@@ -57,8 +57,12 @@ libexec_PROGRAMS =					\
 fwupd_SOURCES =						\
 	fu-cleanup.h					\
 	fu-common.h					\
+	fu-debug.c					\
+	fu-debug.h					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-provider.c					\
+	fu-provider.h					\
 	fu-provider-uefi.c				\
 	fu-provider-uefi.h				\
 	fu-resources.c					\

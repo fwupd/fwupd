@@ -40,15 +40,7 @@ struct _FuProviderUefiPrivate
 	GPtrArray			*array_devices;
 };
 
-enum {
-	SIGNAL_SENSOR_ADDED,
-	SIGNAL_SENSOR_REMOVED,
-	SIGNAL_LAST
-};
-
-static guint signals[SIGNAL_LAST] = { 0 };
-
-G_DEFINE_TYPE (FuProviderUefi, fu_provider_uefi, G_TYPE_OBJECT)
+G_DEFINE_TYPE (FuProviderUefi, fu_provider_uefi, FU_TYPE_PROVIDER)
 
 /**
  * fu_provider_uefi_get_by_id:
@@ -73,18 +65,33 @@ fu_provider_uefi_get_by_id (FuProviderUefi *provider_uefi,
 }
 
 /**
+ * fu_provider_uefi_update_offline:
+ **/
+static gboolean
+fu_provider_uefi_update_offline (FuProvider *provider,
+				 FuDevice *device,
+				 gint fd,
+				 GError **error)
+{
+	//FIXME
+	return TRUE;
+}
+
+/**
  * fu_provider_uefi_coldplug:
  **/
-void
-fu_provider_uefi_coldplug (FuProviderUefi *provider_uefi)
+static gboolean
+fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 {
+//	FuProviderUefi *provider_uefi = FU_PROVIDER_UEFI (provider);
 	_cleanup_object_unref_ FuDevice *dev = NULL;
 
 	//FIXME
 	g_debug ("Adding fake UEFI device");
 	dev = fu_device_new ();
 	fu_device_set_id (dev, "819b858e-c52c-402f-80e1-5b311b6c1959");
-	g_signal_emit (provider_uefi, signals[SIGNAL_SENSOR_ADDED], 0, dev);
+	fu_provider_emit_added (provider, dev);
+	return TRUE;
 }
 
 /**
@@ -93,20 +100,12 @@ fu_provider_uefi_coldplug (FuProviderUefi *provider_uefi)
 static void
 fu_provider_uefi_class_init (FuProviderUefiClass *klass)
 {
+	FuProviderClass *provider_class = FU_PROVIDER_CLASS (klass);
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	provider_class->coldplug = fu_provider_uefi_coldplug;
+	provider_class->update_offline = fu_provider_uefi_update_offline;
 	object_class->finalize = fu_provider_uefi_finalize;
-	signals[SIGNAL_SENSOR_ADDED] =
-		g_signal_new ("device-added",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (FuProviderUefiClass, device_added),
-			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
-			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
-	signals[SIGNAL_SENSOR_REMOVED] =
-		g_signal_new ("device-removed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (FuProviderUefiClass, device_removed),
-			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
-			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
 
 	g_type_class_add_private (klass, sizeof (FuProviderUefiPrivate));
 }
@@ -138,11 +137,10 @@ fu_provider_uefi_finalize (GObject *object)
 /**
  * fu_provider_uefi_new:
  **/
-FuProviderUefi *
+FuProvider *
 fu_provider_uefi_new (void)
 {
-	FuProviderUefi *provider_uefi;
-	provider_uefi = g_object_new (FU_TYPE_PROVIDER_UEFI, NULL);
-	return FU_PROVIDER_UEFI (provider_uefi);
+	FuProviderUefi *provider;
+	provider = g_object_new (FU_TYPE_PROVIDER_UEFI, NULL);
+	return FU_PROVIDER (provider);
 }
-

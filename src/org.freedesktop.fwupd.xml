@@ -31,10 +31,10 @@
           </doc:para>
         </doc:description>
       </doc:doc>
-      <arg type='as' name='devices' direction='out'>
+      <arg type='as' name='ids' direction='out'>
         <doc:doc>
           <doc:summary>
-            <doc:para>An array of GUIDs.</doc:para>
+            <doc:para>An array of IDs.</doc:para>
           </doc:summary>
         </doc:doc>
       </arg>
@@ -49,10 +49,10 @@
           </doc:para>
         </doc:description>
       </doc:doc>
-      <arg type='s' name='guid' direction='in'>
+      <arg type='s' name='id' direction='in'>
         <doc:doc>
           <doc:summary>
-            <doc:para>A GUID of the hardware to update.</doc:para>
+            <doc:para>An ID, typically a GUID of the hardware to update.</doc:para>
           </doc:summary>
         </doc:doc>
       </arg>

@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2010-2011 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -19,14 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FU_COMMON_H
-#define __FU_COMMON_H
+#ifndef __CD_DEBUG_H__
+#define __CD_DEBUG_H__
 
-#define FWUPD_DBUS_PATH			"/"
-#define FWUPD_DBUS_SERVICE		"org.freedesktop.fwupd"
-#define FWUPD_DBUS_INTERFACE		"org.freedesktop.fwupd"
+#include <glib.h>
 
-#define FU_ERROR			1
-#define FU_ERROR_INTERNAL		0
+gboolean	 fu_debug_is_verbose		(void);
+GOptionGroup	*fu_debug_get_option_group	(void);
+void		 fu_debug_setup			(gboolean	 enabled);
+void		 fu_debug_destroy		(void);
 
-#endif /* __FU_COMMON_H */
+#endif /* __CD_DEBUG_H__ */

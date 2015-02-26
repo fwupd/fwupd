@@ -25,16 +25,15 @@
 #include <glib-object.h>
 
 #include "fu-device.h"
-#include "fu-provider-uefi.h"
+#include "fu-provider.h"
 
 G_BEGIN_DECLS
 
 #define FU_TYPE_PROVIDER_UEFI		(fu_provider_uefi_get_type ())
 #define FU_PROVIDER_UEFI(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_PROVIDER_UEFI, FuProviderUefi))
-#define FU_PROVIDER_UEFI_CLASS(k)	(G_TYPE_CHECK_CLASS_CAST((k), FU_TYPE_PROVIDER_UEFI, FuProviderUefiClass))
+//#define FU_PROVIDER_UEFI_CLASS(k)	(G_TYPE_CHECK_CLASS_CAST((k), FU_TYPE_PROVIDER_UEFI, FuProviderUefiClass))
 #define FU_IS_PROVIDER_UEFI(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_PROVIDER_UEFI))
-#define FU_IS_PROVIDER_UEFI_CLASS(k)	(G_TYPE_CHECK_CLASS_TYPE ((k), FU_TYPE_PROVIDER_UEFI))
-#define FU_PROVIDER_UEFI_GET_CLASS(o)	(G_TYPE_INSTANCE_GET_CLASS ((o), FU_TYPE_PROVIDER_UEFI, FuProviderUefiClass))
+//#define FU_IS_PROVIDER_UEFI_CLASS(k)	(G_TYPE_CHECK_CLASS_TYPE ((k), FU_TYPE_PROVIDER_UEFI))
 
 typedef struct _FuProviderUefiPrivate	FuProviderUefiPrivate;
 typedef struct _FuProviderUefi		FuProviderUefi;
@@ -42,22 +41,17 @@ typedef struct _FuProviderUefiClass	FuProviderUefiClass;
 
 struct _FuProviderUefi
 {
-	 GObject			 parent;
+	 FuProvider			 parent;
 	 FuProviderUefiPrivate		*priv;
 };
 
 struct _FuProviderUefiClass
 {
-	GObjectClass	parent_class;
-	void		(* device_added)	(FuProviderUefi	*provider_uefi,
-						 FuDevice	*device);
-	void		(* device_removed)	(FuProviderUefi	*provider_uefi,
-						 FuDevice	*device);
+	FuProviderClass			 parent_class;
 };
 
 GType		 fu_provider_uefi_get_type	(void);
-FuProviderUefi	*fu_provider_uefi_new		(void);
-void		 fu_provider_uefi_coldplug	(FuProviderUefi	*provider_uefi);
+FuProvider	*fu_provider_uefi_new		(void);
 
 G_END_DECLS
 

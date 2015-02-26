@@ -21,11 +21,13 @@
 
 #include "config.h"
 
-#include <glib/gi18n.h>
+#include <fcntl.h>
 #include <gio/gio.h>
+#include <gio/gunixfdlist.h>
+#include <glib/gi18n.h>
 #include <locale.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "fu-cleanup.h"
 #include "fu-common.h"
@@ -194,7 +196,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	_cleanup_object_unref_ GDBusConnection *conn = NULL;
 	_cleanup_object_unref_ GDBusProxy *proxy = NULL;
 	_cleanup_variant_unref_ GVariant *val = NULL;
-	const gchar **guids = NULL;
+	const gchar **ids = NULL;
 	guint i;
 
 	conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
@@ -219,12 +221,12 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 				      error);
 	if (val == NULL)
 		return FALSE;
-	g_variant_get (val, "(^a&s)", &guids);
-	g_assert (guids != NULL);
-	if (guids[0] == NULL)
+	g_variant_get (val, "(^a&s)", &ids);
+	g_assert (ids != NULL);
+	if (ids[0] == NULL)
 		g_print ("No hardware detected with firmware update capaility\n");
-	for (i = 0; guids[i] != NULL; i++)
-		g_print ("%i: %s\n", i, guids[i]);
+	for (i = 0; ids[i] != NULL; i++)
+		g_print ("%i: %s\n", i, ids[i]);
 	return TRUE;
 }
 
@@ -234,7 +236,63 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	//FIXME
+	GVariant *body;
+	gint retval;
+	gint fd;
+	_cleanup_object_unref_ GDBusConnection *conn = NULL;
+	_cleanup_object_unref_ GDBusMessage *message = NULL;
+	_cleanup_object_unref_ GDBusMessage *request = NULL;
+	_cleanup_object_unref_ GUnixFDList *fd_list = NULL;
+
+	if (g_strv_length (values) != 2) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'id' 'filename'");
+		return FALSE;
+	}
+
+	conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+	if (conn == NULL)
+		return FALSE;
+
+	/* open file */
+	fd = open (values[1], O_RDONLY);
+	if (fd < 0) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INTERNAL,
+			     "failed to open %s",
+			     values[1]);
+		return FALSE;
+	}
+
+	/* set out of band file descriptor */
+	fd_list = g_unix_fd_list_new ();
+	retval = g_unix_fd_list_append (fd_list, fd, NULL);
+	g_assert (retval != -1);
+	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
+						  FWUPD_DBUS_PATH,
+						  FWUPD_DBUS_INTERFACE,
+						  "UpdateOffline");
+	g_dbus_message_set_unix_fd_list (request, fd_list);
+
+	/* g_unix_fd_list_append did a dup() already */
+	close (fd);
+
+	/* send message */
+	body = g_variant_new ("(sh)", values[0], fd);
+	g_dbus_message_set_body (request, body);
+	message = g_dbus_connection_send_message_with_reply_sync (conn,
+								  request,
+								  G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+								  -1,
+								  NULL,
+								  NULL,
+								  error);
+	if (message == NULL)
+		return FALSE;
+
 	return TRUE;
 }
 
