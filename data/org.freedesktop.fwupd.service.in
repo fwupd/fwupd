@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.freedesktop.fwupd
+Exec=@servicedir@/fwupd
+#SystemdService=fwupd.service
