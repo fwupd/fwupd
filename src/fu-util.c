@@ -281,7 +281,7 @@ fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 	close (fd);
 
 	/* send message */
-	body = g_variant_new ("(sh)", values[0], fd);
+	body = g_variant_new ("(sh)", values[0], fd > -1 ? 0 : -1);
 	g_dbus_message_set_body (request, body);
 	message = g_dbus_connection_send_message_with_reply_sync (conn,
 								  request,
@@ -291,6 +291,8 @@ fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 								  NULL,
 								  error);
 	if (message == NULL)
+		return FALSE;
+	if (g_dbus_message_to_gerror (message, error))
 		return FALSE;
 
 	return TRUE;

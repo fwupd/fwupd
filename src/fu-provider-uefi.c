@@ -73,7 +73,10 @@ fu_provider_uefi_update_offline (FuProvider *provider,
 				 gint fd,
 				 GError **error)
 {
+//	FuProviderUefi *provider_uefi = FU_PROVIDER_UEFI (provider);
+
 	//FIXME
+	g_debug ("DOING UEFI UPDATE USING FD %i", fd);
 	return TRUE;
 }
 
@@ -89,7 +92,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 	//FIXME
 	g_debug ("Adding fake UEFI device");
 	dev = fu_device_new ();
-	fu_device_set_id (dev, "819b858e-c52c-402f-80e1-5b311b6c1959");
+	fu_device_set_id (dev, "UEFI-819b858e-c52c-402f-80e1-5b311b6c1959-dev1");
 	fu_provider_emit_added (provider, dev);
 	return TRUE;
 }

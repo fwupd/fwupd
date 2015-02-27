@@ -26,6 +26,7 @@
 #include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
 #include <locale.h>
+#include <polkit/polkit.h>
 
 #include "fu-cleanup.h"
 #include "fu-common.h"
@@ -40,7 +41,13 @@ typedef struct {
 	GMainLoop		*loop;
 	GPtrArray		*devices;
 	GPtrArray		*providers;
+	PolkitAuthority		*authority;
 } FuMainPrivate;
+
+typedef struct {
+	FuDevice		*device;
+	FuProvider		*provider;
+} FuDeviceItem;
 
 /**
  * fu_main_get_device_list_as_strv:
@@ -61,20 +68,110 @@ fu_main_get_device_list_as_strv (FuMainPrivate *priv)
 }
 
 /**
- * fu_main_get_device_by_id:
+ * fu_main_item_free:
  **/
-static FuDevice *
-fu_main_get_device_by_id (FuMainPrivate *priv, const gchar *id)
+static void
+fu_main_item_free (FuDeviceItem *item)
 {
-	FuDevice *device_tmp;
+	g_object_unref (item->device);
+	g_object_unref (item->provider);
+	g_free (item);
+}
+
+/**
+ * fu_main_get_item_by_id:
+ **/
+static FuDeviceItem *
+fu_main_get_item_by_id (FuMainPrivate *priv, const gchar *id)
+{
+	FuDeviceItem *item;
 	guint i;
 
 	for (i = 0; i < priv->devices->len; i++) {
-		device_tmp = g_ptr_array_index (priv->devices, i);
-		if (g_strcmp0 (fu_device_get_id (device_tmp), id) == 0)
-			return device_tmp;
+		item = g_ptr_array_index (priv->devices, i);
+		if (g_strcmp0 (fu_device_get_id (item->device), id) == 0)
+			return item;
 	}
 	return NULL;
+}
+
+typedef struct {
+	GDBusMethodInvocation	*invocation;
+	FuMainPrivate		*priv;
+	gint			 fd;
+	gchar			*id;
+} FuMainAuthHelper;
+
+/**
+ * fu_main_helper_free:
+ **/
+static void
+fu_main_helper_free (FuMainAuthHelper *helper)
+{
+	g_object_unref (helper->invocation);
+	g_free (helper->id);
+	g_free (helper);
+}
+
+/**
+ * fu_main_check_authorization_cb:
+ **/
+static void
+fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FuMainAuthHelper *helper = (FuMainAuthHelper *) user_data;
+	FuDeviceItem *item;
+	_cleanup_error_free_ GError *error = NULL;
+	_cleanup_object_unref_ PolkitAuthorizationResult *auth = NULL;
+
+	/* get result */
+	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
+							    res, &error);
+	if (auth == NULL) {
+		g_dbus_method_invocation_return_error (helper->invocation,
+						       FU_ERROR,
+						       FU_ERROR_INTERNAL,
+						       "could not check for auth: %s",
+						       error->message);
+		fu_main_helper_free (helper);
+		return;
+	}
+
+	/* did not auth */
+	if (!polkit_authorization_result_get_is_authorized (auth)) {
+		g_dbus_method_invocation_return_error (helper->invocation,
+						       FU_ERROR,
+						       FU_ERROR_INTERNAL,
+						       "failed to obtain auth");
+		fu_main_helper_free (helper);
+		return;
+	}
+
+	/* check the device still exists */
+	item = fu_main_get_item_by_id (helper->priv, helper->id);
+	if (item == NULL) {
+		g_dbus_method_invocation_return_error (helper->invocation,
+						       FU_ERROR,
+						       FU_ERROR_INTERNAL,
+						       "device %s was removed",
+						       helper->id);
+		fu_main_helper_free (helper);
+		return;
+	}
+
+	/* run the correct provider that added this */
+	if (!fu_provider_update_offline (item->provider,
+					 item->device,
+					 helper->fd, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation,
+							error);
+		fu_main_helper_free (helper);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+	fu_main_helper_free (helper);
 }
 
 /**
@@ -89,11 +186,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 	GVariant *val;
 
-	g_debug ("Called %s()", method_name);
-
 	/* return 'as' */
 	if (g_strcmp0 (method_name, "GetDevices") == 0) {
 		_cleanup_strv_free_ gchar **devices = NULL;
+		g_debug ("Called %s()", method_name);
 		devices = fu_main_get_device_list_as_strv (priv);
 		val = g_variant_new ("(^as)", devices);
 		g_dbus_method_invocation_return_value (invocation, val);
@@ -104,16 +200,19 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "UpdateOffline") == 0) {
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
-		FuDevice *device;
+		FuDeviceItem *item;
+		FuMainAuthHelper *helper;
 		const gchar *id = NULL;
 		gint32 fd_handle = 0;
 		gint fd;
 		_cleanup_error_free_ GError *error = NULL;
+		_cleanup_object_unref_ PolkitSubject *subject = NULL;
 
 		/* check the id exists */
 		g_variant_get (parameters, "(&sh)", &id, &fd_handle);
-		device = fu_main_get_device_by_id (priv, id);
-		if (device == NULL) {
+		g_debug ("Called %s(%s,%i)", method_name, id, fd_handle);
+		item = fu_main_get_item_by_id (priv, id);
+		if (item == NULL) {
 			g_dbus_method_invocation_return_error (invocation,
 							       FU_ERROR,
 							       FU_ERROR_INTERNAL,
@@ -139,13 +238,21 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			return;
 		}
 
-		/* TODO: run the correct provider that can handle this */
-//		if (!fu_provider_update_offline (provider, device, fd, &error)) {
-//			g_dbus_method_invocation_return_gerror (invocation,
-//								error);
-//			return;
-//		}
-		g_dbus_method_invocation_return_value (invocation, NULL);
+
+		/* do authorization async */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->invocation = g_object_ref (invocation);
+		helper->fd = fd;
+		helper->id = g_strdup (id);
+		helper->priv = priv;
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (priv->authority, subject,
+						      "org.freedesktop.fwupd.update",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_check_authorization_cb,
+						      helper);
 		return;
 	}
 
@@ -281,7 +388,12 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 				  gpointer user_data)
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
-	g_ptr_array_add (priv->devices, g_object_ref (device));
+	FuDeviceItem *item;
+
+	item = g_new0 (FuDeviceItem, 1);
+	item->device = g_object_ref (device);
+	item->provider = g_object_ref (provider);
+	g_ptr_array_add (priv->devices, item);
 }
 
 /**
@@ -293,7 +405,14 @@ cd_main_provider_device_removed_cb (FuProvider *provider,
 				    gpointer user_data)
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
-	g_ptr_array_remove (priv->devices, g_object_ref (device));
+	FuDeviceItem *item;
+
+	item = fu_main_get_item_by_id (priv, fu_device_get_id (device));
+	if (item == NULL) {
+		g_warning ("can't remove device %s", fu_device_get_id (device));
+		return;
+	}
+	g_ptr_array_remove (priv->devices, item);
 }
 
 /**
@@ -356,7 +475,7 @@ main (int argc, char *argv[])
 
 	/* create new objects */
 	priv = g_new0 (FuMainPrivate, 1);
-	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_main_item_free);
 	priv->loop = g_main_loop_new (NULL, FALSE);
 
 	/* add providers */
@@ -368,6 +487,14 @@ main (int argc, char *argv[])
 								 &error);
 	if (priv->introspection_daemon == NULL) {
 		g_warning ("FuMain: failed to load daemon introspection: %s",
+			   error->message);
+		goto out;
+	}
+
+	/* get authority */
+	priv->authority = polkit_authority_get_sync (NULL, &error);
+	if (priv->authority == NULL) {
+		g_warning ("FuMain: failed to load polkit authority: %s",
 			   error->message);
 		goto out;
 	}
@@ -404,6 +531,8 @@ out:
 			g_main_loop_unref (priv->loop);
 		if (priv->connection != NULL)
 			g_object_unref (priv->connection);
+		if (priv->authority != NULL)
+			g_object_unref (priv->authority);
 		if (priv->introspection_daemon != NULL)
 			g_dbus_node_info_unref (priv->introspection_daemon);
 		g_ptr_array_unref (priv->providers);
