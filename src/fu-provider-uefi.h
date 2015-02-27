@@ -31,9 +31,7 @@ G_BEGIN_DECLS
 
 #define FU_TYPE_PROVIDER_UEFI		(fu_provider_uefi_get_type ())
 #define FU_PROVIDER_UEFI(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_PROVIDER_UEFI, FuProviderUefi))
-//#define FU_PROVIDER_UEFI_CLASS(k)	(G_TYPE_CHECK_CLASS_CAST((k), FU_TYPE_PROVIDER_UEFI, FuProviderUefiClass))
 #define FU_IS_PROVIDER_UEFI(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_PROVIDER_UEFI))
-//#define FU_IS_PROVIDER_UEFI_CLASS(k)	(G_TYPE_CHECK_CLASS_TYPE ((k), FU_TYPE_PROVIDER_UEFI))
 
 typedef struct _FuProviderUefiPrivate	FuProviderUefiPrivate;
 typedef struct _FuProviderUefi		FuProviderUefi;
@@ -41,8 +39,8 @@ typedef struct _FuProviderUefiClass	FuProviderUefiClass;
 
 struct _FuProviderUefi
 {
-	 FuProvider			 parent;
-	 FuProviderUefiPrivate		*priv;
+	FuProvider			 parent;
+	FuProviderUefiPrivate		*priv;
 };
 
 struct _FuProviderUefiClass

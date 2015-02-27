@@ -98,6 +98,7 @@ fu_main_get_item_by_id (FuMainPrivate *priv, const gchar *id)
 typedef struct {
 	GDBusMethodInvocation	*invocation;
 	FuMainPrivate		*priv;
+	FuProviderFlags		 flags;
 	gint			 fd;
 	gchar			*id;
 } FuMainAuthHelper;
@@ -160,9 +161,10 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	}
 
 	/* run the correct provider that added this */
-	if (!fu_provider_update_offline (item->provider,
-					 item->device,
-					 helper->fd, &error)) {
+	if (!fu_provider_update (item->provider,
+				 item->device,
+				 helper->flags,
+				 helper->fd, &error)) {
 		g_dbus_method_invocation_return_gerror (helper->invocation,
 							error);
 		fu_main_helper_free (helper);
@@ -197,19 +199,23 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	}
 
 	/* return '' */
-	if (g_strcmp0 (method_name, "UpdateOffline") == 0) {
-		GDBusMessage *message;
-		GUnixFDList *fd_list;
+	if (g_strcmp0 (method_name, "Update") == 0) {
 		FuDeviceItem *item;
 		FuMainAuthHelper *helper;
+		FuProviderFlags flags = FU_PROVIDER_UPDATE_FLAG_NONE;
+		GDBusMessage *message;
+		GUnixFDList *fd_list;
+		GVariant *prop_value;
 		const gchar *id = NULL;
+		gchar *prop_key;
 		gint32 fd_handle = 0;
 		gint fd;
 		_cleanup_error_free_ GError *error = NULL;
 		_cleanup_object_unref_ PolkitSubject *subject = NULL;
+		_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
 
 		/* check the id exists */
-		g_variant_get (parameters, "(&sh)", &id, &fd_handle);
+		g_variant_get (parameters, "(&sha{sv})", &id, &fd_handle, &iter);
 		g_debug ("Called %s(%s,%i)", method_name, id, fd_handle);
 		item = fu_main_get_item_by_id (priv, id);
 		if (item == NULL) {
@@ -219,6 +225,15 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 							       "no such ID %s",
 							       id);
 			return;
+		}
+
+		/* get options */
+		while (g_variant_iter_next (iter, "{&sv}",
+					    &prop_key, &prop_value)) {
+			g_debug ("got option %s", prop_key);
+			if (g_strcmp0 (prop_key, "offline") == 0 &&
+			    g_variant_get_boolean (prop_value) == TRUE)
+				flags |= FU_PROVIDER_UPDATE_FLAG_OFFLINE;
 		}
 
 		/* get the fd */
@@ -244,6 +259,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		helper->invocation = g_object_ref (invocation);
 		helper->fd = fd;
 		helper->id = g_strdup (id);
+		helper->flags = flags;
 		helper->priv = priv;
 		subject = polkit_system_bus_name_new (sender);
 		polkit_authority_check_authorization (priv->authority, subject,

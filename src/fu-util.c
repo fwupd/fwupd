@@ -31,6 +31,7 @@
 
 #include "fu-cleanup.h"
 #include "fu-common.h"
+#include "fu-provider.h"
 
 #define FU_ERROR			1
 #define FU_ERROR_INVALID_ARGUMENTS	0
@@ -231,12 +232,14 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
- * fu_util_update_offline:
+ * fu_util_update:
  **/
 static gboolean
-fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
+		FuProviderFlags flags, GError **error)
 {
 	GVariant *body;
+	GVariantBuilder builder;
 	gint retval;
 	gint fd;
 	_cleanup_object_unref_ GDBusConnection *conn = NULL;
@@ -244,26 +247,29 @@ fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 	_cleanup_object_unref_ GDBusMessage *request = NULL;
 	_cleanup_object_unref_ GUnixFDList *fd_list = NULL;
 
-	if (g_strv_length (values) != 2) {
-		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
-				     "Invalid arguments: expected 'id' 'filename'");
-		return FALSE;
-	}
-
 	conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
 	if (conn == NULL)
 		return FALSE;
 
+	/* set options */
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_add (&builder, "{sv}",
+			       "reason", g_variant_new_string ("user-action"));
+	g_variant_builder_add (&builder, "{sv}",
+			       "filename", g_variant_new_string (filename));
+	if (flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "offline", g_variant_new_boolean (TRUE));
+	}
+
 	/* open file */
-	fd = open (values[1], O_RDONLY);
+	fd = open (filename, O_RDONLY);
 	if (fd < 0) {
 		g_set_error (error,
 			     FU_ERROR,
 			     FU_ERROR_INTERNAL,
 			     "failed to open %s",
-			     values[1]);
+			     filename);
 		return FALSE;
 	}
 
@@ -274,14 +280,14 @@ fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
 						  FWUPD_DBUS_PATH,
 						  FWUPD_DBUS_INTERFACE,
-						  "UpdateOffline");
+						  "Update");
 	g_dbus_message_set_unix_fd_list (request, fd_list);
 
 	/* g_unix_fd_list_append did a dup() already */
 	close (fd);
 
 	/* send message */
-	body = g_variant_new ("(sh)", values[0], fd > -1 ? 0 : -1);
+	body = g_variant_new ("(sha{sv})", id, fd > -1 ? 0 : -1, &builder);
 	g_dbus_message_set_body (request, body);
 	message = g_dbus_connection_send_message_with_reply_sync (conn,
 								  request,
@@ -296,6 +302,40 @@ fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	return TRUE;
+}
+
+/**
+ * fu_util_update_online:
+ **/
+static gboolean
+fu_util_update_online (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) != 2) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'id' 'filename'");
+		return FALSE;
+	}
+	return fu_util_update (priv, values[0], values[1],
+			       FU_PROVIDER_UPDATE_FLAG_NONE, error);
+}
+
+/**
+ * fu_util_update_offline:
+ **/
+static gboolean
+fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) != 2) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'id' 'filename'");
+		return FALSE;
+	}
+	return fu_util_update (priv, values[0], values[1],
+			       FU_PROVIDER_UPDATE_FLAG_OFFLINE, error);
 }
 
 /**
@@ -349,6 +389,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Install the update the next time the computer is rebooted"),
 		     fu_util_update_offline);
+	fu_util_add (priv->cmd_array,
+		     "update-online",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Install the update now"),
+		     fu_util_update_online);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,

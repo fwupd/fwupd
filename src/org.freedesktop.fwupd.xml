@@ -41,7 +41,7 @@
     </method>
 
     <!--***********************************************************-->
-    <method name='UpdateOffline'>
+    <method name='Update'>
       <doc:doc>
         <doc:description>
           <doc:para>
@@ -62,6 +62,16 @@
             <doc:para>
               An index into the array of file descriptors that may have
               been sent with the DBus message.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='a{sv}' name='options' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              Options to be used when constructing the profile, e.g.
+              <doc:tt>offline=True</doc:tt>.
             </doc:para>
           </doc:summary>
         </doc:doc>

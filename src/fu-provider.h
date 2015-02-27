@@ -44,6 +44,14 @@ struct _FuProvider
 	 GObject			 parent;
 };
 
+typedef enum {
+	FU_PROVIDER_UPDATE_FLAG_NONE		= 0,
+	FU_PROVIDER_UPDATE_FLAG_OFFLINE		= 1,
+	FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL	= 2,
+	FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER	= 4,
+	FU_PROVIDER_UPDATE_FLAG_LAST
+} FuProviderFlags;
+
 struct _FuProviderClass
 {
 	GObjectClass	parent_class;
@@ -51,9 +59,10 @@ struct _FuProviderClass
 	/* vfunc */
 	gboolean	(*coldplug)		(FuProvider	*provider,
 						 GError		**error);
-	gboolean	(*update_offline)	(FuProvider	*provider,
+	gboolean	(*update)		(FuProvider	*provider,
 						 FuDevice	*device,
 						 gint		 fd,
+						 FuProviderFlags flags,
 						 GError		**error);
 
 	/* signals */
@@ -70,9 +79,10 @@ void		 fu_provider_emit_removed	(FuProvider	*provider,
 						 FuDevice	*device);
 gboolean	 fu_provider_coldplug		(FuProvider	*provider,
 						 GError		**error);
-gboolean	 fu_provider_update_offline	(FuProvider	*provider,
+gboolean	 fu_provider_update		(FuProvider	*provider,
 						 FuDevice	*device,
 						 gint		 fd,
+						 FuProviderFlags flags,
 						 GError		**error);
 
 G_END_DECLS

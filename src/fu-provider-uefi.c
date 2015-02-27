@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 
 #include "fu-cleanup.h"
+#include "fu-common.h"
 #include "fu-device.h"
 #include "fu-provider-uefi.h"
 
@@ -65,15 +66,25 @@ fu_provider_uefi_get_by_id (FuProviderUefi *provider_uefi,
 }
 
 /**
- * fu_provider_uefi_update_offline:
+ * fu_provider_uefi_update:
  **/
 static gboolean
-fu_provider_uefi_update_offline (FuProvider *provider,
-				 FuDevice *device,
-				 gint fd,
-				 GError **error)
+fu_provider_uefi_update (FuProvider *provider,
+			 FuDevice *device,
+			 gint fd,
+			 FuProviderFlags flags,
+			 GError **error)
 {
 //	FuProviderUefi *provider_uefi = FU_PROVIDER_UEFI (provider);
+
+	/* this only makes sense offline */
+	if ((flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) == 0) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "Cannot do UEFI update online");
+		return FALSE;
+	}
 
 	//FIXME
 	g_debug ("DOING UEFI UPDATE USING FD %i", fd);
@@ -107,7 +118,7 @@ fu_provider_uefi_class_init (FuProviderUefiClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	provider_class->coldplug = fu_provider_uefi_coldplug;
-	provider_class->update_offline = fu_provider_uefi_update_offline;
+	provider_class->update = fu_provider_uefi_update;
 	object_class->finalize = fu_provider_uefi_finalize;
 
 	g_type_class_add_private (klass, sizeof (FuProviderUefiPrivate));

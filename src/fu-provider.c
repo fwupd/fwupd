@@ -56,23 +56,24 @@ fu_provider_coldplug (FuProvider *provider, GError **error)
 }
 
 /**
- * fu_provider_update_offline:
+ * fu_provider_update:
  **/
 gboolean
-fu_provider_update_offline (FuProvider *provider,
-			    FuDevice *device,
-			    gint fd,
-			    GError **error)
+fu_provider_update (FuProvider *provider,
+		    FuDevice *device,
+		    gint fd,
+		    FuProviderFlags flags,
+		    GError **error)
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
-	if (klass->update_offline == NULL) {
+	if (klass->update == NULL) {
 		g_set_error_literal (error,
 				     FU_ERROR,
 				     FU_ERROR_INTERNAL,
 				     "No offline update functionality");
 		return FALSE;
 	}
-	return klass->update_offline (provider, device, fd, error);
+	return klass->update (provider, device, fd, flags, error);
 }
 
 /**
