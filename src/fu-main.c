@@ -50,21 +50,23 @@ typedef struct {
 } FuDeviceItem;
 
 /**
- * fu_main_get_device_list_as_strv:
+ * fu_device_to_variants:
  **/
-static gchar **
-fu_main_get_device_list_as_strv (FuMainPrivate *priv)
+static GVariant *
+fu_device_to_variants (FuMainPrivate *priv)
 {
-	gchar **val;
+	GVariantBuilder builder;
 	guint i;
-	FuDevice *dev_tmp;
 
-	val = g_new0 (gchar *, priv->devices->len + 1);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (i = 0; i < priv->devices->len; i++) {
-		dev_tmp = g_ptr_array_index (priv->devices, i);
-		val[i] = g_strdup (fu_device_get_id (dev_tmp));
+		GVariant *tmp;
+		FuDeviceItem *item;
+		item = g_ptr_array_index (priv->devices, i);
+		tmp = fu_device_to_variant (item->device);
+		g_variant_builder_add_value (&builder, tmp);
 	}
-	return val;
+	return g_variant_new ("(a{sa{sv}})", &builder);
 }
 
 /**
@@ -163,8 +165,9 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	/* run the correct provider that added this */
 	if (!fu_provider_update (item->provider,
 				 item->device,
+				 helper->fd,
 				 helper->flags,
-				 helper->fd, &error)) {
+				 &error)) {
 		g_dbus_method_invocation_return_gerror (helper->invocation,
 							error);
 		fu_main_helper_free (helper);
@@ -192,8 +195,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "GetDevices") == 0) {
 		_cleanup_strv_free_ gchar **devices = NULL;
 		g_debug ("Called %s()", method_name);
-		devices = fu_main_get_device_list_as_strv (priv);
-		val = g_variant_new ("(^as)", devices);
+		val = fu_device_to_variants (priv);
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
@@ -234,6 +236,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			if (g_strcmp0 (prop_key, "offline") == 0 &&
 			    g_variant_get_boolean (prop_value) == TRUE)
 				flags |= FU_PROVIDER_UPDATE_FLAG_OFFLINE;
+			g_variant_unref (prop_value);
 		}
 
 		/* get the fd */

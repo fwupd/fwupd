@@ -31,10 +31,10 @@
           </doc:para>
         </doc:description>
       </doc:doc>
-      <arg type='as' name='ids' direction='out'>
+      <arg type='a{sa{sv}}' name='devices' direction='out'>
         <doc:doc>
           <doc:summary>
-            <doc:para>An array of IDs.</doc:para>
+            <doc:para>An array of devices, with any properties set on each.</doc:para>
           </doc:summary>
         </doc:doc>
       </arg>

@@ -29,4 +29,7 @@
 #define FU_ERROR			1
 #define FU_ERROR_INTERNAL		0
 
+#define FU_DEVICE_KEY_VERSION		"Version"
+#define FU_DEVICE_KEY_PROVIDER		"Provider"
+
 #endif /* __FU_COMMON_H */

@@ -40,6 +40,7 @@ static void fu_device_finalize			 (GObject *object);
 struct _FuDevicePrivate
 {
 	gchar				*id;
+	GHashTable			*metadata;
 };
 
 enum {
@@ -74,6 +75,75 @@ fu_device_set_id (FuDevice *device, const gchar *id)
 
 	g_free (device->priv->id);
 	device->priv->id = g_strdup (id);
+}
+
+/**
+ * fu_device_get_metadata:
+ **/
+const gchar *
+fu_device_get_metadata (FuDevice *device, const gchar *key)
+{
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	g_return_val_if_fail (key != NULL, NULL);
+	return g_hash_table_lookup (device->priv->metadata, key);
+}
+
+/**
+ * fu_device_get_id:
+ **/
+void
+fu_device_set_metadata (FuDevice *device, const gchar *key, const gchar *value)
+{
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_return_if_fail (key != NULL);
+	g_return_if_fail (value != NULL);
+	g_hash_table_insert (device->priv->metadata, g_strdup (key), g_strdup (value));
+}
+
+/**
+ * fu_device_to_variant:
+ **/
+GVariant *
+fu_device_to_variant (FuDevice *device)
+{
+	GList *l;
+	GVariantBuilder builder;
+	const gchar *key;
+	const gchar *value;
+	_cleanup_list_free_ GList *keys = NULL;
+
+	/* create an array with all the metadata in */
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	keys = g_hash_table_get_keys (device->priv->metadata);
+	for (l = keys; l != NULL; l = l->next) {
+		key = l->data;
+		value = g_hash_table_lookup (device->priv->metadata, key);
+		g_variant_builder_add (&builder, "{sv}",
+				       key, g_variant_new_string (value));
+	}
+	return g_variant_new ("{sa{sv}}", device->priv->id, &builder);
+}
+
+/**
+ * fu_device_set_metadata_from_iter:
+ **/
+void
+fu_device_set_metadata_from_iter (FuDevice *device, GVariantIter *iter)
+{
+	GVariant *variant;
+	const gchar *key;
+	const gchar *type;
+
+	while (g_variant_iter_next (iter, "{&sv}", &key, &variant)) {
+		type = g_variant_get_type_string (variant);
+		if (g_strcmp0 (type, "s") == 0) {
+			fu_device_set_metadata (device, key,
+						g_variant_get_string (variant, NULL));
+		} else {
+			fu_device_set_metadata (device, key, "???");
+		}
+		g_variant_unref (variant);
+	}
 }
 
 /**
@@ -145,6 +215,8 @@ static void
 fu_device_init (FuDevice *device)
 {
 	device->priv = FU_DEVICE_GET_PRIVATE (device);
+	device->priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
+							g_free, g_free);
 }
 
 /**
@@ -157,6 +229,7 @@ fu_device_finalize (GObject *object)
 	FuDevicePrivate *priv = device->priv;
 
 	g_free (priv->id);
+	g_hash_table_unref (priv->metadata);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }

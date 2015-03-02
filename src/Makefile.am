@@ -21,6 +21,8 @@ AM_CPPFLAGS =						\
 bin_PROGRAMS = fwupdmgr
 
 fwupdmgr_SOURCES =					\
+	fu-device.c					\
+	fu-device.h					\
 	fu-util.c
 
 fwupdmgr_LDADD =					\

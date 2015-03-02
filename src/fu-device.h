@@ -53,9 +53,17 @@ GType		 fu_device_get_type			(void);
 FuDevice	*fu_device_new				(void);
 
 /* accessors */
+GVariant	*fu_device_to_variant			(FuDevice	*device);
 const gchar	*fu_device_get_id			(FuDevice	*device);
 void		 fu_device_set_id			(FuDevice	*device,
 							 const gchar	*id);
+const gchar	*fu_device_get_metadata			(FuDevice	*device,
+							 const gchar	*key);
+void		 fu_device_set_metadata			(FuDevice	*device,
+							 const gchar	*key,
+							 const gchar	*value);
+void		 fu_device_set_metadata_from_iter	(FuDevice	*device,
+							 GVariantIter	*iter);
 
 G_END_DECLS
 

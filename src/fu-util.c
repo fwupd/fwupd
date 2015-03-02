@@ -194,11 +194,14 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	GVariantIter *iter_device;
+	FuDevice *dev;
+	gchar *id;
+	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
 	_cleanup_object_unref_ GDBusConnection *conn = NULL;
 	_cleanup_object_unref_ GDBusProxy *proxy = NULL;
+	_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
 	_cleanup_variant_unref_ GVariant *val = NULL;
-	const gchar **ids = NULL;
-	guint i;
 
 	conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
 	if (conn == NULL)
@@ -222,12 +225,39 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 				      error);
 	if (val == NULL)
 		return FALSE;
-	g_variant_get (val, "(^a&s)", &ids);
-	g_assert (ids != NULL);
-	if (ids[0] == NULL)
+
+	/* parse */
+	g_variant_get (val, "(a{sa{sv}})", &iter);
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	while (g_variant_iter_next (iter, "{&sa{sv}}", &id, &iter_device)) {
+		dev = fu_device_new ();
+		fu_device_set_id (dev, id);
+		fu_device_set_metadata_from_iter (dev, iter_device);
+		g_ptr_array_add (devices, dev);
+		g_variant_iter_free (iter_device);
+	}
+
+	/* print */
+	if (devices->len == 0) {
 		g_print ("No hardware detected with firmware update capaility\n");
-	for (i = 0; ids[i] != NULL; i++)
-		g_print ("%i: %s\n", i, ids[i]);
+	} else {
+		guint i;
+		guint j;
+		const gchar *value;
+		const gchar *keys[] = {
+			FU_DEVICE_KEY_PROVIDER,
+			FU_DEVICE_KEY_VERSION,
+			NULL };
+		for (i = 0; i < devices->len; i++) {
+			dev = g_ptr_array_index (devices, i);
+			g_print ("Device: %s\n", fu_device_get_id (dev));
+			for (j = 0; keys[j] != NULL; j++) {
+				value = fu_device_get_metadata (dev, keys[j]);
+				if (value != NULL)
+					g_print ("  %s:\t%s\n", keys[j], value);
+			}
+		}
+	}
 	return TRUE;
 }
 
