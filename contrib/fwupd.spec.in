@@ -13,6 +13,7 @@ BuildRequires: gettext
 BuildRequires: glib2-devel
 BuildRequires: intltool
 BuildRequires: libgudev1-devel
+BuildRequires: colord-devel >= 1.0.0
 BuildRequires: polkit-devel >= 0.103
 BuildRequires: libgcab1-devel
 BuildRequires: libappstream-devel

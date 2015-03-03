@@ -37,6 +37,7 @@
 #include "fu-common.h"
 #include "fu-debug.h"
 #include "fu-device.h"
+#include "fu-provider-colorhug.h"
 #include "fu-provider-uefi.h"
 #include "fu-resources.h"
 
@@ -729,6 +730,7 @@ main (int argc, char *argv[])
 
 	/* add providers */
 	priv->providers = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	fu_main_add_provider (priv, fu_provider_chug_new ());
 	fu_main_add_provider (priv, fu_provider_uefi_new ());
 
 	/* load introspection from file */

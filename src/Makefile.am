@@ -6,6 +6,7 @@ AM_CPPFLAGS =						\
 	$(APPSTREAM_GLIB_CFLAGS)			\
 	$(PIE_CFLAGS)					\
 	$(GCAB_CFLAGS)					\
+	$(COLORHUG_CFLAGS)				\
 	$(GLIB_CFLAGS)					\
 	$(POLKIT_CFLAGS)				\
 	$(GUDEV_CFLAGS)					\
@@ -67,6 +68,8 @@ fwupd_SOURCES =						\
 	fu-device.h					\
 	fu-provider.c					\
 	fu-provider.h					\
+	fu-provider-chug.c				\
+	fu-provider-chug.h				\
 	fu-provider-uefi.c				\
 	fu-provider-uefi.h				\
 	fu-resources.c					\
@@ -75,6 +78,7 @@ fwupd_SOURCES =						\
 
 fwupd_LDADD =						\
 	$(APPSTREAM_GLIB_LIBS)				\
+	$(COLORHUG_LIBS)				\
 	$(POLKIT_LIBS)					\
 	$(GUDEV_LIBS)					\
 	$(GCAB_LIBS)					\
