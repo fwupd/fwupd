@@ -14,6 +14,8 @@ BuildRequires: glib2-devel
 BuildRequires: intltool
 BuildRequires: libgudev1-devel
 BuildRequires: polkit-devel >= 0.103
+BuildRequires: libgcab1-devel
+BuildRequires: libappstream-devel
 
 %description
 fwupd is a daemon to allow session software to update UEFI firmware.

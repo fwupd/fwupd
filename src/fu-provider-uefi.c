@@ -70,6 +70,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 	dev = fu_device_new ();
 	fu_device_set_id (dev, "UEFI-819b858e-c52c-402f-80e1-5b311b6c1959-dev1");
 	fu_device_set_metadata (dev, FU_DEVICE_KEY_PROVIDER, "UEFI");
+	fu_device_set_metadata (dev, FU_DEVICE_KEY_GUID, "819b858e-c52c-402f-80e1-5b311b6c1959");
 	fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, "12345");
 	fu_provider_emit_added (provider, dev);
 	return TRUE;

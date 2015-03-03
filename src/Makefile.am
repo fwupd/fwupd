@@ -3,7 +3,9 @@ dist_introspection_DATA = 				\
 	org.freedesktop.fwupd.xml
 
 AM_CPPFLAGS =						\
+	$(APPSTREAM_GLIB_CFLAGS)			\
 	$(PIE_CFLAGS)					\
+	$(GCAB_CFLAGS)					\
 	$(GLIB_CFLAGS)					\
 	$(POLKIT_CFLAGS)				\
 	$(GUDEV_CFLAGS)					\
@@ -72,8 +74,10 @@ fwupd_SOURCES =						\
 	fu-main.c
 
 fwupd_LDADD =						\
+	$(APPSTREAM_GLIB_LIBS)				\
 	$(POLKIT_LIBS)					\
 	$(GUDEV_LIBS)					\
+	$(GCAB_LIBS)					\
 	$(GLIB_LIBS)
 
 fwupd_LDFLAGS =						\
