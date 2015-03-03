@@ -243,6 +243,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	} else {
 		guint i;
 		guint j;
+		guint k;
 		const gchar *value;
 		const gchar *keys[] = {
 			FU_DEVICE_KEY_PROVIDER,
@@ -254,8 +255,12 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 			g_print ("Device: %s\n", fu_device_get_id (dev));
 			for (j = 0; keys[j] != NULL; j++) {
 				value = fu_device_get_metadata (dev, keys[j]);
-				if (value != NULL)
-					g_print ("  %s:\t%s\n", keys[j], value);
+				if (value != NULL) {
+					g_print ("  %s:", keys[j]);
+					for (k = strlen (keys[j]); k < 15; k++)
+						g_print (" ");
+					g_print (" %s\n", value);
+				}
 			}
 		}
 	}
