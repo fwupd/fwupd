@@ -404,6 +404,35 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		item->usb_device = g_object_ref (device);
 	}
 
+	/* set the display name */
+	switch (mode) {
+	case CH_DEVICE_MODE_BOOTLOADER:
+	case CH_DEVICE_MODE_FIRMWARE:
+	case CH_DEVICE_MODE_LEGACY:
+		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
+					"ColorHug");
+		break;
+	case CH_DEVICE_MODE_BOOTLOADER2:
+	case CH_DEVICE_MODE_FIRMWARE2:
+		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
+					"ColorHug");
+		break;
+	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
+	case CH_DEVICE_MODE_FIRMWARE_PLUS:
+		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
+					"ColorHug");
+		break;
+	case CH_DEVICE_MODE_BOOTLOADER_ALS:
+	case CH_DEVICE_MODE_FIRMWARE_ALS:
+		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
+					"ColorHug");
+		break;
+	default:
+		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
+					"ColorHug??");
+		break;
+	}
+
 	/* is the device in bootloader mode */
 	switch (mode) {
 	case CH_DEVICE_MODE_BOOTLOADER:
@@ -469,7 +498,7 @@ fu_provider_chug_class_init (FuProviderChugClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	provider_class->coldplug = fu_provider_chug_coldplug;
-	provider_class->update = fu_provider_chug_update;
+	provider_class->update_online = fu_provider_chug_update;
 	object_class->finalize = fu_provider_chug_finalize;
 
 	g_type_class_add_private (klass, sizeof (FuProviderChugPrivate));

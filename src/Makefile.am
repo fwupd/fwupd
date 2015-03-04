@@ -28,9 +28,13 @@ fwupdmgr_SOURCES =					\
 	fu-common.h					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-pending.c					\
+	fu-pending.h					\
 	fu-util.c
 
 fwupdmgr_LDADD =					\
+	$(APPSTREAM_GLIB_LIBS)				\
+	$(SQLITE_LIBS)					\
 	$(GLIB_LIBS)
 
 fwupdmgr_LDFLAGS =					\
@@ -69,6 +73,8 @@ fwupd_SOURCES =						\
 	fu-debug.h					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-pending.c					\
+	fu-pending.h					\
 	fu-provider.c					\
 	fu-provider.h					\
 	fu-provider-chug.c				\
@@ -85,6 +91,7 @@ fwupd_LDADD =						\
 	$(POLKIT_LIBS)					\
 	$(GUDEV_LIBS)					\
 	$(GCAB_LIBS)					\
+	$(SQLITE_LIBS)					\
 	$(GLIB_LIBS)
 
 fwupd_LDFLAGS =						\
@@ -93,6 +100,39 @@ fwupd_LDFLAGS =						\
 
 fwupd_CFLAGS =						\
 	$(WARNINGFLAGS_C)
+
+
+TESTS_ENVIRONMENT =					\
+	libtool --mode=execute valgrind			\
+	--quiet						\
+	--leak-check=full				\
+	--show-possibly-lost=no
+
+check_PROGRAMS =					\
+	fu-self-test
+
+fu_self_test_SOURCES =					\
+	fu-common.c					\
+	fu-common.h					\
+	fu-device.c					\
+	fu-device.h					\
+	fu-pending.c					\
+	fu-pending.h					\
+	fu-self-test.c
+
+fu_self_test_LDADD =					\
+	$(SQLITE_LIBS)					\
+	$(GLIB_LIBS)
+
+fu_self_test_CFLAGS = $(WARNINGFLAGS_C)
+
+install-data-hook:
+	if test -w $(DESTDIR)$(prefix)/; then \
+		mkdir -p $(DESTDIR)$(localstatedir)/lib/fwupd; \
+		chmod 0755 $(DESTDIR)$(localstatedir)/lib/fwupd; \
+	fi
+
+TESTS = fu-self-test
 
 BUILT_SOURCES =						\
 	fu-resources.c					\

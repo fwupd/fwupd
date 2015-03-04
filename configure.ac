@@ -91,6 +91,7 @@ PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.9 gusb >= 0.2.2)
 PKG_CHECK_MODULES(POLKIT, polkit-gobject-1 >= 0.103)
 PKG_CHECK_MODULES(GCAB, libgcab-1.0)
 PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib)
+PKG_CHECK_MODULES(SQLITE, sqlite3)
 AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
 
 dnl ---------------------------------------------------------------------------

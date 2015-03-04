@@ -115,6 +115,7 @@ typedef struct {
 	GKeyFile		*inf_kf;
 	gchar			*tmp_path;
 	gint			 cab_fd;
+	GInputStream		*cab_stream;
 	FuMainPrivate		*priv;
 } FuMainAuthHelper;
 
@@ -125,6 +126,8 @@ static void
 fu_main_helper_free (FuMainAuthHelper *helper)
 {
 	/* clean the temp space we created */
+	if (helper->inf_kf != NULL)
+		g_key_file_unref (helper->inf_kf);
 	if (helper->inf_filename != NULL)
 		g_unlink (helper->inf_filename);
 	if (helper->firmware_filename != NULL)
@@ -139,14 +142,14 @@ fu_main_helper_free (FuMainAuthHelper *helper)
 		close (helper->firmware_fd);
 
 	/* free */
-	g_free (helper->id);
-	g_free (helper->tmp_path);
-	g_free (helper->inf_filename);
 	g_free (helper->firmware_basename);
 	g_free (helper->firmware_filename);
-	g_key_file_unref (helper->inf_kf);
+	g_free (helper->id);
+	g_free (helper->inf_filename);
+	g_free (helper->tmp_path);
 	g_object_unref (helper->device);
 	g_object_unref (helper->invocation);
+	g_object_unref (helper->cab_stream);
 	g_free (helper);
 }
 
@@ -199,6 +202,7 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	/* run the correct provider that added this */
 	if (!fu_provider_update (item->provider,
 				 item->device,
+				 helper->cab_stream,
 				 helper->firmware_fd,
 				 helper->flags,
 				 &error)) {
@@ -266,12 +270,11 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	_cleanup_free_ gchar *version = NULL;
 	_cleanup_object_unref_ GCabCabinet *cab = NULL;
 	_cleanup_object_unref_ GFile *path = NULL;
-	_cleanup_object_unref_ GInputStream *stream_buf = NULL;
 	_cleanup_object_unref_ GInputStream *stream = NULL;
 
 	/* GCab needs a GSeekable input stream, so buffer to RAM then load */
 	stream = g_unix_input_stream_new (helper->cab_fd, TRUE);
-	stream_buf = g_memory_input_stream_new ();
+	helper->cab_stream = g_memory_input_stream_new ();
 	while (1) {
 		_cleanup_bytes_unref_ GBytes *data = NULL;
 		data = g_input_stream_read_bytes (stream, 8192, NULL, &error_local);
@@ -284,10 +287,10 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 					     error_local->message);
 			return FALSE;
 		}
-		g_memory_input_stream_add_bytes (G_MEMORY_INPUT_STREAM (stream_buf), data);
+		g_memory_input_stream_add_bytes (G_MEMORY_INPUT_STREAM (helper->cab_stream), data);
 	}
 	cab = gcab_cabinet_new ();
-	if (!gcab_cabinet_load (cab, stream_buf, NULL, &error_local)) {
+	if (!gcab_cabinet_load (cab, helper->cab_stream, NULL, &error_local)) {
 		g_set_error (error,
 			     FU_ERROR,
 			     FU_ERROR_INTERNAL,
@@ -379,9 +382,18 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 			     driver_ver, error_local->message);
 		return FALSE;
 	}
+	fu_device_set_metadata (helper->device, FU_DEVICE_KEY_VERSION_NEW, version);
 
 	/* compare the versions of what we have installed */
 	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_VERSION);
+	if (tmp == NULL) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INTERNAL,
+			     "Device %s does not yet have a current version",
+			     fu_device_get_id (helper->device));
+		return FALSE;
+	}
 	vercmp = as_utils_vercmp (tmp, version);
 	if (vercmp == 0 && (helper->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL) == 0) {
 		g_set_error (error,

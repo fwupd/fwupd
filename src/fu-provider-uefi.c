@@ -43,15 +43,6 @@ fu_provider_uefi_update (FuProvider *provider,
 			 FuProviderFlags flags,
 			 GError **error)
 {
-	/* this only makes sense offline */
-	if ((flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) == 0) {
-		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
-				     "Cannot do UEFI update online");
-		return FALSE;
-	}
-
 	//FIXME
 	g_debug ("DOING UEFI UPDATE USING FD %i", fd);
 	return TRUE;
@@ -73,6 +64,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 	fu_device_set_metadata (dev, FU_DEVICE_KEY_GUID, "819b858e-c52c-402f-80e1-5b311b6c1959");
 	fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, "12345");
 	fu_device_set_metadata (dev, FU_DEVICE_KEY_ONLY_OFFLINE, "TRUE");
+	fu_device_set_metadata (dev, FU_DEVICE_KEY_DISPLAY_NAME, "Dell PowerEdge 8000");
 	fu_provider_emit_added (provider, dev);
 	return TRUE;
 }
@@ -87,7 +79,7 @@ fu_provider_uefi_class_init (FuProviderUefiClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	provider_class->coldplug = fu_provider_uefi_coldplug;
-	provider_class->update = fu_provider_uefi_update;
+	provider_class->update_offline = fu_provider_uefi_update;
 	object_class->finalize = fu_provider_uefi_finalize;
 }
 

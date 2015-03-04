@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <appstream-glib.h>
 #include <fcntl.h>
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
@@ -31,6 +32,7 @@
 
 #include "fu-cleanup.h"
 #include "fu-common.h"
+#include "fu-pending.h"
 #include "fu-provider.h"
 
 #define FU_ERROR_INVALID_ARGUMENTS	0
@@ -248,6 +250,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		guint k;
 		const gchar *value;
 		const gchar *keys[] = {
+			FU_DEVICE_KEY_DISPLAY_NAME,
 			FU_DEVICE_KEY_PROVIDER,
 			FU_DEVICE_KEY_GUID,
 			FU_DEVICE_KEY_VERSION,
@@ -373,6 +376,72 @@ fu_util_update_online (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_update_prepared:
+ **/
+static gboolean
+fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	gint vercmp;
+	guint i;
+	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
+	_cleanup_object_unref_ FuPending *pending = NULL;
+
+	if (g_strv_length (values) != 0) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "Invalid arguments: none expected");
+		return FALSE;
+	}
+
+	/* get prepared updates */
+	pending = fu_pending_new ();
+	devices = fu_pending_get_devices (pending, error);
+	if (devices == NULL)
+		return FALSE;
+	if (devices->len == 0) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "No updates prepared");
+		return FALSE;
+	}
+
+	/* apply each update */
+	for (i = 0; i < devices->len; i++) {
+		FuDevice *device;
+		device = g_ptr_array_index (devices, i);
+
+		/* tell the user what's going to happen */
+		vercmp = as_utils_vercmp (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+					  fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
+		if (vercmp == 0) {
+			g_print ("Reinstalling %s with %s... ",
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME),
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
+		} else if (vercmp > 0) {
+			g_print ("Downgrading %s from %s to %s... ",
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME),
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
+		} else if (vercmp < 0) {
+			g_print ("Updating %s from %s to %s... ",
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME),
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
+		}
+		if (!fu_util_update (priv,
+				     fu_device_get_id (device),
+				     fu_device_get_metadata (device, FU_DEVICE_KEY_FILENAME_CAB),
+				     priv->flags, error))
+			return FALSE;
+		g_print ("Done!\n");
+	}
+
+	return TRUE;
+}
+
+/**
  * fu_util_update_offline:
  **/
 static gboolean
@@ -451,6 +520,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Install the update now"),
 		     fu_util_update_online);
+	fu_util_add (priv->cmd_array,
+		     "update-prepared",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Install prepared updates now"),
+		     fu_util_update_prepared);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,

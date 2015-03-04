@@ -23,15 +23,19 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
+#include <gio/gunixinputstream.h>
 
 #include "fu-cleanup.h"
 #include "fu-common.h"
 #include "fu-device.h"
+#include "fu-pending.h"
 #include "fu-provider-uefi.h"
 
 static void     fu_provider_finalize	(GObject	*object);
 
 #define FU_PROVIDER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_PROVIDER, FuProviderPrivate))
+
+#define FU_PROVIDER_FIRMWARE_MAX	(32 * 1024 * 1024)	/* bytes */
 
 enum {
 	SIGNAL_DEVICE_ADDED,
@@ -56,24 +60,96 @@ fu_provider_coldplug (FuProvider *provider, GError **error)
 }
 
 /**
+ * fu_provider_schedule_update:
+ **/
+static gboolean
+fu_provider_schedule_update (FuDevice *device, GInputStream *stream, GError **error)
+{
+	gchar tmpname[] = {"XXXXXX.cap"};
+	guint i;
+	_cleanup_bytes_unref_ GBytes *fwbin = NULL;
+	_cleanup_free_ gchar *filename = NULL;
+	_cleanup_object_unref_ FuDevice *device_tmp = NULL;
+	_cleanup_object_unref_ FuPending *pending = NULL;
+
+	/* id already exists */
+	pending = fu_pending_new ();
+	device_tmp = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
+	if (device_tmp != NULL) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INTERNAL,
+			     "%s is already scheduled to be updated",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* get a random filename */
+	for (i = 0; i < 6; i++)
+		tmpname[i] = g_random_int_range ('A', 'Z');
+	filename = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", tmpname, NULL);
+
+	/* just copy to the temp file */
+	if (!g_seekable_seek (G_SEEKABLE (stream), 0, G_SEEK_SET, NULL, error))
+		return FALSE;
+	fwbin = g_input_stream_read_bytes (stream,
+					   FU_PROVIDER_FIRMWARE_MAX,
+					   NULL, error);
+	if (fwbin == NULL)
+		return FALSE;
+	if (!g_file_set_contents (filename,
+				  g_bytes_get_data (fwbin, NULL),
+				  g_bytes_get_size (fwbin),
+				  error))
+		return FALSE;
+
+	/* schedule for next boot */
+	g_debug ("schedule %s to be installed to %s on next boot",
+		 filename, fu_device_get_id (device));
+	fu_device_set_metadata (device, FU_DEVICE_KEY_FILENAME_CAB, filename);
+
+	/* add to database */
+	return fu_pending_add_device (pending, device, error);
+}
+
+/**
  * fu_provider_update:
  **/
 gboolean
 fu_provider_update (FuProvider *provider,
 		    FuDevice *device,
-		    gint fd,
+		    GInputStream *stream_cab,
+		    gint fd_fw,
 		    FuProviderFlags flags,
 		    GError **error)
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
-	if (klass->update == NULL) {
+	_cleanup_object_unref_ FuPending *pending = NULL;
+
+	/* schedule for next reboot, or handle in the provider */
+	if (flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
+		if (klass->update_offline == NULL)
+			return fu_provider_schedule_update (device,
+							    stream_cab,
+							    error);
+		return klass->update_offline (provider, device, fd_fw, flags, error);
+	}
+
+	/* online */
+	if (klass->update_online == NULL) {
 		g_set_error_literal (error,
 				     FU_ERROR,
 				     FU_ERROR_INTERNAL,
-				     "No offline update functionality");
+				     "No online update possible");
 		return FALSE;
 	}
-	return klass->update (provider, device, fd, flags, error);
+	if (!klass->update_online (provider, device, fd_fw, flags, error))
+		return FALSE;
+
+	/* remove from pending database */
+	pending = fu_pending_new ();
+	return fu_pending_remove_device (pending, device, error);
+
 }
 
 /**

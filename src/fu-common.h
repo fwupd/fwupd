@@ -32,6 +32,9 @@
 #define FU_DEVICE_KEY_PROVIDER		"Provider"
 #define FU_DEVICE_KEY_GUID		"Guid"
 #define FU_DEVICE_KEY_ONLY_OFFLINE	"OnlyOffline"
+#define FU_DEVICE_KEY_DISPLAY_NAME	"DisplayName"
+#define FU_DEVICE_KEY_VERSION_NEW	"VersionNew"	/* internal only */
+#define FU_DEVICE_KEY_FILENAME_CAB	"FilenameCab"	/* internal only */
 
 typedef enum {
 	FU_ERROR_INTERNAL,

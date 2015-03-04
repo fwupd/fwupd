@@ -17,6 +17,7 @@ BuildRequires: colord-devel >= 1.0.0
 BuildRequires: polkit-devel >= 0.103
 BuildRequires: libgcab1-devel
 BuildRequires: libappstream-glib-devel
+BuildRequires: sqlite-devel
 
 %description
 fwupd is a daemon to allow session software to update UEFI firmware.
@@ -47,6 +48,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %{_datadir}/polkit-1/actions/org.freedesktop.fwupd.policy
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
 %{_datadir}/man/man1/fwupdmgr.1.gz
+%dir %{_localstatedir}/lib/fwupd
 
 %changelog
 * #LONGDATE# Richard Hughes <richard@hughsie.com> #VERSION#-0.#BUILD##ALPHATAG#

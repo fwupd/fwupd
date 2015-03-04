@@ -59,7 +59,12 @@ struct _FuProviderClass
 	/* vfunc */
 	gboolean	(*coldplug)		(FuProvider	*provider,
 						 GError		**error);
-	gboolean	(*update)		(FuProvider	*provider,
+	gboolean	(*update_online)	(FuProvider	*provider,
+						 FuDevice	*device,
+						 gint		 fd,
+						 FuProviderFlags flags,
+						 GError		**error);
+	gboolean	(*update_offline)	(FuProvider	*provider,
 						 FuDevice	*device,
 						 gint		 fd,
 						 FuProviderFlags flags,
@@ -81,7 +86,8 @@ gboolean	 fu_provider_coldplug		(FuProvider	*provider,
 						 GError		**error);
 gboolean	 fu_provider_update		(FuProvider	*provider,
 						 FuDevice	*device,
-						 gint		 fd,
+						 GInputStream	*stream_cab,
+						 gint		 fd_fw,
 						 FuProviderFlags flags,
 						 GError		**error);
 
