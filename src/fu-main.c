@@ -37,7 +37,7 @@
 #include "fu-common.h"
 #include "fu-debug.h"
 #include "fu-device.h"
-#include "fu-provider-colorhug.h"
+#include "fu-provider-chug.h"
 #include "fu-provider-uefi.h"
 #include "fu-resources.h"
 

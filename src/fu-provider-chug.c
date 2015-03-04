@@ -30,7 +30,7 @@
 #include "fu-cleanup.h"
 #include "fu-common.h"
 #include "fu-device.h"
-#include "fu-provider-colorhug.h"
+#include "fu-provider-chug.h"
 
 static void     fu_provider_chug_finalize	(GObject	*object);
 
