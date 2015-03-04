@@ -19,26 +19,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FU_COMMON_H
-#define __FU_COMMON_H
+#include "config.h"
 
-#define FWUPD_DBUS_PATH			"/"
-#define FWUPD_DBUS_SERVICE		"org.freedesktop.fwupd"
-#define FWUPD_DBUS_INTERFACE		"org.freedesktop.fwupd"
+#include <glib-object.h>
+#include <gio/gio.h>
 
-#define FU_ERROR			fu_error_quark()
+#include "fu-common.h"
 
-#define FU_DEVICE_KEY_VERSION		"Version"
-#define FU_DEVICE_KEY_PROVIDER		"Provider"
-#define FU_DEVICE_KEY_GUID		"Guid"
-#define FU_DEVICE_KEY_ONLY_OFFLINE	"OnlyOffline"
-
-typedef enum {
-	FU_ERROR_INTERNAL,
-	/* private */
-	FU_ERROR_LAST
-} FuError;
-
-GQuark		 fu_error_quark			(void);
-
-#endif /* __FU_COMMON_H */
+/**
+ * fu_error_quark:
+ *
+ * Return value: An error quark.
+ *
+ * Since: 0.1.0
+ **/
+GQuark
+fu_error_quark (void)
+{
+	static GQuark quark = 0;
+	if (!quark) {
+		quark = g_quark_from_static_string ("FuError");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_INTERNAL,
+					     "org.freedesktop.fwupd.InternalError");
+	}
+	return quark;
+}

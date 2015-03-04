@@ -33,7 +33,6 @@
 #include "fu-common.h"
 #include "fu-provider.h"
 
-#define FU_ERROR			1
 #define FU_ERROR_INVALID_ARGUMENTS	0
 #define FU_ERROR_NO_SUCH_CMD		1
 

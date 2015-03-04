@@ -24,6 +24,8 @@ AM_CPPFLAGS =						\
 bin_PROGRAMS = fwupdmgr
 
 fwupdmgr_SOURCES =					\
+	fu-common.c					\
+	fu-common.h					\
 	fu-device.c					\
 	fu-device.h					\
 	fu-util.c
@@ -61,6 +63,7 @@ libexec_PROGRAMS =					\
 
 fwupd_SOURCES =						\
 	fu-cleanup.h					\
+	fu-common.c					\
 	fu-common.h					\
 	fu-debug.c					\
 	fu-debug.h					\
