@@ -224,8 +224,10 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 				      -1,
 				      NULL,
 				      error);
-	if (val == NULL)
+	if (val == NULL) {
+		g_dbus_error_strip_remote_error (*error);
 		return FALSE;
+	}
 
 	/* parse */
 	g_variant_get (val, "(a{sa{sv}})", &iter);
@@ -342,10 +344,14 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 								  NULL,
 								  NULL,
 								  error);
-	if (message == NULL)
+	if (message == NULL) {
+		g_dbus_error_strip_remote_error (*error);
 		return FALSE;
-	if (g_dbus_message_to_gerror (message, error))
+	}
+	if (g_dbus_message_to_gerror (message, error)) {
+		g_dbus_error_strip_remote_error (*error);
 		return FALSE;
+	}
 
 	return TRUE;
 }
