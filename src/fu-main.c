@@ -258,9 +258,12 @@ fu_main_cab_extract_firmware_cb (GCabFile *file, gpointer user_data)
 static gboolean
 fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 {
-	const gchar *guid_tmp;
+	const gchar *tmp;
+	gint vercmp;
 	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_free_ gchar *driver_ver = NULL;
 	_cleanup_free_ gchar *guid = NULL;
+	_cleanup_free_ gchar *version = NULL;
 	_cleanup_object_unref_ GCabCabinet *cab = NULL;
 	_cleanup_object_unref_ GFile *path = NULL;
 	_cleanup_object_unref_ GInputStream *stream_buf = NULL;
@@ -346,13 +349,54 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 			     error_local->message);
 		return FALSE;
 	}
-	guid_tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_GUID);
-	if (g_strcmp0 (guid, guid_tmp) != 0) {
+	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_GUID);
+	if (g_strcmp0 (guid, tmp) != 0) {
 		g_set_error (error,
 			     FU_ERROR,
 			     FU_ERROR_INTERNAL,
 			     "firmware is not for this hw: required %s got %s",
-			     guid_tmp, guid);
+			     tmp, guid);
+		return FALSE;
+	}
+
+	/* get version */
+	driver_ver = g_key_file_get_string (helper->inf_kf, "Version", "DriverVer", NULL);
+	if (driver_ver == NULL) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "DriverVer is missing");
+		return FALSE;
+	}
+
+	/* parse the DriverVer */
+	version = as_utils_parse_driver_version (driver_ver, NULL, &error_local);
+	if (version == NULL) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INTERNAL,
+			     "Could not parse DriverVer '%s': %s",
+			     driver_ver, error_local->message);
+		return FALSE;
+	}
+
+	/* compare the versions of what we have installed */
+	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_VERSION);
+	vercmp = as_utils_vercmp (tmp, version);
+	if (vercmp == 0 && (helper->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL) == 0) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INTERNAL,
+			     "Specified firmware is already installed '%s'",
+			     tmp);
+		return FALSE;
+	}
+	if (vercmp > 0 && (helper->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) == 0) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INTERNAL,
+			     "Specified firmware is older than installed '%s < %s'",
+			     tmp, version);
 		return FALSE;
 	}
 
