@@ -40,6 +40,7 @@
 typedef struct {
 	GOptionContext		*context;
 	GPtrArray		*cmd_array;
+	FuProviderFlags		 flags;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -297,6 +298,14 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 		g_variant_builder_add (&builder, "{sv}",
 				       "offline", g_variant_new_boolean (TRUE));
 	}
+	if (flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "allow-older", g_variant_new_boolean (TRUE));
+	}
+	if (flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "allow-reinstall", g_variant_new_boolean (TRUE));
+	}
 
 	/* open file */
 	fd = open (filename, O_RDONLY);
@@ -354,7 +363,7 @@ fu_util_update_online (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	return fu_util_update (priv, values[0], values[1],
-			       FU_PROVIDER_UPDATE_FLAG_NONE, error);
+			       priv->flags, error);
 }
 
 /**
@@ -371,7 +380,8 @@ fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	return fu_util_update (priv, values[0], values[1],
-			       FU_PROVIDER_UPDATE_FLAG_OFFLINE, error);
+			       priv->flags | FU_PROVIDER_UPDATE_FLAG_OFFLINE,
+			       error);
 }
 
 /**
@@ -391,6 +401,7 @@ main (int argc, char *argv[])
 {
 	FuUtilPrivate *priv;
 	gboolean ret;
+	gboolean force = FALSE;
 	gboolean verbose = FALSE;
 	guint retval = 1;
 	_cleanup_error_free_ GError *error = NULL;
@@ -399,6 +410,9 @@ main (int argc, char *argv[])
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			/* TRANSLATORS: command line option */
 			_("Show extra debugging information"), NULL },
+		{ "force", 'f', 0, G_OPTION_ARG_NONE, &force,
+			/* TRANSLATORS: command line option */
+			_("Force the installation of firmware"), NULL },
 		{ NULL}
 	};
 
@@ -458,6 +472,12 @@ main (int argc, char *argv[])
 	} else {
 		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
 				   fu_util_ignore_cb, NULL);
+	}
+
+	/* we're feeling naughty */
+	if (force) {
+		priv->flags = FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL |
+			      FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER;
 	}
 
 	/* run the specified command */
