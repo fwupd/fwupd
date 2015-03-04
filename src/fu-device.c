@@ -118,8 +118,13 @@ fu_device_to_variant (FuDevice *device)
 	for (l = keys; l != NULL; l = l->next) {
 		key = l->data;
 		value = g_hash_table_lookup (device->priv->metadata, key);
-		g_variant_builder_add (&builder, "{sv}",
-				       key, g_variant_new_string (value));
+		if (g_strcmp0 (value, "TRUE") == 0) {
+			g_variant_builder_add (&builder, "{sv}",
+					       key, g_variant_new_boolean (TRUE));
+		} else {
+			g_variant_builder_add (&builder, "{sv}",
+					       key, g_variant_new_string (value));
+		}
 	}
 	return g_variant_new ("{sa{sv}}", device->priv->id, &builder);
 }
@@ -139,6 +144,8 @@ fu_device_set_metadata_from_iter (FuDevice *device, GVariantIter *iter)
 		if (g_strcmp0 (type, "s") == 0) {
 			fu_device_set_metadata (device, key,
 						g_variant_get_string (variant, NULL));
+		} else if (g_strcmp0 (type, "b") == 0) {
+			fu_device_set_metadata (device, key, "TRUE");
 		} else {
 			fu_device_set_metadata (device, key, "???");
 		}

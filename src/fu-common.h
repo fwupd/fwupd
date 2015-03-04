@@ -32,5 +32,6 @@
 #define FU_DEVICE_KEY_VERSION		"Version"
 #define FU_DEVICE_KEY_PROVIDER		"Provider"
 #define FU_DEVICE_KEY_GUID		"Guid"
+#define FU_DEVICE_KEY_ONLY_OFFLINE	"OnlyOffline"
 
 #endif /* __FU_COMMON_H */
