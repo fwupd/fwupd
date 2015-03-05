@@ -125,6 +125,7 @@ fu_provider_update (FuProvider *provider,
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
 	_cleanup_object_unref_ FuPending *pending = NULL;
+	_cleanup_object_unref_ FuDevice *device_tmp = NULL;
 
 	/* schedule for next reboot, or handle in the provider */
 	if (flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
@@ -148,8 +149,32 @@ fu_provider_update (FuProvider *provider,
 
 	/* remove from pending database */
 	pending = fu_pending_new ();
-	return fu_pending_remove_device (pending, device, error);
+	device_tmp = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
+	if (device_tmp != NULL) {
+		const gchar *tmp;
 
+		/* remove from pending database */
+		if (!fu_pending_remove_device (pending, device, error))
+			return FALSE;
+
+		/* delete cab file */
+		tmp = fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_FILENAME_CAB);
+		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
+			_cleanup_error_free_ GError *error_local = NULL;
+			_cleanup_object_unref_ GFile *file = NULL;
+			file = g_file_new_for_path (tmp);
+			if (!g_file_delete (file, NULL, &error_local)) {
+				g_set_error (error,
+					     FU_ERROR,
+					     FU_ERROR_INVALID_FILE,
+					     "Failed to delete %s: %s",
+					     tmp, error_local->message);
+				return FALSE;
+			}
+		}
+	}
+
+	return TRUE;
 }
 
 /**
