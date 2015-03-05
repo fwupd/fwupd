@@ -77,7 +77,7 @@ fu_pending_func (void)
 
 	/* get device that does not exist */
 	device = fu_pending_get_device (pending, "XXXXXXXXXXXXX", &error);
-	g_assert_error (error, FU_ERROR, FU_ERROR_INTERNAL);
+	g_assert_error (error, FU_ERROR, FU_ERROR_NO_SUCH_DEVICE);
 	g_assert (device == NULL);
 	g_clear_error (&error);
 
@@ -91,7 +91,7 @@ fu_pending_func (void)
 
 	/* get device that does not exist */
 	device = fu_pending_get_device (pending, "self-test", &error);
-	g_assert_error (error, FU_ERROR, FU_ERROR_INTERNAL);
+	g_assert_error (error, FU_ERROR, FU_ERROR_NO_SUCH_DEVICE);
 	g_assert (device == NULL);
 	g_clear_error (&error);
 }

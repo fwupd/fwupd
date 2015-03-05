@@ -107,7 +107,7 @@ fu_provider_chug_wait_for_connect (FuProviderChugItem *item, GError **error)
 	if (item->reconnect_id == 0) {
 		g_set_error_literal (error,
 				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FU_ERROR_NO_SUCH_DEVICE,
 				     "request timed out");
 		return FALSE;
 	}
@@ -127,7 +127,7 @@ fu_provider_chug_open (FuProviderChugItem *item, GError **error)
 	if (!ch_device_open (item->usb_device, &error_local)) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_READ,
 			     "failed to open %s device: %s",
 			     fu_device_get_id (item->device),
 			     error_local->message);
@@ -203,7 +203,7 @@ fu_provider_chug_update (FuProvider *provider,
 	if (item == NULL) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_NO_SUCH_DEVICE,
 			     "cannot find: %s",
 			     fu_device_get_id (device));
 		return FALSE;
@@ -228,7 +228,7 @@ fu_provider_chug_update (FuProvider *provider,
 					      NULL, &error_local)) {
 			g_set_error (error,
 				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FU_ERROR_FAILED_TO_WRITE,
 				     "failed to reset device: %s",
 				     error_local->message);
 			g_usb_device_close (item->usb_device, NULL);
@@ -260,7 +260,7 @@ fu_provider_chug_update (FuProvider *provider,
 				      NULL, &error_local)) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_WRITE,
 			     "failed to write firmware: %s",
 			     error_local->message);
 		g_usb_device_close (item->usb_device, NULL);
@@ -275,7 +275,7 @@ fu_provider_chug_update (FuProvider *provider,
 				      NULL, &error_local)) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_WRITE,
 			     "failed to boot flash: %s",
 			     error_local->message);
 		g_usb_device_close (item->usb_device, NULL);
@@ -299,7 +299,7 @@ fu_provider_chug_update (FuProvider *provider,
 				      NULL, &error_local)) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_WRITE,
 			     "failed to set flash success: %s",
 			     error_local->message);
 		g_usb_device_close (item->usb_device, NULL);
@@ -310,7 +310,7 @@ fu_provider_chug_update (FuProvider *provider,
 	if (!g_usb_device_close (item->usb_device, &error_local)) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_WRITE,
 			     "failed to close device: %s",
 			     error_local->message);
 		g_usb_device_close (item->usb_device, NULL);

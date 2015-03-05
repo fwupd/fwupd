@@ -78,7 +78,7 @@ fu_provider_schedule_update (FuDevice *device, GInputStream *stream, GError **er
 	if (device_tmp != NULL) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_ALREADY_SCHEDULED,
 			     "%s is already scheduled to be updated",
 			     fu_device_get_id (device));
 		return FALSE;
@@ -139,7 +139,7 @@ fu_provider_update (FuProvider *provider,
 	if (klass->update_online == NULL) {
 		g_set_error_literal (error,
 				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FU_ERROR_NOT_POSSIBLE,
 				     "No online update possible");
 		return FALSE;
 	}

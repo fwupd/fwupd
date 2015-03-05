@@ -35,9 +35,6 @@
 #include "fu-pending.h"
 #include "fu-provider.h"
 
-#define FU_ERROR_INVALID_ARGUMENTS	0
-#define FU_ERROR_NO_SUCH_CMD		1
-
 typedef struct {
 	GOptionContext		*context;
 	GPtrArray		*cmd_array;
@@ -186,7 +183,7 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 					item->name,
 					item->arguments ? item->arguments : "");
 	}
-	g_set_error_literal (error, FU_ERROR, FU_ERROR_NO_SUCH_CMD, string->str);
+	g_set_error_literal (error, FU_ERROR, FU_ERROR_NO_SUCH_METHOD, string->str);
 	return FALSE;
 }
 
@@ -317,7 +314,7 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 	if (fd < 0) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_INVALID_FILE,
 			     "failed to open %s",
 			     filename);
 		return FALSE;
@@ -402,7 +399,7 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (devices->len == 0) {
 		g_set_error_literal (error,
 				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FU_ERROR_NOTHING_TO_DO,
 				     "No updates prepared");
 		return FALSE;
 	}
@@ -564,7 +561,7 @@ main (int argc, char *argv[])
 	/* run the specified command */
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
-		if (g_error_matches (error, FU_ERROR, FU_ERROR_NO_SUCH_CMD)) {
+		if (g_error_matches (error, FU_ERROR, FU_ERROR_NO_SUCH_METHOD)) {
 			_cleanup_free_ gchar *tmp = NULL;
 			tmp = g_option_context_get_help (priv->context, TRUE, NULL);
 			g_print ("%s", tmp);

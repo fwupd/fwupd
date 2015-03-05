@@ -66,7 +66,7 @@ fu_pending_load (FuPending *pending, GError **error)
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_READ,
 			     "Can't open %s: %s",
 			     filename, sqlite3_errmsg (pending->priv->db));
 		sqlite3_close (pending->priv->db);
@@ -89,7 +89,7 @@ fu_pending_load (FuPending *pending, GError **error)
 		if (rc != SQLITE_OK) {
 			g_set_error (error,
 				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FU_ERROR_FAILED_TO_WRITE,
 				     "Cannot create database: %s",
 				     error_msg);
 			sqlite3_free (error_msg);
@@ -136,7 +136,7 @@ fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_WRITE,
 			     "SQL error: %s",
 			     error_msg);
 		sqlite3_free (error_msg);
@@ -177,7 +177,7 @@ fu_pending_remove_device (FuPending *pending, FuDevice *device, GError **error)
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_WRITE,
 			     "SQL error: %s",
 			     error_msg);
 		sqlite3_free (error_msg);
@@ -268,7 +268,7 @@ fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **erro
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_READ,
 			     "SQL error: %s",
 			     error_msg);
 		sqlite3_free (error_msg);
@@ -277,7 +277,7 @@ fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **erro
 	if (array_tmp->len == 0) {
 		g_set_error_literal (error,
 				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FU_ERROR_NO_SUCH_DEVICE,
 				     "No devices found");
 		goto out;
 	}
@@ -319,7 +319,7 @@ fu_pending_get_devices (FuPending *pending, GError **error)
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_READ,
 			     "SQL error: %s",
 			     error_msg);
 		sqlite3_free (error_msg);

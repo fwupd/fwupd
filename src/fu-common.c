@@ -42,6 +42,42 @@ fu_error_quark (void)
 		g_dbus_error_register_error (quark,
 					     FU_ERROR_INTERNAL,
 					     "org.freedesktop.fwupd.InternalError");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_ALREADY_NEWER_VERSION,
+					     "org.freedesktop.fwupd.AlreadyNewerVersion");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_ALREADY_SAME_VERSION,
+					     "org.freedesktop.fwupd.AlreadySameVersion");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_ALREADY_SCHEDULED,
+					     "org.freedesktop.fwupd.AlreadyScheduled");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_FAILED_TO_AUTHENTICATE,
+					     "org.freedesktop.fwupd.FailedToAuthenticate");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_FAILED_TO_READ,
+					     "org.freedesktop.fwupd.FailedToRead");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_FAILED_TO_WRITE,
+					     "org.freedesktop.fwupd.FailedToWrite");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_INVALID_FILE,
+					     "org.freedesktop.fwupd.InvalidFile");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_NO_SUCH_DEVICE,
+					     "org.freedesktop.fwupd.NoSuchDevice");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_NO_SUCH_METHOD,
+					     "org.freedesktop.fwupd.NoSuchMethod");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_NO_SUCH_PROPERTY,
+					     "org.freedesktop.fwupd.NoSuchProperty");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_NOTHING_TO_DO,
+					     "org.freedesktop.fwupd.NothingToDo");
+		g_dbus_error_register_error (quark,
+					     FU_ERROR_NOT_POSSIBLE,
+					     "org.freedesktop.fwupd.NotPossible");
 	}
 	return quark;
 }

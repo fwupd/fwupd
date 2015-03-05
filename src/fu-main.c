@@ -170,7 +170,7 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	if (auth == NULL) {
 		g_dbus_method_invocation_return_error (helper->invocation,
 						       FU_ERROR,
-						       FU_ERROR_INTERNAL,
+						       FU_ERROR_FAILED_TO_AUTHENTICATE,
 						       "could not check for auth: %s",
 						       error->message);
 		fu_main_helper_free (helper);
@@ -181,7 +181,7 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	if (!polkit_authorization_result_get_is_authorized (auth)) {
 		g_dbus_method_invocation_return_error (helper->invocation,
 						       FU_ERROR,
-						       FU_ERROR_INTERNAL,
+						       FU_ERROR_FAILED_TO_AUTHENTICATE,
 						       "failed to obtain auth");
 		fu_main_helper_free (helper);
 		return;
@@ -192,7 +192,7 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	if (item == NULL) {
 		g_dbus_method_invocation_return_error (helper->invocation,
 						       FU_ERROR,
-						       FU_ERROR_INTERNAL,
+						       FU_ERROR_NO_SUCH_DEVICE,
 						       "device %s was removed",
 						       helper->id);
 		fu_main_helper_free (helper);
@@ -283,7 +283,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		if (data == NULL) {
 			g_set_error_literal (error,
 					     FU_ERROR,
-					     FU_ERROR_INTERNAL,
+					     FU_ERROR_FAILED_TO_READ,
 					     error_local->message);
 			return FALSE;
 		}
@@ -293,7 +293,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (!gcab_cabinet_load (cab, helper->cab_stream, NULL, &error_local)) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_READ,
 			     "cannot load .cab file: %s",
 			     error_local->message);
 		return FALSE;
@@ -304,7 +304,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (helper->tmp_path == NULL) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_WRITE,
 			     "failed to create temp dir: %s",
 			     error_local->message);
 		return FALSE;
@@ -316,7 +316,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 					  helper, NULL, &error_local)) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_WRITE,
 			     "failed to extract .cab file: %s",
 			     error_local->message);
 		return FALSE;
@@ -326,7 +326,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (helper->inf_filename == NULL) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_INVALID_FILE,
 			     "no .inf file in.cab file");
 		return FALSE;
 	}
@@ -335,7 +335,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (helper->inf_kf == NULL) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_INVALID_FILE,
 			     ".inf file could not be loaded: %s",
 			     error_local->message);
 		return FALSE;
@@ -347,7 +347,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (guid == NULL) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_INVALID_FILE,
 			     ".inf file not firmmare: %s",
 			     error_local->message);
 		return FALSE;
@@ -356,7 +356,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (g_strcmp0 (guid, tmp) != 0) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_INVALID_FILE,
 			     "firmware is not for this hw: required %s got %s",
 			     tmp, guid);
 		return FALSE;
@@ -367,7 +367,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (driver_ver == NULL) {
 		g_set_error_literal (error,
 				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FU_ERROR_INVALID_FILE,
 				     "DriverVer is missing");
 		return FALSE;
 	}
@@ -377,7 +377,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (version == NULL) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_INVALID_FILE,
 			     "Could not parse DriverVer '%s': %s",
 			     driver_ver, error_local->message);
 		return FALSE;
@@ -398,7 +398,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (vercmp == 0 && (helper->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL) == 0) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_ALREADY_SAME_VERSION,
 			     "Specified firmware is already installed '%s'",
 			     tmp);
 		return FALSE;
@@ -406,7 +406,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (vercmp > 0 && (helper->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) == 0) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_ALREADY_NEWER_VERSION,
 			     "Specified firmware is older than installed '%s < %s'",
 			     tmp, version);
 		return FALSE;
@@ -414,12 +414,12 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 
 	/* find out what firmware file we have to open */
 	helper->firmware_basename = g_key_file_get_string (helper->inf_kf,
-					      "Firmware_CopyFiles",
-					      "Value000", NULL);
+							   "Firmware_CopyFiles",
+							   "Value000", NULL);
 	if (helper->firmware_basename == NULL) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_INVALID_FILE,
 			     ".inf file has no Firmware_CopyFiles");
 		return FALSE;
 	}
@@ -431,7 +431,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 					  helper, NULL, &error_local)) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_WRITE,
 			     "failed to extract .cab file: %s",
 			     error_local->message);
 		return FALSE;
@@ -439,7 +439,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (helper->firmware_filename == NULL) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_INVALID_FILE,
 			     "%s not found in cab file",
 			     helper->firmware_basename);
 		return FALSE;
@@ -450,7 +450,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (helper->firmware_fd < 0) {
 		g_set_error (error,
 			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FU_ERROR_FAILED_TO_READ,
 			     "failed to open %s",
 			     helper->firmware_basename);
 		return FALSE;
@@ -502,7 +502,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		if (item == NULL) {
 			g_dbus_method_invocation_return_error (invocation,
 							       FU_ERROR,
-							       FU_ERROR_INTERNAL,
+							       FU_ERROR_NO_SUCH_DEVICE,
 							       "no such ID %s",
 							       id);
 			return;
@@ -530,7 +530,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 1) {
 			g_dbus_method_invocation_return_error (invocation,
 							       FU_ERROR,
-							       FU_ERROR_INTERNAL,
+							       FU_ERROR_NO_SUCH_PROPERTY,
 							       "invalid handle");
 			return;
 		}
@@ -571,7 +571,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	/* we suck */
 	g_dbus_method_invocation_return_error (invocation,
 					       FU_ERROR,
-					       FU_ERROR_INTERNAL,
+					       FU_ERROR_NO_SUCH_METHOD,
 					       "no such method %s",
 					       method_name);
 }
@@ -591,7 +591,7 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 	/* return an error */
 	g_set_error (error,
 		     FU_ERROR,
-		     FU_ERROR_INTERNAL,
+		     FU_ERROR_NO_SUCH_METHOD,
 		     "failed to get daemon property %s",
 		     property_name);
 	return NULL;
