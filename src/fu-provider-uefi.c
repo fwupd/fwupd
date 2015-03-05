@@ -23,6 +23,7 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
+#include <fwup.h>
 
 #include "fu-cleanup.h"
 #include "fu-common.h"
@@ -43,8 +44,30 @@ fu_provider_uefi_update (FuProvider *provider,
 			 FuProviderFlags flags,
 			 GError **error)
 {
-	//FIXME
-	g_debug ("DOING UEFI UPDATE USING FD %i", fd);
+	const gchar *guid_str;
+	efi_guid_t guid;
+
+	/* get the hardware we're referencing */
+	guid_str = fu_device_get_metadata (device, FU_DEVICE_KEY_GUID);
+	if (efi_str_to_guid (guid_str, &guid) < 0) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_NOT_POSSIBLE,
+				     "Failed to prepare UEFI update");
+		return FALSE;
+	}
+
+	/* perform the update */
+	g_debug ("Performing UEFI capsule update");
+	if (fwup_set_up_update (&guid, fd) < 0) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_NOT_POSSIBLE,
+			     "UEFI firmware update failed: %s",
+			     fwup_strerror (fwup_error));
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -55,17 +78,67 @@ static gboolean
 fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 {
 	_cleanup_object_unref_ FuDevice *dev = NULL;
+	fwup_resource_iter *iter = NULL;
 
-	//FIXME
-	g_debug ("Adding fake UEFI device");
-	dev = fu_device_new ();
-	fu_device_set_id (dev, "UEFI-819b858e-c52c-402f-80e1-5b311b6c1959-dev1");
-	fu_device_set_metadata (dev, FU_DEVICE_KEY_PROVIDER, "UEFI");
-	fu_device_set_metadata (dev, FU_DEVICE_KEY_GUID, "819b858e-c52c-402f-80e1-5b311b6c1959");
-	fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, "12345");
-	fu_device_set_metadata (dev, FU_DEVICE_KEY_ONLY_OFFLINE, "TRUE");
-	fu_device_set_metadata (dev, FU_DEVICE_KEY_DISPLAY_NAME, "Dell PowerEdge 8000");
-	fu_provider_emit_added (provider, dev);
+	/* not supported */
+	if (!fwup_supported ()) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_NOT_POSSIBLE,
+				     "UEFI firmware updating not supported");
+		return FALSE;
+	}
+
+	if (fwup_resource_iter_create (&iter) < 0) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "Cannot create fwup iter");
+		return FALSE;
+	}
+
+	while (1) {
+		fwup_resource re;
+		int rc;
+		_cleanup_free_ gchar *guid = NULL;
+		_cleanup_free_ gchar *id = NULL;
+		_cleanup_free_ gchar *version = NULL;
+		_cleanup_free_ gchar *version_lowest = NULL;
+
+		rc = fwup_resource_iter_next (iter, &re);
+		if (rc == 0)
+			break;
+		if (rc < 0) {
+			g_warning ("failed to get next fwup iter");
+			break;
+		}
+
+		/* convert to strings */
+		guid = g_strdup ("00000000-0000-0000-0000-000000000000");
+		if (efi_guid_to_str (&re.guid, &guid) < 0) {
+			g_warning ("failed to convert guid to string");
+			continue;
+		}
+		version = g_strdup_printf ("%" G_GUINT32_FORMAT, re.fw_version);
+		id = g_strdup_printf ("UEFI-%s-dev%" G_GUINT64_FORMAT,
+				      guid, re.hardware_instance);
+
+		dev = fu_device_new ();
+		fu_device_set_id (dev, id);
+		fu_device_set_metadata (dev, FU_DEVICE_KEY_PROVIDER, "UEFI");
+		fu_device_set_metadata (dev, FU_DEVICE_KEY_GUID, guid);
+		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
+		if (re.lowest_supported_fw_version != 0) {
+			version_lowest = g_strdup_printf ("%" G_GUINT32_FORMAT,
+							  re.lowest_supported_fw_version);
+			fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION_LOWEST,
+						version_lowest);
+		}
+		fu_device_set_metadata (dev, FU_DEVICE_KEY_ONLY_OFFLINE, "TRUE");
+		//fu_device_set_metadata (dev, FU_DEVICE_KEY_DISPLAY_NAME, "FIXME");
+		fu_provider_emit_added (provider, dev);
+	}
+	fwup_resource_iter_destroy (&iter);
 	return TRUE;
 }
 

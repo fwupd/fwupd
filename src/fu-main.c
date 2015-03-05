@@ -390,6 +390,17 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	}
 	fu_device_set_metadata (helper->device, FU_DEVICE_KEY_VERSION_NEW, version);
 
+	/* compare to the lowest supported version, if it exists */
+	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_VERSION_LOWEST);
+	if (tmp != NULL && as_utils_vercmp (tmp, version) > 0) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_ALREADY_NEWER_VERSION,
+			     "Specified firmware is older than the minimum "
+			     "required version '%s < %s'", tmp, version);
+		return FALSE;
+	}
+
 	/* compare the versions of what we have installed */
 	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_VERSION);
 	if (tmp == NULL) {

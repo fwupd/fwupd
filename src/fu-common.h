@@ -35,6 +35,7 @@
 #define FU_DEVICE_KEY_DISPLAY_NAME	"DisplayName"
 #define FU_DEVICE_KEY_VERSION_NEW	"VersionNew"	/* internal only */
 #define FU_DEVICE_KEY_FILENAME_CAB	"FilenameCab"	/* internal only */
+#define FU_DEVICE_KEY_VERSION_LOWEST	"VersionLowest"
 
 /* if adding values here, remember to register them in fu_error_quark() */
 typedef enum {
