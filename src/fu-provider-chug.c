@@ -217,6 +217,19 @@ fu_provider_chug_update (FuProvider *provider,
 	if (item->fw_bin == NULL)
 		return FALSE;
 
+	/* check this firmware is actually for this device */
+	if (!ch_device_check_firmware (item->usb_device,
+				       g_bytes_get_data (item->fw_bin, NULL),
+				       g_bytes_get_size (item->fw_bin),
+				       &error_local)) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_NOT_POSSIBLE,
+			     "firmware is not suitable: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
 	/* switch to bootloader mode */
 	if (!item->is_bootloader) {
 		g_debug ("ColorHug: Switching to bootloader mode");
