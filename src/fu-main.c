@@ -37,9 +37,15 @@
 #include "fu-common.h"
 #include "fu-debug.h"
 #include "fu-device.h"
-#include "fu-provider-chug.h"
-#include "fu-provider-uefi.h"
+#include "fu-provider.h"
 #include "fu-resources.h"
+
+#ifdef HAVE_COLORHUG
+  #include "fu-provider-chug.h"
+#endif
+#ifdef HAVE_UEFI
+  #include "fu-provider-uefi.h"
+#endif
 
 typedef struct {
 	GDBusConnection		*connection;
@@ -792,8 +798,12 @@ main (int argc, char *argv[])
 
 	/* add providers */
 	priv->providers = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+#ifdef HAVE_COLORHUG
 	fu_main_add_provider (priv, fu_provider_chug_new ());
+#endif
+#ifdef HAVE_UEFI
 	fu_main_add_provider (priv, fu_provider_uefi_new ());
+#endif
 
 	/* load introspection from file */
 	priv->introspection_daemon = fu_main_load_introspection (FWUPD_DBUS_INTERFACE ".xml",

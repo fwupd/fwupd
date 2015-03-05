@@ -49,6 +49,10 @@ MAINTAINERCLEANFILES =					\
 	$(srcdir)/fwupd-*.tar.*			\
 	`find "$(srcdir)" -type f -name Makefile.in -print`
 
+DISTCHECK_CONFIGURE_FLAGS =				\
+	--enable-colorhug				\
+	--enable-uefi
+
 GITIGNOREFILES =					\
 	.tx
 

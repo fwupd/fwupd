@@ -87,12 +87,29 @@ dnl - Check library dependencies
 dnl ---------------------------------------------------------------------------
 PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.36.0 gobject-2.0 gthread-2.0 gio-2.0 >= 2.25.9 gio-unix-2.0)
 PKG_CHECK_MODULES(GUDEV, gudev-1.0)
-PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.9 gusb >= 0.2.2)
 PKG_CHECK_MODULES(POLKIT, polkit-gobject-1 >= 0.103)
 PKG_CHECK_MODULES(GCAB, libgcab-1.0)
 PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
+
+# ColorHug support
+AC_ARG_ENABLE(colorhug, AS_HELP_STRING([--enable-colorhug],[Enable ColorHug support]),
+	      enable_colorhug=$enableval, enable_colorhug=yes)
+if test x$enable_colorhug != xno; then
+	PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.9 gusb >= 0.2.2)
+	AC_DEFINE(HAVE_COLORHUG,1,[Use ColorHug support])
+fi
+AM_CONDITIONAL(HAVE_COLORHUG, test x$enable_colorhug = xyes)
+
+# UEFI support
+AC_ARG_ENABLE(uefi, AS_HELP_STRING([--enable-uefi],[Enable ColorHug support]),
+	      enable_uefi=$enableval, enable_uefi=yes)
+if test x$enable_uefi != xno; then
+	PKG_CHECK_MODULES(UEFI, fwup)
+	AC_DEFINE(HAVE_UEFI,1,[Use ColorHug support])
+fi
+AM_CONDITIONAL(HAVE_UEFI, test x$enable_uefi = xyes)
 
 dnl ---------------------------------------------------------------------------
 dnl - Makefiles, etc.

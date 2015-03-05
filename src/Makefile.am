@@ -4,12 +4,13 @@ dist_introspection_DATA = 				\
 
 AM_CPPFLAGS =						\
 	$(APPSTREAM_GLIB_CFLAGS)			\
-	$(PIE_CFLAGS)					\
-	$(GCAB_CFLAGS)					\
 	$(COLORHUG_CFLAGS)				\
+	$(GCAB_CFLAGS)					\
 	$(GLIB_CFLAGS)					\
-	$(POLKIT_CFLAGS)				\
 	$(GUDEV_CFLAGS)					\
+	$(PIE_CFLAGS)					\
+	$(POLKIT_CFLAGS)				\
+	$(UEFI_CFLAGS)					\
 	-DG_LOG_DOMAIN=\"Fu\"				\
 	-DLIBEXECDIR=\"$(libexecdir)\"			\
 	-DLIBDIR=\"$(libdir)\"				\
@@ -77,22 +78,31 @@ fwupd_SOURCES =						\
 	fu-pending.h					\
 	fu-provider.c					\
 	fu-provider.h					\
-	fu-provider-chug.c				\
-	fu-provider-chug.h				\
-	fu-provider-uefi.c				\
-	fu-provider-uefi.h				\
 	fu-resources.c					\
 	fu-resources.h					\
 	fu-main.c
 
+if HAVE_COLORHUG
+fwupd_SOURCES +=					\
+	fu-provider-chug.c				\
+	fu-provider-chug.h
+endif
+
+if HAVE_UEFI
+fwupd_SOURCES +=					\
+	fu-provider-uefi.c				\
+	fu-provider-uefi.h
+endif
+
 fwupd_LDADD =						\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(COLORHUG_LIBS)				\
-	$(POLKIT_LIBS)					\
-	$(GUDEV_LIBS)					\
 	$(GCAB_LIBS)					\
+	$(GLIB_LIBS)					\
+	$(GUDEV_LIBS)					\
+	$(POLKIT_LIBS)					\
 	$(SQLITE_LIBS)					\
-	$(GLIB_LIBS)
+	$(UEFI_LIBS)
 
 fwupd_LDFLAGS =						\
 	$(PIE_LDFLAGS)					\
