@@ -38,6 +38,8 @@
 #define FU_DEVICE_KEY_VERSION_NEW	"VersionNew"	/* internal only */
 #define FU_DEVICE_KEY_FILENAME_CAB	"FilenameCab"	/* internal only */
 #define FU_DEVICE_KEY_VERSION_LOWEST	"VersionLowest"
+#define FU_DEVICE_KEY_VENDOR		"Vendor"
+#define FU_DEVICE_KEY_SUMMARY		"Summary"
 
 /* if adding values here, remember to register them in fu_error_quark() */
 typedef enum {

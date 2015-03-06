@@ -390,6 +390,106 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_get_details:
+ **/
+static gboolean
+fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	GVariant *body;
+	GVariant *val;
+	GVariant *variant;
+	const gchar *key;
+	const gchar *type;
+	gint fd;
+	gint retval;
+	guint i;
+	_cleanup_object_unref_ GDBusConnection *conn = NULL;
+	_cleanup_object_unref_ GDBusMessage *message = NULL;
+	_cleanup_object_unref_ GDBusMessage *request = NULL;
+	_cleanup_object_unref_ GUnixFDList *fd_list = NULL;
+	_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
+
+	/* check args */
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'filename'");
+		return FALSE;
+	}
+
+	/* get request */
+	conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+	if (conn == NULL)
+		return FALSE;
+
+	/* open file */
+	fd = open (values[0], O_RDONLY);
+	if (fd < 0) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INVALID_FILE,
+			     "failed to open %s",
+			     values[0]);
+		return FALSE;
+	}
+
+	/* set out of band file descriptor */
+	fd_list = g_unix_fd_list_new ();
+	retval = g_unix_fd_list_append (fd_list, fd, NULL);
+	g_assert (retval != -1);
+	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
+						  FWUPD_DBUS_PATH,
+						  FWUPD_DBUS_INTERFACE,
+						  "GetDetails");
+	g_dbus_message_set_unix_fd_list (request, fd_list);
+
+	/* g_unix_fd_list_append did a dup() already */
+	close (fd);
+
+	/* send message */
+	body = g_variant_new ("(h)", fd > -1 ? 0 : -1);
+	g_dbus_message_set_body (request, body);
+	message = g_dbus_connection_send_message_with_reply_sync (conn,
+								  request,
+								  G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+								  -1,
+								  NULL,
+								  NULL,
+								  error);
+	if (message == NULL) {
+		g_dbus_error_strip_remote_error (*error);
+		return FALSE;
+	}
+	if (g_dbus_message_to_gerror (message, error)) {
+		g_dbus_error_strip_remote_error (*error);
+		return FALSE;
+	}
+
+	/* print results */
+	val = g_dbus_message_get_body (message);
+	g_variant_get (val, "(a{sv})", &iter);
+	while (g_variant_iter_next (iter, "{&sv}", &key, &variant)) {
+		g_print ("%s", key);
+		for (i = strlen (key); i < 15; i++)
+			g_print (" ");
+		type = g_variant_get_type_string (variant);
+		if (g_strcmp0 (type, "s") == 0) {
+			g_print ("%s\n", g_variant_get_string (variant, NULL));
+		} else if (g_strcmp0 (type, "b") == 0) {
+			g_print ("%s\n", g_variant_get_boolean (variant) ? "True" : "False");
+		} else if (g_strcmp0 (type, "t") == 0) {
+			g_print ("%" G_GUINT64_FORMAT "\n", g_variant_get_uint64 (variant));
+		} else {
+			g_print ("???? [%s]\n", type);
+		}
+		g_variant_unref (variant);
+	}
+
+	return TRUE;
+}
+
+/**
  * fu_util_update_prepared:
  **/
 static gboolean
@@ -546,6 +646,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware file on this hardware"),
 		     fu_util_install);
+	fu_util_add (priv->cmd_array,
+		     "get-details",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets details about a firmware file"),
+		     fu_util_get_details);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,

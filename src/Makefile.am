@@ -68,6 +68,8 @@ libexec_PROGRAMS =					\
 
 fwupd_SOURCES =						\
 	fu-cleanup.h					\
+	fu-cab.c					\
+	fu-cab.h					\
 	fu-common.c					\
 	fu-common.h					\
 	fu-debug.c					\
@@ -122,6 +124,8 @@ check_PROGRAMS =					\
 	fu-self-test
 
 fu_self_test_SOURCES =					\
+	fu-cab.c					\
+	fu-cab.h					\
 	fu-common.c					\
 	fu-common.h					\
 	fu-device.c					\
@@ -131,7 +135,9 @@ fu_self_test_SOURCES =					\
 	fu-self-test.c
 
 fu_self_test_LDADD =					\
+	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\
+	$(GCAB_LIBS)					\
 	$(GLIB_LIBS)
 
 fu_self_test_CFLAGS = $(WARNINGFLAGS_C)

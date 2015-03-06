@@ -1,0 +1,440 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
+ *
+ * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ *
+ * Licensed under the GNU General Public License Version 2
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include "config.h"
+
+#include <appstream-glib.h>
+#include <glib-object.h>
+#include <gio/gio.h>
+#include <libgcab.h>
+#include <glib/gstdio.h>
+#include <gio/gunixinputstream.h>
+
+#include "fu-cleanup.h"
+#include "fu-common.h"
+#include "fu-cab.h"
+
+static void fu_cab_finalize			 (GObject *object);
+
+#define FU_CAB_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_CAB, FuCabPrivate))
+
+/**
+ * FuCabPrivate:
+ *
+ * Private #FuCab data
+ **/
+struct _FuCabPrivate
+{
+	GCabCabinet			*gcab;
+	GInputStream			*cab_stream;
+	GKeyFile			*inf_kf;
+	gchar				*firmware_basename;
+	gchar				*firmware_filename;
+	gchar				*guid;
+	gchar				*inf_filename;
+	gchar				*tmp_path;
+	gchar				*summary;
+	gchar				*vendor;
+	gchar				*version;
+};
+
+G_DEFINE_TYPE (FuCab, fu_cab, G_TYPE_OBJECT)
+
+/**
+ * fu_cab_extract_inf_cb:
+ **/
+static gboolean
+fu_cab_extract_inf_cb (GCabFile *file, gpointer user_data)
+{
+	FuCab *cab = FU_CAB (user_data);
+	FuCabPrivate *priv = cab->priv;
+
+	/* only extract the first .inf file found in the .cab file */
+	if (priv->inf_filename == NULL &&
+	    g_str_has_suffix (gcab_file_get_name (file), ".inf")) {
+		priv->inf_filename = g_build_filename (priv->tmp_path,
+							 gcab_file_get_name (file),
+							 NULL);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fu_cab_extract_firmware_cb:
+ **/
+static gboolean
+fu_cab_extract_firmware_cb (GCabFile *file, gpointer user_data)
+{
+	FuCab *cab = FU_CAB (user_data);
+	FuCabPrivate *priv = cab->priv;
+
+	/* only extract the firmware file listed in the .inf file */
+	if (priv->firmware_filename == NULL &&
+	    g_strcmp0 (gcab_file_get_name (file),
+		       priv->firmware_basename) == 0) {
+		priv->firmware_filename = g_build_filename (priv->tmp_path,
+							      gcab_file_get_name (file),
+							      NULL);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fu_cab_parse:
+ **/
+static gboolean
+fu_cab_parse (FuCab *cab, GError **error)
+{
+	AsRelease *rel;
+	FuCabPrivate *priv = cab->priv;
+	const gchar *tmp;
+	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_object_unref_ AsApp *app = NULL;
+	_cleanup_object_unref_ GFile *path = NULL;
+
+	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
+
+	/* open the file */
+	priv->gcab = gcab_cabinet_new ();
+	if (!gcab_cabinet_load (priv->gcab, priv->cab_stream, NULL, &error_local)) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_FAILED_TO_READ,
+			     "cannot load .cab file: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* decompress to /tmp */
+	priv->tmp_path = g_dir_make_tmp ("fwupd-XXXXXX", &error_local);
+	if (priv->tmp_path == NULL) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_FAILED_TO_WRITE,
+			     "failed to create temp dir: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	path = g_file_new_for_path (priv->tmp_path);
+	if (!gcab_cabinet_extract_simple (priv->gcab, path,
+					  fu_cab_extract_inf_cb,
+					  cab, NULL, &error_local)) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_FAILED_TO_WRITE,
+			     "failed to extract .cab file: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* read .inf file */
+	if (priv->inf_filename == NULL) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INVALID_FILE,
+			     "no .inf file in.cab file");
+		return FALSE;
+	}
+
+	/* parse it */
+	app = as_app_new ();
+	if (!as_app_parse_file (app, priv->inf_filename,
+				AS_APP_PARSE_FLAG_NONE, &error_local)) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INVALID_FILE,
+			     "%s could not be loaded: %s",
+			     priv->inf_filename,
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* extract info */
+	priv->guid = g_strdup (as_app_get_id (app));
+	tmp = as_app_get_developer_name (app, NULL);
+	if (tmp != NULL)
+		priv->vendor = g_strdup (tmp);
+	tmp = as_app_get_comment (app, NULL);
+	if (tmp == NULL)
+		tmp = as_app_get_name (app, NULL);
+	if (tmp != NULL)
+		priv->summary = g_strdup (tmp);
+	priv->summary = g_strdup (tmp);
+	rel = as_app_get_release_default (app);
+	priv->version = g_strdup (as_release_get_version (rel));
+
+	/* find out what firmware file we have to open */
+	tmp = as_app_get_metadata_item (app, "FirmwareBasename");
+	priv->firmware_basename = g_strdup (tmp);
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_cab_load_fd:
+ **/
+gboolean
+fu_cab_load_fd (FuCab *cab, gint fd, GCancellable *cancellable, GError **error)
+{
+	FuCabPrivate *priv = cab->priv;
+	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_object_unref_ GInputStream *stream = NULL;
+
+	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
+
+	/* GCab needs a GSeekable input stream, so buffer to RAM then load */
+	stream = g_unix_input_stream_new (fd, TRUE);
+	priv->cab_stream = g_memory_input_stream_new ();
+	while (1) {
+		_cleanup_bytes_unref_ GBytes *data = NULL;
+		data = g_input_stream_read_bytes (stream, 8192,
+						  cancellable,
+						  &error_local);
+		if (g_bytes_get_size (data) == 0)
+			break;
+		if (data == NULL) {
+			g_set_error_literal (error,
+					     FU_ERROR,
+					     FU_ERROR_FAILED_TO_READ,
+					     error_local->message);
+			return FALSE;
+		}
+		g_memory_input_stream_add_bytes (G_MEMORY_INPUT_STREAM (priv->cab_stream), data);
+	}
+
+	/* parse */
+	return fu_cab_parse (cab, error);
+}
+
+/**
+ * fu_cab_load_file:
+ **/
+gboolean
+fu_cab_load_file (FuCab *cab, GFile *file, GCancellable *cancellable, GError **error)
+{
+	FuCabPrivate *priv = cab->priv;
+	_cleanup_error_free_ GError *error_local = NULL;
+
+	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
+
+	/* open file */
+	priv->cab_stream = G_INPUT_STREAM (g_file_read (file, cancellable, &error_local));
+	if (priv->cab_stream == NULL) {
+		_cleanup_free_ gchar *filename = NULL;
+		filename = g_file_get_path (file);
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INVALID_FILE,
+			     "Failed to open %s: %s",
+			     filename, error_local->message);
+		return FALSE;
+	}
+
+	/* parse */
+	return fu_cab_parse (cab, error);
+}
+
+/**
+ * fu_cab_extract_firmware:
+ **/
+gboolean
+fu_cab_extract_firmware (FuCab *cab, GError **error)
+{
+	FuCabPrivate *priv = cab->priv;
+	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_object_unref_ GFile *path = NULL;
+
+	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
+
+	/* no valid firmware file */
+	if (priv->firmware_basename == NULL) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INVALID_FILE,
+				     "no firmware found in cab file");
+		return FALSE;
+	}
+
+	/* now extract the firmware */
+	g_debug ("extracting %s", priv->firmware_basename);
+	path = g_file_new_for_path (priv->tmp_path);
+	if (!gcab_cabinet_extract_simple (priv->gcab, path,
+					  fu_cab_extract_firmware_cb,
+					  cab, NULL, &error_local)) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_FAILED_TO_WRITE,
+			     "failed to extract .cab file: %s",
+			     error_local->message);
+		return FALSE;
+	}
+	if (priv->firmware_filename == NULL) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INVALID_FILE,
+			     "%s not found in cab file",
+			     priv->firmware_basename);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+/**
+ * fu_cab_delete_temp_files:
+ **/
+gboolean
+fu_cab_delete_temp_files (FuCab *cab, GError **error)
+{
+	FuCabPrivate *priv = cab->priv;
+	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
+
+	if (priv->inf_filename != NULL)
+		g_unlink (priv->inf_filename);
+	if (priv->firmware_filename != NULL)
+		g_unlink (priv->firmware_filename);
+	if (priv->tmp_path != NULL)
+		g_rmdir (priv->tmp_path);
+
+	return TRUE;
+}
+
+/**
+ * fu_cab_get_stream:
+ **/
+GInputStream *
+fu_cab_get_stream (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
+	return cab->priv->cab_stream;
+}
+
+/**
+ * fu_cab_get_guid:
+ **/
+const gchar *
+fu_cab_get_guid (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
+	return cab->priv->guid;
+}
+
+/**
+ * fu_cab_get_version:
+ **/
+const gchar *
+fu_cab_get_version (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
+	return cab->priv->version;
+}
+
+/**
+ * fu_cab_get_vendor:
+ **/
+const gchar *
+fu_cab_get_vendor (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
+	return cab->priv->vendor;
+}
+
+/**
+ * fu_cab_get_summary:
+ **/
+const gchar *
+fu_cab_get_summary (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
+	return cab->priv->summary;
+}
+
+/**
+ * fu_cab_get_filename_firmware:
+ **/
+const gchar *
+fu_cab_get_filename_firmware (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
+	return cab->priv->firmware_filename;
+}
+
+/**
+ * fu_cab_class_init:
+ **/
+static void
+fu_cab_class_init (FuCabClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	object_class->finalize = fu_cab_finalize;
+	g_type_class_add_private (klass, sizeof (FuCabPrivate));
+}
+
+/**
+ * fu_cab_init:
+ **/
+static void
+fu_cab_init (FuCab *cab)
+{
+	cab->priv = FU_CAB_GET_PRIVATE (cab);
+}
+
+/**
+ * fu_cab_finalize:
+ **/
+static void
+fu_cab_finalize (GObject *object)
+{
+	FuCab *cab = FU_CAB (object);
+	FuCabPrivate *priv = cab->priv;
+
+	g_free (priv->firmware_basename);
+	g_free (priv->firmware_filename);
+	g_free (priv->guid);
+	g_free (priv->inf_filename);
+	g_free (priv->tmp_path);
+	g_free (priv->summary);
+	g_free (priv->vendor);
+	g_free (priv->version);
+	if (priv->cab_stream != NULL)
+		g_object_unref (priv->cab_stream);
+	if (priv->gcab != NULL)
+		g_object_unref (priv->gcab);
+	if (priv->inf_kf != NULL)
+		g_key_file_unref (priv->inf_kf);
+
+	G_OBJECT_CLASS (fu_cab_parent_class)->finalize (object);
+}
+
+/**
+ * fu_cab_new:
+ **/
+FuCab *
+fu_cab_new (void)
+{
+	FuCab *cab;
+	cab = g_object_new (FU_TYPE_CAB, NULL);
+	return FU_CAB (cab);
+}

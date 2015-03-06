@@ -24,9 +24,48 @@
 #include <glib-object.h>
 #include <glib/gstdio.h>
 
+#include "fu-cab.h"
 #include "fu-cleanup.h"
 #include "fu-common.h"
 #include "fu-pending.h"
+
+static void
+fu_cab_func (void)
+{
+	GError *error = NULL;
+	gboolean ret;
+	_cleanup_object_unref_ FuCab *cab = NULL;
+	_cleanup_object_unref_ GFile *file = NULL;
+
+	cab = fu_cab_new ();
+	g_assert (cab != NULL);
+
+	/* load file */
+	file = g_file_new_for_path ("/home/hughsie/Code/ColorHug/ColorHugALS/"
+				    "firmware-releases/release/colorhug-als-3.0.2.cab");
+	ret = fu_cab_load_file (cab, file, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* get properties */
+	g_assert (fu_cab_get_stream (cab) != NULL);
+	g_assert_cmpstr (fu_cab_get_guid (cab), ==, "84f40464-9272-4ef7-9399-cd95f12da696");
+	g_assert_cmpstr (fu_cab_get_version (cab), ==, "3.0.2");
+	g_assert (!g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
+
+	/* extract firmware */
+	ret = fu_cab_extract_firmware (cab, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert (g_str_has_suffix (fu_cab_get_filename_firmware (cab), "/firmware.bin"));
+	g_assert (g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
+
+	/* clean up */
+	ret = fu_cab_delete_temp_files (cab, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert (!g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
+}
 
 static void
 fu_pending_func (void)
@@ -105,6 +144,7 @@ main (int argc, char **argv)
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
 	/* tests go here */
+	g_test_add_func ("/fwupd/cab", fu_cab_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	return g_test_run ();
 }

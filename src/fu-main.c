@@ -25,14 +25,13 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
-#include <gio/gunixinputstream.h>
 #include <glib/gi18n.h>
-#include <libgcab.h>
 #include <locale.h>
 #include <polkit/polkit.h>
 #include <stdlib.h>
 #include <fcntl.h>
 
+#include "fu-cab.h"
 #include "fu-cleanup.h"
 #include "fu-common.h"
 #include "fu-debug.h"
@@ -130,17 +129,12 @@ fu_main_get_item_by_guid (FuMainPrivate *priv, const gchar *guid)
 
 typedef struct {
 	GDBusMethodInvocation	*invocation;
+	FuCab			*cab;
 	FuDevice		*device;
 	FuProviderFlags		 flags;
 	gchar			*id;
-	gchar			*firmware_basename;
-	gchar			*firmware_filename;
 	gint			 firmware_fd;
-	gchar			*inf_filename;
-	GKeyFile		*inf_kf;
-	gchar			*tmp_path;
 	gint			 cab_fd;
-	GInputStream		*cab_stream;
 	FuMainPrivate		*priv;
 } FuMainAuthHelper;
 
@@ -150,15 +144,9 @@ typedef struct {
 static void
 fu_main_helper_free (FuMainAuthHelper *helper)
 {
-	/* clean the temp space we created */
-	if (helper->inf_kf != NULL)
-		g_key_file_unref (helper->inf_kf);
-	if (helper->inf_filename != NULL)
-		g_unlink (helper->inf_filename);
-	if (helper->firmware_filename != NULL)
-		g_unlink (helper->firmware_filename);
-	if (helper->tmp_path != NULL)
-		g_rmdir (helper->tmp_path);
+	/* delete temp files */
+	fu_cab_delete_temp_files (helper->cab, NULL);
+	g_object_unref (helper->cab);
 
 	/* close any open files */
 	if (helper->cab_fd > 0)
@@ -167,15 +155,10 @@ fu_main_helper_free (FuMainAuthHelper *helper)
 		close (helper->firmware_fd);
 
 	/* free */
-	g_free (helper->firmware_basename);
-	g_free (helper->firmware_filename);
 	g_free (helper->id);
-	g_free (helper->inf_filename);
-	g_free (helper->tmp_path);
 	if (helper->device != NULL)
 		g_object_unref (helper->device);
 	g_object_unref (helper->invocation);
-	g_object_unref (helper->cab_stream);
 	g_free (helper);
 }
 
@@ -228,7 +211,7 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	/* run the correct provider that added this */
 	if (!fu_provider_update (item->provider,
 				 item->device,
-				 helper->cab_stream,
+				 fu_cab_get_stream (helper->cab),
 				 helper->firmware_fd,
 				 helper->flags,
 				 &error)) {
@@ -244,142 +227,22 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 }
 
 /**
- * fu_main_cab_extract_inf_cb:
- **/
-static gboolean
-fu_main_cab_extract_inf_cb (GCabFile *file, gpointer user_data)
-{
-	FuMainAuthHelper *helper = (FuMainAuthHelper *) user_data;
-
-	/* only extract the first .inf file found in the .cab file */
-	if (helper->inf_filename == NULL &&
-	    g_str_has_suffix (gcab_file_get_name (file), ".inf")) {
-		helper->inf_filename = g_build_filename (helper->tmp_path,
-							 gcab_file_get_name (file),
-							 NULL);
-		return TRUE;
-	}
-	return FALSE;
-}
-
-/**
- * fu_main_cab_extract_firmware_cb:
- **/
-static gboolean
-fu_main_cab_extract_firmware_cb (GCabFile *file, gpointer user_data)
-{
-	FuMainAuthHelper *helper = (FuMainAuthHelper *) user_data;
-
-	/* only extract the firmware file listed in the .inf file */
-	if (helper->firmware_filename == NULL &&
-	    g_strcmp0 (gcab_file_get_name (file),
-		       helper->firmware_basename) == 0) {
-		helper->firmware_filename = g_build_filename (helper->tmp_path,
-							      gcab_file_get_name (file),
-							      NULL);
-		return TRUE;
-	}
-	return FALSE;
-}
-
-/**
  * fu_main_update_helper:
  **/
 static gboolean
 fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 {
+	const gchar *guid;
 	const gchar *tmp;
+	const gchar *version;
 	gint vercmp;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_free_ gchar *driver_ver = NULL;
-	_cleanup_free_ gchar *guid = NULL;
-	_cleanup_free_ gchar *version = NULL;
-	_cleanup_object_unref_ GCabCabinet *cab = NULL;
-	_cleanup_object_unref_ GFile *path = NULL;
-	_cleanup_object_unref_ GInputStream *stream = NULL;
 
-	/* GCab needs a GSeekable input stream, so buffer to RAM then load */
-	stream = g_unix_input_stream_new (helper->cab_fd, TRUE);
-	helper->cab_stream = g_memory_input_stream_new ();
-	while (1) {
-		_cleanup_bytes_unref_ GBytes *data = NULL;
-		data = g_input_stream_read_bytes (stream, 8192, NULL, &error_local);
-		if (g_bytes_get_size (data) == 0)
-			break;
-		if (data == NULL) {
-			g_set_error_literal (error,
-					     FU_ERROR,
-					     FU_ERROR_FAILED_TO_READ,
-					     error_local->message);
-			return FALSE;
-		}
-		g_memory_input_stream_add_bytes (G_MEMORY_INPUT_STREAM (helper->cab_stream), data);
-	}
-	cab = gcab_cabinet_new ();
-	if (!gcab_cabinet_load (cab, helper->cab_stream, NULL, &error_local)) {
-		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_READ,
-			     "cannot load .cab file: %s",
-			     error_local->message);
+	/* load cab file */
+	if (!fu_cab_load_fd (helper->cab, helper->cab_fd, NULL, error))
 		return FALSE;
-	}
-
-	/* decompress to /tmp */
-	helper->tmp_path = g_dir_make_tmp ("fwupd-XXXXXX", &error_local);
-	if (helper->tmp_path == NULL) {
-		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
-			     "failed to create temp dir: %s",
-			     error_local->message);
-		return FALSE;
-	}
-
-	path = g_file_new_for_path (helper->tmp_path);
-	if (!gcab_cabinet_extract_simple (cab, path,
-					  fu_main_cab_extract_inf_cb,
-					  helper, NULL, &error_local)) {
-		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
-			     "failed to extract .cab file: %s",
-			     error_local->message);
-		return FALSE;
-	}
-
-	/* read .inf file */
-	if (helper->inf_filename == NULL) {
-		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
-			     "no .inf file in.cab file");
-		return FALSE;
-	}
-	g_debug ("loading %s", helper->inf_filename);
-	helper->inf_kf = as_utils_load_inf_file (helper->inf_filename, &error_local);
-	if (helper->inf_kf == NULL) {
-		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
-			     ".inf file could not be loaded: %s",
-			     error_local->message);
-		return FALSE;
-	}
-
-	/* check hardware matches */
-	guid = g_key_file_get_string (helper->inf_kf,
-				      "Version", "ClassGuid", &error_local);
-	if (guid == NULL) {
-		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
-			     ".inf file not firmmare: %s",
-			     error_local->message);
-		return FALSE;
-	}
 
 	/* are we matching *any* hardware */
+	guid = fu_cab_get_guid (helper->cab);
 	if (helper->device == NULL) {
 		FuDeviceItem *item;
 		item = fu_main_get_item_by_guid (helper->priv, guid);
@@ -404,26 +267,8 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		return FALSE;
 	}
 
-	/* get version */
-	driver_ver = g_key_file_get_string (helper->inf_kf, "Version", "DriverVer", NULL);
-	if (driver_ver == NULL) {
-		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INVALID_FILE,
-				     "DriverVer is missing");
-		return FALSE;
-	}
-
 	/* parse the DriverVer */
-	version = as_utils_parse_driver_version (driver_ver, NULL, &error_local);
-	if (version == NULL) {
-		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
-			     "Could not parse DriverVer '%s': %s",
-			     driver_ver, error_local->message);
-		return FALSE;
-	}
+	version = fu_cab_get_version (helper->cab);
 	fu_device_set_metadata (helper->device, FU_DEVICE_KEY_VERSION_NEW, version);
 
 	/* compare to the lowest supported version, if it exists */
@@ -465,47 +310,19 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		return FALSE;
 	}
 
-	/* find out what firmware file we have to open */
-	helper->firmware_basename = g_key_file_get_string (helper->inf_kf,
-							   "Firmware_CopyFiles",
-							   "Value000", NULL);
-	if (helper->firmware_basename == NULL) {
-		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
-			     ".inf file has no Firmware_CopyFiles");
-		return FALSE;
-	}
-
 	/* now extract the firmware */
-	g_debug ("extracting %s", helper->firmware_basename);
-	if (!gcab_cabinet_extract_simple (cab, path,
-					  fu_main_cab_extract_firmware_cb,
-					  helper, NULL, &error_local)) {
-		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
-			     "failed to extract .cab file: %s",
-			     error_local->message);
+	if (!fu_cab_extract_firmware (helper->cab, error))
 		return FALSE;
-	}
-	if (helper->firmware_filename == NULL) {
-		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
-			     "%s not found in cab file",
-			     helper->firmware_basename);
-		return FALSE;
-	}
 
 	/* and open it */
-	helper->firmware_fd = g_open (helper->firmware_filename, O_CLOEXEC, 0);
+	helper->firmware_fd = g_open (fu_cab_get_filename_firmware (helper->cab),
+				      O_CLOEXEC, 0);
 	if (helper->firmware_fd < 0) {
 		g_set_error (error,
 			     FU_ERROR,
 			     FU_ERROR_FAILED_TO_READ,
 			     "failed to open %s",
-			     helper->firmware_basename);
+			     fu_cab_get_filename_firmware (helper->cab));
 		return FALSE;
 	}
 	return TRUE;
@@ -603,6 +420,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		helper->id = g_strdup (id);
 		helper->flags = flags;
 		helper->priv = priv;
+		helper->cab = fu_cab_new ();
 		if (item != NULL)
 			helper->device = g_object_ref (item->device);
 		if (!fu_main_update_helper (helper, &error)) {
@@ -621,6 +439,74 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      NULL,
 						      fu_main_check_authorization_cb,
 						      helper);
+		return;
+	}
+
+	/* return 'a{sv}' */
+	if (g_strcmp0 (method_name, "GetDetails") == 0) {
+		GDBusMessage *message;
+		GUnixFDList *fd_list;
+		GVariantBuilder builder;
+		gint32 fd_handle = 0;
+		gint fd;
+		_cleanup_error_free_ GError *error = NULL;
+		_cleanup_object_unref_ FuCab *cab = NULL;
+		_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
+
+		/* check the id exists */
+		g_variant_get (parameters, "(h)", &fd_handle);
+		g_debug ("Called %s(%i)", method_name, fd_handle);
+
+		/* get the fd */
+		message = g_dbus_method_invocation_get_message (invocation);
+		fd_list = g_dbus_message_get_unix_fd_list (message);
+		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 1) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FU_ERROR,
+							       FU_ERROR_NO_SUCH_PROPERTY,
+							       "invalid handle");
+			return;
+		}
+		fd = g_unix_fd_list_get (fd_list, fd_handle, &error);
+		if (fd < 0) {
+			g_dbus_method_invocation_return_gerror (invocation,
+								error);
+			return;
+		}
+
+		/* load file */
+		cab = fu_cab_new ();
+		if (!fu_cab_load_fd (cab, fd, NULL, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		if (!fu_cab_delete_temp_files (cab, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+
+		/* create an array with all the metadata in */
+		g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+		g_variant_builder_add (&builder, "{sv}",
+				       FU_DEVICE_KEY_VERSION,
+				       g_variant_new_string (fu_cab_get_version (cab)));
+		g_variant_builder_add (&builder, "{sv}",
+				       FU_DEVICE_KEY_GUID,
+				       g_variant_new_string (fu_cab_get_guid (cab)));
+		g_variant_builder_add (&builder, "{sv}",
+				       FU_DEVICE_KEY_VENDOR,
+				       g_variant_new_string (fu_cab_get_vendor (cab)));
+		g_variant_builder_add (&builder, "{sv}",
+				       FU_DEVICE_KEY_SUMMARY,
+				       g_variant_new_string (fu_cab_get_summary (cab)));
+		/* FIXME */
+		g_variant_builder_add (&builder, "{sv}",
+				       FU_DEVICE_KEY_DISPLAY_NAME,
+				       g_variant_new_string ("???"));
+
+		/* return whole array */
+		val = g_variant_new ("(a{sv})", &builder);
+		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
 
