@@ -52,7 +52,9 @@
       <arg type='s' name='id' direction='in'>
         <doc:doc>
           <doc:summary>
-            <doc:para>An ID, typically a GUID of the hardware to update.</doc:para>
+            <doc:para>
+              An ID, typically a GUID of the hardware to update, or the string
+              <doc:tt>*</doc:tt> to match any applicable hardware.</doc:para>
           </doc:summary>
         </doc:doc>
       </arg>

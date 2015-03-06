@@ -109,6 +109,25 @@ fu_main_get_item_by_id (FuMainPrivate *priv, const gchar *id)
 	return NULL;
 }
 
+/**
+ * fu_main_get_item_by_guid:
+ **/
+static FuDeviceItem *
+fu_main_get_item_by_guid (FuMainPrivate *priv, const gchar *guid)
+{
+	FuDeviceItem *item;
+	const gchar *tmp;
+	guint i;
+
+	for (i = 0; i < priv->devices->len; i++) {
+		item = g_ptr_array_index (priv->devices, i);
+		tmp = fu_device_get_metadata (item->device, FU_DEVICE_KEY_GUID);
+		if (g_strcmp0 (tmp, guid) == 0)
+			return item;
+	}
+	return NULL;
+}
+
 typedef struct {
 	GDBusMethodInvocation	*invocation;
 	FuDevice		*device;
@@ -153,7 +172,8 @@ fu_main_helper_free (FuMainAuthHelper *helper)
 	g_free (helper->id);
 	g_free (helper->inf_filename);
 	g_free (helper->tmp_path);
-	g_object_unref (helper->device);
+	if (helper->device != NULL)
+		g_object_unref (helper->device);
 	g_object_unref (helper->invocation);
 	g_object_unref (helper->cab_stream);
 	g_free (helper);
@@ -358,6 +378,22 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 			     error_local->message);
 		return FALSE;
 	}
+
+	/* are we matching *any* hardware */
+	if (helper->device == NULL) {
+		FuDeviceItem *item;
+		item = fu_main_get_item_by_guid (helper->priv, guid);
+		if (item == NULL) {
+			g_set_error (error,
+				     FU_ERROR,
+				     FU_ERROR_INVALID_FILE,
+				     "no hardware matched %s",
+				     guid);
+			return FALSE;
+		}
+		helper->device = g_object_ref (item->device);
+	}
+
 	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_GUID);
 	if (g_strcmp0 (guid, tmp) != 0) {
 		g_set_error (error,
@@ -498,7 +534,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 	/* return '' */
 	if (g_strcmp0 (method_name, "Update") == 0) {
-		FuDeviceItem *item;
+		FuDeviceItem *item = NULL;
 		FuMainAuthHelper *helper;
 		FuProviderFlags flags = FU_PROVIDER_UPDATE_FLAG_NONE;
 		GDBusMessage *message;
@@ -515,14 +551,16 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* check the id exists */
 		g_variant_get (parameters, "(&sha{sv})", &id, &fd_handle, &iter);
 		g_debug ("Called %s(%s,%i)", method_name, id, fd_handle);
-		item = fu_main_get_item_by_id (priv, id);
-		if (item == NULL) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FU_ERROR,
-							       FU_ERROR_NO_SUCH_DEVICE,
-							       "no such ID %s",
-							       id);
-			return;
+		if (g_strcmp0 (id, FWUPD_DEVICE_ID_ANY) != 0) {
+			item = fu_main_get_item_by_id (priv, id);
+			if (item == NULL) {
+				g_dbus_method_invocation_return_error (invocation,
+								       FU_ERROR,
+								       FU_ERROR_NO_SUCH_DEVICE,
+								       "no such device %s",
+								       id);
+				return;
+			}
 		}
 
 		/* get options */
@@ -565,7 +603,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		helper->id = g_strdup (id);
 		helper->flags = flags;
 		helper->priv = priv;
-		helper->device = g_object_ref (item->device);
+		if (item != NULL)
+			helper->device = g_object_ref (item->device);
 		if (!fu_main_update_helper (helper, &error)) {
 			g_dbus_method_invocation_return_gerror (helper->invocation,
 							        error);

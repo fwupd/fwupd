@@ -26,6 +26,8 @@
 #define FWUPD_DBUS_SERVICE		"org.freedesktop.fwupd"
 #define FWUPD_DBUS_INTERFACE		"org.freedesktop.fwupd"
 
+#define FWUPD_DEVICE_ID_ANY		"*"
+
 #define FU_ERROR			fu_error_quark()
 
 #define FU_DEVICE_KEY_VERSION		"Version"

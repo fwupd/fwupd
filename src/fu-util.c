@@ -373,6 +373,23 @@ fu_util_update_online (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_install:
+ **/
+static gboolean
+fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'filename'");
+		return FALSE;
+	}
+	return fu_util_update (priv, FWUPD_DEVICE_ID_ANY,
+			       values[0], priv->flags, error);
+}
+
+/**
  * fu_util_update_prepared:
  **/
 static gboolean
@@ -523,6 +540,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Install prepared updates now"),
 		     fu_util_update_prepared);
+	fu_util_add (priv->cmd_array,
+		     "install",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Install a firmware file on this hardware"),
+		     fu_util_install);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,
