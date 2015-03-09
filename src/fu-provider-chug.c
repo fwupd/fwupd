@@ -236,6 +236,7 @@ fu_provider_chug_update (FuProvider *provider,
 		if (!fu_provider_chug_open (item, error))
 			return FALSE;
 		ch_device_queue_reset (priv->device_queue, item->usb_device);
+		fu_provider_set_status (provider, FU_STATUS_DEVICE_RESTART);
 		if (!ch_device_queue_process (priv->device_queue,
 					      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 					      NULL, &error_local)) {
@@ -260,14 +261,12 @@ fu_provider_chug_update (FuProvider *provider,
 	if (!fu_provider_chug_open (item, error))
 		return FALSE;
 
-	/* write and verify firmware */
+	/* write firmware */
 	g_debug ("ColorHug: Writing firmware");
 	ch_device_queue_write_firmware (priv->device_queue, item->usb_device,
 					g_bytes_get_data (item->fw_bin, NULL),
 					g_bytes_get_size (item->fw_bin));
-	ch_device_queue_verify_firmware (priv->device_queue, item->usb_device,
-					 g_bytes_get_data (item->fw_bin, NULL),
-					 g_bytes_get_size (item->fw_bin));
+	fu_provider_set_status (provider, FU_STATUS_DEVICE_WRITE);
 	if (!ch_device_queue_process (priv->device_queue,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 				      NULL, &error_local)) {
@@ -280,9 +279,28 @@ fu_provider_chug_update (FuProvider *provider,
 		return FALSE;
 	}
 
+	/* verify firmware */
+	g_debug ("ColorHug: Veifying firmware");
+	ch_device_queue_verify_firmware (priv->device_queue, item->usb_device,
+					 g_bytes_get_data (item->fw_bin, NULL),
+					 g_bytes_get_size (item->fw_bin));
+	fu_provider_set_status (provider, FU_STATUS_DEVICE_VERIFY);
+	if (!ch_device_queue_process (priv->device_queue,
+				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
+				      NULL, &error_local)) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_FAILED_TO_WRITE,
+			     "failed to verify firmware: %s",
+			     error_local->message);
+		g_usb_device_close (item->usb_device, NULL);
+		return FALSE;
+	}
+
 	/* boot into the new firmware */
 	g_debug ("ColorHug: Booting new firmware");
 	ch_device_queue_boot_flash (priv->device_queue, item->usb_device);
+	fu_provider_set_status (provider, FU_STATUS_DEVICE_RESTART);
 	if (!ch_device_queue_process (priv->device_queue,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 				      NULL, &error_local)) {

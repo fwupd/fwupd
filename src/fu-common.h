@@ -42,6 +42,18 @@
 #define FU_DEVICE_KEY_SUMMARY		"Summary"
 #define FU_DEVICE_KEY_KIND		"Kind"		/* 'internal' or 'hotplug' */
 
+typedef enum {
+	FU_STATUS_IDLE,
+	FU_STATUS_LOADING,
+	FU_STATUS_DECOMPRESSING,
+	FU_STATUS_DEVICE_RESTART,
+	FU_STATUS_DEVICE_WRITE,
+	FU_STATUS_DEVICE_VERIFY,
+	FU_STATUS_SCHEDULING,
+	/* private */
+	FU_STATUS_LAST
+} FuStatus;
+
 /* if adding values here, remember to register them in fu_error_quark() */
 typedef enum {
 	FU_ERROR_INTERNAL,
@@ -62,5 +74,7 @@ typedef enum {
 } FuError;
 
 GQuark		 fu_error_quark			(void);
+const gchar	*fu_status_to_string		(FuStatus	 status);
+FuStatus	 fu_status_from_string		(const gchar	*status);
 
 #endif /* __FU_COMMON_H */

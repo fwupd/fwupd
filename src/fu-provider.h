@@ -75,6 +75,8 @@ struct _FuProviderClass
 						 FuDevice	*device);
 	void		(* device_removed)	(FuProvider	*provider,
 						 FuDevice	*device);
+	void		(* status_changed)	(FuProvider	*provider,
+						 FuStatus	 status);
 };
 
 GType		 fu_provider_get_type		(void);
@@ -82,6 +84,8 @@ void		 fu_provider_emit_added		(FuProvider	*provider,
 						 FuDevice	*device);
 void		 fu_provider_emit_removed	(FuProvider	*provider,
 						 FuDevice	*device);
+void		 fu_provider_set_status		(FuProvider	*provider,
+						 FuStatus	 status);
 gboolean	 fu_provider_coldplug		(FuProvider	*provider,
 						 GError		**error);
 gboolean	 fu_provider_update		(FuProvider	*provider,

@@ -36,8 +36,12 @@
 #include "fu-provider.h"
 
 typedef struct {
+	GMainLoop		*loop;
 	GOptionContext		*context;
 	GPtrArray		*cmd_array;
+	GVariant		*val;		/* for async */
+	GDBusMessage		*message;	/* for async */
+	GError			*error;		/* for async */
 	FuProviderFlags		 flags;
 } FuUtilPrivate;
 
@@ -188,6 +192,60 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 }
 
 /**
+ * fu_util_status_changed_cb:
+ **/
+static void
+fu_util_status_changed_cb (GDBusProxy *proxy, GVariant *changed_properties, GStrv invalidated_properties, gpointer user_data)
+{
+	const gchar *tmp;
+	_cleanup_variant_unref_ GVariant *val = NULL;
+
+	/* print to the console */
+	val = g_dbus_proxy_get_cached_property (proxy, "Status");
+	if (val == NULL)
+		return;
+	tmp = g_variant_get_string (val, NULL);
+	switch (fu_status_from_string (tmp)) {
+	case FU_STATUS_IDLE:
+		g_print (" * %s\n", _("Idle"));
+		break;
+	case FU_STATUS_DECOMPRESSING:
+		g_print (" * %s\n", _("Decompressing firmware"));
+		break;
+	case FU_STATUS_LOADING:
+		g_print (" * %s\n", _("Loading firmware"));
+		break;
+	case FU_STATUS_DEVICE_RESTART:
+		g_print (" * %s\n", _("Restarting device"));
+		break;
+	case FU_STATUS_DEVICE_WRITE:
+		g_print (" * %s\n", _("Writing firmware to device"));
+		break;
+	case FU_STATUS_DEVICE_VERIFY:
+		g_print (" * %s\n", _("Verifying firmware from device"));
+		break;
+	case FU_STATUS_SCHEDULING:
+		g_print (" * %s\n", _("Scheduling upgrade"));
+		break;
+	default:
+		g_print (" * %s\n", tmp);
+		break;
+	}
+}
+
+/**
+ * fu_util_get_devices_cb:
+ **/
+static void
+fu_util_get_devices_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
+	priv->val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source),
+					      res, &priv->error);
+	g_main_loop_quit (priv->loop);
+}
+
+/**
  * fu_util_get_devices:
  **/
 static gboolean
@@ -215,20 +273,23 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 				       error);
 	if (proxy == NULL)
 		return FALSE;
-	val = g_dbus_proxy_call_sync (proxy,
-				      "GetDevices",
-				      NULL,
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      NULL,
-				      error);
-	if (val == NULL) {
-		g_dbus_error_strip_remote_error (*error);
+	g_signal_connect (proxy, "g-properties-changed",
+			  G_CALLBACK (fu_util_status_changed_cb), priv);
+	g_dbus_proxy_call (proxy,
+			   "GetDevices",
+			   NULL,
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1,
+			   NULL,
+			   fu_util_get_devices_cb, priv);
+	g_main_loop_run (priv->loop);
+	if (priv->val == NULL) {
+		g_propagate_error (error, priv->error);
 		return FALSE;
 	}
 
 	/* parse */
-	g_variant_get (val, "(a{sa{sv}})", &iter);
+	g_variant_get (priv->val, "(a{sa{sv}})", &iter);
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	while (g_variant_iter_next (iter, "{&sa{sv}}", &id, &iter_device)) {
 		dev = fu_device_new ();
@@ -272,6 +333,19 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_update_cb:
+ **/
+static void
+fu_util_update_cb (GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
+	GDBusConnection *con = G_DBUS_CONNECTION (source_object);
+	priv->message = g_dbus_connection_send_message_with_reply_finish (con, res,
+									  &priv->error);
+	g_main_loop_quit (priv->loop);
+}
+
+/**
  * fu_util_update:
  **/
 static gboolean
@@ -283,13 +357,27 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 	gint retval;
 	gint fd;
 	_cleanup_object_unref_ GDBusConnection *conn = NULL;
-	_cleanup_object_unref_ GDBusMessage *message = NULL;
 	_cleanup_object_unref_ GDBusMessage *request = NULL;
+	_cleanup_object_unref_ GDBusProxy *proxy = NULL;
 	_cleanup_object_unref_ GUnixFDList *fd_list = NULL;
 
 	conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
 	if (conn == NULL)
 		return FALSE;
+
+	/* watch for property changes */
+	proxy = g_dbus_proxy_new_sync (conn,
+				       G_DBUS_PROXY_FLAGS_NONE,
+				       NULL,
+				       FWUPD_DBUS_SERVICE,
+				       FWUPD_DBUS_PATH,
+				       FWUPD_DBUS_INTERFACE,
+				       NULL,
+				       error);
+	if (proxy == NULL)
+		return FALSE;
+	g_signal_connect (proxy, "g-properties-changed",
+			  G_CALLBACK (fu_util_status_changed_cb), priv);
 
 	/* set options */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
@@ -337,22 +425,25 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 	/* send message */
 	body = g_variant_new ("(sha{sv})", id, fd > -1 ? 0 : -1, &builder);
 	g_dbus_message_set_body (request, body);
-	message = g_dbus_connection_send_message_with_reply_sync (conn,
-								  request,
-								  G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-								  -1,
-								  NULL,
-								  NULL,
-								  error);
-	if (message == NULL) {
+	g_dbus_connection_send_message_with_reply (conn,
+						   request,
+						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+						   -1,
+						   NULL,
+						   NULL,
+						   fu_util_update_cb,
+						   priv);
+	g_main_loop_run (priv->loop);
+	if (priv->message == NULL) {
+		g_dbus_error_strip_remote_error (priv->error);
+		g_propagate_error (error, priv->error);
+		return FALSE;
+	}
+	if (g_dbus_message_to_gerror (priv->message, error)) {
 		g_dbus_error_strip_remote_error (*error);
 		return FALSE;
 	}
-	if (g_dbus_message_to_gerror (message, error)) {
-		g_dbus_error_strip_remote_error (*error);
-		return FALSE;
-	}
-
+	g_print ("%s\n", _("Done!"));
 	return TRUE;
 }
 
@@ -614,6 +705,7 @@ main (int argc, char *argv[])
 
 	/* create helper object */
 	priv = g_new0 (FuUtilPrivate, 1);
+	priv->loop = g_main_loop_new (NULL, FALSE);
 
 	/* add commands */
 	priv->cmd_array = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_util_item_free);
@@ -707,6 +799,11 @@ out:
 	if (priv != NULL) {
 		if (priv->cmd_array != NULL)
 			g_ptr_array_unref (priv->cmd_array);
+		if (priv->val != NULL)
+			g_variant_unref (priv->val);
+		if (priv->message != NULL)
+			g_object_unref (priv->message);
+		g_main_loop_unref (priv->loop);
 		g_option_context_free (priv->context);
 		g_free (priv);
 	}

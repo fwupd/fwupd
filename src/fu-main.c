@@ -54,12 +54,67 @@ typedef struct {
 	GPtrArray		*devices;
 	GPtrArray		*providers;
 	PolkitAuthority		*authority;
+	FuStatus		 status;
 } FuMainPrivate;
 
 typedef struct {
 	FuDevice		*device;
 	FuProvider		*provider;
 } FuDeviceItem;
+
+/**
+ * fu_main_emit_property_changed:
+ **/
+static void
+fu_main_emit_property_changed (FuMainPrivate *priv,
+			       const gchar *property_name,
+			       GVariant *property_value)
+{
+	GVariantBuilder builder;
+	GVariantBuilder invalidated_builder;
+
+	/* not yet connected */
+	if (priv->connection == NULL)
+		return;
+
+	/* build the dict */
+	g_variant_builder_init (&invalidated_builder, G_VARIANT_TYPE ("as"));
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_add (&builder,
+			       "{sv}",
+			       property_name,
+			       property_value);
+	g_dbus_connection_emit_signal (priv->connection,
+				       NULL,
+				       FWUPD_DBUS_PATH,
+				       "org.freedesktop.DBus.Properties",
+				       "PropertiesChanged",
+				       g_variant_new ("(sa{sv}as)",
+				       FWUPD_DBUS_INTERFACE,
+				       &builder,
+				       &invalidated_builder),
+				       NULL);
+	g_variant_builder_clear (&builder);
+	g_variant_builder_clear (&invalidated_builder);
+}
+
+/**
+ * fu_main_set_status:
+ **/
+static void
+fu_main_set_status (FuMainPrivate *priv, FuStatus status)
+{
+	const gchar *tmp;
+
+	if (priv->status == status)
+		return;
+	priv->status = status;
+
+	/* emit changed */
+	tmp = fu_status_to_string (priv->status);
+	g_debug ("Emitting PropertyChanged('Status'='%s')", tmp);
+	fu_main_emit_property_changed (priv, "Status", g_variant_new_string (tmp));
+}
 
 /**
  * fu_main_device_array_to_variant:
@@ -248,6 +303,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	gint vercmp;
 
 	/* load cab file */
+	fu_main_set_status (helper->priv, FU_STATUS_LOADING);
 	if (!fu_cab_load_fd (helper->cab, helper->cab_fd, NULL, error))
 		return FALSE;
 
@@ -321,6 +377,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	}
 
 	/* now extract the firmware */
+	fu_main_set_status (helper->priv, FU_STATUS_DECOMPRESSING);
 	if (!fu_cab_extract_firmware (helper->cab, error))
 		return FALSE;
 
@@ -386,6 +443,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_debug ("Called %s()", method_name);
 		val = fu_main_device_array_to_variant (priv);
 		g_dbus_method_invocation_return_value (invocation, val);
+		fu_main_set_status (priv, FU_STATUS_IDLE);
 		return;
 	}
 
@@ -468,6 +526,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		if (!fu_main_update_helper (helper, &error)) {
 			g_dbus_method_invocation_return_gerror (helper->invocation,
 							        error);
+			fu_main_set_status (priv, FU_STATUS_IDLE);
 			fu_main_helper_free (helper);
 			return;
 		}
@@ -479,6 +538,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			} else {
 				g_dbus_method_invocation_return_value (invocation, NULL);
 			}
+			fu_main_set_status (priv, FU_STATUS_IDLE);
 			fu_main_helper_free (helper);
 			return;
 		}
@@ -588,8 +648,13 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 			     const gchar *property_name, GError **error,
 			     gpointer user_data)
 {
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+
 	if (g_strcmp0 (property_name, "DaemonVersion") == 0)
 		return g_variant_new_string (VERSION);
+
+	if (g_strcmp0 (property_name, "Status") == 0)
+		return g_variant_new_string (fu_status_to_string (priv->status));
 
 	/* return an error */
 	g_set_error (error,
@@ -748,6 +813,18 @@ cd_main_provider_device_removed_cb (FuProvider *provider,
 }
 
 /**
+ * cd_main_provider_status_changed_cb:
+ **/
+static void
+cd_main_provider_status_changed_cb (FuProvider *provider,
+				    FuStatus status,
+				    gpointer user_data)
+{
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+	fu_main_set_status (priv, status);
+}
+
+/**
  * fu_main_add_provider:
  **/
 static void
@@ -758,6 +835,9 @@ fu_main_add_provider (FuMainPrivate *priv, FuProvider *provider)
 			  priv);
 	g_signal_connect (provider, "device-removed",
 			  G_CALLBACK (cd_main_provider_device_removed_cb),
+			  priv);
+	g_signal_connect (provider, "status-changed",
+			  G_CALLBACK (cd_main_provider_status_changed_cb),
 			  priv);
 	g_ptr_array_add (priv->providers, provider);
 }
@@ -807,6 +887,7 @@ main (int argc, char *argv[])
 
 	/* create new objects */
 	priv = g_new0 (FuMainPrivate, 1);
+	priv->status = FU_STATUS_IDLE;
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_main_item_free);
 	priv->loop = g_main_loop_new (NULL, FALSE);
 

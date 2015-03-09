@@ -23,6 +23,17 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='Status' type='s' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            The daemon status, e.g. <doc:tt>decompressing</doc:tt>.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <method name='GetDevices'>
       <doc:doc>
         <doc:description>

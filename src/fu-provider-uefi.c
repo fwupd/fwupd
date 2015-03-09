@@ -59,6 +59,7 @@ fu_provider_uefi_update (FuProvider *provider,
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
+	fu_provider_set_status (provider, FU_STATUS_SCHEDULING);
 	if (fwup_set_up_update (&guid, fd) < 0) {
 		g_set_error (error,
 			     FU_ERROR,

@@ -40,6 +40,7 @@ static void     fu_provider_finalize	(GObject	*object);
 enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
+	SIGNAL_STATUS_CHANGED,
 	SIGNAL_LAST
 };
 
@@ -63,7 +64,10 @@ fu_provider_coldplug (FuProvider *provider, GError **error)
  * fu_provider_schedule_update:
  **/
 static gboolean
-fu_provider_schedule_update (FuDevice *device, GInputStream *stream, GError **error)
+fu_provider_schedule_update (FuProvider *provider,
+			     FuDevice *device,
+			     GInputStream *stream,
+			     GError **error)
 {
 	gchar tmpname[] = {"XXXXXX.cap"};
 	guint i;
@@ -90,6 +94,7 @@ fu_provider_schedule_update (FuDevice *device, GInputStream *stream, GError **er
 	filename = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", tmpname, NULL);
 
 	/* just copy to the temp file */
+	fu_provider_set_status (provider, FU_STATUS_SCHEDULING);
 	if (!g_seekable_seek (G_SEEKABLE (stream), 0, G_SEEK_SET, NULL, error))
 		return FALSE;
 	fwbin = g_input_stream_read_bytes (stream,
@@ -130,7 +135,8 @@ fu_provider_update (FuProvider *provider,
 	/* schedule for next reboot, or handle in the provider */
 	if (flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
 		if (klass->update_offline == NULL)
-			return fu_provider_schedule_update (device,
+			return fu_provider_schedule_update (provider,
+							    device,
 							    stream_cab,
 							    error);
 		return klass->update_offline (provider, device, fd_fw, flags, error);
@@ -198,6 +204,15 @@ fu_provider_emit_removed (FuProvider *provider, FuDevice *device)
 }
 
 /**
+ * fu_provider_set_status:
+ **/
+void
+fu_provider_set_status (FuProvider *provider, FuStatus status)
+{
+	g_signal_emit (provider, signals[SIGNAL_STATUS_CHANGED], 0, status);
+}
+
+/**
  * fu_provider_class_init:
  **/
 static void
@@ -217,6 +232,12 @@ fu_provider_class_init (FuProviderClass *klass)
 			      G_STRUCT_OFFSET (FuProviderClass, device_removed),
 			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
 			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
+	signals[SIGNAL_STATUS_CHANGED] =
+		g_signal_new ("status-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuProviderClass, status_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
 /**
