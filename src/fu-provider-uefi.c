@@ -128,6 +128,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		fu_device_set_metadata (dev, FU_DEVICE_KEY_PROVIDER, "UEFI");
 		fu_device_set_metadata (dev, FU_DEVICE_KEY_GUID, guid);
 		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
+		fu_device_set_metadata (dev, FU_DEVICE_KEY_KIND, "internal");
 		if (re.lowest_supported_fw_version != 0) {
 			version_lowest = g_strdup_printf ("%" G_GUINT32_FORMAT,
 							  re.lowest_supported_fw_version);

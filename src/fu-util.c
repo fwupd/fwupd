@@ -248,6 +248,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		const gchar *value;
 		const gchar *keys[] = {
 			FU_DEVICE_KEY_DISPLAY_NAME,
+			FU_DEVICE_KEY_KIND,
 			FU_DEVICE_KEY_PROVIDER,
 			FU_DEVICE_KEY_GUID,
 			FU_DEVICE_KEY_VERSION,

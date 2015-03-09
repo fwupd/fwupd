@@ -40,6 +40,7 @@
 #define FU_DEVICE_KEY_VERSION_LOWEST	"VersionLowest"
 #define FU_DEVICE_KEY_VENDOR		"Vendor"
 #define FU_DEVICE_KEY_SUMMARY		"Summary"
+#define FU_DEVICE_KEY_KIND		"Kind"		/* 'internal' or 'hotplug' */
 
 /* if adding values here, remember to register them in fu_error_quark() */
 typedef enum {

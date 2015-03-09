@@ -399,6 +399,8 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 					"ColorHug");
 		fu_device_set_metadata (item->device, FU_DEVICE_KEY_GUID,
 					ch_device_get_guid (device));
+		fu_device_set_metadata (item->device, FU_DEVICE_KEY_KIND,
+					"hotplug");
 
 		/* try to get the serial number -- if opening failed then
 		 * poll until the device is not busy */

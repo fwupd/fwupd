@@ -397,7 +397,9 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		GVariant *prop_value;
+		const gchar *action_id;
 		const gchar *id = NULL;
+		const gchar *kind;
 		gchar *prop_key;
 		gint32 fd_handle = 0;
 		gint fd;
@@ -481,10 +483,18 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			return;
 		}
 
+		/* relax authentication checks for removable devices */
+		kind = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_KIND);
+		if (g_strcmp0 (kind, "hotplug") == 0) {
+			action_id = "org.freedesktop.fwupd.update-hotplug";
+		} else {
+			action_id = "org.freedesktop.fwupd.update-internal";
+		}
+
 		/* authenticate */
 		subject = polkit_system_bus_name_new (sender);
 		polkit_authority_check_authorization (helper->priv->authority, subject,
-						      "org.freedesktop.fwupd.update",
+						      action_id,
 						      NULL,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
