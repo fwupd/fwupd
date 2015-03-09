@@ -49,6 +49,7 @@
 typedef struct {
 	GDBusConnection		*connection;
 	GDBusNodeInfo		*introspection_daemon;
+	GDBusProxy		*proxy_uid;
 	GMainLoop		*loop;
 	GPtrArray		*devices;
 	GPtrArray		*providers;
@@ -163,13 +164,40 @@ fu_main_helper_free (FuMainAuthHelper *helper)
 }
 
 /**
+ * fu_main_provider_update_authenticated:
+ **/
+static gboolean
+fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
+{
+	FuDeviceItem *item;
+
+	/* check the device still exists */
+	item = fu_main_get_item_by_id (helper->priv, fu_device_get_id (helper->device));
+	if (item == NULL) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INVALID_FILE,
+			     "device %s was removed",
+			     fu_device_get_id (helper->device));
+		return FALSE;
+	}
+
+	/* run the correct provider that added this */
+	return fu_provider_update (item->provider,
+				   item->device,
+				   fu_cab_get_stream (helper->cab),
+				   helper->firmware_fd,
+				   helper->flags,
+				   error);
+}
+
+/**
  * fu_main_check_authorization_cb:
  **/
 static void
 fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FuMainAuthHelper *helper = (FuMainAuthHelper *) user_data;
-	FuDeviceItem *item;
 	_cleanup_error_free_ GError *error = NULL;
 	_cleanup_object_unref_ PolkitAuthorizationResult *auth = NULL;
 
@@ -196,27 +224,9 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 		return;
 	}
 
-	/* check the device still exists */
-	item = fu_main_get_item_by_id (helper->priv, helper->id);
-	if (item == NULL) {
-		g_dbus_method_invocation_return_error (helper->invocation,
-						       FU_ERROR,
-						       FU_ERROR_NO_SUCH_DEVICE,
-						       "device %s was removed",
-						       helper->id);
-		fu_main_helper_free (helper);
-		return;
-	}
-
-	/* run the correct provider that added this */
-	if (!fu_provider_update (item->provider,
-				 item->device,
-				 fu_cab_get_stream (helper->cab),
-				 helper->firmware_fd,
-				 helper->flags,
-				 &error)) {
-		g_dbus_method_invocation_return_gerror (helper->invocation,
-							error);
+	/* we're good to go */
+	if (!fu_main_provider_update_authenticated (helper, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
 		fu_main_helper_free (helper);
 		return;
 	}
@@ -329,6 +339,36 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 }
 
 /**
+ * fu_main_dbus_get_uid:
+ *
+ * Return value: the UID, or %G_MAXUINT if it could not be obtained
+ **/
+static guint
+fu_main_dbus_get_uid (FuMainPrivate *priv, const gchar *sender)
+{
+	guint uid;
+	_cleanup_error_free_ GError *error = NULL;
+	_cleanup_variant_unref_ GVariant *value = NULL;
+
+	if (priv->proxy_uid == NULL)
+		return G_MAXUINT;
+	value = g_dbus_proxy_call_sync (priv->proxy_uid,
+					"GetConnectionUnixUser",
+					g_variant_new ("(s)", sender),
+					G_DBUS_CALL_FLAGS_NONE,
+					-1,
+					NULL,
+					&error);
+	if (value == NULL) {
+		g_warning ("Failed to get uid for %s: %s",
+			   sender, error->message);
+		return G_MAXUINT;
+	}
+	g_variant_get (value, "(u)", &uid);
+	return uid;
+}
+
+/**
  * fu_main_daemon_method_call:
  **/
 static void
@@ -426,6 +466,17 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		if (!fu_main_update_helper (helper, &error)) {
 			g_dbus_method_invocation_return_gerror (helper->invocation,
 							        error);
+			fu_main_helper_free (helper);
+			return;
+		}
+
+		/* is root */
+		if (fu_main_dbus_get_uid (priv, sender) == 0) {
+			if (!fu_main_provider_update_authenticated (helper, &error)) {
+				g_dbus_method_invocation_return_gerror (invocation, error);
+			} else {
+				g_dbus_method_invocation_return_value (invocation, NULL);
+			}
 			fu_main_helper_free (helper);
 			return;
 		}
@@ -549,6 +600,7 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 	guint registration_id;
+	_cleanup_error_free_ GError *error = NULL;
 	static const GDBusInterfaceVTable interface_vtable = {
 		fu_main_daemon_method_call,
 		fu_main_daemon_get_property,
@@ -564,6 +616,22 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 							     NULL,  /* user_data_free_func */
 							     NULL); /* GError** */
 	g_assert (registration_id > 0);
+
+	/* connect to D-Bus directly */
+	priv->proxy_uid =
+		g_dbus_proxy_new_sync (priv->connection,
+				       G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
+				       G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
+				       NULL,
+				       "org.freedesktop.DBus",
+				       "/org/freedesktop/DBus",
+				       "org.freedesktop.DBus",
+				       NULL,
+				       &error);
+	if (priv->proxy_uid == NULL) {
+		g_warning ("cannot connect to DBus: %s", error->message);
+		return;
+	}
 }
 
 /**
@@ -788,6 +856,8 @@ out:
 	if (priv != NULL) {
 		if (priv->loop != NULL)
 			g_main_loop_unref (priv->loop);
+		if (priv->proxy_uid != NULL)
+			g_object_unref (priv->proxy_uid);
 		if (priv->connection != NULL)
 			g_object_unref (priv->connection);
 		if (priv->authority != NULL)
