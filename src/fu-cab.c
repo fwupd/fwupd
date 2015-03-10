@@ -51,6 +51,7 @@ struct _FuCabPrivate
 	gchar				*guid;
 	gchar				*inf_filename;
 	gchar				*tmp_path;
+	gchar				*name;
 	gchar				*summary;
 	gchar				*vendor;
 	gchar				*version;
@@ -172,15 +173,9 @@ fu_cab_parse (FuCab *cab, GError **error)
 
 	/* extract info */
 	priv->guid = g_strdup (as_app_get_id (app));
-	tmp = as_app_get_developer_name (app, NULL);
-	if (tmp != NULL)
-		priv->vendor = g_strdup (tmp);
-	tmp = as_app_get_comment (app, NULL);
-	if (tmp == NULL)
-		tmp = as_app_get_name (app, NULL);
-	if (tmp != NULL)
-		priv->summary = g_strdup (tmp);
-	priv->summary = g_strdup (tmp);
+	priv->vendor = g_strdup (as_app_get_developer_name (app, NULL));
+	priv->name = g_strdup (as_app_get_name (app, NULL));
+	priv->summary = g_strdup (as_app_get_comment (app, NULL));
 	rel = as_app_get_release_default (app);
 	priv->version = g_strdup (as_release_get_version (rel));
 
@@ -362,6 +357,16 @@ fu_cab_get_vendor (FuCab *cab)
 }
 
 /**
+ * fu_cab_get_name:
+ **/
+const gchar *
+fu_cab_get_name (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
+	return cab->priv->name;
+}
+
+/**
  * fu_cab_get_summary:
  **/
 const gchar *
@@ -415,6 +420,7 @@ fu_cab_finalize (GObject *object)
 	g_free (priv->guid);
 	g_free (priv->inf_filename);
 	g_free (priv->tmp_path);
+	g_free (priv->name);
 	g_free (priv->summary);
 	g_free (priv->vendor);
 	g_free (priv->version);

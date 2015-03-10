@@ -568,6 +568,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		GVariantBuilder builder;
+		const gchar *tmp;
 		gint32 fd_handle = 0;
 		gint fd;
 		_cleanup_error_free_ GError *error = NULL;
@@ -614,16 +615,26 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_variant_builder_add (&builder, "{sv}",
 				       FU_DEVICE_KEY_GUID,
 				       g_variant_new_string (fu_cab_get_guid (cab)));
-		g_variant_builder_add (&builder, "{sv}",
-				       FU_DEVICE_KEY_VENDOR,
-				       g_variant_new_string (fu_cab_get_vendor (cab)));
-		g_variant_builder_add (&builder, "{sv}",
-				       FU_DEVICE_KEY_SUMMARY,
-				       g_variant_new_string (fu_cab_get_summary (cab)));
-		/* FIXME */
-		g_variant_builder_add (&builder, "{sv}",
-				       FU_DEVICE_KEY_DISPLAY_NAME,
-				       g_variant_new_string ("???"));
+
+		/* optional properties */
+		tmp = fu_cab_get_vendor (cab);
+		if (tmp != NULL) {
+			g_variant_builder_add (&builder, "{sv}",
+					       FU_DEVICE_KEY_VENDOR,
+					       g_variant_new_string (tmp));
+		}
+		tmp = fu_cab_get_name (cab);
+		if (tmp != NULL) {
+			g_variant_builder_add (&builder, "{sv}",
+					       FU_DEVICE_KEY_NAME,
+					       g_variant_new_string (tmp));
+		}
+		tmp = fu_cab_get_summary (cab);
+		if (tmp != NULL) {
+			g_variant_builder_add (&builder, "{sv}",
+					       FU_DEVICE_KEY_SUMMARY,
+					       g_variant_new_string (tmp));
+		}
 
 		/* return whole array */
 		val = g_variant_new ("(a{sv})", &builder);

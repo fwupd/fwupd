@@ -39,6 +39,7 @@
 #define FU_DEVICE_KEY_FILENAME_CAB	"FilenameCab"	/* internal only */
 #define FU_DEVICE_KEY_VERSION_LOWEST	"VersionLowest"
 #define FU_DEVICE_KEY_VENDOR		"Vendor"
+#define FU_DEVICE_KEY_NAME		"Name"
 #define FU_DEVICE_KEY_SUMMARY		"Summary"
 #define FU_DEVICE_KEY_KIND		"Kind"		/* 'internal' or 'hotplug' */
 
