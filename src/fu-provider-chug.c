@@ -448,17 +448,17 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 	case CH_DEVICE_MODE_BOOTLOADER2:
 	case CH_DEVICE_MODE_FIRMWARE2:
 		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
-					"ColorHug");
+					"ColorHug2");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
 	case CH_DEVICE_MODE_FIRMWARE_PLUS:
 		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
-					"ColorHug");
+					"ColorHug+");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_ALS:
 	case CH_DEVICE_MODE_FIRMWARE_ALS:
 		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
-					"ColorHug");
+					"ColorHugALS");
 		break;
 	default:
 		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
