@@ -1,3 +1,8 @@
+
+polkit_rulesdir = $(datadir)/polkit-1/rules.d
+dist_polkit_rules_DATA =				\
+	org.freedesktop.fwupd.rules
+
 @INTLTOOL_POLICY_RULE@
 polkit_policydir = $(datadir)/polkit-1/actions
 polkit_policy_in_files = org.freedesktop.fwupd.policy.in
