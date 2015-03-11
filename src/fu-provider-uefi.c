@@ -47,7 +47,7 @@ fu_provider_uefi_update (FuProvider *provider,
 	const gchar *guid_str;
 	efi_guid_t *guid_raw;
 	fwup_resource_iter *iter = NULL;
-	fwup_resource *re;
+	fwup_resource *re = NULL;
 	fwup_resource *re_matched = NULL;
 	gboolean ret = TRUE;
 	guint64 hardware_instance = 0;	/* FIXME */
