@@ -30,18 +30,22 @@
 
 #define FU_ERROR			fu_error_quark()
 
-#define FU_DEVICE_KEY_VERSION		"Version"
-#define FU_DEVICE_KEY_PROVIDER		"Provider"
-#define FU_DEVICE_KEY_GUID		"Guid"
-#define FU_DEVICE_KEY_ONLY_OFFLINE	"OnlyOffline"
-#define FU_DEVICE_KEY_DISPLAY_NAME	"DisplayName"
+#define FU_DEVICE_KEY_VERSION		"Version"	/* s */
+#define FU_DEVICE_KEY_PROVIDER		"Provider"	/* s */
+#define FU_DEVICE_KEY_GUID		"Guid"		/* s */
+#define FU_DEVICE_KEY_ONLY_OFFLINE	"OnlyOffline"	/* s */
+#define FU_DEVICE_KEY_DISPLAY_NAME	"DisplayName"	/* s */
 #define FU_DEVICE_KEY_VERSION_NEW	"VersionNew"	/* internal only */
 #define FU_DEVICE_KEY_FILENAME_CAB	"FilenameCab"	/* internal only */
-#define FU_DEVICE_KEY_VERSION_LOWEST	"VersionLowest"
-#define FU_DEVICE_KEY_VENDOR		"Vendor"
-#define FU_DEVICE_KEY_NAME		"Name"
-#define FU_DEVICE_KEY_SUMMARY		"Summary"
-#define FU_DEVICE_KEY_KIND		"Kind"		/* 'internal' or 'hotplug' */
+#define FU_DEVICE_KEY_VERSION_LOWEST	"VersionLowest"	/* s */
+#define FU_DEVICE_KEY_VENDOR		"Vendor"	/* s */
+#define FU_DEVICE_KEY_NAME		"Name"		/* s */
+#define FU_DEVICE_KEY_SUMMARY		"Summary"	/* s */
+#define FU_DEVICE_KEY_DESCRIPTION	"Description"	/* s */
+#define FU_DEVICE_KEY_LICENSE		"License"	/* s */
+#define FU_DEVICE_KEY_KIND		"Kind"		/* s: 'internal' or 'hotplug' */
+#define FU_DEVICE_KEY_URL_HOMEPAGE	"UrlHomepage"	/* s */
+#define FU_DEVICE_KEY_SIZE		"Size"		/* t */
 
 typedef enum {
 	FU_STATUS_IDLE,

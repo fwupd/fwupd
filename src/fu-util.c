@@ -313,7 +313,13 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 			FU_DEVICE_KEY_PROVIDER,
 			FU_DEVICE_KEY_GUID,
 			FU_DEVICE_KEY_VERSION,
+			FU_DEVICE_KEY_URL_HOMEPAGE,
+			FU_DEVICE_KEY_NAME,
+			FU_DEVICE_KEY_SUMMARY,
+			FU_DEVICE_KEY_DESCRIPTION,
+			FU_DEVICE_KEY_LICENSE,
 			FU_DEVICE_KEY_ONLY_OFFLINE,
+			FU_DEVICE_KEY_SIZE,
 			NULL };
 		for (i = 0; i < devices->len; i++) {
 			dev = g_ptr_array_index (devices, i);

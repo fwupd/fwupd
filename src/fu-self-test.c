@@ -51,6 +51,12 @@ fu_cab_func (void)
 	g_assert (fu_cab_get_stream (cab) != NULL);
 	g_assert_cmpstr (fu_cab_get_guid (cab), ==, "84f40464-9272-4ef7-9399-cd95f12da696");
 	g_assert_cmpstr (fu_cab_get_version (cab), ==, "3.0.2");
+	g_assert_cmpstr (fu_cab_get_url_homepage (cab), ==, "http://www.hughski.com/");
+	g_assert_cmpstr (fu_cab_get_license (cab), ==, "GPL-2.0+");
+	g_assert_cmpint (fu_cab_get_size (cab), ==, 9668);
+	g_assert_cmpstr (fu_cab_get_description (cab), ==,
+		"<p>Updating the firmware on your ColorHugALS device "
+		"improves performance and adds new features.</p>");
 	g_assert (!g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
 
 	/* extract firmware */

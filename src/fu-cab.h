@@ -71,7 +71,11 @@ const gchar	*fu_cab_get_version			(FuCab		*cab);
 const gchar	*fu_cab_get_vendor			(FuCab		*cab);
 const gchar	*fu_cab_get_summary			(FuCab		*cab);
 const gchar	*fu_cab_get_name			(FuCab		*cab);
+const gchar	*fu_cab_get_description			(FuCab		*cab);
+const gchar	*fu_cab_get_license			(FuCab		*cab);
+const gchar	*fu_cab_get_url_homepage		(FuCab		*cab);
 const gchar	*fu_cab_get_filename_firmware		(FuCab		*cab);
+guint64		 fu_cab_get_size			(FuCab		*cab);
 
 G_END_DECLS
 

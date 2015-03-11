@@ -632,6 +632,9 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_variant_builder_add (&builder, "{sv}",
 				       FU_DEVICE_KEY_GUID,
 				       g_variant_new_string (fu_cab_get_guid (cab)));
+		g_variant_builder_add (&builder, "{sv}",
+				       FU_DEVICE_KEY_SIZE,
+				       g_variant_new_uint64 (fu_cab_get_size (cab)));
 
 		/* optional properties */
 		tmp = fu_cab_get_vendor (cab);
@@ -650,6 +653,24 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		if (tmp != NULL) {
 			g_variant_builder_add (&builder, "{sv}",
 					       FU_DEVICE_KEY_SUMMARY,
+					       g_variant_new_string (tmp));
+		}
+		tmp = fu_cab_get_description (cab);
+		if (tmp != NULL) {
+			g_variant_builder_add (&builder, "{sv}",
+					       FU_DEVICE_KEY_DESCRIPTION,
+					       g_variant_new_string (tmp));
+		}
+		tmp = fu_cab_get_url_homepage (cab);
+		if (tmp != NULL) {
+			g_variant_builder_add (&builder, "{sv}",
+					       FU_DEVICE_KEY_URL_HOMEPAGE,
+					       g_variant_new_string (tmp));
+		}
+		tmp = fu_cab_get_license (cab);
+		if (tmp != NULL) {
+			g_variant_builder_add (&builder, "{sv}",
+					       FU_DEVICE_KEY_LICENSE,
 					       g_variant_new_string (tmp));
 		}
 

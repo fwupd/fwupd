@@ -48,14 +48,18 @@ struct _FuCabPrivate
 	GKeyFile			*inf_kf;
 	gchar				*firmware_basename;
 	gchar				*firmware_filename;
+	gchar				*description;
 	gchar				*guid;
 	gchar				*inf_filename;
 	gchar				*metainfo_filename;
 	gchar				*tmp_path;
+	gchar				*license;
 	gchar				*name;
 	gchar				*summary;
+	gchar				*url_homepage;
 	gchar				*vendor;
 	gchar				*version;
+	guint64				 size;
 };
 
 G_DEFINE_TYPE (FuCab, fu_cab, G_TYPE_OBJECT)
@@ -118,6 +122,7 @@ fu_cab_parse (FuCab *cab, GError **error)
 {
 	AsRelease *rel;
 	FuCabPrivate *priv = cab->priv;
+	GString *update_description;
 	const gchar *tmp;
 	_cleanup_error_free_ GError *error_local = NULL;
 	_cleanup_object_unref_ AsApp *app = NULL;
@@ -199,12 +204,22 @@ fu_cab_parse (FuCab *cab, GError **error)
 	}
 
 	/* extract info */
+	update_description = g_string_new ("");
 	priv->guid = g_strdup (as_app_get_id (app));
 	priv->vendor = g_strdup (as_app_get_developer_name (app, NULL));
 	priv->name = g_strdup (as_app_get_name (app, NULL));
 	priv->summary = g_strdup (as_app_get_comment (app, NULL));
+	tmp = as_app_get_description (app, NULL);
+	if (tmp != NULL)
+		g_string_append (update_description, tmp);
+	priv->url_homepage = g_strdup (as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE));
+	priv->license = g_strdup (as_app_get_project_license (app));
 	rel = as_app_get_release_default (app);
 	priv->version = g_strdup (as_release_get_version (rel));
+	tmp = as_release_get_description (rel, NULL);
+	if (tmp != NULL)
+		g_string_append (update_description, tmp);
+	priv->description = g_string_free (update_description, FALSE);
 
 	/* find out what firmware file we have to open */
 	tmp = as_app_get_metadata_item (app, "FirmwareBasename");
@@ -226,6 +241,11 @@ fu_cab_load_fd (FuCab *cab, gint fd, GCancellable *cancellable, GError **error)
 
 	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
 
+	/* we can't get the size of the files in the .cab file, so just return
+	 * the size of the cab file itself, on the logic that the firmware will
+	 * be the largest thing by far, and typically be uncompressable */
+	priv->size = 0;
+
 	/* GCab needs a GSeekable input stream, so buffer to RAM then load */
 	stream = g_unix_input_stream_new (fd, TRUE);
 	priv->cab_stream = g_memory_input_stream_new ();
@@ -243,6 +263,7 @@ fu_cab_load_fd (FuCab *cab, gint fd, GCancellable *cancellable, GError **error)
 					     error_local->message);
 			return FALSE;
 		}
+		priv->size += g_bytes_get_size (data);
 		g_memory_input_stream_add_bytes (G_MEMORY_INPUT_STREAM (priv->cab_stream), data);
 	}
 
@@ -258,8 +279,24 @@ fu_cab_load_file (FuCab *cab, GFile *file, GCancellable *cancellable, GError **e
 {
 	FuCabPrivate *priv = cab->priv;
 	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_object_unref_ GFileInfo *info = NULL;
 
 	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
+
+	/* get size */
+	info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_SIZE,
+				  G_FILE_QUERY_INFO_NONE, cancellable, &error_local);
+	if (info == NULL) {
+		_cleanup_free_ gchar *filename = NULL;
+		filename = g_file_get_path (file);
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INVALID_FILE,
+			     "Failed to get info for %s: %s",
+			     filename, error_local->message);
+		return FALSE;
+	}
+	priv->size = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_STANDARD_SIZE);
 
 	/* open file */
 	priv->cab_stream = G_INPUT_STREAM (g_file_read (file, cancellable, &error_local));
@@ -404,6 +441,46 @@ fu_cab_get_summary (FuCab *cab)
 }
 
 /**
+ * fu_cab_get_description:
+ **/
+const gchar *
+fu_cab_get_description (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
+	return cab->priv->description;
+}
+
+/**
+ * fu_cab_get_url_homepage:
+ **/
+const gchar *
+fu_cab_get_url_homepage (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
+	return cab->priv->url_homepage;
+}
+
+/**
+ * fu_cab_get_size:
+ **/
+guint64
+fu_cab_get_size (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), 0);
+	return cab->priv->size;
+}
+
+/**
+ * fu_cab_get_license:
+ **/
+const gchar *
+fu_cab_get_license (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
+	return cab->priv->license;
+}
+
+/**
  * fu_cab_get_filename_firmware:
  **/
 const gchar *
@@ -446,11 +523,15 @@ fu_cab_finalize (GObject *object)
 	g_free (priv->firmware_filename);
 	g_free (priv->guid);
 	g_free (priv->inf_filename);
+	g_free (priv->metainfo_filename);
 	g_free (priv->tmp_path);
 	g_free (priv->name);
 	g_free (priv->summary);
+	g_free (priv->description);
+	g_free (priv->url_homepage);
 	g_free (priv->vendor);
 	g_free (priv->version);
+	g_free (priv->license);
 	if (priv->cab_stream != NULL)
 		g_object_unref (priv->cab_stream);
 	if (priv->gcab != NULL)

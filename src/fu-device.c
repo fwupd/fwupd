@@ -146,7 +146,13 @@ fu_device_set_metadata_from_iter (FuDevice *device, GVariantIter *iter)
 						g_variant_get_string (variant, NULL));
 		} else if (g_strcmp0 (type, "b") == 0) {
 			fu_device_set_metadata (device, key, "TRUE");
+		} else if (g_strcmp0 (type, "t") == 0) {
+			_cleanup_free_ gchar *tmp = NULL;
+			tmp = g_strdup_printf ("%" G_GUINT64_FORMAT,
+					       g_variant_get_uint64 (variant));
+			fu_device_set_metadata (device, key, tmp);
 		} else {
+			g_warning ("type=%s", type);
 			fu_device_set_metadata (device, key, "???");
 		}
 		g_variant_unref (variant);
