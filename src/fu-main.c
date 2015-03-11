@@ -63,6 +63,23 @@ typedef struct {
 } FuDeviceItem;
 
 /**
+ * fu_main_emit_changed:
+ **/
+static void
+fu_main_emit_changed (FuMainPrivate *priv)
+{
+	/* not yet connected */
+	if (priv->connection == NULL)
+		return;
+	g_dbus_connection_emit_signal (priv->connection,
+				       NULL,
+				       FWUPD_DBUS_PATH,
+				       FWUPD_DBUS_INTERFACE,
+				       "Changed",
+				       NULL, NULL);
+}
+
+/**
  * fu_main_emit_property_changed:
  **/
 static void
@@ -802,6 +819,7 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 	item->device = g_object_ref (device);
 	item->provider = g_object_ref (provider);
 	g_ptr_array_add (priv->devices, item);
+	fu_main_emit_changed (priv);
 }
 
 /**
@@ -821,6 +839,7 @@ cd_main_provider_device_removed_cb (FuProvider *provider,
 		return;
 	}
 	g_ptr_array_remove (priv->devices, item);
+	fu_main_emit_changed (priv);
 }
 
 /**
