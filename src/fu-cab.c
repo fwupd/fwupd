@@ -50,6 +50,7 @@ struct _FuCabPrivate
 	gchar				*firmware_filename;
 	gchar				*guid;
 	gchar				*inf_filename;
+	gchar				*metainfo_filename;
 	gchar				*tmp_path;
 	gchar				*name;
 	gchar				*summary;
@@ -74,6 +75,15 @@ fu_cab_extract_inf_cb (GCabFile *file, gpointer user_data)
 		priv->inf_filename = g_build_filename (priv->tmp_path,
 							 gcab_file_get_name (file),
 							 NULL);
+		return TRUE;
+	}
+
+	/* also extract the optional metainfo file if it exists */
+	if (priv->metainfo_filename == NULL &&
+	    g_str_has_suffix (gcab_file_get_name (file), ".metainfo.xml")) {
+		priv->metainfo_filename = g_build_filename (priv->tmp_path,
+							    gcab_file_get_name (file),
+							    NULL);
 		return TRUE;
 	}
 	return FALSE;
@@ -169,6 +179,23 @@ fu_cab_parse (FuCab *cab, GError **error)
 			     priv->inf_filename,
 			     error_local->message);
 		return FALSE;
+	}
+
+	/* merge with the metainfo file */
+	if (priv->metainfo_filename != NULL) {
+		_cleanup_object_unref_ AsApp *app2 = NULL;
+		app2 = as_app_new ();
+		if (!as_app_parse_file (app2, priv->metainfo_filename,
+					AS_APP_PARSE_FLAG_NONE, &error_local)) {
+			g_set_error (error,
+				     FU_ERROR,
+				     FU_ERROR_INVALID_FILE,
+				     "%s could not be loaded: %s",
+				     priv->metainfo_filename,
+				     error_local->message);
+			return FALSE;
+		}
+		as_app_subsume_full (app, app2, AS_APP_SUBSUME_FLAG_NONE);
 	}
 
 	/* extract info */
