@@ -19,6 +19,7 @@ BuildRequires: libgcab1-devel
 BuildRequires: libappstream-glib-devel
 BuildRequires: sqlite-devel
 BuildRequires: fwupdate-devel >= 0.1
+Requires: efibootmgr
 
 %description
 fwupd is a daemon to allow session software to update UEFI firmware.
