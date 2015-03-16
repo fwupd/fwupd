@@ -1,0 +1,169 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+# Franck <franck.routier@gmail.com>, 2015
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-03-16 12:40+0000\n"
+"PO-Revision-Date: 2015-03-16 13:56+0000\n"
+"Last-Translator: Franck <franck.routier@gmail.com>\n"
+"Language-Team: French (http://www.transifex.com/projects/p/fwupd/language/fr/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#. SECURITY:
+#. - Normal users require admin authentication to update firmware
+#. - This should not be set to 'yes' as unprivileged users could then
+#. update to hostile and unsigned firmware.
+msgid "Install system firmware update"
+msgstr "Mettre à jour le micrologiciel système"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "Une authentification est nécessaire pour mettre à jour le micrologiciel sur cette machine"
+
+#. SECURITY:
+#. - Normal users should not require admin authentication to update devices
+msgid "Install device firmware update"
+msgstr "Mettre à jour le micrologiciel du périphérique"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a device"
+msgstr "Une authentification est nécessaire pour mettre à jour le micrologiciel sur un périphérique"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all files"
+msgstr "Montrer les informations de débogage pour tous les fichiers"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Debugging Options"
+msgstr "Options de débogage"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Show debugging options"
+msgstr "Montrer les options de débogage"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+msgid "Exit after a small delay"
+msgstr "Quitter après un bref délai"
+
+#. TRANSLATORS: exit straight away, used for automatic profiling
+msgid "Exit after the engine has loaded"
+msgstr "Quitter après le chargement du moteur"
+
+#. TRANSLATORS: program name
+msgid "Firmware Update"
+msgstr "Mise à jour des micrologiciels"
+
+#. TRANSLATORS: program summary
+msgid "Firmware Update D-Bus Service"
+msgstr "Service D-Bus de mise à jour des micrologiciels"
+
+#. TRANSLATORS: this is a command alias
+#, c-format
+msgid "Alias to %s"
+msgstr "Alias de %s"
+
+#. TRANSLATORS: error message
+msgid "Command not found, valid commands are:"
+msgstr "Commande inconnue, les commandes valides sont :"
+
+#. TRANSLATORS: daemon is inactive
+msgid "Idle"
+msgstr "En attente"
+
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing firmware"
+msgstr "Décompression du micrologiciel"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading firmware"
+msgstr "Chargement du micrologiciel"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device"
+msgstr "Redémarrage du périphérique"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing firmware to device"
+msgstr "Ecriture du micrologiciel sur le périphérique"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying firmware from device"
+msgstr "Vérification du micrologiciel du périphérique"
+
+#. TRANSLATORS: scheduing an update to be done on the next boot
+msgid "Scheduling upgrade"
+msgstr "Planification de la mise à jour"
+
+#. TRANSLATORS: nothing attached that can be upgraded
+msgid "No hardware detected with firmware update capability"
+msgstr "Aucun matériel ayant des capacités de mise à jour du micrologiciel n'a été détecté"
+
+#. TRANSLATORS: update completed, no errors
+msgid "Done!"
+msgstr "Terminé !"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second is a version number
+#. * e.g. "1.2.3"
+#, c-format
+msgid "Reinstalling %s with %s... "
+msgstr "Réinstallation de %s en %s"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#, c-format
+msgid "Downgrading %s from %s to %s... "
+msgstr "Rétrogradation de %s de %s en %s"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#, c-format
+msgid "Updating %s from %s to %s... "
+msgstr "Mise à jour de %s de %s en %s"
+
+#. TRANSLATORS: command line option
+msgid "Show extra debugging information"
+msgstr "Montre des informations de débogage complémentaires"
+
+#. TRANSLATORS: command line option
+msgid "Force the installation of firmware"
+msgstr "Force l'installation du micrologiciel"
+
+#. TRANSLATORS: command description
+msgid "Get all devices that support firmware updates"
+msgstr "Obtenir la liste des périphériques supportant les mises à jour de micrologiciel"
+
+#. TRANSLATORS: command description
+msgid "Install the update the next time the computer is rebooted"
+msgstr "Installer la mise à jour au prochain redémarrage de l'ordinateur"
+
+#. TRANSLATORS: command description
+msgid "Install the update now"
+msgstr "Installer la mise à jour immédiatement"
+
+#. TRANSLATORS: command description
+msgid "Install prepared updates now"
+msgstr "Installer immédiatement les mises à jour préparées"
+
+#. TRANSLATORS: command description
+msgid "Install a firmware file on this hardware"
+msgstr "Installer un fichier de micrologiciel sur ce matériel"
+
+#. TRANSLATORS: command description
+msgid "Gets details about a firmware file"
+msgstr "Obtenir les détails d'un fichier de micrologiciel"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "Echec de l'analyse des paramètres"

@@ -1,0 +1,169 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+# dhead666 <myfoolishgames@gmail.com>, 2015
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-03-16 12:40+0000\n"
+"PO-Revision-Date: 2015-03-16 16:07+0000\n"
+"Last-Translator: dhead666 <myfoolishgames@gmail.com>\n"
+"Language-Team: Hebrew (http://www.transifex.com/projects/p/fwupd/language/he/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: he\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. SECURITY:
+#. - Normal users require admin authentication to update firmware
+#. - This should not be set to 'yes' as unprivileged users could then
+#. update to hostile and unsigned firmware.
+msgid "Install system firmware update"
+msgstr "התקנת עדכון קושחת מערכת"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "אימות משתמש נדרש לעדכון קושחה מערכת זו"
+
+#. SECURITY:
+#. - Normal users should not require admin authentication to update devices
+msgid "Install device firmware update"
+msgstr "התקנת עדכון קושחת מכשיר"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a device"
+msgstr "אימות משתמש נדרש לעדכון קושחה מכשיר"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all files"
+msgstr "הצג מידע ניפוי שגיאות לכל הקבצים"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Debugging Options"
+msgstr "אפשרויות ניפוי שגיאות"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Show debugging options"
+msgstr "הצג אפשרויות ניפוי שגיאות"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+msgid "Exit after a small delay"
+msgstr "יציאה לאחר השהייה קצרה"
+
+#. TRANSLATORS: exit straight away, used for automatic profiling
+msgid "Exit after the engine has loaded"
+msgstr "יציאה לאחר טעינת מנוע התכנה"
+
+#. TRANSLATORS: program name
+msgid "Firmware Update"
+msgstr "עדכון קושחה"
+
+#. TRANSLATORS: program summary
+msgid "Firmware Update D-Bus Service"
+msgstr "שירות D-Bus עדכון קושחה"
+
+#. TRANSLATORS: this is a command alias
+#, c-format
+msgid "Alias to %s"
+msgstr "כינוי עבור %s"
+
+#. TRANSLATORS: error message
+msgid "Command not found, valid commands are:"
+msgstr "פקודה לא נמצאה, פקודות אפשריות:"
+
+#. TRANSLATORS: daemon is inactive
+msgid "Idle"
+msgstr "מצב סרק"
+
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing firmware"
+msgstr "מחלץ קושחה"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading firmware"
+msgstr "טוען קושחה"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device"
+msgstr "מפעיל מחדש מכשיר"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing firmware to device"
+msgstr "כותב קושחה למכשיר"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying firmware from device"
+msgstr "מאמת קושחה שבמכשיר"
+
+#. TRANSLATORS: scheduing an update to be done on the next boot
+msgid "Scheduling upgrade"
+msgstr "מתזמן שדרוג"
+
+#. TRANSLATORS: nothing attached that can be upgraded
+msgid "No hardware detected with firmware update capability"
+msgstr "לא אותרה חומרה בעלת יכולת עדכון קושחה"
+
+#. TRANSLATORS: update completed, no errors
+msgid "Done!"
+msgstr "הסתיים!"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second is a version number
+#. * e.g. "1.2.3"
+#, c-format
+msgid "Reinstalling %s with %s... "
+msgstr "מתקין מחדש %s עם %s..."
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#, c-format
+msgid "Downgrading %s from %s to %s... "
+msgstr "משנמך גרסת %s מ־%s ל־%s..."
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#, c-format
+msgid "Updating %s from %s to %s... "
+msgstr "מעדכן %s מ־%s ל־%s..."
+
+#. TRANSLATORS: command line option
+msgid "Show extra debugging information"
+msgstr "הצג מידע ניפוי שגיאות מורחב"
+
+#. TRANSLATORS: command line option
+msgid "Force the installation of firmware"
+msgstr "אלץ התקנת קושחה"
+
+#. TRANSLATORS: command description
+msgid "Get all devices that support firmware updates"
+msgstr "מציג כל המכשירים התומכים בעדכוני קושחה"
+
+#. TRANSLATORS: command description
+msgid "Install the update the next time the computer is rebooted"
+msgstr "מתקין עדכון בעת הפעלת המחשב הבאה"
+
+#. TRANSLATORS: command description
+msgid "Install the update now"
+msgstr "מתקין עדכון כעת"
+
+#. TRANSLATORS: command description
+msgid "Install prepared updates now"
+msgstr "מתקין כעת עדכונים מוכנים"
+
+#. TRANSLATORS: command description
+msgid "Install a firmware file on this hardware"
+msgstr "מתקין קובץ קושחה בחומרה זו"
+
+#. TRANSLATORS: command description
+msgid "Gets details about a firmware file"
+msgstr "מציג פרטים אודות קובץ קושחה"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "נכשל בפענוח הארגומנטים"

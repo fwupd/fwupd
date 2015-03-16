@@ -1,0 +1,169 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+# Piotr Drąg <piotrdrag@gmail.com>, 2015
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-03-16 12:40+0000\n"
+"PO-Revision-Date: 2015-03-16 15:21+0000\n"
+"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
+"Language-Team: Polish (http://www.transifex.com/projects/p/fwupd/language/pl/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pl\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#. SECURITY:
+#. - Normal users require admin authentication to update firmware
+#. - This should not be set to 'yes' as unprivileged users could then
+#. update to hostile and unsigned firmware.
+msgid "Install system firmware update"
+msgstr "Aktualizacja oprogramowania sprzętowego komputera"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "Wymagane jest uwierzytelnienie, aby zaktualizować oprogramowanie sprzętowe tego komputera"
+
+#. SECURITY:
+#. - Normal users should not require admin authentication to update devices
+msgid "Install device firmware update"
+msgstr "Aktualizacja oprogramowania sprzętowego urządzenia"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a device"
+msgstr "Wymagane jest uwierzytelnienie, aby zaktualizować oprogramowanie sprzętowe urządzenia"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all files"
+msgstr "Wyświetla informacje o debugowaniu dla wszystkich plików"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Debugging Options"
+msgstr "Opcje debugowania"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Show debugging options"
+msgstr "Wyświetla opcje debugowania"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+msgid "Exit after a small delay"
+msgstr "Kończy działanie po małym opóźnieniu"
+
+#. TRANSLATORS: exit straight away, used for automatic profiling
+msgid "Exit after the engine has loaded"
+msgstr "Kończy działanie po wczytaniu mechanizmu"
+
+#. TRANSLATORS: program name
+msgid "Firmware Update"
+msgstr "Aktualizacja oprogramowania sprzętowego"
+
+#. TRANSLATORS: program summary
+msgid "Firmware Update D-Bus Service"
+msgstr "Usługa D-Bus aktualizacji oprogramowania sprzętowego"
+
+#. TRANSLATORS: this is a command alias
+#, c-format
+msgid "Alias to %s"
+msgstr "Alias do %s"
+
+#. TRANSLATORS: error message
+msgid "Command not found, valid commands are:"
+msgstr "Nie odnaleziono polecenia. Prawidłowe polecenia:"
+
+#. TRANSLATORS: daemon is inactive
+msgid "Idle"
+msgstr "Bezczynne"
+
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing firmware"
+msgstr "Dekompresowanie oprogramowania sprzętowego"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading firmware"
+msgstr "Wczytywanie oprogramowania sprzętowego"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device"
+msgstr "Ponowne uruchamianie urządzenia"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing firmware to device"
+msgstr "Zapisywanie oprogramowania sprzętowego w urządzeniu"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying firmware from device"
+msgstr "Sprawdzanie poprawności oprogramowania sprzętowego z urządzenia"
+
+#. TRANSLATORS: scheduing an update to be done on the next boot
+msgid "Scheduling upgrade"
+msgstr "Planowanie aktualizacji"
+
+#. TRANSLATORS: nothing attached that can be upgraded
+msgid "No hardware detected with firmware update capability"
+msgstr "Nie wykryto sprzętu z możliwością aktualizacji jego oprogramowania"
+
+#. TRANSLATORS: update completed, no errors
+msgid "Done!"
+msgstr "Gotowe."
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second is a version number
+#. * e.g. "1.2.3"
+#, c-format
+msgid "Reinstalling %s with %s... "
+msgstr "Ponowne instalowanie %s za pomocą %s... "
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#, c-format
+msgid "Downgrading %s from %s to %s... "
+msgstr "Instalowanie poprzedniej wersji %s z %s do %s... "
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#, c-format
+msgid "Updating %s from %s to %s... "
+msgstr "Aktualizowanie %s z wersji %s do %s... "
+
+#. TRANSLATORS: command line option
+msgid "Show extra debugging information"
+msgstr "Wyświetla dodatkowe informacje o debugowaniu"
+
+#. TRANSLATORS: command line option
+msgid "Force the installation of firmware"
+msgstr "Wymusza instalację oprogramowania sprzętowego"
+
+#. TRANSLATORS: command description
+msgid "Get all devices that support firmware updates"
+msgstr "Uzyskuje wszystkie urządzenia obsługujące aktualizacje oprogramowania sprzętowego"
+
+#. TRANSLATORS: command description
+msgid "Install the update the next time the computer is rebooted"
+msgstr "Instaluje aktualizację podczas następnego ponownego uruchomienia komputera"
+
+#. TRANSLATORS: command description
+msgid "Install the update now"
+msgstr "Instaluje aktualizację teraz"
+
+#. TRANSLATORS: command description
+msgid "Install prepared updates now"
+msgstr "Instaluje przygotowaną aktualizację teraz"
+
+#. TRANSLATORS: command description
+msgid "Install a firmware file on this hardware"
+msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
+
+#. TRANSLATORS: command description
+msgid "Gets details about a firmware file"
+msgstr "Uzyskuje informacje o pliku oprogramowania sprzętowego"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "Przetworzenie parametrów się nie powiodło"

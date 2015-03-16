@@ -17,7 +17,7 @@ cd po
 make fwupd.pot
 INTLTOOL_EXTRACT="/usr/bin/intltool-extract" XGETTEXT="/usr/bin/xgettext --no-location" srcdir=. /usr/bin/intltool-update --gettext-package fwupd --pot
 tx push --source
-tx pull --all
+tx pull --all --minimum-perc=5
 git add *.po
 
 2. Commit changes to git:
