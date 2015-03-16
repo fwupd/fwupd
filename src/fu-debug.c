@@ -200,7 +200,9 @@ fu_debug_get_option_group (void)
 {
 	GOptionGroup *group;
 	group = g_option_group_new ("debug",
+				    /* TRANSLATORS: for the --verbose arg */
 				    _("Debugging Options"),
+				    /* TRANSLATORS: for the --verbose arg */
 				    _("Show debugging options"),
 				    NULL, NULL);
 	g_option_group_set_parse_hooks (group,

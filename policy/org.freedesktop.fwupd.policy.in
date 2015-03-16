@@ -20,6 +20,7 @@
             update to hostile and unsigned firmware.
      -->
     <_description>Install system firmware update</_description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
     <_message>Authentication is required to update the firmware on this machine</_message>
     <icon_name>application-vnd.iccprofile</icon_name>
     <defaults>
@@ -34,6 +35,7 @@
           - Normal users should not require admin authentication to update devices
      -->
     <_description>Install device firmware update</_description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
     <_message>Authentication is required to update the firmware on a device</_message>
     <icon_name>application-vnd.iccprofile</icon_name>
     <defaults>

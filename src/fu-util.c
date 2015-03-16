@@ -178,8 +178,8 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 
 	/* not found */
 	string = g_string_new ("");
-	/* TRANSLATORS: error message */
 	g_string_append_printf (string, "%s\n",
+				/* TRANSLATORS: error message */
 				_("Command not found, valid commands are:"));
 	for (i = 0; i < priv->cmd_array->len; i++) {
 		item = g_ptr_array_index (priv->cmd_array, i);
@@ -207,24 +207,31 @@ fu_util_status_changed_cb (GDBusProxy *proxy, GVariant *changed_properties, GStr
 	tmp = g_variant_get_string (val, NULL);
 	switch (fu_status_from_string (tmp)) {
 	case FU_STATUS_IDLE:
+		/* TRANSLATORS: daemon is inactive */
 		g_print (" * %s\n", _("Idle"));
 		break;
 	case FU_STATUS_DECOMPRESSING:
+		/* TRANSLATORS: decompressing the firmware file */
 		g_print (" * %s\n", _("Decompressing firmware"));
 		break;
 	case FU_STATUS_LOADING:
+		/* TRANSLATORS: parsing the firmware information */
 		g_print (" * %s\n", _("Loading firmware"));
 		break;
 	case FU_STATUS_DEVICE_RESTART:
+		/* TRANSLATORS: restarting the device to pick up new F/W */
 		g_print (" * %s\n", _("Restarting device"));
 		break;
 	case FU_STATUS_DEVICE_WRITE:
+		/* TRANSLATORS: writing to the flash chips */
 		g_print (" * %s\n", _("Writing firmware to device"));
 		break;
 	case FU_STATUS_DEVICE_VERIFY:
+		/* TRANSLATORS: verifying we wrote the firmware correctly */
 		g_print (" * %s\n", _("Verifying firmware from device"));
 		break;
 	case FU_STATUS_SCHEDULING:
+		/* TRANSLATORS: scheduing an update to be done on the next boot */
 		g_print (" * %s\n", _("Scheduling upgrade"));
 		break;
 	default:
@@ -301,7 +308,8 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* print */
 	if (devices->len == 0) {
-		g_print ("No hardware detected with firmware update capaility\n");
+		/* TRANSLATORS: nothing attached that can be upgraded */
+		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 	} else {
 		guint i;
 		guint j;
@@ -449,6 +457,7 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 		g_dbus_error_strip_remote_error (*error);
 		return FALSE;
 	}
+	/* TRANSLATORS: update completed, no errors */
 	g_print ("%s\n", _("Done!"));
 	return TRUE;
 }
@@ -628,16 +637,25 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 		vercmp = as_utils_vercmp (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
 					  fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
 		if (vercmp == 0) {
-			g_print ("Reinstalling %s with %s... ",
+			/* TRANSLATORS: the first replacement is a display name
+			 * e.g. "ColorHugALS" and the second is a version number
+			 * e.g. "1.2.3" */
+			g_print (_("Reinstalling %s with %s... "),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
 		} else if (vercmp > 0) {
-			g_print ("Downgrading %s from %s to %s... ",
+			/* TRANSLATORS: the first replacement is a display name
+			 * e.g. "ColorHugALS" and the second and third are
+			 * version numbers e.g. "1.2.3" */
+			g_print (_("Downgrading %s from %s to %s... "),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
 		} else if (vercmp < 0) {
-			g_print ("Updating %s from %s to %s... ",
+			/* TRANSLATORS: the first replacement is a display name
+			 * e.g. "ColorHugALS" and the second and third are
+			 * version numbers e.g. "1.2.3" */
+			g_print (_("Updating %s from %s to %s... "),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
@@ -647,7 +665,7 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 				     fu_device_get_metadata (device, FU_DEVICE_KEY_FILENAME_CAB),
 				     priv->flags, error))
 			return FALSE;
-		g_print ("Done!\n");
+		g_print ("%s\n", _("Done!"));
 	}
 
 	return TRUE;

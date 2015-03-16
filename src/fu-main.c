@@ -928,6 +928,7 @@ main (int argc, char *argv[])
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, options, NULL);
 	g_option_context_add_group (context, fu_debug_get_option_group ());
+	/* TRANSLATORS: program summary */
 	g_option_context_set_summary (context, _("Firmware Update D-Bus Service"));
 	ret = g_option_context_parse (context, &argc, &argv, &error);
 	if (!ret) {
