@@ -60,6 +60,22 @@
           <para>Show summary of options.</para>
         </listitem>
       </varlistentry>
+      <varlistentry>
+        <term>
+          <option>--verbose</option>
+        </term>
+        <listitem>
+          <para>Show extra debugging information.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>--force</option>
+        </term>
+        <listitem>
+          <para>Force the installation of firmware.</para>
+        </listitem>
+      </varlistentry>
     </variablelist>
   </refsect1>
   <refsect1>
@@ -70,10 +86,26 @@
     <variablelist>
       <varlistentry>
         <term>
+          <option>get-details</option>
+        </term>
+        <listitem>
+          <para>Gets details about a firmware file.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
           <option>get-devices</option>
         </term>
         <listitem>
           <para>Get the list of hardware that supports firmware updates.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>install</option>
+        </term>
+        <listitem>
+          <para>Install a firmware file on this hardware.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -84,6 +116,24 @@
         </term>
         <listitem>
           <para>Install the update the next time the computer is rebooted.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>update-online</option>
+          <parameter>guid</parameter>
+          <parameter>filename</parameter>
+        </term>
+        <listitem>
+          <para>Install the update now, if possible.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>update-prepared</option>
+        </term>
+        <listitem>
+          <para>Install prepared updates now.</para>
         </listitem>
       </varlistentry>
     </variablelist>
