@@ -23,17 +23,35 @@
 
 #include <glib-object.h>
 #include <glib/gstdio.h>
+#include <stdlib.h>
 
 #include "fu-cab.h"
 #include "fu-cleanup.h"
 #include "fu-common.h"
 #include "fu-pending.h"
 
+/**
+ * fu_test_get_filename:
+ **/
+static gchar *
+fu_test_get_filename (const gchar *filename)
+{
+	gchar *tmp;
+	char full_tmp[PATH_MAX];
+	_cleanup_free_ gchar *path = NULL;
+	path = g_build_filename (TESTDATADIR, filename, NULL);
+	tmp = realpath (path, full_tmp);
+	if (tmp == NULL)
+		return NULL;
+	return g_strdup (full_tmp);
+}
+
 static void
 fu_cab_func (void)
 {
 	GError *error = NULL;
 	gboolean ret;
+	_cleanup_free_ gchar *filename = NULL;
 	_cleanup_object_unref_ FuCab *cab = NULL;
 	_cleanup_object_unref_ GFile *file = NULL;
 
@@ -41,8 +59,9 @@ fu_cab_func (void)
 	g_assert (cab != NULL);
 
 	/* load file */
-	file = g_file_new_for_path ("/home/hughsie/Code/ColorHug/ColorHugALS/"
-				    "firmware-releases/release/colorhug-als-3.0.2.cab");
+	filename = fu_test_get_filename ("colorhug-als-3.0.2.cab");
+	g_assert (filename != NULL);
+	file = g_file_new_for_path (filename);
 	ret = fu_cab_load_file (cab, file, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -54,9 +73,7 @@ fu_cab_func (void)
 	g_assert_cmpstr (fu_cab_get_url_homepage (cab), ==, "http://www.hughski.com/");
 	g_assert_cmpstr (fu_cab_get_license (cab), ==, "GPL-2.0+");
 	g_assert_cmpint (fu_cab_get_size (cab), ==, 9668);
-	g_assert_cmpstr (fu_cab_get_description (cab), ==,
-		"<p>Updating the firmware on your ColorHugALS device "
-		"improves performance and adds new features.</p>");
+	g_assert_cmpstr (fu_cab_get_description (cab), !=, NULL);
 	g_assert (!g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
 
 	/* extract firmware */

@@ -1,0 +1,6 @@
+Version 0.1.0
+~~~~~~~~~~~~~
+Released: 2015-03-16
+
+Notes:
+ - fwupd is a simple daemon to allow session software to update firmware.

@@ -1,0 +1,53 @@
+fwupd Release Notes
+
+1. Write NEWS entries for fwupd in the same format as usual.
+
+git shortlog fwupd_1_2_9.. | grep -i -v trivial | grep -v Merge > NEWS.new
+
+Version 0.1.0
+~~~~~~~~~~~~~
+Released: 2015-xx-xx
+
+New Features:
+Bugfixes:
+
+Update translations:
+
+cd po
+make fwupd.pot
+INTLTOOL_EXTRACT="/usr/bin/intltool-extract" XGETTEXT="/usr/bin/xgettext --no-location" srcdir=. /usr/bin/intltool-update --gettext-package fwupd --pot
+tx push --source
+tx pull --all
+git add *.po
+
+2. Commit changes to git:
+
+# MAKE SURE THESE ARE CORRECT
+export release_version="0.1.0"
+export release_tag="fwupd_0_1_0"
+
+git commit -a -m "Release fwupd ${release_version}"
+git tag -s -f -m "Release fwupd ${release_version}" "${release_tag}"
+<wait>
+git push --tags
+git push
+
+3. Generate the tarball:
+
+make distcheck
+
+3a. Generate the additon verification metadata
+
+sha1sum fwupd-${release_version}.tar.xz > fwupd-${release_version}.tar.xz.sha1
+gpg -b -a fwupd-${release_version}.tar.xz
+
+4. Upload tarball:
+
+scp fwupd-${release_version}.tar.* hughsient@people.freedesktop.org:~/public_html/releases
+
+5. Do post release version bump in configure.ac
+
+6. Commit changes:
+
+git commit -a -m "trivial: post release version bump"
+git push

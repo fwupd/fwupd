@@ -6,7 +6,7 @@ Version:   #VERSION#
 Release:   0.#BUILD#%{?alphatag}%{?dist}
 License:   GPLv2+
 URL:       https://github.com/hughsie/fwupd
-Source0:   http://www.freedesktop.org/software/releases/%{name}-%{version}.tar.xz
+Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.tar.xz
 
 BuildRequires: docbook-utils
 BuildRequires: gettext
@@ -27,16 +27,17 @@ BuildRequires: libappstream-glib-devel
 # Requires: efibootmgr
 
 %description
-fwupd is a daemon to allow session software to update UEFI firmware.
+fwupd is a daemon to allow session software to update device firmware.
 
 %prep
 %setup -q
 
 %build
 %configure \
-        --disable-static \
-        --disable-rpath \
-        --disable-silent-rules \
+        --disable-static        \
+        --disable-rpath         \
+        --disable-uefi          \
+        --disable-silent-rules  \
         --disable-dependency-tracking
 
 make %{?_smp_mflags}

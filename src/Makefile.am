@@ -19,6 +19,7 @@ AM_CPPFLAGS =						\
 	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
 	-DVERSION="\"$(VERSION)\""			\
 	-DDAEMON_USER="\"$(daemon_user)\""		\
+	-DTESTDATADIR=\""$(top_srcdir)/data/tests"\"	\
 	-DG_UDEV_API_IS_SUBJECT_TO_CHANGE		\
 	-DLOCALEDIR=\""$(localedir)"\"
 
