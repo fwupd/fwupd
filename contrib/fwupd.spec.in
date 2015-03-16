@@ -45,6 +45,10 @@ make %{?_smp_mflags}
 %install
 make install DESTDIR=$RPM_BUILD_ROOT
 
+%systemd_post fwupd.service
+%systemd_preun fwupd.service
+%systemd_postun fwupd.service
+
 %find_lang %{name}
 
 %files -f %{name}.lang
@@ -57,6 +61,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
 %{_datadir}/man/man1/fwupdmgr.1.gz
+/usr/lib/systemd/system/fwupd.service
 %dir %{_localstatedir}/lib/fwupd
 
 %changelog

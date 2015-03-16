@@ -13,6 +13,16 @@ $(dbusservicemain_DATA): $(dbusservicemain_in_files) Makefile
 EXTRA_DIST =						\
 	$(dbusservicemain_in_files)
 
+if HAVE_SYSTEMD
+systemdservicemain_in_files = fwupd.service.in
+systemdservicemaindir = $(systemdsystemunitdir)
+systemdservicemain_DATA     = $(systemdservicemain_in_files:.service.in=.service)
+$(systemdservicemain_DATA): $(systemdservicemain_in_files) Makefile
+	@sed -e "s|\@servicedir\@|$(libexecdir)|" $< | \
+	sed -e "s|\@daemon_user\@|$(daemon_user)|" > $@
+EXTRA_DIST += $(systemdservicemain_in_files)
+endif
+
 DISTCLEANFILES =					\
 	$(dbusservicemain_DATA)				\
 	$(systemdservicemain_DATA)

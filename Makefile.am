@@ -51,7 +51,8 @@ MAINTAINERCLEANFILES =					\
 
 DISTCHECK_CONFIGURE_FLAGS =				\
 	--enable-colorhug				\
-	--enable-uefi
+	--enable-uefi					\
+	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
 
 GITIGNOREFILES =					\
 	.tx

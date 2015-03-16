@@ -1,0 +1,12 @@
+[Unit]
+Description=Firmware update daemon
+After=dbus.service
+Before=gdm.service
+ConditionPathExists=/var/lib/fwupd/pending.db
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.fwupd
+ExecStart=@servicedir@/fwupd
+PrivateNetwork=yes
+PrivateTmp=yes
