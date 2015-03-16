@@ -16,10 +16,15 @@ BuildRequires: libgudev1-devel
 BuildRequires: colord-devel >= 1.0.0
 BuildRequires: polkit-devel >= 0.103
 BuildRequires: libgcab1-devel
-BuildRequires: libappstream-glib-devel
 BuildRequires: sqlite-devel
-BuildRequires: fwupdate-devel >= 0.1
-Requires: efibootmgr
+
+# this really needs to be >= 0.3.6 (git master) to get the self-tests to pass
+# and will be added for the next upstream release of appstream-glib
+BuildRequires: libappstream-glib-devel
+
+# we'll fix this when Peter has the latest code in a Fedora package
+# BuildRequires: fwupdate-devel >= 0.1
+# Requires: efibootmgr
 
 %description
 fwupd is a daemon to allow session software to update UEFI firmware.

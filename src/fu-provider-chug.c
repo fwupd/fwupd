@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <colord.h>
 #include <colorhug.h>
 #include <gio/gio.h>
 #include <gio/gunixinputstream.h>
@@ -384,6 +385,33 @@ fu_provider_chug_open_cb (gpointer user_data)
 	/* keep trying */
 	return TRUE;
 }
+
+#if !CD_CHECK_VERSION(1,2,10)
+#define CH_DEVICE_GUID_COLORHUG			"40338ceb-b966-4eae-adae-9c32edfcc484"
+#define CH_DEVICE_GUID_COLORHUG2		"2082b5e0-7a64-478a-b1b2-e3404fab6dad"
+#define CH_DEVICE_GUID_COLORHUG_ALS		"84f40464-9272-4ef7-9399-cd95f12da696"
+#define CH_DEVICE_GUID_COLORHUG_PLUS		"6d6f05a9-3ecb-43a2-bcbb-3844f1825366"
+
+static const gchar *
+ch_device_get_guid (GUsbDevice *device)
+{
+	ChDeviceMode mode = ch_device_get_mode (device);
+	if (mode == CH_DEVICE_MODE_LEGACY ||
+	    mode == CH_DEVICE_MODE_FIRMWARE ||
+	    mode == CH_DEVICE_MODE_BOOTLOADER)
+		return CH_DEVICE_GUID_COLORHUG;
+	if (mode == CH_DEVICE_MODE_FIRMWARE2 ||
+	    mode == CH_DEVICE_MODE_BOOTLOADER2)
+		return CH_DEVICE_GUID_COLORHUG2;
+	if (mode == CH_DEVICE_MODE_FIRMWARE_PLUS ||
+	    mode == CH_DEVICE_MODE_BOOTLOADER_PLUS)
+		return CH_DEVICE_GUID_COLORHUG_PLUS;
+	if (mode == CH_DEVICE_MODE_FIRMWARE_ALS ||
+	    mode == CH_DEVICE_MODE_BOOTLOADER_ALS)
+		return CH_DEVICE_GUID_COLORHUG_ALS;
+	return NULL;
+}
+#endif
 
 /**
  * fu_provider_chug_device_added_cb:
