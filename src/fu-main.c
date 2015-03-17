@@ -137,10 +137,19 @@ fu_main_set_status (FuMainPrivate *priv, FuStatus status)
  * fu_main_device_array_to_variant:
  **/
 static GVariant *
-fu_main_device_array_to_variant (FuMainPrivate *priv)
+fu_main_device_array_to_variant (FuMainPrivate *priv, GError **error)
 {
 	GVariantBuilder builder;
 	guint i;
+
+	/* no devices */
+	if (priv->devices->len == 0) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_NOTHING_TO_DO,
+				     "no supported devices");
+		return NULL;
+	}
 
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (i = 0; i < priv->devices->len; i++) {
@@ -456,9 +465,14 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 	/* return 'as' */
 	if (g_strcmp0 (method_name, "GetDevices") == 0) {
+		_cleanup_error_free_ GError *error = NULL;
 		_cleanup_strv_free_ gchar **devices = NULL;
 		g_debug ("Called %s()", method_name);
-		val = fu_main_device_array_to_variant (priv);
+		val = fu_main_device_array_to_variant (priv, &error);
+		if (val == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
 		g_dbus_method_invocation_return_value (invocation, val);
 		fu_main_set_status (priv, FU_STATUS_IDLE);
 		return;
