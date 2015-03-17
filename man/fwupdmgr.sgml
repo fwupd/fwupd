@@ -102,6 +102,14 @@
       </varlistentry>
       <varlistentry>
         <term>
+          <option>get-updates</option>
+        </term>
+        <listitem>
+          <para>Gets the list of updates for connected hardware.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
           <option>install</option>
         </term>
         <listitem>
