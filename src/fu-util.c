@@ -103,7 +103,7 @@ fu_util_add (GPtrArray *array,
 		if (i == 0) {
 			item->description = g_strdup (description);
 		} else {
-			/* TRANSLATORS: this is a command alias */
+			/* TRANSLATORS: this is a command alias, e.g. 'get-devices' */
 			item->description = g_strdup_printf (_("Alias to %s"),
 							     names[0]);
 		}
