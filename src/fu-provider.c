@@ -73,9 +73,11 @@ fu_provider_schedule_update (FuProvider *provider,
 	gchar tmpname[] = {"XXXXXX.cap"};
 	guint i;
 	_cleanup_bytes_unref_ GBytes *fwbin = NULL;
+	_cleanup_free_ gchar *dirname = NULL;
 	_cleanup_free_ gchar *filename = NULL;
 	_cleanup_object_unref_ FuDevice *device_tmp = NULL;
 	_cleanup_object_unref_ FuPending *pending = NULL;
+	_cleanup_object_unref_ GFile *file = NULL;
 
 	/* id already exists */
 	pending = fu_pending_new ();
@@ -89,10 +91,18 @@ fu_provider_schedule_update (FuProvider *provider,
 		return FALSE;
 	}
 
+	/* create directory */
+	dirname = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
+	file = g_file_new_for_path (dirname);
+	if (!g_file_query_exists (file, NULL)) {
+		if (!g_file_make_directory_with_parents (file, NULL, error))
+			return FALSE;
+	}
+
 	/* get a random filename */
 	for (i = 0; i < 6; i++)
 		tmpname[i] = g_random_int_range ('A', 'Z');
-	filename = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", tmpname, NULL);
+	filename = g_build_filename (dirname, tmpname, NULL);
 
 	/* just copy to the temp file */
 	fu_provider_set_status (provider, FU_STATUS_SCHEDULING);

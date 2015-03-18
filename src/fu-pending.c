@@ -55,13 +55,23 @@ fu_pending_load (FuPending *pending, GError **error)
 	char *error_msg = NULL;
 	const char *statement;
 	gint rc;
+	_cleanup_free_ gchar *dirname = NULL;
 	_cleanup_free_ gchar *filename = NULL;
+	_cleanup_object_unref_ GFile *file = NULL;
 
 	g_return_val_if_fail (FU_IS_PENDING (pending), FALSE);
 	g_return_val_if_fail (pending->priv->db == NULL, FALSE);
 
-	filename = g_build_filename (LOCALSTATEDIR, "lib", "fwupd",
-				     "pending.db", NULL);
+	/* create directory */
+	dirname = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
+	file = g_file_new_for_path (dirname);
+	if (!g_file_query_exists (file, NULL)) {
+		if (!g_file_make_directory_with_parents (file, NULL, error))
+			return FALSE;
+	}
+
+	/* open */
+	filename = g_build_filename (dirname, "pending.db", NULL);
 	g_debug ("FuPending: trying to open database '%s'", filename);
 	rc = sqlite3_open (filename, &pending->priv->db);
 	if (rc != SQLITE_OK) {
