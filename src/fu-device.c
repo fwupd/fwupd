@@ -78,6 +78,46 @@ fu_device_set_id (FuDevice *device, const gchar *id)
 }
 
 /**
+ * fu_device_get_guid:
+ **/
+const gchar *
+fu_device_get_guid (FuDevice *device)
+{
+	return fu_device_get_metadata (device, FU_DEVICE_KEY_GUID);
+}
+
+/**
+ * fu_device_set_guid:
+ **/
+void
+fu_device_set_guid (FuDevice *device, const gchar *guid)
+{
+	fu_device_set_metadata (device, FU_DEVICE_KEY_GUID, guid);
+}
+
+/**
+ * fu_device_get_display_name:
+ **/
+const gchar *
+fu_device_get_display_name (FuDevice *device)
+{
+	const gchar *tmp;
+	tmp = fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME);
+	if (tmp == NULL)
+		tmp = fu_device_get_id (device);
+	return tmp;
+}
+
+/**
+ * fu_device_set_display_name:
+ **/
+void
+fu_device_set_display_name (FuDevice *device, const gchar *display_name)
+{
+	fu_device_set_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME, display_name);
+}
+
+/**
  * fu_device_get_metadata:
  **/
 const gchar *
@@ -127,6 +167,36 @@ fu_device_to_variant (FuDevice *device)
 		}
 	}
 	return g_variant_new ("{sa{sv}}", device->priv->id, &builder);
+}
+
+/**
+ * fu_device_get_metadata_as_variant:
+ **/
+GVariant *
+fu_device_get_metadata_as_variant (FuDevice *device)
+{
+	GList *l;
+	GVariantBuilder builder;
+	const gchar *key;
+	const gchar *value;
+	_cleanup_list_free_ GList *keys = NULL;
+
+	/* create an array with all the metadata in */
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	keys = g_hash_table_get_keys (device->priv->metadata);
+	keys = g_list_sort (keys, (GCompareFunc) g_strcmp0);
+	for (l = keys; l != NULL; l = l->next) {
+		key = l->data;
+		value = g_hash_table_lookup (device->priv->metadata, key);
+		if (g_strcmp0 (value, "TRUE") == 0) {
+			g_variant_builder_add (&builder, "{sv}",
+					       key, g_variant_new_boolean (TRUE));
+		} else {
+			g_variant_builder_add (&builder, "{sv}",
+					       key, g_variant_new_string (value));
+		}
+	}
+	return g_variant_new ("(a{sv})", &builder);
 }
 
 /**

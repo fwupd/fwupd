@@ -36,6 +36,7 @@
 #include "fu-common.h"
 #include "fu-debug.h"
 #include "fu-device.h"
+#include "fu-pending.h"
 #include "fu-provider.h"
 #include "fu-resources.h"
 
@@ -55,6 +56,7 @@ typedef struct {
 	GPtrArray		*providers;
 	PolkitAuthority		*authority;
 	FuStatus		 status;
+	FuPending		*pending;
 } FuMainPrivate;
 
 typedef struct {
@@ -197,14 +199,29 @@ static FuDeviceItem *
 fu_main_get_item_by_guid (FuMainPrivate *priv, const gchar *guid)
 {
 	FuDeviceItem *item;
-	const gchar *tmp;
 	guint i;
 
 	for (i = 0; i < priv->devices->len; i++) {
 		item = g_ptr_array_index (priv->devices, i);
-		tmp = fu_device_get_metadata (item->device, FU_DEVICE_KEY_GUID);
-		if (g_strcmp0 (tmp, guid) == 0)
+		if (g_strcmp0 (fu_device_get_guid (item->device), guid) == 0)
 			return item;
+	}
+	return NULL;
+}
+
+/**
+ * fu_main_get_provider_by_name:
+ **/
+static FuProvider *
+fu_main_get_provider_by_name (FuMainPrivate *priv, const gchar *name)
+{
+	FuProvider *provider;
+	guint i;
+
+	for (i = 0; i < priv->providers->len; i++) {
+		provider = g_ptr_array_index (priv->providers, i);
+		if (g_strcmp0 (fu_provider_get_name (provider), name) == 0)
+			return provider;
 	}
 	return NULL;
 }
@@ -349,7 +366,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		helper->device = g_object_ref (item->device);
 	}
 
-	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_GUID);
+	tmp = fu_device_get_guid (helper->device);
 	if (g_strcmp0 (guid, tmp) != 0) {
 		g_set_error (error,
 			     FU_ERROR,
@@ -452,6 +469,75 @@ fu_main_dbus_get_uid (FuMainPrivate *priv, const gchar *sender)
 }
 
 /**
+ * fu_main_get_item_by_id_fallback_pending:
+ **/
+static FuDeviceItem *
+fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, GError **error)
+{
+	FuDevice *dev;
+	FuProvider *provider;
+	FuDeviceItem *item = NULL;
+	const gchar *tmp;
+	guint i;
+	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
+
+	/* not a wildcard */
+	if (g_strcmp0 (id, FWUPD_DEVICE_ID_ANY) != 0) {
+		item = fu_main_get_item_by_id (priv, id);
+		if (item == NULL) {
+			g_set_error (error,
+				     FU_ERROR,
+				     FU_ERROR_NO_SUCH_DEVICE,
+				     "no suitable device found for %s", id);
+		}
+		return item;
+	}
+
+	/* allow '*' for any */
+	devices = fu_pending_get_devices (priv->pending, error);
+	if (devices == NULL)
+		return NULL;
+	for (i = 0; i < devices->len; i++) {
+		dev = g_ptr_array_index (devices, i);
+		tmp = fu_device_get_metadata (dev, FU_DEVICE_KEY_PENDING_STATE);
+		if (tmp == NULL)
+			continue;
+		if (g_strcmp0 (tmp, "scheduled") == 0)
+			continue;
+
+		/* if the device is not still connected, fake a FuDeviceItem */
+		item = fu_main_get_item_by_id (priv, fu_device_get_id (dev));
+		if (item == NULL) {
+			tmp = fu_device_get_metadata (dev, FU_DEVICE_KEY_PROVIDER);
+			provider = fu_main_get_provider_by_name (priv, tmp);
+			if (provider == NULL) {
+				g_set_error (error,
+					     FU_ERROR,
+					     FU_ERROR_NO_SUCH_DEVICE,
+					     "no provider %s found", tmp);
+			}
+			item = g_new0 (FuDeviceItem, 1);
+			item->device = g_object_ref (dev);
+			item->provider = g_object_ref (provider);
+			g_ptr_array_add (priv->devices, item);
+
+			/* FIXME: just a boolean on FuDeviceItem? */
+			fu_device_set_metadata (dev, "FakeDevice", "TRUE");
+		}
+		break;
+	}
+
+	/* no device found */
+	if (item == NULL) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_NO_SUCH_DEVICE,
+				     "no suitable devices found");
+	}
+	return item;
+}
+
+/**
  * fu_main_daemon_method_call:
  **/
 static void
@@ -475,6 +561,61 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 		g_dbus_method_invocation_return_value (invocation, val);
 		fu_main_set_status (priv, FU_STATUS_IDLE);
+		return;
+	}
+
+	/* return '' */
+	if (g_strcmp0 (method_name, "ClearResults") == 0) {
+		FuDeviceItem *item = NULL;
+		const gchar *id = NULL;
+		_cleanup_error_free_ GError *error = NULL;
+
+		g_variant_get (parameters, "(&s)", &id);
+		g_debug ("Called %s(%s)", method_name, id);
+
+		/* find device */
+		item = fu_main_get_item_by_id_fallback_pending (priv, id, &error);
+		if (item == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+
+		/* call into the provider */
+		if (!fu_provider_clear_results (item->provider, item->device, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+
+		/* success */
+		g_dbus_method_invocation_return_value (invocation, NULL);
+		return;
+	}
+
+	/* return 'a{sv}' */
+	if (g_strcmp0 (method_name, "GetResults") == 0) {
+		FuDeviceItem *item = NULL;
+		const gchar *id = NULL;
+		_cleanup_error_free_ GError *error = NULL;
+
+		g_variant_get (parameters, "(&s)", &id);
+		g_debug ("Called %s(%s)", method_name, id);
+
+		/* find device */
+		item = fu_main_get_item_by_id_fallback_pending (priv, id, &error);
+		if (item == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+
+		/* call into the provider */
+		if (!fu_provider_get_results (item->provider, item->device, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+
+		/* success */
+		val = fu_device_get_metadata_as_variant (item->device);
+		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
 
@@ -850,6 +991,12 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 	FuDeviceItem *item;
 
+	/* remove any fake device */
+	item = fu_main_get_item_by_id (priv, fu_device_get_id (device));
+	if (item != NULL)
+		g_ptr_array_remove (priv->devices, item);
+
+	/* create new device */
 	item = g_new0 (FuDeviceItem, 1);
 	item->device = g_object_ref (device);
 	item->provider = g_object_ref (provider);
@@ -956,6 +1103,7 @@ main (int argc, char *argv[])
 	priv->status = FU_STATUS_IDLE;
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_main_item_free);
 	priv->loop = g_main_loop_new (NULL, FALSE);
+	priv->pending = fu_pending_new ();
 
 	/* add providers */
 	priv->providers = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -1021,6 +1169,7 @@ out:
 			g_object_unref (priv->authority);
 		if (priv->introspection_daemon != NULL)
 			g_dbus_node_info_unref (priv->introspection_daemon);
+		g_object_unref (priv->pending);
 		g_ptr_array_unref (priv->providers);
 		g_ptr_array_unref (priv->devices);
 		g_free (priv);

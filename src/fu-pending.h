@@ -51,11 +51,29 @@ struct _FuPendingClass
 	GObjectClass		 parent_class;
 };
 
+typedef enum {
+	FU_PENDING_STATE_UNKNOWN,
+	FU_PENDING_STATE_SCHEDULED,
+	FU_PENDING_STATE_SUCCESS,
+	FU_PENDING_STATE_FAILED,
+	/* private */
+	FU_PENDING_STATE_LAST
+} FuPendingState;
+
 GType		 fu_pending_get_type			(void);
 FuPending	*fu_pending_new				(void);
+const gchar	*fu_pending_state_to_string		(FuPendingState	 state);
 
 gboolean	 fu_pending_add_device			(FuPending	*pending,
 							 FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_pending_set_state			(FuPending	*pending,
+							 FuDevice	*device,
+							 FuPendingState	 state,
+							 GError		**error);
+gboolean	 fu_pending_set_error_msg			(FuPending	*pending,
+							 FuDevice	*device,
+							 const gchar	*error_msg,
 							 GError		**error);
 gboolean	 fu_pending_remove_device		(FuPending	*pending,
 							 FuDevice	*device,

@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <gio/gunixinputstream.h>
@@ -129,8 +130,10 @@ fu_provider_update (FuProvider *provider,
 		    GError **error)
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
+	_cleanup_free_ gchar *comment = NULL;
 	_cleanup_object_unref_ FuPending *pending = NULL;
-	_cleanup_object_unref_ FuDevice *device_tmp = NULL;
+	_cleanup_object_unref_ FuDevice *device_pending = NULL;
+	GError *error_update = NULL;
 
 	/* schedule for next reboot, or handle in the provider */
 	if (flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
@@ -150,21 +153,27 @@ fu_provider_update (FuProvider *provider,
 				     "No online update possible");
 		return FALSE;
 	}
-	if (!klass->update_online (provider, device, fd_fw, flags, error))
-		return FALSE;
-
-	/* remove from pending database */
 	pending = fu_pending_new ();
-	device_tmp = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
-	if (device_tmp != NULL) {
+	device_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
+	if (!klass->update_online (provider, device, fd_fw, flags, &error_update)) {
+		/* save the error to the database */
+		if (device_pending != NULL) {
+			fu_pending_set_error_msg (pending, device,
+						  error_update->message, NULL);
+		}
+		g_propagate_error (error, error_update);
+		return FALSE;
+	}
+
+	/* cleanup */
+	if (device_pending != NULL) {
 		const gchar *tmp;
 
-		/* remove from pending database */
-		if (!fu_pending_remove_device (pending, device, error))
-			return FALSE;
+		/* update pending database */
+		fu_pending_set_state (pending, device, FU_PENDING_STATE_SUCCESS, NULL);
 
 		/* delete cab file */
-		tmp = fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_FILENAME_CAB);
+		tmp = fu_device_get_metadata (device_pending, FU_DEVICE_KEY_FILENAME_CAB);
 		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
 			_cleanup_error_free_ GError *error_local = NULL;
 			_cleanup_object_unref_ GFile *file = NULL;
@@ -184,20 +193,124 @@ fu_provider_update (FuProvider *provider,
 }
 
 /**
- * fu_provider_emit_added:
+ * fu_provider_clear_results:
+ **/
+gboolean
+fu_provider_clear_results (FuProvider *provider, FuDevice *device, GError **error)
+{
+	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
+	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_object_unref_ FuDevice *device_pending = NULL;
+	_cleanup_object_unref_ FuPending *pending = NULL;
+
+	/* handled by the provider */
+	if (klass->clear_results != NULL)
+		return klass->clear_results (provider, device, error);
+
+	/* handled using the database */
+	pending = fu_pending_new ();
+	device_pending = fu_pending_get_device (pending,
+						fu_device_get_id (device),
+						&error_local);
+	if (device_pending == NULL) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_INVALID_FILE,
+			     "Failed to find %s in pending database: %s",
+			     fu_device_get_id (device),
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* remove from pending database */
+	return fu_pending_remove_device (pending, device, error);
+}
+
+/**
+ * fu_provider_get_results:
+ **/
+gboolean
+fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
+{
+	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
+	const gchar *tmp;
+	guint i;
+	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_object_unref_ FuDevice *device_pending = NULL;
+	_cleanup_object_unref_ FuPending *pending = NULL;
+	const gchar *copy_keys[] = {
+		FU_DEVICE_KEY_PENDING_STATE,
+		FU_DEVICE_KEY_PENDING_ERROR,
+		FU_DEVICE_KEY_VERSION_OLD,
+		FU_DEVICE_KEY_VERSION_NEW,
+		NULL };
+
+	/* handled by the provider */
+	if (klass->get_results != NULL)
+		return klass->get_results (provider, device, error);
+
+	/* handled using the database */
+	pending = fu_pending_new ();
+	device_pending = fu_pending_get_device (pending,
+						fu_device_get_id (device),
+						&error_local);
+	if (device_pending == NULL) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_NOTHING_TO_DO,
+			     "Failed to find %s in pending database: %s",
+			     fu_device_get_id (device),
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* copy the important parts from the pending device to the real one */
+	tmp = fu_device_get_metadata (device_pending, FU_DEVICE_KEY_PENDING_STATE);
+	if (tmp == NULL || g_strcmp0 (tmp, "scheduled") == 0) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_NOTHING_TO_DO,
+			     "Device %s has not been updated offline yet",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+	for (i = 0; copy_keys[i] != NULL; i++) {
+		tmp = fu_device_get_metadata (device_pending, copy_keys[i]);
+		if (tmp != NULL)
+			fu_device_set_metadata (device, copy_keys[i], tmp);
+	}
+	return TRUE;
+}
+
+/**
+ * fu_provider_device_add:
+ **/
+const gchar *
+fu_provider_get_name (FuProvider *provider)
+{
+	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
+	if (klass->get_name != NULL)
+		return klass->get_name (provider);
+	return NULL;
+}
+
+/**
+ * fu_provider_device_add:
  **/
 void
-fu_provider_emit_added (FuProvider *provider, FuDevice *device)
+fu_provider_device_add (FuProvider *provider, FuDevice *device)
 {
 	g_debug ("emit added: %s", fu_device_get_id (device));
+	fu_device_set_metadata (device, FU_DEVICE_KEY_PROVIDER,
+				fu_provider_get_name (provider));
 	g_signal_emit (provider, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
 
 /**
- * fu_provider_emit_removed:
+ * fu_provider_device_remove:
  **/
 void
-fu_provider_emit_removed (FuProvider *provider, FuDevice *device)
+fu_provider_device_remove (FuProvider *provider, FuDevice *device)
 {
 	g_debug ("emit removed: %s", fu_device_get_id (device));
 	g_signal_emit (provider, signals[SIGNAL_DEVICE_REMOVED], 0, device);

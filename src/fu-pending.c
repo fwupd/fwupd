@@ -24,6 +24,7 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <sqlite3.h>
+#include <stdlib.h>
 
 #include "fu-cleanup.h"
 #include "fu-common.h"
@@ -81,8 +82,11 @@ fu_pending_load (FuPending *pending, GError **error)
 		sqlite3_free (error_msg);
 		statement = "CREATE TABLE pending ("
 			    "device_id TEXT PRIMARY KEY,"
+			    "state INTEGER DEFAULT 0,"
+			    "error TEXT,"
 			    "filename TEXT,"
 			    "display_name TEXT,"
+			    "provider TEXT,"
 			    "version_old TEXT,"
 			    "version_new TEXT);";
 		rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
@@ -96,6 +100,22 @@ fu_pending_load (FuPending *pending, GError **error)
 			return FALSE;
 		}
 	}
+
+	/* check pending has state and provider (since 0.1.1) */
+	rc = sqlite3_exec (pending->priv->db,
+			   "SELECT provider FROM pending LIMIT 1",
+			   NULL, NULL, &error_msg);
+	if (rc != SQLITE_OK) {
+		g_debug ("FuPending: altering table to repair: %s", error_msg);
+		sqlite3_free (error_msg);
+		statement = "ALTER TABLE pending ADD COLUMN state INTEGER DEFAULT 0;";
+		sqlite3_exec (pending->priv->db, statement, NULL, NULL, NULL);
+		statement = "ALTER TABLE pending ADD COLUMN error TEXT;";
+		sqlite3_exec (pending->priv->db, statement, NULL, NULL, NULL);
+		statement = "ALTER TABLE pending ADD COLUMN provider TEXT;";
+		sqlite3_exec (pending->priv->db, statement, NULL, NULL, NULL);
+	}
+
 	return TRUE;
 }
 
@@ -120,14 +140,18 @@ fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 
 	g_debug ("FuPending: add device %s", fu_device_get_id (device));
 	statement = sqlite3_mprintf ("INSERT INTO pending (device_id,"
+							  "state,"
 							  "filename,"
 							  "display_name,"
+							  "provider,"
 							  "version_old,"
 							  "version_new) "
-				     "VALUES ('%q','%q','%q','%q','%q')",
+				     "VALUES ('%q','%i','%q','%q','%q','%q','%q')",
 				     fu_device_get_id (device),
+				     FU_PENDING_STATE_SCHEDULED,
 				     fu_device_get_metadata (device, FU_DEVICE_KEY_FILENAME_CAB),
-				     fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME),
+				     fu_device_get_display_name (device),
+				     fu_device_get_metadata (device, FU_DEVICE_KEY_PROVIDER),
 				     fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
 				     fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
 
@@ -217,15 +241,30 @@ fu_pending_device_sqlite_cb (void *data,
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "display_name") == 0) {
-			fu_device_set_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME, argv[i]);
+			fu_device_set_display_name (device, argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "version_old") == 0) {
-			fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION, argv[i]);
+			fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION_OLD, argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "version_new") == 0) {
 			fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION_NEW, argv[i]);
+			continue;
+		}
+		if (g_strcmp0 (col_name[i], "provider") == 0) {
+			fu_device_set_metadata (device, FU_DEVICE_KEY_PROVIDER, argv[i]);
+			continue;
+		}
+		if (g_strcmp0 (col_name[i], "state") == 0) {
+			FuPendingState state = atoi (argv[i]);
+			fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
+						fu_pending_state_to_string (state));
+			continue;
+		}
+		if (g_strcmp0 (col_name[i], "error") == 0) {
+			if (argv[i] != NULL)
+				fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_ERROR, argv[i]);
 			continue;
 		}
 		g_warning ("unhandled %s=%s", col_name[i], argv[i]);
@@ -331,6 +370,115 @@ fu_pending_get_devices (FuPending *pending, GError **error)
 out:
 	sqlite3_free (statement);
 	return array;
+}
+
+/**
+ * fu_pending_state_to_string:
+ **/
+const gchar *
+fu_pending_state_to_string (FuPendingState state)
+{
+	if (state == FU_PENDING_STATE_UNKNOWN)
+		return "unknown";
+	if (state == FU_PENDING_STATE_SCHEDULED)
+		return "scheduled";
+	if (state == FU_PENDING_STATE_SUCCESS)
+		return "success";
+	if (state == FU_PENDING_STATE_FAILED)
+		return "failed";
+	return NULL;
+}
+
+/**
+ * fu_pending_set_state:
+ **/
+gboolean
+fu_pending_set_state (FuPending *pending,
+		      FuDevice *device,
+		      FuPendingState state,
+		      GError **error)
+{
+	char *error_msg = NULL;
+	char *statement;
+	gboolean ret = TRUE;
+	gint rc;
+
+	g_return_val_if_fail (FU_IS_PENDING (pending), FALSE);
+
+	/* lazy load */
+	if (pending->priv->db == NULL) {
+		if (!fu_pending_load (pending, error))
+			return FALSE;
+	}
+
+	g_debug ("FuPending: set state of %s to %s",
+		 fu_device_get_id (device),
+		 fu_pending_state_to_string (state));
+	statement = sqlite3_mprintf ("UPDATE pending SET state='%i' WHERE "
+				     "device_id = '%q';",
+				     state, fu_device_get_id (device));
+
+	/* remove entry */
+	rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
+	if (rc != SQLITE_OK) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_FAILED_TO_WRITE,
+			     "SQL error: %s",
+			     error_msg);
+		sqlite3_free (error_msg);
+		ret = FALSE;
+		goto out;
+	}
+out:
+	sqlite3_free (statement);
+	return ret;
+}
+
+/**
+ * fu_pending_set_error_msg:
+ **/
+gboolean
+fu_pending_set_error_msg (FuPending *pending,
+			  FuDevice *device,
+			  const gchar *error_msg2,
+			  GError **error)
+{
+	char *error_msg = NULL;
+	char *statement;
+	gboolean ret = TRUE;
+	gint rc;
+
+	g_return_val_if_fail (FU_IS_PENDING (pending), FALSE);
+
+	/* lazy load */
+	if (pending->priv->db == NULL) {
+		if (!fu_pending_load (pending, error))
+			return FALSE;
+	}
+
+	g_debug ("FuPending: add comment to %s: %s",
+		 fu_device_get_id (device), error_msg2);
+	statement = sqlite3_mprintf ("UPDATE pending SET error='%q' WHERE "
+				     "device_id = '%q';",
+				     error_msg2,
+				     fu_device_get_id (device));
+
+	/* remove entry */
+	rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
+	if (rc != SQLITE_OK) {
+		g_set_error (error,
+			     FU_ERROR,
+			     FU_ERROR_FAILED_TO_WRITE,
+			     "SQL error: %s",
+			     error_msg);
+		sqlite3_free (error_msg);
+		ret = FALSE;
+		goto out;
+	}
+out:
+	sqlite3_free (statement);
+	return ret;
 }
 
 /**

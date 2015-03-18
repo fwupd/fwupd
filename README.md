@@ -87,6 +87,24 @@ it prohibited means we can do the upgrade with a fancy graphical splash screen,
 without having to worry about locales and input methods. Updating firmware
 should be no more dangerious than installing a new kernel or glibc package.
 
+Offline Updates Lifecycle
+-------------------------
+
+Offlines updates are done using a special boot target which means that the usual
+graphical environment is not started. Once the firmware update has completed the
+system will reboot.
+
+Devices go through the following lifecycles:
+
+ * created -> `SCHEDULED` -> `SUCCESS` -> deleted
+ * created -> `SCHEDULED` -> `FAILED` -> deleted
+
+Any user-visible output is available using the GetResults() D-Bus method, and
+the database entry is only deleted once the ClearResults() method is called.
+
+The results are obtained and cleared either using a provider-supplied method
+or using a small sqlite database located at /var/lib/fwupd/pending.db
+
 ColorHug Support
 ----------------
 

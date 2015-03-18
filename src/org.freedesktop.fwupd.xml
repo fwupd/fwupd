@@ -123,6 +123,53 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetResults'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets the results of an offline update.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              An ID, typically a GUID of the hardware that was updated, or the
+              string <doc:tt>*</doc:tt> to match any hardware.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='a{sv}' name='results' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>Results about the update, e.g. <doc:tt>success=True</doc:tt></doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='ClearResults'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Clears the results of an offline update.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              An ID, typically a GUID of the hardware that was updated, or the
+              string <doc:tt>*</doc:tt> to match any hardware.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <signal name='Changed'>
       <doc:doc>
         <doc:description>

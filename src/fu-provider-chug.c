@@ -66,6 +66,15 @@ typedef struct {
 G_DEFINE_TYPE (FuProviderChug, fu_provider_chug, FU_TYPE_PROVIDER)
 
 /**
+ * fu_provider_chug_get_name:
+ **/
+static const gchar *
+fu_provider_chug_get_name (FuProvider *provider)
+{
+	return "ColorHug";
+}
+
+/**
  * fu_provider_chug_device_free:
  **/
 static void
@@ -441,10 +450,7 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		item->device = fu_device_new ();
 		item->mode = mode;
 		fu_device_set_id (item->device, id);
-		fu_device_set_metadata (item->device, FU_DEVICE_KEY_PROVIDER,
-					"ColorHug");
-		fu_device_set_metadata (item->device, FU_DEVICE_KEY_GUID,
-					ch_device_get_guid (device));
+		fu_device_set_guid (item->device, ch_device_get_guid (device));
 		fu_device_set_metadata (item->device, FU_DEVICE_KEY_KIND,
 					"hotplug");
 
@@ -470,27 +476,22 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 	case CH_DEVICE_MODE_BOOTLOADER:
 	case CH_DEVICE_MODE_FIRMWARE:
 	case CH_DEVICE_MODE_LEGACY:
-		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
-					"ColorHug");
+		fu_device_set_display_name (item->device, "ColorHug");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER2:
 	case CH_DEVICE_MODE_FIRMWARE2:
-		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
-					"ColorHug2");
+		fu_device_set_display_name (item->device, "ColorHug2");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
 	case CH_DEVICE_MODE_FIRMWARE_PLUS:
-		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
-					"ColorHug+");
+		fu_device_set_display_name (item->device, "ColorHug+");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_ALS:
 	case CH_DEVICE_MODE_FIRMWARE_ALS:
-		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
-					"ColorHugALS");
+		fu_device_set_display_name (item->device, "ColorHugALS");
 		break;
 	default:
-		fu_device_set_metadata (item->device, FU_DEVICE_KEY_DISPLAY_NAME,
-					"ColorHug??");
+		fu_device_set_display_name (item->device, "ColorHug??");
 		break;
 	}
 
@@ -506,7 +507,7 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		item->is_bootloader = FALSE;
 		break;
 	}
-	fu_provider_emit_added (FU_PROVIDER (provider_chug), item->device);
+	fu_provider_device_add (FU_PROVIDER (provider_chug), item->device);
 
 	/* are we waiting for the device to show up */
 	if (g_main_loop_is_running (item->loop))
@@ -535,7 +536,7 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 		g_source_remove (item->timeout_open_id);
 		item->timeout_open_id = 0;
 	}
-	fu_provider_emit_removed (FU_PROVIDER (provider_chug), item->device);
+	fu_provider_device_remove (FU_PROVIDER (provider_chug), item->device);
 }
 
 /**
@@ -558,6 +559,7 @@ fu_provider_chug_class_init (FuProviderChugClass *klass)
 	FuProviderClass *provider_class = FU_PROVIDER_CLASS (klass);
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+	provider_class->get_name = fu_provider_chug_get_name;
 	provider_class->coldplug = fu_provider_chug_coldplug;
 	provider_class->update_online = fu_provider_chug_update;
 	object_class->finalize = fu_provider_chug_finalize;

@@ -36,6 +36,7 @@
 #define FU_DEVICE_KEY_ONLY_OFFLINE	"OnlyOffline"	/* s */
 #define FU_DEVICE_KEY_DISPLAY_NAME	"DisplayName"	/* s */
 #define FU_DEVICE_KEY_VERSION_NEW	"VersionNew"	/* internal only */
+#define FU_DEVICE_KEY_VERSION_OLD	"VersionOld"	/* internal only */
 #define FU_DEVICE_KEY_FILENAME_CAB	"FilenameCab"	/* internal only */
 #define FU_DEVICE_KEY_VERSION_LOWEST	"VersionLowest"	/* s */
 #define FU_DEVICE_KEY_VENDOR		"Vendor"	/* s */
@@ -46,6 +47,8 @@
 #define FU_DEVICE_KEY_KIND		"Kind"		/* s: 'internal' or 'hotplug' */
 #define FU_DEVICE_KEY_URL_HOMEPAGE	"UrlHomepage"	/* s */
 #define FU_DEVICE_KEY_SIZE		"Size"		/* t */
+#define FU_DEVICE_KEY_PENDING_STATE	"PendingState"	/* s */
+#define FU_DEVICE_KEY_PENDING_ERROR	"PendingError"	/* s */
 
 typedef enum {
 	FU_STATUS_IDLE,

@@ -144,6 +144,22 @@
           <para>Install prepared updates now.</para>
         </listitem>
       </varlistentry>
+      <varlistentry>
+        <term>
+          <option>clear-results</option>
+        </term>
+        <listitem>
+          <para>Clears the results from the last update.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>get-results</option>
+        </term>
+        <listitem>
+          <para>Gets the results from the last update.</para>
+        </listitem>
+      </varlistentry>
     </variablelist>
   </refsect1>
   <refsect1>

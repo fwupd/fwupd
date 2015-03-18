@@ -57,35 +57,43 @@ struct _FuProviderClass
 	GObjectClass	parent_class;
 
 	/* vfunc */
-	gboolean	(*coldplug)		(FuProvider	*provider,
+	const gchar	*(*get_name)		(FuProvider	*provider);
+	gboolean	 (*coldplug)		(FuProvider	*provider,
 						 GError		**error);
-	gboolean	(*update_online)	(FuProvider	*provider,
+	gboolean	 (*update_online)	(FuProvider	*provider,
 						 FuDevice	*device,
 						 gint		 fd,
 						 FuProviderFlags flags,
 						 GError		**error);
-	gboolean	(*update_offline)	(FuProvider	*provider,
+	gboolean	 (*update_offline)	(FuProvider	*provider,
 						 FuDevice	*device,
 						 gint		 fd,
 						 FuProviderFlags flags,
+						 GError		**error);
+	gboolean	 (*clear_results)	(FuProvider	*provider,
+						 FuDevice	*device,
+						 GError		**error);
+	gboolean	 (*get_results)		(FuProvider	*provider,
+						 FuDevice	*device,
 						 GError		**error);
 
 	/* signals */
-	void		(* device_added)	(FuProvider	*provider,
+	void		 (* device_added)	(FuProvider	*provider,
 						 FuDevice	*device);
-	void		(* device_removed)	(FuProvider	*provider,
+	void		 (* device_removed)	(FuProvider	*provider,
 						 FuDevice	*device);
-	void		(* status_changed)	(FuProvider	*provider,
+	void		 (* status_changed)	(FuProvider	*provider,
 						 FuStatus	 status);
 };
 
 GType		 fu_provider_get_type		(void);
-void		 fu_provider_emit_added		(FuProvider	*provider,
+void		 fu_provider_device_add		(FuProvider	*provider,
 						 FuDevice	*device);
-void		 fu_provider_emit_removed	(FuProvider	*provider,
+void		 fu_provider_device_remove	(FuProvider	*provider,
 						 FuDevice	*device);
 void		 fu_provider_set_status		(FuProvider	*provider,
 						 FuStatus	 status);
+const gchar	*fu_provider_get_name		(FuProvider	*provider);
 gboolean	 fu_provider_coldplug		(FuProvider	*provider,
 						 GError		**error);
 gboolean	 fu_provider_update		(FuProvider	*provider,
@@ -93,6 +101,12 @@ gboolean	 fu_provider_update		(FuProvider	*provider,
 						 GInputStream	*stream_cab,
 						 gint		 fd_fw,
 						 FuProviderFlags flags,
+						 GError		**error);
+gboolean	 fu_provider_clear_results	(FuProvider	*provider,
+						 FuDevice	*device,
+						 GError		**error);
+gboolean	 fu_provider_get_results	(FuProvider	*provider,
+						 FuDevice	*device,
 						 GError		**error);
 
 G_END_DECLS

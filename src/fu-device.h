@@ -57,8 +57,15 @@ GVariant	*fu_device_to_variant			(FuDevice	*device);
 const gchar	*fu_device_get_id			(FuDevice	*device);
 void		 fu_device_set_id			(FuDevice	*device,
 							 const gchar	*id);
+const gchar	*fu_device_get_guid			(FuDevice	*device);
+void		 fu_device_set_guid			(FuDevice	*device,
+							 const gchar	*guid);
+const gchar	*fu_device_get_display_name		(FuDevice	*device);
+void		 fu_device_set_display_name		(FuDevice	*device,
+							 const gchar	*display_name);
 const gchar	*fu_device_get_metadata			(FuDevice	*device,
 							 const gchar	*key);
+GVariant	*fu_device_get_metadata_as_variant	(FuDevice	*device);
 void		 fu_device_set_metadata			(FuDevice	*device,
 							 const gchar	*key,
 							 const gchar	*value);

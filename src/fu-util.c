@@ -43,6 +43,8 @@ typedef struct {
 	GDBusMessage		*message;	/* for async */
 	GError			*error;		/* for async */
 	FuProviderFlags		 flags;
+	GDBusConnection		*conn;
+	GDBusProxy		*proxy;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -262,27 +264,10 @@ fu_util_get_devices_internal (FuUtilPrivate *priv, GError **error)
 	GPtrArray *devices = NULL;
 	FuDevice *dev;
 	gchar *id;
-	_cleanup_object_unref_ GDBusConnection *conn = NULL;
-	_cleanup_object_unref_ GDBusProxy *proxy = NULL;
 	_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
 	_cleanup_variant_unref_ GVariant *val = NULL;
 
-	conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (conn == NULL)
-		return NULL;
-	proxy = g_dbus_proxy_new_sync (conn,
-				       G_DBUS_PROXY_FLAGS_NONE,
-				       NULL,
-				       FWUPD_DBUS_SERVICE,
-				       FWUPD_DBUS_PATH,
-				       FWUPD_DBUS_INTERFACE,
-				       NULL,
-				       error);
-	if (proxy == NULL)
-		return NULL;
-	g_signal_connect (proxy, "g-properties-changed",
-			  G_CALLBACK (fu_util_status_changed_cb), priv);
-	g_dbus_proxy_call (proxy,
+	g_dbus_proxy_call (priv->proxy,
 			   "GetDevices",
 			   NULL,
 			   G_DBUS_CALL_FLAGS_NONE,
@@ -386,28 +371,8 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 	GVariantBuilder builder;
 	gint retval;
 	gint fd;
-	_cleanup_object_unref_ GDBusConnection *conn = NULL;
 	_cleanup_object_unref_ GDBusMessage *request = NULL;
-	_cleanup_object_unref_ GDBusProxy *proxy = NULL;
 	_cleanup_object_unref_ GUnixFDList *fd_list = NULL;
-
-	conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (conn == NULL)
-		return FALSE;
-
-	/* watch for property changes */
-	proxy = g_dbus_proxy_new_sync (conn,
-				       G_DBUS_PROXY_FLAGS_NONE,
-				       NULL,
-				       FWUPD_DBUS_SERVICE,
-				       FWUPD_DBUS_PATH,
-				       FWUPD_DBUS_INTERFACE,
-				       NULL,
-				       error);
-	if (proxy == NULL)
-		return FALSE;
-	g_signal_connect (proxy, "g-properties-changed",
-			  G_CALLBACK (fu_util_status_changed_cb), priv);
 
 	/* set options */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
@@ -455,7 +420,7 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 	/* send message */
 	body = g_variant_new ("(sha{sv})", id, fd > -1 ? 0 : -1, &builder);
 	g_dbus_message_set_body (request, body);
-	g_dbus_connection_send_message_with_reply (conn,
+	g_dbus_connection_send_message_with_reply (priv->conn,
 						   request,
 						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
 						   -1,
@@ -513,6 +478,37 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_print_metadata:
+ **/
+static void
+fu_util_print_metadata (GVariant *val)
+{
+	GVariant *variant;
+	const gchar *key;
+	const gchar *type;
+	guint i;
+	_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
+
+	g_variant_get (val, "(a{sv})", &iter);
+	while (g_variant_iter_next (iter, "{&sv}", &key, &variant)) {
+		g_print ("%s", key);
+		for (i = strlen (key); i < 15; i++)
+			g_print (" ");
+		type = g_variant_get_type_string (variant);
+		if (g_strcmp0 (type, "s") == 0) {
+			g_print ("%s\n", g_variant_get_string (variant, NULL));
+		} else if (g_strcmp0 (type, "b") == 0) {
+			g_print ("%s\n", g_variant_get_boolean (variant) ? "True" : "False");
+		} else if (g_strcmp0 (type, "t") == 0) {
+			g_print ("%" G_GUINT64_FORMAT "\n", g_variant_get_uint64 (variant));
+		} else {
+			g_print ("???? [%s]\n", type);
+		}
+		g_variant_unref (variant);
+	}
+}
+
+/**
  * fu_util_get_details:
  **/
 static gboolean
@@ -520,17 +516,11 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GVariant *body;
 	GVariant *val;
-	GVariant *variant;
-	const gchar *key;
-	const gchar *type;
 	gint fd;
 	gint retval;
-	guint i;
-	_cleanup_object_unref_ GDBusConnection *conn = NULL;
 	_cleanup_object_unref_ GDBusMessage *message = NULL;
 	_cleanup_object_unref_ GDBusMessage *request = NULL;
 	_cleanup_object_unref_ GUnixFDList *fd_list = NULL;
-	_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
 
 	/* check args */
 	if (g_strv_length (values) != 1) {
@@ -540,11 +530,6 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments: expected 'filename'");
 		return FALSE;
 	}
-
-	/* get request */
-	conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (conn == NULL)
-		return FALSE;
 
 	/* open file */
 	fd = open (values[0], O_RDONLY);
@@ -573,7 +558,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* send message */
 	body = g_variant_new ("(h)", fd > -1 ? 0 : -1);
 	g_dbus_message_set_body (request, body);
-	message = g_dbus_connection_send_message_with_reply_sync (conn,
+	message = g_dbus_connection_send_message_with_reply_sync (priv->conn,
 								  request,
 								  G_DBUS_SEND_MESSAGE_FLAGS_NONE,
 								  -1,
@@ -591,24 +576,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* print results */
 	val = g_dbus_message_get_body (message);
-	g_variant_get (val, "(a{sv})", &iter);
-	while (g_variant_iter_next (iter, "{&sv}", &key, &variant)) {
-		g_print ("%s", key);
-		for (i = strlen (key); i < 15; i++)
-			g_print (" ");
-		type = g_variant_get_type_string (variant);
-		if (g_strcmp0 (type, "s") == 0) {
-			g_print ("%s\n", g_variant_get_string (variant, NULL));
-		} else if (g_strcmp0 (type, "b") == 0) {
-			g_print ("%s\n", g_variant_get_boolean (variant) ? "True" : "False");
-		} else if (g_strcmp0 (type, "t") == 0) {
-			g_print ("%" G_GUINT64_FORMAT "\n", g_variant_get_uint64 (variant));
-		} else {
-			g_print ("???? [%s]\n", type);
-		}
-		g_variant_unref (variant);
-	}
-
+	fu_util_print_metadata (val);
 	return TRUE;
 }
 
@@ -619,7 +587,9 @@ static gboolean
 fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	gint vercmp;
+	guint cnt = 0;
 	guint i;
+	const gchar *tmp;
 	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
 	_cleanup_object_unref_ FuPending *pending = NULL;
 
@@ -636,44 +606,42 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	devices = fu_pending_get_devices (pending, error);
 	if (devices == NULL)
 		return FALSE;
-	if (devices->len == 0) {
-		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_NOTHING_TO_DO,
-				     "No updates prepared");
-		return FALSE;
-	}
 
 	/* apply each update */
 	for (i = 0; i < devices->len; i++) {
 		FuDevice *device;
 		device = g_ptr_array_index (devices, i);
 
+		/* check not already done */
+		tmp = fu_device_get_metadata (device, FU_DEVICE_KEY_PENDING_STATE);
+		if (g_strcmp0 (tmp, "scheduled") != 0)
+			continue;
+
 		/* tell the user what's going to happen */
-		vercmp = as_utils_vercmp (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+		vercmp = as_utils_vercmp (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_OLD),
 					  fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
 		if (vercmp == 0) {
 			/* TRANSLATORS: the first replacement is a display name
 			 * e.g. "ColorHugALS" and the second is a version number
 			 * e.g. "1.2.3" */
 			g_print (_("Reinstalling %s with %s... "),
-				 fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME),
+				 fu_device_get_display_name (device),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
 		} else if (vercmp > 0) {
 			/* TRANSLATORS: the first replacement is a display name
 			 * e.g. "ColorHugALS" and the second and third are
 			 * version numbers e.g. "1.2.3" */
 			g_print (_("Downgrading %s from %s to %s... "),
-				 fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME),
-				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+				 fu_device_get_display_name (device),
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_OLD),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
 		} else if (vercmp < 0) {
 			/* TRANSLATORS: the first replacement is a display name
 			 * e.g. "ColorHugALS" and the second and third are
 			 * version numbers e.g. "1.2.3" */
 			g_print (_("Updating %s from %s to %s... "),
-				 fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME),
-				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+				 fu_device_get_display_name (device),
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_OLD),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
 		}
 		if (!fu_util_update (priv,
@@ -681,9 +649,19 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 				     fu_device_get_metadata (device, FU_DEVICE_KEY_FILENAME_CAB),
 				     priv->flags, error))
 			return FALSE;
-		g_print ("%s\n", _("Done!"));
+		cnt++;
 	}
 
+	/* nothing to do */
+	if (cnt == 0) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_NOTHING_TO_DO,
+				     "No updates prepared");
+		return FALSE;
+	}
+
+	g_print ("%s\n", _("Done!"));
 	return TRUE;
 }
 
@@ -705,6 +683,70 @@ fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 			       error);
 }
 
+/**
+ * fu_util_clear_results:
+ **/
+static gboolean
+fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	_cleanup_variant_unref_ GVariant *val = NULL;
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'id'");
+		return FALSE;
+	}
+
+	/* clear results, and wait for reply */
+	g_dbus_proxy_call (priv->proxy,
+			   "ClearResults",
+			   g_variant_new ("(s)", values[0]),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1,
+			   NULL,
+			   fu_util_get_devices_cb, priv);
+	g_main_loop_run (priv->loop);
+	if (priv->val == NULL) {
+		g_dbus_error_strip_remote_error (priv->error);
+		g_propagate_error (error, priv->error);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_util_get_results:
+ **/
+static gboolean
+fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	_cleanup_variant_unref_ GVariant *val = NULL;
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FU_ERROR,
+				     FU_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'id'");
+		return FALSE;
+	}
+
+	/* clear results, and wait for reply */
+	g_dbus_proxy_call (priv->proxy,
+			   "GetResults",
+			   g_variant_new ("(s)", values[0]),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1,
+			   NULL,
+			   fu_util_get_devices_cb, priv);
+	g_main_loop_run (priv->loop);
+	if (priv->val == NULL) {
+		g_dbus_error_strip_remote_error (priv->error);
+		g_propagate_error (error, priv->error);
+		return FALSE;
+	}
+	fu_util_print_metadata (priv->val);
+	return TRUE;
+}
 
 /**
  * fu_util_print_data:
@@ -746,12 +788,8 @@ fu_util_get_updates_app (FuUtilPrivate *priv, FuDevice *dev, AsApp *app, GError 
 	const gchar *version;
 	guint i;
 
-	/* get a name to display */
-	display_name = fu_device_get_metadata (dev, FU_DEVICE_KEY_DISPLAY_NAME);
-	if (display_name == NULL)
-		display_name = fu_device_get_id (dev);
-
 	/* find any newer versions */
+	display_name = fu_device_get_display_name (dev);
 	version = fu_device_get_metadata (dev, FU_DEVICE_KEY_VERSION);
 	if (version == NULL) {
 		g_set_error (error,
@@ -822,7 +860,6 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	AsApp *app;
 	FuDevice *dev;
-	const gchar *guid;
 	guint i;
 	_cleanup_object_unref_ AsStore *store = NULL;
 	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
@@ -844,8 +881,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		dev = g_ptr_array_index (devices, i);
 
 		/* match the GUID in the XML */
-		guid = fu_device_get_metadata (dev, FU_DEVICE_KEY_GUID);
-		app = as_store_get_app_by_id (store, guid);
+		app = as_store_get_app_by_id (store, fu_device_get_guid (dev));
 		if (app == NULL)
 			continue;
 
@@ -952,6 +988,18 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets the list of updates for connected hardware"),
 		     fu_util_get_updates);
+	fu_util_add (priv->cmd_array,
+		     "clear-results",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Clears the results from the last update"),
+		     fu_util_clear_results);
+	fu_util_add (priv->cmd_array,
+		     "get-results",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the results from the last update"),
+		     fu_util_get_results);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,
@@ -987,6 +1035,31 @@ main (int argc, char *argv[])
 			      FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER;
 	}
 
+	/* connect to the daemon */
+	priv->conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
+	if (priv->conn == NULL) {
+		/* TRANSLATORS: the user is in a bad place */
+		g_print ("%s: %s\n", _("Failed to connect to D-Bus"),
+			 error->message);
+		goto out;
+	}
+	priv->proxy = g_dbus_proxy_new_sync (priv->conn,
+					     G_DBUS_PROXY_FLAGS_NONE,
+					     NULL,
+					     FWUPD_DBUS_SERVICE,
+					     FWUPD_DBUS_PATH,
+					     FWUPD_DBUS_INTERFACE,
+					     NULL,
+					     &error);
+	if (priv->proxy == NULL) {
+		/* TRANSLATORS: we can't connect to the daemon */
+		g_print ("%s: %s\n", _("Failed to connect to fwupd"),
+			 error->message);
+		goto out;
+	}
+	g_signal_connect (priv->proxy, "g-properties-changed",
+			  G_CALLBACK (fu_util_status_changed_cb), priv);
+
 	/* run the specified command */
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
@@ -1010,6 +1083,10 @@ out:
 			g_variant_unref (priv->val);
 		if (priv->message != NULL)
 			g_object_unref (priv->message);
+		if (priv->conn != NULL)
+			g_object_unref (priv->conn);
+		if (priv->proxy != NULL)
+			g_object_unref (priv->proxy);
 		g_main_loop_unref (priv->loop);
 		g_option_context_free (priv->context);
 		g_free (priv);

@@ -133,6 +133,10 @@ fu_self_test_SOURCES =					\
 	fu-device.h					\
 	fu-pending.c					\
 	fu-pending.h					\
+	fu-provider.c					\
+	fu-provider.h					\
+	fu-provider-fake.c				\
+	fu-provider-fake.h				\
 	fu-self-test.c
 
 fu_self_test_LDADD =					\
