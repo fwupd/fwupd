@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <glib-object.h>
 #include <glib/gstdio.h>
 #include <stdlib.h>
@@ -194,7 +195,7 @@ fu_provider_func (void)
 
 	/* re-get the status */
 	ret = fu_provider_get_results (provider, device_tmp, &error);
-	g_assert_error (error, FU_ERROR, FU_ERROR_NOTHING_TO_DO);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
 	g_assert (!ret);
 
 	g_object_unref (device_tmp);
@@ -268,7 +269,7 @@ fu_pending_func (void)
 
 	/* get device that does not exist */
 	device = fu_pending_get_device (pending, "XXXXXXXXXXXXX", &error);
-	g_assert_error (error, FU_ERROR, FU_ERROR_NO_SUCH_DEVICE);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (device == NULL);
 	g_clear_error (&error);
 
@@ -282,7 +283,7 @@ fu_pending_func (void)
 
 	/* get device that does not exist */
 	device = fu_pending_get_device (pending, "self-test", &error);
-	g_assert_error (error, FU_ERROR, FU_ERROR_NO_SUCH_DEVICE);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (device == NULL);
 	g_clear_error (&error);
 }

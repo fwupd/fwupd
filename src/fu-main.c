@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <appstream-glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
@@ -147,8 +148,8 @@ fu_main_device_array_to_variant (FuMainPrivate *priv, GError **error)
 	/* no devices */
 	if (priv->devices->len == 0) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_NOTHING_TO_DO,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
 				     "no supported devices");
 		return NULL;
 	}
@@ -273,8 +274,8 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 	item = fu_main_get_item_by_id (helper->priv, fu_device_get_id (helper->device));
 	if (item == NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "device %s was removed",
 			     fu_device_get_id (helper->device));
 		return FALSE;
@@ -304,8 +305,8 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 							    res, &error);
 	if (auth == NULL) {
 		g_dbus_method_invocation_return_error (helper->invocation,
-						       FU_ERROR,
-						       FU_ERROR_FAILED_TO_AUTHENTICATE,
+						       FWUPD_ERROR,
+						       FWUPD_ERROR_AUTH_FAILED,
 						       "could not check for auth: %s",
 						       error->message);
 		fu_main_helper_free (helper);
@@ -315,8 +316,8 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	/* did not auth */
 	if (!polkit_authorization_result_get_is_authorized (auth)) {
 		g_dbus_method_invocation_return_error (helper->invocation,
-						       FU_ERROR,
-						       FU_ERROR_FAILED_TO_AUTHENTICATE,
+						       FWUPD_ERROR,
+						       FWUPD_ERROR_AUTH_FAILED,
 						       "failed to obtain auth");
 		fu_main_helper_free (helper);
 		return;
@@ -357,8 +358,8 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		item = fu_main_get_item_by_guid (helper->priv, guid);
 		if (item == NULL) {
 			g_set_error (error,
-				     FU_ERROR,
-				     FU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "no hardware matched %s",
 				     guid);
 			return FALSE;
@@ -369,8 +370,8 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	tmp = fu_device_get_guid (helper->device);
 	if (g_strcmp0 (guid, tmp) != 0) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "firmware is not for this hw: required %s got %s",
 			     tmp, guid);
 		return FALSE;
@@ -384,8 +385,8 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_VERSION_LOWEST);
 	if (tmp != NULL && as_utils_vercmp (tmp, version) > 0) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_ALREADY_NEWER_VERSION,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_VERSION_NEWER,
 			     "Specified firmware is older than the minimum "
 			     "required version '%s < %s'", tmp, version);
 		return FALSE;
@@ -395,8 +396,8 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_VERSION);
 	if (tmp == NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "Device %s does not yet have a current version",
 			     fu_device_get_id (helper->device));
 		return FALSE;
@@ -404,16 +405,16 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	vercmp = as_utils_vercmp (tmp, version);
 	if (vercmp == 0 && (helper->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL) == 0) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_ALREADY_SAME_VERSION,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_VERSION_SAME,
 			     "Specified firmware is already installed '%s'",
 			     tmp);
 		return FALSE;
 	}
 	if (vercmp > 0 && (helper->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) == 0) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_ALREADY_NEWER_VERSION,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_VERSION_NEWER,
 			     "Specified firmware is older than installed '%s < %s'",
 			     tmp, version);
 		return FALSE;
@@ -429,8 +430,8 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 				      O_CLOEXEC, 0);
 	if (helper->firmware_fd < 0) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_READ,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
 			     "failed to open %s",
 			     fu_cab_get_filename_firmware (helper->cab));
 		return FALSE;
@@ -486,8 +487,8 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 		item = fu_main_get_item_by_id (priv, id);
 		if (item == NULL) {
 			g_set_error (error,
-				     FU_ERROR,
-				     FU_ERROR_NO_SUCH_DEVICE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "no suitable device found for %s", id);
 		}
 		return item;
@@ -512,8 +513,8 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 			provider = fu_main_get_provider_by_name (priv, tmp);
 			if (provider == NULL) {
 				g_set_error (error,
-					     FU_ERROR,
-					     FU_ERROR_NO_SUCH_DEVICE,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_FOUND,
 					     "no provider %s found", tmp);
 			}
 			item = g_new0 (FuDeviceItem, 1);
@@ -530,8 +531,8 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 	/* no device found */
 	if (item == NULL) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_NO_SUCH_DEVICE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "no suitable devices found");
 	}
 	return item;
@@ -644,8 +645,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			item = fu_main_get_item_by_id (priv, id);
 			if (item == NULL) {
 				g_dbus_method_invocation_return_error (invocation,
-								       FU_ERROR,
-								       FU_ERROR_NO_SUCH_DEVICE,
+								       FWUPD_ERROR,
+								       FWUPD_ERROR_NOT_FOUND,
 								       "no such device %s",
 								       id);
 				return;
@@ -673,8 +674,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		fd_list = g_dbus_message_get_unix_fd_list (message);
 		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 1) {
 			g_dbus_method_invocation_return_error (invocation,
-							       FU_ERROR,
-							       FU_ERROR_NO_SUCH_PROPERTY,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_INTERNAL,
 							       "invalid handle");
 			return;
 		}
@@ -756,8 +757,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		fd_list = g_dbus_message_get_unix_fd_list (message);
 		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 1) {
 			g_dbus_method_invocation_return_error (invocation,
-							       FU_ERROR,
-							       FU_ERROR_NO_SUCH_PROPERTY,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_INTERNAL,
 							       "invalid handle");
 			return;
 		}
@@ -837,8 +838,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 	/* we suck */
 	g_dbus_method_invocation_return_error (invocation,
-					       FU_ERROR,
-					       FU_ERROR_NO_SUCH_METHOD,
+					       G_DBUS_ERROR,
+					       G_DBUS_ERROR_UNKNOWN_METHOD,
 					       "no such method %s",
 					       method_name);
 }
@@ -862,8 +863,8 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 
 	/* return an error */
 	g_set_error (error,
-		     FU_ERROR,
-		     FU_ERROR_NO_SUCH_METHOD,
+		     G_DBUS_ERROR,
+		     G_DBUS_ERROR_UNKNOWN_PROPERTY,
 		     "failed to get daemon property %s",
 		     property_name);
 	return NULL;

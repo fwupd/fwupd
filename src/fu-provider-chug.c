@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <colord.h>
 #include <colorhug.h>
 #include <gio/gio.h>
@@ -116,8 +117,8 @@ fu_provider_chug_wait_for_connect (FuProviderChugItem *item, GError **error)
 	g_main_loop_run (item->loop);
 	if (item->reconnect_id == 0) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_NO_SUCH_DEVICE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "request timed out");
 		return FALSE;
 	}
@@ -136,8 +137,8 @@ fu_provider_chug_open (FuProviderChugItem *item, GError **error)
 	_cleanup_error_free_ GError *error_local = NULL;
 	if (!ch_device_open (item->usb_device, &error_local)) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_READ,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
 			     "failed to open %s device: %s",
 			     fu_device_get_id (item->device),
 			     error_local->message);
@@ -212,8 +213,8 @@ fu_provider_chug_update (FuProvider *provider,
 				    fu_device_get_id (device));
 	if (item == NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_NO_SUCH_DEVICE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
 			     "cannot find: %s",
 			     fu_device_get_id (device));
 		return FALSE;
@@ -233,8 +234,8 @@ fu_provider_chug_update (FuProvider *provider,
 				       g_bytes_get_size (item->fw_bin),
 				       &error_local)) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_NOT_POSSIBLE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "firmware is not suitable: %s",
 			     error_local->message);
 		return FALSE;
@@ -251,8 +252,8 @@ fu_provider_chug_update (FuProvider *provider,
 					      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 					      NULL, &error_local)) {
 			g_set_error (error,
-				     FU_ERROR,
-				     FU_ERROR_FAILED_TO_WRITE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_WRITE,
 				     "failed to reset device: %s",
 				     error_local->message);
 			g_usb_device_close (item->usb_device, NULL);
@@ -281,8 +282,8 @@ fu_provider_chug_update (FuProvider *provider,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 				      NULL, &error_local)) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "failed to write firmware: %s",
 			     error_local->message);
 		g_usb_device_close (item->usb_device, NULL);
@@ -299,8 +300,8 @@ fu_provider_chug_update (FuProvider *provider,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 				      NULL, &error_local)) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "failed to verify firmware: %s",
 			     error_local->message);
 		g_usb_device_close (item->usb_device, NULL);
@@ -315,8 +316,8 @@ fu_provider_chug_update (FuProvider *provider,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 				      NULL, &error_local)) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "failed to boot flash: %s",
 			     error_local->message);
 		g_usb_device_close (item->usb_device, NULL);
@@ -339,8 +340,8 @@ fu_provider_chug_update (FuProvider *provider,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 				      NULL, &error_local)) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "failed to set flash success: %s",
 			     error_local->message);
 		g_usb_device_close (item->usb_device, NULL);
@@ -350,8 +351,8 @@ fu_provider_chug_update (FuProvider *provider,
 	/* close, orderly */
 	if (!g_usb_device_close (item->usb_device, &error_local)) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "failed to close device: %s",
 			     error_local->message);
 		g_usb_device_close (item->usb_device, NULL);

@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <sqlite3.h>
@@ -76,8 +77,8 @@ fu_pending_load (FuPending *pending, GError **error)
 	rc = sqlite3_open (filename, &pending->priv->db);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_READ,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
 			     "Can't open %s: %s",
 			     filename, sqlite3_errmsg (pending->priv->db));
 		sqlite3_close (pending->priv->db);
@@ -102,8 +103,8 @@ fu_pending_load (FuPending *pending, GError **error)
 		rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
 		if (rc != SQLITE_OK) {
 			g_set_error (error,
-				     FU_ERROR,
-				     FU_ERROR_FAILED_TO_WRITE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_WRITE,
 				     "Cannot create database: %s",
 				     error_msg);
 			sqlite3_free (error_msg);
@@ -169,8 +170,8 @@ fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 	rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "SQL error: %s",
 			     error_msg);
 		sqlite3_free (error_msg);
@@ -210,8 +211,8 @@ fu_pending_remove_device (FuPending *pending, FuDevice *device, GError **error)
 	rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "SQL error: %s",
 			     error_msg);
 		sqlite3_free (error_msg);
@@ -316,8 +317,8 @@ fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **erro
 			   &error_msg);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_READ,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
 			     "SQL error: %s",
 			     error_msg);
 		sqlite3_free (error_msg);
@@ -325,8 +326,8 @@ fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **erro
 	}
 	if (array_tmp->len == 0) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_NO_SUCH_DEVICE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "No devices found");
 		goto out;
 	}
@@ -367,8 +368,8 @@ fu_pending_get_devices (FuPending *pending, GError **error)
 			   &error_msg);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_READ,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
 			     "SQL error: %s",
 			     error_msg);
 		sqlite3_free (error_msg);
@@ -432,8 +433,8 @@ fu_pending_set_state (FuPending *pending,
 	rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "SQL error: %s",
 			     error_msg);
 		sqlite3_free (error_msg);
@@ -478,8 +479,8 @@ fu_pending_set_error_msg (FuPending *pending,
 	rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "SQL error: %s",
 			     error_msg);
 		sqlite3_free (error_msg);

@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -134,8 +135,8 @@ fu_cab_parse (FuCab *cab, GError **error)
 	priv->gcab = gcab_cabinet_new ();
 	if (!gcab_cabinet_load (priv->gcab, priv->cab_stream, NULL, &error_local)) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_READ,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
 			     "cannot load .cab file: %s",
 			     error_local->message);
 		return FALSE;
@@ -145,8 +146,8 @@ fu_cab_parse (FuCab *cab, GError **error)
 	priv->tmp_path = g_dir_make_tmp ("fwupd-XXXXXX", &error_local);
 	if (priv->tmp_path == NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "failed to create temp dir: %s",
 			     error_local->message);
 		return FALSE;
@@ -157,8 +158,8 @@ fu_cab_parse (FuCab *cab, GError **error)
 					  fu_cab_extract_inf_cb,
 					  cab, NULL, &error_local)) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "failed to extract .cab file: %s",
 			     error_local->message);
 		return FALSE;
@@ -167,8 +168,8 @@ fu_cab_parse (FuCab *cab, GError **error)
 	/* read .inf file */
 	if (priv->inf_filename == NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "no .inf file in.cab file");
 		return FALSE;
 	}
@@ -178,8 +179,8 @@ fu_cab_parse (FuCab *cab, GError **error)
 	if (!as_app_parse_file (app, priv->inf_filename,
 				AS_APP_PARSE_FLAG_NONE, &error_local)) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "%s could not be loaded: %s",
 			     priv->inf_filename,
 			     error_local->message);
@@ -193,8 +194,8 @@ fu_cab_parse (FuCab *cab, GError **error)
 		if (!as_app_parse_file (app2, priv->metainfo_filename,
 					AS_APP_PARSE_FLAG_NONE, &error_local)) {
 			g_set_error (error,
-				     FU_ERROR,
-				     FU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "%s could not be loaded: %s",
 				     priv->metainfo_filename,
 				     error_local->message);
@@ -258,8 +259,8 @@ fu_cab_load_fd (FuCab *cab, gint fd, GCancellable *cancellable, GError **error)
 			break;
 		if (data == NULL) {
 			g_set_error_literal (error,
-					     FU_ERROR,
-					     FU_ERROR_FAILED_TO_READ,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_READ,
 					     error_local->message);
 			return FALSE;
 		}
@@ -290,8 +291,8 @@ fu_cab_load_file (FuCab *cab, GFile *file, GCancellable *cancellable, GError **e
 		_cleanup_free_ gchar *filename = NULL;
 		filename = g_file_get_path (file);
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "Failed to get info for %s: %s",
 			     filename, error_local->message);
 		return FALSE;
@@ -304,8 +305,8 @@ fu_cab_load_file (FuCab *cab, GFile *file, GCancellable *cancellable, GError **e
 		_cleanup_free_ gchar *filename = NULL;
 		filename = g_file_get_path (file);
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "Failed to open %s: %s",
 			     filename, error_local->message);
 		return FALSE;
@@ -330,8 +331,8 @@ fu_cab_extract_firmware (FuCab *cab, GError **error)
 	/* no valid firmware file */
 	if (priv->firmware_basename == NULL) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "no firmware found in cab file");
 		return FALSE;
 	}
@@ -343,16 +344,16 @@ fu_cab_extract_firmware (FuCab *cab, GError **error)
 					  fu_cab_extract_firmware_cb,
 					  cab, NULL, &error_local)) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_WRITE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
 			     "failed to extract .cab file: %s",
 			     error_local->message);
 		return FALSE;
 	}
 	if (priv->firmware_filename == NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "%s not found in cab file",
 			     priv->firmware_basename);
 		return FALSE;

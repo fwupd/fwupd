@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <fwup.h>
@@ -77,8 +78,8 @@ fu_provider_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError *
 	/* paradoxically, no hardware matched */
 	if (re_matched == NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_NOT_POSSIBLE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "No UEFI firmware matched %s",
 			     guid_str);
 	}
@@ -106,8 +107,8 @@ fu_provider_uefi_clear_results (FuProvider *provider, FuDevice *device, GError *
 	if (fwup_clear_status (re) < 0) {
 		ret = FALSE;
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "Cannot create clear UEFI status for %s",
 			     fu_device_get_guid (device));
 		goto out;
@@ -178,8 +179,8 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 	if (fwup_get_last_attempt_info (re, &version, &status, NULL) < 0) {
 		ret = FALSE;
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "Cannot get UEFI status for %s",
 			     fu_device_get_guid (device));
 		goto out;
@@ -234,8 +235,8 @@ fu_provider_uefi_update (FuProvider *provider,
 	if (fwup_set_up_update (re, hardware_instance, fd) < 0) {
 		ret = FALSE;
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_NOT_POSSIBLE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "UEFI firmware update failed: %s",
 			     fwup_strerror (fwup_error));
 		goto out;
@@ -249,8 +250,8 @@ fu_provider_uefi_update (FuProvider *provider,
 					&error_local)) {
 		ret = FALSE;
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_NOT_POSSIBLE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Failed to launch efibootmgr: %s",
 			     error_local->message);
 		goto out;
@@ -258,8 +259,8 @@ fu_provider_uefi_update (FuProvider *provider,
 	if (!g_spawn_check_exit_status (rc, &error_local)) {
 		ret = FALSE;
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_NOT_POSSIBLE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "UEFI firmware update failed: %s",
 			     error_local->message);
 		goto out;
@@ -283,8 +284,8 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 	/* not supported */
 	if (!fwup_supported ()) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_NOT_POSSIBLE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "UEFI firmware updating not supported");
 		return FALSE;
 	}
@@ -292,8 +293,8 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 	/* this can fail if we have no permissions */
 	if (fwup_resource_iter_create (&iter) < 0) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "Cannot create fwup iter");
 		return FALSE;
 	}

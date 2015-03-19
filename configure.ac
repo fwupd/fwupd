@@ -1,7 +1,13 @@
 # Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
 AC_PREREQ(2.63)
 
-AC_INIT([fwupd],[0.1.1],[http://www.freedesktop.org/software/fwupd/])
+m4_define([fwupd_major_version], [0])
+m4_define([fwupd_minor_version], [1])
+m4_define([fwupd_micro_version], [1])
+m4_define([fwupd_version],
+          [fwupd_major_version.fwupd_minor_version.fwupd_micro_version])
+
+AC_INIT([fwupd],[fwupd_version],[https://github.com/hughsie/fwupd])
 AC_CONFIG_SRCDIR(src)
 AM_INIT_AUTOMAKE([1.9 no-dist-gzip dist-xz tar-ustar foreign])
 AC_CONFIG_HEADERS([config.h])
@@ -11,6 +17,30 @@ AC_PROG_LIBTOOL
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [GOBJECT_INTROSPECTION_CHECK([0.9.8])])
 AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyes)
 GLIB_GSETTINGS
+
+# use this in fu-version.h
+FWUPD_MAJOR_VERSION=fwupd_major_version
+FWUPD_MINOR_VERSION=fwupd_minor_version
+FWUPD_MICRO_VERSION=fwupd_micro_version
+AC_SUBST(VERSION)
+AC_SUBST(FWUPD_MAJOR_VERSION)
+AC_SUBST(FWUPD_MINOR_VERSION)
+AC_SUBST(FWUPD_MICRO_VERSION)
+
+# libtool versioning - this applies to libfwupd
+#
+# See http://sources.redhat.com/autobook/autobook/autobook_91.html#SEC91 for details
+#
+# increment;
+# CURRENT	If the API or ABI interface has changed (reset REVISION to 0)
+# REVISION	If the API and ABI remains the same, but bugs are fixed.
+# AGE		Don't use.
+LT_CURRENT=1
+LT_REVISION=0
+LT_AGE=0
+AC_SUBST(LT_CURRENT)
+AC_SUBST(LT_REVISION)
+AC_SUBST(LT_AGE)
 
 # enable nice build output on automake1.11
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
@@ -126,6 +156,9 @@ dnl - Makefiles, etc.
 dnl ---------------------------------------------------------------------------
 AC_CONFIG_FILES([
 Makefile
+libfwupd/fwupd-version.h
+libfwupd/fwupd.pc
+libfwupd/Makefile
 man/Makefile
 data/Makefile
 data/tests/Makefile

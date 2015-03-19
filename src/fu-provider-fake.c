@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <gio/gio.h>
 #include <glib-object.h>
 
@@ -64,8 +65,8 @@ fu_provider_fake_update (FuProvider *provider,
 {
 	if (flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "cannot handle offline");
 	}
 	fu_provider_set_status (provider, FU_STATUS_DECOMPRESSING);

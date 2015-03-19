@@ -28,8 +28,6 @@
 
 #define FWUPD_DEVICE_ID_ANY		"*"
 
-#define FU_ERROR			fu_error_quark()
-
 #define FU_DEVICE_KEY_VERSION		"Version"	/* s */
 #define FU_DEVICE_KEY_PROVIDER		"Provider"	/* s */
 #define FU_DEVICE_KEY_GUID		"Guid"		/* s */
@@ -62,27 +60,7 @@ typedef enum {
 	FU_STATUS_LAST
 } FuStatus;
 
-/* if adding values here, remember to register them in fu_error_quark() */
-typedef enum {
-	FU_ERROR_INTERNAL,
-	FU_ERROR_ALREADY_NEWER_VERSION,
-	FU_ERROR_ALREADY_SAME_VERSION,
-	FU_ERROR_ALREADY_SCHEDULED,
-	FU_ERROR_FAILED_TO_AUTHENTICATE,
-	FU_ERROR_FAILED_TO_READ,
-	FU_ERROR_FAILED_TO_WRITE,
-	FU_ERROR_INVALID_FILE,
-	FU_ERROR_NO_SUCH_DEVICE,
-	FU_ERROR_NO_SUCH_METHOD,
-	FU_ERROR_NO_SUCH_PROPERTY,
-	FU_ERROR_NOTHING_TO_DO,
-	FU_ERROR_NOT_POSSIBLE,
-	/* private */
-	FU_ERROR_LAST
-} FuError;
-
-GQuark		 fu_error_quark			(void);
-const gchar	*fu_status_to_string		(FuStatus	 status);
-FuStatus	 fu_status_from_string		(const gchar	*status);
+const gchar	*fu_status_to_string			(FuStatus	 status);
+FuStatus	 fu_status_from_string			(const gchar	*status);
 
 #endif /* __FU_COMMON_H */

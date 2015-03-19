@@ -11,6 +11,9 @@ AM_CPPFLAGS =						\
 	$(PIE_CFLAGS)					\
 	$(POLKIT_CFLAGS)				\
 	$(UEFI_CFLAGS)					\
+	-I$(top_srcdir)					\
+	-I$(top_builddir)				\
+	-I$(top_srcdir)/libfwupd			\
 	-DG_LOG_DOMAIN=\"Fu\"				\
 	-DLIBEXECDIR=\"$(libexecdir)\"			\
 	-DLIBDIR=\"$(libdir)\"				\
@@ -22,6 +25,9 @@ AM_CPPFLAGS =						\
 	-DTESTDATADIR=\""$(top_srcdir)/data/tests"\"	\
 	-DG_UDEV_API_IS_SUBJECT_TO_CHANGE		\
 	-DLOCALEDIR=\""$(localedir)"\"
+
+FWUPD_LIBS =						\
+	$(top_builddir)/libfwupd/libfwupd.la
 
 bin_PROGRAMS = fwupdmgr
 
@@ -35,6 +41,7 @@ fwupdmgr_SOURCES =					\
 	fu-util.c
 
 fwupdmgr_LDADD =					\
+	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\
 	$(GLIB_LIBS)
@@ -98,6 +105,7 @@ fwupd_SOURCES +=					\
 endif
 
 fwupd_LDADD =						\
+	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(COLORHUG_LIBS)				\
 	$(GCAB_LIBS)					\
@@ -140,6 +148,7 @@ fu_self_test_SOURCES =					\
 	fu-self-test.c
 
 fu_self_test_LDADD =					\
+	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\
 	$(GCAB_LIBS)					\

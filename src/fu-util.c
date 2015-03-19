@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <appstream-glib.h>
 #include <fcntl.h>
 #include <gio/gio.h>
@@ -189,7 +190,7 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 					item->name,
 					item->arguments ? item->arguments : "");
 	}
-	g_set_error_literal (error, FU_ERROR, FU_ERROR_NO_SUCH_METHOD, string->str);
+	g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, string->str);
 	return FALSE;
 }
 
@@ -397,8 +398,8 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 	fd = open (filename, O_RDONLY);
 	if (fd < 0) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "failed to open %s",
 			     filename);
 		return FALSE;
@@ -451,8 +452,8 @@ fu_util_update_online (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	if (g_strv_length (values) != 2) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "Invalid arguments: expected 'id' 'filename'");
 		return FALSE;
 	}
@@ -468,8 +469,8 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "Invalid arguments: expected 'filename'");
 		return FALSE;
 	}
@@ -525,8 +526,8 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* check args */
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "Invalid arguments: expected 'filename'");
 		return FALSE;
 	}
@@ -535,8 +536,8 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	fd = open (values[0], O_RDONLY);
 	if (fd < 0) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "failed to open %s",
 			     values[0]);
 		return FALSE;
@@ -595,8 +596,8 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	if (g_strv_length (values) != 0) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "Invalid arguments: none expected");
 		return FALSE;
 	}
@@ -655,8 +656,8 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* nothing to do */
 	if (cnt == 0) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_NOTHING_TO_DO,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
 				     "No updates prepared");
 		return FALSE;
 	}
@@ -673,8 +674,8 @@ fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	if (g_strv_length (values) != 2) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "Invalid arguments: expected 'id' 'filename'");
 		return FALSE;
 	}
@@ -692,8 +693,8 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	_cleanup_variant_unref_ GVariant *val = NULL;
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "Invalid arguments: expected 'id'");
 		return FALSE;
 	}
@@ -724,8 +725,8 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	_cleanup_variant_unref_ GVariant *val = NULL;
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "Invalid arguments: expected 'id'");
 		return FALSE;
 	}
@@ -793,8 +794,8 @@ fu_util_get_updates_app (FuUtilPrivate *priv, FuDevice *dev, AsApp *app, GError 
 	version = fu_device_get_metadata (dev, FU_DEVICE_KEY_VERSION);
 	if (version == NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_FAILED_TO_READ,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
 			     "Device %s has no Version",
 			     fu_device_get_id (dev));
 		return NULL;
@@ -843,8 +844,8 @@ fu_util_get_updates_app (FuUtilPrivate *priv, FuDevice *dev, AsApp *app, GError 
 	/* nothing */
 	if (rel_newest == NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_NOTHING_TO_DO,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
 			     "Device %s has no firmware updates",
 			     display_name);
 	}
@@ -888,8 +889,8 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		/* we found a device match, does it need updating */
 		if (fu_util_get_updates_app (priv, dev, app, &error_local) == NULL) {
 			if (g_error_matches (error_local,
-					     FU_ERROR,
-					     FU_ERROR_NOTHING_TO_DO)) {
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO)) {
 				g_print ("%s\n", error_local->message);
 				continue;
 			}
@@ -1063,7 +1064,7 @@ main (int argc, char *argv[])
 	/* run the specified command */
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
-		if (g_error_matches (error, FU_ERROR, FU_ERROR_NO_SUCH_METHOD)) {
+		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			_cleanup_free_ gchar *tmp = NULL;
 			tmp = g_option_context_get_help (priv->context, TRUE, NULL);
 			g_print ("%s", tmp);

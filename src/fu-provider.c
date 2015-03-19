@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -84,8 +85,8 @@ fu_provider_schedule_update (FuProvider *provider,
 	device_tmp = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
 	if (device_tmp != NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_ALREADY_SCHEDULED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_ALREADY_PENDING,
 			     "%s is already scheduled to be updated",
 			     fu_device_get_id (device));
 		return FALSE;
@@ -158,8 +159,8 @@ fu_provider_update (FuProvider *provider,
 	/* online */
 	if (klass->update_online == NULL) {
 		g_set_error_literal (error,
-				     FU_ERROR,
-				     FU_ERROR_NOT_POSSIBLE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "No online update possible");
 		return FALSE;
 	}
@@ -190,8 +191,8 @@ fu_provider_update (FuProvider *provider,
 			file = g_file_new_for_path (tmp);
 			if (!g_file_delete (file, NULL, &error_local)) {
 				g_set_error (error,
-					     FU_ERROR,
-					     FU_ERROR_INVALID_FILE,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
 					     "Failed to delete %s: %s",
 					     tmp, error_local->message);
 				return FALSE;
@@ -224,8 +225,8 @@ fu_provider_clear_results (FuProvider *provider, FuDevice *device, GError **erro
 						&error_local);
 	if (device_pending == NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_INVALID_FILE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "Failed to find %s in pending database: %s",
 			     fu_device_get_id (device),
 			     error_local->message);
@@ -266,8 +267,8 @@ fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 						&error_local);
 	if (device_pending == NULL) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_NOTHING_TO_DO,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
 			     "Failed to find %s in pending database: %s",
 			     fu_device_get_id (device),
 			     error_local->message);
@@ -278,8 +279,8 @@ fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 	tmp = fu_device_get_metadata (device_pending, FU_DEVICE_KEY_PENDING_STATE);
 	if (tmp == NULL || g_strcmp0 (tmp, "scheduled") == 0) {
 		g_set_error (error,
-			     FU_ERROR,
-			     FU_ERROR_NOTHING_TO_DO,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
 			     "Device %s has not been updated offline yet",
 			     fu_device_get_id (device));
 		return FALSE;
