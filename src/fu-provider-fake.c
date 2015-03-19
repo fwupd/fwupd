@@ -26,7 +26,6 @@
 #include <glib-object.h>
 
 #include "fu-cleanup.h"
-#include "fu-common.h"
 #include "fu-device.h"
 #include "fu-provider-fake.h"
 
@@ -69,8 +68,8 @@ fu_provider_fake_update (FuProvider *provider,
 				     FWUPD_ERROR_INTERNAL,
 				     "cannot handle offline");
 	}
-	fu_provider_set_status (provider, FU_STATUS_DECOMPRESSING);
-	fu_provider_set_status (provider, FU_STATUS_DEVICE_WRITE);
+	fu_provider_set_status (provider, FWUPD_STATUS_DECOMPRESSING);
+	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_WRITE);
 	return TRUE;
 }
 

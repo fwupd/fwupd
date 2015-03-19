@@ -34,6 +34,26 @@ G_BEGIN_DECLS
 #define FU_DEVICE_GET_CLASS(o)	(G_TYPE_INSTANCE_GET_CLASS ((o), FU_TYPE_DEVICE, FuDeviceClass))
 #define FU_DEVICE_ERROR		fu_device_error_quark()
 
+#define FU_DEVICE_KEY_VERSION		"Version"	/* s */
+#define FU_DEVICE_KEY_PROVIDER		"Provider"	/* s */
+#define FU_DEVICE_KEY_GUID		"Guid"		/* s */
+#define FU_DEVICE_KEY_ONLY_OFFLINE	"OnlyOffline"	/* s */
+#define FU_DEVICE_KEY_DISPLAY_NAME	"DisplayName"	/* s */
+#define FU_DEVICE_KEY_VERSION_NEW	"VersionNew"	/* internal only */
+#define FU_DEVICE_KEY_VERSION_OLD	"VersionOld"	/* internal only */
+#define FU_DEVICE_KEY_FILENAME_CAB	"FilenameCab"	/* internal only */
+#define FU_DEVICE_KEY_VERSION_LOWEST	"VersionLowest"	/* s */
+#define FU_DEVICE_KEY_VENDOR		"Vendor"	/* s */
+#define FU_DEVICE_KEY_NAME		"Name"		/* s */
+#define FU_DEVICE_KEY_SUMMARY		"Summary"	/* s */
+#define FU_DEVICE_KEY_DESCRIPTION	"Description"	/* s */
+#define FU_DEVICE_KEY_LICENSE		"License"	/* s */
+#define FU_DEVICE_KEY_KIND		"Kind"		/* s: 'internal' or 'hotplug' */
+#define FU_DEVICE_KEY_URL_HOMEPAGE	"UrlHomepage"	/* s */
+#define FU_DEVICE_KEY_SIZE		"Size"		/* t */
+#define FU_DEVICE_KEY_PENDING_STATE	"PendingState"	/* s */
+#define FU_DEVICE_KEY_PENDING_ERROR	"PendingError"	/* s */
+
 typedef struct _FuDevicePrivate	FuDevicePrivate;
 typedef struct _FuDevice	FuDevice;
 typedef struct _FuDeviceClass	FuDeviceClass;

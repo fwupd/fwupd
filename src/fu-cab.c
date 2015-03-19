@@ -30,7 +30,6 @@
 #include <gio/gunixinputstream.h>
 
 #include "fu-cleanup.h"
-#include "fu-common.h"
 #include "fu-cab.h"
 
 static void fu_cab_finalize			 (GObject *object);

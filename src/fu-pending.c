@@ -28,7 +28,6 @@
 #include <stdlib.h>
 
 #include "fu-cleanup.h"
-#include "fu-common.h"
 #include "fu-pending.h"
 
 static void fu_pending_finalize			 (GObject *object);

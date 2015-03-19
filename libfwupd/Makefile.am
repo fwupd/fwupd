@@ -24,10 +24,12 @@ libfwupd_include_HEADERS =					\
 
 libfwupdbase_includedir = $(libfwupd_includedir)/libfwupd
 libfwupdbase_include_HEADERS =					\
+	fwupd-enums.h						\
 	fwupd-error.h						\
 	fwupd-version.h
 
 libfwupd_la_SOURCES =						\
+	fwupd-enums.c						\
 	fwupd-error.c
 libfwupd_la_LIBADD =						\
 	$(GLIB_LIBS)

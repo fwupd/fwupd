@@ -34,7 +34,6 @@
 
 #include "fu-cab.h"
 #include "fu-cleanup.h"
-#include "fu-common.h"
 #include "fu-debug.h"
 #include "fu-device.h"
 #include "fu-pending.h"
@@ -56,7 +55,7 @@ typedef struct {
 	GPtrArray		*devices;
 	GPtrArray		*providers;
 	PolkitAuthority		*authority;
-	FuStatus		 status;
+	FwupdStatus		 status;
 	FuPending		*pending;
 } FuMainPrivate;
 
@@ -122,7 +121,7 @@ fu_main_emit_property_changed (FuMainPrivate *priv,
  * fu_main_set_status:
  **/
 static void
-fu_main_set_status (FuMainPrivate *priv, FuStatus status)
+fu_main_set_status (FuMainPrivate *priv, FwupdStatus status)
 {
 	const gchar *tmp;
 
@@ -131,7 +130,7 @@ fu_main_set_status (FuMainPrivate *priv, FuStatus status)
 	priv->status = status;
 
 	/* emit changed */
-	tmp = fu_status_to_string (priv->status);
+	tmp = fwupd_status_to_string (priv->status);
 	g_debug ("Emitting PropertyChanged('Status'='%s')", tmp);
 	fu_main_emit_property_changed (priv, "Status", g_variant_new_string (tmp));
 }
@@ -347,7 +346,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	gint vercmp;
 
 	/* load cab file */
-	fu_main_set_status (helper->priv, FU_STATUS_LOADING);
+	fu_main_set_status (helper->priv, FWUPD_STATUS_LOADING);
 	if (!fu_cab_load_fd (helper->cab, helper->cab_fd, NULL, error))
 		return FALSE;
 
@@ -421,7 +420,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	}
 
 	/* now extract the firmware */
-	fu_main_set_status (helper->priv, FU_STATUS_DECOMPRESSING);
+	fu_main_set_status (helper->priv, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_cab_extract_firmware (helper->cab, error))
 		return FALSE;
 
@@ -561,7 +560,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			return;
 		}
 		g_dbus_method_invocation_return_value (invocation, val);
-		fu_main_set_status (priv, FU_STATUS_IDLE);
+		fu_main_set_status (priv, FWUPD_STATUS_IDLE);
 		return;
 	}
 
@@ -699,7 +698,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		if (!fu_main_update_helper (helper, &error)) {
 			g_dbus_method_invocation_return_gerror (helper->invocation,
 							        error);
-			fu_main_set_status (priv, FU_STATUS_IDLE);
+			fu_main_set_status (priv, FWUPD_STATUS_IDLE);
 			fu_main_helper_free (helper);
 			return;
 		}
@@ -711,7 +710,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			} else {
 				g_dbus_method_invocation_return_value (invocation, NULL);
 			}
-			fu_main_set_status (priv, FU_STATUS_IDLE);
+			fu_main_set_status (priv, FWUPD_STATUS_IDLE);
 			fu_main_helper_free (helper);
 			return;
 		}
@@ -859,7 +858,7 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 		return g_variant_new_string (VERSION);
 
 	if (g_strcmp0 (property_name, "Status") == 0)
-		return g_variant_new_string (fu_status_to_string (priv->status));
+		return g_variant_new_string (fwupd_status_to_string (priv->status));
 
 	/* return an error */
 	g_set_error (error,
@@ -1030,7 +1029,7 @@ cd_main_provider_device_removed_cb (FuProvider *provider,
  **/
 static void
 cd_main_provider_status_changed_cb (FuProvider *provider,
-				    FuStatus status,
+				    FwupdStatus status,
 				    gpointer user_data)
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
@@ -1101,7 +1100,7 @@ main (int argc, char *argv[])
 
 	/* create new objects */
 	priv = g_new0 (FuMainPrivate, 1);
-	priv->status = FU_STATUS_IDLE;
+	priv->status = FWUPD_STATUS_IDLE;
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_main_item_free);
 	priv->loop = g_main_loop_new (NULL, FALSE);
 	priv->pending = fu_pending_new ();

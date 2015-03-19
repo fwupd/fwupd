@@ -28,7 +28,6 @@
 
 #include "fu-cab.h"
 #include "fu-cleanup.h"
-#include "fu-common.h"
 #include "fu-pending.h"
 #include "fu-provider-fake.h"
 
@@ -93,7 +92,7 @@ fu_cab_func (void)
 }
 
 static void
-_provider_status_changed_cb (FuProvider *provider, FuStatus status, gpointer user_data)
+_provider_status_changed_cb (FuProvider *provider, FwupdStatus status, gpointer user_data)
 {
 	guint *cnt = (guint *) user_data;
 	(*cnt)++;

@@ -32,7 +32,6 @@
 #include <stdlib.h>
 
 #include "fu-cleanup.h"
-#include "fu-common.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
 
@@ -208,32 +207,32 @@ fu_util_status_changed_cb (GDBusProxy *proxy, GVariant *changed_properties, GStr
 	if (val == NULL)
 		return;
 	tmp = g_variant_get_string (val, NULL);
-	switch (fu_status_from_string (tmp)) {
-	case FU_STATUS_IDLE:
+	switch (fwupd_status_from_string (tmp)) {
+	case FWUPD_STATUS_IDLE:
 		/* TRANSLATORS: daemon is inactive */
 		g_print (" * %s\n", _("Idle"));
 		break;
-	case FU_STATUS_DECOMPRESSING:
+	case FWUPD_STATUS_DECOMPRESSING:
 		/* TRANSLATORS: decompressing the firmware file */
 		g_print (" * %s\n", _("Decompressing firmware"));
 		break;
-	case FU_STATUS_LOADING:
+	case FWUPD_STATUS_LOADING:
 		/* TRANSLATORS: parsing the firmware information */
 		g_print (" * %s\n", _("Loading firmware"));
 		break;
-	case FU_STATUS_DEVICE_RESTART:
+	case FWUPD_STATUS_DEVICE_RESTART:
 		/* TRANSLATORS: restarting the device to pick up new F/W */
 		g_print (" * %s\n", _("Restarting device"));
 		break;
-	case FU_STATUS_DEVICE_WRITE:
+	case FWUPD_STATUS_DEVICE_WRITE:
 		/* TRANSLATORS: writing to the flash chips */
 		g_print (" * %s\n", _("Writing firmware to device"));
 		break;
-	case FU_STATUS_DEVICE_VERIFY:
+	case FWUPD_STATUS_DEVICE_VERIFY:
 		/* TRANSLATORS: verifying we wrote the firmware correctly */
 		g_print (" * %s\n", _("Verifying firmware from device"));
 		break;
-	case FU_STATUS_SCHEDULING:
+	case FWUPD_STATUS_SCHEDULING:
 		/* TRANSLATORS: scheduing an update to be done on the next boot */
 		g_print (" * %s\n", _("Scheduling upgrade"));
 		break;

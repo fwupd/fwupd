@@ -83,7 +83,7 @@ struct _FuProviderClass
 	void		 (* device_removed)	(FuProvider	*provider,
 						 FuDevice	*device);
 	void		 (* status_changed)	(FuProvider	*provider,
-						 FuStatus	 status);
+						 FwupdStatus	 status);
 };
 
 GType		 fu_provider_get_type		(void);
@@ -92,7 +92,7 @@ void		 fu_provider_device_add		(FuProvider	*provider,
 void		 fu_provider_device_remove	(FuProvider	*provider,
 						 FuDevice	*device);
 void		 fu_provider_set_status		(FuProvider	*provider,
-						 FuStatus	 status);
+						 FwupdStatus	 status);
 const gchar	*fu_provider_get_name		(FuProvider	*provider);
 gboolean	 fu_provider_coldplug		(FuProvider	*provider,
 						 GError		**error);

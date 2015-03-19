@@ -25,7 +25,6 @@
 #include <gio/gio.h>
 
 #include "fu-cleanup.h"
-#include "fu-common.h"
 #include "fu-device.h"
 
 static void fu_device_finalize			 (GObject *object);

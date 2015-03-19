@@ -28,7 +28,6 @@
 #include <gio/gunixinputstream.h>
 
 #include "fu-cleanup.h"
-#include "fu-common.h"
 #include "fu-device.h"
 #include "fu-pending.h"
 #include "fu-provider-uefi.h"
@@ -106,7 +105,7 @@ fu_provider_schedule_update (FuProvider *provider,
 	filename = g_build_filename (dirname, tmpname, NULL);
 
 	/* just copy to the temp file */
-	fu_provider_set_status (provider, FU_STATUS_SCHEDULING);
+	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
 	if (!g_seekable_seek (G_SEEKABLE (stream), 0, G_SEEK_SET, NULL, error))
 		return FALSE;
 	fwbin = g_input_stream_read_bytes (stream,
@@ -331,7 +330,7 @@ fu_provider_device_remove (FuProvider *provider, FuDevice *device)
  * fu_provider_set_status:
  **/
 void
-fu_provider_set_status (FuProvider *provider, FuStatus status)
+fu_provider_set_status (FuProvider *provider, FwupdStatus status)
 {
 	g_signal_emit (provider, signals[SIGNAL_STATUS_CHANGED], 0, status);
 }

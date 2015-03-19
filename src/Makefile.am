@@ -32,8 +32,6 @@ FWUPD_LIBS =						\
 bin_PROGRAMS = fwupdmgr
 
 fwupdmgr_SOURCES =					\
-	fu-common.c					\
-	fu-common.h					\
 	fu-device.c					\
 	fu-device.h					\
 	fu-pending.c					\
@@ -78,8 +76,6 @@ fwupd_SOURCES =						\
 	fu-cleanup.h					\
 	fu-cab.c					\
 	fu-cab.h					\
-	fu-common.c					\
-	fu-common.h					\
 	fu-debug.c					\
 	fu-debug.h					\
 	fu-device.c					\
@@ -135,8 +131,6 @@ check_PROGRAMS =					\
 fu_self_test_SOURCES =					\
 	fu-cab.c					\
 	fu-cab.h					\
-	fu-common.c					\
-	fu-common.h					\
 	fu-device.c					\
 	fu-device.h					\
 	fu-pending.c					\

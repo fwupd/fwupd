@@ -19,21 +19,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-/**
- * SECTION:fwupd
- * @short_description: Helper objects for accessing fwupd
- */
+#ifndef __FWUPD_ENUMS_H
+#define __FWUPD_ENUMS_H
 
-#ifndef __FWUPD_H__
-#define __FWUPD_H__
+#include <glib.h>
 
-#define __FWUPD_H_INSIDE__
+#define FWUPD_DBUS_PATH			"/"
+#define FWUPD_DBUS_SERVICE		"org.freedesktop.fwupd"
+#define FWUPD_DBUS_INTERFACE		"org.freedesktop.fwupd"
 
-#include <libfwupd/fwupd-enums.h>
-#include <libfwupd/fwupd-error.h>
-#include <libfwupd/fwupd-version.h>
+#define FWUPD_DEVICE_ID_ANY		"*"
 
-#undef __FWUPD_H_INSIDE__
+typedef enum {
+	FWUPD_STATUS_IDLE,
+	FWUPD_STATUS_LOADING,
+	FWUPD_STATUS_DECOMPRESSING,
+	FWUPD_STATUS_DEVICE_RESTART,
+	FWUPD_STATUS_DEVICE_WRITE,
+	FWUPD_STATUS_DEVICE_VERIFY,
+	FWUPD_STATUS_SCHEDULING,
+	/* private */
+	FWUPD_STATUS_LAST
+} FwupdStatus;
 
-#endif /* __FWUPD_H__ */
+const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
+FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
 
+#endif /* __FWUPD_ENUMS_H */

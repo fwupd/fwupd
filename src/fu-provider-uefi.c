@@ -27,7 +27,6 @@
 #include <fwup.h>
 
 #include "fu-cleanup.h"
-#include "fu-common.h"
 #include "fu-device.h"
 #include "fu-pending.h"
 #include "fu-provider-uefi.h"
@@ -231,7 +230,7 @@ fu_provider_uefi_update (FuProvider *provider,
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
-	fu_provider_set_status (provider, FU_STATUS_SCHEDULING);
+	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
 	if (fwup_set_up_update (re, hardware_instance, fd) < 0) {
 		ret = FALSE;
 		g_set_error (error,
