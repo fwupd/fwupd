@@ -23,7 +23,7 @@
     </property>
 
     <!--***********************************************************-->
-    <property name='Status' type='s' access='read'>
+    <property name='Status' type='u' access='read'>
       <doc:doc>
         <doc:description>
           <doc:para>

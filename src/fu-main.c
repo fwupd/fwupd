@@ -123,16 +123,14 @@ fu_main_emit_property_changed (FuMainPrivate *priv,
 static void
 fu_main_set_status (FuMainPrivate *priv, FwupdStatus status)
 {
-	const gchar *tmp;
-
 	if (priv->status == status)
 		return;
 	priv->status = status;
 
 	/* emit changed */
-	tmp = fwupd_status_to_string (priv->status);
-	g_debug ("Emitting PropertyChanged('Status'='%s')", tmp);
-	fu_main_emit_property_changed (priv, "Status", g_variant_new_string (tmp));
+	g_debug ("Emitting PropertyChanged('Status'='%s')",
+		 fwupd_status_to_string (status));
+	fu_main_emit_property_changed (priv, "Status", g_variant_new_uint32 (status));
 }
 
 /**

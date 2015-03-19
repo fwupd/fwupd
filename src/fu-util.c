@@ -197,17 +197,16 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
  * fu_util_status_changed_cb:
  **/
 static void
-fu_util_status_changed_cb (GDBusProxy *proxy, GVariant *changed_properties, GStrv invalidated_properties, gpointer user_data)
+fu_util_status_changed_cb (GDBusProxy *proxy, GVariant *changed_properties,
+			   GStrv invalidated_properties, gpointer user_data)
 {
-	const gchar *tmp;
 	_cleanup_variant_unref_ GVariant *val = NULL;
 
 	/* print to the console */
 	val = g_dbus_proxy_get_cached_property (proxy, "Status");
 	if (val == NULL)
 		return;
-	tmp = g_variant_get_string (val, NULL);
-	switch (fwupd_status_from_string (tmp)) {
+	switch (g_variant_get_uint32 (val)) {
 	case FWUPD_STATUS_IDLE:
 		/* TRANSLATORS: daemon is inactive */
 		g_print (" * %s\n", _("Idle"));
@@ -237,7 +236,6 @@ fu_util_status_changed_cb (GDBusProxy *proxy, GVariant *changed_properties, GStr
 		g_print (" * %s\n", _("Scheduling upgrade"));
 		break;
 	default:
-		g_print (" * %s\n", tmp);
 		break;
 	}
 }
