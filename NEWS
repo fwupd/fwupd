@@ -1,3 +1,16 @@
+Version 0.1.1
+~~~~~~~~~~~~~
+Released: 2015-03-23
+
+New Features:
+ - Add a 'get-updates' command to fwupdmgr (Richard Hughes)
+ - Add and document the offline-update lifecycle (Richard Hughes)
+ - Create a libfwupd shared library (Richard Hughes)
+
+Bugfixes:
+ - Create runtime directories if they do not exist (Richard Hughes)
+ - Do not crash when there are no devices to return (Richard Hughes)
+
 Version 0.1.0
 ~~~~~~~~~~~~~
 Released: 2015-03-16

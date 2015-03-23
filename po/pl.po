@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-03-16 12:40+0000\n"
-"PO-Revision-Date: 2015-03-16 15:21+0000\n"
-"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
+"POT-Creation-Date: 2015-03-23 11:58+0000\n"
+"PO-Revision-Date: 2015-03-23 11:58+0000\n"
+"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Polish (http://www.transifex.com/projects/p/fwupd/language/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -66,7 +66,7 @@ msgstr "Aktualizacja oprogramowania sprzętowego"
 msgid "Firmware Update D-Bus Service"
 msgstr "Usługa D-Bus aktualizacji oprogramowania sprzętowego"
 
-#. TRANSLATORS: this is a command alias
+#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
 msgstr "Alias do %s"
@@ -132,6 +132,27 @@ msgstr "Instalowanie poprzedniej wersji %s z %s do %s... "
 msgid "Updating %s from %s to %s... "
 msgstr "Aktualizowanie %s z wersji %s do %s... "
 
+#. TRANSLATORS: first replacement is device name
+#, c-format
+msgid "%s has firmware updates:"
+msgstr ""
+
+#. TRANSLATORS: section header for firmware version
+msgid "Version"
+msgstr ""
+
+#. TRANSLATORS: section header for firmware SHA1
+msgid "Checksum"
+msgstr ""
+
+#. TRANSLATORS: section header for firmware remote http://
+msgid "Location"
+msgstr ""
+
+#. TRANSLATORS: section header for long firmware desc
+msgid "Description"
+msgstr ""
+
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
 msgstr "Wyświetla dodatkowe informacje o debugowaniu"
@@ -164,6 +185,26 @@ msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
 msgid "Gets details about a firmware file"
 msgstr "Uzyskuje informacje o pliku oprogramowania sprzętowego"
 
+#. TRANSLATORS: command description
+msgid "Gets the list of updates for connected hardware"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Clears the results from the last update"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Gets the results from the last update"
+msgstr ""
+
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Przetworzenie parametrów się nie powiodło"
+
+#. TRANSLATORS: the user is in a bad place
+msgid "Failed to connect to D-Bus"
+msgstr ""
+
+#. TRANSLATORS: we can't connect to the daemon
+msgid "Failed to connect to fwupd"
+msgstr ""
