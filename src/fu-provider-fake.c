@@ -120,9 +120,6 @@ fu_provider_fake_init (FuProviderFake *provider_fake)
 static void
 fu_provider_fake_finalize (GObject *object)
 {
-//	FuProviderFake *provider_fake = FU_PROVIDER_FAKE (object);
-//	FuProviderFakePrivate *priv = provider_fake->priv;
-
 	G_OBJECT_CLASS (fu_provider_fake_parent_class)->finalize (object);
 }
 
