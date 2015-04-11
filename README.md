@@ -7,7 +7,7 @@ quite interesting for phones, tablets and server farms, so I'd be really happy
 if this gets used on other non-desktop hardware.
 
 You can either use a GUI software manager like GNOME Software to view and apply
-updates, the command line tool or the system D-Bus interface directly.
+updates, the command-line tool or the system D-Bus interface directly.
 
 Introduction
 ------------
@@ -56,10 +56,10 @@ isn't rocket science.
 What is standardised is the metadata, using AppStream 0.9 as the interchange
 format. A lot of tools already talk AppStream and so this makes working with
 other desktop and server tools very easy. Actually generating the AppStream
-metadata can either be done using using appstream-builder, or some random vendor
-specific non-free perl/C++/awk script that operates on internal data; the point
-is that as long as the output format is AppStream and the metadata GUID matches
-the hardware GUID we don't really care.
+metadata can either be done using using appstream-builder, or some random
+vendor-specific non-free Perl/C++/awk script that operates on internal data;
+the point is that as long as the output format is AppStream and the metadata
+GUID matches the hardware GUID we don't really care.
 
 Security
 --------
@@ -74,7 +74,7 @@ firmware without the root password. By default, we already let admin user and
 root update glibc and the kernel without additional authentication, and these
 would be a much easier target to backdoor. The firmware updates themselves
 have a checksum, and the metadata describing this checksum is provided by the
-distribution either as GPG signed repository metadata, or installed from a
+distribution either as GPG-signed repository metadata, or installed from a
 package, which is expected to also be signed. It is important that clients that
 are downloading firmware for fwupd check the checksum before asking fwupd to
 update a specific device.
@@ -99,11 +99,11 @@ Devices go through the following lifecycles:
  * created -> `SCHEDULED` -> `SUCCESS` -> deleted
  * created -> `SCHEDULED` -> `FAILED` -> deleted
 
-Any user-visible output is available using the GetResults() D-Bus method, and
-the database entry is only deleted once the ClearResults() method is called.
+Any user-visible output is available using the `GetResults()` D-Bus method, and
+the database entry is only deleted once the `ClearResults()` method is called.
 
 The results are obtained and cleared either using a provider-supplied method
-or using a small sqlite database located at /var/lib/fwupd/pending.db
+or using a small sqlite database located at `/var/lib/fwupd/pending.db`
 
 ColorHug Support
 ----------------
@@ -112,7 +112,7 @@ You need to install colord 1.2.9 which may be newer that your distribution
 provides. Compile it from source https://github.com/hughsie/colord or grab the
 RPMS here http://people.freedesktop.org/~hughsient/fedora/
 
-If you don't want or need this functionality you can use --disable-colorhug
+If you don't want or need this functionality you can use `--disable-colorhug`
 
 UEFI Support
 ------------
@@ -121,4 +121,4 @@ If you're wondering where to get fwupdate from, either compile it form source
 (you might also need a newer efivar) from https://github.com/rhinstaller/fwupdate
 or grab the RPMs here https://pjones.fedorapeople.org/fwupdate/
 
-If you don't want or need this functionality you can use --disable-uefi
+If you don't want or need this functionality you can use `--disable-uefi`
