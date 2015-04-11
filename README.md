@@ -35,7 +35,7 @@ Of course, a lot of vendors are not going to care about good descriptions, and
 won't be interested in shipping another file in the update just for Linux users.
 For that, we can actually "inject" a replacement MetaInfo file when we curate
 the AppStream metadata. This allows us to download all the .cab files we care
-about, but are not allowed to redistribute, run the appstream-builder on them,
+about, but are not allowed to redistribute, run the `appstream-builder` on them,
 then package up just the XML metadata which can be consumed by pretty much any
 distribution tool.
 
@@ -56,7 +56,7 @@ isn't rocket science.
 What is standardised is the metadata, using AppStream 0.9 as the interchange
 format. A lot of tools already talk AppStream and so this makes working with
 other desktop and server tools very easy. Actually generating the AppStream
-metadata can either be done using using appstream-builder, or some random
+metadata can either be done using using `appstream-builder`, or some random
 vendor-specific non-free Perl/C++/awk script that operates on internal data;
 the point is that as long as the output format is AppStream and the metadata
 GUID matches the hardware GUID we don't really care.
@@ -85,12 +85,12 @@ User Interaction
 No user interaction should be required when actually applying updates. Making
 it prohibited means we can do the upgrade with a fancy graphical splash screen,
 without having to worry about locales and input methods. Updating firmware
-should be no more dangerious than installing a new kernel or glibc package.
+should be no more dangerous than installing a new kernel or glibc package.
 
 Offline Updates Lifecycle
 -------------------------
 
-Offlines updates are done using a special boot target which means that the usual
+Offline updates are done using a special boot target which means that the usual
 graphical environment is not started. Once the firmware update has completed the
 system will reboot.
 
@@ -103,7 +103,7 @@ Any user-visible output is available using the `GetResults()` D-Bus method, and
 the database entry is only deleted once the `ClearResults()` method is called.
 
 The results are obtained and cleared either using a provider-supplied method
-or using a small sqlite database located at `/var/lib/fwupd/pending.db`
+or using a small SQLite database located at `/var/lib/fwupd/pending.db`
 
 ColorHug Support
 ----------------
