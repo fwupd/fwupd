@@ -3,208 +3,208 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Derek Stavis <dekestavis@gmail.com>, 2015
+# Balázs Úr <urbalazs@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-04-12 19:44+0100\n"
-"PO-Revision-Date: 2015-03-24 03:51+0000\n"
-"Last-Translator: Derek Stavis <dekestavis@gmail.com>\n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/fwupd/language/pt_BR/)\n"
+"PO-Revision-Date: 2015-03-24 19:01+0000\n"
+"Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
+"Language-Team: Hungarian (http://www.transifex.com/projects/p/fwupd/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: pt_BR\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Language: hu\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. SECURITY:
 #. - Normal users require admin authentication to update firmware
 #. - This should not be set to 'yes' as unprivileged users could then
 #. update to hostile and unsigned firmware.
 msgid "Install system firmware update"
-msgstr "Instalar atualização de firmware"
+msgstr "Rendszer firmware frissítés telepítése"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
-msgstr "É requerida autenticação para atualizar o firmware nesta máquina"
+msgstr "Hitelesítés szükséges a firmware frissítéséhez ezen a gépen"
 
 #. SECURITY:
 #. - Normal users should not require admin authentication to update devices
 msgid "Install device firmware update"
-msgstr "Instalar atualização de firmware do dispositivo"
+msgstr "Eszköz firmware frissítés telepítése"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a device"
-msgstr "É requerida autenticação para atualizar o firmware no dispositivo"
+msgstr "Hitelesítés szükséges a firmware frissítéséhez az eszközön"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
-msgstr "Mostrar informações de depuração para todos os arquivos"
+msgstr "Hibakeresési információk megjelenítése minden fájlnál"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
-msgstr "Opções de depuração"
+msgstr "Hibakeresési beállítások"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
-msgstr "Mostrar opções de depuração"
+msgstr "Hibakeresési beállítások megjelenítése"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
-msgstr "Sair após pequeno atraso"
+msgstr "Kilépés egy kis késleltetés után"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
-msgstr "Sair após o carregamento do motor"
+msgstr "Kilépés a motor betöltődése után"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update"
-msgstr "Atualização de Firmware"
+msgstr "Firmware frissítés"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
-msgstr "Serviço D-Bus de Atualização de Firmware"
+msgstr "Firmware frissítés D-Bus szolgáltatás"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
-msgstr "Atalho para %s"
+msgstr "Álnév ehhez: %s"
 
 #. TRANSLATORS: error message
 msgid "Command not found, valid commands are:"
-msgstr "Comando não encontrado, comandos válidos são:"
+msgstr "A parancs nem található, az érvényes parancsok:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle"
-msgstr "Ocioso"
+msgstr "Üresjárat"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing firmware"
-msgstr "Descomprimindo firmware"
+msgstr "Firmware kibontása"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading firmware"
-msgstr "Carregando firmware"
+msgstr "Firmware betöltése"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device"
-msgstr "Reiniciando dispositivo"
+msgstr "Eszköz újraindítása"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing firmware to device"
-msgstr "Escrevendo firmware no dispositivo"
+msgstr "Firmware írása az eszközre"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying firmware from device"
-msgstr "Verificando firmware do dispositivo"
+msgstr "Firmware ellenőrzése az eszközről"
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling upgrade"
-msgstr "Agendando atualização"
+msgstr "Ütemezett frissítés"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
-msgstr "Nenhum periférico com capacidade de atualização de firmware foi detectado"
+msgstr "Nem észlelhető firmware frissítési képességgel rendelkező hardver"
 
 #. TRANSLATORS: update completed, no errors
 msgid "Done!"
-msgstr "Feito!"
+msgstr "Kész!"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
 #, c-format
 msgid "Reinstalling %s with %s... "
-msgstr "Reinstalando %s com %s..."
+msgstr "%s újratelepítése ezzel: %s…"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
-msgstr "Revertendo %s de %s para %s..."
+msgstr "%s visszafejlesztése: %s -> %s…"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Updating %s from %s to %s... "
-msgstr "Atualizando %s de %s para %s..."
+msgstr "%s frissítése: %s -> %s…"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
-msgstr "%s tem atualizações:"
+msgstr "%s firmware frissítésekkel rendelkezik:"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Version"
-msgstr "Versão"
+msgstr "Verzió"
 
 #. TRANSLATORS: section header for firmware SHA1
 msgid "Checksum"
-msgstr "Soma de verificação"
+msgstr "Ellenőrzőösszeg"
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Location"
-msgstr "Local"
+msgstr "Hely"
 
 #. TRANSLATORS: section header for long firmware desc
 msgid "Description"
-msgstr "Descrição"
+msgstr "Leírás"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
-msgstr "Mostrar informações adicionais de depuração"
+msgstr "További hibakeresési információk megjelenítése"
 
 #. TRANSLATORS: command line option
 msgid "Force the installation of firmware"
-msgstr "Forçar a instalação do firmware"
+msgstr "A firmware telepítésének kényszerítése"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
-msgstr "Obter todos os dispositivos que suportam atualizações de firmware"
+msgstr "Minden eszköz lekérése, amelyek támogatják a firmware frissítéseket"
 
 #. TRANSLATORS: command description
 msgid "Install the update the next time the computer is rebooted"
-msgstr "Instalar a atualização na próxima vez que o computador for reiniciado"
+msgstr "A frissítés telepítése a számítógép következő újraindításakor"
 
 #. TRANSLATORS: command description
 msgid "Install the update now"
-msgstr "Instalar a atualização agora"
+msgstr "A frissítés telepítése most"
 
 #. TRANSLATORS: command description
 msgid "Install prepared updates now"
-msgstr "Instalar as atualizações preparadas agora"
+msgstr "Az előkészített frissítések telepítés most"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
-msgstr "Instalar um arquivo de firmware neste periférico"
+msgstr "Egy firmware fájl telepítése ezen a hardveren"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
-msgstr "Obtém detalhes sobre um arquivo de firmware"
+msgstr "Részleteket kér le egy firmware fájlról"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
-msgstr "Obtém a lista de atualizações para os periféricos conectados"
+msgstr "A frissítések listáját kéri le a csatlakoztatott hardverhez"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
-msgstr "Limpa os resultados da última atualização"
+msgstr "Törli a legutóbbi frissítésből származó eredményeket"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
-msgstr "Obtém os resultados da última atualização"
+msgstr "A legutóbbi frissítésből származó eredményeket kéri le"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
-msgstr "Falha ao interpretar argumentos"
+msgstr "Nem sikerült feldolgozni az argumentumokat"
 
 #. TRANSLATORS: the user is in a bad place
 msgid "Failed to connect to D-Bus"
-msgstr "Falha ao conectar ao D-Bus"
+msgstr "Nem sikerült csatlakozni a D-Bus rendszerhez"
 
 #. TRANSLATORS: we can't connect to the daemon
 msgid "Failed to connect to fwupd"
-msgstr "Falha ao conectar ao fwupd"
+msgstr "Nem sikerült csatlakozni az fwupd rendszerhez"

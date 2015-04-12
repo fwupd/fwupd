@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-03-23 11:58+0000\n"
-"PO-Revision-Date: 2015-03-23 11:58+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2015-04-12 19:44+0100\n"
+"PO-Revision-Date: 2015-03-23 16:59+0000\n"
+"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish (http://www.transifex.com/projects/p/fwupd/language/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -135,23 +135,23 @@ msgstr "Aktualizowanie %s z wersji %s do %s... "
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
-msgstr ""
+msgstr "Dostępne są aktualizacje oprogramowania sprzętowego dla urządzenia %s:"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Version"
-msgstr ""
+msgstr "Wersja"
 
 #. TRANSLATORS: section header for firmware SHA1
 msgid "Checksum"
-msgstr ""
+msgstr "Suma kontrolna"
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Location"
-msgstr ""
+msgstr "Położenie"
 
 #. TRANSLATORS: section header for long firmware desc
 msgid "Description"
-msgstr ""
+msgstr "Opis"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
@@ -187,15 +187,15 @@ msgstr "Uzyskuje informacje o pliku oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
-msgstr ""
+msgstr "Uzyskuje listę aktualizacji dla podłączonego sprzętu"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
-msgstr ""
+msgstr "Czyści wyniki z ostatniej aktualizacji"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
-msgstr ""
+msgstr "Uzyskuje wyniki z ostatniej aktualizacji"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -203,8 +203,8 @@ msgstr "Przetworzenie parametrów się nie powiodło"
 
 #. TRANSLATORS: the user is in a bad place
 msgid "Failed to connect to D-Bus"
-msgstr ""
+msgstr "Połączenie z magistralą D-Bus się nie powiodło"
 
 #. TRANSLATORS: we can't connect to the daemon
 msgid "Failed to connect to fwupd"
-msgstr ""
+msgstr "Połączenie z usługą fwupd się nie powiodło"
