@@ -48,6 +48,8 @@ struct _FuCabPrivate
 	GKeyFile			*inf_kf;
 	gchar				*firmware_basename;
 	gchar				*firmware_filename;
+	gchar				*signature_basename;
+	gchar				*signature_filename;
 	gchar				*description;
 	gchar				*guid;
 	gchar				*inf_filename;
@@ -107,8 +109,16 @@ fu_cab_extract_firmware_cb (GCabFile *file, gpointer user_data)
 	    g_strcmp0 (gcab_file_get_name (file),
 		       priv->firmware_basename) == 0) {
 		priv->firmware_filename = g_build_filename (priv->tmp_path,
-							      gcab_file_get_name (file),
-							      NULL);
+							    gcab_file_get_name (file),
+							    NULL);
+		return TRUE;
+	}
+	if (priv->signature_filename == NULL &&
+	    g_strcmp0 (gcab_file_get_name (file),
+		       priv->signature_basename) == 0) {
+		priv->signature_filename = g_build_filename (priv->tmp_path,
+							     gcab_file_get_name (file),
+							     NULL);
 		return TRUE;
 	}
 	return FALSE;
@@ -224,6 +234,7 @@ fu_cab_parse (FuCab *cab, GError **error)
 	/* find out what firmware file we have to open */
 	tmp = as_app_get_metadata_item (app, "FirmwareBasename");
 	priv->firmware_basename = g_strdup (tmp);
+	priv->signature_basename = g_strdup_printf ("%s.asc", tmp);
 
 	/* success */
 	return TRUE;
@@ -374,6 +385,8 @@ fu_cab_delete_temp_files (FuCab *cab, GError **error)
 		g_unlink (priv->inf_filename);
 	if (priv->firmware_filename != NULL)
 		g_unlink (priv->firmware_filename);
+	if (priv->signature_filename != NULL)
+		g_unlink (priv->signature_filename);
 	if (priv->tmp_path != NULL)
 		g_rmdir (priv->tmp_path);
 
@@ -521,6 +534,8 @@ fu_cab_finalize (GObject *object)
 
 	g_free (priv->firmware_basename);
 	g_free (priv->firmware_filename);
+	g_free (priv->signature_basename);
+	g_free (priv->signature_filename);
 	g_free (priv->guid);
 	g_free (priv->inf_filename);
 	g_free (priv->metainfo_filename);
