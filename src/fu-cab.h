@@ -76,6 +76,7 @@ const gchar	*fu_cab_get_license			(FuCab		*cab);
 const gchar	*fu_cab_get_url_homepage		(FuCab		*cab);
 const gchar	*fu_cab_get_filename_firmware		(FuCab		*cab);
 guint64		 fu_cab_get_size			(FuCab		*cab);
+FwupdTrustFlags	 fu_cab_get_trust_flags			(FuCab		*cab);
 
 G_END_DECLS
 

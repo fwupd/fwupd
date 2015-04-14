@@ -31,6 +31,7 @@
 
 #include "fu-cleanup.h"
 #include "fu-cab.h"
+#include "fu-keyring.h"
 
 static void fu_cab_finalize			 (GObject *object);
 
@@ -46,6 +47,7 @@ struct _FuCabPrivate
 	GCabCabinet			*gcab;
 	GInputStream			*cab_stream;
 	GKeyFile			*inf_kf;
+	FwupdTrustFlags			 trust_flags;
 	gchar				*firmware_basename;
 	gchar				*firmware_filename;
 	gchar				*signature_basename;
@@ -369,6 +371,43 @@ fu_cab_extract_firmware (FuCab *cab, GError **error)
 		return FALSE;
 	}
 
+	/* check signature */
+	if (priv->signature_filename != NULL) {
+		_cleanup_object_unref_ FuKeyring *kr = NULL;
+		_cleanup_free_ gchar *pki_dir = NULL;
+		_cleanup_free_ gchar *signature = NULL;
+
+		/* check we were installed correctly */
+		pki_dir = g_build_filename (SYSCONFDIR, "pki", "fwupd", NULL);
+		if (!g_file_test (pki_dir, G_FILE_TEST_EXISTS)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "PKI directory %s not found", pki_dir);
+			return FALSE;
+		}
+
+		/* load signature */
+		if (!g_file_get_contents (priv->signature_filename,
+					  &signature, NULL, error))
+			return FALSE;
+
+		/* verify against the system trusted keys */
+		kr = fu_keyring_new ();
+		if (!fu_keyring_add_public_keys (kr, pki_dir, error))
+			return FALSE;
+		if (!fu_keyring_verify_file (kr, priv->firmware_filename,
+					     signature, &error_local)) {
+			g_warning ("untrusted as failed to verify: %s",
+				   error_local->message);
+		} else {
+			g_debug ("marking payload as trusted");
+			priv->trust_flags |= FWUPD_TRUST_FLAG_PAYLOAD;
+		}
+	} else {
+		g_debug ("firmware archive contained no signatures");
+	}
+
 	return TRUE;
 }
 
@@ -501,6 +540,16 @@ fu_cab_get_filename_firmware (FuCab *cab)
 {
 	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
 	return cab->priv->firmware_filename;
+}
+
+/**
+ * fu_cab_get_trust_flags:
+ **/
+FwupdTrustFlags
+fu_cab_get_trust_flags (FuCab *cab)
+{
+	g_return_val_if_fail (FU_IS_CAB (cab), 0);
+	return cab->priv->trust_flags;
 }
 
 /**

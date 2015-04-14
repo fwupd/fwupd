@@ -42,6 +42,14 @@ typedef enum {
 	FWUPD_STATUS_LAST
 } FwupdStatus;
 
+typedef enum {
+	FWUPD_TRUST_FLAG_NONE		= 0,
+	FWUPD_TRUST_FLAG_PAYLOAD	= 1,
+	FWUPD_TRUST_FLAG_METADATA	= 2,
+	/* private */
+	FWUPD_TRUST_FLAG_LAST
+} FwupdTrustFlags;
+
 const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
 
