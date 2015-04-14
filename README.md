@@ -239,7 +239,7 @@ Introduction:
 ------------
 
 Installing a public key to `/etc/pki/fwupd` allows firmware signed with a
-matching private key to recognized as trusted, which may require less
+matching private key to be recognized as trusted, which may require less
 authentication to install than for untrusted files. By default trusted firmware
 can be **upgraded** (but not downgraded) without the user or administrator
 password.
