@@ -13,13 +13,20 @@
   <vendor_url>https://github.com/hughsie/fwupd</vendor_url>
   <icon_name>application-vnd.iccprofile</icon_name>
 
+  <action id="org.freedesktop.fwupd.update-internal-trusted">
+    <_description>Install signed system firmware</_description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <_message>Authentication is required to update the firmware on this machine</_message>
+    <icon_name>application-vnd.iccprofile</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
   <action id="org.freedesktop.fwupd.update-internal">
-    <!-- SECURITY:
-          - Normal users require admin authentication to update firmware
-          - This should not be set to 'yes' as unprivileged users could then
-            update to hostile and unsigned firmware.
-     -->
-    <_description>Install system firmware update</_description>
+    <_description>Install unsigned system firmware</_description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
     <_message>Authentication is required to update the firmware on this machine</_message>
     <icon_name>application-vnd.iccprofile</icon_name>
@@ -30,18 +37,51 @@
     </defaults>
   </action>
 
-  <action id="org.freedesktop.fwupd.update-hotplug">
-    <!-- SECURITY:
-          - Normal users should not require admin authentication to update devices
-     -->
-    <_description>Install device firmware update</_description>
+  <action id="org.freedesktop.fwupd.downgrade-internal">
+    <_description>Install old version of system firmware</_description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
-    <_message>Authentication is required to update the firmware on a device</_message>
+    <_message>Authentication is required to downgrade the firmware on this machine</_message>
+    <icon_name>application-vnd.iccprofile</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.fwupd.update-hotplug-trusted">
+    <_description>Install signed device firmware</_description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <_message>Authentication is required to update the firmware on a removable device</_message>
     <icon_name>application-vnd.iccprofile</icon_name>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
       <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.fwupd.update-hotplug">
+    <_description>Install unsigned device firmware</_description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <_message>Authentication is required to update the firmware on a removable device</_message>
+    <icon_name>application-vnd.iccprofile</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.fwupd.downgrade-hotplug">
+    <_description>Install unsigned device firmware</_description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <_message>Authentication is required to downgrade the firmware on a removable device</_message>
+    <icon_name>application-vnd.iccprofile</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
     </defaults>
   </action>
 

@@ -232,6 +232,7 @@ typedef struct {
 	gchar			*id;
 	gint			 firmware_fd;
 	gint			 cab_fd;
+	gint			 vercmp;
 	FuMainPrivate		*priv;
 } FuMainAuthHelper;
 
@@ -341,7 +342,6 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	const gchar *guid;
 	const gchar *tmp;
 	const gchar *version;
-	gint vercmp;
 
 	/* load cab file */
 	fu_main_set_status (helper->priv, FWUPD_STATUS_LOADING);
@@ -399,8 +399,8 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 			     fu_device_get_id (helper->device));
 		return FALSE;
 	}
-	vercmp = as_utils_vercmp (tmp, version);
-	if (vercmp == 0 && (helper->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL) == 0) {
+	helper->vercmp = as_utils_vercmp (tmp, version);
+	if (helper->vercmp == 0 && (helper->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_SAME,
@@ -408,7 +408,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 			     tmp);
 		return FALSE;
 	}
-	if (vercmp > 0 && (helper->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) == 0) {
+	if (helper->vercmp > 0 && (helper->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_NEWER,
@@ -536,6 +536,38 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 }
 
 /**
+ * fu_main_get_action_id_for_device:
+ **/
+static const gchar *
+fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
+{
+	const gchar *kind;
+	gboolean is_trusted;
+	gboolean is_downgrade;
+
+	/* only test the payload */
+	is_trusted = (fu_cab_get_trust_flags (helper->cab) & FWUPD_TRUST_FLAG_PAYLOAD) > 0;
+	is_downgrade = helper->vercmp > 0;
+
+	/* relax authentication checks for removable devices */
+	kind = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_KIND);
+	if (g_strcmp0 (kind, "hotplug") == 0) {
+		if (is_downgrade)
+			return "org.freedesktop.fwupd.downgrade-hotplug";
+		if (is_trusted)
+			return "org.freedesktop.fwupd.update-hotplug-trusted";
+		return "org.freedesktop.fwupd.update-hotplug";
+	}
+
+	/* internal device */
+	if (is_downgrade)
+		return "org.freedesktop.fwupd.downgrade-internal";
+	if (is_trusted)
+		return "org.freedesktop.fwupd.update-internal-trusted";
+	return "org.freedesktop.fwupd.update-internal";
+}
+
+/**
  * fu_main_daemon_method_call:
  **/
 static void
@@ -627,7 +659,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		GVariant *prop_value;
 		const gchar *action_id;
 		const gchar *id = NULL;
-		const gchar *kind;
 		gchar *prop_key;
 		gint32 fd_handle = 0;
 		gint fd;
@@ -713,15 +744,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			return;
 		}
 
-		/* relax authentication checks for removable devices */
-		kind = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_KIND);
-		if (g_strcmp0 (kind, "hotplug") == 0) {
-			action_id = "org.freedesktop.fwupd.update-hotplug";
-		} else {
-			action_id = "org.freedesktop.fwupd.update-internal";
-		}
-
 		/* authenticate */
+		action_id = fu_main_get_action_id_for_device (helper);
 		subject = polkit_system_bus_name_new (sender);
 		polkit_authority_check_authorization (helper->priv->authority, subject,
 						      action_id,
