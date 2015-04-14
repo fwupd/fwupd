@@ -147,7 +147,7 @@ else
 fi
 
 # UEFI support
-AC_ARG_ENABLE(uefi, AS_HELP_STRING([--enable-uefi],[Enable ColorHug support]),
+AC_ARG_ENABLE(uefi, AS_HELP_STRING([--enable-uefi],[Enable UEFI support]),
 	      enable_uefi=$enableval, enable_uefi=yes)
 if test x$enable_uefi != xno; then
 	PKG_CHECK_MODULES(UEFI, fwup)
