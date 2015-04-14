@@ -53,6 +53,7 @@ G_BEGIN_DECLS
 #define FU_DEVICE_KEY_SIZE		"Size"		/* t */
 #define FU_DEVICE_KEY_PENDING_STATE	"PendingState"	/* s */
 #define FU_DEVICE_KEY_PENDING_ERROR	"PendingError"	/* s */
+#define FU_DEVICE_KEY_TRUSTED		"Trusted"	/* t */
 
 typedef struct _FuDevicePrivate	FuDevicePrivate;
 typedef struct _FuDevice	FuDevice;

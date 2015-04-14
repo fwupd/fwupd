@@ -738,6 +738,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		GVariantBuilder builder;
+		FwupdTrustFlags trust_flags;
 		const gchar *tmp;
 		gint32 fd_handle = 0;
 		gint fd;
@@ -773,6 +774,12 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			return;
 		}
 		if (!fu_cab_delete_temp_files (cab, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+
+		/* we have to extract the file to check the signature */
+		if (!fu_cab_extract_firmware (cab, &error)) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
@@ -826,6 +833,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 					       FU_DEVICE_KEY_LICENSE,
 					       g_variant_new_string (tmp));
 		}
+		trust_flags = fu_cab_get_trust_flags (cab);
+		g_variant_builder_add (&builder, "{sv}",
+				       FU_DEVICE_KEY_TRUSTED,
+				       g_variant_new_uint64 (trust_flags));
 
 		/* return whole array */
 		val = g_variant_new ("(a{sv})", &builder);

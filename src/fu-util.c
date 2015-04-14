@@ -326,6 +326,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 			FU_DEVICE_KEY_DESCRIPTION,
 			FU_DEVICE_KEY_LICENSE,
 			FU_DEVICE_KEY_ONLY_OFFLINE,
+			FU_DEVICE_KEY_TRUSTED,
 			FU_DEVICE_KEY_SIZE,
 			NULL };
 		for (i = 0; i < devices->len; i++) {
