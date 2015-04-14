@@ -122,3 +122,139 @@ If you're wondering where to get fwupdate from, either compile it form source
 or grab the RPMs here https://pjones.fedorapeople.org/fwupdate/
 
 If you don't want or need this functionality you can use `--disable-uefi`
+
+Vendor Firmware Updates
+=======================
+
+This document explains what steps a vendor needs to take so that firmware
+updates are downloaded and applied to user hardware automatically.
+
+Different hardware update methods can be supported, but would require a new
+plugin and there would need to be interfaces available to be able to write
+(or at least trigger) the firmware from userspace as the root user.
+
+What do I have to do?
+---------------------
+
+As per the [ Microsoft guidelines](https://msdn.microsoft.com/en-us/library/windows/hardware/dn917810%28v=vs.85%29.aspx),
+package up your firmware into a `.cab` file, with these files inside:
+
+* The actual `.cap` file your engineers have created
+* The `.inf` file describing the .cap file,
+  described [here](https://msdn.microsoft.com/en-us/library/windows/hardware/ff547402%28v=vs.85%29.aspx)
+* The optional `.asc` file which is a detached GPG signature of the firmware file.
+* The optional `.metainfo.xml` file with a long description and extra metadata,
+  described [here](http://www.freedesktop.org/software/appstream/docs/sect-Quickstart-Addons.html)
+
+You can create a `.cab` file using `makecab.exe` on Windows and `gcab --create`
+on Linux.
+
+It is recommended you name the `.cab` file with the hardware name and the version
+number, e.g. `colorhug-als-1.2.3.cab`. It's mandatory that the files inside the
+`.cab` file have the same basename, for example this is would be valid:
+
+    colorhug2-1.2.3.cab
+     |- firmware.inf
+     |- firmware.bin
+     |- firmware.bin.asc
+     \- firmware.metainfo.xml
+
+An example `.inf` file might look like this:
+
+    [Version]
+    Class=Firmware
+    ClassGuid=84f40464-9272-4ef7-9399-cd95f12da696
+    DriverVer=03/03/2015,3.0.2
+
+    [Firmware_CopyFiles]
+    firmware.bin
+
+An example `.metainfo.xml` file might look like this:
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!-- Copyright 2015 Richard Hughes <richard@hughsie.com> -->
+    <component type="firmware">
+      <id>84f40464-9272-4ef7-9399-cd95f12da696</id>
+      <name>ColorHugALS Firmware</name>
+      <summary>Firmware for the ColorHugALS Ambient Light Sensor</summary>
+      <description>
+        <p>
+          Updating the firmware on your ColorHugALS device improves performance and
+          adds new features.
+        </p>
+      </description>
+      <url type="homepage">http://www.hughski.com/</url>
+      <metadata_license>CC0-1.0</metadata_license>
+      <project_license>GPL-2.0+</project_license>
+      <developer_name>Hughski Limited</developer_name>
+      <releases>
+        <release version="3.0.2" timestamp="1424116753">
+          <location>http://www.hughski.com/downloads/colorhug-als/firmware/colorhug-als-3.0.2.cab</location>
+          <description>
+            <p>This stable release fixes the following bugs:</p>
+            <ul>
+              <li>Fix the return code from GetHardwareVersion</li>
+              <li>Scale the output of TakeReadingRaw by the datasheet values</li>
+            </ul>
+          </description>
+        </release>
+      </releases>
+    </component>
+
+If the firmware is not redistributable you have to indicate it in in the
+`.metainfo.xml` file with `<project_license>proprietary</project_license>`.
+It is then **very important** you also provide a download location in the
+`.metainfo.xml` file.
+
+Questions:
+----------
+
+### Where will this data be used?
+
+We will scrape the `.inf` and `.metainfo.xml` files when building and composing
+metadata for distributions; end users will still be downloading the `.cab`
+files directly from the vendor site.
+
+### How do I know if my appdata XML is correct?
+
+The best way to validate the data is by using the `appstream-util validate`
+tool available from the [appstream-glib](https://github.com/hughsie/appstream-glib) project.
+
+### Where do I submit the `.cab` files?
+
+At the moment we are auto-generating the metadata for various distributions,
+but the end goal is for vendors to produce the AppStream metadata themselves
+where it would be downloaded directly.
+Please [email us](mailto://richard@hughsie.com) if you would like us to start
+generating the metadata for your product.
+
+Users will also be able to download the `.cab` file manually and install it
+using the Software application in Linux, although the goal is to be able to
+notify them that updates are available.
+
+Adding Trusted Keys
+===================
+
+Introduction:
+------------
+
+Installing a public key to `/etc/pki/fwupd` allows firmware signed with a
+matching private key to recognized as trusted, which may require less
+authentication to install than for untrusted files. By default trusted firmware
+can be **upgraded** (but not downgraded) without the user or administrator
+password.
+
+By default only very few keys will be installed *by default*. These are vendors
+who have a proven security track record and a thorough understanding of
+public-private key security.
+
+In particular, private keys should **only** be kept on trusted hardware (or
+virtual machine) that has limited network access, or networking completely
+disabled. The machine and any backups also need to be kept physically secure.
+
+Adding a New Key
+----------------
+
+If you think your key should be added by default and trusted by all users,
+please open a pull request with details about your company including items such
+as a day time phone number and any relevant security policies already in place.
