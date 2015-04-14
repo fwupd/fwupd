@@ -11,6 +11,7 @@ AM_CPPFLAGS =						\
 	$(PIE_CFLAGS)					\
 	$(POLKIT_CFLAGS)				\
 	$(UEFI_CFLAGS)					\
+	$(GPGME_CFLAGS)					\
 	-I$(top_srcdir)					\
 	-I$(top_builddir)				\
 	-I$(top_srcdir)/libfwupd			\
@@ -80,6 +81,8 @@ fwupd_SOURCES =						\
 	fu-debug.h					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-keyring.c					\
+	fu-keyring.h					\
 	fu-pending.c					\
 	fu-pending.h					\
 	fu-provider.c					\
@@ -109,6 +112,7 @@ fwupd_LDADD =						\
 	$(GUDEV_LIBS)					\
 	$(POLKIT_LIBS)					\
 	$(SQLITE_LIBS)					\
+	$(GPGME_LIBS)					\
 	$(UEFI_LIBS)
 
 fwupd_LDFLAGS =						\
@@ -133,6 +137,8 @@ fu_self_test_SOURCES =					\
 	fu-cab.h					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-keyring.c					\
+	fu-keyring.h					\
 	fu-pending.c					\
 	fu-pending.h					\
 	fu-provider.c					\
@@ -146,6 +152,7 @@ fu_self_test_LDADD =					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\
 	$(GCAB_LIBS)					\
+	$(GPGME_LIBS)					\
 	$(GLIB_LIBS)
 
 fu_self_test_CFLAGS = $(WARNINGFLAGS_C)

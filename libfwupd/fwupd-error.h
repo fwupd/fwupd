@@ -39,6 +39,7 @@
  * @FWUPD_ERROR_NOT_FOUND:			No matching device exists
  * @FWUPD_ERROR_NOTHING_TO_DO:			Nothing to do
  * @FWUPD_ERROR_NOT_SUPPORTED:			Action was not possible
+ * @FWUPD_ERROR_SIGNATURE_INVALID:		Signature was invalid
  *
  * The error code.
  **/
@@ -54,6 +55,7 @@ typedef enum {
 	FWUPD_ERROR_NOT_FOUND,			/* Since: 0.1.1 */
 	FWUPD_ERROR_NOTHING_TO_DO,		/* Since: 0.1.1 */
 	FWUPD_ERROR_NOT_SUPPORTED,		/* Since: 0.1.1 */
+	FWUPD_ERROR_SIGNATURE_INVALID,		/* Since: 0.1.2 */
 	/*< private >*/
 	FWUPD_ERROR_LAST
 } FwupdError;

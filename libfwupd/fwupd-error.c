@@ -71,6 +71,9 @@ fwupd_error_quark (void)
 		g_dbus_error_register_error (quark,
 					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "org.freedesktop.fwupd.NotSupported");
+		g_dbus_error_register_error (quark,
+					     FWUPD_ERROR_SIGNATURE_INVALID,
+					     "org.freedesktop.fwupd.SignatureInvalid");
 	}
 	return quark;
 }

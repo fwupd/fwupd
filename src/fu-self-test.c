@@ -28,6 +28,7 @@
 
 #include "fu-cab.h"
 #include "fu-cleanup.h"
+#include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider-fake.h"
 
@@ -287,6 +288,45 @@ fu_pending_func (void)
 	g_clear_error (&error);
 }
 
+static void
+fu_keyring_func (void)
+{
+	gboolean ret;
+	_cleanup_error_free_ GError *error = NULL;
+	_cleanup_free_ gchar *fw_fail = NULL;
+	_cleanup_free_ gchar *fw_pass = NULL;
+	_cleanup_free_ gchar *pki_dir = NULL;
+	_cleanup_object_unref_ FuKeyring *keyring = NULL;
+	const gchar *sig =
+	"iQEcBAABAgAGBQJVK9RSAAoJEBesuo36lw4XvmoH/3tJL5wVRN+rsvoo/FMc3w4g"
+	"I7rizJNIgQ04WVTREX6tRZJfxYzGAaeokVeqah2JUC4u1j22BDkoG/Fs+/2/Z/OP"
+	"PTxMoiEzfzryWpVwt20As+H9CmMZGdCfvKgnWiosAENCzE7JE1miJ4YvTpRtdPMh"
+	"erz8DqLTFAfr72aimf5hBs8ZFkBGPGjljdTDv78hk2WDep5E1+1swGoFbhDcXyih"
+	"8GZjSLP7XkKo23/p6odCJD3SkkDE7jIUMA8GrTHHXIhF41UsriKx2ERYoau5k3cX"
+	"OdK3/cRQ6BeuSBMLr7hUpa0RwlKUKex/I7+p/T9Ohk4lNnGS7GpE45RbpflK1VQ="
+	"=0D8+";
+
+	/* add test keys to keyring */
+	keyring = fu_keyring_new ();
+	pki_dir = fu_test_get_filename ("pki");
+	ret = fu_keyring_add_public_keys (keyring, pki_dir, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* verify */
+	fw_pass = fu_test_get_filename ("firmware.bin");
+	ret = fu_keyring_verify_file (keyring, fw_pass, sig, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* verify will fail */
+	fw_fail = fu_test_get_filename ("colorhug-als-3.0.2.cab");
+	ret = fu_keyring_verify_file (keyring, fw_fail, sig, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
+	g_assert (!ret);
+	g_clear_error (&error);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -299,6 +339,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/cab", fu_cab_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/provider", fu_provider_func);
+	g_test_add_func ("/fwupd/keyring", fu_keyring_func);
 	return g_test_run ();
 }
 

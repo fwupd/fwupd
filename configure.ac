@@ -132,6 +132,20 @@ if test x$enable_colorhug != xno; then
 fi
 AM_CONDITIONAL(HAVE_COLORHUG, test x$enable_colorhug = xyes)
 
+# gpgme support
+AC_MSG_CHECKING([for gpgme])
+if ! test -x "/usr/bin/gpgme-config"; then
+	AC_MSG_ERROR([Cannot locate gpgme])
+else
+	AC_MSG_RESULT([yes])
+	GPGME_CFLAGS="`\"/usr/bin/gpgme-config\" --cflags`"
+	GPGME_LIBS="`\"/usr/bin/gpgme-config\" --libs`"
+	GPGME_CFLAGS+=" `\"/usr/bin/gpg-error-config\" --cflags`"
+	GPGME_LIBS+=" `\"/usr/bin/gpg-error-config\" --libs`"
+	AC_SUBST([GPGME_CFLAGS])
+	AC_SUBST([GPGME_LIBS])
+fi
+
 # UEFI support
 AC_ARG_ENABLE(uefi, AS_HELP_STRING([--enable-uefi],[Enable ColorHug support]),
 	      enable_uefi=$enableval, enable_uefi=yes)
@@ -161,6 +175,7 @@ libfwupd/fwupd.pc
 libfwupd/Makefile
 man/Makefile
 data/Makefile
+data/pki/Makefile
 data/tests/Makefile
 policy/Makefile
 po/Makefile.in
