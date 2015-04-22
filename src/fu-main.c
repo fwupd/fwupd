@@ -903,6 +903,23 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 }
 
 /**
+ * fu_main_providers_coldplug:
+ **/
+static void
+fu_main_providers_coldplug (FuMainPrivate *priv)
+{
+	FuProvider *provider;
+	guint i;
+
+	for (i = 0; i < priv->providers->len; i++) {
+		_cleanup_error_free_ GError *error = NULL;
+		provider = g_ptr_array_index (priv->providers, i);
+		if (!fu_provider_coldplug (FU_PROVIDER (provider), &error))
+			g_warning ("Failed to coldplug: %s", error->message);
+	}
+}
+
+/**
  * fu_main_on_bus_acquired_cb:
  **/
 static void
@@ -929,6 +946,9 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 							     NULL); /* GError** */
 	g_assert (registration_id > 0);
 
+	/* add devices */
+	fu_main_providers_coldplug (priv);
+
 	/* connect to D-Bus directly */
 	priv->proxy_uid =
 		g_dbus_proxy_new_sync (priv->connection,
@@ -954,17 +974,7 @@ fu_main_on_name_acquired_cb (GDBusConnection *connection,
 			     const gchar *name,
 			     gpointer user_data)
 {
-	FuMainPrivate *priv = (FuMainPrivate *) user_data;
-	FuProvider *provider;
-	guint i;
-
 	g_debug ("FuMain: acquired name: %s", name);
-	for (i = 0; i < priv->providers->len; i++) {
-		_cleanup_error_free_ GError *error = NULL;
-		provider = g_ptr_array_index (priv->providers, i);
-		if (!fu_provider_coldplug (FU_PROVIDER (provider), &error))
-			g_warning ("Failed to coldplug: %s", error->message);
-	}
 }
 
 /**
