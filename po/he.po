@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-03-23 11:58+0000\n"
-"PO-Revision-Date: 2015-03-23 11:58+0000\n"
+"POT-Creation-Date: 2015-04-22 15:07+0100\n"
+"PO-Revision-Date: 2015-04-22 14:07+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Hebrew (http://www.transifex.com/projects/p/fwupd/language/he/)\n"
 "MIME-Version: 1.0\n"
@@ -18,25 +18,38 @@ msgstr ""
 "Language: he\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. SECURITY:
-#. - Normal users require admin authentication to update firmware
-#. - This should not be set to 'yes' as unprivileged users could then
-#. update to hostile and unsigned firmware.
-msgid "Install system firmware update"
-msgstr "התקנת עדכון קושחת מערכת"
+msgid "Install signed system firmware"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "אימות משתמש נדרש לעדכון קושחה מערכת זו"
 
-#. SECURITY:
-#. - Normal users should not require admin authentication to update devices
-msgid "Install device firmware update"
-msgstr "התקנת עדכון קושחת מכשיר"
+msgid "Install unsigned system firmware"
+msgstr ""
+
+msgid "Install old version of system firmware"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to update the firmware on a device"
-msgstr "אימות משתמש נדרש לעדכון קושחה מכשיר"
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr ""
+
+msgid "Install signed device firmware"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to update the firmware on a removable device"
+msgstr ""
+
+msgid "Install unsigned device firmware"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to downgrade the firmware on a removable device"
+msgstr ""
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"

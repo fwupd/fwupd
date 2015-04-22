@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-04-12 19:44+0100\n"
-"PO-Revision-Date: 2015-03-29 21:36+0000\n"
-"Last-Translator: Serge Vylekzhanin <vylekzhanin@mail.ru>\n"
+"POT-Creation-Date: 2015-04-22 15:07+0100\n"
+"PO-Revision-Date: 2015-04-22 14:07+0000\n"
+"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Russian (http://www.transifex.com/projects/p/fwupd/language/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -18,25 +18,38 @@ msgstr ""
 "Language: ru\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#. SECURITY:
-#. - Normal users require admin authentication to update firmware
-#. - This should not be set to 'yes' as unprivileged users could then
-#. update to hostile and unsigned firmware.
-msgid "Install system firmware update"
-msgstr "Установить обновление системной микропрограммы"
+msgid "Install signed system firmware"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "Для обновления микропрограммы на этой машине требуется аутентификация"
 
-#. SECURITY:
-#. - Normal users should not require admin authentication to update devices
-msgid "Install device firmware update"
-msgstr "Установить обновление микропрограммы устройства"
+msgid "Install unsigned system firmware"
+msgstr ""
+
+msgid "Install old version of system firmware"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to update the firmware on a device"
-msgstr "Для обновления микропрограммы на устройстве требуется аутентификация"
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr ""
+
+msgid "Install signed device firmware"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to update the firmware on a removable device"
+msgstr ""
+
+msgid "Install unsigned device firmware"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to downgrade the firmware on a removable device"
+msgstr ""
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
