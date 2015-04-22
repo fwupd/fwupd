@@ -222,15 +222,18 @@ tool available from the [appstream-glib](https://github.com/hughsie/appstream-gl
 
 ### Where do I submit the `.cab` files?
 
-At the moment we are auto-generating the metadata for various distributions,
-but the end goal is for vendors to produce the AppStream metadata themselves
-where it would be downloaded directly.
-Please [email us](mailto://richard@hughsie.com) if you would like us to start
-generating the metadata for your product.
+The end goal is for vendors to produce and upload the AppStream metadata
+themselves using the `appstream-builder` command line tool, for example:
 
-Users will also be able to download the `.cab` file manually and install it
-using the Software application in Linux, although the goal is to be able to
-notify them that updates are available.
+    appstream-builder                \
+        --basename=colorhug-firmware \
+        --origin=hughski             \
+        ColorHug*/firmware-releases/*.*.*/*.cab
+
+...will produce this file: http://www.hughski.com/downloads/colorhug-firmware.xml
+
+Please [email us](mailto://richard@hughsie.com) if you just want to upload `.cab`
+files and you would like us to generate metadata for your product.
 
 Adding Trusted Keys
 ===================
