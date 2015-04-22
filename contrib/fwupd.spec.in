@@ -19,6 +19,7 @@ BuildRequires: libgcab1-devel
 BuildRequires: sqlite-devel
 BuildRequires: gpgme-devel
 BuildRequires: systemd
+BuildRequires: fwupdate-devel
 BuildRequires: gobject-introspection-devel
 
 Requires(post): systemd
@@ -50,7 +51,6 @@ Files for development with %{name}.
 %configure \
         --disable-static        \
         --disable-rpath         \
-        --disable-uefi          \
         --disable-silent-rules  \
         --disable-dependency-tracking
 
