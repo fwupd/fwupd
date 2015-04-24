@@ -70,5 +70,5 @@ fwupd_status_from_string (const gchar *status)
 		return FWUPD_STATUS_DEVICE_VERIFY;
 	if (g_strcmp0 (status, "scheduling") == 0)
 		return FWUPD_STATUS_SCHEDULING;
-	return FWUPD_STATUS_IDLE;
+	return FWUPD_STATUS_UNKNOWN;
 }
