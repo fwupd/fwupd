@@ -342,6 +342,8 @@ main (int argc, char **argv)
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
+	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
+
 	/* tests go here */
 	g_test_add_func ("/fwupd/cab", fu_cab_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);

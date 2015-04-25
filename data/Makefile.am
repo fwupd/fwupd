@@ -14,13 +14,18 @@ EXTRA_DIST =						\
 	$(dbusservicemain_in_files)
 
 if HAVE_SYSTEMD
-systemdservicemain_in_files = fwupd.service.in
+systemdservicemain_in_files =				\
+	fwupd.service.in				\
+	fwupd-offline-update.service.in
 systemdservicemaindir = $(systemdsystemunitdir)
 systemdservicemain_DATA     = $(systemdservicemain_in_files:.service.in=.service)
 $(systemdservicemain_DATA): $(systemdservicemain_in_files) Makefile
 	@sed -e "s|\@servicedir\@|$(libexecdir)|" $< | \
 	sed -e "s|\@daemon_user\@|$(daemon_user)|" > $@
 EXTRA_DIST += $(systemdservicemain_in_files)
+install-data-hook:
+	mkdir -p $(DESTDIR)$(systemdservicedir)/system-update.target.wants
+	ln -sf ../fwupd-offline-update.service $(DESTDIR)$(systemdservicedir)/system-update.target.wants/fwupd-offline-update.service
 endif
 
 DISTCLEANFILES =					\

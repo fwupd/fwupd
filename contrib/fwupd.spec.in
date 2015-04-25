@@ -85,7 +85,7 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
 %{_datadir}/man/man1/fwupdmgr.1.gz
-%{_unitdir}/fwupd.service
+%{_unitdir}/*.service
 %dir %{_localstatedir}/lib/fwupd
 %{_libdir}/lib*.so.*
 %{_libdir}/girepository-1.0/*.typelib

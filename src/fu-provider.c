@@ -23,9 +23,11 @@
 
 #include <fwupd.h>
 #include <appstream-glib.h>
+#include <errno.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <gio/gunixinputstream.h>
+#include <string.h>
 
 #include "fu-cleanup.h"
 #include "fu-device.h"
@@ -48,6 +50,56 @@ enum {
 static guint signals[SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE (FuProvider, fu_provider, G_TYPE_OBJECT)
+
+/**
+ * fu_provider_offline_invalidate:
+ **/
+static gboolean
+fu_provider_offline_invalidate (GError **error)
+{
+	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_object_unref_ GFile *file1 = NULL;
+
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	file1 = g_file_new_for_path (FU_OFFLINE_TRIGGER_FILENAME);
+	if (!g_file_query_exists (file1, NULL))
+		return TRUE;
+	if (!g_file_delete (file1, NULL, &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Cannot delete %s: %s",
+			     FU_OFFLINE_TRIGGER_FILENAME,
+			     error_local->message);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_provider_offline_setup:
+ **/
+static gboolean
+fu_provider_offline_setup (GError **error)
+{
+	gint rc;
+
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* create symlink for the systemd-system-update-generator */
+	rc = symlink ("/var/lib", FU_OFFLINE_TRIGGER_FILENAME);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to create symlink %s to %s: %s",
+			     FU_OFFLINE_TRIGGER_FILENAME,
+			     "/var/lib", strerror (errno));
+		return FALSE;
+	}
+	return TRUE;
+}
 
 /**
  * fu_provider_coldplug:
@@ -125,7 +177,11 @@ fu_provider_schedule_update (FuProvider *provider,
 	fu_device_set_metadata (device, FU_DEVICE_KEY_FILENAME_CAB, filename);
 
 	/* add to database */
-	return fu_pending_add_device (pending, device, error);
+	if (!fu_pending_add_device (pending, device, error))
+		return FALSE;
+
+	/* next boot we run offline */
+	return fu_provider_offline_setup (error);
 }
 
 /**
@@ -154,6 +210,10 @@ fu_provider_update (FuProvider *provider,
 							    error);
 		return klass->update_offline (provider, device, fd_fw, flags, error);
 	}
+
+	/* cancel the pending action */
+	if (!fu_provider_offline_invalidate (error))
+		return FALSE;
 
 	/* online */
 	if (klass->update_online == NULL) {

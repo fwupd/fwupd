@@ -49,6 +49,7 @@ fwupdmgr_LDFLAGS =					\
 	$(PIE_LDFLAGS)
 
 fwupdmgr_CFLAGS =					\
+	-DFU_OFFLINE_DESTDIR=\"\"			\
 	$(WARNINGFLAGS_C)
 
 fu-resources.c: fwupd.gresource.xml $(dist_introspection_DATA)
@@ -120,8 +121,8 @@ fwupd_LDFLAGS =						\
 	$(RELRO_LDFLAGS)
 
 fwupd_CFLAGS =						\
+	-DFU_OFFLINE_DESTDIR=\"\"			\
 	$(WARNINGFLAGS_C)
-
 
 TESTS_ENVIRONMENT =					\
 	libtool --mode=execute valgrind			\
@@ -155,7 +156,9 @@ fu_self_test_LDADD =					\
 	$(GPGME_LIBS)					\
 	$(GLIB_LIBS)
 
-fu_self_test_CFLAGS = $(WARNINGFLAGS_C)
+fu_self_test_CFLAGS =					\
+	-DFU_OFFLINE_DESTDIR=\"/tmp/fwupd-self-test\"	\
+	$(WARNINGFLAGS_C)
 
 install-data-hook:
 	if test -w $(DESTDIR)$(prefix)/; then \

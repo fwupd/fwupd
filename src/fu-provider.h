@@ -86,6 +86,8 @@ struct _FuProviderClass
 						 FwupdStatus	 status);
 };
 
+#define FU_OFFLINE_TRIGGER_FILENAME	FU_OFFLINE_DESTDIR "/system-update"
+
 GType		 fu_provider_get_type		(void);
 void		 fu_provider_device_add		(FuProvider	*provider,
 						 FuDevice	*device);

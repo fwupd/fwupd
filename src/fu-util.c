@@ -24,6 +24,7 @@
 #include <fwupd.h>
 #include <appstream-glib.h>
 #include <fcntl.h>
+#include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
@@ -580,6 +581,35 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_offline_update_reboot:
+ **/
+static void
+fu_util_offline_update_reboot (void)
+{
+	_cleanup_error_free_ GError *error = NULL;
+	_cleanup_object_unref_ GDBusConnection *connection = NULL;
+	_cleanup_variant_unref_ GVariant *val = NULL;
+
+	/* reboot using systemd */
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
+	if (connection == NULL)
+		return;
+	val = g_dbus_connection_call_sync (connection,
+					   "org.freedesktop.systemd1",
+					   "/org/freedesktop/systemd1",
+					   "org.freedesktop.systemd1.Manager",
+					   "Reboot",
+					   NULL,
+					   NULL,
+					   G_DBUS_CALL_FLAGS_NONE,
+					   -1,
+					   NULL,
+					   &error);
+	if (val == NULL)
+		g_print ("Failed to reboot: %s\n", error->message);
+}
+
+/**
  * fu_util_update_prepared:
  **/
 static gboolean
@@ -592,11 +622,23 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
 	_cleanup_object_unref_ FuPending *pending = NULL;
 
+	/* do this first to avoid a loop if this tool segfaults */
+	g_unlink (FU_OFFLINE_TRIGGER_FILENAME);
+
 	if (g_strv_length (values) != 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "Invalid arguments: none expected");
+		return FALSE;
+	}
+
+	/* ensure root user */
+	if (getuid () != 0 || geteuid () != 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "This function can only be used as root");
 		return FALSE;
 	}
 
@@ -659,6 +701,9 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "No updates prepared");
 		return FALSE;
 	}
+
+	/* reboot */
+	fu_util_offline_update_reboot ();
 
 	g_print ("%s\n", _("Done!"));
 	return TRUE;
