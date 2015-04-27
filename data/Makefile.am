@@ -10,26 +10,26 @@ $(dbusservicemain_DATA): $(dbusservicemain_in_files) Makefile
 	@sed -e "s|\@servicedir\@|$(libexecdir)|" $< | \
 	sed -e "s|\@daemon_user\@|$(daemon_user)|" > $@
 
-EXTRA_DIST =						\
-	$(dbusservicemain_in_files)
+%.service: %.service.in Makefile
+	$(AM_V_GEN)sed -e 's|\@servicedir\@|$(libexecdir)|' \
+	               -e 's|\@daemon_user\@|$(daemon_user)|' $< > $@.tmp && mv $@.tmp $@
 
-if HAVE_SYSTEMD
-systemdservicemain_in_files =				\
+systemdservicedir = $(systemdunitdir)
+systemdservice_in_files =				\
 	fwupd.service.in				\
 	fwupd-offline-update.service.in
-systemdservicemaindir = $(systemdsystemunitdir)
-systemdservicemain_DATA     = $(systemdservicemain_in_files:.service.in=.service)
-$(systemdservicemain_DATA): $(systemdservicemain_in_files) Makefile
-	@sed -e "s|\@servicedir\@|$(libexecdir)|" $< | \
-	sed -e "s|\@daemon_user\@|$(daemon_user)|" > $@
-EXTRA_DIST += $(systemdservicemain_in_files)
+systemdservice_DATA = $(systemdservice_in_files:.service.in=.service)
+
 install-data-hook:
-	mkdir -p $(DESTDIR)$(systemdservicedir)/system-update.target.wants
-	ln -sf ../fwupd-offline-update.service $(DESTDIR)$(systemdservicedir)/system-update.target.wants/fwupd-offline-update.service
-endif
+	mkdir -p $(DESTDIR)$(systemdunitdir)/system-update.target.wants
+	ln -sf ../fwupd-offline-update.service $(DESTDIR)$(systemdunitdir)/system-update.target.wants/fwupd-offline-update.service
+
+EXTRA_DIST =						\
+	$(dbusservicemain_in_files)			\
+	$(systemdservice_in_files)
 
 DISTCLEANFILES =					\
 	$(dbusservicemain_DATA)				\
-	$(systemdservicemain_DATA)
+	$(systemdservice_DATA)
 
 -include $(top_srcdir)/git.mk

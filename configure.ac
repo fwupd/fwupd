@@ -156,14 +156,11 @@ fi
 AM_CONDITIONAL(HAVE_UEFI, test x$enable_uefi = xyes)
 
 # systemd support
-AC_ARG_WITH([systemdsystemunitdir],
-            AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd service files]),
+AC_ARG_WITH([systemdunitdir],
+            AS_HELP_STRING([--with-systemdunitdir=DIR], [Directory for systemd service files]),
             [],
-            [with_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)])
-if test "x$with_systemdsystemunitdir" != "xno"; then
-	AC_SUBST([systemdsystemunitdir], [$with_systemdsystemunitdir])
-fi
-AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$systemdsystemunitdir"])
+            [with_systemdunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)])
+AC_SUBST([systemdunitdir], [$with_systemdunitdir])
 
 dnl ---------------------------------------------------------------------------
 dnl - Makefiles, etc.
