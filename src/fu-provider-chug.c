@@ -166,12 +166,39 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 	guint16 major;
 	guint16 micro;
 	guint16 minor;
+#if G_USB_CHECK_VERSION(0,2,5)
+	guint8 idx;
+#endif
 	_cleanup_error_free_ GError *error = NULL;
 	_cleanup_free_ gchar *version = NULL;
 
+	/* try to get the version without claiming interface */
+#if G_USB_CHECK_VERSION(0,2,5)
+	if (!g_usb_device_open (item->usb_device, &error)) {
+		g_debug ("Failed to open, polling: %s", error->message);
+		return;
+	}
+	idx = g_usb_device_get_custom_index (item->usb_device,
+					     G_USB_DEVICE_CLASS_VENDOR,
+					     'F', 'W', NULL);
+	if (idx != 0x00) {
+		_cleanup_free_ gchar *tmp = NULL;
+		tmp = g_usb_device_get_string_descriptor (item->usb_device,
+							  idx, NULL);
+		if (tmp != NULL) {
+			item->got_version = TRUE;
+			g_debug ("obtained fwver using extension '%s'", tmp);
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_VERSION, tmp);
+			goto out;
+		}
+	}
+	g_usb_device_close (item->usb_device, NULL);
+#endif
+
 	/* attempt to open the device and get the serial number */
 	if (!ch_device_open (item->usb_device, &error)) {
-		g_debug ("Failed to open, polling: %s", error->message);
+		g_debug ("Failed to claim interface, polling: %s", error->message);
 		return;
 	}
 	ch_device_queue_get_firmware_ver (priv->device_queue, item->usb_device,
@@ -180,12 +207,16 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 				      NULL, &error)) {
 		g_warning ("Failed to get serial: %s", error->message);
-	} else {
-		item->got_version = TRUE;
-		version = g_strdup_printf ("%i.%i.%i", major, minor, micro);
-		fu_device_set_metadata (item->device, FU_DEVICE_KEY_VERSION, version);
+		goto out;
 	}
 
+	/* got things the old fashioned way */
+	item->got_version = TRUE;
+	version = g_strdup_printf ("%i.%i.%i", major, minor, micro);
+	g_debug ("obtained fwver using API '%s'", version);
+	fu_device_set_metadata (item->device, FU_DEVICE_KEY_VERSION, version);
+
+out:
 	/* we're done here */
 	if (!g_usb_device_close (item->usb_device, &error))
 		g_debug ("Failed to close: %s", error->message);
