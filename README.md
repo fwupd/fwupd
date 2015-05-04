@@ -110,18 +110,20 @@ ColorHug Support
 
 You need to install colord 1.2.9 which may be newer that your distribution
 provides. Compile it from source https://github.com/hughsie/colord or grab the
-RPMS here http://people.freedesktop.org/~hughsient/fedora/
+RPMs here http://people.freedesktop.org/~hughsient/fedora/
 
-If you don't want or need this functionality you can use `--disable-colorhug`
+If you don't want or need this functionality you can use the
+`--disable-colorhug` option.
 
 UEFI Support
 ------------
 
-If you're wondering where to get fwupdate from, either compile it form source
-(you might also need a newer efivar) from https://github.com/rhinstaller/fwupdate
+If you're wondering where to get `fwupdate` from, either compile it form source
+(you might also need a newer `efivar`) from https://github.com/rhinstaller/fwupdate
 or grab the RPMs here https://pjones.fedorapeople.org/fwupdate/
 
-If you don't want or need this functionality you can use `--disable-uefi`
+If you don't want or need this functionality you can use the `--disable-uefi`
+option.
 
 Vendor Firmware Updates
 =======================
@@ -136,7 +138,7 @@ plugin and there would need to be interfaces available to be able to write
 What do I have to do?
 ---------------------
 
-As per the [ Microsoft guidelines](https://msdn.microsoft.com/en-us/library/windows/hardware/dn917810%28v=vs.85%29.aspx),
+As per the [Microsoft guidelines](https://msdn.microsoft.com/en-us/library/windows/hardware/dn917810%28v=vs.85%29.aspx),
 package up your firmware into a `.cab` file, with these files inside:
 
 * The actual `.cap` file your engineers have created
@@ -210,8 +212,8 @@ If the firmware is not redistributable you have to indicate it in in the
 It is then **very important** you also provide a download location in the
 `.metainfo.xml` file.
 
-Questions:
-----------
+Questions
+---------
 
 ### Where will this data be used?
 
@@ -258,7 +260,7 @@ An example commit to the ColorHug project can be found [here](https://github.com
 Adding Trusted Keys
 ===================
 
-Introduction:
+Introduction
 ------------
 
 Installing a public key to `/etc/pki/fwupd` allows firmware signed with a
