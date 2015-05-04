@@ -161,45 +161,49 @@ number, e.g. `colorhug-als-1.2.3.cab`. It's mandatory that the files inside the
 
 An example `.inf` file might look like this:
 
-    [Version]
-    Class=Firmware
-    ClassGuid=84f40464-9272-4ef7-9399-cd95f12da696
-    DriverVer=03/03/2015,3.0.2
+```ini
+[Version]
+Class=Firmware
+ClassGuid=84f40464-9272-4ef7-9399-cd95f12da696
+DriverVer=03/03/2015,3.0.2
 
-    [Firmware_CopyFiles]
-    firmware.bin
+[Firmware_CopyFiles]
+firmware.bin
+```
 
 An example `.metainfo.xml` file might look like this:
 
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!-- Copyright 2015 Richard Hughes <richard@hughsie.com> -->
-    <component type="firmware">
-      <id>84f40464-9272-4ef7-9399-cd95f12da696</id>
-      <name>ColorHugALS Firmware</name>
-      <summary>Firmware for the ColorHugALS Ambient Light Sensor</summary>
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2015 Richard Hughes <richard@hughsie.com> -->
+<component type="firmware">
+  <id>84f40464-9272-4ef7-9399-cd95f12da696</id>
+  <name>ColorHugALS Firmware</name>
+  <summary>Firmware for the ColorHugALS Ambient Light Sensor</summary>
+  <description>
+    <p>
+      Updating the firmware on your ColorHugALS device improves performance and
+      adds new features.
+    </p>
+  </description>
+  <url type="homepage">http://www.hughski.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0+</project_license>
+  <developer_name>Hughski Limited</developer_name>
+  <releases>
+    <release version="3.0.2" timestamp="1424116753">
+      <location>http://www.hughski.com/downloads/colorhug-als/firmware/colorhug-als-3.0.2.cab</location>
       <description>
-        <p>
-          Updating the firmware on your ColorHugALS device improves performance and
-          adds new features.
-        </p>
+        <p>This stable release fixes the following bugs:</p>
+        <ul>
+          <li>Fix the return code from GetHardwareVersion</li>
+          <li>Scale the output of TakeReadingRaw by the datasheet values</li>
+        </ul>
       </description>
-      <url type="homepage">http://www.hughski.com/</url>
-      <metadata_license>CC0-1.0</metadata_license>
-      <project_license>GPL-2.0+</project_license>
-      <developer_name>Hughski Limited</developer_name>
-      <releases>
-        <release version="3.0.2" timestamp="1424116753">
-          <location>http://www.hughski.com/downloads/colorhug-als/firmware/colorhug-als-3.0.2.cab</location>
-          <description>
-            <p>This stable release fixes the following bugs:</p>
-            <ul>
-              <li>Fix the return code from GetHardwareVersion</li>
-              <li>Scale the output of TakeReadingRaw by the datasheet values</li>
-            </ul>
-          </description>
-        </release>
-      </releases>
-    </component>
+    </release>
+  </releases>
+</component>
+```
 
 If the firmware is not redistributable you have to indicate it in in the
 `.metainfo.xml` file with `<project_license>proprietary</project_license>`.
@@ -225,10 +229,12 @@ tool available from the [appstream-glib](https://github.com/hughsie/appstream-gl
 The end goal is for vendors to produce and upload the AppStream metadata
 themselves using the `appstream-builder` command line tool, for example:
 
-    appstream-builder                \
-        --basename=colorhug-firmware \
-        --origin=hughski             \
-        ColorHug*/firmware-releases/*.*.*/*.cab
+```sh
+appstream-builder                \
+    --basename=colorhug-firmware \
+    --origin=hughski             \
+    ColorHug*/firmware-releases/*.*.*/*.cab
+```
 
 ...will produce this file: http://www.hughski.com/downloads/colorhug-firmware.xml
 
