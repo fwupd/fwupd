@@ -88,6 +88,8 @@ fwupd_SOURCES =						\
 	fu-pending.h					\
 	fu-provider.c					\
 	fu-provider.h					\
+	fu-provider-usb.c				\
+	fu-provider-usb.h				\
 	fu-resources.c					\
 	fu-resources.h					\
 	fu-main.c

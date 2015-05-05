@@ -331,7 +331,8 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 			fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION_LOWEST,
 						version_lowest);
 		}
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_ONLY_OFFLINE, "TRUE");
+		fu_device_set_metadata (dev, FU_DEVICE_KEY_ALLOW_OFFLINE, "TRUE");
+		fu_device_set_metadata (dev, FU_DEVICE_KEY_ALLOW_ONLINE, "FALSE");
 		fu_provider_device_add (provider, dev);
 	}
 	fwup_resource_iter_destroy (&iter);

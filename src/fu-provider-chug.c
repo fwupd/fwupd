@@ -179,7 +179,7 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 		return;
 	}
 	idx = g_usb_device_get_custom_index (item->usb_device,
-					     G_USB_DEVICE_CLASS_VENDOR,
+					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
 					     'F', 'W', NULL);
 	if (idx != 0x00) {
 		_cleanup_free_ gchar *tmp = NULL;
@@ -484,6 +484,8 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		fu_device_set_guid (item->device, ch_device_get_guid (device));
 		fu_device_set_metadata (item->device, FU_DEVICE_KEY_KIND,
 					"hotplug");
+		fu_device_set_metadata (item->device, FU_DEVICE_KEY_ALLOW_OFFLINE, "TRUE");
+		fu_device_set_metadata (item->device, FU_DEVICE_KEY_ALLOW_ONLINE, "TRUE");
 
 		/* try to get the serial number -- if opening failed then
 		 * poll until the device is not busy */

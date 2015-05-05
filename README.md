@@ -245,17 +245,28 @@ files and you would like us to generate metadata for your product.
 
 ### How does fwupd know the device firmware version?
 
-For generic USB devices you can use a firmware version extension that is used
+For generic USB devices you can use a firmware vendor extensions that are used
 by a few OpenHardware projects. This means the fwupd daemon can obtain the
-firmware version without claiming the interface on the device and preventing
-other software from using it straight away.
-For closed-source devices a product-specific provider can be used, although
+GUID and firmware version without claiming the interface on the device and
+preventing other software from using it straight away.
+For closed-source devices a product-specific provider can also be used, although
 this isn't covered here.
 
 To implement the firmware version extension just create an interface descriptor
 with class code `0xff`, subclass code `0x46` and protocol `0x57` pointing to a
 string descriptor with the firmware version.
 An example commit to the ColorHug project can be found [here](https://github.com/hughski/colorhug2-firmware/commit/5e1bb64ad722a9d2d95927e305fd869b4a3a46a8).
+
+Furthermore, using the firmware GUID extension allows fwupd to detect firmware
+updates for devices it does not know how to update.
+These types of devices will however show up in the command line and GUI tools,
+so the user is at least aware that updates are available.
+
+To implement this, add an interface descriptor with class code `0xff`, subclass
+code `0x47` and protocol `0x55` pointing to a string descriptor with the GUID.
+If the GUID matches the '<id>' obtained from the AppStream metadata then the
+device will be shown.
+An example commit to the ColorHug project can be found [here](https://github.com/hughski/colorhug2-firmware/commit/f974638ac17b0e50f21987e2f1d982374cabe22c).
 
 Adding Trusted Keys
 ===================

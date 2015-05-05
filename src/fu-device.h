@@ -37,7 +37,8 @@ G_BEGIN_DECLS
 #define FU_DEVICE_KEY_VERSION		"Version"	/* s */
 #define FU_DEVICE_KEY_PROVIDER		"Provider"	/* s */
 #define FU_DEVICE_KEY_GUID		"Guid"		/* s */
-#define FU_DEVICE_KEY_ONLY_OFFLINE	"OnlyOffline"	/* s */
+#define FU_DEVICE_KEY_ALLOW_ONLINE	"AllowOnline"	/* b */
+#define FU_DEVICE_KEY_ALLOW_OFFLINE	"AllowOffline"	/* b */
 #define FU_DEVICE_KEY_DISPLAY_NAME	"DisplayName"	/* s */
 #define FU_DEVICE_KEY_VERSION_NEW	"VersionNew"	/* internal only */
 #define FU_DEVICE_KEY_VERSION_OLD	"VersionOld"	/* internal only */
