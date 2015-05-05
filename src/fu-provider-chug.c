@@ -482,10 +482,8 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		item->mode = mode;
 		fu_device_set_id (item->device, id);
 		fu_device_set_guid (item->device, ch_device_get_guid (device));
-		fu_device_set_metadata (item->device, FU_DEVICE_KEY_KIND,
-					"hotplug");
-		fu_device_set_metadata (item->device, FU_DEVICE_KEY_ALLOW_OFFLINE, "TRUE");
-		fu_device_set_metadata (item->device, FU_DEVICE_KEY_ALLOW_ONLINE, "TRUE");
+		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
+		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_ONLINE);
 
 		/* try to get the serial number -- if opening failed then
 		 * poll until the device is not busy */

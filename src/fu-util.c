@@ -300,6 +300,31 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuDevice *dev;
 	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
+	guint i;
+	guint j;
+	guint k;
+	guint f;
+	guint64 flags;
+	const gchar *value;
+	const gchar *keys[] = {
+		FU_DEVICE_KEY_DISPLAY_NAME,
+		FU_DEVICE_KEY_PROVIDER,
+		FU_DEVICE_KEY_GUID,
+		FU_DEVICE_KEY_VERSION,
+		FU_DEVICE_KEY_URL_HOMEPAGE,
+		FU_DEVICE_KEY_NAME,
+		FU_DEVICE_KEY_SUMMARY,
+		FU_DEVICE_KEY_DESCRIPTION,
+		FU_DEVICE_KEY_LICENSE,
+		FU_DEVICE_KEY_FLAGS,
+		FU_DEVICE_KEY_TRUSTED,
+		FU_DEVICE_KEY_SIZE,
+		NULL };
+	const gchar *flags_str[] = {
+		"Internal",
+		"AllowOnline",
+		"AllowOffline",
+		NULL };
 
 	/* get devices from daemon */
 	devices = fu_util_get_devices_internal (priv, error);
@@ -310,41 +335,32 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (devices->len == 0) {
 		/* TRANSLATORS: nothing attached that can be upgraded */
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
-	} else {
-		guint i;
-		guint j;
-		guint k;
-		const gchar *value;
-		const gchar *keys[] = {
-			FU_DEVICE_KEY_DISPLAY_NAME,
-			FU_DEVICE_KEY_KIND,
-			FU_DEVICE_KEY_PROVIDER,
-			FU_DEVICE_KEY_GUID,
-			FU_DEVICE_KEY_VERSION,
-			FU_DEVICE_KEY_URL_HOMEPAGE,
-			FU_DEVICE_KEY_NAME,
-			FU_DEVICE_KEY_SUMMARY,
-			FU_DEVICE_KEY_DESCRIPTION,
-			FU_DEVICE_KEY_LICENSE,
-			FU_DEVICE_KEY_ALLOW_ONLINE,
-			FU_DEVICE_KEY_ALLOW_OFFLINE,
-			FU_DEVICE_KEY_TRUSTED,
-			FU_DEVICE_KEY_SIZE,
-			NULL };
-		for (i = 0; i < devices->len; i++) {
-			dev = g_ptr_array_index (devices, i);
-			g_print ("Device: %s\n", fu_device_get_id (dev));
-			for (j = 0; keys[j] != NULL; j++) {
-				value = fu_device_get_metadata (dev, keys[j]);
-				if (value != NULL) {
-					g_print ("  %s:", keys[j]);
-					for (k = strlen (keys[j]); k < 15; k++)
+		return TRUE;
+	}
+	for (i = 0; i < devices->len; i++) {
+		dev = g_ptr_array_index (devices, i);
+		g_print ("Device: %s\n", fu_device_get_id (dev));
+		for (j = 0; keys[j] != NULL; j++) {
+			if (g_strcmp0 (keys[j], FU_DEVICE_KEY_FLAGS) == 0) {
+				flags = fu_device_get_flags (dev);
+				for (f = 0; flags_str[f] != NULL; f++) {
+					g_print ("  %s:", flags_str[f]);
+					for (k = strlen (flags_str[f]); k < 15; k++)
 						g_print (" ");
-					g_print (" %s\n", value);
+					g_print (" %s\n", flags & (1 << f) ? "True" : "False");
 				}
+				continue;
+			}
+			value = fu_device_get_metadata (dev, keys[j]);
+			if (value != NULL) {
+				g_print ("  %s:", keys[j]);
+				for (k = strlen (keys[j]); k < 15; k++)
+					g_print (" ");
+				g_print (" %s\n", value);
 			}
 		}
 	}
+
 	return TRUE;
 }
 

@@ -23,6 +23,7 @@
 #define __FU_DEVICE_H
 
 #include <glib-object.h>
+#include <fwupd.h>
 
 G_BEGIN_DECLS
 
@@ -37,8 +38,7 @@ G_BEGIN_DECLS
 #define FU_DEVICE_KEY_VERSION		"Version"	/* s */
 #define FU_DEVICE_KEY_PROVIDER		"Provider"	/* s */
 #define FU_DEVICE_KEY_GUID		"Guid"		/* s */
-#define FU_DEVICE_KEY_ALLOW_ONLINE	"AllowOnline"	/* b */
-#define FU_DEVICE_KEY_ALLOW_OFFLINE	"AllowOffline"	/* b */
+#define FU_DEVICE_KEY_FLAGS		"Flags"		/* internal only */
 #define FU_DEVICE_KEY_DISPLAY_NAME	"DisplayName"	/* s */
 #define FU_DEVICE_KEY_VERSION_NEW	"VersionNew"	/* internal only */
 #define FU_DEVICE_KEY_VERSION_OLD	"VersionOld"	/* internal only */
@@ -49,7 +49,6 @@ G_BEGIN_DECLS
 #define FU_DEVICE_KEY_SUMMARY		"Summary"	/* s */
 #define FU_DEVICE_KEY_DESCRIPTION	"Description"	/* s */
 #define FU_DEVICE_KEY_LICENSE		"License"	/* s */
-#define FU_DEVICE_KEY_KIND		"Kind"		/* s: 'internal' or 'hotplug' */
 #define FU_DEVICE_KEY_URL_HOMEPAGE	"UrlHomepage"	/* s */
 #define FU_DEVICE_KEY_SIZE		"Size"		/* t */
 #define FU_DEVICE_KEY_PENDING_STATE	"PendingState"	/* s */
@@ -79,6 +78,11 @@ GVariant	*fu_device_to_variant			(FuDevice	*device);
 const gchar	*fu_device_get_id			(FuDevice	*device);
 void		 fu_device_set_id			(FuDevice	*device,
 							 const gchar	*id);
+guint64		 fu_device_get_flags			(FuDevice	*device);
+void		 fu_device_set_flags			(FuDevice	*device,
+							 guint64	 flags);
+void		 fu_device_add_flag			(FuDevice	*device,
+							 FwupdDeviceFlags flag);
 const gchar	*fu_device_get_guid			(FuDevice	*device);
 void		 fu_device_set_guid			(FuDevice	*device,
 							 const gchar	*guid);

@@ -30,26 +30,50 @@
 
 #define FWUPD_DEVICE_ID_ANY		"*"
 
+/**
+ * FwupdStatus:
+ *
+ * The flags to show daemon status.
+ **/
 typedef enum {
-	FWUPD_STATUS_UNKNOWN,
-	FWUPD_STATUS_IDLE,
-	FWUPD_STATUS_LOADING,
-	FWUPD_STATUS_DECOMPRESSING,
-	FWUPD_STATUS_DEVICE_RESTART,
-	FWUPD_STATUS_DEVICE_WRITE,
-	FWUPD_STATUS_DEVICE_VERIFY,
-	FWUPD_STATUS_SCHEDULING,
+	FWUPD_STATUS_UNKNOWN,				/* Since: 0.1.1 */
+	FWUPD_STATUS_IDLE,				/* Since: 0.1.1 */
+	FWUPD_STATUS_LOADING,				/* Since: 0.1.1 */
+	FWUPD_STATUS_DECOMPRESSING,			/* Since: 0.1.1 */
+	FWUPD_STATUS_DEVICE_RESTART,			/* Since: 0.1.1 */
+	FWUPD_STATUS_DEVICE_WRITE,			/* Since: 0.1.1 */
+	FWUPD_STATUS_DEVICE_VERIFY,			/* Since: 0.1.1 */
+	FWUPD_STATUS_SCHEDULING,			/* Since: 0.1.1 */
 	/* private */
 	FWUPD_STATUS_LAST
 } FwupdStatus;
 
+/**
+ * FwupdTrustFlags:
+ *
+ * The flags to show the level of trust.
+ **/
 typedef enum {
-	FWUPD_TRUST_FLAG_NONE		= 0,
-	FWUPD_TRUST_FLAG_PAYLOAD	= 1,
-	FWUPD_TRUST_FLAG_METADATA	= 2,
+	FWUPD_TRUST_FLAG_NONE		= 0,		/* Since: 0.1.2 */
+	FWUPD_TRUST_FLAG_PAYLOAD	= 1 << 0,	/* Since: 0.1.2 */
+	FWUPD_TRUST_FLAG_METADATA	= 1 << 1,	/* Since: 0.1.2 */
 	/* private */
 	FWUPD_TRUST_FLAG_LAST
 } FwupdTrustFlags;
+
+/**
+ * FwupdDeviceFlags:
+ *
+ * The device flags.
+ **/
+typedef enum {
+	FU_DEVICE_FLAG_NONE		= 0,		/* Since: 0.1.3 */
+	FU_DEVICE_FLAG_INTERNAL		= 1 << 0,	/* Since: 0.1.3 */
+	FU_DEVICE_FLAG_ALLOW_ONLINE	= 1 << 1,	/* Since: 0.1.3 */
+	FU_DEVICE_FLAG_ALLOW_OFFLINE	= 1 << 2,	/* Since: 0.1.3 */
+	/* private */
+	FU_DEVICE_FLAG_LAST,
+} FwupdDeviceFlags;
 
 const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);

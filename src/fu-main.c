@@ -542,7 +542,6 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 static const gchar *
 fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 {
-	const gchar *kind;
 	gboolean is_trusted;
 	gboolean is_downgrade;
 
@@ -551,8 +550,7 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 	is_downgrade = helper->vercmp > 0;
 
 	/* relax authentication checks for removable devices */
-	kind = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_KIND);
-	if (g_strcmp0 (kind, "hotplug") == 0) {
+	if ((fu_device_get_flags (helper->device) & FU_DEVICE_FLAG_INTERNAL) == 0) {
 		if (is_downgrade)
 			return "org.freedesktop.fwupd.downgrade-hotplug";
 		if (is_trusted)

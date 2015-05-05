@@ -39,6 +39,7 @@ static void fu_device_finalize			 (GObject *object);
 struct _FuDevicePrivate
 {
 	gchar				*id;
+	guint64				 flags;
 	GHashTable			*metadata;
 };
 
@@ -74,6 +75,36 @@ fu_device_set_id (FuDevice *device, const gchar *id)
 
 	g_free (device->priv->id);
 	device->priv->id = g_strdup (id);
+}
+
+/**
+ * fu_device_get_flags:
+ **/
+guint64
+fu_device_get_flags (FuDevice *device)
+{
+	g_return_val_if_fail (FU_IS_DEVICE (device), 0);
+	return device->priv->flags;
+}
+
+/**
+ * fu_device_set_flags:
+ **/
+void
+fu_device_set_flags (FuDevice *device, guint64 flags)
+{
+	g_return_if_fail (FU_IS_DEVICE (device));
+	device->priv->flags = flags;
+}
+
+/**
+ * fu_device_add_flag:
+ **/
+void
+fu_device_add_flag (FuDevice *device, FwupdDeviceFlags flag)
+{
+	g_return_if_fail (FU_IS_DEVICE (device));
+	device->priv->flags |= flag;
 }
 
 /**
@@ -165,6 +196,9 @@ fu_device_to_variant (FuDevice *device)
 					       key, g_variant_new_string (value));
 		}
 	}
+	g_variant_builder_add (&builder, "{sv}",
+			       FU_DEVICE_KEY_FLAGS,
+			       g_variant_new_uint64 (device->priv->flags));
 	return g_variant_new ("{sa{sv}}", device->priv->id, &builder);
 }
 
@@ -195,6 +229,9 @@ fu_device_get_metadata_as_variant (FuDevice *device)
 					       key, g_variant_new_string (value));
 		}
 	}
+	g_variant_builder_add (&builder, "{sv}",
+			       FU_DEVICE_KEY_FLAGS,
+			       g_variant_new_uint64 (device->priv->flags));
 	return g_variant_new ("(a{sv})", &builder);
 }
 
@@ -209,6 +246,10 @@ fu_device_set_metadata_from_iter (FuDevice *device, GVariantIter *iter)
 	const gchar *type;
 
 	while (g_variant_iter_next (iter, "{&sv}", &key, &variant)) {
+		if (g_strcmp0 (key, FU_DEVICE_KEY_FLAGS) == 0) {
+			fu_device_set_flags (device, g_variant_get_uint64 (variant));
+			continue;
+		}
 		type = g_variant_get_type_string (variant);
 		if (g_strcmp0 (type, "s") == 0) {
 			fu_device_set_metadata (device, key,

@@ -129,9 +129,6 @@ fu_provider_usb_device_added_cb (GUsbContext *ctx,
 		fu_device_set_guid (dev, guid);
 		fu_device_set_display_name (dev, product);
 		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_KIND, "hotplug");
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_ALLOW_OFFLINE, "FALSE");
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_ALLOW_ONLINE, "FALSE");
 
 		/* insert to hash */
 		g_hash_table_insert (provider_usb->priv->devices,

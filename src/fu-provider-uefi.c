@@ -323,7 +323,6 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		fu_device_set_id (dev, id);
 		fu_device_set_guid (dev, guid);
 		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_KIND, "internal");
 		fwup_get_lowest_supported_fw_version (re, &version_raw);
 		if (version_raw != 0) {
 			version_lowest = g_strdup_printf ("%" G_GUINT32_FORMAT,
@@ -331,8 +330,8 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 			fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION_LOWEST,
 						version_lowest);
 		}
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_ALLOW_OFFLINE, "TRUE");
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_ALLOW_ONLINE, "FALSE");
+		fu_device_add_flag (dev, FU_DEVICE_FLAG_INTERNAL);
+		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_OFFLINE);
 		fu_provider_device_add (provider, dev);
 	}
 	fwup_resource_iter_destroy (&iter);
