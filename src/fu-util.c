@@ -1127,7 +1127,7 @@ main (int argc, char *argv[])
 		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			_cleanup_free_ gchar *tmp = NULL;
 			tmp = g_option_context_get_help (priv->context, TRUE, NULL);
-			g_print ("%s", tmp);
+			g_print ("%s\n\n%s", error->message, tmp);
 		} else {
 			g_print ("%s\n", error->message);
 		}
