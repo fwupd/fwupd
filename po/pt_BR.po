@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-04-22 15:07+0100\n"
-"PO-Revision-Date: 2015-04-22 14:07+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2015-05-28 09:46+0100\n"
+"PO-Revision-Date: 2015-04-22 14:38+0000\n"
+"Last-Translator: Derek Stavis <dekestavis@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/fwupd/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,37 +19,37 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 msgid "Install signed system firmware"
-msgstr ""
+msgstr "Instalar firmware assinado no sistema"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "É requerida autenticação para atualizar o firmware nesta máquina"
 
 msgid "Install unsigned system firmware"
-msgstr ""
+msgstr "Instalar firmware não assinado no sistema"
 
 msgid "Install old version of system firmware"
-msgstr ""
+msgstr "Instalar versão antiga do firmware no sistema"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr ""
+msgstr "É requerida autenticação para voltar a versão do firmware nesta máquina"
 
 msgid "Install signed device firmware"
-msgstr ""
+msgstr "Instalar firmware assinado no dispositivo"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid ""
 "Authentication is required to update the firmware on a removable device"
-msgstr ""
+msgstr "É requerida autenticação para atualizar o firmware em dispositivo removível"
 
 msgid "Install unsigned device firmware"
-msgstr ""
+msgstr "Instalar firmware não assinado no dispositivo"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid ""
 "Authentication is required to downgrade the firmware on a removable device"
-msgstr ""
+msgstr "É requerida autenticação para voltar a versão do firmware em um dispositivo removível"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"

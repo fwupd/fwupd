@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-04-22 15:07+0100\n"
-"PO-Revision-Date: 2015-04-22 14:07+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2015-05-28 09:46+0100\n"
+"PO-Revision-Date: 2015-04-23 04:22+0000\n"
+"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian (http://www.transifex.com/projects/p/fwupd/language/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,37 +19,37 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 msgid "Install signed system firmware"
-msgstr ""
+msgstr "Встановити підписану мікропрограму системи"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "Щоб отримати доступ до оновлення мікропрограми цього комп’ютера, вам слід пройти розпізнавання"
 
 msgid "Install unsigned system firmware"
-msgstr ""
+msgstr "Встановити непідписану мікропрограму системи"
 
 msgid "Install old version of system firmware"
-msgstr ""
+msgstr "Встановити стару версію мікропрограми системи"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr ""
+msgstr "Для встановлення застарілої версії мікропрограми на цей комп’ютер слід пройти розпізнавання"
 
 msgid "Install signed device firmware"
-msgstr ""
+msgstr "Встановити підписану мікропрограму пристрою"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid ""
 "Authentication is required to update the firmware on a removable device"
-msgstr ""
+msgstr "Для оновлення мікропрограми на портативному пристрої слід пройти розпізнавання"
 
 msgid "Install unsigned device firmware"
-msgstr ""
+msgstr "Встановити непідписану мікропрограму пристрою"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid ""
 "Authentication is required to downgrade the firmware on a removable device"
-msgstr ""
+msgstr "Для встановлення застарілої версії мікропрограми на портативний пристрій слід пройти розпізнавання"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"

@@ -1,3 +1,16 @@
+Version 0.1.3
+~~~~~~~~~~~~~
+Released: 2015-05-28
+
+New Features:
+ - Get the firmware version from the device descriptors (Richard Hughes)
+ - Run the offline actions using systemd when required (Richard Hughes)
+ - Support OpenHardware devices using the fwupd vendor extensions (Richard Hughes)
+
+Bugfixes:
+ - Add an UNKNOWN status so we can return meaningful enum values (Richard Hughes)
+ - Coldplug the devices before acquiring the well known name (Richard Hughes)
+
 Version 0.1.2
 ~~~~~~~~~~~~~
 Released: 2015-04-22
