@@ -94,6 +94,7 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %dir %{_localstatedir}/cache/app-info
 %dir %{_localstatedir}/cache/app-info/icons
 %dir %{_localstatedir}/cache/app-info/xmls
+/usr/lib/udev/rules.d/*.rules
 
 %files devel
 %{_includedir}/fwupd-1

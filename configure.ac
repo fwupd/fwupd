@@ -162,6 +162,13 @@ AC_ARG_WITH([systemdunitdir],
             [with_systemdunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)])
 AC_SUBST([systemdunitdir], [$with_systemdunitdir])
 
+# udev rules
+AC_ARG_WITH([udevrulesdir],
+            AS_HELP_STRING([--with-udevrulesdir=DIR], [Directory for udev rules files]),
+            [],
+            [with_udevrulesdir=$($PKG_CONFIG --variable=udevdir udev)/rules.d])
+AC_SUBST([udevrulesdir], [$with_udevrulesdir])
+
 dnl ---------------------------------------------------------------------------
 dnl - Makefiles, etc.
 dnl ---------------------------------------------------------------------------

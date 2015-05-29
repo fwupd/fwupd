@@ -25,7 +25,11 @@ install-data-hook:
 	mkdir -p $(DESTDIR)$(systemdunitdir)/system-update.target.wants
 	ln -sf ../fwupd-offline-update.service $(DESTDIR)$(systemdunitdir)/system-update.target.wants/fwupd-offline-update.service
 
+udevrules_DATA =					\
+	90-fwupd-devices.rules
+
 EXTRA_DIST =						\
+	$(udevrules_DATA)				\
 	$(dbusservicemain_in_files)			\
 	$(systemdservice_in_files)
 

@@ -40,6 +40,7 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
+#include "fu-provider-udev.h"
 #include "fu-provider-usb.h"
 #include "fu-resources.h"
 
@@ -1282,6 +1283,7 @@ main (int argc, char *argv[])
 
 	/* add providers */
 	priv->providers = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	fu_main_add_provider (priv, fu_provider_udev_new ());
 	fu_main_add_provider (priv, fu_provider_usb_new ());
 #ifdef HAVE_COLORHUG
 	fu_main_add_provider (priv, fu_provider_chug_new ());
