@@ -1,0 +1,9 @@
+fwupd for Debian
+----------------
+
+To build from the git tree, run:
+	git-buildpackage -us -uc -S
+Then, if using sbuild, you can use something like:
+	sbuild -s -c sid-amd64 -d unstable
+
+ -- Daniel Jared Dominguez <Jared_Dominguez@Dell.com>  Thu, 21 May 2015 13:44:16 -0500

@@ -1,0 +1,36 @@
+Source: fwupd
+Priority: optional
+Maintainer: Daniel Jared Dominguez <Jared_Dominguez@Dell.com>
+Uploaders: Steve McIntyre <93sam@debian.org>
+Build-Depends: debhelper (>= 9.0.0), dh-autoreconf, pkg-config, docbook-utils, gettext, libglib2.0-dev, intltool, libgudev-1.0-dev, libcolord-dev (>= 1.0.0), libpolkit-gobject-1-dev (>= 0.103), libgcab-dev, libsqlite3-dev, libgpgme11-dev, systemd, libfwup-dev, libgirepository1.0-dev, libappstream-glib-dev (>= 0.3.5), libarchive-dev, libcolorhug-dev (>= 1.2.9), libgusb-dev (>= 0.2.2)
+Standards-Version: 3.9.6.1
+Section: admin
+Homepage: https://github.com/hughsie/fwupd
+#Vcs-Git: git://anonscm.debian.org/collab-maint/fwupd.git
+#Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/fwupd.git
+
+Package: fwupd
+Architecture: amd64 i386 armhf arm64 armel
+Depends: ${shlibs:Depends}, ${misc:Depends}, efibootmgr
+Multi-Arch: foreign
+Description: Firmware update daemon
+ fwupd is a daemon to allow session software to update device firmware. 
+ You can either use a GUI software manager like GNOME Software to view and 
+ apply updates, the command-line tool or the system D-Bus interface directly.
+ Currently, firmware updates using the UEFI capsule format and for the 
+ ColorHug are supported. More formats may be supported in the future.
+ See <https://github.com/hughsie/fwupd> for details
+
+Package: fwupd-dev
+Architecture: amd64 i386 armhf arm64 armel
+Multi-Arch: same
+Depends: fwupd (= ${binary:Version}), ${misc:Depends}
+Description: development files for fwupd
+ fwupd is a daemon to allow session software to update device firmware. 
+ You can either use a GUI software manager like GNOME Software to view and 
+ apply updates, the command-line tool or the system D-Bus interface directly.
+ Currently, firmware updates using the UEFI capsule format and for the 
+ ColorHug are supported. More formats may be supported in the future.
+ See <https://github.com/hughsie/fwupd> for details
+ .
+ This package provides the development files for fwupd
