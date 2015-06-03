@@ -2,7 +2,7 @@ fwupd Release Notes
 
 1. Write NEWS entries for fwupd in the same format as usual.
 
-git shortlog fwupd_0_1_3.. | grep -i -v trivial | grep -v Merge > NEWS.new
+git shortlog 0.1.3.. | grep -i -v trivial | grep -v Merge > NEWS.new
 
 Version 0.1.4
 ~~~~~~~~~~~~~
@@ -23,11 +23,10 @@ git add *.po
 2. Commit changes to git:
 
 # MAKE SURE THESE ARE CORRECT
-export release_version="0.1.4"
-export release_tag="fwupd_0_1_4"
+export release_ver="0.1.4"
 
-git commit -a -m "Release fwupd ${release_version}"
-git tag -s -f -m "Release fwupd ${release_version}" "${release_tag}"
+git commit -a -m "Release fwupd ${release_ver}"
+git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
 <wait>
 git push --tags
 git push
@@ -38,12 +37,12 @@ make distcheck
 
 3a. Generate the additon verification metadata
 
-sha1sum fwupd-${release_version}.tar.xz > fwupd-${release_version}.tar.xz.sha1
-gpg -b -a fwupd-${release_version}.tar.xz
+sha1sum fwupd-${release_ver}.tar.xz > fwupd-${release_ver}.tar.xz.sha1
+gpg -b -a fwupd-${release_ver}.tar.xz
 
 4. Upload tarball:
 
-scp fwupd-${release_version}.tar.* hughsient@people.freedesktop.org:~/public_html/releases
+scp fwupd-${release_ver}.tar.* hughsient@people.freedesktop.org:~/public_html/releases
 
 5. Do post release version bump in configure.ac
 
