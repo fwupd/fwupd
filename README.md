@@ -280,13 +280,14 @@ authentication to install than for untrusted files. By default trusted firmware
 can be **upgraded** (but not downgraded) without the user or administrator
 password.
 
-By default only very few keys will be installed *by default*. These are vendors
-who have a proven security track record and a thorough understanding of
+Only very few keys will be installed *by default*. These are the keys of
+vendors who have a proven security track record and a thorough understanding of
 public-private key security.
 
-In particular, private keys should **only** be kept on trusted hardware (or
-virtual machine) that has limited network access, or networking completely
-disabled. The machine and any backups also need to be kept physically secure.
+In particular, private keys should **only** be kept on Hardware Security
+Mechanisms, and used on machines (or virtual machine) that have limited network
+access, or networking completely disabled. The machine and any backups also
+need to be kept physically secure.
 
 Adding a New Key
 ----------------
