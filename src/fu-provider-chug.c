@@ -426,7 +426,7 @@ fu_provider_chug_open_cb (gpointer user_data)
 	return TRUE;
 }
 
-#if !CD_CHECK_VERSION(1,2,10)
+#if !CH_CHECK_VERSION(1,2,10)
 #define CH_DEVICE_GUID_COLORHUG			"40338ceb-b966-4eae-adae-9c32edfcc484"
 #define CH_DEVICE_GUID_COLORHUG2		"2082b5e0-7a64-478a-b1b2-e3404fab6dad"
 #define CH_DEVICE_GUID_COLORHUG_ALS		"84f40464-9272-4ef7-9399-cd95f12da696"
