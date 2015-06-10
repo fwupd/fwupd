@@ -1,0 +1,26 @@
+From bc5e762e6719af6516859151b003f90fc3941e6c Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario_limonciello@dell.com>
+Date: Wed, 10 Jun 2015 02:47:33 -0500
+Subject: [PATCH] Fix version check for colorhug version.
+
+Signed-off-by: Mario Limonciello <Mario_Limonciello@Dell.com>
+---
+ src/fu-provider-chug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/fu-provider-chug.c b/src/fu-provider-chug.c
+index cdddd96..b38d512 100644
+--- a/src/fu-provider-chug.c
++++ b/src/fu-provider-chug.c
+@@ -426,7 +426,7 @@ fu_provider_chug_open_cb (gpointer user_data)
+ 	return TRUE;
+ }
+ 
+-#if !CD_CHECK_VERSION(1,2,10)
++#if !CH_CHECK_VERSION(1,2,10)
+ #define CH_DEVICE_GUID_COLORHUG			"40338ceb-b966-4eae-adae-9c32edfcc484"
+ #define CH_DEVICE_GUID_COLORHUG2		"2082b5e0-7a64-478a-b1b2-e3404fab6dad"
+ #define CH_DEVICE_GUID_COLORHUG_ALS		"84f40464-9272-4ef7-9399-cd95f12da696"
+-- 
+1.9.1
+
