@@ -6,8 +6,8 @@ Build-Depends: debhelper (>= 9.0.0), dh-autoreconf, pkg-config, docbook-utils, g
 Standards-Version: 3.9.6.1
 Section: admin
 Homepage: https://github.com/hughsie/fwupd
-#Vcs-Git: git://anonscm.debian.org/collab-maint/fwupd.git
-#Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/fwupd.git
+Vcs-Git: git://anonscm.debian.org/collab-maint/fwupd.git
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/fwupd.git
 
 Package: fwupd
 Architecture: amd64 i386 armhf arm64 armel
