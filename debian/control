@@ -9,6 +9,20 @@ Homepage: https://github.com/hughsie/fwupd
 Vcs-Git: git://anonscm.debian.org/collab-maint/fwupd.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/fwupd.git
 
+Package: libfwupd1
+Architecture: amd64 i386 armhf arm64 armel
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Multi-Arch: same
+Description: Firmware update daemon library
+ fwupd is a daemon to allow session software to update device firmware. 
+ You can either use a GUI software manager like GNOME Software to view and 
+ apply updates, the command-line tool or the system D-Bus interface directly.
+ Currently, firmware updates using the UEFI capsule format and for the 
+ ColorHug are supported. More formats may be supported in the future.
+ See <https://github.com/hughsie/fwupd> for details
+ .
+ This package provides the library used by the daemon.
+
 Package: fwupd
 Architecture: amd64 i386 armhf arm64 armel
 Depends: ${shlibs:Depends}, ${misc:Depends}, efibootmgr
