@@ -9,3 +9,10 @@ export DH_OPTIONS=-v
 
 %:
 	dh $@ --with autoreconf
+
+override_dh_autoreconf:
+	dh_autoreconf ./autogen.sh
+
+#Disabled for now.
+#https://github.com/hughsie/fwupd/issues/14
+override_dh_auto_test:
