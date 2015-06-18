@@ -1,6 +1,9 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
+#GPGME needs this for proper building on x86
+export CFLAGS += -D_FILE_OFFSET_BITS=64
+
 %:
 	dh $@ --with autoreconf
 
