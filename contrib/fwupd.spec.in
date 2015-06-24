@@ -79,6 +79,7 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %{_libexecdir}/fwupd
 %{_bindir}/fwupdmgr
 %{_sysconfdir}/pki/fwupd
+%{_sysconfdir}/pki/fwupd-metadata
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/dbus-1/interfaces/org.freedesktop.fwupd.xml
 %{_datadir}/polkit-1/actions/org.freedesktop.fwupd.policy
@@ -90,6 +91,9 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %dir %{_localstatedir}/lib/fwupd
 %{_libdir}/lib*.so.*
 %{_libdir}/girepository-1.0/*.typelib
+%dir %{_localstatedir}/cache/app-info
+%dir %{_localstatedir}/cache/app-info/icons
+%dir %{_localstatedir}/cache/app-info/xmls
 
 %files devel
 %{_includedir}/fwupd-1

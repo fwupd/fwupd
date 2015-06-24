@@ -322,6 +322,94 @@ out:
 }
 
 /**
+ * fu_keyring_verify_data:
+ **/
+gboolean
+fu_keyring_verify_data (FuKeyring *keyring,
+			GBytes *payload,
+			GBytes *payload_signature,
+			GError **error)
+{
+	gboolean ret = TRUE;
+	gpgme_data_t data = NULL;
+	gpgme_data_t sig = NULL;
+	gpgme_error_t rc;
+	gpgme_signature_t s;
+	gpgme_verify_result_t result;
+
+	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
+	g_return_val_if_fail (payload != NULL, FALSE);
+	g_return_val_if_fail (payload_signature != NULL, FALSE);
+
+	/* setup context */
+	if (!fu_keyring_setup (keyring, error))
+		return FALSE;
+
+	/* load file data */
+	rc = gpgme_data_new_from_mem (&data,
+				      g_bytes_get_data (payload, NULL),
+				      g_bytes_get_size (payload), 0);
+	if (rc != GPG_ERR_NO_ERROR) {
+		ret = FALSE;
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to load data: %s",
+			     gpgme_strerror (rc));
+		goto out;
+	}
+	rc = gpgme_data_new_from_mem (&sig,
+				      g_bytes_get_data (payload_signature, NULL),
+				      g_bytes_get_size (payload_signature), 0);
+	if (rc != GPG_ERR_NO_ERROR) {
+		ret = FALSE;
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to load signature: %s",
+			      gpgme_strerror (rc));
+		goto out;
+	}
+
+	/* verify */
+	rc = gpgme_op_verify (keyring->priv->ctx, sig, data, NULL);
+	if (rc != GPG_ERR_NO_ERROR) {
+		ret = FALSE;
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to verify data: %s",
+			     gpgme_strerror (rc));
+		goto out;
+	}
+
+
+	/* verify the result */
+	result = gpgme_op_verify_result (keyring->priv->ctx);
+	if (result == NULL) {
+		ret = FALSE;
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "no result record from libgpgme");
+		goto out;
+	}
+
+	/* look at each signature */
+	for (s = result->signatures; s != NULL ; s = s->next ) {
+		ret = fu_keyring_check_signature (s, error);
+		if (!ret)
+			goto out;
+	}
+out:
+	if (data != NULL)
+		gpgme_data_release (data);
+	if (sig != NULL)
+		gpgme_data_release (sig);
+	return ret;
+}
+
+/**
  * fu_keyring_class_init:
  **/
 static void

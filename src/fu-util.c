@@ -777,6 +777,84 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_update_metadata:
+ **/
+static gboolean
+fu_util_update_metadata (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	GVariant *body;
+	gint fd;
+	gint fd_sig;
+	_cleanup_object_unref_ GDBusMessage *request = NULL;
+	_cleanup_object_unref_ GUnixFDList *fd_list = NULL;
+
+	if (g_strv_length (values) != 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'filename.xml' 'filename.xml.asc'");
+		return FALSE;
+	}
+
+	/* open file */
+	fd = open (values[0], O_RDONLY);
+	if (fd < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to open %s",
+			     values[0]);
+		return FALSE;
+	}
+	fd_sig = open (values[1], O_RDONLY);
+	if (fd_sig < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to open %s",
+			     values[1]);
+		return FALSE;
+	}
+
+	/* set out of band file descriptor */
+	fd_list = g_unix_fd_list_new ();
+	g_unix_fd_list_append (fd_list, fd, NULL);
+	g_unix_fd_list_append (fd_list, fd_sig, NULL);
+	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
+						  FWUPD_DBUS_PATH,
+						  FWUPD_DBUS_INTERFACE,
+						  "UpdateMetadata");
+	g_dbus_message_set_unix_fd_list (request, fd_list);
+
+	/* g_unix_fd_list_append did a dup() already */
+	close (fd);
+	close (fd_sig);
+
+	/* send message */
+	body = g_variant_new ("(hh)", fd, fd_sig);
+	g_dbus_message_set_body (request, body);
+	g_dbus_connection_send_message_with_reply (priv->conn,
+						   request,
+						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+						   -1,
+						   NULL,
+						   NULL,
+						   fu_util_update_cb,
+						   priv);
+	g_main_loop_run (priv->loop);
+	if (priv->message == NULL) {
+		g_dbus_error_strip_remote_error (priv->error);
+		g_propagate_error (error, priv->error);
+		return FALSE;
+	}
+	if (g_dbus_message_to_gerror (priv->message, error)) {
+		g_dbus_error_strip_remote_error (*error);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fu_util_get_results:
  **/
 static gboolean
@@ -1061,6 +1139,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets the results from the last update"),
 		     fu_util_get_results);
+	fu_util_add (priv->cmd_array,
+		     "update-metadata",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Updates metadata"),
+		     fu_util_update_metadata);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,

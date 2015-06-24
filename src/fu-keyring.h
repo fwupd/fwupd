@@ -63,6 +63,10 @@ gboolean	 fu_keyring_verify_file			(FuKeyring	*keyring,
 							 const gchar	*filename,
 							 const gchar	*signature,
 							 GError		**error);
+gboolean	 fu_keyring_verify_data			(FuKeyring	*keyring,
+							 GBytes		*payload,
+							 GBytes		*payload_signature,
+							 GError		**error);
 
 G_END_DECLS
 

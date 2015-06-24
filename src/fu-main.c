@@ -26,6 +26,7 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
+#include <gio/gunixinputstream.h>
 #include <glib/gi18n.h>
 #include <locale.h>
 #include <polkit/polkit.h>
@@ -36,6 +37,7 @@
 #include "fu-cleanup.h"
 #include "fu-debug.h"
 #include "fu-device.h"
+#include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
 #include "fu-provider-usb.h"
@@ -567,6 +569,101 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 }
 
 /**
+ * fu_main_daemon_update_metadata:
+ *
+ * Supports optionally GZipped AppStream files up to 1MiB in size.
+ **/
+static gboolean
+fu_main_daemon_update_metadata (gint fd, gint fd_sig, GError **error)
+{
+	guint8 magic[2];
+	_cleanup_bytes_unref_ GBytes *bytes = NULL;
+	_cleanup_bytes_unref_ GBytes *bytes_raw = NULL;
+	_cleanup_bytes_unref_ GBytes *bytes_sig = NULL;
+	_cleanup_object_unref_ AsStore *store = NULL;
+	_cleanup_object_unref_ FuKeyring *kr = NULL;
+	_cleanup_object_unref_ GConverter *converter = NULL;
+	_cleanup_object_unref_ GFile *file = NULL;
+	_cleanup_object_unref_ GInputStream *stream_buf = NULL;
+	_cleanup_object_unref_ GInputStream *stream_fd = NULL;
+	_cleanup_object_unref_ GInputStream *stream = NULL;
+	_cleanup_object_unref_ GInputStream *stream_sig = NULL;
+
+	/* open existing file if it exists */
+	store = as_store_new ();
+	file = g_file_new_for_path ("/var/cache/app-info/xmls/fwupd.xml");
+	if (g_file_query_exists (file, NULL)) {
+		if (!as_store_from_file (store, file, NULL, NULL, error))
+			return FALSE;
+	}
+
+	/* read the entire file into memory */
+	stream_fd = g_unix_input_stream_new (fd, TRUE);
+	bytes_raw = g_input_stream_read_bytes (stream_fd, 0x100000, NULL, error);
+	if (bytes_raw == NULL)
+		return FALSE;
+	stream_buf = g_memory_input_stream_new ();
+	g_memory_input_stream_add_bytes (G_MEMORY_INPUT_STREAM (stream_buf), bytes_raw);
+
+	/* peek the file type and get data */
+	if (g_input_stream_read (stream_buf, magic, 2, NULL, error) == -1)
+		return FALSE;
+	if (magic[0] == 0x1f && magic[1] == 0x8b) {
+		g_debug ("using GZip decompressor for data");
+		if (!g_seekable_seek (G_SEEKABLE (stream_buf), 0, G_SEEK_SET, NULL, error))
+			return FALSE;
+		converter = G_CONVERTER (g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP));
+		stream = g_converter_input_stream_new (stream_buf, converter);
+		bytes = g_input_stream_read_bytes (stream, 0x100000, NULL, error);
+		if (bytes == NULL)
+			return FALSE;
+	} else if (magic[0] == '<' && magic[1] == '?') {
+		g_debug ("using no decompressor for data");
+		bytes = g_bytes_ref (bytes_raw);
+	} else {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "file type '0x%02x,0x%02x' not supported",
+			     magic[0], magic[1]);
+		return FALSE;
+	}
+
+	/* read signature */
+	stream_sig = g_unix_input_stream_new (fd_sig, TRUE);
+	bytes_sig = g_input_stream_read_bytes (stream_sig, 0x800, NULL, error);
+	if (bytes_sig == NULL)
+		return FALSE;
+
+	/* verify file */
+	kr = fu_keyring_new ();
+	if (!fu_keyring_add_public_keys (kr, "/etc/pki/fwupd-metadata", error))
+		return FALSE;
+	if (!fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error))
+		return FALSE;
+
+	/* merge in the new contents */
+	g_debug ("Store was %i size", as_store_get_size (store));
+	if (!as_store_from_xml (store,
+				g_bytes_get_data (bytes, NULL), -1,
+				NULL, error))
+		return FALSE;
+	g_debug ("Store now %i size", as_store_get_size (store));
+
+	/* save the new file */
+	as_store_set_api_version (store, 0.9);
+	if (!as_store_to_file (store, file,
+			       AS_NODE_TO_XML_FLAG_ADD_HEADER |
+			       AS_NODE_TO_XML_FLAG_FORMAT_MULTILINE |
+			       AS_NODE_TO_XML_FLAG_FORMAT_INDENT,
+			       NULL, error)) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+/**
  * fu_main_daemon_method_call:
  **/
 static void
@@ -645,6 +742,42 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* success */
 		val = fu_device_get_metadata_as_variant (item->device);
 		g_dbus_method_invocation_return_value (invocation, val);
+		return;
+	}
+
+	/* return '' */
+	if (g_strcmp0 (method_name, "UpdateMetadata") == 0) {
+		GDBusMessage *message;
+		GUnixFDList *fd_list;
+		gint fd_data;
+		gint fd_sig;
+		_cleanup_error_free_ GError *error = NULL;
+
+		message = g_dbus_method_invocation_get_message (invocation);
+		fd_list = g_dbus_message_get_unix_fd_list (message);
+		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 2) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_INTERNAL,
+							       "invalid handle");
+			return;
+		}
+		fd_data = g_unix_fd_list_get (fd_list, 0, &error);
+		if (fd_data < 0) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		fd_sig = g_unix_fd_list_get (fd_list, 1, &error);
+		if (fd_sig < 0) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		if (!fu_main_daemon_update_metadata (fd_data, fd_sig, &error)) {
+			g_prefix_error (&error, "failed to update metadata: ");
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		g_dbus_method_invocation_return_value (invocation, NULL);
 		return;
 	}
 
