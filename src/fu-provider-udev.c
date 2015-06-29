@@ -175,6 +175,52 @@ fu_provider_udev_get_rom_version (const gchar *rom_fn, GError **error)
 }
 
 /**
+ * fu_provider_udev_verify:
+ **/
+static gboolean
+fu_provider_udev_verify (FuProvider *provider,
+			 FuDevice *device,
+			 FuProviderVerifyFlags flags,
+			 GError **error)
+{
+	const gchar *rom_fn;
+	guint8 buffer[4096];
+	_cleanup_checksum_free_ GChecksum *hash = NULL;
+	_cleanup_object_unref_ GFile *file = NULL;
+	_cleanup_object_unref_ GFileInputStream *input_stream = NULL;
+
+	/* open the file */
+	rom_fn = fu_device_get_metadata (device, "RomFilename");
+	if (rom_fn == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Unable to read firmware from device");
+		return FALSE;
+	}
+	file = g_file_new_for_path (rom_fn);
+	input_stream = g_file_read (file, NULL, error);
+	if (input_stream == NULL)
+		return NULL;
+
+	hash = g_checksum_new (G_CHECKSUM_SHA1);
+	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_VERIFY);
+	while (TRUE) {
+		gssize sz;
+		sz = g_input_stream_read (G_INPUT_STREAM (input_stream),
+					  buffer,
+					  sizeof (buffer),
+					  NULL, NULL);
+		if (sz <= 0)
+			break;
+		g_checksum_update (hash, buffer, sz);
+	}
+	fu_device_set_metadata (device, FU_DEVICE_KEY_FIRMWARE_HASH,
+				g_checksum_get_string (hash));
+	return TRUE;
+}
+
+/**
  * fu_provider_udev_client_add:
  **/
 static void
@@ -268,6 +314,8 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	if (vendor != NULL)
 		fu_device_set_metadata (dev, FU_DEVICE_KEY_VENDOR, vendor);
 	fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
+	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS))
+		fu_device_set_metadata (dev, "RomFilename", rom_fn);
 
 	/* insert to hash */
 	g_hash_table_insert (provider_udev->priv->devices, g_strdup (id), dev);
@@ -353,6 +401,7 @@ fu_provider_udev_class_init (FuProviderUdevClass *klass)
 
 	provider_class->get_name = fu_provider_udev_get_name;
 	provider_class->coldplug = fu_provider_udev_coldplug;
+	provider_class->verify = fu_provider_udev_verify;
 	object_class->finalize = fu_provider_udev_finalize;
 
 	g_type_class_add_private (klass, sizeof (FuProviderUdevPrivate));

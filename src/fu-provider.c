@@ -185,6 +185,21 @@ fu_provider_schedule_update (FuProvider *provider,
 }
 
 /**
+ * fu_provider_verify:
+ **/
+gboolean
+fu_provider_verify (FuProvider *provider,
+		    FuDevice *device,
+		    FuProviderVerifyFlags flags,
+		    GError **error)
+{
+	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
+	if (klass->verify != NULL)
+		return klass->verify (provider, device, flags, error);
+	return TRUE;
+}
+
+/**
  * fu_provider_update:
  **/
 gboolean

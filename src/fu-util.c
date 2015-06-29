@@ -319,6 +319,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		FU_DEVICE_KEY_FLAGS,
 		FU_DEVICE_KEY_TRUSTED,
 		FU_DEVICE_KEY_SIZE,
+		FU_DEVICE_KEY_FIRMWARE_HASH,
 		NULL };
 	const gchar *flags_str[] = {
 		"Internal",
@@ -887,6 +888,119 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+
+/**
+ * fu_util_verify_internal:
+ **/
+static gboolean
+fu_util_verify_internal (FuUtilPrivate *priv, const gchar *id, GError **error)
+{
+	_cleanup_variant_unref_ GVariant *val = NULL;
+	g_dbus_proxy_call (priv->proxy,
+			   "Verify",
+			   g_variant_new ("(s)", id),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1,
+			   NULL,
+			   fu_util_get_devices_cb, priv);
+	g_main_loop_run (priv->loop);
+	if (priv->val == NULL) {
+		g_dbus_error_strip_remote_error (priv->error);
+		g_propagate_error (error, priv->error);
+		priv->error = NULL;
+		return FALSE;
+	}
+	return TRUE;
+
+}
+
+/**
+ * fu_util_verify_all:
+ **/
+static gboolean
+fu_util_verify_all (FuUtilPrivate *priv, GError **error)
+{
+	AsApp *app;
+	FuDevice *dev;
+	const gchar *tmp;
+	guint i;
+	_cleanup_object_unref_ AsStore *store = NULL;
+	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
+
+	/* get devices from daemon */
+	devices = fu_util_get_devices_internal (priv, error);
+	if (devices == NULL)
+		return FALSE;
+
+	/* get results */
+	for (i = 0; i < devices->len; i++) {
+		_cleanup_error_free_ GError *error_local = NULL;
+		dev = g_ptr_array_index (devices, i);
+		if (!fu_util_verify_internal (priv, fu_device_get_id (dev), &error_local)) {
+			g_print ("Failed to verify %s: %s\n",
+				 fu_device_get_id (dev),
+				 error_local->message);
+		}
+	}
+
+	/* only load firmware from the system */
+	store = as_store_new ();
+	as_store_add_filter (store, AS_ID_KIND_FIRMWARE);
+	if (!as_store_load (store, AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM, NULL, error))
+		return FALSE;
+
+	/* print */
+	for (i = 0; i < devices->len; i++) {
+		const gchar *hash = NULL;
+		const gchar *ver = NULL;
+		_cleanup_free_ gchar *status = NULL;
+
+		dev = g_ptr_array_index (devices, i);
+		hash = fu_device_get_metadata (dev, FU_DEVICE_KEY_FIRMWARE_HASH);
+		if (hash == NULL)
+			continue;
+		app = as_store_get_app_by_id (store, fu_device_get_guid (dev));
+		if (app == NULL) {
+			status = g_strdup ("No metadata");
+		} else {
+			AsRelease *rel;
+			ver = fu_device_get_metadata (dev, FU_DEVICE_KEY_VERSION);
+			rel = as_app_get_release (app, ver);
+			if (rel == NULL) {
+				status = g_strdup_printf ("No version %s", ver);
+			} else {
+				tmp = as_release_get_checksum (rel, G_CHECKSUM_SHA1);
+				if (g_strcmp0 (tmp, hash) != 0) {
+					status = g_strdup_printf ("Failed: for v%s expected %s", ver, tmp);
+				} else {
+					status = g_strdup ("OK");
+				}
+			}
+		}
+		g_print ("%s\t%s\t%s\n", fu_device_get_guid (dev), hash, status);
+	}
+
+	return TRUE;
+}
+
+/**
+ * fu_util_verify:
+ **/
+static gboolean
+fu_util_verify (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) == 0)
+		return fu_util_verify_all (priv, error);
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'id'");
+		return FALSE;
+	}
+	return fu_util_verify_internal (priv, values[0], error);
+}
+
 /**
  * fu_util_print_data:
  **/
@@ -1127,6 +1241,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets the list of updates for connected hardware"),
 		     fu_util_get_updates);
+	fu_util_add (priv->cmd_array,
+		     "verify",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the cryptographic hash of the dumped firmware"),
+		     fu_util_verify);
 	fu_util_add (priv->cmd_array,
 		     "clear-results",
 		     NULL,

@@ -782,6 +782,36 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		return;
 	}
 
+	/* return 's' */
+	if (g_strcmp0 (method_name, "Verify") == 0) {
+		FuDeviceItem *item = NULL;
+		const gchar *id = NULL;
+		_cleanup_error_free_ GError *error = NULL;
+		const gchar *hash = NULL;
+
+		/* check the id exists */
+		g_variant_get (parameters, "(&s)", &id);
+		g_debug ("Called %s(%s)", method_name, id);
+		item = fu_main_get_item_by_id (priv, id);
+		if (item == NULL) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_FOUND,
+							       "no such device %s",
+							       id);
+			return;
+		}
+		if (!fu_provider_verify (item->provider, item->device,
+					 FU_PROVIDER_VERIFY_FLAG_NONE, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		hash = fu_device_get_metadata (item->device, FU_DEVICE_KEY_FIRMWARE_HASH);
+		g_dbus_method_invocation_return_value (invocation,
+						       g_variant_new ("(s)", hash));
+		return;
+	}
+
 	/* return '' */
 	if (g_strcmp0 (method_name, "Update") == 0) {
 		FuDeviceItem *item = NULL;
