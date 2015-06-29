@@ -24,6 +24,7 @@
 #include <fwupd.h>
 #include <glib-object.h>
 #include <gudev/gudev.h>
+#include <string.h>
 
 #include "fu-cleanup.h"
 #include "fu-device.h"
@@ -66,6 +67,114 @@ fu_provider_udev_get_id (GUdevDevice *device)
 }
 
 /**
+ * fu_guid_is_valid:
+ **/
+static gboolean
+fu_guid_is_valid (const gchar *guid)
+{
+	_cleanup_strv_free_ gchar **split = NULL;
+	if (guid == NULL)
+		return FALSE;
+	split = g_strsplit (guid, "-", -1);
+	if (g_strv_length (split) != 5)
+		return FALSE;
+	if (strlen (split[0]) != 8)
+		return FALSE;
+	if (strlen (split[1]) != 4)
+		return FALSE;
+	if (strlen (split[2]) != 4)
+		return FALSE;
+	if (strlen (split[3]) != 4)
+		return FALSE;
+	if (strlen (split[4]) != 12)
+		return FALSE;
+	return TRUE;
+}
+
+/**
+ * fu_guid_generate:
+ **/
+static gchar *
+fu_guid_generate (const gchar *guid)
+{
+	gchar *tmp;
+	tmp = g_compute_checksum_for_string (G_CHECKSUM_SHA1, guid, -1);
+	tmp[8] = '-';
+	tmp[13] = '-';
+	tmp[18] = '-';
+	tmp[23] = '-';
+	tmp[36] = '\0';
+	g_assert (fu_guid_is_valid (tmp));
+	return tmp;
+}
+
+/**
+ * fu_strstr_bin:
+ **/
+static gchar *
+fu_strstr_bin (const gchar *haystack, gsize haystack_len, const gchar *needle)
+{
+	guint i;
+	guint needle_len = strlen (needle);
+	for (i = 0; i < haystack_len - needle_len; i++) {
+		if (strncmp (haystack + i, needle, needle_len) == 0)
+			return g_strdup (haystack + i + needle_len);
+	}
+	return NULL;
+}
+
+/**
+ * fu_provider_udev_get_rom_version:
+ **/
+static gchar *
+fu_provider_udev_get_rom_version (const gchar *rom_fn, GError **error)
+{
+	gchar buffer[1024];
+	gchar *str;
+	gssize sz;
+	_cleanup_object_unref_ GFile *file = NULL;
+	_cleanup_object_unref_ GFileInputStream *input_stream = NULL;
+	_cleanup_object_unref_ GFileOutputStream *output_stream = NULL;
+
+	file = g_file_new_for_path (rom_fn);
+	input_stream = g_file_read (file, NULL, error);
+	if (input_stream == NULL)
+		return NULL;
+
+	/* we have to enable the read */
+	output_stream = g_file_replace (file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error);
+	if (output_stream == NULL)
+		return NULL;
+	if (g_output_stream_write (G_OUTPUT_STREAM (output_stream), "1", 1, NULL, error) < 0)
+		return NULL;
+
+	sz = g_input_stream_read (G_INPUT_STREAM (input_stream),
+				  buffer,
+				  sizeof (buffer),
+				  NULL,
+				  error);
+	if (sz < 0)
+		return NULL;
+
+	/* NVIDIA */
+	str = fu_strstr_bin (buffer, sizeof (buffer), "Version ");
+	if (str != NULL)
+		return str;
+
+	/* ATI */
+	str = fu_strstr_bin (buffer, sizeof (buffer), " VER");
+	if (str != NULL)
+		return str;
+
+	/* not known */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Firmware version extractor not known");
+	return NULL;
+}
+
+/**
  * fu_provider_udev_client_add:
  **/
 static void
@@ -76,7 +185,10 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	const gchar *guid;
 	const gchar *product;
 	const gchar *vendor;
+	_cleanup_free_ gchar *guid_new = NULL;
 	_cleanup_free_ gchar *id = NULL;
+	_cleanup_free_ gchar *rom_fn = NULL;
+	_cleanup_free_ gchar *version = NULL;
 	_cleanup_strv_free_ gchar **split = NULL;
 
 	/* interesting device? */
@@ -116,19 +228,46 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 			g_warning ("env{PRODUCT} is invalid: %s", product);
 			return;
 		}
+		version = g_strdup (split[2]);
+	}
+
+	/* get the FW version from the rom */
+	rom_fn = g_build_filename (g_udev_device_get_sysfs_path (device), "rom", NULL);
+	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS)) {
+		_cleanup_error_free_ GError *error = NULL;
+		version = fu_provider_udev_get_rom_version (rom_fn, &error);
+		if (version == NULL) {
+			g_warning ("Failed to get version from %s: %s",
+				   rom_fn, error->message);
+		}
+	}
+
+	/* we failed */
+	if (version == NULL)
+		return;
+
+	/* check the guid */
+	if (!fu_guid_is_valid (guid)) {
+		guid_new = fu_guid_generate (guid);
+	} else {
+		guid_new = g_strdup (guid);
 	}
 
 	/* did we get enough data */
 	dev = fu_device_new ();
 	fu_device_set_id (dev, id);
-	fu_device_set_guid (dev, guid);
+	fu_device_set_guid (dev, guid_new);
 	display_name = g_udev_device_get_property (device, "FWUPD_MODEL");
+	if (display_name == NULL)
+		display_name = g_udev_device_get_property (device, "ID_MODEL_FROM_DATABASE");
 	if (display_name != NULL)
 		fu_device_set_display_name (dev, display_name);
 	vendor = g_udev_device_get_property (device, "FWUPD_VENDOR");
+	if (vendor == NULL)
+		vendor = g_udev_device_get_property (device, "ID_VENDOR_FROM_DATABASE");
 	if (vendor != NULL)
 		fu_device_set_metadata (dev, FU_DEVICE_KEY_VENDOR, vendor);
-	fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, split[2]);
+	fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
 
 	/* insert to hash */
 	g_hash_table_insert (provider_udev->priv->devices, g_strdup (id), dev);
@@ -185,15 +324,20 @@ fu_provider_udev_coldplug (FuProvider *provider, GError **error)
 	GList *devices;
 	GList *l;
 	GUdevDevice *udev_device;
+	const gchar *devclass[] = { "usb", "pci", NULL };
+	guint i;
 
-	/* get all usb devices */
-	devices = g_udev_client_query_by_subsystem (provider_udev->priv->gudev_client, "usb");
-	for (l = devices; l != NULL; l = l->next) {
-		udev_device = l->data;
-		fu_provider_udev_client_add (provider_udev, udev_device);
+	/* get all devices of class */
+	for (i = 0; devclass[i] != NULL; i++) {
+		devices = g_udev_client_query_by_subsystem (provider_udev->priv->gudev_client,
+							    devclass[i]);
+		for (l = devices; l != NULL; l = l->next) {
+			udev_device = l->data;
+			fu_provider_udev_client_add (provider_udev, udev_device);
+		}
+		g_list_foreach (devices, (GFunc) g_object_unref, NULL);
+		g_list_free (devices);
 	}
-	g_list_foreach (devices, (GFunc) g_object_unref, NULL);
-	g_list_free (devices);
 
 	return TRUE;
 }
