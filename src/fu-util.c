@@ -35,6 +35,7 @@
 #include "fu-cleanup.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
+#include "fu-rom.h"
 
 typedef struct {
 	GMainLoop		*loop;
@@ -778,6 +779,35 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_dump_rom:
+ **/
+static gboolean
+fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	_cleanup_object_unref_ FuRom *rom = NULL;
+	_cleanup_object_unref_ GFile *file = NULL;
+
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'filename.rom'");
+		return FALSE;
+	}
+
+	file = g_file_new_for_path (values[0]);
+	rom = fu_rom_new ();
+	if (!fu_rom_load_file (rom, file, NULL, error))
+		return FALSE;
+	if (!fu_rom_generate_checksum (rom, NULL, error))
+		return FALSE;
+	g_print ("%s -> %s [Version: %s]\n", values[0],
+		 fu_rom_get_checksum (rom),
+		 fu_rom_get_version (rom));
+	return TRUE;
+}
+
+/**
  * fu_util_update_metadata:
  **/
 static gboolean
@@ -1265,6 +1295,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Updates metadata"),
 		     fu_util_update_metadata);
+	fu_util_add (priv->cmd_array,
+		     "dump-rom",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Dump the ROM checksum"),
+		     fu_util_dump_rom);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,

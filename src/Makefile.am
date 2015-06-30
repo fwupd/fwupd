@@ -37,6 +37,8 @@ fwupdmgr_SOURCES =					\
 	fu-device.h					\
 	fu-pending.c					\
 	fu-pending.h					\
+	fu-rom.c					\
+	fu-rom.h					\
 	fu-util.c
 
 fwupdmgr_LDADD =					\
