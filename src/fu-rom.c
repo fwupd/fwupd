@@ -150,7 +150,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 		output_stream = g_file_replace (file, NULL, FALSE, G_FILE_CREATE_NONE,
 						cancellable, error);
 		if (output_stream == NULL)
-			return NULL;
+			return FALSE;
 		if (g_output_stream_write (G_OUTPUT_STREAM (output_stream), "1", 1,
 					   cancellable, error) < 0)
 			return FALSE;
@@ -324,7 +324,7 @@ fu_rom_generate_checksum (FuRom *rom, GCancellable *cancellable, GError **error)
 	gssize cnt = block_sz;
 	guint8 buffer[block_sz];
 
-	g_return_val_if_fail (FU_IS_ROM (rom), NULL);
+	g_return_val_if_fail (FU_IS_ROM (rom), FALSE);
 
 	while (TRUE) {
 		gssize sz;
