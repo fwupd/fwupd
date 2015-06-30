@@ -5,6 +5,7 @@ dist_introspection_DATA = 				\
 AM_CPPFLAGS =						\
 	$(APPSTREAM_GLIB_CFLAGS)			\
 	$(COLORHUG_CFLAGS)				\
+	$(GUSB_CFLAGS)					\
 	$(GCAB_CFLAGS)					\
 	$(GLIB_CFLAGS)					\
 	$(GUDEV_CFLAGS)					\
@@ -116,6 +117,7 @@ fwupd_LDADD =						\
 	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(COLORHUG_LIBS)				\
+	$(GUSB_LIBS)					\
 	$(GCAB_LIBS)					\
 	$(GLIB_LIBS)					\
 	$(GUDEV_LIBS)					\

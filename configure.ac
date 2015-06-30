@@ -120,6 +120,7 @@ PKG_CHECK_MODULES(GUDEV, gudev-1.0)
 PKG_CHECK_MODULES(POLKIT, polkit-gobject-1 >= 0.103)
 PKG_CHECK_MODULES(GCAB, libgcab-1.0)
 PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib >= 0.3.5)
+PKG_CHECK_MODULES(GUSB, gusb >= 0.2.2)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
 
@@ -127,7 +128,7 @@ AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
 AC_ARG_ENABLE(colorhug, AS_HELP_STRING([--enable-colorhug],[Enable ColorHug support]),
 	      enable_colorhug=$enableval, enable_colorhug=yes)
 if test x$enable_colorhug != xno; then
-	PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.9 gusb >= 0.2.2)
+	PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.9)
 	AC_DEFINE(HAVE_COLORHUG,1,[Use ColorHug support])
 fi
 AM_CONDITIONAL(HAVE_COLORHUG, test x$enable_colorhug = xyes)
