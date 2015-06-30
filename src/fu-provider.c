@@ -211,7 +211,6 @@ fu_provider_update (FuProvider *provider,
 		    GError **error)
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
-	_cleanup_free_ gchar *comment = NULL;
 	_cleanup_object_unref_ FuPending *pending = NULL;
 	_cleanup_object_unref_ FuDevice *device_pending = NULL;
 	GError *error_update = NULL;

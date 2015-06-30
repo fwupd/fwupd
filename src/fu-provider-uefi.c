@@ -54,7 +54,6 @@ fu_provider_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError *
 	fwup_resource *re_matched = NULL;
 	fwup_resource *re = NULL;
 	_cleanup_free_ gchar *guid_str_tmp = NULL;
-	_cleanup_free_ gchar *standard_error = NULL;
 
 	/* get the hardware we're referencing */
 	guid_str_tmp = g_strdup ("00000000-0000-0000-0000-000000000000");
@@ -217,7 +216,6 @@ fu_provider_uefi_update (FuProvider *provider,
 	gint rc = 0;
 	guint64 hardware_instance = 0;	/* FIXME */
 	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_free_ gchar *guid_str_tmp = NULL;
 	_cleanup_free_ gchar *standard_error = NULL;
 
 	/* get the hardware we're referencing */

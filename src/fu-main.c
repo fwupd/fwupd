@@ -679,7 +679,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	/* return 'as' */
 	if (g_strcmp0 (method_name, "GetDevices") == 0) {
 		_cleanup_error_free_ GError *error = NULL;
-		_cleanup_strv_free_ gchar **devices = NULL;
 		g_debug ("Called %s()", method_name);
 		val = fu_main_device_array_to_variant (priv, &error);
 		if (val == NULL) {
@@ -931,7 +930,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		gint fd;
 		_cleanup_error_free_ GError *error = NULL;
 		_cleanup_object_unref_ FuCab *cab = NULL;
-		_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
 
 		/* check the id exists */
 		g_variant_get (parameters, "(h)", &fd_handle);

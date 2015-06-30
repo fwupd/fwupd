@@ -119,7 +119,6 @@ fu_provider_udev_verify (FuProvider *provider,
 			 GError **error)
 {
 	const gchar *rom_fn;
-	_cleanup_checksum_free_ GChecksum *hash = NULL;
 	_cleanup_object_unref_ GFile *file = NULL;
 	_cleanup_object_unref_ FuRom *rom = NULL;
 
