@@ -136,8 +136,13 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 
 	/* open file */
 	priv->stream = G_INPUT_STREAM (g_file_read (file, cancellable, &error_local));
-	if (priv->stream == NULL)
+	if (priv->stream == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_AUTH_FAILED,
+				     error_local->message);
 		return FALSE;
+	}
 
 	/* we have to enable the read for devices */
 	fn = g_file_get_path (file);
