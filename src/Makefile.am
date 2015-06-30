@@ -94,6 +94,8 @@ fwupd_SOURCES =						\
 	fu-provider-usb.h				\
 	fu-resources.c					\
 	fu-resources.h					\
+	fu-rom.c					\
+	fu-rom.h					\
 	fu-main.c
 
 if HAVE_COLORHUG
@@ -150,6 +152,8 @@ fu_self_test_SOURCES =					\
 	fu-provider.h					\
 	fu-provider-fake.c				\
 	fu-provider-fake.h				\
+	fu-rom.c					\
+	fu-rom.h					\
 	fu-self-test.c
 
 fu_self_test_LDADD =					\

@@ -29,6 +29,7 @@
 #include "fu-cleanup.h"
 #include "fu-device.h"
 #include "fu-provider-udev.h"
+#include "fu-rom.h"
 
 static void     fu_provider_udev_finalize	(GObject	*object);
 
@@ -109,72 +110,6 @@ fu_guid_generate (const gchar *guid)
 }
 
 /**
- * fu_strstr_bin:
- **/
-static gchar *
-fu_strstr_bin (const gchar *haystack, gsize haystack_len, const gchar *needle)
-{
-	guint i;
-	guint needle_len = strlen (needle);
-	for (i = 0; i < haystack_len - needle_len; i++) {
-		if (strncmp (haystack + i, needle, needle_len) == 0)
-			return g_strdup (haystack + i + needle_len);
-	}
-	return NULL;
-}
-
-/**
- * fu_provider_udev_get_rom_version:
- **/
-static gchar *
-fu_provider_udev_get_rom_version (const gchar *rom_fn, GError **error)
-{
-	gchar buffer[1024];
-	gchar *str;
-	gssize sz;
-	_cleanup_object_unref_ GFile *file = NULL;
-	_cleanup_object_unref_ GFileInputStream *input_stream = NULL;
-	_cleanup_object_unref_ GFileOutputStream *output_stream = NULL;
-
-	file = g_file_new_for_path (rom_fn);
-	input_stream = g_file_read (file, NULL, error);
-	if (input_stream == NULL)
-		return NULL;
-
-	/* we have to enable the read */
-	output_stream = g_file_replace (file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error);
-	if (output_stream == NULL)
-		return NULL;
-	if (g_output_stream_write (G_OUTPUT_STREAM (output_stream), "1", 1, NULL, error) < 0)
-		return NULL;
-
-	sz = g_input_stream_read (G_INPUT_STREAM (input_stream),
-				  buffer,
-				  sizeof (buffer),
-				  NULL,
-				  error);
-	if (sz < 0)
-		return NULL;
-
-	/* NVIDIA */
-	str = fu_strstr_bin (buffer, sizeof (buffer), "Version ");
-	if (str != NULL)
-		return str;
-
-	/* ATI */
-	str = fu_strstr_bin (buffer, sizeof (buffer), " VER");
-	if (str != NULL)
-		return str;
-
-	/* not known */
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Firmware version extractor not known");
-	return NULL;
-}
-
-/**
  * fu_provider_udev_verify:
  **/
 static gboolean
@@ -184,10 +119,9 @@ fu_provider_udev_verify (FuProvider *provider,
 			 GError **error)
 {
 	const gchar *rom_fn;
-	guint8 buffer[4096];
 	_cleanup_checksum_free_ GChecksum *hash = NULL;
 	_cleanup_object_unref_ GFile *file = NULL;
-	_cleanup_object_unref_ GFileInputStream *input_stream = NULL;
+	_cleanup_object_unref_ FuRom *rom = NULL;
 
 	/* open the file */
 	rom_fn = fu_device_get_metadata (device, "RomFilename");
@@ -199,24 +133,13 @@ fu_provider_udev_verify (FuProvider *provider,
 		return FALSE;
 	}
 	file = g_file_new_for_path (rom_fn);
-	input_stream = g_file_read (file, NULL, error);
-	if (input_stream == NULL)
-		return NULL;
-
-	hash = g_checksum_new (G_CHECKSUM_SHA1);
-	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_VERIFY);
-	while (TRUE) {
-		gssize sz;
-		sz = g_input_stream_read (G_INPUT_STREAM (input_stream),
-					  buffer,
-					  sizeof (buffer),
-					  NULL, NULL);
-		if (sz <= 0)
-			break;
-		g_checksum_update (hash, buffer, sz);
-	}
+	rom = fu_rom_new ();
+	if (!fu_rom_load_file (rom, file, NULL, error))
+		return FALSE;
+	if (!fu_rom_generate_checksum (rom, NULL, error))
+		return FALSE;
 	fu_device_set_metadata (device, FU_DEVICE_KEY_FIRMWARE_HASH,
-				g_checksum_get_string (hash));
+				fu_rom_get_checksum (rom));
 	return TRUE;
 }
 
@@ -281,11 +204,15 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	rom_fn = g_build_filename (g_udev_device_get_sysfs_path (device), "rom", NULL);
 	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS)) {
 		_cleanup_error_free_ GError *error = NULL;
-		version = fu_provider_udev_get_rom_version (rom_fn, &error);
-		if (version == NULL) {
-			g_warning ("Failed to get version from %s: %s",
+		_cleanup_object_unref_ GFile *file = NULL;
+		_cleanup_object_unref_ FuRom *rom = NULL;
+		file = g_file_new_for_path (rom_fn);
+		rom = fu_rom_new ();
+		if (!fu_rom_load_file (rom, file, NULL, &error)) {
+			g_warning ("Failed to parse ROM from %s: %s",
 				   rom_fn, error->message);
 		}
+		version = g_strdup (fu_rom_get_version (rom));
 	}
 
 	/* we failed */
@@ -295,6 +222,7 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	/* check the guid */
 	if (!fu_guid_is_valid (guid)) {
 		guid_new = fu_guid_generate (guid);
+		g_debug ("Fixing GUID %s->%s", guid, guid_new);
 	} else {
 		guid_new = g_strdup (guid);
 	}

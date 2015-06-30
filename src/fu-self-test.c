@@ -31,6 +31,7 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider-fake.h"
+#include "fu-rom.h"
 
 /**
  * fu_test_get_filename:
@@ -46,6 +47,110 @@ fu_test_get_filename (const gchar *filename)
 	if (tmp == NULL)
 		return NULL;
 	return g_strdup (full_tmp);
+}
+
+static void
+fu_rom_func (void)
+{
+	guint i;
+	struct {
+		FuRomKind kind;
+		const gchar *fn;
+		const gchar *ver;
+		const gchar *csum;
+	} data[] = {
+		    { FU_ROM_KIND_ATI,
+			"Asus.9800PRO.256.unknown.031114.rom",
+			"008.015.041.001",
+			"3137385685298bbf7db2c8304f60d89005c731ed" },
+		    { FU_ROM_KIND_ATI, /* atombios */
+			"Asus.R9290X.4096.131014.rom",
+			"015.039.000.006.003515",
+			"2b159ae92517595d2cddb31193f5ed702ca3f803" },
+		    { FU_ROM_KIND_ATI, /* atombios, with serial */
+			"Asus.HD7970.3072.121018.rom",
+			"015.023.000.002.000000",
+			"bceb6cd2adfc0b84ed92065bead4fa98ec70124e" },
+		    { FU_ROM_KIND_NVIDIA,
+			"Asus.GTX480.1536.100406_1.rom",
+			"70.00.1A.00.02",
+			"3fcab24e60934850246fcfc4f42eceb32540a0ad" },
+		    { FU_ROM_KIND_NVIDIA, /* nvgi */
+			"Asus.GTX980.4096.140905.rom",
+			"84.04.1F.00.02",
+			"f314b90d4279935726ae2752bd5ec29e66140ad1" },
+		    { FU_ROM_KIND_NVIDIA, /* nvgi, with serial */
+			"Asus.TitanBlack.6144.140212.rom",
+			"80.80.4E.00.01",
+			"e86482f5ce29f3f8468cb4077ab72f6f9c9abfd2" },
+		    { FU_ROM_KIND_UNKNOWN, NULL, NULL, NULL }
+		};
+
+	for (i = 0; data[i].fn != NULL; i++) {
+		gboolean ret;
+		_cleanup_error_free_ GError *error = NULL;
+		_cleanup_free_ gchar *filename = NULL;
+		_cleanup_object_unref_ FuRom *rom = NULL;
+		_cleanup_object_unref_ GFile *file = NULL;
+		rom = fu_rom_new ();
+		g_assert (rom != NULL);
+
+		/* load file */
+		filename = fu_test_get_filename (data[i].fn);
+		if (filename == NULL)
+			continue;
+		g_print ("\nparsing %s...", filename);
+		file = g_file_new_for_path (filename);
+		ret = fu_rom_load_file (rom, file, NULL, &error);
+		g_assert_no_error (error);
+		g_assert (ret);
+		ret = fu_rom_generate_checksum (rom, NULL, &error);
+		g_assert_no_error (error);
+		g_assert (ret);
+		g_assert_cmpstr (fu_rom_get_version (rom), ==, data[i].ver);
+		g_assert_cmpstr (fu_rom_get_checksum (rom), ==, data[i].csum);
+		g_assert_cmpint (fu_rom_get_kind (rom), ==, data[i].kind);
+	}
+}
+
+static void
+fu_rom_all_func (void)
+{
+	GDir *dir;
+	_cleanup_free_ gchar *path = NULL;
+
+	/* may or may not exist */
+	path = fu_test_get_filename ("roms");
+	if (path == NULL)
+		return;
+	g_print ("\n");
+	dir = g_dir_open (path, 0, NULL);
+	do {
+		const gchar *fn;
+		gboolean ret;
+		_cleanup_error_free_ GError *error = NULL;
+		_cleanup_free_ gchar *filename = NULL;
+		_cleanup_object_unref_ FuRom *rom = NULL;
+		_cleanup_object_unref_ GFile *file = NULL;
+
+		fn = g_dir_read_name (dir);
+		if (fn == NULL)
+			break;
+		filename = g_build_filename (path, fn, NULL);
+		file = g_file_new_for_path (filename);
+		rom = fu_rom_new ();
+		ret = fu_rom_load_file (rom, file, NULL, &error);
+		if (!ret) {
+			g_print ("%s %s : %s\n",
+				 fu_rom_kind_to_string (fu_rom_get_kind (rom)),
+				 filename, error->message);
+			continue;
+		}
+		g_assert_cmpstr (fu_rom_get_version (rom), !=, NULL);
+		g_assert_cmpstr (fu_rom_get_version (rom), !=, "\0");
+		g_assert_cmpstr (fu_rom_get_checksum (rom), !=, NULL);
+		g_assert_cmpint (fu_rom_get_kind (rom), !=, FU_ROM_KIND_UNKNOWN);
+	} while (TRUE);
 }
 
 static void
@@ -345,6 +450,8 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
+	g_test_add_func ("/fwupd/rom", fu_rom_func);
+	g_test_add_func ("/fwupd/rom{all}", fu_rom_all_func);
 	g_test_add_func ("/fwupd/cab", fu_cab_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/provider", fu_provider_func);
