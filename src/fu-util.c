@@ -265,7 +265,6 @@ fu_util_get_devices_internal (FuUtilPrivate *priv, GError **error)
 	FuDevice *dev;
 	gchar *id;
 	_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
-	_cleanup_variant_unref_ GVariant *val = NULL;
 
 	g_dbus_proxy_call (priv->proxy,
 			   "GetDevices",
@@ -752,7 +751,6 @@ fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	_cleanup_variant_unref_ GVariant *val = NULL;
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -891,7 +889,6 @@ fu_util_update_metadata (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	_cleanup_variant_unref_ GVariant *val = NULL;
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -925,7 +922,6 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_verify_internal (FuUtilPrivate *priv, const gchar *id, GError **error)
 {
-	_cleanup_variant_unref_ GVariant *val = NULL;
 	g_dbus_proxy_call (priv->proxy,
 			   "Verify",
 			   g_variant_new ("(s)", id),

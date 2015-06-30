@@ -110,7 +110,6 @@ fu_provider_chug_reconnect_timeout_cb (gpointer user_data)
 static gboolean
 fu_provider_chug_wait_for_connect (FuProviderChugItem *item, GError **error)
 {
-	_cleanup_error_free_ GError *error_local = NULL;
 	item->reconnect_id = g_timeout_add (CH_DEVICE_USB_TIMEOUT,
 				fu_provider_chug_reconnect_timeout_cb, item);
 	g_main_loop_run (item->loop);
