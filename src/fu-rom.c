@@ -258,6 +258,15 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 				}
 			}
 		}
+
+		/* fallback to VBIOS */
+		if (priv->version == NULL) {
+			str = (gchar *) fu_rom_strstr_bin (buffer, sz, "VBIOS ");
+			if (str != NULL) {
+				priv->version = g_strdup (str + 6);
+				g_strdelimit (priv->version, "\r\n ", '\0');
+			}
+		}
 	case FU_ROM_KIND_ATI:
 		if (priv->version == NULL) {
 			str = (gchar *) fu_rom_strstr_bin (buffer, sz, " VER0");
