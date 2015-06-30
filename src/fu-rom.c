@@ -61,6 +61,8 @@ fu_rom_kind_to_string (FuRomKind kind)
 		return "ati";
 	if (kind == FU_ROM_KIND_NVIDIA)
 		return "nvidia";
+	if (kind == FU_ROM_KIND_INTEL)
+		return "intel";
 	return NULL;
 }
 
@@ -123,7 +125,8 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 	const guint block_sz = 4096;
 	guint8 buffer[block_sz];
 	gchar *str;
-	guint nvgi_sz = 0;
+	guint hdr_sz = 0;
+	guint i;
 	gssize sz;
 	_cleanup_free_ gchar *fn = NULL;
 	_cleanup_error_free_ GError *error_local = NULL;
@@ -163,12 +166,21 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 
 	/* detect signed header and skip to option ROM */
 	if (memcmp (buffer, "NVGI", 4) == 0)
-		nvgi_sz = GUINT16_FROM_BE (buffer[0x15]);
+		hdr_sz = GUINT16_FROM_BE (buffer[0x15]);
 
 	/* firmware magic bytes */
-	if (memcmp (buffer + nvgi_sz, "\x55\xaa", 2) == 0) {
-		if (memcmp (buffer + nvgi_sz + 0x04, "K740", 4) == 0) {
+	if (memcmp (buffer + hdr_sz, "\x55\xaa", 2) == 0) {
+
+		/* detect intel header */
+		if (memcmp (buffer + 0x06, "00000000000", 11) == 0)
+			hdr_sz = (buffer[0x1b] << 8) + buffer[0x1a];
+
+		if (memcmp (buffer + hdr_sz + 0x04, "K740", 4) == 0) {
 			priv->kind = FU_ROM_KIND_NVIDIA;
+		} else if (memcmp (buffer + hdr_sz, "$VBT", 4) == 0) {
+			priv->kind = FU_ROM_KIND_INTEL;
+			/* see drivers/gpu/drm/i915/intel_bios.h */
+			hdr_sz += (buffer[hdr_sz + 23] << 8) + buffer[hdr_sz + 22];
 		} else if (memcmp(buffer + 0x30, " 761295520", 10) == 0) {
 			priv->kind = FU_ROM_KIND_ATI;
 		} else {
@@ -192,10 +204,10 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 	case FU_ROM_KIND_NVIDIA:
 
 		/* static location for some firmware */
-		if (memcmp (buffer + nvgi_sz + 0x0d7, "Version ", 8) == 0)
-			priv->version = g_strdup ((gchar *) &buffer[0x0d7 + nvgi_sz + 8]);
-		else if (memcmp (buffer + nvgi_sz + 0x155, "Version ", 8) == 0)
-			priv->version = g_strdup ((gchar *) &buffer[0x155 + nvgi_sz + 8]);
+		if (memcmp (buffer + hdr_sz + 0x0d7, "Version ", 8) == 0)
+			priv->version = g_strdup ((gchar *) &buffer[0x0d7 + hdr_sz + 8]);
+		else if (memcmp (buffer + hdr_sz + 0x155, "Version ", 8) == 0)
+			priv->version = g_strdup ((gchar *) &buffer[0x155 + hdr_sz + 8]);
 
 		/* usual search string */
 		if (priv->version == NULL) {
@@ -218,8 +230,8 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 
 		/* fallback to VBIOS */
 		if (priv->version == NULL &&
-		    memcmp (buffer + nvgi_sz + 0xfa, "VBIOS Ver", 9) == 0)
-			priv->version = g_strdup ((gchar *) &buffer[0xfa + nvgi_sz + 9]);
+		    memcmp (buffer + hdr_sz + 0xfa, "VBIOS Ver", 9) == 0)
+			priv->version = g_strdup ((gchar *) &buffer[0xfa + hdr_sz + 9]);
 
 		/* urgh */
 		if (priv->version != NULL) {
@@ -227,6 +239,20 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 			g_strdelimit (priv->version, "\r\n ", '\0');
 		}
 		break;
+	case FU_ROM_KIND_INTEL:
+		if (priv->version == NULL) {
+			/* 2175_RYan PC 14.34  06/06/2013  21:27:53 */
+			str = (gchar *) fu_rom_strstr_bin (buffer, sz, "Build Number:");
+			if (str != NULL) {
+				_cleanup_strv_free_ gchar **split = NULL;
+				split = g_strsplit (str + 14, " ", -1);
+				for (i = 0; split[i] != NULL; i++) {
+					if (g_strstr_len (split[i], -1, ".") == NULL)
+						continue;
+					priv->version = g_strdup (split[i]);
+				}
+			}
+		}
 	case FU_ROM_KIND_ATI:
 		if (priv->version == NULL) {
 			str = (gchar *) fu_rom_strstr_bin (buffer, sz, " VER0");
