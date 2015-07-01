@@ -966,16 +966,17 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 	guint i;
 	_cleanup_object_unref_ AsStore *store = NULL;
 	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
+	_cleanup_ptrarray_unref_ GPtrArray *devices_tmp = NULL;
 
 	/* get devices from daemon */
-	devices = fu_util_get_devices_internal (priv, error);
-	if (devices == NULL)
+	devices_tmp = fu_util_get_devices_internal (priv, error);
+	if (devices_tmp == NULL)
 		return FALSE;
 
 	/* get results */
-	for (i = 0; i < devices->len; i++) {
+	for (i = 0; i < devices_tmp->len; i++) {
 		_cleanup_error_free_ GError *error_local = NULL;
-		dev = g_ptr_array_index (devices, i);
+		dev = g_ptr_array_index (devices_tmp, i);
 		if (!fu_util_verify_internal (priv, fu_device_get_id (dev), &error_local)) {
 			g_print ("Failed to verify %s: %s\n",
 				 fu_device_get_id (dev),
@@ -990,6 +991,9 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 		return FALSE;
 
 	/* print */
+	devices = fu_util_get_devices_internal (priv, error);
+	if (devices == NULL)
+		return FALSE;
 	for (i = 0; i < devices->len; i++) {
 		const gchar *hash = NULL;
 		const gchar *ver = NULL;
