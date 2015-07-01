@@ -85,6 +85,8 @@ fwupd_SOURCES =						\
 	fu-debug.h					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-guid.c					\
+	fu-guid.h					\
 	fu-keyring.c					\
 	fu-keyring.h					\
 	fu-pending.c					\

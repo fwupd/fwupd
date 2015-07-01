@@ -28,6 +28,7 @@
 
 #include "fu-cleanup.h"
 #include "fu-device.h"
+#include "fu-guid.h"
 #include "fu-provider-udev.h"
 #include "fu-rom.h"
 
@@ -65,48 +66,6 @@ fu_provider_udev_get_id (GUdevDevice *device)
 	id = g_strdup_printf ("ro-%s", g_udev_device_get_sysfs_path (device));
 	g_strdelimit (id, "/:.-", '_');
 	return id;
-}
-
-/**
- * fu_guid_is_valid:
- **/
-static gboolean
-fu_guid_is_valid (const gchar *guid)
-{
-	_cleanup_strv_free_ gchar **split = NULL;
-	if (guid == NULL)
-		return FALSE;
-	split = g_strsplit (guid, "-", -1);
-	if (g_strv_length (split) != 5)
-		return FALSE;
-	if (strlen (split[0]) != 8)
-		return FALSE;
-	if (strlen (split[1]) != 4)
-		return FALSE;
-	if (strlen (split[2]) != 4)
-		return FALSE;
-	if (strlen (split[3]) != 4)
-		return FALSE;
-	if (strlen (split[4]) != 12)
-		return FALSE;
-	return TRUE;
-}
-
-/**
- * fu_guid_generate:
- **/
-static gchar *
-fu_guid_generate (const gchar *guid)
-{
-	gchar *tmp;
-	tmp = g_compute_checksum_for_string (G_CHECKSUM_SHA1, guid, -1);
-	tmp[8] = '-';
-	tmp[13] = '-';
-	tmp[18] = '-';
-	tmp[23] = '-';
-	tmp[36] = '\0';
-	g_assert (fu_guid_is_valid (tmp));
-	return tmp;
 }
 
 /**
@@ -220,7 +179,7 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 
 	/* check the guid */
 	if (!fu_guid_is_valid (guid)) {
-		guid_new = fu_guid_generate (guid);
+		guid_new = fu_guid_generate_from_string (guid);
 		g_debug ("Fixing GUID %s->%s", guid, guid_new);
 	} else {
 		guid_new = g_strdup (guid);
