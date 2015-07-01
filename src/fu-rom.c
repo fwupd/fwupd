@@ -108,6 +108,8 @@ fu_rom_find_and_blank_serial_numbers (guint8 *buffer, guint buffer_sz)
 	guint8 *tmp;
 	guint len;
 
+	if (buffer_sz < 4)
+		return;
 	tmp = fu_rom_strstr_bin (buffer, buffer_sz, "PPID");
 	if (tmp != NULL) {
 		len = fu_rom_blank_serial_numbers (tmp, buffer_sz - (tmp - buffer));
