@@ -58,32 +58,40 @@ fu_rom_func (void)
 		const gchar *fn;
 		const gchar *ver;
 		const gchar *csum;
+		guint16 vendor;
+		guint16 model;
 	} data[] = {
 		    { FU_ROM_KIND_ATI,
 			"Asus.9800PRO.256.unknown.031114.rom",
 			"008.015.041.001",
-			"3137385685298bbf7db2c8304f60d89005c731ed" },
+			"3137385685298bbf7db2c8304f60d89005c731ed",
+			0x1002, 0x4e48 },
 		    { FU_ROM_KIND_ATI, /* atombios */
 			"Asus.R9290X.4096.131014.rom",
 			"015.039.000.006.003515",
-			"2b159ae92517595d2cddb31193f5ed702ca3f803" },
+			"2b159ae92517595d2cddb31193f5ed702ca3f803",
+			0x1002, 0x67b0 },
 		    { FU_ROM_KIND_ATI, /* atombios, with serial */
 			"Asus.HD7970.3072.121018.rom",
 			"015.023.000.002.000000",
-			"bceb6cd2adfc0b84ed92065bead4fa98ec70124e" },
+			"bceb6cd2adfc0b84ed92065bead4fa98ec70124e",
+			0x1002, 0x6798 },
 		    { FU_ROM_KIND_NVIDIA,
 			"Asus.GTX480.1536.100406_1.rom",
 			"70.00.1A.00.02",
-			"3fcab24e60934850246fcfc4f42eceb32540a0ad" },
+			"3fcab24e60934850246fcfc4f42eceb32540a0ad",
+			0x10de, 0x06c0 },
 		    { FU_ROM_KIND_NVIDIA, /* nvgi */
 			"Asus.GTX980.4096.140905.rom",
 			"84.04.1F.00.02",
-			"f314b90d4279935726ae2752bd5ec29e66140ad1" },
+			"f314b90d4279935726ae2752bd5ec29e66140ad1",
+			0x10de, 0x13c0 },
 		    { FU_ROM_KIND_NVIDIA, /* nvgi, with serial */
 			"Asus.TitanBlack.6144.140212.rom",
 			"80.80.4E.00.01",
-			"e86482f5ce29f3f8468cb4077ab72f6f9c9abfd2" },
-		    { FU_ROM_KIND_UNKNOWN, NULL, NULL, NULL }
+			"e86482f5ce29f3f8468cb4077ab72f6f9c9abfd2",
+			0x10de, 0x100c },
+		    { FU_ROM_KIND_UNKNOWN, NULL, NULL, NULL, 0x0000, 0x0000 }
 		};
 
 	for (i = 0; data[i].fn != NULL; i++) {
@@ -110,6 +118,8 @@ fu_rom_func (void)
 		g_assert_cmpstr (fu_rom_get_version (rom), ==, data[i].ver);
 		g_assert_cmpstr (fu_rom_get_checksum (rom), ==, data[i].csum);
 		g_assert_cmpint (fu_rom_get_kind (rom), ==, data[i].kind);
+		g_assert_cmpint (fu_rom_get_vendor (rom), ==, data[i].vendor);
+		g_assert_cmpint (fu_rom_get_model (rom), ==, data[i].model);
 	}
 }
 

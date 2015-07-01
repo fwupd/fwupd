@@ -45,6 +45,9 @@ struct _FuRomPrivate
 	GInputStream			*stream;
 	FuRomKind			 kind;
 	gchar				*version;
+	guint16				 vendor;
+	guint16				 model;
+	guint16				 rom_length;
 };
 
 G_DEFINE_TYPE (FuRom, fu_rom, G_TYPE_OBJECT)
@@ -63,6 +66,8 @@ fu_rom_kind_to_string (FuRomKind kind)
 		return "nvidia";
 	if (kind == FU_ROM_KIND_INTEL)
 		return "intel";
+	if (kind == FU_ROM_KIND_PCI)
+		return "pci";
 	return NULL;
 }
 
@@ -117,6 +122,115 @@ fu_rom_find_and_blank_serial_numbers (guint8 *buffer, guint buffer_sz)
 	}
 }
 
+/* data from http://resources.infosecinstitute.com/pci-expansion-rom/ */
+typedef struct {
+	guint8	 rom_signature[2];	/* 0x55 0xaa */
+	guint8	 rom_size;		/* of 512 bytes */
+	guint8	 entry_point[3];
+	guint8	 reserved[18];
+	guint16	 cpi_ptr;
+} FuRomPciHeader;
+
+typedef struct {
+	guint8	 signature[4];		/* PCIR */
+	guint16	 vendor_id;
+	guint16	 device_id;
+	guint16	 device_list_ptr;
+	guint16	 pci_data_length;
+	guint8	 pci_data_revision;	/* expected 3 */
+	guint8	 class_code[3];
+	guint16	 image_len;		/* of 512 bytes */
+	guint16	 revision_level;
+	guint8	 code_type;
+	guint8	 last_image_indicator;	/* 1 = last image */
+	guint16	 max_runtime_len;	/* of 512 bytes */
+	guint16	 config_header_ptr;
+	guint16	 dmtf_clp_entry_point;
+} FuRomPciData;
+
+/**
+ * fu_rom_pci_get_data:
+ **/
+static FuRomPciData *
+fu_rom_pci_get_data (FuRomPciHeader *hdr, gssize sz)
+{
+	FuRomPciData *dtr;
+
+	/* check valid */
+	if (hdr == NULL ||
+	    hdr->cpi_ptr == 0x0000 ||
+	    hdr->cpi_ptr > hdr->rom_size * 512) {
+		g_debug ("No PCI DATA");
+		return NULL;
+	}
+
+	/* gahh, CPI is out of the first chunk */
+	if (hdr->cpi_ptr > sz) {
+		g_debug ("No available PCI DATA");
+		return NULL;
+	}
+
+	/* check signature */
+	dtr = (FuRomPciData *) &((guint8 *)hdr)[hdr->cpi_ptr];
+	if (dtr == NULL ||
+	    dtr->signature == NULL ||
+	    memcmp (dtr->signature, "PCIR", 4) != 0) {
+		g_debug ("Not PCI DATA");
+		return NULL;
+	}
+	g_debug ("VendorID:  0x%04x", dtr->vendor_id);
+	g_debug ("DeviceID:  0x%04x", dtr->device_id);
+	g_debug ("DevList:   0x%04x", dtr->device_list_ptr);
+	g_debug ("DataLen:   0x%04x", dtr->pci_data_length);
+	g_debug ("DataRev:   0x%04x", dtr->pci_data_revision);
+	g_debug ("ImageLen:  0x%04x", dtr->image_len * 512);
+	g_debug ("RevLevel:  0x%04x", dtr->revision_level);
+	g_debug ("CodeType:  0x%02x", dtr->code_type);
+	g_debug ("LastImg:   0x%02x [%s]", dtr->last_image_indicator,
+		 dtr->last_image_indicator == 0x80 ? "yes" : "no");
+	g_debug ("MaxRunLen: 0x%04x", dtr->max_runtime_len);
+	g_debug ("ConfigHdr: 0x%04x", dtr->config_header_ptr);
+	g_debug ("ClpPtr:    0x%04x", dtr->dmtf_clp_entry_point);
+	return dtr;
+}
+
+/**
+ * fu_rom_pci_get_header:
+ **/
+static FuRomPciHeader *
+fu_rom_pci_get_header (guint8 *buffer, gssize sz)
+{
+	FuRomPciHeader *hdr = (FuRomPciHeader *) buffer;
+	guint i;
+	_cleanup_string_free_ GString *str = NULL;
+
+	/* check signature */
+	if (hdr == NULL ||
+	    hdr->rom_signature == NULL ||
+	    memcmp (hdr->rom_signature, "\x55\xaa", 2) != 0) {
+		g_debug ("Not PCI ROM");
+		return NULL;
+	}
+
+	/* print details about the header */
+	g_debug ("RomSize:   0x%04x", hdr->rom_size * 512);
+	g_debug ("EntryPnt:  0x%02x%02x%02x",
+		 hdr->entry_point[0],
+		 hdr->entry_point[1],
+		 hdr->entry_point[2]);
+	str = g_string_new ("");
+	for (i = 0; i < 18; i++) {
+		gchar tmp = '?';
+		if (g_ascii_isprint (hdr->reserved[i]))
+			tmp = hdr->reserved[i];
+		g_string_append_printf (str, "%02x [%c] ",
+					hdr->reserved[i], tmp);
+	}
+	g_debug ("Reserved:  %s", str->str);
+	g_debug ("CpiPtr:    0x%04x", hdr->cpi_ptr);
+	return hdr;
+}
+
 /**
  * fu_rom_load_file:
  **/
@@ -124,7 +238,9 @@ gboolean
 fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **error)
 {
 	FuRomPrivate *priv = rom->priv;
-	const guint block_sz = 4096;
+	FuRomPciData *dtr = NULL;
+	FuRomPciHeader *hdr = NULL;
+	const guint block_sz = 0x4000;
 	guint8 buffer[block_sz];
 	gchar *str;
 	guint hdr_sz = 0;
@@ -178,8 +294,21 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 	/* firmware magic bytes */
 	if (memcmp (buffer + hdr_sz, "\x55\xaa", 2) == 0) {
 
+		/* find generic PCI option ROM */
+		g_debug ("Filename: %s", g_file_get_path (file));
+		hdr = fu_rom_pci_get_header (&buffer[hdr_sz], sz - hdr_sz);
+		if (hdr != NULL) {
+			priv->rom_length = hdr->rom_size * 512;
+			dtr = fu_rom_pci_get_data (hdr, sz - hdr_sz);
+			if (dtr != NULL) {
+				priv->vendor = dtr->vendor_id;
+				priv->model = dtr->device_id;
+				priv->kind = FU_ROM_KIND_PCI;
+			}
+		}
+
 		/* detect intel header */
-		if (memcmp (buffer + 0x06, "00000000000", 11) == 0)
+		if (memcmp (hdr->reserved, "00000000000", 11) == 0)
 			hdr_sz = (buffer[0x1b] << 8) + buffer[0x1a];
 
 		if (memcmp (buffer + hdr_sz + 0x04, "K740", 4) == 0) {
@@ -190,12 +319,6 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 			hdr_sz += (buffer[hdr_sz + 23] << 8) + buffer[hdr_sz + 22];
 		} else if (memcmp(buffer + 0x30, " 761295520", 10) == 0) {
 			priv->kind = FU_ROM_KIND_ATI;
-		} else {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Failed to detect firmware kind");
-			return FALSE;
 		}
 	} else {
 		g_set_error (error,
@@ -206,8 +329,26 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 		return FALSE;
 	}
 
+	/* nothing */
+	if (priv->kind == FU_ROM_KIND_UNKNOWN) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to detect firmware kind");
+		return FALSE;
+	}
+
 	/* find version string */
 	switch (priv->kind) {
+	case FU_ROM_KIND_PCI:
+
+		/* ARC storage */
+		if (memcmp (hdr->reserved, "\0\0ARC", 5) == 0) {
+			str = (gchar *) fu_rom_strstr_bin (buffer, sz, "BIOS: ");
+			if (str != NULL)
+				priv->version = g_strdup (str + 6);
+		}
+
 	case FU_ROM_KIND_NVIDIA:
 
 		/* static location for some firmware */
@@ -323,6 +464,26 @@ fu_rom_get_version (FuRom *rom)
 }
 
 /**
+ * fu_rom_get_vendor:
+ **/
+guint16
+fu_rom_get_vendor (FuRom *rom)
+{
+	g_return_val_if_fail (FU_IS_ROM (rom), 0x0000);
+	return rom->priv->vendor;
+}
+
+/**
+ * fu_rom_get_model:
+ **/
+guint16
+fu_rom_get_model (FuRom *rom)
+{
+	g_return_val_if_fail (FU_IS_ROM (rom), 0x0000);
+	return rom->priv->model;
+}
+
+/**
  * fu_rom_generate_checksum:
  *
  * This adds the entire firmware image to the checksum data.
@@ -331,7 +492,7 @@ gboolean
 fu_rom_generate_checksum (FuRom *rom, GCancellable *cancellable, GError **error)
 {
 	FuRomPrivate *priv = rom->priv;
-	const guint block_sz = 4096;
+	const guint block_sz = 0x4000;
 	gssize cnt = block_sz;
 	guint8 buffer[block_sz];
 
@@ -351,7 +512,14 @@ fu_rom_generate_checksum (FuRom *rom, GCancellable *cancellable, GError **error)
 		fu_rom_find_and_blank_serial_numbers (buffer, sz);
 		g_checksum_update (priv->checksum_wip, buffer, sz);
 	}
-	g_debug ("read %" G_GSSIZE_FORMAT " bytes from ROM", cnt);
+
+	/* is the data wrapped up, e.g. NVGI */
+	if (priv->rom_length == 0 || cnt <= priv->rom_length) {
+		g_debug ("read %" G_GSSIZE_FORMAT " bytes from ROM", cnt);
+	} else {
+		g_debug ("read %" G_GSSIZE_FORMAT " bytes from ROM, %" G_GSIZE_FORMAT
+			 " bytes more than expected", cnt, cnt - priv->rom_length);
+	}
 
 	return TRUE;
 }

@@ -55,6 +55,7 @@ typedef enum {
 	FU_ROM_KIND_ATI,
 	FU_ROM_KIND_NVIDIA,
 	FU_ROM_KIND_INTEL,
+	FU_ROM_KIND_PCI,
 	FU_ROM_KIND_LAST
 } FuRomKind;
 
@@ -71,6 +72,8 @@ gboolean	 fu_rom_generate_checksum		(FuRom		*rom,
 FuRomKind	 fu_rom_get_kind			(FuRom		*rom);
 const gchar	*fu_rom_get_version			(FuRom		*rom);
 const gchar	*fu_rom_get_checksum			(FuRom		*rom);
+guint16		 fu_rom_get_vendor			(FuRom		*rom);
+guint16		 fu_rom_get_model			(FuRom		*rom);
 const gchar	*fu_rom_kind_to_string			(FuRomKind	 kind);
 
 G_END_DECLS
