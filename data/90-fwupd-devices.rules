@@ -24,4 +24,4 @@ ENV{FWUPD_GUID}=="*?", ENV{ID_MODEL}=="", IMPORT{builtin}="usb_id"
 ENV{FWUPD_GUID}=="*?", ENV{ID_MODEL_FROM_DATABASE}=="", IMPORT{builtin}="hwdb --subsystem=usb"
 
 # PCI cards with ROM
-SUBSYSTEM=="pci", TEST=="/sys$devpath/rom", ENV{FWUPD_GUID}="$attr{vendor}:$attr{device}:$attr{subsystem_vendor}:$attr{subsystem_device}"
+SUBSYSTEM=="pci", TEST=="/sys$devpath/rom", ENV{FWUPD_GUID}="$attr{vendor}:$attr{device}"
