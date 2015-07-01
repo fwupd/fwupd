@@ -33,6 +33,7 @@
 #include <stdlib.h>
 
 #include "fu-cleanup.h"
+#include "fu-guid.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
 #include "fu-rom.h"
@@ -820,6 +821,78 @@ fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_verify_update:
+ **/
+static gboolean
+fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	guint i;
+	_cleanup_object_unref_ AsStore *store = NULL;
+	_cleanup_object_unref_ GFile *xml_file = NULL;
+
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'filename.xml' 'filename.rom'");
+		return FALSE;
+	}
+	store = as_store_new ();
+
+	/* open existing file */
+	xml_file = g_file_new_for_path (values[0]);
+	if (g_file_query_exists (xml_file, NULL)) {
+		if (!as_store_from_file (store, xml_file, NULL, NULL, error))
+			return FALSE;
+	}
+
+	/* add new values */
+	as_store_set_api_version (store, 0.9);
+	for (i = 1; values[i] != NULL; i++) {
+		_cleanup_free_ gchar *guid = NULL;
+		_cleanup_free_ gchar *id = NULL;
+		_cleanup_object_unref_ AsApp *app = NULL;
+		_cleanup_object_unref_ AsRelease *rel = NULL;
+		_cleanup_object_unref_ FuRom *rom = NULL;
+		_cleanup_object_unref_ GFile *file = NULL;
+		_cleanup_error_free_ GError *error_local = NULL;
+
+		file = g_file_new_for_path (values[i]);
+		rom = fu_rom_new ();
+		g_print ("Processing %s...\n", values[i]);
+		if (!fu_rom_load_file (rom, file, NULL, &error_local)) {
+			g_print ("%s\n", error_local->message);
+			continue;
+		}
+		if (!fu_rom_generate_checksum (rom, NULL, error))
+			return FALSE;
+
+		/* add app to store */
+		app = as_app_new ();
+		id = g_strdup_printf ("0x%04x:0x%04x",
+				      fu_rom_get_vendor (rom),
+				      fu_rom_get_model (rom));
+		guid = fu_guid_generate_from_string (id);
+		as_app_set_id (app, guid, -1);
+		as_app_set_id_kind (app, AS_ID_KIND_FIRMWARE);
+		as_app_set_source_kind (app, AS_APP_SOURCE_KIND_INF);
+		rel = as_release_new ();
+		as_release_set_version (rel, fu_rom_get_version (rom), -1);
+		as_release_set_checksum (rel, G_CHECKSUM_SHA1,
+					 fu_rom_get_checksum (rom), -1);
+		as_app_add_release (app, rel);
+		as_store_add_app (store, app);
+	}
+	if (!as_store_to_file (store, xml_file,
+			       AS_NODE_TO_XML_FLAG_ADD_HEADER |
+			       AS_NODE_TO_XML_FLAG_FORMAT_INDENT |
+			       AS_NODE_TO_XML_FLAG_FORMAT_MULTILINE,
+			       NULL, error))
+		return FALSE;
+	return TRUE;
+}
+
+/**
  * fu_util_update_metadata:
  **/
 static gboolean
@@ -1315,6 +1388,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Dump the ROM checksum"),
 		     fu_util_dump_rom);
+	fu_util_add (priv->cmd_array,
+		     "verify-update",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Update the stored metadata with current ROM contents"),
+		     fu_util_verify_update);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,

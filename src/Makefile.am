@@ -36,6 +36,8 @@ bin_PROGRAMS = fwupdmgr
 fwupdmgr_SOURCES =					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-guid.c					\
+	fu-guid.h					\
 	fu-pending.c					\
 	fu-pending.h					\
 	fu-rom.c					\
