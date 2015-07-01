@@ -347,6 +347,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 			if (str != NULL)
 				priv->version = g_strdup (str + 6);
 		}
+		break;
 
 	case FU_ROM_KIND_NVIDIA:
 
@@ -379,13 +380,8 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 		if (priv->version == NULL &&
 		    memcmp (buffer + hdr_sz + 0xfa, "VBIOS Ver", 9) == 0)
 			priv->version = g_strdup ((gchar *) &buffer[0xfa + hdr_sz + 9]);
-
-		/* urgh */
-		if (priv->version != NULL) {
-			g_strstrip (priv->version);
-			g_strdelimit (priv->version, "\r\n ", '\0');
-		}
 		break;
+
 	case FU_ROM_KIND_INTEL:
 		if (priv->version == NULL) {
 			/* 2175_RYan PC 14.34  06/06/2013  21:27:53 */
@@ -409,6 +405,8 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 				g_strdelimit (priv->version, "\r\n ", '\0');
 			}
 		}
+		break;
+
 	case FU_ROM_KIND_ATI:
 		if (priv->version == NULL) {
 			str = (gchar *) fu_rom_strstr_bin (buffer, sz, " VER0");
@@ -424,6 +422,12 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 		break;
 	default:
 		break;
+	}
+
+	/* fix */
+	if (priv->version != NULL) {
+		g_strstrip (priv->version);
+		g_strdelimit (priv->version, "\r\n ", '\0');
 	}
 
 	/* update checksum */
