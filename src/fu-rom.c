@@ -295,7 +295,6 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 	if (memcmp (buffer + hdr_sz, "\x55\xaa", 2) == 0) {
 
 		/* find generic PCI option ROM */
-		g_debug ("Filename: %s", g_file_get_path (file));
 		hdr = fu_rom_pci_get_header (&buffer[hdr_sz], sz - hdr_sz);
 		if (hdr != NULL) {
 			priv->rom_length = hdr->rom_size * 512;
