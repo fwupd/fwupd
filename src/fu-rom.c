@@ -289,7 +289,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 	}
 
 	/* ensure we got enough data to fill the buffer */
-	while (sz < 0x4000) {
+	while (sz < block_sz) {
 		gssize sz_chunk;
 		sz_chunk = g_input_stream_read (priv->stream,
 						buffer + sz,
