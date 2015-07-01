@@ -782,26 +782,40 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	_cleanup_object_unref_ FuRom *rom = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
+	guint i;
+	_cleanup_object_unref_ GFile *xml_file = NULL;
 
-	if (g_strv_length (values) != 1) {
+	if (g_strv_length (values) == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "Invalid arguments: expected 'filename.rom'");
 		return FALSE;
 	}
+	for (i = 0; values[i] != NULL; i++) {
+		_cleanup_free_ gchar *guid = NULL;
+		_cleanup_free_ gchar *id = NULL;
+		_cleanup_object_unref_ FuRom *rom = NULL;
+		_cleanup_object_unref_ GFile *file = NULL;
+		_cleanup_error_free_ GError *error_local = NULL;
 
-	file = g_file_new_for_path (values[0]);
-	rom = fu_rom_new ();
-	if (!fu_rom_load_file (rom, file, NULL, error))
-		return FALSE;
-	if (!fu_rom_generate_checksum (rom, NULL, error))
-		return FALSE;
-	g_print ("%s -> %s [Version: %s]\n", values[0],
-		 fu_rom_get_checksum (rom),
-		 fu_rom_get_version (rom));
+		file = g_file_new_for_path (values[i]);
+		rom = fu_rom_new ();
+		g_print ("%s:\n", values[i]);
+		if (!fu_rom_load_file (rom, file, NULL, &error_local)) {
+			g_print ("%s\n", error_local->message);
+			continue;
+		}
+		if (!fu_rom_generate_checksum (rom, NULL, &error_local)) {
+			g_print ("%s\n", error_local->message);
+			continue;
+		}
+		g_print ("0x%04x:0x%04x -> %s [%s]\n",
+			 fu_rom_get_vendor (rom),
+			 fu_rom_get_model (rom),
+			 fu_rom_get_checksum (rom),
+			 fu_rom_get_version (rom));
+	}
 	return TRUE;
 }
 
