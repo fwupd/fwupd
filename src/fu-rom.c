@@ -245,6 +245,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 	gchar *str;
 	guint hdr_sz = 0;
 	guint i;
+	guint number_reads = 0;
 	gssize sz;
 	_cleanup_free_ gchar *fn = NULL;
 	_cleanup_error_free_ GError *error_local = NULL;
@@ -285,6 +286,32 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 			     FWUPD_ERROR_INVALID_FILE,
 			     "Firmware too small: %" G_GSIZE_FORMAT " bytes", sz);
 		return FALSE;
+	}
+
+	/* ensure we got enough data to fill the buffer */
+	while (sz < 0x4000) {
+		gssize sz_chunk;
+		sz_chunk = g_input_stream_read (priv->stream,
+						buffer + sz,
+						block_sz - sz,
+						cancellable,
+						error);
+		if (sz_chunk == 0)
+			break;
+		g_debug ("ROM returned 0x%04x bytes, adding 0x%04x...",
+			 (guint) sz, (guint) sz_chunk);
+		if (sz_chunk < 0)
+			return FALSE;
+		sz += sz_chunk;
+
+		/* check the firmware isn't serving us small chunks */
+		if (number_reads++ > 16) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "firmware not fulfilling requests");
+			return FALSE;
+		}
 	}
 
 	/* detect signed header and skip to option ROM */
