@@ -807,10 +807,6 @@ fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 			g_print ("%s\n", error_local->message);
 			continue;
 		}
-		if (!fu_rom_generate_checksum (rom, NULL, &error_local)) {
-			g_print ("%s\n", error_local->message);
-			continue;
-		}
 		g_print ("0x%04x:0x%04x -> %s [%s]\n",
 			 fu_rom_get_vendor (rom),
 			 fu_rom_get_model (rom),
@@ -864,8 +860,6 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 			g_print ("%s\n", error_local->message);
 			continue;
 		}
-		if (!fu_rom_generate_checksum (rom, NULL, error))
-			return FALSE;
 
 		/* add app to store */
 		app = as_app_new ();

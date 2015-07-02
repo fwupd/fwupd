@@ -94,8 +94,6 @@ fu_provider_udev_verify (FuProvider *provider,
 	rom = fu_rom_new ();
 	if (!fu_rom_load_file (rom, file, NULL, error))
 		return FALSE;
-	if (!fu_rom_generate_checksum (rom, NULL, error))
-		return FALSE;
 	fu_device_set_metadata (device, FU_DEVICE_KEY_FIRMWARE_HASH,
 				fu_rom_get_checksum (rom));
 	return TRUE;

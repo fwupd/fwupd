@@ -34,6 +34,28 @@ static void fu_rom_finalize			 (GObject *object);
 
 #define FU_ROM_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_ROM, FuRomPrivate))
 
+/* data from http://resources.infosecinstitute.com/pci-expansion-rom/ */
+typedef struct {
+	guint32		 rom_len;
+	guint32		 entry_point;
+	guint8		 reserved[18];
+	guint16		 cpi_ptr;
+	guint16		 vendor_id;
+	guint16		 device_id;
+	guint16		 device_list_ptr;
+	guint16		 data_len;
+	guint8		 data_rev;
+	guint32		 class_code;
+	guint32		 image_len;
+	guint16		 revision_level;
+	guint8		 code_type;
+	guint8		 last_image;
+	guint32		 max_runtime_len;
+	guint16		 config_header_ptr;
+	guint16		 dmtf_clp_ptr;
+	guint32		 offset_in_buffer;
+} FuRomPciHeader;
+
 /**
  * FuRomPrivate:
  *
@@ -47,7 +69,7 @@ struct _FuRomPrivate
 	gchar				*version;
 	guint16				 vendor;
 	guint16				 model;
-	guint16				 rom_length;
+	GPtrArray			*hdrs; /* of FuRomPciHeader */
 };
 
 G_DEFINE_TYPE (FuRom, fu_rom, G_TYPE_OBJECT)
@@ -79,6 +101,8 @@ fu_rom_strstr_bin (guint8 *haystack, gsize haystack_len, const gchar *needle)
 {
 	guint i;
 	guint needle_len = strlen (needle);
+	if (needle_len > haystack_len)
+		return NULL;
 	for (i = 0; i < haystack_len - needle_len; i++) {
 		if (memcmp (haystack + i, needle, needle_len) == 0)
 			return &haystack[i];
@@ -105,93 +129,268 @@ fu_rom_blank_serial_numbers (guint8 *buffer, guint buffer_sz)
 }
 
 /**
- * fu_rom_find_and_blank_serial_numbers:
+ * fu_rom_get_hex_dump:
+ **/
+static gchar *
+fu_rom_get_hex_dump (guint8 *buffer, gssize sz)
+{
+	GString *str = NULL;
+	guint i;
+	str = g_string_new ("");
+	for (i = 0; i < sz; i++) {
+		g_string_append_printf (str, "%02x ", buffer[i]);
+	}
+	g_string_append (str, "   ");
+	for (i = 0; i < sz; i++) {
+		gchar tmp = '?';
+		if (g_ascii_isprint (buffer[i]))
+			tmp = buffer[i];
+		g_string_append_printf (str, "%c", tmp);
+	}
+	return g_string_free (str, FALSE);
+}
+
+typedef struct {
+	guint8		segment_kind;
+	guint16		next_offset;
+} FooRomPciCertificateHdr;
+
+/**
+ * fu_rom_pci_print_certificate_data:
  **/
 static void
-fu_rom_find_and_blank_serial_numbers (guint8 *buffer, guint buffer_sz)
+fu_rom_pci_print_certificate_data (guint8 *buffer, gssize sz)
 {
-	guint8 *tmp;
-	guint len;
+	guint16 off = 0;
+	_cleanup_free_ gchar *hdr_str = NULL;
 
-	if (buffer_sz < 4)
-		return;
-	tmp = fu_rom_strstr_bin (buffer, buffer_sz, "PPID");
-	if (tmp != NULL) {
-		len = fu_rom_blank_serial_numbers (tmp, buffer_sz - (tmp - buffer));
-		g_debug ("cleared %i chars", len);
+	/* 27 byte header, unknown purpose */
+	hdr_str = fu_rom_get_hex_dump (buffer+off, 27);
+	g_debug ("    ISBN header: %s", hdr_str);
+	buffer += 27;
+
+	while (TRUE) {
+		/* 29 byte header to the segment, then data:
+		 * 0x01      = type. 0x1 = certificate, 0x2 = hashes?
+		 * 0x13,0x14 = offset to next segment */
+		FooRomPciCertificateHdr h;
+		_cleanup_free_ gchar *segment_str = NULL;
+		segment_str = fu_rom_get_hex_dump (buffer+off, 29);
+		g_debug ("     ISBN segment: %s", segment_str);
+		h.segment_kind = buffer[off+1];
+		h.next_offset = ((guint16) buffer[off+14] << 8) + buffer[off+13];
+		if (h.next_offset == 0x0000) {
+			/* length of this segment must be (sz - off - 27) */
+			break;
+		}
+		if (h.segment_kind == 0x01 && FALSE) {
+			_cleanup_free_ gchar *cert = NULL;
+			cert = g_strndup ((gchar*) buffer + off + 29, h.next_offset - off - 29);
+			g_debug ("%s(%i)", cert, h.next_offset - off - 29);
+		}
+		off = h.next_offset;
 	}
 }
 
-/* data from http://resources.infosecinstitute.com/pci-expansion-rom/ */
-typedef struct {
-	guint8	 rom_signature[2];	/* 0x55 0xaa */
-	guint8	 rom_size;		/* of 512 bytes */
-	guint8	 entry_point[3];
-	guint8	 reserved[18];
-	guint16	 cpi_ptr;
-} FuRomPciHeader;
+/**
+ * fu_rom_pci_code_type_to_string:
+ **/
+static const gchar *
+fu_rom_pci_code_type_to_string (guint8 code_type)
+{
+	if (code_type == 0)
+		return "Intel86";
+	if (code_type == 1)
+		return "OpenFirmware";
+	if (code_type == 2)
+		return "PA-RISC";
+	if (code_type == 3)
+		return "EFI";
+	return "reserved";
+}
 
-typedef struct {
-	guint8	 signature[4];		/* PCIR */
-	guint16	 vendor_id;
-	guint16	 device_id;
-	guint16	 device_list_ptr;
-	guint16	 pci_data_length;
-	guint8	 pci_data_revision;	/* expected 3 */
-	guint8	 class_code[3];
-	guint16	 image_len;		/* of 512 bytes */
-	guint16	 revision_level;
-	guint8	 code_type;
-	guint8	 last_image_indicator;	/* 1 = last image */
-	guint16	 max_runtime_len;	/* of 512 bytes */
-	guint16	 config_header_ptr;
-	guint16	 dmtf_clp_entry_point;
-} FuRomPciData;
+/**
+ * fu_rom_pci_header_get_checksum:
+ **/
+static guint8
+fu_rom_pci_header_get_checksum (FuRomPciHeader *hdr, guint8 *buffer, gssize sz)
+{
+	guint8 chksum_check = 0x00;
+	guint i;
+	for (i = 0; i < hdr->image_len; i++)
+		chksum_check += buffer[hdr->offset_in_buffer + i];
+	return chksum_check;
+}
+
+/**
+ * fu_rom_pci_print_header:
+ **/
+static void
+fu_rom_pci_print_header (FuRomPciHeader *hdr, guint8 *buffer, gssize sz)
+{
+	guint8 chksum_check;
+	_cleanup_free_ gchar *data_str = NULL;
+	_cleanup_free_ gchar *reserved_str = NULL;
+
+	g_debug ("PCI Header");
+	g_debug (" RomSize:   0x%04x", hdr->rom_len);
+	g_debug (" EntryPnt:  0x%06x", hdr->entry_point);
+	reserved_str = fu_rom_get_hex_dump (hdr->reserved, 18);
+	g_debug (" Reserved:  %s", reserved_str);
+	g_debug (" CpiPtr:    0x%04x", hdr->cpi_ptr);
+
+	/* print the data */
+	buffer += hdr->offset_in_buffer + hdr->cpi_ptr;
+	g_debug ("  PCI Data");
+	g_debug ("   VendorID:  0x%04x", hdr->vendor_id);
+	g_debug ("   DeviceID:  0x%04x", hdr->device_id);
+	g_debug ("   DevList:   0x%04x", hdr->device_list_ptr);
+	g_debug ("   DataLen:   0x%04x", hdr->data_len);
+	g_debug ("   DataRev:   0x%04x", hdr->data_rev);
+	if (hdr->image_len < 0x0f) {
+		data_str = fu_rom_get_hex_dump (&buffer[hdr->data_len], hdr->image_len);
+		g_debug ("   ImageLen:  0x%04x [%s]", hdr->image_len, data_str);
+	} else {
+		data_str = fu_rom_get_hex_dump (&buffer[hdr->data_len], 0x0f);
+		g_debug ("   ImageLen:  0x%04x [%s...]", hdr->image_len, data_str);
+	}
+	g_debug ("   RevLevel:  0x%04x", hdr->revision_level);
+	g_debug ("   CodeType:  0x%02x [%s]", hdr->code_type,
+		 fu_rom_pci_code_type_to_string (hdr->code_type));
+	g_debug ("   LastImg:   0x%02x [%s]", hdr->last_image,
+		 hdr->last_image == 0x80 ? "yes" : "no");
+	g_debug ("   MaxRunLen: 0x%04x", hdr->max_runtime_len);
+	g_debug ("   ConfigHdr: 0x%04x", hdr->config_header_ptr);
+	g_debug ("   ClpPtr:    0x%04x", hdr->dmtf_clp_ptr);
+
+	/* dump the ISBN */
+	if (hdr->code_type == 0x70 &&
+	    memcmp (&buffer[hdr->data_len], "ISBN", 4) == 0) {
+		fu_rom_pci_print_certificate_data (&buffer[hdr->data_len],
+						   hdr->image_len);
+	}
+
+	/* verify the checksum byte */
+	if (hdr->image_len <= sz && hdr->image_len > 0) {
+		buffer -= hdr->cpi_ptr;
+		chksum_check = fu_rom_pci_header_get_checksum (hdr, buffer, sz);
+		if (chksum_check == 0x00) {
+			g_debug ("   ChkSum:    0x%02x [valid]",
+				 buffer[hdr->image_len-1]);
+		} else {
+			g_debug ("   ChkSum:    0x%02x [failed, got 0x%02x]",
+				 buffer[hdr->image_len-1],
+				 chksum_check);
+		}
+	} else {
+		g_debug ("   ChkSum:    0x?? [unknown]");
+	}
+}
+
+/**
+ * fu_rom_find_and_blank_serial_numbers:
+ **/
+static void
+fu_rom_find_and_blank_serial_numbers (FuRom *rom, guint8 *buffer, gsize sz)
+{
+	FuRomPrivate *priv = rom->priv;
+	FuRomPciHeader *hdr;
+	guint i;
+	guint8 *tmp;
+
+	for (i = 0; i < priv->hdrs->len; i++) {
+		guint32 off;
+
+		hdr = g_ptr_array_index (priv->hdrs, i);
+		g_debug ("Looking for serial numbers at ROM 0x%04x", hdr->offset_in_buffer);
+
+		if (priv->kind == FU_ROM_KIND_PCI)
+			continue;
+		if (priv->kind == FU_ROM_KIND_INTEL)
+			continue;
+		if (hdr->image_len < 4)
+			continue;
+		if (hdr->image_len > sz)
+			continue;
+
+		/* Only NVIDIA and ATI embed the PPID in the ROM */
+		off = hdr->offset_in_buffer;
+		off += hdr->data_len;
+		if (off > sz)
+			continue;
+		tmp = fu_rom_strstr_bin (&buffer[off], hdr->image_len, "PPID");
+		if (tmp != NULL) {
+			guint len;
+			guint8 chk;
+			len = fu_rom_blank_serial_numbers (tmp, sz - (tmp - buffer));
+			g_debug ("cleared %i chars @ 0x%04lx", len, tmp - buffer);
+
+			/* we have to fix the checksum */
+			chk = fu_rom_pci_header_get_checksum (hdr, buffer, sz);
+			buffer[hdr->offset_in_buffer + hdr->image_len - 1] -= chk;
+			fu_rom_pci_print_header (hdr, buffer, sz);
+		}
+	}
+}
 
 /**
  * fu_rom_pci_get_data:
  **/
-static FuRomPciData *
-fu_rom_pci_get_data (FuRomPciHeader *hdr, gssize sz)
+static gboolean
+fu_rom_pci_parse_data (FuRomPciHeader *hdr, guint8 *buffer, gssize sz)
 {
-	FuRomPciData *dtr;
-
 	/* check valid */
 	if (hdr == NULL ||
-	    hdr->cpi_ptr == 0x0000 ||
-	    hdr->cpi_ptr > hdr->rom_size * 512) {
+	    hdr->cpi_ptr == 0x0000) {
 		g_debug ("No PCI DATA");
-		return NULL;
+		return FALSE;
+	}
+	if (hdr->rom_len > 0 && hdr->cpi_ptr > hdr->rom_len) {
+		g_debug ("Invalid PCI DATA");
+		return FALSE;
 	}
 
 	/* gahh, CPI is out of the first chunk */
 	if (hdr->cpi_ptr > sz) {
 		g_debug ("No available PCI DATA");
-		return NULL;
+		return FALSE;
 	}
 
 	/* check signature */
-	dtr = (FuRomPciData *) &((guint8 *)hdr)[hdr->cpi_ptr];
-	if (dtr == NULL ||
-	    dtr->signature == NULL ||
-	    memcmp (dtr->signature, "PCIR", 4) != 0) {
-		g_debug ("Not PCI DATA");
-		return NULL;
+	if (memcmp (&buffer[hdr->cpi_ptr], "PCIR", 4) != 0) {
+		if (memcmp (&buffer[hdr->cpi_ptr], "RGIS", 4) == 0 ||
+		    memcmp (&buffer[hdr->cpi_ptr], "NPDS", 4) == 0 ||
+		    memcmp (&buffer[hdr->cpi_ptr], "NPDE", 4) == 0) {
+			g_debug ("-- using NVIDIA DATA quirk");
+		} else {
+			g_debug ("Not PCI DATA: %02x%02x%02x%02x [%c%c%c%c]",
+				 buffer[hdr->cpi_ptr+0], buffer[hdr->cpi_ptr+1],
+				 buffer[hdr->cpi_ptr+2], buffer[hdr->cpi_ptr+3],
+				 buffer[hdr->cpi_ptr+0], buffer[hdr->cpi_ptr+1],
+				 buffer[hdr->cpi_ptr+2], buffer[hdr->cpi_ptr+3]);
+			return FALSE;
+		}
 	}
-	g_debug ("VendorID:  0x%04x", dtr->vendor_id);
-	g_debug ("DeviceID:  0x%04x", dtr->device_id);
-	g_debug ("DevList:   0x%04x", dtr->device_list_ptr);
-	g_debug ("DataLen:   0x%04x", dtr->pci_data_length);
-	g_debug ("DataRev:   0x%04x", dtr->pci_data_revision);
-	g_debug ("ImageLen:  0x%04x", dtr->image_len * 512);
-	g_debug ("RevLevel:  0x%04x", dtr->revision_level);
-	g_debug ("CodeType:  0x%02x", dtr->code_type);
-	g_debug ("LastImg:   0x%02x [%s]", dtr->last_image_indicator,
-		 dtr->last_image_indicator == 0x80 ? "yes" : "no");
-	g_debug ("MaxRunLen: 0x%04x", dtr->max_runtime_len);
-	g_debug ("ConfigHdr: 0x%04x", dtr->config_header_ptr);
-	g_debug ("ClpPtr:    0x%04x", dtr->dmtf_clp_entry_point);
-	return dtr;
+
+	/* parse */
+	buffer += hdr->cpi_ptr;
+	hdr->vendor_id = ((guint16) buffer[0x05] << 8) + buffer[0x04];
+	hdr->device_id = ((guint16) buffer[0x07] << 8) + buffer[0x06];
+	hdr->device_list_ptr = ((guint16) buffer[0x09] << 8) + buffer[0x08];
+	hdr->data_len = ((guint16) buffer[0x0b] << 8) + buffer[0x0a];
+	hdr->data_rev = buffer[0x0c];
+	hdr->class_code = ((guint16) buffer[0x0f] << 16) +
+			  ((guint16) buffer[0x0e] << 8) +
+			  buffer[0x0d];
+	hdr->image_len = (((guint16) buffer[0x11] << 8) + buffer[0x10]) * 512;
+	hdr->revision_level = ((guint16) buffer[0x13] << 8) + buffer[0x12];
+	hdr->code_type = buffer[0x14];
+	hdr->last_image = buffer[0x15];
+	hdr->max_runtime_len = (((guint16) buffer[0x17] << 8) +
+				buffer[0x16]) * 512;
+	hdr->config_header_ptr = ((guint16) buffer[0x19] << 8) + buffer[0x18];
+	hdr->dmtf_clp_ptr = ((guint16) buffer[0x1b] << 8) + buffer[0x1a];
+	return TRUE;
 }
 
 /**
@@ -200,35 +399,152 @@ fu_rom_pci_get_data (FuRomPciHeader *hdr, gssize sz)
 static FuRomPciHeader *
 fu_rom_pci_get_header (guint8 *buffer, gssize sz)
 {
-	FuRomPciHeader *hdr = (FuRomPciHeader *) buffer;
-	guint i;
-	_cleanup_string_free_ GString *str = NULL;
+	FuRomPciHeader *hdr;
 
 	/* check signature */
-	if (hdr == NULL ||
-	    hdr->rom_signature == NULL ||
-	    memcmp (hdr->rom_signature, "\x55\xaa", 2) != 0) {
-		g_debug ("Not PCI ROM");
-		return NULL;
+	if (memcmp (buffer, "\x55\xaa", 2) != 0) {
+		if (memcmp (buffer, "\x56\x4e", 2) == 0) {
+			g_debug ("-- using NVIDIA ROM quirk");
+		} else {
+			_cleanup_free_ gchar *sig_str = NULL;
+			sig_str = fu_rom_get_hex_dump (buffer, 16);
+			g_debug ("Not PCI ROM %s", sig_str);
+			return NULL;
+		}
 	}
 
-	/* print details about the header */
-	g_debug ("RomSize:   0x%04x", hdr->rom_size * 512);
-	g_debug ("EntryPnt:  0x%02x%02x%02x",
-		 hdr->entry_point[0],
-		 hdr->entry_point[1],
-		 hdr->entry_point[2]);
-	str = g_string_new ("");
-	for (i = 0; i < 18; i++) {
-		gchar tmp = '?';
-		if (g_ascii_isprint (hdr->reserved[i]))
-			tmp = hdr->reserved[i];
-		g_string_append_printf (str, "%02x [%c] ",
-					hdr->reserved[i], tmp);
-	}
-	g_debug ("Reserved:  %s", str->str);
-	g_debug ("CpiPtr:    0x%04x", hdr->cpi_ptr);
+	/* decode structure */
+	hdr = g_new0 (FuRomPciHeader, 1);
+	hdr->rom_len = buffer[0x02] * 512;
+	hdr->entry_point = ((guint32) buffer[0x05] << 16) +
+			   ((guint16) buffer[0x04] << 8) +
+			   buffer[0x03];
+	memcpy (&hdr->reserved, &buffer[6], 18);
+	hdr->cpi_ptr = ((guint16) buffer[0x19] << 8) + buffer[0x18];
+
+	/* parse the header data */
+	g_debug ("looking for PCI DATA @ 0x%04x", hdr->cpi_ptr);
+	fu_rom_pci_parse_data (hdr, buffer, sz);
 	return hdr;
+}
+
+/**
+ * fu_rom_find_version_pci:
+ **/
+static gchar *
+fu_rom_find_version_pci (FuRomPciHeader *hdr, guint8 *buffer, gsize sz)
+{
+	gchar *str;
+
+	/* ARC storage */
+	if (memcmp (hdr->reserved, "\0\0ARC", 5) == 0) {
+		str = (gchar *) fu_rom_strstr_bin (buffer, sz, "BIOS: ");
+		if (str != NULL)
+			return g_strdup (str + 6);
+	}
+	return NULL;
+}
+
+/**
+ * fu_rom_find_version_nvidia:
+ **/
+static gchar *
+fu_rom_find_version_nvidia (FuRomPciHeader *hdr, guint8 *buffer, gsize sz)
+{
+	gchar *str;
+
+	/* static location for some firmware */
+	if (memcmp (buffer + 0x0d7, "Version ", 8) == 0)
+		return g_strdup ((gchar *) &buffer[0x0d7 + 8]);
+	if (memcmp (buffer + 0x155, "Version ", 8) == 0)
+		return g_strdup ((gchar *) &buffer[0x155 + 8]);
+
+	/* usual search string */
+	str = (gchar *) fu_rom_strstr_bin (buffer, sz, "Version ");
+	if (str != NULL)
+		return g_strdup (str + 8);
+
+	/* broken */
+	str = (gchar *) fu_rom_strstr_bin (buffer, sz, "Vension:");
+	if (str != NULL)
+		return g_strdup (str + 8);
+	str = (gchar *) fu_rom_strstr_bin (buffer, sz, "Version");
+	if (str != NULL)
+		return g_strdup (str + 7);
+
+	/* fallback to VBIOS */
+	if (memcmp (buffer + 0xfa, "VBIOS Ver", 9) == 0)
+		return g_strdup ((gchar *) &buffer[0xfa + 9]);
+	return NULL;
+}
+
+/**
+ * fu_rom_find_version_intel:
+ **/
+static gchar *
+fu_rom_find_version_intel (FuRomPciHeader *hdr, guint8 *buffer, gsize sz)
+{
+	gchar *str;
+
+	/* 2175_RYan PC 14.34  06/06/2013  21:27:53 */
+	str = (gchar *) fu_rom_strstr_bin (buffer, sz, "Build Number:");
+	if (str != NULL) {
+		guint i;
+		_cleanup_strv_free_ gchar **split = NULL;
+		split = g_strsplit (str + 14, " ", -1);
+		for (i = 0; split[i] != NULL; i++) {
+			if (g_strstr_len (split[i], -1, ".") == NULL)
+				continue;
+			return g_strdup (split[i]);
+		}
+	}
+
+	/* fallback to VBIOS */
+	str = (gchar *) fu_rom_strstr_bin (buffer, sz, "VBIOS ");
+	if (str != NULL)
+		return g_strdup (str + 6);
+	return NULL;
+}
+
+/**
+ * fu_rom_find_version_ati:
+ **/
+static gchar *
+fu_rom_find_version_ati (FuRomPciHeader *hdr, guint8 *buffer, gsize sz)
+{
+	gchar *str;
+
+	str = (gchar *) fu_rom_strstr_bin (buffer, sz, " VER0");
+	if (str != NULL)
+		return g_strdup (str + 4);
+
+	/* broken */
+	str = (gchar *) fu_rom_strstr_bin (buffer, sz, " VR");
+	if (str != NULL)
+		return g_strdup (str + 4);
+	return NULL;
+}
+
+/**
+ * fu_rom_find_version:
+ **/
+static gchar *
+fu_rom_find_version (FuRomKind kind, FuRomPciHeader *hdr,
+		     guint8 *buffer, gsize sz)
+{
+	/* narrow the search space down a bit */
+	buffer = &buffer[hdr->offset_in_buffer];
+	sz = hdr->rom_len;
+
+	if (kind == FU_ROM_KIND_PCI)
+		return fu_rom_find_version_pci (hdr, buffer, sz);
+	if (kind == FU_ROM_KIND_NVIDIA)
+		return fu_rom_find_version_nvidia (hdr, buffer, sz);
+	if (kind == FU_ROM_KIND_INTEL)
+		return fu_rom_find_version_intel (hdr, buffer, sz);
+	if (kind == FU_ROM_KIND_ATI)
+		return fu_rom_find_version_ati (hdr, buffer, sz);
+	return NULL;
 }
 
 /**
@@ -238,17 +554,16 @@ gboolean
 fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **error)
 {
 	FuRomPrivate *priv = rom->priv;
-	FuRomPciData *dtr = NULL;
 	FuRomPciHeader *hdr = NULL;
-	const guint block_sz = 0x4000;
-	guint8 buffer[block_sz];
-	gchar *str;
+	const gssize buffer_sz = 0x400000;
+	gssize sz;
+	guint32 jump = 0;
 	guint hdr_sz = 0;
 	guint i;
 	guint number_reads = 0;
-	gssize sz;
-	_cleanup_free_ gchar *fn = NULL;
 	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_free_ gchar *fn = NULL;
+	_cleanup_free_ guint8 *buffer = NULL;
 	_cleanup_object_unref_ GFileOutputStream *output_stream = NULL;
 
 	g_return_val_if_fail (FU_IS_ROM (rom), FALSE);
@@ -276,7 +591,8 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 	}
 
 	/* read out the header */
-	sz = g_input_stream_read (priv->stream, buffer, block_sz,
+	buffer = g_malloc (buffer_sz);
+	sz = g_input_stream_read (priv->stream, buffer, buffer_sz,
 				  cancellable, error);
 	if (sz < 0)
 		return FALSE;
@@ -289,11 +605,11 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 	}
 
 	/* ensure we got enough data to fill the buffer */
-	while (sz < block_sz) {
+	while (sz < buffer_sz) {
 		gssize sz_chunk;
 		sz_chunk = g_input_stream_read (priv->stream,
 						buffer + sz,
-						block_sz - sz,
+						buffer_sz - sz,
 						cancellable,
 						error);
 		if (sz_chunk == 0)
@@ -313,46 +629,88 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 			return FALSE;
 		}
 	}
+	g_debug ("ROM buffer filled %likb/%likb", sz / 0x400, buffer_sz / 0x400);
 
-	/* detect signed header and skip to option ROM */
+	/* detect optional IFR header and skip to option ROM */
 	if (memcmp (buffer, "NVGI", 4) == 0)
 		hdr_sz = GUINT16_FROM_BE (buffer[0x15]);
 
-	/* firmware magic bytes */
-	if (memcmp (buffer + hdr_sz, "\x55\xaa", 2) == 0) {
-
-		/* find generic PCI option ROM */
-		hdr = fu_rom_pci_get_header (&buffer[hdr_sz], sz - hdr_sz);
-		if (hdr != NULL) {
-			priv->rom_length = hdr->rom_size * 512;
-			dtr = fu_rom_pci_get_data (hdr, sz - hdr_sz);
-			if (dtr != NULL) {
-				priv->vendor = dtr->vendor_id;
-				priv->model = dtr->device_id;
-				priv->kind = FU_ROM_KIND_PCI;
-			}
+	/* read all the ROM headers */
+	while (sz > hdr_sz + jump) {
+		guint32 jump_sz;
+		g_debug ("looking for PCI ROM @ 0x%04x", hdr_sz + jump);
+		hdr = fu_rom_pci_get_header (&buffer[hdr_sz + jump], sz - hdr_sz - jump);
+		if (hdr == NULL) {
+			g_debug ("found junk data, adding fake ROM header");
+			hdr = g_new0 (FuRomPciHeader, 1);
+			hdr->vendor_id = 0xdead;
+			hdr->device_id = 0xbeef;
+			hdr->code_type = 0xff;
+			hdr->last_image = 0x80;
+			hdr->offset_in_buffer = hdr_sz + jump;
+			hdr->rom_len = sz - (hdr_sz + jump);
+			hdr->image_len = hdr->rom_len;
+			g_ptr_array_add (priv->hdrs, hdr);
+			break;
 		}
 
-		/* detect intel header */
-		if (memcmp (hdr->reserved, "00000000000", 11) == 0)
-			hdr_sz = (buffer[0x1b] << 8) + buffer[0x1a];
+		/* save this so we can fix checksums */
+		hdr->offset_in_buffer = hdr_sz + jump;
 
-		if (memcmp (buffer + hdr_sz + 0x04, "K740", 4) == 0) {
-			priv->kind = FU_ROM_KIND_NVIDIA;
-		} else if (memcmp (buffer + hdr_sz, "$VBT", 4) == 0) {
-			priv->kind = FU_ROM_KIND_INTEL;
-			/* see drivers/gpu/drm/i915/intel_bios.h */
-			hdr_sz += (buffer[hdr_sz + 23] << 8) + buffer[hdr_sz + 22];
-		} else if (memcmp(buffer + 0x30, " 761295520", 10) == 0) {
-			priv->kind = FU_ROM_KIND_ATI;
-		}
-	} else {
+		/* we can't break on hdr->last_image as
+		 * NVIDIA uses packed but not merged extended headers */
+		g_ptr_array_add (priv->hdrs, hdr);
+
+		/* NVIDIA don't always set a ROM size for extensions */
+		jump_sz = hdr->rom_len;
+		if (jump_sz == 0)
+			jump_sz = hdr->image_len;
+		if (jump_sz == 0x0)
+			break;
+		jump += jump_sz;
+	}
+
+	/* we found nothing */
+	if (priv->hdrs->len == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "Failed to detect firmware header [%02x%02x]",
 			     buffer[0], buffer[1]);
 		return FALSE;
+	}
+
+	/* print all headers */
+	for (i = 0; i < priv->hdrs->len; i++) {
+		hdr = g_ptr_array_index (priv->hdrs, i);
+		fu_rom_pci_print_header (hdr, buffer, sz);
+	}
+
+	/* find first ROM header */
+	hdr = g_ptr_array_index (priv->hdrs, 0);
+	priv->vendor = hdr->vendor_id;
+	priv->model = hdr->device_id;
+	priv->kind = FU_ROM_KIND_PCI;
+
+	/* detect intel header */
+	if (memcmp (hdr->reserved, "00000000000", 11) == 0)
+		hdr_sz = (buffer[0x1b] << 8) + buffer[0x1a];
+		if (hdr_sz > sz) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "firmware corrupt (overflow)");
+			return FALSE;
+		}
+
+	if (memcmp (buffer + hdr_sz + 0x04, "K74", 3) == 0) {
+		priv->kind = FU_ROM_KIND_NVIDIA;
+	} else if (memcmp (buffer + hdr_sz, "$VBT", 4) == 0) {
+		priv->kind = FU_ROM_KIND_INTEL;
+		/* see drivers/gpu/drm/i915/intel_bios.h */
+		hdr_sz += (buffer[hdr_sz + 23] << 8) + buffer[hdr_sz + 22];
+	} else if (memcmp(buffer + 0x30, " 761295520", 10) == 0) {
+		priv->kind = FU_ROM_KIND_ATI;
 	}
 
 	/* nothing */
@@ -365,100 +723,14 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 	}
 
 	/* find version string */
-	switch (priv->kind) {
-	case FU_ROM_KIND_PCI:
-
-		/* ARC storage */
-		if (memcmp (hdr->reserved, "\0\0ARC", 5) == 0) {
-			str = (gchar *) fu_rom_strstr_bin (buffer, sz, "BIOS: ");
-			if (str != NULL)
-				priv->version = g_strdup (str + 6);
-		}
-		break;
-
-	case FU_ROM_KIND_NVIDIA:
-
-		/* static location for some firmware */
-		if (memcmp (buffer + hdr_sz + 0x0d7, "Version ", 8) == 0)
-			priv->version = g_strdup ((gchar *) &buffer[0x0d7 + hdr_sz + 8]);
-		else if (memcmp (buffer + hdr_sz + 0x155, "Version ", 8) == 0)
-			priv->version = g_strdup ((gchar *) &buffer[0x155 + hdr_sz + 8]);
-
-		/* usual search string */
-		if (priv->version == NULL) {
-			str = (gchar *) fu_rom_strstr_bin (buffer, sz, "Version ");
-			if (str != NULL)
-				priv->version = g_strdup (str + 8);
-		}
-
-		/* broken */
-		if (priv->version == NULL) {
-			str = (gchar *) fu_rom_strstr_bin (buffer, sz, "Vension:");
-			if (str != NULL)
-				priv->version = g_strdup (str + 8);
-		}
-		if (priv->version == NULL) {
-			str = (gchar *) fu_rom_strstr_bin (buffer, sz, "Version");
-			if (str != NULL)
-				priv->version = g_strdup (str + 7);
-		}
-
-		/* fallback to VBIOS */
-		if (priv->version == NULL &&
-		    memcmp (buffer + hdr_sz + 0xfa, "VBIOS Ver", 9) == 0)
-			priv->version = g_strdup ((gchar *) &buffer[0xfa + hdr_sz + 9]);
-		break;
-
-	case FU_ROM_KIND_INTEL:
-		if (priv->version == NULL) {
-			/* 2175_RYan PC 14.34  06/06/2013  21:27:53 */
-			str = (gchar *) fu_rom_strstr_bin (buffer, sz, "Build Number:");
-			if (str != NULL) {
-				_cleanup_strv_free_ gchar **split = NULL;
-				split = g_strsplit (str + 14, " ", -1);
-				for (i = 0; split[i] != NULL; i++) {
-					if (g_strstr_len (split[i], -1, ".") == NULL)
-						continue;
-					priv->version = g_strdup (split[i]);
-				}
-			}
-		}
-
-		/* fallback to VBIOS */
-		if (priv->version == NULL) {
-			str = (gchar *) fu_rom_strstr_bin (buffer, sz, "VBIOS ");
-			if (str != NULL) {
-				priv->version = g_strdup (str + 6);
-				g_strdelimit (priv->version, "\r\n ", '\0');
-			}
-		}
-		break;
-
-	case FU_ROM_KIND_ATI:
-		if (priv->version == NULL) {
-			str = (gchar *) fu_rom_strstr_bin (buffer, sz, " VER0");
-			if (str != NULL)
-				priv->version = g_strdup (str + 4);
-		}
-		/* broken */
-		if (priv->version == NULL) {
-			str = (gchar *) fu_rom_strstr_bin (buffer, sz, " VR");
-			if (str != NULL)
-				priv->version = g_strdup (str + 4);
-		}
-		break;
-	default:
-		break;
-	}
-
-	/* fix */
+	priv->version = fu_rom_find_version (priv->kind, hdr, buffer, sz);
 	if (priv->version != NULL) {
 		g_strstrip (priv->version);
 		g_strdelimit (priv->version, "\r\n ", '\0');
 	}
 
 	/* update checksum */
-	fu_rom_find_and_blank_serial_numbers (buffer, sz);
+	fu_rom_find_and_blank_serial_numbers (rom, buffer, sz);
 	g_checksum_update (priv->checksum_wip, buffer, sz);
 
 	/* not known */
@@ -514,52 +786,9 @@ fu_rom_get_model (FuRom *rom)
 }
 
 /**
- * fu_rom_generate_checksum:
- *
- * This adds the entire firmware image to the checksum data.
- **/
-gboolean
-fu_rom_generate_checksum (FuRom *rom, GCancellable *cancellable, GError **error)
-{
-	FuRomPrivate *priv = rom->priv;
-	const guint block_sz = 0x4000;
-	gssize cnt = block_sz;
-	guint8 buffer[block_sz];
-
-	g_return_val_if_fail (FU_IS_ROM (rom), FALSE);
-
-	while (TRUE) {
-		gssize sz;
-		sz = g_input_stream_read (G_INPUT_STREAM (priv->stream),
-					  buffer, block_sz, NULL, NULL);
-		if (sz <= 0)
-			break;
-
-		/* blank out serial numbers */
-		fu_rom_find_and_blank_serial_numbers (buffer, sz);
-
-		cnt += sz;
-		fu_rom_find_and_blank_serial_numbers (buffer, sz);
-		g_checksum_update (priv->checksum_wip, buffer, sz);
-	}
-
-	/* is the data wrapped up, e.g. NVGI */
-	if (priv->rom_length == 0 || cnt <= priv->rom_length) {
-		g_debug ("read %" G_GSSIZE_FORMAT " bytes from ROM", cnt);
-	} else {
-		g_debug ("read %" G_GSSIZE_FORMAT " bytes from ROM, %" G_GSIZE_FORMAT
-			 " bytes more than expected", cnt, cnt - priv->rom_length);
-	}
-
-	return TRUE;
-}
-
-/**
  * fu_rom_get_checksum:
  *
  * This returns the checksum of the firmware.
- * If fu_rom_generate_checksum() has been called then the checksum is of the
- * entire firmware image, and not just the header.
  **/
 const gchar *
 fu_rom_get_checksum (FuRom *rom)
@@ -587,6 +816,7 @@ fu_rom_init (FuRom *rom)
 {
 	rom->priv = FU_ROM_GET_PRIVATE (rom);
 	rom->priv->checksum_wip = g_checksum_new (G_CHECKSUM_SHA1);
+	rom->priv->hdrs = g_ptr_array_new_with_free_func (g_free);
 }
 
 /**
@@ -600,6 +830,7 @@ fu_rom_finalize (GObject *object)
 
 	g_checksum_free (priv->checksum_wip);
 	g_free (priv->version);
+	g_ptr_array_unref (priv->hdrs);
 	if (priv->stream != NULL)
 		g_object_unref (priv->stream);
 

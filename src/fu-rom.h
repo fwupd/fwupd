@@ -66,9 +66,6 @@ gboolean	 fu_rom_load_file			(FuRom		*rom,
 							 GFile		*file,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fu_rom_generate_checksum		(FuRom		*rom,
-							 GCancellable	*cancellable,
-							 GError		**error);
 FuRomKind	 fu_rom_get_kind			(FuRom		*rom);
 const gchar	*fu_rom_get_version			(FuRom		*rom);
 const gchar	*fu_rom_get_checksum			(FuRom		*rom);

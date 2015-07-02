@@ -69,12 +69,12 @@ fu_rom_func (void)
 		    { FU_ROM_KIND_ATI, /* atombios */
 			"Asus.R9290X.4096.131014.rom",
 			"015.039.000.006.003515",
-			"2b159ae92517595d2cddb31193f5ed702ca3f803",
+			"d8e32fa09a00ab9dcc96a990266f3fe5a99eacc5",
 			0x1002, 0x67b0 },
 		    { FU_ROM_KIND_ATI, /* atombios, with serial */
 			"Asus.HD7970.3072.121018.rom",
 			"015.023.000.002.000000",
-			"bceb6cd2adfc0b84ed92065bead4fa98ec70124e",
+			"e4107546d3df3e52db2068babbcacc6329f05d46",
 			0x1002, 0x6798 },
 		    { FU_ROM_KIND_NVIDIA,
 			"Asus.GTX480.1536.100406_1.rom",
@@ -89,7 +89,7 @@ fu_rom_func (void)
 		    { FU_ROM_KIND_NVIDIA, /* nvgi, with serial */
 			"Asus.TitanBlack.6144.140212.rom",
 			"80.80.4E.00.01",
-			"e86482f5ce29f3f8468cb4077ab72f6f9c9abfd2",
+			"298627b23efea5a8fb62d992a66fba10b06a136d",
 			0x10de, 0x100c },
 		    { FU_ROM_KIND_UNKNOWN, NULL, NULL, NULL, 0x0000, 0x0000 }
 		};
@@ -110,9 +110,6 @@ fu_rom_func (void)
 		g_print ("\nparsing %s...", filename);
 		file = g_file_new_for_path (filename);
 		ret = fu_rom_load_file (rom, file, NULL, &error);
-		g_assert_no_error (error);
-		g_assert (ret);
-		ret = fu_rom_generate_checksum (rom, NULL, &error);
 		g_assert_no_error (error);
 		g_assert (ret);
 		g_assert_cmpstr (fu_rom_get_version (rom), ==, data[i].ver);
@@ -147,6 +144,7 @@ fu_rom_all_func (void)
 		if (fn == NULL)
 			break;
 		filename = g_build_filename (path, fn, NULL);
+		g_print ("\nparsing %s...", filename);
 		file = g_file_new_for_path (filename);
 		rom = fu_rom_new ();
 		ret = fu_rom_load_file (rom, file, NULL, &error);
