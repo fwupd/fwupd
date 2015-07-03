@@ -151,11 +151,17 @@ An example `.inf` file might look like this:
 ```ini
 [Version]
 Class=Firmware
-ClassGuid=84f40464-9272-4ef7-9399-cd95f12da696
+ClassGuid={f2e7dd72-6468-4e36-b6f1-6488f42c1b52}
 DriverVer=03/03/2015,3.0.2
 
 [Firmware_CopyFiles]
 firmware.bin
+
+[Firmware_AddReg]
+HKR,,FirmwareId,,{84f40464-9272-4ef7-9399-cd95f12da696}
+HKR,,FirmwareVersion,%REG_DWORD%,0x0000000
+HKR,,FirmwareFilename,,firmware.bin
+
 ```
 
 An example `.metainfo.xml` file might look like this:
