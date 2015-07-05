@@ -641,16 +641,29 @@ fu_rom_load_file (FuRom *rom, GFile *file, GCancellable *cancellable, GError **e
 		g_debug ("looking for PCI ROM @ 0x%04x", hdr_sz + jump);
 		hdr = fu_rom_pci_get_header (&buffer[hdr_sz + jump], sz - hdr_sz - jump);
 		if (hdr == NULL) {
-			g_debug ("found junk data, adding fake ROM header");
-			hdr = g_new0 (FuRomPciHeader, 1);
-			hdr->vendor_id = 0xdead;
-			hdr->device_id = 0xbeef;
-			hdr->code_type = 0xff;
-			hdr->last_image = 0x80;
-			hdr->offset_in_buffer = hdr_sz + jump;
-			hdr->rom_len = sz - (hdr_sz + jump);
-			hdr->image_len = hdr->rom_len;
-			g_ptr_array_add (priv->hdrs, hdr);
+			gboolean found_data = FALSE;
+
+			/* check it's not just NUL padding */
+			for (i = 0; i < hdr_sz + jump; i++) {
+				if (buffer[hdr_sz + jump + i] != 0x00) {
+					found_data = TRUE;
+					break;
+				}
+			}
+			if (found_data) {
+				g_debug ("found junk data, adding fake");
+				hdr = g_new0 (FuRomPciHeader, 1);
+				hdr->vendor_id = 0xdead;
+				hdr->device_id = 0xbeef;
+				hdr->code_type = 0xff;
+				hdr->last_image = 0x80;
+				hdr->offset_in_buffer = hdr_sz + jump;
+				hdr->rom_len = sz - (hdr_sz + jump);
+				hdr->image_len = hdr->rom_len;
+				g_ptr_array_add (priv->hdrs, hdr);
+			} else {
+				g_debug ("ignoring padding");
+			}
 			break;
 		}
 
