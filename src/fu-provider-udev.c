@@ -92,7 +92,7 @@ fu_provider_udev_verify (FuProvider *provider,
 	}
 	file = g_file_new_for_path (rom_fn);
 	rom = fu_rom_new ();
-	if (!fu_rom_load_file (rom, file, NULL, error))
+	if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, error))
 		return FALSE;
 	fu_device_set_metadata (device, FU_DEVICE_KEY_FIRMWARE_HASH,
 				fu_rom_get_checksum (rom));
@@ -164,7 +164,7 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 		_cleanup_object_unref_ FuRom *rom = NULL;
 		file = g_file_new_for_path (rom_fn);
 		rom = fu_rom_new ();
-		if (!fu_rom_load_file (rom, file, NULL, &error)) {
+		if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, &error)) {
 			g_warning ("Failed to parse ROM from %s: %s",
 				   rom_fn, error->message);
 		}

@@ -803,7 +803,8 @@ fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 		file = g_file_new_for_path (values[i]);
 		rom = fu_rom_new ();
 		g_print ("%s:\n", values[i]);
-		if (!fu_rom_load_file (rom, file, NULL, &error_local)) {
+		if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID,
+				       NULL, &error_local)) {
 			g_print ("%s\n", error_local->message);
 			continue;
 		}
@@ -856,7 +857,8 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		file = g_file_new_for_path (values[i]);
 		rom = fu_rom_new ();
 		g_print ("Processing %s...\n", values[i]);
-		if (!fu_rom_load_file (rom, file, NULL, &error_local)) {
+		if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID,
+				       NULL, &error_local)) {
 			g_print ("%s\n", error_local->message);
 			continue;
 		}

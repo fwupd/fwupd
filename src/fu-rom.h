@@ -59,12 +59,22 @@ typedef enum {
 	FU_ROM_KIND_LAST
 } FuRomKind;
 
+typedef enum {
+	FU_ROM_LOAD_FLAG_NONE,
+	FU_ROM_LOAD_FLAG_BLANK_PPID = 1,
+	FU_ROM_LOAD_FLAG_LAST
+} FuRomLoadFlags;
+
 GType		 fu_rom_get_type			(void);
 FuRom		*fu_rom_new				(void);
 
 gboolean	 fu_rom_load_file			(FuRom		*rom,
 							 GFile		*file,
+							 FuRomLoadFlags	 flags,
 							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 fu_rom_extract_all			(FuRom		*rom,
+							 const gchar	*path,
 							 GError		**error);
 FuRomKind	 fu_rom_get_kind			(FuRom		*rom);
 const gchar	*fu_rom_get_version			(FuRom		*rom);
