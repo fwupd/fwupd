@@ -18,6 +18,7 @@ ${datadir}/dbus-1/interfaces/org.freedesktop.fwupd.xml
 ${datadir}/polkit-1/actions/org.freedesktop.fwupd.policy
 ${datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 ${datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
+${datadir}/locale
 ${libdir}/fwupd
 ${mandir}/man1/*
 ${unitdir}/*.service
