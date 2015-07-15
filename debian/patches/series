@@ -1,1 +1,3 @@
 0001-build-gusb-is-required-even-without-colorhug.patch
+0001-Allow-fwupdmgr-to-issue-offline-install-commands.patch
+0002-Don-t-call-efibootmgr-after-fwupdate.patch
