@@ -322,6 +322,75 @@ out:
 }
 
 /**
+ * fu_keyring_sign_data:
+ **/
+GBytes *
+fu_keyring_sign_data (FuKeyring *keyring, GBytes *payload, GError **error)
+{
+	GBytes *sig_bytes = NULL;
+	gchar *sig_data = NULL;
+	gpgme_data_t data = NULL;
+	gpgme_data_t sig = NULL;
+	gpgme_error_t rc;
+	gpgme_sign_result_t sign_result;
+	gsize sig_len = 0;
+
+	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
+	g_return_val_if_fail (payload != NULL, FALSE);
+
+	/* setup context */
+	if (!fu_keyring_setup (keyring, error))
+		return NULL;
+
+	/* load file data */
+	rc = gpgme_data_new_from_mem (&data,
+				      g_bytes_get_data (payload, NULL),
+				      g_bytes_get_size (payload), 0);
+	if (rc != GPG_ERR_NO_ERROR) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to load data: %s",
+			     gpgme_strerror (rc));
+		goto out;
+	}
+
+	/* sign */
+	gpgme_data_new (&sig);
+	rc = gpgme_op_sign (keyring->priv->ctx, data, sig, GPGME_SIG_MODE_DETACH);
+	if (rc != GPG_ERR_NO_ERROR) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to sign data: %s",
+			     gpgme_strerror (rc));
+		goto out;
+	}
+	sign_result = gpgme_op_sign_result (keyring->priv->ctx);
+	if (sign_result == NULL ||
+	    sign_result->signatures == NULL ||
+	    sign_result->signatures->fpr == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to sign data with any key");
+		goto out;
+	}
+	g_debug ("signed with key %s", sign_result->signatures->fpr);
+
+	/* steal signature data */
+	sig_data = gpgme_data_release_and_get_mem (sig, &sig_len);
+	sig_bytes = g_bytes_new_with_free_func (sig_data, sig_len, (GDestroyNotify) gpgme_free, sig_data);
+	sig = NULL;
+out:
+	if (data != NULL)
+		gpgme_data_release (data);
+	if (sig != NULL)
+		gpgme_data_release (sig);
+	return sig_bytes;
+}
+
+/**
  * fu_keyring_verify_data:
  **/
 gboolean

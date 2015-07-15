@@ -67,6 +67,9 @@ gboolean	 fu_keyring_verify_data			(FuKeyring	*keyring,
 							 GBytes		*payload,
 							 GBytes		*payload_signature,
 							 GError		**error);
+GBytes		*fu_keyring_sign_data			(FuKeyring	*keyring,
+							 GBytes		*payload,
+							 GError		**error);
 
 G_END_DECLS
 
