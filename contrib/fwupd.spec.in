@@ -44,11 +44,22 @@ Requires: %{name} = %{version}-%{release}
 %description devel
 Files for development with %{name}.
 
+%package sign
+Summary: Firmware signing server
+Requires: %{name} = %{version}-%{release}
+
+%description sign
+This package provides a signing server suitable for automatically signing
+firmware in .cab archives.
+The values in /etc/fwsignd.conf file should be set before starting the daemon.
+You probably don't need this package unless you're implementing a LVFS clone.
+
 %prep
 %setup -q
 
 %build
 %configure \
+        --enable-fwsignd        \
         --disable-static        \
         --disable-rpath         \
         --disable-silent-rules  \
@@ -86,7 +97,8 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
 %{_datadir}/man/man1/fwupdmgr.1.gz
-%{_unitdir}/*.service
+%{_unitdir}/fwupd-offline-update.service
+%{_unitdir}/fwupd.service
 %{_unitdir}/system-update.target.wants/*.service
 %dir %{_localstatedir}/lib/fwupd
 %{_libdir}/lib*.so.*
@@ -95,6 +107,11 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %dir %{_localstatedir}/cache/app-info/icons
 %dir %{_localstatedir}/cache/app-info/xmls
 /usr/lib/udev/rules.d/*.rules
+
+%files sign
+%config(noreplace)%{_sysconfdir}/fwsignd.conf
+%{_unitdir}/fwsignd.service
+%{_libexecdir}/fwsignd
 
 %files devel
 %{_includedir}/fwupd-1

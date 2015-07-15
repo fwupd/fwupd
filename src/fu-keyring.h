@@ -59,6 +59,9 @@ gboolean	 fu_keyring_add_public_keys		(FuKeyring	*keyring,
 gboolean	 fu_keyring_add_public_key		(FuKeyring	*keyring,
 							 const gchar	*filename,
 							 GError		**error);
+gboolean	 fu_keyring_set_signing_key		(FuKeyring	*keyring,
+							 const gchar	*key_id,
+							 GError		**error);
 gboolean	 fu_keyring_verify_file			(FuKeyring	*keyring,
 							 const gchar	*filename,
 							 const gchar	*signature,

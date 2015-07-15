@@ -156,6 +156,11 @@ if test x$enable_uefi != xno; then
 fi
 AM_CONDITIONAL(HAVE_UEFI, test x$enable_uefi = xyes)
 
+# Build the signing server
+AC_ARG_ENABLE(fwsignd, AS_HELP_STRING([--enable-fwsignd],[Enable fwsignd support]),
+	      enable_fwsignd=$enableval, enable_fwsignd=no)
+AM_CONDITIONAL(HAVE_FWSIGND, test x$enable_fwsignd = xyes)
+
 # systemd support
 AC_ARG_WITH([systemdunitdir],
             AS_HELP_STRING([--with-systemdunitdir=DIR], [Directory for systemd service files]),

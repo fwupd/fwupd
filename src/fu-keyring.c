@@ -95,6 +95,96 @@ fu_keyring_setup (FuKeyring *keyring, GError **error)
 	/* enable armor mode */
 	gpgme_set_armor (keyring->priv->ctx, TRUE);
 
+	/* never interactive */
+	gpgme_set_pinentry_mode (keyring->priv->ctx, GPGME_PINENTRY_MODE_ERROR);
+
+	return TRUE;
+}
+
+/**
+ * fu_keyring_list_private_keys:
+ **/
+static void
+fu_keyring_list_private_keys (FuKeyring *keyring)
+{
+	gpgme_key_t key;
+	gpgme_error_t err;
+
+	err = gpgme_op_keylist_start (keyring->priv->ctx, NULL, 1);
+	while (!err) {
+		_cleanup_string_free_ GString *str = NULL;
+		err = gpgme_op_keylist_next (keyring->priv->ctx, &key);
+		if (err)
+			break;
+		str = g_string_new (key->subkeys->keyid);
+		g_string_append_printf (str, "\t[secret:%i, sign:%i]",
+					key->subkeys->secret,
+					key->subkeys->can_sign);
+		if (key->uids && key->uids->name)
+			g_string_append_printf (str,  " %s", key->uids->name);
+		if (key->uids && key->uids->email)
+			g_string_append_printf (str,  " <%s>", key->uids->email);
+		g_debug ("%s", str->str);
+		gpgme_key_release (key);
+	}
+
+	if (gpg_err_code (err) != GPG_ERR_EOF) {
+		g_warning ("can not list keys: %s\n", gpgme_strerror (err));
+		return;
+	}
+}
+
+/**
+ * fu_keyring_set_signing_key:
+ **/
+gboolean
+fu_keyring_set_signing_key (FuKeyring *keyring, const gchar *key_id, GError **error)
+{
+	gint n_signers;
+	gpgme_error_t rc;
+	gpgme_key_t key;
+
+
+	/* setup context */
+	if (!fu_keyring_setup (keyring, error))
+		return FALSE;
+
+	/* list possible keys */
+	fu_keyring_list_private_keys (keyring);
+
+	/* find key */
+	rc = gpgme_get_key (keyring->priv->ctx, key_id, &key, 1);
+	if (rc != GPG_ERR_NO_ERROR) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to find key %s: %s",
+			     key_id, gpgme_strerror (rc));
+		return FALSE;
+	}
+
+	/* select it to be used */
+	gpgme_signers_clear (keyring->priv->ctx);
+	rc = gpgme_signers_add (keyring->priv->ctx, key);
+	if (rc != GPG_ERR_NO_ERROR) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to add signing key %s: %s",
+			     key_id, gpgme_strerror (rc));
+		return FALSE;
+	}
+	gpgme_key_unref (key);
+
+	/* check it's selected */
+	n_signers = gpgme_signers_count (keyring->priv->ctx);
+	if (n_signers != 1) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to check signing key %s", key_id);
+		return FALSE;
+	}
 	return TRUE;
 }
 

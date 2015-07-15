@@ -21,6 +21,12 @@ systemdservice_in_files =				\
 	fwupd-offline-update.service.in
 systemdservice_DATA = $(systemdservice_in_files:.service.in=.service)
 
+if HAVE_FWSIGND
+systemdservice_in_files += fwsignd.service.in
+configdir = $(sysconfdir)
+dist_config_DATA = fwsignd.conf
+endif
+
 install-data-hook:
 	mkdir -p $(DESTDIR)$(systemdunitdir)/system-update.target.wants
 	ln -sf ../fwupd-offline-update.service $(DESTDIR)$(systemdunitdir)/system-update.target.wants/fwupd-offline-update.service

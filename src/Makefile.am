@@ -138,6 +138,34 @@ fwupd_CFLAGS =						\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
 	$(WARNINGFLAGS_C)
 
+if HAVE_FWSIGND
+libexec_PROGRAMS += fwsignd
+
+fwsignd_SOURCES =					\
+	fu-cleanup.h					\
+	fu-cab.c					\
+	fu-cab.h					\
+	fu-keyring.c					\
+	fu-keyring.h					\
+	fu-debug.c					\
+	fu-debug.h					\
+	fu-sign.c
+
+fwsignd_LDADD =						\
+	$(FWUPD_LIBS)					\
+	$(APPSTREAM_GLIB_LIBS)				\
+	$(GPGME_LIBS)					\
+	$(GCAB_LIBS)					\
+	$(GLIB_LIBS)
+
+fwsignd_LDFLAGS =					\
+	$(PIE_LDFLAGS)
+
+fwsignd_CFLAGS =					\
+	$(WARNINGFLAGS_C)
+
+endif
+
 TESTS_ENVIRONMENT =					\
 	libtool --mode=execute valgrind			\
 	--quiet						\
