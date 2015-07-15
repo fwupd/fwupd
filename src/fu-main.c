@@ -421,9 +421,12 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		return FALSE;
 	}
 
-	/* now extract the firmware */
+	/* now extract the firmware and set any trust flags */
 	fu_main_set_status (helper->priv, FWUPD_STATUS_DECOMPRESSING);
-	if (!fu_cab_extract_firmware (helper->cab, error))
+	if (!fu_cab_extract (helper->cab, FU_CAB_EXTRACT_FLAG_FIRMWARE |
+					  FU_CAB_EXTRACT_FLAG_SIGNATURE, error))
+		return FALSE;
+	if (!fu_cab_verify (helper->cab, error))
 		return FALSE;
 
 	/* and open it */
@@ -963,8 +966,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			return;
 		}
 
-		/* we have to extract the file to check the signature */
-		if (!fu_cab_extract_firmware (cab, &error)) {
+		/* we have to extract the firmware to check the signature */
+		if (!fu_cab_extract (cab, FU_CAB_EXTRACT_FLAG_FIRMWARE, &error)) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}

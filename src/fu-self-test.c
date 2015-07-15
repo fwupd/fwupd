@@ -193,11 +193,17 @@ fu_cab_func (void)
 	g_assert (!g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
 
 	/* extract firmware */
-	ret = fu_cab_extract_firmware (cab, &error);
+	ret = fu_cab_extract (cab, FU_CAB_EXTRACT_FLAG_FIRMWARE |
+				   FU_CAB_EXTRACT_FLAG_SIGNATURE, &error);
 	/* this is not available in make distcheck */
 	if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 		g_clear_error (&error);
 	} else {
+		g_assert_no_error (error);
+		g_assert (ret);
+
+		/* check the certificate */
+		ret = fu_cab_verify (cab, &error);
 		g_assert_no_error (error);
 		g_assert (ret);
 		g_assert_cmpint (fu_cab_get_trust_flags (cab), ==, FWUPD_TRUST_FLAG_PAYLOAD);
