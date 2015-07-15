@@ -33,7 +33,6 @@ BuildRequires: libappstream-glib-devel
 
 # we'll fix this when Peter has the latest code in a Fedora package
 # BuildRequires: fwupdate-devel >= 0.1
-# Requires: efibootmgr
 
 %description
 fwupd is a daemon to allow session software to update device firmware.

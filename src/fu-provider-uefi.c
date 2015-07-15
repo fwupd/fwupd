@@ -213,7 +213,6 @@ fu_provider_uefi_update (FuProvider *provider,
 	fwup_resource_iter *iter = NULL;
 	fwup_resource *re = NULL;
 	gboolean ret = TRUE;
-	gint rc = 0;
 	guint64 hardware_instance = 0;	/* FIXME */
 	_cleanup_error_free_ GError *error_local = NULL;
 	_cleanup_free_ gchar *standard_error = NULL;
@@ -236,30 +235,6 @@ fu_provider_uefi_update (FuProvider *provider,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "UEFI firmware update failed: %s",
 			     fwup_strerror (fwup_error));
-		goto out;
-	}
-
-	/* schedule our next boot to be the fwupdate */
-	if (!g_spawn_command_line_sync ("/usr/sbin/efibootmgr -n 1337",
-					NULL,
-					&standard_error,
-					&rc,
-					&error_local)) {
-		ret = FALSE;
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Failed to launch efibootmgr: %s",
-			     error_local->message);
-		goto out;
-	}
-	if (!g_spawn_check_exit_status (rc, &error_local)) {
-		ret = FALSE;
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "UEFI firmware update failed: %s",
-			     error_local->message);
 		goto out;
 	}
 out:
