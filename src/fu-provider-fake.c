@@ -62,12 +62,6 @@ fu_provider_fake_update (FuProvider *provider,
 			 FuProviderFlags flags,
 			 GError **error)
 {
-	if (flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "cannot handle offline");
-	}
 	fu_provider_set_status (provider, FWUPD_STATUS_DECOMPRESSING);
 	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_WRITE);
 	return TRUE;

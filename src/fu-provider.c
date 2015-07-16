@@ -215,65 +215,56 @@ fu_provider_update (FuProvider *provider,
 	_cleanup_object_unref_ FuDevice *device_pending = NULL;
 	GError *error_update = NULL;
 
-	/* schedule for next reboot, or handle in the provider */
-	if (flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
-		if (klass->update_offline == NULL)
-			return fu_provider_schedule_update (provider,
-							    device,
-							    stream_cab,
-							    error);
-		return klass->update_offline (provider, device, fd_fw, flags, error);
-	}
-
 	/* cancel the pending action */
 	if (!fu_provider_offline_invalidate (error))
 		return FALSE;
 
-	/* online */
-	if (klass->update_online == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "No online update possible");
-		return FALSE;
-	}
-	pending = fu_pending_new ();
-	device_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
-	if (!klass->update_online (provider, device, fd_fw, flags, &error_update)) {
-		/* save the error to the database */
-		if (device_pending != NULL) {
-			fu_pending_set_error_msg (pending, device,
-						  error_update->message, NULL);
+	/* try online first */
+	if (klass->update_online != NULL) {
+		pending = fu_pending_new ();
+		device_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
+		if (!klass->update_online (provider, device, fd_fw, flags, &error_update)) {
+			/* save the error to the database */
+			if (device_pending != NULL) {
+				fu_pending_set_error_msg (pending, device,
+							  error_update->message, NULL);
+			}
+			g_propagate_error (error, error_update);
 		}
-		g_propagate_error (error, error_update);
-		return FALSE;
-	}
 
-	/* cleanup */
-	if (device_pending != NULL) {
-		const gchar *tmp;
+		/* cleanup */
+		if (error_update == NULL && device_pending != NULL) {
+			const gchar *tmp;
 
-		/* update pending database */
-		fu_pending_set_state (pending, device, FU_PENDING_STATE_SUCCESS, NULL);
+			/* update pending database */
+			fu_pending_set_state (pending, device, FU_PENDING_STATE_SUCCESS, NULL);
 
-		/* delete cab file */
-		tmp = fu_device_get_metadata (device_pending, FU_DEVICE_KEY_FILENAME_CAB);
-		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
-			_cleanup_error_free_ GError *error_local = NULL;
-			_cleanup_object_unref_ GFile *file = NULL;
-			file = g_file_new_for_path (tmp);
-			if (!g_file_delete (file, NULL, &error_local)) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Failed to delete %s: %s",
-					     tmp, error_local->message);
-				return FALSE;
+			/* delete cab file */
+			tmp = fu_device_get_metadata (device_pending, FU_DEVICE_KEY_FILENAME_CAB);
+			if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
+				_cleanup_error_free_ GError *error_local = NULL;
+				_cleanup_object_unref_ GFile *file = NULL;
+				file = g_file_new_for_path (tmp);
+				if (!g_file_delete (file, NULL, &error_local)) {
+					g_set_error (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
+						     "Failed to delete %s: %s",
+						     tmp, error_local->message);
+					return FALSE;
+				}
 			}
 		}
+		return TRUE;
 	}
 
-	return TRUE;
+	/* schedule for next reboot, or handle in the provider */
+	if (klass->update_offline == NULL)
+		return fu_provider_schedule_update (provider,
+						    device,
+						    stream_cab,
+						    error);
+	return klass->update_offline (provider, device, fd_fw, flags, error);
 }
 
 /**
