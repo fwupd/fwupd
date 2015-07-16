@@ -847,9 +847,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		while (g_variant_iter_next (iter, "{&sv}",
 					    &prop_key, &prop_value)) {
 			g_debug ("got option %s", prop_key);
-			if (g_strcmp0 (prop_key, "offline") == 0 &&
-			    g_variant_get_boolean (prop_value) == TRUE)
-				flags |= FU_PROVIDER_UPDATE_FLAG_OFFLINE;
 			if (g_strcmp0 (prop_key, "allow-older") == 0 &&
 			    g_variant_get_boolean (prop_value) == TRUE)
 				flags |= FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER;

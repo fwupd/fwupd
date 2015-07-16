@@ -399,10 +399,6 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 			       "reason", g_variant_new_string ("user-action"));
 	g_variant_builder_add (&builder, "{sv}",
 			       "filename", g_variant_new_string (filename));
-	if (flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "offline", g_variant_new_boolean (TRUE));
-	}
 	if (flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "allow-older", g_variant_new_boolean (TRUE));

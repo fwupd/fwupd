@@ -266,7 +266,7 @@ fu_provider_func (void)
 	g_assert_no_error (error);
 	g_assert (stream != NULL);
 	ret = fu_provider_update (provider, device, stream, -1,
-				  FU_PROVIDER_UPDATE_FLAG_OFFLINE, &error);
+				  NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 1);
