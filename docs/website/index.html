@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+     Licensed under the GNU General Public License Version 2 -->
+<html>
+
+<head>
+<title>fwupd: Updating Firmware in Linux</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="style.css" type="text/css" media="screen"/>
+<link rel="shortcut icon" href="favicon.ico"/>
+</head>
+
+<body>
+
+<h1 class="banner">fwupd: Updating<br>Firmware in Linux</h1>
+
+<h1>Introduction</h1>
+<p>
+This project aims to make updating firmware on Linux automatic, safe and reliable.
+</p>
+
+<nav class="buttons">
+  <a id="users" href="users.html">For end users</a>
+  <a id="devs" href="developers.html">For developers</a>
+  <a id="hw" href="vendors.html">For hardware vendors</a>
+</nav>
+
+<h2>About</h2>
+
+<p>
+To update a BIOS or network card firmware in Linux traditionally meant rebooting into Microsoft Windows, or
+preparing a MSDOS floppy disk (!) and hoping that everything would
+work after the update.
+</p>
+
+<p>
+Now that we have UEFI as a boot mechanism it's much more important to
+update firmware on devices, as these updates can fix serious security bugs.
+Periodically searching a vendor website for updates is a manual and
+error-prone task and not something we should ask users to do.
+</p>
+
+<p>
+Providing a firmware update service actually requires two things:
+<ol>
+<li>Vendors providing information about what updates are available for specific hardware</li>
+<li>A mechanism to actually deploy the firmware onto the hardware itself</li>
+</ol>
+
+<p>
+Traditionally firmware is packaged up in a <code>cab</code> file which includes
+an <code>inf</code> file that describes the update in more detail.
+We can also add extra metadata so we can have fully localized update descriptions,
+along with all the usual things you'd expect from an update, for example,
+security classification and licensing information.
+</p>
+
+<p class="footer">
+ Copyright <a href="mailto:richard@hughsie.com">Richard Hughes 2015</a>
+</p>
+
+</body>
+
+</html>

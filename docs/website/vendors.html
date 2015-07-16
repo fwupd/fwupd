@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+     Licensed under the GNU General Public License Version 2 -->
+<html>
+
+<head>
+<title>Linux Vendor Firmware Service</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="style.css" type="text/css" media="screen"/>
+<link rel="shortcut icon" href="favicon.ico"/>
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+</head>
+
+<body>
+
+<h1 class="banner">Linux Vendor<br>Firmware Service</h1>
+
+<h1>Introduction</h1>
+<p>
+ This page provides a place for hardware vendors to submit packaged
+ firmware updates, typically <code>cab</code> files.
+ This <em>fire-and-forget</em> service allows vendors to submit firmware updates
+ without generating and hosting metadata themselves.
+</p>
+<p>
+ Clients such as <a href="https://github.com/hughsie/fwupd/blob/master/README.md">fwupd</a>
+ periodically check for updated metadata at this site and will offer the firmware
+ to end users or be installed automatically depending on site policy.
+</p>
+<p>
+ NOTE: This service should only be used to distribute firmware that is
+ <em>flashed</em> onto non-volatile memory.
+ It is not designed for firmware that has to be uploaded to devices every time
+ the device is used.
+</p>
+<p>
+ There is no charge to vendors for the hosting or distribution of content.
+</p>
+<p>When files are submitted the following actions are performed:</p>
+<ol>
+<li>The update metadata is <a href="https://github.com/hughsie/fwupd/blob/master/README.md#what-do-i-have-to-do">checked for correctness</a>.</li>
+<li>The firmware capsule is signed with <a href="mooo">our GPG key</a>.</li>
+<li>The new <code>cab</code> file is moved to <a href="dump.php">our infrastructure</a>.</li>
+<li>The metadata is added to <a href="downloads/firmware.xml.gz">our database</a>.</li>
+</ol>
+
+<h1>Upload Firmware</h1>
+<p>
+ <b>It is imperative that updates have been verified to work correctly on
+ all matching hardware.</b>
+</p>
+
+<h2>Legal</h2>
+<p>By uploading a firmware file you must agree that:</p>
+<ul>
+<li>You are legally permitted to submit the firmware.</li>
+<li>The submitted firmware file is permitted to be mirrored by our site.</li>
+<li>The firmware installation must complete without requiring user input.</li>
+<li>Firmware must not engage in malicious activity (e.g. be viruses, worms, or exploit security issues).</li>
+<li>Firmware can only be removed from this archive in exceptional cases.</li>
+</ul>
+<form action="upload.php" method="post" enctype="multipart/form-data">
+<table class="upload">
+<tr>
+ <th width="150px">Vendor Key:</th>
+ <td><input type="text" id="auth" name="auth" placeholder="5be94d63-58d2-410e-bc49-eecb22637a8e" required size="36"/></td>
+</tr>
+<tr><th width="150px">Contact Email:</th><td><input type="email" name="update_contact" required size="36"/></td></tr>
+<tr><th width="150px">Firmware:</th><td><input type="file" name="file" required/></td></tr>
+</table>
+<input type="submit" class="submit" value="Upload"/>
+</form>
+
+<h1>Help With Submitting Firmware</h1>
+
+<p>
+If you are <b>not</b> using the UEFI capsule update method you need to write a
+plugin for fwupd to trigger the firmware update from userspace.
+At the moment there is just UEFI and ColorHug providers, but others are welcome.
+</p>
+
+<p>
+As per the <a href="https://msdn.microsoft.com/en-us/library/windows/hardware/dn917810%28v=vs.85%29.aspx">Microsoft guidelines</a>
+package up your firmware into a <code>cab</code> file, with these files inside:
+</p>
+<ul>
+<li>The actual <code>cap</code> file your engineers have created</li>
+<li>The <code>inf</code> file <a href="https://msdn.microsoft.com/en-us/library/windows/hardware/ff547402%28v=vs.85%29.aspx">describing the .cap file</a>.</li>
+<li>The optional <code>asc</code> file which is a detached GPG signature of the firmware file.</li>
+<li>The optional <code>metainfo.xml</code> file with <a href="http://www.freedesktop.org/software/appstream/docs/sect-Quickstart-Addons.html">a long description and extra metadata</a></li>
+</ul>
+<p>
+You can create a <code>cab</code> file using <code>makecab.exe</code> on Windows and <code>gcab --create</code>
+on Linux.
+</p>
+<p>
+It is recommended you name the <code>cab</code> file with the hardware name and the version
+number, e.g. <code>colorhug-als-1.2.3.cab</code>. It's mandatory that the files inside the
+<code>cab</code> file have the same basename, for example this is would be valid:
+</p>
+<p>
+<pre>
+    colorhug2-1.2.3.cab
+     |- firmware.inf
+     |- firmware.bin
+     |- firmware.bin.asc
+     \- firmware.metainfo.xml
+</pre>
+</p>
+<p>
+An example <code>inf</code> file looks like this:
+</p>
+<p>
+<pre class="prettyprint lang-sh">
+[Version]
+Class=Firmware
+ClassGuid={f2e7dd72-6468-4e36-b6f1-6488f42c1b52}
+DriverVer=03/03/2015,3.0.2
+
+[Firmware_CopyFiles]
+firmware.bin
+
+[Firmware_AddReg]
+HKR,,FirmwareId,,{84f40464-9272-4ef7-9399-cd95f12da696}
+HKR,,FirmwareVersion,%REG_DWORD%,0x0000000
+HKR,,FirmwareFilename,,firmware.bin
+</pre>
+</p>
+<p>
+An example <code>metainfo.xml</code> file looks like this:
+</p>
+<p>
+<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- Copyright 2015 Richard Hughes <richard@hughsie.com> --&gt;
+&lt;component type="firmware"&gt;
+  &lt;id&gt;84f40464-9272-4ef7-9399-cd95f12da696&lt;/id&gt;
+  &lt;name&gt;ColorHugALS Firmware&lt;/name&gt;
+  &lt;summary&gt;Firmware for the ColorHugALS Ambient Light Sensor&lt;/summary&gt;
+  &lt;description&gt;
+    &lt;p&gt;
+      Updating the firmware on your ColorHugALS device improves performance and
+      adds new features.
+    &lt;/p&gt;
+  &lt;/description&gt;
+  &lt;url type="homepage"&gt;http://www.hughski.com/&lt;/url&gt;
+  &lt;metadata_license&gt;CC0-1.0&lt;/metadata_license&gt;
+  &lt;project_license&gt;GPL-2.0+&lt;/project_license&gt;
+  &lt;developer_name&gt;Hughski Limited&lt;/developer_name&gt;
+  &lt;releases&gt;
+    &lt;release version="3.0.2" timestamp="1424116753"&gt;
+      &lt;location&gt;http://www.hughski.com/downloads/colorhug-als/firmware/colorhug-als-3.0.2.cab&lt;/location&gt;
+      &lt;description&gt;
+        &lt;p&gt;This stable release fixes the following bugs:&lt;/p&gt;
+        &lt;ul&gt;
+          &lt;li&gt;Fix the return code from GetHardwareVersion&lt;/li&gt;
+          &lt;li&gt;Scale the output of TakeReadingRaw by the datasheet values&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/description&gt;
+    &lt;/release&gt;
+  &lt;/releases&gt;
+&lt;/component&gt;
+</pre>
+</p>
+<p>
+If the firmware is not free software you have to indicate it in the
+<code>metainfo.xml</code> file with <code>&lt;project_license&gt;proprietary&lt;/project_license&gt;</code>.
+</p>
+
+<h2>Why does the LVFS project sign my firmware?</h2>
+<p>
+The Linux Vendor Firmware Project signs the firmware image and repacks
+the files into a new cabinet file for several reasons:
+</p>
+<ul>
+<li>Only trusted vendors have access to the LVFS service, so we can be sure the firmware actually came from the vendor</li>
+<li>Clients do not (yet) verify the signatures in the <code>cat</code> file</li>
+<li>Not all software trusts the Microsoft WHQL certificate</li>
+<li>We ensure that only required files are included in the cabinet file, typically making the download size much smaller</li>
+</ul>
+
+<h2>Validation</h2>
+<p>
+The best way to validate the metainfo file or firmware before submission is by using the
+<code>appstream-util validate</code> tool available from the
+<a href="https://github.com/hughsie/appstream-glib">appstream-glib</a> project.
+</p>
+
+<p><a href="index.html">Go back to the main page</a></p>
+
+<p class="footer">
+ Copyright <a href="mailto:richard@hughsie.com">Richard Hughes 2015</a>
+</p>
+
+</body>
+
+</html>
