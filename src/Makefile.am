@@ -13,6 +13,7 @@ AM_CPPFLAGS =						\
 	$(POLKIT_CFLAGS)				\
 	$(UEFI_CFLAGS)					\
 	$(GPGME_CFLAGS)					\
+	$(SOUP_CFLAGS)					\
 	-I$(top_srcdir)					\
 	-I$(top_builddir)				\
 	-I$(top_srcdir)/libfwupd			\
@@ -48,6 +49,7 @@ fwupdmgr_LDADD =					\
 	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\
+	$(SOUP_LIBS)					\
 	$(GLIB_LIBS)
 
 fwupdmgr_LDFLAGS =					\

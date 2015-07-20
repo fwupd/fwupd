@@ -31,6 +31,7 @@
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <libsoup/soup.h>
 
 #include "fu-cleanup.h"
 #include "fu-guid.h"
@@ -889,10 +890,13 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
- * fu_util_update_metadata:
+ * fu_util_update_metadata_internal:
  **/
 static gboolean
-fu_util_update_metadata (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_update_metadata_internal (FuUtilPrivate *priv,
+				  const gchar *data_fn,
+				  const gchar *sig_fn,
+				  GError **error)
 {
 	GVariant *body;
 	gint fd;
@@ -900,31 +904,23 @@ fu_util_update_metadata (FuUtilPrivate *priv, gchar **values, GError **error)
 	_cleanup_object_unref_ GDBusMessage *request = NULL;
 	_cleanup_object_unref_ GUnixFDList *fd_list = NULL;
 
-	if (g_strv_length (values) != 2) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments: expected 'filename.xml' 'filename.xml.asc'");
-		return FALSE;
-	}
-
 	/* open file */
-	fd = open (values[0], O_RDONLY);
+	fd = open (data_fn, O_RDONLY);
 	if (fd < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "failed to open %s",
-			     values[0]);
+			     data_fn);
 		return FALSE;
 	}
-	fd_sig = open (values[1], O_RDONLY);
+	fd_sig = open (sig_fn, O_RDONLY);
 	if (fd_sig < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "failed to open %s",
-			     values[1]);
+			     sig_fn);
 		return FALSE;
 	}
 
@@ -964,6 +960,110 @@ fu_util_update_metadata (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	return TRUE;
+}
+
+/**
+ * fu_util_download_metadata:
+ **/
+static gboolean
+fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
+{
+	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_free_ gchar *sig_fn = NULL;
+	_cleanup_free_ gchar *url_sig = NULL;
+	_cleanup_object_unref_ SoupMessage *msg_data = NULL;
+	_cleanup_object_unref_ SoupMessage *msg_sig = NULL;
+	_cleanup_object_unref_ SoupSession *session = NULL;
+	const gchar *data_fn = "/tmp/firmware.xml.gz";
+	const gchar *url_data = "https://beta-lvfs.rhcloud.com/downloads/firmware.xml.gz";
+	guint status_code;
+
+	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT,
+						 "fwupdmgr",
+						 NULL);
+	if (session == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "%s: failed to setup networking");
+		return FALSE;
+	}
+
+	/* this disables the double-compression of the firmware.xml.gz file */
+	soup_session_remove_feature_by_type (session, SOUP_TYPE_CONTENT_DECODER);
+
+	/* download the signature */
+	url_sig = g_strdup_printf ("%s.asc", url_data);
+	msg_sig = soup_message_new (SOUP_METHOD_GET, url_sig);
+	status_code = soup_session_send_message (session, msg_sig);
+	if (status_code != SOUP_STATUS_OK) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to download %s: %s",
+			     url_sig, soup_status_get_phrase (status_code));
+		return FALSE;
+	}
+	sig_fn = g_strdup_printf ("%s.asc", data_fn);
+	g_debug ("saving new signature to %s:", sig_fn);
+	if (!g_file_set_contents (sig_fn,
+				  msg_sig->response_body->data,
+				  msg_sig->response_body->length,
+				  &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to save metadata signature: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* download the payload */
+	msg_data = soup_message_new (SOUP_METHOD_GET, url_data);
+	status_code = soup_session_send_message (session, msg_data);
+	if (status_code != SOUP_STATUS_OK) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to download %s: %s",
+			     url_data, soup_status_get_phrase (status_code));
+		return FALSE;
+	}
+	g_debug ("saving new data to %s:", data_fn);
+	if (!g_file_set_contents (data_fn,
+				  msg_data->response_body->data,
+				  msg_data->response_body->length,
+				  &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to save metadata: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* phew, lets send all this to fwupd */
+	return fu_util_update_metadata_internal (priv, data_fn, sig_fn, error);
+}
+
+/**
+ * fu_util_update_metadata:
+ **/
+static gboolean
+fu_util_update_metadata (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) == 0)
+		return fu_util_download_metadata (priv, error);
+	if (g_strv_length (values) != 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'filename.xml' 'filename.xml.asc'");
+		return FALSE;
+	}
+
+	/* open file */
+	return fu_util_update_metadata_internal (priv, values[0], values[1], error);
 }
 
 /**
