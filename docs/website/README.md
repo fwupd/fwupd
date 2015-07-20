@@ -21,7 +21,6 @@ We also need a SQL server somewhere, with the following tables set up:
 
     CREATE TABLE `firmware` (
       `vendor_key` varchar(36) DEFAULT NULL,
-      `update_contact` varchar(255) DEFAULT NULL,
       `addr` varchar(16) DEFAULT NULL,
       `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
       `filename` varchar(255) DEFAULT NULL,
@@ -30,6 +29,8 @@ We also need a SQL server somewhere, with the following tables set up:
     CREATE TABLE `users` (
       `guid` varchar(36) NOT NULL DEFAULT '',
       `name` varchar(128) DEFAULT NULL
+      `update_contact` varchar(255) DEFAULT NULL,
+      `state` integer DEFAULT 0,
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 Just modify the `db.php` file with your login credentials. You can insert

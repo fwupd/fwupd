@@ -27,7 +27,7 @@ $uploaddir = $_ENV["OPENSHIFT_DATA_DIR"] . '/uploads/';
 function lvfs_check_auth($db, $auth_token) {
 	if ($auth_token == '')
 		return False;
-	if (!($stmt = $db->prepare('SELECT * FROM users WHERE guid = ?;')))
+	if (!($stmt = $db->prepare('SELECT * FROM users WHERE guid = ? AND state = 1;')))
 		die("failed to prepare: " . $db->error);
 	$stmt->bind_param("s", $auth_token);
 	if (!$stmt->execute())
@@ -41,7 +41,7 @@ function lvfs_check_auth($db, $auth_token) {
 
 function lvfs_upload_firmware($db, $auth_token, $uploaddir, $file) {
 
-	$success = False;
+	$success = True;
 	$uri = 'result.php?';
 
 	# check auth key
@@ -79,7 +79,7 @@ function lvfs_upload_firmware($db, $auth_token, $uploaddir, $file) {
 	}
 
 	# only save if we passed all tests
-	if ($success = True) {
+	if ($success == True) {
 		$destination = $uploaddir . $id . '.cab';
 		#$destination = $uploaddir . $file['name'];
 		$handle = fopen($destination, "w");
@@ -96,14 +96,12 @@ function lvfs_upload_firmware($db, $auth_token, $uploaddir, $file) {
 		fclose($handle);
 
 		# log to database
-		$success = True;
-		$query = "INSERT INTO firmware (vendor_key, update_contact, addr, timestamp, filename, hash) " .
+		$query = "INSERT INTO firmware (vendor_key, addr, timestamp, filename, hash) " .
 			 "VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?);";
 		if (!($stmt = $db->prepare($query)))
 			die("failed to prepare: " . $db->error);
 		$stmt->bind_param("sssss",
 				  $auth_token,
-				  $_POST['update_contact'],
 				  $_SERVER['REMOTE_ADDR'],
 				  $file['name'],
 				  $id);

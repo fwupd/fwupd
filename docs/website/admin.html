@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+     Licensed under the GNU General Public License Version 2 -->
+<html>
+
+<head>
+<title>Linux Vendor Firmware Service</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="style.css" type="text/css" media="screen"/>
+<link rel="shortcut icon" href="favicon.ico"/>
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+</head>
+
+<body>
+
+<h1 class="banner">Linux Vendor<br>Admin Page</h1>
+
+<h1>Add Vendor</h1>
+<p>
+  Adding a vendor key allows a new user to upload firmware.
+  You should not do this unless the vendor is trusted as we will sign
+  all uploaded files of the user with the <code>sign@fwupd.org</code> private key.
+</p>
+<form action="admin.php?action=add" method="post" enctype="multipart/form-data">
+<table class="upload">
+<tr>
+ <th width="150px">Master Key:</th>
+ <td><input type="text" id="auth_master" name="auth_master" placeholder="b7a69990-dcfe-4ee2-8c23-693e0cba81a2" required size="36"/></td>
+</tr>
+<tr>
+ <th width="150px">Vendor Key:</th>
+ <td><input type="text" id="auth_vendor" name="auth_vendor" placeholder="5be94d63-58d2-410e-bc49-eecb22637a8e" required size="36"/></td>
+</tr>
+<tr>
+ <th width="150px">Vendor Name:</th>
+ <td><input type="text" id="name" name="name" placeholder="Acme Inc." required size="36"/></td>
+</tr>
+<tr><th width="150px">Vendor Email:</th><td><input type="email" name="update_contact" placeholder="info@acme.com" required size="36"/></td></tr>
+</table>
+<input type="submit" class="submit" value="Add"/>
+</form>
+
+<h1>Deactivate Vendor</h1>
+<p>
+  Deactivating a vendor key stops the user adding firmware but does not remove
+  any firmware uploaded with that key.
+</p>
+<form action="admin.php?action=disable" method="post" enctype="multipart/form-data">
+<table class="upload">
+<tr>
+ <th width="150px">Master Key:</th>
+ <td><input type="text" id="auth_master" name="auth_master" placeholder="b7a69990-dcfe-4ee2-8c23-693e0cba81a2" required size="36"/></td>
+</tr>
+<tr>
+ <th width="150px">Vendor Key:</th>
+ <td><input type="text" id="auth_vendor" name="auth_vendor" placeholder="5be94d63-58d2-410e-bc49-eecb22637a8e" required size="36"/></td>
+</tr>
+</table>
+<input type="submit" class="submit" value="Deactivate"/>
+</form>
+
+<p><a href="index.html">Go back to the main page</a></p>
+
+<p class="footer">
+ Copyright <a href="mailto:richard@hughsie.com">Richard Hughes 2015</a>
+</p>
+
+</body>
+
+</html>

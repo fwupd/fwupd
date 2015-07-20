@@ -12,7 +12,7 @@
 <body>
 
 <?php
-if ($_GET["result"] == 'True')
+if ($_GET["result"] == True)
      echo '<h1>Result: Success</h1>';
 else
      echo '<h1>Result: Failed</h1>';
