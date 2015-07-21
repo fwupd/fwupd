@@ -400,10 +400,6 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 			       "reason", g_variant_new_string ("user-action"));
 	g_variant_builder_add (&builder, "{sv}",
 			       "filename", g_variant_new_string (filename));
-	if (flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "offline", g_variant_new_boolean (TRUE));
-	}
 	if (flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "allow-older", g_variant_new_boolean (TRUE));
@@ -461,23 +457,6 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 	/* TRANSLATORS: update completed, no errors */
 	g_print ("%s\n", _("Done!"));
 	return TRUE;
-}
-
-/**
- * fu_util_update_online:
- **/
-static gboolean
-fu_util_update_online (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	if (g_strv_length (values) != 2) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments: expected 'id' 'filename'");
-		return FALSE;
-	}
-	return fu_util_update (priv, values[0], values[1],
-			       priv->flags, error);
 }
 
 /**
@@ -727,24 +706,6 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	g_print ("%s\n", _("Done!"));
 	return TRUE;
-}
-
-/**
- * fu_util_update_offline:
- **/
-static gboolean
-fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	if (g_strv_length (values) != 2) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments: expected 'id' 'filename'");
-		return FALSE;
-	}
-	return fu_util_update (priv, values[0], values[1],
-			       priv->flags | FU_PROVIDER_UPDATE_FLAG_OFFLINE,
-			       error);
 }
 
 /**
@@ -1418,18 +1379,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Get all devices that support firmware updates"),
 		     fu_util_get_devices);
-	fu_util_add (priv->cmd_array,
-		     "update-offline",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Install the update the next time the computer is rebooted"),
-		     fu_util_update_offline);
-	fu_util_add (priv->cmd_array,
-		     "update-online",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Install the update now"),
-		     fu_util_update_online);
 	fu_util_add (priv->cmd_array,
 		     "update-prepared",
 		     NULL,

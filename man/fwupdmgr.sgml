@@ -118,26 +118,6 @@
       </varlistentry>
       <varlistentry>
         <term>
-          <option>update-offline</option>
-          <parameter>guid</parameter>
-          <parameter>filename</parameter>
-        </term>
-        <listitem>
-          <para>Install the update the next time the computer is rebooted.</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term>
-          <option>update-online</option>
-          <parameter>guid</parameter>
-          <parameter>filename</parameter>
-        </term>
-        <listitem>
-          <para>Install the update now, if possible.</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term>
           <option>update-prepared</option>
         </term>
         <listitem>
