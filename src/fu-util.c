@@ -999,7 +999,7 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	if (status_code != SOUP_STATUS_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "Failed to download %s: %s",
 			     url_sig, soup_status_get_phrase (status_code));
 		return FALSE;
@@ -1012,7 +1012,7 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 				  &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     FWUPD_ERROR_WRITE,
 			     "Failed to save metadata signature: %s",
 			     error_local->message);
 		return FALSE;
@@ -1024,7 +1024,7 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	if (status_code != SOUP_STATUS_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "Failed to download %s: %s",
 			     url_data, soup_status_get_phrase (status_code));
 		return FALSE;
@@ -1036,7 +1036,7 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 				  &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     FWUPD_ERROR_WRITE,
 			     "Failed to save metadata: %s",
 			     error_local->message);
 		return FALSE;
