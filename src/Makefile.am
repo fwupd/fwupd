@@ -210,6 +210,8 @@ install-data-hook:
 	if test -w $(DESTDIR)$(prefix)/; then \
 		mkdir -p $(DESTDIR)$(localstatedir)/lib/fwupd; \
 		chmod 0755 $(DESTDIR)$(localstatedir)/lib/fwupd; \
+		mkdir -p $(DESTDIR)$(localstatedir)/lib/fwsignd; \
+		chmod 0755 $(DESTDIR)$(localstatedir)/lib/fwsignd; \
 		mkdir -p $(DESTDIR)$(localstatedir)/cache/app-info/xmls; \
 		mkdir -p $(DESTDIR)$(localstatedir)/cache/app-info/icons; \
 	fi

@@ -73,6 +73,12 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 
 %find_lang %{name}
 
+%pre
+getent group fwsignd >/dev/null || groupadd -r fwsignd
+getent passwd fwsignd >/dev/null || \
+    useradd -r -g fwsignd -d /var/lib/fwsignd -s /sbin/nologin \
+    -c "User for fwsignd" fwsignd
+
 %post
 /sbin/ldconfig
 %systemd_post fwupd.service
@@ -112,6 +118,7 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %config(noreplace)%{_sysconfdir}/fwsignd.conf
 %{_unitdir}/fwsignd.service
 %{_libexecdir}/fwsignd
+%attr(755,fwsignd,fwsignd) %dir %{_localstatedir}/lib/fwsignd
 
 %files devel
 %{_includedir}/fwupd-1
