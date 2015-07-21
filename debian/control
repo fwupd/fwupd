@@ -25,7 +25,8 @@ Description: Firmware update daemon library
 
 Package: fwupd
 Architecture: amd64 i386 armhf arm64 armel
-Depends: ${shlibs:Depends}, ${misc:Depends}, efibootmgr
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: fwupdate
 Multi-Arch: foreign
 Description: Firmware update daemon
  fwupd is a daemon to allow session software to update device firmware. 
