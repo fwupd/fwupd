@@ -61,6 +61,7 @@ typedef struct {
 	PolkitAuthority		*authority;
 	FwupdStatus		 status;
 	FuPending		*pending;
+	AsStore			*store;
 } FuMainPrivate;
 
 typedef struct {
@@ -141,25 +142,25 @@ fu_main_set_status (FuMainPrivate *priv, FwupdStatus status)
  * fu_main_device_array_to_variant:
  **/
 static GVariant *
-fu_main_device_array_to_variant (FuMainPrivate *priv, GError **error)
+fu_main_device_array_to_variant (GPtrArray *devices, GError **error)
 {
 	GVariantBuilder builder;
 	guint i;
 
 	/* no devices */
-	if (priv->devices->len == 0) {
+	if (devices->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "no supported devices");
+				     "no devices");
 		return NULL;
 	}
 
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	for (i = 0; i < priv->devices->len; i++) {
+	for (i = 0; i < devices->len; i++) {
 		GVariant *tmp;
 		FuDeviceItem *item;
-		item = g_ptr_array_index (priv->devices, i);
+		item = g_ptr_array_index (devices, i);
 		tmp = fu_device_to_variant (item->device);
 		g_variant_builder_add_value (&builder, tmp);
 	}
@@ -687,6 +688,86 @@ fu_main_daemon_update_metadata (gint fd, gint fd_sig, GError **error)
 }
 
 /**
+ * fu_main_get_updates:
+ **/
+static GPtrArray *
+fu_main_get_updates (FuMainPrivate *priv, GError **error)
+{
+	AsApp *app;
+	AsRelease *rel;
+	FuDeviceItem *item;
+	GPtrArray *updates;
+	guint i;
+	const gchar *tmp;
+
+	/* find any updates using the AppStream metadata */
+	updates = g_ptr_array_new ();
+	for (i = 0; i < priv->devices->len; i++) {
+		const gchar *version;
+		_cleanup_error_free_ GError *error_local = NULL;
+
+		item = g_ptr_array_index (priv->devices, i);
+
+		/* get device version */
+		version = fu_device_get_metadata (item->device, FU_DEVICE_KEY_VERSION);
+		if (version == NULL)
+			continue;
+
+		/* match the GUID in the XML */
+		app = as_store_get_app_by_id (priv->store, fu_device_get_guid (item->device));
+		if (app == NULL)
+			continue;
+
+		/* get latest release */
+		rel = as_app_get_release_default (app);
+		if (rel == NULL) {
+			g_debug ("%s has no firmware update metadata",
+				 fu_device_get_id (item->device));
+			continue;
+		}
+
+		/* check if actually newer than what we have installed */
+		if (as_utils_vercmp (as_release_get_version (rel), version) <= 0) {
+			g_debug ("%s has no firmware updates",
+				 fu_device_get_id (item->device));
+			continue;
+		}
+
+		/* set update metadata */
+		tmp = as_release_get_version (rel);
+		if (tmp != NULL) {
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_UPDATE_VERSION, tmp);
+		}
+		tmp = as_release_get_checksum (rel, G_CHECKSUM_SHA1);
+		if (tmp != NULL) {
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_UPDATE_HASH, tmp);
+		}
+		tmp = as_release_get_location_default (rel);
+		if (tmp != NULL) {
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_UPDATE_URI, tmp);
+		}
+		tmp = as_release_get_description (rel, NULL);
+		if (tmp != NULL) {
+			_cleanup_free_ gchar *md = NULL;
+			md = as_markup_convert (tmp, -1,
+						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
+						NULL);
+			if (md != NULL) {
+				fu_device_set_metadata (item->device,
+							FU_DEVICE_KEY_UPDATE_DESCRIPTION,
+							md);
+			}
+		}
+		g_ptr_array_add (updates, item);
+	}
+
+	return updates;
+}
+
+/**
  * fu_main_daemon_method_call:
  **/
 static void
@@ -702,7 +783,27 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "GetDevices") == 0) {
 		_cleanup_error_free_ GError *error = NULL;
 		g_debug ("Called %s()", method_name);
-		val = fu_main_device_array_to_variant (priv, &error);
+		val = fu_main_device_array_to_variant (priv->devices, &error);
+		if (val == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		g_dbus_method_invocation_return_value (invocation, val);
+		fu_main_set_status (priv, FWUPD_STATUS_IDLE);
+		return;
+	}
+
+	/* return 'as' */
+	if (g_strcmp0 (method_name, "GetUpdates") == 0) {
+		_cleanup_error_free_ GError *error = NULL;
+		_cleanup_ptrarray_unref_ GPtrArray *updates = NULL;
+		g_debug ("Called %s()", method_name);
+		updates = fu_main_get_updates (priv, &error);
+		if (updates == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		val = fu_main_device_array_to_variant (updates, &error);
 		if (val == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
@@ -1330,6 +1431,17 @@ main (int argc, char *argv[])
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_main_item_free);
 	priv->loop = g_main_loop_new (NULL, FALSE);
 	priv->pending = fu_pending_new ();
+	priv->store = as_store_new ();
+
+	/* load AppStream */
+	as_store_add_filter (priv->store, AS_ID_KIND_FIRMWARE);
+	if (!as_store_load (priv->store,
+			    AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM,
+			    NULL, &error)){
+		g_warning ("FuMain: failed to load AppStream data: %s",
+			   error->message);
+		return FALSE;
+	}
 
 	/* add providers */
 	priv->providers = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -1395,6 +1507,8 @@ out:
 			g_object_unref (priv->connection);
 		if (priv->authority != NULL)
 			g_object_unref (priv->authority);
+		if (priv->store != NULL)
+			g_object_unref (priv->store);
 		if (priv->introspection_daemon != NULL)
 			g_dbus_node_info_unref (priv->introspection_daemon);
 		g_object_unref (priv->pending);

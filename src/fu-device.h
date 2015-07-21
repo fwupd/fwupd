@@ -55,6 +55,10 @@ G_BEGIN_DECLS
 #define FU_DEVICE_KEY_PENDING_ERROR	"PendingError"	/* s */
 #define FU_DEVICE_KEY_TRUSTED		"Trusted"	/* t */
 #define FU_DEVICE_KEY_FIRMWARE_HASH	"FirmwareHash"	/* s */
+#define FU_DEVICE_KEY_UPDATE_VERSION	"UpdateVersion"	/* s */
+#define FU_DEVICE_KEY_UPDATE_HASH	"UpdateHash"	/* s */
+#define FU_DEVICE_KEY_UPDATE_URI	"UpdateUri"	/* s */
+#define FU_DEVICE_KEY_UPDATE_DESCRIPTION "UpdateDescription" /* s */
 
 typedef struct _FuDevicePrivate	FuDevicePrivate;
 typedef struct _FuDevice	FuDevice;

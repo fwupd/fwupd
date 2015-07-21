@@ -295,6 +295,44 @@ fu_util_get_devices_internal (FuUtilPrivate *priv, GError **error)
 }
 
 /**
+ * fu_util_get_updates_internal:
+ **/
+static GPtrArray *
+fu_util_get_updates_internal (FuUtilPrivate *priv, GError **error)
+{
+	GVariantIter *iter_device;
+	GPtrArray *devices = NULL;
+	FuDevice *dev;
+	gchar *id;
+	_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
+
+	g_dbus_proxy_call (priv->proxy,
+			   "GetUpdates",
+			   NULL,
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1,
+			   NULL,
+			   fu_util_get_devices_cb, priv);
+	g_main_loop_run (priv->loop);
+	if (priv->val == NULL) {
+		g_propagate_error (error, priv->error);
+		return NULL;
+	}
+
+	/* parse */
+	g_variant_get (priv->val, "(a{sa{sv}})", &iter);
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	while (g_variant_iter_next (iter, "{&sa{sv}}", &id, &iter_device)) {
+		dev = fu_device_new ();
+		fu_device_set_id (dev, id);
+		fu_device_set_metadata_from_iter (dev, iter_device);
+		g_ptr_array_add (devices, dev);
+		g_variant_iter_free (iter_device);
+	}
+	return devices;
+}
+
+/**
  * fu_util_get_devices:
  **/
 static gboolean
@@ -1241,128 +1279,41 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 }
 
 /**
- * fu_util_get_updates_app:
- **/
-static AsRelease *
-fu_util_get_updates_app (FuUtilPrivate *priv, FuDevice *dev, AsApp *app, GError **error)
-{
-	AsRelease *rel;
-	AsRelease *rel_newest = NULL;
-	GPtrArray *releases;
-	const gchar *display_name;
-	const gchar *tmp;
-	const gchar *version;
-	guint i;
-
-	/* find any newer versions */
-	display_name = fu_device_get_display_name (dev);
-	version = fu_device_get_metadata (dev, FU_DEVICE_KEY_VERSION);
-	if (version == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_READ,
-			     "Device %s has no Version",
-			     fu_device_get_id (dev));
-		return NULL;
-	}
-	releases = as_app_get_releases (app);
-	for (i = 0; i < releases->len; i++) {
-
-		/* check if actually newer */
-		rel = g_ptr_array_index (releases, i);
-		if ((priv->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL) == 0 &&
-		    (priv->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) == 0 &&
-		    as_utils_vercmp (as_release_get_version (rel), version) <= 0)
-			continue;
-
-		/* this is the first and newest */
-		if (rel_newest == NULL) {
-			/* TRANSLATORS: first replacement is device name */
-			g_print (_("%s has firmware updates:"), display_name);
-			g_print ("\n");
-			rel_newest = rel;
-		}
-
-		/* TRANSLATORS: section header for firmware version */
-		fu_util_print_data (_("Version"), as_release_get_version (rel));
-
-		/* TRANSLATORS: section header for firmware SHA1 */
-		fu_util_print_data (_("Checksum"), as_release_get_checksum (rel, G_CHECKSUM_SHA1));
-
-		/* TRANSLATORS: section header for firmware remote http:// */
-		fu_util_print_data (_("Location"), as_release_get_location_default (rel));
-
-		/* description is optional */
-		tmp = as_release_get_description (rel, NULL);
-		if (tmp != NULL) {
-			_cleanup_free_ gchar *md = NULL;
-			md = as_markup_convert (tmp, -1,
-						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
-						NULL);
-			if (md != NULL) {
-				/* TRANSLATORS: section header for long firmware desc */
-				fu_util_print_data (_("Description"), md);
-			}
-		}
-	}
-
-	/* nothing */
-	if (rel_newest == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "Device %s has no firmware updates",
-			     display_name);
-	}
-
-	return rel_newest;
-}
-
-/**
  * fu_util_get_updates:
  **/
 static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	AsApp *app;
 	FuDevice *dev;
+	GPtrArray *devices = NULL;
 	guint i;
-	_cleanup_object_unref_ AsStore *store = NULL;
-	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
 
-	/* only load firmware from the system */
-	store = as_store_new ();
-	as_store_add_filter (store, AS_ID_KIND_FIRMWARE);
-	if (!as_store_load (store, AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM, NULL, error))
-		return FALSE;
-
-	/* get devices from daemon */
-	devices = fu_util_get_devices_internal (priv, error);
+	/* print any updates */
+	devices = fu_util_get_updates_internal (priv, error);
 	if (devices == NULL)
 		return FALSE;
-
-	/* find any GUIDs in the AppStream metadata */
 	for (i = 0; i < devices->len; i++) {
-		_cleanup_error_free_ GError *error_local = NULL;
 		dev = g_ptr_array_index (devices, i);
 
-		/* match the GUID in the XML */
-		app = as_store_get_app_by_id (store, fu_device_get_guid (dev));
-		if (app == NULL)
-			continue;
+		/* TRANSLATORS: first replacement is device name */
+		g_print (_("%s has firmware updates:"), fu_device_get_display_name (dev));
+		g_print ("\n");
 
-		/* we found a device match, does it need updating */
-		if (fu_util_get_updates_app (priv, dev, app, &error_local) == NULL) {
-			if (g_error_matches (error_local,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOTHING_TO_DO)) {
-				g_print ("%s\n", error_local->message);
-				continue;
-			}
-			g_propagate_error (error, error_local);
-			error_local = NULL;
-			return FALSE;
-		}
+		/* TRANSLATORS: section header for firmware version */
+		fu_util_print_data (_("Version"),
+				    fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_VERSION));
+
+		/* TRANSLATORS: section header for firmware SHA1 */
+		fu_util_print_data (_("Checksum"),
+				    fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_HASH));
+
+		/* TRANSLATORS: section header for firmware remote http:// */
+		fu_util_print_data (_("Location"),
+				    fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_URI));
+
+		/* TRANSLATORS: section header for long firmware desc */
+		fu_util_print_data (_("Description"),
+				    fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_DESCRIPTION));
 	}
 
 	return TRUE;

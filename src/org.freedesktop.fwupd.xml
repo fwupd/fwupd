@@ -52,6 +52,24 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetUpdates'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets a list of all the devices that can be updated.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='a{sa{sv}}' name='devices' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>An array of devices, with any properties set on each.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='GetDetails'>
       <doc:doc>
         <doc:description>
