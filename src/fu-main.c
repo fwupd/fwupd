@@ -573,6 +573,23 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 }
 
 /**
+ * _as_store_set_priority:
+ **/
+static void
+_as_store_set_priority (AsStore *store, gint priority)
+{
+	AsApp *app;
+	GPtrArray *apps;
+	guint i;
+
+	apps = as_store_get_apps (store);
+	for (i = 0; i < apps->len; i++) {
+		app = g_ptr_array_index (apps, i);
+		as_app_set_priority (app, priority);
+	}
+}
+
+/**
  * fu_main_daemon_update_metadata:
  *
  * Supports optionally GZipped AppStream files up to 1MiB in size.
@@ -599,6 +616,8 @@ fu_main_daemon_update_metadata (gint fd, gint fd_sig, GError **error)
 	if (g_file_query_exists (file, NULL)) {
 		if (!as_store_from_file (store, file, NULL, NULL, error))
 			return FALSE;
+		/* ensure we don't merge existing entries */
+		_as_store_set_priority (store, -1);
 	}
 
 	/* read the entire file into memory */
