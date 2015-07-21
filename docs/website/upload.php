@@ -24,21 +24,6 @@ include 'db.php';
 
 $uploaddir = $_ENV["OPENSHIFT_DATA_DIR"] . '/uploads/';
 
-function lvfs_check_auth($db, $auth_token) {
-	if ($auth_token == '')
-		return False;
-	if (!($stmt = $db->prepare('SELECT * FROM users WHERE guid = ? AND state = 1;')))
-		die("failed to prepare: " . $db->error);
-	$stmt->bind_param("s", $auth_token);
-	if (!$stmt->execute())
-		die("failed to execute: " . $db->error);
-	$res = $stmt->get_result();
-	$stmt->close();
-	if ($res->num_rows > 0)
-		return True;
-	return False;
-}
-
 function lvfs_upload_firmware($db, $auth_token, $uploaddir, $file) {
 
 	$success = True;
@@ -80,8 +65,7 @@ function lvfs_upload_firmware($db, $auth_token, $uploaddir, $file) {
 
 	# only save if we passed all tests
 	if ($success == True) {
-		$destination = $uploaddir . $id . '.cab';
-		#$destination = $uploaddir . $file['name'];
+		$destination = $uploaddir . $file['name'];
 		$handle = fopen($destination, "w");
 		if ($handle == FALSE) {
 			header('HTTP/1.0 403 Forbidden');
@@ -97,10 +81,10 @@ function lvfs_upload_firmware($db, $auth_token, $uploaddir, $file) {
 
 		# log to database
 		$query = "INSERT INTO firmware (vendor_key, addr, timestamp, filename, hash) " .
-			 "VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?);";
+			 "VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?);";
 		if (!($stmt = $db->prepare($query)))
 			die("failed to prepare: " . $db->error);
-		$stmt->bind_param("sssss",
+		$stmt->bind_param("ssss",
 				  $auth_token,
 				  $_SERVER['REMOTE_ADDR'],
 				  $file['name'],

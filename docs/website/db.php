@@ -32,4 +32,35 @@ function lvfs_disconnect_db($db) {
 	$db->close();
 }
 
+function lvfs_check_auth($db, $auth_token) {
+	if ($auth_token == '')
+		return False;
+	if (!($stmt = $db->prepare("SELECT * FROM users WHERE guid=? AND state=1;")))
+		die("failed to prepare: " . $db->error);
+	$stmt->bind_param("s", $auth_token);
+	if (!$stmt->execute())
+		die("failed to execute: " . $db->error);
+	$res = $stmt->get_result();
+	$stmt->close();
+	if ($res->num_rows > 0)
+		return True;
+	return False;
+}
+
+function lvfs_check_auth_master($db, $auth_token) {
+	$master_update_contact = 'sign@fwupd.org';
+	if ($auth_token == '')
+		return False;
+	if (!($stmt = $db->prepare("SELECT * FROM users WHERE update_contact = ? AND guid = ?;")))
+		die("failed to prepare: " . $db->error);
+	$stmt->bind_param("ss", $master_update_contact, $auth_token);
+	if (!$stmt->execute())
+		die("failed to execute: " . $db->error);
+	$res = $stmt->get_result();
+	$stmt->close();
+	if ($res->num_rows > 0)
+		return True;
+	return False;
+}
+
 ?>
