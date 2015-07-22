@@ -508,6 +508,7 @@ static gboolean
 fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *id;
+	_cleanup_error_free_ GError *error_local = NULL;
 
 	/* handle both forms */
 	if (g_strv_length (values) == 1) {
@@ -522,6 +523,21 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	/* install with flags chosen by the user */
+	if (fu_util_install_internal (priv, id, values[0], &error_local))
+		return TRUE;
+
+	/* some other failure */
+	if ((priv->flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) > 0 ||
+	    !g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_propagate_error (error, error_local);
+		error_local = NULL;
+		return FALSE;
+	}
+
+	/* TRANSLATOR: the provider only supports offline */
+	g_print ("%s...\n", _("Retrying as an offline update"));
+	priv->flags |= FU_PROVIDER_UPDATE_FLAG_OFFLINE;
 	return fu_util_install_internal (priv, id, values[0], error);
 }
 
