@@ -173,7 +173,6 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 {
 	guint i;
 	FuUtilItem *item;
-	_cleanup_string_free_ GString *string = NULL;
 
 	/* find command */
 	for (i = 0; i < priv->cmd_array->len; i++) {
@@ -183,17 +182,11 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 	}
 
 	/* not found */
-	string = g_string_new ("");
-	g_string_append_printf (string, "%s\n",
-				/* TRANSLATORS: error message */
-				_("Command not found, valid commands are:"));
-	for (i = 0; i < priv->cmd_array->len; i++) {
-		item = g_ptr_array_index (priv->cmd_array, i);
-		g_string_append_printf (string, " * %s %s\n",
-					item->name,
-					item->arguments ? item->arguments : "");
-	}
-	g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, string->str);
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     /* TRANSLATORS: error message */
+			     _("Command not found"));
 	return FALSE;
 }
 
@@ -916,10 +909,10 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
- * fu_util_update_metadata_internal:
+ * fu_util_refresh_internal:
  **/
 static gboolean
-fu_util_update_metadata_internal (FuUtilPrivate *priv,
+fu_util_refresh_internal (FuUtilPrivate *priv,
 				  const gchar *data_fn,
 				  const gchar *sig_fn,
 				  GError **error)
@@ -1083,14 +1076,14 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 		return FALSE;
 
 	/* send all this to fwupd */
-	return fu_util_update_metadata_internal (priv, data_fn, sig_fn, error);
+	return fu_util_refresh_internal (priv, data_fn, sig_fn, error);
 }
 
 /**
- * fu_util_update_metadata:
+ * fu_util_refresh:
  **/
 static gboolean
-fu_util_update_metadata (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	if (g_strv_length (values) == 0)
 		return fu_util_download_metadata (priv, error);
@@ -1103,7 +1096,7 @@ fu_util_update_metadata (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open file */
-	return fu_util_update_metadata_internal (priv, values[0], values[1], error);
+	return fu_util_refresh_internal (priv, values[0], values[1], error);
 }
 
 /**
@@ -1474,11 +1467,11 @@ main (int argc, char *argv[])
 		     _("Gets the results from the last update"),
 		     fu_util_get_results);
 	fu_util_add (priv->cmd_array,
-		     "update-metadata",
+		     "refresh",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Updates metadata"),
-		     fu_util_update_metadata);
+		     _("Refresh metadata from remote server"),
+		     fu_util_refresh);
 	fu_util_add (priv->cmd_array,
 		     "dump-rom",
 		     NULL,

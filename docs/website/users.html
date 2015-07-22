@@ -77,21 +77,26 @@ Usage:
   fwupdmgr [OPTION…]
 
   clear-results                     Clears the results from the last update
+  dump-rom                          Dump the ROM checksum
   get-details                       Gets details about a firmware file
   get-devices                       Get all devices that support firmware updates
   get-results                       Gets the results from the last update
   get-updates                       Gets the list of updates for connected hardware
   install                           Install a firmware file on this hardware
-  update-offline                    Install the update the next time the computer is rebooted
-  update-online                     Install the update now
-  update-prepared                   Install prepared updates now
+  install-prepared                  Install prepared updates now
+  refresh                           Refresh metadata from remote server
+  update                            Updates all firmware to latest versions available
+  verify                            Gets the cryptographic hash of the dumped firmware
+  verify-update                     Update the stored metadata with current ROM contents
 
 Help Options:
-  -h, --help        Show help options
+  -h, --help            Show help options
 
 Application Options:
-  -v, --verbose     Show extra debugging information
-  -f, --force       Force the installation of firmware
+  -v, --verbose         Show extra debugging information
+  --offline             Perform the installation offline where possible
+  --allow-reinstall     Allow re-installing existing firmware versions
+  --allow-older         Allow downgrading firmware versions
 </pre>
 
 <h2>Using the D-Bus API</h2>
