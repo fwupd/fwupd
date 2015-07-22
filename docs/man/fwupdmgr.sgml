@@ -126,6 +126,14 @@
       </varlistentry>
       <varlistentry>
         <term>
+          <option>update</option>
+        </term>
+        <listitem>
+          <para>Updates all firmware to latest versions available.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
           <option>install</option>
         </term>
         <listitem>

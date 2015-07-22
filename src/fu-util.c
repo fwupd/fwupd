@@ -989,20 +989,20 @@ fu_util_update_metadata_internal (FuUtilPrivate *priv,
 }
 
 /**
- * fu_util_download_metadata:
+ * fu_util_download_file:
  **/
 static gboolean
-fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
+fu_util_download_file (FuUtilPrivate *priv,
+		       const gchar *uri,
+		       const gchar *fn,
+		       const gchar *checksum_expected,
+		       GError **error)
 {
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_free_ gchar *sig_fn = NULL;
-	_cleanup_free_ gchar *url_sig = NULL;
-	_cleanup_object_unref_ SoupMessage *msg_data = NULL;
-	_cleanup_object_unref_ SoupMessage *msg_sig = NULL;
-	_cleanup_object_unref_ SoupSession *session = NULL;
-	const gchar *data_fn = "/tmp/firmware.xml.gz";
-	const gchar *url_data = "https://beta-lvfs.rhcloud.com/downloads/firmware.xml.gz";
 	guint status_code;
+	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_free_ gchar *checksum_actual = NULL;
+	_cleanup_object_unref_ SoupMessage *msg = NULL;
+	_cleanup_object_unref_ SoupSession *session = NULL;
 
 	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT,
 						 "fwupdmgr",
@@ -1018,57 +1018,71 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	/* this disables the double-compression of the firmware.xml.gz file */
 	soup_session_remove_feature_by_type (session, SOUP_TYPE_CONTENT_DECODER);
 
-	/* download the signature */
-	url_sig = g_strdup_printf ("%s.asc", url_data);
-	msg_sig = soup_message_new (SOUP_METHOD_GET, url_sig);
-	status_code = soup_session_send_message (session, msg_sig);
+	/* download data */
+	g_debug ("downloading %s to %s:", uri, fn);
+	msg = soup_message_new (SOUP_METHOD_GET, uri);
+	status_code = soup_session_send_message (session, msg);
 	if (status_code != SOUP_STATUS_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "Failed to download %s: %s",
-			     url_sig, soup_status_get_phrase (status_code));
+			     uri, soup_status_get_phrase (status_code));
 		return FALSE;
 	}
-	sig_fn = g_strdup_printf ("%s.asc", data_fn);
-	g_debug ("saving new signature to %s:", sig_fn);
-	if (!g_file_set_contents (sig_fn,
-				  msg_sig->response_body->data,
-				  msg_sig->response_body->length,
+
+	/* verify checksum */
+	if (checksum_expected != NULL) {
+		checksum_actual = g_compute_checksum_for_data (G_CHECKSUM_SHA1,
+							       (guchar *) msg->response_body->data,
+							       msg->response_body->length);
+		if (g_strcmp0 (checksum_expected, checksum_actual) != 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Checksum invalid, expected %s got %s",
+				     checksum_expected, checksum_actual);
+			return FALSE;
+		}
+	}
+
+	/* save file */
+	if (!g_file_set_contents (fn,
+				  msg->response_body->data,
+				  msg->response_body->length,
 				  &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
-			     "Failed to save metadata signature: %s",
+			     "Failed to save file: %s",
 			     error_local->message);
 		return FALSE;
 	}
+	return TRUE;
+}
+
+/**
+ * fu_util_download_metadata:
+ **/
+static gboolean
+fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
+{
+	_cleanup_free_ gchar *sig_fn = NULL;
+	_cleanup_free_ gchar *sig_uri = NULL;
+	const gchar *data_fn = "/tmp/firmware.xml.gz";
+	const gchar *data_uri = "https://beta-lvfs.rhcloud.com/downloads/firmware.xml.gz";
+
+	/* download the signature */
+	sig_uri = g_strdup_printf ("%s.asc", data_uri);
+	sig_fn = g_strdup_printf ("%s.asc", data_fn);
+	if (!fu_util_download_file (priv, sig_uri, sig_fn, NULL, error))
+		return FALSE;
 
 	/* download the payload */
-	msg_data = soup_message_new (SOUP_METHOD_GET, url_data);
-	status_code = soup_session_send_message (session, msg_data);
-	if (status_code != SOUP_STATUS_OK) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to download %s: %s",
-			     url_data, soup_status_get_phrase (status_code));
+	if (!fu_util_download_file (priv, data_uri, data_fn, NULL, error))
 		return FALSE;
-	}
-	g_debug ("saving new data to %s:", data_fn);
-	if (!g_file_set_contents (data_fn,
-				  msg_data->response_body->data,
-				  msg_data->response_body->length,
-				  &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "Failed to save metadata: %s",
-			     error_local->message);
-		return FALSE;
-	}
 
-	/* phew, lets send all this to fwupd */
+	/* send all this to fwupd */
 	return fu_util_update_metadata_internal (priv, data_fn, sig_fn, error);
 }
 
@@ -1308,6 +1322,52 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_update:
+ **/
+static gboolean
+fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FuDevice *dev;
+	GPtrArray *devices = NULL;
+	guint i;
+
+	/* apply any updates */
+	devices = fu_util_get_updates_internal (priv, error);
+	if (devices == NULL)
+		return FALSE;
+	for (i = 0; i < devices->len; i++) {
+		const gchar *checksum;
+		const gchar *uri;
+		_cleanup_free_ gchar *basename = NULL;
+		_cleanup_free_ gchar *fn = NULL;
+
+		dev = g_ptr_array_index (devices, i);
+
+		/* download file */
+		checksum = fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_HASH);
+		if (checksum == NULL)
+			continue;
+		uri = fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_URI);
+		if (uri == NULL)
+			continue;
+		g_print ("Downloading %s for %s...\n",
+			 fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_VERSION),
+			 fu_device_get_display_name (dev));
+		basename = g_path_get_basename (uri);
+		fn = g_build_filename (g_get_tmp_dir (), basename, NULL);
+		if (!fu_util_download_file (priv, uri, fn, checksum, error))
+			return FALSE;
+		g_print ("Updating %s on %s...\n",
+			 fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_VERSION),
+			 fu_device_get_display_name (dev));
+		if (!fu_util_install_internal (priv, fu_device_get_id (dev), fn, error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+/**
  * fu_util_ignore_cb:
  **/
 static void
@@ -1389,6 +1449,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets the list of updates for connected hardware"),
 		     fu_util_get_updates);
+	fu_util_add (priv->cmd_array,
+		     "update",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Updates all firmware to latest versions available"),
+		     fu_util_update);
 	fu_util_add (priv->cmd_array,
 		     "verify",
 		     NULL,
