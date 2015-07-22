@@ -38,7 +38,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-            Gets a list of all the devices that support UEFI firmware upgrading.
+            Gets a list of all the devices that are supported.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -101,11 +101,11 @@
     </method>
 
     <!--***********************************************************-->
-    <method name='Update'>
+    <method name='Install'>
       <doc:doc>
         <doc:description>
           <doc:para>
-            Schedules an update to be done offline.
+            Schedules a firmware to be installed.
           </doc:para>
         </doc:description>
       </doc:doc>

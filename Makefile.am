@@ -6,7 +6,7 @@ SUBDIRS = 						\
 	libfwupd					\
 	po						\
 	data						\
-	man						\
+	docs						\
 	policy						\
 	src
 

@@ -419,11 +419,11 @@ fu_util_update_cb (GObject *source_object, GAsyncResult *res, gpointer user_data
 }
 
 /**
- * fu_util_update:
+ * fu_util_install_internal:
  **/
 static gboolean
-fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
-		FuProviderFlags flags, GError **error)
+fu_util_install_internal (FuUtilPrivate *priv, const gchar *id,
+			  const gchar *filename, GError **error)
 {
 	GVariant *body;
 	GVariantBuilder builder;
@@ -438,15 +438,15 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 			       "reason", g_variant_new_string ("user-action"));
 	g_variant_builder_add (&builder, "{sv}",
 			       "filename", g_variant_new_string (filename));
-	if (flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
+	if (priv->flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "offline", g_variant_new_boolean (TRUE));
 	}
-	if (flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) {
+	if (priv->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "allow-older", g_variant_new_boolean (TRUE));
 	}
-	if (flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL) {
+	if (priv->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "allow-reinstall", g_variant_new_boolean (TRUE));
 	}
@@ -469,7 +469,7 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
 						  FWUPD_DBUS_PATH,
 						  FWUPD_DBUS_INTERFACE,
-						  "Update");
+						  "Install");
 	g_dbus_message_set_unix_fd_list (request, fd_list);
 
 	/* g_unix_fd_list_append did a dup() already */
@@ -502,37 +502,27 @@ fu_util_update (FuUtilPrivate *priv, const gchar *id, const gchar *filename,
 }
 
 /**
- * fu_util_update_online:
- **/
-static gboolean
-fu_util_update_online (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	if (g_strv_length (values) != 2) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments: expected 'id' 'filename'");
-		return FALSE;
-	}
-	return fu_util_update (priv, values[0], values[1],
-			       priv->flags, error);
-}
-
-/**
  * fu_util_install:
  **/
 static gboolean
 fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	if (g_strv_length (values) != 1) {
+	const gchar *id;
+
+	/* handle both forms */
+	if (g_strv_length (values) == 1) {
+		id = FWUPD_DEVICE_ID_ANY;
+	} else if (g_strv_length (values) == 2) {
+		id = values[1];
+	} else {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments: expected 'filename'");
+				     "Invalid arguments: expected 'filename' [id]");
 		return FALSE;
 	}
-	return fu_util_update (priv, FWUPD_DEVICE_ID_ANY,
-			       values[0], priv->flags, error);
+
+	return fu_util_install_internal (priv, id, values[0], error);
 }
 
 /**
@@ -668,10 +658,10 @@ fu_util_offline_update_reboot (void)
 }
 
 /**
- * fu_util_update_prepared:
+ * fu_util_install_prepared:
  **/
 static gboolean
-fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	gint vercmp;
 	guint cnt = 0;
@@ -743,10 +733,10 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_OLD),
 				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
 		}
-		if (!fu_util_update (priv,
-				     fu_device_get_id (device),
-				     fu_device_get_metadata (device, FU_DEVICE_KEY_FILENAME_CAB),
-				     priv->flags, error))
+		if (!fu_util_install_internal (priv,
+					       fu_device_get_id (device),
+					       fu_device_get_metadata (device, FU_DEVICE_KEY_FILENAME_CAB),
+					       error))
 			return FALSE;
 		cnt++;
 	}
@@ -765,24 +755,6 @@ fu_util_update_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	g_print ("%s\n", _("Done!"));
 	return TRUE;
-}
-
-/**
- * fu_util_update_offline:
- **/
-static gboolean
-fu_util_update_offline (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	if (g_strv_length (values) != 2) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments: expected 'id' 'filename'");
-		return FALSE;
-	}
-	return fu_util_update (priv, values[0], values[1],
-			       priv->flags | FU_PROVIDER_UPDATE_FLAG_OFFLINE,
-			       error);
 }
 
 /**
@@ -1335,8 +1307,10 @@ int
 main (int argc, char *argv[])
 {
 	FuUtilPrivate *priv;
+	gboolean allow_older = FALSE;
+	gboolean allow_reinstall = FALSE;
+	gboolean offline = FALSE;
 	gboolean ret;
-	gboolean force = FALSE;
 	gboolean verbose = FALSE;
 	guint retval = 1;
 	_cleanup_error_free_ GError *error = NULL;
@@ -1345,9 +1319,15 @@ main (int argc, char *argv[])
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			/* TRANSLATORS: command line option */
 			_("Show extra debugging information"), NULL },
-		{ "force", 'f', 0, G_OPTION_ARG_NONE, &force,
+		{ "offline", '\0', 0, G_OPTION_ARG_NONE, &offline,
 			/* TRANSLATORS: command line option */
-			_("Force the installation of firmware"), NULL },
+			_("Perform the installation offline where possible"), NULL },
+		{ "allow-reinstall", '\0', 0, G_OPTION_ARG_NONE, &allow_reinstall,
+			/* TRANSLATORS: command line option */
+			_("Allow re-installing existing firmware versions"), NULL },
+		{ "allow-older", '\0', 0, G_OPTION_ARG_NONE, &allow_older,
+			/* TRANSLATORS: command line option */
+			_("Allow downgrading firmware versions"), NULL },
 		{ NULL}
 	};
 
@@ -1370,23 +1350,11 @@ main (int argc, char *argv[])
 		     _("Get all devices that support firmware updates"),
 		     fu_util_get_devices);
 	fu_util_add (priv->cmd_array,
-		     "update-offline",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Install the update the next time the computer is rebooted"),
-		     fu_util_update_offline);
-	fu_util_add (priv->cmd_array,
-		     "update-online",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Install the update now"),
-		     fu_util_update_online);
-	fu_util_add (priv->cmd_array,
-		     "update-prepared",
+		     "install-prepared",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Install prepared updates now"),
-		     fu_util_update_prepared);
+		     fu_util_install_prepared);
 	fu_util_add (priv->cmd_array,
 		     "install",
 		     NULL,
@@ -1452,7 +1420,7 @@ main (int argc, char *argv[])
 	g_option_context_set_summary (priv->context, cmd_descriptions);
 
 	/* TRANSLATORS: program name */
-	g_set_application_name (_("Firmware Update"));
+	g_set_application_name (_("Firmware Utility"));
 	g_option_context_add_main_entries (priv->context, options, NULL);
 	ret = g_option_context_parse (priv->context, &argc, &argv, &error);
 	if (!ret) {
@@ -1470,11 +1438,13 @@ main (int argc, char *argv[])
 				   fu_util_ignore_cb, NULL);
 	}
 
-	/* we're feeling naughty */
-	if (force) {
-		priv->flags = FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL |
-			      FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER;
-	}
+	/* set flags */
+	if (offline)
+		priv->flags |= FU_PROVIDER_UPDATE_FLAG_OFFLINE;
+	if (allow_reinstall)
+		priv->flags |= FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL;
+	if (allow_older)
+		priv->flags |= FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER;
 
 	/* connect to the daemon */
 	priv->conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);

@@ -935,7 +935,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	}
 
 	/* return '' */
-	if (g_strcmp0 (method_name, "Update") == 0) {
+	if (g_strcmp0 (method_name, "Install") == 0) {
 		FuDeviceItem *item = NULL;
 		FuMainAuthHelper *helper;
 		FuProviderFlags flags = FU_PROVIDER_UPDATE_FLAG_NONE;
@@ -1412,7 +1412,7 @@ main (int argc, char *argv[])
 	textdomain (GETTEXT_PACKAGE);
 
 	/* TRANSLATORS: program name */
-	g_set_application_name (_("Firmware Update"));
+	g_set_application_name (_("Firmware Update Daemon"));
 	context = g_option_context_new (NULL);
 	g_option_context_add_main_entries (context, options, NULL);
 	g_option_context_add_group (context, fu_debug_get_option_group ());

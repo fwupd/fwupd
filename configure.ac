@@ -184,10 +184,11 @@ Makefile
 libfwupd/fwupd-version.h
 libfwupd/fwupd.pc
 libfwupd/Makefile
-man/Makefile
 data/Makefile
 data/pki/Makefile
 data/tests/Makefile
+docs/Makefile
+docs/man/Makefile
 policy/Makefile
 po/Makefile.in
 src/Makefile
