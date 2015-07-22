@@ -503,12 +503,6 @@ fu_cab_verify (FuCab *cab, GError **error)
 		return FALSE;
 	}
 
-	/* no signature */
-	if (priv->signature_basename == NULL) {
-		g_debug ("firmware archive contained no GPG signature");
-		return TRUE;
-	}
-
 	/* check we were installed correctly */
 	pki_dir = g_build_filename (SYSCONFDIR, "pki", "fwupd", NULL);
 	if (!g_file_test (pki_dir, G_FILE_TEST_EXISTS)) {
@@ -521,6 +515,10 @@ fu_cab_verify (FuCab *cab, GError **error)
 
 	/* load signature */
 	fn = g_build_filename (priv->tmp_path, priv->signature_basename, NULL);
+	if (!g_file_test (fn, G_FILE_TEST_EXISTS)) {
+		g_debug ("firmware archive contained no GPG signature");
+		return TRUE;
+	}
 	if (!g_file_get_contents (fn, &signature, NULL, error))
 		return FALSE;
 
