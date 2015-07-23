@@ -1353,8 +1353,16 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("Updating %s on %s...\n",
 			 fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_VERSION),
 			 fu_device_get_display_name (dev));
-		if (!fu_util_install_internal (priv, fu_device_get_id (dev), fn, error))
-			return FALSE;
+		/*try online first */
+		if (!fu_util_install_internal (priv, fu_device_get_id (dev), fn, error)) {
+			g_print ("%s...\n", _("Retrying as an offline update"));
+			priv->flags |= FU_PROVIDER_UPDATE_FLAG_OFFLINE;
+			if (!fu_util_install_internal (priv,
+							fu_device_get_id(dev),
+							fn, error))
+				return FALSE;
+		}
+
 	}
 
 	return TRUE;
