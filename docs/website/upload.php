@@ -35,9 +35,9 @@ function lvfs_upload_firmware($db, $auth_token, $uploaddir, $file) {
 		$uri = $uri . 'authkey=False&';
 	}
 
-	# check size
+	# check size < 50Mb
 	$size = $file['size'];
-	if ($size > 102400 || $size < 1280) {
+	if ($size > 50000000 || $size < 1280) {
 		$success = False;
 		$uri = $uri . 'sizecheck=False&';
 	}
