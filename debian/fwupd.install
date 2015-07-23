@@ -13,6 +13,7 @@ unitdir=/lib/systemd/system
 cat<<EOF
 ${bindir}/fwupdmgr
 ${sysconfdir}/pki/fwupd
+${sysconfdir}/pki/fwupd-metadata/
 ${sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 ${datadir}/dbus-1/interfaces/org.freedesktop.fwupd.xml
 ${datadir}/polkit-1/actions/org.freedesktop.fwupd.policy
@@ -24,4 +25,6 @@ ${mandir}/man1/*
 ${unitdir}/*.service
 ${unitdir}/system-update.target.wants/*.service
 ${localstatedir}/lib/fwupd
+lib/udev/rules.d/*
 EOF
+
