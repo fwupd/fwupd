@@ -65,7 +65,8 @@ function lvfs_upload_firmware($db, $auth_token, $uploaddir, $file) {
 
 	# only save if we passed all tests
 	if ($success == True) {
-		$destination = $uploaddir . $file['name'];
+		$new_filename = $id . '-' . $file['name'];
+		$destination = $uploaddir . $new_filename;
 		$handle = fopen($destination, "w");
 		if ($handle == FALSE) {
 			header('HTTP/1.0 403 Forbidden');
@@ -74,7 +75,7 @@ function lvfs_upload_firmware($db, $auth_token, $uploaddir, $file) {
 		}
 		if (fwrite($handle, $data) == FALSE) {
 			header('HTTP/1.0 413 Request Entity Too Large');
-			echo 'Failed to write file';
+			echo 'Failed to write ' . $destination;
 			return;
 		}
 		fclose($handle);
@@ -87,7 +88,7 @@ function lvfs_upload_firmware($db, $auth_token, $uploaddir, $file) {
 		$stmt->bind_param("ssss",
 				  $auth_token,
 				  $_SERVER['REMOTE_ADDR'],
-				  $file['name'],
+				  $new_filename,
 				  $id);
 		if (!$stmt->execute())
 			die("failed to execute: " . $stmt->error);
