@@ -40,6 +40,7 @@ typedef struct {
 	gchar			*key_id;
 	gboolean		 set_owner;
 	FuKeyring		*keyring;
+	GPtrArray		*pending_files;
 } FuSignPrivate;
 
 /**
@@ -238,20 +239,39 @@ fu_sign_monitor_changed_cb (GFileMonitor *monitor,
 			    GFileMonitorEvent event_type,
 			    FuSignPrivate *priv)
 {
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *fn_src = NULL;
+	guint i;
+	const gchar *fn;
 
-	/* only new files */
-	if (event_type != G_FILE_MONITOR_EVENT_CREATED)
-		return;
-	fn_src = g_file_get_path (file);
-	if (fn_src == NULL)
-		return;
-
-	/* process file */
-	if (!fu_sign_process_file (priv, fn_src, &error)) {
-		g_warning ("failed to process %s: %s", fn_src, error->message);
-		return;
+	/* we don't want to process the file when the event is EVENT_CREATED as
+	 * the file may still be in the process of being transferred */
+	switch (event_type) {
+	case G_FILE_MONITOR_EVENT_CREATED:
+		g_ptr_array_add (priv->pending_files, g_file_get_path (file));
+		break;
+	case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
+		for (i = 0; i < priv->pending_files->len; i++) {
+			_cleanup_error_free_ GError *error = NULL;
+			fn = g_ptr_array_index (priv->pending_files, i);
+			if (!fu_sign_process_file (priv, fn, &error)) {
+				g_warning ("failed to process %s: %s",
+					   fn, error->message);
+				continue;
+			}
+		}
+		g_ptr_array_set_size (priv->pending_files, 0);
+		break;
+	case G_FILE_MONITOR_EVENT_DELETED:
+		for (i = 0; i < priv->pending_files->len; i++) {
+			_cleanup_free_ gchar *fn_src = g_file_get_path (file);
+			fn = g_ptr_array_index (priv->pending_files, i);
+			if (g_strcmp0 (fn, fn_src) == 0) {
+				g_ptr_array_remove_index_fast (priv->pending_files, i);
+				break;
+			}
+		}
+		break;
+	default:
+		break;
 	}
 }
 
@@ -337,6 +357,7 @@ main (int argc, char *argv[])
 	priv->destination = g_strdup (destination);
 	priv->key_id = g_strdup (key_id);
 	priv->keyring = fu_keyring_new ();
+	priv->pending_files = g_ptr_array_new_with_free_func (g_free);
 	priv->set_owner = g_key_file_get_boolean (config, "fwupd", "SetDestinationOwner", NULL);
 	if (priv->key_id != NULL &&
 	    !fu_keyring_set_signing_key (priv->keyring, priv->key_id, &error)) {
@@ -374,6 +395,7 @@ main (int argc, char *argv[])
 out:
 	if (priv != NULL) {
 		g_object_unref (priv->keyring);
+		g_ptr_array_unref (priv->pending_files);
 		g_free (priv->source);
 		g_free (priv->destination);
 		g_free (priv->key_id);
