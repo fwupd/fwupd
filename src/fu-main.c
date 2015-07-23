@@ -596,7 +596,7 @@ _as_store_set_priority (AsStore *store, gint priority)
  * Supports optionally GZipped AppStream files up to 1MiB in size.
  **/
 static gboolean
-fu_main_daemon_update_metadata (gint fd, gint fd_sig, GError **error)
+fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GError **error)
 {
 	guint8 magic[2];
 	_cleanup_bytes_unref_ GBytes *bytes = NULL;
@@ -682,6 +682,13 @@ fu_main_daemon_update_metadata (gint fd, gint fd_sig, GError **error)
 			       AS_NODE_TO_XML_FLAG_FORMAT_INDENT,
 			       NULL, error)) {
 		return FALSE;
+	}
+
+	/* force the store to reload */
+        if (!as_store_load (priv->store,
+                            AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM,
+                            NULL, error)) {
+                return FALSE;
 	}
 
 	return TRUE;
@@ -895,7 +902,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		if (!fu_main_daemon_update_metadata (fd_data, fd_sig, &error)) {
+		if (!fu_main_daemon_update_metadata (priv, fd_data, fd_sig, &error)) {
 			g_prefix_error (&error, "failed to update metadata: ");
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
