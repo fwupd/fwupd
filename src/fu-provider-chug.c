@@ -110,7 +110,6 @@ fu_provider_chug_reconnect_timeout_cb (gpointer user_data)
 static gboolean
 fu_provider_chug_wait_for_connect (FuProviderChugItem *item, GError **error)
 {
-	_cleanup_error_free_ GError *error_local = NULL;
 	item->reconnect_id = g_timeout_add (CH_DEVICE_USB_TIMEOUT,
 				fu_provider_chug_reconnect_timeout_cb, item);
 	g_main_loop_run (item->loop);
@@ -220,6 +219,77 @@ out:
 	/* we're done here */
 	if (!g_usb_device_close (item->usb_device, &error))
 		g_debug ("Failed to close: %s", error->message);
+}
+
+/**
+ * fu_provider_chug_verify:
+ **/
+static gboolean
+fu_provider_chug_verify (FuProvider *provider,
+			 FuDevice *device,
+			 FuProviderVerifyFlags flags,
+			 GError **error)
+{
+	FuProviderChug *provider_chug = FU_PROVIDER_CHUG (provider);
+	FuProviderChugPrivate *priv = provider_chug->priv;
+	FuProviderChugItem *item;
+	gsize len;
+	_cleanup_error_free_ GError *error_local = NULL;
+	_cleanup_free_ gchar *hash = NULL;
+	_cleanup_free_ guint8 *data = NULL;
+
+	/* find item */
+	item = g_hash_table_lookup (priv->devices, fu_device_get_id (device));
+	if (item == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "cannot find: %s",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+#if !CD_CHECK_VERSION(1,2,12)
+	/* recompile colord */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Cannot read firmware: colord too old");
+	return FALSE;
+#endif
+
+	/* open */
+	if (!fu_provider_chug_open (item, error))
+		return FALSE;
+
+	/* get the firmware from the device */
+	g_debug ("ColorHug: Verifying firmware");
+#if CD_CHECK_VERSION(1,2,12)
+	ch_device_queue_read_firmware (priv->device_queue, item->usb_device,
+				       &data, &len);
+#endif
+	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_VERIFY);
+	if (!ch_device_queue_process (priv->device_queue,
+				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
+				      NULL, &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "failed to dump firmware: %s",
+			     error_local->message);
+		g_usb_device_close (item->usb_device, NULL);
+		return FALSE;
+	}
+
+	/* get the SHA1 hash */
+	hash = g_compute_checksum_for_data (G_CHECKSUM_SHA1, (guchar *) data, len);
+	fu_device_set_metadata (device, FU_DEVICE_KEY_FIRMWARE_HASH, hash);
+
+	/* we're done here */
+	if (!g_usb_device_close (item->usb_device, &error_local))
+		g_debug ("Failed to close: %s", error_local->message);
+
+	return TRUE;
 }
 
 /**
@@ -593,6 +663,7 @@ fu_provider_chug_class_init (FuProviderChugClass *klass)
 	provider_class->get_name = fu_provider_chug_get_name;
 	provider_class->coldplug = fu_provider_chug_coldplug;
 	provider_class->update_online = fu_provider_chug_update;
+	provider_class->verify = fu_provider_chug_verify;
 	object_class->finalize = fu_provider_chug_finalize;
 
 	g_type_class_add_private (klass, sizeof (FuProviderChugPrivate));

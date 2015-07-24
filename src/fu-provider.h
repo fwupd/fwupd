@@ -52,6 +52,11 @@ typedef enum {
 	FU_PROVIDER_UPDATE_FLAG_LAST
 } FuProviderFlags;
 
+typedef enum {
+	FU_PROVIDER_VERIFY_FLAG_NONE	= 0,
+	FU_PROVIDER_VERIFY_FLAG_LAST
+} FuProviderVerifyFlags;
+
 struct _FuProviderClass
 {
 	GObjectClass	parent_class;
@@ -59,6 +64,10 @@ struct _FuProviderClass
 	/* vfunc */
 	const gchar	*(*get_name)		(FuProvider	*provider);
 	gboolean	 (*coldplug)		(FuProvider	*provider,
+						 GError		**error);
+	gboolean	 (*verify)		(FuProvider	*provider,
+						 FuDevice	*device,
+						 FuProviderVerifyFlags flags,
 						 GError		**error);
 	gboolean	 (*update_online)	(FuProvider	*provider,
 						 FuDevice	*device,
@@ -103,6 +112,10 @@ gboolean	 fu_provider_update		(FuProvider	*provider,
 						 GInputStream	*stream_cab,
 						 gint		 fd_fw,
 						 FuProviderFlags flags,
+						 GError		**error);
+gboolean	 fu_provider_verify		(FuProvider	*provider,
+						 FuDevice	*device,
+						 FuProviderVerifyFlags flags,
 						 GError		**error);
 gboolean	 fu_provider_clear_results	(FuProvider	*provider,
 						 FuDevice	*device,

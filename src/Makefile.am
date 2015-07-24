@@ -5,6 +5,7 @@ dist_introspection_DATA = 				\
 AM_CPPFLAGS =						\
 	$(APPSTREAM_GLIB_CFLAGS)			\
 	$(COLORHUG_CFLAGS)				\
+	$(GUSB_CFLAGS)					\
 	$(GCAB_CFLAGS)					\
 	$(GLIB_CFLAGS)					\
 	$(GUDEV_CFLAGS)					\
@@ -12,6 +13,7 @@ AM_CPPFLAGS =						\
 	$(POLKIT_CFLAGS)				\
 	$(UEFI_CFLAGS)					\
 	$(GPGME_CFLAGS)					\
+	$(SOUP_CFLAGS)					\
 	-I$(top_srcdir)					\
 	-I$(top_builddir)				\
 	-I$(top_srcdir)/libfwupd			\
@@ -35,14 +37,19 @@ bin_PROGRAMS = fwupdmgr
 fwupdmgr_SOURCES =					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-guid.c					\
+	fu-guid.h					\
 	fu-pending.c					\
 	fu-pending.h					\
+	fu-rom.c					\
+	fu-rom.h					\
 	fu-util.c
 
 fwupdmgr_LDADD =					\
 	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\
+	$(SOUP_LIBS)					\
 	$(GLIB_LIBS)
 
 fwupdmgr_LDFLAGS =					\
@@ -82,16 +89,22 @@ fwupd_SOURCES =						\
 	fu-debug.h					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-guid.c					\
+	fu-guid.h					\
 	fu-keyring.c					\
 	fu-keyring.h					\
 	fu-pending.c					\
 	fu-pending.h					\
 	fu-provider.c					\
 	fu-provider.h					\
+	fu-provider-udev.c				\
+	fu-provider-udev.h				\
 	fu-provider-usb.c				\
 	fu-provider-usb.h				\
 	fu-resources.c					\
 	fu-resources.h					\
+	fu-rom.c					\
+	fu-rom.h					\
 	fu-main.c
 
 if HAVE_COLORHUG
@@ -110,6 +123,7 @@ fwupd_LDADD =						\
 	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(COLORHUG_LIBS)				\
+	$(GUSB_LIBS)					\
 	$(GCAB_LIBS)					\
 	$(GLIB_LIBS)					\
 	$(GUDEV_LIBS)					\
@@ -125,6 +139,34 @@ fwupd_LDFLAGS =						\
 fwupd_CFLAGS =						\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
 	$(WARNINGFLAGS_C)
+
+if HAVE_FWSIGND
+libexec_PROGRAMS += fwsignd
+
+fwsignd_SOURCES =					\
+	fu-cleanup.h					\
+	fu-cab.c					\
+	fu-cab.h					\
+	fu-keyring.c					\
+	fu-keyring.h					\
+	fu-debug.c					\
+	fu-debug.h					\
+	fu-sign.c
+
+fwsignd_LDADD =						\
+	$(FWUPD_LIBS)					\
+	$(APPSTREAM_GLIB_LIBS)				\
+	$(GPGME_LIBS)					\
+	$(GCAB_LIBS)					\
+	$(GLIB_LIBS)
+
+fwsignd_LDFLAGS =					\
+	$(PIE_LDFLAGS)
+
+fwsignd_CFLAGS =					\
+	$(WARNINGFLAGS_C)
+
+endif
 
 TESTS_ENVIRONMENT =					\
 	libtool --mode=execute valgrind			\
@@ -148,6 +190,8 @@ fu_self_test_SOURCES =					\
 	fu-provider.h					\
 	fu-provider-fake.c				\
 	fu-provider-fake.h				\
+	fu-rom.c					\
+	fu-rom.h					\
 	fu-self-test.c
 
 fu_self_test_LDADD =					\
@@ -166,6 +210,10 @@ install-data-hook:
 	if test -w $(DESTDIR)$(prefix)/; then \
 		mkdir -p $(DESTDIR)$(localstatedir)/lib/fwupd; \
 		chmod 0755 $(DESTDIR)$(localstatedir)/lib/fwupd; \
+		mkdir -p $(DESTDIR)$(localstatedir)/lib/fwsignd; \
+		chmod 0755 $(DESTDIR)$(localstatedir)/lib/fwsignd; \
+		mkdir -p $(DESTDIR)$(localstatedir)/cache/app-info/xmls; \
+		mkdir -p $(DESTDIR)$(localstatedir)/cache/app-info/icons; \
 	fi
 
 TESTS = fu-self-test

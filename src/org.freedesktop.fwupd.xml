@@ -38,7 +38,25 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-            Gets a list of all the devices that support UEFI firmware upgrading.
+            Gets a list of all the devices that are supported.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='a{sa{sv}}' name='devices' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>An array of devices, with any properties set on each.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='GetUpdates'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets a list of all the devices that can be updated.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -83,11 +101,11 @@
     </method>
 
     <!--***********************************************************-->
-    <method name='Update'>
+    <method name='Install'>
       <doc:doc>
         <doc:description>
           <doc:para>
-            Schedules an update to be done offline.
+            Schedules a firmware to be installed.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -116,6 +134,35 @@
             <doc:para>
               Options to be used when constructing the profile, e.g.
               <doc:tt>offline=True</doc:tt>.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='Verify'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Verifies firmware on a device by reading it back and performing
+            a cryptographic hash, typically SHA1.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              An ID, typically a GUID of the hardware.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='s' name='hash' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The cryptographic hash of the firmware.
             </doc:para>
           </doc:summary>
         </doc:doc>
@@ -164,6 +211,35 @@
             <doc:para>
               An ID, typically a GUID of the hardware that was updated, or the
               string <doc:tt>*</doc:tt> to match any hardware.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='UpdateMetadata'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Adds AppStream resource information from a session client.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='h' name='data' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              File handle to AppStream metadata.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='h' name='signature' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              File handle to AppStream metadata GPG signature.
+            </doc:para>
           </doc:summary>
         </doc:doc>
       </arg>

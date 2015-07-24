@@ -70,10 +70,26 @@
       </varlistentry>
       <varlistentry>
         <term>
-          <option>--force</option>
+          <option>--allow-reinstall</option>
         </term>
         <listitem>
-          <para>Force the installation of firmware.</para>
+          <para>Allow re-installing existing firmware versions.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>--allow-older</option>
+        </term>
+        <listitem>
+          <para>Allow downgrading firmware versions.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>--offline</option>
+        </term>
+        <listitem>
+          <para>Perform the installation offline where possible.</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -110,6 +126,14 @@
       </varlistentry>
       <varlistentry>
         <term>
+          <option>update</option>
+        </term>
+        <listitem>
+          <para>Updates all firmware to latest versions available.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
           <option>install</option>
         </term>
         <listitem>
@@ -118,27 +142,7 @@
       </varlistentry>
       <varlistentry>
         <term>
-          <option>update-offline</option>
-          <parameter>guid</parameter>
-          <parameter>filename</parameter>
-        </term>
-        <listitem>
-          <para>Install the update the next time the computer is rebooted.</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term>
-          <option>update-online</option>
-          <parameter>guid</parameter>
-          <parameter>filename</parameter>
-        </term>
-        <listitem>
-          <para>Install the update now, if possible.</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term>
-          <option>update-prepared</option>
+          <option>install-prepared</option>
         </term>
         <listitem>
           <para>Install prepared updates now.</para>
@@ -150,6 +154,14 @@
         </term>
         <listitem>
           <para>Clears the results from the last update.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>refresh</option>
+        </term>
+        <listitem>
+          <para>Refresh metadata from remote server.</para>
         </listitem>
       </varlistentry>
       <varlistentry>

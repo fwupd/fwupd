@@ -1,0 +1,27 @@
+########################################################################
+# Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+#
+# Licensed under the GNU General Public License Version 2
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# VIA USB 3.0 VL811 Hub
+SUBSYSTEM=="usb", DRIVER=="hub", ATTRS{idVendor}=="2109", ATTRS{idProduct}=="0810", ENV{FWUPD_GUID}="adbb9034-b577-42c2-a661-1ee4f49ef64c", ENV{FWUPD_VENDOR}="VIA", ENV{FWUPD_MODEL}="USB 3.0 VL811 Hub"
+
+# VIA USB 3.0 VL811+ Hub
+SUBSYSTEM=="usb", DRIVER=="hub", ATTRS{idVendor}=="2109", ATTRS{idProduct}=="0811", ENV{FWUPD_GUID}="54f84d05-c917-4c50-8b35-44feabaaa323", ENV{FWUPD_VENDOR}="VIA", ENV{FWUPD_MODEL}="USB 3.0 VL811+ Hub"
+
+# VIA USB 3.0 VL812 Hub
+SUBSYSTEM=="usb", DRIVER=="hub", ATTRS{idVendor}=="2109", ATTRS{idProduct}=="0812", ENV{FWUPD_GUID}="cd0314ec-b80f-4d1a-a24f-c409183a8b2d", ENV{FWUPD_VENDOR}="VIA", ENV{FWUPD_MODEL}="USB 3.0 VL812 Hub"
+
+# VIA USB 3.0 VL812 B2 Hub
+SUBSYSTEM=="usb", DRIVER=="hub", ATTRS{idVendor}=="2109", ATTRS{idProduct}=="2812", ENV{FWUPD_GUID}="26470009-97a8-4028-867a-bbbac6ee7bf0", ENV{FWUPD_VENDOR}="VIA", ENV{FWUPD_MODEL}="USB 3.0 VL812 B2 Hub"
+
+ENV{FWUPD_GUID}=="*?", ENV{ID_MODEL}=="", IMPORT{builtin}="usb_id"
+ENV{FWUPD_GUID}=="*?", ENV{ID_MODEL_FROM_DATABASE}=="", IMPORT{builtin}="hwdb --subsystem=usb"
+
+# PCI cards with ROM
+SUBSYSTEM=="pci", TEST=="/sys$devpath/rom", ENV{FWUPD_GUID}="$attr{vendor}:$attr{device}"

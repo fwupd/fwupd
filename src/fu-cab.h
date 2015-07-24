@@ -50,9 +50,22 @@ struct _FuCabClass
 	GObjectClass		 parent_class;
 };
 
+typedef enum {
+	FU_CAB_EXTRACT_FLAG_UNKNOWN		= 0,
+	FU_CAB_EXTRACT_FLAG_INF			= 1,
+	FU_CAB_EXTRACT_FLAG_METAINFO		= 2,
+	FU_CAB_EXTRACT_FLAG_FIRMWARE		= 4,
+	FU_CAB_EXTRACT_FLAG_SIGNATURE		= 8,
+	FU_CAB_EXTRACT_FLAG_CATALOG		= 16,
+	FU_CAB_EXTRACT_FLAG_ALL			= 0xff,
+	FU_CAB_EXTRACT_FLAG_LAST
+} FuCabExtractFlags;
+
 GType		 fu_cab_get_type			(void);
 FuCab		*fu_cab_new				(void);
 
+gboolean	 fu_cab_verify				(FuCab		*cab,
+							 GError		**error);
 gboolean	 fu_cab_load_fd				(FuCab		*cab,
 							 gint		 fd,
 							 GCancellable	*cancellable,
@@ -61,7 +74,12 @@ gboolean	 fu_cab_load_file			(FuCab		*cab,
 							 GFile		*file,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fu_cab_extract_firmware		(FuCab		*cab,
+gboolean	 fu_cab_save_file			(FuCab		*cab,
+							 GFile		*file,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 fu_cab_extract				(FuCab		*cab,
+							 FuCabExtractFlags flags,
 							 GError		**error);
 gboolean	 fu_cab_delete_temp_files		(FuCab		*cab,
 							 GError		**error);
@@ -77,6 +95,8 @@ const gchar	*fu_cab_get_url_homepage		(FuCab		*cab);
 const gchar	*fu_cab_get_filename_firmware		(FuCab		*cab);
 guint64		 fu_cab_get_size			(FuCab		*cab);
 FwupdTrustFlags	 fu_cab_get_trust_flags			(FuCab		*cab);
+void		 fu_cab_add_file			(FuCab		*cab,
+							 const gchar	*filename);
 
 G_END_DECLS
 
