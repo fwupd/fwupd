@@ -1,3 +1,34 @@
+Version 0.1.4
+~~~~~~~~~~~~~
+Released: 2015-07-25
+
+Notes:
+ - In this release we've moved the LVFS website to the fwupd project and made
+   them work really well together. To update all the firmware on your system
+   is now just a case of "fwupdmgr refresh && fwupdmgr update"
+ - We've also added verification of BIOS and PCI ROM firmware, which may be
+   useful for forensics or to verify that system updates have been applied.
+
+New Features:
+ - Actually parse the complete PCI option ROM (Richard Hughes)
+ - Add a 'fwupdmgr update' command to update all devices to latest versions (Richard Hughes)
+ - Add a simple signing server that operates on .cab files (Richard Hughes)
+ - Add a 'verify' command that verifies the cryptographic hash of device firmware (Richard Hughes)
+ - Allow clients to add new firmware metadata to the system cache (Richard Hughes)
+ - Move GetUpdates to the daemon (Richard Hughes)
+ - Move the LVFS website to the fwupd project (Richard Hughes)
+
+Bugfixes:
+ - Accept multiple files at one time when using fwupdmgr dump-rom (Richard Hughes)
+ - Automatically download metadata using fwupdmgr if required (Richard Hughes)
+ - Do not return NULL as a gboolean (Thomas Hindoe Paaboel Andersen)
+ - Don't call efibootmgr after fwupdate (Mario Limonciello)
+ - Fallback to offline install when calling the update argument (Mario Limonciello)
+ - Fix Intel VBIOS detection on Dell hardware (Richard Hughes)
+ - Reload appstream data after refreshing (Mario Limonciello)
+ - Use the new LVFS GPG key (Richard Hughes)
+ - Fix build: libgusb is required even without colorhug support (Jussi Kukkonen)
+
 Version 0.1.3
 ~~~~~~~~~~~~~
 Released: 2015-05-28

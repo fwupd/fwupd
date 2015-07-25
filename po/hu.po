@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-04-22 15:07+0100\n"
-"PO-Revision-Date: 2015-04-22 14:07+0000\n"
+"POT-Creation-Date: 2015-07-25 14:51+0100\n"
+"PO-Revision-Date: 2015-07-25 13:51+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Hungarian (http://www.transifex.com/projects/p/fwupd/language/hu/)\n"
 "MIME-Version: 1.0\n"
@@ -19,37 +19,37 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Install signed system firmware"
-msgstr ""
+msgstr "Aláírt rendszer firmware telepítése"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "Hitelesítés szükséges a firmware frissítéséhez ezen a gépen"
 
 msgid "Install unsigned system firmware"
-msgstr ""
+msgstr "Nem aláírt rendszer firmware telepítése"
 
 msgid "Install old version of system firmware"
-msgstr ""
+msgstr "A rendszer firmware régi verziójának telepítése"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr ""
+msgstr "Hitelesítés szükséges a firmware visszafejlesztéséhez ezen a gépen"
 
 msgid "Install signed device firmware"
-msgstr ""
+msgstr "Aláírt eszköz firmware telepítése"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid ""
 "Authentication is required to update the firmware on a removable device"
-msgstr ""
+msgstr "Hitelesítés szükséges a firmware frissítéséhez egy cserélhető eszközön"
 
 msgid "Install unsigned device firmware"
-msgstr ""
+msgstr "Nem aláírt eszköz firmware telepítése"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid ""
 "Authentication is required to downgrade the firmware on a removable device"
-msgstr ""
+msgstr "Hitelesítés szükséges a firmware visszafejlesztéséhez egy cserélhető eszközön"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
@@ -72,12 +72,36 @@ msgid "Exit after the engine has loaded"
 msgstr "Kilépés a motor betöltődése után"
 
 #. TRANSLATORS: program name
-msgid "Firmware Update"
-msgstr "Firmware frissítés"
+msgid "Firmware Update Daemon"
+msgstr ""
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Firmware frissítés D-Bus szolgáltatás"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+msgid "Exit after signing queue"
+msgstr ""
+
+#. TRANSLATORS: input location to watch
+msgid "Source path for files"
+msgstr ""
+
+#. TRANSLATORS: output location to put files
+msgid "Destination path for files"
+msgstr ""
+
+#. TRANSLATORS: output location to put files
+msgid "GPG key used to sign the firmware"
+msgstr ""
+
+#. TRANSLATORS: program name
+msgid "fwsignd"
+msgstr ""
+
+#. TRANSLATORS: program summary
+msgid "Firmware signing server"
+msgstr ""
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -85,8 +109,8 @@ msgid "Alias to %s"
 msgstr "Álnév ehhez: %s"
 
 #. TRANSLATORS: error message
-msgid "Command not found, valid commands are:"
-msgstr "A parancs nem található, az érvényes parancsok:"
+msgid "Command not found"
+msgstr ""
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle"
@@ -123,6 +147,10 @@ msgstr "Nem észlelhető firmware frissítési képességgel rendelkező hardver
 #. TRANSLATORS: update completed, no errors
 msgid "Done!"
 msgstr "Kész!"
+
+#. TRANSLATOR: the provider only supports offline
+msgid "Retrying as an offline update"
+msgstr ""
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -171,20 +199,20 @@ msgid "Show extra debugging information"
 msgstr "További hibakeresési információk megjelenítése"
 
 #. TRANSLATORS: command line option
-msgid "Force the installation of firmware"
-msgstr "A firmware telepítésének kényszerítése"
+msgid "Perform the installation offline where possible"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Allow re-installing existing firmware versions"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Allow downgrading firmware versions"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Minden eszköz lekérése, amelyek támogatják a firmware frissítéseket"
-
-#. TRANSLATORS: command description
-msgid "Install the update the next time the computer is rebooted"
-msgstr "A frissítés telepítése a számítógép következő újraindításakor"
-
-#. TRANSLATORS: command description
-msgid "Install the update now"
-msgstr "A frissítés telepítése most"
 
 #. TRANSLATORS: command description
 msgid "Install prepared updates now"
@@ -203,12 +231,36 @@ msgid "Gets the list of updates for connected hardware"
 msgstr "A frissítések listáját kéri le a csatlakoztatott hardverhez"
 
 #. TRANSLATORS: command description
+msgid "Updates all firmware to latest versions available"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Gets the cryptographic hash of the dumped firmware"
+msgstr ""
+
+#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Törli a legutóbbi frissítésből származó eredményeket"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "A legutóbbi frissítésből származó eredményeket kéri le"
+
+#. TRANSLATORS: command description
+msgid "Refresh metadata from remote server"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Dump the ROM checksum"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Update the stored metadata with current ROM contents"
+msgstr ""
+
+#. TRANSLATORS: program name
+msgid "Firmware Utility"
+msgstr ""
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
