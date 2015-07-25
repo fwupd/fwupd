@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-04-22 15:07+0100\n"
-"PO-Revision-Date: 2015-04-22 14:07+0000\n"
+"POT-Creation-Date: 2015-07-25 14:51+0100\n"
+"PO-Revision-Date: 2015-07-25 13:51+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Hebrew (http://www.transifex.com/projects/p/fwupd/language/he/)\n"
 "MIME-Version: 1.0\n"
@@ -72,12 +72,36 @@ msgid "Exit after the engine has loaded"
 msgstr "יציאה לאחר טעינת מנוע התכנה"
 
 #. TRANSLATORS: program name
-msgid "Firmware Update"
-msgstr "עדכון קושחה"
+msgid "Firmware Update Daemon"
+msgstr ""
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "שירות D-Bus עדכון קושחה"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+msgid "Exit after signing queue"
+msgstr ""
+
+#. TRANSLATORS: input location to watch
+msgid "Source path for files"
+msgstr ""
+
+#. TRANSLATORS: output location to put files
+msgid "Destination path for files"
+msgstr ""
+
+#. TRANSLATORS: output location to put files
+msgid "GPG key used to sign the firmware"
+msgstr ""
+
+#. TRANSLATORS: program name
+msgid "fwsignd"
+msgstr ""
+
+#. TRANSLATORS: program summary
+msgid "Firmware signing server"
+msgstr ""
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -85,8 +109,8 @@ msgid "Alias to %s"
 msgstr "כינוי עבור %s"
 
 #. TRANSLATORS: error message
-msgid "Command not found, valid commands are:"
-msgstr "פקודה לא נמצאה, פקודות אפשריות:"
+msgid "Command not found"
+msgstr ""
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle"
@@ -123,6 +147,10 @@ msgstr "לא אותרה חומרה בעלת יכולת עדכון קושחה"
 #. TRANSLATORS: update completed, no errors
 msgid "Done!"
 msgstr "הסתיים!"
+
+#. TRANSLATOR: the provider only supports offline
+msgid "Retrying as an offline update"
+msgstr ""
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -171,20 +199,20 @@ msgid "Show extra debugging information"
 msgstr "הצג מידע ניפוי שגיאות מורחב"
 
 #. TRANSLATORS: command line option
-msgid "Force the installation of firmware"
-msgstr "אלץ התקנת קושחה"
+msgid "Perform the installation offline where possible"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Allow re-installing existing firmware versions"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Allow downgrading firmware versions"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "מציג כל המכשירים התומכים בעדכוני קושחה"
-
-#. TRANSLATORS: command description
-msgid "Install the update the next time the computer is rebooted"
-msgstr "מתקין עדכון בעת הפעלת המחשב הבאה"
-
-#. TRANSLATORS: command description
-msgid "Install the update now"
-msgstr "מתקין עדכון כעת"
 
 #. TRANSLATORS: command description
 msgid "Install prepared updates now"
@@ -203,11 +231,35 @@ msgid "Gets the list of updates for connected hardware"
 msgstr ""
 
 #. TRANSLATORS: command description
+msgid "Updates all firmware to latest versions available"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Gets the cryptographic hash of the dumped firmware"
+msgstr ""
+
+#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Refresh metadata from remote server"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Dump the ROM checksum"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Update the stored metadata with current ROM contents"
+msgstr ""
+
+#. TRANSLATORS: program name
+msgid "Firmware Utility"
 msgstr ""
 
 #. TRANSLATORS: the user didn't read the man page
