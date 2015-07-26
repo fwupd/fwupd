@@ -489,7 +489,6 @@ fu_cab_verify (FuCab *cab, GError **error)
 	_cleanup_free_ gchar *signature = NULL;
 	_cleanup_free_ gchar *fn = NULL;
 	_cleanup_object_unref_ FuKeyring *kr = NULL;
-	_cleanup_object_unref_ GFile *path = NULL;
 
 	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
 

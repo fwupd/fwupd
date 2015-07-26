@@ -711,7 +711,6 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 	updates = g_ptr_array_new ();
 	for (i = 0; i < priv->devices->len; i++) {
 		const gchar *version;
-		_cleanup_error_free_ GError *error_local = NULL;
 
 		item = g_ptr_array_index (priv->devices, i);
 

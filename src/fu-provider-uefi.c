@@ -214,8 +214,6 @@ fu_provider_uefi_update (FuProvider *provider,
 	fwup_resource *re = NULL;
 	gboolean ret = TRUE;
 	guint64 hardware_instance = 0;	/* FIXME */
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_free_ gchar *standard_error = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
