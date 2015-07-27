@@ -816,7 +816,6 @@ static gboolean
 fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	guint i;
-	_cleanup_object_unref_ GFile *xml_file = NULL;
 
 	if (g_strv_length (values) == 0) {
 		g_set_error_literal (error,
@@ -826,8 +825,6 @@ fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	for (i = 0; values[i] != NULL; i++) {
-		_cleanup_free_ gchar *guid = NULL;
-		_cleanup_free_ gchar *id = NULL;
 		_cleanup_object_unref_ FuRom *rom = NULL;
 		_cleanup_object_unref_ GFile *file = NULL;
 		_cleanup_error_free_ GError *error_local = NULL;
