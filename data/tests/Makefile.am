@@ -1,7 +1,7 @@
 test_files =								\
 	colorhug-als-3.0.2.cab						\
 	firmware.bin							\
-	pki/GPG-KEY-Hughski-Limited
+	pki/GPG-KEY-Linux-Vendor-Firmware-Service
 
 EXTRA_DIST = $(test_files)
 

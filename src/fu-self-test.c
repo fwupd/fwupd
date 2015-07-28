@@ -425,13 +425,13 @@ fu_keyring_func (void)
 	_cleanup_free_ gchar *pki_dir = NULL;
 	_cleanup_object_unref_ FuKeyring *keyring = NULL;
 	const gchar *sig =
-	"iQEcBAABAgAGBQJVK9RSAAoJEBesuo36lw4XvmoH/3tJL5wVRN+rsvoo/FMc3w4g"
-	"I7rizJNIgQ04WVTREX6tRZJfxYzGAaeokVeqah2JUC4u1j22BDkoG/Fs+/2/Z/OP"
-	"PTxMoiEzfzryWpVwt20As+H9CmMZGdCfvKgnWiosAENCzE7JE1miJ4YvTpRtdPMh"
-	"erz8DqLTFAfr72aimf5hBs8ZFkBGPGjljdTDv78hk2WDep5E1+1swGoFbhDcXyih"
-	"8GZjSLP7XkKo23/p6odCJD3SkkDE7jIUMA8GrTHHXIhF41UsriKx2ERYoau5k3cX"
-	"OdK3/cRQ6BeuSBMLr7hUpa0RwlKUKex/I7+p/T9Ohk4lNnGS7GpE45RbpflK1VQ="
-	"=0D8+";
+	"iQEcBAABCAAGBQJVt0B4AAoJEEim2A5FOLrCFb8IAK+QTLY34Wu8xZ8nl6p3JdMu"
+	"HOaifXAmX7291UrsFRwdabU2m65pqxQLwcoFrqGv738KuaKtu4oIwo9LIrmmTbEh"
+	"IID8uszxBt0bMdcIHrvwd+ADx+MqL4hR3guXEE3YOBTLvv2RF1UBcJPInNf/7Ui1"
+	"3lW1c3trL8RAJyx1B5RdKqAMlyfwiuvKM5oT4SN4uRSbQf+9mt78ZSWfJVZZH/RR"
+	"H9q7PzR5GdmbsRPM0DgC27Trvqjo3MzoVtoLjIyEb/aWqyulUbnJUNKPYTnZgkzM"
+	"v2yVofWKIM3e3wX5+MOtf6EV58mWa2cHJQ4MCYmpKxbIvAIZagZ4c9A8BA6tQWg="
+	"=fkit";
 
 	/* add test keys to keyring */
 	keyring = fu_keyring_new ();

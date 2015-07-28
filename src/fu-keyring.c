@@ -197,11 +197,14 @@ fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **e
 	gboolean ret = TRUE;
 	gpgme_data_t data = NULL;
 	gpgme_error_t rc;
+	gpgme_import_result_t result;
+	gpgme_import_status_t s;
 
 	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
 	g_return_val_if_fail (filename != NULL, FALSE);
 
 	/* import public key */
+	g_debug ("Adding public key %s", filename);
 	rc = gpgme_data_new_from_file (&data, filename, 1);
 	if (rc != GPG_ERR_NO_ERROR) {
 		ret = FALSE;
@@ -221,6 +224,13 @@ fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **e
 			     "failed to import %s: %s",
 			     filename, gpgme_strerror (rc));
 		goto out;
+	}
+
+	/* print what keys were imported */
+	result = gpgme_op_import_result (keyring->priv->ctx);
+	for (s = result->imports; s != NULL; s = s->next) {
+		g_debug ("importing key %s [%i] %s",
+			 s->fpr, s->status, gpgme_strerror (s->result));
 	}
 out:
 	gpgme_data_release (data);
