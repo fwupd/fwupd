@@ -789,8 +789,6 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 		priv->kind = FU_ROM_KIND_NVIDIA;
 	} else if (memcmp (buffer + hdr_sz, "$VBT", 4) == 0) {
 		priv->kind = FU_ROM_KIND_INTEL;
-		/* see drivers/gpu/drm/i915/intel_bios.h */
-		hdr_sz += (buffer[hdr_sz + 23] << 8) + buffer[hdr_sz + 22];
 	} else if (memcmp(buffer + 0x30, " 761295520", 10) == 0) {
 		priv->kind = FU_ROM_KIND_ATI;
 	}
