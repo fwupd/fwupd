@@ -757,15 +757,9 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 		}
 		tmp = as_release_get_description (rel, NULL);
 		if (tmp != NULL) {
-			_cleanup_free_ gchar *md = NULL;
-			md = as_markup_convert (tmp, -1,
-						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
-						NULL);
-			if (md != NULL) {
-				fu_device_set_metadata (item->device,
-							FU_DEVICE_KEY_UPDATE_DESCRIPTION,
-							md);
-			}
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_UPDATE_DESCRIPTION,
+						tmp);
 		}
 		g_ptr_array_add (updates, item);
 	}

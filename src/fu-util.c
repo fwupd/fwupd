@@ -1290,6 +1290,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuDevice *dev;
 	GPtrArray *devices = NULL;
+	const gchar *tmp;
 	guint i;
 
 	/* print any updates */
@@ -1315,9 +1316,18 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("Location"),
 				    fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_URI));
 
-		/* TRANSLATORS: section header for long firmware desc */
-		fu_util_print_data (_("Description"),
-				    fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_DESCRIPTION));
+		/* convert XML -> text */
+		tmp = fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_DESCRIPTION);
+		if (tmp != NULL) {
+			_cleanup_free_ gchar *md = NULL;
+			md = as_markup_convert (tmp, -1,
+						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
+						NULL);
+			if (md != NULL) {
+				/* TRANSLATORS: section header for long firmware desc */
+				fu_util_print_data (_("Description"), md);
+			}
+		}
 	}
 
 	return TRUE;
