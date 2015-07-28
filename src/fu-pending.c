@@ -300,7 +300,7 @@ fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **erro
 	/* lazy load */
 	if (pending->priv->db == NULL) {
 		if (!fu_pending_load (pending, error))
-			return FALSE;
+			return NULL;
 	}
 
 	/* get all the devices */
@@ -353,7 +353,7 @@ fu_pending_get_devices (FuPending *pending, GError **error)
 	/* lazy load */
 	if (pending->priv->db == NULL) {
 		if (!fu_pending_load (pending, error))
-			return FALSE;
+			return NULL;
 	}
 
 	/* get all the devices */

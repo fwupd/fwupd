@@ -435,8 +435,8 @@ fu_keyring_sign_data (FuKeyring *keyring, GBytes *payload, GError **error)
 	gpgme_sign_result_t sign_result;
 	gsize sig_len = 0;
 
-	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
-	g_return_val_if_fail (payload != NULL, FALSE);
+	g_return_val_if_fail (FU_IS_KEYRING (keyring), NULL);
+	g_return_val_if_fail (payload != NULL, NULL);
 
 	/* setup context */
 	if (!fu_keyring_setup (keyring, error))
