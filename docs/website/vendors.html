@@ -86,8 +86,7 @@ package up your firmware into a <code>cab</code> file, with these files inside:
 <ul>
 <li>The actual <code>cap</code> file your engineers have created</li>
 <li>The <code>inf</code> file <a href="https://msdn.microsoft.com/en-us/library/windows/hardware/ff547402%28v=vs.85%29.aspx">describing the .cap file</a>.</li>
-<li>The optional <code>asc</code> file which is a detached GPG signature of the firmware file.</li>
-<li>The optional <code>metainfo.xml</code> file with <a href="http://www.freedesktop.org/software/appstream/docs/sect-Quickstart-Addons.html">a long description and extra metadata</a></li>
+<li>The <code>metainfo.xml</code> file with <a href="http://www.freedesktop.org/software/appstream/docs/sect-Quickstart-Addons.html">a long description and extra metadata</a></li>
 </ul>
 <p>
 You can create a <code>cab</code> file using <code>makecab.exe</code> on Windows and <code>gcab --create</code>
@@ -135,8 +134,8 @@ An example <code>metainfo.xml</code> file looks like this:
 &lt;!-- Copyright 2015 Richard Hughes <richard@hughsie.com> --&gt;
 &lt;component type="firmware"&gt;
   &lt;id&gt;84f40464-9272-4ef7-9399-cd95f12da696&lt;/id&gt;
-  &lt;name&gt;ColorHugALS Firmware&lt;/name&gt;
-  &lt;summary&gt;Firmware for the ColorHugALS Ambient Light Sensor&lt;/summary&gt;
+  &lt;name&gt;ColorHugALS Device Update&lt;/name&gt;
+  &lt;summary&gt;Firmware for the Hughski ColorHug Ambient Light Sensor&lt;/summary&gt;
   &lt;description&gt;
     &lt;p&gt;
       Updating the firmware on your ColorHugALS device improves performance and
@@ -166,6 +165,42 @@ An example <code>metainfo.xml</code> file looks like this:
 If the firmware is not free software you have to indicate it in the
 <code>metainfo.xml</code> file with <code>&lt;project_license&gt;proprietary&lt;/project_license&gt;</code>.
 </p>
+
+<h2>Update Style Guide</h2>
+<h3>&lt;name&gt;</h3>
+<ul>
+<li>Use a short device name, e.g. <em>"ThinkPad Device Update"</em> or <em>"ColorHug Device Update"</em>.</li>
+<li>Use a UTF-8 character (e.g. ™ or ®) rather than <code>(R)</code> if required</li>
+<li>Don't include the vendor name</li>
+</ul>
+<h3>&lt;summary&gt;</h3>
+<ul>
+<li>Refer to the type of hardware, e.g. <em>"Firmware for the Hughski ColorHug Colorimeter"</em></li>
+<li>Include the vendor name before the full device description</li>
+<li>Use a UTF-8 character (e.g. ™ or ®) rather than <code>(R)</code> if required</li>
+</ul>
+<h3>&lt;description&gt;</h3>
+<ul>
+<li>
+  Try to avoid explaining the implementation details of the fix, e.g.
+  <em>"Ensure accurate color profile creation with high screen brightness."</em>
+  rather than
+  <em>"Fix overflow in counter when over 500 Lux detected."</em>
+</li>
+<li>
+  Do not use overly technical descriptions when simpler text would suffice, e.g. use
+  <em>"Fix LED color during system start up."</em> rather than
+  <em>"Fix LED color during POST."</em>
+</li>
+<li>
+  Try to describe fixed bugs and new features from the point of view of the user
+  and how it affects them
+</li>
+<li>
+  For security or important updates also include the effect of not applying the update, e.g.
+  <em>"Disk corruption resulting in possible data loss may occur until this update is installed."</em>
+</li>
+</ul>
 
 <h2>Why does the LVFS project sign my firmware?</h2>
 <p>
