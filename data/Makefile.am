@@ -35,6 +35,7 @@ udevrules_DATA =					\
 	90-fwupd-devices.rules
 
 EXTRA_DIST =						\
+	fwsignd.service.in				\
 	$(udevrules_DATA)				\
 	$(dbusservicemain_in_files)			\
 	$(systemdservice_in_files)
