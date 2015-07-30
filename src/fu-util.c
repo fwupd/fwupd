@@ -28,6 +28,7 @@
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
+#include <gudev/gudev.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -847,26 +848,22 @@ fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
- * fu_util_verify_update:
+ * fu_util_verify_update_internal:
  **/
 static gboolean
-fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_verify_update_internal (FuUtilPrivate *priv,
+				const gchar *filename,
+				gchar **values,
+				GError **error)
 {
 	guint i;
 	_cleanup_object_unref_ AsStore *store = NULL;
 	_cleanup_object_unref_ GFile *xml_file = NULL;
 
-	if (g_strv_length (values) < 2) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments: expected 'filename.xml' 'filename.rom'");
-		return FALSE;
-	}
 	store = as_store_new ();
 
 	/* open existing file */
-	xml_file = g_file_new_for_path (values[0]);
+	xml_file = g_file_new_for_path (filename);
 	if (g_file_query_exists (xml_file, NULL)) {
 		if (!as_store_from_file (store, xml_file, NULL, NULL, error))
 			return FALSE;
@@ -874,7 +871,7 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* add new values */
 	as_store_set_api_version (store, 0.9);
-	for (i = 1; values[i] != NULL; i++) {
+	for (i = 0; values[i] != NULL; i++) {
 		_cleanup_free_ gchar *guid = NULL;
 		_cleanup_object_unref_ AsApp *app = NULL;
 		_cleanup_object_unref_ AsRelease *rel = NULL;
@@ -910,6 +907,70 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 			       NULL, error))
 		return FALSE;
 	return TRUE;
+}
+
+/**
+ * fu_util_verify_update_all:
+ **/
+static gboolean
+fu_util_verify_update_all (FuUtilPrivate *priv, const gchar *fn, GError **error)
+{
+	GList *devices;
+	GList *l;
+	GUdevDevice *dev;
+	const gchar *devclass[] = { "pci", NULL };
+	const gchar *subsystems[] = { NULL };
+	guint i;
+	_cleanup_object_unref_ GUdevClient *gudev_client = NULL;
+	_cleanup_ptrarray_unref_ GPtrArray *roms = NULL;
+
+	/* get all devices of class */
+	gudev_client = g_udev_client_new (subsystems);
+	roms = g_ptr_array_new_with_free_func (g_free);
+	for (i = 0; devclass[i] != NULL; i++) {
+		devices = g_udev_client_query_by_subsystem (gudev_client,
+							    devclass[i]);
+		for (l = devices; l != NULL; l = l->next) {
+			_cleanup_free_ gchar *rom_fn = NULL;
+			dev = l->data;
+			rom_fn = g_build_filename (g_udev_device_get_sysfs_path (dev), "rom", NULL);
+			if (!g_file_test (rom_fn, G_FILE_TEST_EXISTS))
+				continue;
+			g_ptr_array_add (roms, g_strdup (rom_fn));
+		}
+		g_list_foreach (devices, (GFunc) g_object_unref, NULL);
+		g_list_free (devices);
+	}
+
+	/* no ROMs to add */
+	if (roms->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No hardware with ROM");
+		return FALSE;
+	}
+	g_ptr_array_add (roms, NULL);
+	return fu_util_verify_update_internal (priv, fn,
+					       (gchar **) roms->pdata,
+					       error);
+}
+
+/**
+ * fu_util_verify_update:
+ **/
+static gboolean
+fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	const gchar *fn = "/var/cache/app-info/xmls/fwupd-verify.xml";
+	if (g_strv_length (values) == 0)
+		return fu_util_verify_update_all (priv, fn, error);
+	if (g_strv_length (values) == 1)
+		return fu_util_verify_update_all (priv, values[0], error);
+	return fu_util_verify_update_internal (priv,
+					       values[0],
+					       &values[1],
+					       error);
 }
 
 /**

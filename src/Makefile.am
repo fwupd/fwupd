@@ -50,6 +50,7 @@ fwupdmgr_LDADD =					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\
 	$(SOUP_LIBS)					\
+	$(GUDEV_LIBS)					\
 	$(GLIB_LIBS)
 
 fwupdmgr_LDFLAGS =					\
@@ -182,6 +183,8 @@ fu_self_test_SOURCES =					\
 	fu-cab.h					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-guid.c					\
+	fu-guid.h					\
 	fu-keyring.c					\
 	fu-keyring.h					\
 	fu-pending.c					\
