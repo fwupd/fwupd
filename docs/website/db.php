@@ -32,6 +32,21 @@ function lvfs_disconnect_db($db) {
 	$db->close();
 }
 
+function lvfs_check_exists($db, $auth_token) {
+	if ($auth_token == '')
+		return False;
+	if (!($stmt = $db->prepare("SELECT * FROM users WHERE guid=?;")))
+		die("failed to prepare: " . $db->error);
+	$stmt->bind_param("s", $auth_token);
+	if (!$stmt->execute())
+		die("failed to execute: " . $db->error);
+	$res = $stmt->get_result();
+	$stmt->close();
+	if ($res->num_rows > 0)
+		return True;
+	return False;
+}
+
 function lvfs_check_auth($db, $auth_token) {
 	if ($auth_token == '')
 		return False;
