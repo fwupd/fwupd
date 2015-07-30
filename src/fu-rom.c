@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "fu-cleanup.h"
+#include "fu-guid.h"
 #include "fu-rom.h"
 
 static void fu_rom_finalize			 (GObject *object);
@@ -68,6 +69,7 @@ struct _FuRomPrivate
 	GInputStream			*stream;
 	FuRomKind			 kind;
 	gchar				*version;
+	gchar				*guid;
 	guint16				 vendor;
 	guint16				 model;
 	GPtrArray			*hdrs; /* of FuRomPciHeader */
@@ -631,6 +633,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 	guint number_reads = 0;
 	_cleanup_error_free_ GError *error_local = NULL;
 	_cleanup_free_ gchar *fn = NULL;
+	_cleanup_free_ gchar *id = NULL;
 	_cleanup_free_ guint8 *buffer = NULL;
 	_cleanup_object_unref_ GFileOutputStream *output_stream = NULL;
 
@@ -817,6 +820,11 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 		g_checksum_update (priv->checksum_wip, hdr->rom_data, hdr->rom_len);
 	}
 
+	/* update guid */
+	id = g_strdup_printf ("0x%04x:0x%04x", priv->vendor, priv->model);
+	priv->guid = fu_guid_generate_from_string (id);
+	g_debug ("using %s for %s", priv->guid, id);
+
 	/* not known */
 	if (priv->version == NULL) {
 		g_set_error_literal (error,
@@ -847,6 +855,16 @@ fu_rom_get_version (FuRom *rom)
 {
 	g_return_val_if_fail (FU_IS_ROM (rom), NULL);
 	return rom->priv->version;
+}
+
+/**
+ * fu_rom_get_guid:
+ **/
+const gchar *
+fu_rom_get_guid (FuRom *rom)
+{
+	g_return_val_if_fail (FU_IS_ROM (rom), NULL);
+	return rom->priv->guid;
 }
 
 /**
@@ -914,6 +932,7 @@ fu_rom_finalize (GObject *object)
 
 	g_checksum_free (priv->checksum_wip);
 	g_free (priv->version);
+	g_free (priv->guid);
 	g_ptr_array_unref (priv->hdrs);
 	if (priv->stream != NULL)
 		g_object_unref (priv->stream);

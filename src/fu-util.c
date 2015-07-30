@@ -876,7 +876,6 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	as_store_set_api_version (store, 0.9);
 	for (i = 1; values[i] != NULL; i++) {
 		_cleanup_free_ gchar *guid = NULL;
-		_cleanup_free_ gchar *id = NULL;
 		_cleanup_object_unref_ AsApp *app = NULL;
 		_cleanup_object_unref_ AsRelease *rel = NULL;
 		_cleanup_object_unref_ FuRom *rom = NULL;
@@ -894,11 +893,7 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* add app to store */
 		app = as_app_new ();
-		id = g_strdup_printf ("0x%04x:0x%04x",
-				      fu_rom_get_vendor (rom),
-				      fu_rom_get_model (rom));
-		guid = fu_guid_generate_from_string (id);
-		as_app_set_id (app, guid, -1);
+		as_app_set_id (app, fu_rom_get_guid (rom), -1);
 		as_app_set_id_kind (app, AS_ID_KIND_FIRMWARE);
 		as_app_set_source_kind (app, AS_APP_SOURCE_KIND_INF);
 		rel = as_release_new ();
