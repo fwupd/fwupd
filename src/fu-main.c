@@ -918,10 +918,16 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 	/* return 's' */
 	if (g_strcmp0 (method_name, "Verify") == 0) {
+		AsApp *app;
+#if AS_CHECK_VERSION(0,5,0)
+		AsChecksum *csum;
+#endif
+		AsRelease *release;
 		FuDeviceItem *item = NULL;
-		const gchar *id = NULL;
-		_cleanup_error_free_ GError *error = NULL;
 		const gchar *hash = NULL;
+		const gchar *id = NULL;
+		const gchar *version = NULL;
+		_cleanup_error_free_ GError *error = NULL;
 
 		/* check the id exists */
 		g_variant_get (parameters, "(&s)", &id);
@@ -931,18 +937,72 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_error (invocation,
 							       FWUPD_ERROR,
 							       FWUPD_ERROR_NOT_FOUND,
-							       "no such device %s",
+							       "No such device %s",
 							       id);
 			return;
 		}
+
+		/* set the device firmware hash */
 		if (!fu_provider_verify (item->provider, item->device,
 					 FU_PROVIDER_VERIFY_FLAG_NONE, &error)) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
+
+		/* find component in metadata */
+		app = as_store_get_app_by_id (priv->store, fu_device_get_guid (item->device));
+		if (app == NULL) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_SUPPORTED,
+							       "No metadata");
+			return;
+		}
+
+		/* find version in metadata */
+		version = fu_device_get_metadata (item->device, FU_DEVICE_KEY_VERSION);
+		release = as_app_get_release (app, version);
+		if (release == NULL) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_SUPPORTED,
+							       "No version %s",
+							       version);
+			return;
+		}
+
+		/* find checksum */
+#if AS_CHECK_VERSION(0,5,0)
+		csum = as_release_get_checksum_by_target (release, AS_CHECKSUM_TARGET_CONTENT);
+		if (csum == NULL) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_SUPPORTED,
+							       "No content checksum for %s",
+							       version);
+			return;
+		}
 		hash = fu_device_get_metadata (item->device, FU_DEVICE_KEY_FIRMWARE_HASH);
-		g_dbus_method_invocation_return_value (invocation,
-						       g_variant_new ("(s)", hash));
+		if (g_strcmp0 (as_checksum_get_value (csum), hash) != 0) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_SUPPORTED,
+							       "For v%s expected %s, got %s",
+							       version,
+							       as_checksum_get_value (csum),
+							       hash);
+			return;
+		}
+#else
+		g_dbus_method_invocation_return_error (invocation,
+						       FWUPD_ERROR,
+						       FWUPD_ERROR_NOT_SUPPORTED,
+						       "No information with %s",
+						       hash);
+		return;
+#endif
+
+		g_dbus_method_invocation_return_value (invocation, NULL);
 		return;
 	}
 

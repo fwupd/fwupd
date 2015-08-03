@@ -1239,75 +1239,29 @@ fu_util_verify_internal (FuUtilPrivate *priv, const gchar *id, GError **error)
 static gboolean
 fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 {
-	AsApp *app;
 	FuDevice *dev;
 	guint i;
-	_cleanup_object_unref_ AsStore *store = NULL;
 	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
-	_cleanup_ptrarray_unref_ GPtrArray *devices_tmp = NULL;
 
 	/* get devices from daemon */
-	devices_tmp = fu_util_get_devices_internal (priv, error);
-	if (devices_tmp == NULL)
-		return FALSE;
-
-	/* get results */
-	for (i = 0; i < devices_tmp->len; i++) {
-		_cleanup_error_free_ GError *error_local = NULL;
-		dev = g_ptr_array_index (devices_tmp, i);
-		if (!fu_util_verify_internal (priv, fu_device_get_id (dev), &error_local)) {
-			g_print ("Failed to verify %s: %s\n",
-				 fu_device_get_id (dev),
-				 error_local->message);
-		}
-	}
-
-	/* only load firmware from the system */
-	store = as_store_new ();
-	as_store_add_filter (store, AS_ID_KIND_FIRMWARE);
-	if (!as_store_load (store, AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM, NULL, error))
-		return FALSE;
-
-	/* print */
 	devices = fu_util_get_devices_internal (priv, error);
 	if (devices == NULL)
 		return FALSE;
+
+	/* get results */
 	for (i = 0; i < devices->len; i++) {
-		const gchar *hash = NULL;
-		const gchar *ver = NULL;
-		_cleanup_free_ gchar *status = NULL;
-
+		_cleanup_error_free_ GError *error_local = NULL;
 		dev = g_ptr_array_index (devices, i);
-		hash = fu_device_get_metadata (dev, FU_DEVICE_KEY_FIRMWARE_HASH);
-		if (hash == NULL)
+		if (!fu_util_verify_internal (priv, fu_device_get_id (dev), &error_local)) {
+			g_print ("%s\tFAILED: %s\n",
+				 fu_device_get_guid (dev),
+				 error_local->message);
 			continue;
-		app = as_store_get_app_by_id (store, fu_device_get_guid (dev));
-		if (app == NULL) {
-			status = g_strdup ("No metadata");
-		} else {
-			AsRelease *rel;
-			ver = fu_device_get_metadata (dev, FU_DEVICE_KEY_VERSION);
-			rel = as_app_get_release (app, ver);
-			if (rel == NULL) {
-				status = g_strdup_printf ("No version %s", ver);
-			} else {
-#if AS_CHECK_VERSION(0,5,0)
-				AsChecksum *csum;
-				csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTENT);
-				if (g_strcmp0 (as_checksum_get_value (csum), hash) != 0) {
-					status = g_strdup_printf ("Failed: for v%s expected %s",
-								  ver, as_checksum_get_value (csum));
-				} else {
-					status = g_strdup ("OK");
-				}
-#else
-				status = g_strdup ("No data");
-#endif
-			}
 		}
-		g_print ("%s\t%s\t%s\n", fu_device_get_guid (dev), hash, status);
+		g_print ("%s\t%s\n",
+			 fu_device_get_guid (dev),
+			 _("OK"));
 	}
-
 	return TRUE;
 }
 
