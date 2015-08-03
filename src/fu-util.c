@@ -856,6 +856,7 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 				gchar **values,
 				GError **error)
 {
+#if AS_CHECK_VERSION(0,5,0)
 	guint i;
 	_cleanup_object_unref_ AsStore *store = NULL;
 	_cleanup_object_unref_ GFile *xml_file = NULL;
@@ -874,6 +875,7 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 	for (i = 0; values[i] != NULL; i++) {
 		_cleanup_free_ gchar *guid = NULL;
 		_cleanup_object_unref_ AsApp *app = NULL;
+		_cleanup_object_unref_ AsChecksum *csum = NULL;
 		_cleanup_object_unref_ AsRelease *rel = NULL;
 		_cleanup_object_unref_ FuRom *rom = NULL;
 		_cleanup_object_unref_ GFile *file = NULL;
@@ -890,13 +892,16 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 
 		/* add app to store */
 		app = as_app_new ();
-		as_app_set_id (app, fu_rom_get_guid (rom), -1);
+		as_app_set_id (app, fu_rom_get_guid (rom));
 		as_app_set_id_kind (app, AS_ID_KIND_FIRMWARE);
 		as_app_set_source_kind (app, AS_APP_SOURCE_KIND_INF);
 		rel = as_release_new ();
-		as_release_set_version (rel, fu_rom_get_version (rom), -1);
-		as_release_set_checksum (rel, G_CHECKSUM_SHA1,
-					 fu_rom_get_checksum (rom), -1);
+		as_release_set_version (rel, fu_rom_get_version (rom));
+		csum = as_checksum_new ();
+		as_checksum_set_kind (csum, G_CHECKSUM_SHA1);
+		as_checksum_set_value (csum, fu_rom_get_checksum (rom));
+		as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
+		as_release_add_checksum (rel, csum);
 		as_app_add_release (app, rel);
 		as_store_add_app (store, app);
 	}
@@ -907,6 +912,13 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 			       NULL, error))
 		return FALSE;
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Required AppStreamGlib >= 0.5.0 to perform verify");
+	return FALSE;
+#endif
 }
 
 /**
@@ -1229,7 +1241,6 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 {
 	AsApp *app;
 	FuDevice *dev;
-	const gchar *tmp;
 	guint i;
 	_cleanup_object_unref_ AsStore *store = NULL;
 	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
@@ -1280,12 +1291,18 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 			if (rel == NULL) {
 				status = g_strdup_printf ("No version %s", ver);
 			} else {
-				tmp = as_release_get_checksum (rel, G_CHECKSUM_SHA1);
-				if (g_strcmp0 (tmp, hash) != 0) {
-					status = g_strdup_printf ("Failed: for v%s expected %s", ver, tmp);
+#if AS_CHECK_VERSION(0,5,0)
+				AsChecksum *csum;
+				csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTENT);
+				if (g_strcmp0 (as_checksum_get_value (csum), hash) != 0) {
+					status = g_strdup_printf ("Failed: for v%s expected %s",
+								  ver, as_checksum_get_value (csum));
 				} else {
 					status = g_strdup ("OK");
 				}
+#else
+				status = g_strdup ("No data");
+#endif
 			}
 		}
 		g_print ("%s\t%s\t%s\n", fu_device_get_guid (dev), hash, status);
@@ -1376,9 +1393,15 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		tmp = fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_DESCRIPTION);
 		if (tmp != NULL) {
 			_cleanup_free_ gchar *md = NULL;
+#if AS_CHECK_VERSION(0,5,0)
+			md = as_markup_convert (tmp,
+						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
+						NULL);
+#else
 			md = as_markup_convert (tmp, -1,
 						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
 						NULL);
+#endif
 			if (md != NULL) {
 				/* TRANSLATORS: section header for long firmware desc */
 				fu_util_print_data (_("Description"), md);
