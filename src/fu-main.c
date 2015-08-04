@@ -669,7 +669,10 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	/* merge in the new contents */
 	g_debug ("Store was %i size", as_store_get_size (store));
 	if (!as_store_from_xml (store,
-				g_bytes_get_data (bytes, NULL), -1,
+				g_bytes_get_data (bytes, NULL),
+#if !AS_CHECK_VERSION(0,5,0)
+				-1,
+#endif
 				NULL, error))
 		return FALSE;
 	g_debug ("Store now %i size", as_store_get_size (store));
