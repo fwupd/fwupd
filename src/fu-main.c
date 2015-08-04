@@ -1479,6 +1479,8 @@ main (int argc, char *argv[])
 		{ NULL}
 	};
 	_cleanup_error_free_ GError *error = NULL;
+	_cleanup_free_ gchar *config_file = NULL;
+	_cleanup_keyfile_unref_ GKeyFile *config = NULL;
 
 	setlocale (LC_ALL, "");
 
@@ -1518,9 +1520,22 @@ main (int argc, char *argv[])
 		return FALSE;
 	}
 
+	/* read config file */
+	config = g_key_file_new ();
+	config_file = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
+	g_debug ("Loading fallback values from %s", config_file);
+	if (!g_key_file_load_from_file (config, config_file,
+					G_KEY_FILE_NONE, &error)) {
+		g_print ("failed to load config file %s: %s\n",
+			  config_file, error->message);
+		retval = EXIT_FAILURE;
+		goto out;
+	}
+
 	/* add providers */
 	priv->providers = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	fu_main_add_provider (priv, fu_provider_udev_new ());
+	if (g_key_file_get_boolean (config, "fwupd", "EnableOptionROM", NULL))
+		fu_main_add_provider (priv, fu_provider_udev_new ());
 	fu_main_add_provider (priv, fu_provider_usb_new ());
 #ifdef HAVE_COLORHUG
 	fu_main_add_provider (priv, fu_provider_chug_new ());
@@ -1587,7 +1602,8 @@ out:
 		if (priv->introspection_daemon != NULL)
 			g_dbus_node_info_unref (priv->introspection_daemon);
 		g_object_unref (priv->pending);
-		g_ptr_array_unref (priv->providers);
+		if (priv->providers != NULL)
+			g_ptr_array_unref (priv->providers);
 		g_ptr_array_unref (priv->devices);
 		g_free (priv);
 	}
