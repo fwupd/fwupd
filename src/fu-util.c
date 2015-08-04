@@ -1137,12 +1137,23 @@ fu_util_download_file (FuUtilPrivate *priv,
 static gboolean
 fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 {
+	_cleanup_free_ gchar *config_fn = NULL;
+	_cleanup_free_ gchar *data_uri = NULL;
 	_cleanup_free_ gchar *sig_fn = NULL;
 	_cleanup_free_ gchar *sig_uri = NULL;
+	_cleanup_keyfile_unref_ GKeyFile *config = NULL;
 	const gchar *data_fn = "/tmp/firmware.xml.gz";
-	const gchar *data_uri = "https://beta-lvfs.rhcloud.com/downloads/firmware.xml.gz";
+
+	/* read config file */
+	config = g_key_file_new ();
+	config_fn = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
+	if (!g_key_file_load_from_file (config, config_fn, G_KEY_FILE_NONE, error))
+		return FALSE;
 
 	/* download the signature */
+	data_uri = g_key_file_get_string (config, "fwupd", "DownloadURI", error);
+	if (data_uri == NULL)
+		return FALSE;
 	sig_uri = g_strdup_printf ("%s.asc", data_uri);
 	sig_fn = g_strdup_printf ("%s.asc", data_fn);
 	if (!fu_util_download_file (priv, sig_uri, sig_fn, NULL, error))

@@ -93,6 +93,7 @@ getent passwd fwsignd >/dev/null || \
 %files -f %{name}.lang
 %doc README.md AUTHORS NEWS
 %license COPYING
+%config(noreplace)%{_sysconfdir}/fwupd.conf
 %{_libexecdir}/fwupd
 %{_bindir}/fwupdmgr
 %{_sysconfdir}/pki/fwupd

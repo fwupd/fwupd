@@ -24,7 +24,7 @@ systemdservice_DATA = $(systemdservice_in_files:.service.in=.service)
 if HAVE_FWSIGND
 systemdservice_in_files += fwsignd.service.in
 configdir = $(sysconfdir)
-dist_config_DATA = fwsignd.conf
+dist_config_DATA = fwsignd.conf fwupd.conf
 endif
 
 install-data-hook:
