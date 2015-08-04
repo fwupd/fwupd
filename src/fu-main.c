@@ -40,6 +40,7 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
+#include "fu-provider-rpi.h"
 #include "fu-provider-udev.h"
 #include "fu-provider-usb.h"
 #include "fu-resources.h"
@@ -1537,6 +1538,7 @@ main (int argc, char *argv[])
 	if (g_key_file_get_boolean (config, "fwupd", "EnableOptionROM", NULL))
 		fu_main_add_provider (priv, fu_provider_udev_new ());
 	fu_main_add_provider (priv, fu_provider_usb_new ());
+	fu_main_add_provider (priv, fu_provider_rpi_new ());
 #ifdef HAVE_COLORHUG
 	fu_main_add_provider (priv, fu_provider_chug_new ());
 #endif
