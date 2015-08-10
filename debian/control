@@ -4,7 +4,25 @@ Maintainer: Debian EFI <debian-efi@lists.debian.org>
 Uploaders: Steve McIntyre <93sam@debian.org>,
            Daniel Jared Dominguez <Jared_Dominguez@Dell.com>,
            Matthias Klumpp <mak@debian.org>
-Build-Depends: debhelper (>= 9.0.0), dh-autoreconf, pkg-config, docbook-utils, gettext, libglib2.0-dev (>= 2.42.1), intltool, libgudev-1.0-dev, libcolord-dev (>= 1.0.0), libpolkit-gobject-1-dev (>= 0.103), libgcab-dev, libsqlite3-dev, libgpgme11-dev, libfwup-dev, libgirepository1.0-dev, libappstream-glib-dev (>= 0.3.5), libarchive-dev, libgusb-dev (>= 0.2.2), valgrind
+Build-Depends: debhelper (>= 9.0.0),
+               dh-autoreconf,
+               docbook-utils,
+               gettext,
+               intltool,
+               libappstream-glib-dev (>= 0.3.5),
+               libarchive-dev,
+               libcolord-dev (>= 1.0.0),
+               libfwup-dev,
+               libgcab-dev,
+               libgirepository1.0-dev,
+               libglib2.0-dev (>= 2.42.1),
+               libgpgme11-dev,
+               libgudev-1.0-dev,
+               libgusb-dev (>= 0.2.2),
+               libpolkit-gobject-1-dev (>= 0.103),
+               libsqlite3-dev,
+               pkg-config,
+               valgrind
 Standards-Version: 3.9.6.1
 Section: admin
 Homepage: https://github.com/hughsie/fwupd
@@ -12,41 +30,44 @@ Vcs-Git: git://anonscm.debian.org/uefi/fwupd.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=uefi/fwupd.git
 
 Package: libfwupd1
-Architecture: amd64 i386 armhf arm64 armel
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Architecture: amd64 arm64 armel armhf i386
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
 Multi-Arch: same
 Description: Firmware update daemon library
- fwupd is a daemon to allow session software to update device firmware. 
- You can either use a GUI software manager like GNOME Software to view and 
+ fwupd is a daemon to allow session software to update device firmware.
+ You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
- Currently, firmware updates using the UEFI capsule format and for the 
+ Currently, firmware updates using the UEFI capsule format and for the
  ColorHug are supported. More formats may be supported in the future.
  See <https://github.com/hughsie/fwupd> for details
  .
  This package provides the library used by the daemon.
 
 Package: fwupd
-Architecture: amd64 i386 armhf arm64 armel
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Architecture: amd64 arm64 armel armhf i386
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
 Recommends: fwupdate
 Multi-Arch: foreign
 Description: Firmware update daemon
- fwupd is a daemon to allow session software to update device firmware. 
- You can either use a GUI software manager like GNOME Software to view and 
+ fwupd is a daemon to allow session software to update device firmware.
+ You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
- Currently, firmware updates using the UEFI capsule format and for the 
+ Currently, firmware updates using the UEFI capsule format and for the
  ColorHug are supported. More formats may be supported in the future.
  See <https://github.com/hughsie/fwupd> for details
 
 Package: fwupd-dev
-Architecture: amd64 i386 armhf arm64 armel
+Architecture: amd64 arm64 armel armhf i386
 Multi-Arch: same
-Depends: fwupd (= ${binary:Version}), ${misc:Depends}
+Depends: fwupd (= ${binary:Version}),
+         ${misc:Depends}
 Description: development files for fwupd
- fwupd is a daemon to allow session software to update device firmware. 
- You can either use a GUI software manager like GNOME Software to view and 
+ fwupd is a daemon to allow session software to update device firmware.
+ You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
- Currently, firmware updates using the UEFI capsule format and for the 
+ Currently, firmware updates using the UEFI capsule format and for the
  ColorHug are supported. More formats may be supported in the future.
  See <https://github.com/hughsie/fwupd> for details
  .
