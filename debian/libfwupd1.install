@@ -1,8 +1,2 @@
-#!/bin/sh
-
-libdir=usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)
-
-cat<<EOF
-${libdir}/lib*.so.*
-${libdir}/girepository-1.0/*.typelib
-EOF
+usr/lib/*/lib*.so.*
+usr/lib/*/girepository-1.0/*.typelib

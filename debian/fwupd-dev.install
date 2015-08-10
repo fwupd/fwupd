@@ -1,18 +1,4 @@
-#!/bin/sh
-
-bindir=usr/bin
-datadir=usr/share
-includedir=usr/include
-libdir=usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)
-libexecdir=${libdir}
-mandir=${datadir}/man
-sysconfdir=/etc
-localstatedir=/var
-unitdir=/lib/systemd/system
-
-cat<<EOF
-${includedir}/fwupd-1
-${libdir}/lib*.so
-${libdir}/pkgconfig/*.pc
-${datadir}/gir-1.0/*.gir
-EOF
+usr/include/fwupd-1
+usr/lib/*/lib*.so
+usr/lib/*/pkgconfig/*.pc
+usr/share/gir-1.0/*.gir
