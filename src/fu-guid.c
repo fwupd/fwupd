@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <appstream-glib.h>
 #include <fwupd.h>
 #include <glib-object.h>
 #include <string.h>
@@ -34,6 +35,9 @@
 gboolean
 fu_guid_is_valid (const gchar *guid)
 {
+#if AS_CHECK_VERSION(0,5,0)
+	return as_utils_guid_is_valid (guid);
+#else
 	_cleanup_strv_free_ gchar **split = NULL;
 	if (guid == NULL)
 		return FALSE;
@@ -51,6 +55,7 @@ fu_guid_is_valid (const gchar *guid)
 	if (strlen (split[4]) != 12)
 		return FALSE;
 	return TRUE;
+#endif
 }
 
 /**
@@ -59,6 +64,9 @@ fu_guid_is_valid (const gchar *guid)
 gchar *
 fu_guid_generate_from_string (const gchar *str)
 {
+#if AS_CHECK_VERSION(0,5,0)
+	return as_utils_guid_from_string (str);
+#else
 	gchar *tmp;
 	tmp = g_compute_checksum_for_string (G_CHECKSUM_SHA1, str, -1);
 	tmp[8] = '-';
@@ -68,4 +76,5 @@ fu_guid_generate_from_string (const gchar *str)
 	tmp[36] = '\0';
 	g_assert (fu_guid_is_valid (tmp));
 	return tmp;
+#endif
 }
