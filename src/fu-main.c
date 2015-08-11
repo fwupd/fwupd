@@ -727,7 +727,13 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 			continue;
 
 		/* match the GUID in the XML */
+#if AS_CHECK_VERSION(0,5,0)
+		app = as_store_get_app_by_provide (priv->store,
+						   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
+						   fu_device_get_guid (item->device));
+#else
 		app = as_store_get_app_by_id (priv->store, fu_device_get_guid (item->device));
+#endif
 		if (app == NULL)
 			continue;
 
