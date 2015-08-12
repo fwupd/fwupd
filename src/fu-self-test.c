@@ -196,7 +196,7 @@ fu_cab_func (void)
 	g_assert (cab != NULL);
 
 	/* load file */
-	filename = fu_test_get_filename ("colorhug-als-3.0.2.cab");
+	filename = fu_test_get_filename ("colorhug/colorhug-als-3.0.2.cab");
 	g_assert (filename != NULL);
 	file = g_file_new_for_path (filename);
 	ret = fu_cab_load_file (cab, file, NULL, &error);
@@ -209,7 +209,7 @@ fu_cab_func (void)
 	g_assert_cmpstr (fu_cab_get_version (cab), ==, "3.0.2");
 	g_assert_cmpstr (fu_cab_get_url_homepage (cab), ==, "http://www.hughski.com/");
 	g_assert_cmpstr (fu_cab_get_license (cab), ==, "GPL-2.0+");
-	g_assert_cmpint (fu_cab_get_size (cab), ==, 10174);
+	g_assert_cmpint (fu_cab_get_size (cab), ==, 10325);
 	g_assert_cmpstr (fu_cab_get_description (cab), !=, NULL);
 	g_assert_cmpint (fu_cab_get_trust_flags (cab), ==, FWUPD_TRUST_FLAG_NONE);
 	g_assert (!g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
@@ -533,13 +533,13 @@ fu_keyring_func (void)
 	g_assert (ret);
 
 	/* verify */
-	fw_pass = fu_test_get_filename ("firmware.bin");
+	fw_pass = fu_test_get_filename ("colorhug/firmware.bin");
 	ret = fu_keyring_verify_file (keyring, fw_pass, sig, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* verify will fail */
-	fw_fail = fu_test_get_filename ("colorhug-als-3.0.2.cab");
+	fw_fail = fu_test_get_filename ("colorhug/colorhug-als-3.0.2.cab");
 	ret = fu_keyring_verify_file (keyring, fw_fail, sig, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert (!ret);

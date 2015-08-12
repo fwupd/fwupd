@@ -194,6 +194,7 @@ data/Makefile
 data/pki/Makefile
 data/tests/Makefile
 data/tests/rpiupdate/Makefile
+data/tests/colorhug/Makefile
 docs/Makefile
 docs/man/Makefile
 policy/Makefile

@@ -1,9 +1,8 @@
 SUBDIRS = 								\
+	colorhug							\
 	rpiupdate
 
 test_files =								\
-	colorhug-als-3.0.2.cab						\
-	firmware.bin							\
 	rpiboot/start.elf						\
 	pki/GPG-KEY-Linux-Vendor-Firmware-Service
 
