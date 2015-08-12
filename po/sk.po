@@ -8,10 +8,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-25 14:51+0100\n"
-"PO-Revision-Date: 2015-07-25 13:51+0000\n"
+"POT-Creation-Date: 2015-08-12 09:20+0100\n"
+"PO-Revision-Date: 2015-08-12 08:20+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
-"Language-Team: Slovak (http://www.transifex.com/projects/p/fwupd/language/sk/)\n"
+"Language-Team: Slovak (http://www.transifex.com/hughsie/fwupd/language/sk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -73,7 +73,7 @@ msgstr "Skončí po načítaní jadra"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr ""
+msgstr "Démon aktualizácie firmvéru"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -81,27 +81,27 @@ msgstr "Služba zbernice D-Bus na aktualizovanie firmvéru"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after signing queue"
-msgstr ""
+msgstr "Skončenie po fronte podpisov"
 
 #. TRANSLATORS: input location to watch
 msgid "Source path for files"
-msgstr ""
+msgstr "Zdrojová cesta pre súbory"
 
 #. TRANSLATORS: output location to put files
 msgid "Destination path for files"
-msgstr ""
+msgstr "Cieľová cesta pre súbory"
 
 #. TRANSLATORS: output location to put files
 msgid "GPG key used to sign the firmware"
-msgstr ""
+msgstr "Kľúč GPG použitý na podpísanie firmvéru"
 
 #. TRANSLATORS: program name
 msgid "fwsignd"
-msgstr ""
+msgstr "fwsignd"
 
 #. TRANSLATORS: program summary
 msgid "Firmware signing server"
-msgstr ""
+msgstr "Server pre podpisovanie firmvéru"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -110,7 +110,7 @@ msgstr "Prezývka príkazu %s"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
-msgstr ""
+msgstr "Príkaz nenájdený"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle"
@@ -150,7 +150,7 @@ msgstr "Hotovo!"
 
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
-msgstr ""
+msgstr "Skúša sa znovu ako aktualizácia bez pripojenia"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -172,6 +172,9 @@ msgstr "Vracia sa %s z verzie %s na verziu %s... "
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Aktualizuje sa %s z verzie %s na verziu %s... "
+
+msgid "OK"
+msgstr ""
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -200,15 +203,15 @@ msgstr "Zobrazovať dodatočné ladiace informácie"
 
 #. TRANSLATORS: command line option
 msgid "Perform the installation offline where possible"
-msgstr ""
+msgstr "Vykoná inštaláciu bez pripojenia, kde je to možné"
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
-msgstr ""
+msgstr "Umožní preinštalovanie existujúcich vedzií firmvéru"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
-msgstr ""
+msgstr "Umožní zníženie verzií firmvéru"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -232,11 +235,11 @@ msgstr "Získa zoznam aktualizácií pre pripojený hardvér"
 
 #. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"
-msgstr ""
+msgstr "Aktualizuje všetok firmvér na najnovšiu dostupnú verziu"
 
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr ""
+msgstr "Získa kryptografický medzisúčet stiahnutého firmvéru"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -248,19 +251,19 @@ msgstr "Získa výsledky z poslednej aktualizácie"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr ""
+msgstr "Obnoví metaúdaje zo vzdialeného servera"
 
 #. TRANSLATORS: command description
 msgid "Dump the ROM checksum"
-msgstr ""
+msgstr "Stiahne medzisúčet pamäte ROM"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
-msgstr ""
+msgstr "Aktualizuje uložené metaúdaje s aktuálnym obsahom pamäte ROM"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
-msgstr ""
+msgstr "Nástroj pre firmvéry"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
