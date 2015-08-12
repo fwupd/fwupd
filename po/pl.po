@@ -8,10 +8,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-25 14:51+0100\n"
-"PO-Revision-Date: 2015-07-25 13:51+0000\n"
+"POT-Creation-Date: 2015-08-12 09:20+0100\n"
+"PO-Revision-Date: 2015-08-12 08:20+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
-"Language-Team: Polish (http://www.transifex.com/projects/p/fwupd/language/pl/)\n"
+"Language-Team: Polish (http://www.transifex.com/hughsie/fwupd/language/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -73,7 +73,7 @@ msgstr "Kończy działanie po wczytaniu mechanizmu"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr ""
+msgstr "Usługa aktualizacji oprogramowania sprzętowego"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -81,27 +81,27 @@ msgstr "Usługa D-Bus aktualizacji oprogramowania sprzętowego"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after signing queue"
-msgstr ""
+msgstr "Kończy działanie po podpisaniu kolejki"
 
 #. TRANSLATORS: input location to watch
 msgid "Source path for files"
-msgstr ""
+msgstr "Ścieżka źródłowa do plików"
 
 #. TRANSLATORS: output location to put files
 msgid "Destination path for files"
-msgstr ""
+msgstr "Ścieżka docelowa do plików"
 
 #. TRANSLATORS: output location to put files
 msgid "GPG key used to sign the firmware"
-msgstr ""
+msgstr "Klucz GPG używany do podpisywania oprogramowania sprzętowego"
 
 #. TRANSLATORS: program name
 msgid "fwsignd"
-msgstr ""
+msgstr "fwsignd"
 
 #. TRANSLATORS: program summary
 msgid "Firmware signing server"
-msgstr ""
+msgstr "Serwer podpisywania oprogramowania sprzętowego"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -110,7 +110,7 @@ msgstr "Alias do %s"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
-msgstr ""
+msgstr "Nie odnaleziono polecenia"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle"
@@ -150,7 +150,7 @@ msgstr "Gotowe."
 
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
-msgstr ""
+msgstr "Próbowanie ponownie jako aktualizacja w trybie offline"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -172,6 +172,9 @@ msgstr "Instalowanie poprzedniej wersji %s z %s do %s... "
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Aktualizowanie %s z wersji %s do %s... "
+
+msgid "OK"
+msgstr ""
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -200,15 +203,15 @@ msgstr "Wyświetla dodatkowe informacje o debugowaniu"
 
 #. TRANSLATORS: command line option
 msgid "Perform the installation offline where possible"
-msgstr ""
+msgstr "Wykonuje instalację w trybie offline, jeśli to możliwe"
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
-msgstr ""
+msgstr "Umożliwia ponowne instalowanie istniejących wersji oprogramowania sprzętowego"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
-msgstr ""
+msgstr "Umożliwia instalowanie poprzednich wersji oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -232,11 +235,11 @@ msgstr "Uzyskuje listę aktualizacji dla podłączonego sprzętu"
 
 #. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"
-msgstr ""
+msgstr "Aktualizuje całe oprogramowanie sprzętowe do najnowszych dostępnych wersji"
 
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr ""
+msgstr "Pobiera kryptograficzną sumę kontrolną zrzuconego oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -248,19 +251,19 @@ msgstr "Uzyskuje wyniki z ostatniej aktualizacji"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr ""
+msgstr "Odświeża metadane ze zdalnego serwera"
 
 #. TRANSLATORS: command description
 msgid "Dump the ROM checksum"
-msgstr ""
+msgstr "Zrzuca sumę kontrolną pamięci ROM"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
-msgstr ""
+msgstr "Aktualizuje przechowywane metadane bieżącą zawartością pamięci ROM"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
-msgstr ""
+msgstr "Narzędzie oprogramowania sprzętowego"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"

@@ -1,3 +1,26 @@
+Version 0.1.5
+~~~~~~~~~~~~~
+Released: 2015-08-12
+
+Notes:
+ - For the device verification code to work correctly you need at least
+   libappstream-glib 0.5.0 installed.
+
+New Features:
+ - Add a Raspberry Pi firmware provider (Richard Hughes)
+ - Add a simple config file to store the correct LVFS download URI (Richard Hughes)
+ - Make parsing the option ROM runtime optional (Richard Hughes)
+
+Bugfixes:
+ - Allow fwupd to be autostarted by systemd (Richard Hughes)
+ - Allow no arguments to 'fwupdmgr verify-update' and use sane defaults (Richard Hughes)
+ - Devices with option ROM are always internal (Richard Hughes)
+ - Do not pre-convert the update description from AppStream XML (Richard Hughes)
+ - Fix validation of written firmware (Richard Hughes)
+ - Move the verification and metadata matching phase to the daemon (Richard Hughes)
+ - Sign the test binary with the correct key (Richard Hughes)
+ - Use the AppStream 0.9 firmware specification by default (Richard Hughes)
+
 Version 0.1.4
 ~~~~~~~~~~~~~
 Released: 2015-07-25

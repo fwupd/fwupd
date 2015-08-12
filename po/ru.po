@@ -8,10 +8,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-25 14:51+0100\n"
-"PO-Revision-Date: 2015-07-25 13:51+0000\n"
+"POT-Creation-Date: 2015-08-12 09:20+0100\n"
+"PO-Revision-Date: 2015-08-12 08:20+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
-"Language-Team: Russian (http://www.transifex.com/projects/p/fwupd/language/ru/)\n"
+"Language-Team: Russian (http://www.transifex.com/hughsie/fwupd/language/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -73,7 +73,7 @@ msgstr "Выйти после загрузки движка"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr ""
+msgstr "Служба обновления микропрограммы"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -81,27 +81,27 @@ msgstr "D-Bus служба обновления микропрограммы"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after signing queue"
-msgstr ""
+msgstr "Выход после подписания очереди"
 
 #. TRANSLATORS: input location to watch
 msgid "Source path for files"
-msgstr ""
+msgstr "Путь к файлам источника"
 
 #. TRANSLATORS: output location to put files
 msgid "Destination path for files"
-msgstr ""
+msgstr "Путь к файлам назначения"
 
 #. TRANSLATORS: output location to put files
 msgid "GPG key used to sign the firmware"
-msgstr ""
+msgstr "Ключ GPG, используемый для подписи микропрограммы"
 
 #. TRANSLATORS: program name
 msgid "fwsignd"
-msgstr ""
+msgstr "fwsignd"
 
 #. TRANSLATORS: program summary
 msgid "Firmware signing server"
-msgstr ""
+msgstr "Сервер подписи микропрограмм"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -110,7 +110,7 @@ msgstr "Псевдоним %s"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
-msgstr ""
+msgstr "Команда не найдена"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle"
@@ -150,7 +150,7 @@ msgstr "Готово!"
 
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
-msgstr ""
+msgstr "Повторная попытка как в режиме автономного обновления"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -172,6 +172,9 @@ msgstr "Понижение версии %s с  %s на %s…"
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Обновление %s с %s на %s…"
+
+msgid "OK"
+msgstr ""
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -200,15 +203,15 @@ msgstr "Показать дополнительную отладочную ин�
 
 #. TRANSLATORS: command line option
 msgid "Perform the installation offline where possible"
-msgstr ""
+msgstr "Выполнить установку в автономном режиме, где возможно"
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
-msgstr ""
+msgstr "Разрешить повторную установку существующих версий микропрограмм"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
-msgstr ""
+msgstr "Разрешить понижение версий микропрограмм"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -232,11 +235,11 @@ msgstr "Получает список обновлений для подключ
 
 #. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"
-msgstr ""
+msgstr "Обновляет все микропрограммы до их последних доступных версий"
 
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr ""
+msgstr "Получает криптографической хэш дампа микропрограммы"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -248,19 +251,19 @@ msgstr "Получает результаты с последнего обнов
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr ""
+msgstr "Обновить метаданные с удаленного сервера"
 
 #. TRANSLATORS: command description
 msgid "Dump the ROM checksum"
-msgstr ""
+msgstr "Создать дамп контрольной суммы ПЗУ"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
-msgstr ""
+msgstr "Обновить сохранённые метаданные с текущим содержимым ПЗУ"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
-msgstr ""
+msgstr "Средство работы с микропрограммами"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
