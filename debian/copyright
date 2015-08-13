@@ -7,8 +7,8 @@ Copyright: 2015 Richard Hughes <richard@hughsie.com>
 License: GPL-2.0+
 
 Files: src/fu-cleanup.h
-Copyright: 2012 Colin Walters <walters@verbum.org>.
-Copyright: 2014-2015 Richard Hughes <richard@hughsie.com>
+Copyright: 2012 Colin Walters <walters@verbum.org>,
+           2014-2015 Richard Hughes <richard@hughsie.com>
 Licence: LGPL-2.1+
 
 Files: libfwupd1/fwupd*
