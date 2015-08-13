@@ -8,3 +8,4 @@ usr/share/man/man1/*
 lib/systemd/system/*
 var/lib/fwupd
 lib/udev/rules.d/*
+data/fwupd.conf etc
