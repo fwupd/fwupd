@@ -40,6 +40,7 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
+#include "fu-provider-rpi.h"
 #include "fu-provider-udev.h"
 #include "fu-provider-usb.h"
 #include "fu-resources.h"
@@ -669,7 +670,10 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	/* merge in the new contents */
 	g_debug ("Store was %i size", as_store_get_size (store));
 	if (!as_store_from_xml (store,
-				g_bytes_get_data (bytes, NULL), -1,
+				g_bytes_get_data (bytes, NULL),
+#if !AS_CHECK_VERSION(0,5,0)
+				-1,
+#endif
 				NULL, error))
 		return FALSE;
 	g_debug ("Store now %i size", as_store_get_size (store));
@@ -711,7 +715,9 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 	updates = g_ptr_array_new ();
 	for (i = 0; i < priv->devices->len; i++) {
 		const gchar *version;
-		_cleanup_error_free_ GError *error_local = NULL;
+#if AS_CHECK_VERSION(0,5,0)
+		AsChecksum *csum;
+#endif
 
 		item = g_ptr_array_index (priv->devices, i);
 
@@ -721,7 +727,13 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 			continue;
 
 		/* match the GUID in the XML */
+#if AS_CHECK_VERSION(0,5,0)
+		app = as_store_get_app_by_provide (priv->store,
+						   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
+						   fu_device_get_guid (item->device));
+#else
 		app = as_store_get_app_by_id (priv->store, fu_device_get_guid (item->device));
+#endif
 		if (app == NULL)
 			continue;
 
@@ -746,11 +758,20 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 			fu_device_set_metadata (item->device,
 						FU_DEVICE_KEY_UPDATE_VERSION, tmp);
 		}
+#if AS_CHECK_VERSION(0,5,0)
+		csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTAINER);
+		if (csum != NULL) {
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_UPDATE_HASH,
+						as_checksum_get_value (csum));
+		}
+#else
 		tmp = as_release_get_checksum (rel, G_CHECKSUM_SHA1);
 		if (tmp != NULL) {
 			fu_device_set_metadata (item->device,
 						FU_DEVICE_KEY_UPDATE_HASH, tmp);
 		}
+#endif
 		tmp = as_release_get_location_default (rel);
 		if (tmp != NULL) {
 			fu_device_set_metadata (item->device,
@@ -758,15 +779,9 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 		}
 		tmp = as_release_get_description (rel, NULL);
 		if (tmp != NULL) {
-			_cleanup_free_ gchar *md = NULL;
-			md = as_markup_convert (tmp, -1,
-						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
-						NULL);
-			if (md != NULL) {
-				fu_device_set_metadata (item->device,
-							FU_DEVICE_KEY_UPDATE_DESCRIPTION,
-							md);
-			}
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_UPDATE_DESCRIPTION,
+						tmp);
 		}
 		g_ptr_array_add (updates, item);
 	}
@@ -913,10 +928,16 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 	/* return 's' */
 	if (g_strcmp0 (method_name, "Verify") == 0) {
+		AsApp *app;
+#if AS_CHECK_VERSION(0,5,0)
+		AsChecksum *csum;
+#endif
+		AsRelease *release;
 		FuDeviceItem *item = NULL;
-		const gchar *id = NULL;
-		_cleanup_error_free_ GError *error = NULL;
 		const gchar *hash = NULL;
+		const gchar *id = NULL;
+		const gchar *version = NULL;
+		_cleanup_error_free_ GError *error = NULL;
 
 		/* check the id exists */
 		g_variant_get (parameters, "(&s)", &id);
@@ -926,18 +947,72 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_error (invocation,
 							       FWUPD_ERROR,
 							       FWUPD_ERROR_NOT_FOUND,
-							       "no such device %s",
+							       "No such device %s",
 							       id);
 			return;
 		}
+
+		/* set the device firmware hash */
 		if (!fu_provider_verify (item->provider, item->device,
 					 FU_PROVIDER_VERIFY_FLAG_NONE, &error)) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
+
+		/* find component in metadata */
+		app = as_store_get_app_by_id (priv->store, fu_device_get_guid (item->device));
+		if (app == NULL) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_SUPPORTED,
+							       "No metadata");
+			return;
+		}
+
+		/* find version in metadata */
+		version = fu_device_get_metadata (item->device, FU_DEVICE_KEY_VERSION);
+		release = as_app_get_release (app, version);
+		if (release == NULL) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_SUPPORTED,
+							       "No version %s",
+							       version);
+			return;
+		}
+
+		/* find checksum */
+#if AS_CHECK_VERSION(0,5,0)
+		csum = as_release_get_checksum_by_target (release, AS_CHECKSUM_TARGET_CONTENT);
+		if (csum == NULL) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_SUPPORTED,
+							       "No content checksum for %s",
+							       version);
+			return;
+		}
 		hash = fu_device_get_metadata (item->device, FU_DEVICE_KEY_FIRMWARE_HASH);
-		g_dbus_method_invocation_return_value (invocation,
-						       g_variant_new ("(s)", hash));
+		if (g_strcmp0 (as_checksum_get_value (csum), hash) != 0) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_SUPPORTED,
+							       "For v%s expected %s, got %s",
+							       version,
+							       as_checksum_get_value (csum),
+							       hash);
+			return;
+		}
+#else
+		g_dbus_method_invocation_return_error (invocation,
+						       FWUPD_ERROR,
+						       FWUPD_ERROR_NOT_SUPPORTED,
+						       "No information with %s",
+						       hash);
+		return;
+#endif
+
+		g_dbus_method_invocation_return_value (invocation, NULL);
 		return;
 	}
 
@@ -1411,6 +1486,8 @@ main (int argc, char *argv[])
 		{ NULL}
 	};
 	_cleanup_error_free_ GError *error = NULL;
+	_cleanup_free_ gchar *config_file = NULL;
+	_cleanup_keyfile_unref_ GKeyFile *config = NULL;
 
 	setlocale (LC_ALL, "");
 
@@ -1450,10 +1527,24 @@ main (int argc, char *argv[])
 		return FALSE;
 	}
 
+	/* read config file */
+	config = g_key_file_new ();
+	config_file = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
+	g_debug ("Loading fallback values from %s", config_file);
+	if (!g_key_file_load_from_file (config, config_file,
+					G_KEY_FILE_NONE, &error)) {
+		g_print ("failed to load config file %s: %s\n",
+			  config_file, error->message);
+		retval = EXIT_FAILURE;
+		goto out;
+	}
+
 	/* add providers */
 	priv->providers = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	fu_main_add_provider (priv, fu_provider_udev_new ());
+	if (g_key_file_get_boolean (config, "fwupd", "EnableOptionROM", NULL))
+		fu_main_add_provider (priv, fu_provider_udev_new ());
 	fu_main_add_provider (priv, fu_provider_usb_new ());
+	fu_main_add_provider (priv, fu_provider_rpi_new ());
 #ifdef HAVE_COLORHUG
 	fu_main_add_provider (priv, fu_provider_chug_new ());
 #endif
@@ -1519,7 +1610,8 @@ out:
 		if (priv->introspection_daemon != NULL)
 			g_dbus_node_info_unref (priv->introspection_daemon);
 		g_object_unref (priv->pending);
-		g_ptr_array_unref (priv->providers);
+		if (priv->providers != NULL)
+			g_ptr_array_unref (priv->providers);
 		g_ptr_array_unref (priv->devices);
 		g_free (priv);
 	}

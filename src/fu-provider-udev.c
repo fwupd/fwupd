@@ -169,22 +169,31 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 				   rom_fn, error->message);
 		}
 		version = g_strdup (fu_rom_get_version (rom));
+
+		/* prefer the GUID from the firmware rather than the
+		 * hardware as the firmware may be more generic, which
+		 * also allows us to match the GUID when doing 'verify'
+		 * on a device with a different PID to the firmware */
+		guid_new = g_strdup (fu_rom_get_guid (rom));
 	}
 
 	/* we failed */
 	if (version == NULL)
 		return;
 
-	/* check the guid */
-	if (!fu_guid_is_valid (guid)) {
-		guid_new = fu_guid_generate_from_string (guid);
-		g_debug ("Fixing GUID %s->%s", guid, guid_new);
-	} else {
-		guid_new = g_strdup (guid);
+	/* no GUID from the ROM, so fix up the VID:PID */
+	if (guid_new == NULL) {
+		if (!fu_guid_is_valid (guid)) {
+			guid_new = fu_guid_generate_from_string (guid);
+			g_debug ("Fixing GUID %s->%s", guid, guid_new);
+		} else {
+			guid_new = g_strdup (guid);
+		}
 	}
 
 	/* did we get enough data */
 	dev = fu_device_new ();
+	fu_device_add_flag (dev, FU_DEVICE_FLAG_INTERNAL);
 	fu_device_set_id (dev, id);
 	fu_device_set_guid (dev, guid_new);
 	display_name = g_udev_device_get_property (device, "FWUPD_MODEL");

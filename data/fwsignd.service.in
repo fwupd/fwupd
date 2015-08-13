@@ -9,3 +9,6 @@ Type=simple
 ExecStart=@servicedir@/fwsignd
 PrivateNetwork=yes
 PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -24,13 +24,16 @@
 #include <fwupd.h>
 #include <glib-object.h>
 #include <glib/gstdio.h>
+#include <gio/gfiledescriptorbased.h>
 #include <stdlib.h>
 
 #include "fu-cab.h"
 #include "fu-cleanup.h"
+#include "fu-guid.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider-fake.h"
+#include "fu-provider-rpi.h"
 #include "fu-rom.h"
 
 /**
@@ -47,6 +50,25 @@ fu_test_get_filename (const gchar *filename)
 	if (tmp == NULL)
 		return NULL;
 	return g_strdup (full_tmp);
+}
+
+static void
+fu_guid_func (void)
+{
+	_cleanup_free_ gchar *guid = NULL;
+
+	/* invalid */
+	g_assert (!fu_guid_is_valid (NULL));
+	g_assert (!fu_guid_is_valid (""));
+	g_assert (!fu_guid_is_valid ("1ff60ab2-3905-06a1-b476"));
+	g_assert (!fu_guid_is_valid (" 1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
+
+	/* valid */
+	g_assert (fu_guid_is_valid ("1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
+
+	/* make valid */
+	guid = fu_guid_generate_from_string ("0x8086:0x0406");
+	g_assert_cmpstr (guid, ==, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
 }
 
 static void
@@ -174,7 +196,7 @@ fu_cab_func (void)
 	g_assert (cab != NULL);
 
 	/* load file */
-	filename = fu_test_get_filename ("colorhug-als-3.0.2.cab");
+	filename = fu_test_get_filename ("colorhug/colorhug-als-3.0.2.cab");
 	g_assert (filename != NULL);
 	file = g_file_new_for_path (filename);
 	ret = fu_cab_load_file (cab, file, NULL, &error);
@@ -187,7 +209,7 @@ fu_cab_func (void)
 	g_assert_cmpstr (fu_cab_get_version (cab), ==, "3.0.2");
 	g_assert_cmpstr (fu_cab_get_url_homepage (cab), ==, "http://www.hughski.com/");
 	g_assert_cmpstr (fu_cab_get_license (cab), ==, "GPL-2.0+");
-	g_assert_cmpint (fu_cab_get_size (cab), ==, 10174);
+	g_assert_cmpint (fu_cab_get_size (cab), ==, 10325);
 	g_assert_cmpstr (fu_cab_get_description (cab), !=, NULL);
 	g_assert_cmpint (fu_cab_get_trust_flags (cab), ==, FWUPD_TRUST_FLAG_NONE);
 	g_assert (!g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
@@ -335,6 +357,76 @@ fu_provider_func (void)
 }
 
 static void
+fu_provider_rpi_func (void)
+{
+	gboolean ret;
+	guint cnt = 0;
+	int fd;
+	_cleanup_error_free_ GError *error = NULL;
+	_cleanup_free_ gchar *path = NULL;
+	_cleanup_free_ gchar *pending_db = NULL;
+	_cleanup_free_ gchar *fwfile = NULL;
+	_cleanup_object_unref_ FuDevice *device = NULL;
+	_cleanup_object_unref_ FuProvider *provider = NULL;
+	_cleanup_object_unref_ GFile *file = NULL;
+	_cleanup_object_unref_ GInputStream *stream = NULL;
+
+	/* test location */
+	path = fu_test_get_filename ("rpiboot");
+	g_assert (path != NULL);
+
+	/* create a fake device */
+	provider = fu_provider_rpi_new ();
+	fu_provider_rpi_set_fw_dir (FU_PROVIDER_RPI (provider), path);
+	g_signal_connect (provider, "device-added",
+			  G_CALLBACK (_provider_device_added_cb),
+			  &device);
+	g_signal_connect (provider, "status-changed",
+			  G_CALLBACK (_provider_status_changed_cb),
+			  &cnt);
+	ret = fu_provider_coldplug (provider, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* check we did the right thing */
+	g_assert_cmpint (cnt, ==, 0);
+	g_assert (device != NULL);
+	g_assert_cmpstr (fu_device_get_id (device), ==, "raspberry-pi");
+	g_assert_cmpstr (fu_device_get_guid (device), ==,
+			 "c77029fe-ffb2-3706-dc67-67af4a132afd");
+	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION), ==,
+			 "20150803");
+
+	/* ensure clean */
+	g_unlink ("/tmp/rpiboot/start.elf");
+
+	/* do update */
+	fu_provider_rpi_set_fw_dir (FU_PROVIDER_RPI (provider), "/tmp/rpiboot");
+	fwfile = fu_test_get_filename ("rpiupdate/firmware.bin");
+	g_assert (fwfile != NULL);
+	file = g_file_new_for_path (fwfile);
+	stream = G_INPUT_STREAM (g_file_read (file, NULL, &error));
+	fd = g_file_descriptor_based_get_fd (G_FILE_DESCRIPTOR_BASED (stream));
+	g_assert_no_error (error);
+	g_assert (stream != NULL);
+	ret = fu_provider_update (provider, device, NULL, fd,
+				  FU_PROVIDER_UPDATE_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (cnt, ==, 3);
+
+	/* check the file was exploded to the right place */
+	g_assert (g_file_test ("/tmp/rpiboot/start.elf", G_FILE_TEST_EXISTS));
+	g_assert (g_file_test ("/tmp/rpiboot/overlays/test.dtb", G_FILE_TEST_EXISTS));
+	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION), ==,
+			 "20150805");
+
+	/* clean up */
+	pending_db = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", "pending.db", NULL);
+	g_unlink (pending_db);
+}
+
+static void
 fu_pending_func (void)
 {
 	GError *error = NULL;
@@ -425,13 +517,13 @@ fu_keyring_func (void)
 	_cleanup_free_ gchar *pki_dir = NULL;
 	_cleanup_object_unref_ FuKeyring *keyring = NULL;
 	const gchar *sig =
-	"iQEcBAABAgAGBQJVK9RSAAoJEBesuo36lw4XvmoH/3tJL5wVRN+rsvoo/FMc3w4g"
-	"I7rizJNIgQ04WVTREX6tRZJfxYzGAaeokVeqah2JUC4u1j22BDkoG/Fs+/2/Z/OP"
-	"PTxMoiEzfzryWpVwt20As+H9CmMZGdCfvKgnWiosAENCzE7JE1miJ4YvTpRtdPMh"
-	"erz8DqLTFAfr72aimf5hBs8ZFkBGPGjljdTDv78hk2WDep5E1+1swGoFbhDcXyih"
-	"8GZjSLP7XkKo23/p6odCJD3SkkDE7jIUMA8GrTHHXIhF41UsriKx2ERYoau5k3cX"
-	"OdK3/cRQ6BeuSBMLr7hUpa0RwlKUKex/I7+p/T9Ohk4lNnGS7GpE45RbpflK1VQ="
-	"=0D8+";
+	"iQEcBAABCAAGBQJVt0B4AAoJEEim2A5FOLrCFb8IAK+QTLY34Wu8xZ8nl6p3JdMu"
+	"HOaifXAmX7291UrsFRwdabU2m65pqxQLwcoFrqGv738KuaKtu4oIwo9LIrmmTbEh"
+	"IID8uszxBt0bMdcIHrvwd+ADx+MqL4hR3guXEE3YOBTLvv2RF1UBcJPInNf/7Ui1"
+	"3lW1c3trL8RAJyx1B5RdKqAMlyfwiuvKM5oT4SN4uRSbQf+9mt78ZSWfJVZZH/RR"
+	"H9q7PzR5GdmbsRPM0DgC27Trvqjo3MzoVtoLjIyEb/aWqyulUbnJUNKPYTnZgkzM"
+	"v2yVofWKIM3e3wX5+MOtf6EV58mWa2cHJQ4MCYmpKxbIvAIZagZ4c9A8BA6tQWg="
+	"=fkit";
 
 	/* add test keys to keyring */
 	keyring = fu_keyring_new ();
@@ -441,13 +533,13 @@ fu_keyring_func (void)
 	g_assert (ret);
 
 	/* verify */
-	fw_pass = fu_test_get_filename ("firmware.bin");
+	fw_pass = fu_test_get_filename ("colorhug/firmware.bin");
 	ret = fu_keyring_verify_file (keyring, fw_pass, sig, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* verify will fail */
-	fw_fail = fu_test_get_filename ("colorhug-als-3.0.2.cab");
+	fw_fail = fu_test_get_filename ("colorhug/colorhug-als-3.0.2.cab");
 	ret = fu_keyring_verify_file (keyring, fw_fail, sig, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert (!ret);
@@ -465,11 +557,13 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
+	g_test_add_func ("/fwupd/guid", fu_guid_func);
 	g_test_add_func ("/fwupd/rom", fu_rom_func);
 	g_test_add_func ("/fwupd/rom{all}", fu_rom_all_func);
 	g_test_add_func ("/fwupd/cab", fu_cab_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/provider", fu_provider_func);
+	g_test_add_func ("/fwupd/provider{rpi}", fu_provider_rpi_func);
 	g_test_add_func ("/fwupd/keyring", fu_keyring_func);
 	return g_test_run ();
 }

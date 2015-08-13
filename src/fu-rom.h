@@ -79,6 +79,7 @@ gboolean	 fu_rom_extract_all			(FuRom		*rom,
 FuRomKind	 fu_rom_get_kind			(FuRom		*rom);
 const gchar	*fu_rom_get_version			(FuRom		*rom);
 const gchar	*fu_rom_get_checksum			(FuRom		*rom);
+const gchar	*fu_rom_get_guid			(FuRom		*rom);
 guint16		 fu_rom_get_vendor			(FuRom		*rom);
 guint16		 fu_rom_get_model			(FuRom		*rom);
 const gchar	*fu_rom_kind_to_string			(FuRomKind	 kind);

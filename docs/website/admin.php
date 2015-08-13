@@ -22,6 +22,8 @@
 
 include 'db.php';
 
+$downloaddir = $_ENV["OPENSHIFT_DATA_DIR"] . '/downloads/';
+
 function lvfs_admin_add($db, $auth_master, $auth_vendor, $name, $update_contact) {
 
 	$success = True;
@@ -65,7 +67,7 @@ function lvfs_admin_add($db, $auth_master, $auth_vendor, $name, $update_contact)
 	return $uri . 'result=' . $success;
 }
 
-function lvfs_admin_remove($db, $auth_master, $auth_vendor) {
+function lvfs_admin_disable($db, $auth_master, $auth_vendor) {
 
 	$success = True;
 	$uri = 'result.php?';
@@ -90,13 +92,70 @@ function lvfs_admin_remove($db, $auth_master, $auth_vendor) {
 	return $uri . 'result=' . $success;
 }
 
+function lvfs_admin_remove($db, $auth_master, $auth_vendor, $downloaddir) {
+
+	$success = True;
+	$uri = 'result.php?';
+
+	# check auth key
+	if (!lvfs_check_auth_master($db, $auth_master)) {
+		$success = False;
+		$uri = $uri . 'authkey=False&';
+	}
+
+	# check vendor key exists
+	if (!lvfs_check_exists($db, $auth_master)) {
+		$success = False;
+		$uri = $uri . 'authkey=False&';
+	}
+
+	# delete user
+	if ($success == True) {
+		$query = "DELETE FROM users WHERE guid = ?;";
+		if (!($stmt = $db->prepare($query)))
+			die("failed to prepare: " . $db->error);
+		$stmt->bind_param("s", $auth_vendor);
+		if (!$stmt->execute())
+			die("failed to execute: " . $stmt->error);
+		$stmt->close();
+	}
+
+	# delete files
+	$query = "SELECT filename FROM firmware WHERE vendor_key = ?;";
+	if (!($stmt = $db->prepare($query)))
+		die("failed to prepare: " . $db->error);
+	$stmt->bind_param("s", $auth_vendor);
+	if (!$stmt->execute())
+		die("failed to execute: " . $stmt->error);
+	$stmt->bind_result($fn);
+	while ($stmt->fetch()) {
+		unlink($downloaddir . $fn);
+	}
+	$stmt->close();
+
+	# delete history
+	if ($success == True) {
+		$query = "DELETE FROM firmware WHERE vendor_key = ?;";
+		if (!($stmt = $db->prepare($query)))
+			die("failed to prepare: " . $db->error);
+		$stmt->bind_param("s", $auth_vendor);
+		if (!$stmt->execute())
+			die("failed to execute: " . $stmt->error);
+		$stmt->close();
+	}
+
+	return $uri . 'result=' . $success;
+}
+
 # connect to database and perform action
 $db = lvfs_connect_db();
 $location = 'index.html';
 if ($_GET["action"] == 'add')
 	$location = lvfs_admin_add($db, $_POST['auth_master'], $_POST['auth_vendor'], $_POST['name'], $_POST['update_contact']);
 if ($_GET["action"] == 'disable')
-	$location = lvfs_admin_remove($db, $_POST['auth_master'], $_POST['auth_vendor']);
+	$location = lvfs_admin_disable($db, $_POST['auth_master'], $_POST['auth_vendor']);
+if ($_GET["action"] == 'remove')
+	$location = lvfs_admin_remove($db, $_POST['auth_master'], $_POST['auth_vendor'], $downloaddir);
 lvfs_disconnect_db($db);
 
 header('Location: ' . $location);

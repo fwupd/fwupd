@@ -72,7 +72,7 @@ typedef enum {
 	FU_DEVICE_FLAG_ALLOW_ONLINE	= 1 << 1,	/* Since: 0.1.3 */
 	FU_DEVICE_FLAG_ALLOW_OFFLINE	= 1 << 2,	/* Since: 0.1.3 */
 	/* private */
-	FU_DEVICE_FLAG_LAST,
+	FU_DEVICE_FLAG_LAST
 } FwupdDeviceFlags;
 
 const gchar	*fwupd_status_to_string			(FwupdStatus	 status);

@@ -24,7 +24,7 @@ systemdservice_DATA = $(systemdservice_in_files:.service.in=.service)
 if HAVE_FWSIGND
 systemdservice_in_files += fwsignd.service.in
 configdir = $(sysconfdir)
-dist_config_DATA = fwsignd.conf
+dist_config_DATA = fwsignd.conf fwupd.conf
 endif
 
 install-data-hook:
@@ -35,6 +35,7 @@ udevrules_DATA =					\
 	90-fwupd-devices.rules
 
 EXTRA_DIST =						\
+	fwsignd.service.in				\
 	$(udevrules_DATA)				\
 	$(dbusservicemain_in_files)			\
 	$(systemdservice_in_files)

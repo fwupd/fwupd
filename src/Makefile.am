@@ -14,6 +14,7 @@ AM_CPPFLAGS =						\
 	$(UEFI_CFLAGS)					\
 	$(GPGME_CFLAGS)					\
 	$(SOUP_CFLAGS)					\
+	$(ARCHIVE_CFLAGS)				\
 	-I$(top_srcdir)					\
 	-I$(top_builddir)				\
 	-I$(top_srcdir)/libfwupd			\
@@ -50,6 +51,7 @@ fwupdmgr_LDADD =					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\
 	$(SOUP_LIBS)					\
+	$(GUDEV_LIBS)					\
 	$(GLIB_LIBS)
 
 fwupdmgr_LDFLAGS =					\
@@ -97,6 +99,8 @@ fwupd_SOURCES =						\
 	fu-pending.h					\
 	fu-provider.c					\
 	fu-provider.h					\
+	fu-provider-rpi.c				\
+	fu-provider-rpi.h				\
 	fu-provider-udev.c				\
 	fu-provider-udev.h				\
 	fu-provider-usb.c				\
@@ -130,6 +134,7 @@ fwupd_LDADD =						\
 	$(POLKIT_LIBS)					\
 	$(SQLITE_LIBS)					\
 	$(GPGME_LIBS)					\
+	$(ARCHIVE_LIBS)					\
 	$(UEFI_LIBS)
 
 fwupd_LDFLAGS =						\
@@ -182,6 +187,8 @@ fu_self_test_SOURCES =					\
 	fu-cab.h					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-guid.c					\
+	fu-guid.h					\
 	fu-keyring.c					\
 	fu-keyring.h					\
 	fu-pending.c					\
@@ -190,6 +197,8 @@ fu_self_test_SOURCES =					\
 	fu-provider.h					\
 	fu-provider-fake.c				\
 	fu-provider-fake.h				\
+	fu-provider-rpi.c				\
+	fu-provider-rpi.h				\
 	fu-rom.c					\
 	fu-rom.h					\
 	fu-self-test.c
@@ -200,6 +209,7 @@ fu_self_test_LDADD =					\
 	$(SQLITE_LIBS)					\
 	$(GCAB_LIBS)					\
 	$(GPGME_LIBS)					\
+	$(ARCHIVE_LIBS)					\
 	$(GLIB_LIBS)
 
 fu_self_test_CFLAGS =					\

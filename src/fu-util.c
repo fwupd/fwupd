@@ -28,6 +28,7 @@
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
+#include <gudev/gudev.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -816,7 +817,6 @@ static gboolean
 fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	guint i;
-	_cleanup_object_unref_ GFile *xml_file = NULL;
 
 	if (g_strv_length (values) == 0) {
 		g_set_error_literal (error,
@@ -826,8 +826,6 @@ fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	for (i = 0; values[i] != NULL; i++) {
-		_cleanup_free_ gchar *guid = NULL;
-		_cleanup_free_ gchar *id = NULL;
 		_cleanup_object_unref_ FuRom *rom = NULL;
 		_cleanup_object_unref_ GFile *file = NULL;
 		_cleanup_error_free_ GError *error_local = NULL;
@@ -850,26 +848,23 @@ fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
- * fu_util_verify_update:
+ * fu_util_verify_update_internal:
  **/
 static gboolean
-fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_verify_update_internal (FuUtilPrivate *priv,
+				const gchar *filename,
+				gchar **values,
+				GError **error)
 {
+#if AS_CHECK_VERSION(0,5,0)
 	guint i;
 	_cleanup_object_unref_ AsStore *store = NULL;
 	_cleanup_object_unref_ GFile *xml_file = NULL;
 
-	if (g_strv_length (values) < 2) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments: expected 'filename.xml' 'filename.rom'");
-		return FALSE;
-	}
 	store = as_store_new ();
 
 	/* open existing file */
-	xml_file = g_file_new_for_path (values[0]);
+	xml_file = g_file_new_for_path (filename);
 	if (g_file_query_exists (xml_file, NULL)) {
 		if (!as_store_from_file (store, xml_file, NULL, NULL, error))
 			return FALSE;
@@ -877,10 +872,10 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* add new values */
 	as_store_set_api_version (store, 0.9);
-	for (i = 1; values[i] != NULL; i++) {
+	for (i = 0; values[i] != NULL; i++) {
 		_cleanup_free_ gchar *guid = NULL;
-		_cleanup_free_ gchar *id = NULL;
 		_cleanup_object_unref_ AsApp *app = NULL;
+		_cleanup_object_unref_ AsChecksum *csum = NULL;
 		_cleanup_object_unref_ AsRelease *rel = NULL;
 		_cleanup_object_unref_ FuRom *rom = NULL;
 		_cleanup_object_unref_ GFile *file = NULL;
@@ -897,17 +892,16 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* add app to store */
 		app = as_app_new ();
-		id = g_strdup_printf ("0x%04x:0x%04x",
-				      fu_rom_get_vendor (rom),
-				      fu_rom_get_model (rom));
-		guid = fu_guid_generate_from_string (id);
-		as_app_set_id (app, guid, -1);
+		as_app_set_id (app, fu_rom_get_guid (rom));
 		as_app_set_id_kind (app, AS_ID_KIND_FIRMWARE);
 		as_app_set_source_kind (app, AS_APP_SOURCE_KIND_INF);
 		rel = as_release_new ();
-		as_release_set_version (rel, fu_rom_get_version (rom), -1);
-		as_release_set_checksum (rel, G_CHECKSUM_SHA1,
-					 fu_rom_get_checksum (rom), -1);
+		as_release_set_version (rel, fu_rom_get_version (rom));
+		csum = as_checksum_new ();
+		as_checksum_set_kind (csum, G_CHECKSUM_SHA1);
+		as_checksum_set_value (csum, fu_rom_get_checksum (rom));
+		as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
+		as_release_add_checksum (rel, csum);
 		as_app_add_release (app, rel);
 		as_store_add_app (store, app);
 	}
@@ -918,6 +912,77 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 			       NULL, error))
 		return FALSE;
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Required AppStreamGlib >= 0.5.0 to perform verify");
+	return FALSE;
+#endif
+}
+
+/**
+ * fu_util_verify_update_all:
+ **/
+static gboolean
+fu_util_verify_update_all (FuUtilPrivate *priv, const gchar *fn, GError **error)
+{
+	GList *devices;
+	GList *l;
+	GUdevDevice *dev;
+	const gchar *devclass[] = { "pci", NULL };
+	const gchar *subsystems[] = { NULL };
+	guint i;
+	_cleanup_object_unref_ GUdevClient *gudev_client = NULL;
+	_cleanup_ptrarray_unref_ GPtrArray *roms = NULL;
+
+	/* get all devices of class */
+	gudev_client = g_udev_client_new (subsystems);
+	roms = g_ptr_array_new_with_free_func (g_free);
+	for (i = 0; devclass[i] != NULL; i++) {
+		devices = g_udev_client_query_by_subsystem (gudev_client,
+							    devclass[i]);
+		for (l = devices; l != NULL; l = l->next) {
+			_cleanup_free_ gchar *rom_fn = NULL;
+			dev = l->data;
+			rom_fn = g_build_filename (g_udev_device_get_sysfs_path (dev), "rom", NULL);
+			if (!g_file_test (rom_fn, G_FILE_TEST_EXISTS))
+				continue;
+			g_ptr_array_add (roms, g_strdup (rom_fn));
+		}
+		g_list_foreach (devices, (GFunc) g_object_unref, NULL);
+		g_list_free (devices);
+	}
+
+	/* no ROMs to add */
+	if (roms->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No hardware with ROM");
+		return FALSE;
+	}
+	g_ptr_array_add (roms, NULL);
+	return fu_util_verify_update_internal (priv, fn,
+					       (gchar **) roms->pdata,
+					       error);
+}
+
+/**
+ * fu_util_verify_update:
+ **/
+static gboolean
+fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	const gchar *fn = "/var/cache/app-info/xmls/fwupd-verify.xml";
+	if (g_strv_length (values) == 0)
+		return fu_util_verify_update_all (priv, fn, error);
+	if (g_strv_length (values) == 1)
+		return fu_util_verify_update_all (priv, values[0], error);
+	return fu_util_verify_update_internal (priv,
+					       values[0],
+					       &values[1],
+					       error);
 }
 
 /**
@@ -1072,12 +1137,23 @@ fu_util_download_file (FuUtilPrivate *priv,
 static gboolean
 fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 {
+	_cleanup_free_ gchar *config_fn = NULL;
+	_cleanup_free_ gchar *data_uri = NULL;
 	_cleanup_free_ gchar *sig_fn = NULL;
 	_cleanup_free_ gchar *sig_uri = NULL;
+	_cleanup_keyfile_unref_ GKeyFile *config = NULL;
 	const gchar *data_fn = "/tmp/firmware.xml.gz";
-	const gchar *data_uri = "https://beta-lvfs.rhcloud.com/downloads/firmware.xml.gz";
+
+	/* read config file */
+	config = g_key_file_new ();
+	config_fn = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
+	if (!g_key_file_load_from_file (config, config_fn, G_KEY_FILE_NONE, error))
+		return FALSE;
 
 	/* download the signature */
+	data_uri = g_key_file_get_string (config, "fwupd", "DownloadURI", error);
+	if (data_uri == NULL)
+		return FALSE;
 	sig_uri = g_strdup_printf ("%s.asc", data_uri);
 	sig_fn = g_strdup_printf ("%s.asc", data_fn);
 	if (!fu_util_download_file (priv, sig_uri, sig_fn, NULL, error))
@@ -1174,70 +1250,29 @@ fu_util_verify_internal (FuUtilPrivate *priv, const gchar *id, GError **error)
 static gboolean
 fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 {
-	AsApp *app;
 	FuDevice *dev;
-	const gchar *tmp;
 	guint i;
-	_cleanup_object_unref_ AsStore *store = NULL;
 	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
-	_cleanup_ptrarray_unref_ GPtrArray *devices_tmp = NULL;
 
 	/* get devices from daemon */
-	devices_tmp = fu_util_get_devices_internal (priv, error);
-	if (devices_tmp == NULL)
-		return FALSE;
-
-	/* get results */
-	for (i = 0; i < devices_tmp->len; i++) {
-		_cleanup_error_free_ GError *error_local = NULL;
-		dev = g_ptr_array_index (devices_tmp, i);
-		if (!fu_util_verify_internal (priv, fu_device_get_id (dev), &error_local)) {
-			g_print ("Failed to verify %s: %s\n",
-				 fu_device_get_id (dev),
-				 error_local->message);
-		}
-	}
-
-	/* only load firmware from the system */
-	store = as_store_new ();
-	as_store_add_filter (store, AS_ID_KIND_FIRMWARE);
-	if (!as_store_load (store, AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM, NULL, error))
-		return FALSE;
-
-	/* print */
 	devices = fu_util_get_devices_internal (priv, error);
 	if (devices == NULL)
 		return FALSE;
+
+	/* get results */
 	for (i = 0; i < devices->len; i++) {
-		const gchar *hash = NULL;
-		const gchar *ver = NULL;
-		_cleanup_free_ gchar *status = NULL;
-
+		_cleanup_error_free_ GError *error_local = NULL;
 		dev = g_ptr_array_index (devices, i);
-		hash = fu_device_get_metadata (dev, FU_DEVICE_KEY_FIRMWARE_HASH);
-		if (hash == NULL)
+		if (!fu_util_verify_internal (priv, fu_device_get_id (dev), &error_local)) {
+			g_print ("%s\tFAILED: %s\n",
+				 fu_device_get_guid (dev),
+				 error_local->message);
 			continue;
-		app = as_store_get_app_by_id (store, fu_device_get_guid (dev));
-		if (app == NULL) {
-			status = g_strdup ("No metadata");
-		} else {
-			AsRelease *rel;
-			ver = fu_device_get_metadata (dev, FU_DEVICE_KEY_VERSION);
-			rel = as_app_get_release (app, ver);
-			if (rel == NULL) {
-				status = g_strdup_printf ("No version %s", ver);
-			} else {
-				tmp = as_release_get_checksum (rel, G_CHECKSUM_SHA1);
-				if (g_strcmp0 (tmp, hash) != 0) {
-					status = g_strdup_printf ("Failed: for v%s expected %s", ver, tmp);
-				} else {
-					status = g_strdup ("OK");
-				}
-			}
 		}
-		g_print ("%s\t%s\t%s\n", fu_device_get_guid (dev), hash, status);
+		g_print ("%s\t%s\n",
+			 fu_device_get_guid (dev),
+			 _("OK"));
 	}
-
 	return TRUE;
 }
 
@@ -1293,6 +1328,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuDevice *dev;
 	GPtrArray *devices = NULL;
+	const gchar *tmp;
 	guint i;
 
 	/* print any updates */
@@ -1318,9 +1354,24 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("Location"),
 				    fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_URI));
 
-		/* TRANSLATORS: section header for long firmware desc */
-		fu_util_print_data (_("Description"),
-				    fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_DESCRIPTION));
+		/* convert XML -> text */
+		tmp = fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_DESCRIPTION);
+		if (tmp != NULL) {
+			_cleanup_free_ gchar *md = NULL;
+#if AS_CHECK_VERSION(0,5,0)
+			md = as_markup_convert (tmp,
+						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
+						NULL);
+#else
+			md = as_markup_convert (tmp, -1,
+						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
+						NULL);
+#endif
+			if (md != NULL) {
+				/* TRANSLATORS: section header for long firmware desc */
+				fu_util_print_data (_("Description"), md);
+			}
+		}
 	}
 
 	return TRUE;

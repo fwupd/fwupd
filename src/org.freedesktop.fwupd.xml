@@ -158,15 +158,6 @@
           </doc:summary>
         </doc:doc>
       </arg>
-      <arg type='s' name='hash' direction='out'>
-        <doc:doc>
-          <doc:summary>
-            <doc:para>
-              The cryptographic hash of the firmware.
-            </doc:para>
-          </doc:summary>
-        </doc:doc>
-      </arg>
     </method>
 
     <!--***********************************************************-->

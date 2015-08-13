@@ -19,20 +19,19 @@ BuildRequires: libgcab1-devel
 BuildRequires: sqlite-devel
 BuildRequires: gpgme-devel
 BuildRequires: systemd
-BuildRequires: fwupdate-devel
 BuildRequires: libsoup-devel
+BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
+BuildRequires: libappstream-glib-devel >= 0.3.6
+BuildRequires: gcab
+
+%ifarch x86_64 %{ix86} aarch64
+BuildRequires: fwupdate-devel >= 0.4
+%endif
 
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
-
-# this really needs to be >= 0.3.6 (git master) to get the self-tests to pass
-# and will be added for the next upstream release of appstream-glib
-BuildRequires: libappstream-glib-devel
-
-# we'll fix this when Peter has the latest code in a Fedora package
-# BuildRequires: fwupdate-devel >= 0.1
 
 %description
 fwupd is a daemon to allow session software to update device firmware.
@@ -61,6 +60,9 @@ You probably don't need this package unless you're implementing a LVFS clone.
 %configure \
         --enable-fwsignd        \
         --disable-static        \
+%ifnarch x86_64 %{ix86} aarch64
+        --disable-uefi          \
+%endif
         --disable-rpath         \
         --disable-silent-rules  \
         --disable-dependency-tracking
@@ -73,7 +75,7 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 
 %find_lang %{name}
 
-%pre
+%pre sign
 getent group fwsignd >/dev/null || groupadd -r fwsignd
 getent passwd fwsignd >/dev/null || \
     useradd -r -g fwsignd -d /var/lib/fwsignd -s /sbin/nologin \
@@ -93,6 +95,7 @@ getent passwd fwsignd >/dev/null || \
 %files -f %{name}.lang
 %doc README.md AUTHORS NEWS
 %license COPYING
+%config(noreplace)%{_sysconfdir}/fwupd.conf
 %{_libexecdir}/fwupd
 %{_bindir}/fwupdmgr
 %{_sysconfdir}/pki/fwupd
