@@ -9,7 +9,7 @@ License: GPL-2.0+
 Files: src/fu-cleanup.h
 Copyright: 2012 Colin Walters <walters@verbum.org>,
            2014-2015 Richard Hughes <richard@hughsie.com>
-Licence: LGPL-2.1+
+License: LGPL-2.1+
 
 Files: libfwupd1/fwupd*
 Copyright: 2015 Richard Hughes <richard@hughsie.com>
