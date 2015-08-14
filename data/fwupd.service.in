@@ -7,6 +7,6 @@ ConditionPathExists=/var/lib/fwupd/pending.db
 [Service]
 Type=dbus
 BusName=org.freedesktop.fwupd
-ExecStart=@servicedir@/fwupd
+ExecStart=@servicedir@/fwupd/fwupd
 PrivateNetwork=yes
 PrivateTmp=yes

@@ -80,7 +80,7 @@ fu-resources.h: fwupd.gresource.xml
 		--c-name fu				\
 		$(srcdir)/fwupd.gresource.xml
 
-libexec_PROGRAMS =					\
+pkglibexec_PROGRAMS =					\
 	fwupd
 
 fwupd_SOURCES =						\
@@ -146,7 +146,7 @@ fwupd_CFLAGS =						\
 	$(WARNINGFLAGS_C)
 
 if HAVE_FWSIGND
-libexec_PROGRAMS += fwsignd
+pkglibexec_PROGRAMS += fwsignd
 
 fwsignd_SOURCES =					\
 	fu-cleanup.h					\

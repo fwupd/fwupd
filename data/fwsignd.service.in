@@ -6,7 +6,7 @@ Type=simple
 # you can set the user to non root if you want, but we're not then able to set
 # the owner to the correct value on files written to the destination directory
 #User=fwsignd
-ExecStart=@servicedir@/fwsignd
+ExecStart=@servicedir@/fwupd/fwsignd
 PrivateNetwork=yes
 PrivateTmp=yes
 
