@@ -11,7 +11,7 @@ Copyright: 2012 Colin Walters <walters@verbum.org>,
            2014-2015 Richard Hughes <richard@hughsie.com>
 License: LGPL-2.1+
 
-Files: libfwupd1/fwupd*
+Files: libfwupd/fwupd*
 Copyright: 2015 Richard Hughes <richard@hughsie.com>
 License: LGPL-2.1+
 
