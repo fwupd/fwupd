@@ -33,7 +33,7 @@ Vcs-Git: git://anonscm.debian.org/uefi/fwupd.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=uefi/fwupd.git
 
 Package: libfwupd1
-Architecture: amd64 arm64 armel armhf i386
+Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
 Multi-Arch: same
@@ -48,7 +48,7 @@ Description: Firmware update daemon library
  This package provides the library used by the daemon.
 
 Package: fwupd
-Architecture: amd64 arm64 armel armhf i386
+Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
 Recommends: fwupdate
@@ -62,7 +62,7 @@ Description: Firmware update daemon
  See <https://github.com/hughsie/fwupd> for details
 
 Package: fwupd-dev
-Architecture: amd64 arm64 armel armhf i386
+Architecture: linux-any
 Multi-Arch: same
 Depends: fwupd (= ${binary:Version}),
          ${misc:Depends}
