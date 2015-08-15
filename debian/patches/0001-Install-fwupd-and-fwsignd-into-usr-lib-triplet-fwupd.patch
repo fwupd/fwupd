@@ -1,0 +1,75 @@
+From 001558db63efde6b7dde4e86d6d36f3cd881493e Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario_limonciello@dell.com>
+Date: Fri, 14 Aug 2015 18:58:33 -0500
+Subject: [PATCH] Install fwupd and fwsignd into /usr/lib/$(triplet)/fwupd
+ instead.
+
+Fixes https://github.com/hughsie/fwupd/issues/29
+---
+ data/fwsignd.service.in               | 2 +-
+ data/fwupd.service.in                 | 2 +-
+ data/org.freedesktop.fwupd.service.in | 2 +-
+ src/Makefile.am                       | 4 ++--
+ 4 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/data/fwsignd.service.in b/data/fwsignd.service.in
+index f4ff8bb..85dc4a9 100644
+--- a/data/fwsignd.service.in
++++ b/data/fwsignd.service.in
+@@ -6,7 +6,7 @@ Type=simple
+ # you can set the user to non root if you want, but we're not then able to set
+ # the owner to the correct value on files written to the destination directory
+ #User=fwsignd
+-ExecStart=@servicedir@/fwsignd
++ExecStart=@servicedir@/fwupd/fwsignd
+ PrivateNetwork=yes
+ PrivateTmp=yes
+ 
+diff --git a/data/fwupd.service.in b/data/fwupd.service.in
+index 4411eec..d474a62 100644
+--- a/data/fwupd.service.in
++++ b/data/fwupd.service.in
+@@ -7,6 +7,6 @@ ConditionPathExists=/var/lib/fwupd/pending.db
+ [Service]
+ Type=dbus
+ BusName=org.freedesktop.fwupd
+-ExecStart=@servicedir@/fwupd
++ExecStart=@servicedir@/fwupd/fwupd
+ PrivateNetwork=yes
+ PrivateTmp=yes
+diff --git a/data/org.freedesktop.fwupd.service.in b/data/org.freedesktop.fwupd.service.in
+index df22a4c..a7b713a 100644
+--- a/data/org.freedesktop.fwupd.service.in
++++ b/data/org.freedesktop.fwupd.service.in
+@@ -1,5 +1,5 @@
+ [D-BUS Service]
+ Name=org.freedesktop.fwupd
+-Exec=@servicedir@/fwupd
++Exec=@servicedir@/fwupd/fwupd
+ User=root
+ #SystemdService=fwupd.service
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 11b8c93..6cf47cf 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -80,7 +80,7 @@ fu-resources.h: fwupd.gresource.xml
+ 		--c-name fu				\
+ 		$(srcdir)/fwupd.gresource.xml
+ 
+-libexec_PROGRAMS =					\
++pkglibexec_PROGRAMS =					\
+ 	fwupd
+ 
+ fwupd_SOURCES =						\
+@@ -146,7 +146,7 @@ fwupd_CFLAGS =						\
+ 	$(WARNINGFLAGS_C)
+ 
+ if HAVE_FWSIGND
+-libexec_PROGRAMS += fwsignd
++pkglibexec_PROGRAMS += fwsignd
+ 
+ fwsignd_SOURCES =					\
+ 	fu-cleanup.h					\
+-- 
+1.9.1
+
