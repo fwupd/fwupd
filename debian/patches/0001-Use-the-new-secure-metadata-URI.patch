@@ -1,0 +1,26 @@
+From b990ceefee510255763770156f17cd2f5787138f Mon Sep 17 00:00:00 2001
+From: Richard Hughes <richard@hughsie.com>
+Date: Wed, 19 Aug 2015 20:21:03 +0100
+Subject: [PATCH] Use the new secure metadata URI
+
+We're out of beta testing stage now...
+---
+ data/fwupd.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/data/fwupd.conf b/data/fwupd.conf
+index 32b2ab5..a10a3d1 100644
+--- a/data/fwupd.conf
++++ b/data/fwupd.conf
+@@ -1,7 +1,7 @@
+ [fwupd]
+ 
+ # The download URI to use for LVFS metadata
+-DownloadURI=https://beta-lvfs.rhcloud.com/downloads/firmware.xml.gz
++DownloadURI=https://secure-lvfs.rhcloud.com/downloads/firmware.xml.gz
+ 
+ # If we should verify option ROM images
+ EnableOptionROM=true
+-- 
+1.9.1
+
