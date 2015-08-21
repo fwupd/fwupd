@@ -3,4 +3,4 @@ Description=Updates device firmware whilst offline
 OnFailure=reboot.target
 
 [Service]
-ExecStart=@bindir@/fwupdmgr update-prepared
+ExecStart=@bindir@/fwupdmgr install-prepared
