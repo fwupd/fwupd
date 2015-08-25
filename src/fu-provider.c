@@ -88,7 +88,7 @@ fu_provider_offline_setup (GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* create symlink for the systemd-system-update-generator */
-	rc = symlink ("/var/lib", FU_OFFLINE_TRIGGER_FILENAME);
+	rc = symlink ("/var/lib/fwupd", FU_OFFLINE_TRIGGER_FILENAME);
 	if (rc < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,

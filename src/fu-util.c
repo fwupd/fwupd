@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libsoup/soup.h>
+#include <unistd.h>
 
 #include "fu-cleanup.h"
 #include "fu-guid.h"
@@ -685,12 +686,29 @@ fu_util_offline_update_reboot (void)
 static gboolean
 fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	gchar buf[1024];
 	gint vercmp;
+	gssize len;
 	guint cnt = 0;
 	guint i;
 	const gchar *tmp;
 	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
 	_cleanup_object_unref_ FuPending *pending = NULL;
+
+	/* verify this is pointing to our cache */
+	len = readlink (FU_OFFLINE_TRIGGER_FILENAME, buf, sizeof(buf) - 1);
+	if (len == -1) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to read target of %s",
+			     FU_OFFLINE_TRIGGER_FILENAME);
+		return FALSE;
+	}
+	if (g_strcmp0 (buf, "/var/lib/fwupd") != 0) {
+		g_debug ("Another framework set up the trigger, exiting");
+		return TRUE;
+	}
 
 	/* do this first to avoid a loop if this tool segfaults */
 	g_unlink (FU_OFFLINE_TRIGGER_FILENAME);
