@@ -1,5 +1,8 @@
 SUBDIRS = tests pki
 
+configdir = $(sysconfdir)
+dist_config_DATA = fwupd.conf
+
 dbusdir = $(sysconfdir)/dbus-1/system.d
 dist_dbus_DATA = org.freedesktop.fwupd.conf
 
@@ -21,12 +24,6 @@ systemdservice_in_files =				\
 	fwupd-offline-update.service.in
 systemdservice_DATA = $(systemdservice_in_files:.service.in=.service)
 
-if HAVE_FWSIGND
-systemdservice_in_files += fwsignd.service.in
-configdir = $(sysconfdir)
-dist_config_DATA = fwsignd.conf fwupd.conf
-endif
-
 install-data-hook:
 	mkdir -p $(DESTDIR)$(systemdunitdir)/system-update.target.wants
 	ln -sf ../fwupd-offline-update.service $(DESTDIR)$(systemdunitdir)/system-update.target.wants/fwupd-offline-update.service
@@ -35,7 +32,6 @@ udevrules_DATA =					\
 	90-fwupd-devices.rules
 
 EXTRA_DIST =						\
-	fwsignd.service.in				\
 	$(udevrules_DATA)				\
 	$(dbusservicemain_in_files)			\
 	$(systemdservice_in_files)

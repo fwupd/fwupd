@@ -33,6 +33,8 @@ Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
 
+Obsoletes: fwupd-sign
+
 %description
 fwupd is a daemon to allow session software to update device firmware.
 
@@ -43,22 +45,11 @@ Requires: %{name} = %{version}-%{release}
 %description devel
 Files for development with %{name}.
 
-%package sign
-Summary: Firmware signing server
-Requires: %{name} = %{version}-%{release}
-
-%description sign
-This package provides a signing server suitable for automatically signing
-firmware in .cab archives.
-The values in /etc/fwsignd.conf file should be set before starting the daemon.
-You probably don't need this package unless you're implementing a LVFS clone.
-
 %prep
 %setup -q
 
 %build
 %configure \
-        --enable-fwsignd        \
         --disable-static        \
 %ifnarch x86_64 %{ix86} aarch64
         --disable-uefi          \
@@ -74,12 +65,6 @@ make install DESTDIR=$RPM_BUILD_ROOT
 find %{buildroot} -name '*.la' -exec rm -f {} ';'
 
 %find_lang %{name}
-
-%pre sign
-getent group fwsignd >/dev/null || groupadd -r fwsignd
-getent passwd fwsignd >/dev/null || \
-    useradd -r -g fwsignd -d /var/lib/fwsignd -s /sbin/nologin \
-    -c "User for fwsignd" fwsignd
 
 %post
 /sbin/ldconfig
@@ -117,12 +102,6 @@ getent passwd fwsignd >/dev/null || \
 %dir %{_localstatedir}/cache/app-info/icons
 %dir %{_localstatedir}/cache/app-info/xmls
 /usr/lib/udev/rules.d/*.rules
-
-%files sign
-%config(noreplace)%{_sysconfdir}/fwsignd.conf
-%{_unitdir}/fwsignd.service
-%{_libexecdir}/fwupd/fwsignd
-%attr(755,fwsignd,fwsignd) %dir %{_localstatedir}/lib/fwsignd
 
 %files devel
 %{_includedir}/fwupd-1
