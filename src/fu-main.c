@@ -743,7 +743,39 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 			continue;
 		}
 
-		/* set update metadata */
+		/* add application metadata */
+		tmp = as_app_get_developer_name (app, NULL);
+		if (tmp != NULL) {
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_VENDOR, tmp);
+		}
+		tmp = as_app_get_name (app, NULL);
+		if (tmp != NULL) {
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_NAME, tmp);
+		}
+		tmp = as_app_get_comment (app, NULL);
+		if (tmp != NULL) {
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_SUMMARY, tmp);
+		}
+		tmp = as_app_get_description (app, NULL);
+		if (tmp != NULL) {
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_DESCRIPTION, tmp);
+		}
+		tmp = as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE);
+		if (tmp != NULL) {
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_URL_HOMEPAGE, tmp);
+		}
+		tmp = as_app_get_project_license (app);
+		if (tmp != NULL) {
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_LICENSE, tmp);
+		}
+
+		/* add release information */
 		tmp = as_release_get_version (rel);
 		if (tmp != NULL) {
 			fu_device_set_metadata (item->device,
