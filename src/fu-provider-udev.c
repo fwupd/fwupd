@@ -22,13 +22,13 @@
 #include "config.h"
 
 #include <fwupd.h>
+#include <appstream-glib.h>
 #include <glib-object.h>
 #include <gudev/gudev.h>
 #include <string.h>
 
 #include "fu-cleanup.h"
 #include "fu-device.h"
-#include "fu-guid.h"
 #include "fu-provider-udev.h"
 #include "fu-rom.h"
 
@@ -183,8 +183,8 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 
 	/* no GUID from the ROM, so fix up the VID:PID */
 	if (guid_new == NULL) {
-		if (!fu_guid_is_valid (guid)) {
-			guid_new = fu_guid_generate_from_string (guid);
+		if (!as_utils_guid_is_valid (guid)) {
+			guid_new = as_utils_guid_from_string (guid);
 			g_debug ("Fixing GUID %s->%s", guid, guid_new);
 		} else {
 			guid_new = g_strdup (guid);

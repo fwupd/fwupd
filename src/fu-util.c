@@ -36,7 +36,6 @@
 #include <unistd.h>
 
 #include "fu-cleanup.h"
-#include "fu-guid.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
 #include "fu-rom.h"
@@ -874,7 +873,6 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 				gchar **values,
 				GError **error)
 {
-#if AS_CHECK_VERSION(0,5,0)
 	guint i;
 	_cleanup_object_unref_ AsStore *store = NULL;
 	_cleanup_object_unref_ GFile *xml_file = NULL;
@@ -930,13 +928,6 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 			       NULL, error))
 		return FALSE;
 	return TRUE;
-#else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Required AppStreamGlib >= 0.5.0 to perform verify");
-	return FALSE;
-#endif
 }
 
 /**
@@ -1376,15 +1367,9 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		tmp = fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_DESCRIPTION);
 		if (tmp != NULL) {
 			_cleanup_free_ gchar *md = NULL;
-#if AS_CHECK_VERSION(0,5,0)
 			md = as_markup_convert (tmp,
 						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
 						NULL);
-#else
-			md = as_markup_convert (tmp, -1,
-						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
-						NULL);
-#endif
 			if (md != NULL) {
 				/* TRANSLATORS: section header for long firmware desc */
 				fu_util_print_data (_("Description"), md);

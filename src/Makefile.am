@@ -38,8 +38,6 @@ bin_PROGRAMS = fwupdmgr
 fwupdmgr_SOURCES =					\
 	fu-device.c					\
 	fu-device.h					\
-	fu-guid.c					\
-	fu-guid.h					\
 	fu-pending.c					\
 	fu-pending.h					\
 	fu-rom.c					\
@@ -91,8 +89,6 @@ fwupd_SOURCES =						\
 	fu-debug.h					\
 	fu-device.c					\
 	fu-device.h					\
-	fu-guid.c					\
-	fu-guid.h					\
 	fu-keyring.c					\
 	fu-keyring.h					\
 	fu-pending.c					\
@@ -159,8 +155,6 @@ fu_self_test_SOURCES =					\
 	fu-cab.h					\
 	fu-device.c					\
 	fu-device.h					\
-	fu-guid.c					\
-	fu-guid.h					\
 	fu-keyring.c					\
 	fu-keyring.h					\
 	fu-pending.c					\

@@ -671,9 +671,6 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	g_debug ("Store was %i size", as_store_get_size (store));
 	if (!as_store_from_xml (store,
 				g_bytes_get_data (bytes, NULL),
-#if !AS_CHECK_VERSION(0,5,0)
-				-1,
-#endif
 				NULL, error))
 		return FALSE;
 	g_debug ("Store now %i size", as_store_get_size (store));
@@ -715,9 +712,7 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 	updates = g_ptr_array_new ();
 	for (i = 0; i < priv->devices->len; i++) {
 		const gchar *version;
-#if AS_CHECK_VERSION(0,5,0)
 		AsChecksum *csum;
-#endif
 
 		item = g_ptr_array_index (priv->devices, i);
 
@@ -727,13 +722,9 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 			continue;
 
 		/* match the GUID in the XML */
-#if AS_CHECK_VERSION(0,5,0)
 		app = as_store_get_app_by_provide (priv->store,
 						   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
 						   fu_device_get_guid (item->device));
-#else
-		app = as_store_get_app_by_id (priv->store, fu_device_get_guid (item->device));
-#endif
 		if (app == NULL)
 			continue;
 
@@ -758,20 +749,12 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 			fu_device_set_metadata (item->device,
 						FU_DEVICE_KEY_UPDATE_VERSION, tmp);
 		}
-#if AS_CHECK_VERSION(0,5,0)
 		csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTAINER);
 		if (csum != NULL) {
 			fu_device_set_metadata (item->device,
 						FU_DEVICE_KEY_UPDATE_HASH,
 						as_checksum_get_value (csum));
 		}
-#else
-		tmp = as_release_get_checksum (rel, G_CHECKSUM_SHA1);
-		if (tmp != NULL) {
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_UPDATE_HASH, tmp);
-		}
-#endif
 		tmp = as_release_get_location_default (rel);
 		if (tmp != NULL) {
 			fu_device_set_metadata (item->device,
@@ -929,9 +912,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	/* return 's' */
 	if (g_strcmp0 (method_name, "Verify") == 0) {
 		AsApp *app;
-#if AS_CHECK_VERSION(0,5,0)
 		AsChecksum *csum;
-#endif
 		AsRelease *release;
 		FuDeviceItem *item = NULL;
 		const gchar *hash = NULL;
@@ -982,7 +963,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* find checksum */
-#if AS_CHECK_VERSION(0,5,0)
 		csum = as_release_get_checksum_by_target (release, AS_CHECKSUM_TARGET_CONTENT);
 		if (csum == NULL) {
 			g_dbus_method_invocation_return_error (invocation,
@@ -1003,15 +983,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 							       hash);
 			return;
 		}
-#else
-		g_dbus_method_invocation_return_error (invocation,
-						       FWUPD_ERROR,
-						       FWUPD_ERROR_NOT_SUPPORTED,
-						       "No information with %s",
-						       hash);
-		return;
-#endif
-
 		g_dbus_method_invocation_return_value (invocation, NULL);
 		return;
 	}

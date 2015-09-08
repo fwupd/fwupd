@@ -22,13 +22,13 @@
 #include "config.h"
 
 #include <fwupd.h>
+#include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <glib/gstdio.h>
 #include <string.h>
 
 #include "fu-cleanup.h"
-#include "fu-guid.h"
 #include "fu-rom.h"
 
 static void fu_rom_finalize			 (GObject *object);
@@ -822,7 +822,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 
 	/* update guid */
 	id = g_strdup_printf ("0x%04x:0x%04x", priv->vendor, priv->model);
-	priv->guid = fu_guid_generate_from_string (id);
+	priv->guid = as_utils_guid_from_string (id);
 	g_debug ("using %s for %s", priv->guid, id);
 
 	/* not known */

@@ -29,7 +29,6 @@
 
 #include "fu-cab.h"
 #include "fu-cleanup.h"
-#include "fu-guid.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider-fake.h"
@@ -50,25 +49,6 @@ fu_test_get_filename (const gchar *filename)
 	if (tmp == NULL)
 		return NULL;
 	return g_strdup (full_tmp);
-}
-
-static void
-fu_guid_func (void)
-{
-	_cleanup_free_ gchar *guid = NULL;
-
-	/* invalid */
-	g_assert (!fu_guid_is_valid (NULL));
-	g_assert (!fu_guid_is_valid (""));
-	g_assert (!fu_guid_is_valid ("1ff60ab2-3905-06a1-b476"));
-	g_assert (!fu_guid_is_valid (" 1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
-
-	/* valid */
-	g_assert (fu_guid_is_valid ("1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
-
-	/* make valid */
-	guid = fu_guid_generate_from_string ("0x8086:0x0406");
-	g_assert_cmpstr (guid, ==, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
 }
 
 static void
@@ -557,7 +537,6 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
-	g_test_add_func ("/fwupd/guid", fu_guid_func);
 	g_test_add_func ("/fwupd/rom", fu_rom_func);
 	g_test_add_func ("/fwupd/rom{all}", fu_rom_all_func);
 	g_test_add_func ("/fwupd/cab", fu_cab_func);

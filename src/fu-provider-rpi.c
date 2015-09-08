@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <appstream-glib.h>
 #include <archive_entry.h>
 #include <archive.h>
 #include <fwupd.h>
@@ -29,7 +30,6 @@
 #include <string.h>
 
 #include "fu-cleanup.h"
-#include "fu-guid.h"
 #include "fu-device.h"
 #include "fu-provider-rpi.h"
 
@@ -294,7 +294,7 @@ fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
 	/* create fake device */
 	device = fu_device_new ();
 	fu_device_set_id (device, "raspberry-pi");
-	guid = fu_guid_generate_from_string ("raspberrypi");
+	guid = as_utils_guid_from_string ("raspberrypi");
 	fu_device_set_guid (device, guid);
 	fu_device_set_display_name (device, "Raspberry Pi");
 	fu_device_add_flag (device, FU_DEVICE_FLAG_INTERNAL);
