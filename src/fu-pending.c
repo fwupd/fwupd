@@ -163,7 +163,7 @@ fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 				     fu_device_get_display_name (device),
 				     fu_device_get_metadata (device, FU_DEVICE_KEY_PROVIDER),
 				     fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
-				     fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
+				     fu_device_get_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION));
 
 	/* insert entry */
 	rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
@@ -255,11 +255,11 @@ fu_pending_device_sqlite_cb (void *data,
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "version_old") == 0) {
-			fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION_OLD, argv[i]);
+			fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION, argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "version_new") == 0) {
-			fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION_NEW, argv[i]);
+			fu_device_set_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION, argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "provider") == 0) {

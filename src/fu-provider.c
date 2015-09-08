@@ -325,8 +325,8 @@ fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 	const gchar *copy_keys[] = {
 		FU_DEVICE_KEY_PENDING_STATE,
 		FU_DEVICE_KEY_PENDING_ERROR,
-		FU_DEVICE_KEY_VERSION_OLD,
-		FU_DEVICE_KEY_VERSION_NEW,
+		FU_DEVICE_KEY_VERSION,
+		FU_DEVICE_KEY_UPDATE_VERSION,
 		NULL };
 
 	/* handled by the provider */

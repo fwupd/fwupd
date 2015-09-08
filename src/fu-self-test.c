@@ -433,7 +433,7 @@ fu_pending_func (void)
 	fu_device_set_metadata (device, FU_DEVICE_KEY_FILENAME_CAB, "/var/lib/dave.cap"),
 	fu_device_set_display_name (device, "ColorHug"),
 	fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION, "3.0.1"),
-	fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION_NEW, "3.0.2");
+	fu_device_set_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION, "3.0.2");
 	ret = fu_pending_add_device (pending, device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -460,8 +460,8 @@ fu_pending_func (void)
 	g_assert_cmpstr (fu_device_get_id (device), ==, "self-test");
 	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_FILENAME_CAB), ==, "/var/lib/dave.cap");
 	g_assert_cmpstr (fu_device_get_display_name (device), ==, "ColorHug");
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_OLD), ==, "3.0.1");
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW), ==, "3.0.2");
+	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION), ==, "3.0.1");
+	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION), ==, "3.0.2");
 	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_PENDING_STATE), ==, "scheduled");
 	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_PENDING_ERROR), ==, "word");
 	g_object_unref (device);

@@ -382,7 +382,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 
 	/* parse the DriverVer */
 	version = fu_cab_get_version (helper->cab);
-	fu_device_set_metadata (helper->device, FU_DEVICE_KEY_VERSION_NEW, version);
+	fu_device_set_metadata (helper->device, FU_DEVICE_KEY_UPDATE_VERSION, version);
 
 	/* compare to the lowest supported version, if it exists */
 	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_VERSION_LOWEST);

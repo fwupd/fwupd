@@ -184,7 +184,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 		goto out;
 	}
 	version_str = g_strdup_printf ("%u", version);
-	fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION_NEW, version_str);
+	fu_device_set_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION, version_str);
 	if (status == FWUP_LAST_ATTEMPT_STATUS_SUCCESS) {
 		fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
 					fu_pending_state_to_string (FU_PENDING_STATE_SUCCESS));

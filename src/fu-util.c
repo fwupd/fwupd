@@ -746,31 +746,31 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 
 		/* tell the user what's going to happen */
-		vercmp = as_utils_vercmp (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_OLD),
-					  fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
+		vercmp = as_utils_vercmp (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+					  fu_device_get_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION));
 		if (vercmp == 0) {
 			/* TRANSLATORS: the first replacement is a display name
 			 * e.g. "ColorHugALS" and the second is a version number
 			 * e.g. "1.2.3" */
 			g_print (_("Reinstalling %s with %s... "),
 				 fu_device_get_display_name (device),
-				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION));
 		} else if (vercmp > 0) {
 			/* TRANSLATORS: the first replacement is a display name
 			 * e.g. "ColorHugALS" and the second and third are
 			 * version numbers e.g. "1.2.3" */
 			g_print (_("Downgrading %s from %s to %s... "),
 				 fu_device_get_display_name (device),
-				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_OLD),
-				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION));
 		} else if (vercmp < 0) {
 			/* TRANSLATORS: the first replacement is a display name
 			 * e.g. "ColorHugALS" and the second and third are
 			 * version numbers e.g. "1.2.3" */
 			g_print (_("Updating %s from %s to %s... "),
 				 fu_device_get_display_name (device),
-				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_OLD),
-				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW));
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+				 fu_device_get_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION));
 		}
 		if (!fu_util_install_internal (priv,
 					       fu_device_get_id (device),

@@ -40,8 +40,6 @@ G_BEGIN_DECLS
 #define FU_DEVICE_KEY_GUID		"Guid"		/* s */
 #define FU_DEVICE_KEY_FLAGS		"Flags"		/* internal only */
 #define FU_DEVICE_KEY_DISPLAY_NAME	"DisplayName"	/* s */
-#define FU_DEVICE_KEY_VERSION_NEW	"VersionNew"	/* internal only */
-#define FU_DEVICE_KEY_VERSION_OLD	"VersionOld"	/* internal only */
 #define FU_DEVICE_KEY_FILENAME_CAB	"FilenameCab"	/* internal only */
 #define FU_DEVICE_KEY_VERSION_LOWEST	"VersionLowest"	/* s */
 #define FU_DEVICE_KEY_VENDOR		"Vendor"	/* s */
