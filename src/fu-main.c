@@ -63,6 +63,7 @@ typedef struct {
 	FwupdStatus		 status;
 	FuPending		*pending;
 	AsStore			*store;
+	guint			 store_changed_id;
 } FuMainPrivate;
 
 typedef struct {
@@ -575,23 +576,6 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 }
 
 /**
- * _as_store_set_priority:
- **/
-static void
-_as_store_set_priority (AsStore *store, gint priority)
-{
-	AsApp *app;
-	GPtrArray *apps;
-	guint i;
-
-	apps = as_store_get_apps (store);
-	for (i = 0; i < apps->len; i++) {
-		app = g_ptr_array_index (apps, i);
-		as_app_set_priority (app, priority);
-	}
-}
-
-/**
  * fu_main_daemon_update_metadata:
  *
  * Supports optionally GZipped AppStream files up to 1MiB in size.
@@ -603,7 +587,6 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	_cleanup_bytes_unref_ GBytes *bytes = NULL;
 	_cleanup_bytes_unref_ GBytes *bytes_raw = NULL;
 	_cleanup_bytes_unref_ GBytes *bytes_sig = NULL;
-	_cleanup_object_unref_ AsStore *store = NULL;
 	_cleanup_object_unref_ FuKeyring *kr = NULL;
 	_cleanup_object_unref_ GConverter *converter = NULL;
 	_cleanup_object_unref_ GFile *file = NULL;
@@ -611,16 +594,6 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	_cleanup_object_unref_ GInputStream *stream_fd = NULL;
 	_cleanup_object_unref_ GInputStream *stream = NULL;
 	_cleanup_object_unref_ GInputStream *stream_sig = NULL;
-
-	/* open existing file if it exists */
-	store = as_store_new ();
-	file = g_file_new_for_path ("/var/cache/app-info/xmls/fwupd.xml");
-	if (g_file_query_exists (file, NULL)) {
-		if (!as_store_from_file (store, file, NULL, NULL, error))
-			return FALSE;
-		/* ensure we don't merge existing entries */
-		_as_store_set_priority (store, -1);
-	}
 
 	/* read the entire file into memory */
 	stream_fd = g_unix_input_stream_new (fd, TRUE);
@@ -668,16 +641,16 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 		return FALSE;
 
 	/* merge in the new contents */
-	g_debug ("Store was %i size", as_store_get_size (store));
-	if (!as_store_from_xml (store,
+	as_store_remove_all (priv->store);
+	if (!as_store_from_xml (priv->store,
 				g_bytes_get_data (bytes, NULL),
 				NULL, error))
 		return FALSE;
-	g_debug ("Store now %i size", as_store_get_size (store));
 
 	/* save the new file */
-	as_store_set_api_version (store, 0.9);
-	if (!as_store_to_file (store, file,
+	as_store_set_api_version (priv->store, 0.9);
+	file = g_file_new_for_path ("/var/cache/app-info/xmls/fwupd.xml");
+	if (!as_store_to_file (priv->store, file,
 			       AS_NODE_TO_XML_FLAG_ADD_HEADER |
 			       AS_NODE_TO_XML_FLAG_FORMAT_MULTILINE |
 			       AS_NODE_TO_XML_FLAG_FORMAT_INDENT,
@@ -685,14 +658,41 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 		return FALSE;
 	}
 
-	/* force the store to reload */
-        if (!as_store_load (priv->store,
-                            AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM,
-                            NULL, error)) {
-                return FALSE;
-	}
-
 	return TRUE;
+}
+
+/**
+ * fu_main_store_delay_cb:
+ **/
+static gboolean
+fu_main_store_delay_cb (gpointer user_data)
+{
+	AsApp *app;
+	GPtrArray *apps;
+	guint i;
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+
+	g_debug ("devices now in store:");
+	apps = as_store_get_apps (priv->store);
+	for (i = 0; i < apps->len; i++) {
+		app = g_ptr_array_index (apps, i);
+		g_debug ("%i\t%s\t%s", i + 1,
+			 as_app_get_id (app),
+			 as_app_get_name (app, NULL));
+	}
+	priv->store_changed_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+/**
+ * fu_main_store_changed_cb:
+ **/
+static void
+fu_main_store_changed_cb (AsStore *store, FuMainPrivate *priv)
+{
+	if (priv->store_changed_id != 0)
+		return;
+	priv->store_changed_id = g_timeout_add (200, fu_main_store_delay_cb, priv);
 }
 
 /**
@@ -1519,6 +1519,10 @@ main (int argc, char *argv[])
 	priv->loop = g_main_loop_new (NULL, FALSE);
 	priv->pending = fu_pending_new ();
 	priv->store = as_store_new ();
+	g_signal_connect (priv->store, "changed",
+			  G_CALLBACK (fu_main_store_changed_cb), priv);
+	as_store_set_watch_flags (priv->store, AS_STORE_WATCH_FLAG_ADDED |
+					       AS_STORE_WATCH_FLAG_REMOVED);
 
 	/* load AppStream */
 	as_store_add_filter (priv->store, AS_ID_KIND_FIRMWARE);
@@ -1612,6 +1616,8 @@ out:
 			g_object_unref (priv->store);
 		if (priv->introspection_daemon != NULL)
 			g_dbus_node_info_unref (priv->introspection_daemon);
+		if (priv->store_changed_id != 0)
+			g_source_remove (priv->store_changed_id);
 		g_object_unref (priv->pending);
 		if (priv->providers != NULL)
 			g_ptr_array_unref (priv->providers);
