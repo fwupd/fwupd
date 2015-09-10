@@ -1,3 +1,19 @@
+Version 0.1.6
+~~~~~~~~~~~~~
+Released: 2015-09-10
+
+New Features:
+ - Remove fwsignd, we have the LVFS now (Richard Hughes)
+
+Bugfixes:
+ - Add application metadata when getting the updates list (Richard Hughes)
+ - Depend on appstream-glib >= 0.5.0 (Richard Hughes)
+ - Don't apply firmware if something else is processing the update (Richard Hughes)
+ - Install fwupd into /usr/lib/$(triplet)/fwupd instead (Mario Limonciello)
+ - Simplify the version properties on devices to avoid complexity (Richard Hughes)
+ - Update the offline update service to invoke right command (Kalev Lember)
+ - Use the new secure metadata URI (Richard Hughes)
+
 Version 0.1.5
 ~~~~~~~~~~~~~
 Released: 2015-08-12

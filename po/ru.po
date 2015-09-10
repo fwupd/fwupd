@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-08-12 09:20+0100\n"
-"PO-Revision-Date: 2015-08-12 08:20+0000\n"
+"POT-Creation-Date: 2015-09-10 09:28+0100\n"
+"PO-Revision-Date: 2015-09-10 08:28+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Russian (http://www.transifex.com/hughsie/fwupd/language/ru/)\n"
 "MIME-Version: 1.0\n"
@@ -78,30 +78,6 @@ msgstr "Служба обновления микропрограммы"
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "D-Bus служба обновления микропрограммы"
-
-#. TRANSLATORS: exit after we've started up, used for user profiling
-msgid "Exit after signing queue"
-msgstr "Выход после подписания очереди"
-
-#. TRANSLATORS: input location to watch
-msgid "Source path for files"
-msgstr "Путь к файлам источника"
-
-#. TRANSLATORS: output location to put files
-msgid "Destination path for files"
-msgstr "Путь к файлам назначения"
-
-#. TRANSLATORS: output location to put files
-msgid "GPG key used to sign the firmware"
-msgstr "Ключ GPG, используемый для подписи микропрограммы"
-
-#. TRANSLATORS: program name
-msgid "fwsignd"
-msgstr "fwsignd"
-
-#. TRANSLATORS: program summary
-msgid "Firmware signing server"
-msgstr "Сервер подписи микропрограмм"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -174,7 +150,7 @@ msgid "Updating %s from %s to %s... "
 msgstr "Обновление %s с %s на %s…"
 
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
