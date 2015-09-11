@@ -27,30 +27,14 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_KEYRING		(fu_keyring_get_type ())
-#define FU_KEYRING(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_KEYRING, FuKeyring))
-#define FU_KEYRING_CLASS(k)	(G_TYPE_CHECK_CLASS_CAST((k), FU_TYPE_KEYRING, FuKeyringClass))
-#define FU_IS_KEYRING(o)	(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_KEYRING))
-#define FU_IS_KEYRING_CLASS(k)	(G_TYPE_CHECK_CLASS_TYPE ((k), FU_TYPE_KEYRING))
-#define FU_KEYRING_GET_CLASS(o)	(G_TYPE_INSTANCE_GET_CLASS ((o), FU_TYPE_KEYRING, FuKeyringClass))
-#define FU_KEYRING_ERROR	fu_keyring_error_quark()
-
-typedef struct _FuKeyringPrivate	FuKeyringPrivate;
-typedef struct _FuKeyring		FuKeyring;
-typedef struct _FuKeyringClass		FuKeyringClass;
-
-struct _FuKeyring
-{
-	 GObject		 parent;
-	 FuKeyringPrivate	*priv;
-};
+#define FU_TYPE_KEYRING (fu_keyring_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuKeyring, fu_keyring, FU, KEYRING, GObject)
 
 struct _FuKeyringClass
 {
 	GObjectClass		 parent_class;
 };
 
-GType		 fu_keyring_get_type			(void);
 FuKeyring	*fu_keyring_new				(void);
 
 gboolean	 fu_keyring_add_public_keys		(FuKeyring	*keyring,

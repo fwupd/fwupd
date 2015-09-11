@@ -29,14 +29,11 @@
 #include <gio/gunixinputstream.h>
 #include <string.h>
 
-#include "fu-cleanup.h"
 #include "fu-device.h"
 #include "fu-pending.h"
 #include "fu-provider-uefi.h"
 
-static void     fu_provider_finalize	(GObject	*object);
-
-#define FU_PROVIDER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_PROVIDER, FuProviderPrivate))
+static void	fu_provider_finalize	(GObject	*object);
 
 #define FU_PROVIDER_FIRMWARE_MAX	(32 * 1024 * 1024)	/* bytes */
 
@@ -57,8 +54,8 @@ G_DEFINE_TYPE (FuProvider, fu_provider, G_TYPE_OBJECT)
 static gboolean
 fu_provider_offline_invalidate (GError **error)
 {
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_object_unref_ GFile *file1 = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GFile) file1 = NULL;
 
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -124,12 +121,12 @@ fu_provider_schedule_update (FuProvider *provider,
 {
 	gchar tmpname[] = {"XXXXXX.cap"};
 	guint i;
-	_cleanup_bytes_unref_ GBytes *fwbin = NULL;
-	_cleanup_free_ gchar *dirname = NULL;
-	_cleanup_free_ gchar *filename = NULL;
-	_cleanup_object_unref_ FuDevice *device_tmp = NULL;
-	_cleanup_object_unref_ FuPending *pending = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
+	g_autoptr(GBytes) fwbin = NULL;
+	g_autofree gchar *dirname = NULL;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuDevice) device_tmp = NULL;
+	g_autoptr(FuPending) pending = NULL;
+	g_autoptr(GFile) file = NULL;
 
 	/* id already exists */
 	pending = fu_pending_new ();
@@ -211,8 +208,8 @@ fu_provider_update (FuProvider *provider,
 		    GError **error)
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
-	_cleanup_object_unref_ FuPending *pending = NULL;
-	_cleanup_object_unref_ FuDevice *device_pending = NULL;
+	g_autoptr(FuPending) pending = NULL;
+	g_autoptr(FuDevice) device_pending = NULL;
 	GError *error_update = NULL;
 
 	/* schedule for next reboot, or handle in the provider */
@@ -259,8 +256,8 @@ fu_provider_update (FuProvider *provider,
 		/* delete cab file */
 		tmp = fu_device_get_metadata (device_pending, FU_DEVICE_KEY_FILENAME_CAB);
 		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
-			_cleanup_error_free_ GError *error_local = NULL;
-			_cleanup_object_unref_ GFile *file = NULL;
+			g_autoptr(GError) error_local = NULL;
+			g_autoptr(GFile) file = NULL;
 			file = g_file_new_for_path (tmp);
 			if (!g_file_delete (file, NULL, &error_local)) {
 				g_set_error (error,
@@ -283,9 +280,9 @@ gboolean
 fu_provider_clear_results (FuProvider *provider, FuDevice *device, GError **error)
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_object_unref_ FuDevice *device_pending = NULL;
-	_cleanup_object_unref_ FuPending *pending = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuDevice) device_pending = NULL;
+	g_autoptr(FuPending) pending = NULL;
 
 	/* handled by the provider */
 	if (klass->clear_results != NULL)
@@ -319,9 +316,9 @@ fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
 	const gchar *tmp;
 	guint i;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_object_unref_ FuDevice *device_pending = NULL;
-	_cleanup_object_unref_ FuPending *pending = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuDevice) device_pending = NULL;
+	g_autoptr(FuPending) pending = NULL;
 	const gchar *copy_keys[] = {
 		FU_DEVICE_KEY_PENDING_STATE,
 		FU_DEVICE_KEY_PENDING_ERROR,

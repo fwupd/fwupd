@@ -29,26 +29,14 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_PROVIDER_FAKE		(fu_provider_fake_get_type ())
-#define FU_PROVIDER_FAKE(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_PROVIDER_FAKE, FuProviderFake))
-#define FU_IS_PROVIDER_FAKE(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_PROVIDER_FAKE))
-
-typedef struct _FuProviderFakePrivate	FuProviderFakePrivate;
-typedef struct _FuProviderFake		FuProviderFake;
-typedef struct _FuProviderFakeClass	FuProviderFakeClass;
-
-struct _FuProviderFake
-{
-	FuProvider			 parent;
-	FuProviderFakePrivate		*priv;
-};
+#define FU_TYPE_PROVIDER_FAKE (fu_provider_fake_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuProviderFake, provider_fake, FU, PROVIDER_FAKE, FuProvider)
 
 struct _FuProviderFakeClass
 {
 	FuProviderClass			 parent_class;
 };
 
-GType		 fu_provider_fake_get_type	(void);
 FuProvider	*fu_provider_fake_new		(void);
 
 G_END_DECLS

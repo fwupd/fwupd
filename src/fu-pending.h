@@ -28,23 +28,8 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_PENDING		(fu_pending_get_type ())
-#define FU_PENDING(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_PENDING, FuPending))
-#define FU_PENDING_CLASS(k)	(G_TYPE_CHECK_CLASS_CAST((k), FU_TYPE_PENDING, FuPendingClass))
-#define FU_IS_PENDING(o)	(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_PENDING))
-#define FU_IS_PENDING_CLASS(k)	(G_TYPE_CHECK_CLASS_TYPE ((k), FU_TYPE_PENDING))
-#define FU_PENDING_GET_CLASS(o)	(G_TYPE_INSTANCE_GET_CLASS ((o), FU_TYPE_PENDING, FuPendingClass))
-#define FU_PENDING_ERROR	fu_pending_error_quark()
-
-typedef struct _FuPendingPrivate	FuPendingPrivate;
-typedef struct _FuPending	FuPending;
-typedef struct _FuPendingClass	FuPendingClass;
-
-struct _FuPending
-{
-	 GObject		 parent;
-	 FuPendingPrivate	*priv;
-};
+#define FU_TYPE_PENDING (fu_pending_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuPending, fu_pending, FU, PENDING, GObject)
 
 struct _FuPendingClass
 {
@@ -60,7 +45,6 @@ typedef enum {
 	FU_PENDING_STATE_LAST
 } FuPendingState;
 
-GType		 fu_pending_get_type			(void);
 FuPending	*fu_pending_new				(void);
 const gchar	*fu_pending_state_to_string		(FuPendingState	 state);
 

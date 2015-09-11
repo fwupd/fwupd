@@ -29,20 +29,8 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_PROVIDER		(fu_provider_get_type ())
-#define FU_PROVIDER(o)			(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_PROVIDER, FuProvider))
-#define FU_PROVIDER_CLASS(k)		(G_TYPE_CHECK_CLASS_CAST((k), FU_TYPE_PROVIDER, FuProviderClass))
-#define FU_IS_PROVIDER(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_PROVIDER))
-#define FU_IS_PROVIDER_CLASS(k)		(G_TYPE_CHECK_CLASS_TYPE ((k), FU_TYPE_PROVIDER))
-#define FU_PROVIDER_GET_CLASS(o)	(G_TYPE_INSTANCE_GET_CLASS ((o), FU_TYPE_PROVIDER, FuProviderClass))
-
-typedef struct _FuProvider		FuProvider;
-typedef struct _FuProviderClass		FuProviderClass;
-
-struct _FuProvider
-{
-	 GObject			 parent;
-};
+#define FU_TYPE_PROVIDER (fu_provider_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuProvider, fu_provider, FU, PROVIDER, GObject)
 
 typedef enum {
 	FU_PROVIDER_UPDATE_FLAG_NONE		= 0,
@@ -97,7 +85,6 @@ struct _FuProviderClass
 
 #define FU_OFFLINE_TRIGGER_FILENAME	FU_OFFLINE_DESTDIR "/system-update"
 
-GType		 fu_provider_get_type		(void);
 void		 fu_provider_device_add		(FuProvider	*provider,
 						 FuDevice	*device);
 void		 fu_provider_device_remove	(FuProvider	*provider,

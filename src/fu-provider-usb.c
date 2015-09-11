@@ -25,24 +25,21 @@
 #include <glib-object.h>
 #include <gusb.h>
 
-#include "fu-cleanup.h"
 #include "fu-device.h"
 #include "fu-provider-usb.h"
 
-static void     fu_provider_usb_finalize	(GObject	*object);
-
-#define FU_PROVIDER_USB_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_PROVIDER_USB, FuProviderUsbPrivate))
+static void	fu_provider_usb_finalize	(GObject	*object);
 
 /**
  * FuProviderUsbPrivate:
  **/
-struct _FuProviderUsbPrivate
-{
+typedef struct {
 	GHashTable		*devices;
 	GUsbContext		*usb_ctx;
-};
+} FuProviderUsbPrivate;
 
-G_DEFINE_TYPE (FuProviderUsb, fu_provider_usb, FU_TYPE_PROVIDER)
+G_DEFINE_TYPE_WITH_PRIVATE (FuProviderUsb, fu_provider_usb, FU_TYPE_PROVIDER)
+#define GET_PRIVATE(o) (fu_provider_usb_get_instance_private (o))
 
 /**
  * fu_provider_usb_get_name:
@@ -71,13 +68,14 @@ fu_provider_usb_device_added_cb (GUsbContext *ctx,
 				 GUsbDevice *device,
 				 FuProviderUsb *provider_usb)
 {
+	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
 	FuDevice *dev;
 	guint8 idx = 0x00;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *guid = NULL;
-	_cleanup_free_ gchar *id = NULL;
-	_cleanup_free_ gchar *product = NULL;
-	_cleanup_free_ gchar *version = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *guid = NULL;
+	g_autofree gchar *id = NULL;
+	g_autofree gchar *product = NULL;
+	g_autofree gchar *version = NULL;
 
 	/* ignore hubs */
 #if G_USB_CHECK_VERSION(0,2,5)
@@ -93,7 +91,7 @@ fu_provider_usb_device_added_cb (GUsbContext *ctx,
 	}
 
 	/* is already in database */
-	dev = g_hash_table_lookup (provider_usb->priv->devices, id);
+	dev = g_hash_table_lookup (priv->devices, id);
 	if (dev != NULL) {
 		g_debug ("ignoring duplicate %s", id);
 		return;
@@ -131,7 +129,7 @@ fu_provider_usb_device_added_cb (GUsbContext *ctx,
 		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
 
 		/* insert to hash */
-		g_hash_table_insert (provider_usb->priv->devices,
+		g_hash_table_insert (priv->devices,
 				     g_strdup (id), dev);
 		fu_provider_device_add (FU_PROVIDER (provider_usb), dev);
 	} else {
@@ -154,12 +152,13 @@ fu_provider_usb_device_removed_cb (GUsbContext *ctx,
 				   GUsbDevice *device,
 				   FuProviderUsb *provider_usb)
 {
+	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
 	FuDevice *dev;
-	_cleanup_free_ gchar *id = NULL;
+	g_autofree gchar *id = NULL;
 
 	/* already in database */
 	id = fu_provider_usb_get_id (device);
-	dev = g_hash_table_lookup (provider_usb->priv->devices, id);
+	dev = g_hash_table_lookup (priv->devices, id);
 	if (dev == NULL)
 		return;
 	fu_provider_device_remove (FU_PROVIDER (provider_usb), dev);
@@ -172,7 +171,8 @@ static gboolean
 fu_provider_usb_coldplug (FuProvider *provider, GError **error)
 {
 	FuProviderUsb *provider_usb = FU_PROVIDER_USB (provider);
-	g_usb_context_enumerate (provider_usb->priv->usb_ctx);
+	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
+	g_usb_context_enumerate (priv->usb_ctx);
 	return TRUE;
 }
 
@@ -188,8 +188,6 @@ fu_provider_usb_class_init (FuProviderUsbClass *klass)
 	provider_class->get_name = fu_provider_usb_get_name;
 	provider_class->coldplug = fu_provider_usb_coldplug;
 	object_class->finalize = fu_provider_usb_finalize;
-
-	g_type_class_add_private (klass, sizeof (FuProviderUsbPrivate));
 }
 
 /**
@@ -198,14 +196,14 @@ fu_provider_usb_class_init (FuProviderUsbClass *klass)
 static void
 fu_provider_usb_init (FuProviderUsb *provider_usb)
 {
-	provider_usb->priv = FU_PROVIDER_USB_GET_PRIVATE (provider_usb);
-	provider_usb->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-							      g_free, (GDestroyNotify) g_object_unref);
-	provider_usb->priv->usb_ctx = g_usb_context_new (NULL);
-	g_signal_connect (provider_usb->priv->usb_ctx, "device-added",
+	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
+	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
+					       g_free, (GDestroyNotify) g_object_unref);
+	priv->usb_ctx = g_usb_context_new (NULL);
+	g_signal_connect (priv->usb_ctx, "device-added",
 			  G_CALLBACK (fu_provider_usb_device_added_cb),
 			  provider_usb);
-	g_signal_connect (provider_usb->priv->usb_ctx, "device-removed",
+	g_signal_connect (priv->usb_ctx, "device-removed",
 			  G_CALLBACK (fu_provider_usb_device_removed_cb),
 			  provider_usb);
 }
@@ -217,7 +215,7 @@ static void
 fu_provider_usb_finalize (GObject *object)
 {
 	FuProviderUsb *provider_usb = FU_PROVIDER_USB (object);
-	FuProviderUsbPrivate *priv = provider_usb->priv;
+	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
 
 	g_hash_table_unref (priv->devices);
 	g_object_unref (priv->usb_ctx);

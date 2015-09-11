@@ -27,24 +27,21 @@
 #include <sqlite3.h>
 #include <stdlib.h>
 
-#include "fu-cleanup.h"
 #include "fu-pending.h"
 
 static void fu_pending_finalize			 (GObject *object);
-
-#define FU_PENDING_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_PENDING, FuPendingPrivate))
 
 /**
  * FuPendingPrivate:
  *
  * Private #FuPending data
  **/
-struct _FuPendingPrivate
-{
+typedef struct {
 	sqlite3				*db;
-};
+} FuPendingPrivate;
 
-G_DEFINE_TYPE (FuPending, fu_pending, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (FuPending, fu_pending, G_TYPE_OBJECT)
+#define GET_PRIVATE(o) (fu_pending_get_instance_private (o))
 
 /**
  * fu_pending_load:
@@ -52,15 +49,16 @@ G_DEFINE_TYPE (FuPending, fu_pending, G_TYPE_OBJECT)
 static gboolean
 fu_pending_load (FuPending *pending, GError **error)
 {
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
 	char *error_msg = NULL;
 	const char *statement;
 	gint rc;
-	_cleanup_free_ gchar *dirname = NULL;
-	_cleanup_free_ gchar *filename = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
+	g_autofree gchar *dirname = NULL;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(GFile) file = NULL;
 
 	g_return_val_if_fail (FU_IS_PENDING (pending), FALSE);
-	g_return_val_if_fail (pending->priv->db == NULL, FALSE);
+	g_return_val_if_fail (priv->db == NULL, FALSE);
 
 	/* create directory */
 	dirname = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
@@ -73,19 +71,19 @@ fu_pending_load (FuPending *pending, GError **error)
 	/* open */
 	filename = g_build_filename (dirname, "pending.db", NULL);
 	g_debug ("FuPending: trying to open database '%s'", filename);
-	rc = sqlite3_open (filename, &pending->priv->db);
+	rc = sqlite3_open (filename, &priv->db);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
 			     "Can't open %s: %s",
-			     filename, sqlite3_errmsg (pending->priv->db));
-		sqlite3_close (pending->priv->db);
+			     filename, sqlite3_errmsg (priv->db));
+		sqlite3_close (priv->db);
 		return FALSE;
 	}
 
 	/* check devices */
-	rc = sqlite3_exec (pending->priv->db, "SELECT * FROM pending LIMIT 1",
+	rc = sqlite3_exec (priv->db, "SELECT * FROM pending LIMIT 1",
 			   NULL, NULL, &error_msg);
 	if (rc != SQLITE_OK) {
 		g_debug ("FuPending: creating table to repair: %s", error_msg);
@@ -99,7 +97,7 @@ fu_pending_load (FuPending *pending, GError **error)
 			    "provider TEXT,"
 			    "version_old TEXT,"
 			    "version_new TEXT);";
-		rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
+		rc = sqlite3_exec (priv->db, statement, NULL, NULL, &error_msg);
 		if (rc != SQLITE_OK) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -112,18 +110,18 @@ fu_pending_load (FuPending *pending, GError **error)
 	}
 
 	/* check pending has state and provider (since 0.1.1) */
-	rc = sqlite3_exec (pending->priv->db,
+	rc = sqlite3_exec (priv->db,
 			   "SELECT provider FROM pending LIMIT 1",
 			   NULL, NULL, &error_msg);
 	if (rc != SQLITE_OK) {
 		g_debug ("FuPending: altering table to repair: %s", error_msg);
 		sqlite3_free (error_msg);
 		statement = "ALTER TABLE pending ADD COLUMN state INTEGER DEFAULT 0;";
-		sqlite3_exec (pending->priv->db, statement, NULL, NULL, NULL);
+		sqlite3_exec (priv->db, statement, NULL, NULL, NULL);
 		statement = "ALTER TABLE pending ADD COLUMN error TEXT;";
-		sqlite3_exec (pending->priv->db, statement, NULL, NULL, NULL);
+		sqlite3_exec (priv->db, statement, NULL, NULL, NULL);
 		statement = "ALTER TABLE pending ADD COLUMN provider TEXT;";
-		sqlite3_exec (pending->priv->db, statement, NULL, NULL, NULL);
+		sqlite3_exec (priv->db, statement, NULL, NULL, NULL);
 	}
 
 	return TRUE;
@@ -135,6 +133,7 @@ fu_pending_load (FuPending *pending, GError **error)
 gboolean
 fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 {
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
 	char *error_msg = NULL;
 	char *statement;
 	gboolean ret = TRUE;
@@ -143,7 +142,7 @@ fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 	g_return_val_if_fail (FU_IS_PENDING (pending), FALSE);
 
 	/* lazy load */
-	if (pending->priv->db == NULL) {
+	if (priv->db == NULL) {
 		if (!fu_pending_load (pending, error))
 			return FALSE;
 	}
@@ -166,7 +165,7 @@ fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 				     fu_device_get_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION));
 
 	/* insert entry */
-	rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
+	rc = sqlite3_exec (priv->db, statement, NULL, NULL, &error_msg);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -188,6 +187,7 @@ out:
 gboolean
 fu_pending_remove_device (FuPending *pending, FuDevice *device, GError **error)
 {
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
 	char *error_msg = NULL;
 	char *statement;
 	gboolean ret = TRUE;
@@ -196,7 +196,7 @@ fu_pending_remove_device (FuPending *pending, FuDevice *device, GError **error)
 	g_return_val_if_fail (FU_IS_PENDING (pending), FALSE);
 
 	/* lazy load */
-	if (pending->priv->db == NULL) {
+	if (priv->db == NULL) {
 		if (!fu_pending_load (pending, error))
 			return FALSE;
 	}
@@ -207,7 +207,7 @@ fu_pending_remove_device (FuPending *pending, FuDevice *device, GError **error)
 				     fu_device_get_id (device));
 
 	/* remove entry */
-	rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
+	rc = sqlite3_exec (priv->db, statement, NULL, NULL, &error_msg);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -289,16 +289,17 @@ fu_pending_device_sqlite_cb (void *data,
 FuDevice *
 fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **error)
 {
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
 	FuDevice *device = NULL;
 	char *error_msg = NULL;
 	char *statement;
 	gint rc;
-	_cleanup_ptrarray_unref_ GPtrArray *array_tmp = NULL;
+	g_autoptr(GPtrArray) array_tmp = NULL;
 
 	g_return_val_if_fail (FU_IS_PENDING (pending), NULL);
 
 	/* lazy load */
-	if (pending->priv->db == NULL) {
+	if (priv->db == NULL) {
 		if (!fu_pending_load (pending, error))
 			return NULL;
 	}
@@ -309,7 +310,7 @@ fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **erro
 				     "device_id = '%q';",
 				     device_id);
 	array_tmp = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	rc = sqlite3_exec (pending->priv->db,
+	rc = sqlite3_exec (priv->db,
 			   statement,
 			   fu_pending_device_sqlite_cb,
 			   array_tmp,
@@ -342,16 +343,17 @@ out:
 GPtrArray *
 fu_pending_get_devices (FuPending *pending, GError **error)
 {
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
 	GPtrArray *array = NULL;
 	char *error_msg = NULL;
 	char *statement;
 	gint rc;
-	_cleanup_ptrarray_unref_ GPtrArray *array_tmp = NULL;
+	g_autoptr(GPtrArray) array_tmp = NULL;
 
 	g_return_val_if_fail (FU_IS_PENDING (pending), NULL);
 
 	/* lazy load */
-	if (pending->priv->db == NULL) {
+	if (priv->db == NULL) {
 		if (!fu_pending_load (pending, error))
 			return NULL;
 	}
@@ -360,7 +362,7 @@ fu_pending_get_devices (FuPending *pending, GError **error)
 	g_debug ("FuPending: get devices");
 	statement = sqlite3_mprintf ("SELECT * FROM pending;");
 	array_tmp = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	rc = sqlite3_exec (pending->priv->db,
+	rc = sqlite3_exec (priv->db,
 			   statement,
 			   fu_pending_device_sqlite_cb,
 			   array_tmp,
@@ -408,6 +410,7 @@ fu_pending_set_state (FuPending *pending,
 		      FuPendingState state,
 		      GError **error)
 {
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
 	char *error_msg = NULL;
 	char *statement;
 	gboolean ret = TRUE;
@@ -416,7 +419,7 @@ fu_pending_set_state (FuPending *pending,
 	g_return_val_if_fail (FU_IS_PENDING (pending), FALSE);
 
 	/* lazy load */
-	if (pending->priv->db == NULL) {
+	if (priv->db == NULL) {
 		if (!fu_pending_load (pending, error))
 			return FALSE;
 	}
@@ -429,7 +432,7 @@ fu_pending_set_state (FuPending *pending,
 				     state, fu_device_get_id (device));
 
 	/* remove entry */
-	rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
+	rc = sqlite3_exec (priv->db, statement, NULL, NULL, &error_msg);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -454,6 +457,7 @@ fu_pending_set_error_msg (FuPending *pending,
 			  const gchar *error_msg2,
 			  GError **error)
 {
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
 	char *error_msg = NULL;
 	char *statement;
 	gboolean ret = TRUE;
@@ -462,7 +466,7 @@ fu_pending_set_error_msg (FuPending *pending,
 	g_return_val_if_fail (FU_IS_PENDING (pending), FALSE);
 
 	/* lazy load */
-	if (pending->priv->db == NULL) {
+	if (priv->db == NULL) {
 		if (!fu_pending_load (pending, error))
 			return FALSE;
 	}
@@ -475,7 +479,7 @@ fu_pending_set_error_msg (FuPending *pending,
 				     fu_device_get_id (device));
 
 	/* remove entry */
-	rc = sqlite3_exec (pending->priv->db, statement, NULL, NULL, &error_msg);
+	rc = sqlite3_exec (priv->db, statement, NULL, NULL, &error_msg);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -499,7 +503,6 @@ fu_pending_class_init (FuPendingClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = fu_pending_finalize;
-	g_type_class_add_private (klass, sizeof (FuPendingPrivate));
 }
 
 /**
@@ -508,7 +511,6 @@ fu_pending_class_init (FuPendingClass *klass)
 static void
 fu_pending_init (FuPending *pending)
 {
-	pending->priv = FU_PENDING_GET_PRIVATE (pending);
 }
 
 /**
@@ -518,7 +520,7 @@ static void
 fu_pending_finalize (GObject *object)
 {
 	FuPending *pending = FU_PENDING (object);
-	FuPendingPrivate *priv = pending->priv;
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
 
 	if (priv->db != NULL)
 		sqlite3_close (priv->db);

@@ -24,24 +24,21 @@
 #include <fwupd.h>
 #include <gpgme.h>
 
-#include "fu-cleanup.h"
 #include "fu-keyring.h"
 
 static void fu_keyring_finalize			 (GObject *object);
-
-#define FU_KEYRING_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_KEYRING, FuKeyringPrivate))
 
 /**
  * FuKeyringPrivate:
  *
  * Private #FuKeyring data
  **/
-struct _FuKeyringPrivate
-{
+typedef struct {
 	gpgme_ctx_t		 ctx;
-};
+} FuKeyringPrivate;
 
-G_DEFINE_TYPE (FuKeyring, fu_keyring, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (FuKeyring, fu_keyring, G_TYPE_OBJECT)
+#define GET_PRIVATE(o) (fu_keyring_get_instance_private (o))
 
 /**
  * fu_keyring_setup:
@@ -49,11 +46,12 @@ G_DEFINE_TYPE (FuKeyring, fu_keyring, G_TYPE_OBJECT)
 static gboolean
 fu_keyring_setup (FuKeyring *keyring, GError **error)
 {
+	FuKeyringPrivate *priv = GET_PRIVATE (keyring);
 	gpgme_error_t rc;
 
 	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
 
-	if (keyring->priv->ctx != NULL)
+	if (priv->ctx != NULL)
 		return TRUE;
 
 	/* check version */
@@ -71,7 +69,7 @@ fu_keyring_setup (FuKeyring *keyring, GError **error)
 	}
 
 	/* create a new GPG context */
-	rc = gpgme_new (&keyring->priv->ctx);
+	rc = gpgme_new (&priv->ctx);
 	if (rc != GPG_ERR_NO_ERROR) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -82,7 +80,7 @@ fu_keyring_setup (FuKeyring *keyring, GError **error)
 	}
 
 	/* set the protocol */
-	rc = gpgme_set_protocol (keyring->priv->ctx, GPGME_PROTOCOL_OpenPGP);
+	rc = gpgme_set_protocol (priv->ctx, GPGME_PROTOCOL_OpenPGP);
 	if (rc != GPG_ERR_NO_ERROR) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -93,10 +91,10 @@ fu_keyring_setup (FuKeyring *keyring, GError **error)
 	}
 
 	/* enable armor mode */
-	gpgme_set_armor (keyring->priv->ctx, TRUE);
+	gpgme_set_armor (priv->ctx, TRUE);
 
 	/* never interactive */
-	gpgme_set_pinentry_mode (keyring->priv->ctx, GPGME_PINENTRY_MODE_ERROR);
+	gpgme_set_pinentry_mode (priv->ctx, GPGME_PINENTRY_MODE_ERROR);
 
 	return TRUE;
 }
@@ -107,13 +105,14 @@ fu_keyring_setup (FuKeyring *keyring, GError **error)
 static void
 fu_keyring_list_private_keys (FuKeyring *keyring)
 {
+	FuKeyringPrivate *priv = GET_PRIVATE (keyring);
 	gpgme_key_t key;
 	gpgme_error_t err;
 
-	err = gpgme_op_keylist_start (keyring->priv->ctx, NULL, 1);
+	err = gpgme_op_keylist_start (priv->ctx, NULL, 1);
 	while (!err) {
-		_cleanup_string_free_ GString *str = NULL;
-		err = gpgme_op_keylist_next (keyring->priv->ctx, &key);
+		g_autoptr(GString) str = NULL;
+		err = gpgme_op_keylist_next (priv->ctx, &key);
 		if (err)
 			break;
 		str = g_string_new (key->subkeys->keyid);
@@ -140,6 +139,7 @@ fu_keyring_list_private_keys (FuKeyring *keyring)
 gboolean
 fu_keyring_set_signing_key (FuKeyring *keyring, const gchar *key_id, GError **error)
 {
+	FuKeyringPrivate *priv = GET_PRIVATE (keyring);
 	gint n_signers;
 	gpgme_error_t rc;
 	gpgme_key_t key;
@@ -153,7 +153,7 @@ fu_keyring_set_signing_key (FuKeyring *keyring, const gchar *key_id, GError **er
 	fu_keyring_list_private_keys (keyring);
 
 	/* find key */
-	rc = gpgme_get_key (keyring->priv->ctx, key_id, &key, 1);
+	rc = gpgme_get_key (priv->ctx, key_id, &key, 1);
 	if (rc != GPG_ERR_NO_ERROR) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -164,8 +164,8 @@ fu_keyring_set_signing_key (FuKeyring *keyring, const gchar *key_id, GError **er
 	}
 
 	/* select it to be used */
-	gpgme_signers_clear (keyring->priv->ctx);
-	rc = gpgme_signers_add (keyring->priv->ctx, key);
+	gpgme_signers_clear (priv->ctx);
+	rc = gpgme_signers_add (priv->ctx, key);
 	if (rc != GPG_ERR_NO_ERROR) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -177,7 +177,7 @@ fu_keyring_set_signing_key (FuKeyring *keyring, const gchar *key_id, GError **er
 	gpgme_key_unref (key);
 
 	/* check it's selected */
-	n_signers = gpgme_signers_count (keyring->priv->ctx);
+	n_signers = gpgme_signers_count (priv->ctx);
 	if (n_signers != 1) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -194,6 +194,7 @@ fu_keyring_set_signing_key (FuKeyring *keyring, const gchar *key_id, GError **er
 gboolean
 fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **error)
 {
+	FuKeyringPrivate *priv = GET_PRIVATE (keyring);
 	gboolean ret = TRUE;
 	gpgme_data_t data = NULL;
 	gpgme_error_t rc;
@@ -215,7 +216,7 @@ fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **e
 			     filename, gpgme_strerror (rc));
 		goto out;
 	}
-	rc = gpgme_op_import (keyring->priv->ctx, data);
+	rc = gpgme_op_import (priv->ctx, data);
 	if (rc != GPG_ERR_NO_ERROR) {
 		ret = FALSE;
 		g_set_error (error,
@@ -227,7 +228,7 @@ fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **e
 	}
 
 	/* print what keys were imported */
-	result = gpgme_op_import_result (keyring->priv->ctx);
+	result = gpgme_op_import_result (priv->ctx);
 	for (s = result->imports; s != NULL; s = s->next) {
 		g_debug ("importing key %s [%i] %s",
 			 s->fpr, s->status, gpgme_strerror (s->result));
@@ -243,7 +244,7 @@ out:
 gboolean
 fu_keyring_add_public_keys (FuKeyring *keyring, const gchar *dirname, GError **error)
 {
-	_cleanup_dir_close_ GDir *dir = NULL;
+	g_autoptr(GDir) dir = NULL;
 
 	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
 	g_return_val_if_fail (dirname != NULL, FALSE);
@@ -258,7 +259,7 @@ fu_keyring_add_public_keys (FuKeyring *keyring, const gchar *dirname, GError **e
 		return FALSE;
 	do {
 		const gchar *filename;
-		_cleanup_free_ gchar *path_tmp = NULL;
+		g_autofree gchar *path_tmp = NULL;
 		filename = g_dir_read_name (dir);
 		if (filename == NULL)
 			break;
@@ -331,6 +332,7 @@ fu_keyring_verify_file (FuKeyring *keyring,
 			const gchar *signature,
 			GError **error)
 {
+	FuKeyringPrivate *priv = GET_PRIVATE (keyring);
 	gboolean has_header;
 	gboolean ret = TRUE;
 	gpgme_data_t data = NULL;
@@ -338,7 +340,7 @@ fu_keyring_verify_file (FuKeyring *keyring,
 	gpgme_error_t rc;
 	gpgme_signature_t s;
 	gpgme_verify_result_t result;
-	_cleanup_string_free_ GString *sig_v1 = NULL;
+	g_autoptr(GString) sig_v1 = NULL;
 
 	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
 	g_return_val_if_fail (filename != NULL, FALSE);
@@ -384,7 +386,7 @@ fu_keyring_verify_file (FuKeyring *keyring,
 	}
 
 	/* verify */
-	rc = gpgme_op_verify (keyring->priv->ctx, sig, data, NULL);
+	rc = gpgme_op_verify (priv->ctx, sig, data, NULL);
 	if (rc != GPG_ERR_NO_ERROR) {
 		ret = FALSE;
 		g_set_error (error,
@@ -397,7 +399,7 @@ fu_keyring_verify_file (FuKeyring *keyring,
 
 
 	/* verify the result */
-	result = gpgme_op_verify_result (keyring->priv->ctx);
+	result = gpgme_op_verify_result (priv->ctx);
 	if (result == NULL) {
 		ret = FALSE;
 		g_set_error_literal (error,
@@ -427,6 +429,7 @@ out:
 GBytes *
 fu_keyring_sign_data (FuKeyring *keyring, GBytes *payload, GError **error)
 {
+	FuKeyringPrivate *priv = GET_PRIVATE (keyring);
 	GBytes *sig_bytes = NULL;
 	gchar *sig_data = NULL;
 	gpgme_data_t data = NULL;
@@ -457,7 +460,7 @@ fu_keyring_sign_data (FuKeyring *keyring, GBytes *payload, GError **error)
 
 	/* sign */
 	gpgme_data_new (&sig);
-	rc = gpgme_op_sign (keyring->priv->ctx, data, sig, GPGME_SIG_MODE_DETACH);
+	rc = gpgme_op_sign (priv->ctx, data, sig, GPGME_SIG_MODE_DETACH);
 	if (rc != GPG_ERR_NO_ERROR) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -466,7 +469,7 @@ fu_keyring_sign_data (FuKeyring *keyring, GBytes *payload, GError **error)
 			     gpgme_strerror (rc));
 		goto out;
 	}
-	sign_result = gpgme_op_sign_result (keyring->priv->ctx);
+	sign_result = gpgme_op_sign_result (priv->ctx);
 	if (sign_result == NULL ||
 	    sign_result->signatures == NULL ||
 	    sign_result->signatures->fpr == NULL) {
@@ -499,6 +502,7 @@ fu_keyring_verify_data (FuKeyring *keyring,
 			GBytes *payload_signature,
 			GError **error)
 {
+	FuKeyringPrivate *priv = GET_PRIVATE (keyring);
 	gboolean ret = TRUE;
 	gpgme_data_t data = NULL;
 	gpgme_data_t sig = NULL;
@@ -541,7 +545,7 @@ fu_keyring_verify_data (FuKeyring *keyring,
 	}
 
 	/* verify */
-	rc = gpgme_op_verify (keyring->priv->ctx, sig, data, NULL);
+	rc = gpgme_op_verify (priv->ctx, sig, data, NULL);
 	if (rc != GPG_ERR_NO_ERROR) {
 		ret = FALSE;
 		g_set_error (error,
@@ -554,7 +558,7 @@ fu_keyring_verify_data (FuKeyring *keyring,
 
 
 	/* verify the result */
-	result = gpgme_op_verify_result (keyring->priv->ctx);
+	result = gpgme_op_verify_result (priv->ctx);
 	if (result == NULL) {
 		ret = FALSE;
 		g_set_error_literal (error,
@@ -586,7 +590,6 @@ fu_keyring_class_init (FuKeyringClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = fu_keyring_finalize;
-	g_type_class_add_private (klass, sizeof (FuKeyringPrivate));
 }
 
 /**
@@ -595,7 +598,6 @@ fu_keyring_class_init (FuKeyringClass *klass)
 static void
 fu_keyring_init (FuKeyring *keyring)
 {
-	keyring->priv = FU_KEYRING_GET_PRIVATE (keyring);
 }
 
 /**
@@ -605,7 +607,7 @@ static void
 fu_keyring_finalize (GObject *object)
 {
 	FuKeyring *keyring = FU_KEYRING (object);
-	FuKeyringPrivate *priv = keyring->priv;
+	FuKeyringPrivate *priv = GET_PRIVATE (keyring);
 
 	if (priv->ctx != NULL)
 		gpgme_release (priv->ctx);

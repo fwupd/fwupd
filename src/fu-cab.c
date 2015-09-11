@@ -35,15 +35,12 @@
 
 static void fu_cab_finalize			 (GObject *object);
 
-#define FU_CAB_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_CAB, FuCabPrivate))
-
 /**
  * FuCabPrivate:
  *
  * Private #FuCab data
  **/
-struct _FuCabPrivate
-{
+typedef struct {
 	GCabCabinet			*gcab;
 	GInputStream			*cab_stream;
 	GKeyFile			*inf_kf;
@@ -66,9 +63,10 @@ struct _FuCabPrivate
 	guint64				 size;
 	GPtrArray			*basenames_to_delete;
 	GPtrArray			*filelist;	/* with full path */
-};
+} FuCabPrivate;
 
-G_DEFINE_TYPE (FuCab, fu_cab, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (FuCab, fu_cab, G_TYPE_OBJECT)
+#define GET_PRIVATE(o) (fu_cab_get_instance_private (o))
 
 typedef struct {
 	FuCab			*cab;
@@ -81,15 +79,15 @@ typedef struct {
 void
 fu_cab_add_file (FuCab *cab, const gchar *filename)
 {
-	FuCabPrivate *priv = cab->priv;
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	const gchar *tmp;
 	guint i;
-	_cleanup_free_ gchar *basename = NULL;
+	g_autofree gchar *basename = NULL;
 
 	/* check the same basename does not already exist */
 	basename = g_path_get_basename (filename);
 	for (i = 0; i < priv->filelist->len; i++) {
-		_cleanup_free_ gchar *basename_tmp = NULL;
+		g_autofree gchar *basename_tmp = NULL;
 		tmp = g_ptr_array_index (priv->filelist, i);
 		basename_tmp = g_path_get_basename (tmp);
 		if (g_strcmp0 (basename_tmp, basename) == 0) {
@@ -100,7 +98,7 @@ fu_cab_add_file (FuCab *cab, const gchar *filename)
 	}
 
 	/* add the full filename */
-	g_ptr_array_add (cab->priv->filelist, g_strdup (filename));
+	g_ptr_array_add (priv->filelist, g_strdup (filename));
 }
 
 /**
@@ -110,8 +108,9 @@ static gboolean
 fu_cab_read_file_list_cb (GCabFile *file, gpointer user_data)
 {
 	FuCab *cab = FU_CAB (user_data);
-	g_ptr_array_add (cab->priv->filelist,
-			 g_build_filename (cab->priv->tmp_path,
+	FuCabPrivate *priv = GET_PRIVATE (cab);
+	g_ptr_array_add (priv->filelist,
+			 g_build_filename (priv->tmp_path,
 					   gcab_file_get_name (file),
 					   NULL));
 	return FALSE;
@@ -123,7 +122,7 @@ fu_cab_read_file_list_cb (GCabFile *file, gpointer user_data)
 static FuCabExtractFlags
 fu_cab_match_basename_flag (FuCab *cab, const gchar *basename)
 {
-	FuCabPrivate *priv = cab->priv;
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	if (g_strcmp0 (basename, priv->firmware_basename) == 0)
 		return FU_CAB_EXTRACT_FLAG_FIRMWARE;
 	if (g_strcmp0 (basename, priv->signature_basename) == 0)
@@ -145,7 +144,7 @@ fu_cab_extract_cb (GCabFile *file, gpointer user_data)
 {
 	FuCabExtractHelper *helper = (FuCabExtractHelper *) user_data;
 	FuCab *cab = FU_CAB (helper->cab);
-	FuCabPrivate *priv = cab->priv;
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	FuCabExtractFlags match_flags;
 
 	/* only if it matches the mask */
@@ -166,15 +165,15 @@ static gboolean
 fu_cab_parse (FuCab *cab, GError **error)
 {
 	AsRelease *rel;
-	FuCabPrivate *priv = cab->priv;
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	GString *update_description;
 	const gchar *tmp;
 	guint i;
 	const gchar *fn;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_free_ gchar *inf_filename = NULL;
-	_cleanup_object_unref_ AsApp *app = NULL;
-	_cleanup_object_unref_ GFile *path = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *inf_filename = NULL;
+	g_autoptr(AsApp) app = NULL;
+	g_autoptr(GFile) path = NULL;
 
 	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
 
@@ -255,8 +254,8 @@ fu_cab_parse (FuCab *cab, GError **error)
 
 	/* merge with the metainfo file */
 	if (priv->metainfo_basename != NULL) {
-		_cleanup_free_ gchar *metainfo_filename = NULL;
-		_cleanup_object_unref_ AsApp *app2 = NULL;
+		g_autofree gchar *metainfo_filename = NULL;
+		g_autoptr(AsApp) app2 = NULL;
 		app2 = as_app_new ();
 		metainfo_filename = g_build_filename (priv->tmp_path,
 						      priv->metainfo_basename, NULL);
@@ -312,9 +311,9 @@ fu_cab_parse (FuCab *cab, GError **error)
 gboolean
 fu_cab_load_fd (FuCab *cab, gint fd, GCancellable *cancellable, GError **error)
 {
-	FuCabPrivate *priv = cab->priv;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_object_unref_ GInputStream *stream = NULL;
+	FuCabPrivate *priv = GET_PRIVATE (cab);
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
 
@@ -327,7 +326,7 @@ fu_cab_load_fd (FuCab *cab, gint fd, GCancellable *cancellable, GError **error)
 	stream = g_unix_input_stream_new (fd, TRUE);
 	priv->cab_stream = g_memory_input_stream_new ();
 	while (1) {
-		_cleanup_bytes_unref_ GBytes *data = NULL;
+		g_autoptr(GBytes) data = NULL;
 		data = g_input_stream_read_bytes (stream, 8192,
 						  cancellable,
 						  &error_local);
@@ -354,12 +353,12 @@ fu_cab_load_fd (FuCab *cab, gint fd, GCancellable *cancellable, GError **error)
 gboolean
 fu_cab_save_file (FuCab *cab, GFile *file, GCancellable *cancellable, GError **error)
 {
-	FuCabPrivate *priv = cab->priv;
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	const gchar *tmp;
 	guint i;
 	_cleanup_object_unref_ GCabCabinet *gcab = NULL;
 	_cleanup_object_unref_ GCabFolder *folder = NULL;
-	_cleanup_object_unref_ GOutputStream *stream = NULL;
+	g_autoptr(GOutputStream) stream = NULL;
 
 	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
 
@@ -371,9 +370,9 @@ fu_cab_save_file (FuCab *cab, GFile *file, GCancellable *cancellable, GError **e
 	gcab = gcab_cabinet_new ();
 	folder = gcab_folder_new (GCAB_COMPRESSION_NONE);
 	for (i = 0; i < priv->filelist->len; i++) {
-		_cleanup_free_ gchar *name = NULL;
+		g_autofree gchar *name = NULL;
 		_cleanup_object_unref_ GCabFile *gfile = NULL;
-		_cleanup_object_unref_ GFile *file_tmp = NULL;
+		g_autoptr(GFile) file_tmp = NULL;
 
 		/* only write basename as name */
 		tmp = g_ptr_array_index (priv->filelist, i);
@@ -408,9 +407,9 @@ fu_cab_save_file (FuCab *cab, GFile *file, GCancellable *cancellable, GError **e
 gboolean
 fu_cab_load_file (FuCab *cab, GFile *file, GCancellable *cancellable, GError **error)
 {
-	FuCabPrivate *priv = cab->priv;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_object_unref_ GFileInfo *info = NULL;
+	FuCabPrivate *priv = GET_PRIVATE (cab);
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GFileInfo) info = NULL;
 
 	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
 
@@ -418,7 +417,7 @@ fu_cab_load_file (FuCab *cab, GFile *file, GCancellable *cancellable, GError **e
 	info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_SIZE,
 				  G_FILE_QUERY_INFO_NONE, cancellable, &error_local);
 	if (info == NULL) {
-		_cleanup_free_ gchar *filename = NULL;
+		g_autofree gchar *filename = NULL;
 		filename = g_file_get_path (file);
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -432,7 +431,7 @@ fu_cab_load_file (FuCab *cab, GFile *file, GCancellable *cancellable, GError **e
 	/* open file */
 	priv->cab_stream = G_INPUT_STREAM (g_file_read (file, cancellable, &error_local));
 	if (priv->cab_stream == NULL) {
-		_cleanup_free_ gchar *filename = NULL;
+		g_autofree gchar *filename = NULL;
 		filename = g_file_get_path (file);
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -452,10 +451,10 @@ fu_cab_load_file (FuCab *cab, GFile *file, GCancellable *cancellable, GError **e
 gboolean
 fu_cab_extract (FuCab *cab, FuCabExtractFlags flags, GError **error)
 {
-	FuCabPrivate *priv = cab->priv;
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	FuCabExtractHelper helper;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_object_unref_ GFile *path = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GFile) path = NULL;
 
 	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
 
@@ -483,12 +482,12 @@ fu_cab_extract (FuCab *cab, FuCabExtractFlags flags, GError **error)
 gboolean
 fu_cab_verify (FuCab *cab, GError **error)
 {
-	FuCabPrivate *priv = cab->priv;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_free_ gchar *pki_dir = NULL;
-	_cleanup_free_ gchar *signature = NULL;
-	_cleanup_free_ gchar *fn = NULL;
-	_cleanup_object_unref_ FuKeyring *kr = NULL;
+	FuCabPrivate *priv = GET_PRIVATE (cab);
+	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *pki_dir = NULL;
+	g_autofree gchar *signature = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuKeyring) kr = NULL;
 
 	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
 
@@ -543,14 +542,14 @@ fu_cab_verify (FuCab *cab, GError **error)
 gboolean
 fu_cab_delete_temp_files (FuCab *cab, GError **error)
 {
-	FuCabPrivate *priv = cab->priv;
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), FALSE);
 
 	if (priv->tmp_path != NULL) {
 		const gchar *tmp;
 		guint i;
 		for (i = 0; i < priv->basenames_to_delete->len; i++) {
-			_cleanup_free_ gchar *fn = NULL;
+			g_autofree gchar *fn = NULL;
 			tmp = g_ptr_array_index (priv->basenames_to_delete, i);
 			fn = g_build_filename (priv->tmp_path, tmp, NULL);
 			g_unlink (fn);
@@ -568,8 +567,9 @@ fu_cab_delete_temp_files (FuCab *cab, GError **error)
 GInputStream *
 fu_cab_get_stream (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
-	return cab->priv->cab_stream;
+	return priv->cab_stream;
 }
 
 /**
@@ -578,8 +578,9 @@ fu_cab_get_stream (FuCab *cab)
 const gchar *
 fu_cab_get_guid (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
-	return cab->priv->guid;
+	return priv->guid;
 }
 
 /**
@@ -588,8 +589,9 @@ fu_cab_get_guid (FuCab *cab)
 const gchar *
 fu_cab_get_version (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
-	return cab->priv->version;
+	return priv->version;
 }
 
 /**
@@ -598,8 +600,9 @@ fu_cab_get_version (FuCab *cab)
 const gchar *
 fu_cab_get_vendor (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
-	return cab->priv->vendor;
+	return priv->vendor;
 }
 
 /**
@@ -608,8 +611,9 @@ fu_cab_get_vendor (FuCab *cab)
 const gchar *
 fu_cab_get_name (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
-	return cab->priv->name;
+	return priv->name;
 }
 
 /**
@@ -618,8 +622,9 @@ fu_cab_get_name (FuCab *cab)
 const gchar *
 fu_cab_get_summary (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
-	return cab->priv->summary;
+	return priv->summary;
 }
 
 /**
@@ -628,8 +633,9 @@ fu_cab_get_summary (FuCab *cab)
 const gchar *
 fu_cab_get_description (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
-	return cab->priv->description;
+	return priv->description;
 }
 
 /**
@@ -638,8 +644,9 @@ fu_cab_get_description (FuCab *cab)
 const gchar *
 fu_cab_get_url_homepage (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
-	return cab->priv->url_homepage;
+	return priv->url_homepage;
 }
 
 /**
@@ -648,8 +655,9 @@ fu_cab_get_url_homepage (FuCab *cab)
 guint64
 fu_cab_get_size (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), 0);
-	return cab->priv->size;
+	return priv->size;
 }
 
 /**
@@ -658,8 +666,9 @@ fu_cab_get_size (FuCab *cab)
 const gchar *
 fu_cab_get_license (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
-	return cab->priv->license;
+	return priv->license;
 }
 
 /**
@@ -668,8 +677,9 @@ fu_cab_get_license (FuCab *cab)
 const gchar *
 fu_cab_get_filename_firmware (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), NULL);
-	return cab->priv->firmware_filename;
+	return priv->firmware_filename;
 }
 
 /**
@@ -678,8 +688,9 @@ fu_cab_get_filename_firmware (FuCab *cab)
 FwupdTrustFlags
 fu_cab_get_trust_flags (FuCab *cab)
 {
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 	g_return_val_if_fail (FU_IS_CAB (cab), 0);
-	return cab->priv->trust_flags;
+	return priv->trust_flags;
 }
 
 /**
@@ -690,7 +701,6 @@ fu_cab_class_init (FuCabClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = fu_cab_finalize;
-	g_type_class_add_private (klass, sizeof (FuCabPrivate));
 }
 
 /**
@@ -699,9 +709,10 @@ fu_cab_class_init (FuCabClass *klass)
 static void
 fu_cab_init (FuCab *cab)
 {
-	cab->priv = FU_CAB_GET_PRIVATE (cab);
-	cab->priv->basenames_to_delete = g_ptr_array_new_with_free_func (g_free);
-	cab->priv->filelist = g_ptr_array_new_with_free_func (g_free);
+	FuCabPrivate *priv = GET_PRIVATE (cab);
+	priv = GET_PRIVATE (cab);
+	priv->basenames_to_delete = g_ptr_array_new_with_free_func (g_free);
+	priv->filelist = g_ptr_array_new_with_free_func (g_free);
 }
 
 /**
@@ -711,7 +722,7 @@ static void
 fu_cab_finalize (GObject *object)
 {
 	FuCab *cab = FU_CAB (object);
-	FuCabPrivate *priv = cab->priv;
+	FuCabPrivate *priv = GET_PRIVATE (cab);
 
 	g_free (priv->firmware_basename);
 	g_free (priv->firmware_filename);

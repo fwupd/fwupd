@@ -29,26 +29,14 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_PROVIDER_USB		(fu_provider_usb_get_type ())
-#define FU_PROVIDER_USB(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_PROVIDER_USB, FuProviderUsb))
-#define FU_IS_PROVIDER_USB(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_PROVIDER_USB))
-
-typedef struct _FuProviderUsbPrivate	FuProviderUsbPrivate;
-typedef struct _FuProviderUsb		FuProviderUsb;
-typedef struct _FuProviderUsbClass	FuProviderUsbClass;
-
-struct _FuProviderUsb
-{
-	FuProvider			 parent;
-	FuProviderUsbPrivate		*priv;
-};
+#define FU_TYPE_PROVIDER_USB (fu_provider_usb_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuProviderUsb, fu_provider_usb, FU, PROVIDER_USB, FuProvider)
 
 struct _FuProviderUsbClass
 {
 	FuProviderClass			 parent_class;
 };
 
-GType		 fu_provider_usb_get_type	(void);
 FuProvider	*fu_provider_usb_new		(void);
 
 G_END_DECLS

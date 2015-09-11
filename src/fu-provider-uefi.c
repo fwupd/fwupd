@@ -26,12 +26,11 @@
 #include <gio/gio.h>
 #include <fwup.h>
 
-#include "fu-cleanup.h"
 #include "fu-device.h"
 #include "fu-pending.h"
 #include "fu-provider-uefi.h"
 
-static void     fu_provider_uefi_finalize	(GObject	*object);
+static void	fu_provider_uefi_finalize	(GObject	*object);
 
 G_DEFINE_TYPE (FuProviderUefi, fu_provider_uefi, FU_TYPE_PROVIDER)
 
@@ -53,7 +52,7 @@ fu_provider_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError *
 	efi_guid_t *guid_raw;
 	fwup_resource *re_matched = NULL;
 	fwup_resource *re = NULL;
-	_cleanup_free_ gchar *guid_str_tmp = NULL;
+	g_autofree gchar *guid_str_tmp = NULL;
 
 	/* get the hardware we're referencing */
 	guid_str_tmp = g_strdup ("00000000-0000-0000-0000-000000000000");
@@ -165,7 +164,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 	gboolean ret = TRUE;
 	guint32 status = 0;
 	guint32 version = 0;
-	_cleanup_free_ gchar *version_str = NULL;
+	g_autofree gchar *version_str = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
@@ -248,8 +247,8 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 {
 	fwup_resource_iter *iter = NULL;
 	fwup_resource *re;
-	_cleanup_free_ gchar *guid = NULL;
-	_cleanup_object_unref_ FuDevice *dev = NULL;
+	g_autofree gchar *guid = NULL;
+	g_autoptr(FuDevice) dev = NULL;
 
 	/* not supported */
 	if (!fwup_supported ()) {
@@ -275,9 +274,9 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		efi_guid_t *guid_raw;
 		guint32 version_raw;
 		guint64 hardware_instance = 0;	/* FIXME */
-		_cleanup_free_ gchar *id = NULL;
-		_cleanup_free_ gchar *version = NULL;
-		_cleanup_free_ gchar *version_lowest = NULL;
+		g_autofree gchar *id = NULL;
+		g_autofree gchar *version = NULL;
+		g_autofree gchar *version_lowest = NULL;
 
 		/* convert to strings */
 		fwup_get_guid (re, &guid_raw);

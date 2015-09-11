@@ -29,26 +29,14 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_PROVIDER_RPI		(fu_provider_rpi_get_type ())
-#define FU_PROVIDER_RPI(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_PROVIDER_RPI, FuProviderRpi))
-#define FU_IS_PROVIDER_RPI(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_PROVIDER_RPI))
-
-typedef struct _FuProviderRpiPrivate	FuProviderRpiPrivate;
-typedef struct _FuProviderRpi		FuProviderRpi;
-typedef struct _FuProviderRpiClass	FuProviderRpiClass;
-
-struct _FuProviderRpi
-{
-	FuProvider			 parent;
-	FuProviderRpiPrivate		*priv;
-};
+#define FU_TYPE_PROVIDER_RPI (fu_provider_rpi_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuProviderRpi, fu_provider_rpi, FU, PROVIDER_RPI, GObject)
 
 struct _FuProviderRpiClass
 {
 	FuProviderClass			 parent_class;
 };
 
-GType		 fu_provider_rpi_get_type	(void);
 FuProvider	*fu_provider_rpi_new		(void);
 void		 fu_provider_rpi_set_fw_dir	(FuProviderRpi	*provider_rpi,
 						 const gchar	*fw_dir);

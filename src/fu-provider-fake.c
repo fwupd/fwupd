@@ -25,21 +25,10 @@
 #include <gio/gio.h>
 #include <glib-object.h>
 
-#include "fu-cleanup.h"
 #include "fu-device.h"
 #include "fu-provider-fake.h"
 
-static void     fu_provider_fake_finalize	(GObject	*object);
-
-#define FU_PROVIDER_FAKE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_PROVIDER_FAKE, FuProviderFakePrivate))
-
-/**
- * FuProviderFakePrivate:
- **/
-struct _FuProviderFakePrivate
-{
-	GHashTable		*devices;
-};
+static void	fu_provider_fake_finalize	(GObject	*object);
 
 G_DEFINE_TYPE (FuProviderFake, fu_provider_fake, FU_TYPE_PROVIDER)
 
@@ -79,7 +68,7 @@ fu_provider_fake_update (FuProvider *provider,
 static gboolean
 fu_provider_fake_coldplug (FuProvider *provider, GError **error)
 {
-	_cleanup_object_unref_ FuDevice *device = NULL;
+	g_autoptr(FuDevice) device = NULL;
 	device = fu_device_new ();
 	fu_device_set_id (device, "FakeDevice");
 	fu_device_set_guid (device, "00000000-0000-0000-0000-000000000000");
@@ -100,8 +89,6 @@ fu_provider_fake_class_init (FuProviderFakeClass *klass)
 	provider_class->coldplug = fu_provider_fake_coldplug;
 	provider_class->update_online = fu_provider_fake_update;
 	object_class->finalize = fu_provider_fake_finalize;
-
-	g_type_class_add_private (klass, sizeof (FuProviderFakePrivate));
 }
 
 /**
@@ -110,7 +97,6 @@ fu_provider_fake_class_init (FuProviderFakeClass *klass)
 static void
 fu_provider_fake_init (FuProviderFake *provider_fake)
 {
-	provider_fake->priv = FU_PROVIDER_FAKE_GET_PRIVATE (provider_fake);
 }
 
 /**

@@ -27,23 +27,8 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_CAB		(fu_cab_get_type ())
-#define FU_CAB(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_CAB, FuCab))
-#define FU_CAB_CLASS(k)		(G_TYPE_CHECK_CLASS_CAST((k), FU_TYPE_CAB, FuCabClass))
-#define FU_IS_CAB(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_CAB))
-#define FU_IS_CAB_CLASS(k)	(G_TYPE_CHECK_CLASS_TYPE ((k), FU_TYPE_CAB))
-#define FU_CAB_GET_CLASS(o)	(G_TYPE_INSTANCE_GET_CLASS ((o), FU_TYPE_CAB, FuCabClass))
-#define FU_CAB_ERROR		fu_cab_error_quark()
-
-typedef struct _FuCabPrivate	FuCabPrivate;
-typedef struct _FuCab		FuCab;
-typedef struct _FuCabClass	FuCabClass;
-
-struct _FuCab
-{
-	 GObject		 parent;
-	 FuCabPrivate		*priv;
-};
+#define FU_TYPE_CAB (fu_cab_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuCab, fu_cab, FU, CAB, GObject)
 
 struct _FuCabClass
 {
@@ -61,7 +46,6 @@ typedef enum {
 	FU_CAB_EXTRACT_FLAG_LAST
 } FuCabExtractFlags;
 
-GType		 fu_cab_get_type			(void);
 FuCab		*fu_cab_new				(void);
 
 gboolean	 fu_cab_verify				(FuCab		*cab,

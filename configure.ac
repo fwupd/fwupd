@@ -2,8 +2,8 @@
 AC_PREREQ(2.63)
 
 m4_define([fwupd_major_version], [0])
-m4_define([fwupd_minor_version], [1])
-m4_define([fwupd_micro_version], [7])
+m4_define([fwupd_minor_version], [5])
+m4_define([fwupd_micro_version], [0])
 m4_define([fwupd_version],
           [fwupd_major_version.fwupd_minor_version.fwupd_micro_version])
 
@@ -115,7 +115,7 @@ AC_SUBST([RELRO_LDFLAGS])
 dnl ---------------------------------------------------------------------------
 dnl - Check library dependencies
 dnl ---------------------------------------------------------------------------
-PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.36.0 gobject-2.0 gthread-2.0 gio-2.0 >= 2.25.9 gio-unix-2.0)
+PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.45.8 gobject-2.0 gthread-2.0 gio-2.0 >= 2.25.9 gio-unix-2.0)
 PKG_CHECK_MODULES(GUDEV, gudev-1.0)
 PKG_CHECK_MODULES(POLKIT, polkit-gobject-1 >= 0.103)
 PKG_CHECK_MODULES(GCAB, libgcab-1.0)
@@ -123,7 +123,7 @@ PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib >= 0.5.0)
 PKG_CHECK_MODULES(GUSB, gusb >= 0.2.2)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 PKG_CHECK_MODULES(ARCHIVE, libarchive)
-PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.42)
+PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.51.92)
 AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
 
 AC_PATH_PROG(GCAB, [gcab], [no])

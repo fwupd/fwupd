@@ -27,25 +27,22 @@
 #include <gudev/gudev.h>
 #include <string.h>
 
-#include "fu-cleanup.h"
 #include "fu-device.h"
 #include "fu-provider-udev.h"
 #include "fu-rom.h"
 
-static void     fu_provider_udev_finalize	(GObject	*object);
-
-#define FU_PROVIDER_UDEV_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_PROVIDER_UDEV, FuProviderUdevPrivate))
+static void	fu_provider_udev_finalize	(GObject	*object);
 
 /**
  * FuProviderUdevPrivate:
  **/
-struct _FuProviderUdevPrivate
-{
+typedef struct {
 	GHashTable		*devices;
 	GUdevClient		*gudev_client;
-};
+} FuProviderUdevPrivate;
 
-G_DEFINE_TYPE (FuProviderUdev, fu_provider_udev, FU_TYPE_PROVIDER)
+G_DEFINE_TYPE_WITH_PRIVATE (FuProviderUdev, fu_provider_udev, FU_TYPE_PROVIDER)
+#define GET_PRIVATE(o) (fu_provider_udev_get_instance_private (o))
 
 /**
  * fu_provider_udev_get_name:
@@ -78,8 +75,8 @@ fu_provider_udev_verify (FuProvider *provider,
 			 GError **error)
 {
 	const gchar *rom_fn;
-	_cleanup_object_unref_ GFile *file = NULL;
-	_cleanup_object_unref_ FuRom *rom = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(FuRom) rom = NULL;
 
 	/* open the file */
 	rom_fn = fu_device_get_metadata (device, "RomFilename");
@@ -105,16 +102,17 @@ fu_provider_udev_verify (FuProvider *provider,
 static void
 fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 {
+	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
 	FuDevice *dev;
 	const gchar *display_name;
 	const gchar *guid;
 	const gchar *product;
 	const gchar *vendor;
-	_cleanup_free_ gchar *guid_new = NULL;
-	_cleanup_free_ gchar *id = NULL;
-	_cleanup_free_ gchar *rom_fn = NULL;
-	_cleanup_free_ gchar *version = NULL;
-	_cleanup_strv_free_ gchar **split = NULL;
+	g_autofree gchar *guid_new = NULL;
+	g_autofree gchar *id = NULL;
+	g_autofree gchar *rom_fn = NULL;
+	g_autofree gchar *version = NULL;
+	g_auto(GStrv) split = NULL;
 
 	/* interesting device? */
 	guid = g_udev_device_get_property (device, "FWUPD_GUID");
@@ -139,7 +137,7 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 
 	/* is already in database */
 	id = fu_provider_udev_get_id (device);
-	dev = g_hash_table_lookup (provider_udev->priv->devices, id);
+	dev = g_hash_table_lookup (priv->devices, id);
 	if (dev != NULL) {
 		g_debug ("ignoring duplicate %s", id);
 		return;
@@ -159,9 +157,9 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	/* get the FW version from the rom */
 	rom_fn = g_build_filename (g_udev_device_get_sysfs_path (device), "rom", NULL);
 	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS)) {
-		_cleanup_error_free_ GError *error = NULL;
-		_cleanup_object_unref_ GFile *file = NULL;
-		_cleanup_object_unref_ FuRom *rom = NULL;
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GFile) file = NULL;
+		g_autoptr(FuRom) rom = NULL;
 		file = g_file_new_for_path (rom_fn);
 		rom = fu_rom_new ();
 		if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, &error)) {
@@ -211,7 +209,7 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 		fu_device_set_metadata (dev, "RomFilename", rom_fn);
 
 	/* insert to hash */
-	g_hash_table_insert (provider_udev->priv->devices, g_strdup (id), dev);
+	g_hash_table_insert (priv->devices, g_strdup (id), dev);
 	fu_provider_device_add (FU_PROVIDER (provider_udev), dev);
 }
 
@@ -221,8 +219,9 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 static void
 fu_provider_udev_client_remove (FuProviderUdev *provider_udev, GUdevDevice *device)
 {
+	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
 	FuDevice *dev;
-	_cleanup_free_ gchar *id = NULL;
+	g_autofree gchar *id = NULL;
 
 	/* interesting device? */
 	if (g_udev_device_get_property (device, "FWUPD_GUID") == NULL)
@@ -230,7 +229,7 @@ fu_provider_udev_client_remove (FuProviderUdev *provider_udev, GUdevDevice *devi
 
 	/* already in database */
 	id = fu_provider_udev_get_id (device);
-	dev = g_hash_table_lookup (provider_udev->priv->devices, id);
+	dev = g_hash_table_lookup (priv->devices, id);
 	if (dev == NULL)
 		return;
 	fu_provider_device_remove (FU_PROVIDER (provider_udev), dev);
@@ -262,6 +261,7 @@ static gboolean
 fu_provider_udev_coldplug (FuProvider *provider, GError **error)
 {
 	FuProviderUdev *provider_udev = FU_PROVIDER_UDEV (provider);
+	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
 	GList *devices;
 	GList *l;
 	GUdevDevice *udev_device;
@@ -270,7 +270,7 @@ fu_provider_udev_coldplug (FuProvider *provider, GError **error)
 
 	/* get all devices of class */
 	for (i = 0; devclass[i] != NULL; i++) {
-		devices = g_udev_client_query_by_subsystem (provider_udev->priv->gudev_client,
+		devices = g_udev_client_query_by_subsystem (priv->gudev_client,
 							    devclass[i]);
 		for (l = devices; l != NULL; l = l->next) {
 			udev_device = l->data;
@@ -296,8 +296,6 @@ fu_provider_udev_class_init (FuProviderUdevClass *klass)
 	provider_class->coldplug = fu_provider_udev_coldplug;
 	provider_class->verify = fu_provider_udev_verify;
 	object_class->finalize = fu_provider_udev_finalize;
-
-	g_type_class_add_private (klass, sizeof (FuProviderUdevPrivate));
 }
 
 /**
@@ -306,12 +304,13 @@ fu_provider_udev_class_init (FuProviderUdevClass *klass)
 static void
 fu_provider_udev_init (FuProviderUdev *provider_udev)
 {
+	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
 	const gchar *subsystems[] = { NULL };
-	provider_udev->priv = FU_PROVIDER_UDEV_GET_PRIVATE (provider_udev);
-	provider_udev->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-							      g_free, (GDestroyNotify) g_object_unref);
-	provider_udev->priv->gudev_client = g_udev_client_new (subsystems);
-	g_signal_connect (provider_udev->priv->gudev_client, "uevent",
+
+	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
+					       g_free, (GDestroyNotify) g_object_unref);
+	priv->gudev_client = g_udev_client_new (subsystems);
+	g_signal_connect (priv->gudev_client, "uevent",
 			  G_CALLBACK (fu_provider_udev_client_uevent_cb), provider_udev);
 }
 
@@ -322,7 +321,7 @@ static void
 fu_provider_udev_finalize (GObject *object)
 {
 	FuProviderUdev *provider_udev = FU_PROVIDER_UDEV (object);
-	FuProviderUdevPrivate *priv = provider_udev->priv;
+	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
 
 	g_hash_table_unref (priv->devices);
 	g_object_unref (priv->gudev_client);

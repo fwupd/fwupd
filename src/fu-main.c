@@ -302,7 +302,7 @@ static void
 fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FuMainAuthHelper *helper = (FuMainAuthHelper *) user_data;
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 	_cleanup_object_unref_ PolkitAuthorizationResult *auth = NULL;
 
 	/* get result */
@@ -455,8 +455,8 @@ static guint
 fu_main_dbus_get_uid (FuMainPrivate *priv, const gchar *sender)
 {
 	guint uid;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_variant_unref_ GVariant *value = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) value = NULL;
 
 	if (priv->proxy_uid == NULL)
 		return G_MAXUINT;
@@ -487,7 +487,7 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 	FuDeviceItem *item = NULL;
 	const gchar *tmp;
 	guint i;
-	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 
 	/* not a wildcard */
 	if (g_strcmp0 (id, FWUPD_DEVICE_ID_ANY) != 0) {
@@ -584,16 +584,16 @@ static gboolean
 fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GError **error)
 {
 	guint8 magic[2];
-	_cleanup_bytes_unref_ GBytes *bytes = NULL;
-	_cleanup_bytes_unref_ GBytes *bytes_raw = NULL;
-	_cleanup_bytes_unref_ GBytes *bytes_sig = NULL;
-	_cleanup_object_unref_ FuKeyring *kr = NULL;
-	_cleanup_object_unref_ GConverter *converter = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
-	_cleanup_object_unref_ GInputStream *stream_buf = NULL;
-	_cleanup_object_unref_ GInputStream *stream_fd = NULL;
-	_cleanup_object_unref_ GInputStream *stream = NULL;
-	_cleanup_object_unref_ GInputStream *stream_sig = NULL;
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GBytes) bytes_raw = NULL;
+	g_autoptr(GBytes) bytes_sig = NULL;
+	g_autoptr(FuKeyring) kr = NULL;
+	g_autoptr(GConverter) converter = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GInputStream) stream_buf = NULL;
+	g_autoptr(GInputStream) stream_fd = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GInputStream) stream_sig = NULL;
 
 	/* read the entire file into memory */
 	stream_fd = g_unix_input_stream_new (fd, TRUE);
@@ -818,7 +818,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 	/* return 'as' */
 	if (g_strcmp0 (method_name, "GetDevices") == 0) {
-		_cleanup_error_free_ GError *error = NULL;
+		g_autoptr(GError) error = NULL;
 		g_debug ("Called %s()", method_name);
 		val = fu_main_device_array_to_variant (priv->devices, &error);
 		if (val == NULL) {
@@ -832,8 +832,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 	/* return 'as' */
 	if (g_strcmp0 (method_name, "GetUpdates") == 0) {
-		_cleanup_error_free_ GError *error = NULL;
-		_cleanup_ptrarray_unref_ GPtrArray *updates = NULL;
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GPtrArray) updates = NULL;
 		g_debug ("Called %s()", method_name);
 		updates = fu_main_get_updates (priv, &error);
 		if (updates == NULL) {
@@ -854,7 +854,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "ClearResults") == 0) {
 		FuDeviceItem *item = NULL;
 		const gchar *id = NULL;
-		_cleanup_error_free_ GError *error = NULL;
+		g_autoptr(GError) error = NULL;
 
 		g_variant_get (parameters, "(&s)", &id);
 		g_debug ("Called %s(%s)", method_name, id);
@@ -881,7 +881,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "GetResults") == 0) {
 		FuDeviceItem *item = NULL;
 		const gchar *id = NULL;
-		_cleanup_error_free_ GError *error = NULL;
+		g_autoptr(GError) error = NULL;
 
 		g_variant_get (parameters, "(&s)", &id);
 		g_debug ("Called %s(%s)", method_name, id);
@@ -911,7 +911,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		GUnixFDList *fd_list;
 		gint fd_data;
 		gint fd_sig;
-		_cleanup_error_free_ GError *error = NULL;
+		g_autoptr(GError) error = NULL;
 
 		message = g_dbus_method_invocation_get_message (invocation);
 		fd_list = g_dbus_message_get_unix_fd_list (message);
@@ -950,7 +950,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		const gchar *hash = NULL;
 		const gchar *id = NULL;
 		const gchar *version = NULL;
-		_cleanup_error_free_ GError *error = NULL;
+		g_autoptr(GError) error = NULL;
 
 		/* check the id exists */
 		g_variant_get (parameters, "(&s)", &id);
@@ -1032,9 +1032,9 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		gchar *prop_key;
 		gint32 fd_handle = 0;
 		gint fd;
-		_cleanup_error_free_ GError *error = NULL;
+		g_autoptr(GError) error = NULL;
 		_cleanup_object_unref_ PolkitSubject *subject = NULL;
-		_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
+		g_autoptr(GVariantIter) iter = NULL;
 
 		/* check the id exists */
 		g_variant_get (parameters, "(&sha{sv})", &id, &fd_handle, &iter);
@@ -1136,8 +1136,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		const gchar *tmp;
 		gint32 fd_handle = 0;
 		gint fd;
-		_cleanup_error_free_ GError *error = NULL;
-		_cleanup_object_unref_ FuCab *cab = NULL;
+		g_autoptr(GError) error = NULL;
+		g_autoptr(FuCab) cab = NULL;
 
 		/* check the id exists */
 		g_variant_get (parameters, "(h)", &fd_handle);
@@ -1281,7 +1281,7 @@ fu_main_providers_coldplug (FuMainPrivate *priv)
 	guint i;
 
 	for (i = 0; i < priv->providers->len; i++) {
-		_cleanup_error_free_ GError *error = NULL;
+		g_autoptr(GError) error = NULL;
 		provider = g_ptr_array_index (priv->providers, i);
 		if (!fu_provider_coldplug (FU_PROVIDER (provider), &error))
 			g_warning ("Failed to coldplug: %s", error->message);
@@ -1298,7 +1298,7 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 	guint registration_id;
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 	static const GDBusInterfaceVTable interface_vtable = {
 		fu_main_daemon_method_call,
 		fu_main_daemon_get_property,
@@ -1376,8 +1376,8 @@ fu_main_timed_exit_cb (gpointer user_data)
 static GDBusNodeInfo *
 fu_main_load_introspection (const gchar *filename, GError **error)
 {
-	_cleanup_bytes_unref_ GBytes *data = NULL;
-	_cleanup_free_ gchar *path = NULL;
+	g_autoptr(GBytes) data = NULL;
+	g_autofree gchar *path = NULL;
 
 	/* lookup data */
 	path = g_build_filename ("/org/freedesktop/fwupd", filename, NULL);
@@ -1488,9 +1488,9 @@ main (int argc, char *argv[])
 		  _("Exit after the engine has loaded"), NULL },
 		{ NULL}
 	};
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *config_file = NULL;
-	_cleanup_keyfile_unref_ GKeyFile *config = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *config_file = NULL;
+	g_autoptr(GKeyFile) config = NULL;
 
 	setlocale (LC_ALL, "");
 

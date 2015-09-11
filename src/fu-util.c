@@ -96,7 +96,7 @@ fu_util_add (GPtrArray *array,
 {
 	guint i;
 	FuUtilItem *item;
-	_cleanup_strv_free_ gchar **names = NULL;
+	g_auto(GStrv) names = NULL;
 
 	g_return_if_fail (name != NULL);
 	g_return_if_fail (description != NULL);
@@ -198,7 +198,7 @@ static void
 fu_util_status_changed_cb (GDBusProxy *proxy, GVariant *changed_properties,
 			   GStrv invalidated_properties, gpointer user_data)
 {
-	_cleanup_variant_unref_ GVariant *val = NULL;
+	g_autoptr(GVariant) val = NULL;
 
 	/* print to the console */
 	val = g_dbus_proxy_get_cached_property (proxy, "Status");
@@ -260,7 +260,7 @@ fu_util_get_devices_internal (FuUtilPrivate *priv, GError **error)
 	GPtrArray *devices = NULL;
 	FuDevice *dev;
 	gchar *id;
-	_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
+	g_autoptr(GVariantIter) iter = NULL;
 
 	g_dbus_proxy_call (priv->proxy,
 			   "GetDevices",
@@ -298,7 +298,7 @@ fu_util_get_updates_internal (FuUtilPrivate *priv, GError **error)
 	GPtrArray *devices = NULL;
 	FuDevice *dev;
 	gchar *id;
-	_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
+	g_autoptr(GVariantIter) iter = NULL;
 
 	g_dbus_proxy_call (priv->proxy,
 			   "GetUpdates",
@@ -333,7 +333,7 @@ static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuDevice *dev;
-	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 	guint i;
 	guint j;
 	guint k;
@@ -423,8 +423,8 @@ fu_util_install_internal (FuUtilPrivate *priv, const gchar *id,
 	GVariantBuilder builder;
 	gint retval;
 	gint fd;
-	_cleanup_object_unref_ GDBusMessage *request = NULL;
-	_cleanup_object_unref_ GUnixFDList *fd_list = NULL;
+	g_autoptr(GDBusMessage) request = NULL;
+	g_autoptr(GUnixFDList) fd_list = NULL;
 
 	/* set options */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
@@ -502,7 +502,7 @@ static gboolean
 fu_util_install_with_fallback (FuUtilPrivate *priv, const gchar *id,
 			       const gchar *filename, GError **error)
 {
-	_cleanup_error_free_ GError *error_local = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* install with flags chosen by the user */
 	if (fu_util_install_internal (priv, id, filename, &error_local))
@@ -557,7 +557,7 @@ fu_util_print_metadata (GVariant *val)
 	const gchar *key;
 	const gchar *type;
 	guint i;
-	_cleanup_variant_iter_free_ GVariantIter *iter = NULL;
+	g_autoptr(GVariantIter) iter = NULL;
 
 	g_variant_get (val, "(a{sv})", &iter);
 	while (g_variant_iter_next (iter, "{&sv}", &key, &variant)) {
@@ -588,9 +588,9 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	GVariant *val;
 	gint fd;
 	gint retval;
-	_cleanup_object_unref_ GDBusMessage *message = NULL;
-	_cleanup_object_unref_ GDBusMessage *request = NULL;
-	_cleanup_object_unref_ GUnixFDList *fd_list = NULL;
+	g_autoptr(GDBusMessage) message = NULL;
+	g_autoptr(GDBusMessage) request = NULL;
+	g_autoptr(GUnixFDList) fd_list = NULL;
 
 	/* check args */
 	if (g_strv_length (values) != 1) {
@@ -656,9 +656,9 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 static void
 fu_util_offline_update_reboot (void)
 {
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_object_unref_ GDBusConnection *connection = NULL;
-	_cleanup_variant_unref_ GVariant *val = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GVariant) val = NULL;
 
 	/* reboot using systemd */
 	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
@@ -691,8 +691,8 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	guint cnt = 0;
 	guint i;
 	const gchar *tmp;
-	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
-	_cleanup_object_unref_ FuPending *pending = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(FuPending) pending = NULL;
 
 	/* verify this is pointing to our cache */
 	len = readlink (FU_OFFLINE_TRIGGER_FILENAME, buf, sizeof(buf) - 1);
@@ -843,9 +843,9 @@ fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	for (i = 0; values[i] != NULL; i++) {
-		_cleanup_object_unref_ FuRom *rom = NULL;
-		_cleanup_object_unref_ GFile *file = NULL;
-		_cleanup_error_free_ GError *error_local = NULL;
+		g_autoptr(FuRom) rom = NULL;
+		g_autoptr(GFile) file = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		file = g_file_new_for_path (values[i]);
 		rom = fu_rom_new ();
@@ -874,8 +874,8 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 				GError **error)
 {
 	guint i;
-	_cleanup_object_unref_ AsStore *store = NULL;
-	_cleanup_object_unref_ GFile *xml_file = NULL;
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GFile) xml_file = NULL;
 
 	store = as_store_new ();
 
@@ -889,13 +889,13 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 	/* add new values */
 	as_store_set_api_version (store, 0.9);
 	for (i = 0; values[i] != NULL; i++) {
-		_cleanup_free_ gchar *guid = NULL;
-		_cleanup_object_unref_ AsApp *app = NULL;
-		_cleanup_object_unref_ AsChecksum *csum = NULL;
-		_cleanup_object_unref_ AsRelease *rel = NULL;
-		_cleanup_object_unref_ FuRom *rom = NULL;
-		_cleanup_object_unref_ GFile *file = NULL;
-		_cleanup_error_free_ GError *error_local = NULL;
+		g_autofree gchar *guid = NULL;
+		g_autoptr(AsApp) app = NULL;
+		g_autoptr(AsChecksum) csum = NULL;
+		g_autoptr(AsRelease) rel = NULL;
+		g_autoptr(FuRom) rom = NULL;
+		g_autoptr(GFile) file = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		file = g_file_new_for_path (values[i]);
 		rom = fu_rom_new ();
@@ -943,7 +943,7 @@ fu_util_verify_update_all (FuUtilPrivate *priv, const gchar *fn, GError **error)
 	const gchar *subsystems[] = { NULL };
 	guint i;
 	_cleanup_object_unref_ GUdevClient *gudev_client = NULL;
-	_cleanup_ptrarray_unref_ GPtrArray *roms = NULL;
+	g_autoptr(GPtrArray) roms = NULL;
 
 	/* get all devices of class */
 	gudev_client = g_udev_client_new (subsystems);
@@ -952,7 +952,7 @@ fu_util_verify_update_all (FuUtilPrivate *priv, const gchar *fn, GError **error)
 		devices = g_udev_client_query_by_subsystem (gudev_client,
 							    devclass[i]);
 		for (l = devices; l != NULL; l = l->next) {
-			_cleanup_free_ gchar *rom_fn = NULL;
+			g_autofree gchar *rom_fn = NULL;
 			dev = l->data;
 			rom_fn = g_build_filename (g_udev_device_get_sysfs_path (dev), "rom", NULL);
 			if (!g_file_test (rom_fn, G_FILE_TEST_EXISTS))
@@ -1006,8 +1006,8 @@ fu_util_refresh_internal (FuUtilPrivate *priv,
 	GVariant *body;
 	gint fd;
 	gint fd_sig;
-	_cleanup_object_unref_ GDBusMessage *request = NULL;
-	_cleanup_object_unref_ GUnixFDList *fd_list = NULL;
+	g_autoptr(GDBusMessage) request = NULL;
+	g_autoptr(GUnixFDList) fd_list = NULL;
 
 	/* open file */
 	fd = open (data_fn, O_RDONLY);
@@ -1078,10 +1078,10 @@ fu_util_download_file (FuUtilPrivate *priv,
 		       GError **error)
 {
 	guint status_code;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_free_ gchar *checksum_actual = NULL;
-	_cleanup_object_unref_ SoupMessage *msg = NULL;
-	_cleanup_object_unref_ SoupSession *session = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *checksum_actual = NULL;
+	g_autoptr(SoupMessage) msg = NULL;
+	g_autoptr(SoupSession) session = NULL;
 
 	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT,
 						 "fwupdmgr",
@@ -1146,11 +1146,11 @@ fu_util_download_file (FuUtilPrivate *priv,
 static gboolean
 fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 {
-	_cleanup_free_ gchar *config_fn = NULL;
-	_cleanup_free_ gchar *data_uri = NULL;
-	_cleanup_free_ gchar *sig_fn = NULL;
-	_cleanup_free_ gchar *sig_uri = NULL;
-	_cleanup_keyfile_unref_ GKeyFile *config = NULL;
+	g_autofree gchar *config_fn = NULL;
+	g_autofree gchar *data_uri = NULL;
+	g_autofree gchar *sig_fn = NULL;
+	g_autofree gchar *sig_uri = NULL;
+	g_autoptr(GKeyFile) config = NULL;
 	const gchar *data_fn = "/tmp/firmware.xml.gz";
 
 	/* read config file */
@@ -1261,7 +1261,7 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 {
 	FuDevice *dev;
 	guint i;
-	_cleanup_ptrarray_unref_ GPtrArray *devices = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get devices from daemon */
 	devices = fu_util_get_devices_internal (priv, error);
@@ -1270,7 +1270,7 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 
 	/* get results */
 	for (i = 0; i < devices->len; i++) {
-		_cleanup_error_free_ GError *error_local = NULL;
+		g_autoptr(GError) error_local = NULL;
 		dev = g_ptr_array_index (devices, i);
 		if (!fu_util_verify_internal (priv, fu_device_get_id (dev), &error_local)) {
 			g_print ("%s\tFAILED: %s\n",
@@ -1312,7 +1312,7 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 	guint i;
 	guint j;
 	guint title_len;
-	_cleanup_strv_free_ gchar **lines = NULL;
+	g_auto(GStrv) lines = NULL;
 
 	if (msg == NULL)
 		return;
@@ -1366,7 +1366,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		/* convert XML -> text */
 		tmp = fu_device_get_metadata (dev, FU_DEVICE_KEY_UPDATE_DESCRIPTION);
 		if (tmp != NULL) {
-			_cleanup_free_ gchar *md = NULL;
+			g_autofree gchar *md = NULL;
 			md = as_markup_convert (tmp,
 						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
 						NULL);
@@ -1397,8 +1397,8 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (i = 0; i < devices->len; i++) {
 		const gchar *checksum;
 		const gchar *uri;
-		_cleanup_free_ gchar *basename = NULL;
-		_cleanup_free_ gchar *fn = NULL;
+		g_autofree gchar *basename = NULL;
+		g_autofree gchar *fn = NULL;
 
 		dev = g_ptr_array_index (devices, i);
 
@@ -1448,8 +1448,8 @@ main (int argc, char *argv[])
 	gboolean ret;
 	gboolean verbose = FALSE;
 	guint retval = 1;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *cmd_descriptions = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *cmd_descriptions = NULL;
 	const GOptionEntry options[] = {
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			/* TRANSLATORS: command line option */
@@ -1616,7 +1616,7 @@ main (int argc, char *argv[])
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
 		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
-			_cleanup_free_ gchar *tmp = NULL;
+			g_autofree gchar *tmp = NULL;
 			tmp = g_option_context_get_help (priv->context, TRUE, NULL);
 			g_print ("%s\n\n%s", error->message, tmp);
 		} else {

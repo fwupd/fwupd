@@ -29,25 +29,22 @@
 #include <glib-object.h>
 #include <string.h>
 
-#include "fu-cleanup.h"
 #include "fu-device.h"
 #include "fu-provider-rpi.h"
 
-static void     fu_provider_rpi_finalize	(GObject	*object);
-
-#define FU_PROVIDER_RPI_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_PROVIDER_RPI, FuProviderRpiPrivate))
+static void	fu_provider_rpi_finalize	(GObject	*object);
 
 #define FU_PROVIDER_RPI_FIRMWARE_FILENAME		"start.elf"
 
 /**
  * FuProviderRpiPrivate:
  **/
-struct _FuProviderRpiPrivate
-{
+typedef struct {
 	gchar			*fw_dir;
-};
+} FuProviderRpiPrivate;
 
-G_DEFINE_TYPE (FuProviderRpi, fu_provider_rpi, FU_TYPE_PROVIDER)
+G_DEFINE_TYPE_WITH_PRIVATE (FuProviderRpi, fu_provider_rpi, FU_TYPE_PROVIDER)
+#define GET_PRIVATE(o) (fu_provider_rpi_get_instance_private (o))
 
 /**
  * fu_provider_rpi_get_name:
@@ -96,11 +93,11 @@ fu_provider_rpi_parse_firmware (FuDevice *device, const gchar *fn, GError **erro
 	GDate *date;
 	gsize len = 0;
 	guint offset;
-	_cleanup_free_ gchar *fwver = NULL;
-	_cleanup_free_ gchar *platform = NULL;
-	_cleanup_free_ gchar *vc_date = NULL;
-	_cleanup_free_ gchar *vc_time = NULL;
-	_cleanup_free_ guint8 *data = NULL;
+	g_autofree gchar *fwver = NULL;
+	g_autofree gchar *platform = NULL;
+	g_autofree gchar *vc_date = NULL;
+	g_autofree gchar *vc_time = NULL;
+	g_autofree guint8 *data = NULL;
 
 	/* read file -- things we can find are:
 	 *
@@ -179,7 +176,7 @@ static gboolean
 fu_provider_rpi_explode_file (struct archive_entry *entry, const gchar *dir)
 {
 	const gchar *tmp;
-	_cleanup_free_ gchar *buf = NULL;
+	g_autofree gchar *buf = NULL;
 
 	/* no output file */
 	if (archive_entry_pathname (entry) == NULL)
@@ -203,12 +200,13 @@ fu_provider_rpi_update (FuProvider *provider,
 			GError **error)
 {
 	FuProviderRpi *provider_rpi = FU_PROVIDER_RPI (provider);
+	FuProviderRpiPrivate *priv = GET_PRIVATE (provider_rpi);
 	gboolean ret = TRUE;
 	gboolean valid;
 	int r;
 	struct archive *arch = NULL;
 	struct archive_entry *entry;
-	_cleanup_free_ gchar *fwfn = NULL;
+	g_autofree gchar *fwfn = NULL;
 
 	/* decompress anything matching either glob */
 	fu_provider_set_status (provider, FWUPD_STATUS_DECOMPRESSING);
@@ -227,7 +225,7 @@ fu_provider_rpi_update (FuProvider *provider,
 	}
 	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_WRITE);
 	for (;;) {
-		_cleanup_free_ gchar *path = NULL;
+		g_autofree gchar *path = NULL;
 		r = archive_read_next_header (arch, &entry);
 		if (r == ARCHIVE_EOF)
 			break;
@@ -242,7 +240,7 @@ fu_provider_rpi_update (FuProvider *provider,
 		}
 
 		/* only extract if valid */
-		valid = fu_provider_rpi_explode_file (entry, provider_rpi->priv->fw_dir);
+		valid = fu_provider_rpi_explode_file (entry, priv->fw_dir);
 		if (!valid)
 			continue;
 		r = archive_read_extract (arch, entry, 0);
@@ -259,7 +257,7 @@ fu_provider_rpi_update (FuProvider *provider,
 
 	/* get the new VC build info */
 	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_VERIFY);
-	fwfn = g_build_filename (provider_rpi->priv->fw_dir,
+	fwfn = g_build_filename (priv->fw_dir,
 				 FU_PROVIDER_RPI_FIRMWARE_FILENAME,
 				 NULL);
 	if (!fu_provider_rpi_parse_firmware (device, fwfn, error))
@@ -279,13 +277,14 @@ static gboolean
 fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
 {
 	FuProviderRpi *provider_rpi = FU_PROVIDER_RPI (provider);
-	_cleanup_free_ gchar *fwfn = NULL;
-	_cleanup_free_ gchar *fwver = NULL;
-	_cleanup_free_ gchar *guid = NULL;
-	_cleanup_object_unref_ FuDevice *device = NULL;
+	FuProviderRpiPrivate *priv = GET_PRIVATE (provider_rpi);
+	g_autofree gchar *fwfn = NULL;
+	g_autofree gchar *fwver = NULL;
+	g_autofree gchar *guid = NULL;
+	g_autoptr(FuDevice) device = NULL;
 
 	/* anything interesting */
-	fwfn = g_build_filename (provider_rpi->priv->fw_dir,
+	fwfn = g_build_filename (priv->fw_dir,
 				 FU_PROVIDER_RPI_FIRMWARE_FILENAME,
 				 NULL);
 	if (!g_file_test (fwfn, G_FILE_TEST_EXISTS))
@@ -322,8 +321,6 @@ fu_provider_rpi_class_init (FuProviderRpiClass *klass)
 	provider_class->coldplug = fu_provider_rpi_coldplug;
 	provider_class->update_online = fu_provider_rpi_update;
 	object_class->finalize = fu_provider_rpi_finalize;
-
-	g_type_class_add_private (klass, sizeof (FuProviderRpiPrivate));
 }
 
 /**
@@ -332,11 +329,11 @@ fu_provider_rpi_class_init (FuProviderRpiClass *klass)
 static void
 fu_provider_rpi_init (FuProviderRpi *provider_rpi)
 {
+	FuProviderRpiPrivate *priv = GET_PRIVATE (provider_rpi);
 	const gchar *tmp;
-	provider_rpi->priv = FU_PROVIDER_RPI_GET_PRIVATE (provider_rpi);
 
 	/* allow this to be overidden for testing */
-	provider_rpi->priv->fw_dir = g_strdup ("/boot");
+	priv->fw_dir = g_strdup ("/boot");
 	tmp = g_getenv ("FWUPD_RPI_FW_DIR");
 	if (tmp != NULL)
 		fu_provider_rpi_set_fw_dir (provider_rpi, tmp);
@@ -348,8 +345,9 @@ fu_provider_rpi_init (FuProviderRpi *provider_rpi)
 void
 fu_provider_rpi_set_fw_dir (FuProviderRpi *provider_rpi, const gchar *fw_dir)
 {
-	g_free (provider_rpi->priv->fw_dir);
-	provider_rpi->priv->fw_dir = g_strdup (fw_dir);
+	FuProviderRpiPrivate *priv = GET_PRIVATE (provider_rpi);
+	g_free (priv->fw_dir);
+	priv->fw_dir = g_strdup (fw_dir);
 	g_mkdir_with_parents (fw_dir, 0700);
 }
 
@@ -360,7 +358,7 @@ static void
 fu_provider_rpi_finalize (GObject *object)
 {
 	FuProviderRpi *provider_rpi = FU_PROVIDER_RPI (object);
-	FuProviderRpiPrivate *priv = provider_rpi->priv;
+	FuProviderRpiPrivate *priv = GET_PRIVATE (provider_rpi);
 
 	g_free (priv->fw_dir);
 

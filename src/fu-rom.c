@@ -28,12 +28,9 @@
 #include <glib/gstdio.h>
 #include <string.h>
 
-#include "fu-cleanup.h"
 #include "fu-rom.h"
 
 static void fu_rom_finalize			 (GObject *object);
-
-#define FU_ROM_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_ROM, FuRomPrivate))
 
 /* data from http://resources.infosecinstitute.com/pci-expansion-rom/ */
 typedef struct {
@@ -63,8 +60,7 @@ typedef struct {
  *
  * Private #FuRom data
  **/
-struct _FuRomPrivate
-{
+typedef struct {
 	GChecksum			*checksum_wip;
 	GInputStream			*stream;
 	FuRomKind			 kind;
@@ -73,9 +69,10 @@ struct _FuRomPrivate
 	guint16				 vendor;
 	guint16				 model;
 	GPtrArray			*hdrs; /* of FuRomPciHeader */
-};
+} FuRomPrivate;
 
-G_DEFINE_TYPE (FuRom, fu_rom, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (FuRom, fu_rom, G_TYPE_OBJECT)
+#define GET_PRIVATE(o) (fu_rom_get_instance_private (o))
 
 /**
  * fu_rom_pci_header_free:
@@ -190,7 +187,7 @@ static void
 fu_rom_pci_print_certificate_data (guint8 *buffer, gssize sz)
 {
 	guint16 off = 0;
-	_cleanup_free_ gchar *hdr_str = NULL;
+	g_autofree gchar *hdr_str = NULL;
 
 	/* 27 byte header, unknown purpose */
 	hdr_str = fu_rom_get_hex_dump (buffer+off, 27);
@@ -202,7 +199,7 @@ fu_rom_pci_print_certificate_data (guint8 *buffer, gssize sz)
 		 * 0x01      = type. 0x1 = certificate, 0x2 = hashes?
 		 * 0x13,0x14 = offset to next segment */
 		FooRomPciCertificateHdr h;
-		_cleanup_free_ gchar *segment_str = NULL;
+		g_autofree gchar *segment_str = NULL;
 		segment_str = fu_rom_get_hex_dump (buffer+off, 29);
 		g_debug ("     ISBN segment @%02x: %s", off, segment_str);
 		h.segment_kind = buffer[off+1];
@@ -217,11 +214,11 @@ fu_rom_pci_print_certificate_data (guint8 *buffer, gssize sz)
 
 		/* print the certificate */
 		if (h.segment_kind == 0x01) {
-			_cleanup_free_ gchar *tmp = NULL;
+			g_autofree gchar *tmp = NULL;
 			tmp = fu_rom_get_hex_dump (h.data, h.data_len);
 			g_debug ("%s(%i)", tmp, h.data_len);
 		} else if (h.segment_kind == 0x02) {
-			_cleanup_free_ gchar *tmp = NULL;
+			g_autofree gchar *tmp = NULL;
 			tmp = fu_rom_get_hex_dump (h.data,
 						   h.data_len < 32 ? h.data_len : 32);
 			g_debug ("%s(%i)", tmp, h.data_len);
@@ -274,8 +271,8 @@ fu_rom_pci_print_header (FuRomPciHeader *hdr)
 {
 	guint8 chksum_check;
 	guint8 *buffer;
-	_cleanup_free_ gchar *data_str = NULL;
-	_cleanup_free_ gchar *reserved_str = NULL;
+	g_autofree gchar *data_str = NULL;
+	g_autofree gchar *reserved_str = NULL;
 
 	g_debug ("PCI Header");
 	g_debug (" RomOffset: 0x%04x", hdr->rom_offset);
@@ -339,12 +336,12 @@ fu_rom_pci_print_header (FuRomPciHeader *hdr)
 gboolean
 fu_rom_extract_all (FuRom *rom, const gchar *path, GError **error)
 {
-	FuRomPrivate *priv = rom->priv;
+	FuRomPrivate *priv = GET_PRIVATE (rom);
 	FuRomPciHeader *hdr;
 	guint i;
 
 	for (i = 0; i < priv->hdrs->len; i++) {
-		_cleanup_free_ gchar *fn = NULL;
+		g_autofree gchar *fn = NULL;
 		hdr = g_ptr_array_index (priv->hdrs, i);
 		fn = g_strdup_printf ("%s/%02i.bin", path, i);
 		g_debug ("dumping ROM #%i at 0x%04x [0x%02x] to %s",
@@ -365,7 +362,7 @@ fu_rom_extract_all (FuRom *rom, const gchar *path, GError **error)
 static void
 fu_rom_find_and_blank_serial_numbers (FuRom *rom)
 {
-	FuRomPrivate *priv = rom->priv;
+	FuRomPrivate *priv = GET_PRIVATE (rom);
 	FuRomPciHeader *hdr;
 	guint i;
 	guint8 *tmp;
@@ -471,7 +468,7 @@ fu_rom_pci_get_header (guint8 *buffer, gssize sz)
 		if (memcmp (buffer, "\x56\x4e", 2) == 0) {
 			g_debug ("-- using NVIDIA ROM quirk");
 		} else {
-			_cleanup_free_ gchar *sig_str = NULL;
+			g_autofree gchar *sig_str = NULL;
 			sig_str = fu_rom_get_hex_dump (buffer, 16);
 			g_debug ("Not PCI ROM %s", sig_str);
 			return NULL;
@@ -564,7 +561,7 @@ fu_rom_find_version_intel (FuRomPciHeader *hdr)
 	str = (gchar *) fu_rom_pci_strstr (hdr, "Build Number:");
 	if (str != NULL) {
 		guint i;
-		_cleanup_strv_free_ gchar **split = NULL;
+		g_auto(GStrv) split = NULL;
 		split = g_strsplit (str + 14, " ", -1);
 		for (i = 0; split[i] != NULL; i++) {
 			if (g_strstr_len (split[i], -1, ".") == NULL)
@@ -623,7 +620,7 @@ gboolean
 fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 		  GCancellable *cancellable, GError **error)
 {
-	FuRomPrivate *priv = rom->priv;
+	FuRomPrivate *priv = GET_PRIVATE (rom);
 	FuRomPciHeader *hdr = NULL;
 	const gssize buffer_sz = 0x400000;
 	gssize sz;
@@ -631,11 +628,11 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 	guint hdr_sz = 0;
 	guint i;
 	guint number_reads = 0;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_free_ gchar *fn = NULL;
-	_cleanup_free_ gchar *id = NULL;
-	_cleanup_free_ guint8 *buffer = NULL;
-	_cleanup_object_unref_ GFileOutputStream *output_stream = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *id = NULL;
+	g_autofree guint8 *buffer = NULL;
+	g_autoptr(GFileOutputStream) output_stream = NULL;
 
 	g_return_val_if_fail (FU_IS_ROM (rom), FALSE);
 
@@ -843,8 +840,9 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 FuRomKind
 fu_rom_get_kind (FuRom *rom)
 {
+	FuRomPrivate *priv = GET_PRIVATE (rom);
 	g_return_val_if_fail (FU_IS_ROM (rom), FU_ROM_KIND_UNKNOWN);
-	return rom->priv->kind;
+	return priv->kind;
 }
 
 /**
@@ -853,8 +851,9 @@ fu_rom_get_kind (FuRom *rom)
 const gchar *
 fu_rom_get_version (FuRom *rom)
 {
+	FuRomPrivate *priv = GET_PRIVATE (rom);
 	g_return_val_if_fail (FU_IS_ROM (rom), NULL);
-	return rom->priv->version;
+	return priv->version;
 }
 
 /**
@@ -863,8 +862,9 @@ fu_rom_get_version (FuRom *rom)
 const gchar *
 fu_rom_get_guid (FuRom *rom)
 {
+	FuRomPrivate *priv = GET_PRIVATE (rom);
 	g_return_val_if_fail (FU_IS_ROM (rom), NULL);
-	return rom->priv->guid;
+	return priv->guid;
 }
 
 /**
@@ -873,8 +873,9 @@ fu_rom_get_guid (FuRom *rom)
 guint16
 fu_rom_get_vendor (FuRom *rom)
 {
+	FuRomPrivate *priv = GET_PRIVATE (rom);
 	g_return_val_if_fail (FU_IS_ROM (rom), 0x0000);
-	return rom->priv->vendor;
+	return priv->vendor;
 }
 
 /**
@@ -883,8 +884,9 @@ fu_rom_get_vendor (FuRom *rom)
 guint16
 fu_rom_get_model (FuRom *rom)
 {
+	FuRomPrivate *priv = GET_PRIVATE (rom);
 	g_return_val_if_fail (FU_IS_ROM (rom), 0x0000);
-	return rom->priv->model;
+	return priv->model;
 }
 
 /**
@@ -895,7 +897,7 @@ fu_rom_get_model (FuRom *rom)
 const gchar *
 fu_rom_get_checksum (FuRom *rom)
 {
-	FuRomPrivate *priv = rom->priv;
+	FuRomPrivate *priv = GET_PRIVATE (rom);
 	return g_checksum_get_string (priv->checksum_wip);
 }
 
@@ -907,7 +909,6 @@ fu_rom_class_init (FuRomClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = fu_rom_finalize;
-	g_type_class_add_private (klass, sizeof (FuRomPrivate));
 }
 
 /**
@@ -916,9 +917,9 @@ fu_rom_class_init (FuRomClass *klass)
 static void
 fu_rom_init (FuRom *rom)
 {
-	rom->priv = FU_ROM_GET_PRIVATE (rom);
-	rom->priv->checksum_wip = g_checksum_new (G_CHECKSUM_SHA1);
-	rom->priv->hdrs = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_rom_pci_header_free);
+	FuRomPrivate *priv = GET_PRIVATE (rom);
+	priv->checksum_wip = g_checksum_new (G_CHECKSUM_SHA1);
+	priv->hdrs = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_rom_pci_header_free);
 }
 
 /**
@@ -928,7 +929,7 @@ static void
 fu_rom_finalize (GObject *object)
 {
 	FuRom *rom = FU_ROM (object);
-	FuRomPrivate *priv = rom->priv;
+	FuRomPrivate *priv = GET_PRIVATE (rom);
 
 	g_checksum_free (priv->checksum_wip);
 	g_free (priv->version);

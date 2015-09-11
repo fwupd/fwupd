@@ -29,26 +29,14 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_PROVIDER_UEFI		(fu_provider_uefi_get_type ())
-#define FU_PROVIDER_UEFI(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_PROVIDER_UEFI, FuProviderUefi))
-#define FU_IS_PROVIDER_UEFI(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_PROVIDER_UEFI))
-
-typedef struct _FuProviderUefiPrivate	FuProviderUefiPrivate;
-typedef struct _FuProviderUefi		FuProviderUefi;
-typedef struct _FuProviderUefiClass	FuProviderUefiClass;
-
-struct _FuProviderUefi
-{
-	FuProvider			 parent;
-	FuProviderUefiPrivate		*priv;
-};
+#define FU_TYPE_PROVIDER_UEFI (fu_provider_uefi_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuProviderUefi, fu_provider_uefi, FU, PROVIDER_UEFI, FuProvider)
 
 struct _FuProviderUefiClass
 {
 	FuProviderClass			 parent_class;
 };
 
-GType		 fu_provider_uefi_get_type	(void);
 FuProvider	*fu_provider_uefi_new		(void);
 
 G_END_DECLS

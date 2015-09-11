@@ -27,13 +27,13 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_DEVICE		(fu_device_get_type ())
-#define FU_DEVICE(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_DEVICE, FuDevice))
-#define FU_DEVICE_CLASS(k)	(G_TYPE_CHECK_CLASS_CAST((k), FU_TYPE_DEVICE, FuDeviceClass))
-#define FU_IS_DEVICE(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_DEVICE))
-#define FU_IS_DEVICE_CLASS(k)	(G_TYPE_CHECK_CLASS_TYPE ((k), FU_TYPE_DEVICE))
-#define FU_DEVICE_GET_CLASS(o)	(G_TYPE_INSTANCE_GET_CLASS ((o), FU_TYPE_DEVICE, FuDeviceClass))
-#define FU_DEVICE_ERROR		fu_device_error_quark()
+#define FU_TYPE_DEVICE (fu_device_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuDevice, fu_device, FU, DEVICE, GObject)
+
+struct _FuDeviceClass
+{
+	GObjectClass		 parent_class;
+};
 
 #define FU_DEVICE_KEY_VERSION		"Version"	/* s */
 #define FU_DEVICE_KEY_PROVIDER		"Provider"	/* s */
@@ -58,22 +58,6 @@ G_BEGIN_DECLS
 #define FU_DEVICE_KEY_UPDATE_URI	"UpdateUri"	/* s */
 #define FU_DEVICE_KEY_UPDATE_DESCRIPTION "UpdateDescription" /* s */
 
-typedef struct _FuDevicePrivate	FuDevicePrivate;
-typedef struct _FuDevice	FuDevice;
-typedef struct _FuDeviceClass	FuDeviceClass;
-
-struct _FuDevice
-{
-	 GObject		 parent;
-	 FuDevicePrivate	*priv;
-};
-
-struct _FuDeviceClass
-{
-	GObjectClass		 parent_class;
-};
-
-GType		 fu_device_get_type			(void);
 FuDevice	*fu_device_new				(void);
 
 /* accessors */

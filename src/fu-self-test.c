@@ -28,7 +28,6 @@
 #include <stdlib.h>
 
 #include "fu-cab.h"
-#include "fu-cleanup.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider-fake.h"
@@ -43,7 +42,7 @@ fu_test_get_filename (const gchar *filename)
 {
 	gchar *tmp;
 	char full_tmp[PATH_MAX];
-	_cleanup_free_ gchar *path = NULL;
+	g_autofree gchar *path = NULL;
 	path = g_build_filename (TESTDATADIR, filename, NULL);
 	tmp = realpath (path, full_tmp);
 	if (tmp == NULL)
@@ -98,10 +97,10 @@ fu_rom_func (void)
 
 	for (i = 0; data[i].fn != NULL; i++) {
 		gboolean ret;
-		_cleanup_error_free_ GError *error = NULL;
-		_cleanup_free_ gchar *filename = NULL;
-		_cleanup_object_unref_ FuRom *rom = NULL;
-		_cleanup_object_unref_ GFile *file = NULL;
+		g_autoptr(GError) error = NULL;
+		g_autofree gchar *filename = NULL;
+		g_autoptr(FuRom) rom = NULL;
+		g_autoptr(GFile) file = NULL;
 		rom = fu_rom_new ();
 		g_assert (rom != NULL);
 
@@ -126,7 +125,7 @@ static void
 fu_rom_all_func (void)
 {
 	GDir *dir;
-	_cleanup_free_ gchar *path = NULL;
+	g_autofree gchar *path = NULL;
 
 	/* may or may not exist */
 	path = fu_test_get_filename ("roms");
@@ -137,10 +136,10 @@ fu_rom_all_func (void)
 	do {
 		const gchar *fn;
 		gboolean ret;
-		_cleanup_error_free_ GError *error = NULL;
-		_cleanup_free_ gchar *filename = NULL;
-		_cleanup_object_unref_ FuRom *rom = NULL;
-		_cleanup_object_unref_ GFile *file = NULL;
+		g_autoptr(GError) error = NULL;
+		g_autofree gchar *filename = NULL;
+		g_autoptr(FuRom) rom = NULL;
+		g_autoptr(GFile) file = NULL;
 
 		fn = g_dir_read_name (dir);
 		if (fn == NULL)
@@ -168,9 +167,9 @@ fu_cab_func (void)
 {
 	GError *error = NULL;
 	gboolean ret;
-	_cleanup_free_ gchar *filename = NULL;
-	_cleanup_object_unref_ FuCab *cab = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuCab) cab = NULL;
+	g_autoptr(GFile) file = NULL;
 
 	cab = fu_cab_new ();
 	g_assert (cab != NULL);
@@ -242,13 +241,13 @@ fu_provider_func (void)
 	FuDevice *device_tmp;
 	gboolean ret;
 	guint cnt = 0;
-	_cleanup_free_ gchar *pending_cap = NULL;
-	_cleanup_free_ gchar *pending_db = NULL;
-	_cleanup_object_unref_ FuDevice *device = NULL;
-	_cleanup_object_unref_ FuPending *pending = NULL;
-	_cleanup_object_unref_ FuProvider *provider = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
-	_cleanup_object_unref_ GInputStream *stream = NULL;
+	g_autofree gchar *pending_cap = NULL;
+	g_autofree gchar *pending_db = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuPending) pending = NULL;
+	g_autoptr(FuProvider) provider = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* create a fake device */
 	provider = fu_provider_fake_new ();
@@ -342,14 +341,14 @@ fu_provider_rpi_func (void)
 	gboolean ret;
 	guint cnt = 0;
 	int fd;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *path = NULL;
-	_cleanup_free_ gchar *pending_db = NULL;
-	_cleanup_free_ gchar *fwfile = NULL;
-	_cleanup_object_unref_ FuDevice *device = NULL;
-	_cleanup_object_unref_ FuProvider *provider = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
-	_cleanup_object_unref_ GInputStream *stream = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *path = NULL;
+	g_autofree gchar *pending_db = NULL;
+	g_autofree gchar *fwfile = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuProvider) provider = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* test location */
 	path = fu_test_get_filename ("rpiboot");
@@ -412,9 +411,9 @@ fu_pending_func (void)
 	GError *error = NULL;
 	gboolean ret;
 	FuDevice *device;
-	_cleanup_object_unref_ FuPending *pending = NULL;
-	_cleanup_free_ gchar *dirname = NULL;
-	_cleanup_free_ gchar *filename = NULL;
+	g_autoptr(FuPending) pending = NULL;
+	g_autofree gchar *dirname = NULL;
+	g_autofree gchar *filename = NULL;
 
 	/* create */
 	pending = fu_pending_new ();
@@ -491,11 +490,11 @@ static void
 fu_keyring_func (void)
 {
 	gboolean ret;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *fw_fail = NULL;
-	_cleanup_free_ gchar *fw_pass = NULL;
-	_cleanup_free_ gchar *pki_dir = NULL;
-	_cleanup_object_unref_ FuKeyring *keyring = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *fw_fail = NULL;
+	g_autofree gchar *fw_pass = NULL;
+	g_autofree gchar *pki_dir = NULL;
+	g_autoptr(FuKeyring) keyring = NULL;
 	const gchar *sig =
 	"iQEcBAABCAAGBQJVt0B4AAoJEEim2A5FOLrCFb8IAK+QTLY34Wu8xZ8nl6p3JdMu"
 	"HOaifXAmX7291UrsFRwdabU2m65pqxQLwcoFrqGv738KuaKtu4oIwo9LIrmmTbEh"
