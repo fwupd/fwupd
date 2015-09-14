@@ -697,12 +697,8 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* verify this is pointing to our cache */
 	len = readlink (FU_OFFLINE_TRIGGER_FILENAME, buf, sizeof(buf) - 1);
 	if (len == -1) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Failed to read target of %s",
-			     FU_OFFLINE_TRIGGER_FILENAME);
-		return FALSE;
+		g_debug ("No %s, exiting", FU_OFFLINE_TRIGGER_FILENAME);
+		return TRUE;
 	}
 	if (g_strcmp0 (buf, "/var/lib/fwupd") != 0) {
 		g_debug ("Another framework set up the trigger, exiting");
