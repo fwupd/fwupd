@@ -10,7 +10,7 @@ Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.
 
 BuildRequires: docbook-utils
 BuildRequires: gettext
-BuildRequires: glib2-devel
+BuildRequires: glib2-devel >= 2.45.8
 BuildRequires: intltool
 BuildRequires: libgudev1-devel
 BuildRequires: colord-devel >= 1.0.0
@@ -19,7 +19,7 @@ BuildRequires: libgcab1-devel
 BuildRequires: sqlite-devel
 BuildRequires: gpgme-devel
 BuildRequires: systemd
-BuildRequires: libsoup-devel
+BuildRequires: libsoup-devel >= 2.51.92
 BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
 BuildRequires: libappstream-glib-devel >= 0.5.0

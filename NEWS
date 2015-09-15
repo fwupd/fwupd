@@ -1,3 +1,14 @@
+Version 0.5.0
+~~~~~~~~~~~~~
+Released: 2015-09-15
+
+New Features:
+ - Raise the dep on GLib to support and use g_autoptr() (Richard Hughes)
+
+Bugfixes:
+ - Do not merge existing firmware metadata (Richard Hughes)
+ - Do not reboot if racing with the PackageKit offline update mechanism (Richard Hughes)
+
 Version 0.1.6
 ~~~~~~~~~~~~~
 Released: 2015-09-10
