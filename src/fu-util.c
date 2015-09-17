@@ -309,6 +309,7 @@ fu_util_get_updates_internal (FuUtilPrivate *priv, GError **error)
 			   fu_util_get_devices_cb, priv);
 	g_main_loop_run (priv->loop);
 	if (priv->val == NULL) {
+		g_dbus_error_strip_remote_error (priv->error);
 		g_propagate_error (error, priv->error);
 		return NULL;
 	}
