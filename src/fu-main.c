@@ -154,7 +154,7 @@ fu_main_device_array_to_variant (GPtrArray *devices, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "no devices");
+				     "Nothing to do");
 		return NULL;
 	}
 
@@ -822,6 +822,11 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_debug ("Called %s()", method_name);
 		val = fu_main_device_array_to_variant (priv->devices, &error);
 		if (val == NULL) {
+			if (g_error_matches (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO)) {
+				g_prefix_error (&error, "No detected devices: ");
+			}
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
@@ -842,6 +847,11 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 		val = fu_main_device_array_to_variant (updates, &error);
 		if (val == NULL) {
+			if (g_error_matches (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO)) {
+				g_prefix_error (&error, "No devices can be updated: ");
+			}
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
