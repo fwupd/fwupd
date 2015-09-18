@@ -686,22 +686,21 @@ fu_util_offline_update_reboot (void)
 static gboolean
 fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	gchar buf[1024];
 	gint vercmp;
-	gssize len;
 	guint cnt = 0;
 	guint i;
 	const gchar *tmp;
+	g_autofree gchar *link = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuPending) pending = NULL;
 
 	/* verify this is pointing to our cache */
-	len = readlink (FU_OFFLINE_TRIGGER_FILENAME, buf, sizeof(buf) - 1);
-	if (len == -1) {
+	link = g_file_read_link (FU_OFFLINE_TRIGGER_FILENAME, NULL);
+	if (link == NULL) {
 		g_debug ("No %s, exiting", FU_OFFLINE_TRIGGER_FILENAME);
 		return TRUE;
 	}
-	if (g_strcmp0 (buf, "/var/lib/fwupd") != 0) {
+	if (g_strcmp0 (link, "/var/lib/fwupd") != 0) {
 		g_debug ("Another framework set up the trigger, exiting");
 		return TRUE;
 	}
