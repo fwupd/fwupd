@@ -1,3 +1,11 @@
+Version 0.5.1
+~~~~~~~~~~~~~
+Released: 2015-09-21
+
+Bugfixes:
+ - Fix the error message when no devices can be updated (Richard Hughes)
+ - Fix reading symlink to prevent crash with some compilers (Kalev Lember)
+
 Version 0.5.0
 ~~~~~~~~~~~~~
 Released: 2015-09-15
