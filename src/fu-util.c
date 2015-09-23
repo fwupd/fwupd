@@ -1468,6 +1468,9 @@ main (int argc, char *argv[])
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
+	/* ensure D-Bus errors are registered */
+	fwupd_error_quark ();
+
 	/* create helper object */
 	priv = g_new0 (FuUtilPrivate, 1);
 	priv->loop = g_main_loop_new (NULL, FALSE);
