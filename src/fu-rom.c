@@ -633,10 +633,13 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 	g_autofree gchar *id = NULL;
 	g_autofree guint8 *buffer = NULL;
 	g_autoptr(GFileOutputStream) output_stream = NULL;
+	g_autoptr(AsProfile) profile = as_profile_new ();
+	g_autoptr(AsProfileTask) ptask = NULL;
 
 	g_return_val_if_fail (FU_IS_ROM (rom), FALSE);
 
 	/* open file */
+	ptask = as_profile_start_literal (profile, "FuRom:reading-data");
 	priv->stream = G_INPUT_STREAM (g_file_read (file, cancellable, &error_local));
 	if (priv->stream == NULL) {
 		g_set_error_literal (error,

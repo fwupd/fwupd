@@ -113,6 +113,8 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	g_autofree gchar *rom_fn = NULL;
 	g_autofree gchar *version = NULL;
 	g_auto(GStrv) split = NULL;
+	g_autoptr(AsProfile) profile = as_profile_new ();
+	g_autoptr(AsProfileTask) ptask = NULL;
 
 	/* interesting device? */
 	guid = g_udev_device_get_property (device, "FWUPD_GUID");
@@ -120,6 +122,7 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 		return;
 
 	/* get data */
+	ptask = as_profile_start (profile, "FuProviderUdev:client-add{%s}", guid);
 	g_debug ("adding udev device: %s", g_udev_device_get_sysfs_path (device));
 	if (0) {
 		const gchar * const *keys;
@@ -160,6 +163,7 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GFile) file = NULL;
 		g_autoptr(FuRom) rom = NULL;
+
 		file = g_file_new_for_path (rom_fn);
 		rom = fu_rom_new ();
 		if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, &error)) {
@@ -267,9 +271,12 @@ fu_provider_udev_coldplug (FuProvider *provider, GError **error)
 	GUdevDevice *udev_device;
 	const gchar *devclass[] = { "usb", "pci", NULL };
 	guint i;
+	g_autoptr(AsProfile) profile = as_profile_new ();
 
 	/* get all devices of class */
 	for (i = 0; devclass[i] != NULL; i++) {
+		g_autoptr(AsProfileTask) ptask = NULL;
+		ptask = as_profile_start (profile, "FuProviderUdev:coldplug{%s}", devclass[i]);
 		devices = g_udev_client_query_by_subsystem (priv->gudev_client,
 							    devclass[i]);
 		for (l = devices; l != NULL; l = l->next) {
