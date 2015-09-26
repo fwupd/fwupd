@@ -2,6 +2,8 @@ fwupd (0.1.5-2) UNRELEASED; urgency=medium
 
   * Backport 697eb603 from upstream to fix fallback from online to offline
     modes for installing CAB files.
+  * Backport 9d76a877 from upstream to clarify the error message when no
+    updates are available.
 
  -- Mario Limonciello <mario_limonciello@Dell.com>  Tue, 22 Sep 2015 18:48:44 -0500
 
