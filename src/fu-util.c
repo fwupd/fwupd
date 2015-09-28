@@ -995,9 +995,9 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
  **/
 static gboolean
 fu_util_refresh_internal (FuUtilPrivate *priv,
-				  const gchar *data_fn,
-				  const gchar *sig_fn,
-				  GError **error)
+			  const gchar *data_fn,
+			  const gchar *sig_fn,
+			  GError **error)
 {
 	GVariant *body;
 	gint fd;
@@ -1152,8 +1152,10 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	/* read config file */
 	config = g_key_file_new ();
 	config_fn = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
-	if (!g_key_file_load_from_file (config, config_fn, G_KEY_FILE_NONE, error))
+	if (!g_key_file_load_from_file (config, config_fn, G_KEY_FILE_NONE, error)) {
+		g_prefix_error (error, "Failed to load %s: ", config_fn);
 		return FALSE;
+	}
 
 	/* download the signature */
 	data_uri = g_key_file_get_string (config, "fwupd", "DownloadURI", error);
