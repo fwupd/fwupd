@@ -47,7 +47,6 @@ typedef struct {
 } FuProviderChugPrivate;
 
 typedef struct {
-	ChDeviceMode		 mode;
 	FuDevice		*device;
 	FuProviderChug		*provider_chug;
 	GMainLoop		*loop;
@@ -547,7 +546,6 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		item->provider_chug = g_object_ref (provider_chug);
 		item->usb_device = g_object_ref (device);
 		item->device = fu_device_new ();
-		item->mode = mode;
 		fu_device_set_id (item->device, id);
 		fu_device_set_guid (item->device, ch_device_get_guid (device));
 		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
