@@ -127,7 +127,7 @@ PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.51.92)
 AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
 
 AC_PATH_PROG(GCAB, [gcab], [no])
-if test x$GCAB = "xno" ; then
+if test -z $GCAB ; then
 	AC_MSG_ERROR([gcab program not found])
 fi
 
