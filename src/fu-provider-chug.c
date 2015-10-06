@@ -53,6 +53,7 @@ typedef struct {
 	GUsbDevice		*usb_device;
 	gboolean		 got_version;
 	gboolean		 is_bootloader;
+	gboolean		 persist_after_unplug;
 	guint			 timeout_open_id;
 	guint			 reconnect_id;
 	GBytes			*fw_bin;
@@ -147,8 +148,11 @@ fu_provider_chug_open (FuProviderChugItem *item, GError **error)
 static gchar *
 fu_provider_chug_get_id (GUsbDevice *device)
 {
-	/* this identifies the *port* the device is plugged into */
-	return g_strdup_printf ("CHug-%s", g_usb_device_get_platform_id (device));
+	/* this identifies the *port* the device is plugged into and
+	 * the kind of device */
+	return g_strdup_printf ("CHug-%s-%s",
+				g_usb_device_get_platform_id (device),
+				ch_device_get_guid (device));
 }
 
 /**
@@ -183,6 +187,7 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 		if (tmp != NULL) {
 			item->got_version = TRUE;
 			g_debug ("obtained fwver using extension '%s'", tmp);
+			item->persist_after_unplug = FALSE;
 			fu_device_set_metadata (item->device,
 						FU_DEVICE_KEY_VERSION, tmp);
 			goto out;
@@ -192,6 +197,7 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 #endif
 
 	/* attempt to open the device and get the serial number */
+	item->persist_after_unplug = TRUE;
 	if (!ch_device_open (item->usb_device, &error)) {
 		g_debug ("Failed to claim interface, polling: %s", error->message);
 		return;
@@ -635,6 +641,12 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 		item->timeout_open_id = 0;
 	}
 	fu_provider_device_remove (FU_PROVIDER (provider_chug), item->device);
+
+	/* if we got the version from an extension then it's best to
+	 * rescan each time so we don't get confused when different
+	 * kinds of ColorHug device are plugged in... */
+	if (!item->persist_after_unplug)
+		g_hash_table_remove (priv->devices, id);
 }
 
 /**
