@@ -35,8 +35,6 @@
 
 static void	fu_provider_finalize	(GObject	*object);
 
-#define FU_PROVIDER_FIRMWARE_MAX	(32 * 1024 * 1024)	/* bytes */
-
 enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
@@ -116,12 +114,11 @@ fu_provider_coldplug (FuProvider *provider, GError **error)
 static gboolean
 fu_provider_schedule_update (FuProvider *provider,
 			     FuDevice *device,
-			     GInputStream *stream,
+			     GBytes *blob_cab,
 			     GError **error)
 {
 	gchar tmpname[] = {"XXXXXX.cap"};
 	guint i;
-	g_autoptr(GBytes) fwbin = NULL;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
@@ -155,16 +152,9 @@ fu_provider_schedule_update (FuProvider *provider,
 
 	/* just copy to the temp file */
 	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
-	if (!g_seekable_seek (G_SEEKABLE (stream), 0, G_SEEK_SET, NULL, error))
-		return FALSE;
-	fwbin = g_input_stream_read_bytes (stream,
-					   FU_PROVIDER_FIRMWARE_MAX,
-					   NULL, error);
-	if (fwbin == NULL)
-		return FALSE;
 	if (!g_file_set_contents (filename,
-				  g_bytes_get_data (fwbin, NULL),
-				  g_bytes_get_size (fwbin),
+				  g_bytes_get_data (blob_cab, NULL),
+				  g_bytes_get_size (blob_cab),
 				  error))
 		return FALSE;
 
@@ -202,8 +192,8 @@ fu_provider_verify (FuProvider *provider,
 gboolean
 fu_provider_update (FuProvider *provider,
 		    FuDevice *device,
-		    GInputStream *stream_cab,
-		    gint fd_fw,
+		    GBytes *blob_cab,
+		    GBytes *blob_fw,
 		    FuProviderFlags flags,
 		    GError **error)
 {
@@ -217,9 +207,9 @@ fu_provider_update (FuProvider *provider,
 		if (klass->update_offline == NULL)
 			return fu_provider_schedule_update (provider,
 							    device,
-							    stream_cab,
+							    blob_cab,
 							    error);
-		return klass->update_offline (provider, device, fd_fw, flags, error);
+		return klass->update_offline (provider, device, blob_fw, flags, error);
 	}
 
 	/* cancel the pending action */
@@ -236,7 +226,7 @@ fu_provider_update (FuProvider *provider,
 	}
 	pending = fu_pending_new ();
 	device_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
-	if (!klass->update_online (provider, device, fd_fw, flags, &error_update)) {
+	if (!klass->update_online (provider, device, blob_fw, flags, &error_update)) {
 		/* save the error to the database */
 		if (device_pending != NULL) {
 			fu_pending_set_error_msg (pending, device,

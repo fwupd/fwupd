@@ -47,7 +47,7 @@ fu_provider_fake_get_name (FuProvider *provider)
 static gboolean
 fu_provider_fake_update (FuProvider *provider,
 			 FuDevice *device,
-			 gint fd,
+			 GBytes *blob_fw,
 			 FuProviderFlags flags,
 			 GError **error)
 {

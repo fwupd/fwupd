@@ -25,7 +25,9 @@
 #include <fwupd.h>
 #include <glib-object.h>
 #include <gio/gio.h>
+#include <glib/gstdio.h>
 #include <fwup.h>
+#include <fcntl.h>
 
 #include "fu-device.h"
 #include "fu-pending.h"
@@ -206,14 +208,40 @@ out:
 static gboolean
 fu_provider_uefi_update (FuProvider *provider,
 			 FuDevice *device,
-			 gint fd,
+			 GBytes *blob_fw,
 			 FuProviderFlags flags,
 			 GError **error)
 {
+	g_autoptr(GError) error_local = NULL;
 	fwup_resource_iter *iter = NULL;
 	fwup_resource *re = NULL;
 	gboolean ret = TRUE;
 	guint64 hardware_instance = 0;	/* FIXME */
+	int fd;
+	const gchar *fn = "/boot/fwupd-efiupdate";
+
+	/* save the data to a temp file */
+	if (!g_file_set_contents (fn,
+				  g_bytes_get_data (blob_fw, NULL),
+				  g_bytes_get_size (blob_fw),
+				  &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "Failed to write temp file: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* open the file */
+	fd = g_open (fn, O_CLOEXEC, 0);
+	if (fd < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "failed to open %s", fn);
+		return FALSE;
+	}
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);

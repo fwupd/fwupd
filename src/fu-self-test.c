@@ -27,7 +27,6 @@
 #include <gio/gfiledescriptorbased.h>
 #include <stdlib.h>
 
-#include "fu-cab.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider-fake.h"
@@ -160,64 +159,6 @@ fu_rom_all_func (void)
 		g_assert_cmpstr (fu_rom_get_checksum (rom), !=, NULL);
 		g_assert_cmpint (fu_rom_get_kind (rom), !=, FU_ROM_KIND_UNKNOWN);
 	} while (TRUE);
-}
-
-static void
-fu_cab_func (void)
-{
-	GError *error = NULL;
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autoptr(FuCab) cab = NULL;
-	g_autoptr(GFile) file = NULL;
-
-	cab = fu_cab_new ();
-	g_assert (cab != NULL);
-
-	/* load file */
-	filename = fu_test_get_filename ("colorhug/colorhug-als-3.0.2.cab");
-	g_assert (filename != NULL);
-	file = g_file_new_for_path (filename);
-	ret = fu_cab_load_file (cab, file, NULL, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-
-	/* get properties */
-	g_assert (fu_cab_get_stream (cab) != NULL);
-	g_assert_cmpstr (fu_cab_get_guid (cab), ==, "84f40464-9272-4ef7-9399-cd95f12da696");
-	g_assert_cmpstr (fu_cab_get_version (cab), ==, "3.0.2");
-	g_assert_cmpstr (fu_cab_get_url_homepage (cab), ==, "http://www.hughski.com/");
-	g_assert_cmpstr (fu_cab_get_license (cab), ==, "GPL-2.0+");
-	g_assert_cmpint (fu_cab_get_size (cab), ==, 10325);
-	g_assert_cmpstr (fu_cab_get_description (cab), !=, NULL);
-	g_assert_cmpint (fu_cab_get_trust_flags (cab), ==, FWUPD_TRUST_FLAG_NONE);
-	g_assert (!g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
-
-	/* extract firmware */
-	ret = fu_cab_extract (cab, FU_CAB_EXTRACT_FLAG_FIRMWARE |
-				   FU_CAB_EXTRACT_FLAG_SIGNATURE, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	g_assert (g_str_has_suffix (fu_cab_get_filename_firmware (cab), "/firmware.bin"));
-	g_assert (g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
-
-	/* this is not available in make distcheck */
-	ret = fu_cab_verify (cab, &error);
-	if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-		g_clear_error (&error);
-	} else {
-		g_assert_no_error (error);
-		g_assert (ret);
-
-		/* check the certificate */
-		g_assert_cmpint (fu_cab_get_trust_flags (cab), ==, FWUPD_TRUST_FLAG_PAYLOAD);
-	}
-
-	/* clean up */
-	ret = fu_cab_delete_temp_files (cab, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	g_assert (!g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
 }
 
 static void
@@ -538,7 +479,6 @@ main (int argc, char **argv)
 	/* tests go here */
 	g_test_add_func ("/fwupd/rom", fu_rom_func);
 	g_test_add_func ("/fwupd/rom{all}", fu_rom_all_func);
-	g_test_add_func ("/fwupd/cab", fu_cab_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/provider", fu_provider_func);
 	g_test_add_func ("/fwupd/provider{rpi}", fu_provider_rpi_func);

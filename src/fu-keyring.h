@@ -43,9 +43,6 @@ gboolean	 fu_keyring_add_public_keys		(FuKeyring	*keyring,
 gboolean	 fu_keyring_add_public_key		(FuKeyring	*keyring,
 							 const gchar	*filename,
 							 GError		**error);
-gboolean	 fu_keyring_set_signing_key		(FuKeyring	*keyring,
-							 const gchar	*key_id,
-							 GError		**error);
 gboolean	 fu_keyring_verify_file			(FuKeyring	*keyring,
 							 const gchar	*filename,
 							 const gchar	*signature,
@@ -53,9 +50,6 @@ gboolean	 fu_keyring_verify_file			(FuKeyring	*keyring,
 gboolean	 fu_keyring_verify_data			(FuKeyring	*keyring,
 							 GBytes		*payload,
 							 GBytes		*payload_signature,
-							 GError		**error);
-GBytes		*fu_keyring_sign_data			(FuKeyring	*keyring,
-							 GBytes		*payload,
 							 GError		**error);
 
 G_END_DECLS

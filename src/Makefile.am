@@ -83,8 +83,6 @@ pkglibexec_PROGRAMS =					\
 
 fwupd_SOURCES =						\
 	fu-cleanup.h					\
-	fu-cab.c					\
-	fu-cab.h					\
 	fu-debug.c					\
 	fu-debug.h					\
 	fu-device.c					\
@@ -151,8 +149,6 @@ check_PROGRAMS =					\
 	fu-self-test
 
 fu_self_test_SOURCES =					\
-	fu-cab.c					\
-	fu-cab.h					\
 	fu-device.c					\
 	fu-device.h					\
 	fu-keyring.c					\

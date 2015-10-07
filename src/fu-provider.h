@@ -59,12 +59,12 @@ struct _FuProviderClass
 						 GError		**error);
 	gboolean	 (*update_online)	(FuProvider	*provider,
 						 FuDevice	*device,
-						 gint		 fd,
+						 GBytes		*blob_fw,
 						 FuProviderFlags flags,
 						 GError		**error);
 	gboolean	 (*update_offline)	(FuProvider	*provider,
 						 FuDevice	*device,
-						 gint		 fd,
+						 GBytes		*blob_fw,
 						 FuProviderFlags flags,
 						 GError		**error);
 	gboolean	 (*clear_results)	(FuProvider	*provider,
@@ -96,8 +96,8 @@ gboolean	 fu_provider_coldplug		(FuProvider	*provider,
 						 GError		**error);
 gboolean	 fu_provider_update		(FuProvider	*provider,
 						 FuDevice	*device,
-						 GInputStream	*stream_cab,
-						 gint		 fd_fw,
+						 GBytes		*blob_cab,
+						 GBytes		*blob_fw,
 						 FuProviderFlags flags,
 						 GError		**error);
 gboolean	 fu_provider_verify		(FuProvider	*provider,

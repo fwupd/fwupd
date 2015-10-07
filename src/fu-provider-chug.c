@@ -300,14 +300,13 @@ fu_provider_chug_verify (FuProvider *provider,
 static gboolean
 fu_provider_chug_update (FuProvider *provider,
 			 FuDevice *device,
-			 gint fd,
+			 GBytes *blob_fw,
 			 FuProviderFlags flags,
 			 GError **error)
 {
 	FuProviderChug *provider_chug = FU_PROVIDER_CHUG (provider);
 	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
-	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* find item */
@@ -323,12 +322,7 @@ fu_provider_chug_update (FuProvider *provider,
 	}
 
 	/* this file is so small, just slurp it all in one go */
-	stream = g_unix_input_stream_new (fd, TRUE);
-	item->fw_bin = g_input_stream_read_bytes (stream,
-						  FU_PROVIDER_CHUG_FIRMWARE_MAX,
-						  NULL, error);
-	if (item->fw_bin == NULL)
-		return FALSE;
+	item->fw_bin = g_bytes_ref (blob_fw);
 
 	/* check this firmware is actually for this device */
 	if (!ch_device_check_firmware (item->usb_device,
@@ -460,10 +454,6 @@ fu_provider_chug_update (FuProvider *provider,
 		g_usb_device_close (item->usb_device, NULL);
 		return FALSE;
 	}
-
-	/* close stream */
-	if (!g_input_stream_close (stream, NULL, error))
-		return FALSE;
 
 	/* get the new firmware version */
 	g_debug ("ColorHug: Getting new firmware version");

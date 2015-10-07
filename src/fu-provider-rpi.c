@@ -195,7 +195,7 @@ fu_provider_rpi_explode_file (struct archive_entry *entry, const gchar *dir)
 static gboolean
 fu_provider_rpi_update (FuProvider *provider,
 			FuDevice *device,
-			gint fd,
+			GBytes *blob_fw,
 			FuProviderFlags flags,
 			GError **error)
 {
@@ -213,7 +213,9 @@ fu_provider_rpi_update (FuProvider *provider,
 	arch = archive_read_new ();
 	archive_read_support_format_all (arch);
 	archive_read_support_filter_all (arch);
-	r = archive_read_open_fd (arch, fd, 1024 * 32);
+	r = archive_read_open_memory (arch,
+				      (void *) g_bytes_get_data (blob_fw, NULL),
+				      (size_t) g_bytes_get_size (blob_fw));
 	if (r) {
 		ret = FALSE;
 		g_set_error (error,
