@@ -187,8 +187,8 @@ fu_provider_func (void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuPending) pending = NULL;
 	g_autoptr(FuProvider) provider = NULL;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GMappedFile) mapped_file = NULL;
 
 	/* create a fake device */
 	provider = fu_provider_fake_new ();
@@ -210,11 +210,11 @@ fu_provider_func (void)
 			 "00000000-0000-0000-0000-000000000000");
 
 	/* schedule an offline update */
-	file = g_file_new_for_path ("/etc/resolv.conf");
-	stream = G_INPUT_STREAM (g_file_read (file, NULL, &error));
+	mapped_file = g_mapped_file_new ("/etc/resolv.conf", FALSE, &error);
 	g_assert_no_error (error);
-	g_assert (stream != NULL);
-	ret = fu_provider_update (provider, device, stream, -1,
+	g_assert (mapped_file != NULL);
+	blob_cab = g_mapped_file_get_bytes (mapped_file);
+	ret = fu_provider_update (provider, device, blob_cab, NULL,
 				  FU_PROVIDER_UPDATE_FLAG_OFFLINE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -234,7 +234,7 @@ fu_provider_func (void)
 	g_object_unref (device_tmp);
 
 	/* lets do this online */
-	ret = fu_provider_update (provider, device, stream, -1,
+	ret = fu_provider_update (provider, device, blob_cab, NULL,
 				  FU_PROVIDER_UPDATE_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -281,15 +281,14 @@ fu_provider_rpi_func (void)
 {
 	gboolean ret;
 	guint cnt = 0;
-	int fd;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *path = NULL;
 	g_autofree gchar *pending_db = NULL;
 	g_autofree gchar *fwfile = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProvider) provider = NULL;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(GMappedFile) mapped_file = NULL;
 
 	/* test location */
 	path = fu_test_get_filename ("rpiboot");
@@ -324,12 +323,11 @@ fu_provider_rpi_func (void)
 	fu_provider_rpi_set_fw_dir (FU_PROVIDER_RPI (provider), "/tmp/rpiboot");
 	fwfile = fu_test_get_filename ("rpiupdate/firmware.bin");
 	g_assert (fwfile != NULL);
-	file = g_file_new_for_path (fwfile);
-	stream = G_INPUT_STREAM (g_file_read (file, NULL, &error));
-	fd = g_file_descriptor_based_get_fd (G_FILE_DESCRIPTOR_BASED (stream));
+	mapped_file = g_mapped_file_new (fwfile, FALSE, &error);
 	g_assert_no_error (error);
-	g_assert (stream != NULL);
-	ret = fu_provider_update (provider, device, NULL, fd,
+	g_assert (mapped_file != NULL);
+	blob_fw = g_mapped_file_get_bytes (mapped_file);
+	ret = fu_provider_update (provider, device, NULL, blob_fw,
 				  FU_PROVIDER_UPDATE_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
