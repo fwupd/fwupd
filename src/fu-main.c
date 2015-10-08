@@ -1418,6 +1418,12 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 					       FU_DEVICE_KEY_LICENSE,
 					       g_variant_new_string (tmp));
 		}
+		tmp = as_release_get_description (rel, NULL);
+		if (tmp != NULL) {
+			g_variant_builder_add (&builder, "{sv}",
+					       FU_DEVICE_KEY_UPDATE_DESCRIPTION,
+					       g_variant_new_string (tmp));
+		}
 		g_variant_builder_add (&builder, "{sv}",
 				       FU_DEVICE_KEY_TRUSTED,
 				       g_variant_new_uint64 (trust_flags));
