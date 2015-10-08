@@ -35,10 +35,13 @@
 #include <libsoup/soup.h>
 #include <unistd.h>
 
-#include "fu-cleanup.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
 #include "fu-rom.h"
+
+#ifndef GUdevClient_autoptr
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
+#endif
 
 typedef struct {
 	GMainLoop		*loop;
@@ -938,7 +941,7 @@ fu_util_verify_update_all (FuUtilPrivate *priv, const gchar *fn, GError **error)
 	const gchar *devclass[] = { "pci", NULL };
 	const gchar *subsystems[] = { NULL };
 	guint i;
-	_cleanup_object_unref_ GUdevClient *gudev_client = NULL;
+	g_autoptr(GUdevClient) gudev_client = NULL;
 	g_autoptr(GPtrArray) roms = NULL;
 
 	/* get all devices of class */

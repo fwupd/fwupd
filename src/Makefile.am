@@ -82,7 +82,6 @@ pkglibexec_PROGRAMS =					\
 	fwupd
 
 fwupd_SOURCES =						\
-	fu-cleanup.h					\
 	fu-debug.c					\
 	fu-debug.h					\
 	fu-device.c					\

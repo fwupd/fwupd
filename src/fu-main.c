@@ -33,7 +33,6 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#include "fu-cleanup.h"
 #include "fu-debug.h"
 #include "fu-device.h"
 #include "fu-keyring.h"
@@ -49,6 +48,11 @@
 #endif
 #ifdef HAVE_UEFI
   #include "fu-provider-uefi.h"
+#endif
+
+#ifndef PolkitAuthorizationResult_autoptr
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitAuthorizationResult, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitSubject, g_object_unref)
 #endif
 
 #define FU_MAIN_FIRMWARE_SIZE_MAX	(32 * 1024 * 1024)	/* bytes */
@@ -354,7 +358,7 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 {
 	FuMainAuthHelper *helper = (FuMainAuthHelper *) user_data;
 	g_autoptr(GError) error = NULL;
-	_cleanup_object_unref_ PolkitAuthorizationResult *auth = NULL;
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
@@ -1153,7 +1157,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		gint32 fd_handle = 0;
 		gint fd;
 		g_autoptr(GError) error = NULL;
-		_cleanup_object_unref_ PolkitSubject *subject = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
 		g_autoptr(GVariantIter) iter = NULL;
 		g_autoptr(GBytes) blob_cab = NULL;
 		g_autoptr(GInputStream) stream = NULL;
