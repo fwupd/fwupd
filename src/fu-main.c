@@ -1097,7 +1097,9 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* find component in metadata */
-		app = as_store_get_app_by_id (priv->store, fu_device_get_guid (item->device));
+		app = as_store_get_app_by_provide (priv->store,
+						   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
+						   fu_device_get_guid (item->device));
 		if (app == NULL) {
 			g_dbus_method_invocation_return_error (invocation,
 							       FWUPD_ERROR,

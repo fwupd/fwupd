@@ -888,10 +888,11 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 	/* add new values */
 	as_store_set_api_version (store, 0.9);
 	for (i = 0; values[i] != NULL; i++) {
-		g_autofree gchar *guid = NULL;
+		g_autofree gchar *id = NULL;
 		g_autoptr(AsApp) app = NULL;
 		g_autoptr(AsChecksum) csum = NULL;
 		g_autoptr(AsRelease) rel = NULL;
+		g_autoptr(AsProvide) prov = NULL;
 		g_autoptr(FuRom) rom = NULL;
 		g_autoptr(GFile) file = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -905,9 +906,12 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 			continue;
 		}
 
+		/* make a plausible ID */
+		id = g_strdup_printf ("%s.firmware", fu_rom_get_guid (rom));
+
 		/* add app to store */
 		app = as_app_new ();
-		as_app_set_id (app, fu_rom_get_guid (rom));
+		as_app_set_id (app, id);
 		as_app_set_id_kind (app, AS_ID_KIND_FIRMWARE);
 		as_app_set_source_kind (app, AS_APP_SOURCE_KIND_INF);
 		rel = as_release_new ();
@@ -918,6 +922,10 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 		as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
 		as_release_add_checksum (rel, csum);
 		as_app_add_release (app, rel);
+		prov = as_provide_new ();
+		as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
+		as_provide_set_value (prov, fu_rom_get_guid (rom));
+		as_app_add_provide (app, prov);
 		as_store_add_app (store, app);
 	}
 	if (!as_store_to_file (store, xml_file,
