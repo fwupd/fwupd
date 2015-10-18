@@ -315,7 +315,8 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		}
 		fwup_get_fw_version(re, &version_raw);
 #if AS_CHECK_VERSION(0,5,2)
-		version = as_utils_version_from_uint32 (version_raw);
+		version = as_utils_version_from_uint32 (version_raw,
+							AS_VERSION_PARSE_FLAG_USE_TRIPLET);
 #else
 		version = g_strdup_printf ("%" G_GUINT32_FORMAT, version_raw);
 #endif
@@ -329,7 +330,8 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		fwup_get_lowest_supported_fw_version (re, &version_raw);
 		if (version_raw != 0) {
 #if AS_CHECK_VERSION(0,5,2)
-			version_lowest = as_utils_version_from_uint32 (version_raw);
+			version_lowest = as_utils_version_from_uint32 (version_raw,
+								       AS_VERSION_PARSE_FLAG_USE_TRIPLET);
 #else
 			version_lowest = g_strdup_printf ("%" G_GUINT32_FORMAT,
 							  version_raw);
