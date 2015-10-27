@@ -698,6 +698,9 @@ static gboolean
 fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GError **error)
 {
 	guint8 magic[2];
+	guint i;
+	GPtrArray *apps;
+	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GBytes) bytes_raw = NULL;
 	g_autoptr(GBytes) bytes_sig = NULL;
@@ -754,12 +757,20 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	if (!fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error))
 		return FALSE;
 
-	/* merge in the new contents */
-	as_store_remove_all (priv->store);
-	if (!as_store_from_xml (priv->store,
+	/* load the store locally until we know it is valid */
+	store = as_store_new ();
+	if (!as_store_from_xml (store,
 				g_bytes_get_data (bytes, NULL),
 				NULL, error))
 		return FALSE;
+
+	/* add the new application from the store */
+	as_store_remove_all (priv->store);
+	apps = as_store_get_apps (store);
+	for (i = 0; i < apps->len; i++) {
+		AsApp *app = g_ptr_array_index (apps, i);
+		as_store_add_app (priv->store, app);
+	}
 
 	/* save the new file */
 	as_store_set_api_version (priv->store, 0.9);
