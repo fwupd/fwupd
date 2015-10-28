@@ -29,26 +29,14 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_PROVIDER_CHUG		(fu_provider_chug_get_type ())
-#define FU_PROVIDER_CHUG(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_PROVIDER_CHUG, FuProviderChug))
-#define FU_IS_PROVIDER_CHUG(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_PROVIDER_CHUG))
-
-typedef struct _FuProviderChugPrivate	FuProviderChugPrivate;
-typedef struct _FuProviderChug		FuProviderChug;
-typedef struct _FuProviderChugClass	FuProviderChugClass;
-
-struct _FuProviderChug
-{
-	FuProvider			 parent;
-	FuProviderChugPrivate		*priv;
-};
+#define FU_TYPE_PROVIDER_CHUG (fu_provider_chug_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuProviderChug, fu_provider_chug, FU, PROVIDER_CHUG, FuProvider)
 
 struct _FuProviderChugClass
 {
 	FuProviderClass			 parent_class;
 };
 
-GType		 fu_provider_chug_get_type	(void);
 FuProvider	*fu_provider_chug_new		(void);
 
 G_END_DECLS

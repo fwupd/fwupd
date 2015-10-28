@@ -29,16 +29,11 @@
 #include <gio/gunixinputstream.h>
 #include <string.h>
 
-#include "fu-cleanup.h"
 #include "fu-device.h"
 #include "fu-pending.h"
 #include "fu-provider-uefi.h"
 
-static void     fu_provider_finalize	(GObject	*object);
-
-#define FU_PROVIDER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_PROVIDER, FuProviderPrivate))
-
-#define FU_PROVIDER_FIRMWARE_MAX	(32 * 1024 * 1024)	/* bytes */
+static void	fu_provider_finalize	(GObject	*object);
 
 enum {
 	SIGNAL_DEVICE_ADDED,
@@ -57,8 +52,8 @@ G_DEFINE_TYPE (FuProvider, fu_provider, G_TYPE_OBJECT)
 static gboolean
 fu_provider_offline_invalidate (GError **error)
 {
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_object_unref_ GFile *file1 = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GFile) file1 = NULL;
 
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -88,7 +83,7 @@ fu_provider_offline_setup (GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* create symlink for the systemd-system-update-generator */
-	rc = symlink ("/var/lib", FU_OFFLINE_TRIGGER_FILENAME);
+	rc = symlink ("/var/lib/fwupd", FU_OFFLINE_TRIGGER_FILENAME);
 	if (rc < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -119,17 +114,16 @@ fu_provider_coldplug (FuProvider *provider, GError **error)
 static gboolean
 fu_provider_schedule_update (FuProvider *provider,
 			     FuDevice *device,
-			     GInputStream *stream,
+			     GBytes *blob_cab,
 			     GError **error)
 {
 	gchar tmpname[] = {"XXXXXX.cap"};
 	guint i;
-	_cleanup_bytes_unref_ GBytes *fwbin = NULL;
-	_cleanup_free_ gchar *dirname = NULL;
-	_cleanup_free_ gchar *filename = NULL;
-	_cleanup_object_unref_ FuDevice *device_tmp = NULL;
-	_cleanup_object_unref_ FuPending *pending = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
+	g_autofree gchar *dirname = NULL;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuDevice) device_tmp = NULL;
+	g_autoptr(FuPending) pending = NULL;
+	g_autoptr(GFile) file = NULL;
 
 	/* id already exists */
 	pending = fu_pending_new ();
@@ -158,16 +152,9 @@ fu_provider_schedule_update (FuProvider *provider,
 
 	/* just copy to the temp file */
 	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
-	if (!g_seekable_seek (G_SEEKABLE (stream), 0, G_SEEK_SET, NULL, error))
-		return FALSE;
-	fwbin = g_input_stream_read_bytes (stream,
-					   FU_PROVIDER_FIRMWARE_MAX,
-					   NULL, error);
-	if (fwbin == NULL)
-		return FALSE;
 	if (!g_file_set_contents (filename,
-				  g_bytes_get_data (fwbin, NULL),
-				  g_bytes_get_size (fwbin),
+				  g_bytes_get_data (blob_cab, NULL),
+				  g_bytes_get_size (blob_cab),
 				  error))
 		return FALSE;
 
@@ -205,14 +192,14 @@ fu_provider_verify (FuProvider *provider,
 gboolean
 fu_provider_update (FuProvider *provider,
 		    FuDevice *device,
-		    GInputStream *stream_cab,
-		    gint fd_fw,
+		    GBytes *blob_cab,
+		    GBytes *blob_fw,
 		    FuProviderFlags flags,
 		    GError **error)
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
-	_cleanup_object_unref_ FuPending *pending = NULL;
-	_cleanup_object_unref_ FuDevice *device_pending = NULL;
+	g_autoptr(FuPending) pending = NULL;
+	g_autoptr(FuDevice) device_pending = NULL;
 	GError *error_update = NULL;
 
 	/* schedule for next reboot, or handle in the provider */
@@ -220,9 +207,9 @@ fu_provider_update (FuProvider *provider,
 		if (klass->update_offline == NULL)
 			return fu_provider_schedule_update (provider,
 							    device,
-							    stream_cab,
+							    blob_cab,
 							    error);
-		return klass->update_offline (provider, device, fd_fw, flags, error);
+		return klass->update_offline (provider, device, blob_fw, flags, error);
 	}
 
 	/* cancel the pending action */
@@ -239,7 +226,7 @@ fu_provider_update (FuProvider *provider,
 	}
 	pending = fu_pending_new ();
 	device_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
-	if (!klass->update_online (provider, device, fd_fw, flags, &error_update)) {
+	if (!klass->update_online (provider, device, blob_fw, flags, &error_update)) {
 		/* save the error to the database */
 		if (device_pending != NULL) {
 			fu_pending_set_error_msg (pending, device,
@@ -259,8 +246,8 @@ fu_provider_update (FuProvider *provider,
 		/* delete cab file */
 		tmp = fu_device_get_metadata (device_pending, FU_DEVICE_KEY_FILENAME_CAB);
 		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
-			_cleanup_error_free_ GError *error_local = NULL;
-			_cleanup_object_unref_ GFile *file = NULL;
+			g_autoptr(GError) error_local = NULL;
+			g_autoptr(GFile) file = NULL;
 			file = g_file_new_for_path (tmp);
 			if (!g_file_delete (file, NULL, &error_local)) {
 				g_set_error (error,
@@ -283,9 +270,9 @@ gboolean
 fu_provider_clear_results (FuProvider *provider, FuDevice *device, GError **error)
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_object_unref_ FuDevice *device_pending = NULL;
-	_cleanup_object_unref_ FuPending *pending = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuDevice) device_pending = NULL;
+	g_autoptr(FuPending) pending = NULL;
 
 	/* handled by the provider */
 	if (klass->clear_results != NULL)
@@ -319,14 +306,14 @@ fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
 	const gchar *tmp;
 	guint i;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_object_unref_ FuDevice *device_pending = NULL;
-	_cleanup_object_unref_ FuPending *pending = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuDevice) device_pending = NULL;
+	g_autoptr(FuPending) pending = NULL;
 	const gchar *copy_keys[] = {
 		FU_DEVICE_KEY_PENDING_STATE,
 		FU_DEVICE_KEY_PENDING_ERROR,
-		FU_DEVICE_KEY_VERSION_OLD,
-		FU_DEVICE_KEY_VERSION_NEW,
+		FU_DEVICE_KEY_VERSION,
+		FU_DEVICE_KEY_UPDATE_VERSION,
 		NULL };
 
 	/* handled by the provider */

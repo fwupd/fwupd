@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-08-12 09:20+0100\n"
-"PO-Revision-Date: 2015-08-12 08:20+0000\n"
+"POT-Creation-Date: 2015-09-10 09:28+0100\n"
+"PO-Revision-Date: 2015-09-10 08:28+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Polish (http://www.transifex.com/hughsie/fwupd/language/pl/)\n"
 "MIME-Version: 1.0\n"
@@ -79,34 +79,10 @@ msgstr "Usługa aktualizacji oprogramowania sprzętowego"
 msgid "Firmware Update D-Bus Service"
 msgstr "Usługa D-Bus aktualizacji oprogramowania sprzętowego"
 
-#. TRANSLATORS: exit after we've started up, used for user profiling
-msgid "Exit after signing queue"
-msgstr "Kończy działanie po podpisaniu kolejki"
-
-#. TRANSLATORS: input location to watch
-msgid "Source path for files"
-msgstr "Ścieżka źródłowa do plików"
-
-#. TRANSLATORS: output location to put files
-msgid "Destination path for files"
-msgstr "Ścieżka docelowa do plików"
-
-#. TRANSLATORS: output location to put files
-msgid "GPG key used to sign the firmware"
-msgstr "Klucz GPG używany do podpisywania oprogramowania sprzętowego"
-
-#. TRANSLATORS: program name
-msgid "fwsignd"
-msgstr "fwsignd"
-
-#. TRANSLATORS: program summary
-msgid "Firmware signing server"
-msgstr "Serwer podpisywania oprogramowania sprzętowego"
-
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
-msgstr "Alias do %s"
+msgstr "Alias do „%s”"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
@@ -157,24 +133,24 @@ msgstr "Próbowanie ponownie jako aktualizacja w trybie offline"
 #. * e.g. "1.2.3"
 #, c-format
 msgid "Reinstalling %s with %s... "
-msgstr "Ponowne instalowanie %s za pomocą %s... "
+msgstr "Ponowne instalowanie %s za pomocą %s… "
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
-msgstr "Instalowanie poprzedniej wersji %s z %s do %s... "
+msgstr "Instalowanie poprzedniej wersji %s z %s do %s… "
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Updating %s from %s to %s... "
-msgstr "Aktualizowanie %s z wersji %s do %s... "
+msgstr "Aktualizowanie %s z wersji %s do %s… "
 
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format

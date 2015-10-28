@@ -27,9 +27,6 @@
 #include <gio/gfiledescriptorbased.h>
 #include <stdlib.h>
 
-#include "fu-cab.h"
-#include "fu-cleanup.h"
-#include "fu-guid.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider-fake.h"
@@ -44,31 +41,12 @@ fu_test_get_filename (const gchar *filename)
 {
 	gchar *tmp;
 	char full_tmp[PATH_MAX];
-	_cleanup_free_ gchar *path = NULL;
+	g_autofree gchar *path = NULL;
 	path = g_build_filename (TESTDATADIR, filename, NULL);
 	tmp = realpath (path, full_tmp);
 	if (tmp == NULL)
 		return NULL;
 	return g_strdup (full_tmp);
-}
-
-static void
-fu_guid_func (void)
-{
-	_cleanup_free_ gchar *guid = NULL;
-
-	/* invalid */
-	g_assert (!fu_guid_is_valid (NULL));
-	g_assert (!fu_guid_is_valid (""));
-	g_assert (!fu_guid_is_valid ("1ff60ab2-3905-06a1-b476"));
-	g_assert (!fu_guid_is_valid (" 1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
-
-	/* valid */
-	g_assert (fu_guid_is_valid ("1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
-
-	/* make valid */
-	guid = fu_guid_generate_from_string ("0x8086:0x0406");
-	g_assert_cmpstr (guid, ==, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
 }
 
 static void
@@ -118,10 +96,10 @@ fu_rom_func (void)
 
 	for (i = 0; data[i].fn != NULL; i++) {
 		gboolean ret;
-		_cleanup_error_free_ GError *error = NULL;
-		_cleanup_free_ gchar *filename = NULL;
-		_cleanup_object_unref_ FuRom *rom = NULL;
-		_cleanup_object_unref_ GFile *file = NULL;
+		g_autoptr(GError) error = NULL;
+		g_autofree gchar *filename = NULL;
+		g_autoptr(FuRom) rom = NULL;
+		g_autoptr(GFile) file = NULL;
 		rom = fu_rom_new ();
 		g_assert (rom != NULL);
 
@@ -146,7 +124,7 @@ static void
 fu_rom_all_func (void)
 {
 	GDir *dir;
-	_cleanup_free_ gchar *path = NULL;
+	g_autofree gchar *path = NULL;
 
 	/* may or may not exist */
 	path = fu_test_get_filename ("roms");
@@ -157,10 +135,10 @@ fu_rom_all_func (void)
 	do {
 		const gchar *fn;
 		gboolean ret;
-		_cleanup_error_free_ GError *error = NULL;
-		_cleanup_free_ gchar *filename = NULL;
-		_cleanup_object_unref_ FuRom *rom = NULL;
-		_cleanup_object_unref_ GFile *file = NULL;
+		g_autoptr(GError) error = NULL;
+		g_autofree gchar *filename = NULL;
+		g_autoptr(FuRom) rom = NULL;
+		g_autoptr(GFile) file = NULL;
 
 		fn = g_dir_read_name (dir);
 		if (fn == NULL)
@@ -184,64 +162,6 @@ fu_rom_all_func (void)
 }
 
 static void
-fu_cab_func (void)
-{
-	GError *error = NULL;
-	gboolean ret;
-	_cleanup_free_ gchar *filename = NULL;
-	_cleanup_object_unref_ FuCab *cab = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
-
-	cab = fu_cab_new ();
-	g_assert (cab != NULL);
-
-	/* load file */
-	filename = fu_test_get_filename ("colorhug/colorhug-als-3.0.2.cab");
-	g_assert (filename != NULL);
-	file = g_file_new_for_path (filename);
-	ret = fu_cab_load_file (cab, file, NULL, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-
-	/* get properties */
-	g_assert (fu_cab_get_stream (cab) != NULL);
-	g_assert_cmpstr (fu_cab_get_guid (cab), ==, "84f40464-9272-4ef7-9399-cd95f12da696");
-	g_assert_cmpstr (fu_cab_get_version (cab), ==, "3.0.2");
-	g_assert_cmpstr (fu_cab_get_url_homepage (cab), ==, "http://www.hughski.com/");
-	g_assert_cmpstr (fu_cab_get_license (cab), ==, "GPL-2.0+");
-	g_assert_cmpint (fu_cab_get_size (cab), ==, 10325);
-	g_assert_cmpstr (fu_cab_get_description (cab), !=, NULL);
-	g_assert_cmpint (fu_cab_get_trust_flags (cab), ==, FWUPD_TRUST_FLAG_NONE);
-	g_assert (!g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
-
-	/* extract firmware */
-	ret = fu_cab_extract (cab, FU_CAB_EXTRACT_FLAG_FIRMWARE |
-				   FU_CAB_EXTRACT_FLAG_SIGNATURE, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	g_assert (g_str_has_suffix (fu_cab_get_filename_firmware (cab), "/firmware.bin"));
-	g_assert (g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
-
-	/* this is not available in make distcheck */
-	ret = fu_cab_verify (cab, &error);
-	if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-		g_clear_error (&error);
-	} else {
-		g_assert_no_error (error);
-		g_assert (ret);
-
-		/* check the certificate */
-		g_assert_cmpint (fu_cab_get_trust_flags (cab), ==, FWUPD_TRUST_FLAG_PAYLOAD);
-	}
-
-	/* clean up */
-	ret = fu_cab_delete_temp_files (cab, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	g_assert (!g_file_test (fu_cab_get_filename_firmware (cab), G_FILE_TEST_EXISTS));
-}
-
-static void
 _provider_status_changed_cb (FuProvider *provider, FwupdStatus status, gpointer user_data)
 {
 	guint *cnt = (guint *) user_data;
@@ -262,13 +182,13 @@ fu_provider_func (void)
 	FuDevice *device_tmp;
 	gboolean ret;
 	guint cnt = 0;
-	_cleanup_free_ gchar *pending_cap = NULL;
-	_cleanup_free_ gchar *pending_db = NULL;
-	_cleanup_object_unref_ FuDevice *device = NULL;
-	_cleanup_object_unref_ FuPending *pending = NULL;
-	_cleanup_object_unref_ FuProvider *provider = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
-	_cleanup_object_unref_ GInputStream *stream = NULL;
+	g_autofree gchar *pending_cap = NULL;
+	g_autofree gchar *pending_db = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuPending) pending = NULL;
+	g_autoptr(FuProvider) provider = NULL;
+	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GMappedFile) mapped_file = NULL;
 
 	/* create a fake device */
 	provider = fu_provider_fake_new ();
@@ -290,11 +210,11 @@ fu_provider_func (void)
 			 "00000000-0000-0000-0000-000000000000");
 
 	/* schedule an offline update */
-	file = g_file_new_for_path ("/etc/resolv.conf");
-	stream = G_INPUT_STREAM (g_file_read (file, NULL, &error));
+	mapped_file = g_mapped_file_new ("/etc/resolv.conf", FALSE, &error);
 	g_assert_no_error (error);
-	g_assert (stream != NULL);
-	ret = fu_provider_update (provider, device, stream, -1,
+	g_assert (mapped_file != NULL);
+	blob_cab = g_mapped_file_get_bytes (mapped_file);
+	ret = fu_provider_update (provider, device, blob_cab, NULL,
 				  FU_PROVIDER_UPDATE_FLAG_OFFLINE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -314,7 +234,7 @@ fu_provider_func (void)
 	g_object_unref (device_tmp);
 
 	/* lets do this online */
-	ret = fu_provider_update (provider, device, stream, -1,
+	ret = fu_provider_update (provider, device, blob_cab, NULL,
 				  FU_PROVIDER_UPDATE_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -361,15 +281,14 @@ fu_provider_rpi_func (void)
 {
 	gboolean ret;
 	guint cnt = 0;
-	int fd;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *path = NULL;
-	_cleanup_free_ gchar *pending_db = NULL;
-	_cleanup_free_ gchar *fwfile = NULL;
-	_cleanup_object_unref_ FuDevice *device = NULL;
-	_cleanup_object_unref_ FuProvider *provider = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
-	_cleanup_object_unref_ GInputStream *stream = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *path = NULL;
+	g_autofree gchar *pending_db = NULL;
+	g_autofree gchar *fwfile = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuProvider) provider = NULL;
+	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(GMappedFile) mapped_file = NULL;
 
 	/* test location */
 	path = fu_test_get_filename ("rpiboot");
@@ -404,12 +323,11 @@ fu_provider_rpi_func (void)
 	fu_provider_rpi_set_fw_dir (FU_PROVIDER_RPI (provider), "/tmp/rpiboot");
 	fwfile = fu_test_get_filename ("rpiupdate/firmware.bin");
 	g_assert (fwfile != NULL);
-	file = g_file_new_for_path (fwfile);
-	stream = G_INPUT_STREAM (g_file_read (file, NULL, &error));
-	fd = g_file_descriptor_based_get_fd (G_FILE_DESCRIPTOR_BASED (stream));
+	mapped_file = g_mapped_file_new (fwfile, FALSE, &error);
 	g_assert_no_error (error);
-	g_assert (stream != NULL);
-	ret = fu_provider_update (provider, device, NULL, fd,
+	g_assert (mapped_file != NULL);
+	blob_fw = g_mapped_file_get_bytes (mapped_file);
+	ret = fu_provider_update (provider, device, NULL, blob_fw,
 				  FU_PROVIDER_UPDATE_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -432,9 +350,9 @@ fu_pending_func (void)
 	GError *error = NULL;
 	gboolean ret;
 	FuDevice *device;
-	_cleanup_object_unref_ FuPending *pending = NULL;
-	_cleanup_free_ gchar *dirname = NULL;
-	_cleanup_free_ gchar *filename = NULL;
+	g_autoptr(FuPending) pending = NULL;
+	g_autofree gchar *dirname = NULL;
+	g_autofree gchar *filename = NULL;
 
 	/* create */
 	pending = fu_pending_new ();
@@ -453,7 +371,7 @@ fu_pending_func (void)
 	fu_device_set_metadata (device, FU_DEVICE_KEY_FILENAME_CAB, "/var/lib/dave.cap"),
 	fu_device_set_display_name (device, "ColorHug"),
 	fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION, "3.0.1"),
-	fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION_NEW, "3.0.2");
+	fu_device_set_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION, "3.0.2");
 	ret = fu_pending_add_device (pending, device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -480,8 +398,8 @@ fu_pending_func (void)
 	g_assert_cmpstr (fu_device_get_id (device), ==, "self-test");
 	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_FILENAME_CAB), ==, "/var/lib/dave.cap");
 	g_assert_cmpstr (fu_device_get_display_name (device), ==, "ColorHug");
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_OLD), ==, "3.0.1");
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION_NEW), ==, "3.0.2");
+	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION), ==, "3.0.1");
+	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION), ==, "3.0.2");
 	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_PENDING_STATE), ==, "scheduled");
 	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_PENDING_ERROR), ==, "word");
 	g_object_unref (device);
@@ -511,11 +429,11 @@ static void
 fu_keyring_func (void)
 {
 	gboolean ret;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *fw_fail = NULL;
-	_cleanup_free_ gchar *fw_pass = NULL;
-	_cleanup_free_ gchar *pki_dir = NULL;
-	_cleanup_object_unref_ FuKeyring *keyring = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *fw_fail = NULL;
+	g_autofree gchar *fw_pass = NULL;
+	g_autofree gchar *pki_dir = NULL;
+	g_autoptr(FuKeyring) keyring = NULL;
 	const gchar *sig =
 	"iQEcBAABCAAGBQJVt0B4AAoJEEim2A5FOLrCFb8IAK+QTLY34Wu8xZ8nl6p3JdMu"
 	"HOaifXAmX7291UrsFRwdabU2m65pqxQLwcoFrqGv738KuaKtu4oIwo9LIrmmTbEh"
@@ -557,10 +475,8 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
-	g_test_add_func ("/fwupd/guid", fu_guid_func);
 	g_test_add_func ("/fwupd/rom", fu_rom_func);
 	g_test_add_func ("/fwupd/rom{all}", fu_rom_all_func);
-	g_test_add_func ("/fwupd/cab", fu_cab_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/provider", fu_provider_func);
 	g_test_add_func ("/fwupd/provider{rpi}", fu_provider_rpi_func);

@@ -38,8 +38,6 @@ bin_PROGRAMS = fwupdmgr
 fwupdmgr_SOURCES =					\
 	fu-device.c					\
 	fu-device.h					\
-	fu-guid.c					\
-	fu-guid.h					\
 	fu-pending.c					\
 	fu-pending.h					\
 	fu-rom.c					\
@@ -80,19 +78,14 @@ fu-resources.h: fwupd.gresource.xml
 		--c-name fu				\
 		$(srcdir)/fwupd.gresource.xml
 
-libexec_PROGRAMS =					\
+pkglibexec_PROGRAMS =					\
 	fwupd
 
 fwupd_SOURCES =						\
-	fu-cleanup.h					\
-	fu-cab.c					\
-	fu-cab.h					\
 	fu-debug.c					\
 	fu-debug.h					\
 	fu-device.c					\
 	fu-device.h					\
-	fu-guid.c					\
-	fu-guid.h					\
 	fu-keyring.c					\
 	fu-keyring.h					\
 	fu-pending.c					\
@@ -145,34 +138,6 @@ fwupd_CFLAGS =						\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
 	$(WARNINGFLAGS_C)
 
-if HAVE_FWSIGND
-libexec_PROGRAMS += fwsignd
-
-fwsignd_SOURCES =					\
-	fu-cleanup.h					\
-	fu-cab.c					\
-	fu-cab.h					\
-	fu-keyring.c					\
-	fu-keyring.h					\
-	fu-debug.c					\
-	fu-debug.h					\
-	fu-sign.c
-
-fwsignd_LDADD =						\
-	$(FWUPD_LIBS)					\
-	$(APPSTREAM_GLIB_LIBS)				\
-	$(GPGME_LIBS)					\
-	$(GCAB_LIBS)					\
-	$(GLIB_LIBS)
-
-fwsignd_LDFLAGS =					\
-	$(PIE_LDFLAGS)
-
-fwsignd_CFLAGS =					\
-	$(WARNINGFLAGS_C)
-
-endif
-
 TESTS_ENVIRONMENT =					\
 	libtool --mode=execute valgrind			\
 	--quiet						\
@@ -183,12 +148,8 @@ check_PROGRAMS =					\
 	fu-self-test
 
 fu_self_test_SOURCES =					\
-	fu-cab.c					\
-	fu-cab.h					\
 	fu-device.c					\
 	fu-device.h					\
-	fu-guid.c					\
-	fu-guid.h					\
 	fu-keyring.c					\
 	fu-keyring.h					\
 	fu-pending.c					\
@@ -220,8 +181,6 @@ install-data-hook:
 	if test -w $(DESTDIR)$(prefix)/; then \
 		mkdir -p $(DESTDIR)$(localstatedir)/lib/fwupd; \
 		chmod 0755 $(DESTDIR)$(localstatedir)/lib/fwupd; \
-		mkdir -p $(DESTDIR)$(localstatedir)/lib/fwsignd; \
-		chmod 0755 $(DESTDIR)$(localstatedir)/lib/fwsignd; \
 		mkdir -p $(DESTDIR)$(localstatedir)/cache/app-info/xmls; \
 		mkdir -p $(DESTDIR)$(localstatedir)/cache/app-info/icons; \
 	fi

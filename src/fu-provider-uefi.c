@@ -21,17 +21,19 @@
 
 #include "config.h"
 
+#include <appstream-glib.h>
 #include <fwupd.h>
 #include <glib-object.h>
 #include <gio/gio.h>
+#include <glib/gstdio.h>
 #include <fwup.h>
+#include <fcntl.h>
 
-#include "fu-cleanup.h"
 #include "fu-device.h"
 #include "fu-pending.h"
 #include "fu-provider-uefi.h"
 
-static void     fu_provider_uefi_finalize	(GObject	*object);
+static void	fu_provider_uefi_finalize	(GObject	*object);
 
 G_DEFINE_TYPE (FuProviderUefi, fu_provider_uefi, FU_TYPE_PROVIDER)
 
@@ -53,7 +55,7 @@ fu_provider_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError *
 	efi_guid_t *guid_raw;
 	fwup_resource *re_matched = NULL;
 	fwup_resource *re = NULL;
-	_cleanup_free_ gchar *guid_str_tmp = NULL;
+	g_autofree gchar *guid_str_tmp = NULL;
 
 	/* get the hardware we're referencing */
 	guid_str_tmp = g_strdup ("00000000-0000-0000-0000-000000000000");
@@ -165,7 +167,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 	gboolean ret = TRUE;
 	guint32 status = 0;
 	guint32 version = 0;
-	_cleanup_free_ gchar *version_str = NULL;
+	g_autofree gchar *version_str = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
@@ -184,7 +186,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 		goto out;
 	}
 	version_str = g_strdup_printf ("%u", version);
-	fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION_NEW, version_str);
+	fu_device_set_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION, version_str);
 	if (status == FWUP_LAST_ATTEMPT_STATUS_SUCCESS) {
 		fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
 					fu_pending_state_to_string (FU_PENDING_STATE_SUCCESS));
@@ -206,14 +208,40 @@ out:
 static gboolean
 fu_provider_uefi_update (FuProvider *provider,
 			 FuDevice *device,
-			 gint fd,
+			 GBytes *blob_fw,
 			 FuProviderFlags flags,
 			 GError **error)
 {
+	g_autoptr(GError) error_local = NULL;
 	fwup_resource_iter *iter = NULL;
 	fwup_resource *re = NULL;
 	gboolean ret = TRUE;
 	guint64 hardware_instance = 0;	/* FIXME */
+	int fd;
+	const gchar *fn = "/boot/fwupd-efiupdate";
+
+	/* save the data to a temp file */
+	if (!g_file_set_contents (fn,
+				  g_bytes_get_data (blob_fw, NULL),
+				  g_bytes_get_size (blob_fw),
+				  &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "Failed to write temp file: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* open the file */
+	fd = g_open (fn, O_CLOEXEC, 0);
+	if (fd < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "failed to open %s", fn);
+		return FALSE;
+	}
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
@@ -248,8 +276,8 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 {
 	fwup_resource_iter *iter = NULL;
 	fwup_resource *re;
-	_cleanup_free_ gchar *guid = NULL;
-	_cleanup_object_unref_ FuDevice *dev = NULL;
+	g_autofree gchar *guid = NULL;
+	g_autoptr(FuDevice) dev = NULL;
 
 	/* not supported */
 	if (!fwup_supported ()) {
@@ -275,9 +303,9 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		efi_guid_t *guid_raw;
 		guint32 version_raw;
 		guint64 hardware_instance = 0;	/* FIXME */
-		_cleanup_free_ gchar *id = NULL;
-		_cleanup_free_ gchar *version = NULL;
-		_cleanup_free_ gchar *version_lowest = NULL;
+		g_autofree gchar *id = NULL;
+		g_autofree gchar *version = NULL;
+		g_autofree gchar *version_lowest = NULL;
 
 		/* convert to strings */
 		fwup_get_guid (re, &guid_raw);
@@ -286,7 +314,12 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 			continue;
 		}
 		fwup_get_fw_version(re, &version_raw);
+#if AS_CHECK_VERSION(0,5,2)
+		version = as_utils_version_from_uint32 (version_raw,
+							AS_VERSION_PARSE_FLAG_USE_TRIPLET);
+#else
 		version = g_strdup_printf ("%" G_GUINT32_FORMAT, version_raw);
+#endif
 		id = g_strdup_printf ("UEFI-%s-dev%" G_GUINT64_FORMAT,
 				      guid, hardware_instance);
 
@@ -296,8 +329,13 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
 		fwup_get_lowest_supported_fw_version (re, &version_raw);
 		if (version_raw != 0) {
+#if AS_CHECK_VERSION(0,5,2)
+			version_lowest = as_utils_version_from_uint32 (version_raw,
+								       AS_VERSION_PARSE_FLAG_USE_TRIPLET);
+#else
 			version_lowest = g_strdup_printf ("%" G_GUINT32_FORMAT,
 							  version_raw);
+#endif
 			fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION_LOWEST,
 						version_lowest);
 		}

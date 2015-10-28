@@ -29,13 +29,10 @@
 #include <glib-object.h>
 #include <gusb.h>
 
-#include "fu-cleanup.h"
 #include "fu-device.h"
 #include "fu-provider-chug.h"
 
-static void     fu_provider_chug_finalize	(GObject	*object);
-
-#define FU_PROVIDER_CHUG_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), FU_TYPE_PROVIDER_CHUG, FuProviderChugPrivate))
+static void	fu_provider_chug_finalize	(GObject	*object);
 
 #define FU_PROVIDER_CHUG_POLL_REOPEN		5		/* seconds */
 #define FU_PROVIDER_CHUG_FIRMWARE_MAX		(64 * 1024)	/* bytes */
@@ -43,27 +40,27 @@ static void     fu_provider_chug_finalize	(GObject	*object);
 /**
  * FuProviderChugPrivate:
  **/
-struct _FuProviderChugPrivate
-{
+typedef struct {
 	GHashTable		*devices;
 	GUsbContext		*usb_ctx;
 	ChDeviceQueue		*device_queue;
-};
+} FuProviderChugPrivate;
 
 typedef struct {
-	ChDeviceMode		 mode;
 	FuDevice		*device;
 	FuProviderChug		*provider_chug;
 	GMainLoop		*loop;
 	GUsbDevice		*usb_device;
 	gboolean		 got_version;
 	gboolean		 is_bootloader;
+	gboolean		 persist_after_unplug;
 	guint			 timeout_open_id;
 	guint			 reconnect_id;
 	GBytes			*fw_bin;
 } FuProviderChugItem;
 
-G_DEFINE_TYPE (FuProviderChug, fu_provider_chug, FU_TYPE_PROVIDER)
+G_DEFINE_TYPE_WITH_PRIVATE (FuProviderChug, fu_provider_chug, FU_TYPE_PROVIDER)
+#define GET_PRIVATE(o) (fu_provider_chug_get_instance_private (o))
 
 /**
  * fu_provider_chug_get_name:
@@ -132,7 +129,7 @@ fu_provider_chug_wait_for_connect (FuProviderChugItem *item, GError **error)
 static gboolean
 fu_provider_chug_open (FuProviderChugItem *item, GError **error)
 {
-	_cleanup_error_free_ GError *error_local = NULL;
+	g_autoptr(GError) error_local = NULL;
 	if (!ch_device_open (item->usb_device, &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -151,8 +148,11 @@ fu_provider_chug_open (FuProviderChugItem *item, GError **error)
 static gchar *
 fu_provider_chug_get_id (GUsbDevice *device)
 {
-	/* this identifies the *port* the device is plugged into */
-	return g_strdup_printf ("CHug-%s", g_usb_device_get_platform_id (device));
+	/* this identifies the *port* the device is plugged into and
+	 * the kind of device */
+	return g_strdup_printf ("CHug-%s-%s",
+				g_usb_device_get_platform_id (device),
+				ch_device_get_guid (device));
 }
 
 /**
@@ -161,15 +161,15 @@ fu_provider_chug_get_id (GUsbDevice *device)
 static void
 fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 {
-	FuProviderChugPrivate *priv = item->provider_chug->priv;
+	FuProviderChugPrivate *priv = GET_PRIVATE (item->provider_chug);
 	guint16 major;
 	guint16 micro;
 	guint16 minor;
 #if G_USB_CHECK_VERSION(0,2,5)
 	guint8 idx;
 #endif
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *version = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *version = NULL;
 
 	/* try to get the version without claiming interface */
 #if G_USB_CHECK_VERSION(0,2,5)
@@ -181,12 +181,13 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
 					     'F', 'W', NULL);
 	if (idx != 0x00) {
-		_cleanup_free_ gchar *tmp = NULL;
+		g_autofree gchar *tmp = NULL;
 		tmp = g_usb_device_get_string_descriptor (item->usb_device,
 							  idx, NULL);
 		if (tmp != NULL) {
 			item->got_version = TRUE;
 			g_debug ("obtained fwver using extension '%s'", tmp);
+			item->persist_after_unplug = FALSE;
 			fu_device_set_metadata (item->device,
 						FU_DEVICE_KEY_VERSION, tmp);
 			goto out;
@@ -196,6 +197,7 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 #endif
 
 	/* attempt to open the device and get the serial number */
+	item->persist_after_unplug = TRUE;
 	if (!ch_device_open (item->usb_device, &error)) {
 		g_debug ("Failed to claim interface, polling: %s", error->message);
 		return;
@@ -231,12 +233,12 @@ fu_provider_chug_verify (FuProvider *provider,
 			 GError **error)
 {
 	FuProviderChug *provider_chug = FU_PROVIDER_CHUG (provider);
-	FuProviderChugPrivate *priv = provider_chug->priv;
+	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
 	gsize len;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_free_ gchar *hash = NULL;
-	_cleanup_free_ guint8 *data = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *hash = NULL;
+	g_autofree guint8 *data = NULL;
 
 	/* find item */
 	item = g_hash_table_lookup (priv->devices, fu_device_get_id (device));
@@ -298,18 +300,17 @@ fu_provider_chug_verify (FuProvider *provider,
 static gboolean
 fu_provider_chug_update (FuProvider *provider,
 			 FuDevice *device,
-			 gint fd,
+			 GBytes *blob_fw,
 			 FuProviderFlags flags,
 			 GError **error)
 {
 	FuProviderChug *provider_chug = FU_PROVIDER_CHUG (provider);
-	FuProviderChugPrivate *priv = provider_chug->priv;
+	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
-	_cleanup_object_unref_ GInputStream *stream = NULL;
-	_cleanup_error_free_ GError *error_local = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* find item */
-	item = g_hash_table_lookup (provider_chug->priv->devices,
+	item = g_hash_table_lookup (priv->devices,
 				    fu_device_get_id (device));
 	if (item == NULL) {
 		g_set_error (error,
@@ -321,12 +322,7 @@ fu_provider_chug_update (FuProvider *provider,
 	}
 
 	/* this file is so small, just slurp it all in one go */
-	stream = g_unix_input_stream_new (fd, TRUE);
-	item->fw_bin = g_input_stream_read_bytes (stream,
-						  FU_PROVIDER_CHUG_FIRMWARE_MAX,
-						  NULL, error);
-	if (item->fw_bin == NULL)
-		return FALSE;
+	item->fw_bin = g_bytes_ref (blob_fw);
 
 	/* check this firmware is actually for this device */
 	if (!ch_device_check_firmware (item->usb_device,
@@ -459,10 +455,6 @@ fu_provider_chug_update (FuProvider *provider,
 		return FALSE;
 	}
 
-	/* close stream */
-	if (!g_input_stream_close (stream, NULL, error))
-		return FALSE;
-
 	/* get the new firmware version */
 	g_debug ("ColorHug: Getting new firmware version");
 	item->got_version = FALSE;
@@ -531,9 +523,10 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 				  GUsbDevice *device,
 				  FuProviderChug *provider_chug)
 {
+	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
 	ChDeviceMode mode;
-	_cleanup_free_ gchar *id = NULL;
+	g_autofree gchar *id = NULL;
 
 	/* ignore */
 	mode = ch_device_get_mode (device);
@@ -542,14 +535,13 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 
 	/* is already in database */
 	id = fu_provider_chug_get_id (device);
-	item = g_hash_table_lookup (provider_chug->priv->devices, id);
+	item = g_hash_table_lookup (priv->devices, id);
 	if (item == NULL) {
 		item = g_new0 (FuProviderChugItem, 1);
 		item->loop = g_main_loop_new (NULL, FALSE);
 		item->provider_chug = g_object_ref (provider_chug);
 		item->usb_device = g_object_ref (device);
 		item->device = fu_device_new ();
-		item->mode = mode;
 		fu_device_set_id (item->device, id);
 		fu_device_set_guid (item->device, ch_device_get_guid (device));
 		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
@@ -564,7 +556,7 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		}
 
 		/* insert to hash */
-		g_hash_table_insert (provider_chug->priv->devices,
+		g_hash_table_insert (priv->devices,
 				     g_strdup (id), item);
 	} else {
 		/* update the device */
@@ -623,12 +615,13 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 				    GUsbDevice *device,
 				    FuProviderChug *provider_chug)
 {
+	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
-	_cleanup_free_ gchar *id = NULL;
+	g_autofree gchar *id = NULL;
 
 	/* already in database */
 	id = fu_provider_chug_get_id (device);
-	item = g_hash_table_lookup (provider_chug->priv->devices, id);
+	item = g_hash_table_lookup (priv->devices, id);
 	if (item == NULL)
 		return;
 
@@ -638,6 +631,12 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 		item->timeout_open_id = 0;
 	}
 	fu_provider_device_remove (FU_PROVIDER (provider_chug), item->device);
+
+	/* if we got the version from an extension then it's best to
+	 * rescan each time so we don't get confused when different
+	 * kinds of ColorHug device are plugged in... */
+	if (!item->persist_after_unplug)
+		g_hash_table_remove (priv->devices, id);
 }
 
 /**
@@ -647,7 +646,8 @@ static gboolean
 fu_provider_chug_coldplug (FuProvider *provider, GError **error)
 {
 	FuProviderChug *provider_chug = FU_PROVIDER_CHUG (provider);
-	g_usb_context_enumerate (provider_chug->priv->usb_ctx);
+	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
+	g_usb_context_enumerate (priv->usb_ctx);
 	return TRUE;
 }
 
@@ -665,8 +665,6 @@ fu_provider_chug_class_init (FuProviderChugClass *klass)
 	provider_class->update_online = fu_provider_chug_update;
 	provider_class->verify = fu_provider_chug_verify;
 	object_class->finalize = fu_provider_chug_finalize;
-
-	g_type_class_add_private (klass, sizeof (FuProviderChugPrivate));
 }
 
 /**
@@ -675,15 +673,15 @@ fu_provider_chug_class_init (FuProviderChugClass *klass)
 static void
 fu_provider_chug_init (FuProviderChug *provider_chug)
 {
-	provider_chug->priv = FU_PROVIDER_CHUG_GET_PRIVATE (provider_chug);
-	provider_chug->priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-							      g_free, (GDestroyNotify) fu_provider_chug_device_free);
-	provider_chug->priv->usb_ctx = g_usb_context_new (NULL);
-	provider_chug->priv->device_queue = ch_device_queue_new ();
-	g_signal_connect (provider_chug->priv->usb_ctx, "device-added",
+	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
+	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
+					       g_free, (GDestroyNotify) fu_provider_chug_device_free);
+	priv->usb_ctx = g_usb_context_new (NULL);
+	priv->device_queue = ch_device_queue_new ();
+	g_signal_connect (priv->usb_ctx, "device-added",
 			  G_CALLBACK (fu_provider_chug_device_added_cb),
 			  provider_chug);
-	g_signal_connect (provider_chug->priv->usb_ctx, "device-removed",
+	g_signal_connect (priv->usb_ctx, "device-removed",
 			  G_CALLBACK (fu_provider_chug_device_removed_cb),
 			  provider_chug);
 }
@@ -695,7 +693,7 @@ static void
 fu_provider_chug_finalize (GObject *object)
 {
 	FuProviderChug *provider_chug = FU_PROVIDER_CHUG (object);
-	FuProviderChugPrivate *priv = provider_chug->priv;
+	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 
 	g_hash_table_unref (priv->devices);
 	g_object_unref (priv->usb_ctx);

@@ -1,3 +1,55 @@
+Version 0.5.2
+~~~~~~~~~~~~~
+Released: 2015-10-28
+
+New Features:
+ - Add profiling data to debug slow startup times (Richard Hughes)
+ - Support cabinet archives files with more than one firmware (Richard Hughes)
+
+Bugfixes:
+ - Add the update description to the GetDetails results (Richard Hughes)
+ - Clear the in-memory firmware store only after parsing a valid XML file (Richard Hughes)
+ - Ensure D-Bus remote errors are registered at fwupdmgr startup (Richard Hughes)
+ - Fix verify-update to produce components with the correct provide values (Richard Hughes)
+ - Require appstream-glib 0.5.1 (Mirco Tischler)
+ - Show the dotted-decimal representation of the UEFI version number (Richard Hughes)
+ - When the version is from the 'FW' extension do not cache the device (Richard Hughes)
+
+Version 0.5.1
+~~~~~~~~~~~~~
+Released: 2015-09-21
+
+Bugfixes:
+ - Fix the error message when no devices can be updated (Richard Hughes)
+ - Fix reading symlink to prevent crash with some compilers (Kalev Lember)
+
+Version 0.5.0
+~~~~~~~~~~~~~
+Released: 2015-09-15
+
+New Features:
+ - Raise the dep on GLib to support and use g_autoptr() (Richard Hughes)
+
+Bugfixes:
+ - Do not merge existing firmware metadata (Richard Hughes)
+ - Do not reboot if racing with the PackageKit offline update mechanism (Richard Hughes)
+
+Version 0.1.6
+~~~~~~~~~~~~~
+Released: 2015-09-10
+
+New Features:
+ - Remove fwsignd, we have the LVFS now (Richard Hughes)
+
+Bugfixes:
+ - Add application metadata when getting the updates list (Richard Hughes)
+ - Depend on appstream-glib >= 0.5.0 (Richard Hughes)
+ - Don't apply firmware if something else is processing the update (Richard Hughes)
+ - Install fwupd into /usr/lib/$(triplet)/fwupd instead (Mario Limonciello)
+ - Simplify the version properties on devices to avoid complexity (Richard Hughes)
+ - Update the offline update service to invoke right command (Kalev Lember)
+ - Use the new secure metadata URI (Richard Hughes)
+
 Version 0.1.5
 ~~~~~~~~~~~~~
 Released: 2015-08-12

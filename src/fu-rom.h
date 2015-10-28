@@ -27,23 +27,8 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_ROM		(fu_rom_get_type ())
-#define FU_ROM(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), FU_TYPE_ROM, FuRom))
-#define FU_ROM_CLASS(k)		(G_TYPE_CHECK_CLASS_CAST((k), FU_TYPE_ROM, FuRomClass))
-#define FU_IS_ROM(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), FU_TYPE_ROM))
-#define FU_IS_ROM_CLASS(k)	(G_TYPE_CHECK_CLASS_TYPE ((k), FU_TYPE_ROM))
-#define FU_ROM_GET_CLASS(o)	(G_TYPE_INSTANCE_GET_CLASS ((o), FU_TYPE_ROM, FuRomClass))
-#define FU_ROM_ERROR		fu_rom_error_quark()
-
-typedef struct _FuRomPrivate	FuRomPrivate;
-typedef struct _FuRom		FuRom;
-typedef struct _FuRomClass	FuRomClass;
-
-struct _FuRom
-{
-	 GObject		 parent;
-	 FuRomPrivate		*priv;
-};
+#define FU_TYPE_ROM (fu_rom_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuRom, fu_rom, FU, ROM, GObject)
 
 struct _FuRomClass
 {
@@ -65,7 +50,6 @@ typedef enum {
 	FU_ROM_LOAD_FLAG_LAST
 } FuRomLoadFlags;
 
-GType		 fu_rom_get_type			(void);
 FuRom		*fu_rom_new				(void);
 
 gboolean	 fu_rom_load_file			(FuRom		*rom,

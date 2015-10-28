@@ -2,8 +2,8 @@
 AC_PREREQ(2.63)
 
 m4_define([fwupd_major_version], [0])
-m4_define([fwupd_minor_version], [1])
-m4_define([fwupd_micro_version], [5])
+m4_define([fwupd_minor_version], [5])
+m4_define([fwupd_micro_version], [2])
 m4_define([fwupd_version],
           [fwupd_major_version.fwupd_minor_version.fwupd_micro_version])
 
@@ -115,19 +115,22 @@ AC_SUBST([RELRO_LDFLAGS])
 dnl ---------------------------------------------------------------------------
 dnl - Check library dependencies
 dnl ---------------------------------------------------------------------------
-PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.36.0 gobject-2.0 gthread-2.0 gio-2.0 >= 2.25.9 gio-unix-2.0)
+PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.45.8 gobject-2.0 gthread-2.0 gio-2.0 >= 2.25.9 gio-unix-2.0)
 PKG_CHECK_MODULES(GUDEV, gudev-1.0)
 PKG_CHECK_MODULES(POLKIT, polkit-gobject-1 >= 0.103)
 PKG_CHECK_MODULES(GCAB, libgcab-1.0)
-PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib >= 0.3.5)
+PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib >= 0.5.2)
 PKG_CHECK_MODULES(GUSB, gusb >= 0.2.2)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 PKG_CHECK_MODULES(ARCHIVE, libarchive)
-PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.42)
+PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.51.92)
 AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
+if test -z $DOCBOOK2MAN ; then
+	AC_MSG_ERROR([docbook2man program not found])
+fi
 
 AC_PATH_PROG(GCAB, [gcab], [no])
-if test x$GCAB = "xno" ; then
+if test -z $GCAB ; then
 	AC_MSG_ERROR([gcab program not found])
 fi
 
@@ -162,11 +165,6 @@ if test x$enable_uefi != xno; then
 	AC_DEFINE(HAVE_UEFI,1,[Use ColorHug support])
 fi
 AM_CONDITIONAL(HAVE_UEFI, test x$enable_uefi = xyes)
-
-# Build the signing server
-AC_ARG_ENABLE(fwsignd, AS_HELP_STRING([--enable-fwsignd],[Enable fwsignd support]),
-	      enable_fwsignd=$enableval, enable_fwsignd=no)
-AM_CONDITIONAL(HAVE_FWSIGND, test x$enable_fwsignd = xyes)
 
 # systemd support
 AC_ARG_WITH([systemdunitdir],

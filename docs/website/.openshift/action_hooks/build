@@ -1,3 +1,0 @@
-#!/bin/bash
-ln -s ${OPENSHIFT_DATA_DIR}uploads ${OPENSHIFT_REPO_DIR}uploads
-ln -s ${OPENSHIFT_DATA_DIR}downloads ${OPENSHIFT_REPO_DIR}downloads
