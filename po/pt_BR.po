@@ -4,13 +4,14 @@
 # 
 # Translators:
 # Derek Stavis <dekestavis@gmail.com>, 2015
+# Rafael Fontenelle <rffontenelle@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-10 09:28+0100\n"
-"PO-Revision-Date: 2015-09-10 08:28+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2015-10-28 09:58+0000\n"
+"PO-Revision-Date: 2015-10-07 12:34+0000\n"
+"Last-Translator: Derek Stavis <dekestavis@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/hughsie/fwupd/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -73,7 +74,7 @@ msgstr "Sair após o carregamento do motor"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr ""
+msgstr "Daemon de Atualização de Firmware"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -86,7 +87,7 @@ msgstr "Atalho para %s"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
-msgstr ""
+msgstr "Comando não encontrado"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle"
@@ -126,7 +127,7 @@ msgstr "Feito!"
 
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
-msgstr ""
+msgstr "Tentando novamente como atualização offline"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -150,7 +151,7 @@ msgid "Updating %s from %s to %s... "
 msgstr "Atualizando %s de %s para %s..."
 
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -179,15 +180,15 @@ msgstr "Mostrar informações adicionais de depuração"
 
 #. TRANSLATORS: command line option
 msgid "Perform the installation offline where possible"
-msgstr ""
+msgstr "Executar a instalação offline quando possivel"
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
-msgstr ""
+msgstr "Permitir reinstalar versões existentes de firmware"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
-msgstr ""
+msgstr "Permitir reverter versões de firmware"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -211,11 +212,11 @@ msgstr "Obtém a lista de atualizações para os periféricos conectados"
 
 #. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"
-msgstr ""
+msgstr "Atualiza todos os firmwares para a última versão disponível"
 
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr ""
+msgstr "Obtém o hash criptográfico do firmware despejado"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -227,19 +228,19 @@ msgstr "Obtém os resultados da última atualização"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr ""
+msgstr "Renova metadados do servidor remoto"
 
 #. TRANSLATORS: command description
 msgid "Dump the ROM checksum"
-msgstr ""
+msgstr "Despeja a soma de verificação da ROM"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
-msgstr ""
+msgstr "Atualiza os metadados armazenados com o conteúdo da ROM atual"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
-msgstr ""
+msgstr "Utilitário de Firmware"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"

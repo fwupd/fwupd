@@ -3,253 +3,252 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# dhead666 <myfoolishgames@gmail.com>, 2015
-# GenghisKhan <genghiskhan@gmx.ca>, 2015
+# Марко М. Костић (Marko M. Kostić) <marko.m.kostic@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-28 09:58+0000\n"
-"PO-Revision-Date: 2015-10-22 20:05+0000\n"
-"Last-Translator: GenghisKhan <genghiskhan@gmx.ca>\n"
-"Language-Team: Hebrew (http://www.transifex.com/hughsie/fwupd/language/he/)\n"
+"PO-Revision-Date: 2015-10-15 21:00+0000\n"
+"Last-Translator: Марко М. Костић (Marko M. Kostić) <marko.m.kostic@gmail.com>\n"
+"Language-Team: Serbian (http://www.transifex.com/hughsie/fwupd/language/sr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: he\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: sr\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 msgid "Install signed system firmware"
-msgstr ""
+msgstr "Инсталирајте потписани системски фирмвер"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
-msgstr "אימות משתמש נדרש לעדכון קושחה מערכת זו"
+msgstr "Потребна је пријава за ажурирање фирмвера на овој машини"
 
 msgid "Install unsigned system firmware"
-msgstr ""
+msgstr "Инсталирајте непотписани системски фирмвер"
 
 msgid "Install old version of system firmware"
-msgstr ""
+msgstr "Инсталирајте старо издање системског фирмвера"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr ""
+msgstr "Потребна је пријава за уназађивање фирмвера на овој машини"
 
 msgid "Install signed device firmware"
-msgstr ""
+msgstr "Инсталирајте потписани фирмвер за уређаје"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid ""
 "Authentication is required to update the firmware on a removable device"
-msgstr ""
+msgstr "Потребна је пријава за ажурирање фирмвера на преносивом уређају"
 
 msgid "Install unsigned device firmware"
-msgstr ""
+msgstr "Инсталирајте непотписани фирмвер за уређаје"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid ""
 "Authentication is required to downgrade the firmware on a removable device"
-msgstr ""
+msgstr "Потребна је пријава за уназађивање фирмвера на преносивом уређају"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
-msgstr "הצג מידע ניפוי שגיאות לכל הקבצים"
+msgstr "Прикажи податке о отклањању проблема за све датотеке"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
-msgstr "אפשרויות ניפוי שגיאות"
+msgstr "Опције отклањања проблема"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
-msgstr "הצג אפשרויות ניפוי שגיאות"
+msgstr "Прикажи опције за отклањање проблема"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
-msgstr "יציאה לאחר השהייה קצרה"
+msgstr "Изађи након малог застоја"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
-msgstr "יציאה לאחר טעינת מנוע התכנה"
+msgstr "Изађи након учитавања мотора"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr "שדון עדכון קושחה"
+msgstr "Демон за ажурирање фирмвера"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
-msgstr "שירות D-Bus עדכון קושחה"
+msgstr "Д-Бус услуга ажурирања фирмвера"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
-msgstr "כינוי עבור %s"
+msgstr "Алијас на %s"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
-msgstr "פקודה לא נמצאה"
+msgstr "Наредба није пронађена"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle"
-msgstr "מצב סרק"
+msgstr "У мировању"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing firmware"
-msgstr "מחלץ קושחה"
+msgstr "Распакивање фирмвера у току"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading firmware"
-msgstr "טוען קושחה"
+msgstr "Учитавам фирмвер"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device"
-msgstr "מפעיל מחדש מכשיר"
+msgstr "Поново покрећем уређај"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing firmware to device"
-msgstr "כותב קושחה למכשיר"
+msgstr "Уписујем фирмвер на уређај"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying firmware from device"
-msgstr "מאמת קושחה שבמכשיר"
+msgstr "Потврђујем фирмвер са уређаја"
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling upgrade"
-msgstr "מתזמן שדרוג"
+msgstr "Заказујем надоградњу"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
-msgstr "לא אותרה חומרה בעלת יכולת עדכון קושחה"
+msgstr "Нема хардвера којем се може ажурирати фирмвер"
 
 #. TRANSLATORS: update completed, no errors
 msgid "Done!"
-msgstr "הסתיים!"
+msgstr "Урађено!"
 
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
-msgstr ""
+msgstr "Поново покушавам преко ванмрежног ажурирања"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
 #, c-format
 msgid "Reinstalling %s with %s... "
-msgstr "מתקין מחדש %s עם %s..."
+msgstr "Поново инсталирам %s са %s..."
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
-msgstr "משנמך גרסת %s מ־%s ל־%s..."
+msgstr "Уназађујем %s са %s на %s..."
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Updating %s from %s to %s... "
-msgstr "מעדכן %s מ־%s ל־%s..."
+msgstr "Ажурирам %s са %s на %s..."
 
 msgid "OK"
-msgstr "אישור"
+msgstr "У реду"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
-msgstr "ישנם עדכוני קושחה עבור %s:"
+msgstr "%s има ажурирања за фирмвер:"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Version"
-msgstr "גרסא"
+msgstr "Издање"
 
 #. TRANSLATORS: section header for firmware SHA1
 msgid "Checksum"
-msgstr "סכום ביקורת"
+msgstr "Чек-сума"
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Location"
-msgstr "מיקום"
+msgstr "Место"
 
 #. TRANSLATORS: section header for long firmware desc
 msgid "Description"
-msgstr "תיאור"
+msgstr "Опис"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
-msgstr "הצג מידע ניפוי שגיאות מורחב"
+msgstr "Прикажи додатне податке за отклањање проблема"
 
 #. TRANSLATORS: command line option
 msgid "Perform the installation offline where possible"
-msgstr ""
+msgstr "Изврши ажурирања ван мреже где је то могуће"
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
-msgstr ""
+msgstr "Дозволи поновно инсталирање већ постојећих издања фирмвера"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
-msgstr ""
+msgstr "Дозволи уназађивање издања фирмвера"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
-msgstr "מציג כל המכשירים התומכים בעדכוני קושחה"
+msgstr "Добави све уређаје који подржавају ажурирање фирмвера"
 
 #. TRANSLATORS: command description
 msgid "Install prepared updates now"
-msgstr "מתקין כעת עדכונים מוכנים"
+msgstr "Инсталирај припремљена ажурирања сад"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
-msgstr "מתקין קובץ קושחה בחומרה זו"
+msgstr "Инсталирај датотеку са фирмвером на овај уређај"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
-msgstr "מציג פרטים אודות קובץ קושחה"
+msgstr "Добави појединости о датотеци са фирмвером"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
-msgstr ""
+msgstr "Добави списак свих ажурирања за повезани уређај"
 
 #. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"
-msgstr ""
+msgstr "Ажурира сав фирмвер на последња доступна издања"
 
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr ""
+msgstr "Добавља криптографски хеш извађеног фирмвера"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
-msgstr ""
+msgstr "Чисти резултате последњег ажурирања"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
-msgstr ""
+msgstr "Добавља резултате последњег ажурирања"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr ""
+msgstr "Освежава метаподатке са удаљеног сервера"
 
 #. TRANSLATORS: command description
 msgid "Dump the ROM checksum"
-msgstr ""
+msgstr "Извади РОМ чек-суму"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
-msgstr ""
+msgstr "Ажурирај ускладиштене метаподатке са тренутним садржајима РОМ-а"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
-msgstr ""
+msgstr "Алатка за фирмвер"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
-msgstr "נכשל בפענוח הארגומנטים"
+msgstr "Не могу да обрадим аргументе"
 
 #. TRANSLATORS: the user is in a bad place
 msgid "Failed to connect to D-Bus"
-msgstr ""
+msgstr "Не могу да се повежем на Д-Бус"
 
 #. TRANSLATORS: we can't connect to the daemon
 msgid "Failed to connect to fwupd"
-msgstr ""
+msgstr "Не могу да се повежем на fwupd"

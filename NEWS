@@ -1,3 +1,20 @@
+Version 0.5.2
+~~~~~~~~~~~~~
+Released: 2015-10-28
+
+New Features:
+ - Add profiling data to debug slow startup times (Richard Hughes)
+ - Support cabinet archives files with more than one firmware (Richard Hughes)
+
+Bugfixes:
+ - Add the update description to the GetDetails results (Richard Hughes)
+ - Clear the in-memory firmware store only after parsing a valid XML file (Richard Hughes)
+ - Ensure D-Bus remote errors are registered at fwupdmgr startup (Richard Hughes)
+ - Fix verify-update to produce components with the correct provide values (Richard Hughes)
+ - Require appstream-glib 0.5.1 (Mirco Tischler)
+ - Show the dotted-decimal representation of the UEFI version number (Richard Hughes)
+ - When the version is from the 'FW' extension do not cache the device (Richard Hughes)
+
 Version 0.5.1
 ~~~~~~~~~~~~~
 Released: 2015-09-21
