@@ -1,3 +1,9 @@
+fwupd (0.5.2-1) UNRELEASED; urgency=medium
+
+  * New upstream release (0.5.2)
+
+ -- Mario Limonciello <mario_limonciello@dell.com>  Wed, 28 Oct 2015 10:47:00 -0500
+
 fwupd (0.1.5-1) unstable; urgency=low
 
   * Initial release (Closes: #793446)
