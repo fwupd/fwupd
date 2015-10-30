@@ -697,8 +697,9 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 static gboolean
 fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GError **error)
 {
-	guint8 magic[2];
+	const guint8 *data;
 	guint i;
+	gsize size;
 	GPtrArray *apps;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) bytes = NULL;
@@ -721,18 +722,22 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	g_memory_input_stream_add_bytes (G_MEMORY_INPUT_STREAM (stream_buf), bytes_raw);
 
 	/* peek the file type and get data */
-	if (g_input_stream_read (stream_buf, magic, 2, NULL, error) == -1)
+	data = g_bytes_get_data (bytes_raw, &size);
+	if (size < 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "file is too small");
 		return FALSE;
-	if (magic[0] == 0x1f && magic[1] == 0x8b) {
+	}
+	if (data[0] == 0x1f && data[1] == 0x8b) {
 		g_debug ("using GZip decompressor for data");
-		if (!g_seekable_seek (G_SEEKABLE (stream_buf), 0, G_SEEK_SET, NULL, error))
-			return FALSE;
 		converter = G_CONVERTER (g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP));
 		stream = g_converter_input_stream_new (stream_buf, converter);
 		bytes = g_input_stream_read_bytes (stream, 0x100000, NULL, error);
 		if (bytes == NULL)
 			return FALSE;
-	} else if (magic[0] == '<' && magic[1] == '?') {
+	} else if (data[0] == '<' && data[1] == '?') {
 		g_debug ("using no decompressor for data");
 		bytes = g_bytes_ref (bytes_raw);
 	} else {
@@ -740,7 +745,7 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "file type '0x%02x,0x%02x' not supported",
-			     magic[0], magic[1]);
+			     data[0], data[1]);
 		return FALSE;
 	}
 
