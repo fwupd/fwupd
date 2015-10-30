@@ -701,6 +701,7 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	guint i;
 	gsize size;
 	GPtrArray *apps;
+	g_autofree gchar *xml = NULL;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GBytes) bytes_raw = NULL;
@@ -764,9 +765,9 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 
 	/* load the store locally until we know it is valid */
 	store = as_store_new ();
-	if (!as_store_from_xml (store,
-				g_bytes_get_data (bytes, NULL),
-				NULL, error))
+	data = g_bytes_get_data (bytes, &size);
+	xml = g_strndup ((const gchar *) data, size);
+	if (!as_store_from_xml (store, xml, NULL, error))
 		return FALSE;
 
 	/* add the new application from the store */
