@@ -1,3 +1,12 @@
+Version 0.5.3
+~~~~~~~~~~~~~
+Released: 2015-11-05
+
+Bugfixes:
+ - Avoid seeking when reading the file magic during refresh (Richard Hughes)
+ - Do not assume that the compressed XML data will be NUL terminated (Richard Hughes)
+ - Use the correct user agent string for fwupdmgr (Richard Hughes)
+
 Version 0.5.2
 ~~~~~~~~~~~~~
 Released: 2015-10-28
