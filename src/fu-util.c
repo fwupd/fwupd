@@ -1087,11 +1087,13 @@ fu_util_download_file (FuUtilPrivate *priv,
 	guint status_code;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *checksum_actual = NULL;
+	g_autofree gchar *user_agent = NULL;
 	g_autoptr(SoupMessage) msg = NULL;
 	g_autoptr(SoupSession) session = NULL;
 
+	user_agent = g_strdup_printf ("%s/%s", PACKAGE_NAME, PACKAGE_VERSION);
 	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT,
-						 "fwupdmgr",
+						 user_agent,
 						 NULL);
 	if (session == NULL) {
 		g_set_error_literal (error,
