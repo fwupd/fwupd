@@ -33,6 +33,9 @@ AM_CPPFLAGS =						\
 FWUPD_LIBS =						\
 	$(top_builddir)/libfwupd/libfwupd.la
 
+DFU_LIBS =						\
+	$(top_builddir)/libdfu/libdfu-private.la
+
 bin_PROGRAMS = fwupdmgr
 
 fwupdmgr_SOURCES =					\
@@ -118,6 +121,7 @@ endif
 
 fwupd_LDADD =						\
 	$(FWUPD_LIBS)					\
+	$(DFU_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(COLORHUG_LIBS)				\
 	$(GUSB_LIBS)					\

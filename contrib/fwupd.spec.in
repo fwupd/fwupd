@@ -84,6 +84,7 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %{_bindir}/fwupdmgr
+%{_bindir}/dfu-tool
 %{_sysconfdir}/pki/fwupd
 %{_sysconfdir}/pki/fwupd-metadata
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf
@@ -92,11 +93,13 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
 %{_datadir}/man/man1/fwupdmgr.1.gz
+%{_datadir}/man/man1/dfu-tool.1.gz
 %{_unitdir}/fwupd-offline-update.service
 %{_unitdir}/fwupd.service
 %{_unitdir}/system-update.target.wants/
 %dir %{_localstatedir}/lib/fwupd
 %{_libdir}/lib*.so.*
+%{_libdir}/fwupd/libdfu-private.so
 %{_libdir}/girepository-1.0/*.typelib
 %dir %{_localstatedir}/cache/app-info
 %dir %{_localstatedir}/cache/app-info/icons

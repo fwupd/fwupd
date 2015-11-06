@@ -4,6 +4,7 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 SUBDIRS = 						\
 	libfwupd					\
+	libdfu						\
 	po						\
 	data						\
 	docs						\

@@ -165,14 +165,11 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 	guint16 major;
 	guint16 micro;
 	guint16 minor;
-#if G_USB_CHECK_VERSION(0,2,5)
 	guint8 idx;
-#endif
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* try to get the version without claiming interface */
-#if G_USB_CHECK_VERSION(0,2,5)
 	if (!g_usb_device_open (item->usb_device, &error)) {
 		g_debug ("Failed to open, polling: %s", error->message);
 		return;
@@ -194,7 +191,6 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 		}
 	}
 	g_usb_device_close (item->usb_device, NULL);
-#endif
 
 	/* attempt to open the device and get the serial number */
 	item->persist_after_unplug = TRUE;
@@ -532,6 +528,11 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 	/* ignore */
 	mode = ch_device_get_mode (device);
 	if (mode == CH_DEVICE_MODE_UNKNOWN)
+		return;
+
+	/* this is using DFU now */
+	if (mode == CH_DEVICE_MODE_BOOTLOADER_PLUS ||
+	    mode == CH_DEVICE_MODE_FIRMWARE_PLUS)
 		return;
 
 	/* is already in database */

@@ -1,7 +1,9 @@
 man_MANS_DIST = 					\
+	dfu-tool.1					\
 	fwupdmgr.1
 
 EXTRA_DIST =						\
+	dfu-tool.sgml					\
 	fwupdmgr.sgml					\
 	$(man_MANS_DIST)
 
@@ -9,6 +11,9 @@ man_MANS =						\
 	$(man_MANS_DIST)
 
 fwupdmgr.1: fwupdmgr.sgml
+	$(AM_V_GEN)					\
+	docbook2man $? > /dev/null
+dfu-tool.1: dfu-tool.sgml
 	$(AM_V_GEN)					\
 	docbook2man $? > /dev/null
 

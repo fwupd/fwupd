@@ -1,0 +1,112 @@
+<!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+  <!-- Please adjust the date whenever revising the manpage. -->
+  <!ENTITY date        "<date>26 February,2015</date>">
+  <!ENTITY package     "fwupdmgr">
+  <!ENTITY gnu         "<acronym>GNU</acronym>">
+  <!ENTITY gpl         "&gnu; <acronym>GPL</acronym>">
+]>
+
+<refentry>
+  <refentryinfo>
+    <address>
+      <email>richard@hughsie.com</email>;
+    </address>
+    <author>
+      <firstname>Richard</firstname>
+      <surname>Hughes</surname>
+    </author>
+    <copyright>
+      <year>2015</year>
+      <holder>Richard Hughes</holder>
+    </copyright>
+    &date;
+  </refentryinfo>
+  <refmeta>
+    <refentrytitle>dfu-tool</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>&package;</refname>
+    <refpurpose>Device Firmware Update Tool</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>&package;</command>
+      <arg><option>--verbose</option></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+      This manual page documents briefly the <command>&package;</command> command.
+    </para>
+    <para>
+      <command>&package;</command> allows a user to update firmware on a
+      DFU-capable device.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>OPTIONS</title>
+    <para>
+      This program follows the usual &gnu; command line syntax,
+      with long options starting with two dashes (`-').  A summary of
+      options is included below.
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term>
+          <option>--help</option>
+        </term>
+        <listitem>
+          <para>Show summary of options.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>--verbose</option>
+        </term>
+        <listitem>
+          <para>Show extra debugging information.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>COMMANDS</title>
+    <para>
+      This program takes commands with a variable number of arguments.
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term>
+          <option>convert</option>
+        </term>
+        <listitem>
+          <para>Converts a file to DFU format.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>AUTHOR</title>
+    <para>This manual page was written by Richard Hughes <email>richard@hughsie.com</email>.
+    </para>
+  </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-default-dtd-file:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->
