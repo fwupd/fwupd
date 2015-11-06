@@ -1,6 +1,8 @@
 fwupd (0.5.3-1) UNRELEASED; urgency=medium
 
   * New upstream release (0.5.3)
+  * Drop all patches, now upstream.
+  * debian/control: Update build dependencies for new upstream version.
 
  -- Mario Limonciello <mario_limonciello@dell.com>  Thu, 05 Nov 2015 10:26:19 -0600
 
