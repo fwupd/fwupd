@@ -1,3 +1,10 @@
+fwupd (0.5.3-2) unstable; urgency=medium
+
+  * Add build dependency on udev.  (Closes: #804279)
+  * Fix hardening flags.
+
+ -- Mario Limonciello <mario_limonciello@dell.com>  Sat, 07 Nov 2015 11:33:31 -0600
+
 fwupd (0.5.3-1) unstable; urgency=medium
 
   * New upstream release (0.5.3)
