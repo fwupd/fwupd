@@ -2,7 +2,9 @@
 # -*- makefile -*-
 
 #GPGME needs this for proper building on x86
-export CFLAGS += -D_FILE_OFFSET_BITS=64
+ifeq "$(DEB_BUILD_ARCH)" "i386"
+	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64
+endif
 
 %:
 	dh $@ --with autoreconf
