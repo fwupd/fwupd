@@ -1,8 +1,11 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-#GPGME needs this for proper building on x86
+#GPGME needs this for proper building on i386 and armhf
 ifeq "$(DEB_BUILD_ARCH)" "i386"
+	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64
+endif
+ifeq "$(DEB_BUILD_ARCH)" "armhf"
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64
 endif
 
