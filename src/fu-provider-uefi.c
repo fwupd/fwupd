@@ -218,6 +218,7 @@ fu_provider_uefi_update (FuProvider *provider,
 	gboolean ret = TRUE;
 	guint64 hardware_instance = 0;	/* FIXME */
 	int fd;
+	int call;
 	const gchar *fn = "/boot/fwupd-efiupdate";
 
 	/* save the data to a temp file */
@@ -254,13 +255,14 @@ fu_provider_uefi_update (FuProvider *provider,
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
 	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
-	if (fwup_set_up_update (re, hardware_instance, fd) < 0) {
+	call = fwup_set_up_update (re, hardware_instance, fd);
+	if (call < 0) {
 		ret = FALSE;
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "UEFI firmware update failed: %s",
-			     fwup_strerror (fwup_error));
+			     call);
 		goto out;
 	}
 out:
