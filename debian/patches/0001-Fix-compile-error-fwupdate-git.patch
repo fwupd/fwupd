@@ -1,0 +1,43 @@
+From 6fade1ffea19246987667a6acf35d9a6917693c9 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario_limonciello@dell.com>
+Date: Tue, 10 Nov 2015 18:13:48 -0600
+Subject: [PATCH] Fix compile error against fwupdate git due to dropped
+ functions.
+
+Closes #37
+---
+ src/fu-provider-uefi.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/fu-provider-uefi.c b/src/fu-provider-uefi.c
+index c537915..a4e4ebc 100644
+--- a/src/fu-provider-uefi.c
++++ b/src/fu-provider-uefi.c
+@@ -218,6 +218,7 @@ fu_provider_uefi_update (FuProvider *provider,
+ 	gboolean ret = TRUE;
+ 	guint64 hardware_instance = 0;	/* FIXME */
+ 	int fd;
++	int call;
+ 	const gchar *fn = "/boot/fwupd-efiupdate";
+ 
+ 	/* save the data to a temp file */
+@@ -254,13 +255,14 @@ fu_provider_uefi_update (FuProvider *provider,
+ 	/* perform the update */
+ 	g_debug ("Performing UEFI capsule update");
+ 	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
+-	if (fwup_set_up_update (re, hardware_instance, fd) < 0) {
++	call = fwup_set_up_update (re, hardware_instance, fd);
++	if (call < 0) {
+ 		ret = FALSE;
+ 		g_set_error (error,
+ 			     FWUPD_ERROR,
+ 			     FWUPD_ERROR_NOT_SUPPORTED,
+ 			     "UEFI firmware update failed: %s",
+-			     fwup_strerror (fwup_error));
++			     call);
+ 		goto out;
+ 	}
+ out:
+-- 
+1.9.1
+
