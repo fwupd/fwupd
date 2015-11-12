@@ -219,6 +219,7 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 
 out:
 	/* we're done here */
+	g_clear_error (&error);
 	if (!g_usb_device_close (item->usb_device, &error))
 		g_debug ("Failed to close: %s", error->message);
 }
