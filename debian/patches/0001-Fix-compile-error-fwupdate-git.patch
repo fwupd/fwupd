@@ -9,11 +9,11 @@ Closes #37
  src/fu-provider-uefi.c | 6 ++++--
  1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/src/fu-provider-uefi.c b/src/fu-provider-uefi.c
-index c537915..a4e4ebc 100644
---- a/src/fu-provider-uefi.c
-+++ b/src/fu-provider-uefi.c
-@@ -218,6 +218,7 @@ fu_provider_uefi_update (FuProvider *provider,
+Index: fwupd/src/fu-provider-uefi.c
+===================================================================
+--- fwupd.orig/src/fu-provider-uefi.c	2015-11-12 10:14:33.666632745 -0600
++++ fwupd/src/fu-provider-uefi.c	2015-11-12 10:14:48.318632673 -0600
+@@ -218,6 +218,7 @@
  	gboolean ret = TRUE;
  	guint64 hardware_instance = 0;	/* FIXME */
  	int fd;
@@ -21,7 +21,7 @@ index c537915..a4e4ebc 100644
  	const gchar *fn = "/boot/fwupd-efiupdate";
  
  	/* save the data to a temp file */
-@@ -254,13 +255,14 @@ fu_provider_uefi_update (FuProvider *provider,
+@@ -254,13 +255,14 @@
  	/* perform the update */
  	g_debug ("Performing UEFI capsule update");
  	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
@@ -32,12 +32,10 @@ index c537915..a4e4ebc 100644
  		g_set_error (error,
  			     FWUPD_ERROR,
  			     FWUPD_ERROR_NOT_SUPPORTED,
- 			     "UEFI firmware update failed: %s",
+-			     "UEFI firmware update failed: %s",
 -			     fwup_strerror (fwup_error));
++			     "UEFI firmware update failed: %d",
 +			     call);
  		goto out;
  	}
  out:
--- 
-1.9.1
-
