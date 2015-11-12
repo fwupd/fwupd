@@ -261,7 +261,7 @@ fu_provider_uefi_update (FuProvider *provider,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "UEFI firmware update failed: %s",
+			     "UEFI firmware update failed: %d",
 			     call);
 		goto out;
 	}
