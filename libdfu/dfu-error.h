@@ -19,25 +19,35 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
+#ifndef __DFU_ERROR_H
+#define __DFU_ERROR_H
+
+#include <glib.h>
+
+#define DFU_ERROR			dfu_error_quark()
+
 /**
- * SECTION:dfu
- * @short_description: Helper objects for interacting with DFU devices.
- */
+ * DfuError:
+ * @DFU_ERROR_INTERNAL:				Internal error
+ * @DFU_ERROR_VERIFY_FAILED:			Failed to verify write
+ * @DFU_ERROR_INVALID_FILE:			Invalid file format
+ * @DFU_ERROR_INVALID_DEVICE:			Invalid device type
+ * @DFU_ERROR_NOT_FOUND:			Resource not found
+ * @DFU_ERROR_NOT_SUPPORTED:			Action was not supported
+ *
+ * The error code.
+ **/
+typedef enum {
+	DFU_ERROR_INTERNAL,			/* Since: 0.5.4 */
+	DFU_ERROR_VERIFY_FAILED,		/* Since: 0.5.4 */
+	DFU_ERROR_INVALID_FILE,			/* Since: 0.5.4 */
+	DFU_ERROR_INVALID_DEVICE,		/* Since: 0.5.4 */
+	DFU_ERROR_NOT_FOUND,			/* Since: 0.5.4 */
+	DFU_ERROR_NOT_SUPPORTED,		/* Since: 0.5.4 */
+	/*< private >*/
+	DFU_ERROR_LAST
+} DfuError;
 
-#ifndef __DFU_H__
-#define __DFU_H__
+GQuark		 dfu_error_quark			(void);
 
-#define __DFU_H_INSIDE__
-
-#include <libdfu/dfu-common.h>
-#include <libdfu/dfu-device.h>
-#include <libdfu/dfu-element.h>
-#include <libdfu/dfu-error.h>
-#include <libdfu/dfu-firmware.h>
-#include <libdfu/dfu-image.h>
-#include <libdfu/dfu-target.h>
-
-#undef __DFU_H_INSIDE__
-
-#endif /* __DFU_H__ */
-
+#endif /* __DFU_ERROR_H */

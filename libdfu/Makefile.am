@@ -2,7 +2,6 @@ AM_CPPFLAGS = \
 	$(GLIB_CFLAGS)						\
 	$(GUSB_CFLAGS)						\
 	-I$(top_srcdir)/libdfu					\
-	-I$(top_srcdir)/libfwupd				\
 	-I$(top_srcdir)						\
 	-I$(top_builddir)					\
 	-DG_USB_API_IS_SUBJECT_TO_CHANGE			\
@@ -27,6 +26,8 @@ libdfu_private_la_SOURCES =					\
 	dfu-element.c						\
 	dfu-element.h						\
 	dfu-element-private.h					\
+	dfu-error.c						\
+	dfu-error.h						\
 	dfu-firmware.c						\
 	dfu-firmware.h						\
 	dfu-image.c						\

@@ -33,7 +33,6 @@
 
 #include "config.h"
 
-#include <fwupd.h>
 #include <string.h>
 #include <stdio.h>
 

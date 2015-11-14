@@ -20,24 +20,30 @@
  */
 
 /**
- * SECTION:dfu
- * @short_description: Helper objects for interacting with DFU devices.
+ * SECTION:dfu-error
+ * @short_description: Error defines for libdfu
+ *
+ * This documents the error domain and codes used by libdfu.
  */
 
-#ifndef __DFU_H__
-#define __DFU_H__
+#include "config.h"
 
-#define __DFU_H_INSIDE__
+#include <gio/gio.h>
 
-#include <libdfu/dfu-common.h>
-#include <libdfu/dfu-device.h>
-#include <libdfu/dfu-element.h>
-#include <libdfu/dfu-error.h>
-#include <libdfu/dfu-firmware.h>
-#include <libdfu/dfu-image.h>
-#include <libdfu/dfu-target.h>
+#include "dfu-error.h"
 
-#undef __DFU_H_INSIDE__
-
-#endif /* __DFU_H__ */
-
+/**
+ * dfu_error_quark:
+ *
+ * Return value: An error quark.
+ *
+ * Since: 0.5.4
+ **/
+GQuark
+dfu_error_quark (void)
+{
+	static GQuark quark = 0;
+	if (!quark)
+		quark = g_quark_from_static_string ("DfuError");
+	return quark;
+}

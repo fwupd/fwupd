@@ -22,7 +22,6 @@
 #include "config.h"
 
 #include <dfu.h>
-#include <fwupd.h>
 #include <libintl.h>
 #include <locale.h>
 #include <stdlib.h>
@@ -183,8 +182,8 @@ dfu_tool_run (DfuToolPrivate *priv, const gchar *command, gchar **values, GError
 
 	/* not found */
 	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
 			     /* TRANSLATORS: error message */
 			     _("Command not found"));
 	return FALSE;
@@ -214,8 +213,8 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 		vid_pid = g_strsplit (priv->device_vid_pid, ":", -1);
 		if (g_strv_length (vid_pid) != 2) {
 			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
+					     DFU_ERROR,
+					     DFU_ERROR_INTERNAL,
 					     "Invalid format of VID:PID");
 			return NULL;
 		}
@@ -232,8 +231,8 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 		device = dfu_device_new (usb_device);
 		if (device == NULL) {
 			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
+					     DFU_ERROR,
+					     DFU_ERROR_INVALID_DEVICE,
 					     "Not a DFU device");
 			return NULL;
 		}
@@ -251,8 +250,8 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 
 	/* boo-hoo*/
 	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INVALID_DEVICE,
 			     "No DFU-capable devices detected");
 	return NULL;
 }
@@ -273,8 +272,8 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* check args */
 	if (argc < 3) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "Invalid arguments, expected "
 				     "FORMAT FILE-IN FILE-OUT [VID] [PID] [PRODUCT] [SIZE]"
 				     " -- e.g. `dfu firmware.hex firmware.dfu 273f 1004 ffff 8000`");
@@ -300,8 +299,8 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
 	} else {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
 			     "unknown format '%s', expected [raw|dfu|dfuse]",
 			     values[0]);
 		return FALSE;
@@ -312,8 +311,8 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 		tmp = g_ascii_strtoull (values[3], NULL, 16);
 		if (tmp == 0 || tmp > 0xffff) {
 			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "Failed to parse VID '%s'", values[3]);
 			return FALSE;
 		}
@@ -325,8 +324,8 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 		tmp = g_ascii_strtoull (values[4], NULL, 16);
 		if (tmp == 0 || tmp > 0xffff) {
 			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "Failed to parse PID '%s'", values[4]);
 			return FALSE;
 		}
@@ -338,8 +337,8 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 		tmp = g_ascii_strtoull (values[5], NULL, 16);
 		if (tmp == 0 || tmp > 0xffff) {
 			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "Failed to parse release '%s'", values[5]);
 			return FALSE;
 		}
@@ -353,8 +352,8 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 		tmp = g_ascii_strtoull (values[6], NULL, 16);
 		if (tmp == 0 || tmp > 0xffff) {
 			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "Failed to parse target size '%s'", values[6]);
 			return FALSE;
 		}
@@ -416,8 +415,8 @@ dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* check args */
 	if (g_strv_length (values) < 1) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "Invalid arguments, expected FILENAME");
 		return FALSE;
 	}
@@ -486,8 +485,8 @@ dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* check args */
 	if (g_strv_length (values) < 1) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "Invalid arguments, expected FILENAME");
 		return FALSE;
 	}
@@ -584,8 +583,8 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* check args */
 	if (g_strv_length (values) < 1) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "Invalid arguments, expected FILENAME");
 		return FALSE;
 	}
@@ -621,8 +620,8 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* check args */
 	if (g_strv_length (values) < 1) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "Invalid arguments, expected FILENAME");
 		return FALSE;
 	}
@@ -671,8 +670,8 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	image = dfu_firmware_get_image (firmware, priv->alt_setting);
 	if (image == NULL) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INVALID_FILE,
 			     "could not locate image in firmware for %02x",
 			     priv->alt_setting);
 		return FALSE;
@@ -709,8 +708,8 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* check args */
 	if (g_strv_length (values) < 1) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "Invalid arguments, expected FILENAME");
 		return FALSE;
 	}
@@ -967,7 +966,7 @@ main (int argc, char *argv[])
 	/* run the specified command */
 	ret = dfu_tool_run (priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
-		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
+		if (g_error_matches (error, DFU_ERROR, DFU_ERROR_INTERNAL)) {
 			g_autofree gchar *tmp = NULL;
 			tmp = g_option_context_get_help (context, TRUE, NULL);
 			g_print ("%s\n\n%s", error->message, tmp);

@@ -34,11 +34,11 @@
 
 #include "config.h"
 
-#include <fwupd.h>
 #include <string.h>
 #include <stdio.h>
 
 #include "dfu-common.h"
+#include "dfu-error.h"
 #include "dfu-firmware.h"
 #include "dfu-image-private.h"
 
@@ -464,8 +464,8 @@ dfu_firmware_parse_inhx32 (GBytes *in, GError **error)
 		if (sscanf (&in_buffer[offset], ":%02x%04x%02x",
 			    &len_tmp, &addr_low, &type) != 3) {
 			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
+					     DFU_ERROR,
+					     DFU_ERROR_INTERNAL,
 					     "invalid inhx32 syntax");
 			return NULL;
 		}
@@ -481,8 +481,8 @@ dfu_firmware_parse_inhx32 (GBytes *in, GError **error)
 		}
 		if (dfu_firmware_inhx32_parse_uint8 (in_buffer, end) != checksum)  {
 			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
+					     DFU_ERROR,
+					     DFU_ERROR_INTERNAL,
 					     "invalid checksum");
 			return NULL;
 		}
@@ -519,8 +519,8 @@ dfu_firmware_parse_inhx32 (GBytes *in, GError **error)
 		case DFU_INHX32_RECORD_TYPE_EXTENDED:
 			if (sscanf (&in_buffer[offset+9], "%04x", &addr_high) != 1) {
 				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INTERNAL,
+						     DFU_ERROR,
+						     DFU_ERROR_INTERNAL,
 						     "invalid hex syntax");
 				return NULL;
 			}
@@ -529,8 +529,8 @@ dfu_firmware_parse_inhx32 (GBytes *in, GError **error)
 			break;
 		default:
 			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
+					     DFU_ERROR,
+					     DFU_ERROR_INTERNAL,
 					     "invalid record type");
 			return NULL;
 		}
@@ -611,8 +611,8 @@ dfu_firmware_add_dfuse (DfuFirmware *firmware, GBytes *bytes, GError **error)
 	prefix = (DfuSePrefix *) data;
 	if (memcmp (prefix->sig, "DfuSe", 5) != 0) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "invalid DfuSe prefix");
 		return FALSE;
 	}
@@ -620,8 +620,8 @@ dfu_firmware_add_dfuse (DfuFirmware *firmware, GBytes *bytes, GError **error)
 	/* check the version */
 	if (prefix->ver != 0x01) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
 			     "invalid DfuSe version, got %02x",
 			     prefix->ver);
 		return FALSE;
@@ -630,8 +630,8 @@ dfu_firmware_add_dfuse (DfuFirmware *firmware, GBytes *bytes, GError **error)
 	/* check image size */
 	if (GUINT32_FROM_LE (prefix->image_size) != len) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
 			     "invalid DfuSe image size, got %u, expected %lu",
 			     GUINT32_FROM_LE (prefix->image_size),
 			     len);
@@ -762,8 +762,8 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 		if (priv->format != DFU_FIRMWARE_FORMAT_DFU_1_0 &&
 		    priv->format != DFU_FIRMWARE_FORMAT_DFUSE) {
 			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "version check failed, got %04x",
 				     priv->format);
 			return FALSE;
@@ -775,8 +775,8 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 		crc_new = dfu_firmware_generate_crc32 (data, len - 4);
 		if (GUINT32_FROM_LE (ftr->crc) != crc_new) {
 			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "CRC failed, expected %04x, got %04x",
 				     crc_new, GUINT32_FROM_LE (ftr->crc));
 			return FALSE;
@@ -884,8 +884,8 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 	/* at least one image */
 	if (priv->images == 0) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "no image data to write");
 		return NULL;
 	}
@@ -894,8 +894,8 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 	if (priv->images->len > 1 &&
 	    priv->format != DFU_FIRMWARE_FORMAT_DFUSE) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
 			     "only DfuSe format supports multiple images (%i)",
 			     priv->images->len);
 		return NULL;
@@ -937,8 +937,8 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 
 	/* invalid */
 	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_INTERNAL,
+		     DFU_ERROR,
+		     DFU_ERROR_INTERNAL,
 		     "invalid format for write (0x%04x)",
 		     priv->format);
 	return NULL;

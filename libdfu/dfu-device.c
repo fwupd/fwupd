@@ -37,11 +37,11 @@
 
 #include "config.h"
 
-#include <fwupd.h>
 #include <string.h>
 
 #include "dfu-common.h"
 #include "dfu-device-private.h"
+#include "dfu-error.h"
 #include "dfu-target-private.h"
 
 static void dfu_device_finalize			 (GObject *object);
@@ -211,8 +211,8 @@ dfu_device_get_target_by_alt_setting (DfuDevice *device,
 
 	/* failed */
 	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_INTERNAL,
+		     DFU_ERROR,
+		     DFU_ERROR_NOT_FOUND,
 		     "No target with alt-setting %i",
 		     alt_setting);
 	return NULL;
@@ -240,8 +240,8 @@ dfu_device_get_target_default (DfuDevice *device, GError **error)
 	/* find first target */
 	if (priv->targets->len == 0) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_FOUND,
 				     "No default target");
 		return NULL;
 	}
@@ -281,8 +281,8 @@ dfu_device_get_target_by_alt_name (DfuDevice *device,
 
 	/* failed */
 	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_INTERNAL,
+		     DFU_ERROR,
+		     DFU_ERROR_NOT_FOUND,
 		     "No target with alt-name %s",
 		     alt_name);
 	return NULL;
@@ -404,8 +404,8 @@ dfu_device_open (DfuDevice *device, GError **error)
 	/* open */
 	if (!g_usb_device_open (priv->dev, &error_local)) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INVALID_DEVICE,
 			     "cannot open device %s: %s",
 			     g_usb_device_get_platform_id (priv->dev),
 			     error_local->message);
@@ -545,16 +545,16 @@ dfu_device_wait_for_replug (DfuDevice *device, guint timeout,
 	/* target went off into the woods */
 	if (went_away) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_DEVICE,
 				     "target went away but did not come back");
 		return FALSE;
 	}
 
 	/* VID and PID did not change */
 	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INVALID_DEVICE,
 			     "target came back with same VID:PID values");
 	return FALSE;
 }
@@ -581,8 +581,8 @@ dfu_device_reset (DfuDevice *device, GError **error)
 
 	if (!g_usb_device_reset (priv->dev, &error_local)) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INVALID_DEVICE,
 			     "cannot reset USB device: %s [%i]",
 			     error_local->message,
 			     error_local->code);
@@ -737,8 +737,8 @@ dfu_device_download (DfuDevice *device,
 	    dfu_device_get_runtime_pid (device) != 0xffff &&
 	    dfu_firmware_get_vid (firmware) != dfu_device_get_runtime_vid (device)) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
 			     "vendor ID incorrect, expected 0x%04x got 0x%04x\n",
 			     dfu_firmware_get_vid (firmware),
 			     dfu_device_get_runtime_vid (device));
@@ -750,8 +750,8 @@ dfu_device_download (DfuDevice *device,
 	    dfu_device_get_runtime_pid (device) != 0xffff &&
 	    dfu_firmware_get_pid (firmware) != dfu_device_get_runtime_pid (device)) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
 			     "product ID incorrect, expected 0x%04x got 0x%04x",
 			     dfu_firmware_get_pid (firmware),
 			     dfu_device_get_runtime_pid (device));
@@ -783,8 +783,8 @@ dfu_device_download (DfuDevice *device,
 	images = dfu_firmware_get_images (firmware);
 	if (images->len == 0) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_FILE,
 				     "no images in firmware file");
 		return FALSE;
 	}

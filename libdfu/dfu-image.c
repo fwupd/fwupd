@@ -31,12 +31,12 @@
 
 #include "config.h"
 
-#include <fwupd.h>
 #include <string.h>
 #include <stdio.h>
 
 #include "dfu-common.h"
 #include "dfu-element-private.h"
+#include "dfu-error.h"
 #include "dfu-image-private.h"
 
 static void dfu_image_finalize			 (GObject *object);
@@ -344,8 +344,8 @@ _dfu_image_from_dfuse (const guint8 *data,
 	im = (DfuSeImagePrefix *) data;
 	if (memcmp (im->sig, "Target", 6) != 0) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_FILE,
 				     "invalid DfuSe target signature");
 		return NULL;
 	}

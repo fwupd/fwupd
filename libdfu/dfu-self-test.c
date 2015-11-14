@@ -21,12 +21,12 @@
 
 #include "config.h"
 
-#include <fwupd.h>
 #include <glib-object.h>
 #include <stdlib.h>
 
 #include "dfu-common.h"
 #include "dfu-device.h"
+#include "dfu-error.h"
 #include "dfu-firmware.h"
 #include "dfu-target.h"
 
@@ -418,8 +418,8 @@ dfu_colorhug_plus_func (void)
 					   DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
 					   NULL, NULL, NULL, &error);
 		g_assert_error (error,
-				FWUPD_ERROR,
-				FWUPD_ERROR_INTERNAL);
+				DFU_ERROR,
+				DFU_ERROR_INTERNAL);
 		g_assert (ret);
 		g_clear_error (&error);
 	}

@@ -35,12 +35,12 @@
 
 #include "config.h"
 
-#include <fwupd.h>
 #include <string.h>
 #include <math.h>
 
 #include "dfu-common.h"
 #include "dfu-device-private.h"
+#include "dfu-error.h"
 #include "dfu-target-private.h"
 
 static void dfu_target_finalize			 (GObject *object);
@@ -461,8 +461,8 @@ dfu_target_open (DfuTarget *target, DfuTargetOpenFlags flags,
 	dev = _dfu_device_get_usb_dev (priv->device);
 	if (!g_usb_device_claim_interface (dev, (gint) priv->iface_number, 0, &error_local)) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INVALID_DEVICE,
 			     "cannot claim interface %i: %s",
 			     priv->iface_number, error_local->message);
 		return FALSE;
@@ -476,8 +476,8 @@ dfu_target_open (DfuTarget *target, DfuTargetOpenFlags flags,
 						     (gint) priv->iface_alt_setting,
 						     &error_local)) {
 			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
 				     "cannot set alternate setting 0x%02x on interface %i: %s",
 				     priv->iface_alt_setting,
 				     priv->iface_number,
@@ -552,8 +552,8 @@ dfu_target_close (DfuTarget *target, GError **error)
 						     0,
 						     &error_local)) {
 			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
 				     "cannot release interface %i: %s",
 				     priv->iface_number, error_local->message);
 			return FALSE;
@@ -599,16 +599,16 @@ dfu_target_refresh (DfuTarget *target, GCancellable *cancellable, GError **error
 					    cancellable,
 					    &error_local)) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
 			     "cannot get target state: %s",
 			     error_local->message);
 		return FALSE;
 	}
 	if (actual_length != 6) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
 			     "cannot get target status, invalid size: %04x",
 			     (guint) actual_length);
 	}
@@ -660,8 +660,8 @@ dfu_target_detach (DfuTarget *target, GCancellable *cancellable, GError **error)
 					    cancellable,
 					    &error_local)) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
 			     "cannot detach target: %s",
 			     error_local->message);
 		return FALSE;
@@ -709,8 +709,8 @@ dfu_target_abort (DfuTarget *target, GCancellable *cancellable, GError **error)
 					    cancellable,
 					    &error_local)) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
 			     "cannot abort target: %s",
 			     error_local->message);
 		return FALSE;
@@ -747,8 +747,8 @@ _dfu_target_update (DfuTarget *target, GUsbInterface *iface,
 	/* check this is _still_ a DFU-capable target */
 	if (!dfu_target_update_from_iface (target, iface)) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
 				     "replugged target is not DFU-capable");
 		return FALSE;
 	}
@@ -797,8 +797,8 @@ dfu_target_clear_status (DfuTarget *target, GCancellable *cancellable, GError **
 					    cancellable,
 					    &error_local)) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
 			     "cannot clear status on the target: %s",
 			     error_local->message);
 		return FALSE;
@@ -832,8 +832,8 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 					    cancellable,
 					    &error_local)) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
 			     "cannot clear status on the target: %s",
 			     error_local->message);
 		return NULL;
@@ -884,8 +884,8 @@ dfu_target_upload (DfuTarget *target,
 	/* can the target do this? */
 	if (!dfu_target_can_upload (target)) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
 				     "target cannot do uploading");
 		return NULL;
 	}
@@ -922,8 +922,8 @@ dfu_target_upload (DfuTarget *target,
 	if (expected_size > 0) {
 		if (total_size != expected_size) {
 			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_FILE,
 				     "invalid size, got %li, expected %li",
 				     total_size, expected_size);
 			return NULL;
@@ -990,8 +990,8 @@ dfu_target_download_chunk (DfuTarget *target, guint8 index, GBytes *bytes,
 					    cancellable,
 					    &error_local)) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
 			     "cannot download data to the target (state: %s): %s",
 			     dfu_state_to_string (priv->state),
 			     error_local->message);
@@ -1052,8 +1052,8 @@ dfu_target_download_bytes (DfuTarget *target, GBytes *bytes,
 	/* can the target do this? */
 	if (!dfu_target_can_download (target)) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
 				     "target cannot do downloading");
 		return FALSE;
 	}
@@ -1063,8 +1063,8 @@ dfu_target_download_bytes (DfuTarget *target, GBytes *bytes,
 			  (gdouble) priv->transfer_size);
 	if (nr_chunks == 0) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_FILE,
 				     "zero-length firmware");
 		return FALSE;
 	}
@@ -1128,8 +1128,8 @@ dfu_target_download_bytes (DfuTarget *target, GBytes *bytes,
 			g_autofree gchar *bytes_cmp_str = NULL;
 			bytes_cmp_str = _g_bytes_compare_verbose (bytes_tmp, bytes);
 			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_WRITE,
+				     DFU_ERROR,
+				     DFU_ERROR_VERIFY_FAILED,
 				     "verify failed: %s",
 				     bytes_cmp_str);
 			return FALSE;
@@ -1189,8 +1189,8 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 	element = dfu_image_get_element (image, 0);
 	if (element == NULL) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_WRITE,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_FILE,
 				     "no image elements");
 		return FALSE;
 	}
