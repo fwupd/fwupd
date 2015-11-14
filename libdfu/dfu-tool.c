@@ -661,29 +661,6 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	str_debug = dfu_firmware_to_string (firmware);
 	g_debug ("DFU: %s", str_debug);
 
-	/* check vendor matches */
-	if (dfu_firmware_get_vid (firmware) != 0xffff &&
-	    dfu_device_get_runtime_pid (device) != 0xffff &&
-	    dfu_firmware_get_vid (firmware) != dfu_device_get_runtime_vid (device)) {
-		g_print ("Vendor ID incorrect, expected 0x%04x got 0x%04x\n",
-			 dfu_firmware_get_vid (firmware),
-			 dfu_device_get_runtime_vid (device));
-		return EXIT_FAILURE;
-	}
-
-	/* check product matches */
-	if (dfu_firmware_get_pid (firmware) != 0xffff &&
-	    dfu_device_get_runtime_pid (device) != 0xffff &&
-	    dfu_firmware_get_pid (firmware) != dfu_device_get_runtime_pid (device)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Product ID incorrect, expected 0x%04x got 0x%04x",
-			     dfu_firmware_get_pid (firmware),
-			     dfu_device_get_runtime_pid (device));
-		return FALSE;
-	}
-
 	/* optional reset */
 	if (priv->reset) {
 		flags |= DFU_TARGET_TRANSFER_FLAG_HOST_RESET;
@@ -754,29 +731,6 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* print the new object */
 	str_debug = dfu_firmware_to_string (firmware);
 	g_debug ("DFU: %s", str_debug);
-
-	/* check vendor matches */
-	if (dfu_firmware_get_vid (firmware) != 0xffff &&
-	    dfu_device_get_runtime_pid (device) != 0xffff &&
-	    dfu_firmware_get_vid (firmware) != dfu_device_get_runtime_vid (device)) {
-		g_print ("Vendor ID incorrect, expected 0x%04x got 0x%04x\n",
-			 dfu_firmware_get_vid (firmware),
-			 dfu_device_get_runtime_vid (device));
-		return EXIT_FAILURE;
-	}
-
-	/* check product matches */
-	if (dfu_firmware_get_pid (firmware) != 0xffff &&
-	    dfu_device_get_runtime_pid (device) != 0xffff &&
-	    dfu_firmware_get_pid (firmware) != dfu_device_get_runtime_pid (device)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Product ID incorrect, expected 0x%04x got 0x%04x",
-			     dfu_firmware_get_pid (firmware),
-			     dfu_device_get_runtime_pid (device));
-		return FALSE;
-	}
 
 	/* optional reset */
 	if (priv->reset) {

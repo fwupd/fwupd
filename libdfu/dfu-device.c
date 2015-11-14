@@ -732,6 +732,32 @@ dfu_device_download (DfuDevice *device,
 	g_autoptr(DfuTarget) target_default = NULL;
 	g_autoptr(GPtrArray) targets = NULL;
 
+	/* check vendor matches */
+	if (dfu_firmware_get_vid (firmware) != 0xffff &&
+	    dfu_device_get_runtime_pid (device) != 0xffff &&
+	    dfu_firmware_get_vid (firmware) != dfu_device_get_runtime_vid (device)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "vendor ID incorrect, expected 0x%04x got 0x%04x\n",
+			     dfu_firmware_get_vid (firmware),
+			     dfu_device_get_runtime_vid (device));
+		return FALSE;
+	}
+
+	/* check product matches */
+	if (dfu_firmware_get_pid (firmware) != 0xffff &&
+	    dfu_device_get_runtime_pid (device) != 0xffff &&
+	    dfu_firmware_get_pid (firmware) != dfu_device_get_runtime_pid (device)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "product ID incorrect, expected 0x%04x got 0x%04x",
+			     dfu_firmware_get_pid (firmware),
+			     dfu_device_get_runtime_pid (device));
+		return FALSE;
+	}
+
 	/* auto-open */
 	if (!priv->device_open) {
 		if (!dfu_device_open (device, error))

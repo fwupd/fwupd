@@ -323,6 +323,7 @@ static void
 dfu_colorhug_plus_func (void)
 {
 	gboolean ret;
+	gboolean seen_app_idle = FALSE;
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(DfuTarget) target = NULL;
 	g_autoptr(DfuImage) image = NULL;
@@ -366,6 +367,8 @@ dfu_colorhug_plus_func (void)
 		ret = dfu_device_close (device2, &error);
 		g_assert_no_error (error);
 		g_assert (ret);
+
+		/* we know the runtime VID:PID */
 	}
 
 	/* find any DFU in dfuIDLE mode */
@@ -394,6 +397,32 @@ dfu_colorhug_plus_func (void)
 
 	/* is in dfuIDLE mode */
 	g_assert_cmpstr (dfu_state_to_string (dfu_target_get_state (target)), ==, "dfuIDLE");
+
+	/* lets try and flash something inappropriate */
+	if (seen_app_idle) {
+		g_autoptr(DfuFirmware) firmware = NULL;
+		g_autoptr(GFile) file = NULL;
+		g_autofree gchar *filename = NULL;
+
+		filename = dfu_test_get_filename ("kiibohd.dfu.bin");
+		g_assert (filename != NULL);
+		file = g_file_new_for_path (filename);
+		firmware = dfu_firmware_new ();
+		ret = dfu_firmware_parse_file (firmware, file,
+					       DFU_FIRMWARE_PARSE_FLAG_NONE,
+					       NULL, &error);
+		g_assert_no_error (error);
+		g_assert (ret);
+		ret = dfu_device_download (device, firmware,
+					   DFU_TARGET_TRANSFER_FLAG_DETACH |
+					   DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
+					   NULL, NULL, NULL, &error);
+		g_assert_error (error,
+				FWUPD_ERROR,
+				FWUPD_ERROR_INTERNAL);
+		g_assert (ret);
+		g_clear_error (&error);
+	}
 
 	/* get a dump of the existing firmware */
 	image = dfu_target_upload (target, 0, DFU_TARGET_TRANSFER_FLAG_NONE,
