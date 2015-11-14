@@ -372,9 +372,9 @@ dfu_colorhug_plus_func (void)
 	usb_device = g_usb_context_find_by_vid_pid (usb_ctx,
 						    0x273f,
 						    0x1003,
-						    &error);
-	g_assert_no_error (error);
-	g_assert (usb_device != NULL);
+						    NULL);
+	if (usb_device == NULL)
+		return;
 
 	/* check it's DFU-capable */
 	device = dfu_device_new (usb_device);
