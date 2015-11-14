@@ -23,8 +23,15 @@ libdfu_private_la_SOURCES =					\
 	dfu-common.h						\
 	dfu-device.c						\
 	dfu-device.h						\
+	dfu-device-private.h					\
+	dfu-element.c						\
+	dfu-element.h						\
+	dfu-element-private.h					\
 	dfu-firmware.c						\
 	dfu-firmware.h						\
+	dfu-image.c						\
+	dfu-image.h						\
+	dfu-image-private.h					\
 	dfu-target.c						\
 	dfu-target.h						\
 	dfu-target-private.h

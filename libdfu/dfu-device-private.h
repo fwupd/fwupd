@@ -19,23 +19,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#ifndef __DFU_TARGET_PRIVATE_H
-#define __DFU_TARGET_PRIVATE_H
+#ifndef __DFU_DEVICE_PRIVATE_H
+#define __DFU_DEVICE_PRIVATE_H
 
+#include <glib-object.h>
+#include <gio/gio.h>
 #include <gusb.h>
 
 #include "dfu-device.h"
-#include "dfu-target.h"
 
 G_BEGIN_DECLS
 
-DfuTarget	*_dfu_target_new			(DfuDevice	*device,
-							 GUsbInterface	*iface);
-gboolean	 _dfu_target_update			(DfuTarget	*target,
-							 GUsbInterface	*iface,
-							 GCancellable	*cancellable,
-							 GError		**error);
+GUsbDevice	*_dfu_device_get_usb_dev		(DfuDevice	*device);
+void		 _dfu_device_set_runtime_vid		(DfuDevice	*device,
+							 guint16	 runtime_vid);
+void		 _dfu_device_set_runtime_pid		(DfuDevice	*device,
+							 guint16	 runtime_pid);
 
 G_END_DECLS
 
-#endif /* __DFU_TARGET_PRIVATE_H */
+#endif /* __DFU_DEVICE_PRIVATE_H */

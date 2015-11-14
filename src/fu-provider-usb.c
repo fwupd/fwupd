@@ -250,7 +250,7 @@ fu_provider_usb_update (FuProvider *provider,
 	GUsbDevice *dev;
 	const gchar *platform_id;
 	g_autoptr(DfuDevice) dfu_device = NULL;
-	g_autoptr(DfuTarget) dfu_target = NULL;
+	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get device */
@@ -275,36 +275,21 @@ fu_provider_usb_update (FuProvider *provider,
 			     platform_id);
 		return FALSE;
 	}
-	dfu_target = dfu_device_get_target_by_alt_setting (dfu_device, 0, error);
-	if (dfu_target == NULL)
-		return FALSE;
-	if (!dfu_target_open (dfu_target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
-		return FALSE;
-	g_debug ("device is now %s:%s",
-		 dfu_mode_to_string (dfu_target_get_mode (dfu_target)),
-		 dfu_state_to_string (dfu_target_get_state (dfu_target)));
-
-	/* detach the device and wait for reconnection */
-	if (dfu_target_get_mode (dfu_target) == DFU_MODE_RUNTIME) {
-		if (!dfu_target_detach (dfu_target, NULL, error))
-			return FALSE;
-		if (!dfu_target_wait_for_reset (dfu_target, 5000, NULL, error))
-			return FALSE;
-	}
 
 	/* hit hardware */
-	if (!dfu_target_download (dfu_target, blob_fw,
+	dfu_firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_data (dfu_firmware, blob_fw,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE, error))
+		return FALSE;
+	if (!dfu_device_download (dfu_device, dfu_firmware,
+				  DFU_TARGET_TRANSFER_FLAG_DETACH |
 				  DFU_TARGET_TRANSFER_FLAG_VERIFY |
 				  DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
 				  NULL,
 				  fu_provider_usb_progress_cb, provider,
 				  error))
 		return FALSE;
-
-	/* teardown */
-	if (!dfu_target_close (dfu_target, error))
-		return FALSE;
-
+	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -352,12 +337,12 @@ fu_provider_usb_verify (FuProvider *provider,
 {
 	FuProviderUsb *provider_usb = FU_PROVIDER_USB (provider);
 	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
+	GBytes *blob_fw;
 	GUsbDevice *dev;
 	const gchar *platform_id;
 	g_autofree gchar *hash = NULL;
 	g_autoptr(DfuDevice) dfu_device = NULL;
-	g_autoptr(DfuTarget) dfu_target = NULL;
-	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get device */
@@ -382,40 +367,25 @@ fu_provider_usb_verify (FuProvider *provider,
 			     platform_id);
 		return FALSE;
 	}
-	dfu_target = dfu_device_get_target_by_alt_setting (dfu_device, 0, error);
-	if (dfu_target == NULL)
-		return FALSE;
-	if (!dfu_target_open (dfu_target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
-		return FALSE;
-	g_debug ("device is now %s:%s",
-		 dfu_mode_to_string (dfu_target_get_mode (dfu_target)),
-		 dfu_state_to_string (dfu_target_get_state (dfu_target)));
-
-	/* detach the device and wait for reconnection */
-	if (dfu_target_get_mode (dfu_target) == DFU_MODE_RUNTIME) {
-		if (!dfu_target_detach (dfu_target, NULL, error))
-			return FALSE;
-		if (!dfu_target_wait_for_reset (dfu_target, 5000, NULL, error))
-			return FALSE;
-	}
 
 	/* get data from hardware */
-	blob_fw = dfu_target_upload (dfu_target,
-				     0,
-				     DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
-				     NULL,
-				     fu_provider_usb_progress_cb, provider,
-				     error);
-	if (blob_fw == NULL)
-		return FALSE;
-
-	/* teardown */
-	if (!dfu_target_close (dfu_target, error))
+	dfu_firmware = dfu_device_upload (dfu_device,
+					  0,
+					  DFU_TARGET_TRANSFER_FLAG_DETACH |
+					  DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
+					  NULL,
+					  fu_provider_usb_progress_cb, provider,
+					  error);
+	if (dfu_firmware == NULL)
 		return FALSE;
 
 	/* get the SHA1 hash */
+	blob_fw = dfu_firmware_write_data (dfu_firmware, error);
+	if (blob_fw == NULL)
+		return FALSE;
 	hash = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_fw);
 	fu_device_set_metadata (device, FU_DEVICE_KEY_FIRMWARE_HASH, hash);
+	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 

@@ -26,6 +26,8 @@
 #include <gio/gio.h>
 #include <gusb.h>
 
+#include "dfu-image.h"
+
 G_BEGIN_DECLS
 
 #define DFU_TYPE_TARGET (dfu_target_get_type ())
@@ -56,6 +58,7 @@ typedef enum {
  * @DFU_TARGET_TRANSFER_FLAG_VERIFY:		Verify the download once complete
  * @DFU_TARGET_TRANSFER_FLAG_HOST_RESET:	Reset the bus when complete
  * @DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME:	Boot to runtime when complete
+ * @DFU_TARGET_TRANSFER_FLAG_DETACH:		Automatically detach and reset when in appIDLE mode
  *
  * The optional flags used for transfering firmware.
  **/
@@ -64,7 +67,8 @@ typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_VERIFY		= (1 << 0),
 	DFU_TARGET_TRANSFER_FLAG_HOST_RESET	= (1 << 1),
 	DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME	= (1 << 2),
-	/* private */
+	DFU_TARGET_TRANSFER_FLAG_DETACH		= (1 << 3),
+	/*< private >*/
 	DFU_TARGET_TRANSFER_FLAG_LAST,
 } DfuTargetTransferFlags;
 
@@ -96,7 +100,7 @@ gboolean	 dfu_target_abort			(DfuTarget	*target,
 gboolean	 dfu_target_clear_status		(DfuTarget	*target,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GBytes		*dfu_target_upload			(DfuTarget	*target,
+DfuImage	*dfu_target_upload			(DfuTarget	*target,
 							 gsize		 expected_size,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
@@ -104,25 +108,17 @@ GBytes		*dfu_target_upload			(DfuTarget	*target,
 							 gpointer	 progress_cb_data,
 							 GError		**error);
 gboolean	 dfu_target_download			(DfuTarget	*target,
-							 GBytes		*bytes,
+							 DfuImage	*image,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
 							 DfuProgressCallback progress_cb,
 							 gpointer	 progress_cb_data,
-							 GError		**error);
-gboolean	 dfu_target_reset			(DfuTarget	*target,
-							 GError		**error);
-gboolean	 dfu_target_wait_for_reset		(DfuTarget	*target,
-							 guint		 max_ms,
-							 GCancellable	*cancellable,
 							 GError		**error);
 void		 dfu_target_set_timeout			(DfuTarget	*target,
 							 guint		 timeout_ms);
 guint8		 dfu_target_get_interface_number	(DfuTarget	*target);
 guint8		 dfu_target_get_interface_alt_setting	(DfuTarget	*target);
 const gchar	*dfu_target_get_interface_alt_name	(DfuTarget	*target);
-guint16		 dfu_target_get_runtime_vid		(DfuTarget	*target);
-guint16		 dfu_target_get_runtime_pid		(DfuTarget	*target);
 guint16		 dfu_target_get_transfer_size		(DfuTarget	*target);
 void		 dfu_target_set_transfer_size		(DfuTarget	*target,
 							 guint16	 transfer_size);

@@ -34,6 +34,7 @@
 #include <math.h>
 
 #include "dfu-common.h"
+#include "dfu-device-private.h"
 #include "dfu-target-private.h"
 
 static void dfu_target_finalize			 (GObject *object);
@@ -65,11 +66,8 @@ typedef struct {
 	DfuMode			 mode;
 	DfuState		 state;
 	DfuStatus		 status;
-	GUsbDevice		*dev;
-	gboolean		 device_open;
+	DfuDevice		*device;
 	gboolean		 interface_claimed;
-	guint16			 runtime_pid;
-	guint16			 runtime_vid;
 	guint16			 transfer_size;
 	guint8			 iface_number;
 	guint8			 iface_alt_setting;
@@ -105,8 +103,6 @@ dfu_target_init (DfuTarget *target)
 	priv->status = DFU_STATUS_OK;
 	priv->timeout_ms = 500;
 	priv->transfer_size = 64;
-	priv->runtime_vid = 0xffff;
-	priv->runtime_pid = 0xffff;
 }
 
 /**
@@ -118,15 +114,9 @@ dfu_target_finalize (GObject *object)
 	DfuTarget *target = DFU_TARGET (object);
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 
-	/* don't rely on this */
-	if (priv->device_open) {
-		g_debug ("auto-closing DfuTarget, call dfu_target_close()");
-		g_usb_device_close (priv->dev, NULL);
-	}
-
 	g_free (priv->iface_alt_setting_name);
-	if (priv->dev != NULL)
-		g_object_unref (priv->dev);
+	if (priv->device != NULL)
+		g_object_unref (priv->device);
 
 	G_OBJECT_CLASS (dfu_target_parent_class)->finalize (object);
 }
@@ -185,15 +175,16 @@ dfu_target_get_quirks (GUsbDevice *dev)
 }
 
 /**
- * dfu_target_set_usb_dev_iface:
+ * dfu_target_update_from_iface:
  **/
 static gboolean
-dfu_target_set_usb_dev_iface (DfuTarget *target, GUsbDevice *dev, GUsbInterface *iface)
+dfu_target_update_from_iface (DfuTarget *target, GUsbInterface *iface)
 {
 	DfuMode mode = DFU_MODE_UNKNOWN;
 	DfuQuirks quirks;
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	GBytes *iface_data = NULL;
+	GUsbDevice *dev;
 	const DfuFuncDescriptor *desc;
 	gsize iface_data_length;
 
@@ -206,6 +197,7 @@ dfu_target_set_usb_dev_iface (DfuTarget *target, GUsbDevice *dev, GUsbInterface 
 		mode = DFU_MODE_DFU;
 
 	/* the DSO Nano has uses 0 instead of 2 when in DFU mode */
+	dev = _dfu_device_get_usb_dev (priv->device);
 	quirks = dfu_target_get_quirks (dev);
 	if ((quirks & DFU_QUIRK_USE_PROTOCOL_ZERO) &&
 	    g_usb_interface_get_protocol (iface) == 0x00)
@@ -226,12 +218,11 @@ dfu_target_set_usb_dev_iface (DfuTarget *target, GUsbDevice *dev, GUsbInterface 
 
 	/* save for reset */
 	if (mode == DFU_MODE_RUNTIME) {
-		priv->runtime_vid = g_usb_device_get_vid (dev);
-		priv->runtime_pid = g_usb_device_get_pid (dev);
+		_dfu_device_set_runtime_vid (priv->device, g_usb_device_get_vid (dev));
+		_dfu_device_set_runtime_pid (priv->device, g_usb_device_get_pid (dev));
 	}
 
 	/* update */
-	g_set_object (&priv->dev, dev);
 	priv->iface_number = g_usb_interface_get_number (iface);
 	priv->iface_alt_setting = g_usb_interface_get_alternate (iface);
 	priv->iface_alt_setting_idx = g_usb_interface_get_index (iface);
@@ -277,22 +268,26 @@ dfu_target_set_usb_dev_iface (DfuTarget *target, GUsbDevice *dev, GUsbInterface 
 }
 
 /**
- * dfu_target_new:
- * @dev: a #GUsbDevice
+ * _dfu_target_new:
+ * @device: a #DfuDevice
  * @iface: a #GUsbInterface
  *
- * Creates a new DFU wrapper.
+ * Creates a new DFU target, which represents an alt-setting on a
+ * DFU-capable device.
  *
  * Return value: a #DfuTarget, or %NULL if @iface was not DFU-capable
  *
  * Since: 0.5.4
  **/
 DfuTarget *
-dfu_target_new (GUsbDevice *dev, GUsbInterface *iface)
+_dfu_target_new (DfuDevice *device, GUsbInterface *iface)
 {
+	DfuTargetPrivate *priv;
 	DfuTarget *target;
 	target = g_object_new (DFU_TYPE_TARGET, NULL);
-	if (!dfu_target_set_usb_dev_iface (target, dev, iface)) {
+	priv = GET_PRIVATE (target);
+	priv->device = g_object_ref (device);
+	if (!dfu_target_update_from_iface (target, iface)) {
 		g_object_unref (target);
 		return NULL;
 	}
@@ -390,42 +385,6 @@ dfu_target_can_download (DfuTarget *target)
 }
 
 /**
- * dfu_target_get_runtime_vid:
- * @target: a #GUsbDevice
- *
- * Gets the runtime vendor ID.
- *
- * Return value: vendor ID, or 0xffff for unknown
- *
- * Since: 0.5.4
- **/
-guint16
-dfu_target_get_runtime_vid (DfuTarget *target)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_return_val_if_fail (DFU_IS_TARGET (target), 0xffff);
-	return priv->runtime_vid;
-}
-
-/**
- * dfu_target_get_runtime_pid:
- * @target: a #GUsbDevice
- *
- * Gets the runtime product ID.
- *
- * Return value: product ID, or 0xffff for unknown
- *
- * Since: 0.5.4
- **/
-guint16
-dfu_target_get_runtime_pid (DfuTarget *target)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_return_val_if_fail (DFU_IS_TARGET (target), 0xffff);
-	return priv->runtime_pid;
-}
-
-/**
  * dfu_target_get_transfer_size:
  * @target: a #GUsbDevice
  *
@@ -478,25 +437,23 @@ dfu_target_open (DfuTarget *target, DfuTargetOpenFlags flags,
 		 GCancellable *cancellable, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	GUsbDevice *dev;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	/* open */
-	if (!g_usb_device_open (priv->dev, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "cannot open target %s: %s",
-			     g_usb_device_get_platform_id (priv->dev),
-			     error_local->message);
+	/* already done */
+	if (priv->interface_claimed)
+		return TRUE;
+
+	/* ensure parent device is open */
+	if (!dfu_device_open (priv->device, error))
 		return FALSE;
-	}
-	priv->device_open = TRUE;
 
 	/* claim the correct interface */
-	if (!g_usb_device_claim_interface (priv->dev, (gint) priv->iface_number, 0, &error_local)) {
+	dev = _dfu_device_get_usb_dev (priv->device);
+	if (!g_usb_device_claim_interface (dev, (gint) priv->iface_number, 0, &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -508,7 +465,7 @@ dfu_target_open (DfuTarget *target, DfuTargetOpenFlags flags,
 
 	/* use the correct setting */
 	if (priv->mode == DFU_MODE_DFU) {
-		if (!g_usb_device_set_interface_alt (priv->dev,
+		if (!g_usb_device_set_interface_alt (dev,
 						     (gint) priv->iface_number,
 						     (gint) priv->iface_alt_setting,
 						     &error_local)) {
@@ -526,7 +483,7 @@ dfu_target_open (DfuTarget *target, DfuTargetOpenFlags flags,
 	/* get string */
 	if (priv->iface_alt_setting_idx != 0x00) {
 		priv->iface_alt_setting_name =
-			g_usb_device_get_string_descriptor (priv->dev,
+			g_usb_device_get_string_descriptor (dev,
 							    priv->iface_alt_setting_idx,
 							    NULL);
 	}
@@ -571,14 +528,20 @@ gboolean
 dfu_target_close (DfuTarget *target, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	GUsbDevice *dev;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* this is our intention; the release might fail if the USB device
+	 * has been disconnected already */
+	priv->interface_claimed = FALSE;
+
 	/* only release if claimed */
 	if (priv->interface_claimed) {
-		if (!g_usb_device_release_interface (priv->dev,
+		dev = _dfu_device_get_usb_dev (priv->device);
+		if (!g_usb_device_release_interface (dev,
 						     (gint) priv->iface_number,
 						     0,
 						     &error_local)) {
@@ -589,14 +552,6 @@ dfu_target_close (DfuTarget *target, GError **error)
 				     priv->iface_number, error_local->message);
 			return FALSE;
 		}
-		priv->interface_claimed = FALSE;
-	}
-
-	/* only close if open */
-	if (priv->device_open) {
-		if (!g_usb_device_close (priv->dev, error))
-			return FALSE;
-		priv->device_open = FALSE;
 	}
 
 	/* success */
@@ -626,7 +581,7 @@ dfu_target_refresh (DfuTarget *target, GCancellable *cancellable, GError **error
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	if (!g_usb_device_control_transfer (priv->dev,
+	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
@@ -667,38 +622,6 @@ dfu_target_refresh (DfuTarget *target, GCancellable *cancellable, GError **error
 }
 
 /**
- * dfu_target_reset:
- * @target: a #DfuTarget
- * @error: a #GError, or %NULL
- *
- * Resets the USB device.
- *
- * Return value: %TRUE for success
- *
- * Since: 0.5.4
- **/
-gboolean
-dfu_target_reset (DfuTarget *target, GError **error)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	if (!g_usb_device_reset (priv->dev, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "cannot reset USB target: %s [%i]",
-			     error_local->message,
-			     error_local->code);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-/**
  * dfu_target_detach:
  * @target: a #DfuTarget
  * @cancellable: a #GCancellable, or %NULL
@@ -719,7 +642,7 @@ dfu_target_detach (DfuTarget *target, GCancellable *cancellable, GError **error)
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	if (!g_usb_device_control_transfer (priv->dev,
+	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
@@ -741,7 +664,7 @@ dfu_target_detach (DfuTarget *target, GCancellable *cancellable, GError **error)
 	/* do a host reset */
 	if ((priv->attributes & DFU_ATTRIBUTE_WILL_DETACH) == 0) {
 		g_debug ("doing target reset as host will not self-reset");
-		if (!dfu_target_reset (target, error))
+		if (!dfu_device_reset (priv->device, error))
 			return FALSE;
 	}
 	return TRUE;
@@ -768,7 +691,7 @@ dfu_target_abort (DfuTarget *target, GCancellable *cancellable, GError **error)
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	if (!g_usb_device_control_transfer (priv->dev,
+	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
@@ -790,20 +713,33 @@ dfu_target_abort (DfuTarget *target, GCancellable *cancellable, GError **error)
 }
 
 /**
- * dfu_target_set_new_dev:
+ * _dfu_target_update:
+ * @target: a #DfuTarget
+ * @iface: a #GUsbInterface
+ * @cancellable: a #GCancellable, or %NULL
+ * @error: a #GError, or %NULL
+ *
+ * Updates the target with new interface data. This only needs to be
+ * done after the device has been reset.
+ * 
+ * Returns: %TRUE for success
  **/
-static gboolean
-dfu_target_set_new_dev (DfuTarget *target, GUsbDevice *dev, GUsbInterface *iface,
-			GCancellable *cancellable, GError **error)
+gboolean
+_dfu_target_update (DfuTarget *target, GUsbInterface *iface,
+		    GCancellable *cancellable, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	gboolean reclaim_interface = FALSE;
 
-	/* close old target */
-	if (!g_usb_device_close (priv->dev, error))
-		return FALSE;
+	/* close */
+	if (priv->interface_claimed) {
+		if (!dfu_target_close (target, error))
+			return FALSE;
+		reclaim_interface = TRUE;
+	}
 
 	/* check this is _still_ a DFU-capable target */
-	if (!dfu_target_set_usb_dev_iface (target, dev, iface)) {
+	if (!dfu_target_update_from_iface (target, iface)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
@@ -811,121 +747,15 @@ dfu_target_set_new_dev (DfuTarget *target, GUsbDevice *dev, GUsbInterface *iface
 		return FALSE;
 	}
 
-	/* re-open */
-	return dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE, cancellable, error);
-}
-
-/**
- * _get_dfu_iface_with_alt_setting:
- **/
-static GUsbInterface *
-_get_dfu_iface_with_alt_setting (GUsbDevice *dev, guint alt_setting, GError **error)
-{
-	guint j;
-	g_autoptr(GPtrArray) interfaces = NULL;
-
-	/* get new list */
-	interfaces = g_usb_device_get_interfaces (dev, error);
-	if (interfaces == NULL)
-		return NULL;
-
-	/* match with altsetting */
-	for (j = 0; j < interfaces->len; j++) {
-		GUsbInterface *iface_tmp;
-		iface_tmp = g_ptr_array_index (interfaces, j);
-		if (g_usb_interface_get_class (iface_tmp) != G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
-			continue;
-		if (g_usb_interface_get_subclass (iface_tmp) != 0x01)
-			continue;
-		if (g_usb_interface_get_alternate (iface_tmp) != alt_setting)
-			continue;
-		return g_object_ref (iface_tmp);
+	/* reclaim */
+	if (reclaim_interface) {
+		if (!dfu_device_open (priv->device, error))
+			return FALSE;
+		if (!dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE,
+				      cancellable, error))
+			return FALSE;
 	}
-
-	/* no match */
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_INTERNAL,
-		     "new target did not have DFU with alt-setting %i",
-		     alt_setting);
-	return NULL;
-}
-
-/**
- * dfu_target_wait_for_reset:
- * @target: a #DfuTarget
- * @max_ms: the maximum amount of time to wait
- * @cancellable: a #GCancellable, or %NULL
- * @error: a #GError, or %NULL
- *
- * Waits for a DFU target to disconnect and reconnect.
- *
- * Return value: %TRUE for success
- *
- * Since: 0.5.4
- **/
-gboolean
-dfu_target_wait_for_reset (DfuTarget *target, guint max_ms,
-			   GCancellable *cancellable, GError **error)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	const guint poll_interval_ms = 100;
-	gboolean went_away = FALSE;
-	guint16 pid;
-	guint16 vid;
-	guint i;
-	g_autofree gchar *platform_id = NULL;
-	g_autoptr(GUsbContext) usb_ctx = NULL;
-
-	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* keep copies */
-	platform_id = g_strdup (g_usb_device_get_platform_id (priv->dev));
-	vid = g_usb_device_get_vid (priv->dev);
-	pid = g_usb_device_get_pid (priv->dev);
-
-	/* keep trying */
-	g_object_get (priv->dev, "context", &usb_ctx, NULL);
-	for (i = 0; i < max_ms / poll_interval_ms; i++) {
-		g_autoptr(GUsbDevice) dev_tmp = NULL;
-		g_usleep(poll_interval_ms * 1000);
-		g_usb_context_enumerate (usb_ctx);
-		dev_tmp = g_usb_context_find_by_platform_id (usb_ctx, platform_id, NULL);
-		if (dev_tmp == NULL) {
-			went_away = TRUE;
-			continue;
-		}
-
-		/* VID:PID changed so find a DFU iface with the same alt */
-		if (vid != g_usb_device_get_vid (dev_tmp) ||
-		    pid != g_usb_device_get_pid (dev_tmp)) {
-			g_autoptr(GUsbInterface) iface = NULL;
-			iface = _get_dfu_iface_with_alt_setting (dev_tmp,
-								 priv->iface_alt_setting,
-								 error);
-			if (iface == NULL)
-				return FALSE;
-			return dfu_target_set_new_dev (target, dev_tmp, iface,
-						       cancellable, error);
-		}
-	}
-
-	/* target went off into the woods */
-	if (went_away) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "target went away but did not come back");
-		return FALSE;
-	}
-
-	/* VID and PID did not change */
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "target came back with same VID:PID values");
-	return FALSE;
+	return TRUE;
 }
 
 /**
@@ -949,7 +779,7 @@ dfu_target_clear_status (DfuTarget *target, GCancellable *cancellable, GError **
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	if (!g_usb_device_control_transfer (priv->dev,
+	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
@@ -983,7 +813,7 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 	gsize actual_length;
 
 	buf = g_new0 (guint8, priv->transfer_size);
-	if (!g_usb_device_control_transfer (priv->dev,
+	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
@@ -1017,11 +847,11 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
  *
  * Uploads firmware from the target to the host.
  *
- * Return value: (transfer container): the uploaded data, or %NULL
+ * Return value: (transfer full): the uploaded image, or %NULL for error
  *
  * Since: 0.5.4
  **/
-GBytes *
+DfuImage *
 dfu_target_upload (DfuTarget *target,
 		   gsize expected_size,
 		   DfuTargetTransferFlags flags,
@@ -1031,12 +861,15 @@ dfu_target_upload (DfuTarget *target,
 		   GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	DfuImage *image = NULL;
 	GBytes *chunk_tmp;
 	gsize chunk_size;
 	gsize offset = 0;
 	gsize total_size = 0;
 	guint8 *buffer;
 	guint i;
+	g_autoptr(DfuElement) element = NULL;
+	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
@@ -1094,14 +927,14 @@ dfu_target_upload (DfuTarget *target,
 	/* do host reset */
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_HOST_RESET) > 0 ||
 	    (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) > 0) {
-		if (!dfu_target_reset (target, error))
+		if (!dfu_device_reset (priv->device, error))
 			return NULL;
 	}
 
 	/* boot to runtime */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) {
 		g_debug ("booting to runtime");
-		if (!dfu_target_wait_for_reset (target, 2000, cancellable, error))
+		if (!dfu_device_wait_for_replug (priv->device, 2000, cancellable, error))
 			return NULL;
 	}
 
@@ -1114,9 +947,17 @@ dfu_target_upload (DfuTarget *target,
 		memcpy (buffer + offset, chunk_data, chunk_size);
 		offset += chunk_size;
 	}
-	return g_bytes_new_take (buffer, total_size);
-}
 
+	/* create new image */
+	contents = g_bytes_new_take (buffer, total_size);
+	image = dfu_image_new ();
+	dfu_image_set_name (image, priv->iface_alt_setting_name);
+	dfu_image_set_alt_setting (image, priv->iface_alt_setting);
+	element = dfu_element_new ();
+	dfu_element_set_contents (element, contents);
+	dfu_image_add_element (image, element);
+	return image;
+}
 
 /**
  * dfu_target_download_chunk:
@@ -1129,7 +970,7 @@ dfu_target_download_chunk (DfuTarget *target, guint8 index, GBytes *bytes,
 	g_autoptr(GError) error_local = NULL;
 	gsize actual_length;
 
-	if (!g_usb_device_control_transfer (priv->dev,
+	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
@@ -1186,37 +1027,21 @@ _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 }
 
 /**
- * dfu_target_download:
- * @target: a #DfuTarget
- * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
- * @cancellable: a #GCancellable, or %NULL
- * @progress_cb: a #GFileProgressCallback, or %NULL
- * @progress_cb_data: user data to pass to @progress_cb
- * @error: a #GError, or %NULL
- *
- * Downloads firmware from the host to the target, optionally verifying
- * the transfer.
- *
- * Return value: %TRUE for success
- *
- * Since: 0.5.4
+ * dfu_target_download_bytes:
  **/
-gboolean
-dfu_target_download (DfuTarget *target, GBytes *bytes,
-		     DfuTargetTransferFlags flags,
-		     GCancellable *cancellable,
-		     DfuProgressCallback progress_cb,
-		     gpointer progress_cb_data,
-		     GError **error)
+static gboolean
+dfu_target_download_bytes (DfuTarget *target, GBytes *bytes,
+			   DfuTargetTransferFlags flags,
+			   GCancellable *cancellable,
+			   DfuProgressCallback progress_cb,
+			   gpointer progress_cb_data,
+			   GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	DfuElement *element;
 	guint i;
 	guint nr_chunks;
 	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
-	g_return_val_if_fail (bytes != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* can the target do this? */
 	if (!dfu_target_can_download (target)) {
@@ -1280,16 +1105,19 @@ dfu_target_download (DfuTarget *target, GBytes *bytes,
 
 	/* verify */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY) {
-		g_autoptr(GBytes) bytes_tmp = NULL;
-		bytes_tmp = dfu_target_upload (target,
+		GBytes *bytes_tmp;
+		g_autoptr(DfuImage) image_tmp = NULL;
+		image_tmp = dfu_target_upload (target,
 					       g_bytes_get_size (bytes),
 					       DFU_TARGET_TRANSFER_FLAG_NONE,
 					       cancellable,
 					       progress_cb,
 					       progress_cb_data,
 					       error);
-		if (bytes_tmp == NULL)
+		if (image_tmp == NULL)
 			return FALSE;
+		element = dfu_image_get_element (image_tmp, 0);
+		bytes_tmp = dfu_element_get_contents (element);
 		if (g_bytes_compare (bytes_tmp, bytes) != 0) {
 			g_autofree gchar *bytes_cmp_str = NULL;
 			bytes_cmp_str = _g_bytes_compare_verbose (bytes_tmp, bytes);
@@ -1305,18 +1133,64 @@ dfu_target_download (DfuTarget *target, GBytes *bytes,
 	/* do a host reset */
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_HOST_RESET) > 0 ||
 	    (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) > 0) {
-		if (!dfu_target_reset (target, error))
+		if (!dfu_device_reset (priv->device, error))
 			return FALSE;
 	}
 
 	/* boot to runtime */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) {
 		g_debug ("booting to runtime to set auto-boot");
-		if (!dfu_target_wait_for_reset (target, 2000, cancellable, error))
+		if (!dfu_device_wait_for_replug (priv->device, 2000, cancellable, error))
 			return FALSE;
 	}
 
 	return TRUE;
+}
+
+/**
+ * dfu_target_download:
+ * @target: a #DfuTarget
+ * @image: a #DfuImage
+ * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
+ * @cancellable: a #GCancellable, or %NULL
+ * @progress_cb: a #GFileProgressCallback, or %NULL
+ * @progress_cb_data: user data to pass to @progress_cb
+ * @error: a #GError, or %NULL
+ *
+ * Downloads firmware from the host to the target, optionally verifying
+ * the transfer.
+ *
+ * Return value: %TRUE for success
+ *
+ * Since: 0.5.4
+ **/
+gboolean
+dfu_target_download (DfuTarget *target, DfuImage *image,
+		     DfuTargetTransferFlags flags,
+		     GCancellable *cancellable,
+		     DfuProgressCallback progress_cb,
+		     gpointer progress_cb_data,
+		     GError **error)
+{
+	GBytes *contents;
+	DfuElement *element;
+
+	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
+	g_return_val_if_fail (DFU_IS_IMAGE (image), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* get data */
+	element = dfu_image_get_element (image, 0);
+	if (element == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_WRITE,
+				     "no image elements");
+		return FALSE;
+	}
+	contents = dfu_element_get_contents (element);
+	return dfu_target_download_bytes (target, contents, flags, cancellable,
+					  progress_cb, progress_cb_data, error);
 }
 
 /**

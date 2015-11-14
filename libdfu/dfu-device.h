@@ -27,6 +27,7 @@
 #include <gusb.h>
 
 #include "dfu-target.h"
+#include "dfu-firmware.h"
 
 G_BEGIN_DECLS
 
@@ -39,12 +40,40 @@ struct _DfuDeviceClass
 };
 
 DfuDevice	*dfu_device_new				(GUsbDevice	*dev);
+gboolean	 dfu_device_open			(DfuDevice	*device,
+							 GError		**error);
+gboolean	 dfu_device_close			(DfuDevice	*device,
+							 GError		**error);
 GPtrArray	*dfu_device_get_targets			(DfuDevice	*device);
+DfuTarget	*dfu_device_get_target_default		(DfuDevice	*device,
+							 GError		**error);
 DfuTarget	*dfu_device_get_target_by_alt_setting	(DfuDevice	*device,
 							 guint8		 alt_setting,
 							 GError		**error);
 DfuTarget	*dfu_device_get_target_by_alt_name	(DfuDevice	*device,
 							 const gchar	*alt_name,
+							 GError		**error);
+guint16		 dfu_device_get_runtime_vid		(DfuDevice	*device);
+guint16		 dfu_device_get_runtime_pid		(DfuDevice	*device);
+gboolean	 dfu_device_reset			(DfuDevice	*device,
+							 GError		**error);
+gboolean	 dfu_device_wait_for_replug		(DfuDevice	*device,
+							 guint		 timeout,
+							 GCancellable	*cancellable,
+							 GError		**error);
+DfuFirmware	*dfu_device_upload			(DfuDevice	*device,
+							 gsize		 expected_size,
+							 DfuTargetTransferFlags flags,
+							 GCancellable	*cancellable,
+							 DfuProgressCallback progress_cb,
+							 gpointer	 progress_cb_data,
+							 GError		**error);
+gboolean	 dfu_device_download			(DfuDevice	*device,
+							 DfuFirmware	*firmware,
+							 DfuTargetTransferFlags flags,
+							 GCancellable	*cancellable,
+							 DfuProgressCallback progress_cb,
+							 gpointer	 progress_cb_data,
 							 GError		**error);
 
 G_END_DECLS

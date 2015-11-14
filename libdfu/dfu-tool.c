@@ -191,10 +191,10 @@ dfu_tool_run (DfuToolPrivate *priv, const gchar *command, gchar **values, GError
 }
 
 /**
- * ddfu_tool_get_default_device:
+ * dfu_tool_get_defalt_device:
  **/
-static DfuTarget *
-ddfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
+static DfuDevice *
+dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 {
 	guint i;
 	g_autoptr(GUsbContext) usb_ctx = NULL;
@@ -206,9 +206,9 @@ ddfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 
 	/* we specified it manually */
 	if (priv->device_vid_pid != NULL) {
+		DfuDevice *device;
 		g_auto(GStrv) vid_pid = NULL;
 		g_autoptr(GUsbDevice) usb_device = NULL;
-		g_autoptr(DfuDevice) dfu_device = NULL;
 
 		/* split up */
 		vid_pid = g_strsplit (priv->device_vid_pid, ":", -1);
@@ -229,36 +229,31 @@ ddfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 			return NULL;
 
 		/* get DFU device */
-		dfu_device = dfu_device_new (usb_device);
-		if (dfu_device == NULL) {
+		device = dfu_device_new (usb_device);
+		if (device == NULL) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INTERNAL,
 					     "Not a DFU device");
 			return NULL;
 		}
-		return dfu_device_get_target_by_alt_setting (dfu_device, priv->alt_setting, error);
+		return device;
 	}
 
 	/* auto-detect first device */
 	devices = g_usb_context_get_devices (usb_ctx);
 	for (i = 0; i < devices->len; i++) {
-		GUsbDevice *usb_device;
-		g_autoptr(DfuDevice) dfu_device = NULL;
-
-		usb_device = g_ptr_array_index (devices, i);
-		dfu_device = dfu_device_new (usb_device);
-		if (dfu_device != NULL)
-			return dfu_device_get_target_by_alt_setting (dfu_device,
-								     priv->alt_setting,
-								     error);
+		GUsbDevice *usb_device = g_ptr_array_index (devices, i);
+		DfuDevice *device = dfu_device_new (usb_device);
+		if (device != NULL)
+			return device;
 	}
 
 	/* boo-hoo*/
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "No DFU devices detected");
+			     "No DFU-capable devices detected");
 	return NULL;
 }
 
@@ -276,78 +271,98 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GFile) file_out = NULL;
 
 	/* check args */
-	if (argc < 2) {
+	if (argc < 3) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "Invalid arguments, expected "
-				     "FILE-IN FILE-OUT [VID] [PID] [PRODUCT] [SIZE]"
-				     " -- e.g. firmware.hex firmware.dfu 273f 1004 ffff 8000");
+				     "FORMAT FILE-IN FILE-OUT [VID] [PID] [PRODUCT] [SIZE]"
+				     " -- e.g. `dfu firmware.hex firmware.dfu 273f 1004 ffff 8000`");
 		return FALSE;
 	}
 
-	/* create new firmware helper */
-	firmware = dfu_firmware_new ();
-
-	/* set target size */
-	if (argc > 5) {
-		tmp = g_ascii_strtoull (values[5], NULL, 16);
-		if (tmp == 0 || tmp > 0xffff) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Failed to parse target size '%s'", values[4]);
-			return FALSE;
-		}
-		dfu_firmware_set_target_size (firmware, tmp);
-	}
-
 	/* parse file */
-	file_in = g_file_new_for_path (values[0]);
-	file_out = g_file_new_for_path (values[1]);
+	file_in = g_file_new_for_path (values[1]);
+	file_out = g_file_new_for_path (values[2]);
+	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file_in,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
 				      NULL, error)) {
 		return FALSE;
 	}
 
-	/* set VID */
-	if (argc > 2) {
-		tmp = g_ascii_strtoull (values[2], NULL, 16);
-		if (tmp == 0 || tmp > 0xffff) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Failed to parse VID '%s'", values[2]);
-			return FALSE;
-		}
-		dfu_firmware_set_vid (firmware, tmp);
+	/* set output format */
+	if (g_strcmp0 (values[0], "raw") == 0) {
+		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_RAW);
+	} else if (g_strcmp0 (values[0], "dfu") == 0) {
+		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
+	} else if (g_strcmp0 (values[0], "dfuse") == 0) {
+		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
+	} else {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "unknown format '%s', expected [raw|dfu|dfuse]",
+			     values[0]);
+		return FALSE;
 	}
 
-	/* set PID */
+	/* set VID */
 	if (argc > 3) {
 		tmp = g_ascii_strtoull (values[3], NULL, 16);
 		if (tmp == 0 || tmp > 0xffff) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "Failed to parse PID '%s'", values[3]);
+				     "Failed to parse VID '%s'", values[3]);
 			return FALSE;
 		}
-		dfu_firmware_set_pid (firmware, tmp);
+		dfu_firmware_set_vid (firmware, tmp);
 	}
 
-	/* set release */
+	/* set PID */
 	if (argc > 4) {
 		tmp = g_ascii_strtoull (values[4], NULL, 16);
 		if (tmp == 0 || tmp > 0xffff) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "Failed to parse release '%s'", values[4]);
+				     "Failed to parse PID '%s'", values[4]);
+			return FALSE;
+		}
+		dfu_firmware_set_pid (firmware, tmp);
+	}
+
+	/* set release */
+	if (argc > 5) {
+		tmp = g_ascii_strtoull (values[5], NULL, 16);
+		if (tmp == 0 || tmp > 0xffff) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Failed to parse release '%s'", values[5]);
 			return FALSE;
 		}
 		dfu_firmware_set_release (firmware, tmp);
+	}
+
+	/* set target size */
+	if (argc > 6) {
+		DfuImage *image;
+		DfuElement *element;
+		tmp = g_ascii_strtoull (values[6], NULL, 16);
+		if (tmp == 0 || tmp > 0xffff) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Failed to parse target size '%s'", values[6]);
+			return FALSE;
+		}
+
+		/* this has to exist */
+		image = dfu_firmware_get_image (firmware, 0);
+		element = dfu_image_get_element (image, 0);
+		dfu_element_set_target_size (element, tmp);
 	}
 
 	/* print the new object */
@@ -364,35 +379,39 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_reset (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(DfuTarget) dfu_target = NULL;
-	dfu_target = ddfu_tool_get_default_device (priv, error);
-	if (dfu_target == NULL)
-		return FALSE;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuTarget) target = NULL;
 
-	if (!dfu_target_open (dfu_target,
+	device = dfu_tool_get_defalt_device (priv, error);
+	if (device == NULL)
+		return FALSE;
+	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
+	if (target == NULL)
+		return FALSE;
+	if (!dfu_target_open (target,
 			      DFU_TARGET_OPEN_FLAG_NO_AUTO_REFRESH,
 			      NULL, error))
 		return FALSE;
 
-	if (!dfu_target_reset (dfu_target, error))
+	if (!dfu_device_reset (device, error))
 		return FALSE;
 
-	return EXIT_SUCCESS;
 	return TRUE;
 }
 
 /**
- * dfu_tool_upload:
+ * dfu_tool_upload_target:
  **/
 static gboolean
-dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
+dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	g_autofree gchar *str_debug = NULL;
-	g_autoptr(DfuFirmware) dfu_firmware = NULL;
-	g_autoptr(DfuTarget) dfu_target = NULL;
-	g_autoptr(GBytes) bytes = NULL;
-	g_autoptr(GFile) file = NULL;
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
+	g_autofree gchar *str_debug = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(DfuImage) image = NULL;
+	g_autoptr(DfuTarget) target = NULL;
+	g_autoptr(GFile) file = NULL;
 
 	/* check args */
 	if (g_strv_length (values) < 1) {
@@ -404,46 +423,98 @@ dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open correct device */
-	dfu_target = ddfu_tool_get_default_device (priv, error);
-	if (dfu_target == NULL)
+	device = dfu_tool_get_defalt_device (priv, error);
+	if (device == NULL)
+		return FALSE;
+	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
+	if (target == NULL)
 		return FALSE;
 
 	if (priv->transfer_size > 0)
-		dfu_target_set_transfer_size (dfu_target, priv->transfer_size);
-	if (!dfu_target_open (dfu_target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
+		dfu_target_set_transfer_size (target, priv->transfer_size);
+	if (!dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
 		return FALSE;
 
-
 	/* APP -> DFU */
-	if (dfu_target_get_mode (dfu_target) == DFU_MODE_RUNTIME) {
-		if (!dfu_target_wait_for_reset (dfu_target, 5000, NULL, error))
+	if (dfu_target_get_mode (target) == DFU_MODE_RUNTIME) {
+		if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
 			return FALSE;
 		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
 	}
 
 	/* transfer */
-	bytes = dfu_target_upload (dfu_target, 0, flags,
-				   NULL, NULL, NULL, error);
-	if (bytes == NULL)
+	image = dfu_target_upload (target, DFU_TARGET_TRANSFER_FLAG_NONE,
+				   flags, NULL, NULL, NULL, error);
+	if (image == NULL)
 		return FALSE;
 
+	/* create new firmware object */
+	firmware = dfu_firmware_new ();
+	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
+	dfu_firmware_set_vid (firmware, dfu_device_get_runtime_vid (device));
+	dfu_firmware_set_pid (firmware, dfu_device_get_runtime_pid (device));
+	dfu_firmware_add_image (firmware, image);
+
 	/* save file */
-	dfu_firmware = dfu_firmware_new ();
-	dfu_firmware_set_vid (dfu_firmware, dfu_target_get_runtime_vid (dfu_target));
-	dfu_firmware_set_pid (dfu_firmware, dfu_target_get_runtime_pid (dfu_target));
-	dfu_firmware_set_contents (dfu_firmware, bytes);
 	file = g_file_new_for_path (values[0]);
-	if (!dfu_firmware_write_file (dfu_firmware, file, NULL, error))
+	if (!dfu_firmware_write_file (firmware, file, NULL, error))
 		return FALSE;
 
 	/* print the new object */
-	str_debug = dfu_firmware_to_string (dfu_firmware);
+	str_debug = dfu_firmware_to_string (firmware);
 	g_debug ("DFU: %s", str_debug);
 
 	/* success */
-	g_print ("%li bytes successfully uploaded from device\n",
-		 g_bytes_get_size (bytes));
+	g_print ("%u bytes successfully uploaded from device\n",
+		 dfu_image_get_size (image));
+	return TRUE;
+}
 
+/**
+ * dfu_tool_upload:
+ **/
+static gboolean
+dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
+	g_autofree gchar *str_debug = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(DfuImage) image = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+
+	/* open correct device */
+	device = dfu_tool_get_defalt_device (priv, error);
+	if (device == NULL)
+		return FALSE;
+
+	/* transfer */
+	firmware = dfu_device_upload (device, DFU_TARGET_TRANSFER_FLAG_NONE,
+				      flags, NULL, NULL, NULL, error);
+	if (firmware == NULL)
+		return FALSE;
+
+	/* save file */
+	file = g_file_new_for_path (values[0]);
+	if (!dfu_firmware_write_file (firmware, file, NULL, error))
+		return FALSE;
+
+	/* print the new object */
+	str_debug = dfu_firmware_to_string (firmware);
+	g_debug ("DFU: %s", str_debug);
+
+	/* success */
+	g_print ("%u bytes successfully uploaded from device\n",
+		 dfu_firmware_get_size (firmware));
 	return TRUE;
 }
 
@@ -502,17 +573,12 @@ fu_tool_transfer_progress_cb (DfuState state, goffset current,
 }
 
 /**
- * dfu_tool_download:
+ * dfu_tool_dump:
  **/
 static gboolean
-dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
+dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
-	DfuToolProgressHelper helper;
-	GBytes *contents = NULL;
-	g_autofree gchar *str_debug = NULL;
-	g_autoptr(DfuFirmware) dfu_firmware = NULL;
-	g_autoptr(DfuTarget) dfu_target = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(GFile) file = NULL;
 
 	/* check args */
@@ -525,54 +591,191 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open file */
-	dfu_firmware = dfu_firmware_new ();
+	firmware = dfu_firmware_new ();
 	file = g_file_new_for_path (values[0]);
-	if (!dfu_firmware_parse_file (dfu_firmware, file,
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      NULL, error))
+		return FALSE;
+
+	/* dump to screen */
+	g_print ("%s\n", dfu_firmware_to_string (firmware));
+	return TRUE;
+}
+
+/**
+ * dfu_tool_download_target:
+ **/
+static gboolean
+dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	DfuImage *image;
+	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
+	DfuToolProgressHelper helper;
+	g_autofree gchar *str_debug = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(DfuTarget) target = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+
+	/* open file */
+	firmware = dfu_firmware_new ();
+	file = g_file_new_for_path (values[0]);
+	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
 				      NULL, error))
 		return FALSE;
 
 	/* open correct device */
-	dfu_target = ddfu_tool_get_default_device (priv, error);
-	if (dfu_target == NULL)
+	device = dfu_tool_get_defalt_device (priv, error);
+	if (device == NULL)
+		return FALSE;
+	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
+	if (target == NULL)
 		return FALSE;
 
 	if (priv->transfer_size > 0)
-		dfu_target_set_transfer_size (dfu_target, priv->transfer_size);
-	if (!dfu_target_open (dfu_target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
+		dfu_target_set_transfer_size (target, priv->transfer_size);
+	if (!dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
 		return FALSE;
 
 	/* APP -> DFU */
-	if (dfu_target_get_mode (dfu_target) == DFU_MODE_RUNTIME) {
+	if (dfu_target_get_mode (target) == DFU_MODE_RUNTIME) {
 		g_debug ("detaching");
-		if (!dfu_target_detach (dfu_target, NULL, error))
+		if (!dfu_target_detach (target, NULL, error))
 			return FALSE;
-		if (!dfu_target_wait_for_reset (dfu_target, 5000, NULL, error))
+		if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
 			return FALSE;
 	}
 
 	/* print the new object */
-	str_debug = dfu_firmware_to_string (dfu_firmware);
+	str_debug = dfu_firmware_to_string (firmware);
 	g_debug ("DFU: %s", str_debug);
 
 	/* check vendor matches */
-	if (dfu_firmware_get_vid (dfu_firmware) != 0xffff &&
-	    dfu_target_get_runtime_pid (dfu_target) != 0xffff &&
-	    dfu_firmware_get_vid (dfu_firmware) != dfu_target_get_runtime_vid (dfu_target)) {
+	if (dfu_firmware_get_vid (firmware) != 0xffff &&
+	    dfu_device_get_runtime_pid (device) != 0xffff &&
+	    dfu_firmware_get_vid (firmware) != dfu_device_get_runtime_vid (device)) {
 		g_print ("Vendor ID incorrect, expected 0x%04x got 0x%04x\n",
-			 dfu_firmware_get_vid (dfu_firmware),
-			 dfu_target_get_runtime_vid (dfu_target));
+			 dfu_firmware_get_vid (firmware),
+			 dfu_device_get_runtime_vid (device));
 		return EXIT_FAILURE;
 	}
 
 	/* check product matches */
-	if (dfu_firmware_get_pid (dfu_firmware) != 0xffff &&
-	    dfu_target_get_runtime_pid (dfu_target) != 0xffff &&
-	    dfu_firmware_get_pid (dfu_firmware) != dfu_target_get_runtime_pid (dfu_target)) {
-		g_print ("Product ID incorrect, expected 0x%04x got 0x%04x\n",
-			 dfu_firmware_get_pid (dfu_firmware),
-			 dfu_target_get_runtime_pid (dfu_target));
+	if (dfu_firmware_get_pid (firmware) != 0xffff &&
+	    dfu_device_get_runtime_pid (device) != 0xffff &&
+	    dfu_firmware_get_pid (firmware) != dfu_device_get_runtime_pid (device)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Product ID incorrect, expected 0x%04x got 0x%04x",
+			     dfu_firmware_get_pid (firmware),
+			     dfu_device_get_runtime_pid (device));
+		return FALSE;
+	}
+
+	/* optional reset */
+	if (priv->reset) {
+		flags |= DFU_TARGET_TRANSFER_FLAG_HOST_RESET;
+		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
+	}
+
+	/* get correct firmware object */
+	image = dfu_firmware_get_image (firmware, priv->alt_setting);
+	if (image == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "could not locate image in firmware for %02x",
+			     priv->alt_setting);
+		return FALSE;
+	}
+
+	/* transfer */
+	helper.last_state = DFU_STATE_DFU_ERROR;
+	helper.marks_total = 30;
+	helper.marks_shown = 0;
+	if (!dfu_target_download (target, image, flags, NULL,
+				  fu_tool_transfer_progress_cb, &helper,
+				  error))
+		return FALSE;
+
+	/* success */
+	g_print ("%u bytes successfully downloaded to device\n",
+		 dfu_image_get_size (image));
+	return TRUE;
+}
+
+/**
+ * dfu_tool_download:
+ **/
+static gboolean
+dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
+	DfuToolProgressHelper helper;
+	g_autofree gchar *str_debug = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+
+	/* open file */
+	firmware = dfu_firmware_new ();
+	file = g_file_new_for_path (values[0]);
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      NULL, error))
+		return FALSE;
+
+	/* open correct device */
+	device = dfu_tool_get_defalt_device (priv, error);
+	if (device == NULL)
+		return FALSE;
+
+	/* print the new object */
+	str_debug = dfu_firmware_to_string (firmware);
+	g_debug ("DFU: %s", str_debug);
+
+	/* check vendor matches */
+	if (dfu_firmware_get_vid (firmware) != 0xffff &&
+	    dfu_device_get_runtime_pid (device) != 0xffff &&
+	    dfu_firmware_get_vid (firmware) != dfu_device_get_runtime_vid (device)) {
+		g_print ("Vendor ID incorrect, expected 0x%04x got 0x%04x\n",
+			 dfu_firmware_get_vid (firmware),
+			 dfu_device_get_runtime_vid (device));
 		return EXIT_FAILURE;
+	}
+
+	/* check product matches */
+	if (dfu_firmware_get_pid (firmware) != 0xffff &&
+	    dfu_device_get_runtime_pid (device) != 0xffff &&
+	    dfu_firmware_get_pid (firmware) != dfu_device_get_runtime_pid (device)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Product ID incorrect, expected 0x%04x got 0x%04x",
+			     dfu_firmware_get_pid (firmware),
+			     dfu_device_get_runtime_pid (device));
+		return FALSE;
 	}
 
 	/* optional reset */
@@ -585,16 +788,14 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 	helper.last_state = DFU_STATE_DFU_ERROR;
 	helper.marks_total = 30;
 	helper.marks_shown = 0;
-	contents = dfu_firmware_get_contents (dfu_firmware);
-	if (!dfu_target_download (dfu_target, contents, flags, NULL,
+	if (!dfu_device_download (device, firmware, flags, NULL,
 				  fu_tool_transfer_progress_cb, &helper,
 				  error))
 		return FALSE;
 
 	/* success */
-	g_print ("%li bytes successfully downloaded to device\n",
-		 g_bytes_get_size (contents));
-
+	g_print ("%u bytes successfully downloaded to device\n",
+		 dfu_firmware_get_size (firmware));
 	return TRUE;
 }
 
@@ -615,47 +816,47 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_usb_context_enumerate (usb_ctx);
 	devices = g_usb_context_get_devices (usb_ctx);
 	for (i = 0; i < devices->len; i++) {
-		g_autoptr(DfuDevice) dfu_device = NULL;
+		g_autoptr(DfuDevice) device = NULL;
 		GPtrArray *dfu_targets;
-		DfuTarget *dfu_target;
+		DfuTarget *target;
 		guint j;
 
 		usb_device = g_ptr_array_index (devices, i);
 		g_debug ("PROBING [%04x:%04x]",
 			 g_usb_device_get_vid (usb_device),
 			 g_usb_device_get_pid (usb_device));
-		dfu_device = dfu_device_new (usb_device);
-		if (dfu_device == NULL)
+		device = dfu_device_new (usb_device);
+		if (device == NULL)
 			continue;
-		dfu_targets = dfu_device_get_targets (dfu_device);
+		dfu_targets = dfu_device_get_targets (device);
 		for (j = 0; j < dfu_targets->len; j++) {
 			g_autoptr(GError) error_local = NULL;
-			dfu_target = g_ptr_array_index (dfu_targets, j);
+			target = g_ptr_array_index (dfu_targets, j);
 
 			if (priv->transfer_size > 0)
-				dfu_target_set_transfer_size (dfu_target, priv->transfer_size);
-			ret = dfu_target_open (dfu_target,
+				dfu_target_set_transfer_size (target, priv->transfer_size);
+			ret = dfu_target_open (target,
 					       DFU_TARGET_OPEN_FLAG_NONE,
 					       NULL, &error_local);
 			g_print ("Found %s: [%04x:%04x] ver=%04x, devnum=%i, cfg=%i, intf=%i, ts=%i, alt=%i, name=%s",
-				 dfu_mode_to_string (dfu_target_get_mode (dfu_target)),
+				 dfu_mode_to_string (dfu_target_get_mode (target)),
 				 g_usb_device_get_vid (usb_device),
 				 g_usb_device_get_pid (usb_device),
 				 g_usb_device_get_release (usb_device),
 				 g_usb_device_get_address (usb_device),
 				 g_usb_device_get_configuration (usb_device, NULL),
-				 dfu_target_get_interface_number (dfu_target),
-				 dfu_target_get_transfer_size (dfu_target),
-				 dfu_target_get_interface_alt_setting (dfu_target),
-				 dfu_target_get_interface_alt_name (dfu_target));
+				 dfu_target_get_interface_number (target),
+				 dfu_target_get_transfer_size (target),
+				 dfu_target_get_interface_alt_setting (target),
+				 dfu_target_get_interface_alt_name (target));
 			if (ret) {
 				g_print (", status=%s, state=%s\n",
-					 dfu_status_to_string (dfu_target_get_status (dfu_target)),
-					 dfu_state_to_string (dfu_target_get_state (dfu_target)));
+					 dfu_status_to_string (dfu_target_get_status (target)),
+					 dfu_state_to_string (dfu_target_get_state (target)));
 			} else {
 				g_print (": %s\n", error_local->message);
 			}
-			dfu_target_close (dfu_target, NULL);
+			dfu_target_close (target, NULL);
 		}
 	}
 	return TRUE;
@@ -667,19 +868,23 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_detach (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(DfuTarget) dfu_target = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuTarget) target = NULL;
 
 	/* open correct device */
-	dfu_target = ddfu_tool_get_default_device (priv, error);
-	if (dfu_target == NULL)
+	device = dfu_tool_get_defalt_device (priv, error);
+	if (device == NULL)
+		return FALSE;
+	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
+	if (target == NULL)
 		return FALSE;
 	if (priv->transfer_size > 0)
-		dfu_target_set_transfer_size (dfu_target, priv->transfer_size);
-	if (!dfu_target_open (dfu_target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
+		dfu_target_set_transfer_size (target, priv->transfer_size);
+	if (!dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
 		return FALSE;
 
 	/* detatch */
-	if (!dfu_target_detach (dfu_target, NULL, error))
+	if (!dfu_target_detach (target, NULL, error))
 		return FALSE;
 	return TRUE;
 }
@@ -740,7 +945,19 @@ main (int argc, char *argv[])
 		     _("Read firmware from device into file"),
 		     dfu_tool_upload);
 	dfu_tool_add (priv->cmd_array,
+		     "upload-target",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Read firmware from target into file"),
+		     dfu_tool_upload_target);
+	dfu_tool_add (priv->cmd_array,
 		     "download",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Write firmware from file into target"),
+		     dfu_tool_download_target);
+	dfu_tool_add (priv->cmd_array,
+		     "download-target",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Write firmware from file into device"),
@@ -757,6 +974,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Detach currently attached DFU capable device"),
 		     dfu_tool_detach);
+	dfu_tool_add (priv->cmd_array,
+		     "dump",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Dump details about a firmware file"),
+		     dfu_tool_dump);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,

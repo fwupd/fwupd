@@ -34,6 +34,7 @@
 
 #include "dfu-common.h"
 #include "dfu-firmware.h"
+#include "dfu-image-private.h"
 
 static void dfu_firmware_finalize			 (GObject *object);
 
@@ -43,12 +44,11 @@ static void dfu_firmware_finalize			 (GObject *object);
  * Private #DfuFirmware data
  **/
 typedef struct {
-	GBytes			*contents;
+	GPtrArray		*images;
 	guint16			 vid;
 	guint16			 pid;
 	guint16			 release;
-	guint16			 format;
-	guint32			 target_size;
+	DfuFirmwareFormat	 format;
 } DfuFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (DfuFirmware, dfu_firmware, G_TYPE_OBJECT)
@@ -74,6 +74,7 @@ dfu_firmware_init (DfuFirmware *firmware)
 	priv->vid = 0xffff;
 	priv->pid = 0xffff;
 	priv->release = 0xffff;
+	priv->images = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 }
 
 /**
@@ -85,8 +86,7 @@ dfu_firmware_finalize (GObject *object)
 	DfuFirmware *firmware = DFU_FIRMWARE (object);
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 
-	if (priv->contents != NULL)
-		g_bytes_unref (priv->contents);
+	g_ptr_array_unref (priv->images);
 
 	G_OBJECT_CLASS (dfu_firmware_parent_class)->finalize (object);
 }
@@ -109,21 +109,95 @@ dfu_firmware_new (void)
 }
 
 /**
- * dfu_firmware_get_contents:
+ * dfu_firmware_get_image:
  * @firmware: a #DfuFirmware
+ * @alt_setting: an alternative setting, typically 0x00
  *
- * Gets the firmware data.
+ * Gets an image from the firmware file.
  *
- * Return value: (transfer none): firmware data
+ * Return value: (transfer none): a #DfuImage, or %NULL for not found
  *
  * Since: 0.5.4
  **/
-GBytes *
-dfu_firmware_get_contents (DfuFirmware *firmware)
+DfuImage *
+dfu_firmware_get_image (DfuFirmware *firmware, guint8 alt_setting)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	DfuImage *im;
+	guint i;
+
+	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
+
+	/* find correct image */
+	for (i = 0; i < priv->images->len; i++) {
+		im = g_ptr_array_index (priv->images, i);
+		if (dfu_image_get_alt_setting (im) == alt_setting)
+			return im;
+	}
+	return NULL;
+}
+
+/**
+ * dfu_firmware_get_images:
+ * @firmware: a #DfuFirmware
+ *
+ * Gets all the images contained in this firmware file.
+ *
+ * Return value: (transfer none) (element-type DfuImage): list of images
+ *
+ * Since: 0.5.4
+ **/
+GPtrArray *
+dfu_firmware_get_images (DfuFirmware *firmware)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
-	return priv->contents;
+	return priv->images;
+}
+
+/**
+ * dfu_firmware_get_size:
+ * @firmware: a #DfuFirmware
+ *
+ * Gets the size of all the images in the firmware.
+ *
+ * This only returns actual data that would be sent to the device and
+ * does not include any padding.
+ *
+ * Return value: a integer value, or 0 if there are no images.
+ *
+ * Since: 0.5.4
+ **/
+guint32
+dfu_firmware_get_size (DfuFirmware *firmware)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	guint32 length = 0;
+	guint i;
+	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), 0);
+	for (i = 0; i < priv->images->len; i++) {
+		DfuImage *image = g_ptr_array_index (priv->images, i);
+		length += dfu_image_get_size (image);
+	}
+	return length;
+}
+
+/**
+ * dfu_firmware_add_image:
+ * @firmware: a #DfuFirmware
+ * @image: a #DfuImage
+ *
+ * Adds an image to the list of images.
+ *
+ * Since: 0.5.4
+ **/
+void
+dfu_firmware_add_image (DfuFirmware *firmware, DfuImage *image)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	g_return_if_fail (DFU_IS_FIRMWARE (firmware));
+	g_return_if_fail (DFU_IS_IMAGE (image));
+	g_ptr_array_add (priv->images, g_object_ref (image));
 }
 
 /**
@@ -199,45 +273,6 @@ dfu_firmware_get_format (DfuFirmware *firmware)
 }
 
 /**
- * dfu_firmware_set_contents:
- * @firmware: a #DfuFirmware
- * @contents: firmware data
- *
- * Sets the firmware data.
- *
- * Since: 0.5.4
- **/
-void
-dfu_firmware_set_contents (DfuFirmware *firmware, GBytes *contents)
-{
-	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	const guint8 *data;
-	gsize length;
-	guint8 *buf;
-
-	g_return_if_fail (DFU_IS_FIRMWARE (firmware));
-	g_return_if_fail (contents != NULL);
-
-	if (priv->contents == contents)
-		return;
-	if (priv->contents != NULL)
-		g_bytes_unref (priv->contents);
-
-	/* no need to pad */
-	if (priv->target_size == 0 ||
-	    g_bytes_get_size (contents) >= priv->target_size) {
-		priv->contents = g_bytes_ref (contents);
-		return;
-	}
-
-	/* reallocate and copy */
-	data = g_bytes_get_data (contents, &length);
-	buf = g_malloc0 (priv->target_size);
-	memcpy (buf, data, length);
-	priv->contents = g_bytes_new_take (buf, priv->target_size);
-}
-
-/**
  * dfu_firmware_set_vid:
  * @firmware: a #DfuFirmware
  * @vid: vendor ID, or 0xffff for unset
@@ -291,14 +326,14 @@ dfu_firmware_set_release (DfuFirmware *firmware, guint16 release)
 /**
  * dfu_firmware_set_format:
  * @firmware: a #DfuFirmware
- * @release: device ID, or 0xffff for unset
+ * @format: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_DFUSE
  *
  * Sets the DFU version in BCD format.
  *
  * Since: 0.5.4
  **/
 void
-dfu_firmware_set_format (DfuFirmware *firmware, guint16 format)
+dfu_firmware_set_format (DfuFirmware *firmware, DfuFirmwareFormat format)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 	g_return_if_fail (DFU_IS_FIRMWARE (firmware));
@@ -505,6 +540,162 @@ dfu_firmware_parse_inhx32 (GBytes *in, GError **error)
 	return g_bytes_new (string->str, string->len);
 }
 
+/* DfuSe header */
+typedef struct __attribute__((packed)) {
+	guint8		 sig[5];
+	guint8		 ver;
+	guint32		 image_size;
+	guint8		 targets;
+} DfuSePrefix;
+
+/**
+ * dfu_firmware_add_inhx32:
+ **/
+static gboolean
+dfu_firmware_add_inhx32 (DfuFirmware *firmware, GBytes *bytes, GError **error)
+{
+	g_autoptr(DfuElement) element = NULL;
+	g_autoptr(DfuImage) image = NULL;
+	g_autoptr(GBytes) contents = NULL;
+
+	/* parse hex file */
+	contents = dfu_firmware_parse_inhx32 (bytes, error);
+	if (contents == NULL)
+		return FALSE;
+
+	/* add single image */
+	image = dfu_image_new ();
+	element = dfu_element_new ();
+	dfu_element_set_contents (element, contents);
+	dfu_image_add_element (image, element);
+	dfu_firmware_add_image (firmware, image);
+	return TRUE;
+}
+
+/**
+ * dfu_firmware_add_binary:
+ **/
+static gboolean
+dfu_firmware_add_binary (DfuFirmware *firmware, GBytes *bytes, GError **error)
+{
+	g_autoptr(DfuElement) element = NULL;
+	g_autoptr(DfuImage) image = NULL;
+	image = dfu_image_new ();
+	element = dfu_element_new ();
+	dfu_element_set_contents (element, bytes);
+	dfu_image_add_element (image, element);
+	dfu_firmware_add_image (firmware, image);
+	return TRUE;
+}
+
+/**
+ * dfu_firmware_add_dfuse:
+ **/
+static gboolean
+dfu_firmware_add_dfuse (DfuFirmware *firmware, GBytes *bytes, GError **error)
+{
+	DfuSePrefix *prefix;
+	gsize len;
+	guint32 offset = sizeof(DfuSePrefix);
+	guint8 *data;
+	guint i;
+
+	/* check the prefix (BE) */
+	data = (guint8 *) g_bytes_get_data (bytes, &len);
+	prefix = (DfuSePrefix *) data;
+	if (memcmp (prefix->sig, "DfuSe", 5) != 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid DfuSe prefix");
+		return FALSE;
+	}
+
+	/* check the version */
+	if (prefix->ver != 0x01) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "invalid DfuSe version, got %02x",
+			     prefix->ver);
+		return FALSE;
+	}
+
+	/* check image size */
+	if (GUINT32_FROM_LE (prefix->image_size) != len) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "invalid DfuSe image size, got %u, expected %lu",
+			     GUINT32_FROM_LE (prefix->image_size),
+			     len);
+		return FALSE;
+	}
+
+	/* parse the image targets */
+	for (i = 0; i < prefix->targets; i++) {
+		guint consumed;
+		g_autoptr(DfuImage) image = NULL;
+		image = _dfu_image_from_dfuse (data + offset,
+					      len - offset,
+					      &consumed,
+					      error);
+		if (image == NULL)
+			return FALSE;
+		dfu_firmware_add_image (firmware, image);
+		offset += consumed;
+	}
+	return TRUE;
+}
+
+/**
+ * dfu_firmware_write_data_dfuse:
+ **/
+static GBytes *
+dfu_firmware_write_data_dfuse (DfuFirmware *firmware, GError **error)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	DfuSePrefix *prefix;
+	guint i;
+	guint32 image_size_total = 0;
+	guint32 offset = sizeof (DfuSePrefix);
+	guint8 *buf;
+	g_autoptr(GPtrArray) dfuse_images = NULL;
+
+	/* get all the image data */
+	dfuse_images = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
+	for (i = 0; i < priv->images->len; i++) {
+		DfuImage *im = g_ptr_array_index (priv->images, i);
+		GBytes *contents;
+		contents = _dfu_image_to_dfuse (im);
+		image_size_total += g_bytes_get_size (contents);
+		g_ptr_array_add (dfuse_images, contents);
+	}
+	g_debug ("image_size_total: %i", image_size_total);
+
+	buf = g_malloc0 (sizeof (DfuSePrefix) + image_size_total);
+
+	/* DfuSe header */
+	prefix = (DfuSePrefix *) buf;
+	memcpy (prefix->sig, "DfuSe", 5);
+	prefix->ver = 0x01;
+	prefix->image_size = offset + image_size_total;
+	prefix->targets = priv->images->len;
+
+	/* copy images */
+	for (i = 0; i < dfuse_images->len; i++) {
+		GBytes *contents = g_ptr_array_index (dfuse_images, i);
+		gsize length;
+		const guint8 *data;
+		data = g_bytes_get_data (contents, &length);
+		memcpy (buf + offset, data, length);
+		offset += length;
+	}
+
+	/* return blob */
+	return g_bytes_new_take (buf, sizeof (DfuSePrefix) + image_size_total);
+}
+
 /**
  * dfu_firmware_parse_data:
  * @firmware: a #DfuFirmware
@@ -533,6 +724,9 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	g_return_val_if_fail (bytes != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* sanity check */
+	g_assert_cmpint(sizeof(DfuSePrefix), ==, 11);
+
 	/* set defaults */
 	priv->vid = 0xffff;
 	priv->pid = 0xffff;
@@ -540,32 +734,27 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 
 	/* this is inhx32 */
 	data = (guint8 *) g_bytes_get_data (bytes, &len);
-	if (data[0] == ':') {
-		contents = dfu_firmware_parse_inhx32 (bytes, error);
-		if (contents == NULL)
-			return FALSE;
-		dfu_firmware_set_contents (firmware, contents);
-		return TRUE;
-	}
+	if (data[0] == ':')
+		return dfu_firmware_add_inhx32 (firmware, bytes, error);
 
-	/* too small */
+	/* too small to be a DFU file */
 	if (len < 16) {
-		dfu_firmware_set_contents (firmware, bytes);
-		return TRUE;
+		priv->format = DFU_FIRMWARE_FORMAT_RAW;
+		return dfu_firmware_add_binary (firmware, bytes, error);
 	}
 
-	/* check signature */
+	/* check for DFU signature */
 	ftr = (DfuFirmwareFooter *) &data[len-sizeof(DfuFirmwareFooter)];
 	if (memcmp (ftr->sig, "UFD", 3) != 0) {
-		dfu_firmware_set_contents (firmware, bytes);
-		return TRUE;
+		priv->format = DFU_FIRMWARE_FORMAT_RAW;
+		return dfu_firmware_add_binary (firmware, bytes, error);
 	}
 
 	/* check version */
 	priv->format = GUINT16_FROM_LE (ftr->ver);
 	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_VERSION_TEST) == 0) {
-		if (priv->format != DFU_FORMAT_DFU_1_0 &&
-		    priv->format != DFU_FORMAT_DEFUSE) {
+		if (priv->format != DFU_FIRMWARE_FORMAT_DFU_1_0 &&
+		    priv->format != DFU_FIRMWARE_FORMAT_DFUSE) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
@@ -588,13 +777,18 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 		}
 	}
 
-	/* copy */
-	contents = g_bytes_new_from_bytes (bytes, 0, len - GUINT16_FROM_LE (ftr->len));
-	dfu_firmware_set_contents (firmware, contents);
+	/* set from footer */
 	dfu_firmware_set_vid (firmware, GUINT16_FROM_LE (ftr->vid));
 	dfu_firmware_set_pid (firmware, GUINT16_FROM_LE (ftr->pid));
 	dfu_firmware_set_release (firmware, GUINT16_FROM_LE (ftr->release));
-	return TRUE;
+
+	/* parse DfuSe prefix */
+	contents = g_bytes_new_from_bytes (bytes, 0, len - GUINT16_FROM_LE (ftr->len));
+	if (priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
+		return dfu_firmware_add_dfuse (firmware, contents, error);
+
+	/* just copy old-plain DFU file */
+	return dfu_firmware_add_binary (firmware, contents, error);
 }
 
 /**
@@ -632,6 +826,36 @@ dfu_firmware_parse_file (DfuFirmware *firmware, GFile *file,
 }
 
 /**
+ * dfu_firmware_add_footer:
+ **/
+static GBytes *
+dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	DfuFirmwareFooter *ftr;
+	const guint8 *data;
+	gsize length = 0;
+	guint8 *buf;
+
+	data = g_bytes_get_data (contents, &length);
+	buf = g_malloc0 (length + 0x10);
+	memcpy (buf, data, length);
+
+	/* set up LE footer */
+	ftr = (DfuFirmwareFooter *) &buf[length];
+	ftr->release = GUINT16_TO_LE (priv->release);
+	ftr->pid = GUINT16_TO_LE (priv->pid);
+	ftr->vid = GUINT16_TO_LE (priv->vid);
+	ftr->ver = GUINT16_TO_LE (priv->format);
+	ftr->len = GUINT16_TO_LE (0x10);
+	memcpy(ftr->sig, "UFD", 3);
+	ftr->crc = dfu_firmware_generate_crc32 (buf, length + 12);
+
+	/* return all data */
+	return g_bytes_new (buf, length + 0x10);
+}
+
+/**
  * dfu_firmware_write_data:
  * @firmware: a #DfuFirmware
  * @error: a #GError, or %NULL
@@ -645,32 +869,73 @@ dfu_firmware_parse_file (DfuFirmware *firmware, GFile *file,
 GBytes *
 dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 {
-	DfuFirmwareFooter *ftr;
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	const guint8 *data;
-	gsize length = 0;
-	guint8 *buf;
+	DfuImage *image;
 
 	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	/* copy firmware contents */
-	data = g_bytes_get_data (priv->contents, &length);
-	buf = g_malloc0 (length + 0x10);
-	memcpy (buf, data, length);
+	/* at least one image */
+	if (priv->images == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "no image data to write");
+		return NULL;
+	}
 
-	/* set up LE footer */
-	ftr = (DfuFirmwareFooter *) &buf[length];
-	ftr->release = GUINT16_TO_LE (priv->release);
-	ftr->pid = GUINT16_TO_LE (priv->pid);
-	ftr->vid = GUINT16_TO_LE (priv->vid);
-	ftr->ver = GUINT16_TO_LE (0x0100);
-	ftr->len = GUINT16_TO_LE (0x10);
-	memcpy(ftr->sig, "UFD", 3);
-	ftr->crc = dfu_firmware_generate_crc32 (buf, length + 12);
+	/* DFU only supports one image */
+	if (priv->images->len > 1 &&
+	    priv->format != DFU_FIRMWARE_FORMAT_DFUSE) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "only DfuSe format supports multiple images (%i)",
+			     priv->images->len);
+		return NULL;
+	}
 
-	/* return all data */
-	return g_bytes_new (buf, length + 0x10);
+	/* raw */
+	if (priv->format == DFU_FIRMWARE_FORMAT_RAW) {
+		GBytes *contents;
+		DfuElement *element;
+		image = dfu_firmware_get_image (firmware, 0);
+		g_assert (image != NULL);
+		element = dfu_image_get_element (image, 0);
+		g_assert (element != NULL);
+		contents = dfu_element_get_contents (element);
+		return g_bytes_ref (contents);
+	}
+
+	/* plain-old DFU */
+	if (priv->format == DFU_FIRMWARE_FORMAT_DFU_1_0) {
+		GBytes *contents;
+		DfuElement *element;
+		image = dfu_firmware_get_image (firmware, 0);
+		g_assert (image != NULL);
+		element = dfu_image_get_element (image, 0);
+		g_assert (element != NULL);
+		contents = dfu_element_get_contents (element);
+		g_assert (contents != NULL);
+		return dfu_firmware_add_footer (firmware, contents);
+	}
+
+	/* DfuSe */
+	if (priv->format == DFU_FIRMWARE_FORMAT_DFUSE) {
+		g_autoptr(GBytes) contents = NULL;
+		contents = dfu_firmware_write_data_dfuse (firmware, error);
+		if (contents == NULL)
+			return NULL;
+		return dfu_firmware_add_footer (firmware, contents);
+	}
+
+	/* invalid */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_INTERNAL,
+		     "invalid format for write (0x%04x)",
+		     priv->format);
+	return NULL;
 }
 
 /**
@@ -730,24 +995,25 @@ gchar *
 dfu_firmware_to_string (DfuFirmware *firmware)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	DfuImage *image;
 	GString *str;
-	guint32 crc;
-	gsize length;
-	const guint8 *data;
+	guint i;
 
 	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
 
-	str = g_string_new ("\n");
-	g_string_append_printf (str, "vid:      0x%04x\n", priv->vid);
-	g_string_append_printf (str, "pid:      0x%04x\n", priv->pid);
-	g_string_append_printf (str, "release:  0x%04x\n", priv->release);
-	g_string_append_printf (str, "format:   0x%04x\n", priv->format);
-	g_string_append_printf (str, "target:   0x%04x\n", priv->target_size);
-	if (priv->contents != NULL) {
-		data = g_bytes_get_data (priv->contents, &length);
-		crc = dfu_firmware_generate_crc32 (data, length);
-		g_string_append_printf (str, "contents: 0x%04x\n", (guint32) length);
-		g_string_append_printf (str, "crc:      0x%08x\n", crc);
+	str = g_string_new ("");
+	g_string_append_printf (str, "vid:         0x%04x\n", priv->vid);
+	g_string_append_printf (str, "pid:         0x%04x\n", priv->pid);
+	g_string_append_printf (str, "release:     0x%04x\n", priv->release);
+	g_string_append_printf (str, "format:      %s [0x%04x]\n",
+				dfu_firmware_format_to_string (priv->format),
+				priv->format);
+	for (i = 0; i < priv->images->len; i++) {
+		g_autofree gchar *tmp = NULL;
+		image = g_ptr_array_index (priv->images, i);
+		tmp = dfu_image_to_string (image);
+		g_string_append_printf (str, "= IMAGE %i =\n", i);
+		g_string_append_printf (str, "%s\n", tmp);
 	}
 
 	g_string_truncate (str, str->len - 1);
@@ -755,19 +1021,23 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 }
 
 /**
- * dfu_firmware_set_target_size:
- * @firmware: a #DfuFirmware
- * @target_size: size in bytes
+ * dfu_firmware_format_to_string:
+ * @format: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_DFU_1_0
  *
- * Sets a target size for the firmware. If the prepared firmware is smaller
- * than this then it will be padded with NUL bytes up to the required size.
+ * Returns a string representaiton of the format.
+ *
+ * Return value: NULL terminated string, or %NULL for invalid
  *
  * Since: 0.5.4
  **/
-void
-dfu_firmware_set_target_size (DfuFirmware *firmware, guint32 target_size)
+const gchar *
+dfu_firmware_format_to_string (DfuFirmwareFormat format)
 {
-	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	g_return_if_fail (DFU_IS_FIRMWARE (firmware));
-	priv->target_size = target_size;
+	if (format == DFU_FIRMWARE_FORMAT_RAW)
+		return "RAW";
+	if (format == DFU_FIRMWARE_FORMAT_DFU_1_0)
+		return "DFU";
+	if (format == DFU_FIRMWARE_FORMAT_DFUSE)
+		return "DfuSe";
+	return NULL;
 }

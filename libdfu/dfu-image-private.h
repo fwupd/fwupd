@@ -19,23 +19,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#ifndef __DFU_TARGET_PRIVATE_H
-#define __DFU_TARGET_PRIVATE_H
+#ifndef __DFU_IMAGE_PRIVATE_H
+#define __DFU_IMAGE_PRIVATE_H
 
-#include <gusb.h>
-
-#include "dfu-device.h"
-#include "dfu-target.h"
+#include "dfu-image.h"
 
 G_BEGIN_DECLS
 
-DfuTarget	*_dfu_target_new			(DfuDevice	*device,
-							 GUsbInterface	*iface);
-gboolean	 _dfu_target_update			(DfuTarget	*target,
-							 GUsbInterface	*iface,
-							 GCancellable	*cancellable,
-							 GError		**error);
+DfuImage	*_dfu_image_from_dfuse		(const guint8	*data,
+						 gsize		 length,
+						 guint32	*consumed,
+						 GError		**error);
+GBytes		*_dfu_image_to_dfuse		(DfuImage	*image);
 
 G_END_DECLS
 
-#endif /* __DFU_TARGET_PRIVATE_H */
+#endif /* __DFU_IMAGE_PRIVATE_H */

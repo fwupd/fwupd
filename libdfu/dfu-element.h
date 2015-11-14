@@ -19,23 +19,36 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#ifndef __DFU_TARGET_PRIVATE_H
-#define __DFU_TARGET_PRIVATE_H
+#ifndef __DFU_ELEMENT_H
+#define __DFU_ELEMENT_H
 
-#include <gusb.h>
-
-#include "dfu-device.h"
-#include "dfu-target.h"
+#include <glib-object.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
-DfuTarget	*_dfu_target_new			(DfuDevice	*device,
-							 GUsbInterface	*iface);
-gboolean	 _dfu_target_update			(DfuTarget	*target,
-							 GUsbInterface	*iface,
-							 GCancellable	*cancellable,
-							 GError		**error);
+#define DFU_TYPE_ELEMENT (dfu_element_get_type ())
+G_DECLARE_DERIVABLE_TYPE (DfuElement, dfu_element, DFU, ELEMENT, GObject)
+
+struct _DfuElementClass
+{
+	GObjectClass		 parent_class;
+};
+
+DfuElement	*dfu_element_new		(void);
+
+GBytes		*dfu_element_get_contents	(DfuElement	*element);
+guint8		 dfu_element_get_address	(DfuElement	*element);
+
+void		 dfu_element_set_contents	(DfuElement	*element,
+						 GBytes		*contents);
+void		 dfu_element_set_address	(DfuElement	*element,
+						 guint8		 address);
+void		 dfu_element_set_target_size	(DfuElement	*element,
+						 guint32	 target_size);
+
+gchar		*dfu_element_to_string		(DfuElement	*element);
 
 G_END_DECLS
 
-#endif /* __DFU_TARGET_PRIVATE_H */
+#endif /* __DFU_ELEMENT_H */
