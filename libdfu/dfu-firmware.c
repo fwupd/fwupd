@@ -21,9 +21,15 @@
 
 /**
  * SECTION:dfu-firmware
- * @short_description: Object representing a DFU firmware
+ * @short_description: Object representing a DFU or DfuSe firmware file
  *
- * This object allows reading and writing DFU-suffix files.
+ * This object allows reading and writing firmware files either in
+ * raw, DFU or DfuSe formats.
+ *
+ * A #DfuFirmware can be made up of several #DfuImages, although
+ * typically there is only one.
+ *
+ * See also: #DfuImage
  */
 
 #include "config.h"

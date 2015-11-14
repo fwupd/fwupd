@@ -47,7 +47,7 @@ typedef enum {
 	DFU_REQUEST_CLRSTATUS			= 0x04,
 	DFU_REQUEST_GETSTATE			= 0x05,
 	DFU_REQUEST_ABORT			= 0x06,
-	/* private */
+	/*< private >*/
 	DFU_REQUEST_LAST
 } DfuRequest;
 
@@ -89,7 +89,7 @@ typedef enum {
 	DFU_STATUS_ERR_POR			= 0x0d,
 	DFU_STATUS_ERR_UNKNOWN			= 0x0e,
 	DFU_STATUS_ERR_STALLDPKT		= 0x0f,
-	/* private */
+	/*< private >*/
 	DFU_STATUS_LAST
 } DfuStatus;
 
@@ -121,7 +121,7 @@ typedef enum {
 	DFU_STATE_DFU_MANIFEST_WAIT_RESET	= 0x08,
 	DFU_STATE_DFU_UPLOAD_IDLE		= 0x09,
 	DFU_STATE_DFU_ERROR			= 0x0a,
-	/* private */
+	/*< private >*/
 	DFU_STATE_LAST
 } DfuState;
 
@@ -137,7 +137,7 @@ typedef enum {
 	DFU_MODE_UNKNOWN,
 	DFU_MODE_RUNTIME,
 	DFU_MODE_DFU,
-	/* private */
+	/*< private >*/
 	DFU_MODE_LAST
 } DfuMode;
 

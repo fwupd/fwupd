@@ -20,11 +20,17 @@
  */
 
 /**
- * SECTION:dfu-firmware
+ * SECTION:dfu-target
  * @short_description: Object representing a DFU-capable target
  *
- * This object allows uploading and downloading firmware onto a
+ * This object allows uploading and downloading an image onto a
  * specific DFU-capable target.
+ *
+ * You only need to use this in preference to #DfuDevice if you only
+ * want to update one target on the device. Most users will want to
+ * update all the targets on the device at the same time.
+ *
+ * See also: #DfuDevice, #DfuImage
  */
 
 #include "config.h"

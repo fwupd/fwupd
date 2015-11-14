@@ -45,6 +45,9 @@ AC_SUBST(LT_AGE)
 # enable nice build output on automake1.11
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
+# check for gtk-doc
+GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
+
 AS_ALL_LINGUAS
 AC_PROG_CC
 AC_PROG_INSTALL
@@ -196,6 +199,7 @@ data/tests/rpiupdate/Makefile
 data/tests/colorhug/Makefile
 data/tests/dfu/Makefile
 docs/Makefile
+docs/libdfu/Makefile
 docs/man/Makefile
 policy/Makefile
 po/Makefile.in

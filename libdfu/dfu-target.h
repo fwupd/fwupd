@@ -48,7 +48,7 @@ struct _DfuTargetClass
 typedef enum {
 	DFU_TARGET_OPEN_FLAG_NONE		= 0,
 	DFU_TARGET_OPEN_FLAG_NO_AUTO_REFRESH	= (1 << 0),
-	/* private */
+	/*< private >*/
 	DFU_TARGET_OPEN_FLAG_LAST,
 } DfuTargetOpenFlags;
 

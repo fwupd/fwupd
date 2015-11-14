@@ -21,9 +21,18 @@
 
 /**
  * SECTION:dfu-device
- * @short_description: Object representing a DFU device
+ * @short_description: Object representing a DFU-capable device
  *
- * This object allows reading and writing DFU-suffix files.
+ * This object allows two things:
+ *
+ *  - Downloading from the host to the device, optionally with
+ *    verification using a DFU or DfuSe firmware file.
+ *
+ *  - Uploading from the device to the host to a DFU or DfuSe firmware
+ *    file. The file format is chosen automatically, with DfuSe being
+ *    chosen if the device contains more than one target.
+ *
+ * See also: #DfuTarget, #DfuFirmware
  */
 
 #include "config.h"
@@ -173,6 +182,7 @@ dfu_device_get_targets (DfuDevice *device)
  * dfu_device_get_target_by_alt_setting:
  * @device: a #DfuDevice
  * @alt_setting: the setting used to find
+ * @error: a #GError, or %NULL
  *
  * Gets a target with a specific alternative setting.
  *
@@ -181,7 +191,9 @@ dfu_device_get_targets (DfuDevice *device)
  * Since: 0.5.4
  **/
 DfuTarget *
-dfu_device_get_target_by_alt_setting (DfuDevice *device, guint8 alt_setting, GError **error)
+dfu_device_get_target_by_alt_setting (DfuDevice *device,
+				      guint8 alt_setting,
+				      GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	DfuTarget *target;
@@ -240,6 +252,7 @@ dfu_device_get_target_default (DfuDevice *device, GError **error)
  * dfu_device_get_target_by_alt_name:
  * @device: a #DfuDevice
  * @alt_name: the name used to find
+ * @error: a #GError, or %NULL
  *
  * Gets a target with a specific alternative name.
  *
@@ -248,7 +261,9 @@ dfu_device_get_target_default (DfuDevice *device, GError **error)
  * Since: 0.5.4
  **/
 DfuTarget *
-dfu_device_get_target_by_alt_name (DfuDevice *device, const gchar *alt_name, GError **error)
+dfu_device_get_target_by_alt_name (DfuDevice *device,
+				   const gchar *alt_name,
+				   GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	DfuTarget *target;

@@ -32,7 +32,6 @@
 
 /**
  * dfu_state_to_string:
- * @dev: a #GUsbDevice
  * @state: a #DfuState, e.g. %DFU_STATE_DFU_MANIFEST
  *
  * Converts an enumerated value to a string.
@@ -71,7 +70,6 @@ dfu_state_to_string (DfuState state)
 
 /**
  * dfu_status_to_string:
- * @dev: a #GUsbDevice
  * @status: a #DfuStatus, e.g. %DFU_STATUS_ERR_ERASE
  *
  * Converts an enumerated value to a string.

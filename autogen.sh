@@ -22,6 +22,7 @@ if test -z $AUTORECONF; then
 fi
 
 autopoint --force
+gtkdocize || exit 1
 ACLOCAL="${ACLOCAL-aclocal} $ACLOCAL_FLAGS"  AUTOPOINT='intltoolize --automake --copy' autoreconf --force --install --verbose
 
 cd "$olddir"
