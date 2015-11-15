@@ -115,7 +115,7 @@ fu_provider_usb_device_add (FuProviderUsb *provider_usb, const gchar *id, GUsbDe
 		guid = g_usb_device_get_string_descriptor (device, idx, NULL);
 	if (guid == NULL) {
 		g_autofree gchar *vid_pid = NULL;
-		vid_pid = g_strdup_printf ("%04x:%04x",
+		vid_pid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 					  g_usb_device_get_vid (device),
 					  g_usb_device_get_pid (device));
 		guid = as_utils_guid_from_string (vid_pid);
