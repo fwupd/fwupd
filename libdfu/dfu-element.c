@@ -234,20 +234,24 @@ dfu_element_set_target_size (DfuElement *element, guint32 target_size)
 
 	g_return_if_fail (DFU_IS_ELEMENT (element));
 
+	/* save for dump */
+	priv->target_size = target_size;
+
 	/* no need to pad */
 	if (priv->contents == NULL)
 		return;
-	if (g_bytes_get_size (priv->contents) == target_size)
+	if (g_bytes_get_size (priv->contents) >= target_size)
 		return;
 
 	/* reallocate and pad */
 	data = g_bytes_get_data (priv->contents, &length);
-	buf = g_malloc0 (priv->target_size);
+	buf = g_malloc0 (target_size);
+	g_assert (buf != NULL);
 	memcpy (buf, data, length);
 
 	/* replace */
 	g_bytes_unref (priv->contents);
-	priv->contents = g_bytes_new_take (buf, priv->target_size);
+	priv->contents = g_bytes_new_take (buf, target_size);
 }
 
 /* DfuSe element header */
