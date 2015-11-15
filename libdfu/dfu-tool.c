@@ -956,7 +956,8 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
-				     "Invalid arguments, expected FILENAME");
+				     "Invalid arguments, expected "
+				     "FILENAME [ALT-SETTING]");
 		return FALSE;
 	}
 
@@ -1000,15 +1001,35 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
 	}
 
-	/* get correct firmware object */
-	image = dfu_firmware_get_image (firmware, priv->alt_setting);
-	if (image == NULL) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_FILE,
-			     "could not locate image in firmware for %02x",
-			     priv->alt_setting);
-		return FALSE;
+	/* allow overriding the firmware alt-setting */
+	if (g_strv_length (values) > 1) {
+		guint64 tmp = g_ascii_strtoull (values[1], NULL, 10);
+		if (tmp > 0xff) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Failed to parse alt-setting '%s'", values[1]);
+			return FALSE;
+		}
+		image = dfu_firmware_get_image (firmware, tmp);
+		if (image == NULL) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_FILE,
+				     "could not locate image in firmware for %02x",
+				     (guint) tmp);
+			return FALSE;
+		}
+	} else {
+		g_print ("WARNING: Using default firmware image\n");
+		image = dfu_firmware_get_image_default (firmware);
+		if (image == NULL) {
+			g_set_error_literal (error,
+					     DFU_ERROR,
+					     DFU_ERROR_INVALID_FILE,
+					     "no default image");
+			return FALSE;
+		}
 	}
 
 	/* transfer */
