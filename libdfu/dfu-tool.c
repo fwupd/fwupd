@@ -257,6 +257,253 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 }
 
 /**
+ * dfu_tool_set_vendor:
+ **/
+static gboolean
+dfu_tool_set_vendor (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	guint64 tmp;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILE VID"
+				     " -- e.g. `firmware.dfu 273f");
+		return FALSE;
+	}
+
+	/* open */
+	file = g_file_new_for_path (values[0]);
+	firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      NULL, error)) {
+		return FALSE;
+	}
+
+	/* parse VID */
+	tmp = g_ascii_strtoull (values[1], NULL, 16);
+	if (tmp == 0 || tmp > 0xffff) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Failed to parse VID '%s'", values[1]);
+		return FALSE;
+	}
+	dfu_firmware_set_vid (firmware, tmp);
+
+	/* write out new file */
+	return dfu_firmware_write_file (firmware, file, NULL, error);
+}
+
+/**
+ * dfu_tool_set_product:
+ **/
+static gboolean
+dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	guint64 tmp;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILE PID"
+				     " -- e.g. `firmware.dfu 1004");
+		return FALSE;
+	}
+
+	/* open */
+	file = g_file_new_for_path (values[0]);
+	firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      NULL, error)) {
+		return FALSE;
+	}
+
+	/* parse VID */
+	tmp = g_ascii_strtoull (values[1], NULL, 16);
+	if (tmp == 0 || tmp > 0xffff) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Failed to parse PID '%s'", values[1]);
+		return FALSE;
+	}
+	dfu_firmware_set_pid (firmware, tmp);
+
+	/* write out new file */
+	return dfu_firmware_write_file (firmware, file, NULL, error);
+}
+
+/**
+ * dfu_tool_set_release:
+ **/
+static gboolean
+dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	guint64 tmp;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILE RELEASE"
+				     " -- e.g. `firmware.dfu ffff");
+		return FALSE;
+	}
+
+	/* open */
+	file = g_file_new_for_path (values[0]);
+	firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      NULL, error)) {
+		return FALSE;
+	}
+
+	/* parse VID */
+	tmp = g_ascii_strtoull (values[1], NULL, 16);
+	if (tmp == 0 || tmp > 0xffff) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Failed to parse release '%s'", values[1]);
+		return FALSE;
+	}
+	dfu_firmware_set_release (firmware, tmp);
+
+	/* write out new file */
+	return dfu_firmware_write_file (firmware, file, NULL, error);
+}
+
+/**
+ * dfu_tool_set_alt_setting:
+ **/
+static gboolean
+dfu_tool_set_alt_setting (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	DfuImage *image;
+	guint64 tmp;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILE ALT-ID"
+				     " -- e.g. `firmware.dfu 1");
+		return FALSE;
+	}
+
+	/* open */
+	file = g_file_new_for_path (values[0]);
+	firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      NULL, error)) {
+		return FALSE;
+	}
+
+	/* doesn't make sense for non-DfuSe */
+	if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFUSE) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Only possible on DfuSe images, try convert");
+		return FALSE;
+	}
+
+	/* parse VID */
+	tmp = g_ascii_strtoull (values[1], NULL, 10);
+	if (tmp == 0 || tmp > 0xff) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Failed to parse alternative setting '%s'", values[1]);
+		return FALSE;
+	}
+	image = dfu_firmware_get_image_default (firmware);
+	if (image == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "found no image '%s'", values[1]);
+		return FALSE;
+	}
+	dfu_image_set_alt_setting (image, tmp);
+
+	/* write out new file */
+	return dfu_firmware_write_file (firmware, file, NULL, error);
+}
+
+/**
+ * dfu_tool_set_alt_setting_name:
+ **/
+static gboolean
+dfu_tool_set_alt_setting_name (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	DfuImage *image;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILE ALT-NAME"
+				     " -- e.g. `firmware.dfu ST");
+		return FALSE;
+	}
+
+	/* open */
+	file = g_file_new_for_path (values[0]);
+	firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      NULL, error)) {
+		return FALSE;
+	}
+
+	/* doesn't make sense for non-DfuSe */
+	if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFUSE) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Only possible on DfuSe images, try convert");
+		return FALSE;
+	}
+
+	/* parse VID */
+	image = dfu_firmware_get_image_default (firmware);
+	if (image == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "found no image '%s'", values[1]);
+		return FALSE;
+	}
+	dfu_image_set_name (image, values[1]);
+
+	/* write out new file */
+	return dfu_firmware_write_file (firmware, file, NULL, error);
+}
+
+/**
  * dfu_tool_convert:
  **/
 static gboolean
@@ -275,8 +522,8 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
 				     "Invalid arguments, expected "
-				     "FORMAT FILE-IN FILE-OUT [VID] [PID] [PRODUCT] [SIZE]"
-				     " -- e.g. `dfu firmware.hex firmware.dfu 273f 1004 ffff 8000`");
+				     "FORMAT FILE-IN FILE-OUT [SIZE]"
+				     " -- e.g. `dfu firmware.hex firmware.dfu 8000`");
 		return FALSE;
 	}
 
@@ -306,62 +553,35 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	/* set VID */
-	if (argc > 3) {
-		tmp = g_ascii_strtoull (values[3], NULL, 16);
-		if (tmp == 0 || tmp > 0xffff) {
-			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
-				     "Failed to parse VID '%s'", values[3]);
-			return FALSE;
-		}
-		dfu_firmware_set_vid (firmware, tmp);
-	}
-
-	/* set PID */
-	if (argc > 4) {
-		tmp = g_ascii_strtoull (values[4], NULL, 16);
-		if (tmp == 0 || tmp > 0xffff) {
-			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
-				     "Failed to parse PID '%s'", values[4]);
-			return FALSE;
-		}
-		dfu_firmware_set_pid (firmware, tmp);
-	}
-
-	/* set release */
-	if (argc > 5) {
-		tmp = g_ascii_strtoull (values[5], NULL, 16);
-		if (tmp == 0 || tmp > 0xffff) {
-			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
-				     "Failed to parse release '%s'", values[5]);
-			return FALSE;
-		}
-		dfu_firmware_set_release (firmware, tmp);
-	}
-
 	/* set target size */
-	if (argc > 6) {
+	if (argc > 3) {
 		DfuImage *image;
 		DfuElement *element;
-		tmp = g_ascii_strtoull (values[6], NULL, 16);
-		if (tmp == 0 || tmp > 0xffff) {
+		tmp = g_ascii_strtoull (values[3], NULL, 16);
+		if (tmp > 0xffff) {
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
-				     "Failed to parse target size '%s'", values[6]);
+				     "Failed to parse target size '%s'", values[3]);
+			return FALSE;
+		}
+
+		/* doesn't make sense for DfuSe */
+		if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFUSE) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Cannot pad DfuSe image, try DFU");
 			return FALSE;
 		}
 
 		/* this has to exist */
-		image = dfu_firmware_get_image (firmware, 0);
-		element = dfu_image_get_element (image, 0);
-		dfu_element_set_target_size (element, tmp);
+		if (tmp > 0) {
+			image = dfu_firmware_get_image_default (firmware);
+			g_assert (image != NULL);
+			element = dfu_image_get_element (image, 0);
+			dfu_element_set_target_size (element, tmp);
+		}
 	}
 
 	/* print the new object */
@@ -885,6 +1105,36 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Convert firmware to DFU format"),
 		     dfu_tool_convert);
+	dfu_tool_add (priv->cmd_array,
+		     "set-vendor",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Set vendor ID on firmware file"),
+		     dfu_tool_set_vendor);
+	dfu_tool_add (priv->cmd_array,
+		     "set-product",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Set product ID on firmware file"),
+		     dfu_tool_set_product);
+	dfu_tool_add (priv->cmd_array,
+		     "set-release",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Set release version on firmware file"),
+		     dfu_tool_set_release);
+	dfu_tool_add (priv->cmd_array,
+		     "set-alt-setting",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Set alternative number on firmware file"),
+		     dfu_tool_set_alt_setting);
+	dfu_tool_add (priv->cmd_array,
+		     "set-alt-setting-name",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Set alternative name on firmware file"),
+		     dfu_tool_set_alt_setting_name);
 	dfu_tool_add (priv->cmd_array,
 		     "reset",
 		     NULL,

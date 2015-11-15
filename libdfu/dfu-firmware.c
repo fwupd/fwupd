@@ -144,6 +144,26 @@ dfu_firmware_get_image (DfuFirmware *firmware, guint8 alt_setting)
 }
 
 /**
+ * dfu_firmware_get_image_default:
+ * @firmware: a #DfuFirmware
+ *
+ * Gets the default image from the firmware file.
+ *
+ * Return value: (transfer none): a #DfuImage, or %NULL for not found
+ *
+ * Since: 0.5.4
+ **/
+DfuImage *
+dfu_firmware_get_image_default (DfuFirmware *firmware)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
+	if (priv->images->len == 0)
+		return NULL;
+	return g_ptr_array_index (priv->images, 0);
+}
+
+/**
  * dfu_firmware_get_images:
  * @firmware: a #DfuFirmware
  *
@@ -905,7 +925,7 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 	if (priv->format == DFU_FIRMWARE_FORMAT_RAW) {
 		GBytes *contents;
 		DfuElement *element;
-		image = dfu_firmware_get_image (firmware, 0);
+		image = dfu_firmware_get_image_default (firmware);
 		g_assert (image != NULL);
 		element = dfu_image_get_element (image, 0);
 		g_assert (element != NULL);
@@ -917,7 +937,7 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 	if (priv->format == DFU_FIRMWARE_FORMAT_DFU_1_0) {
 		GBytes *contents;
 		DfuElement *element;
-		image = dfu_firmware_get_image (firmware, 0);
+		image = dfu_firmware_get_image_default (firmware);
 		g_assert (image != NULL);
 		element = dfu_image_get_element (image, 0);
 		g_assert (element != NULL);

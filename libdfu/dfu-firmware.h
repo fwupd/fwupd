@@ -77,6 +77,7 @@ const gchar	*dfu_firmware_format_to_string	(DfuFirmwareFormat format);
 
 DfuImage	*dfu_firmware_get_image		(DfuFirmware	*firmware,
 						 guint8		 alt_setting);
+DfuImage	*dfu_firmware_get_image_default	(DfuFirmware	*firmware);
 GPtrArray	*dfu_firmware_get_images	(DfuFirmware	*firmware);
 guint16		 dfu_firmware_get_vid		(DfuFirmware	*firmware);
 guint16		 dfu_firmware_get_pid		(DfuFirmware	*firmware);
