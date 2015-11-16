@@ -822,6 +822,13 @@ dfu_device_download (DfuDevice *device,
 		g_debug ("booting to runtime to set auto-boot");
 		if (!dfu_device_wait_for_replug (device, 2000, cancellable, error))
 			return FALSE;
+		target_default = dfu_device_get_target_default (device, error);
+		if (target_default == NULL)
+			return FALSE;
+		if (!dfu_target_open (target_default,
+				      DFU_TARGET_OPEN_FLAG_NONE,
+				      NULL, error))
+			return FALSE;
 	}
 
 	/* auto-close */

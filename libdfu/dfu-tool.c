@@ -1088,6 +1088,7 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* optional reset */
 	if (priv->reset) {
+		flags |= DFU_TARGET_TRANSFER_FLAG_DETACH;
 		flags |= DFU_TARGET_TRANSFER_FLAG_HOST_RESET;
 		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
 	}
