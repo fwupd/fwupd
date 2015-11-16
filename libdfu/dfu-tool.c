@@ -1300,13 +1300,13 @@ main (int argc, char *argv[])
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Write firmware from file into target"),
-		     dfu_tool_download_target);
+		     dfu_tool_download);
 	dfu_tool_add (priv->cmd_array,
 		     "download-target",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Write firmware from file into device"),
-		     dfu_tool_download);
+		     dfu_tool_download_target);
 	dfu_tool_add (priv->cmd_array,
 		     "list",
 		     NULL,
