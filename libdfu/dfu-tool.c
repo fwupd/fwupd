@@ -631,7 +631,7 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GFile) file_out = NULL;
 
 	/* check args */
-	if (argc < 3) {
+	if (argc < 3 || argc > 4) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
