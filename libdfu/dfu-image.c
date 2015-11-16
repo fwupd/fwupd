@@ -261,9 +261,11 @@ dfu_image_set_name (DfuImage *image, const gchar *name)
 	g_return_if_fail (DFU_IS_IMAGE (image));
 
 	/* this is a hard limit in DfuSe */
-	sz = MIN (strlen (name), 254);
-	memset (priv->name, 0x00, 254);
-	memcpy (priv->name, name, sz);
+	memset (priv->name, 0x00, 0xff);
+	if (name != NULL) {
+		sz = MIN (strlen (name), 0xff - 1);
+		memcpy (priv->name, name, sz);
+	}
 }
 
 /**
