@@ -38,10 +38,14 @@ static void	fu_provider_usb_finalize	(GObject	*object);
 typedef struct {
 	GHashTable		*devices;
 	GUsbContext		*usb_ctx;
+	GTimer			*timer_dfu_replug;
+	gboolean		 done_coldplug;
 } FuProviderUsbPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuProviderUsb, fu_provider_usb, FU_TYPE_PROVIDER)
 #define GET_PRIVATE(o) (fu_provider_usb_get_instance_private (o))
+
+#define _DFU_REPLUG_DELAY	3.f /* s */
 
 /**
  * fu_provider_usb_get_name:
@@ -153,6 +157,23 @@ fu_provider_usb_device_add (FuProviderUsb *provider_usb, const gchar *id, GUsbDe
 }
 
 /**
+ * fu_provider_usb_event_valid:
+ **/
+static gboolean
+fu_provider_usb_event_valid (FuProviderUsb *provider_usb)
+{
+	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
+
+	if (!priv->done_coldplug)
+		return TRUE;
+	if (g_timer_elapsed (priv->timer_dfu_replug, NULL) > _DFU_REPLUG_DELAY)
+		return TRUE;
+
+	/* we probably are in the middle of a DFU reset */
+	return FALSE;
+}
+
+/**
  * fu_provider_usb_device_added_cb:
  **/
 static void
@@ -166,6 +187,14 @@ fu_provider_usb_device_added_cb (GUsbContext *ctx,
 	g_autofree gchar *id = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
+
+	/* doing DFU replug */
+	if (!fu_provider_usb_event_valid (provider_usb)) {
+		g_debug ("ignoring device addition of %04x:%04x",
+			 g_usb_device_get_vid (device),
+			 g_usb_device_get_pid (device));
+		return;
+	}
 
 	/* ignore hubs */
 	if (g_usb_device_get_device_class (device) == G_USB_DEVICE_CLASS_HUB)
@@ -221,6 +250,9 @@ fu_provider_usb_progress_cb (DfuState state, goffset current,
 			     goffset total, gpointer user_data)
 {
 	FuProvider *provider = FU_PROVIDER (user_data);
+	FuProviderUsb *provider_usb = FU_PROVIDER_USB (provider);
+	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
+
 	switch (state) {
 	case DFU_STATE_DFU_UPLOAD_IDLE:
 		fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_VERIFY);
@@ -231,6 +263,9 @@ fu_provider_usb_progress_cb (DfuState state, goffset current,
 	default:
 		break;
 	}
+
+	/* reset */
+	g_timer_reset (priv->timer_dfu_replug);
 }
 
 /**
@@ -305,11 +340,20 @@ fu_provider_usb_device_removed_cb (GUsbContext *ctx,
 	FuDevice *dev;
 	g_autofree gchar *id = NULL;
 
+	/* doing DFU replug */
+	if (!fu_provider_usb_event_valid (provider_usb)) {
+		g_debug ("ignoring device removal of %04x:%04x",
+			 g_usb_device_get_vid (device),
+			 g_usb_device_get_pid (device));
+		return;
+	}
+
 	/* already in database */
 	id = fu_provider_usb_get_id (device);
 	dev = g_hash_table_lookup (priv->devices, id);
 	if (dev == NULL)
 		return;
+
 	fu_provider_device_remove (FU_PROVIDER (provider_usb), dev);
 }
 
@@ -323,6 +367,9 @@ fu_provider_usb_coldplug (FuProvider *provider, GError **error)
 	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
 
 	g_usb_context_enumerate (priv->usb_ctx);
+
+	/* start ignoring USB devices that just replug */
+	priv->done_coldplug = TRUE;
 	return TRUE;
 }
 
@@ -379,6 +426,16 @@ fu_provider_usb_verify (FuProvider *provider,
 	if (dfu_firmware == NULL)
 		return FALSE;
 
+	/* the device never came back! */
+	if (!FU_IS_DEVICE (device)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "%s never came back from DFU mode",
+			     platform_id);
+		return FALSE;
+	}
+
 	/* get the SHA1 hash */
 	blob_fw = dfu_firmware_write_data (dfu_firmware, error);
 	if (blob_fw == NULL)
@@ -412,6 +469,7 @@ static void
 fu_provider_usb_init (FuProviderUsb *provider_usb)
 {
 	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
+	priv->timer_dfu_replug = g_timer_new ();
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
 	priv->usb_ctx = g_usb_context_new (NULL);
@@ -434,6 +492,7 @@ fu_provider_usb_finalize (GObject *object)
 
 	g_hash_table_unref (priv->devices);
 	g_object_unref (priv->usb_ctx);
+	g_timer_destroy (priv->timer_dfu_replug);
 
 	G_OBJECT_CLASS (fu_provider_usb_parent_class)->finalize (object);
 }
