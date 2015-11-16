@@ -800,6 +800,9 @@ dfu_device_download (DfuDevice *device,
 			return FALSE;
 		if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY)
 			flags_local = DFU_TARGET_TRANSFER_FLAG_VERIFY;
+		if (!dfu_target_open (target_tmp, DFU_TARGET_OPEN_FLAG_NONE,
+				      cancellable, error))
+			return FALSE;
 		if (!dfu_target_download (target_tmp,
 					  image,
 					  flags_local,
