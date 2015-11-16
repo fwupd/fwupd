@@ -871,16 +871,28 @@ fu_tool_transfer_progress_cb (DfuState state, goffset current,
 	/* changed state */
 	if (state != helper->last_state) {
 		const gchar *title = NULL;
+
+		/* detach was left hanging... */
+		if (helper->last_state == DFU_STATE_APP_DETACH) {
+			/* TRANSLATORS: when an action has completed */
+			g_print ("%s\n", _("OK"));
+		}
+
 		switch (state) {
+		case DFU_STATE_APP_DETACH:
+			/* TRANSLATORS: when moving from APP to DFU mode */
+			title = _("Detatching");
+			break;
 		case DFU_STATE_DFU_DNLOAD_IDLE:
-			/* TRANSLATORS: this is when moving from host to device */
+			/* TRANSLATORS: when copying from host to device */
 			title = _("Downloading");
 			break;
 		case DFU_STATE_DFU_UPLOAD_IDLE:
-			/* TRANSLATORS: this is when moving from device to host */
+			/* TRANSLATORS: when copying from device to host */
 			title = _("Verifying");
 			break;
 		default:
+			g_debug ("ignoring %s", dfu_state_to_string (state));
 			break;
 		}
 		/* show title and then pad */
@@ -893,6 +905,10 @@ fu_tool_transfer_progress_cb (DfuState state, goffset current,
 		helper->marks_shown = 0;
 		helper->last_state = state;
 	}
+
+	/* not known yet */
+	if (total == 0)
+		return;
 
 	/* add any sections */
 	marks_now = current * helper->marks_total / total;

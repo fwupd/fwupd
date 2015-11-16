@@ -638,6 +638,14 @@ dfu_device_upload (DfuDevice *device,
 
 	/* APP -> DFU */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_DETACH) {
+
+		/* inform UI there's going to be a detach:attach */
+		if (progress_cb != NULL) {
+			progress_cb (DFU_STATE_APP_DETACH, 0, 0,
+				     progress_cb_data);
+		}
+
+		/* detach and USB reset */
 		target_default = dfu_device_get_target_default (device, error);
 		if (target_default == NULL)
 			return NULL;
@@ -685,6 +693,14 @@ dfu_device_upload (DfuDevice *device,
 	/* boot to runtime */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) {
 		g_debug ("booting to runtime");
+
+		/* inform UI there's going to be a detach:attach */
+		if (progress_cb != NULL) {
+			progress_cb (DFU_STATE_APP_DETACH, 0, 0,
+				     progress_cb_data);
+		}
+
+		/* DFU -> APP */
 		if (!dfu_device_wait_for_replug (device, 2000, cancellable, error))
 			return NULL;
 	}
@@ -767,6 +783,14 @@ dfu_device_download (DfuDevice *device,
 
 	/* APP -> DFU */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_DETACH) {
+
+		/* inform UI there's going to be a detach:attach */
+		if (progress_cb != NULL) {
+			progress_cb (DFU_STATE_APP_DETACH, 0, 0,
+				     progress_cb_data);
+		}
+
+		/* detach and USB reset */
 		target_default = dfu_device_get_target_default (device, error);
 		if (target_default == NULL)
 			return FALSE;
@@ -823,6 +847,14 @@ dfu_device_download (DfuDevice *device,
 	/* boot to runtime */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) {
 		g_debug ("booting to runtime to set auto-boot");
+
+		/* inform UI there's going to be a detach:attach */
+		if (progress_cb != NULL) {
+			progress_cb (DFU_STATE_APP_DETACH, 0, 0,
+				     progress_cb_data);
+		}
+
+		/* DFU -> APP */
 		if (!dfu_device_wait_for_replug (device, 2000, cancellable, error))
 			return FALSE;
 		target_default = dfu_device_get_target_default (device, error);
