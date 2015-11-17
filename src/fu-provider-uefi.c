@@ -217,32 +217,7 @@ fu_provider_uefi_update (FuProvider *provider,
 	fwup_resource *re = NULL;
 	gboolean ret = TRUE;
 	guint64 hardware_instance = 0;	/* FIXME */
-	int fd;
 	int rc;
-	const gchar *fn = "/boot/fwupd-efiupdate";
-
-	/* save the data to a temp file */
-	if (!g_file_set_contents (fn,
-				  g_bytes_get_data (blob_fw, NULL),
-				  g_bytes_get_size (blob_fw),
-				  &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "Failed to write temp file: %s",
-			     error_local->message);
-		return FALSE;
-	}
-
-	/* open the file */
-	fd = g_open (fn, O_CLOEXEC, 0);
-	if (fd < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_READ,
-			     "failed to open %s", fn);
-		return FALSE;
-	}
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
@@ -255,7 +230,9 @@ fu_provider_uefi_update (FuProvider *provider,
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
 	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
-	rc = fwup_set_up_update (re, hardware_instance, fd);
+	rc = fwup_set_up_update_with_buf (re, hardware_instance,
+					  g_bytes_get_data (blob_fw, NULL),
+					  g_bytes_get_size (blob_fw));
 	if (rc < 0) {
 		ret = FALSE;
 		g_set_error (error,
