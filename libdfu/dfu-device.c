@@ -748,6 +748,26 @@ dfu_device_download (DfuDevice *device,
 	g_autoptr(DfuTarget) target_default = NULL;
 	g_autoptr(GPtrArray) targets = NULL;
 
+	/* do we allow wildcard VID:PID matches */
+	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID) == 0) {
+		if (dfu_firmware_get_vid (firmware) == 0xffff) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "firmware vendor ID not specified");
+			return FALSE;
+		}
+	}
+	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID) == 0) {
+		if (dfu_firmware_get_pid (firmware) == 0xffff) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "firmware product ID not specified");
+			return FALSE;
+		}
+	}
+
 	/* check vendor matches */
 	if (dfu_firmware_get_vid (firmware) != 0xffff &&
 	    dfu_device_get_runtime_pid (device) != 0xffff &&

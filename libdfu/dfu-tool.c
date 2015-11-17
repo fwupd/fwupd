@@ -29,6 +29,7 @@
 
 typedef struct {
 	GPtrArray		*cmd_array;
+	gboolean		 force;
 	gboolean		 reset;
 	gchar			*device_vid_pid;
 	guint16			 transfer_size;
@@ -593,6 +594,15 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 			g_print ("Adding alternative setting ID of 0x%02x\n",
 				 alt_id);
 			if (dfu_firmware_get_image (firmware, alt_id) != NULL) {
+				if (!priv->force) {
+					g_set_error (error,
+						     DFU_ERROR,
+						     DFU_ERROR_INVALID_FILE,
+						     "The alternative setting ID "
+						     "of 0x%02x has already been added",
+						     alt_id);
+					return FALSE;
+				}
 				g_print ("WARNING: The alternative setting "
 					 "ID of 0x%02x has already been added\n",
 					 alt_id);
@@ -1109,6 +1119,12 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
 	}
 
+	/* allow wildcards */
+	if (priv->force) {
+		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
+		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
+	}
+
 	/* transfer */
 	helper.last_state = DFU_STATE_DFU_ERROR;
 	helper.marks_total = 30;
@@ -1163,7 +1179,8 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 			ret = dfu_target_open (target,
 					       DFU_TARGET_OPEN_FLAG_NONE,
 					       NULL, &error_local);
-			g_print ("Found %s: [%04x:%04x] ver=%04x, devnum=%i, cfg=%i, intf=%i, ts=%i, alt=%i, name=%s",
+			g_print ("Found %s: [%04x:%04x] ver=%04x, devnum=%i, "
+				 "cfg=%i, intf=%i, ts=%i, alt=%i, name=%s",
 				 dfu_mode_to_string (dfu_target_get_mode (target)),
 				 g_usb_device_get_vid (usb_device),
 				 g_usb_device_get_pid (usb_device),
@@ -1240,6 +1257,8 @@ main (int argc, char *argv[])
 			"Specify the number of bytes per USB transfer", "BYTES" },
 		{ "reset", 'r', 0, G_OPTION_ARG_NONE, &priv->reset,
 			"Issue USB host reset once finished", NULL },
+		{ "force", '\0', 0, G_OPTION_ARG_NONE, &priv->force,
+			"Force the action ignoring all warnings", NULL },
 		{ NULL}
 	};
 

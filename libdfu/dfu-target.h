@@ -59,6 +59,8 @@ typedef enum {
  * @DFU_TARGET_TRANSFER_FLAG_HOST_RESET:	Reset the bus when complete
  * @DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME:	Boot to runtime when complete
  * @DFU_TARGET_TRANSFER_FLAG_DETACH:		Automatically detach and reset when in appIDLE mode
+ * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID:	Allow downloading images with wildcard VIDs
+ * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID:	Allow downloading images with wildcard PIDs
  *
  * The optional flags used for transfering firmware.
  **/
@@ -68,6 +70,8 @@ typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_HOST_RESET	= (1 << 1),
 	DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME	= (1 << 2),
 	DFU_TARGET_TRANSFER_FLAG_DETACH		= (1 << 3),
+	DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID	= (1 << 4),
+	DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID	= (1 << 5),
 	/*< private >*/
 	DFU_TARGET_TRANSFER_FLAG_LAST,
 } DfuTargetTransferFlags;
