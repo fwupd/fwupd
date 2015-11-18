@@ -232,7 +232,7 @@ fu_provider_uefi_update (FuProvider *provider,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "UEFI firmware update failed: %s",
-			     fwup_strerror (fwup_error));
+			     strerror (errno));
 		goto out;
 	}
 out:

@@ -26,7 +26,7 @@ BuildRequires: libappstream-glib-devel >= 0.3.6
 BuildRequires: gcab
 
 %ifarch x86_64 %{ix86} aarch64
-BuildRequires: fwupdate-devel >= 0.4
+BuildRequires: fwupdate-devel >= 0.5
 %endif
 
 Requires(post): systemd
