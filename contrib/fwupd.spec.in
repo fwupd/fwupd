@@ -22,11 +22,11 @@ BuildRequires: systemd
 BuildRequires: libsoup-devel >= 2.51.92
 BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
-BuildRequires: libappstream-glib-devel >= 0.5.0
+BuildRequires: libappstream-glib-devel >= 0.5.2
 BuildRequires: gcab
 
 %ifarch x86_64 %{ix86} aarch64
-BuildRequires: fwupdate-devel >= 0.4
+BuildRequires: fwupdate-devel >= 0.5
 %endif
 
 Requires(post): systemd
