@@ -1,4 +1,5 @@
 AM_CPPFLAGS = \
+	$(APPSTREAM_GLIB_CFLAGS)				\
 	$(GLIB_CFLAGS)						\
 	$(GUSB_CFLAGS)						\
 	-I$(top_srcdir)/libdfu					\
@@ -59,6 +60,7 @@ dfu_tool_SOURCES =						\
 
 dfu_tool_LDADD =						\
 	$(privlib_LTLIBRARIES)					\
+	$(APPSTREAM_GLIB_LIBS)					\
 	$(GLIB_LIBS)						\
 	$(GUSB_LIBS)
 

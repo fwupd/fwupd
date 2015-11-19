@@ -34,6 +34,7 @@
  * @DFU_ERROR_INVALID_DEVICE:			Invalid device type
  * @DFU_ERROR_NOT_FOUND:			Resource not found
  * @DFU_ERROR_NOT_SUPPORTED:			Action was not supported
+ * @DFU_ERROR_PERMISSION_DENIED:		Failed due to access permissions
  *
  * The error code.
  **/
@@ -44,6 +45,7 @@ typedef enum {
 	DFU_ERROR_INVALID_DEVICE,		/* Since: 0.5.4 */
 	DFU_ERROR_NOT_FOUND,			/* Since: 0.5.4 */
 	DFU_ERROR_NOT_SUPPORTED,		/* Since: 0.5.4 */
+	DFU_ERROR_PERMISSION_DENIED,		/* Since: 0.5.4 */
 	/*< private >*/
 	DFU_ERROR_LAST
 } DfuError;

@@ -26,6 +26,7 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <glib/gi18n.h>
+#include <appstream-glib.h>
 
 typedef struct {
 	GPtrArray		*cmd_array;
@@ -1158,13 +1159,74 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * dfu_tool_print_indent:
+ **/
+static void
+dfu_tool_print_indent (const gchar *title, const gchar *message, guint indent)
+{
+	guint i;
+	for (i = 0; i < indent; i++)
+		g_print (" ");
+	g_print ("%s:", title);
+	for (i = strlen (title) + indent; i < 15; i++)
+		g_print (" ");
+	g_print ("%s\n", message);
+}
+
+/**
+ * dfu_tool_list_target:
+ **/
+static void
+dfu_tool_list_target (DfuTarget *target)
+{
+	const gchar *tmp;
+	gboolean ret;
+	g_autofree gchar *alt_id = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* TRANSLATORS: the identifier name please */
+	alt_id = g_strdup_printf ("%i", dfu_target_get_interface_alt_setting (target));
+	dfu_tool_print_indent (_("ID"), alt_id, 1);
+
+	/* TRANSLATORS: device mode, e.g. runtime or DFU */
+	dfu_tool_print_indent (_("Mode"), dfu_mode_to_string (dfu_target_get_mode (target)), 2);
+	tmp = dfu_target_get_interface_alt_name (target);
+	if (tmp != NULL) {
+		/* TRANSLATORS: interface name, e.g. "Flash" */
+		dfu_tool_print_indent (_("Name"), tmp, 2);
+	}
+	ret = dfu_target_open (target,
+			       DFU_TARGET_OPEN_FLAG_NONE,
+			       NULL, &error_local);
+	if (ret) {
+		tmp = dfu_status_to_string (dfu_target_get_status (target));
+		/* TRANSLATORS: device status, e.g. "OK" */
+		dfu_tool_print_indent (_("Status"), tmp, 2);
+
+		tmp = dfu_state_to_string (dfu_target_get_state (target));
+		/* TRANSLATORS: device state, i.e. appIDLE */
+		dfu_tool_print_indent (_("State"), tmp, 2);
+	} else {
+		if (g_error_matches (error_local,
+				     DFU_ERROR,
+				     DFU_ERROR_PERMISSION_DENIED)) {
+			/* TRANSLATORS: probably not run as root... */
+			dfu_tool_print_indent (_("Status"), _("Unknown: permission denied"), 2);
+		} else {
+			/* TRANSLATORS: device has failed to report status */
+			dfu_tool_print_indent (_("Status"), error_local->message, 2);
+		}
+	}
+	dfu_target_close (target, NULL);
+}
+
+/**
  * dfu_tool_list:
  **/
 static gboolean
 dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	GUsbDevice *usb_device;
-	gboolean ret;
 	guint i;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GUsbContext) usb_ctx = NULL;
@@ -1178,6 +1240,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		GPtrArray *dfu_targets;
 		DfuTarget *target;
 		guint j;
+		g_autofree gchar *version = NULL;
 
 		usb_device = g_ptr_array_index (devices, i);
 		g_debug ("PROBING [%04x:%04x]",
@@ -1186,36 +1249,22 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		device = dfu_device_new (usb_device);
 		if (device == NULL)
 			continue;
+
+		/* device specific */
+		version = as_utils_version_from_uint16 (g_usb_device_get_release (usb_device),
+							AS_VERSION_PARSE_FLAG_NONE);
+		g_print ("%s %04x:%04x [v%s]:\n",
+			 /* TRANSLATORS: detected a DFU device */
+			 _("Found"),
+			 g_usb_device_get_vid (usb_device),
+			 g_usb_device_get_pid (usb_device),
+			 version);
+
+		/* list targets */
 		dfu_targets = dfu_device_get_targets (device);
 		for (j = 0; j < dfu_targets->len; j++) {
-			g_autoptr(GError) error_local = NULL;
 			target = g_ptr_array_index (dfu_targets, j);
-
-			if (priv->transfer_size > 0)
-				dfu_target_set_transfer_size (target, priv->transfer_size);
-			ret = dfu_target_open (target,
-					       DFU_TARGET_OPEN_FLAG_NONE,
-					       NULL, &error_local);
-			g_print ("Found %s: [%04x:%04x] ver=%04x, devnum=%i, "
-				 "cfg=%i, intf=%i, ts=%i, alt=%i, name=%s",
-				 dfu_mode_to_string (dfu_target_get_mode (target)),
-				 g_usb_device_get_vid (usb_device),
-				 g_usb_device_get_pid (usb_device),
-				 g_usb_device_get_release (usb_device),
-				 g_usb_device_get_address (usb_device),
-				 g_usb_device_get_configuration (usb_device, NULL),
-				 dfu_target_get_interface_number (target),
-				 dfu_target_get_transfer_size (target),
-				 dfu_target_get_interface_alt_setting (target),
-				 dfu_target_get_interface_alt_name (target));
-			if (ret) {
-				g_print (", status=%s, state=%s\n",
-					 dfu_status_to_string (dfu_target_get_status (target)),
-					 dfu_state_to_string (dfu_target_get_state (target)));
-			} else {
-				g_print (": %s\n", error_local->message);
-			}
-			dfu_target_close (target, NULL);
+			dfu_tool_list_target (target);
 		}
 	}
 	return TRUE;

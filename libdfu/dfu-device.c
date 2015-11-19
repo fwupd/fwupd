@@ -403,6 +403,15 @@ dfu_device_open (DfuDevice *device, GError **error)
 
 	/* open */
 	if (!g_usb_device_open (priv->dev, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_PERMISSION_DENIED)) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_PERMISSION_DENIED,
+				     "%s", error_local->message);
+			return FALSE;
+		}
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INVALID_DEVICE,
