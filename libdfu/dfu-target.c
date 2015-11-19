@@ -51,6 +51,7 @@ typedef enum {
 	DFU_ATTRIBUTE_CAN_UPLOAD		= (1 << 1),
 	DFU_ATTRIBUTE_MANIFEST_TOL		= (1 << 2),
 	DFU_ATTRIBUTE_WILL_DETACH		= (1 << 3),
+	DFU_ATTRIBUTE_CAN_ACCELERATE		= (1 << 7),
 	DFU_ATTRIBUTE_LAST
 } DfuAttributes;
 
@@ -74,6 +75,7 @@ typedef struct {
 	DfuStatus		 status;
 	DfuDevice		*device;
 	gboolean		 interface_claimed;
+	gboolean		 dfuse_supported;
 	guint16			 transfer_size;
 	guint8			 iface_number;
 	guint8			 iface_alt_setting;
@@ -261,12 +263,23 @@ dfu_target_update_from_iface (DfuTarget *target, GUsbInterface *iface)
 	if (quirks & DFU_QUIRK_IGNORE_INVALID_VERSION) {
 		g_debug ("ignoring quirked DFU version");
 	} else {
-		if (desc->bcdDFUVersion != 0x0100 &&
-		    desc->bcdDFUVersion != 0x0101) {
+		if (desc->bcdDFUVersion == 0x0100 ||
+		    desc->bcdDFUVersion == 0x0101) {
+			g_debug ("basic DFU, no DfuSe support");
+			priv->dfuse_supported = FALSE;
+		} else if (desc->bcdDFUVersion == 0x011a) {
+			g_debug ("DfuSe support");
+			priv->dfuse_supported = TRUE;
+		} else {
 			g_warning ("DFU version is invalid: 0x%04x",
 				   desc->bcdDFUVersion);
 		}
 	}
+
+	/* ST-specific */
+	if (priv->dfuse_supported &&
+	    desc->bmAttributes & DFU_ATTRIBUTE_CAN_ACCELERATE)
+		priv->transfer_size = 0x1000;
 
 	/* get attributes about the DFU operation */
 	priv->attributes = desc->bmAttributes;
@@ -890,6 +903,15 @@ dfu_target_upload (DfuTarget *target,
 		return NULL;
 	}
 
+	/* net yet... */
+	if (priv->dfuse_supported) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "DfuSe support not complete");
+		return NULL;
+	}
+
 	/* get all the chunks from the hardware */
 	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 	for (i = 0; i < 0xffff; i++) {
@@ -1178,12 +1200,22 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		     gpointer progress_cb_data,
 		     GError **error)
 {
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	GBytes *contents;
 	DfuElement *element;
 
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (DFU_IS_IMAGE (image), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* net yet... */
+	if (priv->dfuse_supported) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "DfuSe support not complete");
+		return FALSE;
+	}
 
 	/* get data */
 	element = dfu_image_get_element (image, 0);
