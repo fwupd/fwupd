@@ -638,19 +638,19 @@ dfu_device_upload (DfuDevice *device,
 
 	/* APP -> DFU */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_DETACH) {
-
-		/* inform UI there's going to be a detach:attach */
-		if (progress_cb != NULL) {
-			progress_cb (DFU_STATE_APP_DETACH, 0, 0,
-				     progress_cb_data);
-		}
-
-		/* detach and USB reset */
 		target_default = dfu_device_get_target_default (device, error);
 		if (target_default == NULL)
 			return NULL;
 		if (dfu_target_get_mode (target_default) == DFU_MODE_RUNTIME) {
 			g_debug ("detaching");
+
+			/* inform UI there's going to be a detach:attach */
+			if (progress_cb != NULL) {
+				progress_cb (DFU_STATE_APP_DETACH, 0, 0,
+					     progress_cb_data);
+			}
+
+			/* detach and USB reset */
 			if (!dfu_target_detach (target_default, NULL, error))
 				return NULL;
 			if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
