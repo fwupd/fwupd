@@ -742,125 +742,6 @@ dfu_tool_reset (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_tool_upload_target:
- **/
-static gboolean
-dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
-{
-	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
-	g_autofree gchar *str_debug = NULL;
-	g_autoptr(DfuDevice) device = NULL;
-	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(DfuImage) image = NULL;
-	g_autoptr(DfuTarget) target = NULL;
-	g_autoptr(GFile) file = NULL;
-
-	/* check args */
-	if (g_strv_length (values) < 1) {
-		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
-				     "Invalid arguments, expected FILENAME");
-		return FALSE;
-	}
-
-	/* open correct device */
-	device = dfu_tool_get_defalt_device (priv, error);
-	if (device == NULL)
-		return FALSE;
-	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
-	if (target == NULL)
-		return FALSE;
-
-	if (priv->transfer_size > 0)
-		dfu_target_set_transfer_size (target, priv->transfer_size);
-	if (!dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
-		return FALSE;
-
-	/* APP -> DFU */
-	if (dfu_target_get_mode (target) == DFU_MODE_RUNTIME) {
-		if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
-			return FALSE;
-		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
-	}
-
-	/* transfer */
-	image = dfu_target_upload (target, DFU_TARGET_TRANSFER_FLAG_NONE,
-				   flags, NULL, NULL, NULL, error);
-	if (image == NULL)
-		return FALSE;
-
-	/* create new firmware object */
-	firmware = dfu_firmware_new ();
-	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
-	dfu_firmware_set_vid (firmware, dfu_device_get_runtime_vid (device));
-	dfu_firmware_set_pid (firmware, dfu_device_get_runtime_pid (device));
-	dfu_firmware_add_image (firmware, image);
-
-	/* save file */
-	file = g_file_new_for_path (values[0]);
-	if (!dfu_firmware_write_file (firmware, file, NULL, error))
-		return FALSE;
-
-	/* print the new object */
-	str_debug = dfu_firmware_to_string (firmware);
-	g_debug ("DFU: %s", str_debug);
-
-	/* success */
-	g_print ("%u bytes successfully uploaded from device\n",
-		 dfu_image_get_size (image));
-	return TRUE;
-}
-
-/**
- * dfu_tool_upload:
- **/
-static gboolean
-dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
-{
-	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
-	g_autofree gchar *str_debug = NULL;
-	g_autoptr(DfuDevice) device = NULL;
-	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(DfuImage) image = NULL;
-	g_autoptr(GFile) file = NULL;
-
-	/* check args */
-	if (g_strv_length (values) < 1) {
-		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
-				     "Invalid arguments, expected FILENAME");
-		return FALSE;
-	}
-
-	/* open correct device */
-	device = dfu_tool_get_defalt_device (priv, error);
-	if (device == NULL)
-		return FALSE;
-
-	/* transfer */
-	firmware = dfu_device_upload (device, DFU_TARGET_TRANSFER_FLAG_NONE,
-				      flags, NULL, NULL, NULL, error);
-	if (firmware == NULL)
-		return FALSE;
-
-	/* save file */
-	file = g_file_new_for_path (values[0]);
-	if (!dfu_firmware_write_file (firmware, file, NULL, error))
-		return FALSE;
-
-	/* print the new object */
-	str_debug = dfu_firmware_to_string (firmware);
-	g_debug ("DFU: %s", str_debug);
-
-	/* success */
-	g_print ("%u bytes successfully uploaded from device\n",
-		 dfu_firmware_get_size (firmware));
-	return TRUE;
-}
-
 typedef struct {
 	guint		 marks_total;
 	guint		 marks_shown;
@@ -899,7 +780,7 @@ fu_tool_transfer_progress_cb (DfuState state, goffset current,
 			break;
 		case DFU_STATE_DFU_UPLOAD_IDLE:
 			/* TRANSLATORS: when copying from device to host */
-			title = _("Verifying");
+			title = _("Uploading");
 			break;
 		default:
 			g_debug ("ignoring %s", dfu_state_to_string (state));
@@ -929,6 +810,142 @@ fu_tool_transfer_progress_cb (DfuState state, goffset current,
 	/* this state done */
 	if (current == total)
 		g_print ("\n");
+}
+
+/**
+ * dfu_tool_upload_target:
+ **/
+static gboolean
+dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
+	DfuToolProgressHelper helper;
+	g_autofree gchar *str_debug = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(DfuImage) image = NULL;
+	g_autoptr(DfuTarget) target = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 1) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+
+	/* open correct device */
+	device = dfu_tool_get_defalt_device (priv, error);
+	if (device == NULL)
+		return FALSE;
+	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
+	if (target == NULL)
+		return FALSE;
+
+	if (priv->transfer_size > 0)
+		dfu_target_set_transfer_size (target, priv->transfer_size);
+	if (!dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
+		return FALSE;
+
+	/* APP -> DFU */
+	if (dfu_target_get_mode (target) == DFU_MODE_RUNTIME) {
+		if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
+			return FALSE;
+		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
+	}
+
+	/* transfer */
+	helper.last_state = DFU_STATE_DFU_ERROR;
+	helper.marks_total = 30;
+	helper.marks_shown = 0;
+	image = dfu_target_upload (target, 0, flags, NULL,
+				   fu_tool_transfer_progress_cb, &helper,
+				   error);
+	if (image == NULL)
+		return FALSE;
+
+	/* create new firmware object */
+	firmware = dfu_firmware_new ();
+	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
+	dfu_firmware_set_vid (firmware, dfu_device_get_runtime_vid (device));
+	dfu_firmware_set_pid (firmware, dfu_device_get_runtime_pid (device));
+	dfu_firmware_add_image (firmware, image);
+
+	/* save file */
+	file = g_file_new_for_path (values[0]);
+	if (!dfu_firmware_write_file (firmware, file, NULL, error))
+		return FALSE;
+
+	/* print the new object */
+	str_debug = dfu_firmware_to_string (firmware);
+	g_debug ("DFU: %s", str_debug);
+
+	/* success */
+	g_print ("%u bytes successfully uploaded from device\n",
+		 dfu_image_get_size (image));
+	return TRUE;
+}
+
+/**
+ * dfu_tool_upload:
+ **/
+static gboolean
+dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
+	DfuToolProgressHelper helper;
+	g_autofree gchar *str_debug = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(DfuImage) image = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 1) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+
+	/* open correct device */
+	device = dfu_tool_get_defalt_device (priv, error);
+	if (device == NULL)
+		return FALSE;
+
+	/* optional reset */
+	if (priv->reset) {
+		flags |= DFU_TARGET_TRANSFER_FLAG_DETACH;
+		flags |= DFU_TARGET_TRANSFER_FLAG_HOST_RESET;
+		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
+	}
+
+	/* transfer */
+	helper.last_state = DFU_STATE_DFU_ERROR;
+	helper.marks_total = 30;
+	helper.marks_shown = 0;
+	firmware = dfu_device_upload (device, 0, flags, NULL,
+				      fu_tool_transfer_progress_cb, &helper,
+				      error);
+	if (firmware == NULL)
+		return FALSE;
+
+	/* save file */
+	file = g_file_new_for_path (values[0]);
+	if (!dfu_firmware_write_file (firmware, file, NULL, error))
+		return FALSE;
+
+	/* print the new object */
+	str_debug = dfu_firmware_to_string (firmware);
+	g_debug ("DFU: %s", str_debug);
+
+	/* success */
+	g_print ("%u bytes successfully uploaded from device\n",
+		 dfu_firmware_get_size (firmware));
+	return TRUE;
 }
 
 /**
