@@ -38,12 +38,12 @@ struct _DfuElementClass
 DfuElement	*dfu_element_new		(void);
 
 GBytes		*dfu_element_get_contents	(DfuElement	*element);
-guint8		 dfu_element_get_address	(DfuElement	*element);
+guint32		 dfu_element_get_address	(DfuElement	*element);
 
 void		 dfu_element_set_contents	(DfuElement	*element,
 						 GBytes		*contents);
 void		 dfu_element_set_address	(DfuElement	*element,
-						 guint8		 address);
+						 guint32	 address);
 void		 dfu_element_set_target_size	(DfuElement	*element,
 						 guint32	 target_size);
 

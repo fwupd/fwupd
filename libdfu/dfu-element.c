@@ -133,11 +133,11 @@ dfu_element_get_contents (DfuElement *element)
  *
  * Since: 0.5.4
  **/
-guint8
+guint32
 dfu_element_get_address (DfuElement *element)
 {
 	DfuElementPrivate *priv = GET_PRIVATE (element);
-	g_return_val_if_fail (DFU_IS_ELEMENT (element), 0xff);
+	g_return_val_if_fail (DFU_IS_ELEMENT (element), 0x00);
 	return priv->address;
 }
 
@@ -173,7 +173,7 @@ dfu_element_set_contents (DfuElement *element, GBytes *contents)
  * Since: 0.5.4
  **/
 void
-dfu_element_set_address (DfuElement *element, guint8 address)
+dfu_element_set_address (DfuElement *element, guint32 address)
 {
 	DfuElementPrivate *priv = GET_PRIVATE (element);
 	g_return_if_fail (DFU_IS_ELEMENT (element));
