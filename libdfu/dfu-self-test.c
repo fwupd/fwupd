@@ -28,7 +28,8 @@
 #include "dfu-device.h"
 #include "dfu-error.h"
 #include "dfu-firmware.h"
-#include "dfu-target.h"
+#include "dfu-sector-private.h"
+#include "dfu-target-private.h"
 
 /**
  * dfu_test_get_filename:
@@ -322,6 +323,7 @@ dfu_device_func (void)
 static void
 dfu_colorhug_plus_func (void)
 {
+	GPtrArray *elements;
 	gboolean ret;
 	gboolean seen_app_idle = FALSE;
 	g_autoptr(DfuDevice) device = NULL;
@@ -425,10 +427,13 @@ dfu_colorhug_plus_func (void)
 	}
 
 	/* get a dump of the existing firmware */
-	image = dfu_target_upload (target, 0, DFU_TARGET_TRANSFER_FLAG_NONE,
+	image = dfu_target_upload (target, DFU_TARGET_TRANSFER_FLAG_NONE,
 				   NULL, NULL, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (DFU_IS_IMAGE (image));
+	elements = dfu_image_get_elements (image);
+	g_assert_nonnull (elements);
+	g_assert_cmpint (elements->len, ==, 1);
 
 	/* download a new firmware */
 	ret = dfu_target_download (target, image,
@@ -460,6 +465,102 @@ dfu_colorhug_plus_func (void)
 	g_assert (ret);
 }
 
+/**
+ * _dfu_target_sectors_to_string:
+ **/
+static gchar *
+_dfu_target_sectors_to_string (DfuTarget *target)
+{
+	DfuSector *sector;
+	GPtrArray *sectors;
+	GString *str;
+	guint i;
+
+	str = g_string_new ("");
+	sectors = dfu_target_get_sectors (target);
+	for (i = 0; i < sectors->len; i++) {
+		g_autofree gchar *tmp = NULL;
+		sector = g_ptr_array_index (sectors, i);
+		tmp = dfu_sector_to_string (sector);
+		g_string_append_printf (str, "%s\n", tmp);
+	}
+	if (str->len > 0)
+		g_string_truncate (str, str->len - 1);
+	return g_string_free (str, FALSE);
+}
+
+static void
+dfu_target_dfuse_func (void)
+{
+	gboolean ret;
+	gchar *tmp;
+	g_autoptr(DfuTarget) target = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* NULL */
+	target = g_object_new (DFU_TYPE_TARGET, NULL);
+	ret = dfu_target_parse_sectors (target, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	tmp = _dfu_target_sectors_to_string (target);
+	g_assert_cmpstr (tmp, ==, "");
+	g_free (tmp);
+
+	/* no addresses */
+	ret = dfu_target_parse_sectors (target, "@Flash3", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	tmp = _dfu_target_sectors_to_string (target);
+	g_assert_cmpstr (tmp, ==, "");
+	g_free (tmp);
+
+	/* one sector, no space */
+	ret = dfu_target_parse_sectors (target, "@Internal Flash /0x08000000/2*001Ka", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	tmp = _dfu_target_sectors_to_string (target);
+	g_assert_cmpstr (tmp, ==, "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1\n"
+				  "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1");
+	g_free (tmp);
+
+	/* multiple sectors */
+	ret = dfu_target_parse_sectors (target, "@Flash1 /0x08000000/2*001 Ka,4*001 Kg", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	tmp = _dfu_target_sectors_to_string (target);
+	g_assert_cmpstr (tmp, ==, "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1\n"
+				  "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1\n"
+				  "Zone:0, Sec#:1, Addr:0x08000000, Size:0x0400, Caps:0x7\n"
+				  "Zone:0, Sec#:1, Addr:0x08000400, Size:0x0400, Caps:0x7\n"
+				  "Zone:0, Sec#:1, Addr:0x08000800, Size:0x0400, Caps:0x7\n"
+				  "Zone:0, Sec#:1, Addr:0x08000c00, Size:0x0400, Caps:0x7");
+	g_free (tmp);
+
+	/* non-contiguous */
+	ret = dfu_target_parse_sectors (target, "@Flash2 /0xF000/4*100Ba/0xE000/3*8Kg/0x80000/2*24Kg", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	tmp = _dfu_target_sectors_to_string (target);
+	g_assert_cmpstr (tmp, ==, "Zone:0, Sec#:0, Addr:0x0000f000, Size:0x0064, Caps:0x1\n"
+				  "Zone:0, Sec#:0, Addr:0x0000f064, Size:0x0064, Caps:0x1\n"
+				  "Zone:0, Sec#:0, Addr:0x0000f0c8, Size:0x0064, Caps:0x1\n"
+				  "Zone:0, Sec#:0, Addr:0x0000f12c, Size:0x0064, Caps:0x1\n"
+				  "Zone:1, Sec#:0, Addr:0x0000e000, Size:0x2000, Caps:0x7\n"
+				  "Zone:1, Sec#:0, Addr:0x00010000, Size:0x2000, Caps:0x7\n"
+				  "Zone:1, Sec#:0, Addr:0x00012000, Size:0x2000, Caps:0x7\n"
+				  "Zone:2, Sec#:0, Addr:0x00080000, Size:0x6000, Caps:0x7\n"
+				  "Zone:2, Sec#:0, Addr:0x00086000, Size:0x6000, Caps:0x7");
+	g_free (tmp);
+
+	/* invalid */
+	ret = dfu_target_parse_sectors (target, "Flash", NULL);
+	g_assert (ret);
+	ret = dfu_target_parse_sectors (target, "@Internal Flash /0x08000000", NULL);
+	g_assert (!ret);
+	ret = dfu_target_parse_sectors (target, "@Internal Flash /0x08000000/12*001a", NULL);
+	g_assert (!ret);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -470,6 +571,7 @@ main (int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func ("/libdfu/enums", dfu_enums_func);
+	g_test_add_func ("/libdfu/target(DfuSe}", dfu_target_dfuse_func);
 	g_test_add_func ("/libdfu/firmware{raw}", dfu_firmware_raw_func);
 	g_test_add_func ("/libdfu/firmware{dfu}", dfu_firmware_dfu_func);
 	g_test_add_func ("/libdfu/firmware{dfuse}", dfu_firmware_dfuse_func);

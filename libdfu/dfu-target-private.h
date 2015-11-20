@@ -36,6 +36,11 @@ gboolean	 _dfu_target_update			(DfuTarget	*target,
 							 GCancellable	*cancellable,
 							 GError		**error);
 
+/* export this just for the self tests */
+gboolean	 dfu_target_parse_sectors		(DfuTarget	*target,
+							 const gchar	*alt_name,
+							 GError		**error);
+
 G_END_DECLS
 
 #endif /* __DFU_TARGET_PRIVATE_H */

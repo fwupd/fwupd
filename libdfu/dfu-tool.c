@@ -861,7 +861,7 @@ dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	helper.last_state = DFU_STATE_DFU_ERROR;
 	helper.marks_total = 30;
 	helper.marks_shown = 0;
-	image = dfu_target_upload (target, 0, flags, NULL,
+	image = dfu_target_upload (target, flags, NULL,
 				   fu_tool_transfer_progress_cb, &helper,
 				   error);
 	if (image == NULL)
@@ -928,7 +928,7 @@ dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
 	helper.last_state = DFU_STATE_DFU_ERROR;
 	helper.marks_total = 30;
 	helper.marks_shown = 0;
-	firmware = dfu_device_upload (device, 0, flags, NULL,
+	firmware = dfu_device_upload (device, flags, NULL,
 				      fu_tool_transfer_progress_cb, &helper,
 				      error);
 	if (firmware == NULL)
@@ -1181,6 +1181,7 @@ dfu_tool_list_target (DfuTarget *target)
 {
 	const gchar *tmp;
 	gboolean ret;
+	guint i;
 	g_autofree gchar *alt_id = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -1199,6 +1200,7 @@ dfu_tool_list_target (DfuTarget *target)
 			       DFU_TARGET_OPEN_FLAG_NONE,
 			       NULL, &error_local);
 	if (ret) {
+		GPtrArray *sectors;
 		tmp = dfu_status_to_string (dfu_target_get_status (target));
 		/* TRANSLATORS: device status, e.g. "OK" */
 		dfu_tool_print_indent (_("Status"), tmp, 2);
@@ -1206,6 +1208,19 @@ dfu_tool_list_target (DfuTarget *target)
 		tmp = dfu_state_to_string (dfu_target_get_state (target));
 		/* TRANSLATORS: device state, i.e. appIDLE */
 		dfu_tool_print_indent (_("State"), tmp, 2);
+
+		/* print sector information */
+		sectors = dfu_target_get_sectors (target);
+		for (i = 0; i < sectors->len; i++) {
+			DfuSector *sector;
+			g_autofree gchar *msg = NULL;
+			g_autofree gchar *title = NULL;
+			sector = g_ptr_array_index (sectors, i);
+			msg = dfu_sector_to_string (sector);
+			/* TRANSLATORS: these are areas of memory on the chip */
+			title = g_strdup_printf ("%s 0x%02x", _("Region"), i);
+			dfu_tool_print_indent (title, msg, 3);
+		}
 	} else {
 		if (g_error_matches (error_local,
 				     DFU_ERROR,
@@ -1217,6 +1232,7 @@ dfu_tool_list_target (DfuTarget *target)
 			dfu_tool_print_indent (_("Status"), error_local->message, 2);
 		}
 	}
+
 	dfu_target_close (target, NULL);
 }
 

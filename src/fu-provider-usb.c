@@ -417,7 +417,6 @@ fu_provider_usb_verify (FuProvider *provider,
 
 	/* get data from hardware */
 	dfu_firmware = dfu_device_upload (dfu_device,
-					  0,
 					  DFU_TARGET_TRANSFER_FLAG_DETACH |
 					  DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
 					  NULL,

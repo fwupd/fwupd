@@ -52,6 +52,7 @@ IGNORE_HFILES=							\
 	dfu-device-private.h					\
 	dfu-element-private.h					\
 	dfu-image-private.h					\
+	dfu-sector-private.h					\
 	dfu-target-private.h
 
 # Images to copy into HTML directory.

@@ -80,6 +80,7 @@ if (!dfu_device_download (dfu_device, dfu_firmware,
     <xi:include href="xml/dfu-firmware.xml"/>
     <xi:include href="xml/dfu-image.xml"/>
     <xi:include href="xml/dfu-element.xml"/>
+    <xi:include href="xml/dfu-sector.xml"/>
     <xi:include href="xml/dfu-target.xml"/>
     <xi:include href="xml/dfu-common.xml"/>
     <xi:include href="xml/dfu-error.xml"/>

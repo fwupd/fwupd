@@ -19,26 +19,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-/**
- * SECTION:dfu
- * @short_description: Helper objects for interacting with DFU devices.
- */
+#ifndef __DFU_SECTOR_PRIVATE_H
+#define __DFU_SECTOR_PRIVATE_H
 
-#ifndef __DFU_H__
-#define __DFU_H__
+#include "dfu-sector.h"
 
-#define __DFU_H_INSIDE__
+G_BEGIN_DECLS
 
-#include <libdfu/dfu-common.h>
-#include <libdfu/dfu-device.h>
-#include <libdfu/dfu-element.h>
-#include <libdfu/dfu-error.h>
-#include <libdfu/dfu-firmware.h>
-#include <libdfu/dfu-image.h>
-#include <libdfu/dfu-sector.h>
-#include <libdfu/dfu-target.h>
+DfuSector	*dfu_sector_new		(guint32	 address,
+					 guint32	 size,
+					 guint32	 size_left,
+					 guint16	 zone,
+					 guint16	 number,
+					 DfuSectorCap	 cap);
 
-#undef __DFU_H_INSIDE__
+G_END_DECLS
 
-#endif /* __DFU_H__ */
-
+#endif /* __DFU_SECTOR_PRIVATE_H */

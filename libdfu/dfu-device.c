@@ -603,7 +603,6 @@ dfu_device_reset (DfuDevice *device, GError **error)
 /**
  * dfu_device_upload:
  * @device: a #DfuDevice
- * @expected_size: the expected size of the firmware, or 0 for unknown
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
  * @cancellable: a #GCancellable, or %NULL
  * @progress_cb: a #GFileProgressCallback, or %NULL
@@ -618,7 +617,6 @@ dfu_device_reset (DfuDevice *device, GError **error)
  **/
 DfuFirmware *
 dfu_device_upload (DfuDevice *device,
-		   gsize expected_size,
 		   DfuTargetTransferFlags flags,
 		   GCancellable *cancellable,
 		   DfuProgressCallback progress_cb,
@@ -646,25 +644,30 @@ dfu_device_upload (DfuDevice *device,
 	dfu_firmware_set_release (firmware, 0xffff);
 
 	/* APP -> DFU */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_DETACH) {
-		target_default = dfu_device_get_target_default (device, error);
-		if (target_default == NULL)
-			return NULL;
-		if (dfu_target_get_mode (target_default) == DFU_MODE_RUNTIME) {
-			g_debug ("detaching");
-
-			/* inform UI there's going to be a detach:attach */
-			if (progress_cb != NULL) {
-				progress_cb (DFU_STATE_APP_DETACH, 0, 0,
-					     progress_cb_data);
-			}
-
-			/* detach and USB reset */
-			if (!dfu_target_detach (target_default, NULL, error))
-				return NULL;
-			if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
-				return NULL;
+	target_default = dfu_device_get_target_default (device, error);
+	if (target_default == NULL)
+		return NULL;
+	if (dfu_target_get_mode (target_default) == DFU_MODE_RUNTIME) {
+		if ((flags & DFU_TARGET_TRANSFER_FLAG_DETACH) == 0) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "device is not in DFU mode");
+			return FALSE;
 		}
+		g_debug ("detaching");
+
+		/* inform UI there's going to be a detach:attach */
+		if (progress_cb != NULL) {
+			progress_cb (DFU_STATE_APP_DETACH, 0, 0,
+				     progress_cb_data);
+		}
+
+		/* detach and USB reset */
+		if (!dfu_target_detach (target_default, NULL, error))
+			return NULL;
+		if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
+			return NULL;
 	}
 
 	/* upload from each target */
@@ -673,7 +676,12 @@ dfu_device_upload (DfuDevice *device,
 		DfuTarget *target;
 		g_autoptr(DfuImage) image = NULL;
 		target = g_ptr_array_index (targets, i);
-		image = dfu_target_upload (target, 0,
+		if (!dfu_target_open (target,
+				      DFU_TARGET_OPEN_FLAG_NONE,
+				      cancellable,
+				      error))
+			return NULL;
+		image = dfu_target_upload (target,
 					   DFU_TARGET_TRANSFER_FLAG_NONE,
 					   cancellable,
 					   progress_cb,
@@ -811,7 +819,18 @@ dfu_device_download (DfuDevice *device,
 	}
 
 	/* APP -> DFU */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_DETACH) {
+	/* detach and USB reset */
+	target_default = dfu_device_get_target_default (device, error);
+	if (target_default == NULL)
+		return FALSE;
+	if (dfu_target_get_mode (target_default) == DFU_MODE_RUNTIME) {
+		if ((flags & DFU_TARGET_TRANSFER_FLAG_DETACH) == 0) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "device is not in DFU mode");
+			return FALSE;
+		}
 
 		/* inform UI there's going to be a detach:attach */
 		if (progress_cb != NULL) {
@@ -819,17 +838,11 @@ dfu_device_download (DfuDevice *device,
 				     progress_cb_data);
 		}
 
-		/* detach and USB reset */
-		target_default = dfu_device_get_target_default (device, error);
-		if (target_default == NULL)
+		g_debug ("detaching");
+		if (!dfu_target_detach (target_default, NULL, error))
 			return FALSE;
-		if (dfu_target_get_mode (target_default) == DFU_MODE_RUNTIME) {
-			g_debug ("detaching");
-			if (!dfu_target_detach (target_default, NULL, error))
-				return FALSE;
-			if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
-				return FALSE;
-		}
+		if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
+			return FALSE;
 	}
 
 	/* download each target */

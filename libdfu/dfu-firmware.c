@@ -928,7 +928,13 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 		image = dfu_firmware_get_image_default (firmware);
 		g_assert (image != NULL);
 		element = dfu_image_get_element (image, 0);
-		g_assert (element != NULL);
+		if (element == NULL) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_FOUND,
+				     "no firmware element data to write");
+			return NULL;
+		}
 		contents = dfu_element_get_contents (element);
 		return g_bytes_ref (contents);
 	}
@@ -940,7 +946,13 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 		image = dfu_firmware_get_image_default (firmware);
 		g_assert (image != NULL);
 		element = dfu_image_get_element (image, 0);
-		g_assert (element != NULL);
+		if (element == NULL) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_FOUND,
+				     "no firmware element data to write");
+			return NULL;
+		}
 		contents = dfu_element_get_contents (element);
 		g_assert (contents != NULL);
 		return dfu_firmware_add_footer (firmware, contents);

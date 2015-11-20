@@ -34,6 +34,9 @@ libdfu_private_la_SOURCES =					\
 	dfu-image.c						\
 	dfu-image.h						\
 	dfu-image-private.h					\
+	dfu-sector.c						\
+	dfu-sector.h						\
+	dfu-sector-private.h					\
 	dfu-target.c						\
 	dfu-target.h						\
 	dfu-target-private.h

@@ -62,7 +62,6 @@ gboolean	 dfu_device_wait_for_replug		(DfuDevice	*device,
 							 GCancellable	*cancellable,
 							 GError		**error);
 DfuFirmware	*dfu_device_upload			(DfuDevice	*device,
-							 gsize		 expected_size,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
 							 DfuProgressCallback progress_cb,

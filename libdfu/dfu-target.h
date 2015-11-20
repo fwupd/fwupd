@@ -90,6 +90,7 @@ gboolean	 dfu_target_close			(DfuTarget	*target,
 DfuMode		 dfu_target_get_mode			(DfuTarget	*target);
 DfuState	 dfu_target_get_state			(DfuTarget	*target);
 DfuStatus	 dfu_target_get_status			(DfuTarget	*target);
+GPtrArray	*dfu_target_get_sectors			(DfuTarget	*target);
 gboolean	 dfu_target_can_upload			(DfuTarget	*target);
 gboolean	 dfu_target_can_download		(DfuTarget	*target);
 gboolean	 dfu_target_refresh			(DfuTarget	*target,
@@ -105,7 +106,6 @@ gboolean	 dfu_target_clear_status		(DfuTarget	*target,
 							 GCancellable	*cancellable,
 							 GError		**error);
 DfuImage	*dfu_target_upload			(DfuTarget	*target,
-							 gsize		 expected_size,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
 							 DfuProgressCallback progress_cb,
