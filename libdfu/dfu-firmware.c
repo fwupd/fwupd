@@ -662,7 +662,7 @@ dfu_firmware_add_dfuse (DfuFirmware *firmware, GBytes *bytes, GError **error)
 	for (i = 0; i < prefix->targets; i++) {
 		guint consumed;
 		g_autoptr(DfuImage) image = NULL;
-		image = _dfu_image_from_dfuse (data + offset,
+		image = dfu_image_from_dfuse (data + offset,
 					      len - offset,
 					      &consumed,
 					      error);
@@ -693,7 +693,7 @@ dfu_firmware_write_data_dfuse (DfuFirmware *firmware, GError **error)
 	for (i = 0; i < priv->images->len; i++) {
 		DfuImage *im = g_ptr_array_index (priv->images, i);
 		GBytes *contents;
-		contents = _dfu_image_to_dfuse (im);
+		contents = dfu_image_to_dfuse (im);
 		image_size_total += g_bytes_get_size (contents);
 		g_ptr_array_add (dfuse_images, contents);
 	}
@@ -878,7 +878,7 @@ dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents)
 	ftr->crc = dfu_firmware_generate_crc32 (buf, length + 12);
 
 	/* return all data */
-	return g_bytes_new (buf, length + 0x10);
+	return g_bytes_new_take (buf, length + 0x10);
 }
 
 /**

@@ -29,12 +29,8 @@
 
 G_BEGIN_DECLS
 
-DfuTarget	*_dfu_target_new			(DfuDevice	*device,
+DfuTarget	*dfu_target_new				(DfuDevice	*device,
 							 GUsbInterface	*iface);
-gboolean	 _dfu_target_update			(DfuTarget	*target,
-							 GUsbInterface	*iface,
-							 GCancellable	*cancellable,
-							 GError		**error);
 
 /* export this just for the self tests */
 gboolean	 dfu_target_parse_sectors		(DfuTarget	*target,

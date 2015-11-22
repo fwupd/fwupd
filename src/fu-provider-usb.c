@@ -83,7 +83,6 @@ fu_provider_usb_device_add (FuProviderUsb *provider_usb, const gchar *id, GUsbDe
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(DfuDevice) dfu_device = NULL;
-	g_autoptr(DfuTarget) dfu_target = NULL;
 
 	/* get product */
 	idx = g_usb_device_get_product_index (device);
@@ -135,20 +134,12 @@ fu_provider_usb_device_add (FuProviderUsb *provider_usb, const gchar *id, GUsbDe
 	/* is there a DFU interface */
 	dfu_device = dfu_device_new (device);
 	if (dfu_device != NULL) {
-		dfu_target = dfu_device_get_target_by_alt_setting (dfu_device, 0, NULL);
-		if (dfu_target != NULL) {
-			if (dfu_target_can_download (dfu_target)) {
-				fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_ONLINE);
-				fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_OFFLINE);
-			} else {
-				g_debug ("DFU device does not support downloading?!");
-				/* FIXME: is the CH+ correct here? */
-				fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_ONLINE);
-				fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_OFFLINE);
-			}
-		} else {
-			g_debug ("not a DFU device");
+		if (dfu_device_can_download (dfu_device)) {
+			fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_ONLINE);
+			fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_OFFLINE);
 		}
+	} else {
+		g_debug ("not a DFU device");
 	}
 
 	/* good to go */
@@ -310,6 +301,15 @@ fu_provider_usb_update (FuProvider *provider,
 			     platform_id);
 		return FALSE;
 	}
+	if (!dfu_device_open (dfu_device, DFU_DEVICE_OPEN_FLAG_NONE,
+			      NULL, &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to open DFU device %s: %s",
+			     platform_id, error_local->message);
+		return FALSE;
+	}
 
 	/* hit hardware */
 	dfu_firmware = dfu_firmware_new ();
@@ -412,6 +412,15 @@ fu_provider_usb_verify (FuProvider *provider,
 			     FWUPD_ERROR_INTERNAL,
 			     "%s is not a DFU device",
 			     platform_id);
+		return FALSE;
+	}
+	if (!dfu_device_open (dfu_device, DFU_DEVICE_OPEN_FLAG_NONE,
+			      NULL, &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to open DFU device %s: %s",
+			     platform_id, error_local->message);
 		return FALSE;
 	}
 

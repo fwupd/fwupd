@@ -208,12 +208,29 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 	/* we specified it manually */
 	if (priv->device_vid_pid != NULL) {
 		DfuDevice *device;
-		g_auto(GStrv) vid_pid = NULL;
+		gchar *tmp;
+		guint64 pid;
+		guint64 vid;
 		g_autoptr(GUsbDevice) usb_device = NULL;
 
-		/* split up */
-		vid_pid = g_strsplit (priv->device_vid_pid, ":", -1);
-		if (g_strv_length (vid_pid) != 2) {
+		/* parse */
+		vid = g_ascii_strtoull (priv->device_vid_pid, &tmp, 16);
+		if (vid == 0 || vid > G_MAXUINT16) {
+			g_set_error_literal (error,
+					     DFU_ERROR,
+					     DFU_ERROR_INTERNAL,
+					     "Invalid format of VID:PID");
+			return NULL;
+		}
+		if (tmp[0] != ':') {
+			g_set_error_literal (error,
+					     DFU_ERROR,
+					     DFU_ERROR_INTERNAL,
+					     "Invalid format of VID:PID");
+			return NULL;
+		}
+		pid = g_ascii_strtoull (tmp + 1, NULL, 16);
+		if (vid == 0 || vid > G_MAXUINT16) {
 			g_set_error_literal (error,
 					     DFU_ERROR,
 					     DFU_ERROR_INTERNAL,
@@ -223,8 +240,7 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 
 		/* find device */
 		usb_device = g_usb_context_find_by_vid_pid (usb_ctx,
-							    atoi (vid_pid[0]),
-							    atoi (vid_pid[1]),
+							    vid, pid,
 							    error);
 		if (usb_device == NULL)
 			return NULL;
@@ -724,22 +740,16 @@ static gboolean
 dfu_tool_reset (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(DfuDevice) device = NULL;
-	g_autoptr(DfuTarget) target = NULL;
 
 	device = dfu_tool_get_defalt_device (priv, error);
 	if (device == NULL)
 		return FALSE;
-	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
-	if (target == NULL)
-		return FALSE;
-	if (!dfu_target_open (target,
-			      DFU_TARGET_OPEN_FLAG_NO_AUTO_REFRESH,
+	if (!dfu_device_open (device,
+			      DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH,
 			      NULL, error))
 		return FALSE;
-
 	if (!dfu_device_reset (device, error))
 		return FALSE;
-
 	return TRUE;
 }
 
@@ -841,23 +851,24 @@ dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	device = dfu_tool_get_defalt_device (priv, error);
 	if (device == NULL)
 		return FALSE;
-	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
-	if (target == NULL)
-		return FALSE;
-
 	if (priv->transfer_size > 0)
-		dfu_target_set_transfer_size (target, priv->transfer_size);
-	if (!dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
+		dfu_device_set_transfer_size (device, priv->transfer_size);
+	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, error))
 		return FALSE;
 
 	/* APP -> DFU */
-	if (dfu_target_get_mode (target) == DFU_MODE_RUNTIME) {
+	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
+		g_debug ("detaching");
+		if (!dfu_device_detach (device, NULL, error))
+			return FALSE;
 		if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
 			return FALSE;
-		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
 	}
 
 	/* transfer */
+	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
+	if (target == NULL)
+		return FALSE;
 	helper.last_state = DFU_STATE_DFU_ERROR;
 	helper.marks_total = 30;
 	helper.marks_shown = 0;
@@ -915,6 +926,8 @@ dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* open correct device */
 	device = dfu_tool_get_defalt_device (priv, error);
 	if (device == NULL)
+		return FALSE;
+	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, error))
 		return FALSE;
 
 	/* optional reset */
@@ -1017,19 +1030,15 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	device = dfu_tool_get_defalt_device (priv, error);
 	if (device == NULL)
 		return FALSE;
-	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
-	if (target == NULL)
-		return FALSE;
-
 	if (priv->transfer_size > 0)
-		dfu_target_set_transfer_size (target, priv->transfer_size);
-	if (!dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
+		dfu_device_set_transfer_size (device, priv->transfer_size);
+	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, error))
 		return FALSE;
 
 	/* APP -> DFU */
-	if (dfu_target_get_mode (target) == DFU_MODE_RUNTIME) {
+	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
 		g_debug ("detaching");
-		if (!dfu_target_detach (target, NULL, error))
+		if (!dfu_device_detach (device, NULL, error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
 			return FALSE;
@@ -1077,6 +1086,9 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* transfer */
+	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
+	if (target == NULL)
+		return FALSE;
 	helper.last_state = DFU_STATE_DFU_ERROR;
 	helper.marks_total = 30;
 	helper.marks_shown = 0;
@@ -1124,6 +1136,8 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* open correct device */
 	device = dfu_tool_get_defalt_device (priv, error);
 	if (device == NULL)
+		return FALSE;
+	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, error))
 		return FALSE;
 
 	/* print the new object */
@@ -1179,61 +1193,35 @@ dfu_tool_print_indent (const gchar *title, const gchar *message, guint indent)
 static void
 dfu_tool_list_target (DfuTarget *target)
 {
+	GPtrArray *sectors;
 	const gchar *tmp;
-	gboolean ret;
 	guint i;
 	g_autofree gchar *alt_id = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* TRANSLATORS: the identifier name please */
-	alt_id = g_strdup_printf ("%i", dfu_target_get_interface_alt_setting (target));
+	alt_id = g_strdup_printf ("%i", dfu_target_get_alt_setting (target));
 	dfu_tool_print_indent (_("ID"), alt_id, 1);
 
-	/* TRANSLATORS: device mode, e.g. runtime or DFU */
-	dfu_tool_print_indent (_("Mode"), dfu_mode_to_string (dfu_target_get_mode (target)), 2);
-	tmp = dfu_target_get_interface_alt_name (target);
+	/* this is optional */
+	tmp = dfu_target_get_alt_name (target, NULL);
 	if (tmp != NULL) {
 		/* TRANSLATORS: interface name, e.g. "Flash" */
 		dfu_tool_print_indent (_("Name"), tmp, 2);
 	}
-	ret = dfu_target_open (target,
-			       DFU_TARGET_OPEN_FLAG_NONE,
-			       NULL, &error_local);
-	if (ret) {
-		GPtrArray *sectors;
-		tmp = dfu_status_to_string (dfu_target_get_status (target));
-		/* TRANSLATORS: device status, e.g. "OK" */
-		dfu_tool_print_indent (_("Status"), tmp, 2);
 
-		tmp = dfu_state_to_string (dfu_target_get_state (target));
-		/* TRANSLATORS: device state, i.e. appIDLE */
-		dfu_tool_print_indent (_("State"), tmp, 2);
-
-		/* print sector information */
-		sectors = dfu_target_get_sectors (target);
-		for (i = 0; i < sectors->len; i++) {
-			DfuSector *sector;
-			g_autofree gchar *msg = NULL;
-			g_autofree gchar *title = NULL;
-			sector = g_ptr_array_index (sectors, i);
-			msg = dfu_sector_to_string (sector);
-			/* TRANSLATORS: these are areas of memory on the chip */
-			title = g_strdup_printf ("%s 0x%02x", _("Region"), i);
-			dfu_tool_print_indent (title, msg, 3);
-		}
-	} else {
-		if (g_error_matches (error_local,
-				     DFU_ERROR,
-				     DFU_ERROR_PERMISSION_DENIED)) {
-			/* TRANSLATORS: probably not run as root... */
-			dfu_tool_print_indent (_("Status"), _("Unknown: permission denied"), 2);
-		} else {
-			/* TRANSLATORS: device has failed to report status */
-			dfu_tool_print_indent (_("Status"), error_local->message, 2);
-		}
+	/* print sector information */
+	sectors = dfu_target_get_sectors (target);
+	for (i = 0; i < sectors->len; i++) {
+		DfuSector *sector;
+		g_autofree gchar *msg = NULL;
+		g_autofree gchar *title = NULL;
+		sector = g_ptr_array_index (sectors, i);
+		msg = dfu_sector_to_string (sector);
+		/* TRANSLATORS: these are areas of memory on the chip */
+		title = g_strdup_printf ("%s 0x%02x", _("Region"), i);
+		dfu_tool_print_indent (title, msg, 2);
 	}
-
-	dfu_target_close (target, NULL);
 }
 
 /**
@@ -1252,11 +1240,13 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_usb_context_enumerate (usb_ctx);
 	devices = g_usb_context_get_devices (usb_ctx);
 	for (i = 0; i < devices->len; i++) {
-		g_autoptr(DfuDevice) device = NULL;
 		GPtrArray *dfu_targets;
 		DfuTarget *target;
+		const gchar *tmp;
 		guint j;
 		g_autofree gchar *version = NULL;
+		g_autoptr(DfuDevice) device = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		usb_device = g_ptr_array_index (devices, i);
 		g_debug ("PROBING [%04x:%04x]",
@@ -1276,6 +1266,34 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 			 g_usb_device_get_pid (usb_device),
 			 version);
 
+		/* open */
+		if (!dfu_device_open (device,
+				      DFU_DEVICE_OPEN_FLAG_NONE,
+				      NULL, &error_local)) {
+			if (g_error_matches (error_local,
+					     DFU_ERROR,
+					     DFU_ERROR_PERMISSION_DENIED)) {
+				/* TRANSLATORS: probably not run as root... */
+				dfu_tool_print_indent (_("Status"), _("Unknown: permission denied"), 2);
+			} else {
+				/* TRANSLATORS: device has failed to report status */
+				dfu_tool_print_indent (_("Status"), error_local->message, 2);
+			}
+			continue;
+		}
+
+		tmp = dfu_mode_to_string (dfu_device_get_mode (device));
+		/* TRANSLATORS: device mode, e.g. runtime or DFU */
+		dfu_tool_print_indent (_("Mode"), tmp, 1);
+
+		tmp = dfu_status_to_string (dfu_device_get_status (device));
+		/* TRANSLATORS: device status, e.g. "OK" */
+		dfu_tool_print_indent (_("Status"), tmp, 1);
+
+		tmp = dfu_state_to_string (dfu_device_get_state (device));
+		/* TRANSLATORS: device state, i.e. appIDLE */
+		dfu_tool_print_indent (_("State"), tmp, 1);
+
 		/* list targets */
 		dfu_targets = dfu_device_get_targets (device);
 		for (j = 0; j < dfu_targets->len; j++) {
@@ -1293,22 +1311,18 @@ static gboolean
 dfu_tool_detach (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(DfuDevice) device = NULL;
-	g_autoptr(DfuTarget) target = NULL;
 
 	/* open correct device */
 	device = dfu_tool_get_defalt_device (priv, error);
 	if (device == NULL)
 		return FALSE;
-	target = dfu_device_get_target_by_alt_setting (device, priv->alt_setting, error);
-	if (target == NULL)
-		return FALSE;
 	if (priv->transfer_size > 0)
-		dfu_target_set_transfer_size (target, priv->transfer_size);
-	if (!dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE, NULL, error))
-		return FALSE;
+		dfu_device_set_transfer_size (device, priv->transfer_size);
 
 	/* detatch */
-	if (!dfu_target_detach (target, NULL, error))
+	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, error))
+		return FALSE;
+	if (!dfu_device_detach (device, NULL, error))
 		return FALSE;
 	return TRUE;
 }

@@ -39,20 +39,6 @@ struct _DfuTargetClass
 };
 
 /**
- * DfuTargetOpenFlags:
- * @DFU_TARGET_OPEN_FLAG_NONE:			No flags set
- * @DFU_TARGET_OPEN_FLAG_NO_AUTO_REFRESH:	Do not do the initial GET_STATUS
- *
- * The optional flags used for opening the target.
- **/
-typedef enum {
-	DFU_TARGET_OPEN_FLAG_NONE		= 0,
-	DFU_TARGET_OPEN_FLAG_NO_AUTO_REFRESH	= (1 << 0),
-	/*< private >*/
-	DFU_TARGET_OPEN_FLAG_LAST,
-} DfuTargetOpenFlags;
-
-/**
  * DfuTargetTransferFlags:
  * @DFU_TARGET_TRANSFER_FLAG_NONE:		No flags set
  * @DFU_TARGET_TRANSFER_FLAG_VERIFY:		Verify the download once complete
@@ -81,29 +67,9 @@ typedef void	(*DfuProgressCallback)			(DfuState	 state,
 							 goffset	 total,
 							 gpointer	 user_data);
 
-gboolean	 dfu_target_open			(DfuTarget	*target,
-							 DfuTargetOpenFlags flags,
-							 GCancellable	*cancellable,
-							 GError		**error);
-gboolean	 dfu_target_close			(DfuTarget	*target,
-							 GError		**error);
-DfuMode		 dfu_target_get_mode			(DfuTarget	*target);
-DfuState	 dfu_target_get_state			(DfuTarget	*target);
-DfuStatus	 dfu_target_get_status			(DfuTarget	*target);
 GPtrArray	*dfu_target_get_sectors			(DfuTarget	*target);
-gboolean	 dfu_target_can_upload			(DfuTarget	*target);
-gboolean	 dfu_target_can_download		(DfuTarget	*target);
-gboolean	 dfu_target_refresh			(DfuTarget	*target,
-							 GCancellable	*cancellable,
-							 GError		**error);
-gboolean	 dfu_target_detach			(DfuTarget	*target,
-							 GCancellable	*cancellable,
-							 GError		**error);
-gboolean	 dfu_target_abort			(DfuTarget	*target,
-							 GCancellable	*cancellable,
-							 GError		**error);
-gboolean	 dfu_target_clear_status		(DfuTarget	*target,
-							 GCancellable	*cancellable,
+guint8		 dfu_target_get_alt_setting		(DfuTarget	*target);
+const gchar	*dfu_target_get_alt_name		(DfuTarget	*target,
 							 GError		**error);
 DfuImage	*dfu_target_upload			(DfuTarget	*target,
 							 DfuTargetTransferFlags flags,
@@ -118,14 +84,6 @@ gboolean	 dfu_target_download			(DfuTarget	*target,
 							 DfuProgressCallback progress_cb,
 							 gpointer	 progress_cb_data,
 							 GError		**error);
-void		 dfu_target_set_timeout			(DfuTarget	*target,
-							 guint		 timeout_ms);
-guint8		 dfu_target_get_interface_number	(DfuTarget	*target);
-guint8		 dfu_target_get_interface_alt_setting	(DfuTarget	*target);
-const gchar	*dfu_target_get_interface_alt_name	(DfuTarget	*target);
-guint16		 dfu_target_get_transfer_size		(DfuTarget	*target);
-void		 dfu_target_set_transfer_size		(DfuTarget	*target,
-							 guint16	 transfer_size);
 
 G_END_DECLS
 

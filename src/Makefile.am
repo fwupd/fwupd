@@ -34,7 +34,7 @@ FWUPD_LIBS =						\
 	$(top_builddir)/libfwupd/libfwupd.la
 
 DFU_LIBS =						\
-	$(top_builddir)/libdfu/libdfu-private.la
+	$(top_builddir)/libdfu/libdfu.la
 
 bin_PROGRAMS = fwupdmgr
 

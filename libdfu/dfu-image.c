@@ -113,7 +113,7 @@ dfu_image_new (void)
  *
  * Gets the element data.
  *
- * Return value: (transfer none): element data
+ * Return value: (transfer none) (element-type DfuElement): element data
  *
  * Since: 0.5.4
  **/
@@ -318,7 +318,7 @@ typedef struct __attribute__((packed)) {
 } DfuSeImagePrefix;
 
 /**
- * _dfu_image_from_dfuse: (skip)
+ * dfu_image_from_dfuse: (skip)
  * @data: data buffer
  * @length: length of @data we can access
  * @consumed: (out): the number of bytes we consued
@@ -329,7 +329,7 @@ typedef struct __attribute__((packed)) {
  * Returns: a #DfuImage, or %NULL for error
  **/
 DfuImage *
-_dfu_image_from_dfuse (const guint8 *data,
+dfu_image_from_dfuse (const guint8 *data,
 		      gsize length,
 		      guint32 *consumed,
 		      GError **error)
@@ -339,7 +339,6 @@ _dfu_image_from_dfuse (const guint8 *data,
 	DfuSeImagePrefix *im;
 	guint32 offset = sizeof(DfuSeImagePrefix);
 	guint j;
-	g_autoptr(GBytes) contents = NULL;
 
 	g_assert_cmpint(sizeof(DfuSeImagePrefix), ==, 274);
 
@@ -359,13 +358,12 @@ _dfu_image_from_dfuse (const guint8 *data,
 	priv->alt_setting = im->alt_setting;
 	if (im->target_named == 0x01)
 		memcpy (priv->name, im->target_name, 255);
-	contents = g_bytes_new (data + offset,
-				GUINT32_FROM_LE (im->target_size));
+
 	/* parse elements */
 	for (j = 0; j < im->elements; j++) {
 		guint32 consumed_local;
 		g_autoptr(DfuElement) element = NULL;
-		element = _dfu_element_from_dfuse (data + offset, length,
+		element = dfu_element_from_dfuse (data + offset, length,
 						  &consumed_local, error);
 		if (element == NULL)
 			return NULL;
@@ -381,7 +379,7 @@ _dfu_image_from_dfuse (const guint8 *data,
 }
 
 /**
- * _dfu_image_to_dfuse: (skip)
+ * dfu_image_to_dfuse: (skip)
  * @image: a #DfuImage
  *
  * Packs a DfuSe image
@@ -389,7 +387,7 @@ _dfu_image_from_dfuse (const guint8 *data,
  * Returns: (transfer full): the packed data
  **/
 GBytes *
-_dfu_image_to_dfuse (DfuImage *image)
+dfu_image_to_dfuse (DfuImage *image)
 {
 	DfuImagePrivate *priv = GET_PRIVATE (image);
 	DfuElement *element;
@@ -405,7 +403,7 @@ _dfu_image_to_dfuse (DfuImage *image)
 	element_array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 	for (i = 0; i < priv->elements->len; i++) {
 		element = g_ptr_array_index (priv->elements, i);
-		bytes = _dfu_element_to_dfuse (element);
+		bytes = dfu_element_to_dfuse (element);
 		g_ptr_array_add (element_array, bytes);
 		length_total += g_bytes_get_size (bytes);
 	}

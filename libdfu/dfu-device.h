@@ -34,6 +34,20 @@ G_BEGIN_DECLS
 #define DFU_TYPE_DEVICE (dfu_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuDevice, dfu_device, DFU, DEVICE, GObject)
 
+/**
+ * DfuDeviceOpenFlags:
+ * @DFU_DEVICE_OPEN_FLAG_NONE:			No flags set
+ * @DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH:	Do not do the initial GET_STATUS
+ *
+ * The optional flags used for opening the target.
+ **/
+typedef enum {
+	DFU_DEVICE_OPEN_FLAG_NONE		= 0,
+	DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH	= (1 << 0),
+	/*< private >*/
+	DFU_DEVICE_OPEN_FLAG_LAST,
+} DfuDeviceOpenFlags;
+
 struct _DfuDeviceClass
 {
 	GObjectClass		 parent_class;
@@ -41,12 +55,12 @@ struct _DfuDeviceClass
 
 DfuDevice	*dfu_device_new				(GUsbDevice	*dev);
 gboolean	 dfu_device_open			(DfuDevice	*device,
+							 DfuDeviceOpenFlags flags,
+							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_device_close			(DfuDevice	*device,
 							 GError		**error);
 GPtrArray	*dfu_device_get_targets			(DfuDevice	*device);
-DfuTarget	*dfu_device_get_target_default		(DfuDevice	*device,
-							 GError		**error);
 DfuTarget	*dfu_device_get_target_by_alt_setting	(DfuDevice	*device,
 							 guint8		 alt_setting,
 							 GError		**error);
@@ -74,6 +88,32 @@ gboolean	 dfu_device_download			(DfuDevice	*device,
 							 DfuProgressCallback progress_cb,
 							 gpointer	 progress_cb_data,
 							 GError		**error);
+gboolean	 dfu_device_refresh			(DfuDevice	*device,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 dfu_device_detach			(DfuDevice	*device,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 dfu_device_abort			(DfuDevice	*device,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 dfu_device_clear_status		(DfuDevice	*device,
+							 GCancellable	*cancellable,
+							 GError		**error);
+
+guint8		 dfu_device_get_interface		(DfuDevice	*device);
+DfuMode		 dfu_device_get_mode			(DfuDevice	*device);
+DfuState	 dfu_device_get_state			(DfuDevice	*device);
+DfuStatus	 dfu_device_get_status			(DfuDevice	*device);
+guint16		 dfu_device_get_transfer_size		(DfuDevice	*device);
+guint		 dfu_device_get_timeout			(DfuDevice	*device);
+gboolean	 dfu_device_can_upload			(DfuDevice	*device);
+gboolean	 dfu_device_can_download		(DfuDevice	*device);
+
+void		 dfu_device_set_transfer_size		(DfuDevice	*device,
+							 guint16	 transfer_size);
+void		 dfu_device_set_timeout			(DfuDevice	*device,
+							 guint		 timeout_ms);
 
 G_END_DECLS
 

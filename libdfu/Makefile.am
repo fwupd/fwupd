@@ -1,3 +1,10 @@
+if HAVE_INTROSPECTION
+-include $(INTROSPECTION_MAKEFILE)
+INTROSPECTION_GIRS =
+INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir)
+INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
+endif
+
 AM_CPPFLAGS = \
 	$(APPSTREAM_GLIB_CFLAGS)				\
 	$(GLIB_CFLAGS)						\
@@ -13,11 +20,25 @@ AM_CPPFLAGS = \
 FWUPD_LIBS =							\
 	$(top_builddir)/libfwupd/libfwupd.la
 
-privlibdir=$(libdir)/fwupd
-privlib_LTLIBRARIES =						\
-	libdfu-private.la
+lib_LTLIBRARIES =						\
+	libdfu.la
 
-libdfu_private_la_SOURCES =					\
+libdfu_includedir = $(includedir)/fwupd-1
+libdfu_include_HEADERS =					\
+	dfu.h
+
+libdfubase_includedir = $(libdfu_includedir)/libdfu
+libdfubase_include_HEADERS =					\
+	dfu-common.h						\
+	dfu-device.h						\
+	dfu-element.h						\
+	dfu-error.h						\
+	dfu-firmware.h						\
+	dfu-image.h						\
+	dfu-sector.h						\
+	dfu-target.h
+
+libdfu_la_SOURCES =						\
 	dfu.h							\
 	dfu-common.c						\
 	dfu-common.h						\
@@ -41,18 +62,18 @@ libdfu_private_la_SOURCES =					\
 	dfu-target.h						\
 	dfu-target-private.h
 
-libdfu_private_la_LIBADD =					\
+libdfu_la_LIBADD =						\
 	$(FWUPD_LIBS)						\
 	$(GUSB_LIBS)						\
 	$(GLIB_LIBS)
 
-libdfu_private_la_LDFLAGS =					\
+libdfu_la_LDFLAGS =						\
 	-export-dynamic						\
 	-no-undefined						\
 	-avoid-version						\
 	-export-symbols-regex '^dfu_.*'
 
-libdfu_private_la_CFLAGS =					\
+libdfu_la_CFLAGS =						\
 	$(WARNINGFLAGS_C)
 
 bin_PROGRAMS =							\
@@ -62,7 +83,7 @@ dfu_tool_SOURCES =						\
 	dfu-tool.c
 
 dfu_tool_LDADD =						\
-	$(privlib_LTLIBRARIES)					\
+	$(lib_LTLIBRARIES)					\
 	$(APPSTREAM_GLIB_LIBS)					\
 	$(GLIB_LIBS)						\
 	$(GUSB_LIBS)
@@ -82,7 +103,7 @@ dfu_self_test_SOURCES =						\
 	dfu-self-test.c
 
 dfu_self_test_LDADD =						\
-	$(privlib_LTLIBRARIES)					\
+	$(lib_LTLIBRARIES)					\
 	$(GLIB_LIBS)						\
 	$(GUSB_LIBS)
 
@@ -93,6 +114,31 @@ TESTS = dfu-self-test
 CLEANFILES = *.log *.trs $(BUILT_SOURCES)
 
 MAINTAINERCLEANFILES = *.dfu *.bin
+if HAVE_INTROSPECTION
+introspection_sources =						\
+	$(libdfu_la_SOURCES)
+
+Dfu-1.0.gir: libdfu.la
+Dfu_1_0_gir_INCLUDES = GObject-2.0 Gio-2.0 GUsb-1.0
+Dfu_1_0_gir_CFLAGS = $(AM_CPPFLAGS)
+Dfu_1_0_gir_SCANNERFLAGS = --identifier-prefix=Dfu \
+				--symbol-prefix=dfu \
+				--warn-all \
+				--add-include-path=$(srcdir) \
+				--c-include="dfu.h"
+Dfu_1_0_gir_EXPORT_PACKAGES = dfu
+Dfu_1_0_gir_LIBS = libdfu.la
+Dfu_1_0_gir_FILES = $(introspection_sources)
+INTROSPECTION_GIRS += Dfu-1.0.gir
+
+girdir = $(datadir)/gir-1.0
+gir_DATA = $(INTROSPECTION_GIRS)
+
+typelibdir = $(libdir)/girepository-1.0
+typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
+
+CLEANFILES += $(gir_DATA) $(typelib_DATA) *.log *.trs *.test
+endif
 
 clean-local:
 	rm -f *~

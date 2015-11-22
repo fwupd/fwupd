@@ -261,7 +261,7 @@ typedef struct __attribute__((packed)) {
 } DfuSeElementPrefix;
 
 /**
- * _dfu_element_from_dfuse: (skip)
+ * dfu_element_from_dfuse: (skip)
  * @data: data buffer
  * @length: length of @data we can access
  * @consumed: (out): the number of bytes we consued
@@ -272,7 +272,7 @@ typedef struct __attribute__((packed)) {
  * Returns: a #DfuElement, or %NULL for error
  **/
 DfuElement *
-_dfu_element_from_dfuse (const guint8 *data,
+dfu_element_from_dfuse (const guint8 *data,
 			gsize length,
 			guint32 *consumed,
 			GError **error)
@@ -298,7 +298,7 @@ _dfu_element_from_dfuse (const guint8 *data,
 }
 
 /**
- * _dfu_element_to_dfuse: (skip)
+ * dfu_element_to_dfuse: (skip)
  * @element: a #DfuElement
  *
  * Packs a DfuSe element.
@@ -306,7 +306,7 @@ _dfu_element_from_dfuse (const guint8 *data,
  * Returns: (transfer full): the packed data
  **/
 GBytes *
-_dfu_element_to_dfuse (DfuElement *element)
+dfu_element_to_dfuse (DfuElement *element)
 {
 	DfuElementPrivate *priv = GET_PRIVATE (element);
 	DfuSeElementPrefix *el;

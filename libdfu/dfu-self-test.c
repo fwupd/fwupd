@@ -103,17 +103,15 @@ dfu_firmware_raw_func (void)
 {
 	DfuElement *element;
 	DfuImage *image_tmp;
+	GBytes *no_suffix_contents;
 	gchar buf[256];
 	guint i;
 	gboolean ret;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GBytes) no_suffix_contents = NULL;
 	g_autoptr(GBytes) roundtrip_orig = NULL;
 	g_autoptr(GBytes) roundtrip = NULL;
 	g_autoptr(GError) error = NULL;
-
-	firmware = dfu_firmware_new ();
 
 	/* set up some dummy data */
 	for (i = 0; i < 256; i++)
@@ -121,6 +119,7 @@ dfu_firmware_raw_func (void)
 	fw = g_bytes_new_static (buf, 256);
 
 	/* load a non DFU firmware */
+	firmware = dfu_firmware_new ();
 	ret = dfu_firmware_parse_data (firmware, fw, DFU_FIRMWARE_PARSE_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -162,8 +161,6 @@ dfu_firmware_dfu_func (void)
 	g_autoptr(GBytes) roundtrip = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file = NULL;
-
-	firmware = dfu_firmware_new ();
 
 	/* set up some dummy data */
 	for (i = 0; i < 256; i++)
@@ -305,7 +302,7 @@ dfu_device_func (void)
 	g_assert (target1 != NULL);
 
 	/* ensure open */
-	ret = dfu_target_open (target1, DFU_TARGET_OPEN_FLAG_NONE, NULL, &error);
+	ret = dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -315,7 +312,7 @@ dfu_device_func (void)
 	g_assert (target2 != NULL);
 
 	/* close */
-	ret = dfu_target_close (target1, &error);
+	ret = dfu_device_close (device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 }
@@ -344,16 +341,13 @@ dfu_colorhug_plus_func (void)
 						    NULL);
 	if (usb_device != NULL) {
 		g_autoptr(DfuDevice) device2 = NULL;
-		g_autoptr(DfuTarget) target2 = NULL;
 		device2 = dfu_device_new (usb_device);
 		g_assert (device2 != NULL);
-		target2 = dfu_device_get_target_by_alt_setting (device2, 0, &error);
-		g_assert_no_error (error);
-		g_assert (target2 != NULL);
-		ret = dfu_target_open (target2, DFU_TARGET_OPEN_FLAG_NO_AUTO_REFRESH, NULL, &error);
+
+		ret = dfu_device_open (device2, DFU_DEVICE_OPEN_FLAG_NONE, NULL, &error);
 		g_assert_no_error (error);
 		g_assert (ret);
-		ret = dfu_target_detach (target2, NULL, &error);
+		ret = dfu_device_detach (device2, NULL, &error);
 		g_assert_no_error (error);
 		g_assert (ret);
 
@@ -363,9 +357,6 @@ dfu_colorhug_plus_func (void)
 		g_assert (ret);
 
 		/* close it */
-		ret = dfu_target_close (target2, &error);
-		g_assert_no_error (error);
-		g_assert (ret);
 		ret = dfu_device_close (device2, &error);
 		g_assert_no_error (error);
 		g_assert (ret);
@@ -384,21 +375,18 @@ dfu_colorhug_plus_func (void)
 	/* check it's DFU-capable */
 	device = dfu_device_new (usb_device);
 	g_assert (device != NULL);
-	target = dfu_device_get_target_by_alt_setting (device, 0, &error);
-	g_assert_no_error (error);
-	g_assert (target != NULL);
 
 	/* we don't know this yet */
 	g_assert_cmpint (dfu_device_get_runtime_vid (device), ==, 0xffff);
 	g_assert_cmpint (dfu_device_get_runtime_pid (device), ==, 0xffff);
 
 	/* open it */
-	ret = dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE, NULL, &error);
+	ret = dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* is in dfuIDLE mode */
-	g_assert_cmpstr (dfu_state_to_string (dfu_target_get_state (target)), ==, "dfuIDLE");
+	g_assert_cmpstr (dfu_state_to_string (dfu_device_get_state (device)), ==, "dfuIDLE");
 
 	/* lets try and flash something inappropriate */
 	if (seen_app_idle) {
@@ -427,12 +415,15 @@ dfu_colorhug_plus_func (void)
 	}
 
 	/* get a dump of the existing firmware */
+	target = dfu_device_get_target_by_alt_setting (device, 0, &error);
+	g_assert_no_error (error);
+	g_assert (target != NULL);
 	image = dfu_target_upload (target, DFU_TARGET_TRANSFER_FLAG_NONE,
 				   NULL, NULL, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (DFU_IS_IMAGE (image));
 	elements = dfu_image_get_elements (image);
-	g_assert_nonnull (elements);
+	g_assert (elements != NULL);
 	g_assert_cmpint (elements->len, ==, 1);
 
 	/* download a new firmware */
@@ -453,23 +444,13 @@ dfu_colorhug_plus_func (void)
 	/* we should know now */
 	g_assert_cmpint (dfu_device_get_runtime_vid (device), ==, 0x273f);
 	g_assert_cmpint (dfu_device_get_runtime_pid (device), ==, 0x1002);
-
-	/* close it */
-	ret = dfu_target_close (target, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-
-	/* close it again */
-	ret = dfu_target_close (target, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
 }
 
 /**
- * _dfu_target_sectors_to_string:
+ * dfu_target_sectors_to_string:
  **/
 static gchar *
-_dfu_target_sectors_to_string (DfuTarget *target)
+dfu_target_sectors_to_string (DfuTarget *target)
 {
 	DfuSector *sector;
 	GPtrArray *sectors;
@@ -502,7 +483,7 @@ dfu_target_dfuse_func (void)
 	ret = dfu_target_parse_sectors (target, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	tmp = _dfu_target_sectors_to_string (target);
+	tmp = dfu_target_sectors_to_string (target);
 	g_assert_cmpstr (tmp, ==, "");
 	g_free (tmp);
 
@@ -510,7 +491,7 @@ dfu_target_dfuse_func (void)
 	ret = dfu_target_parse_sectors (target, "@Flash3", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	tmp = _dfu_target_sectors_to_string (target);
+	tmp = dfu_target_sectors_to_string (target);
 	g_assert_cmpstr (tmp, ==, "");
 	g_free (tmp);
 
@@ -518,7 +499,7 @@ dfu_target_dfuse_func (void)
 	ret = dfu_target_parse_sectors (target, "@Internal Flash /0x08000000/2*001Ka", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	tmp = _dfu_target_sectors_to_string (target);
+	tmp = dfu_target_sectors_to_string (target);
 	g_assert_cmpstr (tmp, ==, "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1\n"
 				  "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1");
 	g_free (tmp);
@@ -527,7 +508,7 @@ dfu_target_dfuse_func (void)
 	ret = dfu_target_parse_sectors (target, "@Flash1 /0x08000000/2*001 Ka,4*001 Kg", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	tmp = _dfu_target_sectors_to_string (target);
+	tmp = dfu_target_sectors_to_string (target);
 	g_assert_cmpstr (tmp, ==, "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1\n"
 				  "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1\n"
 				  "Zone:0, Sec#:1, Addr:0x08000000, Size:0x0400, Caps:0x7\n"
@@ -540,7 +521,7 @@ dfu_target_dfuse_func (void)
 	ret = dfu_target_parse_sectors (target, "@Flash2 /0xF000/4*100Ba/0xE000/3*8Kg/0x80000/2*24Kg", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	tmp = _dfu_target_sectors_to_string (target);
+	tmp = dfu_target_sectors_to_string (target);
 	g_assert_cmpstr (tmp, ==, "Zone:0, Sec#:0, Addr:0x0000f000, Size:0x0064, Caps:0x1\n"
 				  "Zone:0, Sec#:0, Addr:0x0000f064, Size:0x0064, Caps:0x1\n"
 				  "Zone:0, Sec#:0, Addr:0x0000f0c8, Size:0x0064, Caps:0x1\n"

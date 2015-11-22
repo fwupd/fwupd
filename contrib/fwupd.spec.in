@@ -100,7 +100,6 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %{_unitdir}/system-update.target.wants/
 %dir %{_localstatedir}/lib/fwupd
 %{_libdir}/lib*.so.*
-%{_libdir}/fwupd/libdfu-private.so
 %{_libdir}/girepository-1.0/*.typelib
 %dir %{_localstatedir}/cache/app-info
 %dir %{_localstatedir}/cache/app-info/icons

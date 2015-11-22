@@ -47,25 +47,6 @@
 static void dfu_target_finalize			 (GObject *object);
 
 typedef enum {
-	DFU_ATTRIBUTE_NONE			= 0,
-	DFU_ATTRIBUTE_CAN_DOWNLOAD		= (1 << 0),
-	DFU_ATTRIBUTE_CAN_UPLOAD		= (1 << 1),
-	DFU_ATTRIBUTE_MANIFEST_TOL		= (1 << 2),
-	DFU_ATTRIBUTE_WILL_DETACH		= (1 << 3),
-	DFU_ATTRIBUTE_CAN_ACCELERATE		= (1 << 7),
-	DFU_ATTRIBUTE_LAST
-} DfuAttributes;
-
-typedef enum {
-	DFU_QUIRK_NONE				= 0,
-	DFU_QUIRK_IGNORE_POLLTIMEOUT		= (1 << 0),
-	DFU_QUIRK_FORCE_DFU_MODE		= (1 << 1),
-	DFU_QUIRK_IGNORE_INVALID_VERSION	= (1 << 2),
-	DFU_QUIRK_USE_PROTOCOL_ZERO		= (1 << 3),
-	DFU_QUIRK_LAST
-} DfuQuirks;
-
-typedef enum {
 	DFU_CMD_DFUSE_GET_COMMAND		= 0x00,
 	DFU_CMD_DFUSE_SET_ADDRESS_POINTER	= 0x21,
 	DFU_CMD_DFUSE_ERASE			= 0x41,
@@ -78,23 +59,13 @@ typedef enum {
  * Private #DfuTarget data
  **/
 typedef struct {
-	DfuMode			 mode;
-	DfuState		 state;
-	DfuStatus		 status;
 	DfuDevice		*device;
-	gboolean		 interface_claimed;
-	gboolean		 dfuse_supported;
-	guint16			 transfer_size;
-	guint8			 iface_number;
-	guint8			 iface_alt_setting;
-	guint8			 iface_alt_setting_idx;
-	gchar			*iface_alt_setting_name;
-	guint			 dnload_timeout;
-	guint			 timeout_ms;
-	DfuAttributes		 attributes;
-	DfuQuirks		 quirks;
-	GPtrArray		*sectors; /* of DfuSector */
-	GHashTable		*sectors_erased; /* of DfuSector:1 */
+	gboolean		 done_setup;
+	guint8			 alt_setting;
+	guint8			 alt_idx;
+	gchar			*alt_name;
+	GPtrArray		*sectors;		/* of DfuSector */
+	GHashTable		*sectors_erased;	/* of DfuSector:1 */
 } DfuTargetPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (DfuTarget, dfu_target, G_TYPE_OBJECT)
@@ -117,10 +88,6 @@ static void
 dfu_target_init (DfuTarget *target)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	priv->state = DFU_STATE_APP_IDLE;
-	priv->status = DFU_STATUS_OK;
-	priv->timeout_ms = 500;
-	priv->transfer_size = 64;
 	priv->sectors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->sectors_erased = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
@@ -134,7 +101,7 @@ dfu_target_finalize (GObject *object)
 	DfuTarget *target = DFU_TARGET (object);
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 
-	g_free (priv->iface_alt_setting_name);
+	g_free (priv->alt_name);
 	g_ptr_array_unref (priv->sectors);
 	g_hash_table_unref (priv->sectors_erased);
 	if (priv->device != NULL)
@@ -327,6 +294,7 @@ gboolean
 dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	guint64 addr;
 	guint i;
 	guint j;
 	g_autofree gchar *str_debug = NULL;
@@ -335,6 +303,23 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 	/* not set */
 	if (alt_name == NULL)
 		return TRUE;
+
+	/* From the Neo Freerunner */
+	if (g_str_has_prefix (alt_name, "RAM 0x")) {
+		DfuSector *sector;
+		addr = g_ascii_strtoull (alt_name + 6, NULL, 16);
+		if (addr == 0 && addr > G_MAXUINT32)
+			return FALSE;
+		g_debug ("RAM descripton, so parsing");
+		sector = dfu_sector_new (addr, /* addr */
+					 0x0, /* size */
+					 0x0, /* size_left */
+					 0x0, /* zone */
+					 0x0, /* number */
+					 DFU_SECTOR_CAP_READABLE |
+					 DFU_SECTOR_CAP_WRITEABLE);
+		g_ptr_array_add (priv->sectors, sector);
+	}
 
 	/* not a DfuSe alternative name */
 	if (alt_name[0] != '@')
@@ -347,7 +332,6 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 	zones = g_strsplit (alt_name, "/", -1);
 	g_debug ("DfuSe nice alt-name: %s", g_strchomp (zones[0] + 1));
 	for (i = 1; zones[i] != NULL; i += 2) {
-		guint64 addr;
 		g_auto(GStrv) sectors = NULL;
 
 		/* parse address */
@@ -384,165 +368,8 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 	return TRUE;
 }
 
-typedef struct __attribute__((packed)) {
-	guint8		bLength;
-	guint8		bDescriptorType;
-	guint8		bmAttributes;
-	guint16		wDetachTimeOut;
-	guint16		wTransferSize;
-	guint16		bcdDFUVersion;
-} DfuFuncDescriptor;
-
 /**
- * dfu_target_get_quirks:
- **/
-static DfuQuirks
-dfu_target_get_quirks (GUsbDevice *dev)
-{
-	DfuQuirks quirks = DFU_QUIRK_NONE;
-	guint16 vid, pid, release;
-
-	vid = g_usb_device_get_vid (dev);
-	pid = g_usb_device_get_pid (dev);
-	release = g_usb_device_get_release (dev);
-
-	/* Openmoko Freerunner / GTA02 */
-	if ((vid == 0x1d50 || vid == 0x1457) &&
-	    pid >= 0x5117 && pid <= 0x5126)
-		quirks |= DFU_QUIRK_IGNORE_POLLTIMEOUT;
-
-	/* OpenPCD Reader */
-	if (vid == 0x16c0 && pid == 0x076b)
-		quirks |= DFU_QUIRK_IGNORE_POLLTIMEOUT;
-
-	/* Siemens AG, PXM 40 & PXM 50 */
-	if (vid == 0x0908 && (pid == 0x02c4 || pid == 0x02c5) && release == 0x0)
-		quirks |= DFU_QUIRK_IGNORE_POLLTIMEOUT;
-
-	/* Midiman M-Audio Transit */
-	if (vid == 0x0763 && pid == 0x2806)
-		quirks |= DFU_QUIRK_IGNORE_POLLTIMEOUT;
-
-	/* the LPC DFU bootloader uses the wrong mode */
-	if (vid == 0x1fc9 && pid == 0x000c)
-		quirks |= DFU_QUIRK_FORCE_DFU_MODE;
-
-	/* the Leaflabs Maple3 is known broken */
-	if (vid == 0x1eaf && pid == 0x0003 && release == 0x0200)
-		quirks |= DFU_QUIRK_IGNORE_INVALID_VERSION;
-
-	/* the DSO Nano has uses 0 instead of 2 when in DFU mode */
-//	quirks |= DFU_QUIRK_USE_PROTOCOL_ZERO;
-
-	return quirks;
-}
-
-/**
- * dfu_target_update_from_iface:
- **/
-static gboolean
-dfu_target_update_from_iface (DfuTarget *target, GUsbInterface *iface)
-{
-	DfuMode mode = DFU_MODE_UNKNOWN;
-	DfuQuirks quirks;
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	GBytes *iface_data = NULL;
-	GUsbDevice *dev;
-	const DfuFuncDescriptor *desc;
-	gsize iface_data_length;
-
-	/* runtime */
-	if (g_usb_interface_get_protocol (iface) == 0x01)
-		mode = DFU_MODE_RUNTIME;
-
-	/* DFU */
-	if (g_usb_interface_get_protocol (iface) == 0x02)
-		mode = DFU_MODE_DFU;
-
-	/* the DSO Nano has uses 0 instead of 2 when in DFU mode */
-	dev = _dfu_device_get_usb_dev (priv->device);
-	quirks = dfu_target_get_quirks (dev);
-	if ((quirks & DFU_QUIRK_USE_PROTOCOL_ZERO) &&
-	    g_usb_interface_get_protocol (iface) == 0x00)
-		mode = DFU_MODE_DFU;
-
-	/* nothing found */
-	if (mode == DFU_MODE_UNKNOWN)
-		return FALSE;
-
-	/* in DFU mode, the interface is supposed to be 0 */
-	if (mode == DFU_MODE_DFU && g_usb_interface_get_number (iface) != 0)
-		g_warning ("iface has to be 0 in DFU mode, got 0x%02i",
-			   g_usb_interface_get_number (iface));
-
-	/* some devices set the wrong mode */
-	if (quirks & DFU_QUIRK_FORCE_DFU_MODE)
-		mode = DFU_MODE_DFU;
-
-	/* save for reset */
-	if (mode == DFU_MODE_RUNTIME) {
-		_dfu_device_set_runtime_vid (priv->device, g_usb_device_get_vid (dev));
-		_dfu_device_set_runtime_pid (priv->device, g_usb_device_get_pid (dev));
-	}
-
-	/* update */
-	priv->iface_number = g_usb_interface_get_number (iface);
-	priv->iface_alt_setting = g_usb_interface_get_alternate (iface);
-	priv->iface_alt_setting_idx = g_usb_interface_get_index (iface);
-	priv->quirks = quirks;
-	priv->mode = mode;
-
-	/* parse the functional descriptor */
-	iface_data = g_usb_interface_get_extra (iface);
-	desc = g_bytes_get_data (iface_data, &iface_data_length);
-	if (iface_data_length != 0x09) {
-		g_warning ("interface found, but no interface data");
-		return FALSE;
-	}
-
-	/* check sanity */
-	if (desc->bLength != 0x09) {
-		g_warning ("DFU interface data has incorrect length: 0x%02x",
-			   desc->bLength);
-	}
-
-	/* check transfer size */
-	priv->transfer_size = desc->wTransferSize;
-	if (priv->transfer_size == 0x0000) {
-		g_warning ("DFU transfer size invalid, using default: 0x%04x",
-			   desc->wTransferSize);
-		priv->transfer_size = 64;
-	}
-
-	/* check DFU version */
-	if (quirks & DFU_QUIRK_IGNORE_INVALID_VERSION) {
-		g_debug ("ignoring quirked DFU version");
-	} else {
-		if (desc->bcdDFUVersion == 0x0100 ||
-		    desc->bcdDFUVersion == 0x0101) {
-			g_debug ("basic DFU, no DfuSe support");
-			priv->dfuse_supported = FALSE;
-		} else if (desc->bcdDFUVersion == 0x011a) {
-			g_debug ("DfuSe support");
-			priv->dfuse_supported = TRUE;
-		} else {
-			g_warning ("DFU version is invalid: 0x%04x",
-				   desc->bcdDFUVersion);
-		}
-	}
-
-	/* ST-specific */
-	if (priv->dfuse_supported &&
-	    desc->bmAttributes & DFU_ATTRIBUTE_CAN_ACCELERATE)
-		priv->transfer_size = 0x1000;
-
-	/* get attributes about the DFU operation */
-	priv->attributes = desc->bmAttributes;
-	return TRUE;
-}
-
-/**
- * _dfu_target_new:
+ * dfu_target_new: (skip)
  * @device: a #DfuDevice
  * @iface: a #GUsbInterface
  *
@@ -554,17 +381,15 @@ dfu_target_update_from_iface (DfuTarget *target, GUsbInterface *iface)
  * Since: 0.5.4
  **/
 DfuTarget *
-_dfu_target_new (DfuDevice *device, GUsbInterface *iface)
+dfu_target_new (DfuDevice *device, GUsbInterface *iface)
 {
 	DfuTargetPrivate *priv;
 	DfuTarget *target;
 	target = g_object_new (DFU_TYPE_TARGET, NULL);
 	priv = GET_PRIVATE (target);
 	priv->device = g_object_ref (device);
-	if (!dfu_target_update_from_iface (target, iface)) {
-		g_object_unref (target);
-		return NULL;
-	}
+	priv->alt_idx = g_usb_interface_get_index (iface);
+	priv->alt_setting = g_usb_interface_get_alternate (iface);
 	return target;
 }
 
@@ -587,175 +412,6 @@ dfu_target_get_sectors (DfuTarget *target)
 }
 
 /**
- * dfu_target_get_mode:
- * @target: a #GUsbDevice
- *
- * Gets the target mode.
- *
- * Return value: enumerated mode, e.g. %DFU_MODE_RUNTIME
- *
- * Since: 0.5.4
- **/
-DfuMode
-dfu_target_get_mode (DfuTarget *target)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_return_val_if_fail (DFU_IS_TARGET (target), 0);
-	return priv->mode;
-}
-
-/**
- * dfu_target_get_state:
- * @target: a #GUsbDevice
- *
- * Gets the target state.
- *
- * Return value: enumerated state, e.g. %DFU_STATE_DFU_UPLOAD_IDLE
- *
- * Since: 0.5.4
- **/
-DfuState
-dfu_target_get_state (DfuTarget *target)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_return_val_if_fail (DFU_IS_TARGET (target), 0);
-	return priv->state;
-}
-
-/**
- * dfu_target_get_status:
- * @target: a #GUsbDevice
- *
- * Gets the target status.
- *
- * Return value: enumerated status, e.g. %DFU_STATUS_ERR_ADDRESS
- *
- * Since: 0.5.4
- **/
-DfuStatus
-dfu_target_get_status (DfuTarget *target)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_return_val_if_fail (DFU_IS_TARGET (target), 0);
-	return priv->status;
-}
-
-/**
- * dfu_target_can_upload:
- * @target: a #GUsbDevice
- *
- * Gets if the target can upload.
- *
- * Return value: %TRUE if the target can upload from target to host
- *
- * Since: 0.5.4
- **/
-gboolean
-dfu_target_can_upload (DfuTarget *target)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
-	return (priv->attributes & DFU_ATTRIBUTE_CAN_UPLOAD) > 0;
-}
-
-/**
- * dfu_target_can_download:
- * @target: a #GUsbDevice
- *
- * Gets if the target can download.
- *
- * Return value: %TRUE if the target can download from host to target
- *
- * Since: 0.5.4
- **/
-gboolean
-dfu_target_can_download (DfuTarget *target)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
-	return (priv->attributes & DFU_ATTRIBUTE_CAN_DOWNLOAD) > 0;
-}
-
-/**
- * dfu_target_get_transfer_size:
- * @target: a #GUsbDevice
- *
- * Gets the transfer size in bytes.
- *
- * Return value: packet size, or 0 for unknown
- *
- * Since: 0.5.4
- **/
-guint16
-dfu_target_get_transfer_size (DfuTarget *target)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_return_val_if_fail (DFU_IS_TARGET (target), 0xffff);
-	return priv->transfer_size;
-}
-
-/**
- * dfu_target_set_transfer_size:
- * @target: a #GUsbDevice
- * @transfer_size: maximum packet size
- *
- * Sets the transfer size in bytes.
- *
- * Since: 0.5.4
- **/
-void
-dfu_target_set_transfer_size (DfuTarget *target, guint16 transfer_size)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_return_if_fail (DFU_IS_TARGET (target));
-	priv->transfer_size = transfer_size;
-}
-
-/**
- * dfu_target_error_fixup:
- **/
-static void
-dfu_target_error_fixup (DfuTarget *target,
-			GCancellable *cancellable,
-			GError **error)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-
-	/* sad panda */
-	if (error == NULL)
-		return;
-
-	/* not the right error to query */
-	if (!g_error_matches (*error,
-			      G_USB_DEVICE_ERROR,
-			      G_USB_DEVICE_ERROR_NOT_SUPPORTED))
-		return;
-
-	/* get the status */
-	if (!dfu_target_refresh (target, cancellable, NULL))
-		return;
-
-	/* not in an error state */
-	if (priv->state != DFU_STATE_DFU_ERROR)
-		return;
-
-	/* prefix the error */
-	switch (priv->status) {
-	case DFU_STATUS_OK:
-		/* ignore */
-		break;
-	case DFU_STATUS_ERR_VENDOR:
-		g_prefix_error (error, "read protection is active: ");
-		break;
-	default:
-		g_prefix_error (error, "[%s,%s]: ",
-				dfu_state_to_string (priv->state),
-				dfu_status_to_string (priv->status));
-		break;
-	}
-}
-
-/**
  * dfu_target_check_status:
  **/
 static gboolean
@@ -766,23 +422,23 @@ dfu_target_check_status (DfuTarget *target,
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 
 	/* get the status */
-	if (!dfu_target_refresh (target, cancellable, error))
+	if (!dfu_device_refresh (priv->device, cancellable, error))
 		return FALSE;
 
 	/* not in an error state */
-	if (priv->state != DFU_STATE_DFU_ERROR)
+	if (dfu_device_get_state (priv->device) != DFU_STATE_DFU_ERROR)
 		return TRUE;
 
 	/* read protection */
-	if (priv->dfuse_supported) {
-		if (priv->status == DFU_STATUS_ERR_VENDOR) {
+	if (dfu_device_has_dfuse_support (priv->device)) {
+		if (dfu_device_get_status (priv->device) == DFU_STATUS_ERR_VENDOR) {
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
 				     "failed, read protection is active");
 			return FALSE;
 		}
-		if (priv->status == DFU_STATUS_ERR_TARGET) {
+		if (dfu_device_get_status (priv->device) == DFU_STATUS_ERR_TARGET) {
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
@@ -796,16 +452,14 @@ dfu_target_check_status (DfuTarget *target,
 		     DFU_ERROR,
 		     DFU_ERROR_NOT_SUPPORTED,
 		     "failed, state:%s status:%s]: ",
-		     dfu_state_to_string (priv->state),
-		     dfu_status_to_string (priv->status));
+		     dfu_state_to_string (dfu_device_get_state (priv->device)),
+		     dfu_status_to_string (dfu_device_get_status (priv->device)));
 	return FALSE;
 }
 
 /**
- * dfu_target_open:
+ * dfu_target_use_alt_setting:
  * @target: a #DfuTarget
- * @flags: #DfuTargetOpenFlags, e.g. %DFU_TARGET_OPEN_FLAG_NONE
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Opens a DFU-capable target.
@@ -814,9 +468,8 @@ dfu_target_check_status (DfuTarget *target,
  *
  * Since: 0.5.4
  **/
-gboolean
-dfu_target_open (DfuTarget *target, DfuTargetOpenFlags flags,
-		 GCancellable *cancellable, GError **error)
+static gboolean
+dfu_target_use_alt_setting (DfuTarget *target, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	GUsbDevice *dev;
@@ -825,76 +478,64 @@ dfu_target_open (DfuTarget *target, DfuTargetOpenFlags flags,
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	/* already done */
-	if (priv->interface_claimed)
-		return TRUE;
-
-	/* ensure parent device is open */
-	if (!dfu_device_open (priv->device, error))
-		return FALSE;
-
-	/* claim the correct interface */
-	dev = _dfu_device_get_usb_dev (priv->device);
-	if (!g_usb_device_claim_interface (dev, (gint) priv->iface_number, 0, &error_local)) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_DEVICE,
-			     "cannot claim interface %i: %s",
-			     priv->iface_number, error_local->message);
-		return FALSE;
-	}
-	priv->interface_claimed = TRUE;
-
 	/* use the correct setting */
-	if (priv->mode == DFU_MODE_DFU) {
+	dev = dfu_device_get_usb_dev (priv->device);
+	if (dfu_device_get_mode (priv->device) == DFU_MODE_DFU) {
 		if (!g_usb_device_set_interface_alt (dev,
-						     (gint) priv->iface_number,
-						     (gint) priv->iface_alt_setting,
+						     (gint) dfu_device_get_interface (priv->device),
+						     (gint) priv->alt_setting,
 						     &error_local)) {
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
 				     "cannot set alternate setting 0x%02x on interface %i: %s",
-				     priv->iface_alt_setting,
-				     priv->iface_number,
+				     priv->alt_setting,
+				     dfu_device_get_interface (priv->device),
 				     error_local->message);
 			return FALSE;
 		}
 	}
 
-	/* get string */
-	if (priv->iface_alt_setting_idx != 0x00) {
-		priv->iface_alt_setting_name =
-			g_usb_device_get_string_descriptor (dev,
-							    priv->iface_alt_setting_idx,
-							    NULL);
-	}
+	return TRUE;
+}
 
-	/* automatically abort any uploads or downloads */
-	if ((flags & DFU_TARGET_OPEN_FLAG_NO_AUTO_REFRESH) == 0) {
-		if (!dfu_target_refresh (target, cancellable, error))
-			return FALSE;
-		switch (priv->state) {
-		case DFU_STATE_DFU_UPLOAD_IDLE:
-		case DFU_STATE_DFU_DNLOAD_IDLE:
-		case DFU_STATE_DFU_DNLOAD_SYNC:
-			g_debug ("aborting transfer %s", dfu_status_to_string (priv->status));
-			if (!dfu_target_abort (target, cancellable, error))
-				return FALSE;
-			break;
-		case DFU_STATE_DFU_ERROR:
-			g_debug ("clearing error %s", dfu_status_to_string (priv->status));
-			if (!dfu_target_clear_status (target, cancellable, error))
-				return FALSE;
-			break;
-		default:
-			break;
-		}
+/**
+ * dfu_target_setup:
+ * @target: a #DfuTarget
+ * @error: a #GError, or %NULL
+ *
+ * Opens a DFU-capable target.
+ *
+ * Return value: %TRUE for success
+ *
+ * Since: 0.5.4
+ **/
+static gboolean
+dfu_target_setup (DfuTarget *target, GError **error)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* already done */
+	if (priv->done_setup)
+		return TRUE;
+
+	/* get string */
+	if (priv->alt_idx != 0x00) {
+		GUsbDevice *dev;
+		dev = dfu_device_get_usb_dev (priv->device);
+		priv->alt_name =
+			g_usb_device_get_string_descriptor (dev,
+							    priv->alt_idx,
+							    NULL);
 	}
 
 	/* parse the DfuSe format according to UM0424 */
 	if (!dfu_target_parse_sectors (target,
-				       priv->iface_alt_setting_name,
+				       priv->alt_name,
 				       error))
 		return FALSE;
 
@@ -908,304 +549,11 @@ dfu_target_open (DfuTarget *target, DfuTargetOpenFlags flags,
 					 0x0, /* number */
 					 DFU_SECTOR_CAP_READABLE |
 					 DFU_SECTOR_CAP_WRITEABLE);
-		g_debug ("no UM0424 sector descripton, so adding dummy");
+		g_debug ("no UM0424 sector descripton in %s", priv->alt_name);
 		g_ptr_array_add (priv->sectors, sector);
 	}
 
-	return TRUE;
-}
-
-/**
- * dfu_target_close:
- * @target: a #DfuTarget
- * @error: a #GError, or %NULL
- *
- * Closes a DFU-capable target.
- *
- * Return value: %TRUE for success
- *
- * Since: 0.5.4
- **/
-gboolean
-dfu_target_close (DfuTarget *target, GError **error)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	GUsbDevice *dev;
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* this is our intention; the release might fail if the USB device
-	 * has been disconnected already */
-	priv->interface_claimed = FALSE;
-
-	/* only release if claimed */
-	if (priv->interface_claimed) {
-		dev = _dfu_device_get_usb_dev (priv->device);
-		if (!g_usb_device_release_interface (dev,
-						     (gint) priv->iface_number,
-						     0,
-						     &error_local)) {
-			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
-				     "cannot release interface %i: %s",
-				     priv->iface_number, error_local->message);
-			return FALSE;
-		}
-	}
-
-	/* success */
-	return TRUE;
-}
-
-/**
- * dfu_target_refresh:
- * @target: a #DfuTarget
- * @cancellable: a #GCancellable, or %NULL
- * @error: a #GError, or %NULL
- *
- * Refreshes the cached properties on the DFU target.
- *
- * Return value: %TRUE for success
- *
- * Since: 0.5.4
- **/
-gboolean
-dfu_target_refresh (DfuTarget *target, GCancellable *cancellable, GError **error)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	gsize actual_length = 0;
-	guint8 buf[6];
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    DFU_REQUEST_GETSTATUS,
-					    0,
-					    priv->iface_number,
-					    buf, sizeof(buf), &actual_length,
-					    priv->timeout_ms,
-					    cancellable,
-					    &error_local)) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
-			     "cannot get target state: %s",
-			     error_local->message);
-		return FALSE;
-	}
-	if (actual_length != 6) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
-			     "cannot get target status, invalid size: %04x",
-			     (guint) actual_length);
-	}
-	priv->status = buf[0];
-	if (priv->quirks & DFU_QUIRK_IGNORE_POLLTIMEOUT) {
-		priv->dnload_timeout = 5;
-	} else {
-		priv->dnload_timeout = buf[1] +
-					(((guint32) buf[2]) << 8) +
-					(((guint32) buf[3]) << 16);
-	}
-	priv->state = buf[4];
-	g_debug ("refreshed status=%s and state=%s",
-		 dfu_status_to_string (priv->status),
-		 dfu_state_to_string (priv->state));
-	return TRUE;
-}
-
-/**
- * dfu_target_detach:
- * @target: a #DfuTarget
- * @cancellable: a #GCancellable, or %NULL
- * @error: a #GError, or %NULL
- *
- * Detaches the target putting it into DFU-mode.
- *
- * Return value: %TRUE for success
- *
- * Since: 0.5.4
- **/
-gboolean
-dfu_target_detach (DfuTarget *target, GCancellable *cancellable, GError **error)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    DFU_REQUEST_DETACH,
-					    0,
-					    priv->iface_number,
-					    NULL, 0, NULL,
-					    priv->timeout_ms,
-					    cancellable,
-					    &error_local)) {
-		/* refresh the error code */
-		dfu_target_error_fixup (target, cancellable, &error_local);
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
-			     "cannot detach target: %s",
-			     error_local->message);
-		return FALSE;
-	}
-
-	/* do a host reset */
-	if ((priv->attributes & DFU_ATTRIBUTE_WILL_DETACH) == 0) {
-		g_debug ("doing target reset as host will not self-reset");
-		if (!dfu_device_reset (priv->device, error))
-			return FALSE;
-	}
-	return TRUE;
-}
-
-/**
- * dfu_target_abort:
- * @target: a #DfuTarget
- * @cancellable: a #GCancellable, or %NULL
- * @error: a #GError, or %NULL
- *
- * Aborts any upload or download in progress.
- *
- * Return value: %TRUE for success
- *
- * Since: 0.5.4
- **/
-gboolean
-dfu_target_abort (DfuTarget *target, GCancellable *cancellable, GError **error)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    DFU_REQUEST_ABORT,
-					    0,
-					    priv->iface_number,
-					    NULL, 0, NULL,
-					    priv->timeout_ms,
-					    cancellable,
-					    &error_local)) {
-		/* refresh the error code */
-		dfu_target_error_fixup (target, cancellable, &error_local);
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
-			     "cannot abort target: %s",
-			     error_local->message);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-/**
- * _dfu_target_update:
- * @target: a #DfuTarget
- * @iface: a #GUsbInterface
- * @cancellable: a #GCancellable, or %NULL
- * @error: a #GError, or %NULL
- *
- * Updates the target with new interface data. This only needs to be
- * done after the device has been reset.
- *
- * Returns: %TRUE for success
- **/
-gboolean
-_dfu_target_update (DfuTarget *target, GUsbInterface *iface,
-		    GCancellable *cancellable, GError **error)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	gboolean reclaim_interface = FALSE;
-
-	/* close */
-	if (priv->interface_claimed) {
-		if (!dfu_target_close (target, error))
-			return FALSE;
-		reclaim_interface = TRUE;
-	}
-
-	/* check this is _still_ a DFU-capable target */
-	if (!dfu_target_update_from_iface (target, iface)) {
-		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
-				     "replugged target is not DFU-capable");
-		return FALSE;
-	}
-
-	/* reclaim */
-	if (reclaim_interface) {
-		if (!dfu_device_open (priv->device, error))
-			return FALSE;
-		if (!dfu_target_open (target, DFU_TARGET_OPEN_FLAG_NONE,
-				      cancellable, error))
-			return FALSE;
-	}
-	return TRUE;
-}
-
-/**
- * dfu_target_clear_status:
- * @target: a #DfuTarget
- * @cancellable: a #GCancellable, or %NULL
- * @error: a #GError, or %NULL
- *
- * Clears any error status on the DFU target.
- *
- * Return value: %TRUE for success
- *
- * Since: 0.5.4
- **/
-gboolean
-dfu_target_clear_status (DfuTarget *target, GCancellable *cancellable, GError **error)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    DFU_REQUEST_CLRSTATUS,
-					    0,
-					    priv->iface_number,
-					    NULL, 0, NULL,
-					    priv->timeout_ms,
-					    cancellable,
-					    &error_local)) {
-		/* refresh the error code */
-		dfu_target_error_fixup (target, cancellable, &error_local);
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
-			     "cannot clear status on the target: %s",
-			     error_local->message);
-		return FALSE;
-	}
+	priv->done_setup = TRUE;
 	return TRUE;
 }
 
@@ -1220,21 +568,21 @@ dfu_target_download_chunk (DfuTarget *target, guint8 index, GBytes *bytes,
 	g_autoptr(GError) error_local = NULL;
 	gsize actual_length;
 
-	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
+	if (!g_usb_device_control_transfer (dfu_device_get_usb_dev (priv->device),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
 					    DFU_REQUEST_DNLOAD,
 					    index,
-					    priv->iface_number,
+					    dfu_device_get_interface (priv->device),
 					    (guint8 *) g_bytes_get_data (bytes, NULL),
 					    g_bytes_get_size (bytes),
 					    &actual_length,
-					    priv->timeout_ms,
+					    dfu_device_get_timeout (priv->device),
 					    cancellable,
 					    &error_local)) {
 		/* refresh the error code */
-		dfu_target_error_fixup (target, cancellable, &error_local);
+		dfu_device_error_fixup (priv->device, cancellable, &error_local);
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_NOT_SUPPORTED,
@@ -1277,7 +625,7 @@ dfu_target_set_address (DfuTarget *target,
 	guint8 buf[5];
 
 	/* invalid */
-	if (!priv->dfuse_supported) {
+	if (!dfu_device_has_dfuse_support (priv->device)) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
@@ -1324,7 +672,7 @@ dfu_target_erase_address (DfuTarget *target,
 	guint8 buf[5];
 
 	/* invalid */
-	if (!priv->dfuse_supported) {
+	if (!dfu_device_has_dfuse_support (priv->device)) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
@@ -1376,7 +724,7 @@ dfu_target_mass_erase (DfuTarget *target,
 	guint8 buf[1];
 
 	/* invalid */
-	if (!priv->dfuse_supported) {
+	if (!dfu_device_has_dfuse_support (priv->device)) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
@@ -1422,7 +770,7 @@ dfu_target_read_unprotect (DfuTarget *target,
 	guint8 buf[5];
 
 	/* invalid */
-	if (!priv->dfuse_supported) {
+	if (!dfu_device_has_dfuse_support (priv->device)) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
@@ -1454,22 +802,23 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 	g_autoptr(GError) error_local = NULL;
 	guint8 *buf;
 	gsize actual_length;
+	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 
-	buf = g_new0 (guint8, priv->transfer_size);
-	if (!g_usb_device_control_transfer (_dfu_device_get_usb_dev (priv->device),
+	buf = g_new0 (guint8, transfer_size);
+	if (!g_usb_device_control_transfer (dfu_device_get_usb_dev (priv->device),
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
 					    DFU_REQUEST_UPLOAD,
 					    index,
-					    priv->iface_number,
-					    buf, (gsize) priv->transfer_size,
+					    dfu_device_get_interface (priv->device),
+					    buf, (gsize) transfer_size,
 					    &actual_length,
-					    priv->timeout_ms,
+					    dfu_device_get_timeout (priv->device),
 					    cancellable,
 					    &error_local)) {
 		/* refresh the error code */
-		dfu_target_error_fixup (target, cancellable, &error_local);
+		dfu_device_error_fixup (priv->device, cancellable, &error_local);
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_NOT_SUPPORTED,
@@ -1479,8 +828,10 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 	}
 
 	/* for ST devices, the action only occurs when we do GetStatus */
-	if (!dfu_target_check_status (target, cancellable, error))
-		return FALSE;
+	if (!dfu_device_has_quirk (priv->device, DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD)) {
+		if (!dfu_target_check_status (target, cancellable, error))
+			return FALSE;
+	}
 
 	return g_bytes_new_take (buf, actual_length);
 }
@@ -1504,6 +855,7 @@ dfu_target_upload_element (DfuTarget *target,
 	gsize chunk_size;
 	gsize offset = 0;
 	gsize total_size = 0;
+	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 	guint8 *buffer;
 	guint32 last_sector_id = G_MAXUINT;
 	guint dfuse_sector_offset = 0;
@@ -1512,7 +864,7 @@ dfu_target_upload_element (DfuTarget *target,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* ST uses wBlockNum=0 for DfuSe commands and wBlockNum=1 is reserved */
-	if (priv->dfuse_supported) {
+	if (dfu_device_has_dfuse_support (priv->device)) {
 		offset += address;
 		dfuse_sector_offset = 2;
 	}
@@ -1522,7 +874,7 @@ dfu_target_upload_element (DfuTarget *target,
 	for (i = 0; i < 0xffff; i++) {
 
 		/* for DfuSe devices we need to handle the address manually */
-		if (priv->dfuse_supported) {
+		if (dfu_device_has_dfuse_support (priv->device)) {
 
 			/* check the sector with this element address is suitable */
 			sector = dfu_target_get_sector_for_addr (target, offset);
@@ -1581,7 +933,7 @@ dfu_target_upload_element (DfuTarget *target,
 		}
 
 		/* detect short write as EOF */
-		if (chunk_size < priv->transfer_size)
+		if (chunk_size < transfer_size)
 			break;
 	}
 
@@ -1620,7 +972,7 @@ dfu_target_upload_element (DfuTarget *target,
  * @target: a #DfuTarget
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
  * @cancellable: a #GCancellable, or %NULL
- * @progress_cb: a #GFileProgressCallback, or %NULL
+ * @progress_cb: (scope call): a #GFileProgressCallback, or %NULL
  * @progress_cb_data: user data to pass to @progress_cb
  * @error: a #GError, or %NULL
  *
@@ -1647,14 +999,22 @@ dfu_target_upload (DfuTarget *target,
 	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
+	/* ensure populated */
+	if (!dfu_target_setup (target, error))
+		return NULL;
+
 	/* can the target do this? */
-	if (!dfu_target_can_upload (target)) {
+	if (!dfu_device_can_upload (priv->device)) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
 				     "target cannot do uploading");
 		return NULL;
 	}
+
+	/* use correct alt */
+	if (!dfu_target_use_alt_setting (target, error))
+		return NULL;
 
 	/* no open?! */
 	if (priv->sectors->len == 0) {
@@ -1667,8 +1027,8 @@ dfu_target_upload (DfuTarget *target,
 
 	/* create a new image */
 	image = dfu_image_new ();
-	dfu_image_set_name (image, priv->iface_alt_setting_name);
-	dfu_image_set_alt_setting (image, priv->iface_alt_setting);
+	dfu_image_set_name (image, priv->alt_name);
+	dfu_image_set_alt_setting (image, priv->alt_setting);
 
 	/* get all the sectors for the device */
 	for (i = 0; i < priv->sectors->len; i++) {
@@ -1768,16 +1128,17 @@ dfu_target_download_element (DfuTarget *target,
 	guint nr_chunks;
 	guint dfuse_sector_offset = 0;
 	guint last_sector_id = G_MAXUINT;
+	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* ST uses wBlockNum=0 for DfuSe commands and wBlockNum=1 is reserved */
-	if (priv->dfuse_supported)
+	if (dfu_device_has_dfuse_support (priv->device))
 		dfuse_sector_offset = 2;
 
 	/* round up as we have to transfer incomplete blocks */
 	bytes = dfu_element_get_contents (element);
 	nr_chunks = ceil ((gdouble) g_bytes_get_size (bytes) /
-			  (gdouble) priv->transfer_size);
+			  (gdouble) transfer_size);
 	if (nr_chunks == 0) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
@@ -1791,11 +1152,11 @@ dfu_target_download_element (DfuTarget *target,
 		g_autoptr(GBytes) bytes_tmp = NULL;
 
 		/* caclulate the offset into the element data */
-		offset = i * priv->transfer_size;
+		offset = i * transfer_size;
 
 		/* for DfuSe devices we need to handle the erase and setting
 		 * the address manually */
-		if (priv->dfuse_supported) {
+		if (dfu_device_has_dfuse_support (priv->device)) {
 
 			/* check the sector with this element address is suitable */
 			sector = dfu_target_get_sector_for_addr (target, offset);
@@ -1845,8 +1206,8 @@ dfu_target_download_element (DfuTarget *target,
 		/* we have to write one final zero-sized chunk for EOF */
 		if (i < nr_chunks) {
 			length = g_bytes_get_size (bytes) - offset;
-			if (length > priv->transfer_size)
-				length = priv->transfer_size;
+			if (length > transfer_size)
+				length = transfer_size;
 			bytes_tmp = g_bytes_new_from_bytes (bytes, offset, length);
 		} else {
 			bytes_tmp = g_bytes_new (NULL, 0);
@@ -1869,10 +1230,10 @@ dfu_target_download_element (DfuTarget *target,
 		}
 
 		/* give the target a chance to update */
-		g_usleep (priv->dnload_timeout * 1000);
+		g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
 
 		/* getting the status moves the state machine to DNLOAD-IDLE */
-		if (!dfu_target_refresh (target, cancellable, error))
+		if (!dfu_device_refresh (priv->device, cancellable, error))
 			return FALSE;
 	}
 
@@ -1911,7 +1272,7 @@ dfu_target_download_element (DfuTarget *target,
  * @image: a #DfuImage
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
  * @cancellable: a #GCancellable, or %NULL
- * @progress_cb: a #GFileProgressCallback, or %NULL
+ * @progress_cb: (scope call): a #GFileProgressCallback, or %NULL
  * @progress_cb_data: user data to pass to @progress_cb
  * @error: a #GError, or %NULL
  *
@@ -1940,8 +1301,12 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 	g_return_val_if_fail (DFU_IS_IMAGE (image), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* ensure populated */
+	if (!dfu_target_setup (target, error))
+		return NULL;
+
 	/* can the target do this? */
-	if (!dfu_target_can_download (target)) {
+	if (!dfu_device_can_download (priv->device)) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
@@ -1949,8 +1314,12 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		return FALSE;
 	}
 
+	/* use correct alt */
+	if (!dfu_target_use_alt_setting (target, error))
+		return FALSE;
+
 	/* mark these as all erased */
-	if (priv->dfuse_supported)
+	if (dfu_device_has_dfuse_support (priv->device))
 		g_hash_table_remove_all (priv->sectors_erased);
 
 	/* download all elements in the image to the device */
@@ -2009,7 +1378,7 @@ dfu_target_get_commands (DfuTarget *target,
 	guint8 buf[1];
 
 	/* invalid */
-	if (!priv->dfuse_supported) {
+	if (!dfu_device_has_dfuse_support (priv->device)) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
@@ -2037,40 +1406,7 @@ dfu_target_get_commands (DfuTarget *target,
 #endif
 
 /**
- * dfu_target_set_timeout:
- * @target: a #DfuTarget
- * @timeout_ms: the timeout in ms
- *
- * Sets the USB timeout to use when contacting the USB target.
- *
- * Since: 0.5.4
- **/
-void
-dfu_target_set_timeout (DfuTarget *target, guint timeout_ms)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_return_if_fail (DFU_IS_TARGET (target));
-	priv->timeout_ms = timeout_ms;
-}
-
-/**
- * dfu_target_get_interface_number:
- * @target: a #DfuTarget
- *
- * Gets the interface number.
- *
- * Since: 0.5.4
- **/
-guint8
-dfu_target_get_interface_number (DfuTarget *target)
-{
-	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_return_val_if_fail (DFU_IS_TARGET (target), 0xff);
-	return priv->iface_number;
-}
-
-/**
- * dfu_target_get_interface_alt_setting:
+ * dfu_target_get_alt_setting:
  * @target: a #DfuTarget
  *
  * Gets the alternate setting to use for this interface.
@@ -2080,15 +1416,15 @@ dfu_target_get_interface_number (DfuTarget *target)
  * Since: 0.5.4
  **/
 guint8
-dfu_target_get_interface_alt_setting (DfuTarget *target)
+dfu_target_get_alt_setting (DfuTarget *target)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	g_return_val_if_fail (DFU_IS_TARGET (target), 0xff);
-	return priv->iface_alt_setting;
+	return priv->alt_setting;
 }
 
 /**
- * dfu_target_get_interface_alt_name:
+ * dfu_target_get_alt_name:
  * @target: a #DfuTarget
  *
  * Gets the alternate setting name to use for this interface.
@@ -2098,9 +1434,23 @@ dfu_target_get_interface_alt_setting (DfuTarget *target)
  * Since: 0.5.4
  **/
 const gchar *
-dfu_target_get_interface_alt_name (DfuTarget *target)
+dfu_target_get_alt_name (DfuTarget *target, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
-	return priv->iface_alt_setting_name;
+
+	/* ensure populated */
+	if (!dfu_target_setup (target, error))
+		return NULL;
+
+	/* nothing */
+	if (priv->alt_name == NULL) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_FOUND,
+				     "no alt-name");
+		return FALSE;
+	}
+
+	return priv->alt_name;
 }
