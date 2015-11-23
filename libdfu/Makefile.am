@@ -76,6 +76,12 @@ libdfu_la_LDFLAGS =						\
 libdfu_la_CFLAGS =						\
 	$(WARNINGFLAGS_C)
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = dfu.pc
+
+EXTRA_DIST =							\
+	dfu.pc.in
+
 bin_PROGRAMS =							\
 	dfu-tool
 
