@@ -9,6 +9,7 @@ AM_CPPFLAGS = \
 	$(APPSTREAM_GLIB_CFLAGS)				\
 	$(GLIB_CFLAGS)						\
 	$(GUSB_CFLAGS)						\
+	$(PIE_CFLAGS)						\
 	-I$(top_srcdir)/libdfu					\
 	-I$(top_srcdir)						\
 	-I$(top_builddir)					\
@@ -71,12 +72,13 @@ libdfu_la_LIBADD =						\
 	$(GLIB_LIBS)
 
 libdfu_la_LDFLAGS =						\
+	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)	\
 	-export-dynamic						\
 	-no-undefined						\
-	-avoid-version						\
 	-export-symbols-regex '^dfu_.*'
 
 libdfu_la_CFLAGS =						\
+	$(PIE_CFLAGS)						\
 	$(WARNINGFLAGS_C)
 
 pkgconfigdir = $(libdir)/pkgconfig
