@@ -35,6 +35,17 @@ G_DECLARE_DERIVABLE_TYPE (DfuImage, dfu_image, DFU, IMAGE, GObject)
 struct _DfuImageClass
 {
 	GObjectClass		 parent_class;
+	/*< private >*/
+	/* Padding for future expansion */
+	void (*_dfu_image_reserved1) (void);
+	void (*_dfu_image_reserved2) (void);
+	void (*_dfu_image_reserved3) (void);
+	void (*_dfu_image_reserved4) (void);
+	void (*_dfu_image_reserved5) (void);
+	void (*_dfu_image_reserved6) (void);
+	void (*_dfu_image_reserved7) (void);
+	void (*_dfu_image_reserved8) (void);
+	void (*_dfu_image_reserved9) (void);
 };
 
 DfuImage	*dfu_image_new		(void);

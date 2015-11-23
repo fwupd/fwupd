@@ -68,6 +68,13 @@ typedef struct {
 	GHashTable		*sectors_erased;	/* of DfuSector:1 */
 } DfuTargetPrivate;
 
+enum {
+	SIGNAL_PERCENTAGE_CHANGED,
+	SIGNAL_LAST
+};
+
+static guint signals [SIGNAL_LAST] = { 0 };
+
 G_DEFINE_TYPE_WITH_PRIVATE (DfuTarget, dfu_target, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (dfu_target_get_instance_private (o))
 
@@ -78,6 +85,23 @@ static void
 dfu_target_class_init (DfuTargetClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	/**
+	 * DfuTarget::percentage-changed:
+	 * @device: the #DfuTarget instance that emitted the signal
+	 * @percentage: the new percentage
+	 *
+	 * The ::percentage-changed signal is emitted when the percentage changes.
+	 *
+	 * Since: 0.5.4
+	 **/
+	signals [SIGNAL_PERCENTAGE_CHANGED] =
+		g_signal_new ("percentage-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (DfuTargetClass, percentage_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
 	object_class->finalize = dfu_target_finalize;
 }
 
@@ -844,8 +868,6 @@ dfu_target_upload_element (DfuTarget *target,
 			   guint32 address,
 			   gsize expected_size,
 			   GCancellable *cancellable,
-			   DfuProgressCallback progress_cb,
-			   gpointer progress_cb_data,
 			   GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -860,6 +882,7 @@ dfu_target_upload_element (DfuTarget *target,
 	guint32 last_sector_id = G_MAXUINT;
 	guint dfuse_sector_offset = 0;
 	guint i;
+	guint old_percentage = G_MAXUINT;
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -925,11 +948,13 @@ dfu_target_upload_element (DfuTarget *target,
 		g_ptr_array_add (chunks, chunk_tmp);
 
 		/* update UI */
-		if (progress_cb != NULL && chunk_size > 0) {
-			progress_cb (DFU_STATE_DFU_UPLOAD_IDLE,
-				     total_size,
-				     expected_size,
-				     progress_cb_data);
+		if (chunk_size > 0) {
+			guint percentage = (total_size * 100) / expected_size;
+			if (percentage != old_percentage) {
+				g_signal_emit (target,
+					       signals[SIGNAL_PERCENTAGE_CHANGED],
+					       0, percentage);
+			}
 		}
 
 		/* detect short write as EOF */
@@ -972,8 +997,6 @@ dfu_target_upload_element (DfuTarget *target,
  * @target: a #DfuTarget
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
  * @cancellable: a #GCancellable, or %NULL
- * @progress_cb: (scope call): a #GFileProgressCallback, or %NULL
- * @progress_cb_data: user data to pass to @progress_cb
  * @error: a #GError, or %NULL
  *
  * Uploads firmware from the target to the host.
@@ -986,8 +1009,6 @@ DfuImage *
 dfu_target_upload (DfuTarget *target,
 		   DfuTargetTransferFlags flags,
 		   GCancellable *cancellable,
-		   DfuProgressCallback progress_cb,
-		   gpointer progress_cb_data,
 		   GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -1047,8 +1068,6 @@ dfu_target_upload (DfuTarget *target,
 						     dfu_sector_get_address (sector),
 						     dfu_sector_get_size_left (sector),
 						     cancellable,
-						     progress_cb,
-						     progress_cb_data,
 						     error);
 		if (element == NULL)
 			return NULL;
@@ -1117,8 +1136,6 @@ dfu_target_download_element (DfuTarget *target,
 			     DfuElement *element,
 			     DfuTargetTransferFlags flags,
 			     GCancellable *cancellable,
-			     DfuProgressCallback progress_cb,
-			     gpointer progress_cb_data,
 			     GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -1128,6 +1145,7 @@ dfu_target_download_element (DfuTarget *target,
 	guint nr_chunks;
 	guint dfuse_sector_offset = 0;
 	guint last_sector_id = G_MAXUINT;
+	guint old_percentage = G_MAXUINT;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 	g_autoptr(GError) error_local = NULL;
 
@@ -1149,6 +1167,7 @@ dfu_target_download_element (DfuTarget *target,
 	for (i = 0; i < nr_chunks + 1; i++) {
 		gsize length;
 		gsize offset;
+		guint percentage;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 
 		/* caclulate the offset into the element data */
@@ -1222,11 +1241,11 @@ dfu_target_download_element (DfuTarget *target,
 			return FALSE;
 
 		/* update UI */
-		if (progress_cb != NULL) {
-			progress_cb (DFU_STATE_DFU_DNLOAD_IDLE,
-				     offset,
-				     g_bytes_get_size (bytes),
-				     progress_cb_data);
+		percentage = (offset * 100) / g_bytes_get_size (bytes);
+		if (percentage != old_percentage) {
+			g_signal_emit (target,
+				       signals[SIGNAL_PERCENTAGE_CHANGED],
+				       0, percentage);
 		}
 
 		/* give the target a chance to update */
@@ -1245,8 +1264,6 @@ dfu_target_download_element (DfuTarget *target,
 							 dfu_element_get_address (element),
 							 g_bytes_get_size (bytes),
 							 cancellable,
-							 progress_cb,
-							 progress_cb_data,
 							 error);
 		if (element_tmp == NULL)
 			return FALSE;
@@ -1272,8 +1289,6 @@ dfu_target_download_element (DfuTarget *target,
  * @image: a #DfuImage
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
  * @cancellable: a #GCancellable, or %NULL
- * @progress_cb: (scope call): a #GFileProgressCallback, or %NULL
- * @progress_cb_data: user data to pass to @progress_cb
  * @error: a #GError, or %NULL
  *
  * Downloads firmware from the host to the target, optionally verifying
@@ -1287,8 +1302,6 @@ gboolean
 dfu_target_download (DfuTarget *target, DfuImage *image,
 		     DfuTargetTransferFlags flags,
 		     GCancellable *cancellable,
-		     DfuProgressCallback progress_cb,
-		     gpointer progress_cb_data,
 		     GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -1339,8 +1352,6 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 						   element,
 						   flags,
 						   cancellable,
-						   progress_cb,
-						   progress_cb_data,
 						   error);
 		if (!ret)
 			return FALSE;

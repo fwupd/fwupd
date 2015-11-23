@@ -69,6 +69,15 @@ typedef struct {
 	guint			 timeout_ms;
 } DfuDevicePrivate;
 
+enum {
+	SIGNAL_STATUS_CHANGED,
+	SIGNAL_STATE_CHANGED,
+	SIGNAL_PERCENTAGE_CHANGED,
+	SIGNAL_LAST
+};
+
+static guint signals [SIGNAL_LAST] = { 0 };
+
 G_DEFINE_TYPE_WITH_PRIVATE (DfuDevice, dfu_device, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (dfu_device_get_instance_private (o))
 
@@ -79,6 +88,55 @@ static void
 dfu_device_class_init (DfuDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	/**
+	 * DfuDevice::status-changed:
+	 * @device: the #DfuDevice instance that emitted the signal
+	 * @status: the new #DfuStatus
+	 *
+	 * The ::status-changed signal is emitted when the status changes.
+	 *
+	 * Since: 0.5.4
+	 **/
+	signals [SIGNAL_STATUS_CHANGED] =
+		g_signal_new ("status-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (DfuDeviceClass, status_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
+	/**
+	 * DfuDevice::state-changed:
+	 * @device: the #DfuDevice instance that emitted the signal
+	 * @state: the new #DfuState
+	 *
+	 * The ::state-changed signal is emitted when the state changes.
+	 *
+	 * Since: 0.5.4
+	 **/
+	signals [SIGNAL_STATE_CHANGED] =
+		g_signal_new ("state-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (DfuDeviceClass, state_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
+	/**
+	 * DfuDevice::percentage-changed:
+	 * @device: the #DfuDevice instance that emitted the signal
+	 * @percentage: the new percentage
+	 *
+	 * The ::percentage-changed signal is emitted when the percentage changes.
+	 *
+	 * Since: 0.5.4
+	 **/
+	signals [SIGNAL_PERCENTAGE_CHANGED] =
+		g_signal_new ("percentage-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (DfuDeviceClass, percentage_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
 	object_class->finalize = dfu_device_finalize;
 }
 
@@ -728,6 +786,31 @@ dfu_device_get_usb_dev (DfuDevice *device)
 	return priv->dev;
 }
 
+/**
+ * dfu_device_set_state:
+ **/
+static void
+dfu_device_set_state (DfuDevice *device, DfuState state)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	if (priv->state == state)
+		return;
+	priv->state = state;
+	g_signal_emit (device, signals[SIGNAL_STATE_CHANGED], 0, state);
+}
+
+/**
+ * dfu_device_set_status:
+ **/
+static void
+dfu_device_set_status (DfuDevice *device, DfuStatus status)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	if (priv->status == status)
+		return;
+	priv->status = status;
+	g_signal_emit (device, signals[SIGNAL_STATUS_CHANGED], 0, status);
+}
 
 /**
  * dfu_device_refresh:
@@ -777,8 +860,10 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 			     "cannot get device status, invalid size: %04x",
 			     (guint) actual_length);
 	}
-	priv->status = buf[0];
-	priv->state = buf[4];
+
+	/* status or state changed */
+	dfu_device_set_status (device, buf[0]);
+	dfu_device_set_state (device, buf[4]);
 	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT)) {
 		priv->dnload_timeout = 5;
 	} else {
@@ -812,6 +897,9 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* inform UI there's going to be a detach:attach */
+	dfu_device_set_state (device, DFU_STATE_APP_DETACH);
 
 	if (!g_usb_device_control_transfer (priv->dev,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -1210,12 +1298,20 @@ dfu_device_reset (DfuDevice *device, GError **error)
 }
 
 /**
+ * dfu_device_percentage_cb:
+ **/
+static void
+dfu_device_percentage_cb (DfuTarget *target, guint percentage, DfuDevice *device)
+{
+	/* FIXME: divide by number of targets? */
+	g_signal_emit (device, signals[SIGNAL_PERCENTAGE_CHANGED], 0, percentage);
+}
+
+/**
  * dfu_device_upload:
  * @device: a #DfuDevice
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
  * @cancellable: a #GCancellable, or %NULL
- * @progress_cb: (scope call): a #GFileProgressCallback, or %NULL
- * @progress_cb_data: user data to pass to @progress_cb
  * @error: a #GError, or %NULL
  *
  * Uploads firmware from the target to the host.
@@ -1228,8 +1324,6 @@ DfuFirmware *
 dfu_device_upload (DfuDevice *device,
 		   DfuTargetTransferFlags flags,
 		   GCancellable *cancellable,
-		   DfuProgressCallback progress_cb,
-		   gpointer progress_cb_data,
 		   GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
@@ -1254,12 +1348,6 @@ dfu_device_upload (DfuDevice *device,
 		}
 		g_debug ("detaching");
 
-		/* inform UI there's going to be a detach:attach */
-		if (progress_cb != NULL) {
-			progress_cb (DFU_STATE_APP_DETACH, 0, 0,
-				     progress_cb_data);
-		}
-
 		/* detach and USB reset */
 		if (!dfu_device_detach (device, NULL, error))
 			return NULL;
@@ -1271,14 +1359,18 @@ dfu_device_upload (DfuDevice *device,
 	targets = dfu_device_get_targets (device);
 	for (i = 0; i < targets->len; i++) {
 		DfuTarget *target;
+		guint id;
 		g_autoptr(DfuImage) image = NULL;
+
+		/* upload to target and proxy signals */
 		target = g_ptr_array_index (targets, i);
+		id = g_signal_connect (target, "percentage-changed",
+				       G_CALLBACK (dfu_device_percentage_cb), device);
 		image = dfu_target_upload (target,
 					   DFU_TARGET_TRANSFER_FLAG_NONE,
 					   cancellable,
-					   progress_cb,
-					   progress_cb_data,
 					   error);
+		g_signal_handler_disconnect (target, id);
 		if (image == NULL)
 			return NULL;
 		dfu_firmware_add_image (firmware, image);
@@ -1304,10 +1396,7 @@ dfu_device_upload (DfuDevice *device,
 		g_debug ("booting to runtime");
 
 		/* inform UI there's going to be a detach:attach */
-		if (progress_cb != NULL) {
-			progress_cb (DFU_STATE_APP_DETACH, 0, 0,
-				     progress_cb_data);
-		}
+		dfu_device_set_state (device, DFU_STATE_APP_DETACH);
 
 		/* DFU -> APP */
 		if (!dfu_device_wait_for_replug (device, 2000, cancellable, error))
@@ -1324,8 +1413,6 @@ dfu_device_upload (DfuDevice *device,
  * @firmware: a #DfuFirmware
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
  * @cancellable: a #GCancellable, or %NULL
- * @progress_cb: (scope call): a #GFileProgressCallback, or %NULL
- * @progress_cb_data: user data to pass to @progress_cb
  * @error: a #GError, or %NULL
  *
  * Downloads firmware from the host to the target, optionally verifying
@@ -1340,12 +1427,11 @@ dfu_device_download (DfuDevice *device,
 		     DfuFirmware *firmware,
 		     DfuTargetTransferFlags flags,
 		     GCancellable *cancellable,
-		     DfuProgressCallback progress_cb,
-		     gpointer progress_cb_data,
 		     GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	GPtrArray *images;
+	gboolean ret;
 	guint i;
 	g_autoptr(GPtrArray) targets = NULL;
 
@@ -1405,12 +1491,6 @@ dfu_device_download (DfuDevice *device,
 			return FALSE;
 		}
 
-		/* inform UI there's going to be a detach:attach */
-		if (progress_cb != NULL) {
-			progress_cb (DFU_STATE_APP_DETACH, 0, 0,
-				     progress_cb_data);
-		}
-
 		/* detach and USB reset */
 		g_debug ("detaching");
 		if (!dfu_device_detach (device, NULL, error))
@@ -1431,7 +1511,9 @@ dfu_device_download (DfuDevice *device,
 	for (i = 0; i < images->len; i++) {
 		DfuImage *image;
 		DfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
+		guint id;
 		g_autoptr(DfuTarget) target_tmp = NULL;
+
 		image = g_ptr_array_index (images, i);
 		target_tmp = dfu_device_get_target_by_alt_setting (device,
 								   dfu_image_get_alt_setting (image),
@@ -1440,13 +1522,15 @@ dfu_device_download (DfuDevice *device,
 			return FALSE;
 		if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY)
 			flags_local = DFU_TARGET_TRANSFER_FLAG_VERIFY;
-		if (!dfu_target_download (target_tmp,
-					  image,
-					  flags_local,
-					  cancellable,
-					  progress_cb,
-					  progress_cb_data,
-					  error))
+		id = g_signal_connect (target_tmp, "percentage-changed",
+				       G_CALLBACK (dfu_device_percentage_cb), device);
+		ret = dfu_target_download (target_tmp,
+					   image,
+					   flags_local,
+					   cancellable,
+					   error);
+		g_signal_handler_disconnect (target_tmp, id);
+		if (!ret)
 			return FALSE;
 	}
 
@@ -1462,10 +1546,7 @@ dfu_device_download (DfuDevice *device,
 		g_debug ("booting to runtime to set auto-boot");
 
 		/* inform UI there's going to be a detach:attach */
-		if (progress_cb != NULL) {
-			progress_cb (DFU_STATE_APP_DETACH, 0, 0,
-				     progress_cb_data);
-		}
+		dfu_device_set_state (device, DFU_STATE_APP_DETACH);
 
 		/* DFU -> APP */
 		if (!dfu_device_wait_for_replug (device, 2000, cancellable, error))

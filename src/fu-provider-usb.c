@@ -234,13 +234,13 @@ fu_provider_usb_device_added_cb (GUsbContext *ctx,
 }
 
 /**
- * fu_provider_usb_progress_cb:
+ * fu_provider_usb_state_changed_cb:
  **/
 static void
-fu_provider_usb_progress_cb (DfuState state, goffset current,
-			     goffset total, gpointer user_data)
+fu_provider_usb_state_changed_cb (DfuDevice *device,
+				  DfuState state,
+				  FuProvider *provider)
 {
-	FuProvider *provider = FU_PROVIDER (user_data);
 	FuProviderUsb *provider_usb = FU_PROVIDER_USB (provider);
 	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
 
@@ -310,6 +310,8 @@ fu_provider_usb_update (FuProvider *provider,
 			     platform_id, error_local->message);
 		return FALSE;
 	}
+	g_signal_connect (dfu_device, "state-changed",
+			  G_CALLBACK (fu_provider_usb_state_changed_cb), provider);
 
 	/* hit hardware */
 	dfu_firmware = dfu_firmware_new ();
@@ -321,7 +323,6 @@ fu_provider_usb_update (FuProvider *provider,
 				  DFU_TARGET_TRANSFER_FLAG_VERIFY |
 				  DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
 				  NULL,
-				  fu_provider_usb_progress_cb, provider,
 				  error))
 		return FALSE;
 	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
@@ -423,13 +424,14 @@ fu_provider_usb_verify (FuProvider *provider,
 			     platform_id, error_local->message);
 		return FALSE;
 	}
+	g_signal_connect (dfu_device, "state-changed",
+			  G_CALLBACK (fu_provider_usb_state_changed_cb), provider);
 
 	/* get data from hardware */
 	dfu_firmware = dfu_device_upload (dfu_device,
 					  DFU_TARGET_TRANSFER_FLAG_DETACH |
 					  DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
 					  NULL,
-					  fu_provider_usb_progress_cb, provider,
 					  error);
 	if (dfu_firmware == NULL)
 		return FALSE;

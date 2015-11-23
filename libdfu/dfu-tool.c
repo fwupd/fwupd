@@ -760,66 +760,73 @@ typedef struct {
 } DfuToolProgressHelper;
 
 /**
- * fu_tool_transfer_progress_cb:
+ * fu_tool_state_changed_cb:
  **/
 static void
-fu_tool_transfer_progress_cb (DfuState state, goffset current,
-			      goffset total, gpointer user_data)
+fu_tool_state_changed_cb (DfuDevice *device,
+			  DfuState state,
+			  DfuToolProgressHelper *helper)
 {
-	DfuToolProgressHelper *helper = (DfuToolProgressHelper *) user_data;
-	guint marks_now;
+	const gchar *title = NULL;
 	guint i;
 
 	/* changed state */
-	if (state != helper->last_state) {
-		const gchar *title = NULL;
-
-		/* detach was left hanging... */
-		if (helper->last_state == DFU_STATE_APP_DETACH) {
-			/* TRANSLATORS: when an action has completed */
-			g_print ("%s\n", _("OK"));
-		}
-
-		switch (state) {
-		case DFU_STATE_APP_DETACH:
-			/* TRANSLATORS: when moving from APP to DFU mode */
-			title = _("Detatching");
-			break;
-		case DFU_STATE_DFU_DNLOAD_IDLE:
-			/* TRANSLATORS: when copying from host to device */
-			title = _("Downloading");
-			break;
-		case DFU_STATE_DFU_UPLOAD_IDLE:
-			/* TRANSLATORS: when copying from device to host */
-			title = _("Uploading");
-			break;
-		default:
-			g_debug ("ignoring %s", dfu_state_to_string (state));
-			break;
-		}
-		/* show title and then pad */
-		if (title != NULL) {
-			g_print ("%s ", title);
-			for (i = strlen (title); i < 15; i++)
-				g_print (" ");
-			g_print (": ");
-		}
-		helper->marks_shown = 0;
-		helper->last_state = state;
-	}
-
-	/* not known yet */
-	if (total == 0)
+	if (state == helper->last_state)
 		return;
 
+	/* detach was left hanging... */
+	if (helper->last_state == DFU_STATE_APP_DETACH) {
+		/* TRANSLATORS: when an action has completed */
+		g_print ("%s\n", _("OK"));
+	}
+
+	switch (state) {
+	case DFU_STATE_APP_DETACH:
+		/* TRANSLATORS: when moving from APP to DFU mode */
+		title = _("Detatching");
+		break;
+	case DFU_STATE_DFU_DNLOAD_IDLE:
+		/* TRANSLATORS: when copying from host to device */
+		title = _("Downloading");
+		break;
+	case DFU_STATE_DFU_UPLOAD_IDLE:
+		/* TRANSLATORS: when copying from device to host */
+		title = _("Uploading");
+		break;
+	default:
+		g_debug ("ignoring %s", dfu_state_to_string (state));
+		break;
+	}
+	/* show title and then pad */
+	if (title != NULL) {
+		g_print ("%s ", title);
+		for (i = strlen (title); i < 15; i++)
+			g_print (" ");
+		g_print (": ");
+	}
+	helper->marks_shown = 0;
+	helper->last_state = state;
+}
+
+/**
+ * fu_tool_percentage_changed_cb:
+ **/
+static void
+fu_tool_percentage_changed_cb (DfuDevice *device,
+			       guint percentage,
+			       DfuToolProgressHelper *helper)
+{
+	guint marks_now;
+	guint i;
+
 	/* add any sections */
-	marks_now = current * helper->marks_total / total;
+	marks_now = percentage * helper->marks_total / 100;
 	for (i = helper->marks_shown; i < marks_now; i++)
 		g_print ("#");
 	helper->marks_shown = marks_now;
 
 	/* this state done */
-	if (current == total)
+	if (percentage == 100)
 		g_print ("\n");
 }
 
@@ -872,9 +879,11 @@ dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	helper.last_state = DFU_STATE_DFU_ERROR;
 	helper.marks_total = 30;
 	helper.marks_shown = 0;
-	image = dfu_target_upload (target, flags, NULL,
-				   fu_tool_transfer_progress_cb, &helper,
-				   error);
+	g_signal_connect (device, "state-changed",
+			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
+	g_signal_connect (device, "percentage-changed",
+			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
+	image = dfu_target_upload (target, flags, NULL, error);
 	if (image == NULL)
 		return FALSE;
 
@@ -941,9 +950,11 @@ dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
 	helper.last_state = DFU_STATE_DFU_ERROR;
 	helper.marks_total = 30;
 	helper.marks_shown = 0;
-	firmware = dfu_device_upload (device, flags, NULL,
-				      fu_tool_transfer_progress_cb, &helper,
-				      error);
+	g_signal_connect (device, "state-changed",
+			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
+	g_signal_connect (device, "percentage-changed",
+			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
+	firmware = dfu_device_upload (device, flags, NULL, error);
 	if (firmware == NULL)
 		return FALSE;
 
@@ -1092,9 +1103,11 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	helper.last_state = DFU_STATE_DFU_ERROR;
 	helper.marks_total = 30;
 	helper.marks_shown = 0;
-	if (!dfu_target_download (target, image, flags, NULL,
-				  fu_tool_transfer_progress_cb, &helper,
-				  error))
+	g_signal_connect (device, "state-changed",
+			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
+	g_signal_connect (device, "percentage-changed",
+			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
+	if (!dfu_target_download (target, image, flags, NULL, error))
 		return FALSE;
 
 	/* success */
@@ -1161,9 +1174,11 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 	helper.last_state = DFU_STATE_DFU_ERROR;
 	helper.marks_total = 30;
 	helper.marks_shown = 0;
-	if (!dfu_device_download (device, firmware, flags, NULL,
-				  fu_tool_transfer_progress_cb, &helper,
-				  error))
+	g_signal_connect (device, "state-changed",
+			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
+	g_signal_connect (device, "percentage-changed",
+			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
+	if (!dfu_device_download (device, firmware, flags, NULL, error))
 		return FALSE;
 
 	/* success */

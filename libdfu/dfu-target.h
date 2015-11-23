@@ -36,6 +36,19 @@ G_DECLARE_DERIVABLE_TYPE (DfuTarget, dfu_target, DFU, TARGET, GUsbDevice)
 struct _DfuTargetClass
 {
 	GUsbDeviceClass		 parent_class;
+	void			(*percentage_changed)	(DfuTarget	*target,
+							 guint		 percentage);
+	/*< private >*/
+	/* Padding for future expansion */
+	void (*_dfu_target_reserved1) (void);
+	void (*_dfu_target_reserved2) (void);
+	void (*_dfu_target_reserved3) (void);
+	void (*_dfu_target_reserved4) (void);
+	void (*_dfu_target_reserved5) (void);
+	void (*_dfu_target_reserved6) (void);
+	void (*_dfu_target_reserved7) (void);
+	void (*_dfu_target_reserved8) (void);
+	void (*_dfu_target_reserved9) (void);
 };
 
 /**
@@ -62,11 +75,6 @@ typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_LAST,
 } DfuTargetTransferFlags;
 
-typedef void	(*DfuProgressCallback)			(DfuState	 state,
-							 goffset	 current,
-							 goffset	 total,
-							 gpointer	 user_data);
-
 GPtrArray	*dfu_target_get_sectors			(DfuTarget	*target);
 guint8		 dfu_target_get_alt_setting		(DfuTarget	*target);
 const gchar	*dfu_target_get_alt_name		(DfuTarget	*target,
@@ -74,15 +82,11 @@ const gchar	*dfu_target_get_alt_name		(DfuTarget	*target,
 DfuImage	*dfu_target_upload			(DfuTarget	*target,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
-							 DfuProgressCallback progress_cb,
-							 gpointer	 progress_cb_data,
 							 GError		**error);
 gboolean	 dfu_target_download			(DfuTarget	*target,
 							 DfuImage	*image,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
-							 DfuProgressCallback progress_cb,
-							 gpointer	 progress_cb_data,
 							 GError		**error);
 
 G_END_DECLS

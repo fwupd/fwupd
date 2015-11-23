@@ -51,6 +51,23 @@ typedef enum {
 struct _DfuDeviceClass
 {
 	GObjectClass		 parent_class;
+	void			(*status_changed)	(DfuDevice	*device,
+							 DfuStatus	 status);
+	void			(*state_changed)	(DfuDevice	*device,
+							 DfuState	 state);
+	void			(*percentage_changed)	(DfuDevice	*device,
+							 guint		 percentage);
+	/*< private >*/
+	/* Padding for future expansion */
+	void (*_dfu_device_reserved1) (void);
+	void (*_dfu_device_reserved2) (void);
+	void (*_dfu_device_reserved3) (void);
+	void (*_dfu_device_reserved4) (void);
+	void (*_dfu_device_reserved5) (void);
+	void (*_dfu_device_reserved6) (void);
+	void (*_dfu_device_reserved7) (void);
+	void (*_dfu_device_reserved8) (void);
+	void (*_dfu_device_reserved9) (void);
 };
 
 DfuDevice	*dfu_device_new				(GUsbDevice	*dev);
@@ -78,15 +95,11 @@ gboolean	 dfu_device_wait_for_replug		(DfuDevice	*device,
 DfuFirmware	*dfu_device_upload			(DfuDevice	*device,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
-							 DfuProgressCallback progress_cb,
-							 gpointer	 progress_cb_data,
 							 GError		**error);
 gboolean	 dfu_device_download			(DfuDevice	*device,
 							 DfuFirmware	*firmware,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
-							 DfuProgressCallback progress_cb,
-							 gpointer	 progress_cb_data,
 							 GError		**error);
 gboolean	 dfu_device_refresh			(DfuDevice	*device,
 							 GCancellable	*cancellable,
