@@ -30,6 +30,7 @@
 #define __DFU_H_INSIDE__
 
 #include <libdfu/dfu-common.h>
+#include <libdfu/dfu-context.h>
 #include <libdfu/dfu-device.h>
 #include <libdfu/dfu-element.h>
 #include <libdfu/dfu-error.h>

@@ -88,6 +88,9 @@ void		 dfu_device_error_fixup			(DfuDevice	*device,
 							 GCancellable	*cancellable,
 							 GError		**error);
 guint		 dfu_device_get_download_timeout	(DfuDevice	*device);
+gboolean
+dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
+			    GCancellable *cancellable, GError **error);
 
 G_END_DECLS
 

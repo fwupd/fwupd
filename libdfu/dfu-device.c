@@ -1152,12 +1152,16 @@ dfu_device_close (DfuDevice *device, GError **error)
 /**
  * dfu_device_set_new_usb_dev:
  **/
-static gboolean
+gboolean
 dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 			    GCancellable *cancellable, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	gboolean reopen_device = FALSE;
+
+	/* same */
+	if (priv->dev == dev)
+		return TRUE;
 
 	/* close */
 	if (priv->device_open) {

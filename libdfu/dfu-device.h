@@ -26,6 +26,7 @@
 #include <gio/gio.h>
 #include <gusb.h>
 
+#include "dfu-common.h"
 #include "dfu-target.h"
 #include "dfu-firmware.h"
 

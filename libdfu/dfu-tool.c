@@ -28,7 +28,10 @@
 #include <glib/gi18n.h>
 #include <appstream-glib.h>
 
+#include "dfu-device-private.h"
+
 typedef struct {
+	DfuContext		*dfu_context;
 	GPtrArray		*cmd_array;
 	gboolean		 force;
 	gboolean		 reset;
@@ -38,6 +41,21 @@ typedef struct {
 } DfuToolPrivate;
 
 /**
+ * dfu_tool_print_indent:
+ **/
+static void
+dfu_tool_print_indent (const gchar *title, const gchar *message, guint indent)
+{
+	guint i;
+	for (i = 0; i < indent; i++)
+		g_print (" ");
+	g_print ("%s:", title);
+	for (i = strlen (title) + indent; i < 15; i++)
+		g_print (" ");
+	g_print ("%s\n", message);
+}
+
+/**
  * dfu_tool_private_free:
  **/
 static void
@@ -45,6 +63,8 @@ dfu_tool_private_free (DfuToolPrivate *priv)
 {
 	if (priv == NULL)
 		return;
+	if (priv->dfu_context != NULL)
+		g_object_unref (priv->dfu_context);
 	g_free (priv->device_vid_pid);
 	if (priv->cmd_array != NULL)
 		g_ptr_array_unref (priv->cmd_array);
@@ -197,21 +217,11 @@ dfu_tool_run (DfuToolPrivate *priv, const gchar *command, gchar **values, GError
 static DfuDevice *
 dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 {
-	guint i;
-	g_autoptr(GUsbContext) usb_ctx = NULL;
-	g_autoptr(GPtrArray) devices = NULL;
-
-	/* get USB context */
-	usb_ctx = g_usb_context_new (NULL);
-	g_usb_context_enumerate (usb_ctx);
-
 	/* we specified it manually */
 	if (priv->device_vid_pid != NULL) {
-		DfuDevice *device;
 		gchar *tmp;
 		guint64 pid;
 		guint64 vid;
-		g_autoptr(GUsbDevice) usb_device = NULL;
 
 		/* parse */
 		vid = g_ascii_strtoull (priv->device_vid_pid, &tmp, 16);
@@ -239,39 +249,13 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 		}
 
 		/* find device */
-		usb_device = g_usb_context_find_by_vid_pid (usb_ctx,
-							    vid, pid,
-							    error);
-		if (usb_device == NULL)
-			return NULL;
-
-		/* get DFU device */
-		device = dfu_device_new (usb_device);
-		if (device == NULL) {
-			g_set_error_literal (error,
-					     DFU_ERROR,
-					     DFU_ERROR_INVALID_DEVICE,
-					     "Not a DFU device");
-			return NULL;
-		}
-		return device;
+		return dfu_context_get_device_by_vid_pid (priv->dfu_context,
+							  vid, pid,
+							  error);
 	}
 
 	/* auto-detect first device */
-	devices = g_usb_context_get_devices (usb_ctx);
-	for (i = 0; i < devices->len; i++) {
-		GUsbDevice *usb_device = g_ptr_array_index (devices, i);
-		DfuDevice *device = dfu_device_new (usb_device);
-		if (device != NULL)
-			return device;
-	}
-
-	/* boo-hoo*/
-	g_set_error_literal (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_DEVICE,
-			     "No DFU-capable devices detected");
-	return NULL;
+	return dfu_context_get_device_default (priv->dfu_context, error);
 }
 
 /**
@@ -974,6 +958,87 @@ dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * dfu_tool_get_device_string:
+ **/
+static gchar *
+dfu_tool_get_device_string (DfuDevice *device)
+{
+	gchar *dstr;
+	GUsbDevice *dev;
+	g_autoptr(GError) error = NULL;
+
+	/* open, and get status */
+	dev = dfu_device_get_usb_dev (device);
+	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, &error)) {
+		return g_strdup_printf ("%04x:%04x [%s]",
+					g_usb_device_get_vid (dev),
+					g_usb_device_get_pid (dev),
+					error->message);
+	}
+	dstr = g_strdup_printf ("%04x:%04x [%s:%s]",
+				g_usb_device_get_vid (dev),
+				g_usb_device_get_pid (dev),
+				dfu_state_to_string (dfu_device_get_state (device)),
+				dfu_status_to_string (dfu_device_get_status (device)));
+	dfu_device_close (device, NULL);
+	return dstr;
+}
+
+/**
+ * dfu_tool_device_added_cb:
+ **/
+static void
+dfu_tool_device_added_cb (DfuContext *context, DfuDevice *device, gpointer user_data)
+{
+	g_autofree gchar *tmp;
+	tmp = dfu_tool_get_device_string (device);
+	/* TRANSLATORS: this is when a device is hotplugged */
+	dfu_tool_print_indent (_("Added"), tmp, 0);
+}
+
+/**
+ * dfu_tool_device_removed_cb:
+ **/
+static void
+dfu_tool_device_removed_cb (DfuContext *context, DfuDevice *device, gpointer user_data)
+{
+	g_autofree gchar *tmp;
+	tmp = dfu_tool_get_device_string (device);
+	/* TRANSLATORS: this is when a device is hotplugged */
+	dfu_tool_print_indent (_("Removed"), tmp, 0);
+}
+
+/**
+ * dfu_tool_device_changed_cb:
+ **/
+static void
+dfu_tool_device_changed_cb (DfuContext *context, DfuDevice *device, gpointer user_data)
+{
+	g_autofree gchar *tmp;
+	tmp = dfu_tool_get_device_string (device);
+	/* TRANSLATORS: this is when a device is hotplugged */
+	dfu_tool_print_indent (_("Changed"), tmp, 0);
+}
+
+/**
+ * dfu_tool_watch:
+ **/
+static gboolean
+dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GMainLoop) loop = NULL;
+	g_signal_connect (priv->dfu_context, "device-added",
+			  G_CALLBACK (dfu_tool_device_added_cb), NULL);
+	g_signal_connect (priv->dfu_context, "device-removed",
+			  G_CALLBACK (dfu_tool_device_removed_cb), NULL);
+	g_signal_connect (priv->dfu_context, "device-changed",
+			  G_CALLBACK (dfu_tool_device_changed_cb), NULL);
+	loop = g_main_loop_new (NULL, FALSE);
+	g_main_loop_run (loop);
+	return TRUE;
+}
+
+/**
  * dfu_tool_dump:
  **/
 static gboolean
@@ -1188,21 +1253,6 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 /**
- * dfu_tool_print_indent:
- **/
-static void
-dfu_tool_print_indent (const gchar *title, const gchar *message, guint indent)
-{
-	guint i;
-	for (i = 0; i < indent; i++)
-		g_print (" ");
-	g_print ("%s:", title);
-	for (i = strlen (title) + indent; i < 15; i++)
-		g_print (" ");
-	g_print ("%s\n", message);
-}
-
-/**
  * dfu_tool_list_target:
  **/
 static void
@@ -1245,40 +1295,31 @@ dfu_tool_list_target (DfuTarget *target)
 static gboolean
 dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	GUsbDevice *usb_device;
 	guint i;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GUsbContext) usb_ctx = NULL;
 
 	/* get all the connected USB devices */
-	usb_ctx = g_usb_context_new (NULL);
-	g_usb_context_enumerate (usb_ctx);
-	devices = g_usb_context_get_devices (usb_ctx);
+	devices = dfu_context_get_devices (priv->dfu_context);
 	for (i = 0; i < devices->len; i++) {
-		GPtrArray *dfu_targets;
+		DfuDevice *device = NULL;
 		DfuTarget *target;
+		GUsbDevice *dev;
+		GPtrArray *dfu_targets;
 		const gchar *tmp;
 		guint j;
 		g_autofree gchar *version = NULL;
-		g_autoptr(DfuDevice) device = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		usb_device = g_ptr_array_index (devices, i);
-		g_debug ("PROBING [%04x:%04x]",
-			 g_usb_device_get_vid (usb_device),
-			 g_usb_device_get_pid (usb_device));
-		device = dfu_device_new (usb_device);
-		if (device == NULL)
-			continue;
-
 		/* device specific */
-		version = as_utils_version_from_uint16 (g_usb_device_get_release (usb_device),
+		device = g_ptr_array_index (devices, i);
+		dev = dfu_device_get_usb_dev (device);
+		version = as_utils_version_from_uint16 (g_usb_device_get_release (dev),
 							AS_VERSION_PARSE_FLAG_NONE);
 		g_print ("%s %04x:%04x [v%s]:\n",
 			 /* TRANSLATORS: detected a DFU device */
 			 _("Found"),
-			 g_usb_device_get_vid (usb_device),
-			 g_usb_device_get_pid (usb_device),
+			 g_usb_device_get_vid (dev),
+			 g_usb_device_get_pid (dev),
 			 version);
 
 		/* open */
@@ -1471,6 +1512,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Dump details about a firmware file"),
 		     dfu_tool_dump);
+	dfu_tool_add (priv->cmd_array,
+		     "watch",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Watch DFU devices being hotplugged"),
+		     dfu_tool_watch);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,
@@ -1500,6 +1547,10 @@ main (int argc, char *argv[])
 		g_print ("%s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
 		return EXIT_SUCCESS;
 	}
+
+	/* get all the DFU devices */
+	priv->dfu_context = dfu_context_new ();
+	dfu_context_enumerate (priv->dfu_context, NULL);
 
 	/* run the specified command */
 	ret = dfu_tool_run (priv, argv[1], (gchar**) &argv[2], &error);

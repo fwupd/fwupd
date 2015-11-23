@@ -30,6 +30,7 @@ libdfu_include_HEADERS =					\
 libdfubase_includedir = $(libdfu_includedir)/libdfu
 libdfubase_include_HEADERS =					\
 	dfu-common.h						\
+	dfu-context.h						\
 	dfu-device.h						\
 	dfu-element.h						\
 	dfu-error.h						\
@@ -42,6 +43,8 @@ libdfu_la_SOURCES =						\
 	dfu.h							\
 	dfu-common.c						\
 	dfu-common.h						\
+	dfu-context.c						\
+	dfu-context.h						\
 	dfu-device.c						\
 	dfu-device.h						\
 	dfu-device-private.h					\
