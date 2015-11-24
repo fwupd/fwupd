@@ -325,6 +325,15 @@ fu_provider_usb_update (FuProvider *provider,
 				  NULL,
 				  error))
 		return FALSE;
+
+	/* we're done */
+	if (!dfu_device_close (dfu_device, &error_local)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     error_local->message);
+		return FALSE;
+	}
 	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
@@ -435,6 +444,15 @@ fu_provider_usb_verify (FuProvider *provider,
 					  error);
 	if (dfu_firmware == NULL)
 		return FALSE;
+
+	/* we're done */
+	if (!dfu_device_close (dfu_device, &error_local)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     error_local->message);
+		return FALSE;
+	}
 
 	/* the device never came back! */
 	if (!FU_IS_DEVICE (device)) {
