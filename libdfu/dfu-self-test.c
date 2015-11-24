@@ -406,7 +406,7 @@ dfu_colorhug_plus_func (void)
 		ret = dfu_device_download (device, firmware,
 					   DFU_TARGET_TRANSFER_FLAG_DETACH |
 					   DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
-					   NULL, NULL, NULL, &error);
+					   NULL, &error);
 		g_assert_error (error,
 				DFU_ERROR,
 				DFU_ERROR_INTERNAL);
@@ -419,7 +419,7 @@ dfu_colorhug_plus_func (void)
 	g_assert_no_error (error);
 	g_assert (target != NULL);
 	image = dfu_target_upload (target, DFU_TARGET_TRANSFER_FLAG_NONE,
-				   NULL, NULL, NULL, &error);
+				   NULL, &error);
 	g_assert_no_error (error);
 	g_assert (DFU_IS_IMAGE (image));
 	elements = dfu_image_get_elements (image);
@@ -430,9 +430,7 @@ dfu_colorhug_plus_func (void)
 	ret = dfu_target_download (target, image,
 				   DFU_TARGET_TRANSFER_FLAG_VERIFY |
 				   DFU_TARGET_TRANSFER_FLAG_HOST_RESET,
-				   NULL,
-				   NULL, NULL,
-				   &error);
+				   NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
