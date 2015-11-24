@@ -61,6 +61,7 @@ typedef struct {
 	GUsbDevice		*dev;
 	gboolean		 device_open;
 	gboolean		 dfuse_supported;
+	gchar			*display_name;
 	guint16			 runtime_pid;
 	guint16			 runtime_vid;
 	guint16			 runtime_release;
@@ -226,6 +227,7 @@ dfu_device_finalize (GObject *object)
 		g_usb_device_close (priv->dev, NULL);
 	}
 
+	g_free (priv->display_name);
 	g_ptr_array_unref (priv->targets);
 
 	G_OBJECT_CLASS (dfu_device_parent_class)->finalize (object);
@@ -826,6 +828,24 @@ dfu_device_get_usb_dev (DfuDevice *device)
 }
 
 /**
+ * dfu_device_get_display_name:
+ * @device: a #DfuDevice
+ *
+ * Gets the display name to use for the device.
+ *
+ * Return value: string or %NULL for unset
+ *
+ * Since: 0.5.4
+ **/
+const gchar *
+dfu_device_get_display_name (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), NULL);
+	return priv->display_name;
+}
+
+/**
  * dfu_device_set_state:
  **/
 static void
@@ -1093,6 +1113,7 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 		 GCancellable *cancellable, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	guint idx;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
@@ -1132,6 +1153,10 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 		return FALSE;
 	}
 
+	/* get product name if it exists */
+	idx = g_usb_device_get_product_index (priv->dev);
+	if (idx != 0x00)
+		priv->display_name = g_usb_device_get_string_descriptor (priv->dev, idx, NULL);
 
 	/* automatically abort any uploads or downloads */
 	if ((flags & DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH) == 0) {
