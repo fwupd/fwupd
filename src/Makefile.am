@@ -95,6 +95,8 @@ fwupd_SOURCES =						\
 	fu-pending.h					\
 	fu-provider.c					\
 	fu-provider.h					\
+	fu-provider-dfu.c				\
+	fu-provider-dfu.h				\
 	fu-provider-rpi.c				\
 	fu-provider-rpi.h				\
 	fu-provider-udev.c				\

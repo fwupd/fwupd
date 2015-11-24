@@ -143,19 +143,6 @@ fu_provider_chug_open (FuProviderChugItem *item, GError **error)
 }
 
 /**
- * fu_provider_chug_get_id:
- **/
-static gchar *
-fu_provider_chug_get_id (GUsbDevice *device)
-{
-	/* this identifies the *port* the device is plugged into and
-	 * the kind of device */
-	return g_strdup_printf ("CHug-%s-%s",
-				g_usb_device_get_platform_id (device),
-				ch_device_get_guid (device));
-}
-
-/**
  * fu_provider_chug_get_firmware_version:
  **/
 static void
@@ -523,7 +510,7 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
 	ChDeviceMode mode;
-	g_autofree gchar *id = NULL;
+	const gchar *platform_id = NULL;
 
 	/* ignore */
 	mode = ch_device_get_mode (device);
@@ -536,15 +523,15 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		return;
 
 	/* is already in database */
-	id = fu_provider_chug_get_id (device);
-	item = g_hash_table_lookup (priv->devices, id);
+	platform_id = g_usb_device_get_platform_id (device);
+	item = g_hash_table_lookup (priv->devices, platform_id);
 	if (item == NULL) {
 		item = g_new0 (FuProviderChugItem, 1);
 		item->loop = g_main_loop_new (NULL, FALSE);
 		item->provider_chug = g_object_ref (provider_chug);
 		item->usb_device = g_object_ref (device);
 		item->device = fu_device_new ();
-		fu_device_set_id (item->device, id);
+		fu_device_set_id (item->device, platform_id);
 		fu_device_set_guid (item->device, ch_device_get_guid (device));
 		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
 		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_ONLINE);
@@ -559,7 +546,7 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 
 		/* insert to hash */
 		g_hash_table_insert (priv->devices,
-				     g_strdup (id), item);
+				     g_strdup (platform_id), item);
 	} else {
 		/* update the device */
 		g_object_unref (item->usb_device);
@@ -619,11 +606,11 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 {
 	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
-	g_autofree gchar *id = NULL;
+	const gchar *platform_id = NULL;
 
 	/* already in database */
-	id = fu_provider_chug_get_id (device);
-	item = g_hash_table_lookup (priv->devices, id);
+	platform_id = g_usb_device_get_platform_id (device);
+	item = g_hash_table_lookup (priv->devices, platform_id);
 	if (item == NULL)
 		return;
 
@@ -638,7 +625,7 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 	 * rescan each time so we don't get confused when different
 	 * kinds of ColorHug device are plugged in... */
 	if (!item->persist_after_unplug)
-		g_hash_table_remove (priv->devices, id);
+		g_hash_table_remove (priv->devices, platform_id);
 }
 
 /**

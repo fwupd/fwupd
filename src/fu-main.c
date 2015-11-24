@@ -38,6 +38,7 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
+#include "fu-provider-dfu.h"
 #include "fu-provider-rpi.h"
 #include "fu-provider-udev.h"
 #include "fu-provider-usb.h"
@@ -1640,8 +1641,13 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 
 	/* remove any fake device */
 	item = fu_main_get_item_by_id (priv, fu_device_get_id (device));
-	if (item != NULL)
-		g_ptr_array_remove (priv->devices, item);
+	if (item != NULL) {
+		g_debug ("already added %s by %s, ignoring same device from %s",
+			 fu_device_get_id (item->device),
+			 fu_device_get_metadata (item->device, FU_DEVICE_KEY_PROVIDER),
+			 fu_provider_get_name (provider));
+		return;
+	}
 
 	/* create new device */
 	item = g_new0 (FuDeviceItem, 1);
@@ -1664,9 +1670,18 @@ cd_main_provider_device_removed_cb (FuProvider *provider,
 
 	item = fu_main_get_item_by_id (priv, fu_device_get_id (device));
 	if (item == NULL) {
-		g_warning ("can't remove device %s", fu_device_get_id (device));
+		g_debug ("no device to remove %s", fu_device_get_id (device));
 		return;
 	}
+
+	/* check this came from the same provider */
+	if (g_strcmp0 (fu_provider_get_name (provider),
+		       fu_provider_get_name (item->provider)) != 0) {
+		g_debug ("ignoring duplicate removal from %s",
+			 fu_provider_get_name (provider));
+		return;
+	}
+
 	g_ptr_array_remove (priv->devices, item);
 	fu_main_emit_changed (priv);
 }
@@ -1786,7 +1801,7 @@ main (int argc, char *argv[])
 	priv->providers = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	if (g_key_file_get_boolean (config, "fwupd", "EnableOptionROM", NULL))
 		fu_main_add_provider (priv, fu_provider_udev_new ());
-	fu_main_add_provider (priv, fu_provider_usb_new ());
+	fu_main_add_provider (priv, fu_provider_dfu_new ());
 	fu_main_add_provider (priv, fu_provider_rpi_new ());
 #ifdef HAVE_COLORHUG
 	fu_main_add_provider (priv, fu_provider_chug_new ());
@@ -1794,6 +1809,9 @@ main (int argc, char *argv[])
 #ifdef HAVE_UEFI
 	fu_main_add_provider (priv, fu_provider_uefi_new ());
 #endif
+
+	/* last as least priority */
+	fu_main_add_provider (priv, fu_provider_usb_new ());
 
 	/* load introspection from file */
 	priv->introspection_daemon = fu_main_load_introspection (FWUPD_DBUS_INTERFACE ".xml",

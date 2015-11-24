@@ -25,7 +25,6 @@
 #include <fwupd.h>
 #include <glib-object.h>
 #include <gusb.h>
-#include <libdfu/dfu.h>
 
 #include "fu-device.h"
 #include "fu-provider-usb.h"
@@ -38,14 +37,11 @@ static void	fu_provider_usb_finalize	(GObject	*object);
 typedef struct {
 	GHashTable		*devices;
 	GUsbContext		*usb_ctx;
-	GTimer			*timer_dfu_replug;
-	gboolean		 done_coldplug;
+	gboolean		 done_enumerate;
 } FuProviderUsbPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuProviderUsb, fu_provider_usb, FU_TYPE_PROVIDER)
 #define GET_PRIVATE(o) (fu_provider_usb_get_instance_private (o))
-
-#define _DFU_REPLUG_DELAY	3.f /* s */
 
 /**
  * fu_provider_usb_get_name:
@@ -57,33 +53,46 @@ fu_provider_usb_get_name (FuProvider *provider)
 }
 
 /**
- * fu_provider_usb_get_id:
+ * fu_provider_usb_device_added:
  **/
-static gchar *
-fu_provider_usb_get_id (GUsbDevice *device)
+static void
+fu_provider_usb_device_added (FuProviderUsb *provider_usb, GUsbDevice *device)
 {
-	/* this identifies the *port* the device is plugged into */
-	return g_strdup_printf ("usb-%s", g_usb_device_get_platform_id (device));
-}
-
-/**
- * fu_provider_usb_device_update:
- *
- * Important, the device must already be open!
- **/
-static gboolean
-fu_provider_usb_device_update (FuProviderUsb *provider_usb,
-			       FuDevice *dev,
-			       GUsbDevice *device,
-			       GError **error)
-{
+	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
+	const gchar *platform_id = NULL;
 	guint8 idx = 0x00;
 	g_autofree gchar *guid = NULL;
 	g_autofree gchar *product = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
-	g_autoptr(DfuDevice) dfu_device = NULL;
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* ignore hubs */
+	if (g_usb_device_get_device_class (device) == G_USB_DEVICE_CLASS_HUB)
+		return;
+	ptask = as_profile_start (profile, "FuProviderUsb:added{%04x:%04x}",
+				  g_usb_device_get_vid (device),
+				  g_usb_device_get_pid (device));
+
+	/* is already in database */
+	platform_id = g_usb_device_get_platform_id (device);
+	dev = g_hash_table_lookup (priv->devices, platform_id);
+	if (dev != NULL) {
+		g_debug ("ignoring duplicate %s", platform_id);
+		return;
+	}
+
+	/* try to get the version without claiming interface */
+	if (!g_usb_device_open (device, &error)) {
+		g_debug ("Failed to open: %s", error->message);
+		return;
+	}
+
+	/* insert to hash if valid */
+	dev = fu_device_new ();
+	fu_device_set_id (dev, platform_id);
 
 	/* get product */
 	idx = g_usb_device_get_product_index (device);
@@ -93,15 +102,12 @@ fu_provider_usb_device_update (FuProviderUsb *provider_usb,
 		product = g_usb_device_get_string_descriptor (device, idx, NULL);
 	}
 	if (product == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "no product string descriptor");
-		return FALSE;
+		g_debug ("no product string descriptor");
+		return;
 	}
+	fu_device_set_display_name (dev, product);
 
 	/* get version number, falling back to the USB device release */
-	ptask = as_profile_start_literal (profile, "FuProviderUsb:get-custom-index");
 	idx = g_usb_device_get_custom_index (device,
 					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
 					     'F', 'W', NULL);
@@ -113,6 +119,7 @@ fu_provider_usb_device_update (FuProviderUsb *provider_usb,
 		version = as_utils_version_from_uint16 (release,
 							AS_VERSION_PARSE_FLAG_NONE);
 	}
+	fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
 
 	/* get GUID, falling back to the USB VID:PID hash */
 	idx = g_usb_device_get_custom_index (device,
@@ -127,62 +134,33 @@ fu_provider_usb_device_update (FuProviderUsb *provider_usb,
 					  g_usb_device_get_pid (device));
 		guid = as_utils_guid_from_string (vid_pid);
 	}
+	fu_device_set_guid (dev, guid);
+
+	/* we're done here */
+	if (!g_usb_device_close (device, &error))
+		g_debug ("Failed to close: %s", error->message);
 
 	/* insert to hash */
-	fu_device_set_guid (dev, guid);
-	fu_device_set_display_name (dev, product);
-	fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
-
-	/* is there a DFU interface */
-	dfu_device = dfu_device_new (device);
-	if (dfu_device != NULL) {
-		if (dfu_device_can_download (dfu_device)) {
-			fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_ONLINE);
-			fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_OFFLINE);
-		}
-	} else {
-		g_debug ("not a DFU device");
-	}
-	return TRUE;
-}
-
-/**
- * fu_provider_usb_device_add:
- *
- * Important, the device must already be open!
- **/
-static void
-fu_provider_usb_device_add (FuProviderUsb *provider_usb, const gchar *id, GUsbDevice *device)
-{
-	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
-	g_autoptr(FuDevice) dev = NULL;
-	g_autoptr(GError) error = NULL;
-
-	/* insert to hash if valid */
-	dev = fu_device_new ();
-	fu_device_set_id (dev, id);
-	if (!fu_provider_usb_device_update (provider_usb, dev, device, &error)) {
-		g_debug ("Failed to add %s: %s", id, error->message);
-		return;
-	}
-	g_hash_table_insert (priv->devices, g_strdup (id), g_object_ref (dev));
 	fu_provider_device_add (FU_PROVIDER (provider_usb), dev);
+	g_hash_table_insert (priv->devices, g_strdup (platform_id), g_object_ref (dev));
 }
 
+typedef struct {
+	FuProviderUsb	*provider_usb;
+	GUsbDevice	*device;
+} FuProviderUsbHelper;
+
 /**
- * fu_provider_usb_event_valid:
+ * fu_provider_usb_device_added_delay_cb:
  **/
 static gboolean
-fu_provider_usb_event_valid (FuProviderUsb *provider_usb)
+fu_provider_usb_device_added_delay_cb (gpointer user_data)
 {
-	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
-
-	if (!priv->done_coldplug)
-		return TRUE;
-	if (g_timer_elapsed (priv->timer_dfu_replug, NULL) > _DFU_REPLUG_DELAY)
-		return TRUE;
-
-	/* we probably are in the middle of a DFU reset */
+	FuProviderUsbHelper *helper = (FuProviderUsbHelper *) user_data;
+	fu_provider_usb_device_added (helper->provider_usb, helper->device);
+	g_object_unref (helper->provider_usb);
+	g_object_unref (helper->device);
+	g_free (helper);
 	return FALSE;
 }
 
@@ -195,174 +173,19 @@ fu_provider_usb_device_added_cb (GUsbContext *ctx,
 				 FuProviderUsb *provider_usb)
 {
 	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
-	FuDevice *dev;
-	g_autoptr(GError) error = NULL;
-	g_autofree gchar *id = NULL;
-	g_autoptr(AsProfile) profile = as_profile_new ();
-	g_autoptr(AsProfileTask) ptask = NULL;
 
-	/* ignore hubs */
-	if (g_usb_device_get_device_class (device) == G_USB_DEVICE_CLASS_HUB)
-		return;
-	ptask = as_profile_start (profile, "FuProviderUsb:added{%04x:%04x}",
-				  g_usb_device_get_vid (device),
-				  g_usb_device_get_pid (device));
-
-	/* handled by another provider */
-	id = fu_provider_usb_get_id (device);
-	if (g_usb_device_get_vid (device) == 0x273f) {
-		switch (g_usb_device_get_pid (device)) {
-		case 0x1000:
-		case 0x1001:
-		case 0x1004:
-		case 0x1005:
-		case 0x1006:
-		case 0x1007:
-		case 0x1008:
-			g_debug ("handling %s in another provider", id);
-			return;
-		default:
-			break;
-		}
-	}
-
-	/* doing DFU replug */
-	if (!fu_provider_usb_event_valid (provider_usb)) {
-		g_debug ("ignoring device addition of %04x:%04x",
-			 g_usb_device_get_vid (device),
-			 g_usb_device_get_pid (device));
-		dev = g_hash_table_lookup (priv->devices, id);
-		if (dev != NULL) {
-			g_debug ("Updating device after firmware flash");
-			fu_provider_usb_device_update (provider_usb, dev, device, NULL);
-		}
+	/* use a small delay for hotplugging so that other, better, providers
+	 * can claim this interface and add the FuDevice */
+	if (priv->done_enumerate) {
+		FuProviderUsbHelper *helper;
+		g_debug ("waiting a small time for other providers");
+		helper = g_new0 (FuProviderUsbHelper, 1);
+		helper->provider_usb = g_object_ref (provider_usb);
+		helper->device = g_object_ref (device);
+		g_timeout_add (500, fu_provider_usb_device_added_delay_cb, helper);
 		return;
 	}
-
-	/* is already in database */
-	dev = g_hash_table_lookup (priv->devices, id);
-	if (dev != NULL) {
-		g_debug ("ignoring duplicate %s", id);
-		return;
-	}
-
-	/* try to get the version without claiming interface */
-	if (!g_usb_device_open (device, &error)) {
-		g_debug ("Failed to open: %s", error->message);
-		return;
-	}
-
-	/* try to add the device */
-	fu_provider_usb_device_add (provider_usb, id, device);
-
-	/* we're done here */
-	if (!g_usb_device_close (device, &error))
-		g_debug ("Failed to close: %s", error->message);
-}
-
-/**
- * fu_provider_usb_state_changed_cb:
- **/
-static void
-fu_provider_usb_state_changed_cb (DfuDevice *device,
-				  DfuState state,
-				  FuProvider *provider)
-{
-	FuProviderUsb *provider_usb = FU_PROVIDER_USB (provider);
-	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
-
-	switch (state) {
-	case DFU_STATE_DFU_UPLOAD_IDLE:
-		fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_VERIFY);
-		break;
-	case DFU_STATE_DFU_DNLOAD_IDLE:
-		fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_WRITE);
-		break;
-	default:
-		break;
-	}
-
-	/* reset */
-	g_timer_reset (priv->timer_dfu_replug);
-}
-
-/**
- * fu_provider_usb_update:
- *
- * This updates using DFU.
- **/
-static gboolean
-fu_provider_usb_update (FuProvider *provider,
-			FuDevice *device,
-			GBytes *blob_fw,
-			FuProviderFlags flags,
-			GError **error)
-{
-	FuProviderUsb *provider_usb = FU_PROVIDER_USB (provider);
-	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
-	GUsbDevice *dev;
-	const gchar *platform_id;
-	g_autoptr(DfuDevice) dfu_device = NULL;
-	g_autoptr(DfuFirmware) dfu_firmware = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	/* get device */
-	platform_id = fu_device_get_id (device) + 4;
-	dev = g_usb_context_find_by_platform_id (priv->usb_ctx, platform_id, &error_local);
-	if (dev == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "cannot find device %s: %s",
-			     platform_id, error_local->message);
-		return FALSE;
-	}
-
-	/* open it */
-	dfu_device = dfu_device_new (dev);
-	if (dfu_device == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "%s is not a DFU device",
-			     platform_id);
-		return FALSE;
-	}
-	if (!dfu_device_open (dfu_device, DFU_DEVICE_OPEN_FLAG_NONE,
-			      NULL, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "failed to open DFU device %s: %s",
-			     platform_id, error_local->message);
-		return FALSE;
-	}
-	g_signal_connect (dfu_device, "state-changed",
-			  G_CALLBACK (fu_provider_usb_state_changed_cb), provider);
-
-	/* hit hardware */
-	dfu_firmware = dfu_firmware_new ();
-	if (!dfu_firmware_parse_data (dfu_firmware, blob_fw,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE, error))
-		return FALSE;
-	if (!dfu_device_download (dfu_device, dfu_firmware,
-				  DFU_TARGET_TRANSFER_FLAG_DETACH |
-				  DFU_TARGET_TRANSFER_FLAG_VERIFY |
-				  DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
-				  NULL,
-				  error))
-		return FALSE;
-
-	/* we're done */
-	if (!dfu_device_close (dfu_device, &error_local)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     error_local->message);
-		return FALSE;
-	}
-	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
-	return TRUE;
+	fu_provider_usb_device_added (provider_usb, device);
 }
 
 /**
@@ -375,23 +198,16 @@ fu_provider_usb_device_removed_cb (GUsbContext *ctx,
 {
 	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
 	FuDevice *dev;
-	g_autofree gchar *id = NULL;
-
-	/* doing DFU replug */
-	if (!fu_provider_usb_event_valid (provider_usb)) {
-		g_debug ("ignoring device removal of %04x:%04x",
-			 g_usb_device_get_vid (device),
-			 g_usb_device_get_pid (device));
-		return;
-	}
+	const gchar *platform_id = NULL;
 
 	/* already in database */
-	id = fu_provider_usb_get_id (device);
-	dev = g_hash_table_lookup (priv->devices, id);
+	platform_id = g_usb_device_get_platform_id (device);
+	dev = g_hash_table_lookup (priv->devices, platform_id);
 	if (dev == NULL)
 		return;
 
 	fu_provider_device_remove (FU_PROVIDER (provider_usb), dev);
+	g_hash_table_remove (priv->devices, platform_id);
 }
 
 /**
@@ -402,102 +218,8 @@ fu_provider_usb_coldplug (FuProvider *provider, GError **error)
 {
 	FuProviderUsb *provider_usb = FU_PROVIDER_USB (provider);
 	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
-
 	g_usb_context_enumerate (priv->usb_ctx);
-
-	/* start ignoring USB devices that just replug */
-	priv->done_coldplug = TRUE;
-	return TRUE;
-}
-
-/**
- * fu_provider_usb_verify:
- **/
-static gboolean
-fu_provider_usb_verify (FuProvider *provider,
-			FuDevice *device,
-			FuProviderVerifyFlags flags,
-			GError **error)
-{
-	FuProviderUsb *provider_usb = FU_PROVIDER_USB (provider);
-	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
-	GBytes *blob_fw;
-	GUsbDevice *dev;
-	const gchar *platform_id;
-	g_autofree gchar *hash = NULL;
-	g_autoptr(DfuDevice) dfu_device = NULL;
-	g_autoptr(DfuFirmware) dfu_firmware = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	/* get device */
-	platform_id = fu_device_get_id (device) + 4;
-	dev = g_usb_context_find_by_platform_id (priv->usb_ctx, platform_id, &error_local);
-	if (dev == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "cannot find device %s: %s",
-			     platform_id, error_local->message);
-		return FALSE;
-	}
-
-	/* open it */
-	dfu_device = dfu_device_new (dev);
-	if (dfu_device == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "%s is not a DFU device",
-			     platform_id);
-		return FALSE;
-	}
-	if (!dfu_device_open (dfu_device, DFU_DEVICE_OPEN_FLAG_NONE,
-			      NULL, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "failed to open DFU device %s: %s",
-			     platform_id, error_local->message);
-		return FALSE;
-	}
-	g_signal_connect (dfu_device, "state-changed",
-			  G_CALLBACK (fu_provider_usb_state_changed_cb), provider);
-
-	/* get data from hardware */
-	dfu_firmware = dfu_device_upload (dfu_device,
-					  DFU_TARGET_TRANSFER_FLAG_DETACH |
-					  DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
-					  NULL,
-					  error);
-	if (dfu_firmware == NULL)
-		return FALSE;
-
-	/* we're done */
-	if (!dfu_device_close (dfu_device, &error_local)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     error_local->message);
-		return FALSE;
-	}
-
-	/* the device never came back! */
-	if (!FU_IS_DEVICE (device)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "%s never came back from DFU mode",
-			     platform_id);
-		return FALSE;
-	}
-
-	/* get the SHA1 hash */
-	blob_fw = dfu_firmware_write_data (dfu_firmware, error);
-	if (blob_fw == NULL)
-		return FALSE;
-	hash = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_fw);
-	fu_device_set_metadata (device, FU_DEVICE_KEY_FIRMWARE_HASH, hash);
-	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
+	priv->done_enumerate = TRUE;
 	return TRUE;
 }
 
@@ -512,8 +234,6 @@ fu_provider_usb_class_init (FuProviderUsbClass *klass)
 
 	provider_class->get_name = fu_provider_usb_get_name;
 	provider_class->coldplug = fu_provider_usb_coldplug;
-	provider_class->update_online = fu_provider_usb_update;
-	provider_class->verify = fu_provider_usb_verify;
 	object_class->finalize = fu_provider_usb_finalize;
 }
 
@@ -524,7 +244,6 @@ static void
 fu_provider_usb_init (FuProviderUsb *provider_usb)
 {
 	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
-	priv->timer_dfu_replug = g_timer_new ();
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
 	priv->usb_ctx = g_usb_context_new (NULL);
@@ -547,7 +266,6 @@ fu_provider_usb_finalize (GObject *object)
 
 	g_hash_table_unref (priv->devices);
 	g_object_unref (priv->usb_ctx);
-	g_timer_destroy (priv->timer_dfu_replug);
 
 	G_OBJECT_CLASS (fu_provider_usb_parent_class)->finalize (object);
 }
