@@ -67,15 +67,16 @@ fu_provider_usb_get_id (GUsbDevice *device)
 }
 
 /**
- * fu_provider_usb_device_add:
+ * fu_provider_usb_device_update:
  *
  * Important, the device must already be open!
  **/
-static void
-fu_provider_usb_device_add (FuProviderUsb *provider_usb, const gchar *id, GUsbDevice *device)
+static gboolean
+fu_provider_usb_device_update (FuProviderUsb *provider_usb,
+			       FuDevice *dev,
+			       GUsbDevice *device,
+			       GError **error)
 {
-	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
-	FuDevice *dev;
 	guint8 idx = 0x00;
 	g_autofree gchar *guid = NULL;
 	g_autofree gchar *product = NULL;
@@ -92,8 +93,11 @@ fu_provider_usb_device_add (FuProviderUsb *provider_usb, const gchar *id, GUsbDe
 		product = g_usb_device_get_string_descriptor (device, idx, NULL);
 	}
 	if (product == NULL) {
-		g_debug ("ignoring %s as no product string descriptor", id);
-		return;
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "no product string descriptor");
+		return FALSE;
 	}
 
 	/* get version number, falling back to the USB device release */
@@ -125,8 +129,6 @@ fu_provider_usb_device_add (FuProviderUsb *provider_usb, const gchar *id, GUsbDe
 	}
 
 	/* insert to hash */
-	dev = fu_device_new ();
-	fu_device_set_id (dev, id);
 	fu_device_set_guid (dev, guid);
 	fu_device_set_display_name (dev, product);
 	fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
@@ -141,9 +143,29 @@ fu_provider_usb_device_add (FuProviderUsb *provider_usb, const gchar *id, GUsbDe
 	} else {
 		g_debug ("not a DFU device");
 	}
+	return TRUE;
+}
 
-	/* good to go */
-	g_hash_table_insert (priv->devices, g_strdup (id), dev);
+/**
+ * fu_provider_usb_device_add:
+ *
+ * Important, the device must already be open!
+ **/
+static void
+fu_provider_usb_device_add (FuProviderUsb *provider_usb, const gchar *id, GUsbDevice *device)
+{
+	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* insert to hash if valid */
+	dev = fu_device_new ();
+	fu_device_set_id (dev, id);
+	if (!fu_provider_usb_device_update (provider_usb, dev, device, &error)) {
+		g_debug ("Failed to add %s: %s", id, error->message);
+		return;
+	}
+	g_hash_table_insert (priv->devices, g_strdup (id), g_object_ref (dev));
 	fu_provider_device_add (FU_PROVIDER (provider_usb), dev);
 }
 
@@ -179,14 +201,6 @@ fu_provider_usb_device_added_cb (GUsbContext *ctx,
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 
-	/* doing DFU replug */
-	if (!fu_provider_usb_event_valid (provider_usb)) {
-		g_debug ("ignoring device addition of %04x:%04x",
-			 g_usb_device_get_vid (device),
-			 g_usb_device_get_pid (device));
-		return;
-	}
-
 	/* ignore hubs */
 	if (g_usb_device_get_device_class (device) == G_USB_DEVICE_CLASS_HUB)
 		return;
@@ -210,6 +224,19 @@ fu_provider_usb_device_added_cb (GUsbContext *ctx,
 		default:
 			break;
 		}
+	}
+
+	/* doing DFU replug */
+	if (!fu_provider_usb_event_valid (provider_usb)) {
+		g_debug ("ignoring device addition of %04x:%04x",
+			 g_usb_device_get_vid (device),
+			 g_usb_device_get_pid (device));
+		dev = g_hash_table_lookup (priv->devices, id);
+		if (dev != NULL) {
+			g_debug ("Updating device after firmware flash");
+			fu_provider_usb_device_update (provider_usb, dev, device, NULL);
+		}
+		return;
 	}
 
 	/* is already in database */
