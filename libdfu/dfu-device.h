@@ -78,6 +78,7 @@ gboolean	 dfu_device_open			(DfuDevice	*device,
 							 GError		**error);
 gboolean	 dfu_device_close			(DfuDevice	*device,
 							 GError		**error);
+const gchar	*dfu_device_get_platform_id		(DfuDevice	*device);
 GPtrArray	*dfu_device_get_targets			(DfuDevice	*device);
 DfuTarget	*dfu_device_get_target_by_alt_setting	(DfuDevice	*device,
 							 guint8		 alt_setting,

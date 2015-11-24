@@ -732,6 +732,24 @@ dfu_device_get_target_by_alt_name (DfuDevice *device,
 }
 
 /**
+ * dfu_device_get_platform_id:
+ * @device: a #DfuDevice
+ *
+ * Gets the platform ID which normally corresponds to the port in some way.
+ *
+ * Return value: string or %NULL
+ *
+ * Since: 0.5.4
+ **/
+const gchar *
+dfu_device_get_platform_id (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), NULL);
+	return g_usb_device_get_platform_id (priv->dev);
+}
+
+/**
  * dfu_device_get_runtime_vid:
  * @device: a #DfuDevice
  *

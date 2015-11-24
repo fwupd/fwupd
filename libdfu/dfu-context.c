@@ -510,6 +510,46 @@ dfu_context_get_device_by_vid_pid (DfuContext *context,
 }
 
 /**
+ * dfu_context_get_device_by_platform_id:
+ * @context: a #DfuContext
+ * @platform_id: a platform ID
+ * @error: a #GError, or %NULL
+ *
+ * Finds a device in the context with a specific platform ID.
+ *
+ * Return value: (transfer full): a #DfuDevice for success, or %NULL for an error
+ *
+ * Since: 0.5.4
+ **/
+DfuDevice *
+dfu_context_get_device_by_platform_id (DfuContext *context,
+				       const gchar *platform_id,
+				       GError **error)
+{
+	DfuContextPrivate *priv = GET_PRIVATE (context);
+	DfuContextItem *item;
+	guint i;
+
+	g_return_val_if_fail (DFU_IS_CONTEXT (context), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* search all devices */
+	for (i = 0; i < priv->devices->len; i++) {
+		item = g_ptr_array_index (priv->devices, i);
+		if (g_strcmp0 (dfu_device_get_platform_id (item->device),
+			       platform_id) == 0) {
+			return g_object_ref (item->device);
+		}
+	}
+	g_set_error (error,
+		     DFU_ERROR,
+		     DFU_ERROR_NOT_FOUND,
+		     "no device matches for %s",
+		     platform_id);
+	return NULL;
+}
+
+/**
  * dfu_context_get_device_default:
  * @context: a #DfuContext
  * @error: a #GError, or %NULL

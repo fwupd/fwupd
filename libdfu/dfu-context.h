@@ -65,6 +65,9 @@ DfuDevice	*dfu_context_get_device_by_vid_pid	(DfuContext	*context,
 							 guint16	 vid,
 							 guint16	 pid,
 							 GError		**error);
+DfuDevice	*dfu_context_get_device_by_platform_id	(DfuContext	*context,
+							 const gchar	*platform_id,
+							 GError		**error);
 DfuDevice	*dfu_context_get_device_default		(DfuContext	*context,
 							 GError		**error);
 
