@@ -59,7 +59,7 @@ typedef enum {
  * Private #DfuTarget data
  **/
 typedef struct {
-	DfuDevice		*device;
+	DfuDevice		*device;		/* not refcounted */
 	gboolean		 done_setup;
 	guint8			 alt_setting;
 	guint8			 alt_idx;
@@ -128,8 +128,6 @@ dfu_target_finalize (GObject *object)
 	g_free (priv->alt_name);
 	g_ptr_array_unref (priv->sectors);
 	g_hash_table_unref (priv->sectors_erased);
-	if (priv->device != NULL)
-		g_object_unref (priv->device);
 
 	G_OBJECT_CLASS (dfu_target_parent_class)->finalize (object);
 }
@@ -411,9 +409,14 @@ dfu_target_new (DfuDevice *device, GUsbInterface *iface)
 	DfuTarget *target;
 	target = g_object_new (DFU_TYPE_TARGET, NULL);
 	priv = GET_PRIVATE (target);
-	priv->device = g_object_ref (device);
+	priv->device = device;
 	priv->alt_idx = g_usb_interface_get_index (iface);
 	priv->alt_setting = g_usb_interface_get_alternate (iface);
+
+	/* if we try to ref the target and destroy the device */
+	g_object_add_weak_pointer (G_OBJECT (priv->device),
+				   (gpointer *) &priv->device);
+
 	return target;
 }
 
