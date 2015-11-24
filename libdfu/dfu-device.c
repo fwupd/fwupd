@@ -63,6 +63,7 @@ typedef struct {
 	gboolean		 dfuse_supported;
 	guint16			 runtime_pid;
 	guint16			 runtime_vid;
+	guint16			 runtime_release;
 	guint16			 transfer_size;
 	guint8			 iface_number;
 	guint			 dnload_timeout;
@@ -149,6 +150,7 @@ dfu_device_init (DfuDevice *device)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	priv->runtime_pid = 0xffff;
 	priv->runtime_vid = 0xffff;
+	priv->runtime_release = 0xffff;
 	priv->state = DFU_STATE_APP_IDLE;
 	priv->status = DFU_STATUS_OK;
 	priv->targets = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -335,6 +337,7 @@ dfu_device_update_from_iface (DfuDevice *device, GUsbInterface *iface)
 	    (priv->quirks & DFU_DEVICE_QUIRK_NO_PID_CHANGE)) {
 		priv->runtime_vid = g_usb_device_get_vid (priv->dev);
 		priv->runtime_pid = g_usb_device_get_pid (priv->dev);
+		priv->runtime_release = g_usb_device_get_release (priv->dev);
 	}
 
 	priv->mode = target_mode;
@@ -783,6 +786,24 @@ dfu_device_get_runtime_pid (DfuDevice *device)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
 	return priv->runtime_pid;
+}
+
+/**
+ * dfu_device_get_runtime_release:
+ * @device: a #DfuDevice
+ *
+ * Gets the runtime release number in BCD format.
+ *
+ * Return value: release number, or 0xffff for unknown
+ *
+ * Since: 0.5.4
+ **/
+guint16
+dfu_device_get_runtime_release (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
+	return priv->runtime_release;
 }
 
 /**
