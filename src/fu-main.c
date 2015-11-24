@@ -342,12 +342,17 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 	}
 
 	/* run the correct provider that added this */
-	return fu_provider_update (item->provider,
-				   item->device,
-				   helper->blob_cab,
-				   helper->blob_fw,
-				   helper->flags,
-				   error);
+	if (!fu_provider_update (item->provider,
+				 item->device,
+				 helper->blob_cab,
+				 helper->blob_fw,
+				 helper->flags,
+				 error))
+		return FALSE;
+
+	/* make the UI update */
+	fu_main_emit_changed (helper->priv);
+	return TRUE;
 }
 
 /**
