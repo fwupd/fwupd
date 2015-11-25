@@ -897,6 +897,16 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* no backing USB device */
+	if (priv->dev == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "failed to refresh: no GUsbDevice for %s",
+			     priv->platform_id);
+		return FALSE;
+	}
+
 	if (!g_usb_device_control_transfer (priv->dev,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -960,6 +970,16 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* no backing USB device */
+	if (priv->dev == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "failed to detach: no GUsbDevice for %s",
+			     priv->platform_id);
+		return FALSE;
+	}
+
 	/* inform UI there's going to be a detach:attach */
 	dfu_device_set_state (device, DFU_STATE_APP_DETACH);
 
@@ -1014,6 +1034,16 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* no backing USB device */
+	if (priv->dev == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "failed to abort: no GUsbDevice for %s",
+			     priv->platform_id);
+		return FALSE;
+	}
+
 	if (!g_usb_device_control_transfer (priv->dev,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -1058,6 +1088,16 @@ dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no backing USB device */
+	if (priv->dev == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "failed to clear status: no GUsbDevice for %s",
+			     priv->platform_id);
+		return FALSE;
+	}
 
 	if (!g_usb_device_control_transfer (priv->dev,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -1121,6 +1161,16 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no backing USB device */
+	if (priv->dev == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "failed to open: no GUsbDevice for %s",
+			     priv->platform_id);
+		return FALSE;
+	}
 
 	/* just ignore */
 	if (priv->device_open)
@@ -1203,6 +1253,16 @@ dfu_device_close (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(GError) error_local = NULL;
+
+	/* no backing USB device */
+	if (priv->dev == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "failed to close: no GUsbDevice for %s",
+			     priv->platform_id);
+		return FALSE;
+	}
 
 	/* only close if open */
 	if (priv->device_open) {
@@ -1302,6 +1362,16 @@ dfu_device_wait_for_replug (DfuDevice *device, guint timeout,
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* no backing USB device */
+	if (priv->dev == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "failed to wait for replug: no GUsbDevice for %s",
+			     priv->platform_id);
+		return FALSE;
+	}
+
 	/* keep copies */
 	platform_id = g_strdup (g_usb_device_get_platform_id (priv->dev));
 	vid = g_usb_device_get_vid (priv->dev);
@@ -1370,6 +1440,16 @@ dfu_device_reset (DfuDevice *device, GError **error)
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* no backing USB device */
+	if (priv->dev == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "failed to reset: no GUsbDevice for %s",
+			     priv->platform_id);
+		return FALSE;
+	}
+
 	if (!g_usb_device_reset (priv->dev, &error_local)) {
 		g_set_error (error,
 			     DFU_ERROR,
@@ -1414,7 +1494,16 @@ dfu_device_upload (DfuDevice *device,
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	guint i;
 	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(GPtrArray) targets = NULL;
+
+	/* no backing USB device */
+	if (priv->dev == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "failed to upload: no GUsbDevice for %s",
+			     priv->platform_id);
+		return NULL;
+	}
 
 	/* create ahead of time */
 	firmware = dfu_firmware_new ();
@@ -1441,14 +1530,13 @@ dfu_device_upload (DfuDevice *device,
 	}
 
 	/* upload from each target */
-	targets = dfu_device_get_targets (device);
-	for (i = 0; i < targets->len; i++) {
+	for (i = 0; i < priv->targets->len; i++) {
 		DfuTarget *target;
 		guint id;
 		g_autoptr(DfuImage) image = NULL;
 
 		/* upload to target and proxy signals */
-		target = g_ptr_array_index (targets, i);
+		target = g_ptr_array_index (priv->targets, i);
 		id = g_signal_connect (target, "percentage-changed",
 				       G_CALLBACK (dfu_device_percentage_cb), device);
 		image = dfu_target_upload (target,
@@ -1462,7 +1550,7 @@ dfu_device_upload (DfuDevice *device,
 	}
 
 	/* choose the most appropriate type */
-	if (targets->len > 1) {
+	if (priv->targets->len > 1) {
 		g_debug ("switching to DefuSe automatically");
 		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
 	} else {
@@ -1519,6 +1607,16 @@ dfu_device_download (DfuDevice *device,
 	gboolean ret;
 	guint i;
 	g_autoptr(GPtrArray) targets = NULL;
+
+	/* no backing USB device */
+	if (priv->dev == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "failed to download: no GUsbDevice for %s",
+			     priv->platform_id);
+		return FALSE;
+	}
 
 	/* do we allow wildcard VID:PID matches */
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID) == 0) {
