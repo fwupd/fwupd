@@ -59,7 +59,7 @@ typedef struct {
 
 typedef struct {
 	DfuContext		*context;		/* not refcounted */
-	DfuDevice		*device;
+	DfuDevice		*device;		/* not refcounted */
 	guint			 timeout_id;
 	guint			 state_change_id;
 } DfuContextItem;
@@ -160,6 +160,8 @@ dfu_context_get_device_id (DfuDevice *device)
 {
 	GUsbDevice *dev;
 	dev = dfu_device_get_usb_dev (device);
+	if (dev == NULL)
+		return g_strdup (dfu_device_get_platform_id (device));
 	return g_strdup_printf ("%04x:%04x [%s]",
 				g_usb_device_get_vid (dev),
 				g_usb_device_get_pid (dev),
@@ -174,14 +176,12 @@ dfu_context_find_item_by_platform_id (DfuContext *context, const gchar *platform
 {
 	DfuContextPrivate *priv = GET_PRIVATE (context);
 	DfuContextItem *item;
-	GUsbDevice *dev;
 	guint i;
 
 	/* do we have this device */
 	for (i = 0; i < priv->devices->len; i++) {
 		item = g_ptr_array_index (priv->devices, i);
-		dev = dfu_device_get_usb_dev (item->device);
-		if (g_strcmp0 (g_usb_device_get_platform_id (dev), platform_id) == 0)
+		if (g_strcmp0 (dfu_device_get_platform_id (item->device), platform_id) == 0)
 			return item;
 	}
 	return NULL;
@@ -196,12 +196,12 @@ dfu_context_remove_item (DfuContextItem *item)
 	DfuContextPrivate *priv = GET_PRIVATE (item->context);
 	g_autofree gchar *device_id = NULL;
 
-	g_signal_emit (item->context, signals[SIGNAL_DEVICE_REMOVED], 0, item->device);
-	g_ptr_array_remove (priv->devices, item);
-
 	/* log something */
 	device_id = dfu_context_get_device_id (item->device);
 	g_debug ("%s was removed", device_id);
+
+	g_signal_emit (item->context, signals[SIGNAL_DEVICE_REMOVED], 0, item->device);
+	g_ptr_array_remove (priv->devices, item);
 }
 
 /**
@@ -252,9 +252,11 @@ dfu_context_device_added_cb (GUsbContext *usb_context,
 	item = dfu_context_find_item_by_platform_id (context, platform_id);
 	if (item != NULL) {
 		device_id = dfu_context_get_device_id (item->device);
-		if (item->timeout_id > 0)
+		if (item->timeout_id > 0) {
+			g_debug ("cancelling the remove timeout");
 			g_source_remove (item->timeout_id);
-		item->timeout_id  = 0;
+			item->timeout_id  = 0;
+		}
 
 		/* try and be helpful; we may be a daemon like fwupd watching a
 		 * DFU device after dfu-tool or dfu-util has detached the
@@ -300,10 +302,14 @@ dfu_context_device_removed_cb (GUsbContext *usb_context,
 	DfuContextItem *item;
 	const gchar *platform_id;
 
+	/* find the item */
 	platform_id = g_usb_device_get_platform_id (usb_device);
 	item = dfu_context_find_item_by_platform_id (context, platform_id);
 	if (item == NULL)
 		return;
+
+	/* mark the backing USB device as invalid */
+	dfu_device_set_new_usb_dev (item->device, NULL, NULL, NULL);
 
 	/* this item has just detached */
 	if (item->timeout_id > 0)

@@ -122,7 +122,9 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 
 	/* attempt to add */
 	fu_provider_device_add (FU_PROVIDER (provider_dfu), dev);
-	g_hash_table_insert (priv->devices, g_strdup (platform_id), g_object_ref (dev));
+	g_hash_table_insert (priv->devices,
+			     g_strdup (platform_id),
+			     g_object_ref (dev));
 }
 
 /**

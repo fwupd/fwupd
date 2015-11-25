@@ -62,6 +62,7 @@ typedef struct {
 	gboolean		 device_open;
 	gboolean		 dfuse_supported;
 	gchar			*display_name;
+	gchar			*platform_id;
 	guint16			 runtime_pid;
 	guint16			 runtime_vid;
 	guint16			 runtime_release;
@@ -228,6 +229,7 @@ dfu_device_finalize (GObject *object)
 	}
 
 	g_free (priv->display_name);
+	g_free (priv->platform_id);
 	g_ptr_array_unref (priv->targets);
 
 	G_OBJECT_CLASS (dfu_device_parent_class)->finalize (object);
@@ -630,6 +632,7 @@ dfu_device_new (GUsbDevice *dev)
 	device = g_object_new (DFU_TYPE_DEVICE, NULL);
 	priv = GET_PRIVATE (device);
 	priv->dev = g_object_ref (dev);
+	priv->platform_id = g_strdup (g_usb_device_get_platform_id (dev));
 	if (!dfu_device_add_targets (device)) {
 		g_object_unref (device);
 		return NULL;
@@ -751,7 +754,7 @@ dfu_device_get_platform_id (DfuDevice *device)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_val_if_fail (DFU_IS_DEVICE (device), NULL);
-	return g_usb_device_get_platform_id (priv->dev);
+	return priv->platform_id;
 }
 
 /**
@@ -1227,6 +1230,12 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 	if (priv->dev == dev)
 		return TRUE;
 
+	/* device removed */
+	if (dev == NULL) {
+		g_clear_object (&priv->dev);
+		return TRUE;
+	}
+
 	/* close */
 	if (priv->device_open) {
 		if (!dfu_device_close (device, error))
@@ -1236,6 +1245,14 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 
 	/* set the new USB device */
 	g_set_object (&priv->dev, dev);
+
+	/* should be the same */
+	if (g_strcmp0 (priv->platform_id,
+		       g_usb_device_get_platform_id (dev)) != 0) {
+		g_warning ("platform ID changed");
+		g_free (priv->platform_id);
+		priv->platform_id = g_strdup (g_usb_device_get_platform_id (dev));
+	}
 
 	/* update all the targets */
 	g_ptr_array_set_size (priv->targets, 0);
