@@ -232,8 +232,8 @@ dfu_target_parse_sector (DfuTarget *target,
 		return FALSE;
 	}
 
-	/* optional space */
-	if (tmp[0] == ' ')
+	/* optional spaces */
+	while (tmp[0] == ' ')
 		tmp++;
 
 	/* get multiplier */

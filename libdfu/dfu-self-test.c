@@ -503,7 +503,7 @@ dfu_target_dfuse_func (void)
 	g_free (tmp);
 
 	/* multiple sectors */
-	ret = dfu_target_parse_sectors (target, "@Flash1 /0x08000000/2*001 Ka,4*001 Kg", &error);
+	ret = dfu_target_parse_sectors (target, "@Flash1   /0x08000000/2*001 Ka,4*001 Kg", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	tmp = dfu_target_sectors_to_string (target);
