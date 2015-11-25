@@ -52,35 +52,25 @@ fu_provider_dfu_get_name (FuProvider *provider)
 }
 
 /**
- * fu_provider_dfu_device_added_cb:
+ * fu_provider_dfu_device_update:
  **/
 static void
-fu_provider_dfu_device_added_cb (DfuContext *ctx,
-				 DfuDevice *device,
-				 FuProviderDfu *provider_dfu)
+fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
+			       FuDevice *dev,
+			       DfuDevice *device)
 {
-	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
 	const gchar *platform_id;
-	const gchar *display_name;
 	guint16 release;
 	g_autofree gchar *guid = NULL;
-	g_autofree gchar *id = NULL;
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *vid_pid = NULL;
-	g_autoptr(AsProfile) profile = as_profile_new ();
-	g_autoptr(AsProfileTask) ptask = NULL;
-	g_autoptr(FuDevice) dev = NULL;
-	g_autoptr(GError) error = NULL;
 
+	/* check mode */
 	platform_id = dfu_device_get_platform_id (device);
-	ptask = as_profile_start (profile, "FuProviderDfu:added{%s} [%04x:%04x]",
-				  platform_id,
-				  dfu_device_get_runtime_vid (device),
-				  dfu_device_get_runtime_pid (device));
-
-	/* create new device */
-	dev = fu_device_new ();
-	fu_device_set_id (dev, platform_id);
+	if (dfu_device_get_runtime_vid (device) == 0xffff) {
+		g_debug ("Ignoring DFU device not in runtime: %s", platform_id);
+		return;
+	}
 
 	/* check capabilities */
 	if (dfu_device_can_download (device)) {
@@ -96,17 +86,63 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
 	}
 
-	/* get DFU VID:PID hash */
-	if (dfu_device_get_runtime_vid (device) == 0xffff) {
-		g_debug ("Ignoring DFU device not in runtime: %s", platform_id);
-		return;
-	}
 	vid_pid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 				  dfu_device_get_runtime_vid (device),
 				  dfu_device_get_runtime_pid (device));
 	guid = as_utils_guid_from_string (vid_pid);
 	g_debug ("using %s for %s", guid, vid_pid);
 	fu_device_set_guid (dev, guid);
+}
+
+/**
+ * fu_provider_dfu_device_changed_cb:
+ **/
+static void
+fu_provider_dfu_device_changed_cb (DfuContext *ctx,
+				   DfuDevice *device,
+				   FuProviderDfu *provider_dfu)
+{
+	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
+	FuDevice *dev;
+	const gchar *platform_id;
+
+	/* convert DfuDevice to FuDevice */
+	platform_id = dfu_device_get_platform_id (device);
+	dev = g_hash_table_lookup (priv->devices, platform_id);
+	if (dev == NULL) {
+		g_warning ("cannot find device %s", platform_id);
+		return;
+	}
+	fu_provider_dfu_device_update (provider_dfu, dev, device);
+}
+
+/**
+ * fu_provider_dfu_device_added_cb:
+ **/
+static void
+fu_provider_dfu_device_added_cb (DfuContext *ctx,
+				 DfuDevice *device,
+				 FuProviderDfu *provider_dfu)
+{
+	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
+	const gchar *platform_id;
+	const gchar *display_name;
+	g_autofree gchar *id = NULL;
+	g_autoptr(AsProfile) profile = as_profile_new ();
+	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
+
+	platform_id = dfu_device_get_platform_id (device);
+	ptask = as_profile_start (profile, "FuProviderDfu:added{%s} [%04x:%04x]",
+				  platform_id,
+				  dfu_device_get_runtime_vid (device),
+				  dfu_device_get_runtime_pid (device));
+
+	/* create new device */
+	dev = fu_device_new ();
+	fu_device_set_id (dev, platform_id);
+	fu_provider_dfu_device_update (provider_dfu, dev, device);
 
 	/* open device to get display name */
 	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, &error)) {
@@ -204,8 +240,10 @@ fu_provider_dfu_update (FuProvider *provider,
 	g_autoptr(GError) error_local = NULL;
 
 	/* get device */
-	platform_id = fu_device_get_id (dev) + 4;
-	device = dfu_context_get_device_by_platform_id (priv->context, platform_id, &error_local);
+	platform_id = fu_device_get_id (dev);
+	device = dfu_context_get_device_by_platform_id (priv->context,
+							platform_id,
+							&error_local);
 	if (device == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -359,6 +397,9 @@ fu_provider_dfu_init (FuProviderDfu *provider_dfu)
 			  provider_dfu);
 	g_signal_connect (priv->context, "device-removed",
 			  G_CALLBACK (fu_provider_dfu_device_removed_cb),
+			  provider_dfu);
+	g_signal_connect (priv->context, "device-changed",
+			  G_CALLBACK (fu_provider_dfu_device_changed_cb),
 			  provider_dfu);
 }
 
