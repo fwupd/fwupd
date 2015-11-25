@@ -141,7 +141,7 @@ fi
 AC_ARG_ENABLE(colorhug, AS_HELP_STRING([--enable-colorhug],[Enable ColorHug support]),
 	      enable_colorhug=$enableval, enable_colorhug=yes)
 if test x$enable_colorhug != xno; then
-	PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.9)
+	PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.12)
 	AC_DEFINE(HAVE_COLORHUG,1,[Use ColorHug support])
 fi
 AM_CONDITIONAL(HAVE_COLORHUG, test x$enable_colorhug = xyes)
