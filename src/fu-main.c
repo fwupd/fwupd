@@ -881,6 +881,9 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 		}
 
 		/* add application metadata */
+		fu_device_set_metadata (item->device,
+					FU_DEVICE_KEY_APPSTREAM_ID,
+					as_app_get_id (app));
 		tmp = as_app_get_developer_name (app, NULL);
 		if (tmp != NULL) {
 			fu_device_set_metadata (item->device,

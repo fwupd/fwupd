@@ -347,6 +347,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	const gchar *keys[] = {
 		FU_DEVICE_KEY_DISPLAY_NAME,
 		FU_DEVICE_KEY_PROVIDER,
+		FU_DEVICE_KEY_APPSTREAM_ID,
 		FU_DEVICE_KEY_GUID,
 		FU_DEVICE_KEY_VERSION,
 		FU_DEVICE_KEY_URL_HOMEPAGE,
@@ -1361,6 +1362,14 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		/* TRANSLATORS: first replacement is device name */
 		g_print (_("%s has firmware updates:"), fu_device_get_display_name (dev));
 		g_print ("\n");
+
+		/* TRANSLATORS: Appstream ID for the hardware type */
+		fu_util_print_data (_("ID"),
+				    fu_device_get_metadata (dev, FU_DEVICE_KEY_APPSTREAM_ID));
+
+		/* TRANSLATORS: a GUID for the hardware */
+		fu_util_print_data (_("GUID"),
+				    fu_device_get_metadata (dev, FU_DEVICE_KEY_GUID));
 
 		/* TRANSLATORS: section header for firmware version */
 		fu_util_print_data (_("Version"),

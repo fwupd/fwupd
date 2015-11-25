@@ -57,6 +57,7 @@ struct _FuDeviceClass
 #define FU_DEVICE_KEY_UPDATE_HASH	"UpdateHash"	/* s */
 #define FU_DEVICE_KEY_UPDATE_URI	"UpdateUri"	/* s */
 #define FU_DEVICE_KEY_UPDATE_DESCRIPTION "UpdateDescription" /* s */
+#define FU_DEVICE_KEY_APPSTREAM_ID	"AppstreamId" /* s */
 
 FuDevice	*fu_device_new				(void);
 
