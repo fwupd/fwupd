@@ -129,6 +129,12 @@ dfu_target_finalize (GObject *object)
 	g_ptr_array_unref (priv->sectors);
 	g_hash_table_unref (priv->sectors_erased);
 
+	/* we no longer care */
+	if (priv->device != NULL) {
+		g_object_remove_weak_pointer (G_OBJECT (priv->device),
+					      (gpointer *) &priv->device);
+	}
+
 	G_OBJECT_CLASS (dfu_target_parent_class)->finalize (object);
 }
 
