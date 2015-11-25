@@ -25,6 +25,7 @@
 #include <stdlib.h>
 
 #include "dfu-common.h"
+#include "dfu-context.h"
 #include "dfu-device.h"
 #include "dfu-error.h"
 #include "dfu-firmware.h"
@@ -323,27 +324,25 @@ dfu_colorhug_plus_func (void)
 	GPtrArray *elements;
 	gboolean ret;
 	gboolean seen_app_idle = FALSE;
+	g_autoptr(DfuContext) context = NULL;
 	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuDevice) device2 = NULL;
 	g_autoptr(DfuTarget) target = NULL;
 	g_autoptr(DfuImage) image = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GUsbContext) usb_ctx = NULL;
-	g_autoptr(GUsbDevice) usb_device = NULL;
+
+	/* create context */
+	context = dfu_context_new ();
+	ret = dfu_context_enumerate (context, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 
 	/* push appIDLE into dfuIDLE */
-	usb_ctx = g_usb_context_new (&error);
-	g_assert_no_error (error);
-	g_assert (usb_ctx != NULL);
-	g_usb_context_enumerate (usb_ctx);
-	usb_device = g_usb_context_find_by_vid_pid (usb_ctx,
-						    0x273f,
-						    0x1002,
-						    NULL);
-	if (usb_device != NULL) {
-		g_autoptr(DfuDevice) device2 = NULL;
-		device2 = dfu_device_new (usb_device);
-		g_assert (device2 != NULL);
-
+	device2 = dfu_context_get_device_by_vid_pid (context,
+						     0x273f,
+						     0x1002,
+						     NULL);
+	if (device2 != NULL) {
 		ret = dfu_device_open (device2, DFU_DEVICE_OPEN_FLAG_NONE, NULL, &error);
 		g_assert_no_error (error);
 		g_assert (ret);
@@ -360,25 +359,21 @@ dfu_colorhug_plus_func (void)
 		ret = dfu_device_close (device2, &error);
 		g_assert_no_error (error);
 		g_assert (ret);
-
-		/* we know the runtime VID:PID */
 	}
 
 	/* find any DFU in dfuIDLE mode */
-	usb_device = g_usb_context_find_by_vid_pid (usb_ctx,
+	device = dfu_context_get_device_by_vid_pid (context,
 						    0x273f,
 						    0x1003,
 						    NULL);
-	if (usb_device == NULL)
+	if (device == NULL)
 		return;
 
-	/* check it's DFU-capable */
-	device = dfu_device_new (usb_device);
-	g_assert (device != NULL);
-
-	/* we don't know this yet */
-	g_assert_cmpint (dfu_device_get_runtime_vid (device), ==, 0xffff);
-	g_assert_cmpint (dfu_device_get_runtime_pid (device), ==, 0xffff);
+	/* we don't know this unless we went from appIDLE -> dfuIDLE */
+	if (device2 == NULL) {
+		g_assert_cmpint (dfu_device_get_runtime_vid (device), ==, 0xffff);
+		g_assert_cmpint (dfu_device_get_runtime_pid (device), ==, 0xffff);
+	}
 
 	/* open it */
 	ret = dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, &error);
@@ -547,6 +542,9 @@ main (int argc, char **argv)
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
+
+	/* log everything */
+	g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
 
 	/* tests go here */
 	g_test_add_func ("/libdfu/enums", dfu_enums_func);

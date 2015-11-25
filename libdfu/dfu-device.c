@@ -59,7 +59,7 @@ typedef struct {
 	DfuStatus		 status;
 	GPtrArray		*targets;
 	GUsbDevice		*dev;
-	gboolean		 device_open;
+	gboolean		 open_new_dev;		/* if set new GUsbDevice */
 	gboolean		 dfuse_supported;
 	gchar			*display_name;
 	gchar			*platform_id;
@@ -223,10 +223,7 @@ dfu_device_finalize (GObject *object)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 
 	/* don't rely on this */
-	if (priv->device_open) {
-		g_debug ("auto-closing DfuDevice, call dfu_device_close()");
-		g_usb_device_close (priv->dev, NULL);
-	}
+	g_usb_device_close (priv->dev, NULL);
 
 	g_free (priv->display_name);
 	g_free (priv->platform_id);
@@ -1172,12 +1169,14 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 		return FALSE;
 	}
 
-	/* just ignore */
-	if (priv->device_open)
-		return TRUE;
-
 	/* open */
 	if (!g_usb_device_open (priv->dev, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_ALREADY_OPEN)) {
+			g_debug ("device already open, ignoring");
+			return TRUE;
+		}
 		if (g_error_matches (error_local,
 				     G_USB_DEVICE_ERROR,
 				     G_USB_DEVICE_ERROR_PERMISSION_DENIED)) {
@@ -1233,7 +1232,7 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 		}
 	}
 
-	priv->device_open = TRUE;
+	priv->open_new_dev = TRUE;
 	return TRUE;
 }
 
@@ -1264,15 +1263,21 @@ dfu_device_close (DfuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* only close if open */
-	if (priv->device_open) {
-		g_usb_device_release_interface (priv->dev,
-						(gint) priv->iface_number,
-						0, NULL);
-		if (!g_usb_device_close (priv->dev, error))
-			return FALSE;
-		priv->device_open = FALSE;
+	/* close if open */
+	if (!g_usb_device_close (priv->dev, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_NOT_OPEN)) {
+			g_debug ("device not open, so ignoring error for close");
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     error_local->message);
+		return FALSE;
 	}
+	priv->open_new_dev = FALSE;
 	return TRUE;
 }
 
@@ -1284,23 +1289,27 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 			    GCancellable *cancellable, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	gboolean reopen_device = FALSE;
 
 	/* same */
-	if (priv->dev == dev)
+	if (priv->dev == dev) {
+		g_warning ("setting GUsbDevice with same dev?!");
 		return TRUE;
+	}
 
 	/* device removed */
 	if (dev == NULL) {
+		g_debug ("invalidating backing GUsbDevice");
 		g_clear_object (&priv->dev);
+		g_ptr_array_set_size (priv->targets, 0);
 		return TRUE;
 	}
 
 	/* close */
-	if (priv->device_open) {
+	if (priv->dev != NULL) {
+		gboolean tmp = priv->open_new_dev;
 		if (!dfu_device_close (device, error))
 			return FALSE;
-		reopen_device = TRUE;
+		priv->open_new_dev = tmp;
 	}
 
 	/* set the new USB device */
@@ -1309,13 +1318,12 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 	/* should be the same */
 	if (g_strcmp0 (priv->platform_id,
 		       g_usb_device_get_platform_id (dev)) != 0) {
-		g_warning ("platform ID changed");
+		g_warning ("platform ID changed when setting new GUsbDevice?!");
 		g_free (priv->platform_id);
 		priv->platform_id = g_strdup (g_usb_device_get_platform_id (dev));
 	}
 
 	/* update all the targets */
-	g_ptr_array_set_size (priv->targets, 0);
 	if (!dfu_device_add_targets (device)) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
@@ -1325,11 +1333,80 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 	}
 
 	/* reclaim */
-	if (reopen_device) {
+	if (priv->open_new_dev) {
+		g_debug ("automatically reopening device");
 		if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE,
 				      cancellable, error))
 			return FALSE;
 	}
+	return TRUE;
+}
+
+typedef struct {
+	DfuDevice	*device;
+	GError		**error;
+	GMainLoop	*loop;
+	GUsbDevice	*dev;
+	guint		 cnt;
+	guint		 timeout;
+} DfuDeviceReplugHelper;
+
+/**
+ * dfu_device_replug_helper_free:
+ **/
+static void
+dfu_device_replug_helper_free (DfuDeviceReplugHelper *helper)
+{
+	if (helper->dev != NULL)
+		g_object_unref (helper->dev);
+	g_object_unref (helper->device);
+	g_main_loop_unref (helper->loop);
+	g_free (helper);
+}
+
+/**
+ * dfu_device_replug_helper_cb:
+ **/
+static gboolean
+dfu_device_replug_helper_cb (gpointer user_data)
+{
+	DfuDeviceReplugHelper *helper = (DfuDeviceReplugHelper *) user_data;
+	DfuDevicePrivate *priv = GET_PRIVATE (helper->device);
+
+	/* did the backing GUsbDevice change */
+	if (helper->dev != priv->dev) {
+		g_debug ("device changed GUsbDevice %p->%p",
+			 helper->dev, priv->dev);
+		g_set_object (&helper->dev, priv->dev);
+
+		/* success */
+		if (helper->dev != NULL) {
+			g_main_loop_quit (helper->loop);
+			return FALSE;
+		}
+	}
+
+	/* set a limit */
+	if (helper->cnt++ * 100 > helper->timeout) {
+		g_debug ("gave up waiting for device replug");
+		if (helper->dev == NULL) {
+			g_set_error_literal (helper->error,
+					     DFU_ERROR,
+					     DFU_ERROR_INVALID_DEVICE,
+					     "target went away but did not come back");
+		} else {
+			g_set_error_literal (helper->error,
+					     DFU_ERROR,
+					     DFU_ERROR_INVALID_DEVICE,
+					     "target did not disconnect");
+		}
+		g_main_loop_quit (helper->loop);
+		return FALSE;
+	}
+
+	/* continue waiting */
+	g_debug ("waiting for device replug for %ims -- state is %s",
+		 helper->cnt * 100, dfu_state_to_string (priv->state));
 	return TRUE;
 }
 
@@ -1341,6 +1418,7 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
  * @error: a #GError, or %NULL
  *
  * Waits for a DFU device to disconnect and reconnect.
+ * This does rely on a #DfuContext being set up before this is called.
  *
  * Return value: %TRUE for success
  *
@@ -1351,73 +1429,25 @@ dfu_device_wait_for_replug (DfuDevice *device, guint timeout,
 			    GCancellable *cancellable, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	const guint poll_interval_ms = 100;
-	gboolean went_away = FALSE;
-	guint16 pid;
-	guint16 vid;
-	guint i;
-	g_autofree gchar *platform_id = NULL;
-	g_autoptr(GUsbContext) usb_ctx = NULL;
+	DfuDeviceReplugHelper *helper;
+	GError *error_tmp = NULL;
+	const guint replug_poll = 100; /* ms */
 
-	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* no backing USB device */
-	if (priv->dev == NULL) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
-			     "failed to wait for replug: no GUsbDevice for %s",
-			     priv->platform_id);
+	helper = g_new0 (DfuDeviceReplugHelper, 1);
+	helper->loop = g_main_loop_new (NULL, FALSE);
+	helper->device = g_object_ref (device);
+	helper->dev = g_object_ref (priv->dev);
+	helper->error = &error_tmp;
+	helper->timeout = timeout;
+	g_timeout_add_full (G_PRIORITY_DEFAULT, replug_poll,
+			    dfu_device_replug_helper_cb, helper,
+			    (GDestroyNotify) dfu_device_replug_helper_free);
+	g_main_loop_run (helper->loop);
+	if (error_tmp != NULL) {
+		g_propagate_error (error, error_tmp);
 		return FALSE;
 	}
-
-	/* keep copies */
-	platform_id = g_strdup (g_usb_device_get_platform_id (priv->dev));
-	vid = g_usb_device_get_vid (priv->dev);
-	pid = g_usb_device_get_pid (priv->dev);
-
-	/* keep trying */
-	g_object_get (priv->dev, "context", &usb_ctx, NULL);
-	for (i = 0; i < timeout / poll_interval_ms; i++) {
-		g_autoptr(GUsbDevice) dev_tmp = NULL;
-		g_usleep (poll_interval_ms * 1000);
-		g_usb_context_enumerate (usb_ctx);
-		dev_tmp = g_usb_context_find_by_platform_id (usb_ctx, platform_id, NULL);
-		if (dev_tmp == NULL) {
-			went_away = TRUE;
-			continue;
-		}
-
-		/* some devices use the same PID for DFU mode */
-		if (priv->quirks & DFU_DEVICE_QUIRK_NO_PID_CHANGE) {
-			return dfu_device_set_new_usb_dev (device, dev_tmp,
-							   cancellable, error);
-		}
-
-		/* VID:PID changed so find a DFU iface with the same alt */
-		if (vid != g_usb_device_get_vid (dev_tmp) ||
-		    pid != g_usb_device_get_pid (dev_tmp)) {
-			return dfu_device_set_new_usb_dev (device, dev_tmp,
-							   cancellable, error);
-		}
-	}
-
-	/* target went off into the woods */
-	if (went_away) {
-		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_DEVICE,
-				     "target went away but did not come back");
-		return FALSE;
-	}
-
-	/* VID and PID did not change */
-	g_set_error_literal (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_DEVICE,
-			     "target came back with same VID:PID values");
-	return FALSE;
+	return TRUE;
 }
 
 /**
