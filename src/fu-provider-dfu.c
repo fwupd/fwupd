@@ -101,10 +101,11 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 		g_debug ("Ignoring DFU device not in runtime: %s", platform_id);
 		return;
 	}
-	vid_pid = g_strdup_printf ("DFU\\VID_%04X&PID_%04X",
+	vid_pid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 				  dfu_device_get_runtime_vid (device),
 				  dfu_device_get_runtime_pid (device));
 	guid = as_utils_guid_from_string (vid_pid);
+	g_debug ("using %s for %s", guid, vid_pid);
 	fu_device_set_guid (dev, guid);
 
 	/* open device to get display name */
