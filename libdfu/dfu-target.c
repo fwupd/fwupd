@@ -1092,7 +1092,10 @@ dfu_target_upload (DfuTarget *target,
 	/* boot to runtime */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) {
 		g_debug ("booting to runtime");
-		if (!dfu_device_wait_for_replug (priv->device, 2000, cancellable, error))
+		if (!dfu_device_wait_for_replug (priv->device,
+						 DFU_DEVICE_REPLUG_TIMEOUT,
+						 cancellable,
+						 error))
 			return NULL;
 	}
 
@@ -1370,7 +1373,10 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 	/* boot to runtime */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) {
 		g_debug ("booting to runtime to set auto-boot");
-		if (!dfu_device_wait_for_replug (priv->device, 2000, cancellable, error))
+		if (!dfu_device_wait_for_replug (priv->device,
+						 DFU_DEVICE_REPLUG_TIMEOUT,
+						 cancellable,
+						 error))
 			return FALSE;
 	}
 

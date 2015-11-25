@@ -1525,7 +1525,10 @@ dfu_device_upload (DfuDevice *device,
 		/* detach and USB reset */
 		if (!dfu_device_detach (device, NULL, error))
 			return NULL;
-		if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
+		if (!dfu_device_wait_for_replug (device,
+						 DFU_DEVICE_REPLUG_TIMEOUT,
+						 cancellable,
+						 error))
 			return NULL;
 	}
 
@@ -1572,7 +1575,10 @@ dfu_device_upload (DfuDevice *device,
 		dfu_device_set_state (device, DFU_STATE_APP_DETACH);
 
 		/* DFU -> APP */
-		if (!dfu_device_wait_for_replug (device, 2000, cancellable, error))
+		if (!dfu_device_wait_for_replug (device,
+						 DFU_DEVICE_REPLUG_TIMEOUT,
+						 cancellable,
+						 error))
 			return NULL;
 	}
 
@@ -1678,7 +1684,10 @@ dfu_device_download (DfuDevice *device,
 		g_debug ("detaching");
 		if (!dfu_device_detach (device, NULL, error))
 			return FALSE;
-		if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
+		if (!dfu_device_wait_for_replug (device,
+						 DFU_DEVICE_REPLUG_TIMEOUT,
+						 NULL,
+						 error))
 			return FALSE;
 	}
 
@@ -1732,7 +1741,10 @@ dfu_device_download (DfuDevice *device,
 		dfu_device_set_state (device, DFU_STATE_APP_DETACH);
 
 		/* DFU -> APP */
-		if (!dfu_device_wait_for_replug (device, 2000, cancellable, error))
+		if (!dfu_device_wait_for_replug (device,
+						 DFU_DEVICE_REPLUG_TIMEOUT,
+						 cancellable,
+						 error))
 			return FALSE;
 	}
 

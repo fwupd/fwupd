@@ -30,6 +30,8 @@
 
 G_BEGIN_DECLS
 
+#define DFU_DEVICE_REPLUG_TIMEOUT	5000	/* ms */
+
 /**
  * DfuDeviceQuirks:
  * @DFU_DEVICE_QUIRK_NONE:			No device quirks

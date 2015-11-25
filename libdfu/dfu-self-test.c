@@ -352,7 +352,7 @@ dfu_colorhug_plus_func (void)
 		g_assert (ret);
 
 		/* wait for it to come back as 273f:1005 */
-		ret = dfu_device_wait_for_replug (device2, 2000, NULL, &error);
+		ret = dfu_device_wait_for_replug (device2, 5000, NULL, &error);
 		g_assert_no_error (error);
 		g_assert (ret);
 
@@ -435,7 +435,7 @@ dfu_colorhug_plus_func (void)
 	g_assert (ret);
 
 	/* wait for it to come back as 273f:1004 */
-	ret = dfu_device_wait_for_replug (device, 2000, NULL, &error);
+	ret = dfu_device_wait_for_replug (device, 5000, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
