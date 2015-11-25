@@ -299,6 +299,7 @@ fu_provider_dfu_verify (FuProvider *provider,
 			  G_CALLBACK (fu_provider_dfu_state_changed_cb), provider);
 
 	/* get data from hardware */
+	g_debug ("uploading from device->host");
 	dfu_firmware = dfu_device_upload (device,
 					  DFU_TARGET_TRANSFER_FLAG_DETACH |
 					  DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
