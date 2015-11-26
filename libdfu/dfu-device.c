@@ -223,7 +223,8 @@ dfu_device_finalize (GObject *object)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 
 	/* don't rely on this */
-	g_usb_device_close (priv->dev, NULL);
+	if (priv->dev != NULL)
+		g_usb_device_close (priv->dev, NULL);
 
 	g_free (priv->display_name);
 	g_free (priv->platform_id);
