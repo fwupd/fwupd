@@ -76,6 +76,7 @@ if (!dfu_device_download (dfu_device, dfu_firmware,
         Functionality exported by libdfu.
       </para>
     </partintro>
+    <xi:include href="xml/dfu-context.xml"/>
     <xi:include href="xml/dfu-device.xml"/>
     <xi:include href="xml/dfu-firmware.xml"/>
     <xi:include href="xml/dfu-image.xml"/>
