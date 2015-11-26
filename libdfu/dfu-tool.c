@@ -1423,6 +1423,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		GPtrArray *dfu_targets;
 		const gchar *tmp;
 		guint j;
+		g_autofree gchar *quirks = NULL;
 		g_autofree gchar *version = NULL;
 		g_autoptr(GError) error_local = NULL;
 
@@ -1466,6 +1467,14 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		tmp = dfu_state_to_string (dfu_device_get_state (device));
 		/* TRANSLATORS: device state, i.e. appIDLE */
 		dfu_tool_print_indent (_("State"), tmp, 1);
+
+		/* quirks are NULL if none are set */
+		quirks = dfu_device_get_quirks_as_string (device);
+		if (quirks != NULL) {
+			/* TRANSLATORS: device quirks, i.e. things that
+			 * it does that we have to work around */
+			dfu_tool_print_indent (_("Quirks"), quirks, 1);
+		}
 
 		/* list targets */
 		dfu_targets = dfu_device_get_targets (device);

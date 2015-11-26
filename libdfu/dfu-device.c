@@ -150,6 +150,7 @@ static void
 dfu_device_init (DfuDevice *device)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	priv->iface_number = 0xff;
 	priv->runtime_pid = 0xffff;
 	priv->runtime_vid = 0xffff;
 	priv->runtime_release = 0xffff;
@@ -384,6 +385,16 @@ dfu_device_add_targets (DfuDevice *device)
 		if (g_bytes_get_size (iface_data) > 0)
 			dfu_device_parse_iface_data (device, iface_data);
 	}
+
+	/* the device has no DFU runtime, so cheat */
+	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+		if (priv->targets->len == 0) {
+			g_debug ("no DFU runtime, so faking device");
+			priv->iface_number = 0xff;
+		}
+		return TRUE;
+	}
+
 	return priv->targets->len > 0;
 }
 
@@ -586,6 +597,7 @@ dfu_target_set_quirks (DfuDevice *device)
 	    pid >= 0x5117 && pid <= 0x5126)
 		priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT |
 				DFU_DEVICE_QUIRK_NO_PID_CHANGE |
+				DFU_DEVICE_QUIRK_NO_DFU_RUNTIME |
 				DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD;
 
 	/* OpenPCD Reader */
@@ -631,11 +643,16 @@ dfu_device_new (GUsbDevice *dev)
 	priv = GET_PRIVATE (device);
 	priv->dev = g_object_ref (dev);
 	priv->platform_id = g_strdup (g_usb_device_get_platform_id (dev));
+
+	/* set any quirks on the device before adding targets */
+	dfu_target_set_quirks (device);
+
+	/* add each alternate interface, although typically there will
+	 * be only one */
 	if (!dfu_device_add_targets (device)) {
 		g_object_unref (device);
 		return NULL;
 	}
-	dfu_target_set_quirks (device);
 	return device;
 }
 
@@ -905,6 +922,15 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 		return FALSE;
 	}
 
+	/* the device has no DFU runtime, so cheat */
+	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "not supported as no DFU runtime");
+		return FALSE;
+	}
+
 	if (!g_usb_device_control_transfer (priv->dev,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -978,6 +1004,15 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 		return FALSE;
 	}
 
+	/* the device has no DFU runtime, so cheat */
+	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "not supported as no DFU runtime");
+		return FALSE;
+	}
+
 	/* inform UI there's going to be a detach:attach */
 	dfu_device_set_state (device, DFU_STATE_APP_DETACH);
 
@@ -1042,6 +1077,15 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
 		return FALSE;
 	}
 
+	/* the device has no DFU runtime, so cheat */
+	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "not supported as no DFU runtime");
+		return FALSE;
+	}
+
 	if (!g_usb_device_control_transfer (priv->dev,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -1094,6 +1138,15 @@ dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **
 			     DFU_ERROR_INTERNAL,
 			     "failed to clear status: no GUsbDevice for %s",
 			     priv->platform_id);
+		return FALSE;
+	}
+
+	/* the device has no DFU runtime, so cheat */
+	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "not supported as no DFU runtime");
 		return FALSE;
 	}
 
@@ -1196,20 +1249,32 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 		return FALSE;
 	}
 
-	/* claim the correct interface */
-	if (!g_usb_device_claim_interface (priv->dev, (gint) priv->iface_number, 0, &error_local)) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_DEVICE,
-			     "cannot claim interface %i: %s",
-			     priv->iface_number, error_local->message);
-		return FALSE;
+	/* claim the correct interface if set */
+	if (priv->iface_number != 0xff) {
+		if (!g_usb_device_claim_interface (priv->dev,
+						   (gint) priv->iface_number,
+						   0,
+						   &error_local)) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_DEVICE,
+				     "cannot claim interface %i: %s",
+				     priv->iface_number, error_local->message);
+			return FALSE;
+		}
 	}
 
 	/* get product name if it exists */
 	idx = g_usb_device_get_product_index (priv->dev);
 	if (idx != 0x00)
 		priv->display_name = g_usb_device_get_string_descriptor (priv->dev, idx, NULL);
+
+	/* the device has no DFU runtime, so cheat */
+	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+		priv->state = DFU_STATE_APP_IDLE;
+		priv->status = DFU_STATUS_OK;
+		flags |= DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH;
+	}
 
 	/* automatically abort any uploads or downloads */
 	if ((flags & DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH) == 0) {
@@ -1824,4 +1889,48 @@ dfu_device_error_fixup (DfuDevice *device,
 				dfu_status_to_string (priv->status));
 		break;
 	}
+}
+
+/**
+ * dfu_device_get_quirks_as_string: (skip)
+ * @device: a #DfuDevice
+ *
+ * Gets a string describing the quirks set for a device.
+ *
+ * Return value: string, or %NULL for no quirks
+ *
+ * Since: 0.5.4
+ **/
+gchar *
+dfu_device_get_quirks_as_string (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	GString *str;
+
+	/* just append to a string */
+	str = g_string_new ("");
+	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT)
+		g_string_append_printf (str, "ignore-polltimeout|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_FORCE_DFU_MODE)
+		g_string_append_printf (str, "force-dfu-mode|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION)
+		g_string_append_printf (str, "ignore-invalid-version|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO)
+		g_string_append_printf (str, "use-protocol-zero|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_NO_PID_CHANGE)
+		g_string_append_printf (str, "no-pid-change|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD)
+		g_string_append_printf (str, "no-get-status-upload|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
+		g_string_append_printf (str, "no-dfu-runtime|");
+
+	/* a well behaved device */
+	if (str->len == 0) {
+		g_string_free (str, TRUE);
+		return NULL;
+	}
+
+	/* remove trailing pipe */
+	g_string_truncate (str, str->len - 1);
+	return g_string_free (str, FALSE);
 }

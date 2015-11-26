@@ -41,6 +41,7 @@ G_BEGIN_DECLS
  * @DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO:		Fix up the protocol number
  * @DFU_DEVICE_QUIRK_NO_PID_CHANGE:		Accept the same VID:PID when changing modes
  * @DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD:	Do not do GetStatus when uploading
+ * @DFU_DEVICE_QUIRK_NO_DFU_RUNTIME:		No DFU runtime interface is provided
  *
  * The workarounds for different devices.
  **/
@@ -52,6 +53,7 @@ typedef enum {
 	DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO	= (1 << 3),
 	DFU_DEVICE_QUIRK_NO_PID_CHANGE		= (1 << 4),
 	DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD	= (1 << 5),
+	DFU_DEVICE_QUIRK_NO_DFU_RUNTIME		= (1 << 6),
 	/*< private >*/
 	DFU_DEVICE_QUIRK_LAST
 } DfuDeviceQuirks;
@@ -90,6 +92,7 @@ void		 dfu_device_error_fixup			(DfuDevice	*device,
 							 GCancellable	*cancellable,
 							 GError		**error);
 guint		 dfu_device_get_download_timeout	(DfuDevice	*device);
+gchar		*dfu_device_get_quirks_as_string	(DfuDevice	*device);
 gboolean	 dfu_device_set_new_usb_dev		(DfuDevice	*device,
 							 GUsbDevice	*dev,
 							 GCancellable	*cancellable,
