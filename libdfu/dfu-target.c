@@ -825,9 +825,9 @@ dfu_target_read_unprotect (DfuTarget *target,
 #endif
 
 /**
- * dfu_target_upload_chunk:
+ * dfu_target_upload_chunk: (skip)
  **/
-static GBytes *
+GBytes *
 dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 			 GCancellable *cancellable, GError **error)
 {
@@ -1089,14 +1089,14 @@ dfu_target_upload (DfuTarget *target,
 	}
 
 	/* do host reset */
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_HOST_RESET) > 0 ||
-	    (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) > 0) {
-		if (!dfu_device_reset (priv->device, error))
+	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||
+	    (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) > 0) {
+		if (!dfu_device_attach (priv->device, error))
 			return NULL;
 	}
 
 	/* boot to runtime */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) {
+	if (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) {
 		g_debug ("booting to runtime");
 		if (!dfu_device_wait_for_replug (priv->device,
 						 DFU_DEVICE_REPLUG_TIMEOUT,
@@ -1369,15 +1369,15 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 			return FALSE;
 	}
 
-	/* do a host reset */
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_HOST_RESET) > 0 ||
-	    (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) > 0) {
-		if (!dfu_device_reset (priv->device, error))
+	/* attempt to switch back to runtime */
+	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||
+	    (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) > 0) {
+		if (!dfu_device_attach (priv->device, error))
 			return FALSE;
 	}
 
 	/* boot to runtime */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) {
+	if (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) {
 		g_debug ("booting to runtime to set auto-boot");
 		if (!dfu_device_wait_for_replug (priv->device,
 						 DFU_DEVICE_REPLUG_TIMEOUT,

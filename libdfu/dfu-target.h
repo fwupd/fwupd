@@ -55,9 +55,9 @@ struct _DfuTargetClass
  * DfuTargetTransferFlags:
  * @DFU_TARGET_TRANSFER_FLAG_NONE:		No flags set
  * @DFU_TARGET_TRANSFER_FLAG_VERIFY:		Verify the download once complete
- * @DFU_TARGET_TRANSFER_FLAG_HOST_RESET:	Reset the bus when complete
- * @DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME:	Boot to runtime when complete
- * @DFU_TARGET_TRANSFER_FLAG_DETACH:		Automatically detach and reset when in appIDLE mode
+ * @DFU_TARGET_TRANSFER_FLAG_DETACH:		If required, detach from runtime mode
+ * @DFU_TARGET_TRANSFER_FLAG_ATTACH:		Attach the device back to runtime after completion
+ * @DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME:	Wait for runtime to load after completion
  * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID:	Allow downloading images with wildcard VIDs
  * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID:	Allow downloading images with wildcard PIDs
  *
@@ -66,9 +66,9 @@ struct _DfuTargetClass
 typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_NONE		= 0,
 	DFU_TARGET_TRANSFER_FLAG_VERIFY		= (1 << 0),
-	DFU_TARGET_TRANSFER_FLAG_HOST_RESET	= (1 << 1),
-	DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME	= (1 << 2),
-	DFU_TARGET_TRANSFER_FLAG_DETACH		= (1 << 3),
+	DFU_TARGET_TRANSFER_FLAG_DETACH		= (1 << 1),
+	DFU_TARGET_TRANSFER_FLAG_ATTACH		= (1 << 2),
+	DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME	= (1 << 3),
 	DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID	= (1 << 4),
 	DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID	= (1 << 5),
 	/*< private >*/

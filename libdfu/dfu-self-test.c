@@ -400,7 +400,7 @@ dfu_colorhug_plus_func (void)
 		g_assert (ret);
 		ret = dfu_device_download (device, firmware,
 					   DFU_TARGET_TRANSFER_FLAG_DETACH |
-					   DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
+					   DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME,
 					   NULL, &error);
 		g_assert_error (error,
 				DFU_ERROR,
@@ -424,7 +424,7 @@ dfu_colorhug_plus_func (void)
 	/* download a new firmware */
 	ret = dfu_target_download (target, image,
 				   DFU_TARGET_TRANSFER_FLAG_VERIFY |
-				   DFU_TARGET_TRANSFER_FLAG_HOST_RESET,
+				   DFU_TARGET_TRANSFER_FLAG_ATTACH,
 				   NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);

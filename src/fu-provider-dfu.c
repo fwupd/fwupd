@@ -274,7 +274,7 @@ fu_provider_dfu_update (FuProvider *provider,
 	if (!dfu_device_download (device, dfu_firmware,
 				  DFU_TARGET_TRANSFER_FLAG_DETACH |
 				  DFU_TARGET_TRANSFER_FLAG_VERIFY |
-				  DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
+				  DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME,
 				  NULL,
 				  error))
 		return FALSE;
@@ -341,7 +341,7 @@ fu_provider_dfu_verify (FuProvider *provider,
 	g_debug ("uploading from device->host");
 	dfu_firmware = dfu_device_upload (device,
 					  DFU_TARGET_TRANSFER_FLAG_DETACH |
-					  DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME,
+					  DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME,
 					  NULL,
 					  error);
 	if (dfu_firmware == NULL)

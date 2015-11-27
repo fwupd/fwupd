@@ -61,6 +61,7 @@ typedef struct {
 	GUsbDevice		*dev;
 	gboolean		 open_new_dev;		/* if set new GUsbDevice */
 	gboolean		 dfuse_supported;
+	gboolean		 done_upload_or_download;
 	gchar			*display_name;
 	gchar			*platform_id;
 	guint16			 runtime_pid;
@@ -620,6 +621,10 @@ dfu_target_set_quirks (DfuDevice *device)
 	if (vid == 0x1eaf && pid == 0x0003 && release == 0x0200)
 		priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION;
 
+	/* m-stack DFU implementation */
+	if (vid == 0x273f && pid == 0x1003)
+		priv->quirks |= DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD;
+
 	/* the DSO Nano has uses 0 instead of 2 when in DFU mode */
 //	quirks |= DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO;
 }
@@ -993,6 +998,19 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* already in DFU mode */
+	switch (priv->state) {
+	case DFU_STATE_APP_IDLE:
+	case DFU_STATE_APP_DETACH:
+		break;
+	default:
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
+			     "Already in DFU mode");
+		return FALSE;
+	}
 
 	/* no backing USB device */
 	if (priv->dev == NULL) {
@@ -1559,6 +1577,66 @@ dfu_device_reset (DfuDevice *device, GError **error)
 }
 
 /**
+ * dfu_device_attach:
+ * @device: a #DfuDevice
+ * @error: a #GError, or %NULL
+ *
+ * Move device from DFU mode to runtime.
+ *
+ * Return value: %TRUE for success
+ *
+ * Since: 0.5.4
+ **/
+gboolean
+dfu_device_attach (DfuDevice *device, GError **error)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* already in runtime mode */
+	switch (priv->state) {
+	case DFU_STATE_APP_IDLE:
+	case DFU_STATE_APP_DETACH:
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
+			     "Already in application runtime mode");
+		return FALSE;
+	default:
+		break;
+	}
+
+	/* inform UI there's going to be a re-attach */
+	dfu_device_set_state (device, DFU_STATE_DFU_MANIFEST_WAIT_RESET);
+
+	/* handle m-stack DFU bootloaders */
+	if (!priv->done_upload_or_download &&
+	    (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD) > 0) {
+		g_autoptr(GBytes) chunk = NULL;
+		g_autoptr(DfuTarget) target = NULL;
+		g_debug ("doing dummy upload to work around m-stack quirk");
+		target = dfu_device_get_target_by_alt_setting (device, 0, error);
+		if (target == NULL)
+			return FALSE;
+		chunk = dfu_target_upload_chunk (target, 0, NULL, error);
+		if (chunk == NULL)
+			return FALSE;
+	}
+
+	/* there's a a special command for ST devices */
+	if (priv->dfuse_supported) {
+		//FIXME
+		return TRUE;
+	}
+
+	/* normal DFU mode just needs a bus reset */
+	return dfu_device_reset (device, error);
+}
+
+/**
  * dfu_device_percentage_cb:
  **/
 static void
@@ -1648,6 +1726,9 @@ dfu_device_upload (DfuDevice *device,
 		dfu_firmware_add_image (firmware, image);
 	}
 
+	/* do not do the dummy upload for quirked devices */
+	priv->done_upload_or_download = TRUE;
+
 	/* choose the most appropriate type */
 	if (priv->targets->len > 1) {
 		g_debug ("switching to DefuSe automatically");
@@ -1657,20 +1738,15 @@ dfu_device_upload (DfuDevice *device,
 	}
 
 	/* do host reset */
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_HOST_RESET) > 0 ||
-	    (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) > 0) {
-		if (!dfu_device_reset (device, error))
+	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||
+	    (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) > 0) {
+		if (!dfu_device_attach (device, error))
 			return NULL;
 	}
 
 	/* boot to runtime */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) {
+	if (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) {
 		g_debug ("booting to runtime");
-
-		/* inform UI there's going to be a detach:attach */
-		dfu_device_set_state (device, DFU_STATE_APP_DETACH);
-
-		/* DFU -> APP */
 		if (!dfu_device_wait_for_replug (device,
 						 DFU_DEVICE_REPLUG_TIMEOUT,
 						 cancellable,
@@ -1822,21 +1898,19 @@ dfu_device_download (DfuDevice *device,
 			return FALSE;
 	}
 
-	/* do a host reset */
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_HOST_RESET) > 0 ||
-	    (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) > 0) {
-		if (!dfu_device_reset (device, error))
+	/* do not do the dummy upload for quirked devices */
+	priv->done_upload_or_download = TRUE;
+
+	/* attempt to switch back to runtime */
+	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||
+	    (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) > 0) {
+		if (!dfu_device_attach (device, error))
 			return FALSE;
 	}
 
 	/* boot to runtime */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME) {
+	if (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) {
 		g_debug ("booting to runtime to set auto-boot");
-
-		/* inform UI there's going to be a detach:attach */
-		dfu_device_set_state (device, DFU_STATE_APP_DETACH);
-
-		/* DFU -> APP */
 		if (!dfu_device_wait_for_replug (device,
 						 DFU_DEVICE_REPLUG_TIMEOUT,
 						 cancellable,
@@ -1923,6 +1997,8 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "no-get-status-upload|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
 		g_string_append_printf (str, "no-dfu-runtime|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD)
+		g_string_append_printf (str, "attach-upload-download|");
 
 	/* a well behaved device */
 	if (str->len == 0) {

@@ -42,6 +42,7 @@ G_BEGIN_DECLS
  * @DFU_DEVICE_QUIRK_NO_PID_CHANGE:		Accept the same VID:PID when changing modes
  * @DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD:	Do not do GetStatus when uploading
  * @DFU_DEVICE_QUIRK_NO_DFU_RUNTIME:		No DFU runtime interface is provided
+ * @DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD:	An upload or download is required for attach
  *
  * The workarounds for different devices.
  **/
@@ -54,6 +55,7 @@ typedef enum {
 	DFU_DEVICE_QUIRK_NO_PID_CHANGE		= (1 << 4),
 	DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD	= (1 << 5),
 	DFU_DEVICE_QUIRK_NO_DFU_RUNTIME		= (1 << 6),
+	DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD	= (1 << 7),
 	/*< private >*/
 	DFU_DEVICE_QUIRK_LAST
 } DfuDeviceQuirks;

@@ -755,10 +755,10 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 /**
- * dfu_tool_reset:
+ * dfu_tool_attach:
  **/
 static gboolean
-dfu_tool_reset (DfuToolPrivate *priv, gchar **values, GError **error)
+dfu_tool_attach (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(DfuDevice) device = NULL;
 
@@ -766,11 +766,11 @@ dfu_tool_reset (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (device == NULL)
 		return FALSE;
 	if (!dfu_device_open (device,
-			      DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH,
+			      DFU_DEVICE_OPEN_FLAG_NONE,
 			      priv->cancellable,
 			      error))
 		return FALSE;
-	if (!dfu_device_reset (device, error))
+	if (!dfu_device_attach (device, error))
 		return FALSE;
 	return TRUE;
 }
@@ -804,8 +804,12 @@ fu_tool_state_changed_cb (DfuDevice *device,
 
 	switch (state) {
 	case DFU_STATE_APP_DETACH:
-		/* TRANSLATORS: when moving from APP to DFU mode */
-		title = _("Detatching");
+		/* TRANSLATORS: when moving from runtime to DFU mode */
+		title = _("Detaching");
+		break;
+	case DFU_STATE_DFU_MANIFEST_WAIT_RESET:
+		/* TRANSLATORS: when moving from DFU to runtime mode */
+		title = _("Attaching");
 		break;
 	case DFU_STATE_DFU_DNLOAD_IDLE:
 		/* TRANSLATORS: when copying from host to device */
@@ -819,6 +823,7 @@ fu_tool_state_changed_cb (DfuDevice *device,
 		g_debug ("ignoring %s", dfu_state_to_string (state));
 		break;
 	}
+
 	/* show title and then pad */
 	if (title != NULL) {
 		g_print ("%s ", title);
@@ -826,7 +831,20 @@ fu_tool_state_changed_cb (DfuDevice *device,
 			g_print (" ");
 		g_print (": ");
 	}
-	helper->marks_shown = 0;
+
+	/* reset the progress bar */
+	switch (state) {
+	case DFU_STATE_APP_DETACH:
+	case DFU_STATE_DFU_DNLOAD_IDLE:
+	case DFU_STATE_DFU_UPLOAD_IDLE:
+		g_debug ("resetting progress bar");
+		helper->marks_shown = 0;
+		break;
+	default:
+		break;
+	}
+
+	/* ignore if the same */
 	helper->last_state = state;
 }
 
@@ -977,8 +995,8 @@ dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* optional reset */
 	if (priv->reset) {
 		flags |= DFU_TARGET_TRANSFER_FLAG_DETACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_HOST_RESET;
-		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
+		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
+		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
 	}
 
 	/* transfer */
@@ -1228,8 +1246,8 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* optional reset */
 	if (priv->reset) {
-		flags |= DFU_TARGET_TRANSFER_FLAG_HOST_RESET;
-		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
+		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
+		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
 	}
 
 	/* allow overriding the firmware alt-setting */
@@ -1337,8 +1355,8 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* optional reset */
 	if (priv->reset) {
 		flags |= DFU_TARGET_TRANSFER_FLAG_DETACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_HOST_RESET;
-		flags |= DFU_TARGET_TRANSFER_FLAG_BOOT_RUNTIME;
+		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
+		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
 	}
 
 	/* allow wildcards */
@@ -1604,11 +1622,11 @@ main (int argc, char *argv[])
 		     _("Set alternative name on firmware file"),
 		     dfu_tool_set_alt_setting_name);
 	dfu_tool_add (priv->cmd_array,
-		     "reset",
+		     "attach",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Issue USB host reset"),
-		     dfu_tool_reset);
+		     _("Attach DFU capable device back to runtime"),
+		     dfu_tool_attach);
 	dfu_tool_add (priv->cmd_array,
 		     "upload",
 		     NULL,
