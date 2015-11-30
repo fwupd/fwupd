@@ -36,10 +36,8 @@ typedef struct {
 	GCancellable		*cancellable;
 	GPtrArray		*cmd_array;
 	gboolean		 force;
-	gboolean		 reset;
 	gchar			*device_vid_pid;
 	guint16			 transfer_size;
-	guint8			 alt_setting;
 } DfuToolPrivate;
 
 /**
@@ -715,8 +713,9 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (argc > 3) {
 		DfuImage *image;
 		DfuElement *element;
-		tmp = g_ascii_strtoull (values[3], NULL, 16);
-		if (tmp > 0xffff) {
+		gchar *endptr;
+		tmp = g_ascii_strtoull (values[3], &endptr, 16);
+		if (tmp > 0xffff || endptr[0] != '\0') {
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
@@ -796,10 +795,21 @@ fu_tool_state_changed_cb (DfuDevice *device,
 	if (state == helper->last_state)
 		return;
 
-	/* detach was left hanging... */
-	if (helper->last_state == DFU_STATE_APP_DETACH) {
-		/* TRANSLATORS: when an action has completed */
-		g_print ("%s\n", _("OK"));
+	/* state was left hanging... */
+	if (helper->marks_shown == 0) {
+		switch (helper->last_state) {
+		case DFU_STATE_APP_DETACH:
+		case DFU_STATE_DFU_DNLOAD_IDLE:
+		case DFU_STATE_DFU_MANIFEST_WAIT_RESET:
+		case DFU_STATE_DFU_UPLOAD_IDLE:
+			/* TRANSLATORS: when an action has completed */
+			g_print ("%s\n", _("OK"));
+			break;
+		default:
+			g_debug ("ignore last state transition %s",
+				 dfu_state_to_string (helper->last_state));
+			break;
+		}
 	}
 
 	switch (state) {
@@ -836,6 +846,7 @@ fu_tool_state_changed_cb (DfuDevice *device,
 	switch (state) {
 	case DFU_STATE_APP_DETACH:
 	case DFU_STATE_DFU_DNLOAD_IDLE:
+	case DFU_STATE_DFU_MANIFEST_WAIT_RESET:
 	case DFU_STATE_DFU_UPLOAD_IDLE:
 		g_debug ("resetting progress bar");
 		helper->marks_shown = 0;
@@ -871,10 +882,10 @@ fu_tool_percentage_changed_cb (DfuDevice *device,
 }
 
 /**
- * dfu_tool_upload_target:
+ * dfu_tool_read_alt:
  **/
 static gboolean
-dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
+dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
 	DfuToolProgressHelper helper;
@@ -886,11 +897,12 @@ dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GFile) file = NULL;
 
 	/* check args */
-	if (g_strv_length (values) < 1) {
+	if (g_strv_length (values) < 2) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
-				     "Invalid arguments, expected FILENAME");
+				     "Invalid arguments, expected "
+				     "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID");
 		return FALSE;
 	}
 
@@ -904,6 +916,16 @@ dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
 			      DFU_DEVICE_OPEN_FLAG_NONE,
 			      priv->cancellable,
 			      error))
+		return FALSE;
+
+	/* set up progress */
+	helper.last_state = DFU_STATE_DFU_ERROR;
+	helper.marks_total = 30;
+	helper.marks_shown = 0;
+	g_signal_connect (device, "state-changed",
+			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
+	g_signal_connect (device, "percentage-changed",
+			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
 
 	/* APP -> DFU */
 	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
@@ -915,21 +937,35 @@ dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
 						 priv->cancellable,
 						 error))
 			return FALSE;
+
+		/* put back in same state */
+		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
+		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
 	}
 
 	/* transfer */
-	target = dfu_device_get_target_by_alt_setting (device,
-						       priv->alt_setting,
-						       error);
-	if (target == NULL)
-		return FALSE;
-	helper.last_state = DFU_STATE_DFU_ERROR;
-	helper.marks_total = 30;
-	helper.marks_shown = 0;
-	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
-	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
+	target = dfu_device_get_target_by_alt_name (device,
+						    values[1],
+						    NULL);
+	if (target == NULL) {
+		gchar *endptr;
+		guint64 tmp = g_ascii_strtoull (values[1], &endptr, 10);
+		if (tmp > 0xff || endptr[0] != '\0') {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Failed to parse alt-setting '%s'",
+				     values[1]);
+			return FALSE;
+		}
+		target = dfu_device_get_target_by_alt_setting (device,
+							       tmp,
+							       error);
+		if (target == NULL)
+			return FALSE;
+	}
+
+	/* do transfer */
 	image = dfu_target_upload (target, flags, priv->cancellable, error);
 	if (image == NULL)
 		return FALSE;
@@ -960,10 +996,10 @@ dfu_tool_upload_target (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 /**
- * dfu_tool_upload:
+ * dfu_tool_read:
  **/
 static gboolean
-dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
+dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
 	DfuToolProgressHelper helper;
@@ -993,7 +1029,7 @@ dfu_tool_upload (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* optional reset */
-	if (priv->reset) {
+	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
 		flags |= DFU_TARGET_TRANSFER_FLAG_DETACH;
 		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
 		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
@@ -1187,10 +1223,10 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 /**
- * dfu_tool_download_target:
+ * dfu_tool_write_alt:
  **/
 static gboolean
-dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
+dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	DfuImage *image;
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
@@ -1202,12 +1238,13 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GFile) file = NULL;
 
 	/* check args */
-	if (g_strv_length (values) < 1) {
+	if (g_strv_length (values) < 2) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
 				     "Invalid arguments, expected "
-				     "FILENAME [ALT-SETTING]");
+				     "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID "
+				     "[IMAGE-ALT-NAME|IMAGE-ALT-ID]");
 		return FALSE;
 	}
 
@@ -1231,6 +1268,15 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 			      error))
 		return FALSE;
 
+	/* set up progress */
+	helper.last_state = DFU_STATE_DFU_ERROR;
+	helper.marks_total = 30;
+	helper.marks_shown = 0;
+	g_signal_connect (device, "state-changed",
+			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
+	g_signal_connect (device, "percentage-changed",
+			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
+
 	/* APP -> DFU */
 	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
 		g_debug ("detaching");
@@ -1238,22 +1284,24 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device, 5000, priv->cancellable, error))
 			return FALSE;
+
+		/* put back in same state */
+		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
+		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
 	}
 
 	/* print the new object */
 	str_debug = dfu_firmware_to_string (firmware);
 	g_debug ("DFU: %s", str_debug);
 
-	/* optional reset */
-	if (priv->reset) {
-		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
-	}
-
-	/* allow overriding the firmware alt-setting */
-	if (g_strv_length (values) > 1) {
-		guint64 tmp = g_ascii_strtoull (values[1], NULL, 10);
-		if (tmp > 0xff) {
+	/* get correct target on device */
+	target = dfu_device_get_target_by_alt_name (device,
+						    values[1],
+						    NULL);
+	if (target == NULL) {
+		gchar *endptr;
+		guint64 tmp = g_ascii_strtoull (values[1], &endptr, 10);
+		if (tmp > 0xff || endptr[0] != '\0') {
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
@@ -1261,14 +1309,36 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 				     values[1]);
 			return FALSE;
 		}
-		image = dfu_firmware_get_image (firmware, tmp);
-		if (image == NULL) {
-			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
-				     "could not locate image in firmware for %02x",
-				     (guint) tmp);
+		target = dfu_device_get_target_by_alt_setting (device,
+							       tmp,
+							       error);
+		if (target == NULL)
 			return FALSE;
+	}
+
+	/* allow overriding the firmware alt-setting */
+	if (g_strv_length (values) > 2) {
+		image = dfu_firmware_get_image_by_name (firmware, values[2]);
+		if (image == NULL) {
+			gchar *endptr;
+			guint64 tmp = g_ascii_strtoull (values[2], &endptr, 10);
+			if (tmp > 0xff || endptr[0] != '\0') {
+				g_set_error (error,
+					     DFU_ERROR,
+					     DFU_ERROR_INTERNAL,
+					     "Failed to parse image alt-setting '%s'",
+					     values[2]);
+				return FALSE;
+			}
+			image = dfu_firmware_get_image (firmware, tmp);
+			if (image == NULL) {
+				g_set_error (error,
+					     DFU_ERROR,
+					     DFU_ERROR_INVALID_FILE,
+					     "could not locate image in firmware for %02x",
+					     (guint) tmp);
+				return FALSE;
+			}
 		}
 	} else {
 		g_print ("WARNING: Using default firmware image\n");
@@ -1283,18 +1353,6 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	target = dfu_device_get_target_by_alt_setting (device,
-						       priv->alt_setting,
-						       error);
-	if (target == NULL)
-		return FALSE;
-	helper.last_state = DFU_STATE_DFU_ERROR;
-	helper.marks_total = 30;
-	helper.marks_shown = 0;
-	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
-	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
 	if (!dfu_target_download (target,
 				  image,
 				  flags,
@@ -1309,10 +1367,10 @@ dfu_tool_download_target (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 /**
- * dfu_tool_download:
+ * dfu_tool_write:
  **/
 static gboolean
-dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
+dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
 	DfuToolProgressHelper helper;
@@ -1352,8 +1410,8 @@ dfu_tool_download (DfuToolPrivate *priv, gchar **values, GError **error)
 	str_debug = dfu_firmware_to_string (firmware);
 	g_debug ("DFU: %s", str_debug);
 
-	/* optional reset */
-	if (priv->reset) {
+	/* put in correct mode */
+	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
 		flags |= DFU_TARGET_TRANSFER_FLAG_DETACH;
 		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
 		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
@@ -1560,12 +1618,8 @@ main (int argc, char *argv[])
 			"Print verbose debug statements", NULL },
 		{ "device", 'd', 0, G_OPTION_ARG_STRING, &priv->device_vid_pid,
 			"Specify Vendor/Product ID(s) of DFU device", "VID:PID" },
-		{ "alt", 'a', 0, G_OPTION_ARG_INT, &priv->alt_setting,
-			"Specify the alternate setting of the DFU interface", "NUMBER" },
 		{ "transfer-size", 't', 0, G_OPTION_ARG_STRING, &priv->transfer_size,
 			"Specify the number of bytes per USB transfer", "BYTES" },
-		{ "reset", 'r', 0, G_OPTION_ARG_NONE, &priv->reset,
-			"Issue USB host reset once finished", NULL },
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &priv->force,
 			"Force the action ignoring all warnings", NULL },
 		{ NULL}
@@ -1628,29 +1682,29 @@ main (int argc, char *argv[])
 		     _("Attach DFU capable device back to runtime"),
 		     dfu_tool_attach);
 	dfu_tool_add (priv->cmd_array,
-		     "upload",
+		     "read",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Read firmware from device into file"),
-		     dfu_tool_upload);
+		     _("Read firmware from device into a file"),
+		     dfu_tool_read);
 	dfu_tool_add (priv->cmd_array,
-		     "upload-target",
+		     "read-alt",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Read firmware from target into file"),
-		     dfu_tool_upload_target);
+		     _("Read firmware from one partition into a file"),
+		     dfu_tool_read_alt);
 	dfu_tool_add (priv->cmd_array,
-		     "download",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Write firmware from file into target"),
-		     dfu_tool_download);
-	dfu_tool_add (priv->cmd_array,
-		     "download-target",
+		     "write",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Write firmware from file into device"),
-		     dfu_tool_download_target);
+		     dfu_tool_write);
+	dfu_tool_add (priv->cmd_array,
+		     "write-alt",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Write firmware from file into one partition"),
+		     dfu_tool_write_alt);
 	dfu_tool_add (priv->cmd_array,
 		     "list",
 		     NULL,

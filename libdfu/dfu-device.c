@@ -485,7 +485,7 @@ DfuMode
 dfu_device_get_mode (DfuDevice *device)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (DFU_IS_DEVICE (device), 0);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), DFU_MODE_UNKNOWN);
 	return priv->mode;
 }
 
@@ -1686,7 +1686,7 @@ dfu_device_upload (DfuDevice *device,
 	dfu_firmware_set_release (firmware, 0xffff);
 
 	/* APP -> DFU */
-	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
+	if (priv->mode == DFU_MODE_RUNTIME) {
 		if ((flags & DFU_TARGET_TRANSFER_FLAG_DETACH) == 0) {
 			g_set_error (error,
 				     DFU_ERROR,
