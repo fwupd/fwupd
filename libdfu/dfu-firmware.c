@@ -144,6 +144,35 @@ dfu_firmware_get_image (DfuFirmware *firmware, guint8 alt_setting)
 }
 
 /**
+ * dfu_firmware_get_image_by_name:
+ * @firmware: a #DfuFirmware
+ * @name: an alternative setting name
+ *
+ * Gets an image from the firmware file.
+ *
+ * Return value: (transfer none): a #DfuImage, or %NULL for not found
+ *
+ * Since: 0.5.4
+ **/
+DfuImage *
+dfu_firmware_get_image_by_name (DfuFirmware *firmware, const gchar *name)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	DfuImage *im;
+	guint i;
+
+	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
+
+	/* find correct image */
+	for (i = 0; i < priv->images->len; i++) {
+		im = g_ptr_array_index (priv->images, i);
+		if (g_strcmp0 (dfu_image_get_name (im), name) == 0)
+			return im;
+	}
+	return NULL;
+}
+
+/**
  * dfu_firmware_get_image_default:
  * @firmware: a #DfuFirmware
  *
