@@ -69,7 +69,8 @@ libdfu_la_SOURCES =						\
 libdfu_la_LIBADD =						\
 	$(FWUPD_LIBS)						\
 	$(GUSB_LIBS)						\
-	$(GLIB_LIBS)
+	$(GLIB_LIBS)						\
+	$(LIBM)
 
 libdfu_la_LDFLAGS =						\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)	\
@@ -97,7 +98,8 @@ dfu_tool_LDADD =						\
 	$(lib_LTLIBRARIES)					\
 	$(APPSTREAM_GLIB_LIBS)					\
 	$(GLIB_LIBS)						\
-	$(GUSB_LIBS)
+	$(GUSB_LIBS)						\
+	$(LIBM)
 
 dfu_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARNINGFLAGS_C)
 

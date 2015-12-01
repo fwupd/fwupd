@@ -48,6 +48,7 @@ fwupdmgr_SOURCES =					\
 	fu-util.c
 
 fwupdmgr_LDADD =					\
+	$(LIBM)						\
 	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\
@@ -171,6 +172,7 @@ fu_self_test_SOURCES =					\
 	fu-self-test.c
 
 fu_self_test_LDADD =					\
+	$(LIBM)						\
 	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\
