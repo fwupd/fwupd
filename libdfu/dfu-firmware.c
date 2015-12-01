@@ -54,6 +54,7 @@ typedef struct {
 	guint16			 vid;
 	guint16			 pid;
 	guint16			 release;
+	guint32			 crc;
 	DfuFirmwareFormat	 format;
 } DfuFirmwarePrivate;
 
@@ -820,9 +821,10 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	}
 
 	/* verify the checksum */
+	priv->crc = GUINT32_FROM_LE (ftr->crc);
 	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST) == 0) {
 		crc_new = dfu_firmware_generate_crc32 (data, len - 4);
-		if (GUINT32_FROM_LE (ftr->crc) != crc_new) {
+		if (priv->crc != crc_new) {
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
@@ -1072,6 +1074,7 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 	g_string_append_printf (str, "vid:         0x%04x\n", priv->vid);
 	g_string_append_printf (str, "pid:         0x%04x\n", priv->pid);
 	g_string_append_printf (str, "release:     0x%04x\n", priv->release);
+	g_string_append_printf (str, "crc:         0x%08x\n", priv->crc);
 	g_string_append_printf (str, "format:      %s [0x%04x]\n",
 				dfu_firmware_format_to_string (priv->format),
 				priv->format);

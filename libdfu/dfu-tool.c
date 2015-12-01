@@ -1197,8 +1197,8 @@ dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(GFile) file = NULL;
+	DfuFirmwareParseFlags flags = DFU_FIRMWARE_PARSE_FLAG_NONE;
+	guint i;
 
 	/* check args */
 	if (g_strv_length (values) < 1) {
@@ -1209,16 +1209,31 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	/* open file */
-	firmware = dfu_firmware_new ();
-	file = g_file_new_for_path (values[0]);
-	if (!dfu_firmware_parse_file (firmware, file,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable, error))
-		return FALSE;
+	/* dump corrupt files */
+	if (priv->force) {
+		flags |= DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST;
+		flags |= DFU_FIRMWARE_PARSE_FLAG_NO_VERSION_TEST;
+	}
 
-	/* dump to screen */
-	g_print ("%s\n", dfu_firmware_to_string (firmware));
+	/* open files */
+	for (i = 0; values[i] != NULL; i++) {
+		g_autoptr(DfuFirmware) firmware = NULL;
+		g_autoptr(GFile) file = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* dump to screen */
+		g_print ("Loading %s:\n", values[i]);
+		firmware = dfu_firmware_new ();
+		file = g_file_new_for_path (values[i]);
+		if (!dfu_firmware_parse_file (firmware, file, flags,
+					      priv->cancellable,
+					      &error_local)) {
+			g_print ("Failed to load firmware: %s\n",
+				 error_local->message);
+			continue;
+		}
+		g_print ("%s\n", dfu_firmware_to_string (firmware));
+	}
 	return TRUE;
 }
 
