@@ -335,12 +335,22 @@ dfu_image_from_dfuse (const guint8 *data,
 		      GError **error)
 {
 	DfuImagePrivate *priv;
-	DfuImage *image = NULL;
 	DfuSeImagePrefix *im;
 	guint32 offset = sizeof(DfuSeImagePrefix);
 	guint j;
+	g_autoptr(DfuImage) image = NULL;
 
 	g_assert_cmpint(sizeof(DfuSeImagePrefix), ==, 274);
+
+	/* check input buffer size */
+	if (length < sizeof(DfuSeImagePrefix)) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "invalid image data size %x",
+			     (guint32) length);
+		return NULL;
+	}
 
 	/* verify image signature */
 	im = (DfuSeImagePrefix *) data;
@@ -360,6 +370,7 @@ dfu_image_from_dfuse (const guint8 *data,
 		memcpy (priv->name, im->target_name, 255);
 
 	/* parse elements */
+	length -= offset;
 	for (j = 0; j < im->elements; j++) {
 		guint32 consumed_local;
 		g_autoptr(DfuElement) element = NULL;
@@ -369,13 +380,14 @@ dfu_image_from_dfuse (const guint8 *data,
 			return NULL;
 		dfu_image_add_element (image, element);
 		offset += consumed_local;
+		length -= consumed_local;
 	}
 
 	/* return size */
 	if (consumed != NULL)
 		*consumed = offset;
 
-	return image;
+	return g_object_ref (image);
 }
 
 /**

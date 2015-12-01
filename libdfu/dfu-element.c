@@ -38,6 +38,7 @@
 
 #include "dfu-common.h"
 #include "dfu-element-private.h"
+#include "dfu-error.h"
 
 static void dfu_element_finalize			 (GObject *object);
 
@@ -280,19 +281,40 @@ dfu_element_from_dfuse (const guint8 *data,
 	DfuElement *element = NULL;
 	DfuElementPrivate *priv;
 	DfuSeElementPrefix *el = (DfuSeElementPrefix *) data;
+	guint32 size;
 
 	g_assert_cmpint(sizeof(DfuSeElementPrefix), ==, 8);
+
+	/* check input buffer size */
+	if (length < sizeof(DfuSeElementPrefix)) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "invalid element data size %x",
+			     (guint32) length);
+		return NULL;
+	}
+
+	/* check size */
+	size = GUINT32_FROM_LE (el->size);
+	if (size > length) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "invalid element size %x, %x bytes left",
+			     size, (guint32) length);
+		return NULL;
+	}
 
 	/* create new element */
 	element = dfu_element_new ();
 	priv = GET_PRIVATE (element);
 	priv->address = GUINT32_FROM_LE (el->address);
-	priv->contents = g_bytes_new (data + sizeof(DfuSeElementPrefix),
-				      GUINT32_FROM_LE (el->size));
+	priv->contents = g_bytes_new (data + sizeof(DfuSeElementPrefix), size);
 
 	/* return size */
 	if (consumed != NULL)
-		*consumed = sizeof(DfuSeElementPrefix) + GUINT32_FROM_LE (el->size);
+		*consumed = sizeof(DfuSeElementPrefix) + size;
 
 	return element;
 }

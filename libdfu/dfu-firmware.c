@@ -689,17 +689,17 @@ dfu_firmware_add_dfuse (DfuFirmware *firmware, GBytes *bytes, GError **error)
 	}
 
 	/* parse the image targets */
+	len -= sizeof(DfuSePrefix);
 	for (i = 0; i < prefix->targets; i++) {
 		guint consumed;
 		g_autoptr(DfuImage) image = NULL;
-		image = dfu_image_from_dfuse (data + offset,
-					      len - offset,
-					      &consumed,
-					      error);
+		image = dfu_image_from_dfuse (data + offset, len,
+					      &consumed, error);
 		if (image == NULL)
 			return FALSE;
 		dfu_firmware_add_image (firmware, image);
 		offset += consumed;
+		len -= consumed;
 	}
 	return TRUE;
 }
@@ -773,6 +773,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 	gsize len;
 	guint32 crc_new;
+	guint32 size;
 	guint8 *data;
 	g_autoptr(GBytes) contents = NULL;
 
@@ -839,8 +840,19 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	dfu_firmware_set_pid (firmware, GUINT16_FROM_LE (ftr->pid));
 	dfu_firmware_set_release (firmware, GUINT16_FROM_LE (ftr->release));
 
+	/* check reported length */
+	size = GUINT16_FROM_LE (ftr->len);
+	if (size > len) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "reported firmware size %04x larger than file %04x",
+			     size, len);
+		return FALSE;
+	}
+
 	/* parse DfuSe prefix */
-	contents = g_bytes_new_from_bytes (bytes, 0, len - GUINT16_FROM_LE (ftr->len));
+	contents = g_bytes_new_from_bytes (bytes, 0, len - size);
 	if (priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
 		return dfu_firmware_add_dfuse (firmware, contents, error);
 
