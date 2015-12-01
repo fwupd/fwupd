@@ -847,7 +847,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
 			     "reported firmware size %04x larger than file %04x",
-			     size, len);
+			     (guint) size, (guint) len);
 		return FALSE;
 	}
 

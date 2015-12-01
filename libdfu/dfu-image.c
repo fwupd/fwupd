@@ -330,7 +330,7 @@ typedef struct __attribute__((packed)) {
  **/
 DfuImage *
 dfu_image_from_dfuse (const guint8 *data,
-		      gsize length,
+		      guint32 length,
 		      guint32 *consumed,
 		      GError **error)
 {
@@ -347,7 +347,7 @@ dfu_image_from_dfuse (const guint8 *data,
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "invalid image data size %x",
+			     "invalid image data size %u",
 			     (guint32) length);
 		return NULL;
 	}

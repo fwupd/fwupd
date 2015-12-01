@@ -274,7 +274,7 @@ typedef struct __attribute__((packed)) {
  **/
 DfuElement *
 dfu_element_from_dfuse (const guint8 *data,
-			gsize length,
+			guint32 length,
 			guint32 *consumed,
 			GError **error)
 {
@@ -290,19 +290,20 @@ dfu_element_from_dfuse (const guint8 *data,
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "invalid element data size %x",
+			     "invalid element data size %u",
 			     (guint32) length);
 		return NULL;
 	}
 
 	/* check size */
 	size = GUINT32_FROM_LE (el->size);
-	if (size > length) {
+	if (size + sizeof(DfuSeElementPrefix) > length) {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "invalid element size %x, %x bytes left",
-			     size, (guint32) length);
+			     "invalid element size %u, only %u bytes left",
+			     size,
+			     (guint32) (length - sizeof(DfuSeElementPrefix)));
 		return NULL;
 	}
 

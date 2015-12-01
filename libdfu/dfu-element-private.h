@@ -27,7 +27,7 @@
 G_BEGIN_DECLS
 
 DfuElement	*dfu_element_from_dfuse		(const guint8	*data,
-						 gsize		 length,
+						 guint32	 length,
 						 guint32	*consumed,
 						 GError		**error);
 GBytes		*dfu_element_to_dfuse		(DfuElement	*element);
