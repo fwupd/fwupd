@@ -141,9 +141,24 @@ typedef enum {
 	DFU_MODE_LAST
 } DfuMode;
 
+/**
+ * DfuCipherKind:
+ * @DFU_CIPHER_KIND_NONE:			No cipher detected
+ * @DFU_CIPHER_KIND_XTEA:			XTEA cipher detected
+ *
+ * The type of cipher used for transfering the firmware.
+ **/
+typedef enum {
+	DFU_CIPHER_KIND_NONE,
+	DFU_CIPHER_KIND_XTEA,
+	/*< private >*/
+	DFU_CIPHER_KIND_LAST
+} DfuCipherKind;
+
 const gchar	*dfu_state_to_string			(DfuState	 state);
 const gchar	*dfu_status_to_string			(DfuStatus	 status);
 const gchar	*dfu_mode_to_string			(DfuMode	 mode);
+const gchar	*dfu_cipher_kind_to_string		(DfuCipherKind	 cipher_kind);
 
 G_END_DECLS
 

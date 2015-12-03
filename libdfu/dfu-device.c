@@ -1873,8 +1873,11 @@ dfu_device_download (DfuDevice *device,
 		return FALSE;
 	}
 	for (i = 0; i < images->len; i++) {
+		DfuCipherKind cipher_fw;
+		DfuCipherKind cipher_target;
 		DfuImage *image;
 		DfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
+		const gchar *alt_name;
 		guint id;
 		g_autoptr(DfuTarget) target_tmp = NULL;
 
@@ -1884,6 +1887,41 @@ dfu_device_download (DfuDevice *device,
 								   error);
 		if (target_tmp == NULL)
 			return FALSE;
+
+		/* we don't actually need to print this, but it makes sure the
+		 * target is setup prior to doing the cipher checks */
+		alt_name = dfu_target_get_alt_name (target_tmp, error);
+		if (alt_name == NULL)
+			return FALSE;
+		g_debug ("downloading to target: %s", alt_name);
+
+		/* check we're flashing a compatible firmware */
+		cipher_target = dfu_target_get_cipher_kind (target_tmp);
+		cipher_fw = dfu_firmware_get_cipher_kind (firmware);
+		if ((flags & DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER) == 0) {
+			if (cipher_fw != DFU_CIPHER_KIND_NONE &&
+			    cipher_target == DFU_CIPHER_KIND_NONE) {
+				g_set_error (error,
+					     DFU_ERROR,
+					     DFU_ERROR_INVALID_FILE,
+					     "Device is only accepting "
+					     "unsigned firmware, not %s",
+					     dfu_cipher_kind_to_string (cipher_fw));
+				return FALSE;
+			}
+			if (cipher_fw == DFU_CIPHER_KIND_NONE &&
+			    cipher_target != DFU_CIPHER_KIND_NONE) {
+				g_set_error (error,
+					     DFU_ERROR,
+					     DFU_ERROR_INVALID_FILE,
+					     "Device is only accepting "
+					     "firmware with %s cipher kind",
+					     dfu_cipher_kind_to_string (cipher_target));
+				return FALSE;
+			}
+		}
+
+		/* download onto target */
 		if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY)
 			flags_local = DFU_TARGET_TRANSFER_FLAG_VERIFY;
 		id = g_signal_connect (target_tmp, "percentage-changed",

@@ -80,6 +80,27 @@ _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 }
 
 static void
+dfu_firmware_xdfu_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	fn = dfu_test_get_filename ("example.xdfu");
+	g_assert (fn != NULL);
+	firmware = dfu_firmware_new ();
+	file = g_file_new_for_path (fn);
+	ret = dfu_firmware_parse_file (firmware, file,
+				       DFU_FIRMWARE_PARSE_FLAG_NONE,
+				       NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_XTEA);
+}
+
+static void
 dfu_enums_func (void)
 {
 	guint i;
@@ -128,6 +149,7 @@ dfu_firmware_raw_func (void)
 	g_assert_cmpint (dfu_firmware_get_pid (firmware), ==, 0xffff);
 	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xffff);
 	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_RAW);
+	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 	image_tmp = dfu_firmware_get_image (firmware, 0xfe);
 	g_assert (image_tmp == NULL);
 	image_tmp = dfu_firmware_get_image (firmware, 0);
@@ -210,6 +232,7 @@ dfu_firmware_dfu_func (void)
 	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xffff);
 	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU_1_0);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x8eB4);
+	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 
 	/* can we roundtrip without loosing data */
 	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
@@ -247,6 +270,7 @@ dfu_firmware_dfuse_func (void)
 	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0x0000);
 	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFUSE);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x168d5);
+	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 
 	/* can we roundtrip without loosing data */
 	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
@@ -533,6 +557,13 @@ dfu_target_dfuse_func (void)
 	g_assert (!ret);
 	ret = dfu_target_parse_sectors (target, "@Internal Flash /0x08000000/12*001a", NULL);
 	g_assert (!ret);
+
+	/* indicate a cipher being used */
+	g_assert_cmpint (dfu_target_get_cipher_kind (target), ==, DFU_CIPHER_KIND_NONE);
+	ret = dfu_target_parse_sectors (target, "@Flash|XTEA", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (dfu_target_get_cipher_kind (target), ==, DFU_CIPHER_KIND_XTEA);
 }
 
 int
@@ -552,6 +583,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/libdfu/firmware{raw}", dfu_firmware_raw_func);
 	g_test_add_func ("/libdfu/firmware{dfu}", dfu_firmware_dfu_func);
 	g_test_add_func ("/libdfu/firmware{dfuse}", dfu_firmware_dfuse_func);
+	g_test_add_func ("/libdfu/firmware{xdfu}", dfu_firmware_xdfu_func);
 	g_test_add_func ("/libdfu/device", dfu_device_func);
 	g_test_add_func ("/libdfu/colorhug+", dfu_colorhug_plus_func);
 	return g_test_run ();

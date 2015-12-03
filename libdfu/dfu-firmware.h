@@ -25,6 +25,7 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include "dfu-common.h"
 #include "dfu-image.h"
 
 G_BEGIN_DECLS
@@ -97,6 +98,7 @@ guint16		 dfu_firmware_get_pid		(DfuFirmware	*firmware);
 guint16		 dfu_firmware_get_release	(DfuFirmware	*firmware);
 guint16		 dfu_firmware_get_format	(DfuFirmware	*firmware);
 guint32		 dfu_firmware_get_size		(DfuFirmware	*firmware);
+DfuCipherKind	 dfu_firmware_get_cipher_kind	(DfuFirmware	*firmware);
 
 void		 dfu_firmware_add_image		(DfuFirmware	*firmware,
 						 DfuImage	*image);

@@ -26,6 +26,7 @@
 #include <gio/gio.h>
 #include <gusb.h>
 
+#include "dfu-common.h"
 #include "dfu-image.h"
 
 G_BEGIN_DECLS
@@ -60,6 +61,7 @@ struct _DfuTargetClass
  * @DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME:	Wait for runtime to load after completion
  * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID:	Allow downloading images with wildcard VIDs
  * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID:	Allow downloading images with wildcard PIDs
+ * @DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER:	Allow any cipher kinds to be downloaded
  *
  * The optional flags used for transfering firmware.
  **/
@@ -71,6 +73,7 @@ typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME	= (1 << 3),
 	DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID	= (1 << 4),
 	DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID	= (1 << 5),
+	DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER	= (1 << 6),
 	/*< private >*/
 	DFU_TARGET_TRANSFER_FLAG_LAST,
 } DfuTargetTransferFlags;
@@ -88,6 +91,7 @@ gboolean	 dfu_target_download			(DfuTarget	*target,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
+DfuCipherKind	 dfu_target_get_cipher_kind		(DfuTarget	*target);
 
 G_END_DECLS
 

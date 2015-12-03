@@ -135,3 +135,23 @@ dfu_mode_to_string (DfuMode mode)
 		return "DFU";
 	return NULL;
 }
+
+/**
+ * dfu_cipher_kind_to_string:
+ * @cipher_kind: a #DfuCipherKind, e.g. %DFU_CIPHER_KIND_XTEA
+ *
+ * Converts an enumerated value to a string.
+ *
+ * Return value: a string
+ *
+ * Since: 0.5.4
+ **/
+const gchar *
+dfu_cipher_kind_to_string (DfuCipherKind cipher_kind)
+{
+	if (cipher_kind == DFU_CIPHER_KIND_NONE)
+		return "none";
+	if (cipher_kind == DFU_CIPHER_KIND_XTEA)
+		return "xtea";
+	return NULL;
+}

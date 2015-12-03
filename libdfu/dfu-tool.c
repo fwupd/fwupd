@@ -1323,7 +1323,7 @@ dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GFile) file_out = NULL;
 
 	/* check args */
-	if (g_strv_length (values) < 3) {
+	if (g_strv_length (values) < 4) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
@@ -1678,6 +1678,11 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 		}
 	}
 
+	/* allow forcing firmware kinds */
+	if (priv->force) {
+		flags |= DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER;
+	}
+
 	/* transfer */
 	if (!dfu_target_download (target,
 				  image,
@@ -1747,6 +1752,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (priv->force) {
 		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
 		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
+		flags |= DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER;
 	}
 
 	/* transfer */
@@ -1776,6 +1782,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 static void
 dfu_tool_list_target (DfuTarget *target)
 {
+	DfuCipherKind cipher_kind;
 	GPtrArray *sectors;
 	const gchar *tmp;
 	guint i;
@@ -1792,6 +1799,10 @@ dfu_tool_list_target (DfuTarget *target)
 		/* TRANSLATORS: interface name, e.g. "Flash" */
 		dfu_tool_print_indent (_("Name"), tmp, 2);
 	}
+
+	/* TRANSLATORS: this is the encryption method used when writing  */
+	cipher_kind = dfu_target_get_cipher_kind (target);
+	dfu_tool_print_indent (_("Cipher"), dfu_cipher_kind_to_string (cipher_kind), 2);
 
 	/* print sector information */
 	sectors = dfu_target_get_sectors (target);
