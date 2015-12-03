@@ -1,3 +1,13 @@
+Version 0.5.4
+~~~~~~~~~~~~~
+Released: 2015-11-18
+
+New Features:
+ - Use API available in fwupdate 0.5 to avoid writing temp files (Richard Hughes)
+
+Bugfixes:
+ - Fix compile error against fwupdate 0.5 due to API bump (Mario Limonciello)
+
 Version 0.5.3
 ~~~~~~~~~~~~~
 Released: 2015-11-05
