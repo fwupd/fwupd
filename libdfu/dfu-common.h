@@ -155,6 +155,10 @@ typedef enum {
 	DFU_CIPHER_KIND_LAST
 } DfuCipherKind;
 
+#define DFU_METADATA_KEY_LICENSE		"License"
+#define DFU_METADATA_KEY_COPYRIGHT		"Copyright"
+#define DFU_METADATA_KEY_CIPHER_KIND		"CipherKind"
+
 const gchar	*dfu_state_to_string			(DfuState	 state);
 const gchar	*dfu_status_to_string			(DfuStatus	 status);
 const gchar	*dfu_mode_to_string			(DfuMode	 mode);

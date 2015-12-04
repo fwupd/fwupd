@@ -288,6 +288,42 @@ dfu_firmware_dfuse_func (void)
 }
 
 static void
+dfu_firmware_metadata_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GBytes) roundtrip_orig = NULL;
+	g_autoptr(GBytes) roundtrip = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* load a DFU firmware with a metadata table */
+	filename = dfu_test_get_filename ("metadata.dfu");
+	g_assert (filename != NULL);
+	file = g_file_new_for_path (filename);
+	firmware = dfu_firmware_new ();
+	ret = dfu_firmware_parse_file (firmware, file,
+				       DFU_FIRMWARE_PARSE_FLAG_NONE,
+				       NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 6);
+	g_assert_cmpstr (dfu_firmware_get_metadata (firmware, "key"), ==, "value");
+	g_assert_cmpstr (dfu_firmware_get_metadata (firmware, "???"), ==, NULL);
+
+	/* can we roundtrip without loosing data */
+	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
+	g_assert_no_error (error);
+	g_assert (roundtrip_orig != NULL);
+	roundtrip = dfu_firmware_write_data (firmware, &error);
+	g_assert_no_error (error);
+	g_assert (roundtrip != NULL);
+
+	g_assert_cmpstr (_g_bytes_compare_verbose (roundtrip, roundtrip_orig), ==, NULL);
+}
+
+static void
 dfu_device_func (void)
 {
 	GPtrArray *targets;
@@ -584,6 +620,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/libdfu/firmware{dfu}", dfu_firmware_dfu_func);
 	g_test_add_func ("/libdfu/firmware{dfuse}", dfu_firmware_dfuse_func);
 	g_test_add_func ("/libdfu/firmware{xdfu}", dfu_firmware_xdfu_func);
+	g_test_add_func ("/libdfu/firmware{metadata}", dfu_firmware_metadata_func);
 	g_test_add_func ("/libdfu/device", dfu_device_func);
 	g_test_add_func ("/libdfu/colorhug+", dfu_colorhug_plus_func);
 	return g_test_run ();

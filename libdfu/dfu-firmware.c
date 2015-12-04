@@ -50,6 +50,7 @@ static void dfu_firmware_finalize			 (GObject *object);
  * Private #DfuFirmware data
  **/
 typedef struct {
+	GHashTable		*metadata;
 	GPtrArray		*images;
 	guint16			 vid;
 	guint16			 pid;
@@ -83,6 +84,7 @@ dfu_firmware_init (DfuFirmware *firmware)
 	priv->pid = 0xffff;
 	priv->release = 0xffff;
 	priv->images = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 }
 
 /**
@@ -95,6 +97,7 @@ dfu_firmware_finalize (GObject *object)
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 
 	g_ptr_array_unref (priv->images);
+	g_hash_table_destroy (priv->metadata);
 
 	G_OBJECT_CLASS (dfu_firmware_parent_class)->finalize (object);
 }
@@ -754,6 +757,90 @@ dfu_firmware_write_data_dfuse (DfuFirmware *firmware, GError **error)
 }
 
 /**
+ * dfu_firmware_parse_metadata:
+ *
+ * The representation in memory is as follows:
+ *
+ * uint16      signature='MD'
+ * uint8       number_of_keys
+ * uint8       number_of_keys
+ * uint8       key(n)_length
+ * ...         key(n) (no NUL)
+ * uint8       value(n)_length
+ * ...         value(n) (no NUL)
+ * <existing DFU footer>
+ **/
+static gboolean
+dfu_firmware_parse_metadata (DfuFirmware *firmware,
+			     const guint8 *data,
+			     guint data_length,
+			     guint32 footer_size,
+			     GError **error)
+{
+	guint i;
+	guint idx = data_length - footer_size + 2;
+	guint kvlen;
+	guint number_keys;
+
+	/* not big enough */
+	if (footer_size <= 0x10)
+		return TRUE;
+
+	/* signature invalid */
+	if (memcmp (&data[data_length - footer_size], "MD", 2) != 0)
+		return TRUE;
+
+	/* parse key=value store */
+	number_keys = data[idx++];
+	for (i = 0; i < number_keys; i++) {
+		g_autofree gchar *key = NULL;
+		g_autofree gchar *value = NULL;
+
+		/* parse key */
+		kvlen = data[idx++];
+		if (kvlen > 233) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "metadata table corrupt, key=%i",
+				     kvlen);
+			return FALSE;
+		}
+		if (idx + kvlen + 0x10 > data_length) {
+			g_set_error_literal (error,
+					     DFU_ERROR,
+					     DFU_ERROR_INTERNAL,
+					     "metadata table corrupt");
+			return FALSE;
+		}
+		key = g_strndup ((const gchar *) data + idx, kvlen);
+		idx += kvlen;
+
+		/* parse value */
+		kvlen = data[idx++];
+		if (kvlen > 233) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "metadata table corrupt, value=%i",
+				     kvlen);
+			return FALSE;
+		}
+		if (idx + kvlen + 0x10 > data_length) {
+			g_set_error_literal (error,
+					     DFU_ERROR,
+					     DFU_ERROR_INTERNAL,
+					     "metadata table corrupt");
+			return FALSE;
+		}
+		value = g_strndup ((const gchar *) data + idx, kvlen);
+		idx += kvlen;
+		dfu_firmware_set_metadata (firmware, key, value);
+	}
+	return TRUE;
+}
+
+/**
  * dfu_firmware_parse_data:
  * @firmware: a #DfuFirmware
  * @bytes: raw firmware data
@@ -772,6 +859,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 {
 	DfuFirmwareFooter *ftr;
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	const gchar *cipher_str;
 	gsize len;
 	guint32 crc_new;
 	guint32 size;
@@ -852,6 +940,21 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 		return FALSE;
 	}
 
+	/* parse the optional metadata segment */
+	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_METADATA) == 0) {
+		if (!dfu_firmware_parse_metadata (firmware, data, len, size, error))
+			return FALSE;
+	}
+
+	/* set this automatically */
+	cipher_str = dfu_firmware_get_metadata (firmware, DFU_METADATA_KEY_CIPHER_KIND);
+	if (cipher_str != NULL) {
+		if (g_strcmp0 (cipher_str, "XTEA") == 0)
+			priv->cipher_kind = DFU_CIPHER_KIND_XTEA;
+		else
+			g_warning ("Unknown CipherKind: %s", cipher_str);
+	}
+
 	/* parse DfuSe prefix */
 	contents = g_bytes_new_from_bytes (bytes, 0, len - size);
 	if (priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
@@ -903,33 +1006,184 @@ dfu_firmware_parse_file (DfuFirmware *firmware, GFile *file,
 }
 
 /**
+ * dfu_firmware_get_metadata:
+ * @firmware: a #DfuFirmware
+ * @key: metadata string key
+ *
+ * Gets metadata from the store with a specific key.
+ *
+ * Return value: the metadata value, or %NULL for unset
+ *
+ * Since: 0.5.4
+ **/
+const gchar *
+dfu_firmware_get_metadata (DfuFirmware *firmware, const gchar *key)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	return g_hash_table_lookup (priv->metadata, key);
+}
+
+/**
+ * dfu_firmware_set_metadata:
+ * @firmware: a #DfuFirmware
+ * @key: metadata string key
+ * @value: metadata string value
+ *
+ * Sets a metadata value with a specific key.
+ *
+ * Since: 0.5.4
+ **/
+void
+dfu_firmware_set_metadata (DfuFirmware *firmware, const gchar *key, const gchar *value)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	g_debug ("adding metadata %s=%s", key, value);
+	g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
+}
+
+/**
+ * dfu_firmware_remove_metadata:
+ * @firmware: a #DfuFirmware
+ * @key: metadata string key
+ *
+ * Removes a metadata item from the store
+ *
+ * Since: 0.5.4
+ **/
+void
+dfu_firmware_remove_metadata (DfuFirmware *firmware, const gchar *key)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	g_debug ("removing metadata %s", key);
+	g_hash_table_remove (priv->metadata, key);
+}
+
+/**
+ * dfu_firmware_build_metadata_table:
+ **/
+static GBytes *
+dfu_firmware_build_metadata_table (DfuFirmware *firmware, GError **error)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	GList *l;
+	guint8 mdbuf[239];
+	guint idx = 0;
+	guint number_keys;
+	g_autoptr(GList) keys = NULL;
+
+	/* no metadata */
+	if (g_hash_table_size (priv->metadata) == 0)
+		return g_bytes_new (NULL, 0);
+
+	/* check the number of keys */
+	keys = g_hash_table_get_keys (priv->metadata);
+	number_keys = g_list_length (keys);
+	if (number_keys > 59) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
+			     "too many metadata keys (%i)",
+			     number_keys);
+		return NULL;
+	}
+
+	/* write the signature */
+	mdbuf[idx++] = 'M';
+	mdbuf[idx++] = 'D';
+	mdbuf[idx++] = number_keys;
+	for (l = keys; l != NULL; l = l->next) {
+		const gchar *key;
+		const gchar *value;
+		guint key_len;
+		guint value_len;
+
+		/* check key and value length */
+		key = l->data;
+		key_len = strlen (key);
+		if (key_len > 233) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "metdata key too long: %s",
+				     key);
+			return NULL;
+		}
+		value = g_hash_table_lookup (priv->metadata, key);
+		value_len = strlen (value);
+		if (value_len > 233) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "value too long: %s",
+				     value);
+			return NULL;
+		}
+
+		/* do we still have space? */
+		if (idx + key_len + value_len + 2 > sizeof(mdbuf)) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "not enough space in metadata table, "
+				     "already used %i bytes", idx);
+			return NULL;
+		}
+
+		/* write the key */
+		mdbuf[idx++] = key_len;
+		memcpy(mdbuf + idx, key, key_len);
+		idx += key_len;
+
+		/* write the value */
+		mdbuf[idx++] = value_len;
+		memcpy(mdbuf + idx, value, value_len);
+		idx += value_len;
+	}
+	g_debug ("metadata table was %i/%i bytes", idx, (guint) sizeof(mdbuf));
+	return g_bytes_new (mdbuf, idx);
+}
+
+/**
  * dfu_firmware_add_footer:
  **/
 static GBytes *
-dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents)
+dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents, GError **error)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 	DfuFirmwareFooter *ftr;
-	const guint8 *data;
-	gsize length = 0;
+	const guint8 *data_bin;
+	const guint8 *data_md;
+	gsize length_bin = 0;
+	gsize length_md = 0;
 	guint8 *buf;
+	g_autoptr(GBytes) metadata_table = NULL;
 
-	data = g_bytes_get_data (contents, &length);
-	buf = g_malloc0 (length + 0x10);
-	memcpy (buf, data, length);
+	/* get any file metadata */
+	metadata_table = dfu_firmware_build_metadata_table (firmware, error);
+	if (metadata_table == NULL)
+		return NULL;
+	data_md = g_bytes_get_data (metadata_table, &length_md);
+
+	/* add the raw firmware data */
+	data_bin = g_bytes_get_data (contents, &length_bin);
+	buf = g_malloc0 (length_bin + length_md + 0x10);
+	memcpy (buf + 0, data_bin, length_bin);
+
+	/* add the metadata table */
+	memcpy (buf + length_bin, data_md, length_md);
 
 	/* set up LE footer */
-	ftr = (DfuFirmwareFooter *) &buf[length];
+	ftr = (DfuFirmwareFooter *) (buf + length_bin + length_md);
 	ftr->release = GUINT16_TO_LE (priv->release);
 	ftr->pid = GUINT16_TO_LE (priv->pid);
 	ftr->vid = GUINT16_TO_LE (priv->vid);
 	ftr->ver = GUINT16_TO_LE (priv->format);
-	ftr->len = GUINT16_TO_LE (0x10);
+	ftr->len = GUINT16_TO_LE (0x10 + length_md);
 	memcpy(ftr->sig, "UFD", 3);
-	ftr->crc = dfu_firmware_generate_crc32 (buf, length + 12);
+	ftr->crc = dfu_firmware_generate_crc32 (buf, length_bin + length_md + 12);
 
 	/* return all data */
-	return g_bytes_new_take (buf, length + 0x10);
+	return g_bytes_new_take (buf, length_bin + length_md + 0x10);
 }
 
 /**
@@ -1006,7 +1260,7 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 		}
 		contents = dfu_element_get_contents (element);
 		g_assert (contents != NULL);
-		return dfu_firmware_add_footer (firmware, contents);
+		return dfu_firmware_add_footer (firmware, contents, error);
 	}
 
 	/* DfuSe */
@@ -1015,7 +1269,7 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 		contents = dfu_firmware_write_data_dfuse (firmware, error);
 		if (contents == NULL)
 			return NULL;
-		return dfu_firmware_add_footer (firmware, contents);
+		return dfu_firmware_add_footer (firmware, contents, error);
 	}
 
 	/* invalid */
@@ -1085,8 +1339,10 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 	DfuImage *image;
+	GList *l;
 	GString *str;
 	guint i;
+	g_autoptr(GList) keys = NULL;
 
 	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
 
@@ -1100,6 +1356,18 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 				priv->format);
 	g_string_append_printf (str, "cipher:      %s\n",
 				dfu_cipher_kind_to_string (priv->cipher_kind));
+
+	/* print metadata */
+	keys = g_hash_table_get_keys (priv->metadata);
+	for (l = keys; l != NULL; l = l->next) {
+		const gchar *key;
+		const gchar *value;
+		key = l->data;
+		value = g_hash_table_lookup (priv->metadata, key);
+		g_string_append_printf (str, "metadata:    %s=%s\n", key, value);
+	}
+
+	/* print images */
 	for (i = 0; i < priv->images->len; i++) {
 		g_autofree gchar *tmp = NULL;
 		image = g_ptr_array_index (priv->images, i);

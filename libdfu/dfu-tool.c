@@ -408,6 +408,54 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * dfu_tool_set_metadata:
+ **/
+static gboolean
+dfu_tool_set_metadata (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 3) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILE KEY VALUE"
+				     " -- e.g. `firmware.dfu Licence GPL-2.0+");
+		return FALSE;
+	}
+
+	/* open */
+	file = g_file_new_for_path (values[0]);
+	firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      priv->cancellable,
+				      error)) {
+		return FALSE;
+	}
+
+	/* doesn't make sense for non-DFU */
+	if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_RAW) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Only possible on DFU/DfuSe images, try convert");
+		return FALSE;
+	}
+
+	/* set metadata */
+	dfu_firmware_set_metadata (firmware, values[1], values[2]);
+
+	/* write out new file */
+	return dfu_firmware_write_file (firmware,
+					file,
+					priv->cancellable,
+					error);
+}
+
+/**
  * dfu_tool_set_alt_setting:
  **/
 static gboolean
@@ -1372,6 +1420,9 @@ dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 		if (!dfu_tool_parse_xtea_key (values[3], key, error))
 			return FALSE;
 		dfu_tool_encrypt_xtea (key, data, len);
+		dfu_firmware_set_metadata (firmware,
+					   DFU_METADATA_KEY_CIPHER_KIND,
+					   "XTEA");
 	} else {
 		g_set_error (error,
 			     DFU_ERROR,
@@ -1452,6 +1503,8 @@ dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 		if (!dfu_tool_parse_xtea_key (values[3], key, error))
 			return FALSE;
 		dfu_tool_decrypt_xtea (key, data, len);
+		dfu_firmware_remove_metadata (firmware,
+					      DFU_METADATA_KEY_CIPHER_KIND);
 	} else {
 		g_set_error (error,
 			     DFU_ERROR,
@@ -2078,6 +2131,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Decrypt firmware data"),
 		     dfu_tool_decrypt);
+	dfu_tool_add (priv->cmd_array,
+		     "set-metadata",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Sets metadata on a firmware file"),
+		     dfu_tool_set_metadata);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
