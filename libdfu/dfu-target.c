@@ -445,6 +445,54 @@ dfu_target_get_sectors (DfuTarget *target)
 }
 
 /**
+ * dfu_target_status_to_error_msg:
+ * @status: a #DfuStatus, e.g. %DFU_STATUS_ERR_ERASE
+ *
+ * Converts an enumerated value to an error description.
+ *
+ * Return value: a string
+ *
+ * Since: 0.5.4
+ **/
+static const gchar *
+dfu_target_status_to_error_msg (DfuStatus status)
+{
+	if (status == DFU_STATUS_OK)
+		return "No error condition is present";
+	if (status == DFU_STATUS_ERR_TARGET)
+		return "Firmware is not for designed this device";
+	if (status == DFU_STATUS_ERR_FILE)
+		return "Firmware is for this device but fails verification";
+	if (status == DFU_STATUS_ERR_WRITE)
+		return "Device is unable to write memory";
+	if (status == DFU_STATUS_ERR_ERASE)
+		return "Memory erase function failed";
+	if (status == DFU_STATUS_ERR_CHECK_ERASED)
+		return "Memory erase check failed";
+	if (status == DFU_STATUS_ERR_PROG)
+		return "Program memory function failed";
+	if (status == DFU_STATUS_ERR_VERIFY)
+		return "Programmed memory failed verification";
+	if (status == DFU_STATUS_ERR_ADDRESS)
+		return "Cannot program memory due to address out of range";
+	if (status == DFU_STATUS_ERR_NOTDONE)
+		return "Received zero-length download but data is incomplete";
+	if (status == DFU_STATUS_ERR_FIRMWARE)
+		return "Device firmware is corrupt";
+	if (status == DFU_STATUS_ERR_VENDOR)
+		return "Vendor-specific error";
+	if (status == DFU_STATUS_ERR_USBR)
+		return "Device detected unexpected USB reset signaling";
+	if (status == DFU_STATUS_ERR_POR)
+		return "Device detected unexpected power on reset";
+	if (status == DFU_STATUS_ERR_UNKNOWN)
+		return "Something unexpected went wrong";
+	if (status == DFU_STATUS_ERR_STALLDPKT)
+		return "Device stalled an unexpected request";
+	return NULL;
+}
+
+/**
  * dfu_target_check_status:
  **/
 static gboolean
@@ -453,6 +501,7 @@ dfu_target_check_status (DfuTarget *target,
 			 GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	DfuStatus status;
 
 	/* get the status */
 	if (!dfu_device_refresh (priv->device, cancellable, error))
@@ -462,31 +511,30 @@ dfu_target_check_status (DfuTarget *target,
 	if (dfu_device_get_state (priv->device) != DFU_STATE_DFU_ERROR)
 		return TRUE;
 
-	/* read protection */
+	/* DfuSe-specific long errors */
+	status = dfu_device_get_status (priv->device);
 	if (dfu_device_has_dfuse_support (priv->device)) {
-		if (dfu_device_get_status (priv->device) == DFU_STATUS_ERR_VENDOR) {
+		if (status == DFU_STATUS_ERR_VENDOR) {
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
-				     "failed, read protection is active");
+				     "Read protection is active");
 			return FALSE;
 		}
-		if (dfu_device_get_status (priv->device) == DFU_STATUS_ERR_TARGET) {
+		if (status == DFU_STATUS_ERR_TARGET) {
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
-				     "failed, address is wrong or unsupported");
+				     "Address is wrong or unsupported");
 			return FALSE;
 		}
 	}
 
-	/* prefix the error */
-	g_set_error (error,
-		     DFU_ERROR,
-		     DFU_ERROR_NOT_SUPPORTED,
-		     "failed, state:%s status:%s]: ",
-		     dfu_state_to_string (dfu_device_get_state (priv->device)),
-		     dfu_status_to_string (dfu_device_get_status (priv->device)));
+	/* use a proper error description */
+	g_set_error_literal (error,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
+			     dfu_target_status_to_error_msg (status));
 	return FALSE;
 }
 
