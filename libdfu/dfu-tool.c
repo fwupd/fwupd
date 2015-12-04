@@ -32,7 +32,6 @@
 #include "dfu-device-private.h"
 
 typedef struct {
-	DfuContext		*dfu_context;
 	GCancellable		*cancellable;
 	GPtrArray		*cmd_array;
 	gboolean		 force;
@@ -63,8 +62,6 @@ dfu_tool_private_free (DfuToolPrivate *priv)
 {
 	if (priv == NULL)
 		return;
-	if (priv->dfu_context != NULL)
-		g_object_unref (priv->dfu_context);
 	g_free (priv->device_vid_pid);
 	g_object_unref (priv->cancellable);
 	if (priv->cmd_array != NULL)
@@ -221,6 +218,13 @@ dfu_tool_run (DfuToolPrivate *priv,
 static DfuDevice *
 dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 {
+	DfuDevice *device;
+	g_autoptr(DfuContext) dfu_context = NULL;
+
+	/* get all the DFU devices */
+	dfu_context = dfu_context_new ();
+	dfu_context_enumerate (dfu_context, NULL);
+
 	/* we specified it manually */
 	if (priv->device_vid_pid != NULL) {
 		gchar *tmp;
@@ -253,13 +257,23 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 		}
 
 		/* find device */
-		return dfu_context_get_device_by_vid_pid (priv->dfu_context,
-							  vid, pid,
-							  error);
+		device = dfu_context_get_device_by_vid_pid (dfu_context,
+							    vid, pid,
+							    error);
+		if (device == NULL)
+			return NULL;
+	} else {
+		/* auto-detect first device */
+		device = dfu_context_get_device_default (dfu_context, error);
+		if (device == NULL)
+			return NULL;
 	}
 
-	/* auto-detect first device */
-	return dfu_context_get_device_default (priv->dfu_context, error);
+	/* this has to be added to the device so we can deal with detach */
+	g_object_set_data_full (G_OBJECT (device), "DfuContext",
+				g_object_ref (dfu_context),
+				(GDestroyNotify) g_object_unref);
+	return device;
 }
 
 /**
@@ -1531,23 +1545,28 @@ dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	guint i;
 	DfuDevice *device;
+	g_autoptr(DfuContext) dfu_context = NULL;
 	g_autoptr(GMainLoop) loop = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
+	/* get all the DFU devices */
+	dfu_context = dfu_context_new ();
+	dfu_context_enumerate (dfu_context, NULL);
+
 	/* print what's already attached */
-	devices = dfu_context_get_devices (priv->dfu_context);
+	devices = dfu_context_get_devices (dfu_context);
 	for (i = 0; i < devices->len; i++) {
 		device = g_ptr_array_index (devices, i);
-		dfu_tool_device_added_cb (priv->dfu_context, device, NULL);
+		dfu_tool_device_added_cb (dfu_context, device, NULL);
 	}
 
 	/* watch for any hotplugged device */
 	loop = g_main_loop_new (NULL, FALSE);
-	g_signal_connect (priv->dfu_context, "device-added",
+	g_signal_connect (dfu_context, "device-added",
 			  G_CALLBACK (dfu_tool_device_added_cb), priv);
-	g_signal_connect (priv->dfu_context, "device-removed",
+	g_signal_connect (dfu_context, "device-removed",
 			  G_CALLBACK (dfu_tool_device_removed_cb), priv);
-	g_signal_connect (priv->dfu_context, "device-changed",
+	g_signal_connect (dfu_context, "device-changed",
 			  G_CALLBACK (dfu_tool_device_changed_cb), priv);
 	g_signal_connect (priv->cancellable, "cancelled",
 			  G_CALLBACK (dfu_tool_watch_cancelled_cb), loop);
@@ -1878,10 +1897,13 @@ static gboolean
 dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	guint i;
+	g_autoptr(DfuContext) dfu_context = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get all the connected USB devices */
-	devices = dfu_context_get_devices (priv->dfu_context);
+	dfu_context = dfu_context_new ();
+	dfu_context_enumerate (dfu_context, NULL);
+	devices = dfu_context_get_devices (dfu_context);
 	for (i = 0; i < devices->len; i++) {
 		DfuDevice *device = NULL;
 		DfuTarget *target;
@@ -2174,10 +2196,6 @@ main (int argc, char *argv[])
 		g_print ("%s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
 		return EXIT_SUCCESS;
 	}
-
-	/* get all the DFU devices */
-	priv->dfu_context = dfu_context_new ();
-	dfu_context_enumerate (priv->dfu_context, NULL);
 
 	/* run the specified command */
 	ret = dfu_tool_run (priv, argv[1], (gchar**) &argv[2], &error);
