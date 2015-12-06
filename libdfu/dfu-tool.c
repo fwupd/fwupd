@@ -1559,7 +1559,7 @@ dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
 	devices = dfu_context_get_devices (dfu_context);
 	for (i = 0; i < devices->len; i++) {
 		device = g_ptr_array_index (devices, i);
-		dfu_tool_device_added_cb (dfu_context, device, NULL);
+		dfu_tool_device_added_cb (dfu_context, device, priv);
 	}
 
 	/* watch for any hotplugged device */
