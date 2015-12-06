@@ -324,6 +324,77 @@ dfu_firmware_metadata_func (void)
 }
 
 static void
+dfu_firmware_intel_hex_func (void)
+{
+	const guint8 *data;
+	gboolean ret;
+	gsize len;
+	g_autofree gchar *filename_hex = NULL;
+	g_autofree gchar *filename_ref = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GBytes) data_bin2 = NULL;
+	g_autoptr(GBytes) data_bin = NULL;
+	g_autoptr(GBytes) data_hex = NULL;
+	g_autoptr(GBytes) data_ref = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_bin = NULL;
+	g_autoptr(GFile) file_hex = NULL;
+
+	/* load a Intel hex32 file */
+	filename_hex = dfu_test_get_filename ("firmware.hex");
+	g_assert (filename_hex != NULL);
+	file_hex = g_file_new_for_path (filename_hex);
+	firmware = dfu_firmware_new ();
+	ret = dfu_firmware_parse_file (firmware, file_hex,
+				       DFU_FIRMWARE_PARSE_FLAG_NONE,
+				       NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 136);
+	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_RAW);
+	data_bin = dfu_firmware_write_data (firmware, &error);
+	g_assert_no_error (error);
+	g_assert (data_bin != NULL);
+
+	/* did we match the reference file? */
+	filename_ref = dfu_test_get_filename ("firmware.bin");
+	g_assert (filename_ref != NULL);
+	file_bin = g_file_new_for_path (filename_ref);
+	data_ref = dfu_self_test_get_bytes_for_file (file_bin, &error);
+	g_assert_no_error (error);
+	g_assert (data_ref != NULL);
+	g_assert_cmpstr (_g_bytes_compare_verbose (data_bin, data_ref), ==, NULL);
+
+	/* export a ihex file (which will be slightly different due to
+	 * non-continous regions being expanded */
+	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_INTEL_HEX);
+	data_hex = dfu_firmware_write_data (firmware, &error);
+	g_assert_no_error (error);
+	g_assert (data_hex != NULL);
+	data = g_bytes_get_data (data_hex, &len);
+	str = g_strndup ((const gchar *) data, len);
+	g_assert_cmpstr (str, ==,
+			 ":104000003DEF20F000000000FACF01F0FBCF02F0AF\n"
+			 ":10401000E9CF03F0EACF04F0E1CF05F0E2CF06F005\n"
+			 ":10402000D9CF07F0DACF08F0F3CF09F0F4CF0AF021\n"
+			 ":10403000F6CF0BF0F7CF0CF0F8CF0DF0F5CF0EF044\n"
+			 ":104040000EC0F5FF0DC0F8FF0CC0F7FF0BC0F6FF45\n"
+			 ":104050000AC0F4FF09C0F3FF08C0DAFF07C0D9FF24\n"
+			 ":1040600006C0E2FF05C0E1FF04C0EAFF03C0E9FF0A\n"
+			 ":1040700002C0FBFF01C0FAFF11003FEF20F00001BB\n"
+			 ":0840800042EF20F03DEF20F037\n"
+			 ":00000001FF\n");
+
+	/* do we match the binary file again */
+	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_RAW);
+	data_bin2 = dfu_firmware_write_data (firmware, &error);
+	g_assert_no_error (error);
+	g_assert (data_bin2 != NULL);
+	g_assert_cmpstr (_g_bytes_compare_verbose (data_bin, data_bin2), ==, NULL);
+}
+
+static void
 dfu_device_func (void)
 {
 	GPtrArray *targets;
@@ -621,6 +692,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/libdfu/firmware{dfuse}", dfu_firmware_dfuse_func);
 	g_test_add_func ("/libdfu/firmware{xdfu}", dfu_firmware_xdfu_func);
 	g_test_add_func ("/libdfu/firmware{metadata}", dfu_firmware_metadata_func);
+	g_test_add_func ("/libdfu/firmware{intel-hex}", dfu_firmware_intel_hex_func);
 	g_test_add_func ("/libdfu/device", dfu_device_func);
 	g_test_add_func ("/libdfu/colorhug+", dfu_colorhug_plus_func);
 	return g_test_run ();

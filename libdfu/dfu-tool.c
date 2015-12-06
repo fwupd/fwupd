@@ -762,11 +762,13 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
 	} else if (g_strcmp0 (values[0], "dfuse") == 0) {
 		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
+	} else if (g_strcmp0 (values[0], "ihex") == 0) {
+		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_INTEL_HEX);
 	} else {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "unknown format '%s', expected [raw|dfu|dfuse]",
+			     "unknown format '%s', expected [raw|dfu|dfuse|ihex]",
 			     values[0]);
 		return FALSE;
 	}
