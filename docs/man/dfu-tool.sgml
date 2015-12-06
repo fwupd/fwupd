@@ -1,7 +1,7 @@
 <!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
   <!-- Please adjust the date whenever revising the manpage. -->
   <!ENTITY date        "<date>26 February,2015</date>">
-  <!ENTITY package     "fwupdmgr">
+  <!ENTITY package     "dfu-tool">
   <!ENTITY gnu         "<acronym>GNU</acronym>">
   <!ENTITY gpl         "&gnu; <acronym>GPL</acronym>">
 ]>
@@ -27,7 +27,7 @@
   </refmeta>
   <refnamediv>
     <refname>&package;</refname>
-    <refpurpose>Device Firmware Update Tool</refpurpose>
+    <refpurpose>Device Firmware Upgrade Tool</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <cmdsynopsis>
@@ -41,8 +41,48 @@
       This manual page documents briefly the <command>&package;</command> command.
     </para>
     <para>
-      <command>&package;</command> allows a user to update firmware on a
-      DFU-capable device.
+      <command>&package;</command> allows a user to write various kinds of
+      firmware onto devices supporting the USB Device Firmware Upgrade protocol.
+      This tool can be used to switch the device from runtime and DFU modes to
+      allow reading the device contents from supported devices.
+      Either the whole device can be written in one operation, or individual
+      `targets' can be specified with the alternative name or number.
+    </para>
+    <para>
+      <command>&package;</command> uses the <literal>libdfu</literal> shared
+      library to perform actions.
+      Any syncronous actions can be safely cancelled and on failure will return
+      errors with both a type and a full textual description.
+      libdfu supports DFU 1.0, DFU 1.1 and the ST DfuSe vendor extension, and
+      handles many device `quirks' necessary for the real-world implementations
+      of <acronym>DFU</acronym>.
+    </para>
+    <para>
+      Additionally <command>&package;</command> can be used to convert firmware
+      from various different formats, or to modify details about the elements,
+      images and metadata contained inside the firmware file.
+      For example, you can easily convert DFU 1.1 firmware into the
+      vendor-specific DfuSe format, convert a Intel HEX file into a raw file
+      padded to a specific size, or add new copyright and licensing information
+      to an existing file.
+      Fields such as the vendor and product IDs can be changed, and the firmware
+      elements can be encrypted and decrypted using various different methods.
+      Merging two DfuSe files together is also possible, although specifying
+      different alt-setting numbers before merging is a good idea to avoid
+      confusion.
+    </para>
+    <para>
+      Although <command>&package;</command> tries to provide a large number of
+      easy-to-use commands, it may only be possible to do certain operations
+      using the <literal>libdfu</literal> library directly.
+      This is easier than it sounds, as the library is built with GObject
+      Introspection support making it usable in many languages such as C,
+      Javascript and Python.
+      Furthermore, using the library is a good idea if you want to perform
+      multiple operations on large firmware files, for instance,
+      converting from an Intel HEX file, padding to a certain size, setting
+      vendor and adding licensing information and then saving to a remote
+      location.
     </para>
   </refsect1>
   <refsect1>
@@ -58,7 +98,7 @@
           <option>--help</option>
         </term>
         <listitem>
-          <para>Show summary of options.</para>
+          <para>Show summary of all the commands available for use.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -67,22 +107,6 @@
         </term>
         <listitem>
           <para>Show extra debugging information.</para>
-        </listitem>
-      </varlistentry>
-    </variablelist>
-  </refsect1>
-  <refsect1>
-    <title>COMMANDS</title>
-    <para>
-      This program takes commands with a variable number of arguments.
-    </para>
-    <variablelist>
-      <varlistentry>
-        <term>
-          <option>convert</option>
-        </term>
-        <listitem>
-          <para>Converts a file to DFU format.</para>
         </listitem>
       </varlistentry>
     </variablelist>
