@@ -787,7 +787,9 @@ dfu_firmware_add_dfuse (DfuFirmware *firmware, GBytes *bytes, GError **error)
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "invalid DfuSe image size, got %u, expected %lu",
+			     "invalid DfuSe image size, "
+			     "got %" G_GUINT32_FORMAT ", "
+			     "expected %" G_GSIZE_FORMAT,
 			     GUINT32_FROM_LE (prefix->image_size),
 			     len);
 		return FALSE;

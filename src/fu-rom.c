@@ -161,10 +161,10 @@ fu_rom_get_hex_dump (guint8 *buffer, gssize sz)
 	str = g_string_new ("");
 	if (sz <= 0)
 		return NULL;
-	for (i = 0; i < sz; i++)
+	for (i = 0; i < (guint) sz; i++)
 		g_string_append_printf (str, "%02x ", buffer[i]);
 	g_string_append (str, "   ");
-	for (i = 0; i < sz; i++) {
+	for (i = 0; i < (guint) sz; i++) {
 		gchar tmp = '?';
 		if (g_ascii_isprint (buffer[i]))
 			tmp = buffer[i];
@@ -671,7 +671,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
-			     "Firmware too small: %" G_GSIZE_FORMAT " bytes", sz);
+			     "Firmware too small: %" G_GSSIZE_FORMAT " bytes", sz);
 		return FALSE;
 	}
 
@@ -700,7 +700,8 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 			return FALSE;
 		}
 	}
-	g_debug ("ROM buffer filled %likb/%likb", sz / 0x400, buffer_sz / 0x400);
+	g_debug ("ROM buffer filled %" G_GSSIZE_FORMAT "kb/%" G_GSSIZE_FORMAT "kb",
+		 sz / 0x400, buffer_sz / 0x400);
 
 	/* detect optional IFR header and skip to option ROM */
 	if (memcmp (buffer, "NVGI", 4) == 0)

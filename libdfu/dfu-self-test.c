@@ -65,7 +65,8 @@ _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 
 	/* not the same length */
 	if (length1 != length2) {
-		return g_strdup_printf ("got %li bytes, expected %li",
+		return g_strdup_printf ("got %" G_GSIZE_FORMAT " bytes, "
+					"expected %" G_GSIZE_FORMAT,
 					length1, length2);
 	}
 

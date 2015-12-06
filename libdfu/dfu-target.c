@@ -1006,7 +1006,8 @@ dfu_target_upload_element (DfuTarget *target,
 		offset += chunk_size;
 
 		/* add to array */
-		g_debug ("got #%04x chunk of size %li", i, chunk_size);
+		g_debug ("got #%04x chunk of size %" G_GSIZE_FORMAT,
+			 i, chunk_size);
 		g_ptr_array_add (chunks, chunk_tmp);
 
 		/* update UI */
@@ -1030,7 +1031,8 @@ dfu_target_upload_element (DfuTarget *target,
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INVALID_FILE,
-				     "invalid size, got %li, expected %li",
+				     "invalid size, got %" G_GSIZE_FORMAT ", "
+				     "expected %" G_GSIZE_FORMAT ,
 				     total_size, expected_size);
 			return NULL;
 		}
@@ -1179,7 +1181,8 @@ _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 
 	/* not the same length */
 	if (length1 != length2) {
-		return g_strdup_printf ("got %li bytes, expected %li",
+		return g_strdup_printf ("got %" G_GSIZE_FORMAT " bytes, "
+					"expected %" G_GSIZE_FORMAT,
 					length1, length2);
 	}
 
@@ -1296,7 +1299,7 @@ dfu_target_download_element (DfuTarget *target,
 		} else {
 			bytes_tmp = g_bytes_new (NULL, 0);
 		}
-		g_debug ("writing #%04x chunk of size %li",
+		g_debug ("writing #%04x chunk of size %" G_GSIZE_FORMAT,
 			 i, g_bytes_get_size (bytes_tmp));
 		if (!dfu_target_download_chunk (target,
 						i + dfuse_sector_offset,
