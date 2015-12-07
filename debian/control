@@ -69,6 +69,7 @@ Depends: libfwupd1 (= ${binary:Version}),
          ${misc:Depends}
 Conflicts: fwupd-dev
 Replaces: fwupd-dev
+Section: libdevel
 Description: development files for libfwupd
  fwupd is a daemon to allow session software to update device firmware.
  You can either use a GUI software manager like GNOME Software to view and
