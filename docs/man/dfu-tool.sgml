@@ -47,15 +47,15 @@
     <para>
       <command>&package;</command> allows a user to write various kinds of
       firmware onto devices supporting the USB Device Firmware Upgrade protocol.
-      This tool can be used to switch the device from runtime and DFU modes to
-      allow reading the device contents from supported devices.
+      This tool can be used to switch the device from the normal runtime mode
+      to `DFU mode' which allows the user to read and write firmware.
       Either the whole device can be written in one operation, or individual
       `targets' can be specified with the alternative name or number.
     </para>
     <para>
       <command>&package;</command> uses the <literal>libdfu</literal> shared
       library to perform actions.
-      Any syncronous actions can be safely cancelled and on failure will return
+      All synchronous actions can be safely cancelled and on failure will return
       errors with both a type and a full textual description.
       libdfu supports DFU 1.0, DFU 1.1 and the ST DfuSe vendor extension, and
       handles many device `quirks' necessary for the real-world implementations
@@ -269,7 +269,7 @@
             This command downloads firmware from the file into one partition.
             You can specify the partition by either the ALT-ID or ALT-NAME if set.
           </para>
-          <para>e.g. <command>&package; sram.dfu SRAM __SRAM</command></para>
+          <para>e.g. <command>&package; write-alt sram.dfu SRAM __SRAM</command></para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -309,7 +309,7 @@
             it can be used to support devices that do not store the runtime image
             size and where validation of the written firmware is required.
           </para>
-          <para>e.g. <command>&package; dfu firmware.hex firmware.dfu 8000</command></para>
+          <para>e.g. <command>&package; convert dfu firmware.hex firmware.dfu 8000</command></para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -327,7 +327,7 @@
             as an input to a hash function which can produce a key of the
             required size.
           </para>
-          <para>e.g. <command>&package; firmware.dfu firmware.xdfu xtea deadbeef</command></para>
+          <para>e.g. <command>&package; encrypt firmware.dfu firmware.xdfu xtea deadbeef</command></para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -345,7 +345,7 @@
             as an input to a hash function which can produce a key of the
             required size.
           </para>
-          <para>e.g. <command>&package; firmware.xdfu firmware.dfu xtea deadbeef</command></para>
+          <para>e.g. <command>&package; decrypt firmware.xdfu firmware.dfu xtea deadbeef</command></para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -358,7 +358,7 @@
             Although you can merge files with the same ALT-ID or ALT-NAME this
             probably isn't what you want to do.
           </para>
-          <para>e.g. <command>&package; combined.dfu lib.dfu app.dfu</command></para>
+          <para>e.g. <command>&package; merge combined.dfu lib.dfu app.dfu</command></para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -369,7 +369,7 @@
           <para>
             This command modifies the alternative number on firmware file.
           </para>
-          <para>e.g. <command>&package; firmware.dfu 1</command></para>
+          <para>e.g. <command>&package; set-alt-setting firmware.dfu 1</command></para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -380,7 +380,7 @@
           <para>
             This command modifies the alternative name on firmware file.
           </para>
-          <para>e.g. <command>&package; firmware.dfu SRAM</command></para>
+          <para>e.g. <command>&package; set-alt-setting-name firmware.dfu SRAM</command></para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -395,7 +395,7 @@
             In particular, the <literal>License</literal> value should be
             specified in SPDX format.
           </para>
-          <para>e.g. <command>&package; firmware.dfu Licence GPL-2.0+</command></para>
+          <para>e.g. <command>&package; set-metadata firmware.dfu Licence GPL-2.0+</command></para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -408,7 +408,7 @@
             match specific devices.
             Values of <literal>ffff</literal> will match any device vendor.
           </para>
-          <para>e.g. <command>&package; firmware.dfu 273f</command></para>
+          <para>e.g. <command>&package; set-vendor firmware.dfu 273f</command></para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -421,7 +421,7 @@
             match specific devices.
             Values of <literal>ffff</literal> will match any device product.
           </para>
-          <para>e.g. <command>&package; firmware.dfu 1004</command></para>
+          <para>e.g. <command>&package; set-product firmware.dfu 1004</command></para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -434,7 +434,7 @@
             match specific devices.
             Values of <literal>ffff</literal> will match any device release.
           </para>
-          <para>e.g. <command>&package; firmware.dfu ffff</command></para>
+          <para>e.g. <command>&package; set-release firmware.dfu ffff</command></para>
         </listitem>
       </varlistentry>
     </variablelist>
