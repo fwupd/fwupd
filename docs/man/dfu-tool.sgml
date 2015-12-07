@@ -33,6 +33,10 @@
     <cmdsynopsis>
       <command>&package;</command>
       <arg><option>--verbose</option></arg>
+      <arg><option>--version</option></arg>
+      <arg><option>--force</option></arg>
+      <arg><option>--device=VID:PID</option></arg>
+      <arg><option>--transfer-size=BYTES</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
   <refsect1>
@@ -89,8 +93,8 @@
     <title>OPTIONS</title>
     <para>
       This program follows the usual &gnu; command line syntax,
-      with long options starting with two dashes (`-').  A summary of
-      options is included below.
+      with long options starting with two dashes (<literal>-</literal>).
+      A summary of options is included below.
     </para>
     <variablelist>
       <varlistentry>
@@ -103,10 +107,334 @@
       </varlistentry>
       <varlistentry>
         <term>
+          <option>--version</option>
+        </term>
+        <listitem>
+          <para>Show the version of <command>&package;</command> installed.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
           <option>--verbose</option>
         </term>
         <listitem>
           <para>Show extra debugging information.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>--device=VID:PID</option>
+        </term>
+        <listitem>
+          <para>
+            If multiple DFU-capable devices are attached you can specify the
+            specific vendor and product ID of the DFU device you want to query.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>--transfer-size=BYTES</option>
+        </term>
+        <listitem>
+          <para>
+            Manually override the size of each USB transfer, which you may want
+            for unreliable hardware or when the device lies about the maximum
+            packet size it accepts.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>--force</option>
+        </term>
+        <listitem>
+          <para>
+            Force the operation, disregarding warnings or sanity checks like
+            file CRC and checksums.
+            This is useful if you really know what you are doing, or in the
+            specialised case of fuzz-testing libdfu.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>DEVICE COMMANDS</title>
+    <para>
+      These commands are used to interface with DFU-capable devices.
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term>
+          <option>list</option>
+        </term>
+        <listitem>
+          <para>
+            This command lists currently attached DFU capable devices.
+            Some devices do not support the official DFU <literal>runtime</literal>
+            mode and thus do not support auto-discovery using this command.
+            For those devices, putting the device into DFU mode manually (e.g. by
+            holding a button down when rebooting the device) will make it show
+            up here.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>detach</option>
+        </term>
+        <listitem>
+          <para>
+            This command detaches the currently attached DFU capable device into
+            a special programming mode.
+            Whilst the device is in this special <acronym>DFU</acronym> mode it
+            can not be used as a normal device.
+            For example, a printer will not accept documents when in DFU mode.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>attach</option>
+        </term>
+        <listitem>
+          <para>
+            This command attaches a DFU capable device back to runtime so it can
+            be used as a normal device.
+            Some devices do not support attaching, and need to be manually
+            disconnected and connected before changing modes.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>watch</option>
+        </term>
+        <listitem>
+          <para>
+            This command watches DFU devices being hotplugged and can be used to
+            verify <literal>libdfu</literal> matches up the runtime and DFU modes
+            when attaching and detaching.
+            Use <option>CTRL+C</option> to make this command quit.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>read FILENAME</option>
+        </term>
+        <listitem>
+          <para>
+            This command uploads all the firmware from device into a file.
+            If the device has multiple partitions exported as different alternative
+            sections then they will all be read into a multi-image DfuSe-format
+            file.
+            If you just want the contents of one partition, <option>read-alt</option>
+            is the command you want.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>read-alt FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID</option>
+        </term>
+        <listitem>
+          <para>
+            This command uploads firmware from one partition into a file.
+            You can specify the partition by either the ALT-ID or ALT-NAME if set.
+          </para>
+          <para>e.g. <command>&package; read-alt backup.dfu SRAM</command></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>write</option>
+        </term>
+        <listitem>
+          <para>
+            This command downloads firmware from a file into all possible
+            partitions of a device.
+            If you only want to write one partition, <option>write-alt</option>
+            is the command you want.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>write-alt FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]</option>
+        </term>
+        <listitem>
+          <para>
+            This command downloads firmware from the file into one partition.
+            You can specify the partition by either the ALT-ID or ALT-NAME if set.
+          </para>
+          <para>e.g. <command>&package; sram.dfu SRAM __SRAM</command></para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>FIRMWARE COMMANDS</title>
+    <para>
+      These commands are used to read and modify existing firmware files.
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term>
+          <option>dump FILENAME</option>
+        </term>
+        <listitem>
+          <para>
+            This command dumps all know details about a firmware file.
+            The complete memory map is shown, along with any metadata or vendor
+            information about the firmware file.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>convert FORMAT FILE-IN FILE-OUT [SIZE]</option>
+        </term>
+        <listitem>
+          <para>
+            This command converts the firmware from one format to another, optionally
+            padding to a certain size.
+            Possible values for the destination <option>FORMAT</option> include:
+            <literal>raw</literal>, <literal>ihex</literal>,
+            <literal>dfu</literal> and <literal>dfuse</literal>.
+            The <option>FILE-IN</option> and <option>FILE-OUT</option> values can
+            be the same if the source file is to be overwritten.
+            Although padding increases the file size with no apparent advantages
+            it can be used to support devices that do not store the runtime image
+            size and where validation of the written firmware is required.
+          </para>
+          <para>e.g. <command>&package; dfu firmware.hex firmware.dfu 8000</command></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>encrypt FILENAME-IN FILENAME-OUT TYPE KEY</option>
+        </term>
+        <listitem>
+          <para>
+            This command encrypts firmware data.
+            Only the image contents are actually modified, the DFU footer and
+            DfuSe header are left unaltered.
+            Possible values for the destination <option>TYPE</option> include:
+            <literal>xtea</literal> and <literal>nop</literal>.
+            If the <option>KEY</option> is not of the required length it is used
+            as an input to a hash function which can produce a key of the
+            required size.
+          </para>
+          <para>e.g. <command>&package; firmware.dfu firmware.xdfu xtea deadbeef</command></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>decrypt FILENAME-IN FILENAME-OUT TYPE KEY</option>
+        </term>
+        <listitem>
+          <para>
+            This command decrypts firmware data.
+            Only the image contents are actually modified, the DFU footer and
+            DfuSe header are left unaltered.
+            Possible values for the destination <option>TYPE</option> include:
+            <literal>xtea</literal> and <literal>nop</literal>.
+            If the <option>KEY</option> is not of the required length it is used
+            as an input to a hash function which can produce a key of the
+            required size.
+          </para>
+          <para>e.g. <command>&package; firmware.xdfu firmware.dfu xtea deadbeef</command></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>merge FILE-OUT FILE1 FILE2 [FILE3...]</option>
+        </term>
+        <listitem>
+          <para>
+            This command merges multiple firmware files into one file.
+            Although you can merge files with the same ALT-ID or ALT-NAME this
+            probably isn't what you want to do.
+          </para>
+          <para>e.g. <command>&package; combined.dfu lib.dfu app.dfu</command></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>set-alt-setting FILE ALT-ID</option>
+        </term>
+        <listitem>
+          <para>
+            This command modifies the alternative number on firmware file.
+          </para>
+          <para>e.g. <command>&package; firmware.dfu 1</command></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>set-alt-setting-name</option>
+        </term>
+        <listitem>
+          <para>
+            This command modifies the alternative name on firmware file.
+          </para>
+          <para>e.g. <command>&package; firmware.dfu SRAM</command></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>set-metadata FILE KEY VALUE</option>
+        </term>
+        <listitem>
+          <para>
+            This command adds or modifies existing metadata on a firmware file.
+            NOTE: There is only very limited metadata storage space in DFU files,
+            so keys and values should be kept as short as possible.
+            In particular, the <literal>License</literal> value should be
+            specified in SPDX format.
+          </para>
+          <para>e.g. <command>&package; firmware.dfu Licence GPL-2.0+</command></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>set-vendor FILE VID</option>
+        </term>
+        <listitem>
+          <para>
+            This command sets vendor ID on a firmware file that will be used to
+            match specific devices.
+            Values of <literal>ffff</literal> will match any device vendor.
+          </para>
+          <para>e.g. <command>&package; firmware.dfu 273f</command></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>set-product FILE PID</option>
+        </term>
+        <listitem>
+          <para>
+            This command sets the product ID on a firmware file that will be used to
+            match specific devices.
+            Values of <literal>ffff</literal> will match any device product.
+          </para>
+          <para>e.g. <command>&package; firmware.dfu 1004</command></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>set-release FILE RELEASE</option>
+        </term>
+        <listitem>
+          <para>
+            This command sets the release version on firmware file that will be used to
+            match specific devices.
+            Values of <literal>ffff</literal> will match any device release.
+          </para>
+          <para>e.g. <command>&package; firmware.dfu ffff</command></para>
         </listitem>
       </varlistentry>
     </variablelist>
