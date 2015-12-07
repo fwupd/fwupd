@@ -1,3 +1,23 @@
+Version 0.6.0
+~~~~~~~~~~~~~
+Released: 2015-12-07
+
+Notes:
+ - This release adds a new GObject library called libdfu and a command line
+   client called dfu-tool. This is a low-level tool used to upgrade USB device
+   firmware and can either be shipped in the same package as fwupd or split off
+   as separate subpackages.
+
+New Features:
+ - Add support for automatically updating USB DFU-capable devices (Richard Hughes)
+
+Bugfixes:
+ - Emit the changed signal after doing an update (Richard Hughes)
+ - Export the AppStream ID when returning device results (Richard Hughes)
+ - Fix compile with --disable-shared (Richard Hughes)
+ - Use new API available in fwup 0.5 (Richard Hughes, Mario Limonciello)
+ - Use the same device identification string format as Microsoft (Richard Hughes)
+
 Version 0.5.3
 ~~~~~~~~~~~~~
 Released: 2015-11-05

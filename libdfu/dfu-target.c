@@ -1508,6 +1508,7 @@ dfu_target_get_alt_setting (DfuTarget *target)
 /**
  * dfu_target_get_alt_name:
  * @target: a #DfuTarget
+ * @error: a #GError, or %NULL
  *
  * Gets the alternate setting name to use for this interface.
  *

@@ -1874,8 +1874,8 @@ dfu_tool_list_target (DfuTarget *target)
 		dfu_tool_print_indent (_("Name"), tmp, 2);
 	}
 
-	/* TRANSLATORS: this is the encryption method used when writing  */
 	cipher_kind = dfu_target_get_cipher_kind (target);
+	/* TRANSLATORS: this is the encryption method used when writing  */
 	dfu_tool_print_indent (_("Cipher"), dfu_cipher_kind_to_string (cipher_kind), 2);
 
 	/* print sector information */
@@ -2123,7 +2123,7 @@ main (int argc, char *argv[])
 		     "list",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("List currently attached DFU capable device"),
+		     _("List currently attached DFU capable devices"),
 		     dfu_tool_list);
 	dfu_tool_add (priv->cmd_array,
 		     "detach",
