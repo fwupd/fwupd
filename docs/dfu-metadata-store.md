@@ -65,6 +65,78 @@ The signature of `MD` should also be checked before attempting to parse the
 metadata store structure to ensure other vendor-specific extensions are not
 already in use.
 
+The key and value fields should be parsed as UTF-8, although in the pursuit of
+space minimisation ASCII values are preferred where possible.
+
+Example
+-------
+
+The following table shows an example firmware file with the payload 'DATA' set
+with vendor 0x1234, product 0xABCD and no metadata table.
+
+    neg.
+    offset  description     byte
+    ----------------------------
+    13      firmware'D'     0x44
+    12      firmware'A'     0x41
+    11      firmware'T'     0x54
+    10      firmware'A'     0x44
+    0f      bcdDevice       0xFF
+    0e      bcdDevice       0xFF
+    0d      idProduct       0xCD
+    0c      idProduct       0xAB
+    0b      idVendor        0x34
+    0a      idVendor        0x12
+    09      bcdDFU          0x00
+    08      bcdDFU          0x01
+    07      ucDfuSig'U'     0x55
+    06      ucDfuSig'F'     0x46
+    05      ucDfuSig'D'     0x44
+    04      bLength         0x10
+    03      dwCRC           0x52
+    02      dwCRC           0xB4
+    01      dwCRC           0xE5
+    00      dwCRC           0xCE
+
+The following table shows a second firmware file with the same payload but
+with the addition of a metadata table with a single metadata pair of `test=val`:
+
+    neg.
+    offset  description     byte
+    ----------------------------
+    1f      firmware'D'     0x44
+    1e      firmware'A'     0x41
+    1d      firmware'T'     0x54
+    1c      firmware'A'     0x44
+    1b      ucMdSig'M'      0x4D
+    1a      ucMdSig'D'      0x44
+    19      bMdLength       0x01
+    18      bKeyLen         0x04
+    17      KeyData't'      0x74
+    16      KeyData'e'      0x65
+    15      KeyData's'      0x73
+    14      KeyData't'      0x74
+    13      bValueLen       0x03
+    12      ValueData'v'    0x76
+    11      ValueData'a'    0x61
+    10      ValueData'l'    0x6c
+    0f      bcdDevice       0xFF
+    0e      bcdDevice       0xFF
+    0d      idProduct       0xCD
+    0c      idProduct       0xAB
+    0b      idVendor        0x34
+    0a      idVendor        0x12
+    09      bcdDFU          0x00
+    08      bcdDFU          0x01
+    07      ucDfuSig'U'     0x55
+    06      ucDfuSig'F'     0x46
+    05      ucDfuSig'D'     0x44
+    04      bLength         0x1C
+    03      dwCRC           0x1B
+    02      dwCRC           0x25
+    01      dwCRC           0x6D
+    00      dwCRC           0xF5
+
 Conclusions
 -----------
 
