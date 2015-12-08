@@ -67,8 +67,8 @@ Architecture: linux-any
 Multi-Arch: same
 Depends: libfwupd1 (= ${binary:Version}),
          ${misc:Depends}
-Conflicts: fwupd-dev
-Replaces: fwupd-dev
+Breaks: fwupd-dev (<< 0.5.4-2~)
+Replaces: fwupd-dev (<< 0.5.4-2~)
 Section: libdevel
 Description: development files for libfwupd
  fwupd is a daemon to allow session software to update device firmware.
