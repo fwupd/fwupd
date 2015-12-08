@@ -2,8 +2,8 @@
 AC_PREREQ(2.63)
 
 m4_define([fwupd_major_version], [0])
-m4_define([fwupd_minor_version], [5])
-m4_define([fwupd_micro_version], [4])
+m4_define([fwupd_minor_version], [6])
+m4_define([fwupd_micro_version], [0])
 m4_define([fwupd_version],
           [fwupd_major_version.fwupd_minor_version.fwupd_micro_version])
 
@@ -44,6 +44,9 @@ AC_SUBST(LT_AGE)
 
 # enable nice build output on automake1.11
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
+
+# check for gtk-doc
+GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
 
 AS_ALL_LINGUAS
 AC_PROG_CC
@@ -112,6 +115,10 @@ AX_CHECK_LINK_FLAG([-Wl,-z,relro,-z,now],
 		   [RELRO_LDFLAGS="-Wl,-z,relro,-z,now"])
 AC_SUBST([RELRO_LDFLAGS])
 
+# use -lm
+LT_LIB_M
+AC_SUBST(LIBM)
+
 dnl ---------------------------------------------------------------------------
 dnl - Check library dependencies
 dnl ---------------------------------------------------------------------------
@@ -119,8 +126,8 @@ PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.45.8 gobject-2.0 gthread-2.0 gio-2.0 >= 2.
 PKG_CHECK_MODULES(GUDEV, gudev-1.0)
 PKG_CHECK_MODULES(POLKIT, polkit-gobject-1 >= 0.103)
 PKG_CHECK_MODULES(GCAB, libgcab-1.0)
-PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib >= 0.5.2)
-PKG_CHECK_MODULES(GUSB, gusb >= 0.2.2)
+PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib >= 0.5.4)
+PKG_CHECK_MODULES(GUSB, gusb >= 0.2.8)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 PKG_CHECK_MODULES(ARCHIVE, libarchive)
 PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.51.92)
@@ -138,7 +145,7 @@ fi
 AC_ARG_ENABLE(colorhug, AS_HELP_STRING([--enable-colorhug],[Enable ColorHug support]),
 	      enable_colorhug=$enableval, enable_colorhug=yes)
 if test x$enable_colorhug != xno; then
-	PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.9)
+	PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.12)
 	AC_DEFINE(HAVE_COLORHUG,1,[Use ColorHug support])
 fi
 AM_CONDITIONAL(HAVE_COLORHUG, test x$enable_colorhug = xyes)
@@ -185,6 +192,8 @@ dnl - Makefiles, etc.
 dnl ---------------------------------------------------------------------------
 AC_CONFIG_FILES([
 Makefile
+libdfu/Makefile
+libdfu/dfu.pc
 libfwupd/fwupd-version.h
 libfwupd/fwupd.pc
 libfwupd/Makefile
@@ -193,7 +202,9 @@ data/pki/Makefile
 data/tests/Makefile
 data/tests/rpiupdate/Makefile
 data/tests/colorhug/Makefile
+data/tests/dfu/Makefile
 docs/Makefile
+docs/libdfu/Makefile
 docs/man/Makefile
 policy/Makefile
 po/Makefile.in

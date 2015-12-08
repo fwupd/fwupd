@@ -371,7 +371,9 @@ fu_provider_get_name (FuProvider *provider)
 void
 fu_provider_device_add (FuProvider *provider, FuDevice *device)
 {
-	g_debug ("emit added: %s", fu_device_get_id (device));
+	g_debug ("emit added from %s: %s",
+		 fu_provider_get_name (provider),
+		 fu_device_get_id (device));
 	fu_device_set_metadata (device, FU_DEVICE_KEY_PROVIDER,
 				fu_provider_get_name (provider));
 	g_signal_emit (provider, signals[SIGNAL_DEVICE_ADDED], 0, device);
@@ -383,7 +385,9 @@ fu_provider_device_add (FuProvider *provider, FuDevice *device)
 void
 fu_provider_device_remove (FuProvider *provider, FuDevice *device)
 {
-	g_debug ("emit removed: %s", fu_device_get_id (device));
+	g_debug ("emit removed from %s: %s",
+		 fu_provider_get_name (provider),
+		 fu_device_get_id (device));
 	g_signal_emit (provider, signals[SIGNAL_DEVICE_REMOVED], 0, device);
 }
 

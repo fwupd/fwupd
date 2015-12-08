@@ -143,19 +143,6 @@ fu_provider_chug_open (FuProviderChugItem *item, GError **error)
 }
 
 /**
- * fu_provider_chug_get_id:
- **/
-static gchar *
-fu_provider_chug_get_id (GUsbDevice *device)
-{
-	/* this identifies the *port* the device is plugged into and
-	 * the kind of device */
-	return g_strdup_printf ("CHug-%s-%s",
-				g_usb_device_get_platform_id (device),
-				ch_device_get_guid (device));
-}
-
-/**
  * fu_provider_chug_get_firmware_version:
  **/
 static void
@@ -165,14 +152,11 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 	guint16 major;
 	guint16 micro;
 	guint16 minor;
-#if G_USB_CHECK_VERSION(0,2,5)
 	guint8 idx;
-#endif
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* try to get the version without claiming interface */
-#if G_USB_CHECK_VERSION(0,2,5)
 	if (!g_usb_device_open (item->usb_device, &error)) {
 		g_debug ("Failed to open, polling: %s", error->message);
 		return;
@@ -194,7 +178,6 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 		}
 	}
 	g_usb_device_close (item->usb_device, NULL);
-#endif
 
 	/* attempt to open the device and get the serial number */
 	item->persist_after_unplug = TRUE;
@@ -252,25 +235,14 @@ fu_provider_chug_verify (FuProvider *provider,
 		return FALSE;
 	}
 
-#if !CD_CHECK_VERSION(1,2,12)
-	/* recompile colord */
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Cannot read firmware: colord too old");
-	return FALSE;
-#endif
-
 	/* open */
 	if (!fu_provider_chug_open (item, error))
 		return FALSE;
 
 	/* get the firmware from the device */
 	g_debug ("ColorHug: Verifying firmware");
-#if CD_CHECK_VERSION(1,2,12)
 	ch_device_queue_read_firmware (priv->device_queue, item->usb_device,
 				       &data, &len);
-#endif
 	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_VERIFY);
 	if (!ch_device_queue_process (priv->device_queue,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
@@ -489,33 +461,6 @@ fu_provider_chug_open_cb (gpointer user_data)
 	return TRUE;
 }
 
-#if !CD_CHECK_VERSION(1,2,10)
-#define CH_DEVICE_GUID_COLORHUG			"40338ceb-b966-4eae-adae-9c32edfcc484"
-#define CH_DEVICE_GUID_COLORHUG2		"2082b5e0-7a64-478a-b1b2-e3404fab6dad"
-#define CH_DEVICE_GUID_COLORHUG_ALS		"84f40464-9272-4ef7-9399-cd95f12da696"
-#define CH_DEVICE_GUID_COLORHUG_PLUS		"6d6f05a9-3ecb-43a2-bcbb-3844f1825366"
-
-static const gchar *
-ch_device_get_guid (GUsbDevice *device)
-{
-	ChDeviceMode mode = ch_device_get_mode (device);
-	if (mode == CH_DEVICE_MODE_LEGACY ||
-	    mode == CH_DEVICE_MODE_FIRMWARE ||
-	    mode == CH_DEVICE_MODE_BOOTLOADER)
-		return CH_DEVICE_GUID_COLORHUG;
-	if (mode == CH_DEVICE_MODE_FIRMWARE2 ||
-	    mode == CH_DEVICE_MODE_BOOTLOADER2)
-		return CH_DEVICE_GUID_COLORHUG2;
-	if (mode == CH_DEVICE_MODE_FIRMWARE_PLUS ||
-	    mode == CH_DEVICE_MODE_BOOTLOADER_PLUS)
-		return CH_DEVICE_GUID_COLORHUG_PLUS;
-	if (mode == CH_DEVICE_MODE_FIRMWARE_ALS ||
-	    mode == CH_DEVICE_MODE_BOOTLOADER_ALS)
-		return CH_DEVICE_GUID_COLORHUG_ALS;
-	return NULL;
-}
-#endif
-
 /**
  * fu_provider_chug_device_added_cb:
  **/
@@ -527,23 +472,28 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
 	ChDeviceMode mode;
-	g_autofree gchar *id = NULL;
+	const gchar *platform_id = NULL;
 
 	/* ignore */
 	mode = ch_device_get_mode (device);
 	if (mode == CH_DEVICE_MODE_UNKNOWN)
 		return;
 
+	/* this is using DFU now */
+	if (mode == CH_DEVICE_MODE_BOOTLOADER_PLUS ||
+	    mode == CH_DEVICE_MODE_FIRMWARE_PLUS)
+		return;
+
 	/* is already in database */
-	id = fu_provider_chug_get_id (device);
-	item = g_hash_table_lookup (priv->devices, id);
+	platform_id = g_usb_device_get_platform_id (device);
+	item = g_hash_table_lookup (priv->devices, platform_id);
 	if (item == NULL) {
 		item = g_new0 (FuProviderChugItem, 1);
 		item->loop = g_main_loop_new (NULL, FALSE);
 		item->provider_chug = g_object_ref (provider_chug);
 		item->usb_device = g_object_ref (device);
 		item->device = fu_device_new ();
-		fu_device_set_id (item->device, id);
+		fu_device_set_id (item->device, platform_id);
 		fu_device_set_guid (item->device, ch_device_get_guid (device));
 		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
 		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_ONLINE);
@@ -558,7 +508,7 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 
 		/* insert to hash */
 		g_hash_table_insert (priv->devices,
-				     g_strdup (id), item);
+				     g_strdup (platform_id), item);
 	} else {
 		/* update the device */
 		g_object_unref (item->usb_device);
@@ -618,11 +568,11 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 {
 	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
-	g_autofree gchar *id = NULL;
+	const gchar *platform_id = NULL;
 
 	/* already in database */
-	id = fu_provider_chug_get_id (device);
-	item = g_hash_table_lookup (priv->devices, id);
+	platform_id = g_usb_device_get_platform_id (device);
+	item = g_hash_table_lookup (priv->devices, platform_id);
 	if (item == NULL)
 		return;
 
@@ -637,7 +587,7 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 	 * rescan each time so we don't get confused when different
 	 * kinds of ColorHug device are plugged in... */
 	if (!item->persist_after_unplug)
-		g_hash_table_remove (priv->devices, id);
+		g_hash_table_remove (priv->devices, platform_id);
 }
 
 /**

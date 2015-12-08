@@ -33,6 +33,9 @@ AM_CPPFLAGS =						\
 FWUPD_LIBS =						\
 	$(top_builddir)/libfwupd/libfwupd.la
 
+DFU_LIBS =						\
+	$(top_builddir)/libdfu/libdfu.la
+
 bin_PROGRAMS = fwupdmgr
 
 fwupdmgr_SOURCES =					\
@@ -45,6 +48,7 @@ fwupdmgr_SOURCES =					\
 	fu-util.c
 
 fwupdmgr_LDADD =					\
+	$(LIBM)						\
 	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\
@@ -92,6 +96,8 @@ fwupd_SOURCES =						\
 	fu-pending.h					\
 	fu-provider.c					\
 	fu-provider.h					\
+	fu-provider-dfu.c				\
+	fu-provider-dfu.h				\
 	fu-provider-rpi.c				\
 	fu-provider-rpi.h				\
 	fu-provider-udev.c				\
@@ -118,6 +124,7 @@ endif
 
 fwupd_LDADD =						\
 	$(FWUPD_LIBS)					\
+	$(DFU_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(COLORHUG_LIBS)				\
 	$(GUSB_LIBS)					\
@@ -165,6 +172,7 @@ fu_self_test_SOURCES =					\
 	fu-self-test.c
 
 fu_self_test_LDADD =					\
+	$(LIBM)						\
 	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(SQLITE_LIBS)					\

@@ -66,8 +66,8 @@ typedef struct {
 	FuRomKind			 kind;
 	gchar				*version;
 	gchar				*guid;
-	guint16				 vendor;
-	guint16				 model;
+	guint16				 vendor_id;
+	guint16				 device_id;
 	GPtrArray			*hdrs; /* of FuRomPciHeader */
 } FuRomPrivate;
 
@@ -161,10 +161,10 @@ fu_rom_get_hex_dump (guint8 *buffer, gssize sz)
 	str = g_string_new ("");
 	if (sz <= 0)
 		return NULL;
-	for (i = 0; i < sz; i++)
+	for (i = 0; i < (guint) sz; i++)
 		g_string_append_printf (str, "%02x ", buffer[i]);
 	g_string_append (str, "   ");
-	for (i = 0; i < sz; i++) {
+	for (i = 0; i < (guint) sz; i++) {
 		gchar tmp = '?';
 		if (g_ascii_isprint (buffer[i]))
 			tmp = buffer[i];
@@ -671,7 +671,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
-			     "Firmware too small: %" G_GSIZE_FORMAT " bytes", sz);
+			     "Firmware too small: %" G_GSSIZE_FORMAT " bytes", sz);
 		return FALSE;
 	}
 
@@ -700,7 +700,8 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 			return FALSE;
 		}
 	}
-	g_debug ("ROM buffer filled %likb/%likb", sz / 0x400, buffer_sz / 0x400);
+	g_debug ("ROM buffer filled %" G_GSSIZE_FORMAT "kb/%" G_GSSIZE_FORMAT "kb",
+		 sz / 0x400, buffer_sz / 0x400);
 
 	/* detect optional IFR header and skip to option ROM */
 	if (memcmp (buffer, "NVGI", 4) == 0)
@@ -773,8 +774,8 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 
 	/* find first ROM header */
 	hdr = g_ptr_array_index (priv->hdrs, 0);
-	priv->vendor = hdr->vendor_id;
-	priv->model = hdr->device_id;
+	priv->vendor_id = hdr->vendor_id;
+	priv->device_id = hdr->device_id;
 	priv->kind = FU_ROM_KIND_PCI;
 
 	/* detect intel header */
@@ -821,7 +822,8 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 	}
 
 	/* update guid */
-	id = g_strdup_printf ("0x%04x:0x%04x", priv->vendor, priv->model);
+	id = g_strdup_printf ("PCI\\VEN_%04X&DEV_%04X",
+			      priv->vendor_id, priv->device_id);
 	priv->guid = as_utils_guid_from_string (id);
 	g_debug ("using %s for %s", priv->guid, id);
 
@@ -878,7 +880,7 @@ fu_rom_get_vendor (FuRom *rom)
 {
 	FuRomPrivate *priv = GET_PRIVATE (rom);
 	g_return_val_if_fail (FU_IS_ROM (rom), 0x0000);
-	return priv->vendor;
+	return priv->vendor_id;
 }
 
 /**
@@ -889,7 +891,7 @@ fu_rom_get_model (FuRom *rom)
 {
 	FuRomPrivate *priv = GET_PRIVATE (rom);
 	g_return_val_if_fail (FU_IS_ROM (rom), 0x0000);
-	return priv->model;
+	return priv->device_id;
 }
 
 /**

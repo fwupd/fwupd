@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-10 09:28+0100\n"
-"PO-Revision-Date: 2015-09-10 08:28+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2015-12-07 12:22+0000\n"
+"PO-Revision-Date: 2015-12-07 12:48+0000\n"
+"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian (http://www.transifex.com/hughsie/fwupd/language/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -51,6 +51,177 @@ msgid ""
 "Authentication is required to downgrade the firmware on a removable device"
 msgstr "Для встановлення застарілої версії мікропрограми на портативний пристрій слід пройти розпізнавання"
 
+#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
+#, c-format
+msgid "Alias to %s"
+msgstr "Інша назва %s"
+
+#. TRANSLATORS: error message
+msgid "Command not found"
+msgstr "Такої команди не знайдено"
+
+#. TRANSLATORS: when an action has completed
+msgid "OK"
+msgstr "Гаразд"
+
+#. TRANSLATORS: when moving from runtime to DFU mode
+msgid "Detaching"
+msgstr "Від’єднуємо"
+
+#. TRANSLATORS: when moving from DFU to runtime mode
+msgid "Attaching"
+msgstr "З’єднуємо"
+
+#. TRANSLATORS: when copying from host to device
+msgid "Downloading"
+msgstr "Отримуємо"
+
+#. TRANSLATORS: when copying from device to host
+msgid "Uploading"
+msgstr "Вивантажуємо"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Added"
+msgstr "Додано"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Removed"
+msgstr "Вилучено"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Changed"
+msgstr "Змінено"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+msgid "Cancelled"
+msgstr "Скасовано"
+
+#. TRANSLATORS: Appstream ID for the hardware type
+msgid "ID"
+msgstr "Ід."
+
+#. TRANSLATORS: interface name, e.g. "Flash"
+msgid "Name"
+msgstr "Назва"
+
+#. TRANSLATORS: this is the encryption method used when writing
+msgid "Cipher"
+msgstr "Шифр"
+
+#. TRANSLATORS: these are areas of memory on the chip
+msgid "Region"
+msgstr "Регіон"
+
+#. TRANSLATORS: detected a DFU device
+msgid "Found"
+msgstr "Знайдено"
+
+#. TRANSLATORS: probably not run as root...
+#. TRANSLATORS: device has failed to report status
+#. TRANSLATORS: device status, e.g. "OK"
+msgid "Status"
+msgstr "Стан"
+
+msgid "Unknown: permission denied"
+msgstr "Невідомий: доступ заборонено"
+
+#. TRANSLATORS: device mode, e.g. runtime or DFU
+msgid "Mode"
+msgstr "Режим"
+
+#. TRANSLATORS: device state, i.e. appIDLE
+msgid "State"
+msgstr "Стан"
+
+#. TRANSLATORS: device quirks, i.e. things that
+#. * it does that we have to work around
+msgid "Quirks"
+msgstr "Негаразди"
+
+#. TRANSLATORS: command description
+msgid "Convert firmware to DFU format"
+msgstr "Перетворити мікропрограму у формат DFU"
+
+#. TRANSLATORS: command description
+msgid "Merge multiple firmware files into one"
+msgstr "Об’єднати декілька файлів мікропрограм у один"
+
+#. TRANSLATORS: command description
+msgid "Set vendor ID on firmware file"
+msgstr "Встановити ідентифікатор виробника для файла мікропрограми"
+
+#. TRANSLATORS: command description
+msgid "Set product ID on firmware file"
+msgstr "Встановити ідентифікатор продукту для файла мікропрограми"
+
+#. TRANSLATORS: command description
+msgid "Set release version on firmware file"
+msgstr "Встановити версію випуску для файла мікропрограми"
+
+#. TRANSLATORS: command description
+msgid "Set alternative number on firmware file"
+msgstr "Встановити альтернативний номер для файла мікропрограми"
+
+#. TRANSLATORS: command description
+msgid "Set alternative name on firmware file"
+msgstr "Встановити альтернативну назву для файла мікропрограми"
+
+#. TRANSLATORS: command description
+msgid "Attach DFU capable device back to runtime"
+msgstr "Повернути пристрій із можливостями DFU до використання"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from device into a file"
+msgstr "Прочитати мікропрограму з пристрою до файла"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from one partition into a file"
+msgstr "Прочитати мікропрограму з одного розділу до файла"
+
+#. TRANSLATORS: command description
+msgid "Write firmware from file into device"
+msgstr "Записати мікропрограму з файла на пристрій"
+
+#. TRANSLATORS: command description
+msgid "Write firmware from file into one partition"
+msgstr "Записати мікропрограму з файла на один розділ"
+
+#. TRANSLATORS: command description
+msgid "List currently attached DFU capable devices"
+msgstr "Вивести поточний список долучених пристроїв із можливостями DFU"
+
+#. TRANSLATORS: command description
+msgid "Detach currently attached DFU capable device"
+msgstr "Від’єднати поточний з’єднаний пристрій із можливостями DFU"
+
+#. TRANSLATORS: command description
+msgid "Dump details about a firmware file"
+msgstr "Створити дамп даних щодо файла мікропрограми"
+
+#. TRANSLATORS: command description
+msgid "Watch DFU devices being hotplugged"
+msgstr "Спостерігати за пристроями DFU, які з’єднують із комп’ютером"
+
+#. TRANSLATORS: command description
+msgid "Encrypt firmware data"
+msgstr "Зашифрувати дані мікропрограми"
+
+#. TRANSLATORS: command description
+msgid "Decrypt firmware data"
+msgstr "Розшифрувати дані мікропрограми"
+
+#. TRANSLATORS: command description
+msgid "Sets metadata on a firmware file"
+msgstr "Встановлює метадані щодо файла мікпропрограми"
+
+#. TRANSLATORS: DFU stands for device firmware update
+msgid "DFU Utility"
+msgstr "Засіб роботи з DFU"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "Не вдалося обробити аргументи"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
 msgstr "Показувати діагностичні дані для всіх файлів"
@@ -78,15 +249,6 @@ msgstr "Служба оновлення мікропрограми"
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Служба D-Bus оновлення мікропрограми"
-
-#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
-#, c-format
-msgid "Alias to %s"
-msgstr "Інша назва %s"
-
-#. TRANSLATORS: error message
-msgid "Command not found"
-msgstr "Такої команди не знайдено"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle"
@@ -149,13 +311,14 @@ msgstr "Знижуємо версію %s з %s до %s... "
 msgid "Updating %s from %s to %s... "
 msgstr "Оновлюємо %s з %s до %s... "
 
-msgid "OK"
-msgstr "Гаразд"
-
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s має такі оновлення мікропрограми:"
+
+#. TRANSLATORS: a GUID for the hardware
+msgid "GUID"
+msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Version"
@@ -240,10 +403,6 @@ msgstr "Оновити збережені метадані на основі п�
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Засіб роботи з мікропрограмами"
-
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse arguments"
-msgstr "Не вдалося обробити аргументи"
 
 #. TRANSLATORS: the user is in a bad place
 msgid "Failed to connect to D-Bus"

@@ -1,5 +1,6 @@
 SUBDIRS = 								\
 	colorhug							\
+	dfu								\
 	rpiupdate
 
 test_files =								\

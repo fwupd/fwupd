@@ -1,4 +1,5 @@
 policy/org.freedesktop.fwupd.policy.in
+libdfu/dfu-tool.c
 src/fu-debug.c
 src/fu-main.c
 src/fu-util.c

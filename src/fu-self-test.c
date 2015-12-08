@@ -312,7 +312,7 @@ fu_provider_rpi_func (void)
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==, "raspberry-pi");
 	g_assert_cmpstr (fu_device_get_guid (device), ==,
-			 "c77029fe-ffb2-3706-dc67-67af4a132afd");
+			 "91dd7368-8640-5d72-a217-a505c034dd0b");
 	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION), ==,
 			 "20150803");
 
