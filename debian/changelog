@@ -1,9 +1,14 @@
-fwupd (0.5.4-2) unstable; urgency=medium
+fwupd (0.6.0-1) unstable; urgency=medium
 
+  * New upstream release (0.6.0)
+    - Adds support for DFU based flashing.
+  * Generate libdfu* packages for the newly included libdfu support
   * Update copyright for current source
   * Rename fwupd-dev to the more conventionally named libfwupd-dev
+  * update appstream-glib version requirement
+  * add gtk-doc-tools to build depends and cleanup after using them.
 
- -- Mario Limonciello <mario_limonciello@dell.com>  Mon, 07 Dec 2015 21:06:26 -0600
+ -- Mario Limonciello <mario_limonciello@dell.com>  Tue, 08 Dec 2015 13:05:50 -0600
 
 fwupd (0.5.4-1) unstable; urgency=medium
 
