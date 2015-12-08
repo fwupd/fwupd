@@ -1,3 +1,4 @@
+usr/bin/dfu-tool
 usr/bin/fwupdmgr
 etc/*
 usr/share/dbus-1/*

@@ -1,0 +1,5 @@
+usr/include/fwupd-1/dfu.h
+usr/include/fwupd-1/libdfu
+usr/lib/*/libdfu*.so
+usr/lib/*/pkgconfig/dfu.pc
+usr/share/gir-1.0/Dfu*.gir

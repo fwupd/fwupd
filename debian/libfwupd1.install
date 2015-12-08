@@ -1,2 +1,2 @@
-usr/lib/*/lib*.so.*
-usr/lib/*/girepository-1.0/*.typelib
+usr/lib/*/libfwup*.so.*
+usr/lib/*/girepository-1.0/Fwup*.typelib
