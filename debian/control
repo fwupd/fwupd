@@ -26,6 +26,7 @@ Build-Depends: debhelper (>= 9.0.0),
                libsqlite3-dev,
                pkg-config,
                libsoup2.4-dev,
+               gtk-doc-tools,
                valgrind
 Standards-Version: 3.9.6.1
 Section: admin
