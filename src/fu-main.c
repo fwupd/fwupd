@@ -1567,7 +1567,8 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 	}
 
 	/* dump startup profile data */
-	as_profile_dump (priv->profile);
+	if (fu_debug_is_verbose ())
+		as_profile_dump (priv->profile);
 }
 
 /**
