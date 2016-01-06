@@ -811,13 +811,17 @@ fu_main_store_delay_cb (gpointer user_data)
 	guint i;
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 
-	g_debug ("devices now in store:");
 	apps = as_store_get_apps (priv->store);
-	for (i = 0; i < apps->len; i++) {
-		app = g_ptr_array_index (apps, i);
-		g_debug ("%i\t%s\t%s", i + 1,
-			 as_app_get_id (app),
-			 as_app_get_name (app, NULL));
+	if (apps->len == 0) {
+		g_debug ("no devices in store");
+	} else {
+		g_debug ("devices now in store:");
+		for (i = 0; i < apps->len; i++) {
+			app = g_ptr_array_index (apps, i);
+			g_debug ("%i\t%s\t%s", i + 1,
+				 as_app_get_id (app),
+				 as_app_get_name (app, NULL));
+		}
 	}
 	priv->store_changed_id = 0;
 	return G_SOURCE_REMOVE;
