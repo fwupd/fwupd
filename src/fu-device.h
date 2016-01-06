@@ -66,6 +66,9 @@ GVariant	*fu_device_to_variant			(FuDevice	*device);
 const gchar	*fu_device_get_id			(FuDevice	*device);
 void		 fu_device_set_id			(FuDevice	*device,
 							 const gchar	*id);
+const gchar	*fu_device_get_equivalent_id		(FuDevice	*device);
+void		 fu_device_set_equivalent_id		(FuDevice	*device,
+							 const gchar	*equivalent_id);
 guint64		 fu_device_get_flags			(FuDevice	*device);
 void		 fu_device_set_flags			(FuDevice	*device,
 							 guint64	 flags);

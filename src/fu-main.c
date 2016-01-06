@@ -200,6 +200,8 @@ fu_main_get_item_by_id (FuMainPrivate *priv, const gchar *id)
 		item = g_ptr_array_index (priv->devices, i);
 		if (g_strcmp0 (fu_device_get_id (item->device), id) == 0)
 			return item;
+		if (g_strcmp0 (fu_device_get_equivalent_id (item->device), id) == 0)
+			return item;
 	}
 	return NULL;
 }
