@@ -1,0 +1,13 @@
+Index: fwupd/policy/org.freedesktop.fwupd.rules
+===================================================================
+--- fwupd.orig/policy/org.freedesktop.fwupd.rules	2015-12-08 09:47:14.127561751 -0600
++++ fwupd/policy/org.freedesktop.fwupd.rules	2016-01-07 13:52:53.405728911 -0600
+@@ -1,7 +1,7 @@
+ polkit.addRule(function(action, subject) {
+     if (action.id == "org.freedesktop.fwupd.update-internal" &&
+         subject.active == true && subject.local == true &&
+-        subject.isInGroup("wheel")) {
++        subject.isInGroup("sudo")) {
+             return polkit.Result.YES;
+     }
+ });
