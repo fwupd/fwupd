@@ -10,3 +10,4 @@ lib/systemd/system/*
 var/lib/fwupd
 lib/udev/rules.d/*
 data/fwupd.conf etc
+debian/fwupd.pkla /var/lib/polkit-1/localauthority/10-vendor.d
