@@ -3,98 +3,99 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Serge Vylekzhanin <vylekzhanin@mail.ru>, 2015
+# Mingye Wang <arthur200126@gmail.com>, 2016
+# Mingye Wang <arthur2e5@aosc.xyz>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-01-19 12:57+0000\n"
-"PO-Revision-Date: 2015-12-08 06:57+0000\n"
-"Last-Translator: Serge Vylekzhanin <vylekzhanin@mail.ru>\n"
-"Language-Team: Russian (http://www.transifex.com/hughsie/fwupd/language/ru/)\n"
+"PO-Revision-Date: 2016-01-05 19:57+0000\n"
+"Last-Translator: Mingye Wang <arthur200126@gmail.com>\n"
+"Language-Team: Chinese (China) (http://www.transifex.com/hughsie/fwupd/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ru\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "Install signed system firmware"
-msgstr "Установить подписанную системную микропрограмму"
+msgstr "安装已签名的系统固件"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
-msgstr "Для обновления микропрограммы на этой машине требуется аутентификация"
+msgstr "需要认证：在此机器上升级固件"
 
 msgid "Install unsigned system firmware"
-msgstr "Установить неподписанную системную микропрограмму"
+msgstr "安装未签名的系统固件"
 
 msgid "Install old version of system firmware"
-msgstr "Установить старую версию системной микропрограммы"
+msgstr "安装旧版本的系统固件"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "Для понижения версии микропрограммы на этой машине требуется аутентификация"
+msgstr "需要认证：在此机器上降级固件"
 
 msgid "Install signed device firmware"
-msgstr "Установить подписанную микропрограмму устройства"
+msgstr "安装已签名的设备固件"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid ""
 "Authentication is required to update the firmware on a removable device"
-msgstr "Для обновления микропрограммы на съёмном устройстве требуется аутентификация"
+msgstr "需要认证：在可移动设备上升级固件"
 
 msgid "Install unsigned device firmware"
-msgstr "Установить неподписанную микропрограмму устройства"
+msgstr "安装未签名的设备固件"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid ""
 "Authentication is required to downgrade the firmware on a removable device"
-msgstr "Для понижения версии микропрограммы на съёмном устройстве требуется аутентификация"
+msgstr "需要认证：在可移动设备上降级固件"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
-msgstr "Псевдоним %s"
+msgstr "%s 的别名"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
-msgstr "Команда не найдена"
+msgstr "未找到命令"
 
 #. TRANSLATORS: when an action has completed
 msgid "OK"
-msgstr "ОК"
+msgstr "确定"
 
 #. TRANSLATORS: when moving from runtime to DFU mode
 msgid "Detaching"
-msgstr "Отсоединение"
+msgstr "断开中"
 
 #. TRANSLATORS: when moving from DFU to runtime mode
 msgid "Attaching"
-msgstr "Присоединение"
+msgstr "连接中"
 
 #. TRANSLATORS: when copying from host to device
 msgid "Downloading"
-msgstr "Получение"
+msgstr "下载中"
 
 #. TRANSLATORS: when copying from device to host
 msgid "Uploading"
-msgstr "Выгрузка"
+msgstr "上传中"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
-msgstr "Добавлено"
+msgstr "已添加"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Removed"
-msgstr "Удалено"
+msgstr "已移除"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Changed"
-msgstr "Изменено"
+msgstr "已变更"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
-msgstr "Отменено"
+msgstr "已取消"
 
 #. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
@@ -102,219 +103,219 @@ msgstr "ID"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 msgid "Name"
-msgstr "Наименование"
+msgstr "名称"
 
 #. TRANSLATORS: this is the encryption method used when writing
 msgid "Cipher"
-msgstr "Шифр"
+msgstr "加密"
 
 #. TRANSLATORS: these are areas of memory on the chip
 msgid "Region"
-msgstr "Регион"
+msgstr "区域"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
-msgstr "Найдено"
+msgstr "找到"
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
 #. TRANSLATORS: device status, e.g. "OK"
 msgid "Status"
-msgstr "Статус"
+msgstr "状况"
 
 msgid "Unknown: permission denied"
-msgstr "Неизвестно: доступ запрещён"
+msgstr "未知：访问被拒绝"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
 msgid "Mode"
-msgstr "Режим"
+msgstr "模式"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
-msgstr "Состояние"
+msgstr "状态"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
 msgid "Quirks"
-msgstr "Проблемы"
+msgstr "特异情况"
 
 #. TRANSLATORS: command description
 msgid "Convert firmware to DFU format"
-msgstr "Преобразовать микропрограмму в формат DFU"
+msgstr "将固件转换为固件升级（DFU）格式"
 
 #. TRANSLATORS: command description
 msgid "Merge multiple firmware files into one"
-msgstr "Объединить несколько файлов микропрограмм в один"
+msgstr "将多个固件文件合并为一个"
 
 #. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
-msgstr "Установить идентификатор производителя для файла микропрограммы"
+msgstr "设置固件文件上的供应商 ID"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
-msgstr "Установить идентификатор продукта для файла микропрограммы"
+msgstr "设置固件文件上的产品 ID"
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
-msgstr "Установить версию выпуска для файла микропрограммы"
+msgstr "设置固件文件上的发布版本"
 
 #. TRANSLATORS: command description
 msgid "Set alternative number on firmware file"
-msgstr "Установить альтернативный номер для файла микропрограммы"
+msgstr "设置固件文件上的替代数字"
 
 #. TRANSLATORS: command description
 msgid "Set alternative name on firmware file"
-msgstr "Установить альтернативное наименование для файла микропрограммы"
+msgstr "设置固件文件上的替代名称"
 
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
-msgstr "Вернуть устройство с возможностями DFU к использованию"
+msgstr "将可固件升级（DFU）的设备重新附到运行时上"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
-msgstr "Считать микропрограмму из устройства файл"
+msgstr "将来自设备的固件读入文件"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
-msgstr "Считать микропрограмму из одного раздела в файл"
+msgstr "将来自分区的固件读入文件"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"
-msgstr "Записать микропрограмму из файла на устройство"
+msgstr "将来自文件的固件写入设备"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into one partition"
-msgstr "Записать микропрограмму из файла на один раздел"
+msgstr "将来自文件的固件写入分区"
 
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
-msgstr "Вывести список подсоединённых сейчас устройств с возможностями DFU"
+msgstr "列出当前连接的可固件升级的设备"
 
 #. TRANSLATORS: command description
 msgid "Detach currently attached DFU capable device"
-msgstr "Отсоединить подсоединённое сейчас устройство с возможностями DFU"
+msgstr "断开当前连接的可固件升级的设备"
 
 #. TRANSLATORS: command description
 msgid "Dump details about a firmware file"
-msgstr "Создать дамп данных по файлу микропрограммы"
+msgstr "转储有关某固件文件的详细信息"
 
 #. TRANSLATORS: command description
 msgid "Watch DFU devices being hotplugged"
-msgstr "Наблюдать за устройствами DFU, которые являются подключёнными"
+msgstr "注意被热插入的固件升级（DFU）设备"
 
 #. TRANSLATORS: command description
 msgid "Encrypt firmware data"
-msgstr "Зашифровать данные микропрограммы"
+msgstr "加密固件数据"
 
 #. TRANSLATORS: command description
 msgid "Decrypt firmware data"
-msgstr "Расшифровать данные микропрограммы"
+msgstr "正在解密固件"
 
 #. TRANSLATORS: command description
 msgid "Sets metadata on a firmware file"
-msgstr "Устанавливает метаданные файла микропрограммы"
+msgstr "设置固件文件上的元数据"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
-msgstr "Средство работы с DFU"
+msgstr "固件更新实用程序"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
-msgstr "Не удалось разобрать аргументы"
+msgstr "未能解析参数"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
-msgstr "Показать отладочную информацию для всех файлов"
+msgstr "显示所有文件的调试信息"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
-msgstr "Параметры отладки"
+msgstr "调试选项"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
-msgstr "Показать параметры отладки"
+msgstr "显示调试选项"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
-msgstr "Выйти после небольшой задержки"
+msgstr "在短暂的延迟后退出"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
-msgstr "Выйти после загрузки движка"
+msgstr "在引擎加载后退出"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr "Служба обновления микропрограммы"
+msgstr "固件更新守护程序"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
-msgstr "D-Bus служба обновления микропрограммы"
+msgstr "固件更新 D-Bus 服务"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle"
-msgstr "Бездействие"
+msgstr "空闲"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing firmware"
-msgstr "Распаковка микропрограммы"
+msgstr "正在解压缩固件"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading firmware"
-msgstr "Загрузка микропрограммы"
+msgstr "正在加载固件"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device"
-msgstr "Перезапуск устройства"
+msgstr "正在重启设备"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing firmware to device"
-msgstr "Запись микропрограммы на устройство"
+msgstr "正在将固件写入设备"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying firmware from device"
-msgstr "Проверка микропрограммы с устройства"
+msgstr "正在校验来自设备的固件"
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling upgrade"
-msgstr "Планирование обновления"
+msgstr "正在计划升级"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
-msgstr "Не обнаружено оборудования с возможностью обновления микропрограммы"
+msgstr "没有检测到支持更新固件的硬件"
 
 #. TRANSLATORS: update completed, no errors
 msgid "Done!"
-msgstr "Готово!"
+msgstr "完成！"
 
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
-msgstr "Повторная попытка как в режиме автономного обновления"
+msgstr "作为脱机更新重试"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
 #, c-format
 msgid "Reinstalling %s with %s... "
-msgstr "Переустановка %s с %s…"
+msgstr "正在重新安装 %s，使用 %s…"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
-msgstr "Понижение версии %s с  %s на %s…"
+msgstr "正在降级 %s，从 %s 到 %s…"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Updating %s from %s to %s... "
-msgstr "Обновление %s с %s на %s…"
+msgstr "正在更新 %s，从 %s 到 %s…"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
-msgstr "У %s есть обновления микропрограммы:"
+msgstr "%s 有固件更新:"
 
 #. TRANSLATORS: a GUID for the hardware
 msgid "GUID"
@@ -322,92 +323,92 @@ msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Version"
-msgstr "Версия"
+msgstr "版本"
 
 #. TRANSLATORS: section header for firmware SHA1
 msgid "Checksum"
-msgstr "Контрольная сумма"
+msgstr "校验和"
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Location"
-msgstr "Расположение"
+msgstr "位置"
 
 #. TRANSLATORS: section header for long firmware desc
 msgid "Description"
-msgstr "Описание"
+msgstr "描述"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
-msgstr "Показать дополнительную отладочную информацию"
+msgstr "显示额外调试信息"
 
 #. TRANSLATORS: command line option
 msgid "Perform the installation offline where possible"
-msgstr "Выполнить установку в автономном режиме, где возможно"
+msgstr "尽可能地执行脱机安装"
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
-msgstr "Разрешить повторную установку существующих версий микропрограмм"
+msgstr "允许重新安装现有的固件版本"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
-msgstr "Разрешить понижение версий микропрограмм"
+msgstr "允许降级固件版本"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
-msgstr "Получить все устройства, которые поддерживают обновления микропрограммы"
+msgstr "获得所有支持更新固件的硬件列表"
 
 #. TRANSLATORS: command description
 msgid "Install prepared updates now"
-msgstr "Установить подготовленные обновления сейчас"
+msgstr "现在安装准备好的更新"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
-msgstr "Установить файл микропрограммы на это оборудование"
+msgstr "安装此硬件上的固件文件"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
-msgstr "Получает сведения о файле микропрограммы"
+msgstr "获取有关某固件文件的详细信息"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
-msgstr "Получает список обновлений для подключенного оборудования"
+msgstr "获取已连接硬件的可用更新列表"
 
 #. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"
-msgstr "Обновляет все микропрограммы до их последних доступных версий"
+msgstr "将所有固件都更新为最新版本"
 
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "Получает криптографической хэш дампа микропрограммы"
+msgstr "获取转储出的固件的校验和"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
-msgstr "Очищает результаты c последнего обновления"
+msgstr "清除从最后一次更新获取的结果"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
-msgstr "Получает результаты с последнего обновления"
+msgstr "从最后一次更新中获取结果"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr "Обновить метаданные с удаленного сервера"
+msgstr "刷新来自远程服务器的元数据"
 
 #. TRANSLATORS: command description
 msgid "Dump the ROM checksum"
-msgstr "Создать дамп контрольной суммы ПЗУ"
+msgstr "转储 ROM 校验和"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
-msgstr "Обновить сохранённые метаданные с текущим содержимым ПЗУ"
+msgstr "使用目前的 ROM 内容更新存储的元数据"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
-msgstr "Средство работы с микропрограммами"
+msgstr "固件实用程序"
 
 #. TRANSLATORS: the user is in a bad place
 msgid "Failed to connect to D-Bus"
-msgstr "Не удалось подключиться к D-Bus"
+msgstr "未能连接到 D-Bus"
 
 #. TRANSLATORS: we can't connect to the daemon
 msgid "Failed to connect to fwupd"
-msgstr "Не удалось подключиться к fwupd"
+msgstr "未能连接到 fwupd"
