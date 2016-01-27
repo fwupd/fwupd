@@ -58,6 +58,8 @@ struct _FuDeviceClass
 #define FU_DEVICE_KEY_UPDATE_URI	"UpdateUri"	/* s */
 #define FU_DEVICE_KEY_UPDATE_DESCRIPTION "UpdateDescription" /* s */
 #define FU_DEVICE_KEY_APPSTREAM_ID	"AppstreamId" /* s */
+#define FU_DEVICE_KEY_CREATED		"Created"	/* t */
+#define FU_DEVICE_KEY_MODIFIED		"Modified"	/* t */
 
 FuDevice	*fu_device_new				(void);
 
@@ -74,6 +76,12 @@ void		 fu_device_set_flags			(FuDevice	*device,
 							 guint64	 flags);
 void		 fu_device_add_flag			(FuDevice	*device,
 							 FwupdDeviceFlags flag);
+guint64		 fu_device_get_created			(FuDevice	*device);
+void		 fu_device_set_created			(FuDevice	*device,
+							 guint64	 created);
+guint64		 fu_device_get_modified			(FuDevice	*device);
+void		 fu_device_set_modified			(FuDevice	*device,
+							 guint64	 modified);
 const gchar	*fu_device_get_guid			(FuDevice	*device);
 void		 fu_device_set_guid			(FuDevice	*device,
 							 const gchar	*guid);

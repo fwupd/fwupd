@@ -354,6 +354,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 		return FALSE;
 
 	/* make the UI update */
+	fu_device_set_modified (item->device, g_get_real_time () / G_USEC_PER_SEC);
 	fu_main_emit_changed (helper->priv);
 	return TRUE;
 }
