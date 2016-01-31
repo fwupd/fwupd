@@ -437,6 +437,54 @@ fu_main_get_guids_from_store (AsStore *store)
 }
 
 /**
+ * fu_main_vendor_quirk_release_version:
+ **/
+static void
+fu_main_vendor_quirk_release_version (AsApp *app)
+{
+	AsVersionParseFlag flags = AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+	GPtrArray *releases;
+	guint i;
+
+	/* no quirk required */
+	if (as_app_get_id_kind (app) != AS_ID_KIND_FIRMWARE)
+		return;
+
+	/* Dell uses AA.BB.CC.DD rather than AA.BB.CCDD */
+	if (g_str_has_prefix (as_app_get_id (app), "com.dell.uefi"))
+		flags = AS_VERSION_PARSE_FLAG_NONE;
+
+	/* fix each release */
+	releases = as_app_get_releases (app);
+	for (i = 0; i < releases->len; i++) {
+		AsRelease *rel;
+		const gchar *version;
+		guint64 ver_uint32;
+		g_autofree gchar *version_new = NULL;
+
+		rel = g_ptr_array_index (releases, i);
+		version = as_release_get_version (rel);
+		if (version == NULL)
+			continue;
+		if (g_strstr_len (version, -1, ".") != NULL)
+			continue;
+
+		/* metainfo files use hex and the LVFS uses decimal */
+		if (g_str_has_prefix (version, "0x")) {
+			ver_uint32 = g_ascii_strtoull (version + 2, NULL, 16);
+		} else {
+			ver_uint32 = g_ascii_strtoull (version, NULL, 10);
+		}
+		if (ver_uint32 == 0)
+			continue;
+
+		/* convert to dotted decimal */
+		version_new = as_utils_version_from_uint32 (ver_uint32, flags);
+		as_release_set_version (rel, version_new);
+	}
+}
+
+/**
  * fu_main_update_helper:
  **/
 static gboolean
@@ -520,6 +568,9 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 				     "failed to get firmware blob");
 		return FALSE;
 	}
+
+	/* possibly convert the version from 0x to dotted */
+	fu_main_vendor_quirk_release_version (app);
 
 	version = as_release_get_version (rel);
 	fu_device_set_metadata (helper->device, FU_DEVICE_KEY_UPDATE_VERSION, version);
@@ -871,6 +922,9 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 						   fu_device_get_guid (item->device));
 		if (app == NULL)
 			continue;
+
+		/* possibly convert the version from 0x to dotted */
+		fu_main_vendor_quirk_release_version (app);
 
 		/* get latest release */
 		rel = as_app_get_release_default (app);
@@ -1408,6 +1462,9 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
+
+		/* possibly convert the version from 0x to dotted */
+		fu_main_vendor_quirk_release_version (app);
 
 		/* create an array with all the metadata in */
 		g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
