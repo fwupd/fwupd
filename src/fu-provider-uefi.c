@@ -168,6 +168,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 	guint32 status = 0;
 	guint32 version = 0;
 	g_autofree gchar *version_str = NULL;
+	time_t when = 0;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
@@ -176,7 +177,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 		ret = FALSE;
 		goto out;
 	}
-	if (fwup_get_last_attempt_info (re, &version, &status, NULL) < 0) {
+	if (fwup_get_last_attempt_info (re, &version, &status, &when) < 0) {
 		ret = FALSE;
 		g_set_error (error,
 			     FWUPD_ERROR,
