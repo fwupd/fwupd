@@ -22,17 +22,16 @@
 #ifndef __FU_QUIRKS_H
 #define __FU_QUIRKS_H
 
-struct vendor_quirks
-{
+typedef struct {
 	const gchar             *sys_vendor;
 	const gchar		*identifier;
 	AsVersionParseFlag       flags;
-};
+} FuVendorQuirks;
 
-static const struct vendor_quirks quirk_table[] = {
+static const FuVendorQuirks quirk_table[] = {
 	/* Dell uses AA.BB.CC.DD rather than AA.BB.CCDD */
 	{ "Dell Inc.",	"com.dell.uefi",	AS_VERSION_PARSE_FLAG_NONE },
-	{ NULL,	NULL,	AS_VERSION_PARSE_FLAG_NONE }
+	{ NULL,		NULL,			AS_VERSION_PARSE_FLAG_NONE }
 };
 
 #endif /* __FU_QUIRKS_H */

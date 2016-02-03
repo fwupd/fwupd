@@ -104,6 +104,7 @@ fwupd_SOURCES =						\
 	fu-provider-udev.h				\
 	fu-provider-usb.c				\
 	fu-provider-usb.h				\
+	fu-quirks.h					\
 	fu-resources.c					\
 	fu-resources.h					\
 	fu-rom.c					\
