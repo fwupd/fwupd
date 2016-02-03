@@ -43,6 +43,7 @@
 #include "fu-provider-udev.h"
 #include "fu-provider-usb.h"
 #include "fu-resources.h"
+#include "fu-quirks.h"
 
 #ifdef HAVE_COLORHUG
   #include "fu-provider-chug.h"
@@ -450,9 +451,9 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 	if (as_app_get_id_kind (app) != AS_ID_KIND_FIRMWARE)
 		return;
 
-	/* Dell uses AA.BB.CC.DD rather than AA.BB.CCDD */
-	if (g_str_has_prefix (as_app_get_id (app), "com.dell.uefi"))
-		flags = AS_VERSION_PARSE_FLAG_NONE;
+        for (i = 0; quirk_table[i].identifier != NULL; i++)
+		if (g_str_has_prefix (as_app_get_id(app), quirk_table[i].identifier))
+			flags = quirk_table[i].flags;
 
 	/* fix each release */
 	releases = as_app_get_releases (app);
