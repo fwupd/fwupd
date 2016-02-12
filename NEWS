@@ -1,6 +1,17 @@
+Version 0.6.2
+~~~~~~~~~~~~~
+Released: 2016-02-12
+
+New Features:
+ - Add 'Created' and 'Modified' properties on managed devices (Richard Hughes)
+
+Bugfixes:
+ - Fix get-results for UEFI provider (Mario Limonciello)
+ - Support vendor-specific UEFI version encodings (Richard Hughes)
+
 Version 0.6.1
 ~~~~~~~~~~~~~
-Released: 2015-01-19
+Released: 2016-01-19
 
 Bugfixes:
  - Always persist ColorHug devices after replug (Richard Hughes)
