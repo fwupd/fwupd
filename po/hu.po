@@ -4,13 +4,14 @@
 # 
 # Translators:
 # Balázs Úr <urbalazs@gmail.com>, 2015
+# Gabor Kelemen <kelemeng at ubuntu dot com>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-07 12:22+0000\n"
-"PO-Revision-Date: 2015-12-07 12:22+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2016-02-12 16:50+0000\n"
+"PO-Revision-Date: 2016-01-31 00:31+0000\n"
+"Last-Translator: kelemeng <kelemeng@ubuntu.com>\n"
 "Language-Team: Hungarian (http://www.transifex.com/hughsie/fwupd/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -58,165 +59,165 @@ msgstr "Álnév ehhez: %s"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
-msgstr ""
+msgstr "A parancs nem található"
 
 #. TRANSLATORS: when an action has completed
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #. TRANSLATORS: when moving from runtime to DFU mode
 msgid "Detaching"
-msgstr ""
+msgstr "Leválasztás"
 
 #. TRANSLATORS: when moving from DFU to runtime mode
 msgid "Attaching"
-msgstr ""
+msgstr "Csatlakozás"
 
 #. TRANSLATORS: when copying from host to device
 msgid "Downloading"
-msgstr ""
+msgstr "Letöltés"
 
 #. TRANSLATORS: when copying from device to host
 msgid "Uploading"
-msgstr ""
+msgstr "Feltöltés"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
-msgstr ""
+msgstr "Hozzáadva"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Removed"
-msgstr ""
+msgstr "Eltávolítva"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Changed"
-msgstr ""
+msgstr "Módosítva"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
-msgstr ""
+msgstr "Megszakítva"
 
 #. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
-msgstr ""
+msgstr "AZONOSÍTÓ"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 msgid "Name"
-msgstr ""
+msgstr "Név"
 
 #. TRANSLATORS: this is the encryption method used when writing
 msgid "Cipher"
-msgstr ""
+msgstr "Titkosító"
 
 #. TRANSLATORS: these are areas of memory on the chip
 msgid "Region"
-msgstr ""
+msgstr "Régió"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
-msgstr ""
+msgstr "Megtalálva"
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
 #. TRANSLATORS: device status, e.g. "OK"
 msgid "Status"
-msgstr ""
+msgstr "Állapot"
 
 msgid "Unknown: permission denied"
-msgstr ""
+msgstr "Ismeretlen: hozzáférés megtagadva"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
 msgid "Mode"
-msgstr ""
+msgstr "Mód"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
-msgstr ""
+msgstr "Állapot"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
 msgid "Quirks"
-msgstr ""
+msgstr "Kompatibilitási trükkök"
 
 #. TRANSLATORS: command description
 msgid "Convert firmware to DFU format"
-msgstr ""
+msgstr "A firmware DFU formátumra konvertálása"
 
 #. TRANSLATORS: command description
 msgid "Merge multiple firmware files into one"
-msgstr ""
+msgstr "Több firmware fájl egyesítése"
 
 #. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
-msgstr ""
+msgstr "Gyártóazonosító beállítása firmware fájlon"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
-msgstr ""
+msgstr "Termékazonosító beállítása firmware fájlon"
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
-msgstr ""
+msgstr "Kiadási verzió beállítása firmware fájlon"
 
 #. TRANSLATORS: command description
 msgid "Set alternative number on firmware file"
-msgstr ""
+msgstr "Alternatív szám beállítása firmware fájlon"
 
 #. TRANSLATORS: command description
 msgid "Set alternative name on firmware file"
-msgstr ""
+msgstr "Alternatív név beállítása firmware fájlon"
 
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
-msgstr ""
+msgstr "DFU-képes eszköz visszacsatolása a futtatókörnyezethez"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
-msgstr ""
+msgstr "Firmware beolvasása eszközről fájlba"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
-msgstr ""
+msgstr "Firmware beolvasása egy partícióról fájlba"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"
-msgstr ""
+msgstr "Firmware írása fájlból egy eszközre"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into one partition"
-msgstr ""
+msgstr "Firmware írása fájlból egy partícióra"
 
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
-msgstr ""
+msgstr "Aktuálisan csatlakoztatott DFU-képes eszközök felsorolása"
 
 #. TRANSLATORS: command description
 msgid "Detach currently attached DFU capable device"
-msgstr ""
+msgstr "Aktuálisan csatlakoztatott DFU-képes eszközök leválasztása"
 
 #. TRANSLATORS: command description
 msgid "Dump details about a firmware file"
-msgstr ""
+msgstr "Részletek kiírása egy firmware fájlról"
 
 #. TRANSLATORS: command description
 msgid "Watch DFU devices being hotplugged"
-msgstr ""
+msgstr "DFU-eszközök menet közbeni csatlakoztatásának figyelése"
 
 #. TRANSLATORS: command description
 msgid "Encrypt firmware data"
-msgstr ""
+msgstr "Firmware adatok titkosítása"
 
 #. TRANSLATORS: command description
 msgid "Decrypt firmware data"
-msgstr ""
+msgstr "Firmware adatok visszafejtése"
 
 #. TRANSLATORS: command description
 msgid "Sets metadata on a firmware file"
-msgstr ""
+msgstr "Metaadatok beállítása egy firmware fájlon"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
-msgstr ""
+msgstr "DFU segédprogram"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -244,7 +245,7 @@ msgstr "Kilépés a motor betöltődése után"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr ""
+msgstr "Firmware frissítő démon"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -288,7 +289,7 @@ msgstr "Kész!"
 
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
-msgstr ""
+msgstr "Újrapróbálás kapcsolat nélküli frissítésként"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -318,7 +319,7 @@ msgstr "%s firmware frissítésekkel rendelkezik:"
 
 #. TRANSLATORS: a GUID for the hardware
 msgid "GUID"
-msgstr ""
+msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Version"
@@ -342,15 +343,15 @@ msgstr "További hibakeresési információk megjelenítése"
 
 #. TRANSLATORS: command line option
 msgid "Perform the installation offline where possible"
-msgstr ""
+msgstr "A telepítés végrehajtása kapcsolat nélkül, ha lehetséges"
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
-msgstr ""
+msgstr "Meglévő firmware verziók újratelepítésének engedélyezése"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
-msgstr ""
+msgstr "Firmware verziók visszafejlesztésének engedélyezése"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -374,11 +375,11 @@ msgstr "A frissítések listáját kéri le a csatlakoztatott hardverhez"
 
 #. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"
-msgstr ""
+msgstr "Minden firmware-t az elérhető legfrissebb verziókra frissít"
 
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr ""
+msgstr "A kiírt firmware kriptográfiai hash-ének lekérése"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -390,19 +391,19 @@ msgstr "A legutóbbi frissítésből származó eredményeket kéri le"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr ""
+msgstr "Metaadatok frissítése a távoli kiszolgálóról"
 
 #. TRANSLATORS: command description
 msgid "Dump the ROM checksum"
-msgstr ""
+msgstr "A ROM ellenőrzőösszegének kiírása"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
-msgstr ""
+msgstr "A tárolt metaadatok frissítése az aktuális ROM tartalmával"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
-msgstr ""
+msgstr "Firmware segédprogram"
 
 #. TRANSLATORS: the user is in a bad place
 msgid "Failed to connect to D-Bus"

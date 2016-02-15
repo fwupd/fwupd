@@ -41,7 +41,7 @@ static void	fu_provider_chug_finalize	(GObject	*object);
  * FuProviderChugPrivate:
  **/
 typedef struct {
-	GHashTable		*devices;
+	GHashTable		*devices;	/* DeviceKey:FuProviderChugItem */
 	GUsbContext		*usb_ctx;
 	ChDeviceQueue		*device_queue;
 } FuProviderChugPrivate;
@@ -53,7 +53,6 @@ typedef struct {
 	GUsbDevice		*usb_device;
 	gboolean		 got_version;
 	gboolean		 is_bootloader;
-	gboolean		 persist_after_unplug;
 	guint			 timeout_open_id;
 	guint			 reconnect_id;
 	GBytes			*fw_bin;
@@ -69,6 +68,17 @@ static const gchar *
 fu_provider_chug_get_name (FuProvider *provider)
 {
 	return "ColorHug";
+}
+
+/**
+ * fu_provider_chug_get_device_key:
+ **/
+static gchar *
+fu_provider_chug_get_device_key (GUsbDevice *device)
+{
+	return g_strdup_printf ("%s_%s",
+				g_usb_device_get_platform_id (device),
+				ch_device_get_guid (device));
 }
 
 /**
@@ -171,7 +181,6 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 		if (tmp != NULL) {
 			item->got_version = TRUE;
 			g_debug ("obtained fwver using extension '%s'", tmp);
-			item->persist_after_unplug = FALSE;
 			fu_device_set_metadata (item->device,
 						FU_DEVICE_KEY_VERSION, tmp);
 			goto out;
@@ -180,7 +189,6 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 	g_usb_device_close (item->usb_device, NULL);
 
 	/* attempt to open the device and get the serial number */
-	item->persist_after_unplug = TRUE;
 	if (!ch_device_open (item->usb_device, &error)) {
 		g_debug ("Failed to claim interface, polling: %s", error->message);
 		return;
@@ -333,6 +341,7 @@ fu_provider_chug_update (FuProvider *provider,
 		g_usb_device_close (item->usb_device, NULL);
 
 		/* wait for reconnection */
+		g_debug ("ColorHug: Waiting for bootloader");
 		if (!fu_provider_chug_wait_for_connect (item, error))
 			return FALSE;
 	}
@@ -472,7 +481,7 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
 	ChDeviceMode mode;
-	const gchar *platform_id = NULL;
+	g_autofree gchar *device_key = NULL;
 
 	/* ignore */
 	mode = ch_device_get_mode (device);
@@ -485,15 +494,17 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		return;
 
 	/* is already in database */
-	platform_id = g_usb_device_get_platform_id (device);
-	item = g_hash_table_lookup (priv->devices, platform_id);
+	device_key = fu_provider_chug_get_device_key (device);
+	item = g_hash_table_lookup (priv->devices, device_key);
 	if (item == NULL) {
 		item = g_new0 (FuProviderChugItem, 1);
 		item->loop = g_main_loop_new (NULL, FALSE);
 		item->provider_chug = g_object_ref (provider_chug);
 		item->usb_device = g_object_ref (device);
 		item->device = fu_device_new ();
-		fu_device_set_id (item->device, platform_id);
+		fu_device_set_id (item->device, device_key);
+		fu_device_set_equivalent_id (item->device,
+					     g_usb_device_get_platform_id (device));
 		fu_device_set_guid (item->device, ch_device_get_guid (device));
 		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
 		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_ONLINE);
@@ -507,8 +518,7 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		}
 
 		/* insert to hash */
-		g_hash_table_insert (priv->devices,
-				     g_strdup (platform_id), item);
+		g_hash_table_insert (priv->devices, g_strdup (device_key), item);
 	} else {
 		/* update the device */
 		g_object_unref (item->usb_device);
@@ -568,11 +578,11 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 {
 	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
-	const gchar *platform_id = NULL;
+	g_autofree gchar *device_key = NULL;
 
 	/* already in database */
-	platform_id = g_usb_device_get_platform_id (device);
-	item = g_hash_table_lookup (priv->devices, platform_id);
+	device_key = fu_provider_chug_get_device_key (device);
+	item = g_hash_table_lookup (priv->devices, device_key);
 	if (item == NULL)
 		return;
 
@@ -582,12 +592,6 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 		item->timeout_open_id = 0;
 	}
 	fu_provider_device_remove (FU_PROVIDER (provider_chug), item->device);
-
-	/* if we got the version from an extension then it's best to
-	 * rescan each time so we don't get confused when different
-	 * kinds of ColorHug device are plugged in... */
-	if (!item->persist_after_unplug)
-		g_hash_table_remove (priv->devices, platform_id);
 }
 
 /**

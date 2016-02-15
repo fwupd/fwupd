@@ -32,6 +32,7 @@
 #include "fu-device.h"
 #include "fu-pending.h"
 #include "fu-provider-uefi.h"
+#include "fu-quirks.h"
 
 static void	fu_provider_uefi_finalize	(GObject	*object);
 
@@ -168,6 +169,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 	guint32 status = 0;
 	guint32 version = 0;
 	g_autofree gchar *version_str = NULL;
+	time_t when = 0;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
@@ -176,7 +178,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 		ret = FALSE;
 		goto out;
 	}
-	if (fwup_get_last_attempt_info (re, &version, &status, NULL) < 0) {
+	if (fwup_get_last_attempt_info (re, &version, &status, &when) < 0) {
 		ret = FALSE;
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -248,11 +250,34 @@ out:
 }
 
 /**
+ * fu_provider_uefi_get_version_format:
+ **/
+static AsVersionParseFlag
+fu_provider_uefi_get_version_format (void)
+{
+	guint i;
+	g_autofree gchar *content = NULL;
+	/* any vendors match */
+	if (!g_file_get_contents ("/sys/class/dmi/id/sys_vendor",
+				  &content, NULL, NULL))
+		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+	g_strchomp (content);
+	for (i = 0; quirk_table[i].sys_vendor != NULL; i++) {
+		if (g_strcmp0 (content, quirk_table[i].sys_vendor) == 0)
+			return quirk_table[i].flags;
+	}
+
+	/* fall back */
+	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+}
+
+/**
  * fu_provider_uefi_coldplug:
  **/
 static gboolean
 fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 {
+	AsVersionParseFlag parse_flags;
 	fwup_resource_iter *iter = NULL;
 	fwup_resource *re;
 	g_autofree gchar *guid = NULL;
@@ -278,6 +303,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 
 	/* add each device */
 	guid = g_strdup ("00000000-0000-0000-0000-000000000000");
+	parse_flags = fu_provider_uefi_get_version_format ();
 	while (fwup_resource_iter_next (iter, &re) > 0) {
 		efi_guid_t *guid_raw;
 		guint32 version_raw;
@@ -294,7 +320,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		}
 		fwup_get_fw_version(re, &version_raw);
 		version = as_utils_version_from_uint32 (version_raw,
-							AS_VERSION_PARSE_FLAG_USE_TRIPLET);
+							parse_flags);
 		id = g_strdup_printf ("UEFI-%s-dev%" G_GUINT64_FORMAT,
 				      guid, hardware_instance);
 
@@ -305,7 +331,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		fwup_get_lowest_supported_fw_version (re, &version_raw);
 		if (version_raw != 0) {
 			version_lowest = as_utils_version_from_uint32 (version_raw,
-								       AS_VERSION_PARSE_FLAG_USE_TRIPLET);
+								       parse_flags);
 			fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION_LOWEST,
 						version_lowest);
 		}

@@ -374,6 +374,7 @@ fu_provider_device_add (FuProvider *provider, FuDevice *device)
 	g_debug ("emit added from %s: %s",
 		 fu_provider_get_name (provider),
 		 fu_device_get_id (device));
+	fu_device_set_created (device, g_get_real_time () / G_USEC_PER_SEC);
 	fu_device_set_metadata (device, FU_DEVICE_KEY_PROVIDER,
 				fu_provider_get_name (provider));
 	g_signal_emit (provider, signals[SIGNAL_DEVICE_ADDED], 0, device);

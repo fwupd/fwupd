@@ -91,6 +91,7 @@ fu_pending_load (FuPending *pending, GError **error)
 		statement = "CREATE TABLE pending ("
 			    "device_id TEXT PRIMARY KEY,"
 			    "state INTEGER DEFAULT 0,"
+			    "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,"
 			    "error TEXT,"
 			    "filename TEXT,"
 			    "display_name TEXT,"
@@ -121,6 +122,18 @@ fu_pending_load (FuPending *pending, GError **error)
 		statement = "ALTER TABLE pending ADD COLUMN error TEXT;";
 		sqlite3_exec (priv->db, statement, NULL, NULL, NULL);
 		statement = "ALTER TABLE pending ADD COLUMN provider TEXT;";
+		sqlite3_exec (priv->db, statement, NULL, NULL, NULL);
+	}
+
+	/* check pending has timestamp (since 0.6.2) */
+	rc = sqlite3_exec (priv->db,
+			   "SELECT timestamp FROM pending LIMIT 1",
+			   NULL, NULL, &error_msg);
+	if (rc != SQLITE_OK) {
+		g_debug ("FuPending: altering table to repair: %s", error_msg);
+		sqlite3_free (error_msg);
+		statement = "ALTER TABLE pending ADD COLUMN timestamp TIMESTAMP "
+			    "DEFAULT CURRENT_TIMESTAMP NOT NULL0;";
 		sqlite3_exec (priv->db, statement, NULL, NULL, NULL);
 	}
 
@@ -270,6 +283,12 @@ fu_pending_device_sqlite_cb (void *data,
 			FuPendingState state = atoi (argv[i]);
 			fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
 						fu_pending_state_to_string (state));
+			continue;
+		}
+		if (g_strcmp0 (col_name[i], "timestamp") == 0) {
+			guint64 timestamp = g_ascii_strtoull (argv[i], NULL, 10);
+			if (timestamp > 0)
+				fu_device_set_created (device, timestamp);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "error") == 0) {

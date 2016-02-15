@@ -124,19 +124,6 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	/* get data */
 	ptask = as_profile_start (profile, "FuProviderUdev:client-add{%s}", guid);
 	g_debug ("adding udev device: %s", g_udev_device_get_sysfs_path (device));
-	if (0) {
-		const gchar * const *keys;
-		guint i;
-		keys = g_udev_device_get_property_keys (device);
-		for (i = 0; keys[i] != NULL; i++)
-			g_debug ("KEY: %s=%s", keys[i],
-				 g_udev_device_get_property (device, keys[i]));
-
-		keys = g_udev_device_get_sysfs_attr_keys (device);
-		for (i = 0; keys[i] != NULL; i++)
-			g_debug ("SYS: %s=%s", keys[i],
-				 g_udev_device_get_sysfs_attr (device, keys[i]));
-	}
 
 	/* is already in database */
 	id = fu_provider_udev_get_id (device);

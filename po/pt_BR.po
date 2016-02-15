@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-07 12:22+0000\n"
-"PO-Revision-Date: 2015-12-07 12:22+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2016-01-19 12:57+0000\n"
+"PO-Revision-Date: 2015-12-14 17:03+0000\n"
+"Last-Translator: Rafael Fontenelle <rffontenelle@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/hughsie/fwupd/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -67,157 +67,157 @@ msgstr "OK"
 
 #. TRANSLATORS: when moving from runtime to DFU mode
 msgid "Detaching"
-msgstr ""
+msgstr "Desanexando"
 
 #. TRANSLATORS: when moving from DFU to runtime mode
 msgid "Attaching"
-msgstr ""
+msgstr "Anexando"
 
 #. TRANSLATORS: when copying from host to device
 msgid "Downloading"
-msgstr ""
+msgstr "Baixando"
 
 #. TRANSLATORS: when copying from device to host
 msgid "Uploading"
-msgstr ""
+msgstr "Enviando"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
-msgstr ""
+msgstr "Adicionado"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Removed"
-msgstr ""
+msgstr "Removido"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Changed"
-msgstr ""
+msgstr "Alterado"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
-msgstr ""
+msgstr "Cancelado"
 
 #. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 msgid "Name"
-msgstr ""
+msgstr "Nome"
 
 #. TRANSLATORS: this is the encryption method used when writing
 msgid "Cipher"
-msgstr ""
+msgstr "Cifra"
 
 #. TRANSLATORS: these are areas of memory on the chip
 msgid "Region"
-msgstr ""
+msgstr "Região"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
-msgstr ""
+msgstr "Encontrado"
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
 #. TRANSLATORS: device status, e.g. "OK"
 msgid "Status"
-msgstr ""
+msgstr "Status"
 
 msgid "Unknown: permission denied"
-msgstr ""
+msgstr "Desconhecido: permissão negada"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
 msgid "Mode"
-msgstr ""
+msgstr "Modo"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
-msgstr ""
+msgstr "Estado"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
 msgid "Quirks"
-msgstr ""
+msgstr "Gambiarra"
 
 #. TRANSLATORS: command description
 msgid "Convert firmware to DFU format"
-msgstr ""
+msgstr "Converter firmware para formato DFU"
 
 #. TRANSLATORS: command description
 msgid "Merge multiple firmware files into one"
-msgstr ""
+msgstr "Mesclar múltiplos arquivos de firmware em um"
 
 #. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
-msgstr ""
+msgstr "Definir ID de fabricante no arquivo de firmware"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
-msgstr ""
+msgstr "Definir ID de produto no arquivo de firmware"
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
-msgstr ""
+msgstr "Definir versão de lançamento no arquivo de firmware"
 
 #. TRANSLATORS: command description
 msgid "Set alternative number on firmware file"
-msgstr ""
+msgstr "Definir número alternativo no arquivo de firmware"
 
 #. TRANSLATORS: command description
 msgid "Set alternative name on firmware file"
-msgstr ""
+msgstr "Definir nome alternativo no arquivo de firmware"
 
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
-msgstr ""
+msgstr "Anexar dispositivo com capacidade de DFU em tempo real"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
-msgstr ""
+msgstr "Ler firmware do dispositivo para um arquivo"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
-msgstr ""
+msgstr "Ler firmware de uma partição para um arquivo"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"
-msgstr ""
+msgstr "Escrever firmware do arquivo para o dispositivo"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into one partition"
-msgstr ""
+msgstr "Escrever firmware do arquivo para uma partição"
 
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
-msgstr ""
+msgstr "Lista de dispositivos com capacidade de DFU atualmente anexados"
 
 #. TRANSLATORS: command description
 msgid "Detach currently attached DFU capable device"
-msgstr ""
+msgstr "Desanexar dispositivos com capacidade de DFU atualmente anexados"
 
 #. TRANSLATORS: command description
 msgid "Dump details about a firmware file"
-msgstr ""
+msgstr "Despejar detalhes sobre um arquivo firmware"
 
 #. TRANSLATORS: command description
 msgid "Watch DFU devices being hotplugged"
-msgstr ""
+msgstr "Monitorar dispositivos DFU sendo conectados"
 
 #. TRANSLATORS: command description
 msgid "Encrypt firmware data"
-msgstr ""
+msgstr "Criptografar dados do firmware"
 
 #. TRANSLATORS: command description
 msgid "Decrypt firmware data"
-msgstr ""
+msgstr "Descriptografar dados do firmware"
 
 #. TRANSLATORS: command description
 msgid "Sets metadata on a firmware file"
-msgstr ""
+msgstr "Define metadados em um arquivo de firmware"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
-msgstr ""
+msgstr "Utilitário DFU"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -319,7 +319,7 @@ msgstr "%s tem atualizações:"
 
 #. TRANSLATORS: a GUID for the hardware
 msgid "GUID"
-msgstr ""
+msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Version"

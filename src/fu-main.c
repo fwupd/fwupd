@@ -43,6 +43,7 @@
 #include "fu-provider-udev.h"
 #include "fu-provider-usb.h"
 #include "fu-resources.h"
+#include "fu-quirks.h"
 
 #ifdef HAVE_COLORHUG
   #include "fu-provider-chug.h"
@@ -200,6 +201,8 @@ fu_main_get_item_by_id (FuMainPrivate *priv, const gchar *id)
 		item = g_ptr_array_index (priv->devices, i);
 		if (g_strcmp0 (fu_device_get_id (item->device), id) == 0)
 			return item;
+		if (g_strcmp0 (fu_device_get_equivalent_id (item->device), id) == 0)
+			return item;
 	}
 	return NULL;
 }
@@ -352,6 +355,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 		return FALSE;
 
 	/* make the UI update */
+	fu_device_set_modified (item->device, g_get_real_time () / G_USEC_PER_SEC);
 	fu_main_emit_changed (helper->priv);
 	return TRUE;
 }
@@ -431,6 +435,54 @@ fu_main_get_guids_from_store (AsStore *store)
 		return NULL;
 	g_string_truncate (str, str->len - 1);
 	return g_string_free (str, FALSE);
+}
+
+/**
+ * fu_main_vendor_quirk_release_version:
+ **/
+static void
+fu_main_vendor_quirk_release_version (AsApp *app)
+{
+	AsVersionParseFlag flags = AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+	GPtrArray *releases;
+	guint i;
+
+	/* no quirk required */
+	if (as_app_get_id_kind (app) != AS_ID_KIND_FIRMWARE)
+		return;
+
+        for (i = 0; quirk_table[i].identifier != NULL; i++)
+		if (g_str_has_prefix (as_app_get_id(app), quirk_table[i].identifier))
+			flags = quirk_table[i].flags;
+
+	/* fix each release */
+	releases = as_app_get_releases (app);
+	for (i = 0; i < releases->len; i++) {
+		AsRelease *rel;
+		const gchar *version;
+		guint64 ver_uint32;
+		g_autofree gchar *version_new = NULL;
+
+		rel = g_ptr_array_index (releases, i);
+		version = as_release_get_version (rel);
+		if (version == NULL)
+			continue;
+		if (g_strstr_len (version, -1, ".") != NULL)
+			continue;
+
+		/* metainfo files use hex and the LVFS uses decimal */
+		if (g_str_has_prefix (version, "0x")) {
+			ver_uint32 = g_ascii_strtoull (version + 2, NULL, 16);
+		} else {
+			ver_uint32 = g_ascii_strtoull (version, NULL, 10);
+		}
+		if (ver_uint32 == 0)
+			continue;
+
+		/* convert to dotted decimal */
+		version_new = as_utils_version_from_uint32 (ver_uint32, flags);
+		as_release_set_version (rel, version_new);
+	}
 }
 
 /**
@@ -517,6 +569,9 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 				     "failed to get firmware blob");
 		return FALSE;
 	}
+
+	/* possibly convert the version from 0x to dotted */
+	fu_main_vendor_quirk_release_version (app);
 
 	version = as_release_get_version (rel);
 	fu_device_set_metadata (helper->device, FU_DEVICE_KEY_UPDATE_VERSION, version);
@@ -809,13 +864,17 @@ fu_main_store_delay_cb (gpointer user_data)
 	guint i;
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 
-	g_debug ("devices now in store:");
 	apps = as_store_get_apps (priv->store);
-	for (i = 0; i < apps->len; i++) {
-		app = g_ptr_array_index (apps, i);
-		g_debug ("%i\t%s\t%s", i + 1,
-			 as_app_get_id (app),
-			 as_app_get_name (app, NULL));
+	if (apps->len == 0) {
+		g_debug ("no devices in store");
+	} else {
+		g_debug ("devices now in store:");
+		for (i = 0; i < apps->len; i++) {
+			app = g_ptr_array_index (apps, i);
+			g_debug ("%i\t%s\t%s", i + 1,
+				 as_app_get_id (app),
+				 as_app_get_name (app, NULL));
+		}
 	}
 	priv->store_changed_id = 0;
 	return G_SOURCE_REMOVE;
@@ -864,6 +923,9 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 						   fu_device_get_guid (item->device));
 		if (app == NULL)
 			continue;
+
+		/* possibly convert the version from 0x to dotted */
+		fu_main_vendor_quirk_release_version (app);
 
 		/* get latest release */
 		rel = as_app_get_release_default (app);
@@ -1402,6 +1464,9 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			return;
 		}
 
+		/* possibly convert the version from 0x to dotted */
+		fu_main_vendor_quirk_release_version (app);
+
 		/* create an array with all the metadata in */
 		g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 		g_variant_builder_add (&builder, "{sv}",
@@ -1571,7 +1636,8 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 	}
 
 	/* dump startup profile data */
-	as_profile_dump (priv->profile);
+	if (fu_debug_is_verbose ())
+		as_profile_dump (priv->profile);
 }
 
 /**

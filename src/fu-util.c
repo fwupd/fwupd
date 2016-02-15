@@ -331,6 +331,19 @@ fu_util_get_updates_internal (FuUtilPrivate *priv, GError **error)
 }
 
 /**
+ * pad_print:
+ **/
+static void
+pad_print (const gchar *key, const gchar *value)
+{
+	guint k;
+	g_print ("  %s:", key);
+	for (k = strlen (key); k < 15; k++)
+		g_print (" ");
+	g_print (" %s\n", value);
+}
+
+/**
  * fu_util_get_devices:
  **/
 static gboolean
@@ -340,13 +353,14 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 	guint i;
 	guint j;
-	guint k;
 	guint f;
 	guint64 flags;
 	const gchar *value;
 	const gchar *keys[] = {
 		FU_DEVICE_KEY_DISPLAY_NAME,
 		FU_DEVICE_KEY_PROVIDER,
+		FU_DEVICE_KEY_CREATED,
+		FU_DEVICE_KEY_MODIFIED,
 		FU_DEVICE_KEY_APPSTREAM_ID,
 		FU_DEVICE_KEY_GUID,
 		FU_DEVICE_KEY_VERSION,
@@ -377,6 +391,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
+
 	for (i = 0; i < devices->len; i++) {
 		dev = g_ptr_array_index (devices, i);
 		g_print ("Device: %s\n", fu_device_get_id (dev));
@@ -384,20 +399,30 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 			if (g_strcmp0 (keys[j], FU_DEVICE_KEY_FLAGS) == 0) {
 				flags = fu_device_get_flags (dev);
 				for (f = 0; flags_str[f] != NULL; f++) {
-					g_print ("  %s:", flags_str[f]);
-					for (k = strlen (flags_str[f]); k < 15; k++)
-						g_print (" ");
-					g_print (" %s\n", flags & (1 << f) ? "True" : "False");
+					pad_print (flags_str[f],
+						   flags & (1 << f) ? "True" : "False");
 				}
 				continue;
 			}
-			value = fu_device_get_metadata (dev, keys[j]);
-			if (value != NULL) {
-				g_print ("  %s:", keys[j]);
-				for (k = strlen (keys[j]); k < 15; k++)
-					g_print (" ");
-				g_print (" %s\n", value);
+			if (g_strcmp0 (keys[j], FU_DEVICE_KEY_CREATED) == 0) {
+				g_autoptr(GDateTime) date = NULL;
+				g_autofree gchar *date_str = NULL;
+				date = g_date_time_new_from_unix_utc (fu_device_get_created (dev));
+				date_str = g_date_time_format (date, "%F");
+				pad_print (keys[j], date_str);
 			}
+			if (g_strcmp0 (keys[j], FU_DEVICE_KEY_MODIFIED) == 0) {
+				g_autoptr(GDateTime) date = NULL;
+				g_autofree gchar *date_str = NULL;
+				if (fu_device_get_modified (dev) > 0) {
+					date = g_date_time_new_from_unix_utc (fu_device_get_modified (dev));
+					date_str = g_date_time_format (date, "%F");
+					pad_print (keys[j], date_str);
+				}
+			}
+			value = fu_device_get_metadata (dev, keys[j]);
+			if (value != NULL)
+				pad_print (keys[j], value);
 		}
 	}
 
