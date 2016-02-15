@@ -2,8 +2,8 @@ fwupd (0.6.2-1) unstable; urgency=medium
 
   * New upstream release (0.6.2)
     - Fixes for Dell HW versions and UEFI get-results.
-  * Set polkit rules to be effective with proper group (Fixes: #808832)
-  * Add rules compatible with polkit 0.105. (Fixes: #808833)
+  * Set polkit rules to be effective with proper group (Closes: #808832)
+  * Add rules compatible with polkit 0.105. (Closes: #808833)
 
  -- Mario Limonciello <mario_limonciello@dell.com>  Mon, 15 Feb 2016 08:37:19 -0600
 
