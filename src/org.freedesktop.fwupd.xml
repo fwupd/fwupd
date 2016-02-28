@@ -161,6 +161,25 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='Unlock'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Unlock the device to allow firmware access.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              An ID, typically a GUID of the hardware.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='GetResults'>
       <doc:doc>
         <doc:description>

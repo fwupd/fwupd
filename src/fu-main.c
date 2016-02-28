@@ -296,6 +296,13 @@ fu_main_get_release_trust_flags (AsRelease *release,
 	return TRUE;
 }
 
+typedef enum {
+	FU_MAIN_AUTH_KIND_UNKNOWN,
+	FU_MAIN_AUTH_KIND_INSTALL,
+	FU_MAIN_AUTH_KIND_UNLOCK,
+	FU_MAIN_AUTH_KIND_LAST
+} FuMainAuthKind;
+
 typedef struct {
 	GDBusMethodInvocation	*invocation;
 	AsStore			*store;
@@ -305,6 +312,7 @@ typedef struct {
 	GBytes			*blob_fw;
 	GBytes			*blob_cab;
 	gint			 vercmp;
+	FuMainAuthKind		 auth_kind;
 	FuMainPrivate		*priv;
 } FuMainAuthHelper;
 
@@ -321,8 +329,9 @@ fu_main_helper_free (FuMainAuthHelper *helper)
 		g_bytes_unref (helper->blob_fw);
 	if (helper->blob_cab > 0)
 		g_bytes_unref (helper->blob_cab);
+	if (helper->store != NULL)
+		g_object_unref (helper->store);
 	g_object_unref (helper->invocation);
-	g_object_unref (helper->store);
 	g_free (helper);
 }
 
@@ -354,6 +363,36 @@ fu_main_on_battery (void)
 		return FALSE;
 	}
 	return g_variant_get_boolean (value);
+}
+
+/**
+ * fu_main_provider_unlock_authenticated:
+ **/
+static gboolean
+fu_main_provider_unlock_authenticated (FuMainAuthHelper *helper, GError **error)
+{
+	FuDeviceItem *item;
+
+	/* check the device still exists */
+	item = fu_main_get_item_by_id (helper->priv, fu_device_get_id (helper->device));
+	if (item == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "device %s was removed",
+			     fu_device_get_id (helper->device));
+		return FALSE;
+	}
+
+	/* run the correct provider that added this */
+	if (!fu_provider_unlock (item->provider,
+				 item->device,
+				 error))
+		return FALSE;
+
+	/* make the UI update */
+	fu_main_emit_changed (helper->priv);
+	return TRUE;
 }
 
 /**
@@ -436,10 +475,20 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	}
 
 	/* we're good to go */
-	if (!fu_main_provider_update_authenticated (helper, &error)) {
-		g_dbus_method_invocation_return_gerror (helper->invocation, error);
-		fu_main_helper_free (helper);
-		return;
+	if (helper->auth_kind == FU_MAIN_AUTH_KIND_INSTALL) {
+		if (!fu_main_provider_update_authenticated (helper, &error)) {
+			g_dbus_method_invocation_return_gerror (helper->invocation, error);
+			fu_main_helper_free (helper);
+			return;
+		}
+	} else if (helper->auth_kind == FU_MAIN_AUTH_KIND_UNLOCK) {
+		if (!fu_main_provider_unlock_authenticated (helper, &error)) {
+			g_dbus_method_invocation_return_gerror (helper->invocation, error);
+			fu_main_helper_free (helper);
+			return;
+		}
+	} else {
+		g_assert_not_reached ();
 	}
 
 	/* success */
@@ -1196,6 +1245,55 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	}
 
 	/* return 's' */
+	if (g_strcmp0 (method_name, "Unlock") == 0) {
+		FuDeviceItem *item = NULL;
+		FuMainAuthHelper *helper;
+		const gchar *id = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		/* check the id exists */
+		g_variant_get (parameters, "(&s)", &id);
+		g_debug ("Called %s(%s)", method_name, id);
+		item = fu_main_get_item_by_id (priv, id);
+		if (item == NULL) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_FOUND,
+							       "No such device %s",
+							       id);
+			return;
+		}
+
+		/* check the device is locked */
+		if ((fu_device_get_flags (item->device) & FU_DEVICE_FLAG_LOCKED) == 0) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_FOUND,
+							       "Device %s is not locked",
+							       id);
+			return;
+		}
+
+		/* process the firmware */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->auth_kind = FU_MAIN_AUTH_KIND_UNLOCK;
+		helper->invocation = g_object_ref (invocation);
+		helper->device = g_object_ref (item->device);
+		helper->priv = priv;
+
+		/* authenticate */
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (helper->priv->authority, subject,
+						      "org.freedesktop.fwupd.device-unlock",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_check_authorization_cb,
+						      helper);
+		return;
+	}
+
+	/* return 's' */
 	if (g_strcmp0 (method_name, "Verify") == 0) {
 		AsApp *app;
 		AsChecksum *csum;
@@ -1355,6 +1453,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 		/* process the firmware */
 		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->auth_kind = FU_MAIN_AUTH_KIND_INSTALL;
 		helper->invocation = g_object_ref (invocation);
 		helper->trust_flags = FWUPD_TRUST_FLAG_NONE;
 		helper->blob_cab = g_bytes_ref (blob_cab);

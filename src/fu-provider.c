@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -183,6 +183,41 @@ fu_provider_verify (FuProvider *provider,
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
 	if (klass->verify != NULL)
 		return klass->verify (provider, device, flags, error);
+	return TRUE;
+}
+
+/**
+ * fu_provider_unlock:
+ **/
+gboolean
+fu_provider_unlock (FuProvider *provider,
+		    FuDevice *device,
+		    GError **error)
+{
+	guint64 flags;
+
+	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
+
+	/* final check */
+	flags = fu_device_get_flags (device);
+	if ((flags & FU_DEVICE_FLAG_LOCKED) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Device %s is not locked",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* run provider method */
+	if (klass->unlock != NULL) {
+		if (!klass->unlock (provider, device, error))
+			return FALSE;
+	}
+
+	/* update with correct flags */
+	fu_device_set_flags (device, flags &= ~FU_DEVICE_FLAG_LOCKED);
+	fu_device_set_modified (device, g_get_real_time () / G_USEC_PER_SEC);
 	return TRUE;
 }
 

@@ -66,6 +66,18 @@ fu_provider_udev_get_id (GUdevDevice *device)
 }
 
 /**
+ * fu_provider_udev_unlock:
+ **/
+static gboolean
+fu_provider_udev_unlock (FuProvider *provider,
+			 FuDevice *device,
+			 GError **error)
+{
+	g_debug ("unlocking UDEV device %s", fu_device_get_id (device));
+	return TRUE;
+}
+
+/**
  * fu_provider_udev_verify:
  **/
 static gboolean
@@ -289,6 +301,7 @@ fu_provider_udev_class_init (FuProviderUdevClass *klass)
 	provider_class->get_name = fu_provider_udev_get_name;
 	provider_class->coldplug = fu_provider_udev_coldplug;
 	provider_class->verify = fu_provider_udev_verify;
+	provider_class->unlock = fu_provider_udev_unlock;
 	object_class->finalize = fu_provider_udev_finalize;
 }
 

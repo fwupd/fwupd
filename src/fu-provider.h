@@ -57,6 +57,9 @@ struct _FuProviderClass
 						 FuDevice	*device,
 						 FuProviderVerifyFlags flags,
 						 GError		**error);
+	gboolean	 (*unlock)		(FuProvider	*provider,
+						 FuDevice	*device,
+						 GError		**error);
 	gboolean	 (*update_online)	(FuProvider	*provider,
 						 FuDevice	*device,
 						 GBytes		*blob_fw,
@@ -103,6 +106,9 @@ gboolean	 fu_provider_update		(FuProvider	*provider,
 gboolean	 fu_provider_verify		(FuProvider	*provider,
 						 FuDevice	*device,
 						 FuProviderVerifyFlags flags,
+						 GError		**error);
+gboolean	 fu_provider_unlock		(FuProvider	*provider,
+						 FuDevice	*device,
 						 GError		**error);
 gboolean	 fu_provider_clear_results	(FuProvider	*provider,
 						 FuDevice	*device,
