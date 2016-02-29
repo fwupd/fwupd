@@ -17,7 +17,7 @@
     <developer_name>VIA</developer_name>
     <url type="homepage">http://www.via.com.tw/</url>
     <releases>
-      <release version="0983" timestamp="1400000000">
+      <release version="0983" timestamp="1456743953">
         <description>
           <p>This stable release fixes the following problems with USB 3.0:</p>
           <ul>
@@ -49,14 +49,7 @@
     <developer_name>VIA</developer_name>
     <url type="homepage">http://www.via.com.tw/</url>
     <releases>
-      <release version="9095" timestamp="1400000000">
-        <description>
-          <p>This stable release fixes the following problems:</p>
-          <ul>
-            <li>WHAT WAS FIXED?</li>
-          </ul>
-        </description>
-      </release>
+      <release version="9095" timestamp="1456743953"/>
     </releases>
   </component>
 
@@ -74,14 +67,7 @@
     <developer_name>VIA</developer_name>
     <url type="homepage">http://www.via.com.tw/</url>
     <releases>
-      <release version="8581" timestamp="1400000000">
-        <description>
-          <p>This stable release fixes the following problems:</p>
-          <ul>
-            <li>WHAT WAS FIXED?</li>
-          </ul>
-        </description>
-      </release>
+      <release version="8581" timestamp="1456743953"/>
     </releases>
   </component>
 
@@ -100,14 +86,7 @@
     <developer_name>VIA</developer_name>
     <url type="homepage">http://www.via.com.tw/</url>
     <releases>
-      <release version="9091" timestamp="1400000000">
-        <description>
-          <p>This stable release fixes the following problems:</p>
-          <ul>
-            <li>WHAT WAS FIXED?</li>
-          </ul>
-        </description>
-      </release>
+      <release version="9091" timestamp="1456743953"/>
     </releases>
   </component>
 </components>

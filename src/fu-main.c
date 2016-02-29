@@ -327,6 +327,36 @@ fu_main_helper_free (FuMainAuthHelper *helper)
 }
 
 /**
+ * fu_main_on_battery:
+ **/
+static gboolean
+fu_main_on_battery (void)
+{
+	g_autoptr(GDBusProxy) proxy = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) value = NULL;
+
+	proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+					       G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
+					       NULL,
+					       "org.freedesktop.UPower",
+					       "/org/freedesktop/UPower",
+					       "org.freedesktop.UPower",
+					       NULL,
+					       &error);
+	if (proxy == NULL) {
+		g_warning ("Failed to conect UPower: %s", error->message);
+		return FALSE;
+	}
+	value = g_dbus_proxy_get_cached_property (proxy, "OnBattery");
+	if (value == NULL) {
+		g_warning ("Failed to get OnBattery property value");
+		return FALSE;
+	}
+	return g_variant_get_boolean (value);
+}
+
+/**
  * fu_main_provider_update_authenticated:
  **/
 static gboolean
@@ -343,6 +373,18 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 			     "device %s was removed",
 			     fu_device_get_id (helper->device));
 		return FALSE;
+	}
+
+	/* can we only do this on AC power */
+	if (fu_device_get_flags (item->device) & FU_DEVICE_FLAG_REQUIRE_AC) {
+		if (fu_main_on_battery ()) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "Cannot install update "
+					     "when not on AC power");
+			return FALSE;
+		}
 	}
 
 	/* run the correct provider that added this */

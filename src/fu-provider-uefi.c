@@ -337,6 +337,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		}
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_INTERNAL);
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_OFFLINE);
+		fu_device_add_flag (dev, FU_DEVICE_FLAG_REQUIRE_AC);
 		fu_provider_device_add (provider, dev);
 	}
 	fwup_resource_iter_destroy (&iter);
