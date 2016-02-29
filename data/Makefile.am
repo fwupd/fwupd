@@ -6,6 +6,9 @@ dist_config_DATA = fwupd.conf
 dbusdir = $(sysconfdir)/dbus-1/system.d
 dist_dbus_DATA = org.freedesktop.fwupd.conf
 
+appstreamdir = $(datadir)/app-info/xmls
+dist_appstream_DATA = org.freedesktop.fwupd.xml
+
 dbusservicemaindir = $(datadir)/dbus-1/system-services
 dbusservicemain_in_files = org.freedesktop.fwupd.service.in
 dbusservicemain_DATA     = $(dbusservicemain_in_files:.service.in=.service)
