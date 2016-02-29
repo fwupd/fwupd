@@ -169,7 +169,15 @@ AC_ARG_ENABLE(uefi, AS_HELP_STRING([--enable-uefi],[Enable UEFI support]),
 	      enable_uefi=$enableval, enable_uefi=yes)
 if test x$enable_uefi != xno; then
 	PKG_CHECK_MODULES(UEFI, fwup >= 0.5)
-	AC_DEFINE(HAVE_UEFI,1,[Use ColorHug support])
+	AC_DEFINE(HAVE_UEFI,1,[Use UEFI support])
+
+	# check for ability to unlock
+	PKG_CHECK_MODULES(UEFI_UNLOCK, fwup >= 0.6,
+			  has_uefi_unlock=yes,
+			  has_uefi_unlock=no)
+	if test x$has_uefi_unlock = xyes; then
+		AC_DEFINE(HAVE_UEFI_UNLOCK,1,[Use UEFI unlock support])
+	fi
 fi
 AM_CONDITIONAL(HAVE_UEFI, test x$enable_uefi = xyes)
 

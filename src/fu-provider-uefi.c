@@ -279,9 +279,27 @@ fu_provider_uefi_unlock (FuProvider *provider,
 			 FuDevice *device,
 			 GError **error)
 {
+#ifdef HAVE_UEFI_UNLOCK
+	gint rc;
 	g_debug ("unlocking UEFI device %s", fu_device_get_id (device));
-	//FIXME: Add smbios enable code
+	rc = enable_esrt();
+	if (rc <= 0) {
+		g_debug("Failed to unlock UEFI device");
+		return FALSE;
+	} else if (rc == 1)
+		g_debug("UEFI device is already unlocked");
+	else if (rc == 2)
+		g_debug("Succesfully unlocked UEFI device");
+	else if (rc == 3)
+		g_debug("UEFI device will be unlocked on next reboot");
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Not supported, update libfwupdate!");
+	return FALSE;
+#endif
 }
 
 /**
@@ -297,7 +315,12 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 	g_autofree gchar *guid = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
-	/* not supported */
+	/* supported = 0 : ESRT unspported
+	   supported = 1 : unlocked, ESRT supported
+	   supported = 2 : it is locked but can be unlocked to support ESRT
+	   supported = 3 : it is locked, has been marked to be unlocked on next boot
+			   calling unlock again is OK.
+	 */
 	supported = fwup_supported ();
 	if (supported == 0) {
 		g_set_error_literal (error,
@@ -307,8 +330,6 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		return FALSE;
 	}
 
-	/* FIXME: how do we tell the difference between 'disabled' and
-	 * disabled-but-we-can-enable? */
 	if (supported >= 2) {
 		dev = fu_device_new ();
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
