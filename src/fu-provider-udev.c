@@ -73,7 +73,47 @@ fu_provider_udev_unlock (FuProvider *provider,
 			 FuDevice *device,
 			 GError **error)
 {
-	g_debug ("unlocking UDEV device %s", fu_device_get_id (device));
+	const gchar *rom_fn;
+	g_autoptr(FuRom) rom = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* get the FW version from the rom */
+	g_debug ("unlocking UDev device %s", fu_device_get_id (device));
+	rom_fn = fu_device_get_metadata (device, "RomFilename");
+	if (rom_fn == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Unable to read firmware from device");
+		return FALSE;
+	}
+	file = g_file_new_for_path (rom_fn);
+	rom = fu_rom_new ();
+	if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, error))
+		return FALSE;
+
+	/* update version */
+	if (g_strcmp0 (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+		       fu_rom_get_version (rom)) != 0) {
+		g_debug ("changing version of %s from %s to %s",
+			 fu_device_get_id (device),
+			 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+			 fu_rom_get_version (rom));
+		fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION,
+					fu_rom_get_version (rom));
+	}
+
+	/* prefer the GUID from the firmware rather than the
+	 * hardware as the firmware may be more generic, which
+	 * also allows us to match the GUID when doing 'verify'
+	 * on a device with a different PID to the firmware */
+	if (g_strcmp0 (fu_device_get_guid (device), fu_rom_get_guid (rom)) != 0) {
+		fu_device_set_guid (device, fu_rom_get_guid (rom));
+		g_debug ("changing GUID of %s from %s to %s",
+			 fu_device_get_id (device),
+			 fu_device_get_guid (device),
+			 fu_rom_get_guid (rom));
+	}
 	return TRUE;
 }
 
@@ -156,40 +196,12 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 		version = g_strdup (split[2]);
 	}
 
-	/* get the FW version from the rom */
-	rom_fn = g_build_filename (g_udev_device_get_sysfs_path (device), "rom", NULL);
-	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS)) {
-		g_autoptr(GError) error = NULL;
-		g_autoptr(GFile) file = NULL;
-		g_autoptr(FuRom) rom = NULL;
-
-		file = g_file_new_for_path (rom_fn);
-		rom = fu_rom_new ();
-		if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, &error)) {
-			g_warning ("Failed to parse ROM from %s: %s",
-				   rom_fn, error->message);
-		}
-		version = g_strdup (fu_rom_get_version (rom));
-
-		/* prefer the GUID from the firmware rather than the
-		 * hardware as the firmware may be more generic, which
-		 * also allows us to match the GUID when doing 'verify'
-		 * on a device with a different PID to the firmware */
-		guid_new = g_strdup (fu_rom_get_guid (rom));
-	}
-
-	/* we failed */
-	if (version == NULL)
-		return;
-
 	/* no GUID from the ROM, so fix up the VID:PID */
-	if (guid_new == NULL) {
-		if (!as_utils_guid_is_valid (guid)) {
-			guid_new = as_utils_guid_from_string (guid);
-			g_debug ("Fixing GUID %s->%s", guid, guid_new);
-		} else {
-			guid_new = g_strdup (guid);
-		}
+	if (!as_utils_guid_is_valid (guid)) {
+		guid_new = as_utils_guid_from_string (guid);
+		g_debug ("fixing GUID %s->%s", guid, guid_new);
+	} else {
+		guid_new = g_strdup (guid);
 	}
 
 	/* did we get enough data */
@@ -207,9 +219,15 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 		vendor = g_udev_device_get_property (device, "ID_VENDOR_FROM_DATABASE");
 	if (vendor != NULL)
 		fu_device_set_metadata (dev, FU_DEVICE_KEY_VENDOR, vendor);
-	fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
-	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS))
+	if (version != NULL)
+		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
+
+	/* get the FW version from the rom when unlocked */
+	rom_fn = g_build_filename (g_udev_device_get_sysfs_path (device), "rom", NULL);
+	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS)) {
 		fu_device_set_metadata (dev, "RomFilename", rom_fn);
+		fu_device_add_flag (dev, FU_DEVICE_FLAG_LOCKED);
+	}
 
 	/* insert to hash */
 	g_hash_table_insert (priv->devices, g_strdup (id), dev);
