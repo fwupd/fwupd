@@ -282,7 +282,7 @@ fu_provider_uefi_unlock (FuProvider *provider,
 #ifdef HAVE_UEFI_UNLOCK
 	gint rc;
 	g_debug ("unlocking UEFI device %s", fu_device_get_id (device));
-	rc = enable_esrt();
+	rc = fwup_enable_esrt();
 	if (rc <= 0) {
 		g_debug("Failed to unlock UEFI device");
 		return FALSE;
