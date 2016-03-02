@@ -253,6 +253,7 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	const DfuFuncDescriptor *desc;
 	gsize iface_data_length;
+	guint16 dfu_version;
 
 	/* parse the functional descriptor */
 	desc = g_bytes_get_data (iface_data, &iface_data_length);
@@ -276,19 +277,20 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 	}
 
 	/* check DFU version */
+	dfu_version = GUINT16_FROM_LE (desc->bcdDFUVersion);
 	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION) {
 		g_debug ("ignoring quirked DFU version");
 	} else {
-		if (desc->bcdDFUVersion == 0x0100 ||
-		    desc->bcdDFUVersion == 0x0101) {
+		if (dfu_version == 0x0100 ||
+		    dfu_version == 0x0110) {
 			g_debug ("basic DFU, no DfuSe support");
 			priv->dfuse_supported = FALSE;
-		} else if (desc->bcdDFUVersion == 0x011a) {
+		} else if (dfu_version == 0x011a) {
 			g_debug ("DfuSe support");
 			priv->dfuse_supported = TRUE;
 		} else {
 			g_warning ("DFU version is invalid: 0x%04x",
-				   desc->bcdDFUVersion);
+				   dfu_version);
 		}
 	}
 
