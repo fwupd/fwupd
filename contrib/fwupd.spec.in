@@ -22,7 +22,7 @@ BuildRequires: systemd
 BuildRequires: libsoup-devel >= 2.51.92
 BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
-BuildRequires: libappstream-glib-devel >= 0.5.2
+BuildRequires: libappstream-glib-devel >= 0.5.10
 BuildRequires: gcab
 
 %ifarch x86_64 %{ix86} aarch64

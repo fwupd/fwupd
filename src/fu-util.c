@@ -940,7 +940,7 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 		/* add app to store */
 		app = as_app_new ();
 		as_app_set_id (app, id);
-		as_app_set_id_kind (app, AS_ID_KIND_FIRMWARE);
+		as_app_set_kind (app, AS_APP_KIND_FIRMWARE);
 		as_app_set_source_kind (app, AS_APP_SOURCE_KIND_INF);
 		rel = as_release_new ();
 		as_release_set_version (rel, fu_rom_get_version (rom));

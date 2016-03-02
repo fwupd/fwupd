@@ -539,7 +539,7 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 	guint i;
 
 	/* no quirk required */
-	if (as_app_get_id_kind (app) != AS_ID_KIND_FIRMWARE)
+	if (as_app_get_kind (app) != AS_APP_KIND_FIRMWARE)
 		return;
 
         for (i = 0; quirk_table[i].identifier != NULL; i++)
@@ -1986,7 +1986,7 @@ main (int argc, char *argv[])
 					       AS_STORE_WATCH_FLAG_REMOVED);
 
 	/* load AppStream */
-	as_store_add_filter (priv->store, AS_ID_KIND_FIRMWARE);
+	as_store_add_filter (priv->store, AS_APP_KIND_FIRMWARE);
 	if (!as_store_load (priv->store,
 			    AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM,
 			    NULL, &error)){
