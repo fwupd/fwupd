@@ -666,13 +666,6 @@ dfu_device_new (GUsbDevice *dev)
 		return NULL;
 	}
 
-	/* ignore defective runtimes */
-	if (priv->mode == DFU_MODE_RUNTIME &&
-	    dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_IGNORE_RUNTIME)) {
-		g_debug ("ignoring runtime");
-		return NULL;
-	}
-
 	return device;
 }
 
