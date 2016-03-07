@@ -595,6 +595,11 @@ dfu_device_set_quirks (DfuDevice *device)
 	pid = g_usb_device_get_pid (priv->dev);
 	release = g_usb_device_get_release (priv->dev);
 
+	/* on PC platforms the DW1820A firmware is loaded at runtime and can't
+	 * be stored on the device itself as the flash chip is unpopulated */
+	if (vid == 0x0a5c && pid == 0x6412)
+		priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_RUNTIME;
+
 	/* Openmoko Freerunner / GTA02 */
 	if ((vid == 0x1d50 || vid == 0x1457) &&
 	    pid >= 0x5117 && pid <= 0x5126)
@@ -660,6 +665,14 @@ dfu_device_new (GUsbDevice *dev)
 		g_object_unref (device);
 		return NULL;
 	}
+
+	/* ignore defective runtimes */
+	if (priv->mode == DFU_MODE_RUNTIME &&
+	    dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_IGNORE_RUNTIME)) {
+		g_debug ("ignoring runtime");
+		return NULL;
+	}
+
 	return device;
 }
 
@@ -2039,6 +2052,8 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "no-dfu-runtime|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD)
 		g_string_append_printf (str, "attach-upload-download|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_RUNTIME)
+		g_string_append_printf (str, "ignore-runtime|");
 
 	/* a well behaved device */
 	if (str->len == 0) {
