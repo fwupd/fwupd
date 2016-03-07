@@ -586,7 +586,7 @@ dfu_device_has_dfuse_support (DfuDevice *device)
  * dfu_device_set_quirks:
  **/
 static void
-dfu_target_set_quirks (DfuDevice *device)
+dfu_device_set_quirks (DfuDevice *device)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	guint16 vid, pid, release;
@@ -652,7 +652,7 @@ dfu_device_new (GUsbDevice *dev)
 	priv->platform_id = g_strdup (g_usb_device_get_platform_id (dev));
 
 	/* set any quirks on the device before adding targets */
-	dfu_target_set_quirks (device);
+	dfu_device_set_quirks (device);
 
 	/* add each alternate interface, although typically there will
 	 * be only one */
