@@ -389,7 +389,7 @@ fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 }
 
 /**
- * fu_provider_device_add:
+ * fu_provider_get_name:
  **/
 const gchar *
 fu_provider_get_name (FuProvider *provider)
