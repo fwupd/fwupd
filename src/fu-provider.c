@@ -256,6 +256,13 @@ fu_provider_update (FuProvider *provider,
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Online update was not possible");
+		return FALSE;
+	}
+	if ((flags & FU_PROVIDER_UPDATE_FLAG_ONLINE) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "No online update possible");
 		return FALSE;
 	}
