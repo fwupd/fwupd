@@ -1,3 +1,5 @@
+SUBDIRS = plugins
+
 introspectiondir = $(datadir)/dbus-1/interfaces
 dist_introspection_DATA = 				\
 	org.freedesktop.fwupd.xml
@@ -94,6 +96,8 @@ fwupd_SOURCES =						\
 	fu-keyring.h					\
 	fu-pending.c					\
 	fu-pending.h					\
+	fu-plugin.c					\
+	fu-plugin.h					\
 	fu-provider.c					\
 	fu-provider.h					\
 	fu-provider-dfu.c				\
@@ -162,6 +166,8 @@ fu_self_test_SOURCES =					\
 	fu-keyring.h					\
 	fu-pending.c					\
 	fu-pending.h					\
+	fu-plugin.c					\
+	fu-plugin.h					\
 	fu-provider.c					\
 	fu-provider.h					\
 	fu-provider-fake.c				\

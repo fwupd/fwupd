@@ -35,6 +35,7 @@
 
 #include "fu-debug.h"
 #include "fu-device.h"
+#include "fu-plugin.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
@@ -72,6 +73,7 @@ typedef struct {
 	AsProfile		*profile;
 	AsStore			*store;
 	guint			 store_changed_id;
+	GHashTable		*plugins;	/* of name : FuPlugin */
 } FuMainPrivate;
 
 typedef struct {
@@ -175,6 +177,63 @@ fu_main_device_array_to_variant (GPtrArray *devices, GError **error)
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(a{sa{sv}})", &builder);
+}
+
+/**
+ * fu_main_load_plugins:
+ **/
+static gboolean
+fu_main_load_plugins (GHashTable *plugins, GError **error)
+{
+	FuPlugin *plugin;
+	GModule *module;
+	GList *l;
+	const gchar *fn;
+	g_autofree gchar *plugin_dir = NULL;
+	g_autoptr(GDir) dir = NULL;
+	g_autoptr(GList) values = NULL;
+
+	/* search */
+	plugin_dir = g_build_filename (LIBDIR, "fwupd-plugins-1", NULL);
+	dir = g_dir_open (plugin_dir, 0, error);
+	if (dir == NULL)
+		return FALSE;
+	while ((fn = g_dir_read_name (dir)) != NULL) {
+		g_autofree gchar *filename = NULL;
+
+		/* ignore non-plugins */
+		if (!g_str_has_suffix (fn, ".so"))
+			continue;
+
+		/* open module */
+		filename = g_build_filename (plugin_dir, fn, NULL);
+		g_debug ("adding plugin %s", filename);
+		module = g_module_open (filename, 0);
+		if (module == NULL) {
+			g_warning ("failed to open plugin %s: %s",
+				   filename, g_module_error ());
+			continue;
+		}
+		plugin = fu_plugin_new (module);
+		if (plugin == NULL) {
+			g_module_close (module);
+			g_warning ("plugin %s requires name", filename);
+			continue;
+		}
+
+		/* add */
+		g_hash_table_insert (plugins, g_strdup (plugin->name), plugin);
+	}
+
+	/* start them all up */
+	values = g_hash_table_get_values (plugins);
+	for (l = values; l != NULL; l = l->next) {
+		plugin = FU_PLUGIN (l->data);
+		if (!fu_plugin_run_startup (plugin, error))
+			return FALSE;
+	}
+
+	return TRUE;
 }
 
 /**
@@ -1985,6 +2044,15 @@ main (int argc, char *argv[])
 	as_store_set_watch_flags (priv->store, AS_STORE_WATCH_FLAG_ADDED |
 					       AS_STORE_WATCH_FLAG_REMOVED);
 
+	/* load plugin */
+	priv->plugins = g_hash_table_new_full (g_str_hash, g_str_equal,
+					       g_free, (GDestroyNotify) fu_plugin_free);
+	if (!fu_main_load_plugins (priv->plugins, &error)) {
+		g_print ("failed to load plugins: %s\n", error->message);
+		retval = EXIT_FAILURE;
+		goto out;
+	}
+
 	/* load AppStream */
 	as_store_add_filter (priv->store, AS_APP_KIND_FIRMWARE);
 	if (!as_store_load (priv->store,
@@ -2087,6 +2155,8 @@ out:
 		g_object_unref (priv->pending);
 		if (priv->providers != NULL)
 			g_ptr_array_unref (priv->providers);
+		if (priv->plugins != NULL)
+			g_hash_table_unref (priv->plugins);
 		g_ptr_array_unref (priv->devices);
 		g_free (priv);
 	}
