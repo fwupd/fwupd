@@ -61,6 +61,9 @@ struct _FuDeviceClass
 #define FU_DEVICE_KEY_CREATED		"Created"	/* t */
 #define FU_DEVICE_KEY_MODIFIED		"Modified"	/* t */
 
+/* private */
+#define FU_DEVICE_KEY_FWUPD_PLUGIN	"fwupd::plugin"	/* s */
+
 FuDevice	*fu_device_new				(void);
 
 /* accessors */

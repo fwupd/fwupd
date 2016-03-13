@@ -214,7 +214,7 @@ fu_provider_func (void)
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
-	ret = fu_provider_update (provider, device, blob_cab, NULL,
+	ret = fu_provider_update (provider, device, blob_cab, NULL, NULL,
 				  FU_PROVIDER_UPDATE_FLAG_OFFLINE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -234,7 +234,7 @@ fu_provider_func (void)
 	g_object_unref (device_tmp);
 
 	/* lets do this online */
-	ret = fu_provider_update (provider, device, blob_cab, NULL,
+	ret = fu_provider_update (provider, device, blob_cab, NULL, NULL,
 				  FU_PROVIDER_UPDATE_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -327,7 +327,7 @@ fu_provider_rpi_func (void)
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
 	blob_fw = g_mapped_file_get_bytes (mapped_file);
-	ret = fu_provider_update (provider, device, NULL, blob_fw,
+	ret = fu_provider_update (provider, device, NULL, blob_fw, NULL,
 				  FU_PROVIDER_UPDATE_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);

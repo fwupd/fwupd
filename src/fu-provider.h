@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -25,6 +25,7 @@
 #include <glib-object.h>
 
 #include "fu-device.h"
+#include "fu-plugin.h"
 #include "fu-provider.h"
 
 G_BEGIN_DECLS
@@ -101,6 +102,7 @@ gboolean	 fu_provider_update		(FuProvider	*provider,
 						 FuDevice	*device,
 						 GBytes		*blob_cab,
 						 GBytes		*blob_fw,
+						 FuPlugin	*plugin,
 						 FuProviderFlags flags,
 						 GError		**error);
 gboolean	 fu_provider_verify		(FuProvider	*provider,

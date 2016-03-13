@@ -237,6 +237,21 @@ fu_main_load_plugins (GHashTable *plugins, GError **error)
 }
 
 /**
+ * fu_main_get_plugin_for_device:
+ **/
+static FuPlugin *
+fu_main_get_plugin_for_device (GHashTable *plugins, FuDevice *device)
+{
+	const gchar *tmp;
+
+	/* does a vendor plugin exist */
+	tmp = fu_device_get_metadata (device, FU_DEVICE_KEY_FWUPD_PLUGIN);
+	if (tmp == NULL)
+		return NULL;
+	return g_hash_table_lookup (plugins, tmp);
+}
+
+/**
  * fu_main_item_free:
  **/
 static void
@@ -461,6 +476,7 @@ static gboolean
 fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 {
 	FuDeviceItem *item;
+	FuPlugin *plugin;
 
 	/* check the device still exists */
 	item = fu_main_get_item_by_id (helper->priv, fu_device_get_id (helper->device));
@@ -486,10 +502,13 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 	}
 
 	/* run the correct provider that added this */
+	plugin = fu_main_get_plugin_for_device (helper->priv->plugins,
+						item->device);
 	if (!fu_provider_update (item->provider,
 				 item->device,
 				 helper->blob_cab,
 				 helper->blob_fw,
+				 plugin,
 				 helper->flags,
 				 error))
 		return FALSE;
@@ -1907,6 +1926,9 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 	FuDeviceItem *item;
+	AsApp *app;
+	FuPlugin *plugin;
+	g_autoptr(GError) error = NULL;
 
 	/* remove any fake device */
 	item = fu_main_get_item_by_id (priv, fu_device_get_id (device));
@@ -1923,6 +1945,32 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 	item->device = g_object_ref (device);
 	item->provider = g_object_ref (provider);
 	g_ptr_array_add (priv->devices, item);
+
+	/* does this match anything in the AppStream data */
+	app = as_store_get_app_by_provide (priv->store,
+					   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
+					   fu_device_get_guid (item->device));
+	if (app != NULL) {
+		const gchar *tmp;
+		tmp = as_app_get_metadata_item (app, FU_DEVICE_KEY_FWUPD_PLUGIN);
+		if (tmp != NULL) {
+			g_debug ("setting plugin: %s", tmp);
+			fu_device_set_metadata (item->device,
+						FU_DEVICE_KEY_FWUPD_PLUGIN,
+						tmp);
+		}
+	}
+
+	/* run any plugins */
+	plugin = fu_main_get_plugin_for_device (priv->plugins, device);
+	if (plugin != NULL) {
+		if (!fu_plugin_run_device_probe (plugin, device, &error)) {
+			g_warning ("failed to probe %s: %s",
+				   fu_device_get_id (item->device),
+				   error->message);
+		}
+	}
+
 	fu_main_emit_changed (priv);
 }
 

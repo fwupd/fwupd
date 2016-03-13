@@ -31,6 +31,7 @@
 
 #include "fu-device.h"
 #include "fu-pending.h"
+#include "fu-plugin.h"
 #include "fu-provider-uefi.h"
 
 static void	fu_provider_finalize	(GObject	*object);
@@ -229,6 +230,7 @@ fu_provider_update (FuProvider *provider,
 		    FuDevice *device,
 		    GBytes *blob_cab,
 		    GBytes *blob_fw,
+		    FuPlugin *plugin,
 		    FuProviderFlags flags,
 		    GError **error)
 {
@@ -250,6 +252,14 @@ fu_provider_update (FuProvider *provider,
 	/* cancel the pending action */
 	if (!fu_provider_offline_invalidate (error))
 		return FALSE;
+
+	/* we have support using a plugin */
+	if (plugin != NULL) {
+		return fu_plugin_run_device_update (plugin,
+						    device,
+						    blob_fw,
+						    error);
+	}
 
 	/* online */
 	if (klass->update_online == NULL) {
