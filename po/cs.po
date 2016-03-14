@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-01-19 12:57+0000\n"
-"PO-Revision-Date: 2016-01-05 22:08+0000\n"
-"Last-Translator: Marek Černocký <marek@manet.cz>\n"
+"POT-Creation-Date: 2016-03-14 09:29+0000\n"
+"PO-Revision-Date: 2016-03-14 09:29+0000\n"
+"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Czech (http://www.transifex.com/hughsie/fwupd/language/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -50,6 +50,13 @@ msgstr "Instalace nepodepsaného firmwaru zařízení"
 msgid ""
 "Authentication is required to downgrade the firmware on a removable device"
 msgstr "K ponížení verze firmwaru na výměnném zařízení je vyžadováno ověření"
+
+msgid "Unlock the device to allow access"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr ""
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -379,6 +386,10 @@ msgstr "Aktualizovat všechen firmware na nejnovější dostupné verze"
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "Získat kryptografický otisk vypsaného firmwaru"
+
+#. TRANSLATORS: command description
+msgid "Unlocks the device for firmware access"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"

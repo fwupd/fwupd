@@ -1,3 +1,21 @@
+Version 0.6.3
+~~~~~~~~~~~~~
+Released: 2016-03-14
+
+New Features:
+ - Add an unlock method for devices (Richard Hughes)
+ - Add a simple plugin infrastructure (Richard Hughes)
+ - Add ESRT enable method into UEFI provider (Mario Limonciello)
+ - Install the hardcoded firmware AppStream file (Richard Hughes)
+
+Bugfixes:
+ - Correct the BCD version number for DFU 1.1 (Richard Hughes)
+ - Do not use deprecated API from libappstream-glib (Richard Hughes)
+ - Ignore the DFU runtime on the DW1820A (Richard Hughes)
+ - Only read PCI OptionROM firmware when devices are manually unlocked (Richard Hughes)
+ - Require AC power before scheduling some types of firmware update (Richard Hughes)
+ - Show ignored DFU devices in dfu-util, but not in fwupd (Richard Hughes)
+
 Version 0.6.2
 ~~~~~~~~~~~~~
 Released: 2016-02-12
