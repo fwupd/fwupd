@@ -122,11 +122,11 @@ AC_SUBST(LIBM)
 dnl ---------------------------------------------------------------------------
 dnl - Check library dependencies
 dnl ---------------------------------------------------------------------------
-PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.45.8 gobject-2.0 gthread-2.0 gio-2.0 >= 2.25.9 gio-unix-2.0)
+PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.45.8 gobject-2.0 gthread-2.0 gio-2.0 >= 2.25.9 gio-unix-2.0 gmodule-2.0)
 PKG_CHECK_MODULES(GUDEV, gudev-1.0)
 PKG_CHECK_MODULES(POLKIT, polkit-gobject-1 >= 0.103)
 PKG_CHECK_MODULES(GCAB, libgcab-1.0)
-PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib >= 0.5.4)
+PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib >= 0.5.10)
 PKG_CHECK_MODULES(GUSB, gusb >= 0.2.8)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 PKG_CHECK_MODULES(ARCHIVE, libarchive)
@@ -169,7 +169,15 @@ AC_ARG_ENABLE(uefi, AS_HELP_STRING([--enable-uefi],[Enable UEFI support]),
 	      enable_uefi=$enableval, enable_uefi=yes)
 if test x$enable_uefi != xno; then
 	PKG_CHECK_MODULES(UEFI, fwup >= 0.5)
-	AC_DEFINE(HAVE_UEFI,1,[Use ColorHug support])
+	AC_DEFINE(HAVE_UEFI,1,[Use UEFI support])
+
+	# check for ability to unlock
+	PKG_CHECK_MODULES(UEFI_UNLOCK, fwup >= 0.6,
+			  has_uefi_unlock=yes,
+			  has_uefi_unlock=no)
+	if test x$has_uefi_unlock = xyes; then
+		AC_DEFINE(HAVE_UEFI_UNLOCK,1,[Use UEFI unlock support])
+	fi
 fi
 AM_CONDITIONAL(HAVE_UEFI, test x$enable_uefi = xyes)
 
@@ -209,6 +217,7 @@ docs/man/Makefile
 policy/Makefile
 po/Makefile.in
 src/Makefile
+src/plugins/Makefile
 ])
 AC_OUTPUT
 

@@ -3,15 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Balázs Úr <urbalazs@gmail.com>, 2015
+# Balázs Úr <urbalazs@gmail.com>, 2015-2016
 # Gabor Kelemen <kelemeng at ubuntu dot com>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-12 16:50+0000\n"
-"PO-Revision-Date: 2016-01-31 00:31+0000\n"
-"Last-Translator: kelemeng <kelemeng@ubuntu.com>\n"
+"POT-Creation-Date: 2016-03-14 09:29+0000\n"
+"PO-Revision-Date: 2016-03-14 09:29+0000\n"
+"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Hungarian (http://www.transifex.com/hughsie/fwupd/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -51,6 +51,13 @@ msgstr "Nem aláírt eszköz firmware telepítése"
 msgid ""
 "Authentication is required to downgrade the firmware on a removable device"
 msgstr "Hitelesítés szükséges a firmware visszafejlesztéséhez egy cserélhető eszközön"
+
+msgid "Unlock the device to allow access"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr ""
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -99,7 +106,7 @@ msgstr "Megszakítva"
 
 #. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
-msgstr "AZONOSÍTÓ"
+msgstr "Azonosító"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 msgid "Name"
@@ -141,7 +148,7 @@ msgstr "Kompatibilitási trükkök"
 
 #. TRANSLATORS: command description
 msgid "Convert firmware to DFU format"
-msgstr "A firmware DFU formátumra konvertálása"
+msgstr "Firmware átalakítása DFU formátumra"
 
 #. TRANSLATORS: command description
 msgid "Merge multiple firmware files into one"
@@ -149,23 +156,23 @@ msgstr "Több firmware fájl egyesítése"
 
 #. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
-msgstr "Gyártóazonosító beállítása firmware fájlon"
+msgstr "Gyártóazonosító beállítása a firmware fájlon"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
-msgstr "Termékazonosító beállítása firmware fájlon"
+msgstr "Termékazonosító beállítása a firmware fájlon"
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
-msgstr "Kiadási verzió beállítása firmware fájlon"
+msgstr "Kiadási verzió beállítása a firmware fájlon"
 
 #. TRANSLATORS: command description
 msgid "Set alternative number on firmware file"
-msgstr "Alternatív szám beállítása firmware fájlon"
+msgstr "Alternatív szám beállítása a firmware fájlon"
 
 #. TRANSLATORS: command description
 msgid "Set alternative name on firmware file"
-msgstr "Alternatív név beállítása firmware fájlon"
+msgstr "Alternatív név beállítása a firmware fájlon"
 
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
@@ -173,7 +180,7 @@ msgstr "DFU-képes eszköz visszacsatolása a futtatókörnyezethez"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
-msgstr "Firmware beolvasása eszközről fájlba"
+msgstr "Firmware beolvasása eszközről egy fájlba"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
@@ -189,11 +196,11 @@ msgstr "Firmware írása fájlból egy partícióra"
 
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
-msgstr "Aktuálisan csatlakoztatott DFU-képes eszközök felsorolása"
+msgstr "Jelenleg csatlakoztatott DFU-képes eszközök felsorolása"
 
 #. TRANSLATORS: command description
 msgid "Detach currently attached DFU capable device"
-msgstr "Aktuálisan csatlakoztatott DFU-képes eszközök leválasztása"
+msgstr "Jelenleg csatlakoztatott DFU-képes eszközök leválasztása"
 
 #. TRANSLATORS: command description
 msgid "Dump details about a firmware file"
@@ -379,7 +386,11 @@ msgstr "Minden firmware-t az elérhető legfrissebb verziókra frissít"
 
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "A kiírt firmware kriptográfiai hash-ének lekérése"
+msgstr "Lekéri a kiírt firmware kriptográfiai hash-ét"
+
+#. TRANSLATORS: command description
+msgid "Unlocks the device for firmware access"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -399,7 +410,7 @@ msgstr "A ROM ellenőrzőösszegének kiírása"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
-msgstr "A tárolt metaadatok frissítése az aktuális ROM tartalmával"
+msgstr "A tárolt metaadatok frissítése a jelenlegi ROM tartalmával"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"

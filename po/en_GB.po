@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-07 12:22+0000\n"
-"PO-Revision-Date: 2015-12-07 12:27+0000\n"
+"POT-Creation-Date: 2016-03-14 09:29+0000\n"
+"PO-Revision-Date: 2016-03-14 09:29+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/hughsie/fwupd/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
@@ -50,6 +50,13 @@ msgstr "Install unsigned device firmware"
 msgid ""
 "Authentication is required to downgrade the firmware on a removable device"
 msgstr "Authentication is required to downgrade the firmware on a removable device"
+
+msgid "Unlock the device to allow access"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr ""
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -379,6 +386,10 @@ msgstr "Updates all firmware to latest versions available"
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "Gets the cryptographic hash of the dumped firmware"
+
+#. TRANSLATORS: command description
+msgid "Unlocks the device for firmware access"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"

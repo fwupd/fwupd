@@ -1384,7 +1384,7 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 
 	/* ensure populated */
 	if (!dfu_target_setup (target, error))
-		return NULL;
+		return FALSE;
 
 	/* can the target do this? */
 	if (!dfu_device_can_download (priv->device)) {

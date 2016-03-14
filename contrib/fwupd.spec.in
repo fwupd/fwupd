@@ -22,7 +22,7 @@ BuildRequires: systemd
 BuildRequires: libsoup-devel >= 2.51.92
 BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
-BuildRequires: libappstream-glib-devel >= 0.5.2
+BuildRequires: libappstream-glib-devel >= 0.5.10
 BuildRequires: gcab
 
 %ifarch x86_64 %{ix86} aarch64
@@ -106,6 +106,8 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %dir %{_localstatedir}/cache/app-info/icons
 %dir %{_localstatedir}/cache/app-info/xmls
 /usr/lib/udev/rules.d/*.rules
+%dir %{_libdir}/fwupd-plugins-1
+%{_libdir}/fwupd-plugins-1/*.so
 
 %files devel
 %{_includedir}/fwupd-1

@@ -272,6 +272,37 @@ fu_provider_uefi_get_version_format (void)
 }
 
 /**
+ * fu_provider_uefi_unlock:
+ **/
+static gboolean
+fu_provider_uefi_unlock (FuProvider *provider,
+			 FuDevice *device,
+			 GError **error)
+{
+#ifdef HAVE_UEFI_UNLOCK
+	gint rc;
+	g_debug ("unlocking UEFI device %s", fu_device_get_id (device));
+	rc = fwup_enable_esrt();
+	if (rc <= 0) {
+		g_debug("Failed to unlock UEFI device");
+		return FALSE;
+	} else if (rc == 1)
+		g_debug("UEFI device is already unlocked");
+	else if (rc == 2)
+		g_debug("Succesfully unlocked UEFI device");
+	else if (rc == 3)
+		g_debug("UEFI device will be unlocked on next reboot");
+	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Not supported, update libfwupdate!");
+	return FALSE;
+#endif
+}
+
+/**
  * fu_provider_uefi_coldplug:
  **/
 static gboolean
@@ -280,16 +311,34 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 	AsVersionParseFlag parse_flags;
 	fwup_resource_iter *iter = NULL;
 	fwup_resource *re;
+	gint supported;
 	g_autofree gchar *guid = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
-	/* not supported */
-	if (!fwup_supported ()) {
+	/* supported = 0 : ESRT unspported
+	   supported = 1 : unlocked, ESRT supported
+	   supported = 2 : it is locked but can be unlocked to support ESRT
+	   supported = 3 : it is locked, has been marked to be unlocked on next boot
+			   calling unlock again is OK.
+	 */
+	supported = fwup_supported ();
+	if (supported == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "UEFI firmware updating not supported");
 		return FALSE;
+	}
+
+	if (supported >= 2) {
+		dev = fu_device_new ();
+		fu_device_set_id (dev, "UEFI-dummy-dev0");
+		fu_device_set_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, "0");
+		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_ONLINE);
+		fu_device_add_flag (dev, FU_DEVICE_FLAG_LOCKED);
+		fu_provider_device_add (provider, dev);
+		return TRUE;
 	}
 
 	/* this can fail if we have no permissions */
@@ -355,6 +404,7 @@ fu_provider_uefi_class_init (FuProviderUefiClass *klass)
 
 	provider_class->get_name = fu_provider_uefi_get_name;
 	provider_class->coldplug = fu_provider_uefi_coldplug;
+	provider_class->unlock = fu_provider_uefi_unlock;
 	provider_class->update_offline = fu_provider_uefi_update;
 	provider_class->clear_results = fu_provider_uefi_clear_results;
 	provider_class->get_results = fu_provider_uefi_get_results;

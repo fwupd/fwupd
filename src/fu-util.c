@@ -378,6 +378,8 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		"Internal",
 		"AllowOnline",
 		"AllowOffline",
+		"RequireAc",
+		"Locked",
 		NULL };
 
 	/* get devices from daemon */
@@ -938,7 +940,7 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 		/* add app to store */
 		app = as_app_new ();
 		as_app_set_id (app, id);
-		as_app_set_id_kind (app, AS_ID_KIND_FIRMWARE);
+		as_app_set_kind (app, AS_APP_KIND_FIRMWARE);
 		as_app_set_source_kind (app, AS_APP_SOURCE_KIND_INF);
 		rel = as_release_new ();
 		as_release_set_version (rel, fu_rom_get_version (rom));
@@ -1341,6 +1343,36 @@ fu_util_verify (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_unlock:
+ **/
+static gboolean
+fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Invalid arguments: expected 'id'");
+		return FALSE;
+	}
+	g_dbus_proxy_call (priv->proxy,
+			   "Unlock",
+			   g_variant_new ("(s)", values[0]),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1,
+			   NULL,
+			   fu_util_get_devices_cb, priv);
+	g_main_loop_run (priv->loop);
+	if (priv->val == NULL) {
+		g_dbus_error_strip_remote_error (priv->error);
+		g_propagate_error (error, priv->error);
+		priv->error = NULL;
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fu_util_print_data:
  **/
 static void
@@ -1568,6 +1600,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets the cryptographic hash of the dumped firmware"),
 		     fu_util_verify);
+	fu_util_add (priv->cmd_array,
+		     "unlock",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Unlocks the device for firmware access"),
+		     fu_util_unlock);
 	fu_util_add (priv->cmd_array,
 		     "clear-results",
 		     NULL,

@@ -72,6 +72,7 @@ typedef enum {
 	FU_DEVICE_FLAG_ALLOW_ONLINE	= 1 << 1,	/* Since: 0.1.3 */
 	FU_DEVICE_FLAG_ALLOW_OFFLINE	= 1 << 2,	/* Since: 0.1.3 */
 	FU_DEVICE_FLAG_REQUIRE_AC	= 1 << 3,	/* Since: 0.6.3 */
+	FU_DEVICE_FLAG_LOCKED		= 1 << 4,	/* Since: 0.6.3 */
 	/* private */
 	FU_DEVICE_FLAG_LAST
 } FwupdDeviceFlags;
