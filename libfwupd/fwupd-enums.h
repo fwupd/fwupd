@@ -79,5 +79,7 @@ typedef enum {
 
 const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
+const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
+FwupdDeviceFlags fwupd_device_flag_from_string		(const gchar	*device_flag);
 
 #endif /* __FWUPD_ENUMS_H */

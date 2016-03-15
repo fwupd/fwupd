@@ -72,3 +72,49 @@ fwupd_status_from_string (const gchar *status)
 		return FWUPD_STATUS_SCHEDULING;
 	return FWUPD_STATUS_UNKNOWN;
 }
+
+/**
+ * fwupd_device_flag_to_string:
+ *
+ * Since: 0.6.4
+ **/
+const gchar *
+fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
+{
+	if (device_flag == FU_DEVICE_FLAG_NONE)
+		return "none";
+	if (device_flag == FU_DEVICE_FLAG_INTERNAL)
+		return "internal";
+	if (device_flag == FU_DEVICE_FLAG_ALLOW_ONLINE)
+		return "allow-online";
+	if (device_flag == FU_DEVICE_FLAG_ALLOW_OFFLINE)
+		return "allow-offline";
+	if (device_flag == FU_DEVICE_FLAG_REQUIRE_AC)
+		return "require-ac";
+	if (device_flag == FU_DEVICE_FLAG_LOCKED)
+		return "locked";
+	return NULL;
+}
+
+/**
+ * fwupd_device_flag_from_string:
+ *
+ * Since: 0.6.4
+ **/
+FwupdDeviceFlags
+fwupd_device_flag_from_string (const gchar *device_flag)
+{
+	if (g_strcmp0 (device_flag, "none") == 0)
+		return FU_DEVICE_FLAG_NONE;
+	if (g_strcmp0 (device_flag, "internal") == 0)
+		return FU_DEVICE_FLAG_INTERNAL;
+	if (g_strcmp0 (device_flag, "allow-online") == 0)
+		return FU_DEVICE_FLAG_ALLOW_ONLINE;
+	if (g_strcmp0 (device_flag, "allow-offline") == 0)
+		return FU_DEVICE_FLAG_ALLOW_OFFLINE;
+	if (g_strcmp0 (device_flag, "require-ac") == 0)
+		return FU_DEVICE_FLAG_REQUIRE_AC;
+	if (g_strcmp0 (device_flag, "locked") == 0)
+		return FU_DEVICE_FLAG_LOCKED;
+	return FU_DEVICE_FLAG_LAST;
+}
