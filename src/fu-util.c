@@ -344,6 +344,30 @@ pad_print (const gchar *key, const gchar *value)
 }
 
 /**
+ * fu_util_device_flags_to_string:
+ **/
+static gchar *
+fu_util_device_flags_to_string (FwupdDeviceFlags device_flags)
+{
+	GString *str;
+	guint i;
+
+	str = g_string_new ("");
+	for (i = 1; i < FU_DEVICE_FLAG_LAST; i *= 2) {
+		if ((device_flags & i) == 0)
+			continue;
+		g_string_append_printf (str, "%s|",
+					fwupd_device_flag_to_string (i));
+	}
+	if (str->len == 0) {
+		g_string_append (str, fwupd_device_flag_to_string (0));
+	} else {
+		g_string_truncate (str, str->len - 1);
+	}
+	return g_string_free (str, FALSE);
+}
+
+/**
  * fu_util_get_devices:
  **/
 static gboolean
@@ -353,7 +377,6 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 	guint i;
 	guint j;
-	guint f;
 	guint64 flags;
 	const gchar *value;
 	const gchar *keys[] = {
@@ -374,13 +397,6 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		FU_DEVICE_KEY_SIZE,
 		FU_DEVICE_KEY_FIRMWARE_HASH,
 		NULL };
-	const gchar *flags_str[] = {
-		"Internal",
-		"AllowOnline",
-		"AllowOffline",
-		"RequireAc",
-		"Locked",
-		NULL };
 
 	/* get devices from daemon */
 	devices = fu_util_get_devices_internal (priv, error);
@@ -399,11 +415,10 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("Device: %s\n", fu_device_get_id (dev));
 		for (j = 0; keys[j] != NULL; j++) {
 			if (g_strcmp0 (keys[j], FU_DEVICE_KEY_FLAGS) == 0) {
+				g_autofree gchar *tmp = NULL;
 				flags = fu_device_get_flags (dev);
-				for (f = 0; flags_str[f] != NULL; f++) {
-					pad_print (flags_str[f],
-						   flags & (1 << f) ? "True" : "False");
-				}
+				tmp = fu_util_device_flags_to_string (flags);
+				pad_print (keys[j], tmp);
 				continue;
 			}
 			if (g_strcmp0 (keys[j], FU_DEVICE_KEY_CREATED) == 0) {
@@ -596,15 +611,22 @@ fu_util_print_metadata (GVariant *val)
 		g_print ("%s", key);
 		for (i = strlen (key); i < 15; i++)
 			g_print (" ");
-		type = g_variant_get_type_string (variant);
-		if (g_strcmp0 (type, "s") == 0) {
-			g_print ("%s\n", g_variant_get_string (variant, NULL));
-		} else if (g_strcmp0 (type, "b") == 0) {
-			g_print ("%s\n", g_variant_get_boolean (variant) ? "True" : "False");
-		} else if (g_strcmp0 (type, "t") == 0) {
-			g_print ("%" G_GUINT64_FORMAT "\n", g_variant_get_uint64 (variant));
+		if (g_strcmp0 (key, FU_DEVICE_KEY_FLAGS) == 0) {
+			g_autofree gchar *tmp = NULL;
+			guint64 flags = g_variant_get_uint64 (variant);
+			tmp = fu_util_device_flags_to_string (flags);
+			g_print ("%s\n", tmp);
 		} else {
-			g_print ("???? [%s]\n", type);
+			type = g_variant_get_type_string (variant);
+			if (g_strcmp0 (type, "s") == 0) {
+				g_print ("%s\n", g_variant_get_string (variant, NULL));
+			} else if (g_strcmp0 (type, "b") == 0) {
+				g_print ("%s\n", g_variant_get_boolean (variant) ? "True" : "False");
+			} else if (g_strcmp0 (type, "t") == 0) {
+				g_print ("%" G_GUINT64_FORMAT "\n", g_variant_get_uint64 (variant));
+			} else {
+				g_print ("???? [%s]\n", type);
+			}
 		}
 		g_variant_unref (variant);
 	}
