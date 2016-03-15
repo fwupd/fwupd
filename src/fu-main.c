@@ -282,6 +282,23 @@ fu_main_get_item_by_id (FuMainPrivate *priv, const gchar *id)
 }
 
 /**
+ * fu_main_get_item_by_guid:
+ **/
+static FuDeviceItem *
+fu_main_get_item_by_guid (FuMainPrivate *priv, const gchar *guid)
+{
+	FuDeviceItem *item;
+	guint i;
+
+	for (i = 0; i < priv->devices->len; i++) {
+		item = g_ptr_array_index (priv->devices, i);
+		if (g_strcmp0 (fu_device_get_guid (item->device), guid) == 0)
+			return item;
+	}
+	return NULL;
+}
+
+/**
  * fu_main_get_provider_by_name:
  **/
 static FuProvider *
@@ -1582,12 +1599,14 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		GPtrArray *provides;
 		GUnixFDList *fd_list;
 		GVariantBuilder builder;
+		FuDeviceItem *item;
+		FwupdDeviceFlags device_flags = 0;
 		FwupdTrustFlags trust_flags = FWUPD_TRUST_FLAG_NONE;
 		const gchar *tmp;
 		const gchar *guid = NULL;
 		gint32 fd_handle = 0;
-		guint i;
 		gint fd;
+		guint i;
 		g_autoptr(AsStore) store = NULL;
 		g_autoptr(GBytes) blob_cab = NULL;
 		g_autoptr(GError) error = NULL;
@@ -1645,7 +1664,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			/* we've got a .cab file with multiple components,
 			 * so try to find the first thing that's installed */
 			for (i = 0; i < priv->devices->len; i++) {
-				FuDeviceItem *item;
 				item = g_ptr_array_index (priv->devices, i);
 				app = as_store_get_app_by_provide (store,
 								   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
@@ -1686,6 +1704,11 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* possibly convert the version from 0x to dotted */
 		fu_main_vendor_quirk_release_version (app);
 
+		/* is a online or offline update appropriate */
+		item = fu_main_get_item_by_guid (priv, guid);
+		if (item != NULL)
+			device_flags = fu_device_get_flags (item->device);
+
 		/* create an array with all the metadata in */
 		g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 		g_variant_builder_add (&builder, "{sv}",
@@ -1697,6 +1720,9 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_variant_builder_add (&builder, "{sv}",
 				       FU_DEVICE_KEY_SIZE,
 				       g_variant_new_uint64 (as_release_get_size (rel, AS_SIZE_KIND_INSTALLED)));
+		g_variant_builder_add (&builder, "{sv}",
+				       FU_DEVICE_KEY_FLAGS,
+				       g_variant_new_uint64 (device_flags));
 
 		/* optional properties */
 		tmp = as_app_get_developer_name (app, NULL);
