@@ -76,7 +76,7 @@ fwupd_status_from_string (const gchar *status)
 /**
  * fwupd_device_flag_to_string:
  *
- * Since: 0.6.4
+ * Since: 0.7.0
  **/
 const gchar *
 fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
@@ -99,7 +99,7 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 /**
  * fwupd_device_flag_from_string:
  *
- * Since: 0.6.4
+ * Since: 0.7.0
  **/
 FwupdDeviceFlags
 fwupd_device_flag_from_string (const gchar *device_flag)
