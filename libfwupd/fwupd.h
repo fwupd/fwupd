@@ -31,6 +31,7 @@
 
 #include <libfwupd/fwupd-enums.h>
 #include <libfwupd/fwupd-error.h>
+#include <libfwupd/fwupd-result.h>
 #include <libfwupd/fwupd-version.h>
 
 #undef __FWUPD_H_INSIDE__
