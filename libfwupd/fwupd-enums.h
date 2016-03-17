@@ -64,6 +64,8 @@ typedef enum {
 /**
  * FwupdDeviceFlags:
  *
+ * FIXME: rename FU_DEVICE_ -> FWUPD_DEVICE_ when we break API
+ *
  * The device flags.
  **/
 typedef enum {
