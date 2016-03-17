@@ -39,20 +39,20 @@ struct _FuPendingClass
 FuPending	*fu_pending_new				(void);
 
 gboolean	 fu_pending_add_device			(FuPending	*pending,
-							 FuDevice	*device,
+							 FwupdResult	*res,
 							 GError		**error);
 gboolean	 fu_pending_set_state			(FuPending	*pending,
-							 FuDevice	*device,
+							 FwupdResult	*res,
 							 FwupdUpdateState	 state,
 							 GError		**error);
-gboolean	 fu_pending_set_error_msg			(FuPending	*pending,
-							 FuDevice	*device,
+gboolean	 fu_pending_set_error_msg		(FuPending	*pending,
+							 FwupdResult	*res,
 							 const gchar	*error_msg,
 							 GError		**error);
 gboolean	 fu_pending_remove_device		(FuPending	*pending,
-							 FuDevice	*device,
+							 FwupdResult	*res,
 							 GError		**error);
-FuDevice	*fu_pending_get_device			(FuPending	*pending,
+FwupdResult	*fu_pending_get_device			(FuPending	*pending,
 							 const gchar	*device_id,
 							 GError		**error);
 GPtrArray	*fu_pending_get_devices			(FuPending	*pending,

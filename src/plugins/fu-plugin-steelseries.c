@@ -123,7 +123,7 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 	/* update */
 	version = g_strdup_printf ("%i.%i.%i",
 				   data[0], data[1], data[2]);
-	fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION, version);
+	fu_device_set_version (device, version);
 	g_debug ("overriding the version with %s", version);
 
 	/* FIXME: we can't do this until we know how to flash the firmware */

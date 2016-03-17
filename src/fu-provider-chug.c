@@ -166,8 +166,7 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 		if (tmp != NULL) {
 			item->got_version = TRUE;
 			g_debug ("obtained fwver using extension '%s'", tmp);
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_VERSION, tmp);
+			fu_device_set_version (item->device, tmp);
 			goto out;
 		}
 	}
@@ -191,7 +190,7 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 	item->got_version = TRUE;
 	version = g_strdup_printf ("%i.%i.%i", major, minor, micro);
 	g_debug ("obtained fwver using API '%s'", version);
-	fu_device_set_metadata (item->device, FU_DEVICE_KEY_VERSION, version);
+	fu_device_set_version (item->device, version);
 
 out:
 	/* we're done here */
@@ -251,7 +250,7 @@ fu_provider_chug_verify (FuProvider *provider,
 
 	/* get the SHA1 hash */
 	hash = g_compute_checksum_for_data (G_CHECKSUM_SHA1, (guchar *) data, len);
-	fu_device_set_metadata (device, FU_DEVICE_KEY_FIRMWARE_HASH, hash);
+	fu_device_set_checksum (device, hash);
 
 	/* we're done here */
 	if (!g_usb_device_close (item->usb_device, &error_local))
@@ -514,22 +513,22 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 	case CH_DEVICE_MODE_BOOTLOADER:
 	case CH_DEVICE_MODE_FIRMWARE:
 	case CH_DEVICE_MODE_LEGACY:
-		fu_device_set_display_name (item->device, "ColorHug");
+		fu_device_set_name (item->device, "ColorHug");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER2:
 	case CH_DEVICE_MODE_FIRMWARE2:
-		fu_device_set_display_name (item->device, "ColorHug2");
+		fu_device_set_name (item->device, "ColorHug2");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
 	case CH_DEVICE_MODE_FIRMWARE_PLUS:
-		fu_device_set_display_name (item->device, "ColorHug+");
+		fu_device_set_name (item->device, "ColorHug+");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_ALS:
 	case CH_DEVICE_MODE_FIRMWARE_ALS:
-		fu_device_set_display_name (item->device, "ColorHugALS");
+		fu_device_set_name (item->device, "ColorHugALS");
 		break;
 	default:
-		fu_device_set_display_name (item->device, "ColorHug??");
+		fu_device_set_name (item->device, "ColorHug??");
 		break;
 	}
 

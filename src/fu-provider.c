@@ -122,14 +122,14 @@ fu_provider_schedule_update (FuProvider *provider,
 	guint i;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(FuDevice) device_tmp = NULL;
+	g_autoptr(FwupdResult) res_tmp = NULL;
 	g_autoptr(FuPending) pending = NULL;
 	g_autoptr(GFile) file = NULL;
 
 	/* id already exists */
 	pending = fu_pending_new ();
-	device_tmp = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
-	if (device_tmp != NULL) {
+	res_tmp = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
+	if (res_tmp != NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_ALREADY_PENDING,
@@ -162,10 +162,10 @@ fu_provider_schedule_update (FuProvider *provider,
 	/* schedule for next boot */
 	g_debug ("schedule %s to be installed to %s on next boot",
 		 filename, fu_device_get_id (device));
-	fu_device_set_metadata (device, FU_DEVICE_KEY_FILENAME_CAB, filename);
+	fu_device_set_update_filename (device, filename);
 
 	/* add to database */
-	if (!fu_pending_add_device (pending, device, error))
+	if (!fu_pending_add_device (pending, FWUPD_RESULT (device), error))
 		return FALSE;
 
 	/* next boot we run offline */
@@ -236,7 +236,7 @@ fu_provider_update (FuProvider *provider,
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
 	g_autoptr(FuPending) pending = NULL;
-	g_autoptr(FuDevice) device_pending = NULL;
+	g_autoptr(FwupdResult) res_pending = NULL;
 	GError *error_update = NULL;
 
 	/* schedule for next reboot, or handle in the provider */
@@ -270,11 +270,11 @@ fu_provider_update (FuProvider *provider,
 		return FALSE;
 	}
 	pending = fu_pending_new ();
-	device_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
+	res_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
 	if (!klass->update_online (provider, device, blob_fw, flags, &error_update)) {
 		/* save the error to the database */
-		if (device_pending != NULL) {
-			fu_pending_set_error_msg (pending, device,
+		if (res_pending != NULL) {
+			fu_pending_set_error_msg (pending, FWUPD_RESULT (device),
 						  error_update->message, NULL);
 		}
 		g_propagate_error (error, error_update);
@@ -282,14 +282,15 @@ fu_provider_update (FuProvider *provider,
 	}
 
 	/* cleanup */
-	if (device_pending != NULL) {
+	if (res_pending != NULL) {
 		const gchar *tmp;
 
 		/* update pending database */
-		fu_pending_set_state (pending, device, FWUPD_UPDATE_STATE_SUCCESS, NULL);
+		fu_pending_set_state (pending, FWUPD_RESULT (device),
+				      FWUPD_UPDATE_STATE_SUCCESS, NULL);
 
 		/* delete cab file */
-		tmp = fu_device_get_metadata (device_pending, FU_DEVICE_KEY_FILENAME_CAB);
+		tmp = fwupd_result_get_update_filename (res_pending);
 		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
 			g_autoptr(GError) error_local = NULL;
 			g_autoptr(GFile) file = NULL;
@@ -316,7 +317,7 @@ fu_provider_clear_results (FuProvider *provider, FuDevice *device, GError **erro
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuDevice) device_pending = NULL;
+	g_autoptr(FwupdResult) res_pending = NULL;
 	g_autoptr(FuPending) pending = NULL;
 
 	/* handled by the provider */
@@ -325,10 +326,10 @@ fu_provider_clear_results (FuProvider *provider, FuDevice *device, GError **erro
 
 	/* handled using the database */
 	pending = fu_pending_new ();
-	device_pending = fu_pending_get_device (pending,
-						fu_device_get_id (device),
-						&error_local);
-	if (device_pending == NULL) {
+	res_pending = fu_pending_get_device (pending,
+					     fu_device_get_id (device),
+					     &error_local);
+	if (res_pending == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
@@ -339,7 +340,7 @@ fu_provider_clear_results (FuProvider *provider, FuDevice *device, GError **erro
 	}
 
 	/* remove from pending database */
-	return fu_pending_remove_device (pending, device, error);
+	return fu_pending_remove_device (pending, FWUPD_RESULT (device), error);
 }
 
 /**
@@ -349,17 +350,11 @@ gboolean
 fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
+	FwupdUpdateState update_state;
 	const gchar *tmp;
-	guint i;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuDevice) device_pending = NULL;
+	g_autoptr(FwupdResult) res_pending = NULL;
 	g_autoptr(FuPending) pending = NULL;
-	const gchar *copy_keys[] = {
-		FU_DEVICE_KEY_PENDING_STATE,
-		FU_DEVICE_KEY_PENDING_ERROR,
-		FU_DEVICE_KEY_VERSION,
-		FU_DEVICE_KEY_UPDATE_VERSION,
-		NULL };
 
 	/* handled by the provider */
 	if (klass->get_results != NULL)
@@ -367,10 +362,10 @@ fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 
 	/* handled using the database */
 	pending = fu_pending_new ();
-	device_pending = fu_pending_get_device (pending,
-						fu_device_get_id (device),
-						&error_local);
-	if (device_pending == NULL) {
+	res_pending = fu_pending_get_device (pending,
+					     fu_device_get_id (device),
+					     &error_local);
+	if (res_pending == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOTHING_TO_DO,
@@ -381,8 +376,9 @@ fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 	}
 
 	/* copy the important parts from the pending device to the real one */
-	tmp = fu_device_get_metadata (device_pending, FU_DEVICE_KEY_PENDING_STATE);
-	if (tmp == NULL || g_strcmp0 (tmp, "pending") == 0) {
+	update_state = fwupd_result_get_update_state (res_pending);
+	if (update_state == FWUPD_UPDATE_STATE_UNKNOWN ||
+	    update_state == FWUPD_UPDATE_STATE_PENDING) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOTHING_TO_DO,
@@ -390,11 +386,18 @@ fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 			     fu_device_get_id (device));
 		return FALSE;
 	}
-	for (i = 0; copy_keys[i] != NULL; i++) {
-		tmp = fu_device_get_metadata (device_pending, copy_keys[i]);
-		if (tmp != NULL)
-			fu_device_set_metadata (device, copy_keys[i], tmp);
-	}
+
+	/* copy */
+	fu_device_set_update_state (device, update_state);
+	tmp = fwupd_result_get_update_error (res_pending);
+	if (tmp != NULL)
+		fu_device_set_update_error (device, tmp);
+	tmp = fwupd_result_get_device_version (res_pending);
+	if (tmp != NULL)
+		fu_device_set_version (device, tmp);
+	tmp = fwupd_result_get_update_version (res_pending);
+	if (tmp != NULL)
+		fu_device_set_update_version (device, tmp);
 	return TRUE;
 }
 
@@ -420,8 +423,7 @@ fu_provider_device_add (FuProvider *provider, FuDevice *device)
 		 fu_provider_get_name (provider),
 		 fu_device_get_id (device));
 	fu_device_set_created (device, g_get_real_time () / G_USEC_PER_SEC);
-	fu_device_set_metadata (device, FU_DEVICE_KEY_PROVIDER,
-				fu_provider_get_name (provider));
+	fu_device_set_provider (device, fu_provider_get_name (provider));
 	g_signal_emit (provider, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
 

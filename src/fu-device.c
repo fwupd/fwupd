@@ -34,49 +34,12 @@ static void fu_device_finalize			 (GObject *object);
  * Private #FuDevice data
  **/
 typedef struct {
-	gchar				*id;
 	gchar				*equivalent_id;
-	guint64				 flags;
-	guint64				 created;
-	guint64				 modified;
 	GHashTable			*metadata;
 } FuDevicePrivate;
 
-enum {
-	SIGNAL_LAST
-};
-
-enum {
-	PROP_0,
-	PROP_ID,
-	PROP_LAST
-};
-
-G_DEFINE_TYPE_WITH_PRIVATE (FuDevice, fu_device, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (FuDevice, fu_device, FWUPD_TYPE_RESULT)
 #define GET_PRIVATE(o) (fu_device_get_instance_private (o))
-
-/**
- * fu_device_get_id:
- **/
-const gchar *
-fu_device_get_id (FuDevice *device)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
-	return priv->id;
-}
-
-/**
- * fu_device_set_id:
- **/
-void
-fu_device_set_id (FuDevice *device, const gchar *id)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FU_IS_DEVICE (device));
-	g_free (priv->id);
-	priv->id = g_strdup (id);
-}
 
 /**
  * fu_device_get_equivalent_id:
@@ -99,123 +62,6 @@ fu_device_set_equivalent_id (FuDevice *device, const gchar *equivalent_id)
 	g_return_if_fail (FU_IS_DEVICE (device));
 	g_free (priv->equivalent_id);
 	priv->equivalent_id = g_strdup (equivalent_id);
-}
-
-/**
- * fu_device_get_flags:
- **/
-guint64
-fu_device_get_flags (FuDevice *device)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FU_IS_DEVICE (device), 0);
-	return priv->flags;
-}
-
-/**
- * fu_device_set_flags:
- **/
-void
-fu_device_set_flags (FuDevice *device, guint64 flags)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FU_IS_DEVICE (device));
-	priv->flags = flags;
-}
-
-/**
- * fu_device_add_flag:
- **/
-void
-fu_device_add_flag (FuDevice *device, FwupdDeviceFlags flag)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FU_IS_DEVICE (device));
-	priv->flags |= flag;
-}
-
-/**
- * fu_device_get_created:
- **/
-guint64
-fu_device_get_created (FuDevice *device)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FU_IS_DEVICE (device), 0);
-	return priv->created;
-}
-
-/**
- * fu_device_set_created:
- **/
-void
-fu_device_set_created (FuDevice *device, guint64 created)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FU_IS_DEVICE (device));
-	priv->created = created;
-}
-
-/**
- * fu_device_get_modified:
- **/
-guint64
-fu_device_get_modified (FuDevice *device)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FU_IS_DEVICE (device), 0);
-	return priv->modified;
-}
-
-/**
- * fu_device_set_modified:
- **/
-void
-fu_device_set_modified (FuDevice *device, guint64 modified)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FU_IS_DEVICE (device));
-	priv->modified = modified;
-}
-
-/**
- * fu_device_get_guid:
- **/
-const gchar *
-fu_device_get_guid (FuDevice *device)
-{
-	return fu_device_get_metadata (device, FU_DEVICE_KEY_GUID);
-}
-
-/**
- * fu_device_set_guid:
- **/
-void
-fu_device_set_guid (FuDevice *device, const gchar *guid)
-{
-	fu_device_set_metadata (device, FU_DEVICE_KEY_GUID, guid);
-}
-
-/**
- * fu_device_get_display_name:
- **/
-const gchar *
-fu_device_get_display_name (FuDevice *device)
-{
-	const gchar *tmp;
-	tmp = fu_device_get_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME);
-	if (tmp == NULL)
-		tmp = fu_device_get_id (device);
-	return tmp;
-}
-
-/**
- * fu_device_set_display_name:
- **/
-void
-fu_device_set_display_name (FuDevice *device, const gchar *display_name)
-{
-	fu_device_set_metadata (device, FU_DEVICE_KEY_DISPLAY_NAME, display_name);
 }
 
 /**
@@ -244,184 +90,13 @@ fu_device_set_metadata (FuDevice *device, const gchar *key, const gchar *value)
 }
 
 /**
- * fu_device_to_variant:
- **/
-GVariant *
-fu_device_to_variant (FuDevice *device)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	GList *l;
-	GVariantBuilder builder;
-	const gchar *key;
-	const gchar *value;
-	g_autoptr(GList) keys = NULL;
-
-	/* create an array with all the metadata in */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	keys = g_hash_table_get_keys (priv->metadata);
-	for (l = keys; l != NULL; l = l->next) {
-		key = l->data;
-		value = g_hash_table_lookup (priv->metadata, key);
-		if (g_strcmp0 (value, "TRUE") == 0) {
-			g_variant_builder_add (&builder, "{sv}",
-					       key, g_variant_new_boolean (TRUE));
-		} else {
-			g_variant_builder_add (&builder, "{sv}",
-					       key, g_variant_new_string (value));
-		}
-	}
-	g_variant_builder_add (&builder, "{sv}",
-			       FU_DEVICE_KEY_FLAGS,
-			       g_variant_new_uint64 (priv->flags));
-	g_variant_builder_add (&builder, "{sv}",
-			       FU_DEVICE_KEY_CREATED,
-			       g_variant_new_uint64 (priv->created));
-	g_variant_builder_add (&builder, "{sv}",
-			       FU_DEVICE_KEY_MODIFIED,
-			       g_variant_new_uint64 (priv->modified));
-	return g_variant_new ("{sa{sv}}", priv->id, &builder);
-}
-
-/**
- * fu_device_get_metadata_as_variant:
- **/
-GVariant *
-fu_device_get_metadata_as_variant (FuDevice *device)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	GList *l;
-	GVariantBuilder builder;
-	const gchar *key;
-	const gchar *value;
-	g_autoptr(GList) keys = NULL;
-
-	/* create an array with all the metadata in */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	keys = g_hash_table_get_keys (priv->metadata);
-	keys = g_list_sort (keys, (GCompareFunc) g_strcmp0);
-	for (l = keys; l != NULL; l = l->next) {
-		key = l->data;
-		value = g_hash_table_lookup (priv->metadata, key);
-		if (g_strcmp0 (value, "TRUE") == 0) {
-			g_variant_builder_add (&builder, "{sv}",
-					       key, g_variant_new_boolean (TRUE));
-		} else {
-			g_variant_builder_add (&builder, "{sv}",
-					       key, g_variant_new_string (value));
-		}
-	}
-	g_variant_builder_add (&builder, "{sv}",
-			       FU_DEVICE_KEY_FLAGS,
-			       g_variant_new_uint64 (priv->flags));
-	g_variant_builder_add (&builder, "{sv}",
-			       FU_DEVICE_KEY_CREATED,
-			       g_variant_new_uint64 (priv->created));
-	g_variant_builder_add (&builder, "{sv}",
-			       FU_DEVICE_KEY_MODIFIED,
-			       g_variant_new_uint64 (priv->modified));
-	return g_variant_new ("(a{sv})", &builder);
-}
-
-/**
- * fu_device_set_metadata_from_iter:
- **/
-void
-fu_device_set_metadata_from_iter (FuDevice *device, GVariantIter *iter)
-{
-	GVariant *variant;
-	const gchar *key;
-	const gchar *type;
-
-	while (g_variant_iter_next (iter, "{&sv}", &key, &variant)) {
-		if (g_strcmp0 (key, FU_DEVICE_KEY_FLAGS) == 0) {
-			fu_device_set_flags (device, g_variant_get_uint64 (variant));
-			continue;
-		}
-		if (g_strcmp0 (key, FU_DEVICE_KEY_CREATED) == 0) {
-			fu_device_set_created (device, g_variant_get_uint64 (variant));
-			continue;
-		}
-		if (g_strcmp0 (key, FU_DEVICE_KEY_MODIFIED) == 0) {
-			fu_device_set_modified (device, g_variant_get_uint64 (variant));
-			continue;
-		}
-		type = g_variant_get_type_string (variant);
-		if (g_strcmp0 (type, "s") == 0) {
-			fu_device_set_metadata (device, key,
-						g_variant_get_string (variant, NULL));
-		} else if (g_strcmp0 (type, "b") == 0) {
-			fu_device_set_metadata (device, key, "TRUE");
-		} else if (g_strcmp0 (type, "t") == 0) {
-			g_autofree gchar *tmp = NULL;
-			tmp = g_strdup_printf ("%" G_GUINT64_FORMAT,
-					       g_variant_get_uint64 (variant));
-			fu_device_set_metadata (device, key, tmp);
-		} else {
-			g_warning ("type=%s", type);
-			fu_device_set_metadata (device, key, "???");
-		}
-		g_variant_unref (variant);
-	}
-}
-
-/**
- * fu_device_get_property:
- **/
-static void
-fu_device_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
-{
-	FuDevice *device = FU_DEVICE (object);
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-
-	switch (prop_id) {
-	case PROP_ID:
-		g_value_set_string (value, priv->id);
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-		break;
-	}
-}
-
-/**
- * fu_device_set_property:
- **/
-static void
-fu_device_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
-{
-	FuDevice *device = FU_DEVICE (object);
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-
-	switch (prop_id) {
-	case PROP_ID:
-		g_free (priv->id);
-		priv->id = g_strdup (g_value_get_string (value));
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-		break;
-	}
-}
-
-/**
  * fu_device_class_init:
  **/
 static void
 fu_device_class_init (FuDeviceClass *klass)
 {
-	GParamSpec *pspec;
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = fu_device_finalize;
-	object_class->get_property = fu_device_get_property;
-	object_class->set_property = fu_device_set_property;
-
-	/**
-	 * FuDevice:id:
-	 */
-	pspec = g_param_spec_string ("id", NULL, NULL,
-				     NULL,
-				     G_PARAM_READWRITE);
-	g_object_class_install_property (object_class, PROP_ID, pspec);
 }
 
 /**
@@ -444,7 +119,6 @@ fu_device_finalize (GObject *object)
 	FuDevice *device = FU_DEVICE (object);
 	FuDevicePrivate *priv = GET_PRIVATE (device);
 
-	g_free (priv->id);
 	g_hash_table_unref (priv->metadata);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);

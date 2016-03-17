@@ -83,7 +83,7 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 	if (release != 0xffff) {
 		version = as_utils_version_from_uint16 (release,
 							AS_VERSION_PARSE_FLAG_NONE);
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
+		fu_device_set_version (dev, version);
 	}
 
 	vid_pid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
@@ -158,7 +158,7 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 	}
 	display_name = dfu_device_get_display_name (device);
 	if (display_name != NULL)
-		fu_device_set_display_name (dev, display_name);
+		fu_device_set_name (dev, display_name);
 
 	/* we're done here */
 	if (!dfu_device_close (device, &error))
@@ -368,7 +368,7 @@ fu_provider_dfu_verify (FuProvider *provider,
 	if (blob_fw == NULL)
 		return FALSE;
 	hash = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_fw);
-	fu_device_set_metadata (dev, FU_DEVICE_KEY_FIRMWARE_HASH, hash);
+	fu_device_set_checksum (dev, hash);
 	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
 	return TRUE;
 }

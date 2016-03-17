@@ -33,6 +33,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
+#include "fwupd-enums-private.h"
+
 #include "fu-debug.h"
 #include "fu-device.h"
 #include "fu-plugin.h"
@@ -173,7 +175,7 @@ fu_main_device_array_to_variant (GPtrArray *devices, GError **error)
 		GVariant *tmp;
 		FuDeviceItem *item;
 		item = g_ptr_array_index (devices, i);
-		tmp = fu_device_to_variant (item->device);
+		tmp = fwupd_result_to_data (FWUPD_RESULT (item->device), "{sa{sv}}");
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(a{sa{sv}})", &builder);
@@ -760,10 +762,10 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	fu_main_vendor_quirk_release_version (app);
 
 	version = as_release_get_version (rel);
-	fu_device_set_metadata (helper->device, FU_DEVICE_KEY_UPDATE_VERSION, version);
+	fu_device_set_update_version (helper->device, version);
 
 	/* compare to the lowest supported version, if it exists */
-	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_VERSION_LOWEST);
+	tmp = fu_device_get_version_lowest (helper->device);
 	if (tmp != NULL && as_utils_vercmp (tmp, version) > 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -774,7 +776,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	}
 
 	/* compare the versions of what we have installed */
-	tmp = fu_device_get_metadata (helper->device, FU_DEVICE_KEY_VERSION);
+	tmp = fu_device_get_version (helper->device);
 	if (tmp == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -846,6 +848,7 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 	FuDevice *dev;
 	FuProvider *provider;
 	FuDeviceItem *item = NULL;
+	FwupdUpdateState update_state;
 	const gchar *tmp;
 	guint i;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -868,16 +871,16 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 		return NULL;
 	for (i = 0; i < devices->len; i++) {
 		dev = g_ptr_array_index (devices, i);
-		tmp = fu_device_get_metadata (dev, FU_DEVICE_KEY_PENDING_STATE);
-		if (tmp == NULL)
+		update_state = fu_device_get_update_state (dev);
+		if (update_state == FWUPD_UPDATE_STATE_UNKNOWN)
 			continue;
-		if (g_strcmp0 (tmp, "pending") == 0)
+		if (update_state == FWUPD_UPDATE_STATE_PENDING)
 			continue;
 
 		/* if the device is not still connected, fake a FuDeviceItem */
 		item = fu_main_get_item_by_id (priv, fu_device_get_id (dev));
 		if (item == NULL) {
-			tmp = fu_device_get_metadata (dev, FU_DEVICE_KEY_PROVIDER);
+			tmp = fu_device_get_provider (dev);
 			provider = fu_main_get_provider_by_name (priv, tmp);
 			if (provider == NULL) {
 				g_set_error (error,
@@ -1099,7 +1102,7 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 		item = g_ptr_array_index (priv->devices, i);
 
 		/* get device version */
-		version = fu_device_get_metadata (item->device, FU_DEVICE_KEY_VERSION);
+		version = fu_device_get_version (item->device);
 		if (version == NULL)
 			continue;
 
@@ -1129,63 +1132,41 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 		}
 
 		/* add application metadata */
-		fu_device_set_metadata (item->device,
-					FU_DEVICE_KEY_APPSTREAM_ID,
-					as_app_get_id (app));
+		fu_device_set_update_id (item->device, as_app_get_id (app));
 		tmp = as_app_get_developer_name (app, NULL);
-		if (tmp != NULL) {
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_VENDOR, tmp);
-		}
+		if (tmp != NULL)
+			fu_device_set_update_vendor (item->device, tmp);
 		tmp = as_app_get_name (app, NULL);
-		if (tmp != NULL) {
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_NAME, tmp);
-		}
+		if (tmp != NULL)
+			fu_device_set_update_name (item->device, tmp);
 		tmp = as_app_get_comment (app, NULL);
-		if (tmp != NULL) {
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_SUMMARY, tmp);
-		}
+		if (tmp != NULL)
+			fu_device_set_update_summary (item->device, tmp);
 		tmp = as_app_get_description (app, NULL);
-		if (tmp != NULL) {
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_DESCRIPTION, tmp);
-		}
+		if (tmp != NULL)
+			fu_device_set_description (item->device, tmp);
 		tmp = as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE);
-		if (tmp != NULL) {
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_URL_HOMEPAGE, tmp);
-		}
+		if (tmp != NULL)
+			fu_device_set_update_homepage (item->device, tmp);
 		tmp = as_app_get_project_license (app);
-		if (tmp != NULL) {
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_LICENSE, tmp);
-		}
+		if (tmp != NULL)
+			fu_device_set_update_license (item->device, tmp);
 
 		/* add release information */
 		tmp = as_release_get_version (rel);
-		if (tmp != NULL) {
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_UPDATE_VERSION, tmp);
-		}
+		if (tmp != NULL)
+			fu_device_set_update_version (item->device, tmp);
 		csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTAINER);
 		if (csum != NULL) {
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_UPDATE_HASH,
-						as_checksum_get_value (csum));
+			fu_device_set_update_checksum (item->device,
+						       as_checksum_get_value (csum));
 		}
 		tmp = as_release_get_location_default (rel);
-		if (tmp != NULL) {
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_UPDATE_URI, tmp);
-		}
+		if (tmp != NULL)
+			fu_device_set_update_uri (item->device, tmp);
 		tmp = as_release_get_description (rel, NULL);
-		if (tmp != NULL) {
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_UPDATE_DESCRIPTION,
-						tmp);
-		}
+		if (tmp != NULL)
+			fu_device_set_update_description (item->device, tmp);
 		g_ptr_array_add (updates, item);
 	}
 
@@ -1298,7 +1279,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* success */
-		val = fu_device_get_metadata_as_variant (item->device);
+		val = fwupd_result_to_data (FWUPD_RESULT (item->device), "(a{sv})");
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
@@ -1432,7 +1413,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* find version in metadata */
-		version = fu_device_get_metadata (item->device, FU_DEVICE_KEY_VERSION);
+		version = fu_device_get_version (item->device);
 		release = as_app_get_release (app, version);
 		if (release == NULL) {
 			g_dbus_method_invocation_return_error (invocation,
@@ -1453,7 +1434,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 							       version);
 			return;
 		}
-		hash = fu_device_get_metadata (item->device, FU_DEVICE_KEY_FIRMWARE_HASH);
+		hash = fu_device_get_checksum (item->device);
 		if (g_strcmp0 (as_checksum_get_value (csum), hash) != 0) {
 			g_dbus_method_invocation_return_error (invocation,
 							       FWUPD_ERROR,
@@ -1712,63 +1693,63 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* create an array with all the metadata in */
 		g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 		g_variant_builder_add (&builder, "{sv}",
-				       FU_DEVICE_KEY_VERSION,
+				       FWUPD_RESULT_KEY_UPDATE_VERSION,
 				       g_variant_new_string (as_release_get_version (rel)));
 		g_variant_builder_add (&builder, "{sv}",
-				       FU_DEVICE_KEY_GUID,
+				       FWUPD_RESULT_KEY_GUID,
 				       g_variant_new_string (guid));
 		g_variant_builder_add (&builder, "{sv}",
-				       FU_DEVICE_KEY_SIZE,
+				       FWUPD_RESULT_KEY_UPDATE_SIZE,
 				       g_variant_new_uint64 (as_release_get_size (rel, AS_SIZE_KIND_INSTALLED)));
 		g_variant_builder_add (&builder, "{sv}",
-				       FU_DEVICE_KEY_FLAGS,
+				       FWUPD_RESULT_KEY_DEVICE_FLAGS,
 				       g_variant_new_uint64 (device_flags));
 
 		/* optional properties */
 		tmp = as_app_get_developer_name (app, NULL);
 		if (tmp != NULL) {
 			g_variant_builder_add (&builder, "{sv}",
-					       FU_DEVICE_KEY_VENDOR,
+					       FWUPD_RESULT_KEY_UPDATE_VENDOR,
 					       g_variant_new_string (tmp));
 		}
 		tmp = as_app_get_name (app, NULL);
 		if (tmp != NULL) {
 			g_variant_builder_add (&builder, "{sv}",
-					       FU_DEVICE_KEY_NAME,
+					       FWUPD_RESULT_KEY_UPDATE_NAME,
 					       g_variant_new_string (tmp));
 		}
 		tmp = as_app_get_comment (app, NULL);
 		if (tmp != NULL) {
 			g_variant_builder_add (&builder, "{sv}",
-					       FU_DEVICE_KEY_SUMMARY,
+					       FWUPD_RESULT_KEY_UPDATE_SUMMARY,
 					       g_variant_new_string (tmp));
 		}
 		tmp = as_app_get_description (app, NULL);
 		if (tmp != NULL) {
 			g_variant_builder_add (&builder, "{sv}",
-					       FU_DEVICE_KEY_DESCRIPTION,
+					       FWUPD_RESULT_KEY_UPDATE_DESCRIPTION,
 					       g_variant_new_string (tmp));
 		}
 		tmp = as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE);
 		if (tmp != NULL) {
 			g_variant_builder_add (&builder, "{sv}",
-					       FU_DEVICE_KEY_URL_HOMEPAGE,
+					       FWUPD_RESULT_KEY_UPDATE_HOMEPAGE,
 					       g_variant_new_string (tmp));
 		}
 		tmp = as_app_get_project_license (app);
 		if (tmp != NULL) {
 			g_variant_builder_add (&builder, "{sv}",
-					       FU_DEVICE_KEY_LICENSE,
+					       FWUPD_RESULT_KEY_UPDATE_LICENSE,
 					       g_variant_new_string (tmp));
 		}
 		tmp = as_release_get_description (rel, NULL);
 		if (tmp != NULL) {
 			g_variant_builder_add (&builder, "{sv}",
-					       FU_DEVICE_KEY_UPDATE_DESCRIPTION,
+					       FWUPD_RESULT_KEY_UPDATE_DESCRIPTION,
 					       g_variant_new_string (tmp));
 		}
 		g_variant_builder_add (&builder, "{sv}",
-				       FU_DEVICE_KEY_TRUSTED,
+				       FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS,
 				       g_variant_new_uint64 (trust_flags));
 
 		/* return whole array */
@@ -1961,7 +1942,7 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 	if (item != NULL) {
 		g_debug ("already added %s by %s, ignoring same device from %s",
 			 fu_device_get_id (item->device),
-			 fu_device_get_metadata (item->device, FU_DEVICE_KEY_PROVIDER),
+			 fu_device_get_provider (item->device),
 			 fu_provider_get_name (provider));
 		return;
 	}
