@@ -120,6 +120,44 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 }
 
 /**
+ * fwupd_update_state_to_string:
+ *
+ * Since: 0.7.0
+ **/
+const gchar *
+fwupd_update_state_to_string (FwupdUpdateState update_state)
+{
+	if (update_state == FWUPD_UPDATE_STATE_UNKNOWN)
+		return "unknown";
+	if (update_state == FWUPD_UPDATE_STATE_PENDING)
+		return "pending";
+	if (update_state == FWUPD_UPDATE_STATE_SUCCESS)
+		return "success";
+	if (update_state == FWUPD_UPDATE_STATE_FAILED)
+		return "failed";
+	return NULL;
+}
+
+/**
+ * fwupd_update_state_from_string:
+ *
+ * Since: 0.7.0
+ **/
+FwupdUpdateState
+fwupd_update_state_from_string (const gchar *update_state)
+{
+	if (g_strcmp0 (update_state, "unknown") == 0)
+		return FWUPD_UPDATE_STATE_UNKNOWN;
+	if (g_strcmp0 (update_state, "pending") == 0)
+		return FWUPD_UPDATE_STATE_PENDING;
+	if (g_strcmp0 (update_state, "success") == 0)
+		return FWUPD_UPDATE_STATE_SUCCESS;
+	if (g_strcmp0 (update_state, "failed") == 0)
+		return FWUPD_UPDATE_STATE_FAILED;
+	return FWUPD_UPDATE_STATE_UNKNOWN;
+}
+
+/**
  * fwupd_trust_flag_to_string:
  *
  * Since: 0.7.0

@@ -871,7 +871,7 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 		tmp = fu_device_get_metadata (dev, FU_DEVICE_KEY_PENDING_STATE);
 		if (tmp == NULL)
 			continue;
-		if (g_strcmp0 (tmp, "scheduled") == 0)
+		if (g_strcmp0 (tmp, "pending") == 0)
 			continue;
 
 		/* if the device is not still connected, fake a FuDeviceItem */

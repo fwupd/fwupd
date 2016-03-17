@@ -191,10 +191,10 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 	fu_device_set_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION, version_str);
 	if (status == FWUP_LAST_ATTEMPT_STATUS_SUCCESS) {
 		fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
-					fu_pending_state_to_string (FU_PENDING_STATE_SUCCESS));
+					fwupd_update_state_to_string (FWUPD_UPDATE_STATE_SUCCESS));
 	} else {
 		fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
-					fu_pending_state_to_string (FU_PENDING_STATE_FAILED));
+					fwupd_update_state_to_string (FWUPD_UPDATE_STATE_FAILED));
 		tmp = fu_provider_uefi_last_attempt_status_to_str (status);
 		if (tmp != NULL)
 			fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_ERROR, tmp);

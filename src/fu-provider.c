@@ -286,7 +286,7 @@ fu_provider_update (FuProvider *provider,
 		const gchar *tmp;
 
 		/* update pending database */
-		fu_pending_set_state (pending, device, FU_PENDING_STATE_SUCCESS, NULL);
+		fu_pending_set_state (pending, device, FWUPD_UPDATE_STATE_SUCCESS, NULL);
 
 		/* delete cab file */
 		tmp = fu_device_get_metadata (device_pending, FU_DEVICE_KEY_FILENAME_CAB);
@@ -382,7 +382,7 @@ fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 
 	/* copy the important parts from the pending device to the real one */
 	tmp = fu_device_get_metadata (device_pending, FU_DEVICE_KEY_PENDING_STATE);
-	if (tmp == NULL || g_strcmp0 (tmp, "scheduled") == 0) {
+	if (tmp == NULL || g_strcmp0 (tmp, "pending") == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOTHING_TO_DO,

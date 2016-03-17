@@ -170,7 +170,7 @@ fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 							  "version_new) "
 				     "VALUES ('%q','%i','%q','%q','%q','%q','%q')",
 				     fu_device_get_id (device),
-				     FU_PENDING_STATE_SCHEDULED,
+				     FWUPD_UPDATE_STATE_PENDING,
 				     fu_device_get_metadata (device, FU_DEVICE_KEY_FILENAME_CAB),
 				     fu_device_get_display_name (device),
 				     fu_device_get_metadata (device, FU_DEVICE_KEY_PROVIDER),
@@ -280,9 +280,9 @@ fu_pending_device_sqlite_cb (void *data,
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "state") == 0) {
-			FuPendingState state = atoi (argv[i]);
+			FwupdUpdateState state = atoi (argv[i]);
 			fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
-						fu_pending_state_to_string (state));
+						fwupd_update_state_to_string (state));
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "timestamp") == 0) {
@@ -404,29 +404,12 @@ out:
 }
 
 /**
- * fu_pending_state_to_string:
- **/
-const gchar *
-fu_pending_state_to_string (FuPendingState state)
-{
-	if (state == FU_PENDING_STATE_UNKNOWN)
-		return "unknown";
-	if (state == FU_PENDING_STATE_SCHEDULED)
-		return "scheduled";
-	if (state == FU_PENDING_STATE_SUCCESS)
-		return "success";
-	if (state == FU_PENDING_STATE_FAILED)
-		return "failed";
-	return NULL;
-}
-
-/**
  * fu_pending_set_state:
  **/
 gboolean
 fu_pending_set_state (FuPending *pending,
 		      FuDevice *device,
-		      FuPendingState state,
+		      FwupdUpdateState state,
 		      GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
@@ -445,7 +428,7 @@ fu_pending_set_state (FuPending *pending,
 
 	g_debug ("FuPending: set state of %s to %s",
 		 fu_device_get_id (device),
-		 fu_pending_state_to_string (state));
+		 fwupd_update_state_to_string (state));
 	statement = sqlite3_mprintf ("UPDATE pending SET state='%i' WHERE "
 				     "device_id = '%q';",
 				     state, fu_device_get_id (device));

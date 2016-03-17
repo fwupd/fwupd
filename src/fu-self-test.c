@@ -225,7 +225,7 @@ fu_provider_func (void)
 	device_tmp = fu_pending_get_device (pending, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
 	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_PENDING_STATE), ==, "scheduled");
+	g_assert_cmpstr (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_PENDING_STATE), ==, "pending");
 	g_assert_cmpstr (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_PENDING_ERROR), ==, NULL);
 	g_assert_cmpstr (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_FILENAME_CAB), !=, NULL);
 
@@ -383,7 +383,7 @@ fu_pending_func (void)
 	/* add some extra data */
 	device = fu_device_new ();
 	fu_device_set_id (device, "self-test");
-	ret = fu_pending_set_state (pending, device, FU_PENDING_STATE_SCHEDULED, &error);
+	ret = fu_pending_set_state (pending, device, FWUPD_UPDATE_STATE_PENDING, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_pending_set_error_msg (pending, device, "word", &error);
@@ -400,7 +400,7 @@ fu_pending_func (void)
 	g_assert_cmpstr (fu_device_get_display_name (device), ==, "ColorHug");
 	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION), ==, "3.0.1");
 	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION), ==, "3.0.2");
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_PENDING_STATE), ==, "scheduled");
+	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_PENDING_STATE), ==, "pending");
 	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_PENDING_ERROR), ==, "word");
 	g_object_unref (device);
 

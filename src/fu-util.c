@@ -791,7 +791,7 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* check not already done */
 		tmp = fu_device_get_metadata (device, FU_DEVICE_KEY_PENDING_STATE);
-		if (g_strcmp0 (tmp, "scheduled") != 0)
+		if (g_strcmp0 (tmp, "pending") != 0)
 			continue;
 
 		/* tell the user what's going to happen */

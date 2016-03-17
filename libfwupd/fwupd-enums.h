@@ -79,10 +79,26 @@ typedef enum {
 	FU_DEVICE_FLAG_LAST
 } FwupdDeviceFlags;
 
+/**
+ * FwupdUpdateState:
+ *
+ * The update state.
+ **/
+typedef enum {
+	FWUPD_UPDATE_STATE_UNKNOWN,			/* Since: 0.7.0 */
+	FWUPD_UPDATE_STATE_PENDING,			/* Since: 0.7.0 */
+	FWUPD_UPDATE_STATE_SUCCESS,			/* Since: 0.7.0 */
+	FWUPD_UPDATE_STATE_FAILED,			/* Since: 0.7.0 */
+	/* private */
+	FWUPD_UPDATE_STATE_LAST
+} FwupdUpdateState;
+
 const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
 const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
 FwupdDeviceFlags fwupd_device_flag_from_string		(const gchar	*device_flag);
+const gchar	*fwupd_update_state_to_string		(FwupdUpdateState update_state);
+FwupdUpdateState fwupd_update_state_from_string		(const gchar	*update_state);
 const gchar	*fwupd_trust_flag_to_string		(FwupdTrustFlags trust_flag);
 FwupdTrustFlags	 fwupd_trust_flag_from_string		(const gchar	*trust_flag);
 
