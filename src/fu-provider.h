@@ -34,14 +34,6 @@ G_BEGIN_DECLS
 G_DECLARE_DERIVABLE_TYPE (FuProvider, fu_provider, FU, PROVIDER, GObject)
 
 typedef enum {
-	FU_PROVIDER_UPDATE_FLAG_NONE		= 0,
-	FU_PROVIDER_UPDATE_FLAG_OFFLINE		= 1,
-	FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL	= 2,
-	FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER	= 4,
-	FU_PROVIDER_UPDATE_FLAG_LAST
-} FuProviderFlags;
-
-typedef enum {
 	FU_PROVIDER_VERIFY_FLAG_NONE	= 0,
 	FU_PROVIDER_VERIFY_FLAG_LAST
 } FuProviderVerifyFlags;
@@ -64,12 +56,12 @@ struct _FuProviderClass
 	gboolean	 (*update_online)	(FuProvider	*provider,
 						 FuDevice	*device,
 						 GBytes		*blob_fw,
-						 FuProviderFlags flags,
+						 FwupdUpdateFlags flags,
 						 GError		**error);
 	gboolean	 (*update_offline)	(FuProvider	*provider,
 						 FuDevice	*device,
 						 GBytes		*blob_fw,
-						 FuProviderFlags flags,
+						 FwupdUpdateFlags flags,
 						 GError		**error);
 	gboolean	 (*clear_results)	(FuProvider	*provider,
 						 FuDevice	*device,
@@ -103,7 +95,7 @@ gboolean	 fu_provider_update		(FuProvider	*provider,
 						 GBytes		*blob_cab,
 						 GBytes		*blob_fw,
 						 FuPlugin	*plugin,
-						 FuProviderFlags flags,
+						 FwupdUpdateFlags flags,
 						 GError		**error);
 gboolean	 fu_provider_verify		(FuProvider	*provider,
 						 FuDevice	*device,

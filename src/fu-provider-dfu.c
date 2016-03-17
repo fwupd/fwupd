@@ -235,7 +235,7 @@ static gboolean
 fu_provider_dfu_update (FuProvider *provider,
 			FuDevice *dev,
 			GBytes *blob_fw,
-			FuProviderFlags flags,
+			FwupdUpdateFlags flags,
 			GError **error)
 {
 	FuProviderDfu *provider_dfu = FU_PROVIDER_DFU (provider);

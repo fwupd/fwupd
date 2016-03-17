@@ -50,7 +50,7 @@ typedef struct {
 	GVariant		*val;		/* for async */
 	GDBusMessage		*message;	/* for async */
 	GError			*error;		/* for async */
-	FuProviderFlags		 flags;
+	FwupdUpdateFlags	 flags;
 	GDBusConnection		*conn;
 	GDBusProxy		*proxy;
 } FuUtilPrivate;
@@ -479,15 +479,15 @@ fu_util_install_internal (FuUtilPrivate *priv, const gchar *id,
 			       "reason", g_variant_new_string ("user-action"));
 	g_variant_builder_add (&builder, "{sv}",
 			       "filename", g_variant_new_string (filename));
-	if (priv->flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) {
+	if (priv->flags & FWUPD_UPDATE_FLAG_OFFLINE) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "offline", g_variant_new_boolean (TRUE));
 	}
-	if (priv->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER) {
+	if (priv->flags & FWUPD_UPDATE_FLAG_ALLOW_OLDER) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "allow-older", g_variant_new_boolean (TRUE));
 	}
-	if (priv->flags & FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL) {
+	if (priv->flags & FWUPD_UPDATE_FLAG_ALLOW_REINSTALL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "allow-reinstall", g_variant_new_boolean (TRUE));
 	}
@@ -556,7 +556,7 @@ fu_util_install_with_fallback (FuUtilPrivate *priv, const gchar *id,
 		return TRUE;
 
 	/* some other failure */
-	if ((priv->flags & FU_PROVIDER_UPDATE_FLAG_OFFLINE) > 0 ||
+	if ((priv->flags & FWUPD_UPDATE_FLAG_OFFLINE) > 0 ||
 	    !g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_propagate_error (error, error_local);
 		error_local = NULL;
@@ -565,7 +565,7 @@ fu_util_install_with_fallback (FuUtilPrivate *priv, const gchar *id,
 
 	/* TRANSLATOR: the provider only supports offline */
 	g_print ("%s...\n", _("Retrying as an offline update"));
-	priv->flags |= FU_PROVIDER_UPDATE_FLAG_OFFLINE;
+	priv->flags |= FWUPD_UPDATE_FLAG_OFFLINE;
 	return fu_util_install_internal (priv, id, filename, error);
 }
 
@@ -1689,11 +1689,11 @@ main (int argc, char *argv[])
 
 	/* set flags */
 	if (offline)
-		priv->flags |= FU_PROVIDER_UPDATE_FLAG_OFFLINE;
+		priv->flags |= FWUPD_UPDATE_FLAG_OFFLINE;
 	if (allow_reinstall)
-		priv->flags |= FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL;
+		priv->flags |= FWUPD_UPDATE_FLAG_ALLOW_REINSTALL;
 	if (allow_older)
-		priv->flags |= FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER;
+		priv->flags |= FWUPD_UPDATE_FLAG_ALLOW_OLDER;
 
 	/* connect to the daemon */
 	priv->conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);

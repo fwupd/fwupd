@@ -267,7 +267,7 @@ static gboolean
 fu_provider_chug_update (FuProvider *provider,
 			 FuDevice *device,
 			 GBytes *blob_fw,
-			 FuProviderFlags flags,
+			 FwupdUpdateFlags flags,
 			 GError **error)
 {
 	FuProviderChug *provider_chug = FU_PROVIDER_CHUG (provider);
