@@ -412,7 +412,7 @@ fu_pending_func (void)
 	g_clear_error (&error);
 
 	/* remove device */
-	res = fu_device_new ();
+	res = fwupd_result_new ();
 	fu_device_set_id (res, "self-test");
 	ret = fu_pending_remove_device (pending, res, &error);
 	g_assert_no_error (error);
