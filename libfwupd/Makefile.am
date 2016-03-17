@@ -80,6 +80,31 @@ CLEANFILES = $(gir_DATA) $(typelib_DATA)
 
 endif
 
+TESTS_ENVIRONMENT =						\
+	libtool --mode=execute valgrind				\
+	--quiet							\
+	--leak-check=full					\
+	--show-possibly-lost=no
+
+check_PROGRAMS =						\
+	fwupd-self-test
+
+fwupd_self_test_SOURCES =					\
+	fwupd-enums.c						\
+	fwupd-error.c						\
+	fwupd-result.c						\
+	fwupd-self-test.c
+
+fwupd_self_test_LDADD =						\
+	$(LIBM)							\
+	$(ARCHIVE_LIBS)						\
+	$(GLIB_LIBS)
+
+fwupd_self_test_CFLAGS =					\
+	$(WARNINGFLAGS_C)
+
+TESTS = fwupd-self-test
+
 clean-local:
 	rm -f *~
 
