@@ -36,6 +36,7 @@ G_DECLARE_DERIVABLE_TYPE (FwupdClient, fwupd_client, FWUPD, CLIENT, GObject)
 struct _FwupdClientClass
 {
 	GObjectClass		 parent_class;
+	void			(*changed)		(FwupdClient	*client);
 	void			(*status_changed)	(FwupdClient	*client,
 							 FwupdStatus	 status);
 	/*< private >*/

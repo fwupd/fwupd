@@ -49,6 +49,7 @@ typedef struct {
 } FwupdClientPrivate;
 
 enum {
+	SIGNAL_CHANGED,
 	SIGNAL_STATUS_CHANGED,
 	SIGNAL_LAST
 };
@@ -103,14 +104,15 @@ fwupd_client_helper_new (void)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdClientHelper, fwupd_client_helper_free)
 
 /**
- * fwupd_client_status_changed_cb:
+ * fwupd_client_properties_changed_cb:
  **/
 static void
-fwupd_client_status_changed_cb (GDBusProxy *proxy, GVariant *changed_properties,
-				GStrv invalidated_properties, gpointer user_data)
+fwupd_client_properties_changed_cb (GDBusProxy *proxy,
+				    GVariant *changed_properties,
+				    GStrv invalidated_properties,
+				    FwupdClient *client)
 {
 	g_autoptr(GVariant) val = NULL;
-	FwupdClient *client = FWUPD_CLIENT (user_data);
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 
 	/* print to the console */
@@ -120,6 +122,20 @@ fwupd_client_status_changed_cb (GDBusProxy *proxy, GVariant *changed_properties,
 	priv->status = g_variant_get_uint32 (val);
 	g_debug ("Emitting ::status-changed() [%s]", fwupd_status_to_string (priv->status));
 	g_signal_emit (client, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
+}
+
+/**
+ * fwupd_client_signal_cb:
+ */
+static void
+fwupd_client_signal_cb (GDBusProxy *proxy,
+			const gchar *sender_name,
+			const gchar *signal_name,
+			GVariant *parameters,
+			FwupdClient *client)
+{
+	g_debug ("Emitting ::changed()");
+	g_signal_emit (client, signals[SIGNAL_CHANGED], 0);
 }
 
 /**
@@ -151,7 +167,9 @@ fwupd_client_startup (FwupdClient *client, GCancellable *cancellable, GError **e
 	if (priv->proxy == NULL)
 		return FALSE;
 	g_signal_connect (priv->proxy, "g-properties-changed",
-			  G_CALLBACK (fwupd_client_status_changed_cb), client);
+			  G_CALLBACK (fwupd_client_properties_changed_cb), client);
+	g_signal_connect (priv->proxy, "g-signal",
+			  G_CALLBACK (fwupd_client_signal_cb), client);
 	return TRUE;
 }
 
@@ -810,12 +828,28 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	object_class->set_property = fwupd_client_set_property;
 
 	/**
+	 * AsStore::changed:
+	 * @client: the #FwupdClient instance that emitted the signal
+	 *
+	 * The ::changed signal is emitted when the daemon internal has
+	 * changed, for instance when a device has been added or removed.
+	 *
+	 * Since: 0.7.0
+	 **/
+	signals [SIGNAL_CHANGED] =
+		g_signal_new ("changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FwupdClientClass, changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
+			      G_TYPE_NONE, 0);
+
+	/**
 	 * AsStore::state-changed:
 	 * @client: the #FwupdClient instance that emitted the signal
 	 * @status: the #FwupdStatus
 	 *
-	 * The ::state-changed signal is emitted when the daemon state has
-	 * changed.
+	 * The ::state-changed signal is emitted when the daemon status has
+	 * changed, e.g. going from %FWUPD_STATUS_IDLE to %FWUPD_STATUS_DEVICE_WRITE.
 	 *
 	 * Since: 0.7.0
 	 **/
