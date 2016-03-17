@@ -24,12 +24,14 @@ libfwupd_include_HEADERS =					\
 
 libfwupdbase_includedir = $(libfwupd_includedir)/libfwupd
 libfwupdbase_include_HEADERS =					\
+	fwupd-client.h						\
 	fwupd-enums.h						\
 	fwupd-error.h						\
 	fwupd-result.h						\
 	fwupd-version.h
 
 libfwupd_la_SOURCES =						\
+	fwupd-client.c						\
 	fwupd-enums.c						\
 	fwupd-enums-private.h					\
 	fwupd-error.c						\
@@ -90,6 +92,7 @@ check_PROGRAMS =						\
 	fwupd-self-test
 
 fwupd_self_test_SOURCES =					\
+	fwupd-client.c						\
 	fwupd-enums.c						\
 	fwupd-error.c						\
 	fwupd-result.c						\

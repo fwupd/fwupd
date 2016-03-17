@@ -24,6 +24,7 @@
 #include <glib-object.h>
 #include <fnmatch.h>
 
+#include "fwupd-client.h"
 #include "fwupd-result.h"
 
 /**
@@ -103,6 +104,27 @@ fwupd_result_func (void)
 	g_assert (ret);
 }
 
+static void
+fwupd_client_func (void)
+{
+	FwupdResult *res;
+	g_autoptr(FwupdClient) client = NULL;
+	g_autoptr(GPtrArray) array = NULL;
+	g_autoptr(GError) error = NULL;
+
+	client = fwupd_client_new ();
+	array = fwupd_client_get_devices (client, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (array != NULL);
+	g_assert_cmpint (array->len, >, 0);
+
+	/* check device */
+	res = g_ptr_array_index (array, 0);
+	g_assert (FWUPD_IS_RESULT (res));
+	g_assert_cmpstr (fwupd_result_get_guid (res), !=, NULL);
+	g_assert_cmpstr (fwupd_result_get_device_id (res), !=, NULL);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -113,6 +135,7 @@ main (int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func ("/fwupd/result", fwupd_result_func);
+	g_test_add_func ("/fwupd/client", fwupd_client_func);
 	return g_test_run ();
 }
 

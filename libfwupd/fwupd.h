@@ -29,6 +29,7 @@
 
 #define __FWUPD_H_INSIDE__
 
+#include <libfwupd/fwupd-client.h>
 #include <libfwupd/fwupd-enums.h>
 #include <libfwupd/fwupd-error.h>
 #include <libfwupd/fwupd-result.h>
