@@ -716,7 +716,7 @@ dfu_firmware_write_data_ihex (DfuFirmware *firmware, GError **error)
 			if (!dfu_firmware_write_data_ihex_element (element,
 								   str,
 								   error))
-				return FALSE;
+				return NULL;
 		}
 	}
 

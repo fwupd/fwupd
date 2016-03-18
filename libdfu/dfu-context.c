@@ -481,8 +481,8 @@ dfu_context_get_device_by_vid_pid (DfuContext *context,
 	GUsbDevice *dev;
 	guint i;
 
-	g_return_val_if_fail (DFU_IS_CONTEXT (context), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (DFU_IS_CONTEXT (context), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* search all devices */
 	for (i = 0; i < priv->devices->len; i++) {
@@ -536,8 +536,8 @@ dfu_context_get_device_by_platform_id (DfuContext *context,
 	DfuContextItem *item;
 	guint i;
 
-	g_return_val_if_fail (DFU_IS_CONTEXT (context), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (DFU_IS_CONTEXT (context), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* search all devices */
 	for (i = 0; i < priv->devices->len; i++) {
@@ -573,8 +573,8 @@ dfu_context_get_device_default (DfuContext *context, GError **error)
 	DfuContextPrivate *priv = GET_PRIVATE (context);
 	DfuContextItem *item;
 
-	g_return_val_if_fail (DFU_IS_CONTEXT (context), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (DFU_IS_CONTEXT (context), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* none */
 	if (priv->devices->len == 0) {

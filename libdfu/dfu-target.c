@@ -917,7 +917,7 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 	/* for ST devices, the action only occurs when we do GetStatus */
 	if (!dfu_device_has_quirk (priv->device, DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD)) {
 		if (!dfu_target_check_status (target, cancellable, error))
-			return FALSE;
+			return NULL;
 	}
 
 	return g_bytes_new_take (buf, actual_length);
@@ -970,7 +970,7 @@ dfu_target_upload_element (DfuTarget *target,
 					     DFU_ERROR_INVALID_DEVICE,
 					     "no memory sector at 0x%04x",
 					     (guint) offset);
-				return FALSE;
+				return NULL;
 			}
 			if (!dfu_sector_has_cap (sector, DFU_SECTOR_CAP_READABLE)) {
 				g_set_error (error,
@@ -978,7 +978,7 @@ dfu_target_upload_element (DfuTarget *target,
 					     DFU_ERROR_INVALID_DEVICE,
 					     "memory sector at 0x%04x is not readble",
 					     (guint) offset);
-				return FALSE;
+				return NULL;
 			}
 
 			/* manually set the sector address */
@@ -988,7 +988,7 @@ dfu_target_upload_element (DfuTarget *target,
 							     offset,
 							     cancellable,
 							     error))
-					return FALSE;
+					return NULL;
 				last_sector_id = dfu_sector_get_id (sector);
 			}
 		}
@@ -1533,7 +1533,7 @@ dfu_target_get_alt_name (DfuTarget *target, GError **error)
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_FOUND,
 				     "no alt-name");
-		return FALSE;
+		return NULL;
 	}
 
 	return priv->alt_name;

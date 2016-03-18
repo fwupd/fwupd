@@ -1700,7 +1700,7 @@ dfu_device_upload (DfuDevice *device,
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
 				     "device is not in DFU mode");
-			return FALSE;
+			return NULL;
 		}
 		g_debug ("detaching");
 
