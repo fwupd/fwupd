@@ -34,7 +34,8 @@ G_BEGIN_DECLS
 G_DECLARE_DERIVABLE_TYPE (FuProvider, fu_provider, FU, PROVIDER, GObject)
 
 typedef enum {
-	FU_PROVIDER_VERIFY_FLAG_NONE	= 0,
+	FU_PROVIDER_VERIFY_FLAG_NONE		= 0,
+	FU_PROVIDER_VERIFY_FLAG_USE_SHA256	= 1 << 0,
 	FU_PROVIDER_VERIFY_FLAG_LAST
 } FuProviderVerifyFlags;
 
@@ -110,6 +111,7 @@ gboolean	 fu_provider_clear_results	(FuProvider	*provider,
 gboolean	 fu_provider_get_results	(FuProvider	*provider,
 						 FuDevice	*device,
 						 GError		**error);
+GChecksumType	 fu_provider_get_checksum_type	(FuProviderVerifyFlags flags);
 
 G_END_DECLS
 

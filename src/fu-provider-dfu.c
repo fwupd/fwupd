@@ -310,6 +310,7 @@ fu_provider_dfu_verify (FuProvider *provider,
 	FuProviderDfu *provider_dfu = FU_PROVIDER_DFU (provider);
 	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
 	GBytes *blob_fw;
+	GChecksumType checksum_type;
 	DfuDevice *device;
 	const gchar *platform_id;
 	g_autofree gchar *hash = NULL;
@@ -363,12 +364,14 @@ fu_provider_dfu_verify (FuProvider *provider,
 		return FALSE;
 	}
 
-	/* get the SHA1 hash */
+	/* get the checksum */
 	blob_fw = dfu_firmware_write_data (dfu_firmware, error);
 	if (blob_fw == NULL)
 		return FALSE;
-	hash = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_fw);
+	checksum_type = fu_provider_get_checksum_type (flags);
+	hash = g_compute_checksum_for_bytes (checksum_type, blob_fw);
 	fu_device_set_checksum (dev, hash);
+	fu_device_set_checksum_kind (device, checksum_type);
 	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
 	return TRUE;
 }

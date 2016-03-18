@@ -449,6 +449,17 @@ fu_provider_set_status (FuProvider *provider, FwupdStatus status)
 }
 
 /**
+ * fu_provider_get_checksum_type:
+ **/
+GChecksumType
+fu_provider_get_checksum_type (FuProviderVerifyFlags flags)
+{
+	if (flags & FU_PROVIDER_VERIFY_FLAG_USE_SHA256)
+		return G_CHECKSUM_SHA256;
+	return G_CHECKSUM_SHA1;
+}
+
+/**
  * fu_provider_class_init:
  **/
 static void

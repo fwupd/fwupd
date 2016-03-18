@@ -211,6 +211,7 @@ fu_provider_chug_verify (FuProvider *provider,
 	FuProviderChug *provider_chug = FU_PROVIDER_CHUG (provider);
 	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
+	GChecksumType checksum_type;
 	gsize len;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *hash = NULL;
@@ -248,9 +249,11 @@ fu_provider_chug_verify (FuProvider *provider,
 		return FALSE;
 	}
 
-	/* get the SHA1 hash */
-	hash = g_compute_checksum_for_data (G_CHECKSUM_SHA1, (guchar *) data, len);
+	/* get the checksum */
+	checksum_type = fu_provider_get_checksum_type (flags);
+	hash = g_compute_checksum_for_data (checksum_type, (guchar *) data, len);
 	fu_device_set_checksum (device, hash);
+	fu_device_set_checksum_kind (device, checksum_type);
 
 	/* we're done here */
 	if (!g_usb_device_close (item->usb_device, &error_local))
