@@ -147,6 +147,8 @@ fwupd_client_startup (FwupdClient *client, GCancellable *cancellable, GError **e
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* nothing to do */
 	if (priv->proxy != NULL)
@@ -217,6 +219,8 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
 	if (!fwupd_client_startup (client, cancellable, error))
@@ -256,6 +260,8 @@ fwupd_client_get_updates (FwupdClient *client, GCancellable *cancellable, GError
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
 	if (!fwupd_client_startup (client, cancellable, error))
@@ -314,6 +320,9 @@ fwupd_client_verify (FwupdClient *client, const gchar *device_id,
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
 	if (!fwupd_client_startup (client, cancellable, error))
@@ -360,6 +369,9 @@ fwupd_client_unlock (FwupdClient *client, const gchar *device_id,
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
 	if (!fwupd_client_startup (client, cancellable, error))
@@ -406,6 +418,9 @@ fwupd_client_clear_results (FwupdClient *client, const gchar *device_id,
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
 	if (!fwupd_client_startup (client, cancellable, error))
@@ -452,6 +467,9 @@ fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (device_id != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
 	if (!fwupd_client_startup (client, cancellable, error))
@@ -534,6 +552,8 @@ fwupd_client_install (FwupdClient *client,
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
 	g_return_val_if_fail (filename != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
 	if (!fwupd_client_startup (client, cancellable, error))
@@ -630,6 +650,8 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
 	g_return_val_if_fail (filename != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
 	if (!fwupd_client_startup (client, cancellable, error))
@@ -717,6 +739,8 @@ fwupd_client_update_metadata (FwupdClient *client,
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (metadata_fn != NULL, FALSE);
 	g_return_val_if_fail (signature_fn != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
 	if (!fwupd_client_startup (client, cancellable, error))
