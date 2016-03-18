@@ -401,7 +401,7 @@ typedef struct {
 	AsStore			*store;
 	FwupdTrustFlags		 trust_flags;
 	FuDevice		*device;
-	FwupdUpdateFlags	 flags;
+	FwupdInstallFlags	 flags;
 	GBytes			*blob_fw;
 	GBytes			*blob_cab;
 	gint			 vercmp;
@@ -786,7 +786,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		return FALSE;
 	}
 	helper->vercmp = as_utils_vercmp (tmp, version);
-	if (helper->vercmp == 0 && (helper->flags & FWUPD_UPDATE_FLAG_ALLOW_REINSTALL) == 0) {
+	if (helper->vercmp == 0 && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_SAME,
@@ -794,7 +794,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 			     tmp);
 		return FALSE;
 	}
-	if (helper->vercmp > 0 && (helper->flags & FWUPD_UPDATE_FLAG_ALLOW_OLDER) == 0) {
+	if (helper->vercmp > 0 && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_NEWER,
@@ -1453,7 +1453,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "Install") == 0) {
 		FuDeviceItem *item = NULL;
 		FuMainAuthHelper *helper;
-		FwupdUpdateFlags flags = FWUPD_UPDATE_FLAG_NONE;
+		FwupdInstallFlags flags = FWUPD_INSTALL_FLAG_NONE;
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		GVariant *prop_value;
@@ -1489,13 +1489,13 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_debug ("got option %s", prop_key);
 			if (g_strcmp0 (prop_key, "offline") == 0 &&
 			    g_variant_get_boolean (prop_value) == TRUE)
-				flags |= FWUPD_UPDATE_FLAG_OFFLINE;
+				flags |= FWUPD_INSTALL_FLAG_OFFLINE;
 			if (g_strcmp0 (prop_key, "allow-older") == 0 &&
 			    g_variant_get_boolean (prop_value) == TRUE)
-				flags |= FWUPD_UPDATE_FLAG_ALLOW_OLDER;
+				flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 			if (g_strcmp0 (prop_key, "allow-reinstall") == 0 &&
 			    g_variant_get_boolean (prop_value) == TRUE)
-				flags |= FWUPD_UPDATE_FLAG_ALLOW_REINSTALL;
+				flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 			g_variant_unref (prop_value);
 		}
 

@@ -80,18 +80,18 @@ typedef enum {
 } FwupdDeviceFlags;
 
 /**
- * FwupdUpdateFlags:
+ * FwupdInstallFlags:
  *
  * Flags to set when performing the firwmare update or install.
  **/
 typedef enum {
-	FWUPD_UPDATE_FLAG_NONE			= 0,	/* Since: 0.7.0 */
-	FWUPD_UPDATE_FLAG_OFFLINE		= 1,	/* Since: 0.7.0 */
-	FWUPD_UPDATE_FLAG_ALLOW_REINSTALL	= 2,	/* Since: 0.7.0 */
-	FWUPD_UPDATE_FLAG_ALLOW_OLDER		= 4,	/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_NONE			= 0,	/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_OFFLINE		= 1,	/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_ALLOW_REINSTALL	= 2,	/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_ALLOW_OLDER		= 4,	/* Since: 0.7.0 */
 	/* private */
-	FWUPD_UPDATE_FLAG_LAST
-} FwupdUpdateFlags;
+	FWUPD_INSTALL_FLAG_LAST
+} FwupdInstallFlags;
 
 /**
  * FwupdUpdateState:

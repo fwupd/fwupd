@@ -231,7 +231,7 @@ fu_provider_update (FuProvider *provider,
 		    GBytes *blob_cab,
 		    GBytes *blob_fw,
 		    FuPlugin *plugin,
-		    FwupdUpdateFlags flags,
+		    FwupdInstallFlags flags,
 		    GError **error)
 {
 	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
@@ -240,7 +240,7 @@ fu_provider_update (FuProvider *provider,
 	GError *error_update = NULL;
 
 	/* schedule for next reboot, or handle in the provider */
-	if (flags & FWUPD_UPDATE_FLAG_OFFLINE) {
+	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
 		if (klass->update_offline == NULL)
 			return fu_provider_schedule_update (provider,
 							    device,

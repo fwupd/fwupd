@@ -209,7 +209,7 @@ static gboolean
 fu_provider_uefi_update (FuProvider *provider,
 			 FuDevice *device,
 			 GBytes *blob_fw,
-			 FwupdUpdateFlags flags,
+			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	g_autoptr(GError) error_local = NULL;

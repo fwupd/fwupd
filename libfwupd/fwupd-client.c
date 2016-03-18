@@ -503,7 +503,7 @@ fwupd_client_send_message_cb (GObject *source_object, GAsyncResult *res, gpointe
  * @client: A #FwupdClient
  * @device_id: the device ID
  * @filename: the filename to install
- * @update_flags: the #FwupdUpdateFlags, e.g. %FWUPD_UPDATE_FLAG_ALLOW_REINSTALL
+ * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -517,7 +517,7 @@ gboolean
 fwupd_client_install (FwupdClient *client,
 		      const gchar *device_id,
 		      const gchar *filename,
-		      FwupdUpdateFlags update_flags,
+		      FwupdInstallFlags install_flags,
 		      GCancellable *cancellable,
 		      GError **error)
 {
@@ -545,15 +545,15 @@ fwupd_client_install (FwupdClient *client,
 			       "reason", g_variant_new_string ("user-action"));
 	g_variant_builder_add (&builder, "{sv}",
 			       "filename", g_variant_new_string (filename));
-	if (update_flags & FWUPD_UPDATE_FLAG_OFFLINE) {
+	if (install_flags & FWUPD_INSTALL_FLAG_OFFLINE) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "offline", g_variant_new_boolean (TRUE));
 	}
-	if (update_flags & FWUPD_UPDATE_FLAG_ALLOW_OLDER) {
+	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "allow-older", g_variant_new_boolean (TRUE));
 	}
-	if (update_flags & FWUPD_UPDATE_FLAG_ALLOW_REINSTALL) {
+	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "allow-reinstall", g_variant_new_boolean (TRUE));
 	}
@@ -684,25 +684,27 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 }
 
 /**
- * fwupd_client_refresh:
+ * fwupd_client_update_metadata:
  * @client: A #FwupdClient
  * @metadata_fn: the XML metadata filename
  * @signature_fn: the GPG signature file
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
- * Refreshes the metadata.
+ * Updates the metadata. This allows a session process to download the metadata
+ * and metadata signing file to be passed into the daemon to be checked and
+ * parsed.
  *
  * Returns: %TRUE for success
  *
  * Since: 0.7.0
  **/
 gboolean
-fwupd_client_refresh (FwupdClient *client,
-		      const gchar *metadata_fn,
-		      const gchar *signature_fn,
-		      GCancellable *cancellable,
-		      GError **error)
+fwupd_client_update_metadata (FwupdClient *client,
+			      const gchar *metadata_fn,
+			      const gchar *signature_fn,
+			      GCancellable *cancellable,
+			      GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	GVariant *body;

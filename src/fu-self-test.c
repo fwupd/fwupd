@@ -216,7 +216,7 @@ fu_provider_func (void)
 	g_assert (mapped_file != NULL);
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
 	ret = fu_provider_update (provider, device, blob_cab, NULL, NULL,
-				  FWUPD_UPDATE_FLAG_OFFLINE, &error);
+				  FWUPD_INSTALL_FLAG_OFFLINE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 1);
@@ -236,7 +236,7 @@ fu_provider_func (void)
 
 	/* lets do this online */
 	ret = fu_provider_update (provider, device, blob_cab, NULL, NULL,
-				  FWUPD_UPDATE_FLAG_NONE, &error);
+				  FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 3);
@@ -329,7 +329,7 @@ fu_provider_rpi_func (void)
 	g_assert (mapped_file != NULL);
 	blob_fw = g_mapped_file_get_bytes (mapped_file);
 	ret = fu_provider_update (provider, device, NULL, blob_fw, NULL,
-				  FWUPD_UPDATE_FLAG_NONE, &error);
+				  FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 3);

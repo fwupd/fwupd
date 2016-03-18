@@ -196,7 +196,7 @@ static gboolean
 fu_provider_rpi_update (FuProvider *provider,
 			FuDevice *device,
 			GBytes *blob_fw,
-			FwupdUpdateFlags flags,
+			FwupdInstallFlags flags,
 			GError **error)
 {
 	FuProviderRpi *provider_rpi = FU_PROVIDER_RPI (provider);

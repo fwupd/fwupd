@@ -47,7 +47,7 @@ typedef struct {
 	GMainLoop		*loop;
 	GOptionContext		*context;
 	GPtrArray		*cmd_array;
-	FwupdUpdateFlags	 flags;
+	FwupdInstallFlags	 flags;
 	FwupdClient		*client;
 } FuUtilPrivate;
 
@@ -279,7 +279,7 @@ fu_util_install_with_fallback (FuUtilPrivate *priv, const gchar *id,
 		return TRUE;
 
 	/* some other failure */
-	if ((priv->flags & FWUPD_UPDATE_FLAG_OFFLINE) > 0 ||
+	if ((priv->flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0 ||
 	    !g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_propagate_error (error, error_local);
 		error_local = NULL;
@@ -288,7 +288,7 @@ fu_util_install_with_fallback (FuUtilPrivate *priv, const gchar *id,
 
 	/* TRANSLATOR: the provider only supports offline */
 	g_print ("%s...\n", _("Retrying as an offline update"));
-	priv->flags |= FWUPD_UPDATE_FLAG_OFFLINE;
+	priv->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
 	return fwupd_client_install (priv->client, id, filename, priv->flags,
 				     NULL, error);
 }
@@ -785,7 +785,7 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 		return FALSE;
 
 	/* send all this to fwupd */
-	return fwupd_client_refresh (priv->client, data_fn, sig_fn, NULL, error);
+	return fwupd_client_update_metadata (priv->client, data_fn, sig_fn, NULL, error);
 }
 
 /**
@@ -805,7 +805,11 @@ fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open file */
-	return fwupd_client_refresh (priv->client, values[0], values[1], NULL, error);
+	return fwupd_client_update_metadata (priv->client,
+					     values[0],
+					     values[1],
+					     NULL,
+					     error);
 }
 
 /**
@@ -1191,11 +1195,11 @@ main (int argc, char *argv[])
 
 	/* set flags */
 	if (offline)
-		priv->flags |= FWUPD_UPDATE_FLAG_OFFLINE;
+		priv->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
 	if (allow_reinstall)
-		priv->flags |= FWUPD_UPDATE_FLAG_ALLOW_REINSTALL;
+		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (allow_older)
-		priv->flags |= FWUPD_UPDATE_FLAG_ALLOW_OLDER;
+		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 
 	/* connect to the daemon */
 	priv->client = fwupd_client_new ();

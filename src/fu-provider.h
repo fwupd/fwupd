@@ -56,12 +56,12 @@ struct _FuProviderClass
 	gboolean	 (*update_online)	(FuProvider	*provider,
 						 FuDevice	*device,
 						 GBytes		*blob_fw,
-						 FwupdUpdateFlags flags,
+						 FwupdInstallFlags flags,
 						 GError		**error);
 	gboolean	 (*update_offline)	(FuProvider	*provider,
 						 FuDevice	*device,
 						 GBytes		*blob_fw,
-						 FwupdUpdateFlags flags,
+						 FwupdInstallFlags flags,
 						 GError		**error);
 	gboolean	 (*clear_results)	(FuProvider	*provider,
 						 FuDevice	*device,
@@ -95,7 +95,7 @@ gboolean	 fu_provider_update		(FuProvider	*provider,
 						 GBytes		*blob_cab,
 						 GBytes		*blob_fw,
 						 FuPlugin	*plugin,
-						 FwupdUpdateFlags flags,
+						 FwupdInstallFlags flags,
 						 GError		**error);
 gboolean	 fu_provider_verify		(FuProvider	*provider,
 						 FuDevice	*device,

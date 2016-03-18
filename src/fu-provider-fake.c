@@ -48,10 +48,10 @@ static gboolean
 fu_provider_fake_update (FuProvider *provider,
 			 FuDevice *device,
 			 GBytes *blob_fw,
-			 FwupdUpdateFlags flags,
+			 FwupdInstallFlags flags,
 			 GError **error)
 {
-	if (flags & FWUPD_UPDATE_FLAG_OFFLINE) {
+	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
