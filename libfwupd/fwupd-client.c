@@ -235,7 +235,8 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
 				      cancellable,
 				      error);
 	if (val == NULL) {
-		g_dbus_error_strip_remote_error (*error);
+		if (error != NULL)
+			g_dbus_error_strip_remote_error (*error);
 		return NULL;
 	}
 	return fwupd_client_parse_results_from_data (val);
@@ -276,7 +277,8 @@ fwupd_client_get_updates (FwupdClient *client, GCancellable *cancellable, GError
 				      cancellable,
 				      error);
 	if (val == NULL) {
-		g_dbus_error_strip_remote_error (*error);
+		if (error != NULL)
+			g_dbus_error_strip_remote_error (*error);
 		return NULL;
 	}
 	return fwupd_client_parse_results_from_data (val);
