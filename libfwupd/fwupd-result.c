@@ -41,6 +41,7 @@ typedef struct {
 
 	/* device-specific */
 	gchar				*device_checksum;
+	GChecksumType			 device_checksum_kind;
 	gchar				*device_description;
 	gchar				*device_id;
 	gchar				*device_name;
@@ -56,6 +57,7 @@ typedef struct {
 	FwupdTrustFlags			 update_trust_flags;
 	FwupdUpdateState		 update_state;
 	gchar				*update_checksum;
+	GChecksumType			 update_checksum_kind;
 	gchar				*update_description;
 	gchar				*update_error;
 	gchar				*update_filename;
@@ -479,6 +481,41 @@ fwupd_result_set_update_checksum (FwupdResult *result, const gchar *update_check
 }
 
 /**
+ * fwupd_result_get_update_checksum_kind:
+ * @result: A #FwupdResult
+ *
+ * Gets the update checkum kind.
+ *
+ * Returns: the #GChecksumType
+ *
+ * Since: 0.7.0
+ **/
+GChecksumType
+fwupd_result_get_update_checksum_kind (FwupdResult *result)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
+	return priv->update_checksum_kind;
+}
+
+/**
+ * fwupd_result_set_update_checksum_kind:
+ * @result: A #FwupdResult
+ * @checkum_kind: the checksum kind, e.g. %G_CHECKSUM_SHA1
+ *
+ * Sets the update checkum kind.
+ *
+ * Since: 0.7.0
+ **/
+void
+fwupd_result_set_update_checksum_kind (FwupdResult *result, GChecksumType checkum_kind)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_if_fail (FWUPD_IS_RESULT (result));
+	priv->update_checksum_kind = checkum_kind;
+}
+
+/**
  * fwupd_result_get_update_uri:
  * @result: A #FwupdResult
  *
@@ -691,6 +728,41 @@ fwupd_result_set_device_checksum (FwupdResult *result, const gchar *device_check
 	g_return_if_fail (FWUPD_IS_RESULT (result));
 	g_free (priv->device_checksum);
 	priv->device_checksum = g_strdup (device_checksum);
+}
+
+/**
+ * fwupd_result_get_device_checksum_kind:
+ * @result: A #FwupdResult
+ *
+ * Gets the device checkum kind.
+ *
+ * Returns: the #GChecksumType
+ *
+ * Since: 0.7.0
+ **/
+GChecksumType
+fwupd_result_get_device_checksum_kind (FwupdResult *result)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
+	return priv->device_checksum_kind;
+}
+
+/**
+ * fwupd_result_set_device_checksum_kind:
+ * @result: A #FwupdResult
+ * @checkum_kind: the checksum kind, e.g. %G_CHECKSUM_SHA1
+ *
+ * Sets the device checkum kind.
+ *
+ * Since: 0.7.0
+ **/
+void
+fwupd_result_set_device_checksum_kind (FwupdResult *result, GChecksumType checkum_kind)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_if_fail (FWUPD_IS_RESULT (result));
+	priv->device_checksum_kind = checkum_kind;
 }
 
 /**
@@ -1139,6 +1211,9 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_DEVICE_CHECKSUM,
 				       g_variant_new_string (priv->device_checksum));
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND,
+				       g_variant_new_uint32 (priv->device_checksum_kind));
 	}
 	if (priv->update_license != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1189,6 +1264,9 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_UPDATE_CHECKSUM,
 				       g_variant_new_string (priv->update_checksum));
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_UPDATE_CHECKSUM_KIND,
+				       g_variant_new_uint32 (priv->update_checksum_kind));
 	}
 	if (priv->update_uri != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1279,6 +1357,10 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 		fwupd_result_set_device_checksum (result, g_variant_get_string (value, NULL));
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND) == 0) {
+		fwupd_result_set_device_checksum_kind (result, g_variant_get_uint32 (value));
+		return;
+	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_LICENSE) == 0) {
 		fwupd_result_set_update_license (result, g_variant_get_string (value, NULL));
 		return;
@@ -1320,6 +1402,10 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_CHECKSUM) == 0) {
 		fwupd_result_set_update_checksum (result, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_CHECKSUM_KIND) == 0) {
+		fwupd_result_set_update_checksum_kind (result, g_variant_get_uint32 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_URI) == 0) {
@@ -1458,6 +1544,22 @@ fwupd_pad_kv_tfl (GString *str, const gchar *key, FwupdTrustFlags trust_flags)
 }
 
 /**
+ * fwupd_pad_kv_csk:
+ **/
+static void
+fwupd_pad_kv_csk (GString *str, const gchar *key, GChecksumType checksum_type)
+{
+	const gchar *tmp = "unknown";
+	if (checksum_type == G_CHECKSUM_SHA1)
+		tmp = "sha1";
+	else if (checksum_type == G_CHECKSUM_SHA256)
+		tmp = "sha256";
+	else if (checksum_type == G_CHECKSUM_SHA512)
+		tmp = "sha512";
+	fwupd_pad_kv_str (str, key, tmp);
+}
+
+/**
  * fwupd_result_to_string:
  * @result: A #FwupdResult
  *
@@ -1488,6 +1590,8 @@ fwupd_result_to_string (FwupdResult *result)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PROVIDER, priv->device_provider);
 	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_DEVICE_FLAGS, priv->device_flags);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_CHECKSUM, priv->device_checksum);
+	if (priv->device_checksum != NULL)
+		fwupd_pad_kv_csk (str, FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND, priv->device_checksum_kind);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VENDOR, priv->device_vendor);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION, priv->device_version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST, priv->device_version_lowest);
@@ -1502,6 +1606,8 @@ fwupd_result_to_string (FwupdResult *result)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_VERSION, priv->update_version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_FILENAME, priv->update_filename);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_CHECKSUM, priv->update_checksum);
+	if (priv->update_checksum != NULL)
+		fwupd_pad_kv_csk (str, FWUPD_RESULT_KEY_UPDATE_CHECKSUM_KIND, priv->update_checksum_kind);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_LICENSE, priv->update_license);
 	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_UPDATE_SIZE, priv->update_size);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_URI, priv->update_uri);
@@ -1582,6 +1688,9 @@ fwupd_result_class_init (FwupdResultClass *klass)
 static void
 fwupd_result_init (FwupdResult *result)
 {
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	priv->device_checksum_kind = G_CHECKSUM_SHA1;
+	priv->update_checksum_kind = G_CHECKSUM_SHA1;
 }
 
 /**

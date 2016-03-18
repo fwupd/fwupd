@@ -68,6 +68,7 @@ fwupd_result_func (void)
 	/* create dummy object */
 	result = fwupd_result_new ();
 	fwupd_result_set_device_checksum (result, "beefdead");
+	fwupd_result_set_device_checksum_kind (result, G_CHECKSUM_SHA256);
 	fwupd_result_set_device_created (result, 1);
 	fwupd_result_set_device_flags (result, FU_DEVICE_FLAG_ALLOW_OFFLINE);
 	fwupd_result_set_device_id (result, "USB:foo");
@@ -91,12 +92,14 @@ fwupd_result_func (void)
 		"  DisplayName:          ColorHug2\n"
 		"  Flags:                allow-offline|require-ac\n"
 		"  FirmwareHash:         beefdead\n"
+		"  DeviceChecksumKind:   sha256\n"
 		"  Created:              1970-01-01\n"
 		"  Modified:             1970-01-02\n"
 		"  AppstreamId:          org.dave.ColorHug.firmware\n"
 		"  UpdateDescription:    <p>Hi there!</p>\n"
 		"  FilenameCab:          firmware.bin\n"
 		"  UpdateHash:           deadbeef\n"
+		"  UpdateChecksumKind:   sha1\n"
 		"  Size:                 1.0 kB\n"
 		"  UpdateUri:            http://foo.com\n"
 		"  Trusted:              payload\n", &error);

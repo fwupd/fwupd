@@ -80,6 +80,9 @@ void		 fwupd_result_set_device_modified	(FwupdResult	*result,
 const gchar	*fwupd_result_get_device_checksum	(FwupdResult	*result);
 void		 fwupd_result_set_device_checksum	(FwupdResult	*result,
 							 const gchar	*device_checksum);
+GChecksumType	 fwupd_result_get_device_checksum_kind	(FwupdResult	*result);
+void		 fwupd_result_set_device_checksum_kind	(FwupdResult	*result,
+							 GChecksumType	 checkum_kind);
 const gchar	*fwupd_result_get_device_provider	(FwupdResult	*result);
 void		 fwupd_result_set_device_provider	(FwupdResult	*result,
 							 const gchar	*device_provider);
@@ -103,6 +106,9 @@ void		 fwupd_result_set_update_state		(FwupdResult	*result,
 const gchar	*fwupd_result_get_update_checksum	(FwupdResult	*result);
 void		 fwupd_result_set_update_checksum	(FwupdResult	*result,
 							 const gchar	*update_checksum);
+GChecksumType	 fwupd_result_get_update_checksum_kind	(FwupdResult	*result);
+void		 fwupd_result_set_update_checksum_kind	(FwupdResult	*result,
+							 GChecksumType	 checkum_kind);
 const gchar	*fwupd_result_get_update_uri		(FwupdResult	*result);
 void		 fwupd_result_set_update_uri		(FwupdResult	*result,
 							 const gchar	*update_uri);
