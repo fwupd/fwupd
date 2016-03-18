@@ -46,7 +46,7 @@ typedef enum {
 	DFU_DEVICE_OPEN_FLAG_NONE		= 0,
 	DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH	= (1 << 0),
 	/*< private >*/
-	DFU_DEVICE_OPEN_FLAG_LAST,
+	DFU_DEVICE_OPEN_FLAG_LAST
 } DfuDeviceOpenFlags;
 
 /**
