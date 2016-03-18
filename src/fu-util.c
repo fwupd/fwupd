@@ -683,6 +683,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 		       const gchar *uri,
 		       const gchar *fn,
 		       const gchar *checksum_expected,
+		       GChecksumType checksum_type,
 		       GError **error)
 {
 	guint status_code;
@@ -722,7 +723,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 
 	/* verify checksum */
 	if (checksum_expected != NULL) {
-		checksum_actual = g_compute_checksum_for_data (G_CHECKSUM_SHA1,
+		checksum_actual = g_compute_checksum_for_data (checksum_type,
 							       (guchar *) msg->response_body->data,
 							       msg->response_body->length);
 		if (g_strcmp0 (checksum_expected, checksum_actual) != 0) {
@@ -777,11 +778,11 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 		return FALSE;
 	sig_uri = g_strdup_printf ("%s.asc", data_uri);
 	sig_fn = g_strdup_printf ("%s.asc", data_fn);
-	if (!fu_util_download_file (priv, sig_uri, sig_fn, NULL, error))
+	if (!fu_util_download_file (priv, sig_uri, sig_fn, NULL, 0, error))
 		return FALSE;
 
 	/* download the payload */
-	if (!fu_util_download_file (priv, data_uri, data_fn, NULL, error))
+	if (!fu_util_download_file (priv, data_uri, data_fn, NULL, 0, error))
 		return FALSE;
 
 	/* send all this to fwupd */
@@ -932,6 +933,23 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 }
 
 /**
+ * _g_checksum_type_to_string:
+ **/
+static const gchar *
+_g_checksum_type_to_string (GChecksumType checksum_type)
+{
+	if (checksum_type == G_CHECKSUM_MD5)
+		return "md5";
+	if (checksum_type == G_CHECKSUM_SHA1)
+		return "sha1";
+	if (checksum_type == G_CHECKSUM_SHA256)
+		return "sha256";
+	if (checksum_type == G_CHECKSUM_SHA512)
+		return "sha512";
+	return NULL;
+}
+
+/**
  * fu_util_get_updates:
  **/
 static gboolean
@@ -939,6 +957,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FwupdResult *res;
 	GPtrArray *results = NULL;
+	GChecksumType checksum_type;
 	const gchar *tmp;
 	guint i;
 
@@ -962,8 +981,15 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		/* TRANSLATORS: section header for firmware version */
 		fu_util_print_data (_("Version"), fwupd_result_get_update_version (res));
 
-		/* TRANSLATORS: section header for firmware SHA1 */
+		/* TRANSLATORS: section header for firmware checksum */
 		fu_util_print_data (_("Checksum"), fwupd_result_get_update_checksum (res));
+
+		/* TRANSLATORS: section header for firmware checksum type */
+		if (fwupd_result_get_update_checksum (res) != NULL) {
+			checksum_type = fwupd_result_get_update_checksum_kind (res);
+			tmp = _g_checksum_type_to_string (checksum_type);
+			fu_util_print_data (_("Checksum Type"), tmp);
+		}
 
 		/* TRANSLATORS: section header for firmware remote http:// */
 		fu_util_print_data (_("Location"), fwupd_result_get_update_uri (res));
@@ -1000,6 +1026,7 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (results == NULL)
 		return FALSE;
 	for (i = 0; i < results->len; i++) {
+		GChecksumType checksum_type;
 		const gchar *checksum;
 		const gchar *uri;
 		g_autofree gchar *basename = NULL;
@@ -1019,7 +1046,8 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 			 fwupd_result_get_device_name (res));
 		basename = g_path_get_basename (uri);
 		fn = g_build_filename (g_get_tmp_dir (), basename, NULL);
-		if (!fu_util_download_file (priv, uri, fn, checksum, error))
+		checksum_type = fwupd_result_get_update_checksum_kind (res);
+		if (!fu_util_download_file (priv, uri, fn, checksum, checksum_type, error))
 			return FALSE;
 		g_print ("Updating %s on %s...\n",
 			 fwupd_result_get_update_version (res),
