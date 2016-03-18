@@ -83,7 +83,7 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 	if (release != 0xffff) {
 		version = as_utils_version_from_uint16 (release,
 							AS_VERSION_PARSE_FLAG_NONE);
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
+		fu_device_set_version (dev, version);
 	}
 
 	vid_pid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
@@ -158,7 +158,7 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 	}
 	display_name = dfu_device_get_display_name (device);
 	if (display_name != NULL)
-		fu_device_set_display_name (dev, display_name);
+		fu_device_set_name (dev, display_name);
 
 	/* we're done here */
 	if (!dfu_device_close (device, &error))
@@ -235,7 +235,7 @@ static gboolean
 fu_provider_dfu_update (FuProvider *provider,
 			FuDevice *dev,
 			GBytes *blob_fw,
-			FuProviderFlags flags,
+			FwupdInstallFlags flags,
 			GError **error)
 {
 	FuProviderDfu *provider_dfu = FU_PROVIDER_DFU (provider);
@@ -310,6 +310,7 @@ fu_provider_dfu_verify (FuProvider *provider,
 	FuProviderDfu *provider_dfu = FU_PROVIDER_DFU (provider);
 	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
 	GBytes *blob_fw;
+	GChecksumType checksum_type;
 	DfuDevice *device;
 	const gchar *platform_id;
 	g_autofree gchar *hash = NULL;
@@ -363,12 +364,14 @@ fu_provider_dfu_verify (FuProvider *provider,
 		return FALSE;
 	}
 
-	/* get the SHA1 hash */
+	/* get the checksum */
 	blob_fw = dfu_firmware_write_data (dfu_firmware, error);
 	if (blob_fw == NULL)
 		return FALSE;
-	hash = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_fw);
-	fu_device_set_metadata (dev, FU_DEVICE_KEY_FIRMWARE_HASH, hash);
+	checksum_type = fu_provider_get_checksum_type (flags);
+	hash = g_compute_checksum_for_bytes (checksum_type, blob_fw);
+	fu_device_set_checksum (dev, hash);
+	fu_device_set_checksum_kind (device, checksum_type);
 	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
 	return TRUE;
 }

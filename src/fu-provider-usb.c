@@ -105,7 +105,7 @@ fu_provider_usb_device_added (FuProviderUsb *provider_usb, GUsbDevice *device)
 		g_debug ("no product string descriptor");
 		return;
 	}
-	fu_device_set_display_name (dev, product);
+	fu_device_set_name (dev, product);
 
 	/* get version number, falling back to the USB device release */
 	idx = g_usb_device_get_custom_index (device,
@@ -119,7 +119,7 @@ fu_provider_usb_device_added (FuProviderUsb *provider_usb, GUsbDevice *device)
 		version = as_utils_version_from_uint16 (release,
 							AS_VERSION_PARSE_FLAG_NONE);
 	}
-	fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
+	fu_device_set_version (dev, version);
 
 	/* get GUID, falling back to the USB VID:PID hash */
 	idx = g_usb_device_get_custom_index (device,

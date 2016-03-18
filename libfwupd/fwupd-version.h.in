@@ -20,7 +20,7 @@
  */
 
 /**
- * SECTION:cd-version
+ * SECTION:fwupd-version
  * @short_description: Obtains the version for the installed fwupd
  *
  * These compile time macros allow the user to enable parts of client code

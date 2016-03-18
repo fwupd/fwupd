@@ -163,7 +163,7 @@ fu_provider_rpi_parse_firmware (FuDevice *device, const gchar *fn, GError **erro
 				 g_date_get_year (date),
 				 g_date_get_month (date),
 				 g_date_get_day (date));
-	fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION, fwver);
+	fu_device_set_version (device, fwver);
 
 	g_date_free (date);
 	return TRUE;
@@ -196,7 +196,7 @@ static gboolean
 fu_provider_rpi_update (FuProvider *provider,
 			FuDevice *device,
 			GBytes *blob_fw,
-			FuProviderFlags flags,
+			FwupdInstallFlags flags,
 			GError **error)
 {
 	FuProviderRpi *provider_rpi = FU_PROVIDER_RPI (provider);
@@ -297,7 +297,7 @@ fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
 	fu_device_set_id (device, "raspberry-pi");
 	guid = as_utils_guid_from_string ("raspberrypi");
 	fu_device_set_guid (device, guid);
-	fu_device_set_display_name (device, "Raspberry Pi");
+	fu_device_set_name (device, "Raspberry Pi");
 	fu_device_add_flag (device, FU_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
 	fu_device_add_flag (device, FU_DEVICE_FLAG_ALLOW_ONLINE);

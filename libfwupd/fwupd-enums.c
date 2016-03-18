@@ -72,3 +72,121 @@ fwupd_status_from_string (const gchar *status)
 		return FWUPD_STATUS_SCHEDULING;
 	return FWUPD_STATUS_UNKNOWN;
 }
+
+/**
+ * fwupd_device_flag_to_string:
+ *
+ * Since: 0.7.0
+ **/
+const gchar *
+fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
+{
+	if (device_flag == FU_DEVICE_FLAG_NONE)
+		return "none";
+	if (device_flag == FU_DEVICE_FLAG_INTERNAL)
+		return "internal";
+	if (device_flag == FU_DEVICE_FLAG_ALLOW_ONLINE)
+		return "allow-online";
+	if (device_flag == FU_DEVICE_FLAG_ALLOW_OFFLINE)
+		return "allow-offline";
+	if (device_flag == FU_DEVICE_FLAG_REQUIRE_AC)
+		return "require-ac";
+	if (device_flag == FU_DEVICE_FLAG_LOCKED)
+		return "locked";
+	return NULL;
+}
+
+/**
+ * fwupd_device_flag_from_string:
+ *
+ * Since: 0.7.0
+ **/
+FwupdDeviceFlags
+fwupd_device_flag_from_string (const gchar *device_flag)
+{
+	if (g_strcmp0 (device_flag, "none") == 0)
+		return FU_DEVICE_FLAG_NONE;
+	if (g_strcmp0 (device_flag, "internal") == 0)
+		return FU_DEVICE_FLAG_INTERNAL;
+	if (g_strcmp0 (device_flag, "allow-online") == 0)
+		return FU_DEVICE_FLAG_ALLOW_ONLINE;
+	if (g_strcmp0 (device_flag, "allow-offline") == 0)
+		return FU_DEVICE_FLAG_ALLOW_OFFLINE;
+	if (g_strcmp0 (device_flag, "require-ac") == 0)
+		return FU_DEVICE_FLAG_REQUIRE_AC;
+	if (g_strcmp0 (device_flag, "locked") == 0)
+		return FU_DEVICE_FLAG_LOCKED;
+	return FU_DEVICE_FLAG_LAST;
+}
+
+/**
+ * fwupd_update_state_to_string:
+ *
+ * Since: 0.7.0
+ **/
+const gchar *
+fwupd_update_state_to_string (FwupdUpdateState update_state)
+{
+	if (update_state == FWUPD_UPDATE_STATE_UNKNOWN)
+		return "unknown";
+	if (update_state == FWUPD_UPDATE_STATE_PENDING)
+		return "pending";
+	if (update_state == FWUPD_UPDATE_STATE_SUCCESS)
+		return "success";
+	if (update_state == FWUPD_UPDATE_STATE_FAILED)
+		return "failed";
+	return NULL;
+}
+
+/**
+ * fwupd_update_state_from_string:
+ *
+ * Since: 0.7.0
+ **/
+FwupdUpdateState
+fwupd_update_state_from_string (const gchar *update_state)
+{
+	if (g_strcmp0 (update_state, "unknown") == 0)
+		return FWUPD_UPDATE_STATE_UNKNOWN;
+	if (g_strcmp0 (update_state, "pending") == 0)
+		return FWUPD_UPDATE_STATE_PENDING;
+	if (g_strcmp0 (update_state, "success") == 0)
+		return FWUPD_UPDATE_STATE_SUCCESS;
+	if (g_strcmp0 (update_state, "failed") == 0)
+		return FWUPD_UPDATE_STATE_FAILED;
+	return FWUPD_UPDATE_STATE_UNKNOWN;
+}
+
+/**
+ * fwupd_trust_flag_to_string:
+ *
+ * Since: 0.7.0
+ **/
+const gchar *
+fwupd_trust_flag_to_string (FwupdTrustFlags trust_flag)
+{
+	if (trust_flag == FWUPD_TRUST_FLAG_NONE)
+		return "none";
+	if (trust_flag == FWUPD_TRUST_FLAG_PAYLOAD)
+		return "payload";
+	if (trust_flag == FWUPD_TRUST_FLAG_METADATA)
+		return "metadata";
+	return NULL;
+}
+
+/**
+ * fwupd_trust_flag_from_string:
+ *
+ * Since: 0.7.0
+ **/
+FwupdTrustFlags
+fwupd_trust_flag_from_string (const gchar *trust_flag)
+{
+	if (g_strcmp0 (trust_flag, "none") == 0)
+		return FWUPD_TRUST_FLAG_NONE;
+	if (g_strcmp0 (trust_flag, "payload") == 0)
+		return FWUPD_TRUST_FLAG_PAYLOAD;
+	if (g_strcmp0 (trust_flag, "metadata") == 0)
+		return FWUPD_TRUST_FLAG_METADATA;
+	return FWUPD_TRUST_FLAG_LAST;
+}

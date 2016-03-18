@@ -144,7 +144,7 @@ fu_pending_load (FuPending *pending, GError **error)
  * fu_pending_add_device:
  **/
 gboolean
-fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
+fu_pending_add_device (FuPending *pending, FwupdResult *res, GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
 	char *error_msg = NULL;
@@ -160,7 +160,7 @@ fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 			return FALSE;
 	}
 
-	g_debug ("FuPending: add device %s", fu_device_get_id (device));
+	g_debug ("FuPending: add device %s", fwupd_result_get_device_id (res));
 	statement = sqlite3_mprintf ("INSERT INTO pending (device_id,"
 							  "state,"
 							  "filename,"
@@ -169,13 +169,13 @@ fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 							  "version_old,"
 							  "version_new) "
 				     "VALUES ('%q','%i','%q','%q','%q','%q','%q')",
-				     fu_device_get_id (device),
-				     FU_PENDING_STATE_SCHEDULED,
-				     fu_device_get_metadata (device, FU_DEVICE_KEY_FILENAME_CAB),
-				     fu_device_get_display_name (device),
-				     fu_device_get_metadata (device, FU_DEVICE_KEY_PROVIDER),
-				     fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
-				     fu_device_get_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION));
+				     fwupd_result_get_device_id (res),
+				     FWUPD_UPDATE_STATE_PENDING,
+				     fwupd_result_get_update_filename (res),
+				     fwupd_result_get_device_name (res),
+				     fwupd_result_get_device_provider (res),
+				     fwupd_result_get_device_version (res),
+				     fwupd_result_get_update_version (res));
 
 	/* insert entry */
 	rc = sqlite3_exec (priv->db, statement, NULL, NULL, &error_msg);
@@ -198,7 +198,7 @@ out:
  * fu_pending_remove_device:
  **/
 gboolean
-fu_pending_remove_device (FuPending *pending, FuDevice *device, GError **error)
+fu_pending_remove_device (FuPending *pending, FwupdResult *res, GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
 	char *error_msg = NULL;
@@ -214,10 +214,10 @@ fu_pending_remove_device (FuPending *pending, FuDevice *device, GError **error)
 			return FALSE;
 	}
 
-	g_debug ("FuPending: remove device %s", fu_device_get_id (device));
+	g_debug ("FuPending: remove device %s", fwupd_result_get_device_id (res));
 	statement = sqlite3_mprintf ("DELETE FROM pending WHERE "
 				     "device_id = '%q';",
-				     fu_device_get_id (device));
+				     fwupd_result_get_device_id (res));
 
 	/* remove entry */
 	rc = sqlite3_exec (priv->db, statement, NULL, NULL, &error_msg);
@@ -246,54 +246,53 @@ fu_pending_device_sqlite_cb (void *data,
 			gchar **col_name)
 {
 	GPtrArray *array = (GPtrArray *) data;
-	FuDevice *device;
+	FwupdResult *res;
 	gint i;
 
 	/* create new result */
-	device = fu_device_new ();
-	g_ptr_array_add (array, device);
+	res = fwupd_result_new ();
+	g_ptr_array_add (array, res);
 
 	g_debug ("FuPending: got sql result %s", argv[0]);
 	for (i = 0; i < argc; i++) {
 		if (g_strcmp0 (col_name[i], "device_id") == 0) {
-			fu_device_set_id (device, argv[i]);
+			fwupd_result_set_device_id (res, argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "filename") == 0) {
-			fu_device_set_metadata (device, FU_DEVICE_KEY_FILENAME_CAB, argv[i]);
+			fwupd_result_set_update_filename (res, argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "display_name") == 0) {
-			fu_device_set_display_name (device, argv[i]);
+			fwupd_result_set_device_name (res, argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "version_old") == 0) {
-			fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION, argv[i]);
+			fwupd_result_set_device_version (res, argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "version_new") == 0) {
-			fu_device_set_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION, argv[i]);
+			fwupd_result_set_update_version (res, argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "provider") == 0) {
-			fu_device_set_metadata (device, FU_DEVICE_KEY_PROVIDER, argv[i]);
+			fwupd_result_set_device_provider (res, argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "state") == 0) {
-			FuPendingState state = atoi (argv[i]);
-			fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
-						fu_pending_state_to_string (state));
+			FwupdUpdateState state = atoi (argv[i]);
+			fwupd_result_set_update_state (res, state);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "timestamp") == 0) {
 			guint64 timestamp = g_ascii_strtoull (argv[i], NULL, 10);
 			if (timestamp > 0)
-				fu_device_set_created (device, timestamp);
+				fwupd_result_set_device_created (res, timestamp);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "error") == 0) {
 			if (argv[i] != NULL)
-				fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_ERROR, argv[i]);
+				fwupd_result_set_update_error (res, argv[i]);
 			continue;
 		}
 		g_warning ("unhandled %s=%s", col_name[i], argv[i]);
@@ -305,11 +304,11 @@ fu_pending_device_sqlite_cb (void *data,
 /**
  * fu_pending_get_device:
  **/
-FuDevice *
+FwupdResult *
 fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
-	FuDevice *device = NULL;
+	FwupdResult *res = NULL;
 	char *error_msg = NULL;
 	char *statement;
 	gint rc;
@@ -324,7 +323,7 @@ fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **erro
 	}
 
 	/* get all the devices */
-	g_debug ("FuPending: get device");
+	g_debug ("FuPending: get res");
 	statement = sqlite3_mprintf ("SELECT * FROM pending WHERE "
 				     "device_id = '%q';",
 				     device_id);
@@ -350,10 +349,10 @@ fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **erro
 				     "No devices found");
 		goto out;
 	}
-	device = g_object_ref (g_ptr_array_index (array_tmp, 0));
+	res = g_object_ref (g_ptr_array_index (array_tmp, 0));
 out:
 	sqlite3_free (statement);
-	return device;
+	return res;
 }
 
 /**
@@ -404,29 +403,12 @@ out:
 }
 
 /**
- * fu_pending_state_to_string:
- **/
-const gchar *
-fu_pending_state_to_string (FuPendingState state)
-{
-	if (state == FU_PENDING_STATE_UNKNOWN)
-		return "unknown";
-	if (state == FU_PENDING_STATE_SCHEDULED)
-		return "scheduled";
-	if (state == FU_PENDING_STATE_SUCCESS)
-		return "success";
-	if (state == FU_PENDING_STATE_FAILED)
-		return "failed";
-	return NULL;
-}
-
-/**
  * fu_pending_set_state:
  **/
 gboolean
 fu_pending_set_state (FuPending *pending,
-		      FuDevice *device,
-		      FuPendingState state,
+		      FwupdResult *res,
+		      FwupdUpdateState state,
 		      GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
@@ -444,11 +426,11 @@ fu_pending_set_state (FuPending *pending,
 	}
 
 	g_debug ("FuPending: set state of %s to %s",
-		 fu_device_get_id (device),
-		 fu_pending_state_to_string (state));
+		 fwupd_result_get_device_id (res),
+		 fwupd_update_state_to_string (state));
 	statement = sqlite3_mprintf ("UPDATE pending SET state='%i' WHERE "
 				     "device_id = '%q';",
-				     state, fu_device_get_id (device));
+				     state, fwupd_result_get_device_id (res));
 
 	/* remove entry */
 	rc = sqlite3_exec (priv->db, statement, NULL, NULL, &error_msg);
@@ -472,7 +454,7 @@ out:
  **/
 gboolean
 fu_pending_set_error_msg (FuPending *pending,
-			  FuDevice *device,
+			  FwupdResult *res,
 			  const gchar *error_msg2,
 			  GError **error)
 {
@@ -491,11 +473,11 @@ fu_pending_set_error_msg (FuPending *pending,
 	}
 
 	g_debug ("FuPending: add comment to %s: %s",
-		 fu_device_get_id (device), error_msg2);
+		 fwupd_result_get_device_id (res), error_msg2);
 	statement = sqlite3_mprintf ("UPDATE pending SET error='%q' WHERE "
 				     "device_id = '%q';",
 				     error_msg2,
-				     fu_device_get_id (device));
+				     fwupd_result_get_device_id (res));
 
 	/* remove entry */
 	rc = sqlite3_exec (priv->db, statement, NULL, NULL, &error_msg);

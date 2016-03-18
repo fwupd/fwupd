@@ -188,16 +188,14 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 		goto out;
 	}
 	version_str = g_strdup_printf ("%u", version);
-	fu_device_set_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION, version_str);
+	fu_device_set_update_version (device, version_str);
 	if (status == FWUP_LAST_ATTEMPT_STATUS_SUCCESS) {
-		fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
-					fu_pending_state_to_string (FU_PENDING_STATE_SUCCESS));
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	} else {
-		fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
-					fu_pending_state_to_string (FU_PENDING_STATE_FAILED));
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		tmp = fu_provider_uefi_last_attempt_status_to_str (status);
 		if (tmp != NULL)
-			fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_ERROR, tmp);
+			fu_device_set_update_error (device, tmp);
 	}
 out:
 	fwup_resource_iter_destroy (&iter);
@@ -211,7 +209,7 @@ static gboolean
 fu_provider_uefi_update (FuProvider *provider,
 			 FuDevice *device,
 			 GBytes *blob_fw,
-			 FuProviderFlags flags,
+			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
@@ -334,7 +332,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		dev = fu_device_new ();
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
 		fu_device_set_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, "0");
+		fu_device_set_version (dev, "0");
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_ONLINE);
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_LOCKED);
 		fu_provider_device_add (provider, dev);
@@ -376,13 +374,12 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		dev = fu_device_new ();
 		fu_device_set_id (dev, id);
 		fu_device_set_guid (dev, guid);
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
+		fu_device_set_version (dev, version);
 		fwup_get_lowest_supported_fw_version (re, &version_raw);
 		if (version_raw != 0) {
 			version_lowest = as_utils_version_from_uint32 (version_raw,
 								       parse_flags);
-			fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION_LOWEST,
-						version_lowest);
+			fu_device_set_version_lowest (dev, version_lowest);
 		}
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_INTERNAL);
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_OFFLINE);

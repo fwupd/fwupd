@@ -49,12 +49,10 @@ typedef struct {
 typedef struct {
 	FuDevice		*device;
 	FuProviderChug		*provider_chug;
-	GMainLoop		*loop;
 	GUsbDevice		*usb_device;
 	gboolean		 got_version;
 	gboolean		 is_bootloader;
 	guint			 timeout_open_id;
-	guint			 reconnect_id;
 	GBytes			*fw_bin;
 } FuProviderChugItem;
 
@@ -87,7 +85,6 @@ fu_provider_chug_get_device_key (GUsbDevice *device)
 static void
 fu_provider_chug_device_free (FuProviderChugItem *item)
 {
-	g_main_loop_unref (item->loop);
 	g_object_unref (item->device);
 	g_object_unref (item->provider_chug);
 	g_object_unref (item->usb_device);
@@ -95,40 +92,28 @@ fu_provider_chug_device_free (FuProviderChugItem *item)
 		g_bytes_unref (item->fw_bin);
 	if (item->timeout_open_id != 0)
 		g_source_remove (item->timeout_open_id);
-	if (item->reconnect_id != 0)
-		g_source_remove (item->reconnect_id);
-}
-
-/**
- * fu_provider_chug_reconnect_timeout_cb:
- **/
-static gboolean
-fu_provider_chug_reconnect_timeout_cb (gpointer user_data)
-{
-	FuProviderChugItem *item = (FuProviderChugItem *) user_data;
-	item->reconnect_id = 0;
-	g_main_loop_quit (item->loop);
-	return FALSE;
 }
 
 /**
  * fu_provider_chug_wait_for_connect:
  **/
 static gboolean
-fu_provider_chug_wait_for_connect (FuProviderChugItem *item, GError **error)
+fu_provider_chug_wait_for_connect (FuProviderChug *provider_chug,
+				   FuProviderChugItem *item,
+				   GError **error)
 {
-	item->reconnect_id = g_timeout_add (CH_DEVICE_USB_TIMEOUT,
-				fu_provider_chug_reconnect_timeout_cb, item);
-	g_main_loop_run (item->loop);
-	if (item->reconnect_id == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "request timed out");
+	FuProviderChugPrivate *priv = GET_PRIVATE (item->provider_chug);
+	g_autoptr(GUsbDevice) device = NULL;
+
+	device = g_usb_context_wait_for_replug (priv->usb_ctx,
+						item->usb_device,
+						CH_DEVICE_USB_TIMEOUT,
+						error);
+	if (device == NULL)
 		return FALSE;
-	}
-	g_source_remove (item->reconnect_id);
-	item->reconnect_id = 0;
+
+	/* update item */
+	g_set_object (&item->usb_device, device);
 	return TRUE;
 }
 
@@ -181,8 +166,7 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 		if (tmp != NULL) {
 			item->got_version = TRUE;
 			g_debug ("obtained fwver using extension '%s'", tmp);
-			fu_device_set_metadata (item->device,
-						FU_DEVICE_KEY_VERSION, tmp);
+			fu_device_set_version (item->device, tmp);
 			goto out;
 		}
 	}
@@ -206,7 +190,7 @@ fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 	item->got_version = TRUE;
 	version = g_strdup_printf ("%i.%i.%i", major, minor, micro);
 	g_debug ("obtained fwver using API '%s'", version);
-	fu_device_set_metadata (item->device, FU_DEVICE_KEY_VERSION, version);
+	fu_device_set_version (item->device, version);
 
 out:
 	/* we're done here */
@@ -227,6 +211,7 @@ fu_provider_chug_verify (FuProvider *provider,
 	FuProviderChug *provider_chug = FU_PROVIDER_CHUG (provider);
 	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	FuProviderChugItem *item;
+	GChecksumType checksum_type;
 	gsize len;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *hash = NULL;
@@ -264,9 +249,11 @@ fu_provider_chug_verify (FuProvider *provider,
 		return FALSE;
 	}
 
-	/* get the SHA1 hash */
-	hash = g_compute_checksum_for_data (G_CHECKSUM_SHA1, (guchar *) data, len);
-	fu_device_set_metadata (device, FU_DEVICE_KEY_FIRMWARE_HASH, hash);
+	/* get the checksum */
+	checksum_type = fu_provider_get_checksum_type (flags);
+	hash = g_compute_checksum_for_data (checksum_type, (guchar *) data, len);
+	fu_device_set_checksum (device, hash);
+	fu_device_set_checksum_kind (device, checksum_type);
 
 	/* we're done here */
 	if (!g_usb_device_close (item->usb_device, &error_local))
@@ -282,7 +269,7 @@ static gboolean
 fu_provider_chug_update (FuProvider *provider,
 			 FuDevice *device,
 			 GBytes *blob_fw,
-			 FuProviderFlags flags,
+			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuProviderChug *provider_chug = FU_PROVIDER_CHUG (provider);
@@ -342,7 +329,7 @@ fu_provider_chug_update (FuProvider *provider,
 
 		/* wait for reconnection */
 		g_debug ("ColorHug: Waiting for bootloader");
-		if (!fu_provider_chug_wait_for_connect (item, error))
+		if (!fu_provider_chug_wait_for_connect (provider_chug, item, error))
 			return FALSE;
 	}
 
@@ -406,7 +393,7 @@ fu_provider_chug_update (FuProvider *provider,
 	g_usb_device_close (item->usb_device, NULL);
 
 	/* wait for firmware mode */
-	if (!fu_provider_chug_wait_for_connect (item, error))
+	if (!fu_provider_chug_wait_for_connect (provider_chug, item, error))
 		return FALSE;
 	if (!fu_provider_chug_open (item, error))
 		return FALSE;
@@ -498,7 +485,6 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 	item = g_hash_table_lookup (priv->devices, device_key);
 	if (item == NULL) {
 		item = g_new0 (FuProviderChugItem, 1);
-		item->loop = g_main_loop_new (NULL, FALSE);
 		item->provider_chug = g_object_ref (provider_chug);
 		item->usb_device = g_object_ref (device);
 		item->device = fu_device_new ();
@@ -530,22 +516,22 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 	case CH_DEVICE_MODE_BOOTLOADER:
 	case CH_DEVICE_MODE_FIRMWARE:
 	case CH_DEVICE_MODE_LEGACY:
-		fu_device_set_display_name (item->device, "ColorHug");
+		fu_device_set_name (item->device, "ColorHug");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER2:
 	case CH_DEVICE_MODE_FIRMWARE2:
-		fu_device_set_display_name (item->device, "ColorHug2");
+		fu_device_set_name (item->device, "ColorHug2");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
 	case CH_DEVICE_MODE_FIRMWARE_PLUS:
-		fu_device_set_display_name (item->device, "ColorHug+");
+		fu_device_set_name (item->device, "ColorHug+");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_ALS:
 	case CH_DEVICE_MODE_FIRMWARE_ALS:
-		fu_device_set_display_name (item->device, "ColorHugALS");
+		fu_device_set_name (item->device, "ColorHugALS");
 		break;
 	default:
-		fu_device_set_display_name (item->device, "ColorHug??");
+		fu_device_set_name (item->device, "ColorHug??");
 		break;
 	}
 
@@ -562,10 +548,6 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		break;
 	}
 	fu_provider_device_add (FU_PROVIDER (provider_chug), item->device);
-
-	/* are we waiting for the device to show up */
-	if (g_main_loop_is_running (item->loop))
-		g_main_loop_quit (item->loop);
 }
 
 /**
