@@ -451,11 +451,11 @@ fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
 	g_autoptr(FwupdClientHelper) helper = NULL;
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
 
 	/* connect */
 	if (!fwupd_client_startup (client, cancellable, error))
-		return FALSE;
+		return NULL;
 
 	/* call into daemon */
 	helper = fwupd_client_helper_new ();
@@ -471,7 +471,7 @@ fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
 	if (!helper->ret) {
 		g_propagate_error (error, helper->error);
 		helper->error = NULL;
-		return FALSE;
+		return NULL;
 	}
 	return fwupd_result_new_from_data (helper->val);
 }
@@ -628,12 +628,12 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 	g_autoptr(GDBusMessage) request = NULL;
 	g_autoptr(GUnixFDList) fd_list = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (filename != NULL, FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (filename != NULL, NULL);
 
 	/* connect */
 	if (!fwupd_client_startup (client, cancellable, error))
-		return FALSE;
+		return NULL;
 
 	/* open file */
 	fd = open (filename, O_RDONLY);
