@@ -591,7 +591,7 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 		rel = as_release_new ();
 		as_release_set_version (rel, fu_rom_get_version (rom));
 		csum = as_checksum_new ();
-		as_checksum_set_kind (csum, G_CHECKSUM_SHA1);
+		as_checksum_set_kind (csum, fu_rom_get_checksum_kind (rom));
 		as_checksum_set_value (csum, fu_rom_get_checksum (rom));
 		as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
 		as_release_add_checksum (rel, csum);
