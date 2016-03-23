@@ -27,6 +27,7 @@ Build-Depends: debhelper (>= 9.0.0),
                pkg-config,
                libsoup2.4-dev,
                gtk-doc-tools,
+               libcolorhug-dev,
                valgrind
 Standards-Version: 3.9.6.1
 Section: admin

@@ -9,6 +9,12 @@ ifeq "$(DEB_BUILD_ARCH)" "armhf"
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64
 endif
 
+export COLORHUG="--disable-colorhug"
+COLORHUG_VERSION=$(shell dpkg-query -W libcolorhug-dev | awk '{ print $$2 }' | sed 's,-.*,,')
+ifeq "1.2.12" "$(word 1, $(sort 1.2.12 $(COLORHUG_VERSION)))"
+       export COLORHUG="--enable-colorhug"
+endif
+
 %:
 	dh $@ --with autoreconf
 
@@ -17,7 +23,7 @@ override_dh_autoreconf:
 
 override_dh_auto_configure:
 	dh_auto_configure -- --with-systemdunitdir=/lib/systemd/system \
-				--disable-colorhug
+				$(COLORHUG)
 
 #Disabled for now.
 #https://github.com/hughsie/fwupd/issues/14
