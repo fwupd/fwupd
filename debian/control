@@ -29,7 +29,7 @@ Build-Depends: debhelper (>= 9.0.0),
                gtk-doc-tools,
                libcolorhug-dev,
                valgrind
-Standards-Version: 3.9.6.1
+Standards-Version: 3.9.7
 Section: admin
 Homepage: https://github.com/hughsie/fwupd
 Vcs-Git: git://anonscm.debian.org/uefi/fwupd.git
