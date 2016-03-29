@@ -22,8 +22,13 @@ override_dh_autoreconf:
 	NOCONFIGURE=1 dh_autoreconf ./autogen.sh
 
 override_dh_auto_configure:
+	if pkg-config --exists fwup; then \
+		export UEFI="--enable-uefi"; \
+	else \
+		export UEFI="--disable-uefi"; \
+	fi; \
 	dh_auto_configure -- --with-systemdunitdir=/lib/systemd/system \
-				$(COLORHUG)
+				$(COLORHUG) $$UEFI
 
 #Disabled for now.
 #https://github.com/hughsie/fwupd/issues/14
