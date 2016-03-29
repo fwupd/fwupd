@@ -66,6 +66,7 @@ typedef struct {
 	GDBusConnection		*connection;
 	GDBusNodeInfo		*introspection_daemon;
 	GDBusProxy		*proxy_uid;
+	GDBusProxy		*proxy_upower;
 	GMainLoop		*loop;
 	GPtrArray		*devices;	/* of FuDeviceItem */
 	GPtrArray		*providers;
@@ -432,25 +433,14 @@ fu_main_helper_free (FuMainAuthHelper *helper)
  * fu_main_on_battery:
  **/
 static gboolean
-fu_main_on_battery (void)
+fu_main_on_battery (FuMainPrivate *priv)
 {
-	g_autoptr(GDBusProxy) proxy = NULL;
-	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) value = NULL;
-
-	proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-					       G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
-					       NULL,
-					       "org.freedesktop.UPower",
-					       "/org/freedesktop/UPower",
-					       "org.freedesktop.UPower",
-					       NULL,
-					       &error);
-	if (proxy == NULL) {
-		g_warning ("Failed to conect UPower: %s", error->message);
+	if (priv->proxy_upower == NULL) {
+		g_warning ("Failed to get OnBattery property as no UPower");
 		return FALSE;
 	}
-	value = g_dbus_proxy_get_cached_property (proxy, "OnBattery");
+	value = g_dbus_proxy_get_cached_property (priv->proxy_upower, "OnBattery");
 	if (value == NULL) {
 		g_warning ("Failed to get OnBattery property value");
 		return FALSE;
@@ -510,7 +500,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 
 	/* can we only do this on AC power */
 	if (fu_device_has_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC)) {
-		if (fu_main_on_battery ()) {
+		if (fu_main_on_battery (helper->priv)) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1133,7 +1123,7 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 
 		/* can we only do this on AC power */
 		if (fu_device_has_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC) &&
-		    fu_main_on_battery ()) {
+		    fu_main_on_battery (priv)) {
 			g_debug ("ignoring update for %s as not on AC power",
 				 fu_device_get_id (item->device));
 			continue;
@@ -1869,6 +1859,21 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 		return;
 	}
 
+	/* connect to UPower */
+	priv->proxy_upower =
+		g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+					       G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
+					       NULL,
+					       "org.freedesktop.UPower",
+					       "/org/freedesktop/UPower",
+					       "org.freedesktop.UPower",
+					       NULL,
+					       &error);
+	if (priv->proxy_upower == NULL) {
+		g_warning ("Failed to conect UPower: %s", error->message);
+		return;
+	}
+
 	/* dump startup profile data */
 	if (fu_debug_is_verbose ())
 		as_profile_dump (priv->profile);
@@ -2203,6 +2208,8 @@ out:
 			g_main_loop_unref (priv->loop);
 		if (priv->proxy_uid != NULL)
 			g_object_unref (priv->proxy_uid);
+		if (priv->proxy_upower != NULL)
+			g_object_unref (priv->proxy_upower);
 		if (priv->connection != NULL)
 			g_object_unref (priv->connection);
 		if (priv->authority != NULL)
