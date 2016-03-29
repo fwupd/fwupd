@@ -752,17 +752,30 @@ fu_util_download_file (FuUtilPrivate *priv,
 }
 
 /**
+ * fu_util_mkdir_with_parents:
+ **/
+static gboolean
+fu_util_mkdir_with_parents (const gchar *path, GError **error)
+{
+	g_autoptr(GFile) file = g_file_new_for_path (path);
+	if (g_file_query_exists (file, NULL))
+		return TRUE;
+	return g_file_make_directory_with_parents (file, NULL, error);
+}
+
+/**
  * fu_util_download_metadata:
  **/
 static gboolean
 fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 {
+	g_autofree gchar *cache_dir = NULL;
 	g_autofree gchar *config_fn = NULL;
+	g_autofree gchar *data_fn = NULL;
 	g_autofree gchar *data_uri = NULL;
 	g_autofree gchar *sig_fn = NULL;
 	g_autofree gchar *sig_uri = NULL;
 	g_autoptr(GKeyFile) config = NULL;
-	const gchar *data_fn = "/tmp/firmware.xml.gz";
 
 	/* read config file */
 	config = g_key_file_new ();
@@ -772,11 +785,17 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 		return FALSE;
 	}
 
+	/* ensure cache directory exists */
+	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
+	if (!fu_util_mkdir_with_parents (cache_dir, error))
+		return FALSE;
+
 	/* download the signature */
 	data_uri = g_key_file_get_string (config, "fwupd", "DownloadURI", error);
 	if (data_uri == NULL)
 		return FALSE;
 	sig_uri = g_strdup_printf ("%s.asc", data_uri);
+	data_fn = g_build_filename (cache_dir, "firmware.xml.gz", NULL);
 	sig_fn = g_strdup_printf ("%s.asc", data_fn);
 	if (!fu_util_download_file (priv, sig_uri, sig_fn, NULL, 0, error))
 		return FALSE;
