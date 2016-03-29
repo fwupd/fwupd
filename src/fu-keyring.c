@@ -322,6 +322,7 @@ fu_keyring_verify_file (FuKeyring *keyring,
 
 	/* look at each signature */
 	for (s = result->signatures; s != NULL ; s = s->next ) {
+		g_debug ("returned signature fingerprint %s", s->fpr);
 		ret = fu_keyring_check_signature (s, error);
 		if (!ret)
 			goto out;
@@ -411,6 +412,7 @@ fu_keyring_verify_data (FuKeyring *keyring,
 
 	/* look at each signature */
 	for (s = result->signatures; s != NULL ; s = s->next ) {
+		g_debug ("returned signature fingerprint %s", s->fpr);
 		ret = fu_keyring_check_signature (s, error);
 		if (!ret)
 			goto out;
