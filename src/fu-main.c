@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -1127,6 +1127,14 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 		/* check if actually newer than what we have installed */
 		if (as_utils_vercmp (as_release_get_version (rel), version) <= 0) {
 			g_debug ("%s has no firmware updates",
+				 fu_device_get_id (item->device));
+			continue;
+		}
+
+		/* can we only do this on AC power */
+		if (fu_device_has_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC) &&
+		    fu_main_on_battery ()) {
+			g_debug ("ignoring update for %s as not on AC power",
 				 fu_device_get_id (item->device));
 			continue;
 		}
