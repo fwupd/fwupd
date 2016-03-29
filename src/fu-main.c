@@ -509,7 +509,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 	}
 
 	/* can we only do this on AC power */
-	if (fu_device_get_flags (item->device) & FU_DEVICE_FLAG_REQUIRE_AC) {
+	if (fu_device_has_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC)) {
 		if (fu_main_on_battery ()) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
@@ -923,7 +923,7 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 	is_downgrade = helper->vercmp > 0;
 
 	/* relax authentication checks for removable devices */
-	if ((fu_device_get_flags (helper->device) & FU_DEVICE_FLAG_INTERNAL) == 0) {
+	if (!fu_device_has_flag (helper->device, FU_DEVICE_FLAG_INTERNAL)) {
 		if (is_downgrade)
 			return "org.freedesktop.fwupd.downgrade-hotplug";
 		if (is_trusted)
@@ -1341,7 +1341,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* check the device is locked */
-		if ((fu_device_get_flags (item->device) & FU_DEVICE_FLAG_LOCKED) == 0) {
+		if (!fu_device_has_flag (item->device, FU_DEVICE_FLAG_LOCKED)) {
 			g_dbus_method_invocation_return_error (invocation,
 							       FWUPD_ERROR,
 							       FWUPD_ERROR_NOT_FOUND,

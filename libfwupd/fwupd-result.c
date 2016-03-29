@@ -1069,6 +1069,25 @@ fwupd_result_add_device_flag (FwupdResult *result, FwupdDeviceFlags flag)
 }
 
 /**
+ * fwupd_result_has_device_flag:
+ * @result: A #FwupdResult
+ * @flag: the #FwupdDeviceFlags
+ *
+ * Finds if the device has a specific device flag.
+ *
+ * Returns: %TRUE if the flag is set
+ *
+ * Since: 0.7.0
+ **/
+gboolean
+fwupd_result_has_device_flag (FwupdResult *result, FwupdDeviceFlags flag)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), FALSE);
+	return priv->device_flags & flag;
+}
+
+/**
  * fwupd_result_get_device_created:
  * @result: A #FwupdResult
  *
