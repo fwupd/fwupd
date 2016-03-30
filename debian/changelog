@@ -1,3 +1,20 @@
+fwupd (0.6.3-1) unstable; urgency=medium
+
+  * New upstream release (0.6.3)
+  * Enable quirked firmware versions on Alienware as well
+  * Conditionally enable colorhug if a new enough version is available.
+    This will allow for easier backporting in the future
+  * update standards version
+  * Only build against libfwup-dev on x86 and arm architectures
+  * add armel to supported architectures too
+  * Explicitly turn off UEFI if libfwup-dev wasn't installed to fix FTBFS
+    on these other architectures.
+  * Fix FTBFS on powerpc related to GPGME
+  * Update build-depends to libasppstream-glib-dev 0.5.10
+  * Add symbols files for libfwupd and libdfu1
+
+ -- Mario Limonciello <mario_limonciello@dell.com>  Wed, 30 Mar 2016 08:48:44 -0500
+
 fwupd (0.6.2-1) unstable; urgency=medium
 
   * New upstream release (0.6.2)
