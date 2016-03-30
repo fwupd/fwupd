@@ -13,7 +13,7 @@ Build-Depends: debhelper (>= 9.0.0),
                libappstream-glib-dev (>= 0.5.4),
                libarchive-dev,
                libcolord-dev (>= 1.0.0),
-               libfwup-dev,
+               libfwup-dev [amd64 arm64 armhf armel i386],
                libgcab-dev,
                gcab,
                libgirepository1.0-dev,
@@ -27,8 +27,9 @@ Build-Depends: debhelper (>= 9.0.0),
                pkg-config,
                libsoup2.4-dev,
                gtk-doc-tools,
+               libcolorhug-dev,
                valgrind
-Standards-Version: 3.9.6.1
+Standards-Version: 3.9.7
 Section: admin
 Homepage: https://github.com/hughsie/fwupd
 Vcs-Git: git://anonscm.debian.org/uefi/fwupd.git

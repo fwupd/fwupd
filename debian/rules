@@ -1,12 +1,22 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-#GPGME needs this for proper building on i386 and armhf
+#GPGME needs this for proper building on i386, armhf, powerpc
 ifeq "$(DEB_BUILD_ARCH)" "i386"
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64
 endif
 ifeq "$(DEB_BUILD_ARCH)" "armhf"
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64
+endif
+ifeq "$(DEB_BUILD_ARCH)" "powerpc"
+        export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64
+endif
+
+
+export COLORHUG="--disable-colorhug"
+COLORHUG_VERSION=$(shell dpkg-query -W libcolorhug-dev | awk '{ print $$2 }' | sed 's,-.*,,')
+ifeq "1.2.12" "$(word 1, $(sort 1.2.12 $(COLORHUG_VERSION)))"
+       export COLORHUG="--enable-colorhug"
 endif
 
 %:
@@ -16,8 +26,13 @@ override_dh_autoreconf:
 	NOCONFIGURE=1 dh_autoreconf ./autogen.sh
 
 override_dh_auto_configure:
+	if pkg-config --exists fwup; then \
+		export UEFI="--enable-uefi"; \
+	else \
+		export UEFI="--disable-uefi"; \
+	fi; \
 	dh_auto_configure -- --with-systemdunitdir=/lib/systemd/system \
-				--disable-colorhug
+				$(COLORHUG) $$UEFI
 
 #Disabled for now.
 #https://github.com/hughsie/fwupd/issues/14
