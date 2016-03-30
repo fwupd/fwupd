@@ -1,0 +1,4 @@
+libfwupd.so.1 libfwupd1 #MINVER#
+ fwupd_error_quark@Base 0.6.3
+ fwupd_status_from_string@Base 0.6.3
+ fwupd_status_to_string@Base 0.6.3
