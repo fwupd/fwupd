@@ -253,6 +253,7 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	const DfuFuncDescriptor *desc;
 	gsize iface_data_length;
+	guint16 dfu_version;
 
 	/* parse the functional descriptor */
 	desc = g_bytes_get_data (iface_data, &iface_data_length);
@@ -276,19 +277,20 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 	}
 
 	/* check DFU version */
+	dfu_version = GUINT16_FROM_LE (desc->bcdDFUVersion);
 	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION) {
 		g_debug ("ignoring quirked DFU version");
 	} else {
-		if (desc->bcdDFUVersion == 0x0100 ||
-		    desc->bcdDFUVersion == 0x0101) {
+		if (dfu_version == 0x0100 ||
+		    dfu_version == 0x0110) {
 			g_debug ("basic DFU, no DfuSe support");
 			priv->dfuse_supported = FALSE;
-		} else if (desc->bcdDFUVersion == 0x011a) {
+		} else if (dfu_version == 0x011a) {
 			g_debug ("DfuSe support");
 			priv->dfuse_supported = TRUE;
 		} else {
 			g_warning ("DFU version is invalid: 0x%04x",
-				   desc->bcdDFUVersion);
+				   dfu_version);
 		}
 	}
 
@@ -584,7 +586,7 @@ dfu_device_has_dfuse_support (DfuDevice *device)
  * dfu_device_set_quirks:
  **/
 static void
-dfu_target_set_quirks (DfuDevice *device)
+dfu_device_set_quirks (DfuDevice *device)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	guint16 vid, pid, release;
@@ -592,6 +594,11 @@ dfu_target_set_quirks (DfuDevice *device)
 	vid = g_usb_device_get_vid (priv->dev);
 	pid = g_usb_device_get_pid (priv->dev);
 	release = g_usb_device_get_release (priv->dev);
+
+	/* on PC platforms the DW1820A firmware is loaded at runtime and can't
+	 * be stored on the device itself as the flash chip is unpopulated */
+	if (vid == 0x0a5c && pid == 0x6412)
+		priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_RUNTIME;
 
 	/* Openmoko Freerunner / GTA02 */
 	if ((vid == 0x1d50 || vid == 0x1457) &&
@@ -650,7 +657,7 @@ dfu_device_new (GUsbDevice *dev)
 	priv->platform_id = g_strdup (g_usb_device_get_platform_id (dev));
 
 	/* set any quirks on the device before adding targets */
-	dfu_target_set_quirks (device);
+	dfu_device_set_quirks (device);
 
 	/* add each alternate interface, although typically there will
 	 * be only one */
@@ -658,6 +665,7 @@ dfu_device_new (GUsbDevice *dev)
 		g_object_unref (device);
 		return NULL;
 	}
+
 	return device;
 }
 
@@ -2037,6 +2045,8 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "no-dfu-runtime|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD)
 		g_string_append_printf (str, "attach-upload-download|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_RUNTIME)
+		g_string_append_printf (str, "ignore-runtime|");
 
 	/* a well behaved device */
 	if (str->len == 0) {

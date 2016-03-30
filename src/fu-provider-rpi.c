@@ -301,6 +301,7 @@ fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
 	fu_device_add_flag (device, FU_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
 	fu_device_add_flag (device, FU_DEVICE_FLAG_ALLOW_ONLINE);
+	fu_device_add_flag (device, FU_DEVICE_FLAG_REQUIRE_AC);
 
 	/* get the VC build info */
 	if (!fu_provider_rpi_parse_firmware (device, fwfn, error))

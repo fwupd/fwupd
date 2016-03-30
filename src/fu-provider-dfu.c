@@ -139,6 +139,13 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 				  dfu_device_get_runtime_vid (device),
 				  dfu_device_get_runtime_pid (device));
 
+	/* ignore defective runtimes */
+	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME &&
+	    dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_IGNORE_RUNTIME)) {
+		g_debug ("ignoring %s runtime", platform_id);
+		return;
+	}
+
 	/* create new device */
 	dev = fu_device_new ();
 	fu_device_set_id (dev, platform_id);

@@ -35,6 +35,7 @@
 
 #include "fu-debug.h"
 #include "fu-device.h"
+#include "fu-plugin.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-provider.h"
@@ -72,6 +73,7 @@ typedef struct {
 	AsProfile		*profile;
 	AsStore			*store;
 	guint			 store_changed_id;
+	GHashTable		*plugins;	/* of name : FuPlugin */
 } FuMainPrivate;
 
 typedef struct {
@@ -175,6 +177,63 @@ fu_main_device_array_to_variant (GPtrArray *devices, GError **error)
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(a{sa{sv}})", &builder);
+}
+
+/**
+ * fu_main_load_plugins:
+ **/
+static gboolean
+fu_main_load_plugins (GHashTable *plugins, GError **error)
+{
+	FuPlugin *plugin;
+	GModule *module;
+	GList *l;
+	const gchar *fn;
+	g_autofree gchar *plugin_dir = NULL;
+	g_autoptr(GDir) dir = NULL;
+	g_autoptr(GList) values = NULL;
+
+	/* search */
+	plugin_dir = g_build_filename (LIBDIR, "fwupd-plugins-1", NULL);
+	dir = g_dir_open (plugin_dir, 0, error);
+	if (dir == NULL)
+		return FALSE;
+	while ((fn = g_dir_read_name (dir)) != NULL) {
+		g_autofree gchar *filename = NULL;
+
+		/* ignore non-plugins */
+		if (!g_str_has_suffix (fn, ".so"))
+			continue;
+
+		/* open module */
+		filename = g_build_filename (plugin_dir, fn, NULL);
+		g_debug ("adding plugin %s", filename);
+		module = g_module_open (filename, 0);
+		if (module == NULL) {
+			g_warning ("failed to open plugin %s: %s",
+				   filename, g_module_error ());
+			continue;
+		}
+		plugin = fu_plugin_new (module);
+		if (plugin == NULL) {
+			g_module_close (module);
+			g_warning ("plugin %s requires name", filename);
+			continue;
+		}
+
+		/* add */
+		g_hash_table_insert (plugins, g_strdup (plugin->name), plugin);
+	}
+
+	/* start them all up */
+	values = g_hash_table_get_values (plugins);
+	for (l = values; l != NULL; l = l->next) {
+		plugin = FU_PLUGIN (l->data);
+		if (!fu_plugin_run_startup (plugin, error))
+			return FALSE;
+	}
+
+	return TRUE;
 }
 
 /**
@@ -296,6 +355,13 @@ fu_main_get_release_trust_flags (AsRelease *release,
 	return TRUE;
 }
 
+typedef enum {
+	FU_MAIN_AUTH_KIND_UNKNOWN,
+	FU_MAIN_AUTH_KIND_INSTALL,
+	FU_MAIN_AUTH_KIND_UNLOCK,
+	FU_MAIN_AUTH_KIND_LAST
+} FuMainAuthKind;
+
 typedef struct {
 	GDBusMethodInvocation	*invocation;
 	AsStore			*store;
@@ -305,6 +371,7 @@ typedef struct {
 	GBytes			*blob_fw;
 	GBytes			*blob_cab;
 	gint			 vercmp;
+	FuMainAuthKind		 auth_kind;
 	FuMainPrivate		*priv;
 } FuMainAuthHelper;
 
@@ -321,9 +388,70 @@ fu_main_helper_free (FuMainAuthHelper *helper)
 		g_bytes_unref (helper->blob_fw);
 	if (helper->blob_cab > 0)
 		g_bytes_unref (helper->blob_cab);
+	if (helper->store != NULL)
+		g_object_unref (helper->store);
 	g_object_unref (helper->invocation);
-	g_object_unref (helper->store);
 	g_free (helper);
+}
+
+/**
+ * fu_main_on_battery:
+ **/
+static gboolean
+fu_main_on_battery (void)
+{
+	g_autoptr(GDBusProxy) proxy = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) value = NULL;
+
+	proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+					       G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
+					       NULL,
+					       "org.freedesktop.UPower",
+					       "/org/freedesktop/UPower",
+					       "org.freedesktop.UPower",
+					       NULL,
+					       &error);
+	if (proxy == NULL) {
+		g_warning ("Failed to conect UPower: %s", error->message);
+		return FALSE;
+	}
+	value = g_dbus_proxy_get_cached_property (proxy, "OnBattery");
+	if (value == NULL) {
+		g_warning ("Failed to get OnBattery property value");
+		return FALSE;
+	}
+	return g_variant_get_boolean (value);
+}
+
+/**
+ * fu_main_provider_unlock_authenticated:
+ **/
+static gboolean
+fu_main_provider_unlock_authenticated (FuMainAuthHelper *helper, GError **error)
+{
+	FuDeviceItem *item;
+
+	/* check the device still exists */
+	item = fu_main_get_item_by_id (helper->priv, fu_device_get_id (helper->device));
+	if (item == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "device %s was removed",
+			     fu_device_get_id (helper->device));
+		return FALSE;
+	}
+
+	/* run the correct provider that added this */
+	if (!fu_provider_unlock (item->provider,
+				 item->device,
+				 error))
+		return FALSE;
+
+	/* make the UI update */
+	fu_main_emit_changed (helper->priv);
+	return TRUE;
 }
 
 /**
@@ -343,6 +471,18 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 			     "device %s was removed",
 			     fu_device_get_id (helper->device));
 		return FALSE;
+	}
+
+	/* can we only do this on AC power */
+	if (fu_device_get_flags (item->device) & FU_DEVICE_FLAG_REQUIRE_AC) {
+		if (fu_main_on_battery ()) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "Cannot install update "
+					     "when not on AC power");
+			return FALSE;
+		}
 	}
 
 	/* run the correct provider that added this */
@@ -394,10 +534,20 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	}
 
 	/* we're good to go */
-	if (!fu_main_provider_update_authenticated (helper, &error)) {
-		g_dbus_method_invocation_return_gerror (helper->invocation, error);
-		fu_main_helper_free (helper);
-		return;
+	if (helper->auth_kind == FU_MAIN_AUTH_KIND_INSTALL) {
+		if (!fu_main_provider_update_authenticated (helper, &error)) {
+			g_dbus_method_invocation_return_gerror (helper->invocation, error);
+			fu_main_helper_free (helper);
+			return;
+		}
+	} else if (helper->auth_kind == FU_MAIN_AUTH_KIND_UNLOCK) {
+		if (!fu_main_provider_unlock_authenticated (helper, &error)) {
+			g_dbus_method_invocation_return_gerror (helper->invocation, error);
+			fu_main_helper_free (helper);
+			return;
+		}
+	} else {
+		g_assert_not_reached ();
 	}
 
 	/* success */
@@ -448,7 +598,7 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 	guint i;
 
 	/* no quirk required */
-	if (as_app_get_id_kind (app) != AS_ID_KIND_FIRMWARE)
+	if (as_app_get_kind (app) != AS_APP_KIND_FIRMWARE)
 		return;
 
         for (i = 0; quirk_table[i].identifier != NULL; i++)
@@ -1154,6 +1304,55 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	}
 
 	/* return 's' */
+	if (g_strcmp0 (method_name, "Unlock") == 0) {
+		FuDeviceItem *item = NULL;
+		FuMainAuthHelper *helper;
+		const gchar *id = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		/* check the id exists */
+		g_variant_get (parameters, "(&s)", &id);
+		g_debug ("Called %s(%s)", method_name, id);
+		item = fu_main_get_item_by_id (priv, id);
+		if (item == NULL) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_FOUND,
+							       "No such device %s",
+							       id);
+			return;
+		}
+
+		/* check the device is locked */
+		if ((fu_device_get_flags (item->device) & FU_DEVICE_FLAG_LOCKED) == 0) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_NOT_FOUND,
+							       "Device %s is not locked",
+							       id);
+			return;
+		}
+
+		/* process the firmware */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->auth_kind = FU_MAIN_AUTH_KIND_UNLOCK;
+		helper->invocation = g_object_ref (invocation);
+		helper->device = g_object_ref (item->device);
+		helper->priv = priv;
+
+		/* authenticate */
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (helper->priv->authority, subject,
+						      "org.freedesktop.fwupd.device-unlock",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_check_authorization_cb,
+						      helper);
+		return;
+	}
+
+	/* return 's' */
 	if (g_strcmp0 (method_name, "Verify") == 0) {
 		AsApp *app;
 		AsChecksum *csum;
@@ -1313,6 +1512,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 		/* process the firmware */
 		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->auth_kind = FU_MAIN_AUTH_KIND_INSTALL;
 		helper->invocation = g_object_ref (invocation);
 		helper->trust_flags = FWUPD_TRUST_FLAG_NONE;
 		helper->blob_cab = g_bytes_ref (blob_cab);
@@ -1844,8 +2044,17 @@ main (int argc, char *argv[])
 	as_store_set_watch_flags (priv->store, AS_STORE_WATCH_FLAG_ADDED |
 					       AS_STORE_WATCH_FLAG_REMOVED);
 
+	/* load plugin */
+	priv->plugins = g_hash_table_new_full (g_str_hash, g_str_equal,
+					       g_free, (GDestroyNotify) fu_plugin_free);
+	if (!fu_main_load_plugins (priv->plugins, &error)) {
+		g_print ("failed to load plugins: %s\n", error->message);
+		retval = EXIT_FAILURE;
+		goto out;
+	}
+
 	/* load AppStream */
-	as_store_add_filter (priv->store, AS_ID_KIND_FIRMWARE);
+	as_store_add_filter (priv->store, AS_APP_KIND_FIRMWARE);
 	if (!as_store_load (priv->store,
 			    AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM,
 			    NULL, &error)){
@@ -1946,6 +2155,8 @@ out:
 		g_object_unref (priv->pending);
 		if (priv->providers != NULL)
 			g_ptr_array_unref (priv->providers);
+		if (priv->plugins != NULL)
+			g_hash_table_unref (priv->plugins);
 		g_ptr_array_unref (priv->devices);
 		g_free (priv);
 	}

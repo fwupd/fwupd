@@ -22,7 +22,7 @@ BuildRequires: systemd
 BuildRequires: libsoup-devel >= 2.51.92
 BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
-BuildRequires: libappstream-glib-devel >= 0.5.2
+BuildRequires: libappstream-glib-devel >= 0.5.10
 BuildRequires: gcab
 
 %ifarch x86_64 %{ix86} aarch64
@@ -88,6 +88,7 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %{_sysconfdir}/pki/fwupd
 %{_sysconfdir}/pki/fwupd-metadata
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf
+%{_datadir}/app-info/xmls/org.freedesktop.fwupd.xml
 %{_datadir}/dbus-1/interfaces/org.freedesktop.fwupd.xml
 %{_datadir}/polkit-1/actions/org.freedesktop.fwupd.policy
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
@@ -105,6 +106,8 @@ find %{buildroot} -name '*.la' -exec rm -f {} ';'
 %dir %{_localstatedir}/cache/app-info/icons
 %dir %{_localstatedir}/cache/app-info/xmls
 /usr/lib/udev/rules.d/*.rules
+%dir %{_libdir}/fwupd-plugins-1
+%{_libdir}/fwupd-plugins-1/*.so
 
 %files devel
 %{_includedir}/fwupd-1
