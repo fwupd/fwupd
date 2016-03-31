@@ -201,6 +201,27 @@ fwupd_client_parse_results_from_data (GVariant *devices)
 }
 
 /**
+ * fwupd_client_fixup_dbus_error:
+ **/
+static void
+fwupd_client_fixup_dbus_error (GError *error)
+{
+	g_autofree gchar *name = NULL;
+
+	g_return_if_fail (error != NULL);
+
+	/* is a remote error? */
+	if (!g_dbus_error_is_remote_error (error))
+		return;
+
+	/* parse the remote error */
+	name = g_dbus_error_get_remote_error (error);
+	error->domain = FWUPD_ERROR;
+	error->code = fwupd_error_from_string (name);
+	g_dbus_error_strip_remote_error (error);
+}
+
+/**
  * fwupd_client_get_devices:
  * @client: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
@@ -236,7 +257,7 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
 				      error);
 	if (val == NULL) {
 		if (error != NULL)
-			g_dbus_error_strip_remote_error (*error);
+			fwupd_client_fixup_dbus_error (*error);
 		return NULL;
 	}
 	return fwupd_client_parse_results_from_data (val);
@@ -278,7 +299,7 @@ fwupd_client_get_updates (FwupdClient *client, GCancellable *cancellable, GError
 				      error);
 	if (val == NULL) {
 		if (error != NULL)
-			g_dbus_error_strip_remote_error (*error);
+			fwupd_client_fixup_dbus_error (*error);
 		return NULL;
 	}
 	return fwupd_client_parse_results_from_data (val);
@@ -296,7 +317,7 @@ fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_da
 	if (helper->val != NULL)
 		helper->ret = TRUE;
 	if (helper->error != NULL)
-		g_dbus_error_strip_remote_error (helper->error);
+		fwupd_client_fixup_dbus_error (helper->error);
 	g_main_loop_quit (helper->loop);
 }
 
@@ -514,7 +535,7 @@ fwupd_client_send_message_cb (GObject *source_object, GAsyncResult *res, gpointe
 			g_variant_ref (helper->val);
 	}
 	if (helper->error != NULL)
-		g_dbus_error_strip_remote_error (helper->error);
+		fwupd_client_fixup_dbus_error (helper->error);
 	g_main_loop_quit (helper->loop);
 }
 
