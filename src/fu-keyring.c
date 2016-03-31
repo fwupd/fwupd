@@ -144,6 +144,19 @@ fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **e
 		g_debug ("importing key %s [%i] %s",
 			 s->fpr, s->status, gpgme_strerror (s->result));
 	}
+
+	/* make sure keys were really imported */
+	if (result->imported + result->unchanged == 0) {
+		ret = FALSE;
+		g_debug("imported: %d, unchanged: %d, not_imported: %d", result->imported,
+									 result->unchanged,
+									 result->not_imported);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Key import failed %s",
+			     filename);
+	}
 out:
 	gpgme_data_release (data);
 	return ret;
