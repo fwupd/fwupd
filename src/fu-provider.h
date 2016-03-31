@@ -113,6 +113,9 @@ gboolean	 fu_provider_get_results	(FuProvider	*provider,
 						 GError		**error);
 GChecksumType	 fu_provider_get_checksum_type	(FuProviderVerifyFlags flags);
 
+void		 fu_provider_set_dir		(FuProvider *provider,
+						 const gchar *offline_dir);
+
 G_END_DECLS
 
 #endif /* __FU_PROVIDER_H */
