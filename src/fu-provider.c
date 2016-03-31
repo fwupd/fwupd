@@ -36,6 +36,13 @@
 
 static void	fu_provider_finalize	(GObject	*object);
 
+/**
+ * FuProviderPrivate:
+ **/
+typedef struct {
+	gchar                   *offline_dir;
+} FuProviderPrivate;
+
 enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
@@ -45,7 +52,8 @@ enum {
 
 static guint signals[SIGNAL_LAST] = { 0 };
 
-G_DEFINE_TYPE (FuProvider, fu_provider, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (FuProvider, fu_provider, G_TYPE_OBJECT)
+#define GET_PRIVATE(o) (fu_provider_get_instance_private (o))
 
 /**
  * fu_provider_offline_invalidate:
@@ -118,9 +126,10 @@ fu_provider_schedule_update (FuProvider *provider,
 			     GBytes *blob_cab,
 			     GError **error)
 {
+	FuProviderPrivate *priv = GET_PRIVATE (provider);
+
 	gchar tmpname[] = {"XXXXXX.cap"};
 	guint i;
-	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FwupdResult) res_tmp = NULL;
 	g_autoptr(FuPending) pending = NULL;
@@ -139,8 +148,7 @@ fu_provider_schedule_update (FuProvider *provider,
 	}
 
 	/* create directory */
-	dirname = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
-	file = g_file_new_for_path (dirname);
+	file = g_file_new_for_path (priv->offline_dir);
 	if (!g_file_query_exists (file, NULL)) {
 		if (!g_file_make_directory_with_parents (file, NULL, error))
 			return FALSE;
@@ -149,7 +157,7 @@ fu_provider_schedule_update (FuProvider *provider,
 	/* get a random filename */
 	for (i = 0; i < 6; i++)
 		tmpname[i] = g_random_int_range ('A', 'Z');
-	filename = g_build_filename (dirname, tmpname, NULL);
+	filename = g_build_filename (priv->offline_dir, tmpname, NULL);
 
 	/* just copy to the temp file */
 	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
@@ -493,6 +501,26 @@ fu_provider_class_init (FuProviderClass *klass)
 static void
 fu_provider_init (FuProvider *provider)
 {
+        FuProviderPrivate *priv = GET_PRIVATE (provider);
+	const gchar *tmp;
+
+        /* allow this to be overidden for testing */
+        priv->offline_dir = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
+        tmp = g_getenv ("FWUPD_OFFLINE_DIR");
+        if (tmp != NULL)
+                fu_provider_set_dir (provider, tmp);
+}
+
+/**
+ * fu_provider_set_dir:
+ **/
+void
+fu_provider_set_dir (FuProvider *provider, const gchar *offline_dir)
+{
+        FuProviderPrivate *priv = GET_PRIVATE (provider);
+        g_free (priv->offline_dir);
+        priv->offline_dir = g_strdup (offline_dir);
+        g_mkdir_with_parents (offline_dir, 0700);
 }
 
 /**

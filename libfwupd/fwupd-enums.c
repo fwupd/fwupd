@@ -31,6 +31,8 @@
 const gchar *
 fwupd_status_to_string (FwupdStatus status)
 {
+	if (status == FWUPD_STATUS_UNKNOWN)
+		return "unknown";
 	if (status == FWUPD_STATUS_IDLE)
 		return "idle";
 	if (status == FWUPD_STATUS_DECOMPRESSING)
@@ -56,6 +58,8 @@ fwupd_status_to_string (FwupdStatus status)
 FwupdStatus
 fwupd_status_from_string (const gchar *status)
 {
+	if (g_strcmp0 (status, "unknown") == 0)
+		return FWUPD_STATUS_UNKNOWN;
 	if (g_strcmp0 (status, "idle") == 0)
 		return FWUPD_STATUS_IDLE;
 	if (g_strcmp0 (status, "decompressing") == 0)
@@ -70,7 +74,7 @@ fwupd_status_from_string (const gchar *status)
 		return FWUPD_STATUS_DEVICE_VERIFY;
 	if (g_strcmp0 (status, "scheduling") == 0)
 		return FWUPD_STATUS_SCHEDULING;
-	return FWUPD_STATUS_UNKNOWN;
+	return FWUPD_STATUS_LAST;
 }
 
 /**

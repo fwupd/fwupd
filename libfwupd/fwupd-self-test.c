@@ -25,6 +25,8 @@
 #include <fnmatch.h>
 
 #include "fwupd-client.h"
+#include "fwupd-enums.h"
+#include "fwupd-error.h"
 #include "fwupd-result.h"
 
 /**
@@ -55,6 +57,42 @@ as_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 	/* just output the diff */
 	g_set_error_literal (error, 1, 0, output);
 	return FALSE;
+}
+
+static void
+fwupd_enums_func (void)
+{
+	const gchar *tmp;
+	guint i;
+
+	/* enums */
+	for (i = 0; i < FWUPD_ERROR_LAST; i++) {
+		tmp = fwupd_error_to_string (i);
+		g_assert_cmpstr (tmp, !=, NULL);
+		g_assert_cmpint (fwupd_error_from_string (tmp), ==, i);
+	}
+	for (i = 0; i < FWUPD_STATUS_LAST; i++) {
+		tmp = fwupd_status_to_string (i);
+		g_assert_cmpstr (tmp, !=, NULL);
+		g_assert_cmpint (fwupd_status_from_string (tmp), ==, i);
+	}
+	for (i = 0; i < FWUPD_UPDATE_STATE_LAST; i++) {
+		tmp = fwupd_update_state_to_string (i);
+		g_assert_cmpstr (tmp, !=, NULL);
+		g_assert_cmpint (fwupd_update_state_from_string (tmp), ==, i);
+	}
+	for (i = 0; i < FWUPD_TRUST_FLAG_LAST; i++) {
+		tmp = fwupd_trust_flag_to_string (i);
+		g_assert_cmpstr (tmp, !=, NULL);
+		g_assert_cmpint (fwupd_trust_flag_from_string (tmp), ==, i);
+	}
+
+	/* bitfield */
+	for (i = 1; i < FU_DEVICE_FLAG_LAST; i *= 2) {
+		tmp = fwupd_device_flag_to_string (i);
+		g_assert_cmpstr (tmp, !=, NULL);
+		g_assert_cmpint (fwupd_device_flag_from_string (tmp), ==, i);
+	}
 }
 
 static void
@@ -108,7 +146,7 @@ fwupd_result_func (void)
 }
 
 static void
-fwupd_client_func (void)
+fwupd_client_devices_func (void)
 {
 	FwupdResult *res;
 	g_autoptr(FwupdClient) client = NULL;
@@ -117,6 +155,33 @@ fwupd_client_func (void)
 
 	client = fwupd_client_new ();
 	array = fwupd_client_get_devices (client, NULL, &error);
+	if (array == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+		return;
+	g_assert_no_error (error);
+	g_assert (array != NULL);
+	g_assert_cmpint (array->len, >, 0);
+
+	/* check device */
+	res = g_ptr_array_index (array, 0);
+	g_assert (FWUPD_IS_RESULT (res));
+	g_assert_cmpstr (fwupd_result_get_guid (res), !=, NULL);
+	g_assert_cmpstr (fwupd_result_get_device_id (res), !=, NULL);
+}
+
+static void
+fwupd_client_updates_func (void)
+{
+	FwupdResult *res;
+	g_autoptr(FwupdClient) client = NULL;
+	g_autoptr(GPtrArray) array = NULL;
+	g_autoptr(GError) error = NULL;
+
+	client = fwupd_client_new ();
+	array = fwupd_client_get_updates (client, NULL, &error);
+	if (array == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+		return;
 	g_assert_no_error (error);
 	g_assert (array != NULL);
 	g_assert_cmpint (array->len, >, 0);
@@ -137,8 +202,10 @@ main (int argc, char **argv)
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
 	/* tests go here */
+	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
 	g_test_add_func ("/fwupd/result", fwupd_result_func);
-	g_test_add_func ("/fwupd/client", fwupd_client_func);
+	g_test_add_func ("/fwupd/client{devices}", fwupd_client_devices_func);
+	g_test_add_func ("/fwupd/client{updates}", fwupd_client_updates_func);
 	return g_test_run ();
 }
 

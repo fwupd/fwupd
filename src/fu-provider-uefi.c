@@ -89,34 +89,39 @@ fu_provider_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError *
 }
 
 /**
+ * _fwup_resource_iter_free:
+ **/
+static void
+_fwup_resource_iter_free (fwup_resource_iter *iter)
+{
+	fwup_resource_iter_destroy (&iter);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
+
+/**
  * fu_provider_uefi_clear_results:
  **/
 static gboolean
 fu_provider_uefi_clear_results (FuProvider *provider, FuDevice *device, GError **error)
 {
-	fwup_resource_iter *iter = NULL;
 	fwup_resource *re = NULL;
-	gboolean ret = TRUE;
+	g_autoptr(fwup_resource_iter) iter = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
 	re = fu_provider_uefi_find (iter, fu_device_get_guid (device), error);
-	if (re == NULL) {
-		ret = FALSE;
-		goto out;
-	}
+	if (re == NULL)
+		return FALSE;
 	if (fwup_clear_status (re) < 0) {
-		ret = FALSE;
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "Cannot create clear UEFI status for %s",
 			     fu_device_get_guid (device));
-		goto out;
+		return FALSE;
 	}
-out:
-	fwup_resource_iter_destroy (&iter);
-	return ret;
+	return TRUE;
 }
 
 /* only in git master */
@@ -163,29 +168,25 @@ static gboolean
 fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **error)
 {
 	const gchar *tmp;
-	fwup_resource_iter *iter = NULL;
 	fwup_resource *re = NULL;
-	gboolean ret = TRUE;
 	guint32 status = 0;
 	guint32 version = 0;
-	g_autofree gchar *version_str = NULL;
 	time_t when = 0;
+	g_autofree gchar *version_str = NULL;
+	g_autoptr(fwup_resource_iter) iter = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
 	re = fu_provider_uefi_find (iter, fu_device_get_guid (device), error);
-	if (re == NULL) {
-		ret = FALSE;
-		goto out;
-	}
+	if (re == NULL)
+		return FALSE;
 	if (fwup_get_last_attempt_info (re, &version, &status, &when) < 0) {
-		ret = FALSE;
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "Cannot get UEFI status for %s",
 			     fu_device_get_guid (device));
-		goto out;
+		return FALSE;
 	}
 	version_str = g_strdup_printf ("%u", version);
 	fu_device_set_update_version (device, version_str);
@@ -197,9 +198,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 		if (tmp != NULL)
 			fu_device_set_update_error (device, tmp);
 	}
-out:
-	fwup_resource_iter_destroy (&iter);
-	return ret;
+	return TRUE;
 }
 
 /**
@@ -213,19 +212,16 @@ fu_provider_uefi_update (FuProvider *provider,
 			 GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	fwup_resource_iter *iter = NULL;
 	fwup_resource *re = NULL;
-	gboolean ret = TRUE;
 	guint64 hardware_instance = 0;	/* FIXME */
 	int rc;
+	g_autoptr(fwup_resource_iter) iter = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
 	re = fu_provider_uefi_find (iter, fu_device_get_guid (device), error);
-	if (re == NULL) {
-		ret = FALSE;
-		goto out;
-	}
+	if (re == NULL)
+		return FALSE;
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
@@ -234,17 +230,14 @@ fu_provider_uefi_update (FuProvider *provider,
 					  g_bytes_get_data (blob_fw, NULL),
 					  g_bytes_get_size (blob_fw));
 	if (rc < 0) {
-		ret = FALSE;
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "UEFI firmware update failed: %s",
 			     strerror (rc));
-		goto out;
+		return FALSE;
 	}
-out:
-	fwup_resource_iter_destroy (&iter);
-	return ret;
+	return TRUE;
 }
 
 /**
@@ -307,11 +300,11 @@ static gboolean
 fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 {
 	AsVersionParseFlag parse_flags;
-	fwup_resource_iter *iter = NULL;
 	fwup_resource *re;
 	gint supported;
 	g_autofree gchar *guid = NULL;
 	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(fwup_resource_iter) iter = NULL;
 
 	/* supported = 0 : ESRT unspported
 	   supported = 1 : unlocked, ESRT supported
@@ -386,7 +379,6 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_REQUIRE_AC);
 		fu_provider_device_add (provider, dev);
 	}
-	fwup_resource_iter_destroy (&iter);
 	return TRUE;
 }
 
