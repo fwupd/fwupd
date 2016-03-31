@@ -145,7 +145,7 @@ fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **e
 	}
 
 	/* make sure keys were really imported */
-	if (result->imported == result->unchanged) {
+	if (result->imported == 0 && result->unchanged == 0) {
 		g_debug("imported: %d, unchanged: %d, not_imported: %d",
 			result->imported,
 			result->unchanged,
