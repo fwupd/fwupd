@@ -33,3 +33,7 @@ override_dh_auto_configure:
 	fi; \
 	dh_auto_configure -- --with-systemdunitdir=/lib/systemd/system \
 				$(COLORHUG) $$UEFI
+
+override_dh_install:
+	find debian/tmp/usr -name "*a" | xargs rm -f
+	dh_install --fail-missing
