@@ -12,8 +12,14 @@ fwupd (0.6.3-1) unstable; urgency=medium
   * Fix FTBFS on powerpc related to GPGME
   * Update build-depends to libasppstream-glib-dev 0.5.10
   * Add symbols files for libfwupd and libdfu1
+  * Adjust build depends to ensure building with at least gnupg 2.1.0
+  * Add libtool-bin | libtool into build-depends
+  * Re-enable test suite
+  * Include plugins not compiled in as providers in install
+  * Install static app-info file for fwupd
+  * Use dh_install --fail-missing to catch other things added upstream at build time
 
- -- Mario Limonciello <mario_limonciello@dell.com>  Wed, 30 Mar 2016 08:48:44 -0500
+ -- Mario Limonciello <mario_limonciello@dell.com>  Thu, 31 Mar 2016 08:59:34 -0500
 
 fwupd (0.6.2-1) unstable; urgency=medium
 
