@@ -33,7 +33,3 @@ override_dh_auto_configure:
 	fi; \
 	dh_auto_configure -- --with-systemdunitdir=/lib/systemd/system \
 				$(COLORHUG) $$UEFI
-
-#Disabled for now.
-#https://github.com/hughsie/fwupd/issues/14
-override_dh_auto_test:
