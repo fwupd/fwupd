@@ -1,2 +1,4 @@
 polkit_rule_fixes.patch
 0001-Add-Alienware-to-the-version-quirk-table.patch
+0001-Allow-overridding-the-location-of-the-pending-databa.patch
+0002-Allow-overriding-the-location-of-the-provider-offlin.patch
