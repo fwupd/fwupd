@@ -43,6 +43,9 @@
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
 #endif
 
+/* this is only valid in this file */
+#define FWUPD_ERROR_INVALID_ARGS	(FWUPD_ERROR_LAST+1)
+
 typedef struct {
 	GMainLoop		*loop;
 	GOptionContext		*context;
@@ -184,7 +187,7 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 	/* not found */
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     FWUPD_ERROR_INVALID_ARGS,
 			     /* TRANSLATORS: error message */
 			     _("Command not found"));
 	return FALSE;
@@ -309,7 +312,7 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	} else {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_INVALID_ARGS,
 				     "Invalid arguments: expected 'filename' [id]");
 		return FALSE;
 	}
@@ -331,7 +334,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_INVALID_ARGS,
 				     "Invalid arguments: expected 'filename'");
 		return FALSE;
 	}
@@ -402,7 +405,7 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (g_strv_length (values) != 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_INVALID_ARGS,
 				     "Invalid arguments: none expected");
 		return FALSE;
 	}
@@ -411,7 +414,7 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (getuid () != 0 || geteuid () != 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_INVALID_ARGS,
 				     "This function can only be used as root");
 		return FALSE;
 	}
@@ -493,7 +496,7 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_INVALID_ARGS,
 				     "Invalid arguments: expected 'id'");
 		return FALSE;
 	}
@@ -511,7 +514,7 @@ fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (g_strv_length (values) == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_INVALID_ARGS,
 				     "Invalid arguments: expected 'filename.rom'");
 		return FALSE;
 	}
@@ -819,7 +822,7 @@ fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (g_strv_length (values) != 2) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_INVALID_ARGS,
 				     "Invalid arguments: expected 'filename.xml' 'filename.xml.asc'");
 		return FALSE;
 	}
@@ -844,7 +847,7 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_INVALID_ARGS,
 				     "Invalid arguments: expected 'id'");
 		return FALSE;
 	}
@@ -902,7 +905,7 @@ fu_util_verify (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_INVALID_ARGS,
 				     "Invalid arguments: expected 'id'");
 		return FALSE;
 	}
@@ -918,7 +921,7 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_INVALID_ARGS,
 				     "Invalid arguments: expected 'id'");
 		return FALSE;
 	}
@@ -1256,7 +1259,7 @@ main (int argc, char *argv[])
 	/* run the specified command */
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
-		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
+		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
 			g_autofree gchar *tmp = NULL;
 			tmp = g_option_context_get_help (priv->context, TRUE, NULL);
 			g_print ("%s\n\n%s", error->message, tmp);
