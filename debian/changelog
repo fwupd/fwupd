@@ -13,7 +13,7 @@ fwupd (0.6.3-1) unstable; urgency=medium
   * Update build-depends to libasppstream-glib-dev 0.5.10
   * Add symbols files for libfwupd and libdfu1
   * Adjust build depends to ensure building with at least gnupg 2.1.0
-  * Add libtool-bin | libtool into build-depends
+  * Add libtool-bin into build-depends
   * Re-enable test suite
   * Include plugins not compiled in as providers in install
   * Install static app-info file for fwupd
