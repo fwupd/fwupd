@@ -65,10 +65,33 @@ fwupd_enums_func (void)
 	const gchar *tmp;
 	guint i;
 
+	/* enums */
 	for (i = 0; i < FWUPD_ERROR_LAST; i++) {
 		tmp = fwupd_error_to_string (i);
 		g_assert_cmpstr (tmp, !=, NULL);
 		g_assert_cmpint (fwupd_error_from_string (tmp), ==, i);
+	}
+	for (i = 0; i < FWUPD_STATUS_LAST; i++) {
+		tmp = fwupd_status_to_string (i);
+		g_assert_cmpstr (tmp, !=, NULL);
+		g_assert_cmpint (fwupd_status_from_string (tmp), ==, i);
+	}
+	for (i = 0; i < FWUPD_UPDATE_STATE_LAST; i++) {
+		tmp = fwupd_update_state_to_string (i);
+		g_assert_cmpstr (tmp, !=, NULL);
+		g_assert_cmpint (fwupd_update_state_from_string (tmp), ==, i);
+	}
+	for (i = 0; i < FWUPD_TRUST_FLAG_LAST; i++) {
+		tmp = fwupd_trust_flag_to_string (i);
+		g_assert_cmpstr (tmp, !=, NULL);
+		g_assert_cmpint (fwupd_trust_flag_from_string (tmp), ==, i);
+	}
+
+	/* bitfield */
+	for (i = 1; i < FU_DEVICE_FLAG_LAST; i *= 2) {
+		tmp = fwupd_device_flag_to_string (i);
+		g_assert_cmpstr (tmp, !=, NULL);
+		g_assert_cmpint (fwupd_device_flag_from_string (tmp), ==, i);
 	}
 }
 
