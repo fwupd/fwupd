@@ -57,7 +57,8 @@ FwupdResult	*fu_pending_get_device			(FuPending	*pending,
 							 GError		**error);
 GPtrArray	*fu_pending_get_devices			(FuPending	*pending,
 							 GError		**error);
-
+void           fu_pending_set_dir 			(FuPending *pending,
+							 const gchar *pending_dir);
 G_END_DECLS
 
 #endif /* __FU_PENDING_H */

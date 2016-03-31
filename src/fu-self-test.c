@@ -222,6 +222,7 @@ fu_provider_func (void)
 	g_assert_cmpint (cnt, ==, 1);
 
 	/* lets check the pending */
+	g_setenv("FWUPD_PENDING_DIR", "/tmp/fwupd-self-test/var/lib/fwupd", FALSE);
 	pending = fu_pending_new ();
 	res = fu_pending_get_device (pending, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
@@ -272,7 +273,7 @@ fu_provider_func (void)
 	g_clear_error (&error);
 
 	/* delete files */
-	pending_db = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", "pending.db", NULL);
+	pending_db = g_build_filename ("/tmp/fwupd-self-test/var/lib/fwupd", "pending.db", NULL);
 	g_unlink (pending_db);
 	g_unlink (pending_cap);
 }
@@ -341,7 +342,7 @@ fu_provider_rpi_func (void)
 			 "20150805");
 
 	/* clean up */
-	pending_db = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", "pending.db", NULL);
+	pending_db = g_build_filename ("/tmp/fwupd-self-test/var/lib/fwupd", "pending.db", NULL);
 	g_unlink (pending_db);
 }
 
@@ -352,18 +353,16 @@ fu_pending_func (void)
 	gboolean ret;
 	FwupdResult *res;
 	g_autoptr(FuPending) pending = NULL;
-	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 
+
 	/* create */
+	g_setenv("FWUPD_PENDING_DIR", "/tmp/fwupd-self-test/var/lib/fwupd", FALSE);
 	pending = fu_pending_new ();
 	g_assert (pending != NULL);
 
 	/* delete the database */
-	dirname = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
-	if (!g_file_test (dirname, G_FILE_TEST_IS_DIR))
-		return;
-	filename = g_build_filename (dirname, "pending.db", NULL);
+	filename = g_build_filename ("/tmp/fwupd-self-test/var/lib/fwupd/", "pending.db", NULL);
 	g_unlink (filename);
 
 	/* add a device */

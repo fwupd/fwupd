@@ -38,6 +38,7 @@ static void fu_pending_finalize			 (GObject *object);
  **/
 typedef struct {
 	sqlite3				*db;
+	gchar				*pending_dir;
 } FuPendingPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuPending, fu_pending, G_TYPE_OBJECT)
@@ -61,15 +62,14 @@ fu_pending_load (FuPending *pending, GError **error)
 	g_return_val_if_fail (priv->db == NULL, FALSE);
 
 	/* create directory */
-	dirname = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
-	file = g_file_new_for_path (dirname);
+	file = g_file_new_for_path (priv->pending_dir);
 	if (!g_file_query_exists (file, NULL)) {
 		if (!g_file_make_directory_with_parents (file, NULL, error))
 			return FALSE;
 	}
 
 	/* open */
-	filename = g_build_filename (dirname, "pending.db", NULL);
+	filename = g_build_filename (priv->pending_dir, "pending.db", NULL);
 	g_debug ("FuPending: trying to open database '%s'", filename);
 	rc = sqlite3_open (filename, &priv->db);
 	if (rc != SQLITE_OK) {
@@ -512,7 +512,29 @@ fu_pending_class_init (FuPendingClass *klass)
 static void
 fu_pending_init (FuPending *pending)
 {
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
+	const gchar *tmp;
+
+	/* allow this to be overidden for testing */
+	priv->pending_dir = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
+	tmp = g_getenv ("FWUPD_PENDING_DIR");
+	if (tmp != NULL)
+		fu_pending_set_dir (pending, tmp);
+
 }
+
+/**
+ * fu_pending_set_dir:
+ **/
+void
+fu_pending_set_dir (FuPending *pending, const gchar *pending_dir)
+{
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
+	g_free (priv->pending_dir);
+	priv->pending_dir = g_strdup (pending_dir);
+	g_mkdir_with_parents (pending_dir, 0700);
+}
+
 
 /**
  * fu_pending_finalize:
