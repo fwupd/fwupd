@@ -183,6 +183,7 @@ fu_provider_func (void)
 	FwupdResult *res;
 	gboolean ret;
 	guint cnt = 0;
+	g_autofree gchar *mapped_file_fn = NULL;
 	g_autofree gchar *pending_cap = NULL;
 	g_autofree gchar *pending_db = NULL;
 	g_autoptr(FuDevice) device = NULL;
@@ -192,7 +193,6 @@ fu_provider_func (void)
 	g_autoptr(GMappedFile) mapped_file = NULL;
 
 	/* create a fake device */
-	g_setenv("FWUPD_OFFLINE_DIR", "/tmp/fwupd-self-test/var/lib/fwupd", FALSE);
 	provider = fu_provider_fake_new ();
 	g_signal_connect (provider, "device-added",
 			  G_CALLBACK (_provider_device_added_cb),
@@ -212,7 +212,8 @@ fu_provider_func (void)
 			 "00000000-0000-0000-0000-000000000000");
 
 	/* schedule an offline update */
-	mapped_file = g_mapped_file_new ("/etc/resolv.conf", FALSE, &error);
+	mapped_file_fn = fu_test_get_filename ("colorhug/firmware.bin");
+	mapped_file = g_mapped_file_new (mapped_file_fn, FALSE, &error);
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
@@ -223,7 +224,6 @@ fu_provider_func (void)
 	g_assert_cmpint (cnt, ==, 1);
 
 	/* lets check the pending */
-	g_setenv("FWUPD_PENDING_DIR", "/tmp/fwupd-self-test/var/lib/fwupd", FALSE);
 	pending = fu_pending_new ();
 	res = fu_pending_get_device (pending, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
@@ -274,7 +274,7 @@ fu_provider_func (void)
 	g_clear_error (&error);
 
 	/* delete files */
-	pending_db = g_build_filename ("/tmp/fwupd-self-test/var/lib/fwupd", "pending.db", NULL);
+	pending_db = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", "pending.db", NULL);
 	g_unlink (pending_db);
 	g_unlink (pending_cap);
 }
@@ -343,7 +343,7 @@ fu_provider_rpi_func (void)
 			 "20150805");
 
 	/* clean up */
-	pending_db = g_build_filename ("/tmp/fwupd-self-test/var/lib/fwupd", "pending.db", NULL);
+	pending_db = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", "pending.db", NULL);
 	g_unlink (pending_db);
 }
 
@@ -354,16 +354,18 @@ fu_pending_func (void)
 	gboolean ret;
 	FwupdResult *res;
 	g_autoptr(FuPending) pending = NULL;
+	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 
-
 	/* create */
-	g_setenv("FWUPD_PENDING_DIR", "/tmp/fwupd-self-test/var/lib/fwupd", FALSE);
 	pending = fu_pending_new ();
 	g_assert (pending != NULL);
 
 	/* delete the database */
-	filename = g_build_filename ("/tmp/fwupd-self-test/var/lib/fwupd/", "pending.db", NULL);
+	dirname = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
+	if (!g_file_test (dirname, G_FILE_TEST_IS_DIR))
+		return;
+	filename = g_build_filename (dirname, "pending.db", NULL);
 	g_unlink (filename);
 
 	/* add a device */

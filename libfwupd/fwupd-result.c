@@ -1694,6 +1694,10 @@ fwupd_result_class_init (FwupdResultClass *klass)
 
 	/**
 	 * FwupdResult:device-id:
+	 *
+	 * The device ID for this result.
+	 *
+	 * Since: 0.7.0
 	 */
 	pspec = g_param_spec_string ("device-id", NULL, NULL,
 				     NULL,

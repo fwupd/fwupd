@@ -213,6 +213,7 @@ data/tests/colorhug/Makefile
 data/tests/dfu/Makefile
 docs/Makefile
 docs/libdfu/Makefile
+docs/libfwupd/Makefile
 docs/man/Makefile
 policy/Makefile
 po/Makefile.in

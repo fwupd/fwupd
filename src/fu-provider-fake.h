@@ -30,7 +30,7 @@
 G_BEGIN_DECLS
 
 #define FU_TYPE_PROVIDER_FAKE (fu_provider_fake_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuProviderFake, provider_fake, FU, PROVIDER_FAKE, FuProvider)
+G_DECLARE_DERIVABLE_TYPE (FuProviderFake, fu_provider_fake, FU, PROVIDER_FAKE, FuProvider)
 
 struct _FuProviderFakeClass
 {

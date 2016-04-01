@@ -1,5 +1,6 @@
 SUBDIRS = 						\
 	libdfu						\
+	libfwupd					\
 	man
 
 EXTRA_DIST =						\

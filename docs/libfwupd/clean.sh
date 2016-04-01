@@ -1,0 +1,1 @@
+../libdfu/clean.sh

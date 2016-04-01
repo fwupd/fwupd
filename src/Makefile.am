@@ -25,7 +25,6 @@ AM_CPPFLAGS =						\
 	-DLIBDIR=\"$(libdir)\"				\
 	-DDATADIR=\"$(datadir)\"			\
 	-DSYSCONFDIR=\""$(sysconfdir)"\"		\
-	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
 	-DVERSION="\"$(VERSION)\""			\
 	-DDAEMON_USER="\"$(daemon_user)\""		\
 	-DTESTDATADIR=\""$(top_srcdir)/data/tests"\"	\
@@ -63,6 +62,7 @@ fwupdmgr_LDFLAGS =					\
 
 fwupdmgr_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
+	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
 	$(WARNINGFLAGS_C)
 
 fu-resources.c: fwupd.gresource.xml $(dist_introspection_DATA)
@@ -148,6 +148,7 @@ fwupd_LDFLAGS =						\
 
 fwupd_CFLAGS =						\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
+	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
 	$(WARNINGFLAGS_C)
 
 TESTS_ENVIRONMENT =					\
@@ -190,6 +191,7 @@ fu_self_test_LDADD =					\
 
 fu_self_test_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"/tmp/fwupd-self-test\"	\
+	-DLOCALSTATEDIR=\"/tmp/fwupd-self-test/var\"	\
 	$(WARNINGFLAGS_C)
 
 install-data-hook:
