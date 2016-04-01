@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-03-14 09:29+0000\n"
-"PO-Revision-Date: 2016-03-14 09:29+0000\n"
+"POT-Creation-Date: 2016-04-01 14:38+0100\n"
+"PO-Revision-Date: 2016-04-01 13:38+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Occitan (post 1500) (http://www.transifex.com/hughsie/fwupd/language/oc/)\n"
 "MIME-Version: 1.0\n"
@@ -289,10 +289,6 @@ msgstr "Planificacion de la mesa a jorn"
 msgid "No hardware detected with firmware update capability"
 msgstr "Cap de material amb de capacitats de mesa a jorn del micrologicial es pas estat detectat"
 
-#. TRANSLATORS: update completed, no errors
-msgid "Done!"
-msgstr "Acabat !"
-
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
 msgstr ""
@@ -318,6 +314,9 @@ msgstr "Retrogradacion de %s de %s en %s"
 msgid "Updating %s from %s to %s... "
 msgstr "Mesa a jorn de %s de %s en %s"
 
+msgid "Done!"
+msgstr "Acabat !"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
@@ -331,9 +330,12 @@ msgstr "GUID"
 msgid "Version"
 msgstr "Version"
 
-#. TRANSLATORS: section header for firmware SHA1
+#. TRANSLATORS: section header for firmware checksum
 msgid "Checksum"
 msgstr "Soma de contraròtle"
+
+msgid "Checksum Type"
+msgstr ""
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Location"
@@ -413,12 +415,4 @@ msgstr ""
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
-msgstr ""
-
-#. TRANSLATORS: the user is in a bad place
-msgid "Failed to connect to D-Bus"
-msgstr ""
-
-#. TRANSLATORS: we can't connect to the daemon
-msgid "Failed to connect to fwupd"
 msgstr ""

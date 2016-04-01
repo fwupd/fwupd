@@ -1,3 +1,21 @@
+Version 0.7.0
+~~~~~~~~~~~~~
+Released: 2016-04-01
+
+New Features:
+ - Add a version plugin for SteelSeries hardware (Richard Hughes)
+ - Add FwupdClient and FwupdResult to libfwupd (Richard Hughes)
+ - Generate gtk-doc documentation for libfwupd (Richard Hughes)
+ - Return the device flags when getting firmware details (Richard Hughes)
+ - Support other checksum kinds (Richard Hughes)
+
+Bugfixes:
+ - Add Alienware to the version quirk table (Mario Limonciello)
+ - Allow the test suite to run in %check (Richard Hughes)
+ - Do not return updates that require AC when on battery (Richard Hughes)
+ - Do not use /tmp for downloaded files (Richard Hughes)
+ - Test that GPG key import actually was successful (Mario Limonciello)
+
 Version 0.6.3
 ~~~~~~~~~~~~~
 Released: 2016-03-14

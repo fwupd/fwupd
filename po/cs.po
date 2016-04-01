@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-03-14 09:29+0000\n"
-"PO-Revision-Date: 2016-03-14 09:29+0000\n"
+"POT-Creation-Date: 2016-04-01 14:38+0100\n"
+"PO-Revision-Date: 2016-04-01 13:38+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Czech (http://www.transifex.com/hughsie/fwupd/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -52,11 +52,11 @@ msgid ""
 msgstr "K ponížení verze firmwaru na výměnném zařízení je vyžadováno ověření"
 
 msgid "Unlock the device to allow access"
-msgstr ""
+msgstr "Odemknutí zařízení pro umožnění přístupu"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
-msgstr ""
+msgstr "Pro odemknutí zařízení je požadováno ověření"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -289,10 +289,6 @@ msgstr "Plánuje se povýšení"
 msgid "No hardware detected with firmware update capability"
 msgstr "Nebylo nalezeno žádné zařízení schopné aktualizace firmwaru"
 
-#. TRANSLATORS: update completed, no errors
-msgid "Done!"
-msgstr "Hotovo!"
-
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
 msgstr "Zkouší se znova jako aktualizace off-line"
@@ -318,6 +314,9 @@ msgstr "Ponižuje se %s z verze %s na %s…"
 msgid "Updating %s from %s to %s... "
 msgstr "Aktualizuje se %s z verze %s na %s…"
 
+msgid "Done!"
+msgstr "Hotovo!"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
@@ -331,9 +330,12 @@ msgstr "GUID"
 msgid "Version"
 msgstr "Verze"
 
-#. TRANSLATORS: section header for firmware SHA1
+#. TRANSLATORS: section header for firmware checksum
 msgid "Checksum"
 msgstr "Kontrolní součet"
+
+msgid "Checksum Type"
+msgstr ""
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Location"
@@ -389,7 +391,7 @@ msgstr "Získat kryptografický otisk vypsaného firmwaru"
 
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
-msgstr ""
+msgstr "Odemknout zařízení pro přístup k firmwaru"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -414,11 +416,3 @@ msgstr "Aktualizovat uložená metadata pomocí aktuálního obsahu ROM"
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Nástroj pro práci s firmwarem"
-
-#. TRANSLATORS: the user is in a bad place
-msgid "Failed to connect to D-Bus"
-msgstr "Selhalo připojení ke sběrnici D-Bus"
-
-#. TRANSLATORS: we can't connect to the daemon
-msgid "Failed to connect to fwupd"
-msgstr "Selhalo připojení k démonovi fwupd"
