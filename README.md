@@ -49,7 +49,7 @@ be able to enable UEFI support on the device by using the `unlock` command.
 Raspberry Pi support
 --------------------
 
-A provider is avaialable that can flash the boot firmware on the Raspberry Pi.
+A provider is available that can flash the boot firmware on the Raspberry Pi.
 
 Adding a new provider
 ---------------------
