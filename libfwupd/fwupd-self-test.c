@@ -194,15 +194,13 @@ fwupd_client_updates_func (void)
 }
 
 static gboolean
-valid_dbus(void)
+fwupd_has_system_bus (void)
 {
-	GDBusConnection			*conn;
+	g_autoptr(GDBusConnection) conn = NULL;
 	conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
-	if (conn != NULL) {
-			g_object_unref (conn);
-			return TRUE;
-	}
-	g_debug("D-Bus system bus unavailable, skipping tests.");
+	if (conn != NULL)
+		return TRUE;
+	g_debug ("D-Bus system bus unavailable, skipping tests.");
 	return FALSE;
 }
 
@@ -217,7 +215,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
 	g_test_add_func ("/fwupd/result", fwupd_result_func);
-	if (valid_dbus()) {
+	if (fwupd_has_system_bus ()) {
 		g_test_add_func ("/fwupd/client{devices}", fwupd_client_devices_func);
 		g_test_add_func ("/fwupd/client{updates}", fwupd_client_updates_func);
 	}
