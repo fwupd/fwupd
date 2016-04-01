@@ -17,7 +17,9 @@ fwupd (0.6.3-1) unstable; urgency=medium
   * Re-enable test suite (but don't block additional failures)
   * Include plugins not compiled in as providers in install
   * Install static app-info file for fwupd
-  * Use dh_install --fail-missing to catch other things added upstream at build time
+  * Use dh_install --fail-missing to catch other things added upstream
+    at build time
+  * Backport patches from upstream that fix the test suite as a non-root user
 
  -- Mario Limonciello <mario_limonciello@dell.com>  Thu, 31 Mar 2016 08:59:34 -0500
 
