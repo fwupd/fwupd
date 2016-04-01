@@ -24,13 +24,18 @@ libfwupd_include_HEADERS =					\
 
 libfwupdbase_includedir = $(libfwupd_includedir)/libfwupd
 libfwupdbase_include_HEADERS =					\
+	fwupd-client.h						\
 	fwupd-enums.h						\
 	fwupd-error.h						\
+	fwupd-result.h						\
 	fwupd-version.h
 
 libfwupd_la_SOURCES =						\
+	fwupd-client.c						\
 	fwupd-enums.c						\
-	fwupd-error.c
+	fwupd-enums-private.h					\
+	fwupd-error.c						\
+	fwupd-result.c
 libfwupd_la_LIBADD =						\
 	$(GLIB_LIBS)
 libfwupd_la_LDFLAGS =						\
@@ -76,6 +81,32 @@ typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
 CLEANFILES = $(gir_DATA) $(typelib_DATA)
 
 endif
+
+TESTS_ENVIRONMENT =						\
+	libtool --mode=execute valgrind				\
+	--quiet							\
+	--leak-check=full					\
+	--show-possibly-lost=no
+
+check_PROGRAMS =						\
+	fwupd-self-test
+
+fwupd_self_test_SOURCES =					\
+	fwupd-client.c						\
+	fwupd-enums.c						\
+	fwupd-error.c						\
+	fwupd-result.c						\
+	fwupd-self-test.c
+
+fwupd_self_test_LDADD =						\
+	$(LIBM)							\
+	$(ARCHIVE_LIBS)						\
+	$(GLIB_LIBS)
+
+fwupd_self_test_CFLAGS =					\
+	$(WARNINGFLAGS_C)
+
+TESTS = fwupd-self-test
 
 clean-local:
 	rm -f *~

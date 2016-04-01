@@ -62,6 +62,7 @@ typedef struct {
  **/
 typedef struct {
 	GChecksum			*checksum_wip;
+	GChecksumType			 checksum_type;
 	GInputStream			*stream;
 	FuRomKind			 kind;
 	gchar				*version;
@@ -907,6 +908,16 @@ fu_rom_get_checksum (FuRom *rom)
 }
 
 /**
+ * fu_rom_get_checksum_kind:
+ **/
+GChecksumType
+fu_rom_get_checksum_kind (FuRom *rom)
+{
+	FuRomPrivate *priv = GET_PRIVATE (rom);
+	return priv->checksum_type;
+}
+
+/**
  * fu_rom_class_init:
  **/
 static void
@@ -923,7 +934,8 @@ static void
 fu_rom_init (FuRom *rom)
 {
 	FuRomPrivate *priv = GET_PRIVATE (rom);
-	priv->checksum_wip = g_checksum_new (G_CHECKSUM_SHA1);
+	priv->checksum_type = G_CHECKSUM_SHA1;
+	priv->checksum_wip = g_checksum_new (priv->checksum_type);
 	priv->hdrs = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_rom_pci_header_free);
 }
 

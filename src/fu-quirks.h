@@ -29,8 +29,9 @@ typedef struct {
 } FuVendorQuirks;
 
 static const FuVendorQuirks quirk_table[] = {
-	/* Dell uses AA.BB.CC.DD rather than AA.BB.CCDD */
+	/* Dell & Alienware use AA.BB.CC.DD rather than AA.BB.CCDD */
 	{ "Dell Inc.",	"com.dell.uefi",	AS_VERSION_PARSE_FLAG_NONE },
+	{ "Alienware",	"com.dell.uefi",	AS_VERSION_PARSE_FLAG_NONE },
 	{ NULL,		NULL,			AS_VERSION_PARSE_FLAG_NONE }
 };
 

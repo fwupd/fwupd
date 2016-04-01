@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -25,6 +25,7 @@
 #include <glib-object.h>
 
 #include "fu-device.h"
+#include "fu-plugin.h"
 #include "fu-provider.h"
 
 G_BEGIN_DECLS
@@ -33,15 +34,8 @@ G_BEGIN_DECLS
 G_DECLARE_DERIVABLE_TYPE (FuProvider, fu_provider, FU, PROVIDER, GObject)
 
 typedef enum {
-	FU_PROVIDER_UPDATE_FLAG_NONE		= 0,
-	FU_PROVIDER_UPDATE_FLAG_OFFLINE		= 1,
-	FU_PROVIDER_UPDATE_FLAG_ALLOW_REINSTALL	= 2,
-	FU_PROVIDER_UPDATE_FLAG_ALLOW_OLDER	= 4,
-	FU_PROVIDER_UPDATE_FLAG_LAST
-} FuProviderFlags;
-
-typedef enum {
-	FU_PROVIDER_VERIFY_FLAG_NONE	= 0,
+	FU_PROVIDER_VERIFY_FLAG_NONE		= 0,
+	FU_PROVIDER_VERIFY_FLAG_USE_SHA256	= 1 << 0,
 	FU_PROVIDER_VERIFY_FLAG_LAST
 } FuProviderVerifyFlags;
 
@@ -63,12 +57,12 @@ struct _FuProviderClass
 	gboolean	 (*update_online)	(FuProvider	*provider,
 						 FuDevice	*device,
 						 GBytes		*blob_fw,
-						 FuProviderFlags flags,
+						 FwupdInstallFlags flags,
 						 GError		**error);
 	gboolean	 (*update_offline)	(FuProvider	*provider,
 						 FuDevice	*device,
 						 GBytes		*blob_fw,
-						 FuProviderFlags flags,
+						 FwupdInstallFlags flags,
 						 GError		**error);
 	gboolean	 (*clear_results)	(FuProvider	*provider,
 						 FuDevice	*device,
@@ -101,7 +95,8 @@ gboolean	 fu_provider_update		(FuProvider	*provider,
 						 FuDevice	*device,
 						 GBytes		*blob_cab,
 						 GBytes		*blob_fw,
-						 FuProviderFlags flags,
+						 FuPlugin	*plugin,
+						 FwupdInstallFlags flags,
 						 GError		**error);
 gboolean	 fu_provider_verify		(FuProvider	*provider,
 						 FuDevice	*device,
@@ -116,6 +111,7 @@ gboolean	 fu_provider_clear_results	(FuProvider	*provider,
 gboolean	 fu_provider_get_results	(FuProvider	*provider,
 						 FuDevice	*device,
 						 GError		**error);
+GChecksumType	 fu_provider_get_checksum_type	(FuProviderVerifyFlags flags);
 
 G_END_DECLS
 

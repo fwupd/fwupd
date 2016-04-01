@@ -75,7 +75,7 @@ typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID	= (1 << 5),
 	DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER	= (1 << 6),
 	/*< private >*/
-	DFU_TARGET_TRANSFER_FLAG_LAST,
+	DFU_TARGET_TRANSFER_FLAG_LAST
 } DfuTargetTransferFlags;
 
 GPtrArray	*dfu_target_get_sectors			(DfuTarget	*target);

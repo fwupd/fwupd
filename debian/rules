@@ -1,17 +1,10 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-#GPGME needs this for proper building on i386, armhf, powerpc
-ifeq "$(DEB_BUILD_ARCH)" "i386"
-	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64
+#GPGME needs this for proper building on 32 bit archs
+ifeq "$(DEB_HOST_ARCH_BITS)" "32"
+	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 endif
-ifeq "$(DEB_BUILD_ARCH)" "armhf"
-	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64
-endif
-ifeq "$(DEB_BUILD_ARCH)" "powerpc"
-        export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64
-endif
-
 
 export COLORHUG="--disable-colorhug"
 COLORHUG_VERSION=$(shell dpkg-query -W libcolorhug-dev | awk '{ print $$2 }' | sed 's,-.*,,')

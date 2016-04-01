@@ -180,8 +180,10 @@ fu_provider_func (void)
 {
 	GError *error = NULL;
 	FuDevice *device_tmp;
+	FwupdResult *res;
 	gboolean ret;
 	guint cnt = 0;
+	g_autofree gchar *mapped_file_fn = NULL;
 	g_autofree gchar *pending_cap = NULL;
 	g_autofree gchar *pending_db = NULL;
 	g_autoptr(FuDevice) device = NULL;
@@ -210,43 +212,44 @@ fu_provider_func (void)
 			 "00000000-0000-0000-0000-000000000000");
 
 	/* schedule an offline update */
-	mapped_file = g_mapped_file_new ("/etc/resolv.conf", FALSE, &error);
+	mapped_file_fn = fu_test_get_filename ("colorhug/firmware.bin");
+	mapped_file = g_mapped_file_new (mapped_file_fn, FALSE, &error);
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
-	ret = fu_provider_update (provider, device, blob_cab, NULL,
-				  FU_PROVIDER_UPDATE_FLAG_OFFLINE, &error);
+	ret = fu_provider_update (provider, device, blob_cab, NULL, NULL,
+				  FWUPD_INSTALL_FLAG_OFFLINE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 1);
 
 	/* lets check the pending */
 	pending = fu_pending_new ();
-	device_tmp = fu_pending_get_device (pending, fu_device_get_id (device), &error);
+	res = fu_pending_get_device (pending, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
-	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_PENDING_STATE), ==, "scheduled");
-	g_assert_cmpstr (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_PENDING_ERROR), ==, NULL);
-	g_assert_cmpstr (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_FILENAME_CAB), !=, NULL);
+	g_assert (res != NULL);
+	g_assert_cmpint (fu_device_get_update_state (res), ==, FWUPD_UPDATE_STATE_PENDING);
+	g_assert_cmpstr (fu_device_get_update_error (res), ==, NULL);
+	g_assert_cmpstr (fu_device_get_update_filename (res), !=, NULL);
 
 	/* save this; we'll need to delete it later */
-	pending_cap = g_strdup (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_FILENAME_CAB));
-	g_object_unref (device_tmp);
+	pending_cap = g_strdup (fu_device_get_update_filename (res));
+	g_object_unref (res);
 
 	/* lets do this online */
-	ret = fu_provider_update (provider, device, blob_cab, NULL,
-				  FU_PROVIDER_UPDATE_FLAG_NONE, &error);
+	ret = fu_provider_update (provider, device, blob_cab, NULL, NULL,
+				  FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 3);
 
 	/* lets check the pending */
-	device_tmp = fu_pending_get_device (pending, fu_device_get_id (device), &error);
+	res = fu_pending_get_device (pending, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
-	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_PENDING_STATE), ==, "success");
-	g_assert_cmpstr (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_PENDING_ERROR), ==, NULL);
-	g_object_unref (device_tmp);
+	g_assert (res != NULL);
+	g_assert_cmpint (fu_device_get_update_state (res), ==, FWUPD_UPDATE_STATE_SUCCESS);
+	g_assert_cmpstr (fu_device_get_update_error (res), ==, NULL);
+	g_object_unref (res);
 
 	/* get the status */
 	device_tmp = fu_device_new ();
@@ -254,8 +257,8 @@ fu_provider_func (void)
 	ret = fu_provider_get_results (provider, device_tmp, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpstr (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_PENDING_STATE), ==, "success");
-	g_assert_cmpstr (fu_device_get_metadata (device_tmp, FU_DEVICE_KEY_PENDING_ERROR), ==, NULL);
+	g_assert_cmpint (fu_device_get_update_state (device_tmp), ==, FWUPD_UPDATE_STATE_SUCCESS);
+	g_assert_cmpstr (fu_device_get_update_error (device_tmp), ==, NULL);
 
 	/* clear */
 	ret = fu_provider_clear_results (provider, device_tmp, &error);
@@ -313,7 +316,7 @@ fu_provider_rpi_func (void)
 	g_assert_cmpstr (fu_device_get_id (device), ==, "raspberry-pi");
 	g_assert_cmpstr (fu_device_get_guid (device), ==,
 			 "91dd7368-8640-5d72-a217-a505c034dd0b");
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION), ==,
+	g_assert_cmpstr (fu_device_get_version (device), ==,
 			 "20150803");
 
 	/* ensure clean */
@@ -327,8 +330,8 @@ fu_provider_rpi_func (void)
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
 	blob_fw = g_mapped_file_get_bytes (mapped_file);
-	ret = fu_provider_update (provider, device, NULL, blob_fw,
-				  FU_PROVIDER_UPDATE_FLAG_NONE, &error);
+	ret = fu_provider_update (provider, device, NULL, blob_fw, NULL,
+				  FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 3);
@@ -336,7 +339,7 @@ fu_provider_rpi_func (void)
 	/* check the file was exploded to the right place */
 	g_assert (g_file_test ("/tmp/rpiboot/start.elf", G_FILE_TEST_EXISTS));
 	g_assert (g_file_test ("/tmp/rpiboot/overlays/test.dtb", G_FILE_TEST_EXISTS));
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION), ==,
+	g_assert_cmpstr (fu_device_get_version (device), ==,
 			 "20150805");
 
 	/* clean up */
@@ -349,7 +352,7 @@ fu_pending_func (void)
 {
 	GError *error = NULL;
 	gboolean ret;
-	FuDevice *device;
+	FwupdResult *res;
 	g_autoptr(FuPending) pending = NULL;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
@@ -366,62 +369,62 @@ fu_pending_func (void)
 	g_unlink (filename);
 
 	/* add a device */
-	device = fu_device_new ();
-	fu_device_set_id (device, "self-test");
-	fu_device_set_metadata (device, FU_DEVICE_KEY_FILENAME_CAB, "/var/lib/dave.cap"),
-	fu_device_set_display_name (device, "ColorHug"),
-	fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION, "3.0.1"),
-	fu_device_set_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION, "3.0.2");
-	ret = fu_pending_add_device (pending, device, &error);
+	res = fwupd_result_new ();
+	fu_device_set_id (res, "self-test");
+	fu_device_set_update_filename (res, "/var/lib/dave.cap"),
+	fu_device_set_name (res, "ColorHug"),
+	fu_device_set_version (res, "3.0.1"),
+	fu_device_set_update_version (res, "3.0.2");
+	ret = fu_pending_add_device (pending, res, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_object_unref (device);
+	g_object_unref (res);
 
 	/* ensure database was created */
 	g_assert (g_file_test (filename, G_FILE_TEST_EXISTS));
 
 	/* add some extra data */
-	device = fu_device_new ();
-	fu_device_set_id (device, "self-test");
-	ret = fu_pending_set_state (pending, device, FU_PENDING_STATE_SCHEDULED, &error);
+	res = fwupd_result_new ();
+	fu_device_set_id (res, "self-test");
+	ret = fu_pending_set_state (pending, res, FWUPD_UPDATE_STATE_PENDING, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	ret = fu_pending_set_error_msg (pending, device, "word", &error);
+	ret = fu_pending_set_error_msg (pending, res, "word", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_object_unref (device);
+	g_object_unref (res);
 
 	/* get device */
-	device = fu_pending_get_device (pending, "self-test", &error);
+	res = fu_pending_get_device (pending, "self-test", &error);
 	g_assert_no_error (error);
-	g_assert (device != NULL);
-	g_assert_cmpstr (fu_device_get_id (device), ==, "self-test");
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_FILENAME_CAB), ==, "/var/lib/dave.cap");
-	g_assert_cmpstr (fu_device_get_display_name (device), ==, "ColorHug");
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION), ==, "3.0.1");
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION), ==, "3.0.2");
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_PENDING_STATE), ==, "scheduled");
-	g_assert_cmpstr (fu_device_get_metadata (device, FU_DEVICE_KEY_PENDING_ERROR), ==, "word");
-	g_object_unref (device);
+	g_assert (res != NULL);
+	g_assert_cmpstr (fwupd_result_get_device_id (res), ==, "self-test");
+	g_assert_cmpstr (fwupd_result_get_update_filename (res), ==, "/var/lib/dave.cap");
+	g_assert_cmpstr (fwupd_result_get_device_name (res), ==, "ColorHug");
+	g_assert_cmpstr (fwupd_result_get_device_version (res), ==, "3.0.1");
+	g_assert_cmpstr (fwupd_result_get_update_version (res), ==, "3.0.2");
+	g_assert_cmpint (fwupd_result_get_update_state (res), ==, FWUPD_UPDATE_STATE_PENDING);
+	g_assert_cmpstr (fwupd_result_get_update_error (res), ==, "word");
+	g_object_unref (res);
 
 	/* get device that does not exist */
-	device = fu_pending_get_device (pending, "XXXXXXXXXXXXX", &error);
+	res = fu_pending_get_device (pending, "XXXXXXXXXXXXX", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert (device == NULL);
+	g_assert (res == NULL);
 	g_clear_error (&error);
 
 	/* remove device */
-	device = fu_device_new ();
-	fu_device_set_id (device, "self-test");
-	ret = fu_pending_remove_device (pending, device, &error);
+	res = fwupd_result_new ();
+	fu_device_set_id (res, "self-test");
+	ret = fu_pending_remove_device (pending, res, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_object_unref (device);
+	g_object_unref (res);
 
 	/* get device that does not exist */
-	device = fu_pending_get_device (pending, "self-test", &error);
+	res = fu_pending_get_device (pending, "self-test", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert (device == NULL);
+	g_assert (res == NULL);
 	g_clear_error (&error);
 }
 

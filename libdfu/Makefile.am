@@ -18,13 +18,10 @@ AM_CPPFLAGS = \
 	-DTESTDATADIR=\""$(top_srcdir)/data/tests/dfu"\"	\
 	-DLOCALEDIR=\""$(localedir)"\"
 
-FWUPD_LIBS =							\
-	$(top_builddir)/libfwupd/libfwupd.la
-
 lib_LTLIBRARIES =						\
 	libdfu.la
 
-libdfu_includedir = $(includedir)/fwupd-1
+libdfu_includedir = $(includedir)
 libdfu_include_HEADERS =					\
 	dfu.h
 
@@ -67,7 +64,6 @@ libdfu_la_SOURCES =						\
 	dfu-target-private.h
 
 libdfu_la_LIBADD =						\
-	$(FWUPD_LIBS)						\
 	$(GUSB_LIBS)						\
 	$(GLIB_LIBS)						\
 	$(LIBM)

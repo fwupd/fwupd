@@ -93,14 +93,13 @@ fu_provider_udev_unlock (FuProvider *provider,
 		return FALSE;
 
 	/* update version */
-	if (g_strcmp0 (fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+	if (g_strcmp0 (fu_device_get_version (device),
 		       fu_rom_get_version (rom)) != 0) {
 		g_debug ("changing version of %s from %s to %s",
 			 fu_device_get_id (device),
-			 fu_device_get_metadata (device, FU_DEVICE_KEY_VERSION),
+			 fu_device_get_version (device),
 			 fu_rom_get_version (rom));
-		fu_device_set_metadata (device, FU_DEVICE_KEY_VERSION,
-					fu_rom_get_version (rom));
+		fu_device_set_version (device, fu_rom_get_version (rom));
 	}
 
 	/* prefer the GUID from the firmware rather than the
@@ -143,8 +142,7 @@ fu_provider_udev_verify (FuProvider *provider,
 	rom = fu_rom_new ();
 	if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, error))
 		return FALSE;
-	fu_device_set_metadata (device, FU_DEVICE_KEY_FIRMWARE_HASH,
-				fu_rom_get_checksum (rom));
+	fu_device_set_checksum (device, fu_rom_get_checksum (rom));
 	return TRUE;
 }
 
@@ -213,14 +211,14 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	if (display_name == NULL)
 		display_name = g_udev_device_get_property (device, "ID_MODEL_FROM_DATABASE");
 	if (display_name != NULL)
-		fu_device_set_display_name (dev, display_name);
+		fu_device_set_name (dev, display_name);
 	vendor = g_udev_device_get_property (device, "FWUPD_VENDOR");
 	if (vendor == NULL)
 		vendor = g_udev_device_get_property (device, "ID_VENDOR_FROM_DATABASE");
 	if (vendor != NULL)
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_VENDOR, vendor);
+		fu_device_set_vendor (dev, vendor);
 	if (version != NULL)
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
+		fu_device_set_version (dev, version);
 
 	/* get the FW version from the rom when unlocked */
 	rom_fn = g_build_filename (g_udev_device_get_sysfs_path (device), "rom", NULL);

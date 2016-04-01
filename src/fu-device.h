@@ -28,74 +28,71 @@
 G_BEGIN_DECLS
 
 #define FU_TYPE_DEVICE (fu_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuDevice, fu_device, FU, DEVICE, GObject)
+G_DECLARE_DERIVABLE_TYPE (FuDevice, fu_device, FU, DEVICE, FwupdResult)
 
 struct _FuDeviceClass
 {
-	GObjectClass		 parent_class;
+	FwupdResultClass	 parent_class;
 };
 
-#define FU_DEVICE_KEY_VERSION		"Version"	/* s */
-#define FU_DEVICE_KEY_PROVIDER		"Provider"	/* s */
-#define FU_DEVICE_KEY_GUID		"Guid"		/* s */
-#define FU_DEVICE_KEY_FLAGS		"Flags"		/* internal only */
-#define FU_DEVICE_KEY_DISPLAY_NAME	"DisplayName"	/* s */
-#define FU_DEVICE_KEY_FILENAME_CAB	"FilenameCab"	/* internal only */
-#define FU_DEVICE_KEY_VERSION_LOWEST	"VersionLowest"	/* s */
-#define FU_DEVICE_KEY_VENDOR		"Vendor"	/* s */
-#define FU_DEVICE_KEY_NAME		"Name"		/* s */
-#define FU_DEVICE_KEY_SUMMARY		"Summary"	/* s */
-#define FU_DEVICE_KEY_DESCRIPTION	"Description"	/* s */
-#define FU_DEVICE_KEY_LICENSE		"License"	/* s */
-#define FU_DEVICE_KEY_URL_HOMEPAGE	"UrlHomepage"	/* s */
-#define FU_DEVICE_KEY_SIZE		"Size"		/* t */
-#define FU_DEVICE_KEY_PENDING_STATE	"PendingState"	/* s */
-#define FU_DEVICE_KEY_PENDING_ERROR	"PendingError"	/* s */
-#define FU_DEVICE_KEY_TRUSTED		"Trusted"	/* t */
-#define FU_DEVICE_KEY_FIRMWARE_HASH	"FirmwareHash"	/* s */
-#define FU_DEVICE_KEY_UPDATE_VERSION	"UpdateVersion"	/* s */
-#define FU_DEVICE_KEY_UPDATE_HASH	"UpdateHash"	/* s */
-#define FU_DEVICE_KEY_UPDATE_URI	"UpdateUri"	/* s */
-#define FU_DEVICE_KEY_UPDATE_DESCRIPTION "UpdateDescription" /* s */
-#define FU_DEVICE_KEY_APPSTREAM_ID	"AppstreamId" /* s */
-#define FU_DEVICE_KEY_CREATED		"Created"	/* t */
-#define FU_DEVICE_KEY_MODIFIED		"Modified"	/* t */
+/* private */
+#define FU_DEVICE_KEY_FWUPD_PLUGIN	"fwupd::plugin"	/* s */
 
 FuDevice	*fu_device_new				(void);
 
+/* compat setters */
+#define fu_device_add_flag(d,v)			fwupd_result_add_device_flag(FWUPD_RESULT(d),v)
+#define fu_device_has_flag(d,v)			fwupd_result_has_device_flag(FWUPD_RESULT(d),v)
+#define fu_device_set_checksum(d,v)		fwupd_result_set_device_checksum(FWUPD_RESULT(d),v)
+#define fu_device_set_checksum_kind(d,v)	fwupd_result_set_device_checksum_kind(FWUPD_RESULT(d),v)
+#define fu_device_set_created(d,v)		fwupd_result_set_device_created(FWUPD_RESULT(d),v)
+#define fu_device_set_description(d,v)		fwupd_result_set_device_description(FWUPD_RESULT(d),v)
+#define fu_device_set_flags(d,v)		fwupd_result_set_device_flags(FWUPD_RESULT(d),v)
+#define fu_device_set_guid(d,v)			fwupd_result_set_guid(FWUPD_RESULT(d),v)
+#define fu_device_set_id(d,v)			fwupd_result_set_device_id(FWUPD_RESULT(d),v)
+#define fu_device_set_modified(d,v)		fwupd_result_set_device_modified(FWUPD_RESULT(d),v)
+#define fu_device_set_name(d,v)			fwupd_result_set_device_name(FWUPD_RESULT(d),v)
+#define fu_device_set_provider(d,v)		fwupd_result_set_device_provider(FWUPD_RESULT(d),v)
+#define fu_device_set_update_checksum(d,v)	fwupd_result_set_update_checksum(FWUPD_RESULT(d),v)
+#define fu_device_set_update_description(d,v)	fwupd_result_set_update_description(FWUPD_RESULT(d),v)
+#define fu_device_set_update_error(d,v)		fwupd_result_set_update_error(FWUPD_RESULT(d),v)
+#define fu_device_set_update_filename(d,v)	fwupd_result_set_update_filename(FWUPD_RESULT(d),v)
+#define fu_device_set_update_homepage(d,v)	fwupd_result_set_update_homepage(FWUPD_RESULT(d),v)
+#define fu_device_set_update_id(d,v)		fwupd_result_set_update_id(FWUPD_RESULT(d),v)
+#define fu_device_set_update_license(d,v)	fwupd_result_set_update_license(FWUPD_RESULT(d),v)
+#define fu_device_set_update_name(d,v)		fwupd_result_set_update_name(FWUPD_RESULT(d),v)
+#define fu_device_set_update_state(d,v)		fwupd_result_set_update_state(FWUPD_RESULT(d),v)
+#define fu_device_set_update_summary(d,v)	fwupd_result_set_update_summary(FWUPD_RESULT(d),v)
+#define fu_device_set_update_uri(d,v)		fwupd_result_set_update_uri(FWUPD_RESULT(d),v)
+#define fu_device_set_update_vendor(d,v)	fwupd_result_set_update_vendor(FWUPD_RESULT(d),v)
+#define fu_device_set_update_version(d,v)	fwupd_result_set_update_version(FWUPD_RESULT(d),v)
+#define fu_device_set_vendor(d,v)		fwupd_result_set_device_vendor(FWUPD_RESULT(d),v)
+#define fu_device_set_version(d,v)		fwupd_result_set_device_version(FWUPD_RESULT(d),v)
+#define fu_device_set_version_lowest(d,v)	fwupd_result_set_device_version_lowest(FWUPD_RESULT(d),v)
+
+/* compat getters */
+#define fu_device_get_checksum(d)		fwupd_result_get_device_checksum(FWUPD_RESULT(d))
+#define fu_device_get_flags(d)			fwupd_result_get_device_flags(FWUPD_RESULT(d))
+#define fu_device_get_guid(d)			fwupd_result_get_guid(FWUPD_RESULT(d))
+#define fu_device_get_id(d)			fwupd_result_get_device_id(FWUPD_RESULT(d))
+#define fu_device_get_provider(d)		fwupd_result_get_device_provider(FWUPD_RESULT(d))
+#define fu_device_get_update_checksum(d)	fwupd_result_get_update_checksum(FWUPD_RESULT(d))
+#define fu_device_get_update_error(d)		fwupd_result_get_update_error(FWUPD_RESULT(d))
+#define fu_device_get_update_filename(d)	fwupd_result_get_update_filename(FWUPD_RESULT(d))
+#define fu_device_get_update_state(d)		fwupd_result_get_update_state(FWUPD_RESULT(d))
+#define fu_device_get_update_version(d)		fwupd_result_get_update_version(FWUPD_RESULT(d))
+#define fu_device_get_version(d)		fwupd_result_get_device_version(FWUPD_RESULT(d))
+#define fu_device_get_version_lowest(d)		fwupd_result_get_device_version_lowest(FWUPD_RESULT(d))
+
 /* accessors */
-GVariant	*fu_device_to_variant			(FuDevice	*device);
-const gchar	*fu_device_get_id			(FuDevice	*device);
-void		 fu_device_set_id			(FuDevice	*device,
-							 const gchar	*id);
 const gchar	*fu_device_get_equivalent_id		(FuDevice	*device);
 void		 fu_device_set_equivalent_id		(FuDevice	*device,
 							 const gchar	*equivalent_id);
-guint64		 fu_device_get_flags			(FuDevice	*device);
-void		 fu_device_set_flags			(FuDevice	*device,
-							 guint64	 flags);
-void		 fu_device_add_flag			(FuDevice	*device,
-							 FwupdDeviceFlags flag);
-guint64		 fu_device_get_created			(FuDevice	*device);
-void		 fu_device_set_created			(FuDevice	*device,
-							 guint64	 created);
-guint64		 fu_device_get_modified			(FuDevice	*device);
-void		 fu_device_set_modified			(FuDevice	*device,
-							 guint64	 modified);
-const gchar	*fu_device_get_guid			(FuDevice	*device);
-void		 fu_device_set_guid			(FuDevice	*device,
-							 const gchar	*guid);
-const gchar	*fu_device_get_display_name		(FuDevice	*device);
-void		 fu_device_set_display_name		(FuDevice	*device,
-							 const gchar	*display_name);
 const gchar	*fu_device_get_metadata			(FuDevice	*device,
 							 const gchar	*key);
-GVariant	*fu_device_get_metadata_as_variant	(FuDevice	*device);
 void		 fu_device_set_metadata			(FuDevice	*device,
 							 const gchar	*key,
 							 const gchar	*value);
-void		 fu_device_set_metadata_from_iter	(FuDevice	*device,
-							 GVariantIter	*iter);
 
 G_END_DECLS
 

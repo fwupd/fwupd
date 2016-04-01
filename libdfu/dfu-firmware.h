@@ -64,7 +64,7 @@ typedef enum {
 	DFU_FIRMWARE_PARSE_FLAG_NO_VERSION_TEST		= (1 << 1),
 	DFU_FIRMWARE_PARSE_FLAG_NO_METADATA		= (1 << 2),
 	/*< private >*/
-	DFU_FIRMWARE_PARSE_FLAG_LAST,
+	DFU_FIRMWARE_PARSE_FLAG_LAST
 } DfuFirmwareParseFlags;
 
 /**
@@ -84,7 +84,7 @@ typedef enum {
 	DFU_FIRMWARE_FORMAT_DFUSE			= 0x011a,
 	DFU_FIRMWARE_FORMAT_INTEL_HEX			= 0x0002,
 	/*< private >*/
-	DFU_FIRMWARE_FORMAT_LAST,
+	DFU_FIRMWARE_FORMAT_LAST
 } DfuFirmwareFormat;
 
 DfuFirmware	*dfu_firmware_new		(void);

@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-03-14 09:29+0000\n"
-"PO-Revision-Date: 2016-03-14 09:29+0000\n"
+"POT-Creation-Date: 2016-04-01 14:38+0100\n"
+"PO-Revision-Date: 2016-04-01 13:38+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/hughsie/fwupd/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
@@ -290,10 +290,6 @@ msgstr "正在计划升级"
 msgid "No hardware detected with firmware update capability"
 msgstr "没有检测到支持更新固件的硬件"
 
-#. TRANSLATORS: update completed, no errors
-msgid "Done!"
-msgstr "完成！"
-
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
 msgstr "作为脱机更新重试"
@@ -319,6 +315,9 @@ msgstr "正在降级 %s，从 %s 到 %s…"
 msgid "Updating %s from %s to %s... "
 msgstr "正在更新 %s，从 %s 到 %s…"
 
+msgid "Done!"
+msgstr "完成！"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
@@ -332,9 +331,12 @@ msgstr "GUID"
 msgid "Version"
 msgstr "版本"
 
-#. TRANSLATORS: section header for firmware SHA1
+#. TRANSLATORS: section header for firmware checksum
 msgid "Checksum"
 msgstr "校验和"
+
+msgid "Checksum Type"
+msgstr ""
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Location"
@@ -415,11 +417,3 @@ msgstr "使用目前的 ROM 内容更新存储的元数据"
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "固件实用程序"
-
-#. TRANSLATORS: the user is in a bad place
-msgid "Failed to connect to D-Bus"
-msgstr "未能连接到 D-Bus"
-
-#. TRANSLATORS: we can't connect to the daemon
-msgid "Failed to connect to fwupd"
-msgstr "未能连接到 fwupd"

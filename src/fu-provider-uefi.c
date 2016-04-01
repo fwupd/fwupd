@@ -89,34 +89,39 @@ fu_provider_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError *
 }
 
 /**
+ * _fwup_resource_iter_free:
+ **/
+static void
+_fwup_resource_iter_free (fwup_resource_iter *iter)
+{
+	fwup_resource_iter_destroy (&iter);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
+
+/**
  * fu_provider_uefi_clear_results:
  **/
 static gboolean
 fu_provider_uefi_clear_results (FuProvider *provider, FuDevice *device, GError **error)
 {
-	fwup_resource_iter *iter = NULL;
 	fwup_resource *re = NULL;
-	gboolean ret = TRUE;
+	g_autoptr(fwup_resource_iter) iter = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
 	re = fu_provider_uefi_find (iter, fu_device_get_guid (device), error);
-	if (re == NULL) {
-		ret = FALSE;
-		goto out;
-	}
+	if (re == NULL)
+		return FALSE;
 	if (fwup_clear_status (re) < 0) {
-		ret = FALSE;
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "Cannot create clear UEFI status for %s",
 			     fu_device_get_guid (device));
-		goto out;
+		return FALSE;
 	}
-out:
-	fwup_resource_iter_destroy (&iter);
-	return ret;
+	return TRUE;
 }
 
 /* only in git master */
@@ -163,45 +168,37 @@ static gboolean
 fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **error)
 {
 	const gchar *tmp;
-	fwup_resource_iter *iter = NULL;
 	fwup_resource *re = NULL;
-	gboolean ret = TRUE;
 	guint32 status = 0;
 	guint32 version = 0;
-	g_autofree gchar *version_str = NULL;
 	time_t when = 0;
+	g_autofree gchar *version_str = NULL;
+	g_autoptr(fwup_resource_iter) iter = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
 	re = fu_provider_uefi_find (iter, fu_device_get_guid (device), error);
-	if (re == NULL) {
-		ret = FALSE;
-		goto out;
-	}
+	if (re == NULL)
+		return FALSE;
 	if (fwup_get_last_attempt_info (re, &version, &status, &when) < 0) {
-		ret = FALSE;
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "Cannot get UEFI status for %s",
 			     fu_device_get_guid (device));
-		goto out;
+		return FALSE;
 	}
 	version_str = g_strdup_printf ("%u", version);
-	fu_device_set_metadata (device, FU_DEVICE_KEY_UPDATE_VERSION, version_str);
+	fu_device_set_update_version (device, version_str);
 	if (status == FWUP_LAST_ATTEMPT_STATUS_SUCCESS) {
-		fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
-					fu_pending_state_to_string (FU_PENDING_STATE_SUCCESS));
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	} else {
-		fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_STATE,
-					fu_pending_state_to_string (FU_PENDING_STATE_FAILED));
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		tmp = fu_provider_uefi_last_attempt_status_to_str (status);
 		if (tmp != NULL)
-			fu_device_set_metadata (device, FU_DEVICE_KEY_PENDING_ERROR, tmp);
+			fu_device_set_update_error (device, tmp);
 	}
-out:
-	fwup_resource_iter_destroy (&iter);
-	return ret;
+	return TRUE;
 }
 
 /**
@@ -211,23 +208,20 @@ static gboolean
 fu_provider_uefi_update (FuProvider *provider,
 			 FuDevice *device,
 			 GBytes *blob_fw,
-			 FuProviderFlags flags,
+			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	fwup_resource_iter *iter = NULL;
 	fwup_resource *re = NULL;
-	gboolean ret = TRUE;
 	guint64 hardware_instance = 0;	/* FIXME */
 	int rc;
+	g_autoptr(fwup_resource_iter) iter = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
 	re = fu_provider_uefi_find (iter, fu_device_get_guid (device), error);
-	if (re == NULL) {
-		ret = FALSE;
-		goto out;
-	}
+	if (re == NULL)
+		return FALSE;
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
@@ -236,17 +230,14 @@ fu_provider_uefi_update (FuProvider *provider,
 					  g_bytes_get_data (blob_fw, NULL),
 					  g_bytes_get_size (blob_fw));
 	if (rc < 0) {
-		ret = FALSE;
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "UEFI firmware update failed: %s",
 			     strerror (rc));
-		goto out;
+		return FALSE;
 	}
-out:
-	fwup_resource_iter_destroy (&iter);
-	return ret;
+	return TRUE;
 }
 
 /**
@@ -309,11 +300,11 @@ static gboolean
 fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 {
 	AsVersionParseFlag parse_flags;
-	fwup_resource_iter *iter = NULL;
 	fwup_resource *re;
 	gint supported;
 	g_autofree gchar *guid = NULL;
 	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(fwup_resource_iter) iter = NULL;
 
 	/* supported = 0 : ESRT unspported
 	   supported = 1 : unlocked, ESRT supported
@@ -334,7 +325,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		dev = fu_device_new ();
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
 		fu_device_set_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, "0");
+		fu_device_set_version (dev, "0");
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_ONLINE);
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_LOCKED);
 		fu_provider_device_add (provider, dev);
@@ -376,20 +367,18 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		dev = fu_device_new ();
 		fu_device_set_id (dev, id);
 		fu_device_set_guid (dev, guid);
-		fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION, version);
+		fu_device_set_version (dev, version);
 		fwup_get_lowest_supported_fw_version (re, &version_raw);
 		if (version_raw != 0) {
 			version_lowest = as_utils_version_from_uint32 (version_raw,
 								       parse_flags);
-			fu_device_set_metadata (dev, FU_DEVICE_KEY_VERSION_LOWEST,
-						version_lowest);
+			fu_device_set_version_lowest (dev, version_lowest);
 		}
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_INTERNAL);
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_OFFLINE);
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_REQUIRE_AC);
 		fu_provider_device_add (provider, dev);
 	}
-	fwup_resource_iter_destroy (&iter);
 	return TRUE;
 }
 

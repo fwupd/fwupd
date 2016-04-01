@@ -32,6 +32,14 @@
 
 /**
  * FwupdStatus:
+ * @FWUPD_STATUS_UNKNOWN:			Unknown state
+ * @FWUPD_STATUS_IDLE:				Idle
+ * @FWUPD_STATUS_LOADING:			Loading a resource
+ * @FWUPD_STATUS_DECOMPRESSING:			Decompressing firmware
+ * @FWUPD_STATUS_DEVICE_RESTART:		Restarting the device
+ * @FWUPD_STATUS_DEVICE_WRITE:			Writing to a device
+ * @FWUPD_STATUS_DEVICE_VERIFY:			Verifying (reading) a device
+ * @FWUPD_STATUS_SCHEDULING:			Scheduling an offline update
  *
  * The flags to show daemon status.
  **/
@@ -44,12 +52,15 @@ typedef enum {
 	FWUPD_STATUS_DEVICE_WRITE,			/* Since: 0.1.1 */
 	FWUPD_STATUS_DEVICE_VERIFY,			/* Since: 0.1.1 */
 	FWUPD_STATUS_SCHEDULING,			/* Since: 0.1.1 */
-	/* private */
+	/*< private >*/
 	FWUPD_STATUS_LAST
 } FwupdStatus;
 
 /**
  * FwupdTrustFlags:
+ * @FWUPD_TRUST_FLAG_NONE:			No trust
+ * @FWUPD_TRUST_FLAG_PAYLOAD:			The firmware is trusted
+ * @FWUPD_TRUST_FLAG_METADATA:			The metadata is trusted
  *
  * The flags to show the level of trust.
  **/
@@ -57,12 +68,20 @@ typedef enum {
 	FWUPD_TRUST_FLAG_NONE		= 0,		/* Since: 0.1.2 */
 	FWUPD_TRUST_FLAG_PAYLOAD	= 1 << 0,	/* Since: 0.1.2 */
 	FWUPD_TRUST_FLAG_METADATA	= 1 << 1,	/* Since: 0.1.2 */
-	/* private */
+	/*< private >*/
 	FWUPD_TRUST_FLAG_LAST
 } FwupdTrustFlags;
 
 /**
  * FwupdDeviceFlags:
+ * @FU_DEVICE_FLAG_NONE:			No flags set
+ * @FU_DEVICE_FLAG_INTERNAL:			Device cannot be removed easily
+ * @FU_DEVICE_FLAG_ALLOW_ONLINE:		Permits 'live' updating
+ * @FU_DEVICE_FLAG_ALLOW_OFFLINE:		Permits 'offline' updating
+ * @FU_DEVICE_FLAG_REQUIRE_AC:			Requires AC power
+ * @FU_DEVICE_FLAG_LOCKED:			Is locked and can be unlocked
+ *
+ * FIXME: rename FU_DEVICE_ -> FWUPD_DEVICE_ when we break API
  *
  * The device flags.
  **/
@@ -73,11 +92,53 @@ typedef enum {
 	FU_DEVICE_FLAG_ALLOW_OFFLINE	= 1 << 2,	/* Since: 0.1.3 */
 	FU_DEVICE_FLAG_REQUIRE_AC	= 1 << 3,	/* Since: 0.6.3 */
 	FU_DEVICE_FLAG_LOCKED		= 1 << 4,	/* Since: 0.6.3 */
-	/* private */
+	/*< private >*/
 	FU_DEVICE_FLAG_LAST
 } FwupdDeviceFlags;
 
+/**
+ * FwupdInstallFlags:
+ * @FWUPD_INSTALL_FLAG_NONE:			No flags set
+ * @FWUPD_INSTALL_FLAG_OFFLINE:			Perform this offline
+ * @FWUPD_INSTALL_FLAG_ALLOW_REINSTALL:		Allow reinstalling the same version
+ * @FWUPD_INSTALL_FLAG_ALLOW_OLDER:		Allow downgrading firmware
+ *
+ * Flags to set when performing the firwmare update or install.
+ **/
+typedef enum {
+	FWUPD_INSTALL_FLAG_NONE			= 0,	/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_OFFLINE		= 1,	/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_ALLOW_REINSTALL	= 2,	/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_ALLOW_OLDER		= 4,	/* Since: 0.7.0 */
+	/*< private >*/
+	FWUPD_INSTALL_FLAG_LAST
+} FwupdInstallFlags;
+
+/**
+ * FwupdUpdateState:
+ * @FWUPD_UPDATE_STATE_UNKNOWN:			Unknown
+ * @FWUPD_UPDATE_STATE_PENDING:			Update is pending
+ * @FWUPD_UPDATE_STATE_SUCCESS:			Update was successfull
+ * @FWUPD_UPDATE_STATE_FAILED:			Update failed
+ *
+ * The update state.
+ **/
+typedef enum {
+	FWUPD_UPDATE_STATE_UNKNOWN,			/* Since: 0.7.0 */
+	FWUPD_UPDATE_STATE_PENDING,			/* Since: 0.7.0 */
+	FWUPD_UPDATE_STATE_SUCCESS,			/* Since: 0.7.0 */
+	FWUPD_UPDATE_STATE_FAILED,			/* Since: 0.7.0 */
+	/*< private >*/
+	FWUPD_UPDATE_STATE_LAST
+} FwupdUpdateState;
+
 const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
+const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
+FwupdDeviceFlags fwupd_device_flag_from_string		(const gchar	*device_flag);
+const gchar	*fwupd_update_state_to_string		(FwupdUpdateState update_state);
+FwupdUpdateState fwupd_update_state_from_string		(const gchar	*update_state);
+const gchar	*fwupd_trust_flag_to_string		(FwupdTrustFlags trust_flag);
+FwupdTrustFlags	 fwupd_trust_flag_from_string		(const gchar	*trust_flag);
 
 #endif /* __FWUPD_ENUMS_H */

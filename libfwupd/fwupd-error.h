@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -61,5 +61,7 @@ typedef enum {
 } FwupdError;
 
 GQuark		 fwupd_error_quark			(void);
+const gchar	*fwupd_error_to_string			(FwupdError	 error);
+FwupdError	 fwupd_error_from_string		(const gchar	*error);
 
 #endif /* __FWUPD_ERROR_H */
