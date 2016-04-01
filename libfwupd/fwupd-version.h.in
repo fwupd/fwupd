@@ -57,6 +57,9 @@
 
 /**
  * FWUPD_CHECK_VERSION:
+ * @major: Major version number
+ * @minor: Minor version number
+ * @micro: Micro version number
  *
  * Check whether a fwupd version equal to or greater than
  * major.minor.micro.

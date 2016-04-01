@@ -877,7 +877,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	object_class->set_property = fwupd_client_set_property;
 
 	/**
-	 * AsStore::changed:
+	 * FwupdClient::changed:
 	 * @client: the #FwupdClient instance that emitted the signal
 	 *
 	 * The ::changed signal is emitted when the daemon internal has
@@ -893,7 +893,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 			      G_TYPE_NONE, 0);
 
 	/**
-	 * AsStore::state-changed:
+	 * FwupdClient::state-changed:
 	 * @client: the #FwupdClient instance that emitted the signal
 	 * @status: the #FwupdStatus
 	 *
@@ -911,6 +911,10 @@ fwupd_client_class_init (FwupdClientClass *klass)
 
 	/**
 	 * FwupdClient:status:
+	 *
+	 * The last-reported status of the daemon.
+	 *
+	 * Since: 0.7.0
 	 */
 	pspec = g_param_spec_uint ("status", NULL, NULL,
 				   0, FWUPD_STATUS_LAST, FWUPD_STATUS_UNKNOWN,

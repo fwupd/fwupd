@@ -25,6 +25,11 @@
 
 /**
  * fwupd_status_to_string:
+ * @status: A #FwupdStatus, e.g. %FWUPD_STATUS_DECOMPRESSING
+ *
+ * Converts a #FwupdStatus to a string.
+ *
+ * Return value: identifier string
  *
  * Since: 0.1.1
  **/
@@ -52,6 +57,11 @@ fwupd_status_to_string (FwupdStatus status)
 
 /**
  * fwupd_status_from_string:
+ * @status: A string, e.g. "decompressing"
+ *
+ * Converts a string to a #FwupdStatus.
+ *
+ * Return value: enumerated value
  *
  * Since: 0.1.1
  **/
@@ -79,6 +89,11 @@ fwupd_status_from_string (const gchar *status)
 
 /**
  * fwupd_device_flag_to_string:
+ * @device_flag: A #FwupdDeviceFlags, e.g. %FU_DEVICE_FLAG_REQUIRE_AC
+ *
+ * Converts a #FwupdDeviceFlags to a string.
+ *
+ * Return value: identifier string
  *
  * Since: 0.7.0
  **/
@@ -102,6 +117,11 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 
 /**
  * fwupd_device_flag_from_string:
+ * @device_flag: A string, e.g. "require-ac"
+ *
+ * Converts a string to a #FwupdDeviceFlags.
+ *
+ * Return value: enumerated value
  *
  * Since: 0.7.0
  **/
@@ -125,6 +145,11 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 
 /**
  * fwupd_update_state_to_string:
+ * @update_state: A #FwupdUpdateState, e.g. %FWUPD_UPDATE_STATE_PENDING
+ *
+ * Converts a #FwupdUpdateState to a string.
+ *
+ * Return value: identifier string
  *
  * Since: 0.7.0
  **/
@@ -144,6 +169,11 @@ fwupd_update_state_to_string (FwupdUpdateState update_state)
 
 /**
  * fwupd_update_state_from_string:
+ * @update_state: A string, e.g. "pending"
+ *
+ * Converts a string to a #FwupdUpdateState.
+ *
+ * Return value: enumerated value
  *
  * Since: 0.7.0
  **/
@@ -163,6 +193,11 @@ fwupd_update_state_from_string (const gchar *update_state)
 
 /**
  * fwupd_trust_flag_to_string:
+ * @trust_flag: A #FwupdTrustFlags, e.g. %FWUPD_TRUST_FLAG_PAYLOAD
+ *
+ * Converts a #FwupdTrustFlags to a string.
+ *
+ * Return value: identifier string
  *
  * Since: 0.7.0
  **/
@@ -180,6 +215,11 @@ fwupd_trust_flag_to_string (FwupdTrustFlags trust_flag)
 
 /**
  * fwupd_trust_flag_from_string:
+ * @trust_flag: A string, e.g. "payload"
+ *
+ * Converts a string to a #FwupdTrustFlags.
+ *
+ * Return value: enumerated value
  *
  * Since: 0.7.0
  **/

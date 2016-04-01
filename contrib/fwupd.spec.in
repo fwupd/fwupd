@@ -125,6 +125,7 @@ make check VERBOSE=1
 
 %files devel
 %{_datadir}/gir-1.0/Fwupd-1.0.gir
+%{_datadir}/gtk-doc/html/libfwupd
 %{_includedir}/fwupd-1
 %{_libdir}/libfwupd*.so
 %{_libdir}/pkgconfig/fwupd.pc
