@@ -13,9 +13,9 @@ library.
 ColorHug Support
 ----------------
 
-For colorhug support you need to install colord 1.2.12.
+For colorhug support you need to install colord 1.2.12 or later.
 * source:		https://github.com/hughsie/colord
-* rpms:		http://people.freedesktop.org/~hughsient/fedora/
+* rpms:			http://people.freedesktop.org/~hughsient/fedora/
 * debs (Debian):	https://tracker.debian.org/pkg/fwupd
 * debs (Ubuntu):	https://launchpad.net/ubuntu/+source/fwupd
 
@@ -25,11 +25,11 @@ If you don't want or need this functionality you can use the
 UEFI Support
 ------------
 
-For UEFI capsule support, you need to install fwupdate 0.5.
+For UEFI capsule support, you need to install fwupdate 0.5 or later.
 * source:		https://github.com/rhinstaller/fwupdate
-* rpms:		https://pjones.fedorapeople.org/fwupdate/
+* rpms:			https://pjones.fedorapeople.org/fwupdate/
 * debs (Debian):	https://tracker.debian.org/pkg/fwupdate
-* debs (Debian):	https://launchpad.net/ubuntu/+source/fwupdate
+* debs (Ubuntu):	https://launchpad.net/ubuntu/+source/fwupdate
 
 If you don't want or need this functionality you can use the 
 `--disable-uefi` option.
