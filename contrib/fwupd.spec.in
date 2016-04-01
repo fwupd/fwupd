@@ -24,6 +24,7 @@ BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
 BuildRequires: libappstream-glib-devel >= 0.5.10
 BuildRequires: gcab
+BuildRequires: valgrind
 
 %ifarch x86_64 %{ix86} aarch64
 BuildRequires: fwupdate-devel >= 0.5
@@ -78,6 +79,9 @@ make install DESTDIR=$RPM_BUILD_ROOT
 find %{buildroot} -name '*.la' -exec rm -f {} ';'
 
 %find_lang %{name}
+
+%check
+make check VERBOSE=1
 
 %post
 /sbin/ldconfig

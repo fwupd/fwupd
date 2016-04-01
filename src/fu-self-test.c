@@ -183,6 +183,7 @@ fu_provider_func (void)
 	FwupdResult *res;
 	gboolean ret;
 	guint cnt = 0;
+	g_autofree gchar *mapped_file_fn = NULL;
 	g_autofree gchar *pending_cap = NULL;
 	g_autofree gchar *pending_db = NULL;
 	g_autoptr(FuDevice) device = NULL;
@@ -211,7 +212,8 @@ fu_provider_func (void)
 			 "00000000-0000-0000-0000-000000000000");
 
 	/* schedule an offline update */
-	mapped_file = g_mapped_file_new ("/etc/resolv.conf", FALSE, &error);
+	mapped_file_fn = fu_test_get_filename ("colorhug/firmware.bin");
+	mapped_file = g_mapped_file_new (mapped_file_fn, FALSE, &error);
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
