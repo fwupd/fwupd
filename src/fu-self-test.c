@@ -192,7 +192,6 @@ fu_provider_func (void)
 	g_autoptr(GMappedFile) mapped_file = NULL;
 
 	/* create a fake device */
-	g_setenv("FWUPD_OFFLINE_DIR", "/tmp/fwupd-self-test/var/lib/fwupd", FALSE);
 	provider = fu_provider_fake_new ();
 	g_signal_connect (provider, "device-added",
 			  G_CALLBACK (_provider_device_added_cb),
