@@ -8,7 +8,7 @@ Additional information is available at the website: http://www.fwupd.org
 DFU Support
 -----------
 
-DFU support is supported directly by this project with the embedded libdfu1
+DFU support is supported directly by this project with the embedded libdfu
 library.
 
 ColorHug Support
@@ -32,7 +32,7 @@ For UEFI capsule support, you need to install fwupdate 0.5 or later.
 * debs (Debian):	https://tracker.debian.org/pkg/fwupdate
 * debs (Ubuntu):	https://launchpad.net/ubuntu/+source/fwupdate
 
-If you don't want or need this functionality you can use the 
+If you don't want or need this functionality you can use the
 `--disable-uefi` option.
 
 UEFI Unlock Support
@@ -40,7 +40,7 @@ UEFI Unlock Support
 
 On some Dell systems it's possible to turn on and off UEFI capsule
 support from within the BIOS.  This functionality can also be adjusted
-from within the OS by fwupd. This requires using fwupdate 0.6 or later 
+from within the OS by fwupd. This requires using fwupdate 0.6 or later
 and compiling it with libsmbios support.
 
 When fwupd and fwupdate have been compiled with this support you will
@@ -74,7 +74,7 @@ Basic usage flow (command line)
 ------------------------------
 
 If you have a device with firmware supported by fwupd, this is how you will check
-for updates and apply them using fwupd's command line tools.  
+for updates and apply them using fwupd's command line tools.
 
 `fwupdmgr get-devices`
 
@@ -98,13 +98,14 @@ This will download and apply all updates for your system.
 Other frontends
 -------------------
 
-Currently [Gnome Software] (https://wiki.gnome.org/Apps/Software) is the only graphical 
+Currently [GNOME Software] (https://wiki.gnome.org/Apps/Software) is the only graphical
 frontend available.  When compiled with firmware support, it will check for updates
-periodically and automatically download firmware in the background.  
+periodically and automatically download firmware in the background.
 
 After the firmware has been downloaded a popup will be displayed in Gnome Software
 to perform the update.
 
-On Dell IoT gateways, [Wyse Cloud Client Manager (CCM)] (http://www.dell.com/us/business/p/wyse-cloud-client-manager/pd) has been built with fwupd
-support.  The remote administration interface can be used to download and deploy
+On Dell IoT gateways, [Wyse Cloud Client Manager (CCM)] (http://www.dell.com/us/business/p/wyse-cloud-client-manager/pd)
+has been built with fwupd support.
+The remote administration interface can be used to download and deploy
 firmware updates.
