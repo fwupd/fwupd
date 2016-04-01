@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Yuri Chornoivan <yurchor@ukr.net>, 2015
+# Yuri Chornoivan <yurchor@ukr.net>, 2015-2016
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-03-14 09:29+0000\n"
-"PO-Revision-Date: 2016-03-14 09:29+0000\n"
+"POT-Creation-Date: 2016-04-01 14:38+0100\n"
+"PO-Revision-Date: 2016-04-01 13:38+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Ukrainian (http://www.transifex.com/hughsie/fwupd/language/uk/)\n"
 "MIME-Version: 1.0\n"
@@ -52,11 +52,11 @@ msgid ""
 msgstr "Для встановлення застарілої версії мікропрограми на портативний пристрій слід пройти розпізнавання"
 
 msgid "Unlock the device to allow access"
-msgstr ""
+msgstr "Розблокування пристрою для отримання доступу"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
-msgstr ""
+msgstr "Щоб розблокувати пристрій, слід пройти розпізнавання"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -289,10 +289,6 @@ msgstr "Плануємо оновлення"
 msgid "No hardware detected with firmware update capability"
 msgstr "Не виявлено обладнання із передбаченою можливістю оновлення мікропрограми"
 
-#. TRANSLATORS: update completed, no errors
-msgid "Done!"
-msgstr "Виконано!"
-
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
 msgstr "Повторна спроба у режимі автономного оновлення"
@@ -318,6 +314,9 @@ msgstr "Знижуємо версію %s з %s до %s... "
 msgid "Updating %s from %s to %s... "
 msgstr "Оновлюємо %s з %s до %s... "
 
+msgid "Done!"
+msgstr "Виконано!"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
@@ -331,9 +330,12 @@ msgstr "GUID"
 msgid "Version"
 msgstr "Версія"
 
-#. TRANSLATORS: section header for firmware SHA1
+#. TRANSLATORS: section header for firmware checksum
 msgid "Checksum"
 msgstr "Контрольна сума"
+
+msgid "Checksum Type"
+msgstr ""
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Location"
@@ -389,7 +391,7 @@ msgstr "Отримує криптографічні хеш-суми для да�
 
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
-msgstr ""
+msgstr "Розблоковує пристрій для доступу до мікропрограми"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -414,11 +416,3 @@ msgstr "Оновити збережені метадані на основі п�
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Засіб роботи з мікропрограмами"
-
-#. TRANSLATORS: the user is in a bad place
-msgid "Failed to connect to D-Bus"
-msgstr "Не вдалося з’єднатися з D-Bus"
-
-#. TRANSLATORS: we can't connect to the daemon
-msgid "Failed to connect to fwupd"
-msgstr "Не вдалося з’єднатися fwupd"

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-03-14 09:29+0000\n"
-"PO-Revision-Date: 2016-03-14 09:29+0000\n"
+"POT-Creation-Date: 2016-04-01 14:38+0100\n"
+"PO-Revision-Date: 2016-04-01 13:38+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Serbian (http://www.transifex.com/hughsie/fwupd/language/sr/)\n"
 "MIME-Version: 1.0\n"
@@ -52,11 +52,11 @@ msgid ""
 msgstr "Потребна је пријава за уназађивање фирмвера на преносивом уређају"
 
 msgid "Unlock the device to allow access"
-msgstr ""
+msgstr "Откључајте уређај да бисте дозволили приступ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
-msgstr ""
+msgstr "Потребна је пријава за откључавање уређаја"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -289,10 +289,6 @@ msgstr "Заказујем надоградњу"
 msgid "No hardware detected with firmware update capability"
 msgstr "Нема хардвера којем се може ажурирати фирмвер"
 
-#. TRANSLATORS: update completed, no errors
-msgid "Done!"
-msgstr "Урађено!"
-
 #. TRANSLATOR: the provider only supports offline
 msgid "Retrying as an offline update"
 msgstr "Поново покушавам преко ванмрежног ажурирања"
@@ -318,6 +314,9 @@ msgstr "Уназађујем %s са %s на %s..."
 msgid "Updating %s from %s to %s... "
 msgstr "Ажурирам %s са %s на %s..."
 
+msgid "Done!"
+msgstr "Урађено!"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
@@ -331,9 +330,12 @@ msgstr "ГУИД"
 msgid "Version"
 msgstr "Издање"
 
-#. TRANSLATORS: section header for firmware SHA1
+#. TRANSLATORS: section header for firmware checksum
 msgid "Checksum"
 msgstr "Чек-сума"
+
+msgid "Checksum Type"
+msgstr ""
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Location"
@@ -389,7 +391,7 @@ msgstr "Добавља криптографски хеш извађеног фи
 
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
-msgstr ""
+msgstr "Откључава уређај за приступ фирмверу"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -414,11 +416,3 @@ msgstr "Ажурирај ускладиштене метаподатке са т
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Алатка за фирмвер"
-
-#. TRANSLATORS: the user is in a bad place
-msgid "Failed to connect to D-Bus"
-msgstr "Не могу да се повежем на Д-Бус"
-
-#. TRANSLATORS: we can't connect to the daemon
-msgid "Failed to connect to fwupd"
-msgstr "Не могу да се повежем на fwupd"
