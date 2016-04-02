@@ -1016,7 +1016,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	/* verify the checksum */
 	priv->crc = GUINT32_FROM_LE (ftr->crc);
 	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST) == 0) {
-		crc_new = dfu_firmware_generate_crc32 (data, len - 4);
+		crc_new = GUINT32_FROM_LE (dfu_firmware_generate_crc32 (data, len - 4));
 		if (priv->crc != crc_new) {
 			g_set_error (error,
 				     DFU_ERROR,
