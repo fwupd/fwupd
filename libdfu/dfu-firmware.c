@@ -1016,7 +1016,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	/* verify the checksum */
 	priv->crc = GUINT32_FROM_LE (ftr->crc);
 	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST) == 0) {
-		crc_new = GUINT32_FROM_LE (dfu_firmware_generate_crc32 (data, len - 4));
+		crc_new = dfu_firmware_generate_crc32 (data, len - 4);
 		if (priv->crc != crc_new) {
 			g_set_error (error,
 				     DFU_ERROR,
@@ -1258,6 +1258,7 @@ dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents, GError **error
 	const guint8 *data_md;
 	gsize length_bin = 0;
 	gsize length_md = 0;
+	guint32 crc_new;
 	guint8 *buf;
 	g_autoptr(GBytes) metadata_table = NULL;
 
@@ -1283,7 +1284,8 @@ dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents, GError **error
 	ftr->ver = GUINT16_TO_LE (priv->format);
 	ftr->len = GUINT16_TO_LE (0x10 + length_md);
 	memcpy(ftr->sig, "UFD", 3);
-	ftr->crc = dfu_firmware_generate_crc32 (buf, length_bin + length_md + 12);
+	crc_new = dfu_firmware_generate_crc32 (buf, length_bin + length_md + 12);
+	ftr->crc = GUINT32_TO_LE (crc_new);
 
 	/* return all data */
 	return g_bytes_new_take (buf, length_bin + length_md + 0x10);
