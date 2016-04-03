@@ -356,6 +356,7 @@ dfu_image_from_dfuse (const guint8 *data,
 {
 	DfuImagePrivate *priv;
 	DfuSeImagePrefix *im;
+	guint32 elements;
 	guint32 offset = sizeof(DfuSeImagePrefix);
 	guint j;
 	g_autoptr(DfuImage) image = NULL;
@@ -386,12 +387,13 @@ dfu_image_from_dfuse (const guint8 *data,
 	image = dfu_image_new ();
 	priv = GET_PRIVATE (image);
 	priv->alt_setting = im->alt_setting;
-	if (im->target_named == 0x01)
+	if (GUINT32_FROM_LE (im->target_named) == 0x01)
 		memcpy (priv->name, im->target_name, 255);
 
 	/* parse elements */
 	length -= offset;
-	for (j = 0; j < im->elements; j++) {
+	elements = GUINT32_FROM_LE (im->elements);
+	for (j = 0; j < elements; j++) {
 		guint32 consumed_local;
 		g_autoptr(DfuElement) element = NULL;
 		element = dfu_element_from_dfuse (data + offset, length,
@@ -446,11 +448,11 @@ dfu_image_to_dfuse (DfuImage *image)
 	memcpy (im->sig, "Target", 6);
 	im->alt_setting = priv->alt_setting;
 	if (priv->name != NULL) {
-		im->target_named = 0x01;
+		im->target_named = GUINT32_TO_LE (0x01);
 		memcpy (im->target_name, priv->name, 255);
 	}
-	im->target_size = length_total;
-	im->elements = priv->elements->len;
+	im->target_size = GUINT32_TO_LE (length_total);
+	im->elements = GUINT32_TO_LE (priv->elements->len);
 
 	/* copy data */
 	for (i = 0; i < element_array->len; i++) {

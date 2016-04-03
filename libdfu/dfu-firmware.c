@@ -842,7 +842,7 @@ dfu_firmware_write_data_dfuse (DfuFirmware *firmware, GError **error)
 	prefix = (DfuSePrefix *) buf;
 	memcpy (prefix->sig, "DfuSe", 5);
 	prefix->ver = 0x01;
-	prefix->image_size = offset + image_size_total;
+	prefix->image_size = GUINT32_TO_LE (offset + image_size_total);
 	prefix->targets = priv->images->len;
 
 	/* copy images */
@@ -877,7 +877,7 @@ static gboolean
 dfu_firmware_parse_metadata (DfuFirmware *firmware,
 			     const guint8 *data,
 			     guint data_length,
-			     guint32 footer_size,
+			     guint8 footer_size,
 			     GError **error)
 {
 	guint i;
@@ -965,7 +965,6 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	const gchar *cipher_str;
 	gsize len;
 	guint32 crc_new;
-	guint32 size;
 	guint8 *data;
 	g_autoptr(GBytes) contents = NULL;
 
@@ -974,7 +973,8 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
-	g_assert_cmpint(sizeof(DfuSePrefix), ==, 11);
+	g_assert_cmpint (sizeof(DfuFirmwareFooter), ==, 16);
+	g_assert_cmpint (sizeof(DfuSePrefix), ==, 11);
 
 	/* set defaults */
 	priv->vid = 0xffff;
@@ -993,7 +993,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	}
 
 	/* check for DFU signature */
-	ftr = (DfuFirmwareFooter *) &data[len-sizeof(DfuFirmwareFooter)];
+	ftr = (DfuFirmwareFooter *) &data[len - sizeof(DfuFirmwareFooter)];
 	if (memcmp (ftr->sig, "UFD", 3) != 0) {
 		priv->format = DFU_FIRMWARE_FORMAT_RAW;
 		return dfu_firmware_add_binary (firmware, bytes, error);
@@ -1033,19 +1033,18 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	dfu_firmware_set_release (firmware, GUINT16_FROM_LE (ftr->release));
 
 	/* check reported length */
-	size = GUINT16_FROM_LE (ftr->len);
-	if (size > len) {
+	if (ftr->len > len) {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
 			     "reported firmware size %04x larger than file %04x",
-			     (guint) size, (guint) len);
+			     (guint) ftr->len, (guint) len);
 		return FALSE;
 	}
 
 	/* parse the optional metadata segment */
 	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_METADATA) == 0) {
-		if (!dfu_firmware_parse_metadata (firmware, data, len, size, error))
+		if (!dfu_firmware_parse_metadata (firmware, data, len, ftr->len, error))
 			return FALSE;
 	}
 
@@ -1059,7 +1058,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	}
 
 	/* parse DfuSe prefix */
-	contents = g_bytes_new_from_bytes (bytes, 0, len - size);
+	contents = g_bytes_new_from_bytes (bytes, 0, len - ftr->len);
 	if (priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
 		return dfu_firmware_add_dfuse (firmware, contents, error);
 
@@ -1282,7 +1281,7 @@ dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents, GError **error
 	ftr->pid = GUINT16_TO_LE (priv->pid);
 	ftr->vid = GUINT16_TO_LE (priv->vid);
 	ftr->ver = GUINT16_TO_LE (priv->format);
-	ftr->len = GUINT16_TO_LE (0x10 + length_md);
+	ftr->len = sizeof (DfuFirmwareFooter) + length_md;
 	memcpy(ftr->sig, "UFD", 3);
 	crc_new = dfu_firmware_generate_crc32 (buf, length_bin + length_md + 12);
 	ftr->crc = GUINT32_TO_LE (crc_new);
