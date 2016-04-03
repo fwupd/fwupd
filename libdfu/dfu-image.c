@@ -147,6 +147,26 @@ dfu_image_get_element (DfuImage *image, guint8 idx)
 }
 
 /**
+ * dfu_image_get_element_default:
+ * @image: a #DfuImage
+ *
+ * Gets the default element.
+ *
+ * Return value: (transfer none): element data, or %NULL for invalid
+ *
+ * Since: 0.7.1
+ **/
+DfuElement *
+dfu_image_get_element_default (DfuImage *image)
+{
+	DfuImagePrivate *priv = GET_PRIVATE (image);
+	g_return_val_if_fail (DFU_IS_IMAGE (image), NULL);
+	if (priv->elements->len == 0)
+		return NULL;
+	return g_ptr_array_index (priv->elements, 0);
+}
+
+/**
  * dfu_image_get_alt_setting:
  * @image: a #DfuImage
  *
