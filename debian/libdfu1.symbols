@@ -66,6 +66,7 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_firmware_get_image@Base 0.6.3
  dfu_firmware_get_image_by_name@Base 0.6.3
  dfu_firmware_get_image_default@Base 0.6.3
+ dfu_image_get_element_default@Base 0.7.0
  dfu_firmware_get_images@Base 0.6.3
  dfu_firmware_get_metadata@Base 0.6.3
  dfu_firmware_get_pid@Base 0.6.3
