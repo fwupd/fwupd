@@ -1,3 +1,18 @@
+fwupd (0.7.0-1) unstable; urgency=medium
+
+  * New upstream version (0.7.0)
+  * Install static app-info file for fwupd
+  * Drop alienware version quirk table patch included upstream
+  * Update headers installed for libdfu-dev
+  * Use correct dpkg-architecture variable to apply -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
+  * Block builds on test suite failures
+  * update libgusb requirement in debian/control
+  * update symbols
+  * Backport commits from upstream to fix problems on big endian
+  * Backport commit to remove requirement for gnupg 2.1
+
+ -- Mario Limonciello <mario_limonciello@dell.com>  Tue, 05 Apr 2016 11:33:55 -0500
+
 fwupd (0.6.3-1) unstable; urgency=medium
 
   * New upstream release (0.6.3)
