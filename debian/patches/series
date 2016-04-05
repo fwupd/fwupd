@@ -1,2 +1,3 @@
 polkit_rule_fixes.patch
 endian_fix.patch
+0001-Remove-non-interactive-pinentry-setting-from-fu-keyr.patch

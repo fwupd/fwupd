@@ -1,0 +1,40 @@
+From bfedfea62ef969b8e3747717513d9b213b743b2a Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario_limonciello@dell.com>
+Date: Tue, 5 Apr 2016 08:51:03 -0500
+Subject: [PATCH] Remove non-interactive pinentry setting from fu-keyring
+
+691e02d6525376aaf06a43cd8f17db86b1054bd0 [fu_keyring_setup] added a signing
+server and configured to not have interactive pin entry
+[gpgme_set_pinentry_mode]
+
+This signing server was reverted in 5c35abb1a5f3d1b3152864e53540af4b85cd9aab
+but the non-interactive pin entry setting for gpgme remained.
+
+This functionality was only added in gnupg 2.1. If not running on gnupg 2.1
+gpgme will give silent errors when importing keys.  The silent errors were
+fixed in 0.7.0 in c5e8921dfd88d26eea5ea9c036ae2ff70b3165ca.  Unfortunately
+that makes an implicit dependency on gnupg 2.1 to use fwupd.
+
+This commit will allow older gnupg versions (< 2.1) to continue to work without
+negative implications for fwupd.
+---
+ src/fu-keyring.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/src/fu-keyring.c b/src/fu-keyring.c
+index 797db7a..265198f 100644
+--- a/src/fu-keyring.c
++++ b/src/fu-keyring.c
+@@ -95,9 +95,6 @@ fu_keyring_setup (FuKeyring *keyring, GError **error)
+ 	/* enable armor mode */
+ 	gpgme_set_armor (priv->ctx, TRUE);
+ 
+-	/* never interactive */
+-	gpgme_set_pinentry_mode (priv->ctx, GPGME_PINENTRY_MODE_ERROR);
+-
+ 	return TRUE;
+ }
+ 
+-- 
+1.9.1
+
