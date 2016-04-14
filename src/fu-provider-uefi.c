@@ -300,6 +300,7 @@ static gboolean
 fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 {
 	AsVersionParseFlag parse_flags;
+	g_autofree gchar *display_name = NULL;
 	fwup_resource *re;
 	gint supported;
 	g_autofree gchar *guid = NULL;
@@ -341,6 +342,12 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		return FALSE;
 	}
 
+	/* set Display Name to the system for all capsules */
+	g_file_get_contents ("/sys/class/dmi/id/product_name",
+				  &display_name, NULL, NULL);
+	if (display_name != NULL)
+		g_strchomp (display_name);
+
 	/* add each device */
 	guid = g_strdup ("00000000-0000-0000-0000-000000000000");
 	parse_flags = fu_provider_uefi_get_version_format ();
@@ -368,6 +375,8 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		fu_device_set_id (dev, id);
 		fu_device_set_guid (dev, guid);
 		fu_device_set_version (dev, version);
+		if (display_name != NULL)
+			fu_device_set_name(dev, display_name);
 		fwup_get_lowest_supported_fw_version (re, &version_raw);
 		if (version_raw != 0) {
 			version_lowest = as_utils_version_from_uint32 (version_raw,
