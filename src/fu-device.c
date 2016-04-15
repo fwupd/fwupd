@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 
@@ -77,7 +78,7 @@ fu_device_get_metadata (FuDevice *device, const gchar *key)
 }
 
 /**
- * fu_device_get_id:
+ * fu_device_set_metadata:
  **/
 void
 fu_device_set_metadata (FuDevice *device, const gchar *key, const gchar *value)
@@ -87,6 +88,18 @@ fu_device_set_metadata (FuDevice *device, const gchar *key, const gchar *value)
 	g_return_if_fail (key != NULL);
 	g_return_if_fail (value != NULL);
 	g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
+}
+
+/**
+ * fu_device_set_name:
+ **/
+void
+fu_device_set_name (FuDevice *device, const gchar *value)
+{
+	g_autoptr(GString) new = g_string_new (value);
+	g_strdelimit (new->str, "_", ' ');
+	as_utils_string_replace (new, "(TM)", "™");
+	fwupd_result_set_device_name (FWUPD_RESULT (device), new->str);
 }
 
 /**

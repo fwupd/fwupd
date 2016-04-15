@@ -72,6 +72,7 @@ fu_provider_fake_coldplug (FuProvider *provider, GError **error)
 	device = fu_device_new ();
 	fu_device_set_id (device, "FakeDevice");
 	fu_device_set_guid (device, "00000000-0000-0000-0000-000000000000");
+	fu_device_set_name (device, "Integrated_Webcam(TM)");
 	fu_provider_device_add (provider, device);
 	return TRUE;
 }

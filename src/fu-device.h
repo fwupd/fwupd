@@ -51,7 +51,6 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_guid(d,v)			fwupd_result_set_guid(FWUPD_RESULT(d),v)
 #define fu_device_set_id(d,v)			fwupd_result_set_device_id(FWUPD_RESULT(d),v)
 #define fu_device_set_modified(d,v)		fwupd_result_set_device_modified(FWUPD_RESULT(d),v)
-#define fu_device_set_name(d,v)			fwupd_result_set_device_name(FWUPD_RESULT(d),v)
 #define fu_device_set_provider(d,v)		fwupd_result_set_device_provider(FWUPD_RESULT(d),v)
 #define fu_device_set_update_checksum(d,v)	fwupd_result_set_update_checksum(FWUPD_RESULT(d),v)
 #define fu_device_set_update_description(d,v)	fwupd_result_set_update_description(FWUPD_RESULT(d),v)
@@ -74,6 +73,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_checksum(d)		fwupd_result_get_device_checksum(FWUPD_RESULT(d))
 #define fu_device_get_flags(d)			fwupd_result_get_device_flags(FWUPD_RESULT(d))
 #define fu_device_get_guid(d)			fwupd_result_get_guid(FWUPD_RESULT(d))
+#define fu_device_get_name(d)			fwupd_result_get_device_name(FWUPD_RESULT(d))
 #define fu_device_get_id(d)			fwupd_result_get_device_id(FWUPD_RESULT(d))
 #define fu_device_get_provider(d)		fwupd_result_get_device_provider(FWUPD_RESULT(d))
 #define fu_device_get_update_checksum(d)	fwupd_result_get_update_checksum(FWUPD_RESULT(d))
@@ -92,6 +92,8 @@ const gchar	*fu_device_get_metadata			(FuDevice	*device,
 							 const gchar	*key);
 void		 fu_device_set_metadata			(FuDevice	*device,
 							 const gchar	*key,
+							 const gchar	*value);
+void		 fu_device_set_name			(FuDevice	*device,
 							 const gchar	*value);
 
 G_END_DECLS
