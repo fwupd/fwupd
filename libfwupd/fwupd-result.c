@@ -1600,11 +1600,11 @@ fwupd_result_to_string (FwupdResult *result)
 
 	/* not set when using GetDetails */
 	if (priv->device_id != NULL)
-		g_string_append_printf (str, "%s\n", priv->device_id);
+		g_string_append_printf (str, "%s\n", priv->device_name);
 
 	/* device */
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, priv->guid);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_NAME, priv->device_name);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->device_id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION, priv->device_description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PROVIDER, priv->device_provider);
 	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_DEVICE_FLAGS, priv->device_flags);

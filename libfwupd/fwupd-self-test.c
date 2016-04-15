@@ -125,9 +125,9 @@ fwupd_result_func (void)
 	g_print ("\n%s", str);
 
 	ret = as_test_compare_lines (str,
-		"USB:foo\n"
+		"ColorHug2\n"
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
-		"  DisplayName:          ColorHug2\n"
+		"  DeviceID:             USB:foo\n"
 		"  Flags:                allow-offline|require-ac\n"
 		"  FirmwareHash:         beefdead\n"
 		"  DeviceChecksumKind:   sha256\n"

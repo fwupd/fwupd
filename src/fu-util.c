@@ -848,7 +848,7 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'id'");
+				     "Invalid arguments: expected 'DeviceID'");
 		return FALSE;
 	}
 	res = fwupd_client_get_results (priv->client, values[0], NULL, error);
@@ -1283,4 +1283,3 @@ out:
 	}
 	return retval;
 }
-
