@@ -4,15 +4,18 @@ fwupd (0.7.0-1) unstable; urgency=medium
   * Install static app-info file for fwupd
   * Drop alienware version quirk table patch included upstream
   * Update headers installed for libdfu-dev
-  * Use correct dpkg-architecture variable to apply -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
+  * Use correct dpkg-architecture variable to apply
+    -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
   * Block builds on test suite failures
   * update libgusb requirement in debian/control
   * update symbols
   * Backport commits from upstream to fix problems on big endian
   * Backport commit to remove requirement for gnupg 2.1
   * Backport UEFI naming to DMI Product Name from master.
+  * Set HOME to current directory for the test suite to run properly on buildd
+  * Stop gpg-agent process that persists after test suite run (Closes: #820669)
 
- -- Mario Limonciello <mario_limonciello@dell.com>  Thu, 14 Apr 2016 12:22:45 -0500
+ -- Mario Limonciello <mario_limonciello@dell.com>  Sun, 17 Apr 2016 23:32:05 -0500
 
 fwupd (0.6.3-1) unstable; urgency=medium
 
