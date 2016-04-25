@@ -944,7 +944,7 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 	g_print ("%s:", title);
 
 	/* pad */
-	title_len = strlen (title);
+	title_len = strlen (title) + 1;
 	lines = g_strsplit (msg, "\n", -1);
 	for (j = 0; lines[j] != NULL; j++) {
 		for (i = title_len; i < 20; i++)
