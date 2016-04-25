@@ -947,7 +947,7 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 	title_len = strlen (title) + 1;
 	lines = g_strsplit (msg, "\n", -1);
 	for (j = 0; lines[j] != NULL; j++) {
-		for (i = title_len; i < 20; i++)
+		for (i = title_len; i < 25; i++)
 			g_print (" ");
 		g_print ("%s\n", lines[j]);
 		title_len = 0;
@@ -1001,20 +1001,22 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("GUID"), fwupd_result_get_guid (res));
 
 		/* TRANSLATORS: section header for firmware version */
-		fu_util_print_data (_("Version"), fwupd_result_get_update_version (res));
+		fu_util_print_data (_("Update Version"),
+				    fwupd_result_get_update_version (res));
 
 		/* TRANSLATORS: section header for firmware checksum */
-		fu_util_print_data (_("Checksum"), fwupd_result_get_update_checksum (res));
+		fu_util_print_data (_("Update Checksum"),
+				    fwupd_result_get_update_checksum (res));
 
 		/* TRANSLATORS: section header for firmware checksum type */
 		if (fwupd_result_get_update_checksum (res) != NULL) {
 			checksum_type = fwupd_result_get_update_checksum_kind (res);
 			tmp = _g_checksum_type_to_string (checksum_type);
-			fu_util_print_data (_("Checksum Type"), tmp);
+			fu_util_print_data (_("Update Checksum Type"), tmp);
 		}
 
 		/* TRANSLATORS: section header for firmware remote http:// */
-		fu_util_print_data (_("Location"), fwupd_result_get_update_uri (res));
+		fu_util_print_data (_("Update Location"), fwupd_result_get_update_uri (res));
 
 		/* convert XML -> text */
 		tmp = fwupd_result_get_update_description (res);
@@ -1025,7 +1027,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 						NULL);
 			if (md != NULL) {
 				/* TRANSLATORS: section header for long firmware desc */
-				fu_util_print_data (_("Description"), md);
+				fu_util_print_data (_("Update Description"), md);
 			}
 		}
 	}
