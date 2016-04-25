@@ -1071,103 +1071,147 @@ fu_main_store_changed_cb (AsStore *store, FuMainPrivate *priv)
 }
 
 /**
+ * fu_main_get_updates_item_update:
+ **/
+static gboolean
+fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
+{
+	AsApp *app;
+	AsChecksum *csum;
+	AsRelease *rel;
+	GPtrArray *releases;
+	const gchar *tmp;
+	const gchar *version;
+	guint i;
+	g_autoptr(GPtrArray) updates_list = NULL;
+
+	/* get device version */
+	version = fu_device_get_version (item->device);
+	if (version == NULL)
+		return FALSE;
+
+	/* match the GUID in the XML */
+	app = as_store_get_app_by_provide (priv->store,
+					   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
+					   fu_device_get_guid (item->device));
+	if (app == NULL)
+		return FALSE;
+
+	/* possibly convert the version from 0x to dotted */
+	fu_main_vendor_quirk_release_version (app);
+
+	/* get latest release */
+	rel = as_app_get_release_default (app);
+	if (rel == NULL) {
+		g_debug ("%s has no firmware update metadata",
+			 fu_device_get_id (item->device));
+		return FALSE;
+	}
+
+	/* check if actually newer than what we have installed */
+	if (as_utils_vercmp (as_release_get_version (rel), version) <= 0) {
+		g_debug ("%s has no firmware updates",
+			 fu_device_get_id (item->device));
+		return FALSE;
+	}
+
+	/* can we only do this on AC power */
+	if (fu_device_has_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC) &&
+	    fu_main_on_battery (priv)) {
+		g_debug ("ignoring update for %s as not on AC power",
+			 fu_device_get_id (item->device));
+		return FALSE;
+	}
+
+	/* add application metadata */
+	fu_device_set_update_id (item->device, as_app_get_id (app));
+	tmp = as_app_get_developer_name (app, NULL);
+	if (tmp != NULL)
+		fu_device_set_update_vendor (item->device, tmp);
+	tmp = as_app_get_name (app, NULL);
+	if (tmp != NULL)
+		fu_device_set_update_name (item->device, tmp);
+	tmp = as_app_get_comment (app, NULL);
+	if (tmp != NULL)
+		fu_device_set_update_summary (item->device, tmp);
+	tmp = as_app_get_description (app, NULL);
+	if (tmp != NULL)
+		fu_device_set_description (item->device, tmp);
+	tmp = as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE);
+	if (tmp != NULL)
+		fu_device_set_update_homepage (item->device, tmp);
+	tmp = as_app_get_project_license (app);
+	if (tmp != NULL)
+		fu_device_set_update_license (item->device, tmp);
+
+	/* add release information */
+	tmp = as_release_get_version (rel);
+	if (tmp != NULL)
+		fu_device_set_update_version (item->device, tmp);
+	csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTAINER);
+	if (csum != NULL) {
+		fu_device_set_update_checksum (item->device,
+					       as_checksum_get_value (csum));
+	}
+	tmp = as_release_get_location_default (rel);
+	if (tmp != NULL)
+		fu_device_set_update_uri (item->device, tmp);
+
+	/* get the list of releases newer than the one installed */
+	updates_list = g_ptr_array_new ();
+	releases = as_app_get_releases (app);
+	for (i = 0; i < releases->len; i++) {
+		rel = g_ptr_array_index (releases, i);
+		if (as_utils_vercmp (as_release_get_version (rel), version) < 0)
+			continue;
+		tmp = as_release_get_description (rel, NULL);
+		if (tmp == NULL)
+			continue;
+		g_ptr_array_add (updates_list, rel);
+	}
+
+	/* no prefix on each release */
+	if (updates_list->len == 1) {
+		rel = g_ptr_array_index (updates_list, 0);
+		fu_device_set_update_description (item->device,
+						  as_release_get_description (rel, NULL));
+	} else {
+		g_autoptr(GString) update_desc = NULL;
+		update_desc = g_string_new ("");
+
+		/* get the descriptions with a version prefix */
+		for (i = 0; i < updates_list->len; i++) {
+			rel = g_ptr_array_index (updates_list, i);
+			g_string_append_printf (update_desc,
+						"<p>%s:</p>%s",
+						as_release_get_version (rel),
+						as_release_get_description (rel, NULL));
+		}
+		if (update_desc->len > 0)
+			fu_device_set_update_description (item->device, update_desc->str);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
  * fu_main_get_updates:
  **/
 static GPtrArray *
 fu_main_get_updates (FuMainPrivate *priv, GError **error)
 {
-	AsApp *app;
-	AsRelease *rel;
-	FuDeviceItem *item;
 	GPtrArray *updates;
+	FuDeviceItem *item;
 	guint i;
-	const gchar *tmp;
 
 	/* find any updates using the AppStream metadata */
 	updates = g_ptr_array_new ();
 	for (i = 0; i < priv->devices->len; i++) {
-		const gchar *version;
-		AsChecksum *csum;
-
 		item = g_ptr_array_index (priv->devices, i);
-
-		/* get device version */
-		version = fu_device_get_version (item->device);
-		if (version == NULL)
-			continue;
-
-		/* match the GUID in the XML */
-		app = as_store_get_app_by_provide (priv->store,
-						   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
-						   fu_device_get_guid (item->device));
-		if (app == NULL)
-			continue;
-
-		/* possibly convert the version from 0x to dotted */
-		fu_main_vendor_quirk_release_version (app);
-
-		/* get latest release */
-		rel = as_app_get_release_default (app);
-		if (rel == NULL) {
-			g_debug ("%s has no firmware update metadata",
-				 fu_device_get_id (item->device));
-			continue;
-		}
-
-		/* check if actually newer than what we have installed */
-		if (as_utils_vercmp (as_release_get_version (rel), version) <= 0) {
-			g_debug ("%s has no firmware updates",
-				 fu_device_get_id (item->device));
-			continue;
-		}
-
-		/* can we only do this on AC power */
-		if (fu_device_has_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC) &&
-		    fu_main_on_battery (priv)) {
-			g_debug ("ignoring update for %s as not on AC power",
-				 fu_device_get_id (item->device));
-			continue;
-		}
-
-		/* add application metadata */
-		fu_device_set_update_id (item->device, as_app_get_id (app));
-		tmp = as_app_get_developer_name (app, NULL);
-		if (tmp != NULL)
-			fu_device_set_update_vendor (item->device, tmp);
-		tmp = as_app_get_name (app, NULL);
-		if (tmp != NULL)
-			fu_device_set_update_name (item->device, tmp);
-		tmp = as_app_get_comment (app, NULL);
-		if (tmp != NULL)
-			fu_device_set_update_summary (item->device, tmp);
-		tmp = as_app_get_description (app, NULL);
-		if (tmp != NULL)
-			fu_device_set_description (item->device, tmp);
-		tmp = as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE);
-		if (tmp != NULL)
-			fu_device_set_update_homepage (item->device, tmp);
-		tmp = as_app_get_project_license (app);
-		if (tmp != NULL)
-			fu_device_set_update_license (item->device, tmp);
-
-		/* add release information */
-		tmp = as_release_get_version (rel);
-		if (tmp != NULL)
-			fu_device_set_update_version (item->device, tmp);
-		csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTAINER);
-		if (csum != NULL) {
-			fu_device_set_update_checksum (item->device,
-						       as_checksum_get_value (csum));
-		}
-		tmp = as_release_get_location_default (rel);
-		if (tmp != NULL)
-			fu_device_set_update_uri (item->device, tmp);
-		tmp = as_release_get_description (rel, NULL);
-		if (tmp != NULL)
-			fu_device_set_update_description (item->device, tmp);
-		g_ptr_array_add (updates, item);
+		if (fu_main_get_updates_item_update (priv, item))
+			g_ptr_array_add (updates, item);
 	}
-
 	return updates;
 }
 
