@@ -102,6 +102,66 @@ fu_main_emit_changed (FuMainPrivate *priv)
 }
 
 /**
+ * fu_main_emit_device_added:
+ **/
+static void
+fu_main_emit_device_added (FuMainPrivate *priv, FuDevice *device)
+{
+	GVariant *val;
+
+	/* not yet connected */
+	if (priv->connection == NULL)
+		return;
+	val = fwupd_result_to_data (FWUPD_RESULT (device), "(a{sv})");
+	g_dbus_connection_emit_signal (priv->connection,
+				       NULL,
+				       FWUPD_DBUS_PATH,
+				       FWUPD_DBUS_INTERFACE,
+				       "DeviceAdded",
+				       val, NULL);
+}
+
+/**
+ * fu_main_emit_device_removed:
+ **/
+static void
+fu_main_emit_device_removed (FuMainPrivate *priv, FuDevice *device)
+{
+	GVariant *val;
+
+	/* not yet connected */
+	if (priv->connection == NULL)
+		return;
+	val = fwupd_result_to_data (FWUPD_RESULT (device), "(a{sv})");
+	g_dbus_connection_emit_signal (priv->connection,
+				       NULL,
+				       FWUPD_DBUS_PATH,
+				       FWUPD_DBUS_INTERFACE,
+				       "DeviceRemoved",
+				       val, NULL);
+}
+
+/**
+ * fu_main_emit_device_changed:
+ **/
+static void
+fu_main_emit_device_changed (FuMainPrivate *priv, FuDevice *device)
+{
+	GVariant *val;
+
+	/* not yet connected */
+	if (priv->connection == NULL)
+		return;
+	val = fwupd_result_to_data (FWUPD_RESULT (device), "(a{sv})");
+	g_dbus_connection_emit_signal (priv->connection,
+				       NULL,
+				       FWUPD_DBUS_PATH,
+				       FWUPD_DBUS_INTERFACE,
+				       "DeviceChanged",
+				       val, NULL);
+}
+
+/**
  * fu_main_emit_property_changed:
  **/
 static void
@@ -474,6 +534,7 @@ fu_main_provider_unlock_authenticated (FuMainAuthHelper *helper, GError **error)
 		return FALSE;
 
 	/* make the UI update */
+	fu_main_emit_device_changed (helper->priv, item->device);
 	fu_main_emit_changed (helper->priv);
 	return TRUE;
 }
@@ -524,6 +585,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 
 	/* make the UI update */
 	fu_device_set_modified (item->device, g_get_real_time () / G_USEC_PER_SEC);
+	fu_main_emit_device_changed (helper->priv, item->device);
 	fu_main_emit_changed (helper->priv);
 	return TRUE;
 }
@@ -2039,6 +2101,8 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 		}
 	}
 
+	/* notify clients */
+	fu_main_emit_device_added (priv, item->device);
 	fu_main_emit_changed (priv);
 }
 
@@ -2067,6 +2131,8 @@ cd_main_provider_device_removed_cb (FuProvider *provider,
 		return;
 	}
 
+	/* make the UI update */
+	fu_main_emit_device_removed (priv, device);
 	g_ptr_array_remove (priv->devices, item);
 	fu_main_emit_changed (priv);
 }

@@ -39,14 +39,17 @@ struct _FwupdClientClass
 	void			(*changed)		(FwupdClient	*client);
 	void			(*status_changed)	(FwupdClient	*client,
 							 FwupdStatus	 status);
+	void			(*device_added)		(FwupdClient	*client,
+							 FwupdResult	*result);
+	void			(*device_removed)	(FwupdClient	*client,
+							 FwupdResult	*result);
+	void			(*device_changed)	(FwupdClient	*client,
+							 FwupdResult	*result);
 	/*< private >*/
 	void (*_fwupd_reserved1)	(void);
 	void (*_fwupd_reserved2)	(void);
 	void (*_fwupd_reserved3)	(void);
 	void (*_fwupd_reserved4)	(void);
-	void (*_fwupd_reserved5)	(void);
-	void (*_fwupd_reserved6)	(void);
-	void (*_fwupd_reserved7)	(void);
 };
 
 FwupdClient	*fwupd_client_new			(void);

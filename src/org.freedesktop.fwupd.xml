@@ -267,5 +267,59 @@
       </doc:doc>
     </signal>
 
+    <!--***********************************************************-->
+    <signal name='DeviceAdded'>
+      <arg type='sa{sv}' name='device' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>A device structure.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            A device has been added.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!--***********************************************************-->
+    <signal name='DeviceRemoved'>
+      <arg type='sa{sv}' name='device' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>A device structure.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            A device has been removed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!--***********************************************************-->
+    <signal name='DeviceChanged'>
+      <arg type='sa{sv}' name='device' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>A device structure.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            A device has been changed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
   </interface>
 </node>

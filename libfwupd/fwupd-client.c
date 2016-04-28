@@ -51,6 +51,9 @@ typedef struct {
 enum {
 	SIGNAL_CHANGED,
 	SIGNAL_STATUS_CHANGED,
+	SIGNAL_DEVICE_ADDED,
+	SIGNAL_DEVICE_REMOVED,
+	SIGNAL_DEVICE_CHANGED,
 	SIGNAL_LAST
 };
 
@@ -134,8 +137,35 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 			GVariant *parameters,
 			FwupdClient *client)
 {
-	g_debug ("Emitting ::changed()");
-	g_signal_emit (client, signals[SIGNAL_CHANGED], 0);
+	g_autoptr(FwupdResult) res = NULL;
+	if (g_strcmp0 (signal_name, "Changed") == 0) {
+		g_debug ("Emitting ::changed()");
+		g_signal_emit (client, signals[SIGNAL_CHANGED], 0);
+		return;
+	}
+	if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
+		res = fwupd_result_new_from_data (parameters);
+		g_debug ("Emitting ::device-added(%s)",
+			 fwupd_result_get_device_id (res));
+		g_signal_emit (client, signals[SIGNAL_DEVICE_ADDED], 0, res);
+		return;
+	}
+	if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
+		res = fwupd_result_new_from_data (parameters);
+		g_signal_emit (client, signals[SIGNAL_DEVICE_REMOVED], 0, res);
+		g_debug ("Emitting ::device-removed(%s)",
+			 fwupd_result_get_device_id (res));
+		return;
+	}
+	if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
+		res = fwupd_result_new_from_data (parameters);
+		g_signal_emit (client, signals[SIGNAL_DEVICE_CHANGED], 0, res);
+		g_debug ("Emitting ::device-changed(%s)",
+			 fwupd_result_get_device_id (res));
+		return;
+	}
+	g_warning ("Unknown signal name '%s' from %s",
+		   signal_name, sender_name);
 }
 
 /**
@@ -919,6 +949,57 @@ fwupd_client_class_init (FwupdClientClass *klass)
 			      G_STRUCT_OFFSET (FwupdClientClass, status_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
+	/**
+	 * FwupdClient::device-added:
+	 * @client: the #FwupdClient instance that emitted the signal
+	 * @result: the #FwupdResult
+	 *
+	 * The ::device-added signal is emitted when a device has been
+	 * added.
+	 *
+	 * Since: 0.7.1
+	 **/
+	signals [SIGNAL_DEVICE_ADDED] =
+		g_signal_new ("device-added",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FwupdClientClass, device_added),
+			      NULL, NULL, g_cclosure_marshal_generic,
+			      G_TYPE_NONE, 1, FWUPD_TYPE_RESULT);
+
+	/**
+	 * FwupdClient::device-removed:
+	 * @client: the #FwupdClient instance that emitted the signal
+	 * @result: the #FwupdResult
+	 *
+	 * The ::device-removed signal is emitted when a device has been
+	 * removed.
+	 *
+	 * Since: 0.7.1
+	 **/
+	signals [SIGNAL_DEVICE_REMOVED] =
+		g_signal_new ("device-removed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FwupdClientClass, device_removed),
+			      NULL, NULL, g_cclosure_marshal_generic,
+			      G_TYPE_NONE, 1, FWUPD_TYPE_RESULT);
+
+	/**
+	 * FwupdClient::device-changed:
+	 * @client: the #FwupdClient instance that emitted the signal
+	 * @result: the #FwupdResult
+	 *
+	 * The ::device-changed signal is emitted when a device has been
+	 * changed in some way, e.g. the version number is updated.
+	 *
+	 * Since: 0.7.1
+	 **/
+	signals [SIGNAL_DEVICE_CHANGED] =
+		g_signal_new ("device-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FwupdClientClass, device_changed),
+			      NULL, NULL, g_cclosure_marshal_generic,
+			      G_TYPE_NONE, 1, FWUPD_TYPE_RESULT);
 
 	/**
 	 * FwupdClient:status:

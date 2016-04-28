@@ -1050,6 +1050,45 @@ fu_util_cancelled_cb (GCancellable *cancellable, gpointer user_data)
 }
 
 /**
+ * fu_util_device_added_cb:
+ **/
+static void
+fu_util_device_added_cb (FwupdClient *client,
+			 FwupdResult *device,
+			 gpointer user_data)
+{
+	g_autofree gchar *tmp = fwupd_result_to_string (device);
+	/* TRANSLATORS: this is when a device is hotplugged */
+	g_print ("%s\n%s", _("Device added:"), tmp);
+}
+
+/**
+ * fu_util_device_removed_cb:
+ **/
+static void
+fu_util_device_removed_cb (FwupdClient *client,
+			   FwupdResult *device,
+			   gpointer user_data)
+{
+	g_autofree gchar *tmp = fwupd_result_to_string (device);
+	/* TRANSLATORS: this is when a device is hotplugged */
+	g_print ("%s\n%s", _("Device removed:"), tmp);
+}
+
+/**
+ * fu_util_device_changed_cb:
+ **/
+static void
+fu_util_device_changed_cb (FwupdClient *client,
+			   FwupdResult *device,
+			   gpointer user_data)
+{
+	g_autofree gchar *tmp = fwupd_result_to_string (device);
+	/* TRANSLATORS: this is when a device has been updated */
+	g_print ("%s\n%s", _("Device changed:"), tmp);
+}
+
+/**
  * fu_util_changed_cb:
  **/
 static void
@@ -1075,6 +1114,12 @@ fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* watch for any hotplugged device */
 	g_signal_connect (client, "changed",
 			  G_CALLBACK (fu_util_changed_cb), priv);
+	g_signal_connect (client, "device-added",
+			  G_CALLBACK (fu_util_device_added_cb), priv);
+	g_signal_connect (client, "device-removed",
+			  G_CALLBACK (fu_util_device_removed_cb), priv);
+	g_signal_connect (client, "device-changed",
+			  G_CALLBACK (fu_util_device_changed_cb), priv);
 	g_signal_connect (priv->cancellable, "cancelled",
 			  G_CALLBACK (fu_util_cancelled_cb), priv);
 	g_main_loop_run (priv->loop);
