@@ -2101,6 +2101,10 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 		}
 	}
 
+	/* match the metadata at this point so clients can tell if the
+	 * device is worthy */
+	fu_main_get_updates_item_update (priv, item);
+
 	/* notify clients */
 	fu_main_emit_device_added (priv, item->device);
 	fu_main_emit_changed (priv);
