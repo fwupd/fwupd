@@ -1823,7 +1823,7 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 		return g_variant_new_string (VERSION);
 
 	if (g_strcmp0 (property_name, "Status") == 0)
-		return g_variant_new_string (fwupd_status_to_string (priv->status));
+		return g_variant_new_uint32 (priv->status);
 
 	/* return an error */
 	g_set_error (error,
