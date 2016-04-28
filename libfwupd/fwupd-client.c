@@ -139,10 +139,21 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 }
 
 /**
- * fwupd_client_startup:
+ * fwupd_client_connect:
+ * @client: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Sets up the client ready for use. Most other methods call this
+ * for you, and do you only need to call this if you are just watching
+ * the client.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 0.7.1
  **/
-static gboolean
-fwupd_client_startup (FwupdClient *client, GCancellable *cancellable, GError **error)
+gboolean
+fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 
@@ -244,7 +255,7 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_startup (client, cancellable, error))
+	if (!fwupd_client_connect (client, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -286,7 +297,7 @@ fwupd_client_get_updates (FwupdClient *client, GCancellable *cancellable, GError
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_startup (client, cancellable, error))
+	if (!fwupd_client_connect (client, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -348,7 +359,7 @@ fwupd_client_verify (FwupdClient *client, const gchar *device_id,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_startup (client, cancellable, error))
+	if (!fwupd_client_connect (client, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -397,7 +408,7 @@ fwupd_client_unlock (FwupdClient *client, const gchar *device_id,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_startup (client, cancellable, error))
+	if (!fwupd_client_connect (client, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -446,7 +457,7 @@ fwupd_client_clear_results (FwupdClient *client, const gchar *device_id,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_startup (client, cancellable, error))
+	if (!fwupd_client_connect (client, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -495,7 +506,7 @@ fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_startup (client, cancellable, error))
+	if (!fwupd_client_connect (client, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -579,7 +590,7 @@ fwupd_client_install (FwupdClient *client,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_startup (client, cancellable, error))
+	if (!fwupd_client_connect (client, cancellable, error))
 		return FALSE;
 
 	/* set options */
@@ -677,7 +688,7 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_startup (client, cancellable, error))
+	if (!fwupd_client_connect (client, cancellable, error))
 		return NULL;
 
 	/* open file */
@@ -766,7 +777,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_startup (client, cancellable, error))
+	if (!fwupd_client_connect (client, cancellable, error))
 		return FALSE;
 
 	/* open file */
