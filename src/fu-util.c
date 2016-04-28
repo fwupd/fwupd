@@ -28,6 +28,7 @@
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
+#include <glib-unix.h>
 #include <gudev/gudev.h>
 #include <locale.h>
 #include <stdio.h>
@@ -47,6 +48,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
 #define FWUPD_ERROR_INVALID_ARGS	(FWUPD_ERROR_LAST+1)
 
 typedef struct {
+	GCancellable		*cancellable;
 	GMainLoop		*loop;
 	GOptionContext		*context;
 	GPtrArray		*cmd_array;
@@ -1036,6 +1038,50 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 /**
+ * fu_util_cancelled_cb:
+ **/
+static void
+fu_util_cancelled_cb (GCancellable *cancellable, gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
+	/* TRANSLATORS: this is when a device ctrl+c's a watch */
+	g_print ("%s\n", _("Cancelled"));
+	g_main_loop_quit (priv->loop);
+}
+
+/**
+ * fu_util_changed_cb:
+ **/
+static void
+fu_util_changed_cb (FwupdClient *client, gpointer user_data)
+{
+	/* TRANSLATORS: this is when the daemon state changes */
+	g_print ("%s\n", _("Changed"));
+}
+
+/**
+ * fu_util_monitor:
+ **/
+static gboolean
+fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FwupdClient) client = NULL;
+
+	/* get all the DFU devices */
+	client = fwupd_client_new ();
+	if (!fwupd_client_connect (client, priv->cancellable, error))
+		return FALSE;
+
+	/* watch for any hotplugged device */
+	g_signal_connect (client, "changed",
+			  G_CALLBACK (fu_util_changed_cb), priv);
+	g_signal_connect (priv->cancellable, "cancelled",
+			  G_CALLBACK (fu_util_cancelled_cb), priv);
+	g_main_loop_run (priv->loop);
+	return TRUE;
+}
+
+/**
  * fu_util_update:
  **/
 static gboolean
@@ -1090,6 +1136,18 @@ static void
 fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 		   const gchar *message, gpointer user_data)
 {
+}
+
+/**
+ * fu_util_sigint_cb:
+ **/
+static gboolean
+fu_util_sigint_cb (gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
+	g_debug ("Handling SIGINT");
+	g_cancellable_cancel (priv->cancellable);
+	return FALSE;
 }
 
 /**
@@ -1216,6 +1274,18 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Update the stored metadata with current ROM contents"),
 		     fu_util_verify_update);
+	fu_util_add (priv->cmd_array,
+		     "monitor",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Monitor the daemon for events"),
+		     fu_util_monitor);
+
+	/* do stuff on ctrl+c */
+	priv->cancellable = g_cancellable_new ();
+	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
+				SIGINT, fu_util_sigint_cb,
+				priv, NULL);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,
@@ -1280,6 +1350,7 @@ out:
 		if (priv->client != NULL)
 			g_object_unref (priv->client);
 		g_main_loop_unref (priv->loop);
+		g_object_unref (priv->cancellable);
 		g_option_context_free (priv->context);
 		g_free (priv);
 	}
