@@ -84,6 +84,8 @@ typedef struct {
 	FuProvider		*provider;
 } FuDeviceItem;
 
+static gboolean fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item);
+
 /**
  * fu_main_emit_changed:
  **/
@@ -1103,8 +1105,10 @@ fu_main_store_delay_cb (gpointer user_data)
 	AsApp *app;
 	GPtrArray *apps;
 	guint i;
+	FuDeviceItem *item;
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 
+	/* print what we've got */
 	apps = as_store_get_apps (priv->store);
 	if (apps->len == 0) {
 		g_debug ("no devices in store");
@@ -1117,6 +1121,14 @@ fu_main_store_delay_cb (gpointer user_data)
 				 as_app_get_name (app, NULL));
 		}
 	}
+
+	/* are any devices now supported? */
+	for (i = 0; i < priv->devices->len; i++) {
+		item = g_ptr_array_index (priv->devices, i);
+		if (fu_main_get_updates_item_update (priv, item))
+			fu_main_emit_device_changed (priv, item->device);
+	}
+
 	priv->store_changed_id = 0;
 	return G_SOURCE_REMOVE;
 }
