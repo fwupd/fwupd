@@ -1599,8 +1599,10 @@ fwupd_result_to_string (FwupdResult *result)
 	str = g_string_new ("");
 
 	/* not set when using GetDetails */
-	if (priv->device_id != NULL)
+	if (priv->device_name != NULL)
 		g_string_append_printf (str, "%s\n", priv->device_name);
+	else
+		g_string_append_printf (str, "%s\n", "Unknown Device");
 
 	/* device */
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, priv->guid);
