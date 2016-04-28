@@ -1108,6 +1108,10 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 		return FALSE;
 	}
 
+	/* supported in metadata */
+	fwupd_result_add_device_flag (FWUPD_RESULT (item->device),
+				      FU_DEVICE_FLAG_SUPPORTED);
+
 	/* check if actually newer than what we have installed */
 	if (as_utils_vercmp (as_release_get_version (rel), version) <= 0) {
 		g_debug ("%s has no firmware updates",

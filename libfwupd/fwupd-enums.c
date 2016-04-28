@@ -112,6 +112,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "require-ac";
 	if (device_flag == FU_DEVICE_FLAG_LOCKED)
 		return "locked";
+	if (device_flag == FU_DEVICE_FLAG_SUPPORTED)
+		return "supported";
 	return NULL;
 }
 
@@ -140,6 +142,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FU_DEVICE_FLAG_REQUIRE_AC;
 	if (g_strcmp0 (device_flag, "locked") == 0)
 		return FU_DEVICE_FLAG_LOCKED;
+	if (g_strcmp0 (device_flag, "supported") == 0)
+		return FU_DEVICE_FLAG_SUPPORTED;
 	return FU_DEVICE_FLAG_LAST;
 }
 

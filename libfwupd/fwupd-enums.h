@@ -80,6 +80,7 @@ typedef enum {
  * @FU_DEVICE_FLAG_ALLOW_OFFLINE:		Permits 'offline' updating
  * @FU_DEVICE_FLAG_REQUIRE_AC:			Requires AC power
  * @FU_DEVICE_FLAG_LOCKED:			Is locked and can be unlocked
+ * @FU_DEVICE_FLAG_SUPPORTED:			Is found in current metadata
  *
  * FIXME: rename FU_DEVICE_ -> FWUPD_DEVICE_ when we break API
  *
@@ -92,6 +93,7 @@ typedef enum {
 	FU_DEVICE_FLAG_ALLOW_OFFLINE	= 1 << 2,	/* Since: 0.1.3 */
 	FU_DEVICE_FLAG_REQUIRE_AC	= 1 << 3,	/* Since: 0.6.3 */
 	FU_DEVICE_FLAG_LOCKED		= 1 << 4,	/* Since: 0.6.3 */
+	FU_DEVICE_FLAG_SUPPORTED	= 1 << 5,	/* Since: 0.7.1 */
 	/*< private >*/
 	FU_DEVICE_FLAG_LAST
 } FwupdDeviceFlags;
