@@ -1847,7 +1847,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		tmp = as_app_get_description (app, NULL);
 		if (tmp != NULL) {
 			g_variant_builder_add (&builder, "{sv}",
-					       FWUPD_RESULT_KEY_UPDATE_DESCRIPTION,
+					       FWUPD_RESULT_KEY_DEVICE_DESCRIPTION,
 					       g_variant_new_string (tmp));
 		}
 		tmp = as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE);
