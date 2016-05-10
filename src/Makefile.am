@@ -6,14 +6,12 @@ dist_introspection_DATA = 				\
 
 AM_CPPFLAGS =						\
 	$(APPSTREAM_GLIB_CFLAGS)			\
-	$(COLORHUG_CFLAGS)				\
 	$(GUSB_CFLAGS)					\
 	$(GCAB_CFLAGS)					\
 	$(GLIB_CFLAGS)					\
 	$(GUDEV_CFLAGS)					\
 	$(PIE_CFLAGS)					\
 	$(POLKIT_CFLAGS)				\
-	$(UEFI_CFLAGS)					\
 	$(GPGME_CFLAGS)					\
 	$(SOUP_CFLAGS)					\
 	$(ARCHIVE_CFLAGS)				\
@@ -115,23 +113,10 @@ fwupd_SOURCES =						\
 	fu-rom.h					\
 	fu-main.c
 
-if HAVE_COLORHUG
-fwupd_SOURCES +=					\
-	fu-provider-chug.c				\
-	fu-provider-chug.h
-endif
-
-if HAVE_UEFI
-fwupd_SOURCES +=					\
-	fu-provider-uefi.c				\
-	fu-provider-uefi.h
-endif
-
 fwupd_LDADD =						\
 	$(FWUPD_LIBS)					\
 	$(DFU_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
-	$(COLORHUG_LIBS)				\
 	$(GUSB_LIBS)					\
 	$(GCAB_LIBS)					\
 	$(GLIB_LIBS)					\
@@ -139,8 +124,27 @@ fwupd_LDADD =						\
 	$(POLKIT_LIBS)					\
 	$(SQLITE_LIBS)					\
 	$(GPGME_LIBS)					\
-	$(ARCHIVE_LIBS)					\
+	$(ARCHIVE_LIBS)
+
+if HAVE_COLORHUG
+fwupd_SOURCES +=					\
+	fu-provider-chug.c				\
+	fu-provider-chug.h
+fwupd_LDADD +=						\
+	$(COLORHUG_LIBS)
+AM_CPPFLAGS +=						\
+	$(COLORHUG_CFLAGS)
+endif
+
+if HAVE_UEFI
+fwupd_SOURCES +=					\
+	fu-provider-uefi.c				\
+	fu-provider-uefi.h
+AM_CPPFLAGS +=						\
+	$(UEFI_CFLAGS)
+fwupd_LDADD +=						\
 	$(UEFI_LIBS)
+endif
 
 fwupd_LDFLAGS =						\
 	$(PIE_LDFLAGS)					\
