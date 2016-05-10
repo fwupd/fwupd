@@ -112,6 +112,7 @@ typedef enum {
 	FWUPD_INSTALL_FLAG_OFFLINE		= 1,	/* Since: 0.7.0 */
 	FWUPD_INSTALL_FLAG_ALLOW_REINSTALL	= 2,	/* Since: 0.7.0 */
 	FWUPD_INSTALL_FLAG_ALLOW_OLDER		= 4,	/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_FORCE		= 8,	/* Since: 0.7.1 */
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_LAST
 } FwupdInstallFlags;

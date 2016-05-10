@@ -641,6 +641,10 @@ fwupd_client_install (FwupdClient *client,
 		g_variant_builder_add (&builder, "{sv}",
 				       "allow-reinstall", g_variant_new_boolean (TRUE));
 	}
+	if (install_flags & FWUPD_INSTALL_FLAG_FORCE) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "force", g_variant_new_boolean (TRUE));
+	}
 
 	/* open file */
 	fd = open (filename, O_RDONLY);

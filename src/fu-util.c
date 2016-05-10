@@ -1202,6 +1202,7 @@ int
 main (int argc, char *argv[])
 {
 	FuUtilPrivate *priv;
+	gboolean force = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
 	gboolean offline = FALSE;
@@ -1223,6 +1224,9 @@ main (int argc, char *argv[])
 		{ "allow-older", '\0', 0, G_OPTION_ARG_NONE, &allow_older,
 			/* TRANSLATORS: command line option */
 			_("Allow downgrading firmware versions"), NULL },
+		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
+			/* TRANSLATORS: command line option */
+			_("Override provider warning"), NULL },
 		{ NULL}
 	};
 
@@ -1367,6 +1371,8 @@ main (int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (allow_older)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+	if (force)
+		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
 
 	/* connect to the daemon */
 	priv->client = fwupd_client_new ();
