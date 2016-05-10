@@ -68,6 +68,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_vendor(d,v)		fwupd_result_set_device_vendor(FWUPD_RESULT(d),v)
 #define fu_device_set_version(d,v)		fwupd_result_set_device_version(FWUPD_RESULT(d),v)
 #define fu_device_set_version_lowest(d,v)	fwupd_result_set_device_version_lowest(FWUPD_RESULT(d),v)
+#define fu_device_set_flashes_left(d,v)		fwupd_result_set_device_flashes_left(FWUPD_RESULT(d),v)
 
 /* compat getters */
 #define fu_device_get_checksum(d)		fwupd_result_get_device_checksum(FWUPD_RESULT(d))
@@ -83,6 +84,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_update_version(d)		fwupd_result_get_update_version(FWUPD_RESULT(d))
 #define fu_device_get_version(d)		fwupd_result_get_device_version(FWUPD_RESULT(d))
 #define fu_device_get_version_lowest(d)		fwupd_result_get_device_version_lowest(FWUPD_RESULT(d))
+#define fu_device_get_flashes_left(d)		fwupd_result_get_device_flashes_left(FWUPD_RESULT(d))
 
 /* accessors */
 const gchar	*fu_device_get_equivalent_id		(FuDevice	*device);
