@@ -49,7 +49,7 @@ typedef struct {
 	gchar				*device_vendor;
 	gchar				*device_version;
 	gchar				*device_version_lowest;
-	gchar				*device_flashes_left;
+	guint32				 device_flashes_left;
 	guint64				 device_created;
 	guint64				 device_flags;
 	guint64				 device_modified;
@@ -366,11 +366,11 @@ fwupd_result_set_device_version_lowest (FwupdResult *result, const gchar *device
  *
  * Since: 0.7.1
  **/
-const gchar *
+guint32
 fwupd_result_get_device_flashes_left (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
-	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
 	return priv->device_flashes_left;
 }
 
@@ -384,12 +384,11 @@ fwupd_result_get_device_flashes_left (FwupdResult *result)
  * Since: 0.7.1
  **/
 void
-fwupd_result_set_device_flashes_left (FwupdResult *result, const gchar *flashes_left)
+fwupd_result_set_device_flashes_left (FwupdResult *result, guint32 flashes_left)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->device_flashes_left);
-	priv->device_flashes_left = g_strdup (flashes_left);
+	priv->device_flashes_left = flashes_left;
 }
 
 /**
@@ -1354,10 +1353,10 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 				       FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST,
 				       g_variant_new_string (priv->device_version_lowest));
 	}
-	if (priv->device_flashes_left != NULL) {
+	if (priv->device_flashes_left > 0) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT,
-				       g_variant_new_string (priv->device_flashes_left));
+				       g_variant_new_uint32 (priv->device_flashes_left));
 	}
 
 	/* supported types */
@@ -1494,7 +1493,7 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT) == 0) {
-		fwupd_result_set_device_flashes_left (result, g_variant_get_string (value, NULL));
+		fwupd_result_set_device_flashes_left (result, g_variant_get_uint32 (value));
 		return;
 	}
 }
@@ -1557,6 +1556,21 @@ fwupd_pad_kv_siz (GString *str, const gchar *key, guint64 value)
 	if (value == 0)
 		return;
 	tmp = g_format_size (value);
+	fwupd_pad_kv_str (str, key, tmp);
+}
+
+/**
+ * fwupd_pad_kv_int:
+ **/
+static void
+fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
+{
+	g_autofree gchar *tmp = NULL;
+
+	/* ignore */
+	if (value == 0)
+		return;
+	tmp = g_strdup_printf("%d", value);
 	fwupd_pad_kv_str (str, key, tmp);
 }
 
@@ -1662,7 +1676,7 @@ fwupd_result_to_string (FwupdResult *result)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VENDOR, priv->device_vendor);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION, priv->device_version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST, priv->device_version_lowest);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT, priv->device_flashes_left);
+	fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT, priv->device_flashes_left);
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_CREATED, priv->device_created);
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_MODIFIED, priv->device_modified);
 
@@ -1782,7 +1796,6 @@ fwupd_result_finalize (GObject *object)
 	g_free (priv->device_provider);
 	g_free (priv->device_version);
 	g_free (priv->device_version_lowest);
-	g_free (priv->device_flashes_left);
 	g_free (priv->guid);
 	g_free (priv->update_description);
 	g_free (priv->update_error);
