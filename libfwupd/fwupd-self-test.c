@@ -119,6 +119,7 @@ fwupd_result_func (void)
 	fwupd_result_set_update_id (result, "org.dave.ColorHug.firmware");
 	fwupd_result_set_update_size (result, 1024);
 	fwupd_result_set_update_uri (result, "http://foo.com");
+	fwupd_result_set_update_version (result, "1.2.3");
 	fwupd_result_add_device_flag (result, FU_DEVICE_FLAG_REQUIRE_AC);
 	fwupd_result_set_update_trust_flags (result, FWUPD_TRUST_FLAG_PAYLOAD);
 	str = fwupd_result_to_string (result);
@@ -135,6 +136,7 @@ fwupd_result_func (void)
 		"  Modified:             1970-01-02\n"
 		"  AppstreamId:          org.dave.ColorHug.firmware\n"
 		"  UpdateDescription:    <p>Hi there!</p>\n"
+		"  UpdateVersion:        1.2.3\n"
 		"  FilenameCab:          firmware.bin\n"
 		"  UpdateHash:           deadbeef\n"
 		"  UpdateChecksumKind:   sha1\n"
