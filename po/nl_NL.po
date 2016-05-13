@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-04-01 14:38+0100\n"
-"PO-Revision-Date: 2016-04-01 13:38+0000\n"
+"POT-Creation-Date: 2016-05-13 14:46+0100\n"
+"PO-Revision-Date: 2016-05-13 13:46+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Dutch (Netherlands) (http://www.transifex.com/hughsie/fwupd/language/nl_NL/)\n"
 "MIME-Version: 1.0\n"
@@ -96,6 +96,7 @@ msgid "Removed"
 msgstr "Verwijderd"
 
 #. TRANSLATORS: this is when a device is hotplugged
+#. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Gewijzigd"
 
@@ -327,23 +328,35 @@ msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
-msgid "Version"
-msgstr "Versie"
+msgid "Update Version"
+msgstr ""
 
 #. TRANSLATORS: section header for firmware checksum
-msgid "Checksum"
-msgstr "Controlesom"
+msgid "Update Checksum"
+msgstr ""
 
-msgid "Checksum Type"
+msgid "Update Checksum Type"
 msgstr ""
 
 #. TRANSLATORS: section header for firmware remote http://
-msgid "Location"
-msgstr "Locatie"
+msgid "Update Location"
+msgstr ""
 
 #. TRANSLATORS: section header for long firmware desc
-msgid "Description"
-msgstr "Omschrijving"
+msgid "Update Description"
+msgstr ""
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr ""
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr ""
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
@@ -360,6 +373,10 @@ msgstr "Herinstalleren van bestaande firmware-versies toestaan"
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
 msgstr "Afwaarderen van oude firmware-versies toestaan"
+
+#. TRANSLATORS: command line option
+msgid "Override provider warning"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -412,6 +429,10 @@ msgstr "De ROM-controlesom wegschrijven"
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
 msgstr "De opgeslagen metadata bijwerken met de huidige ROM-inhoud"
+
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr ""
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
