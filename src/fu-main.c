@@ -54,6 +54,9 @@
 #ifdef HAVE_UEFI
   #include "fu-provider-uefi.h"
 #endif
+#ifdef HAVE_DELL
+  #include "fu-provider-dell.h"
+#endif
 
 #ifndef PolkitAuthorizationResult_autoptr
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitAuthorizationResult, g_object_unref)
@@ -2379,6 +2382,9 @@ main (int argc, char *argv[])
 #endif
 #ifdef HAVE_UEFI
 	fu_main_add_provider (priv, fu_provider_uefi_new ());
+#endif
+#ifdef HAVE_DELL
+	fu_main_add_provider (priv, fu_provider_dell_new ());
 #endif
 
 	/* last as least priority */

@@ -181,6 +181,26 @@ if test x$enable_uefi != xno; then
 fi
 AM_CONDITIONAL(HAVE_UEFI, test x$enable_uefi = xyes)
 
+# Dell Non ESRT capsule support
+AC_ARG_ENABLE(dell, AS_HELP_STRING([--enable-dell],[Enable Dell non-ESRT capsule support]),
+	      enable_dell=$enableval, enable_dell=yes)
+if test x$enable_dell != xno; then
+	PKG_CHECK_MODULES(UEFI, fwup >= 0.5)
+	PKG_CHECK_MODULES(LIBSMBIOS, libsmbios_c >= 2.3.0)
+	PKG_CHECK_MODULES(EFIVAR, efivar)
+	AC_DEFINE(HAVE_DELL,1,[Use Dell non-ESRT capsule support])
+
+	# check for ability to change GUID
+	PKG_CHECK_MODULES(UEFI_GUID, fwup >= 0.6,
+			  has_uefi_guid=yes,
+			  has_uefi_guid=no)
+	if test x$has_uefi_guid = xyes; then
+		AC_DEFINE(HAVE_UEFI_GUID,1,[Use UEFI GUID override])
+	fi
+
+fi
+AM_CONDITIONAL(HAVE_DELL, test x$enable_dell = xyes)
+
 # systemd support
 AC_ARG_WITH([systemdunitdir],
             AS_HELP_STRING([--with-systemdunitdir=DIR], [Directory for systemd service files]),
