@@ -758,6 +758,23 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 				helper->device = g_object_ref (item->device);
 				break;
 			}
+			app = as_store_get_app_by_provide (helper->store,
+							   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
+							   fu_device_get_alternate_guid (item->device));
+			if (app != NULL) {
+				if (helper->flags & FWUPD_INSTALL_FLAG_FORCE) {
+					helper->device = g_object_ref (item->device);
+					break;
+				}
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "A device on the system can support flashing %s, "
+					     "however to do this, you must run with --force.",
+					     fu_device_get_name(item->device));
+				return FALSE;
+			}
+
 		}
 
 		/* nothing found */
@@ -778,14 +795,28 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 						   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
 						   fu_device_get_guid (helper->device));
 		if (app == NULL) {
-			g_autofree gchar *guid = NULL;
-			guid = fu_main_get_guids_from_store (helper->store);
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "firmware is not for this hw: required %s got %s",
-				     fu_device_get_guid (helper->device), guid);
-			return FALSE;
+			app = as_store_get_app_by_provide (helper->store,
+							   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
+							   fu_device_get_alternate_guid (helper->device));
+			if (app == NULL) {
+				g_autofree gchar *guid = NULL;
+				guid = fu_main_get_guids_from_store (helper->store);
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "firmware is not for this hw: required %s got %s",
+					     fu_device_get_guid (helper->device), guid);
+				return FALSE;
+			}
+			if (!(helper->flags & FWUPD_INSTALL_FLAG_FORCE)) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "A device on the system can support flashing %s, "
+					     "However to do this, you must run with --force",
+					     fu_device_get_name(helper->device));
+				return FALSE;
+			}
 		}
 	}
 

@@ -51,6 +51,9 @@ FwupdResult	*fwupd_result_new_from_data		(GVariant	*data);
 const gchar	*fwupd_result_get_guid			(FwupdResult	*result);
 void		 fwupd_result_set_guid			(FwupdResult	*result,
 							 const gchar	*guid);
+const gchar	*fwupd_result_get_alternate_guid	(FwupdResult	*result);
+void		 fwupd_result_set_alternate_guid	(FwupdResult	*result,
+							 const gchar	*guid);
 const gchar	*fwupd_result_get_device_id		(FwupdResult	*result);
 void		 fwupd_result_set_device_id		(FwupdResult	*result,
 							 const gchar	*device_id);
