@@ -38,6 +38,7 @@ static void fwupd_result_finalize	 (GObject *object);
  **/
 typedef struct {
 	gchar				*guid;
+	gchar				*alternate_guid;
 
 	/* device-specific */
 	gchar				*device_checksum;
@@ -120,6 +121,43 @@ fwupd_result_set_device_id (FwupdResult *result, const gchar *device_id)
 	g_return_if_fail (FWUPD_IS_RESULT (result));
 	g_free (priv->device_id);
 	priv->device_id = g_strdup (device_id);
+}
+
+/**
+ * fwupd_result_get_alternate_guid:
+ * @result: A #FwupdResult
+ *
+ * Gets the Alternate GUID.
+ * Alternate GUID is another device ID flashable only by --force.
+ *
+ * Returns: the Alternate GUID, or %NULL if unset
+ *
+ * Since: 0.7.2
+ **/
+const gchar *
+fwupd_result_get_alternate_guid (FwupdResult *result)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
+	return priv->alternate_guid;
+}
+
+/**
+ * fwupd_result_set_alternate_guid:
+ * @result: A #FwupdResult
+ * @guid: the Alternate GUID, e.g. "2082b5e0-7a64-478a-b1b2-e3404fab6dad"
+ *
+ * Sets the Alternate GUID.
+ *
+ * Since: 0.7.2
+ **/
+void
+fwupd_result_set_alternate_guid (FwupdResult *result, const gchar *guid)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_if_fail (FWUPD_IS_RESULT (result));
+	g_free (priv->alternate_guid);
+	priv->alternate_guid = g_strdup (guid);
 }
 
 /**
@@ -1221,6 +1259,11 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 				       FWUPD_RESULT_KEY_GUID,
 				       g_variant_new_string (priv->guid));
 	}
+	if (priv->alternate_guid != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_ALTERNATE_GUID,
+				       g_variant_new_string (priv->alternate_guid));
+	}
 	if (priv->device_name != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_DEVICE_NAME,
@@ -1387,6 +1430,10 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_GUID) == 0) {
 		fwupd_result_set_guid (result, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_ALTERNATE_GUID) == 0) {
+		fwupd_result_set_alternate_guid (result, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_NAME) == 0) {
@@ -1666,6 +1713,7 @@ fwupd_result_to_string (FwupdResult *result)
 
 	/* device */
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, priv->guid);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_ALTERNATE_GUID, priv->alternate_guid);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->device_id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION, priv->device_description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PROVIDER, priv->device_provider);
@@ -1798,6 +1846,7 @@ fwupd_result_finalize (GObject *object)
 	g_free (priv->device_version);
 	g_free (priv->device_version_lowest);
 	g_free (priv->guid);
+	g_free (priv->alternate_guid);
 	g_free (priv->update_description);
 	g_free (priv->update_error);
 	g_free (priv->update_filename);
