@@ -152,7 +152,6 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	const gchar *guid;
 	const gchar *product;
 	const gchar *vendor;
-	g_autofree gchar *guid_new = NULL;
 	g_autofree gchar *id = NULL;
 	g_autofree gchar *rom_fn = NULL;
 	g_autofree gchar *version = NULL;
@@ -188,19 +187,11 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 		version = g_strdup (split[2]);
 	}
 
-	/* no GUID from the ROM, so fix up the VID:PID */
-	if (!as_utils_guid_is_valid (guid)) {
-		guid_new = as_utils_guid_from_string (guid);
-		g_debug ("fixing GUID %s->%s", guid, guid_new);
-	} else {
-		guid_new = g_strdup (guid);
-	}
-
 	/* did we get enough data */
 	dev = fu_device_new ();
 	fu_device_add_flag (dev, FU_DEVICE_FLAG_INTERNAL);
 	fu_device_set_id (dev, id);
-	fu_device_add_guid (dev, guid_new);
+	fu_device_add_guid (dev, guid);
 	display_name = g_udev_device_get_property (device, "FWUPD_MODEL");
 	if (display_name == NULL)
 		display_name = g_udev_device_get_property (device, "ID_MODEL_FROM_DATABASE");

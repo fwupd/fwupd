@@ -282,7 +282,6 @@ fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
 	FuProviderRpiPrivate *priv = GET_PRIVATE (provider_rpi);
 	g_autofree gchar *fwfn = NULL;
 	g_autofree gchar *fwver = NULL;
-	g_autofree gchar *guid = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	/* anything interesting */
@@ -295,8 +294,7 @@ fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
 	/* create fake device */
 	device = fu_device_new ();
 	fu_device_set_id (device, "raspberry-pi");
-	guid = as_utils_guid_from_string ("raspberrypi");
-	fu_device_add_guid (device, guid);
+	fu_device_add_guid (device, "raspberrypi");
 	fu_device_set_name (device, "Raspberry Pi");
 	fu_device_add_flag (device, FU_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (device, FU_DEVICE_FLAG_ALLOW_OFFLINE);

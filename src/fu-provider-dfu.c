@@ -63,7 +63,8 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 	guint16 release;
 	g_autofree gchar *guid = NULL;
 	g_autofree gchar *version = NULL;
-	g_autofree gchar *vid_pid = NULL;
+	g_autofree gchar *devid1 = NULL;
+	g_autofree gchar *devid2 = NULL;
 
 	/* check mode */
 	platform_id = dfu_device_get_platform_id (device);
@@ -86,12 +87,18 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 		fu_device_set_version (dev, version);
 	}
 
-	vid_pid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+	/* add USB\VID_0000&PID_0000 */
+	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 				  dfu_device_get_runtime_vid (device),
 				  dfu_device_get_runtime_pid (device));
-	guid = as_utils_guid_from_string (vid_pid);
-	g_debug ("using %s for %s", guid, vid_pid);
-	fu_device_add_guid (dev, guid);
+	fu_device_add_guid (dev, devid1);
+
+	/* add more specific USB\VID_0000&PID_0000&REV_0000 */
+	devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X",
+				  dfu_device_get_runtime_vid (device),
+				  dfu_device_get_runtime_pid (device),
+				  dfu_device_get_runtime_release (device));
+	fu_device_add_guid (dev, devid2);
 }
 
 /**

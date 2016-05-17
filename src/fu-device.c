@@ -89,6 +89,24 @@ fu_device_set_alternate (FuDevice *device, FuDevice *alternate)
 }
 
 /**
+ * fu_device_add_guid:
+ **/
+void
+fu_device_add_guid (FuDevice *device, const gchar *guid)
+{
+	/* make valid */
+	if (!as_utils_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+		g_debug ("using %s for %s", tmp, guid);
+		fwupd_result_add_guid (FWUPD_RESULT (device), tmp);
+		return;
+	}
+
+	/* already valid */
+	fwupd_result_add_guid (FWUPD_RESULT (device), guid);
+}
+
+/**
  * fu_device_get_metadata:
  **/
 const gchar *
