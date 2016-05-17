@@ -1208,6 +1208,14 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 		return FALSE;
 	}
 
+	/* only show devices that can be updated */
+	if (!fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE) &&
+	    !fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_ONLINE)) {
+		g_debug ("ignoring %s as not updatable live or offline",
+			 fu_device_get_id (item->device));
+		return FALSE;
+	}
+
 	/* can we only do this on AC power */
 	if (fu_device_has_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC) &&
 	    fu_main_on_battery (priv)) {
