@@ -76,8 +76,8 @@ typedef enum {
  * FwupdDeviceFlags:
  * @FU_DEVICE_FLAG_NONE:			No flags set
  * @FU_DEVICE_FLAG_INTERNAL:			Device cannot be removed easily
- * @FU_DEVICE_FLAG_ALLOW_ONLINE:		Permits 'live' updating
- * @FU_DEVICE_FLAG_ALLOW_OFFLINE:		Permits 'offline' updating
+ * @FU_DEVICE_FLAG_ALLOW_ONLINE:		Is capable of 'live' updating
+ * @FU_DEVICE_FLAG_ALLOW_OFFLINE:		Is capable of 'offline' updating
  * @FU_DEVICE_FLAG_REQUIRE_AC:			Requires AC power
  * @FU_DEVICE_FLAG_LOCKED:			Is locked and can be unlocked
  * @FU_DEVICE_FLAG_SUPPORTED:			Is found in current metadata
