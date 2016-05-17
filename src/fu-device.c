@@ -36,6 +36,7 @@ static void fu_device_finalize			 (GObject *object);
  **/
 typedef struct {
 	gchar				*equivalent_id;
+	FuDevice			*alternate;
 	GHashTable			*metadata;
 } FuDevicePrivate;
 
@@ -63,6 +64,28 @@ fu_device_set_equivalent_id (FuDevice *device, const gchar *equivalent_id)
 	g_return_if_fail (FU_IS_DEVICE (device));
 	g_free (priv->equivalent_id);
 	priv->equivalent_id = g_strdup (equivalent_id);
+}
+
+/**
+ * fu_device_get_alternate:
+ **/
+FuDevice *
+fu_device_get_alternate (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->alternate;
+}
+
+/**
+ * fu_device_set_alternate:
+ **/
+void
+fu_device_set_alternate (FuDevice *device, FuDevice *alternate)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_set_object (&priv->alternate, alternate);
 }
 
 /**
@@ -132,6 +155,8 @@ fu_device_finalize (GObject *object)
 	FuDevice *device = FU_DEVICE (object);
 	FuDevicePrivate *priv = GET_PRIVATE (device);
 
+	if (priv->alternate != NULL)
+		g_object_unref (priv->alternate);
 	g_hash_table_unref (priv->metadata);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);

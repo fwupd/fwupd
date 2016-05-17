@@ -92,6 +92,9 @@ FuDevice	*fu_device_new				(void);
 const gchar	*fu_device_get_equivalent_id		(FuDevice	*device);
 void		 fu_device_set_equivalent_id		(FuDevice	*device,
 							 const gchar	*equivalent_id);
+FuDevice	*fu_device_get_alternate		(FuDevice	*device);
+void		 fu_device_set_alternate		(FuDevice	*device,
+							 FuDevice	*alternate);
 const gchar	*fu_device_get_metadata			(FuDevice	*device,
 							 const gchar	*key);
 void		 fu_device_set_metadata			(FuDevice	*device,
