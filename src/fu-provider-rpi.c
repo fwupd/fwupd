@@ -296,7 +296,7 @@ fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
 	device = fu_device_new ();
 	fu_device_set_id (device, "raspberry-pi");
 	guid = as_utils_guid_from_string ("raspberrypi");
-	fu_device_set_guid (device, guid);
+	fu_device_add_guid (device, guid);
 	fu_device_set_name (device, "Raspberry Pi");
 	fu_device_add_flag (device, FU_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (device, FU_DEVICE_FLAG_ALLOW_OFFLINE);

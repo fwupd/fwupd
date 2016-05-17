@@ -47,10 +47,15 @@ struct _FwupdResultClass
 FwupdResult	*fwupd_result_new			(void);
 FwupdResult	*fwupd_result_new_from_data		(GVariant	*data);
 
-/* device-specific */
-const gchar	*fwupd_result_get_guid			(FwupdResult	*result);
-void		 fwupd_result_set_guid			(FwupdResult	*result,
+/* matches */
+void		 fwupd_result_add_guid			(FwupdResult	*result,
 							 const gchar	*guid);
+gboolean	 fwupd_result_has_guid			(FwupdResult	*result,
+							 const gchar	*guid);
+GPtrArray	*fwupd_result_get_guids			(FwupdResult	*result);
+const gchar	*fwupd_result_get_guid_default		(FwupdResult	*result);
+
+/* device-specific */
 const gchar	*fwupd_result_get_device_id		(FwupdResult	*result);
 void		 fwupd_result_set_device_id		(FwupdResult	*result,
 							 const gchar	*device_id);
@@ -149,6 +154,13 @@ void		 fwupd_result_set_update_name		(FwupdResult	*result,
 GVariant	*fwupd_result_to_data			(FwupdResult	*result,
 							 const gchar	*type_string);
 gchar		*fwupd_result_to_string			(FwupdResult	*result);
+
+/* deprecated */
+G_DEPRECATED_FOR(fwupd_result_get_guids)
+const gchar	*fwupd_result_get_guid			(FwupdResult	*result);
+G_DEPRECATED_FOR(fwupd_result_add_guid)
+void		 fwupd_result_set_guid			(FwupdResult	*result,
+							 const gchar	*guid);
 
 G_END_DECLS
 

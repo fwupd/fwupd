@@ -357,7 +357,7 @@ fu_main_get_item_by_guid (FuMainPrivate *priv, const gchar *guid)
 
 	for (i = 0; i < priv->devices->len; i++) {
 		item = g_ptr_array_index (priv->devices, i);
-		if (g_strcmp0 (fu_device_get_guid (item->device), guid) == 0)
+		if (fu_device_has_guid (item->device, guid))
 			return item;
 	}
 	return NULL;
@@ -728,6 +728,27 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 }
 
 /**
+ * fu_main_store_get_app_by_guids:
+ **/
+static AsApp *
+fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
+{
+	GPtrArray *guids;
+	guint i;
+
+	guids = fu_device_get_guids (device);
+	for (i = 0; i < guids->len; i++) {
+		AsApp *app = NULL;
+		app = as_store_get_app_by_provide (store,
+						   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
+						   g_ptr_array_index (guids, i));
+		if (app != NULL)
+			return app;
+	}
+	return NULL;
+}
+
+/**
  * fu_main_update_helper:
  **/
 static gboolean
@@ -751,9 +772,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		for (i = 0; i < helper->priv->devices->len; i++) {
 			FuDeviceItem *item;
 			item = g_ptr_array_index (helper->priv->devices, i);
-			app = as_store_get_app_by_provide (helper->store,
-							   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
-							   fu_device_get_guid (item->device));
+			app = fu_main_store_get_app_by_guids (helper->store, item->device);
 			if (app != NULL) {
 				helper->device = g_object_ref (item->device);
 				break;
@@ -774,9 +793,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	} else {
 		/* find an application from the cabinet 'store' for the
 		 * chosen device */
-		app = as_store_get_app_by_provide (helper->store,
-						   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
-						   fu_device_get_guid (helper->device));
+		app = fu_main_store_get_app_by_guids (helper->store, helper->device);
 		if (app == NULL) {
 			g_autofree gchar *guid = NULL;
 			guid = fu_main_get_guids_from_store (helper->store);
@@ -784,7 +801,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "firmware is not for this hw: required %s got %s",
-				     fu_device_get_guid (helper->device), guid);
+				     fu_device_get_guid_default (helper->device), guid);
 			return FALSE;
 		}
 	}
@@ -1164,10 +1181,8 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	if (version == NULL)
 		return FALSE;
 
-	/* match the GUID in the XML */
-	app = as_store_get_app_by_provide (priv->store,
-					   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
-					   fu_device_get_guid (item->device));
+	/* match the GUIDs in the XML */
+	app = fu_main_store_get_app_by_guids (priv->store, item->device);
 	if (app == NULL)
 		return FALSE;
 
@@ -1521,9 +1536,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* find component in metadata */
-		app = as_store_get_app_by_provide (priv->store,
-						   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
-						   fu_device_get_guid (item->device));
+		app = fu_main_store_get_app_by_guids (priv->store, item->device);
 		if (app == NULL) {
 			g_dbus_method_invocation_return_error (invocation,
 							       FWUPD_ERROR,
@@ -1769,9 +1782,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			 * so try to find the first thing that's installed */
 			for (i = 0; i < priv->devices->len; i++) {
 				item = g_ptr_array_index (priv->devices, i);
-				app = as_store_get_app_by_provide (store,
-								   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
-								   fu_device_get_guid (item->device));
+				app = fu_main_store_get_app_by_guids (store, item->device);
 				if (app != NULL)
 					break;
 			}
@@ -2092,9 +2103,7 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 	g_ptr_array_add (priv->devices, item);
 
 	/* does this match anything in the AppStream data */
-	app = as_store_get_app_by_provide (priv->store,
-					   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
-					   fu_device_get_guid (item->device));
+	app = fu_main_store_get_app_by_guids (priv->store, item->device);
 	if (app != NULL) {
 		const gchar *tmp;
 		tmp = as_app_get_metadata_item (app, FU_DEVICE_KEY_FWUPD_PLUGIN);

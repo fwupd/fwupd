@@ -110,7 +110,7 @@ fu_provider_uefi_clear_results (FuProvider *provider, FuDevice *device, GError *
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_provider_uefi_find (iter, fu_device_get_guid (device), error);
+	re = fu_provider_uefi_find (iter, fu_device_get_guid_default (device), error);
 	if (re == NULL)
 		return FALSE;
 	if (fwup_clear_status (re) < 0) {
@@ -118,7 +118,7 @@ fu_provider_uefi_clear_results (FuProvider *provider, FuDevice *device, GError *
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "Cannot create clear UEFI status for %s",
-			     fu_device_get_guid (device));
+			     fu_device_get_guid_default (device));
 		return FALSE;
 	}
 	return TRUE;
@@ -177,7 +177,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_provider_uefi_find (iter, fu_device_get_guid (device), error);
+	re = fu_provider_uefi_find (iter, fu_device_get_guid_default (device), error);
 	if (re == NULL)
 		return FALSE;
 	if (fwup_get_last_attempt_info (re, &version, &status, &when) < 0) {
@@ -185,7 +185,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "Cannot get UEFI status for %s",
-			     fu_device_get_guid (device));
+			     fu_device_get_guid_default (device));
 		return FALSE;
 	}
 	version_str = g_strdup_printf ("%u", version);
@@ -219,7 +219,7 @@ fu_provider_uefi_update (FuProvider *provider,
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_provider_uefi_find (iter, fu_device_get_guid (device), error);
+	re = fu_provider_uefi_find (iter, fu_device_get_guid_default (device), error);
 	if (re == NULL)
 		return FALSE;
 
@@ -325,7 +325,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 	if (supported >= 2) {
 		dev = fu_device_new ();
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
-		fu_device_set_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+		fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 		fu_device_set_version (dev, "0");
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_ONLINE);
 		fu_device_add_flag (dev, FU_DEVICE_FLAG_LOCKED);
@@ -373,7 +373,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 
 		dev = fu_device_new ();
 		fu_device_set_id (dev, id);
-		fu_device_set_guid (dev, guid);
+		fu_device_add_guid (dev, guid);
 		fu_device_set_version (dev, version);
 		if (display_name != NULL)
 			fu_device_set_name(dev, display_name);

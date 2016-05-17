@@ -37,7 +37,7 @@ static void fwupd_result_finalize	 (GObject *object);
  * Private #FwupdResult data
  **/
 typedef struct {
-	gchar				*guid;
+	GPtrArray			*guids;
 
 	/* device-specific */
 	gchar				*device_checksum;
@@ -123,6 +123,90 @@ fwupd_result_set_device_id (FwupdResult *result, const gchar *device_id)
 }
 
 /**
+ * fwupd_result_get_guids:
+ * @result: A #FwupdResult
+ *
+ * Gets the GUIDs.
+ *
+ * Returns: (element-type utf8) (transfer none): the GUIDs
+ *
+ * Since: 0.7.2
+ **/
+GPtrArray *
+fwupd_result_get_guids (FwupdResult *result)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
+	return priv->guids;
+}
+
+/**
+ * fwupd_result_has_guid:
+ * @result: A #FwupdResult
+ * @guid: the GUID, e.g. "2082b5e0-7a64-478a-b1b2-e3404fab6dad"
+ *
+ * Finds out if the device has this specific GUID.
+ *
+ * Returns: %TRUE if the GUID is found
+ *
+ * Since: 0.7.2
+ **/
+gboolean
+fwupd_result_has_guid (FwupdResult *result, const gchar *guid)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	guint i;
+
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), FALSE);
+
+	for (i = 0; i < priv->guids->len; i++) {
+		const gchar *guid_tmp = g_ptr_array_index (priv->guids, i);
+		if (g_strcmp0 (guid, guid_tmp) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fwupd_result_add_guid:
+ * @result: A #FwupdResult
+ * @guid: the GUID, e.g. "2082b5e0-7a64-478a-b1b2-e3404fab6dad"
+ *
+ * Adds the GUID if it does not already exist.
+ *
+ * Since: 0.7.2
+ **/
+void
+fwupd_result_add_guid (FwupdResult *result, const gchar *guid)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_if_fail (FWUPD_IS_RESULT (result));
+	if (fwupd_result_has_guid (result, guid))
+		return;
+	g_ptr_array_add (priv->guids, g_strdup (guid));
+}
+
+/**
+ * fwupd_result_get_guid_default:
+ * @result: A #FwupdResult
+ *
+ * Gets the default GUID.
+ *
+ * Returns: the GUID, or %NULL if unset
+ *
+ * Since: 0.7.2
+ **/
+const gchar *
+fwupd_result_get_guid_default (FwupdResult *result)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
+	if (priv->guids->len == 0)
+		return NULL;
+	return g_ptr_array_index (priv->guids, 0);
+}
+
+/**
  * fwupd_result_get_guid:
  * @result: A #FwupdResult
  *
@@ -130,14 +214,14 @@ fwupd_result_set_device_id (FwupdResult *result, const gchar *device_id)
  *
  * Returns: the GUID, or %NULL if unset
  *
+ * This function has been deprecated since 0.7.2.
+ *
  * Since: 0.7.0
  **/
 const gchar *
 fwupd_result_get_guid (FwupdResult *result)
 {
-	FwupdResultPrivate *priv = GET_PRIVATE (result);
-	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->guid;
+	return fwupd_result_get_guid_default (result);
 }
 
 /**
@@ -147,15 +231,14 @@ fwupd_result_get_guid (FwupdResult *result)
  *
  * Sets the GUID.
  *
+ * This function has been deprecated since 0.7.2.
+ *
  * Since: 0.7.0
  **/
 void
 fwupd_result_set_guid (FwupdResult *result, const gchar *guid)
 {
-	FwupdResultPrivate *priv = GET_PRIVATE (result);
-	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->guid);
-	priv->guid = g_strdup (guid);
+	fwupd_result_add_guid (result, guid);
 }
 
 /**
@@ -1216,10 +1299,18 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	if (priv->guid != NULL) {
+	if (priv->guids->len > 0) {
+		guint i;
+		g_autoptr(GString) str = g_string_new ("");
+		for (i = 0; i < priv->guids->len; i++) {
+			const gchar *guid = g_ptr_array_index (priv->guids, i);
+			g_string_append_printf (str, "%s,", guid);
+		}
+		if (str->len > 0)
+			g_string_truncate (str, str->len - 1);
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_GUID,
-				       g_variant_new_string (priv->guid));
+				       g_variant_new_string (str->str));
 	}
 	if (priv->device_name != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1386,7 +1477,11 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_GUID) == 0) {
-		fwupd_result_set_guid (result, g_variant_get_string (value, NULL));
+		guint i;
+		const gchar *guids = g_variant_get_string (value, NULL);
+		g_auto(GStrv) split = g_strsplit (guids, ",", -1);
+		for (i = 0; split[i] != NULL; i++)
+			fwupd_result_add_guid (result, split[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_NAME) == 0) {
@@ -1653,6 +1748,7 @@ fwupd_result_to_string (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	GString *str;
+	guint i;
 
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
 
@@ -1665,7 +1761,10 @@ fwupd_result_to_string (FwupdResult *result)
 		g_string_append_printf (str, "%s\n", "Unknown Device");
 
 	/* device */
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, priv->guid);
+	for (i = 0; i < priv->guids->len; i++) {
+		const gchar *guid = g_ptr_array_index (priv->guids, i);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
+	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->device_id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION, priv->device_description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PROVIDER, priv->device_provider);
@@ -1778,6 +1877,7 @@ fwupd_result_init (FwupdResult *result)
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	priv->device_checksum_kind = G_CHECKSUM_SHA1;
 	priv->update_checksum_kind = G_CHECKSUM_SHA1;
+	priv->guids = g_ptr_array_new_with_free_func (g_free);
 }
 
 /**
@@ -1789,6 +1889,7 @@ fwupd_result_finalize (GObject *object)
 	FwupdResult *result = FWUPD_RESULT (object);
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 
+	g_ptr_array_unref (priv->guids);
 	g_free (priv->device_description);
 	g_free (priv->device_checksum);
 	g_free (priv->device_id);
@@ -1797,7 +1898,6 @@ fwupd_result_finalize (GObject *object)
 	g_free (priv->device_provider);
 	g_free (priv->device_version);
 	g_free (priv->device_version_lowest);
-	g_free (priv->guid);
 	g_free (priv->update_description);
 	g_free (priv->update_error);
 	g_free (priv->update_filename);

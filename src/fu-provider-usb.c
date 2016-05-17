@@ -134,7 +134,7 @@ fu_provider_usb_device_added (FuProviderUsb *provider_usb, GUsbDevice *device)
 					  g_usb_device_get_pid (device));
 		guid = as_utils_guid_from_string (vid_pid);
 	}
-	fu_device_set_guid (dev, guid);
+	fu_device_add_guid (dev, guid);
 
 	/* we're done here */
 	if (!g_usb_device_close (device, &error))

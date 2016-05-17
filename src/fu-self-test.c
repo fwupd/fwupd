@@ -208,7 +208,7 @@ fu_provider_func (void)
 	g_assert_cmpint (cnt, ==, 0);
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==, "FakeDevice");
-	g_assert_cmpstr (fu_device_get_guid (device), ==,
+	g_assert_cmpstr (fu_device_get_guid_default (device), ==,
 			 "00000000-0000-0000-0000-000000000000");
 	g_assert_cmpstr (fu_device_get_name (device), ==,
 			 "Integrated Webcam™");
@@ -316,7 +316,7 @@ fu_provider_rpi_func (void)
 	g_assert_cmpint (cnt, ==, 0);
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==, "raspberry-pi");
-	g_assert_cmpstr (fu_device_get_guid (device), ==,
+	g_assert_cmpstr (fu_device_get_guid_default (device), ==,
 			 "91dd7368-8640-5d72-a217-a505c034dd0b");
 	g_assert_cmpstr (fu_device_get_version (device), ==,
 			 "20150803");

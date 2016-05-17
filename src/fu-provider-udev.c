@@ -102,17 +102,11 @@ fu_provider_udev_unlock (FuProvider *provider,
 		fu_device_set_version (device, fu_rom_get_version (rom));
 	}
 
-	/* prefer the GUID from the firmware rather than the
-	 * hardware as the firmware may be more generic, which
-	 * also allows us to match the GUID when doing 'verify'
+	/* Also add the GUID from the firmware as the firmware may be more
+	 * generic, which also allows us to match the GUID when doing 'verify'
 	 * on a device with a different PID to the firmware */
-	if (g_strcmp0 (fu_device_get_guid (device), fu_rom_get_guid (rom)) != 0) {
-		fu_device_set_guid (device, fu_rom_get_guid (rom));
-		g_debug ("changing GUID of %s from %s to %s",
-			 fu_device_get_id (device),
-			 fu_device_get_guid (device),
-			 fu_rom_get_guid (rom));
-	}
+	fu_device_add_guid (device, fu_rom_get_guid (rom));
+
 	return TRUE;
 }
 
@@ -206,7 +200,7 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	dev = fu_device_new ();
 	fu_device_add_flag (dev, FU_DEVICE_FLAG_INTERNAL);
 	fu_device_set_id (dev, id);
-	fu_device_set_guid (dev, guid_new);
+	fu_device_add_guid (dev, guid_new);
 	display_name = g_udev_device_get_property (device, "FWUPD_MODEL");
 	if (display_name == NULL)
 		display_name = g_udev_device_get_property (device, "ID_MODEL_FROM_DATABASE");

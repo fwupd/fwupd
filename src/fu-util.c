@@ -885,12 +885,12 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 					  NULL,
 					  &error_local)) {
 			g_print ("%s\tFAILED: %s\n",
-				 fwupd_result_get_guid (res),
+				 fwupd_result_get_guid_default (res),
 				 error_local->message);
 			continue;
 		}
 		g_print ("%s\t%s\n",
-			 fwupd_result_get_guid (res),
+			 fwupd_result_get_guid_default (res),
 			 _("OK"));
 	}
 	return TRUE;
@@ -981,9 +981,10 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FwupdResult *res;
 	GPtrArray *results = NULL;
+	GPtrArray *guids;
 	GChecksumType checksum_type;
 	const gchar *tmp;
-	guint i;
+	guint i, j;
 
 	/* print any updates */
 	results = fwupd_client_get_updates (priv->client, NULL, error);
@@ -1000,7 +1001,11 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("ID"), fwupd_result_get_update_id (res));
 
 		/* TRANSLATORS: a GUID for the hardware */
-		fu_util_print_data (_("GUID"), fwupd_result_get_guid (res));
+		guids = fwupd_result_get_guids (res);
+		for (j = 0; j < guids->len; j++) {
+			tmp = g_ptr_array_index (guids, j);
+			fu_util_print_data (_("GUID"), tmp);
+		}
 
 		/* TRANSLATORS: section header for firmware version */
 		fu_util_print_data (_("Update Version"),
