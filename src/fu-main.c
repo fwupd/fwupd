@@ -846,6 +846,16 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		return FALSE;
 	}
 
+	/* check the device is locked */
+	if (fu_device_has_flag (helper->device, FU_DEVICE_FLAG_LOCKED)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Device %s is locked",
+			     fu_device_get_id(helper->device));
+		return FALSE;
+	}
+
 	/* compare the versions of what we have installed */
 	tmp = fu_device_get_version (helper->device);
 	if (tmp == NULL) {
