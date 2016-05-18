@@ -561,6 +561,17 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 		return FALSE;
 	}
 
+	/* The provider might have taken away update abilities */
+	if (!fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE) &&
+	    !fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_ONLINE)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Device %s does not currently allow updates",
+			    fu_device_get_id (helper->device));
+		return FALSE;
+	}
+
 	/* can we only do this on AC power */
 	if (fu_device_has_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC)) {
 		if (fu_main_on_battery (helper->priv)) {
