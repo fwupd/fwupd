@@ -1749,14 +1749,15 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		FwupdDeviceFlags device_flags = 0;
 		FwupdTrustFlags trust_flags = FWUPD_TRUST_FLAG_NONE;
 		const gchar *tmp;
-		const gchar *guid = NULL;
 		gint32 fd_handle = 0;
 		gint fd;
 		guint i;
+		g_autofree gchar *guids_as_str = NULL;
 		g_autoptr(AsStore) store = NULL;
 		g_autoptr(GBytes) blob_cab = NULL;
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GInputStream) stream = NULL;
+		g_autoptr(GPtrArray) guid_array = NULL;
 
 		/* check the id exists */
 		g_variant_get (parameters, "(h)", &fd_handle);
@@ -1821,20 +1822,33 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		if (app == NULL)
 			app = AS_APP (g_ptr_array_index (apps, 0));
 
-		/* get guid */
+		/* get guids */
+		guid_array = g_ptr_array_new_with_free_func (g_free);
 		provides = as_app_get_provides (app);
 		for (i = 0; i < provides->len; i++) {
 			AsProvide *prov = AS_PROVIDE (g_ptr_array_index (provides, i));
-			if (as_provide_get_kind (prov) == AS_PROVIDE_KIND_FIRMWARE_FLASHED) {
-				guid = as_provide_get_value (prov);
-				break;
-			}
+			const gchar *guid;
+
+			/* not firmware */
+			if (as_provide_get_kind (prov) != AS_PROVIDE_KIND_FIRMWARE_FLASHED)
+				continue;
+
+			/* is a online or offline update appropriate */
+			guid = as_provide_get_value (prov);
+			if (guid == NULL)
+				continue;
+			item = fu_main_get_item_by_guid (priv, guid);
+			if (item != NULL)
+				device_flags = fu_device_get_flags (item->device);
+
+			/* add GUID */
+			g_ptr_array_add (guid_array, g_strdup (guid));
 		}
-		if (guid == NULL) {
+		if (guid_array->len == 0) {
 			g_dbus_method_invocation_return_error (invocation,
 							       FWUPD_ERROR,
 							       FWUPD_ERROR_INTERNAL,
-							       "component has no GUID");
+							       "component has no GUIDs");
 			return;
 		}
 
@@ -1848,10 +1862,9 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* possibly convert the version from 0x to dotted */
 		fu_main_vendor_quirk_release_version (app);
 
-		/* is a online or offline update appropriate */
-		item = fu_main_get_item_by_guid (priv, guid);
-		if (item != NULL)
-			device_flags = fu_device_get_flags (item->device);
+		/* make GUID string */
+		g_ptr_array_add (guid_array, NULL);
+		guids_as_str = g_strjoinv (",", (gchar **) guid_array->pdata);
 
 		/* create an array with all the metadata in */
 		g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
@@ -1860,7 +1873,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 				       g_variant_new_string (as_release_get_version (rel)));
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_GUID,
-				       g_variant_new_string (guid));
+				       g_variant_new_string (guids_as_str));
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_UPDATE_SIZE,
 				       g_variant_new_uint64 (as_release_get_size (rel, AS_SIZE_KIND_INSTALLED)));
