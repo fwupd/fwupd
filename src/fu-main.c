@@ -1337,6 +1337,147 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 	return updates;
 }
 
+static AsStore *
+fu_main_get_store_from_fd (FuMainPrivate *priv, gint fd, GError **error)
+{
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+
+	/* read the entire fd to a data blob */
+	stream = g_unix_input_stream_new (fd, TRUE);
+	blob_cab = g_input_stream_read_bytes (stream,
+					      FU_MAIN_FIRMWARE_SIZE_MAX,
+					      NULL, &error_local);
+	if (blob_cab == NULL){
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     error_local->message);
+		return NULL;
+	}
+
+	/* load file */
+	store = as_store_new ();
+	if (!as_store_from_bytes (store, blob_cab, NULL, &error_local)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     error_local->message);
+		return NULL;
+	}
+	return g_steal_pointer (&store);
+}
+
+static FwupdResult *
+fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
+{
+	FwupdTrustFlags trust_flags = FWUPD_TRUST_FLAG_NONE;
+	AsRelease *rel;
+	GPtrArray *provides;
+	guint i;
+	g_autoptr(FwupdResult) res = NULL;
+
+	res = fwupd_result_new ();
+	provides = as_app_get_provides (app);
+	for (i = 0; i < provides->len; i++) {
+		AsProvide *prov = AS_PROVIDE (g_ptr_array_index (provides, i));
+		FuDeviceItem *item;
+		const gchar *guid;
+
+		/* not firmware */
+		if (as_provide_get_kind (prov) != AS_PROVIDE_KIND_FIRMWARE_FLASHED)
+			continue;
+
+		/* is a online or offline update appropriate */
+		guid = as_provide_get_value (prov);
+		if (guid == NULL)
+			continue;
+		item = fu_main_get_item_by_guid (priv, guid);
+		if (item != NULL) {
+			FwupdDeviceFlags device_flags;
+			device_flags = fu_device_get_flags (item->device);
+			fwupd_result_set_device_flags (res, device_flags);
+		}
+
+		/* add GUID */
+		fwupd_result_add_guid (res, guid);
+	}
+	if (fwupd_result_get_guids(res)->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "component has no GUIDs");
+		return NULL;
+	}
+
+	/* verify trust */
+	rel = as_app_get_release_default (app);
+	if (!fu_main_get_release_trust_flags (rel, &trust_flags, error))
+		return NULL;
+
+	/* possibly convert the version from 0x to dotted */
+	fu_main_vendor_quirk_release_version (app);
+
+	/* create a result with all the metadata in */
+	fwupd_result_set_device_description (res, as_app_get_description (app, NULL));
+	fwupd_result_set_update_description (res, as_release_get_description (rel, NULL));
+	fwupd_result_set_update_homepage (res, as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE));
+	fwupd_result_set_update_license (res, as_app_get_project_license (app));
+	fwupd_result_set_update_name (res, as_app_get_name (app, NULL));
+	fwupd_result_set_update_size (res, as_release_get_size (rel, AS_SIZE_KIND_INSTALLED));
+	fwupd_result_set_update_summary (res, as_app_get_comment (app, NULL));
+	fwupd_result_set_update_trust_flags (res, trust_flags);
+	fwupd_result_set_update_vendor (res, as_app_get_developer_name (app, NULL));
+	fwupd_result_set_update_version (res, as_release_get_version (rel));
+	return g_steal_pointer (&res);
+}
+
+static GVariant *
+fu_main_get_details_from_fd (FuMainPrivate *priv, gint fd, GError **error)
+{
+	AsApp *app = NULL;
+	GPtrArray *apps;
+	guint i;
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(FwupdResult) res = NULL;
+
+	store = fu_main_get_store_from_fd (priv, fd, error);
+	if (store == NULL)
+		return NULL;
+
+	/* get all apps */
+	apps = as_store_get_apps (store);
+	if (apps->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no components");
+		return NULL;
+	}
+	if (apps->len > 1) {
+		/* we've got a .cab file with multiple components,
+		 * so try to find the first thing that's installed */
+		for (i = 0; i < priv->devices->len; i++) {
+			FuDeviceItem *item = g_ptr_array_index (priv->devices, i);
+			app = fu_main_store_get_app_by_guids (store, item->device);
+			if (app != NULL)
+				break;
+		}
+	}
+
+	/* well, we've tried our best, just show the first entry */
+	if (app == NULL)
+		app = AS_APP (g_ptr_array_index (apps, 0));
+
+	/* create a result with all the metadata in */
+	res = fu_main_get_result_from_app (priv, app, error);
+	if (res == NULL)
+		return NULL;
+	return fwupd_result_to_data (res, "(a{sv})");
+}
+
 /**
  * fu_main_daemon_method_call:
  **/
@@ -1736,30 +1877,15 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		return;
 	}
 
-	/* return 'a{sv}' */
+	/* get a single result object from a local file */
 	if (g_strcmp0 (method_name, "GetDetails") == 0) {
-		AsApp *app = NULL;
-		AsRelease *rel;
 		GDBusMessage *message;
-		GPtrArray *apps;
-		GPtrArray *provides;
 		GUnixFDList *fd_list;
-		GVariantBuilder builder;
-		FuDeviceItem *item;
-		FwupdDeviceFlags device_flags = 0;
-		FwupdTrustFlags trust_flags = FWUPD_TRUST_FLAG_NONE;
-		const gchar *tmp;
 		gint32 fd_handle = 0;
 		gint fd;
-		guint i;
-		g_autofree gchar *guids_as_str = NULL;
-		g_autoptr(AsStore) store = NULL;
-		g_autoptr(GBytes) blob_cab = NULL;
 		g_autoptr(GError) error = NULL;
-		g_autoptr(GInputStream) stream = NULL;
-		g_autoptr(GPtrArray) guid_array = NULL;
 
-		/* check the id exists */
+		/* get parameters */
 		g_variant_get (parameters, "(h)", &fd_handle);
 		g_debug ("Called %s(%i)", method_name, fd_handle);
 
@@ -1780,156 +1906,14 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			return;
 		}
 
-		/* read the entire fd to a data blob */
-		stream = g_unix_input_stream_new (fd, TRUE);
-		blob_cab = g_input_stream_read_bytes (stream,
-						      FU_MAIN_FIRMWARE_SIZE_MAX,
-						      NULL, &error);
-		if (blob_cab == NULL){
+		/* get details about the file */
+		val = fu_main_get_details_from_fd (priv, fd, &error);
+		if (val == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation,
-								error);
+							        error);
+			fu_main_set_status (priv, FWUPD_STATUS_IDLE);
 			return;
 		}
-
-		/* load file */
-		store = as_store_new ();
-		if (!as_store_from_bytes (store, blob_cab, NULL, &error)) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
-			return;
-		}
-
-		/* get default app */
-		apps = as_store_get_apps (store);
-		if (apps->len == 0) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_INVALID_FILE,
-							       "no components");
-			return;
-		}
-		if (apps->len > 1) {
-			/* we've got a .cab file with multiple components,
-			 * so try to find the first thing that's installed */
-			for (i = 0; i < priv->devices->len; i++) {
-				item = g_ptr_array_index (priv->devices, i);
-				app = fu_main_store_get_app_by_guids (store, item->device);
-				if (app != NULL)
-					break;
-			}
-		}
-
-		/* well, we've tried our best, just show the first entry */
-		if (app == NULL)
-			app = AS_APP (g_ptr_array_index (apps, 0));
-
-		/* get guids */
-		guid_array = g_ptr_array_new_with_free_func (g_free);
-		provides = as_app_get_provides (app);
-		for (i = 0; i < provides->len; i++) {
-			AsProvide *prov = AS_PROVIDE (g_ptr_array_index (provides, i));
-			const gchar *guid;
-
-			/* not firmware */
-			if (as_provide_get_kind (prov) != AS_PROVIDE_KIND_FIRMWARE_FLASHED)
-				continue;
-
-			/* is a online or offline update appropriate */
-			guid = as_provide_get_value (prov);
-			if (guid == NULL)
-				continue;
-			item = fu_main_get_item_by_guid (priv, guid);
-			if (item != NULL)
-				device_flags = fu_device_get_flags (item->device);
-
-			/* add GUID */
-			g_ptr_array_add (guid_array, g_strdup (guid));
-		}
-		if (guid_array->len == 0) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_INTERNAL,
-							       "component has no GUIDs");
-			return;
-		}
-
-		/* verify trust */
-		rel = as_app_get_release_default (app);
-		if (!fu_main_get_release_trust_flags (rel, &trust_flags, &error)) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
-			return;
-		}
-
-		/* possibly convert the version from 0x to dotted */
-		fu_main_vendor_quirk_release_version (app);
-
-		/* make GUID string */
-		g_ptr_array_add (guid_array, NULL);
-		guids_as_str = g_strjoinv (",", (gchar **) guid_array->pdata);
-
-		/* create an array with all the metadata in */
-		g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_VERSION,
-				       g_variant_new_string (as_release_get_version (rel)));
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_GUID,
-				       g_variant_new_string (guids_as_str));
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_SIZE,
-				       g_variant_new_uint64 (as_release_get_size (rel, AS_SIZE_KIND_INSTALLED)));
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_FLAGS,
-				       g_variant_new_uint64 (device_flags));
-
-		/* optional properties */
-		tmp = as_app_get_developer_name (app, NULL);
-		if (tmp != NULL) {
-			g_variant_builder_add (&builder, "{sv}",
-					       FWUPD_RESULT_KEY_UPDATE_VENDOR,
-					       g_variant_new_string (tmp));
-		}
-		tmp = as_app_get_name (app, NULL);
-		if (tmp != NULL) {
-			g_variant_builder_add (&builder, "{sv}",
-					       FWUPD_RESULT_KEY_UPDATE_NAME,
-					       g_variant_new_string (tmp));
-		}
-		tmp = as_app_get_comment (app, NULL);
-		if (tmp != NULL) {
-			g_variant_builder_add (&builder, "{sv}",
-					       FWUPD_RESULT_KEY_UPDATE_SUMMARY,
-					       g_variant_new_string (tmp));
-		}
-		tmp = as_app_get_description (app, NULL);
-		if (tmp != NULL) {
-			g_variant_builder_add (&builder, "{sv}",
-					       FWUPD_RESULT_KEY_DEVICE_DESCRIPTION,
-					       g_variant_new_string (tmp));
-		}
-		tmp = as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE);
-		if (tmp != NULL) {
-			g_variant_builder_add (&builder, "{sv}",
-					       FWUPD_RESULT_KEY_UPDATE_HOMEPAGE,
-					       g_variant_new_string (tmp));
-		}
-		tmp = as_app_get_project_license (app);
-		if (tmp != NULL) {
-			g_variant_builder_add (&builder, "{sv}",
-					       FWUPD_RESULT_KEY_UPDATE_LICENSE,
-					       g_variant_new_string (tmp));
-		}
-		tmp = as_release_get_description (rel, NULL);
-		if (tmp != NULL) {
-			g_variant_builder_add (&builder, "{sv}",
-					       FWUPD_RESULT_KEY_UPDATE_DESCRIPTION,
-					       g_variant_new_string (tmp));
-		}
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS,
-				       g_variant_new_uint64 (trust_flags));
-
-		/* return whole array */
-		val = g_variant_new ("(a{sv})", &builder);
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
