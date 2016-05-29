@@ -1451,8 +1451,12 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 	}
 
 	/* supported types */
-	if (g_strcmp0 (type_string, "{sa{sv}}") == 0)
-		return g_variant_new ("{sa{sv}}", priv->device_id, &builder);
+	if (g_strcmp0 (type_string, "{sa{sv}}") == 0) {
+		const gchar *device_id = priv->device_id;
+		if (device_id == NULL)
+			device_id = "";
+		return g_variant_new ("{sa{sv}}", device_id, &builder);
+	}
 	if (g_strcmp0 (type_string, "(a{sv})") == 0)
 		return g_variant_new ("(a{sv})", &builder);
 	return NULL;

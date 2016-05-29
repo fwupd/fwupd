@@ -1396,9 +1396,8 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 			continue;
 		item = fu_main_get_item_by_guid (priv, guid);
 		if (item != NULL) {
-			FwupdDeviceFlags device_flags;
-			device_flags = fu_device_get_flags (item->device);
-			fwupd_result_set_device_flags (res, device_flags);
+			fwupd_result_set_device_flags (res, fu_device_get_flags (item->device));
+			fwupd_result_set_device_id (res, fu_device_get_id (item->device));
 		}
 
 		/* add GUID */
@@ -1476,6 +1475,43 @@ fu_main_get_details_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 	if (res == NULL)
 		return NULL;
 	return fwupd_result_to_data (res, "(a{sv})");
+}
+
+static GVariant *
+fu_main_get_details_local_from_fd (FuMainPrivate *priv, gint fd, GError **error)
+{
+	GPtrArray *apps;
+	GVariantBuilder builder;
+	guint i;
+	g_autoptr(AsStore) store = NULL;
+
+	store = fu_main_get_store_from_fd (priv, fd, error);
+	if (store == NULL)
+		return NULL;
+
+	/* get all apps */
+	apps = as_store_get_apps (store);
+	if (apps->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no components");
+		return NULL;
+	}
+
+	/* create results with all the metadata in */
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	for (i = 0; i < apps->len; i++) {
+		g_autoptr(FwupdResult) res = NULL;
+		AsApp *app = g_ptr_array_index (apps, i);
+		GVariant *tmp;
+		res = fu_main_get_result_from_app (priv, app, error);
+		if (res == NULL)
+			return NULL;
+		tmp = fwupd_result_to_data (res, "{sa{sv}}");
+		g_variant_builder_add_value (&builder, tmp);
+	}
+	return g_variant_new ("(a{sa{sv}})", &builder);
 }
 
 /**
@@ -1908,6 +1944,47 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 		/* get details about the file */
 		val = fu_main_get_details_from_fd (priv, fd, &error);
+		if (val == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation,
+							        error);
+			fu_main_set_status (priv, FWUPD_STATUS_IDLE);
+			return;
+		}
+		g_dbus_method_invocation_return_value (invocation, val);
+		return;
+	}
+
+	/* get multiple result objects from a local file */
+	if (g_strcmp0 (method_name, "GetDetailsLocal") == 0) {
+		GDBusMessage *message;
+		GUnixFDList *fd_list;
+		gint32 fd_handle = 0;
+		gint fd;
+		g_autoptr(GError) error = NULL;
+
+		/* get parameters */
+		g_variant_get (parameters, "(h)", &fd_handle);
+		g_debug ("Called %s(%i)", method_name, fd_handle);
+
+		/* get the fd */
+		message = g_dbus_method_invocation_get_message (invocation);
+		fd_list = g_dbus_message_get_unix_fd_list (message);
+		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 1) {
+			g_dbus_method_invocation_return_error (invocation,
+							       FWUPD_ERROR,
+							       FWUPD_ERROR_INTERNAL,
+							       "invalid handle");
+			return;
+		}
+		fd = g_unix_fd_list_get (fd_list, fd_handle, &error);
+		if (fd < 0) {
+			g_dbus_method_invocation_return_gerror (invocation,
+								error);
+			return;
+		}
+
+		/* get details about the file */
+		val = fu_main_get_details_local_from_fd (priv, fd, &error);
 		if (val == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation,
 							        error);

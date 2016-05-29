@@ -101,6 +101,34 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetDetailsLocal'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets details about a local firmware file.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='h' name='handle' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              An index into the array of file descriptors that may have
+              been sent with the DBus message.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='a{sa{sv}}' name='results' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>An array of results, with any properties set on each.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='Install'>
       <doc:doc>
         <doc:description>

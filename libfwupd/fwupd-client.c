@@ -774,6 +774,88 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 }
 
 /**
+ * fwupd_client_get_details_local:
+ * @client: A #FwupdClient
+ * @filename: the firmware filename, e.g. "firmware.cab"
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets details about a specific firmware file.
+ *
+ * Returns: (transfer container) (element-type FwupdResult): an array of results
+ *
+ * Since: 0.7.2
+ **/
+GPtrArray *
+fwupd_client_get_details_local (FwupdClient *client, const gchar *filename,
+				GCancellable *cancellable, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	GVariant *body;
+	gint fd;
+	gint retval;
+	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GDBusMessage) request = NULL;
+	g_autoptr(GUnixFDList) fd_list = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (filename != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* open file */
+	fd = open (filename, O_RDONLY);
+	if (fd < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to open %s",
+			     filename);
+		return NULL;
+	}
+
+	/* set out of band file descriptor */
+	fd_list = g_unix_fd_list_new ();
+	retval = g_unix_fd_list_append (fd_list, fd, NULL);
+	g_assert (retval != -1);
+	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
+						  FWUPD_DBUS_PATH,
+						  FWUPD_DBUS_INTERFACE,
+						  "GetDetailsLocal");
+	g_dbus_message_set_unix_fd_list (request, fd_list);
+
+	/* g_unix_fd_list_append did a dup() already */
+	close (fd);
+
+	/* call into daemon */
+	helper = fwupd_client_helper_new ();
+	body = g_variant_new ("(h)", fd > -1 ? 0 : -1);
+	g_dbus_message_set_body (request, body);
+
+	g_dbus_connection_send_message_with_reply (priv->conn,
+						   request,
+						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+						   -1,
+						   NULL,
+						   cancellable,
+						   fwupd_client_send_message_cb,
+						   helper);
+	g_main_loop_run (helper->loop);
+	if (!helper->ret) {
+		g_propagate_error (error, helper->error);
+		helper->error = NULL;
+		return NULL;
+	}
+
+	/* return results */
+	return fwupd_client_parse_results_from_data (helper->val);
+}
+
+/**
  * fwupd_client_update_metadata:
  * @client: A #FwupdClient
  * @metadata_fn: the XML metadata filename

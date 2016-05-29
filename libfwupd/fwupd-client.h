@@ -62,6 +62,10 @@ GPtrArray	*fwupd_client_get_devices		(FwupdClient	*client,
 GPtrArray	*fwupd_client_get_updates		(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
+GPtrArray	*fwupd_client_get_details_local		(FwupdClient	*client,
+							 const gchar	*filename,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 fwupd_client_verify			(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
@@ -78,6 +82,7 @@ FwupdResult	*fwupd_client_get_results		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
+G_DEPRECATED_FOR(fwupd_client_get_details_local)
 FwupdResult	*fwupd_client_get_details		(FwupdClient	*client,
 							 const gchar	*filename,
 							 GCancellable	*cancellable,

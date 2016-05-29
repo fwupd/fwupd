@@ -329,8 +329,8 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autofree gchar *tmp = NULL;
-	g_autoptr(FwupdResult) res = NULL;
+	guint i;
+	g_autoptr(GPtrArray) array = NULL;
 
 	/* check args */
 	if (g_strv_length (values) != 1) {
@@ -340,11 +340,15 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments: expected 'filename'");
 		return FALSE;
 	}
-	res = fwupd_client_get_details (priv->client, values[0], NULL, error);
-	if (res == NULL)
+	array = fwupd_client_get_details_local (priv->client, values[0], NULL, error);
+	if (array == NULL)
 		return FALSE;
-	tmp = fwupd_result_to_string (res);
-	g_print ("%s", tmp);
+	for (i = 0; i < array->len; i++) {
+		FwupdResult *res = g_ptr_array_index (array, i);
+		g_autofree gchar *tmp = NULL;
+		tmp = fwupd_result_to_string (res);
+		g_print ("%s", tmp);
+	}
 	return TRUE;
 }
 
