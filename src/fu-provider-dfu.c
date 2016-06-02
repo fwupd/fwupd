@@ -378,7 +378,7 @@ fu_provider_dfu_verify (FuProvider *provider,
 	checksum_type = fu_provider_get_checksum_type (flags);
 	hash = g_compute_checksum_for_bytes (checksum_type, blob_fw);
 	fu_device_set_checksum (dev, hash);
-	fu_device_set_checksum_kind (device, checksum_type);
+	fu_device_set_checksum_kind (dev, checksum_type);
 	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
