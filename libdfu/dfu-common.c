@@ -155,3 +155,25 @@ dfu_cipher_kind_to_string (DfuCipherKind cipher_kind)
 		return "xtea";
 	return NULL;
 }
+
+/**
+ * dfu_version_to_string:
+ * @version: a #DfuVersion, e.g. %DFU_VERSION_DFU_1_1
+ *
+ * Converts an enumerated value to a string.
+ *
+ * Return value: a string
+ *
+ * Since: 0.7.2
+ **/
+const gchar *
+dfu_version_to_string (DfuVersion version)
+{
+	if (version == DFU_VERSION_DFU_1_0)
+		return "1.0";
+	if (version == DFU_VERSION_DFU_1_1)
+		return "1.1";
+	if (version == DFU_VERSION_DFUSE)
+		return "DfuSe";
+	return NULL;
+}

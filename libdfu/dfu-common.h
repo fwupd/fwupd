@@ -155,6 +155,24 @@ typedef enum {
 	DFU_CIPHER_KIND_LAST
 } DfuCipherKind;
 
+/**
+ * DfuVersion:
+ * @DFU_VERSION_UNKNOWN:			Format unknown
+ * @DFU_VERSION_DFU_1_0:			DFU 1.0
+ * @DFU_VERSION_DFU_1_1:			DFU 1.1
+ * @DFU_VERSION_DFUSE:				DfuSe
+ *
+ * The known versions of the DFU standard in BCD format.
+ **/
+typedef enum {
+	DFU_VERSION_UNKNOWN			= 0,
+	DFU_VERSION_DFU_1_0			= 0x0100,
+	DFU_VERSION_DFU_1_1			= 0x0110,
+	DFU_VERSION_DFUSE			= 0x011a,
+	/*< private >*/
+	DFU_VERSION_LAST
+} DfuVersion;
+
 #define DFU_METADATA_KEY_LICENSE		"License"
 #define DFU_METADATA_KEY_COPYRIGHT		"Copyright"
 #define DFU_METADATA_KEY_CIPHER_KIND		"CipherKind"
@@ -163,6 +181,7 @@ const gchar	*dfu_state_to_string			(DfuState	 state);
 const gchar	*dfu_status_to_string			(DfuStatus	 status);
 const gchar	*dfu_mode_to_string			(DfuMode	 mode);
 const gchar	*dfu_cipher_kind_to_string		(DfuCipherKind	 cipher_kind);
+const gchar	*dfu_version_to_string			(DfuVersion	 version);
 
 G_END_DECLS
 
