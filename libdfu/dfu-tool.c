@@ -1926,6 +1926,12 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 			 g_usb_device_get_pid (dev),
 			 version);
 
+		tmp = dfu_version_to_string (dfu_device_get_version (device));
+		if (tmp != NULL) {
+			/* TRANSLATORS: DFU protocol version, e.g. 1.1 */
+			dfu_tool_print_indent (_("Protocol"), tmp, 1);
+		}
+
 		/* open */
 		if (!dfu_device_open (device,
 				      DFU_DEVICE_OPEN_FLAG_NONE,

@@ -177,6 +177,7 @@ DfuMode		 dfu_device_get_mode			(DfuDevice	*device);
 DfuState	 dfu_device_get_state			(DfuDevice	*device);
 DfuStatus	 dfu_device_get_status			(DfuDevice	*device);
 guint16		 dfu_device_get_transfer_size		(DfuDevice	*device);
+guint16		 dfu_device_get_version			(DfuDevice	*device);
 guint		 dfu_device_get_timeout			(DfuDevice	*device);
 gboolean	 dfu_device_can_upload			(DfuDevice	*device);
 gboolean	 dfu_device_can_download		(DfuDevice	*device);

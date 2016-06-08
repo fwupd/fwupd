@@ -64,6 +64,7 @@ typedef struct {
 	gboolean		 done_upload_or_download;
 	gchar			*display_name;
 	gchar			*platform_id;
+	guint16			 version;
 	guint16			 runtime_pid;
 	guint16			 runtime_vid;
 	guint16			 runtime_release;
@@ -181,6 +182,24 @@ dfu_device_get_transfer_size (DfuDevice *device)
 }
 
 /**
+ * dfu_device_get_version:
+ * @device: a #GUsbDevice
+ *
+ * Gets the DFU specification version supported by the device.
+ *
+ * Return value: integer, or 0 for unknown, e.g. %DFU_VERSION_DFU_1_1
+ *
+ * Since: 0.7.2
+ **/
+guint16
+dfu_device_get_version (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
+	return priv->version;
+}
+
+/**
  * dfu_device_get_download_timeout:
  * @device: a #GUsbDevice
  *
@@ -253,7 +272,6 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	const DfuFuncDescriptor *desc;
 	gsize iface_data_length;
-	guint16 dfu_version;
 
 	/* parse the functional descriptor */
 	desc = g_bytes_get_data (iface_data, &iface_data_length);
@@ -277,20 +295,20 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 	}
 
 	/* check DFU version */
-	dfu_version = GUINT16_FROM_LE (desc->bcdDFUVersion);
+	priv->version = GUINT16_FROM_LE (desc->bcdDFUVersion);
 	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION) {
 		g_debug ("ignoring quirked DFU version");
 	} else {
-		if (dfu_version == 0x0100 ||
-		    dfu_version == 0x0110) {
+		if (priv->version == DFU_VERSION_DFU_1_0 ||
+		    priv->version == DFU_VERSION_DFU_1_1) {
 			g_debug ("basic DFU, no DfuSe support");
 			priv->dfuse_supported = FALSE;
-		} else if (dfu_version == 0x011a) {
+		} else if (priv->version == DFU_VERSION_DFUSE) {
 			g_debug ("DfuSe support");
 			priv->dfuse_supported = TRUE;
 		} else {
 			g_warning ("DFU version is invalid: 0x%04x",
-				   dfu_version);
+				   priv->version);
 		}
 	}
 
