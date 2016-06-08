@@ -62,6 +62,7 @@ typedef struct {
 	gboolean		 open_new_dev;		/* if set new GUsbDevice */
 	gboolean		 dfuse_supported;
 	gboolean		 done_upload_or_download;
+	gboolean		 claimed_interface;
 	gchar			*display_name;
 	gchar			*platform_id;
 	guint16			 version;
@@ -921,6 +922,40 @@ dfu_device_set_status (DfuDevice *device, DfuStatus status)
 }
 
 /**
+ * dfu_device_ensure_interface:
+ **/
+gboolean
+dfu_device_ensure_interface (DfuDevice *device, GError **error)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_autoptr(GError) error_local = NULL;
+
+	/* already done */
+	if (priv->claimed_interface)
+		return TRUE;
+
+	/* nothing set */
+	if (priv->iface_number == 0xff)
+		return TRUE;
+
+	/* claim, without detaching kernel driver */
+	if (!g_usb_device_claim_interface (priv->dev,
+					   (gint) priv->iface_number,
+					   0, &error_local)) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INVALID_DEVICE,
+			     "cannot claim interface %i: %s",
+			     priv->iface_number, error_local->message);
+		return FALSE;
+	}
+
+	/* success */
+	priv->claimed_interface = TRUE;
+	return TRUE;
+}
+
+/**
  * dfu_device_refresh:
  * @device: a #DfuDevice
  * @cancellable: a #GCancellable, or %NULL
@@ -961,6 +996,10 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 				     "not supported as no DFU runtime");
 		return FALSE;
 	}
+
+	/* ensure interface is claimed */
+	if (!dfu_device_ensure_interface (device, error))
+		return FALSE;
 
 	if (!g_usb_device_control_transfer (priv->dev,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
@@ -1057,6 +1096,10 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 		return FALSE;
 	}
 
+	/* ensure interface is claimed */
+	if (!dfu_device_ensure_interface (device, error))
+		return FALSE;
+
 	/* inform UI there's going to be a detach:attach */
 	dfu_device_set_state (device, DFU_STATE_APP_DETACH);
 
@@ -1130,6 +1173,10 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
 		return FALSE;
 	}
 
+	/* ensure interface is claimed */
+	if (!dfu_device_ensure_interface (device, error))
+		return FALSE;
+
 	if (!g_usb_device_control_transfer (priv->dev,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -1193,6 +1240,10 @@ dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **
 				     "not supported as no DFU runtime");
 		return FALSE;
 	}
+
+	/* ensure interface is claimed */
+	if (!dfu_device_ensure_interface (device, error))
+		return FALSE;
 
 	if (!g_usb_device_control_transfer (priv->dev,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -1293,21 +1344,6 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 		return FALSE;
 	}
 
-	/* claim the correct interface if set */
-	if (priv->iface_number != 0xff) {
-		if (!g_usb_device_claim_interface (priv->dev,
-						   (gint) priv->iface_number,
-						   0,
-						   &error_local)) {
-			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_DEVICE,
-				     "cannot claim interface %i: %s",
-				     priv->iface_number, error_local->message);
-			return FALSE;
-		}
-	}
-
 	/* get product name if it exists */
 	idx = g_usb_device_get_product_index (priv->dev);
 	if (idx != 0x00)
@@ -1387,6 +1423,7 @@ dfu_device_close (DfuDevice *device, GError **error)
 				     error_local->message);
 		return FALSE;
 	}
+	priv->claimed_interface = FALSE;
 	priv->open_new_dev = FALSE;
 	return TRUE;
 }
@@ -1411,6 +1448,7 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 		g_debug ("invalidating backing GUsbDevice");
 		g_clear_object (&priv->dev);
 		g_ptr_array_set_size (priv->targets, 0);
+		priv->claimed_interface = FALSE;
 		return TRUE;
 	}
 
@@ -1705,6 +1743,10 @@ dfu_device_upload (DfuDevice *device,
 		return NULL;
 	}
 
+	/* ensure interface is claimed */
+	if (!dfu_device_ensure_interface (device, error))
+		return FALSE;
+
 	/* create ahead of time */
 	firmware = dfu_firmware_new ();
 	dfu_firmware_set_vid (firmware, priv->runtime_vid);
@@ -1821,6 +1863,10 @@ dfu_device_download (DfuDevice *device,
 			     priv->platform_id);
 		return FALSE;
 	}
+
+	/* ensure interface is claimed */
+	if (!dfu_device_ensure_interface (device, error))
+		return FALSE;
 
 	/* do we allow wildcard VID:PID matches */
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID) == 0) {
