@@ -3,7 +3,7 @@ AC_PREREQ(2.63)
 
 m4_define([fwupd_major_version], [0])
 m4_define([fwupd_minor_version], [7])
-m4_define([fwupd_micro_version], [2])
+m4_define([fwupd_micro_version], [3])
 m4_define([fwupd_version],
           [fwupd_major_version.fwupd_minor_version.fwupd_micro_version])
 
