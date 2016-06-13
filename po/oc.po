@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-13 14:46+0100\n"
-"PO-Revision-Date: 2016-05-13 13:46+0000\n"
+"POT-Creation-Date: 2016-06-13 13:29+0100\n"
+"PO-Revision-Date: 2016-06-13 12:29+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Occitan (post 1500) (http://www.transifex.com/hughsie/fwupd/language/oc/)\n"
 "MIME-Version: 1.0\n"
@@ -124,6 +124,10 @@ msgstr "Region"
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Trobat"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+msgid "Protocol"
+msgstr ""
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
@@ -324,7 +328,6 @@ msgstr "Acabat !"
 msgid "%s has firmware updates:"
 msgstr ""
 
-#. TRANSLATORS: a GUID for the hardware
 msgid "GUID"
 msgstr "GUID"
 
@@ -361,7 +364,7 @@ msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
-msgstr "Mòstra d'informations de desbugatge complementàrias"
+msgstr "Mòstra d'informacions de desbugatge complementàrias"
 
 #. TRANSLATORS: command line option
 msgid "Perform the installation offline where possible"

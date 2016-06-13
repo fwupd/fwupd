@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-13 14:46+0100\n"
-"PO-Revision-Date: 2016-05-13 13:46+0000\n"
+"POT-Creation-Date: 2016-06-13 13:29+0100\n"
+"PO-Revision-Date: 2016-06-13 12:29+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Ukrainian (http://www.transifex.com/hughsie/fwupd/language/uk/)\n"
 "MIME-Version: 1.0\n"
@@ -123,6 +123,10 @@ msgstr "Регіон"
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Знайдено"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+msgid "Protocol"
+msgstr ""
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
@@ -323,40 +327,39 @@ msgstr "Виконано!"
 msgid "%s has firmware updates:"
 msgstr "%s має такі оновлення мікропрограми:"
 
-#. TRANSLATORS: a GUID for the hardware
 msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
-msgstr ""
+msgstr "Версія оновлення"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"
-msgstr ""
+msgstr "Контрольна сума оновлення"
 
 msgid "Update Checksum Type"
-msgstr ""
+msgstr "Тип контрольної суми оновлення"
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Update Location"
-msgstr ""
+msgstr "Місце оновлення"
 
 #. TRANSLATORS: section header for long firmware desc
 msgid "Update Description"
-msgstr ""
+msgstr "Опис оновлення"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
-msgstr ""
+msgstr "Додано пристрій:"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
-msgstr ""
+msgstr "Вилучено пристрій:"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
-msgstr ""
+msgstr "Змінено пристрій:"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
@@ -376,7 +379,7 @@ msgstr "Дозволити зниження версій мікропрогра�
 
 #. TRANSLATORS: command line option
 msgid "Override provider warning"
-msgstr ""
+msgstr "Не зважати на попередження надавача"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -432,7 +435,7 @@ msgstr "Оновити збережені метадані на основі п�
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
-msgstr ""
+msgstr "Стежити за подіями у фоновій службі"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"

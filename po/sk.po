@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-13 14:46+0100\n"
-"PO-Revision-Date: 2016-05-13 13:46+0000\n"
+"POT-Creation-Date: 2016-06-13 13:29+0100\n"
+"PO-Revision-Date: 2016-06-13 12:29+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Slovak (http://www.transifex.com/hughsie/fwupd/language/sk/)\n"
 "MIME-Version: 1.0\n"
@@ -123,6 +123,10 @@ msgstr "Oblasť"
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Nájdené"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+msgid "Protocol"
+msgstr ""
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
@@ -323,40 +327,39 @@ msgstr "Hotovo!"
 msgid "%s has firmware updates:"
 msgstr "Pre zariadenie %s sú dostupné aktualizácie firmvéru:"
 
-#. TRANSLATORS: a GUID for the hardware
 msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
-msgstr ""
+msgstr "Verzia aktualizácie"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"
-msgstr ""
+msgstr "Kontrolný medzisúčet aktualizácie"
 
 msgid "Update Checksum Type"
-msgstr ""
+msgstr "Typ kontrolného medzisúčtu aktualizácie"
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Update Location"
-msgstr ""
+msgstr "Umiestnenie aktualizácie"
 
 #. TRANSLATORS: section header for long firmware desc
 msgid "Update Description"
-msgstr ""
+msgstr "Popis aktualizácie"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
-msgstr ""
+msgstr "Pridané zariadenie:"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
-msgstr ""
+msgstr "Odstránené zariadenie:"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
-msgstr ""
+msgstr "Zmenené zariadenie:"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
@@ -376,7 +379,7 @@ msgstr "Umožní zníženie verzií firmvéru"
 
 #. TRANSLATORS: command line option
 msgid "Override provider warning"
-msgstr ""
+msgstr "Nahradí upozornenie poskytovateľa"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -432,7 +435,7 @@ msgstr "Aktualizuje uložené metaúdaje s aktuálnym obsahom pamäte ROM"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
-msgstr ""
+msgstr "Sleduje démona kvôli udalostiam"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"

@@ -1,3 +1,19 @@
+Version 0.7.2
+~~~~~~~~~~~~~
+Released: 2016-06-13
+
+New Features:
+ - Add a GetDetailsLocal() method to eventually replace GetDetails() (Richard Hughes)
+ - Add fu_device_get_alternate() (Richard Hughes)
+ - Allow devices to have multiple assigned GUIDs (Richard Hughes)
+ - Allow metainfo files to match only specific revisions of devices (Richard Hughes)
+ - Show the DFU protocol version in 'dfu-tool list' (Richard Hughes)
+
+Bugfixes:
+ - Enforce allowing providers to take away flash abilities (Mario Limonciello)
+ - Only claim the DFU interface when required (Richard Hughes)
+ - Only return updatable devices from GetDevices() (Richard Hughes)
+
 Version 0.7.1
 ~~~~~~~~~~~~~
 Released: 2016-05-13

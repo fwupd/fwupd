@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-13 14:46+0100\n"
-"PO-Revision-Date: 2016-05-13 13:46+0000\n"
+"POT-Creation-Date: 2016-06-13 13:29+0100\n"
+"PO-Revision-Date: 2016-06-13 12:29+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Hebrew (http://www.transifex.com/hughsie/fwupd/language/he/)\n"
 "MIME-Version: 1.0\n"
@@ -123,6 +123,10 @@ msgstr ""
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
+msgstr ""
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+msgid "Protocol"
 msgstr ""
 
 #. TRANSLATORS: probably not run as root...
@@ -324,7 +328,6 @@ msgstr "הסתיים!"
 msgid "%s has firmware updates:"
 msgstr "ישנם עדכוני קושחה עבור %s:"
 
-#. TRANSLATORS: a GUID for the hardware
 msgid "GUID"
 msgstr ""
 

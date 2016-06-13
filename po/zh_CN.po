@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-13 14:46+0100\n"
-"PO-Revision-Date: 2016-05-13 13:46+0000\n"
+"POT-Creation-Date: 2016-06-13 13:29+0100\n"
+"PO-Revision-Date: 2016-06-13 12:29+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/hughsie/fwupd/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
@@ -125,6 +125,10 @@ msgstr "区域"
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "找到"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+msgid "Protocol"
+msgstr ""
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
@@ -325,40 +329,39 @@ msgstr "完成！"
 msgid "%s has firmware updates:"
 msgstr "%s 有固件更新:"
 
-#. TRANSLATORS: a GUID for the hardware
 msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
-msgstr ""
+msgstr "更新版本"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"
-msgstr ""
+msgstr "更新校验和"
 
 msgid "Update Checksum Type"
-msgstr ""
+msgstr "更新校验和类型"
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Update Location"
-msgstr ""
+msgstr "更新位置"
 
 #. TRANSLATORS: section header for long firmware desc
 msgid "Update Description"
-msgstr ""
+msgstr "更新说明"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
-msgstr ""
+msgstr "已添加设备："
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
-msgstr ""
+msgstr "已移除设备："
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
-msgstr ""
+msgstr "已更改设备："
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
@@ -378,7 +381,7 @@ msgstr "允许降级固件版本"
 
 #. TRANSLATORS: command line option
 msgid "Override provider warning"
-msgstr ""
+msgstr "替代提供商警告"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -434,7 +437,7 @@ msgstr "使用目前的 ROM 内容更新存储的元数据"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
-msgstr ""
+msgstr "监视守护程序里的事件"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
