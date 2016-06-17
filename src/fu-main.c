@@ -1375,6 +1375,8 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 {
 	FwupdTrustFlags trust_flags = FWUPD_TRUST_FLAG_NONE;
 	AsRelease *rel;
+	AsChecksum * csum_tmp;
+	const gchar *fn;
 	GPtrArray *provides;
 	guint i;
 	g_autoptr(FwupdResult) res = NULL;
@@ -1430,6 +1432,11 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 	fwupd_result_set_update_trust_flags (res, trust_flags);
 	fwupd_result_set_update_vendor (res, as_app_get_developer_name (app, NULL));
 	fwupd_result_set_update_version (res, as_release_get_version (rel));
+	csum_tmp = as_release_get_checksum_by_target (rel,
+	AS_CHECKSUM_TARGET_CONTENT);
+	fn = as_checksum_get_filename (csum_tmp);
+	if (fn != NULL)
+		fwupd_result_set_update_filename (res, fn);
 	return g_steal_pointer (&res);
 }
 
