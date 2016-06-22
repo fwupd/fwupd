@@ -2176,10 +2176,10 @@ fu_main_load_introspection (const gchar *filename, GError **error)
 }
 
 /**
- * cd_main_provider_device_added_cb:
+ * fu_main_provider_device_added_cb:
  **/
 static void
-cd_main_provider_device_added_cb (FuProvider *provider,
+fu_main_provider_device_added_cb (FuProvider *provider,
 				  FuDevice *device,
 				  gpointer user_data)
 {
@@ -2238,10 +2238,10 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 }
 
 /**
- * cd_main_provider_device_removed_cb:
+ * fu_main_provider_device_removed_cb:
  **/
 static void
-cd_main_provider_device_removed_cb (FuProvider *provider,
+fu_main_provider_device_removed_cb (FuProvider *provider,
 				    FuDevice *device,
 				    gpointer user_data)
 {
@@ -2269,10 +2269,10 @@ cd_main_provider_device_removed_cb (FuProvider *provider,
 }
 
 /**
- * cd_main_provider_status_changed_cb:
+ * fu_main_provider_status_changed_cb:
  **/
 static void
-cd_main_provider_status_changed_cb (FuProvider *provider,
+fu_main_provider_status_changed_cb (FuProvider *provider,
 				    FwupdStatus status,
 				    gpointer user_data)
 {
@@ -2287,13 +2287,13 @@ static void
 fu_main_add_provider (FuMainPrivate *priv, FuProvider *provider)
 {
 	g_signal_connect (provider, "device-added",
-			  G_CALLBACK (cd_main_provider_device_added_cb),
+			  G_CALLBACK (fu_main_provider_device_added_cb),
 			  priv);
 	g_signal_connect (provider, "device-removed",
-			  G_CALLBACK (cd_main_provider_device_removed_cb),
+			  G_CALLBACK (fu_main_provider_device_removed_cb),
 			  priv);
 	g_signal_connect (provider, "status-changed",
-			  G_CALLBACK (cd_main_provider_status_changed_cb),
+			  G_CALLBACK (fu_main_provider_status_changed_cb),
 			  priv);
 	g_ptr_array_add (priv->providers, provider);
 }
