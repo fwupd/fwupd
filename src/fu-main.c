@@ -1423,6 +1423,7 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 
 	/* create a result with all the metadata in */
 	fwupd_result_set_device_description (res, as_app_get_description (app, NULL));
+	fwupd_result_set_update_id (res, as_app_get_id (app));
 	fwupd_result_set_update_description (res, as_release_get_description (rel, NULL));
 	fwupd_result_set_update_homepage (res, as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE));
 	fwupd_result_set_update_license (res, as_app_get_project_license (app));
