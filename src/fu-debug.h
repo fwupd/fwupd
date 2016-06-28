@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __CD_DEBUG_H__
-#define __CD_DEBUG_H__
+#ifndef __FU_DEBUG_H__
+#define __FU_DEBUG_H__
 
 #include <glib.h>
 
@@ -29,4 +29,4 @@ GOptionGroup	*fu_debug_get_option_group	(void);
 void		 fu_debug_setup			(gboolean	 enabled);
 void		 fu_debug_destroy		(void);
 
-#endif /* __CD_DEBUG_H__ */
+#endif /* __FU_DEBUG_H__ */

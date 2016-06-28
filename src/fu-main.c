@@ -1375,6 +1375,8 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 {
 	FwupdTrustFlags trust_flags = FWUPD_TRUST_FLAG_NONE;
 	AsRelease *rel;
+	AsChecksum * csum_tmp;
+	const gchar *fn;
 	GPtrArray *provides;
 	guint i;
 	g_autoptr(FwupdResult) res = NULL;
@@ -1421,6 +1423,7 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 
 	/* create a result with all the metadata in */
 	fwupd_result_set_device_description (res, as_app_get_description (app, NULL));
+	fwupd_result_set_update_id (res, as_app_get_id (app));
 	fwupd_result_set_update_description (res, as_release_get_description (rel, NULL));
 	fwupd_result_set_update_homepage (res, as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE));
 	fwupd_result_set_update_license (res, as_app_get_project_license (app));
@@ -1430,6 +1433,11 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 	fwupd_result_set_update_trust_flags (res, trust_flags);
 	fwupd_result_set_update_vendor (res, as_app_get_developer_name (app, NULL));
 	fwupd_result_set_update_version (res, as_release_get_version (rel));
+	csum_tmp = as_release_get_checksum_by_target (rel,
+	AS_CHECKSUM_TARGET_CONTENT);
+	fn = as_checksum_get_filename (csum_tmp);
+	if (fn != NULL)
+		fwupd_result_set_update_filename (res, fn);
 	return g_steal_pointer (&res);
 }
 
@@ -2176,10 +2184,10 @@ fu_main_load_introspection (const gchar *filename, GError **error)
 }
 
 /**
- * cd_main_provider_device_added_cb:
+ * fu_main_provider_device_added_cb:
  **/
 static void
-cd_main_provider_device_added_cb (FuProvider *provider,
+fu_main_provider_device_added_cb (FuProvider *provider,
 				  FuDevice *device,
 				  gpointer user_data)
 {
@@ -2238,10 +2246,10 @@ cd_main_provider_device_added_cb (FuProvider *provider,
 }
 
 /**
- * cd_main_provider_device_removed_cb:
+ * fu_main_provider_device_removed_cb:
  **/
 static void
-cd_main_provider_device_removed_cb (FuProvider *provider,
+fu_main_provider_device_removed_cb (FuProvider *provider,
 				    FuDevice *device,
 				    gpointer user_data)
 {
@@ -2269,10 +2277,10 @@ cd_main_provider_device_removed_cb (FuProvider *provider,
 }
 
 /**
- * cd_main_provider_status_changed_cb:
+ * fu_main_provider_status_changed_cb:
  **/
 static void
-cd_main_provider_status_changed_cb (FuProvider *provider,
+fu_main_provider_status_changed_cb (FuProvider *provider,
 				    FwupdStatus status,
 				    gpointer user_data)
 {
@@ -2287,13 +2295,13 @@ static void
 fu_main_add_provider (FuMainPrivate *priv, FuProvider *provider)
 {
 	g_signal_connect (provider, "device-added",
-			  G_CALLBACK (cd_main_provider_device_added_cb),
+			  G_CALLBACK (fu_main_provider_device_added_cb),
 			  priv);
 	g_signal_connect (provider, "device-removed",
-			  G_CALLBACK (cd_main_provider_device_removed_cb),
+			  G_CALLBACK (fu_main_provider_device_removed_cb),
 			  priv);
 	g_signal_connect (provider, "status-changed",
-			  G_CALLBACK (cd_main_provider_status_changed_cb),
+			  G_CALLBACK (fu_main_provider_status_changed_cb),
 			  priv);
 	g_ptr_array_add (priv->providers, provider);
 }
