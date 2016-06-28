@@ -13,7 +13,7 @@ ifeq "1.2.12" "$(word 1, $(sort 1.2.12 $(COLORHUG_VERSION)))"
 endif
 
 %:
-	dh $@ --with autoreconf
+	dh $@ --with autoreconf,gir
 
 override_dh_autoreconf:
 	NOCONFIGURE=1 dh_autoreconf ./autogen.sh
