@@ -1,6 +1,17 @@
-fwupd (0.7.2-1) UNRELEASED; urgency=medium
+fwupd (0.7.2-1) unstable; urgency=medium
 
+  [ Mario Limonciello ]
   * New upstream version (0.7.2)
+  * Drop unnecessary patches now upstream.
+  * Add gobject-introspection to build dependencies
+
+  [ Michael Biebl ]
+  * Split GObject introspection files into a separate package named gir1.2-fwupd-1.0.
+    (Fixes: #826743)
+
+  [ Jurica Stanojkovic ]
+  * Disable test suite on mips to prevent FTBFS.
+    Fixes: #826251)
 
  -- Mario Limonciello <mario_limonciello@dell.com>  Tue, 28 Jun 2016 08:45:42 -0500
 
