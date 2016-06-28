@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 
@@ -35,6 +36,7 @@ static void fu_device_finalize			 (GObject *object);
  **/
 typedef struct {
 	gchar				*equivalent_id;
+	FuDevice			*alternate;
 	GHashTable			*metadata;
 } FuDevicePrivate;
 
@@ -65,6 +67,46 @@ fu_device_set_equivalent_id (FuDevice *device, const gchar *equivalent_id)
 }
 
 /**
+ * fu_device_get_alternate:
+ **/
+FuDevice *
+fu_device_get_alternate (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->alternate;
+}
+
+/**
+ * fu_device_set_alternate:
+ **/
+void
+fu_device_set_alternate (FuDevice *device, FuDevice *alternate)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_set_object (&priv->alternate, alternate);
+}
+
+/**
+ * fu_device_add_guid:
+ **/
+void
+fu_device_add_guid (FuDevice *device, const gchar *guid)
+{
+	/* make valid */
+	if (!as_utils_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+		g_debug ("using %s for %s", tmp, guid);
+		fwupd_result_add_guid (FWUPD_RESULT (device), tmp);
+		return;
+	}
+
+	/* already valid */
+	fwupd_result_add_guid (FWUPD_RESULT (device), guid);
+}
+
+/**
  * fu_device_get_metadata:
  **/
 const gchar *
@@ -77,7 +119,7 @@ fu_device_get_metadata (FuDevice *device, const gchar *key)
 }
 
 /**
- * fu_device_get_id:
+ * fu_device_set_metadata:
  **/
 void
 fu_device_set_metadata (FuDevice *device, const gchar *key, const gchar *value)
@@ -87,6 +129,18 @@ fu_device_set_metadata (FuDevice *device, const gchar *key, const gchar *value)
 	g_return_if_fail (key != NULL);
 	g_return_if_fail (value != NULL);
 	g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
+}
+
+/**
+ * fu_device_set_name:
+ **/
+void
+fu_device_set_name (FuDevice *device, const gchar *value)
+{
+	g_autoptr(GString) new = g_string_new (value);
+	g_strdelimit (new->str, "_", ' ');
+	as_utils_string_replace (new, "(TM)", "™");
+	fwupd_result_set_device_name (FWUPD_RESULT (device), new->str);
 }
 
 /**
@@ -119,6 +173,8 @@ fu_device_finalize (GObject *object)
 	FuDevice *device = FU_DEVICE (object);
 	FuDevicePrivate *priv = GET_PRIVATE (device);
 
+	if (priv->alternate != NULL)
+		g_object_unref (priv->alternate);
 	g_hash_table_unref (priv->metadata);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);

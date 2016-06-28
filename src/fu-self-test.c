@@ -208,8 +208,10 @@ fu_provider_func (void)
 	g_assert_cmpint (cnt, ==, 0);
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==, "FakeDevice");
-	g_assert_cmpstr (fu_device_get_guid (device), ==,
+	g_assert_cmpstr (fu_device_get_guid_default (device), ==,
 			 "00000000-0000-0000-0000-000000000000");
+	g_assert_cmpstr (fu_device_get_name (device), ==,
+			 "Integrated Webcam™");
 
 	/* schedule an offline update */
 	mapped_file_fn = fu_test_get_filename ("colorhug/firmware.bin");
@@ -314,7 +316,7 @@ fu_provider_rpi_func (void)
 	g_assert_cmpint (cnt, ==, 0);
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==, "raspberry-pi");
-	g_assert_cmpstr (fu_device_get_guid (device), ==,
+	g_assert_cmpstr (fu_device_get_guid_default (device), ==,
 			 "91dd7368-8640-5d72-a217-a505c034dd0b");
 	g_assert_cmpstr (fu_device_get_version (device), ==,
 			 "20150803");
@@ -369,10 +371,10 @@ fu_pending_func (void)
 	g_unlink (filename);
 
 	/* add a device */
-	res = fwupd_result_new ();
+	res = FWUPD_RESULT (fu_device_new ());
 	fu_device_set_id (res, "self-test");
 	fu_device_set_update_filename (res, "/var/lib/dave.cap"),
-	fu_device_set_name (res, "ColorHug"),
+	fu_device_set_name (FU_DEVICE (res), "ColorHug"),
 	fu_device_set_version (res, "3.0.1"),
 	fu_device_set_update_version (res, "3.0.2");
 	ret = fu_pending_add_device (pending, res, &error);

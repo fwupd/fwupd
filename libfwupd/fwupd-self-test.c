@@ -112,22 +112,30 @@ fwupd_result_func (void)
 	fwupd_result_set_device_id (result, "USB:foo");
 	fwupd_result_set_device_modified (result, 60 * 60 * 24);
 	fwupd_result_set_device_name (result, "ColorHug2");
-	fwupd_result_set_guid (result, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
+	fwupd_result_add_guid (result, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
+	fwupd_result_add_guid (result, "00000000-0000-0000-0000-000000000000");
 	fwupd_result_set_update_checksum (result, "deadbeef");
 	fwupd_result_set_update_description (result, "<p>Hi there!</p>");
 	fwupd_result_set_update_filename (result, "firmware.bin");
 	fwupd_result_set_update_id (result, "org.dave.ColorHug.firmware");
 	fwupd_result_set_update_size (result, 1024);
 	fwupd_result_set_update_uri (result, "http://foo.com");
+	fwupd_result_set_update_version (result, "1.2.3");
 	fwupd_result_add_device_flag (result, FU_DEVICE_FLAG_REQUIRE_AC);
 	fwupd_result_set_update_trust_flags (result, FWUPD_TRUST_FLAG_PAYLOAD);
 	str = fwupd_result_to_string (result);
 	g_print ("\n%s", str);
 
+	/* check GUIDs */
+	g_assert (fwupd_result_has_guid (result, "2082b5e0-7a64-478a-b1b2-e3404fab6dad"));
+	g_assert (fwupd_result_has_guid (result, "00000000-0000-0000-0000-000000000000"));
+	g_assert (!fwupd_result_has_guid (result, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"));
+
 	ret = as_test_compare_lines (str,
-		"USB:foo\n"
+		"ColorHug2\n"
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
-		"  DisplayName:          ColorHug2\n"
+		"  Guid:                 00000000-0000-0000-0000-000000000000\n"
+		"  DeviceID:             USB:foo\n"
 		"  Flags:                allow-offline|require-ac\n"
 		"  FirmwareHash:         beefdead\n"
 		"  DeviceChecksumKind:   sha256\n"
@@ -135,6 +143,7 @@ fwupd_result_func (void)
 		"  Modified:             1970-01-02\n"
 		"  AppstreamId:          org.dave.ColorHug.firmware\n"
 		"  UpdateDescription:    <p>Hi there!</p>\n"
+		"  UpdateVersion:        1.2.3\n"
 		"  FilenameCab:          firmware.bin\n"
 		"  UpdateHash:           deadbeef\n"
 		"  UpdateChecksumKind:   sha1\n"
@@ -165,7 +174,7 @@ fwupd_client_devices_func (void)
 	/* check device */
 	res = g_ptr_array_index (array, 0);
 	g_assert (FWUPD_IS_RESULT (res));
-	g_assert_cmpstr (fwupd_result_get_guid (res), !=, NULL);
+	g_assert_cmpstr (fwupd_result_get_guid_default (res), !=, NULL);
 	g_assert_cmpstr (fwupd_result_get_device_id (res), !=, NULL);
 }
 
@@ -189,7 +198,7 @@ fwupd_client_updates_func (void)
 	/* check device */
 	res = g_ptr_array_index (array, 0);
 	g_assert (FWUPD_IS_RESULT (res));
-	g_assert_cmpstr (fwupd_result_get_guid (res), !=, NULL);
+	g_assert_cmpstr (fwupd_result_get_guid_default (res), !=, NULL);
 	g_assert_cmpstr (fwupd_result_get_device_id (res), !=, NULL);
 }
 

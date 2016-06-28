@@ -53,6 +53,7 @@ DfuImage	*dfu_image_new		(void);
 GPtrArray	*dfu_image_get_elements		(DfuImage	*image);
 DfuElement	*dfu_image_get_element		(DfuImage	*image,
 						 guint8		 idx);
+DfuElement	*dfu_image_get_element_default	(DfuImage	*image);
 guint8		 dfu_image_get_alt_setting	(DfuImage	*image);
 const gchar	*dfu_image_get_name		(DfuImage	*image);
 guint32		 dfu_image_get_size		(DfuImage	*image);

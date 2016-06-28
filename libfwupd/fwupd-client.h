@@ -39,21 +39,31 @@ struct _FwupdClientClass
 	void			(*changed)		(FwupdClient	*client);
 	void			(*status_changed)	(FwupdClient	*client,
 							 FwupdStatus	 status);
+	void			(*device_added)		(FwupdClient	*client,
+							 FwupdResult	*result);
+	void			(*device_removed)	(FwupdClient	*client,
+							 FwupdResult	*result);
+	void			(*device_changed)	(FwupdClient	*client,
+							 FwupdResult	*result);
 	/*< private >*/
 	void (*_fwupd_reserved1)	(void);
 	void (*_fwupd_reserved2)	(void);
 	void (*_fwupd_reserved3)	(void);
 	void (*_fwupd_reserved4)	(void);
-	void (*_fwupd_reserved5)	(void);
-	void (*_fwupd_reserved6)	(void);
-	void (*_fwupd_reserved7)	(void);
 };
 
 FwupdClient	*fwupd_client_new			(void);
+gboolean	 fwupd_client_connect			(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
 GPtrArray	*fwupd_client_get_devices		(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
 GPtrArray	*fwupd_client_get_updates		(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
+GPtrArray	*fwupd_client_get_details_local		(FwupdClient	*client,
+							 const gchar	*filename,
 							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 fwupd_client_verify			(FwupdClient	*client,
@@ -72,6 +82,7 @@ FwupdResult	*fwupd_client_get_results		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
+G_DEPRECATED_FOR(fwupd_client_get_details_local)
 FwupdResult	*fwupd_client_get_details		(FwupdClient	*client,
 							 const gchar	*filename,
 							 GCancellable	*cancellable,

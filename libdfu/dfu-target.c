@@ -565,6 +565,10 @@ dfu_target_use_alt_setting (DfuTarget *target, GError **error)
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* ensure interface is claimed */
+	if (!dfu_device_ensure_interface (priv->device, error))
+		return FALSE;
+
 	/* use the correct setting */
 	dev = dfu_device_get_usb_dev (priv->device);
 	if (dfu_device_get_mode (priv->device) == DFU_MODE_DFU) {

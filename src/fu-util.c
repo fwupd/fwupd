@@ -28,6 +28,7 @@
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
+#include <glib-unix.h>
 #include <gudev/gudev.h>
 #include <locale.h>
 #include <stdio.h>
@@ -47,6 +48,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
 #define FWUPD_ERROR_INVALID_ARGS	(FWUPD_ERROR_LAST+1)
 
 typedef struct {
+	GCancellable		*cancellable;
 	GMainLoop		*loop;
 	GOptionContext		*context;
 	GPtrArray		*cmd_array;
@@ -327,8 +329,8 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autofree gchar *tmp = NULL;
-	g_autoptr(FwupdResult) res = NULL;
+	guint i;
+	g_autoptr(GPtrArray) array = NULL;
 
 	/* check args */
 	if (g_strv_length (values) != 1) {
@@ -338,11 +340,15 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments: expected 'filename'");
 		return FALSE;
 	}
-	res = fwupd_client_get_details (priv->client, values[0], NULL, error);
-	if (res == NULL)
+	array = fwupd_client_get_details_local (priv->client, values[0], NULL, error);
+	if (array == NULL)
 		return FALSE;
-	tmp = fwupd_result_to_string (res);
-	g_print ("%s", tmp);
+	for (i = 0; i < array->len; i++) {
+		FwupdResult *res = g_ptr_array_index (array, i);
+		g_autofree gchar *tmp = NULL;
+		tmp = fwupd_result_to_string (res);
+		g_print ("%s", tmp);
+	}
 	return TRUE;
 }
 
@@ -848,7 +854,7 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'id'");
+				     "Invalid arguments: expected 'DeviceID'");
 		return FALSE;
 	}
 	res = fwupd_client_get_results (priv->client, values[0], NULL, error);
@@ -883,12 +889,12 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 					  NULL,
 					  &error_local)) {
 			g_print ("%s\tFAILED: %s\n",
-				 fwupd_result_get_guid (res),
+				 fwupd_result_get_guid_default (res),
 				 error_local->message);
 			continue;
 		}
 		g_print ("%s\t%s\n",
-			 fwupd_result_get_guid (res),
+			 fwupd_result_get_guid_default (res),
 			 _("OK"));
 	}
 	return TRUE;
@@ -944,10 +950,10 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 	g_print ("%s:", title);
 
 	/* pad */
-	title_len = strlen (title);
+	title_len = strlen (title) + 1;
 	lines = g_strsplit (msg, "\n", -1);
 	for (j = 0; lines[j] != NULL; j++) {
-		for (i = title_len; i < 20; i++)
+		for (i = title_len; i < 25; i++)
 			g_print (" ");
 		g_print ("%s\n", lines[j]);
 		title_len = 0;
@@ -979,9 +985,10 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FwupdResult *res;
 	GPtrArray *results = NULL;
+	GPtrArray *guids;
 	GChecksumType checksum_type;
 	const gchar *tmp;
-	guint i;
+	guint i, j;
 
 	/* print any updates */
 	results = fwupd_client_get_updates (priv->client, NULL, error);
@@ -998,23 +1005,29 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("ID"), fwupd_result_get_update_id (res));
 
 		/* TRANSLATORS: a GUID for the hardware */
-		fu_util_print_data (_("GUID"), fwupd_result_get_guid (res));
+		guids = fwupd_result_get_guids (res);
+		for (j = 0; j < guids->len; j++) {
+			tmp = g_ptr_array_index (guids, j);
+			fu_util_print_data (_("GUID"), tmp);
+		}
 
 		/* TRANSLATORS: section header for firmware version */
-		fu_util_print_data (_("Version"), fwupd_result_get_update_version (res));
+		fu_util_print_data (_("Update Version"),
+				    fwupd_result_get_update_version (res));
 
 		/* TRANSLATORS: section header for firmware checksum */
-		fu_util_print_data (_("Checksum"), fwupd_result_get_update_checksum (res));
+		fu_util_print_data (_("Update Checksum"),
+				    fwupd_result_get_update_checksum (res));
 
 		/* TRANSLATORS: section header for firmware checksum type */
 		if (fwupd_result_get_update_checksum (res) != NULL) {
 			checksum_type = fwupd_result_get_update_checksum_kind (res);
 			tmp = _g_checksum_type_to_string (checksum_type);
-			fu_util_print_data (_("Checksum Type"), tmp);
+			fu_util_print_data (_("Update Checksum Type"), tmp);
 		}
 
 		/* TRANSLATORS: section header for firmware remote http:// */
-		fu_util_print_data (_("Location"), fwupd_result_get_update_uri (res));
+		fu_util_print_data (_("Update Location"), fwupd_result_get_update_uri (res));
 
 		/* convert XML -> text */
 		tmp = fwupd_result_get_update_description (res);
@@ -1025,11 +1038,100 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 						NULL);
 			if (md != NULL) {
 				/* TRANSLATORS: section header for long firmware desc */
-				fu_util_print_data (_("Description"), md);
+				fu_util_print_data (_("Update Description"), md);
 			}
 		}
 	}
 
+	return TRUE;
+}
+
+/**
+ * fu_util_cancelled_cb:
+ **/
+static void
+fu_util_cancelled_cb (GCancellable *cancellable, gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
+	/* TRANSLATORS: this is when a device ctrl+c's a watch */
+	g_print ("%s\n", _("Cancelled"));
+	g_main_loop_quit (priv->loop);
+}
+
+/**
+ * fu_util_device_added_cb:
+ **/
+static void
+fu_util_device_added_cb (FwupdClient *client,
+			 FwupdResult *device,
+			 gpointer user_data)
+{
+	g_autofree gchar *tmp = fwupd_result_to_string (device);
+	/* TRANSLATORS: this is when a device is hotplugged */
+	g_print ("%s\n%s", _("Device added:"), tmp);
+}
+
+/**
+ * fu_util_device_removed_cb:
+ **/
+static void
+fu_util_device_removed_cb (FwupdClient *client,
+			   FwupdResult *device,
+			   gpointer user_data)
+{
+	g_autofree gchar *tmp = fwupd_result_to_string (device);
+	/* TRANSLATORS: this is when a device is hotplugged */
+	g_print ("%s\n%s", _("Device removed:"), tmp);
+}
+
+/**
+ * fu_util_device_changed_cb:
+ **/
+static void
+fu_util_device_changed_cb (FwupdClient *client,
+			   FwupdResult *device,
+			   gpointer user_data)
+{
+	g_autofree gchar *tmp = fwupd_result_to_string (device);
+	/* TRANSLATORS: this is when a device has been updated */
+	g_print ("%s\n%s", _("Device changed:"), tmp);
+}
+
+/**
+ * fu_util_changed_cb:
+ **/
+static void
+fu_util_changed_cb (FwupdClient *client, gpointer user_data)
+{
+	/* TRANSLATORS: this is when the daemon state changes */
+	g_print ("%s\n", _("Changed"));
+}
+
+/**
+ * fu_util_monitor:
+ **/
+static gboolean
+fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FwupdClient) client = NULL;
+
+	/* get all the DFU devices */
+	client = fwupd_client_new ();
+	if (!fwupd_client_connect (client, priv->cancellable, error))
+		return FALSE;
+
+	/* watch for any hotplugged device */
+	g_signal_connect (client, "changed",
+			  G_CALLBACK (fu_util_changed_cb), priv);
+	g_signal_connect (client, "device-added",
+			  G_CALLBACK (fu_util_device_added_cb), priv);
+	g_signal_connect (client, "device-removed",
+			  G_CALLBACK (fu_util_device_removed_cb), priv);
+	g_signal_connect (client, "device-changed",
+			  G_CALLBACK (fu_util_device_changed_cb), priv);
+	g_signal_connect (priv->cancellable, "cancelled",
+			  G_CALLBACK (fu_util_cancelled_cb), priv);
+	g_main_loop_run (priv->loop);
 	return TRUE;
 }
 
@@ -1091,12 +1193,25 @@ fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 }
 
 /**
+ * fu_util_sigint_cb:
+ **/
+static gboolean
+fu_util_sigint_cb (gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
+	g_debug ("Handling SIGINT");
+	g_cancellable_cancel (priv->cancellable);
+	return FALSE;
+}
+
+/**
  * main:
  **/
 int
 main (int argc, char *argv[])
 {
 	FuUtilPrivate *priv;
+	gboolean force = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
 	gboolean offline = FALSE;
@@ -1118,6 +1233,9 @@ main (int argc, char *argv[])
 		{ "allow-older", '\0', 0, G_OPTION_ARG_NONE, &allow_older,
 			/* TRANSLATORS: command line option */
 			_("Allow downgrading firmware versions"), NULL },
+		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
+			/* TRANSLATORS: command line option */
+			_("Override provider warning"), NULL },
 		{ NULL}
 	};
 
@@ -1214,6 +1332,18 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Update the stored metadata with current ROM contents"),
 		     fu_util_verify_update);
+	fu_util_add (priv->cmd_array,
+		     "monitor",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Monitor the daemon for events"),
+		     fu_util_monitor);
+
+	/* do stuff on ctrl+c */
+	priv->cancellable = g_cancellable_new ();
+	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
+				SIGINT, fu_util_sigint_cb,
+				priv, NULL);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,
@@ -1250,6 +1380,8 @@ main (int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (allow_older)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+	if (force)
+		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
 
 	/* connect to the daemon */
 	priv->client = fwupd_client_new ();
@@ -1278,9 +1410,9 @@ out:
 		if (priv->client != NULL)
 			g_object_unref (priv->client);
 		g_main_loop_unref (priv->loop);
+		g_object_unref (priv->cancellable);
 		g_option_context_free (priv->context);
 		g_free (priv);
 	}
 	return retval;
 }
-

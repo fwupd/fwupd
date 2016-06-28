@@ -61,7 +61,8 @@ fu_provider_usb_device_added (FuProviderUsb *provider_usb, GUsbDevice *device)
 	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
 	const gchar *platform_id = NULL;
 	guint8 idx = 0x00;
-	g_autofree gchar *guid = NULL;
+	g_autofree gchar *devid1 = NULL;
+	g_autofree gchar *devid2 = NULL;
 	g_autofree gchar *product = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
@@ -121,20 +122,26 @@ fu_provider_usb_device_added (FuProviderUsb *provider_usb, GUsbDevice *device)
 	}
 	fu_device_set_version (dev, version);
 
-	/* get GUID, falling back to the USB VID:PID hash */
+	/* get GUID from the descriptor if set */
 	idx = g_usb_device_get_custom_index (device,
 					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
 					     'G', 'U', NULL);
-	if (idx != 0x00)
+	if (idx != 0x00) {
+		g_autofree gchar *guid = NULL;
 		guid = g_usb_device_get_string_descriptor (device, idx, NULL);
-	if (guid == NULL) {
-		g_autofree gchar *vid_pid = NULL;
-		vid_pid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
-					  g_usb_device_get_vid (device),
-					  g_usb_device_get_pid (device));
-		guid = as_utils_guid_from_string (vid_pid);
+		fu_device_add_guid (dev, guid);
 	}
-	fu_device_set_guid (dev, guid);
+
+	/* also fall back to the USB VID:PID hash */
+	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+				  g_usb_device_get_vid (device),
+				  g_usb_device_get_pid (device));
+	fu_device_add_guid (dev, devid1);
+	devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X",
+				  g_usb_device_get_vid (device),
+				  g_usb_device_get_pid (device),
+				  g_usb_device_get_release (device));
+	fu_device_add_guid (dev, devid2);
 
 	/* we're done here */
 	if (!g_usb_device_close (device, &error))

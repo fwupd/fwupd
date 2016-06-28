@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-04-01 14:38+0100\n"
-"PO-Revision-Date: 2016-04-01 13:38+0000\n"
+"POT-Creation-Date: 2016-06-13 13:29+0100\n"
+"PO-Revision-Date: 2016-06-13 12:29+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Polish (http://www.transifex.com/hughsie/fwupd/language/pl/)\n"
 "MIME-Version: 1.0\n"
@@ -96,6 +96,7 @@ msgid "Removed"
 msgstr "Usunięto"
 
 #. TRANSLATORS: this is when a device is hotplugged
+#. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Zmieniono"
 
@@ -122,6 +123,10 @@ msgstr "Region"
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Odnaleziono"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+msgid "Protocol"
+msgstr ""
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
@@ -322,28 +327,39 @@ msgstr "Gotowe."
 msgid "%s has firmware updates:"
 msgstr "Dostępne są aktualizacje oprogramowania sprzętowego dla urządzenia %s:"
 
-#. TRANSLATORS: a GUID for the hardware
 msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
-msgid "Version"
-msgstr "Wersja"
+msgid "Update Version"
+msgstr "Wersja aktualizacji"
 
 #. TRANSLATORS: section header for firmware checksum
-msgid "Checksum"
-msgstr "Suma kontrolna"
+msgid "Update Checksum"
+msgstr "Suma kontrolna aktualizacji"
 
-msgid "Checksum Type"
-msgstr ""
+msgid "Update Checksum Type"
+msgstr "Typ sumy kontrolnej aktualizacji"
 
 #. TRANSLATORS: section header for firmware remote http://
-msgid "Location"
-msgstr "Położenie"
+msgid "Update Location"
+msgstr "Położenie aktualizacji"
 
 #. TRANSLATORS: section header for long firmware desc
-msgid "Description"
-msgstr "Opis"
+msgid "Update Description"
+msgstr "Opis aktualizacji"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "Dodano urządzenie:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "Usunięto urządzenie:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "Zmieniono urządzenie:"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
@@ -360,6 +376,10 @@ msgstr "Umożliwia ponowne instalowanie istniejących wersji oprogramowania sprz
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
 msgstr "Umożliwia instalowanie poprzednich wersji oprogramowania sprzętowego"
+
+#. TRANSLATORS: command line option
+msgid "Override provider warning"
+msgstr "Ignoruje ostrzeżenie dostawcy"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -412,6 +432,10 @@ msgstr "Zrzuca sumę kontrolną pamięci ROM"
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
 msgstr "Aktualizuje przechowywane metadane bieżącą zawartością pamięci ROM"
+
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "Monitoruje zdarzenia usługi"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"

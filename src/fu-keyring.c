@@ -95,9 +95,6 @@ fu_keyring_setup (FuKeyring *keyring, GError **error)
 	/* enable armor mode */
 	gpgme_set_armor (priv->ctx, TRUE);
 
-	/* never interactive */
-	gpgme_set_pinentry_mode (priv->ctx, GPGME_PINENTRY_MODE_ERROR);
-
 	return TRUE;
 }
 

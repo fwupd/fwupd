@@ -1,3 +1,9 @@
+fwupd (0.7.2-1) UNRELEASED; urgency=medium
+
+  * New upstream version (0.7.2)
+
+ -- Mario Limonciello <mario_limonciello@dell.com>  Tue, 28 Jun 2016 08:45:42 -0500
+
 fwupd (0.7.0-1) unstable; urgency=medium
 
   * New upstream version (0.7.0)

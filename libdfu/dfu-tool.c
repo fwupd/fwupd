@@ -1177,8 +1177,7 @@ dfu_tool_device_added_cb (DfuContext *context,
 			  gpointer user_data)
 {
 	DfuToolPrivate *priv = (DfuToolPrivate *) user_data;
-	g_autofree gchar *tmp;
-	tmp = dfu_tool_get_device_string (priv, device);
+	g_autofree gchar *tmp = dfu_tool_get_device_string (priv, device);
 	/* TRANSLATORS: this is when a device is hotplugged */
 	dfu_tool_print_indent (_("Added"), tmp, 0);
 }
@@ -1192,8 +1191,7 @@ dfu_tool_device_removed_cb (DfuContext *context,
 			    gpointer user_data)
 {
 	DfuToolPrivate *priv = (DfuToolPrivate *) user_data;
-	g_autofree gchar *tmp;
-	tmp = dfu_tool_get_device_string (priv, device);
+	g_autofree gchar *tmp = dfu_tool_get_device_string (priv, device);
 	/* TRANSLATORS: this is when a device is hotplugged */
 	dfu_tool_print_indent (_("Removed"), tmp, 0);
 }
@@ -1205,8 +1203,7 @@ static void
 dfu_tool_device_changed_cb (DfuContext *context, DfuDevice *device, gpointer user_data)
 {
 	DfuToolPrivate *priv = (DfuToolPrivate *) user_data;
-	g_autofree gchar *tmp;
-	tmp = dfu_tool_get_device_string (priv, device);
+	g_autofree gchar *tmp = dfu_tool_get_device_string (priv, device);
 	/* TRANSLATORS: this is when a device is hotplugged */
 	dfu_tool_print_indent (_("Changed"), tmp, 0);
 }
@@ -1928,6 +1925,12 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 			 g_usb_device_get_vid (dev),
 			 g_usb_device_get_pid (dev),
 			 version);
+
+		tmp = dfu_version_to_string (dfu_device_get_version (device));
+		if (tmp != NULL) {
+			/* TRANSLATORS: DFU protocol version, e.g. 1.1 */
+			dfu_tool_print_indent (_("Protocol"), tmp, 1);
+		}
 
 		/* open */
 		if (!dfu_device_open (device,

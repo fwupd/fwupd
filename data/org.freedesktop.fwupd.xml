@@ -3,6 +3,8 @@
 
   <!-- SteelSeries legacy hardware  -->
   <component type="firmware">
+    <name>Rival SteelSeries</name>
+    <summary>Firmware for Rival SteelSeries mice</summary>
     <id>com.steelseries.rival-legacy.firmware</id>
     <provides>
       <!-- 1038:1702 = Rival 100 -->

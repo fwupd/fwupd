@@ -50,7 +50,6 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 	gboolean ret;
 	gsize actual_len = 0;
 	guint8 data[32];
-	guint i;
 	g_autofree gchar *version = NULL;
 	g_autoptr(GUsbContext) usb_ctx = NULL;
 	g_autoptr(GUsbDevice) usb_device = NULL;
@@ -150,7 +149,6 @@ fu_plugin_device_update (FuPlugin *plugin,
 			 GError **error)
 {
 	const gchar *platform_id;
-	const gchar *vendor_driver;
 	g_autoptr(GUsbContext) usb_ctx = NULL;
 	g_autoptr(GUsbDevice) usb_device = NULL;
 	g_autoptr(GUsbDevice) usb_devnew = NULL;

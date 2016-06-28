@@ -1,3 +1,42 @@
+Version 0.7.2
+~~~~~~~~~~~~~
+Released: 2016-06-13
+
+New Features:
+ - Add a GetDetailsLocal() method to eventually replace GetDetails() (Richard Hughes)
+ - Add fu_device_get_alternate() (Richard Hughes)
+ - Allow devices to have multiple assigned GUIDs (Richard Hughes)
+ - Allow metainfo files to match only specific revisions of devices (Richard Hughes)
+ - Show the DFU protocol version in 'dfu-tool list' (Richard Hughes)
+
+Bugfixes:
+ - Enforce allowing providers to take away flash abilities (Mario Limonciello)
+ - Only claim the DFU interface when required (Richard Hughes)
+ - Only return updatable devices from GetDevices() (Richard Hughes)
+
+Version 0.7.1
+~~~~~~~~~~~~~
+Released: 2016-05-13
+
+New Features:
+ - Add a --force flag to override provider warnings (Mario Limonciello)
+ - Add device-added, device-removed and device-changed signals (Richard Hughes)
+ - Add dfu_image_get_element_default() (Richard Hughes)
+ - Add for a new device field "Flashes Left" (Mario Limonciello)
+ - Add fwupd_client_connect() (Richard Hughes)
+ - Add the 'monitor' debugging command for fwupdmgr (Richard Hughes)
+ - Add the 'supported' flag to the FuDevice (Richard Hughes)
+
+Bugfixes:
+ - Add summary and name field for Rival SteelSeries (Mario Limonciello)
+ - Fix a critical warning when restarting the daemon (Richard Hughes)
+ - Fix BE issues when reading and writing DFU files (Mario Limonciello, Richard Hughes)
+ - Make the device display name nicer (Richard Hughes, Richard Hughes)
+ - Match the AppStream metadata after a device has been added (Richard Hughes)
+ - Remove non-interactive pinentry setting from fu-keyring (Mario Limonciello)
+ - Return all update descriptions newer than the installed version (Richard Hughes)
+ - Set the device description when parsing local firmware files (Richard Hughes)
+
 Version 0.7.0
 ~~~~~~~~~~~~~
 Released: 2016-04-01

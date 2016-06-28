@@ -63,7 +63,8 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 	guint16 release;
 	g_autofree gchar *guid = NULL;
 	g_autofree gchar *version = NULL;
-	g_autofree gchar *vid_pid = NULL;
+	g_autofree gchar *devid1 = NULL;
+	g_autofree gchar *devid2 = NULL;
 
 	/* check mode */
 	platform_id = dfu_device_get_platform_id (device);
@@ -86,12 +87,18 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 		fu_device_set_version (dev, version);
 	}
 
-	vid_pid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+	/* add USB\VID_0000&PID_0000 */
+	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 				  dfu_device_get_runtime_vid (device),
 				  dfu_device_get_runtime_pid (device));
-	guid = as_utils_guid_from_string (vid_pid);
-	g_debug ("using %s for %s", guid, vid_pid);
-	fu_device_set_guid (dev, guid);
+	fu_device_add_guid (dev, devid1);
+
+	/* add more specific USB\VID_0000&PID_0000&REV_0000 */
+	devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X",
+				  dfu_device_get_runtime_vid (device),
+				  dfu_device_get_runtime_pid (device),
+				  dfu_device_get_runtime_release (device));
+	fu_device_add_guid (dev, devid2);
 }
 
 /**
@@ -152,7 +159,8 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 	fu_provider_dfu_device_update (provider_dfu, dev, device);
 
 	/* open device to get display name */
-	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, &error)) {
+	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH,
+			      NULL, &error)) {
 		g_warning ("Failed to open DFU device: %s", error->message);
 		return;
 	}
@@ -371,7 +379,7 @@ fu_provider_dfu_verify (FuProvider *provider,
 	checksum_type = fu_provider_get_checksum_type (flags);
 	hash = g_compute_checksum_for_bytes (checksum_type, blob_fw);
 	fu_device_set_checksum (dev, hash);
-	fu_device_set_checksum_kind (device, checksum_type);
+	fu_device_set_checksum_kind (dev, checksum_type);
 	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
