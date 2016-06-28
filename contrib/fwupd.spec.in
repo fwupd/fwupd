@@ -77,6 +77,7 @@ make %{?_smp_mflags}
 %install
 make install DESTDIR=$RPM_BUILD_ROOT
 find %{buildroot} -name '*.la' -exec rm -f {} ';'
+mkdir --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
 %find_lang %{name}
 
@@ -122,6 +123,7 @@ make check VERBOSE=1
 /usr/lib/udev/rules.d/*.rules
 %dir %{_libdir}/fwupd-plugins-1
 %{_libdir}/fwupd-plugins-1/*.so
+%ghost %{_localstatedir}/lib/fwupd/gnupg
 
 %files devel
 %{_datadir}/gir-1.0/Fwupd-1.0.gir

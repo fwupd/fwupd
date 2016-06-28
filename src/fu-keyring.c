@@ -50,6 +50,7 @@ fu_keyring_setup (FuKeyring *keyring, GError **error)
 {
 	FuKeyringPrivate *priv = GET_PRIVATE (keyring);
 	gpgme_error_t rc;
+	g_autofree gchar *gpg_home = NULL;
 
 	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
 
@@ -83,6 +84,34 @@ fu_keyring_setup (FuKeyring *keyring, GError **error)
 
 	/* set the protocol */
 	rc = gpgme_set_protocol (priv->ctx, GPGME_PROTOCOL_OpenPGP);
+	if (rc != GPG_ERR_NO_ERROR) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to set protocol: %s",
+			     gpgme_strerror (rc));
+		return FALSE;
+	}
+
+	/* set a custom home directory */
+	gpg_home = g_build_filename (LOCALSTATEDIR,
+				     "lib",
+				     PACKAGE_NAME,
+				     "gnupg",
+				     NULL);
+	if (g_mkdir_with_parents (gpg_home, 0700) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to create %s",
+			     gpg_home);
+		return FALSE;
+	}
+	g_debug ("Using keyring at %s", gpg_home);
+	rc = gpgme_ctx_set_engine_info (priv->ctx,
+					GPGME_PROTOCOL_OpenPGP,
+					NULL,
+					gpg_home);
 	if (rc != GPG_ERR_NO_ERROR) {
 		g_set_error (error,
 			     FWUPD_ERROR,
