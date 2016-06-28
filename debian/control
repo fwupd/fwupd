@@ -29,7 +29,7 @@ Build-Depends: debhelper (>= 9.0.0),
                libsoup2.4-dev,
                gtk-doc-tools,
                libcolorhug-dev,
-               valgrind
+               valgrind[!mips]
 Standards-Version: 3.9.7
 Section: admin
 Homepage: https://github.com/hughsie/fwupd

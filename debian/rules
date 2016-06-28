@@ -32,5 +32,7 @@ override_dh_install:
 	dh_install --fail-missing
 
 override_dh_auto_test:
-	HOME=`pwd` dh_auto_test
-	HOME=`pwd` gpg-connect-agent "KILLAGENT" /bye
+	if [ -x /usr/bin/valgrind ] ; then \
+		HOME=`pwd` dh_auto_test ; \
+		HOME=`pwd` gpg-connect-agent "KILLAGENT" /bye ; \
+	fi
