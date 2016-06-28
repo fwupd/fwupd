@@ -17,6 +17,7 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_device_close@Base 0.6.3
  dfu_device_detach@Base 0.6.3
  dfu_device_download@Base 0.6.3
+ dfu_device_ensure_interface@Base 0.7.2
  dfu_device_error_fixup@Base 0.6.3
  dfu_device_get_display_name@Base 0.6.3
  dfu_device_get_download_timeout@Base 0.6.3
@@ -36,6 +37,7 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_device_get_transfer_size@Base 0.6.3
  dfu_device_get_type@Base 0.6.3
  dfu_device_get_usb_dev@Base 0.6.3
+ dfu_device_get_version@Base 0.7.2
  dfu_device_has_attribute@Base 0.6.3
  dfu_device_has_dfuse_support@Base 0.6.3
  dfu_device_has_quirk@Base 0.6.3
@@ -120,3 +122,4 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_target_parse_sectors@Base 0.6.3
  dfu_target_upload@Base 0.6.3
  dfu_target_upload_chunk@Base 0.6.3
+ dfu_version_to_string@Base 0.7.2
