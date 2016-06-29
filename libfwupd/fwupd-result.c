@@ -31,11 +31,6 @@
 
 static void fwupd_result_finalize	 (GObject *object);
 
-/**
- * FwupdResultPrivate:
- *
- * Private #FwupdResult data
- **/
 typedef struct {
 	GPtrArray			*guids;
 
@@ -1462,9 +1457,6 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 	return NULL;
 }
 
-/**
- * fwupd_result_from_kv:
- **/
 static void
 fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 {
@@ -1597,9 +1589,6 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 	}
 }
 
-/**
- * fwupd_pad_kv_str:
- **/
 static void
 fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
 {
@@ -1614,9 +1603,6 @@ fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
 	g_string_append_printf (str, "%s\n", value);
 }
 
-/**
- * fwupd_pad_kv_unx:
- **/
 static void
 fwupd_pad_kv_unx (GString *str, const gchar *key, guint64 value)
 {
@@ -1632,9 +1618,6 @@ fwupd_pad_kv_unx (GString *str, const gchar *key, guint64 value)
 	fwupd_pad_kv_str (str, key, tmp);
 }
 
-/**
- * fwupd_pad_kv_ups:
- **/
 static void
 fwupd_pad_kv_ups (GString *str, const gchar *key, FwupdUpdateState value)
 {
@@ -1643,9 +1626,6 @@ fwupd_pad_kv_ups (GString *str, const gchar *key, FwupdUpdateState value)
 	fwupd_pad_kv_str (str, key, fwupd_update_state_to_string (value));
 }
 
-/**
- * fwupd_pad_kv_siz:
- **/
 static void
 fwupd_pad_kv_siz (GString *str, const gchar *key, guint64 value)
 {
@@ -1658,9 +1638,6 @@ fwupd_pad_kv_siz (GString *str, const gchar *key, guint64 value)
 	fwupd_pad_kv_str (str, key, tmp);
 }
 
-/**
- * fwupd_pad_kv_int:
- **/
 static void
 fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
 {
@@ -1673,9 +1650,6 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
 	fwupd_pad_kv_str (str, key, tmp);
 }
 
-/**
- * fwupd_pad_kv_dfl:
- **/
 static void
 fwupd_pad_kv_dfl (GString *str, const gchar *key, guint64 device_flags)
 {
@@ -1697,9 +1671,6 @@ fwupd_pad_kv_dfl (GString *str, const gchar *key, guint64 device_flags)
 	fwupd_pad_kv_str (str, key, tmp->str);
 }
 
-/**
- * fwupd_pad_kv_tfl:
- **/
 static void
 fwupd_pad_kv_tfl (GString *str, const gchar *key, FwupdTrustFlags trust_flags)
 {
@@ -1721,9 +1692,6 @@ fwupd_pad_kv_tfl (GString *str, const gchar *key, FwupdTrustFlags trust_flags)
 	fwupd_pad_kv_str (str, key, tmp->str);
 }
 
-/**
- * fwupd_pad_kv_csk:
- **/
 static void
 fwupd_pad_kv_csk (GString *str, const gchar *key, GChecksumType checksum_type)
 {
@@ -1806,9 +1774,6 @@ fwupd_result_to_string (FwupdResult *result)
 	return g_string_free (str, FALSE);
 }
 
-/**
- * fwupd_result_get_property:
- **/
 static void
 fwupd_result_get_property (GObject *object, guint prop_id,
 			   GValue *value, GParamSpec *pspec)
@@ -1826,9 +1791,6 @@ fwupd_result_get_property (GObject *object, guint prop_id,
 	}
 }
 
-/**
- * fwupd_result_set_property:
- **/
 static void
 fwupd_result_set_property (GObject *object, guint prop_id,
 			   const GValue *value, GParamSpec *pspec)
@@ -1847,9 +1809,6 @@ fwupd_result_set_property (GObject *object, guint prop_id,
 	}
 }
 
-/**
- * fwupd_result_class_init:
- **/
 static void
 fwupd_result_class_init (FwupdResultClass *klass)
 {
@@ -1872,9 +1831,6 @@ fwupd_result_class_init (FwupdResultClass *klass)
 	g_object_class_install_property (object_class, PROP_DEVICE_ID, pspec);
 }
 
-/**
- * fwupd_result_init:
- **/
 static void
 fwupd_result_init (FwupdResult *result)
 {
@@ -1884,9 +1840,6 @@ fwupd_result_init (FwupdResult *result)
 	priv->guids = g_ptr_array_new_with_free_func (g_free);
 }
 
-/**
- * fwupd_result_finalize:
- **/
 static void
 fwupd_result_finalize (GObject *object)
 {
@@ -1918,9 +1871,6 @@ fwupd_result_finalize (GObject *object)
 	G_OBJECT_CLASS (fwupd_result_parent_class)->finalize (object);
 }
 
-/**
- * fwupd_result_from_variant_iter:
- **/
 static void
 fwupd_result_from_variant_iter (FwupdResult *result, GVariantIter *iter)
 {

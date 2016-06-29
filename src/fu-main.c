@@ -86,9 +86,6 @@ typedef struct {
 
 static gboolean fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item);
 
-/**
- * fu_main_emit_changed:
- **/
 static void
 fu_main_emit_changed (FuMainPrivate *priv)
 {
@@ -103,9 +100,6 @@ fu_main_emit_changed (FuMainPrivate *priv)
 				       NULL, NULL);
 }
 
-/**
- * fu_main_emit_device_added:
- **/
 static void
 fu_main_emit_device_added (FuMainPrivate *priv, FuDevice *device)
 {
@@ -123,9 +117,6 @@ fu_main_emit_device_added (FuMainPrivate *priv, FuDevice *device)
 				       val, NULL);
 }
 
-/**
- * fu_main_emit_device_removed:
- **/
 static void
 fu_main_emit_device_removed (FuMainPrivate *priv, FuDevice *device)
 {
@@ -143,9 +134,6 @@ fu_main_emit_device_removed (FuMainPrivate *priv, FuDevice *device)
 				       val, NULL);
 }
 
-/**
- * fu_main_emit_device_changed:
- **/
 static void
 fu_main_emit_device_changed (FuMainPrivate *priv, FuDevice *device)
 {
@@ -163,9 +151,6 @@ fu_main_emit_device_changed (FuMainPrivate *priv, FuDevice *device)
 				       val, NULL);
 }
 
-/**
- * fu_main_emit_property_changed:
- **/
 static void
 fu_main_emit_property_changed (FuMainPrivate *priv,
 			       const gchar *property_name,
@@ -199,9 +184,6 @@ fu_main_emit_property_changed (FuMainPrivate *priv,
 	g_variant_builder_clear (&invalidated_builder);
 }
 
-/**
- * fu_main_set_status:
- **/
 static void
 fu_main_set_status (FuMainPrivate *priv, FwupdStatus status)
 {
@@ -215,9 +197,6 @@ fu_main_set_status (FuMainPrivate *priv, FwupdStatus status)
 	fu_main_emit_property_changed (priv, "Status", g_variant_new_uint32 (status));
 }
 
-/**
- * fu_main_device_array_to_variant:
- **/
 static GVariant *
 fu_main_device_array_to_variant (GPtrArray *devices, GError **error)
 {
@@ -244,9 +223,6 @@ fu_main_device_array_to_variant (GPtrArray *devices, GError **error)
 	return g_variant_new ("(a{sa{sv}})", &builder);
 }
 
-/**
- * fu_main_load_plugins:
- **/
 static gboolean
 fu_main_load_plugins (GHashTable *plugins, GError **error)
 {
@@ -301,9 +277,6 @@ fu_main_load_plugins (GHashTable *plugins, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_main_get_plugin_for_device:
- **/
 static FuPlugin *
 fu_main_get_plugin_for_device (GHashTable *plugins, FuDevice *device)
 {
@@ -316,9 +289,6 @@ fu_main_get_plugin_for_device (GHashTable *plugins, FuDevice *device)
 	return g_hash_table_lookup (plugins, tmp);
 }
 
-/**
- * fu_main_item_free:
- **/
 static void
 fu_main_item_free (FuDeviceItem *item)
 {
@@ -327,9 +297,6 @@ fu_main_item_free (FuDeviceItem *item)
 	g_free (item);
 }
 
-/**
- * fu_main_get_item_by_id:
- **/
 static FuDeviceItem *
 fu_main_get_item_by_id (FuMainPrivate *priv, const gchar *id)
 {
@@ -346,9 +313,6 @@ fu_main_get_item_by_id (FuMainPrivate *priv, const gchar *id)
 	return NULL;
 }
 
-/**
- * fu_main_get_item_by_guid:
- **/
 static FuDeviceItem *
 fu_main_get_item_by_guid (FuMainPrivate *priv, const gchar *guid)
 {
@@ -363,9 +327,6 @@ fu_main_get_item_by_guid (FuMainPrivate *priv, const gchar *guid)
 	return NULL;
 }
 
-/**
- * fu_main_get_provider_by_name:
- **/
 static FuProvider *
 fu_main_get_provider_by_name (FuMainPrivate *priv, const gchar *name)
 {
@@ -380,9 +341,6 @@ fu_main_get_provider_by_name (FuMainPrivate *priv, const gchar *name)
 	return NULL;
 }
 
-/**
- * fu_main_get_release_trust_flags:
- **/
 static gboolean
 fu_main_get_release_trust_flags (AsRelease *release,
 				 FwupdTrustFlags *trust_flags,
@@ -472,9 +430,6 @@ typedef struct {
 	FuMainPrivate		*priv;
 } FuMainAuthHelper;
 
-/**
- * fu_main_helper_free:
- **/
 static void
 fu_main_helper_free (FuMainAuthHelper *helper)
 {
@@ -491,9 +446,6 @@ fu_main_helper_free (FuMainAuthHelper *helper)
 	g_free (helper);
 }
 
-/**
- * fu_main_on_battery:
- **/
 static gboolean
 fu_main_on_battery (FuMainPrivate *priv)
 {
@@ -510,9 +462,6 @@ fu_main_on_battery (FuMainPrivate *priv)
 	return g_variant_get_boolean (value);
 }
 
-/**
- * fu_main_provider_unlock_authenticated:
- **/
 static gboolean
 fu_main_provider_unlock_authenticated (FuMainAuthHelper *helper, GError **error)
 {
@@ -550,9 +499,6 @@ fu_main_provider_unlock_authenticated (FuMainAuthHelper *helper, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_main_provider_update_authenticated:
- **/
 static gboolean
 fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 {
@@ -625,9 +571,6 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_main_check_authorization_cb:
- **/
 static void
 fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
@@ -680,9 +623,6 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	fu_main_helper_free (helper);
 }
 
-/**
- * fu_main_get_guids_from_store:
- **/
 static gchar *
 fu_main_get_guids_from_store (AsStore *store)
 {
@@ -712,9 +652,6 @@ fu_main_get_guids_from_store (AsStore *store)
 	return g_string_free (str, FALSE);
 }
 
-/**
- * fu_main_vendor_quirk_release_version:
- **/
 static void
 fu_main_vendor_quirk_release_version (AsApp *app)
 {
@@ -760,9 +697,6 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 	}
 }
 
-/**
- * fu_main_store_get_app_by_guids:
- **/
 static AsApp *
 fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
 {
@@ -781,9 +715,6 @@ fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
 	return NULL;
 }
 
-/**
- * fu_main_update_helper:
- **/
 static gboolean
 fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 {
@@ -954,11 +885,6 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_main_dbus_get_uid:
- *
- * Return value: the UID, or %G_MAXUINT if it could not be obtained
- **/
 static guint
 fu_main_dbus_get_uid (FuMainPrivate *priv, const gchar *sender)
 {
@@ -984,9 +910,6 @@ fu_main_dbus_get_uid (FuMainPrivate *priv, const gchar *sender)
 	return uid;
 }
 
-/**
- * fu_main_get_item_by_id_fallback_pending:
- **/
 static FuDeviceItem *
 fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, GError **error)
 {
@@ -1054,9 +977,6 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 	return item;
 }
 
-/**
- * fu_main_get_action_id_for_device:
- **/
 static const gchar *
 fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 {
@@ -1093,11 +1013,6 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 	return "org.freedesktop.fwupd.update-internal";
 }
 
-/**
- * fu_main_daemon_update_metadata:
- *
- * Supports optionally GZipped AppStream files up to 1MiB in size.
- **/
 static gboolean
 fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GError **error)
 {
@@ -1196,9 +1111,6 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	return TRUE;
 }
 
-/**
- * fu_main_store_delay_cb:
- **/
 static gboolean
 fu_main_store_delay_cb (gpointer user_data)
 {
@@ -1233,9 +1145,6 @@ fu_main_store_delay_cb (gpointer user_data)
 	return G_SOURCE_REMOVE;
 }
 
-/**
- * fu_main_store_changed_cb:
- **/
 static void
 fu_main_store_changed_cb (AsStore *store, FuMainPrivate *priv)
 {
@@ -1244,9 +1153,6 @@ fu_main_store_changed_cb (AsStore *store, FuMainPrivate *priv)
 	priv->store_changed_id = g_timeout_add (200, fu_main_store_delay_cb, priv);
 }
 
-/**
- * fu_main_get_updates_item_update:
- **/
 static gboolean
 fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 {
@@ -1379,9 +1285,6 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	return TRUE;
 }
 
-/**
- * fu_main_get_updates:
- **/
 static GPtrArray *
 fu_main_get_updates (FuMainPrivate *priv, GError **error)
 {
@@ -1584,9 +1487,6 @@ fu_main_get_details_local_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 	return g_variant_new ("(a{sa{sv}})", &builder);
 }
 
-/**
- * fu_main_daemon_method_call:
- **/
 static void
 fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			    const gchar *object_path, const gchar *interface_name,
@@ -2078,9 +1978,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 					       method_name);
 }
 
-/**
- * fu_main_daemon_get_property:
- **/
 static GVariant *
 fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 			     const gchar *object_path, const gchar *interface_name,
@@ -2104,9 +2001,6 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 	return NULL;
 }
 
-/**
- * fu_main_providers_coldplug:
- **/
 static void
 fu_main_providers_coldplug (FuMainPrivate *priv)
 {
@@ -2127,9 +2021,6 @@ fu_main_providers_coldplug (FuMainPrivate *priv)
 	}
 }
 
-/**
- * fu_main_on_bus_acquired_cb:
- **/
 static void
 fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 			    const gchar *name,
@@ -2193,9 +2084,6 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 		as_profile_dump (priv->profile);
 }
 
-/**
- * fu_main_on_name_acquired_cb:
- **/
 static void
 fu_main_on_name_acquired_cb (GDBusConnection *connection,
 			     const gchar *name,
@@ -2204,9 +2092,6 @@ fu_main_on_name_acquired_cb (GDBusConnection *connection,
 	g_debug ("FuMain: acquired name: %s", name);
 }
 
-/**
- * fu_main_on_name_lost_cb:
- **/
 static void
 fu_main_on_name_lost_cb (GDBusConnection *connection,
 			 const gchar *name,
@@ -2217,9 +2102,6 @@ fu_main_on_name_lost_cb (GDBusConnection *connection,
 	g_main_loop_quit (priv->loop);
 }
 
-/**
- * fu_main_timed_exit_cb:
- **/
 static gboolean
 fu_main_timed_exit_cb (gpointer user_data)
 {
@@ -2228,9 +2110,6 @@ fu_main_timed_exit_cb (gpointer user_data)
 	return G_SOURCE_REMOVE;
 }
 
-/**
- * fu_main_load_introspection:
- **/
 static GDBusNodeInfo *
 fu_main_load_introspection (const gchar *filename, GError **error)
 {
@@ -2250,9 +2129,6 @@ fu_main_load_introspection (const gchar *filename, GError **error)
 	return g_dbus_node_info_new_for_xml (g_bytes_get_data (data, NULL), error);
 }
 
-/**
- * fu_main_provider_device_added_cb:
- **/
 static void
 fu_main_provider_device_added_cb (FuProvider *provider,
 				  FuDevice *device,
@@ -2312,9 +2188,6 @@ fu_main_provider_device_added_cb (FuProvider *provider,
 	fu_main_emit_changed (priv);
 }
 
-/**
- * fu_main_provider_device_removed_cb:
- **/
 static void
 fu_main_provider_device_removed_cb (FuProvider *provider,
 				    FuDevice *device,
@@ -2343,9 +2216,6 @@ fu_main_provider_device_removed_cb (FuProvider *provider,
 	fu_main_emit_changed (priv);
 }
 
-/**
- * fu_main_provider_status_changed_cb:
- **/
 static void
 fu_main_provider_status_changed_cb (FuProvider *provider,
 				    FwupdStatus status,
@@ -2355,9 +2225,6 @@ fu_main_provider_status_changed_cb (FuProvider *provider,
 	fu_main_set_status (priv, status);
 }
 
-/**
- * fu_main_add_provider:
- **/
 static void
 fu_main_add_provider (FuMainPrivate *priv, FuProvider *provider)
 {
@@ -2373,9 +2240,6 @@ fu_main_add_provider (FuMainPrivate *priv, FuProvider *provider)
 	g_ptr_array_add (priv->providers, provider);
 }
 
-/**
- * main:
- **/
 int
 main (int argc, char *argv[])
 {

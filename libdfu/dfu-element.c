@@ -42,11 +42,6 @@
 
 static void dfu_element_finalize			 (GObject *object);
 
-/**
- * DfuElementPrivate:
- *
- * Private #DfuElement data
- **/
 typedef struct {
 	GBytes			*contents;
 	guint32			 target_size;
@@ -56,9 +51,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (DfuElement, dfu_element, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (dfu_element_get_instance_private (o))
 
-/**
- * dfu_element_class_init:
- **/
 static void
 dfu_element_class_init (DfuElementClass *klass)
 {
@@ -66,17 +58,11 @@ dfu_element_class_init (DfuElementClass *klass)
 	object_class->finalize = dfu_element_finalize;
 }
 
-/**
- * dfu_element_init:
- **/
 static void
 dfu_element_init (DfuElement *element)
 {
 }
 
-/**
- * dfu_element_finalize:
- **/
 static void
 dfu_element_finalize (GObject *object)
 {

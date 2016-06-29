@@ -33,9 +33,6 @@
 #include "fu-provider-rpi.h"
 #include "fu-rom.h"
 
-/**
- * fu_test_get_filename:
- **/
 static gchar *
 fu_test_get_filename (const gchar *filename)
 {

@@ -29,9 +29,6 @@
 #include "fwupd-error.h"
 #include "fwupd-result.h"
 
-/**
- * as_test_compare_lines:
- **/
 static gboolean
 as_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 {

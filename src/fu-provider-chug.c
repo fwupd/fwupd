@@ -37,9 +37,6 @@ static void	fu_provider_chug_finalize	(GObject	*object);
 #define FU_PROVIDER_CHUG_POLL_REOPEN		5		/* seconds */
 #define FU_PROVIDER_CHUG_FIRMWARE_MAX		(64 * 1024)	/* bytes */
 
-/**
- * FuProviderChugPrivate:
- **/
 typedef struct {
 	GHashTable		*devices;	/* DeviceKey:FuProviderChugItem */
 	GUsbContext		*usb_ctx;
@@ -59,18 +56,12 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (FuProviderChug, fu_provider_chug, FU_TYPE_PROVIDER)
 #define GET_PRIVATE(o) (fu_provider_chug_get_instance_private (o))
 
-/**
- * fu_provider_chug_get_name:
- **/
 static const gchar *
 fu_provider_chug_get_name (FuProvider *provider)
 {
 	return "ColorHug";
 }
 
-/**
- * fu_provider_chug_get_device_key:
- **/
 static gchar *
 fu_provider_chug_get_device_key (GUsbDevice *device)
 {
@@ -79,9 +70,6 @@ fu_provider_chug_get_device_key (GUsbDevice *device)
 				ch_device_get_guid (device));
 }
 
-/**
- * fu_provider_chug_device_free:
- **/
 static void
 fu_provider_chug_device_free (FuProviderChugItem *item)
 {
@@ -94,9 +82,6 @@ fu_provider_chug_device_free (FuProviderChugItem *item)
 		g_source_remove (item->timeout_open_id);
 }
 
-/**
- * fu_provider_chug_wait_for_connect:
- **/
 static gboolean
 fu_provider_chug_wait_for_connect (FuProviderChug *provider_chug,
 				   FuProviderChugItem *item,
@@ -118,9 +103,6 @@ fu_provider_chug_wait_for_connect (FuProviderChug *provider_chug,
 }
 
 
-/**
- * fu_provider_chug_open:
- **/
 static gboolean
 fu_provider_chug_open (FuProviderChugItem *item, GError **error)
 {
@@ -137,9 +119,6 @@ fu_provider_chug_open (FuProviderChugItem *item, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_chug_get_firmware_version:
- **/
 static void
 fu_provider_chug_get_firmware_version (FuProviderChugItem *item)
 {
@@ -199,9 +178,6 @@ out:
 		g_debug ("Failed to close: %s", error->message);
 }
 
-/**
- * fu_provider_chug_verify:
- **/
 static gboolean
 fu_provider_chug_verify (FuProvider *provider,
 			 FuDevice *device,
@@ -262,9 +238,6 @@ fu_provider_chug_verify (FuProvider *provider,
 	return TRUE;
 }
 
-/**
- * fu_provider_chug_update:
- **/
 static gboolean
 fu_provider_chug_update (FuProvider *provider,
 			 FuDevice *device,
@@ -435,9 +408,6 @@ fu_provider_chug_update (FuProvider *provider,
 	return TRUE;
 }
 
-/**
- * fu_provider_chug_open_cb:
- **/
 static gboolean
 fu_provider_chug_open_cb (gpointer user_data)
 {
@@ -457,9 +427,6 @@ fu_provider_chug_open_cb (gpointer user_data)
 	return TRUE;
 }
 
-/**
- * fu_provider_chug_device_added_cb:
- **/
 static void
 fu_provider_chug_device_added_cb (GUsbContext *ctx,
 				  GUsbDevice *device,
@@ -550,9 +517,6 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 	fu_provider_device_add (FU_PROVIDER (provider_chug), item->device);
 }
 
-/**
- * fu_provider_chug_device_removed_cb:
- **/
 static void
 fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 				    GUsbDevice *device,
@@ -576,9 +540,6 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 	fu_provider_device_remove (FU_PROVIDER (provider_chug), item->device);
 }
 
-/**
- * fu_provider_chug_coldplug:
- **/
 static gboolean
 fu_provider_chug_coldplug (FuProvider *provider, GError **error)
 {
@@ -588,9 +549,6 @@ fu_provider_chug_coldplug (FuProvider *provider, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_chug_class_init:
- **/
 static void
 fu_provider_chug_class_init (FuProviderChugClass *klass)
 {
@@ -604,9 +562,6 @@ fu_provider_chug_class_init (FuProviderChugClass *klass)
 	object_class->finalize = fu_provider_chug_finalize;
 }
 
-/**
- * fu_provider_chug_init:
- **/
 static void
 fu_provider_chug_init (FuProviderChug *provider_chug)
 {
@@ -623,9 +578,6 @@ fu_provider_chug_init (FuProviderChug *provider_chug)
 			  provider_chug);
 }
 
-/**
- * fu_provider_chug_finalize:
- **/
 static void
 fu_provider_chug_finalize (GObject *object)
 {
@@ -639,9 +591,6 @@ fu_provider_chug_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_provider_chug_parent_class)->finalize (object);
 }
 
-/**
- * fu_provider_chug_new:
- **/
 FuProvider *
 fu_provider_chug_new (void)
 {

@@ -37,11 +37,6 @@
 
 static void fwupd_client_finalize	 (GObject *object);
 
-/**
- * FwupdClientPrivate:
- *
- * Private #FwupdClient data
- **/
 typedef struct {
 	FwupdStatus			 status;
 	GDBusConnection			*conn;
@@ -76,9 +71,6 @@ typedef struct {
 	GDBusMessage	*message;
 } FwupdClientHelper;
 
-/**
- * fwupd_client_helper_free:
- **/
 static void
 fwupd_client_helper_free (FwupdClientHelper *helper)
 {
@@ -92,9 +84,6 @@ fwupd_client_helper_free (FwupdClientHelper *helper)
 	g_free (helper);
 }
 
-/**
- * fwupd_client_helper_new:
- **/
 static FwupdClientHelper *
 fwupd_client_helper_new (void)
 {
@@ -106,9 +95,6 @@ fwupd_client_helper_new (void)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdClientHelper, fwupd_client_helper_free)
 
-/**
- * fwupd_client_properties_changed_cb:
- **/
 static void
 fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 				    GVariant *changed_properties,
@@ -127,9 +113,6 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 	g_signal_emit (client, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
 }
 
-/**
- * fwupd_client_signal_cb:
- */
 static void
 fwupd_client_signal_cb (GDBusProxy *proxy,
 			const gchar *sender_name,
@@ -216,9 +199,6 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 	return TRUE;
 }
 
-/**
- * fwupd_client_parse_results_from_data:
- **/
 static GPtrArray *
 fwupd_client_parse_results_from_data (GVariant *devices)
 {
@@ -241,9 +221,6 @@ fwupd_client_parse_results_from_data (GVariant *devices)
 	return results;
 }
 
-/**
- * fwupd_client_fixup_dbus_error:
- **/
 static void
 fwupd_client_fixup_dbus_error (GError *error)
 {
@@ -346,9 +323,6 @@ fwupd_client_get_updates (FwupdClient *client, GCancellable *cancellable, GError
 	return fwupd_client_parse_results_from_data (val);
 }
 
-/**
- * fwupd_client_proxy_call_cb:
- **/
 static void
 fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
@@ -558,9 +532,6 @@ fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
 	return fwupd_result_new_from_data (helper->val);
 }
 
-/**
- * fwupd_client_send_message_cb:
- **/
 static void
 fwupd_client_send_message_cb (GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
@@ -951,9 +922,6 @@ fwupd_client_update_metadata (FwupdClient *client,
 	return TRUE;
 }
 
-/**
- * fwupd_client_get_property:
- **/
 static void
 fwupd_client_get_property (GObject *object, guint prop_id,
 			   GValue *value, GParamSpec *pspec)
@@ -971,9 +939,6 @@ fwupd_client_get_property (GObject *object, guint prop_id,
 	}
 }
 
-/**
- * fwupd_client_set_property:
- **/
 static void
 fwupd_client_set_property (GObject *object, guint prop_id,
 			   const GValue *value, GParamSpec *pspec)
@@ -991,9 +956,6 @@ fwupd_client_set_property (GObject *object, guint prop_id,
 	}
 }
 
-/**
- * fwupd_client_class_init:
- **/
 static void
 fwupd_client_class_init (FwupdClientClass *klass)
 {
@@ -1100,17 +1062,11 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	g_object_class_install_property (object_class, PROP_STATUS, pspec);
 }
 
-/**
- * fwupd_client_init:
- **/
 static void
 fwupd_client_init (FwupdClient *client)
 {
 }
 
-/**
- * fwupd_client_finalize:
- **/
 static void
 fwupd_client_finalize (GObject *object)
 {

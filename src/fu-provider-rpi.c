@@ -36,9 +36,6 @@ static void	fu_provider_rpi_finalize	(GObject	*object);
 
 #define FU_PROVIDER_RPI_FIRMWARE_FILENAME		"start.elf"
 
-/**
- * FuProviderRpiPrivate:
- **/
 typedef struct {
 	gchar			*fw_dir;
 } FuProviderRpiPrivate;
@@ -46,18 +43,12 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (FuProviderRpi, fu_provider_rpi, FU_TYPE_PROVIDER)
 #define GET_PRIVATE(o) (fu_provider_rpi_get_instance_private (o))
 
-/**
- * fu_provider_rpi_get_name:
- **/
 static const gchar *
 fu_provider_rpi_get_name (FuProvider *provider)
 {
 	return "RaspberryPi";
 }
 
-/**
- * fu_provider_rpi_strstr:
- **/
 static gchar *
 fu_provider_rpi_strstr (const guint8 *haystack,
 			gsize haystack_len,
@@ -84,9 +75,6 @@ fu_provider_rpi_strstr (const guint8 *haystack,
 	return NULL;
 }
 
-/**
- * fu_provider_rpi_parse_firmware:
- **/
 static gboolean
 fu_provider_rpi_parse_firmware (FuDevice *device, const gchar *fn, GError **error)
 {
@@ -169,9 +157,6 @@ fu_provider_rpi_parse_firmware (FuDevice *device, const gchar *fn, GError **erro
 	return TRUE;
 }
 
-/**
- * fu_provider_rpi_explode_file:
- **/
 static gboolean
 fu_provider_rpi_explode_file (struct archive_entry *entry, const gchar *dir)
 {
@@ -189,9 +174,6 @@ fu_provider_rpi_explode_file (struct archive_entry *entry, const gchar *dir)
 	return TRUE;
 }
 
-/**
- * fu_provider_rpi_update:
- **/
 static gboolean
 fu_provider_rpi_update (FuProvider *provider,
 			FuDevice *device,
@@ -272,9 +254,6 @@ out:
 	return ret;
 }
 
-/**
- * fu_provider_rpi_coldplug:
- **/
 static gboolean
 fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
 {
@@ -309,9 +288,6 @@ fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_rpi_class_init:
- **/
 static void
 fu_provider_rpi_class_init (FuProviderRpiClass *klass)
 {
@@ -324,9 +300,6 @@ fu_provider_rpi_class_init (FuProviderRpiClass *klass)
 	object_class->finalize = fu_provider_rpi_finalize;
 }
 
-/**
- * fu_provider_rpi_init:
- **/
 static void
 fu_provider_rpi_init (FuProviderRpi *provider_rpi)
 {
@@ -340,9 +313,6 @@ fu_provider_rpi_init (FuProviderRpi *provider_rpi)
 		fu_provider_rpi_set_fw_dir (provider_rpi, tmp);
 }
 
-/**
- * fu_provider_rpi_set_fw_dir:
- **/
 void
 fu_provider_rpi_set_fw_dir (FuProviderRpi *provider_rpi, const gchar *fw_dir)
 {
@@ -352,9 +322,6 @@ fu_provider_rpi_set_fw_dir (FuProviderRpi *provider_rpi, const gchar *fw_dir)
 	g_mkdir_with_parents (fw_dir, 0700);
 }
 
-/**
- * fu_provider_rpi_finalize:
- **/
 static void
 fu_provider_rpi_finalize (GObject *object)
 {
@@ -366,9 +333,6 @@ fu_provider_rpi_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_provider_rpi_parent_class)->finalize (object);
 }
 
-/**
- * fu_provider_rpi_new:
- **/
 FuProvider *
 fu_provider_rpi_new (void)
 {

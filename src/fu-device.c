@@ -29,11 +29,6 @@
 
 static void fu_device_finalize			 (GObject *object);
 
-/**
- * FuDevicePrivate:
- *
- * Private #FuDevice data
- **/
 typedef struct {
 	gchar				*equivalent_id;
 	FuDevice			*alternate;
@@ -43,9 +38,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (FuDevice, fu_device, FWUPD_TYPE_RESULT)
 #define GET_PRIVATE(o) (fu_device_get_instance_private (o))
 
-/**
- * fu_device_get_equivalent_id:
- **/
 const gchar *
 fu_device_get_equivalent_id (FuDevice *device)
 {
@@ -54,9 +46,6 @@ fu_device_get_equivalent_id (FuDevice *device)
 	return priv->equivalent_id;
 }
 
-/**
- * fu_device_set_equivalent_id:
- **/
 void
 fu_device_set_equivalent_id (FuDevice *device, const gchar *equivalent_id)
 {
@@ -66,9 +55,6 @@ fu_device_set_equivalent_id (FuDevice *device, const gchar *equivalent_id)
 	priv->equivalent_id = g_strdup (equivalent_id);
 }
 
-/**
- * fu_device_get_alternate:
- **/
 FuDevice *
 fu_device_get_alternate (FuDevice *device)
 {
@@ -77,9 +63,6 @@ fu_device_get_alternate (FuDevice *device)
 	return priv->alternate;
 }
 
-/**
- * fu_device_set_alternate:
- **/
 void
 fu_device_set_alternate (FuDevice *device, FuDevice *alternate)
 {
@@ -88,9 +71,6 @@ fu_device_set_alternate (FuDevice *device, FuDevice *alternate)
 	g_set_object (&priv->alternate, alternate);
 }
 
-/**
- * fu_device_add_guid:
- **/
 void
 fu_device_add_guid (FuDevice *device, const gchar *guid)
 {
@@ -106,9 +86,6 @@ fu_device_add_guid (FuDevice *device, const gchar *guid)
 	fwupd_result_add_guid (FWUPD_RESULT (device), guid);
 }
 
-/**
- * fu_device_get_metadata:
- **/
 const gchar *
 fu_device_get_metadata (FuDevice *device, const gchar *key)
 {
@@ -118,9 +95,6 @@ fu_device_get_metadata (FuDevice *device, const gchar *key)
 	return g_hash_table_lookup (priv->metadata, key);
 }
 
-/**
- * fu_device_set_metadata:
- **/
 void
 fu_device_set_metadata (FuDevice *device, const gchar *key, const gchar *value)
 {
@@ -131,9 +105,6 @@ fu_device_set_metadata (FuDevice *device, const gchar *key, const gchar *value)
 	g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
 }
 
-/**
- * fu_device_set_name:
- **/
 void
 fu_device_set_name (FuDevice *device, const gchar *value)
 {
@@ -143,9 +114,6 @@ fu_device_set_name (FuDevice *device, const gchar *value)
 	fwupd_result_set_device_name (FWUPD_RESULT (device), new->str);
 }
 
-/**
- * fu_device_class_init:
- **/
 static void
 fu_device_class_init (FuDeviceClass *klass)
 {
@@ -153,9 +121,6 @@ fu_device_class_init (FuDeviceClass *klass)
 	object_class->finalize = fu_device_finalize;
 }
 
-/**
- * fu_device_init:
- **/
 static void
 fu_device_init (FuDevice *device)
 {
@@ -164,9 +129,6 @@ fu_device_init (FuDevice *device)
 						g_free, g_free);
 }
 
-/**
- * fu_device_finalize:
- **/
 static void
 fu_device_finalize (GObject *object)
 {
@@ -180,9 +142,6 @@ fu_device_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }
 
-/**
- * fu_device_new:
- **/
 FuDevice *
 fu_device_new (void)
 {

@@ -29,18 +29,12 @@
 #define STEELSERIES_REPLUG_TIMEOUT		5000 /* ms */
 #define STEELSERIES_TRANSACTION_TIMEOUT		1000 /* ms */
 
-/**
- * fu_plugin_get_name:
- */
 const gchar *
 fu_plugin_get_name (void)
 {
 	return "steelseries";
 }
 
-/**
- * fu_plugin_device_probe:
- **/
 gboolean
 fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 {
@@ -139,9 +133,6 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_plugin_device_update:
- **/
 gboolean
 fu_plugin_device_update (FuPlugin *plugin,
 			 FuDevice *device,

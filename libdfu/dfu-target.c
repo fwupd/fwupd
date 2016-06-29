@@ -54,11 +54,6 @@ typedef enum {
 	DFU_CMD_DFUSE_LAST
 } DfuCmdDfuse;
 
-/**
- * DfuTargetPrivate:
- *
- * Private #DfuTarget data
- **/
 typedef struct {
 	DfuDevice		*device;		/* not refcounted */
 	DfuCipherKind		 cipher_kind;
@@ -80,9 +75,6 @@ static guint signals [SIGNAL_LAST] = { 0 };
 G_DEFINE_TYPE_WITH_PRIVATE (DfuTarget, dfu_target, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (dfu_target_get_instance_private (o))
 
-/**
- * dfu_target_class_init:
- **/
 static void
 dfu_target_class_init (DfuTargetClass *klass)
 {
@@ -107,9 +99,6 @@ dfu_target_class_init (DfuTargetClass *klass)
 	object_class->finalize = dfu_target_finalize;
 }
 
-/**
- * dfu_target_init:
- **/
 static void
 dfu_target_init (DfuTarget *target)
 {
@@ -118,9 +107,6 @@ dfu_target_init (DfuTarget *target)
 	priv->sectors_erased = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
-/**
- * dfu_target_finalize:
- **/
 static void
 dfu_target_finalize (GObject *object)
 {
@@ -140,9 +126,6 @@ dfu_target_finalize (GObject *object)
 	G_OBJECT_CLASS (dfu_target_parent_class)->finalize (object);
 }
 
-/**
- * dfu_target_sectors_to_string:
- **/
 static gchar *
 dfu_target_sectors_to_string (DfuTarget *target)
 {
@@ -163,11 +146,6 @@ dfu_target_sectors_to_string (DfuTarget *target)
 	return g_string_free (str, FALSE);
 }
 
-/**
- * dfu_target_get_sector_for_addr:
- *
- * Returns: the sector that should be used for a specific address, or %NULL
- **/
 static DfuSector *
 dfu_target_get_sector_for_addr (DfuTarget *target, guint32 addr)
 {
@@ -187,11 +165,6 @@ dfu_target_get_sector_for_addr (DfuTarget *target, guint32 addr)
 	return NULL;
 }
 
-/**
- * dfu_target_parse_sector:
- *
- * Parse the DfuSe sector format according to UM0424
- **/
 static gboolean
 dfu_target_parse_sector (DfuTarget *target,
 			 const gchar *dfuse_sector_id,
@@ -315,11 +288,6 @@ dfu_target_parse_sector (DfuTarget *target,
 	return TRUE;
 }
 
-/**
- * dfu_target_parse_sectors: (skip)
- *
- * Parse the DfuSe format according to UM0424
- **/
 gboolean
 dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **error)
 {
@@ -498,9 +466,6 @@ dfu_target_status_to_error_msg (DfuStatus status)
 	return NULL;
 }
 
-/**
- * dfu_target_check_status:
- **/
 static gboolean
 dfu_target_check_status (DfuTarget *target,
 			 GCancellable *cancellable,
@@ -648,9 +613,6 @@ dfu_target_setup (DfuTarget *target, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_target_download_chunk:
- **/
 static gboolean
 dfu_target_download_chunk (DfuTarget *target, guint8 index, GBytes *bytes,
 			   GCancellable *cancellable, GError **error)
@@ -882,9 +844,6 @@ dfu_target_read_unprotect (DfuTarget *target,
 
 #endif
 
-/**
- * dfu_target_upload_chunk: (skip)
- **/
 GBytes *
 dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 			 GCancellable *cancellable, GError **error)
@@ -927,9 +886,6 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 	return g_bytes_new_take (buf, actual_length);
 }
 
-/**
- * dfu_target_upload_element:
- **/
 static DfuElement *
 dfu_target_upload_element (DfuTarget *target,
 			   guint32 address,
@@ -1169,9 +1125,6 @@ dfu_target_upload (DfuTarget *target,
 	return g_object_ref (image);
 }
 
-/**
- * _g_bytes_compare_verbose:
- **/
 static gchar *
 _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 {
@@ -1201,9 +1154,6 @@ _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 	return NULL;
 }
 
-/**
- * dfu_target_download_element:
- **/
 static gboolean
 dfu_target_download_element (DfuTarget *target,
 			     DfuElement *element,
@@ -1452,9 +1402,6 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 }
 
 #if 0
-/**
- * dfu_target_get_commands:
- **/
 static gboolean
 dfu_target_get_commands (DfuTarget *target,
 			 GCancellable *cancellable,

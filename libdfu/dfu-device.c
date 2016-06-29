@@ -46,11 +46,6 @@
 
 static void dfu_device_finalize			 (GObject *object);
 
-/**
- * DfuDevicePrivate:
- *
- * Private #DfuDevice data
- **/
 typedef struct {
 	DfuDeviceAttributes	 attributes;
 	DfuDeviceQuirks		 quirks;
@@ -87,9 +82,6 @@ static guint signals [SIGNAL_LAST] = { 0 };
 G_DEFINE_TYPE_WITH_PRIVATE (DfuDevice, dfu_device, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (dfu_device_get_instance_private (o))
 
-/**
- * dfu_device_class_init:
- **/
 static void
 dfu_device_class_init (DfuDeviceClass *klass)
 {
@@ -146,9 +138,6 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	object_class->finalize = dfu_device_finalize;
 }
 
-/**
- * dfu_device_init:
- **/
 static void
 dfu_device_init (DfuDevice *device)
 {
@@ -235,9 +224,6 @@ dfu_device_set_transfer_size (DfuDevice *device, guint16 transfer_size)
 	priv->transfer_size = transfer_size;
 }
 
-/**
- * dfu_device_finalize:
- **/
 static void
 dfu_device_finalize (GObject *object)
 {
@@ -264,9 +250,6 @@ typedef struct __attribute__((packed)) {
 	guint16		bcdDFUVersion;
 } DfuFuncDescriptor;
 
-/**
- * dfu_device_parse_iface_data:
- **/
 static void
 dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 {
@@ -322,9 +305,6 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 	priv->attributes = desc->bmAttributes;
 }
 
-/**
- * dfu_device_update_from_iface:
- **/
 static gboolean
 dfu_device_update_from_iface (DfuDevice *device, GUsbInterface *iface)
 {
@@ -369,9 +349,6 @@ dfu_device_update_from_iface (DfuDevice *device, GUsbInterface *iface)
 	return TRUE;
 }
 
-/**
- * dfu_device_add_targets:
- **/
 static gboolean
 dfu_device_add_targets (DfuDevice *device)
 {
@@ -601,9 +578,6 @@ dfu_device_has_dfuse_support (DfuDevice *device)
 	return priv->dfuse_supported;
 }
 
-/**
- * dfu_device_set_quirks:
- **/
 static void
 dfu_device_set_quirks (DfuDevice *device)
 {
@@ -895,9 +869,6 @@ dfu_device_get_display_name (DfuDevice *device)
 	return priv->display_name;
 }
 
-/**
- * dfu_device_set_state:
- **/
 static void
 dfu_device_set_state (DfuDevice *device, DfuState state)
 {
@@ -908,9 +879,6 @@ dfu_device_set_state (DfuDevice *device, DfuState state)
 	g_signal_emit (device, signals[SIGNAL_STATE_CHANGED], 0, state);
 }
 
-/**
- * dfu_device_set_status:
- **/
 static void
 dfu_device_set_status (DfuDevice *device, DfuStatus status)
 {
@@ -921,9 +889,6 @@ dfu_device_set_status (DfuDevice *device, DfuStatus status)
 	g_signal_emit (device, signals[SIGNAL_STATUS_CHANGED], 0, status);
 }
 
-/**
- * dfu_device_ensure_interface:
- **/
 gboolean
 dfu_device_ensure_interface (DfuDevice *device, GError **error)
 {
@@ -1428,9 +1393,6 @@ dfu_device_close (DfuDevice *device, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_device_set_new_usb_dev:
- **/
 gboolean
 dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 			    GCancellable *cancellable, GError **error)
@@ -1499,9 +1461,6 @@ typedef struct {
 	guint		 timeout;
 } DfuDeviceReplugHelper;
 
-/**
- * dfu_device_replug_helper_free:
- **/
 static void
 dfu_device_replug_helper_free (DfuDeviceReplugHelper *helper)
 {
@@ -1512,9 +1471,6 @@ dfu_device_replug_helper_free (DfuDeviceReplugHelper *helper)
 	g_free (helper);
 }
 
-/**
- * dfu_device_replug_helper_cb:
- **/
 static gboolean
 dfu_device_replug_helper_cb (gpointer user_data)
 {
@@ -1700,9 +1656,6 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	return dfu_device_reset (device, error);
 }
 
-/**
- * dfu_device_percentage_cb:
- **/
 static void
 dfu_device_percentage_cb (DfuTarget *target, guint percentage, DfuDevice *device)
 {
@@ -2031,9 +1984,6 @@ dfu_device_download (DfuDevice *device,
 	return TRUE;
 }
 
-/**
- * dfu_device_error_fixup:
- **/
 void
 dfu_device_error_fixup (DfuDevice *device,
 			GCancellable *cancellable,
