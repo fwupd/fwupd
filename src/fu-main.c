@@ -464,8 +464,8 @@ typedef struct {
 	AsStore			*store;
 	FwupdTrustFlags		 trust_flags;
 	GPtrArray		*devices;	/* of FuDevice */
+	GPtrArray		*blob_fws;	/* of GBytes */
 	FwupdInstallFlags	 flags;
-	GBytes			*blob_fw;
 	GBytes			*blob_cab;
 	gboolean		 is_downgrade;
 	FuMainAuthKind		 auth_kind;
@@ -481,8 +481,8 @@ fu_main_helper_free (FuMainAuthHelper *helper)
 	/* free */
 	if (helper->devices != NULL)
 		g_ptr_array_unref (helper->devices);
-	if (helper->blob_fw > 0)
-		g_bytes_unref (helper->blob_fw);
+	if (helper->blob_fws > 0)
+		g_ptr_array_unref (helper->blob_fws);
 	if (helper->blob_cab > 0)
 		g_bytes_unref (helper->blob_cab);
 	if (helper->store != NULL)
@@ -601,6 +601,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 	/* run the correct providers for each device */
 	for (i = 0; i < helper->devices->len; i ++) {
 		FuDevice *device = g_ptr_array_index (helper->devices, i);
+		GBytes *blob_fw = g_ptr_array_index (helper->blob_fws, i);
 		item = fu_main_get_item_by_id (helper->priv,
 					       fu_device_get_id (device));
 		plugin = fu_main_get_plugin_for_device (helper->priv->plugins,
@@ -608,7 +609,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 		if (!fu_provider_update (item->provider,
 					 item->device,
 					 helper->blob_cab,
-					 helper->blob_fw,
+					 blob_fw,
 					 plugin,
 					 helper->flags,
 					 error))
@@ -828,6 +829,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	/* find an application from the cabinet 'store' for the device */
 	for (i = 0; i < helper->devices->len; i ++) {
 		gboolean is_downgrade;
+		GBytes *blob_fw;
 		FuDevice *device = g_ptr_array_index (helper->devices, i);
 		app = fu_main_store_get_app_by_guids (helper->store, device);
 		if (app == NULL) {
@@ -862,16 +864,16 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 			return FALSE;
 		}
 
-		/* FIXME: this assumes all devices use the same blob */
-		if (helper->blob_fw == NULL)
-			helper->blob_fw = as_release_get_blob (rel, tmp);
-		if (helper->blob_fw == NULL) {
+		/* not all devices have to use the same blob */
+		blob_fw = as_release_get_blob (rel, tmp);
+		if (blob_fw == NULL) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_READ,
 					     "failed to get firmware blob");
 			return FALSE;
 		}
+		g_ptr_array_add (helper->blob_fws, g_bytes_ref (blob_fw));
 
 		/* possibly convert the version from 0x to dotted */
 		fu_main_vendor_quirk_release_version (app);
@@ -936,6 +938,17 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		/* verify */
 		if (!fu_main_get_release_trust_flags (rel, &helper->trust_flags, error))
 			return FALSE;
+	}
+
+	/* sanity check */
+	if (helper->devices->len != helper->blob_fws->len) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "not enough firmware blobs (%i) for devices (%i)",
+			     helper->blob_fws->len,
+			     helper->devices->len);
+		return FALSE;
 	}
 
 	return TRUE;
@@ -1939,6 +1952,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		helper->priv = priv;
 		helper->store = as_store_new ();
 		helper->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+		helper->blob_fws = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 		if (item != NULL)
 			g_ptr_array_add (helper->devices, g_object_ref (item->device));
 		if (!fu_main_update_helper (helper, &error)) {
