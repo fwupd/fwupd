@@ -1729,8 +1729,12 @@ fwupd_result_to_string (FwupdResult *result)
 	/* not set when using GetDetails */
 	if (priv->device_name != NULL)
 		g_string_append_printf (str, "%s\n", priv->device_name);
-	else
-		g_string_append_printf (str, "%s\n", "Unknown Device");
+	else {
+		if (priv->update_name != NULL)
+			g_string_append_printf( str, "%s\n", priv->update_name);
+		else
+			g_string_append_printf (str, "%s\n", "Unknown Device");
+	}
 
 	/* device */
 	for (i = 0; i < priv->guids->len; i++) {
@@ -1753,7 +1757,6 @@ fwupd_result_to_string (FwupdResult *result)
 
 	/* updates */
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_ID, priv->update_id);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_NAME, priv->update_name);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_SUMMARY, priv->update_summary);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_DESCRIPTION, priv->update_description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_VERSION, priv->update_version);
