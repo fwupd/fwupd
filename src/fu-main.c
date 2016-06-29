@@ -467,7 +467,7 @@ typedef struct {
 	FwupdInstallFlags	 flags;
 	GBytes			*blob_fw;
 	GBytes			*blob_cab;
-	gint			 vercmp;
+	gboolean		 is_downgrade;
 	FuMainAuthKind		 auth_kind;
 	FuMainPrivate		*priv;
 } FuMainAuthHelper;
@@ -770,6 +770,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	AsRelease *rel;
 	const gchar *tmp;
 	const gchar *version;
+	gint vercmp;
 	guint i;
 
 	/* load store file which also decompresses firmware */
@@ -877,8 +878,8 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 			     fu_device_get_id (helper->device));
 		return FALSE;
 	}
-	helper->vercmp = as_utils_vercmp (tmp, version);
-	if (helper->vercmp == 0 && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
+	vercmp = as_utils_vercmp (tmp, version);
+	if (vercmp == 0 && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_SAME,
@@ -886,7 +887,8 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 			     tmp);
 		return FALSE;
 	}
-	if (helper->vercmp > 0 && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0) {
+	helper->is_downgrade = vercmp > 0;
+	if (helper->is_downgrade && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_NEWER,
@@ -1008,15 +1010,13 @@ static const gchar *
 fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 {
 	gboolean is_trusted;
-	gboolean is_downgrade;
 
 	/* only test the payload */
 	is_trusted = (helper->trust_flags & FWUPD_TRUST_FLAG_PAYLOAD) > 0;
-	is_downgrade = helper->vercmp > 0;
 
 	/* relax authentication checks for removable devices */
 	if (!fu_device_has_flag (helper->device, FU_DEVICE_FLAG_INTERNAL)) {
-		if (is_downgrade)
+		if (helper->is_downgrade)
 			return "org.freedesktop.fwupd.downgrade-hotplug";
 		if (is_trusted)
 			return "org.freedesktop.fwupd.update-hotplug-trusted";
@@ -1024,7 +1024,7 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 	}
 
 	/* internal device */
-	if (is_downgrade)
+	if (helper->is_downgrade)
 		return "org.freedesktop.fwupd.downgrade-internal";
 	if (is_trusted)
 		return "org.freedesktop.fwupd.update-internal-trusted";
