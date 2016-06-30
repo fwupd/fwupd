@@ -725,86 +725,55 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	const gchar *version;
 	gint vercmp;
 	guint i;
+	guint length;
+	gboolean is_downgrade;
+	FuDeviceItem *item;
+	GBytes *blob_fw;
+	FuDevice *device;
 
 	/* load store file which also decompresses firmware */
 	fu_main_set_status (helper->priv, FWUPD_STATUS_DECOMPRESSING);
 	if (!as_store_from_bytes (helper->store, helper->blob_cab, NULL, error))
 		return FALSE;
 
-	/* if we've not chosen a device, try and find anything in the
-	 * cabinet 'store' that matches any installed device */
-	if (helper->devices->len == 0) {
-		for (i = 0; i < helper->priv->devices->len; i++) {
-			FuDeviceItem *item;
-			item = g_ptr_array_index (helper->priv->devices, i);
-			app = fu_main_store_get_app_by_guids (helper->store, item->device);
-			if (app != NULL) {
-				g_ptr_array_add (helper->devices,
-						 g_object_ref (item->device));
-			}
-		}
-	}
+	/* if a device was specified on command line, don't shop the store */
+	if (helper->devices->len == 0)
+		length = helper->priv->devices->len;
+	else
+		length = helper->devices->len;
 
-	/* still nothing found */
-	if (helper->devices->len == 0) {
-		g_autofree gchar *guid = NULL;
-		guid = fu_main_get_guids_from_store (helper->store);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "no attached hardware matched %s",
-			     guid);
-		return FALSE;
-	}
-
-	/* find an application from the cabinet 'store' for the device */
-	for (i = 0; i < helper->devices->len; i ++) {
-		gboolean is_downgrade;
-		GBytes *blob_fw;
-		FuDevice *device = g_ptr_array_index (helper->devices, i);
-		app = fu_main_store_get_app_by_guids (helper->store, device);
-		if (app == NULL) {
-			g_autofree gchar *guid = NULL;
-			guid = fu_main_get_guids_from_store (helper->store);
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "firmware is not for this hw: required %s got %s",
-				     fu_device_get_guid_default (device), guid);
-			return FALSE;
-		}
+	/* try and find anything in the cabinet 'store' that matches any
+	 * installed device */
+	for (i = 0; i < length; i++) {
+		item = g_ptr_array_index (helper->priv->devices, i);
+		app = fu_main_store_get_app_by_guids (helper->store, item->device);
+		if (app == NULL)
+			continue;
+		device = item->device;
 
 		/* parse the DriverVer */
 		rel = as_app_get_release_default (app);
 		if (rel == NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "no releases in the firmware component");
-			return FALSE;
+			g_debug ("%s: no releases in the firmware component",
+				 fu_device_get_id (device));
+			continue;
 		}
-
 		/* get the blob */
 		csum_tmp = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTENT);
 		tmp = as_checksum_get_filename (csum_tmp);
 		if (tmp == NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "no checksum filename");
-			return FALSE;
+			g_debug ("%s: no checksum filename",
+				 fu_device_get_id (device));
+			continue;
 		}
 
 		/* not all devices have to use the same blob */
 		blob_fw = as_release_get_blob (rel, tmp);
 		if (blob_fw == NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_READ,
-					     "failed to get firmware blob");
-			return FALSE;
+			g_debug("%s: failed to get firmware blob",
+				fu_device_get_id (device));
+			continue;
 		}
-		g_ptr_array_add (helper->blob_fws, g_bytes_ref (blob_fw));
 
 		/* possibly convert the version from 0x to dotted */
 		fu_main_vendor_quirk_release_version (app);
@@ -815,51 +784,35 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		/* compare to the lowest supported version, if it exists */
 		tmp = fu_device_get_version_lowest (device);
 		if (tmp != NULL && as_utils_vercmp (tmp, version) > 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_VERSION_NEWER,
-				     "Specified firmware is older than the minimum "
-				     "required version '%s < %s'", tmp, version);
-			return FALSE;
+			g_debug("Specified firmware is older than the minimum "
+			"required version '%s < %s'", tmp, version);
+			continue;
 		}
 
 		/* check the device is locked */
 		if (fu_device_has_flag (device, FU_DEVICE_FLAG_LOCKED)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Device %s is locked",
-				     fu_device_get_id (device));
-			return FALSE;
+			g_debug("Device %s is locked", fu_device_get_id (device));
+			continue;
 		}
 
 		/* compare the versions of what we have installed */
 		tmp = fu_device_get_version (device);
 		if (tmp == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Device %s does not yet have a current version",
-				     fu_device_get_id (device));
-			return FALSE;
+			g_debug("Device %s does not yet have a current version",
+			fu_device_get_id (device));
+			continue;
 		}
 		vercmp = as_utils_vercmp (tmp, version);
 		if (vercmp == 0 && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_VERSION_SAME,
-				     "Specified firmware is already installed '%s'",
-				     tmp);
-			return FALSE;
+			g_debug("Specified firmware is already installed '%s'",
+			tmp);
+			continue;
 		}
 		is_downgrade = vercmp > 0;
 		if (is_downgrade && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_VERSION_NEWER,
-				     "Specified firmware is older than installed '%s < %s'",
-				     tmp, version);
-			return FALSE;
+			g_debug("Specified firmware is older than installed '%s < %s'",
+			tmp, version);
+			continue;
 		}
 
 		/* if any downgrade, we want the global to be true */
@@ -869,6 +822,22 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		/* verify */
 		if (!fu_main_get_release_trust_flags (rel, &helper->trust_flags, error))
 			return FALSE;
+
+		g_ptr_array_add (helper->blob_fws, g_bytes_ref (blob_fw));
+		g_ptr_array_add (helper->devices,
+					 g_object_ref (item->device));
+	}
+
+	/* still nothing found */
+	if (helper->devices->len == 0) {
+		g_autofree gchar *guid = NULL;
+		guid = fu_main_get_guids_from_store (helper->store);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "no valid updates for %s",
+			     guid);
+		return FALSE;
 	}
 
 	/* sanity check */
@@ -2416,4 +2385,3 @@ out:
 	}
 	return retval;
 }
-
