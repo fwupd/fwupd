@@ -6,8 +6,8 @@ fwupd (0.7.2-1) unstable; urgency=medium
   * Add gobject-introspection to build dependencies
 
   [ Michael Biebl ]
-  * Split GObject introspection files into a separate package named gir1.2-fwupd-1.0.
-    (Fixes: #826743)
+  * Split GObject introspection files into a separate package
+    named gir1.2-fwupd-1.0. (Fixes: #826743)
 
   [ Jurica Stanojkovic ]
   * Disable test suite on mips to prevent FTBFS.
