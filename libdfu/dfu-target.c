@@ -312,7 +312,7 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 		addr = g_ascii_strtoull (alt_name + 6, NULL, 16);
 		if (addr == 0 && addr > G_MAXUINT32)
 			return FALSE;
-		g_debug ("RAM descripton, so parsing");
+		g_debug ("RAM description, so parsing");
 		sector = dfu_sector_new (addr, /* addr */
 					 0x0, /* size */
 					 0x0, /* size_left */
@@ -605,7 +605,7 @@ dfu_target_setup (DfuTarget *target, GError **error)
 					 0x0, /* number */
 					 DFU_SECTOR_CAP_READABLE |
 					 DFU_SECTOR_CAP_WRITEABLE);
-		g_debug ("no UM0424 sector descripton in %s", priv->alt_name);
+		g_debug ("no UM0424 sector description in %s", priv->alt_name);
 		g_ptr_array_add (priv->sectors, sector);
 	}
 
