@@ -1,5 +1,6 @@
 [Unit]
 Description=Firmware update daemon
+Documentation=http://www.fwupd.org/
 After=dbus.service
 Before=gdm.service
 ConditionPathExists=/var/lib/fwupd/pending.db

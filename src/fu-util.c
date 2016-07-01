@@ -67,9 +67,6 @@ typedef struct {
 	FuUtilPrivateCb	 callback;
 } FuUtilItem;
 
-/**
- * fu_util_item_free:
- **/
 static void
 fu_util_item_free (FuUtilItem *item)
 {
@@ -88,9 +85,6 @@ fu_sort_command_name_cb (FuUtilItem **item1, FuUtilItem **item2)
 	return g_strcmp0 ((*item1)->name, (*item2)->name);
 }
 
-/**
- * fu_util_add:
- **/
 static void
 fu_util_add (GPtrArray *array,
 	     const gchar *name,
@@ -124,9 +118,6 @@ fu_util_add (GPtrArray *array,
 	}
 }
 
-/**
- * fu_util_get_descriptions:
- **/
 static gchar *
 fu_util_get_descriptions (GPtrArray *array)
 {
@@ -170,9 +161,6 @@ fu_util_get_descriptions (GPtrArray *array)
 	return g_string_free (string, FALSE);
 }
 
-/**
- * fu_util_run:
- **/
 static gboolean
 fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError **error)
 {
@@ -195,9 +183,6 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 	return FALSE;
 }
 
-/**
- * fu_util_status_changed_cb:
- **/
 static void
 fu_util_status_changed_cb (FwupdClient *client,
 			   FwupdStatus status,
@@ -237,9 +222,6 @@ fu_util_status_changed_cb (FwupdClient *client,
 	}
 }
 
-/**
- * fu_util_get_devices:
- **/
 static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -269,9 +251,6 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_util_install_with_fallback:
- **/
 static gboolean
 fu_util_install_with_fallback (FuUtilPrivate *priv, const gchar *id,
 			       const gchar *filename, GError **error)
@@ -298,9 +277,6 @@ fu_util_install_with_fallback (FuUtilPrivate *priv, const gchar *id,
 				     NULL, error);
 }
 
-/**
- * fu_util_install:
- **/
 static gboolean
 fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -323,9 +299,6 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_util_install_with_fallback (priv, id, values[0], error);
 }
 
-/**
- * fu_util_get_details:
- **/
 static gboolean
 fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -352,9 +325,6 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_util_offline_update_reboot:
- **/
 static void
 fu_util_offline_update_reboot (void)
 {
@@ -381,9 +351,6 @@ fu_util_offline_update_reboot (void)
 		g_print ("Failed to reboot: %s\n", error->message);
 }
 
-/**
- * fu_util_install_prepared:
- **/
 static gboolean
 fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -493,9 +460,6 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_util_clear_results:
- **/
 static gboolean
 fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -509,9 +473,6 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fwupd_client_clear_results (priv->client, values[0], NULL, error);
 }
 
-/**
- * fu_util_dump_rom:
- **/
 static gboolean
 fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -546,9 +507,6 @@ fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_util_verify_update_internal:
- **/
 static gboolean
 fu_util_verify_update_internal (FuUtilPrivate *priv,
 				const gchar *filename,
@@ -620,9 +578,6 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 	return TRUE;
 }
 
-/**
- * fu_util_verify_update_all:
- **/
 static gboolean
 fu_util_verify_update_all (FuUtilPrivate *priv, const gchar *fn, GError **error)
 {
@@ -667,9 +622,6 @@ fu_util_verify_update_all (FuUtilPrivate *priv, const gchar *fn, GError **error)
 					       error);
 }
 
-/**
- * fu_util_verify_update:
- **/
 static gboolean
 fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -684,9 +636,6 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 					       error);
 }
 
-/**
- * fu_util_download_file:
- **/
 static gboolean
 fu_util_download_file (FuUtilPrivate *priv,
 		       const gchar *uri,
@@ -760,9 +709,6 @@ fu_util_download_file (FuUtilPrivate *priv,
 	return TRUE;
 }
 
-/**
- * fu_util_mkdir_with_parents:
- **/
 static gboolean
 fu_util_mkdir_with_parents (const gchar *path, GError **error)
 {
@@ -772,9 +718,6 @@ fu_util_mkdir_with_parents (const gchar *path, GError **error)
 	return g_file_make_directory_with_parents (file, NULL, error);
 }
 
-/**
- * fu_util_download_metadata:
- **/
 static gboolean
 fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 {
@@ -817,9 +760,6 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	return fwupd_client_update_metadata (priv->client, data_fn, sig_fn, NULL, error);
 }
 
-/**
- * fu_util_refresh:
- **/
 static gboolean
 fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -841,9 +781,6 @@ fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
 					     error);
 }
 
-/**
- * fu_util_get_results:
- **/
 static gboolean
 fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -865,9 +802,6 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_util_verify_all:
- **/
 static gboolean
 fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 {
@@ -900,9 +834,6 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_util_verify:
- **/
 static gboolean
 fu_util_verify (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -918,9 +849,6 @@ fu_util_verify (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fwupd_client_verify (priv->client, values[0], NULL, error);
 }
 
-/**
- * fu_util_unlock:
- **/
 static gboolean
 fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -934,9 +862,6 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fwupd_client_unlock (priv->client, values[0], NULL, error);
 }
 
-/**
- * fu_util_print_data:
- **/
 static void
 fu_util_print_data (const gchar *title, const gchar *msg)
 {
@@ -960,9 +885,6 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 	}
 }
 
-/**
- * _g_checksum_type_to_string:
- **/
 static const gchar *
 _g_checksum_type_to_string (GChecksumType checksum_type)
 {
@@ -977,9 +899,6 @@ _g_checksum_type_to_string (GChecksumType checksum_type)
 	return NULL;
 }
 
-/**
- * fu_util_get_updates:
- **/
 static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -1046,9 +965,6 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_util_cancelled_cb:
- **/
 static void
 fu_util_cancelled_cb (GCancellable *cancellable, gpointer user_data)
 {
@@ -1058,9 +974,6 @@ fu_util_cancelled_cb (GCancellable *cancellable, gpointer user_data)
 	g_main_loop_quit (priv->loop);
 }
 
-/**
- * fu_util_device_added_cb:
- **/
 static void
 fu_util_device_added_cb (FwupdClient *client,
 			 FwupdResult *device,
@@ -1071,9 +984,6 @@ fu_util_device_added_cb (FwupdClient *client,
 	g_print ("%s\n%s", _("Device added:"), tmp);
 }
 
-/**
- * fu_util_device_removed_cb:
- **/
 static void
 fu_util_device_removed_cb (FwupdClient *client,
 			   FwupdResult *device,
@@ -1084,9 +994,6 @@ fu_util_device_removed_cb (FwupdClient *client,
 	g_print ("%s\n%s", _("Device removed:"), tmp);
 }
 
-/**
- * fu_util_device_changed_cb:
- **/
 static void
 fu_util_device_changed_cb (FwupdClient *client,
 			   FwupdResult *device,
@@ -1097,9 +1004,6 @@ fu_util_device_changed_cb (FwupdClient *client,
 	g_print ("%s\n%s", _("Device changed:"), tmp);
 }
 
-/**
- * fu_util_changed_cb:
- **/
 static void
 fu_util_changed_cb (FwupdClient *client, gpointer user_data)
 {
@@ -1107,9 +1011,6 @@ fu_util_changed_cb (FwupdClient *client, gpointer user_data)
 	g_print ("%s\n", _("Changed"));
 }
 
-/**
- * fu_util_monitor:
- **/
 static gboolean
 fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -1135,9 +1036,6 @@ fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_util_update:
- **/
 static gboolean
 fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -1183,18 +1081,12 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_util_ignore_cb:
- **/
 static void
 fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 		   const gchar *message, gpointer user_data)
 {
 }
 
-/**
- * fu_util_sigint_cb:
- **/
 static gboolean
 fu_util_sigint_cb (gpointer user_data)
 {
@@ -1204,9 +1096,6 @@ fu_util_sigint_cb (gpointer user_data)
 	return FALSE;
 }
 
-/**
- * main:
- **/
 int
 main (int argc, char *argv[])
 {

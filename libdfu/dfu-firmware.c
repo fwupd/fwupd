@@ -44,11 +44,6 @@
 
 static void dfu_firmware_finalize			 (GObject *object);
 
-/**
- * DfuFirmwarePrivate:
- *
- * Private #DfuFirmware data
- **/
 typedef struct {
 	GHashTable		*metadata;
 	GPtrArray		*images;
@@ -63,9 +58,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (DfuFirmware, dfu_firmware, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (dfu_firmware_get_instance_private (o))
 
-/**
- * dfu_firmware_class_init:
- **/
 static void
 dfu_firmware_class_init (DfuFirmwareClass *klass)
 {
@@ -73,9 +65,6 @@ dfu_firmware_class_init (DfuFirmwareClass *klass)
 	object_class->finalize = dfu_firmware_finalize;
 }
 
-/**
- * dfu_firmware_init:
- **/
 static void
 dfu_firmware_init (DfuFirmware *firmware)
 {
@@ -87,9 +76,6 @@ dfu_firmware_init (DfuFirmware *firmware)
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 }
 
-/**
- * dfu_firmware_finalize:
- **/
 static void
 dfu_firmware_finalize (GObject *object)
 {
@@ -455,9 +441,6 @@ static guint32 _crctbl[] = {
 	0x54de5729, 0x23d967bf, 0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94,
 	0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d };
 
-/**
- * dfu_firmware_generate_crc32:
- **/
 static guint32
 dfu_firmware_generate_crc32 (const guint8 *data, gsize length)
 {
@@ -468,9 +451,6 @@ dfu_firmware_generate_crc32 (const guint8 *data, gsize length)
 	return accum;
 }
 
-/**
- * dfu_firmware_ihex_parse_uint8:
- **/
 static guint8
 dfu_firmware_ihex_parse_uint8 (const gchar *data, guint pos)
 {
@@ -480,9 +460,6 @@ dfu_firmware_ihex_parse_uint8 (const gchar *data, guint pos)
 	return g_ascii_strtoull (buffer, NULL, 16);
 }
 
-/**
- * dfu_firmware_ihex_parse_uint16:
- **/
 static guint16
 dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
 {
@@ -496,9 +473,6 @@ dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
 #define	DFU_INHX32_RECORD_TYPE_EOF		1
 #define	DFU_INHX32_RECORD_TYPE_EXTENDED		4
 
-/**
- * dfu_firmware_add_ihex:
- **/
 static gboolean
 dfu_firmware_add_ihex (DfuFirmware *firmware, GBytes *bytes,
 		       DfuFirmwareParseFlags flags, GError **error)
@@ -653,9 +627,6 @@ dfu_firmware_add_ihex (DfuFirmware *firmware, GBytes *bytes,
 	return TRUE;
 }
 
-/**
- * dfu_firmware_write_data_ihex_element:
- **/
 static gboolean
 dfu_firmware_write_data_ihex_element (DfuElement *element,
 				      GString *str,
@@ -692,9 +663,6 @@ dfu_firmware_write_data_ihex_element (DfuElement *element,
 	return TRUE;
 }
 
-/**
- * dfu_firmware_write_data_ihex:
- **/
 static GBytes *
 dfu_firmware_write_data_ihex (DfuFirmware *firmware, GError **error)
 {
@@ -725,9 +693,6 @@ dfu_firmware_write_data_ihex (DfuFirmware *firmware, GError **error)
 	return g_bytes_new (str->str, str->len);
 }
 
-/**
- * dfu_firmware_add_binary:
- **/
 static gboolean
 dfu_firmware_add_binary (DfuFirmware *firmware, GBytes *bytes, GError **error)
 {
@@ -749,9 +714,6 @@ typedef struct __attribute__((packed)) {
 	guint8		 targets;
 } DfuSePrefix;
 
-/**
- * dfu_firmware_add_dfuse:
- **/
 static gboolean
 dfu_firmware_add_dfuse (DfuFirmware *firmware, GBytes *bytes, GError **error)
 {
@@ -811,9 +773,6 @@ dfu_firmware_add_dfuse (DfuFirmware *firmware, GBytes *bytes, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_firmware_write_data_dfuse:
- **/
 static GBytes *
 dfu_firmware_write_data_dfuse (DfuFirmware *firmware, GError **error)
 {
@@ -1160,9 +1119,6 @@ dfu_firmware_remove_metadata (DfuFirmware *firmware, const gchar *key)
 	g_hash_table_remove (priv->metadata, key);
 }
 
-/**
- * dfu_firmware_build_metadata_table:
- **/
 static GBytes *
 dfu_firmware_build_metadata_table (DfuFirmware *firmware, GError **error)
 {
@@ -1245,9 +1201,6 @@ dfu_firmware_build_metadata_table (DfuFirmware *firmware, GError **error)
 	return g_bytes_new (mdbuf, idx);
 }
 
-/**
- * dfu_firmware_add_footer:
- **/
 static GBytes *
 dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents, GError **error)
 {

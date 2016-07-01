@@ -41,11 +41,6 @@
 
 static void dfu_image_finalize			 (GObject *object);
 
-/**
- * DfuImagePrivate:
- *
- * Private #DfuImage data
- **/
 typedef struct {
 	GPtrArray		*elements;
 	gchar			 name[255];
@@ -55,9 +50,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (DfuImage, dfu_image, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (dfu_image_get_instance_private (o))
 
-/**
- * dfu_image_class_init:
- **/
 static void
 dfu_image_class_init (DfuImageClass *klass)
 {
@@ -65,9 +57,6 @@ dfu_image_class_init (DfuImageClass *klass)
 	object_class->finalize = dfu_image_finalize;
 }
 
-/**
- * dfu_image_init:
- **/
 static void
 dfu_image_init (DfuImage *image)
 {
@@ -76,9 +65,6 @@ dfu_image_init (DfuImage *image)
 	memset (priv->name, 0x00, 255);
 }
 
-/**
- * dfu_image_finalize:
- **/
 static void
 dfu_image_finalize (GObject *object)
 {

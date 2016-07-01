@@ -26,9 +26,6 @@
 #include "fu-device.h"
 #include "fu-plugin.h"
 
-/**
- * fu_plugin_new:
- **/
 FuPlugin *
 fu_plugin_new (GModule *module)
 {
@@ -59,9 +56,6 @@ fu_plugin_new (GModule *module)
 	return plugin;
 }
 
-/**
- * fu_plugin_free:
- **/
 void
 fu_plugin_free (FuPlugin *plugin)
 {
@@ -81,9 +75,6 @@ fu_plugin_free (FuPlugin *plugin)
 	g_free (plugin);
 }
 
-/**
- * fu_plugin_run_startup:
- **/
 gboolean
 fu_plugin_run_startup (FuPlugin *plugin, GError **error)
 {
@@ -105,9 +96,6 @@ fu_plugin_run_startup (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_plugin_run_device_probe:
- **/
 gboolean
 fu_plugin_run_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 {
@@ -129,9 +117,6 @@ fu_plugin_run_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_plugin_run_device_update:
- **/
 gboolean
 fu_plugin_run_device_update (FuPlugin *plugin, FuDevice *device,
 			     GBytes *data, GError **error)

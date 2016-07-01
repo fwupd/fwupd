@@ -31,9 +31,6 @@
 
 static void	fu_provider_dfu_finalize	(GObject	*object);
 
-/**
- * FuProviderDfuPrivate:
- **/
 typedef struct {
 	DfuContext		*context;
 	GHashTable		*devices;	/* platform_id:DfuDevice */
@@ -42,18 +39,12 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (FuProviderDfu, fu_provider_dfu, FU_TYPE_PROVIDER)
 #define GET_PRIVATE(o) (fu_provider_dfu_get_instance_private (o))
 
-/**
- * fu_provider_dfu_get_name:
- **/
 static const gchar *
 fu_provider_dfu_get_name (FuProvider *provider)
 {
 	return "DFU";
 }
 
-/**
- * fu_provider_dfu_device_update:
- **/
 static void
 fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 			       FuDevice *dev,
@@ -101,9 +92,6 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 	fu_device_add_guid (dev, devid2);
 }
 
-/**
- * fu_provider_dfu_device_changed_cb:
- **/
 static void
 fu_provider_dfu_device_changed_cb (DfuContext *ctx,
 				   DfuDevice *device,
@@ -123,9 +111,6 @@ fu_provider_dfu_device_changed_cb (DfuContext *ctx,
 	fu_provider_dfu_device_update (provider_dfu, dev, device);
 }
 
-/**
- * fu_provider_dfu_device_added_cb:
- **/
 static void
 fu_provider_dfu_device_added_cb (DfuContext *ctx,
 				 DfuDevice *device,
@@ -179,9 +164,6 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 			     g_object_ref (dev));
 }
 
-/**
- * fu_provider_dfu_device_removed_cb:
- **/
 static void
 fu_provider_dfu_device_removed_cb (DfuContext *ctx,
 				   DfuDevice *device,
@@ -202,9 +184,6 @@ fu_provider_dfu_device_removed_cb (DfuContext *ctx,
 	fu_provider_device_remove (FU_PROVIDER (provider_dfu), dev);
 }
 
-/**
- * fu_provider_dfu_coldplug:
- **/
 static gboolean
 fu_provider_dfu_coldplug (FuProvider *provider, GError **error)
 {
@@ -214,9 +193,6 @@ fu_provider_dfu_coldplug (FuProvider *provider, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_dfu_state_changed_cb:
- **/
 static void
 fu_provider_dfu_state_changed_cb (DfuDevice *device,
 				  DfuState state,
@@ -234,11 +210,6 @@ fu_provider_dfu_state_changed_cb (DfuDevice *device,
 	}
 }
 
-/**
- * fu_provider_dfu_update:
- *
- * This updates using DFU.
- **/
 static gboolean
 fu_provider_dfu_update (FuProvider *provider,
 			FuDevice *dev,
@@ -306,9 +277,6 @@ fu_provider_dfu_update (FuProvider *provider,
 	return TRUE;
 }
 
-/**
- * fu_provider_dfu_verify:
- **/
 static gboolean
 fu_provider_dfu_verify (FuProvider *provider,
 			FuDevice *dev,
@@ -384,9 +352,6 @@ fu_provider_dfu_verify (FuProvider *provider,
 	return TRUE;
 }
 
-/**
- * fu_provider_dfu_class_init:
- **/
 static void
 fu_provider_dfu_class_init (FuProviderDfuClass *klass)
 {
@@ -400,9 +365,6 @@ fu_provider_dfu_class_init (FuProviderDfuClass *klass)
 	object_class->finalize = fu_provider_dfu_finalize;
 }
 
-/**
- * fu_provider_dfu_init:
- **/
 static void
 fu_provider_dfu_init (FuProviderDfu *provider_dfu)
 {
@@ -421,9 +383,6 @@ fu_provider_dfu_init (FuProviderDfu *provider_dfu)
 			  provider_dfu);
 }
 
-/**
- * fu_provider_dfu_finalize:
- **/
 static void
 fu_provider_dfu_finalize (GObject *object)
 {
@@ -436,9 +395,6 @@ fu_provider_dfu_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_provider_dfu_parent_class)->finalize (object);
 }
 
-/**
- * fu_provider_dfu_new:
- **/
 FuProvider *
 fu_provider_dfu_new (void)
 {

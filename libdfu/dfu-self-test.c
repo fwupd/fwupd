@@ -32,9 +32,6 @@
 #include "dfu-sector-private.h"
 #include "dfu-target-private.h"
 
-/**
- * dfu_test_get_filename:
- **/
 static gchar *
 dfu_test_get_filename (const gchar *filename)
 {
@@ -48,9 +45,6 @@ dfu_test_get_filename (const gchar *filename)
 	return g_strdup (full_tmp);
 }
 
-/**
- * _g_bytes_compare_verbose:
- **/
 static gchar *
 _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 {
@@ -571,9 +565,6 @@ dfu_colorhug_plus_func (void)
 	g_assert_cmpint (dfu_device_get_runtime_pid (device), ==, 0x1002);
 }
 
-/**
- * dfu_target_sectors_to_string:
- **/
 static gchar *
 dfu_target_sectors_to_string (DfuTarget *target)
 {

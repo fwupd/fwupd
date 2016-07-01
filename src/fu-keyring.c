@@ -28,11 +28,6 @@
 
 static void fu_keyring_finalize			 (GObject *object);
 
-/**
- * FuKeyringPrivate:
- *
- * Private #FuKeyring data
- **/
 typedef struct {
 	gpgme_ctx_t		 ctx;
 } FuKeyringPrivate;
@@ -42,9 +37,6 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuKeyring, fu_keyring, G_TYPE_OBJECT)
 
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gpgme_data_t, gpgme_data_release, NULL)
 
-/**
- * fu_keyring_setup:
- **/
 static gboolean
 fu_keyring_setup (FuKeyring *keyring, GError **error)
 {
@@ -127,9 +119,6 @@ fu_keyring_setup (FuKeyring *keyring, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_keyring_add_public_key:
- **/
 gboolean
 fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **error)
 {
@@ -186,9 +175,6 @@ fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **e
 	return TRUE;
 }
 
-/**
- * fu_keyring_add_public_keys:
- **/
 gboolean
 fu_keyring_add_public_keys (FuKeyring *keyring, const gchar *dirname, GError **error)
 {
@@ -218,9 +204,6 @@ fu_keyring_add_public_keys (FuKeyring *keyring, const gchar *dirname, GError **e
 	return TRUE;
 }
 
-/**
- * fu_keyring_check_signature:
- **/
 static gboolean
 fu_keyring_check_signature (gpgme_signature_t signature, GError **error)
 {
@@ -271,9 +254,6 @@ fu_keyring_check_signature (gpgme_signature_t signature, GError **error)
 	return ret;
 }
 
-/**
- * fu_keyring_verify_file:
- **/
 gboolean
 fu_keyring_verify_file (FuKeyring *keyring,
 			const gchar *filename,
@@ -360,9 +340,6 @@ fu_keyring_verify_file (FuKeyring *keyring,
 	return TRUE;
 }
 
-/**
- * fu_keyring_verify_data:
- **/
 gboolean
 fu_keyring_verify_data (FuKeyring *keyring,
 			GBytes *payload,
@@ -439,9 +416,6 @@ fu_keyring_verify_data (FuKeyring *keyring,
 	return TRUE;
 }
 
-/**
- * fu_keyring_class_init:
- **/
 static void
 fu_keyring_class_init (FuKeyringClass *klass)
 {
@@ -449,17 +423,11 @@ fu_keyring_class_init (FuKeyringClass *klass)
 	object_class->finalize = fu_keyring_finalize;
 }
 
-/**
- * fu_keyring_init:
- **/
 static void
 fu_keyring_init (FuKeyring *keyring)
 {
 }
 
-/**
- * fu_keyring_finalize:
- **/
 static void
 fu_keyring_finalize (GObject *object)
 {
@@ -472,9 +440,6 @@ fu_keyring_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_keyring_parent_class)->finalize (object);
 }
 
-/**
- * fu_keyring_new:
- **/
 FuKeyring *
 fu_keyring_new (void)
 {

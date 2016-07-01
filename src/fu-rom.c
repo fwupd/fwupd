@@ -55,11 +55,6 @@ typedef struct {
 	guint16		 dmtf_clp_ptr;
 } FuRomPciHeader;
 
-/**
- * FuRomPrivate:
- *
- * Private #FuRom data
- **/
 typedef struct {
 	GChecksum			*checksum_wip;
 	GChecksumType			 checksum_type;
@@ -75,9 +70,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (FuRom, fu_rom, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_rom_get_instance_private (o))
 
-/**
- * fu_rom_pci_header_free:
- **/
 static void
 fu_rom_pci_header_free (FuRomPciHeader *hdr)
 {
@@ -85,9 +77,6 @@ fu_rom_pci_header_free (FuRomPciHeader *hdr)
 	g_free (hdr);
 }
 
-/**
- * fu_rom_kind_to_string:
- **/
 const gchar *
 fu_rom_kind_to_string (FuRomKind kind)
 {
@@ -104,9 +93,6 @@ fu_rom_kind_to_string (FuRomKind kind)
 	return NULL;
 }
 
-/**
- * fu_rom_pci_strstr:
- **/
 static guint8 *
 fu_rom_pci_strstr (FuRomPciHeader *hdr, const gchar *needle)
 {
@@ -133,9 +119,6 @@ fu_rom_pci_strstr (FuRomPciHeader *hdr, const gchar *needle)
 	return NULL;
 }
 
-/**
- * fu_rom_blank_serial_numbers:
- **/
 static guint
 fu_rom_blank_serial_numbers (guint8 *buffer, guint buffer_sz)
 {
@@ -151,9 +134,6 @@ fu_rom_blank_serial_numbers (guint8 *buffer, guint buffer_sz)
 	return i;
 }
 
-/**
- * fu_rom_get_hex_dump:
- **/
 static gchar *
 fu_rom_get_hex_dump (guint8 *buffer, gssize sz)
 {
@@ -181,9 +161,6 @@ typedef struct {
 	guint16		 next_offset;
 } FooRomPciCertificateHdr;
 
-/**
- * fu_rom_pci_print_certificate_data:
- **/
 static void
 fu_rom_pci_print_certificate_data (guint8 *buffer, gssize sz)
 {
@@ -234,9 +211,6 @@ fu_rom_pci_print_certificate_data (guint8 *buffer, gssize sz)
 	}
 }
 
-/**
- * fu_rom_pci_code_type_to_string:
- **/
 static const gchar *
 fu_rom_pci_code_type_to_string (guint8 code_type)
 {
@@ -251,9 +225,6 @@ fu_rom_pci_code_type_to_string (guint8 code_type)
 	return "reserved";
 }
 
-/**
- * fu_rom_pci_header_get_checksum:
- **/
 static guint8
 fu_rom_pci_header_get_checksum (FuRomPciHeader *hdr)
 {
@@ -264,9 +235,6 @@ fu_rom_pci_header_get_checksum (FuRomPciHeader *hdr)
 	return chksum_check;
 }
 
-/**
- * fu_rom_pci_print_header:
- **/
 static void
 fu_rom_pci_print_header (FuRomPciHeader *hdr)
 {
@@ -331,9 +299,6 @@ fu_rom_pci_print_header (FuRomPciHeader *hdr)
 	}
 }
 
-/**
- * fu_rom_extract_all:
- **/
 gboolean
 fu_rom_extract_all (FuRom *rom, const gchar *path, GError **error)
 {
@@ -357,9 +322,6 @@ fu_rom_extract_all (FuRom *rom, const gchar *path, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_rom_find_and_blank_serial_numbers:
- **/
 static void
 fu_rom_find_and_blank_serial_numbers (FuRom *rom)
 {
@@ -393,9 +355,6 @@ fu_rom_find_and_blank_serial_numbers (FuRom *rom)
 	}
 }
 
-/**
- * fu_rom_pci_get_data:
- **/
 static gboolean
 fu_rom_pci_parse_data (FuRomPciHeader *hdr)
 {
@@ -456,9 +415,6 @@ fu_rom_pci_parse_data (FuRomPciHeader *hdr)
 	return TRUE;
 }
 
-/**
- * fu_rom_pci_get_header:
- **/
 static FuRomPciHeader *
 fu_rom_pci_get_header (guint8 *buffer, gssize sz)
 {
@@ -502,9 +458,6 @@ fu_rom_pci_get_header (guint8 *buffer, gssize sz)
 	return hdr;
 }
 
-/**
- * fu_rom_find_version_pci:
- **/
 static gchar *
 fu_rom_find_version_pci (FuRomPciHeader *hdr)
 {
@@ -519,9 +472,6 @@ fu_rom_find_version_pci (FuRomPciHeader *hdr)
 	return NULL;
 }
 
-/**
- * fu_rom_find_version_nvidia:
- **/
 static gchar *
 fu_rom_find_version_nvidia (FuRomPciHeader *hdr)
 {
@@ -550,9 +500,6 @@ fu_rom_find_version_nvidia (FuRomPciHeader *hdr)
 	return NULL;
 }
 
-/**
- * fu_rom_find_version_intel:
- **/
 static gchar *
 fu_rom_find_version_intel (FuRomPciHeader *hdr)
 {
@@ -578,9 +525,6 @@ fu_rom_find_version_intel (FuRomPciHeader *hdr)
 	return NULL;
 }
 
-/**
- * fu_rom_find_version_ati:
- **/
 static gchar *
 fu_rom_find_version_ati (FuRomPciHeader *hdr)
 {
@@ -597,9 +541,6 @@ fu_rom_find_version_ati (FuRomPciHeader *hdr)
 	return NULL;
 }
 
-/**
- * fu_rom_find_version:
- **/
 static gchar *
 fu_rom_find_version (FuRomKind kind, FuRomPciHeader *hdr)
 {
@@ -614,9 +555,6 @@ fu_rom_find_version (FuRomKind kind, FuRomPciHeader *hdr)
 	return NULL;
 }
 
-/**
- * fu_rom_load_file:
- **/
 gboolean
 fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 		  GCancellable *cancellable, GError **error)
@@ -840,9 +778,6 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 	return TRUE;
 }
 
-/**
- * fu_rom_get_kind:
- **/
 FuRomKind
 fu_rom_get_kind (FuRom *rom)
 {
@@ -851,9 +786,6 @@ fu_rom_get_kind (FuRom *rom)
 	return priv->kind;
 }
 
-/**
- * fu_rom_get_version:
- **/
 const gchar *
 fu_rom_get_version (FuRom *rom)
 {
@@ -862,9 +794,6 @@ fu_rom_get_version (FuRom *rom)
 	return priv->version;
 }
 
-/**
- * fu_rom_get_guid:
- **/
 const gchar *
 fu_rom_get_guid (FuRom *rom)
 {
@@ -873,9 +802,6 @@ fu_rom_get_guid (FuRom *rom)
 	return priv->guid;
 }
 
-/**
- * fu_rom_get_vendor:
- **/
 guint16
 fu_rom_get_vendor (FuRom *rom)
 {
@@ -884,9 +810,6 @@ fu_rom_get_vendor (FuRom *rom)
 	return priv->vendor_id;
 }
 
-/**
- * fu_rom_get_model:
- **/
 guint16
 fu_rom_get_model (FuRom *rom)
 {
@@ -895,11 +818,6 @@ fu_rom_get_model (FuRom *rom)
 	return priv->device_id;
 }
 
-/**
- * fu_rom_get_checksum:
- *
- * This returns the checksum of the firmware.
- **/
 const gchar *
 fu_rom_get_checksum (FuRom *rom)
 {
@@ -907,9 +825,6 @@ fu_rom_get_checksum (FuRom *rom)
 	return g_checksum_get_string (priv->checksum_wip);
 }
 
-/**
- * fu_rom_get_checksum_kind:
- **/
 GChecksumType
 fu_rom_get_checksum_kind (FuRom *rom)
 {
@@ -917,9 +832,6 @@ fu_rom_get_checksum_kind (FuRom *rom)
 	return priv->checksum_type;
 }
 
-/**
- * fu_rom_class_init:
- **/
 static void
 fu_rom_class_init (FuRomClass *klass)
 {
@@ -927,9 +839,6 @@ fu_rom_class_init (FuRomClass *klass)
 	object_class->finalize = fu_rom_finalize;
 }
 
-/**
- * fu_rom_init:
- **/
 static void
 fu_rom_init (FuRom *rom)
 {
@@ -939,9 +848,6 @@ fu_rom_init (FuRom *rom)
 	priv->hdrs = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_rom_pci_header_free);
 }
 
-/**
- * fu_rom_finalize:
- **/
 static void
 fu_rom_finalize (GObject *object)
 {
@@ -958,9 +864,6 @@ fu_rom_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_rom_parent_class)->finalize (object);
 }
 
-/**
- * fu_rom_new:
- **/
 FuRom *
 fu_rom_new (void)
 {
