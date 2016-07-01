@@ -31,7 +31,7 @@ Build-Depends: debhelper (>= 9.0.0),
                libcolorhug-dev,
                gobject-introspection,
                valgrind[!mips]
-Standards-Version: 3.9.7
+Standards-Version: 3.9.8
 Section: admin
 Homepage: https://github.com/hughsie/fwupd
 Vcs-Git: https://anonscm.debian.org/git/uefi/fwupd.git
