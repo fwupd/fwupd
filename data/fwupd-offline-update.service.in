@@ -1,5 +1,6 @@
 [Unit]
 Description=Updates device firmware whilst offline
+Documentation=man:fwupdmgr
 OnFailure=reboot.target
 
 [Service]
