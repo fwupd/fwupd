@@ -745,18 +745,6 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		}
 	}
 
-	/* still nothing found */
-	if (helper->devices->len == 0) {
-		g_autofree gchar *guid = NULL;
-		guid = fu_main_get_guids_from_store (helper->store);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "no attached hardware matched %s",
-			     guid);
-		return FALSE;
-	}
-
 	/* find an application from the cabinet 'store' for the device */
 	for (i = 0; i < helper->devices->len; i ++) {
 		gboolean is_downgrade;
@@ -869,6 +857,18 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		/* verify */
 		if (!fu_main_get_release_trust_flags (rel, &helper->trust_flags, error))
 			return FALSE;
+	}
+
+	/* still nothing found */
+	if (helper->devices->len == 0) {
+		g_autofree gchar *guid = NULL;
+		guid = fu_main_get_guids_from_store (helper->store);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "no attached hardware matched %s",
+			     guid);
+		return FALSE;
 	}
 
 	/* sanity check */
