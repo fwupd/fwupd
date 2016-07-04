@@ -845,7 +845,6 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 static gboolean
 fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 {
-	AsApp *app;
 	guint i;
 
 	/* load store file which also decompresses firmware */
@@ -853,28 +852,42 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (!as_store_from_bytes (helper->store, helper->blob_cab, NULL, error))
 		return FALSE;
 
-	/* if we've not chosen a device, try and find anything in the
-	 * cabinet 'store' that matches any installed device */
-	if (helper->devices->len == 0) {
-		for (i = 0; i < helper->priv->devices->len; i++) {
-			FuDeviceItem *item;
-			item = g_ptr_array_index (helper->priv->devices, i);
-			app = fu_main_store_get_app_by_guids (helper->store, item->device);
-			if (app != NULL) {
-				g_ptr_array_add (helper->devices,
-						 g_object_ref (item->device));
-			}
+	/* we've specified a specific device; failure is critical */
+	if (helper->devices->len > 0) {
+		for (i = 0; i < helper->devices->len; i ++) {
+			FuDevice *device = g_ptr_array_index (helper->devices, i);
+			if (!fu_main_update_helper_for_device (helper, device, error))
+				return FALSE;
 		}
+		return TRUE;
 	}
 
-	/* find an application from the cabinet 'store' for the device */
-	for (i = 0; i < helper->devices->len; i ++) {
-		FuDevice *device = g_ptr_array_index (helper->devices, i);
-		if (!fu_main_update_helper_for_device (helper, device, error))
-			return FALSE;
-	}
+	/* if we've not chosen a device, try and find anything in the
+	 * cabinet 'store' that matches any installed device and is updatable */
+	for (i = 0; i < helper->priv->devices->len; i++) {
+		AsApp *app;
+		FuDeviceItem *item;
+		g_autoptr(GError) error_local = NULL;
 
-	/* still nothing found */
+		/* guid found */
+		item = g_ptr_array_index (helper->priv->devices, i);
+		app = fu_main_store_get_app_by_guids (helper->store, item->device);
+		if (app == NULL)
+			continue;
+
+		/* try this device, error not fatal */
+		if (!fu_main_update_helper_for_device (helper,
+						       item->device,
+						       &error_local)) {
+			g_debug ("failed to add %s: %s",
+				 fu_device_get_id (item->device),
+				 error_local->message);
+			continue;
+		}
+
+		/* success */
+		g_ptr_array_add (helper->devices, g_object_ref (item->device));
+	}
 	if (helper->devices->len == 0) {
 		g_autofree gchar *guid = NULL;
 		guid = fu_main_get_guids_from_store (helper->store);
