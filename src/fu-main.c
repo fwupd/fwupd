@@ -846,6 +846,7 @@ static gboolean
 fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 {
 	guint i;
+	g_autoptr(GError) error_first = NULL;
 
 	/* load store file which also decompresses firmware */
 	fu_main_set_status (helper->priv, FWUPD_STATUS_DECOMPRESSING);
@@ -882,6 +883,10 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 			g_debug ("failed to add %s: %s",
 				 fu_device_get_id (item->device),
 				 error_local->message);
+
+			/* save this for later */
+			if (error_first == NULL)
+				error_first = g_error_copy (error_local);
 			continue;
 		}
 
@@ -891,11 +896,19 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 	if (helper->devices->len == 0) {
 		g_autofree gchar *guid = NULL;
 		guid = fu_main_get_guids_from_store (helper->store);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "no attached hardware matched %s",
-			     guid);
+		if (error_first != NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no attached hardware matched %s: %s",
+				     guid, error_first->message);
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no attached hardware matched %s",
+				     guid);
+		}
 		return FALSE;
 	}
 
