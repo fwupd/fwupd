@@ -346,8 +346,8 @@ fu_provider_dell_get_res (FuProviderDell *provider_dell,
 static gboolean
 fu_provider_dell_detect_dock (FuProviderDell *provider_dell, guint32 *location)
 {
-	g_autofree struct dock_count_in *count_args;
-	g_autofree struct dock_count_out *count_out;
+	g_autofree struct dock_count_in *count_args = NULL;
+	g_autofree struct dock_count_out *count_out = NULL;
 
 	/* look up dock count */
 	count_args = g_malloc0 (sizeof(struct dock_count_in));
@@ -811,8 +811,8 @@ fu_provider_dell_detect_tpm (FuProvider *provider, GError **error)
 	g_autofree gchar *tpm_id_alt = NULL;
 	g_autofree gchar *tpm_id = NULL;
 	g_autofree gchar *version_str = NULL;
-	g_autofree guint32 *args;
-	g_autofree struct tpm_status *out;
+	g_autofree guint32 *args = NULL;
+	g_autofree struct tpm_status *out = NULL;
 	g_autoptr(FuDevice) dev_alt = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
