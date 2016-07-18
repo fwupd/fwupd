@@ -70,6 +70,7 @@ typedef struct {
 	GDBusNodeInfo		*introspection_daemon;
 	GDBusProxy		*proxy_uid;
 	GDBusProxy		*proxy_upower;
+	GKeyFile		*config;
 	GMainLoop		*loop;
 	GPtrArray		*devices;	/* of FuDeviceItem */
 	GPtrArray		*providers;
@@ -2182,7 +2183,24 @@ fu_main_provider_device_added_cb (FuProvider *provider,
 	FuDeviceItem *item;
 	AsApp *app;
 	FuPlugin *plugin;
+	g_auto(GStrv) guids = NULL;
 	g_autoptr(GError) error = NULL;
+
+	/* is this GUID blacklisted */
+	guids = g_key_file_get_string_list (priv->config,
+					    "fwupd",
+					    "BlacklistDevices",
+					    NULL, /* length */
+					    NULL);
+	if (guids != NULL &&
+	    g_strv_contains ((const gchar * const *) guids,
+			     fu_device_get_guid_default (device))) {
+		g_debug ("%s is blacklisted [%s], ignoring from %s",
+			 fu_device_get_id (device),
+			 fu_device_get_guid_default (device),
+			 fu_provider_get_name (provider));
+		return;
+	}
 
 	/* remove any fake device */
 	item = fu_main_get_item_by_id (priv, fu_device_get_id (device));
@@ -2305,7 +2323,6 @@ main (int argc, char *argv[])
 	};
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *config_file = NULL;
-	g_autoptr(GKeyFile) config = NULL;
 
 	setlocale (LC_ALL, "");
 
@@ -2360,10 +2377,10 @@ main (int argc, char *argv[])
 	}
 
 	/* read config file */
-	config = g_key_file_new ();
 	config_file = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
 	g_debug ("Loading fallback values from %s", config_file);
-	if (!g_key_file_load_from_file (config, config_file,
+	priv->config = g_key_file_new ();
+	if (!g_key_file_load_from_file (priv->config, config_file,
 					G_KEY_FILE_NONE, &error)) {
 		g_print ("failed to load config file %s: %s\n",
 			  config_file, error->message);
@@ -2373,7 +2390,7 @@ main (int argc, char *argv[])
 
 	/* add providers */
 	priv->providers = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	if (g_key_file_get_boolean (config, "fwupd", "EnableOptionROM", NULL))
+	if (g_key_file_get_boolean (priv->config, "fwupd", "EnableOptionROM", NULL))
 		fu_main_add_provider (priv, fu_provider_udev_new ());
 	fu_main_add_provider (priv, fu_provider_dfu_new ());
 	fu_main_add_provider (priv, fu_provider_rpi_new ());
@@ -2441,6 +2458,8 @@ out:
 			g_object_unref (priv->proxy_uid);
 		if (priv->proxy_upower != NULL)
 			g_object_unref (priv->proxy_upower);
+		if (priv->config != NULL)
+			g_object_unref (priv->config);
 		if (priv->connection != NULL)
 			g_object_unref (priv->connection);
 		if (priv->authority != NULL)
