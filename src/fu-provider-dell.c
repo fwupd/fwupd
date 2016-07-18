@@ -63,20 +63,6 @@ typedef struct dell_smi_obj fu_dell_smi_obj;
 #define DELL_IMAGE_MISSING		0x000D
 #define DELL_DID_NOTHING		0xFFFF
 
-/* These are nodes that will indicate information about
- * the TPM status
- */
-struct tpm_status {
-	guint32 ret;
-	guint32 fw_version;
-	guint32 status;
-	guint32 flashes_left;
-};
-#define TPM_EN_MASK	0x0001
-#define TPM_OWN_MASK	0x0004
-#define TPM_TYPE_MASK	0x0F00
-#define TPM_1_2_MODE	0x0001
-#define TPM_2_0_MODE	0x0002
 
 /* These are DACI class/select needed for
  * flash capability queries
@@ -94,10 +80,6 @@ struct tpm_status {
 #define DACI_DOCK_ARG_MODE_USER		0
 #define DACI_DOCK_ARG_MODE_FLASH	1
 
-/* VID/PID of ethernet controller on dock */
-#define DOCK_NIC_VID		0x0bda
-#define DOCK_NIC_PID		0x8153
-
 /* These are for dock query capabilities */
 struct dock_count_in {
 	guint32 argument;
@@ -113,62 +95,12 @@ struct dock_count_out {
 	guint32 reserved;
 };
 
-/* Dock Info version 1 */
-#pragma pack(1)
-#define MAX_COMPONENTS 5
 typedef struct _DOCK_DESCRIPTION
 {
 	const efi_guid_t	guid;
 	const gchar *		query;
 	const gchar *		desc;
 } DOCK_DESCRIPTION;
-
-typedef struct _COMPONENTS {
-	gchar		description[80];
-	guint32		fw_version; 		/* BCD format: 0x00XXYYZZ */
-} COMPONENTS;
-
-typedef struct _DOCK_INFO {
-	gchar		dock_description[80];
-	guint32		flash_pkg_version;	/* BCD format: 0x00XXYYZZ */
-	guint32		cable_type;		/* bit0-7 cable type, bit7-31 set to 0 */
-	guint8		location;		/* Location of the dock */
-	guint8		reserved;
-	guint8		component_count;
-	COMPONENTS	components[MAX_COMPONENTS];	/* number of component_count */
-} DOCK_INFO;
-
-typedef struct _DOCK_INFO_HEADER {
-	guint8		dir_version;  		/* version 1, 2 … */
-	guint8		dock_type;
-	guint16		reserved;
-} DOCK_INFO_HEADER;
-
-typedef struct _DOCK_INFO_RECORD {
-	DOCK_INFO_HEADER	dock_info_header; /* dock version specific definition */
-	DOCK_INFO		dock_info;
-} DOCK_INFO_RECORD;
-
-typedef union _INFO_UNION{
-	guint8 *buf;
-	DOCK_INFO_RECORD *record;
-} INFO_UNION;
-#pragma pack()
-
-typedef enum _DOCK_TYPE
-{
-	DOCK_TYPE_NONE,
-	DOCK_TYPE_TB15,
-	DOCK_TYPE_WD15
-} DOCK_TYPE;
-
-typedef enum _CABLE_TYPE
-{
-	CABLE_TYPE_NONE,
-	CABLE_TYPE_LEGACY,
-	CABLE_TYPE_UNIV,
-	CABLE_TYPE_TBT
-} CABLE_TYPE;
 
 /* These are for matching the components */
 #define WD15_EC_STR		"2 0 2 2 0"
