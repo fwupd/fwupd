@@ -33,6 +33,8 @@
 #include "fu-provider-rpi.h"
 #include "fu-rom.h"
 
+#undef HAVE_DELL
+
 #ifdef HAVE_DELL
   #include "fu-provider-dell.h"
 #endif
