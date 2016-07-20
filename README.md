@@ -50,6 +50,8 @@ Dell Support
 ----------------
 
 This allows installing Dell capsules that are not part of the ESRT table.
+Information on special features enabled by this provider are available here:
+https://github.com/hughsie/fwupd/blob/master/docs/dell-provider.md
 
 For Dell support you will need libsmbios_c version 2.3.0 or later and
 efivar.
