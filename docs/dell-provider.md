@@ -25,7 +25,6 @@ Precision 5510 TPM 1.2
   Provider:             Dell
   Flags:                internal|allow-offline|require-ac
   Version:              5.81.0.0
-  FlashesLeft:          127
   Created:              2016-07-19
 
 Precision 5510 TPM 2.0
@@ -37,8 +36,7 @@ Precision 5510 TPM 2.0
 ```
 
 In this example, the TPM is currently operating in **TPM 1.2 mode**.  Any
-firmware updates posted to *LVFS* for TPM 1.2 mode will be applied as long as
-the remaining flash counter is greater than 0.
+firmware updates posted to *LVFS* for TPM 1.2 mode will be applied.
 
 ### Switching TPM Modes
 In order to be offered to switch the TPM to **TPM 2.0 mode**, the virtual device
@@ -60,7 +58,6 @@ Precision 5510 TPM 1.2
   Provider:             Dell
   Flags:                internal|require-ac
   Version:              5.81.0.0
-  FlashesLeft:          127
   Created:              2016-07-19
 
 Precision 5510 TPM 2.0
@@ -69,7 +66,6 @@ Precision 5510 TPM 2.0
   Provider:             Dell
   Flags:                internal|allow-offline|require-ac
   Version:              0.0.0.0
-  FlashesLeft:          127
   Created:              2016-07-19
   Modified:             2016-07-19
 ```
@@ -91,7 +87,6 @@ Precision 5510 TPM 2.0
   Provider:             Dell
   Flags:                internal|allow-offline|require-ac
   Version:              1.3.0.1
-  FlashesLeft:          126
   Created:              2016-07-20
 
 Precision 5510 TPM 1.2
@@ -99,7 +94,6 @@ Precision 5510 TPM 1.2
   DeviceID:             DELL-b2088ba1-51ae-514e-8f0a-64756c6e4ffclu
   Provider:             Dell
   Flags:                internal|require-ac|locked
-  FlashesLeft:          126
   Created:              2016-07-20
 ```
 
