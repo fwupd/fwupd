@@ -60,6 +60,19 @@ Requires: libdfu = %{version}-%{release}
 %description -n libdfu-devel
 Files for development with libdfu.
 
+%package -n libebitdo
+Summary: A library for accessing 0bitdo hardware
+
+%description -n libebitdo
+A library for updating 0bitdo USB devices.
+
+%package -n libebitdo-devel
+Summary: Development package for libebitdo
+Requires: libebitdo = %{version}-%{release}
+
+%description -n libebitdo-devel
+Files for development with libebitdo.
+
 %prep
 %setup -q
 
@@ -147,6 +160,19 @@ make check VERBOSE=1
 %{_includedir}/libdfu/*.h
 %{_libdir}/libdfu*.so
 %{_libdir}/pkgconfig/dfu.pc
+
+%files -n libebitdo
+%{_bindir}/ebitdo-tool
+%{_libdir}/libebitdo*.so.*
+
+%files -n libebitdo-devel
+%{_datadir}/gir-1.0/Dfu-1.0.gir
+%{_datadir}/gtk-doc/html/libebitdo
+%dir %{_includedir}/libebitdo
+%{_includedir}/ebitdo.h
+%{_includedir}/libebitdo/*.h
+%{_libdir}/libebitdo*.so
+%{_libdir}/pkgconfig/ebitdo.pc
 
 %changelog
 * #LONGDATE# Richard Hughes <richard@hughsie.com> #VERSION#-0.#BUILD##ALPHATAG#
