@@ -60,6 +60,9 @@ efivar.
 * debs (Debian):	http://tracker.debian.org/pkg/libsmbios
 * debs (Ubuntu):	http://launchpad.net/ubuntu/+source/libsmbios
 
+If you don't want or need this functionality you can use the
+`--disable-dell` option.
+
 Raspberry Pi support
 --------------------
 
