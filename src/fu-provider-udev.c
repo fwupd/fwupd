@@ -240,19 +240,17 @@ fu_provider_udev_coldplug (FuProvider *provider, GError **error)
 	FuProviderUdev *provider_udev = FU_PROVIDER_UDEV (provider);
 	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
 	GList *devices;
-	GList *l;
 	GUdevDevice *udev_device;
 	const gchar *devclass[] = { "usb", "pci", NULL };
-	guint i;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 
 	/* get all devices of class */
-	for (i = 0; devclass[i] != NULL; i++) {
+	for (guint i = 0; devclass[i] != NULL; i++) {
 		g_autoptr(AsProfileTask) ptask = NULL;
 		ptask = as_profile_start (profile, "FuProviderUdev:coldplug{%s}", devclass[i]);
 		devices = g_udev_client_query_by_subsystem (priv->gudev_client,
 							    devclass[i]);
-		for (l = devices; l != NULL; l = l->next) {
+		for (GList *l = devices; l != NULL; l = l->next) {
 			udev_device = l->data;
 			fu_provider_udev_client_add (provider_udev, udev_device);
 		}

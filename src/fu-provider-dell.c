@@ -186,7 +186,6 @@ fu_provider_dell_match_dock_component(const gchar *query_str,
 				 const efi_guid_t **guid_out,
 				 const gchar **name_out)
 {
-	guint i;
 	const DOCK_DESCRIPTION list[] = {
 		{WD15_EC_GUID, WD15_EC_STR, EC_DESC},
 		{TB15_EC_GUID, TB15_EC_STR, EC_DESC},
@@ -198,7 +197,7 @@ fu_provider_dell_match_dock_component(const gchar *query_str,
 		{LEGACY_CBL_GUID, LEGACY_CBL_STR, LEGACY_CBL_DESC},
 	};
 
-	for (i = 0; i < G_N_ELEMENTS(list); i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(list); i++) {
 		if (g_strcmp0 (query_str,
 			       list[i].query) == 0) {
 			*guid_out = &list[i].guid;
@@ -215,11 +214,10 @@ fu_provider_dell_inject_fake_data (FuProviderDell *provider_dell,
 				   guint8 *buf)
 {
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
-	guint i;
 
 	if (!priv->fake_smbios)
 		return;
-	for (i = 0; i < 4; i++)
+	for (guint i = 0; i < 4; i++)
 		priv->fake_output[i] = output[i];
 	priv->fake_vid = vid;
 	priv->fake_pid = pid;
@@ -249,10 +247,9 @@ fu_provider_dell_execute_simple_smi (FuProviderDell *provider_dell,
 				     guint32  *args, guint32 *out)
 {
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
-	guint i;
 
 	if (priv->fake_smbios) {
-		for (i = 0; i < 4; i++)
+		for (guint i = 0; i < 4; i++)
 			out[i] = priv->fake_output[i];
 		return TRUE;
 	}
@@ -317,7 +314,6 @@ fu_provider_dell_device_free (FuProviderDellDockItem *item)
 static AsVersionParseFlag
 fu_provider_dell_get_version_format (void)
 {
-	guint i;
 	g_autofree gchar *content = NULL;
 
 	/* any vendors match */
@@ -325,7 +321,7 @@ fu_provider_dell_get_version_format (void)
 				  &content, NULL, NULL))
 		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 	g_strchomp (content);
-	for (i = 0; quirk_table[i].sys_vendor != NULL; i++) {
+	for (guint i = 0; quirk_table[i].sys_vendor != NULL; i++) {
 		if (g_strcmp0 (content, quirk_table[i].sys_vendor) == 0)
 			return quirk_table[i].flags;
 	}
@@ -425,7 +421,6 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 	guint buf_size;
 	g_autoptr(fu_dell_smi_obj) smi = NULL;
 	gint result;
-	gint i;
 	guint32 location;
 	const efi_guid_t *guid_raw = NULL;
 	efi_guid_t tmpguid;
@@ -501,7 +496,7 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 	g_debug ("Dell: dock component count: %d", dock_info->component_count);
 	parse_flags = fu_provider_dell_get_version_format ();
 
-	for (i = 0; i < dock_info->component_count; i++) {
+	for (guint i = 0; i < dock_info->component_count; i++) {
 		if (i > MAX_COMPONENTS) {
 			g_debug ("Dell: Too many components.  Invalid: #%d", i);
 			break;
@@ -640,7 +635,7 @@ fu_provider_dell_device_removed_cb (GUsbContext *ctx,
 		return;
 
 	/* remove any components already in database? */
-	for (i = 0; i < G_N_ELEMENTS(guids); i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(guids); i++) {
 		guid_raw = &guids[i];
 		guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
 		efi_guid_to_str (guid_raw, &guid_str);
@@ -731,7 +726,6 @@ fu_provider_dell_detect_tpm (FuProvider *provider, GError **error)
 	const gchar *tpm_mode;
 	const gchar *tpm_mode_alt;
 	guint16 system_id = 0;
-	guint i;
 	gboolean can_switch_modes = TRUE;
 	g_autofree gchar *pretty_tpm_name_alt = NULL;
 	g_autofree gchar *pretty_tpm_name = NULL;
@@ -792,7 +786,7 @@ fu_provider_dell_detect_tpm (FuProvider *provider, GError **error)
 	if (!priv->fake_smbios)
 		system_id = sysinfo_get_dell_system_id ();
 
-	for (i = 0; i < G_N_ELEMENTS(tpm_switch_blacklist); i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(tpm_switch_blacklist); i++) {
 		if (tpm_switch_blacklist[i] == system_id) {
 			can_switch_modes = FALSE;
 		}

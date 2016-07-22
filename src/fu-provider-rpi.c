@@ -55,7 +55,6 @@ fu_provider_rpi_strstr (const guint8 *haystack,
 			const gchar *needle,
 			guint *offset)
 {
-	guint i;
 	guint needle_len;
 
 	if (needle == NULL || needle[0] == '\0')
@@ -65,7 +64,7 @@ fu_provider_rpi_strstr (const guint8 *haystack,
 	needle_len = strlen (needle);
 	if (needle_len > haystack_len)
 		return NULL;
-	for (i = 0; i < haystack_len - needle_len; i++) {
+	for (guint i = 0; i < haystack_len - needle_len; i++) {
 		if (memcmp (haystack + i, needle, needle_len) == 0) {
 			if (offset != NULL)
 				*offset = i + needle_len;

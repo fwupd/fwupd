@@ -205,7 +205,6 @@ static GVariant *
 fu_main_device_array_to_variant (GPtrArray *devices, GError **error)
 {
 	GVariantBuilder builder;
-	guint i;
 
 	/* no devices */
 	if (devices->len == 0) {
@@ -217,7 +216,7 @@ fu_main_device_array_to_variant (GPtrArray *devices, GError **error)
 	}
 
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	for (i = 0; i < devices->len; i++) {
+	for (guint i = 0; i < devices->len; i++) {
 		GVariant *tmp;
 		FuDeviceItem *item;
 		item = g_ptr_array_index (devices, i);
@@ -232,7 +231,6 @@ fu_main_load_plugins (GHashTable *plugins, GError **error)
 {
 	FuPlugin *plugin;
 	GModule *module;
-	GList *l;
 	const gchar *fn;
 	g_autofree gchar *plugin_dir = NULL;
 	g_autoptr(GDir) dir = NULL;
@@ -272,7 +270,7 @@ fu_main_load_plugins (GHashTable *plugins, GError **error)
 
 	/* start them all up */
 	values = g_hash_table_get_values (plugins);
-	for (l = values; l != NULL; l = l->next) {
+	for (GList *l = values; l != NULL; l = l->next) {
 		plugin = FU_PLUGIN (l->data);
 		if (!fu_plugin_run_startup (plugin, error))
 			return FALSE;
@@ -304,11 +302,8 @@ fu_main_item_free (FuDeviceItem *item)
 static FuDeviceItem *
 fu_main_get_item_by_id (FuMainPrivate *priv, const gchar *id)
 {
-	FuDeviceItem *item;
-	guint i;
-
-	for (i = 0; i < priv->devices->len; i++) {
-		item = g_ptr_array_index (priv->devices, i);
+	for (guint i = 0; i < priv->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (priv->devices, i);
 		if (g_strcmp0 (fu_device_get_id (item->device), id) == 0)
 			return item;
 		if (g_strcmp0 (fu_device_get_equivalent_id (item->device), id) == 0)
@@ -320,11 +315,8 @@ fu_main_get_item_by_id (FuMainPrivate *priv, const gchar *id)
 static FuDeviceItem *
 fu_main_get_item_by_guid (FuMainPrivate *priv, const gchar *guid)
 {
-	FuDeviceItem *item;
-	guint i;
-
-	for (i = 0; i < priv->devices->len; i++) {
-		item = g_ptr_array_index (priv->devices, i);
+	for (guint i = 0; i < priv->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (priv->devices, i);
 		if (fu_device_has_guid (item->device, guid))
 			return item;
 	}
@@ -334,11 +326,8 @@ fu_main_get_item_by_guid (FuMainPrivate *priv, const gchar *guid)
 static FuProvider *
 fu_main_get_provider_by_name (FuMainPrivate *priv, const gchar *name)
 {
-	FuProvider *provider;
-	guint i;
-
-	for (i = 0; i < priv->providers->len; i++) {
-		provider = g_ptr_array_index (priv->providers, i);
+	for (guint i = 0; i < priv->providers->len; i++) {
+		FuProvider *provider = g_ptr_array_index (priv->providers, i);
 		if (g_strcmp0 (fu_provider_get_name (provider), name) == 0)
 			return provider;
 	}
@@ -469,10 +458,8 @@ fu_main_on_battery (FuMainPrivate *priv)
 static gboolean
 fu_main_provider_unlock_authenticated (FuMainAuthHelper *helper, GError **error)
 {
-	guint i;
-
 	/* check the devices still exists */
-	for (i = 0; i < helper->devices->len; i ++) {
+	for (guint i = 0; i < helper->devices->len; i ++) {
 		FuDeviceItem *item;
 		FuDevice *device = g_ptr_array_index (helper->devices, i);
 
@@ -508,10 +495,9 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 {
 	FuDeviceItem *item;
 	FuPlugin *plugin;
-	guint i;
 
 	/* check the devices still exists */
-	for (i = 0; i < helper->devices->len; i ++) {
+	for (guint i = 0; i < helper->devices->len; i ++) {
 		FuDevice *device = g_ptr_array_index (helper->devices, i);
 		item = fu_main_get_item_by_id (helper->priv,
 					       fu_device_get_id (device));
@@ -549,7 +535,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 	}
 
 	/* run the correct providers for each device */
-	for (i = 0; i < helper->devices->len; i ++) {
+	for (guint i = 0; i < helper->devices->len; i ++) {
 		FuDevice *device = g_ptr_array_index (helper->devices, i);
 		GBytes *blob_fw = g_ptr_array_index (helper->blob_fws, i);
 		item = fu_main_get_item_by_id (helper->priv,
@@ -630,20 +616,17 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 static gchar *
 fu_main_get_guids_from_store (AsStore *store)
 {
-	AsApp *app;
 	AsProvide *prov;
 	GPtrArray *provides;
 	GPtrArray *apps;
 	GString *str = g_string_new ("");
-	guint i;
-	guint j;
 
 	/* return a string with all the firmware apps in the store */
 	apps = as_store_get_apps (store);
-	for (i = 0; i < apps->len; i++) {
-		app = AS_APP (g_ptr_array_index (apps, i));
+	for (guint i = 0; i < apps->len; i++) {
+		AsApp *app = AS_APP (g_ptr_array_index (apps, i));
 		provides = as_app_get_provides (app);
-		for (j = 0; j < provides->len; j++) {
+		for (guint j = 0; j < provides->len; j++) {
 			prov = AS_PROVIDE (g_ptr_array_index (provides, j));
 			if (as_provide_get_kind (prov) != AS_PROVIDE_KIND_FIRMWARE_FLASHED)
 				continue;
@@ -661,19 +644,19 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 {
 	AsVersionParseFlag flags = AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 	GPtrArray *releases;
-	guint i;
 
 	/* no quirk required */
 	if (as_app_get_kind (app) != AS_APP_KIND_FIRMWARE)
 		return;
 
-        for (i = 0; quirk_table[i].identifier != NULL; i++)
+	for (guint i = 0; quirk_table[i].identifier != NULL; i++) {
 		if (g_str_has_prefix (as_app_get_id(app), quirk_table[i].identifier))
 			flags = quirk_table[i].flags;
+	}
 
 	/* fix each release */
 	releases = as_app_get_releases (app);
-	for (i = 0; i < releases->len; i++) {
+	for (guint i = 0; i < releases->len; i++) {
 		AsRelease *rel;
 		const gchar *version;
 		guint64 ver_uint32;
@@ -704,11 +687,8 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 static AsApp *
 fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
 {
-	GPtrArray *guids;
-	guint i;
-
-	guids = fu_device_get_guids (device);
-	for (i = 0; i < guids->len; i++) {
+	GPtrArray *guids = fu_device_get_guids (device);
+	for (guint i = 0; i < guids->len; i++) {
 		AsApp *app = NULL;
 		app = as_store_get_app_by_provide (store,
 						   AS_PROVIDE_KIND_FIRMWARE_FLASHED,
@@ -849,7 +829,6 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 static gboolean
 fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 {
-	guint i;
 	g_autoptr(GError) error_first = NULL;
 
 	/* load store file which also decompresses firmware */
@@ -859,7 +838,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 
 	/* we've specified a specific device; failure is critical */
 	if (helper->devices->len > 0) {
-		for (i = 0; i < helper->devices->len; i ++) {
+		for (guint i = 0; i < helper->devices->len; i ++) {
 			FuDevice *device = g_ptr_array_index (helper->devices, i);
 			if (!fu_main_update_helper_for_device (helper, device, error))
 				return FALSE;
@@ -869,7 +848,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 
 	/* if we've not chosen a device, try and find anything in the
 	 * cabinet 'store' that matches any installed device and is updatable */
-	for (i = 0; i < helper->priv->devices->len; i++) {
+	for (guint i = 0; i < helper->priv->devices->len; i++) {
 		AsApp *app;
 		FuDeviceItem *item;
 		g_autoptr(GError) error_local = NULL;
@@ -963,7 +942,6 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 	FuDeviceItem *item = NULL;
 	FwupdUpdateState update_state;
 	const gchar *tmp;
-	guint i;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* not a wildcard */
@@ -982,7 +960,7 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 	devices = fu_pending_get_devices (priv->pending, error);
 	if (devices == NULL)
 		return NULL;
-	for (i = 0; i < devices->len; i++) {
+	for (guint i = 0; i < devices->len; i++) {
 		dev = g_ptr_array_index (devices, i);
 		update_state = fu_device_get_update_state (dev);
 		if (update_state == FWUPD_UPDATE_STATE_UNKNOWN)
@@ -1027,13 +1005,12 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 {
 	gboolean all_removable = TRUE;
 	gboolean is_trusted;
-	guint i;
 
 	/* only test the payload */
 	is_trusted = (helper->trust_flags & FWUPD_TRUST_FLAG_PAYLOAD) > 0;
 
 	/* any non-removable means false */
-	for (i = 0; i < helper->devices->len; i ++) {
+	for (guint i = 0; i < helper->devices->len; i ++) {
 		FuDevice *device = g_ptr_array_index (helper->devices, i);
 		if (fu_device_has_flag (device, FU_DEVICE_FLAG_INTERNAL)) {
 			all_removable = FALSE;
@@ -1062,7 +1039,6 @@ static gboolean
 fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GError **error)
 {
 	const guint8 *data;
-	guint i;
 	gsize size;
 	GPtrArray *apps;
 	g_autofree gchar *xml = NULL;
@@ -1137,7 +1113,7 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	/* add the new application from the store */
 	as_store_remove_all (priv->store);
 	apps = as_store_get_apps (store);
-	for (i = 0; i < apps->len; i++) {
+	for (guint i = 0; i < apps->len; i++) {
 		AsApp *app = g_ptr_array_index (apps, i);
 		as_store_add_app (priv->store, app);
 	}
@@ -1159,11 +1135,8 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 static gboolean
 fu_main_store_delay_cb (gpointer user_data)
 {
-	AsApp *app;
-	GPtrArray *apps;
-	guint i;
-	FuDeviceItem *item;
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+	GPtrArray *apps;
 
 	/* print what we've got */
 	apps = as_store_get_apps (priv->store);
@@ -1171,8 +1144,8 @@ fu_main_store_delay_cb (gpointer user_data)
 		g_debug ("no devices in store");
 	} else {
 		g_debug ("devices now in store:");
-		for (i = 0; i < apps->len; i++) {
-			app = g_ptr_array_index (apps, i);
+		for (guint i = 0; i < apps->len; i++) {
+			AsApp *app = g_ptr_array_index (apps, i);
 			g_debug ("%i\t%s\t%s", i + 1,
 				 as_app_get_id (app),
 				 as_app_get_name (app, NULL));
@@ -1180,8 +1153,8 @@ fu_main_store_delay_cb (gpointer user_data)
 	}
 
 	/* are any devices now supported? */
-	for (i = 0; i < priv->devices->len; i++) {
-		item = g_ptr_array_index (priv->devices, i);
+	for (guint i = 0; i < priv->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (priv->devices, i);
 		if (fu_main_get_updates_item_update (priv, item))
 			fu_main_emit_device_changed (priv, item->device);
 	}
@@ -1207,7 +1180,6 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	GPtrArray *releases;
 	const gchar *tmp;
 	const gchar *version;
-	guint i;
 	g_autoptr(GPtrArray) updates_list = NULL;
 
 	/* get device version */
@@ -1295,7 +1267,7 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	/* get the list of releases newer than the one installed */
 	updates_list = g_ptr_array_new ();
 	releases = as_app_get_releases (app);
-	for (i = 0; i < releases->len; i++) {
+	for (guint i = 0; i < releases->len; i++) {
 		rel = g_ptr_array_index (releases, i);
 		if (as_utils_vercmp (as_release_get_version (rel), version) < 0)
 			continue;
@@ -1315,7 +1287,7 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 		update_desc = g_string_new ("");
 
 		/* get the descriptions with a version prefix */
-		for (i = 0; i < updates_list->len; i++) {
+		for (guint i = 0; i < updates_list->len; i++) {
 			rel = g_ptr_array_index (updates_list, i);
 			g_string_append_printf (update_desc,
 						"<p>%s:</p>%s",
@@ -1330,17 +1302,13 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	return TRUE;
 }
 
+/* find any updates using the AppStream metadata */
 static GPtrArray *
 fu_main_get_updates (FuMainPrivate *priv, GError **error)
 {
-	GPtrArray *updates;
-	FuDeviceItem *item;
-	guint i;
-
-	/* find any updates using the AppStream metadata */
-	updates = g_ptr_array_new ();
-	for (i = 0; i < priv->devices->len; i++) {
-		item = g_ptr_array_index (priv->devices, i);
+	GPtrArray *updates = g_ptr_array_new ();
+	for (guint i = 0; i < priv->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (priv->devices, i);
 		if (fu_main_get_updates_item_update (priv, item))
 			g_ptr_array_add (updates, item);
 	}
@@ -1388,12 +1356,11 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 	AsChecksum * csum_tmp;
 	const gchar *fn;
 	GPtrArray *provides;
-	guint i;
 	g_autoptr(FwupdResult) res = NULL;
 
 	res = fwupd_result_new ();
 	provides = as_app_get_provides (app);
-	for (i = 0; i < provides->len; i++) {
+	for (guint i = 0; i < provides->len; i++) {
 		AsProvide *prov = AS_PROVIDE (g_ptr_array_index (provides, i));
 		FuDeviceItem *item;
 		const gchar *guid;
@@ -1456,7 +1423,6 @@ fu_main_get_details_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 {
 	AsApp *app = NULL;
 	GPtrArray *apps;
-	guint i;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FwupdResult) res = NULL;
 
@@ -1476,7 +1442,7 @@ fu_main_get_details_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 	if (apps->len > 1) {
 		/* we've got a .cab file with multiple components,
 		 * so try to find the first thing that's installed */
-		for (i = 0; i < priv->devices->len; i++) {
+		for (guint i = 0; i < priv->devices->len; i++) {
 			FuDeviceItem *item = g_ptr_array_index (priv->devices, i);
 			app = fu_main_store_get_app_by_guids (store, item->device);
 			if (app != NULL)
@@ -1500,7 +1466,6 @@ fu_main_get_details_local_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 {
 	GPtrArray *apps;
 	GVariantBuilder builder;
-	guint i;
 	g_autoptr(AsStore) store = NULL;
 
 	store = fu_main_get_store_from_fd (priv, fd, error);
@@ -1519,7 +1484,7 @@ fu_main_get_details_local_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 
 	/* create results with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	for (i = 0; i < apps->len; i++) {
+	for (guint i = 0; i < apps->len; i++) {
 		g_autoptr(FwupdResult) res = NULL;
 		AsApp *app = g_ptr_array_index (apps, i);
 		GVariant *tmp;
@@ -2049,15 +2014,13 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 static void
 fu_main_providers_coldplug (FuMainPrivate *priv)
 {
-	FuProvider *provider;
-	guint i;
 	g_autoptr(AsProfileTask) ptask = NULL;
 
 	ptask = as_profile_start_literal (priv->profile, "FuMain:coldplug");
-	for (i = 0; i < priv->providers->len; i++) {
+	for (guint i = 0; i < priv->providers->len; i++) {
 		g_autoptr(GError) error = NULL;
 		g_autoptr(AsProfileTask) ptask2 = NULL;
-		provider = g_ptr_array_index (priv->providers, i);
+		FuProvider *provider = g_ptr_array_index (priv->providers, i);
 		ptask2 = as_profile_start (priv->profile,
 					   "FuMain:coldplug{%s}",
 					   fu_provider_get_name (provider));

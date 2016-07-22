@@ -107,7 +107,6 @@ fu_provider_schedule_update (FuProvider *provider,
 			     GError **error)
 {
 	gchar tmpname[] = {"XXXXXX.cap"};
-	guint i;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FwupdResult) res_tmp = NULL;
@@ -135,7 +134,7 @@ fu_provider_schedule_update (FuProvider *provider,
 	}
 
 	/* get a random filename */
-	for (i = 0; i < 6; i++)
+	for (guint i = 0; i < 6; i++)
 		tmpname[i] = g_random_int_range ('A', 'Z');
 	filename = g_build_filename (dirname, tmpname, NULL);
 

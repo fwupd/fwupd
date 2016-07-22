@@ -53,7 +53,6 @@ fu_test_get_filename (const gchar *filename)
 static void
 fu_rom_func (void)
 {
-	guint i;
 	struct {
 		FuRomKind kind;
 		const gchar *fn;
@@ -95,7 +94,7 @@ fu_rom_func (void)
 		    { FU_ROM_KIND_UNKNOWN, NULL, NULL, NULL, 0x0000, 0x0000 }
 		};
 
-	for (i = 0; data[i].fn != NULL; i++) {
+	for (guint i = 0; data[i].fn != NULL; i++) {
 		gboolean ret;
 		g_autoptr(GError) error = NULL;
 		g_autofree gchar *filename = NULL;

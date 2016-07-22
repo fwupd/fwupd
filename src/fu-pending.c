@@ -230,14 +230,13 @@ fu_pending_device_sqlite_cb (void *data,
 {
 	GPtrArray *array = (GPtrArray *) data;
 	FwupdResult *res;
-	gint i;
 
 	/* create new result */
 	res = fwupd_result_new ();
 	g_ptr_array_add (array, res);
 
 	g_debug ("FuPending: got sql result %s", argv[0]);
-	for (i = 0; i < argc; i++) {
+	for (gint i = 0; i < argc; i++) {
 		if (g_strcmp0 (col_name[i], "device_id") == 0) {
 			fwupd_result_set_device_id (res, argv[i]);
 			continue;

@@ -222,14 +222,13 @@ fu_provider_uefi_update (FuProvider *provider,
 static AsVersionParseFlag
 fu_provider_uefi_get_version_format (void)
 {
-	guint i;
 	g_autofree gchar *content = NULL;
 	/* any vendors match */
 	if (!g_file_get_contents ("/sys/class/dmi/id/sys_vendor",
 				  &content, NULL, NULL))
 		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 	g_strchomp (content);
-	for (i = 0; quirk_table[i].sys_vendor != NULL; i++) {
+	for (guint i = 0; quirk_table[i].sys_vendor != NULL; i++) {
 		if (g_strcmp0 (content, quirk_table[i].sys_vendor) == 0)
 			return quirk_table[i].flags;
 	}
