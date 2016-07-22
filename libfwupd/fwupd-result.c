@@ -1751,7 +1751,8 @@ fwupd_result_to_string (FwupdResult *result)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VENDOR, priv->device_vendor);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION, priv->device_version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST, priv->device_version_lowest);
-	fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT, priv->device_flashes_left);
+	if (priv->device_flashes_left < 2)
+		fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT, priv->device_flashes_left);
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_CREATED, priv->device_created);
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_MODIFIED, priv->device_modified);
 

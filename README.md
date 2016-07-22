@@ -46,6 +46,23 @@ and compiling it with libsmbios support.
 When fwupd and fwupdate have been compiled with this support you will
 be able to enable UEFI support on the device by using the `unlock` command.
 
+Dell Support
+----------------
+
+This allows installing Dell capsules that are not part of the ESRT table.
+Information on special features enabled by this provider are available here:
+https://github.com/hughsie/fwupd/blob/master/docs/dell-provider.md
+
+For Dell support you will need libsmbios_c version 2.3.0 or later and
+efivar.
+* source:		http://linux.dell.com/cgi-bin/cgit.cgi/libsmbios.git/
+* rpms:		https://apps.fedoraproject.org/packages/libsmbios
+* debs (Debian):	http://tracker.debian.org/pkg/libsmbios
+* debs (Ubuntu):	http://launchpad.net/ubuntu/+source/libsmbios
+
+If you don't want or need this functionality you can use the
+`--disable-dell` option.
+
 Raspberry Pi support
 --------------------
 
