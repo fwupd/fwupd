@@ -25,6 +25,7 @@ override_dh_auto_configure:
 		export UEFI="--disable-uefi"; \
 	fi; \
 	dh_auto_configure -- --with-systemdunitdir=/lib/systemd/system \
+				--enable-gtk-doc \
 				$(COLORHUG) $$UEFI
 
 override_dh_install:

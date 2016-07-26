@@ -81,6 +81,22 @@ Description: Firmware update daemon
  ColorHug are supported. More formats may be supported in the future.
  See <https://github.com/hughsie/fwupd> for details
 
+Package: fwupd-doc
+Architecture: linux-any
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Multi-Arch: same
+Description: Firmware update daemon documentation (HTML format)
+ fwupd is a daemon to allow session software to update device firmware.
+ You can either use a GUI software manager like GNOME Software to view and
+ apply updates, the command-line tool or the system D-Bus interface directly.
+ Currently, firmware updates using the UEFI capsule format and for the
+ ColorHug are supported. More formats may be supported in the future.
+ See <https://github.com/hughsie/fwupd> for details
+ .
+ This package provides development documentation for creating a package that
+ uses fwupd.
+
 Package: libfwupd-dev
 Architecture: linux-any
 Multi-Arch: same
