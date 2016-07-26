@@ -30,6 +30,7 @@ Build-Depends: debhelper (>= 9.0.0),
                gtk-doc-tools,
                libcolorhug-dev,
                gobject-introspection,
+               libsmbios-dev,
                valgrind[!mips]
 Standards-Version: 3.9.8
 Section: admin
