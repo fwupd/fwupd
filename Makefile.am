@@ -54,6 +54,7 @@ MAINTAINERCLEANFILES =					\
 DISTCHECK_CONFIGURE_FLAGS =				\
 	--enable-colorhug				\
 	--enable-uefi					\
+	--enable-dell					\
 	--with-udevrulesdir=$$dc_install_base/$(udevrulesdir) \
 	--with-systemdunitdir=$$dc_install_base/$(systemdunitdir)
 

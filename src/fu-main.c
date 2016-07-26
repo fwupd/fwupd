@@ -54,6 +54,9 @@
 #ifdef HAVE_UEFI
   #include "fu-provider-uefi.h"
 #endif
+#ifdef HAVE_DELL
+  #include "fu-provider-dell.h"
+#endif
 
 #ifndef PolkitAuthorizationResult_autoptr
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitAuthorizationResult, g_object_unref)
@@ -67,6 +70,7 @@ typedef struct {
 	GDBusNodeInfo		*introspection_daemon;
 	GDBusProxy		*proxy_uid;
 	GDBusProxy		*proxy_upower;
+	GKeyFile		*config;
 	GMainLoop		*loop;
 	GPtrArray		*devices;	/* of FuDeviceItem */
 	GPtrArray		*providers;
@@ -716,159 +720,200 @@ fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
 }
 
 static gboolean
-fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
+fu_main_update_helper_for_device (FuMainAuthHelper *helper,
+				  FuDevice *device,
+				  GError **error)
 {
 	AsApp *app;
 	AsChecksum *csum_tmp;
 	AsRelease *rel;
+	GBytes *blob_fw;
 	const gchar *tmp;
 	const gchar *version;
+	gboolean is_downgrade;
 	gint vercmp;
+
+	/* find from guid */
+	app = fu_main_store_get_app_by_guids (helper->store, device);
+	if (app == NULL) {
+		g_autofree gchar *guid = NULL;
+		guid = fu_main_get_guids_from_store (helper->store);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "firmware is not for this hw: required %s got %s",
+			     fu_device_get_guid_default (device), guid);
+		return FALSE;
+	}
+
+	/* parse the DriverVer */
+	rel = as_app_get_release_default (app);
+	if (rel == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no releases in the firmware component");
+		return FALSE;
+	}
+
+	/* get the blob */
+	csum_tmp = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTENT);
+	tmp = as_checksum_get_filename (csum_tmp);
+	if (tmp == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no checksum filename");
+		return FALSE;
+	}
+
+	/* not all devices have to use the same blob */
+	blob_fw = as_release_get_blob (rel, tmp);
+	if (blob_fw == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
+				     "failed to get firmware blob");
+		return FALSE;
+	}
+
+	/* possibly convert the version from 0x to dotted */
+	fu_main_vendor_quirk_release_version (app);
+
+	version = as_release_get_version (rel);
+	fu_device_set_update_version (device, version);
+
+	/* compare to the lowest supported version, if it exists */
+	tmp = fu_device_get_version_lowest (device);
+	if (tmp != NULL && as_utils_vercmp (tmp, version) > 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_VERSION_NEWER,
+			     "Specified firmware is older than the minimum "
+			     "required version '%s < %s'", tmp, version);
+		return FALSE;
+	}
+
+	/* check the device is locked */
+	if (fu_device_has_flag (device, FU_DEVICE_FLAG_LOCKED)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Device %s is locked",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* compare the versions of what we have installed */
+	tmp = fu_device_get_version (device);
+	if (tmp == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Device %s does not yet have a current version",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+	vercmp = as_utils_vercmp (tmp, version);
+	if (vercmp == 0 && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_VERSION_SAME,
+			     "Specified firmware is already installed '%s'",
+			     tmp);
+		return FALSE;
+	}
+	is_downgrade = vercmp > 0;
+	if (is_downgrade && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_VERSION_NEWER,
+			     "Specified firmware is older than installed '%s < %s'",
+			     tmp, version);
+		return FALSE;
+	}
+
+	/* if any downgrade, we want the global to be true */
+	if (is_downgrade)
+		helper->is_downgrade = is_downgrade;
+
+	/* verify */
+	if (!fu_main_get_release_trust_flags (rel, &helper->trust_flags, error))
+		return FALSE;
+
+	/* success */
+	g_ptr_array_add (helper->blob_fws, g_bytes_ref (blob_fw));
+	return TRUE;
+}
+
+static gboolean
+fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
+{
 	guint i;
+	g_autoptr(GError) error_first = NULL;
 
 	/* load store file which also decompresses firmware */
 	fu_main_set_status (helper->priv, FWUPD_STATUS_DECOMPRESSING);
 	if (!as_store_from_bytes (helper->store, helper->blob_cab, NULL, error))
 		return FALSE;
 
-	/* if we've not chosen a device, try and find anything in the
-	 * cabinet 'store' that matches any installed device */
-	if (helper->devices->len == 0) {
-		for (i = 0; i < helper->priv->devices->len; i++) {
-			FuDeviceItem *item;
-			item = g_ptr_array_index (helper->priv->devices, i);
-			app = fu_main_store_get_app_by_guids (helper->store, item->device);
-			if (app != NULL) {
-				g_ptr_array_add (helper->devices,
-						 g_object_ref (item->device));
-			}
+	/* we've specified a specific device; failure is critical */
+	if (helper->devices->len > 0) {
+		for (i = 0; i < helper->devices->len; i ++) {
+			FuDevice *device = g_ptr_array_index (helper->devices, i);
+			if (!fu_main_update_helper_for_device (helper, device, error))
+				return FALSE;
 		}
+		return TRUE;
 	}
 
-	/* still nothing found */
+	/* if we've not chosen a device, try and find anything in the
+	 * cabinet 'store' that matches any installed device and is updatable */
+	for (i = 0; i < helper->priv->devices->len; i++) {
+		AsApp *app;
+		FuDeviceItem *item;
+		g_autoptr(GError) error_local = NULL;
+
+		/* guid found */
+		item = g_ptr_array_index (helper->priv->devices, i);
+		app = fu_main_store_get_app_by_guids (helper->store, item->device);
+		if (app == NULL)
+			continue;
+
+		/* try this device, error not fatal */
+		if (!fu_main_update_helper_for_device (helper,
+						       item->device,
+						       &error_local)) {
+			g_debug ("failed to add %s: %s",
+				 fu_device_get_id (item->device),
+				 error_local->message);
+
+			/* save this for later */
+			if (error_first == NULL)
+				error_first = g_error_copy (error_local);
+			continue;
+		}
+
+		/* success */
+		g_ptr_array_add (helper->devices, g_object_ref (item->device));
+	}
 	if (helper->devices->len == 0) {
 		g_autofree gchar *guid = NULL;
 		guid = fu_main_get_guids_from_store (helper->store);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "no attached hardware matched %s",
-			     guid);
-		return FALSE;
-	}
-
-	/* find an application from the cabinet 'store' for the device */
-	for (i = 0; i < helper->devices->len; i ++) {
-		gboolean is_downgrade;
-		GBytes *blob_fw;
-		FuDevice *device = g_ptr_array_index (helper->devices, i);
-		app = fu_main_store_get_app_by_guids (helper->store, device);
-		if (app == NULL) {
-			g_autofree gchar *guid = NULL;
-			guid = fu_main_get_guids_from_store (helper->store);
+		if (error_first != NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "firmware is not for this hw: required %s got %s",
-				     fu_device_get_guid_default (device), guid);
-			return FALSE;
-		}
-
-		/* parse the DriverVer */
-		rel = as_app_get_release_default (app);
-		if (rel == NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "no releases in the firmware component");
-			return FALSE;
-		}
-
-		/* get the blob */
-		csum_tmp = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTENT);
-		tmp = as_checksum_get_filename (csum_tmp);
-		if (tmp == NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "no checksum filename");
-			return FALSE;
-		}
-
-		/* not all devices have to use the same blob */
-		blob_fw = as_release_get_blob (rel, tmp);
-		if (blob_fw == NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_READ,
-					     "failed to get firmware blob");
-			return FALSE;
-		}
-		g_ptr_array_add (helper->blob_fws, g_bytes_ref (blob_fw));
-
-		/* possibly convert the version from 0x to dotted */
-		fu_main_vendor_quirk_release_version (app);
-
-		version = as_release_get_version (rel);
-		fu_device_set_update_version (device, version);
-
-		/* compare to the lowest supported version, if it exists */
-		tmp = fu_device_get_version_lowest (device);
-		if (tmp != NULL && as_utils_vercmp (tmp, version) > 0) {
+				     "no attached hardware matched %s: %s",
+				     guid, error_first->message);
+		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_VERSION_NEWER,
-				     "Specified firmware is older than the minimum "
-				     "required version '%s < %s'", tmp, version);
-			return FALSE;
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no attached hardware matched %s",
+				     guid);
 		}
-
-		/* check the device is locked */
-		if (fu_device_has_flag (device, FU_DEVICE_FLAG_LOCKED)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Device %s is locked",
-				     fu_device_get_id (device));
-			return FALSE;
-		}
-
-		/* compare the versions of what we have installed */
-		tmp = fu_device_get_version (device);
-		if (tmp == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Device %s does not yet have a current version",
-				     fu_device_get_id (device));
-			return FALSE;
-		}
-		vercmp = as_utils_vercmp (tmp, version);
-		if (vercmp == 0 && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_VERSION_SAME,
-				     "Specified firmware is already installed '%s'",
-				     tmp);
-			return FALSE;
-		}
-		is_downgrade = vercmp > 0;
-		if (is_downgrade && (helper->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_VERSION_NEWER,
-				     "Specified firmware is older than installed '%s < %s'",
-				     tmp, version);
-			return FALSE;
-		}
-
-		/* if any downgrade, we want the global to be true */
-		if (is_downgrade)
-			helper->is_downgrade = is_downgrade;
-
-		/* verify */
-		if (!fu_main_get_release_trust_flags (rel, &helper->trust_flags, error))
-			return FALSE;
+		return FALSE;
 	}
 
 	/* sanity check */
@@ -2138,7 +2183,24 @@ fu_main_provider_device_added_cb (FuProvider *provider,
 	FuDeviceItem *item;
 	AsApp *app;
 	FuPlugin *plugin;
+	g_auto(GStrv) guids = NULL;
 	g_autoptr(GError) error = NULL;
+
+	/* is this GUID blacklisted */
+	guids = g_key_file_get_string_list (priv->config,
+					    "fwupd",
+					    "BlacklistDevices",
+					    NULL, /* length */
+					    NULL);
+	if (guids != NULL &&
+	    g_strv_contains ((const gchar * const *) guids,
+			     fu_device_get_guid_default (device))) {
+		g_debug ("%s is blacklisted [%s], ignoring from %s",
+			 fu_device_get_id (device),
+			 fu_device_get_guid_default (device),
+			 fu_provider_get_name (provider));
+		return;
+	}
 
 	/* remove any fake device */
 	item = fu_main_get_item_by_id (priv, fu_device_get_id (device));
@@ -2261,7 +2323,6 @@ main (int argc, char *argv[])
 	};
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *config_file = NULL;
-	g_autoptr(GKeyFile) config = NULL;
 
 	setlocale (LC_ALL, "");
 
@@ -2316,10 +2377,10 @@ main (int argc, char *argv[])
 	}
 
 	/* read config file */
-	config = g_key_file_new ();
 	config_file = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
 	g_debug ("Loading fallback values from %s", config_file);
-	if (!g_key_file_load_from_file (config, config_file,
+	priv->config = g_key_file_new ();
+	if (!g_key_file_load_from_file (priv->config, config_file,
 					G_KEY_FILE_NONE, &error)) {
 		g_print ("failed to load config file %s: %s\n",
 			  config_file, error->message);
@@ -2329,7 +2390,7 @@ main (int argc, char *argv[])
 
 	/* add providers */
 	priv->providers = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	if (g_key_file_get_boolean (config, "fwupd", "EnableOptionROM", NULL))
+	if (g_key_file_get_boolean (priv->config, "fwupd", "EnableOptionROM", NULL))
 		fu_main_add_provider (priv, fu_provider_udev_new ());
 	fu_main_add_provider (priv, fu_provider_dfu_new ());
 	fu_main_add_provider (priv, fu_provider_rpi_new ());
@@ -2338,6 +2399,9 @@ main (int argc, char *argv[])
 #endif
 #ifdef HAVE_UEFI
 	fu_main_add_provider (priv, fu_provider_uefi_new ());
+#endif
+#ifdef HAVE_DELL
+	fu_main_add_provider (priv, fu_provider_dell_new ());
 #endif
 
 	/* last as least priority */
@@ -2394,6 +2458,8 @@ out:
 			g_object_unref (priv->proxy_uid);
 		if (priv->proxy_upower != NULL)
 			g_object_unref (priv->proxy_upower);
+		if (priv->config != NULL)
+			g_object_unref (priv->config);
 		if (priv->connection != NULL)
 			g_object_unref (priv->connection);
 		if (priv->authority != NULL)
