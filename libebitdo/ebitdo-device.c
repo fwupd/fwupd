@@ -353,7 +353,7 @@ ebitdo_device_open (EbitdoDevice *device, GError **error)
 {
 	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
 	gdouble tmp;
-	guint32 version_tmp;
+	guint32 version_tmp = 0;
 	guint32 serial_tmp[9];
 	guint i;
 
@@ -413,6 +413,7 @@ ebitdo_device_open (EbitdoDevice *device, GError **error)
 				 error)) {
 		return FALSE;
 	}
+	memset (serial_tmp, 0x00, sizeof (serial_tmp));
 	if (!ebitdo_device_receive (device,
 				    (guint8 *) &serial_tmp, sizeof(serial_tmp),
 				    error)) {
