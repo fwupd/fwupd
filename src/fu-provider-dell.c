@@ -618,7 +618,6 @@ fu_provider_dell_device_removed_cb (GUsbContext *ctx,
 	const efi_guid_t *guid_raw;
 	guint16 pid;
 	guint16 vid;
-	guint i;
 
 	g_autofree gchar *guid_str = NULL;
 
