@@ -13,6 +13,7 @@ AM_INIT_AUTOMAKE([1.9 no-dist-gzip dist-xz tar-ustar foreign])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_LIBTOOL
+AC_PROG_CC_STDC
 
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [GOBJECT_INTROSPECTION_CHECK([0.9.8])])
 AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyes)
@@ -222,6 +223,8 @@ AC_CONFIG_FILES([
 Makefile
 libdfu/Makefile
 libdfu/dfu.pc
+libebitdo/Makefile
+libebitdo/ebitdo.pc
 libfwupd/fwupd-version.h
 libfwupd/fwupd.pc
 libfwupd/Makefile

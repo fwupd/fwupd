@@ -92,8 +92,6 @@ fu_util_add (GPtrArray *array,
 	     const gchar *description,
 	     FuUtilPrivateCb callback)
 {
-	guint i;
-	FuUtilItem *item;
 	g_auto(GStrv) names = NULL;
 
 	g_return_if_fail (name != NULL);
@@ -102,8 +100,8 @@ fu_util_add (GPtrArray *array,
 
 	/* add each one */
 	names = g_strsplit (name, ",", -1);
-	for (i = 0; names[i] != NULL; i++) {
-		item = g_new0 (FuUtilItem, 1);
+	for (guint i = 0; names[i] != NULL; i++) {
+		FuUtilItem *item = g_new0 (FuUtilItem, 1);
 		item->name = g_strdup (names[i]);
 		if (i == 0) {
 			item->description = g_strdup (description);
@@ -121,17 +119,14 @@ fu_util_add (GPtrArray *array,
 static gchar *
 fu_util_get_descriptions (GPtrArray *array)
 {
-	guint i;
-	guint j;
 	guint len;
 	const guint max_len = 35;
-	FuUtilItem *item;
 	GString *string;
 
 	/* print each command */
 	string = g_string_new ("");
-	for (i = 0; i < array->len; i++) {
-		item = g_ptr_array_index (array, i);
+	for (guint i = 0; i < array->len; i++) {
+		FuUtilItem *item = g_ptr_array_index (array, i);
 		g_string_append (string, "  ");
 		g_string_append (string, item->name);
 		len = strlen (item->name) + 2;
@@ -141,13 +136,13 @@ fu_util_get_descriptions (GPtrArray *array)
 			len += strlen (item->arguments) + 1;
 		}
 		if (len < max_len) {
-			for (j = len; j < max_len + 1; j++)
+			for (guint j = len; j < max_len + 1; j++)
 				g_string_append_c (string, ' ');
 			g_string_append (string, item->description);
 			g_string_append_c (string, '\n');
 		} else {
 			g_string_append_c (string, '\n');
-			for (j = 0; j < max_len + 1; j++)
+			for (guint j = 0; j < max_len + 1; j++)
 				g_string_append_c (string, ' ');
 			g_string_append (string, item->description);
 			g_string_append_c (string, '\n');
@@ -164,12 +159,9 @@ fu_util_get_descriptions (GPtrArray *array)
 static gboolean
 fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError **error)
 {
-	guint i;
-	FuUtilItem *item;
-
 	/* find command */
-	for (i = 0; i < priv->cmd_array->len; i++) {
-		item = g_ptr_array_index (priv->cmd_array, i);
+	for (guint i = 0; i < priv->cmd_array->len; i++) {
+		FuUtilItem *item = g_ptr_array_index (priv->cmd_array, i);
 		if (g_strcmp0 (item->name, command) == 0)
 			return item->callback (priv, values, error);
 	}
@@ -225,8 +217,6 @@ fu_util_status_changed_cb (FwupdClient *client,
 static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	FwupdResult *res;
-	guint i;
 	g_autoptr(GPtrArray) results = NULL;
 
 	/* get results from daemon */
@@ -241,9 +231,9 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	for (i = 0; i < results->len; i++) {
+	for (guint i = 0; i < results->len; i++) {
 		g_autofree gchar *tmp = NULL;
-		res = g_ptr_array_index (results, i);
+		FwupdResult *res = g_ptr_array_index (results, i);
 		tmp = fwupd_result_to_string (res);
 		g_print ("%s\n", tmp);
 	}
@@ -302,7 +292,6 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	guint i;
 	g_autoptr(GPtrArray) array = NULL;
 
 	/* check args */
@@ -316,7 +305,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	array = fwupd_client_get_details_local (priv->client, values[0], NULL, error);
 	if (array == NULL)
 		return FALSE;
-	for (i = 0; i < array->len; i++) {
+	for (guint i = 0; i < array->len; i++) {
 		FwupdResult *res = g_ptr_array_index (array, i);
 		g_autofree gchar *tmp = NULL;
 		tmp = fwupd_result_to_string (res);
@@ -356,7 +345,6 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	gint vercmp;
 	guint cnt = 0;
-	guint i;
 	g_autofree gchar *link = NULL;
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(FuPending) pending = NULL;
@@ -399,9 +387,8 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* apply each update */
-	for (i = 0; i < results->len; i++) {
-		FwupdResult *res;
-		res = g_ptr_array_index (results, i);
+	for (guint i = 0; i < results->len; i++) {
+		FwupdResult *res = g_ptr_array_index (results, i);
 
 		/* check not already done */
 		if (fwupd_result_get_update_state (res) != FWUPD_UPDATE_STATE_PENDING)
@@ -476,8 +463,6 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	guint i;
-
 	if (g_strv_length (values) == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -485,7 +470,7 @@ fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments: expected 'filename.rom'");
 		return FALSE;
 	}
-	for (i = 0; values[i] != NULL; i++) {
+	for (guint i = 0; values[i] != NULL; i++) {
 		g_autoptr(FuRom) rom = NULL;
 		g_autoptr(GFile) file = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -513,7 +498,6 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 				gchar **values,
 				GError **error)
 {
-	guint i;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GFile) xml_file = NULL;
 
@@ -528,7 +512,7 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 
 	/* add new values */
 	as_store_set_api_version (store, 0.9);
-	for (i = 0; values[i] != NULL; i++) {
+	for (guint i = 0; values[i] != NULL; i++) {
 		g_autofree gchar *id = NULL;
 		g_autoptr(AsApp) app = NULL;
 		g_autoptr(AsChecksum) csum = NULL;
@@ -581,22 +565,19 @@ fu_util_verify_update_internal (FuUtilPrivate *priv,
 static gboolean
 fu_util_verify_update_all (FuUtilPrivate *priv, const gchar *fn, GError **error)
 {
-	GList *devices;
-	GList *l;
 	GUdevDevice *dev;
 	const gchar *devclass[] = { "pci", NULL };
 	const gchar *subsystems[] = { NULL };
-	guint i;
 	g_autoptr(GUdevClient) gudev_client = NULL;
 	g_autoptr(GPtrArray) roms = NULL;
 
 	/* get all devices of class */
 	gudev_client = g_udev_client_new (subsystems);
 	roms = g_ptr_array_new_with_free_func (g_free);
-	for (i = 0; devclass[i] != NULL; i++) {
-		devices = g_udev_client_query_by_subsystem (gudev_client,
+	for (guint i = 0; devclass[i] != NULL; i++) {
+		GList *devices = g_udev_client_query_by_subsystem (gudev_client,
 							    devclass[i]);
-		for (l = devices; l != NULL; l = l->next) {
+		for (GList *l = devices; l != NULL; l = l->next) {
 			g_autofree gchar *rom_fn = NULL;
 			dev = l->data;
 			rom_fn = g_build_filename (g_udev_device_get_sysfs_path (dev), "rom", NULL);
@@ -805,8 +786,6 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 {
-	FwupdResult *res;
-	guint i;
 	g_autoptr(GPtrArray) results = NULL;
 
 	/* get devices from daemon */
@@ -815,9 +794,9 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 		return FALSE;
 
 	/* get results */
-	for (i = 0; i < results->len; i++) {
+	for (guint i = 0; i < results->len; i++) {
 		g_autoptr(GError) error_local = NULL;
-		res = g_ptr_array_index (results, i);
+		FwupdResult *res = g_ptr_array_index (results, i);
 		if (!fwupd_client_verify (priv->client,
 					  fwupd_result_get_device_id (res),
 					  NULL,
@@ -865,8 +844,6 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 static void
 fu_util_print_data (const gchar *title, const gchar *msg)
 {
-	guint i;
-	guint j;
 	guint title_len;
 	g_auto(GStrv) lines = NULL;
 
@@ -877,8 +854,8 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 	/* pad */
 	title_len = strlen (title) + 1;
 	lines = g_strsplit (msg, "\n", -1);
-	for (j = 0; lines[j] != NULL; j++) {
-		for (i = title_len; i < 25; i++)
+	for (guint j = 0; lines[j] != NULL; j++) {
+		for (guint i = title_len; i < 25; i++)
 			g_print (" ");
 		g_print ("%s\n", lines[j]);
 		title_len = 0;
@@ -902,19 +879,17 @@ _g_checksum_type_to_string (GChecksumType checksum_type)
 static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	FwupdResult *res;
 	GPtrArray *results = NULL;
 	GPtrArray *guids;
 	GChecksumType checksum_type;
 	const gchar *tmp;
-	guint i, j;
 
 	/* print any updates */
 	results = fwupd_client_get_updates (priv->client, NULL, error);
 	if (results == NULL)
 		return FALSE;
-	for (i = 0; i < results->len; i++) {
-		res = g_ptr_array_index (results, i);
+	for (guint i = 0; i < results->len; i++) {
+		FwupdResult *res = g_ptr_array_index (results, i);
 
 		/* TRANSLATORS: first replacement is device name */
 		g_print (_("%s has firmware updates:"), fwupd_result_get_device_name (res));
@@ -925,7 +900,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* TRANSLATORS: a GUID for the hardware */
 		guids = fwupd_result_get_guids (res);
-		for (j = 0; j < guids->len; j++) {
+		for (guint j = 0; j < guids->len; j++) {
 			tmp = g_ptr_array_index (guids, j);
 			fu_util_print_data (_("GUID"), tmp);
 		}
@@ -1039,22 +1014,20 @@ fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	FwupdResult *res;
 	GPtrArray *results = NULL;
-	guint i;
 
 	/* apply any updates */
 	results = fwupd_client_get_updates (priv->client, NULL, error);
 	if (results == NULL)
 		return FALSE;
-	for (i = 0; i < results->len; i++) {
+	for (guint i = 0; i < results->len; i++) {
 		GChecksumType checksum_type;
 		const gchar *checksum;
 		const gchar *uri;
 		g_autofree gchar *basename = NULL;
 		g_autofree gchar *fn = NULL;
 
-		res = g_ptr_array_index (results, i);
+		FwupdResult *res = g_ptr_array_index (results, i);
 
 		/* download file */
 		checksum = fwupd_result_get_update_checksum (res);
