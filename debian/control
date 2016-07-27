@@ -68,6 +68,22 @@ Description: Firmware update daemon library for DFU support
  .
  This package provides the library used by the daemon for DFU support.
 
+Package: libebitdo
+Architecture: linux-any
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Multi-Arch: same
+Description: Firmware update daemon library for 0bitdo support
+ fwupd is a daemon to allow session software to update device firmware.
+ You can either use a GUI software manager like GNOME Software to view and
+ apply updates, the command-line tool or the system D-Bus interface directly.
+ Currently, firmware updates using the UEFI capsule format and for the
+ ColorHug are supported. More formats may be supported in the future.
+ See <https://github.com/hughsie/fwupd> for details
+ .
+ This package provides the library used by the daemon for 0bitdo device
+ support.
+
 Package: fwupd
 Architecture: linux-any
 Depends: ${misc:Depends},
@@ -147,3 +163,19 @@ Description: development files for libdfu
  See <https://github.com/hughsie/fwupd> for details
  .
  This package provides the development files for libdfu
+
+Package: libebitdo-dev
+Architecture: linux-any
+Multi-Arch: same
+Depends: libdfu1 (= ${binary:Version}),
+         ${misc:Depends}
+Section: libdevel
+Description: development files for libebitdo
+ fwupd is a daemon to allow session software to update device firmware.
+ You can either use a GUI software manager like GNOME Software to view and
+ apply updates, the command-line tool or the system D-Bus interface directly.
+ Currently, firmware updates using the UEFI capsule format and for the
+ ColorHug are supported. More formats may be supported in the future.
+ See <https://github.com/hughsie/fwupd> for details
+ .
+ This package provides the development files for libebitdo
