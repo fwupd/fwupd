@@ -167,7 +167,6 @@ make check VERBOSE=1
 
 %files -n libebitdo-devel
 %{_datadir}/gir-1.0/Dfu-1.0.gir
-%{_datadir}/gtk-doc/html/libebitdo
 %dir %{_includedir}/libebitdo
 %{_includedir}/ebitdo.h
 %{_includedir}/libebitdo/*.h
