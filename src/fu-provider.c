@@ -135,14 +135,14 @@ fu_provider_schedule_update (FuProvider *provider,
 
 	/* get a random filename */
 	for (guint i = 0; i < 6; i++)
-		tmpname[i] = g_random_int_range ('A', 'Z');
+		tmpname[i] = (gchar) g_random_int_range ('A', 'Z');
 	filename = g_build_filename (dirname, tmpname, NULL);
 
 	/* just copy to the temp file */
 	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
 	if (!g_file_set_contents (filename,
 				  g_bytes_get_data (blob_cab, NULL),
-				  g_bytes_get_size (blob_cab),
+				  (gssize) g_bytes_get_size (blob_cab),
 				  error))
 		return FALSE;
 
@@ -200,7 +200,7 @@ fu_provider_unlock (FuProvider *provider,
 	/* update with correct flags */
 	flags = fu_device_get_flags (device);
 	fu_device_set_flags (device, flags &= ~FU_DEVICE_FLAG_LOCKED);
-	fu_device_set_modified (device, g_get_real_time () / G_USEC_PER_SEC);
+	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	return TRUE;
 }
 
@@ -389,7 +389,7 @@ fu_provider_device_add (FuProvider *provider, FuDevice *device)
 	g_debug ("emit added from %s: %s",
 		 fu_provider_get_name (provider),
 		 fu_device_get_id (device));
-	fu_device_set_created (device, g_get_real_time () / G_USEC_PER_SEC);
+	fu_device_set_created (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	fu_device_set_provider (device, fu_provider_get_name (provider));
 	g_signal_emit (provider, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }

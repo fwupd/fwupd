@@ -301,7 +301,7 @@ dfu_element_from_dfuse (const guint8 *data,
 
 	/* return size */
 	if (consumed != NULL)
-		*consumed = sizeof(DfuSeElementPrefix) + size;
+		*consumed = (guint32) sizeof(DfuSeElementPrefix) + size;
 
 	return element;
 }

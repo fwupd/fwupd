@@ -40,7 +40,7 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	GUsbDeviceClaimInterfaceFlags flags;
 	const gchar *platform_id;
-	const guint iface_idx = 0x00;
+	const guint8 iface_idx = 0x00;
 	gboolean ret;
 	gsize actual_len = 0;
 	guint8 data[32];

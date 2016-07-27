@@ -132,7 +132,7 @@ dfu_firmware_raw_func (void)
 
 	/* set up some dummy data */
 	for (i = 0; i < 256; i++)
-		buf[i] = i;
+		buf[i] = (gchar) i;
 	fw = g_bytes_new_static (buf, 256);
 
 	/* load a non DFU firmware */
@@ -182,7 +182,7 @@ dfu_firmware_dfu_func (void)
 
 	/* set up some dummy data */
 	for (i = 0; i < 256; i++)
-		buf[i] = i;
+		buf[i] = (gchar) i;
 	fw = g_bytes_new_static (buf, 256);
 
 	/* write DFU format */

@@ -552,7 +552,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 			return FALSE;
 
 		/* make the UI update */
-		fu_device_set_modified (item->device, g_get_real_time () / G_USEC_PER_SEC);
+		fu_device_set_modified (item->device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 		fu_main_emit_device_changed (helper->priv, item->device);
 	}
 
@@ -679,7 +679,7 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 			continue;
 
 		/* convert to dotted decimal */
-		version_new = as_utils_version_from_uint32 (ver_uint32, flags);
+		version_new = as_utils_version_from_uint32 ((guint32) ver_uint32, flags);
 		as_release_set_version (rel, version_new);
 	}
 }
@@ -900,7 +900,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "not enough firmware blobs (%i) for devices (%i)",
+			     "not enough firmware blobs (%u) for devices (%u)",
 			     helper->blob_fws->len,
 			     helper->devices->len);
 		return FALSE;
@@ -1146,7 +1146,7 @@ fu_main_store_delay_cb (gpointer user_data)
 		g_debug ("devices now in store:");
 		for (guint i = 0; i < apps->len; i++) {
 			AsApp *app = g_ptr_array_index (apps, i);
-			g_debug ("%i\t%s\t%s", i + 1,
+			g_debug ("%u\t%s\t%s", i + 1,
 				 as_app_get_id (app),
 				 as_app_get_name (app, NULL));
 		}
@@ -2274,7 +2274,7 @@ main (int argc, char *argv[])
 	gboolean timed_exit = FALSE;
 	GOptionContext *context;
 	guint owner_id = 0;
-	guint retval = 1;
+	gint retval = 1;
 	const GOptionEntry options[] = {
 		{ "timed-exit", '\0', 0, G_OPTION_ARG_NONE, &timed_exit,
 		  /* TRANSLATORS: exit after we've started up, used for user profiling */

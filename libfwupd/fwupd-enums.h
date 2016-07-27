@@ -86,17 +86,15 @@ typedef enum {
  *
  * The device flags.
  **/
-typedef enum {
-	FU_DEVICE_FLAG_NONE		= 0,		/* Since: 0.1.3 */
-	FU_DEVICE_FLAG_INTERNAL		= 1 << 0,	/* Since: 0.1.3 */
-	FU_DEVICE_FLAG_ALLOW_ONLINE	= 1 << 1,	/* Since: 0.1.3 */
-	FU_DEVICE_FLAG_ALLOW_OFFLINE	= 1 << 2,	/* Since: 0.1.3 */
-	FU_DEVICE_FLAG_REQUIRE_AC	= 1 << 3,	/* Since: 0.6.3 */
-	FU_DEVICE_FLAG_LOCKED		= 1 << 4,	/* Since: 0.6.3 */
-	FU_DEVICE_FLAG_SUPPORTED	= 1 << 5,	/* Since: 0.7.1 */
-	/*< private >*/
-	FU_DEVICE_FLAG_LAST
-} FwupdDeviceFlags;
+#define FU_DEVICE_FLAG_NONE		(0u)		/* Since: 0.1.3 */
+#define FU_DEVICE_FLAG_INTERNAL		(1u << 0)	/* Since: 0.1.3 */
+#define FU_DEVICE_FLAG_ALLOW_ONLINE	(1u << 1)	/* Since: 0.1.3 */
+#define FU_DEVICE_FLAG_ALLOW_OFFLINE	(1u << 2)	/* Since: 0.1.3 */
+#define FU_DEVICE_FLAG_REQUIRE_AC	(1u << 3)	/* Since: 0.6.3 */
+#define FU_DEVICE_FLAG_LOCKED		(1u << 4)	/* Since: 0.6.3 */
+#define FU_DEVICE_FLAG_SUPPORTED	(1u << 5)	/* Since: 0.7.1 */
+#define FU_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
+typedef guint64 FwupdDeviceFlags;
 
 /**
  * FwupdInstallFlags:

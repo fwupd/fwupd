@@ -228,14 +228,14 @@ static gboolean
 fu_provider_dell_execute_smi (FuProviderDell *provider_dell, fu_dell_smi_obj *smi)
 {
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
-	guint ret;
+	gint ret;
 
 	if (priv->fake_smbios)
 		return TRUE;
 
 	ret = dell_smi_obj_execute (smi);
 	if (ret != 0) {
-		g_debug ("Dell: SMI execution failed: %d", ret);
+		g_debug ("Dell: SMI execution failed: %i", ret);
 		return FALSE;
 	}
 	return TRUE;
@@ -243,7 +243,7 @@ fu_provider_dell_execute_smi (FuProviderDell *provider_dell, fu_dell_smi_obj *sm
 
 static gboolean
 fu_provider_dell_execute_simple_smi (FuProviderDell *provider_dell,
-				     guint32 class, guint32 select,
+				     guint16 class, guint16 select,
 				     guint32  *args, guint32 *out)
 {
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
@@ -254,7 +254,7 @@ fu_provider_dell_execute_simple_smi (FuProviderDell *provider_dell,
 		return TRUE;
 	}
 	if (dell_simple_ci_smi (class, select, args, out)) {
-		g_debug ("Dell: failed to run query %d/%d", class, select);
+		g_debug ("Dell: failed to run query %u/%u", class, select);
 		return FALSE;
 	}
 	return TRUE;
@@ -262,7 +262,7 @@ fu_provider_dell_execute_simple_smi (FuProviderDell *provider_dell,
 
 static guint32
 fu_provider_dell_get_res (FuProviderDell *provider_dell,
-			  fu_dell_smi_obj *smi, guint32 arg)
+			  fu_dell_smi_obj *smi, guint8 arg)
 {
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
 
@@ -290,7 +290,7 @@ fu_provider_dell_detect_dock (FuProviderDell *provider_dell, guint32 *location)
 		return FALSE;
 	if (count_out->ret != 0) {
 		g_debug ("Dell: Failed to query system for dock count: "
-			 "(%d)", count_out->ret);
+			 "(%" G_GUINT32_FORMAT ")", count_out->ret);
 		return FALSE;
 	}
 	if (count_out->count < 1) {
@@ -469,7 +469,7 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 	result = fu_provider_dell_get_res (provider_dell, smi, cbARG1);
 	if (result != SMI_SUCCESS) {
 		if (result == SMI_INVALID_BUFFER) {
-			g_debug ("Dell: Invalid buffer size, sent %d, needed %d",
+			g_debug ("Dell: Invalid buffer size, sent %u, needed %" G_GUINT32_FORMAT,
 				 buf_size,
 				 fu_provider_dell_get_res (provider_dell, smi, cbARG2));
 		} else {
@@ -491,17 +491,17 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 	g_debug ("Dell: dock flash pkg ver: 0x%x", dock_info->flash_pkg_version);
 	if (dock_info->flash_pkg_version == 0x00ffffff)
 		g_debug ("Dell: WARNING: dock flash package version invalid");
-	g_debug ("Dell: dock cable type: %d", dock_info->cable_type);
+	g_debug ("Dell: dock cable type: %" G_GUINT32_FORMAT, dock_info->cable_type);
 	g_debug ("Dell: dock location: %d", dock_info->location);
 	g_debug ("Dell: dock component count: %d", dock_info->component_count);
 	parse_flags = fu_provider_dell_get_version_format ();
 
 	for (guint i = 0; i < dock_info->component_count; i++) {
 		if (i > MAX_COMPONENTS) {
-			g_debug ("Dell: Too many components.  Invalid: #%d", i);
+			g_debug ("Dell: Too many components.  Invalid: #%u", i);
 			break;
 		}
-		g_debug ("Dell: dock component %d: %s (version 0x%x)", i,
+		g_debug ("Dell: dock component %u: %s (version 0x%x)", i,
 			 dock_info->components[i].description,
 			 dock_info->components[i].fw_version);
 		query_str = g_strrstr (dock_info->components[i].description,
@@ -755,7 +755,7 @@ fu_provider_dell_detect_tpm (FuProvider *provider, GError **error)
 
 	if (out->ret != 0) {
 		g_debug ("Dell: Failed to query system for TPM information: "
-			 "(%d)", out->ret);
+			 "(%" G_GUINT32_FORMAT ")", out->ret);
 		return FALSE;
 	}
 	/* HW version is output in second /input/ arg
@@ -783,7 +783,7 @@ fu_provider_dell_detect_tpm (FuProvider *provider, GError **error)
 	}
 
 	if (!priv->fake_smbios)
-		system_id = sysinfo_get_dell_system_id ();
+		system_id = (guint16) sysinfo_get_dell_system_id ();
 
 	for (guint i = 0; i < G_N_ELEMENTS(tpm_switch_blacklist); i++) {
 		if (tpm_switch_blacklist[i] == system_id) {
@@ -907,7 +907,7 @@ fu_provider_dell_coldplug (FuProvider *provider, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Dell: UEFI capsule firmware updating not supported (%x)",
-			     uefi_supported);
+			     (guint) uefi_supported);
 		return FALSE;
 	}
 
@@ -1002,13 +1002,13 @@ fu_provider_dell_update (FuProvider *provider,
 	flashes_left = fu_device_get_flashes_left (device);
 	if (flashes_left > 0) {
 		name = fu_device_get_name (device);
-		g_debug ("Dell: %s has %d flashes left", name, flashes_left);
+		g_debug ("Dell: %s has %u flashes left", name, flashes_left);
 		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
 			   flashes_left <= 2) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "WARNING: %s only has %d flashes left. "
+				     "WARNING: %s only has %u flashes left. "
 				     "To update anyway please run the update with --force.",
 				     name, flashes_left);
 			return FALSE;

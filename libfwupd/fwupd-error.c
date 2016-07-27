@@ -118,9 +118,8 @@ fwupd_error_quark (void)
 {
 	static GQuark quark = 0;
 	if (!quark) {
-		guint i;
 		quark = g_quark_from_static_string ("FwupdError");
-		for (i = 0; i < FWUPD_ERROR_LAST; i++) {
+		for (gint i = 0; i < FWUPD_ERROR_LAST; i++) {
 			g_dbus_error_register_error (quark, i,
 						     fwupd_error_to_string (i));
 		}

@@ -119,8 +119,8 @@ fu_util_add (GPtrArray *array,
 static gchar *
 fu_util_get_descriptions (GPtrArray *array)
 {
-	guint len;
-	const guint max_len = 35;
+	gsize len;
+	const gsize max_len = 35;
 	GString *string;
 
 	/* print each command */
@@ -136,13 +136,13 @@ fu_util_get_descriptions (GPtrArray *array)
 			len += strlen (item->arguments) + 1;
 		}
 		if (len < max_len) {
-			for (guint j = len; j < max_len + 1; j++)
+			for (gsize j = len; j < max_len + 1; j++)
 				g_string_append_c (string, ' ');
 			g_string_append (string, item->description);
 			g_string_append_c (string, '\n');
 		} else {
 			g_string_append_c (string, '\n');
-			for (guint j = 0; j < max_len + 1; j++)
+			for (gsize j = 0; j < max_len + 1; j++)
 				g_string_append_c (string, ' ');
 			g_string_append (string, item->description);
 			g_string_append_c (string, '\n');
@@ -664,7 +664,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 	if (checksum_expected != NULL) {
 		checksum_actual = g_compute_checksum_for_data (checksum_type,
 							       (guchar *) msg->response_body->data,
-							       msg->response_body->length);
+							       (gsize) msg->response_body->length);
 		if (g_strcmp0 (checksum_expected, checksum_actual) != 0) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -844,7 +844,7 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 static void
 fu_util_print_data (const gchar *title, const gchar *msg)
 {
-	guint title_len;
+	gsize title_len;
 	g_auto(GStrv) lines = NULL;
 
 	if (msg == NULL)
@@ -855,7 +855,7 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 	title_len = strlen (title) + 1;
 	lines = g_strsplit (msg, "\n", -1);
 	for (guint j = 0; lines[j] != NULL; j++) {
-		for (guint i = title_len; i < 25; i++)
+		for (gsize i = title_len; i < 25; i++)
 			g_print (" ");
 		g_print ("%s\n", lines[j]);
 		title_len = 0;
@@ -1079,7 +1079,7 @@ main (int argc, char *argv[])
 	gboolean offline = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
-	guint retval = 1;
+	gint rc = 1;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *cmd_descriptions = NULL;
 	const GOptionEntry options[] = {
@@ -1264,7 +1264,7 @@ main (int argc, char *argv[])
 	}
 
 	/* success */
-	retval = 0;
+	rc = 0;
 out:
 	if (priv != NULL) {
 		if (priv->cmd_array != NULL)
@@ -1276,5 +1276,5 @@ out:
 		g_option_context_free (priv->context);
 		g_free (priv);
 	}
-	return retval;
+	return rc;
 }

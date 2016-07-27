@@ -86,12 +86,10 @@ ebitdo_pkt_cmd_to_string (EbitdoPktCmd cmd)
 void
 ebitdo_dump_raw (const gchar *title, const guint8 *data, gsize len)
 {
-	guint i;
-
 	g_print ("%s:", title);
-	for (i = strlen (title); i < 16; i++)
+	for (gsize i = strlen (title); i < 16; i++)
 		g_print (" ");
-	for (i = 0; i < len; i++) {
+	for (gsize i = 0; i < len; i++) {
 		g_print ("%02x ", data[i]);
 		if (i > 0 && i % 32 == 0)
 			g_print ("\n");
@@ -121,6 +119,6 @@ ebitdo_dump_firmware_header (EbitdoFirmwareHeader *hdr)
 		 (gdouble) GUINT32_FROM_LE (hdr->version) / 100.f);
 	g_print ("Destination Address: %x\n",
 		 GUINT32_FROM_LE (hdr->destination_addr));
-	g_print ("Destination Length:  %i\n",
+	g_print ("Destination Length:  %" G_GUINT32_FORMAT "\n",
 		 GUINT32_FROM_LE (hdr->destination_len));
 }

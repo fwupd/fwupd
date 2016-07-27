@@ -96,7 +96,7 @@ fu_rom_kind_to_string (FuRomKind kind)
 static guint8 *
 fu_rom_pci_strstr (FuRomPciHeader *hdr, const gchar *needle)
 {
-	guint needle_len;
+	gsize needle_len;
 	guint8 *haystack;
 	gsize haystack_len;
 
@@ -136,8 +136,7 @@ fu_rom_blank_serial_numbers (guint8 *buffer, guint buffer_sz)
 static gchar *
 fu_rom_get_hex_dump (guint8 *buffer, gssize sz)
 {
-	GString *str = NULL;
-	str = g_string_new ("");
+	GString *str = g_string_new ("");
 	if (sz <= 0)
 		return NULL;
 	for (guint i = 0; i < (guint) sz; i++)
@@ -146,7 +145,7 @@ fu_rom_get_hex_dump (guint8 *buffer, gssize sz)
 	for (guint i = 0; i < (guint) sz; i++) {
 		gchar tmp = '?';
 		if (g_ascii_isprint (buffer[i]))
-			tmp = buffer[i];
+			tmp = (gchar) buffer[i];
 		g_string_append_printf (str, "%c", tmp);
 	}
 	return g_string_free (str, FALSE);
@@ -179,14 +178,14 @@ fu_rom_pci_print_certificate_data (guint8 *buffer, gssize sz)
 		segment_str = fu_rom_get_hex_dump (buffer+off, 29);
 		g_debug ("     ISBN segment @%02x: %s", off, segment_str);
 		h.segment_kind = buffer[off+1];
-		h.next_offset = ((guint16) buffer[off+14] << 8) + buffer[off+13];
+		h.next_offset = (guint16) (((guint16) buffer[off+14] << 8) + buffer[off+13]);
 		h.data = &buffer[off+29];
 
 		/* calculate last block length automatically */
 		if (h.next_offset == 0)
-			h.data_len = sz - off - 29 - 27;
+			h.data_len = (guint16) (sz - off - 29 - 27);
 		else
-			h.data_len = h.next_offset - off - 29;
+			h.data_len = (guint16) (h.next_offset - off - 29);
 
 		/* print the certificate */
 		if (h.segment_kind == 0x01) {
@@ -305,8 +304,8 @@ fu_rom_extract_all (FuRom *rom, const gchar *path, GError **error)
 	for (guint i = 0; i < priv->hdrs->len; i++) {
 		g_autofree gchar *fn = NULL;
 		hdr = g_ptr_array_index (priv->hdrs, i);
-		fn = g_strdup_printf ("%s/%02i.bin", path, i);
-		g_debug ("dumping ROM #%i at 0x%04x [0x%02x] to %s",
+		fn = g_strdup_printf ("%s/%02u.bin", path, i);
+		g_debug ("dumping ROM #%u at 0x%04x [0x%02x] to %s",
 			 i, hdr->rom_offset, hdr->rom_len, fn);
 		if (hdr->rom_len == 0)
 			continue;
@@ -340,7 +339,8 @@ fu_rom_find_and_blank_serial_numbers (FuRom *rom)
 			guint len;
 			guint8 chk;
 			len = fu_rom_blank_serial_numbers (tmp, hdr->rom_len - hdr->data_len);
-			g_debug ("cleared %i chars @ 0x%04lx", len, tmp - &hdr->rom_data[hdr->data_len]);
+			g_debug ("cleared %u chars @ 0x%04lx",
+				 len, (gulong) (tmp - &hdr->rom_data[hdr->data_len]));
 
 			/* we have to fix the checksum */
 			chk = fu_rom_pci_header_get_checksum (hdr);
@@ -434,7 +434,7 @@ fu_rom_pci_get_header (guint8 *buffer, gssize sz)
 	/* fix up misreporting */
 	if (hdr->rom_len == 0) {
 		g_debug ("fixing up last image size");
-		hdr->rom_len = sz;
+		hdr->rom_len = (guint32) sz;
 	}
 
 	/* copy this locally to the header */
@@ -558,7 +558,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 	const gssize buffer_sz = 0x400000;
 	gssize sz;
 	guint32 jump = 0;
-	guint hdr_sz = 0;
+	guint32 hdr_sz = 0;
 	guint number_reads = 0;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *fn = NULL;
@@ -594,7 +594,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 	}
 
 	/* read out the header */
-	buffer = g_malloc (buffer_sz);
+	buffer = g_malloc ((gsize) buffer_sz);
 	sz = g_input_stream_read (priv->stream, buffer, buffer_sz,
 				  cancellable, error);
 	if (sz < 0)
@@ -662,7 +662,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 				hdr->code_type = 0x00;
 				hdr->last_image = 0x80;
 				hdr->rom_offset = hdr_sz + jump;
-				hdr->rom_len = sz - hdr->rom_offset;
+				hdr->rom_len = (guint32) (sz - hdr->rom_offset);
 				hdr->rom_data = g_memdup (&buffer[hdr->rom_offset], hdr->rom_len);
 				hdr->image_len = hdr->rom_len;
 				g_ptr_array_add (priv->hdrs, hdr);
@@ -712,7 +712,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 
 	/* detect intel header */
 	if (memcmp (hdr->reserved, "00000000000", 11) == 0)
-		hdr_sz = (buffer[0x1b] << 8) + buffer[0x1a];
+		hdr_sz = (guint32) (((guint16) buffer[0x1b] << 8) + buffer[0x1a]);
 	if (hdr_sz > sz) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,

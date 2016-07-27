@@ -56,7 +56,7 @@ typedef struct {
 	DfuContext		*context;		/* not refcounted */
 	DfuDevice		*device;		/* not refcounted */
 	guint			 timeout_id;
-	guint			 state_change_id;
+	gulong			 state_change_id;
 } DfuContextItem;
 
 enum {

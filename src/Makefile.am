@@ -61,7 +61,7 @@ fwupdmgr_LDFLAGS =					\
 fwupdmgr_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
 	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
 
 fu-resources.c: fwupd.gresource.xml $(dist_introspection_DATA)
 	$(AM_V_GEN)					\
@@ -153,7 +153,7 @@ fwupd_LDFLAGS =						\
 fwupd_CFLAGS =						\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
 	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
 
 TESTS_ENVIRONMENT =					\
 	libtool --mode=execute valgrind			\
@@ -196,7 +196,7 @@ fu_self_test_LDADD =					\
 fu_self_test_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"/tmp/fwupd-self-test\"	\
 	-DLOCALSTATEDIR=\"/tmp/fwupd-self-test/var\"	\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
 
 if HAVE_DELL
 fwupd_SOURCES +=					\

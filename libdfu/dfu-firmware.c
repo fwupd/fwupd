@@ -457,7 +457,7 @@ dfu_firmware_ihex_parse_uint8 (const gchar *data, guint pos)
 	gchar buffer[3];
 	memcpy (buffer, data + pos, 2);
 	buffer[2] = '\0';
-	return g_ascii_strtoull (buffer, NULL, 16);
+	return (guint8) g_ascii_strtoull (buffer, NULL, 16);
 }
 
 static guint16
@@ -466,7 +466,7 @@ dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
 	gchar buffer[5];
 	memcpy (buffer, data + pos, 4);
 	buffer[4] = '\0';
-	return g_ascii_strtoull (buffer, NULL, 16);
+	return (guint16) g_ascii_strtoull (buffer, NULL, 16);
 }
 
 #define	DFU_INHX32_RECORD_TYPE_DATA		0
@@ -523,7 +523,7 @@ dfu_firmware_add_ihex (DfuFirmware *firmware, GBytes *bytes,
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INVALID_FILE,
-				     "record incomplete at %i, length %i",
+				     "record incomplete at %u, length %u",
 				     offset, (guint) len_in);
 			return FALSE;
 		}
@@ -569,15 +569,16 @@ dfu_firmware_add_ihex (DfuFirmware *firmware, GBytes *bytes,
 					g_debug ("base address %04x", addr_low);
 					dfu_element_set_address (element, addr_low);
 				}
-				addr32 = addr_high + addr_low;
+//				addr32 = addr_high + addr_low;
+				addr32 = ((guint32) addr_high << 16) + addr_low;
 			}
 
 			/* parse bytes from line */
 			for (i = offset + 9; i < end; i += 2) {
 				/* any holes in the hex record */
-				len_tmp = addr32 - addr32_last;
-				if (addr32_last > 0x0 && len_tmp > 1) {
-					for (j = 1; j < len_tmp; j++) {
+				guint32 len_hole = addr32 - addr32_last;
+				if (addr32_last > 0x0 && len_hole > 1) {
+					for (j = 1; j < len_hole; j++) {
 						g_debug ("filling address 0x%04x",
 							 addr32_last + j);
 						/* although 0xff might be clearer,
@@ -587,7 +588,7 @@ dfu_firmware_add_ihex (DfuFirmware *firmware, GBytes *bytes,
 				}
 				/* write into buf */
 				data_tmp = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
-				g_string_append_c (string, data_tmp);
+				g_string_append_c (string, (gchar) data_tmp);
 				g_debug ("writing address 0x%04x", addr32);
 				addr32_last = addr32++;
 			}
@@ -597,8 +598,7 @@ dfu_firmware_add_ihex (DfuFirmware *firmware, GBytes *bytes,
 		case DFU_INHX32_RECORD_TYPE_EXTENDED:
 			addr_high = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+9);
 			g_error ("set base address %x", addr_high);
-			addr_high <<= 16;
-			addr32 = addr_high + addr_low;
+			addr32 = ((guint32) addr_high << 16) + addr_low;
 			break;
 		default:
 			g_set_error (error,
@@ -636,28 +636,25 @@ dfu_firmware_write_data_ihex_element (DfuElement *element,
 	const guint8 *data;
 	const guint chunk_size = 16;
 	gsize len;
-	guint chunk_len;
-	guint i;
-	guint j;
 
 	/* get number of chunks */
 	contents = dfu_element_get_contents (element);
 	data = g_bytes_get_data (contents, &len);
-	for (i = 0; i < len; i += chunk_size) {
+	for (gsize i = 0; i < len; i += chunk_size) {
 		guint8 checksum = 0;
 
 		/* length, 16-bit address, type */
-		chunk_len = MIN (len - i, 16);
+		gsize chunk_len = MIN (len - i, 16);
 		g_string_append_printf (str, ":%02X%04X%02X",
-					chunk_len,
-					dfu_element_get_address (element) + i,
-					DFU_INHX32_RECORD_TYPE_DATA);
-		for (j = 0; j < chunk_len; j++)
+					(guint) chunk_len,
+					(guint) (dfu_element_get_address (element) + i),
+					(guint) DFU_INHX32_RECORD_TYPE_DATA);
+		for (gsize j = 0; j < chunk_len; j++)
 			g_string_append_printf (str, "%02X", data[i+j]);
 
 		/* add checksum */
-		for (j = 0; j < (chunk_len * 2) + 8; j++)
-			checksum += str->str[str->len - (j + 1)];
+		for (gsize j = 0; j < (chunk_len * 2) + 8; j++)
+			checksum += (guint8) str->str[str->len - (j + 1)];
 		g_string_append_printf (str, "%02X\n", checksum);
 	}
 	return TRUE;
@@ -689,7 +686,8 @@ dfu_firmware_write_data_ihex (DfuFirmware *firmware, GError **error)
 	}
 
 	/* add EOF */
-	g_string_append_printf (str, ":000000%02XFF\n", DFU_INHX32_RECORD_TYPE_EOF);
+	g_string_append_printf (str, ":000000%02XFF\n",
+				(guint) DFU_INHX32_RECORD_TYPE_EOF);
 	return g_bytes_new (str->str, str->len);
 }
 
@@ -762,7 +760,7 @@ dfu_firmware_add_dfuse (DfuFirmware *firmware, GBytes *bytes, GError **error)
 	for (i = 0; i < prefix->targets; i++) {
 		guint consumed;
 		g_autoptr(DfuImage) image = NULL;
-		image = dfu_image_from_dfuse (data + offset, len,
+		image = dfu_image_from_dfuse (data + offset, (guint32) len,
 					      &consumed, error);
 		if (image == NULL)
 			return FALSE;
@@ -790,10 +788,10 @@ dfu_firmware_write_data_dfuse (DfuFirmware *firmware, GError **error)
 		DfuImage *im = g_ptr_array_index (priv->images, i);
 		GBytes *contents;
 		contents = dfu_image_to_dfuse (im);
-		image_size_total += g_bytes_get_size (contents);
+		image_size_total += (guint32) g_bytes_get_size (contents);
 		g_ptr_array_add (dfuse_images, contents);
 	}
-	g_debug ("image_size_total: %i", image_size_total);
+	g_debug ("image_size_total: %" G_GUINT32_FORMAT, image_size_total);
 
 	buf = g_malloc0 (sizeof (DfuSePrefix) + image_size_total);
 
@@ -802,7 +800,15 @@ dfu_firmware_write_data_dfuse (DfuFirmware *firmware, GError **error)
 	memcpy (prefix->sig, "DfuSe", 5);
 	prefix->ver = 0x01;
 	prefix->image_size = GUINT32_TO_LE (offset + image_size_total);
-	prefix->targets = priv->images->len;
+	if (priv->images->len > G_MAXUINT8) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "too many (%u) images to write DfuSe file",
+			     priv->images->len);
+		return FALSE;
+	}
+	prefix->targets = (guint8) priv->images->len;
 
 	/* copy images */
 	for (i = 0; i < dfuse_images->len; i++) {
@@ -811,7 +817,7 @@ dfu_firmware_write_data_dfuse (DfuFirmware *firmware, GError **error)
 		const guint8 *data;
 		data = g_bytes_get_data (contents, &length);
 		memcpy (buf + offset, data, length);
-		offset += length;
+		offset += (guint32) length;
 	}
 
 	/* return blob */
@@ -864,7 +870,7 @@ dfu_firmware_parse_metadata (DfuFirmware *firmware,
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
-				     "metadata table corrupt, key=%i",
+				     "metadata table corrupt, key=%u",
 				     kvlen);
 			return FALSE;
 		}
@@ -884,7 +890,7 @@ dfu_firmware_parse_metadata (DfuFirmware *firmware,
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
-				     "metadata table corrupt, value=%i",
+				     "metadata table corrupt, value=%u",
 				     kvlen);
 			return FALSE;
 		}
@@ -1003,7 +1009,9 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 
 	/* parse the optional metadata segment */
 	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_METADATA) == 0) {
-		if (!dfu_firmware_parse_metadata (firmware, data, len, ftr->len, error))
+		if (!dfu_firmware_parse_metadata (firmware, data,
+						  (guint) len,
+						  (guint) ftr->len, error))
 			return FALSE;
 	}
 
@@ -1140,7 +1148,7 @@ dfu_firmware_build_metadata_table (DfuFirmware *firmware, GError **error)
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_NOT_SUPPORTED,
-			     "too many metadata keys (%i)",
+			     "too many metadata keys (%u)",
 			     number_keys);
 		return NULL;
 	}
@@ -1148,7 +1156,7 @@ dfu_firmware_build_metadata_table (DfuFirmware *firmware, GError **error)
 	/* write the signature */
 	mdbuf[idx++] = 'M';
 	mdbuf[idx++] = 'D';
-	mdbuf[idx++] = number_keys;
+	mdbuf[idx++] = (guint8) number_keys;
 	for (l = keys; l != NULL; l = l->next) {
 		const gchar *key;
 		const gchar *value;
@@ -1157,7 +1165,7 @@ dfu_firmware_build_metadata_table (DfuFirmware *firmware, GError **error)
 
 		/* check key and value length */
 		key = l->data;
-		key_len = strlen (key);
+		key_len = (guint) strlen (key);
 		if (key_len > 233) {
 			g_set_error (error,
 				     DFU_ERROR,
@@ -1167,7 +1175,7 @@ dfu_firmware_build_metadata_table (DfuFirmware *firmware, GError **error)
 			return NULL;
 		}
 		value = g_hash_table_lookup (priv->metadata, key);
-		value_len = strlen (value);
+		value_len = (guint) strlen (value);
 		if (value_len > 233) {
 			g_set_error (error,
 				     DFU_ERROR,
@@ -1183,21 +1191,22 @@ dfu_firmware_build_metadata_table (DfuFirmware *firmware, GError **error)
 				     DFU_ERROR,
 				     DFU_ERROR_NOT_SUPPORTED,
 				     "not enough space in metadata table, "
-				     "already used %i bytes", idx);
+				     "already used %u bytes", idx);
 			return NULL;
 		}
 
 		/* write the key */
-		mdbuf[idx++] = key_len;
+		mdbuf[idx++] = (guint8) key_len;
 		memcpy(mdbuf + idx, key, key_len);
 		idx += key_len;
 
 		/* write the value */
-		mdbuf[idx++] = value_len;
+		mdbuf[idx++] = (guint8) value_len;
 		memcpy(mdbuf + idx, value, value_len);
 		idx += value_len;
 	}
-	g_debug ("metadata table was %i/%i bytes", idx, (guint) sizeof(mdbuf));
+	g_debug ("metadata table was %u/%" G_GSIZE_FORMAT " bytes",
+		 idx, sizeof(mdbuf));
 	return g_bytes_new (mdbuf, idx);
 }
 
@@ -1234,7 +1243,7 @@ dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents, GError **error
 	ftr->pid = GUINT16_TO_LE (priv->pid);
 	ftr->vid = GUINT16_TO_LE (priv->vid);
 	ftr->ver = GUINT16_TO_LE (priv->format);
-	ftr->len = sizeof (DfuFirmwareFooter) + length_md;
+	ftr->len = (guint8) (sizeof (DfuFirmwareFooter) + length_md);
 	memcpy(ftr->sig, "UFD", 3);
 	crc_new = dfu_firmware_generate_crc32 (buf, length_bin + length_md + 12);
 	ftr->crc = GUINT32_TO_LE (crc_new);
@@ -1278,7 +1287,7 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "only DfuSe format supports multiple images (%i)",
+			     "only DfuSe format supports multiple images (%u)",
 			     priv->images->len);
 		return NULL;
 	}
@@ -1433,7 +1442,7 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 		g_autofree gchar *tmp = NULL;
 		image = g_ptr_array_index (priv->images, i);
 		tmp = dfu_image_to_string (image);
-		g_string_append_printf (str, "= IMAGE %i =\n", i);
+		g_string_append_printf (str, "= IMAGE %u =\n", i);
 		g_string_append_printf (str, "%s\n", tmp);
 	}
 

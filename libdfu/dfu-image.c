@@ -210,7 +210,7 @@ dfu_image_get_size (DfuImage *image)
 	g_return_val_if_fail (DFU_IS_IMAGE (image), 0);
 	for (i = 0; i < priv->elements->len; i++) {
 		DfuElement *element = g_ptr_array_index (priv->elements, i);
-		length += g_bytes_get_size (dfu_element_get_contents (element));
+		length += (guint32) g_bytes_get_size (dfu_element_get_contents (element));
 	}
 	return length;
 }
@@ -269,7 +269,7 @@ dfu_image_set_name (DfuImage *image, const gchar *name)
 	/* this is a hard limit in DfuSe */
 	memset (priv->name, 0x00, 0xff);
 	if (name != NULL) {
-		sz = MIN (strlen (name), 0xff - 1);
+		sz = MIN ((guint16) strlen (name), 0xff - 1);
 		memcpy (priv->name, name, sz);
 	}
 }
@@ -305,7 +305,7 @@ dfu_image_to_string (DfuImage *image)
 		DfuElement *element = g_ptr_array_index (priv->elements, i);
 		g_autofree gchar *tmp = NULL;
 		tmp = dfu_element_to_string (element);
-		g_string_append_printf (str, "== ELEMENT %i ==\n", i);
+		g_string_append_printf (str, "== ELEMENT %u ==\n", i);
 		g_string_append_printf (str, "%s\n", tmp);
 	}
 
@@ -425,7 +425,7 @@ dfu_image_to_dfuse (DfuImage *image)
 		element = g_ptr_array_index (priv->elements, i);
 		bytes = dfu_element_to_dfuse (element);
 		g_ptr_array_add (element_array, bytes);
-		length_total += g_bytes_get_size (bytes);
+		length_total += (guint32) g_bytes_get_size (bytes);
 	}
 
 	/* add prefix */
@@ -447,7 +447,7 @@ dfu_image_to_dfuse (DfuImage *image)
 		bytes = g_ptr_array_index (element_array, i);
 		data = g_bytes_get_data (bytes, &length);
 		memcpy (buf + offset, data, length);
-		offset += length;
+		offset += (guint32) length;
 	}
 	return g_bytes_new_take (buf, length_total + sizeof (DfuSeImagePrefix));
 }

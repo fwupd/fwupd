@@ -1198,7 +1198,7 @@ fwupd_result_has_device_flag (FwupdResult *result, FwupdDeviceFlags flag)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), FALSE);
-	return priv->device_flags & flag;
+	return (priv->device_flags & flag) > 0;
 }
 
 /**
@@ -1592,13 +1592,11 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 static void
 fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
 {
-	guint i;
-
 	/* ignore */
 	if (key == NULL || value == NULL)
 		return;
 	g_string_append_printf (str, "  %s: ", key);
-	for (i = strlen (key); i < 20; i++)
+	for (gsize i = strlen (key); i < 20; i++)
 		g_string_append (str, " ");
 	g_string_append_printf (str, "%s\n", value);
 }
@@ -1613,7 +1611,7 @@ fwupd_pad_kv_unx (GString *str, const gchar *key, guint64 value)
 	if (value == 0)
 		return;
 
-	date = g_date_time_new_from_unix_utc (value);
+	date = g_date_time_new_from_unix_utc ((gint64) value);
 	tmp = g_date_time_format (date, "%F");
 	fwupd_pad_kv_str (str, key, tmp);
 }
@@ -1646,7 +1644,7 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
 	/* ignore */
 	if (value == 0)
 		return;
-	tmp = g_strdup_printf("%d", value);
+	tmp = g_strdup_printf("%" G_GUINT32_FORMAT, value);
 	fwupd_pad_kv_str (str, key, tmp);
 }
 
@@ -1657,11 +1655,11 @@ fwupd_pad_kv_dfl (GString *str, const gchar *key, guint64 device_flags)
 	g_autoptr(GString) tmp = NULL;
 
 	tmp = g_string_new ("");
-	for (i = 1; i < FU_DEVICE_FLAG_LAST; i *= 2) {
-		if ((device_flags & i) == 0)
+	for (i = 0; i < 64; i++) {
+		if ((device_flags & ((guint64) 1 << i)) == 0)
 			continue;
 		g_string_append_printf (tmp, "%s|",
-					fwupd_device_flag_to_string (i));
+					fwupd_device_flag_to_string ((guint64) 1 << i));
 	}
 	if (tmp->len == 0) {
 		g_string_append (tmp, fwupd_device_flag_to_string (0));

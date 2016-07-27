@@ -201,13 +201,13 @@ ebitdo_device_send (EbitdoDevice *device,
 		hdr->cmd = cmd;
 		hdr->payload_len = GUINT16_TO_LE (in_len);
 		memcpy (packet + 0x07, in, in_len);
-		hdr->pkt_len = in_len + 7;
+		hdr->pkt_len = (guint8) (in_len + 7);
 	} else {
 		hdr->cmd_len = GUINT16_TO_LE (in_len + 1);
 		hdr->cmd = cmd;
 		hdr->pkt_len = 5;
 	}
-	ebitdo_dump_raw ("->DEVICE", packet, hdr->pkt_len + 1);
+	ebitdo_dump_raw ("->DEVICE", packet, (gsize) hdr->pkt_len + 1);
 	ebitdo_dump_pkt (hdr);
 
 	/* get data from device */
@@ -223,7 +223,7 @@ ebitdo_device_send (EbitdoDevice *device,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "failed to send to device on ep 0x%02x: %s",
-			     EBITDO_USB_BOOTLOADER_EP_OUT,
+			     (guint) EBITDO_USB_BOOTLOADER_EP_OUT,
 			     error_local->message);
 		return FALSE;
 	}
@@ -261,12 +261,12 @@ ebitdo_device_receive (EbitdoDevice *device,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "failed to retrieve from device on ep 0x%02x: %s",
-			     EBITDO_USB_BOOTLOADER_EP_IN,
+			     (guint) EBITDO_USB_BOOTLOADER_EP_IN,
 			     error_local->message);
 		return FALSE;
 	}
 
-	ebitdo_dump_raw ("<-DEVICE", packet, hdr->pkt_len - 1);
+	ebitdo_dump_raw ("<-DEVICE", packet, (gsize) hdr->pkt_len - 1);
 	ebitdo_dump_pkt (hdr);
 
 	/* get-version (booloader) */
@@ -278,8 +278,8 @@ ebitdo_device_receive (EbitdoDevice *device,
 				g_set_error (error,
 					     G_IO_ERROR,
 					     G_IO_ERROR_INVALID_DATA,
-					     "outbuf size wrong, expected %i got %i",
-					     (guint) out_len,
+					     "outbuf size wrong, expected %" G_GSIZE_FORMAT " got %u",
+					     out_len,
 					     hdr->payload_len);
 				return FALSE;
 			}
@@ -297,8 +297,8 @@ ebitdo_device_receive (EbitdoDevice *device,
 				g_set_error (error,
 					     G_IO_ERROR,
 					     G_IO_ERROR_INVALID_DATA,
-					     "outbuf size wrong, expected 4 got %i",
-					     (guint) out_len);
+					     "outbuf size wrong, expected 4 got %" G_GSIZE_FORMAT,
+					     out_len);
 				return FALSE;
 			}
 			memcpy (out, packet + 1, 4);
@@ -314,8 +314,8 @@ ebitdo_device_receive (EbitdoDevice *device,
 				g_set_error (error,
 					     G_IO_ERROR,
 					     G_IO_ERROR_INVALID_DATA,
-					     "outbuf size wrong, expected %i got %i",
-					     (guint) out_len,
+					     "outbuf size wrong, expected %" G_GSIZE_FORMAT " got %i",
+					     out_len,
 					     hdr->cmd_len);
 				return FALSE;
 			}
@@ -480,7 +480,7 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw, GError **error)
 	ebitdo_dump_firmware_header (hdr);
 
 	/* check the file size */
-	payload_len = g_bytes_get_size (fw) - sizeof (EbitdoFirmwareHeader);
+	payload_len = (guint32) (g_bytes_get_size (fw) - sizeof (EbitdoFirmwareHeader));
 	if (payload_len != GUINT32_FROM_LE (hdr->destination_len)) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -497,7 +497,7 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw, GError **error)
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "data invalid, reserved[%i] = 0x%04x",
+				     "data invalid, reserved[%u] = 0x%04x",
 				     i, hdr->reserved[i]);
 			return FALSE;
 		}

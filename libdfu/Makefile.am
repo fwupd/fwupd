@@ -76,7 +76,7 @@ libdfu_la_LDFLAGS =						\
 
 libdfu_la_CFLAGS =						\
 	$(PIE_CFLAGS)						\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = dfu.pc
@@ -97,7 +97,7 @@ dfu_tool_LDADD =						\
 	$(GUSB_LIBS)						\
 	$(LIBM)
 
-dfu_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARNINGFLAGS_C)
+dfu_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
 
 TESTS_ENVIRONMENT =						\
 	libtool --mode=execute valgrind				\
@@ -116,7 +116,7 @@ dfu_self_test_LDADD =						\
 	$(GLIB_LIBS)						\
 	$(GUSB_LIBS)
 
-dfu_self_test_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARNINGFLAGS_C)
+dfu_self_test_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
 
 TESTS = dfu-self-test
 

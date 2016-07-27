@@ -79,7 +79,7 @@ main (int argc, char **argv)
 	g_print ("Device Firmware Ver: %s\n", ebitdo_device_get_version (dev));
 	g_print ("Device Verification ID:\n");
 	for (i = 0; i < 9; i++)
-		g_print ("\t%i = 0x%08x\n", i, ebitdo_device_get_serial(dev)[i]);
+		g_print ("\t%u = 0x%08x\n", i, ebitdo_device_get_serial(dev)[i]);
 
 	/* not in bootloader mode, so print what to do */
 	if (ebitdo_device_get_kind (dev) != EBITDO_DEVICE_KIND_BOOTLOADER) {

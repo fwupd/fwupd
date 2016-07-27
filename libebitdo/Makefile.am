@@ -40,7 +40,7 @@ libebitdo_la_LDFLAGS =						\
 
 libebitdo_la_CFLAGS =						\
 	$(PIE_CFLAGS)						\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = ebitdo.pc
@@ -61,7 +61,7 @@ ebitdo_tool_LDADD =						\
 	$(GUSB_LIBS)						\
 	$(LIBM)
 
-ebitdo_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARNINGFLAGS_C)
+ebitdo_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
 
 clean-local:
 	rm -f *~
