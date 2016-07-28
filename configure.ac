@@ -53,7 +53,6 @@ AC_PROG_CC_C99
 AC_PROG_INSTALL
 LT_INIT
 AM_PROG_CC_C_O
-IT_PROG_INTLTOOL([0.35.0])
 AC_PATH_PROG(XSLTPROC, xsltproc)
 
 WARN_CFLAGS_EXTRA="
@@ -104,15 +103,11 @@ WARN_CFLAGS_EXTRA="
 AX_APPEND_COMPILE_FLAGS([$WARN_CFLAGS_EXTRA], [WARN_CFLAGS])
 AC_SUBST(WARN_CFLAGS)
 
-dnl ---------------------------------------------------------------------------
-dnl - gettext stuff
-dnl ---------------------------------------------------------------------------
-AM_GNU_GETTEXT_VERSION([0.17])
+# internationalization
 AM_GNU_GETTEXT([external])
-
-GETTEXT_PACKAGE=AC_PACKAGE_NAME
-AC_SUBST(GETTEXT_PACKAGE)
-AC_DEFINE(GETTEXT_PACKAGE, "AC_PACKAGE_NAME", [foo])
+AM_GNU_GETTEXT_VERSION([0.19.8])
+AC_SUBST([GETTEXT_PACKAGE], [fwupd])
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Package name for gettext])
 
 # check for PIE (position independent executable) support
 if test x$with_pic != xno; then

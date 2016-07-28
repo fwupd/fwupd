@@ -1,6 +1,5 @@
 *.gmo
 *.header
-.intltool-merge-cache
 Makefile.in.in
 Makevars.template
 POTFILES

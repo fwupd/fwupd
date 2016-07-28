@@ -3,12 +3,10 @@ polkit_rulesdir = $(datadir)/polkit-1/rules.d
 dist_polkit_rules_DATA =				\
 	org.freedesktop.fwupd.rules
 
-@INTLTOOL_POLICY_RULE@
 polkit_policydir = $(datadir)/polkit-1/actions
-polkit_policy_in_files = org.freedesktop.fwupd.policy.in
-polkit_policy_DATA = $(polkit_policy_in_files:.policy.in=.policy)
-#polkit_policy_DATA =					\
-#	org.freedesktop.fwupd.policy
+polkit_policy_DATA = org.freedesktop.fwupd.policy
+org.freedesktop.fwupd.policy: org.freedesktop.fwupd.policy.in
+	$(AM_V_GEN) $(MSGFMT) --xml --template $< -d $(top_srcdir)/po -o $@
 
 EXTRA_DIST = org.freedesktop.fwupd.policy.in
 CLEANFILES =						\
