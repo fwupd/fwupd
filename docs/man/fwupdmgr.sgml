@@ -32,7 +32,8 @@
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>&package;</command>
-      <arg><option>--verbose</option></arg>
+      <arg><option>options</option></arg>
+      <arg>COMMAND</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
   <refsect1>
@@ -90,6 +91,14 @@
         </term>
         <listitem>
           <para>Perform the installation offline where possible.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>--force</option>
+        </term>
+        <listitem>
+          <para>Override provider warning.</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -154,6 +163,46 @@
         </term>
         <listitem>
           <para>Clears the results from the last update.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>dump-rom</option>
+        </term>
+        <listitem>
+          <para>Dump the ROM checksum.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>monitor</option>
+        </term>
+        <listitem>
+          <para>Monitor the daemon for events.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>unlock</option>
+        </term>
+        <listitem>
+          <para>Unlocks the devicefor firmware access.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>verify</option>
+        </term>
+        <listitem>
+          <para>Gets the cryptographic hash of the dumped firmware.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>verify-update</option>
+        </term>
+        <listitem>
+          <para>Update the stored metadata with current ROM contents.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
