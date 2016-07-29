@@ -227,6 +227,7 @@ docs/Makefile
 docs/libdfu/Makefile
 docs/libfwupd/Makefile
 docs/man/Makefile
+docs/version.xml
 policy/Makefile
 po/Makefile.in
 src/Makefile
