@@ -58,7 +58,7 @@ HTML_IMAGES=
 # Extra files that are included by $(DOC_MAIN_SGML_FILE).
 # e.g. content_files=running.xml building.xml changes-2.0.xml
 content_files=						\
-	$(top_srcdir)/docs/version.xml
+	$(top_builddir)/docs/version.xml
 
 # Files where gtk-doc abbrevations (#GtkWidget) are expanded
 # e.g. expand_content_files=running.xml
