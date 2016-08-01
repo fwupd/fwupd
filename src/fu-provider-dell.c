@@ -977,11 +977,11 @@ fu_provider_dell_unlock(FuProvider *provider,
 }
 
 static gboolean
-fu_provider_dell_update (FuProvider *provider,
-			FuDevice *device,
-			GBytes *blob_fw,
-			FwupdInstallFlags flags,
-			GError **error)
+fu_provider_dell_update_offline (FuProvider *provider,
+				 FuDevice *device,
+				 GBytes *blob_fw,
+				 FwupdInstallFlags flags,
+				 GError **error)
 {
 	FuProviderDell *provider_dell = FU_PROVIDER_DELL (provider);
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
@@ -1067,16 +1067,21 @@ fu_provider_dell_update (FuProvider *provider,
 			     strerror (rc));
 		return FALSE;
 	}
+	return TRUE;
+}
 
-	/* TODO: add support for AR (dock/cable) and MST flash.
-	 * This is dependent upon OS interfaces for flashing these components.
-	 * pseudo code below
-	 */
-#if 0
+static gboolean
+fu_provider_dell_toggle_dock_mode (FuProviderDell *provider_dell,
+				   guint32 new_mode, guint32 dock_location,
+				   GError **error)
+{
+	g_autofree guint32 *input = NULL;
+	g_autofree guint32 *output = NULL;
+
 	/* Put into mode to accept AR/MST */
 	input[0] = DACI_DOCK_ARG_MODE;
 	input[1] = dock_location;
-	input[2] = DACI_DOCK_ARG_MODE_FLASH;
+	input[2] = new_mode;
 	if (!fu_provider_dell_execute_simple_smi (provider_dell,
 						  DACI_DOCK_CLASS,
 						  DACI_DOCK_SELECT,
@@ -1087,32 +1092,97 @@ fu_provider_dell_update (FuProvider *provider,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Dell: Failed to set dock flash mode: %d",
+			     "Dell: Failed to set dock flash mode: %u",
 			     output[1]);
 		return FALSE;
 	}
+	return TRUE;
+}
 
-	/* do the update */
+static gboolean
+fu_provider_dell_update_online (FuProvider *provider,
+				FuDevice *device,
+				GBytes *blob_fw,
+				FwupdInstallFlags flags,
+				GError **error)
+{
+	FuProviderDell *provider_dell = FU_PROVIDER_DELL (provider);
+	guint32 dock_location;
+	const gchar *device_guid_str = NULL;
+	efi_guid_t tmpguid;
 
-	/* take out of mode to accept AR/MST */
-	input[0] = DACI_DOCK_ARG_MODE;
-	input[1] = dock_location;
-	input[2] = DACI_DOCK_ARG_MODE_USER;
-	if (!fu_provider_dell_execute_simple_smi (provider_dell,
-						  DACI_DOCK_CLASS,
-						  DACI_DOCK_SELECT,
-						  input,
-						  output))
+	g_autofree gchar *tb15_nvm_guid_str = NULL;
+	g_autofree gchar *cable_nvm_guid_str = NULL;
+	g_autofree gchar *mst_guid_str = NULL;
+
+	/* TODO: if we'll support host MST updates, detect if called with host
+	 * 	 or dock MST
+	 */
+
+	/* Find the dock location (confirm it's still plugged in too) */
+	if (!fu_provider_dell_detect_dock (provider_dell, &dock_location)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to detect dock location");
 		return FALSE;
-	if (output[1] != 0) {
+	}
+
+	/* Put the dock in flash mode */
+	if (!fu_provider_dell_toggle_dock_mode (provider_dell,
+						DACI_DOCK_ARG_MODE_FLASH,
+						dock_location, error))
+		return FALSE;
+
+	/* check which device we're flashing by GUID? (MST or AR)*/
+	device_guid_str = fu_device_get_guid_default (device);
+	tb15_nvm_guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
+	cable_nvm_guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
+	mst_guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
+	tmpguid = TB15_NVM_GUID;
+	efi_guid_to_str (&tmpguid, &tb15_nvm_guid_str);
+	tmpguid = CBL_NVM_GUID;
+	efi_guid_to_str (&tmpguid, &cable_nvm_guid_str);
+	tmpguid = DOCK_MST_GUID;
+	efi_guid_to_str (&tmpguid, &mst_guid_str);
+
+	/* Dock MST hub */
+	if (g_strcmp0 (device_guid_str, mst_guid_str) == 0) {
+		/* TODO do the update */
+		/* TODO confirm the version of the update */
+
+	}
+	/* TODO: add support for AR (dock/cable).
+	 * This is dependent upon OS interfaces for flashing these components.
+	 */
+	else if (g_strcmp0 (device_guid_str, tb15_nvm_guid_str) == 0 ||
+		 g_strcmp0 (device_guid_str, cable_nvm_guid_str) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "NVM updates are not yet supported");
+		fu_provider_dell_toggle_dock_mode (provider_dell,
+						   DACI_DOCK_ARG_MODE_USER,
+						   dock_location, error);
+		return FALSE;
+	}
+	else {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Dell: failed to set dock user mode: %d",
-			     output[1]);
+			     "Unknown device type: %s",
+			     fu_device_get_name (device));
+		fu_provider_dell_toggle_dock_mode (provider_dell,
+						   DACI_DOCK_ARG_MODE_USER,
+						   dock_location, error);
 		return FALSE;
 	}
-#endif
+
+	 /* Put the dock in user mode */
+	if (!fu_provider_dell_toggle_dock_mode (provider_dell,
+						DACI_DOCK_ARG_MODE_USER,
+						dock_location, error))
+		return FALSE;
 
 	return TRUE;
 }
@@ -1126,7 +1196,8 @@ fu_provider_dell_class_init (FuProviderDellClass *klass)
 	provider_class->get_name = fu_provider_dell_get_name;
 	provider_class->coldplug = fu_provider_dell_coldplug;
 	provider_class->unlock = fu_provider_dell_unlock;
-	provider_class->update_offline = fu_provider_dell_update;
+	provider_class->update_offline = fu_provider_dell_update_offline;
+	provider_class->update_online = fu_provider_dell_update_online;
 	provider_class->get_results = fu_provider_dell_get_results;
 	object_class->finalize = fu_provider_dell_finalize;
 }
