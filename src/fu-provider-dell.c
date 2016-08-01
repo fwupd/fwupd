@@ -347,8 +347,8 @@ fu_provider_dell_get_dock_key (FuProviderDell *provider_dell,
 static gboolean
 fu_provider_dell_dock_node (FuProviderDell *provider_dell, GUsbDevice *device,
 			   guint8 type, const efi_guid_t *guid_raw,
-			   const gchar *component_desc,
-			   const gchar *version)
+			   const gchar *component_desc, const gchar *version,
+			   gboolean updates_online)
 {
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
 	FuProviderDellDockItem *item;
@@ -397,7 +397,12 @@ fu_provider_dell_dock_node (FuProviderDell *provider_dell, GUsbDevice *device,
 	fu_device_add_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
 		fu_device_set_version (item->device, version);
-		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
+		if (updates_online)
+			fu_device_add_flag (item->device,
+					    FU_DEVICE_FLAG_ALLOW_ONLINE);
+		else
+			fu_device_add_flag (item->device,
+					    FU_DEVICE_FLAG_ALLOW_OFFLINE);
 	}
 
 	g_hash_table_insert (priv->devices, g_strdup (dock_key), item);
@@ -533,7 +538,8 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 						 buf.record->dock_info_header.dock_type,
 						 guid_raw,
 						 component_name,
-						 fw_str)) {
+						 fw_str,
+						 FALSE)) {
 			g_debug ("Dell: failed to create %s", component_name);
 			return;
 		}
@@ -551,7 +557,8 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 						 buf.record->dock_info_header.dock_type,
 						 &tmpguid,
 						 TB15_NVM_DESC,
-						 NULL)) {
+						 NULL,
+						 TRUE)) {
 			g_debug ("Dell: failed to create %s", TB15_NVM_DESC);
 			return;
 		}
@@ -566,7 +573,8 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 						 buf.record->dock_info_header.dock_type,
 						 &tmpguid,
 						 CBL_NVM_DESC,
-						 NULL)) {
+						 NULL,
+						 TRUE)) {
 			g_debug ("Dell: failed to create %s", CBL_NVM_DESC);
 			return;
 		}
@@ -579,7 +587,8 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 					 buf.record->dock_info_header.dock_type,
 					 &tmpguid,
 					 MST_DESC,
-					 NULL)) {
+					 NULL,
+					 TRUE)) {
 		g_debug ("Dell: failed to create %s", MST_DESC);
 		return;
 	}
@@ -594,7 +603,8 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 						 buf.record->dock_info_header.dock_type,
 						 &tmpguid,
 						 "",
-						 fw_str)) {
+						 fw_str,
+						 FALSE)) {
 			g_debug ("Dell: failed to create top dock node");
 			return;
 		}
