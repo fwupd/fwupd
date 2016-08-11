@@ -181,7 +181,7 @@ if test x$enable_dell != xno; then
 	AC_DEFINE(HAVE_DELL,1,[Use Dell non-ESRT capsule support])
 
 	# check for ability to change GUID
-	PKG_CHECK_MODULES(UEFI_GUID, fwup >= 0.6,
+	PKG_CHECK_MODULES(UEFI_GUID, fwup >= 5,
 			  has_uefi_guid=yes,
 			  has_uefi_guid=no)
 	if test x$has_uefi_guid = xyes; then
