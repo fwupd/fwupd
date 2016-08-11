@@ -283,12 +283,18 @@ static FuPlugin *
 fu_main_get_plugin_for_device (GHashTable *plugins, FuDevice *device)
 {
 	const gchar *tmp;
+	FuPlugin *plugin;
 
 	/* does a vendor plugin exist */
 	tmp = fu_device_get_metadata (device, FU_DEVICE_KEY_FWUPD_PLUGIN);
 	if (tmp == NULL)
 		return NULL;
-	return g_hash_table_lookup (plugins, tmp);
+	plugin = g_hash_table_lookup (plugins, tmp);
+	if (plugin == NULL) {
+		g_warning ("requested plugin %s for %s, but not found",
+			   tmp, fu_device_get_id (device));
+	}
+	return plugin;
 }
 
 static void
