@@ -2,8 +2,7 @@
 <components version="0.9" origin="fwupd">
 
   <!-- SteelSeries legacy hardware  -->
-  <component type="firmware">
-    <name>Rival SteelSeries</name>
+  <component type="firmware" merge="append">
     <summary>Firmware for Rival SteelSeries mice</summary>
     <id>com.steelseries.rival-legacy.firmware</id>
     <provides>
