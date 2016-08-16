@@ -522,7 +522,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "Device %s does not currently allow updates",
+				    "Device %s does not now allow updates",
 				    fu_device_get_id (device));
 			return FALSE;
 		}
@@ -705,6 +705,15 @@ fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
 	return NULL;
 }
 
+static AsScreenshot *
+_as_app_get_screenshot_default (AsApp *app)
+{
+	GPtrArray *array = as_app_get_screenshots (app);
+	if (array->len == 0)
+		return NULL;
+	return g_ptr_array_index (array, 0);
+}
+
 static gboolean
 fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 				  FuDevice *device,
@@ -739,6 +748,29 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "no releases in the firmware component");
+		return FALSE;
+	}
+
+	/* no update abilities */
+	if (!fu_device_has_flag (device, FU_DEVICE_FLAG_ALLOW_OFFLINE) &&
+	    !fu_device_has_flag (device, FU_DEVICE_FLAG_ALLOW_ONLINE)) {
+		const gchar *caption = NULL;
+		AsScreenshot *ss = _as_app_get_screenshot_default (app);
+		if (ss != NULL)
+			caption = as_screenshot_get_caption (ss, NULL);
+		if (caption != NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Device %s does not currently allow updates: %s",
+				     fu_device_get_id (device), caption);
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Device %s does not currently allow updates",
+				     fu_device_get_id (device));
+		}
 		return FALSE;
 	}
 
