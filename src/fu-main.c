@@ -883,15 +883,14 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		g_ptr_array_add (helper->devices, g_object_ref (item->device));
 	}
 	if (helper->devices->len == 0) {
-		g_autofree gchar *guid = NULL;
-		guid = fu_main_get_guids_from_store (helper->store);
 		if (error_first != NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no attached hardware matched %s: %s",
-				     guid, error_first->message);
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     error_first->message);
 		} else {
+			g_autofree gchar *guid = NULL;
+			guid = fu_main_get_guids_from_store (helper->store);
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
