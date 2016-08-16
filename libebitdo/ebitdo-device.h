@@ -91,6 +91,8 @@ gboolean	 ebitdo_device_close		(EbitdoDevice	*device,
 						 GError		**error);
 gboolean	 ebitdo_device_write_firmware	(EbitdoDevice	*device,
 						 GBytes		*fw,
+						 GFileProgressCallback progress_cb,
+						 gpointer	 progress_data,
 						 GError		**error);
 
 G_END_DECLS

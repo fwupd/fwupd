@@ -72,5 +72,60 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 	if (!ebitdo_device_close (ebitdo_dev, error))
 		return FALSE;
 
+	/* handled in the plugin */
+	if (ebitdo_device_get_kind (ebitdo_dev) == EBITDO_DEVICE_KIND_BOOTLOADER)
+		fu_device_add_flag (device, FU_DEVICE_FLAG_ALLOW_ONLINE);
+
+	return TRUE;
+}
+
+static void
+ebitdo_write_progress_cb (goffset current, goffset total, gpointer user_data)
+{
+	gdouble percentage = -1.f;
+	if (total > 0)
+		percentage = (100.f * (gdouble) current) / (gdouble) total;
+	g_debug ("written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT " bytes [%.1f%%]\n",
+		 current, total, percentage);
+}
+
+gboolean
+fu_plugin_device_update (FuPlugin *plugin,
+			 FuDevice *device,
+			 GBytes *data,
+			 GError **error)
+{
+	const gchar *platform_id;
+	g_autoptr(EbitdoDevice) ebitdo_dev = NULL;
+	g_autoptr(GUsbContext) usb_ctx = NULL;
+	g_autoptr(GUsbDevice) usb_device = NULL;
+
+	/* get version */
+	platform_id = fu_device_get_id (device);
+	usb_ctx = g_usb_context_new (NULL);
+	usb_device = g_usb_context_find_by_platform_id (usb_ctx,
+							platform_id,
+							error);
+	if (usb_device == NULL)
+		return FALSE;
+	ebitdo_dev = ebitdo_device_new (usb_device);
+	if (ebitdo_device_get_kind (ebitdo_dev) != EBITDO_DEVICE_KIND_BOOTLOADER) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "invalid 0Bitdo device type detected");
+		return FALSE;
+	}
+
+	/* write the firmware */
+	if (!ebitdo_device_open (ebitdo_dev, error))
+		return FALSE;
+	if (!ebitdo_device_write_firmware (ebitdo_dev, data,
+					   ebitdo_write_progress_cb, device,
+					   error))
+		return FALSE;
+	if (!ebitdo_device_close (ebitdo_dev, error))
+		return FALSE;
+
 	return TRUE;
 }

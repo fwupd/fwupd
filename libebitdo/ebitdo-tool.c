@@ -24,6 +24,16 @@
 #include "ebitdo-common.h"
 #include "ebitdo-device.h"
 
+static void
+ebitdo_write_progress_cb (goffset current, goffset total, gpointer user_data)
+{
+	gdouble percentage = -1.f;
+	if (total > 0)
+		percentage = (100.f * (gdouble) current) / (gdouble) total;
+	g_print ("Written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT " bytes [%.1f%%]\n",
+		 current, total, percentage);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -117,7 +127,9 @@ main (int argc, char **argv)
 
 	/* update with data blob */
 	fw = g_bytes_new (data, len);
-	if (!ebitdo_device_write_firmware (dev, fw, &error)) {
+	if (!ebitdo_device_write_firmware (dev, fw,
+					   ebitdo_write_progress_cb, NULL,
+					   &error)) {
 		g_print ("Failed to write firmware: %s\n", error->message);
 		return 1;
 	}
@@ -129,7 +141,7 @@ main (int argc, char **argv)
 	}
 
 	/* success */
-	g_print ("Now turn off the controlled with the power button.\n");
+	g_print ("Now turn off the controller with the power button.\n");
 
 	return 0;
 }

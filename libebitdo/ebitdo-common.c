@@ -36,34 +36,6 @@ ebitdo_pkt_type_to_string (EbitdoPktType cmd)
 }
 
 const gchar *
-ebitdo_pkt_subtype_to_string (EbitdoPktSubtype cmd)
-{
-	if (cmd == EBITDO_PKT_SUBTYPE_ACK)
-		return "ack";
-	if (cmd == EBITDO_PKT_SUBTYPE_NAK)
-		return "nak";
-	if (cmd == EBITDO_PKT_SUBTYPE_UPDATE_FIRMWARE_DATA)
-		return "update-firmware-data";
-	if (cmd == EBITDO_PKT_SUBTYPE_TRANSFER_ABORT)
-		return "transfer-abort";
-	if (cmd == EBITDO_PKT_SUBTYPE_VERIFICATION_ID)
-		return "verification-id";
-	if (cmd == EBITDO_PKT_SUBTYPE_GET_VERIFICATION_ID)
-		return "get-verification-id";
-	if (cmd == EBITDO_PKT_SUBTYPE_VERIFY_ERROR)
-		return "verify-error";
-	if (cmd == EBITDO_PKT_SUBTYPE_VERIFY_OK)
-		return "verify-ok";
-	if (cmd == EBITDO_PKT_SUBTYPE_TRANSFER_TIMEOUT)
-		return "transfer-timeout";
-	if (cmd == EBITDO_PKT_SUBTYPE_GET_VERSION)
-		return "get-version";
-	if (cmd == EBITDO_PKT_SUBTYPE_GET_VERSION_RESPONSE)
-		return "get-version-response";
-	return NULL;
-}
-
-const gchar *
 ebitdo_pkt_cmd_to_string (EbitdoPktCmd cmd)
 {
 	if (cmd == EBITDO_PKT_CMD_FW_UPDATE_DATA)
@@ -80,6 +52,28 @@ ebitdo_pkt_cmd_to_string (EbitdoPktCmd cmd)
 		return "fw-set-version";
 	if (cmd == EBITDO_PKT_CMD_FW_SET_ENCODE_ID)
 		return "fw-set-encode-id";
+	if (cmd == EBITDO_PKT_CMD_ACK)
+		return "ack";
+	if (cmd == EBITDO_PKT_CMD_NAK)
+		return "nak";
+	if (cmd == EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA)
+		return "update-firmware-data";
+	if (cmd == EBITDO_PKT_CMD_TRANSFER_ABORT)
+		return "transfer-abort";
+	if (cmd == EBITDO_PKT_CMD_VERIFICATION_ID)
+		return "verification-id";
+	if (cmd == EBITDO_PKT_CMD_GET_VERIFICATION_ID)
+		return "get-verification-id";
+	if (cmd == EBITDO_PKT_CMD_VERIFY_ERROR)
+		return "verify-error";
+	if (cmd == EBITDO_PKT_CMD_VERIFY_OK)
+		return "verify-ok";
+	if (cmd == EBITDO_PKT_CMD_TRANSFER_TIMEOUT)
+		return "transfer-timeout";
+	if (cmd == EBITDO_PKT_CMD_GET_VERSION)
+		return "get-version";
+	if (cmd == EBITDO_PKT_CMD_GET_VERSION_RESPONSE)
+		return "get-version-response";
 	return NULL;
 }
 
@@ -104,7 +98,7 @@ ebitdo_dump_pkt (EbitdoPkt *hdr)
 	g_print ("PktType:     0x%02x [%s]\n",
 		 hdr->type, ebitdo_pkt_type_to_string (hdr->type));
 	g_print ("CmdSubtype:  0x%02x [%s]\n",
-		 hdr->subtype, ebitdo_pkt_subtype_to_string (hdr->subtype));
+		 hdr->subtype, ebitdo_pkt_cmd_to_string (hdr->subtype));
 	g_print ("CmdLen:      0x%04x\n", GUINT16_FROM_LE (hdr->cmd_len));
 	g_print ("Cmd:         0x%02x [%s]\n",
 		 hdr->cmd, ebitdo_pkt_cmd_to_string (hdr->cmd));

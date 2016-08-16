@@ -2,7 +2,7 @@
 <components version="0.9" origin="fwupd">
 
   <!-- SteelSeries legacy hardware  -->
-  <component type="firmware" merge="append">
+  <component type="firmware">
     <summary>Firmware for Rival SteelSeries mice</summary>
     <id>com.steelseries.rival-legacy.firmware</id>
     <provides>
@@ -15,14 +15,11 @@
   </component>
 
   <!-- 8Bitdo hardware  -->
-  <component type="firmware" merge="append">
-    <id>com.8Bitdo.SFC30.firmware</id>
+  <component type="firmware">
+    <id>com.8bitdo.bootloader.firmware</id>
     <provides>
-      <firmware type="flashed">f94d3231-f6e1-5ef3-a4a0-dc819d74ae54</firmware>
-      <firmware type="flashed">113ab24c-cddd-5180-ac5b-bc2e52762f19</firmware>
-      <firmware type="flashed">178d45aa-f40c-502f-a513-5b267e4a1e6c</firmware>
-      <firmware type="flashed">5df06f76-d262-5d52-a33b-17ad70bef8cc</firmware>
-      <firmware type="flashed">0d74bd3d-cac7-51e6-811c-349682319b9d</firmware>
+      <!-- USB\VID_0483&PID_5750 is the Bootloader -->
+      <firmware type="flashed">043c7673-bd45-5e2e-b8b9-c22df2dfec2a</firmware>
     </provides>
     <metadata>
       <value key="fwupd::plugin">ebitdo</value>
