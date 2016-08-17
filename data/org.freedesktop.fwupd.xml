@@ -14,18 +14,6 @@
     </metadata>
   </component>
 
-  <!-- 8Bitdo hardware  -->
-  <component type="firmware">
-    <id>com.8bitdo.bootloader.firmware</id>
-    <provides>
-      <!-- USB\VID_0483&PID_5750 is the Bootloader -->
-      <firmware type="flashed">043c7673-bd45-5e2e-b8b9-c22df2dfec2a</firmware>
-    </provides>
-    <metadata>
-      <value key="fwupd::plugin">ebitdo</value>
-    </metadata>
-  </component>
-
   <!-- some UEFI hardware needs to be enabled before the ESRT is available  -->
   <component type="firmware">
     <id>UEFI-dummy-dev0</id>

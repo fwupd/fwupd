@@ -17,6 +17,7 @@ AM_CPPFLAGS =						\
 	$(ARCHIVE_CFLAGS)				\
 	-I$(top_srcdir)					\
 	-I$(top_builddir)				\
+	-I$(top_srcdir)/libebitdo			\
 	-I$(top_srcdir)/libfwupd			\
 	-DG_LOG_DOMAIN=\"Fu\"				\
 	-DLIBEXECDIR=\"$(libexecdir)\"			\
@@ -34,6 +35,9 @@ FWUPD_LIBS =						\
 
 DFU_LIBS =						\
 	$(top_builddir)/libdfu/libdfu.la
+
+EBITDO_LIBS =						\
+	$(top_builddir)/libebitdo/libebitdo.la
 
 bin_PROGRAMS = fwupdmgr
 
@@ -106,6 +110,8 @@ fwupd_SOURCES =						\
 	fu-provider-udev.h				\
 	fu-provider-usb.c				\
 	fu-provider-usb.h				\
+	fu-provider-ebitdo.c				\
+	fu-provider-ebitdo.h				\
 	fu-quirks.h					\
 	fu-resources.c					\
 	fu-resources.h					\
@@ -116,6 +122,7 @@ fwupd_SOURCES =						\
 fwupd_LDADD =						\
 	$(FWUPD_LIBS)					\
 	$(DFU_LIBS)					\
+	$(EBITDO_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(GUSB_LIBS)					\
 	$(GCAB_LIBS)					\

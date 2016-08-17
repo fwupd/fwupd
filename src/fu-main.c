@@ -42,6 +42,7 @@
 #include "fu-pending.h"
 #include "fu-provider.h"
 #include "fu-provider-dfu.h"
+#include "fu-provider-ebitdo.h"
 #include "fu-provider-rpi.h"
 #include "fu-provider-udev.h"
 #include "fu-provider-usb.h"
@@ -768,6 +769,16 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 	/* no update abilities */
 	if (!fu_device_has_flag (device, FU_DEVICE_FLAG_ALLOW_OFFLINE) &&
 	    !fu_device_has_flag (device, FU_DEVICE_FLAG_ALLOW_ONLINE)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Device %s does not currently allow updates",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* not in bootloader mode */
+	if (fu_device_has_flag (device, FU_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
 		const gchar *caption = NULL;
 		AsScreenshot *ss = _as_app_get_screenshot_default (app);
 		if (ss != NULL)
@@ -776,14 +787,14 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "Device %s does not currently allow updates: %s",
-				     fu_device_get_id (device), caption);
+				     "Device %s needs to manually be put in update mode: %s",
+				     fu_device_get_name (device), caption);
 		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "Device %s does not currently allow updates",
-				     fu_device_get_id (device));
+				     "Device %s needs to manually be put in update mode",
+				     fu_device_get_name (device));
 		}
 		return FALSE;
 	}
@@ -1249,8 +1260,9 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	/* get latest release */
 	rel = as_app_get_release_default (app);
 	if (rel == NULL) {
-		g_debug ("%s has no firmware update metadata",
-			 fu_device_get_id (item->device));
+		g_debug ("%s [%s] has no firmware update metadata",
+			 fu_device_get_id (item->device),
+			 fu_device_get_name (item->device));
 		return FALSE;
 	}
 
@@ -1268,8 +1280,9 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	/* only show devices that can be updated */
 	if (!fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE) &&
 	    !fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_ONLINE)) {
-		g_debug ("ignoring %s as not updatable live or offline",
-			 fu_device_get_id (item->device));
+		g_debug ("ignoring %s [%s] as not updatable live or offline",
+			 fu_device_get_id (item->device),
+			 fu_device_get_name (item->device));
 		return FALSE;
 	}
 
@@ -2421,6 +2434,7 @@ main (int argc, char *argv[])
 		fu_main_add_provider (priv, fu_provider_udev_new ());
 	fu_main_add_provider (priv, fu_provider_dfu_new ());
 	fu_main_add_provider (priv, fu_provider_rpi_new ());
+	fu_main_add_provider (priv, fu_provider_ebitdo_new ());
 #ifdef HAVE_COLORHUG
 	fu_main_add_provider (priv, fu_provider_chug_new ());
 #endif

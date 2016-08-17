@@ -22,6 +22,7 @@
 #include "config.h"
 
 #include <string.h>
+#include <appstream-glib.h>
 
 #include "ebitdo-common.h"
 #include "ebitdo-device.h"
@@ -31,6 +32,7 @@ typedef struct
 	EbitdoDeviceKind	 kind;
 	GUsbDevice		*usb_device;
 	guint32			 serial[9];
+	gchar			*guid;
 	gchar			*version;
 } EbitdoDevicePrivate;
 
@@ -108,6 +110,7 @@ ebitdo_device_finalize (GObject *object)
 	EbitdoDevice *device = EBITDO_DEVICE (object);
 	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
 
+	g_free (priv->guid);
 	g_free (priv->version);
 	if (priv->usb_device != NULL)
 		g_object_unref (priv->usb_device);
@@ -443,6 +446,13 @@ ebitdo_device_close (EbitdoDevice *device, GError **error)
 }
 
 const gchar *
+ebitdo_device_get_guid (EbitdoDevice *device)
+{
+	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	return priv->guid;
+}
+
+const gchar *
 ebitdo_device_get_version (EbitdoDevice *device)
 {
 	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
@@ -664,7 +674,16 @@ ebitdo_device_new (GUsbDevice *usb_device)
 	for (j = 0; vidpids[j].vid != 0x0000; j++) {
 		if (g_usb_device_get_vid (usb_device) == vidpids[j].vid &&
 		    g_usb_device_get_pid (usb_device) == vidpids[j].pid) {
+			g_autofree gchar *devid1 = NULL;
+
+			/* set kind */
 			priv->kind = vidpids[j].kind;
+
+			/* generate GUID */
+			devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+						  g_usb_device_get_vid (usb_device),
+						  g_usb_device_get_pid (usb_device));
+			priv->guid = as_utils_guid_from_string (devid1);
 			break;
 		}
 	}

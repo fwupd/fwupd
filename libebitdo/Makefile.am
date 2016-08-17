@@ -1,4 +1,5 @@
 AM_CPPFLAGS = \
+	$(APPSTREAM_GLIB_CFLAGS)				\
 	$(GLIB_CFLAGS)						\
 	$(GUSB_CFLAGS)						\
 	$(PIE_CFLAGS)						\
@@ -29,6 +30,7 @@ libebitdo_la_SOURCES =						\
 	ebitdo-device.h
 
 libebitdo_la_LIBADD =						\
+	$(APPSTREAM_GLIB_LIBS)					\
 	$(GUSB_LIBS)						\
 	$(GLIB_LIBS)
 
