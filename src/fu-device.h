@@ -42,6 +42,7 @@ FuDevice	*fu_device_new				(void);
 
 /* compat setters */
 #define fu_device_add_flag(d,v)			fwupd_result_add_device_flag(FWUPD_RESULT(d),v)
+#define fu_device_remove_flag(d,v)		fwupd_result_remove_device_flag(FWUPD_RESULT(d),v)
 #define fu_device_has_flag(d,v)			fwupd_result_has_device_flag(FWUPD_RESULT(d),v)
 #define fu_device_set_checksum(d,v)		fwupd_result_set_device_checksum(FWUPD_RESULT(d),v)
 #define fu_device_set_checksum_kind(d,v)	fwupd_result_set_device_checksum_kind(FWUPD_RESULT(d),v)

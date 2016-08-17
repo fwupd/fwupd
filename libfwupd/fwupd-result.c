@@ -1183,6 +1183,23 @@ fwupd_result_add_device_flag (FwupdResult *result, FwupdDeviceFlags flag)
 }
 
 /**
+ * fwupd_result_remove_device_flag:
+ * @result: A #FwupdResult
+ * @flag: the #FwupdDeviceFlags
+ *
+ * Removes a specific device flag from the result.
+ *
+ * Since: 0.7.3
+ **/
+void
+fwupd_result_remove_device_flag (FwupdResult *result, FwupdDeviceFlags flag)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_if_fail (FWUPD_IS_RESULT (result));
+	priv->device_flags &= ~flag;
+}
+
+/**
  * fwupd_result_has_device_flag:
  * @result: A #FwupdResult
  * @flag: the #FwupdDeviceFlags

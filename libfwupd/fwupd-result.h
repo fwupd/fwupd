@@ -79,6 +79,8 @@ void		 fwupd_result_set_device_flags		(FwupdResult	*result,
 							 guint64	 device_flags);
 void		 fwupd_result_add_device_flag		(FwupdResult	*result,
 							 FwupdDeviceFlags flag);
+void		 fwupd_result_remove_device_flag	(FwupdResult	*result,
+							 FwupdDeviceFlags flag);
 gboolean	 fwupd_result_has_device_flag		(FwupdResult	*result,
 							 FwupdDeviceFlags flag);
 guint64		 fwupd_result_get_device_created	(FwupdResult	*result);
