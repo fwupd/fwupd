@@ -1306,7 +1306,7 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	releases = as_app_get_releases (app);
 	for (guint i = 0; i < releases->len; i++) {
 		rel = g_ptr_array_index (releases, i);
-		if (as_utils_vercmp (as_release_get_version (rel), version) < 0)
+		if (as_utils_vercmp (as_release_get_version (rel), version) <= 0)
 			continue;
 		tmp = as_release_get_description (rel, NULL);
 		if (tmp == NULL)
