@@ -76,6 +76,7 @@ typedef struct {
 	GPtrArray		*providers;
 	PolkitAuthority		*authority;
 	FwupdStatus		 status;
+	guint			 percentage;
 	FuPending		*pending;
 	AsProfile		*profile;
 	AsStore			*store;
@@ -199,6 +200,19 @@ fu_main_set_status (FuMainPrivate *priv, FwupdStatus status)
 	g_debug ("Emitting PropertyChanged('Status'='%s')",
 		 fwupd_status_to_string (status));
 	fu_main_emit_property_changed (priv, "Status", g_variant_new_uint32 (status));
+}
+
+static void
+fu_main_set_percentage (FuMainPrivate *priv, guint percentage)
+{
+	if (priv->percentage == percentage)
+		return;
+	priv->percentage = percentage;
+
+	/* emit changed */
+	g_debug ("Emitting PropertyChanged('Percentage'='%u%%')", percentage);
+	fu_main_emit_property_changed (priv, "Percentage",
+				       g_variant_new_uint32 (percentage));
 }
 
 static GVariant *
@@ -2288,6 +2302,15 @@ fu_main_provider_status_changed_cb (FuProvider *provider,
 }
 
 static void
+fu_main_provider_percentage_changed_cb (FuProvider *provider,
+					guint percentage,
+					gpointer user_data)
+{
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+	fu_main_set_percentage (priv, percentage);
+}
+
+static void
 fu_main_add_provider (FuMainPrivate *priv, FuProvider *provider)
 {
 	g_signal_connect (provider, "device-added",
@@ -2298,6 +2321,9 @@ fu_main_add_provider (FuMainPrivate *priv, FuProvider *provider)
 			  priv);
 	g_signal_connect (provider, "status-changed",
 			  G_CALLBACK (fu_main_provider_status_changed_cb),
+			  priv);
+	g_signal_connect (provider, "percentage-changed",
+			  G_CALLBACK (fu_main_provider_percentage_changed_cb),
 			  priv);
 	g_ptr_array_add (priv->providers, provider);
 }
@@ -2347,6 +2373,7 @@ main (int argc, char *argv[])
 	/* create new objects */
 	priv = g_new0 (FuMainPrivate, 1);
 	priv->status = FWUPD_STATUS_IDLE;
+	priv->percentage = 0;
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_main_item_free);
 	priv->loop = g_main_loop_new (NULL, FALSE);
 	priv->pending = fu_pending_new ();

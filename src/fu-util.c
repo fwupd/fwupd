@@ -214,6 +214,15 @@ fu_util_status_changed_cb (FwupdClient *client,
 	}
 }
 
+static void
+fu_util_percentage_changed_cb (GObject *object,
+			       GParamSpec *pspec,
+			       FuUtilPrivate *priv)
+{
+	FwupdClient *client = FWUPD_CLIENT (object);
+	g_print ("Complete: %u%%\n", fwupd_client_get_percentage (client));
+}
+
 static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -1249,6 +1258,8 @@ main (int argc, char *argv[])
 	priv->client = fwupd_client_new ();
 	g_signal_connect (priv->client, "status-changed",
 			  G_CALLBACK (fu_util_status_changed_cb), priv);
+	g_signal_connect (priv->client, "notify::percentage",
+			  G_CALLBACK (fu_util_percentage_changed_cb), priv);
 
 	/* run the specified command */
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);

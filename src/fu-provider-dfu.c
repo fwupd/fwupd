@@ -210,6 +210,14 @@ fu_provider_dfu_state_changed_cb (DfuDevice *device,
 	}
 }
 
+static void
+fu_provider_dfu_percentage_changed_cb (DfuDevice *device,
+				       guint percentage,
+				       FuProvider *provider)
+{
+	fu_provider_set_percentage (provider, percentage);
+}
+
 static gboolean
 fu_provider_dfu_update (FuProvider *provider,
 			FuDevice *dev,
@@ -251,6 +259,8 @@ fu_provider_dfu_update (FuProvider *provider,
 	}
 	g_signal_connect (device, "state-changed",
 			  G_CALLBACK (fu_provider_dfu_state_changed_cb), provider);
+	g_signal_connect (device, "percentage-changed",
+			  G_CALLBACK (fu_provider_dfu_percentage_changed_cb), provider);
 
 	/* hit hardware */
 	dfu_firmware = dfu_firmware_new ();
@@ -320,6 +330,8 @@ fu_provider_dfu_verify (FuProvider *provider,
 	}
 	g_signal_connect (device, "state-changed",
 			  G_CALLBACK (fu_provider_dfu_state_changed_cb), provider);
+	g_signal_connect (device, "percentage-changed",
+			  G_CALLBACK (fu_provider_dfu_percentage_changed_cb), provider);
 
 	/* get data from hardware */
 	g_debug ("uploading from device->host");

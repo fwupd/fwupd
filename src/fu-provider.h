@@ -78,6 +78,8 @@ struct _FuProviderClass
 						 FuDevice	*device);
 	void		 (* status_changed)	(FuProvider	*provider,
 						 FwupdStatus	 status);
+	void		 (* percentage_changed)	(FuProvider	*provider,
+						 guint		 percentage);
 };
 
 #define FU_OFFLINE_TRIGGER_FILENAME	FU_OFFLINE_DESTDIR "/system-update"
@@ -88,6 +90,8 @@ void		 fu_provider_device_remove	(FuProvider	*provider,
 						 FuDevice	*device);
 void		 fu_provider_set_status		(FuProvider	*provider,
 						 FwupdStatus	 status);
+void		 fu_provider_set_percentage	(FuProvider	*provider,
+						 guint		 percentage);
 const gchar	*fu_provider_get_name		(FuProvider	*provider);
 gboolean	 fu_provider_coldplug		(FuProvider	*provider,
 						 GError		**error);

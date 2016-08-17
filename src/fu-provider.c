@@ -40,6 +40,7 @@ enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_STATUS_CHANGED,
+	SIGNAL_PERCENTAGE_CHANGED,
 	SIGNAL_LAST
 };
 
@@ -409,6 +410,13 @@ fu_provider_set_status (FuProvider *provider, FwupdStatus status)
 	g_signal_emit (provider, signals[SIGNAL_STATUS_CHANGED], 0, status);
 }
 
+void
+fu_provider_set_percentage (FuProvider *provider, guint percentage)
+{
+	g_signal_emit (provider, signals[SIGNAL_PERCENTAGE_CHANGED], 0,
+		       percentage);
+}
+
 GChecksumType
 fu_provider_get_checksum_type (FuProviderVerifyFlags flags)
 {
@@ -438,6 +446,12 @@ fu_provider_class_init (FuProviderClass *klass)
 		g_signal_new ("status-changed",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (FuProviderClass, status_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+	signals[SIGNAL_PERCENTAGE_CHANGED] =
+		g_signal_new ("percentage-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuProviderClass, percentage_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_UINT);
 }

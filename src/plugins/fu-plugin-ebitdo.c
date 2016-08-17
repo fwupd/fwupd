@@ -87,6 +87,7 @@ ebitdo_write_progress_cb (goffset current, goffset total, gpointer user_data)
 		percentage = (100.f * (gdouble) current) / (gdouble) total;
 	g_debug ("written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT " bytes [%.1f%%]\n",
 		 current, total, percentage);
+//	fu_provider_set_percentage (provider, (guint) percentage);
 }
 
 gboolean
