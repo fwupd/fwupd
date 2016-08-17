@@ -81,6 +81,7 @@ typedef enum {
  * @FU_DEVICE_FLAG_REQUIRE_AC:			Requires AC power
  * @FU_DEVICE_FLAG_LOCKED:			Is locked and can be unlocked
  * @FU_DEVICE_FLAG_SUPPORTED:			Is found in current metadata
+ * @FU_DEVICE_FLAG_NEEDS_BOOTLOADER:		Requires a bootloader mode
  *
  * FIXME: rename FU_DEVICE_ -> FWUPD_DEVICE_ when we break API
  *
@@ -93,6 +94,7 @@ typedef enum {
 #define FU_DEVICE_FLAG_REQUIRE_AC	(1u << 3)	/* Since: 0.6.3 */
 #define FU_DEVICE_FLAG_LOCKED		(1u << 4)	/* Since: 0.6.3 */
 #define FU_DEVICE_FLAG_SUPPORTED	(1u << 5)	/* Since: 0.7.1 */
+#define FU_DEVICE_FLAG_NEEDS_BOOTLOADER	(1u << 6)	/* Since: 0.7.3 */
 #define FU_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 
