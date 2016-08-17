@@ -85,7 +85,6 @@ ebitdo_process_csv_line (GPtrArray *array, const gchar *line)
 	guint i;
 	guint8 buffer[64];
 	gboolean direction = FALSE;
-	EbitdoPkt *hdr = (EbitdoPkt *) buffer;
 	EbitdoParseItem *item;
 
 	/* comment */
@@ -123,13 +122,6 @@ ebitdo_process_csv_line (GPtrArray *array, const gchar *line)
 		if (tmp > 0xff)
 			break;
 		buffer[i] = tmp;
-	}
-
-	/* filter out transfer timeouts */
-	if (0) {
-		if (hdr->type == EBITDO_PKT_TYPE_USER_CMD &&
-		    hdr->subtype == EBITDO_PKT_CMD_TRANSFER_TIMEOUT)
-			return;
 	}
 
 	/* add object */
