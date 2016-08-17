@@ -206,6 +206,7 @@ AM_CPPFLAGS +=						\
 	$(LIBSMBIOS_CFLAGS)				\
 	$(EFIVAR_CFLAGS)
 fwupd_LDADD +=						\
+	$(UEFI_LIBS)					\
 	$(LIBSMBIOS_LIBS)				\
 	$(EFIVAR_LIBS)
 fu_self_test_LDADD +=					\
