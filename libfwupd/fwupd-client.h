@@ -98,6 +98,7 @@ gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
 							 const gchar	*signature_fn,
 							 GCancellable	*cancellable,
 							 GError		**error);
+FwupdStatus	 fwupd_client_get_status		(FwupdClient	*client);
 guint		 fwupd_client_get_percentage		(FwupdClient	*client);
 
 G_END_DECLS

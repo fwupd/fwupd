@@ -861,6 +861,24 @@ fwupd_client_get_percentage (FwupdClient *client)
 }
 
 /**
+ * fwupd_client_get_status:
+ * @client: A #FwupdClient
+ *
+ * Gets the last returned status value.
+ *
+ * Returns: a #FwupdStatus, or %FWUPD_STATUS_UNKNOWN for unknown.
+ *
+ * Since: 0.7.3
+ **/
+FwupdStatus
+fwupd_client_get_status (FwupdClient *client)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FWUPD_STATUS_UNKNOWN);
+	return priv->status;
+}
+
+/**
  * fwupd_client_update_metadata:
  * @client: A #FwupdClient
  * @metadata_fn: the XML metadata filename
