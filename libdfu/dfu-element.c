@@ -37,7 +37,7 @@
 #include <stdio.h>
 
 #include "dfu-common.h"
-#include "dfu-element-private.h"
+#include "dfu-element.h"
 #include "dfu-error.h"
 
 static void dfu_element_finalize			 (GObject *object);
@@ -239,96 +239,4 @@ dfu_element_set_target_size (DfuElement *element, guint32 target_size)
 	/* replace */
 	g_bytes_unref (priv->contents);
 	priv->contents = g_bytes_new_take (buf, target_size);
-}
-
-/* DfuSe element header */
-typedef struct __attribute__((packed)) {
-	guint32		 address;
-	guint32		 size;
-} DfuSeElementPrefix;
-
-/**
- * dfu_element_from_dfuse: (skip)
- * @data: data buffer
- * @length: length of @data we can access
- * @consumed: (out): the number of bytes we consued
- * @error: a #GError, or %NULL
- *
- * Unpacks an element from DfuSe data.
- *
- * Returns: a #DfuElement, or %NULL for error
- **/
-DfuElement *
-dfu_element_from_dfuse (const guint8 *data,
-			guint32 length,
-			guint32 *consumed,
-			GError **error)
-{
-	DfuElement *element = NULL;
-	DfuElementPrivate *priv;
-	DfuSeElementPrefix *el = (DfuSeElementPrefix *) data;
-	guint32 size;
-
-	g_assert_cmpint(sizeof(DfuSeElementPrefix), ==, 8);
-
-	/* check input buffer size */
-	if (length < sizeof(DfuSeElementPrefix)) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
-			     "invalid element data size %u",
-			     (guint32) length);
-		return NULL;
-	}
-
-	/* check size */
-	size = GUINT32_FROM_LE (el->size);
-	if (size + sizeof(DfuSeElementPrefix) > length) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
-			     "invalid element size %u, only %u bytes left",
-			     size,
-			     (guint32) (length - sizeof(DfuSeElementPrefix)));
-		return NULL;
-	}
-
-	/* create new element */
-	element = dfu_element_new ();
-	priv = GET_PRIVATE (element);
-	priv->address = GUINT32_FROM_LE (el->address);
-	priv->contents = g_bytes_new (data + sizeof(DfuSeElementPrefix), size);
-
-	/* return size */
-	if (consumed != NULL)
-		*consumed = (guint32) sizeof(DfuSeElementPrefix) + size;
-
-	return element;
-}
-
-/**
- * dfu_element_to_dfuse: (skip)
- * @element: a #DfuElement
- *
- * Packs a DfuSe element.
- *
- * Returns: (transfer full): the packed data
- **/
-GBytes *
-dfu_element_to_dfuse (DfuElement *element)
-{
-	DfuElementPrivate *priv = GET_PRIVATE (element);
-	DfuSeElementPrefix *el;
-	const guint8 *data;
-	gsize length;
-	guint8 *buf;
-
-	data = g_bytes_get_data (priv->contents, &length);
-	buf = g_malloc0 (length + sizeof (DfuSeElementPrefix));
-	el = (DfuSeElementPrefix *) buf;
-	el->address = GUINT32_TO_LE (priv->address);
-	el->size = GUINT32_TO_LE (length);
-
-	memcpy (buf + sizeof (DfuSeElementPrefix), data, length);
-	return g_bytes_new_take (buf, length + sizeof (DfuSeElementPrefix));
 }

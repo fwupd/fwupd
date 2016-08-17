@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -19,19 +19,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#ifndef __DFU_IMAGE_PRIVATE_H
-#define __DFU_IMAGE_PRIVATE_H
+#ifndef __DFU_FORMAT_RAW_H
+#define __DFU_FORMAT_RAW_H
 
-#include "dfu-image.h"
+#include <glib-object.h>
+#include <gio/gio.h>
+
+#include "dfu-firmware.h"
 
 G_BEGIN_DECLS
 
-DfuImage	*dfu_image_from_dfuse		(const guint8	*data,
-						 guint32	 length,
-						 guint32	*consumed,
-						 GError		**error);
-GBytes		*dfu_image_to_dfuse		(DfuImage	*image);
+DfuFirmwareFormat	 dfu_firmware_detect_raw	(GBytes		*bytes);
+GBytes			*dfu_firmware_to_raw		(DfuFirmware	*firmware,
+							GError		**error);
+gboolean		 dfu_firmware_from_raw		(DfuFirmware	*firmware,
+							GBytes		*bytes,
+							DfuFirmwareParseFlags flags,
+							GError		**error);
 
 G_END_DECLS
 
-#endif /* __DFU_IMAGE_PRIVATE_H */
+#endif /* __DFU_FORMAT_RAW_H */

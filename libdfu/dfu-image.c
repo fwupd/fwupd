@@ -35,9 +35,9 @@
 #include <stdio.h>
 
 #include "dfu-common.h"
-#include "dfu-element-private.h"
+#include "dfu-element.h"
 #include "dfu-error.h"
-#include "dfu-image-private.h"
+#include "dfu-image.h"
 
 static void dfu_image_finalize			 (GObject *object);
 
@@ -272,6 +272,10 @@ dfu_image_set_name (DfuImage *image, const gchar *name)
 		sz = MIN ((guint16) strlen (name), 0xff - 1);
 		memcpy (priv->name, name, sz);
 	}
+
+	/* copy junk data in self tests for 1:1 copies */
+	if (name != NULL && G_UNLIKELY (g_getenv ("DFU_SELF_TEST") != NULL))
+		memcpy (priv->name, name, 0xff);
 }
 
 /**
@@ -311,143 +315,4 @@ dfu_image_to_string (DfuImage *image)
 
 	g_string_truncate (str, str->len - 1);
 	return g_string_free (str, FALSE);
-}
-
-/* DfuSe image header */
-typedef struct __attribute__((packed)) {
-	guint8		 sig[6];
-	guint8		 alt_setting;
-	guint32		 target_named;
-	gchar		 target_name[255];
-	guint32		 target_size;
-	guint32		 elements;
-} DfuSeImagePrefix;
-
-/**
- * dfu_image_from_dfuse: (skip)
- * @data: data buffer
- * @length: length of @data we can access
- * @consumed: (out): the number of bytes we consued
- * @error: a #GError, or %NULL
- *
- * Unpacks an image from DfuSe data.
- *
- * Returns: a #DfuImage, or %NULL for error
- **/
-DfuImage *
-dfu_image_from_dfuse (const guint8 *data,
-		      guint32 length,
-		      guint32 *consumed,
-		      GError **error)
-{
-	DfuImagePrivate *priv;
-	DfuSeImagePrefix *im;
-	guint32 elements;
-	guint32 offset = sizeof(DfuSeImagePrefix);
-	guint j;
-	g_autoptr(DfuImage) image = NULL;
-
-	g_assert_cmpint(sizeof(DfuSeImagePrefix), ==, 274);
-
-	/* check input buffer size */
-	if (length < sizeof(DfuSeImagePrefix)) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
-			     "invalid image data size %u",
-			     (guint32) length);
-		return NULL;
-	}
-
-	/* verify image signature */
-	im = (DfuSeImagePrefix *) data;
-	if (memcmp (im->sig, "Target", 6) != 0) {
-		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
-				     "invalid DfuSe target signature");
-		return NULL;
-	}
-
-	/* create new image */
-	image = dfu_image_new ();
-	priv = GET_PRIVATE (image);
-	priv->alt_setting = im->alt_setting;
-	if (GUINT32_FROM_LE (im->target_named) == 0x01)
-		memcpy (priv->name, im->target_name, 255);
-
-	/* parse elements */
-	length -= offset;
-	elements = GUINT32_FROM_LE (im->elements);
-	for (j = 0; j < elements; j++) {
-		guint32 consumed_local;
-		g_autoptr(DfuElement) element = NULL;
-		element = dfu_element_from_dfuse (data + offset, length,
-						  &consumed_local, error);
-		if (element == NULL)
-			return NULL;
-		dfu_image_add_element (image, element);
-		offset += consumed_local;
-		length -= consumed_local;
-	}
-
-	/* return size */
-	if (consumed != NULL)
-		*consumed = offset;
-
-	return g_object_ref (image);
-}
-
-/**
- * dfu_image_to_dfuse: (skip)
- * @image: a #DfuImage
- *
- * Packs a DfuSe image
- *
- * Returns: (transfer full): the packed data
- **/
-GBytes *
-dfu_image_to_dfuse (DfuImage *image)
-{
-	DfuImagePrivate *priv = GET_PRIVATE (image);
-	DfuElement *element;
-	DfuSeImagePrefix *im;
-	GBytes *bytes;
-	guint32 length_total = 0;
-	guint32 offset = sizeof (DfuSeImagePrefix);
-	guint8 *buf;
-	guint i;
-	g_autoptr(GPtrArray) element_array = NULL;
-
-	/* get total size */
-	element_array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
-	for (i = 0; i < priv->elements->len; i++) {
-		element = g_ptr_array_index (priv->elements, i);
-		bytes = dfu_element_to_dfuse (element);
-		g_ptr_array_add (element_array, bytes);
-		length_total += (guint32) g_bytes_get_size (bytes);
-	}
-
-	/* add prefix */
-	buf = g_malloc0 (length_total + sizeof (DfuSeImagePrefix));
-	im = (DfuSeImagePrefix *) buf;
-	memcpy (im->sig, "Target", 6);
-	im->alt_setting = priv->alt_setting;
-	if (priv->name != NULL) {
-		im->target_named = GUINT32_TO_LE (0x01);
-		memcpy (im->target_name, priv->name, 255);
-	}
-	im->target_size = GUINT32_TO_LE (length_total);
-	im->elements = GUINT32_TO_LE (priv->elements->len);
-
-	/* copy data */
-	for (i = 0; i < element_array->len; i++) {
-		const guint8 *data;
-		gsize length;
-		bytes = g_ptr_array_index (element_array, i);
-		data = g_bytes_get_data (bytes, &length);
-		memcpy (buf + offset, data, length);
-		offset += (guint32) length;
-	}
-	return g_bytes_new_take (buf, length_total + sizeof (DfuSeImagePrefix));
 }

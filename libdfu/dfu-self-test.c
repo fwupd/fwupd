@@ -675,6 +675,7 @@ main (int argc, char **argv)
 
 	/* log everything */
 	g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
+	g_setenv ("DFU_SELF_TEST", "", FALSE);
 
 	/* tests go here */
 	g_test_add_func ("/libdfu/enums", dfu_enums_func);

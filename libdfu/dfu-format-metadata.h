@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -19,19 +19,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#ifndef __DFU_ELEMENT_PRIVATE_H
-#define __DFU_ELEMENT_PRIVATE_H
+#ifndef __DFU_FORMAT_METADATA_H
+#define __DFU_FORMAT_METADATA_H
 
-#include "dfu-element.h"
+#include <glib-object.h>
+#include <gio/gio.h>
+
+#include "dfu-firmware.h"
 
 G_BEGIN_DECLS
 
-DfuElement	*dfu_element_from_dfuse		(const guint8	*data,
-						 guint32	 length,
-						 guint32	*consumed,
-						 GError		**error);
-GBytes		*dfu_element_to_dfuse		(DfuElement	*element);
+GBytes			*dfu_firmware_to_metadata	(DfuFirmware	*firmware,
+							 GError		**error);
+gboolean		 dfu_firmware_from_metadata	(DfuFirmware	*firmware,
+							 GBytes		*bytes,
+							 DfuFirmwareParseFlags flags,
+							 GError		**error);
 
 G_END_DECLS
 
-#endif /* __DFU_ELEMENT_PRIVATE_H */
+#endif /* __DFU_FORMAT_METADATA_H */

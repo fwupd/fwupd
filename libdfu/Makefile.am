@@ -48,14 +48,22 @@ libdfu_la_SOURCES =						\
 	dfu-device-private.h					\
 	dfu-element.c						\
 	dfu-element.h						\
-	dfu-element-private.h					\
 	dfu-error.c						\
 	dfu-error.h						\
 	dfu-firmware.c						\
 	dfu-firmware.h						\
+	dfu-format-dfu.c					\
+	dfu-format-dfu.h					\
+	dfu-format-dfuse.c					\
+	dfu-format-dfuse.h					\
+	dfu-format-ihex.c					\
+	dfu-format-ihex.h					\
+	dfu-format-metadata.c					\
+	dfu-format-metadata.h					\
+	dfu-format-raw.c					\
+	dfu-format-raw.h					\
 	dfu-image.c						\
 	dfu-image.h						\
-	dfu-image-private.h					\
 	dfu-sector.c						\
 	dfu-sector.h						\
 	dfu-sector-private.h					\
