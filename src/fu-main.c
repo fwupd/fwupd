@@ -1412,6 +1412,7 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 static AsStore *
 fu_main_get_store_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 {
+	g_autofree gchar *checksum = NULL;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -1439,6 +1440,13 @@ fu_main_get_store_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 				     error_local->message);
 		return NULL;
 	}
+
+	/* get a checksum of the file and use it as the origin */
+	checksum = g_compute_checksum_for_data (G_CHECKSUM_SHA1,
+						g_bytes_get_data (blob_cab, NULL),
+						g_bytes_get_size (blob_cab));
+	as_store_set_origin (store, checksum);
+
 	return g_steal_pointer (&store);
 }
 
@@ -1555,6 +1563,7 @@ fu_main_get_details_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 		app = AS_APP (g_ptr_array_index (apps, 0));
 
 	/* create a result with all the metadata in */
+	as_app_set_origin (app, as_store_get_origin (store));
 	res = fu_main_get_result_from_app (priv, app, error);
 	if (res == NULL)
 		return NULL;
@@ -1588,6 +1597,7 @@ fu_main_get_details_local_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 		g_autoptr(FwupdResult) res = NULL;
 		AsApp *app = g_ptr_array_index (apps, i);
 		GVariant *tmp;
+		as_app_set_origin (app, as_store_get_origin (store));
 		res = fu_main_get_result_from_app (priv, app, error);
 		if (res == NULL)
 			return NULL;
