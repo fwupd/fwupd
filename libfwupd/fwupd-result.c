@@ -33,6 +33,7 @@ static void fwupd_result_finalize	 (GObject *object);
 
 typedef struct {
 	GPtrArray			*guids;
+	gchar				*unique_id;
 
 	/* device-specific */
 	gchar				*device_checksum;
@@ -75,11 +76,48 @@ enum {
 enum {
 	PROP_0,
 	PROP_DEVICE_ID,
+	PROP_UNIQUE_ID,
 	PROP_LAST
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdResult, fwupd_result, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_result_get_instance_private (o))
+
+/**
+ * fwupd_result_get_unique_id:
+ * @result: A #FwupdResult
+ *
+ * Gets the unique ID that can be used for caching.
+ *
+ * Returns: the ID, or %NULL if unset
+ *
+ * Since: 0.7.3
+ **/
+const gchar *
+fwupd_result_get_unique_id (FwupdResult *result)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
+	return priv->unique_id;
+}
+
+/**
+ * fwupd_result_set_unique_id:
+ * @result: A #FwupdResult
+ * @unique_id: the result ID, e.g. "USB:foo"
+ *
+ * Sets the unique ID that can be used for caching.
+ *
+ * Since: 0.7.3
+ **/
+void
+fwupd_result_set_unique_id (FwupdResult *result, const gchar *unique_id)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_if_fail (FWUPD_IS_RESULT (result));
+	g_free (priv->unique_id);
+	priv->unique_id = g_strdup (unique_id);
+}
 
 /**
  * fwupd_result_get_device_id:
@@ -1324,6 +1362,11 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 				       FWUPD_RESULT_KEY_GUID,
 				       g_variant_new_string (str->str));
 	}
+	if (priv->unique_id != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_UNIQUE_ID,
+				       g_variant_new_string (priv->unique_id));
+	}
 	if (priv->device_name != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_DEVICE_NAME,
@@ -1495,6 +1538,10 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 		g_auto(GStrv) split = g_strsplit (guids, ",", -1);
 		for (i = 0; split[i] != NULL; i++)
 			fwupd_result_add_guid (result, split[i]);
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UNIQUE_ID) == 0) {
+		fwupd_result_set_unique_id (result, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_NAME) == 0) {
@@ -1756,6 +1803,7 @@ fwupd_result_to_string (FwupdResult *result)
 		const gchar *guid = g_ptr_array_index (priv->guids, i);
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
 	}
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UNIQUE_ID, priv->unique_id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->device_id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION, priv->device_description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PROVIDER, priv->device_provider);
@@ -1804,6 +1852,9 @@ fwupd_result_get_property (GObject *object, guint prop_id,
 	case PROP_DEVICE_ID:
 		g_value_set_string (value, priv->device_id);
 		break;
+	case PROP_UNIQUE_ID:
+		g_value_set_string (value, priv->unique_id);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -1821,6 +1872,10 @@ fwupd_result_set_property (GObject *object, guint prop_id,
 	case PROP_DEVICE_ID:
 		g_free (priv->device_id);
 		priv->device_id = g_strdup (g_value_get_string (value));
+		break;
+	case PROP_UNIQUE_ID:
+		g_free (priv->unique_id);
+		priv->unique_id = g_strdup (g_value_get_string (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1866,6 +1921,7 @@ fwupd_result_finalize (GObject *object)
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 
 	g_ptr_array_unref (priv->guids);
+	g_free (priv->unique_id);
 	g_free (priv->device_description);
 	g_free (priv->device_checksum);
 	g_free (priv->device_id);

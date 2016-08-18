@@ -55,6 +55,10 @@ gboolean	 fwupd_result_has_guid			(FwupdResult	*result,
 GPtrArray	*fwupd_result_get_guids			(FwupdResult	*result);
 const gchar	*fwupd_result_get_guid_default		(FwupdResult	*result);
 
+const gchar	*fwupd_result_get_unique_id		(FwupdResult	*result);
+void		 fwupd_result_set_unique_id		(FwupdResult	*result,
+							 const gchar	*unique_id);
+
 /* device-specific */
 const gchar	*fwupd_result_get_device_id		(FwupdResult	*result);
 void		 fwupd_result_set_device_id		(FwupdResult	*result,

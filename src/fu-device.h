@@ -53,6 +53,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_id(d,v)			fwupd_result_set_device_id(FWUPD_RESULT(d),v)
 #define fu_device_set_modified(d,v)		fwupd_result_set_device_modified(FWUPD_RESULT(d),v)
 #define fu_device_set_provider(d,v)		fwupd_result_set_device_provider(FWUPD_RESULT(d),v)
+#define fu_device_set_unique_id(d,v)		fwupd_result_set_unique_id(FWUPD_RESULT(d),v)
 #define fu_device_set_update_checksum(d,v)	fwupd_result_set_update_checksum(FWUPD_RESULT(d),v)
 #define fu_device_set_update_description(d,v)	fwupd_result_set_update_description(FWUPD_RESULT(d),v)
 #define fu_device_set_update_error(d,v)		fwupd_result_set_update_error(FWUPD_RESULT(d),v)

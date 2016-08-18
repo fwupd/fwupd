@@ -1337,6 +1337,13 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	tmp = as_app_get_project_license (app);
 	if (tmp != NULL)
 		fu_device_set_update_license (item->device, tmp);
+#if AS_CHECK_VERSION(0,6,1)
+	tmp = as_app_get_unique_id (app);
+	if (tmp != NULL)
+		fu_device_set_unique_id (item->device, tmp);
+#else
+	fu_device_set_unique_id (item->device, as_app_get_id (app));
+#endif
 
 	/* add release information */
 	tmp = as_release_get_version (rel);
@@ -1497,6 +1504,12 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 	fwupd_result_set_update_trust_flags (res, trust_flags);
 	fwupd_result_set_update_vendor (res, as_app_get_developer_name (app, NULL));
 	fwupd_result_set_update_version (res, as_release_get_version (rel));
+#if AS_CHECK_VERSION(0,6,1)
+	fwupd_result_set_unique_id (res, as_app_get_unique_id (app));
+#else
+	fwupd_result_set_unique_id (res, as_app_get_id (app));
+#endif
+
 	csum_tmp = as_release_get_checksum_by_target (rel,
 	AS_CHECKSUM_TARGET_CONTENT);
 	fn = as_checksum_get_filename (csum_tmp);
