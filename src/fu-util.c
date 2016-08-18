@@ -119,8 +119,8 @@ fu_util_add (GPtrArray *array,
 static gchar *
 fu_util_get_descriptions (GPtrArray *array)
 {
-	guint len;
-	const guint max_len = 35;
+	gsize len;
+	const gsize max_len = 35;
 	GString *string;
 
 	/* print each command */
@@ -136,13 +136,13 @@ fu_util_get_descriptions (GPtrArray *array)
 			len += strlen (item->arguments) + 1;
 		}
 		if (len < max_len) {
-			for (guint j = len; j < max_len + 1; j++)
+			for (gsize j = len; j < max_len + 1; j++)
 				g_string_append_c (string, ' ');
 			g_string_append (string, item->description);
 			g_string_append_c (string, '\n');
 		} else {
 			g_string_append_c (string, '\n');
-			for (guint j = 0; j < max_len + 1; j++)
+			for (gsize j = 0; j < max_len + 1; j++)
 				g_string_append_c (string, ' ');
 			g_string_append (string, item->description);
 			g_string_append_c (string, '\n');
@@ -175,43 +175,97 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 	return FALSE;
 }
 
-static void
-fu_util_status_changed_cb (FwupdClient *client,
-			   FwupdStatus status,
-			   FuUtilPrivate *priv)
+static const gchar *
+fu_util_status_to_string (FwupdStatus status)
 {
 	switch (status) {
 	case FWUPD_STATUS_IDLE:
 		/* TRANSLATORS: daemon is inactive */
-		g_print (" * %s\n", _("Idle"));
+		return _("Idle…");
 		break;
 	case FWUPD_STATUS_DECOMPRESSING:
 		/* TRANSLATORS: decompressing the firmware file */
-		g_print (" * %s\n", _("Decompressing firmware"));
+		return _("Decompressing…");
 		break;
 	case FWUPD_STATUS_LOADING:
 		/* TRANSLATORS: parsing the firmware information */
-		g_print (" * %s\n", _("Loading firmware"));
+		return _("Loading…");
 		break;
 	case FWUPD_STATUS_DEVICE_RESTART:
 		/* TRANSLATORS: restarting the device to pick up new F/W */
-		g_print (" * %s\n", _("Restarting device"));
+		return _("Restarting device…");
 		break;
 	case FWUPD_STATUS_DEVICE_WRITE:
 		/* TRANSLATORS: writing to the flash chips */
-		g_print (" * %s\n", _("Writing firmware to device"));
+		return _("Writing…");
 		break;
 	case FWUPD_STATUS_DEVICE_VERIFY:
 		/* TRANSLATORS: verifying we wrote the firmware correctly */
-		g_print (" * %s\n", _("Verifying firmware from device"));
+		return _("Verifying…");
 		break;
 	case FWUPD_STATUS_SCHEDULING:
 		/* TRANSLATORS: scheduing an update to be done on the next boot */
-		g_print (" * %s\n", _("Scheduling upgrade"));
+		return _("Scheduling…");
 		break;
 	default:
 		break;
 	}
+
+	/* TRANSLATORS: currect daemon status is unknown */
+	return _("Unknown");
+}
+
+static void
+fu_util_display_panel (FuUtilPrivate *priv)
+{
+	FwupdStatus status;
+	const gchar *title;
+	const guint progressbar_len = 40;
+	const guint title_len = 25;
+	guint i;
+	guint percentage;
+	static guint to_erase = 0;
+	g_autoptr(GString) str = g_string_new (NULL);
+
+	/* erase previous line */
+	for (i = 0; i < to_erase; i++)
+		g_print ("\b");
+
+	/* add status */
+	status = fwupd_client_get_status (priv->client);
+	if (status == FWUPD_STATUS_IDLE) {
+		if (to_erase > 0)
+			g_print ("\n");
+		to_erase = 0;
+		return;
+	}
+	title = fu_util_status_to_string (status);
+	g_string_append (str, title);
+	for (i = str->len; i < title_len; i++)
+		g_string_append (str, " ");
+
+	/* add progressbar */
+	percentage = fwupd_client_get_percentage (priv->client);
+	if (percentage > 0) {
+		g_string_append (str, "[");
+		for (i = 0; i < progressbar_len * percentage / 100; i++)
+			g_string_append (str, "*");
+		for (i = i + 1; i < progressbar_len; i++)
+			g_string_append (str, " ");
+		g_string_append (str, "]");
+	}
+
+	/* dump to screen */
+	g_print ("%s", str->str);
+	to_erase = str->len;
+}
+
+static void
+fu_util_client_notify_cb (GObject *object,
+			  GParamSpec *pspec,
+			  FuUtilPrivate *priv)
+{
+	fu_util_display_panel (priv);
 }
 
 static gboolean
@@ -664,7 +718,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 	if (checksum_expected != NULL) {
 		checksum_actual = g_compute_checksum_for_data (checksum_type,
 							       (guchar *) msg->response_body->data,
-							       msg->response_body->length);
+							       (gsize) msg->response_body->length);
 		if (g_strcmp0 (checksum_expected, checksum_actual) != 0) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -844,7 +898,7 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 static void
 fu_util_print_data (const gchar *title, const gchar *msg)
 {
-	guint title_len;
+	gsize title_len;
 	g_auto(GStrv) lines = NULL;
 
 	if (msg == NULL)
@@ -855,7 +909,7 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 	title_len = strlen (title) + 1;
 	lines = g_strsplit (msg, "\n", -1);
 	for (guint j = 0; lines[j] != NULL; j++) {
-		for (guint i = title_len; i < 25; i++)
+		for (gsize i = title_len; i < 25; i++)
 			g_print (" ");
 		g_print ("%s\n", lines[j]);
 		title_len = 0;
@@ -1079,7 +1133,7 @@ main (int argc, char *argv[])
 	gboolean offline = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
-	guint retval = 1;
+	gint rc = 1;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *cmd_descriptions = NULL;
 	const GOptionEntry options[] = {
@@ -1247,8 +1301,10 @@ main (int argc, char *argv[])
 
 	/* connect to the daemon */
 	priv->client = fwupd_client_new ();
-	g_signal_connect (priv->client, "status-changed",
-			  G_CALLBACK (fu_util_status_changed_cb), priv);
+	g_signal_connect (priv->client, "notify::percentage",
+			  G_CALLBACK (fu_util_client_notify_cb), priv);
+	g_signal_connect (priv->client, "notify::status",
+			  G_CALLBACK (fu_util_client_notify_cb), priv);
 
 	/* run the specified command */
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);
@@ -1264,7 +1320,7 @@ main (int argc, char *argv[])
 	}
 
 	/* success */
-	retval = 0;
+	rc = 0;
 out:
 	if (priv != NULL) {
 		if (priv->cmd_array != NULL)
@@ -1276,5 +1332,5 @@ out:
 		g_option_context_free (priv->context);
 		g_free (priv);
 	}
-	return retval;
+	return rc;
 }

@@ -155,7 +155,7 @@ fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **e
 	/* print what keys were imported */
 	result = gpgme_op_import_result (priv->ctx);
 	for (s = result->imports; s != NULL; s = s->next) {
-		g_debug ("importing key %s [%i] %s",
+		g_debug ("importing key %s [%u] %s",
 			 s->fpr, s->status, gpgme_strerror (s->result));
 	}
 

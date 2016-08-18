@@ -37,6 +37,7 @@
 #define FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT	"FlashesLeft"	/* u */
 #define FWUPD_RESULT_KEY_DEVICE_VENDOR		"DeviceVendor"	/* s */
 #define FWUPD_RESULT_KEY_GUID			"Guid"		/* s */
+#define FWUPD_RESULT_KEY_UNIQUE_ID		"UniqueID"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_DESCRIPTION	"UpdateDescription" /* s */
 #define FWUPD_RESULT_KEY_UPDATE_ERROR		"PendingError"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_FILENAME	"FilenameCab"	/* s */

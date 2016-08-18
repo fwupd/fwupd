@@ -22,6 +22,7 @@
 #include "config.h"
 
 #include <string.h>
+#include <appstream-glib.h>
 
 #include "ebitdo-common.h"
 #include "ebitdo-device.h"
@@ -31,6 +32,7 @@ typedef struct
 	EbitdoDeviceKind	 kind;
 	GUsbDevice		*usb_device;
 	guint32			 serial[9];
+	gchar			*guid;
 	gchar			*version;
 } EbitdoDevicePrivate;
 
@@ -108,6 +110,7 @@ ebitdo_device_finalize (GObject *object)
 	EbitdoDevice *device = EBITDO_DEVICE (object);
 	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
 
+	g_free (priv->guid);
 	g_free (priv->version);
 	if (priv->usb_device != NULL)
 		g_object_unref (priv->usb_device);
@@ -164,7 +167,7 @@ ebitdo_device_get_usb_device (EbitdoDevice *device)
 static gboolean
 ebitdo_device_send (EbitdoDevice *device,
 		    EbitdoPktType type,
-		    EbitdoPktSubtype subtype,
+		    EbitdoPktCmd subtype,
 		    EbitdoPktCmd cmd,
 		    const guint8 *in,
 		    gsize in_len,
@@ -200,15 +203,19 @@ ebitdo_device_send (EbitdoDevice *device,
 		hdr->cmd_len = GUINT16_TO_LE (in_len + 3);
 		hdr->cmd = cmd;
 		hdr->payload_len = GUINT16_TO_LE (in_len);
-		memcpy (packet + 0x07, in, in_len);
-		hdr->pkt_len = in_len + 7;
+		memcpy (packet + 0x08, in, in_len);
+		hdr->pkt_len = (guint8) (in_len + 7);
 	} else {
 		hdr->cmd_len = GUINT16_TO_LE (in_len + 1);
 		hdr->cmd = cmd;
 		hdr->pkt_len = 5;
 	}
-	ebitdo_dump_raw ("->DEVICE", packet, hdr->pkt_len + 1);
-	ebitdo_dump_pkt (hdr);
+
+	/* debug */
+	if (g_getenv ("EBITDO_DEBUG") != NULL) {
+		ebitdo_dump_raw ("->DEVICE", packet, (gsize) hdr->pkt_len + 1);
+		ebitdo_dump_pkt (hdr);
+	}
 
 	/* get data from device */
 	if (!g_usb_device_interrupt_transfer (priv->usb_device,
@@ -223,7 +230,7 @@ ebitdo_device_send (EbitdoDevice *device,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "failed to send to device on ep 0x%02x: %s",
-			     EBITDO_USB_BOOTLOADER_EP_OUT,
+			     (guint) EBITDO_USB_BOOTLOADER_EP_OUT,
 			     error_local->message);
 		return FALSE;
 	}
@@ -261,25 +268,28 @@ ebitdo_device_receive (EbitdoDevice *device,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "failed to retrieve from device on ep 0x%02x: %s",
-			     EBITDO_USB_BOOTLOADER_EP_IN,
+			     (guint) EBITDO_USB_BOOTLOADER_EP_IN,
 			     error_local->message);
 		return FALSE;
 	}
 
-	ebitdo_dump_raw ("<-DEVICE", packet, hdr->pkt_len - 1);
-	ebitdo_dump_pkt (hdr);
+	/* debug */
+	if (g_getenv ("EBITDO_DEBUG") != NULL) {
+		ebitdo_dump_raw ("<-DEVICE", packet, (gsize) hdr->pkt_len - 1);
+		ebitdo_dump_pkt (hdr);
+	}
 
 	/* get-version (booloader) */
 	if (hdr->type == EBITDO_PKT_TYPE_USER_CMD &&
-	    hdr->subtype == EBITDO_PKT_SUBTYPE_UPDATE_FIRMWARE_DATA &&
+	    hdr->subtype == EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA &&
 	    hdr->cmd == EBITDO_PKT_CMD_FW_GET_VERSION) {
 		if (out != NULL) {
 			if (hdr->payload_len != out_len) {
 				g_set_error (error,
 					     G_IO_ERROR,
 					     G_IO_ERROR_INVALID_DATA,
-					     "outbuf size wrong, expected %i got %i",
-					     (guint) out_len,
+					     "outbuf size wrong, expected %" G_GSIZE_FORMAT " got %u",
+					     out_len,
 					     hdr->payload_len);
 				return FALSE;
 			}
@@ -291,14 +301,14 @@ ebitdo_device_receive (EbitdoDevice *device,
 	}
 
 	/* get-version (firmware) -- not a packet, just raw data! */
-	if (hdr->pkt_len == EBITDO_PKT_SUBTYPE_GET_VERSION_RESPONSE) {
+	if (hdr->pkt_len == EBITDO_PKT_CMD_GET_VERSION_RESPONSE) {
 		if (out != NULL) {
 			if (out_len != 4) {
 				g_set_error (error,
 					     G_IO_ERROR,
 					     G_IO_ERROR_INVALID_DATA,
-					     "outbuf size wrong, expected 4 got %i",
-					     (guint) out_len);
+					     "outbuf size wrong, expected 4 got %" G_GSIZE_FORMAT,
+					     out_len);
 				return FALSE;
 			}
 			memcpy (out, packet + 1, 4);
@@ -308,14 +318,14 @@ ebitdo_device_receive (EbitdoDevice *device,
 
 	/* verification-id response */
 	if (hdr->type == EBITDO_PKT_TYPE_USER_CMD &&
-	    hdr->subtype == EBITDO_PKT_SUBTYPE_VERIFICATION_ID) {
+	    hdr->subtype == EBITDO_PKT_CMD_VERIFICATION_ID) {
 		if (out != NULL) {
 			if (hdr->cmd_len != out_len) {
 				g_set_error (error,
 					     G_IO_ERROR,
 					     G_IO_ERROR_INVALID_DATA,
-					     "outbuf size wrong, expected %i got %i",
-					     (guint) out_len,
+					     "outbuf size wrong, expected %" G_GSIZE_FORMAT " got %i",
+					     out_len,
 					     hdr->cmd_len);
 				return FALSE;
 			}
@@ -328,13 +338,14 @@ ebitdo_device_receive (EbitdoDevice *device,
 
 	/* update-firmware-data */
 	if (hdr->type == EBITDO_PKT_TYPE_USER_CMD &&
-	    hdr->subtype == EBITDO_PKT_SUBTYPE_UPDATE_FIRMWARE_DATA &&
+	    hdr->subtype == EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA &&
 	    hdr->payload_len == 0x00) {
-		if (hdr->cmd != EBITDO_PKT_SUBTYPE_ACK) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_DATA,
-					     "write failed");
+		if (hdr->cmd != EBITDO_PKT_CMD_ACK) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "write failed, got %s",
+				     ebitdo_pkt_cmd_to_string (hdr->cmd));
 			return FALSE;
 		}
 		return TRUE;
@@ -353,7 +364,7 @@ ebitdo_device_open (EbitdoDevice *device, GError **error)
 {
 	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
 	gdouble tmp;
-	guint32 version_tmp;
+	guint32 version_tmp = 0;
 	guint32 serial_tmp[9];
 	guint i;
 
@@ -369,7 +380,7 @@ ebitdo_device_open (EbitdoDevice *device, GError **error)
 	if (priv->kind != EBITDO_DEVICE_KIND_BOOTLOADER) {
 		if (!ebitdo_device_send (device,
 					 EBITDO_PKT_TYPE_USER_CMD,
-					 EBITDO_PKT_SUBTYPE_GET_VERSION,
+					 EBITDO_PKT_CMD_GET_VERSION,
 					 0,
 					 NULL, 0, /* in */
 					 error)) {
@@ -389,7 +400,7 @@ ebitdo_device_open (EbitdoDevice *device, GError **error)
 	/* get version */
 	if (!ebitdo_device_send (device,
 				 EBITDO_PKT_TYPE_USER_CMD,
-				 EBITDO_PKT_SUBTYPE_UPDATE_FIRMWARE_DATA,
+				 EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 EBITDO_PKT_CMD_FW_GET_VERSION,
 				 NULL, 0, /* in */
 				 error)) {
@@ -407,12 +418,13 @@ ebitdo_device_open (EbitdoDevice *device, GError **error)
 	/* get verification ID */
 	if (!ebitdo_device_send (device,
 				 EBITDO_PKT_TYPE_USER_CMD,
-				 EBITDO_PKT_SUBTYPE_GET_VERIFICATION_ID,
+				 EBITDO_PKT_CMD_GET_VERIFICATION_ID,
 				 0x00, /* cmd */
 				 NULL, 0,
 				 error)) {
 		return FALSE;
 	}
+	memset (serial_tmp, 0x00, sizeof (serial_tmp));
 	if (!ebitdo_device_receive (device,
 				    (guint8 *) &serial_tmp, sizeof(serial_tmp),
 				    error)) {
@@ -434,6 +446,13 @@ ebitdo_device_close (EbitdoDevice *device, GError **error)
 }
 
 const gchar *
+ebitdo_device_get_guid (EbitdoDevice *device)
+{
+	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	return priv->guid;
+}
+
+const gchar *
 ebitdo_device_get_version (EbitdoDevice *device)
 {
 	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
@@ -448,7 +467,10 @@ ebitdo_device_get_serial (EbitdoDevice *device)
 }
 
 gboolean
-ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw, GError **error)
+ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
+			      GFileProgressCallback progress_cb,
+			      gpointer progress_data,
+			      GError **error)
 {
 	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
 	EbitdoFirmwareHeader *hdr;
@@ -480,7 +502,7 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw, GError **error)
 	ebitdo_dump_firmware_header (hdr);
 
 	/* check the file size */
-	payload_len = g_bytes_get_size (fw) - sizeof (EbitdoFirmwareHeader);
+	payload_len = (guint32) (g_bytes_get_size (fw) - sizeof (EbitdoFirmwareHeader));
 	if (payload_len != GUINT32_FROM_LE (hdr->destination_len)) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -497,18 +519,16 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw, GError **error)
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "data invalid, reserved[%i] = 0x%04x",
+				     "data invalid, reserved[%u] = 0x%04x",
 				     i, hdr->reserved[i]);
 			return FALSE;
 		}
 	}
 
-g_error ("ABORT, THERE BE DRAGONS");
-
 	/* set up the firmware header */
 	if (!ebitdo_device_send (device,
 				 EBITDO_PKT_TYPE_USER_CMD,
-				 EBITDO_PKT_SUBTYPE_UPDATE_FIRMWARE_DATA,
+				 EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 EBITDO_PKT_CMD_FW_UPDATE_HEADER,
 				 (const guint8 *) hdr, sizeof(EbitdoFirmwareHeader),
 				 &error_local)) {
@@ -519,14 +539,28 @@ g_error ("ABORT, THERE BE DRAGONS");
 			     error_local->message);
 		return FALSE;
 	}
+	if (!ebitdo_device_receive (device, NULL, 0, &error_local)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "failed to get ACK for fw update header: %s",
+			     error_local->message);
+		return FALSE;
+	}
 
 	/* flash the firmware in 32 byte blocks */
 	payload_data = g_bytes_get_data (fw, NULL);
 	payload_data += sizeof(EbitdoFirmwareHeader);
-	for (offset = 0; offset < payload_len + chunk_sz - 1; offset += chunk_sz) {
+	for (offset = 0; offset < payload_len; offset += chunk_sz) {
+		if (g_getenv ("EBITDO_DEBUG") != NULL) {
+			g_debug ("writing %u bytes to 0x%04x of 0x%04x",
+				 chunk_sz, offset, payload_len);
+		}
+		if (progress_cb != NULL)
+			progress_cb (offset, payload_len, progress_data);
 		if (!ebitdo_device_send (device,
 					 EBITDO_PKT_TYPE_USER_CMD,
-					 EBITDO_PKT_SUBTYPE_UPDATE_FIRMWARE_DATA,
+					 EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 					 EBITDO_PKT_CMD_FW_UPDATE_DATA,
 					 payload_data + offset, chunk_sz,
 					 &error_local)) {
@@ -547,14 +581,19 @@ g_error ("ABORT, THERE BE DRAGONS");
 		}
 	}
 
+	/* mark as complete */
+	if (progress_cb != NULL)
+		progress_cb (payload_len, payload_len, progress_data);
+
 	/* set the "encode id" which is likely a checksum, bluetooth pairing
-	 * or maybe just security-through-obscurity */
+	 * or maybe just security-through-obscurity -- also note:
+	 * SET_ENCODE_ID enforces no read for success?! */
 	serial_new[0] = priv->serial[0] ^ app_key_index[priv->serial[0] & 0x0f];
 	serial_new[1] = priv->serial[1] ^ app_key_index[priv->serial[1] & 0x0f];
 	serial_new[2] = priv->serial[2] ^ app_key_index[priv->serial[2] & 0x0f];
 	if (!ebitdo_device_send (device,
 				 EBITDO_PKT_TYPE_USER_CMD,
-				 EBITDO_PKT_SUBTYPE_UPDATE_FIRMWARE_DATA,
+				 EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 EBITDO_PKT_CMD_FW_SET_ENCODE_ID,
 				 (guint8 *) serial_new,
 				 sizeof(serial_new),
@@ -570,7 +609,7 @@ g_error ("ABORT, THERE BE DRAGONS");
 	/* mark flash as successful */
 	if (!ebitdo_device_send (device,
 				 EBITDO_PKT_TYPE_USER_CMD,
-				 EBITDO_PKT_SUBTYPE_UPDATE_FIRMWARE_DATA,
+				 EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 EBITDO_PKT_CMD_FW_UPDATE_OK,
 				 NULL, 0,
 				 &error_local)) {
@@ -635,7 +674,16 @@ ebitdo_device_new (GUsbDevice *usb_device)
 	for (j = 0; vidpids[j].vid != 0x0000; j++) {
 		if (g_usb_device_get_vid (usb_device) == vidpids[j].vid &&
 		    g_usb_device_get_pid (usb_device) == vidpids[j].pid) {
+			g_autofree gchar *devid1 = NULL;
+
+			/* set kind */
 			priv->kind = vidpids[j].kind;
+
+			/* generate GUID */
+			devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+						  g_usb_device_get_vid (usb_device),
+						  g_usb_device_get_pid (usb_device));
+			priv->guid = as_utils_guid_from_string (devid1);
 			break;
 		}
 	}

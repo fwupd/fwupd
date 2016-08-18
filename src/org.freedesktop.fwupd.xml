@@ -34,6 +34,17 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='Percentage' type='u' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            The job percentage completion, or 0 for unknown.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <method name='GetDevices'>
       <doc:doc>
         <doc:description>

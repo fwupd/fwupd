@@ -83,6 +83,7 @@ EbitdoDeviceKind ebitdo_device_get_kind		(EbitdoDevice	*device);
 GUsbDevice	*ebitdo_device_get_usb_device	(EbitdoDevice	*device);
 const gchar	*ebitdo_device_get_version	(EbitdoDevice	*device);
 const guint32	*ebitdo_device_get_serial	(EbitdoDevice	*device);
+const gchar	*ebitdo_device_get_guid		(EbitdoDevice	*device);
 
 /* object methods */
 gboolean	 ebitdo_device_open		(EbitdoDevice	*device,
@@ -91,6 +92,8 @@ gboolean	 ebitdo_device_close		(EbitdoDevice	*device,
 						 GError		**error);
 gboolean	 ebitdo_device_write_firmware	(EbitdoDevice	*device,
 						 GBytes		*fw,
+						 GFileProgressCallback progress_cb,
+						 gpointer	 progress_data,
 						 GError		**error);
 
 G_END_DECLS

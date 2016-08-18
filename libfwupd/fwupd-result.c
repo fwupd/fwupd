@@ -33,6 +33,7 @@ static void fwupd_result_finalize	 (GObject *object);
 
 typedef struct {
 	GPtrArray			*guids;
+	gchar				*unique_id;
 
 	/* device-specific */
 	gchar				*device_checksum;
@@ -75,11 +76,48 @@ enum {
 enum {
 	PROP_0,
 	PROP_DEVICE_ID,
+	PROP_UNIQUE_ID,
 	PROP_LAST
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdResult, fwupd_result, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_result_get_instance_private (o))
+
+/**
+ * fwupd_result_get_unique_id:
+ * @result: A #FwupdResult
+ *
+ * Gets the unique ID that can be used for caching.
+ *
+ * Returns: the ID, or %NULL if unset
+ *
+ * Since: 0.7.3
+ **/
+const gchar *
+fwupd_result_get_unique_id (FwupdResult *result)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
+	return priv->unique_id;
+}
+
+/**
+ * fwupd_result_set_unique_id:
+ * @result: A #FwupdResult
+ * @unique_id: the result ID, e.g. "USB:foo"
+ *
+ * Sets the unique ID that can be used for caching.
+ *
+ * Since: 0.7.3
+ **/
+void
+fwupd_result_set_unique_id (FwupdResult *result, const gchar *unique_id)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_if_fail (FWUPD_IS_RESULT (result));
+	g_free (priv->unique_id);
+	priv->unique_id = g_strdup (unique_id);
+}
 
 /**
  * fwupd_result_get_device_id:
@@ -1183,6 +1221,23 @@ fwupd_result_add_device_flag (FwupdResult *result, FwupdDeviceFlags flag)
 }
 
 /**
+ * fwupd_result_remove_device_flag:
+ * @result: A #FwupdResult
+ * @flag: the #FwupdDeviceFlags
+ *
+ * Removes a specific device flag from the result.
+ *
+ * Since: 0.7.3
+ **/
+void
+fwupd_result_remove_device_flag (FwupdResult *result, FwupdDeviceFlags flag)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_if_fail (FWUPD_IS_RESULT (result));
+	priv->device_flags &= ~flag;
+}
+
+/**
  * fwupd_result_has_device_flag:
  * @result: A #FwupdResult
  * @flag: the #FwupdDeviceFlags
@@ -1198,7 +1253,7 @@ fwupd_result_has_device_flag (FwupdResult *result, FwupdDeviceFlags flag)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), FALSE);
-	return priv->device_flags & flag;
+	return (priv->device_flags & flag) > 0;
 }
 
 /**
@@ -1306,6 +1361,11 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_GUID,
 				       g_variant_new_string (str->str));
+	}
+	if (priv->unique_id != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_UNIQUE_ID,
+				       g_variant_new_string (priv->unique_id));
 	}
 	if (priv->device_name != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1480,6 +1540,10 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 			fwupd_result_add_guid (result, split[i]);
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UNIQUE_ID) == 0) {
+		fwupd_result_set_unique_id (result, g_variant_get_string (value, NULL));
+		return;
+	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_NAME) == 0) {
 		fwupd_result_set_device_name (result, g_variant_get_string (value, NULL));
 		return;
@@ -1592,13 +1656,11 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 static void
 fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
 {
-	guint i;
-
 	/* ignore */
 	if (key == NULL || value == NULL)
 		return;
 	g_string_append_printf (str, "  %s: ", key);
-	for (i = strlen (key); i < 20; i++)
+	for (gsize i = strlen (key); i < 20; i++)
 		g_string_append (str, " ");
 	g_string_append_printf (str, "%s\n", value);
 }
@@ -1613,7 +1675,7 @@ fwupd_pad_kv_unx (GString *str, const gchar *key, guint64 value)
 	if (value == 0)
 		return;
 
-	date = g_date_time_new_from_unix_utc (value);
+	date = g_date_time_new_from_unix_utc ((gint64) value);
 	tmp = g_date_time_format (date, "%F");
 	fwupd_pad_kv_str (str, key, tmp);
 }
@@ -1646,7 +1708,7 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
 	/* ignore */
 	if (value == 0)
 		return;
-	tmp = g_strdup_printf("%d", value);
+	tmp = g_strdup_printf("%" G_GUINT32_FORMAT, value);
 	fwupd_pad_kv_str (str, key, tmp);
 }
 
@@ -1657,11 +1719,11 @@ fwupd_pad_kv_dfl (GString *str, const gchar *key, guint64 device_flags)
 	g_autoptr(GString) tmp = NULL;
 
 	tmp = g_string_new ("");
-	for (i = 1; i < FU_DEVICE_FLAG_LAST; i *= 2) {
-		if ((device_flags & i) == 0)
+	for (i = 0; i < 64; i++) {
+		if ((device_flags & ((guint64) 1 << i)) == 0)
 			continue;
 		g_string_append_printf (tmp, "%s|",
-					fwupd_device_flag_to_string (i));
+					fwupd_device_flag_to_string ((guint64) 1 << i));
 	}
 	if (tmp->len == 0) {
 		g_string_append (tmp, fwupd_device_flag_to_string (0));
@@ -1741,6 +1803,7 @@ fwupd_result_to_string (FwupdResult *result)
 		const gchar *guid = g_ptr_array_index (priv->guids, i);
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
 	}
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UNIQUE_ID, priv->unique_id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->device_id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION, priv->device_description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PROVIDER, priv->device_provider);
@@ -1789,6 +1852,9 @@ fwupd_result_get_property (GObject *object, guint prop_id,
 	case PROP_DEVICE_ID:
 		g_value_set_string (value, priv->device_id);
 		break;
+	case PROP_UNIQUE_ID:
+		g_value_set_string (value, priv->unique_id);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -1806,6 +1872,10 @@ fwupd_result_set_property (GObject *object, guint prop_id,
 	case PROP_DEVICE_ID:
 		g_free (priv->device_id);
 		priv->device_id = g_strdup (g_value_get_string (value));
+		break;
+	case PROP_UNIQUE_ID:
+		g_free (priv->unique_id);
+		priv->unique_id = g_strdup (g_value_get_string (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1851,6 +1921,7 @@ fwupd_result_finalize (GObject *object)
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 
 	g_ptr_array_unref (priv->guids);
+	g_free (priv->unique_id);
 	g_free (priv->device_description);
 	g_free (priv->device_checksum);
 	g_free (priv->device_id);

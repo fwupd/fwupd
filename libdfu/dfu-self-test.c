@@ -132,7 +132,7 @@ dfu_firmware_raw_func (void)
 
 	/* set up some dummy data */
 	for (i = 0; i < 256; i++)
-		buf[i] = i;
+		buf[i] = (gchar) i;
 	fw = g_bytes_new_static (buf, 256);
 
 	/* load a non DFU firmware */
@@ -182,7 +182,7 @@ dfu_firmware_dfu_func (void)
 
 	/* set up some dummy data */
 	for (i = 0; i < 256; i++)
-		buf[i] = i;
+		buf[i] = (gchar) i;
 	fw = g_bytes_new_static (buf, 256);
 
 	/* write DFU format */
@@ -675,6 +675,7 @@ main (int argc, char **argv)
 
 	/* log everything */
 	g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
+	g_setenv ("DFU_SELF_TEST", "", FALSE);
 
 	/* tests go here */
 	g_test_add_func ("/libdfu/enums", dfu_enums_func);

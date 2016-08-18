@@ -53,9 +53,9 @@ static gchar *
 fu_provider_rpi_strstr (const guint8 *haystack,
 			gsize haystack_len,
 			const gchar *needle,
-			guint *offset)
+			gsize *offset)
 {
-	guint needle_len;
+	gsize needle_len;
 
 	if (needle == NULL || needle[0] == '\0')
 		return NULL;
@@ -64,7 +64,7 @@ fu_provider_rpi_strstr (const guint8 *haystack,
 	needle_len = strlen (needle);
 	if (needle_len > haystack_len)
 		return NULL;
-	for (guint i = 0; i < haystack_len - needle_len; i++) {
+	for (gsize i = 0; i < haystack_len - needle_len; i++) {
 		if (memcmp (haystack + i, needle, needle_len) == 0) {
 			if (offset != NULL)
 				*offset = i + needle_len;
@@ -79,7 +79,7 @@ fu_provider_rpi_parse_firmware (FuDevice *device, const gchar *fn, GError **erro
 {
 	GDate *date;
 	gsize len = 0;
-	guint offset;
+	gsize offset;
 	g_autofree gchar *fwver = NULL;
 	g_autofree gchar *platform = NULL;
 	g_autofree gchar *vc_date = NULL;
@@ -146,7 +146,7 @@ fu_provider_rpi_parse_firmware (FuDevice *device, const gchar *fn, GError **erro
 	}
 
 	/* create a version number from the date and time */
-	fwver = g_strdup_printf ("%04i%02i%02i",
+	fwver = g_strdup_printf ("%04i%02u%02i",
 				 g_date_get_year (date),
 				 g_date_get_month (date),
 				 g_date_get_day (date));

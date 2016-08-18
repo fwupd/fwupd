@@ -42,6 +42,7 @@
 #include "fu-pending.h"
 #include "fu-provider.h"
 #include "fu-provider-dfu.h"
+#include "fu-provider-ebitdo.h"
 #include "fu-provider-rpi.h"
 #include "fu-provider-udev.h"
 #include "fu-provider-usb.h"
@@ -76,6 +77,7 @@ typedef struct {
 	GPtrArray		*providers;
 	PolkitAuthority		*authority;
 	FwupdStatus		 status;
+	guint			 percentage;
 	FuPending		*pending;
 	AsProfile		*profile;
 	AsStore			*store;
@@ -201,6 +203,19 @@ fu_main_set_status (FuMainPrivate *priv, FwupdStatus status)
 	fu_main_emit_property_changed (priv, "Status", g_variant_new_uint32 (status));
 }
 
+static void
+fu_main_set_percentage (FuMainPrivate *priv, guint percentage)
+{
+	if (priv->percentage == percentage)
+		return;
+	priv->percentage = percentage;
+
+	/* emit changed */
+	g_debug ("Emitting PropertyChanged('Percentage'='%u%%')", percentage);
+	fu_main_emit_property_changed (priv, "Percentage",
+				       g_variant_new_uint32 (percentage));
+}
+
 static GVariant *
 fu_main_device_array_to_variant (GPtrArray *devices, GError **error)
 {
@@ -224,6 +239,24 @@ fu_main_device_array_to_variant (GPtrArray *devices, GError **error)
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(a{sa{sv}})", &builder);
+}
+
+static void
+fu_main_invocation_return_value (FuMainPrivate *priv,
+				 GDBusMethodInvocation *invocation,
+				 GVariant *parameters)
+{
+	fu_main_set_status (priv, FWUPD_STATUS_IDLE);
+	g_dbus_method_invocation_return_value (invocation, parameters);
+}
+
+static void
+fu_main_invocation_return_error (FuMainPrivate *priv,
+				 GDBusMethodInvocation *invocation,
+				 const GError *error)
+{
+	fu_main_set_status (priv, FWUPD_STATUS_IDLE);
+	g_dbus_method_invocation_return_gerror (invocation, error);
 }
 
 static gboolean
@@ -283,12 +316,18 @@ static FuPlugin *
 fu_main_get_plugin_for_device (GHashTable *plugins, FuDevice *device)
 {
 	const gchar *tmp;
+	FuPlugin *plugin;
 
 	/* does a vendor plugin exist */
 	tmp = fu_device_get_metadata (device, FU_DEVICE_KEY_FWUPD_PLUGIN);
 	if (tmp == NULL)
 		return NULL;
-	return g_hash_table_lookup (plugins, tmp);
+	plugin = g_hash_table_lookup (plugins, tmp);
+	if (plugin == NULL) {
+		g_warning ("requested plugin %s for %s, but not found",
+			   tmp, fu_device_get_id (device));
+	}
+	return plugin;
 }
 
 static void
@@ -516,7 +555,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "Device %s does not currently allow updates",
+				    "Device %s does not now allow updates",
 				    fu_device_get_id (device));
 			return FALSE;
 		}
@@ -552,7 +591,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 			return FALSE;
 
 		/* make the UI update */
-		fu_device_set_modified (item->device, g_get_real_time () / G_USEC_PER_SEC);
+		fu_device_set_modified (item->device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 		fu_main_emit_device_changed (helper->priv, item->device);
 	}
 
@@ -572,21 +611,22 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
 							    res, &error);
 	if (auth == NULL) {
-		g_dbus_method_invocation_return_error (helper->invocation,
-						       FWUPD_ERROR,
-						       FWUPD_ERROR_AUTH_FAILED,
-						       "could not check for auth: %s",
-						       error->message);
+		g_set_error (&error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_AUTH_FAILED,
+			     "could not check for auth: %s", error->message);
+		fu_main_invocation_return_error (helper->priv, helper->invocation, error);
 		fu_main_helper_free (helper);
 		return;
 	}
 
 	/* did not auth */
 	if (!polkit_authorization_result_get_is_authorized (auth)) {
-		g_dbus_method_invocation_return_error (helper->invocation,
-						       FWUPD_ERROR,
-						       FWUPD_ERROR_AUTH_FAILED,
-						       "failed to obtain auth");
+		g_set_error_literal (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_AUTH_FAILED,
+				     "failed to obtain auth");
+		fu_main_invocation_return_error (helper->priv, helper->invocation, error);
 		fu_main_helper_free (helper);
 		return;
 	}
@@ -594,13 +634,17 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	/* we're good to go */
 	if (helper->auth_kind == FU_MAIN_AUTH_KIND_INSTALL) {
 		if (!fu_main_provider_update_authenticated (helper, &error)) {
-			g_dbus_method_invocation_return_gerror (helper->invocation, error);
+			fu_main_invocation_return_error (helper->priv,
+							 helper->invocation,
+							 error);
 			fu_main_helper_free (helper);
 			return;
 		}
 	} else if (helper->auth_kind == FU_MAIN_AUTH_KIND_UNLOCK) {
 		if (!fu_main_provider_unlock_authenticated (helper, &error)) {
-			g_dbus_method_invocation_return_gerror (helper->invocation, error);
+			fu_main_invocation_return_error (helper->priv,
+							 helper->invocation,
+							 error);
 			fu_main_helper_free (helper);
 			return;
 		}
@@ -609,7 +653,7 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 	}
 
 	/* success */
-	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+	fu_main_invocation_return_value (helper->priv, helper->invocation, NULL);
 	fu_main_helper_free (helper);
 }
 
@@ -679,7 +723,7 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 			continue;
 
 		/* convert to dotted decimal */
-		version_new = as_utils_version_from_uint32 (ver_uint32, flags);
+		version_new = as_utils_version_from_uint32 ((guint32) ver_uint32, flags);
 		as_release_set_version (rel, version_new);
 	}
 }
@@ -697,6 +741,15 @@ fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
 			return app;
 	}
 	return NULL;
+}
+
+static AsScreenshot *
+_as_app_get_screenshot_default (AsApp *app)
+{
+	GPtrArray *array = as_app_get_screenshots (app);
+	if (array->len == 0)
+		return NULL;
+	return g_ptr_array_index (array, 0);
 }
 
 static gboolean
@@ -733,6 +786,39 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "no releases in the firmware component");
+		return FALSE;
+	}
+
+	/* no update abilities */
+	if (!fu_device_has_flag (device, FU_DEVICE_FLAG_ALLOW_OFFLINE) &&
+	    !fu_device_has_flag (device, FU_DEVICE_FLAG_ALLOW_ONLINE)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Device %s does not currently allow updates",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* not in bootloader mode */
+	if (fu_device_has_flag (device, FU_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+		const gchar *caption = NULL;
+		AsScreenshot *ss = _as_app_get_screenshot_default (app);
+		if (ss != NULL)
+			caption = as_screenshot_get_caption (ss, NULL);
+		if (caption != NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Device %s needs to manually be put in update mode: %s",
+				     fu_device_get_name (device), caption);
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Device %s needs to manually be put in update mode",
+				     fu_device_get_name (device));
+		}
 		return FALSE;
 	}
 
@@ -877,15 +963,14 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		g_ptr_array_add (helper->devices, g_object_ref (item->device));
 	}
 	if (helper->devices->len == 0) {
-		g_autofree gchar *guid = NULL;
-		guid = fu_main_get_guids_from_store (helper->store);
 		if (error_first != NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no attached hardware matched %s: %s",
-				     guid, error_first->message);
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     error_first->message);
 		} else {
+			g_autofree gchar *guid = NULL;
+			guid = fu_main_get_guids_from_store (helper->store);
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
@@ -900,7 +985,7 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "not enough firmware blobs (%i) for devices (%i)",
+			     "not enough firmware blobs (%u) for devices (%u)",
 			     helper->blob_fws->len,
 			     helper->devices->len);
 		return FALSE;
@@ -1146,7 +1231,7 @@ fu_main_store_delay_cb (gpointer user_data)
 		g_debug ("devices now in store:");
 		for (guint i = 0; i < apps->len; i++) {
 			AsApp *app = g_ptr_array_index (apps, i);
-			g_debug ("%i\t%s\t%s", i + 1,
+			g_debug ("%u\t%s\t%s", i + 1,
 				 as_app_get_id (app),
 				 as_app_get_name (app, NULL));
 		}
@@ -1198,8 +1283,9 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	/* get latest release */
 	rel = as_app_get_release_default (app);
 	if (rel == NULL) {
-		g_debug ("%s has no firmware update metadata",
-			 fu_device_get_id (item->device));
+		g_debug ("%s [%s] has no firmware update metadata",
+			 fu_device_get_id (item->device),
+			 fu_device_get_name (item->device));
 		return FALSE;
 	}
 
@@ -1217,8 +1303,9 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	/* only show devices that can be updated */
 	if (!fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE) &&
 	    !fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_ONLINE)) {
-		g_debug ("ignoring %s as not updatable live or offline",
-			 fu_device_get_id (item->device));
+		g_debug ("ignoring %s [%s] as not updatable live or offline",
+			 fu_device_get_id (item->device),
+			 fu_device_get_name (item->device));
 		return FALSE;
 	}
 
@@ -1250,6 +1337,13 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	tmp = as_app_get_project_license (app);
 	if (tmp != NULL)
 		fu_device_set_update_license (item->device, tmp);
+#if AS_CHECK_VERSION(0,6,1)
+	tmp = as_app_get_unique_id (app);
+	if (tmp != NULL)
+		fu_device_set_unique_id (item->device, tmp);
+#else
+	fu_device_set_unique_id (item->device, as_app_get_id (app));
+#endif
 
 	/* add release information */
 	tmp = as_release_get_version (rel);
@@ -1269,7 +1363,7 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	releases = as_app_get_releases (app);
 	for (guint i = 0; i < releases->len; i++) {
 		rel = g_ptr_array_index (releases, i);
-		if (as_utils_vercmp (as_release_get_version (rel), version) < 0)
+		if (as_utils_vercmp (as_release_get_version (rel), version) <= 0)
 			continue;
 		tmp = as_release_get_description (rel, NULL);
 		if (tmp == NULL)
@@ -1318,6 +1412,7 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 static AsStore *
 fu_main_get_store_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 {
+	g_autofree gchar *checksum = NULL;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -1345,6 +1440,13 @@ fu_main_get_store_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 				     error_local->message);
 		return NULL;
 	}
+
+	/* get a checksum of the file and use it as the origin */
+	checksum = g_compute_checksum_for_data (G_CHECKSUM_SHA1,
+						g_bytes_get_data (blob_cab, NULL),
+						g_bytes_get_size (blob_cab));
+	as_store_set_origin (store, checksum);
+
 	return g_steal_pointer (&store);
 }
 
@@ -1410,6 +1512,12 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 	fwupd_result_set_update_trust_flags (res, trust_flags);
 	fwupd_result_set_update_vendor (res, as_app_get_developer_name (app, NULL));
 	fwupd_result_set_update_version (res, as_release_get_version (rel));
+#if AS_CHECK_VERSION(0,6,1)
+	fwupd_result_set_unique_id (res, as_app_get_unique_id (app));
+#else
+	fwupd_result_set_unique_id (res, as_app_get_id (app));
+#endif
+
 	csum_tmp = as_release_get_checksum_by_target (rel,
 	AS_CHECKSUM_TARGET_CONTENT);
 	fn = as_checksum_get_filename (csum_tmp);
@@ -1455,6 +1563,7 @@ fu_main_get_details_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 		app = AS_APP (g_ptr_array_index (apps, 0));
 
 	/* create a result with all the metadata in */
+	as_app_set_origin (app, as_store_get_origin (store));
 	res = fu_main_get_result_from_app (priv, app, error);
 	if (res == NULL)
 		return NULL;
@@ -1488,6 +1597,7 @@ fu_main_get_details_local_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 		g_autoptr(FwupdResult) res = NULL;
 		AsApp *app = g_ptr_array_index (apps, i);
 		GVariant *tmp;
+		as_app_set_origin (app, as_store_get_origin (store));
 		res = fu_main_get_result_from_app (priv, app, error);
 		if (res == NULL)
 			return NULL;
@@ -1505,10 +1615,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 	GVariant *val;
+	g_autoptr(GError) error = NULL;
 
 	/* return 'as' */
 	if (g_strcmp0 (method_name, "GetDevices") == 0) {
-		g_autoptr(GError) error = NULL;
 		g_debug ("Called %s()", method_name);
 		val = fu_main_device_array_to_variant (priv->devices, &error);
 		if (val == NULL) {
@@ -1517,22 +1627,20 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 					     FWUPD_ERROR_NOTHING_TO_DO)) {
 				g_prefix_error (&error, "No detected devices: ");
 			}
-			g_dbus_method_invocation_return_gerror (invocation, error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		g_dbus_method_invocation_return_value (invocation, val);
-		fu_main_set_status (priv, FWUPD_STATUS_IDLE);
+		fu_main_invocation_return_value (priv, invocation, val);
 		return;
 	}
 
 	/* return 'as' */
 	if (g_strcmp0 (method_name, "GetUpdates") == 0) {
-		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) updates = NULL;
 		g_debug ("Called %s()", method_name);
 		updates = fu_main_get_updates (priv, &error);
 		if (updates == NULL) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 		val = fu_main_device_array_to_variant (updates, &error);
@@ -1542,11 +1650,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 					     FWUPD_ERROR_NOTHING_TO_DO)) {
 				g_prefix_error (&error, "No devices can be updated: ");
 			}
-			g_dbus_method_invocation_return_gerror (invocation, error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		g_dbus_method_invocation_return_value (invocation, val);
-		fu_main_set_status (priv, FWUPD_STATUS_IDLE);
+		fu_main_invocation_return_value (priv, invocation, val);
 		return;
 	}
 
@@ -1554,7 +1661,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "ClearResults") == 0) {
 		FuDeviceItem *item = NULL;
 		const gchar *id = NULL;
-		g_autoptr(GError) error = NULL;
 
 		g_variant_get (parameters, "(&s)", &id);
 		g_debug ("Called %s(%s)", method_name, id);
@@ -1562,18 +1668,18 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* find device */
 		item = fu_main_get_item_by_id_fallback_pending (priv, id, &error);
 		if (item == NULL) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
 		/* call into the provider */
 		if (!fu_provider_clear_results (item->provider, item->device, &error)) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
 		/* success */
-		g_dbus_method_invocation_return_value (invocation, NULL);
+		fu_main_invocation_return_value (priv, invocation, NULL);
 		return;
 	}
 
@@ -1581,7 +1687,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "GetResults") == 0) {
 		FuDeviceItem *item = NULL;
 		const gchar *id = NULL;
-		g_autoptr(GError) error = NULL;
 
 		g_variant_get (parameters, "(&s)", &id);
 		g_debug ("Called %s(%s)", method_name, id);
@@ -1589,19 +1694,19 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* find device */
 		item = fu_main_get_item_by_id_fallback_pending (priv, id, &error);
 		if (item == NULL) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
 		/* call into the provider */
 		if (!fu_provider_get_results (item->provider, item->device, &error)) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
 		/* success */
 		val = fwupd_result_to_data (FWUPD_RESULT (item->device), "(a{sv})");
-		g_dbus_method_invocation_return_value (invocation, val);
+		fu_main_invocation_return_value (priv, invocation, val);
 		return;
 	}
 
@@ -1611,33 +1716,33 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		GUnixFDList *fd_list;
 		gint fd_data;
 		gint fd_sig;
-		g_autoptr(GError) error = NULL;
 
 		message = g_dbus_method_invocation_get_message (invocation);
 		fd_list = g_dbus_message_get_unix_fd_list (message);
 		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 2) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_INTERNAL,
-							       "invalid handle");
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid handle");
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 		fd_data = g_unix_fd_list_get (fd_list, 0, &error);
 		if (fd_data < 0) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 		fd_sig = g_unix_fd_list_get (fd_list, 1, &error);
 		if (fd_sig < 0) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 		if (!fu_main_daemon_update_metadata (priv, fd_data, fd_sig, &error)) {
 			g_prefix_error (&error, "failed to update metadata: ");
-			g_dbus_method_invocation_return_gerror (invocation, error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		g_dbus_method_invocation_return_value (invocation, NULL);
+		fu_main_invocation_return_value (priv, invocation, NULL);
 		return;
 	}
 
@@ -1653,21 +1758,21 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_debug ("Called %s(%s)", method_name, id);
 		item = fu_main_get_item_by_id (priv, id);
 		if (item == NULL) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_NOT_FOUND,
-							       "No such device %s",
-							       id);
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No such device %s", id);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
 		/* check the device is locked */
 		if (!fu_device_has_flag (item->device, FU_DEVICE_FLAG_LOCKED)) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_NOT_FOUND,
-							       "Device %s is not locked",
-							       id);
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "Device %s is not locked", id);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
@@ -1702,35 +1807,35 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		const gchar *hash = NULL;
 		const gchar *id = NULL;
 		const gchar *version = NULL;
-		g_autoptr(GError) error = NULL;
 
 		/* check the id exists */
 		g_variant_get (parameters, "(&s)", &id);
 		g_debug ("Called %s(%s)", method_name, id);
 		item = fu_main_get_item_by_id (priv, id);
 		if (item == NULL) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_NOT_FOUND,
-							       "No such device %s",
-							       id);
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No such device %s", id);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
 		/* set the device firmware hash */
 		if (!fu_provider_verify (item->provider, item->device,
 					 FU_PROVIDER_VERIFY_FLAG_NONE, &error)) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
 		/* find component in metadata */
 		app = fu_main_store_get_app_by_guids (priv->store, item->device);
 		if (app == NULL) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_NOT_SUPPORTED,
-							       "No metadata");
+			g_set_error_literal (&error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_FOUND,
+					     "No metadata");
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
@@ -1738,36 +1843,37 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		version = fu_device_get_version (item->device);
 		release = as_app_get_release (app, version);
 		if (release == NULL) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_NOT_SUPPORTED,
-							       "No version %s",
-							       version);
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No version %s", version);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
 		/* find checksum */
 		csum = as_release_get_checksum_by_target (release, AS_CHECKSUM_TARGET_CONTENT);
 		if (csum == NULL) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_NOT_SUPPORTED,
-							       "No content checksum for %s",
-							       version);
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No content checksum for %s", version);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 		hash = fu_device_get_checksum (item->device);
 		if (g_strcmp0 (as_checksum_get_value (csum), hash) != 0) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_NOT_SUPPORTED,
-							       "For v%s expected %s, got %s",
-							       version,
-							       as_checksum_get_value (csum),
-							       hash);
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "For v%s expected %s, got %s",
+				     version,
+				     as_checksum_get_value (csum),
+				     hash);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		g_dbus_method_invocation_return_value (invocation, NULL);
+		fu_main_invocation_return_value (priv, invocation, NULL);
 		return;
 	}
 
@@ -1784,7 +1890,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		gchar *prop_key;
 		gint32 fd_handle = 0;
 		gint fd;
-		g_autoptr(GError) error = NULL;
 		g_autoptr(PolkitSubject) subject = NULL;
 		g_autoptr(GVariantIter) iter = NULL;
 		g_autoptr(GBytes) blob_cab = NULL;
@@ -1796,11 +1901,11 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		if (g_strcmp0 (id, FWUPD_DEVICE_ID_ANY) != 0) {
 			item = fu_main_get_item_by_id (priv, id);
 			if (item == NULL) {
-				g_dbus_method_invocation_return_error (invocation,
-								       FWUPD_ERROR,
-								       FWUPD_ERROR_NOT_FOUND,
-								       "no such device %s",
-								       id);
+				g_set_error (&error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_FOUND,
+					     "no such device %s", id);
+				fu_main_invocation_return_error (priv, invocation, error);
 				return;
 			}
 		}
@@ -1828,16 +1933,16 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		message = g_dbus_method_invocation_get_message (invocation);
 		fd_list = g_dbus_message_get_unix_fd_list (message);
 		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 1) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_INTERNAL,
-							       "invalid handle");
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid handle");
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 		fd = g_unix_fd_list_get (fd_list, fd_handle, &error);
 		if (fd < 0) {
-			g_dbus_method_invocation_return_gerror (invocation,
-								error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
@@ -1847,8 +1952,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      FU_MAIN_FIRMWARE_SIZE_MAX,
 						      NULL, &error);
 		if (blob_cab == NULL){
-			g_dbus_method_invocation_return_gerror (invocation,
-								error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
@@ -1866,9 +1970,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		if (item != NULL)
 			g_ptr_array_add (helper->devices, g_object_ref (item->device));
 		if (!fu_main_update_helper (helper, &error)) {
-			g_dbus_method_invocation_return_gerror (helper->invocation,
-							        error);
-			fu_main_set_status (priv, FWUPD_STATUS_IDLE);
+			fu_main_invocation_return_error (helper->priv, helper->invocation, error);
 			fu_main_helper_free (helper);
 			return;
 		}
@@ -1876,11 +1978,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* is root */
 		if (fu_main_dbus_get_uid (priv, sender) == 0) {
 			if (!fu_main_provider_update_authenticated (helper, &error)) {
-				g_dbus_method_invocation_return_gerror (invocation, error);
+				fu_main_invocation_return_error (priv, invocation, error);
 			} else {
-				g_dbus_method_invocation_return_value (invocation, NULL);
+				fu_main_invocation_return_value (priv, invocation, NULL);
 			}
-			fu_main_set_status (priv, FWUPD_STATUS_IDLE);
 			fu_main_helper_free (helper);
 			return;
 		}
@@ -1904,7 +2005,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		GUnixFDList *fd_list;
 		gint32 fd_handle = 0;
 		gint fd;
-		g_autoptr(GError) error = NULL;
 
 		/* get parameters */
 		g_variant_get (parameters, "(h)", &fd_handle);
@@ -1914,28 +2014,26 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		message = g_dbus_method_invocation_get_message (invocation);
 		fd_list = g_dbus_message_get_unix_fd_list (message);
 		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 1) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_INTERNAL,
-							       "invalid handle");
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid handle");
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 		fd = g_unix_fd_list_get (fd_list, fd_handle, &error);
 		if (fd < 0) {
-			g_dbus_method_invocation_return_gerror (invocation,
-								error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
 		/* get details about the file */
 		val = fu_main_get_details_from_fd (priv, fd, &error);
 		if (val == NULL) {
-			g_dbus_method_invocation_return_gerror (invocation,
-							        error);
-			fu_main_set_status (priv, FWUPD_STATUS_IDLE);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		g_dbus_method_invocation_return_value (invocation, val);
+		fu_main_invocation_return_value (priv, invocation, val);
 		return;
 	}
 
@@ -1945,7 +2043,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		GUnixFDList *fd_list;
 		gint32 fd_handle = 0;
 		gint fd;
-		g_autoptr(GError) error = NULL;
 
 		/* get parameters */
 		g_variant_get (parameters, "(h)", &fd_handle);
@@ -1955,37 +2052,35 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		message = g_dbus_method_invocation_get_message (invocation);
 		fd_list = g_dbus_message_get_unix_fd_list (message);
 		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 1) {
-			g_dbus_method_invocation_return_error (invocation,
-							       FWUPD_ERROR,
-							       FWUPD_ERROR_INTERNAL,
-							       "invalid handle");
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid handle");
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 		fd = g_unix_fd_list_get (fd_list, fd_handle, &error);
 		if (fd < 0) {
-			g_dbus_method_invocation_return_gerror (invocation,
-								error);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
 
 		/* get details about the file */
 		val = fu_main_get_details_local_from_fd (priv, fd, &error);
 		if (val == NULL) {
-			g_dbus_method_invocation_return_gerror (invocation,
-							        error);
-			fu_main_set_status (priv, FWUPD_STATUS_IDLE);
+			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		g_dbus_method_invocation_return_value (invocation, val);
+		fu_main_invocation_return_value (priv, invocation, val);
 		return;
 	}
 
 	/* we suck */
-	g_dbus_method_invocation_return_error (invocation,
-					       G_DBUS_ERROR,
-					       G_DBUS_ERROR_UNKNOWN_METHOD,
-					       "no such method %s",
-					       method_name);
+	g_set_error (&error,
+		     G_DBUS_ERROR,
+		     G_DBUS_ERROR_UNKNOWN_METHOD,
+		     "no such method %s", method_name);
+	fu_main_invocation_return_error (priv, invocation, error);
 }
 
 static GVariant *
@@ -2251,6 +2346,15 @@ fu_main_provider_status_changed_cb (FuProvider *provider,
 }
 
 static void
+fu_main_provider_percentage_changed_cb (FuProvider *provider,
+					guint percentage,
+					gpointer user_data)
+{
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+	fu_main_set_percentage (priv, percentage);
+}
+
+static void
 fu_main_add_provider (FuMainPrivate *priv, FuProvider *provider)
 {
 	g_signal_connect (provider, "device-added",
@@ -2261,6 +2365,9 @@ fu_main_add_provider (FuMainPrivate *priv, FuProvider *provider)
 			  priv);
 	g_signal_connect (provider, "status-changed",
 			  G_CALLBACK (fu_main_provider_status_changed_cb),
+			  priv);
+	g_signal_connect (provider, "percentage-changed",
+			  G_CALLBACK (fu_main_provider_percentage_changed_cb),
 			  priv);
 	g_ptr_array_add (priv->providers, provider);
 }
@@ -2274,7 +2381,7 @@ main (int argc, char *argv[])
 	gboolean timed_exit = FALSE;
 	GOptionContext *context;
 	guint owner_id = 0;
-	guint retval = 1;
+	gint retval = 1;
 	const GOptionEntry options[] = {
 		{ "timed-exit", '\0', 0, G_OPTION_ARG_NONE, &timed_exit,
 		  /* TRANSLATORS: exit after we've started up, used for user profiling */
@@ -2310,6 +2417,7 @@ main (int argc, char *argv[])
 	/* create new objects */
 	priv = g_new0 (FuMainPrivate, 1);
 	priv->status = FWUPD_STATUS_IDLE;
+	priv->percentage = 0;
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_main_item_free);
 	priv->loop = g_main_loop_new (NULL, FALSE);
 	priv->pending = fu_pending_new ();
@@ -2357,6 +2465,7 @@ main (int argc, char *argv[])
 		fu_main_add_provider (priv, fu_provider_udev_new ());
 	fu_main_add_provider (priv, fu_provider_dfu_new ());
 	fu_main_add_provider (priv, fu_provider_rpi_new ());
+	fu_main_add_provider (priv, fu_provider_ebitdo_new ());
 #ifdef HAVE_COLORHUG
 	fu_main_add_provider (priv, fu_provider_chug_new ());
 #endif

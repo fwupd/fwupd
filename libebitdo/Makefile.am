@@ -1,4 +1,5 @@
 AM_CPPFLAGS = \
+	$(APPSTREAM_GLIB_CFLAGS)				\
 	$(GLIB_CFLAGS)						\
 	$(GUSB_CFLAGS)						\
 	$(PIE_CFLAGS)						\
@@ -29,6 +30,7 @@ libebitdo_la_SOURCES =						\
 	ebitdo-device.h
 
 libebitdo_la_LIBADD =						\
+	$(APPSTREAM_GLIB_LIBS)					\
 	$(GUSB_LIBS)						\
 	$(GLIB_LIBS)
 
@@ -40,7 +42,7 @@ libebitdo_la_LDFLAGS =						\
 
 libebitdo_la_CFLAGS =						\
 	$(PIE_CFLAGS)						\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = ebitdo.pc
@@ -61,7 +63,22 @@ ebitdo_tool_LDADD =						\
 	$(GUSB_LIBS)						\
 	$(LIBM)
 
-ebitdo_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARNINGFLAGS_C)
+ebitdo_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
+
+noinst_PROGRAMS =						\
+	ebitdo-parse
+
+ebitdo_parse_SOURCES =						\
+	ebitdo-parse.c
+
+ebitdo_parse_LDADD =						\
+	$(lib_LTLIBRARIES)					\
+	$(APPSTREAM_GLIB_LIBS)					\
+	$(GLIB_LIBS)						\
+	$(GUSB_LIBS)						\
+	$(LIBM)
+
+ebitdo_parse_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
 
 clean-local:
 	rm -f *~

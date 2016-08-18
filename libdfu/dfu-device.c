@@ -1267,7 +1267,7 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 		 GCancellable *cancellable, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	guint idx;
+	guint8 idx;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
@@ -1509,7 +1509,7 @@ dfu_device_replug_helper_cb (gpointer user_data)
 	}
 
 	/* continue waiting */
-	g_debug ("waiting for device replug for %ims -- state is %s",
+	g_debug ("waiting for device replug for %ums -- state is %s",
 		 helper->cnt * 100, dfu_state_to_string (priv->state));
 	return TRUE;
 }
@@ -1730,7 +1730,7 @@ dfu_device_upload (DfuDevice *device,
 	/* upload from each target */
 	for (i = 0; i < priv->targets->len; i++) {
 		DfuTarget *target;
-		guint id;
+		gulong id;
 		g_autoptr(DfuImage) image = NULL;
 
 		/* upload to target and proxy signals */
@@ -1903,7 +1903,7 @@ dfu_device_download (DfuDevice *device,
 		DfuImage *image;
 		DfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
 		const gchar *alt_name;
-		guint id;
+		gulong id;
 		g_autoptr(DfuTarget) target_tmp = NULL;
 
 		image = g_ptr_array_index (images, i);

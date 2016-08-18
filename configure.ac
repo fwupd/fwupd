@@ -57,40 +57,29 @@ AM_PROG_CC_C_O
 IT_PROG_INTLTOOL([0.35.0])
 AC_PATH_PROG(XSLTPROC, xsltproc)
 
-dnl ---------------------------------------------------------------------------
-dnl - Extra verbose warning switches
-dnl ---------------------------------------------------------------------------
-
-if test "$GCC" = "yes"; then
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wall"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wcast-align -Wno-uninitialized"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wmissing-declarations"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wpointer-arith"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wcast-align"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wwrite-strings"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Winit-self"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wreturn-type"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wformat-nonliteral"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wformat-security"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wmissing-include-dirs"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wmissing-format-attribute"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wclobbered"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wempty-body"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wignored-qualifiers"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wsign-compare"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wtype-limits"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wuninitialized"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Waggregate-return"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wdeclaration-after-statement"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wshadow"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wno-strict-aliasing"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Winline"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wmissing-parameter-type"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Woverride-init"
-else
-	WARNINGFLAGS_C=""
-fi
-AC_SUBST(WARNINGFLAGS_C)
+GNOME_COMPILE_WARNINGS([maximum],[
+	-Wmissing-declarations
+	-Wcast-align
+	-Wwrite-strings
+	-Wreturn-type
+	-Wformat-nonliteral
+	-Wmissing-format-attribute
+	-Wclobbered
+	-Wempty-body
+	-Wignored-qualifiers
+	-Wsign-compare
+	-Wtype-limits
+	-Wuninitialized
+	-Waggregate-return
+	-Wdeclaration-after-statement
+	-Wshadow
+	-Wno-strict-aliasing
+	-Winline
+	-Wmissing-parameter-type
+	-Woverride-init
+	-Wno-discarded-qualifiers
+	-Wformat-signedness
+])
 
 dnl ---------------------------------------------------------------------------
 dnl - gettext stuff
@@ -192,7 +181,7 @@ if test x$enable_dell != xno; then
 	AC_DEFINE(HAVE_DELL,1,[Use Dell non-ESRT capsule support])
 
 	# check for ability to change GUID
-	PKG_CHECK_MODULES(UEFI_GUID, fwup >= 0.6,
+	PKG_CHECK_MODULES(UEFI_GUID, fwup >= 5,
 			  has_uefi_guid=yes,
 			  has_uefi_guid=no)
 	if test x$has_uefi_guid = xyes; then
@@ -238,6 +227,7 @@ docs/Makefile
 docs/libdfu/Makefile
 docs/libfwupd/Makefile
 docs/man/Makefile
+docs/version.xml
 policy/Makefile
 po/Makefile.in
 src/Makefile

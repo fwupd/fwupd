@@ -228,14 +228,14 @@ static gboolean
 fu_provider_dell_execute_smi (FuProviderDell *provider_dell, fu_dell_smi_obj *smi)
 {
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
-	guint ret;
+	gint ret;
 
 	if (priv->fake_smbios)
 		return TRUE;
 
 	ret = dell_smi_obj_execute (smi);
 	if (ret != 0) {
-		g_debug ("Dell: SMI execution failed: %d", ret);
+		g_debug ("Dell: SMI execution failed: %i", ret);
 		return FALSE;
 	}
 	return TRUE;
@@ -243,7 +243,7 @@ fu_provider_dell_execute_smi (FuProviderDell *provider_dell, fu_dell_smi_obj *sm
 
 static gboolean
 fu_provider_dell_execute_simple_smi (FuProviderDell *provider_dell,
-				     guint32 class, guint32 select,
+				     guint16 class, guint16 select,
 				     guint32  *args, guint32 *out)
 {
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
@@ -254,7 +254,7 @@ fu_provider_dell_execute_simple_smi (FuProviderDell *provider_dell,
 		return TRUE;
 	}
 	if (dell_simple_ci_smi (class, select, args, out)) {
-		g_debug ("Dell: failed to run query %d/%d", class, select);
+		g_debug ("Dell: failed to run query %u/%u", class, select);
 		return FALSE;
 	}
 	return TRUE;
@@ -262,7 +262,7 @@ fu_provider_dell_execute_simple_smi (FuProviderDell *provider_dell,
 
 static guint32
 fu_provider_dell_get_res (FuProviderDell *provider_dell,
-			  fu_dell_smi_obj *smi, guint32 arg)
+			  fu_dell_smi_obj *smi, guint8 arg)
 {
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
 
@@ -290,7 +290,7 @@ fu_provider_dell_detect_dock (FuProviderDell *provider_dell, guint32 *location)
 		return FALSE;
 	if (count_out->ret != 0) {
 		g_debug ("Dell: Failed to query system for dock count: "
-			 "(%d)", count_out->ret);
+			 "(%" G_GUINT32_FORMAT ")", count_out->ret);
 		return FALSE;
 	}
 	if (count_out->count < 1) {
@@ -347,8 +347,8 @@ fu_provider_dell_get_dock_key (FuProviderDell *provider_dell,
 static gboolean
 fu_provider_dell_dock_node (FuProviderDell *provider_dell, GUsbDevice *device,
 			   guint8 type, const efi_guid_t *guid_raw,
-			   const gchar *component_desc,
-			   const gchar *version)
+			   const gchar *component_desc, const gchar *version,
+			   gboolean updates_online)
 {
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
 	FuProviderDellDockItem *item;
@@ -397,7 +397,12 @@ fu_provider_dell_dock_node (FuProviderDell *provider_dell, GUsbDevice *device,
 	fu_device_add_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
 		fu_device_set_version (item->device, version);
-		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
+		if (updates_online)
+			fu_device_add_flag (item->device,
+					    FU_DEVICE_FLAG_ALLOW_ONLINE);
+		else
+			fu_device_add_flag (item->device,
+					    FU_DEVICE_FLAG_ALLOW_OFFLINE);
 	}
 
 	g_hash_table_insert (priv->devices, g_strdup (dock_key), item);
@@ -469,7 +474,7 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 	result = fu_provider_dell_get_res (provider_dell, smi, cbARG1);
 	if (result != SMI_SUCCESS) {
 		if (result == SMI_INVALID_BUFFER) {
-			g_debug ("Dell: Invalid buffer size, sent %d, needed %d",
+			g_debug ("Dell: Invalid buffer size, sent %u, needed %" G_GUINT32_FORMAT,
 				 buf_size,
 				 fu_provider_dell_get_res (provider_dell, smi, cbARG2));
 		} else {
@@ -491,17 +496,17 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 	g_debug ("Dell: dock flash pkg ver: 0x%x", dock_info->flash_pkg_version);
 	if (dock_info->flash_pkg_version == 0x00ffffff)
 		g_debug ("Dell: WARNING: dock flash package version invalid");
-	g_debug ("Dell: dock cable type: %d", dock_info->cable_type);
+	g_debug ("Dell: dock cable type: %" G_GUINT32_FORMAT, dock_info->cable_type);
 	g_debug ("Dell: dock location: %d", dock_info->location);
 	g_debug ("Dell: dock component count: %d", dock_info->component_count);
 	parse_flags = fu_provider_dell_get_version_format ();
 
 	for (guint i = 0; i < dock_info->component_count; i++) {
 		if (i > MAX_COMPONENTS) {
-			g_debug ("Dell: Too many components.  Invalid: #%d", i);
+			g_debug ("Dell: Too many components.  Invalid: #%u", i);
 			break;
 		}
-		g_debug ("Dell: dock component %d: %s (version 0x%x)", i,
+		g_debug ("Dell: dock component %u: %s (version 0x%x)", i,
 			 dock_info->components[i].description,
 			 dock_info->components[i].fw_version);
 		query_str = g_strrstr (dock_info->components[i].description,
@@ -533,7 +538,8 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 						 buf.record->dock_info_header.dock_type,
 						 guid_raw,
 						 component_name,
-						 fw_str)) {
+						 fw_str,
+						 FALSE)) {
 			g_debug ("Dell: failed to create %s", component_name);
 			return;
 		}
@@ -551,7 +557,8 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 						 buf.record->dock_info_header.dock_type,
 						 &tmpguid,
 						 TB15_NVM_DESC,
-						 NULL)) {
+						 NULL,
+						 TRUE)) {
 			g_debug ("Dell: failed to create %s", TB15_NVM_DESC);
 			return;
 		}
@@ -566,7 +573,8 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 						 buf.record->dock_info_header.dock_type,
 						 &tmpguid,
 						 CBL_NVM_DESC,
-						 NULL)) {
+						 NULL,
+						 TRUE)) {
 			g_debug ("Dell: failed to create %s", CBL_NVM_DESC);
 			return;
 		}
@@ -579,7 +587,8 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 					 buf.record->dock_info_header.dock_type,
 					 &tmpguid,
 					 MST_DESC,
-					 NULL)) {
+					 NULL,
+					 TRUE)) {
 		g_debug ("Dell: failed to create %s", MST_DESC);
 		return;
 	}
@@ -594,7 +603,8 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 						 buf.record->dock_info_header.dock_type,
 						 &tmpguid,
 						 "",
-						 fw_str)) {
+						 fw_str,
+						 FALSE)) {
 			g_debug ("Dell: failed to create top dock node");
 			return;
 		}
@@ -755,7 +765,7 @@ fu_provider_dell_detect_tpm (FuProvider *provider, GError **error)
 
 	if (out->ret != 0) {
 		g_debug ("Dell: Failed to query system for TPM information: "
-			 "(%d)", out->ret);
+			 "(%" G_GUINT32_FORMAT ")", out->ret);
 		return FALSE;
 	}
 	/* HW version is output in second /input/ arg
@@ -783,7 +793,7 @@ fu_provider_dell_detect_tpm (FuProvider *provider, GError **error)
 	}
 
 	if (!priv->fake_smbios)
-		system_id = sysinfo_get_dell_system_id ();
+		system_id = (guint16) sysinfo_get_dell_system_id ();
 
 	for (guint i = 0; i < G_N_ELEMENTS(tpm_switch_blacklist); i++) {
 		if (tpm_switch_blacklist[i] == system_id) {
@@ -907,7 +917,7 @@ fu_provider_dell_coldplug (FuProvider *provider, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Dell: UEFI capsule firmware updating not supported (%x)",
-			     uefi_supported);
+			     (guint) uefi_supported);
 		return FALSE;
 	}
 
@@ -977,11 +987,11 @@ fu_provider_dell_unlock(FuProvider *provider,
 }
 
 static gboolean
-fu_provider_dell_update (FuProvider *provider,
-			FuDevice *device,
-			GBytes *blob_fw,
-			FwupdInstallFlags flags,
-			GError **error)
+fu_provider_dell_update_offline (FuProvider *provider,
+				 FuDevice *device,
+				 GBytes *blob_fw,
+				 FwupdInstallFlags flags,
+				 GError **error)
 {
 	FuProviderDell *provider_dell = FU_PROVIDER_DELL (provider);
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
@@ -1002,13 +1012,13 @@ fu_provider_dell_update (FuProvider *provider,
 	flashes_left = fu_device_get_flashes_left (device);
 	if (flashes_left > 0) {
 		name = fu_device_get_name (device);
-		g_debug ("Dell: %s has %d flashes left", name, flashes_left);
+		g_debug ("Dell: %s has %u flashes left", name, flashes_left);
 		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
 			   flashes_left <= 2) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "WARNING: %s only has %d flashes left. "
+				     "WARNING: %s only has %u flashes left. "
 				     "To update anyway please run the update with --force.",
 				     name, flashes_left);
 			return FALSE;
@@ -1067,16 +1077,21 @@ fu_provider_dell_update (FuProvider *provider,
 			     strerror (rc));
 		return FALSE;
 	}
+	return TRUE;
+}
 
-	/* TODO: add support for AR (dock/cable) and MST flash.
-	 * This is dependent upon OS interfaces for flashing these components.
-	 * pseudo code below
-	 */
-#if 0
+static gboolean
+fu_provider_dell_toggle_dock_mode (FuProviderDell *provider_dell,
+				   guint32 new_mode, guint32 dock_location,
+				   GError **error)
+{
+	g_autofree guint32 *input = NULL;
+	g_autofree guint32 *output = NULL;
+
 	/* Put into mode to accept AR/MST */
 	input[0] = DACI_DOCK_ARG_MODE;
 	input[1] = dock_location;
-	input[2] = DACI_DOCK_ARG_MODE_FLASH;
+	input[2] = new_mode;
 	if (!fu_provider_dell_execute_simple_smi (provider_dell,
 						  DACI_DOCK_CLASS,
 						  DACI_DOCK_SELECT,
@@ -1087,32 +1102,97 @@ fu_provider_dell_update (FuProvider *provider,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Dell: Failed to set dock flash mode: %d",
+			     "Dell: Failed to set dock flash mode: %u",
 			     output[1]);
 		return FALSE;
 	}
+	return TRUE;
+}
 
-	/* do the update */
+static gboolean
+fu_provider_dell_update_online (FuProvider *provider,
+				FuDevice *device,
+				GBytes *blob_fw,
+				FwupdInstallFlags flags,
+				GError **error)
+{
+	FuProviderDell *provider_dell = FU_PROVIDER_DELL (provider);
+	guint32 dock_location;
+	const gchar *device_guid_str = NULL;
+	efi_guid_t tmpguid;
 
-	/* take out of mode to accept AR/MST */
-	input[0] = DACI_DOCK_ARG_MODE;
-	input[1] = dock_location;
-	input[2] = DACI_DOCK_ARG_MODE_USER;
-	if (!fu_provider_dell_execute_simple_smi (provider_dell,
-						  DACI_DOCK_CLASS,
-						  DACI_DOCK_SELECT,
-						  input,
-						  output))
+	g_autofree gchar *tb15_nvm_guid_str = NULL;
+	g_autofree gchar *cable_nvm_guid_str = NULL;
+	g_autofree gchar *mst_guid_str = NULL;
+
+	/* TODO: if we'll support host MST updates, detect if called with host
+	 * 	 or dock MST
+	 */
+
+	/* Find the dock location (confirm it's still plugged in too) */
+	if (!fu_provider_dell_detect_dock (provider_dell, &dock_location)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to detect dock location");
 		return FALSE;
-	if (output[1] != 0) {
+	}
+
+	/* Put the dock in flash mode */
+	if (!fu_provider_dell_toggle_dock_mode (provider_dell,
+						DACI_DOCK_ARG_MODE_FLASH,
+						dock_location, error))
+		return FALSE;
+
+	/* check which device we're flashing by GUID? (MST or AR)*/
+	device_guid_str = fu_device_get_guid_default (device);
+	tb15_nvm_guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
+	cable_nvm_guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
+	mst_guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
+	tmpguid = TB15_NVM_GUID;
+	efi_guid_to_str (&tmpguid, &tb15_nvm_guid_str);
+	tmpguid = CBL_NVM_GUID;
+	efi_guid_to_str (&tmpguid, &cable_nvm_guid_str);
+	tmpguid = DOCK_MST_GUID;
+	efi_guid_to_str (&tmpguid, &mst_guid_str);
+
+	/* Dock MST hub */
+	if (g_strcmp0 (device_guid_str, mst_guid_str) == 0) {
+		/* TODO do the update */
+		/* TODO confirm the version of the update */
+
+	}
+	/* TODO: add support for AR (dock/cable).
+	 * This is dependent upon OS interfaces for flashing these components.
+	 */
+	else if (g_strcmp0 (device_guid_str, tb15_nvm_guid_str) == 0 ||
+		 g_strcmp0 (device_guid_str, cable_nvm_guid_str) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "NVM updates are not yet supported");
+		fu_provider_dell_toggle_dock_mode (provider_dell,
+						   DACI_DOCK_ARG_MODE_USER,
+						   dock_location, error);
+		return FALSE;
+	}
+	else {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Dell: failed to set dock user mode: %d",
-			     output[1]);
+			     "Unknown device type: %s",
+			     fu_device_get_name (device));
+		fu_provider_dell_toggle_dock_mode (provider_dell,
+						   DACI_DOCK_ARG_MODE_USER,
+						   dock_location, error);
 		return FALSE;
 	}
-#endif
+
+	 /* Put the dock in user mode */
+	if (!fu_provider_dell_toggle_dock_mode (provider_dell,
+						DACI_DOCK_ARG_MODE_USER,
+						dock_location, error))
+		return FALSE;
 
 	return TRUE;
 }
@@ -1126,7 +1206,8 @@ fu_provider_dell_class_init (FuProviderDellClass *klass)
 	provider_class->get_name = fu_provider_dell_get_name;
 	provider_class->coldplug = fu_provider_dell_coldplug;
 	provider_class->unlock = fu_provider_dell_unlock;
-	provider_class->update_offline = fu_provider_dell_update;
+	provider_class->update_offline = fu_provider_dell_update_offline;
+	provider_class->update_online = fu_provider_dell_update_online;
 	provider_class->get_results = fu_provider_dell_get_results;
 	object_class->finalize = fu_provider_dell_finalize;
 }

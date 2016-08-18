@@ -45,7 +45,7 @@ libfwupd_la_LDFLAGS =						\
 	-export-symbols-regex '^fwupd_.*'
 libfwupd_la_CFLAGS =						\
 	$(PIE_CFLAGS)						\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = fwupd.pc
@@ -104,7 +104,7 @@ fwupd_self_test_LDADD =						\
 	$(GLIB_LIBS)
 
 fwupd_self_test_CFLAGS =					\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
 
 TESTS = fwupd-self-test
 

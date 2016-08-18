@@ -114,6 +114,8 @@ void		 dfu_firmware_set_release	(DfuFirmware	*firmware,
 						 guint16	 release);
 void		 dfu_firmware_set_format	(DfuFirmware	*firmware,
 						 DfuFirmwareFormat format);
+void		 dfu_firmware_set_cipher_kind	(DfuFirmware	*firmware,
+						 DfuCipherKind	 cipher_kind);
 
 gboolean	 dfu_firmware_parse_data	(DfuFirmware	*firmware,
 						 GBytes		*bytes,
@@ -133,6 +135,7 @@ gboolean	 dfu_firmware_write_file	(DfuFirmware	*firmware,
 						 GError		**error);
 gchar		*dfu_firmware_to_string		(DfuFirmware	*firmware);
 
+GHashTable	*dfu_firmware_get_metadata_table(DfuFirmware	*firmware);
 const gchar	*dfu_firmware_get_metadata	(DfuFirmware	*firmware,
 						 const gchar	*key);
 void		 dfu_firmware_set_metadata	(DfuFirmware	*firmware,

@@ -187,7 +187,7 @@ dfu_sector_has_cap (DfuSector *sector, DfuSectorCap cap)
 {
 	DfuSectorPrivate *priv = GET_PRIVATE (sector);
 	g_return_val_if_fail (DFU_IS_SECTOR (sector), FALSE);
-	return priv->cap & cap;
+	return (priv->cap & cap) > 0;
 }
 
 /**

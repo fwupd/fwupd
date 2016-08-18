@@ -61,10 +61,10 @@ Requires: libdfu = %{version}-%{release}
 Files for development with libdfu.
 
 %package -n libebitdo
-Summary: A library for accessing 0bitdo hardware
+Summary: A library for accessing 8Bitdo hardware
 
 %description -n libebitdo
-A library for updating 0bitdo USB devices.
+A library for updating 8Bitdo USB devices.
 
 %package -n libebitdo-devel
 Summary: Development package for libebitdo
@@ -167,7 +167,6 @@ make check VERBOSE=1
 
 %files -n libebitdo-devel
 %{_datadir}/gir-1.0/Dfu-1.0.gir
-%{_datadir}/gtk-doc/html/libebitdo
 %dir %{_includedir}/libebitdo
 %{_includedir}/ebitdo.h
 %{_includedir}/libebitdo/*.h
