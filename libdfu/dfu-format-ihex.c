@@ -184,6 +184,17 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 				addr32 = ((guint32) addr_high << 16) + addr_low;
 			}
 
+			/* does not make sense */
+			if (addr32 < addr32_last) {
+				g_set_error (error,
+					     DFU_ERROR,
+					     DFU_ERROR_INVALID_FILE,
+					     "invalid address 0x%x, last was 0x%x",
+					     (guint) addr32,
+					     (guint) addr32_last);
+				return FALSE;
+			}
+
 			/* parse bytes from line */
 			for (i = offset + 9; i < end; i += 2) {
 				/* any holes in the hex record */
