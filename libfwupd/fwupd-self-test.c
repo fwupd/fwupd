@@ -85,7 +85,7 @@ fwupd_enums_func (void)
 	}
 
 	/* bitfield */
-	for (i = 1; i < FU_DEVICE_FLAG_UNKNOWN; i *= 2) {
+	for (i = 1; i < FWUPD_DEVICE_FLAG_UNKNOWN; i *= 2) {
 		tmp = fwupd_device_flag_to_string (i);
 		if (tmp == NULL)
 			break;
@@ -106,7 +106,7 @@ fwupd_result_func (void)
 	fwupd_result_set_device_checksum (result, "beefdead");
 	fwupd_result_set_device_checksum_kind (result, G_CHECKSUM_SHA256);
 	fwupd_result_set_device_created (result, 1);
-	fwupd_result_set_device_flags (result, FU_DEVICE_FLAG_ALLOW_OFFLINE);
+	fwupd_result_set_device_flags (result, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 	fwupd_result_set_device_id (result, "USB:foo");
 	fwupd_result_set_device_modified (result, 60 * 60 * 24);
 	fwupd_result_set_device_name (result, "ColorHug2");
@@ -119,7 +119,7 @@ fwupd_result_func (void)
 	fwupd_result_set_update_size (result, 1024);
 	fwupd_result_set_update_uri (result, "http://foo.com");
 	fwupd_result_set_update_version (result, "1.2.3");
-	fwupd_result_add_device_flag (result, FU_DEVICE_FLAG_REQUIRE_AC);
+	fwupd_result_add_device_flag (result, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fwupd_result_set_update_trust_flags (result, FWUPD_TRUST_FLAG_PAYLOAD);
 	str = fwupd_result_to_string (result);
 	g_print ("\n%s", str);

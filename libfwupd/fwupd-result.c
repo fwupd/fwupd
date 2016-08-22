@@ -1189,7 +1189,7 @@ fwupd_result_get_device_flags (FwupdResult *result)
 /**
  * fwupd_result_set_device_flags:
  * @result: A #FwupdResult
- * @device_flags: the device flags, e.g. %FU_DEVICE_FLAG_REQUIRE_AC
+ * @device_flags: the device flags, e.g. %FWUPD_DEVICE_FLAG_REQUIRE_AC
  *
  * Sets the device flags.
  *

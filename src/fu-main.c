@@ -550,8 +550,8 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 		}
 
 		/* The provider might have taken away update abilities */
-		if (!fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE) &&
-		    !fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_ONLINE)) {
+		if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE) &&
+		    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -561,7 +561,7 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 		}
 
 		/* can we only do this on AC power */
-		if (fu_device_has_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC)) {
+		if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_REQUIRE_AC)) {
 			if (fu_main_on_battery (helper->priv)) {
 				g_set_error_literal (error,
 						     FWUPD_ERROR,
@@ -790,8 +790,8 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 	}
 
 	/* no update abilities */
-	if (!fu_device_has_flag (device, FU_DEVICE_FLAG_ALLOW_OFFLINE) &&
-	    !fu_device_has_flag (device, FU_DEVICE_FLAG_ALLOW_ONLINE)) {
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE) &&
+	    !fu_device_has_flag (device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -801,7 +801,7 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 	}
 
 	/* not in bootloader mode */
-	if (fu_device_has_flag (device, FU_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
 		const gchar *caption = NULL;
 		AsScreenshot *ss = _as_app_get_screenshot_default (app);
 		if (ss != NULL)
@@ -861,7 +861,7 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 	}
 
 	/* check the device is locked */
-	if (fu_device_has_flag (device, FU_DEVICE_FLAG_LOCKED)) {
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_LOCKED)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -1097,7 +1097,7 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 	/* any non-removable means false */
 	for (guint i = 0; i < helper->devices->len; i ++) {
 		FuDevice *device = g_ptr_array_index (helper->devices, i);
-		if (fu_device_has_flag (device, FU_DEVICE_FLAG_INTERNAL)) {
+		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL)) {
 			all_removable = FALSE;
 			break;
 		}
@@ -1291,7 +1291,7 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 
 	/* supported in metadata */
 	fwupd_result_add_device_flag (FWUPD_RESULT (item->device),
-				      FU_DEVICE_FLAG_SUPPORTED);
+				      FWUPD_DEVICE_FLAG_SUPPORTED);
 
 	/* check if actually newer than what we have installed */
 	if (as_utils_vercmp (as_release_get_version (rel), version) <= 0) {
@@ -1301,8 +1301,8 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	}
 
 	/* only show devices that can be updated */
-	if (!fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE) &&
-	    !fu_device_has_flag (item->device, FU_DEVICE_FLAG_ALLOW_ONLINE)) {
+	if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE) &&
+	    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE)) {
 		g_debug ("ignoring %s [%s] as not updatable live or offline",
 			 fu_device_get_id (item->device),
 			 fu_device_get_name (item->device));
@@ -1310,7 +1310,7 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	}
 
 	/* can we only do this on AC power */
-	if (fu_device_has_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC) &&
+	if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
 	    fu_main_on_battery (priv)) {
 		g_debug ("ignoring update for %s as not on AC power",
 			 fu_device_get_id (item->device));
@@ -1767,7 +1767,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* check the device is locked */
-		if (!fu_device_has_flag (item->device, FU_DEVICE_FLAG_LOCKED)) {
+		if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_LOCKED)) {
 			g_set_error (&error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_FOUND,

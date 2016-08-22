@@ -335,11 +335,11 @@ fu_provider_dell_tpm_func (void)
 
 	/* make sure 2.0 is locked */
 	flags = fu_device_get_flags (device);
-	g_assert_cmpint (flags & FU_DEVICE_FLAG_LOCKED, >, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_LOCKED, >, 0);
 
 	/* make sure not allowed to flash 1.2 */
 	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, !=, 1);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, !=, 1);
 
 	/* try to unlock 2.0 */
 	ret = fu_provider_unlock (provider, device, &error);
@@ -370,7 +370,7 @@ fu_provider_dell_tpm_func (void)
 
 	/* make sure allowed to flash 1.2 */
 	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint(flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+	g_assert_cmpint(flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
 
 	/* try to unlock 2.0 */
 	ret = fu_provider_unlock (provider, device, &error);
@@ -401,9 +401,9 @@ fu_provider_dell_tpm_func (void)
 
 	/* make sure allowed to flash 1.2 but not 2.0 */
 	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
 	flags = fu_device_get_flags (device);
-	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
 
 	/* try to unlock 2.0 */
 	ret = fu_provider_unlock (provider, device, &error);
@@ -412,9 +412,9 @@ fu_provider_dell_tpm_func (void)
 
 	/* make sure no longer allowed to flash 1.2 but can flash 2.0 */
 	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
 	flags = fu_device_get_flags (device);
-	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
 
 	/* cleanup */
 	fu_provider_device_remove (provider, device_alt);
@@ -439,9 +439,9 @@ fu_provider_dell_tpm_func (void)
 
 	/* make sure allowed to flash 2.0 but not 1.2 */
 	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
 	flags = fu_device_get_flags (device);
-	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
 
 	/* With one flash left we need an override */
 	ret = fu_provider_update (provider, device_alt, NULL, NULL, NULL,

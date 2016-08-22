@@ -171,7 +171,7 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 
 	/* did we get enough data */
 	dev = fu_device_new ();
-	fu_device_add_flag (dev, FU_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_id (dev, id);
 	fu_device_add_guid (dev, guid);
 	display_name = g_udev_device_get_property (device, "FWUPD_MODEL");
@@ -191,7 +191,7 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	rom_fn = g_build_filename (g_udev_device_get_sysfs_path (device), "rom", NULL);
 	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS)) {
 		fu_device_set_metadata (dev, "RomFilename", rom_fn);
-		fu_device_add_flag (dev, FU_DEVICE_FLAG_LOCKED);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
 	}
 
 	/* insert to hash */

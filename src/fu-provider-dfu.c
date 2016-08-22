@@ -66,8 +66,8 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 
 	/* check capabilities */
 	if (dfu_device_can_download (device)) {
-		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_ONLINE);
-		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_OFFLINE);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 	}
 
 	/* get version number, falling back to the DFU device release */
