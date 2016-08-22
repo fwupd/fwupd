@@ -219,7 +219,6 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			break;
 		case DFU_INHX32_RECORD_TYPE_EXTENDED:
 			addr_high = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+9);
-			g_error ("set base address %x", addr_high);
 			addr32 = ((guint32) addr_high << 16) + addr_low;
 			break;
 		default:
