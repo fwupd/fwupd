@@ -132,13 +132,24 @@ if test -z $GCAB ; then
 fi
 
 # ColorHug support
-AC_ARG_ENABLE(colorhug, AS_HELP_STRING([--enable-colorhug],[Enable ColorHug support]),
-	      enable_colorhug=$enableval, enable_colorhug=yes)
+AC_ARG_ENABLE(colorhug,
+	      AS_HELP_STRING([--enable-colorhug],
+			     [Enable ColorHug support [default=auto]]),,
+	      enable_colorhug=maybe)
 if test x$enable_colorhug != xno; then
-	PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.12)
-	AC_DEFINE(HAVE_COLORHUG,1,[Use ColorHug support])
+	PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.12,
+			  has_colorhug=yes,
+			  has_colorhug=no)
 fi
-AM_CONDITIONAL(HAVE_COLORHUG, test x$enable_colorhug = xyes)
+if test x$has_colorhug = xyes; then
+	AC_DEFINE(HAVE_COLORHUG,1,[Use ColorHug support])
+else
+	has_colorhug=no
+	if test "x$enable_colorhug" = "xyes"; then
+		AC_MSG_ERROR([colorhug support requested but 'libcolorhug-dev' was not found])
+	fi
+fi
+AM_CONDITIONAL(HAVE_COLORHUG, test x$has_colorhug = xyes)
 
 # gpgme support
 AC_MSG_CHECKING([for gpgme])
@@ -155,12 +166,17 @@ else
 fi
 
 # UEFI support
-AC_ARG_ENABLE(uefi, AS_HELP_STRING([--enable-uefi],[Enable UEFI support]),
-	      enable_uefi=$enableval, enable_uefi=yes)
+AC_ARG_ENABLE(uefi,
+	      AS_HELP_STRING([--enable-uefi],
+	      [Enable UEFI support [default=auto]]),,
+	      enable_uefi=maybe)
 if test x$enable_uefi != xno; then
-	PKG_CHECK_MODULES(UEFI, fwup >= 0.5)
+	PKG_CHECK_MODULES(UEFI, fwup >= 0.5,
+			  has_fwup=yes,
+			  has_fwup=no)
+fi
+if test x$has_fwup = xyes; then
 	AC_DEFINE(HAVE_UEFI,1,[Use UEFI support])
-
 	# check for ability to unlock
 	PKG_CHECK_MODULES(UEFI_UNLOCK, fwup >= 5,
 			  has_uefi_unlock=yes,
@@ -168,18 +184,32 @@ if test x$enable_uefi != xno; then
 	if test x$has_uefi_unlock = xyes; then
 		AC_DEFINE(HAVE_UEFI_UNLOCK,1,[Use UEFI unlock support])
 	fi
+else
+	has_fwup=no
+	if test "x$enable_uefi" = "xyes"; then
+		AC_MSG_ERROR([UEFI support requested but 'libfwup-dev' was not found])
+	fi
 fi
-AM_CONDITIONAL(HAVE_UEFI, test x$enable_uefi = xyes)
+AM_CONDITIONAL(HAVE_UEFI, test x$has_fwup = xyes)
 
 # Dell Non ESRT capsule support
-AC_ARG_ENABLE(dell, AS_HELP_STRING([--enable-dell],[Enable Dell non-ESRT capsule support]),
-	      enable_dell=$enableval, enable_dell=no)
+AC_ARG_ENABLE(dell,
+	      AS_HELP_STRING([--enable-dell],
+	      [Enable Dell non-ESRT capsule support]),,
+	      enable_dell=maybe)
 if test x$enable_dell != xno; then
-	PKG_CHECK_MODULES(UEFI, fwup >= 0.5)
-	PKG_CHECK_MODULES(LIBSMBIOS, libsmbios_c >= 2.3.0)
-	PKG_CHECK_MODULES(EFIVAR, efivar)
+	PKG_CHECK_MODULES(LIBSMBIOS, libsmbios_c >= 2.3.0,
+			  has_libsmbios=yes,
+			  has_libsmbios=no)
+	PKG_CHECK_MODULES(EFIVAR, efivar,
+			  has_efivar=yes,
+			  has_efivar=no)
+fi
+if test x$has_libsmbios = xyes &&
+   test x$has_efivar = xyes &&
+   test x$has_fwup = xyes; then
 	AC_DEFINE(HAVE_DELL,1,[Use Dell non-ESRT capsule support])
-
+	has_dell=yes
 	# check for ability to change GUID
 	PKG_CHECK_MODULES(UEFI_GUID, fwup >= 5,
 			  has_uefi_guid=yes,
@@ -187,9 +217,24 @@ if test x$enable_dell != xno; then
 	if test x$has_uefi_guid = xyes; then
 		AC_DEFINE(HAVE_UEFI_GUID,1,[Use UEFI GUID override])
 	fi
-
+else
+	has_dell=no
+	if test "x$enable_dell" = "xyes"; then
+		if test x$enable_uefi = xno; then
+			AC_MSG_ERROR([Dell support requested but UEFI support explicitly disabled])
+		fi
+		if test x$has_libsmbios = xno; then
+			AC_MSG_ERROR([Dell support requested but 'libsmbios-dev' was not found])
+		fi
+		if test x$has_efivar = xno; then
+			AC_MSG_ERROR([Dell support requested but 'libefivar-dev' was not found])
+		fi
+		if test x$has_fwup = xno; then
+			AC_MSG_ERROR([Dell support requested but 'libfwup-dev' was not found])
+		fi
+	fi
 fi
-AM_CONDITIONAL(HAVE_DELL, test x$enable_dell = xyes)
+AM_CONDITIONAL(HAVE_DELL, test x$has_dell = xyes)
 
 # systemd support
 AC_ARG_WITH([systemdunitdir],
