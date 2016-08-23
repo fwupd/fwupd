@@ -349,6 +349,7 @@ dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 {
+	gchar *endptr = NULL;
 	guint64 tmp;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -374,8 +375,8 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* parse VID */
-	tmp = g_ascii_strtoull (values[1], NULL, 16);
-	if (tmp == 0 || tmp > G_MAXUINT16) {
+	tmp = g_ascii_strtoull (values[1], &endptr, 16);
+	if (tmp > G_MAXUINT16 || endptr[0] != '\0') {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
