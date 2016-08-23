@@ -224,6 +224,8 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 	if (cipher_str != NULL) {
 		if (g_strcmp0 (cipher_str, "XTEA") == 0)
 			dfu_firmware_set_cipher_kind (firmware, DFU_CIPHER_KIND_XTEA);
+		else if (g_strcmp0 (cipher_str, "DEVO") == 0)
+			dfu_firmware_set_cipher_kind (firmware, DFU_CIPHER_KIND_DEVO);
 		else
 			g_warning ("Unknown CipherKind: %s", cipher_str);
 	}
