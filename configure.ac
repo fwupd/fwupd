@@ -290,4 +290,10 @@ echo "
         compiler:                  ${CC}
         cflags:                    ${CFLAGS}
         cppflags:                  ${CPPFLAGS}
+
+	optional providers
+	------------------
+	Colorhug:                  $has_colorhug
+	UEFI:                      $has_fwup
+	Dell:                      $has_dell
 "
