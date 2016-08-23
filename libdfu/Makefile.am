@@ -41,6 +41,8 @@ libdfu_la_SOURCES =						\
 	dfu.h							\
 	dfu-common.c						\
 	dfu-common.h						\
+	dfu-cipher-devo.c					\
+	dfu-cipher-devo.h					\
 	dfu-cipher-xtea.c					\
 	dfu-cipher-xtea.h					\
 	dfu-context.c						\
