@@ -40,7 +40,7 @@ UEFI Unlock Support
 
 On some Dell systems it's possible to turn on and off UEFI capsule
 support from within the BIOS.  This functionality can also be adjusted
-from within the OS by fwupd. This requires using fwupdate 0.6 or later
+from within the OS by fwupd. This requires using fwupdate 5 or later
 and compiling it with libsmbios support.
 
 When fwupd and fwupdate have been compiled with this support you will

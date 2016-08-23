@@ -162,7 +162,7 @@ if test x$enable_uefi != xno; then
 	AC_DEFINE(HAVE_UEFI,1,[Use UEFI support])
 
 	# check for ability to unlock
-	PKG_CHECK_MODULES(UEFI_UNLOCK, fwup >= 0.6,
+	PKG_CHECK_MODULES(UEFI_UNLOCK, fwup >= 5,
 			  has_uefi_unlock=yes,
 			  has_uefi_unlock=no)
 	if test x$has_uefi_unlock = xyes; then
