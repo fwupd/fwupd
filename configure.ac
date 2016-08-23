@@ -173,7 +173,7 @@ AM_CONDITIONAL(HAVE_UEFI, test x$enable_uefi = xyes)
 
 # Dell Non ESRT capsule support
 AC_ARG_ENABLE(dell, AS_HELP_STRING([--enable-dell],[Enable Dell non-ESRT capsule support]),
-	      enable_dell=$enableval, enable_dell=yes)
+	      enable_dell=$enableval, enable_dell=no)
 if test x$enable_dell != xno; then
 	PKG_CHECK_MODULES(UEFI, fwup >= 0.5)
 	PKG_CHECK_MODULES(LIBSMBIOS, libsmbios_c >= 2.3.0)
