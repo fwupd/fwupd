@@ -390,6 +390,86 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+dfu_tool_set_target_size (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	DfuElement *element;
+	DfuImage *image;
+	gchar *endptr;
+	guint64 padding_char = 0x00;
+	guint64 target_size;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILE SIZE [VAL]"
+				     " -- e.g. `firmware.dfu 8000 ff");
+		return FALSE;
+	}
+
+	/* open */
+	file = g_file_new_for_path (values[0]);
+	firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      priv->cancellable,
+				      error)) {
+		return FALSE;
+	}
+
+	/* doesn't make sense for DfuSe */
+	if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFUSE) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Cannot pad DfuSe image, try DFU");
+		return FALSE;
+	}
+
+	/* parse target size */
+	target_size = g_ascii_strtoull (values[1], &endptr, 16);
+	if (target_size > 0xffff || endptr[0] != '\0') {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Failed to parse target size '%s'",
+			     values[1]);
+		return FALSE;
+	}
+
+	/* parse padding value */
+	if (g_strv_length (values) > 3) {
+		padding_char = g_ascii_strtoull (values[2], &endptr, 16);
+		if (padding_char > 0xff || endptr[0] != '\0') {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Failed to parse padding value '%s'",
+				     values[2]);
+			return FALSE;
+		}
+	}
+
+	/* this has to exist */
+	if (target_size > 0) {
+		image = dfu_firmware_get_image_default (firmware);
+		g_assert (image != NULL);
+		element = dfu_image_get_element (image, 0);
+		dfu_element_set_padding_value (element, (guint8) padding_char);
+		dfu_element_set_target_size (element, (guint32) target_size);
+	}
+
+	/* write out new file */
+	return dfu_firmware_write_file (firmware,
+					file,
+					priv->cancellable,
+					error);
+}
+
+static gboolean
 dfu_tool_set_metadata (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(DfuFirmware) firmware = NULL;
@@ -679,7 +759,6 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	guint64 tmp;
 	guint argc = g_strv_length (values);
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
@@ -687,13 +766,13 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GFile) file_out = NULL;
 
 	/* check args */
-	if (argc < 3 || argc > 4) {
+	if (argc != 3) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
 				     "Invalid arguments, expected "
-				     "FORMAT FILE-IN FILE-OUT [SIZE]"
-				     " -- e.g. `dfu firmware.hex firmware.dfu 8000`");
+				     "FORMAT FILE-IN FILE-OUT"
+				     " -- e.g. `dfu firmware.hex firmware.dfu`");
 		return FALSE;
 	}
 
@@ -724,39 +803,6 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 			     "unknown format '%s', expected [raw|dfu|dfuse|ihex]",
 			     values[0]);
 		return FALSE;
-	}
-
-	/* set target size */
-	if (argc > 3) {
-		DfuImage *image;
-		DfuElement *element;
-		gchar *endptr;
-		tmp = g_ascii_strtoull (values[3], &endptr, 16);
-		if (tmp > 0xffff || endptr[0] != '\0') {
-			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
-				     "Failed to parse target size '%s'",
-				     values[3]);
-			return FALSE;
-		}
-
-		/* doesn't make sense for DfuSe */
-		if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFUSE) {
-			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
-				     "Cannot pad DfuSe image, try DFU");
-			return FALSE;
-		}
-
-		/* this has to exist */
-		if (tmp > 0) {
-			image = dfu_firmware_get_image_default (firmware);
-			g_assert (image != NULL);
-			element = dfu_image_get_element (image, 0);
-			dfu_element_set_target_size (element, (guint32) tmp);
-		}
 	}
 
 	/* print the new object */
@@ -1952,6 +1998,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Set product ID on firmware file"),
 		     dfu_tool_set_product);
+	dfu_tool_add (priv->cmd_array,
+		     "set-target-size",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Set the firmware size for the target"),
+		     dfu_tool_set_target_size);
 	dfu_tool_add (priv->cmd_array,
 		     "set-release",
 		     NULL,

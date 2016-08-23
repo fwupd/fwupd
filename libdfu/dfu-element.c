@@ -46,6 +46,7 @@ typedef struct {
 	GBytes			*contents;
 	guint32			 target_size;
 	guint32			 address;
+	guint8			 padding_value;
 } DfuElementPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (DfuElement, dfu_element, G_TYPE_OBJECT)
@@ -201,12 +202,34 @@ dfu_element_to_string (DfuElement *element)
 }
 
 /**
+ * dfu_element_set_padding_value:
+ * @element: a #DfuElement
+ * @padding_value: char value, typically 0x00 or 0xff
+ *
+ * Sets a the value of the padding byte to be used in the function
+ * dfu_element_set_target_size().
+ *
+ * Since: 0.7.3
+ **/
+void
+dfu_element_set_padding_value (DfuElement *element, guint8 padding_value)
+{
+	DfuElementPrivate *priv = GET_PRIVATE (element);
+	g_return_if_fail (DFU_IS_ELEMENT (element));
+	priv->padding_value = padding_value;
+}
+
+/**
  * dfu_element_set_target_size:
  * @element: a #DfuElement
  * @target_size: size in bytes
  *
  * Sets a target size for the element. If the prepared element is smaller
- * than this then it will be padded with NUL bytes up to the required size.
+ * than this then it will be padded up to the required size.
+ *
+ * If a padding byte other than 0x00 is required then the function
+ * dfu_element_set_padding_value() should be used before this function is
+ * called.
  *
  * Since: 0.5.4
  **/
@@ -235,6 +258,13 @@ dfu_element_set_target_size (DfuElement *element, guint32 target_size)
 	buf = g_malloc0 (target_size);
 	g_assert (buf != NULL);
 	memcpy (buf, data, length);
+
+	/* set the pading value */
+	if (priv->padding_value != 0x00) {
+		memset (buf + length,
+			priv->padding_value,
+			target_size - length);
+	}
 
 	/* replace */
 	g_bytes_unref (priv->contents);

@@ -57,6 +57,8 @@ void		 dfu_element_set_address	(DfuElement	*element,
 						 guint32	 address);
 void		 dfu_element_set_target_size	(DfuElement	*element,
 						 guint32	 target_size);
+void		 dfu_element_set_padding_value	(DfuElement	*element,
+						 guint8		 padding_value);
 
 gchar		*dfu_element_to_string		(DfuElement	*element);
 
