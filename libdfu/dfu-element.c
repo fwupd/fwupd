@@ -115,9 +115,9 @@ dfu_element_get_contents (DfuElement *element)
  * dfu_element_get_address:
  * @element: a #DfuElement
  *
- * Gets the alternate setting.
+ * Gets the offset address of the element.
  *
- * Return value: integer, or 0x00 for unset
+ * Return value: memory offset value, or 0x00 for unset
  *
  * Since: 0.5.4
  **/
@@ -154,9 +154,9 @@ dfu_element_set_contents (DfuElement *element, GBytes *contents)
 /**
  * dfu_element_set_address:
  * @element: a #DfuElement
- * @address: vendor ID, or 0xffff for unset
+ * @address: memory offset value
  *
- * Sets the vendor ID.
+ * Sets the offset address of the element.
  *
  * Since: 0.5.4
  **/

@@ -473,6 +473,74 @@ dfu_tool_set_target_size (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+dfu_tool_set_address (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	DfuElement *element;
+	DfuFirmwareFormat firmware_format;
+	DfuImage *image;
+	gchar *endptr;
+	guint64 address;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILE ADDR"
+				     " -- e.g. `firmware.dfu 8000");
+		return FALSE;
+	}
+
+	/* open */
+	file = g_file_new_for_path (values[0]);
+	firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      priv->cancellable,
+				      error)) {
+		return FALSE;
+	}
+
+	/* only makes sense for DfuSe */
+	firmware_format = dfu_firmware_get_format (firmware);
+	if (firmware_format != DFU_FIRMWARE_FORMAT_DFUSE) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Cannot set address of %s image, try DfuSe",
+			     dfu_firmware_format_to_string (firmware_format));
+		return FALSE;
+	}
+
+	/* parse address */
+	address = g_ascii_strtoull (values[1], &endptr, 16);
+	if (address > G_MAXUINT32 || endptr[0] != '\0') {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Failed to parse address '%s'",
+			     values[1]);
+		return FALSE;
+	}
+
+	/* this has to exist */
+	if (address > 0) {
+		image = dfu_firmware_get_image_default (firmware);
+		g_assert (image != NULL);
+		element = dfu_image_get_element (image, 0);
+		dfu_element_set_address (element, (guint32) address);
+	}
+
+	/* write out new file */
+	return dfu_firmware_write_file (firmware,
+					file,
+					priv->cancellable,
+					error);
+}
+
+static gboolean
 dfu_tool_set_metadata (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(DfuFirmware) firmware = NULL;
@@ -1905,6 +1973,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Set product ID on firmware file"),
 		     dfu_tool_set_product);
+	dfu_tool_add (priv->cmd_array,
+		     "set-address",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Set element address on firmware file"),
+		     dfu_tool_set_address);
 	dfu_tool_add (priv->cmd_array,
 		     "set-target-size",
 		     NULL,
