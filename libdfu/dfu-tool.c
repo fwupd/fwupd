@@ -1863,6 +1863,12 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 			dfu_tool_print_indent (_("Name"), tmp, 1);
 		}
 
+		tmp = dfu_device_get_serial_number (device);
+		if (tmp != NULL) {
+			/* TRANSLATORS: serial number, e.g. '00012345' */
+			dfu_tool_print_indent (_("Serial"), tmp, 1);
+		}
+
 		tmp = dfu_mode_to_string (dfu_device_get_mode (device));
 		/* TRANSLATORS: device mode, e.g. runtime or DFU */
 		dfu_tool_print_indent (_("Mode"), tmp, 1);

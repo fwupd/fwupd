@@ -59,6 +59,7 @@ typedef struct {
 	gboolean		 done_upload_or_download;
 	gboolean		 claimed_interface;
 	gchar			*display_name;
+	gchar			*serial_number;
 	gchar			*platform_id;
 	guint16			 version;
 	guint16			 runtime_pid;
@@ -235,6 +236,7 @@ dfu_device_finalize (GObject *object)
 		g_usb_device_close (priv->dev, NULL);
 
 	g_free (priv->display_name);
+	g_free (priv->serial_number);
 	g_free (priv->platform_id);
 	g_ptr_array_unref (priv->targets);
 
@@ -869,6 +871,24 @@ dfu_device_get_display_name (DfuDevice *device)
 	return priv->display_name;
 }
 
+/**
+ * dfu_device_get_serial_number:
+ * @device: a #DfuDevice
+ *
+ * Gets the serial number for the device.
+ *
+ * Return value: string or %NULL for unset
+ *
+ * Since: 0.7.3
+ **/
+const gchar *
+dfu_device_get_serial_number (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), NULL);
+	return priv->serial_number;
+}
+
 static void
 dfu_device_set_state (DfuDevice *device, DfuState state)
 {
@@ -1313,6 +1333,11 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 	idx = g_usb_device_get_product_index (priv->dev);
 	if (idx != 0x00)
 		priv->display_name = g_usb_device_get_string_descriptor (priv->dev, idx, NULL);
+
+	/* get serial number if it exists */
+	idx = g_usb_device_get_serial_number_index (priv->dev);
+	if (idx != 0x00)
+		priv->serial_number = g_usb_device_get_string_descriptor (priv->dev, idx, NULL);
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {

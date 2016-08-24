@@ -139,6 +139,7 @@ DfuTarget	*dfu_device_get_target_by_alt_name	(DfuDevice	*device,
 							 const gchar	*alt_name,
 							 GError		**error);
 const gchar	*dfu_device_get_display_name		(DfuDevice	*device);
+const gchar	*dfu_device_get_serial_number		(DfuDevice	*device);
 guint16		 dfu_device_get_runtime_vid		(DfuDevice	*device);
 guint16		 dfu_device_get_runtime_pid		(DfuDevice	*device);
 guint16		 dfu_device_get_runtime_release		(DfuDevice	*device);
