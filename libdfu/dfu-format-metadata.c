@@ -89,10 +89,11 @@ dfu_firmware_from_metadata (DfuFirmware *firmware,
 			return FALSE;
 		}
 		if (idx + kvlen + 0x10 > data_length) {
-			g_set_error_literal (error,
-					     DFU_ERROR,
-					     DFU_ERROR_INTERNAL,
-					     "metadata table corrupt");
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "metadata table corrupt, k-kvlen=%u",
+				     kvlen);
 			return FALSE;
 		}
 		key = g_strndup ((const gchar *) data + idx, kvlen);
@@ -109,10 +110,11 @@ dfu_firmware_from_metadata (DfuFirmware *firmware,
 			return FALSE;
 		}
 		if (idx + kvlen + 0x10 > data_length) {
-			g_set_error_literal (error,
-					     DFU_ERROR,
-					     DFU_ERROR_INTERNAL,
-					     "metadata table corrupt");
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "metadata table corrupt, v-kvlen=%u",
+				     kvlen);
 			return FALSE;
 		}
 		value = g_strndup ((const gchar *) data + idx, kvlen);
