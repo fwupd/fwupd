@@ -1857,6 +1857,12 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 			continue;
 		}
 
+		tmp = dfu_device_get_display_name (device);
+		if (tmp != NULL) {
+			/* TRANSLATORS: device name, e.g. 'ColorHug2' */
+			dfu_tool_print_indent (_("Name"), tmp, 1);
+		}
+
 		tmp = dfu_mode_to_string (dfu_device_get_mode (device));
 		/* TRANSLATORS: device mode, e.g. runtime or DFU */
 		dfu_tool_print_indent (_("Mode"), tmp, 1);
