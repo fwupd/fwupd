@@ -57,29 +57,51 @@ AM_PROG_CC_C_O
 IT_PROG_INTLTOOL([0.35.0])
 AC_PATH_PROG(XSLTPROC, xsltproc)
 
-GNOME_COMPILE_WARNINGS([maximum],[
-	-Wmissing-declarations
-	-Wcast-align
-	-Wwrite-strings
-	-Wreturn-type
-	-Wformat-nonliteral
-	-Wmissing-format-attribute
-	-Wclobbered
-	-Wempty-body
-	-Wignored-qualifiers
-	-Wsign-compare
-	-Wtype-limits
-	-Wuninitialized
+WARN_CFLAGS_EXTRA="
 	-Waggregate-return
+	-Warray-bounds
+	-Wcast-align
+	-Wclobbered
 	-Wdeclaration-after-statement
-	-Wshadow
-	-Wno-strict-aliasing
-	-Winline
-	-Wmissing-parameter-type
-	-Woverride-init
-	-Wno-discarded-qualifiers
+	-Wempty-body
+	-Wextra
+	-Wformat=2
+	-Wformat-nonliteral
+	-Wformat-security
 	-Wformat-signedness
-])
+	-Wignored-qualifiers
+	-Wimplicit-function-declaration
+	-Winit-self
+	-Winline
+	-Wmissing-declarations
+	-Wmissing-format-attribute
+	-Wmissing-include-dirs
+	-Wmissing-noreturn
+	-Wmissing-parameter-type
+	-Wmissing-prototypes
+	-Wnested-externs
+	-Wno-discarded-qualifiers
+	-Wno-missing-field-initializers
+	-Wno-strict-aliasing
+	-Wno-suggest-attribute=format
+	-Wno-unused-parameter
+	-Wold-style-definition
+	-Woverride-init
+	-Wpacked
+	-Wpointer-arith
+	-Wredundant-decls
+	-Wreturn-type
+	-Wshadow
+	-Wsign-compare
+	-Wstrict-aliasing
+	-Wstrict-prototypes
+	-Wswitch-default
+	-Wtype-limits
+	-Wundef
+	-Wuninitialized
+	-Wunused-but-set-variable
+	-Wwrite-strings"
+AX_APPEND_COMPILE_FLAGS([$WARN_CFLAGS_EXTRA], [WARN_CFLAGS])
 
 dnl ---------------------------------------------------------------------------
 dnl - gettext stuff
