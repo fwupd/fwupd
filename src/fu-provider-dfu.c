@@ -45,10 +45,11 @@ fu_provider_dfu_get_name (FuProvider *provider)
 	return "DFU";
 }
 
-static void
+static gboolean
 fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 			       FuDevice *dev,
-			       DfuDevice *device)
+			       DfuDevice *device,
+			       GError **error)
 {
 	const gchar *platform_id;
 	guint16 release;
@@ -60,8 +61,12 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 	/* check mode */
 	platform_id = dfu_device_get_platform_id (device);
 	if (dfu_device_get_runtime_vid (device) == 0xffff) {
-		g_debug ("Ignoring DFU device not in runtime: %s", platform_id);
-		return;
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "device not in runtime: %s",
+			     platform_id);
+		return FALSE;
 	}
 
 	/* check capabilities */
@@ -90,6 +95,7 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 				  dfu_device_get_runtime_pid (device),
 				  dfu_device_get_runtime_release (device));
 	fu_device_add_guid (dev, devid2);
+	return TRUE;
 }
 
 static void
@@ -100,6 +106,7 @@ fu_provider_dfu_device_changed_cb (DfuContext *ctx,
 	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
 	FuDevice *dev;
 	const gchar *platform_id;
+	g_autoptr(GError) error = NULL;
 
 	/* convert DfuDevice to FuDevice */
 	platform_id = dfu_device_get_platform_id (device);
@@ -108,7 +115,10 @@ fu_provider_dfu_device_changed_cb (DfuContext *ctx,
 		g_warning ("cannot find device %s", platform_id);
 		return;
 	}
-	fu_provider_dfu_device_update (provider_dfu, dev, device);
+	if (!fu_provider_dfu_device_update (provider_dfu, dev, device, &error)) {
+		g_warning ("ignoring device: %s", error->message);
+		return;
+	}
 }
 
 static void
@@ -141,7 +151,10 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 	/* create new device */
 	dev = fu_device_new ();
 	fu_device_set_id (dev, platform_id);
-	fu_provider_dfu_device_update (provider_dfu, dev, device);
+	if (!fu_provider_dfu_device_update (provider_dfu, dev, device, &error)) {
+		g_debug ("ignoring device: %s", error->message);
+		return;
+	}
 
 	/* open device to get display name */
 	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH,
