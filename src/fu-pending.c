@@ -125,7 +125,7 @@ fu_pending_load (FuPending *pending, GError **error)
 		g_debug ("FuPending: altering table to repair: %s", error_msg);
 		sqlite3_free (error_msg);
 		statement = "ALTER TABLE pending ADD COLUMN timestamp TIMESTAMP "
-			    "DEFAULT CURRENT_TIMESTAMP NOT NULL0;";
+			    "DEFAULT CURRENT_TIMESTAMP NOT NULL;";
 		sqlite3_exec (priv->db, statement, NULL, NULL, NULL);
 	}
 
