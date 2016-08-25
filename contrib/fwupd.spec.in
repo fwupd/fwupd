@@ -26,6 +26,7 @@ BuildRequires: libappstream-glib-devel >= 0.5.10
 BuildRequires: gcab
 BuildRequires: valgrind
 BuildRequires: libsmbios-devel >= 2.3.0
+BuildRequires: elfutils-libelf-devel
 
 %ifarch x86_64 %{ix86} aarch64
 BuildRequires: fwupdate-devel >= 0.5

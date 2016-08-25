@@ -867,6 +867,8 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
 	} else if (g_strcmp0 (values[0], "ihex") == 0) {
 		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_INTEL_HEX);
+	} else if (g_strcmp0 (values[0], "elf") == 0) {
+		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_ELF);
 	} else {
 		g_set_error (error,
 			     DFU_ERROR,
