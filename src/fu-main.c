@@ -2244,6 +2244,14 @@ fu_main_provider_device_added_cb (FuProvider *provider,
 	g_auto(GStrv) guids = NULL;
 	g_autoptr(GError) error = NULL;
 
+	/* device has no GUIDs set! */
+	if (fu_device_get_guid_default (device) == NULL) {
+		g_warning ("no GUIDs for device %s [%s]",
+			   fu_device_get_id (device),
+			   fu_device_get_name (device));
+		return;
+	}
+
 	/* is this GUID blacklisted */
 	guids = g_key_file_get_string_list (priv->config,
 					    "fwupd",
