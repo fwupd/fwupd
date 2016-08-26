@@ -92,6 +92,7 @@ typedef enum {
 DfuFirmware	*dfu_firmware_new		(void);
 
 const gchar	*dfu_firmware_format_to_string	(DfuFirmwareFormat format);
+DfuFirmwareFormat dfu_firmware_format_from_string(const gchar	*format);
 
 DfuImage	*dfu_firmware_get_image		(DfuFirmware	*firmware,
 						 guint8		 alt_setting);

@@ -739,6 +739,32 @@ dfu_firmware_format_to_string (DfuFirmwareFormat format)
 }
 
 /**
+ * dfu_firmware_format_from_string:
+ * @format: a format string, e.g. `dfuse`
+ *
+ * Returns an enumerated version of the format.
+ *
+ * Return value: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_DFUSE
+ *
+ * Since: 0.7.3
+ **/
+DfuFirmwareFormat
+dfu_firmware_format_from_string (const gchar *format)
+{
+	if (g_strcmp0 (format, "raw") == 0)
+		return DFU_FIRMWARE_FORMAT_RAW;
+	if (g_strcmp0 (format, "dfu") == 0)
+		return DFU_FIRMWARE_FORMAT_DFU_1_0;
+	if (g_strcmp0 (format, "dfuse") == 0)
+		return DFU_FIRMWARE_FORMAT_DFUSE;
+	if (g_strcmp0 (format, "ihex") == 0)
+		return DFU_FIRMWARE_FORMAT_INTEL_HEX;
+	if (g_strcmp0 (format, "elf") == 0)
+		return DFU_FIRMWARE_FORMAT_ELF;
+	return DFU_FIRMWARE_FORMAT_UNKNOWN;
+}
+
+/**
  * dfu_firmware_get_cipher_kind:
  * @firmware: a #DfuFirmware
  *
