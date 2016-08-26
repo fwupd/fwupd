@@ -56,8 +56,8 @@ dfu_firmware_from_metadata (DfuFirmware *firmware,
 			    DfuFirmwareParseFlags flags,
 			    GError **error)
 {
+	const guint8 *data;
 	gsize data_length;
-	guint8 *data;
 	guint i;
 	guint idx = 2;
 	guint kvlen;
