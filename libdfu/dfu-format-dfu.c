@@ -64,7 +64,7 @@ dfu_firmware_detect_dfu (GBytes *bytes)
 	/* check for DFU signature */
 	ftr = (DfuFirmwareFooter *) &data[len - sizeof(DfuFirmwareFooter)];
 	if (memcmp (ftr->sig, "UFD", 3) != 0)
-		return DFU_FIRMWARE_FORMAT_RAW;
+		return DFU_FIRMWARE_FORMAT_UNKNOWN;
 
 	return GUINT16_FROM_LE (ftr->ver);
 }
