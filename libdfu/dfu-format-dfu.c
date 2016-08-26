@@ -66,7 +66,17 @@ dfu_firmware_detect_dfu (GBytes *bytes)
 	if (memcmp (ftr->sig, "UFD", 3) != 0)
 		return DFU_FIRMWARE_FORMAT_UNKNOWN;
 
-	return GUINT16_FROM_LE (ftr->ver);
+	/* check versions */
+	switch (GUINT16_FROM_LE (ftr->ver)) {
+	case DFU_VERSION_DFU_1_0:
+	case DFU_VERSION_DFU_1_1:
+		return DFU_FIRMWARE_FORMAT_DFU_1_0;
+	case DFU_VERSION_DFUSE:
+		return DFU_FIRMWARE_FORMAT_DFUSE;
+	default:
+		break;
+	}
+	return DFU_FIRMWARE_FORMAT_UNKNOWN;
 }
 
 static guint32 _crctbl[] = {
@@ -239,6 +249,16 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 	return dfu_firmware_from_raw (firmware, contents, flags, error);
 }
 
+static DfuVersion
+dfu_convert_version (DfuFirmwareFormat format)
+{
+	if (format == DFU_FIRMWARE_FORMAT_DFU_1_0)
+		return DFU_VERSION_DFU_1_0;
+	if (format == DFU_FIRMWARE_FORMAT_DFUSE)
+		return DFU_VERSION_DFUSE;
+	return DFU_VERSION_UNKNOWN;
+}
+
 static GBytes *
 dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents, GError **error)
 {
@@ -270,7 +290,7 @@ dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents, GError **error
 	ftr->release = GUINT16_TO_LE (dfu_firmware_get_release (firmware));
 	ftr->pid = GUINT16_TO_LE (dfu_firmware_get_pid (firmware));
 	ftr->vid = GUINT16_TO_LE (dfu_firmware_get_vid (firmware));
-	ftr->ver = GUINT16_TO_LE (dfu_firmware_get_format (firmware));
+	ftr->ver = GUINT16_TO_LE (dfu_convert_version (dfu_firmware_get_format (firmware)));
 	ftr->len = (guint8) (sizeof (DfuFirmwareFooter) + length_md);
 	memcpy(ftr->sig, "UFD", 3);
 	crc_new = dfu_firmware_generate_crc32 (buf, length_bin + length_md + 12);

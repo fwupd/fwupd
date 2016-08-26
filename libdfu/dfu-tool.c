@@ -830,6 +830,7 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 {
+	DfuFirmwareFormat format;
 	guint argc = g_strv_length (values);
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
@@ -859,22 +860,20 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* set output format */
-	if (g_strcmp0 (values[0], "raw") == 0) {
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_RAW);
-	} else if (g_strcmp0 (values[0], "dfu") == 0) {
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
-	} else if (g_strcmp0 (values[0], "dfuse") == 0) {
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
-	} else if (g_strcmp0 (values[0], "ihex") == 0) {
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_INTEL_HEX);
-	} else if (g_strcmp0 (values[0], "elf") == 0) {
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_ELF);
-	} else {
+	format = dfu_firmware_format_from_string (values[0]);
+	dfu_firmware_set_format (firmware, format);
+	if (format == DFU_FIRMWARE_FORMAT_UNKNOWN) {
+		g_autoptr(GString) tmp = g_string_new (NULL);
+		for (guint i = 1; i < DFU_FIRMWARE_FORMAT_LAST; i++) {
+			if (tmp->len > 0)
+				g_string_append (tmp, "|");
+			g_string_append (tmp, dfu_firmware_format_to_string (i));
+		}
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "unknown format '%s', expected [raw|dfu|dfuse|ihex]",
-			     values[0]);
+			     "unknown format '%s', expected [%s]",
+			     values[0], tmp->str);
 		return FALSE;
 	}
 

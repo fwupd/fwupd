@@ -726,15 +726,15 @@ const gchar *
 dfu_firmware_format_to_string (DfuFirmwareFormat format)
 {
 	if (format == DFU_FIRMWARE_FORMAT_RAW)
-		return "RAW";
+		return "raw";
 	if (format == DFU_FIRMWARE_FORMAT_DFU_1_0)
-		return "DFU";
+		return "dfu";
 	if (format == DFU_FIRMWARE_FORMAT_DFUSE)
-		return "DfuSe";
+		return "dfuse";
 	if (format == DFU_FIRMWARE_FORMAT_INTEL_HEX)
-		return "IHEX";
+		return "ihex";
 	if (format == DFU_FIRMWARE_FORMAT_ELF)
-		return "ELF";
+		return "elf";
 	return NULL;
 }
 
