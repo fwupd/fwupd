@@ -95,6 +95,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 	guint16 addr_low = 0;
 	guint32 addr32 = 0;
 	guint32 addr32_last = 0;
+	guint32 element_address = 0;
 	guint8 checksum;
 	guint8 data_tmp;
 	guint8 len_tmp;
@@ -183,6 +184,8 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 				}
 //				addr32 = addr_high + addr_low;
 				addr32 = ((guint32) addr_high << 16) + addr_low;
+				if (element_address == 0x0)
+					element_address = addr32;
 			}
 
 			/* does not make sense */
@@ -253,6 +256,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 	/* add single image */
 	contents = g_bytes_new (string->str, string->len);
 	dfu_element_set_contents (element, contents);
+	dfu_element_set_address (element, element_address);
 	dfu_image_add_element (image, element);
 	dfu_firmware_add_image (firmware, image);
 	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_INTEL_HEX);
