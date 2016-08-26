@@ -1780,7 +1780,7 @@ dfu_device_upload (DfuDevice *device,
 		g_debug ("switching to DefuSe automatically");
 		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
 	} else {
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
+		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU);
 	}
 
 	/* do host reset */

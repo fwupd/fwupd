@@ -1095,7 +1095,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* create new firmware object */
 	firmware = dfu_firmware_new ();
-	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
+	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU);
 	dfu_firmware_set_vid (firmware, dfu_device_get_runtime_vid (device));
 	dfu_firmware_set_pid (firmware, dfu_device_get_runtime_pid (device));
 	dfu_firmware_add_image (firmware, image);

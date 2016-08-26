@@ -432,7 +432,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 		return dfu_firmware_from_ihex (firmware, bytes, flags, error);
 	if (priv->format == DFU_FIRMWARE_FORMAT_ELF)
 		return dfu_firmware_from_elf (firmware, bytes, flags, error);
-	if (priv->format == DFU_FIRMWARE_FORMAT_DFU_1_0 ||
+	if (priv->format == DFU_FIRMWARE_FORMAT_DFU ||
 	    priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
 		return dfu_firmware_from_dfu (firmware, bytes, flags, error);
 	return dfu_firmware_from_raw (firmware, bytes, flags, error);
@@ -593,7 +593,7 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 		return dfu_firmware_to_raw (firmware, error);
 
 	/* DFU or DfuSe*/
-	if (priv->format == DFU_FIRMWARE_FORMAT_DFU_1_0 ||
+	if (priv->format == DFU_FIRMWARE_FORMAT_DFU ||
 	    priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
 		return dfu_firmware_to_dfu (firmware, error);
 
@@ -714,7 +714,7 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 
 /**
  * dfu_firmware_format_to_string:
- * @format: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_DFU_1_0
+ * @format: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_DFU
  *
  * Returns a string representaiton of the format.
  *
@@ -727,7 +727,7 @@ dfu_firmware_format_to_string (DfuFirmwareFormat format)
 {
 	if (format == DFU_FIRMWARE_FORMAT_RAW)
 		return "raw";
-	if (format == DFU_FIRMWARE_FORMAT_DFU_1_0)
+	if (format == DFU_FIRMWARE_FORMAT_DFU)
 		return "dfu";
 	if (format == DFU_FIRMWARE_FORMAT_DFUSE)
 		return "dfuse";
@@ -754,7 +754,7 @@ dfu_firmware_format_from_string (const gchar *format)
 	if (g_strcmp0 (format, "raw") == 0)
 		return DFU_FIRMWARE_FORMAT_RAW;
 	if (g_strcmp0 (format, "dfu") == 0)
-		return DFU_FIRMWARE_FORMAT_DFU_1_0;
+		return DFU_FIRMWARE_FORMAT_DFU;
 	if (g_strcmp0 (format, "dfuse") == 0)
 		return DFU_FIRMWARE_FORMAT_DFUSE;
 	if (g_strcmp0 (format, "ihex") == 0)

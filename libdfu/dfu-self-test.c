@@ -187,7 +187,7 @@ dfu_firmware_dfu_func (void)
 
 	/* write DFU format */
 	firmware = dfu_firmware_new ();
-	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
+	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU);
 	dfu_firmware_set_vid (firmware, 0x1234);
 	dfu_firmware_set_pid (firmware, 0x5678);
 	dfu_firmware_set_release (firmware, 0xfedc);
@@ -209,7 +209,7 @@ dfu_firmware_dfu_func (void)
 	g_assert_cmpint (dfu_firmware_get_vid (firmware), ==, 0x1234);
 	g_assert_cmpint (dfu_firmware_get_pid (firmware), ==, 0x5678);
 	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xfedc);
-	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU_1_0);
+	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 256);
 
 	/* load a real firmware */
@@ -225,7 +225,7 @@ dfu_firmware_dfu_func (void)
 	g_assert_cmpint (dfu_firmware_get_vid (firmware), ==, 0x1c11);
 	g_assert_cmpint (dfu_firmware_get_pid (firmware), ==, 0xb007);
 	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xffff);
-	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU_1_0);
+	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x8eB4);
 	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 

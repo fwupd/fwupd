@@ -70,7 +70,7 @@ dfu_firmware_detect_dfu (GBytes *bytes)
 	switch (GUINT16_FROM_LE (ftr->ver)) {
 	case DFU_VERSION_DFU_1_0:
 	case DFU_VERSION_DFU_1_1:
-		return DFU_FIRMWARE_FORMAT_DFU_1_0;
+		return DFU_FIRMWARE_FORMAT_DFU;
 	case DFU_VERSION_DFUSE:
 		return DFU_FIRMWARE_FORMAT_DFUSE;
 	default:
@@ -181,7 +181,7 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 
 	/* check version */
 	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_VERSION_TEST) == 0) {
-		if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFU_1_0 &&
+		if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFU &&
 		    dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFUSE) {
 			g_set_error (error,
 				     DFU_ERROR,
@@ -252,7 +252,7 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 static DfuVersion
 dfu_convert_version (DfuFirmwareFormat format)
 {
-	if (format == DFU_FIRMWARE_FORMAT_DFU_1_0)
+	if (format == DFU_FIRMWARE_FORMAT_DFU)
 		return DFU_VERSION_DFU_1_0;
 	if (format == DFU_FIRMWARE_FORMAT_DFUSE)
 		return DFU_VERSION_DFUSE;
@@ -313,7 +313,7 @@ GBytes *
 dfu_firmware_to_dfu (DfuFirmware *firmware, GError **error)
 {
 	/* plain DFU */
-	if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFU_1_0) {
+	if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFU) {
 		GBytes *contents;
 		DfuElement *element;
 		DfuImage *image;
