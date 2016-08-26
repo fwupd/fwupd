@@ -67,9 +67,10 @@ dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
 	return (guint16) g_ascii_strtoull (buffer, NULL, 16);
 }
 
-#define	DFU_INHX32_RECORD_TYPE_DATA		0
-#define	DFU_INHX32_RECORD_TYPE_EOF		1
-#define	DFU_INHX32_RECORD_TYPE_EXTENDED		4
+#define	DFU_INHX32_RECORD_TYPE_DATA		0x00
+#define	DFU_INHX32_RECORD_TYPE_EOF		0x01
+#define	DFU_INHX32_RECORD_TYPE_EXTENDED		0x04
+#define	DFU_INHX32_RECORD_TYPE_TEXT		0xfe
 
 /**
  * dfu_firmware_from_ihex: (skip)
@@ -221,6 +222,16 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			addr_high = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+9);
 			addr32 = ((guint32) addr_high << 16) + addr_low;
 			break;
+		case DFU_INHX32_RECORD_TYPE_TEXT:
+		{
+			g_autoptr(GString) str = g_string_new ("");
+			for (i = offset + 9; i < end; i += 2) {
+				guint8 tmp_c = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
+				g_string_append_c (str, tmp_c);
+			}
+			g_debug ("%08x: %s", addr32, str->str);
+			break;
+		}
 		default:
 			g_set_error (error,
 				     DFU_ERROR,
