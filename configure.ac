@@ -59,6 +59,7 @@ AC_PATH_PROG(XSLTPROC, xsltproc)
 
 WARN_CFLAGS_EXTRA="
 	-Waggregate-return
+	-Wunused
 	-Warray-bounds
 	-Wcast-align
 	-Wclobbered
@@ -87,7 +88,6 @@ WARN_CFLAGS_EXTRA="
 	-Wno-unused-parameter
 	-Wold-style-definition
 	-Woverride-init
-	-Wpacked
 	-Wpointer-arith
 	-Wredundant-decls
 	-Wreturn-type
@@ -102,6 +102,7 @@ WARN_CFLAGS_EXTRA="
 	-Wunused-but-set-variable
 	-Wwrite-strings"
 AX_APPEND_COMPILE_FLAGS([$WARN_CFLAGS_EXTRA], [WARN_CFLAGS])
+AC_SUBST(WARN_CFLAGS)
 
 dnl ---------------------------------------------------------------------------
 dnl - gettext stuff
