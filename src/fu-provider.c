@@ -40,6 +40,7 @@ enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_STATUS_CHANGED,
+	SIGNAL_PERCENTAGE_CHANGED,
 	SIGNAL_LAST
 };
 
@@ -47,9 +48,6 @@ static guint signals[SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE (FuProvider, fu_provider, G_TYPE_OBJECT)
 
-/**
- * fu_provider_offline_invalidate:
- **/
 static gboolean
 fu_provider_offline_invalidate (GError **error)
 {
@@ -73,9 +71,6 @@ fu_provider_offline_invalidate (GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_offline_setup:
- **/
 static gboolean
 fu_provider_offline_setup (GError **error)
 {
@@ -97,9 +92,6 @@ fu_provider_offline_setup (GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_coldplug:
- **/
 gboolean
 fu_provider_coldplug (FuProvider *provider, GError **error)
 {
@@ -109,9 +101,6 @@ fu_provider_coldplug (FuProvider *provider, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_schedule_update:
- **/
 static gboolean
 fu_provider_schedule_update (FuProvider *provider,
 			     FuDevice *device,
@@ -119,7 +108,6 @@ fu_provider_schedule_update (FuProvider *provider,
 			     GError **error)
 {
 	gchar tmpname[] = {"XXXXXX.cap"};
-	guint i;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FwupdResult) res_tmp = NULL;
@@ -147,15 +135,15 @@ fu_provider_schedule_update (FuProvider *provider,
 	}
 
 	/* get a random filename */
-	for (i = 0; i < 6; i++)
-		tmpname[i] = g_random_int_range ('A', 'Z');
+	for (guint i = 0; i < 6; i++)
+		tmpname[i] = (gchar) g_random_int_range ('A', 'Z');
 	filename = g_build_filename (dirname, tmpname, NULL);
 
 	/* just copy to the temp file */
 	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
 	if (!g_file_set_contents (filename,
 				  g_bytes_get_data (blob_cab, NULL),
-				  g_bytes_get_size (blob_cab),
+				  (gssize) g_bytes_get_size (blob_cab),
 				  error))
 		return FALSE;
 
@@ -172,9 +160,6 @@ fu_provider_schedule_update (FuProvider *provider,
 	return fu_provider_offline_setup (error);
 }
 
-/**
- * fu_provider_verify:
- **/
 gboolean
 fu_provider_verify (FuProvider *provider,
 		    FuDevice *device,
@@ -187,9 +172,6 @@ fu_provider_verify (FuProvider *provider,
 	return TRUE;
 }
 
-/**
- * fu_provider_unlock:
- **/
 gboolean
 fu_provider_unlock (FuProvider *provider,
 		    FuDevice *device,
@@ -219,13 +201,10 @@ fu_provider_unlock (FuProvider *provider,
 	/* update with correct flags */
 	flags = fu_device_get_flags (device);
 	fu_device_set_flags (device, flags &= ~FU_DEVICE_FLAG_LOCKED);
-	fu_device_set_modified (device, g_get_real_time () / G_USEC_PER_SEC);
+	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	return TRUE;
 }
 
-/**
- * fu_provider_update:
- **/
 gboolean
 fu_provider_update (FuProvider *provider,
 		    FuDevice *device,
@@ -310,9 +289,6 @@ fu_provider_update (FuProvider *provider,
 	return TRUE;
 }
 
-/**
- * fu_provider_clear_results:
- **/
 gboolean
 fu_provider_clear_results (FuProvider *provider, FuDevice *device, GError **error)
 {
@@ -344,9 +320,6 @@ fu_provider_clear_results (FuProvider *provider, FuDevice *device, GError **erro
 	return fu_pending_remove_device (pending, FWUPD_RESULT (device), error);
 }
 
-/**
- * fu_provider_get_results:
- **/
 gboolean
 fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 {
@@ -402,9 +375,6 @@ fu_provider_get_results (FuProvider *provider, FuDevice *device, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_get_name:
- **/
 const gchar *
 fu_provider_get_name (FuProvider *provider)
 {
@@ -414,23 +384,17 @@ fu_provider_get_name (FuProvider *provider)
 	return NULL;
 }
 
-/**
- * fu_provider_device_add:
- **/
 void
 fu_provider_device_add (FuProvider *provider, FuDevice *device)
 {
 	g_debug ("emit added from %s: %s",
 		 fu_provider_get_name (provider),
 		 fu_device_get_id (device));
-	fu_device_set_created (device, g_get_real_time () / G_USEC_PER_SEC);
+	fu_device_set_created (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	fu_device_set_provider (device, fu_provider_get_name (provider));
 	g_signal_emit (provider, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
 
-/**
- * fu_provider_device_remove:
- **/
 void
 fu_provider_device_remove (FuProvider *provider, FuDevice *device)
 {
@@ -440,18 +404,19 @@ fu_provider_device_remove (FuProvider *provider, FuDevice *device)
 	g_signal_emit (provider, signals[SIGNAL_DEVICE_REMOVED], 0, device);
 }
 
-/**
- * fu_provider_set_status:
- **/
 void
 fu_provider_set_status (FuProvider *provider, FwupdStatus status)
 {
 	g_signal_emit (provider, signals[SIGNAL_STATUS_CHANGED], 0, status);
 }
 
-/**
- * fu_provider_get_checksum_type:
- **/
+void
+fu_provider_set_percentage (FuProvider *provider, guint percentage)
+{
+	g_signal_emit (provider, signals[SIGNAL_PERCENTAGE_CHANGED], 0,
+		       percentage);
+}
+
 GChecksumType
 fu_provider_get_checksum_type (FuProviderVerifyFlags flags)
 {
@@ -460,9 +425,6 @@ fu_provider_get_checksum_type (FuProviderVerifyFlags flags)
 	return G_CHECKSUM_SHA1;
 }
 
-/**
- * fu_provider_class_init:
- **/
 static void
 fu_provider_class_init (FuProviderClass *klass)
 {
@@ -486,19 +448,19 @@ fu_provider_class_init (FuProviderClass *klass)
 			      G_STRUCT_OFFSET (FuProviderClass, status_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_UINT);
+	signals[SIGNAL_PERCENTAGE_CHANGED] =
+		g_signal_new ("percentage-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuProviderClass, percentage_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
-/**
- * fu_provider_init:
- **/
 static void
 fu_provider_init (FuProvider *provider)
 {
 }
 
-/**
- * fu_provider_finalize:
- **/
 static void
 fu_provider_finalize (GObject *object)
 {

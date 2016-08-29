@@ -25,14 +25,15 @@ override_dh_auto_configure:
 		export UEFI="--disable-uefi"; \
 	fi; \
 	dh_auto_configure -- --with-systemdunitdir=/lib/systemd/system \
+				--enable-gtk-doc \
 				$(COLORHUG) $$UEFI
 
 override_dh_install:
 	find debian/tmp/usr -name "*a" | xargs rm -f
+	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install --fail-missing
 
 override_dh_auto_test:
 	if [ -x /usr/bin/valgrind ] ; then \
-		HOME=`pwd` dh_auto_test ; \
-		HOME=`pwd` gpg-connect-agent "KILLAGENT" /bye ; \
+		dh_auto_test; \
 	fi

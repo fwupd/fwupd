@@ -19,19 +19,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#ifndef __DFU_IMAGE_PRIVATE_H
-#define __DFU_IMAGE_PRIVATE_H
+/**
+ * SECTION:ebitdo
+ * @short_description: Helper objects for interacting with EBITDO devices.
+ */
 
-#include "dfu-image.h"
+#ifndef __EBITDO_H__
+#define __EBITDO_H__
 
-G_BEGIN_DECLS
+#define __EBITDO_H_INSIDE__
 
-DfuImage	*dfu_image_from_dfuse		(const guint8	*data,
-						 guint32	 length,
-						 guint32	*consumed,
-						 GError		**error);
-GBytes		*dfu_image_to_dfuse		(DfuImage	*image);
+#include <libebitdo/ebitdo-device.h>
 
-G_END_DECLS
+#undef __EBITDO_H_INSIDE__
 
-#endif /* __DFU_IMAGE_PRIVATE_H */
+#endif /* __EBITDO_H__ */
+

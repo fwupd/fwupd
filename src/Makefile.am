@@ -17,6 +17,7 @@ AM_CPPFLAGS =						\
 	$(ARCHIVE_CFLAGS)				\
 	-I$(top_srcdir)					\
 	-I$(top_builddir)				\
+	-I$(top_srcdir)/libebitdo			\
 	-I$(top_srcdir)/libfwupd			\
 	-DG_LOG_DOMAIN=\"Fu\"				\
 	-DLIBEXECDIR=\"$(libexecdir)\"			\
@@ -34,6 +35,9 @@ FWUPD_LIBS =						\
 
 DFU_LIBS =						\
 	$(top_builddir)/libdfu/libdfu.la
+
+EBITDO_LIBS =						\
+	$(top_builddir)/libebitdo/libebitdo.la
 
 bin_PROGRAMS = fwupdmgr
 
@@ -61,7 +65,7 @@ fwupdmgr_LDFLAGS =					\
 fwupdmgr_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
 	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
 
 fu-resources.c: fwupd.gresource.xml $(dist_introspection_DATA)
 	$(AM_V_GEN)					\
@@ -106,6 +110,8 @@ fwupd_SOURCES =						\
 	fu-provider-udev.h				\
 	fu-provider-usb.c				\
 	fu-provider-usb.h				\
+	fu-provider-ebitdo.c				\
+	fu-provider-ebitdo.h				\
 	fu-quirks.h					\
 	fu-resources.c					\
 	fu-resources.h					\
@@ -116,6 +122,7 @@ fwupd_SOURCES =						\
 fwupd_LDADD =						\
 	$(FWUPD_LIBS)					\
 	$(DFU_LIBS)					\
+	$(EBITDO_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(GUSB_LIBS)					\
 	$(GCAB_LIBS)					\
@@ -153,7 +160,7 @@ fwupd_LDFLAGS =						\
 fwupd_CFLAGS =						\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
 	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
 
 TESTS_ENVIRONMENT =					\
 	libtool --mode=execute valgrind			\
@@ -196,7 +203,28 @@ fu_self_test_LDADD =					\
 fu_self_test_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"/tmp/fwupd-self-test\"	\
 	-DLOCALSTATEDIR=\"/tmp/fwupd-self-test/var\"	\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
+
+if HAVE_DELL
+fwupd_SOURCES +=					\
+	fu-provider-dell.c				\
+	fu-provider-dell.h
+AM_CPPFLAGS +=						\
+	$(LIBSMBIOS_CFLAGS)				\
+	$(EFIVAR_CFLAGS)
+fwupd_LDADD +=						\
+	$(UEFI_LIBS)					\
+	$(LIBSMBIOS_LIBS)				\
+	$(EFIVAR_LIBS)
+fu_self_test_LDADD +=					\
+	$(GUSB_LIBS)					\
+	$(UEFI_LIBS)					\
+	$(LIBSMBIOS_LIBS)				\
+	$(EFIVAR_LIBS)
+fu_self_test_SOURCES +=					\
+	fu-provider-dell.c				\
+	fu-provider-dell.h
+endif
 
 install-data-hook:
 	if test -w $(DESTDIR)$(prefix)/; then \

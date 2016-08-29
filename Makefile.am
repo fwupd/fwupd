@@ -5,6 +5,7 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 SUBDIRS = 						\
 	libfwupd					\
 	libdfu						\
+	libebitdo					\
 	po						\
 	data						\
 	docs						\
@@ -54,6 +55,7 @@ MAINTAINERCLEANFILES =					\
 DISTCHECK_CONFIGURE_FLAGS =				\
 	--enable-colorhug				\
 	--enable-uefi					\
+	--enable-dell					\
 	--with-udevrulesdir=$$dc_install_base/$(udevrulesdir) \
 	--with-systemdunitdir=$$dc_install_base/$(systemdunitdir)
 

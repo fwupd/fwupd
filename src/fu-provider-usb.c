@@ -31,9 +31,6 @@
 
 static void	fu_provider_usb_finalize	(GObject	*object);
 
-/**
- * FuProviderUsbPrivate:
- **/
 typedef struct {
 	GHashTable		*devices;
 	GUsbContext		*usb_ctx;
@@ -43,18 +40,12 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (FuProviderUsb, fu_provider_usb, FU_TYPE_PROVIDER)
 #define GET_PRIVATE(o) (fu_provider_usb_get_instance_private (o))
 
-/**
- * fu_provider_usb_get_name:
- **/
 static const gchar *
 fu_provider_usb_get_name (FuProvider *provider)
 {
 	return "USB";
 }
 
-/**
- * fu_provider_usb_device_added:
- **/
 static void
 fu_provider_usb_device_added (FuProviderUsb *provider_usb, GUsbDevice *device)
 {
@@ -157,9 +148,6 @@ typedef struct {
 	GUsbDevice	*device;
 } FuProviderUsbHelper;
 
-/**
- * fu_provider_usb_device_added_delay_cb:
- **/
 static gboolean
 fu_provider_usb_device_added_delay_cb (gpointer user_data)
 {
@@ -171,9 +159,6 @@ fu_provider_usb_device_added_delay_cb (gpointer user_data)
 	return FALSE;
 }
 
-/**
- * fu_provider_usb_device_added_cb:
- **/
 static void
 fu_provider_usb_device_added_cb (GUsbContext *ctx,
 				 GUsbDevice *device,
@@ -195,9 +180,6 @@ fu_provider_usb_device_added_cb (GUsbContext *ctx,
 	fu_provider_usb_device_added (provider_usb, device);
 }
 
-/**
- * fu_provider_usb_device_removed_cb:
- **/
 static void
 fu_provider_usb_device_removed_cb (GUsbContext *ctx,
 				   GUsbDevice *device,
@@ -217,9 +199,6 @@ fu_provider_usb_device_removed_cb (GUsbContext *ctx,
 	g_hash_table_remove (priv->devices, platform_id);
 }
 
-/**
- * fu_provider_usb_coldplug:
- **/
 static gboolean
 fu_provider_usb_coldplug (FuProvider *provider, GError **error)
 {
@@ -230,9 +209,6 @@ fu_provider_usb_coldplug (FuProvider *provider, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_usb_class_init:
- **/
 static void
 fu_provider_usb_class_init (FuProviderUsbClass *klass)
 {
@@ -244,9 +220,6 @@ fu_provider_usb_class_init (FuProviderUsbClass *klass)
 	object_class->finalize = fu_provider_usb_finalize;
 }
 
-/**
- * fu_provider_usb_init:
- **/
 static void
 fu_provider_usb_init (FuProviderUsb *provider_usb)
 {
@@ -262,9 +235,6 @@ fu_provider_usb_init (FuProviderUsb *provider_usb)
 			  provider_usb);
 }
 
-/**
- * fu_provider_usb_finalize:
- **/
 static void
 fu_provider_usb_finalize (GObject *object)
 {
@@ -277,9 +247,6 @@ fu_provider_usb_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_provider_usb_parent_class)->finalize (object);
 }
 
-/**
- * fu_provider_usb_new:
- **/
 FuProvider *
 fu_provider_usb_new (void)
 {

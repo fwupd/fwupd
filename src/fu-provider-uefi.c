@@ -38,18 +38,12 @@ static void	fu_provider_uefi_finalize	(GObject	*object);
 
 G_DEFINE_TYPE (FuProviderUefi, fu_provider_uefi, FU_TYPE_PROVIDER)
 
-/**
- * fu_provider_uefi_get_name:
- **/
 static const gchar *
 fu_provider_uefi_get_name (FuProvider *provider)
 {
 	return "UEFI";
 }
 
-/**
- * fu_provider_uefi_find:
- **/
 static fwup_resource *
 fu_provider_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError **error)
 {
@@ -88,9 +82,6 @@ fu_provider_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError *
 	return re_matched;
 }
 
-/**
- * _fwup_resource_iter_free:
- **/
 static void
 _fwup_resource_iter_free (fwup_resource_iter *iter)
 {
@@ -99,9 +90,6 @@ _fwup_resource_iter_free (fwup_resource_iter *iter)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
 
-/**
- * fu_provider_uefi_clear_results:
- **/
 static gboolean
 fu_provider_uefi_clear_results (FuProvider *provider, FuDevice *device, GError **error)
 {
@@ -136,9 +124,6 @@ fu_provider_uefi_clear_results (FuProvider *provider, FuDevice *device, GError *
 #define FWUP_LAST_ATTEMPT_STATUS_ERROR_PWR_EVT_BATT		0x00000007
 #endif
 
-/**
- * fu_provider_uefi_last_attempt_status_to_str:
- **/
 static const gchar *
 fu_provider_uefi_last_attempt_status_to_str (guint32 status)
 {
@@ -161,9 +146,6 @@ fu_provider_uefi_last_attempt_status_to_str (guint32 status)
 	return NULL;
 }
 
-/**
- * fu_provider_uefi_get_results:
- **/
 static gboolean
 fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **error)
 {
@@ -201,9 +183,6 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 	return TRUE;
 }
 
-/**
- * fu_provider_uefi_update:
- **/
 static gboolean
 fu_provider_uefi_update (FuProvider *provider,
 			 FuDevice *device,
@@ -240,20 +219,16 @@ fu_provider_uefi_update (FuProvider *provider,
 	return TRUE;
 }
 
-/**
- * fu_provider_uefi_get_version_format:
- **/
 static AsVersionParseFlag
 fu_provider_uefi_get_version_format (void)
 {
-	guint i;
 	g_autofree gchar *content = NULL;
 	/* any vendors match */
 	if (!g_file_get_contents ("/sys/class/dmi/id/sys_vendor",
 				  &content, NULL, NULL))
 		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 	g_strchomp (content);
-	for (i = 0; quirk_table[i].sys_vendor != NULL; i++) {
+	for (guint i = 0; quirk_table[i].sys_vendor != NULL; i++) {
 		if (g_strcmp0 (content, quirk_table[i].sys_vendor) == 0)
 			return quirk_table[i].flags;
 	}
@@ -262,9 +237,6 @@ fu_provider_uefi_get_version_format (void)
 	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 }
 
-/**
- * fu_provider_uefi_unlock:
- **/
 static gboolean
 fu_provider_uefi_unlock (FuProvider *provider,
 			 FuDevice *device,
@@ -293,9 +265,6 @@ fu_provider_uefi_unlock (FuProvider *provider,
 #endif
 }
 
-/**
- * fu_provider_uefi_coldplug:
- **/
 static gboolean
 fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 {
@@ -391,9 +360,6 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_uefi_class_init:
- **/
 static void
 fu_provider_uefi_class_init (FuProviderUefiClass *klass)
 {
@@ -409,26 +375,17 @@ fu_provider_uefi_class_init (FuProviderUefiClass *klass)
 	object_class->finalize = fu_provider_uefi_finalize;
 }
 
-/**
- * fu_provider_uefi_init:
- **/
 static void
 fu_provider_uefi_init (FuProviderUefi *provider_uefi)
 {
 }
 
-/**
- * fu_provider_uefi_finalize:
- **/
 static void
 fu_provider_uefi_finalize (GObject *object)
 {
 	G_OBJECT_CLASS (fu_provider_uefi_parent_class)->finalize (object);
 }
 
-/**
- * fu_provider_uefi_new:
- **/
 FuProvider *
 fu_provider_uefi_new (void)
 {

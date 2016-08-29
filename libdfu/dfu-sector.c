@@ -43,11 +43,6 @@
 #include "dfu-common.h"
 #include "dfu-sector-private.h"
 
-/**
- * DfuSectorPrivate:
- *
- * Private #DfuSector data
- **/
 typedef struct {
 	guint32			 address;
 	guint32			 size;
@@ -60,17 +55,11 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (DfuSector, dfu_sector, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (dfu_sector_get_instance_private (o))
 
-/**
- * dfu_sector_class_init:
- **/
 static void
 dfu_sector_class_init (DfuSectorClass *klass)
 {
 }
 
-/**
- * dfu_sector_init:
- **/
 static void
 dfu_sector_init (DfuSector *sector)
 {
@@ -198,7 +187,7 @@ dfu_sector_has_cap (DfuSector *sector, DfuSectorCap cap)
 {
 	DfuSectorPrivate *priv = GET_PRIVATE (sector);
 	g_return_val_if_fail (DFU_IS_SECTOR (sector), FALSE);
-	return priv->cap & cap;
+	return (priv->cap & cap) > 0;
 }
 
 /**

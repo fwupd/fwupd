@@ -37,13 +37,9 @@
 
 static void fwupd_client_finalize	 (GObject *object);
 
-/**
- * FwupdClientPrivate:
- *
- * Private #FwupdClient data
- **/
 typedef struct {
 	FwupdStatus			 status;
+	guint				 percentage;
 	GDBusConnection			*conn;
 	GDBusProxy			*proxy;
 } FwupdClientPrivate;
@@ -60,6 +56,7 @@ enum {
 enum {
 	PROP_0,
 	PROP_STATUS,
+	PROP_PERCENTAGE,
 	PROP_LAST
 };
 
@@ -76,9 +73,6 @@ typedef struct {
 	GDBusMessage	*message;
 } FwupdClientHelper;
 
-/**
- * fwupd_client_helper_free:
- **/
 static void
 fwupd_client_helper_free (FwupdClientHelper *helper)
 {
@@ -92,9 +86,6 @@ fwupd_client_helper_free (FwupdClientHelper *helper)
 	g_free (helper);
 }
 
-/**
- * fwupd_client_helper_new:
- **/
 static FwupdClientHelper *
 fwupd_client_helper_new (void)
 {
@@ -106,30 +97,38 @@ fwupd_client_helper_new (void)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdClientHelper, fwupd_client_helper_free)
 
-/**
- * fwupd_client_properties_changed_cb:
- **/
 static void
 fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 				    GVariant *changed_properties,
 				    GStrv invalidated_properties,
 				    FwupdClient *client)
 {
-	g_autoptr(GVariant) val = NULL;
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	GVariantDict dict;
 
 	/* print to the console */
-	val = g_dbus_proxy_get_cached_property (proxy, "Status");
-	if (val == NULL)
-		return;
-	priv->status = g_variant_get_uint32 (val);
-	g_debug ("Emitting ::status-changed() [%s]", fwupd_status_to_string (priv->status));
-	g_signal_emit (client, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
+	g_variant_dict_init (&dict, changed_properties);
+	if (g_variant_dict_contains (&dict, "Status")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy, "Status");
+		if (val != NULL) {
+			priv->status = g_variant_get_uint32 (val);
+			g_debug ("Emitting ::status-changed() [%s]",
+				 fwupd_status_to_string (priv->status));
+			g_signal_emit (client, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
+			g_object_notify (G_OBJECT (client), "status");
+		}
+	}
+	if (g_variant_dict_contains (&dict, "Percentage")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy, "Percentage");
+		if (val != NULL) {
+			priv->percentage = g_variant_get_uint32 (val);
+			g_object_notify (G_OBJECT (client), "percentage");
+		}
+	}
 }
 
-/**
- * fwupd_client_signal_cb:
- */
 static void
 fwupd_client_signal_cb (GDBusProxy *proxy,
 			const gchar *sender_name,
@@ -216,9 +215,6 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 	return TRUE;
 }
 
-/**
- * fwupd_client_parse_results_from_data:
- **/
 static GPtrArray *
 fwupd_client_parse_results_from_data (GVariant *devices)
 {
@@ -241,9 +237,6 @@ fwupd_client_parse_results_from_data (GVariant *devices)
 	return results;
 }
 
-/**
- * fwupd_client_fixup_dbus_error:
- **/
 static void
 fwupd_client_fixup_dbus_error (GError *error)
 {
@@ -346,9 +339,6 @@ fwupd_client_get_updates (FwupdClient *client, GCancellable *cancellable, GError
 	return fwupd_client_parse_results_from_data (val);
 }
 
-/**
- * fwupd_client_proxy_call_cb:
- **/
 static void
 fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
@@ -558,9 +548,6 @@ fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
 	return fwupd_result_new_from_data (helper->val);
 }
 
-/**
- * fwupd_client_send_message_cb:
- **/
 static void
 fwupd_client_send_message_cb (GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
@@ -677,7 +664,7 @@ fwupd_client_install (FwupdClient *client,
 	g_dbus_connection_send_message_with_reply (priv->conn,
 						   request,
 						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-						   -1,
+						   G_MAXINT,
 						   NULL,
 						   cancellable,
 						   fwupd_client_send_message_cb,
@@ -856,6 +843,42 @@ fwupd_client_get_details_local (FwupdClient *client, const gchar *filename,
 }
 
 /**
+ * fwupd_client_get_percentage:
+ * @client: A #FwupdClient
+ *
+ * Gets the last returned percentage value.
+ *
+ * Returns: a percentage, or 0 for unknown.
+ *
+ * Since: 0.7.3
+ **/
+guint
+fwupd_client_get_percentage (FwupdClient *client)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), 0);
+	return priv->percentage;
+}
+
+/**
+ * fwupd_client_get_status:
+ * @client: A #FwupdClient
+ *
+ * Gets the last returned status value.
+ *
+ * Returns: a #FwupdStatus, or %FWUPD_STATUS_UNKNOWN for unknown.
+ *
+ * Since: 0.7.3
+ **/
+FwupdStatus
+fwupd_client_get_status (FwupdClient *client)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FWUPD_STATUS_UNKNOWN);
+	return priv->status;
+}
+
+/**
  * fwupd_client_update_metadata:
  * @client: A #FwupdClient
  * @metadata_fn: the XML metadata filename
@@ -951,9 +974,6 @@ fwupd_client_update_metadata (FwupdClient *client,
 	return TRUE;
 }
 
-/**
- * fwupd_client_get_property:
- **/
 static void
 fwupd_client_get_property (GObject *object, guint prop_id,
 			   GValue *value, GParamSpec *pspec)
@@ -965,15 +985,15 @@ fwupd_client_get_property (GObject *object, guint prop_id,
 	case PROP_STATUS:
 		g_value_set_uint (value, priv->status);
 		break;
+	case PROP_PERCENTAGE:
+		g_value_set_uint (value, priv->percentage);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
 }
 
-/**
- * fwupd_client_set_property:
- **/
 static void
 fwupd_client_set_property (GObject *object, guint prop_id,
 			   const GValue *value, GParamSpec *pspec)
@@ -985,15 +1005,15 @@ fwupd_client_set_property (GObject *object, guint prop_id,
 	case PROP_STATUS:
 		priv->status = g_value_get_uint (value);
 		break;
+	case PROP_PERCENTAGE:
+		priv->percentage = g_value_get_uint (value);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
 }
 
-/**
- * fwupd_client_class_init:
- **/
 static void
 fwupd_client_class_init (FwupdClientClass *klass)
 {
@@ -1098,19 +1118,25 @@ fwupd_client_class_init (FwupdClientClass *klass)
 				   0, FWUPD_STATUS_LAST, FWUPD_STATUS_UNKNOWN,
 				   G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_STATUS, pspec);
+
+	/**
+	 * FwupdClient:percentage:
+	 *
+	 * The last-reported percentage of the daemon.
+	 *
+	 * Since: 0.7.3
+	 */
+	pspec = g_param_spec_uint ("percentage", NULL, NULL,
+				   0, 100, 0,
+				   G_PARAM_READWRITE);
+	g_object_class_install_property (object_class, PROP_PERCENTAGE, pspec);
 }
 
-/**
- * fwupd_client_init:
- **/
 static void
 fwupd_client_init (FwupdClient *client)
 {
 }
 
-/**
- * fwupd_client_finalize:
- **/
 static void
 fwupd_client_finalize (GObject *object)
 {

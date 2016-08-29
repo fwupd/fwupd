@@ -28,11 +28,6 @@
 
 static void fu_keyring_finalize			 (GObject *object);
 
-/**
- * FuKeyringPrivate:
- *
- * Private #FuKeyring data
- **/
 typedef struct {
 	gpgme_ctx_t		 ctx;
 } FuKeyringPrivate;
@@ -42,14 +37,12 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuKeyring, fu_keyring, G_TYPE_OBJECT)
 
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gpgme_data_t, gpgme_data_release, NULL)
 
-/**
- * fu_keyring_setup:
- **/
 static gboolean
 fu_keyring_setup (FuKeyring *keyring, GError **error)
 {
 	FuKeyringPrivate *priv = GET_PRIVATE (keyring);
 	gpgme_error_t rc;
+	g_autofree gchar *gpg_home = NULL;
 
 	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
 
@@ -92,15 +85,40 @@ fu_keyring_setup (FuKeyring *keyring, GError **error)
 		return FALSE;
 	}
 
+	/* set a custom home directory */
+	gpg_home = g_build_filename (LOCALSTATEDIR,
+				     "lib",
+				     PACKAGE_NAME,
+				     "gnupg",
+				     NULL);
+	if (g_mkdir_with_parents (gpg_home, 0700) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to create %s",
+			     gpg_home);
+		return FALSE;
+	}
+	g_debug ("Using keyring at %s", gpg_home);
+	rc = gpgme_ctx_set_engine_info (priv->ctx,
+					GPGME_PROTOCOL_OpenPGP,
+					NULL,
+					gpg_home);
+	if (rc != GPG_ERR_NO_ERROR) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to set protocol: %s",
+			     gpgme_strerror (rc));
+		return FALSE;
+	}
+
 	/* enable armor mode */
 	gpgme_set_armor (priv->ctx, TRUE);
 
 	return TRUE;
 }
 
-/**
- * fu_keyring_add_public_key:
- **/
 gboolean
 fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **error)
 {
@@ -137,7 +155,7 @@ fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **e
 	/* print what keys were imported */
 	result = gpgme_op_import_result (priv->ctx);
 	for (s = result->imports; s != NULL; s = s->next) {
-		g_debug ("importing key %s [%i] %s",
+		g_debug ("importing key %s [%u] %s",
 			 s->fpr, s->status, gpgme_strerror (s->result));
 	}
 
@@ -157,9 +175,6 @@ fu_keyring_add_public_key (FuKeyring *keyring, const gchar *filename, GError **e
 	return TRUE;
 }
 
-/**
- * fu_keyring_add_public_keys:
- **/
 gboolean
 fu_keyring_add_public_keys (FuKeyring *keyring, const gchar *dirname, GError **error)
 {
@@ -189,9 +204,6 @@ fu_keyring_add_public_keys (FuKeyring *keyring, const gchar *dirname, GError **e
 	return TRUE;
 }
 
-/**
- * fu_keyring_check_signature:
- **/
 static gboolean
 fu_keyring_check_signature (gpgme_signature_t signature, GError **error)
 {
@@ -242,9 +254,6 @@ fu_keyring_check_signature (gpgme_signature_t signature, GError **error)
 	return ret;
 }
 
-/**
- * fu_keyring_verify_file:
- **/
 gboolean
 fu_keyring_verify_file (FuKeyring *keyring,
 			const gchar *filename,
@@ -331,9 +340,6 @@ fu_keyring_verify_file (FuKeyring *keyring,
 	return TRUE;
 }
 
-/**
- * fu_keyring_verify_data:
- **/
 gboolean
 fu_keyring_verify_data (FuKeyring *keyring,
 			GBytes *payload,
@@ -410,9 +416,6 @@ fu_keyring_verify_data (FuKeyring *keyring,
 	return TRUE;
 }
 
-/**
- * fu_keyring_class_init:
- **/
 static void
 fu_keyring_class_init (FuKeyringClass *klass)
 {
@@ -420,17 +423,11 @@ fu_keyring_class_init (FuKeyringClass *klass)
 	object_class->finalize = fu_keyring_finalize;
 }
 
-/**
- * fu_keyring_init:
- **/
 static void
 fu_keyring_init (FuKeyring *keyring)
 {
 }
 
-/**
- * fu_keyring_finalize:
- **/
 static void
 fu_keyring_finalize (GObject *object)
 {
@@ -443,9 +440,6 @@ fu_keyring_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_keyring_parent_class)->finalize (object);
 }
 
-/**
- * fu_keyring_new:
- **/
 FuKeyring *
 fu_keyring_new (void)
 {

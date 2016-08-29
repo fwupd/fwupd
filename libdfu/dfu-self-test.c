@@ -32,9 +32,6 @@
 #include "dfu-sector-private.h"
 #include "dfu-target-private.h"
 
-/**
- * dfu_test_get_filename:
- **/
 static gchar *
 dfu_test_get_filename (const gchar *filename)
 {
@@ -48,9 +45,6 @@ dfu_test_get_filename (const gchar *filename)
 	return g_strdup (full_tmp);
 }
 
-/**
- * _g_bytes_compare_verbose:
- **/
 static gchar *
 _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 {
@@ -138,7 +132,7 @@ dfu_firmware_raw_func (void)
 
 	/* set up some dummy data */
 	for (i = 0; i < 256; i++)
-		buf[i] = i;
+		buf[i] = (gchar) i;
 	fw = g_bytes_new_static (buf, 256);
 
 	/* load a non DFU firmware */
@@ -188,7 +182,7 @@ dfu_firmware_dfu_func (void)
 
 	/* set up some dummy data */
 	for (i = 0; i < 256; i++)
-		buf[i] = i;
+		buf[i] = (gchar) i;
 	fw = g_bytes_new_static (buf, 256);
 
 	/* write DFU format */
@@ -571,9 +565,6 @@ dfu_colorhug_plus_func (void)
 	g_assert_cmpint (dfu_device_get_runtime_pid (device), ==, 0x1002);
 }
 
-/**
- * dfu_target_sectors_to_string:
- **/
 static gchar *
 dfu_target_sectors_to_string (DfuTarget *target)
 {
@@ -684,6 +675,7 @@ main (int argc, char **argv)
 
 	/* log everything */
 	g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
+	g_setenv ("DFU_SELF_TEST", "", FALSE);
 
 	/* tests go here */
 	g_test_add_func ("/libdfu/enums", dfu_enums_func);

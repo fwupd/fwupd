@@ -46,11 +46,6 @@
 
 static void dfu_context_finalize			 (GObject *object);
 
-/**
- * DfuContextPrivate:
- *
- * Private #DfuContext data
- **/
 typedef struct {
 	GUsbContext		*usb_ctx;
 	GPtrArray		*devices;		/* of DfuContextItem */
@@ -61,7 +56,7 @@ typedef struct {
 	DfuContext		*context;		/* not refcounted */
 	DfuDevice		*device;		/* not refcounted */
 	guint			 timeout_id;
-	guint			 state_change_id;
+	gulong			 state_change_id;
 } DfuContextItem;
 
 enum {
@@ -76,9 +71,6 @@ static guint signals [SIGNAL_LAST] = { 0 };
 G_DEFINE_TYPE_WITH_PRIVATE (DfuContext, dfu_context, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (dfu_context_get_instance_private (o))
 
-/**
- * dfu_context_device_free:
- **/
 static void
 dfu_context_device_free (DfuContextItem *item)
 {
@@ -92,9 +84,6 @@ dfu_context_device_free (DfuContextItem *item)
 	g_free (item);
 }
 
-/**
- * dfu_context_class_init:
- **/
 static void
 dfu_context_class_init (DfuContextClass *klass)
 {
@@ -152,9 +141,6 @@ dfu_context_class_init (DfuContextClass *klass)
 	object_class->finalize = dfu_context_finalize;
 }
 
-/**
- * dfu_context_get_device_id:
- **/
 static gchar *
 dfu_context_get_device_id (DfuDevice *device)
 {
@@ -168,9 +154,6 @@ dfu_context_get_device_id (DfuDevice *device)
 				g_usb_device_get_platform_id (dev));
 }
 
-/**
- * dfu_context_find_item_by_platform_id:
- **/
 static DfuContextItem *
 dfu_context_find_item_by_platform_id (DfuContext *context, const gchar *platform_id)
 {
@@ -187,9 +170,6 @@ dfu_context_find_item_by_platform_id (DfuContext *context, const gchar *platform
 	return NULL;
 }
 
-/**
- * dfu_context_remove_item:
- **/
 static void
 dfu_context_remove_item (DfuContextItem *item)
 {
@@ -204,9 +184,6 @@ dfu_context_remove_item (DfuContextItem *item)
 	g_ptr_array_remove (priv->devices, item);
 }
 
-/**
- * dfu_context_device_timeout_cb:
- **/
 static gboolean
 dfu_context_device_timeout_cb (gpointer user_data)
 {
@@ -220,9 +197,6 @@ dfu_context_device_timeout_cb (gpointer user_data)
 	return FALSE;
 }
 
-/**
- * dfu_context_device_state_cb:
- **/
 static void
 dfu_context_device_state_cb (DfuDevice *device, DfuState state, DfuContext *context)
 {
@@ -232,9 +206,6 @@ dfu_context_device_state_cb (DfuDevice *device, DfuState state, DfuContext *cont
 	g_signal_emit (context, signals[SIGNAL_DEVICE_CHANGED], 0, device);
 }
 
-/**
- * dfu_context_device_added_cb:
- **/
 static void
 dfu_context_device_added_cb (GUsbContext *usb_context,
 			     GUsbDevice *usb_device,
@@ -290,9 +261,6 @@ dfu_context_device_added_cb (GUsbContext *usb_context,
 	g_debug ("device %s was added", device_id);
 }
 
-/**
- * dfu_context_device_removed_cb:
- **/
 static void
 dfu_context_device_removed_cb (GUsbContext *usb_context,
 			       GUsbDevice  *usb_device,
@@ -318,9 +286,6 @@ dfu_context_device_removed_cb (GUsbContext *usb_context,
 		g_timeout_add (priv->timeout, dfu_context_device_timeout_cb, item);
 }
 
-/**
- * dfu_context_init:
- **/
 static void
 dfu_context_init (DfuContext *context)
 {
@@ -334,9 +299,6 @@ dfu_context_init (DfuContext *context)
 			  G_CALLBACK (dfu_context_device_removed_cb), context);
 }
 
-/**
- * dfu_context_finalize:
- **/
 static void
 dfu_context_finalize (GObject *object)
 {

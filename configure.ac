@@ -3,7 +3,7 @@ AC_PREREQ(2.63)
 
 m4_define([fwupd_major_version], [0])
 m4_define([fwupd_minor_version], [7])
-m4_define([fwupd_micro_version], [2])
+m4_define([fwupd_micro_version], [3])
 m4_define([fwupd_version],
           [fwupd_major_version.fwupd_minor_version.fwupd_micro_version])
 
@@ -13,6 +13,7 @@ AM_INIT_AUTOMAKE([1.9 no-dist-gzip dist-xz tar-ustar foreign])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_LIBTOOL
+AC_PROG_CC_STDC
 
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [GOBJECT_INTROSPECTION_CHECK([0.9.8])])
 AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyes)
@@ -56,40 +57,29 @@ AM_PROG_CC_C_O
 IT_PROG_INTLTOOL([0.35.0])
 AC_PATH_PROG(XSLTPROC, xsltproc)
 
-dnl ---------------------------------------------------------------------------
-dnl - Extra verbose warning switches
-dnl ---------------------------------------------------------------------------
-
-if test "$GCC" = "yes"; then
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wall"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wcast-align -Wno-uninitialized"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wmissing-declarations"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wpointer-arith"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wcast-align"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wwrite-strings"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Winit-self"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wreturn-type"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wformat-nonliteral"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wformat-security"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wmissing-include-dirs"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wmissing-format-attribute"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wclobbered"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wempty-body"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wignored-qualifiers"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wsign-compare"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wtype-limits"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wuninitialized"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Waggregate-return"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wdeclaration-after-statement"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wshadow"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wno-strict-aliasing"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Winline"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Wmissing-parameter-type"
-	WARNINGFLAGS_C="$WARNINGFLAGS_C -Woverride-init"
-else
-	WARNINGFLAGS_C=""
-fi
-AC_SUBST(WARNINGFLAGS_C)
+GNOME_COMPILE_WARNINGS([maximum],[
+	-Wmissing-declarations
+	-Wcast-align
+	-Wwrite-strings
+	-Wreturn-type
+	-Wformat-nonliteral
+	-Wmissing-format-attribute
+	-Wclobbered
+	-Wempty-body
+	-Wignored-qualifiers
+	-Wsign-compare
+	-Wtype-limits
+	-Wuninitialized
+	-Waggregate-return
+	-Wdeclaration-after-statement
+	-Wshadow
+	-Wno-strict-aliasing
+	-Winline
+	-Wmissing-parameter-type
+	-Woverride-init
+	-Wno-discarded-qualifiers
+	-Wformat-signedness
+])
 
 dnl ---------------------------------------------------------------------------
 dnl - gettext stuff
@@ -181,6 +171,26 @@ if test x$enable_uefi != xno; then
 fi
 AM_CONDITIONAL(HAVE_UEFI, test x$enable_uefi = xyes)
 
+# Dell Non ESRT capsule support
+AC_ARG_ENABLE(dell, AS_HELP_STRING([--enable-dell],[Enable Dell non-ESRT capsule support]),
+	      enable_dell=$enableval, enable_dell=yes)
+if test x$enable_dell != xno; then
+	PKG_CHECK_MODULES(UEFI, fwup >= 0.5)
+	PKG_CHECK_MODULES(LIBSMBIOS, libsmbios_c >= 2.3.0)
+	PKG_CHECK_MODULES(EFIVAR, efivar)
+	AC_DEFINE(HAVE_DELL,1,[Use Dell non-ESRT capsule support])
+
+	# check for ability to change GUID
+	PKG_CHECK_MODULES(UEFI_GUID, fwup >= 5,
+			  has_uefi_guid=yes,
+			  has_uefi_guid=no)
+	if test x$has_uefi_guid = xyes; then
+		AC_DEFINE(HAVE_UEFI_GUID,1,[Use UEFI GUID override])
+	fi
+
+fi
+AM_CONDITIONAL(HAVE_DELL, test x$enable_dell = xyes)
+
 # systemd support
 AC_ARG_WITH([systemdunitdir],
             AS_HELP_STRING([--with-systemdunitdir=DIR], [Directory for systemd service files]),
@@ -202,6 +212,8 @@ AC_CONFIG_FILES([
 Makefile
 libdfu/Makefile
 libdfu/dfu.pc
+libebitdo/Makefile
+libebitdo/ebitdo.pc
 libfwupd/fwupd-version.h
 libfwupd/fwupd.pc
 libfwupd/Makefile
@@ -215,6 +227,7 @@ docs/Makefile
 docs/libdfu/Makefile
 docs/libfwupd/Makefile
 docs/man/Makefile
+docs/version.xml
 policy/Makefile
 po/Makefile.in
 src/Makefile

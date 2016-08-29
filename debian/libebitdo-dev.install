@@ -1,0 +1,4 @@
+usr/include/libebitdo/*
+usr/include/ebitdo.h
+usr/lib/*/libebitdo*.so
+usr/lib/*/pkgconfig/ebitdo.pc

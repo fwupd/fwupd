@@ -29,9 +29,6 @@
 #include "fwupd-error.h"
 #include "fwupd-result.h"
 
-/**
- * as_test_compare_lines:
- **/
 static gboolean
 as_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 {
@@ -63,7 +60,7 @@ static void
 fwupd_enums_func (void)
 {
 	const gchar *tmp;
-	guint i;
+	guint64 i;
 
 	/* enums */
 	for (i = 0; i < FWUPD_ERROR_LAST; i++) {
@@ -88,9 +85,10 @@ fwupd_enums_func (void)
 	}
 
 	/* bitfield */
-	for (i = 1; i < FU_DEVICE_FLAG_LAST; i *= 2) {
+	for (i = 1; i < FU_DEVICE_FLAG_UNKNOWN; i *= 2) {
 		tmp = fwupd_device_flag_to_string (i);
-		g_assert_cmpstr (tmp, !=, NULL);
+		if (tmp == NULL)
+			break;
 		g_assert_cmpint (fwupd_device_flag_from_string (tmp), ==, i);
 	}
 }

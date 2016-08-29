@@ -33,9 +33,6 @@
 
 static void	fu_provider_udev_finalize	(GObject	*object);
 
-/**
- * FuProviderUdevPrivate:
- **/
 typedef struct {
 	GHashTable		*devices;
 	GUdevClient		*gudev_client;
@@ -44,18 +41,12 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (FuProviderUdev, fu_provider_udev, FU_TYPE_PROVIDER)
 #define GET_PRIVATE(o) (fu_provider_udev_get_instance_private (o))
 
-/**
- * fu_provider_udev_get_name:
- **/
 static const gchar *
 fu_provider_udev_get_name (FuProvider *provider)
 {
 	return "Udev";
 }
 
-/**
- * fu_provider_udev_get_id:
- **/
 static gchar *
 fu_provider_udev_get_id (GUdevDevice *device)
 {
@@ -65,9 +56,6 @@ fu_provider_udev_get_id (GUdevDevice *device)
 	return id;
 }
 
-/**
- * fu_provider_udev_unlock:
- **/
 static gboolean
 fu_provider_udev_unlock (FuProvider *provider,
 			 FuDevice *device,
@@ -110,9 +98,6 @@ fu_provider_udev_unlock (FuProvider *provider,
 	return TRUE;
 }
 
-/**
- * fu_provider_udev_verify:
- **/
 static gboolean
 fu_provider_udev_verify (FuProvider *provider,
 			 FuDevice *device,
@@ -140,9 +125,6 @@ fu_provider_udev_verify (FuProvider *provider,
 	return TRUE;
 }
 
-/**
- * fu_provider_udev_client_add:
- **/
 static void
 fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 {
@@ -217,9 +199,6 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	fu_provider_device_add (FU_PROVIDER (provider_udev), dev);
 }
 
-/**
- * fu_provider_udev_client_remove:
- **/
 static void
 fu_provider_udev_client_remove (FuProviderUdev *provider_udev, GUdevDevice *device)
 {
@@ -239,9 +218,6 @@ fu_provider_udev_client_remove (FuProviderUdev *provider_udev, GUdevDevice *devi
 	fu_provider_device_remove (FU_PROVIDER (provider_udev), dev);
 }
 
-/**
- * fu_provider_udev_client_uevent_cb:
- **/
 static void
 fu_provider_udev_client_uevent_cb (GUdevClient *gudev_client,
 				   const gchar *action,
@@ -258,28 +234,23 @@ fu_provider_udev_client_uevent_cb (GUdevClient *gudev_client,
 	}
 }
 
-/**
- * fu_provider_udev_coldplug:
- **/
 static gboolean
 fu_provider_udev_coldplug (FuProvider *provider, GError **error)
 {
 	FuProviderUdev *provider_udev = FU_PROVIDER_UDEV (provider);
 	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
 	GList *devices;
-	GList *l;
 	GUdevDevice *udev_device;
 	const gchar *devclass[] = { "usb", "pci", NULL };
-	guint i;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 
 	/* get all devices of class */
-	for (i = 0; devclass[i] != NULL; i++) {
+	for (guint i = 0; devclass[i] != NULL; i++) {
 		g_autoptr(AsProfileTask) ptask = NULL;
 		ptask = as_profile_start (profile, "FuProviderUdev:coldplug{%s}", devclass[i]);
 		devices = g_udev_client_query_by_subsystem (priv->gudev_client,
 							    devclass[i]);
-		for (l = devices; l != NULL; l = l->next) {
+		for (GList *l = devices; l != NULL; l = l->next) {
 			udev_device = l->data;
 			fu_provider_udev_client_add (provider_udev, udev_device);
 		}
@@ -290,9 +261,6 @@ fu_provider_udev_coldplug (FuProvider *provider, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_udev_class_init:
- **/
 static void
 fu_provider_udev_class_init (FuProviderUdevClass *klass)
 {
@@ -306,9 +274,6 @@ fu_provider_udev_class_init (FuProviderUdevClass *klass)
 	object_class->finalize = fu_provider_udev_finalize;
 }
 
-/**
- * fu_provider_udev_init:
- **/
 static void
 fu_provider_udev_init (FuProviderUdev *provider_udev)
 {
@@ -322,9 +287,6 @@ fu_provider_udev_init (FuProviderUdev *provider_udev)
 			  G_CALLBACK (fu_provider_udev_client_uevent_cb), provider_udev);
 }
 
-/**
- * fu_provider_udev_finalize:
- **/
 static void
 fu_provider_udev_finalize (GObject *object)
 {
@@ -337,9 +299,6 @@ fu_provider_udev_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_provider_udev_parent_class)->finalize (object);
 }
 
-/**
- * fu_provider_udev_new:
- **/
 FuProvider *
 fu_provider_udev_new (void)
 {

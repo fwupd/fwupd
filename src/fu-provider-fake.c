@@ -32,18 +32,12 @@ static void	fu_provider_fake_finalize	(GObject	*object);
 
 G_DEFINE_TYPE (FuProviderFake, fu_provider_fake, FU_TYPE_PROVIDER)
 
-/**
- * fu_provider_fake_get_name:
- **/
 static const gchar *
 fu_provider_fake_get_name (FuProvider *provider)
 {
 	return "Fake";
 }
 
-/**
- * fu_provider_fake_update:
- **/
 static gboolean
 fu_provider_fake_update (FuProvider *provider,
 			 FuDevice *device,
@@ -62,9 +56,6 @@ fu_provider_fake_update (FuProvider *provider,
 	return TRUE;
 }
 
-/**
- * fu_provider_fake_coldplug:
- **/
 static gboolean
 fu_provider_fake_coldplug (FuProvider *provider, GError **error)
 {
@@ -77,9 +68,6 @@ fu_provider_fake_coldplug (FuProvider *provider, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_provider_fake_class_init:
- **/
 static void
 fu_provider_fake_class_init (FuProviderFakeClass *klass)
 {
@@ -92,26 +80,17 @@ fu_provider_fake_class_init (FuProviderFakeClass *klass)
 	object_class->finalize = fu_provider_fake_finalize;
 }
 
-/**
- * fu_provider_fake_init:
- **/
 static void
 fu_provider_fake_init (FuProviderFake *provider_fake)
 {
 }
 
-/**
- * fu_provider_fake_finalize:
- **/
 static void
 fu_provider_fake_finalize (GObject *object)
 {
 	G_OBJECT_CLASS (fu_provider_fake_parent_class)->finalize (object);
 }
 
-/**
- * fu_provider_fake_new:
- **/
 FuProvider *
 fu_provider_fake_new (void)
 {

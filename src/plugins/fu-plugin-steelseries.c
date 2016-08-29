@@ -26,27 +26,20 @@
 
 #include "fu-plugin.h"
 
-#define STEELSERIES_REPLUG_TIMEOUT		5000 /* ms */
 #define STEELSERIES_TRANSACTION_TIMEOUT		1000 /* ms */
 
-/**
- * fu_plugin_get_name:
- */
 const gchar *
 fu_plugin_get_name (void)
 {
 	return "steelseries";
 }
 
-/**
- * fu_plugin_device_probe:
- **/
 gboolean
 fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	GUsbDeviceClaimInterfaceFlags flags;
 	const gchar *platform_id;
-	const guint iface_idx = 0x00;
+	const guint8 iface_idx = 0x00;
 	gboolean ret;
 	gsize actual_len = 0;
 	guint8 data[32];
@@ -125,9 +118,6 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 	fu_device_set_version (device, version);
 	g_debug ("overriding the version with %s", version);
 
-	/* FIXME: we can't do this until we know how to flash the firmware */
-//	fu_device_add_flag (device, FU_DEVICE_FLAG_ALLOW_ONLINE);
-
 	/* release device */
 	if (!g_usb_device_release_interface (usb_device, iface_idx, flags, error)) {
 		g_prefix_error (error, "failed to release interface: ");
@@ -136,49 +126,5 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 	if (!g_usb_device_close (usb_device, error))
 		return FALSE;
 
-	return TRUE;
-}
-
-/**
- * fu_plugin_device_update:
- **/
-gboolean
-fu_plugin_device_update (FuPlugin *plugin,
-			 FuDevice *device,
-			 GBytes *data,
-			 GError **error)
-{
-	const gchar *platform_id;
-	g_autoptr(GUsbContext) usb_ctx = NULL;
-	g_autoptr(GUsbDevice) usb_device = NULL;
-	g_autoptr(GUsbDevice) usb_devnew = NULL;
-
-	/* get GUsbDevice */
-	platform_id = fu_device_get_id (device);
-	usb_ctx = g_usb_context_new (NULL);
-	usb_device = g_usb_context_find_by_platform_id (usb_ctx,
-							platform_id,
-							error);
-	if (usb_device == NULL)
-		return FALSE;
-
-	// if not bootloader
-	//     issue vendor specific command and wait for replug
-	usb_devnew = g_usb_context_wait_for_replug (usb_ctx,
-						    usb_device,
-						    STEELSERIES_REPLUG_TIMEOUT,
-						    error);
-	if (usb_devnew == NULL)
-		return FALSE;
-
-	/* open device */
-	if (!g_usb_device_open (usb_devnew, error))
-		return FALSE;
-
-	// squirt in firmware
-
-	/* close device */
-	if (!g_usb_device_close (usb_devnew, error))
-		return FALSE;
 	return TRUE;
 }

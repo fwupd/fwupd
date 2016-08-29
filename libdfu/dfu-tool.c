@@ -39,13 +39,10 @@ typedef struct {
 	guint16			 transfer_size;
 } DfuToolPrivate;
 
-/**
- * dfu_tool_print_indent:
- **/
 static void
 dfu_tool_print_indent (const gchar *title, const gchar *message, guint indent)
 {
-	guint i;
+	gsize i;
 	for (i = 0; i < indent; i++)
 		g_print (" ");
 	g_print ("%s:", title);
@@ -54,9 +51,6 @@ dfu_tool_print_indent (const gchar *title, const gchar *message, guint indent)
 	g_print ("%s\n", message);
 }
 
-/**
- * dfu_tool_private_free:
- **/
 static void
 dfu_tool_private_free (DfuToolPrivate *priv)
 {
@@ -81,9 +75,6 @@ typedef struct {
 	FuUtilPrivateCb	 callback;
 } FuUtilItem;
 
-/**
- * dfu_tool_item_free:
- **/
 static void
 dfu_tool_item_free (FuUtilItem *item)
 {
@@ -93,18 +84,12 @@ dfu_tool_item_free (FuUtilItem *item)
 	g_free (item);
 }
 
-/**
- * dfu_tool_sort_command_name_cb:
- **/
 static gint
 dfu_tool_sort_command_name_cb (FuUtilItem **item1, FuUtilItem **item2)
 {
 	return g_strcmp0 ((*item1)->name, (*item2)->name);
 }
 
-/**
- * dfu_tool_add:
- **/
 static void
 dfu_tool_add (GPtrArray *array,
 	      const gchar *name,
@@ -138,16 +123,13 @@ dfu_tool_add (GPtrArray *array,
 	}
 }
 
-/**
- * dfu_tool_get_descriptions:
- **/
 static gchar *
 dfu_tool_get_descriptions (GPtrArray *array)
 {
 	guint i;
-	guint j;
-	guint len;
-	const guint max_len = 31;
+	gsize j;
+	gsize len;
+	const gsize max_len = 31;
 	FuUtilItem *item;
 	GString *string;
 
@@ -184,9 +166,6 @@ dfu_tool_get_descriptions (GPtrArray *array)
 	return g_string_free (string, FALSE);
 }
 
-/**
- * dfu_tool_run:
- **/
 static gboolean
 dfu_tool_run (DfuToolPrivate *priv,
 	      const gchar *command,
@@ -212,9 +191,6 @@ dfu_tool_run (DfuToolPrivate *priv,
 	return FALSE;
 }
 
-/**
- * dfu_tool_get_defalt_device:
- **/
 static DfuDevice *
 dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 {
@@ -258,7 +234,8 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 
 		/* find device */
 		device = dfu_context_get_device_by_vid_pid (dfu_context,
-							    vid, pid,
+							    (guint16) vid,
+							    (guint16) pid,
 							    error);
 		if (device == NULL)
 			return NULL;
@@ -276,9 +253,6 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 	return device;
 }
 
-/**
- * dfu_tool_set_vendor:
- **/
 static gboolean
 dfu_tool_set_vendor (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -308,7 +282,7 @@ dfu_tool_set_vendor (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* parse VID */
 	tmp = g_ascii_strtoull (values[1], NULL, 16);
-	if (tmp == 0 || tmp > 0xffff) {
+	if (tmp == 0 || tmp > G_MAXUINT16) {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
@@ -316,7 +290,7 @@ dfu_tool_set_vendor (DfuToolPrivate *priv, gchar **values, GError **error)
 			     values[1]);
 		return FALSE;
 	}
-	dfu_firmware_set_vid (firmware, tmp);
+	dfu_firmware_set_vid (firmware, (guint16) tmp);
 
 	/* write out new file */
 	return dfu_firmware_write_file (firmware,
@@ -325,9 +299,6 @@ dfu_tool_set_vendor (DfuToolPrivate *priv, gchar **values, GError **error)
 					error);
 }
 
-/**
- * dfu_tool_set_product:
- **/
 static gboolean
 dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -357,14 +328,14 @@ dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* parse VID */
 	tmp = g_ascii_strtoull (values[1], NULL, 16);
-	if (tmp == 0 || tmp > 0xffff) {
+	if (tmp == 0 || tmp > G_MAXUINT16) {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
 			     "Failed to parse PID '%s'", values[1]);
 		return FALSE;
 	}
-	dfu_firmware_set_pid (firmware, tmp);
+	dfu_firmware_set_pid (firmware, (guint16) tmp);
 
 	/* write out new file */
 	return dfu_firmware_write_file (firmware,
@@ -373,9 +344,6 @@ dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 					error);
 }
 
-/**
- * dfu_tool_set_release:
- **/
 static gboolean
 dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -405,14 +373,14 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* parse VID */
 	tmp = g_ascii_strtoull (values[1], NULL, 16);
-	if (tmp == 0 || tmp > 0xffff) {
+	if (tmp == 0 || tmp > G_MAXUINT16) {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
 			     "Failed to parse release '%s'", values[1]);
 		return FALSE;
 	}
-	dfu_firmware_set_release (firmware, tmp);
+	dfu_firmware_set_release (firmware, (guint16) tmp);
 
 	/* write out new file */
 	return dfu_firmware_write_file (firmware,
@@ -421,9 +389,6 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 					error);
 }
 
-/**
- * dfu_tool_set_metadata:
- **/
 static gboolean
 dfu_tool_set_metadata (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -469,9 +434,6 @@ dfu_tool_set_metadata (DfuToolPrivate *priv, gchar **values, GError **error)
 					error);
 }
 
-/**
- * dfu_tool_set_alt_setting:
- **/
 static gboolean
 dfu_tool_set_alt_setting (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -511,7 +473,7 @@ dfu_tool_set_alt_setting (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* parse VID */
 	tmp = g_ascii_strtoull (values[1], NULL, 10);
-	if (tmp == 0 || tmp > 0xff) {
+	if (tmp == 0 || tmp > G_MAXUINT8) {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
@@ -527,7 +489,7 @@ dfu_tool_set_alt_setting (DfuToolPrivate *priv, gchar **values, GError **error)
 			     "found no image '%s'", values[1]);
 		return FALSE;
 	}
-	dfu_image_set_alt_setting (image, tmp);
+	dfu_image_set_alt_setting (image, (guint8) tmp);
 
 	/* write out new file */
 	return dfu_firmware_write_file (firmware,
@@ -536,9 +498,6 @@ dfu_tool_set_alt_setting (DfuToolPrivate *priv, gchar **values, GError **error)
 					error);
 }
 
-/**
- * dfu_tool_set_alt_setting_name:
- **/
 static gboolean
 dfu_tool_set_alt_setting_name (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -593,9 +552,6 @@ dfu_tool_set_alt_setting_name (DfuToolPrivate *priv, gchar **values, GError **er
 					error);
 }
 
-/**
- * dfu_tool_merge:
- **/
 static gboolean
 dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -676,7 +632,7 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 		images = dfu_firmware_get_images (firmware_tmp);
 		for (j = 0; j < images->len; j++) {
 			DfuImage *image;
-			guint alt_id;
+			guint8 alt_id;
 
 			/* verify the alt-setting does not already exist */
 			image = g_ptr_array_index (images, j);
@@ -720,9 +676,6 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 					error);
 }
 
-/**
- * dfu_tool_convert:
- **/
 static gboolean
 dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -802,7 +755,7 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 			image = dfu_firmware_get_image_default (firmware);
 			g_assert (image != NULL);
 			element = dfu_image_get_element (image, 0);
-			dfu_element_set_target_size (element, tmp);
+			dfu_element_set_target_size (element, (guint32) tmp);
 		}
 	}
 
@@ -817,9 +770,6 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 					error);
 }
 
-/**
- * dfu_tool_attach:
- **/
 static gboolean
 dfu_tool_attach (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -844,16 +794,13 @@ typedef struct {
 	DfuState	 last_state;
 } DfuToolProgressHelper;
 
-/**
- * fu_tool_state_changed_cb:
- **/
 static void
 fu_tool_state_changed_cb (DfuDevice *device,
 			  DfuState state,
 			  DfuToolProgressHelper *helper)
 {
 	const gchar *title = NULL;
-	guint i;
+	gsize i;
 
 	/* changed state */
 	if (state == helper->last_state)
@@ -923,9 +870,6 @@ fu_tool_state_changed_cb (DfuDevice *device,
 	helper->last_state = state;
 }
 
-/**
- * fu_tool_percentage_changed_cb:
- **/
 static void
 fu_tool_percentage_changed_cb (DfuDevice *device,
 			       guint percentage,
@@ -945,9 +889,6 @@ fu_tool_percentage_changed_cb (DfuDevice *device,
 		g_print ("\n");
 }
 
-/**
- * dfu_tool_read_alt:
- **/
 static gboolean
 dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -1023,7 +964,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		}
 		target = dfu_device_get_target_by_alt_setting (device,
-							       tmp,
+							       (guint8) tmp,
 							       error);
 		if (target == NULL)
 			return FALSE;
@@ -1059,9 +1000,6 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_tool_read:
- **/
 static gboolean
 dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -1132,9 +1070,6 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_tool_get_device_string:
- **/
 static gchar *
 dfu_tool_get_device_string (DfuToolPrivate *priv, DfuDevice *device)
 {
@@ -1168,9 +1103,6 @@ dfu_tool_get_device_string (DfuToolPrivate *priv, DfuDevice *device)
 	return dstr;
 }
 
-/**
- * dfu_tool_device_added_cb:
- **/
 static void
 dfu_tool_device_added_cb (DfuContext *context,
 			  DfuDevice *device,
@@ -1182,9 +1114,6 @@ dfu_tool_device_added_cb (DfuContext *context,
 	dfu_tool_print_indent (_("Added"), tmp, 0);
 }
 
-/**
- * dfu_tool_device_removed_cb:
- **/
 static void
 dfu_tool_device_removed_cb (DfuContext *context,
 			    DfuDevice *device,
@@ -1196,9 +1125,6 @@ dfu_tool_device_removed_cb (DfuContext *context,
 	dfu_tool_print_indent (_("Removed"), tmp, 0);
 }
 
-/**
- * dfu_tool_device_changed_cb:
- **/
 static void
 dfu_tool_device_changed_cb (DfuContext *context, DfuDevice *device, gpointer user_data)
 {
@@ -1208,9 +1134,6 @@ dfu_tool_device_changed_cb (DfuContext *context, DfuDevice *device, gpointer use
 	dfu_tool_print_indent (_("Changed"), tmp, 0);
 }
 
-/**
- * dfu_tool_watch_cancelled_cb:
- **/
 static void
 dfu_tool_watch_cancelled_cb (GCancellable *cancellable, gpointer user_data)
 {
@@ -1220,14 +1143,11 @@ dfu_tool_watch_cancelled_cb (GCancellable *cancellable, gpointer user_data)
 	g_main_loop_quit (loop);
 }
 
-/**
- * dfu_tool_parse_xtea_key:
- **/
 static gboolean
 dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
 {
 	guint i;
-	guint key_len;
+	gsize key_len;
 	g_autofree gchar *key_pad = NULL;
 
 	/* too long */
@@ -1236,7 +1156,7 @@ dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_NOT_SUPPORTED,
-			     "Key string too long at %i chars, max 16",
+			     "Key string too long at %" G_GSIZE_FORMAT " chars, max 16",
 			     key_len);
 		return FALSE;
 	}
@@ -1258,13 +1178,13 @@ dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
 					     "Failed to parse key '%s'", key);
 				return FALSE;
 			}
-			keys[3-i] = tmp;
+			keys[3-i] = (guint32) tmp;
 		}
 	} else {
 		gsize buf_len = 16;
 		g_autoptr(GChecksum) csum = NULL;
 		csum = g_checksum_new (G_CHECKSUM_MD5);
-		g_checksum_update (csum, (const guchar *) key, key_len);
+		g_checksum_update (csum, (const guchar *) key, (gssize) key_len);
 		g_checksum_get_digest (csum, (guint8 *) keys, &buf_len);
 		g_assert (buf_len == 16);
 	}
@@ -1275,9 +1195,6 @@ dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_tool_get_firmware_contents_default:
- **/
 static guint8 *
 dfu_tool_get_firmware_contents_default (DfuFirmware *firmware,
 					gsize *length,
@@ -1317,9 +1234,6 @@ dfu_tool_get_firmware_contents_default (DfuFirmware *firmware,
 #define XTEA_DELTA		0x9e3779b9
 #define XTEA_NUM_ROUNDS		32
 
-/**
- * dfu_tool_encrypt_xtea:
- **/
 static void
 dfu_tool_encrypt_xtea (const guint32 key[4], guint8 *data, guint16 length)
 {
@@ -1344,9 +1258,6 @@ dfu_tool_encrypt_xtea (const guint32 key[4], guint8 *data, guint16 length)
 	}
 }
 
-/**
- * dfu_tool_decrypt_xtea:
- **/
 static void
 dfu_tool_decrypt_xtea (const guint32 key[4], guint8 *data, guint16 length)
 {
@@ -1371,9 +1282,6 @@ dfu_tool_decrypt_xtea (const guint32 key[4], guint8 *data, guint16 length)
 	}
 }
 
-/**
- * dfu_tool_encrypt:
- **/
 static gboolean
 dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -1432,7 +1340,7 @@ dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 		guint32 key[4];
 		if (!dfu_tool_parse_xtea_key (values[3], key, error))
 			return FALSE;
-		dfu_tool_encrypt_xtea (key, data, len);
+		dfu_tool_encrypt_xtea (key, data, (guint16) len);
 		dfu_firmware_set_metadata (firmware,
 					   DFU_METADATA_KEY_CIPHER_KIND,
 					   "XTEA");
@@ -1454,9 +1362,6 @@ dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 					error);
 }
 
-/**
- * dfu_tool_decrypt:
- **/
 static gboolean
 dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -1515,7 +1420,7 @@ dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 		guint32 key[4];
 		if (!dfu_tool_parse_xtea_key (values[3], key, error))
 			return FALSE;
-		dfu_tool_decrypt_xtea (key, data, len);
+		dfu_tool_decrypt_xtea (key, data, (guint16) len);
 		dfu_firmware_remove_metadata (firmware,
 					      DFU_METADATA_KEY_CIPHER_KIND);
 	} else {
@@ -1536,9 +1441,6 @@ dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 					error);
 }
 
-/**
- * dfu_tool_watch:
- **/
 static gboolean
 dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -1573,9 +1475,6 @@ dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_tool_dump:
- **/
 static gboolean
 dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -1619,9 +1518,6 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_tool_write_alt:
- **/
 static gboolean
 dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -1707,7 +1603,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		}
 		target = dfu_device_get_target_by_alt_setting (device,
-							       tmp,
+							       (guint8) tmp,
 							       error);
 		if (target == NULL)
 			return FALSE;
@@ -1727,7 +1623,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 					     values[2]);
 				return FALSE;
 			}
-			image = dfu_firmware_get_image (firmware, tmp);
+			image = dfu_firmware_get_image (firmware, (guint8) tmp);
 			if (image == NULL) {
 				g_set_error (error,
 					     DFU_ERROR,
@@ -1768,9 +1664,6 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_tool_write:
- **/
 static gboolean
 dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -1847,9 +1740,6 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_tool_list_target:
- **/
 static void
 dfu_tool_list_target (DfuTarget *target)
 {
@@ -1889,9 +1779,6 @@ dfu_tool_list_target (DfuTarget *target)
 	}
 }
 
-/**
- * dfu_tool_list:
- **/
 static gboolean
 dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -1979,9 +1866,6 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_tool_detach:
- **/
 static gboolean
 dfu_tool_detach (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -2003,9 +1887,6 @@ dfu_tool_detach (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_tool_sigint_cb:
- **/
 static gboolean
 dfu_tool_sigint_cb (gpointer user_data)
 {
@@ -2015,9 +1896,6 @@ dfu_tool_sigint_cb (gpointer user_data)
 	return FALSE;
 }
 
-/**
- * main:
- **/
 int
 main (int argc, char *argv[])
 {

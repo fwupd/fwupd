@@ -16,7 +16,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.xml
 # gtk-doc will search all .c and .h files beneath these paths
 # for inline comments documenting functions and macros.
 # e.g. DOC_SOURCE_DIR=$(top_srcdir)/gtk $(top_srcdir)/gdk
-DOC_SOURCE_DIR=$(top_srcdir)/libfwupd
+DOC_SOURCE_DIR=$(top_srcdir)/libfwupd $(top_builddir)/libfwupd
 
 # Extra options to pass to gtkdoc-scangobj. Normally not needed.
 SCANGOBJ_OPTIONS=
@@ -57,7 +57,8 @@ HTML_IMAGES=
 
 # Extra files that are included by $(DOC_MAIN_SGML_FILE).
 # e.g. content_files=running.xml building.xml changes-2.0.xml
-content_files=
+content_files=						\
+	$(top_builddir)/docs/version.xml
 
 # Files where gtk-doc abbrevations (#GtkWidget) are expanded
 # e.g. expand_content_files=running.xml

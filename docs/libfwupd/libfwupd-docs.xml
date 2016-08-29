@@ -3,12 +3,13 @@
                "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
   <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+  <!ENTITY version SYSTEM "../version.xml">
 ]>
 <book id="index">
   <bookinfo>
     <title>libfwupd Reference Manual</title>
     <releaseinfo>
-      for libfwupd [VERSION].
+      for libfwupd &version;.
     </releaseinfo>
   </bookinfo>
 

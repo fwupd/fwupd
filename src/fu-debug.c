@@ -29,9 +29,6 @@
 static gboolean _verbose = FALSE;
 static gboolean _console = FALSE;
 
-/**
- * fu_debug_is_verbose:
- **/
 gboolean
 fu_debug_is_verbose (void)
 {
@@ -46,9 +43,6 @@ fu_debug_is_verbose (void)
 }
 
 
-/**
- * fu_debug_ignore_cb:
- **/
 static void
 fu_debug_ignore_cb (const gchar *log_domain,
 		    GLogLevelFlags log_level,
@@ -69,9 +63,6 @@ fu_debug_ignore_cb (const gchar *log_domain,
 	}
 }
 
-/**
- * fu_debug_handler_cb:
- **/
 static void
 fu_debug_handler_cb (const gchar *log_domain,
 		     GLogLevelFlags log_level,
@@ -122,9 +113,6 @@ fu_debug_handler_cb (const gchar *log_domain,
 	}
 }
 
-/**
- * fu_debug_pre_parse_hook:
- */
 static gboolean
 fu_debug_pre_parse_hook (GOptionContext *context,
 			 GOptionGroup *group,
@@ -143,17 +131,11 @@ fu_debug_pre_parse_hook (GOptionContext *context,
 	return TRUE;
 }
 
-/**
- * fu_debug_destroy:
- */
 void
 fu_debug_destroy (void)
 {
 }
 
-/**
- * fu_debug_setup:
- */
 void
 fu_debug_setup (gboolean enabled)
 {
@@ -176,9 +158,6 @@ fu_debug_setup (gboolean enabled)
 	_console = (isatty (fileno (stdout)) == 1);
 }
 
-/**
- * fu_debug_post_parse_hook:
- */
 static gboolean
 fu_debug_post_parse_hook (GOptionContext *context,
 			  GOptionGroup *group,
@@ -192,9 +171,6 @@ fu_debug_post_parse_hook (GOptionContext *context,
 	return TRUE;
 }
 
-/**
- * fu_debug_get_option_group:
- */
 GOptionGroup *
 fu_debug_get_option_group (void)
 {

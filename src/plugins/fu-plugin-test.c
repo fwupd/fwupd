@@ -27,18 +27,12 @@ struct FuPluginPrivate {
 	GMutex			 mutex;
 };
 
-/**
- * fu_plugin_get_name:
- */
 const gchar *
 fu_plugin_get_name (void)
 {
 	return "test";
 }
 
-/**
- * fu_plugin_init:
- */
 void
 fu_plugin_init (FuPlugin *plugin)
 {
@@ -52,18 +46,12 @@ fu_plugin_init (FuPlugin *plugin)
 	g_debug ("init");
 }
 
-/**
- * fu_plugin_destroy:
- */
 void
 fu_plugin_destroy (FuPlugin *plugin)
 {
 	g_debug ("destroy");
 }
 
-/**
- * fu_plugin_startup:
- **/
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {

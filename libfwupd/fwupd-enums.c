@@ -114,6 +114,10 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "locked";
 	if (device_flag == FU_DEVICE_FLAG_SUPPORTED)
 		return "supported";
+	if (device_flag == FU_DEVICE_FLAG_NEEDS_BOOTLOADER)
+		return "needs-bootloader";
+	if (device_flag == FU_DEVICE_FLAG_UNKNOWN)
+		return "unknown";
 	return NULL;
 }
 
@@ -144,7 +148,9 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FU_DEVICE_FLAG_LOCKED;
 	if (g_strcmp0 (device_flag, "supported") == 0)
 		return FU_DEVICE_FLAG_SUPPORTED;
-	return FU_DEVICE_FLAG_LAST;
+	if (g_strcmp0 (device_flag, "needs-bootloader") == 0)
+		return FU_DEVICE_FLAG_NEEDS_BOOTLOADER;
+	return FU_DEVICE_FLAG_UNKNOWN;
 }
 
 /**

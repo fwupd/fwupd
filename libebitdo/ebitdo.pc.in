@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: ebitdo
+Description: libebitdo is a library for communicating with 8Bitdo hardware
+Version: @VERSION@
+Requires: glib-2.0, gobject-2.0, gio-2.0
+Libs: -L${libdir} -lebitdo
+Cflags: -I${includedir}

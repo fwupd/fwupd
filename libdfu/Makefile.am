@@ -48,14 +48,22 @@ libdfu_la_SOURCES =						\
 	dfu-device-private.h					\
 	dfu-element.c						\
 	dfu-element.h						\
-	dfu-element-private.h					\
 	dfu-error.c						\
 	dfu-error.h						\
 	dfu-firmware.c						\
 	dfu-firmware.h						\
+	dfu-format-dfu.c					\
+	dfu-format-dfu.h					\
+	dfu-format-dfuse.c					\
+	dfu-format-dfuse.h					\
+	dfu-format-ihex.c					\
+	dfu-format-ihex.h					\
+	dfu-format-metadata.c					\
+	dfu-format-metadata.h					\
+	dfu-format-raw.c					\
+	dfu-format-raw.h					\
 	dfu-image.c						\
 	dfu-image.h						\
-	dfu-image-private.h					\
 	dfu-sector.c						\
 	dfu-sector.h						\
 	dfu-sector-private.h					\
@@ -76,7 +84,7 @@ libdfu_la_LDFLAGS =						\
 
 libdfu_la_CFLAGS =						\
 	$(PIE_CFLAGS)						\
-	$(WARNINGFLAGS_C)
+	$(WARN_CFLAGS)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = dfu.pc
@@ -97,7 +105,7 @@ dfu_tool_LDADD =						\
 	$(GUSB_LIBS)						\
 	$(LIBM)
 
-dfu_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARNINGFLAGS_C)
+dfu_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
 
 TESTS_ENVIRONMENT =						\
 	libtool --mode=execute valgrind				\
@@ -116,7 +124,7 @@ dfu_self_test_LDADD =						\
 	$(GLIB_LIBS)						\
 	$(GUSB_LIBS)
 
-dfu_self_test_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARNINGFLAGS_C)
+dfu_self_test_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
 
 TESTS = dfu-self-test
 

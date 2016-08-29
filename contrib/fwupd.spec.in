@@ -25,6 +25,7 @@ BuildRequires: gobject-introspection-devel
 BuildRequires: libappstream-glib-devel >= 0.5.10
 BuildRequires: gcab
 BuildRequires: valgrind
+BuildRequires: libsmbios-devel >= 2.3.0
 
 %ifarch x86_64 %{ix86} aarch64
 BuildRequires: fwupdate-devel >= 0.5
@@ -59,6 +60,19 @@ Requires: libdfu = %{version}-%{release}
 %description -n libdfu-devel
 Files for development with libdfu.
 
+%package -n libebitdo
+Summary: A library for accessing 8Bitdo hardware
+
+%description -n libebitdo
+A library for updating 8Bitdo USB devices.
+
+%package -n libebitdo-devel
+Summary: Development package for libebitdo
+Requires: libebitdo = %{version}-%{release}
+
+%description -n libebitdo-devel
+Files for development with libebitdo.
+
 %prep
 %setup -q
 
@@ -77,6 +91,7 @@ make %{?_smp_mflags}
 %install
 make install DESTDIR=$RPM_BUILD_ROOT
 find %{buildroot} -name '*.la' -exec rm -f {} ';'
+mkdir --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
 %find_lang %{name}
 
@@ -122,6 +137,7 @@ make check VERBOSE=1
 /usr/lib/udev/rules.d/*.rules
 %dir %{_libdir}/fwupd-plugins-1
 %{_libdir}/fwupd-plugins-1/*.so
+%ghost %{_localstatedir}/lib/fwupd/gnupg
 
 %files devel
 %{_datadir}/gir-1.0/Fwupd-1.0.gir
@@ -144,6 +160,18 @@ make check VERBOSE=1
 %{_includedir}/libdfu/*.h
 %{_libdir}/libdfu*.so
 %{_libdir}/pkgconfig/dfu.pc
+
+%files -n libebitdo
+%{_bindir}/ebitdo-tool
+%{_libdir}/libebitdo*.so.*
+
+%files -n libebitdo-devel
+%{_datadir}/gir-1.0/Dfu-1.0.gir
+%dir %{_includedir}/libebitdo
+%{_includedir}/ebitdo.h
+%{_includedir}/libebitdo/*.h
+%{_libdir}/libebitdo*.so
+%{_libdir}/pkgconfig/ebitdo.pc
 
 %changelog
 * #LONGDATE# Richard Hughes <richard@hughsie.com> #VERSION#-0.#BUILD##ALPHATAG#

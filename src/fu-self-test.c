@@ -33,9 +33,10 @@
 #include "fu-provider-rpi.h"
 #include "fu-rom.h"
 
-/**
- * fu_test_get_filename:
- **/
+#ifdef HAVE_DELL
+  #include "fu-provider-dell.h"
+#endif
+
 static gchar *
 fu_test_get_filename (const gchar *filename)
 {
@@ -52,7 +53,6 @@ fu_test_get_filename (const gchar *filename)
 static void
 fu_rom_func (void)
 {
-	guint i;
 	struct {
 		FuRomKind kind;
 		const gchar *fn;
@@ -94,7 +94,7 @@ fu_rom_func (void)
 		    { FU_ROM_KIND_UNKNOWN, NULL, NULL, NULL, 0x0000, 0x0000 }
 		};
 
-	for (i = 0; data[i].fn != NULL; i++) {
+	for (guint i = 0; data[i].fn != NULL; i++) {
 		gboolean ret;
 		g_autoptr(GError) error = NULL;
 		g_autofree gchar *filename = NULL;
@@ -280,6 +280,399 @@ fu_provider_func (void)
 	g_unlink (pending_db);
 	g_unlink (pending_cap);
 }
+
+#ifdef HAVE_DELL
+static void
+fu_provider_dell_tpm_func (void)
+{
+	gboolean ret;
+	guint cnt = 0;
+	struct tpm_status tpm_out;
+	FwupdDeviceFlags flags = 0;
+	FuDevice *device_alt = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuProvider) provider = NULL;
+
+	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
+	provider = fu_provider_dell_new ();
+	ret = fu_provider_coldplug(provider, &error);
+	g_signal_connect (provider, "device-added",
+			  G_CALLBACK (_provider_device_added_cb),
+			  &device);
+	g_signal_connect (provider, "status-changed",
+			  G_CALLBACK (_provider_status_changed_cb),
+			  &cnt);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* inject fake data (no TPM) */
+	tpm_out.ret = -2;
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &tpm_out, 0, 0, NULL);
+	ret = fu_provider_dell_detect_tpm (provider, &error);
+	g_assert_no_error (error);
+	g_assert (!ret);
+
+	/* inject fake data:
+	 * - that is out of flashes
+	 * - no ownership
+	 * - TPM 1.2
+	 * dev will be the locked 2.0, alt will be the orig 1.2
+	 */
+	tpm_out.ret = 0;
+	tpm_out.fw_version = 0;
+	tpm_out.status = TPM_EN_MASK | (TPM_1_2_MODE << 8);
+	tpm_out.flashes_left = 0;
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &tpm_out, 0, 0, NULL);
+	ret = fu_provider_dell_detect_tpm (provider, &error);
+	device_alt = fu_device_get_alternate (device);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert (device != NULL);
+	g_assert (device_alt != NULL);
+
+	/* make sure 2.0 is locked */
+	flags = fu_device_get_flags (device);
+	g_assert_cmpint (flags & FU_DEVICE_FLAG_LOCKED, >, 0);
+
+	/* make sure not allowed to flash 1.2 */
+	flags = fu_device_get_flags (device_alt);
+	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, !=, 1);
+
+	/* try to unlock 2.0 */
+	ret = fu_provider_unlock (provider, device, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert (!ret);
+	g_clear_error (&error);
+
+	/* cleanup */
+	fu_provider_device_remove (provider, device_alt);
+	fu_provider_device_remove (provider, device);
+
+	/* inject fake data:
+	 * - that hasflashes
+	 * - owned
+	 * - TPM 1.2
+	 * dev will be the locked 2.0, alt will be the orig 1.2
+	 */
+	tpm_out.status = TPM_EN_MASK | TPM_OWN_MASK | (TPM_1_2_MODE << 8);
+	tpm_out.flashes_left = 125;
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &tpm_out, 0, 0, NULL);
+	ret = fu_provider_dell_detect_tpm (provider, &error);
+	device_alt = fu_device_get_alternate (device);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert (device != NULL);
+	g_assert (device_alt != NULL);
+
+	/* make sure allowed to flash 1.2 */
+	flags = fu_device_get_flags (device_alt);
+	g_assert_cmpint(flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+
+	/* try to unlock 2.0 */
+	ret = fu_provider_unlock (provider, device, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert (!ret);
+	g_clear_error (&error);
+
+	/* cleanup */
+	fu_provider_device_remove (provider, device_alt);
+	fu_provider_device_remove (provider, device);
+
+	/* inject fake data:
+	 * - that has flashes
+	 * - not owned
+	 * - TPM 1.2
+	 * dev will be the locked 2.0, alt will be the orig 1.2
+	 */
+	tpm_out.status = TPM_EN_MASK | (TPM_1_2_MODE << 8);
+	tpm_out.flashes_left = 125;
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &tpm_out, 0, 0, NULL);
+	ret = fu_provider_dell_detect_tpm (provider, &error);
+	device_alt = fu_device_get_alternate (device);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert (device != NULL);
+	g_assert (device_alt != NULL);
+
+	/* make sure allowed to flash 1.2 but not 2.0 */
+	flags = fu_device_get_flags (device_alt);
+	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+	flags = fu_device_get_flags (device);
+	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
+
+	/* try to unlock 2.0 */
+	ret = fu_provider_unlock (provider, device, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* make sure no longer allowed to flash 1.2 but can flash 2.0 */
+	flags = fu_device_get_flags (device_alt);
+	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
+	flags = fu_device_get_flags (device);
+	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+
+	/* cleanup */
+	fu_provider_device_remove (provider, device_alt);
+	fu_provider_device_remove (provider, device);
+
+	/* inject fake data:
+	 * - that has 1 flash left
+	 * - not owned
+	 * - TPM 2.0
+	 * dev will be the locked 1.2, alt will be the orig 2.0
+	 */
+	tpm_out.status = TPM_EN_MASK | (TPM_2_0_MODE << 8);
+	tpm_out.flashes_left = 1;
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &tpm_out, 0, 0, NULL);
+	ret = fu_provider_dell_detect_tpm (provider, &error);
+	device_alt = fu_device_get_alternate (device);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert (device != NULL);
+	g_assert (device_alt != NULL);
+
+	/* make sure allowed to flash 2.0 but not 1.2 */
+	flags = fu_device_get_flags (device_alt);
+	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+	flags = fu_device_get_flags (device);
+	g_assert_cmpint (flags & FU_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
+
+	/* With one flash left we need an override */
+	ret = fu_provider_update (provider, device_alt, NULL, NULL, NULL,
+				  FWUPD_INSTALL_FLAG_OFFLINE, &error);
+	g_assert (!ret);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error (&error);
+
+	/* test override */
+	ret = fu_provider_update (provider, device_alt, NULL, NULL, NULL,
+				  FWUPD_INSTALL_FLAG_FORCE |
+				  FWUPD_INSTALL_FLAG_OFFLINE, &error);
+	g_assert (ret);
+	g_assert_no_error (error);
+
+	/* cleanup */
+	fu_provider_device_remove (provider, device_alt);
+	fu_provider_device_remove (provider, device);
+}
+
+static void
+fu_provider_dell_dock_func (void)
+{
+	gboolean ret;
+	guint cnt = 0;
+	guint32 out[4];
+	INFO_UNION buf;
+	DOCK_INFO *dock_info;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuProvider) provider = NULL;
+
+	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
+	provider = fu_provider_dell_new ();
+	ret = fu_provider_coldplug (provider, &error);
+	g_signal_connect (provider, "device-added",
+			  G_CALLBACK (_provider_device_added_cb),
+			  &device);
+	g_signal_connect (provider, "status-changed",
+			  G_CALLBACK (_provider_status_changed_cb),
+			  &cnt);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* make sure bad device doesn't trigger this */
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &out,
+					   0x1234, 0x4321, NULL);
+	fu_provider_dell_device_added_cb (NULL, NULL, FU_PROVIDER_DELL(provider));
+	g_assert (device == NULL);
+
+	/* inject a USB dongle matching correct VID/PID */
+	out[0] = 0;
+	out[1] = 0;
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &out,
+					   DOCK_NIC_VID, DOCK_NIC_PID, NULL);
+	fu_provider_dell_device_added_cb (NULL, NULL, FU_PROVIDER_DELL(provider));
+	g_assert (device == NULL);
+
+	/* inject valid TB15 dock w/ invalid flash pkg version */
+	buf.record = g_malloc0(sizeof(DOCK_INFO_RECORD));
+	dock_info = &buf.record->dock_info;
+	buf.record->dock_info_header.dir_version = 1;
+	buf.record->dock_info_header.dock_type = DOCK_TYPE_TB15;
+	memcpy (dock_info->dock_description,
+		"BME_Dock", 8);
+	dock_info->flash_pkg_version = 0x00ffffff;
+	dock_info->cable_type = CABLE_TYPE_TBT;
+	dock_info->location = 2;
+	dock_info->component_count = 4;
+	dock_info->components[0].fw_version = 0x00ffffff;
+	memcpy (dock_info->components[0].description,
+		"Dock1,EC,MIPS32,BME_Dock,0 :Query 2 0 2 1 0", 43);
+	dock_info->components[1].fw_version = 0x10201;
+	memcpy (dock_info->components[1].description,
+		"Dock1,PC,TI,BME_Dock,0 :Query 2 1 0 1 0", 39);
+	dock_info->components[2].fw_version = 0x10201;
+	memcpy (dock_info->components[2].description,
+		"Dock1,PC,TI,BME_Dock,1 :Query 2 1 0 1 1", 39);
+	dock_info->components[3].fw_version = 0x00ffffff;
+	memcpy (dock_info->components[3].description,
+		"Dock1,Cable,Cyp,TBT_Cable,0 :Query 2 2 2 3 0", 44);
+	out[0] = 0;
+	out[1] = 1;
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &out,
+					   DOCK_NIC_VID, DOCK_NIC_PID,
+					   buf.buf);
+	fu_provider_dell_device_added_cb (NULL, NULL,
+					  FU_PROVIDER_DELL(provider));
+	g_assert (device != NULL);
+	device = NULL;
+	g_free (buf.record);
+	fu_provider_dell_device_removed_cb (NULL, NULL,
+					    FU_PROVIDER_DELL(provider));
+
+	/* inject valid TB15 dock w/ older system EC */
+	buf.record = g_malloc0(sizeof(DOCK_INFO_RECORD));
+	dock_info = &buf.record->dock_info;
+	buf.record->dock_info_header.dir_version = 1;
+	buf.record->dock_info_header.dock_type = DOCK_TYPE_TB15;
+	memcpy (dock_info->dock_description,
+		"BME_Dock", 8);
+	dock_info->flash_pkg_version = 0x43;
+	dock_info->cable_type = CABLE_TYPE_TBT;
+	dock_info->location = 2;
+	dock_info->component_count = 4;
+	dock_info->components[0].fw_version = 0xffffffff;
+	memcpy (dock_info->components[0].description,
+		"Dock1,EC,MIPS32,BME_Dock,0 :Query 2 0 2 1 0", 43);
+	dock_info->components[1].fw_version = 0x10211;
+	memcpy (dock_info->components[1].description,
+		"Dock1,PC,TI,BME_Dock,0 :Query 2 1 0 1 0", 39);
+	dock_info->components[2].fw_version = 0x10212;
+	memcpy (dock_info->components[2].description,
+		"Dock1,PC,TI,BME_Dock,1 :Query 2 1 0 1 1", 39);
+	dock_info->components[3].fw_version = 0xffffffff;
+	memcpy (dock_info->components[3].description,
+		"Dock1,Cable,Cyp,TBT_Cable,0 :Query 2 2 2 3 0", 44);
+	out[0] = 0;
+	out[1] = 1;
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &out,
+					   DOCK_NIC_VID, DOCK_NIC_PID,
+					   buf.buf);
+	fu_provider_dell_device_added_cb (NULL, NULL,
+					  FU_PROVIDER_DELL(provider));
+	g_assert (device != NULL);
+	device = NULL;
+	g_free (buf.record);
+	fu_provider_dell_device_removed_cb (NULL, NULL,
+					    FU_PROVIDER_DELL(provider));
+
+
+	/* inject valid WD15 dock w/ invalid flash pkg version */
+	buf.record = g_malloc0(sizeof(DOCK_INFO_RECORD));
+	dock_info = &buf.record->dock_info;
+	buf.record->dock_info_header.dir_version = 1;
+	buf.record->dock_info_header.dock_type = DOCK_TYPE_WD15;
+	memcpy (dock_info->dock_description,
+		"IE_Dock", 7);
+	dock_info->flash_pkg_version = 0x00ffffff;
+	dock_info->cable_type = CABLE_TYPE_LEGACY;
+	dock_info->location = 2;
+	dock_info->component_count = 3;
+	dock_info->components[0].fw_version = 0x00ffffff;
+	memcpy (dock_info->components[0].description,
+		"Dock1,EC,MIPS32,IE_Dock,0 :Query 2 0 2 2 0", 42);
+	dock_info->components[1].fw_version = 0x00ffffff;
+	memcpy (dock_info->components[1].description,
+		"Dock1,PC,TI,IE_Dock,0 :Query 2 1 0 2 0", 38);
+	dock_info->components[2].fw_version = 0x00ffffff;
+	memcpy (dock_info->components[2].description,
+		"Dock1,Cable,Cyp,IE_Cable,0 :Query 2 2 2 1 0", 43);
+	out[0] = 0;
+	out[1] = 1;
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &out,
+					   DOCK_NIC_VID, DOCK_NIC_PID,
+					   buf.buf);
+	fu_provider_dell_device_added_cb (NULL, NULL,
+					  FU_PROVIDER_DELL(provider));
+	g_assert (device != NULL);
+	device = NULL;
+	g_free (buf.record);
+	fu_provider_dell_device_removed_cb (NULL, NULL,
+					    FU_PROVIDER_DELL(provider));
+
+
+	/* inject valid WD15 dock w/ older system EC */
+	buf.record = g_malloc0(sizeof(DOCK_INFO_RECORD));
+	dock_info = &buf.record->dock_info;
+	buf.record->dock_info_header.dir_version = 1;
+	buf.record->dock_info_header.dock_type = DOCK_TYPE_WD15;
+	memcpy (dock_info->dock_description,
+		"IE_Dock", 7);
+	dock_info->flash_pkg_version = 0x43;
+	dock_info->cable_type = CABLE_TYPE_LEGACY;
+	dock_info->location = 2;
+	dock_info->component_count = 3;
+	dock_info->components[0].fw_version = 0xffffffff;
+	memcpy (dock_info->components[0].description,
+		"Dock1,EC,MIPS32,IE_Dock,0 :Query 2 0 2 2 0", 42);
+	dock_info->components[1].fw_version = 0x10108;
+	memcpy (dock_info->components[1].description,
+		"Dock1,PC,TI,IE_Dock,0 :Query 2 1 0 2 0", 38);
+	dock_info->components[2].fw_version = 0xffffffff;
+	memcpy (dock_info->components[2].description,
+		"Dock1,Cable,Cyp,IE_Cable,0 :Query 2 2 2 1 0", 43);
+	out[0] = 0;
+	out[1] = 1;
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &out,
+					   DOCK_NIC_VID, DOCK_NIC_PID,
+					   buf.buf);
+	fu_provider_dell_device_added_cb (NULL, NULL,
+					  FU_PROVIDER_DELL(provider));
+	g_assert (device != NULL);
+	device = NULL;
+	g_free (buf.record);
+	fu_provider_dell_device_removed_cb (NULL, NULL,
+					    FU_PROVIDER_DELL(provider));
+
+	/* inject an invalid future dock */
+	buf.record = g_malloc0(sizeof(DOCK_INFO_RECORD));
+	dock_info = &buf.record->dock_info;
+	buf.record->dock_info_header.dir_version = 1;
+	buf.record->dock_info_header.dock_type = 50;
+	memcpy (dock_info->dock_description,
+		"Future!", 8);
+	dock_info->flash_pkg_version = 0x00ffffff;
+	dock_info->cable_type = CABLE_TYPE_UNIV;
+	dock_info->location = 2;
+	dock_info->component_count = 1;
+	dock_info->components[0].fw_version = 0x00ffffff;
+	memcpy (dock_info->components[0].description,
+		"Dock1,EC,MIPS32,FUT_Dock,0 :Query 2 0 2 2 0", 43);
+	out[0] = 0;
+	out[1] = 1;
+	fu_provider_dell_inject_fake_data (FU_PROVIDER_DELL(provider),
+					   (guint32 *) &out,
+					   DOCK_NIC_VID, DOCK_NIC_PID,
+					   buf.buf);
+	fu_provider_dell_device_added_cb (NULL, NULL,
+					  FU_PROVIDER_DELL(provider));
+	g_assert (device == NULL);
+	g_free (buf.record);
+}
+
+#endif
 
 static void
 fu_provider_rpi_func (void)
@@ -485,7 +878,10 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/provider", fu_provider_func);
 	g_test_add_func ("/fwupd/provider{rpi}", fu_provider_rpi_func);
+#ifdef HAVE_DELL
+	g_test_add_func ("/fwupd/provider{dell:tpm}", fu_provider_dell_tpm_func);
+	g_test_add_func ("/fwupd/provider{dell:dock}", fu_provider_dell_dock_func);
+#endif
 	g_test_add_func ("/fwupd/keyring", fu_keyring_func);
 	return g_test_run ();
 }
-

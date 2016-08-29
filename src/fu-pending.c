@@ -31,11 +31,6 @@
 
 static void fu_pending_finalize			 (GObject *object);
 
-/**
- * FuPendingPrivate:
- *
- * Private #FuPending data
- **/
 typedef struct {
 	sqlite3				*db;
 } FuPendingPrivate;
@@ -43,9 +38,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (FuPending, fu_pending, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_pending_get_instance_private (o))
 
-/**
- * fu_pending_load:
- **/
 static gboolean
 fu_pending_load (FuPending *pending, GError **error)
 {
@@ -140,9 +132,6 @@ fu_pending_load (FuPending *pending, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_pending_add_device:
- **/
 gboolean
 fu_pending_add_device (FuPending *pending, FwupdResult *res, GError **error)
 {
@@ -194,9 +183,6 @@ out:
 	return ret;
 }
 
-/**
- * fu_pending_remove_device:
- **/
 gboolean
 fu_pending_remove_device (FuPending *pending, FwupdResult *res, GError **error)
 {
@@ -236,9 +222,6 @@ out:
 	return ret;
 }
 
-/**
- * fu_pending_device_sqlite_cb:
- **/
 static gint
 fu_pending_device_sqlite_cb (void *data,
 			gint argc,
@@ -247,14 +230,13 @@ fu_pending_device_sqlite_cb (void *data,
 {
 	GPtrArray *array = (GPtrArray *) data;
 	FwupdResult *res;
-	gint i;
 
 	/* create new result */
 	res = fwupd_result_new ();
 	g_ptr_array_add (array, res);
 
 	g_debug ("FuPending: got sql result %s", argv[0]);
-	for (i = 0; i < argc; i++) {
+	for (gint i = 0; i < argc; i++) {
 		if (g_strcmp0 (col_name[i], "device_id") == 0) {
 			fwupd_result_set_device_id (res, argv[i]);
 			continue;
@@ -301,9 +283,6 @@ fu_pending_device_sqlite_cb (void *data,
 	return 0;
 }
 
-/**
- * fu_pending_get_device:
- **/
 FwupdResult *
 fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **error)
 {
@@ -355,9 +334,6 @@ out:
 	return res;
 }
 
-/**
- * fu_pending_get_devices:
- **/
 GPtrArray *
 fu_pending_get_devices (FuPending *pending, GError **error)
 {
@@ -402,9 +378,6 @@ out:
 	return array;
 }
 
-/**
- * fu_pending_set_state:
- **/
 gboolean
 fu_pending_set_state (FuPending *pending,
 		      FwupdResult *res,
@@ -449,9 +422,6 @@ out:
 	return ret;
 }
 
-/**
- * fu_pending_set_error_msg:
- **/
 gboolean
 fu_pending_set_error_msg (FuPending *pending,
 			  FwupdResult *res,
@@ -496,9 +466,6 @@ out:
 	return ret;
 }
 
-/**
- * fu_pending_class_init:
- **/
 static void
 fu_pending_class_init (FuPendingClass *klass)
 {
@@ -506,17 +473,11 @@ fu_pending_class_init (FuPendingClass *klass)
 	object_class->finalize = fu_pending_finalize;
 }
 
-/**
- * fu_pending_init:
- **/
 static void
 fu_pending_init (FuPending *pending)
 {
 }
 
-/**
- * fu_pending_finalize:
- **/
 static void
 fu_pending_finalize (GObject *object)
 {
@@ -529,9 +490,6 @@ fu_pending_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_pending_parent_class)->finalize (object);
 }
 
-/**
- * fu_pending_new:
- **/
 FuPending *
 fu_pending_new (void)
 {

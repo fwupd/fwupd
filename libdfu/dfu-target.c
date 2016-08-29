@@ -54,11 +54,6 @@ typedef enum {
 	DFU_CMD_DFUSE_LAST
 } DfuCmdDfuse;
 
-/**
- * DfuTargetPrivate:
- *
- * Private #DfuTarget data
- **/
 typedef struct {
 	DfuDevice		*device;		/* not refcounted */
 	DfuCipherKind		 cipher_kind;
@@ -80,9 +75,6 @@ static guint signals [SIGNAL_LAST] = { 0 };
 G_DEFINE_TYPE_WITH_PRIVATE (DfuTarget, dfu_target, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (dfu_target_get_instance_private (o))
 
-/**
- * dfu_target_class_init:
- **/
 static void
 dfu_target_class_init (DfuTargetClass *klass)
 {
@@ -107,9 +99,6 @@ dfu_target_class_init (DfuTargetClass *klass)
 	object_class->finalize = dfu_target_finalize;
 }
 
-/**
- * dfu_target_init:
- **/
 static void
 dfu_target_init (DfuTarget *target)
 {
@@ -118,9 +107,6 @@ dfu_target_init (DfuTarget *target)
 	priv->sectors_erased = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
-/**
- * dfu_target_finalize:
- **/
 static void
 dfu_target_finalize (GObject *object)
 {
@@ -140,9 +126,6 @@ dfu_target_finalize (GObject *object)
 	G_OBJECT_CLASS (dfu_target_parent_class)->finalize (object);
 }
 
-/**
- * dfu_target_sectors_to_string:
- **/
 static gchar *
 dfu_target_sectors_to_string (DfuTarget *target)
 {
@@ -163,11 +146,6 @@ dfu_target_sectors_to_string (DfuTarget *target)
 	return g_string_free (str, FALSE);
 }
 
-/**
- * dfu_target_get_sector_for_addr:
- *
- * Returns: the sector that should be used for a specific address, or %NULL
- **/
 static DfuSector *
 dfu_target_get_sector_for_addr (DfuTarget *target, guint32 addr)
 {
@@ -187,17 +165,12 @@ dfu_target_get_sector_for_addr (DfuTarget *target, guint32 addr)
 	return NULL;
 }
 
-/**
- * dfu_target_parse_sector:
- *
- * Parse the DfuSe sector format according to UM0424
- **/
 static gboolean
 dfu_target_parse_sector (DfuTarget *target,
 			 const gchar *dfuse_sector_id,
 			 guint32 addr,
-			 guint zone,
-			 guint number,
+			 guint16 zone,
+			 guint16 number,
 			 GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -304,8 +277,8 @@ dfu_target_parse_sector (DfuTarget *target,
 	for (i = 0; i < nr_sectors; i++) {
 		DfuSector *sector;
 		sector = dfu_sector_new (addr + addr_offset,
-					 sector_size,
-					 (nr_sectors * sector_size)- addr_offset,
+					 (guint32) sector_size,
+					 (guint32) ((nr_sectors * sector_size) - addr_offset),
 					 zone,
 					 number,
 					 cap);
@@ -315,18 +288,11 @@ dfu_target_parse_sector (DfuTarget *target,
 	return TRUE;
 }
 
-/**
- * dfu_target_parse_sectors: (skip)
- *
- * Parse the DfuSe format according to UM0424
- **/
 gboolean
 dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	guint64 addr;
-	guint i;
-	guint j;
 	g_autofree gchar *str_debug = NULL;
 	g_auto(GStrv) zones = NULL;
 
@@ -344,8 +310,8 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 		addr = g_ascii_strtoull (alt_name + 6, NULL, 16);
 		if (addr == 0 && addr > G_MAXUINT32)
 			return FALSE;
-		g_debug ("RAM descripton, so parsing");
-		sector = dfu_sector_new (addr, /* addr */
+		g_debug ("RAM description, so parsing");
+		sector = dfu_sector_new ((guint32) addr, /* addr */
 					 0x0, /* size */
 					 0x0, /* size_left */
 					 0x0, /* zone */
@@ -365,7 +331,7 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 	/* parse zones */
 	zones = g_strsplit (alt_name, "/", -1);
 	g_debug ("DfuSe nice alt-name: %s", g_strchomp (zones[0] + 1));
-	for (i = 1; zones[i] != NULL; i += 2) {
+	for (guint i = 1; zones[i] != NULL; i += 2) {
 		g_auto(GStrv) sectors = NULL;
 
 		/* parse address */
@@ -386,10 +352,10 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 
 		/* parse sectors */
 		sectors = g_strsplit (zones[i+1], ",", -1);
-		for (j = 0; sectors[j] != NULL; j++) {
+		for (guint16 j = 0; sectors[j] != NULL; j++) {
 			if (!dfu_target_parse_sector (target,
 						      sectors[j],
-						      addr,
+						      (guint32) addr,
 						      (i - 1) / 2, j,
 						      error))
 				return FALSE;
@@ -498,9 +464,6 @@ dfu_target_status_to_error_msg (DfuStatus status)
 	return NULL;
 }
 
-/**
- * dfu_target_check_status:
- **/
 static gboolean
 dfu_target_check_status (DfuTarget *target,
 			 GCancellable *cancellable,
@@ -640,7 +603,7 @@ dfu_target_setup (DfuTarget *target, GError **error)
 					 0x0, /* number */
 					 DFU_SECTOR_CAP_READABLE |
 					 DFU_SECTOR_CAP_WRITEABLE);
-		g_debug ("no UM0424 sector descripton in %s", priv->alt_name);
+		g_debug ("no UM0424 sector description in %s", priv->alt_name);
 		g_ptr_array_add (priv->sectors, sector);
 	}
 
@@ -648,9 +611,6 @@ dfu_target_setup (DfuTarget *target, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_target_download_chunk:
- **/
 static gboolean
 dfu_target_download_chunk (DfuTarget *target, guint8 index, GBytes *bytes,
 			   GCancellable *cancellable, GError **error)
@@ -882,9 +842,6 @@ dfu_target_read_unprotect (DfuTarget *target,
 
 #endif
 
-/**
- * dfu_target_upload_chunk: (skip)
- **/
 GBytes *
 dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 			 GCancellable *cancellable, GError **error)
@@ -927,9 +884,6 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 	return g_bytes_new_take (buf, actual_length);
 }
 
-/**
- * dfu_target_upload_element:
- **/
 static DfuElement *
 dfu_target_upload_element (DfuTarget *target,
 			   guint32 address,
@@ -941,14 +895,15 @@ dfu_target_upload_element (DfuTarget *target,
 	DfuSector *sector;
 	DfuElement *element = NULL;
 	GBytes *chunk_tmp;
-	gsize chunk_size;
-	gsize offset = 0;
+	guint32 chunk_size;
+	guint32 offset = 0;
 	gsize total_size = 0;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 	guint8 *buffer;
 	guint32 last_sector_id = G_MAXUINT;
-	guint dfuse_sector_offset = 0;
+	guint8 dfuse_sector_offset = 0;
 	guint i;
+	guint8 idx;
 	guint old_percentage = G_MAXUINT;
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -961,7 +916,7 @@ dfu_target_upload_element (DfuTarget *target,
 
 	/* get all the chunks from the hardware */
 	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
-	for (i = 0; i < 0xffff; i++) {
+	for (idx = 0; idx < G_MAXUINT8; idx++) {
 
 		/* for DfuSe devices we need to handle the address manually */
 		if (dfu_device_has_dfuse_support (priv->device)) {
@@ -999,25 +954,25 @@ dfu_target_upload_element (DfuTarget *target,
 
 		/* read chunk of data */
 		chunk_tmp = dfu_target_upload_chunk (target,
-						     i + dfuse_sector_offset,
+						     (guint8) (idx + dfuse_sector_offset),
 						     cancellable,
 						     error);
 		if (chunk_tmp == NULL)
 			return NULL;
 
 		/* keep a sum of all the chunks */
-		chunk_size = g_bytes_get_size (chunk_tmp);
+		chunk_size = (guint32) g_bytes_get_size (chunk_tmp);
 		total_size += chunk_size;
 		offset += chunk_size;
 
 		/* add to array */
-		g_debug ("got #%04x chunk of size %" G_GSIZE_FORMAT,
-			 i, chunk_size);
+		g_debug ("got #%04x chunk of size %" G_GUINT32_FORMAT,
+			 idx, chunk_size);
 		g_ptr_array_add (chunks, chunk_tmp);
 
 		/* update UI */
 		if (chunk_size > 0) {
-			guint percentage = (total_size * 100) / expected_size;
+			guint percentage = (guint) ((total_size * 100) / expected_size);
 			if (percentage != old_percentage) {
 				g_signal_emit (target,
 					       signals[SIGNAL_PERCENTAGE_CHANGED],
@@ -1049,8 +1004,8 @@ dfu_target_upload_element (DfuTarget *target,
 	for (i = 0; i < chunks->len; i++) {
 		const guint8 *chunk_data;
 		chunk_tmp = g_ptr_array_index (chunks, i);
-		chunk_data = g_bytes_get_data (chunk_tmp, &chunk_size);
-		memcpy (buffer + offset, chunk_data, chunk_size);
+		chunk_data = g_bytes_get_data (chunk_tmp, (gsize *) &chunk_size);
+		memcpy (buffer + offset, chunk_data, (gsize) chunk_size);
 		offset += chunk_size;
 	}
 
@@ -1169,9 +1124,6 @@ dfu_target_upload (DfuTarget *target,
 	return g_object_ref (image);
 }
 
-/**
- * _g_bytes_compare_verbose:
- **/
 static gchar *
 _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 {
@@ -1201,9 +1153,6 @@ _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 	return NULL;
 }
 
-/**
- * dfu_target_download_element:
- **/
 static gboolean
 dfu_target_download_element (DfuTarget *target,
 			     DfuElement *element,
@@ -1228,8 +1177,8 @@ dfu_target_download_element (DfuTarget *target,
 
 	/* round up as we have to transfer incomplete blocks */
 	bytes = dfu_element_get_contents (element);
-	nr_chunks = ceil ((gdouble) g_bytes_get_size (bytes) /
-			  (gdouble) transfer_size);
+	nr_chunks = (guint) ceil ((gdouble) g_bytes_get_size (bytes) /
+				  (gdouble) transfer_size);
 	if (nr_chunks == 0) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
@@ -1239,7 +1188,7 @@ dfu_target_download_element (DfuTarget *target,
 	}
 	for (i = 0; i < nr_chunks + 1; i++) {
 		gsize length;
-		gsize offset;
+		guint32 offset;
 		guint percentage;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 
@@ -1272,7 +1221,7 @@ dfu_target_download_element (DfuTarget *target,
 			/* if it's erasable and not yet blanked */
 			if (!dfu_sector_has_cap (sector, DFU_SECTOR_CAP_ERASEABLE) &&
 			    g_hash_table_lookup (priv->sectors_erased, sector) == NULL) {
-				g_debug ("erasing DfuSe address at 0x%04x", (guint) offset);
+				g_debug ("erasing DfuSe address at 0x%04x", offset);
 				if (!dfu_target_erase_address (target,
 							       offset,
 							       cancellable,
@@ -1287,7 +1236,7 @@ dfu_target_download_element (DfuTarget *target,
 			if (dfu_sector_get_id (sector) != last_sector_id) {
 				g_debug ("setting DfuSe address to 0x%04x", (guint) offset);
 				if (!dfu_target_set_address (target,
-							     offset,
+							     (guint32) offset,
 							     cancellable,
 							     error))
 					return FALSE;
@@ -1307,14 +1256,14 @@ dfu_target_download_element (DfuTarget *target,
 		g_debug ("writing #%04x chunk of size %" G_GSIZE_FORMAT,
 			 i, g_bytes_get_size (bytes_tmp));
 		if (!dfu_target_download_chunk (target,
-						i + dfuse_sector_offset,
+						(guint8) (i + dfuse_sector_offset),
 						bytes_tmp,
 						cancellable,
 						error))
 			return FALSE;
 
 		/* update UI */
-		percentage = (offset * 100) / g_bytes_get_size (bytes);
+		percentage = (guint) ((offset * 100) / g_bytes_get_size (bytes));
 		if (percentage != old_percentage) {
 			g_signal_emit (target,
 				       signals[SIGNAL_PERCENTAGE_CHANGED],
@@ -1418,7 +1367,7 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		return FALSE;
 	}
 	for (i = 0; i < elements->len; i++) {
-		element = dfu_image_get_element (image, i);
+		element = dfu_image_get_element (image, (guint8) i);
 		g_debug ("downloading element at 0x%04x",
 			 dfu_element_get_address (element));
 		ret = dfu_target_download_element (target,
@@ -1452,9 +1401,6 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 }
 
 #if 0
-/**
- * dfu_target_get_commands:
- **/
 static gboolean
 dfu_target_get_commands (DfuTarget *target,
 			 GCancellable *cancellable,
