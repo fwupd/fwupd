@@ -10,6 +10,9 @@ fwupd (0.7.3-1) unstable; urgency=medium
   * Add new packages for lib0bitdo support
   * require building against libfwup 7
   * Backport patch to allow building on older appstream-glib
+  * Add a lintian override for fuzzing tests
+  * add gir:depends for libdfu1
+  * don't install ebitdo-tool helper tool
 
  -- Mario Limonciello <mario_limonciello@dell.com>  Mon, 29 Aug 2016 10:51:01 -0500
 
