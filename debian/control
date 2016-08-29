@@ -68,7 +68,7 @@ Description: Firmware update daemon library for DFU support
  .
  This package provides the library used by the daemon for DFU support.
 
-Package: libebitdo
+Package: libebitdo1
 Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
