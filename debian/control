@@ -56,6 +56,7 @@ Description: Firmware update daemon library
 Package: libdfu1
 Architecture: linux-any
 Depends: ${misc:Depends},
+         ${gir:Depends},
          ${shlibs:Depends}
 Multi-Arch: same
 Description: Firmware update daemon library for DFU support
