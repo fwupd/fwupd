@@ -1,3 +1,18 @@
+fwupd (0.7.3-1) unstable; urgency=medium
+
+  * New upstream verison (0.7.3)
+  * debian/rules: Adjust launch of test suite due to 4eb527
+  * Drop wheel/sudo patch, and instead make change in debian/rules at build.
+  * Update Vcs-Git URL to secure URL
+  * Update standards version
+  * Add libsmbios-dev to build dependencies for Dell features
+  * Drop gtk-doc documentation into new package fwupd-doc
+  * Add new packages for lib0bitdo support
+  * require building against libfwup 7
+  * Backport patch to allow building on older appstream-glib
+
+ -- Mario Limonciello <mario_limonciello@dell.com>  Mon, 29 Aug 2016 10:51:01 -0500
+
 fwupd (0.7.2-1) unstable; urgency=medium
 
   [ Mario Limonciello ]
