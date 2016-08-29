@@ -1,6 +1,6 @@
 fwupd (0.7.3-1) unstable; urgency=medium
 
-  * New upstream verison (0.7.3)
+  * New upstream version (0.7.3)
   * debian/rules: Adjust launch of test suite due to 4eb527
   * Drop wheel/sudo patch, and instead make change in debian/rules at build.
   * Update Vcs-Git URL to secure URL
