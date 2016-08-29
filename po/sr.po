@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-13 13:29+0100\n"
-"PO-Revision-Date: 2016-06-13 12:29+0000\n"
+"POT-Creation-Date: 2016-08-29 09:50+0100\n"
+"PO-Revision-Date: 2016-08-29 08:50+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Serbian (http://www.transifex.com/hughsie/fwupd/language/sr/)\n"
 "MIME-Version: 1.0\n"
@@ -110,6 +110,7 @@ msgid "ID"
 msgstr "ИБ"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
+#. TRANSLATORS: device name, e.g. 'ColorHug2'
 msgid "Name"
 msgstr "Назив"
 
@@ -137,6 +138,10 @@ msgstr "Статус"
 
 msgid "Unknown: permission denied"
 msgstr "Непознато: приступ одбијен"
+
+#. TRANSLATORS: serial number, e.g. '00012345'
+msgid "Serial"
+msgstr ""
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
 msgid "Mode"
@@ -166,6 +171,14 @@ msgstr "Подеси ИБ продавца на датотеци са фирмв
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
 msgstr "Подеси ИБ производа на датотеци са фирмвером"
+
+#. TRANSLATORS: command description
+msgid "Set element address on firmware file"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Set the firmware size for the target"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
@@ -264,32 +277,36 @@ msgid "Firmware Update D-Bus Service"
 msgstr "Д-Бус услуга ажурирања фирмвера"
 
 #. TRANSLATORS: daemon is inactive
-msgid "Idle"
-msgstr "У мировању"
+msgid "Idle…"
+msgstr ""
 
 #. TRANSLATORS: decompressing the firmware file
-msgid "Decompressing firmware"
-msgstr "Распакивање фирмвера у току"
+msgid "Decompressing…"
+msgstr ""
 
 #. TRANSLATORS: parsing the firmware information
-msgid "Loading firmware"
-msgstr "Учитавам фирмвер"
+msgid "Loading…"
+msgstr ""
 
 #. TRANSLATORS: restarting the device to pick up new F/W
-msgid "Restarting device"
-msgstr "Поново покрећем уређај"
+msgid "Restarting device…"
+msgstr ""
 
 #. TRANSLATORS: writing to the flash chips
-msgid "Writing firmware to device"
-msgstr "Уписујем фирмвер на уређај"
+msgid "Writing…"
+msgstr ""
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
-msgid "Verifying firmware from device"
-msgstr "Потврђујем фирмвер са уређаја"
+msgid "Verifying…"
+msgstr ""
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
-msgid "Scheduling upgrade"
-msgstr "Заказујем надоградњу"
+msgid "Scheduling…"
+msgstr ""
+
+#. TRANSLATORS: currect daemon status is unknown
+msgid "Unknown"
+msgstr ""
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
