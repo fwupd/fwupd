@@ -25,7 +25,12 @@ BuildRequires: gobject-introspection-devel
 BuildRequires: libappstream-glib-devel >= 0.5.10
 BuildRequires: gcab
 BuildRequires: valgrind
+BuildRequires: elfutils-libelf-devel
+BuildRequires: gtk-doc
+
+%ifarch x86_64 %{ix86}
 BuildRequires: libsmbios-devel >= 2.3.0
+%endif
 
 %ifarch x86_64 %{ix86} aarch64
 BuildRequires: fwupdate-devel >= 0.5
@@ -79,8 +84,17 @@ Files for development with libebitdo.
 %build
 %configure \
         --disable-static        \
-%ifnarch x86_64 %{ix86} aarch64
+        --enable-gtk-doc        \
+        --enable-colorhug       \
+%ifarch x86_64 %{ix86} aarch64
+        --enable-uefi           \
+%else
         --disable-uefi          \
+%endif
+%ifarch x86_64 %{ix86}
+        --enable-dell           \
+%else
+        --disable-dell          \
 %endif
         --disable-rpath         \
         --disable-silent-rules  \

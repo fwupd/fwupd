@@ -64,9 +64,19 @@ dfu_firmware_detect_dfu (GBytes *bytes)
 	/* check for DFU signature */
 	ftr = (DfuFirmwareFooter *) &data[len - sizeof(DfuFirmwareFooter)];
 	if (memcmp (ftr->sig, "UFD", 3) != 0)
-		return DFU_FIRMWARE_FORMAT_RAW;
+		return DFU_FIRMWARE_FORMAT_UNKNOWN;
 
-	return GUINT16_FROM_LE (ftr->ver);
+	/* check versions */
+	switch (GUINT16_FROM_LE (ftr->ver)) {
+	case DFU_VERSION_DFU_1_0:
+	case DFU_VERSION_DFU_1_1:
+		return DFU_FIRMWARE_FORMAT_DFU;
+	case DFU_VERSION_DFUSE:
+		return DFU_FIRMWARE_FORMAT_DFUSE;
+	default:
+		break;
+	}
+	return DFU_FIRMWARE_FORMAT_UNKNOWN;
 }
 
 static guint32 _crctbl[] = {
@@ -171,7 +181,7 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 
 	/* check version */
 	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_VERSION_TEST) == 0) {
-		if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFU_1_0 &&
+		if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFU &&
 		    dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFUSE) {
 			g_set_error (error,
 				     DFU_ERROR,
@@ -224,6 +234,8 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 	if (cipher_str != NULL) {
 		if (g_strcmp0 (cipher_str, "XTEA") == 0)
 			dfu_firmware_set_cipher_kind (firmware, DFU_CIPHER_KIND_XTEA);
+		else if (g_strcmp0 (cipher_str, "DEVO") == 0)
+			dfu_firmware_set_cipher_kind (firmware, DFU_CIPHER_KIND_DEVO);
 		else
 			g_warning ("Unknown CipherKind: %s", cipher_str);
 	}
@@ -235,6 +247,16 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 
 	/* just copy old-plain DFU file */
 	return dfu_firmware_from_raw (firmware, contents, flags, error);
+}
+
+static DfuVersion
+dfu_convert_version (DfuFirmwareFormat format)
+{
+	if (format == DFU_FIRMWARE_FORMAT_DFU)
+		return DFU_VERSION_DFU_1_0;
+	if (format == DFU_FIRMWARE_FORMAT_DFUSE)
+		return DFU_VERSION_DFUSE;
+	return DFU_VERSION_UNKNOWN;
 }
 
 static GBytes *
@@ -268,7 +290,7 @@ dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents, GError **error
 	ftr->release = GUINT16_TO_LE (dfu_firmware_get_release (firmware));
 	ftr->pid = GUINT16_TO_LE (dfu_firmware_get_pid (firmware));
 	ftr->vid = GUINT16_TO_LE (dfu_firmware_get_vid (firmware));
-	ftr->ver = GUINT16_TO_LE (dfu_firmware_get_format (firmware));
+	ftr->ver = GUINT16_TO_LE (dfu_convert_version (dfu_firmware_get_format (firmware)));
 	ftr->len = (guint8) (sizeof (DfuFirmwareFooter) + length_md);
 	memcpy(ftr->sig, "UFD", 3);
 	crc_new = dfu_firmware_generate_crc32 (buf, length_bin + length_md + 12);
@@ -291,7 +313,7 @@ GBytes *
 dfu_firmware_to_dfu (DfuFirmware *firmware, GError **error)
 {
 	/* plain DFU */
-	if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFU_1_0) {
+	if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFU) {
 		GBytes *contents;
 		DfuElement *element;
 		DfuImage *image;

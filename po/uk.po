@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-13 13:29+0100\n"
-"PO-Revision-Date: 2016-06-13 12:29+0000\n"
+"POT-Creation-Date: 2016-08-29 09:50+0100\n"
+"PO-Revision-Date: 2016-08-29 08:50+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Ukrainian (http://www.transifex.com/hughsie/fwupd/language/uk/)\n"
 "MIME-Version: 1.0\n"
@@ -109,6 +109,7 @@ msgid "ID"
 msgstr "Ід."
 
 #. TRANSLATORS: interface name, e.g. "Flash"
+#. TRANSLATORS: device name, e.g. 'ColorHug2'
 msgid "Name"
 msgstr "Назва"
 
@@ -126,7 +127,7 @@ msgstr "Знайдено"
 
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
 msgid "Protocol"
-msgstr ""
+msgstr "Протокол"
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
@@ -136,6 +137,10 @@ msgstr "Стан"
 
 msgid "Unknown: permission denied"
 msgstr "Невідомий: доступ заборонено"
+
+#. TRANSLATORS: serial number, e.g. '00012345'
+msgid "Serial"
+msgstr ""
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
 msgid "Mode"
@@ -165,6 +170,14 @@ msgstr "Встановити ідентифікатор виробника дл�
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
 msgstr "Встановити ідентифікатор продукту для файла мікропрограми"
+
+#. TRANSLATORS: command description
+msgid "Set element address on firmware file"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Set the firmware size for the target"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
@@ -263,32 +276,36 @@ msgid "Firmware Update D-Bus Service"
 msgstr "Служба D-Bus оновлення мікропрограми"
 
 #. TRANSLATORS: daemon is inactive
-msgid "Idle"
-msgstr "Бездіяльність"
+msgid "Idle…"
+msgstr ""
 
 #. TRANSLATORS: decompressing the firmware file
-msgid "Decompressing firmware"
-msgstr "Розпаковуємо мікропрограму"
+msgid "Decompressing…"
+msgstr ""
 
 #. TRANSLATORS: parsing the firmware information
-msgid "Loading firmware"
-msgstr "Завантажуємо мікропрограму"
+msgid "Loading…"
+msgstr ""
 
 #. TRANSLATORS: restarting the device to pick up new F/W
-msgid "Restarting device"
-msgstr "Перезапускаємо пристрій"
+msgid "Restarting device…"
+msgstr ""
 
 #. TRANSLATORS: writing to the flash chips
-msgid "Writing firmware to device"
-msgstr "Записуємо мікропрограму на пристрій"
+msgid "Writing…"
+msgstr ""
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
-msgid "Verifying firmware from device"
-msgstr "Перевіряємо мікропрограму з пристрою"
+msgid "Verifying…"
+msgstr ""
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
-msgid "Scheduling upgrade"
-msgstr "Плануємо оновлення"
+msgid "Scheduling…"
+msgstr ""
+
+#. TRANSLATORS: currect daemon status is unknown
+msgid "Unknown"
+msgstr ""
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"

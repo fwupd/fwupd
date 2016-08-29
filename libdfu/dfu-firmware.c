@@ -40,6 +40,7 @@
 #include "dfu-common.h"
 #include "dfu-error.h"
 #include "dfu-firmware.h"
+#include "dfu-format-elf.h"
 #include "dfu-format-dfu.h"
 #include "dfu-format-ihex.h"
 #include "dfu-format-raw.h"
@@ -422,12 +423,16 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
 		priv->format = dfu_firmware_detect_dfu (bytes);
 	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
+		priv->format = dfu_firmware_detect_elf (bytes);
+	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
 		priv->format = dfu_firmware_detect_raw (bytes);
 
 	/* handled easily */
 	if (priv->format == DFU_FIRMWARE_FORMAT_INTEL_HEX)
 		return dfu_firmware_from_ihex (firmware, bytes, flags, error);
-	if (priv->format == DFU_FIRMWARE_FORMAT_DFU_1_0 ||
+	if (priv->format == DFU_FIRMWARE_FORMAT_ELF)
+		return dfu_firmware_from_elf (firmware, bytes, flags, error);
+	if (priv->format == DFU_FIRMWARE_FORMAT_DFU ||
 	    priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
 		return dfu_firmware_from_dfu (firmware, bytes, flags, error);
 	return dfu_firmware_from_raw (firmware, bytes, flags, error);
@@ -588,13 +593,17 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 		return dfu_firmware_to_raw (firmware, error);
 
 	/* DFU or DfuSe*/
-	if (priv->format == DFU_FIRMWARE_FORMAT_DFU_1_0 ||
+	if (priv->format == DFU_FIRMWARE_FORMAT_DFU ||
 	    priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
 		return dfu_firmware_to_dfu (firmware, error);
 
 	/* Intel HEX */
 	if (priv->format == DFU_FIRMWARE_FORMAT_INTEL_HEX)
 		return dfu_firmware_to_ihex (firmware, error);
+
+	/* ELF */
+	if (priv->format == DFU_FIRMWARE_FORMAT_ELF)
+		return dfu_firmware_to_elf (firmware, error);
 
 	/* invalid */
 	g_set_error (error,
@@ -705,7 +714,7 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 
 /**
  * dfu_firmware_format_to_string:
- * @format: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_DFU_1_0
+ * @format: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_DFU
  *
  * Returns a string representaiton of the format.
  *
@@ -717,14 +726,42 @@ const gchar *
 dfu_firmware_format_to_string (DfuFirmwareFormat format)
 {
 	if (format == DFU_FIRMWARE_FORMAT_RAW)
-		return "RAW";
-	if (format == DFU_FIRMWARE_FORMAT_DFU_1_0)
-		return "DFU";
+		return "raw";
+	if (format == DFU_FIRMWARE_FORMAT_DFU)
+		return "dfu";
 	if (format == DFU_FIRMWARE_FORMAT_DFUSE)
-		return "DfuSe";
+		return "dfuse";
 	if (format == DFU_FIRMWARE_FORMAT_INTEL_HEX)
-		return "IHEX";
+		return "ihex";
+	if (format == DFU_FIRMWARE_FORMAT_ELF)
+		return "elf";
 	return NULL;
+}
+
+/**
+ * dfu_firmware_format_from_string:
+ * @format: a format string, e.g. `dfuse`
+ *
+ * Returns an enumerated version of the format.
+ *
+ * Return value: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_DFUSE
+ *
+ * Since: 0.7.3
+ **/
+DfuFirmwareFormat
+dfu_firmware_format_from_string (const gchar *format)
+{
+	if (g_strcmp0 (format, "raw") == 0)
+		return DFU_FIRMWARE_FORMAT_RAW;
+	if (g_strcmp0 (format, "dfu") == 0)
+		return DFU_FIRMWARE_FORMAT_DFU;
+	if (g_strcmp0 (format, "dfuse") == 0)
+		return DFU_FIRMWARE_FORMAT_DFUSE;
+	if (g_strcmp0 (format, "ihex") == 0)
+		return DFU_FIRMWARE_FORMAT_INTEL_HEX;
+	if (g_strcmp0 (format, "elf") == 0)
+		return DFU_FIRMWARE_FORMAT_ELF;
+	return DFU_FIRMWARE_FORMAT_UNKNOWN;
 }
 
 /**

@@ -1,3 +1,42 @@
+Version 0.7.3
+~~~~~~~~~~~~~
+Released: 2016-08-29
+
+New Features:
+ - Add a set-address and set-target-size commands to dfu-util (Richard Hughes)
+ - Add a small library for talking with 0bitdo hardware (Richard Hughes)
+ - Add Dell TPM and TB15/WD15 support via new Dell provider (Mario Limonciello)
+ - Add FU_DEVICE_FLAG_NEEDS_BOOTLOADER (Richard Hughes)
+ - Add fwupd_client_get_status() (Richard Hughes)
+ - Add fwupd_result_get_unique_id() (Richard Hughes)
+ - Add initial ELF reading and writing support to libdfu (Richard Hughes)
+ - Add support for installing multiple devices from a CAB file (Richard Hughes)
+ - Allow providers to export percentage completion (Richard Hughes)
+ - Show a progress notification when installing firmware (Richard Hughes)
+ - Show the vendor flashing instructions when installing (Richard Hughes)
+
+Bugfixes:
+ - Add XPS 9250 to Dell TPM modeswitch blacklist (Mario Limonciello)
+ - Allow blacklisting devices by their GUID (Richard Hughes)
+ - Conditionally enable all providers based upon installed (Mario Limonciello)
+ - Display flashes left in results output when it gets low (Mario Limonciello)
+ - Do not attempt to add DFU devices not in runtime mode (Richard Hughes)
+ - Do not use the deprecated GNOME_COMPILE_WARNINGS (Richard Hughes)
+ - Don't fail while checking versions or locked state (Richard Hughes)
+ - Embed fwupd version in generated documentation (Mario Limonciello)
+ - Ensure the ID is set when getting local firmware details (Richard Hughes)
+ - Fix gtk-doc build when srcdir != builddir (Ting-Wei Lan)
+ - Fix libdfu hang when parsing corrupt IHEX files (Richard Hughes)
+ - Ignore devices that do not add at least one GUID (Richard Hughes)
+ - In get-details output, display the blob filename (Mario Limonciello)
+ - Save the unique ID in the pending database (Richard Hughes)
+ - Support the 'DEVO' cipher kind in libdfu (Richard Hughes)
+ - Switch to the Amazon S3 CDN for firmware metadata (Richard Hughes)
+ - Update fwupdmgr manpage for new commands and arguments (Mario Limonciello)
+ - Use a private gnupg key store (Richard Hughes)
+ - Use the correct firmware when installing a composite device (Richard Hughes)
+ - Use the SHA1 hash of the local file data as the origin (Richard Hughes)
+
 Version 0.7.2
 ~~~~~~~~~~~~~
 Released: 2016-06-13

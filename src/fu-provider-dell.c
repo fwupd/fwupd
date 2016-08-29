@@ -394,15 +394,15 @@ fu_provider_dell_dock_node (FuProviderDell *provider_dell, GUsbDevice *device,
 	fu_device_set_id (item->device, dock_id);
 	fu_device_set_name (item->device, dock_name);
 	fu_device_add_guid (item->device, guid_str);
-	fu_device_add_flag (item->device, FU_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
 		fu_device_set_version (item->device, version);
 		if (updates_online)
 			fu_device_add_flag (item->device,
-					    FU_DEVICE_FLAG_ALLOW_ONLINE);
+					    FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
 		else
 			fu_device_add_flag (item->device,
-					    FU_DEVICE_FLAG_ALLOW_OFFLINE);
+					    FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 	}
 
 	g_hash_table_insert (priv->devices, g_strdup (dock_key), item);
@@ -833,10 +833,10 @@ fu_provider_dell_detect_tpm (FuProvider *provider, GError **error)
 	fu_device_add_guid (dev, tpm_guid);
 	fu_device_set_name (dev, pretty_tpm_name);
 	fu_device_set_version (dev, version_str);
-	fu_device_add_flag (dev, FU_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag (dev, FU_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (out->flashes_left > 0) {
-		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_OFFLINE);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	}
 	fu_provider_device_add (provider, dev);
@@ -847,9 +847,9 @@ fu_provider_dell_detect_tpm (FuProvider *provider, GError **error)
 		fu_device_set_id (dev_alt, tpm_id_alt);
 		fu_device_add_guid (dev_alt, tpm_guid_alt);
 		fu_device_set_name (dev_alt, pretty_tpm_name_alt);
-		fu_device_add_flag (dev_alt, FU_DEVICE_FLAG_INTERNAL);
-		fu_device_add_flag (dev_alt, FU_DEVICE_FLAG_REQUIRE_AC);
-		fu_device_add_flag (dev_alt, FU_DEVICE_FLAG_LOCKED);
+		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_INTERNAL);
+		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_LOCKED);
 		fu_device_set_alternate (dev_alt, dev);
 
 		/* If TPM is not owned and at least 1 flash left allow mode switching
@@ -978,7 +978,7 @@ fu_provider_dell_unlock(FuProvider *provider,
 	/* clone the info from real device but prevent it from being flashed */
 	device_flags_alt = fu_device_get_flags (device_alt);
 	fu_device_set_flags (device, device_flags_alt);
-	fu_device_set_flags (device_alt, device_flags_alt & ~FU_DEVICE_FLAG_ALLOW_OFFLINE);
+	fu_device_set_flags (device_alt, device_flags_alt & ~FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 
 	/* make sure that this unlocked device can be updated */
 	fu_device_set_version (device, "0.0.0.0");

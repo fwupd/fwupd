@@ -296,8 +296,8 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
 		fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 		fu_device_set_version (dev, "0");
-		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_ONLINE);
-		fu_device_add_flag (dev, FU_DEVICE_FLAG_LOCKED);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
 		fu_provider_device_add (provider, dev);
 		return TRUE;
 	}
@@ -352,9 +352,9 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 								       parse_flags);
 			fu_device_set_version_lowest (dev, version_lowest);
 		}
-		fu_device_add_flag (dev, FU_DEVICE_FLAG_INTERNAL);
-		fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_OFFLINE);
-		fu_device_add_flag (dev, FU_DEVICE_FLAG_REQUIRE_AC);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 		fu_provider_device_add (provider, dev);
 	}
 	return TRUE;

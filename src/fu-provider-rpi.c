@@ -274,10 +274,10 @@ fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
 	fu_device_set_id (device, "raspberry-pi");
 	fu_device_add_guid (device, "raspberrypi");
 	fu_device_set_name (device, "Raspberry Pi");
-	fu_device_add_flag (device, FU_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag (device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
-	fu_device_add_flag (device, FU_DEVICE_FLAG_ALLOW_ONLINE);
-	fu_device_add_flag (device, FU_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 
 	/* get the VC build info */
 	if (!fu_provider_rpi_parse_firmware (device, fwfn, error))

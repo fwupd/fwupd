@@ -57,29 +57,52 @@ AM_PROG_CC_C_O
 IT_PROG_INTLTOOL([0.35.0])
 AC_PATH_PROG(XSLTPROC, xsltproc)
 
-GNOME_COMPILE_WARNINGS([maximum],[
-	-Wmissing-declarations
-	-Wcast-align
-	-Wwrite-strings
-	-Wreturn-type
-	-Wformat-nonliteral
-	-Wmissing-format-attribute
-	-Wclobbered
-	-Wempty-body
-	-Wignored-qualifiers
-	-Wsign-compare
-	-Wtype-limits
-	-Wuninitialized
+WARN_CFLAGS_EXTRA="
 	-Waggregate-return
+	-Wunused
+	-Warray-bounds
+	-Wcast-align
+	-Wclobbered
 	-Wdeclaration-after-statement
-	-Wshadow
-	-Wno-strict-aliasing
-	-Winline
-	-Wmissing-parameter-type
-	-Woverride-init
-	-Wno-discarded-qualifiers
+	-Wempty-body
+	-Wextra
+	-Wformat=2
+	-Wformat-nonliteral
+	-Wformat-security
 	-Wformat-signedness
-])
+	-Wignored-qualifiers
+	-Wimplicit-function-declaration
+	-Winit-self
+	-Winline
+	-Wmissing-declarations
+	-Wmissing-format-attribute
+	-Wmissing-include-dirs
+	-Wmissing-noreturn
+	-Wmissing-parameter-type
+	-Wmissing-prototypes
+	-Wnested-externs
+	-Wno-discarded-qualifiers
+	-Wno-missing-field-initializers
+	-Wno-strict-aliasing
+	-Wno-suggest-attribute=format
+	-Wno-unused-parameter
+	-Wold-style-definition
+	-Woverride-init
+	-Wpointer-arith
+	-Wredundant-decls
+	-Wreturn-type
+	-Wshadow
+	-Wsign-compare
+	-Wstrict-aliasing
+	-Wstrict-prototypes
+	-Wswitch-default
+	-Wtype-limits
+	-Wundef
+	-Wuninitialized
+	-Wunused-but-set-variable
+	-Wwrite-strings"
+AX_APPEND_COMPILE_FLAGS([$WARN_CFLAGS_EXTRA], [WARN_CFLAGS])
+AC_SUBST(WARN_CFLAGS)
 
 dnl ---------------------------------------------------------------------------
 dnl - gettext stuff
@@ -120,6 +143,7 @@ PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib >= 0.5.10)
 PKG_CHECK_MODULES(GUSB, gusb >= 0.2.9)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 PKG_CHECK_MODULES(ARCHIVE, libarchive)
+PKG_CHECK_MODULES(ELF, libelf)
 PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.51.92)
 AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
 if test -z $DOCBOOK2MAN ; then
@@ -132,13 +156,24 @@ if test -z $GCAB ; then
 fi
 
 # ColorHug support
-AC_ARG_ENABLE(colorhug, AS_HELP_STRING([--enable-colorhug],[Enable ColorHug support]),
-	      enable_colorhug=$enableval, enable_colorhug=yes)
+AC_ARG_ENABLE(colorhug,
+	      AS_HELP_STRING([--enable-colorhug],
+			     [Enable ColorHug support [default=auto]]),,
+	      enable_colorhug=maybe)
 if test x$enable_colorhug != xno; then
-	PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.12)
-	AC_DEFINE(HAVE_COLORHUG,1,[Use ColorHug support])
+	PKG_CHECK_MODULES(COLORHUG, colorhug >= 1.2.12,
+			  has_colorhug=yes,
+			  has_colorhug=no)
 fi
-AM_CONDITIONAL(HAVE_COLORHUG, test x$enable_colorhug = xyes)
+if test x$has_colorhug = xyes; then
+	AC_DEFINE(HAVE_COLORHUG,1,[Use ColorHug support])
+else
+	has_colorhug=no
+	if test "x$enable_colorhug" = "xyes"; then
+		AC_MSG_ERROR([colorhug support requested but 'libcolorhug-dev' was not found])
+	fi
+fi
+AM_CONDITIONAL(HAVE_COLORHUG, test x$has_colorhug = xyes)
 
 # gpgme support
 AC_MSG_CHECKING([for gpgme])
@@ -155,31 +190,50 @@ else
 fi
 
 # UEFI support
-AC_ARG_ENABLE(uefi, AS_HELP_STRING([--enable-uefi],[Enable UEFI support]),
-	      enable_uefi=$enableval, enable_uefi=yes)
+AC_ARG_ENABLE(uefi,
+	      AS_HELP_STRING([--enable-uefi],
+	      [Enable UEFI support [default=auto]]),,
+	      enable_uefi=maybe)
 if test x$enable_uefi != xno; then
-	PKG_CHECK_MODULES(UEFI, fwup >= 0.5)
+	PKG_CHECK_MODULES(UEFI, fwup >= 0.5,
+			  has_fwup=yes,
+			  has_fwup=no)
+fi
+if test x$has_fwup = xyes; then
 	AC_DEFINE(HAVE_UEFI,1,[Use UEFI support])
-
 	# check for ability to unlock
-	PKG_CHECK_MODULES(UEFI_UNLOCK, fwup >= 0.6,
+	PKG_CHECK_MODULES(UEFI_UNLOCK, fwup >= 5,
 			  has_uefi_unlock=yes,
 			  has_uefi_unlock=no)
 	if test x$has_uefi_unlock = xyes; then
 		AC_DEFINE(HAVE_UEFI_UNLOCK,1,[Use UEFI unlock support])
 	fi
+else
+	has_fwup=no
+	if test "x$enable_uefi" = "xyes"; then
+		AC_MSG_ERROR([UEFI support requested but 'libfwup-dev' was not found])
+	fi
 fi
-AM_CONDITIONAL(HAVE_UEFI, test x$enable_uefi = xyes)
+AM_CONDITIONAL(HAVE_UEFI, test x$has_fwup = xyes)
 
 # Dell Non ESRT capsule support
-AC_ARG_ENABLE(dell, AS_HELP_STRING([--enable-dell],[Enable Dell non-ESRT capsule support]),
-	      enable_dell=$enableval, enable_dell=yes)
+AC_ARG_ENABLE(dell,
+	      AS_HELP_STRING([--enable-dell],
+	      [Enable Dell non-ESRT capsule support]),,
+	      enable_dell=maybe)
 if test x$enable_dell != xno; then
-	PKG_CHECK_MODULES(UEFI, fwup >= 0.5)
-	PKG_CHECK_MODULES(LIBSMBIOS, libsmbios_c >= 2.3.0)
-	PKG_CHECK_MODULES(EFIVAR, efivar)
+	PKG_CHECK_MODULES(LIBSMBIOS, libsmbios_c >= 2.3.0,
+			  has_libsmbios=yes,
+			  has_libsmbios=no)
+	PKG_CHECK_MODULES(EFIVAR, efivar,
+			  has_efivar=yes,
+			  has_efivar=no)
+fi
+if test x$has_libsmbios = xyes &&
+   test x$has_efivar = xyes &&
+   test x$has_fwup = xyes; then
 	AC_DEFINE(HAVE_DELL,1,[Use Dell non-ESRT capsule support])
-
+	has_dell=yes
 	# check for ability to change GUID
 	PKG_CHECK_MODULES(UEFI_GUID, fwup >= 5,
 			  has_uefi_guid=yes,
@@ -187,9 +241,24 @@ if test x$enable_dell != xno; then
 	if test x$has_uefi_guid = xyes; then
 		AC_DEFINE(HAVE_UEFI_GUID,1,[Use UEFI GUID override])
 	fi
-
+else
+	has_dell=no
+	if test "x$enable_dell" = "xyes"; then
+		if test x$enable_uefi = xno; then
+			AC_MSG_ERROR([Dell support requested but UEFI support explicitly disabled])
+		fi
+		if test x$has_libsmbios = xno; then
+			AC_MSG_ERROR([Dell support requested but 'libsmbios-dev' was not found])
+		fi
+		if test x$has_efivar = xno; then
+			AC_MSG_ERROR([Dell support requested but 'libefivar-dev' was not found])
+		fi
+		if test x$has_fwup = xno; then
+			AC_MSG_ERROR([Dell support requested but 'libfwup-dev' was not found])
+		fi
+	fi
 fi
-AM_CONDITIONAL(HAVE_DELL, test x$enable_dell = xyes)
+AM_CONDITIONAL(HAVE_DELL, test x$has_dell = xyes)
 
 # systemd support
 AC_ARG_WITH([systemdunitdir],
@@ -245,4 +314,10 @@ echo "
         compiler:                  ${CC}
         cflags:                    ${CFLAGS}
         cppflags:                  ${CPPFLAGS}
+
+	optional providers
+	------------------
+	Colorhug:                  $has_colorhug
+	UEFI:                      $has_fwup
+	Dell:                      $has_dell
 "

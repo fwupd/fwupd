@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Derek Stavis <dekestavis@gmail.com>, 2015
+# Derek Willian Stavis <dekestavis@gmail.com>, 2015
+# Derek Willian Stavis <dekestavis@gmail.com>, 2016
 # Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2016
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-13 13:29+0100\n"
-"PO-Revision-Date: 2016-06-13 12:29+0000\n"
+"POT-Creation-Date: 2016-08-29 09:50+0100\n"
+"PO-Revision-Date: 2016-08-29 08:50+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/hughsie/fwupd/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
@@ -110,6 +111,7 @@ msgid "ID"
 msgstr "ID"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
+#. TRANSLATORS: device name, e.g. 'ColorHug2'
 msgid "Name"
 msgstr "Nome"
 
@@ -137,6 +139,10 @@ msgstr "Status"
 
 msgid "Unknown: permission denied"
 msgstr "Desconhecido: permissão negada"
+
+#. TRANSLATORS: serial number, e.g. '00012345'
+msgid "Serial"
+msgstr ""
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
 msgid "Mode"
@@ -166,6 +172,14 @@ msgstr "Definir ID de fabricante no arquivo de firmware"
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
 msgstr "Definir ID de produto no arquivo de firmware"
+
+#. TRANSLATORS: command description
+msgid "Set element address on firmware file"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Set the firmware size for the target"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
@@ -264,32 +278,36 @@ msgid "Firmware Update D-Bus Service"
 msgstr "Serviço D-Bus de Atualização de Firmware"
 
 #. TRANSLATORS: daemon is inactive
-msgid "Idle"
-msgstr "Ocioso"
+msgid "Idle…"
+msgstr ""
 
 #. TRANSLATORS: decompressing the firmware file
-msgid "Decompressing firmware"
-msgstr "Descomprimindo firmware"
+msgid "Decompressing…"
+msgstr ""
 
 #. TRANSLATORS: parsing the firmware information
-msgid "Loading firmware"
-msgstr "Carregando firmware"
+msgid "Loading…"
+msgstr ""
 
 #. TRANSLATORS: restarting the device to pick up new F/W
-msgid "Restarting device"
-msgstr "Reiniciando dispositivo"
+msgid "Restarting device…"
+msgstr ""
 
 #. TRANSLATORS: writing to the flash chips
-msgid "Writing firmware to device"
-msgstr "Escrevendo firmware no dispositivo"
+msgid "Writing…"
+msgstr ""
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
-msgid "Verifying firmware from device"
-msgstr "Verificando firmware do dispositivo"
+msgid "Verifying…"
+msgstr ""
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
-msgid "Scheduling upgrade"
-msgstr "Agendando atualização"
+msgid "Scheduling…"
+msgstr ""
+
+#. TRANSLATORS: currect daemon status is unknown
+msgid "Unknown"
+msgstr ""
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -333,34 +351,34 @@ msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
-msgstr ""
+msgstr "Versão da atualização"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"
-msgstr ""
+msgstr "Soma de verificação da atualização"
 
 msgid "Update Checksum Type"
-msgstr ""
+msgstr "Tipo da soma de verificação"
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Update Location"
-msgstr ""
+msgstr "Local da atualização"
 
 #. TRANSLATORS: section header for long firmware desc
 msgid "Update Description"
-msgstr ""
+msgstr "Descrição da atualização"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
-msgstr ""
+msgstr "Dispositivo adicionado:"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
-msgstr ""
+msgstr "Dispositivo removido:"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
-msgstr ""
+msgstr "Dispositivo modificado:"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"

@@ -29,6 +29,8 @@
 #include <glib-unix.h>
 #include <appstream-glib.h>
 
+#include "dfu-cipher-devo.h"
+#include "dfu-cipher-xtea.h"
 #include "dfu-device-private.h"
 
 typedef struct {
@@ -347,6 +349,7 @@ dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 {
+	gchar *endptr = NULL;
 	guint64 tmp;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -372,8 +375,8 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* parse VID */
-	tmp = g_ascii_strtoull (values[1], NULL, 16);
-	if (tmp == 0 || tmp > G_MAXUINT16) {
+	tmp = g_ascii_strtoull (values[1], &endptr, 16);
+	if (tmp > G_MAXUINT16 || endptr[0] != '\0') {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
@@ -381,6 +384,154 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	dfu_firmware_set_release (firmware, (guint16) tmp);
+
+	/* write out new file */
+	return dfu_firmware_write_file (firmware,
+					file,
+					priv->cancellable,
+					error);
+}
+
+static gboolean
+dfu_tool_set_target_size (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	DfuElement *element;
+	DfuImage *image;
+	gchar *endptr;
+	guint64 padding_char = 0x00;
+	guint64 target_size;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILE SIZE [VAL]"
+				     " -- e.g. `firmware.dfu 8000 ff");
+		return FALSE;
+	}
+
+	/* open */
+	file = g_file_new_for_path (values[0]);
+	firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      priv->cancellable,
+				      error)) {
+		return FALSE;
+	}
+
+	/* doesn't make sense for DfuSe */
+	if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFUSE) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Cannot pad DfuSe image, try DFU");
+		return FALSE;
+	}
+
+	/* parse target size */
+	target_size = g_ascii_strtoull (values[1], &endptr, 16);
+	if (target_size > 0xffff || endptr[0] != '\0') {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Failed to parse target size '%s'",
+			     values[1]);
+		return FALSE;
+	}
+
+	/* parse padding value */
+	if (g_strv_length (values) > 3) {
+		padding_char = g_ascii_strtoull (values[2], &endptr, 16);
+		if (padding_char > 0xff || endptr[0] != '\0') {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Failed to parse padding value '%s'",
+				     values[2]);
+			return FALSE;
+		}
+	}
+
+	/* this has to exist */
+	if (target_size > 0) {
+		image = dfu_firmware_get_image_default (firmware);
+		g_assert (image != NULL);
+		element = dfu_image_get_element (image, 0);
+		dfu_element_set_padding_value (element, (guint8) padding_char);
+		dfu_element_set_target_size (element, (guint32) target_size);
+	}
+
+	/* write out new file */
+	return dfu_firmware_write_file (firmware,
+					file,
+					priv->cancellable,
+					error);
+}
+
+static gboolean
+dfu_tool_set_address (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	DfuElement *element;
+	DfuFirmwareFormat firmware_format;
+	DfuImage *image;
+	gchar *endptr;
+	guint64 address;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILE ADDR"
+				     " -- e.g. `firmware.dfu 8000");
+		return FALSE;
+	}
+
+	/* open */
+	file = g_file_new_for_path (values[0]);
+	firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      priv->cancellable,
+				      error)) {
+		return FALSE;
+	}
+
+	/* only makes sense for DfuSe */
+	firmware_format = dfu_firmware_get_format (firmware);
+	if (firmware_format != DFU_FIRMWARE_FORMAT_DFUSE) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Cannot set address of %s image, try DfuSe",
+			     dfu_firmware_format_to_string (firmware_format));
+		return FALSE;
+	}
+
+	/* parse address */
+	address = g_ascii_strtoull (values[1], &endptr, 16);
+	if (address > G_MAXUINT32 || endptr[0] != '\0') {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Failed to parse address '%s'",
+			     values[1]);
+		return FALSE;
+	}
+
+	/* this has to exist */
+	if (address > 0) {
+		image = dfu_firmware_get_image_default (firmware);
+		g_assert (image != NULL);
+		element = dfu_image_get_element (image, 0);
+		dfu_element_set_address (element, (guint32) address);
+	}
 
 	/* write out new file */
 	return dfu_firmware_write_file (firmware,
@@ -679,7 +830,7 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	guint64 tmp;
+	DfuFirmwareFormat format;
 	guint argc = g_strv_length (values);
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
@@ -687,13 +838,13 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GFile) file_out = NULL;
 
 	/* check args */
-	if (argc < 3 || argc > 4) {
+	if (argc != 3) {
 		g_set_error_literal (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
 				     "Invalid arguments, expected "
-				     "FORMAT FILE-IN FILE-OUT [SIZE]"
-				     " -- e.g. `dfu firmware.hex firmware.dfu 8000`");
+				     "FORMAT FILE-IN FILE-OUT"
+				     " -- e.g. `dfu firmware.hex firmware.dfu`");
 		return FALSE;
 	}
 
@@ -709,54 +860,21 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* set output format */
-	if (g_strcmp0 (values[0], "raw") == 0) {
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_RAW);
-	} else if (g_strcmp0 (values[0], "dfu") == 0) {
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
-	} else if (g_strcmp0 (values[0], "dfuse") == 0) {
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
-	} else if (g_strcmp0 (values[0], "ihex") == 0) {
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_INTEL_HEX);
-	} else {
+	format = dfu_firmware_format_from_string (values[0]);
+	dfu_firmware_set_format (firmware, format);
+	if (format == DFU_FIRMWARE_FORMAT_UNKNOWN) {
+		g_autoptr(GString) tmp = g_string_new (NULL);
+		for (guint i = 1; i < DFU_FIRMWARE_FORMAT_LAST; i++) {
+			if (tmp->len > 0)
+				g_string_append (tmp, "|");
+			g_string_append (tmp, dfu_firmware_format_to_string (i));
+		}
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "unknown format '%s', expected [raw|dfu|dfuse|ihex]",
-			     values[0]);
+			     "unknown format '%s', expected [%s]",
+			     values[0], tmp->str);
 		return FALSE;
-	}
-
-	/* set target size */
-	if (argc > 3) {
-		DfuImage *image;
-		DfuElement *element;
-		gchar *endptr;
-		tmp = g_ascii_strtoull (values[3], &endptr, 16);
-		if (tmp > 0xffff || endptr[0] != '\0') {
-			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
-				     "Failed to parse target size '%s'",
-				     values[3]);
-			return FALSE;
-		}
-
-		/* doesn't make sense for DfuSe */
-		if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFUSE) {
-			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
-				     "Cannot pad DfuSe image, try DFU");
-			return FALSE;
-		}
-
-		/* this has to exist */
-		if (tmp > 0) {
-			image = dfu_firmware_get_image_default (firmware);
-			g_assert (image != NULL);
-			element = dfu_image_get_element (image, 0);
-			dfu_element_set_target_size (element, (guint32) tmp);
-		}
 	}
 
 	/* print the new object */
@@ -977,7 +1095,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* create new firmware object */
 	firmware = dfu_firmware_new ();
-	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
+	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU);
 	dfu_firmware_set_vid (firmware, dfu_device_get_runtime_vid (device));
 	dfu_firmware_set_pid (firmware, dfu_device_get_runtime_pid (device));
 	dfu_firmware_add_image (firmware, image);
@@ -1143,58 +1261,6 @@ dfu_tool_watch_cancelled_cb (GCancellable *cancellable, gpointer user_data)
 	g_main_loop_quit (loop);
 }
 
-static gboolean
-dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
-{
-	guint i;
-	gsize key_len;
-	g_autofree gchar *key_pad = NULL;
-
-	/* too long */
-	key_len = strlen (key);
-	if (key_len > 32) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
-			     "Key string too long at %" G_GSIZE_FORMAT " chars, max 16",
-			     key_len);
-		return FALSE;
-	}
-
-	/* parse 4x32b values or generate a hash */
-	if (key_len == 32) {
-		for (i = 0; i < 4; i++) {
-			gchar buf[] = "xxxxxxxx";
-			gchar *endptr;
-			guint64 tmp;
-
-			/* copy to 4-char buf (with NUL) */
-			memcpy (buf, key + i*8, 8);
-			tmp = g_ascii_strtoull (buf, &endptr, 16);
-			if (endptr && endptr[0] != '\0') {
-				g_set_error (error,
-					     DFU_ERROR,
-					     DFU_ERROR_NOT_SUPPORTED,
-					     "Failed to parse key '%s'", key);
-				return FALSE;
-			}
-			keys[3-i] = (guint32) tmp;
-		}
-	} else {
-		gsize buf_len = 16;
-		g_autoptr(GChecksum) csum = NULL;
-		csum = g_checksum_new (G_CHECKSUM_MD5);
-		g_checksum_update (csum, (const guchar *) key, (gssize) key_len);
-		g_checksum_get_digest (csum, (guint8 *) keys, &buf_len);
-		g_assert (buf_len == 16);
-	}
-
-	/* success */
-	g_debug ("using XTEA key %04x%04x%04x%04x",
-		 keys[3], keys[2], keys[1], keys[0]);
-	return TRUE;
-}
-
 static guint8 *
 dfu_tool_get_firmware_contents_default (DfuFirmware *firmware,
 					gsize *length,
@@ -1229,57 +1295,6 @@ dfu_tool_get_firmware_contents_default (DfuFirmware *firmware,
 		return NULL;
 	}
 	return (guint8 *) g_bytes_get_data (contents, length);
-}
-
-#define XTEA_DELTA		0x9e3779b9
-#define XTEA_NUM_ROUNDS		32
-
-static void
-dfu_tool_encrypt_xtea (const guint32 key[4], guint8 *data, guint16 length)
-{
-	guint32 sum;
-	guint32 *tmp = (guint32 *) data;
-	guint32 v0;
-	guint32 v1;
-	guint8 i;
-	guint j;
-
-	for (j = 0; j < length / 4; j += 2) {
-		sum = 0;
-		v0 = tmp[j];
-		v1 = tmp[j+1];
-		for (i = 0; i < XTEA_NUM_ROUNDS; i++) {
-			v0 += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
-			sum += XTEA_DELTA;
-			v1 += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum >> 11) & 3]);
-		}
-		tmp[j] = v0;
-		tmp[j+1] = v1;
-	}
-}
-
-static void
-dfu_tool_decrypt_xtea (const guint32 key[4], guint8 *data, guint16 length)
-{
-	guint32 sum;
-	guint32 *tmp = (guint32 *) data;
-	guint32 v0;
-	guint32 v1;
-	guint8 i;
-	guint j;
-
-	for (j = 0; j < length / 4; j += 2) {
-		v0 = tmp[j];
-		v1 = tmp[j+1];
-		sum = XTEA_DELTA * XTEA_NUM_ROUNDS;
-		for (i = 0; i < XTEA_NUM_ROUNDS; i++) {
-			v1 -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum >> 11) & 3]);
-			sum -= XTEA_DELTA;
-			v0 -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
-		}
-		tmp[j] = v0;
-		tmp[j+1] = v1;
-	}
 }
 
 static gboolean
@@ -1337,18 +1352,22 @@ dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* check type */
 	if (g_strcmp0 (values[2], "xtea") == 0) {
-		guint32 key[4];
-		if (!dfu_tool_parse_xtea_key (values[3], key, error))
+		if (!dfu_cipher_encrypt_xtea (values[3], data, (guint32) len, error))
 			return FALSE;
-		dfu_tool_encrypt_xtea (key, data, (guint16) len);
 		dfu_firmware_set_metadata (firmware,
 					   DFU_METADATA_KEY_CIPHER_KIND,
 					   "XTEA");
+	} else if (g_strcmp0 (values[2], "devo") == 0) {
+		if (!dfu_cipher_encrypt_devo (values[3], data, (guint32) len, error))
+			return FALSE;
+		dfu_firmware_set_metadata (firmware,
+					   DFU_METADATA_KEY_CIPHER_KIND,
+					   "DEVO");
 	} else {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "unknown type '%s', expected [xtea]",
+			     "unknown type '%s', expected [xtea|devo]",
 			     values[2]);
 		return FALSE;
 	}
@@ -1417,17 +1436,20 @@ dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* check type */
 	if (g_strcmp0 (values[2], "xtea") == 0) {
-		guint32 key[4];
-		if (!dfu_tool_parse_xtea_key (values[3], key, error))
+		if (!dfu_cipher_decrypt_xtea (values[3], data, (guint32) len, error))
 			return FALSE;
-		dfu_tool_decrypt_xtea (key, data, (guint16) len);
+		dfu_firmware_remove_metadata (firmware,
+					      DFU_METADATA_KEY_CIPHER_KIND);
+	} else if (g_strcmp0 (values[2], "devo") == 0) {
+		if (!dfu_cipher_decrypt_devo (values[3], data, (guint32) len, error))
+			return FALSE;
 		dfu_firmware_remove_metadata (firmware,
 					      DFU_METADATA_KEY_CIPHER_KIND);
 	} else {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "unknown type '%s', expected [xtea]",
+			     "unknown type '%s', expected [xtea:devo]",
 			     values[2]);
 		return FALSE;
 	}
@@ -1836,6 +1858,18 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 			continue;
 		}
 
+		tmp = dfu_device_get_display_name (device);
+		if (tmp != NULL) {
+			/* TRANSLATORS: device name, e.g. 'ColorHug2' */
+			dfu_tool_print_indent (_("Name"), tmp, 1);
+		}
+
+		tmp = dfu_device_get_serial_number (device);
+		if (tmp != NULL) {
+			/* TRANSLATORS: serial number, e.g. '00012345' */
+			dfu_tool_print_indent (_("Serial"), tmp, 1);
+		}
+
 		tmp = dfu_mode_to_string (dfu_device_get_mode (device));
 		/* TRANSLATORS: device mode, e.g. runtime or DFU */
 		dfu_tool_print_indent (_("Mode"), tmp, 1);
@@ -1952,6 +1986,18 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Set product ID on firmware file"),
 		     dfu_tool_set_product);
+	dfu_tool_add (priv->cmd_array,
+		     "set-address",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Set element address on firmware file"),
+		     dfu_tool_set_address);
+	dfu_tool_add (priv->cmd_array,
+		     "set-target-size",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Set the firmware size for the target"),
+		     dfu_tool_set_target_size);
 	dfu_tool_add (priv->cmd_array,
 		     "set-release",
 		     NULL,

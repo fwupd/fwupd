@@ -183,7 +183,7 @@ fu_provider_unlock (FuProvider *provider,
 
 	/* final check */
 	flags = fu_device_get_flags (device);
-	if ((flags & FU_DEVICE_FLAG_LOCKED) == 0) {
+	if ((flags & FWUPD_DEVICE_FLAG_LOCKED) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -200,7 +200,7 @@ fu_provider_unlock (FuProvider *provider,
 
 	/* update with correct flags */
 	flags = fu_device_get_flags (device);
-	fu_device_set_flags (device, flags &= ~FU_DEVICE_FLAG_LOCKED);
+	fu_device_set_flags (device, flags &= ~FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	return TRUE;
 }

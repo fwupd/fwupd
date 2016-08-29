@@ -459,8 +459,8 @@ fu_provider_chug_device_added_cb (GUsbContext *ctx,
 		fu_device_set_equivalent_id (item->device,
 					     g_usb_device_get_platform_id (device));
 		fu_device_add_guid (item->device, ch_device_get_guid (device));
-		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_OFFLINE);
-		fu_device_add_flag (item->device, FU_DEVICE_FLAG_ALLOW_ONLINE);
+		fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
 
 		/* try to get the serial number -- if opening failed then
 		 * poll until the device is not busy */

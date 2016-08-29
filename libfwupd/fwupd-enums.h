@@ -74,29 +74,40 @@ typedef enum {
 
 /**
  * FwupdDeviceFlags:
- * @FU_DEVICE_FLAG_NONE:			No flags set
- * @FU_DEVICE_FLAG_INTERNAL:			Device cannot be removed easily
- * @FU_DEVICE_FLAG_ALLOW_ONLINE:		Is capable of 'live' updating
- * @FU_DEVICE_FLAG_ALLOW_OFFLINE:		Is capable of 'offline' updating
- * @FU_DEVICE_FLAG_REQUIRE_AC:			Requires AC power
- * @FU_DEVICE_FLAG_LOCKED:			Is locked and can be unlocked
- * @FU_DEVICE_FLAG_SUPPORTED:			Is found in current metadata
- * @FU_DEVICE_FLAG_NEEDS_BOOTLOADER:		Requires a bootloader mode
+ * @FWUPD_DEVICE_FLAG_NONE:			No flags set
+ * @FWUPD_DEVICE_FLAG_INTERNAL:			Device cannot be removed easily
+ * @FWUPD_DEVICE_FLAG_ALLOW_ONLINE:		Is capable of 'live' updating
+ * @FWUPD_DEVICE_FLAG_ALLOW_OFFLINE:		Is capable of 'offline' updating
+ * @FWUPD_DEVICE_FLAG_REQUIRE_AC:		Requires AC power
+ * @FWUPD_DEVICE_FLAG_LOCKED:			Is locked and can be unlocked
+ * @FWUPD_DEVICE_FLAG_SUPPORTED:		Is found in current metadata
+ * @FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER:		Requires a bootloader mode
  *
  * FIXME: rename FU_DEVICE_ -> FWUPD_DEVICE_ when we break API
  *
  * The device flags.
  **/
-#define FU_DEVICE_FLAG_NONE		(0u)		/* Since: 0.1.3 */
-#define FU_DEVICE_FLAG_INTERNAL		(1u << 0)	/* Since: 0.1.3 */
-#define FU_DEVICE_FLAG_ALLOW_ONLINE	(1u << 1)	/* Since: 0.1.3 */
-#define FU_DEVICE_FLAG_ALLOW_OFFLINE	(1u << 2)	/* Since: 0.1.3 */
-#define FU_DEVICE_FLAG_REQUIRE_AC	(1u << 3)	/* Since: 0.6.3 */
-#define FU_DEVICE_FLAG_LOCKED		(1u << 4)	/* Since: 0.6.3 */
-#define FU_DEVICE_FLAG_SUPPORTED	(1u << 5)	/* Since: 0.7.1 */
-#define FU_DEVICE_FLAG_NEEDS_BOOTLOADER	(1u << 6)	/* Since: 0.7.3 */
-#define FU_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
+#define FWUPD_DEVICE_FLAG_NONE			(0u)		/* Since: 0.1.3 */
+#define FWUPD_DEVICE_FLAG_INTERNAL		(1u << 0)	/* Since: 0.1.3 */
+#define FWUPD_DEVICE_FLAG_ALLOW_ONLINE		(1u << 1)	/* Since: 0.1.3 */
+#define FWUPD_DEVICE_FLAG_ALLOW_OFFLINE		(1u << 2)	/* Since: 0.1.3 */
+#define FWUPD_DEVICE_FLAG_REQUIRE_AC		(1u << 3)	/* Since: 0.6.3 */
+#define FWUPD_DEVICE_FLAG_LOCKED		(1u << 4)	/* Since: 0.6.3 */
+#define FWUPD_DEVICE_FLAG_SUPPORTED		(1u << 5)	/* Since: 0.7.1 */
+#define FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER	(1u << 6)	/* Since: 0.7.3 */
+#define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
+
+/* deprecated names */
+#define FU_DEVICE_FLAG_NONE		FWUPD_DEVICE_FLAG_NONE
+#define FU_DEVICE_FLAG_INTERNAL		FWUPD_DEVICE_FLAG_INTERNAL
+#define FU_DEVICE_FLAG_ALLOW_ONLINE	FWUPD_DEVICE_FLAG_ALLOW_ONLINE
+#define FU_DEVICE_FLAG_ALLOW_OFFLINE	FWUPD_DEVICE_FLAG_ALLOW_OFFLINE
+#define FU_DEVICE_FLAG_REQUIRE_AC	FWUPD_DEVICE_FLAG_REQUIRE_AC
+#define FU_DEVICE_FLAG_LOCKED		FWUPD_DEVICE_FLAG_LOCKED
+#define FU_DEVICE_FLAG_SUPPORTED	FWUPD_DEVICE_FLAG_SUPPORTED
+#define FU_DEVICE_FLAG_NEEDS_BOOTLOADER	FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER
+#define FU_DEVICE_FLAG_UNKNOWN		FWUPD_DEVICE_FLAG_UNKNOWN
 
 /**
  * FwupdInstallFlags:

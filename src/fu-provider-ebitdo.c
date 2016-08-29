@@ -90,7 +90,7 @@ fu_provider_ebitdo_device_added (FuProviderEbitdo *provider_ebitdo,
 	/* create the device */
 	dev = fu_device_new ();
 	fu_device_set_id (dev, platform_id);
-	fu_device_add_flag (dev, FU_DEVICE_FLAG_ALLOW_ONLINE);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
 	fu_device_add_guid (dev, ebitdo_device_get_guid (ebitdo_dev));
 	fu_device_set_version (dev, ebitdo_device_get_version (ebitdo_dev));
 	fu_device_set_name (dev, name);
@@ -102,7 +102,7 @@ fu_provider_ebitdo_device_added (FuProviderEbitdo *provider_ebitdo,
 	/* only the bootloader can do the update */
 	if (ebitdo_kind == EBITDO_DEVICE_KIND_BOOTLOADER) {
 		EbitdoDevice *ebitdo_runtime;
-		fu_device_remove_flag (dev, FU_DEVICE_FLAG_NEEDS_BOOTLOADER);
+		fu_device_remove_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 
 		/* add the last seen runtime GUID too */
 		ebitdo_runtime = g_hash_table_lookup (priv->devices_runtime, platform_id);
@@ -113,7 +113,7 @@ fu_provider_ebitdo_device_added (FuProviderEbitdo *provider_ebitdo,
 			fu_device_add_guid (dev, guid);
 		}
 	} else {
-		fu_device_add_flag (dev, FU_DEVICE_FLAG_NEEDS_BOOTLOADER);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 		g_hash_table_insert (priv->devices_runtime,
 				     g_strdup (platform_id),
 				     g_object_ref (ebitdo_dev));

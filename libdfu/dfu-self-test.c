@@ -187,7 +187,7 @@ dfu_firmware_dfu_func (void)
 
 	/* write DFU format */
 	firmware = dfu_firmware_new ();
-	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU_1_0);
+	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU);
 	dfu_firmware_set_vid (firmware, 0x1234);
 	dfu_firmware_set_pid (firmware, 0x5678);
 	dfu_firmware_set_release (firmware, 0xfedc);
@@ -209,7 +209,7 @@ dfu_firmware_dfu_func (void)
 	g_assert_cmpint (dfu_firmware_get_vid (firmware), ==, 0x1234);
 	g_assert_cmpint (dfu_firmware_get_pid (firmware), ==, 0x5678);
 	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xfedc);
-	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU_1_0);
+	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 256);
 
 	/* load a real firmware */
@@ -225,7 +225,7 @@ dfu_firmware_dfu_func (void)
 	g_assert_cmpint (dfu_firmware_get_vid (firmware), ==, 0x1c11);
 	g_assert_cmpint (dfu_firmware_get_pid (firmware), ==, 0xb007);
 	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xffff);
-	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU_1_0);
+	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x8eB4);
 	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 
@@ -306,6 +306,45 @@ dfu_firmware_metadata_func (void)
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 6);
 	g_assert_cmpstr (dfu_firmware_get_metadata (firmware, "key"), ==, "value");
 	g_assert_cmpstr (dfu_firmware_get_metadata (firmware, "???"), ==, NULL);
+
+	/* can we roundtrip without loosing data */
+	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
+	g_assert_no_error (error);
+	g_assert (roundtrip_orig != NULL);
+	roundtrip = dfu_firmware_write_data (firmware, &error);
+	g_assert_no_error (error);
+	g_assert (roundtrip != NULL);
+
+	g_assert_cmpstr (_g_bytes_compare_verbose (roundtrip, roundtrip_orig), ==, NULL);
+}
+
+static void
+dfu_firmware_elf_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GBytes) roundtrip_orig = NULL;
+	g_autoptr(GBytes) roundtrip = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* load a ELF firmware */
+	filename = dfu_test_get_filename ("example.elf");
+	g_assert (filename != NULL);
+	file = g_file_new_for_path (filename);
+	firmware = dfu_firmware_new ();
+	ret = dfu_firmware_parse_file (firmware, file,
+				       DFU_FIRMWARE_PARSE_FLAG_NONE,
+				       NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (dfu_firmware_get_vid (firmware), ==, 0xffff);
+	g_assert_cmpint (dfu_firmware_get_pid (firmware), ==, 0xffff);
+	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xffff);
+	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_ELF);
+	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x0c);
+	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 
 	/* can we roundtrip without loosing data */
 	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
@@ -686,6 +725,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/libdfu/firmware{xdfu}", dfu_firmware_xdfu_func);
 	g_test_add_func ("/libdfu/firmware{metadata}", dfu_firmware_metadata_func);
 	g_test_add_func ("/libdfu/firmware{intel-hex}", dfu_firmware_intel_hex_func);
+	g_test_add_func ("/libdfu/firmware{elf}", dfu_firmware_elf_func);
 	g_test_add_func ("/libdfu/device", dfu_device_func);
 	g_test_add_func ("/libdfu/colorhug+", dfu_colorhug_plus_func);
 	return g_test_run ();

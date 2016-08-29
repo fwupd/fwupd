@@ -153,6 +153,8 @@ dfu_cipher_kind_to_string (DfuCipherKind cipher_kind)
 		return "none";
 	if (cipher_kind == DFU_CIPHER_KIND_XTEA)
 		return "xtea";
+	if (cipher_kind == DFU_CIPHER_KIND_DEVO)
+		return "devo";
 	return NULL;
 }
 

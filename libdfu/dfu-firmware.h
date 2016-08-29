@@ -71,18 +71,20 @@ typedef enum {
  * DfuFirmwareFormat:
  * @DFU_FIRMWARE_FORMAT_UNKNOWN:			Format unknown
  * @DFU_FIRMWARE_FORMAT_RAW:				Raw format
- * @DFU_FIRMWARE_FORMAT_DFU_1_0:			DFU 1.0
- * @DFU_FIRMWARE_FORMAT_DFUSE:				DfuSe extension
+ * @DFU_FIRMWARE_FORMAT_DFU:				DFU footer
+ * @DFU_FIRMWARE_FORMAT_DFUSE:				DfuSe header
  * @DFU_FIRMWARE_FORMAT_INTEL_HEX:			Intel HEX
+ * @DFU_FIRMWARE_FORMAT_ELF:				ELF
  *
  * The known versions of the DFU standard in BCD format.
  **/
 typedef enum {
-	DFU_FIRMWARE_FORMAT_UNKNOWN			= 0,
-	DFU_FIRMWARE_FORMAT_RAW				= 0x0001,
-	DFU_FIRMWARE_FORMAT_DFU_1_0			= 0x0100,
-	DFU_FIRMWARE_FORMAT_DFUSE			= 0x011a,
-	DFU_FIRMWARE_FORMAT_INTEL_HEX			= 0x0002,
+	DFU_FIRMWARE_FORMAT_UNKNOWN,
+	DFU_FIRMWARE_FORMAT_RAW,
+	DFU_FIRMWARE_FORMAT_DFU,
+	DFU_FIRMWARE_FORMAT_DFUSE,
+	DFU_FIRMWARE_FORMAT_INTEL_HEX,
+	DFU_FIRMWARE_FORMAT_ELF,
 	/*< private >*/
 	DFU_FIRMWARE_FORMAT_LAST
 } DfuFirmwareFormat;
@@ -90,6 +92,7 @@ typedef enum {
 DfuFirmware	*dfu_firmware_new		(void);
 
 const gchar	*dfu_firmware_format_to_string	(DfuFirmwareFormat format);
+DfuFirmwareFormat dfu_firmware_format_from_string(const gchar	*format);
 
 DfuImage	*dfu_firmware_get_image		(DfuFirmware	*firmware,
 						 guint8		 alt_setting);

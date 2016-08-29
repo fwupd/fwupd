@@ -9,6 +9,7 @@ AM_CPPFLAGS = \
 	$(APPSTREAM_GLIB_CFLAGS)				\
 	$(GLIB_CFLAGS)						\
 	$(GUSB_CFLAGS)						\
+	$(ELF_CFLAGS)						\
 	$(PIE_CFLAGS)						\
 	-I$(top_srcdir)/libdfu					\
 	-I$(top_srcdir)						\
@@ -41,6 +42,10 @@ libdfu_la_SOURCES =						\
 	dfu.h							\
 	dfu-common.c						\
 	dfu-common.h						\
+	dfu-cipher-devo.c					\
+	dfu-cipher-devo.h					\
+	dfu-cipher-xtea.c					\
+	dfu-cipher-xtea.h					\
 	dfu-context.c						\
 	dfu-context.h						\
 	dfu-device.c						\
@@ -56,6 +61,8 @@ libdfu_la_SOURCES =						\
 	dfu-format-dfu.h					\
 	dfu-format-dfuse.c					\
 	dfu-format-dfuse.h					\
+	dfu-format-elf.c					\
+	dfu-format-elf.h					\
 	dfu-format-ihex.c					\
 	dfu-format-ihex.h					\
 	dfu-format-metadata.c					\
@@ -72,6 +79,7 @@ libdfu_la_SOURCES =						\
 	dfu-target-private.h
 
 libdfu_la_LIBADD =						\
+	$(ELF_LIBS)						\
 	$(GUSB_LIBS)						\
 	$(GLIB_LIBS)						\
 	$(LIBM)
@@ -101,6 +109,7 @@ dfu_tool_SOURCES =						\
 dfu_tool_LDADD =						\
 	$(lib_LTLIBRARIES)					\
 	$(APPSTREAM_GLIB_LIBS)					\
+	$(ELF_LIBS)						\
 	$(GLIB_LIBS)						\
 	$(GUSB_LIBS)						\
 	$(LIBM)

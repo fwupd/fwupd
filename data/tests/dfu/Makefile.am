@@ -1,6 +1,7 @@
 EXTRA_DIST =								\
 	example.bin							\
 	example.dfu							\
+	example.elf							\
 	example.xdfu							\
 	firmware.bin							\
 	firmware.hex							\

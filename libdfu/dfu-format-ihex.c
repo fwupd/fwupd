@@ -67,9 +67,10 @@ dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
 	return (guint16) g_ascii_strtoull (buffer, NULL, 16);
 }
 
-#define	DFU_INHX32_RECORD_TYPE_DATA		0
-#define	DFU_INHX32_RECORD_TYPE_EOF		1
-#define	DFU_INHX32_RECORD_TYPE_EXTENDED		4
+#define	DFU_INHX32_RECORD_TYPE_DATA		0x00
+#define	DFU_INHX32_RECORD_TYPE_EOF		0x01
+#define	DFU_INHX32_RECORD_TYPE_EXTENDED		0x04
+#define	DFU_INHX32_RECORD_TYPE_TEXT		0xfe
 
 /**
  * dfu_firmware_from_ihex: (skip)
@@ -94,6 +95,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 	guint16 addr_low = 0;
 	guint32 addr32 = 0;
 	guint32 addr32_last = 0;
+	guint32 element_address = 0;
 	guint8 checksum;
 	guint8 data_tmp;
 	guint8 len_tmp;
@@ -182,6 +184,19 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 				}
 //				addr32 = addr_high + addr_low;
 				addr32 = ((guint32) addr_high << 16) + addr_low;
+				if (element_address == 0x0)
+					element_address = addr32;
+			}
+
+			/* does not make sense */
+			if (addr32 < addr32_last) {
+				g_set_error (error,
+					     DFU_ERROR,
+					     DFU_ERROR_INVALID_FILE,
+					     "invalid address 0x%x, last was 0x%x",
+					     (guint) addr32,
+					     (guint) addr32_last);
+				return FALSE;
 			}
 
 			/* parse bytes from line */
@@ -208,9 +223,18 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			break;
 		case DFU_INHX32_RECORD_TYPE_EXTENDED:
 			addr_high = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+9);
-			g_error ("set base address %x", addr_high);
 			addr32 = ((guint32) addr_high << 16) + addr_low;
 			break;
+		case DFU_INHX32_RECORD_TYPE_TEXT:
+		{
+			g_autoptr(GString) str = g_string_new ("");
+			for (i = offset + 9; i < end; i += 2) {
+				guint8 tmp_c = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
+				g_string_append_c (str, tmp_c);
+			}
+			g_debug ("%08x: %s", addr32, str->str);
+			break;
+		}
 		default:
 			g_set_error (error,
 				     DFU_ERROR,
@@ -232,6 +256,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 	/* add single image */
 	contents = g_bytes_new (string->str, string->len);
 	dfu_element_set_contents (element, contents);
+	dfu_element_set_address (element, element_address);
 	dfu_image_add_element (image, element);
 	dfu_firmware_add_image (firmware, image);
 	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_INTEL_HEX);
