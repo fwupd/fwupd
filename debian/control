@@ -102,7 +102,6 @@ Package: fwupd-doc
 Section: doc
 Architecture: all
 Depends: ${misc:Depends},
-Multi-Arch: same
 Description: Firmware update daemon documentation (HTML format)
  fwupd is a daemon to allow session software to update device firmware.
  You can either use a GUI software manager like GNOME Software to view and
