@@ -102,7 +102,6 @@ Package: fwupd-doc
 Section: doc
 Architecture: all
 Depends: ${misc:Depends},
-         ${shlibs:Depends}
 Multi-Arch: same
 Description: Firmware update daemon documentation (HTML format)
  fwupd is a daemon to allow session software to update device firmware.
@@ -137,8 +136,7 @@ Description: development files for libfwupd
 Package: gir1.2-fwupd-1.0
 Architecture: linux-any
 Multi-Arch: same
-Depends: ${shlibs:Depends},
-         ${misc:Depends},
+Depends: ${misc:Depends},
          ${gir:Depends}
 Breaks: libfwupd1 (<< 0.7.2-1~)
 Replaces: libfwupd1 (<< 0.7.2-1~)
