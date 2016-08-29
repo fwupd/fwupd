@@ -1,4 +1,8 @@
 libdfu.so.1 libdfu1 #MINVER#
+ dfu_cipher_decrypt_devo@Base 0.7.3
+ dfu_cipher_decrypt_xtea@Base 0.7.3
+ dfu_cipher_encrypt_devo@Base 0.7.3
+ dfu_cipher_encrypt_xtea@Base 0.7.3
  dfu_cipher_kind_to_string@Base 0.6.3
  dfu_context_enumerate@Base 0.6.3
  dfu_context_get_device_by_platform_id@Base 0.6.3
@@ -28,6 +32,7 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_device_get_runtime_pid@Base 0.6.3
  dfu_device_get_runtime_release@Base 0.6.3
  dfu_device_get_runtime_vid@Base 0.6.3
+ dfu_device_get_serial_number@Base 0.7.3
  dfu_device_get_state@Base 0.6.3
  dfu_device_get_status@Base 0.6.3
  dfu_device_get_target_by_alt_name@Base 0.6.3
@@ -50,27 +55,37 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_device_set_transfer_size@Base 0.6.3
  dfu_device_upload@Base 0.6.3
  dfu_device_wait_for_replug@Base 0.6.3
- dfu_element_from_dfuse@Base 0.6.3
  dfu_element_get_address@Base 0.6.3
  dfu_element_get_contents@Base 0.6.3
  dfu_element_get_type@Base 0.6.3
  dfu_element_new@Base 0.6.3
  dfu_element_set_address@Base 0.6.3
  dfu_element_set_contents@Base 0.6.3
+ dfu_element_set_padding_value@Base 0.7.3
  dfu_element_set_target_size@Base 0.6.3
- dfu_element_to_dfuse@Base 0.6.3
  dfu_element_to_string@Base 0.6.3
  dfu_error_quark@Base 0.6.3
  dfu_firmware_add_image@Base 0.6.3
+ dfu_firmware_detect_dfu@Base 0.7.3
+ dfu_firmware_detect_elf@Base 0.7.3
+ dfu_firmware_detect_ihex@Base 0.7.3
+ dfu_firmware_detect_raw@Base 0.7.3
+ dfu_firmware_format_from_string@Base 0.7.3
  dfu_firmware_format_to_string@Base 0.6.3
+ dfu_firmware_from_dfu@Base 0.7.3
+ dfu_firmware_from_dfuse@Base 0.7.3
+ dfu_firmware_from_elf@Base 0.7.3
+ dfu_firmware_from_ihex@Base 0.7.3
+ dfu_firmware_from_metadata@Base 0.7.3
+ dfu_firmware_from_raw@Base 0.7.3
  dfu_firmware_get_cipher_kind@Base 0.6.3
  dfu_firmware_get_format@Base 0.6.3
  dfu_firmware_get_image@Base 0.6.3
  dfu_firmware_get_image_by_name@Base 0.6.3
  dfu_firmware_get_image_default@Base 0.6.3
- dfu_image_get_element_default@Base 0.7.0
  dfu_firmware_get_images@Base 0.6.3
  dfu_firmware_get_metadata@Base 0.6.3
+ dfu_firmware_get_metadata_table@Base 0.7.3
  dfu_firmware_get_pid@Base 0.6.3
  dfu_firmware_get_release@Base 0.6.3
  dfu_firmware_get_size@Base 0.6.3
@@ -80,18 +95,25 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_firmware_parse_data@Base 0.6.3
  dfu_firmware_parse_file@Base 0.6.3
  dfu_firmware_remove_metadata@Base 0.6.3
+ dfu_firmware_set_cipher_kind@Base 0.7.3
  dfu_firmware_set_format@Base 0.6.3
  dfu_firmware_set_metadata@Base 0.6.3
  dfu_firmware_set_pid@Base 0.6.3
  dfu_firmware_set_release@Base 0.6.3
  dfu_firmware_set_vid@Base 0.6.3
+ dfu_firmware_to_dfu@Base 0.7.3
+ dfu_firmware_to_dfuse@Base 0.7.3
+ dfu_firmware_to_elf@Base 0.7.3
+ dfu_firmware_to_ihex@Base 0.7.3
+ dfu_firmware_to_metadata@Base 0.7.3
+ dfu_firmware_to_raw@Base 0.7.3
  dfu_firmware_to_string@Base 0.6.3
  dfu_firmware_write_data@Base 0.6.3
  dfu_firmware_write_file@Base 0.6.3
  dfu_image_add_element@Base 0.6.3
- dfu_image_from_dfuse@Base 0.6.3
  dfu_image_get_alt_setting@Base 0.6.3
  dfu_image_get_element@Base 0.6.3
+ dfu_image_get_element_default@Base 0.7.0
  dfu_image_get_elements@Base 0.6.3
  dfu_image_get_name@Base 0.6.3
  dfu_image_get_size@Base 0.6.3
@@ -99,7 +121,6 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_image_new@Base 0.6.3
  dfu_image_set_alt_setting@Base 0.6.3
  dfu_image_set_name@Base 0.6.3
- dfu_image_to_dfuse@Base 0.6.3
  dfu_image_to_string@Base 0.6.3
  dfu_mode_to_string@Base 0.6.3
  dfu_sector_get_address@Base 0.6.3

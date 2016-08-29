@@ -4,7 +4,9 @@ libfwupd.so.1 libfwupd1 #MINVER#
  fwupd_client_get_details@Base 0.7.0
  fwupd_client_get_details_local@Base 0.7.2
  fwupd_client_get_devices@Base 0.7.0
+ fwupd_client_get_percentage@Base 0.7.3
  fwupd_client_get_results@Base 0.7.0
+ fwupd_client_get_status@Base 0.7.3
  fwupd_client_get_type@Base 0.7.0
  fwupd_client_get_updates@Base 0.7.0
  fwupd_client_install@Base 0.7.0
@@ -36,6 +38,7 @@ libfwupd.so.1 libfwupd1 #MINVER#
  fwupd_result_get_guid_default@Base 0.7.2
  fwupd_result_get_guids@Base 0.7.2
  fwupd_result_get_type@Base 0.7.0
+ fwupd_result_get_unique_id@Base 0.7.3
  fwupd_result_get_update_checksum@Base 0.7.0
  fwupd_result_get_update_checksum_kind@Base 0.7.0
  fwupd_result_get_update_description@Base 0.7.0
@@ -56,6 +59,7 @@ libfwupd.so.1 libfwupd1 #MINVER#
  fwupd_result_has_guid@Base 0.7.2
  fwupd_result_new@Base 0.7.0
  fwupd_result_new_from_data@Base 0.7.0
+ fwupd_result_remove_device_flag@Base 0.7.3
  fwupd_result_set_device_checksum@Base 0.7.0
  fwupd_result_set_device_checksum_kind@Base 0.7.0
  fwupd_result_set_device_created@Base 0.7.0
@@ -70,6 +74,7 @@ libfwupd.so.1 libfwupd1 #MINVER#
  fwupd_result_set_device_version@Base 0.7.0
  fwupd_result_set_device_version_lowest@Base 0.7.0
  fwupd_result_set_guid@Base 0.7.0
+ fwupd_result_set_unique_id@Base 0.7.3
  fwupd_result_set_update_checksum@Base 0.7.0
  fwupd_result_set_update_checksum_kind@Base 0.7.0
  fwupd_result_set_update_description@Base 0.7.0
