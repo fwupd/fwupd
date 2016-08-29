@@ -1708,12 +1708,18 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		if (fwupd_result_get_unique_id (FWUPD_RESULT (item->device)) == NULL) {
 			g_autofree gchar *id2 = NULL;
 			FwupdResult *res = FWUPD_RESULT (item->device);
+#if AS_CHECK_VERSION(0,6,1)
 			id2 = as_utils_unique_id_build (AS_APP_SCOPE_SYSTEM,
 							AS_BUNDLE_KIND_UNKNOWN,
 							NULL,
 							AS_APP_KIND_FIRMWARE,
 							fwupd_result_get_device_name (res),
 							fwupd_result_get_device_version (res));
+#else
+			id2 = g_strdup_printf ("system/*/*/firmware/%s/%s",
+					       fwupd_result_get_device_name (res),
+					       fwupd_result_get_device_version (res));
+#endif
 			fwupd_result_set_unique_id (res, id2);
 		}
 
