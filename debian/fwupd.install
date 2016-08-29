@@ -1,5 +1,4 @@
 usr/bin/dfu-tool
-usr/bin/ebitdo-tool
 usr/bin/fwupdmgr
 etc/*
 usr/share/app-info/*

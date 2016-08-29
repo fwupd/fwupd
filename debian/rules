@@ -30,6 +30,7 @@ override_dh_auto_configure:
 
 override_dh_install:
 	find debian/tmp/usr -name "*a" | xargs rm -f
+	rm -f debian/tmp/usr/bin/ebitdo-tool
 	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install --fail-missing
 
