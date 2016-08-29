@@ -1,3 +1,8 @@
+%global libglib2_version 2.45.8
+%global libappstream_version 0.5.10
+%global libgusb_version 0.2.9
+%global libsoup_version 2.51.92
+
 %define alphatag                #ALPHATAG#
 
 Summary:   Firmware update daemon
@@ -10,19 +15,20 @@ Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.
 
 BuildRequires: docbook-utils
 BuildRequires: gettext
-BuildRequires: glib2-devel >= 2.45.8
+BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: intltool
+BuildRequires: libappstream-glib-devel >= %{libappstream_version}
 BuildRequires: libgudev1-devel
+BuildRequires: libgusb-devel >= %{libgusb_version}
+BuildRequires: libsoup-devel >= %{libsoup_version}
 BuildRequires: colord-devel >= 1.0.0
 BuildRequires: polkit-devel >= 0.103
 BuildRequires: libgcab1-devel
 BuildRequires: sqlite-devel
 BuildRequires: gpgme-devel
 BuildRequires: systemd
-BuildRequires: libsoup-devel >= 2.51.92
 BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
-BuildRequires: libappstream-glib-devel >= 0.5.10
 BuildRequires: gcab
 BuildRequires: valgrind
 BuildRequires: elfutils-libelf-devel
@@ -33,12 +39,18 @@ BuildRequires: libsmbios-devel >= 2.3.0
 %endif
 
 %ifarch x86_64 %{ix86} aarch64
-BuildRequires: fwupdate-devel >= 0.5
+BuildRequires: fwupdate-devel >= 7
 %endif
 
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
+
+Requires: libdfu%{?_isa} = %{version}-%{release}
+Requires: glib2%{?_isa} >= %{glib2_version}
+Requires: libappstream-glib%{?_isa} >= %{libappstream_version}
+Requires: libgusb%{?_isa} >= %{libgusb_version}
+Requires: libsoup%{?_isa} >= %{libsoup_version}
 
 Obsoletes: fwupd-sign < 0.1.6
 
@@ -47,7 +59,7 @@ fwupd is a daemon to allow session software to update device firmware.
 
 %package devel
 Summary: Development package for %{name}
-Requires: %{name} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description devel
 Files for development with %{name}.
@@ -60,7 +72,7 @@ A library for updating USB devices using DFU.
 
 %package -n libdfu-devel
 Summary: Development package for libdfu
-Requires: libdfu = %{version}-%{release}
+Requires: libdfu%{?_isa} = %{version}-%{release}
 
 %description -n libdfu-devel
 Files for development with libdfu.
@@ -180,7 +192,6 @@ make check VERBOSE=1
 %{_libdir}/libebitdo*.so.*
 
 %files -n libebitdo-devel
-%{_datadir}/gir-1.0/Dfu-1.0.gir
 %dir %{_includedir}/libebitdo
 %{_includedir}/ebitdo.h
 %{_includedir}/libebitdo/*.h
