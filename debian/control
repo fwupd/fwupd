@@ -99,7 +99,8 @@ Description: Firmware update daemon
  See <https://github.com/hughsie/fwupd> for details
 
 Package: fwupd-doc
-Architecture: linux-any
+Section: doc
+Architecture: all
 Depends: ${misc:Depends},
          ${shlibs:Depends}
 Multi-Arch: same
