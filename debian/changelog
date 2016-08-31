@@ -13,6 +13,7 @@ fwupd (0.7.3-1) unstable; urgency=medium
   * Add a lintian override for fuzzing tests
   * add gir:depends for libdfu1
   * don't install ebitdo-tool helper tool
+  * Backport patches for s390x failures.
 
  -- Mario Limonciello <mario_limonciello@dell.com>  Mon, 29 Aug 2016 10:51:01 -0500
 

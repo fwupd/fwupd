@@ -1,1 +1,4 @@
 0001-Add-a-fallback-for-older-appstream-glib-releases.patch
+0001-trivial-Parse-the-.interrupt-section-in-the-.elf-fil.patch
+0002-Write-the-ELF-files-with-the-correct-section-type.patch
+0003-Fix-libfwupd-self-tests-when-a-host-provided-fwupd-i.patch
