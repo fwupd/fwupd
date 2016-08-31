@@ -119,6 +119,7 @@ dfu_firmware_from_elf (DfuFirmware *firmware,
 	guint sections_cnt = 0;
 	g_autoptr(Elf) e = NULL;
 	const gchar *section_names[] = {
+		".interrupt",
 		".text",
 		NULL };
 
