@@ -77,6 +77,12 @@ _get_element_from_section_name (Elf *e, const gchar *desired_name)
 			g_warning ("failed gelf_getshdr");
 			continue;
 		}
+
+		/* not program data */
+		if (shdr.sh_type != SHT_PROGBITS)
+			continue;
+
+		/* not the same section name */
 		if ((name = elf_strptr (e, shstrndx, shdr.sh_name)) == NULL) {
 			g_warning ("failed elf_strptr");
 			continue;
@@ -227,7 +233,7 @@ dfu_format_elf_pack_element (Elf *e, DfuElement *element, GError **error)
 		return FALSE;
 	}
 	shdr->sh_name = 1;
-	shdr->sh_type = SHT_HASH;
+	shdr->sh_type = SHT_PROGBITS;
 	shdr->sh_flags = SHF_ALLOC;
 	shdr->sh_entsize = 0;
 	return TRUE;
