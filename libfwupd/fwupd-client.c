@@ -250,8 +250,18 @@ fwupd_client_fixup_dbus_error (GError *error)
 
 	/* parse the remote error */
 	name = g_dbus_error_get_remote_error (error);
-	error->domain = FWUPD_ERROR;
-	error->code = fwupd_error_from_string (name);
+	if (g_str_has_prefix (name, FWUPD_DBUS_INTERFACE)) {
+		error->domain = FWUPD_ERROR;
+		error->code = fwupd_error_from_string (name);
+	} else if (g_error_matches (error,
+				    G_DBUS_ERROR,
+				    G_DBUS_ERROR_SERVICE_UNKNOWN)) {
+		error->domain = FWUPD_ERROR;
+		error->code = FWUPD_ERROR_NOT_SUPPORTED;
+	} else {
+		error->domain = FWUPD_ERROR;
+		error->code = FWUPD_ERROR_INTERNAL;
+	}
 	g_dbus_error_strip_remote_error (error);
 }
 
