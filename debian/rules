@@ -36,5 +36,8 @@ override_dh_install:
 
 override_dh_auto_test:
 	if [ -x /usr/bin/valgrind ] ; then \
+		mv data/tests/dfu/example.elf data/tests/dfu/example.elf.old; \
+		cp debian/binary-patches/example.elf data/tests/dfu/; \
 		dh_auto_test; \
+		mv data/tests/dfu/example.elf.old data/tests/dfu/example.elf; \
 	fi
