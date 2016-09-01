@@ -13,3 +13,4 @@ lib/udev/rules.d/*
 data/fwupd.conf etc
 debian/fwupd.pkla /var/lib/polkit-1/localauthority/10-vendor.d
 usr/lib/*/fwupd-plugins-*/*.so
+debian/lintian/fwupd usr/share/lintian/overrides
