@@ -36,6 +36,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <appstream-glib.h>
 
 #include "dfu-common.h"
 #include "dfu-error.h"
@@ -678,14 +679,18 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 	GList *l;
 	GString *str;
 	guint i;
+	g_autofree gchar *release_str = NULL;
 	g_autoptr(GList) keys = NULL;
 
 	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
 
+	release_str = as_utils_version_from_uint16 (priv->release,
+						    AS_VERSION_PARSE_FLAG_NONE);
 	str = g_string_new ("");
 	g_string_append_printf (str, "vid:         0x%04x\n", priv->vid);
 	g_string_append_printf (str, "pid:         0x%04x\n", priv->pid);
-	g_string_append_printf (str, "release:     0x%04x\n", priv->release);
+	g_string_append_printf (str, "release:     0x%04x [%s]\n",
+				priv->release, release_str);
 	g_string_append_printf (str, "format:      %s [0x%04x]\n",
 				dfu_firmware_format_to_string (priv->format),
 				priv->format);

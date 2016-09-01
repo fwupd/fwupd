@@ -80,6 +80,7 @@ libdfu_la_SOURCES =						\
 	dfu-target-private.h
 
 libdfu_la_LIBADD =						\
+	$(APPSTREAM_GLIB_LIBS)					\
 	$(ELF_LIBS)						\
 	$(GUSB_LIBS)						\
 	$(GLIB_LIBS)						\
@@ -131,6 +132,7 @@ dfu_self_test_SOURCES =						\
 
 dfu_self_test_LDADD =						\
 	$(lib_LTLIBRARIES)					\
+	$(APPSTREAM_GLIB_LIBS)					\
 	$(GLIB_LIBS)						\
 	$(GUSB_LIBS)
 
@@ -146,7 +148,7 @@ introspection_sources =						\
 	$(libdfu_la_SOURCES)
 
 Dfu-1.0.gir: libdfu.la
-Dfu_1_0_gir_INCLUDES = GObject-2.0 Gio-2.0 GUsb-1.0
+Dfu_1_0_gir_INCLUDES = GObject-2.0 Gio-2.0 GUsb-1.0 AppStreamGlib-1.0
 Dfu_1_0_gir_CFLAGS = $(AM_CPPFLAGS)
 Dfu_1_0_gir_SCANNERFLAGS = --identifier-prefix=Dfu \
 				--symbol-prefix=dfu \
