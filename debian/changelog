@@ -14,8 +14,10 @@ fwupd (0.7.3-1) unstable; urgency=medium
   * add gir:depends for libdfu1
   * don't install ebitdo-tool helper tool
   * Backport patches for s390x failures.
+    - include binary patch of example.elf
+  * set libsmbios to i386/amd64 only
 
- -- Mario Limonciello <mario_limonciello@dell.com>  Mon, 29 Aug 2016 10:51:01 -0500
+ -- Mario Limonciello <mario_limonciello@dell.com>  Thu, 01 Sep 2016 13:00:30 -0500
 
 fwupd (0.7.2-1) unstable; urgency=medium
 
