@@ -99,6 +99,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			GError **error)
 {
 	const gchar *in_buffer;
+	gboolean got_eof = FALSE;
 	gsize len_in;
 	guint16 addr_high = 0;
 	guint16 addr_low = 0;
@@ -228,6 +229,15 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			}
 			break;
 		case DFU_INHX32_RECORD_TYPE_EOF:
+			if (got_eof) {
+				g_set_error_literal (error,
+						     DFU_ERROR,
+						     DFU_ERROR_INVALID_FILE,
+						     "duplicate EOF, perhaps "
+						     "corrupt file");
+				return FALSE;
+			}
+			got_eof = TRUE;
 			break;
 		case DFU_INHX32_RECORD_TYPE_EXTENDED:
 			addr_high = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+9);
@@ -250,6 +260,9 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			break;
 		}
 		default:
+			/* vendors sneak in nonstandard sections past the EOF */
+			if (got_eof)
+				break;
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INVALID_FILE,
@@ -265,6 +278,15 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			    in_buffer[offset] != '\r')
 				break;
 		}
+	}
+
+	/* no EOF */
+	if (!got_eof) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_FILE,
+				     "no EOF, perhaps truncated file");
+		return FALSE;
 	}
 
 	/* get the VID/PID for altos devices */
