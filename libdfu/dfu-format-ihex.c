@@ -267,6 +267,21 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		}
 	}
 
+	/* get the VID/PID for altos devices */
+	addr32 = dfu_firmware_lookup_symbol (firmware, "ao_usb_descriptors");
+	if (addr32 != 0x0 &&
+	    addr32 > element_address &&
+	    addr32 - element_address < string->len) {
+		guint16 vid, pid, release;
+		addr32 -= element_address;
+		memcpy (&vid, &string->str[addr32 + 8], 2);
+		memcpy (&pid, &string->str[addr32 + 10], 2);
+		memcpy (&release, &string->str[addr32 + 12], 2);
+		dfu_firmware_set_vid (firmware, GUINT32_FROM_LE (vid));
+		dfu_firmware_set_pid (firmware, GUINT32_FROM_LE (pid));
+		dfu_firmware_set_release (firmware, GUINT32_FROM_LE (release));
+	}
+
 	/* add single image */
 	contents = g_bytes_new (string->str, string->len);
 	dfu_element_set_contents (element, contents);
