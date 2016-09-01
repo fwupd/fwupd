@@ -39,7 +39,7 @@
 
 #include "dfu-common.h"
 #include "dfu-error.h"
-#include "dfu-firmware.h"
+#include "dfu-firmware-private.h"
 #include "dfu-format-elf.h"
 #include "dfu-format-dfu.h"
 #include "dfu-format-ihex.h"
@@ -50,6 +50,7 @@ static void dfu_firmware_finalize			 (GObject *object);
 
 typedef struct {
 	GHashTable		*metadata;
+	GHashTable		*symtab;
 	GPtrArray		*images;
 	guint16			 vid;
 	guint16			 pid;
@@ -77,6 +78,7 @@ dfu_firmware_init (DfuFirmware *firmware)
 	priv->release = 0xffff;
 	priv->images = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	priv->symtab = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
 static void
@@ -87,6 +89,7 @@ dfu_firmware_finalize (GObject *object)
 
 	g_ptr_array_unref (priv->images);
 	g_hash_table_destroy (priv->metadata);
+	g_hash_table_destroy (priv->symtab);
 
 	G_OBJECT_CLASS (dfu_firmware_parent_class)->finalize (object);
 }
@@ -800,4 +803,48 @@ dfu_firmware_set_cipher_kind (DfuFirmware *firmware, DfuCipherKind cipher_kind)
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 	g_return_if_fail (DFU_IS_FIRMWARE (firmware));
 	priv->cipher_kind = cipher_kind;
+}
+
+/**
+ * dfu_firmware_add_symbol:
+ * @firmware: a #DfuFirmware
+ * @symbol_name: a valid symbol name
+ * @symbol_addr: a symbol memory address
+ *
+ * Adds a symbol to the global map for the firmware.
+ *
+ * NOTE: Only certain types of firmware can contain a symbol table.
+ *
+ * Since: 0.7.4
+ **/
+void
+dfu_firmware_add_symbol (DfuFirmware *firmware,
+			 const gchar *symbol_name,
+			 guint32 symbol_addr)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	g_hash_table_insert (priv->symtab,
+			     g_strdup (symbol_name),
+			     GUINT_TO_POINTER (symbol_addr));
+}
+
+/**
+ * dfu_firmware_lookup_symbol:
+ * @firmware: a #DfuFirmware
+ * @symbol_name: a valid symbol name
+ *
+ * Returns the address of a symbol from the global map.
+ *
+ * NOTE: Only certain types of firmware can contain a symbol table.
+ *
+ * Return value: address of the symbol, or 0x0 for not found.
+ *
+ * Since: 0.7.4
+ **/
+guint32
+dfu_firmware_lookup_symbol (DfuFirmware *firmware, const gchar *symbol_name)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	return GPOINTER_TO_UINT (g_hash_table_lookup (priv->symtab,
+						      symbol_name));
 }

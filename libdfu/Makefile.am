@@ -57,6 +57,7 @@ libdfu_la_SOURCES =						\
 	dfu-error.h						\
 	dfu-firmware.c						\
 	dfu-firmware.h						\
+	dfu-firmware-private.h					\
 	dfu-format-dfu.c					\
 	dfu-format-dfu.h					\
 	dfu-format-dfuse.c					\
