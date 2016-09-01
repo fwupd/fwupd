@@ -25,6 +25,7 @@
 
 #include "dfu-element.h"
 #include "dfu-error.h"
+#include "dfu-firmware-private.h"
 #include "dfu-format-ihex.h"
 #include "dfu-image.h"
 
@@ -70,7 +71,15 @@ dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
 #define	DFU_INHX32_RECORD_TYPE_DATA		0x00
 #define	DFU_INHX32_RECORD_TYPE_EOF		0x01
 #define	DFU_INHX32_RECORD_TYPE_EXTENDED		0x04
-#define	DFU_INHX32_RECORD_TYPE_TEXT		0xfe
+#define	DFU_INHX32_RECORD_TYPE_SYMTAB		0xfe
+
+static gboolean
+dfu_firmware_ihex_symbol_name_valid (const GString *symbol_name)
+{
+	if (symbol_name->len == 2 && symbol_name->str[0] == '$')
+		return FALSE;
+	return TRUE;
+}
 
 /**
  * dfu_firmware_from_ihex: (skip)
@@ -179,10 +188,9 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			/* if not contiguous with previous record */
 			if ((addr_high + addr_low) != addr32) {
 				if (addr32 == 0x0) {
-					g_debug ("base address %04x", addr_low);
+					g_debug ("base address %08x", addr_low);
 					dfu_element_set_address (element, addr_low);
 				}
-//				addr32 = addr_high + addr_low;
 				addr32 = ((guint32) addr_high << 16) + addr_low;
 				if (element_address == 0x0)
 					element_address = addr32;
@@ -200,12 +208,13 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			}
 
 			/* parse bytes from line */
+			g_debug ("writing data 0x%08x", (guint32) addr32);
 			for (i = offset + 9; i < end; i += 2) {
 				/* any holes in the hex record */
 				guint32 len_hole = addr32 - addr32_last;
 				if (addr32_last > 0x0 && len_hole > 1) {
 					for (j = 1; j < len_hole; j++) {
-						g_debug ("filling address 0x%04x",
+						g_debug ("filling address 0x%08x",
 							 addr32_last + j);
 						/* although 0xff might be clearer,
 						 * we can't write 0xffff to pic14 */
@@ -215,7 +224,6 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 				/* write into buf */
 				data_tmp = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
 				g_string_append_c (string, (gchar) data_tmp);
-				g_debug ("writing address 0x%04x", addr32);
 				addr32_last = addr32++;
 			}
 			break;
@@ -225,14 +233,20 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			addr_high = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+9);
 			addr32 = ((guint32) addr_high << 16) + addr_low;
 			break;
-		case DFU_INHX32_RECORD_TYPE_TEXT:
+		case DFU_INHX32_RECORD_TYPE_SYMTAB:
 		{
 			g_autoptr(GString) str = g_string_new ("");
 			for (i = offset + 9; i < end; i += 2) {
 				guint8 tmp_c = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
 				g_string_append_c (str, tmp_c);
 			}
-			g_debug ("%08x: %s", addr32, str->str);
+			addr32 = ((guint32) addr_high << 16) + addr_low;
+			if (addr32 != 0x0 && dfu_firmware_ihex_symbol_name_valid (str)) {
+				g_debug ("symtab 0x%08x: %s", addr32, str->str);
+				dfu_firmware_add_symbol (firmware,
+							 str->str,
+							 (guint64) addr32);
+			}
 			break;
 		}
 		default:
