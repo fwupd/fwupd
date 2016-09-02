@@ -1088,6 +1088,9 @@ fu_provider_dell_toggle_dock_mode (FuProviderDell *provider_dell,
 	g_autofree guint32 *input = NULL;
 	g_autofree guint32 *output = NULL;
 
+	input = g_malloc0 (sizeof(guint32) *4);
+	output = g_malloc0 (sizeof(guint32) *4);
+
 	/* Put into mode to accept AR/MST */
 	input[0] = DACI_DOCK_ARG_MODE;
 	input[1] = dock_location;
