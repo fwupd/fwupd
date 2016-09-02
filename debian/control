@@ -31,6 +31,7 @@ Build-Depends: debhelper (>= 9.0.0),
                libcolorhug-dev,
                gobject-introspection,
                libsmbios-dev [amd64 i386],
+               libelf-dev,
                valgrind[!mips]
 Standards-Version: 3.9.8
 Section: admin

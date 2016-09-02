@@ -17,6 +17,7 @@ fwupd (0.7.3-1) unstable; urgency=medium
     - include binary patch of example.elf
   * set libsmbios to i386/amd64 only
   * Add lintian override for systemd services missing Install.
+  * Add libelf-dev to build-depends.
 
  -- Mario Limonciello <mario_limonciello@dell.com>  Thu, 01 Sep 2016 13:00:30 -0500
 
