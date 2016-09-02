@@ -853,3 +853,25 @@ dfu_firmware_lookup_symbol (DfuFirmware *firmware, const gchar *symbol_name)
 	return GPOINTER_TO_UINT (g_hash_table_lookup (priv->symtab,
 						      symbol_name));
 }
+
+/**
+ * dfu_firmware_get_symbols:
+ * @firmware: a #DfuFirmware
+ *
+ * Gets all the symbols currently defined.
+ *
+ * Return value: (element-type utf8) (transfer container): symbol names
+ *
+ * Since: 0.7.4
+ **/
+GPtrArray *
+dfu_firmware_get_symbols (DfuFirmware *firmware)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	GPtrArray *array = g_ptr_array_new_with_free_func (g_free);
+	GList *l;
+	g_autoptr(GList) keys = g_hash_table_get_keys (priv->symtab);
+	for (l = keys; l != NULL; l = l->next)
+		g_ptr_array_add (array, g_strdup (l->data));
+	return array;
+}

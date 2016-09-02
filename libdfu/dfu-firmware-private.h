@@ -31,6 +31,7 @@ void		 dfu_firmware_add_symbol	(DfuFirmware	*firmware,
 						 guint32	 symbol_addr);
 guint32		 dfu_firmware_lookup_symbol	(DfuFirmware	*firmware,
 						 const gchar	*symbol_name);
+GPtrArray	*dfu_firmware_get_symbols	(DfuFirmware	*firmware);
 
 G_END_DECLS
 
