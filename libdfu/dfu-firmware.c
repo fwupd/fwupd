@@ -393,6 +393,56 @@ dfu_firmware_set_format (DfuFirmware *firmware, DfuFirmwareFormat format)
 	priv->format = format;
 }
 
+static void
+dfu_firmware_parse_altos_vid_pid (DfuFirmware *firmware)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	guint32 addr32;
+
+	/* find symbol */
+	addr32 = dfu_firmware_lookup_symbol (firmware, "ao_usb_descriptors");
+	if (addr32 == 0x0)
+		return;
+
+	/* search each element */
+	for (guint i = 0; i < priv->images->len; i++) {
+		DfuImage *image = g_ptr_array_index (priv->images, i);
+		DfuElement *element;
+		GBytes *bytes_tmp;
+		const guint8 *data;
+		gsize length;
+		guint32 element_address;
+		guint16 vid, pid, release;
+
+		/* get element data */
+		element = dfu_image_get_element_default (image);
+		if (element == NULL)
+			continue;
+
+		/* check address is in this element */
+		element_address = dfu_element_get_address (element);
+		if (element_address > addr32)
+			continue;
+		bytes_tmp = dfu_element_get_contents (element);
+		if (bytes_tmp == NULL)
+			continue;
+
+		/* check this element is big enough */
+		data = g_bytes_get_data (bytes_tmp, &length);
+		if (addr32 - element_address > length)
+			continue;
+
+		/* read the USB descriptor */
+		addr32 -= element_address;
+		memcpy (&vid, &data[addr32 + 8], 2);
+		memcpy (&pid, &data[addr32 + 10], 2);
+		memcpy (&release, &data[addr32 + 12], 2);
+		dfu_firmware_set_vid (firmware, GUINT32_FROM_LE (vid));
+		dfu_firmware_set_pid (firmware, GUINT32_FROM_LE (pid));
+		dfu_firmware_set_release (firmware, GUINT32_FROM_LE (release));
+	}
+}
+
 /**
  * dfu_firmware_parse_data:
  * @firmware: a #DfuFirmware
@@ -432,14 +482,30 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 		priv->format = dfu_firmware_detect_raw (bytes);
 
 	/* handled easily */
-	if (priv->format == DFU_FIRMWARE_FORMAT_INTEL_HEX)
-		return dfu_firmware_from_ihex (firmware, bytes, flags, error);
-	if (priv->format == DFU_FIRMWARE_FORMAT_ELF)
-		return dfu_firmware_from_elf (firmware, bytes, flags, error);
-	if (priv->format == DFU_FIRMWARE_FORMAT_DFU ||
-	    priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
-		return dfu_firmware_from_dfu (firmware, bytes, flags, error);
-	return dfu_firmware_from_raw (firmware, bytes, flags, error);
+	switch (priv->format) {
+	case DFU_FIRMWARE_FORMAT_INTEL_HEX:
+		if (!dfu_firmware_from_ihex (firmware, bytes, flags, error))
+			return FALSE;
+		break;
+	case DFU_FIRMWARE_FORMAT_ELF:
+		if (!dfu_firmware_from_elf (firmware, bytes, flags, error))
+			return FALSE;
+		break;
+	case DFU_FIRMWARE_FORMAT_DFU:
+	case DFU_FIRMWARE_FORMAT_DFUSE:
+		if (!dfu_firmware_from_dfu (firmware, bytes, flags, error))
+			return FALSE;
+		break;
+	default:
+		if (!dfu_firmware_from_raw (firmware, bytes, flags, error))
+			return FALSE;
+		break;
+	}
+
+	/* get the VID/PID for altos devices */
+	dfu_firmware_parse_altos_vid_pid (firmware);
+
+	return TRUE;
 }
 
 /**
