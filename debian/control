@@ -2,9 +2,9 @@ Source: fwupd
 Priority: optional
 Maintainer: Debian EFI <debian-efi@lists.debian.org>
 Uploaders: Steve McIntyre <93sam@debian.org>,
-           Daniel Jared Dominguez <jared_dominguez@dell.com>,
+           Daniel Jared Dominguez <jared.dominguez@dell.com>,
            Matthias Klumpp <mak@debian.org>,
-           Mario Limonciello <mario_limonciello@dell.com>
+           Mario Limonciello <mario.limonciello@dell.com>
 Build-Depends: debhelper (>= 9.0.0),
                dh-autoreconf,
                docbook-utils,
