@@ -155,6 +155,8 @@ dfu_cipher_kind_to_string (DfuCipherKind cipher_kind)
 		return "xtea";
 	if (cipher_kind == DFU_CIPHER_KIND_DEVO)
 		return "devo";
+	if (cipher_kind == DFU_CIPHER_KIND_RSA)
+		return "rsa";
 	return NULL;
 }
 
