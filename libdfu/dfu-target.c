@@ -1005,6 +1005,8 @@ dfu_target_upload_element (DfuTarget *target,
 		const guint8 *chunk_data;
 		chunk_tmp = g_ptr_array_index (chunks, i);
 		chunk_data = g_bytes_get_data (chunk_tmp, (gsize *) &chunk_size);
+		if (chunk_size == 0)
+			continue;
 		memcpy (buffer + offset, chunk_data, (gsize) chunk_size);
 		offset += chunk_size;
 	}
