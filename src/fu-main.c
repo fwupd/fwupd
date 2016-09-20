@@ -549,13 +549,23 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
 			return FALSE;
 		}
 
-		/* The provider might have taken away update abilities */
-		if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE) &&
+		/* Called with online update, test if device is supposed to allow this */
+		if (!(helper->flags & FWUPD_INSTALL_FLAG_OFFLINE) &&
 		    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "Device %s does not now allow updates",
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Device %s does not allow online updates",
+				    fu_device_get_id (device));
+			return FALSE;
+		}
+		/* Called with offline update, test if device is supposed to allow this */
+		if (helper->flags & FWUPD_INSTALL_FLAG_OFFLINE &&
+		    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Device %s does not allow offline updates",
 				    fu_device_get_id (device));
 			return FALSE;
 		}
