@@ -1,3 +1,19 @@
+fwupd (0.7.4-1) UNRELEASED; urgency=medium
+
+  * New upstream version (0.7.4)
+  * drop binary patches
+  * Drop existing upstream patches
+  * Add a patch that verifies providers are called with proper mode
+  * debian/control:
+  - Update dell email addresses (_ -> .)
+  - Add an explicit build dependency on new version of efivar
+  * debian/rules:
+  - Adjust architectures that tests are run for missing valgrind
+  -  Add autoconf archive to build-depends (Closes: 837826)
+  -  Adjust daemon install path to be non multi-arch (Closes: #808831)
+
+ -- Mario Limonciello <mario_limonciello@dell.com>  Fri, 23 Sep 2016 11:01:53 -0500
+
 fwupd (0.7.3-1) unstable; urgency=medium
 
   * New upstream version (0.7.3)
