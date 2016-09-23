@@ -1,0 +1,57 @@
+From 3ef952fcea42cda9b7e45b2f768965f2f4bec554 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Tue, 20 Sep 2016 12:28:59 -0500
+Subject: [PATCH] Verify devices support updating in mode they are called.
+
+Providers that have both online and offline update methods don't
+do verification that the device actually supports that mode.
+
+This caused problems for Dell TPM devices where if you called
+$ fwupdmgr install tpm.cab
+
+It would attempt to use the online stub added in 1d97c8b5.
+This would of course fall over requiring you to call with
+$ fwupdmgr install tpm.cab --allow-offline
+
+This fix will guarantee that the current install fallback
+logic takes into account both device and provider support
+for online/offline.
+---
+ src/fu-main.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/src/fu-main.c b/src/fu-main.c
+index b8e01e8..5dd4439 100644
+--- a/src/fu-main.c
++++ b/src/fu-main.c
+@@ -549,13 +549,23 @@ fu_main_provider_update_authenticated (FuMainAuthHelper *helper, GError **error)
+ 			return FALSE;
+ 		}
+ 
+-		/* The provider might have taken away update abilities */
+-		if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE) &&
++		/* Called with online update, test if device is supposed to allow this */
++		if (!(helper->flags & FWUPD_INSTALL_FLAG_OFFLINE) &&
+ 		    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE)) {
+ 			g_set_error(error,
+ 				    FWUPD_ERROR,
+-				    FWUPD_ERROR_INTERNAL,
+-				    "Device %s does not now allow updates",
++				    FWUPD_ERROR_NOT_SUPPORTED,
++				    "Device %s does not allow online updates",
++				    fu_device_get_id (device));
++			return FALSE;
++		}
++		/* Called with offline update, test if device is supposed to allow this */
++		if (helper->flags & FWUPD_INSTALL_FLAG_OFFLINE &&
++		    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE)) {
++			g_set_error(error,
++				    FWUPD_ERROR,
++				    FWUPD_ERROR_NOT_SUPPORTED,
++				    "Device %s does not allow offline updates",
+ 				    fu_device_get_id (device));
+ 			return FALSE;
+ 		}
+-- 
+2.7.4
+
