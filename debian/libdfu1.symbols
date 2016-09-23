@@ -66,6 +66,7 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_element_to_string@Base 0.6.3
  dfu_error_quark@Base 0.6.3
  dfu_firmware_add_image@Base 0.6.3
+ dfu_firmware_add_symbol@Base 0.7.4
  dfu_firmware_detect_dfu@Base 0.7.3
  dfu_firmware_detect_elf@Base 0.7.3
  dfu_firmware_detect_ihex@Base 0.7.3
@@ -89,8 +90,10 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_firmware_get_pid@Base 0.6.3
  dfu_firmware_get_release@Base 0.6.3
  dfu_firmware_get_size@Base 0.6.3
+ dfu_firmware_get_symbols@Base 0.7.4
  dfu_firmware_get_type@Base 0.6.3
  dfu_firmware_get_vid@Base 0.6.3
+ dfu_firmware_lookup_symbol@Base 0.7.4
  dfu_firmware_new@Base 0.6.3
  dfu_firmware_parse_data@Base 0.6.3
  dfu_firmware_parse_file@Base 0.6.3

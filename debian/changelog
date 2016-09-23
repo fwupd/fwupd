@@ -1,6 +1,7 @@
 fwupd (0.7.4-1) UNRELEASED; urgency=medium
 
   * New upstream version (0.7.4)
+  * Update symbols file.
   * drop binary patches
   * Drop existing upstream patches
   * Add a patch that verifies providers are called with proper mode
