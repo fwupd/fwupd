@@ -26,6 +26,7 @@ override_dh_auto_configure:
 	fi; \
 	dh_auto_configure -- --with-systemdunitdir=/lib/systemd/system \
 				--enable-gtk-doc \
+				--libexecdir=\$${prefix}/lib \
 				$(COLORHUG) $$UEFI
 
 override_dh_install:
