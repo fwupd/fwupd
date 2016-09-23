@@ -165,6 +165,9 @@ fwupd_client_devices_func (void)
 	if (array == NULL &&
 	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
 		return;
+	if (array == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+		return;
 	g_assert_no_error (error);
 	g_assert (array != NULL);
 	g_assert_cmpint (array->len, >, 0);
@@ -188,6 +191,9 @@ fwupd_client_updates_func (void)
 	array = fwupd_client_get_updates (client, NULL, &error);
 	if (array == NULL &&
 	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+		return;
+	if (array == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 		return;
 	g_assert_no_error (error);
 	g_assert (array != NULL);

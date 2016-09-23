@@ -1,3 +1,20 @@
+Version 0.7.4
+~~~~~~~~~~~~~
+Released: 2016-09-19
+
+New Features:
+ - Add dfu_firmware_add_symbol() (Richard Hughes)
+ - Allow the argument to 'dfu-tool set-release' be major.minor (Richard Hughes)
+ - Load the Altos USB descriptor from ELF files (Richard Hughes)
+ - Support writing the IHEX symbol table (Richard Hughes)
+
+Bugfixes:
+ - Add a fallback for older appstream-glib releases (Richard Hughes)
+ - Fix a possible crash when uploading firmware files using libdfu (Richard Hughes)
+ - Fix libfwupd self tests when a host-provided fwupd is not available (Richard Hughes)
+ - Show the human-readable version in the 'dfu-tool dump' output (Richard Hughes)
+ - Write the ELF files with the correct section type (Richard Hughes)
+
 Version 0.7.3
 ~~~~~~~~~~~~~
 Released: 2016-08-29

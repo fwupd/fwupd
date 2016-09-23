@@ -23,6 +23,7 @@
 
 #include <glib-object.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "dfu-common.h"
 #include "dfu-context.h"
@@ -321,6 +322,10 @@ dfu_firmware_metadata_func (void)
 static void
 dfu_firmware_elf_func (void)
 {
+	DfuElement *element;
+	DfuImage *image;
+	GBytes *contents;
+	const gchar *data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
@@ -345,6 +350,18 @@ dfu_firmware_elf_func (void)
 	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_ELF);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x0c);
 	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
+
+	/* check the data */
+	image = dfu_firmware_get_image_default (firmware);
+	g_assert (image != NULL);
+	element = dfu_image_get_element_default (image);
+	g_assert (element != NULL);
+	contents = dfu_element_get_contents (element);
+	g_assert (contents != NULL);
+	g_assert_cmpint (g_bytes_get_size (contents), ==, 12);
+	data = g_bytes_get_data (contents, NULL);
+	g_assert (data != NULL);
+	g_assert (memcmp (data, "hello world\n", 12) == 0);
 
 	/* can we roundtrip without loosing data */
 	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);

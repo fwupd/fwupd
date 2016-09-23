@@ -25,6 +25,7 @@
 
 #include "dfu-element.h"
 #include "dfu-error.h"
+#include "dfu-firmware-private.h"
 #include "dfu-format-ihex.h"
 #include "dfu-image.h"
 
@@ -70,7 +71,15 @@ dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
 #define	DFU_INHX32_RECORD_TYPE_DATA		0x00
 #define	DFU_INHX32_RECORD_TYPE_EOF		0x01
 #define	DFU_INHX32_RECORD_TYPE_EXTENDED		0x04
-#define	DFU_INHX32_RECORD_TYPE_TEXT		0xfe
+#define	DFU_INHX32_RECORD_TYPE_SYMTAB		0xfe
+
+static gboolean
+dfu_firmware_ihex_symbol_name_valid (const GString *symbol_name)
+{
+	if (symbol_name->len == 2 && symbol_name->str[0] == '$')
+		return FALSE;
+	return TRUE;
+}
 
 /**
  * dfu_firmware_from_ihex: (skip)
@@ -90,6 +99,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			GError **error)
 {
 	const gchar *in_buffer;
+	gboolean got_eof = FALSE;
 	gsize len_in;
 	guint16 addr_high = 0;
 	guint16 addr_low = 0;
@@ -179,10 +189,9 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			/* if not contiguous with previous record */
 			if ((addr_high + addr_low) != addr32) {
 				if (addr32 == 0x0) {
-					g_debug ("base address %04x", addr_low);
+					g_debug ("base address %08x", addr_low);
 					dfu_element_set_address (element, addr_low);
 				}
-//				addr32 = addr_high + addr_low;
 				addr32 = ((guint32) addr_high << 16) + addr_low;
 				if (element_address == 0x0)
 					element_address = addr32;
@@ -200,12 +209,13 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			}
 
 			/* parse bytes from line */
+			g_debug ("writing data 0x%08x", (guint32) addr32);
 			for (i = offset + 9; i < end; i += 2) {
 				/* any holes in the hex record */
 				guint32 len_hole = addr32 - addr32_last;
 				if (addr32_last > 0x0 && len_hole > 1) {
 					for (j = 1; j < len_hole; j++) {
-						g_debug ("filling address 0x%04x",
+						g_debug ("filling address 0x%08x",
 							 addr32_last + j);
 						/* although 0xff might be clearer,
 						 * we can't write 0xffff to pic14 */
@@ -215,27 +225,44 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 				/* write into buf */
 				data_tmp = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
 				g_string_append_c (string, (gchar) data_tmp);
-				g_debug ("writing address 0x%04x", addr32);
 				addr32_last = addr32++;
 			}
 			break;
 		case DFU_INHX32_RECORD_TYPE_EOF:
+			if (got_eof) {
+				g_set_error_literal (error,
+						     DFU_ERROR,
+						     DFU_ERROR_INVALID_FILE,
+						     "duplicate EOF, perhaps "
+						     "corrupt file");
+				return FALSE;
+			}
+			got_eof = TRUE;
 			break;
 		case DFU_INHX32_RECORD_TYPE_EXTENDED:
 			addr_high = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+9);
 			addr32 = ((guint32) addr_high << 16) + addr_low;
 			break;
-		case DFU_INHX32_RECORD_TYPE_TEXT:
+		case DFU_INHX32_RECORD_TYPE_SYMTAB:
 		{
 			g_autoptr(GString) str = g_string_new ("");
 			for (i = offset + 9; i < end; i += 2) {
 				guint8 tmp_c = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
 				g_string_append_c (str, tmp_c);
 			}
-			g_debug ("%08x: %s", addr32, str->str);
+			addr32 = ((guint32) addr_high << 16) + addr_low;
+			if (addr32 != 0x0 && dfu_firmware_ihex_symbol_name_valid (str)) {
+				g_debug ("symtab 0x%08x: %s", addr32, str->str);
+				dfu_firmware_add_symbol (firmware,
+							 str->str,
+							 (guint64) addr32);
+			}
 			break;
 		}
 		default:
+			/* vendors sneak in nonstandard sections past the EOF */
+			if (got_eof)
+				break;
 			g_set_error (error,
 				     DFU_ERROR,
 				     DFU_ERROR_INVALID_FILE,
@@ -253,6 +280,15 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		}
 	}
 
+	/* no EOF */
+	if (!got_eof) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_FILE,
+				     "no EOF, perhaps truncated file");
+		return FALSE;
+	}
+
 	/* add single image */
 	contents = g_bytes_new (string->str, string->len);
 	dfu_element_set_contents (element, contents);
@@ -263,16 +299,15 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 	return TRUE;
 }
 
-static gboolean
-dfu_firmware_to_ihex_element (DfuElement *element, GString *str, GError **error)
+static void
+dfu_firmware_to_ihex_bytes (GString *str, guint8 record_type,
+			    guint32 address, GBytes *contents)
 {
-	GBytes *contents;
 	const guint8 *data;
 	const guint chunk_size = 16;
 	gsize len;
 
 	/* get number of chunks */
-	contents = dfu_element_get_contents (element);
 	data = g_bytes_get_data (contents, &len);
 	for (gsize i = 0; i < len; i += chunk_size) {
 		guint8 checksum = 0;
@@ -281,8 +316,8 @@ dfu_firmware_to_ihex_element (DfuElement *element, GString *str, GError **error)
 		gsize chunk_len = MIN (len - i, 16);
 		g_string_append_printf (str, ":%02X%04X%02X",
 					(guint) chunk_len,
-					(guint) (dfu_element_get_address (element) + i),
-					(guint) DFU_INHX32_RECORD_TYPE_DATA);
+					(guint) (address + i),
+					(guint) record_type);
 		for (gsize j = 0; j < chunk_len; j++)
 			g_string_append_printf (str, "%02X", data[i+j]);
 
@@ -291,6 +326,15 @@ dfu_firmware_to_ihex_element (DfuElement *element, GString *str, GError **error)
 			checksum += (guint8) str->str[str->len - (j + 1)];
 		g_string_append_printf (str, "%02X\n", checksum);
 	}
+}
+
+static gboolean
+dfu_firmware_to_ihex_element (DfuElement *element, GString *str, GError **error)
+{
+	GBytes *contents = dfu_element_get_contents (element);
+	dfu_firmware_to_ihex_bytes (str, DFU_INHX32_RECORD_TYPE_DATA,
+				    dfu_element_get_address (element),
+				    contents);
 	return TRUE;
 }
 
@@ -312,6 +356,7 @@ dfu_firmware_to_ihex (DfuFirmware *firmware, GError **error)
 	GPtrArray *elements;
 	guint i;
 	guint j;
+	g_autoptr(GPtrArray) symbols = NULL;
 	g_autoptr(GString) str = NULL;
 
 	/* write all the element data */
@@ -332,5 +377,16 @@ dfu_firmware_to_ihex (DfuFirmware *firmware, GError **error)
 	/* add EOF */
 	g_string_append_printf (str, ":000000%02XFF\n",
 				(guint) DFU_INHX32_RECORD_TYPE_EOF);
+
+	/* add any symbol table */
+	symbols = dfu_firmware_get_symbols (firmware);
+	for (i = 0; i < symbols->len; i++) {
+		const gchar *name = g_ptr_array_index (symbols, i);
+		guint32 addr = dfu_firmware_lookup_symbol (firmware, name);
+		g_autoptr(GBytes) contents = g_bytes_new_static (name, strlen (name));
+		dfu_firmware_to_ihex_bytes (str, DFU_INHX32_RECORD_TYPE_SYMTAB,
+					    addr, contents);
+	}
+
 	return g_bytes_new (str->str, str->len);
 }

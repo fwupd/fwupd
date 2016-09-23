@@ -29,6 +29,7 @@
 #include <string.h>
 #include <sys/syscall.h>
 
+#include "dfu-firmware-private.h"
 #include "dfu-format-elf.h"
 #include "dfu-error.h"
 
@@ -77,6 +78,12 @@ _get_element_from_section_name (Elf *e, const gchar *desired_name)
 			g_warning ("failed gelf_getshdr");
 			continue;
 		}
+
+		/* not program data */
+		if (shdr.sh_type != SHT_PROGBITS)
+			continue;
+
+		/* not the same section name */
 		if ((name = elf_strptr (e, shstrndx, shdr.sh_name)) == NULL) {
 			g_warning ("failed elf_strptr");
 			continue;
@@ -97,6 +104,46 @@ _get_element_from_section_name (Elf *e, const gchar *desired_name)
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(Elf, elf_end);
+
+static void
+dfu_format_elf_symbols_from_symtab (DfuFirmware *firmware, Elf *e)
+{
+	Elf_Scn *scn = NULL;
+	gsize shstrndx;
+
+	if (elf_getshdrstrndx (e, &shstrndx) != 0) {
+		g_warning ("failed elf_getshdrstrndx");
+		return;
+	}
+	while ((scn = elf_nextscn (e, scn)) != NULL ) {
+		Elf_Data *data;
+		GElf_Shdr shdr;
+		const gchar *name;
+		gssize ns;
+		if (gelf_getshdr (scn, &shdr) != &shdr) {
+			g_warning ("failed gelf_getshdr");
+			continue;
+		}
+
+		/* not program data */
+		if (shdr.sh_type != SHT_SYMTAB)
+			continue;
+
+		/* get symbols */
+		data = elf_getdata (scn, NULL);
+		ns = shdr.sh_size / shdr.sh_entsize;
+		for (gint i = 0; i < ns; i++) {
+			GElf_Sym sym;
+                        gelf_getsym (data, i, &sym);
+			if (sym.st_value == 0)
+				continue;
+			name = elf_strptr (e, shdr.sh_link, sym.st_name);
+			if (name == NULL)
+				continue;
+			dfu_firmware_add_symbol (firmware, name, sym.st_value);
+		}
+	}
+}
 
 /**
  * dfu_firmware_from_elf: (skip)
@@ -119,6 +166,7 @@ dfu_firmware_from_elf (DfuFirmware *firmware,
 	guint sections_cnt = 0;
 	g_autoptr(Elf) e = NULL;
 	const gchar *section_names[] = {
+		".interrupt",
 		".text",
 		NULL };
 
@@ -167,6 +215,9 @@ dfu_firmware_from_elf (DfuFirmware *firmware,
 		dfu_firmware_add_image (firmware, image);
 		sections_cnt++;
 	}
+
+	/* load symbol table */
+	dfu_format_elf_symbols_from_symtab (firmware, e);
 
 	/* nothing found */
 	if (sections_cnt == 0) {
@@ -226,7 +277,7 @@ dfu_format_elf_pack_element (Elf *e, DfuElement *element, GError **error)
 		return FALSE;
 	}
 	shdr->sh_name = 1;
-	shdr->sh_type = SHT_HASH;
+	shdr->sh_type = SHT_PROGBITS;
 	shdr->sh_flags = SHF_ALLOC;
 	shdr->sh_entsize = 0;
 	return TRUE;

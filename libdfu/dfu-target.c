@@ -903,7 +903,7 @@ dfu_target_upload_element (DfuTarget *target,
 	guint32 last_sector_id = G_MAXUINT;
 	guint8 dfuse_sector_offset = 0;
 	guint i;
-	guint8 idx;
+	guint idx;
 	guint old_percentage = G_MAXUINT;
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -916,7 +916,7 @@ dfu_target_upload_element (DfuTarget *target,
 
 	/* get all the chunks from the hardware */
 	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
-	for (idx = 0; idx < G_MAXUINT8; idx++) {
+	for (idx = 0; idx < G_MAXUINT16; idx++) {
 
 		/* for DfuSe devices we need to handle the address manually */
 		if (dfu_device_has_dfuse_support (priv->device)) {
@@ -1005,6 +1005,8 @@ dfu_target_upload_element (DfuTarget *target,
 		const guint8 *chunk_data;
 		chunk_tmp = g_ptr_array_index (chunks, i);
 		chunk_data = g_bytes_get_data (chunk_tmp, (gsize *) &chunk_size);
+		if (chunk_size == 0)
+			continue;
 		memcpy (buffer + offset, chunk_data, (gsize) chunk_size);
 		offset += chunk_size;
 	}

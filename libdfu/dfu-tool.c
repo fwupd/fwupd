@@ -346,6 +346,44 @@ dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 					error);
 }
 
+static guint16
+dfu_tool_parse_release_uint16 (const gchar *version, GError **error)
+{
+	gchar *endptr = NULL;
+	guint64 tmp_lsb, tmp_msb;
+	g_auto(GStrv) split = g_strsplit (version, ".", -1);
+
+	/* check if valid */
+	if (g_strv_length (split) != 2) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "invalid format, expected 'major.minor'");
+		return 0xffff;
+	}
+
+	/* parse MSB & LSB */
+	tmp_msb = g_ascii_strtoull (split[0], &endptr, 10);
+	if (tmp_msb > 0xff || endptr[0] != '\0') {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Failed to parse version '%s'",
+			     version);
+		return 0xffff;
+	}
+	tmp_lsb = g_ascii_strtoull (split[1], &endptr, 10);
+	if (tmp_lsb > 0xff || endptr[0] != '\0') {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "Failed to parse version '%s'",
+			     version);
+		return 0xffff;
+	}
+	return (tmp_msb << 8) + tmp_lsb;
+}
+
 static gboolean
 dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -374,14 +412,12 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	/* parse VID */
+	/* parse release */
 	tmp = g_ascii_strtoull (values[1], &endptr, 16);
 	if (tmp > G_MAXUINT16 || endptr[0] != '\0') {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
-			     "Failed to parse release '%s'", values[1]);
-		return FALSE;
+		tmp = dfu_tool_parse_release_uint16 (values[1], error);
+		if (tmp == 0xffff)
+			return FALSE;
 	}
 	dfu_firmware_set_release (firmware, (guint16) tmp);
 
