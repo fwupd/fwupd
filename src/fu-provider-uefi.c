@@ -294,7 +294,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		return FALSE;
 	}
 
-	if (supported >= 2) {
+	if (supported == 2) {
 		dev = fu_device_new ();
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
 		fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
