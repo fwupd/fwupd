@@ -8,6 +8,7 @@ fwupd (0.7.4-1) UNRELEASED; urgency=medium
   * debian/control:
   - Update dell email addresses (_ -> .)
   - Add an explicit build dependency on new version of efivar
+  - Add build dep on gir1.2-appstreamglib-1.0
   * debian/rules:
   - Adjust architectures that tests are run for missing valgrind
   -  Add autoconf archive to build-depends (Closes: 837826)
