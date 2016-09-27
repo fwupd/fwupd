@@ -247,7 +247,10 @@ fu_provider_uefi_unlock (FuProvider *provider,
 	g_debug ("unlocking UEFI device %s", fu_device_get_id (device));
 	rc = fwup_enable_esrt();
 	if (rc <= 0) {
-		g_debug("Failed to unlock UEFI device");
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "failed to unlock UEFI device");
 		return FALSE;
 	} else if (rc == 1)
 		g_debug("UEFI device is already unlocked");
