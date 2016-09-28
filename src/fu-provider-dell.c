@@ -360,7 +360,7 @@ fu_provider_dell_dock_node (FuProviderDell *provider_dell, GUsbDevice *device,
 
 	switch (type) {
 	case DOCK_TYPE_TB15:
-		dock_type = "TB15";
+		dock_type = "TB15/TB16";
 		break;
 	case DOCK_TYPE_WD15:
 		dock_type = "WD15";
