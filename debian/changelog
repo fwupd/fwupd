@@ -13,6 +13,8 @@ fwupd (0.7.4-1) UNRELEASED; urgency=medium
   - Adjust architectures that tests are run for missing valgrind
   -  Add autoconf archive to build-depends (Closes: 837826)
   -  Adjust daemon install path to be non multi-arch (Closes: #808831)
+  * Backport patch to make sure test suite runs without sysfs
+    bind mounted.
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Fri, 23 Sep 2016 11:01:53 -0500
 
