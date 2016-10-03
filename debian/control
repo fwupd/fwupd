@@ -106,6 +106,7 @@ Description: Firmware update daemon
 Package: fwupd-doc
 Section: doc
 Architecture: all
+Multi-Arch: foreign
 Depends: ${misc:Depends},
 Description: Firmware update daemon documentation (HTML format)
  fwupd is a daemon to allow session software to update device firmware.

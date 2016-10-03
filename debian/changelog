@@ -15,8 +15,9 @@ fwupd (0.7.4-1) UNRELEASED; urgency=medium
   -  Adjust daemon install path to be non multi-arch (Closes: #808831)
   * Backport patch to make sure test suite runs without sysfs
     bind mounted.
+  * Mark fwupd-doc package as Multi-Arch: foreign.
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Fri, 23 Sep 2016 11:01:53 -0500
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 03 Oct 2016 14:55:16 -0500
 
 fwupd (0.7.3-1) unstable; urgency=medium
 
