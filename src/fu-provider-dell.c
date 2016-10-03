@@ -815,15 +815,17 @@ fu_provider_dell_detect_tpm (FuProvider *provider, GError **error)
 						    AS_VERSION_PARSE_FLAG_NONE);
 
 	/* make it clear that the TPM is a discrete device of the product */
-	if (!g_file_get_contents ("/sys/class/dmi/id/product_name",
-				  &product_name,NULL, NULL)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "Unable to read product information");
-		return FALSE;
+	if (!priv->fake_smbios) {
+		if (!g_file_get_contents ("/sys/class/dmi/id/product_name",
+					  &product_name,NULL, NULL)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "Unable to read product information");
+			return FALSE;
+		}
+		g_strchomp (product_name);
 	}
-	g_strchomp (product_name);
 	pretty_tpm_name = g_strdup_printf ("%s TPM %s", product_name, tpm_mode);
 	pretty_tpm_name_alt = g_strdup_printf ("%s TPM %s", product_name, tpm_mode_alt);
 
