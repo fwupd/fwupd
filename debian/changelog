@@ -1,4 +1,4 @@
-fwupd (0.7.4-1) UNRELEASED; urgency=medium
+fwupd (0.7.4-1) unstable; urgency=medium
 
   * New upstream version (0.7.4)
   * Update symbols file.
