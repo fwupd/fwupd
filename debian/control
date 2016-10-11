@@ -35,7 +35,7 @@ Build-Depends: debhelper (>= 9.0.0),
                libsmbios-dev [amd64 i386],
                libelf-dev,
                autoconf-archive,
-               valgrind[!mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha]
+               valgrind[!mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha !mips64el !armhf !armel !mipsel]
 Standards-Version: 3.9.8
 Section: admin
 Homepage: https://github.com/hughsie/fwupd

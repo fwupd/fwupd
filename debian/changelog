@@ -3,6 +3,8 @@ fwupd (0.7.4-2) UNRELEASED; urgency=medium
   * Backport a patch to make sure that appstream metadata validates
     properly. (Closes: #837765)
   * Drop armel from libfwup-dev build dependency architecture list.
+  * Drop valgrind build dependency for mipsel, mips64el, armhf, and armel
+    where it is segfaulting.
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 11 Oct 2016 10:17:09 -0500
 
