@@ -1225,18 +1225,20 @@ dfu_target_download_element (DfuTarget *target,
 	for (i = 0; i < nr_chunks + 1; i++) {
 		gsize length;
 		guint32 offset;
+		guint32 offset_dev;
 		guint percentage;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 
 		/* caclulate the offset into the element data */
 		offset = i * transfer_size;
+		offset_dev = dfu_element_get_address (element) + offset;
 
 		/* for DfuSe devices we need to handle the erase and setting
 		 * the address manually */
 		if (dfu_device_has_dfuse_support (priv->device)) {
 
 			/* check the sector with this element address is suitable */
-			sector = dfu_target_get_sector_for_addr (target, offset);
+			sector = dfu_target_get_sector_for_addr (target, offset_dev);
 			if (sector == NULL) {
 				g_set_error (error,
 					     DFU_ERROR,
@@ -1250,16 +1252,16 @@ dfu_target_download_element (DfuTarget *target,
 					     DFU_ERROR,
 					     DFU_ERROR_INVALID_DEVICE,
 					     "memory sector at 0x%04x is not writable",
-					     (guint) offset);
+					     (guint) offset_dev);
 				return FALSE;
 			}
 
 			/* if it's erasable and not yet blanked */
 			if (!dfu_sector_has_cap (sector, DFU_SECTOR_CAP_ERASEABLE) &&
 			    g_hash_table_lookup (priv->sectors_erased, sector) == NULL) {
-				g_debug ("erasing DfuSe address at 0x%04x", offset);
+				g_debug ("erasing DfuSe address at 0x%04x", offset_dev);
 				if (!dfu_target_erase_address (target,
-							       offset,
+							       offset_dev,
 							       cancellable,
 							       error))
 					return FALSE;
@@ -1272,7 +1274,7 @@ dfu_target_download_element (DfuTarget *target,
 			if (dfu_sector_get_id (sector) != last_sector_id) {
 				g_debug ("setting DfuSe address to 0x%04x", (guint) offset);
 				if (!dfu_target_set_address (target,
-							     (guint32) offset,
+							     (guint32) offset_dev,
 							     cancellable,
 							     error))
 					return FALSE;
