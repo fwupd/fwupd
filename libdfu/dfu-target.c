@@ -703,8 +703,10 @@ dfu_target_set_address (DfuTarget *target,
 	buf[0] = DFU_CMD_DFUSE_SET_ADDRESS_POINTER;
 	memcpy (buf + 1, &address, 4);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error))
+	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+		g_prefix_error (error, "cannot set address 0x%x: ", address);
 		return FALSE;
+	}
 
 	/* for ST devices, the action only occurs when we do GetStatus */
 	if (!dfu_target_check_status (target, cancellable, error))
@@ -750,8 +752,10 @@ dfu_target_erase_address (DfuTarget *target,
 	buf[0] = DFU_CMD_DFUSE_ERASE;
 	memcpy (buf + 1, &address, 4);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error))
+	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+		g_prefix_error (error, "cannot erase address 0x%x: ", address);
 		return FALSE;
+	}
 
 	/* for ST devices, the action only occurs when we do GetStatus */
 	if (!dfu_target_check_status (target, cancellable, error))
@@ -801,8 +805,10 @@ dfu_target_mass_erase (DfuTarget *target,
 	/* format buffer */
 	buf[0] = DFU_CMD_DFUSE_ERASE;
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error))
+	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+		g_prefix_error (error, "cannot mass-erase: ");
 		return FALSE;
+	}
 
 	/* for ST devices, the action only occurs when we do GetStatus */
 	if (!dfu_target_check_status (target, cancellable, error))
@@ -848,8 +854,10 @@ dfu_target_read_unprotect (DfuTarget *target,
 	buf[0] = DFU_CMD_DFUSE_READ_UNPROTECT;
 	memcpy (buf + 1, &address, 4);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error))
+	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+		g_prefix_error (error, "cannot read-unprotect: ");
 		return FALSE;
+	}
 
 	/* for ST devices, the action only occurs when we do GetStatus */
 	return dfu_target_check_status (target, cancellable, error);
@@ -1440,8 +1448,10 @@ dfu_target_get_commands (DfuTarget *target,
 	/* format buffer */
 	buf[0] = DFU_CMD_DFUSE_GET_COMMAND;
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error))
+	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+		g_prefix_error (error, "cannot get DfuSe commands: ");
 		return FALSE;
+	}
 
 	/* return results */
 	data_out = dfu_target_upload_chunk (target, 0, cancellable, error);
