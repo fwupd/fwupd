@@ -170,7 +170,7 @@ dfu_target_get_sector_for_addr (DfuTarget *target, guint32 addr)
 static gboolean
 dfu_target_parse_sector (DfuTarget *target,
 			 const gchar *dfuse_sector_id,
-			 guint32 addr,
+			 guint32 *addr,
 			 guint16 zone,
 			 guint16 number,
 			 GError **error)
@@ -275,7 +275,7 @@ dfu_target_parse_sector (DfuTarget *target,
 	/* add all the sectors */
 	for (i = 0; i < nr_sectors; i++) {
 		DfuSector *sector;
-		sector = dfu_sector_new (addr + addr_offset,
+		sector = dfu_sector_new (*addr + addr_offset,
 					 (guint32) sector_size,
 					 (guint32) ((nr_sectors * sector_size) - addr_offset),
 					 zone,
@@ -284,6 +284,9 @@ dfu_target_parse_sector (DfuTarget *target,
 		g_ptr_array_add (priv->sectors, sector);
 		addr_offset += dfu_sector_get_size (sector);
 	}
+
+	/* update for next sector */
+	*addr += addr_offset;
 	return TRUE;
 }
 
@@ -366,7 +369,7 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 		for (guint16 j = 0; sectors[j] != NULL; j++) {
 			if (!dfu_target_parse_sector (target,
 						      sectors[j],
-						      (guint32) addr,
+						      &addr,
 						      (i - 1) / 2, j,
 						      error)) {
 				g_prefix_error (error,
