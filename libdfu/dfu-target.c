@@ -61,6 +61,7 @@ typedef struct {
 	guint8			 alt_setting;
 	guint8			 alt_idx;
 	gchar			*alt_name;
+	gchar			*alt_name_for_display;
 	GPtrArray		*sectors;		/* of DfuSector */
 	GHashTable		*sectors_erased;	/* of DfuSector:1 */
 } DfuTargetPrivate;
@@ -114,6 +115,7 @@ dfu_target_finalize (GObject *object)
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 
 	g_free (priv->alt_name);
+	g_free (priv->alt_name_for_display);
 	g_ptr_array_unref (priv->sectors);
 	g_hash_table_unref (priv->sectors_erased);
 
@@ -327,7 +329,7 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 
 	/* parse zones */
 	zones = g_strsplit (alt_name, "/", -1);
-	g_debug ("DfuSe nice alt-name: %s", g_strchomp (zones[0] + 1));
+	priv->alt_name_for_display = g_strdup (g_strchomp (zones[0] + 1));
 	for (guint i = 1; zones[i] != NULL; i += 2) {
 		g_auto(GStrv) sectors = NULL;
 
@@ -1491,6 +1493,40 @@ dfu_target_get_alt_name (DfuTarget *target, GError **error)
 	}
 
 	return priv->alt_name;
+}
+
+/**
+ * dfu_target_get_alt_name_for_display:
+ * @target: a #DfuTarget
+ * @error: a #GError, or %NULL
+ *
+ * Gets the alternate setting name to use for this interface that can be
+ * shown on the display.
+ *
+ * Return value: the alternative setting name
+ *
+ * Since: 0.7.5
+ **/
+const gchar *
+dfu_target_get_alt_name_for_display (DfuTarget *target, GError **error)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
+
+	/* ensure populated */
+	if (!dfu_target_setup (target, error))
+		return NULL;
+
+	/* nothing */
+	if (priv->alt_name_for_display == NULL) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_FOUND,
+				     "no alt-name");
+		return NULL;
+	}
+
+	return priv->alt_name_for_display;
 }
 
 /**

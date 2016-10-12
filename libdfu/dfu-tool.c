@@ -1813,7 +1813,7 @@ dfu_tool_list_target (DfuTarget *target)
 	dfu_tool_print_indent (_("ID"), alt_id, 1);
 
 	/* this is optional */
-	tmp = dfu_target_get_alt_name (target, &error_local);
+	tmp = dfu_target_get_alt_name_for_display (target, &error_local);
 	if (tmp != NULL) {
 		/* TRANSLATORS: interface name, e.g. "Flash" */
 		dfu_tool_print_indent (_("Name"), tmp, 2);

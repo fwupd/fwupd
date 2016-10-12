@@ -82,6 +82,8 @@ GPtrArray	*dfu_target_get_sectors			(DfuTarget	*target);
 guint8		 dfu_target_get_alt_setting		(DfuTarget	*target);
 const gchar	*dfu_target_get_alt_name		(DfuTarget	*target,
 							 GError		**error);
+const gchar	*dfu_target_get_alt_name_for_display	(DfuTarget	*target,
+							 GError		**error);
 DfuImage	*dfu_target_upload			(DfuTarget	*target,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
