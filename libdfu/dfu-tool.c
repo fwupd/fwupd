@@ -1861,6 +1861,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		GPtrArray *dfu_targets;
 		const gchar *tmp;
 		guint j;
+		guint16 transfer_size;
 		g_autofree gchar *quirks = NULL;
 		g_autofree gchar *version = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -1923,6 +1924,15 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		tmp = dfu_state_to_string (dfu_device_get_state (device));
 		/* TRANSLATORS: device state, i.e. appIDLE */
 		dfu_tool_print_indent (_("State"), tmp, 1);
+
+		transfer_size = dfu_device_get_transfer_size (device);
+		if (transfer_size > 0) {
+			g_autofree gchar *str = NULL;
+			str = g_format_size_full (transfer_size,
+						  G_FORMAT_SIZE_LONG_FORMAT);
+			/* TRANSLATORS: transfer size in bytes */
+			dfu_tool_print_indent (_("Transfer Size"), str, 1);
+		}
 
 		/* quirks are NULL if none are set */
 		quirks = dfu_device_get_quirks_as_string (device);
