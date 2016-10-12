@@ -357,8 +357,12 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 						      sectors[j],
 						      (guint32) addr,
 						      (i - 1) / 2, j,
-						      error))
+						      error)) {
+				g_prefix_error (error,
+						"Failed to parse: '%s': ",
+						sectors[j]);
 				return FALSE;
+			}
 		}
 	}
 

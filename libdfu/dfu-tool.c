@@ -1813,10 +1813,14 @@ dfu_tool_list_target (DfuTarget *target)
 	dfu_tool_print_indent (_("ID"), alt_id, 1);
 
 	/* this is optional */
-	tmp = dfu_target_get_alt_name (target, NULL);
+	tmp = dfu_target_get_alt_name (target, &error_local);
 	if (tmp != NULL) {
 		/* TRANSLATORS: interface name, e.g. "Flash" */
 		dfu_tool_print_indent (_("Name"), tmp, 2);
+	} else {
+		g_autofree gchar *str = NULL;
+		str = g_strdup_printf ("Error: %s", error_local->message);
+		dfu_tool_print_indent (_("Name"), str, 2);
 	}
 
 	cipher_kind = dfu_target_get_cipher_kind (target);
