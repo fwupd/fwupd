@@ -901,12 +901,6 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 		return NULL;
 	}
 
-	/* for ST devices, the action only occurs when we do GetStatus */
-	if (!dfu_device_has_quirk (priv->device, DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD)) {
-		if (!dfu_target_check_status (target, cancellable, error))
-			return NULL;
-	}
-
 	return g_bytes_new_take (buf, actual_length);
 }
 
