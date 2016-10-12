@@ -291,7 +291,7 @@ gboolean
 dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	guint64 addr;
+	guint32 addr;
 	g_autofree gchar *str_debug = NULL;
 	g_auto(GStrv) zones = NULL;
 
@@ -331,14 +331,26 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 	zones = g_strsplit (alt_name, "/", -1);
 	priv->alt_name_for_display = g_strdup (g_strchomp (zones[0] + 1));
 	for (guint i = 1; zones[i] != NULL; i += 2) {
+		guint64 addr_tmp;
 		g_auto(GStrv) sectors = NULL;
 
 		/* parse address */
-		if (!g_str_has_prefix (zones[i], "0x"))
+		if (!g_str_has_prefix (zones[i], "0x")) {
+			g_set_error_literal (error,
+					     DFU_ERROR,
+					     DFU_ERROR_NOT_SUPPORTED,
+					     "No sector address");
 			return FALSE;
-		addr = g_ascii_strtoull (zones[i] + 2, NULL, 16);
-		if (addr > G_MAXUINT32)
+		}
+		addr_tmp = g_ascii_strtoull (zones[i] + 2, NULL, 16);
+		if (addr_tmp > G_MAXUINT32) {
+			g_set_error_literal (error,
+					     DFU_ERROR,
+					     DFU_ERROR_NOT_SUPPORTED,
+					     "Sector address too large");
 			return FALSE;
+		}
+		addr = (guint32) addr_tmp;
 
 		/* no sectors?! */
 		if (zones[i+1] == NULL) {
