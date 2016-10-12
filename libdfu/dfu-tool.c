@@ -1825,9 +1825,14 @@ dfu_tool_list_target (DfuTarget *target)
 		dfu_tool_print_indent (_("Name"), str, 2);
 	}
 
+	/* this is optional */
 	cipher_kind = dfu_target_get_cipher_kind (target);
-	/* TRANSLATORS: this is the encryption method used when writing  */
-	dfu_tool_print_indent (_("Cipher"), dfu_cipher_kind_to_string (cipher_kind), 2);
+	if (cipher_kind != DFU_CIPHER_KIND_NONE) {
+		/* TRANSLATORS: this is the encryption method used when writing  */
+		dfu_tool_print_indent (_("Cipher"),
+				       dfu_cipher_kind_to_string (cipher_kind),
+				       2);
+	}
 
 	/* print sector information */
 	sectors = dfu_target_get_sectors (target);
