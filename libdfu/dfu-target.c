@@ -213,13 +213,10 @@ dfu_target_parse_sector (DfuTarget *target,
 		return FALSE;
 	}
 
-	/* optional spaces */
-	while (tmp[0] == ' ')
-		tmp++;
-
 	/* get multiplier */
 	switch (tmp[0]) {
 	case 'B':		/* byte */
+	case ' ':		/* byte, ST reference bootloader :/ */
 		break;
 	case 'K':		/* Kilo */
 		sector_size *= 0x400;

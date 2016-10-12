@@ -1817,7 +1817,9 @@ dfu_tool_list_target (DfuTarget *target)
 	if (tmp != NULL) {
 		/* TRANSLATORS: interface name, e.g. "Flash" */
 		dfu_tool_print_indent (_("Name"), tmp, 2);
-	} else {
+	} else if (!g_error_matches (error_local,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_FOUND)) {
 		g_autofree gchar *str = NULL;
 		str = g_strdup_printf ("Error: %s", error_local->message);
 		dfu_tool_print_indent (_("Name"), str, 2);
