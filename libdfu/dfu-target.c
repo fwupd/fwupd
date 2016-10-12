@@ -951,6 +951,9 @@ dfu_target_upload_element (DfuTarget *target,
 					     (guint) offset);
 				return NULL;
 			}
+			g_debug ("using sector %u for read of %x",
+				 dfu_sector_get_id (sector),
+				 offset);
 			if (!dfu_sector_has_cap (sector, DFU_SECTOR_CAP_READABLE)) {
 				g_set_error (error,
 					     DFU_ERROR,
@@ -970,6 +973,10 @@ dfu_target_upload_element (DfuTarget *target,
 					return NULL;
 				last_sector_id = dfu_sector_get_id (sector);
 			}
+
+			/* abort back to IDLE */
+			if (!dfu_device_abort (priv->device, cancellable, error))
+				return FALSE;
 		}
 
 		/* read chunk of data */
@@ -1003,6 +1010,12 @@ dfu_target_upload_element (DfuTarget *target,
 		/* detect short write as EOF */
 		if (chunk_size < transfer_size)
 			break;
+	}
+
+	/* abort back to IDLE */
+	if (dfu_device_has_dfuse_support (priv->device)) {
+		if (!dfu_device_abort (priv->device, cancellable, error))
+			return FALSE;
 	}
 
 	/* check final size */
