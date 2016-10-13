@@ -52,6 +52,7 @@ typedef struct {
 	DfuMode			 mode;
 	DfuState		 state;
 	DfuStatus		 status;
+	DfuAction		 action_last;
 	GPtrArray		*targets;
 	GUsbDevice		*dev;
 	gboolean		 open_new_dev;		/* if set new GUsbDevice */
@@ -75,6 +76,7 @@ enum {
 	SIGNAL_STATUS_CHANGED,
 	SIGNAL_STATE_CHANGED,
 	SIGNAL_PERCENTAGE_CHANGED,
+	SIGNAL_ACTION_CHANGED,
 	SIGNAL_LAST
 };
 
@@ -136,6 +138,22 @@ dfu_device_class_init (DfuDeviceClass *klass)
 			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_UINT);
 
+	/**
+	 * DfuDevice::action-changed:
+	 * @device: the #DfuDevice instance that emitted the signal
+	 * @action: the new #DfuAction
+	 *
+	 * The ::action-changed signal is emitted when the high level action changes.
+	 *
+	 * Since: 0.7.5
+	 **/
+	signals [SIGNAL_ACTION_CHANGED] =
+		g_signal_new ("action-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (DfuDeviceClass, action_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
 	object_class->finalize = dfu_device_finalize;
 }
 
@@ -152,6 +170,16 @@ dfu_device_init (DfuDevice *device)
 	priv->targets = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->timeout_ms = 500;
 	priv->transfer_size = 64;
+}
+
+static void
+dfu_device_set_action (DfuDevice *device, DfuAction action)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	if (action == priv->action_last)
+		return;
+	g_signal_emit (device, signals[SIGNAL_ACTION_CHANGED], 0, action);
+	priv->action_last = action;
 }
 
 /**
@@ -1086,7 +1114,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 		return FALSE;
 
 	/* inform UI there's going to be a detach:attach */
-	dfu_device_set_state (device, DFU_STATE_APP_DETACH);
+	dfu_device_set_action (device, DFU_ACTION_DETACH);
 
 	if (!g_usb_device_control_transfer (priv->dev,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -1115,6 +1143,9 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 		if (!dfu_device_reset (device, error))
 			return FALSE;
 	}
+
+	/* success */
+	dfu_device_set_action (device, DFU_ACTION_IDLE);
 	return TRUE;
 }
 
@@ -1562,6 +1593,7 @@ dfu_device_wait_for_replug (DfuDevice *device, guint timeout,
 	GError *error_tmp = NULL;
 	const guint replug_poll = 100; /* ms */
 
+	/* wait for replug */
 	helper = g_new0 (DfuDeviceReplugHelper, 1);
 	helper->loop = g_main_loop_new (NULL, FALSE);
 	helper->device = g_object_ref (device);
@@ -1576,6 +1608,9 @@ dfu_device_wait_for_replug (DfuDevice *device, guint timeout,
 		g_propagate_error (error, error_tmp);
 		return FALSE;
 	}
+
+	/* success */
+	dfu_device_set_action (device, DFU_ACTION_IDLE);
 	return TRUE;
 }
 
@@ -1655,7 +1690,7 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	}
 
 	/* inform UI there's going to be a re-attach */
-	dfu_device_set_state (device, DFU_STATE_DFU_MANIFEST_WAIT_RESET);
+	dfu_device_set_action (device, DFU_ACTION_ATTACH);
 
 	/* handle m-stack DFU bootloaders */
 	if (!priv->done_upload_or_download &&
@@ -1674,11 +1709,17 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	/* there's a a special command for ST devices */
 	if (priv->dfuse_supported) {
 		//FIXME
+		dfu_device_set_action (device, DFU_ACTION_IDLE);
 		return TRUE;
 	}
 
 	/* normal DFU mode just needs a bus reset */
-	return dfu_device_reset (device, error);
+	if (!dfu_device_reset (device, error))
+		return FALSE;
+
+	/* success */
+	dfu_device_set_action (device, DFU_ACTION_IDLE);
+	return TRUE;
 }
 
 static void
@@ -1686,6 +1727,12 @@ dfu_device_percentage_cb (DfuTarget *target, guint percentage, DfuDevice *device
 {
 	/* FIXME: divide by number of targets? */
 	g_signal_emit (device, signals[SIGNAL_PERCENTAGE_CHANGED], 0, percentage);
+}
+
+static void
+dfu_device_action_cb (DfuTarget *target, DfuAction action, DfuDevice *device)
+{
+	dfu_device_set_action (device, action);
 }
 
 /**
@@ -1755,18 +1802,22 @@ dfu_device_upload (DfuDevice *device,
 	/* upload from each target */
 	for (i = 0; i < priv->targets->len; i++) {
 		DfuTarget *target;
-		gulong id;
+		gulong id1;
+		gulong id2;
 		g_autoptr(DfuImage) image = NULL;
 
 		/* upload to target and proxy signals */
 		target = g_ptr_array_index (priv->targets, i);
-		id = g_signal_connect (target, "percentage-changed",
-				       G_CALLBACK (dfu_device_percentage_cb), device);
+		id1 = g_signal_connect (target, "percentage-changed",
+					G_CALLBACK (dfu_device_percentage_cb), device);
+		id2 = g_signal_connect (target, "action-changed",
+					G_CALLBACK (dfu_device_action_cb), device);
 		image = dfu_target_upload (target,
 					   DFU_TARGET_TRANSFER_FLAG_NONE,
 					   cancellable,
 					   error);
-		g_signal_handler_disconnect (target, id);
+		g_signal_handler_disconnect (target, id1);
+		g_signal_handler_disconnect (target, id2);
 		if (image == NULL)
 			return NULL;
 		dfu_firmware_add_image (firmware, image);
@@ -1801,6 +1852,7 @@ dfu_device_upload (DfuDevice *device,
 	}
 
 	/* success */
+	dfu_device_set_action (device, DFU_ACTION_IDLE);
 	return g_object_ref (firmware);
 }
 
@@ -1928,7 +1980,8 @@ dfu_device_download (DfuDevice *device,
 		DfuImage *image;
 		DfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
 		const gchar *alt_name;
-		gulong id;
+		gulong id1;
+		gulong id2;
 		g_autoptr(DfuTarget) target_tmp = NULL;
 
 		image = g_ptr_array_index (images, i);
@@ -1974,14 +2027,17 @@ dfu_device_download (DfuDevice *device,
 		/* download onto target */
 		if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY)
 			flags_local = DFU_TARGET_TRANSFER_FLAG_VERIFY;
-		id = g_signal_connect (target_tmp, "percentage-changed",
-				       G_CALLBACK (dfu_device_percentage_cb), device);
+		id1 = g_signal_connect (target_tmp, "percentage-changed",
+					G_CALLBACK (dfu_device_percentage_cb), device);
+		id2 = g_signal_connect (target_tmp, "action-changed",
+					G_CALLBACK (dfu_device_action_cb), device);
 		ret = dfu_target_download (target_tmp,
 					   image,
 					   flags_local,
 					   cancellable,
 					   error);
-		g_signal_handler_disconnect (target_tmp, id);
+		g_signal_handler_disconnect (target_tmp, id1);
+		g_signal_handler_disconnect (target_tmp, id2);
 		if (!ret)
 			return FALSE;
 	}
@@ -2006,6 +2062,8 @@ dfu_device_download (DfuDevice *device,
 			return FALSE;
 	}
 
+	/* success */
+	dfu_device_set_action (device, DFU_ACTION_IDLE);
 	return TRUE;
 }
 

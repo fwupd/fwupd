@@ -64,10 +64,12 @@ typedef struct {
 	gchar			*alt_name_for_display;
 	GPtrArray		*sectors;		/* of DfuSector */
 	GHashTable		*sectors_erased;	/* of DfuSector:1 */
+	guint			 old_percentage;
 } DfuTargetPrivate;
 
 enum {
 	SIGNAL_PERCENTAGE_CHANGED,
+	SIGNAL_ACTION_CHANGED,
 	SIGNAL_LAST
 };
 
@@ -97,6 +99,22 @@ dfu_target_class_init (DfuTargetClass *klass)
 			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_UINT);
 
+	/**
+	 * DfuTarget::action-changed:
+	 * @device: the #DfuTarget instance that emitted the signal
+	 * @action: the new DfuAction
+	 *
+	 * The ::action-changed signal is emitted when the high level action changes.
+	 *
+	 * Since: 0.7.5
+	 **/
+	signals [SIGNAL_ACTION_CHANGED] =
+		g_signal_new ("action-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (DfuTargetClass, action_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
 	object_class->finalize = dfu_target_finalize;
 }
 
@@ -106,6 +124,7 @@ dfu_target_init (DfuTarget *target)
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	priv->sectors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->sectors_erased = g_hash_table_new (g_direct_hash, g_direct_equal);
+	priv->old_percentage = G_MAXUINT;
 }
 
 static void
@@ -904,6 +923,37 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 	return g_bytes_new_take (buf, actual_length);
 }
 
+static void
+dfu_target_set_action (DfuTarget *target, DfuAction task)
+{
+	g_signal_emit (target, signals[SIGNAL_ACTION_CHANGED], 0, task);
+}
+
+static void
+dfu_target_set_percentage_raw (DfuTarget *target, guint percentage)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	if (percentage == priv->old_percentage)
+		return;
+	g_signal_emit (target,
+		       signals[SIGNAL_PERCENTAGE_CHANGED],
+		       0, percentage);
+	priv->old_percentage = percentage;
+}
+
+static void
+dfu_target_set_percentage (DfuTarget *target, guint value, guint total)
+{
+	guint percentage;
+
+	g_return_if_fail (total > 0);
+
+	percentage = (value * 100) / total;
+	if (percentage >= 100)
+		return;
+	dfu_target_set_percentage_raw (target, percentage);
+}
+
 static DfuElement *
 dfu_target_upload_element (DfuTarget *target,
 			   guint32 address,
@@ -923,7 +973,6 @@ dfu_target_upload_element (DfuTarget *target,
 	guint8 dfuse_sector_offset = 0;
 	guint i;
 	guint idx;
-	guint old_percentage = G_MAXUINT;
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -998,14 +1047,8 @@ dfu_target_upload_element (DfuTarget *target,
 		g_ptr_array_add (chunks, chunk_tmp);
 
 		/* update UI */
-		if (chunk_size > 0) {
-			guint percentage = (guint) ((total_size * 100) / expected_size);
-			if (percentage != old_percentage) {
-				g_signal_emit (target,
-					       signals[SIGNAL_PERCENTAGE_CHANGED],
-					       0, percentage);
-			}
-		}
+		if (chunk_size > 0)
+			dfu_target_set_percentage (target, total_size, expected_size);
 
 		/* detect short write as EOF */
 		if (chunk_size < transfer_size)
@@ -1030,6 +1073,9 @@ dfu_target_upload_element (DfuTarget *target,
 			return NULL;
 		}
 	}
+
+	/* done */
+	dfu_target_set_percentage_raw (target, 100);
 
 	/* stitch them all together */
 	offset = 0;
@@ -1106,6 +1152,9 @@ dfu_target_upload (DfuTarget *target,
 		return NULL;
 	}
 
+	/* update UI */
+	dfu_target_set_action (target, DFU_ACTION_READ);
+
 	/* create a new image */
 	image = dfu_image_new ();
 	dfu_image_set_name (image, priv->alt_name);
@@ -1138,6 +1187,9 @@ dfu_target_upload (DfuTarget *target,
 		/* ignore sectors until one of these changes */
 		last_sector_id = dfu_sector_get_id (sector);
 	}
+
+	/* update UI */
+	dfu_target_set_action (target, DFU_ACTION_IDLE);
 
 	/* do host reset */
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||
@@ -1203,7 +1255,6 @@ dfu_target_download_element (DfuTarget *target,
 	guint nr_chunks;
 	guint dfuse_sector_offset = 0;
 	guint last_sector_id = G_MAXUINT;
-	guint old_percentage = G_MAXUINT;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 	g_autoptr(GError) error_local = NULL;
 
@@ -1226,7 +1277,6 @@ dfu_target_download_element (DfuTarget *target,
 		gsize length;
 		guint32 offset;
 		guint32 offset_dev;
-		guint percentage;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 
 		/* caclulate the offset into the element data */
@@ -1301,12 +1351,7 @@ dfu_target_download_element (DfuTarget *target,
 			return FALSE;
 
 		/* update UI */
-		percentage = (guint) ((offset * 100) / g_bytes_get_size (bytes));
-		if (percentage != old_percentage) {
-			g_signal_emit (target,
-				       signals[SIGNAL_PERCENTAGE_CHANGED],
-				       0, percentage);
-		}
+		dfu_target_set_percentage (target, offset, g_bytes_get_size (bytes));
 
 		/* give the target a chance to update */
 		g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
@@ -1316,10 +1361,15 @@ dfu_target_download_element (DfuTarget *target,
 			return FALSE;
 	}
 
+	/* done */
+	dfu_target_set_percentage_raw (target, 100);
+	dfu_target_set_action (target, DFU_ACTION_IDLE);
+
 	/* verify */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY) {
 		GBytes *bytes_tmp;
 		g_autoptr(DfuElement) element_tmp = NULL;
+		dfu_target_set_action (target, DFU_ACTION_VERIFY);
 		element_tmp = dfu_target_upload_element (target,
 							 dfu_element_get_address (element),
 							 g_bytes_get_size (bytes),
@@ -1338,6 +1388,7 @@ dfu_target_download_element (DfuTarget *target,
 				     bytes_cmp_str);
 			return FALSE;
 		}
+		dfu_target_set_action (target, DFU_ACTION_IDLE);
 	}
 
 	return TRUE;
@@ -1395,6 +1446,9 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 	if (dfu_device_has_dfuse_support (priv->device))
 		g_hash_table_remove_all (priv->sectors_erased);
 
+	/* update UI */
+	dfu_target_set_action (target, DFU_ACTION_WRITE);
+
 	/* download all elements in the image to the device */
 	elements = dfu_image_get_elements (image);
 	if (elements->len == 0) {
@@ -1416,6 +1470,9 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		if (!ret)
 			return FALSE;
 	}
+
+	/* update UI */
+	dfu_target_set_action (target, DFU_ACTION_IDLE);
 
 	/* attempt to switch back to runtime */
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||

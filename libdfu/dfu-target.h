@@ -39,6 +39,8 @@ struct _DfuTargetClass
 	GUsbDeviceClass		 parent_class;
 	void			(*percentage_changed)	(DfuTarget	*target,
 							 guint		 percentage);
+	void			(*action_changed)	(DfuTarget	*target,
+							 DfuAction	 action);
 	/*< private >*/
 	/* Padding for future expansion */
 	void (*_dfu_target_reserved1) (void);
@@ -49,7 +51,6 @@ struct _DfuTargetClass
 	void (*_dfu_target_reserved6) (void);
 	void (*_dfu_target_reserved7) (void);
 	void (*_dfu_target_reserved8) (void);
-	void (*_dfu_target_reserved9) (void);
 };
 
 /**
