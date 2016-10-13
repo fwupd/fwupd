@@ -106,6 +106,8 @@ bin_PROGRAMS =							\
 	dfu-tool
 
 dfu_tool_SOURCES =						\
+	dfu-progress-bar.c					\
+	dfu-progress-bar.h					\
 	dfu-tool.c
 
 dfu_tool_LDADD =						\

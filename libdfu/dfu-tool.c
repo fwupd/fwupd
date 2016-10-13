@@ -32,6 +32,7 @@
 #include "dfu-cipher-devo.h"
 #include "dfu-cipher-xtea.h"
 #include "dfu-device-private.h"
+#include "dfu-progress-bar.h"
 
 typedef struct {
 	GCancellable		*cancellable;
@@ -39,6 +40,7 @@ typedef struct {
 	gboolean		 force;
 	gchar			*device_vid_pid;
 	guint16			 transfer_size;
+	DfuProgressBar		*progress_bar;
 } DfuToolPrivate;
 
 static void
@@ -942,112 +944,63 @@ dfu_tool_attach (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-typedef struct {
-	guint		 marks_total;
-	guint		 marks_shown;
-	DfuState	 last_state;
-} DfuToolProgressHelper;
-
-static void
-fu_tool_state_changed_cb (DfuDevice *device,
-			  DfuState state,
-			  DfuToolProgressHelper *helper)
-{
-	const gchar *title = NULL;
-	gsize i;
-
-	/* changed state */
-	if (state == helper->last_state)
-		return;
-
-	/* state was left hanging... */
-	if (helper->marks_shown == 0) {
-		switch (helper->last_state) {
-		case DFU_STATE_APP_DETACH:
-		case DFU_STATE_DFU_DNLOAD_IDLE:
-		case DFU_STATE_DFU_MANIFEST_WAIT_RESET:
-		case DFU_STATE_DFU_UPLOAD_IDLE:
-			/* TRANSLATORS: when an action has completed */
-			g_print ("%s\n", _("OK"));
-			break;
-		default:
-			g_debug ("ignore last state transition %s",
-				 dfu_state_to_string (helper->last_state));
-			break;
-		}
-	}
-
-	switch (state) {
-	case DFU_STATE_APP_DETACH:
-		/* TRANSLATORS: when moving from runtime to DFU mode */
-		title = _("Detaching");
-		break;
-	case DFU_STATE_DFU_MANIFEST_WAIT_RESET:
-		/* TRANSLATORS: when moving from DFU to runtime mode */
-		title = _("Attaching");
-		break;
-	case DFU_STATE_DFU_DNLOAD_IDLE:
-		/* TRANSLATORS: when copying from host to device */
-		title = _("Downloading");
-		break;
-	case DFU_STATE_DFU_UPLOAD_IDLE:
-		/* TRANSLATORS: when copying from device to host */
-		title = _("Uploading");
-		break;
-	default:
-		g_debug ("ignoring %s", dfu_state_to_string (state));
-		break;
-	}
-
-	/* show title and then pad */
-	if (title != NULL) {
-		g_print ("%s ", title);
-		for (i = strlen (title); i < 15; i++)
-			g_print (" ");
-		g_print (": ");
-	}
-
-	/* reset the progress bar */
-	switch (state) {
-	case DFU_STATE_APP_DETACH:
-	case DFU_STATE_DFU_DNLOAD_IDLE:
-	case DFU_STATE_DFU_MANIFEST_WAIT_RESET:
-	case DFU_STATE_DFU_UPLOAD_IDLE:
-		g_debug ("resetting progress bar");
-		helper->marks_shown = 0;
-		break;
-	default:
-		break;
-	}
-
-	/* ignore if the same */
-	helper->last_state = state;
-}
-
 static void
 fu_tool_percentage_changed_cb (DfuDevice *device,
 			       guint percentage,
-			       DfuToolProgressHelper *helper)
+			       DfuToolPrivate *priv)
 {
-	guint marks_now;
-	guint i;
+	dfu_progress_bar_set_percentage (priv->progress_bar, percentage);
+}
 
-	/* add any sections */
-	marks_now = percentage * helper->marks_total / 100;
-	for (i = helper->marks_shown; i < marks_now; i++)
-		g_print ("#");
-	helper->marks_shown = marks_now;
-
-	/* this state done */
-	if (percentage == 100)
-		g_print ("\n");
+static void
+fu_tool_action_changed_cb (DfuDevice *device,
+			   DfuAction action,
+			   DfuToolPrivate *priv)
+{
+	switch (action) {
+	case DFU_ACTION_IDLE:
+		dfu_progress_bar_set_percentage (priv->progress_bar, 100);
+		dfu_progress_bar_end (priv->progress_bar);
+		break;
+	case DFU_ACTION_READ:
+		dfu_progress_bar_start (priv->progress_bar,
+				       /* TRANSLATORS: read from device to host */
+				       _("Reading"));
+		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
+		break;
+	case DFU_ACTION_WRITE:
+		dfu_progress_bar_start (priv->progress_bar,
+				       /* TRANSLATORS: write from host to device */
+				       _("Writing"));
+		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
+		break;
+	case DFU_ACTION_VERIFY:
+		dfu_progress_bar_start (priv->progress_bar,
+				       /* TRANSLATORS: read from device to host */
+				       _("Verifying"));
+		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
+		break;
+	case DFU_ACTION_DETACH:
+		dfu_progress_bar_start (priv->progress_bar,
+				       /* TRANSLATORS: waiting for device */
+				       _("Detaching"));
+		dfu_progress_bar_set_percentage (priv->progress_bar, -1);
+		break;
+	case DFU_ACTION_ATTACH:
+		dfu_progress_bar_start (priv->progress_bar,
+				       /* TRANSLATORS: waiting for device */
+				       _("Attaching"));
+		dfu_progress_bar_set_percentage (priv->progress_bar, -1);
+		break;
+	default:
+		break;
+	}
 }
 
 static gboolean
 dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
-	DfuToolProgressHelper helper;
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
@@ -1078,13 +1031,10 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* set up progress */
-	helper.last_state = DFU_STATE_DFU_ERROR;
-	helper.marks_total = 30;
-	helper.marks_shown = 0;
-	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
+	g_signal_connect (device, "action-changed",
+			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
+			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
 
 	/* APP -> DFU */
 	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
@@ -1158,7 +1108,6 @@ static gboolean
 dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
-	DfuToolProgressHelper helper;
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
@@ -1192,13 +1141,10 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	helper.last_state = DFU_STATE_DFU_ERROR;
-	helper.marks_total = 30;
-	helper.marks_shown = 0;
-	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
+	g_signal_connect (device, "action-changed",
+			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
+			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
 	firmware = dfu_device_upload (device,
 				      flags,
 				      priv->cancellable,
@@ -1581,7 +1527,6 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	DfuImage *image;
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
-	DfuToolProgressHelper helper;
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
@@ -1620,13 +1565,10 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* set up progress */
-	helper.last_state = DFU_STATE_DFU_ERROR;
-	helper.marks_total = 30;
-	helper.marks_shown = 0;
-	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
+	g_signal_connect (device, "action-changed",
+			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
+			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
 
 	/* APP -> DFU */
 	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
@@ -1726,7 +1668,6 @@ static gboolean
 dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
-	DfuToolProgressHelper helper;
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
@@ -1778,13 +1719,10 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	helper.last_state = DFU_STATE_DFU_ERROR;
-	helper.marks_total = 30;
-	helper.marks_shown = 0;
-	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_tool_state_changed_cb), &helper);
+	g_signal_connect (device, "action-changed",
+			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_tool_percentage_changed_cb), &helper);
+			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
 	if (!dfu_device_download (device,
 				  firmware,
 				  flags,
@@ -2146,6 +2084,11 @@ main (int argc, char *argv[])
 		     _("Sets metadata on a firmware file"),
 		     dfu_tool_set_metadata);
 
+	/* use animated progress bar */
+	priv->progress_bar = dfu_progress_bar_new ();
+	dfu_progress_bar_set_size (priv->progress_bar, 50);
+	dfu_progress_bar_set_padding (priv->progress_bar, 20);
+
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
 	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
@@ -2197,5 +2140,6 @@ main (int argc, char *argv[])
 	}
 
 	/* success/ */
+	g_object_unref (priv->progress_bar);
 	return EXIT_SUCCESS;
 }
