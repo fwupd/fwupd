@@ -184,6 +184,7 @@ typedef enum {
  * @DFU_ACTION_READ:			Reading from the device
  * @DFU_ACTION_WRITE:			Writing to the device
  * @DFU_ACTION_VERIFY:			Verifying the write
+ * @DFU_ACTION_ERASE:			Erasing the device
  * @DFU_ACTION_DETACH:			Detach into DFU mode
  * @DFU_ACTION_ATTACH:			Attach into APP mode
  *
@@ -195,6 +196,7 @@ typedef enum {
 	DFU_ACTION_READ,				/* Since: 0.7.5 */
 	DFU_ACTION_WRITE,				/* Since: 0.7.5 */
 	DFU_ACTION_VERIFY,				/* Since: 0.7.5 */
+	DFU_ACTION_ERASE,				/* Since: 0.7.5 */
 	DFU_ACTION_DETACH,				/* Since: 0.7.5 */
 	DFU_ACTION_ATTACH,				/* Since: 0.7.5 */
 	/*< private >*/

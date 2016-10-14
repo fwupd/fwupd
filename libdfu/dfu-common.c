@@ -203,6 +203,8 @@ dfu_action_to_string (DfuAction action)
 		return "write";
 	if (action == DFU_ACTION_VERIFY)
 		return "verify";
+	if (action == DFU_ACTION_ERASE)
+		return "erase";
 	if (action == DFU_ACTION_DETACH)
 		return "detach";
 	if (action == DFU_ACTION_ATTACH)

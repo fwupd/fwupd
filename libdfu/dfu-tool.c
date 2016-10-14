@@ -1127,6 +1127,12 @@ fu_tool_action_changed_cb (DfuDevice *device,
 				       _("Verifying"));
 		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
 		break;
+	case DFU_ACTION_ERASE:
+		dfu_progress_bar_start (priv->progress_bar,
+				       /* TRANSLATORS: read from device to host */
+				       _("Erasing"));
+		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
+		break;
 	case DFU_ACTION_DETACH:
 		dfu_progress_bar_start (priv->progress_bar,
 				       /* TRANSLATORS: waiting for device */
