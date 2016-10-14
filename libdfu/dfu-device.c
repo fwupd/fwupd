@@ -1708,7 +1708,23 @@ dfu_device_attach (DfuDevice *device, GError **error)
 
 	/* there's a a special command for ST devices */
 	if (priv->dfuse_supported) {
-		//FIXME
+		g_autoptr(DfuTarget) target = NULL;
+		g_autoptr(GBytes) bytes_tmp = NULL;
+
+		/* get default target */
+		target = dfu_device_get_target_by_alt_setting (device, 0, error);
+		if (target == NULL)
+			return FALSE;
+
+		/* do zero byte download */
+		bytes_tmp = g_bytes_new (NULL, 0);
+		if (!dfu_target_download_chunk (target,
+						0 + 2,
+						bytes_tmp,
+						NULL,
+						error))
+			return FALSE;
+
 		dfu_device_set_action (device, DFU_ACTION_IDLE);
 		return TRUE;
 	}
