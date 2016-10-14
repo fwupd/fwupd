@@ -513,6 +513,16 @@ dfu_target_check_status (DfuTarget *target,
 	if (!dfu_device_refresh (priv->device, cancellable, error))
 		return FALSE;
 
+	/* wait for dfuDNBUSY to not be set */
+	if (dfu_device_has_dfuse_support (priv->device)) {
+		while (dfu_device_get_state (priv->device) == DFU_STATE_DFU_DNBUSY) {
+			g_debug ("waiting for DFU_STATE_DFU_DNBUSY to clear");
+			g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
+			if (!dfu_device_refresh (priv->device, cancellable, error))
+				return FALSE;
+		}
+	}
+
 	/* not in an error state */
 	if (dfu_device_get_state (priv->device) != DFU_STATE_DFU_ERROR)
 		return TRUE;
