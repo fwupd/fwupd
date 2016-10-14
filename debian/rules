@@ -1,6 +1,8 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
 #GPGME needs this for proper building on 32 bit archs
 ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
