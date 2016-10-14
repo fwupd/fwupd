@@ -1905,6 +1905,25 @@ dfu_device_upload (DfuDevice *device,
 	return g_object_ref (firmware);
 }
 
+static gboolean
+dfu_device_id_compatible (guint16 id_file, guint16 id_runtime, guint16 id_dev)
+{
+	/* file doesn't specify */
+	if (id_file == 0xffff)
+		return TRUE;
+
+	/* runtime matches */
+	if (id_runtime != 0xffff && id_file == id_runtime)
+		return TRUE;
+
+	/* bootloader matches */
+	if (id_dev != 0xffff && id_file == id_dev)
+		return TRUE;
+
+	/* nothing */
+	return FALSE;
+}
+
 /**
  * dfu_device_download:
  * @device: a #DfuDevice
@@ -1968,28 +1987,32 @@ dfu_device_download (DfuDevice *device,
 	}
 
 	/* check vendor matches */
-	if (dfu_firmware_get_vid (firmware) != 0xffff &&
-	    priv->runtime_pid != 0xffff &&
-	    dfu_firmware_get_vid (firmware) != priv->runtime_vid) {
+	if (!dfu_device_id_compatible (dfu_firmware_get_vid (firmware),
+				       priv->runtime_vid,
+				       g_usb_device_get_vid (priv->dev))) {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_NOT_SUPPORTED,
-			     "vendor ID incorrect, expected 0x%04x got 0x%04x\n",
+			     "vendor ID incorrect, expected 0x%04x "
+			     "got 0x%04x and 0x%04x\n",
 			     dfu_firmware_get_vid (firmware),
-			     priv->runtime_vid);
+			     priv->runtime_vid,
+			     g_usb_device_get_vid (priv->dev));
 		return FALSE;
 	}
 
 	/* check product matches */
-	if (dfu_firmware_get_pid (firmware) != 0xffff &&
-	    priv->runtime_pid != 0xffff &&
-	    dfu_firmware_get_pid (firmware) != priv->runtime_pid) {
+	if (!dfu_device_id_compatible (dfu_firmware_get_pid (firmware),
+				       priv->runtime_pid,
+				       g_usb_device_get_pid (priv->dev))) {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_NOT_SUPPORTED,
-			     "product ID incorrect, expected 0x%04x got 0x%04x",
+			     "product ID incorrect, expected 0x%04x "
+			     "got 0x%04x and 0x%04x",
 			     dfu_firmware_get_pid (firmware),
-			     priv->runtime_pid);
+			     priv->runtime_pid,
+			     g_usb_device_get_pid (priv->dev));
 		return FALSE;
 	}
 
