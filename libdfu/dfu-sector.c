@@ -190,6 +190,19 @@ dfu_sector_has_cap (DfuSector *sector, DfuSectorCap cap)
 	return (priv->cap & cap) > 0;
 }
 
+static gchar *
+dfu_sector_cap_to_string (DfuSectorCap cap)
+{
+	GString *str = g_string_new (NULL);
+	if (cap & DFU_SECTOR_CAP_READABLE)
+		g_string_append (str, "R");
+	if (cap & DFU_SECTOR_CAP_ERASEABLE)
+		g_string_append (str, "E");
+	if (cap & DFU_SECTOR_CAP_WRITEABLE)
+		g_string_append (str, "W");
+	return g_string_free (str, FALSE);
+}
+
 /**
  * dfu_sector_to_string:
  * @sector: a #DfuSector
@@ -205,14 +218,16 @@ dfu_sector_to_string (DfuSector *sector)
 {
 	DfuSectorPrivate *priv = GET_PRIVATE (sector);
 	GString *str;
+	g_autofree gchar *caps_str = NULL;
 
 	g_return_val_if_fail (DFU_IS_SECTOR (sector), NULL);
 
 	str = g_string_new ("");
+	caps_str = dfu_sector_cap_to_string (priv->cap);
 	g_string_append_printf (str,
 				"Zone:%i, Sec#:%i, Addr:0x%08x, "
-				"Size:0x%04x, Caps:0x%01x",
+				"Size:0x%04x, Caps:0x%01x [%s]",
 				priv->zone, priv->number, priv->address,
-				priv->size, priv->cap);
+				priv->size, priv->cap, caps_str);
 	return g_string_free (str, FALSE);
 }
