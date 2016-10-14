@@ -168,7 +168,7 @@ dfu_device_init (DfuDevice *device)
 	priv->state = DFU_STATE_APP_IDLE;
 	priv->status = DFU_STATUS_OK;
 	priv->targets = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	priv->timeout_ms = 500;
+	priv->timeout_ms = 1500;
 	priv->transfer_size = 64;
 }
 
@@ -1071,9 +1071,10 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 					(((guint32) buf[2]) << 8) +
 					(((guint32) buf[3]) << 16);
 	}
-	g_debug ("refreshed status=%s and state=%s",
+	g_debug ("refreshed status=%s and state=%s (dnload=%u)",
 		 dfu_status_to_string (priv->status),
-		 dfu_state_to_string (priv->state));
+		 dfu_state_to_string (priv->state),
+		 priv->dnload_timeout);
 	return TRUE;
 }
 
