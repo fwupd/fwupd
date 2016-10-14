@@ -1507,6 +1507,17 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 		priv->platform_id = g_strdup (g_usb_device_get_platform_id (dev));
 	}
 
+	/* re-get the quirks for this new device */
+	priv->quirks = DFU_DEVICE_QUIRK_NONE;
+	priv->attributes = DFU_DEVICE_ATTRIBUTE_NONE;
+	dfu_device_set_quirks (device);
+
+	/* the device has no DFU runtime, so cheat */
+	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+		g_debug ("ignoring fake device");
+		return TRUE;
+	}
+
 	/* update all the targets */
 	if (!dfu_device_add_targets (device)) {
 		g_set_error_literal (error,
