@@ -68,6 +68,8 @@ guint32		 dfu_sector_get_id		(DfuSector	*sector);
 guint32		 dfu_sector_get_address		(DfuSector	*sector);
 guint32		 dfu_sector_get_size		(DfuSector	*sector);
 guint32		 dfu_sector_get_size_left	(DfuSector	*sector);
+guint16		 dfu_sector_get_zone		(DfuSector	*sector);
+guint16		 dfu_sector_get_number		(DfuSector	*sector);
 gboolean	 dfu_sector_has_cap		(DfuSector	*sector,
 						 DfuSectorCap	 cap);
 gchar		*dfu_sector_to_string		(DfuSector	*sector);
