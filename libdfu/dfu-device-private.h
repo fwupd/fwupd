@@ -46,6 +46,7 @@ gboolean	 dfu_device_set_new_usb_dev		(DfuDevice	*device,
 							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_device_ensure_interface		(DfuDevice	*device,
+							 GCancellable	*cancellable,
 							 GError		**error);
 
 G_END_DECLS

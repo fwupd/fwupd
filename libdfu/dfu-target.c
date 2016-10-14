@@ -566,7 +566,7 @@ dfu_target_use_alt_setting (DfuTarget *target, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (priv->device, error))
+	if (!dfu_device_ensure_interface (priv->device, NULL, error))
 		return FALSE;
 
 	/* use the correct setting */

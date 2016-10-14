@@ -938,7 +938,9 @@ dfu_device_set_status (DfuDevice *device, DfuStatus status)
 }
 
 gboolean
-dfu_device_ensure_interface (DfuDevice *device, GError **error)
+dfu_device_ensure_interface (DfuDevice *device,
+			     GCancellable *cancellable,
+			     GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(GError) error_local = NULL;
@@ -950,6 +952,16 @@ dfu_device_ensure_interface (DfuDevice *device, GError **error)
 	/* nothing set */
 	if (priv->iface_number == 0xff)
 		return TRUE;
+
+	/* ensure open */
+	if (!dfu_device_open (device,
+			      DFU_DEVICE_OPEN_FLAG_NONE,
+			      cancellable,
+			      error)) {
+		g_prefix_error (error, "cannot claim interface %i: ",
+				priv->iface_number);
+		return TRUE;
+	}
 
 	/* claim, without detaching kernel driver */
 	if (!g_usb_device_claim_interface (priv->dev,
@@ -1011,7 +1023,7 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, error))
+	if (!dfu_device_ensure_interface (device, cancellable, error))
 		return FALSE;
 
 	if (!g_usb_device_control_transfer (priv->dev,
@@ -1110,7 +1122,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, error))
+	if (!dfu_device_ensure_interface (device, cancellable, error))
 		return FALSE;
 
 	/* inform UI there's going to be a detach:attach */
@@ -1190,7 +1202,7 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, error))
+	if (!dfu_device_ensure_interface (device, cancellable, error))
 		return FALSE;
 
 	if (!g_usb_device_control_transfer (priv->dev,
@@ -1258,7 +1270,7 @@ dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, error))
+	if (!dfu_device_ensure_interface (device, cancellable, error))
 		return FALSE;
 
 	if (!g_usb_device_control_transfer (priv->dev,
@@ -1785,7 +1797,7 @@ dfu_device_upload (DfuDevice *device,
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, error))
+	if (!dfu_device_ensure_interface (device, cancellable, error))
 		return FALSE;
 
 	/* create ahead of time */
@@ -1911,7 +1923,7 @@ dfu_device_download (DfuDevice *device,
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, error))
+	if (!dfu_device_ensure_interface (device, cancellable, error))
 		return FALSE;
 
 	/* do we allow wildcard VID:PID matches */
