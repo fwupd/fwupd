@@ -35,6 +35,8 @@ libebitdo_la_LIBADD =						\
 	$(GLIB_LIBS)
 
 libebitdo_la_LDFLAGS =						\
+	$(PIE_LDFLAGS)						\
+	$(RELRO_LDFLAGS)					\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)	\
 	-export-dynamic						\
 	-no-undefined						\

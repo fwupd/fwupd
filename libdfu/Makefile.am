@@ -87,6 +87,8 @@ libdfu_la_LIBADD =						\
 	$(LIBM)
 
 libdfu_la_LDFLAGS =						\
+	$(PIE_LDFLAGS)						\
+	$(RELRO_LDFLAGS)					\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)	\
 	-export-dynamic						\
 	-no-undefined						\
@@ -137,6 +139,10 @@ dfu_self_test_LDADD =						\
 	$(APPSTREAM_GLIB_LIBS)					\
 	$(GLIB_LIBS)						\
 	$(GUSB_LIBS)
+
+dfu_self_test_LDFLAGS =						\
+	$(PIE_LDFLAGS)						\
+	$(RELRO_LDFLAGS)
 
 dfu_self_test_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
 
