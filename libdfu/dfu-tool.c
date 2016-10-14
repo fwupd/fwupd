@@ -430,6 +430,153 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 					error);
 }
 
+static GBytes *
+dfu_tool_parse_hex_string (const gchar *val, GError **error)
+{
+	gsize result_size;
+	guint i;
+	g_autofree guint8 *result = NULL;
+
+	/* sanity check */
+	if (val == NULL) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "nothing to parse");
+		return NULL;
+	}
+
+	/* parse each hex byte */
+	result_size = strlen (val) / 2;
+	result = g_malloc (result_size);
+	for (i = 0; i < result_size; i++) {
+		gchar buf[3] = { "xx" };
+		gchar *endptr = NULL;
+		guint64 tmp;
+
+		/* copy two bytes and parse as hex */
+		memcpy (buf, val + (i * 2), 2);
+		tmp = g_ascii_strtoull (buf, &endptr, 16);
+		if (tmp > 0xff || endptr[0] != '\0') {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "failed to parse '%s'", val);
+			return NULL;
+		}
+		result[i] = tmp;
+	}
+	return g_bytes_new (result, result_size);
+}
+
+static guint
+dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
+{
+	gsize data_sz;
+	gsize i;
+	gsize replace_sz;
+	gsize search_sz;
+	guint8 *data_buf;
+	guint8 *replace_buf;
+	guint8 *search_buf;
+	guint cnt = 0;
+
+	data_buf = g_bytes_get_data (data, &data_sz);
+	search_buf = g_bytes_get_data (search, &search_sz);
+	replace_buf = g_bytes_get_data (replace, &replace_sz);
+
+	g_return_val_if_fail (search_sz == replace_sz, FALSE);
+
+	/* find and replace each one */
+	for (i = 0; i < data_sz - search_sz; i++) {
+		if (memcmp (data_buf + i, search_buf, search_sz) == 0) {
+			g_print ("Replacing %" G_GSIZE_FORMAT " bytes @0x%04x\n",
+				 replace_sz, (guint) i);
+			memcpy (data_buf + i, replace_buf, replace_sz);
+			i += replace_sz;
+			cnt++;
+		}
+	}
+	return cnt;
+}
+
+static gboolean
+dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	GPtrArray *images;
+	guint i;
+	guint j;
+	guint cnt = 0;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GBytes) data_search = NULL;
+	g_autoptr(GBytes) data_replace = NULL;
+
+	/* check args */
+	if (g_strv_length (values) < 3) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "Invalid arguments, expected FILE SEARCH REPLACE"
+				     " -- e.g. `firmware.dfu deadbeef beefdead");
+		return FALSE;
+	}
+
+	/* open */
+	file = g_file_new_for_path (values[0]);
+	firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_file (firmware, file,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      priv->cancellable,
+				      error)) {
+		return FALSE;
+	}
+
+	/* parse hex values */
+	data_search = dfu_tool_parse_hex_string (values[1], error);
+	if (data_search == NULL)
+		return FALSE;
+	data_replace = dfu_tool_parse_hex_string (values[2], error);
+	if (data_replace == NULL)
+		return FALSE;
+	if (g_bytes_get_size (data_search) != g_bytes_get_size (data_replace)) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "search and replace were different sizes");
+		return FALSE;
+	}
+
+	/* get each data segment */
+	images = dfu_firmware_get_images (firmware);
+	for (i = 0; i < images->len; i++) {
+		DfuImage *image = g_ptr_array_index (images, i);
+		GPtrArray *elements = dfu_image_get_elements (image);
+		for (j = 0; j < elements->len; j++) {
+			DfuElement *element = g_ptr_array_index (elements, j);
+			GBytes *contents = dfu_element_get_contents (element);
+			if (contents == NULL)
+				continue;
+			cnt += dfu_tool_bytes_replace (contents, data_search, data_replace);
+		}
+	}
+
+	/* nothing done */
+	if (cnt == 0) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INTERNAL,
+				     "search string was not found");
+		return FALSE;
+	}
+
+	/* write out new file */
+	return dfu_firmware_write_file (firmware,
+					file,
+					priv->cancellable,
+					error);
+}
+
 static gboolean
 dfu_tool_set_target_size (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -2083,6 +2230,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Sets metadata on a firmware file"),
 		     dfu_tool_set_metadata);
+	dfu_tool_add (priv->cmd_array,
+		     "replace-data",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Replace data in an existing firmware file"),
+		     dfu_tool_replace_data);
 
 	/* use animated progress bar */
 	priv->progress_bar = dfu_progress_bar_new ();
