@@ -660,6 +660,10 @@ dfu_device_set_quirks (DfuDevice *device)
 	if (vid == 0x273f && pid == 0x1003)
 		priv->quirks |= DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD;
 
+	/* HydraBus */
+	if (vid == 0x1d50 && pid == 0x60a7)
+		priv->quirks |= DFU_DEVICE_QUIRK_NO_DFU_RUNTIME;
+
 	/* the DSO Nano has uses 0 instead of 2 when in DFU mode */
 //	quirks |= DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO;
 }
