@@ -420,6 +420,11 @@ dfu_device_add_targets (DfuDevice *device)
 		if (priv->targets->len == 0) {
 			g_debug ("no DFU runtime, so faking device");
 			priv->iface_number = 0xff;
+			priv->runtime_vid = g_usb_device_get_vid (priv->dev);
+			priv->runtime_pid = g_usb_device_get_pid (priv->dev);
+			priv->runtime_release = g_usb_device_get_release (priv->dev);
+			priv->attributes = DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD |
+					   DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD;
 		}
 		return TRUE;
 	}
@@ -1386,6 +1391,7 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		priv->state = DFU_STATE_APP_IDLE;
 		priv->status = DFU_STATUS_OK;
+		priv->mode = DFU_MODE_RUNTIME;
 		flags |= DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH;
 	}
 
