@@ -969,7 +969,7 @@ dfu_device_ensure_interface (DfuDevice *device,
 			      error)) {
 		g_prefix_error (error, "cannot claim interface %i: ",
 				priv->iface_number);
-		return TRUE;
+		return FALSE;
 	}
 
 	/* claim, without detaching kernel driver */
