@@ -1127,6 +1127,7 @@ dfu_target_upload_element_dfuse (DfuTarget *target,
 		contents_truncated = g_bytes_ref (contents);
 	element = dfu_element_new ();
 	dfu_element_set_contents (element, contents_truncated);
+	dfu_element_set_address (element, address);
 	return element;
 }
 
