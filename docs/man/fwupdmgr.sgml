@@ -90,7 +90,7 @@
           <option>--offline</option>
         </term>
         <listitem>
-          <para>Perform the installation offline where possible.</para>
+          <para>Schedule installation for next reboot when possible.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
