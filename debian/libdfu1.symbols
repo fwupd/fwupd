@@ -1,4 +1,5 @@
 libdfu.so.1 libdfu1 #MINVER#
+ dfu_action_to_string@Base 0.7.5
  dfu_cipher_decrypt_devo@Base 0.7.3
  dfu_cipher_decrypt_xtea@Base 0.7.3
  dfu_cipher_encrypt_devo@Base 0.7.3
@@ -128,16 +129,20 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_mode_to_string@Base 0.6.3
  dfu_sector_get_address@Base 0.6.3
  dfu_sector_get_id@Base 0.6.3
+ dfu_sector_get_number@Base 0.7.5
  dfu_sector_get_size@Base 0.6.3
  dfu_sector_get_size_left@Base 0.6.3
  dfu_sector_get_type@Base 0.6.3
+ dfu_sector_get_zone@Base 0.7.5
  dfu_sector_has_cap@Base 0.6.3
  dfu_sector_new@Base 0.6.3
  dfu_sector_to_string@Base 0.6.3
  dfu_state_to_string@Base 0.6.3
  dfu_status_to_string@Base 0.6.3
  dfu_target_download@Base 0.6.3
+ dfu_target_download_chunk@Base 0.7.5
  dfu_target_get_alt_name@Base 0.6.3
+ dfu_target_get_alt_name_for_display@Base 0.7.5
  dfu_target_get_alt_setting@Base 0.6.3
  dfu_target_get_cipher_kind@Base 0.6.3
  dfu_target_get_sectors@Base 0.6.3
