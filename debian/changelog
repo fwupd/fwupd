@@ -4,6 +4,7 @@ fwupd (0.7.5-1) UNRELEASED; urgency=medium
   * Refresh symbols.
   * Drop all patches, now upstream.
   * Enable build hardening flags
+  * Drop valgind build dependency from m68k
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Wed, 19 Oct 2016 09:16:53 -0500
 
