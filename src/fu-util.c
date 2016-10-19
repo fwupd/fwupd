@@ -295,11 +295,28 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static void
+fu_util_verbose_install_messaging (FuUtilPrivate *priv, gboolean fallback) {
+	if (g_getenv ("FWUPD_VERBOSE") == NULL)
+		return;
+	if (fallback)
+		/* TRANSLATOR: provider only supports offline */
+		g_print ("%s, ", _("Flashing in OS unsupported"));
+	if ((priv->flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0)
+		/* TRANSLATOR: update flashed on next boot */
+		g_print ("%s...\n", _("Attempting to schedule update for next reboot"));
+	else
+		/* TRANSLATOR: provider supports flashing immediately */
+		g_print ("%s...\n", _("Attempting to flash within OS"));
+}
+
 static gboolean
 fu_util_install_with_fallback (FuUtilPrivate *priv, const gchar *id,
 			       const gchar *filename, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
+
+	fu_util_verbose_install_messaging (priv, FALSE);
 
 	/* install with flags chosen by the user */
 	if (fwupd_client_install (priv->client, id, filename, priv->flags,
@@ -314,9 +331,9 @@ fu_util_install_with_fallback (FuUtilPrivate *priv, const gchar *id,
 		return FALSE;
 	}
 
-	/* TRANSLATOR: the provider only supports offline */
-	g_print ("%s...\n", _("Retrying as an offline update"));
+	/* fallback to offline update */
 	priv->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
+	fu_util_verbose_install_messaging (priv, TRUE);
 	return fwupd_client_install (priv->client, id, filename, priv->flags,
 				     NULL, error);
 }
