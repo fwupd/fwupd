@@ -39,6 +39,8 @@ struct _DfuTargetClass
 	GUsbDeviceClass		 parent_class;
 	void			(*percentage_changed)	(DfuTarget	*target,
 							 guint		 percentage);
+	void			(*action_changed)	(DfuTarget	*target,
+							 DfuAction	 action);
 	/*< private >*/
 	/* Padding for future expansion */
 	void (*_dfu_target_reserved1) (void);
@@ -49,7 +51,6 @@ struct _DfuTargetClass
 	void (*_dfu_target_reserved6) (void);
 	void (*_dfu_target_reserved7) (void);
 	void (*_dfu_target_reserved8) (void);
-	void (*_dfu_target_reserved9) (void);
 };
 
 /**
@@ -81,6 +82,8 @@ typedef enum {
 GPtrArray	*dfu_target_get_sectors			(DfuTarget	*target);
 guint8		 dfu_target_get_alt_setting		(DfuTarget	*target);
 const gchar	*dfu_target_get_alt_name		(DfuTarget	*target,
+							 GError		**error);
+const gchar	*dfu_target_get_alt_name_for_display	(DfuTarget	*target,
 							 GError		**error);
 DfuImage	*dfu_target_upload			(DfuTarget	*target,
 							 DfuTargetTransferFlags flags,

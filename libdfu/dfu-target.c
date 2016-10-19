@@ -61,12 +61,15 @@ typedef struct {
 	guint8			 alt_setting;
 	guint8			 alt_idx;
 	gchar			*alt_name;
+	gchar			*alt_name_for_display;
 	GPtrArray		*sectors;		/* of DfuSector */
-	GHashTable		*sectors_erased;	/* of DfuSector:1 */
+	guint			 old_percentage;
+	DfuAction		 old_action;
 } DfuTargetPrivate;
 
 enum {
 	SIGNAL_PERCENTAGE_CHANGED,
+	SIGNAL_ACTION_CHANGED,
 	SIGNAL_LAST
 };
 
@@ -96,6 +99,22 @@ dfu_target_class_init (DfuTargetClass *klass)
 			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_UINT);
 
+	/**
+	 * DfuTarget::action-changed:
+	 * @device: the #DfuTarget instance that emitted the signal
+	 * @action: the new DfuAction
+	 *
+	 * The ::action-changed signal is emitted when the high level action changes.
+	 *
+	 * Since: 0.7.5
+	 **/
+	signals [SIGNAL_ACTION_CHANGED] =
+		g_signal_new ("action-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (DfuTargetClass, action_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
 	object_class->finalize = dfu_target_finalize;
 }
 
@@ -104,7 +123,8 @@ dfu_target_init (DfuTarget *target)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	priv->sectors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	priv->sectors_erased = g_hash_table_new (g_direct_hash, g_direct_equal);
+	priv->old_percentage = G_MAXUINT;
+	priv->old_action = DFU_ACTION_IDLE;
 }
 
 static void
@@ -114,8 +134,8 @@ dfu_target_finalize (GObject *object)
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 
 	g_free (priv->alt_name);
+	g_free (priv->alt_name_for_display);
 	g_ptr_array_unref (priv->sectors);
-	g_hash_table_unref (priv->sectors_erased);
 
 	/* we no longer care */
 	if (priv->device != NULL) {
@@ -168,7 +188,7 @@ dfu_target_get_sector_for_addr (DfuTarget *target, guint32 addr)
 static gboolean
 dfu_target_parse_sector (DfuTarget *target,
 			 const gchar *dfuse_sector_id,
-			 guint32 addr,
+			 guint32 *addr,
 			 guint16 zone,
 			 guint16 number,
 			 GError **error)
@@ -213,13 +233,10 @@ dfu_target_parse_sector (DfuTarget *target,
 		return FALSE;
 	}
 
-	/* optional spaces */
-	while (tmp[0] == ' ')
-		tmp++;
-
 	/* get multiplier */
 	switch (tmp[0]) {
 	case 'B':		/* byte */
+	case ' ':		/* byte, ST reference bootloader :/ */
 		break;
 	case 'K':		/* Kilo */
 		sector_size *= 0x400;
@@ -276,7 +293,7 @@ dfu_target_parse_sector (DfuTarget *target,
 	/* add all the sectors */
 	for (i = 0; i < nr_sectors; i++) {
 		DfuSector *sector;
-		sector = dfu_sector_new (addr + addr_offset,
+		sector = dfu_sector_new (*addr + addr_offset,
 					 (guint32) sector_size,
 					 (guint32) ((nr_sectors * sector_size) - addr_offset),
 					 zone,
@@ -285,6 +302,9 @@ dfu_target_parse_sector (DfuTarget *target,
 		g_ptr_array_add (priv->sectors, sector);
 		addr_offset += dfu_sector_get_size (sector);
 	}
+
+	/* update for next sector */
+	*addr += addr_offset;
 	return TRUE;
 }
 
@@ -292,7 +312,7 @@ gboolean
 dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	guint64 addr;
+	guint32 addr;
 	g_autofree gchar *str_debug = NULL;
 	g_auto(GStrv) zones = NULL;
 
@@ -330,16 +350,28 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 
 	/* parse zones */
 	zones = g_strsplit (alt_name, "/", -1);
-	g_debug ("DfuSe nice alt-name: %s", g_strchomp (zones[0] + 1));
+	priv->alt_name_for_display = g_strdup (g_strchomp (zones[0] + 1));
 	for (guint i = 1; zones[i] != NULL; i += 2) {
+		guint64 addr_tmp;
 		g_auto(GStrv) sectors = NULL;
 
 		/* parse address */
-		if (!g_str_has_prefix (zones[i], "0x"))
+		if (!g_str_has_prefix (zones[i], "0x")) {
+			g_set_error_literal (error,
+					     DFU_ERROR,
+					     DFU_ERROR_NOT_SUPPORTED,
+					     "No sector address");
 			return FALSE;
-		addr = g_ascii_strtoull (zones[i] + 2, NULL, 16);
-		if (addr > G_MAXUINT32)
+		}
+		addr_tmp = g_ascii_strtoull (zones[i] + 2, NULL, 16);
+		if (addr_tmp > G_MAXUINT32) {
+			g_set_error_literal (error,
+					     DFU_ERROR,
+					     DFU_ERROR_NOT_SUPPORTED,
+					     "Sector address too large");
 			return FALSE;
+		}
+		addr = (guint32) addr_tmp;
 
 		/* no sectors?! */
 		if (zones[i+1] == NULL) {
@@ -355,10 +387,14 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 		for (guint16 j = 0; sectors[j] != NULL; j++) {
 			if (!dfu_target_parse_sector (target,
 						      sectors[j],
-						      (guint32) addr,
+						      &addr,
 						      (i - 1) / 2, j,
-						      error))
+						      error)) {
+				g_prefix_error (error,
+						"Failed to parse: '%s': ",
+						sectors[j]);
 				return FALSE;
+			}
 		}
 	}
 
@@ -476,6 +512,16 @@ dfu_target_check_status (DfuTarget *target,
 	if (!dfu_device_refresh (priv->device, cancellable, error))
 		return FALSE;
 
+	/* wait for dfuDNBUSY to not be set */
+	if (dfu_device_has_dfuse_support (priv->device)) {
+		while (dfu_device_get_state (priv->device) == DFU_STATE_DFU_DNBUSY) {
+			g_debug ("waiting for DFU_STATE_DFU_DNBUSY to clear");
+			g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
+			if (!dfu_device_refresh (priv->device, cancellable, error))
+				return FALSE;
+		}
+	}
+
 	/* not in an error state */
 	if (dfu_device_get_state (priv->device) != DFU_STATE_DFU_ERROR)
 		return TRUE;
@@ -529,7 +575,7 @@ dfu_target_use_alt_setting (DfuTarget *target, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (priv->device, error))
+	if (!dfu_device_ensure_interface (priv->device, NULL, error))
 		return FALSE;
 
 	/* use the correct setting */
@@ -611,7 +657,7 @@ dfu_target_setup (DfuTarget *target, GError **error)
 	return TRUE;
 }
 
-static gboolean
+gboolean
 dfu_target_download_chunk (DfuTarget *target, guint8 index, GBytes *bytes,
 			   GCancellable *cancellable, GError **error)
 {
@@ -643,8 +689,11 @@ dfu_target_download_chunk (DfuTarget *target, guint8 index, GBytes *bytes,
 	}
 
 	/* for ST devices, the action only occurs when we do GetStatus */
-	if (!dfu_target_check_status (target, cancellable, error))
+	if (!dfu_device_refresh (priv->device, cancellable, error))
 		return FALSE;
+
+	/* give the target a chance to update */
+	g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
 
 	g_assert (actual_length == g_bytes_get_size (bytes));
 	return TRUE;
@@ -688,13 +737,14 @@ dfu_target_set_address (DfuTarget *target,
 	buf[0] = DFU_CMD_DFUSE_SET_ADDRESS_POINTER;
 	memcpy (buf + 1, &address, 4);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error))
+	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+		g_prefix_error (error, "cannot set address 0x%x: ", address);
 		return FALSE;
+	}
 
-	/* for ST devices, the action only occurs when we do GetStatus */
-	if (!dfu_target_check_status (target, cancellable, error))
-		return FALSE;
-	return TRUE;
+	/* 2nd check required to get error code */
+	g_debug ("doing actual check status");
+	return dfu_target_check_status (target, cancellable, error);
 }
 
 /**
@@ -735,14 +785,13 @@ dfu_target_erase_address (DfuTarget *target,
 	buf[0] = DFU_CMD_DFUSE_ERASE;
 	memcpy (buf + 1, &address, 4);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error))
+	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+		g_prefix_error (error, "cannot erase address 0x%x: ", address);
 		return FALSE;
-
-	/* for ST devices, the action only occurs when we do GetStatus */
-	if (!dfu_target_check_status (target, cancellable, error))
-		return FALSE;
+	}
 
 	/* 2nd check required to get error code */
+	g_debug ("doing actual check status");
 	return dfu_target_check_status (target, cancellable, error);
 }
 
@@ -786,12 +835,10 @@ dfu_target_mass_erase (DfuTarget *target,
 	/* format buffer */
 	buf[0] = DFU_CMD_DFUSE_ERASE;
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error))
+	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+		g_prefix_error (error, "cannot mass-erase: ");
 		return FALSE;
-
-	/* for ST devices, the action only occurs when we do GetStatus */
-	if (!dfu_target_check_status (target, cancellable, error))
-		return FALSE;
+	}
 
 	/* 2nd check required to get error code */
 	return dfu_target_check_status (target, cancellable, error);
@@ -833,8 +880,10 @@ dfu_target_read_unprotect (DfuTarget *target,
 	buf[0] = DFU_CMD_DFUSE_READ_UNPROTECT;
 	memcpy (buf + 1, &address, 4);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error))
+	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+		g_prefix_error (error, "cannot read-unprotect: ");
 		return FALSE;
+	}
 
 	/* for ST devices, the action only occurs when we do GetStatus */
 	return dfu_target_check_status (target, cancellable, error);
@@ -875,86 +924,243 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 		return NULL;
 	}
 
-	/* for ST devices, the action only occurs when we do GetStatus */
-	if (!dfu_device_has_quirk (priv->device, DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD)) {
-		if (!dfu_target_check_status (target, cancellable, error))
-			return NULL;
-	}
-
 	return g_bytes_new_take (buf, actual_length);
 }
 
+static void
+dfu_target_set_action (DfuTarget *target, DfuAction action)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+
+	/* unchanged */
+	if (priv->old_action == action)
+		return;
+	if (priv->old_action != DFU_ACTION_IDLE &&
+	    action != DFU_ACTION_IDLE) {
+		g_debug ("ignoring action %s as %s already set and not idle",
+			 dfu_action_to_string (action),
+			 dfu_action_to_string (priv->old_action));
+		return;
+	}
+	g_debug ("setting action %s", dfu_action_to_string (action));
+	g_signal_emit (target, signals[SIGNAL_ACTION_CHANGED], 0, action);
+	priv->old_action = action;
+}
+
+static void
+dfu_target_set_percentage_raw (DfuTarget *target, guint percentage)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	if (percentage == priv->old_percentage)
+		return;
+	g_debug ("setting percentage %u%% of %s",
+		 percentage, dfu_action_to_string (priv->old_action));
+	g_signal_emit (target,
+		       signals[SIGNAL_PERCENTAGE_CHANGED],
+		       0, percentage);
+	priv->old_percentage = percentage;
+}
+
+static void
+dfu_target_set_percentage (DfuTarget *target, guint value, guint total)
+{
+	guint percentage;
+
+	g_return_if_fail (total > 0);
+
+	percentage = (value * 100) / total;
+	if (percentage >= 100)
+		return;
+	dfu_target_set_percentage_raw (target, percentage);
+}
+
+static GBytes *
+_g_bytes_array_join (GPtrArray *chunks)
+{
+	gsize total_size = 0;
+	guint32 offset = 0;
+	guint8 *buffer;
+	guint i;
+
+	/* get the size of all the chunks */
+	for (i = 0; i < chunks->len; i++) {
+		GBytes *chunk_tmp = g_ptr_array_index (chunks, i);
+		total_size += g_bytes_get_size (chunk_tmp);
+	}
+
+	/* copy them into a buffer */
+	buffer = g_malloc0 (total_size);
+	for (i = 0; i < chunks->len; i++) {
+		const guint8 *chunk_data;
+		gsize chunk_size = 0;
+		GBytes *chunk_tmp = g_ptr_array_index (chunks, i);
+		chunk_data = g_bytes_get_data (chunk_tmp, &chunk_size);
+		if (chunk_size == 0)
+			continue;
+		memcpy (buffer + offset, chunk_data, chunk_size);
+		offset += chunk_size;
+	}
+	return g_bytes_new_take (buffer, total_size);
+}
+
 static DfuElement *
-dfu_target_upload_element (DfuTarget *target,
-			   guint32 address,
-			   gsize expected_size,
-			   GCancellable *cancellable,
-			   GError **error)
+dfu_target_upload_element_dfuse (DfuTarget *target,
+				 guint32 address,
+				 gsize expected_size,
+				 gsize maximum_size,
+				 GCancellable *cancellable,
+				 GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	DfuSector *sector;
 	DfuElement *element = NULL;
 	GBytes *chunk_tmp;
-	guint32 chunk_size;
-	guint32 offset = 0;
+	guint32 offset = address;
+	guint percentage_size = expected_size > 0 ? expected_size : maximum_size;
 	gsize total_size = 0;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
-	guint8 *buffer;
-	guint32 last_sector_id = G_MAXUINT;
-	guint8 dfuse_sector_offset = 0;
-	guint i;
 	guint idx;
-	guint old_percentage = G_MAXUINT;
 	g_autoptr(GBytes) contents = NULL;
+	g_autoptr(GBytes) contents_truncated = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	/* ST uses wBlockNum=0 for DfuSe commands and wBlockNum=1 is reserved */
-	if (dfu_device_has_dfuse_support (priv->device)) {
-		offset += address;
-		dfuse_sector_offset = 2;
+	/* for DfuSe devices we need to handle the address manually */
+	sector = dfu_target_get_sector_for_addr (target, offset);
+	if (sector == NULL) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INVALID_DEVICE,
+			     "no memory sector at 0x%04x",
+			     (guint) offset);
+		return NULL;
 	}
+	g_debug ("using sector %u for read of %x",
+		 dfu_sector_get_id (sector),
+		 offset);
+	if (!dfu_sector_has_cap (sector, DFU_SECTOR_CAP_READABLE)) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INVALID_DEVICE,
+			     "memory sector at 0x%04x is not readble",
+			     (guint) offset);
+		return NULL;
+	}
+
+	/* update UI */
+	dfu_target_set_action (target, DFU_ACTION_READ);
+
+	/* manually set the sector address */
+	g_debug ("setting DfuSe address to 0x%04x", (guint) offset);
+	if (!dfu_target_set_address (target,
+				     offset,
+				     cancellable,
+				     error))
+		return NULL;
+
+	/* abort back to IDLE */
+	if (!dfu_device_abort (priv->device, cancellable, error))
+		return NULL;
 
 	/* get all the chunks from the hardware */
 	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 	for (idx = 0; idx < G_MAXUINT16; idx++) {
+		guint32 chunk_size;
 
-		/* for DfuSe devices we need to handle the address manually */
-		if (dfu_device_has_dfuse_support (priv->device)) {
+		/* read chunk of data -- ST uses wBlockNum=0 for DfuSe commands
+		 * and wBlockNum=1 is reserved */
+		chunk_tmp = dfu_target_upload_chunk (target,
+						     (guint8) (idx + 2),
+						     cancellable,
+						     error);
+		if (chunk_tmp == NULL)
+			return NULL;
 
-			/* check the sector with this element address is suitable */
-			sector = dfu_target_get_sector_for_addr (target, offset);
-			if (sector == NULL) {
-				g_set_error (error,
-					     DFU_ERROR,
-					     DFU_ERROR_INVALID_DEVICE,
-					     "no memory sector at 0x%04x",
-					     (guint) offset);
-				return NULL;
-			}
-			if (!dfu_sector_has_cap (sector, DFU_SECTOR_CAP_READABLE)) {
-				g_set_error (error,
-					     DFU_ERROR,
-					     DFU_ERROR_INVALID_DEVICE,
-					     "memory sector at 0x%04x is not readble",
-					     (guint) offset);
-				return NULL;
-			}
+		/* add to array */
+		chunk_size = (guint32) g_bytes_get_size (chunk_tmp);
+		g_debug ("got #%04x chunk @0x%x of size %" G_GUINT32_FORMAT,
+			 idx, offset, chunk_size);
+		g_ptr_array_add (chunks, chunk_tmp);
+		total_size += chunk_size;
+		offset += chunk_size;
 
-			/* manually set the sector address */
-			if (dfu_sector_get_id (sector) != last_sector_id) {
-				g_debug ("setting DfuSe address to 0x%04x", (guint) offset);
-				if (!dfu_target_set_address (target,
-							     offset,
-							     cancellable,
-							     error))
-					return NULL;
-				last_sector_id = dfu_sector_get_id (sector);
-			}
+		/* update UI */
+		if (chunk_size > 0)
+			dfu_target_set_percentage (target, total_size, percentage_size);
+
+		/* detect short write as EOF */
+		if (chunk_size < transfer_size)
+			break;
+
+		/* more data than we needed */
+		if (maximum_size > 0 && total_size > maximum_size)
+			break;
+	}
+
+	/* abort back to IDLE */
+	if (dfu_device_has_dfuse_support (priv->device)) {
+		if (!dfu_device_abort (priv->device, cancellable, error))
+			return NULL;
+	}
+
+	/* check final size */
+	if (expected_size > 0) {
+		if (total_size < expected_size) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_FILE,
+				     "invalid size, got %" G_GSIZE_FORMAT ", "
+				     "expected %" G_GSIZE_FORMAT ,
+				     total_size, expected_size);
+			return NULL;
 		}
+	}
+
+	/* done */
+	dfu_target_set_percentage_raw (target, 100);
+	dfu_target_set_action (target, DFU_ACTION_IDLE);
+
+	/* create new image */
+	contents = _g_bytes_array_join (chunks);
+	if (expected_size > 0)
+		contents_truncated = g_bytes_new_from_bytes (contents, 0, expected_size);
+	else
+		contents_truncated = g_bytes_ref (contents);
+	element = dfu_element_new ();
+	dfu_element_set_contents (element, contents_truncated);
+	dfu_element_set_address (element, address);
+	return element;
+}
+
+static DfuElement *
+dfu_target_upload_element_dfu (DfuTarget *target,
+			       guint32 address,
+			       gsize expected_size,
+			       gsize maximum_size,
+			       GCancellable *cancellable,
+			       GError **error)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	DfuElement *element = NULL;
+	GBytes *chunk_tmp;
+	guint32 offset = 0;
+	guint percentage_size = expected_size > 0 ? expected_size : maximum_size;
+	gsize total_size = 0;
+	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
+	guint idx;
+	g_autoptr(GBytes) contents = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* update UI */
+	dfu_target_set_action (target, DFU_ACTION_READ);
+
+	/* get all the chunks from the hardware */
+	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
+	for (idx = 0; idx < G_MAXUINT16; idx++) {
+		guint32 chunk_size;
 
 		/* read chunk of data */
 		chunk_tmp = dfu_target_upload_chunk (target,
-						     (guint8) (idx + dfuse_sector_offset),
+						     (guint8) idx,
 						     cancellable,
 						     error);
 		if (chunk_tmp == NULL)
@@ -971,14 +1177,8 @@ dfu_target_upload_element (DfuTarget *target,
 		g_ptr_array_add (chunks, chunk_tmp);
 
 		/* update UI */
-		if (chunk_size > 0) {
-			guint percentage = (guint) ((total_size * 100) / expected_size);
-			if (percentage != old_percentage) {
-				g_signal_emit (target,
-					       signals[SIGNAL_PERCENTAGE_CHANGED],
-					       0, percentage);
-			}
-		}
+		if (chunk_size > 0)
+			dfu_target_set_percentage (target, total_size, percentage_size);
 
 		/* detect short write as EOF */
 		if (chunk_size < transfer_size)
@@ -998,24 +1198,55 @@ dfu_target_upload_element (DfuTarget *target,
 		}
 	}
 
-	/* stitch them all together */
-	offset = 0;
-	buffer = g_malloc0 (total_size);
-	for (i = 0; i < chunks->len; i++) {
-		const guint8 *chunk_data;
-		chunk_tmp = g_ptr_array_index (chunks, i);
-		chunk_data = g_bytes_get_data (chunk_tmp, (gsize *) &chunk_size);
-		if (chunk_size == 0)
-			continue;
-		memcpy (buffer + offset, chunk_data, (gsize) chunk_size);
-		offset += chunk_size;
-	}
+	/* done */
+	dfu_target_set_percentage_raw (target, 100);
+	dfu_target_set_action (target, DFU_ACTION_IDLE);
 
 	/* create new image */
-	contents = g_bytes_new_take (buffer, total_size);
+	contents = _g_bytes_array_join (chunks);
 	element = dfu_element_new ();
 	dfu_element_set_contents (element, contents);
 	return element;
+}
+
+static DfuElement *
+dfu_target_upload_element (DfuTarget *target,
+			   guint32 address,
+			   gsize expected_size,
+			   gsize maximum_size,
+			   GCancellable *cancellable,
+			   GError **error)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	if (dfu_device_has_dfuse_support (priv->device)) {
+		return dfu_target_upload_element_dfuse (target,
+							address,
+							expected_size,
+							maximum_size,
+							cancellable,
+							error);
+	}
+	return dfu_target_upload_element_dfu (target,
+					      address,
+					      expected_size,
+					      maximum_size,
+					      cancellable,
+					      error);
+}
+
+static guint32
+dfu_target_get_size_of_zone (DfuTarget *target, guint16 zone)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	guint i;
+	guint32 len = 0;
+	for (i = 0; i < priv->sectors->len; i++) {
+		DfuSector *sector = g_ptr_array_index (priv->sectors, i);
+		if (dfu_sector_get_zone (sector) != zone)
+			continue;
+		len += dfu_sector_get_size (sector);
+	}
+	return len;
 }
 
 /**
@@ -1040,7 +1271,9 @@ dfu_target_upload (DfuTarget *target,
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	DfuSector *sector;
 	guint i;
-	guint32 last_sector_id = G_MAXUINT;
+	guint16 zone_cur;
+	guint32 zone_size = 0;
+	guint32 zone_last = G_MAXUINT;
 	g_autoptr(DfuImage) image = NULL;
 
 	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
@@ -1083,16 +1316,22 @@ dfu_target_upload (DfuTarget *target,
 
 		/* only upload to the start of any zone:sector */
 		sector = g_ptr_array_index (priv->sectors, i);
-		if (dfu_sector_get_id (sector) == last_sector_id)
+		zone_cur = dfu_sector_get_zone (sector);
+		if (zone_cur == zone_last)
 			continue;
+
+		/* get the size of the entire continous zone */
+		zone_size = dfu_target_get_size_of_zone (target, zone_cur);
+		zone_last = zone_cur;
 
 		/* get the first element from the hardware */
 		g_debug ("starting upload from 0x%08x (0x%04x)",
 			 dfu_sector_get_address (sector),
-			 dfu_sector_get_size_left (sector));
+			 zone_size);
 		element = dfu_target_upload_element (target,
 						     dfu_sector_get_address (sector),
-						     dfu_sector_get_size_left (sector),
+						     0,		/* expected */
+						     zone_size,	/* maximum */
 						     cancellable,
 						     error);
 		if (element == NULL)
@@ -1100,9 +1339,6 @@ dfu_target_upload (DfuTarget *target,
 
 		/* this element was uploaded okay */
 		dfu_image_add_element (image, element);
-
-		/* ignore sectors until one of these changes */
-		last_sector_id = dfu_sector_get_id (sector);
 	}
 
 	/* do host reset */
@@ -1156,26 +1392,18 @@ _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 }
 
 static gboolean
-dfu_target_download_element (DfuTarget *target,
-			     DfuElement *element,
-			     DfuTargetTransferFlags flags,
-			     GCancellable *cancellable,
-			     GError **error)
+dfu_target_download_element_dfu (DfuTarget *target,
+				 DfuElement *element,
+				 DfuTargetTransferFlags flags,
+				 GCancellable *cancellable,
+				 GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	DfuSector *sector;
 	GBytes *bytes;
 	guint i;
 	guint nr_chunks;
-	guint dfuse_sector_offset = 0;
-	guint last_sector_id = G_MAXUINT;
-	guint old_percentage = G_MAXUINT;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 	g_autoptr(GError) error_local = NULL;
-
-	/* ST uses wBlockNum=0 for DfuSe commands and wBlockNum=1 is reserved */
-	if (dfu_device_has_dfuse_support (priv->device))
-		dfuse_sector_offset = 2;
 
 	/* round up as we have to transfer incomplete blocks */
 	bytes = dfu_element_get_contents (element);
@@ -1188,63 +1416,14 @@ dfu_target_download_element (DfuTarget *target,
 				     "zero-length firmware");
 		return FALSE;
 	}
+	dfu_target_set_action (target, DFU_ACTION_WRITE);
 	for (i = 0; i < nr_chunks + 1; i++) {
 		gsize length;
 		guint32 offset;
-		guint percentage;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 
 		/* caclulate the offset into the element data */
 		offset = i * transfer_size;
-
-		/* for DfuSe devices we need to handle the erase and setting
-		 * the address manually */
-		if (dfu_device_has_dfuse_support (priv->device)) {
-
-			/* check the sector with this element address is suitable */
-			sector = dfu_target_get_sector_for_addr (target, offset);
-			if (sector == NULL) {
-				g_set_error (error,
-					     DFU_ERROR,
-					     DFU_ERROR_INVALID_DEVICE,
-					     "no memory sector at 0x%04x",
-					     (guint) offset);
-				return FALSE;
-			}
-			if (!dfu_sector_has_cap (sector, DFU_SECTOR_CAP_WRITEABLE)) {
-				g_set_error (error,
-					     DFU_ERROR,
-					     DFU_ERROR_INVALID_DEVICE,
-					     "memory sector at 0x%04x is not writable",
-					     (guint) offset);
-				return FALSE;
-			}
-
-			/* if it's erasable and not yet blanked */
-			if (!dfu_sector_has_cap (sector, DFU_SECTOR_CAP_ERASEABLE) &&
-			    g_hash_table_lookup (priv->sectors_erased, sector) == NULL) {
-				g_debug ("erasing DfuSe address at 0x%04x", offset);
-				if (!dfu_target_erase_address (target,
-							       offset,
-							       cancellable,
-							       error))
-					return FALSE;
-				g_hash_table_insert (priv->sectors_erased,
-						     sector,
-						     GINT_TO_POINTER (1));
-			}
-
-			/* manually set the sector address */
-			if (dfu_sector_get_id (sector) != last_sector_id) {
-				g_debug ("setting DfuSe address to 0x%04x", (guint) offset);
-				if (!dfu_target_set_address (target,
-							     (guint32) offset,
-							     cancellable,
-							     error))
-					return FALSE;
-				last_sector_id = dfu_sector_get_id (sector);
-			}
-		}
 
 		/* we have to write one final zero-sized chunk for EOF */
 		if (i < nr_chunks) {
@@ -1258,34 +1437,206 @@ dfu_target_download_element (DfuTarget *target,
 		g_debug ("writing #%04x chunk of size %" G_GSIZE_FORMAT,
 			 i, g_bytes_get_size (bytes_tmp));
 		if (!dfu_target_download_chunk (target,
-						(guint8) (i + dfuse_sector_offset),
+						(guint8) i,
 						bytes_tmp,
 						cancellable,
 						error))
 			return FALSE;
 
 		/* update UI */
-		percentage = (guint) ((offset * 100) / g_bytes_get_size (bytes));
-		if (percentage != old_percentage) {
-			g_signal_emit (target,
-				       signals[SIGNAL_PERCENTAGE_CHANGED],
-				       0, percentage);
+		dfu_target_set_percentage (target, offset, g_bytes_get_size (bytes));
+	}
+
+	/* done */
+	dfu_target_set_percentage_raw (target, 100);
+	dfu_target_set_action (target, DFU_ACTION_IDLE);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+dfu_target_download_element_dfuse (DfuTarget *target,
+				   DfuElement *element,
+				   DfuTargetTransferFlags flags,
+				   GCancellable *cancellable,
+				   GError **error)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	DfuSector *sector;
+	GBytes *bytes;
+	guint i;
+	guint nr_chunks;
+	guint zone_last = G_MAXUINT;
+	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) sectors_array = NULL;
+	g_autoptr(GHashTable) sectors_hash = NULL;
+
+	/* round up as we have to transfer incomplete blocks */
+	bytes = dfu_element_get_contents (element);
+	nr_chunks = (guint) ceil ((gdouble) g_bytes_get_size (bytes) /
+				  (gdouble) transfer_size);
+	if (nr_chunks == 0) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_FILE,
+				     "zero-length firmware");
+		return FALSE;
+	}
+
+	/* 1st pass: work out which sectors need erasing */
+	sectors_array = g_ptr_array_new ();
+	sectors_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
+	for (i = 0; i < nr_chunks; i++) {
+		guint32 offset_dev;
+
+		/* for DfuSe devices we need to handle the erase and setting
+		 * the sectory address manually */
+		offset_dev = dfu_element_get_address (element) + (i * transfer_size);
+		sector = dfu_target_get_sector_for_addr (target, offset_dev);
+		if (sector == NULL) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_DEVICE,
+				     "no memory sector at 0x%04x",
+				     (guint) offset_dev);
+			return FALSE;
+		}
+		if (!dfu_sector_has_cap (sector, DFU_SECTOR_CAP_WRITEABLE)) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_INVALID_DEVICE,
+				     "memory sector at 0x%04x is not writable",
+				     (guint) offset_dev);
+			return FALSE;
 		}
 
-		/* give the target a chance to update */
-		g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
+		/* if it's erasable and not yet blanked */
+		if (dfu_sector_has_cap (sector, DFU_SECTOR_CAP_ERASEABLE) &&
+		    g_hash_table_lookup (sectors_hash, sector) == NULL) {
+			g_hash_table_insert (sectors_hash,
+					     sector,
+					     GINT_TO_POINTER (1));
+			g_ptr_array_add (sectors_array, sector);
+			g_debug ("marking sector 0x%04x-%04x to be erased",
+				 dfu_sector_get_address (sector),
+				 dfu_sector_get_address (sector) + dfu_sector_get_size (sector));
+		}
+	}
+
+	/* 2nd pass: actually erase sectors */
+	dfu_target_set_action (target, DFU_ACTION_ERASE);
+	for (i = 0; i < sectors_array->len; i++) {
+		sector = g_ptr_array_index (sectors_array, i);
+		g_debug ("erasing sector at 0x%04x",
+			 dfu_sector_get_address (sector));
+		if (!dfu_target_erase_address (target,
+					       dfu_sector_get_address (sector),
+					       cancellable,
+					       error))
+			return FALSE;
+		dfu_target_set_percentage (target, i + 1, sectors_array->len);
+	}
+	dfu_target_set_percentage_raw (target, 100);
+	dfu_target_set_action (target, DFU_ACTION_IDLE);
+
+	/* 3rd pass: write data */
+	dfu_target_set_action (target, DFU_ACTION_WRITE);
+	for (i = 0; i < nr_chunks; i++) {
+		gsize length;
+		guint32 offset;
+		guint32 offset_dev;
+		g_autoptr(GBytes) bytes_tmp = NULL;
+
+		/* caclulate the offset into the element data */
+		offset = i * transfer_size;
+		offset_dev = dfu_element_get_address (element) + offset;
+
+		/* for DfuSe devices we need to set the address manually */
+		sector = dfu_target_get_sector_for_addr (target, offset_dev);
+		g_assert (sector != NULL);
+
+		/* manually set the sector address */
+		if (dfu_sector_get_zone (sector) != zone_last) {
+			g_debug ("setting address to 0x%04x",
+				 (guint) offset_dev);
+			if (!dfu_target_set_address (target,
+						     (guint32) offset_dev,
+						     cancellable,
+						     error))
+				return FALSE;
+			zone_last = dfu_sector_get_zone (sector);
+		}
+
+		/* we have to write one final zero-sized chunk for EOF */
+		length = g_bytes_get_size (bytes) - offset;
+		if (length > transfer_size)
+			length = transfer_size;
+		bytes_tmp = g_bytes_new_from_bytes (bytes, offset, length);
+		g_debug ("writing sector at 0x%04x (0x%" G_GSIZE_FORMAT ")",
+			 offset_dev,
+			 g_bytes_get_size (bytes_tmp));
+		/* ST uses wBlockNum=0 for DfuSe commands and wBlockNum=1 is reserved */
+		if (!dfu_target_download_chunk (target,
+						(guint8) (i + 2),
+						bytes_tmp,
+						cancellable,
+						error))
+			return FALSE;
 
 		/* getting the status moves the state machine to DNLOAD-IDLE */
-		if (!dfu_device_refresh (priv->device, cancellable, error))
+		if (!dfu_target_check_status (target, cancellable, error))
+			return FALSE;
+
+		/* update UI */
+		dfu_target_set_percentage (target, offset, g_bytes_get_size (bytes));
+	}
+
+	/* done */
+	dfu_target_set_percentage_raw (target, 100);
+	dfu_target_set_action (target, DFU_ACTION_IDLE);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+dfu_target_download_element (DfuTarget *target,
+			     DfuElement *element,
+			     DfuTargetTransferFlags flags,
+			     GCancellable *cancellable,
+			     GError **error)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+
+	/* DfuSe specific */
+	if (dfu_device_has_dfuse_support (priv->device)) {
+		if (!dfu_target_download_element_dfuse (target,
+							element,
+							flags,
+							cancellable,
+							error))
+			return FALSE;
+	} else {
+		if (!dfu_target_download_element_dfu (target,
+						      element,
+						      flags,
+						      cancellable,
+						      error))
 			return FALSE;
 	}
 
 	/* verify */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY) {
+		GBytes *bytes;
 		GBytes *bytes_tmp;
 		g_autoptr(DfuElement) element_tmp = NULL;
+		dfu_target_set_action (target, DFU_ACTION_VERIFY);
+		bytes = dfu_element_get_contents (element);
 		element_tmp = dfu_target_upload_element (target,
 							 dfu_element_get_address (element),
+							 g_bytes_get_size (bytes),
 							 g_bytes_get_size (bytes),
 							 cancellable,
 							 error);
@@ -1302,6 +1653,7 @@ dfu_target_download_element (DfuTarget *target,
 				     bytes_cmp_str);
 			return FALSE;
 		}
+		dfu_target_set_action (target, DFU_ACTION_IDLE);
 	}
 
 	return TRUE;
@@ -1354,10 +1706,6 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 	/* use correct alt */
 	if (!dfu_target_use_alt_setting (target, error))
 		return FALSE;
-
-	/* mark these as all erased */
-	if (dfu_device_has_dfuse_support (priv->device))
-		g_hash_table_remove_all (priv->sectors_erased);
 
 	/* download all elements in the image to the device */
 	elements = dfu_image_get_elements (image);
@@ -1424,8 +1772,10 @@ dfu_target_get_commands (DfuTarget *target,
 	/* format buffer */
 	buf[0] = DFU_CMD_DFUSE_GET_COMMAND;
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error))
+	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+		g_prefix_error (error, "cannot get DfuSe commands: ");
 		return FALSE;
+	}
 
 	/* return results */
 	data_out = dfu_target_upload_chunk (target, 0, cancellable, error);
@@ -1489,6 +1839,40 @@ dfu_target_get_alt_name (DfuTarget *target, GError **error)
 	}
 
 	return priv->alt_name;
+}
+
+/**
+ * dfu_target_get_alt_name_for_display:
+ * @target: a #DfuTarget
+ * @error: a #GError, or %NULL
+ *
+ * Gets the alternate setting name to use for this interface that can be
+ * shown on the display.
+ *
+ * Return value: the alternative setting name
+ *
+ * Since: 0.7.5
+ **/
+const gchar *
+dfu_target_get_alt_name_for_display (DfuTarget *target, GError **error)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
+
+	/* ensure populated */
+	if (!dfu_target_setup (target, error))
+		return NULL;
+
+	/* nothing */
+	if (priv->alt_name_for_display == NULL) {
+		g_set_error_literal (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_FOUND,
+				     "no alt-name");
+		return NULL;
+	}
+
+	return priv->alt_name_for_display;
 }
 
 /**

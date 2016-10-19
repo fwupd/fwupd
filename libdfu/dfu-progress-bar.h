@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2009-2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -19,36 +19,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#ifndef __DFU_DEVICE_PRIVATE_H
-#define __DFU_DEVICE_PRIVATE_H
+#ifndef __DFU_PROGRESS_BAR_H
+#define __DFU_PROGRESS_BAR_H
 
 #include <glib-object.h>
-#include <gio/gio.h>
-#include <gusb.h>
-
-#include "dfu-device.h"
 
 G_BEGIN_DECLS
 
-#define DFU_DEVICE_REPLUG_TIMEOUT	5000	/* ms */
+#define DFU_TYPE_PROGRESS_BAR (dfu_progress_bar_get_type ())
 
-GUsbDevice	*dfu_device_get_usb_dev			(DfuDevice	*device);
+G_DECLARE_FINAL_TYPE (DfuProgressBar, dfu_progress_bar, DFU, PROGRESS_BAR, GObject)
 
-gboolean	 dfu_device_has_dfuse_support		(DfuDevice	*device);
-
-void		 dfu_device_error_fixup			(DfuDevice	*device,
-							 GCancellable	*cancellable,
-							 GError		**error);
-guint		 dfu_device_get_download_timeout	(DfuDevice	*device);
-gchar		*dfu_device_get_quirks_as_string	(DfuDevice	*device);
-gboolean	 dfu_device_set_new_usb_dev		(DfuDevice	*device,
-							 GUsbDevice	*dev,
-							 GCancellable	*cancellable,
-							 GError		**error);
-gboolean	 dfu_device_ensure_interface		(DfuDevice	*device,
-							 GCancellable	*cancellable,
-							 GError		**error);
+DfuProgressBar	*dfu_progress_bar_new			(void);
+void		 dfu_progress_bar_set_size		(DfuProgressBar	*progress_bar,
+							 guint		 size);
+void		 dfu_progress_bar_set_padding		(DfuProgressBar	*progress_bar,
+							 guint		 padding);
+void		 dfu_progress_bar_set_percentage	(DfuProgressBar	*progress_bar,
+							 gint		 percentage);
+void		 dfu_progress_bar_start			(DfuProgressBar	*progress_bar,
+							 const gchar	*text);
+void		 dfu_progress_bar_end			(DfuProgressBar	*progress_bar);
 
 G_END_DECLS
 
-#endif /* __DFU_DEVICE_PRIVATE_H */
+#endif /* __DFU_PROGRESS_BAR_H */

@@ -75,6 +75,13 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 	}
 
+	/* needs a manual action */
+	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)) {
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	} else {
+		fu_device_remove_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	}
+
 	/* get version number, falling back to the DFU device release */
 	release = dfu_device_get_runtime_release (device);
 	if (release != 0xffff) {

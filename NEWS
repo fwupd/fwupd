@@ -1,3 +1,22 @@
+Version 0.7.5
+~~~~~~~~~~~~~
+Released: 2016-10-19
+
+New Features:
+ - Add a 'replace-data' command to dfu-tool (Richard Hughes)
+ - Use an animated progress bar when performing DFU operations (Richard Hughes)
+
+Bugfixes:
+ - Add quirks for HydraBus as it does not have a DFU runtime (Richard Hughes)
+ - Don't create the UEFI dummy device if the unlock will happen on next boot (Richard Hughes)
+ - Enable hardening flags on more binaries (Mario Limonciello)
+ - Fix an assert when unlocking the dummy ESRT device (Richard Hughes)
+ - Fix writing firmware to devices using the ST reference bootloader (Richard Hughes)
+ - Match the Dell TB16 device (Mario Limonciello)
+ - Re-get the quirks when the DfuDevice gets a new GUsbDevice (Richard Hughes)
+ - Show the nicely formatted target name for DfuSe devices (Richard Hughes)
+ - Verify devices support updating in mode they are called (Mario Limonciello)
+
 Version 0.7.4
 ~~~~~~~~~~~~~
 Released: 2016-09-19

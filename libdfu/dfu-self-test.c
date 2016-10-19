@@ -24,6 +24,7 @@
 #include <glib-object.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fnmatch.h>
 
 #include "dfu-common.h"
 #include "dfu-context.h"
@@ -44,6 +45,33 @@ dfu_test_get_filename (const gchar *filename)
 	if (tmp == NULL)
 		return NULL;
 	return g_strdup (full_tmp);
+}
+
+static gboolean
+dfu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
+{
+	g_autofree gchar *output = NULL;
+
+	/* exactly the same */
+	if (g_strcmp0 (txt1, txt2) == 0)
+		return TRUE;
+
+	/* matches a pattern */
+	if (fnmatch (txt2, txt1, FNM_NOESCAPE) == 0)
+		return TRUE;
+
+	/* save temp files and diff them */
+	if (!g_file_set_contents ("/tmp/a", txt1, -1, error))
+		return FALSE;
+	if (!g_file_set_contents ("/tmp/b", txt2, -1, error))
+		return FALSE;
+	if (!g_spawn_command_line_sync ("diff -urNp /tmp/b /tmp/a",
+					&output, NULL, NULL, error))
+		return FALSE;
+
+	/* just output the diff */
+	g_set_error_literal (error, 1, 0, output);
+	return FALSE;
 }
 
 static gchar *
@@ -672,21 +700,29 @@ dfu_target_dfuse_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	tmp = dfu_target_sectors_to_string (target);
-	g_assert_cmpstr (tmp, ==, "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1\n"
-				  "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1");
+	ret = dfu_test_compare_lines (tmp,
+				      "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1 [R]\n"
+				      "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1 [R]",
+				      &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	g_free (tmp);
 
 	/* multiple sectors */
-	ret = dfu_target_parse_sectors (target, "@Flash1   /0x08000000/2*001 Ka,4*001 Kg", &error);
+	ret = dfu_target_parse_sectors (target, "@Flash1   /0x08000000/2*001Ka,4*001Kg", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	tmp = dfu_target_sectors_to_string (target);
-	g_assert_cmpstr (tmp, ==, "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1\n"
-				  "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1\n"
-				  "Zone:0, Sec#:1, Addr:0x08000000, Size:0x0400, Caps:0x7\n"
-				  "Zone:0, Sec#:1, Addr:0x08000400, Size:0x0400, Caps:0x7\n"
-				  "Zone:0, Sec#:1, Addr:0x08000800, Size:0x0400, Caps:0x7\n"
-				  "Zone:0, Sec#:1, Addr:0x08000c00, Size:0x0400, Caps:0x7");
+	ret = dfu_test_compare_lines (tmp,
+				      "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1 [R]\n"
+				      "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1 [R]\n"
+				      "Zone:0, Sec#:1, Addr:0x08000800, Size:0x0400, Caps:0x7 [REW]\n"
+				      "Zone:0, Sec#:1, Addr:0x08000c00, Size:0x0400, Caps:0x7 [REW]\n"
+				      "Zone:0, Sec#:1, Addr:0x08001000, Size:0x0400, Caps:0x7 [REW]\n"
+				      "Zone:0, Sec#:1, Addr:0x08001400, Size:0x0400, Caps:0x7 [REW]",
+				      &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	g_free (tmp);
 
 	/* non-contiguous */
@@ -694,15 +730,19 @@ dfu_target_dfuse_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	tmp = dfu_target_sectors_to_string (target);
-	g_assert_cmpstr (tmp, ==, "Zone:0, Sec#:0, Addr:0x0000f000, Size:0x0064, Caps:0x1\n"
-				  "Zone:0, Sec#:0, Addr:0x0000f064, Size:0x0064, Caps:0x1\n"
-				  "Zone:0, Sec#:0, Addr:0x0000f0c8, Size:0x0064, Caps:0x1\n"
-				  "Zone:0, Sec#:0, Addr:0x0000f12c, Size:0x0064, Caps:0x1\n"
-				  "Zone:1, Sec#:0, Addr:0x0000e000, Size:0x2000, Caps:0x7\n"
-				  "Zone:1, Sec#:0, Addr:0x00010000, Size:0x2000, Caps:0x7\n"
-				  "Zone:1, Sec#:0, Addr:0x00012000, Size:0x2000, Caps:0x7\n"
-				  "Zone:2, Sec#:0, Addr:0x00080000, Size:0x6000, Caps:0x7\n"
-				  "Zone:2, Sec#:0, Addr:0x00086000, Size:0x6000, Caps:0x7");
+	ret = dfu_test_compare_lines (tmp,
+				      "Zone:0, Sec#:0, Addr:0x0000f000, Size:0x0064, Caps:0x1 [R]\n"
+				      "Zone:0, Sec#:0, Addr:0x0000f064, Size:0x0064, Caps:0x1 [R]\n"
+				      "Zone:0, Sec#:0, Addr:0x0000f0c8, Size:0x0064, Caps:0x1 [R]\n"
+				      "Zone:0, Sec#:0, Addr:0x0000f12c, Size:0x0064, Caps:0x1 [R]\n"
+				      "Zone:1, Sec#:0, Addr:0x0000e000, Size:0x2000, Caps:0x7 [REW]\n"
+				      "Zone:1, Sec#:0, Addr:0x00010000, Size:0x2000, Caps:0x7 [REW]\n"
+				      "Zone:1, Sec#:0, Addr:0x00012000, Size:0x2000, Caps:0x7 [REW]\n"
+				      "Zone:2, Sec#:0, Addr:0x00080000, Size:0x6000, Caps:0x7 [REW]\n"
+				      "Zone:2, Sec#:0, Addr:0x00086000, Size:0x6000, Caps:0x7 [REW]",
+				      &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	g_free (tmp);
 
 	/* invalid */

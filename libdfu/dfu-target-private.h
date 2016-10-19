@@ -36,6 +36,11 @@ GBytes		*dfu_target_upload_chunk		(DfuTarget	*target,
 							 guint8		 index,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 dfu_target_download_chunk		(DfuTarget	*target,
+							 guint8		 index,
+							 GBytes		*bytes,
+							 GCancellable	*cancellable,
+							 GError		**error);
 
 /* export this just for the self tests */
 gboolean	 dfu_target_parse_sectors		(DfuTarget	*target,

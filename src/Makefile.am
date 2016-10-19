@@ -60,7 +60,8 @@ fwupdmgr_LDADD =					\
 	$(GLIB_LIBS)
 
 fwupdmgr_LDFLAGS =					\
-	$(PIE_LDFLAGS)
+	$(PIE_LDFLAGS)					\
+	$(RELRO_LDFLAGS)
 
 fwupdmgr_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
@@ -199,6 +200,10 @@ fu_self_test_LDADD =					\
 	$(GPGME_LIBS)					\
 	$(ARCHIVE_LIBS)					\
 	$(GLIB_LIBS)
+
+fu_self_test_LDFLAGS =					\
+	$(PIE_LDFLAGS)					\
+	$(RELRO_LDFLAGS)
 
 fu_self_test_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"/tmp/fwupd-self-test\"	\

@@ -3,6 +3,7 @@
 
   <!-- SteelSeries legacy hardware  -->
   <component type="firmware">
+    <name>SteelSeries Firmware</name>
     <summary>Firmware for Rival SteelSeries mice</summary>
     <id>com.steelseries.rival-legacy.firmware</id>
     <provides>
