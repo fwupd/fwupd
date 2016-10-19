@@ -1658,7 +1658,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			if (g_error_matches (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_NOTHING_TO_DO)) {
-				g_prefix_error (&error, "No devices can be updated: ");
+				if (fu_main_on_battery (priv))
+					g_prefix_error (&error, "No devices can be updated while operating on battery power: ");
+				else
+					g_prefix_error (&error, "No devices can be updated: ");
 			}
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
