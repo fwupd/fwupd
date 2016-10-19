@@ -1,3 +1,12 @@
+fwupd (0.7.5-1) UNRELEASED; urgency=medium
+
+  * New upstream version (0.7.5)
+  * Refresh symbols.
+  * Drop all patches, now upstream.
+  * Enable build hardening flags
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Wed, 19 Oct 2016 09:16:53 -0500
+
 fwupd (0.7.4-2) unstable; urgency=medium
 
   * Backport a patch to make sure that appstream metadata validates
