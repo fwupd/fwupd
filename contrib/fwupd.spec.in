@@ -85,7 +85,7 @@ A library for updating 8Bitdo USB devices.
 
 %package -n libebitdo-devel
 Summary: Development package for libebitdo
-Requires: libebitdo = %{version}-%{release}
+Requires: libebitdo%{?_isa} = %{version}-%{release}
 
 %description -n libebitdo-devel
 Files for development with libebitdo.
@@ -134,6 +134,12 @@ make check VERBOSE=1
 %postun
 /sbin/ldconfig
 %systemd_postun_with_restart fwupd.service
+
+%post -n libdfu -p /sbin/ldconfig
+%postun -n libdfu -p /sbin/ldconfig
+
+%post -n libebitdo -p /sbin/ldconfig
+%postun -n libebitdo -p /sbin/ldconfig
 
 %files -f %{name}.lang
 %doc README.md AUTHORS NEWS
