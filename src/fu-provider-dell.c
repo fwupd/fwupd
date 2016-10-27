@@ -140,7 +140,7 @@ typedef struct _DOCK_DESCRIPTION
  * Devices that should explicitly disable modeswitching
  */
 static guint16 tpm_switch_blacklist[] = {0x06D6, 0x06E6, 0x06E7, 0x06EB, 0x06EA,
-					 0x0702, 0x07A4};
+					 0x0702};
 
 typedef struct {
 	GHashTable		*devices;	/* DeviceKey:FuProviderDellDockItem */
