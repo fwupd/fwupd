@@ -2100,6 +2100,8 @@ dfu_device_download (DfuDevice *device,
 		/* download onto target */
 		if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY)
 			flags_local = DFU_TARGET_TRANSFER_FLAG_VERIFY;
+		if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_RAW)
+			flags_local |= DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC;
 		id1 = g_signal_connect (target_tmp, "percentage-changed",
 					G_CALLBACK (dfu_device_percentage_cb), device);
 		id2 = g_signal_connect (target_tmp, "action-changed",

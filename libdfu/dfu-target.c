@@ -1720,6 +1720,21 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		element = dfu_image_get_element (image, (guint8) i);
 		g_debug ("downloading element at 0x%04x",
 			 dfu_element_get_address (element));
+
+		/* auto-detect missing firmware address -- this assumes
+		 * that the first target is the main program memory and that
+		 * there is only one element in the firmware file */
+		if (flags & DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC &&
+		    dfu_element_get_address (element) == 0x0 &&
+		    elements->len == 1 &&
+		    priv->sectors->len > 0) {
+			DfuSector *sector = g_ptr_array_index (priv->sectors, 0);
+			g_debug ("fixing up firmware address from 0x0 to 0x%x",
+				 dfu_sector_get_address (sector));
+			dfu_element_set_address (element, dfu_sector_get_address (sector));
+		}
+
+		/* download to device */
 		ret = dfu_target_download_element (target,
 						   element,
 						   flags,

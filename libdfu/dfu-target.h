@@ -63,6 +63,7 @@ struct _DfuTargetClass
  * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID:	Allow downloading images with wildcard VIDs
  * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID:	Allow downloading images with wildcard PIDs
  * @DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER:	Allow any cipher kinds to be downloaded
+ * @DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC:	Automatically detect the address to use
  *
  * The optional flags used for transfering firmware.
  **/
@@ -75,6 +76,7 @@ typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID	= (1 << 4),
 	DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID	= (1 << 5),
 	DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER	= (1 << 6),
+	DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC	= (1 << 7),
 	/*< private >*/
 	DFU_TARGET_TRANSFER_FLAG_LAST
 } DfuTargetTransferFlags;
