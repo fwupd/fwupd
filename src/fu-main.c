@@ -2571,7 +2571,7 @@ out:
 		if (priv->proxy_upower != NULL)
 			g_object_unref (priv->proxy_upower);
 		if (priv->config != NULL)
-			g_object_unref (priv->config);
+			g_key_file_unref (priv->config);
 		if (priv->connection != NULL)
 			g_object_unref (priv->connection);
 		if (priv->authority != NULL)
