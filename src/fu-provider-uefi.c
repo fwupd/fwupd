@@ -315,10 +315,11 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 	}
 
 	/* set Display Name to the system for all capsules */
-	g_file_get_contents ("/sys/class/dmi/id/product_name",
-				  &display_name, NULL, NULL);
-	if (display_name != NULL)
-		g_strchomp (display_name);
+	if (g_file_get_contents ("/sys/class/dmi/id/product_name",
+				 &display_name, NULL, NULL)) {
+		if (display_name != NULL)
+			g_strchomp (display_name);
+	}
 
 	/* add each device */
 	guid = g_strdup ("00000000-0000-0000-0000-000000000000");
