@@ -941,6 +941,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 	}
 	fd_sig = open (signature_fn, O_RDONLY);
 	if (fd_sig < 0) {
+		close (fd);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
