@@ -503,7 +503,7 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 	parse_flags = fu_provider_dell_get_version_format ();
 
 	for (guint i = 0; i < dock_info->component_count; i++) {
-		if (i > MAX_COMPONENTS) {
+		if (i >= MAX_COMPONENTS) {
 			g_debug ("Dell: Too many components.  Invalid: #%u", i);
 			break;
 		}
