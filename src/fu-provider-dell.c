@@ -31,6 +31,7 @@
 #include <smbios_c/smbios.h>
 #include <smbios_c/smi.h>
 #include <smbios_c/obj/smi.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -183,7 +184,7 @@ fu_provider_dell_get_name (FuProvider *provider)
 
 static gboolean
 fu_provider_dell_match_dock_component(const gchar *query_str,
-				 const efi_guid_t **guid_out,
+				 efi_guid_t *guid_out,
 				 const gchar **name_out)
 {
 	const DOCK_DESCRIPTION list[] = {
@@ -200,7 +201,7 @@ fu_provider_dell_match_dock_component(const gchar *query_str,
 	for (guint i = 0; i < G_N_ELEMENTS(list); i++) {
 		if (g_strcmp0 (query_str,
 			       list[i].query) == 0) {
-			*guid_out = &list[i].guid;
+			memcpy (guid_out, &list[i].guid, sizeof (efi_guid_t));
 			*name_out = list[i].desc;
 			return TRUE;
 		}
@@ -427,7 +428,7 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 	g_autoptr(fu_dell_smi_obj) smi = NULL;
 	gint result;
 	guint32 location;
-	const efi_guid_t *guid_raw = NULL;
+	efi_guid_t guid_raw;
 	efi_guid_t tmpguid;
 	gboolean old_ec = FALSE;
 
@@ -536,7 +537,7 @@ fu_provider_dell_device_added_cb (GUsbContext *ctx,
 		if (!fu_provider_dell_dock_node (provider_dell,
 						 device,
 						 buf.record->dock_info_header.dock_type,
-						 guid_raw,
+						 &guid_raw,
 						 component_name,
 						 fw_str,
 						 FALSE)) {
