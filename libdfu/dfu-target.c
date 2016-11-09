@@ -312,7 +312,6 @@ gboolean
 dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	guint32 addr;
 	g_autofree gchar *str_debug = NULL;
 	g_auto(GStrv) zones = NULL;
 
@@ -327,11 +326,12 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 	/* From the Neo Freerunner */
 	if (g_str_has_prefix (alt_name, "RAM 0x")) {
 		DfuSector *sector;
-		addr = g_ascii_strtoull (alt_name + 6, NULL, 16);
-		if (addr == 0 && addr > G_MAXUINT32)
+		guint64 addr_tmp;
+		addr_tmp = g_ascii_strtoull (alt_name + 6, NULL, 16);
+		if (addr_tmp == 0 || addr_tmp > G_MAXUINT32)
 			return FALSE;
 		g_debug ("RAM description, so parsing");
-		sector = dfu_sector_new ((guint32) addr, /* addr */
+		sector = dfu_sector_new ((guint32) addr_tmp,
 					 0x0, /* size */
 					 0x0, /* size_left */
 					 0x0, /* zone */
@@ -352,6 +352,7 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 	zones = g_strsplit (alt_name, "/", -1);
 	priv->alt_name_for_display = g_strdup (g_strchomp (zones[0] + 1));
 	for (guint i = 1; zones[i] != NULL; i += 2) {
+		guint32 addr;
 		guint64 addr_tmp;
 		g_auto(GStrv) sectors = NULL;
 
