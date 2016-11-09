@@ -53,6 +53,7 @@ fu_debug_ignore_cb (const gchar *log_domain,
 	switch (log_level) {
 	case G_LOG_LEVEL_INFO:
 		g_print ("%s\n", message);
+		break;
 	case G_LOG_LEVEL_CRITICAL:
 	case G_LOG_LEVEL_ERROR:
 	case G_LOG_LEVEL_WARNING:
@@ -76,6 +77,7 @@ fu_debug_handler_cb (const gchar *log_domain,
 	switch (log_level) {
 	case G_LOG_LEVEL_INFO:
 		g_print ("%s\n", message);
+		break;
 	case G_LOG_LEVEL_CRITICAL:
 	case G_LOG_LEVEL_ERROR:
 	case G_LOG_LEVEL_WARNING:
