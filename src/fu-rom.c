@@ -356,8 +356,7 @@ fu_rom_pci_parse_data (FuRomPciHeader *hdr)
 	guint8 *buffer;
 
 	/* check valid */
-	if (hdr == NULL ||
-	    hdr->cpi_ptr == 0x0000) {
+	if (hdr->cpi_ptr == 0x0000) {
 		g_debug ("No PCI DATA @ 0x%04x", hdr->rom_offset);
 		return FALSE;
 	}
