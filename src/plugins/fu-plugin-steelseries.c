@@ -62,6 +62,7 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 	flags = G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
 	if (!g_usb_device_claim_interface (usb_device, iface_idx, flags, error)) {
 		g_prefix_error (error, "failed to claim interface: ");
+		g_usb_device_close (usb_device, NULL);
 		return FALSE;
 	}
 
@@ -83,6 +84,7 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 					     error);
 	if (!ret) {
 		g_prefix_error (error, "failed to do control transfer: ");
+		g_usb_device_close (usb_device, NULL);
 		return FALSE;
 	}
 	if (actual_len != 32) {
@@ -102,6 +104,7 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 					       error);
 	if (!ret) {
 		g_prefix_error (error, "failed to do IN transfer: ");
+		g_usb_device_close (usb_device, NULL);
 		return FALSE;
 	}
 	if (actual_len != 32) {
@@ -121,6 +124,7 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 	/* release device */
 	if (!g_usb_device_release_interface (usb_device, iface_idx, flags, error)) {
 		g_prefix_error (error, "failed to release interface: ");
+		g_usb_device_close (usb_device, NULL);
 		return FALSE;
 	}
 	if (!g_usb_device_close (usb_device, error))
