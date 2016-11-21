@@ -95,6 +95,7 @@ fu_provider_usb_device_added (FuProviderUsb *provider_usb, GUsbDevice *device)
 	}
 	if (product == NULL) {
 		g_debug ("no product string descriptor");
+		g_usb_device_close (device, NULL);
 		return;
 	}
 	fu_device_set_name (dev, product);
