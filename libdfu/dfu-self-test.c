@@ -362,6 +362,11 @@ dfu_firmware_elf_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file = NULL;
 
+#ifndef HAVE_LIBELF
+	g_test_skip ("compiled without libelf support");
+	return;
+#endif
+
 	/* load a ELF firmware */
 	filename = dfu_test_get_filename ("example.elf");
 	g_assert (filename != NULL);

@@ -24,8 +24,12 @@
 #include <fcntl.h>
 #include <gelf.h>
 #include <gio/gunixinputstream.h>
+
+#ifdef HAVE_LIBELF
 #include <libelf.h>
 #include <linux/memfd.h>
+#endif
+
 #include <string.h>
 #include <sys/syscall.h>
 
@@ -60,6 +64,7 @@ dfu_firmware_detect_elf (GBytes *bytes)
 	return DFU_FIRMWARE_FORMAT_ELF;
 }
 
+#ifdef HAVE_LIBELF
 static DfuElement *
 _get_element_from_section_name (Elf *e, const gchar *desired_name)
 {
@@ -144,6 +149,7 @@ dfu_format_elf_symbols_from_symtab (DfuFirmware *firmware, Elf *e)
 		}
 	}
 }
+#endif
 
 /**
  * dfu_firmware_from_elf: (skip)
@@ -162,6 +168,7 @@ dfu_firmware_from_elf (DfuFirmware *firmware,
 		       DfuFirmwareParseFlags flags,
 		       GError **error)
 {
+#ifdef HAVE_LIBELF
 	guint i;
 	guint sections_cnt = 0;
 	g_autoptr(Elf) e = NULL;
@@ -230,8 +237,16 @@ dfu_firmware_from_elf (DfuFirmware *firmware,
 
 	/* success */
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "compiled without libelf support");
+	return FALSE;
+#endif
 }
 
+#ifdef HAVE_LIBELF
 static int
 _memfd_create (const char *name, unsigned int flags)
 {
@@ -299,6 +314,7 @@ dfu_format_elf_pack_image (Elf *e, DfuImage *image, GError **error)
 	}
 	return dfu_format_elf_pack_element (e, element, error);
 }
+#endif
 
 /**
  * dfu_firmware_to_elf: (skip)
@@ -312,6 +328,7 @@ dfu_format_elf_pack_image (Elf *e, DfuImage *image, GError **error)
 GBytes *
 dfu_firmware_to_elf (DfuFirmware *firmware, GError **error)
 {
+#ifdef HAVE_LIBELF
 	DfuImage *image;
 	Elf32_Ehdr *ehdr;
 	Elf32_Shdr *shdr;
@@ -446,4 +463,11 @@ dfu_firmware_to_elf (DfuFirmware *firmware, GError **error)
 		return NULL;
 	}
 	return g_input_stream_read_bytes (stream, fsize, NULL, error);
+#else
+	g_set_error_literal (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "compiled without libelf support");
+	return FALSE;
+#endif
 }

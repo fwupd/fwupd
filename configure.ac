@@ -145,7 +145,6 @@ PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib >= 0.5.10)
 PKG_CHECK_MODULES(GUSB, gusb >= 0.2.9)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 PKG_CHECK_MODULES(ARCHIVE, libarchive)
-PKG_CHECK_MODULES(ELF, libelf)
 PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.51.92)
 AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
 if test -z $DOCBOOK2MAN ; then
@@ -176,6 +175,27 @@ else
 	fi
 fi
 AM_CONDITIONAL(HAVE_COLORHUG, test x$has_colorhug = xyes)
+
+# libelf support
+AC_ARG_ENABLE(libelf,
+	      AS_HELP_STRING([--enable-libelf],
+			     [Enable libelf support [default=auto]]),,
+	      enable_libelf=maybe)
+if test x$enable_libelf != xno; then
+	PKG_CHECK_MODULES(LIBELF, libelf >= 1.2.12,
+			  has_libelf=yes,
+			  has_libelf=no)
+fi
+if test x$has_libelf = xyes; then
+	AC_DEFINE(HAVE_LIBELF,1,[Use libelf support])
+else
+	has_libelf=no
+	if test "x$enable_libelf" = "xyes"; then
+		AC_MSG_ERROR([libelf support requested but 'libelf' was not found])
+	fi
+fi
+AM_CONDITIONAL(HAVE_LIBELF, test x$has_libelf = xyes)
+
 
 # gpgme support
 AC_MSG_CHECKING([for gpgme])
@@ -320,6 +340,7 @@ echo "
 	optional providers
 	------------------
 	Colorhug:                  $has_colorhug
+	libelf:                    $has_libelf
 	UEFI:                      $has_fwup
 	Dell:                      $has_dell
 "
