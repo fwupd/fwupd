@@ -247,6 +247,16 @@ fu_rom_pci_print_header (FuRomPciHeader *hdr)
 	g_debug (" Reserved:  %s", reserved_str);
 	g_debug (" CpiPtr:    0x%04x", hdr->cpi_ptr);
 
+	/* sanity check */
+	if (hdr->cpi_ptr > hdr->rom_len) {
+		g_debug ("  PCI DATA: Invalid as cpi_ptr > rom_len");
+		return;
+	}
+	if (hdr->data_len > hdr->rom_len) {
+		g_debug ("  PCI DATA: Invalid as data_len > rom_len");
+		return;
+	}
+
 	/* print the data */
 	buffer = &hdr->rom_data[hdr->cpi_ptr];
 	g_debug ("  PCI Data");
@@ -258,9 +268,11 @@ fu_rom_pci_print_header (FuRomPciHeader *hdr)
 	if (hdr->image_len < 0x0f) {
 		data_str = fu_rom_get_hex_dump (&buffer[hdr->data_len], hdr->image_len);
 		g_debug ("   ImageLen:  0x%04x [%s]", hdr->image_len, data_str);
-	} else {
+	} else if (hdr->image_len >= 0x0f) {
 		data_str = fu_rom_get_hex_dump (&buffer[hdr->data_len], 0x0f);
 		g_debug ("   ImageLen:  0x%04x [%s...]", hdr->image_len, data_str);
+	} else {
+		g_debug ("   ImageLen:  0x%04x", hdr->image_len);
 	}
 	g_debug ("   RevLevel:  0x%04x", hdr->revision_level);
 	g_debug ("   CodeType:  0x%02x [%s]", hdr->code_type,
@@ -420,7 +432,7 @@ fu_rom_pci_get_header (guint8 *buffer, gssize sz)
 			g_debug ("-- using NVIDIA ROM quirk");
 		} else {
 			g_autofree gchar *sig_str = NULL;
-			sig_str = fu_rom_get_hex_dump (buffer, 16);
+			sig_str = fu_rom_get_hex_dump (buffer, MIN (16, sz));
 			g_debug ("Not PCI ROM %s", sig_str);
 			return NULL;
 		}
