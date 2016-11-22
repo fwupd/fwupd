@@ -667,10 +667,13 @@ fu_rom_load_data (FuRom *rom,
 
 	/* nothing */
 	if (priv->kind == FU_ROM_KIND_UNKNOWN) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to detect firmware kind");
+		g_autofree gchar *str = NULL;
+		str = fu_rom_get_hex_dump (buffer + hdr_sz, 0x32);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to detect firmware kind from [%s]",
+			     str);
 		return FALSE;
 	}
 
