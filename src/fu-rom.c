@@ -657,7 +657,7 @@ fu_rom_load_data (FuRom *rom,
 		return FALSE;
 	}
 
-	if (memcmp (buffer + hdr_sz + 0x04, "K74", 3) == 0) {
+	if (hdr->entry_point == 0x374beb) {
 		priv->kind = FU_ROM_KIND_NVIDIA;
 	} else if (memcmp (buffer + hdr_sz, "$VBT", 4) == 0) {
 		priv->kind = FU_ROM_KIND_INTEL;
