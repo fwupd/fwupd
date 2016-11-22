@@ -1403,7 +1403,7 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 	/* automatically abort any uploads or downloads */
 	if ((flags & DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH) == 0) {
 		if (!dfu_device_refresh (device, cancellable, error)) {
-			g_usb_device_close (device, NULL);
+			g_usb_device_close (priv->dev, NULL);
 			return FALSE;
 		}
 		switch (priv->state) {
@@ -1412,14 +1412,14 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 		case DFU_STATE_DFU_DNLOAD_SYNC:
 			g_debug ("aborting transfer %s", dfu_status_to_string (priv->status));
 			if (!dfu_device_abort (device, cancellable, error)) {
-				g_usb_device_close (device, NULL);
+				g_usb_device_close (priv->dev, NULL);
 				return FALSE;
 			}
 			break;
 		case DFU_STATE_DFU_ERROR:
 			g_debug ("clearing error %s", dfu_status_to_string (priv->status));
 			if (!dfu_device_clear_status (device, cancellable, error)) {
-				g_usb_device_close (device, NULL);
+				g_usb_device_close (priv->dev, NULL);
 				return FALSE;
 			}
 			break;
