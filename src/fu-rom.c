@@ -583,8 +583,8 @@ fu_rom_load_data (FuRom *rom,
 			gboolean found_data = FALSE;
 
 			/* check it's not just NUL padding */
-			for (guint i = 0; i < hdr_sz + jump; i++) {
-				if (buffer[hdr_sz + jump + i] != 0x00) {
+			for (guint i = jump + hdr_sz; i < buffer_sz; i++) {
+				if (buffer[i] != 0x00) {
 					found_data = TRUE;
 					break;
 				}
@@ -602,7 +602,8 @@ fu_rom_load_data (FuRom *rom,
 				hdr->image_len = hdr->rom_len;
 				g_ptr_array_add (priv->hdrs, hdr);
 			} else {
-				g_debug ("ignoring padding");
+				g_debug ("ignoring 0x%04x bytes of padding",
+					 (guint) (buffer_sz - (jump + hdr_sz)));
 			}
 			break;
 		}
