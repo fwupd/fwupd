@@ -68,6 +68,30 @@ fwupdmgr_CFLAGS =					\
 	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
 	$(WARN_CFLAGS)
 
+noinst_PROGRAMS = fu-fuzzer
+
+fu_fuzzer_SOURCES =					\
+	fu-rom.c					\
+	fu-fuzzer.c
+
+fu_fuzzer_LDADD =					\
+	$(LIBM)						\
+	$(FWUPD_LIBS)					\
+	$(APPSTREAM_GLIB_LIBS)				\
+	$(SQLITE_LIBS)					\
+	$(SOUP_LIBS)					\
+	$(GUDEV_LIBS)					\
+	$(GLIB_LIBS)
+
+fu_fuzzer_LDFLAGS =					\
+	$(PIE_LDFLAGS)					\
+	$(RELRO_LDFLAGS)
+
+fu_fuzzer_CFLAGS =					\
+	-DFU_OFFLINE_DESTDIR=\"\"			\
+	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
+	$(WARN_CFLAGS)
+
 fu-resources.c: fwupd.gresource.xml $(dist_introspection_DATA)
 	$(AM_V_GEN)					\
 	glib-compile-resources				\
@@ -246,6 +270,9 @@ BUILT_SOURCES =						\
 	fu-resources.h
 
 CLEANFILES = $(BUILT_SOURCES) *.log *.trs
+
+MAINTAINERCLEANFILES =					\
+	findings
 
 EXTRA_DIST =						\
 	fwupd.gresource.xml
