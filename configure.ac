@@ -155,6 +155,14 @@ if test -z $GCAB ; then
 	AC_MSG_ERROR([gcab program not found])
 fi
 
+# 0.114 introduced autocleanup functions for its types.
+PKG_CHECK_MODULES([POLKIT_0_114], [polkit-gobject-1 >= 0.114],
+                  [have_polkit_0_114=yes], [have_polkit_0_114=no])
+AS_IF([test "$have_polkit_0_114" = "yes"], [
+	AC_DEFINE([HAVE_POLKIT_0_114],[1],
+	          [Define as 1 if you have polkit >= 0.114])
+])
+
 # ColorHug support
 AC_ARG_ENABLE(colorhug,
 	      AS_HELP_STRING([--enable-colorhug],
