@@ -1972,7 +1972,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		fd = g_unix_fd_list_get (fd_list, fd_handle, &error);
+		fd = g_unix_fd_list_get (fd_list, 0, &error);
 		if (fd < 0) {
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
@@ -2053,7 +2053,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		fd = g_unix_fd_list_get (fd_list, fd_handle, &error);
+		fd = g_unix_fd_list_get (fd_list, 0, &error);
 		if (fd < 0) {
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
@@ -2091,7 +2091,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		fd = g_unix_fd_list_get (fd_list, fd_handle, &error);
+		fd = g_unix_fd_list_get (fd_list, 0, &error);
 		if (fd < 0) {
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
