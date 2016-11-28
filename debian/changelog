@@ -2,11 +2,13 @@ fwupd (0.7.5-1) UNRELEASED; urgency=medium
 
   * New upstream version (0.7.5)
   * Refresh symbols.
-  * Drop all patches, now upstream.
+  * Drop all now upstream patches.
   * Enable build hardening flags
   * Drop valgind build dependency from m68k
+  * Backport patch to fix fwupd process leaking into dbus cgroup
+    (Closes: #845406)
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Wed, 19 Oct 2016 09:16:53 -0500
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 28 Nov 2016 14:10:57 -0600
 
 fwupd (0.7.4-2) unstable; urgency=medium
 
