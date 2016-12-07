@@ -1,0 +1,6 @@
+{
+global:
+    dfu_*;
+local:
+    *;
+};

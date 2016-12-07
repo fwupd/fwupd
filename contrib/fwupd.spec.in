@@ -92,38 +92,32 @@ Files for development with libdfu.
 %setup -q
 
 %build
-%configure \
-        --disable-static        \
-        --disable-thunderbolt   \
-        --enable-gtk-doc        \
-        --enable-colorhug       \
+
+%meson \
+    -Denable-tests=false \
+    -Denable-thunderbolt=false \
 %if 0%{?have_uefi}
-        --enable-uefi           \
+    -Denable-uefi=true \
 %else
-        --disable-uefi          \
+    -Denable-uefi=false \
 %endif
 %if 0%{?have_smbios}
-        --enable-dell           \
-        --enable-synaptics      \
+    -Denable-dell=true \
+    -Denable-synaptics=true \
 %else
-        --disable-dell          \
-        --disable-synaptics     \
+    -Denable-packdellagekit=false \
+    -Denable-synaptics=false \
 %endif
-        --disable-rpath         \
-        --disable-silent-rules  \
-        --disable-dependency-tracking
+    -Denable-colorhug=true
 
-make %{?_smp_mflags}
+%meson_build
 
 %install
-make install DESTDIR=$RPM_BUILD_ROOT
-find %{buildroot} -name '*.la' -exec rm -f {} ';'
-mkdir --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
+%meson_install
+
+mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
 %find_lang %{name}
-
-%check
-make check VERBOSE=1
 
 %post
 /sbin/ldconfig
