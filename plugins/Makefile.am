@@ -1,4 +1,4 @@
-SUBDIRS = dfu ebitdo raspberrypi steelseries test udev usb
+SUBDIRS = dfu ebitdo raspberrypi steelseries test udev unifying usb
 
 if HAVE_DELL
 SUBDIRS += dell
