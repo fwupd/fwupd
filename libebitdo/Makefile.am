@@ -67,21 +67,6 @@ ebitdo_tool_LDADD =						\
 
 ebitdo_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
 
-noinst_PROGRAMS =						\
-	ebitdo-parse
-
-ebitdo_parse_SOURCES =						\
-	ebitdo-parse.c
-
-ebitdo_parse_LDADD =						\
-	$(lib_LTLIBRARIES)					\
-	$(APPSTREAM_GLIB_LIBS)					\
-	$(GLIB_LIBS)						\
-	$(GUSB_LIBS)						\
-	$(LIBM)
-
-ebitdo_parse_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
-
 clean-local:
 	rm -f *~
 
