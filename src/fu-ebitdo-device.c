@@ -24,57 +24,57 @@
 #include <string.h>
 #include <appstream-glib.h>
 
-#include "ebitdo-common.h"
-#include "ebitdo-device.h"
+#include "fu-ebitdo-common.h"
+#include "fu-ebitdo-device.h"
 
 typedef struct
 {
-	EbitdoDeviceKind	 kind;
+	FuEbitdoDeviceKind	 kind;
 	GUsbDevice		*usb_device;
 	guint32			 serial[9];
 	gchar			*guid;
 	gchar			*version;
-} EbitdoDevicePrivate;
+} FuEbitdoDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (EbitdoDevice, ebitdo_device, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (FuEbitdoDevice, fu_ebitdo_device, G_TYPE_OBJECT)
 
-#define GET_PRIVATE(o) (ebitdo_device_get_instance_private (o))
+#define GET_PRIVATE(o) (fu_ebitdo_device_get_instance_private (o))
 
 /**
- * ebitdo_device_kind_from_string:
+ * fu_ebitdo_device_kind_from_string:
  * @kind: the string.
  *
  * Converts the text representation to an enumerated value.
  *
- * Returns: (transfer full): a #EbitdoDeviceKind, or %EBITDO_DEVICE_KIND_UNKNOWN for unknown.
+ * Returns: (transfer full): a #FuEbitdoDeviceKind, or %FU_EBITDO_DEVICE_KIND_UNKNOWN for unknown.
  *
  * Since: 0.1.0
  **/
-EbitdoDeviceKind
-ebitdo_device_kind_from_string (const gchar *kind)
+FuEbitdoDeviceKind
+fu_ebitdo_device_kind_from_string (const gchar *kind)
 {
 	if (g_strcmp0 (kind, "BOOTLOADER") == 0)
-		return EBITDO_DEVICE_KIND_BOOTLOADER;
+		return FU_EBITDO_DEVICE_KIND_BOOTLOADER;
 	if (g_strcmp0 (kind, "FC30") == 0)
-		return EBITDO_DEVICE_KIND_FC30;
+		return FU_EBITDO_DEVICE_KIND_FC30;
 	if (g_strcmp0 (kind, "NES30") == 0)
-		return EBITDO_DEVICE_KIND_NES30;
+		return FU_EBITDO_DEVICE_KIND_NES30;
 	if (g_strcmp0 (kind, "SFC30") == 0)
-		return EBITDO_DEVICE_KIND_SFC30;
+		return FU_EBITDO_DEVICE_KIND_SFC30;
 	if (g_strcmp0 (kind, "SNES30") == 0)
-		return EBITDO_DEVICE_KIND_SNES30;
+		return FU_EBITDO_DEVICE_KIND_SNES30;
 	if (g_strcmp0 (kind, "FC30PRO") == 0)
-		return EBITDO_DEVICE_KIND_FC30PRO;
+		return FU_EBITDO_DEVICE_KIND_FC30PRO;
 	if (g_strcmp0 (kind, "NES30PRO") == 0)
-		return EBITDO_DEVICE_KIND_NES30PRO;
+		return FU_EBITDO_DEVICE_KIND_NES30PRO;
 	if (g_strcmp0 (kind, "FC30_ARCADE") == 0)
-		return EBITDO_DEVICE_KIND_FC30_ARCADE;
-	return EBITDO_DEVICE_KIND_UNKNOWN;
+		return FU_EBITDO_DEVICE_KIND_FC30_ARCADE;
+	return FU_EBITDO_DEVICE_KIND_UNKNOWN;
 }
 
 /**
- * ebitdo_device_kind_to_string:
- * @kind: the #EbitdoDeviceKind.
+ * fu_ebitdo_device_kind_to_string:
+ * @kind: the #FuEbitdoDeviceKind.
  *
  * Converts the enumerated value to an text representation.
  *
@@ -83,73 +83,73 @@ ebitdo_device_kind_from_string (const gchar *kind)
  * Since: 0.1.0
  **/
 const gchar *
-ebitdo_device_kind_to_string (EbitdoDeviceKind kind)
+fu_ebitdo_device_kind_to_string (FuEbitdoDeviceKind kind)
 {
-	if (kind == EBITDO_DEVICE_KIND_BOOTLOADER)
+	if (kind == FU_EBITDO_DEVICE_KIND_BOOTLOADER)
 		return "BOOTLOADER";
-	if (kind == EBITDO_DEVICE_KIND_FC30)
+	if (kind == FU_EBITDO_DEVICE_KIND_FC30)
 		return "FC30";
-	if (kind == EBITDO_DEVICE_KIND_NES30)
+	if (kind == FU_EBITDO_DEVICE_KIND_NES30)
 		return "NES30";
-	if (kind == EBITDO_DEVICE_KIND_SFC30)
+	if (kind == FU_EBITDO_DEVICE_KIND_SFC30)
 		return "SFC30";
-	if (kind == EBITDO_DEVICE_KIND_SNES30)
+	if (kind == FU_EBITDO_DEVICE_KIND_SNES30)
 		return "SNES30";
-	if (kind == EBITDO_DEVICE_KIND_FC30PRO)
+	if (kind == FU_EBITDO_DEVICE_KIND_FC30PRO)
 		return "FC30PRO";
-	if (kind == EBITDO_DEVICE_KIND_NES30PRO)
+	if (kind == FU_EBITDO_DEVICE_KIND_NES30PRO)
 		return "NES30PRO";
-	if (kind == EBITDO_DEVICE_KIND_FC30_ARCADE)
+	if (kind == FU_EBITDO_DEVICE_KIND_FC30_ARCADE)
 		return "FC30_ARCADE";
 	return NULL;
 }
 
 static void
-ebitdo_device_finalize (GObject *object)
+fu_ebitdo_device_finalize (GObject *object)
 {
-	EbitdoDevice *device = EBITDO_DEVICE (object);
-	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	FuEbitdoDevice *device = FU_EBITDO_DEVICE (object);
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
 
 	g_free (priv->guid);
 	g_free (priv->version);
 	if (priv->usb_device != NULL)
 		g_object_unref (priv->usb_device);
 
-	G_OBJECT_CLASS (ebitdo_device_parent_class)->finalize (object);
+	G_OBJECT_CLASS (fu_ebitdo_device_parent_class)->finalize (object);
 }
 
 static void
-ebitdo_device_init (EbitdoDevice *device)
+fu_ebitdo_device_init (FuEbitdoDevice *device)
 {
 }
 
 static void
-ebitdo_device_class_init (EbitdoDeviceClass *klass)
+fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	object_class->finalize = ebitdo_device_finalize;
+	object_class->finalize = fu_ebitdo_device_finalize;
 }
 
 /**
- * ebitdo_device_get_kind:
- * @device: a #EbitdoDevice instance.
+ * fu_ebitdo_device_get_kind:
+ * @device: a #FuEbitdoDevice instance.
  *
  * Gets the device kind.
  *
- * Returns: the #EbitdoDeviceKind
+ * Returns: the #FuEbitdoDeviceKind
  *
  * Since: 0.1.0
  **/
-EbitdoDeviceKind
-ebitdo_device_get_kind (EbitdoDevice *device)
+FuEbitdoDeviceKind
+fu_ebitdo_device_get_kind (FuEbitdoDevice *device)
 {
-	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
 	return priv->kind;
 }
 
 /**
- * ebitdo_device_get_usb_device:
- * @device: a #EbitdoDevice instance.
+ * fu_ebitdo_device_get_usb_device:
+ * @device: a #FuEbitdoDevice instance.
  *
  * Gets the device usb_device if set.
  *
@@ -158,31 +158,31 @@ ebitdo_device_get_kind (EbitdoDevice *device)
  * Since: 0.1.0
  **/
 GUsbDevice *
-ebitdo_device_get_usb_device (EbitdoDevice *device)
+fu_ebitdo_device_get_usb_device (FuEbitdoDevice *device)
 {
-	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
 	return priv->usb_device;
 }
 
 static gboolean
-ebitdo_device_send (EbitdoDevice *device,
-		    EbitdoPktType type,
-		    EbitdoPktCmd subtype,
-		    EbitdoPktCmd cmd,
+fu_ebitdo_device_send (FuEbitdoDevice *device,
+		    FuEbitdoPktType type,
+		    FuEbitdoPktCmd subtype,
+		    FuEbitdoPktCmd cmd,
 		    const guint8 *in,
 		    gsize in_len,
 		    GError **error)
 {
-	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
-	guint8 packet[EBITDO_USB_EP_SIZE];
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	guint8 packet[FU_EBITDO_USB_EP_SIZE];
 	gsize actual_length;
-	guint8 ep_out = EBITDO_USB_RUNTIME_EP_OUT;
+	guint8 ep_out = FU_EBITDO_USB_RUNTIME_EP_OUT;
 	g_autoptr(GError) error_local = NULL;
-	EbitdoPkt *hdr = (EbitdoPkt *) packet;
+	FuEbitdoPkt *hdr = (FuEbitdoPkt *) packet;
 
 	/* different */
-	if (priv->kind == EBITDO_DEVICE_KIND_BOOTLOADER)
-		ep_out = EBITDO_USB_BOOTLOADER_EP_OUT;
+	if (priv->kind == FU_EBITDO_DEVICE_KIND_BOOTLOADER)
+		ep_out = FU_EBITDO_USB_BOOTLOADER_EP_OUT;
 
 	/* check size */
 	if (in_len > 64 - 8) {
@@ -212,25 +212,25 @@ ebitdo_device_send (EbitdoDevice *device,
 	}
 
 	/* debug */
-	if (g_getenv ("EBITDO_DEBUG") != NULL) {
-		ebitdo_dump_raw ("->DEVICE", packet, (gsize) hdr->pkt_len + 1);
-		ebitdo_dump_pkt (hdr);
+	if (g_getenv ("FU_EBITDO_DEBUG") != NULL) {
+		fu_ebitdo_dump_raw ("->DEVICE", packet, (gsize) hdr->pkt_len + 1);
+		fu_ebitdo_dump_pkt (hdr);
 	}
 
 	/* get data from device */
 	if (!g_usb_device_interrupt_transfer (priv->usb_device,
 					      ep_out,
 					      packet,
-					      EBITDO_USB_EP_SIZE,
+					      FU_EBITDO_USB_EP_SIZE,
 					      &actual_length,
-					      EBITDO_USB_TIMEOUT,
+					      FU_EBITDO_USB_TIMEOUT,
 					      NULL, /* cancellable */
 					      &error_local)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "failed to send to device on ep 0x%02x: %s",
-			     (guint) EBITDO_USB_BOOTLOADER_EP_OUT,
+			     (guint) FU_EBITDO_USB_BOOTLOADER_EP_OUT,
 			     error_local->message);
 		return FALSE;
 	}
@@ -238,51 +238,51 @@ ebitdo_device_send (EbitdoDevice *device,
 }
 
 static gboolean
-ebitdo_device_receive (EbitdoDevice *device,
+fu_ebitdo_device_receive (FuEbitdoDevice *device,
 		       guint8 *out,
 		       gsize out_len,
 		       GError **error)
 {
-	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
-	guint8 packet[EBITDO_USB_EP_SIZE];
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	guint8 packet[FU_EBITDO_USB_EP_SIZE];
 	gsize actual_length;
-	guint8 ep_in = EBITDO_USB_RUNTIME_EP_IN;
+	guint8 ep_in = FU_EBITDO_USB_RUNTIME_EP_IN;
 	g_autoptr(GError) error_local = NULL;
-	EbitdoPkt *hdr = (EbitdoPkt *) packet;
+	FuEbitdoPkt *hdr = (FuEbitdoPkt *) packet;
 
 	/* different */
-	if (priv->kind == EBITDO_DEVICE_KIND_BOOTLOADER)
-		ep_in = EBITDO_USB_BOOTLOADER_EP_IN;
+	if (priv->kind == FU_EBITDO_DEVICE_KIND_BOOTLOADER)
+		ep_in = FU_EBITDO_USB_BOOTLOADER_EP_IN;
 
 	/* get data from device */
 	memset (packet, 0x0, sizeof(packet));
 	if (!g_usb_device_interrupt_transfer (priv->usb_device,
 					      ep_in,
 					      packet,
-					      EBITDO_USB_EP_SIZE,
+					      FU_EBITDO_USB_EP_SIZE,
 					      &actual_length,
-					      EBITDO_USB_TIMEOUT,
+					      FU_EBITDO_USB_TIMEOUT,
 					      NULL, /* cancellable */
 					      &error_local)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "failed to retrieve from device on ep 0x%02x: %s",
-			     (guint) EBITDO_USB_BOOTLOADER_EP_IN,
+			     (guint) FU_EBITDO_USB_BOOTLOADER_EP_IN,
 			     error_local->message);
 		return FALSE;
 	}
 
 	/* debug */
-	if (g_getenv ("EBITDO_DEBUG") != NULL) {
-		ebitdo_dump_raw ("<-DEVICE", packet, (gsize) hdr->pkt_len - 1);
-		ebitdo_dump_pkt (hdr);
+	if (g_getenv ("FU_EBITDO_DEBUG") != NULL) {
+		fu_ebitdo_dump_raw ("<-DEVICE", packet, (gsize) hdr->pkt_len - 1);
+		fu_ebitdo_dump_pkt (hdr);
 	}
 
 	/* get-version (booloader) */
-	if (hdr->type == EBITDO_PKT_TYPE_USER_CMD &&
-	    hdr->subtype == EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA &&
-	    hdr->cmd == EBITDO_PKT_CMD_FW_GET_VERSION) {
+	if (hdr->type == FU_EBITDO_PKT_TYPE_USER_CMD &&
+	    hdr->subtype == FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA &&
+	    hdr->cmd == FU_EBITDO_PKT_CMD_FW_GET_VERSION) {
 		if (out != NULL) {
 			if (hdr->payload_len != out_len) {
 				g_set_error (error,
@@ -294,14 +294,14 @@ ebitdo_device_receive (EbitdoDevice *device,
 				return FALSE;
 			}
 			memcpy (out,
-				packet + sizeof(EbitdoPkt),
+				packet + sizeof(FuEbitdoPkt),
 				hdr->payload_len);
 		}
 		return TRUE;
 	}
 
 	/* get-version (firmware) -- not a packet, just raw data! */
-	if (hdr->pkt_len == EBITDO_PKT_CMD_GET_VERSION_RESPONSE) {
+	if (hdr->pkt_len == FU_EBITDO_PKT_CMD_GET_VERSION_RESPONSE) {
 		if (out != NULL) {
 			if (out_len != 4) {
 				g_set_error (error,
@@ -317,8 +317,8 @@ ebitdo_device_receive (EbitdoDevice *device,
 	}
 
 	/* verification-id response */
-	if (hdr->type == EBITDO_PKT_TYPE_USER_CMD &&
-	    hdr->subtype == EBITDO_PKT_CMD_VERIFICATION_ID) {
+	if (hdr->type == FU_EBITDO_PKT_TYPE_USER_CMD &&
+	    hdr->subtype == FU_EBITDO_PKT_CMD_VERIFICATION_ID) {
 		if (out != NULL) {
 			if (hdr->cmd_len != out_len) {
 				g_set_error (error,
@@ -330,22 +330,22 @@ ebitdo_device_receive (EbitdoDevice *device,
 				return FALSE;
 			}
 			memcpy (out,
-				packet + sizeof(EbitdoPkt) - 3,
+				packet + sizeof(FuEbitdoPkt) - 3,
 				hdr->cmd_len);
 		}
 		return TRUE;
 	}
 
 	/* update-firmware-data */
-	if (hdr->type == EBITDO_PKT_TYPE_USER_CMD &&
-	    hdr->subtype == EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA &&
+	if (hdr->type == FU_EBITDO_PKT_TYPE_USER_CMD &&
+	    hdr->subtype == FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA &&
 	    hdr->payload_len == 0x00) {
-		if (hdr->cmd != EBITDO_PKT_CMD_ACK) {
+		if (hdr->cmd != FU_EBITDO_PKT_CMD_ACK) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
 				     "write failed, got %s",
-				     ebitdo_pkt_cmd_to_string (hdr->cmd));
+				     fu_ebitdo_pkt_cmd_to_string (hdr->cmd));
 			return FALSE;
 		}
 		return TRUE;
@@ -360,9 +360,9 @@ ebitdo_device_receive (EbitdoDevice *device,
 }
 
 gboolean
-ebitdo_device_open (EbitdoDevice *device, GError **error)
+fu_ebitdo_device_open (FuEbitdoDevice *device, GError **error)
 {
-	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
 	gdouble tmp;
 	guint32 version_tmp = 0;
 	guint32 serial_tmp[9];
@@ -377,16 +377,16 @@ ebitdo_device_open (EbitdoDevice *device, GError **error)
 	}
 
 	/* in firmware mode */
-	if (priv->kind != EBITDO_DEVICE_KIND_BOOTLOADER) {
-		if (!ebitdo_device_send (device,
-					 EBITDO_PKT_TYPE_USER_CMD,
-					 EBITDO_PKT_CMD_GET_VERSION,
+	if (priv->kind != FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
+		if (!fu_ebitdo_device_send (device,
+					 FU_EBITDO_PKT_TYPE_USER_CMD,
+					 FU_EBITDO_PKT_CMD_GET_VERSION,
 					 0,
 					 NULL, 0, /* in */
 					 error)) {
 			return FALSE;
 		}
-		if (!ebitdo_device_receive (device,
+		if (!fu_ebitdo_device_receive (device,
 					    (guint8 *) &version_tmp,
 					    sizeof(version_tmp),
 					    error)) {
@@ -398,15 +398,15 @@ ebitdo_device_open (EbitdoDevice *device, GError **error)
 	}
 
 	/* get version */
-	if (!ebitdo_device_send (device,
-				 EBITDO_PKT_TYPE_USER_CMD,
-				 EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
-				 EBITDO_PKT_CMD_FW_GET_VERSION,
+	if (!fu_ebitdo_device_send (device,
+				 FU_EBITDO_PKT_TYPE_USER_CMD,
+				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
+				 FU_EBITDO_PKT_CMD_FW_GET_VERSION,
 				 NULL, 0, /* in */
 				 error)) {
 		return FALSE;
 	}
-	if (!ebitdo_device_receive (device,
+	if (!fu_ebitdo_device_receive (device,
 				    (guint8 *) &version_tmp,
 				    sizeof(version_tmp),
 				    error)) {
@@ -416,16 +416,16 @@ ebitdo_device_open (EbitdoDevice *device, GError **error)
 	priv->version = g_strdup_printf ("%.2f", tmp / 100.f);
 
 	/* get verification ID */
-	if (!ebitdo_device_send (device,
-				 EBITDO_PKT_TYPE_USER_CMD,
-				 EBITDO_PKT_CMD_GET_VERIFICATION_ID,
+	if (!fu_ebitdo_device_send (device,
+				 FU_EBITDO_PKT_TYPE_USER_CMD,
+				 FU_EBITDO_PKT_CMD_GET_VERIFICATION_ID,
 				 0x00, /* cmd */
 				 NULL, 0,
 				 error)) {
 		return FALSE;
 	}
 	memset (serial_tmp, 0x00, sizeof (serial_tmp));
-	if (!ebitdo_device_receive (device,
+	if (!fu_ebitdo_device_receive (device,
 				    (guint8 *) &serial_tmp, sizeof(serial_tmp),
 				    error)) {
 		return FALSE;
@@ -437,43 +437,43 @@ ebitdo_device_open (EbitdoDevice *device, GError **error)
 }
 
 gboolean
-ebitdo_device_close (EbitdoDevice *device, GError **error)
+fu_ebitdo_device_close (FuEbitdoDevice *device, GError **error)
 {
-	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
 	if (!g_usb_device_close (priv->usb_device, error))
 		return FALSE;
 	return TRUE;
 }
 
 const gchar *
-ebitdo_device_get_guid (EbitdoDevice *device)
+fu_ebitdo_device_get_guid (FuEbitdoDevice *device)
 {
-	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
 	return priv->guid;
 }
 
 const gchar *
-ebitdo_device_get_version (EbitdoDevice *device)
+fu_ebitdo_device_get_version (FuEbitdoDevice *device)
 {
-	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
 	return priv->version;
 }
 
 const guint32 *
-ebitdo_device_get_serial (EbitdoDevice *device)
+fu_ebitdo_device_get_serial (FuEbitdoDevice *device)
 {
-	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
 	return priv->serial;
 }
 
 gboolean
-ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
+fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw,
 			      GFileProgressCallback progress_cb,
 			      gpointer progress_data,
 			      GError **error)
 {
-	EbitdoDevicePrivate *priv = GET_PRIVATE (device);
-	EbitdoFirmwareHeader *hdr;
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	FuEbitdoFirmwareHeader *hdr;
 	const guint8 *payload_data;
 	const guint chunk_sz = 32;
 	guint32 offset;
@@ -489,7 +489,7 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
 	};
 
 	/* corrupt */
-	if (g_bytes_get_size (fw) < sizeof (EbitdoFirmwareHeader)) {
+	if (g_bytes_get_size (fw) < sizeof (FuEbitdoFirmwareHeader)) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
@@ -498,11 +498,11 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
 	}
 
 	/* print details about the firmware */
-	hdr = (EbitdoFirmwareHeader *) g_bytes_get_data (fw, NULL);
-	ebitdo_dump_firmware_header (hdr);
+	hdr = (FuEbitdoFirmwareHeader *) g_bytes_get_data (fw, NULL);
+	fu_ebitdo_dump_firmware_header (hdr);
 
 	/* check the file size */
-	payload_len = (guint32) (g_bytes_get_size (fw) - sizeof (EbitdoFirmwareHeader));
+	payload_len = (guint32) (g_bytes_get_size (fw) - sizeof (FuEbitdoFirmwareHeader));
 	if (payload_len != GUINT32_FROM_LE (hdr->destination_len)) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -526,11 +526,11 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
 	}
 
 	/* set up the firmware header */
-	if (!ebitdo_device_send (device,
-				 EBITDO_PKT_TYPE_USER_CMD,
-				 EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
-				 EBITDO_PKT_CMD_FW_UPDATE_HEADER,
-				 (const guint8 *) hdr, sizeof(EbitdoFirmwareHeader),
+	if (!fu_ebitdo_device_send (device,
+				 FU_EBITDO_PKT_TYPE_USER_CMD,
+				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
+				 FU_EBITDO_PKT_CMD_FW_UPDATE_HEADER,
+				 (const guint8 *) hdr, sizeof(FuEbitdoFirmwareHeader),
 				 &error_local)) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -539,7 +539,7 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
 			     error_local->message);
 		return FALSE;
 	}
-	if (!ebitdo_device_receive (device, NULL, 0, &error_local)) {
+	if (!fu_ebitdo_device_receive (device, NULL, 0, &error_local)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
@@ -550,18 +550,18 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
 
 	/* flash the firmware in 32 byte blocks */
 	payload_data = g_bytes_get_data (fw, NULL);
-	payload_data += sizeof(EbitdoFirmwareHeader);
+	payload_data += sizeof(FuEbitdoFirmwareHeader);
 	for (offset = 0; offset < payload_len; offset += chunk_sz) {
-		if (g_getenv ("EBITDO_DEBUG") != NULL) {
+		if (g_getenv ("FU_EBITDO_DEBUG") != NULL) {
 			g_debug ("writing %u bytes to 0x%04x of 0x%04x",
 				 chunk_sz, offset, payload_len);
 		}
 		if (progress_cb != NULL)
 			progress_cb (offset, payload_len, progress_data);
-		if (!ebitdo_device_send (device,
-					 EBITDO_PKT_TYPE_USER_CMD,
-					 EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
-					 EBITDO_PKT_CMD_FW_UPDATE_DATA,
+		if (!fu_ebitdo_device_send (device,
+					 FU_EBITDO_PKT_TYPE_USER_CMD,
+					 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
+					 FU_EBITDO_PKT_CMD_FW_UPDATE_DATA,
 					 payload_data + offset, chunk_sz,
 					 &error_local)) {
 			g_set_error (error,
@@ -571,7 +571,7 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
 				     offset, error_local->message);
 			return FALSE;
 		}
-		if (!ebitdo_device_receive (device, NULL, 0, &error_local)) {
+		if (!fu_ebitdo_device_receive (device, NULL, 0, &error_local)) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
@@ -591,10 +591,10 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
 	serial_new[0] = priv->serial[0] ^ app_key_index[priv->serial[0] & 0x0f];
 	serial_new[1] = priv->serial[1] ^ app_key_index[priv->serial[1] & 0x0f];
 	serial_new[2] = priv->serial[2] ^ app_key_index[priv->serial[2] & 0x0f];
-	if (!ebitdo_device_send (device,
-				 EBITDO_PKT_TYPE_USER_CMD,
-				 EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
-				 EBITDO_PKT_CMD_FW_SET_ENCODE_ID,
+	if (!fu_ebitdo_device_send (device,
+				 FU_EBITDO_PKT_TYPE_USER_CMD,
+				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
+				 FU_EBITDO_PKT_CMD_FW_SET_ENCODE_ID,
 				 (guint8 *) serial_new,
 				 sizeof(serial_new),
 				 &error_local)) {
@@ -607,10 +607,10 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
 	}
 
 	/* mark flash as successful */
-	if (!ebitdo_device_send (device,
-				 EBITDO_PKT_TYPE_USER_CMD,
-				 EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
-				 EBITDO_PKT_CMD_FW_UPDATE_OK,
+	if (!fu_ebitdo_device_send (device,
+				 FU_EBITDO_PKT_TYPE_USER_CMD,
+				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
+				 FU_EBITDO_PKT_CMD_FW_UPDATE_OK,
 				 NULL, 0,
 				 &error_local)) {
 		g_set_error (error,
@@ -620,7 +620,7 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
 			     error_local->message);
 		return FALSE;
 	}
-	if (!ebitdo_device_receive (device, NULL, 0, &error_local)) {
+	if (!fu_ebitdo_device_receive (device, NULL, 0, &error_local)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
@@ -636,37 +636,37 @@ ebitdo_device_write_firmware (EbitdoDevice *device, GBytes *fw,
 typedef struct {
 	guint16			 vid;
 	guint16			 pid;
-	EbitdoDeviceKind	 kind;
-} EbitdoVidPid;
+	FuEbitdoDeviceKind	 kind;
+} FuEbitdoVidPid;
 
 /**
- * ebitdo_device_new:
+ * fu_ebitdo_device_new:
  *
- * Creates a new #EbitdoDevice.
+ * Creates a new #FuEbitdoDevice.
  *
- * Returns: (transfer full): a #EbitdoDevice
+ * Returns: (transfer full): a #FuEbitdoDevice
  *
  * Since: 0.1.0
  **/
-EbitdoDevice *
-ebitdo_device_new (GUsbDevice *usb_device)
+FuEbitdoDevice *
+fu_ebitdo_device_new (GUsbDevice *usb_device)
 {
-	EbitdoDevice *device;
-	EbitdoDevicePrivate *priv;
+	FuEbitdoDevice *device;
+	FuEbitdoDevicePrivate *priv;
 	guint j;
-	const EbitdoVidPid vidpids[] = {
-		{ 0x0483, 0x5750, EBITDO_DEVICE_KIND_BOOTLOADER },
-		{ 0x1235, 0xab11, EBITDO_DEVICE_KIND_FC30 },
-		{ 0x1235, 0xab12, EBITDO_DEVICE_KIND_NES30 },
-		{ 0x1235, 0xab21, EBITDO_DEVICE_KIND_SFC30 },
-		{ 0x1235, 0xab20, EBITDO_DEVICE_KIND_SNES30 },
-		{ 0x1002, 0x9000, EBITDO_DEVICE_KIND_FC30PRO },
-		{ 0x2002, 0x9000, EBITDO_DEVICE_KIND_NES30PRO },
-		{ 0x8000, 0x1002, EBITDO_DEVICE_KIND_FC30_ARCADE },
-		{ 0x0000, 0x0000, EBITDO_DEVICE_KIND_UNKNOWN, NULL }
+	const FuEbitdoVidPid vidpids[] = {
+		{ 0x0483, 0x5750, FU_EBITDO_DEVICE_KIND_BOOTLOADER },
+		{ 0x1235, 0xab11, FU_EBITDO_DEVICE_KIND_FC30 },
+		{ 0x1235, 0xab12, FU_EBITDO_DEVICE_KIND_NES30 },
+		{ 0x1235, 0xab21, FU_EBITDO_DEVICE_KIND_SFC30 },
+		{ 0x1235, 0xab20, FU_EBITDO_DEVICE_KIND_SNES30 },
+		{ 0x1002, 0x9000, FU_EBITDO_DEVICE_KIND_FC30PRO },
+		{ 0x2002, 0x9000, FU_EBITDO_DEVICE_KIND_NES30PRO },
+		{ 0x8000, 0x1002, FU_EBITDO_DEVICE_KIND_FC30_ARCADE },
+		{ 0x0000, 0x0000, FU_EBITDO_DEVICE_KIND_UNKNOWN, NULL }
 	};
 
-	device = g_object_new (EBITDO_TYPE_DEVICE, NULL);
+	device = g_object_new (FU_EBITDO_TYPE_DEVICE, NULL);
 	priv = GET_PRIVATE (device);
 	priv->usb_device = g_object_ref (usb_device);
 
@@ -687,5 +687,5 @@ ebitdo_device_new (GUsbDevice *usb_device)
 			break;
 		}
 	}
-	return EBITDO_DEVICE (device);
+	return FU_EBITDO_DEVICE (device);
 }

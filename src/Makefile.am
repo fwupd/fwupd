@@ -17,7 +17,6 @@ AM_CPPFLAGS =						\
 	$(ARCHIVE_CFLAGS)				\
 	-I$(top_srcdir)					\
 	-I$(top_builddir)				\
-	-I$(top_srcdir)/libebitdo			\
 	-I$(top_srcdir)/libfwupd			\
 	-DG_LOG_DOMAIN=\"Fu\"				\
 	-DLIBEXECDIR=\"$(libexecdir)\"			\
@@ -35,9 +34,6 @@ FWUPD_LIBS =						\
 
 DFU_LIBS =						\
 	$(top_builddir)/libdfu/libdfu.la
-
-EBITDO_LIBS =						\
-	$(top_builddir)/libebitdo/libebitdo.la
 
 bin_PROGRAMS = fwupdmgr
 
@@ -111,6 +107,25 @@ fu-resources.h: fwupd.gresource.xml
 		--c-name fu				\
 		$(srcdir)/fwupd.gresource.xml
 
+noinst_PROGRAMS +=					\
+	fu-ebitdo-tool
+
+fu_ebitdo_tool_SOURCES =				\
+	fu-ebitdo-common.c				\
+	fu-ebitdo-common.h				\
+	fu-ebitdo-device.c				\
+	fu-ebitdo-device.h				\
+	fu-ebitdo-tool.c
+
+fu_ebitdo_tool_LDADD =					\
+	$(lib_LTLIBRARIES)				\
+	$(APPSTREAM_GLIB_LIBS)				\
+	$(GLIB_LIBS)					\
+	$(GUSB_LIBS)					\
+	$(LIBM)
+
+fu_ebitdo_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
+
 pkglibexec_PROGRAMS =					\
 	fwupd
 
@@ -119,6 +134,10 @@ fwupd_SOURCES =						\
 	fu-debug.h					\
 	fu-device.c					\
 	fu-device.h					\
+	fu-ebitdo-common.c				\
+	fu-ebitdo-common.h				\
+	fu-ebitdo-device.c				\
+	fu-ebitdo-device.h				\
 	fu-keyring.c					\
 	fu-keyring.h					\
 	fu-pending.c					\
@@ -147,7 +166,6 @@ fwupd_SOURCES =						\
 fwupd_LDADD =						\
 	$(FWUPD_LIBS)					\
 	$(DFU_LIBS)					\
-	$(EBITDO_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(GUSB_LIBS)					\
 	$(GCAB_LIBS)					\

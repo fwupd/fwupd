@@ -310,8 +310,6 @@ AC_CONFIG_FILES([
 Makefile
 libdfu/Makefile
 libdfu/dfu.pc
-libebitdo/Makefile
-libebitdo/ebitdo.pc
 libfwupd/fwupd-version.h
 libfwupd/fwupd.pc
 libfwupd/Makefile

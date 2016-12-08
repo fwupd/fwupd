@@ -26,7 +26,7 @@
 #include <glib-object.h>
 #include <gusb.h>
 
-#include "ebitdo.h"
+#include "fu-ebitdo-device.h"
 #include "fu-device.h"
 #include "fu-provider-ebitdo.h"
 
@@ -34,7 +34,7 @@ static void	fu_provider_ebitdo_finalize	(GObject	*object);
 
 typedef struct {
 	GHashTable		*devices;		/* id : FuDevice */
-	GHashTable		*devices_runtime;	/* id : EbitdoDevice */
+	GHashTable		*devices_runtime;	/* id : FuEbitdoDevice */
 	GUsbContext		*usb_ctx;
 	gboolean		 done_enumerate;
 } FuProviderEbitdoPrivate;
@@ -54,11 +54,11 @@ fu_provider_ebitdo_device_added (FuProviderEbitdo *provider_ebitdo,
 				 GError **error)
 {
 	FuProviderEbitdoPrivate *priv = GET_PRIVATE (provider_ebitdo);
-	EbitdoDeviceKind ebitdo_kind;
+	FuEbitdoDeviceKind ebitdo_kind;
 	const gchar *platform_id = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
-	g_autoptr(EbitdoDevice) ebitdo_dev = NULL;
+	g_autoptr(FuEbitdoDevice) ebitdo_dev = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autofree gchar *name = NULL;
 
@@ -69,8 +69,8 @@ fu_provider_ebitdo_device_added (FuProviderEbitdo *provider_ebitdo,
 
 	/* get version */
 	platform_id = g_usb_device_get_platform_id (usb_device);
-	ebitdo_dev = ebitdo_device_new (usb_device);
-	if (ebitdo_device_get_kind (ebitdo_dev) == EBITDO_DEVICE_KIND_UNKNOWN) {
+	ebitdo_dev = fu_ebitdo_device_new (usb_device);
+	if (fu_ebitdo_device_get_kind (ebitdo_dev) == FU_EBITDO_DEVICE_KIND_UNKNOWN) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -79,36 +79,36 @@ fu_provider_ebitdo_device_added (FuProviderEbitdo *provider_ebitdo,
 	}
 
 	/* open the device */
-	if (!ebitdo_device_open (ebitdo_dev, error))
+	if (!fu_ebitdo_device_open (ebitdo_dev, error))
 		return FALSE;
 
 	/* generate name */
-	ebitdo_kind = ebitdo_device_get_kind (ebitdo_dev);
+	ebitdo_kind = fu_ebitdo_device_get_kind (ebitdo_dev);
 	name = g_strdup_printf ("8Bitdo %s Gamepad",
-				ebitdo_device_kind_to_string (ebitdo_kind));
+				fu_ebitdo_device_kind_to_string (ebitdo_kind));
 
 	/* create the device */
 	dev = fu_device_new ();
 	fu_device_set_id (dev, platform_id);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
-	fu_device_add_guid (dev, ebitdo_device_get_guid (ebitdo_dev));
-	fu_device_set_version (dev, ebitdo_device_get_version (ebitdo_dev));
+	fu_device_add_guid (dev, fu_ebitdo_device_get_guid (ebitdo_dev));
+	fu_device_set_version (dev, fu_ebitdo_device_get_version (ebitdo_dev));
 	fu_device_set_name (dev, name);
 
 	/* close the device */
-	if (!ebitdo_device_close (ebitdo_dev, error))
+	if (!fu_ebitdo_device_close (ebitdo_dev, error))
 		return FALSE;
 
 	/* only the bootloader can do the update */
-	if (ebitdo_kind == EBITDO_DEVICE_KIND_BOOTLOADER) {
-		EbitdoDevice *ebitdo_runtime;
+	if (ebitdo_kind == FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
+		FuEbitdoDevice *ebitdo_runtime;
 		fu_device_remove_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 
 		/* add the last seen runtime GUID too */
 		ebitdo_runtime = g_hash_table_lookup (priv->devices_runtime, platform_id);
 		if (ebitdo_runtime != NULL) {
 			const gchar *guid;
-			guid = ebitdo_device_get_guid (ebitdo_runtime);
+			guid = fu_ebitdo_device_get_guid (ebitdo_runtime);
 			g_debug ("adding runtime GUID of %s", guid);
 			fu_device_add_guid (dev, guid);
 		}
@@ -118,7 +118,7 @@ fu_provider_ebitdo_device_added (FuProviderEbitdo *provider_ebitdo,
 				     g_strdup (platform_id),
 				     g_object_ref (ebitdo_dev));
 		g_debug ("saving runtime GUID of %s",
-			 ebitdo_device_get_guid (ebitdo_dev));
+			 fu_ebitdo_device_get_guid (ebitdo_dev));
 	}
 
 	/* insert to hash */
@@ -149,7 +149,7 @@ fu_provider_ebitdo_update (FuProvider *provider,
 	FuProviderEbitdo *provider_ebitdo = FU_PROVIDER_EBITDO (provider);
 	FuProviderEbitdoPrivate *priv = GET_PRIVATE (provider_ebitdo);
 	const gchar *platform_id;
-	g_autoptr(EbitdoDevice) ebitdo_dev = NULL;
+	g_autoptr(FuEbitdoDevice) ebitdo_dev = NULL;
 	g_autoptr(GUsbDevice) usb_device = NULL;
 
 	/* get version */
@@ -159,8 +159,8 @@ fu_provider_ebitdo_update (FuProvider *provider,
 							error);
 	if (usb_device == NULL)
 		return FALSE;
-	ebitdo_dev = ebitdo_device_new (usb_device);
-	if (ebitdo_device_get_kind (ebitdo_dev) != EBITDO_DEVICE_KIND_BOOTLOADER) {
+	ebitdo_dev = fu_ebitdo_device_new (usb_device);
+	if (fu_ebitdo_device_get_kind (ebitdo_dev) != FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -169,15 +169,15 @@ fu_provider_ebitdo_update (FuProvider *provider,
 	}
 
 	/* write the firmware */
-	if (!ebitdo_device_open (ebitdo_dev, error))
+	if (!fu_ebitdo_device_open (ebitdo_dev, error))
 		return FALSE;
 	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_WRITE);
-	if (!ebitdo_device_write_firmware (ebitdo_dev, blob_fw,
+	if (!fu_ebitdo_device_write_firmware (ebitdo_dev, blob_fw,
 					   ebitdo_write_progress_cb, provider,
 					   error))
 		return FALSE;
 	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_RESTART);
-	if (!ebitdo_device_close (ebitdo_dev, error))
+	if (!fu_ebitdo_device_close (ebitdo_dev, error))
 		return FALSE;
 
 	/* success */

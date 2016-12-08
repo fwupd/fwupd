@@ -53,6 +53,7 @@ Requires: libgusb%{?_isa} >= %{libgusb_version}
 Requires: libsoup%{?_isa} >= %{libsoup_version}
 
 Obsoletes: fwupd-sign < 0.1.6
+Obsoletes: libebitdo < 0.7.5
 
 %description
 fwupd is a daemon to allow session software to update device firmware.
@@ -60,6 +61,7 @@ fwupd is a daemon to allow session software to update device firmware.
 %package devel
 Summary: Development package for %{name}
 Requires: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: libebitdo-devel < 0.7.5
 
 %description devel
 Files for development with %{name}.
@@ -76,19 +78,6 @@ Requires: libdfu%{?_isa} = %{version}-%{release}
 
 %description -n libdfu-devel
 Files for development with libdfu.
-
-%package -n libebitdo
-Summary: A library for accessing 8Bitdo hardware
-
-%description -n libebitdo
-A library for updating 8Bitdo USB devices.
-
-%package -n libebitdo-devel
-Summary: Development package for libebitdo
-Requires: libebitdo%{?_isa} = %{version}-%{release}
-
-%description -n libebitdo-devel
-Files for development with libebitdo.
 
 %prep
 %setup -q
@@ -137,9 +126,6 @@ make check VERBOSE=1
 
 %post -n libdfu -p /sbin/ldconfig
 %postun -n libdfu -p /sbin/ldconfig
-
-%post -n libebitdo -p /sbin/ldconfig
-%postun -n libebitdo -p /sbin/ldconfig
 
 %files -f %{name}.lang
 %doc README.md AUTHORS NEWS
@@ -192,17 +178,6 @@ make check VERBOSE=1
 %{_includedir}/libdfu/*.h
 %{_libdir}/libdfu*.so
 %{_libdir}/pkgconfig/dfu.pc
-
-%files -n libebitdo
-%{_bindir}/ebitdo-tool
-%{_libdir}/libebitdo*.so.*
-
-%files -n libebitdo-devel
-%dir %{_includedir}/libebitdo
-%{_includedir}/ebitdo.h
-%{_includedir}/libebitdo/*.h
-%{_libdir}/libebitdo*.so
-%{_libdir}/pkgconfig/ebitdo.pc
 
 %changelog
 * #LONGDATE# Richard Hughes <richard@hughsie.com> #VERSION#-0.#BUILD##ALPHATAG#

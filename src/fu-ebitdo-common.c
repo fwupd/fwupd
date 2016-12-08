@@ -21,64 +21,64 @@
 
 #include <string.h>
 
-#include "ebitdo-common.h"
+#include "fu-ebitdo-common.h"
 
 const gchar *
-ebitdo_pkt_type_to_string (EbitdoPktType cmd)
+fu_ebitdo_pkt_type_to_string (FuEbitdoPktType cmd)
 {
-	if (cmd == EBITDO_PKT_TYPE_USER_CMD)
+	if (cmd == FU_EBITDO_PKT_TYPE_USER_CMD)
 		return "user-cmd";
-	if (cmd == EBITDO_PKT_TYPE_USER_DATA)
+	if (cmd == FU_EBITDO_PKT_TYPE_USER_DATA)
 		return "user-data";
-	if (cmd == EBITDO_PKT_TYPE_MID_CMD)
+	if (cmd == FU_EBITDO_PKT_TYPE_MID_CMD)
 		return "mid-cmd";
 	return NULL;
 }
 
 const gchar *
-ebitdo_pkt_cmd_to_string (EbitdoPktCmd cmd)
+fu_ebitdo_pkt_cmd_to_string (FuEbitdoPktCmd cmd)
 {
-	if (cmd == EBITDO_PKT_CMD_FW_UPDATE_DATA)
+	if (cmd == FU_EBITDO_PKT_CMD_FW_UPDATE_DATA)
 		return "fw-update-data";
-	if (cmd == EBITDO_PKT_CMD_FW_UPDATE_HEADER)
+	if (cmd == FU_EBITDO_PKT_CMD_FW_UPDATE_HEADER)
 		return "fw-update-header";
-	if (cmd == EBITDO_PKT_CMD_FW_UPDATE_OK)
+	if (cmd == FU_EBITDO_PKT_CMD_FW_UPDATE_OK)
 		return "fw-update-ok";
-	if (cmd == EBITDO_PKT_CMD_FW_UPDATE_ERROR)
+	if (cmd == FU_EBITDO_PKT_CMD_FW_UPDATE_ERROR)
 		return "fw-update-error";
-	if (cmd == EBITDO_PKT_CMD_FW_GET_VERSION)
+	if (cmd == FU_EBITDO_PKT_CMD_FW_GET_VERSION)
 		return "fw-get-version";
-	if (cmd == EBITDO_PKT_CMD_FW_SET_VERSION)
+	if (cmd == FU_EBITDO_PKT_CMD_FW_SET_VERSION)
 		return "fw-set-version";
-	if (cmd == EBITDO_PKT_CMD_FW_SET_ENCODE_ID)
+	if (cmd == FU_EBITDO_PKT_CMD_FW_SET_ENCODE_ID)
 		return "fw-set-encode-id";
-	if (cmd == EBITDO_PKT_CMD_ACK)
+	if (cmd == FU_EBITDO_PKT_CMD_ACK)
 		return "ack";
-	if (cmd == EBITDO_PKT_CMD_NAK)
+	if (cmd == FU_EBITDO_PKT_CMD_NAK)
 		return "nak";
-	if (cmd == EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA)
+	if (cmd == FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA)
 		return "update-firmware-data";
-	if (cmd == EBITDO_PKT_CMD_TRANSFER_ABORT)
+	if (cmd == FU_EBITDO_PKT_CMD_TRANSFER_ABORT)
 		return "transfer-abort";
-	if (cmd == EBITDO_PKT_CMD_VERIFICATION_ID)
+	if (cmd == FU_EBITDO_PKT_CMD_VERIFICATION_ID)
 		return "verification-id";
-	if (cmd == EBITDO_PKT_CMD_GET_VERIFICATION_ID)
+	if (cmd == FU_EBITDO_PKT_CMD_GET_VERIFICATION_ID)
 		return "get-verification-id";
-	if (cmd == EBITDO_PKT_CMD_VERIFY_ERROR)
+	if (cmd == FU_EBITDO_PKT_CMD_VERIFY_ERROR)
 		return "verify-error";
-	if (cmd == EBITDO_PKT_CMD_VERIFY_OK)
+	if (cmd == FU_EBITDO_PKT_CMD_VERIFY_OK)
 		return "verify-ok";
-	if (cmd == EBITDO_PKT_CMD_TRANSFER_TIMEOUT)
+	if (cmd == FU_EBITDO_PKT_CMD_TRANSFER_TIMEOUT)
 		return "transfer-timeout";
-	if (cmd == EBITDO_PKT_CMD_GET_VERSION)
+	if (cmd == FU_EBITDO_PKT_CMD_GET_VERSION)
 		return "get-version";
-	if (cmd == EBITDO_PKT_CMD_GET_VERSION_RESPONSE)
+	if (cmd == FU_EBITDO_PKT_CMD_GET_VERSION_RESPONSE)
 		return "get-version-response";
 	return NULL;
 }
 
 void
-ebitdo_dump_raw (const gchar *title, const guint8 *data, gsize len)
+fu_ebitdo_dump_raw (const gchar *title, const guint8 *data, gsize len)
 {
 	g_print ("%s:", title);
 	for (gsize i = strlen (title); i < 16; i++)
@@ -92,22 +92,22 @@ ebitdo_dump_raw (const gchar *title, const guint8 *data, gsize len)
 }
 
 void
-ebitdo_dump_pkt (EbitdoPkt *hdr)
+fu_ebitdo_dump_pkt (FuEbitdoPkt *hdr)
 {
 	g_print ("PktLength:   0x%02x\n", hdr->pkt_len);
 	g_print ("PktType:     0x%02x [%s]\n",
-		 hdr->type, ebitdo_pkt_type_to_string (hdr->type));
+		 hdr->type, fu_ebitdo_pkt_type_to_string (hdr->type));
 	g_print ("CmdSubtype:  0x%02x [%s]\n",
-		 hdr->subtype, ebitdo_pkt_cmd_to_string (hdr->subtype));
+		 hdr->subtype, fu_ebitdo_pkt_cmd_to_string (hdr->subtype));
 	g_print ("CmdLen:      0x%04x\n", GUINT16_FROM_LE (hdr->cmd_len));
 	g_print ("Cmd:         0x%02x [%s]\n",
-		 hdr->cmd, ebitdo_pkt_cmd_to_string (hdr->cmd));
+		 hdr->cmd, fu_ebitdo_pkt_cmd_to_string (hdr->cmd));
 	g_print ("Payload Len: 0x%04x\n",
 		 GUINT16_FROM_LE (hdr->payload_len));
 }
 
 void
-ebitdo_dump_firmware_header (EbitdoFirmwareHeader *hdr)
+fu_ebitdo_dump_firmware_header (FuEbitdoFirmwareHeader *hdr)
 {
 	g_print ("Version:             %.2f\n",
 		 (gdouble) GUINT32_FROM_LE (hdr->version) / 100.f);
