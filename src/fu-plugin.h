@@ -24,6 +24,7 @@
 
 #include <glib-object.h>
 #include <gmodule.h>
+#include <gusb.h>
 
 #include "fu-device.h"
 
@@ -34,6 +35,7 @@ typedef struct	FuPlugin	FuPlugin;
 
 struct FuPlugin {
 	GModule			*module;
+	GUsbContext		*usb_ctx;
 	gboolean		 enabled;
 	gchar			*name;
 	FuPluginPrivate		*priv;
@@ -80,6 +82,9 @@ gboolean	 fu_plugin_run_device_update		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GBytes		*data,
 							 GError		**error);
+GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*plugin);
+void		 fu_plugin_set_usb_context		(FuPlugin	*plugin,
+							 GUsbContext	*usb_ctx);
 
 G_END_DECLS
 

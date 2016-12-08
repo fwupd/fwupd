@@ -23,6 +23,7 @@
 #define __FU_PROVIDER_H
 
 #include <glib-object.h>
+#include <gusb.h>
 
 #include "fu-device.h"
 #include "fu-plugin.h"
@@ -45,6 +46,8 @@ struct _FuProviderClass
 
 	/* vfunc */
 	const gchar	*(*get_name)		(FuProvider	*provider);
+	gboolean	 (*setup)		(FuProvider	*provider,
+						 GError		**error);
 	gboolean	 (*coldplug)		(FuProvider	*provider,
 						 GError		**error);
 	gboolean	 (*verify)		(FuProvider	*provider,
@@ -93,6 +96,8 @@ void		 fu_provider_set_status		(FuProvider	*provider,
 void		 fu_provider_set_percentage	(FuProvider	*provider,
 						 guint		 percentage);
 const gchar	*fu_provider_get_name		(FuProvider	*provider);
+gboolean	 fu_provider_setup		(FuProvider	*provider,
+						 GError		**error);
 gboolean	 fu_provider_coldplug		(FuProvider	*provider,
 						 GError		**error);
 gboolean	 fu_provider_update		(FuProvider	*provider,
@@ -116,6 +121,10 @@ gboolean	 fu_provider_get_results	(FuProvider	*provider,
 						 FuDevice	*device,
 						 GError		**error);
 GChecksumType	 fu_provider_get_checksum_type	(FuProviderVerifyFlags flags);
+
+GUsbContext	*fu_provider_get_usb_context	(FuProvider	*provider);
+void		 fu_provider_set_usb_context	(FuProvider	*provider,
+						 GUsbContext	*usb_ctx);
 
 G_END_DECLS
 

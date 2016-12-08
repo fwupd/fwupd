@@ -71,6 +71,7 @@ typedef struct {
 	GDBusNodeInfo		*introspection_daemon;
 	GDBusProxy		*proxy_uid;
 	GDBusProxy		*proxy_upower;
+	GUsbContext		*usb_ctx;
 	GKeyFile		*config;
 	GMainLoop		*loop;
 	GPtrArray		*devices;	/* of FuDeviceItem */
@@ -260,7 +261,7 @@ fu_main_invocation_return_error (FuMainPrivate *priv,
 }
 
 static gboolean
-fu_main_load_plugins (GHashTable *plugins, GError **error)
+fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 {
 	FuPlugin *plugin;
 	GModule *module;
@@ -296,13 +297,14 @@ fu_main_load_plugins (GHashTable *plugins, GError **error)
 			g_warning ("plugin %s requires name", filename);
 			continue;
 		}
+		fu_plugin_set_usb_context (plugin, priv->usb_ctx);
 
 		/* add */
-		g_hash_table_insert (plugins, g_strdup (plugin->name), plugin);
+		g_hash_table_insert (priv->plugins, g_strdup (plugin->name), plugin);
 	}
 
 	/* start them all up */
-	values = g_hash_table_get_values (plugins);
+	values = g_hash_table_get_values (priv->plugins);
 	for (GList *l = values; l != NULL; l = l->next) {
 		plugin = FU_PLUGIN (l->data);
 		if (!fu_plugin_run_startup (plugin, error))
@@ -2139,6 +2141,24 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 }
 
 static void
+fu_main_providers_setup (FuMainPrivate *priv)
+{
+	g_autoptr(AsProfileTask) ptask = NULL;
+
+	ptask = as_profile_start_literal (priv->profile, "FuMain:setup");
+	for (guint i = 0; i < priv->providers->len; i++) {
+		g_autoptr(GError) error = NULL;
+		g_autoptr(AsProfileTask) ptask2 = NULL;
+		FuProvider *provider = g_ptr_array_index (priv->providers, i);
+		ptask2 = as_profile_start (priv->profile,
+					   "FuMain:setup{%s}",
+					   fu_provider_get_name (provider));
+		if (!fu_provider_setup (FU_PROVIDER (provider), &error))
+			g_warning ("Failed to setup: %s", error->message);
+	}
+}
+
+static void
 fu_main_providers_coldplug (FuMainPrivate *priv)
 {
 	g_autoptr(AsProfileTask) ptask = NULL;
@@ -2181,6 +2201,8 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 	g_assert (registration_id > 0);
 
 	/* add devices */
+	fu_main_providers_setup (priv);
+	g_usb_context_enumerate (priv->usb_ctx);
 	fu_main_providers_coldplug (priv);
 
 	/* connect to D-Bus directly */
@@ -2471,7 +2493,7 @@ main (int argc, char *argv[])
 	/* load plugin */
 	priv->plugins = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) fu_plugin_free);
-	if (!fu_main_load_plugins (priv->plugins, &error)) {
+	if (!fu_main_load_plugins (priv, &error)) {
 		g_print ("failed to load plugins: %s\n", error->message);
 		retval = EXIT_FAILURE;
 		goto out;
@@ -2518,6 +2540,18 @@ main (int argc, char *argv[])
 
 	/* last as least priority */
 	fu_main_add_provider (priv, fu_provider_usb_new ());
+
+	/* set shared USB context */
+	priv->usb_ctx = g_usb_context_new (&error);
+	if (priv->usb_ctx == NULL) {
+		g_warning ("FuMain: failed to get USB context: %s",
+			   error->message);
+		goto out;
+	}
+	for (guint i = 0; i < priv->providers->len; i++) {
+		FuProvider *provider = g_ptr_array_index (priv->providers, i);
+		fu_provider_set_usb_context (provider, priv->usb_ctx);
+	}
 
 	/* load introspection from file */
 	priv->introspection_daemon = fu_main_load_introspection (FWUPD_DBUS_INTERFACE ".xml",
@@ -2570,6 +2604,8 @@ out:
 			g_object_unref (priv->proxy_uid);
 		if (priv->proxy_upower != NULL)
 			g_object_unref (priv->proxy_upower);
+		if (priv->usb_ctx != NULL)
+			g_object_unref (priv->usb_ctx);
 		if (priv->config != NULL)
 			g_key_file_unref (priv->config);
 		if (priv->connection != NULL)

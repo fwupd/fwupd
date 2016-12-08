@@ -34,6 +34,10 @@
 #include "fu-plugin.h"
 #include "fu-provider-uefi.h"
 
+typedef struct {
+	GUsbContext		*usb_ctx;
+} FuProviderPrivate;
+
 static void	fu_provider_finalize	(GObject	*object);
 
 enum {
@@ -46,7 +50,8 @@ enum {
 
 static guint signals[SIGNAL_LAST] = { 0 };
 
-G_DEFINE_TYPE (FuProvider, fu_provider, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (FuProvider, fu_provider, G_TYPE_OBJECT)
+#define GET_PRIVATE(o) (fu_provider_get_instance_private (o))
 
 static gboolean
 fu_provider_offline_invalidate (GError **error)
@@ -89,6 +94,15 @@ fu_provider_offline_setup (GError **error)
 			     "/var/lib", strerror (errno));
 		return FALSE;
 	}
+	return TRUE;
+}
+
+gboolean
+fu_provider_setup (FuProvider *provider, GError **error)
+{
+	FuProviderClass *klass = FU_PROVIDER_GET_CLASS (provider);
+	if (klass->setup != NULL)
+		return klass->setup (provider, error);
 	return TRUE;
 }
 
@@ -425,6 +439,20 @@ fu_provider_get_checksum_type (FuProviderVerifyFlags flags)
 	return G_CHECKSUM_SHA1;
 }
 
+GUsbContext *
+fu_provider_get_usb_context (FuProvider *provider)
+{
+	FuProviderPrivate *priv = GET_PRIVATE (provider);
+	return g_object_ref (priv->usb_ctx);
+}
+
+void
+fu_provider_set_usb_context (FuProvider *provider, GUsbContext *usb_ctx)
+{
+	FuProviderPrivate *priv = GET_PRIVATE (provider);
+	g_set_object (&priv->usb_ctx, usb_ctx);
+}
+
 static void
 fu_provider_class_init (FuProviderClass *klass)
 {
@@ -464,5 +492,11 @@ fu_provider_init (FuProvider *provider)
 static void
 fu_provider_finalize (GObject *object)
 {
+	FuProvider *provider = FU_PROVIDER (object);
+	FuProviderPrivate *priv = GET_PRIVATE (provider);
+
+	if (priv->usb_ctx != NULL)
+		g_object_unref (priv->usb_ctx);
+
 	G_OBJECT_CLASS (fu_provider_parent_class)->finalize (object);
 }

@@ -201,11 +201,25 @@ fu_provider_usb_device_removed_cb (GUsbContext *ctx,
 }
 
 static gboolean
+fu_provider_usb_setup (FuProvider *provider, GError **error)
+{
+	FuProviderUsb *provider_usb = FU_PROVIDER_USB (provider);
+	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
+	priv->usb_ctx = fu_provider_get_usb_context (provider);
+	g_signal_connect (priv->usb_ctx, "device-added",
+			  G_CALLBACK (fu_provider_usb_device_added_cb),
+			  provider_usb);
+	g_signal_connect (priv->usb_ctx, "device-removed",
+			  G_CALLBACK (fu_provider_usb_device_removed_cb),
+			  provider_usb);
+	return TRUE;
+}
+
+static gboolean
 fu_provider_usb_coldplug (FuProvider *provider, GError **error)
 {
 	FuProviderUsb *provider_usb = FU_PROVIDER_USB (provider);
 	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
-	g_usb_context_enumerate (priv->usb_ctx);
 	priv->done_enumerate = TRUE;
 	return TRUE;
 }
@@ -217,6 +231,7 @@ fu_provider_usb_class_init (FuProviderUsbClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	provider_class->get_name = fu_provider_usb_get_name;
+	provider_class->setup = fu_provider_usb_setup;
 	provider_class->coldplug = fu_provider_usb_coldplug;
 	object_class->finalize = fu_provider_usb_finalize;
 }
@@ -227,13 +242,6 @@ fu_provider_usb_init (FuProviderUsb *provider_usb)
 	FuProviderUsbPrivate *priv = GET_PRIVATE (provider_usb);
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
-	priv->usb_ctx = g_usb_context_new (NULL);
-	g_signal_connect (priv->usb_ctx, "device-added",
-			  G_CALLBACK (fu_provider_usb_device_added_cb),
-			  provider_usb);
-	g_signal_connect (priv->usb_ctx, "device-removed",
-			  G_CALLBACK (fu_provider_usb_device_removed_cb),
-			  provider_usb);
 }
 
 static void

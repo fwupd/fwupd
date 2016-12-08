@@ -205,11 +205,22 @@ fu_provider_dfu_device_removed_cb (DfuContext *ctx,
 }
 
 static gboolean
-fu_provider_dfu_coldplug (FuProvider *provider, GError **error)
+fu_provider_dfu_setup (FuProvider *provider, GError **error)
 {
+	g_autoptr(GUsbContext) usb_ctx = NULL;
 	FuProviderDfu *provider_dfu = FU_PROVIDER_DFU (provider);
 	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
-	dfu_context_enumerate (priv->context, NULL);
+	usb_ctx = fu_provider_get_usb_context (provider);
+	priv->context = dfu_context_new_with_context (usb_ctx);
+	g_signal_connect (priv->context, "device-added",
+			  G_CALLBACK (fu_provider_dfu_device_added_cb),
+			  provider_dfu);
+	g_signal_connect (priv->context, "device-removed",
+			  G_CALLBACK (fu_provider_dfu_device_removed_cb),
+			  provider_dfu);
+	g_signal_connect (priv->context, "device-changed",
+			  G_CALLBACK (fu_provider_dfu_device_changed_cb),
+			  provider_dfu);
 	return TRUE;
 }
 
@@ -391,7 +402,7 @@ fu_provider_dfu_class_init (FuProviderDfuClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	provider_class->get_name = fu_provider_dfu_get_name;
-	provider_class->coldplug = fu_provider_dfu_coldplug;
+	provider_class->setup = fu_provider_dfu_setup;
 	provider_class->update_online = fu_provider_dfu_update;
 	provider_class->verify = fu_provider_dfu_verify;
 	object_class->finalize = fu_provider_dfu_finalize;
@@ -403,16 +414,6 @@ fu_provider_dfu_init (FuProviderDfu *provider_dfu)
 	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
-	priv->context = dfu_context_new ();
-	g_signal_connect (priv->context, "device-added",
-			  G_CALLBACK (fu_provider_dfu_device_added_cb),
-			  provider_dfu);
-	g_signal_connect (priv->context, "device-removed",
-			  G_CALLBACK (fu_provider_dfu_device_removed_cb),
-			  provider_dfu);
-	g_signal_connect (priv->context, "device-changed",
-			  G_CALLBACK (fu_provider_dfu_device_changed_cb),
-			  provider_dfu);
 }
 
 static void

@@ -877,13 +877,22 @@ fu_provider_dell_detect_tpm (FuProvider *provider, GError **error)
 }
 
 static gboolean
-fu_provider_dell_coldplug (FuProvider *provider, GError **error)
+fu_provider_dell_setup (FuProvider *provider, GError **error)
 {
 	FuProviderDell *provider_dell = FU_PROVIDER_DELL (provider);
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
 	guint8 dell_supported = 0;
 	gint uefi_supported = 0;
 	struct smbios_struct *de_table;
+
+	/* get USB */
+	priv->usb_ctx = fu_provider_get_usb_context (provider);
+	g_signal_connect (priv->usb_ctx, "device-added",
+			  G_CALLBACK (fu_provider_dell_device_added_cb),
+			  provider_dell);
+	g_signal_connect (priv->usb_ctx, "device-removed",
+			  G_CALLBACK (fu_provider_dell_device_removed_cb),
+			  provider_dell);
 
 	if (priv->fake_smbios) {
 		g_debug ("Dell: called with fake SMBIOS implementation. "
@@ -924,14 +933,15 @@ fu_provider_dell_coldplug (FuProvider *provider, GError **error)
 		return FALSE;
 	}
 
+	return TRUE;
+}
 
-	/* enumerate looking for a connected dock */
-	g_usb_context_enumerate (priv->usb_ctx);
-
+static gboolean
+fu_provider_dell_coldplug (FuProvider *provider, GError **error)
+{
 	/* look for switchable TPM */
 	if (!fu_provider_dell_detect_tpm (provider, error))
 		g_debug ("Dell: No switchable TPM detected");
-
 	return TRUE;
 }
 
@@ -1009,7 +1019,7 @@ fu_provider_dell_update_offline (FuProvider *provider,
 #endif
 
 	/* test the flash counter
-	 * - devices with 0 left at coldplug aren't allowed offline updates
+	 * - devices with 0 left at setup aren't allowed offline updates
 	 * - devices greater than 0 should show a warning when near 0
 	 */
 	flashes_left = fu_device_get_flashes_left (device);
@@ -1210,6 +1220,7 @@ fu_provider_dell_class_init (FuProviderDellClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	provider_class->get_name = fu_provider_dell_get_name;
+	provider_class->setup = fu_provider_dell_setup;
 	provider_class->coldplug = fu_provider_dell_coldplug;
 	provider_class->unlock = fu_provider_dell_unlock;
 	provider_class->update_offline = fu_provider_dell_update_offline;
@@ -1225,13 +1236,6 @@ fu_provider_dell_init (FuProviderDell *provider_dell)
 
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) fu_provider_dell_device_free);
-	priv->usb_ctx = g_usb_context_new (NULL);
-	g_signal_connect (priv->usb_ctx, "device-added",
-			  G_CALLBACK (fu_provider_dell_device_added_cb),
-			  provider_dell);
-	g_signal_connect (priv->usb_ctx, "device-removed",
-			  G_CALLBACK (fu_provider_dell_device_removed_cb),
-			  provider_dell);
 	priv->fake_smbios = FALSE;
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
 		priv->fake_smbios = TRUE;
@@ -1244,7 +1248,8 @@ fu_provider_dell_finalize (GObject *object)
 	FuProviderDellPrivate *priv = GET_PRIVATE (provider_dell);
 
 	g_hash_table_unref (priv->devices);
-	g_object_unref (priv->usb_ctx);
+	if (priv->usb_ctx != NULL)
+		g_object_unref (priv->usb_ctx);
 
 	G_OBJECT_CLASS (fu_provider_dell_parent_class)->finalize (object);
 }

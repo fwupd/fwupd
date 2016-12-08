@@ -49,7 +49,7 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 
 	/* get version */
 	platform_id = fu_device_get_id (device);
-	usb_ctx = g_usb_context_new (NULL);
+	usb_ctx = fu_plugin_get_usb_context (plugin);
 	usb_device = g_usb_context_find_by_platform_id (usb_ctx,
 							platform_id,
 							error);

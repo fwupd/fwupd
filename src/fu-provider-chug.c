@@ -541,11 +541,17 @@ fu_provider_chug_device_removed_cb (GUsbContext *ctx,
 }
 
 static gboolean
-fu_provider_chug_coldplug (FuProvider *provider, GError **error)
+fu_provider_chug_setup (FuProvider *provider, GError **error)
 {
 	FuProviderChug *provider_chug = FU_PROVIDER_CHUG (provider);
 	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
-	g_usb_context_enumerate (priv->usb_ctx);
+	priv->usb_ctx = fu_provider_get_usb_context (provider);
+	g_signal_connect (priv->usb_ctx, "device-added",
+			  G_CALLBACK (fu_provider_chug_device_added_cb),
+			  provider_chug);
+	g_signal_connect (priv->usb_ctx, "device-removed",
+			  G_CALLBACK (fu_provider_chug_device_removed_cb),
+			  provider_chug);
 	return TRUE;
 }
 
@@ -556,7 +562,7 @@ fu_provider_chug_class_init (FuProviderChugClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	provider_class->get_name = fu_provider_chug_get_name;
-	provider_class->coldplug = fu_provider_chug_coldplug;
+	provider_class->setup = fu_provider_chug_setup;
 	provider_class->update_online = fu_provider_chug_update;
 	provider_class->verify = fu_provider_chug_verify;
 	object_class->finalize = fu_provider_chug_finalize;
@@ -568,14 +574,7 @@ fu_provider_chug_init (FuProviderChug *provider_chug)
 	FuProviderChugPrivate *priv = GET_PRIVATE (provider_chug);
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) fu_provider_chug_device_free);
-	priv->usb_ctx = g_usb_context_new (NULL);
 	priv->device_queue = ch_device_queue_new ();
-	g_signal_connect (priv->usb_ctx, "device-added",
-			  G_CALLBACK (fu_provider_chug_device_added_cb),
-			  provider_chug);
-	g_signal_connect (priv->usb_ctx, "device-removed",
-			  G_CALLBACK (fu_provider_chug_device_removed_cb),
-			  provider_chug);
 }
 
 static void

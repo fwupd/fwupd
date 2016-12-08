@@ -220,11 +220,25 @@ fu_provider_ebitdo_device_removed_cb (GUsbContext *ctx,
 }
 
 static gboolean
+fu_provider_ebitdo_setup (FuProvider *provider, GError **error)
+{
+	FuProviderEbitdo *provider_ebitdo = FU_PROVIDER_EBITDO (provider);
+	FuProviderEbitdoPrivate *priv = GET_PRIVATE (provider_ebitdo);
+	priv->usb_ctx = fu_provider_get_usb_context (provider);
+	g_signal_connect (priv->usb_ctx, "device-added",
+			  G_CALLBACK (fu_provider_ebitdo_device_added_cb),
+			  provider_ebitdo);
+	g_signal_connect (priv->usb_ctx, "device-removed",
+			  G_CALLBACK (fu_provider_ebitdo_device_removed_cb),
+			  provider_ebitdo);
+	return TRUE;
+}
+
+static gboolean
 fu_provider_ebitdo_coldplug (FuProvider *provider, GError **error)
 {
 	FuProviderEbitdo *provider_ebitdo = FU_PROVIDER_EBITDO (provider);
 	FuProviderEbitdoPrivate *priv = GET_PRIVATE (provider_ebitdo);
-	g_usb_context_enumerate (priv->usb_ctx);
 	priv->done_enumerate = TRUE;
 	return TRUE;
 }
@@ -236,6 +250,7 @@ fu_provider_ebitdo_class_init (FuProviderEbitdoClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	provider_class->get_name = fu_provider_ebitdo_get_name;
+	provider_class->setup = fu_provider_ebitdo_setup;
 	provider_class->coldplug = fu_provider_ebitdo_coldplug;
 	provider_class->update_online = fu_provider_ebitdo_update;
 	object_class->finalize = fu_provider_ebitdo_finalize;
@@ -249,13 +264,6 @@ fu_provider_ebitdo_init (FuProviderEbitdo *provider_ebitdo)
 					       g_free, (GDestroyNotify) g_object_unref);
 	priv->devices_runtime = g_hash_table_new_full (g_str_hash, g_str_equal,
 						       g_free, (GDestroyNotify) g_object_unref);
-	priv->usb_ctx = g_usb_context_new (NULL);
-	g_signal_connect (priv->usb_ctx, "device-added",
-			  G_CALLBACK (fu_provider_ebitdo_device_added_cb),
-			  provider_ebitdo);
-	g_signal_connect (priv->usb_ctx, "device-removed",
-			  G_CALLBACK (fu_provider_ebitdo_device_removed_cb),
-			  provider_ebitdo);
 }
 
 static void

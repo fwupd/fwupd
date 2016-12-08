@@ -24,6 +24,7 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
+#include <gusb.h>
 
 #include "dfu-device.h"
 
@@ -55,6 +56,7 @@ struct _DfuContextClass
 };
 
 DfuContext	*dfu_context_new			(void);
+DfuContext	*dfu_context_new_with_context		(GUsbContext	*usb_ctx);
 gboolean	 dfu_context_enumerate			(DfuContext	*context,
 							 GError		**error);
 GPtrArray	*dfu_context_get_devices		(DfuContext	*context);

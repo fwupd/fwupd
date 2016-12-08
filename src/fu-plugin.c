@@ -56,6 +56,18 @@ fu_plugin_new (GModule *module)
 	return plugin;
 }
 
+GUsbContext *
+fu_plugin_get_usb_context (FuPlugin *plugin)
+{
+	return g_object_ref (plugin->usb_ctx);
+}
+
+void
+fu_plugin_set_usb_context (FuPlugin *plugin, GUsbContext *usb_ctx)
+{
+	g_set_object (&plugin->usb_ctx, usb_ctx);
+}
+
 void
 fu_plugin_free (FuPlugin *plugin)
 {
@@ -69,6 +81,8 @@ fu_plugin_free (FuPlugin *plugin)
 	}
 
 	/* deallocate */
+	if (plugin->usb_ctx != NULL)
+		g_object_unref (plugin->usb_ctx);
 	g_module_close (plugin->module);
 	g_free (plugin->name);
 	g_free (plugin->priv);
