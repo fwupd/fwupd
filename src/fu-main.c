@@ -1248,14 +1248,6 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 		return FALSE;
 	}
 
-	/* can we only do this on AC power */
-	if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
-	    fu_main_on_battery (priv)) {
-		g_debug ("ignoring update for %s as not on AC power",
-			 fu_device_get_id (item->device));
-		return FALSE;
-	}
-
 	/* add application metadata */
 	fu_device_set_update_id (item->device, as_app_get_id (app));
 	tmp = as_app_get_developer_name (app, NULL);
@@ -1587,10 +1579,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			if (g_error_matches (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_NOTHING_TO_DO)) {
-				if (fu_main_on_battery (priv))
-					g_prefix_error (&error, "No devices can be updated while operating on battery power: ");
-				else
-					g_prefix_error (&error, "No devices can be updated: ");
+				g_prefix_error (&error, "No devices can be updated: ");
 			}
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
