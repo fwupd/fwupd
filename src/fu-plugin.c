@@ -222,7 +222,7 @@ gboolean
 fu_plugin_runner_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginStartupFunc func;
+	FuPluginStartupFunc func = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -288,7 +288,7 @@ gboolean
 fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginStartupFunc func;
+	FuPluginStartupFunc func = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -301,6 +301,50 @@ fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 	g_debug ("performing coldplug() on %s", priv->name);
 	if (!func (plugin, error)) {
 		g_prefix_error (error, "failed to coldplug %s: ", priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_plugin_runner_update_prepare (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginDeviceFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_update_prepare", (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing update_prepare() on %s", priv->name);
+	if (!func (plugin, device, error)) {
+		g_prefix_error (error, "failed to prepare for update %s: ", priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_plugin_runner_update_cleanup (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginDeviceFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_update_cleanup", (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing update_cleanup() on %s", priv->name);
+	if (!func (plugin, device, error)) {
+		g_prefix_error (error, "failed to cleanup update %s: ", priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -372,7 +416,7 @@ fu_plugin_runner_verify (FuPlugin *plugin,
 			 GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginVerifyFunc func;
+	FuPluginVerifyFunc func = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -395,7 +439,7 @@ fu_plugin_runner_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	guint64 flags;
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginDeviceFunc func;
+	FuPluginDeviceFunc func = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -417,7 +461,7 @@ fu_plugin_runner_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	if (func != NULL) {
 		g_debug ("performing unlock() on %s", priv->name);
 		if (!func (plugin, device, error)) {
-			g_prefix_error (error, "failed to coldplug %s: ", priv->name);
+			g_prefix_error (error, "failed to unlock %s: ", priv->name);
 			return FALSE;
 		}
 	}
@@ -518,7 +562,7 @@ gboolean
 fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginDeviceFunc func;
+	FuPluginDeviceFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FwupdResult) res_pending = NULL;
 	g_autoptr(FuPending) pending = NULL;
@@ -561,7 +605,7 @@ gboolean
 fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginDeviceFunc func;
+	FuPluginDeviceFunc func = NULL;
 	FwupdUpdateState update_state;
 	const gchar *tmp;
 	g_autoptr(GError) error_local = NULL;

@@ -56,6 +56,12 @@ gboolean	 fu_plugin_clear_results		(FuPlugin	*plugin,
 gboolean	 fu_plugin_get_results			(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
+gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
+							 FuDevice	*dev,
+							 GError		**error);
+gboolean	 fu_plugin_update_cleanup		(FuPlugin	*plugin,
+							 FuDevice	*dev,
+							 GError		**error);
 
 G_END_DECLS
 

@@ -447,6 +447,7 @@ fu_main_plugin_unlock_authenticated (FuMainAuthHelper *helper, GError **error)
 static gboolean
 fu_main_plugin_update_authenticated (FuMainAuthHelper *helper, GError **error)
 {
+	FuMainPrivate *priv = helper->priv;
 	FuDeviceItem *item;
 
 	/* check the devices still exists */
@@ -497,19 +498,35 @@ fu_main_plugin_update_authenticated (FuMainAuthHelper *helper, GError **error)
 		}
 	}
 
-	/* run the correct plugins for each device */
+	/* run the correct plugin for each device */
 	for (guint i = 0; i < helper->devices->len; i ++) {
 		FuDevice *device = g_ptr_array_index (helper->devices, i);
 		GBytes *blob_fw = g_ptr_array_index (helper->blob_fws, i);
 		item = fu_main_get_item_by_id (helper->priv,
 					       fu_device_get_id (device));
+
+		/* signal to all the plugins the update is about to happen */
+		for (guint j = 0; j < priv->plugins->len; j++) {
+			FuPlugin *plugin = g_ptr_array_index (priv->plugins, j);
+			if (!fu_plugin_runner_update_prepare (plugin, device, error))
+				return FALSE;
+		}
+
+		/* do the update */
 		if (!fu_plugin_runner_update (item->plugin,
-					 item->device,
-					 helper->blob_cab,
-					 blob_fw,
-					 helper->flags,
-					 error))
+					      item->device,
+					      helper->blob_cab,
+					      blob_fw,
+					      helper->flags,
+					      error))
 			return FALSE;
+
+		/* signal to all the plugins the update has happened */
+		for (guint j = 0; j < priv->plugins->len; j++) {
+			FuPlugin *plugin = g_ptr_array_index (priv->plugins, j);
+			if (!fu_plugin_runner_update_cleanup (plugin, device, error))
+				return FALSE;
+		}
 
 		/* make the UI update */
 		fu_device_set_modified (item->device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
