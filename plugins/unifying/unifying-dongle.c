@@ -583,8 +583,11 @@ unifying_dongle_nordic_write_firmware (UnifyingDongle *dongle,
 			g_prefix_error (error, "failed to transfer fw @0x%02x: ", i);
 			return FALSE;
 		}
-		if (progress_cb != NULL)
-			progress_cb (i * 32, payloads->len * 32, progress_data);
+		if (progress_cb != NULL) {
+			progress_cb ((goffset) i * 32,
+				     (goffset) payloads->len * 32,
+				     progress_data);
+		}
 	}
 
 	/* send the first managed packet last */
@@ -606,8 +609,8 @@ unifying_dongle_nordic_write_firmware (UnifyingDongle *dongle,
 
 	/* mark as complete */
 	if (progress_cb != NULL) {
-		progress_cb (payloads->len * 32,
-			     payloads->len * 32,
+		progress_cb ((goffset) payloads->len * 32,
+			     (goffset) payloads->len * 32,
 			     progress_data);
 	}
 
@@ -751,8 +754,11 @@ unifying_dongle_texas_write_firmware (UnifyingDongle *dongle,
 			g_prefix_error (error, "failed to transfer fw @0x%02x: ", i);
 			return FALSE;
 		}
-		if (progress_cb != NULL)
-			progress_cb (i * 32, payloads->len * 32, progress_data);
+		if (progress_cb != NULL) {
+			progress_cb ((goffset) i * 32,
+				     (goffset) payloads->len * 32,
+				     progress_data);
+		}
 	}
 
 	/* finish page */
