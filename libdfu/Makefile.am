@@ -1,3 +1,5 @@
+SUBDIRS = tests
+
 if HAVE_INTROSPECTION
 -include $(INTROSPECTION_MAKEFILE)
 INTROSPECTION_GIRS =
@@ -16,7 +18,7 @@ AM_CPPFLAGS = \
 	-I$(top_builddir)					\
 	-DG_USB_API_IS_SUBJECT_TO_CHANGE			\
 	-DG_LOG_DOMAIN=\"libdfu\"				\
-	-DTESTDATADIR=\""$(top_srcdir)/data/tests/dfu"\"	\
+	-DTESTDATADIR=\""$(top_srcdir)/libdfu/tests"\"		\
 	-DLOCALEDIR=\""$(localedir)"\"
 
 lib_LTLIBRARIES =						\

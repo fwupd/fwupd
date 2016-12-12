@@ -310,6 +310,7 @@ AC_CONFIG_FILES([
 Makefile
 libdfu/Makefile
 libdfu/dfu.pc
+libdfu/tests/Makefile
 libfwupd/fwupd-version.h
 libfwupd/fwupd.pc
 libfwupd/Makefile
@@ -318,7 +319,6 @@ data/pki/Makefile
 data/tests/Makefile
 data/tests/rpiupdate/Makefile
 data/tests/colorhug/Makefile
-data/tests/dfu/Makefile
 docs/Makefile
 docs/libdfu/Makefile
 docs/libfwupd/Makefile
