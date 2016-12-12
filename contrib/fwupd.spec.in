@@ -154,7 +154,8 @@ make check VERBOSE=1
 %dir %{_localstatedir}/cache/app-info/xmls
 /usr/lib/udev/rules.d/*.rules
 %dir %{_libdir}/fwupd-plugins-1
-%{_libdir}/fwupd-plugins-1/*.so
+%{_libdir}/fwupd-plugins-1/libfu_plugin_steelseries.so
+%{_libdir}/fwupd-plugins-1/libfu_plugin_test.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 
 %files devel

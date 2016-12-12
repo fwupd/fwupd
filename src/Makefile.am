@@ -1,5 +1,3 @@
-SUBDIRS = plugins
-
 introspectiondir = $(datadir)/dbus-1/interfaces
 dist_introspection_DATA = 				\
 	org.freedesktop.fwupd.xml

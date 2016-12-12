@@ -327,7 +327,9 @@ docs/version.xml
 policy/Makefile
 po/Makefile.in
 src/Makefile
-src/plugins/Makefile
+plugins/Makefile
+plugins/test/Makefile
+plugins/steelseries/Makefile
 ])
 AC_OUTPUT
 

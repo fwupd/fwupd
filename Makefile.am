@@ -9,7 +9,8 @@ SUBDIRS = 						\
 	data						\
 	docs						\
 	policy						\
-	src
+	src						\
+	plugins
 
 snapshot:
 	$(MAKE) dist distdir=$(PACKAGE)-$(VERSION)-`date +"%Y%m%d"`
