@@ -338,6 +338,7 @@ plugins/test/Makefile
 plugins/udev/Makefile
 plugins/uefi/Makefile
 plugins/unifying/Makefile
+plugins/upower/Makefile
 plugins/usb/Makefile
 ])
 AC_OUTPUT

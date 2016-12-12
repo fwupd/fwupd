@@ -55,7 +55,6 @@ typedef struct {
 	GDBusConnection		*connection;
 	GDBusNodeInfo		*introspection_daemon;
 	GDBusProxy		*proxy_uid;
-	GDBusProxy		*proxy_upower;
 	GUsbContext		*usb_ctx;
 	GKeyFile		*config;
 	GMainLoop		*loop;
@@ -394,22 +393,6 @@ fu_main_helper_free (FuMainAuthHelper *helper)
 }
 
 static gboolean
-fu_main_on_battery (FuMainPrivate *priv)
-{
-	g_autoptr(GVariant) value = NULL;
-	if (priv->proxy_upower == NULL) {
-		g_warning ("Failed to get OnBattery property as no UPower");
-		return FALSE;
-	}
-	value = g_dbus_proxy_get_cached_property (priv->proxy_upower, "OnBattery");
-	if (value == NULL) {
-		g_warning ("Failed to get OnBattery property value");
-		return FALSE;
-	}
-	return g_variant_get_boolean (value);
-}
-
-static gboolean
 fu_main_plugin_unlock_authenticated (FuMainAuthHelper *helper, GError **error)
 {
 	/* check the devices still exists */
@@ -483,18 +466,6 @@ fu_main_plugin_update_authenticated (FuMainAuthHelper *helper, GError **error)
 				    "Device %s does not allow offline updates",
 				    fu_device_get_id (device));
 			return FALSE;
-		}
-
-		/* can we only do this on AC power */
-		if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_REQUIRE_AC)) {
-			if (fu_main_on_battery (helper->priv)) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_NOT_SUPPORTED,
-						     "Cannot install update "
-						     "when not on AC power");
-				return FALSE;
-			}
 		}
 	}
 
@@ -2141,21 +2112,6 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 		return;
 	}
 
-	/* connect to UPower */
-	priv->proxy_upower =
-		g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-					       G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
-					       NULL,
-					       "org.freedesktop.UPower",
-					       "/org/freedesktop/UPower",
-					       "org.freedesktop.UPower",
-					       NULL,
-					       &error);
-	if (priv->proxy_upower == NULL) {
-		g_warning ("Failed to conect UPower: %s", error->message);
-		return;
-	}
-
 	/* dump startup profile data */
 	if (fu_debug_is_verbose ())
 		as_profile_dump (priv->profile);
@@ -2517,8 +2473,6 @@ out:
 			g_main_loop_unref (priv->loop);
 		if (priv->proxy_uid != NULL)
 			g_object_unref (priv->proxy_uid);
-		if (priv->proxy_upower != NULL)
-			g_object_unref (priv->proxy_upower);
 		if (priv->usb_ctx != NULL)
 			g_object_unref (priv->usb_ctx);
 		if (priv->config != NULL)

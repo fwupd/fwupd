@@ -1,4 +1,13 @@
-SUBDIRS = dfu ebitdo raspberrypi steelseries test udev unifying usb
+SUBDIRS =		\
+	dfu		\
+	ebitdo		\
+	raspberrypi	\
+	steelseries	\
+	test		\
+	udev		\
+	unifying	\
+	upower		\
+	usb
 
 if HAVE_DELL
 SUBDIRS += dell

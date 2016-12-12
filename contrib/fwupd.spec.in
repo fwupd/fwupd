@@ -164,6 +164,7 @@ make check VERBOSE=1
 %{_libdir}/fwupd-plugins-2/libfu_plugin_udev.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_uefi.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_unifying.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_upower.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_usb.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 
