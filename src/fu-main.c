@@ -984,6 +984,7 @@ fu_main_get_item_by_id_fallback_pending (FuMainPrivate *priv, const gchar *id, G
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_NOT_FOUND,
 					     "no plugin %s found", tmp);
+				return NULL;
 			}
 			item = g_new0 (FuDeviceItem, 1);
 			item->device = g_object_ref (dev);
