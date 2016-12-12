@@ -21,49 +21,61 @@
 
 #include "config.h"
 
-#include <gusb.h>
+#include <appstream-glib.h>
 #include <string.h>
 
 #include "fu-plugin.h"
+#include "fu-plugin-vfuncs.h"
 
 #define STEELSERIES_TRANSACTION_TIMEOUT		1000 /* ms */
 
-const gchar *
-fu_plugin_get_name (void)
+static void
+fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
+				       GUsbDevice *usb_device,
+				       FuPlugin *plugin)
 {
-	return "steelseries";
-}
-
-gboolean
-fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	GUsbDeviceClaimInterfaceFlags flags;
-	const gchar *platform_id;
+	const gchar *platform_id = NULL;
 	const guint8 iface_idx = 0x00;
 	gboolean ret;
 	gsize actual_len = 0;
 	guint8 data[32];
+	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *version = NULL;
-	g_autoptr(GUsbContext) usb_ctx = NULL;
-	g_autoptr(GUsbDevice) usb_device = NULL;
+	g_autoptr(AsProfile) profile = as_profile_new ();
+	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error_local = NULL;
 
-	/* get version */
-	platform_id = fu_device_get_id (device);
-	usb_ctx = fu_plugin_get_usb_context (plugin);
-	usb_device = g_usb_context_find_by_platform_id (usb_ctx,
-							platform_id,
-							error);
-	if (usb_device == NULL)
-		return FALSE;
+	/* not the right kind of device */
+	if (g_usb_device_get_vid (usb_device) != 0x1038)
+		return;
+	if (g_usb_device_get_pid (usb_device) != 0x1702)
+		return;
+
+	/* profile */
+	ptask = as_profile_start (profile, "FuPlugin:added{%04x:%04x}",
+				  g_usb_device_get_vid (usb_device),
+				  g_usb_device_get_pid (usb_device));
+
+	/* is already in database */
+	platform_id = g_usb_device_get_platform_id (usb_device);
+	dev = fu_plugin_cache_lookup (plugin, platform_id);
+	if (dev != NULL) {
+		g_debug ("ignoring duplicate %s", platform_id);
+		return;
+	}
 
 	/* get exclusive access */
-	if (!g_usb_device_open (usb_device, error))
-		return FALSE;
-	flags = G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
-	if (!g_usb_device_claim_interface (usb_device, iface_idx, flags, error)) {
-		g_prefix_error (error, "failed to claim interface: ");
+	if (!g_usb_device_open (usb_device, &error_local)) {
+		g_warning ("failed to open device: %s", error_local->message);
+		return;
+	}
+	if (!g_usb_device_claim_interface (usb_device, iface_idx,
+					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					   &error_local)) {
+		g_warning ("failed to claim interface: %s", error_local->message);
 		g_usb_device_close (usb_device, NULL);
-		return FALSE;
+		return;
 	}
 
 	/* get firmware version on SteelSeries Rival 100 */
@@ -81,18 +93,15 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 					     &actual_len,
 					     STEELSERIES_TRANSACTION_TIMEOUT,
 					     NULL,
-					     error);
+					     &error_local);
 	if (!ret) {
-		g_prefix_error (error, "failed to do control transfer: ");
+		g_warning ("failed to go control transfer: %s", error_local->message);
 		g_usb_device_close (usb_device, NULL);
-		return FALSE;
+		return;
 	}
 	if (actual_len != 32) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "only wrote %" G_GSIZE_FORMAT "bytes",
-			     actual_len);
+		g_warning ("only wrote %" G_GSIZE_FORMAT "bytes", actual_len);
+		return;
 	}
 	ret = g_usb_device_interrupt_transfer (usb_device,
 					       0x81, /* EP1 IN */
@@ -101,34 +110,72 @@ fu_plugin_device_probe (FuPlugin *plugin, FuDevice *device, GError **error)
 					       &actual_len,
 					       STEELSERIES_TRANSACTION_TIMEOUT,
 					       NULL,
-					       error);
+					       &error_local);
 	if (!ret) {
-		g_prefix_error (error, "failed to do IN transfer: ");
+		g_warning ("failed to do EP1 transfer: %s", error_local->message);
 		g_usb_device_close (usb_device, NULL);
-		return FALSE;
+		return;
 	}
 	if (actual_len != 32) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "only read %" G_GSIZE_FORMAT "bytes",
-			     actual_len);
+		g_warning ("only read %" G_GSIZE_FORMAT "bytes", actual_len);
+		return;
 	}
 
-	/* update */
+	/* insert to hash if valid */
+	dev = fu_device_new ();
+	fu_device_set_id (dev, platform_id);
+	fu_device_set_name (dev, "SteelSeries Rival 100");
 	version = g_strdup_printf ("%i.%i.%i",
 				   data[0], data[1], data[2]);
-	fu_device_set_version (device, version);
-	g_debug ("overriding the version with %s", version);
+	fu_device_set_version (dev, version);
 
-	/* release device */
-	if (!g_usb_device_release_interface (usb_device, iface_idx, flags, error)) {
-		g_prefix_error (error, "failed to release interface: ");
+	/* use the USB VID:PID hash */
+	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+				  g_usb_device_get_vid (usb_device),
+				  g_usb_device_get_pid (usb_device));
+	fu_device_add_guid (dev, devid1);
+
+	/* we're done here */
+	if (!g_usb_device_release_interface (usb_device, iface_idx,
+					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					     &error_local)) {
+		g_warning ("failed to release interface: %s", error_local->message);
 		g_usb_device_close (usb_device, NULL);
-		return FALSE;
+		return;
 	}
-	if (!g_usb_device_close (usb_device, error))
-		return FALSE;
+	if (!g_usb_device_close (usb_device, &error_local))
+		g_debug ("Failed to close: %s", error_local->message);
+	fu_plugin_device_add (plugin, dev);
+	fu_plugin_cache_add (plugin, platform_id, dev);
+}
 
+static void
+fu_plugin_steelseries_device_removed_cb (GUsbContext *ctx,
+					 GUsbDevice *device,
+					 FuPlugin *plugin)
+{
+	FuDevice *dev;
+	const gchar *platform_id = NULL;
+
+	/* already in database */
+	platform_id = g_usb_device_get_platform_id (device);
+	dev = fu_plugin_cache_lookup (plugin, platform_id);
+	if (dev == NULL)
+		return;
+
+	fu_plugin_device_remove (plugin, dev);
+	fu_plugin_cache_remove (plugin, platform_id);
+}
+
+gboolean
+fu_plugin_startup (FuPlugin *plugin, GError **error)
+{
+	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
+	g_signal_connect (usb_ctx, "device-added",
+			  G_CALLBACK (fu_plugin_steelseries_device_added_cb),
+			  plugin);
+	g_signal_connect (usb_ctx, "device-removed",
+			  G_CALLBACK (fu_plugin_steelseries_device_removed_cb),
+			  plugin);
 	return TRUE;
 }

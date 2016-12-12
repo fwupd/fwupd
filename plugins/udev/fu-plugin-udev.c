@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,34 +21,19 @@
 
 #include "config.h"
 
-#include <fwupd.h>
 #include <appstream-glib.h>
-#include <glib-object.h>
 #include <gudev/gudev.h>
-#include <string.h>
 
-#include "fu-device.h"
-#include "fu-provider-udev.h"
+#include "fu-plugin.h"
 #include "fu-rom.h"
+#include "fu-plugin-vfuncs.h"
 
-static void	fu_provider_udev_finalize	(GObject	*object);
-
-typedef struct {
-	GHashTable		*devices;
+struct FuPluginData {
 	GUdevClient		*gudev_client;
-} FuProviderUdevPrivate;
-
-G_DEFINE_TYPE_WITH_PRIVATE (FuProviderUdev, fu_provider_udev, FU_TYPE_PROVIDER)
-#define GET_PRIVATE(o) (fu_provider_udev_get_instance_private (o))
-
-static const gchar *
-fu_provider_udev_get_name (FuProvider *provider)
-{
-	return "Udev";
-}
+};
 
 static gchar *
-fu_provider_udev_get_id (GUdevDevice *device)
+fu_plugin_get_id (GUdevDevice *device)
 {
 	gchar *id;
 	id = g_strdup_printf ("ro-%s", g_udev_device_get_sysfs_path (device));
@@ -56,10 +41,8 @@ fu_provider_udev_get_id (GUdevDevice *device)
 	return id;
 }
 
-static gboolean
-fu_provider_udev_unlock (FuProvider *provider,
-			 FuDevice *device,
-			 GError **error)
+gboolean
+fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	const gchar *rom_fn;
 	g_autoptr(FuRom) rom = NULL;
@@ -98,11 +81,11 @@ fu_provider_udev_unlock (FuProvider *provider,
 	return TRUE;
 }
 
-static gboolean
-fu_provider_udev_verify (FuProvider *provider,
-			 FuDevice *device,
-			 FuProviderVerifyFlags flags,
-			 GError **error)
+gboolean
+fu_plugin_verify (FuPlugin *plugin,
+		  FuDevice *device,
+		  FuPluginVerifyFlags flags,
+		  GError **error)
 {
 	const gchar *rom_fn;
 	g_autoptr(GFile) file = NULL;
@@ -126,9 +109,8 @@ fu_provider_udev_verify (FuProvider *provider,
 }
 
 static void
-fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
+fu_plugin_client_add (FuPlugin *plugin, GUdevDevice *device)
 {
-	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
 	FuDevice *dev;
 	const gchar *display_name;
 	const gchar *guid;
@@ -147,12 +129,12 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 		return;
 
 	/* get data */
-	ptask = as_profile_start (profile, "FuProviderUdev:client-add{%s}", guid);
+	ptask = as_profile_start (profile, "FuPlugin:client-add{%s}", guid);
 	g_debug ("adding udev device: %s", g_udev_device_get_sysfs_path (device));
 
 	/* is already in database */
-	id = fu_provider_udev_get_id (device);
-	dev = g_hash_table_lookup (priv->devices, id);
+	id = fu_plugin_get_id (device);
+	dev = fu_plugin_cache_lookup (plugin, id);
 	if (dev != NULL) {
 		g_debug ("ignoring duplicate %s", id);
 		return;
@@ -195,14 +177,13 @@ fu_provider_udev_client_add (FuProviderUdev *provider_udev, GUdevDevice *device)
 	}
 
 	/* insert to hash */
-	g_hash_table_insert (priv->devices, g_strdup (id), dev);
-	fu_provider_device_add (FU_PROVIDER (provider_udev), dev);
+	fu_plugin_cache_add (plugin, id, dev);
+	fu_plugin_device_add (plugin, dev);
 }
 
 static void
-fu_provider_udev_client_remove (FuProviderUdev *provider_udev, GUdevDevice *device)
+fu_plugin_client_remove (FuPlugin *plugin, GUdevDevice *device)
 {
-	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
 	FuDevice *dev;
 	g_autofree gchar *id = NULL;
 
@@ -211,34 +192,51 @@ fu_provider_udev_client_remove (FuProviderUdev *provider_udev, GUdevDevice *devi
 		return;
 
 	/* already in database */
-	id = fu_provider_udev_get_id (device);
-	dev = g_hash_table_lookup (priv->devices, id);
+	id = fu_plugin_get_id (device);
+	dev = fu_plugin_cache_lookup (plugin, id);
 	if (dev == NULL)
 		return;
-	fu_provider_device_remove (FU_PROVIDER (provider_udev), dev);
+	fu_plugin_device_remove (plugin, dev);
 }
 
 static void
-fu_provider_udev_client_uevent_cb (GUdevClient *gudev_client,
+fu_plugin_client_uevent_cb (GUdevClient *gudev_client,
 				   const gchar *action,
 				   GUdevDevice *udev_device,
-				   FuProviderUdev *provider_udev)
+				   FuPlugin *plugin)
 {
 	if (g_strcmp0 (action, "remove") == 0) {
-		fu_provider_udev_client_remove (provider_udev, udev_device);
+		fu_plugin_client_remove (plugin, udev_device);
 		return;
 	}
 	if (g_strcmp0 (action, "add") == 0) {
-		fu_provider_udev_client_add (provider_udev, udev_device);
+		fu_plugin_client_add (plugin, udev_device);
 		return;
 	}
 }
 
-static gboolean
-fu_provider_udev_coldplug (FuProvider *provider, GError **error)
+void
+fu_plugin_init (FuPlugin *plugin)
 {
-	FuProviderUdev *provider_udev = FU_PROVIDER_UDEV (provider);
-	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
+	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	const gchar *subsystems[] = { NULL };
+
+	data->gudev_client = g_udev_client_new (subsystems);
+	g_signal_connect (data->gudev_client, "uevent",
+			  G_CALLBACK (fu_plugin_client_uevent_cb), plugin);
+}
+
+void
+fu_plugin_destroy (FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_object_unref (data->gudev_client);
+}
+
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	GList *devices;
 	GUdevDevice *udev_device;
 	const gchar *devclass[] = { "usb", "pci", NULL };
@@ -247,62 +245,15 @@ fu_provider_udev_coldplug (FuProvider *provider, GError **error)
 	/* get all devices of class */
 	for (guint i = 0; devclass[i] != NULL; i++) {
 		g_autoptr(AsProfileTask) ptask = NULL;
-		ptask = as_profile_start (profile, "FuProviderUdev:coldplug{%s}", devclass[i]);
-		devices = g_udev_client_query_by_subsystem (priv->gudev_client,
+		ptask = as_profile_start (profile, "FuPlugin:coldplug{%s}", devclass[i]);
+		devices = g_udev_client_query_by_subsystem (data->gudev_client,
 							    devclass[i]);
 		for (GList *l = devices; l != NULL; l = l->next) {
 			udev_device = l->data;
-			fu_provider_udev_client_add (provider_udev, udev_device);
+			fu_plugin_client_add (plugin, udev_device);
 		}
 		g_list_foreach (devices, (GFunc) g_object_unref, NULL);
 		g_list_free (devices);
 	}
-
 	return TRUE;
-}
-
-static void
-fu_provider_udev_class_init (FuProviderUdevClass *klass)
-{
-	FuProviderClass *provider_class = FU_PROVIDER_CLASS (klass);
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-	provider_class->get_name = fu_provider_udev_get_name;
-	provider_class->coldplug = fu_provider_udev_coldplug;
-	provider_class->verify = fu_provider_udev_verify;
-	provider_class->unlock = fu_provider_udev_unlock;
-	object_class->finalize = fu_provider_udev_finalize;
-}
-
-static void
-fu_provider_udev_init (FuProviderUdev *provider_udev)
-{
-	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
-	const gchar *subsystems[] = { NULL };
-
-	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free, (GDestroyNotify) g_object_unref);
-	priv->gudev_client = g_udev_client_new (subsystems);
-	g_signal_connect (priv->gudev_client, "uevent",
-			  G_CALLBACK (fu_provider_udev_client_uevent_cb), provider_udev);
-}
-
-static void
-fu_provider_udev_finalize (GObject *object)
-{
-	FuProviderUdev *provider_udev = FU_PROVIDER_UDEV (object);
-	FuProviderUdevPrivate *priv = GET_PRIVATE (provider_udev);
-
-	g_hash_table_unref (priv->devices);
-	g_object_unref (priv->gudev_client);
-
-	G_OBJECT_CLASS (fu_provider_udev_parent_class)->finalize (object);
-}
-
-FuProvider *
-fu_provider_udev_new (void)
-{
-	FuProviderUdev *provider;
-	provider = g_object_new (FU_TYPE_PROVIDER_UDEV, NULL);
-	return FU_PROVIDER (provider);
 }

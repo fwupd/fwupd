@@ -1,20 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <components version="0.9" origin="fwupd">
 
-  <!-- SteelSeries legacy hardware  -->
-  <component type="firmware">
-    <name>SteelSeries Firmware</name>
-    <summary>Firmware for Rival SteelSeries mice</summary>
-    <id>com.steelseries.rival-legacy.firmware</id>
-    <provides>
-      <!-- 1038:1702 = Rival 100 -->
-      <firmware type="flashed">be9dac3a-180b-5aee-9e39-da122d4300ff</firmware>
-    </provides>
-    <metadata>
-      <value key="fwupd::plugin">steelseries</value>
-    </metadata>
-  </component>
-
   <!-- some UEFI hardware needs to be enabled before the ESRT is available  -->
   <component type="firmware">
     <id>UEFI-dummy-dev0</id>

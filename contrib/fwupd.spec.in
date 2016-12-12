@@ -153,9 +153,17 @@ make check VERBOSE=1
 %dir %{_localstatedir}/cache/app-info/icons
 %dir %{_localstatedir}/cache/app-info/xmls
 /usr/lib/udev/rules.d/*.rules
-%dir %{_libdir}/fwupd-plugins-1
-%{_libdir}/fwupd-plugins-1/libfu_plugin_steelseries.so
-%{_libdir}/fwupd-plugins-1/libfu_plugin_test.so
+%dir %{_libdir}/fwupd-plugins-2
+%{_libdir}/fwupd-plugins-2/libfu_plugin_colorhug.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_dell.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_dfu.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_ebitdo.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_raspberrypi.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_steelseries.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_test.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_udev.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_uefi.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_usb.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 
 %files devel

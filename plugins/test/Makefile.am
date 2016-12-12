@@ -5,7 +5,7 @@ AM_CPPFLAGS =						\
 	-I$(top_srcdir)/libfwupd			\
 	-I$(top_srcdir)/src
 
-plugindir = $(libdir)/fwupd-plugins-1
+plugindir = $(libdir)/fwupd-plugins-2
 plugin_LTLIBRARIES = libfu_plugin_test.la
 
 libfu_plugin_test_la_SOURCES =				\

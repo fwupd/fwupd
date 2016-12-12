@@ -19,41 +19,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FU_PROVIDER_DELL_H
-#define __FU_PROVIDER_DELL_H
+#ifndef __FU_PLUGIN_DELL_H
+#define __FU_PLUGIN_DELL_H
 
 #include <gusb.h>
 #include "fu-device.h"
-#include "fu-provider.h"
+#include "fu-plugin.h"
 #include <efivar.h>
 
-G_BEGIN_DECLS
-
-#define FU_TYPE_PROVIDER_DELL (fu_provider_dell_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuProviderDell, fu_provider_dell, FU, PROVIDER_DELL, FuProvider)
-
-struct _FuProviderDellClass
-{
-	FuProviderClass			 parent_class;
-};
-
-FuProvider	*fu_provider_dell_new		(void);
 void
-fu_provider_dell_inject_fake_data (FuProviderDell *provider_dell,
+fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 				   guint32 *output, guint16 vid, guint16 pid,
 				   guint8 *buf);
 gboolean
-fu_provider_dell_detect_tpm (FuProvider *provider, GError **error);
+fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error);
 
 void
-fu_provider_dell_device_added_cb (GUsbContext *ctx,
+fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 				  GUsbDevice *device,
-				  FuProviderDell *provider_dell);
+				  FuPlugin *plugin);
 
 void
-fu_provider_dell_device_removed_cb (GUsbContext *ctx,
+fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 				    GUsbDevice *device,
-				    FuProviderDell *provider_dell);
+				    FuPlugin *plugin);
 
 G_END_DECLS
 
@@ -127,4 +116,4 @@ typedef enum _CABLE_TYPE
 #define DOCK_NIC_VID		0x0bda
 #define DOCK_NIC_PID		0x8153
 
-#endif /* __FU_PROVIDER_DELL_H */
+#endif /* __FU_PLUGIN_DELL_H */

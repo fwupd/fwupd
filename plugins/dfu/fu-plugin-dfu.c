@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -22,34 +22,20 @@
 #include "config.h"
 
 #include <appstream-glib.h>
-#include <fwupd.h>
-#include <glib-object.h>
 #include <libdfu/dfu.h>
 
-#include "fu-device.h"
-#include "fu-provider-dfu.h"
+#include "fu-plugin.h"
+#include "fu-plugin-vfuncs.h"
 
-static void	fu_provider_dfu_finalize	(GObject	*object);
-
-typedef struct {
+struct FuPluginData {
 	DfuContext		*context;
-	GHashTable		*devices;	/* platform_id:DfuDevice */
-} FuProviderDfuPrivate;
-
-G_DEFINE_TYPE_WITH_PRIVATE (FuProviderDfu, fu_provider_dfu, FU_TYPE_PROVIDER)
-#define GET_PRIVATE(o) (fu_provider_dfu_get_instance_private (o))
-
-static const gchar *
-fu_provider_dfu_get_name (FuProvider *provider)
-{
-	return "DFU";
-}
+};
 
 static gboolean
-fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
-			       FuDevice *dev,
-			       DfuDevice *device,
-			       GError **error)
+fu_plugin_dfu_device_update (FuPlugin *plugin,
+			     FuDevice *dev,
+			     DfuDevice *device,
+			     GError **error)
 {
 	const gchar *platform_id;
 	guint16 release;
@@ -106,34 +92,32 @@ fu_provider_dfu_device_update (FuProviderDfu *provider_dfu,
 }
 
 static void
-fu_provider_dfu_device_changed_cb (DfuContext *ctx,
-				   DfuDevice *device,
-				   FuProviderDfu *provider_dfu)
+fu_plugin_dfu_device_changed_cb (DfuContext *ctx,
+				 DfuDevice *device,
+				 FuPlugin *plugin)
 {
-	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
 	FuDevice *dev;
 	const gchar *platform_id;
 	g_autoptr(GError) error = NULL;
 
 	/* convert DfuDevice to FuDevice */
 	platform_id = dfu_device_get_platform_id (device);
-	dev = g_hash_table_lookup (priv->devices, platform_id);
+	dev = fu_plugin_cache_lookup (plugin, platform_id);
 	if (dev == NULL) {
 		g_warning ("cannot find device %s", platform_id);
 		return;
 	}
-	if (!fu_provider_dfu_device_update (provider_dfu, dev, device, &error)) {
+	if (!fu_plugin_dfu_device_update (plugin, dev, device, &error)) {
 		g_warning ("ignoring device: %s", error->message);
 		return;
 	}
 }
 
 static void
-fu_provider_dfu_device_added_cb (DfuContext *ctx,
-				 DfuDevice *device,
-				 FuProviderDfu *provider_dfu)
+fu_plugin_dfu_device_added_cb (DfuContext *ctx,
+			       DfuDevice *device,
+			       FuPlugin *plugin)
 {
-	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
 	const gchar *platform_id;
 	const gchar *display_name;
 	g_autofree gchar *id = NULL;
@@ -143,7 +127,7 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 	g_autoptr(GError) error = NULL;
 
 	platform_id = dfu_device_get_platform_id (device);
-	ptask = as_profile_start (profile, "FuProviderDfu:added{%s} [%04x:%04x]",
+	ptask = as_profile_start (profile, "FuPlugin:added{%s} [%04x:%04x]",
 				  platform_id,
 				  dfu_device_get_runtime_vid (device),
 				  dfu_device_get_runtime_pid (device));
@@ -158,7 +142,7 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 	/* create new device */
 	dev = fu_device_new ();
 	fu_device_set_id (dev, platform_id);
-	if (!fu_provider_dfu_device_update (provider_dfu, dev, device, &error)) {
+	if (!fu_plugin_dfu_device_update (plugin, dev, device, &error)) {
 		g_debug ("ignoring device: %s", error->message);
 		return;
 	}
@@ -178,63 +162,40 @@ fu_provider_dfu_device_added_cb (DfuContext *ctx,
 		g_debug ("Failed to close %s: %s", platform_id, error->message);
 
 	/* attempt to add */
-	fu_provider_device_add (FU_PROVIDER (provider_dfu), dev);
-	g_hash_table_insert (priv->devices,
-			     g_strdup (platform_id),
-			     g_object_ref (dev));
+	fu_plugin_device_add (plugin, dev);
+	fu_plugin_cache_add (plugin, platform_id, dev);
 }
 
 static void
-fu_provider_dfu_device_removed_cb (DfuContext *ctx,
-				   DfuDevice *device,
-				   FuProviderDfu *provider_dfu)
+fu_plugin_dfu_device_removed_cb (DfuContext *ctx,
+				 DfuDevice *device,
+				 FuPlugin *plugin)
 {
-	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
 	FuDevice *dev;
 	const gchar *platform_id;
 
 	/* convert DfuDevice to FuDevice */
 	platform_id = dfu_device_get_platform_id (device);
-	dev = g_hash_table_lookup (priv->devices, platform_id);
+	dev = fu_plugin_cache_lookup (plugin, platform_id);
 	if (dev == NULL) {
 		g_warning ("cannot find device %s", platform_id);
 		return;
 	}
 
-	fu_provider_device_remove (FU_PROVIDER (provider_dfu), dev);
-}
-
-static gboolean
-fu_provider_dfu_setup (FuProvider *provider, GError **error)
-{
-	g_autoptr(GUsbContext) usb_ctx = NULL;
-	FuProviderDfu *provider_dfu = FU_PROVIDER_DFU (provider);
-	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
-	usb_ctx = fu_provider_get_usb_context (provider);
-	priv->context = dfu_context_new_with_context (usb_ctx);
-	g_signal_connect (priv->context, "device-added",
-			  G_CALLBACK (fu_provider_dfu_device_added_cb),
-			  provider_dfu);
-	g_signal_connect (priv->context, "device-removed",
-			  G_CALLBACK (fu_provider_dfu_device_removed_cb),
-			  provider_dfu);
-	g_signal_connect (priv->context, "device-changed",
-			  G_CALLBACK (fu_provider_dfu_device_changed_cb),
-			  provider_dfu);
-	return TRUE;
+	fu_plugin_device_remove (plugin, dev);
 }
 
 static void
-fu_provider_dfu_state_changed_cb (DfuDevice *device,
+fu_plugin_dfu_state_changed_cb (DfuDevice *device,
 				  DfuState state,
-				  FuProvider *provider)
+				  FuPlugin *plugin)
 {
 	switch (state) {
 	case DFU_STATE_DFU_UPLOAD_IDLE:
-		fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_VERIFY);
+		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
 		break;
 	case DFU_STATE_DFU_DNLOAD_IDLE:
-		fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_WRITE);
+		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 		break;
 	default:
 		break;
@@ -242,22 +203,21 @@ fu_provider_dfu_state_changed_cb (DfuDevice *device,
 }
 
 static void
-fu_provider_dfu_percentage_changed_cb (DfuDevice *device,
+fu_plugin_dfu_percentage_changed_cb (DfuDevice *device,
 				       guint percentage,
-				       FuProvider *provider)
+				       FuPlugin *plugin)
 {
-	fu_provider_set_percentage (provider, percentage);
+	fu_plugin_set_percentage (plugin, percentage);
 }
 
-static gboolean
-fu_provider_dfu_update (FuProvider *provider,
-			FuDevice *dev,
-			GBytes *blob_fw,
-			FwupdInstallFlags flags,
-			GError **error)
+gboolean
+fu_plugin_update_online (FuPlugin *plugin,
+			 FuDevice *dev,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
-	FuProviderDfu *provider_dfu = FU_PROVIDER_DFU (provider);
-	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	DfuDevice *device;
 	const gchar *platform_id;
 	g_autoptr(DfuDevice) dfu_device = NULL;
@@ -266,7 +226,7 @@ fu_provider_dfu_update (FuProvider *provider,
 
 	/* get device */
 	platform_id = fu_device_get_id (dev);
-	device = dfu_context_get_device_by_platform_id (priv->context,
+	device = dfu_context_get_device_by_platform_id (data->context,
 							platform_id,
 							&error_local);
 	if (device == NULL) {
@@ -289,9 +249,9 @@ fu_provider_dfu_update (FuProvider *provider,
 		return FALSE;
 	}
 	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_provider_dfu_state_changed_cb), provider);
+			  G_CALLBACK (fu_plugin_dfu_state_changed_cb), plugin);
 	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_provider_dfu_percentage_changed_cb), provider);
+			  G_CALLBACK (fu_plugin_dfu_percentage_changed_cb), plugin);
 
 	/* hit hardware */
 	dfu_firmware = dfu_firmware_new ();
@@ -314,18 +274,17 @@ fu_provider_dfu_update (FuProvider *provider,
 				     error_local->message);
 		return FALSE;
 	}
-	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
+	fu_plugin_set_status (plugin, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
-static gboolean
-fu_provider_dfu_verify (FuProvider *provider,
-			FuDevice *dev,
-			FuProviderVerifyFlags flags,
-			GError **error)
+gboolean
+fu_plugin_verify (FuPlugin *plugin,
+		  FuDevice *dev,
+		  FuPluginVerifyFlags flags,
+		  GError **error)
 {
-	FuProviderDfu *provider_dfu = FU_PROVIDER_DFU (provider);
-	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	GBytes *blob_fw;
 	GChecksumType checksum_type;
 	DfuDevice *device;
@@ -337,7 +296,7 @@ fu_provider_dfu_verify (FuProvider *provider,
 
 	/* get device */
 	platform_id = fu_device_get_id (dev);
-	device = dfu_context_get_device_by_platform_id (priv->context,
+	device = dfu_context_get_device_by_platform_id (data->context,
 							platform_id,
 							&error_local);
 	if (device == NULL) {
@@ -360,9 +319,9 @@ fu_provider_dfu_verify (FuProvider *provider,
 		return FALSE;
 	}
 	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_provider_dfu_state_changed_cb), provider);
+			  G_CALLBACK (fu_plugin_dfu_state_changed_cb), plugin);
 	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_provider_dfu_percentage_changed_cb), provider);
+			  G_CALLBACK (fu_plugin_dfu_percentage_changed_cb), plugin);
 
 	/* get data from hardware */
 	g_debug ("uploading from device->host");
@@ -387,51 +346,41 @@ fu_provider_dfu_verify (FuProvider *provider,
 	blob_fw = dfu_firmware_write_data (dfu_firmware, error);
 	if (blob_fw == NULL)
 		return FALSE;
-	checksum_type = fu_provider_get_checksum_type (flags);
+	checksum_type = fu_plugin_get_checksum_type (flags);
 	hash = g_compute_checksum_for_bytes (checksum_type, blob_fw);
 	fu_device_set_checksum (dev, hash);
 	fu_device_set_checksum_kind (dev, checksum_type);
-	fu_provider_set_status (provider, FWUPD_STATUS_IDLE);
+	fu_plugin_set_status (plugin, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
-static void
-fu_provider_dfu_class_init (FuProviderDfuClass *klass)
+void
+fu_plugin_init (FuPlugin *plugin)
 {
-	FuProviderClass *provider_class = FU_PROVIDER_CLASS (klass);
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-	provider_class->get_name = fu_provider_dfu_get_name;
-	provider_class->setup = fu_provider_dfu_setup;
-	provider_class->update_online = fu_provider_dfu_update;
-	provider_class->verify = fu_provider_dfu_verify;
-	object_class->finalize = fu_provider_dfu_finalize;
+	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
+	data->context = dfu_context_new_with_context (usb_ctx);
 }
 
-static void
-fu_provider_dfu_init (FuProviderDfu *provider_dfu)
+void
+fu_plugin_destroy (FuPlugin *plugin)
 {
-	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
-	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free, (GDestroyNotify) g_object_unref);
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_object_unref (data->context);
 }
 
-static void
-fu_provider_dfu_finalize (GObject *object)
+gboolean
+fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
-	FuProviderDfu *provider_dfu = FU_PROVIDER_DFU (object);
-	FuProviderDfuPrivate *priv = GET_PRIVATE (provider_dfu);
-
-	g_hash_table_unref (priv->devices);
-	g_object_unref (priv->context);
-
-	G_OBJECT_CLASS (fu_provider_dfu_parent_class)->finalize (object);
-}
-
-FuProvider *
-fu_provider_dfu_new (void)
-{
-	FuProviderDfu *provider;
-	provider = g_object_new (FU_TYPE_PROVIDER_DFU, NULL);
-	return FU_PROVIDER (provider);
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_signal_connect (data->context, "device-added",
+			  G_CALLBACK (fu_plugin_dfu_device_added_cb),
+			  plugin);
+	g_signal_connect (data->context, "device-removed",
+			  G_CALLBACK (fu_plugin_dfu_device_removed_cb),
+			  plugin);
+	g_signal_connect (data->context, "device-changed",
+			  G_CALLBACK (fu_plugin_dfu_device_changed_cb),
+			  plugin);
+	return TRUE;
 }

@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,33 +24,20 @@
 #include <appstream-glib.h>
 #include <archive_entry.h>
 #include <archive.h>
-#include <fwupd.h>
-#include <gio/gio.h>
-#include <glib-object.h>
 #include <string.h>
 
-#include "fu-device.h"
-#include "fu-provider-rpi.h"
+#include "fu-plugin.h"
+#include "fu-plugin-vfuncs.h"
+#include "fu-plugin-raspberrypi.h"
 
-static void	fu_provider_rpi_finalize	(GObject	*object);
+#define FU_PLUGIN_RPI_FIRMWARE_FILENAME		"start.elf"
 
-#define FU_PROVIDER_RPI_FIRMWARE_FILENAME		"start.elf"
-
-typedef struct {
+struct FuPluginData {
 	gchar			*fw_dir;
-} FuProviderRpiPrivate;
-
-G_DEFINE_TYPE_WITH_PRIVATE (FuProviderRpi, fu_provider_rpi, FU_TYPE_PROVIDER)
-#define GET_PRIVATE(o) (fu_provider_rpi_get_instance_private (o))
-
-static const gchar *
-fu_provider_rpi_get_name (FuProvider *provider)
-{
-	return "RaspberryPi";
-}
+};
 
 static gchar *
-fu_provider_rpi_strstr (const guint8 *haystack,
+fu_plugin_raspberrypi_strstr (const guint8 *haystack,
 			gsize haystack_len,
 			const gchar *needle,
 			gsize *offset)
@@ -75,7 +62,7 @@ fu_provider_rpi_strstr (const guint8 *haystack,
 }
 
 static gboolean
-fu_provider_rpi_parse_firmware (FuDevice *device, const gchar *fn, GError **error)
+fu_plugin_raspberrypi_parse_firmware (FuDevice *device, const gchar *fn, GError **error)
 {
 	GDate *date;
 	gsize len = 0;
@@ -100,7 +87,7 @@ fu_provider_rpi_parse_firmware (FuDevice *device, const gchar *fn, GError **erro
 		return FALSE;
 
 	/* check the platform matches */
-	platform = fu_provider_rpi_strstr (data, len,
+	platform = fu_plugin_raspberrypi_strstr (data, len,
 					   "VC_BUILD_ID_PLATFORM: ",
 					   NULL);
 	if (g_strcmp0 (platform, "raspberrypi_linux") != 0) {
@@ -114,7 +101,7 @@ fu_provider_rpi_parse_firmware (FuDevice *device, const gchar *fn, GError **erro
 
 	/* find the VC_BUILD info which paradoxically is split into two
 	 * string segments */
-	vc_time = fu_provider_rpi_strstr (data, len,
+	vc_time = fu_plugin_raspberrypi_strstr (data, len,
 					  "VC_BUILD_ID_TIME: ", &offset);
 	if (vc_time == NULL) {
 		g_set_error_literal (error,
@@ -123,7 +110,7 @@ fu_provider_rpi_parse_firmware (FuDevice *device, const gchar *fn, GError **erro
 				     "Failed to get 1st VC_BUILD_ID_TIME");
 		return FALSE;
 	}
-	vc_date = fu_provider_rpi_strstr (data + offset, len - offset,
+	vc_date = fu_plugin_raspberrypi_strstr (data + offset, len - offset,
 					  "VC_BUILD_ID_TIME: ", NULL);
 	if (vc_date == NULL) {
 		g_set_error_literal (error,
@@ -157,7 +144,7 @@ fu_provider_rpi_parse_firmware (FuDevice *device, const gchar *fn, GError **erro
 }
 
 static gboolean
-fu_provider_rpi_explode_file (struct archive_entry *entry, const gchar *dir)
+fu_plugin_raspberrypi_explode_file (struct archive_entry *entry, const gchar *dir)
 {
 	const gchar *tmp;
 	g_autofree gchar *buf = NULL;
@@ -173,15 +160,14 @@ fu_provider_rpi_explode_file (struct archive_entry *entry, const gchar *dir)
 	return TRUE;
 }
 
-static gboolean
-fu_provider_rpi_update (FuProvider *provider,
-			FuDevice *device,
-			GBytes *blob_fw,
-			FwupdInstallFlags flags,
-			GError **error)
+gboolean
+fu_plugin_update_online (FuPlugin *plugin,
+			 FuDevice *device,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
-	FuProviderRpi *provider_rpi = FU_PROVIDER_RPI (provider);
-	FuProviderRpiPrivate *priv = GET_PRIVATE (provider_rpi);
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	gboolean ret = TRUE;
 	gboolean valid;
 	int r;
@@ -190,7 +176,7 @@ fu_provider_rpi_update (FuProvider *provider,
 	g_autofree gchar *fwfn = NULL;
 
 	/* decompress anything matching either glob */
-	fu_provider_set_status (provider, FWUPD_STATUS_DECOMPRESSING);
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DECOMPRESSING);
 	arch = archive_read_new ();
 	archive_read_support_format_all (arch);
 	archive_read_support_filter_all (arch);
@@ -206,7 +192,7 @@ fu_provider_rpi_update (FuProvider *provider,
 			     archive_error_string (arch));
 		goto out;
 	}
-	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_WRITE);
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 	for (;;) {
 		g_autofree gchar *path = NULL;
 		r = archive_read_next_header (arch, &entry);
@@ -223,7 +209,7 @@ fu_provider_rpi_update (FuProvider *provider,
 		}
 
 		/* only extract if valid */
-		valid = fu_provider_rpi_explode_file (entry, priv->fw_dir);
+		valid = fu_plugin_raspberrypi_explode_file (entry, data->fw_dir);
 		if (!valid)
 			continue;
 		r = archive_read_extract (arch, entry, 0);
@@ -239,11 +225,11 @@ fu_provider_rpi_update (FuProvider *provider,
 	}
 
 	/* get the new VC build info */
-	fu_provider_set_status (provider, FWUPD_STATUS_DEVICE_VERIFY);
-	fwfn = g_build_filename (priv->fw_dir,
-				 FU_PROVIDER_RPI_FIRMWARE_FILENAME,
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
+	fwfn = g_build_filename (data->fw_dir,
+				 FU_PLUGIN_RPI_FIRMWARE_FILENAME,
 				 NULL);
-	if (!fu_provider_rpi_parse_firmware (device, fwfn, error))
+	if (!fu_plugin_raspberrypi_parse_firmware (device, fwfn, error))
 		return FALSE;
 out:
 	if (arch != NULL) {
@@ -253,21 +239,55 @@ out:
 	return ret;
 }
 
-static gboolean
-fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
+void
+fu_plugin_raspberrypi_set_fw_dir (FuPlugin *plugin, const gchar *fw_dir)
 {
-	FuProviderRpi *provider_rpi = FU_PROVIDER_RPI (provider);
-	FuProviderRpiPrivate *priv = GET_PRIVATE (provider_rpi);
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_free (data->fw_dir);
+	data->fw_dir = g_strdup (fw_dir);
+	g_mkdir_with_parents (fw_dir, 0700);
+}
+
+void
+fu_plugin_init (FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	const gchar *tmp;
+
+	/* allow this to be overidden for testing */
+	data->fw_dir = g_strdup ("/boot");
+	tmp = g_getenv ("FWUPD_RPI_FW_DIR");
+	if (tmp != NULL)
+		fu_plugin_raspberrypi_set_fw_dir (plugin, tmp);
+}
+
+void
+fu_plugin_destroy (FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_free (data->fw_dir);
+}
+
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autofree gchar *fwfn = NULL;
 	g_autofree gchar *fwver = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	/* anything interesting */
-	fwfn = g_build_filename (priv->fw_dir,
-				 FU_PROVIDER_RPI_FIRMWARE_FILENAME,
+	fwfn = g_build_filename (data->fw_dir,
+				 FU_PLUGIN_RPI_FIRMWARE_FILENAME,
 				 NULL);
-	if (!g_file_test (fwfn, G_FILE_TEST_EXISTS))
-		return TRUE;
+	if (!g_file_test (fwfn, G_FILE_TEST_EXISTS)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "UEFI firmware updating not supported, no %s",
+			     fwfn);
+		return FALSE;
+	}
 
 	/* create fake device */
 	device = fu_device_new ();
@@ -280,62 +300,9 @@ fu_provider_rpi_coldplug (FuProvider *provider, GError **error)
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 
 	/* get the VC build info */
-	if (!fu_provider_rpi_parse_firmware (device, fwfn, error))
+	if (!fu_plugin_raspberrypi_parse_firmware (device, fwfn, error))
 		return FALSE;
 
-	fu_provider_device_add (provider, device);
+	fu_plugin_device_add (plugin, device);
 	return TRUE;
-}
-
-static void
-fu_provider_rpi_class_init (FuProviderRpiClass *klass)
-{
-	FuProviderClass *provider_class = FU_PROVIDER_CLASS (klass);
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-	provider_class->get_name = fu_provider_rpi_get_name;
-	provider_class->coldplug = fu_provider_rpi_coldplug;
-	provider_class->update_online = fu_provider_rpi_update;
-	object_class->finalize = fu_provider_rpi_finalize;
-}
-
-static void
-fu_provider_rpi_init (FuProviderRpi *provider_rpi)
-{
-	FuProviderRpiPrivate *priv = GET_PRIVATE (provider_rpi);
-	const gchar *tmp;
-
-	/* allow this to be overidden for testing */
-	priv->fw_dir = g_strdup ("/boot");
-	tmp = g_getenv ("FWUPD_RPI_FW_DIR");
-	if (tmp != NULL)
-		fu_provider_rpi_set_fw_dir (provider_rpi, tmp);
-}
-
-void
-fu_provider_rpi_set_fw_dir (FuProviderRpi *provider_rpi, const gchar *fw_dir)
-{
-	FuProviderRpiPrivate *priv = GET_PRIVATE (provider_rpi);
-	g_free (priv->fw_dir);
-	priv->fw_dir = g_strdup (fw_dir);
-	g_mkdir_with_parents (fw_dir, 0700);
-}
-
-static void
-fu_provider_rpi_finalize (GObject *object)
-{
-	FuProviderRpi *provider_rpi = FU_PROVIDER_RPI (object);
-	FuProviderRpiPrivate *priv = GET_PRIVATE (provider_rpi);
-
-	g_free (priv->fw_dir);
-
-	G_OBJECT_CLASS (fu_provider_rpi_parent_class)->finalize (object);
-}
-
-FuProvider *
-fu_provider_rpi_new (void)
-{
-	FuProviderRpi *provider;
-	provider = g_object_new (FU_TYPE_PROVIDER_RPI, NULL);
-	return FU_PROVIDER (provider);
 }

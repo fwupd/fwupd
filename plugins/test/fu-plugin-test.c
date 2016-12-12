@@ -22,25 +22,20 @@
 #include "config.h"
 
 #include "fu-plugin.h"
+#include "fu-plugin-vfuncs.h"
 
-struct FuPluginPrivate {
+struct FuPluginData {
 	GMutex			 mutex;
 };
-
-const gchar *
-fu_plugin_get_name (void)
-{
-	return "test";
-}
 
 void
 fu_plugin_init (FuPlugin *plugin)
 {
-	plugin->priv = FU_PLUGIN_GET_PRIVATE (FuPluginPrivate);
+	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 
 	/* only enable when testing */
 	if (g_getenv ("FWUPD_ENABLE_TEST_PLUGIN") == NULL) {
-		plugin->enabled = FALSE;
+		fu_plugin_set_enabled (plugin, FALSE);
 		return;
 	}
 	g_debug ("init");
@@ -49,6 +44,7 @@ fu_plugin_init (FuPlugin *plugin)
 void
 fu_plugin_destroy (FuPlugin *plugin)
 {
+	//FuPluginData *data = fu_plugin_get_data (plugin);
 	g_debug ("destroy");
 }
 
@@ -56,5 +52,35 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	g_debug ("startup");
+	return TRUE;
+}
+
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+	device = fu_device_new ();
+	fu_device_set_id (device, "FakeDevice");
+	fu_device_add_guid (device, "00000000-0000-0000-0000-000000000000");
+	fu_device_set_name (device, "Integrated_Webcam(TM)");
+	fu_plugin_device_add (plugin, device);
+	return TRUE;
+}
+
+gboolean
+fu_plugin_update_online (FuPlugin *plugin,
+			 FuDevice *device,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
+{
+	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "cannot handle offline");
+	}
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DECOMPRESSING);
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 	return TRUE;
 }

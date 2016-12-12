@@ -37,7 +37,7 @@
 #include <unistd.h>
 
 #include "fu-pending.h"
-#include "fu-provider.h"
+#include "fu-plugin-private.h"
 #include "fu-rom.h"
 
 #ifndef GUdevClient_autoptr

@@ -9,7 +9,7 @@ m4_define([fwupd_version],
 
 AC_INIT([fwupd],[fwupd_version],[https://github.com/hughsie/fwupd])
 AC_CONFIG_SRCDIR(src)
-AM_INIT_AUTOMAKE([1.9 no-dist-gzip dist-xz tar-ustar foreign])
+AM_INIT_AUTOMAKE([1.9 no-dist-gzip dist-xz tar-ustar foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_LIBTOOL
@@ -317,7 +317,6 @@ libfwupd/Makefile
 data/Makefile
 data/pki/Makefile
 data/tests/Makefile
-data/tests/rpiupdate/Makefile
 data/tests/colorhug/Makefile
 docs/Makefile
 docs/libdfu/Makefile
@@ -328,8 +327,17 @@ policy/Makefile
 po/Makefile.in
 src/Makefile
 plugins/Makefile
-plugins/test/Makefile
+plugins/colorhug/Makefile
+plugins/dell/Makefile
+plugins/dfu/Makefile
+plugins/ebitdo/Makefile
+plugins/raspberrypi/Makefile
+plugins/raspberrypi/rpiupdate/Makefile
 plugins/steelseries/Makefile
+plugins/test/Makefile
+plugins/udev/Makefile
+plugins/uefi/Makefile
+plugins/usb/Makefile
 ])
 AC_OUTPUT
 

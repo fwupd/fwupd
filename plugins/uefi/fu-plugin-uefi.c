@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -22,30 +22,15 @@
 #include "config.h"
 
 #include <appstream-glib.h>
-#include <fwupd.h>
-#include <glib-object.h>
-#include <gio/gio.h>
-#include <glib/gstdio.h>
 #include <fwup.h>
 #include <fcntl.h>
 
-#include "fu-device.h"
-#include "fu-pending.h"
-#include "fu-provider-uefi.h"
 #include "fu-quirks.h"
-
-static void	fu_provider_uefi_finalize	(GObject	*object);
-
-G_DEFINE_TYPE (FuProviderUefi, fu_provider_uefi, FU_TYPE_PROVIDER)
-
-static const gchar *
-fu_provider_uefi_get_name (FuProvider *provider)
-{
-	return "UEFI";
-}
+#include "fu-plugin.h"
+#include "fu-plugin-vfuncs.h"
 
 static fwup_resource *
-fu_provider_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError **error)
+fu_plugin_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError **error)
 {
 	efi_guid_t *guid_raw;
 	fwup_resource *re_matched = NULL;
@@ -90,15 +75,15 @@ _fwup_resource_iter_free (fwup_resource_iter *iter)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
 
-static gboolean
-fu_provider_uefi_clear_results (FuProvider *provider, FuDevice *device, GError **error)
+gboolean
+fu_plugin_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	fwup_resource *re = NULL;
 	g_autoptr(fwup_resource_iter) iter = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_provider_uefi_find (iter, fu_device_get_guid_default (device), error);
+	re = fu_plugin_uefi_find (iter, fu_device_get_guid_default (device), error);
 	if (re == NULL)
 		return FALSE;
 	if (fwup_clear_status (re) < 0) {
@@ -125,7 +110,7 @@ fu_provider_uefi_clear_results (FuProvider *provider, FuDevice *device, GError *
 #endif
 
 static const gchar *
-fu_provider_uefi_last_attempt_status_to_str (guint32 status)
+fu_plugin_uefi_last_attempt_status_to_str (guint32 status)
 {
 	if (status == FWUP_LAST_ATTEMPT_STATUS_SUCCESS)
 		return "Success";
@@ -146,8 +131,8 @@ fu_provider_uefi_last_attempt_status_to_str (guint32 status)
 	return NULL;
 }
 
-static gboolean
-fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **error)
+gboolean
+fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	const gchar *tmp;
 	fwup_resource *re = NULL;
@@ -159,7 +144,7 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_provider_uefi_find (iter, fu_device_get_guid_default (device), error);
+	re = fu_plugin_uefi_find (iter, fu_device_get_guid_default (device), error);
 	if (re == NULL)
 		return FALSE;
 	if (fwup_get_last_attempt_info (re, &version, &status, &when) < 0) {
@@ -176,19 +161,19 @@ fu_provider_uefi_get_results (FuProvider *provider, FuDevice *device, GError **e
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	} else {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		tmp = fu_provider_uefi_last_attempt_status_to_str (status);
+		tmp = fu_plugin_uefi_last_attempt_status_to_str (status);
 		if (tmp != NULL)
 			fu_device_set_update_error (device, tmp);
 	}
 	return TRUE;
 }
 
-static gboolean
-fu_provider_uefi_update (FuProvider *provider,
-			 FuDevice *device,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+gboolean
+fu_plugin_update_offline (FuPlugin *plugin,
+			  FuDevice *device,
+			  GBytes *blob_fw,
+			  FwupdInstallFlags flags,
+			  GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 	fwup_resource *re = NULL;
@@ -198,13 +183,13 @@ fu_provider_uefi_update (FuProvider *provider,
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_provider_uefi_find (iter, fu_device_get_guid_default (device), error);
+	re = fu_plugin_uefi_find (iter, fu_device_get_guid_default (device), error);
 	if (re == NULL)
 		return FALSE;
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
-	fu_provider_set_status (provider, FWUPD_STATUS_SCHEDULING);
+	fu_plugin_set_status (plugin, FWUPD_STATUS_SCHEDULING);
 	rc = fwup_set_up_update_with_buf (re, hardware_instance,
 					  g_bytes_get_data (blob_fw, NULL),
 					  g_bytes_get_size (blob_fw));
@@ -220,7 +205,7 @@ fu_provider_uefi_update (FuProvider *provider,
 }
 
 static AsVersionParseFlag
-fu_provider_uefi_get_version_format (void)
+fu_plugin_uefi_get_version_format (void)
 {
 	g_autofree gchar *content = NULL;
 	/* any vendors match */
@@ -237,8 +222,8 @@ fu_provider_uefi_get_version_format (void)
 	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 }
 
-static gboolean
-fu_provider_uefi_unlock (FuProvider *provider,
+gboolean
+fu_plugin_unlock (FuPlugin *plugin,
 			 FuDevice *device,
 			 GError **error)
 {
@@ -268,8 +253,8 @@ fu_provider_uefi_unlock (FuProvider *provider,
 #endif
 }
 
-static gboolean
-fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	AsVersionParseFlag parse_flags;
 	g_autofree gchar *display_name = NULL;
@@ -301,7 +286,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		fu_device_set_version (dev, "0");
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
-		fu_provider_device_add (provider, dev);
+		fu_plugin_device_add (plugin, dev);
 		return TRUE;
 	}
 
@@ -323,7 +308,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 
 	/* add each device */
 	guid = g_strdup ("00000000-0000-0000-0000-000000000000");
-	parse_flags = fu_provider_uefi_get_version_format ();
+	parse_flags = fu_plugin_uefi_get_version_format ();
 	while (fwup_resource_iter_next (iter, &re) > 0) {
 		efi_guid_t *guid_raw;
 		guint32 version_raw;
@@ -359,41 +344,7 @@ fu_provider_uefi_coldplug (FuProvider *provider, GError **error)
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-		fu_provider_device_add (provider, dev);
+		fu_plugin_device_add (plugin, dev);
 	}
 	return TRUE;
-}
-
-static void
-fu_provider_uefi_class_init (FuProviderUefiClass *klass)
-{
-	FuProviderClass *provider_class = FU_PROVIDER_CLASS (klass);
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-	provider_class->get_name = fu_provider_uefi_get_name;
-	provider_class->coldplug = fu_provider_uefi_coldplug;
-	provider_class->unlock = fu_provider_uefi_unlock;
-	provider_class->update_offline = fu_provider_uefi_update;
-	provider_class->clear_results = fu_provider_uefi_clear_results;
-	provider_class->get_results = fu_provider_uefi_get_results;
-	object_class->finalize = fu_provider_uefi_finalize;
-}
-
-static void
-fu_provider_uefi_init (FuProviderUefi *provider_uefi)
-{
-}
-
-static void
-fu_provider_uefi_finalize (GObject *object)
-{
-	G_OBJECT_CLASS (fu_provider_uefi_parent_class)->finalize (object);
-}
-
-FuProvider *
-fu_provider_uefi_new (void)
-{
-	FuProviderUefi *provider;
-	provider = g_object_new (FU_TYPE_PROVIDER_UEFI, NULL);
-	return FU_PROVIDER (provider);
 }

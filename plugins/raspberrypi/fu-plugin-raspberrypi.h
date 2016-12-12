@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -19,26 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FU_PROVIDER_USB_H
-#define __FU_PROVIDER_USB_H
-
-#include <glib-object.h>
-
-#include "fu-device.h"
-#include "fu-provider.h"
+#ifndef __FU_PLUGIN_RPI_H
+#define __FU_PLUGIN_RPI_H
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_PROVIDER_USB (fu_provider_usb_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuProviderUsb, fu_provider_usb, FU, PROVIDER_USB, FuProvider)
-
-struct _FuProviderUsbClass
-{
-	FuProviderClass			 parent_class;
-};
-
-FuProvider	*fu_provider_usb_new		(void);
+void		 fu_plugin_raspberrypi_set_fw_dir	(FuPlugin	*plugin,
+						 const gchar	*fw_dir);
 
 G_END_DECLS
 
-#endif /* __FU_PROVIDER_USB_H */
+#endif /* __FU_PLUGIN_RPI_H */

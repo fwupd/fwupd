@@ -7,12 +7,12 @@ AM_CPPFLAGS =						\
 	$(GUSB_CFLAGS)					\
 	$(GCAB_CFLAGS)					\
 	$(GLIB_CFLAGS)					\
-	$(GUDEV_CFLAGS)					\
 	$(PIE_CFLAGS)					\
 	$(POLKIT_CFLAGS)				\
 	$(GPGME_CFLAGS)					\
 	$(SOUP_CFLAGS)					\
 	$(ARCHIVE_CFLAGS)				\
+	$(GUDEV_CFLAGS)					\
 	-I$(top_srcdir)					\
 	-I$(top_builddir)				\
 	-I$(top_srcdir)/libfwupd			\
@@ -105,25 +105,6 @@ fu-resources.h: fwupd.gresource.xml
 		--c-name fu				\
 		$(srcdir)/fwupd.gresource.xml
 
-noinst_PROGRAMS +=					\
-	fu-ebitdo-tool
-
-fu_ebitdo_tool_SOURCES =				\
-	fu-ebitdo-common.c				\
-	fu-ebitdo-common.h				\
-	fu-ebitdo-device.c				\
-	fu-ebitdo-device.h				\
-	fu-ebitdo-tool.c
-
-fu_ebitdo_tool_LDADD =					\
-	$(lib_LTLIBRARIES)				\
-	$(APPSTREAM_GLIB_LIBS)				\
-	$(GLIB_LIBS)					\
-	$(GUSB_LIBS)					\
-	$(LIBM)
-
-fu_ebitdo_tool_CFLAGS = -DEGG_TEST $(AM_CFLAGS) $(WARN_CFLAGS)
-
 pkglibexec_PROGRAMS =					\
 	fwupd
 
@@ -132,28 +113,14 @@ fwupd_SOURCES =						\
 	fu-debug.h					\
 	fu-device.c					\
 	fu-device.h					\
-	fu-ebitdo-common.c				\
-	fu-ebitdo-common.h				\
-	fu-ebitdo-device.c				\
-	fu-ebitdo-device.h				\
 	fu-keyring.c					\
 	fu-keyring.h					\
 	fu-pending.c					\
 	fu-pending.h					\
+	fu-plugin-private.h				\
+	fu-plugin-vfuncs.h				\
 	fu-plugin.c					\
 	fu-plugin.h					\
-	fu-provider.c					\
-	fu-provider.h					\
-	fu-provider-dfu.c				\
-	fu-provider-dfu.h				\
-	fu-provider-rpi.c				\
-	fu-provider-rpi.h				\
-	fu-provider-udev.c				\
-	fu-provider-udev.h				\
-	fu-provider-usb.c				\
-	fu-provider-usb.h				\
-	fu-provider-ebitdo.c				\
-	fu-provider-ebitdo.h				\
 	fu-quirks.h					\
 	fu-resources.c					\
 	fu-resources.h					\
@@ -173,26 +140,6 @@ fwupd_LDADD =						\
 	$(SQLITE_LIBS)					\
 	$(GPGME_LIBS)					\
 	$(ARCHIVE_LIBS)
-
-if HAVE_COLORHUG
-fwupd_SOURCES +=					\
-	fu-provider-chug.c				\
-	fu-provider-chug.h
-fwupd_LDADD +=						\
-	$(COLORHUG_LIBS)
-AM_CPPFLAGS +=						\
-	$(COLORHUG_CFLAGS)
-endif
-
-if HAVE_UEFI
-fwupd_SOURCES +=					\
-	fu-provider-uefi.c				\
-	fu-provider-uefi.h
-AM_CPPFLAGS +=						\
-	$(UEFI_CFLAGS)
-fwupd_LDADD +=						\
-	$(UEFI_LIBS)
-endif
 
 fwupd_LDFLAGS =						\
 	$(PIE_LDFLAGS)					\
@@ -221,12 +168,6 @@ fu_self_test_SOURCES =					\
 	fu-pending.h					\
 	fu-plugin.c					\
 	fu-plugin.h					\
-	fu-provider.c					\
-	fu-provider.h					\
-	fu-provider-fake.c				\
-	fu-provider-fake.h				\
-	fu-provider-rpi.c				\
-	fu-provider-rpi.h				\
 	fu-rom.c					\
 	fu-rom.h					\
 	fu-self-test.c
@@ -250,26 +191,7 @@ fu_self_test_CFLAGS =					\
 	-DLOCALSTATEDIR=\"/tmp/fwupd-self-test/var\"	\
 	$(WARN_CFLAGS)
 
-if HAVE_DELL
-fwupd_SOURCES +=					\
-	fu-provider-dell.c				\
-	fu-provider-dell.h
-AM_CPPFLAGS +=						\
-	$(LIBSMBIOS_CFLAGS)				\
-	$(EFIVAR_CFLAGS)
-fwupd_LDADD +=						\
-	$(UEFI_LIBS)					\
-	$(LIBSMBIOS_LIBS)				\
-	$(EFIVAR_LIBS)
-fu_self_test_LDADD +=					\
-	$(GUSB_LIBS)					\
-	$(UEFI_LIBS)					\
-	$(LIBSMBIOS_LIBS)				\
-	$(EFIVAR_LIBS)
-fu_self_test_SOURCES +=					\
-	fu-provider-dell.c				\
-	fu-provider-dell.h
-endif
+TESTS = fu-self-test
 
 install-data-hook:
 	if test -w $(DESTDIR)$(prefix)/; then \
@@ -278,8 +200,6 @@ install-data-hook:
 		mkdir -p $(DESTDIR)$(localstatedir)/cache/app-info/xmls; \
 		mkdir -p $(DESTDIR)$(localstatedir)/cache/app-info/icons; \
 	fi
-
-TESTS = fu-self-test
 
 BUILT_SOURCES =						\
 	fu-resources.c					\
