@@ -13,6 +13,7 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_context_get_timeout@Base 0.6.3
  dfu_context_get_type@Base 0.6.3
  dfu_context_new@Base 0.6.3
+ dfu_context_new_with_context@Base 0.8.0
  dfu_context_set_timeout@Base 0.6.3
  dfu_device_abort@Base 0.6.3
  dfu_device_attach@Base 0.6.3
