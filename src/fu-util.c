@@ -37,7 +37,7 @@
 #include <unistd.h>
 
 #include "fu-pending.h"
-#include "fu-provider.h"
+#include "fu-plugin-private.h"
 #include "fu-rom.h"
 
 #ifndef GUdevClient_autoptr
@@ -1142,7 +1142,7 @@ main (int argc, char *argv[])
 			_("Show extra debugging information"), NULL },
 		{ "offline", '\0', 0, G_OPTION_ARG_NONE, &offline,
 			/* TRANSLATORS: command line option */
-			_("Perform the installation offline where possible"), NULL },
+			_("Schedule installation for next reboot when possible"), NULL },
 		{ "allow-reinstall", '\0', 0, G_OPTION_ARG_NONE, &allow_reinstall,
 			/* TRANSLATORS: command line option */
 			_("Allow re-installing existing firmware versions"), NULL },

@@ -3,4 +3,4 @@ Name=org.freedesktop.fwupd
 Documentation=http://www.fwupd.org/
 Exec=@servicedir@/fwupd/fwupd
 User=root
-#SystemdService=fwupd.service
+SystemdService=fwupd.service

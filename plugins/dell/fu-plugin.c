@@ -1,0 +1,1 @@
+../../src/fu-plugin.c

@@ -1,0 +1,24 @@
+SUBDIRS =		\
+	dfu		\
+	ebitdo		\
+	raspberrypi	\
+	steelseries	\
+	test		\
+	udev		\
+	unifying	\
+	upower		\
+	usb
+
+if HAVE_DELL
+SUBDIRS += dell
+endif
+
+if HAVE_COLORHUG
+SUBDIRS += colorhug
+endif
+
+if HAVE_UEFI
+SUBDIRS += uefi
+endif
+
+-include $(top_srcdir)/git.mk

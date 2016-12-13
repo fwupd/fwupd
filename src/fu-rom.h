@@ -57,6 +57,12 @@ gboolean	 fu_rom_load_file			(FuRom		*rom,
 							 FuRomLoadFlags	 flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fu_rom_load_data			(FuRom		*rom,
+							 guint8		*buffer,
+							 gsize		 buffer_sz,
+							 FuRomLoadFlags	 flags,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 fu_rom_extract_all			(FuRom		*rom,
 							 const gchar	*path,
 							 GError		**error);

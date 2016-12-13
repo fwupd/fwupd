@@ -228,7 +228,7 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 			return NULL;
 		}
 		pid = g_ascii_strtoull (tmp + 1, NULL, 16);
-		if (vid == 0 || vid > G_MAXUINT16) {
+		if (pid == 0 || pid > G_MAXUINT16) {
 			g_set_error_literal (error,
 					     DFU_ERROR,
 					     DFU_ERROR_INTERNAL,

@@ -2,18 +2,17 @@
 AC_PREREQ(2.63)
 
 m4_define([fwupd_major_version], [0])
-m4_define([fwupd_minor_version], [7])
-m4_define([fwupd_micro_version], [5])
+m4_define([fwupd_minor_version], [8])
+m4_define([fwupd_micro_version], [0])
 m4_define([fwupd_version],
           [fwupd_major_version.fwupd_minor_version.fwupd_micro_version])
 
 AC_INIT([fwupd],[fwupd_version],[https://github.com/hughsie/fwupd])
 AC_CONFIG_SRCDIR(src)
-AM_INIT_AUTOMAKE([1.9 no-dist-gzip dist-xz tar-ustar foreign])
+AM_INIT_AUTOMAKE([1.9 no-dist-gzip dist-xz tar-ustar foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_LIBTOOL
-AC_PROG_CC_STDC
 
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [GOBJECT_INTROSPECTION_CHECK([0.9.8])])
 AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyes)
@@ -50,7 +49,7 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
 
 AS_ALL_LINGUAS
-AC_PROG_CC
+AC_PROG_CC_C99
 AC_PROG_INSTALL
 LT_INIT
 AM_PROG_CC_C_O
@@ -145,7 +144,6 @@ PKG_CHECK_MODULES(APPSTREAM_GLIB, appstream-glib >= 0.5.10)
 PKG_CHECK_MODULES(GUSB, gusb >= 0.2.9)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 PKG_CHECK_MODULES(ARCHIVE, libarchive)
-PKG_CHECK_MODULES(ELF, libelf)
 PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.51.92)
 AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
 if test -z $DOCBOOK2MAN ; then
@@ -156,6 +154,14 @@ AC_PATH_PROG(GCAB, [gcab], [no])
 if test -z $GCAB ; then
 	AC_MSG_ERROR([gcab program not found])
 fi
+
+# 0.114 introduced autocleanup functions for its types.
+PKG_CHECK_MODULES([POLKIT_0_114], [polkit-gobject-1 >= 0.114],
+                  [have_polkit_0_114=yes], [have_polkit_0_114=no])
+AS_IF([test "$have_polkit_0_114" = "yes"], [
+	AC_DEFINE([HAVE_POLKIT_0_114],[1],
+	          [Define as 1 if you have polkit >= 0.114])
+])
 
 # ColorHug support
 AC_ARG_ENABLE(colorhug,
@@ -176,6 +182,27 @@ else
 	fi
 fi
 AM_CONDITIONAL(HAVE_COLORHUG, test x$has_colorhug = xyes)
+
+# libelf support
+AC_ARG_ENABLE(libelf,
+	      AS_HELP_STRING([--enable-libelf],
+			     [Enable libelf support [default=auto]]),,
+	      enable_libelf=maybe)
+if test x$enable_libelf != xno; then
+	PKG_CHECK_MODULES(LIBELF, libelf >= 1.2.12,
+			  has_libelf=yes,
+			  has_libelf=no)
+fi
+if test x$has_libelf = xyes; then
+	AC_DEFINE(HAVE_LIBELF,1,[Use libelf support])
+else
+	has_libelf=no
+	if test "x$enable_libelf" = "xyes"; then
+		AC_MSG_ERROR([libelf support requested but 'libelf' was not found])
+	fi
+fi
+AM_CONDITIONAL(HAVE_LIBELF, test x$has_libelf = xyes)
+
 
 # gpgme support
 AC_MSG_CHECKING([for gpgme])
@@ -283,17 +310,14 @@ AC_CONFIG_FILES([
 Makefile
 libdfu/Makefile
 libdfu/dfu.pc
-libebitdo/Makefile
-libebitdo/ebitdo.pc
+libdfu/tests/Makefile
 libfwupd/fwupd-version.h
 libfwupd/fwupd.pc
 libfwupd/Makefile
 data/Makefile
 data/pki/Makefile
 data/tests/Makefile
-data/tests/rpiupdate/Makefile
 data/tests/colorhug/Makefile
-data/tests/dfu/Makefile
 docs/Makefile
 docs/libdfu/Makefile
 docs/libfwupd/Makefile
@@ -302,7 +326,20 @@ docs/version.xml
 policy/Makefile
 po/Makefile.in
 src/Makefile
-src/plugins/Makefile
+plugins/Makefile
+plugins/colorhug/Makefile
+plugins/dell/Makefile
+plugins/dfu/Makefile
+plugins/ebitdo/Makefile
+plugins/raspberrypi/Makefile
+plugins/raspberrypi/rpiupdate/Makefile
+plugins/steelseries/Makefile
+plugins/test/Makefile
+plugins/udev/Makefile
+plugins/uefi/Makefile
+plugins/unifying/Makefile
+plugins/upower/Makefile
+plugins/usb/Makefile
 ])
 AC_OUTPUT
 
@@ -320,6 +357,7 @@ echo "
 	optional providers
 	------------------
 	Colorhug:                  $has_colorhug
+	libelf:                    $has_libelf
 	UEFI:                      $has_fwup
 	Dell:                      $has_dell
 "

@@ -247,6 +247,16 @@ fu_rom_pci_print_header (FuRomPciHeader *hdr)
 	g_debug (" Reserved:  %s", reserved_str);
 	g_debug (" CpiPtr:    0x%04x", hdr->cpi_ptr);
 
+	/* sanity check */
+	if (hdr->cpi_ptr > hdr->rom_len) {
+		g_debug ("  PCI DATA: Invalid as cpi_ptr > rom_len");
+		return;
+	}
+	if (hdr->data_len > hdr->rom_len) {
+		g_debug ("  PCI DATA: Invalid as data_len > rom_len");
+		return;
+	}
+
 	/* print the data */
 	buffer = &hdr->rom_data[hdr->cpi_ptr];
 	g_debug ("  PCI Data");
@@ -258,9 +268,11 @@ fu_rom_pci_print_header (FuRomPciHeader *hdr)
 	if (hdr->image_len < 0x0f) {
 		data_str = fu_rom_get_hex_dump (&buffer[hdr->data_len], hdr->image_len);
 		g_debug ("   ImageLen:  0x%04x [%s]", hdr->image_len, data_str);
-	} else {
+	} else if (hdr->image_len >= 0x0f) {
 		data_str = fu_rom_get_hex_dump (&buffer[hdr->data_len], 0x0f);
 		g_debug ("   ImageLen:  0x%04x [%s...]", hdr->image_len, data_str);
+	} else {
+		g_debug ("   ImageLen:  0x%04x", hdr->image_len);
 	}
 	g_debug ("   RevLevel:  0x%04x", hdr->revision_level);
 	g_debug ("   CodeType:  0x%02x [%s]", hdr->code_type,
@@ -356,8 +368,7 @@ fu_rom_pci_parse_data (FuRomPciHeader *hdr)
 	guint8 *buffer;
 
 	/* check valid */
-	if (hdr == NULL ||
-	    hdr->cpi_ptr == 0x0000) {
+	if (hdr->cpi_ptr == 0x0000) {
 		g_debug ("No PCI DATA @ 0x%04x", hdr->rom_offset);
 		return FALSE;
 	}
@@ -421,7 +432,7 @@ fu_rom_pci_get_header (guint8 *buffer, gssize sz)
 			g_debug ("-- using NVIDIA ROM quirk");
 		} else {
 			g_autofree gchar *sig_str = NULL;
-			sig_str = fu_rom_get_hex_dump (buffer, 16);
+			sig_str = fu_rom_get_hex_dump (buffer, MIN (16, sz));
 			g_debug ("Not PCI ROM %s", sig_str);
 			return NULL;
 		}
@@ -550,94 +561,30 @@ fu_rom_find_version (FuRomKind kind, FuRomPciHeader *hdr)
 }
 
 gboolean
-fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
-		  GCancellable *cancellable, GError **error)
+fu_rom_load_data (FuRom *rom,
+		  guint8 *buffer, gsize buffer_sz,
+		  FuRomLoadFlags flags,
+		  GCancellable *cancellable,
+		  GError **error)
 {
 	FuRomPrivate *priv = GET_PRIVATE (rom);
 	FuRomPciHeader *hdr = NULL;
-	const gssize buffer_sz = 0x400000;
-	gssize sz;
+	gssize sz = buffer_sz;
 	guint32 jump = 0;
 	guint32 hdr_sz = 0;
-	guint number_reads = 0;
 	g_autoptr(GError) error_local = NULL;
-	g_autofree gchar *fn = NULL;
 	g_autofree gchar *id = NULL;
-	g_autofree guint8 *buffer = NULL;
-	g_autoptr(GFileOutputStream) output_stream = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
-	g_autoptr(AsProfileTask) ptask = NULL;
 
 	g_return_val_if_fail (FU_IS_ROM (rom), FALSE);
 
-	/* open file */
-	ptask = as_profile_start_literal (profile, "FuRom:reading-data");
-	priv->stream = G_INPUT_STREAM (g_file_read (file, cancellable, &error_local));
-	if (priv->stream == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_AUTH_FAILED,
-				     error_local->message);
-		return FALSE;
-	}
-
-	/* we have to enable the read for devices */
-	fn = g_file_get_path (file);
-	if (g_str_has_prefix (fn, "/sys")) {
-		output_stream = g_file_replace (file, NULL, FALSE, G_FILE_CREATE_NONE,
-						cancellable, error);
-		if (output_stream == NULL)
-			return FALSE;
-		if (g_output_stream_write (G_OUTPUT_STREAM (output_stream), "1", 1,
-					   cancellable, error) < 0)
-			return FALSE;
-	}
-
-	/* read out the header */
-	buffer = g_malloc ((gsize) buffer_sz);
-	sz = g_input_stream_read (priv->stream, buffer, buffer_sz,
-				  cancellable, error);
-	if (sz < 0)
-		return FALSE;
-	if (sz < 1024) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Firmware too small: %" G_GSSIZE_FORMAT " bytes", sz);
-		return FALSE;
-	}
-
-	/* ensure we got enough data to fill the buffer */
-	while (sz < buffer_sz) {
-		gssize sz_chunk;
-		sz_chunk = g_input_stream_read (priv->stream,
-						buffer + sz,
-						buffer_sz - sz,
-						cancellable,
-						error);
-		if (sz_chunk == 0)
-			break;
-		g_debug ("ROM returned 0x%04x bytes, adding 0x%04x...",
-			 (guint) sz, (guint) sz_chunk);
-		if (sz_chunk < 0)
-			return FALSE;
-		sz += sz_chunk;
-
-		/* check the firmware isn't serving us small chunks */
-		if (number_reads++ > 16) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "firmware not fulfilling requests");
-			return FALSE;
-		}
-	}
-	g_debug ("ROM buffer filled %" G_GSSIZE_FORMAT "kb/%" G_GSSIZE_FORMAT "kb",
-		 sz / 0x400, buffer_sz / 0x400);
-
 	/* detect optional IFR header and skip to option ROM */
-	if (memcmp (buffer, "NVGI", 4) == 0)
-		hdr_sz = GUINT16_FROM_BE (buffer[0x15]);
+	if (memcmp (buffer, "NVGI", 4) == 0) {
+		guint16 ifr_sz_raw;
+		memcpy (&ifr_sz_raw, &buffer[0x15], 2);
+		hdr_sz = GUINT16_FROM_BE (ifr_sz_raw);
+		g_debug ("detected IFR header, skipping %x bytes", hdr_sz);
+	}
 
 	/* read all the ROM headers */
 	while (sz > hdr_sz + jump) {
@@ -648,8 +595,8 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 			gboolean found_data = FALSE;
 
 			/* check it's not just NUL padding */
-			for (guint i = 0; i < hdr_sz + jump; i++) {
-				if (buffer[hdr_sz + jump + i] != 0x00) {
+			for (guint i = jump + hdr_sz; i < buffer_sz; i++) {
+				if (buffer[i] != 0x00) {
 					found_data = TRUE;
 					break;
 				}
@@ -667,7 +614,8 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 				hdr->image_len = hdr->rom_len;
 				g_ptr_array_add (priv->hdrs, hdr);
 			} else {
-				g_debug ("ignoring padding");
+				g_debug ("ignoring 0x%04x bytes of padding",
+					 (guint) (buffer_sz - (jump + hdr_sz)));
 			}
 			break;
 		}
@@ -721,7 +669,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 		return FALSE;
 	}
 
-	if (memcmp (buffer + hdr_sz + 0x04, "K74", 3) == 0) {
+	if (hdr->entry_point == 0x374beb) {
 		priv->kind = FU_ROM_KIND_NVIDIA;
 	} else if (memcmp (buffer + hdr_sz, "$VBT", 4) == 0) {
 		priv->kind = FU_ROM_KIND_INTEL;
@@ -731,10 +679,13 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 
 	/* nothing */
 	if (priv->kind == FU_ROM_KIND_UNKNOWN) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to detect firmware kind");
+		g_autofree gchar *str = NULL;
+		str = fu_rom_get_hex_dump (buffer + hdr_sz, 0x32);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to detect firmware kind from [%s]",
+			     str);
 		return FALSE;
 	}
 
@@ -769,6 +720,91 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 	}
 
 	return TRUE;
+}
+
+gboolean
+fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
+		  GCancellable *cancellable, GError **error)
+{
+	FuRomPrivate *priv = GET_PRIVATE (rom);
+	const gssize buffer_sz = 0x400000;
+	gssize sz;
+	guint number_reads = 0;
+	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autofree guint8 *buffer = NULL;
+	g_autoptr(GFileOutputStream) output_stream = NULL;
+	g_autoptr(AsProfile) profile = as_profile_new ();
+	g_autoptr(AsProfileTask) ptask = NULL;
+
+	g_return_val_if_fail (FU_IS_ROM (rom), FALSE);
+
+	/* open file */
+	ptask = as_profile_start_literal (profile, "FuRom:reading-data");
+	g_assert (ptask != NULL);
+	priv->stream = G_INPUT_STREAM (g_file_read (file, cancellable, &error_local));
+	if (priv->stream == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_AUTH_FAILED,
+				     error_local->message);
+		return FALSE;
+	}
+
+	/* we have to enable the read for devices */
+	fn = g_file_get_path (file);
+	if (g_str_has_prefix (fn, "/sys")) {
+		output_stream = g_file_replace (file, NULL, FALSE, G_FILE_CREATE_NONE,
+						cancellable, error);
+		if (output_stream == NULL)
+			return FALSE;
+		if (g_output_stream_write (G_OUTPUT_STREAM (output_stream), "1", 1,
+					   cancellable, error) < 0)
+			return FALSE;
+	}
+
+	/* read out the header */
+	buffer = g_malloc ((gsize) buffer_sz);
+	sz = g_input_stream_read (priv->stream, buffer, buffer_sz,
+				  cancellable, error);
+	if (sz < 0)
+		return FALSE;
+	if (sz < 512) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Firmware too small: %" G_GSSIZE_FORMAT " bytes", sz);
+		return FALSE;
+	}
+
+	/* ensure we got enough data to fill the buffer */
+	while (sz < buffer_sz) {
+		gssize sz_chunk;
+		sz_chunk = g_input_stream_read (priv->stream,
+						buffer + sz,
+						buffer_sz - sz,
+						cancellable,
+						error);
+		if (sz_chunk == 0)
+			break;
+		g_debug ("ROM returned 0x%04x bytes, adding 0x%04x...",
+			 (guint) sz, (guint) sz_chunk);
+		if (sz_chunk < 0)
+			return FALSE;
+		sz += sz_chunk;
+
+		/* check the firmware isn't serving us small chunks */
+		if (number_reads++ > 16) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "firmware not fulfilling requests");
+			return FALSE;
+		}
+	}
+	g_debug ("ROM buffer filled %" G_GSSIZE_FORMAT "kb/%" G_GSSIZE_FORMAT "kb",
+		 sz / 0x400, buffer_sz / 0x400);
+	return fu_rom_load_data (rom, buffer, sz, flags, cancellable, error);
 }
 
 FuRomKind

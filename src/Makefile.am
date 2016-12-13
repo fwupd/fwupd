@@ -1,5 +1,3 @@
-SUBDIRS = plugins
-
 introspectiondir = $(datadir)/dbus-1/interfaces
 dist_introspection_DATA = 				\
 	org.freedesktop.fwupd.xml
@@ -9,15 +7,14 @@ AM_CPPFLAGS =						\
 	$(GUSB_CFLAGS)					\
 	$(GCAB_CFLAGS)					\
 	$(GLIB_CFLAGS)					\
-	$(GUDEV_CFLAGS)					\
 	$(PIE_CFLAGS)					\
 	$(POLKIT_CFLAGS)				\
 	$(GPGME_CFLAGS)					\
 	$(SOUP_CFLAGS)					\
 	$(ARCHIVE_CFLAGS)				\
+	$(GUDEV_CFLAGS)					\
 	-I$(top_srcdir)					\
 	-I$(top_builddir)				\
-	-I$(top_srcdir)/libebitdo			\
 	-I$(top_srcdir)/libfwupd			\
 	-DG_LOG_DOMAIN=\"Fu\"				\
 	-DLIBEXECDIR=\"$(libexecdir)\"			\
@@ -35,9 +32,6 @@ FWUPD_LIBS =						\
 
 DFU_LIBS =						\
 	$(top_builddir)/libdfu/libdfu.la
-
-EBITDO_LIBS =						\
-	$(top_builddir)/libebitdo/libebitdo.la
 
 bin_PROGRAMS = fwupdmgr
 
@@ -64,6 +58,30 @@ fwupdmgr_LDFLAGS =					\
 	$(RELRO_LDFLAGS)
 
 fwupdmgr_CFLAGS =					\
+	-DFU_OFFLINE_DESTDIR=\"\"			\
+	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
+	$(WARN_CFLAGS)
+
+noinst_PROGRAMS = fu-fuzzer
+
+fu_fuzzer_SOURCES =					\
+	fu-rom.c					\
+	fu-fuzzer.c
+
+fu_fuzzer_LDADD =					\
+	$(LIBM)						\
+	$(FWUPD_LIBS)					\
+	$(APPSTREAM_GLIB_LIBS)				\
+	$(SQLITE_LIBS)					\
+	$(SOUP_LIBS)					\
+	$(GUDEV_LIBS)					\
+	$(GLIB_LIBS)
+
+fu_fuzzer_LDFLAGS =					\
+	$(PIE_LDFLAGS)					\
+	$(RELRO_LDFLAGS)
+
+fu_fuzzer_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
 	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
 	$(WARN_CFLAGS)
@@ -99,20 +117,10 @@ fwupd_SOURCES =						\
 	fu-keyring.h					\
 	fu-pending.c					\
 	fu-pending.h					\
+	fu-plugin-private.h				\
+	fu-plugin-vfuncs.h				\
 	fu-plugin.c					\
 	fu-plugin.h					\
-	fu-provider.c					\
-	fu-provider.h					\
-	fu-provider-dfu.c				\
-	fu-provider-dfu.h				\
-	fu-provider-rpi.c				\
-	fu-provider-rpi.h				\
-	fu-provider-udev.c				\
-	fu-provider-udev.h				\
-	fu-provider-usb.c				\
-	fu-provider-usb.h				\
-	fu-provider-ebitdo.c				\
-	fu-provider-ebitdo.h				\
 	fu-quirks.h					\
 	fu-resources.c					\
 	fu-resources.h					\
@@ -123,7 +131,6 @@ fwupd_SOURCES =						\
 fwupd_LDADD =						\
 	$(FWUPD_LIBS)					\
 	$(DFU_LIBS)					\
-	$(EBITDO_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(GUSB_LIBS)					\
 	$(GCAB_LIBS)					\
@@ -133,26 +140,6 @@ fwupd_LDADD =						\
 	$(SQLITE_LIBS)					\
 	$(GPGME_LIBS)					\
 	$(ARCHIVE_LIBS)
-
-if HAVE_COLORHUG
-fwupd_SOURCES +=					\
-	fu-provider-chug.c				\
-	fu-provider-chug.h
-fwupd_LDADD +=						\
-	$(COLORHUG_LIBS)
-AM_CPPFLAGS +=						\
-	$(COLORHUG_CFLAGS)
-endif
-
-if HAVE_UEFI
-fwupd_SOURCES +=					\
-	fu-provider-uefi.c				\
-	fu-provider-uefi.h
-AM_CPPFLAGS +=						\
-	$(UEFI_CFLAGS)
-fwupd_LDADD +=						\
-	$(UEFI_LIBS)
-endif
 
 fwupd_LDFLAGS =						\
 	$(PIE_LDFLAGS)					\
@@ -181,12 +168,6 @@ fu_self_test_SOURCES =					\
 	fu-pending.h					\
 	fu-plugin.c					\
 	fu-plugin.h					\
-	fu-provider.c					\
-	fu-provider.h					\
-	fu-provider-fake.c				\
-	fu-provider-fake.h				\
-	fu-provider-rpi.c				\
-	fu-provider-rpi.h				\
 	fu-rom.c					\
 	fu-rom.h					\
 	fu-self-test.c
@@ -210,26 +191,7 @@ fu_self_test_CFLAGS =					\
 	-DLOCALSTATEDIR=\"/tmp/fwupd-self-test/var\"	\
 	$(WARN_CFLAGS)
 
-if HAVE_DELL
-fwupd_SOURCES +=					\
-	fu-provider-dell.c				\
-	fu-provider-dell.h
-AM_CPPFLAGS +=						\
-	$(LIBSMBIOS_CFLAGS)				\
-	$(EFIVAR_CFLAGS)
-fwupd_LDADD +=						\
-	$(UEFI_LIBS)					\
-	$(LIBSMBIOS_LIBS)				\
-	$(EFIVAR_LIBS)
-fu_self_test_LDADD +=					\
-	$(GUSB_LIBS)					\
-	$(UEFI_LIBS)					\
-	$(LIBSMBIOS_LIBS)				\
-	$(EFIVAR_LIBS)
-fu_self_test_SOURCES +=					\
-	fu-provider-dell.c				\
-	fu-provider-dell.h
-endif
+TESTS = fu-self-test
 
 install-data-hook:
 	if test -w $(DESTDIR)$(prefix)/; then \
@@ -239,13 +201,14 @@ install-data-hook:
 		mkdir -p $(DESTDIR)$(localstatedir)/cache/app-info/icons; \
 	fi
 
-TESTS = fu-self-test
-
 BUILT_SOURCES =						\
 	fu-resources.c					\
 	fu-resources.h
 
 CLEANFILES = $(BUILT_SOURCES) *.log *.trs
+
+MAINTAINERCLEANFILES =					\
+	findings
 
 EXTRA_DIST =						\
 	fwupd.gresource.xml

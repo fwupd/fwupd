@@ -669,7 +669,7 @@ fwupd_client_install (FwupdClient *client,
 
 	/* call into daemon */
 	helper = fwupd_client_helper_new ();
-	body = g_variant_new ("(sha{sv})", device_id, fd > -1 ? 0 : -1, &builder);
+	body = g_variant_new ("(sha{sv})", device_id, fd, &builder);
 	g_dbus_message_set_body (request, body);
 	g_dbus_connection_send_message_with_reply (priv->conn,
 						   request,
@@ -748,7 +748,7 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 
 	/* call into daemon */
 	helper = fwupd_client_helper_new ();
-	body = g_variant_new ("(h)", fd > -1 ? 0 : -1);
+	body = g_variant_new ("(h)", fd);
 	g_dbus_message_set_body (request, body);
 
 	g_dbus_connection_send_message_with_reply (priv->conn,
@@ -830,7 +830,7 @@ fwupd_client_get_details_local (FwupdClient *client, const gchar *filename,
 
 	/* call into daemon */
 	helper = fwupd_client_helper_new ();
-	body = g_variant_new ("(h)", fd > -1 ? 0 : -1);
+	body = g_variant_new ("(h)", fd);
 	g_dbus_message_set_body (request, body);
 
 	g_dbus_connection_send_message_with_reply (priv->conn,
@@ -941,6 +941,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 	}
 	fd_sig = open (signature_fn, O_RDONLY);
 	if (fd_sig < 0) {
+		close (fd);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,

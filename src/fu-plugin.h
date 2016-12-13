@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,64 +23,68 @@
 #define __FU_PLUGIN_H
 
 #include <glib-object.h>
-#include <gmodule.h>
+#include <gio/gio.h>
+#include <glib-object.h>
+#include <gusb.h>
 
 #include "fu-device.h"
 
 G_BEGIN_DECLS
 
-typedef struct	FuPluginPrivate	FuPluginPrivate;
-typedef struct	FuPlugin	FuPlugin;
+#define FU_TYPE_PLUGIN (fu_plugin_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuPlugin, fu_plugin, FU, PLUGIN, GObject)
 
-struct FuPlugin {
-	GModule			*module;
-	gboolean		 enabled;
-	gchar			*name;
-	FuPluginPrivate		*priv;
+struct _FuPluginClass
+{
+	GObjectClass		 parent_class;
+	/* signals */
+	void		 (* device_added)		(FuPlugin	*plugin,
+							 FuDevice	*device);
+	void		 (* device_removed)		(FuPlugin	*plugin,
+							 FuDevice	*device);
+	void		 (* status_changed)		(FuPlugin	*plugin,
+							 FwupdStatus	 status);
+	void		 (* percentage_changed)		(FuPlugin	*plugin,
+							 guint		 percentage);
 };
 
-#define	FU_PLUGIN_GET_PRIVATE(x)			g_new0 (x,1)
-#define	FU_PLUGIN(x)					((FuPlugin *) x);
+typedef enum {
+	FU_PLUGIN_VERIFY_FLAG_NONE		= 0,
+	FU_PLUGIN_VERIFY_FLAG_USE_SHA256	= 1 << 0,
+	FU_PLUGIN_VERIFY_FLAG_LAST
+} FuPluginVerifyFlags;
 
-typedef const gchar	*(*FuPluginGetNameFunc)		(void);
-typedef void		 (*FuPluginInitFunc)		(FuPlugin	*plugin);
-typedef gboolean	 (*FuPluginStartupFunc)		(FuPlugin	*plugin,
-							 GError		**error);
-typedef gboolean	 (*FuPluginDeviceProbeFunc)	(FuPlugin	*plugin,
-							 FuDevice	*device,
-							 GError		**error);
-typedef gboolean	 (*FuPluginDeviceUpdateFunc)	(FuPlugin	*plugin,
-							 FuDevice	*device,
-							 GBytes		*data,
-							 GError		**error);
+typedef struct	FuPluginData	FuPluginData;
 
-/* these are implemented by the plugin */
-const gchar	*fu_plugin_get_name			(void);
-void		 fu_plugin_init				(FuPlugin	*plugin);
-void		 fu_plugin_destroy			(FuPlugin	*plugin);
-gboolean	 fu_plugin_startup			(FuPlugin	*plugin,
-							 GError		**error);
-gboolean	 fu_plugin_device_probe			(FuPlugin	*plugin,
-							 FuDevice	*device,
-							 GError		**error);
-gboolean	 fu_plugin_device_update		(FuPlugin	*plugin,
-							 FuDevice	*device,
-							 GBytes		*data,
-							 GError		**error);
-
-/* these are called from the daemon */
-FuPlugin	*fu_plugin_new				(GModule	*module);
-void		 fu_plugin_free				(FuPlugin	*plugin);
-gboolean	 fu_plugin_run_startup			(FuPlugin	*plugin,
-							 GError		**error);
-gboolean	 fu_plugin_run_device_probe		(FuPlugin	*plugin,
-							 FuDevice	*device,
-							 GError		**error);
-gboolean	 fu_plugin_run_device_update		(FuPlugin	*plugin,
-							 FuDevice	*device,
-							 GBytes		*data,
-							 GError		**error);
+/* for plugins to use */
+const gchar	*fu_plugin_get_name			(FuPlugin	*plugin);
+void		 fu_plugin_set_name			(FuPlugin	*plugin,
+							 const gchar	*name);
+FuPluginData	*fu_plugin_get_data			(FuPlugin	*plugin);
+FuPluginData	*fu_plugin_alloc_data			(FuPlugin	*plugin,
+							 gsize		 data_sz);
+gboolean	 fu_plugin_get_enabled			(FuPlugin	*plugin);
+void		 fu_plugin_set_enabled			(FuPlugin	*plugin,
+							 gboolean	 enabled);
+GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*plugin);
+void		 fu_plugin_device_add			(FuPlugin	*plugin,
+							 FuDevice	*device);
+void		 fu_plugin_device_remove		(FuPlugin	*plugin,
+							 FuDevice	*device);
+void		 fu_plugin_set_status			(FuPlugin	*plugin,
+							 FwupdStatus	 status);
+void		 fu_plugin_set_percentage		(FuPlugin	*plugin,
+							 guint		 percentage);
+GChecksumType	 fu_plugin_get_checksum_type		(FuPluginVerifyFlags flags);
+gpointer	 fu_plugin_cache_lookup			(FuPlugin	*plugin,
+							 const gchar	*id);
+void		 fu_plugin_cache_remove			(FuPlugin	*plugin,
+							 const gchar	*id);
+void		 fu_plugin_cache_add			(FuPlugin	*plugin,
+							 const gchar	*id,
+							 gpointer	 dev);
 
 G_END_DECLS
 
 #endif /* __FU_PLUGIN_H */
+
