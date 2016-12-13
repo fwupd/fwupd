@@ -78,7 +78,6 @@ Priority: extra
 Section: oldlibs
 Architecture: linux-any
 Depends: ${misc:Depends},
-         ${shlibs:Depends}
 Multi-Arch: same
 Description: fwupd library for 0bitdo (transitional package)
  This package is a transitional package for 0bitdo support being moved into
