@@ -46,6 +46,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *device)
 	ptask = as_profile_start (profile, "FuPlugin:added{%04x:%04x}",
 				  g_usb_device_get_vid (device),
 				  g_usb_device_get_pid (device));
+	g_assert (ptask != NULL);
 
 	/* is already in database */
 	platform_id = g_usb_device_get_platform_id (device);
@@ -70,6 +71,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *device)
 	if (idx != 0x00) {
 		g_autoptr(AsProfileTask) ptask2 = NULL;
 		ptask2 = as_profile_start_literal (profile, "FuPlugin:get-string-desc");
+		g_assert (ptask2 != NULL);
 		product = g_usb_device_get_string_descriptor (device, idx, NULL);
 	}
 	if (product == NULL) {

@@ -131,6 +131,7 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 				  platform_id,
 				  dfu_device_get_runtime_vid (device),
 				  dfu_device_get_runtime_pid (device));
+	g_assert (ptask != NULL);
 
 	/* ignore defective runtimes */
 	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME &&

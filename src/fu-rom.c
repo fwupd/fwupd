@@ -741,6 +741,7 @@ fu_rom_load_file (FuRom *rom, GFile *file, FuRomLoadFlags flags,
 
 	/* open file */
 	ptask = as_profile_start_literal (profile, "FuRom:reading-data");
+	g_assert (ptask != NULL);
 	priv->stream = G_INPUT_STREAM (g_file_read (file, cancellable, &error_local));
 	if (priv->stream == NULL) {
 		g_set_error_literal (error,

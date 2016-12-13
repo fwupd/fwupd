@@ -2033,6 +2033,7 @@ fu_main_plugins_setup (FuMainPrivate *priv)
 	g_autoptr(AsProfileTask) ptask = NULL;
 
 	ptask = as_profile_start_literal (priv->profile, "FuMain:setup");
+	g_assert (ptask != NULL);
 	for (guint i = 0; i < priv->plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		g_autoptr(AsProfileTask) ptask2 = NULL;
@@ -2040,6 +2041,7 @@ fu_main_plugins_setup (FuMainPrivate *priv)
 		ptask2 = as_profile_start (priv->profile,
 					   "FuMain:setup{%s}",
 					   fu_plugin_get_name (plugin));
+		g_assert (ptask2 != NULL);
 		if (!fu_plugin_runner_startup (plugin, &error)) {
 			fu_plugin_set_enabled (plugin, FALSE);
 			g_warning ("disabling plugin because: %s", error->message);
@@ -2053,6 +2055,7 @@ fu_main_plugins_coldplug (FuMainPrivate *priv)
 	g_autoptr(AsProfileTask) ptask = NULL;
 
 	ptask = as_profile_start_literal (priv->profile, "FuMain:coldplug");
+	g_assert (ptask != NULL);
 	for (guint i = 0; i < priv->plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		g_autoptr(AsProfileTask) ptask2 = NULL;
@@ -2060,6 +2063,7 @@ fu_main_plugins_coldplug (FuMainPrivate *priv)
 		ptask2 = as_profile_start (priv->profile,
 					   "FuMain:coldplug{%s}",
 					   fu_plugin_get_name (plugin));
+		g_assert (ptask2 != NULL);
 		if (!fu_plugin_runner_coldplug (plugin, &error)) {
 			fu_plugin_set_enabled (plugin, FALSE);
 			g_warning ("disabling plugin because: %s", error->message);

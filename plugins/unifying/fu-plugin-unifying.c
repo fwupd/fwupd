@@ -47,6 +47,7 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 	ptask = as_profile_start (profile, "FuPlugin:added{%04x:%04x}",
 				  g_usb_device_get_vid (usb_device),
 				  g_usb_device_get_pid (usb_device));
+	g_assert (ptask != NULL);
 
 	/* get version */
 	platform_id = g_usb_device_get_platform_id (usb_device);
