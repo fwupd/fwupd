@@ -284,7 +284,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "UEFI firmware updating not supported, no %s",
+			     "Raspberry PI firmware updating not supported, no %s",
 			     fwfn);
 		return FALSE;
 	}
