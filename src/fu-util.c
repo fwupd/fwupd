@@ -314,7 +314,7 @@ fu_util_install_with_fallback (FuUtilPrivate *priv, const gchar *id,
 		return FALSE;
 	}
 
-	/* TRANSLATOR: the provider only supports offline */
+	/* TRANSLATOR: the plugin only supports offline */
 	g_print ("%s...\n", _("Retrying as an offline update"));
 	priv->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
 	return fwupd_client_install (priv->client, id, filename, priv->flags,
@@ -1151,7 +1151,7 @@ main (int argc, char *argv[])
 			_("Allow downgrading firmware versions"), NULL },
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
 			/* TRANSLATORS: command line option */
-			_("Override provider warning"), NULL },
+			_("Override plugin warning"), NULL },
 		{ NULL}
 	};
 

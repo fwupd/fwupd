@@ -312,7 +312,7 @@ msgstr ""
 msgid "No hardware detected with firmware update capability"
 msgstr "Нема хардвера којем се може ажурирати фирмвер"
 
-#. TRANSLATOR: the provider only supports offline
+#. TRANSLATOR: the plugin only supports offline
 msgid "Retrying as an offline update"
 msgstr "Поново покушавам преко ванмрежног ажурирања"
 
@@ -396,7 +396,7 @@ msgid "Allow downgrading firmware versions"
 msgstr "Дозволи уназађивање издања фирмвера"
 
 #. TRANSLATORS: command line option
-msgid "Override provider warning"
+msgid "Override plugin warning"
 msgstr ""
 
 #. TRANSLATORS: command description

@@ -311,7 +311,7 @@ msgstr ""
 msgid "No hardware detected with firmware update capability"
 msgstr "Nebylo nalezeno žádné zařízení schopné aktualizace firmwaru"
 
-#. TRANSLATOR: the provider only supports offline
+#. TRANSLATOR: the plugin only supports offline
 msgid "Retrying as an offline update"
 msgstr "Zkouší se znova jako aktualizace off-line"
 
@@ -395,7 +395,7 @@ msgid "Allow downgrading firmware versions"
 msgstr "Povolit ponížení verze firmwaru"
 
 #. TRANSLATORS: command line option
-msgid "Override provider warning"
+msgid "Override plugin warning"
 msgstr ""
 
 #. TRANSLATORS: command description
