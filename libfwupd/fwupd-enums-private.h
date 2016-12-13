@@ -31,7 +31,7 @@
 #define FWUPD_RESULT_KEY_DEVICE_MODIFIED	"Modified"	/* t */
 #define FWUPD_RESULT_KEY_DEVICE_NAME		"DisplayName"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_ID		"DeviceID"	/* s */
-#define FWUPD_RESULT_KEY_DEVICE_PROVIDER	"Provider"	/* s */
+#define FWUPD_RESULT_KEY_DEVICE_PLUGIN		"Plugin"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_VERSION		"Version"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST	"VersionLowest"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT	"FlashesLeft"	/* u */

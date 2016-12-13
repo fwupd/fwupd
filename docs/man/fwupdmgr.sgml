@@ -98,7 +98,7 @@
           <option>--force</option>
         </term>
         <listitem>
-          <para>Override provider warning.</para>
+          <para>Override plugin warning.</para>
         </listitem>
       </varlistentry>
     </variablelist>

@@ -313,7 +313,7 @@ msgstr ""
 msgid "No hardware detected with firmware update capability"
 msgstr "没有检测到支持更新固件的硬件"
 
-#. TRANSLATOR: the provider only supports offline
+#. TRANSLATOR: the plugin only supports offline
 msgid "Retrying as an offline update"
 msgstr "作为脱机更新重试"
 
@@ -397,7 +397,7 @@ msgid "Allow downgrading firmware versions"
 msgstr "允许降级固件版本"
 
 #. TRANSLATORS: command line option
-msgid "Override provider warning"
+msgid "Override plugin warning"
 msgstr "替代提供商警告"
 
 #. TRANSLATORS: command description

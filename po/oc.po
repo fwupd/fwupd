@@ -312,7 +312,7 @@ msgstr ""
 msgid "No hardware detected with firmware update capability"
 msgstr "Cap de material amb de capacitats de mesa a jorn del micrologicial es pas estat detectat"
 
-#. TRANSLATOR: the provider only supports offline
+#. TRANSLATOR: the plugin only supports offline
 msgid "Retrying as an offline update"
 msgstr ""
 
@@ -396,7 +396,7 @@ msgid "Allow downgrading firmware versions"
 msgstr ""
 
 #. TRANSLATORS: command line option
-msgid "Override provider warning"
+msgid "Override plugin warning"
 msgstr ""
 
 #. TRANSLATORS: command description

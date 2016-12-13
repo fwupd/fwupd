@@ -354,7 +354,7 @@ echo "
         cflags:                    ${CFLAGS}
         cppflags:                  ${CPPFLAGS}
 
-	optional providers
+	optional plugins
 	------------------
 	Colorhug:                  $has_colorhug
 	libelf:                    $has_libelf
