@@ -336,7 +336,7 @@ dfu_context_new (void)
 
 /**
  * dfu_context_new_with_context:
- * @context: a #DfuContext
+ * @usb_ctx: a #DfuContext
  *
  * Creates a new DFU context object.
  *
