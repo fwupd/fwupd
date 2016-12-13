@@ -7,6 +7,7 @@ fwupd (0.7.5-1) UNRELEASED; urgency=medium
   * Drop valgind build dependency from m68k
   * Backport patch to fix fwupd process leaking into dbus cgroup
     (Closes: #845406)
+  * Backport patch to fix hotplugging as a result of the dbus cgroup patch
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 28 Nov 2016 14:10:57 -0600
 

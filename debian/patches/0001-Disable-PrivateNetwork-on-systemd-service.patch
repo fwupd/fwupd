@@ -1,0 +1,26 @@
+From 803e4808afd9dfdb8db0571d6dd527bc02441cea Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Tue, 13 Dec 2016 15:28:02 -0600
+Subject: [PATCH] Disable PrivateNetwork on systemd service
+
+commit e34654e1 caused a regression that hotplugging devices no
+longer worked.
+
+Disabling systemd PrivateNetwork confinement resolves this.
+---
+ data/fwupd.service.in | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/data/fwupd.service.in b/data/fwupd.service.in
+index 5e706c8..f3306df 100644
+--- a/data/fwupd.service.in
++++ b/data/fwupd.service.in
+@@ -9,5 +9,4 @@ ConditionPathExists=/var/lib/fwupd/pending.db
+ Type=dbus
+ BusName=org.freedesktop.fwupd
+ ExecStart=@servicedir@/fwupd/fwupd
+-PrivateNetwork=yes
+ PrivateTmp=yes
+-- 
+2.7.4
+
