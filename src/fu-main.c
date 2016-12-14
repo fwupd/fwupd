@@ -360,6 +360,7 @@ typedef enum {
 	FU_MAIN_AUTH_KIND_UNKNOWN,
 	FU_MAIN_AUTH_KIND_INSTALL,
 	FU_MAIN_AUTH_KIND_UNLOCK,
+	FU_MAIN_AUTH_KIND_VERIFY_UPDATE,
 	FU_MAIN_AUTH_KIND_LAST
 } FuMainAuthKind;
 
@@ -425,6 +426,113 @@ fu_main_plugin_unlock_authenticated (FuMainAuthHelper *helper, GError **error)
 	fu_main_emit_changed (helper->priv);
 
 	return TRUE;
+}
+
+static AsApp *
+fu_main_verify_update_device_to_app (FuDevice *device)
+{
+	AsApp *app = NULL;
+	g_autofree gchar *id = NULL;
+	g_autoptr(AsChecksum) csum = NULL;
+	g_autoptr(AsProvide) prov = NULL;
+	g_autoptr(AsRelease) rel = NULL;
+
+	/* make a plausible ID */
+	id = g_strdup_printf ("%s.firmware", fu_device_get_guid_default (device));
+
+	/* add app to store */
+	app = as_app_new ();
+	as_app_set_id (app, id);
+	as_app_set_kind (app, AS_APP_KIND_FIRMWARE);
+	as_app_set_source_kind (app, AS_APP_SOURCE_KIND_INF);
+	rel = as_release_new ();
+	as_release_set_version (rel, fu_device_get_version (device));
+	csum = as_checksum_new ();
+	as_checksum_set_kind (csum, G_CHECKSUM_SHA1);
+	as_checksum_set_value (csum, fu_device_get_checksum (device));
+	as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
+	as_release_add_checksum (rel, csum);
+	as_app_add_release (app, rel);
+	prov = as_provide_new ();
+	as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
+	as_provide_set_value (prov, fu_device_get_guid_default (device));
+	as_app_add_provide (app, prov);
+	return app;
+}
+
+static gboolean
+fu_main_plugin_verify_update_authenticated (FuMainAuthHelper *helper, GError **error)
+{
+	const gchar *fn = "/var/cache/app-info/xmls/fwupd-verify.xml";
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GFile) xml_file = NULL;
+
+	/* load existing store */
+	store = as_store_new ();
+	as_store_set_api_version (store, 0.9);
+	xml_file = g_file_new_for_path (fn);
+	if (g_file_query_exists (xml_file, NULL)) {
+		if (!as_store_from_file (store, xml_file, NULL, NULL, error))
+			return FALSE;
+	}
+
+	/* check the devices still exists */
+	for (guint i = 0; i < helper->devices->len; i ++) {
+		FuDevice *device = g_ptr_array_index (helper->devices, i);
+		FuDeviceItem *item;
+		g_autoptr(AsApp) app = NULL;
+
+		item = fu_main_get_item_by_id (helper->priv,
+					       fu_device_get_id (device));
+		if (item == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "device %s was removed",
+				     fu_device_get_id (device));
+			return FALSE;
+		}
+
+		/* unlock device if required */
+		if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_LOCKED)) {
+			if (!fu_plugin_runner_unlock (item->plugin,
+						      item->device,
+						      error))
+				return FALSE;
+			fu_main_emit_device_changed (helper->priv, item->device);
+		}
+
+		/* get the checksum */
+		if (fu_device_get_checksum (item->device) == NULL) {
+			if (!fu_plugin_runner_verify (item->plugin,
+						      item->device,
+						      FU_PLUGIN_VERIFY_FLAG_NONE,
+						      error))
+				return FALSE;
+			fu_main_emit_device_changed (helper->priv, item->device);
+		}
+
+		/* we got nothing */
+		if (fu_device_get_checksum (item->device) == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "device verification not supported");
+			return FALSE;
+		}
+
+		/* add to store */
+		app = fu_main_verify_update_device_to_app (item->device);
+		as_store_add_app (store, app);
+	}
+
+	/* write */
+	g_debug ("writing %s", fn);
+	return as_store_to_file (store, xml_file,
+				 AS_NODE_TO_XML_FLAG_ADD_HEADER |
+				 AS_NODE_TO_XML_FLAG_FORMAT_INDENT |
+				 AS_NODE_TO_XML_FLAG_FORMAT_MULTILINE,
+				 NULL, error);
 }
 
 static gboolean
@@ -551,6 +659,14 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 		}
 	} else if (helper->auth_kind == FU_MAIN_AUTH_KIND_UNLOCK) {
 		if (!fu_main_plugin_unlock_authenticated (helper, &error)) {
+			fu_main_invocation_return_error (helper->priv,
+							 helper->invocation,
+							 error);
+			fu_main_helper_free (helper);
+			return;
+		}
+	} else if (helper->auth_kind == FU_MAIN_AUTH_KIND_VERIFY_UPDATE) {
+		if (!fu_main_plugin_verify_update_authenticated (helper, &error)) {
 			fu_main_invocation_return_error (helper->priv,
 							 helper->invocation,
 							 error);
@@ -1711,6 +1827,46 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		subject = polkit_system_bus_name_new (sender);
 		polkit_authority_check_authorization (helper->priv->authority, subject,
 						      "org.freedesktop.fwupd.device-unlock",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_check_authorization_cb,
+						      helper);
+		return;
+	}
+
+	/* return 'b' */
+	if (g_strcmp0 (method_name, "VerifyUpdate") == 0) {
+		FuDeviceItem *item = NULL;
+		FuMainAuthHelper *helper;
+		const gchar *id = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		/* check the id exists */
+		g_variant_get (parameters, "(&s)", &id);
+		g_debug ("Called %s(%s)", method_name, id);
+		item = fu_main_get_item_by_id (priv, id);
+		if (item == NULL) {
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No such device %s", id);
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+
+		/* process the firmware */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->auth_kind = FU_MAIN_AUTH_KIND_VERIFY_UPDATE;
+		helper->invocation = g_object_ref (invocation);
+		helper->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+		helper->priv = priv;
+		g_ptr_array_add (helper->devices, g_object_ref (item->device));
+
+		/* authenticate */
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (helper->priv->authority, subject,
+						      "org.freedesktop.fwupd.verify-update",
 						      NULL,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,

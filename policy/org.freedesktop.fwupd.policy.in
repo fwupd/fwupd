@@ -90,4 +90,16 @@
     </defaults>
   </action>
 
+  <action id="org.freedesktop.fwupd.verify-update">
+    <_description>Update the stored device verification information</_description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <_message>Authentication is required to update the stored checksums for the device</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.device-unlock</annotate>
+  </action>
+
 </policyconfig>
