@@ -472,7 +472,7 @@ static guint8
 read_uint8 (const gchar *str)
 {
 	guint64 tmp;
-	guint8 buf[3] = { 0x0, 0x0, 0x0 };
+	gchar buf[3] = { 0x0, 0x0, 0x0 };
 	memcpy (buf, str, 2);
 	tmp = g_ascii_strtoull (buf, NULL, 16);
 	return tmp;
