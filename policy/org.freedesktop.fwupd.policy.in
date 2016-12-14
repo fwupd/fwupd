@@ -11,13 +11,12 @@
 
   <vendor>System firmware update</vendor>
   <vendor_url>https://github.com/hughsie/fwupd</vendor_url>
-  <icon_name>application-vnd.iccprofile</icon_name>
+  <icon_name>application-x-firmware</icon_name>
 
   <action id="org.freedesktop.fwupd.update-internal-trusted">
     <_description>Install signed system firmware</_description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
     <_message>Authentication is required to update the firmware on this machine</_message>
-    <icon_name>application-vnd.iccprofile</icon_name>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -29,7 +28,6 @@
     <_description>Install unsigned system firmware</_description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
     <_message>Authentication is required to update the firmware on this machine</_message>
-    <icon_name>application-vnd.iccprofile</icon_name>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -41,7 +39,6 @@
     <_description>Install old version of system firmware</_description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
     <_message>Authentication is required to downgrade the firmware on this machine</_message>
-    <icon_name>application-vnd.iccprofile</icon_name>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -53,7 +50,6 @@
     <_description>Install signed device firmware</_description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
     <_message>Authentication is required to update the firmware on a removable device</_message>
-    <icon_name>application-vnd.iccprofile</icon_name>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -65,7 +61,6 @@
     <_description>Install unsigned device firmware</_description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
     <_message>Authentication is required to update the firmware on a removable device</_message>
-    <icon_name>application-vnd.iccprofile</icon_name>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -77,7 +72,6 @@
     <_description>Install unsigned device firmware</_description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
     <_message>Authentication is required to downgrade the firmware on a removable device</_message>
-    <icon_name>application-vnd.iccprofile</icon_name>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -89,7 +83,6 @@
     <_description>Unlock the device to allow access</_description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
     <_message>Authentication is required to unlock a device</_message>
-    <icon_name>application-vnd.iccprofile</icon_name>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
