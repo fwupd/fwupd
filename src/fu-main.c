@@ -1763,6 +1763,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* find version in metadata */
 		version = fu_device_get_version (item->device);
 		release = as_app_get_release (app, version);
+		if (release == NULL)
+			release = as_app_get_release_default (app);
 		if (release == NULL) {
 			g_set_error (&error,
 				     FWUPD_ERROR,
