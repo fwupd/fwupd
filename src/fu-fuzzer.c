@@ -104,7 +104,7 @@ fu_fuzzer_rom_create (GError **error)
 	buffer[0x19] = 0x00;			/* cpi_ptr hi */
 	memcpy (&blob_header[0x6], "hdr-no-data       ", 18);
 	g_hash_table_insert (hash, "header-no-data.rom",
-			     g_string_new_len (blob_header, 512));
+			     g_string_new_len ((gchar *) blob_header, 512));
 
 	/* data for header */
 	buffer = &blob_header[0x20];
@@ -134,7 +134,7 @@ fu_fuzzer_rom_create (GError **error)
 	memcpy (&buffer[0x1c], "Version 1.0", 12);
 	memcpy (&blob_header[0x6], "hdr-data-payload  ", 18);
 	g_hash_table_insert (hash, "header-data-payload.rom",
-			     g_string_new_len (blob_header, 512));
+			     g_string_new_len ((gchar *) blob_header, 512));
 
 	/* optional IFR header on some NVIDIA blobs */
 	blob_ifr = g_malloc0 (0x80);
@@ -144,9 +144,9 @@ fu_fuzzer_rom_create (GError **error)
 	memcpy (&buffer[0x15], &sz, 2);
 	g_hash_table_insert (hash, "naked-ifr.rom",
 			     g_string_new_len (blob_ifr, 0x80));
-	str = g_string_new_len (blob_ifr, 0x80);
+	str = g_string_new_len ((gchar *) blob_ifr, 0x80);
 	memcpy (&blob_header[0x6], "ifr-hdr-data-payld", 18);
-	g_string_append_len (str, blob_header, 0x200);
+	g_string_append_len (str, (gchar *) blob_header, 0x200);
 	g_hash_table_insert (hash, "ifr-header-data-payload.rom", str);
 
 	/* dump to files */
