@@ -38,7 +38,6 @@
 
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
-#include "fu-rom.h"
 
 #ifndef GUdevClient_autoptr
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
@@ -512,38 +511,6 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	return fwupd_client_clear_results (priv->client, values[0], NULL, error);
-}
-
-static gboolean
-fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	if (g_strv_length (values) == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'filename.rom'");
-		return FALSE;
-	}
-	for (guint i = 0; values[i] != NULL; i++) {
-		g_autoptr(FuRom) rom = NULL;
-		g_autoptr(GFile) file = NULL;
-		g_autoptr(GError) error_local = NULL;
-
-		file = g_file_new_for_path (values[i]);
-		rom = fu_rom_new ();
-		g_print ("%s:\n", values[i]);
-		if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID,
-				       NULL, &error_local)) {
-			g_print ("%s\n", error_local->message);
-			continue;
-		}
-		g_print ("0x%04x:0x%04x -> %s [%s]\n",
-			 fu_rom_get_vendor (rom),
-			 fu_rom_get_model (rom),
-			 fu_rom_get_checksum (rom),
-			 fu_rom_get_version (rom));
-	}
-	return TRUE;
 }
 
 static gboolean
@@ -1156,12 +1123,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Refresh metadata from remote server"),
 		     fu_util_refresh);
-	fu_util_add (priv->cmd_array,
-		     "dump-rom",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Dump the ROM checksum"),
-		     fu_util_dump_rom);
 	fu_util_add (priv->cmd_array,
 		     "verify-update",
 		     NULL,
