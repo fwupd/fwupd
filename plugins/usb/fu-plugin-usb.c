@@ -43,7 +43,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *device)
 	/* ignore hubs */
 	if (g_usb_device_get_device_class (device) == G_USB_DEVICE_CLASS_HUB)
 		return;
-	ptask = as_profile_start (profile, "FuPlugin:added{%04x:%04x}",
+	ptask = as_profile_start (profile, "FuPluginUsb:added{%04x:%04x}",
 				  g_usb_device_get_vid (device),
 				  g_usb_device_get_pid (device));
 	g_assert (ptask != NULL);
@@ -70,7 +70,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *device)
 	idx = g_usb_device_get_product_index (device);
 	if (idx != 0x00) {
 		g_autoptr(AsProfileTask) ptask2 = NULL;
-		ptask2 = as_profile_start_literal (profile, "FuPlugin:get-string-desc");
+		ptask2 = as_profile_start_literal (profile, "FuPluginUsb:get-string-desc");
 		g_assert (ptask2 != NULL);
 		product = g_usb_device_get_string_descriptor (device, idx, NULL);
 	}

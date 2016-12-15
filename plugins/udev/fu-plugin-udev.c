@@ -129,7 +129,7 @@ fu_plugin_client_add (FuPlugin *plugin, GUdevDevice *device)
 		return;
 
 	/* get data */
-	ptask = as_profile_start (profile, "FuPlugin:client-add{%s}", guid);
+	ptask = as_profile_start (profile, "FuPluginUdev:client-add{%s}", guid);
 	g_assert (ptask != NULL);
 	g_debug ("adding udev device: %s", g_udev_device_get_sysfs_path (device));
 
@@ -246,7 +246,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	/* get all devices of class */
 	for (guint i = 0; devclass[i] != NULL; i++) {
 		g_autoptr(AsProfileTask) ptask = NULL;
-		ptask = as_profile_start (profile, "FuPlugin:coldplug{%s}", devclass[i]);
+		ptask = as_profile_start (profile, "FuPluginUdev:coldplug{%s}", devclass[i]);
 		g_assert (ptask != NULL);
 		devices = g_udev_client_query_by_subsystem (data->gudev_client,
 							    devclass[i]);

@@ -127,7 +127,7 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 	g_autoptr(GError) error = NULL;
 
 	platform_id = dfu_device_get_platform_id (device);
-	ptask = as_profile_start (profile, "FuPlugin:added{%s} [%04x:%04x]",
+	ptask = as_profile_start (profile, "FuPluginDfu:added{%s} [%04x:%04x]",
 				  platform_id,
 				  dfu_device_get_runtime_vid (device),
 				  dfu_device_get_runtime_pid (device));

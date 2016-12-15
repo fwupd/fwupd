@@ -44,7 +44,7 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 	g_autoptr(UnifyingDongle) dongle = NULL;
 
 	/* profile */
-	ptask = as_profile_start (profile, "FuPlugin:added{%04x:%04x}",
+	ptask = as_profile_start (profile, "FuPluginUnifying:added{%04x:%04x}",
 				  g_usb_device_get_vid (usb_device),
 				  g_usb_device_get_pid (usb_device));
 	g_assert (ptask != NULL);
