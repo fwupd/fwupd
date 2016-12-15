@@ -180,8 +180,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(fu_dell_smi_obj, _dell_smi_obj_free);
 
 static gboolean
 fu_plugin_dell_match_dock_component(const gchar *query_str,
-				 efi_guid_t *guid_out,
-				 const gchar **name_out)
+				    efi_guid_t *guid_out,
+				    const gchar **name_out)
 {
 	const DOCK_DESCRIPTION list[] = {
 		{WD15_EC_GUID, WD15_EC_STR, EC_DESC},
@@ -207,8 +207,8 @@ fu_plugin_dell_match_dock_component(const gchar *query_str,
 
 void
 fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
-				   guint32 *output, guint16 vid, guint16 pid,
-				   guint8 *buf)
+				 guint32 *output, guint16 vid, guint16 pid,
+				 guint8 *buf)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
@@ -240,8 +240,8 @@ fu_plugin_dell_execute_smi (FuPlugin *plugin, fu_dell_smi_obj *smi)
 
 static gboolean
 fu_plugin_dell_execute_simple_smi (FuPlugin *plugin,
-				     guint16 class, guint16 select,
-				     guint32  *args, guint32 *out)
+				   guint16 class, guint16 select,
+				   guint32  *args, guint32 *out)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
@@ -259,7 +259,7 @@ fu_plugin_dell_execute_simple_smi (FuPlugin *plugin,
 
 static guint32
 fu_plugin_dell_get_res (FuPlugin *plugin,
-			  fu_dell_smi_obj *smi, guint8 arg)
+			fu_dell_smi_obj *smi, guint8 arg)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
@@ -329,7 +329,7 @@ fu_plugin_dell_get_version_format (void)
 
 static gchar *
 fu_plugin_get_dock_key (FuPlugin *plugin,
-			       GUsbDevice *device, const gchar *guid)
+			GUsbDevice *device, const gchar *guid)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar* platform_id;
@@ -343,9 +343,9 @@ fu_plugin_get_dock_key (FuPlugin *plugin,
 
 static gboolean
 fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
-			   guint8 type, const efi_guid_t *guid_raw,
-			   const gchar *component_desc, const gchar *version,
-			   gboolean updates_online)
+		     guint8 type, const efi_guid_t *guid_raw,
+		     const gchar *component_desc, const gchar *version,
+		     gboolean updates_online)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuPluginDockItem *item;
@@ -409,8 +409,8 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 
 void
 fu_plugin_dell_device_added_cb (GUsbContext *ctx,
-				  GUsbDevice *device,
-				  FuPlugin *plugin)
+				GUsbDevice *device,
+				FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	AsVersionParseFlag parse_flags;
@@ -610,8 +610,8 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 
 void
 fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
-				    GUsbDevice *device,
-				    FuPlugin *plugin)
+				  GUsbDevice *device,
+				  FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuPluginDockItem *item;
@@ -959,10 +959,10 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 
 gboolean
 fu_plugin_update_offline (FuPlugin *plugin,
-				 FuDevice *device,
-				 GBytes *blob_fw,
-				 FwupdInstallFlags flags,
-				 GError **error)
+			  FuDevice *device,
+			  GBytes *blob_fw,
+			  FwupdInstallFlags flags,
+			  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(fwup_resource_iter) iter = NULL;
@@ -1052,8 +1052,8 @@ fu_plugin_update_offline (FuPlugin *plugin,
 
 static gboolean
 fu_plugin_dell_toggle_dock_mode (FuPlugin *plugin,
-				   guint32 new_mode, guint32 dock_location,
-				   GError **error)
+				 guint32 new_mode, guint32 dock_location,
+				 GError **error)
 {
 	g_autofree guint32 *input = NULL;
 	g_autofree guint32 *output = NULL;
@@ -1084,10 +1084,10 @@ fu_plugin_dell_toggle_dock_mode (FuPlugin *plugin,
 
 gboolean
 fu_plugin_update_online (FuPlugin *plugin,
-				FuDevice *device,
-				GBytes *blob_fw,
-				FwupdInstallFlags flags,
-				GError **error)
+			 FuDevice *device,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	guint32 dock_location;
 	const gchar *device_guid_str = NULL;
