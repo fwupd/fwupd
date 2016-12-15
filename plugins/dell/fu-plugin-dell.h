@@ -31,6 +31,10 @@ void
 fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 				   guint32 *output, guint16 vid, guint16 pid,
 				   guint8 *buf);
+
+gboolean
+fu_plugin_dell_force_device_mode (const efi_guid_t, int);
+
 gboolean
 fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error);
 
@@ -45,6 +49,13 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 				    FuPlugin *plugin);
 
 G_END_DECLS
+
+/* This is used for host flash GUIDs */
+typedef union _ADDR_UNION{
+	uint8_t *buf;
+	efi_guid_t *guid;
+} ADDR_UNION;
+#pragma pack()
 
 /* These are nodes that will indicate information about
  * the TPM status

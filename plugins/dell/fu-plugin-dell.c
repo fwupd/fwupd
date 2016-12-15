@@ -78,6 +78,10 @@ typedef struct dell_smi_obj fu_dell_smi_obj;
 #define DACI_FLASH_INTERFACE_CLASS	7
 #define DACI_FLASH_INTERFACE_SELECT	3
 #define DACI_FLASH_ARG_TPM		2
+#define DACI_FLASH_ARG_FLASH_MODE	3
+#define DACI_FLASH_ARG_MODE_USER	0
+#define DACI_FLASH_ARG_MODE_FLASH	1
+
 
 /* DACI class/select for dock capabilities */
 #define DACI_DOCK_CLASS			17
@@ -119,6 +123,10 @@ typedef struct _DOCK_DESCRIPTION
 #define LEGACY_CBL_STR		"2 2 2 1 0"
 #define UNIV_CBL_STR		"2 2 2 2 0"
 #define TBT_CBL_STR		"2 2 2 3 0"
+
+/* supported host related GUIDs */
+#define TBT_GPIO_GUID		EFI_GUID (0x2EFD333F, 0x65EC, 0x41D3, 0x86D3, 0x08, 0xF0, 0x9F, 0x4F, 0xB1, 0x14)
+#define MST_GPIO_GUID		EFI_GUID (0xF24F9bE4, 0x2a13, 0x4344, 0xBC05, 0x01, 0xCE, 0xF7, 0xDA, 0xEF, 0x92)
 
 /* supported dock related GUIDs */
 #define DOCK_FLASH_GUID		EFI_GUID (0xE7CA1F36, 0xBF73, 0x4574, 0xAFE6, 0xA4, 0xCC, 0xAC, 0xAB, 0xF4, 0x79)
@@ -713,6 +721,40 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 			fu_device_set_update_error (device, tmp);
 	}
 
+	return TRUE;
+}
+
+gboolean
+fu_plugin_dell_force_device_mode (const efi_guid_t guid, int mode)
+{
+	gint ret;
+	g_autoptr(fu_dell_smi_obj) smi = NULL;
+	ADDR_UNION buf;
+
+	smi = dell_smi_factory (DELL_SMI_DEFAULTS);
+	dell_smi_obj_set_class (smi, DACI_FLASH_INTERFACE_CLASS);
+	dell_smi_obj_set_select (smi, DACI_FLASH_INTERFACE_SELECT);
+	dell_smi_obj_set_arg (smi, cbARG1, DACI_FLASH_ARG_MODE_FLASH);
+	dell_smi_obj_set_arg (smi, cbARG4, mode);
+	/* needs to be padded with an empty GUID */
+	buf.buf = dell_smi_obj_make_buffer_frombios_withoutheader(smi, cbARG2,
+								  sizeof(efi_guid_t) * 2);
+	if (!buf.buf) {
+		g_debug ("Dell: Failed to initialize SMI buffer");
+		return FALSE;
+	}
+	*buf.guid = guid;
+	ret = dell_smi_obj_execute(smi);
+	if (ret != SMI_SUCCESS){
+		g_debug ("Dell: failed to execute SMI: %d", ret);
+		return FALSE;
+	}
+
+	ret = dell_smi_obj_get_res(smi, cbRES1);
+	if (ret != SMI_SUCCESS) {
+		g_debug ("Dell: SMI execution returned error: %d", ret);
+		return FALSE;
+	}
 	return TRUE;
 }
 
