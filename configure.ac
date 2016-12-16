@@ -183,6 +183,26 @@ else
 fi
 AM_CONDITIONAL(HAVE_COLORHUG, test x$has_colorhug = xyes)
 
+# Thunderbolt support
+AC_ARG_ENABLE(thunderbolt,
+	      AS_HELP_STRING([--enable-thunderbolt],
+			     [Enable Thunderbolt support [default=auto]]),,
+	      enable_thunderbolt=maybe)
+if test x$enable_thunderbolt != xno; then
+	PKG_CHECK_MODULES(THUNDERBOLT, [libtbtfwu >= 0.9],
+			  has_thunderbolt=yes,
+			  has_thunderbolt=no)
+fi
+if test x$has_thunderbolt = xyes; then
+	AC_DEFINE(HAVE_THUNDERBOLT,1,[Use Thunderbolt support])
+else
+	has_thunderbolt=no
+	if test "x$enable_thunderbolt" = "xyes"; then
+		AC_MSG_ERROR([thunderbolt support requested but 'libtbtfwu-dev' was not found])
+	fi
+fi
+AM_CONDITIONAL(HAVE_THUNDERBOLT, test x$has_thunderbolt = xyes)
+
 # libelf support
 AC_ARG_ENABLE(libelf,
 	      AS_HELP_STRING([--enable-libelf],
@@ -335,6 +355,7 @@ plugins/raspberrypi/Makefile
 plugins/raspberrypi/rpiupdate/Makefile
 plugins/steelseries/Makefile
 plugins/test/Makefile
+plugins/thunderbolt/Makefile
 plugins/udev/Makefile
 plugins/uefi/Makefile
 plugins/unifying/Makefile
@@ -360,4 +381,5 @@ echo "
 	libelf:                    $has_libelf
 	UEFI:                      $has_fwup
 	Dell:                      $has_dell
+	Thunderbolt:               $has_thunderbolt
 "

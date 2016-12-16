@@ -85,6 +85,7 @@ Files for development with libdfu.
 %build
 %configure \
         --disable-static        \
+        --disable-thunderbolt   \
         --enable-gtk-doc        \
         --enable-colorhug       \
 %ifarch x86_64 %{ix86} aarch64
