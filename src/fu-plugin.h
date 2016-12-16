@@ -69,6 +69,8 @@ void		 fu_plugin_set_enabled			(FuPlugin	*plugin,
 GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*plugin);
 void		 fu_plugin_device_add			(FuPlugin	*plugin,
 							 FuDevice	*device);
+void		 fu_plugin_device_add_delay		(FuPlugin	*plugin,
+							 FuDevice	*device);
 void		 fu_plugin_device_remove		(FuPlugin	*plugin,
 							 FuDevice	*device);
 void		 fu_plugin_set_status			(FuPlugin	*plugin,

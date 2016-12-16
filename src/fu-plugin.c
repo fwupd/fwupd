@@ -39,6 +39,7 @@ typedef struct {
 	gboolean		 enabled;
 	gchar			*name;
 	GHashTable		*devices;	/* platform_id:GObject */
+	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
 	FuPluginData		*data;
 } FuPluginPrivate;
 
@@ -196,9 +197,57 @@ fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
 
+typedef struct {
+	FuPlugin	*plugin;
+	FuDevice	*device;
+	guint		 timeout_id;
+} FuPluginHelper;
+
+static void
+fu_plugin_helper_free (FuPluginHelper *helper)
+{
+	g_object_unref (helper->plugin);
+	g_object_unref (helper->device);
+	g_free (helper);
+}
+
+static gboolean
+fu_plugin_device_add_delay_cb (gpointer user_data)
+{
+	FuPluginHelper *helper = (FuPluginHelper *) user_data;
+	fu_plugin_device_add (helper->plugin, helper->device);
+	fu_plugin_helper_free (helper);
+	return FALSE;
+}
+
+void
+fu_plugin_device_add_delay (FuPlugin *plugin, FuDevice *device)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginHelper *helper;
+	g_debug ("waiting a small time for other plugins");
+	helper = g_new0 (FuPluginHelper, 1);
+	helper->plugin = g_object_ref (plugin);
+	helper->device = g_object_ref (device);
+	helper->timeout_id = g_timeout_add (500, fu_plugin_device_add_delay_cb, helper);
+	g_hash_table_insert (priv->devices_delay, device, helper);
+}
+
 void
 fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 {
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginHelper *helper;
+
+	/* waiting for add */
+	helper = g_hash_table_lookup (priv->devices_delay, device);
+	if (helper != NULL) {
+		g_debug ("ignoring remove from delayed addition");
+		g_source_remove (helper->timeout_id);
+		fu_plugin_helper_free (helper);
+		return;
+	}
+
 	g_debug ("emit removed from %s: %s",
 		 fu_plugin_get_name (plugin),
 		 fu_device_get_id (device));
@@ -706,6 +755,7 @@ fu_plugin_init (FuPlugin *plugin)
 	priv->enabled = TRUE;
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
+	priv->devices_delay = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
 static void
@@ -729,6 +779,7 @@ fu_plugin_finalize (GObject *object)
 	if (priv->module != NULL)
 		g_module_close (priv->module);
 	g_hash_table_unref (priv->devices);
+	g_hash_table_unref (priv->devices_delay);
 	g_free (priv->name);
 	g_free (priv->data);
 

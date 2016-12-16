@@ -27,7 +27,9 @@
 #include "fu-plugin-vfuncs.h"
 
 static void
-fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *device)
+fu_plugin_usb_device_added_cb (GUsbContext *ctx,
+				 GUsbDevice *device,
+				 FuPlugin *plugin)
 {
 	const gchar *platform_id = NULL;
 	guint8 idx = 0x00;
@@ -120,40 +122,12 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *device)
 	if (!g_usb_device_close (device, &error))
 		g_debug ("Failed to close: %s", error->message);
 
-	/* insert to hash */
-	fu_plugin_device_add (plugin, dev);
-	fu_plugin_cache_add (plugin, platform_id, dev);
-}
-
-typedef struct {
-	FuPlugin	*plugin;
-	GUsbDevice	*device;
-} FuPluginHelper;
-
-static gboolean
-fu_plugin_usb_device_added_delay_cb (gpointer user_data)
-{
-	FuPluginHelper *helper = (FuPluginHelper *) user_data;
-	fu_plugin_usb_device_added (helper->plugin, helper->device);
-	g_object_unref (helper->plugin);
-	g_object_unref (helper->device);
-	g_free (helper);
-	return FALSE;
-}
-
-static void
-fu_plugin_usb_device_added_cb (GUsbContext *ctx,
-				 GUsbDevice *device,
-				 FuPlugin *plugin)
-{
 	/* use a small delay for hotplugging so that other, better, plugins
 	 * can claim this interface and add the FuDevice */
-	FuPluginHelper *helper;
-	g_debug ("waiting a small time for other plugins");
-	helper = g_new0 (FuPluginHelper, 1);
-	helper->plugin = g_object_ref (plugin);
-	helper->device = g_object_ref (device);
-	g_timeout_add (500, fu_plugin_usb_device_added_delay_cb, helper);
+	fu_plugin_device_add_delay (plugin, dev);
+
+	/* insert to hash */
+	fu_plugin_cache_add (plugin, platform_id, dev);
 }
 
 static void
