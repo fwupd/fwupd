@@ -32,8 +32,9 @@ struct FuPluginData {
 	GUdevClient		*gudev_client;
 };
 
+//FIXME: this needs to move to the plugin core
 static gchar *
-fu_plugin_get_id (GUdevDevice *device)
+fu_plugin_udev_get_id (GUdevDevice *device)
 {
 	gchar *id;
 	id = g_strdup_printf ("ro-%s", g_udev_device_get_sysfs_path (device));
@@ -109,9 +110,8 @@ fu_plugin_verify (FuPlugin *plugin,
 }
 
 static void
-fu_plugin_client_add (FuPlugin *plugin, GUdevDevice *device)
+fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 {
-	FuDevice *dev;
 	const gchar *display_name;
 	const gchar *guid;
 	const gchar *product;
@@ -122,6 +122,7 @@ fu_plugin_client_add (FuPlugin *plugin, GUdevDevice *device)
 	g_auto(GStrv) split = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(FuDevice) dev = NULL;
 
 	/* interesting device? */
 	guid = g_udev_device_get_property (device, "FWUPD_GUID");
@@ -134,7 +135,7 @@ fu_plugin_client_add (FuPlugin *plugin, GUdevDevice *device)
 	g_debug ("adding udev device: %s", g_udev_device_get_sysfs_path (device));
 
 	/* is already in database */
-	id = fu_plugin_get_id (device);
+	id = fu_plugin_udev_get_id (device);
 	dev = fu_plugin_cache_lookup (plugin, id);
 	if (dev != NULL) {
 		g_debug ("ignoring duplicate %s", id);
@@ -183,7 +184,7 @@ fu_plugin_client_add (FuPlugin *plugin, GUdevDevice *device)
 }
 
 static void
-fu_plugin_client_remove (FuPlugin *plugin, GUdevDevice *device)
+fu_plugin_udev_remove (FuPlugin *plugin, GUdevDevice *device)
 {
 	FuDevice *dev;
 	g_autofree gchar *id = NULL;
@@ -193,7 +194,7 @@ fu_plugin_client_remove (FuPlugin *plugin, GUdevDevice *device)
 		return;
 
 	/* already in database */
-	id = fu_plugin_get_id (device);
+	id = fu_plugin_udev_get_id (device);
 	dev = fu_plugin_cache_lookup (plugin, id);
 	if (dev == NULL)
 		return;
@@ -201,17 +202,17 @@ fu_plugin_client_remove (FuPlugin *plugin, GUdevDevice *device)
 }
 
 static void
-fu_plugin_client_uevent_cb (GUdevClient *gudev_client,
-				   const gchar *action,
-				   GUdevDevice *udev_device,
-				   FuPlugin *plugin)
+fu_plugin_udev_uevent_cb (GUdevClient *gudev_client,
+			  const gchar *action,
+			  GUdevDevice *udev_device,
+			  FuPlugin *plugin)
 {
 	if (g_strcmp0 (action, "remove") == 0) {
-		fu_plugin_client_remove (plugin, udev_device);
+		fu_plugin_udev_remove (plugin, udev_device);
 		return;
 	}
 	if (g_strcmp0 (action, "add") == 0) {
-		fu_plugin_client_add (plugin, udev_device);
+		fu_plugin_udev_add (plugin, udev_device);
 		return;
 	}
 }
@@ -224,7 +225,7 @@ fu_plugin_init (FuPlugin *plugin)
 
 	data->gudev_client = g_udev_client_new (subsystems);
 	g_signal_connect (data->gudev_client, "uevent",
-			  G_CALLBACK (fu_plugin_client_uevent_cb), plugin);
+			  G_CALLBACK (fu_plugin_udev_uevent_cb), plugin);
 }
 
 void
@@ -252,7 +253,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 							    devclass[i]);
 		for (GList *l = devices; l != NULL; l = l->next) {
 			udev_device = l->data;
-			fu_plugin_client_add (plugin, udev_device);
+			fu_plugin_udev_add (plugin, udev_device);
 		}
 		g_list_foreach (devices, (GFunc) g_object_unref, NULL);
 		g_list_free (devices);
