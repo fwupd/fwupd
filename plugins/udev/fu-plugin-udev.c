@@ -179,7 +179,7 @@ fu_plugin_client_add (FuPlugin *plugin, GUdevDevice *device)
 
 	/* insert to hash */
 	fu_plugin_cache_add (plugin, id, dev);
-	fu_plugin_device_add (plugin, dev);
+	fu_plugin_device_add_delay (plugin, dev);
 }
 
 static void
