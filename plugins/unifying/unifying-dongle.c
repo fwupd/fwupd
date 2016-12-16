@@ -386,6 +386,7 @@ gboolean
 unifying_dongle_open (UnifyingDongle *dongle, GError **error)
 {
 	UnifyingDonglePrivate *priv = GET_PRIVATE (dongle);
+	guint16 pid_for_guid = 0xffff;
 	guint i;
 	guint num_interfaces = 0x1;
 	g_autofree gchar *devid = NULL;
@@ -403,18 +404,27 @@ unifying_dongle_open (UnifyingDongle *dongle, GError **error)
 	/* generate GUID -- in runtime mode we have to use the release */
 	if (priv->kind == UNIFYING_DONGLE_KIND_RUNTIME) {
 		guint16 release = g_usb_device_get_release (priv->usb_device);
-		release &= 0xff00;
-		devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X",
-					 g_usb_device_get_vid (priv->usb_device),
-					 g_usb_device_get_pid (priv->usb_device),
-					 release);
+		switch (release &= 0xff00) {
+		case 0x1200:
+			/* Nordic */
+			pid_for_guid = 0xaaaa;
+			break;
+		case 0x2400:
+			/* Texas */
+			pid_for_guid = 0xaaac;
+			break;
+		default:
+			g_warning ("bootloader release %04x invalid", release);
+			break;
+		}
 	} else {
-		devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
-					 g_usb_device_get_vid (priv->usb_device),
-					 g_usb_device_get_pid (priv->usb_device));
+		pid_for_guid = g_usb_device_get_pid (priv->usb_device);
 	}
-	g_debug ("Using %s for GUID", devid);
+	devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+				 g_usb_device_get_vid (priv->usb_device),
+				 pid_for_guid);
 	priv->guid = as_utils_guid_from_string (devid);
+	g_debug ("Using %s for GUID %s", devid, priv->guid);
 
 	/* open device */
 	g_debug ("opening unifying device");
