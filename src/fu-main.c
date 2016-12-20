@@ -622,16 +622,18 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 {
 	FuMainAuthHelper *helper = (FuMainAuthHelper *) user_data;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
-							    res, &error);
+							    res, &error_local);
 	if (auth == NULL) {
 		g_set_error (&error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_AUTH_FAILED,
-			     "could not check for auth: %s", error->message);
+			     "could not check for auth: %s",
+			     error_local->message);
 		fu_main_invocation_return_error (helper->priv, helper->invocation, error);
 		fu_main_helper_free (helper);
 		return;
