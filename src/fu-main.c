@@ -755,6 +755,46 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 	}
 }
 
+static gboolean
+fu_main_check_version_requirement (AsApp *app,
+				   AsRequireKind kind,
+				   const gchar *id,
+				   const gchar *version,
+				   GError **error)
+{
+#if AS_CHECK_VERSION(0,6,7)
+	AsRequire *req;
+
+	/* check args */
+	if (version == NULL) {
+		g_debug ("no paramater given for %s{%s}",
+			 as_require_kind_to_string (kind), id);
+		return TRUE;
+	}
+
+	/* does requirement exist */
+	req = as_app_get_require_by_value (app, kind, id);
+	if (req == NULL) {
+		g_debug ("no requirement on %s{%s}",
+			 as_require_kind_to_string (kind), id);
+		return TRUE;
+	}
+
+	/* check version */
+	if (!as_require_version_compare (req, version, error)) {
+		g_prefix_error (error, "version of %s incorrect: ", id);
+		return FALSE;
+	}
+
+	/* success */
+	g_debug ("requirement %s %s %s on %s passed",
+		 as_require_get_version (req),
+		 as_require_compare_to_string (as_require_get_compare (req)),
+		 version, id);
+#endif
+	return TRUE;
+}
+
 static AsApp *
 fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
 {
@@ -768,6 +808,39 @@ fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
 			return app;
 	}
 	return NULL;
+}
+
+static gboolean
+fu_main_check_app_versions (AsApp *app, FuDevice *device, GError **error)
+{
+	/* make sure requirements are satisfied */
+	if (!fu_main_check_version_requirement (app,
+						AS_REQUIRE_KIND_ID,
+						"org.freedesktop.fwupd",
+						VERSION,
+						error)) {
+		return FALSE;
+	}
+
+	if (device != NULL) {
+		if (!fu_main_check_version_requirement (app,
+							AS_REQUIRE_KIND_FIRMWARE,
+							NULL,
+							fu_device_get_version (device),
+							error)) {
+			return FALSE;
+		}
+		if (!fu_main_check_version_requirement (app,
+							AS_REQUIRE_KIND_FIRMWARE,
+							"bootloader",
+							fu_device_get_metadata (device, "bootloader-version"), //FIXME
+							error)) {
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static AsScreenshot *
@@ -805,6 +878,10 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 			     fu_device_get_guid_default (device), guid);
 		return FALSE;
 	}
+
+	/* check we can install it */
+	if (!fu_main_check_app_versions (app, device, error))
+		return FALSE;
 
 	/* parse the DriverVer */
 	rel = as_app_get_release_default (app);
@@ -971,6 +1048,13 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		app = fu_main_store_get_app_by_guids (helper->store, item->device);
 		if (app == NULL)
 			continue;
+
+		/* check we can install it */
+		if (!fu_main_check_app_versions (app, item->device, &error_local)) {
+			if (error_first == NULL)
+				error_first = g_error_copy (error_local);
+			continue;
+		}
 
 		/* try this device, error not fatal */
 		if (!fu_main_update_helper_for_device (helper,
@@ -1293,6 +1377,7 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	GPtrArray *releases;
 	const gchar *tmp;
 	const gchar *version;
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) updates_list = NULL;
 
 	/* get device version */
@@ -1325,6 +1410,12 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	if (as_utils_vercmp (as_release_get_version (rel), version) <= 0) {
 		g_debug ("%s has no firmware updates",
 			 fu_device_get_id (item->device));
+		return FALSE;
+	}
+
+	/* check we can install it */
+	if (!fu_main_check_app_versions (app, item->device, &error)) {
+		g_debug ("can not be installed: %s", error->message);
 		return FALSE;
 	}
 
@@ -1512,6 +1603,10 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 		return NULL;
 	}
 
+	/* check we can install it */
+	if (!fu_main_check_app_versions (app, NULL, error))
+		return NULL;
+
 	/* verify trust */
 	rel = as_app_get_release_default (app);
 	if (!fu_main_get_release_trust_flags (rel, &trust_flags, error))
@@ -1582,6 +1677,10 @@ fu_main_get_details_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 	if (app == NULL)
 		app = AS_APP (g_ptr_array_index (apps, 0));
 
+	/* check we can install it */
+	if (!fu_main_check_app_versions (app, NULL, error))
+		return FALSE;
+
 	/* create a result with all the metadata in */
 	as_app_set_origin (app, as_store_get_origin (store));
 	res = fu_main_get_result_from_app (priv, app, error);
@@ -1617,6 +1716,11 @@ fu_main_get_details_local_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 		g_autoptr(FwupdResult) res = NULL;
 		AsApp *app = g_ptr_array_index (apps, i);
 		GVariant *tmp;
+
+		/* check we can install it */
+		if (!fu_main_check_app_versions (app, NULL, error))
+			return NULL;
+
 		as_app_set_origin (app, as_store_get_origin (store));
 		res = fu_main_get_result_from_app (priv, app, error);
 		if (res == NULL)
