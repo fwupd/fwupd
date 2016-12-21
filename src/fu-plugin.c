@@ -201,6 +201,7 @@ typedef struct {
 	FuPlugin	*plugin;
 	FuDevice	*device;
 	guint		 timeout_id;
+	GHashTable	*devices;
 } FuPluginHelper;
 
 static void
@@ -208,6 +209,7 @@ fu_plugin_helper_free (FuPluginHelper *helper)
 {
 	g_object_unref (helper->plugin);
 	g_object_unref (helper->device);
+	g_hash_table_unref (helper->devices);
 	g_free (helper);
 }
 
@@ -217,6 +219,7 @@ fu_plugin_device_add_delay_cb (gpointer user_data)
 	FuPluginHelper *helper = (FuPluginHelper *) user_data;
 	fu_plugin_device_add (helper->plugin, helper->device);
 	fu_plugin_helper_free (helper);
+	g_hash_table_remove (helper->devices, helper->device);
 	return FALSE;
 }
 
@@ -230,7 +233,8 @@ fu_plugin_device_add_delay (FuPlugin *plugin, FuDevice *device)
 	helper->plugin = g_object_ref (plugin);
 	helper->device = g_object_ref (device);
 	helper->timeout_id = g_timeout_add (500, fu_plugin_device_add_delay_cb, helper);
-	g_hash_table_insert (priv->devices_delay, device, helper);
+	helper->devices = g_hash_table_ref (priv->devices_delay);
+	g_hash_table_insert (helper->devices, device, helper);
 }
 
 void
@@ -244,6 +248,7 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 	if (helper != NULL) {
 		g_debug ("ignoring remove from delayed addition");
 		g_source_remove (helper->timeout_id);
+		g_hash_table_remove (priv->devices_delay, helper->device);
 		fu_plugin_helper_free (helper);
 		return;
 	}
