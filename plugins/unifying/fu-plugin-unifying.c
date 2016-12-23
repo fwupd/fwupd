@@ -76,6 +76,7 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
 	fu_device_add_guid (dev, unifying_dongle_get_guid (dongle));
 	fu_device_set_version (dev, unifying_dongle_get_version_fw (dongle));
+	fu_device_set_version_bootloader (dev, unifying_dongle_get_version_bl (dongle));
 	fu_device_set_name (dev, name);
 
 	/* close the device */

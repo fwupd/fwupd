@@ -833,7 +833,7 @@ fu_main_check_app_versions (AsApp *app, FuDevice *device, GError **error)
 		if (!fu_main_check_version_requirement (app,
 							AS_REQUIRE_KIND_FIRMWARE,
 							"bootloader",
-							fu_device_get_metadata (device, "bootloader-version"), //FIXME
+							fu_device_get_version_bootloader (device),
 							error)) {
 			return FALSE;
 		}
