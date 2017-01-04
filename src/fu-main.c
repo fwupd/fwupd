@@ -755,6 +755,7 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 	}
 }
 
+#if AS_CHECK_VERSION(0,6,7)
 static gboolean
 fu_main_check_version_requirement (AsApp *app,
 				   AsRequireKind kind,
@@ -762,7 +763,6 @@ fu_main_check_version_requirement (AsApp *app,
 				   const gchar *version,
 				   GError **error)
 {
-#if AS_CHECK_VERSION(0,6,7)
 	AsRequire *req;
 
 	/* check args */
@@ -791,9 +791,9 @@ fu_main_check_version_requirement (AsApp *app,
 		 as_require_get_version (req),
 		 as_require_compare_to_string (as_require_get_compare (req)),
 		 version, id);
-#endif
 	return TRUE;
 }
+#endif
 
 static AsApp *
 fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
@@ -813,6 +813,7 @@ fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
 static gboolean
 fu_main_check_app_versions (AsApp *app, FuDevice *device, GError **error)
 {
+#if AS_CHECK_VERSION(0,6,7)
 	/* make sure requirements are satisfied */
 	if (!fu_main_check_version_requirement (app,
 						AS_REQUIRE_KIND_ID,
@@ -838,6 +839,7 @@ fu_main_check_app_versions (AsApp *app, FuDevice *device, GError **error)
 			return FALSE;
 		}
 	}
+#endif
 
 	/* success */
 	return TRUE;
