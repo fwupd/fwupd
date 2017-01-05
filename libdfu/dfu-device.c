@@ -1858,12 +1858,21 @@ dfu_device_upload (DfuDevice *device,
 	/* upload from each target */
 	for (i = 0; i < priv->targets->len; i++) {
 		DfuTarget *target;
+		const gchar *alt_name;
 		gulong id1;
 		gulong id2;
 		g_autoptr(DfuImage) image = NULL;
 
 		/* upload to target and proxy signals */
 		target = g_ptr_array_index (priv->targets, i);
+
+		/* ignore some target types */
+		alt_name = dfu_target_get_alt_name_for_display (target, NULL);
+		if (g_strcmp0 (alt_name, "Option Bytes") == 0) {
+			g_debug ("ignoring target %s", alt_name);
+			continue;
+		}
+
 		id1 = g_signal_connect (target, "percentage-changed",
 					G_CALLBACK (dfu_device_percentage_cb), device);
 		id2 = g_signal_connect (target, "action-changed",
