@@ -1,4 +1,5 @@
 SUBDIRS =		\
+	altos		\
 	dfu		\
 	ebitdo		\
 	raspberrypi	\

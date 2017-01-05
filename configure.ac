@@ -347,6 +347,7 @@ policy/Makefile
 po/Makefile.in
 src/Makefile
 plugins/Makefile
+plugins/altos/Makefile
 plugins/colorhug/Makefile
 plugins/dell/Makefile
 plugins/dfu/Makefile
