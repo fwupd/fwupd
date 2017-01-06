@@ -32,7 +32,13 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 				   guint8 *buf);
 
 gboolean
-fu_plugin_dell_force_device_mode (const efi_guid_t, int);
+fu_plugin_dell_toggle_device_mode (const efi_guid_t, int);
+
+gboolean
+fu_plugin_dell_toggle_flash (FuPlugin *,
+			     FuDevice *,
+			     GError **,
+			     gboolean);
 
 gboolean
 fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error);
