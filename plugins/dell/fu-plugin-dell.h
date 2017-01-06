@@ -23,7 +23,6 @@
 #define __FU_PLUGIN_DELL_H
 
 #include <gusb.h>
-#include "fu-device.h"
 #include "fu-plugin.h"
 #include <efivar.h>
 
