@@ -41,7 +41,6 @@
 
 struct FuPluginData {
 	GHashTable		*devices;	/* DeviceKey:FuPluginDockItem */
-	GUsbContext		*usb_ctx;
 	gboolean		fake_smbios;
 	guint32			fake_output[4];
 	guint16			fake_vid;
