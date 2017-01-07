@@ -525,8 +525,7 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	result = fu_plugin_dell_get_res (plugin, smi, cbARG1);
 	if (result != SMI_SUCCESS) {
 		if (result == SMI_INVALID_BUFFER) {
-			g_debug ("Dell: Invalid buffer size, sent %u, needed %" G_GUINT32_FORMAT,
-				 buf_size,
+			g_debug ("Dell: Invalid buffer size, needed %" G_GUINT32_FORMAT,
 				 fu_plugin_dell_get_res (plugin, smi, cbARG2));
 		} else {
 			g_debug ("Dell: SMI execution returned error: %d",
