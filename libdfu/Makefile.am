@@ -160,6 +160,7 @@ introspection_sources =						\
 Dfu-1.0.gir: libdfu.la
 Dfu_1_0_gir_INCLUDES = GObject-2.0 Gio-2.0 GUsb-1.0 AppStreamGlib-1.0
 Dfu_1_0_gir_CFLAGS = $(AM_CPPFLAGS)
+Dfu_1_0_gir_LDFLAGS = $(ELF_LIBS)
 Dfu_1_0_gir_SCANNERFLAGS = --identifier-prefix=Dfu \
 				--symbol-prefix=dfu \
 				--warn-all \

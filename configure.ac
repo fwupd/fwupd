@@ -209,7 +209,7 @@ AC_ARG_ENABLE(libelf,
 			     [Enable libelf support [default=auto]]),,
 	      enable_libelf=maybe)
 if test x$enable_libelf != xno; then
-	PKG_CHECK_MODULES(LIBELF, libelf >= 1.2.12,
+	PKG_CHECK_MODULES(ELF, libelf,
 			  has_libelf=yes,
 			  has_libelf=no)
 fi
