@@ -427,7 +427,7 @@ fu_plugin_dell_toggle_dock_mode (FuPlugin *plugin,
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_plugin_dell_toggle_host_mode (const efi_guid_t guid, int mode)
 {
 	gint ret;
