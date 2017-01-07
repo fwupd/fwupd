@@ -2320,6 +2320,15 @@ fu_main_plugins_coldplug (FuMainPrivate *priv)
 {
 	g_autoptr(AsProfileTask) ptask = NULL;
 
+	/* prepare */
+	for (guint i = 0; i < priv->plugins->len; i++) {
+		g_autoptr(GError) error = NULL;
+		FuPlugin *plugin = g_ptr_array_index (priv->plugins, i);
+		if (!fu_plugin_runner_coldplug_prepare (plugin, &error))
+			g_warning ("failed to prepare coldplug: %s", error->message);
+	}
+
+	/* exec */
 	ptask = as_profile_start_literal (priv->profile, "FuMain:coldplug");
 	g_assert (ptask != NULL);
 	for (guint i = 0; i < priv->plugins->len; i++) {
@@ -2334,6 +2343,14 @@ fu_main_plugins_coldplug (FuMainPrivate *priv)
 			fu_plugin_set_enabled (plugin, FALSE);
 			g_warning ("disabling plugin because: %s", error->message);
 		}
+	}
+
+	/* cleanup */
+	for (guint i = 0; i < priv->plugins->len; i++) {
+		g_autoptr(GError) error = NULL;
+		FuPlugin *plugin = g_ptr_array_index (priv->plugins, i);
+		if (!fu_plugin_runner_coldplug_cleanup (plugin, &error))
+			g_warning ("failed to cleanup coldplug: %s", error->message);
 	}
 }
 

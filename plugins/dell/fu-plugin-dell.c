@@ -1018,9 +1018,8 @@ fu_plugin_update_offline (FuPlugin *plugin,
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_plugin_dell_toggle_flash (FuPlugin *plugin,
-			     FuDevice *device,
 			     GError **error,
 			     gboolean enable)
 {
@@ -1063,7 +1062,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
                           FuDevice *device,
                           GError **error)
 {
-	return fu_plugin_dell_toggle_flash(plugin, device, error, TRUE);
+	return fu_plugin_dell_toggle_flash (plugin, error, TRUE);
 }
 
 gboolean
@@ -1071,23 +1070,19 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
                           FuDevice *device,
                           GError **error)
 {
-	return fu_plugin_dell_toggle_flash(plugin, device, error, FALSE);
+	return fu_plugin_dell_toggle_flash (plugin, error, FALSE);
 }
 
 gboolean
-fu_plugin_coldplug_prepare (FuPlugin *plugin,
-                          FuDevice *device,
-                          GError **error)
+fu_plugin_coldplug_prepare (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_dell_toggle_flash(plugin, device, error, TRUE);
+	return fu_plugin_dell_toggle_flash (plugin, error, TRUE);
 }
 
 gboolean
-fu_plugin_coldplug_cleanup (FuPlugin *plugin,
-                          FuDevice *device,
-                          GError **error)
+fu_plugin_coldplug_cleanup (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_dell_toggle_flash(plugin, device, error, FALSE);
+	return fu_plugin_dell_toggle_flash (plugin, error, FALSE);
 }
 
 void

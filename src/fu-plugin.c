@@ -361,6 +361,50 @@ fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 }
 
 gboolean
+fu_plugin_runner_coldplug_prepare (FuPlugin *plugin, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginStartupFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_coldplug_prepare", (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing coldplug_prepare() on %s", priv->name);
+	if (!func (plugin, error)) {
+		g_prefix_error (error, "failed to prepare for coldplug %s: ", priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_plugin_runner_coldplug_cleanup (FuPlugin *plugin, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginStartupFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_coldplug_cleanup", (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing coldplug_cleanup() on %s", priv->name);
+	if (!func (plugin, error)) {
+		g_prefix_error (error, "failed to cleanup coldplug %s: ", priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
 fu_plugin_runner_update_prepare (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);

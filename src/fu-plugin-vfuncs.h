@@ -33,6 +33,10 @@ gboolean	 fu_plugin_startup			(FuPlugin	*plugin,
 							 GError		**error);
 gboolean	 fu_plugin_coldplug			(FuPlugin	*plugin,
 							 GError		**error);
+gboolean	 fu_plugin_coldplug_prepare		(FuPlugin	*plugin,
+							 GError		**error);
+gboolean	 fu_plugin_coldplug_cleanup		(FuPlugin	*plugin,
+							 GError		**error);
 gboolean	 fu_plugin_update_online		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GBytes		*blob_fw,
