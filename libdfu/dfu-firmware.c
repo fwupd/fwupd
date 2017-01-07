@@ -863,6 +863,7 @@ dfu_firmware_get_cipher_kind (DfuFirmware *firmware)
 /**
  * dfu_firmware_set_cipher_kind:
  * @firmware: a #DfuFirmware
+ * @cipher_kind: a #DfuCipherKind, e.g. %DFU_CIPHER_KIND_XTEA
  *
  * Sets the kind of cipher used by the firmware file.
  *
