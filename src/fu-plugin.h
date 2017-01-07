@@ -36,7 +36,7 @@ G_DECLARE_DERIVABLE_TYPE (FuPlugin, fu_plugin, FU, PLUGIN, GObject)
 
 struct _FuPluginClass
 {
-	GObjectClass		 parent_class;
+	GObjectClass	 parent_class;
 	/* signals */
 	void		 (* device_added)		(FuPlugin	*plugin,
 							 FuDevice	*device);
@@ -46,6 +46,9 @@ struct _FuPluginClass
 							 FwupdStatus	 status);
 	void		 (* percentage_changed)		(FuPlugin	*plugin,
 							 guint		 percentage);
+	void		 (* recoldplug)			(FuPlugin	*plugin);
+	/*< private >*/
+	gpointer	padding[26];
 };
 
 typedef enum {
@@ -77,6 +80,7 @@ void		 fu_plugin_set_status			(FuPlugin	*plugin,
 							 FwupdStatus	 status);
 void		 fu_plugin_set_percentage		(FuPlugin	*plugin,
 							 guint		 percentage);
+void		 fu_plugin_recoldplug			(FuPlugin	*plugin);
 GChecksumType	 fu_plugin_get_checksum_type		(FuPluginVerifyFlags flags);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*plugin,
 							 const gchar	*id);

@@ -48,6 +48,7 @@ enum {
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_STATUS_CHANGED,
 	SIGNAL_PERCENTAGE_CHANGED,
+	SIGNAL_RECOLDPLUG,
 	SIGNAL_LAST
 };
 
@@ -270,6 +271,21 @@ fu_plugin_set_percentage (FuPlugin *plugin, guint percentage)
 {
 	g_signal_emit (plugin, signals[SIGNAL_PERCENTAGE_CHANGED], 0,
 		       percentage);
+}
+
+/**
+ * fu_plugin_recoldplug:
+ * @plugin: A #FuPlugin
+ *
+ * Ask all the plugins to coldplug all devices, which will include the prepare()
+ * and cleanup() phases. Duplicate devices added will be ignored.
+ *
+ * Since: 0.8.0
+ **/
+void
+fu_plugin_recoldplug (FuPlugin *plugin)
+{
+	g_signal_emit (plugin, signals[SIGNAL_RECOLDPLUG], 0);
 }
 
 gboolean
@@ -795,6 +811,12 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, percentage_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_UINT);
+	signals[SIGNAL_RECOLDPLUG] =
+		g_signal_new ("recoldplug",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuPluginClass, recoldplug),
+			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
+			      G_TYPE_NONE, 0);
 }
 
 static void

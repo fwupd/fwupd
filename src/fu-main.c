@@ -2554,6 +2554,12 @@ fu_main_plugin_percentage_changed_cb (FuPlugin *plugin,
 	fu_main_set_percentage (priv, percentage);
 }
 
+static void
+fu_main_plugin_recoldplug_cb (FuPlugin *plugin, FuMainPrivate *priv)
+{
+	fu_main_plugins_coldplug (priv);
+}
+
 static gboolean
 fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 {
@@ -2596,6 +2602,9 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 				  priv);
 		g_signal_connect (plugin, "percentage-changed",
 				  G_CALLBACK (fu_main_plugin_percentage_changed_cb),
+				  priv);
+		g_signal_connect (plugin, "recoldplug",
+				  G_CALLBACK (fu_main_plugin_recoldplug_cb),
 				  priv);
 
 		/* add */
