@@ -67,6 +67,7 @@ typedef struct {
 	AsStore			*store;
 	guint			 store_changed_id;
 	gboolean		 coldplug_running;
+	guint			 coldplug_id;
 	GPtrArray		*plugins;	/* of FuPlugin */
 	GHashTable		*plugins_hash;	/* of name : FuPlugin */
 } FuMainPrivate;
@@ -2561,6 +2562,16 @@ fu_main_plugin_percentage_changed_cb (FuPlugin *plugin,
 	fu_main_set_percentage (priv, percentage);
 }
 
+static gboolean
+fu_main_recoldplug_delay_cb (gpointer user_data)
+{
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+	g_debug ("performing a recoldplug");
+	fu_main_plugins_coldplug (priv);
+	priv->coldplug_id = 0;
+	return FALSE;
+}
+
 static void
 fu_main_plugin_recoldplug_cb (FuPlugin *plugin, FuMainPrivate *priv)
 {
@@ -2568,7 +2579,10 @@ fu_main_plugin_recoldplug_cb (FuPlugin *plugin, FuMainPrivate *priv)
 		g_warning ("coldplug already running, cannot recoldplug");
 		return;
 	}
-	fu_main_plugins_coldplug (priv);
+	g_debug ("scheduling a recoldplug");
+	if (priv->coldplug_id != 0)
+		g_source_remove (priv->coldplug_id);
+	priv->coldplug_id = g_timeout_add (1500, fu_main_recoldplug_delay_cb, priv);
 }
 
 static gboolean
@@ -2797,6 +2811,8 @@ out:
 		if (priv->store_changed_id != 0)
 			g_source_remove (priv->store_changed_id);
 		g_object_unref (priv->pending);
+		if (priv->coldplug_id != 0)
+			g_source_remove (priv->coldplug_id);
 		if (priv->plugins != NULL)
 			g_ptr_array_unref (priv->plugins);
 		if (priv->plugins != NULL)
