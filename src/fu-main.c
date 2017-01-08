@@ -66,6 +66,7 @@ typedef struct {
 	AsProfile		*profile;
 	AsStore			*store;
 	guint			 store_changed_id;
+	gboolean		 coldplug_running;
 	GPtrArray		*plugins;	/* of FuPlugin */
 	GHashTable		*plugins_hash;	/* of name : FuPlugin */
 } FuMainPrivate;
@@ -2320,6 +2321,9 @@ fu_main_plugins_coldplug (FuMainPrivate *priv)
 {
 	g_autoptr(AsProfileTask) ptask = NULL;
 
+	/* don't allow coldplug to be scheduled when in coldplug */
+	priv->coldplug_running = TRUE;
+
 	/* prepare */
 	for (guint i = 0; i < priv->plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
@@ -2352,6 +2356,9 @@ fu_main_plugins_coldplug (FuMainPrivate *priv)
 		if (!fu_plugin_runner_coldplug_cleanup (plugin, &error))
 			g_warning ("failed to cleanup coldplug: %s", error->message);
 	}
+
+	/* we can recoldplug from this point on */
+	priv->coldplug_running = FALSE;
 }
 
 static void
@@ -2557,6 +2564,10 @@ fu_main_plugin_percentage_changed_cb (FuPlugin *plugin,
 static void
 fu_main_plugin_recoldplug_cb (FuPlugin *plugin, FuMainPrivate *priv)
 {
+	if (priv->coldplug_running) {
+		g_warning ("coldplug already running, cannot recoldplug");
+		return;
+	}
 	fu_main_plugins_coldplug (priv);
 }
 
