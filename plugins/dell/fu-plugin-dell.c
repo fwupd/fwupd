@@ -78,8 +78,8 @@ typedef struct dell_smi_obj fu_dell_smi_obj;
 #define DACI_FLASH_INTERFACE_SELECT	3
 #define DACI_FLASH_ARG_TPM		2
 #define DACI_FLASH_ARG_FLASH_MODE	3
-#define DACI_FLASH_ARG_MODE_USER	0
-#define DACI_FLASH_ARG_MODE_FLASH	1
+#define DACI_FLASH_MODE_USER		0
+#define DACI_FLASH_MODE_FLASH		1
 
 
 /* DACI class/select for dock capabilities */
@@ -90,6 +90,9 @@ typedef struct dell_smi_obj fu_dell_smi_obj;
 #define DACI_DOCK_ARG_MODE		2
 #define DACI_DOCK_ARG_MODE_USER		0
 #define DACI_DOCK_ARG_MODE_FLASH	1
+
+/* Delay for settling */
+#define DELL_FLASH_MODE_DELAY		2
 
 /* These are for dock query capabilities */
 struct dock_count_in {
@@ -433,11 +436,10 @@ fu_plugin_dell_toggle_host_mode (const efi_guid_t guid, int mode)
 	gint ret;
 	g_autoptr(fu_dell_smi_obj) smi = NULL;
 	ADDR_UNION buf;
-
 	smi = dell_smi_factory (DELL_SMI_DEFAULTS);
 	dell_smi_obj_set_class (smi, DACI_FLASH_INTERFACE_CLASS);
 	dell_smi_obj_set_select (smi, DACI_FLASH_INTERFACE_SELECT);
-	dell_smi_obj_set_arg (smi, cbARG1, DACI_FLASH_ARG_MODE_FLASH);
+	dell_smi_obj_set_arg (smi, cbARG1, DACI_FLASH_ARG_FLASH_MODE);
 	dell_smi_obj_set_arg (smi, cbARG4, mode);
 	/* needs to be padded with an empty GUID */
 	buf.buf = dell_smi_obj_make_buffer_frombios_withoutheader(smi, cbARG2,
@@ -1023,36 +1025,27 @@ fu_plugin_dell_toggle_flash (FuPlugin *plugin,
 			     gboolean enable)
 {
 	guint32 dock_location;
-	const gchar* plugin_name;
-	efi_guid_t gpio;
-
-	plugin_name = fu_plugin_get_name (plugin);
-	if (g_strcmp0 (plugin_name, "synapticsmst") == 0)
-		gpio = MST_GPIO_GUID;
-	else if (g_strcmp0 (plugin_name, "thunderbolt") == 0)
-		gpio = TBT_GPIO_GUID;
-	else
-		return TRUE;
 
 	/* Dock MST Hub / TBT Controller */
 	if (fu_plugin_dell_detect_dock (plugin, &dock_location)) {
 		if (!fu_plugin_dell_toggle_dock_mode (plugin,
 						      enable,
 						      dock_location, error))
-			g_set_error (error, FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "Error setting dock mode: %d",
-				    enable);
-			return FALSE;
+			g_debug("Dell: unable to change dock to %d", enable);
+		else
+			g_debug("Dell: Toggled dock mode to %d", enable);
 	}
+
 	/* System MST hub / TBT controller */
-	if (fu_plugin_dell_toggle_host_mode (gpio, enable)) {
-		g_set_error (error, FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Failed to put system MST hub in %d mode",
-			    enable);
-		return FALSE;
-	}
+	if (!fu_plugin_dell_toggle_host_mode (TBT_GPIO_GUID, enable))
+		g_debug("Dell: Unable to toggle TBT GPIO to %d", enable);
+	else
+		g_debug("Dell: Toggled TBT GPIO to %d", enable);
+	if (!fu_plugin_dell_toggle_host_mode (MST_GPIO_GUID, enable))
+		g_debug("Dell: Unable to toggle MST hub GPIO to %d", enable);
+	else
+		g_debug("Dell: Toggled MST hub GPIO to %d", enable);
+
 	return TRUE;
 }
 
@@ -1061,7 +1054,14 @@ fu_plugin_update_prepare (FuPlugin *plugin,
                           FuDevice *device,
                           GError **error)
 {
-	return fu_plugin_dell_toggle_flash (plugin, error, TRUE);
+	gboolean result;
+	result = fu_plugin_dell_toggle_flash (plugin, error, TRUE);
+	/* If succesful, add a delay to allow OS response to
+	   settling the GPIO change.  Without this, plugins
+	   may not respond properly */
+	if (result)
+		g_usleep(DELL_FLASH_MODE_DELAY * 1000000);
+	return result;
 }
 
 gboolean
@@ -1075,13 +1075,13 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
 gboolean
 fu_plugin_coldplug_prepare (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_dell_toggle_flash (plugin, error, TRUE);
+	return fu_plugin_update_prepare (plugin, NULL, error);
 }
 
 gboolean
 fu_plugin_coldplug_cleanup (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_dell_toggle_flash (plugin, error, FALSE);
+	return fu_plugin_update_cleanup (plugin, NULL, error);
 }
 
 void
