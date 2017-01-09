@@ -449,6 +449,7 @@ fu_device_check_firmware (FuDeviceAltos *device, DfuFirmware *firmware, GError *
 gboolean
 fu_device_altos_write_firmware (FuDeviceAltos *device,
 				GBytes *fw,
+				FuDeviceAltosWriteFirmwareFlag flags,
 				GFileProgressCallback progress_cb,
 				gpointer progress_data,
 				GError **error)
@@ -574,8 +575,10 @@ fu_device_altos_write_firmware (FuDeviceAltos *device,
 	}
 
 	/* go to application mode */
-	if (!fu_device_altos_tty_write (device, "a\n", -1, error))
-		return FALSE;
+	if (flags & FU_DEVICE_ALTOS_WRITE_FIRMWARE_FLAG_REBOOT) {
+		if (!fu_device_altos_tty_write (device, "a\n", -1, error))
+			return FALSE;
+	}
 
 	/* progress complete */
 	if (progress_cb != NULL) {

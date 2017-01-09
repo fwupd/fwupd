@@ -95,6 +95,7 @@ main (int argc, char **argv)
 	/* update with data blob */
 	fw = g_bytes_new (data, len);
 	if (!fu_device_altos_write_firmware (dev, fw,
+					     FU_DEVICE_ALTOS_WRITE_FIRMWARE_FLAG_NONE,
 					     fu_altos_tool_write_progress_cb, NULL,
 					     &error)) {
 		g_print ("Failed to write firmware: %s\n", error->message);

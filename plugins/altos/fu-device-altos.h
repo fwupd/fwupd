@@ -45,6 +45,13 @@ typedef enum {
 	FU_DEVICE_ALTOS_KIND_LAST
 } FuDeviceAltosKind;
 
+typedef enum {
+	FU_DEVICE_ALTOS_WRITE_FIRMWARE_FLAG_NONE	= 0,
+	FU_DEVICE_ALTOS_WRITE_FIRMWARE_FLAG_REBOOT	= 1 << 0,
+	/*< private >*/
+	FU_DEVICE_ALTOS_WRITE_FIRMWARE_FLAG_LAST
+} FuDeviceAltosWriteFirmwareFlag;
+
 FuDeviceAltos	*fu_device_altos_new			(GUsbDevice *usb_device);
 FuDeviceAltosKind fu_device_altos_kind_from_string	(const gchar	*kind);
 const gchar	*fu_device_altos_kind_to_string		(FuDeviceAltosKind kind);
@@ -53,6 +60,7 @@ gboolean	 fu_device_altos_probe			(FuDeviceAltos	*device,
 							 GError		**error);
 gboolean	 fu_device_altos_write_firmware		(FuDeviceAltos	*device,
 							 GBytes		*fw,
+							 FuDeviceAltosWriteFirmwareFlag flags,
 							 GFileProgressCallback progress_cb,
 							 gpointer	 progress_data,
 							 GError		**error);

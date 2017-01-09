@@ -141,6 +141,7 @@ fu_plugin_update_online (FuPlugin *plugin,
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_device_altos_write_firmware (FU_DEVICE_ALTOS (dev),
 					     blob_fw,
+					     FU_DEVICE_ALTOS_WRITE_FIRMWARE_FLAG_REBOOT,
 					     fu_plugin_altos_progress_cb,
 					     plugin,
 					     error)) {
