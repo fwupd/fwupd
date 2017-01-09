@@ -1046,6 +1046,12 @@ fu_plugin_dell_toggle_flash (FuPlugin *plugin,
 	else
 		g_debug("Dell: Toggled MST hub GPIO to %d", enable);
 
+	/* If succesful, add a delay to allow OS response to
+	   settling the GPIO change.  Without this, plugins
+	   may not respond properly */
+	if (enable)
+		g_usleep(DELL_FLASH_MODE_DELAY * 1000000);
+
 	return TRUE;
 }
 
@@ -1054,14 +1060,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
                           FuDevice *device,
                           GError **error)
 {
-	gboolean result;
-	result = fu_plugin_dell_toggle_flash (plugin, error, TRUE);
-	/* If succesful, add a delay to allow OS response to
-	   settling the GPIO change.  Without this, plugins
-	   may not respond properly */
-	if (result)
-		g_usleep(DELL_FLASH_MODE_DELAY * 1000000);
-	return result;
+	return fu_plugin_dell_toggle_flash (plugin, error, TRUE);
 }
 
 gboolean
@@ -1075,13 +1074,13 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
 gboolean
 fu_plugin_coldplug_prepare (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_update_prepare (plugin, NULL, error);
+	return fu_plugin_dell_toggle_flash (plugin, error, TRUE);
 }
 
 gboolean
 fu_plugin_coldplug_cleanup (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_update_cleanup (plugin, NULL, error);
+	return fu_plugin_dell_toggle_flash (plugin, error, FALSE);
 }
 
 void
