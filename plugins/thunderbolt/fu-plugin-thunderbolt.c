@@ -80,12 +80,10 @@ static FuThunderboltInfo *
 fu_plugin_thunderbolt_get_info_by_id (FuPlugin *plugin, const gchar *id)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	if (data->infos) {
-		for (guint i = 0; i < data->infos->len; i++) {
-			FuThunderboltInfo *info = g_ptr_array_index (data->infos, i);
-			if (g_strcmp0 (info->id, id) == 0)
-				return info;
-		}
+	for (guint i = 0; i < data->infos->len; i++) {
+		FuThunderboltInfo *info = g_ptr_array_index (data->infos, i);
+		if (g_strcmp0 (info->id, id) == 0)
+			return info;
 	}
 	return NULL;
 }
@@ -115,11 +113,9 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 	}
 
 	/* no longer valid */
-	if (data->infos) {
-		for (guint i = 0; i < data->infos->len; i++) {
-			FuThunderboltInfo *info = g_ptr_array_index (data->infos, i);
-			info->controller = NULL;
-		}
+	for (guint i = 0; i < data->infos->len; i++) {
+		FuThunderboltInfo *info = g_ptr_array_index (data->infos, i);
+		info->controller = NULL;
 	}
 
 	/* go through each device in results */
@@ -210,19 +206,17 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 	}
 
 	/* any devices were removed */
-	if (data->infos) {
-		infos_remove = g_ptr_array_new ();
-		for (guint i = 0; i < data->infos->len; i++) {
-			FuThunderboltInfo *info = g_ptr_array_index (data->infos, i);
-			if (info->controller == NULL) {
-				fu_plugin_device_remove (plugin, info->dev);
-				g_ptr_array_add (infos_remove, info);
-			}
+	infos_remove = g_ptr_array_new ();
+	for (guint i = 0; i < data->infos->len; i++) {
+		FuThunderboltInfo *info = g_ptr_array_index (data->infos, i);
+		if (info->controller == NULL) {
+			fu_plugin_device_remove (plugin, info->dev);
+			g_ptr_array_add (infos_remove, info);
 		}
-		for (guint i = 0; i < infos_remove->len; i++) {
-			FuThunderboltInfo *info = g_ptr_array_index (infos_remove, i);
-			g_ptr_array_remove (data->infos, info);
-		}
+	}
+	for (guint i = 0; i < infos_remove->len; i++) {
+		FuThunderboltInfo *info = g_ptr_array_index (infos_remove, i);
+		g_ptr_array_remove (data->infos, info);
 	}
 
 	/* success */
@@ -338,12 +332,10 @@ fu_plugin_thunderbolt_find_devpath (FuPlugin *plugin, GUdevDevice *udev_device)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *devpath = g_udev_device_get_sysfs_path (udev_device);
-	if (data->devpaths) {
-		for (guint i = 0; i < data->devpaths->len; i++) {
-			const gchar *devpath_tmp = g_ptr_array_index (data->devpaths, i);
-			if (g_strcmp0 (devpath_tmp, devpath) == 0)
-				return devpath_tmp;
-		}
+	for (guint i = 0; i < data->devpaths->len; i++) {
+		const gchar *devpath_tmp = g_ptr_array_index (data->devpaths, i);
+		if (g_strcmp0 (devpath_tmp, devpath) == 0)
+			return devpath_tmp;
 	}
 	return NULL;
 }
