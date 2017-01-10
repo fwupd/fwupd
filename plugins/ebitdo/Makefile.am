@@ -11,11 +11,14 @@ AM_CPPFLAGS =						\
 plugindir = $(libdir)/fwupd-plugins-2
 plugin_LTLIBRARIES = libfu_plugin_ebitdo.la
 
+FWUPD_LIBS =						\
+	$(top_builddir)/libfwupd/libfwupd.la
+
 libfu_plugin_ebitdo_la_SOURCES =			\
 	fu-ebitdo-common.c				\
 	fu-ebitdo-common.h				\
-	fu-ebitdo-device.c				\
-	fu-ebitdo-device.h				\
+	fu-device-ebitdo.c				\
+	fu-device-ebitdo.h				\
 	fu-plugin-ebitdo.c
 libfu_plugin_ebitdo_la_LIBADD = $(GUSB_LIBS)
 libfu_plugin_ebitdo_la_LDFLAGS = -module -avoid-version
@@ -28,12 +31,14 @@ noinst_PROGRAMS =					\
 fu_ebitdo_tool_SOURCES =				\
 	fu-ebitdo-common.c				\
 	fu-ebitdo-common.h				\
-	fu-ebitdo-device.c				\
-	fu-ebitdo-device.h				\
+	fu-device-ebitdo.c				\
+	fu-device-ebitdo.h				\
+	../../src/fu-device.c				\
+	../../src/fu-device.h				\
 	fu-ebitdo-tool.c
 
 fu_ebitdo_tool_LDADD =					\
-	$(lib_LTLIBRARIES)				\
+	$(FWUPD_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)				\
 	$(GLIB_LIBS)					\
 	$(GUSB_LIBS)					\
