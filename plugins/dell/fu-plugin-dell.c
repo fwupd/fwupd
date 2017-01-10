@@ -1100,9 +1100,6 @@ fu_plugin_init (FuPlugin *plugin)
 	data->fake_smbios = FALSE;
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
 		data->fake_smbios = TRUE;
-
-	/* set a delay to allow OS response to settling the GPIO change */
-	fu_plugin_set_coldplug_delay (plugin, DELL_FLASH_MODE_DELAY * 1000);
 }
 
 void
@@ -1168,6 +1165,9 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			     (guint) uefi_supported);
 		return FALSE;
 	}
+
+	/* set a delay to allow OS response to settling the GPIO change */
+	fu_plugin_set_coldplug_delay (plugin, DELL_FLASH_MODE_DELAY * 1000);
 
 	return TRUE;
 }
