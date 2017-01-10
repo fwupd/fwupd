@@ -79,7 +79,6 @@ fu_plugin_altos_device_added (FuPlugin *plugin,
 					       fu_device_get_version (dev_runtime));
 		}
 	} else {
-		fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 		g_hash_table_insert (data->devices_runtime,
 				     g_strdup (platform_id),
 				     g_object_ref (dev));

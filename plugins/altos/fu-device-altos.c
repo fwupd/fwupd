@@ -805,7 +805,7 @@ fu_device_altos_probe (FuDeviceAltos *device, GError **error)
 
 /* now with kind and usb_device set */
 static void
-fu_device_init_real (FuDeviceAltos *device)
+fu_device_altos_init_real (FuDeviceAltos *device)
 {
 	FuDeviceAltosPrivate *priv = GET_PRIVATE (device);
 	g_autofree gchar *devid1 = NULL;
@@ -836,6 +836,12 @@ fu_device_init_real (FuDeviceAltos *device)
 				  g_usb_device_get_pid (priv->usb_device));
 	fu_device_add_guid (FU_DEVICE (device), devid1);
 	g_debug ("saving runtime GUID of %s", devid1);
+
+	/* only the bootloader can do the update */
+	if (priv->kind != FU_DEVICE_ALTOS_KIND_BOOTLOADER) {
+		fu_device_add_flag (FU_DEVICE (device),
+				    FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	}
 }
 
 typedef struct {
@@ -849,7 +855,6 @@ fu_device_altos_new (GUsbDevice *usb_device)
 {
 	FuDeviceAltos *device;
 	FuDeviceAltosPrivate *priv;
-	guint j;
 	const FuDeviceAltosVidPid vidpids[] = {
 		{ 0xfffe, 0x000a, FU_DEVICE_ALTOS_KIND_BOOTLOADER },
 		{ 0x1d50, 0x60c6, FU_DEVICE_ALTOS_KIND_CHAOSKEY },
@@ -857,7 +862,7 @@ fu_device_altos_new (GUsbDevice *usb_device)
 	};
 
 	/* set kind */
-	for (j = 0; vidpids[j].vid != 0x0000; j++) {
+	for (guint j = 0; vidpids[j].vid != 0x0000; j++) {
 		if (g_usb_device_get_vid (usb_device) != vidpids[j].vid)
 			continue;
 		if (g_usb_device_get_pid (usb_device) != vidpids[j].pid)
@@ -866,7 +871,7 @@ fu_device_altos_new (GUsbDevice *usb_device)
 		priv = GET_PRIVATE (device);
 		priv->kind = vidpids[j].kind;
 		priv->usb_device = g_object_ref (usb_device);
-		fu_device_init_real (device);
+		fu_device_altos_init_real (device);
 		return device;
 	}
 	return NULL;
