@@ -336,6 +336,7 @@ fu_device_altos_tty_open (FuDeviceAltos *device, GError **error)
 {
 	FuDeviceAltosPrivate *priv = GET_PRIVATE (device);
 	struct termios termios;
+	gint r;
 	g_autoptr(GString) str = NULL;
 
 	/* open device */
@@ -349,12 +350,38 @@ fu_device_altos_tty_open (FuDeviceAltos *device, GError **error)
 		return FALSE;
 	}
 
-	tcgetattr (priv->tty_fd, &termios);
+	r = tcgetattr (priv->tty_fd, &termios);
+	if (r == -1) {
+		close (priv->tty_fd);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed getting tty parameters");
+		return FALSE;
+	}
+
 	priv->tty_termios = termios;
 	cfmakeraw (&termios);
-	cfsetospeed (&termios, B9600);
-	cfsetispeed (&termios, B9600);
-	tcsetattr (priv->tty_fd, TCSAFLUSH, &termios);
+
+	r = cfsetspeed (&termios, B9600);
+	if (r == -1) {
+		close (priv->tty_fd);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed setting tty speed");
+		return FALSE;
+	}
+
+	r = tcsetattr (priv->tty_fd, TCSAFLUSH, &termios);
+	if (r == -1) {
+		close (priv->tty_fd);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed setting tty parameters");
+		return FALSE;
+	}
 
 	/* dump any pending input */
 	str = fu_device_altos_tty_read (device, 50, -1, NULL);
