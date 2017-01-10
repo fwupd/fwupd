@@ -63,8 +63,6 @@ typedef struct	FuPluginData	FuPluginData;
 
 /* for plugins to use */
 const gchar	*fu_plugin_get_name			(FuPlugin	*plugin);
-void		 fu_plugin_set_name			(FuPlugin	*plugin,
-							 const gchar	*name);
 FuPluginData	*fu_plugin_get_data			(FuPlugin	*plugin);
 FuPluginData	*fu_plugin_alloc_data			(FuPlugin	*plugin,
 							 gsize		 data_sz);

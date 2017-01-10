@@ -84,14 +84,6 @@ fu_plugin_get_name (FuPlugin *plugin)
 	return priv->name;
 }
 
-void
-fu_plugin_set_name (FuPlugin *plugin, const gchar *name)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_free (priv->name);
-	priv->name = g_strdup (name);
-}
-
 gpointer
 fu_plugin_cache_lookup (FuPlugin *plugin, const gchar *id)
 {
