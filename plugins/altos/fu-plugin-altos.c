@@ -28,17 +28,13 @@
 
 #include "fu-device-altos.h"
 
-struct FuPluginData {
-	GHashTable		*devices_runtime;	/* id : FuDevice */
-};
-
 static gboolean
 fu_plugin_altos_device_added (FuPlugin *plugin,
 			      GUsbDevice *usb_device,
 			      GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *platform_id = NULL;
+	g_autofree gchar *runtime_id = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDeviceAltos) dev = NULL;
@@ -68,9 +64,10 @@ fu_plugin_altos_device_added (FuPlugin *plugin,
 		return FALSE;
 
 	/* only the bootloader can do the update */
+	runtime_id = g_strdup_printf ("%s-runtime", platform_id);
 	if (fu_device_altos_get_kind (dev) == FU_DEVICE_ALTOS_KIND_BOOTLOADER) {
 		FuDevice *dev_runtime;
-		dev_runtime = g_hash_table_lookup (data->devices_runtime, platform_id);
+		dev_runtime = fu_plugin_cache_lookup (plugin, runtime_id);
 		if (dev_runtime != NULL) {
 			const gchar *guid = fu_device_get_guid_default (dev_runtime);
 			g_debug ("adding runtime GUID of %s", guid);
@@ -79,9 +76,7 @@ fu_plugin_altos_device_added (FuPlugin *plugin,
 					       fu_device_get_version (dev_runtime));
 		}
 	} else {
-		g_hash_table_insert (data->devices_runtime,
-				     g_strdup (platform_id),
-				     g_object_ref (dev));
+		fu_plugin_cache_add (plugin, runtime_id, dev);
 	}
 
 	/* insert to hash */
@@ -182,21 +177,6 @@ fu_plugin_altos_device_removed_cb (GUsbContext *ctx,
 
 	fu_plugin_device_remove (plugin, dev);
 	fu_plugin_cache_remove (plugin, platform_id);
-}
-
-void
-fu_plugin_init (FuPlugin *plugin)
-{
-	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-	data->devices_runtime = g_hash_table_new_full (g_str_hash, g_str_equal,
-						       g_free, (GDestroyNotify) g_object_unref);
-}
-
-void
-fu_plugin_destroy (FuPlugin *plugin)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_hash_table_unref (data->devices_runtime);
 }
 
 gboolean
