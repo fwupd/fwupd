@@ -33,8 +33,8 @@ fu_ebitdo_tool_SOURCES =				\
 	fu-ebitdo-common.h				\
 	fu-device-ebitdo.c				\
 	fu-device-ebitdo.h				\
-	../../src/fu-device.c				\
-	../../src/fu-device.h				\
+	fu-device.c					\
+	fu-device.h					\
 	fu-ebitdo-tool.c
 
 fu_ebitdo_tool_LDADD =					\

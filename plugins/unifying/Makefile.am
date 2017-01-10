@@ -29,8 +29,8 @@ noinst_PROGRAMS =					\
 fu_unifying_tool_SOURCES =				\
 	fu-device-unifying.c				\
 	fu-device-unifying.h				\
-	../../src/fu-device.c				\
-	../../src/fu-device.h				\
+	fu-device.c					\
+	fu-device.h					\
 	fu-unifying-tool.c
 
 fu_unifying_tool_LDADD =				\

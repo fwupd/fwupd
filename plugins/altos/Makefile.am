@@ -32,8 +32,8 @@ noinst_PROGRAMS =					\
 fu_altos_tool_SOURCES =					\
 	fu-device-altos.c				\
 	fu-device-altos.h				\
-	../../src/fu-device.c				\
-	../../src/fu-device.h				\
+	fu-device.c					\
+	fu-device.h					\
 	fu-altos-tool.c
 
 fu_altos_tool_LDADD =					\

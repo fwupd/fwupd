@@ -66,6 +66,6 @@ fu_self_test_CFLAGS =					\
 
 TESTS = fu-self-test
 
-EXTRA_DIST = README.md
+EXTRA_DIST += README.md
 
 -include $(top_srcdir)/git.mk
