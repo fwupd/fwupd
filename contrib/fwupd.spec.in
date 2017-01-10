@@ -155,6 +155,7 @@ make check VERBOSE=1
 %dir %{_localstatedir}/cache/app-info/xmls
 /usr/lib/udev/rules.d/*.rules
 %dir %{_libdir}/fwupd-plugins-2
+%{_libdir}/fwupd-plugins-2/libfu_plugin_altos.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_colorhug.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_dell.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_dfu.so
