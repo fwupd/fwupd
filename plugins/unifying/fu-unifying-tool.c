@@ -23,16 +23,16 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "unifying-dongle.h"
+#include "fu-device-unifying.h"
 
 typedef struct {
 	GCancellable		*cancellable;
 	GPtrArray		*cmd_array;
-	UnifyingDongleKind	 emulation_kind;
-} UnifyingToolPrivate;
+	FuDeviceUnifyingKind	 emulation_kind;
+} FuUnifyingToolPrivate;
 
 static void
-unifying_tool_private_free (UnifyingToolPrivate *priv)
+fu_unifying_tool_private_free (FuUnifyingToolPrivate *priv)
 {
 	if (priv == NULL)
 		return;
@@ -41,9 +41,9 @@ unifying_tool_private_free (UnifyingToolPrivate *priv)
 		g_ptr_array_unref (priv->cmd_array);
 	g_free (priv);
 }
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(UnifyingToolPrivate, unifying_tool_private_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUnifyingToolPrivate, fu_unifying_tool_private_free)
 
-typedef gboolean (*UnifyingToolPrivateCb)	(UnifyingToolPrivate	*util,
+typedef gboolean (*FuUnifyingToolPrivateCb)	(FuUnifyingToolPrivate	*util,
 					 gchar			**values,
 					 GError			**error);
 
@@ -51,11 +51,11 @@ typedef struct {
 	gchar		*name;
 	gchar		*arguments;
 	gchar		*description;
-	UnifyingToolPrivateCb	 callback;
-} UnifyingToolItem;
+	FuUnifyingToolPrivateCb	 callback;
+} FuUnifyingToolItem;
 
 static void
-unifying_tool_item_free (UnifyingToolItem *item)
+fu_unifying_tool_item_free (FuUnifyingToolItem *item)
 {
 	g_free (item->name);
 	g_free (item->arguments);
@@ -64,20 +64,20 @@ unifying_tool_item_free (UnifyingToolItem *item)
 }
 
 static gint
-unifying_tool_sort_command_name_cb (UnifyingToolItem **item1, UnifyingToolItem **item2)
+fu_unifying_tool_sort_command_name_cb (FuUnifyingToolItem **item1, FuUnifyingToolItem **item2)
 {
 	return g_strcmp0 ((*item1)->name, (*item2)->name);
 }
 
 static void
-unifying_tool_add (GPtrArray *array,
+fu_unifying_tool_add (GPtrArray *array,
 		      const gchar *name,
 		      const gchar *arguments,
 		      const gchar *description,
-		      UnifyingToolPrivateCb callback)
+		      FuUnifyingToolPrivateCb callback)
 {
 	guint i;
-	UnifyingToolItem *item;
+	FuUnifyingToolItem *item;
 	g_auto(GStrv) names = NULL;
 
 	g_return_if_fail (name != NULL);
@@ -87,7 +87,7 @@ unifying_tool_add (GPtrArray *array,
 	/* add each one */
 	names = g_strsplit (name, ",", -1);
 	for (i = 0; names[i] != NULL; i++) {
-		item = g_new0 (UnifyingToolItem, 1);
+		item = g_new0 (FuUnifyingToolItem, 1);
 		item->name = g_strdup (names[i]);
 		if (i == 0) {
 			item->description = g_strdup (description);
@@ -101,13 +101,13 @@ unifying_tool_add (GPtrArray *array,
 }
 
 static gchar *
-unifying_tool_get_descriptions (GPtrArray *array)
+fu_unifying_tool_get_descriptions (GPtrArray *array)
 {
 	guint i;
 	gsize j;
 	gsize len;
 	const gsize max_len = 31;
-	UnifyingToolItem *item;
+	FuUnifyingToolItem *item;
 	GString *string;
 
 	/* print each command */
@@ -144,13 +144,13 @@ unifying_tool_get_descriptions (GPtrArray *array)
 }
 
 static gboolean
-unifying_tool_run (UnifyingToolPrivate *priv,
-		   const gchar *command,
-		   gchar **values,
-		   GError **error)
+fu_unifying_tool_run (FuUnifyingToolPrivate *priv,
+		      const gchar *command,
+		      gchar **values,
+		      GError **error)
 {
 	guint i;
-	UnifyingToolItem *item;
+	FuUnifyingToolItem *item;
 
 	/* find command */
 	for (i = 0; i < priv->cmd_array->len; i++) {
@@ -167,10 +167,10 @@ unifying_tool_run (UnifyingToolPrivate *priv,
 	return FALSE;
 }
 
-static UnifyingDongle *
-fu_unifying_get_default_dongle (UnifyingToolPrivate *priv, GError **error)
+static FuDeviceUnifying *
+fu_unifying_get_default_dongle (FuUnifyingToolPrivate *priv, GError **error)
 {
-	UnifyingDongle *dongle = NULL;
+	FuDeviceUnifying *device = NULL;
 	g_autoptr(GUsbContext) usb_ctx = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -184,54 +184,57 @@ fu_unifying_get_default_dongle (UnifyingToolPrivate *priv, GError **error)
 	devices = g_usb_context_get_devices (usb_ctx);
 	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_dev_tmp = g_ptr_array_index (devices, i);
-		g_autoptr(UnifyingDongle) dev_tmp = unifying_dongle_new (usb_dev_tmp);
+		g_autoptr(FuDeviceUnifying) dev_tmp = fu_device_unifying_new (usb_dev_tmp);
 		if (dev_tmp == NULL)
 			continue;
-		if (unifying_dongle_get_kind (dev_tmp) != UNIFYING_DONGLE_KIND_UNKNOWN) {
-			dongle = g_object_ref (dev_tmp);
+		if (fu_device_unifying_get_kind (dev_tmp) != FU_DEVICE_UNIFYING_KIND_UNKNOWN) {
+			device = g_object_ref (dev_tmp);
 			break;
 		}
 	}
 
 	/* nothing supported */
-	if (dongle == NULL) {
+	if (device == NULL) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
 				     "No supported device plugged in");
 		return NULL;
 	}
-	return dongle;
+	return device;
 }
 
 static gboolean
-unifying_tool_info (UnifyingToolPrivate *priv, gchar **values, GError **error)
+fu_unifying_tool_info (FuUnifyingToolPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(UnifyingDongle) dongle = NULL;
+	g_autoptr(FuDeviceUnifying) device = NULL;
 
 	/* open device */
-	dongle = fu_unifying_get_default_dongle (priv, error);
-	if (dongle == NULL)
+	device = fu_unifying_get_default_dongle (priv, error);
+	if (device == NULL)
 		return FALSE;
-	if (!unifying_dongle_open (dongle, error))
+	if (!fu_device_unifying_open (device, error))
 		return FALSE;
 
 	/* show on console */
-	g_debug ("Found %s", unifying_dongle_kind_to_string (unifying_dongle_get_kind (dongle)));
-	g_print ("Firmware Ver: %s\n", unifying_dongle_get_version_fw (dongle));
-	g_print ("Bootloader Ver: %s\n", unifying_dongle_get_version_bl (dongle));
-	g_print ("GUID: %s\n", unifying_dongle_get_guid (dongle));
+	g_debug ("Found %s", fu_device_unifying_kind_to_string (fu_device_unifying_get_kind (device)));
+	g_print ("Firmware Ver: %s\n",
+		 fu_device_get_version (FU_DEVICE (device)));
+	g_print ("Bootloader Ver: %s\n",
+		 fu_device_get_version_bootloader (FU_DEVICE (device)));
+	g_print ("GUID: %s\n",
+		 fu_device_get_guid_default (FU_DEVICE (device)));
 
 	/* close device */
-	return unifying_dongle_close (dongle, error);
+	return fu_device_unifying_close (device, error);
 }
 
 static void
 fu_unifying_write_progress_cb (goffset current, goffset total, gpointer user_data)
 {
-	UnifyingToolPrivate *priv = (UnifyingToolPrivate *) user_data;
+	FuUnifyingToolPrivate *priv = (FuUnifyingToolPrivate *) user_data;
 	gdouble percentage = -1.f;
-	if (priv->emulation_kind != UNIFYING_DONGLE_KIND_UNKNOWN)
+	if (priv->emulation_kind != FU_DEVICE_UNIFYING_KIND_UNKNOWN)
 		return;
 	if (total > 0)
 		percentage = (100.f * (gdouble) current) / (gdouble) total;
@@ -240,12 +243,12 @@ fu_unifying_write_progress_cb (goffset current, goffset total, gpointer user_dat
 }
 
 static gboolean
-unifying_tool_write (UnifyingToolPrivate *priv, gchar **values, GError **error)
+fu_unifying_tool_write (FuUnifyingToolPrivate *priv, gchar **values, GError **error)
 {
 	gsize len;
 	g_autofree guint8 *data = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(UnifyingDongle) dongle = NULL;
+	g_autoptr(FuDeviceUnifying) device = NULL;
 
 	/* check args */
 	if (g_strv_length (values) != 1) {
@@ -258,19 +261,19 @@ unifying_tool_write (UnifyingToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open device */
-	if (priv->emulation_kind == UNIFYING_DONGLE_KIND_UNKNOWN) {
-		dongle = fu_unifying_get_default_dongle (priv, error);
-		if (dongle == NULL)
+	if (priv->emulation_kind == FU_DEVICE_UNIFYING_KIND_UNKNOWN) {
+		device = fu_unifying_get_default_dongle (priv, error);
+		if (device == NULL)
 			return FALSE;
 	} else {
-		dongle = unifying_dongle_emulated_new (priv->emulation_kind);
+		device = fu_device_unifying_emulated_new (priv->emulation_kind);
 	}
-	if (!unifying_dongle_open (dongle, error))
+	if (!fu_device_unifying_open (device, error))
 		return FALSE;
 
 	/* do we need to go into bootloader mode */
-	if (unifying_dongle_get_kind (dongle) == UNIFYING_DONGLE_KIND_RUNTIME) {
-		if (!unifying_dongle_detach (dongle, error))
+	if (fu_device_unifying_get_kind (device) == FU_DEVICE_UNIFYING_KIND_RUNTIME) {
+		if (!fu_device_unifying_detach (device, error))
 			return FALSE;
 		g_print ("Switched to bootloader, now run again\n");
 		return TRUE;
@@ -284,54 +287,54 @@ unifying_tool_write (UnifyingToolPrivate *priv, gchar **values, GError **error)
 
 	/* update with data blob */
 	fw = g_bytes_new (data, len);
-	if (!unifying_dongle_write_firmware (dongle, fw,
+	if (!fu_device_unifying_write_firmware (device, fw,
 						fu_unifying_write_progress_cb, priv,
 						error))
 		return FALSE;
 
 	/* detach back into runtime */
-	if (!unifying_dongle_attach (dongle, error))
+	if (!fu_device_unifying_attach (device, error))
 		return FALSE;
-	if (!unifying_dongle_close (dongle, error))
+	if (!fu_device_unifying_close (device, error))
 		return FALSE;
 
 	return TRUE;
 }
 
 static gboolean
-unifying_tool_attach (UnifyingToolPrivate *priv, gchar **values, GError **error)
+fu_unifying_tool_attach (FuUnifyingToolPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(UnifyingDongle) dongle = NULL;
-	dongle = fu_unifying_get_default_dongle (priv, error);
-	if (dongle == NULL)
+	g_autoptr(FuDeviceUnifying) device = NULL;
+	device = fu_unifying_get_default_dongle (priv, error);
+	if (device == NULL)
 		return FALSE;
-	if (!unifying_dongle_open (dongle, error))
+	if (!fu_device_unifying_open (device, error))
 		return FALSE;
-	if (!unifying_dongle_attach (dongle, error))
+	if (!fu_device_unifying_attach (device, error))
 		return FALSE;
-	if (!unifying_dongle_close (dongle, error))
+	if (!fu_device_unifying_close (device, error))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
-unifying_tool_detach (UnifyingToolPrivate *priv, gchar **values, GError **error)
+fu_unifying_tool_detach (FuUnifyingToolPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(UnifyingDongle) dongle = NULL;
-	dongle = fu_unifying_get_default_dongle (priv, error);
-	if (dongle == NULL)
+	g_autoptr(FuDeviceUnifying) device = NULL;
+	device = fu_unifying_get_default_dongle (priv, error);
+	if (device == NULL)
 		return FALSE;
-	if (!unifying_dongle_open (dongle, error))
+	if (!fu_device_unifying_open (device, error))
 		return FALSE;
-	if (!unifying_dongle_detach (dongle, error))
+	if (!fu_device_unifying_detach (device, error))
 		return FALSE;
-	if (!unifying_dongle_close (dongle, error))
+	if (!fu_device_unifying_close (device, error))
 		return FALSE;
 	return TRUE;
 }
 
 static void
-unifying_tool_log_handler_cb (const gchar *log_domain,
+fu_unifying_tool_log_handler_cb (const gchar *log_domain,
 			      GLogLevelFlags log_level,
 			      const gchar *message,
 			      gpointer user_data)
@@ -347,8 +350,8 @@ main (int argc, char **argv)
 	g_autofree gchar *emulation_kind = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GOptionContext) context = NULL;
-	g_autoptr(UnifyingDongle) dongle = NULL;
-	g_autoptr(UnifyingToolPrivate) priv = g_new0 (UnifyingToolPrivate, 1);
+	g_autoptr(FuDeviceUnifying) device = NULL;
+	g_autoptr(FuUnifyingToolPrivate) priv = g_new0 (FuUnifyingToolPrivate, 1);
 	const GOptionEntry options[] = {
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			"Print verbose debug statements", NULL },
@@ -361,32 +364,32 @@ main (int argc, char **argv)
 	priv->cancellable = g_cancellable_new ();
 
 	/* add commands */
-	priv->cmd_array = g_ptr_array_new_with_free_func ((GDestroyNotify) unifying_tool_item_free);
-	unifying_tool_add (priv->cmd_array,
-			   "info", NULL,
-			   "Show information about the device",
-			   unifying_tool_info);
-	unifying_tool_add (priv->cmd_array,
-			   "write", "FILENAME",
-			   "Update the firmware",
-			   unifying_tool_write);
-	unifying_tool_add (priv->cmd_array,
-			   "attach", NULL,
-			   "Attach to firmware mode",
-			   unifying_tool_attach);
-	unifying_tool_add (priv->cmd_array,
-			   "detach", NULL,
-			   "Detach to bootloader mode",
-			   unifying_tool_detach);
+	priv->cmd_array = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_unifying_tool_item_free);
+	fu_unifying_tool_add (priv->cmd_array,
+			      "info", NULL,
+			      "Show information about the device",
+			      fu_unifying_tool_info);
+	fu_unifying_tool_add (priv->cmd_array,
+			      "write", "FILENAME",
+			      "Update the firmware",
+			      fu_unifying_tool_write);
+	fu_unifying_tool_add (priv->cmd_array,
+			      "attach", NULL,
+			      "Attach to firmware mode",
+			      fu_unifying_tool_attach);
+	fu_unifying_tool_add (priv->cmd_array,
+			      "detach", NULL,
+			      "Detach to bootloader mode",
+			      fu_unifying_tool_detach);
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,
-			  (GCompareFunc) unifying_tool_sort_command_name_cb);
+			  (GCompareFunc) fu_unifying_tool_sort_command_name_cb);
 
 
 	/* get a list of the commands */
 	context = g_option_context_new (NULL);
-	cmd_descriptions = unifying_tool_get_descriptions (priv->cmd_array);
+	cmd_descriptions = fu_unifying_tool_get_descriptions (priv->cmd_array);
 	g_option_context_set_summary (context, cmd_descriptions);
 	g_set_application_name ("Logitech Unifying Debug Tool");
 	g_option_context_add_main_entries (context, options, NULL);
@@ -396,16 +399,16 @@ main (int argc, char **argv)
 	}
 
 	/* emulate */
-	priv->emulation_kind = unifying_dongle_kind_from_string (emulation_kind);
-	if (priv->emulation_kind != UNIFYING_DONGLE_KIND_UNKNOWN)
-		g_log_set_default_handler (unifying_tool_log_handler_cb, priv);
+	priv->emulation_kind = fu_device_unifying_kind_from_string (emulation_kind);
+	if (priv->emulation_kind != FU_DEVICE_UNIFYING_KIND_UNKNOWN)
+		g_log_set_default_handler (fu_unifying_tool_log_handler_cb, priv);
 
 	/* set verbose? */
 	if (verbose)
 		g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
 
 	/* run the specified command */
-	if (!unifying_tool_run (priv, argv[1], (gchar**) &argv[2], &error)) {
+	if (!fu_unifying_tool_run (priv, argv[1], (gchar**) &argv[2], &error)) {
 		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
 			g_autofree gchar *tmp = NULL;
 			tmp = g_option_context_get_help (context, TRUE, NULL);
