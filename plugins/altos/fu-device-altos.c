@@ -369,6 +369,11 @@ fu_device_altos_tty_open (FuDeviceAltos *device, GError **error)
 		return FALSE;
 	}
 
+	/* one input byte is enough to return
+	 * inter-character timer off */
+	termios.c_cc[VMIN]  = 1;
+	termios.c_cc[VTIME] = 0;
+
 	/* set all new data */
 	if (tcsetattr (priv->tty_fd, TCSAFLUSH, &termios) < 0) {
 		g_set_error_literal (error,
