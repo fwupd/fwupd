@@ -227,20 +227,22 @@ fu_device_unifying_send_command (FuDeviceUnifying *device,
 
 	/* send request */
 	fu_unifying_dump_raw ("host->device", data_in, data_in_length);
-	if (priv->usb_device != NULL &&
-	    !g_usb_device_control_transfer (priv->usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    UNIFYING_REQUEST_SET_REPORT,
-					    value, idx,
-					    data_in, data_in_length,
-					    &actual_length,
-					    FU_DEVICE_UNIFYING_TIMEOUT_MS,
-					    NULL,
-					    error)) {
-		g_prefix_error (error, "failed to send data: ");
-		return FALSE;
+	if (priv->usb_device != NULL) {
+		g_autofree guint8 *data_in_buf = g_memdup (data_in, data_in_length);
+		if (!g_usb_device_control_transfer (priv->usb_device,
+						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+						    G_USB_DEVICE_REQUEST_TYPE_CLASS,
+						    G_USB_DEVICE_RECIPIENT_INTERFACE,
+						    UNIFYING_REQUEST_SET_REPORT,
+						    value, idx,
+						    data_in_buf, data_in_length,
+						    &actual_length,
+						    FU_DEVICE_UNIFYING_TIMEOUT_MS,
+						    NULL,
+						    error)) {
+			g_prefix_error (error, "failed to send data: ");
+			return FALSE;
+		}
 	}
 
 	/* get response */
