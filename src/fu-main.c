@@ -68,6 +68,7 @@ typedef struct {
 	guint			 store_changed_id;
 	gboolean		 coldplug_running;
 	guint			 coldplug_id;
+	guint			 coldplug_delay;
 	GPtrArray		*plugins;	/* of FuPlugin */
 	GHashTable		*plugins_hash;	/* of name : FuPlugin */
 } FuMainPrivate;
@@ -2333,6 +2334,12 @@ fu_main_plugins_coldplug (FuMainPrivate *priv)
 			g_warning ("failed to prepare coldplug: %s", error->message);
 	}
 
+	/* do this in one place */
+	if (priv->coldplug_delay > 0) {
+		g_debug ("sleeping for %ums", priv->coldplug_delay);
+		g_usleep (priv->coldplug_delay * 1000);
+	}
+
 	/* exec */
 	ptask = as_profile_start_literal (priv->profile, "FuMain:coldplug");
 	g_assert (ptask != NULL);
@@ -2585,6 +2592,14 @@ fu_main_plugin_recoldplug_cb (FuPlugin *plugin, FuMainPrivate *priv)
 	priv->coldplug_id = g_timeout_add (1500, fu_main_recoldplug_delay_cb, priv);
 }
 
+static void
+fu_main_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuMainPrivate *priv)
+{
+	priv->coldplug_delay = MAX (priv->coldplug_delay, duration);
+	g_debug ("got coldplug delay of %ums, global maximum is now %ums",
+		 duration, priv->coldplug_delay);
+}
+
 static gboolean
 fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 {
@@ -2630,6 +2645,9 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 				  priv);
 		g_signal_connect (plugin, "recoldplug",
 				  G_CALLBACK (fu_main_plugin_recoldplug_cb),
+				  priv);
+		g_signal_connect (plugin, "set-coldplug-delay",
+				  G_CALLBACK (fu_main_plugin_set_coldplug_delay_cb),
 				  priv);
 
 		/* add */

@@ -47,8 +47,10 @@ struct _FuPluginClass
 	void		 (* percentage_changed)		(FuPlugin	*plugin,
 							 guint		 percentage);
 	void		 (* recoldplug)			(FuPlugin	*plugin);
+	void		 (* set_coldplug_delay)		(FuPlugin	*plugin,
+							 guint		 duration);
 	/*< private >*/
-	gpointer	padding[26];
+	gpointer	padding[25];
 };
 
 typedef enum {
@@ -81,6 +83,8 @@ void		 fu_plugin_set_status			(FuPlugin	*plugin,
 void		 fu_plugin_set_percentage		(FuPlugin	*plugin,
 							 guint		 percentage);
 void		 fu_plugin_recoldplug			(FuPlugin	*plugin);
+void		 fu_plugin_set_coldplug_delay		(FuPlugin	*plugin,
+							 guint		 duration);
 GChecksumType	 fu_plugin_get_checksum_type		(FuPluginVerifyFlags flags);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*plugin,
 							 const gchar	*id);

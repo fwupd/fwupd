@@ -1046,12 +1046,6 @@ fu_plugin_dell_toggle_flash (FuPlugin *plugin,
 	else
 		g_debug("Dell: Toggled MST hub GPIO to %d", enable);
 
-	/* If succesful, add a delay to allow OS response to
-	   settling the GPIO change.  Without this, plugins
-	   may not respond properly */
-	if (enable)
-		g_usleep(DELL_FLASH_MODE_DELAY * 1000000);
-
 	return TRUE;
 }
 
@@ -1092,6 +1086,9 @@ fu_plugin_init (FuPlugin *plugin)
 	data->fake_smbios = FALSE;
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
 		data->fake_smbios = TRUE;
+
+	/* set a delay to allow OS response to settling the GPIO change */
+	fu_plugin_set_coldplug_delay (plugin, DELL_FLASH_MODE_DELAY * 1000);
 }
 
 void
