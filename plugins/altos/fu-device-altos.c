@@ -349,12 +349,34 @@ fu_device_altos_tty_open (FuDeviceAltos *device, GError **error)
 		return FALSE;
 	}
 
-	tcgetattr (priv->tty_fd, &termios);
+	/* get the old termios settings so we can restore later */
+	if (tcgetattr (priv->tty_fd, &termios) < 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "failed to get attributes from fd");
+		return FALSE;
+	}
 	priv->tty_termios = termios;
 	cfmakeraw (&termios);
-	cfsetospeed (&termios, B9600);
-	cfsetispeed (&termios, B9600);
-	tcsetattr (priv->tty_fd, TCSAFLUSH, &termios);
+
+	/* set speed */
+	if (cfsetspeed (&termios, B9600) < 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "failed to set terminal speed");
+		return FALSE;
+	}
+
+	/* set all new data */
+	if (tcsetattr (priv->tty_fd, TCSAFLUSH, &termios) < 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "failed to set attributes on fd");
+		return FALSE;
+	}
 
 	/* dump any pending input */
 	str = fu_device_altos_tty_read (device, 50, -1, NULL);
