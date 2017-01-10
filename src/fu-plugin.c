@@ -77,6 +77,16 @@ typedef gboolean	 (*FuPluginUpdateFunc)		(FuPlugin	*plugin,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 
+/**
+ * fu_plugin_get_name:
+ * @plugin: A #FuPlugin
+ *
+ * Gets the plugin name.
+ *
+ * Returns: a plugin name, or %NULL for unknown.
+ *
+ * Since: 0.8.0
+ **/
 const gchar *
 fu_plugin_get_name (FuPlugin *plugin)
 {
@@ -84,6 +94,17 @@ fu_plugin_get_name (FuPlugin *plugin)
 	return priv->name;
 }
 
+/**
+ * fu_plugin_cache_lookup:
+ * @plugin: A #FuPlugin
+ * @id: the key
+ *
+ * Finds an object in the per-plugin cache.
+ *
+ * Returns: (transfer none): a #GObject, or %NULL for unfound.
+ *
+ * Since: 0.8.0
+ **/
 gpointer
 fu_plugin_cache_lookup (FuPlugin *plugin, const gchar *id)
 {
@@ -91,6 +112,16 @@ fu_plugin_cache_lookup (FuPlugin *plugin, const gchar *id)
 	return g_hash_table_lookup (priv->devices, id);
 }
 
+/**
+ * fu_plugin_cache_add:
+ * @plugin: A #FuPlugin
+ * @id: the key
+ * @dev: a #GObject, typically a #FuDevice
+ *
+ * Adds an object to the per-plugin cache.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_cache_add (FuPlugin *plugin, const gchar *id, gpointer dev)
 {
@@ -98,6 +129,15 @@ fu_plugin_cache_add (FuPlugin *plugin, const gchar *id, gpointer dev)
 	g_hash_table_insert (priv->devices, g_strdup (id), g_object_ref (dev));
 }
 
+/**
+ * fu_plugin_cache_remove:
+ * @plugin: A #FuPlugin
+ * @id: the key
+ *
+ * Removes an object from the per-plugin cache.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_cache_remove (FuPlugin *plugin, const gchar *id)
 {
@@ -105,6 +145,16 @@ fu_plugin_cache_remove (FuPlugin *plugin, const gchar *id)
 	g_hash_table_remove (priv->devices, id);
 }
 
+/**
+ * fu_plugin_get_data:
+ * @plugin: A #FuPlugin
+ *
+ * Gets the per-plugin allocated private data.
+ *
+ * Returns: (transfer full): a pointer to a structure, or %NULL for unset.
+ *
+ * Since: 0.8.0
+ **/
 FuPluginData *
 fu_plugin_get_data (FuPlugin *plugin)
 {
@@ -112,6 +162,17 @@ fu_plugin_get_data (FuPlugin *plugin)
 	return priv->data;
 }
 
+/**
+ * fu_plugin_alloc_data:
+ * @plugin: A #FuPlugin
+ * @data_sz: the size to allocate
+ *
+ * Allocates the per-plugin allocated private data.
+ *
+ * Returns: (transfer full): a pointer to a structure, or %NULL for unset.
+ *
+ * Since: 0.8.0
+ **/
 FuPluginData *
 fu_plugin_alloc_data (FuPlugin *plugin, gsize data_sz)
 {
@@ -120,6 +181,16 @@ fu_plugin_alloc_data (FuPlugin *plugin, gsize data_sz)
 	return priv->data;
 }
 
+/**
+ * fu_plugin_get_usb_context:
+ * @plugin: A #FuPlugin
+ *
+ * Gets the shared USB context that all plugins can use.
+ *
+ * Returns: (transfer none): a #GUsbContext.
+ *
+ * Since: 0.8.0
+ **/
 GUsbContext *
 fu_plugin_get_usb_context (FuPlugin *plugin)
 {
@@ -134,6 +205,16 @@ fu_plugin_set_usb_context (FuPlugin *plugin, GUsbContext *usb_ctx)
 	g_set_object (&priv->usb_ctx, usb_ctx);
 }
 
+/**
+ * fu_plugin_get_enabled:
+ * @plugin: A #FuPlugin
+ *
+ * Returns if the plugin is enabled.
+ *
+ * Returns: %TRUE if the plugin is currently enabled.
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_get_enabled (FuPlugin *plugin)
 {
@@ -141,6 +222,15 @@ fu_plugin_get_enabled (FuPlugin *plugin)
 	return priv->enabled;
 }
 
+/**
+ * fu_plugin_set_enabled:
+ * @plugin: A #FuPlugin
+ * @enabled: the enabled value
+ *
+ * Enables or disables a plugin. Plugins can self-disable at any point.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_set_enabled (FuPlugin *plugin, gboolean enabled)
 {
@@ -182,6 +272,21 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 	return TRUE;
 }
 
+/**
+ * fu_plugin_device_add:
+ * @plugin: A #FuPlugin
+ * @device: A #FuDevice
+ *
+ * Asks the daemon to add a device to the exported list. If this device ID
+ * has already been added by a different plugin then this request will be
+ * ignored.
+ *
+ * Plugins should use fu_plugin_device_add_delay() if they are not capable of
+ * actually flashing an image to the hardware so that higher-priority plugins
+ * can add the device themselves.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 {
@@ -219,6 +324,15 @@ fu_plugin_device_add_delay_cb (gpointer user_data)
 	return FALSE;
 }
 
+/**
+ * fu_plugin_device_add_delay:
+ * @plugin: A #FuPlugin
+ * @device: A #FuDevice
+ *
+ * Asks the daemon to add a device to the exported list after a small delay.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_device_add_delay (FuPlugin *plugin, FuDevice *device)
 {
@@ -233,6 +347,15 @@ fu_plugin_device_add_delay (FuPlugin *plugin, FuDevice *device)
 	g_hash_table_insert (helper->devices, device, helper);
 }
 
+/**
+ * fu_plugin_device_add:
+ * @plugin: A #FuPlugin
+ * @device: A #FuDevice
+ *
+ * Asks the daemon to remove a device from the exported list.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 {
@@ -255,12 +378,31 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_REMOVED], 0, device);
 }
 
+/**
+ * fu_plugin_set_status:
+ * @plugin: A #FuPlugin
+ * @status: A #FwupdStatus, e.g. #FWUPD_STATUS_DECOMPRESSING
+ *
+ * Sets the global state of the daemon according to the current plugin action.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_set_status (FuPlugin *plugin, FwupdStatus status)
 {
 	g_signal_emit (plugin, signals[SIGNAL_STATUS_CHANGED], 0, status);
 }
 
+/**
+ * fu_plugin_set_percentage:
+ * @plugin: A #FuPlugin
+ * @percentage: the percentage complete
+ *
+ * Sets the global completion of the daemon according to the current plugin
+ * action.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_set_percentage (FuPlugin *plugin, guint percentage)
 {
