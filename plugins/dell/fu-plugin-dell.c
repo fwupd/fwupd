@@ -1021,10 +1021,24 @@ fu_plugin_update_offline (FuPlugin *plugin,
 
 static gboolean
 fu_plugin_dell_toggle_flash (FuPlugin *plugin,
+			     FuDevice *device,
 			     GError **error,
 			     gboolean enable)
 {
 	guint32 dock_location;
+	FwupdDeviceFlags flags;
+	const gchar *tmp;
+
+	if (device) {
+		flags = fu_device_get_flags (device);
+		if (!(flags & FWUPD_DEVICE_FLAG_ALLOW_ONLINE))
+			return TRUE;
+		tmp = fu_device_get_plugin(device);
+		if (!((g_strcmp0 (tmp, "thunderbolt") == 0) ||
+			(g_strcmp0 (tmp, "synapticsmst") == 0)))
+			return TRUE;
+		g_debug("Dell: preparing/cleaning update for %s", tmp);
+	}
 
 	/* Dock MST Hub / TBT Controller */
 	if (fu_plugin_dell_detect_dock (plugin, &dock_location)) {
@@ -1054,7 +1068,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
                           FuDevice *device,
                           GError **error)
 {
-	return fu_plugin_dell_toggle_flash (plugin, error, TRUE);
+	return fu_plugin_dell_toggle_flash (plugin, device, error, TRUE);
 }
 
 gboolean
@@ -1062,19 +1076,19 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
                           FuDevice *device,
                           GError **error)
 {
-	return fu_plugin_dell_toggle_flash (plugin, error, FALSE);
+	return fu_plugin_dell_toggle_flash (plugin, device, error, FALSE);
 }
 
 gboolean
 fu_plugin_coldplug_prepare (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_dell_toggle_flash (plugin, error, TRUE);
+	return fu_plugin_dell_toggle_flash (plugin, NULL, error, TRUE);
 }
 
 gboolean
 fu_plugin_coldplug_cleanup (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_dell_toggle_flash (plugin, error, FALSE);
+	return fu_plugin_dell_toggle_flash (plugin, NULL, error, FALSE);
 }
 
 void
