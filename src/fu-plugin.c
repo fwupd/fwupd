@@ -91,6 +91,7 @@ const gchar *
 fu_plugin_get_name (FuPlugin *plugin)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
 	return priv->name;
 }
 
@@ -109,6 +110,8 @@ gpointer
 fu_plugin_cache_lookup (FuPlugin *plugin, const gchar *id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
+	g_return_val_if_fail (id != NULL, NULL);
 	return g_hash_table_lookup (priv->devices, id);
 }
 
@@ -126,6 +129,8 @@ void
 fu_plugin_cache_add (FuPlugin *plugin, const gchar *id, gpointer dev)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (id != NULL);
 	g_hash_table_insert (priv->devices, g_strdup (id), g_object_ref (dev));
 }
 
@@ -142,6 +147,8 @@ void
 fu_plugin_cache_remove (FuPlugin *plugin, const gchar *id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (id != NULL);
 	g_hash_table_remove (priv->devices, id);
 }
 
@@ -159,6 +166,7 @@ FuPluginData *
 fu_plugin_get_data (FuPlugin *plugin)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
 	return priv->data;
 }
 
@@ -177,6 +185,7 @@ FuPluginData *
 fu_plugin_alloc_data (FuPlugin *plugin, gsize data_sz)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
 	if (priv->data != NULL) {
 		g_critical ("fu_plugin_alloc_data() already used by plugin");
 		return priv->data;
@@ -199,6 +208,7 @@ GUsbContext *
 fu_plugin_get_usb_context (FuPlugin *plugin)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
 	return priv->usb_ctx;
 }
 
@@ -223,6 +233,7 @@ gboolean
 fu_plugin_get_enabled (FuPlugin *plugin)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), FALSE);
 	return priv->enabled;
 }
 
@@ -239,6 +250,7 @@ void
 fu_plugin_set_enabled (FuPlugin *plugin, gboolean enabled)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	priv->enabled = enabled;
 }
 
@@ -294,6 +306,9 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 void
 fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 {
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_DEVICE (device));
+
 	g_debug ("emit added from %s: %s",
 		 fu_plugin_get_name (plugin),
 		 fu_device_get_id (device));
@@ -342,6 +357,10 @@ fu_plugin_device_add_delay (FuPlugin *plugin, FuDevice *device)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginHelper *helper;
+
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_DEVICE (device));
+
 	g_debug ("waiting a small time for other plugins");
 	helper = g_new0 (FuPluginHelper, 1);
 	helper->plugin = g_object_ref (plugin);
@@ -365,6 +384,9 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginHelper *helper;
+
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_DEVICE (device));
 
 	/* waiting for add */
 	helper = g_hash_table_lookup (priv->devices_delay, device);
@@ -394,6 +416,7 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 void
 fu_plugin_set_status (FuPlugin *plugin, FwupdStatus status)
 {
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_signal_emit (plugin, signals[SIGNAL_STATUS_CHANGED], 0, status);
 }
 
@@ -410,6 +433,8 @@ fu_plugin_set_status (FuPlugin *plugin, FwupdStatus status)
 void
 fu_plugin_set_percentage (FuPlugin *plugin, guint percentage)
 {
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (percentage <= 100);
 	g_signal_emit (plugin, signals[SIGNAL_PERCENTAGE_CHANGED], 0,
 		       percentage);
 }
@@ -426,6 +451,7 @@ fu_plugin_set_percentage (FuPlugin *plugin, guint percentage)
 void
 fu_plugin_recoldplug (FuPlugin *plugin)
 {
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_signal_emit (plugin, signals[SIGNAL_RECOLDPLUG], 0);
 }
 
