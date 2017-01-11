@@ -72,7 +72,8 @@ static void
 fu_plugin_thunderbolt_info_free (FuThunderboltInfo *info)
 {
 	g_free (info->id);
-	g_object_unref (info->dev);
+	if (info->dev != NULL)
+		g_object_unref (info->dev);
 	g_slice_free (FuThunderboltInfo, info);
 }
 
@@ -111,7 +112,8 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 			     tbt_strerror (rc));
 		return FALSE;
 	}
-	g_debug ("found %i thunderbolt controllers", data->controllers_len);
+	g_debug ("found %" G_GSIZE_FORMAT " thunderbolt controllers",
+		 data->controllers_len);
 
 	/* no longer valid */
 	for (guint i = 0; i < data->infos->len; i++) {
