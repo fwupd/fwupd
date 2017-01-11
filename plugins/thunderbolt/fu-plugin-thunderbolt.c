@@ -210,7 +210,8 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 	for (guint i = 0; i < data->infos->len; i++) {
 		FuThunderboltInfo *info = g_ptr_array_index (data->infos, i);
 		if (info->controller == NULL) {
-			fu_plugin_device_remove (plugin, info->dev);
+			if (info->dev != NULL)
+				fu_plugin_device_remove (plugin, info->dev);
 			g_ptr_array_add (infos_remove, info);
 		}
 	}
