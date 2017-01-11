@@ -17,7 +17,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)						\
 	-I$(top_builddir)					\
 	-DG_USB_API_IS_SUBJECT_TO_CHANGE			\
-	-DG_LOG_DOMAIN=\"libdfu\"				\
+	-DG_LOG_DOMAIN=\"Dfu\"					\
 	-DTESTDATADIR=\""$(top_srcdir)/libdfu/tests"\"		\
 	-DLOCALEDIR=\""$(localedir)"\"
 
