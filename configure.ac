@@ -309,6 +309,25 @@ else
 fi
 AM_CONDITIONAL(HAVE_DELL, test x$has_dell = xyes)
 
+# Synaptics mst support
+AC_ARG_ENABLE(synaptics,
+	      AS_HELP_STRING([--enable-synaptics],
+	      [Enable Synaptics MST hub support]),,
+	      enable_synaptics=maybe)
+if test x$enable_synaptics != xno &&
+   test x$has_libsmbios = xyes; then
+	AC_DEFINE(HAVE_SYNAPTICS,1,[Use Synaptics MST hub  support])
+	has_synaptics=yes
+else
+	has_synaptics=no
+	if test "x$enable_synaptics" = "xyes"; then
+		if test x$has_libsmbios = xno; then
+			AC_MSG_ERROR([Synaptics MST support requested but 'libsmbios-dev' was not found])
+		fi
+	fi
+fi
+AM_CONDITIONAL(HAVE_SYNAPTICS, test x$has_synaptics = xyes)
+
 # systemd support
 AC_ARG_WITH([systemdunitdir],
             AS_HELP_STRING([--with-systemdunitdir=DIR], [Directory for systemd service files]),
@@ -355,6 +374,7 @@ plugins/ebitdo/Makefile
 plugins/raspberrypi/Makefile
 plugins/raspberrypi/rpiupdate/Makefile
 plugins/steelseries/Makefile
+plugins/synapticsmst/Makefile
 plugins/test/Makefile
 plugins/thunderbolt/Makefile
 plugins/udev/Makefile
@@ -382,5 +402,6 @@ echo "
 	libelf:                    $has_libelf
 	UEFI:                      $has_fwup
 	Dell:                      $has_dell
+	Synaptics MST:             $has_synaptics
 	Thunderbolt:               $has_thunderbolt
 "

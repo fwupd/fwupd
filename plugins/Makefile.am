@@ -3,6 +3,7 @@ SUBDIRS =		\
 	dfu		\
 	ebitdo		\
 	raspberrypi	\
+	synapticsmst	\
 	steelseries	\
 	test		\
 	udev		\
