@@ -111,6 +111,7 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 			     tbt_strerror (rc));
 		return FALSE;
 	}
+	g_debug ("found %i thunderbolt controllers", data->controllers_len);
 
 	/* no longer valid */
 	for (guint i = 0; i < data->infos->len; i++) {
@@ -440,6 +441,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		}
 	}
 	if (found) {
+		g_debug ("found thunderbolt PCI device on coldplug");
 		if (!fu_plugin_thunderbolt_rescan (plugin, error))
 			return FALSE;
 	}
