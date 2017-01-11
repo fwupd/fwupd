@@ -227,7 +227,7 @@ static gboolean
 fu_plugin_thunderbolt_schedule_rescan_cb (gpointer user_data)
 {
 	FuPlugin *plugin = FU_PLUGIN (user_data);
-	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(GError) error = NULL;
 
 	/* no longer valid */
@@ -242,7 +242,7 @@ fu_plugin_thunderbolt_schedule_rescan_cb (gpointer user_data)
 static void
 fu_plugin_thunderbolt_schedule_rescan (FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	FuPluginData *data = fu_plugin_get_data (plugin);
 
 	/* this delay is a work-around for potential race conditions in which
 	 * the udev event arrives to fwupd prior to the daemon refreshing */
