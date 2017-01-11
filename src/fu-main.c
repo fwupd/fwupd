@@ -600,14 +600,29 @@ fu_main_plugin_update_authenticated (FuMainAuthHelper *helper, GError **error)
 					      helper->blob_cab,
 					      blob_fw,
 					      helper->flags,
-					      error))
+					      error)) {
+			for (guint j = 0; j < priv->plugins->len; j++) {
+				FuPlugin *plugin = g_ptr_array_index (priv->plugins, j);
+				g_autoptr(GError) error_local = NULL;
+				if (!fu_plugin_runner_update_cleanup (plugin,
+								      device,
+								      &error_local)) {
+					g_warning ("failed to update-cleanup "
+						   "after failed update: %s",
+						   error_local->message);
+				}
+			}
 			return FALSE;
+		}
 
 		/* signal to all the plugins the update has happened */
 		for (guint j = 0; j < priv->plugins->len; j++) {
 			FuPlugin *plugin = g_ptr_array_index (priv->plugins, j);
-			if (!fu_plugin_runner_update_cleanup (plugin, device, error))
-				return FALSE;
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_plugin_runner_update_cleanup (plugin, device, &error_local)) {
+				g_warning ("failed to update-cleanup: %s",
+					   error_local->message);
+			}
 		}
 
 		/* make the UI update */
