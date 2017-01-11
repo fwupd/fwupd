@@ -34,24 +34,9 @@
 #include <fcntl.h>
 
 #include "fu-plugin-dell.h"
-
 #include "fu-quirks.h"
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
-
-struct FuPluginData {
-	GHashTable		*devices;	/* DeviceKey:FuPluginDockItem */
-	gboolean		fake_smbios;
-	guint32			fake_output[4];
-	guint16			fake_vid;
-	guint16			fake_pid;
-	guint8			*fake_buffer;
-};
-typedef struct dell_smi_obj fu_dell_smi_obj;
-
-/* SMI return values used */
-#define SMI_SUCCESS			0
-#define SMI_INVALID_BUFFER		-6
 
 /* These are used to indicate the status of a previous DELL flash */
 #define DELL_SUCCESS			0x0000
@@ -70,44 +55,8 @@ typedef struct dell_smi_obj fu_dell_smi_obj;
 #define DELL_IMAGE_MISSING		0x000D
 #define DELL_DID_NOTHING		0xFFFF
 
-
-/* These are DACI class/select needed for
- * flash capability queries
- */
-#define DACI_FLASH_INTERFACE_CLASS	7
-#define DACI_FLASH_INTERFACE_SELECT	3
-#define DACI_FLASH_ARG_TPM		2
-#define DACI_FLASH_ARG_FLASH_MODE	3
-#define DACI_FLASH_MODE_USER		0
-#define DACI_FLASH_MODE_FLASH		1
-
-
-/* DACI class/select for dock capabilities */
-#define DACI_DOCK_CLASS			17
-#define DACI_DOCK_SELECT		22
-#define DACI_DOCK_ARG_COUNT		0
-#define DACI_DOCK_ARG_INFO		1
-#define DACI_DOCK_ARG_MODE		2
-#define DACI_DOCK_ARG_MODE_USER		0
-#define DACI_DOCK_ARG_MODE_FLASH	1
-
 /* Delay for settling */
 #define DELL_FLASH_MODE_DELAY		2
-
-/* These are for dock query capabilities */
-struct dock_count_in {
-	guint32 argument;
-	guint32 reserved1;
-	guint32 reserved2;
-	guint32 reserved3;
-};
-
-struct dock_count_out {
-	guint32 ret;
-	guint32 count;
-	guint32 location;
-	guint32 reserved;
-};
 
 typedef struct _DOCK_DESCRIPTION
 {
@@ -115,6 +64,14 @@ typedef struct _DOCK_DESCRIPTION
 	const gchar *		query;
 	const gchar *		desc;
 } DOCK_DESCRIPTION;
+
+static void
+_dell_smi_obj_free (fu_dell_smi_obj *smi)
+{
+	dell_smi_obj_free (smi);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(fu_dell_smi_obj, _dell_smi_obj_free);
 
 /* These are for matching the components */
 #define WD15_EC_STR		"2 0 2 2 0"
@@ -125,10 +82,6 @@ typedef struct _DOCK_DESCRIPTION
 #define LEGACY_CBL_STR		"2 2 2 1 0"
 #define UNIV_CBL_STR		"2 2 2 2 0"
 #define TBT_CBL_STR		"2 2 2 3 0"
-
-/* supported host related GUIDs */
-#define TBT_GPIO_GUID		EFI_GUID (0x2EFD333F, 0x65EC, 0x41D3, 0x86D3, 0x08, 0xF0, 0x9F, 0x4F, 0xB1, 0x14)
-#define MST_GPIO_GUID		EFI_GUID (0xF24F9bE4, 0x2a13, 0x4344, 0xBC05, 0x01, 0xCE, 0xF7, 0xDA, 0xEF, 0x92)
 
 /* supported dock related GUIDs */
 #define DOCK_FLASH_GUID		EFI_GUID (0xE7CA1F36, 0xBF73, 0x4574, 0xAFE6, 0xA4, 0xCC, 0xAC, 0xAB, 0xF4, 0x79)
@@ -159,11 +112,6 @@ typedef struct {
 	FuPlugin		*plugin;
 } FuPluginDockItem;
 
-static void
-_dell_smi_obj_free (fu_dell_smi_obj *smi)
-{
-	dell_smi_obj_free (smi);
-}
 
 static void
 _fwup_resource_iter_free (fwup_resource_iter *iter)
@@ -172,7 +120,6 @@ _fwup_resource_iter_free (fwup_resource_iter *iter)
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(fu_dell_smi_obj, _dell_smi_obj_free);
 
 static gboolean
 fu_plugin_dell_match_dock_component(const gchar *query_str,
@@ -234,25 +181,6 @@ fu_plugin_dell_execute_smi (FuPlugin *plugin, fu_dell_smi_obj *smi)
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_dell_execute_simple_smi (FuPlugin *plugin,
-				   guint16 class, guint16 select,
-				   guint32  *args, guint32 *out)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-
-	if (data->fake_smbios) {
-		for (guint i = 0; i < 4; i++)
-			out[i] = data->fake_output[i];
-		return TRUE;
-	}
-	if (dell_simple_ci_smi (class, select, args, out)) {
-		g_debug ("Dell: failed to run query %u/%u", class, select);
-		return FALSE;
-	}
-	return TRUE;
-}
-
 static guint32
 fu_plugin_dell_get_res (FuPlugin *plugin,
 			fu_dell_smi_obj *smi, guint8 arg)
@@ -263,38 +191,6 @@ fu_plugin_dell_get_res (FuPlugin *plugin,
 		return data->fake_output[arg];
 
 	return dell_smi_obj_get_res (smi, arg);
-}
-
-static gboolean
-fu_plugin_dell_detect_dock (FuPlugin *plugin, guint32 *location)
-{
-	g_autofree struct dock_count_in *count_args = NULL;
-	g_autofree struct dock_count_out *count_out = NULL;
-
-	/* look up dock count */
-	count_args = g_malloc0 (sizeof(struct dock_count_in));
-	count_out  = g_malloc0 (sizeof(struct dock_count_out));
-	count_args->argument = DACI_DOCK_ARG_COUNT;
-	if (!fu_plugin_dell_execute_simple_smi (plugin,
-						  DACI_DOCK_CLASS,
-						  DACI_DOCK_SELECT,
-						  (guint32 *) count_args,
-						  (guint32 *) count_out))
-		return FALSE;
-	if (count_out->ret != 0) {
-		g_debug ("Dell: Failed to query system for dock count: "
-			 "(%" G_GUINT32_FORMAT ")", count_out->ret);
-		return FALSE;
-	}
-	if (count_out->count < 1) {
-		g_debug ("Dell: no dock plugged in");
-		return FALSE;
-	}
-	*location = count_out->location;
-	g_debug ("Dell: Dock count %u, location %u.",
-		 count_out->count, *location);
-	return TRUE;
-
 }
 
 static void
@@ -398,70 +294,6 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_dell_toggle_dock_mode (FuPlugin *plugin,
-				 guint32 new_mode, guint32 dock_location,
-				 GError **error)
-{
-	g_autofree guint32 *input = NULL;
-	g_autofree guint32 *output = NULL;
-
-	input = g_malloc0 (sizeof(guint32) *4);
-	output = g_malloc0 (sizeof(guint32) *4);
-
-	/* Put into mode to accept AR/MST */
-	input[0] = DACI_DOCK_ARG_MODE;
-	input[1] = dock_location;
-	input[2] = new_mode;
-	if (!fu_plugin_dell_execute_simple_smi (plugin,
-						  DACI_DOCK_CLASS,
-						  DACI_DOCK_SELECT,
-						  input,
-						  output))
-		return FALSE;
-	if (output[1] != 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Dell: Failed to set dock flash mode: %u",
-			     output[1]);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_plugin_dell_toggle_host_mode (const efi_guid_t guid, int mode)
-{
-	gint ret;
-	g_autoptr(fu_dell_smi_obj) smi = NULL;
-	ADDR_UNION buf;
-	smi = dell_smi_factory (DELL_SMI_DEFAULTS);
-	dell_smi_obj_set_class (smi, DACI_FLASH_INTERFACE_CLASS);
-	dell_smi_obj_set_select (smi, DACI_FLASH_INTERFACE_SELECT);
-	dell_smi_obj_set_arg (smi, cbARG1, DACI_FLASH_ARG_FLASH_MODE);
-	dell_smi_obj_set_arg (smi, cbARG4, mode);
-	/* needs to be padded with an empty GUID */
-	buf.buf = dell_smi_obj_make_buffer_frombios_withoutheader(smi, cbARG2,
-								  sizeof(efi_guid_t) * 2);
-	if (!buf.buf) {
-		g_debug ("Dell: Failed to initialize SMI buffer");
-		return FALSE;
-	}
-	*buf.guid = guid;
-	ret = dell_smi_obj_execute(smi);
-	if (ret != SMI_SUCCESS){
-		g_debug ("Dell: failed to execute SMI: %d", ret);
-		return FALSE;
-	}
-
-	ret = dell_smi_obj_get_res(smi, cbRES1);
-	if (ret != SMI_SUCCESS) {
-		g_debug ("Dell: SMI execution returned error: %d", ret);
-		return FALSE;
-	}
-	return TRUE;
-}
 
 void
 fu_plugin_dell_device_added_cb (GUsbContext *ctx,
@@ -499,7 +331,7 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	/* we're going to match on the Realtek NIC in the dock */
 	if (vid != DOCK_NIC_VID || pid != DOCK_NIC_PID)
 		return;
-	if (!fu_plugin_dell_detect_dock (plugin, &location))
+	if (!fu_dell_detect_dock (plugin, &location))
 		return;
 
 	/* look up more information on dock */
@@ -755,7 +587,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 
 	/* execute TPM Status Query */
 	args[0] = DACI_FLASH_ARG_TPM;
-	if (!fu_plugin_dell_execute_simple_smi (plugin,
+	if (!fu_dell_execute_simple_smi (plugin,
 						  DACI_FLASH_INTERFACE_CLASS,
 						  DACI_FLASH_INTERFACE_SELECT,
 						  args,
@@ -1019,56 +851,12 @@ fu_plugin_update_offline (FuPlugin *plugin,
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_dell_toggle_flash (FuPlugin *plugin,
-			     FuDevice *device,
-			     GError **error,
-			     gboolean enable)
-{
-	guint32 dock_location;
-	FwupdDeviceFlags flags;
-	const gchar *tmp;
-
-	if (device) {
-		flags = fu_device_get_flags (device);
-		if (!(flags & FWUPD_DEVICE_FLAG_ALLOW_ONLINE))
-			return TRUE;
-		tmp = fu_device_get_plugin(device);
-		if (!((g_strcmp0 (tmp, "thunderbolt") == 0) ||
-			(g_strcmp0 (tmp, "synapticsmst") == 0)))
-			return TRUE;
-		g_debug("Dell: preparing/cleaning update for %s", tmp);
-	}
-
-	/* Dock MST Hub / TBT Controller */
-	if (fu_plugin_dell_detect_dock (plugin, &dock_location)) {
-		if (!fu_plugin_dell_toggle_dock_mode (plugin,
-						      enable,
-						      dock_location, error))
-			g_debug("Dell: unable to change dock to %d", enable);
-		else
-			g_debug("Dell: Toggled dock mode to %d", enable);
-	}
-
-	/* System MST hub / TBT controller */
-	if (!fu_plugin_dell_toggle_host_mode (TBT_GPIO_GUID, enable))
-		g_debug("Dell: Unable to toggle TBT GPIO to %d", enable);
-	else
-		g_debug("Dell: Toggled TBT GPIO to %d", enable);
-	if (!fu_plugin_dell_toggle_host_mode (MST_GPIO_GUID, enable))
-		g_debug("Dell: Unable to toggle MST hub GPIO to %d", enable);
-	else
-		g_debug("Dell: Toggled MST hub GPIO to %d", enable);
-
-	return TRUE;
-}
-
 gboolean
 fu_plugin_update_prepare (FuPlugin *plugin,
                           FuDevice *device,
                           GError **error)
 {
-	return fu_plugin_dell_toggle_flash (plugin, device, error, TRUE);
+	return fu_dell_toggle_flash (device, error, TRUE);
 }
 
 gboolean
@@ -1076,19 +864,19 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
                           FuDevice *device,
                           GError **error)
 {
-	return fu_plugin_dell_toggle_flash (plugin, device, error, FALSE);
+	return fu_dell_toggle_flash (device, error, FALSE);
 }
 
 gboolean
 fu_plugin_coldplug_prepare (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_dell_toggle_flash (plugin, NULL, error, TRUE);
+	return fu_dell_toggle_flash (NULL, error, TRUE);
 }
 
 gboolean
 fu_plugin_coldplug_cleanup (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_dell_toggle_flash (plugin, NULL, error, FALSE);
+	return fu_dell_toggle_flash (NULL, error, FALSE);
 }
 
 void

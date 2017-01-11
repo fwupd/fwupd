@@ -19,6 +19,7 @@ FWUPD_LIBS =						\
 plugindir = $(libdir)/fwupd-plugins-2
 plugin_LTLIBRARIES = libfu_plugin_dell.la
 libfu_plugin_dell_la_SOURCES =				\
+	fu-dell-flash.c					\
 	fu-plugin-dell.c
 libfu_plugin_dell_la_LIBADD =				\
 	$(GUSB_LIBS)					\
@@ -35,6 +36,8 @@ fu_self_test_SOURCES =					\
 	fu-plugin.c					\
 	fu-pending.c					\
 	fu-device.c					\
+	fu-dell-flash.c					\
+	fu-dell-flash.h					\
 	fu-plugin-dell.c				\
 	fu-plugin-dell.h				\
 	fu-self-test.c
@@ -58,6 +61,27 @@ fu_self_test_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"/tmp/fwupd-self-test\"	\
 	-DLOCALSTATEDIR=\"/tmp/fwupd-self-test/var\"	\
 	$(WARN_CFLAGS)
+
+noinst_PROGRAMS =                                       \
+        fu-dell-tool
+
+fu_dell_tool_SOURCES =					\
+	fu-dell-flash.c					\
+	fu-dell-flash.h					\
+	fu-dell-tool.c
+
+fu_dell_tool_LDADD =					\
+	$(GLIB_LIBS)					\
+	$(FWUPD_LIBS)					\
+	$(LIBSMBIOS_LIBS)
+
+fu_dell_tool_LDFLAGS =					\
+	$(PIE_LDFLAGS)					\
+	$(RELRO_LDFLAGS)
+
+fu_dell_tool_CFLAGS =					\
+	$(WARN_CFLAGS)
+
 
 TESTS = fu-self-test
 
