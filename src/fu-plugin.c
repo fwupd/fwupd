@@ -177,6 +177,10 @@ FuPluginData *
 fu_plugin_alloc_data (FuPlugin *plugin, gsize data_sz)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->data != NULL) {
+		g_critical ("fu_plugin_alloc_data() already used by plugin");
+		return priv->data;
+	}
 	priv->data = g_malloc0 (data_sz);
 	return priv->data;
 }
