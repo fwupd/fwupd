@@ -30,12 +30,11 @@ opinion, the suboptimal design features are as follows:
  * The daemon does not keep track of the physical devices, so we have to check
    a list of cached added sysfs paths to be able to do a rescan only when a
    Thunderbolt controller is removed.
- * The `thunderboltd` daemon does not know whether devices are internal or not.
 
 Build Requirements
 ------------------
 
-For UEFI capsule support, you need to install libtbtfwu.
+For Thunderbolt online update support, you need to install libtbtfwu.
 * source:		https://github.com/01org/thunderbolt-software-user-space/tree/fwupdate
 
 If you don't want or need this functionality you can use the
