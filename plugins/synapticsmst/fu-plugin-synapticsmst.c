@@ -1,6 +1,7 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright (C) 2017 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,21 +30,67 @@
 #define SYNAPTICS_FLASH_MODE_DELAY 2
 
 static gboolean
+fu_synaptics_add_device (FuPlugin *plugin,
+			 SynapticsMSTDevice *device,
+			 guint8 aux_node,
+			 guint8 layer,
+			 guint8 rad,
+			 GError **error) {
+	g_autoptr(FuDevice) dev = NULL;
+	const gchar *board_str = NULL;
+	const gchar *guid_str = NULL;
+	g_autofree gchar *name = NULL;
+	g_autofree gchar *dev_id_str = NULL;
+
+	if (!synapticsmst_device_enumerate_device (device, error)) {
+		g_debug ("SynapticsMST: Error enumerating device at %u", aux_node);
+		return FALSE;
+	}
+
+	board_str = synapticsmst_device_boardID_to_string (synapticsmst_device_get_boardID(device));
+	name = g_strdup_printf ("%s with Synaptics [%s]", board_str,
+				synapticsmst_device_get_chipID (device));
+	guid_str =  synapticsmst_device_get_guid (device);
+	/* Store $KIND-$AUXNODE-$LAYER-$RAD as device ID */
+	dev_id_str = g_strdup_printf ("MST-%u-%u-%u-%u",
+				      synapticsmst_device_get_kind(device),
+				      aux_node, layer, rad);
+
+	if (board_str == NULL) {
+		g_debug ("SynapticsMST: invalid board ID");
+		return FALSE;
+	}
+
+	/* create the device */
+	dev = fu_device_new ();
+	fu_device_set_id (dev, dev_id_str);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+	fu_device_set_name (dev, name);
+	fu_device_set_version (dev, synapticsmst_device_get_version (device));
+	fu_device_add_guid (dev, guid_str);
+
+	fu_plugin_device_add (plugin, dev);
+	fu_plugin_cache_add (plugin, dev_id_str, dev);
+	return TRUE;
+}
+
+static gboolean
 fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 				  GError **error)
 {
 	guint8 i;
+	guint8 j;
+	guint16 rad = 0;
+	guint8 layer = 0;
 	const gchar *aux_node = NULL;
-	const gchar *board_str = NULL;
-	g_autofree gchar *name = NULL;
-	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(SynapticsMSTDevice) device = NULL;
+	g_autoptr(FuDevice) dev = NULL;
 
 	if (!synapticsmst_common_check_supported_system (error))
 		return FALSE;
 
 	for (i=0; i<MAX_DP_AUX_NODES; i++) {
-		aux_node = synapticsmst_device_get_aux_node (i);
+		aux_node = synapticsmst_device_aux_node_to_string (i);
 		dev = fu_plugin_cache_lookup (plugin, aux_node);
 
 		/* If we open succesfully a device exists here */
@@ -54,36 +101,36 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 			if (dev != NULL)
 				continue;
 
-			g_debug ("SynapticsMST: Adding device at %s", aux_node);
-			/* TODO: adding cascading (remote) */
-
-			device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, aux_node);
-
-			if (!synapticsmst_device_enumerate_device(device, error)) {
-				g_debug("SynapticsMST: Error enumerating device at %s", aux_node);
+			/* Add direct devices */
+			g_debug ("SynapticsMST: Adding direct device at %s", aux_node);
+			device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, i, 0, 0);
+			if (!fu_synaptics_add_device (plugin, device, i, 0, 0,
+						      error))
 				continue;
-			}
 
-			board_str = synapticsmst_device_boardID_to_string(synapticsmst_device_get_boardID(device));
-			name = g_strdup_printf ("%s with Synaptics [%s]", board_str,
-						synapticsmst_device_get_chipID(device));
-
-			if (board_str == NULL) {
-				g_debug ("SynapticsMST: invalid board ID");
+			/* Check for cascaded devices */
+			if (!synapticsmst_common_open_aux_node (aux_node))
 				continue;
+			synapticsmst_device_enable_remote_control (device, error);
+			for (j=0; j<2; j++) {
+				if (synapticsmst_device_scan_cascade_device (device, j)) {
+					layer = synapticsmst_device_get_layer (device) + 1;
+					rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
+					device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
+									  i, layer, rad);
+					g_debug ("SynapticsMST: Adding cascaded device at %s (%d,%d)", aux_node, layer, rad);
+					if (!fu_synaptics_add_device (plugin,
+								      device,
+								      i,
+								      layer,
+								      rad,
+								      error))
+						continue;
+				}
 			}
+			synapticsmst_device_disable_remote_control (device, error);
+			synapticsmst_common_close_aux_node ();
 
-			/* create the device */
-			dev = fu_device_new ();
-			fu_device_set_id (dev, aux_node);
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
-			fu_device_set_name (dev, name);
-			fu_device_set_version (dev, synapticsmst_device_get_version (device));
-			/* GUID is created by board ID */
-			fu_device_add_guid (dev, synapticsmst_device_get_guid(device));
-
-			fu_plugin_device_add (plugin, dev);
-			fu_plugin_cache_add (plugin, aux_node, dev);
 		}
 		/* No device exists here, but was there - remove from DB */
 		else if (dev != NULL) {
@@ -118,23 +165,37 @@ fu_plugin_update_online (FuPlugin *plugin,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
-	const gchar *device_id;
 	g_autoptr(SynapticsMSTDevice) device = NULL;
+	const gchar *device_id;
+	SynapticsMSTDeviceKind kind;
+	guint8 aux_node;
+	guint8 layer;
+	guint8 rad;
+	g_auto (GStrv) split = NULL;
+
+	/* extract details to build a new device */
+	device_id = fu_device_get_id (dev);
+	split = g_strsplit (device_id, "-", -1);
+	kind = g_ascii_strtoull (split[1], NULL, 0);
+	aux_node = g_ascii_strtoull (split[2], NULL, 0);
+	layer = g_ascii_strtoull (split[3], NULL, 0);
+	rad = g_ascii_strtoull (split[4], NULL, 0);
+
 
 	/* sleep to allow device wakeup to complete */
 	g_debug ("SynapticsMST: Waiting %d seconds for MST hub wakeup\n",
 		 SYNAPTICS_FLASH_MODE_DELAY);
 	g_usleep (SYNAPTICS_FLASH_MODE_DELAY * 1000000);
 
-	device_id = fu_device_get_id (dev);
-	device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, device_id);
+	device = synapticsmst_device_new (kind, aux_node, layer, rad);
 
 	if (!synapticsmst_device_enumerate_device (device, error))
 		return FALSE;
 	if (synapticsmst_device_boardID_to_string (synapticsmst_device_get_boardID(device)) != NULL) {
 		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 		if (!synapticsmst_device_write_firmware (device, blob_fw,
-							 fu_synapticsmst_write_progress_cb, plugin,
+							 fu_synapticsmst_write_progress_cb,
+							 plugin,
 							 error))
 			return FALSE;
 	} else {
@@ -147,10 +208,10 @@ fu_plugin_update_online (FuPlugin *plugin,
 
 	/* Re-run device enumeration to find the new device version */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
-	fu_plugin_device_remove (plugin, dev);
-	fu_plugin_cache_remove (plugin, device_id);
-	if (!fu_plugin_synapticsmst_enumerate (plugin, error))
+	if (!synapticsmst_device_enumerate_device (device, error)) {
 		return FALSE;
+	}
+	fu_device_set_version (dev, synapticsmst_device_get_version (device));
 
 	return TRUE;
 }
