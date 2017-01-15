@@ -128,6 +128,7 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		gsize tdbid_sz = sizeof (tdbid);
 		g_autofree gchar *guid_id = NULL;
 		g_autofree gchar *version = NULL;
+		gint safe_mode = 0;
 
 		/* get the ID */
 		rc = tbt_fwu_Controller_getID (data->controllers[i],
@@ -151,32 +152,53 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		info->id = g_strdup (tdbid);
 		g_ptr_array_add (data->infos, info);
 
-		/* get the vendor ID */
-		rc = tbt_fwu_Controller_getVendorID (data->controllers[i],
-						     &info->vendor_id);
+		rc = tbt_fwu_Controller_isInSafeMode(data->controllers[i], &safe_mode);
 		if (rc != TBT_OK) {
-			g_warning ("failed to get tbd vendor ID: %s",
+			g_warning ("failed to get controller status: %s",
 				   tbt_strerror (rc));
 			continue;
 		}
 
-		/* get the model ID */
-		rc = tbt_fwu_Controller_getModelID (data->controllers[i],
-						    &info->model_id);
-		if (rc != TBT_OK) {
-			g_warning ("failed to get tbd model ID: %s",
-				   tbt_strerror (rc));
-			continue;
+		if (safe_mode)
+		{
+			info->vendor_id = 0;
+			info->model_id = 0;
+			info->version_major = 0;
+			info->version_minor = 0;
+			g_warning ("Thunderbolt controller %s is in Safe Mode.  "
+				   "Please visit https://github.com/01org/tbtfwupd/wiki "
+				   "for information on how to restore normal operation.",
+				   info->id);
 		}
+		else
+		{
+			/* get the vendor ID */
+			rc = tbt_fwu_Controller_getVendorID (data->controllers[i],
+							     &info->vendor_id);
+			if (rc != TBT_OK) {
+				g_warning ("failed to get tbd vendor ID: %s",
+					   tbt_strerror (rc));
+				continue;
+			}
 
-		/* get the controller info */
-		rc = tbt_fwu_Controller_getNVMVersion (data->controllers[i],
-						       &info->version_major,
-						       &info->version_minor);
-		if (rc != TBT_OK) {
-			g_warning ("failed to get tbd firmware version: %s",
-				   tbt_strerror (rc));
-			continue;
+			/* get the model ID */
+			rc = tbt_fwu_Controller_getModelID (data->controllers[i],
+							    &info->model_id);
+			if (rc != TBT_OK) {
+				g_warning ("failed to get tbd model ID: %s",
+					   tbt_strerror (rc));
+				continue;
+			}
+
+			/* get the controller info */
+			rc = tbt_fwu_Controller_getNVMVersion (data->controllers[i],
+							       &info->version_major,
+							       &info->version_minor);
+			if (rc != TBT_OK) {
+				g_warning ("failed to get tbd firmware version: %s",
+					   tbt_strerror (rc));
+				continue;
+			}
 		}
 
 		/* add FuDevice attributes */
@@ -184,7 +206,10 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		fu_device_set_vendor (info->dev, "Intel");
 		fu_device_set_name (info->dev, "Thunderbolt Controller");
 		fu_device_add_flag (info->dev, FWUPD_DEVICE_FLAG_INTERNAL);
-		fu_device_add_flag (info->dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+		if (!safe_mode)
+		{
+			fu_device_add_flag (info->dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+		}
 		fu_device_set_id (info->dev, info->id);
 
 		/* add GUID that the info firmware uses */
