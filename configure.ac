@@ -189,7 +189,7 @@ AC_ARG_ENABLE(thunderbolt,
 			     [Enable Thunderbolt support [default=auto]]),,
 	      enable_thunderbolt=maybe)
 if test x$enable_thunderbolt != xno; then
-	PKG_CHECK_MODULES(THUNDERBOLT, [libtbtfwu >= 0.9],
+	PKG_CHECK_MODULES(THUNDERBOLT, [libtbtfwu >= 1],
 			  has_thunderbolt=yes,
 			  has_thunderbolt=no)
 fi

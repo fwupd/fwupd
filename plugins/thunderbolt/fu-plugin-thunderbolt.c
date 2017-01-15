@@ -281,6 +281,13 @@ fu_plugin_thunderbolt_device_matches (GUdevDevice *device)
 	return TRUE;
 }
 
+static void
+fu_plugin_thunderbolt_percentage_changed_cb (guint percentage, gpointer user_data)
+{
+	FuPlugin *plugin = FU_PLUGIN (user_data);
+	fu_plugin_set_percentage (plugin, percentage);
+}
+
 gboolean
 fu_plugin_update_online (FuPlugin *plugin,
 			 FuDevice *dev,
@@ -317,7 +324,11 @@ fu_plugin_update_online (FuPlugin *plugin,
 	}
 
 	/* update the device */
-	rc = tbt_fwu_Controller_updateFW (info->controller, blob, blob_sz);
+	rc = tbt_fwu_Controller_updateFW (info->controller,
+					  blob,
+					  blob_sz,
+					  fu_plugin_thunderbolt_percentage_changed_cb,
+					  plugin);
 	if (rc != TBT_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
