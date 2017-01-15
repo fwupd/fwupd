@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Intel Corporation <thunderbolt-software@lists.01.org>
+ * Copyright (C) 2016-2017 Intel Corporation <thunderbolt-software@lists.01.org>
  * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
@@ -126,8 +126,7 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		FuThunderboltInfo *info;
 		gchar tdbid[FU_PLUGIN_THUNDERBOLT_MAX_ID_LEN];
 		gsize tdbid_sz = sizeof (tdbid);
-		g_autofree gchar *guid_id1 = NULL;
-		g_autofree gchar *guid_id2 = NULL;
+		g_autofree gchar *guid_id = NULL;
 		g_autofree gchar *version = NULL;
 
 		/* get the ID */
@@ -188,15 +187,10 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		fu_device_add_flag (info->dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
 		fu_device_set_id (info->dev, info->id);
 
-		/* add GUID that fwupd will know about */
-		guid_id1 = g_strdup_printf ("PCI\\VEN_%04X&DEV_%04X",
-					    info->vendor_id, info->model_id);
-		fu_device_add_guid (info->dev, guid_id1);
-
 		/* add GUID that the info firmware uses */
-		guid_id2 = g_strdup_printf ("TBT-%04x%04x",
-					    info->vendor_id, info->model_id);
-		fu_device_add_guid (info->dev, guid_id2);
+		guid_id = g_strdup_printf ("TBT-%04x%04x",
+					   info->vendor_id, info->model_id);
+		fu_device_add_guid (info->dev, guid_id);
 
 		/* format version */
 		version = g_strdup_printf ("%" G_GUINT32_FORMAT ".%02" G_GUINT32_FORMAT,
