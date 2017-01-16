@@ -94,7 +94,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 		dev = fu_plugin_cache_lookup (plugin, aux_node);
 
 		/* If we open succesfully a device exists here */
-		if (synapticsmst_common_open_aux_node (aux_node)) {
+		if (synapticsmst_common_open_aux_node (aux_node) > 0) {
 			synapticsmst_common_close_aux_node ();
 
 			/* node already exists */
