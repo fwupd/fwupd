@@ -28,9 +28,9 @@
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <smbios_c/smbios.h>
 #include <glib-object.h>
 #include "synapticsmst-common.h"
+#include "synapticsmst-device.h"
 
 #define UNIT_SIZE       32
 #define MAX_WAIT_TIME   3  /* unit : second */
@@ -398,21 +398,4 @@ synapticsmst_common_disable_remote_control (void)
 
     synapticsmst_common_config_connection (tmp_layer, g_RAD);
     return rc;
-}
-
-gboolean synapticsmst_common_check_supported_system (GError **error)
-{
-    guint8 dell_supported = 0;
-    struct smbios_struct *de_table;
-    de_table = smbios_get_next_struct_by_type (0, 0xDE);
-    smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
-    if (dell_supported != 0xDE) {
-        g_set_error (error,
-                 G_IO_ERROR,
-                 G_IO_ERROR_INVALID_DATA,
-                 "SynapticsMST: firmware updating not supported. (%x)",
-                 dell_supported);
-        return FALSE;
-    }
-    return TRUE;
 }

@@ -21,6 +21,7 @@
  */
 
 #include "config.h"
+#include <smbios_c/smbios.h>
 #include "synapticsmst-device.h"
 #include "synapticsmst-common.h"
 #include "fu-plugin-dell.h"
@@ -28,6 +29,40 @@
 #include "fu-plugin-vfuncs.h"
 
 #define SYNAPTICS_FLASH_MODE_DELAY 2
+
+static gboolean
+synapticsmst_common_check_supported_system (GError **error)
+{
+	gint i;
+	guint8 dell_supported = 0;
+	gboolean kernel_support = FALSE;
+	struct smbios_struct *de_table;
+
+	de_table = smbios_get_next_struct_by_type (0, 0xDE);
+	smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
+	if (dell_supported != 0xDE) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "MST firmware updating not supported by OEM (%x)",
+			     dell_supported);
+		return FALSE;
+	}
+	for (i=0; i<MAX_DP_AUX_NODES; i++) {
+		if (kernel_support)
+			break;
+		kernel_support = g_file_test (synapticsmst_device_aux_node_to_string (i),
+					      G_FILE_TEST_EXISTS);
+	}
+	if (!kernel_support) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "MST firmware updating not supported, missing kernel support.");
+		return FALSE;
+	}
+	return TRUE;
+}
 
 static gboolean
 fu_synaptics_add_device (FuPlugin *plugin,
@@ -85,9 +120,6 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 	const gchar *aux_node = NULL;
 	g_autoptr(SynapticsMSTDevice) device = NULL;
 	g_autoptr(FuDevice) dev = NULL;
-
-	if (!synapticsmst_common_check_supported_system (error))
-		return FALSE;
 
 	for (i=0; i<MAX_DP_AUX_NODES; i++) {
 		aux_node = synapticsmst_device_aux_node_to_string (i);
@@ -251,6 +283,10 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
+	/* verify that this is a supported system */
+	if (!synapticsmst_common_check_supported_system (error))
+		return FALSE;
+
 	/* look for host devices or already plugged in dock devices */
 	if (!fu_plugin_synapticsmst_enumerate (plugin, error))
 		g_debug ("SynapticsMST: Error enumerating.");

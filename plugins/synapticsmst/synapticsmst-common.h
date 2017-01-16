@@ -107,6 +107,4 @@ guchar		synapticsmst_common_enable_remote_control	(void);
 
 guchar		synapticsmst_common_disable_remote_control	(void);
 
-gboolean	synapticsmst_common_check_supported_system	(GError **error);
-
 #endif /* __SYNAPTICSMST_COMMON_H */
