@@ -864,6 +864,7 @@ fu_device_unifying_init_real (FuDeviceUnifying *device)
 	/* generate name */
 	name = g_strdup_printf ("Unifying [%s]",
 				fu_device_unifying_kind_to_string (priv->kind));
+	fu_device_set_name (FU_DEVICE (device), name);
 
 	/* generate GUID -- in runtime mode we have to use the release */
 	if (priv->kind == FU_DEVICE_UNIFYING_KIND_RUNTIME) {
