@@ -193,7 +193,7 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		fu_device_add_guid (info->dev, guid_id);
 
 		/* format version */
-		version = g_strdup_printf ("%" G_GUINT32_FORMAT ".%02" G_GUINT32_FORMAT,
+		version = g_strdup_printf ("%" G_GINT32_MODIFIER "x.%02" G_GINT32_MODIFIER "x",
 					   info->version_major,
 					   info->version_minor);
 		fu_device_set_version (info->dev, version);
