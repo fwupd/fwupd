@@ -71,6 +71,10 @@ synapticsmst_common_open_aux_node (const gchar* filename)
 
 	g_fd = open (filename, O_RDWR);
 
+	/* file doesn't exist on this system */
+	if (!g_file_test (filename, G_FILE_TEST_EXISTS))
+		return 0;
+
 	/* can't open aux node, try use sudo to get the permission */
 	if (g_fd == -1)
 		return -1;
