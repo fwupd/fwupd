@@ -234,6 +234,27 @@ fu_plugin_get_dock_key (FuPlugin *plugin,
 }
 
 static gboolean
+fu_plugin_dell_capsule_supported (void)
+{
+	gint uefi_supported;
+
+	/* If ESRT is not turned on, fwupd will have already created an
+	 * unlock device (if compiled with support).
+	 *
+	 * Once unlocked, that will enable flashing capsules here too.
+	 *
+	 * that means we should only look for supported = 1
+	 */
+	uefi_supported = fwup_supported ();
+	if (uefi_supported != 1) {
+		g_debug("UEFI capsule firmware updating not supported (%x)",
+			(guint) uefi_supported);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 		     guint8 type, const efi_guid_t *guid_raw,
 		     const gchar *component_desc, const gchar *version)
@@ -285,8 +306,9 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
 		fu_device_set_version (item->device, version);
-		fu_device_add_flag (item->device,
-				    FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		if (fu_plugin_dell_capsule_supported ())
+			fu_device_add_flag (item->device,
+					    FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 	}
 
 	g_hash_table_insert (data->devices, g_strdup (dock_key), item);
@@ -669,7 +691,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (out->flashes_left > 0) {
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		if (fu_plugin_dell_capsule_supported ())
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	}
 	fu_plugin_device_add (plugin, dev);
@@ -902,7 +925,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	guint8 dell_supported = 0;
-	gint uefi_supported = 0;
 	struct smbios_struct *de_table;
 
 	/* get USB */
@@ -931,26 +953,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Firmware updating not supported (%x)",
 			     dell_supported);
-		return FALSE;
-	}
-	/* Check and make sure that ESRT is supported as well.
-	 *
-	 * This will indicate capsule support on the system.
-	 *
-	 * If ESRT is not turned on, fwupd will have already created an
-	 * unlock device (if compiled with support).
-	 *
-	 * Once unlocked, that will enable this plugin too.
-	 *
-	 * that means we should only look for supported = 1
-	 */
-	uefi_supported = fwup_supported ();
-	if (uefi_supported != 1) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "UEFI capsule firmware updating not supported (%x)",
-			     (guint) uefi_supported);
 		return FALSE;
 	}
 
