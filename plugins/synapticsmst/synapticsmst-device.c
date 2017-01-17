@@ -176,7 +176,7 @@ synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device, guint8 tx_p
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint8 layer = priv->layer + 1;
 	guint16 rad = priv->rad | (tx_port << (2 * (priv->layer)));
-	guint byte[4];
+	guint8 byte[4];
 	guint8 rc;
 
 	synapticsmst_common_config_connection (layer, rad);
