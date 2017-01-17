@@ -55,15 +55,15 @@ synapticsmst_tool_private_free (SynapticsMSTToolPrivate *priv)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(SynapticsMSTToolPrivate, synapticsmst_tool_private_free)
 
 typedef gboolean (*FuUtilPrivateCb)     (SynapticsMSTToolPrivate *util,
-					 gchar          **values,
-					 guint8         device_index,
-					 GError         **error);
+					 gchar			**values,
+					 guint8			  device_index,
+					 GError			**error);
 
 typedef struct {
-	gchar           *name;
-	gchar           *arguments;
-	gchar           *description;
-	FuUtilPrivateCb  callback;
+	gchar		*name;
+	gchar		*arguments;
+	gchar		*description;
+	FuUtilPrivateCb	 callback;
 } FuUtilItem;
 
 static void
@@ -169,7 +169,7 @@ synapticsmst_tool_scan_aux_nodes (SynapticsMSTToolPrivate *priv, GError **error)
 	gint32 fd;
 
 	priv->device_array = g_ptr_array_new ();
-	for (guint8 i=0; i<MAX_DP_AUX_NODES; i++) {
+	for (guint8 i = 0; i < MAX_DP_AUX_NODES; i++) {
 		fd = synapticsmst_common_open_aux_node (synapticsmst_device_aux_node_to_string (i));
 		if (fd > 0) {
 			device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, i, 0, 0);
@@ -178,20 +178,20 @@ synapticsmst_tool_scan_aux_nodes (SynapticsMSTToolPrivate *priv, GError **error)
 			ret = TRUE;
 		} else if (fd == -1) {
 			g_set_error_literal (error,
-					G_IO_ERROR,
-					G_IO_ERROR_INVALID_DATA,
-					"Failed to open aux node, please try sudo to get permission");
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_DATA,
+					     "Failed to open aux node");
 			return FALSE;
 		}
 	}
 
 	if (ret) {
-		for (guint8 i=0; i<priv->device_array->len; i++) {
+		for (guint8 i = 0; i < priv->device_array->len; i++) {
 			device = g_ptr_array_index (priv->device_array, i);
 			aux_node = synapticsmst_device_get_aux_node (device);
 			if (synapticsmst_common_open_aux_node (synapticsmst_device_aux_node_to_string (aux_node))) {
 				synapticsmst_device_enable_remote_control (device, error);
-				for (guint8 j=0; j<2; j++) {
+				for (guint8 j = 0; j < 2; j++) {
 					if (synapticsmst_device_scan_cascade_device (device, j)) {
 						layer = synapticsmst_device_get_layer (device) + 1;
 						rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
@@ -203,18 +203,21 @@ synapticsmst_tool_scan_aux_nodes (SynapticsMSTToolPrivate *priv, GError **error)
 				synapticsmst_device_disable_remote_control (device, error);
 				synapticsmst_common_close_aux_node ();
 			} else {
-				g_set_error (error, G_IO_ERROR,
-						G_IO_ERROR_INVALID_DATA,
-						"Failed to open aux node %d again", aux_node);
+				g_set_error (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_DATA,
+					     "Failed to open aux node %d again",
+					     aux_node);
 				return FALSE;
 			}
 		}
 	}
 
 	if (!ret) {
-		g_set_error_literal (error, G_IO_ERROR,
-				G_IO_ERROR_INVALID_DATA,
-				"No Synaptics MST Device Found");
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "No Synaptics MST Device Found");
 	}
 
 	return ret;
@@ -222,31 +225,30 @@ synapticsmst_tool_scan_aux_nodes (SynapticsMSTToolPrivate *priv, GError **error)
 
 static gboolean
 synapticsmst_tool_enumerate (SynapticsMSTToolPrivate *priv,
-			gchar **values,
-			guint8 device_index,
-			GError **error)
+			     gchar **values,
+			     guint8 device_index,
+			     GError **error)
 {
 	SynapticsMSTDevice *device = NULL;
 
 	/* check avaliable dp aux nodes and add devices */
-	if (!synapticsmst_tool_scan_aux_nodes (priv, error)) {
+	if (!synapticsmst_tool_scan_aux_nodes (priv, error))
 		return FALSE;
-	}
 
 	g_print ("\nMST Devices :\n");
 	/* enumerate all devices one by one */
-	for (guint8 i=0; i<priv->device_array->len; i++) {
+	for (guint8 i = 0; i < priv->device_array->len; i++) {
 		device = g_ptr_array_index (priv->device_array, i);
 		g_print ("[Device %1d]\n", i+1);
 		if (synapticsmst_device_enumerate_device (device, error)) {
 			const gchar *boardID = synapticsmst_device_boardID_to_string (synapticsmst_device_get_boardID (device));
 			if (boardID != NULL) {
 				g_print ("Device : %s with Synaptics %s\n",
-					boardID,
-					synapticsmst_device_get_chipID (device));
+					 boardID,
+					 synapticsmst_device_get_chipID (device));
 				g_print ("Connect Type : %s in DP Aux Node %d\n",
-					synapticsmst_device_kind_to_string (synapticsmst_device_get_kind (device)),
-					synapticsmst_device_get_aux_node (device));
+					 synapticsmst_device_kind_to_string (synapticsmst_device_get_kind (device)),
+					 synapticsmst_device_get_aux_node (device));
 				g_print ("Firmware version : %s\n", synapticsmst_device_get_version (device));
 			} else {
 				g_print ("Unknown Device\n");
@@ -280,9 +282,8 @@ synapticsmst_tool_flash (SynapticsMSTToolPrivate *priv,
 	}
 
 	/* check avaliable dp aux nodes and add devices */
-	if (!synapticsmst_tool_scan_aux_nodes (priv, error)) {
+	if (!synapticsmst_tool_scan_aux_nodes (priv, error))
 		return FALSE;
-	}
 
 	device = g_ptr_array_index (priv->device_array, (device_index - 1));
 	if (synapticsmst_device_enumerate_device (device, error)) {
@@ -388,10 +389,10 @@ main (int argc, char **argv)
 			       synapticsmst_tool_enumerate);
 	synapticsmst_tool_add (priv->cmd_array,
 			       "flash",
-			        NULL,
-				/* TRANSLATORS: command description */
-				_("Flash firmware file to MST device"),
-				synapticsmst_tool_flash);
+			       NULL,
+			       /* TRANSLATORS: command description */
+			       _("Flash firmware file to MST device"),
+			       synapticsmst_tool_flash);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
@@ -424,10 +425,8 @@ main (int argc, char **argv)
 		g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
 
 	/* run the specified command */
-	if (argc == 4) {
+	if (argc == 4)
 		device_index = strtol (argv[3], NULL, 10);
-	}
-
 	ret = synapticsmst_tool_run (priv, argv[1], (gchar**) &argv[2], device_index, &error);
 	if (!ret) {
 		g_print ("%s\n", error->message);

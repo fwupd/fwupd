@@ -48,7 +48,7 @@ synapticsmst_common_check_supported_system (GError **error)
 			     dell_supported);
 		return FALSE;
 	}
-	for (i=0; i<MAX_DP_AUX_NODES; i++) {
+	for (i = 0; i < MAX_DP_AUX_NODES; i++) {
 		if (kernel_support)
 			break;
 		kernel_support = g_file_test (synapticsmst_device_aux_node_to_string (i),
@@ -121,7 +121,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 	g_autoptr(SynapticsMSTDevice) device = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
-	for (i=0; i<MAX_DP_AUX_NODES; i++) {
+	for (i = 0; i < MAX_DP_AUX_NODES; i++) {
 		aux_node = synapticsmst_device_aux_node_to_string (i);
 		dev = fu_plugin_cache_lookup (plugin, aux_node);
 
@@ -144,7 +144,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 			if (!synapticsmst_common_open_aux_node (aux_node))
 				continue;
 			synapticsmst_device_enable_remote_control (device, error);
-			for (j=0; j<2; j++) {
+			for (j = 0; j < 2; j++) {
 				if (synapticsmst_device_scan_cascade_device (device, j)) {
 					layer = synapticsmst_device_get_layer (device) + 1;
 					rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));

@@ -71,40 +71,40 @@ typedef enum {
 	UPDC_READ_FROM_TX_DPCD = 0x32,
 }RC_COMMAND;
 
-gint		synapticsmst_common_open_aux_node 	(const gchar* filename);
+gint		 synapticsmst_common_open_aux_node 		(const gchar *filename);
 
-void		synapticsmst_common_close_aux_node 	(void);
+void		 synapticsmst_common_close_aux_node 		(void);
 
-void		synapticsmst_common_config_connection 	(guchar layer,
-							guint RAD);
+void		 synapticsmst_common_config_connection 		(guchar	 layer,
+								 guint	 RAD);
 
-guchar		synapticsmst_common_read_dpcd 		(gint offset,
-							 gint *buf,
-							 gint length);
+guchar		 synapticsmst_common_read_dpcd 			(gint	 offset,
+								 gint	*buf,
+								 gint	 length);
 
-guchar		synapticsmst_common_write_dpcd 		(gint offset,
-							 gint *buf,
-							 gint length);
+guchar		 synapticsmst_common_write_dpcd 		(gint	 offset,
+								 gint	*buf,
+								 gint	 length);
 
-guchar		synapticsmst_common_rc_set_command 	(gint rc_cmd,
-							 gint length,
-							 gint offset,
-							 guchar *buf);
+guchar		 synapticsmst_common_rc_set_command 		(gint	 rc_cmd,
+								 gint	 length,
+								 gint	 offset,
+								 guchar	*buf);
 
-guchar		synapticsmst_common_rc_get_command 	(gint rc_cmd,
-							 gint length,
-							 gint offset,
-							 guchar *buf);
+guchar		 synapticsmst_common_rc_get_command 		(gint	 rc_cmd,
+								 gint	 length,
+								 gint	 offset,
+								 guchar	*buf);
 
-guchar		synapticsmst_common_rc_special_get_command	(gint rc_cmd,
-								 gint cmd_length,
-								 gint cmd_offset,
-								 guchar *cmd_data,
-								 gint length,
-								 guchar *buf);
+guchar		 synapticsmst_common_rc_special_get_command	(gint	 rc_cmd,
+								 gint	 cmd_length,
+								 gint	 cmd_offset,
+								 guchar	*cmd_data,
+								 gint	 length,
+								 guchar	*buf);
 
-guchar		synapticsmst_common_enable_remote_control	(void);
+guchar		 synapticsmst_common_enable_remote_control	(void);
 
-guchar		synapticsmst_common_disable_remote_control	(void);
+guchar		 synapticsmst_common_disable_remote_control	(void);
 
 #endif /* __SYNAPTICSMST_COMMON_H */
