@@ -92,7 +92,7 @@ fu_synaptics_add_device (FuPlugin *plugin,
 				      aux_node, layer, rad);
 
 	if (board_str == NULL) {
-		g_debug ("invalid board ID");
+		g_debug ("invalid board ID (%x)", synapticsmst_device_get_boardID(device));
 		return FALSE;
 	}
 
