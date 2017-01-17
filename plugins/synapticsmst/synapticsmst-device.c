@@ -324,7 +324,7 @@ synapticsmst_device_get_flash_checksum (SynapticsMSTDevice *device, gint length,
 	if (synapticsmst_common_rc_special_get_command (UPDC_CAL_EEPROM_CHECKSUM,
 							length, offset,
 							NULL, 4,
-							(guchar *)checksum)) {
+							(guint8 *)checksum)) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,

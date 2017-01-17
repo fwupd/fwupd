@@ -36,11 +36,11 @@
 #define MAX_WAIT_TIME 		3  /* unit : second */
 
 gint g_fd = 0;
-guchar g_layer = 0;
-guchar g_remain_layer = 0;
-guchar g_rad = 0;
+guint8 g_layer = 0;
+guint8 g_remain_layer = 0;
+guint8 g_rad = 0;
 
-static guchar
+static guint8
 synapticsmst_common_aux_node_read (gint offset, gint *buf, gint length)
 {
 	if (lseek (g_fd, offset, SEEK_SET) != offset)
@@ -52,7 +52,7 @@ synapticsmst_common_aux_node_read (gint offset, gint *buf, gint length)
 	return DPCD_SUCCESS;
 }
 
-static guchar
+static guint8
 synapticsmst_common_aux_node_write (gint offset, gint *buf, gint length)
 {
 	if (lseek (g_fd, offset, SEEK_SET) != offset)
@@ -67,7 +67,7 @@ synapticsmst_common_aux_node_write (gint offset, gint *buf, gint length)
 gint
 synapticsmst_common_open_aux_node (const gchar* filename)
 {
-	guchar byte[4];
+	guint8 byte[4];
 
 	g_fd = open (filename, O_RDWR);
 
@@ -94,37 +94,37 @@ synapticsmst_common_close_aux_node (void)
 }
 
 void
-synapticsmst_common_config_connection (guchar layer, guint rad)
+synapticsmst_common_config_connection (guint8 layer, guint rad)
 {
 	g_layer = layer;
 	g_remain_layer = g_layer;
 	g_rad = rad;
 }
 
-guchar
+guint8
 synapticsmst_common_read_dpcd (gint offset, gint *buf, gint length)
 {
 	if (g_layer && g_remain_layer) {
-		guchar rc, node;
+		guint8 rc, node;
 
 		g_remain_layer--;
 		node = (g_rad >> g_remain_layer * 2) & 0x03;
-		rc =  synapticsmst_common_rc_get_command (UPDC_READ_FROM_TX_DPCD + node, length, offset, (guchar *)buf);
+		rc =  synapticsmst_common_rc_get_command (UPDC_READ_FROM_TX_DPCD + node, length, offset, (guint8 *)buf);
 		g_remain_layer++;
 		return rc;
 	}
 	return synapticsmst_common_aux_node_read (offset, buf, length);
 }
 
-guchar
+guint8
 synapticsmst_common_write_dpcd (gint offset, gint *buf, gint length)
 {
 	if (g_layer && g_remain_layer) {
-		guchar rc, node;
+		guint8 rc, node;
 
 		g_remain_layer--;
 		node = (g_rad >> g_remain_layer * 2) & 0x03;
-		rc =  synapticsmst_common_rc_set_command (UPDC_WRITE_TO_TX_DPCD + node, length, offset, (guchar *)buf);
+		rc =  synapticsmst_common_rc_set_command (UPDC_WRITE_TO_TX_DPCD + node, length, offset, (guint8 *)buf);
 		g_remain_layer++;
 		return rc;
 	} else {
@@ -132,10 +132,10 @@ synapticsmst_common_write_dpcd (gint offset, gint *buf, gint length)
 	}
 }
 
-guchar
-synapticsmst_common_rc_set_command (gint rc_cmd, gint length, gint offset, guchar *buf)
+guint8
+synapticsmst_common_rc_set_command (gint rc_cmd, gint length, gint offset, guint8 *buf)
 {
-	guchar rc = 0;
+	guint8 rc = 0;
 	gint cur_offset = offset;
 	gint cur_length;
 	gint data_left = length;
@@ -201,10 +201,10 @@ synapticsmst_common_rc_set_command (gint rc_cmd, gint length, gint offset, gucha
 	return rc;
 }
 
-guchar
-synapticsmst_common_rc_get_command (gint rc_cmd, gint length, gint offset, guchar *buf)
+guint8
+synapticsmst_common_rc_get_command (gint rc_cmd, gint length, gint offset, guint8 *buf)
 {
-	guchar rc = 0;
+	guint8 rc = 0;
 	gint cur_offset = offset;
 	gint cur_length;
 	gint data_need = length;
@@ -272,15 +272,15 @@ synapticsmst_common_rc_get_command (gint rc_cmd, gint length, gint offset, gucha
 	return rc;
 }
 
-guchar
+guint8
 synapticsmst_common_rc_special_get_command (gint rc_cmd,
 					    gint cmd_length,
 					    gint cmd_offset,
-					    guchar *cmd_data,
+					    guint8 *cmd_data,
 					    gint length,
-					    guchar *buf)
+					    guint8 *buf)
 {
-	guchar rc = 0;
+	guint8 rc = 0;
 	gint readData = 0;
 	gint cmd;
 	long deadline;
@@ -337,16 +337,16 @@ synapticsmst_common_rc_special_get_command (gint rc_cmd,
 	return rc;
 }
 
-guchar
+guint8
 synapticsmst_common_enable_remote_control (void)
 {
 	const gchar *sc = "PRIUS";
-	guchar tmp_layer = g_layer;
-	guchar rc = 0;
+	guint8 tmp_layer = g_layer;
+	guint8 rc = 0;
 
 	for (gint i = 0; i <= tmp_layer; i++) {
 		synapticsmst_common_config_connection (i, g_rad);
-		rc = synapticsmst_common_rc_set_command (UPDC_ENABLE_RC, 5, 0, (guchar*)sc);
+		rc = synapticsmst_common_rc_set_command (UPDC_ENABLE_RC, 5, 0, (guint8*)sc);
 		if (rc)
 			break;
 	}
@@ -355,15 +355,15 @@ synapticsmst_common_enable_remote_control (void)
 	return rc;
 }
 
-guchar
+guint8
 synapticsmst_common_disable_remote_control (void)
 {
-	guchar tmp_layer = g_layer;
-	guchar rc = 0;
+	guint8 tmp_layer = g_layer;
+	guint8 rc = 0;
 
 	for (gint i = tmp_layer; i >= 0; i--) {
 		synapticsmst_common_config_connection (i, g_rad);
-		rc = synapticsmst_common_rc_set_command (UPDC_DISABLE_RC, 0, 0, (guchar*)NULL);
+		rc = synapticsmst_common_rc_set_command (UPDC_DISABLE_RC, 0, 0, (guint8*)NULL);
 		if (rc)
 			break;
 	}
