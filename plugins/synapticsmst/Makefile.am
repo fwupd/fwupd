@@ -14,6 +14,8 @@ plugindir = $(libdir)/fwupd-plugins-2
 plugin_LTLIBRARIES = libfu_plugin_synapticsmst.la
 
 libfu_plugin_synapticsmst_la_SOURCES =				\
+	fu-dell-flash.h						\
+	fu-plugin-dell.h					\
 	synapticsmst-device.c					\
 	synapticsmst-device.h					\
 	synapticsmst-common.c					\
