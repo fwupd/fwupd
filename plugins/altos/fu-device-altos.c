@@ -286,7 +286,7 @@ fu_device_altos_tty_read (FuDeviceAltos *device,
 			}
 			if (len > 0) {
 				g_debug ("read %" G_GSSIZE_FORMAT " bytes from device", len);
-				g_string_append_len (str, buf, len);
+				g_string_append_len (str, (gchar *) buf, len);
 			}
 
 			/* check maximum size */
@@ -425,7 +425,7 @@ fu_device_altos_write_page (FuDeviceAltos *device,
 	g_autofree gchar *cmd = g_strdup_printf ("W %x\n", address);
 	if (!fu_device_altos_tty_write (device, cmd, -1, error))
 		return FALSE;
-	if (!fu_device_altos_tty_write (device, data, data_len, error))
+	if (!fu_device_altos_tty_write (device, (const gchar *) data, data_len, error))
 		return FALSE;
 	return TRUE;
 }
