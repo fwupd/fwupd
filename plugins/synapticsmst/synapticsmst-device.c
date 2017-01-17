@@ -48,16 +48,6 @@ G_DEFINE_TYPE_WITH_PRIVATE (SynapticsMSTDevice, synapticsmst_device, G_TYPE_OBJE
 
 #define GET_PRIVATE(o) (synapticsmst_device_get_instance_private (o))
 
-/**
- * synapticsmst_device_kind_from_string:
- * @kind: the string.
- *
- * Converts the text representation to an enumerated value.
- *
- * Returns: (transfer full): a #SynapticsMSTDeviceKind, or %SYNAPTICSMST_DEVICE_KIND_UNKNOWN for unknown.
- *
- * Since: 0.1.0
- **/
 SynapticsMSTDeviceKind
 synapticsmst_device_kind_from_string (const gchar *kind)
 {
@@ -68,16 +58,6 @@ synapticsmst_device_kind_from_string (const gchar *kind)
 	return SYNAPTICSMST_DEVICE_KIND_UNKNOWN;
 }
 
-/**
- * synapticsmst_device_kind_to_string:
- * @kind: the #SynapticsMSTDeviceKind.
- *
- * Converts the enumerated value to an text representation.
- *
- * Returns: string version of @kind
- *
- * Since: 0.1.0
- **/
 const gchar *
 synapticsmst_device_kind_to_string (SynapticsMSTDeviceKind kind)
 {
@@ -104,12 +84,6 @@ synapticsmst_device_boardID_to_string (SynapticsMSTDeviceBoardID boardID)
 	return NULL;
 }
 
-/**
- * synapticsmst_device_get_guid:
- *
- * Returns: string version of GUID for use with fwupd
- *
- **/
 const gchar *
 synapticsmst_device_get_guid (SynapticsMSTDevice *device)
 {
@@ -141,16 +115,6 @@ synapticsmst_device_class_init (SynapticsMSTDeviceClass *klass)
 	object_class->finalize = synapticsmst_device_finalize;
 }
 
-/**
- * synapticsmst_device_get_kind:
- * @device: a #SynapticsMSTDevice instance.
- *
- * Gets the device kind.
- *
- * Returns: the #SynapticsMSTDeviceKind
- *
- * Since: 0.1.0
- **/
 SynapticsMSTDeviceKind
 synapticsmst_device_get_kind (SynapticsMSTDevice *device)
 {
@@ -599,15 +563,6 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 	}
 }
 
-/**
- * synapticsmst_device_new:
- *
- * Creates a new #SynapticsMSTDevice.
- *
- * Returns: (transfer full): a #SynapticsMSTDevice
- *
- * Since: 0.1.0
- **/
 SynapticsMSTDevice *
 synapticsmst_device_new (SynapticsMSTDeviceKind kind, guint8 aux_node, guint8 layer, guint16 rad)
 {
