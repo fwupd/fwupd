@@ -76,7 +76,7 @@ gint		 synapticsmst_common_open_aux_node 		(const gchar *filename);
 void		 synapticsmst_common_close_aux_node 		(void);
 
 void		 synapticsmst_common_config_connection 		(guchar	 layer,
-								 guint	 RAD);
+								 guint	 rad);
 
 guchar		 synapticsmst_common_read_dpcd 			(gint	 offset,
 								 gint	*buf,

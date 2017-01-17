@@ -100,7 +100,7 @@ SynapticsMSTDeviceKind synapticsmst_device_get_kind		(SynapticsMSTDevice	*device
 SynapticsMSTDeviceBoardID synapticsmst_device_get_boardID 	(SynapticsMSTDevice *device);
 const gchar	*synapticsmst_device_get_devfs_node		(SynapticsMSTDevice	*device);
 const gchar	*synapticsmst_device_get_version		(SynapticsMSTDevice	*device);
-const gchar 	*synapticsmst_device_get_chipID 		(SynapticsMSTDevice *device);
+const gchar 	*synapticsmst_device_get_chip_id 		(SynapticsMSTDevice *device);
 guint8 		synapticsmst_device_get_aux_node		(SynapticsMSTDevice	*device);
 guint16 	synapticsmst_device_get_rad 			(SynapticsMSTDevice *device);
 guint8 		synapticsmst_device_get_layer 			(SynapticsMSTDevice *device);

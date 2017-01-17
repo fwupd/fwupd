@@ -84,7 +84,7 @@ fu_synaptics_add_device (FuPlugin *plugin,
 
 	board_str = synapticsmst_device_boardID_to_string (synapticsmst_device_get_boardID(device));
 	name = g_strdup_printf ("%s with Synaptics [%s]", board_str,
-				synapticsmst_device_get_chipID (device));
+				synapticsmst_device_get_chip_id (device));
 	guid_str =  synapticsmst_device_get_guid (device);
 	/* Store $KIND-$AUXNODE-$LAYER-$RAD as device ID */
 	dev_id_str = g_strdup_printf ("MST-%u-%u-%u-%u",

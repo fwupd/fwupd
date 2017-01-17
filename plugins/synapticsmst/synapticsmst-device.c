@@ -37,7 +37,7 @@ typedef struct
 	const gchar		*devfs_node;
 	gchar			*version;
 	SynapticsMSTDeviceBoardID boardID;
-	gchar			*chipID;
+	gchar			*chip_id;
 	gchar			*guid;
 	guint8			 aux_node;
 	guint8			 layer;
@@ -98,7 +98,7 @@ synapticsmst_device_finalize (GObject *object)
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 
 	g_free (priv->version);
-	g_free (priv->chipID);
+	g_free (priv->chip_id);
 	g_free (priv->guid);
 	G_OBJECT_CLASS (synapticsmst_device_parent_class)->finalize (object);
 }
@@ -257,7 +257,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 			priv->boardID = 0xFF;
 		}
 
-		/* read board chipID */
+		/* read board chip_id */
 		rc = synapticsmst_common_read_dpcd (REG_CHIP_ID, (gint *)byte, 2);
 		if (rc) {
 			g_set_error_literal (error,
@@ -266,7 +266,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 					     "Failed to read dpcd from device");
 			return FALSE;
 		}
-		priv->chipID = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
+		priv->chip_id = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
 
 		/* disable remote control and close aux node */
 		synapticsmst_device_disable_remote_control (device, error);
@@ -298,10 +298,10 @@ synapticsmst_device_get_version (SynapticsMSTDevice *device)
 }
 
 const gchar *
-synapticsmst_device_get_chipID (SynapticsMSTDevice *device)
+synapticsmst_device_get_chip_id (SynapticsMSTDevice *device)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->chipID;
+	return priv->chip_id;
 }
 
 guint16

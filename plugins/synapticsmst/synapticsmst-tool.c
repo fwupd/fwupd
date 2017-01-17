@@ -245,7 +245,7 @@ synapticsmst_tool_enumerate (SynapticsMSTToolPrivate *priv,
 			if (boardID != NULL) {
 				g_print ("Device : %s with Synaptics %s\n",
 					 boardID,
-					 synapticsmst_device_get_chipID (device));
+					 synapticsmst_device_get_chip_id (device));
 				g_print ("Connect Type : %s in DP Aux Node %d\n",
 					 synapticsmst_device_kind_to_string (synapticsmst_device_get_kind (device)),
 					 synapticsmst_device_get_aux_node (device));

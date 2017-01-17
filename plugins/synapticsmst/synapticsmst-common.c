@@ -38,7 +38,7 @@
 gint g_fd = 0;
 guchar g_layer = 0;
 guchar g_remain_layer = 0;
-guchar g_RAD = 0;
+guchar g_rad = 0;
 
 static guchar
 synapticsmst_common_aux_node_read (gint offset, gint *buf, gint length)
@@ -94,11 +94,11 @@ synapticsmst_common_close_aux_node (void)
 }
 
 void
-synapticsmst_common_config_connection (guchar layer, guint RAD)
+synapticsmst_common_config_connection (guchar layer, guint rad)
 {
 	g_layer = layer;
 	g_remain_layer = g_layer;
-	g_RAD = RAD;
+	g_rad = rad;
 }
 
 guchar
@@ -108,7 +108,7 @@ synapticsmst_common_read_dpcd (gint offset, gint *buf, gint length)
 		guchar rc, node;
 
 		g_remain_layer--;
-		node = (g_RAD >> g_remain_layer * 2) & 0x03;
+		node = (g_rad >> g_remain_layer * 2) & 0x03;
 		rc =  synapticsmst_common_rc_get_command (UPDC_READ_FROM_TX_DPCD + node, length, offset, (guchar *)buf);
 		g_remain_layer++;
 		return rc;
@@ -123,7 +123,7 @@ synapticsmst_common_write_dpcd (gint offset, gint *buf, gint length)
 		guchar rc, node;
 
 		g_remain_layer--;
-		node = (g_RAD >> g_remain_layer * 2) & 0x03;
+		node = (g_rad >> g_remain_layer * 2) & 0x03;
 		rc =  synapticsmst_common_rc_set_command (UPDC_WRITE_TO_TX_DPCD + node, length, offset, (guchar *)buf);
 		g_remain_layer++;
 		return rc;
@@ -345,13 +345,13 @@ synapticsmst_common_enable_remote_control (void)
 	guchar rc = 0;
 
 	for (gint i = 0; i <= tmp_layer; i++) {
-		synapticsmst_common_config_connection (i, g_RAD);
+		synapticsmst_common_config_connection (i, g_rad);
 		rc = synapticsmst_common_rc_set_command (UPDC_ENABLE_RC, 5, 0, (guchar*)sc);
 		if (rc)
 			break;
 	}
 
-	synapticsmst_common_config_connection (tmp_layer, g_RAD);
+	synapticsmst_common_config_connection (tmp_layer, g_rad);
 	return rc;
 }
 
@@ -362,12 +362,12 @@ synapticsmst_common_disable_remote_control (void)
 	guchar rc = 0;
 
 	for (gint i = tmp_layer; i >= 0; i--) {
-		synapticsmst_common_config_connection (i, g_RAD);
+		synapticsmst_common_config_connection (i, g_rad);
 		rc = synapticsmst_common_rc_set_command (UPDC_DISABLE_RC, 0, 0, (guchar*)NULL);
 		if (rc)
 			break;
 	}
 
-	synapticsmst_common_config_connection (tmp_layer, g_RAD);
+	synapticsmst_common_config_connection (tmp_layer, g_rad);
 	return rc;
 }
