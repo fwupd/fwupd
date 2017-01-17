@@ -954,8 +954,10 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
+#if defined(HAVE_SYNAPTICS) || defined(HAVE_THUNDERBOLT)
 	/* set a delay to allow OS response to settling the GPIO change */
 	fu_plugin_set_coldplug_delay (plugin, DELL_FLASH_MODE_DELAY * 1000);
+#endif
 
 	return TRUE;
 }
