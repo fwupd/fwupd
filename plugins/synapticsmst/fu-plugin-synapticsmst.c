@@ -78,7 +78,7 @@ fu_synaptics_add_device (FuPlugin *plugin,
 	g_autofree gchar *dev_id_str = NULL;
 
 	if (!synapticsmst_device_enumerate_device (device, error)) {
-		g_debug ("SynapticsMST: Error enumerating device at %u", aux_node);
+		g_debug ("error enumerating device at %u", aux_node);
 		return FALSE;
 	}
 
@@ -92,7 +92,7 @@ fu_synaptics_add_device (FuPlugin *plugin,
 				      aux_node, layer, rad);
 
 	if (board_str == NULL) {
-		g_debug ("SynapticsMST: invalid board ID");
+		g_debug ("invalid board ID");
 		return FALSE;
 	}
 
@@ -134,7 +134,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 				continue;
 
 			/* Add direct devices */
-			g_debug ("SynapticsMST: Adding direct device at %s", aux_node);
+			g_debug ("adding direct device at %s", aux_node);
 			device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, i, 0, 0);
 			if (!fu_synaptics_add_device (plugin, device, i, 0, 0,
 						      error))
@@ -150,7 +150,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 					rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
 					device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
 									  i, layer, rad);
-					g_debug ("SynapticsMST: Adding cascaded device at %s (%d,%d)", aux_node, layer, rad);
+					g_debug ("adding cascaded device at %s (%d,%d)", aux_node, layer, rad);
 					if (!fu_synaptics_add_device (plugin,
 								      device,
 								      i,
@@ -166,13 +166,13 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 		}
 		/* No device exists here, but was there - remove from DB */
 		else if (dev != NULL) {
-			g_debug ("SynapticsMST: Removing device at %s",
+			g_debug ("removing device at %s",
 				aux_node);
 			fu_plugin_device_remove (plugin, dev);
 			fu_plugin_cache_remove (plugin, aux_node);
 		} else {
 			/* Nothing to see here - move on*/
-			g_debug ("SynapticsMST: no device found on %s", aux_node);
+			g_debug ("no device found on %s", aux_node);
 		}
 	}
 	return TRUE;
@@ -215,7 +215,7 @@ fu_plugin_update_online (FuPlugin *plugin,
 
 
 	/* sleep to allow device wakeup to complete */
-	g_debug ("SynapticsMST: Waiting %d seconds for MST hub wakeup\n",
+	g_debug ("waiting %d seconds for MST hub wakeup\n",
 		 SYNAPTICS_FLASH_MODE_DELAY);
 	g_usleep (SYNAPTICS_FLASH_MODE_DELAY * 1000000);
 
@@ -289,6 +289,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* look for host devices or already plugged in dock devices */
 	if (!fu_plugin_synapticsmst_enumerate (plugin, error))
-		g_debug ("SynapticsMST: Error enumerating.");
+		g_debug ("error enumerating");
 	return TRUE;
 }
