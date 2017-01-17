@@ -79,6 +79,8 @@ synapticsmst_device_boardID_to_string (SynapticsMSTDeviceBoardID boardID)
 		return "Dell WD15/TB16 wired Dock";
 	if (boardID == SYNAPTICSMST_DEVICE_BOARDID_DELL_WLD15_WIRELESS)
 		return "Dell WLD15 Wireless Dock";
+	if (boardID == SYNAPTICSMST_DEVICE_BOARDID_DELL_X7_RUGGED)
+		return "Dell Rugged Platform";
 	if ((boardID & 0xFF00) == SYNAPTICSMST_DEVICE_BOARDID_EVB)
 		return "SYNA evb board";
 	return NULL;
