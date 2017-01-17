@@ -83,7 +83,7 @@ synapticsmst_device_boardID_to_string (SynapticsMSTDeviceBoardID boardID)
 		return "Dell Rugged Platform";
 	if ((boardID & 0xFF00) == SYNAPTICSMST_DEVICE_BOARDID_EVB)
 		return "SYNA evb board";
-	return NULL;
+	return "Unknown Platform";
 }
 
 const gchar *
