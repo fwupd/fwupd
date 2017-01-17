@@ -256,7 +256,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 		priv->version = g_strdup_printf ("%1d.%02d.%03d", byte[0], byte[1], byte[2]);
 
 		/* read board ID */
-		synapticsmst_common_rc_get_command (UPDC_READ_FROM_EEPROM, 2, ADDR_CUSTOMER_ID, byte);
+		ret = synapticsmst_common_rc_get_command (UPDC_READ_FROM_EEPROM, 2, ADDR_CUSTOMER_ID, byte);
 		if (ret) {
 			g_set_error_literal (error,
 					 G_IO_ERROR,
@@ -294,7 +294,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 		}
 
 		/* read board chipID */
-		synapticsmst_common_read_dpcd (REG_CHIP_ID, (gint *)byte, 2);
+		ret = synapticsmst_common_read_dpcd (REG_CHIP_ID, (gint *)byte, 2);
 		if (ret) {
 			g_set_error_literal (error,
 					 G_IO_ERROR,
