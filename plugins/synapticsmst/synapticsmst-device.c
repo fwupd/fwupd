@@ -213,11 +213,11 @@ synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device, guint8 tx_p
 	guint8 layer = priv->layer + 1;
 	guint16 rad = priv->rad | (tx_port << (2 * (priv->layer)));
 	guint byte[4];
-	guint8 ret;
+	guint8 rc;
 
 	synapticsmst_common_config_connection (layer, rad);
-	ret = synapticsmst_common_read_dpcd (REG_RC_CAP, (gint *)byte, 1);
-	if (ret == DPCD_SUCCESS ) {
+	rc = synapticsmst_common_read_dpcd (REG_RC_CAP, (gint *)byte, 1);
+	if (rc == DPCD_SUCCESS ) {
         if (byte[0] & 0x04) {
             synapticsmst_common_read_dpcd (REG_VENDOR_ID, (gint *)byte, 3);
             if (byte[0] == 0x90 && byte[1] == 0xCC && byte[2] == 0x24) {
@@ -238,15 +238,15 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 	guint16 system_id;
 
 	if (synapticsmst_common_open_aux_node (synapticsmst_device_aux_node_to_string (priv->aux_node))) {
-		guint8 ret;
+		guint8 rc;
 		/* enable remote control */
 		if (!synapticsmst_device_enable_remote_control (device, error)) {
 			return FALSE;
 		}
 
 		/* read firmware version */
-		ret = synapticsmst_common_read_dpcd (REG_FIRMWARE_VERSION, (gint *)byte, 3);
-		if (ret) {
+		rc = synapticsmst_common_read_dpcd (REG_FIRMWARE_VERSION, (gint *)byte, 3);
+		if (rc) {
 			g_set_error_literal (error,
 					 G_IO_ERROR,
 					 G_IO_ERROR_INVALID_DATA,
@@ -256,8 +256,8 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 		priv->version = g_strdup_printf ("%1d.%02d.%03d", byte[0], byte[1], byte[2]);
 
 		/* read board ID */
-		ret = synapticsmst_common_rc_get_command (UPDC_READ_FROM_EEPROM, 2, ADDR_CUSTOMER_ID, byte);
-		if (ret) {
+		rc = synapticsmst_common_rc_get_command (UPDC_READ_FROM_EEPROM, 2, ADDR_CUSTOMER_ID, byte);
+		if (rc) {
 			g_set_error_literal (error,
 					 G_IO_ERROR,
 					 G_IO_ERROR_INVALID_DATA,
@@ -294,8 +294,8 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 		}
 
 		/* read board chipID */
-		ret = synapticsmst_common_read_dpcd (REG_CHIP_ID, (gint *)byte, 2);
-		if (ret) {
+		rc = synapticsmst_common_read_dpcd (REG_CHIP_ID, (gint *)byte, 2);
+		if (rc) {
 			g_set_error_literal (error,
 					 G_IO_ERROR,
 					 G_IO_ERROR_INVALID_DATA,
@@ -387,7 +387,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 	guint32 write_loops = 0;
 	guint32 data_to_write = 0;
 	guint8 percentage = 0;
-	guint8 ret = 0;
+	guint8 rc = 0;
 	guint16 tmp;
 	guint16 erase_code = 0xFFFF;
 
@@ -506,7 +506,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		/* update firmware */
 		write_loops = (payload_len / BLOCK_UNIT);
 		data_to_write = payload_len;
-		ret = 0;
+		rc = 0;
 		offset = 0;
 
 		if (payload_len % BLOCK_UNIT) {
@@ -522,17 +522,17 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 				length = data_to_write;
 			}
 
-			ret = synapticsmst_common_rc_set_command (UPDC_WRITE_TO_EEPROM,
+			rc = synapticsmst_common_rc_set_command (UPDC_WRITE_TO_EEPROM,
 						length, offset,
 						payload_data + offset);
-			if (ret) {
+			if (rc) {
 				/* repeat once */
-				ret = synapticsmst_common_rc_set_command (UPDC_WRITE_TO_EEPROM,
+				rc = synapticsmst_common_rc_set_command (UPDC_WRITE_TO_EEPROM,
 							length, offset,
 							payload_data + offset);
 			}
 
-			if (ret) {
+			if (rc) {
 				break;
 			}
 
@@ -549,7 +549,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		if (progress_cb == NULL)
 			g_print ("\n");
 
-		if (ret) {
+		if (rc) {
 			g_set_error (error,
 					G_IO_ERROR,
 					G_IO_ERROR_INVALID_DATA,
@@ -570,14 +570,14 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 						  &flash_checksum,
 						  error)) {
 				if (checksum != flash_checksum) {
-					ret = -1;
+					rc = -1;
 					g_set_error_literal (error,
 							 G_IO_ERROR,
 							 G_IO_ERROR_INVALID_DATA,
 							 "Failed to flash firmware : checksum mismatch");
 				}
 			} else {
-				ret = -1;
+				rc = -1;
 			}
 
 		}
@@ -594,7 +594,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		return FALSE;
 	}
 
-	if (ret) {
+	if (rc) {
 		return FALSE;
 	} else {
 		return TRUE;
