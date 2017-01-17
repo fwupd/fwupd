@@ -33,10 +33,10 @@
 #include <libfwupd/fwupd-error.h>
 
 typedef struct {
-        GCancellable            *cancellable;
-        GPtrArray               *cmd_array;
-        gboolean                 force;
-		GPtrArray               *device_array;
+	GCancellable		*cancellable;
+	GPtrArray		*cmd_array;
+	gboolean		 force;
+	GPtrArray		*device_array;
 } SynapticsMSTToolPrivate;
 
 static void
@@ -47,10 +47,11 @@ synapticsmst_tool_private_free (SynapticsMSTToolPrivate *priv)
 	g_object_unref (priv->cancellable);
 	if (priv->cmd_array != NULL)
 		g_ptr_array_unref (priv->cmd_array);
-		if (priv->device_array != NULL)
-			g_ptr_array_unref (priv->device_array);
+	if (priv->device_array != NULL)
+		g_ptr_array_unref (priv->device_array);
 	g_free (priv);
 }
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(SynapticsMSTToolPrivate, synapticsmst_tool_private_free)
 
 typedef gboolean (*FuUtilPrivateCb)     (SynapticsMSTToolPrivate *util,
