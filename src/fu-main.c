@@ -66,6 +66,7 @@ typedef struct {
 	AsProfile		*profile;
 	AsStore			*store;
 	guint			 store_changed_id;
+	guint			 owner_id;
 	gboolean		 coldplug_running;
 	guint			 coldplug_id;
 	guint			 coldplug_delay;
@@ -2408,11 +2409,6 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 							     NULL); /* GError** */
 	g_assert (registration_id > 0);
 
-	/* add devices */
-	fu_main_plugins_setup (priv);
-	g_usb_context_enumerate (priv->usb_ctx);
-	fu_main_plugins_coldplug (priv);
-
 	/* connect to D-Bus directly */
 	priv->proxy_uid =
 		g_dbus_proxy_new_sync (priv->connection,
@@ -2675,6 +2671,49 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 	return TRUE;
 }
 
+/* returns FALSE if any plugins have pending devices to be added */
+static gboolean
+fu_main_check_plugins_pending (FuMainPrivate *priv, GError **error)
+{
+	for (guint i = 0; i < priv->plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (priv->plugins, i);
+		if (fu_plugin_has_device_delay (plugin)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "%s pending",
+				     fu_plugin_get_name (plugin));
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_main_perhaps_own_name (gpointer user_data)
+{
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+	g_autoptr(GError) error = NULL;
+
+	/* are any plugins pending */
+	if (!fu_main_check_plugins_pending (priv, &error)) {
+		g_debug ("trying again: %s", error->message);
+		return G_SOURCE_CONTINUE;
+	}
+
+	/* own the object */
+	g_debug ("registering D-Bus service");
+	priv->owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
+					 FWUPD_DBUS_SERVICE,
+					 G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
+					 G_BUS_NAME_OWNER_FLAGS_REPLACE,
+					 fu_main_on_bus_acquired_cb,
+					 fu_main_on_name_acquired_cb,
+					 fu_main_on_name_lost_cb,
+					 priv, NULL);
+	return G_SOURCE_REMOVE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -2683,7 +2722,6 @@ main (int argc, char *argv[])
 	gboolean ret;
 	gboolean timed_exit = FALSE;
 	GOptionContext *context;
-	guint owner_id = 0;
 	gint retval = 1;
 	const GOptionEntry options[] = {
 		{ "timed-exit", '\0', 0, G_OPTION_ARG_NONE, &timed_exit,
@@ -2795,15 +2833,13 @@ main (int argc, char *argv[])
 		goto out;
 	}
 
-	/* own the object */
-	owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
-				   FWUPD_DBUS_SERVICE,
-				   G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
-				    G_BUS_NAME_OWNER_FLAGS_REPLACE,
-				   fu_main_on_bus_acquired_cb,
-				   fu_main_on_name_acquired_cb,
-				   fu_main_on_name_lost_cb,
-				   priv, NULL);
+	/* add devices */
+	fu_main_plugins_setup (priv);
+	g_usb_context_enumerate (priv->usb_ctx);
+	fu_main_plugins_coldplug (priv);
+
+	/* keep polling until all the plugins are ready */
+	g_timeout_add (200, fu_main_perhaps_own_name, priv);
 
 	/* Only timeout and close the mainloop if we have specified it
 	 * on the command line */
@@ -2820,11 +2856,11 @@ main (int argc, char *argv[])
 	retval = 0;
 out:
 	g_option_context_free (context);
-	if (owner_id > 0)
-		g_bus_unown_name (owner_id);
 	if (priv != NULL) {
 		if (priv->loop != NULL)
 			g_main_loop_unref (priv->loop);
+		if (priv->owner_id > 0)
+			g_bus_unown_name (priv->owner_id);
 		if (priv->proxy_uid != NULL)
 			g_object_unref (priv->proxy_uid);
 		if (priv->usb_ctx != NULL)

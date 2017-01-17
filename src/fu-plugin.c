@@ -337,10 +337,27 @@ static gboolean
 fu_plugin_device_add_delay_cb (gpointer user_data)
 {
 	FuPluginHelper *helper = (FuPluginHelper *) user_data;
+	g_hash_table_remove (helper->devices, helper->device);
 	fu_plugin_device_add (helper->plugin, helper->device);
 	fu_plugin_helper_free (helper);
-	g_hash_table_remove (helper->devices, helper->device);
 	return FALSE;
+}
+
+/**
+ * fu_plugin_has_device_delay:
+ * @plugin: A #FuPlugin
+ *
+ * Returns if the device has a pending device that is waiting to be added.
+ *
+ * Returns: %TRUE if a device is waiting to be added
+ *
+ * Since: 0.8.0
+ **/
+gboolean
+fu_plugin_has_device_delay (FuPlugin *plugin)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	return g_hash_table_size (priv->devices_delay) > 0;
 }
 
 /**

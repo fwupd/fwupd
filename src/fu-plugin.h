@@ -83,6 +83,7 @@ void		 fu_plugin_set_percentage		(FuPlugin	*plugin,
 void		 fu_plugin_recoldplug			(FuPlugin	*plugin);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*plugin,
 							 guint		 duration);
+gboolean	 fu_plugin_has_device_delay		(FuPlugin	*plugin);
 GChecksumType	 fu_plugin_get_checksum_type		(FuPluginVerifyFlags flags);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*plugin,
 							 const gchar	*id);
