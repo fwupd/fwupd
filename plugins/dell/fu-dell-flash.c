@@ -19,11 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
- #include <appstream-glib.h>
- #include <smbios_c/smi.h>
- #include <smbios_c/obj/smi.h>
- #include "fu-dell-flash.h"
- #include "fu-plugin.h"
+#include <appstream-glib.h>
+#include <smbios_c/smi.h>
+#include <smbios_c/obj/smi.h>
+#include "fu-dell-flash.h"
+#include "fu-plugin.h"
 
 /* These are for dock query capabilities */
 struct dock_count_in {
@@ -66,13 +66,12 @@ fu_dell_execute_simple_smi (FuPlugin *plugin,
 {
 	FuPluginData *data;
 
-	if (plugin) {
+	if (plugin != NULL) {
 		data = fu_plugin_get_data (plugin);
-
-		if ((gboolean) data->fake_smbios) {
+		if (data->fake_smbios) {
 			for (guint i = 0; i < 4; i++)
 				out[i] = data->fake_output[i];
-				return TRUE;
+			return TRUE;
 		}
 	}
 	if (dell_simple_ci_smi (class, select, args, out)) {
