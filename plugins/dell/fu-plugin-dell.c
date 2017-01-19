@@ -234,9 +234,13 @@ fu_plugin_get_dock_key (FuPlugin *plugin,
 }
 
 static gboolean
-fu_plugin_dell_capsule_supported (void)
+fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	gint uefi_supported;
+
+	if (data->fake_smbios)
+		return TRUE;
 
 	/* If ESRT is not turned on, fwupd will have already created an
 	 * unlock device (if compiled with support).
@@ -306,7 +310,7 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
 		fu_device_set_version (item->device, version);
-		if (fu_plugin_dell_capsule_supported ())
+		if (fu_plugin_dell_capsule_supported (plugin))
 			fu_device_add_flag (item->device,
 					    FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 	}
@@ -691,7 +695,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (out->flashes_left > 0) {
-		if (fu_plugin_dell_capsule_supported ())
+		if (fu_plugin_dell_capsule_supported (plugin))
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	}
