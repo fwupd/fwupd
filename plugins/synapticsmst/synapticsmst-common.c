@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
  *
@@ -35,109 +35,100 @@
 #define UNIT_SIZE		32
 #define MAX_WAIT_TIME 		3  /* unit : second */
 
-gint g_fd = 0;
-guint8 g_layer = 0;
-guint8 g_remain_layer = 0;
-guint8 g_rad = 0;
+struct _SynapticsMSTConnection {
+	gint		 fd;		/* not owned by the connection */
+	guint8		 layer;
+	guint8		 remain_layer;
+	guint8		 rad;
+};
 
-static guint8
-synapticsmst_common_aux_node_read (gint offset, gint *buf, gint length)
+guint8
+synapticsmst_common_aux_node_read (SynapticsMSTConnection *connection,
+				   gint offset, gint *buf, gint length)
 {
-	if (lseek (g_fd, offset, SEEK_SET) != offset)
+	if (lseek (connection->fd, offset, SEEK_SET) != offset)
 		return DPCD_SEEK_FAIL;
 
-	if (read (g_fd, buf, length) != length)
+	if (read (connection->fd, buf, length) != length)
 		return DPCD_ACCESS_FAIL;
 
 	return DPCD_SUCCESS;
 }
 
 static guint8
-synapticsmst_common_aux_node_write (gint offset, gint *buf, gint length)
+synapticsmst_common_aux_node_write (SynapticsMSTConnection *connection,
+				    gint offset, gint *buf, gint length)
 {
-	if (lseek (g_fd, offset, SEEK_SET) != offset)
+	if (lseek (connection->fd, offset, SEEK_SET) != offset)
 		return DPCD_SEEK_FAIL;
 
-	if (write (g_fd, buf, length) != length)
+	if (write (connection->fd, buf, length) != length)
 		return DPCD_ACCESS_FAIL;
 
 	return DPCD_SUCCESS;
 }
 
-gint
-synapticsmst_common_open_aux_node (const gchar* filename)
+void
+synapticsmst_common_free (SynapticsMSTConnection *connection)
 {
-	guint8 byte[4];
-
-	g_fd = open (filename, O_RDWR);
-
-	/* file doesn't exist on this system */
-	if (!g_file_test (filename, G_FILE_TEST_EXISTS))
-		return 0;
-
-	/* can't open aux node, try use sudo to get the permission */
-	if (g_fd == -1)
-		return -1;
-
-	if (synapticsmst_common_aux_node_read (REG_RC_CAP, (gint *)byte, 1) == DPCD_SUCCESS) {
-		if (byte[0] & 0x04) {
-			synapticsmst_common_aux_node_read (REG_VENDOR_ID, (gint *)byte, 3);
-			if (byte[0] == 0x90 && byte[1] == 0xCC && byte[2] == 0x24)
-				return 1;
-		}
-	}
-
-	g_fd = 0;
-	return 0;
+	g_free (connection);
 }
 
-void
-synapticsmst_common_close_aux_node (void)
+SynapticsMSTConnection *
+synapticsmst_common_new (gint fd, guint8 layer, guint rad)
 {
-	close (g_fd);
-}
-
-void
-synapticsmst_common_config_connection (guint8 layer, guint rad)
-{
-	g_layer = layer;
-	g_remain_layer = g_layer;
-	g_rad = rad;
+	SynapticsMSTConnection *connection = g_new0 (SynapticsMSTConnection, 1);
+	connection->fd = fd;
+	connection->layer = layer;
+	connection->remain_layer = layer;
+	connection->rad = rad;
+	return connection;
 }
 
 guint8
-synapticsmst_common_read_dpcd (gint offset, gint *buf, gint length)
+synapticsmst_common_read_dpcd (SynapticsMSTConnection *connection,
+			       gint offset, gint *buf, gint length)
 {
-	if (g_layer && g_remain_layer) {
+	if (connection->layer && connection->remain_layer) {
 		guint8 rc, node;
 
-		g_remain_layer--;
-		node = (g_rad >> g_remain_layer * 2) & 0x03;
-		rc =  synapticsmst_common_rc_get_command (UPDC_READ_FROM_TX_DPCD + node, length, offset, (guint8 *)buf);
-		g_remain_layer++;
+		connection->remain_layer--;
+		node = (connection->rad >> connection->remain_layer * 2) & 0x03;
+		rc =  synapticsmst_common_rc_get_command (connection,
+							  UPDC_READ_FROM_TX_DPCD + node,
+							  length, offset, (guint8 *)buf);
+		connection->remain_layer++;
 		return rc;
 	}
-	return synapticsmst_common_aux_node_read (offset, buf, length);
+	return synapticsmst_common_aux_node_read (connection, offset, buf, length);
 }
 
 guint8
-synapticsmst_common_write_dpcd (gint offset, gint *buf, gint length)
+synapticsmst_common_write_dpcd (SynapticsMSTConnection *connection,
+				gint offset,
+				gint *buf,
+				gint length)
 {
-	if (g_layer && g_remain_layer) {
+	if (connection->layer && connection->remain_layer) {
 		guint8 rc, node;
 
-		g_remain_layer--;
-		node = (g_rad >> g_remain_layer * 2) & 0x03;
-		rc =  synapticsmst_common_rc_set_command (UPDC_WRITE_TO_TX_DPCD + node, length, offset, (guint8 *)buf);
-		g_remain_layer++;
+		connection->remain_layer--;
+		node = (connection->rad >> connection->remain_layer * 2) & 0x03;
+		rc =  synapticsmst_common_rc_set_command (connection,
+							  UPDC_WRITE_TO_TX_DPCD + node,
+							  length, offset, (guint8 *)buf);
+		connection->remain_layer++;
 		return rc;
-	} else {
-		return synapticsmst_common_aux_node_write (offset, buf, length);
 	}
+	return synapticsmst_common_aux_node_write (connection, offset, buf, length);
 }
 
 guint8
-synapticsmst_common_rc_set_command (gint rc_cmd, gint length, gint offset, guint8 *buf)
+synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
+				    gint rc_cmd,
+				    gint length,
+				    gint offset,
+				    guint8 *buf)
 {
 	guint8 rc = 0;
 	gint cur_offset = offset;
@@ -157,24 +148,30 @@ synapticsmst_common_rc_set_command (gint rc_cmd, gint length, gint offset, guint
 
 		if (cur_length) {
 			/* write data */
-			rc = synapticsmst_common_write_dpcd (REG_RC_DATA, (gint *)buf, cur_length);
+			rc = synapticsmst_common_write_dpcd (connection, REG_RC_DATA, (gint *)buf, cur_length);
 			if (rc)
 				break;
 
 			/* write offset */
-			rc = synapticsmst_common_write_dpcd (REG_RC_OFFSET, &cur_offset, 4);
+			rc = synapticsmst_common_write_dpcd (connection,
+							     REG_RC_OFFSET,
+							     &cur_offset, 4);
 			if (rc)
 				break;
 
 			/* write length */
-			rc = synapticsmst_common_write_dpcd (REG_RC_LEN, &cur_length, 4);
+			rc = synapticsmst_common_write_dpcd (connection,
+							     REG_RC_LEN,
+							     &cur_length, 4);
 			if (rc)
 				break;
 		}
 
 		/* send command */
 		cmd = 0x80 | rc_cmd;
-		rc = synapticsmst_common_write_dpcd (REG_RC_CMD, &cmd, 1);
+		rc = synapticsmst_common_write_dpcd (connection,
+						     REG_RC_CMD,
+						     &cmd, 1);
 		if (rc)
 			break;
 
@@ -183,7 +180,9 @@ synapticsmst_common_rc_set_command (gint rc_cmd, gint length, gint offset, guint
 		deadline = t_spec.tv_sec + MAX_WAIT_TIME;
 
 		do {
-			rc = synapticsmst_common_read_dpcd (REG_RC_CMD, &readData, 2);
+			rc = synapticsmst_common_read_dpcd (connection,
+							    REG_RC_CMD,
+							    &readData, 2);
 			clock_gettime (CLOCK_REALTIME, &t_spec);
 			if (t_spec.tv_sec > deadline) {
 				rc = -1;
@@ -206,7 +205,11 @@ synapticsmst_common_rc_set_command (gint rc_cmd, gint length, gint offset, guint
 }
 
 guint8
-synapticsmst_common_rc_get_command (gint rc_cmd, gint length, gint offset, guint8 *buf)
+synapticsmst_common_rc_get_command (SynapticsMSTConnection *connection,
+				    gint rc_cmd,
+				    gint length,
+				    gint offset,
+				    guint8 *buf)
 {
 	guint8 rc = 0;
 	gint cur_offset = offset;
@@ -220,26 +223,31 @@ synapticsmst_common_rc_get_command (gint rc_cmd, gint length, gint offset, guint
 	while (data_need) {
 		if (data_need > UNIT_SIZE) {
 			cur_length = UNIT_SIZE;
-		}
-		else {
+		} else {
 			cur_length = data_need;
 		}
 
 		if (cur_length) {
 			/* write offset */
-			rc = synapticsmst_common_write_dpcd (REG_RC_OFFSET, &cur_offset, 4);
+			rc = synapticsmst_common_write_dpcd (connection,
+							     REG_RC_OFFSET,
+							     &cur_offset, 4);
 			if (rc)
 				break;
 
 			/* write length */
-			rc = synapticsmst_common_write_dpcd (REG_RC_LEN, &cur_length, 4);
+			rc = synapticsmst_common_write_dpcd (connection,
+							     REG_RC_LEN,
+							     &cur_length, 4);
 			if (rc)
 				break;
 		}
 
 		/* send command */
 		cmd = 0x80 | rc_cmd;
-		rc = synapticsmst_common_write_dpcd (REG_RC_CMD, &cmd, 1);
+		rc = synapticsmst_common_write_dpcd (connection,
+						     REG_RC_CMD,
+						     &cmd, 1);
 		if (rc)
 			break;
 
@@ -248,7 +256,9 @@ synapticsmst_common_rc_get_command (gint rc_cmd, gint length, gint offset, guint
 		deadline = t_spec.tv_sec + MAX_WAIT_TIME;
 
 		do {
-			rc = synapticsmst_common_read_dpcd (REG_RC_CMD, &readData, 2);
+			rc = synapticsmst_common_read_dpcd (connection,
+							    REG_RC_CMD,
+							    &readData, 2);
 			clock_gettime (CLOCK_REALTIME, &t_spec);
 			if (t_spec.tv_sec > deadline) {
 				rc = -1;
@@ -263,7 +273,10 @@ synapticsmst_common_rc_get_command (gint rc_cmd, gint length, gint offset, guint
 		}
 
 		if (cur_length) {
-			rc = synapticsmst_common_read_dpcd (REG_RC_DATA, (gint *)buf, cur_length);
+			rc = synapticsmst_common_read_dpcd (connection,
+							    REG_RC_DATA,
+							    (gint *)buf,
+							    cur_length);
 			if (rc)
 				break;
 		}
@@ -277,7 +290,8 @@ synapticsmst_common_rc_get_command (gint rc_cmd, gint length, gint offset, guint
 }
 
 guint8
-synapticsmst_common_rc_special_get_command (gint rc_cmd,
+synapticsmst_common_rc_special_get_command (SynapticsMSTConnection *connection,
+					    gint rc_cmd,
 					    gint cmd_length,
 					    gint cmd_offset,
 					    guint8 *cmd_data,
@@ -293,25 +307,32 @@ synapticsmst_common_rc_special_get_command (gint rc_cmd,
 	if (cmd_length) {
 		/* write cmd data */
 		if (cmd_data != NULL) {
-			rc = synapticsmst_common_write_dpcd (REG_RC_DATA, (gint *)cmd_data, cmd_length);
+			rc = synapticsmst_common_write_dpcd (connection,
+							     REG_RC_DATA,
+							     (gint *)cmd_data,
+							     cmd_length);
 			if (rc)
 				return rc;
 		}
 
 		/* write offset */
-		rc = synapticsmst_common_write_dpcd (REG_RC_OFFSET, &cmd_offset, 4);
+		rc = synapticsmst_common_write_dpcd (connection,
+						     REG_RC_OFFSET,
+						     &cmd_offset, 4);
 		if (rc)
 			return rc;
 
 		/* write length */
-		rc = synapticsmst_common_write_dpcd (REG_RC_LEN, &cmd_length, 4);
+		rc = synapticsmst_common_write_dpcd (connection,
+						     REG_RC_LEN,
+						     &cmd_length, 4);
 		if (rc)
 			return rc;
 	}
 
 	/* send command */
 	cmd = 0x80 | rc_cmd;
-	rc = synapticsmst_common_write_dpcd (REG_RC_CMD, &cmd, 1);
+	rc = synapticsmst_common_write_dpcd (connection, REG_RC_CMD, &cmd, 1);
 	if (rc)
 		return rc;
 
@@ -319,7 +340,9 @@ synapticsmst_common_rc_special_get_command (gint rc_cmd,
 	clock_gettime (CLOCK_REALTIME, &t_spec);
 	deadline = t_spec.tv_sec + MAX_WAIT_TIME;
 	do {
-		rc = synapticsmst_common_read_dpcd (REG_RC_CMD, &readData, 2);
+		rc = synapticsmst_common_read_dpcd (connection,
+						    REG_RC_CMD,
+						    &readData, 2);
 		clock_gettime (CLOCK_REALTIME, &t_spec);
 		if (t_spec.tv_sec > deadline)
 			return -1;
@@ -333,7 +356,9 @@ synapticsmst_common_rc_special_get_command (gint rc_cmd,
 	}
 
 	if (length) {
-		rc = synapticsmst_common_read_dpcd (REG_RC_DATA, (gint *)buf, length);
+		rc = synapticsmst_common_read_dpcd (connection,
+						    REG_RC_DATA,
+						    (gint *)buf, length);
 		if (rc)
 			return rc;
 	}
@@ -342,36 +367,36 @@ synapticsmst_common_rc_special_get_command (gint rc_cmd,
 }
 
 guint8
-synapticsmst_common_enable_remote_control (void)
+synapticsmst_common_enable_remote_control (SynapticsMSTConnection *connection)
 {
 	const gchar *sc = "PRIUS";
-	guint8 tmp_layer = g_layer;
 	guint8 rc = 0;
 
-	for (gint i = 0; i <= tmp_layer; i++) {
-		synapticsmst_common_config_connection (i, g_rad);
-		rc = synapticsmst_common_rc_set_command (UPDC_ENABLE_RC, 5, 0, (guint8*)sc);
+	for (gint i = 0; i <= connection->layer; i++) {
+		g_autoptr(SynapticsMSTConnection) connection_tmp = NULL;
+		connection_tmp = synapticsmst_common_new (connection->fd, i, connection->rad);
+		rc = synapticsmst_common_rc_set_command (connection_tmp,
+							 UPDC_ENABLE_RC,
+							 5, 0, (guint8*)sc);
 		if (rc)
 			break;
 	}
-
-	synapticsmst_common_config_connection (tmp_layer, g_rad);
 	return rc;
 }
 
 guint8
-synapticsmst_common_disable_remote_control (void)
+synapticsmst_common_disable_remote_control (SynapticsMSTConnection *connection)
 {
-	guint8 tmp_layer = g_layer;
 	guint8 rc = 0;
 
-	for (gint i = tmp_layer; i >= 0; i--) {
-		synapticsmst_common_config_connection (i, g_rad);
-		rc = synapticsmst_common_rc_set_command (UPDC_DISABLE_RC, 0, 0, (guint8*)NULL);
+	for (gint i = connection->layer; i >= 0; i--) {
+		g_autoptr(SynapticsMSTConnection) connection_tmp = NULL;
+		connection_tmp = synapticsmst_common_new (connection->fd, i, connection->rad);
+		rc = synapticsmst_common_rc_set_command (connection_tmp,
+							 UPDC_DISABLE_RC,
+							 0, 0, NULL);
 		if (rc)
 			break;
 	}
-
-	synapticsmst_common_config_connection (tmp_layer, g_rad);
 	return rc;
 }

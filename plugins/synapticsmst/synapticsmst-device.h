@@ -84,31 +84,31 @@ SynapticsMSTDevice	*synapticsmst_device_new	(SynapticsMSTDeviceKind kind,
 /* helpers */
 SynapticsMSTDeviceKind synapticsmst_device_kind_from_string	(const gchar	*kind);
 const gchar	*synapticsmst_device_kind_to_string		(SynapticsMSTDeviceKind kind);
-const gchar	*synapticsmst_device_boardID_to_string		(SynapticsMSTDeviceBoardID boardID);
+const gchar	*synapticsmst_device_board_id_to_string		(SynapticsMSTDeviceBoardID board_id);
 const gchar 	*synapticsmst_device_aux_node_to_string 	(guint8 index);
-guint8 		synapticsmst_device_string_to_aux_node 		(const gchar* str);
 const gchar 	*synapticsmst_device_get_guid 			(SynapticsMSTDevice *device);
-gboolean 	synapticsmst_device_enable_remote_control 	(SynapticsMSTDevice *device,
+gboolean	 synapticsmst_device_enable_remote_control 	(SynapticsMSTDevice *device,
 								 GError **error);
-gboolean 	synapticsmst_device_disable_remote_control 	(SynapticsMSTDevice *device,
+gboolean 	 synapticsmst_device_disable_remote_control 	(SynapticsMSTDevice *device,
 								 GError **error);
-gboolean	synapticsmst_device_scan_cascade_device 	(SynapticsMSTDevice *device,
+gboolean	 synapticsmst_device_scan_cascade_device 	(SynapticsMSTDevice *device,
 								 guint8 tx_port);
+gboolean	 synapticsmst_device_open 			(SynapticsMSTDevice *device,
+								 GError	**error);
 
 /* getters */
-SynapticsMSTDeviceKind synapticsmst_device_get_kind		(SynapticsMSTDevice	*device);
-SynapticsMSTDeviceBoardID synapticsmst_device_get_boardID 	(SynapticsMSTDevice *device);
-const gchar	*synapticsmst_device_get_devfs_node		(SynapticsMSTDevice	*device);
-const gchar	*synapticsmst_device_get_version		(SynapticsMSTDevice	*device);
+SynapticsMSTDeviceKind synapticsmst_device_get_kind		(SynapticsMSTDevice *device);
+SynapticsMSTDeviceBoardID synapticsmst_device_get_board_id 	(SynapticsMSTDevice *device);
+const gchar	*synapticsmst_device_get_version		(SynapticsMSTDevice *device);
 const gchar 	*synapticsmst_device_get_chip_id 		(SynapticsMSTDevice *device);
-guint8 		synapticsmst_device_get_aux_node		(SynapticsMSTDevice	*device);
-guint16 	synapticsmst_device_get_rad 			(SynapticsMSTDevice *device);
-guint8 		synapticsmst_device_get_layer 			(SynapticsMSTDevice *device);
+guint8 		 synapticsmst_device_get_aux_node		(SynapticsMSTDevice *device);
+guint16 	 synapticsmst_device_get_rad 			(SynapticsMSTDevice *device);
+guint8 		 synapticsmst_device_get_layer 			(SynapticsMSTDevice *device);
 
 /* object methods */
-gboolean	synapticsmst_device_enumerate_device 		(SynapticsMSTDevice *devices,
+gboolean	 synapticsmst_device_enumerate_device 		(SynapticsMSTDevice *devices,
 								 GError **error);
-gboolean	synapticsmst_device_write_firmware		(SynapticsMSTDevice	*device,
+gboolean	 synapticsmst_device_write_firmware		(SynapticsMSTDevice *device,
 								 GBytes	*fw,
 								 GFileProgressCallback	progress_cb,
 								 gpointer user_data,

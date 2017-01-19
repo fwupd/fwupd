@@ -71,40 +71,53 @@ typedef enum {
 	UPDC_READ_FROM_TX_DPCD		= 0x32,
 } SynapticsMstUpdcCmd;
 
-gint		 synapticsmst_common_open_aux_node 		(const gchar *filename);
+typedef struct _SynapticsMSTConnection SynapticsMSTConnection;
 
-void		 synapticsmst_common_close_aux_node 		(void);
+void		 synapticsmst_common_free 			(SynapticsMSTConnection *connection);
 
-void		 synapticsmst_common_config_connection 		(guint8	 layer,
+SynapticsMSTConnection	*synapticsmst_common_new 		(gint	 fd,
+								 guint8	 layer,
 								 guint	 rad);
 
-guint8		 synapticsmst_common_read_dpcd 			(gint	 offset,
+guint8		 synapticsmst_common_aux_node_read		(SynapticsMSTConnection *connection,
+								 gint offset,
+								 gint *buf,
+								 gint length);
+
+guint8		 synapticsmst_common_read_dpcd 			(SynapticsMSTConnection *connection,
+								 gint	 offset,
 								 gint	*buf,
 								 gint	 length);
 
-guint8		 synapticsmst_common_write_dpcd 		(gint	 offset,
+guint8		 synapticsmst_common_write_dpcd 		(SynapticsMSTConnection *connection,
+								 gint	 offset,
 								 gint	*buf,
 								 gint	 length);
 
-guint8		 synapticsmst_common_rc_set_command 		(gint	 rc_cmd,
+guint8		 synapticsmst_common_rc_set_command 		(SynapticsMSTConnection *connection,
+								 gint	 rc_cmd,
 								 gint	 length,
 								 gint	 offset,
 								 guint8	*buf);
 
-guint8		 synapticsmst_common_rc_get_command 		(gint	 rc_cmd,
+guint8		 synapticsmst_common_rc_get_command 		(SynapticsMSTConnection *connection,
+								 gint	 rc_cmd,
 								 gint	 length,
 								 gint	 offset,
 								 guint8	*buf);
 
-guint8		 synapticsmst_common_rc_special_get_command	(gint	 rc_cmd,
+guint8		 synapticsmst_common_rc_special_get_command	(SynapticsMSTConnection *connection,
+								 gint	 rc_cmd,
 								 gint	 cmd_length,
 								 gint	 cmd_offset,
 								 guint8	*cmd_data,
 								 gint	 length,
 								 guint8	*buf);
 
-guint8		 synapticsmst_common_enable_remote_control	(void);
+guint8		 synapticsmst_common_enable_remote_control	(SynapticsMSTConnection *connection);
 
-guint8		 synapticsmst_common_disable_remote_control	(void);
+guint8		 synapticsmst_common_disable_remote_control	(SynapticsMSTConnection *connection);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(SynapticsMSTConnection, synapticsmst_common_free)
 
 #endif /* __SYNAPTICSMST_COMMON_H */

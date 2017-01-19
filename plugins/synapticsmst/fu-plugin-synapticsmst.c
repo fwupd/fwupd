@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2017 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -82,7 +83,7 @@ fu_synaptics_add_device (FuPlugin *plugin,
 		return FALSE;
 	}
 
-	board_str = synapticsmst_device_boardID_to_string (synapticsmst_device_get_boardID(device));
+	board_str = synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device));
 	name = g_strdup_printf ("%s with Synaptics [%s]", board_str,
 				synapticsmst_device_get_chip_id (device));
 	guid_str =  synapticsmst_device_get_guid (device);
@@ -92,7 +93,7 @@ fu_synaptics_add_device (FuPlugin *plugin,
 				      aux_node, layer, rad);
 
 	if (board_str == NULL) {
-		g_debug ("invalid board ID (%x)", synapticsmst_device_get_boardID(device));
+		g_debug ("invalid board ID (%x)", synapticsmst_device_get_board_id (device));
 		return FALSE;
 	}
 
@@ -117,62 +118,76 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 	guint8 j;
 	guint16 rad = 0;
 	guint8 layer = 0;
-	const gchar *aux_node = NULL;
-	g_autoptr(SynapticsMSTDevice) device = NULL;
+	const gchar *aux_node_str = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
 	for (i = 0; i < MAX_DP_AUX_NODES; i++) {
-		aux_node = synapticsmst_device_aux_node_to_string (i);
-		dev = fu_plugin_cache_lookup (plugin, aux_node);
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(SynapticsMSTDevice) device = NULL;
+
+		aux_node_str = synapticsmst_device_aux_node_to_string (i);
+		dev = fu_plugin_cache_lookup (plugin, aux_node_str);
 
 		/* If we open succesfully a device exists here */
-		if (synapticsmst_common_open_aux_node (aux_node) > 0) {
-			synapticsmst_common_close_aux_node ();
+		device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, i, 0, 0);
+		if (!synapticsmst_device_open (device, NULL)) {
+			/* No device exists here, but was there - remove from DB */
+			if (dev != NULL) {
+				g_debug ("removing device at %s", aux_node_str);
+				fu_plugin_device_remove (plugin, dev);
+				fu_plugin_cache_remove (plugin, aux_node_str);
+			} else {
+				/* Nothing to see here - move on*/
+				g_debug ("no device found on %s", aux_node_str);
+			}
+			continue;
+		}
 
-			/* node already exists */
-			if (dev != NULL)
-				continue;
+		/* node already exists */
+		if (dev != NULL)
+			continue;
 
-			/* Add direct devices */
-			g_debug ("adding direct device at %s", aux_node);
-			device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, i, 0, 0);
-			if (!fu_synaptics_add_device (plugin, device, i, 0, 0,
-						      error))
-				continue;
+		/* Add direct devices */
+		g_debug ("adding direct device at %s", aux_node_str);
+		if (!fu_synaptics_add_device (plugin, device, i, 0, 0,
+					      &error_local)) {
+			g_warning ("failed to add device: %s", error_local->message);
+			continue;
+		}
 
-			/* Check for cascaded devices */
-			if (!synapticsmst_common_open_aux_node (aux_node))
-				continue;
-			synapticsmst_device_enable_remote_control (device, error);
-			for (j = 0; j < 2; j++) {
-				if (synapticsmst_device_scan_cascade_device (device, j)) {
-					layer = synapticsmst_device_get_layer (device) + 1;
-					rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
-					device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
-									  i, layer, rad);
-					g_debug ("adding cascaded device at %s (%d,%d)", aux_node, layer, rad);
-					if (!fu_synaptics_add_device (plugin,
-								      device,
-								      i,
-								      layer,
-								      rad,
-								      error))
-						continue;
+		/* Check for cascaded devices */
+		if (!synapticsmst_device_open (device, &error_local)) {
+			g_warning ("failed to open device: %s",
+				   error_local->message);
+			continue;
+		}
+		if (!synapticsmst_device_enable_remote_control (device, &error_local)) {
+			g_warning ("failed to enable remote control: %s",
+				   error_local->message);
+			continue;
+		}
+		for (j = 0; j < 2; j++) {
+			if (synapticsmst_device_scan_cascade_device (device, j)) {
+				g_autoptr(SynapticsMSTDevice) device_cascade = NULL;
+				layer = synapticsmst_device_get_layer (device) + 1;
+				rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
+				device_cascade = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
+								  i, layer, rad);
+				g_debug ("adding cascaded device at %s (%d,%d)", aux_node_str, layer, rad);
+				if (!fu_synaptics_add_device (plugin,
+							      device_cascade,
+							      i,
+							      layer,
+							      rad,
+							      &error_local)) {
+					continue;
 				}
 			}
-			synapticsmst_device_disable_remote_control (device, error);
-			synapticsmst_common_close_aux_node ();
-
 		}
-		/* No device exists here, but was there - remove from DB */
-		else if (dev != NULL) {
-			g_debug ("removing device at %s",
-				aux_node);
-			fu_plugin_device_remove (plugin, dev);
-			fu_plugin_cache_remove (plugin, aux_node);
-		} else {
-			/* Nothing to see here - move on*/
-			g_debug ("no device found on %s", aux_node);
+		if (!synapticsmst_device_disable_remote_control (device, &error_local)) {
+			g_warning ("failed to disable remote control: %s",
+				   error_local->message);
+			continue;
 		}
 	}
 	return TRUE;
@@ -215,7 +230,7 @@ fu_plugin_update_online (FuPlugin *plugin,
 
 
 	/* sleep to allow device wakeup to complete */
-	g_debug ("waiting %d seconds for MST hub wakeup\n",
+	g_debug ("waiting %d seconds for MST hub wakeup",
 		 SYNAPTICS_FLASH_MODE_DELAY);
 	g_usleep (SYNAPTICS_FLASH_MODE_DELAY * 1000000);
 
@@ -223,7 +238,7 @@ fu_plugin_update_online (FuPlugin *plugin,
 
 	if (!synapticsmst_device_enumerate_device (device, error))
 		return FALSE;
-	if (synapticsmst_device_boardID_to_string (synapticsmst_device_get_boardID(device)) != NULL) {
+	if (synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device)) != NULL) {
 		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 		if (!synapticsmst_device_write_firmware (device, blob_fw,
 							 fu_synapticsmst_write_progress_cb,
