@@ -228,8 +228,10 @@ fu_plugin_update_online (FuPlugin *plugin,
 		if (!synapticsmst_device_write_firmware (device, blob_fw,
 							 fu_synapticsmst_write_progress_cb,
 							 plugin,
-							 error))
+							 error)) {
+			g_prefix_error (error, "failed to flash firmware: ");
 			return FALSE;
+		}
 	} else {
 		g_set_error (error,
 			     FWUPD_ERROR,

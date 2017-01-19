@@ -366,7 +366,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to flash firmware : invalid file size");
+				     "invalid file size");
 		return FALSE;
 	}
 
@@ -378,7 +378,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to flash firmware : EDID checksum error");
+				     "EDID checksum error");
 		return FALSE;
 	}
 
@@ -391,7 +391,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to flash firmware : EDID checksum error");
+				     "EDID checksum error");
 		return FALSE;
 	}
 
@@ -404,7 +404,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to flash firmware : configuration checksum error");
+				     "configuration checksum error");
 		return FALSE;
 	}
 
@@ -417,7 +417,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to flash firmware : configuration checksum error");
+				     "configuration checksum error");
 		return FALSE;
 	}
 
@@ -428,7 +428,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to flash firmware : invalid firmware size");
+				     "invalid firmware size");
 		return FALSE;
 	}
 	for (guint32 i = 0; i < (code_size + 17); i++)
@@ -438,7 +438,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to flash firmware : firmware checksum error");
+				     "firmware checksum error");
 		return FALSE;
 	}
 
@@ -450,7 +450,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to flash firmware : board ID mismatch");
+				     "board ID mismatch");
 		return FALSE;
 	}
 
@@ -465,7 +465,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 			g_set_error_literal (error,
 					     G_IO_ERROR,
 					     G_IO_ERROR_INVALID_DATA,
-					     "Failed to flash firmware : can't erase flash");
+					     "can't erase flash");
 			return FALSE;
 		}
 
@@ -515,11 +515,10 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 
 		if (rc) {
 			g_set_error (error,
-					G_IO_ERROR,
-					G_IO_ERROR_INVALID_DATA,
-					"Failed to flash firmware : "
-					"can't write flash at offset 0x%04x",
-					offset);
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "can't write flash at offset 0x%04x",
+				     offset);
 		} else {
 			/* check data just written */
 			checksum = 0;
@@ -536,9 +535,9 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 				if (checksum != flash_checksum) {
 					rc = -1;
 					g_set_error_literal (error,
-							 G_IO_ERROR,
-							 G_IO_ERROR_INVALID_DATA,
-							 "Failed to flash firmware : checksum mismatch");
+							     G_IO_ERROR,
+							     G_IO_ERROR_INVALID_DATA,
+							     "checksum mismatch");
 				}
 			} else {
 				rc = -1;
@@ -551,10 +550,10 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		synapticsmst_common_close_aux_node ();
 	} else {
 		g_set_error (error,
-				G_IO_ERROR,
-				G_IO_ERROR_INVALID_DATA,
-				"Failed to flash firmware : can't open DP Aux node %d",
-				synapticsmst_device_get_aux_node (device));
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "can't open DP Aux node %d",
+			     synapticsmst_device_get_aux_node (device));
 		return FALSE;
 	}
 

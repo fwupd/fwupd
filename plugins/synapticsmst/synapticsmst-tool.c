@@ -303,8 +303,10 @@ synapticsmst_tool_flash (SynapticsMSTToolPrivate *priv,
 			}
 
 			fw = g_bytes_new (data, len);
-			if (!synapticsmst_device_write_firmware (device, fw, NULL, NULL, error))
+			if (!synapticsmst_device_write_firmware (device, fw, NULL, NULL, error)) {
+				g_prefix_error (error, "failed to flash firmware: ");
 				return FALSE;
+			}
 			g_print ("Update Sucessfully. Please reset device to apply new firmware\n");
 		} else {
 			g_set_error_literal (error,
