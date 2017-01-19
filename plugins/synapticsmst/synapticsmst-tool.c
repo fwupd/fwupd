@@ -168,6 +168,7 @@ synapticsmst_tool_scan_aux_nodes (SynapticsMSTToolPrivate *priv, GError **error)
 	guint16 rad = 0;
 	gint32 fd;
 
+	/* add all direct devices */
 	priv->device_array = g_ptr_array_new ();
 	for (guint8 i = 0; i < MAX_DP_AUX_NODES; i++) {
 		fd = synapticsmst_common_open_aux_node (synapticsmst_device_aux_node_to_string (i));
@@ -185,42 +186,44 @@ synapticsmst_tool_scan_aux_nodes (SynapticsMSTToolPrivate *priv, GError **error)
 		}
 	}
 
-	if (ret) {
-		for (guint8 i = 0; i < priv->device_array->len; i++) {
-			device = g_ptr_array_index (priv->device_array, i);
-			aux_node = synapticsmst_device_get_aux_node (device);
-			if (synapticsmst_common_open_aux_node (synapticsmst_device_aux_node_to_string (aux_node))) {
-				synapticsmst_device_enable_remote_control (device, error);
-				for (guint8 j = 0; j < 2; j++) {
-					if (synapticsmst_device_scan_cascade_device (device, j)) {
-						layer = synapticsmst_device_get_layer (device) + 1;
-						rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
-						cascade_device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
-											aux_node, layer, rad);
-						g_ptr_array_add (priv->device_array, g_object_ref (cascade_device));
-					}
-				}
-				synapticsmst_device_disable_remote_control (device, error);
-				synapticsmst_common_close_aux_node ();
-			} else {
-				g_set_error (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_DATA,
-					     "Failed to open aux node %d again",
-					     aux_node);
-				return FALSE;
-			}
-		}
-	}
-
+	/* no devices */
 	if (!ret) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
 				     "No Synaptics MST Device Found");
+		return FALSE;
 	}
 
-	return ret;
+	/* add all cascaded devices */
+	for (guint8 i = 0; i < priv->device_array->len; i++) {
+		device = g_ptr_array_index (priv->device_array, i);
+		aux_node = synapticsmst_device_get_aux_node (device);
+		if (synapticsmst_common_open_aux_node (synapticsmst_device_aux_node_to_string (aux_node))) {
+			synapticsmst_device_enable_remote_control (device, error);
+			for (guint8 j = 0; j < 2; j++) {
+				if (synapticsmst_device_scan_cascade_device (device, j)) {
+					layer = synapticsmst_device_get_layer (device) + 1;
+					rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
+					cascade_device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
+										aux_node, layer, rad);
+					g_ptr_array_add (priv->device_array, g_object_ref (cascade_device));
+				}
+			}
+			synapticsmst_device_disable_remote_control (device, error);
+			synapticsmst_common_close_aux_node ();
+		} else {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "Failed to open aux node %d again",
+				     aux_node);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
