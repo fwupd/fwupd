@@ -152,15 +152,14 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		info->id = g_strdup (tdbid);
 		g_ptr_array_add (data->infos, info);
 
-		rc = tbt_fwu_Controller_isInSafeMode(data->controllers[i], &safe_mode);
+		rc = tbt_fwu_Controller_isInSafeMode (data->controllers[i], &safe_mode);
 		if (rc != TBT_OK) {
 			g_warning ("failed to get controller status: %s",
 				   tbt_strerror (rc));
 			continue;
 		}
 
-		if (safe_mode)
-		{
+		if (safe_mode != 0) {
 			info->vendor_id = 0;
 			info->model_id = 0;
 			info->version_major = 0;
@@ -169,9 +168,7 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 				   "Please visit https://github.com/01org/tbtfwupd/wiki "
 				   "for information on how to restore normal operation.",
 				   info->id);
-		}
-		else
-		{
+		} else {
 			/* get the vendor ID */
 			rc = tbt_fwu_Controller_getVendorID (data->controllers[i],
 							     &info->vendor_id);
@@ -206,10 +203,8 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		fu_device_set_vendor (info->dev, "Intel");
 		fu_device_set_name (info->dev, "Thunderbolt Controller");
 		fu_device_add_flag (info->dev, FWUPD_DEVICE_FLAG_INTERNAL);
-		if (!safe_mode)
-		{
+		if (safe_mode == 0)
 			fu_device_add_flag (info->dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
-		}
 		fu_device_set_id (info->dev, info->id);
 
 		/* add GUID that the info firmware uses */
