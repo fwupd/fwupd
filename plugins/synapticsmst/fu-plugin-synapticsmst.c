@@ -66,23 +66,27 @@ synapticsmst_common_check_supported_system (GError **error)
 }
 
 static gboolean
-fu_synaptics_add_device (FuPlugin *plugin,
-			 SynapticsMSTDevice *device,
-			 guint8 aux_node,
-			 guint8 layer,
-			 guint8 rad,
-			 GError **error) {
+fu_plugin_synaptics_add_device (FuPlugin *plugin,
+				SynapticsMSTDevice *device,
+				GError **error) {
 	g_autoptr(FuDevice) dev = NULL;
 	const gchar *board_str = NULL;
 	const gchar *guid_str = NULL;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *dev_id_str = NULL;
+	guint8 aux_node;
+	guint8 layer;
+	guint16 rad;
 
+	aux_node = synapticsmst_device_get_aux_node (device);
 	if (!synapticsmst_device_enumerate_device (device, error)) {
 		g_debug ("error enumerating device at %u", aux_node);
 		return FALSE;
 	}
 
+	layer = synapticsmst_device_get_layer (device);
+	rad = synapticsmst_device_get_rad (device);
+	aux_node = synapticsmst_device_get_aux_node (device);
 	board_str = synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device));
 	name = g_strdup_printf ("%s with Synaptics [%s]", board_str,
 				synapticsmst_device_get_chip_id (device));
@@ -111,13 +115,51 @@ fu_synaptics_add_device (FuPlugin *plugin,
 }
 
 static gboolean
+fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
+				  SynapticsMSTDevice *device,
+				  GError **error)
+{
+	SynapticsMSTDevice *cascade_device;
+	guint8 aux_node = 0;
+	guint8 layer = 0;
+	guint16 rad = 0;
+	guint8 j;
+
+	aux_node = synapticsmst_device_get_aux_node (device);
+	if (!synapticsmst_device_open (device, error)) {
+		g_prefix_error (error,
+				"failed to open aux node %d again",
+				aux_node);
+		return FALSE;
+	}
+
+	for (j = 0; j < 2; j++) {
+
+		if (!synapticsmst_device_scan_cascade_device (device, error, j))
+			return FALSE;
+		if (!synapticsmst_device_get_cascade (device))
+			continue;
+		layer = synapticsmst_device_get_layer (device) + 1;
+		rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
+		cascade_device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
+							  aux_node, layer, rad);
+
+		if (!fu_plugin_synaptics_add_device (plugin, cascade_device, error))
+			return FALSE;
+
+		/* check recursively for more devices */
+		if (!fu_plugin_synaptics_scan_cascade (plugin, cascade_device, error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 				  GError **error)
 {
 	guint8 i;
-	guint8 j;
-	guint16 rad = 0;
-	guint8 layer = 0;
 	const gchar *aux_node_str = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
@@ -149,46 +191,13 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 
 		/* Add direct devices */
 		g_debug ("adding direct device at %s", aux_node_str);
-		if (!fu_synaptics_add_device (plugin, device, i, 0, 0,
-					      &error_local)) {
+		if (!fu_plugin_synaptics_add_device (plugin, device, &error_local)) {
 			g_warning ("failed to add device: %s", error_local->message);
 			continue;
 		}
 
-		/* Check for cascaded devices */
-		if (!synapticsmst_device_open (device, &error_local)) {
-			g_warning ("failed to open device: %s",
-				   error_local->message);
-			continue;
-		}
-		if (!synapticsmst_device_enable_remote_control (device, &error_local)) {
-			g_warning ("failed to enable remote control: %s",
-				   error_local->message);
-			continue;
-		}
-		for (j = 0; j < 2; j++) {
-			if (synapticsmst_device_scan_cascade_device (device, j)) {
-				g_autoptr(SynapticsMSTDevice) device_cascade = NULL;
-				layer = synapticsmst_device_get_layer (device) + 1;
-				rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
-				device_cascade = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
-								  i, layer, rad);
-				g_debug ("adding cascaded device at %s (%d,%d)", aux_node_str, layer, rad);
-				if (!fu_synaptics_add_device (plugin,
-							      device_cascade,
-							      i,
-							      layer,
-							      rad,
-							      &error_local)) {
-					continue;
-				}
-			}
-		}
-		if (!synapticsmst_device_disable_remote_control (device, &error_local)) {
-			g_warning ("failed to disable remote control: %s",
-				   error_local->message);
-			continue;
-		}
+		/* recursively look for cascade devices */
+		fu_plugin_synaptics_scan_cascade (plugin, device, error);
 	}
 	return TRUE;
 }

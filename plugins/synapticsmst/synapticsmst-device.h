@@ -92,6 +92,7 @@ gboolean	 synapticsmst_device_enable_remote_control 	(SynapticsMSTDevice *device
 gboolean 	 synapticsmst_device_disable_remote_control 	(SynapticsMSTDevice *device,
 								 GError **error);
 gboolean	 synapticsmst_device_scan_cascade_device 	(SynapticsMSTDevice *device,
+								 GError **error,
 								 guint8 tx_port);
 gboolean	 synapticsmst_device_open 			(SynapticsMSTDevice *device,
 								 GError	**error);
@@ -104,6 +105,8 @@ const gchar 	*synapticsmst_device_get_chip_id 		(SynapticsMSTDevice *device);
 guint8 		 synapticsmst_device_get_aux_node		(SynapticsMSTDevice *device);
 guint16 	 synapticsmst_device_get_rad 			(SynapticsMSTDevice *device);
 guint8 		 synapticsmst_device_get_layer 			(SynapticsMSTDevice *device);
+gboolean
+synapticsmst_device_get_cascade					(SynapticsMSTDevice *device);
 
 /* object methods */
 gboolean	 synapticsmst_device_enumerate_device 		(SynapticsMSTDevice *devices,

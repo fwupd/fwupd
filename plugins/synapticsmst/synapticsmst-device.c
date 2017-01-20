@@ -44,6 +44,7 @@ typedef struct
 	guint8			 layer;
 	guint16			 rad;
 	gint			 fd;
+	gboolean		has_cascade;
 } SynapticsMSTDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (SynapticsMSTDevice, synapticsmst_device, G_TYPE_OBJECT)
@@ -173,7 +174,9 @@ synapticsmst_device_disable_remote_control (SynapticsMSTDevice *device, GError *
 }
 
 gboolean
-synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device, guint8 tx_port)
+synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device,
+					 GError ** error,
+					 guint8 tx_port)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint8 layer = priv->layer + 1;
@@ -182,17 +185,34 @@ synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device, guint8 tx_p
 	guint8 rc;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
+	/* reset */
+	priv->has_cascade = FALSE;
+
+	if (!synapticsmst_device_enable_remote_control (device, error)) {
+		g_prefix_error (error,
+				"failed to scan cascade device on tx_port %d: ",
+				tx_port);
+		return FALSE;
+	}
+
 	connection = synapticsmst_common_new (priv->fd, layer, rad);
 	rc = synapticsmst_common_read_dpcd (connection, REG_RC_CAP, (gint *)byte, 1);
 	if (rc == DPCD_SUCCESS ) {
 		if (byte[0] & 0x04) {
 			synapticsmst_common_read_dpcd (connection, REG_VENDOR_ID, (gint *)byte, 3);
 			if (byte[0] == 0x90 && byte[1] == 0xCC && byte[2] == 0x24)
-				return TRUE;
+				priv->has_cascade = TRUE;
 		}
 	}
 
-	return FALSE;
+	if (!synapticsmst_device_disable_remote_control (device, error)) {
+		g_prefix_error (error,
+				"failed to scan cascade device on tx_port %d: ",
+				tx_port);
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 gboolean
@@ -322,6 +342,13 @@ synapticsmst_device_get_layer (SynapticsMSTDevice *device)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	return priv->layer;
+}
+
+gboolean
+synapticsmst_device_get_cascade (SynapticsMSTDevice *device)
+{
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+	return priv->has_cascade;
 }
 
 static gboolean
@@ -591,6 +618,7 @@ synapticsmst_device_new (SynapticsMSTDeviceKind kind,
 	priv->version = NULL;
 	priv->layer = layer;
 	priv->rad = rad;
+	priv->has_cascade = FALSE;
 
 	return SYNAPTICSMST_DEVICE (device);
 }

@@ -210,19 +210,18 @@ synapticsmst_tool_scan_aux_nodes (SynapticsMSTToolPrivate *priv, GError **error)
 					aux_node);
 			return FALSE;
 		}
-		if (!synapticsmst_device_enable_remote_control (device, error))
-			return FALSE;
+
 		for (guint8 j = 0; j < 2; j++) {
-			if (synapticsmst_device_scan_cascade_device (device, j)) {
-				layer = synapticsmst_device_get_layer (device) + 1;
-				rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
-				cascade_device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
-									  aux_node, layer, rad);
-				g_ptr_array_add (priv->device_array, cascade_device);
-			}
+			if (!synapticsmst_device_scan_cascade_device (device, error, j))
+				return FALSE;
+			if (!synapticsmst_device_get_cascade (device))
+				continue;
+			layer = synapticsmst_device_get_layer (device) + 1;
+			rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
+			cascade_device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
+								  aux_node, layer, rad);
+			g_ptr_array_add (priv->device_array, cascade_device);
 		}
-		if (!synapticsmst_device_disable_remote_control (device, error))
-			return FALSE;
 	}
 
 	/* success */
