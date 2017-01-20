@@ -137,7 +137,7 @@ synapticsmst_device_get_board_id (SynapticsMSTDevice *device)
 	return priv->board_id;
 }
 
-gboolean
+static gboolean
 synapticsmst_device_enable_remote_control (SynapticsMSTDevice *device, GError **error)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
@@ -155,7 +155,7 @@ synapticsmst_device_enable_remote_control (SynapticsMSTDevice *device, GError **
 	}
 }
 
-gboolean
+static gboolean
 synapticsmst_device_disable_remote_control (SynapticsMSTDevice *device, GError **error)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);

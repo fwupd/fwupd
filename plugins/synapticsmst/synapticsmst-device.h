@@ -87,10 +87,6 @@ const gchar	*synapticsmst_device_kind_to_string		(SynapticsMSTDeviceKind kind);
 const gchar	*synapticsmst_device_board_id_to_string		(SynapticsMSTDeviceBoardID board_id);
 const gchar 	*synapticsmst_device_aux_node_to_string 	(guint8 index);
 const gchar 	*synapticsmst_device_get_guid 			(SynapticsMSTDevice *device);
-gboolean	 synapticsmst_device_enable_remote_control 	(SynapticsMSTDevice *device,
-								 GError **error);
-gboolean 	 synapticsmst_device_disable_remote_control 	(SynapticsMSTDevice *device,
-								 GError **error);
 gboolean	 synapticsmst_device_scan_cascade_device 	(SynapticsMSTDevice *device,
 								 GError **error,
 								 guint8 tx_port);
