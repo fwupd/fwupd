@@ -3,7 +3,6 @@ SUBDIRS =		\
 	dfu		\
 	ebitdo		\
 	raspberrypi	\
-	synapticsmst	\
 	steelseries	\
 	test		\
 	udev		\
@@ -13,6 +12,10 @@ SUBDIRS =		\
 
 if HAVE_DELL
 SUBDIRS += dell
+endif
+
+if HAVE_SYNAPTICS
+SUBDIRS += synapticsmst
 endif
 
 if HAVE_COLORHUG
