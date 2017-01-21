@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Intel Corporation <thunderbolt-software@lists.01.org>
+ * Copyright (C) 2016-2017 Intel Corporation <thunderbolt-software@lists.01.org>
  * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
@@ -126,9 +126,9 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		FuThunderboltInfo *info;
 		gchar tdbid[FU_PLUGIN_THUNDERBOLT_MAX_ID_LEN];
 		gsize tdbid_sz = sizeof (tdbid);
-		g_autofree gchar *guid_id1 = NULL;
-		g_autofree gchar *guid_id2 = NULL;
+		g_autofree gchar *guid_id = NULL;
 		g_autofree gchar *version = NULL;
+		gint safe_mode = 0;
 
 		/* get the ID */
 		rc = tbt_fwu_Controller_getID (data->controllers[i],
@@ -152,32 +152,50 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		info->id = g_strdup (tdbid);
 		g_ptr_array_add (data->infos, info);
 
-		/* get the vendor ID */
-		rc = tbt_fwu_Controller_getVendorID (data->controllers[i],
-						     &info->vendor_id);
+		rc = tbt_fwu_Controller_isInSafeMode (data->controllers[i], &safe_mode);
 		if (rc != TBT_OK) {
-			g_warning ("failed to get tbd vendor ID: %s",
+			g_warning ("failed to get controller status: %s",
 				   tbt_strerror (rc));
 			continue;
 		}
 
-		/* get the model ID */
-		rc = tbt_fwu_Controller_getModelID (data->controllers[i],
-						    &info->model_id);
-		if (rc != TBT_OK) {
-			g_warning ("failed to get tbd model ID: %s",
-				   tbt_strerror (rc));
-			continue;
-		}
+		if (safe_mode != 0) {
+			info->vendor_id = 0;
+			info->model_id = 0;
+			info->version_major = 0;
+			info->version_minor = 0;
+			g_warning ("Thunderbolt controller %s is in Safe Mode.  "
+				   "Please visit https://github.com/01org/tbtfwupd/wiki "
+				   "for information on how to restore normal operation.",
+				   info->id);
+		} else {
+			/* get the vendor ID */
+			rc = tbt_fwu_Controller_getVendorID (data->controllers[i],
+							     &info->vendor_id);
+			if (rc != TBT_OK) {
+				g_warning ("failed to get tbd vendor ID: %s",
+					   tbt_strerror (rc));
+				continue;
+			}
 
-		/* get the controller info */
-		rc = tbt_fwu_Controller_getNVMVersion (data->controllers[i],
-						       &info->version_major,
-						       &info->version_minor);
-		if (rc != TBT_OK) {
-			g_warning ("failed to get tbd firmware version: %s",
-				   tbt_strerror (rc));
-			continue;
+			/* get the model ID */
+			rc = tbt_fwu_Controller_getModelID (data->controllers[i],
+							    &info->model_id);
+			if (rc != TBT_OK) {
+				g_warning ("failed to get tbd model ID: %s",
+					   tbt_strerror (rc));
+				continue;
+			}
+
+			/* get the controller info */
+			rc = tbt_fwu_Controller_getNVMVersion (data->controllers[i],
+							       &info->version_major,
+							       &info->version_minor);
+			if (rc != TBT_OK) {
+				g_warning ("failed to get tbd firmware version: %s",
+					   tbt_strerror (rc));
+				continue;
+			}
 		}
 
 		/* add FuDevice attributes */
@@ -185,21 +203,17 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		fu_device_set_vendor (info->dev, "Intel");
 		fu_device_set_name (info->dev, "Thunderbolt Controller");
 		fu_device_add_flag (info->dev, FWUPD_DEVICE_FLAG_INTERNAL);
-		fu_device_add_flag (info->dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+		if (safe_mode == 0)
+			fu_device_add_flag (info->dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
 		fu_device_set_id (info->dev, info->id);
 
-		/* add GUID that fwupd will know about */
-		guid_id1 = g_strdup_printf ("PCI\\VEN_%04X&DEV_%04X",
-					    info->vendor_id, info->model_id);
-		fu_device_add_guid (info->dev, guid_id1);
-
 		/* add GUID that the info firmware uses */
-		guid_id2 = g_strdup_printf ("TBT-%04x%04x",
-					    info->vendor_id, info->model_id);
-		fu_device_add_guid (info->dev, guid_id2);
+		guid_id = g_strdup_printf ("TBT-%04x%04x",
+					   info->vendor_id, info->model_id);
+		fu_device_add_guid (info->dev, guid_id);
 
 		/* format version */
-		version = g_strdup_printf ("%" G_GUINT32_FORMAT ".%02" G_GUINT32_FORMAT,
+		version = g_strdup_printf ("%" G_GINT32_MODIFIER "x.%02" G_GINT32_MODIFIER "x",
 					   info->version_major,
 					   info->version_minor);
 		fu_device_set_version (info->dev, version);
@@ -281,6 +295,13 @@ fu_plugin_thunderbolt_device_matches (GUdevDevice *device)
 	return TRUE;
 }
 
+static void
+fu_plugin_thunderbolt_percentage_changed_cb (guint percentage, gpointer user_data)
+{
+	FuPlugin *plugin = FU_PLUGIN (user_data);
+	fu_plugin_set_percentage (plugin, percentage);
+}
+
 gboolean
 fu_plugin_update_online (FuPlugin *plugin,
 			 FuDevice *dev,
@@ -317,7 +338,11 @@ fu_plugin_update_online (FuPlugin *plugin,
 	}
 
 	/* update the device */
-	rc = tbt_fwu_Controller_updateFW (info->controller, blob, blob_sz);
+	rc = tbt_fwu_Controller_updateFW (info->controller,
+					  blob,
+					  blob_sz,
+					  fu_plugin_thunderbolt_percentage_changed_cb,
+					  plugin);
 	if (rc != TBT_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
