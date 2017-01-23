@@ -20,7 +20,7 @@ libfu_plugin_thunderbolt_la_CFLAGS = $(WARN_CFLAGS)	\
 if HAVE_DELL
 AM_CPPFLAGS +=						\
 	$(LIBSMBIOS_CFLAGS)
-libfu_plugin_thunderbolt_la_LIBADD =			\
+libfu_plugin_thunderbolt_la_LIBADD +=			\
 	$(LIBSMBIOS_LIBS)
 endif
 
