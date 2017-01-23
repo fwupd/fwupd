@@ -182,10 +182,10 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 			   when in safe mode, they can be flashed */
 #ifdef HAVE_DELL
 			de_table = smbios_get_next_struct_by_type (0, 0xDE);
-			smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
+			smbios_struct_get_data (de_table, &dell_supported, 0x00, sizeof(guint8));
 			if (dell_supported == 0xDE) {
 				info->vendor_id = 0x00d4;
-				info->model_id = sysinfo_get_dell_system_id();
+				info->model_id = sysinfo_get_dell_system_id ();
 				safe_mode = 0;
 			}
 #endif /* HAVE_DELL */
