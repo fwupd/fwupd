@@ -32,6 +32,11 @@
 #define FU_PLUGIN_THUNDERBOLT_MAX_ID_LEN	255
 #define FU_PLUGIN_THUNDERBOLT_DAEMON_DELAY	3000	/* ms */
 
+#ifdef HAVE_DELL
+#include <smbios_c/system_info.h>
+#include <smbios_c/smbios.h>
+#endif /* HAVE_DELL */
+
 struct FuPluginData {
 	/* A handle on a list of libtbtfwu controller objects.  These must
 	 * eventually be freed.
@@ -129,6 +134,10 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		g_autofree gchar *guid_id = NULL;
 		g_autofree gchar *version = NULL;
 		gint safe_mode = 0;
+#ifdef HAVE_DELL
+		guint8 dell_supported;
+		struct smbios_struct *de_table;
+#endif /* HAVE_DELL */
 
 		/* get the ID */
 		rc = tbt_fwu_Controller_getID (data->controllers[i],
@@ -168,6 +177,18 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 				   "Please visit https://github.com/01org/tbtfwupd/wiki "
 				   "for information on how to restore normal operation.",
 				   info->id);
+
+			/* Dell systems are known to have the system ID as the model_id
+			   when in safe mode, they can be flashed */
+#ifdef HAVE_DELL
+			de_table = smbios_get_next_struct_by_type (0, 0xDE);
+			smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
+			if (dell_supported == 0xDE) {
+				info->vendor_id = 0x00d4;
+				info->model_id = sysinfo_get_dell_system_id();
+				safe_mode = 0;
+			}
+#endif /* HAVE_DELL */
 		} else {
 			/* get the vendor ID */
 			rc = tbt_fwu_Controller_getVendorID (data->controllers[i],
