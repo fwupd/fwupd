@@ -17,6 +17,13 @@ libfu_plugin_thunderbolt_la_LDFLAGS = -module -avoid-version
 libfu_plugin_thunderbolt_la_CFLAGS = $(WARN_CFLAGS)	\
 	-DG_LOG_DOMAIN=\"FuPluginThunderbolt\"
 
+if HAVE_DELL
+AM_CPPFLAGS +=						\
+	$(LIBSMBIOS_CFLAGS)
+libfu_plugin_thunderbolt_la_LIBADD =			\
+	$(LIBSMBIOS_LIBS)
+endif
+
 EXTRA_DIST = README.md
 
 -include $(top_srcdir)/git.mk
