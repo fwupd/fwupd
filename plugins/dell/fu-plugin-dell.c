@@ -526,7 +526,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 
 	/* look at offset 0x06 for identifier meaning completion code */
 	de_table = smbios_get_next_struct_by_type (0, 0xDE);
-	smbios_struct_get_data (de_table, &(completion_code), 0x06, sizeof(guint16));
+	smbios_struct_get_data (de_table, &completion_code, 0x06, sizeof(guint16));
 
 	if (completion_code == DELL_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
@@ -950,7 +950,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 
 	/* look at offset 0x00 for identifier meaning DELL is supported */
 	de_table = smbios_get_next_struct_by_type (0, 0xDE);
-	smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
+	smbios_struct_get_data (de_table, &dell_supported, 0x00, sizeof(guint8));
 	if (dell_supported != 0xDE) {
 		g_set_error (error,
 			     FWUPD_ERROR,

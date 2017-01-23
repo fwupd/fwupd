@@ -22,7 +22,7 @@
 #include <appstream-glib.h>
 #include <smbios_c/smi.h>
 #include <smbios_c/obj/smi.h>
-#include "fu-dell-flash.h"
+#include "fu-dell-common.h"
 #include "fu-plugin.h"
 
 /* These are for dock query capabilities */

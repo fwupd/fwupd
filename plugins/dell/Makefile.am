@@ -19,7 +19,7 @@ FWUPD_LIBS =						\
 plugindir = $(libdir)/fwupd-plugins-2
 plugin_LTLIBRARIES = libfu_plugin_dell.la
 libfu_plugin_dell_la_SOURCES =				\
-	fu-dell-flash.c					\
+	fu-dell-common.c					\
 	fu-plugin-dell.c
 libfu_plugin_dell_la_LIBADD =				\
 	$(GUSB_LIBS)					\
@@ -36,8 +36,8 @@ fu_self_test_SOURCES =					\
 	fu-plugin.c					\
 	fu-pending.c					\
 	fu-device.c					\
-	fu-dell-flash.c					\
-	fu-dell-flash.h					\
+	fu-dell-common.c				\
+	fu-dell-common.h				\
 	fu-plugin-dell.c				\
 	fu-plugin-dell.h				\
 	fu-self-test.c
@@ -66,8 +66,8 @@ noinst_PROGRAMS =                                       \
         fu-dell-tool
 
 fu_dell_tool_SOURCES =					\
-	fu-dell-flash.c					\
-	fu-dell-flash.h					\
+	fu-dell-common.c				\
+	fu-dell-common.h				\
 	fu-dell-tool.c
 
 fu_dell_tool_LDADD =					\

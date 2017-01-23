@@ -25,7 +25,7 @@
 #include <smbios_c/smbios.h>
 #include "synapticsmst-device.h"
 #include "synapticsmst-common.h"
-#include "fu-plugin-dell.h"
+#include "fu-dell-common.h"
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 

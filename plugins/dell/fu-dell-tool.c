@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "fu-dell-flash.h"
+#include "fu-dell-common.h"
 #include <glib/gstdio.h>
 
-/* This is because fu-dell-flash uses FuPlugin but
+/* This is because fu-dell-common uses FuPlugin but
  * we don't want to define all of the plugin for a
  * simple loader tool
  */

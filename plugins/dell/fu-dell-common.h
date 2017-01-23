@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FU_DELL_FLASH_H
-#define __FU_DELL_FLASH_H
+#ifndef __FU_DELL_COMMON_H
+#define __FU_DELL_COMMON_H
 
 #include "fu-device.h"
 #include "fu-plugin.h"
@@ -71,4 +71,8 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable);
 #define DACI_DOCK_ARG_MODE_USER		0
 #define DACI_DOCK_ARG_MODE_FLASH	1
 
-#endif /* __FU_DELL_FLASH_H */
+/* VID/PID of ethernet controller on dock */
+#define DOCK_NIC_VID		0x0bda
+#define DOCK_NIC_PID		0x8153
+
+#endif /* __FU_DELL_COMMON_H */

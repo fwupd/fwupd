@@ -24,7 +24,7 @@
 
 #include <gusb.h>
 #include "fu-plugin.h"
-#include "fu-dell-flash.h"
+#include "fu-dell-common.h"
 void
 fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 				   guint32 *output, guint16 vid, guint16 pid,
@@ -108,9 +108,5 @@ typedef enum _CABLE_TYPE
 	CABLE_TYPE_UNIV,
 	CABLE_TYPE_TBT
 } CABLE_TYPE;
-
-/* VID/PID of ethernet controller on dock */
-#define DOCK_NIC_VID		0x0bda
-#define DOCK_NIC_PID		0x8153
 
 #endif /* __FU_PLUGIN_DELL_H */
