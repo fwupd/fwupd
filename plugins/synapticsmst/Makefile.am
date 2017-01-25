@@ -2,9 +2,10 @@ AM_CPPFLAGS = 							\
 	$(APPSTREAM_GLIB_CFLAGS)				\
 	$(GLIB_CFLAGS)						\
 	$(GUSB_CFLAGS)						\
-	$(LIBSMBIOS_CFLAGS)                             	\
+	$(LIBSMBIOS_CFLAGS)					\
 	$(PIE_CFLAGS)						\
 	$(EFIVAR_CFLAGS)					\
+	-I$(top_srcdir)						\
 	-I$(top_srcdir)/src					\
 	-I$(top_srcdir)/libfwupd				\
 	-DLOCALEDIR=\""$(localedir)"\"
