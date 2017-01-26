@@ -161,17 +161,22 @@ static gboolean
 synapticsmst_tool_scan_aux_nodes (SynapticsMSTToolPrivate *priv, GError **error)
 {
 	SynapticsMSTDevice *cascade_device = NULL;
-	guint8 aux_node = 0;
+	GDir *dir;
+	const gchar *aux_node;
 	guint8 layer = 0;
 	guint16 rad = 0;
 
-	/* add all direct devices */
-	for (guint8 i = 0; i < MAX_DP_AUX_NODES; i++) {
+	dir = g_dir_open (SYSFS_DRM_DP_AUX, 0, NULL);
+	do {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(SynapticsMSTDevice) device = NULL;
 
+		aux_node = g_dir_read_name (dir);
+		if (aux_node == NULL)
+			break;
+
 		/* can we open the device? */
-		device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, i, 0, 0);
+		device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, aux_node, 0, 0);
 		if (!synapticsmst_device_open (device, &error_local)) {
 			if (g_error_matches (error_local,
 					     G_IO_ERROR,
@@ -189,7 +194,7 @@ synapticsmst_tool_scan_aux_nodes (SynapticsMSTToolPrivate *priv, GError **error)
 
 		/* add device to results */
 		g_ptr_array_add (priv->device_array, g_object_ref (device));
-	}
+	} while (TRUE);
 
 	/* no devices */
 	if (priv->device_array->len == 0) {
@@ -206,7 +211,7 @@ synapticsmst_tool_scan_aux_nodes (SynapticsMSTToolPrivate *priv, GError **error)
 		aux_node = synapticsmst_device_get_aux_node (device);
 		if (!synapticsmst_device_open (device, error)) {
 			g_prefix_error (error,
-					"failed to open aux node %d again",
+					"failed to open aux node %s again",
 					aux_node);
 			return FALSE;
 		}
@@ -254,7 +259,7 @@ synapticsmst_tool_enumerate (SynapticsMSTToolPrivate *priv,
 			g_print ("Device: %s with Synaptics %s\n",
 				 board_id,
 				 synapticsmst_device_get_chip_id (device));
-			g_print ("Connect Type: %s in DP Aux Node %d\n",
+			g_print ("Connect Type: %s in DP Aux Node %s\n",
 				 synapticsmst_device_kind_to_string (synapticsmst_device_get_kind (device)),
 				 synapticsmst_device_get_aux_node (device));
 			g_print ("Firmware version: %s\n", synapticsmst_device_get_version (device));

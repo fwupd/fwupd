@@ -32,7 +32,7 @@ G_BEGIN_DECLS
 #define SYNAPTICSMST_TYPE_DEVICE (synapticsmst_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (SynapticsMSTDevice, synapticsmst_device, SYNAPTICSMST, DEVICE, GObject)
 
-#define MAX_DP_AUX_NODES	3
+#define SYSFS_DRM_DP_AUX "/sys/class/drm_dp_aux_dev"
 
 struct _SynapticsMSTDeviceClass
 {
@@ -77,7 +77,7 @@ typedef enum {
 #define CUSTOMERID_DELL 	0x1
 
 SynapticsMSTDevice	*synapticsmst_device_new	(SynapticsMSTDeviceKind kind,
-							 guint8 aux_node,
+							 const gchar *aux_node,
 							 guint8 layer,
 							 guint16 rad);
 
@@ -85,7 +85,6 @@ SynapticsMSTDevice	*synapticsmst_device_new	(SynapticsMSTDeviceKind kind,
 SynapticsMSTDeviceKind synapticsmst_device_kind_from_string	(const gchar	*kind);
 const gchar	*synapticsmst_device_kind_to_string		(SynapticsMSTDeviceKind kind);
 const gchar	*synapticsmst_device_board_id_to_string		(SynapticsMSTDeviceBoardID board_id);
-const gchar 	*synapticsmst_device_aux_node_to_string 	(guint8 index);
 const gchar 	*synapticsmst_device_get_guid 			(SynapticsMSTDevice *device);
 gboolean	 synapticsmst_device_scan_cascade_device 	(SynapticsMSTDevice *device,
 								 GError **error,
@@ -98,7 +97,7 @@ SynapticsMSTDeviceKind synapticsmst_device_get_kind		(SynapticsMSTDevice *device
 SynapticsMSTDeviceBoardID synapticsmst_device_get_board_id 	(SynapticsMSTDevice *device);
 const gchar	*synapticsmst_device_get_version		(SynapticsMSTDevice *device);
 const gchar 	*synapticsmst_device_get_chip_id 		(SynapticsMSTDevice *device);
-guint8 		 synapticsmst_device_get_aux_node		(SynapticsMSTDevice *device);
+const gchar 	*synapticsmst_device_get_aux_node		(SynapticsMSTDevice *device);
 guint16 	 synapticsmst_device_get_rad 			(SynapticsMSTDevice *device);
 guint8 		 synapticsmst_device_get_layer 			(SynapticsMSTDevice *device);
 gboolean

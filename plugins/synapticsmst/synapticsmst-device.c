@@ -40,7 +40,7 @@ typedef struct
 	SynapticsMSTDeviceBoardID board_id;
 	gchar			*chip_id;
 	gchar			*guid;
-	guint8			 aux_node;
+	gchar			*aux_node;
 	guint8			 layer;
 	guint16			 rad;
 	gint			 fd;
@@ -105,6 +105,7 @@ synapticsmst_device_finalize (GObject *object)
 	if (priv->fd > 0)
 		close (priv->fd);
 
+	g_free (priv->aux_node);
 	g_free (priv->version);
 	g_free (priv->chip_id);
 	g_free (priv->guid);
@@ -226,7 +227,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 
 	//FIXME?
 	if (!synapticsmst_device_open (device, error)) {
-		g_prefix_error (error, "Failed to open device in DP Aux Node %d: ",
+		g_prefix_error (error, "Failed to open device in DP Aux Node %s: ",
 				synapticsmst_device_get_aux_node (device));
 		return FALSE;
 	}
@@ -309,7 +310,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 	return TRUE;
 }
 
-guint8
+const gchar *
 synapticsmst_device_get_aux_node (SynapticsMSTDevice *device)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
@@ -493,7 +494,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 
 	if (!synapticsmst_device_open (device, error)) {
 		g_prefix_error (error,
-				"can't open DP Aux node %d",
+				"can't open DP Aux node %s",
 				synapticsmst_device_get_aux_node (device));
 		return FALSE;
 	}
@@ -603,7 +604,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 
 SynapticsMSTDevice *
 synapticsmst_device_new (SynapticsMSTDeviceKind kind,
-			 guint8 aux_node,
+			 const gchar *aux_node,
 			 guint8 layer,
 			 guint16 rad)
 {
@@ -613,7 +614,7 @@ synapticsmst_device_new (SynapticsMSTDeviceKind kind,
 	device = g_object_new (SYNAPTICSMST_TYPE_DEVICE, NULL);
 	priv = GET_PRIVATE (device);
 
-	priv->aux_node = aux_node;
+	priv->aux_node = g_strdup(aux_node);
 	priv->kind = kind;
 	priv->version = NULL;
 	priv->layer = layer;
@@ -623,28 +624,16 @@ synapticsmst_device_new (SynapticsMSTDeviceKind kind,
 	return SYNAPTICSMST_DEVICE (device);
 }
 
-const gchar *
-synapticsmst_device_aux_node_to_string (guint8 index)
-{
-	if (index == 0)
-		return "/dev/drm_dp_aux0";
-	if (index == 1)
-		return "/dev/drm_dp_aux1";
-	if (index == 2)
-		return "/dev/drm_dp_aux2";
-	return "";
-}
-
 gboolean
 synapticsmst_device_open (SynapticsMSTDevice *device, GError **error)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	const gchar *filename;
+	g_autofree gchar *filename;
 	guint8 byte[4];
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
 	/* file doesn't exist on this system */
-	filename = synapticsmst_device_aux_node_to_string (priv->aux_node);
+	filename = g_strdup_printf("/dev/%s", priv->aux_node);
 	if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
 		g_set_error (error,
 			     G_IO_ERROR,

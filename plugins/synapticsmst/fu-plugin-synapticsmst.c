@@ -34,9 +34,7 @@
 static gboolean
 synapticsmst_common_check_supported_system (GError **error)
 {
-	gint i;
 	guint8 dell_supported = 0;
-	gboolean kernel_support = FALSE;
 	struct smbios_struct *de_table;
 
 	de_table = smbios_get_next_struct_by_type (0, 0xDE);
@@ -49,13 +47,7 @@ synapticsmst_common_check_supported_system (GError **error)
 			     dell_supported);
 		return FALSE;
 	}
-	for (i = 0; i < MAX_DP_AUX_NODES; i++) {
-		if (kernel_support)
-			break;
-		kernel_support = g_file_test (synapticsmst_device_aux_node_to_string (i),
-					      G_FILE_TEST_EXISTS);
-	}
-	if (!kernel_support) {
+	if (!g_file_test (SYSFS_DRM_DP_AUX, G_FILE_TEST_IS_DIR)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
@@ -70,31 +62,31 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 				SynapticsMSTDevice *device,
 				GError **error) {
 	g_autoptr(FuDevice) dev = NULL;
+	const gchar *kind_str = NULL;
 	const gchar *board_str = NULL;
 	const gchar *guid_str = NULL;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *dev_id_str = NULL;
-	guint8 aux_node;
+	const gchar *aux_node;
 	guint8 layer;
 	guint16 rad;
 
 	aux_node = synapticsmst_device_get_aux_node (device);
 	if (!synapticsmst_device_enumerate_device (device, error)) {
-		g_debug ("error enumerating device at %u", aux_node);
+		g_debug ("error enumerating device at %s", aux_node);
 		return FALSE;
 	}
 
 	layer = synapticsmst_device_get_layer (device);
 	rad = synapticsmst_device_get_rad (device);
-	aux_node = synapticsmst_device_get_aux_node (device);
 	board_str = synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device));
 	name = g_strdup_printf ("%s with Synaptics [%s]", board_str,
 				synapticsmst_device_get_chip_id (device));
 	guid_str =  synapticsmst_device_get_guid (device);
 	/* Store $KIND-$AUXNODE-$LAYER-$RAD as device ID */
-	dev_id_str = g_strdup_printf ("MST-%u-%u-%u-%u",
-				      synapticsmst_device_get_kind(device),
-				      aux_node, layer, rad);
+	kind_str = synapticsmst_device_kind_to_string (synapticsmst_device_get_kind (device));
+	dev_id_str = g_strdup_printf ("MST-%s-%s-%u-%u",
+				      kind_str, aux_node, layer, rad);
 
 	if (board_str == NULL) {
 		g_debug ("invalid board ID (%x)", synapticsmst_device_get_board_id (device));
@@ -120,7 +112,7 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 				  GError **error)
 {
 	SynapticsMSTDevice *cascade_device;
-	guint8 aux_node = 0;
+	const gchar *aux_node;
 	guint8 layer = 0;
 	guint16 rad = 0;
 	guint8 j;
@@ -128,7 +120,7 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 	aux_node = synapticsmst_device_get_aux_node (device);
 	if (!synapticsmst_device_open (device, error)) {
 		g_prefix_error (error,
-				"failed to open aux node %d again",
+				"failed to open aux node %s again",
 				aux_node);
 		return FALSE;
 	}
@@ -159,28 +151,32 @@ static gboolean
 fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 				  GError **error)
 {
-	guint8 i;
-	const gchar *aux_node_str = NULL;
-	g_autoptr(FuDevice) dev = NULL;
+	GDir *dir;
+	const gchar *aux_node = NULL;
 
-	for (i = 0; i < MAX_DP_AUX_NODES; i++) {
+	dir = g_dir_open (SYSFS_DRM_DP_AUX, 0, NULL);
+	do {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(SynapticsMSTDevice) device = NULL;
+		g_autoptr(FuDevice) dev = NULL;
 
-		aux_node_str = synapticsmst_device_aux_node_to_string (i);
-		dev = fu_plugin_cache_lookup (plugin, aux_node_str);
+		aux_node = g_dir_read_name (dir);
+		if (aux_node == NULL)
+			break;
+
+		dev = fu_plugin_cache_lookup (plugin, aux_node);
 
 		/* If we open succesfully a device exists here */
-		device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, i, 0, 0);
+		device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, aux_node, 0, 0);
 		if (!synapticsmst_device_open (device, NULL)) {
 			/* No device exists here, but was there - remove from DB */
 			if (dev != NULL) {
-				g_debug ("removing device at %s", aux_node_str);
+				g_debug ("removing device at %s", aux_node);
 				fu_plugin_device_remove (plugin, dev);
-				fu_plugin_cache_remove (plugin, aux_node_str);
+				fu_plugin_cache_remove (plugin, aux_node);
 			} else {
 				/* Nothing to see here - move on*/
-				g_debug ("no device found on %s", aux_node_str);
+				g_debug ("no device found on %s", aux_node);
 			}
 			continue;
 		}
@@ -190,7 +186,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 			continue;
 
 		/* Add direct devices */
-		g_debug ("adding direct device at %s", aux_node_str);
+		g_debug ("adding direct device at %s", aux_node);
 		if (!fu_plugin_synaptics_add_device (plugin, device, &error_local)) {
 			g_warning ("failed to add device: %s", error_local->message);
 			continue;
@@ -198,7 +194,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 
 		/* recursively look for cascade devices */
 		fu_plugin_synaptics_scan_cascade (plugin, device, error);
-	}
+	} while(TRUE);
 	return TRUE;
 }
 
@@ -224,7 +220,7 @@ fu_plugin_update_online (FuPlugin *plugin,
 	g_autoptr(SynapticsMSTDevice) device = NULL;
 	const gchar *device_id;
 	SynapticsMSTDeviceKind kind;
-	guint8 aux_node;
+	const gchar *aux_node;
 	guint8 layer;
 	guint8 rad;
 	g_auto (GStrv) split = NULL;
@@ -232,8 +228,8 @@ fu_plugin_update_online (FuPlugin *plugin,
 	/* extract details to build a new device */
 	device_id = fu_device_get_id (dev);
 	split = g_strsplit (device_id, "-", -1);
-	kind = g_ascii_strtoull (split[1], NULL, 0);
-	aux_node = g_ascii_strtoull (split[2], NULL, 0);
+	kind = synapticsmst_device_kind_from_string(split[1]);
+	aux_node = split[2];
 	layer = g_ascii_strtoull (split[3], NULL, 0);
 	rad = g_ascii_strtoull (split[4], NULL, 0);
 
