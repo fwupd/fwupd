@@ -66,12 +66,13 @@ typedef struct _DOCK_DESCRIPTION
 } DOCK_DESCRIPTION;
 
 static void
-_dell_smi_obj_free (fu_dell_smi_obj *smi)
+_dell_smi_obj_free (FuDellSmiObj *obj)
 {
-	dell_smi_obj_free (smi);
+	dell_smi_obj_free (obj->smi);
+	g_free (obj);
 }
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(fu_dell_smi_obj, _dell_smi_obj_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
 
 /* These are for matching the components */
 #define WD15_EC_STR		"2 0 2 2 0"
@@ -119,12 +120,12 @@ _fwup_resource_iter_free (fwup_resource_iter *iter)
 	fwup_resource_iter_destroy (&iter);
 }
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (fwup_resource_iter, _fwup_resource_iter_free);
 
 static gboolean
-fu_plugin_dell_match_dock_component(const gchar *query_str,
-				    efi_guid_t *guid_out,
-				    const gchar **name_out)
+fu_plugin_dell_match_dock_component (const gchar *query_str,
+				     efi_guid_t *guid_out,
+				     const gchar **name_out)
 {
 	const DOCK_DESCRIPTION list[] = {
 		{WD15_EC_GUID, WD15_EC_STR, EC_DESC},
@@ -137,7 +138,7 @@ fu_plugin_dell_match_dock_component(const gchar *query_str,
 		{LEGACY_CBL_GUID, LEGACY_CBL_STR, LEGACY_CBL_DESC},
 	};
 
-	for (guint i = 0; i < G_N_ELEMENTS(list); i++) {
+	for (guint i = 0; i < G_N_ELEMENTS (list); i++) {
 		if (g_strcmp0 (query_str,
 			       list[i].query) == 0) {
 			memcpy (guid_out, &list[i].guid, sizeof (efi_guid_t));
@@ -155,42 +156,13 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
-	if (!data->fake_smbios)
+	if (!data->smi_obj->fake_smbios)
 		return;
 	for (guint i = 0; i < 4; i++)
-		data->fake_output[i] = output[i];
+		data->smi_obj->output[i] = output[i];
 	data->fake_vid = vid;
 	data->fake_pid = pid;
-	data->fake_buffer = buf;
-}
-
-static gboolean
-fu_plugin_dell_execute_smi (FuPlugin *plugin, fu_dell_smi_obj *smi)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	gint ret;
-
-	if (data->fake_smbios)
-		return TRUE;
-
-	ret = dell_smi_obj_execute (smi);
-	if (ret != 0) {
-		g_debug ("SMI execution failed: %i", ret);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static guint32
-fu_plugin_dell_get_res (FuPlugin *plugin,
-			fu_dell_smi_obj *smi, guint8 arg)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-
-	if (data->fake_smbios)
-		return data->fake_output[arg];
-
-	return dell_smi_obj_get_res (smi, arg);
+	data->smi_obj->fake_buffer = buf;
 }
 
 static void
@@ -226,7 +198,7 @@ fu_plugin_get_dock_key (FuPlugin *plugin,
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar* platform_id;
 
-	if (data->fake_smbios)
+	if (data->smi_obj->fake_smbios)
 		platform_id = "fake";
 	else
 		platform_id = g_usb_device_get_platform_id (device);
@@ -239,7 +211,7 @@ fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	gint uefi_supported;
 
-	if (data->fake_smbios)
+	if (data->smi_obj->fake_smbios)
 		return TRUE;
 
 	/* If ESRT is not turned on, fwupd will have already created an
@@ -251,8 +223,8 @@ fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 	 */
 	uefi_supported = fwup_supported ();
 	if (uefi_supported != 1) {
-		g_debug("UEFI capsule firmware updating not supported (%x)",
-			(guint) uefi_supported);
+		g_debug ("UEFI capsule firmware updating not supported (%x)",
+			 (guint) uefi_supported);
 		return FALSE;
 	}
 	return TRUE;
@@ -300,7 +272,7 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 
 	item = g_new0 (FuPluginDockItem, 1);
 	item->plugin = g_object_ref (plugin);
-	item->device = fu_device_new();
+	item->device = fu_device_new ();
 	dock_id = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, guid_str);
 	dock_name = g_strdup_printf ("Dell %s %s", dock_type,
 				     component_desc);
@@ -335,7 +307,6 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	INFO_UNION buf;
 	DOCK_INFO *dock_info;
 	guint buf_size;
-	g_autoptr(fu_dell_smi_obj) smi = NULL;
 	gint result;
 	guint32 location;
 	efi_guid_t guid_raw;
@@ -346,7 +317,7 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 
 	/* don't look up immediately if a dock is connected as that would
 	   mean a SMI on every USB device that showed up on the system */
-	if (!data->fake_smbios) {
+	if (!data->smi_obj->fake_smbios) {
 		vid = g_usb_device_get_vid (device);
 		pid = g_usb_device_get_pid (device);
 	} else {
@@ -357,36 +328,33 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	/* we're going to match on the Realtek NIC in the dock */
 	if (vid != DOCK_NIC_VID || pid != DOCK_NIC_PID)
 		return;
-	if (!fu_dell_detect_dock (plugin, &location))
+	if (!fu_dell_detect_dock (data->smi_obj, &location))
 		return;
 
+	fu_dell_clear_smi (data->smi_obj);
+
 	/* look up more information on dock */
-	if (!data->fake_smbios) {
-		smi = dell_smi_factory (DELL_SMI_DEFAULTS);
-		if (!smi) {
-			g_debug ("Failure initializing SMI");
-			return;
-		}
-		dell_smi_obj_set_class (smi, DACI_DOCK_CLASS);
-		dell_smi_obj_set_select (smi, DACI_DOCK_SELECT);
-		dell_smi_obj_set_arg (smi, cbARG1, DACI_DOCK_ARG_INFO);
-		dell_smi_obj_set_arg (smi, cbARG2, location);
-		buf_size = sizeof(DOCK_INFO_RECORD);
-		buf.buf = dell_smi_obj_make_buffer_frombios_auto (smi, cbARG3, buf_size);
+	if (!data->smi_obj->fake_smbios) {
+		dell_smi_obj_set_class (data->smi_obj->smi, DACI_DOCK_CLASS);
+		dell_smi_obj_set_select (data->smi_obj->smi, DACI_DOCK_SELECT);
+		dell_smi_obj_set_arg (data->smi_obj->smi, cbARG1, DACI_DOCK_ARG_INFO);
+		dell_smi_obj_set_arg (data->smi_obj->smi, cbARG2, location);
+		buf_size = sizeof (DOCK_INFO_RECORD);
+		buf.buf = dell_smi_obj_make_buffer_frombios_auto (data->smi_obj->smi, cbARG3, buf_size);
 		if (!buf.buf) {
 			g_debug ("Failed to initialize buffer");
 			return;
 		}
 	} else {
-		buf.buf = data->fake_buffer;
+		buf.buf = data->smi_obj->fake_buffer;
 	}
-	if (!fu_plugin_dell_execute_smi (plugin, smi))
+	if (!fu_dell_execute_smi (data->smi_obj))
 		return;
-	result = fu_plugin_dell_get_res (plugin, smi, cbARG1);
+	result = fu_dell_get_res (data->smi_obj, cbARG1);
 	if (result != SMI_SUCCESS) {
 		if (result == SMI_INVALID_BUFFER) {
 			g_debug ("Invalid buffer size, needed %" G_GUINT32_FORMAT,
-				 fu_plugin_dell_get_res (plugin, smi, cbARG2));
+				 fu_dell_get_res (data->smi_obj, cbARG2));
 		} else {
 			g_debug ("SMI execution returned error: %d",
 				 result);
@@ -489,7 +457,7 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 
 	g_autofree gchar *guid_str = NULL;
 
-	if (!data->fake_smbios) {
+	if (!data->smi_obj->fake_smbios) {
 		vid = g_usb_device_get_vid (device);
 		pid = g_usb_device_get_pid (device);
 	} else {
@@ -502,7 +470,7 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 		return;
 
 	/* remove any components already in database? */
-	for (guint i = 0; i < G_N_ELEMENTS(guids); i++) {
+	for (guint i = 0; i < G_N_ELEMENTS (guids); i++) {
 		guid_raw = &guids[i];
 		guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
 		efi_guid_to_str (guid_raw, &guid_str);
@@ -526,7 +494,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 
 	/* look at offset 0x06 for identifier meaning completion code */
 	de_table = smbios_get_next_struct_by_type (0, 0xDE);
-	smbios_struct_get_data (de_table, &completion_code, 0x06, sizeof(guint16));
+	smbios_struct_get_data (de_table, &completion_code, 0x06, sizeof (guint16));
 
 	if (completion_code == DELL_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
@@ -603,21 +571,18 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	g_autofree gchar *tpm_id_alt = NULL;
 	g_autofree gchar *tpm_id = NULL;
 	g_autofree gchar *version_str = NULL;
-	g_autofree guint32 *args = NULL;
-	g_autofree struct tpm_status *out = NULL;
-	g_autoptr(FuDevice) dev_alt = NULL;
-	g_autoptr(FuDevice) dev = NULL;
+	struct tpm_status *out = NULL;
+	g_autoptr (FuDevice) dev_alt = NULL;
+	g_autoptr (FuDevice) dev = NULL;
 
-	args = g_malloc0 (sizeof(guint32) *4);
-	out = g_malloc0 (sizeof(struct tpm_status));
+	fu_dell_clear_smi (data->smi_obj);
+	out = (struct tpm_status *) data->smi_obj->output;
 
 	/* execute TPM Status Query */
-	args[0] = DACI_FLASH_ARG_TPM;
-	if (!fu_dell_execute_simple_smi (plugin,
-						  DACI_FLASH_INTERFACE_CLASS,
-						  DACI_FLASH_INTERFACE_SELECT,
-						  args,
-						  (guint32 *) out))
+	data->smi_obj->input[0] = DACI_FLASH_ARG_TPM;
+	if (!fu_dell_execute_simple_smi (data->smi_obj,
+					 DACI_FLASH_INTERFACE_CLASS,
+					 DACI_FLASH_INTERFACE_SELECT))
 		return FALSE;
 
 	if (out->ret != 0) {
@@ -628,7 +593,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	/* HW version is output in second /input/ arg
 	 * it may be relevant as next gen TPM is enabled
 	 */
-	g_debug ("TPM HW version: 0x%x", args[1]);
+	g_debug ("TPM HW version: 0x%x", data->smi_obj->input[1]);
 	g_debug ("TPM Status: 0x%x", out->status);
 
 	/* test TPM enabled (Bit 0) */
@@ -649,10 +614,10 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
-	if (!data->fake_smbios)
+	if (!data->smi_obj->fake_smbios)
 		system_id = (guint16) sysinfo_get_dell_system_id ();
 
-	for (guint i = 0; i < G_N_ELEMENTS(tpm_switch_blacklist); i++) {
+	for (guint i = 0; i < G_N_ELEMENTS (tpm_switch_blacklist); i++) {
 		if (tpm_switch_blacklist[i] == system_id) {
 			can_switch_modes = FALSE;
 		}
@@ -672,7 +637,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 						    AS_VERSION_PARSE_FLAG_NONE);
 
 	/* make it clear that the TPM is a discrete device of the product */
-	if (!data->fake_smbios) {
+	if (!data->smi_obj->fake_smbios) {
 		if (!g_file_get_contents ("/sys/class/dmi/id/product_name",
 					  &product_name,NULL, NULL)) {
 			g_set_error_literal (error,
@@ -703,7 +668,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 
 	/* build alternate device node */
 	if (can_switch_modes) {
-		dev_alt = fu_device_new();
+		dev_alt = fu_device_new ();
 		fu_device_set_id (dev_alt, tpm_id_alt);
 		fu_device_add_guid (dev_alt, tpm_guid_alt);
 		fu_device_set_name (dev_alt, pretty_tpm_name_alt);
@@ -793,7 +758,7 @@ fu_plugin_update_offline (FuPlugin *plugin,
 			  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_autoptr(fwup_resource_iter) iter = NULL;
+	g_autoptr (fwup_resource_iter) iter = NULL;
 	fwup_resource *re = NULL;
 	const gchar *name = NULL;
 	gint rc;
@@ -823,7 +788,7 @@ fu_plugin_update_offline (FuPlugin *plugin,
 		}
 	}
 
-	if (data->fake_smbios)
+	if (data->smi_obj->fake_smbios)
 		return TRUE;
 
 	/* perform the update */
@@ -912,9 +877,12 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	data->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) fu_plugin_device_free);
-	data->fake_smbios = FALSE;
+
+	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
+	data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
+	data->smi_obj->fake_smbios = FALSE;
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
-		data->fake_smbios = TRUE;
+		data->smi_obj->fake_smbios = TRUE;
 }
 
 void
@@ -922,6 +890,8 @@ fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_hash_table_unref (data->devices);
+	dell_smi_obj_free (data->smi_obj->smi);
+	g_free(data->smi_obj);
 }
 
 gboolean
@@ -941,7 +911,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 				  G_CALLBACK (fu_plugin_dell_device_removed_cb),
 				  plugin);
 	}
-	if (data->fake_smbios) {
+	if (data->smi_obj->fake_smbios) {
 		g_debug ("Called with fake SMBIOS implementation. "
 			 "We're ignoring test for SBMIOS table and ESRT. "
 			 "Individual calls will need to be properly staged.");
@@ -960,7 +930,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
-#if defined(HAVE_SYNAPTICS) || defined(HAVE_THUNDERBOLT)
+#if defined (HAVE_SYNAPTICS) || defined (HAVE_THUNDERBOLT)
 	/* set a delay to allow OS response to settling the GPIO change */
 	fu_plugin_set_coldplug_delay (plugin, DELL_FLASH_MODE_DELAY * 1000);
 #endif

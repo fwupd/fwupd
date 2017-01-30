@@ -23,26 +23,32 @@
 #define __FU_DELL_COMMON_H
 
 #include "fu-device.h"
-#include "fu-plugin.h"
+#include <smbios_c/smi.h>
+#include <smbios_c/obj/smi.h>
 #include <efivar.h>
-typedef struct dell_smi_obj fu_dell_smi_obj;
 
-struct FuPluginData {
-	GHashTable		*devices;	/* DeviceKey:FuPluginDockItem */
+typedef struct {
+	struct dell_smi_obj	*smi;
+	guint32			input[4];
+	guint32			output[4];
 	gboolean		fake_smbios;
-	guint32			fake_output[4];
-	guint16			fake_vid;
-	guint16			fake_pid;
 	guint8			*fake_buffer;
-};
+} FuDellSmiObj;
 
 gboolean
-fu_dell_execute_simple_smi (FuPlugin *plugin,
-				   guint16 class, guint16 select,
-				   guint32  *args, guint32 *out);
+fu_dell_clear_smi (FuDellSmiObj *obj);
+
+guint32
+fu_dell_get_res (FuDellSmiObj *smi_obj, guint8 arg);
 
 gboolean
-fu_dell_detect_dock (FuPlugin* plugin, guint32 *location);
+fu_dell_execute_smi (FuDellSmiObj *obj);
+
+gboolean
+fu_dell_execute_simple_smi (FuDellSmiObj *obj, guint16 class, guint16 select);
+
+gboolean
+fu_dell_detect_dock (FuDellSmiObj *obj, guint32 *location);
 
 gboolean
 fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable);

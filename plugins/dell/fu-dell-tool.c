@@ -22,16 +22,6 @@
 #include "fu-dell-common.h"
 #include <glib/gstdio.h>
 
-/* This is because fu-dell-common uses FuPlugin but
- * we don't want to define all of the plugin for a
- * simple loader tool
- */
-#ifndef fu_plugin_get_data
-FuPluginData *fu_plugin_get_data(FuPlugin *plugin) {
-	return NULL;
-}
-#endif
-
 static void usage(void) {
 	g_print ("This application forces TBT/MST controllers to flashing mode on Dell systems\n\n");
 	g_print ("Call with an argument of '1' to force flashing mode\n");

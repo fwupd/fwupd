@@ -20,8 +20,6 @@
  */
 
 #include <appstream-glib.h>
-#include <smbios_c/smi.h>
-#include <smbios_c/obj/smi.h>
 #include "fu-dell-common.h"
 #include "fu-plugin.h"
 
@@ -52,125 +50,160 @@ typedef union _ADDR_UNION{
 #define MST_GPIO_GUID		EFI_GUID (0xF24F9bE4, 0x2a13, 0x4344, 0xBC05, 0x01, 0xCE, 0xF7, 0xDA, 0xEF, 0x92)
 
 static void
-_dell_smi_obj_free (fu_dell_smi_obj *smi)
+_dell_smi_obj_free (FuDellSmiObj *obj)
 {
-	dell_smi_obj_free (smi);
+	dell_smi_obj_free (obj->smi);
+	g_free(obj);
 }
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(fu_dell_smi_obj, _dell_smi_obj_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
+
+/* don't actually clear if we're testing */
+gboolean
+fu_dell_clear_smi (FuDellSmiObj *obj)
+{
+	if (obj->fake_smbios)
+		return TRUE;
+
+	for (gint i=0; i < 4; i++) {
+		obj->input[i] = 0;
+		obj->output[i] = 0;
+	}
+	return TRUE;
+}
+
 
 gboolean
-fu_dell_execute_simple_smi (FuPlugin *plugin,
-			    guint16 class, guint16 select,
-			    guint32  *args, guint32 *out)
+fu_dell_execute_smi (FuDellSmiObj *obj)
 {
-	FuPluginData *data;
+	gint ret;
 
-	if (plugin != NULL) {
-		data = fu_plugin_get_data (plugin);
-		if (data->fake_smbios) {
-			for (guint i = 0; i < 4; i++)
-				out[i] = data->fake_output[i];
-			return TRUE;
-		}
+	if (obj->fake_smbios)
+		return TRUE;
+
+	ret = dell_smi_obj_execute (obj->smi);
+	if (ret != 0) {
+		g_debug ("SMI execution failed: %i", ret);
+		return FALSE;
 	}
-	if (dell_simple_ci_smi (class, select, args, out)) {
-		g_debug ("Dell: failed to run query %u/%u", class, select);
+	return TRUE;
+}
+
+guint32
+fu_dell_get_res (FuDellSmiObj *smi_obj, guint8 arg)
+{
+	if (smi_obj->fake_smbios)
+		return smi_obj->output[arg];
+
+	return dell_smi_obj_get_res (smi_obj->smi, arg);
+}
+
+gboolean
+fu_dell_execute_simple_smi (FuDellSmiObj *obj, guint16 class, guint16 select)
+{
+	/* test suite will mean don't actually call */
+	if (obj->fake_smbios)
+		return TRUE;
+
+	if (dell_simple_ci_smi (class,
+				select,
+				obj->input,
+				obj->output)) {
+		g_debug ("failed to run query %u/%u",
+			 class,
+			 select);
 		return FALSE;
 	}
 	return TRUE;
 }
 
 gboolean
-fu_dell_detect_dock (FuPlugin *plugin, guint32 *location)
+fu_dell_detect_dock (FuDellSmiObj *smi_obj, guint32 *location)
 {
-	g_autofree struct dock_count_in *count_args = NULL;
-	g_autofree struct dock_count_out *count_out = NULL;
+	struct dock_count_in *count_args;
+	struct dock_count_out *count_out;
 
 	/* look up dock count */
-	count_args = g_malloc0 (sizeof(struct dock_count_in));
-	count_out  = g_malloc0 (sizeof(struct dock_count_out));
+	count_args = (struct dock_count_in *) smi_obj->input;
+	count_out  = (struct dock_count_out *) smi_obj->output;
+	if (!fu_dell_clear_smi (smi_obj)) {
+		g_debug ("failed to clear SMI buffers");
+		return FALSE;
+	}
 	count_args->argument = DACI_DOCK_ARG_COUNT;
-	if (!fu_dell_execute_simple_smi (plugin,
+
+	if (!fu_dell_execute_simple_smi (smi_obj,
 					 DACI_DOCK_CLASS,
-					 DACI_DOCK_SELECT,
-					 (guint32 *) count_args,
-					 (guint32 *) count_out))
+					 DACI_DOCK_SELECT))
 		return FALSE;
 	if (count_out->ret != 0) {
-		g_debug ("Dell: Failed to query system for dock count: "
+		g_debug ("Failed to query system for dock count: "
 			 "(%" G_GUINT32_FORMAT ")", count_out->ret);
 		return FALSE;
 	}
 	if (count_out->count < 1) {
-		g_debug ("Dell: no dock plugged in");
+		g_debug ("no dock plugged in");
 		return FALSE;
 	}
 	*location = count_out->location;
-	g_debug ("Dell: Dock count %u, location %u.",
+	g_debug ("Dock count %u, location %u.",
 		 count_out->count, *location);
 	return TRUE;
 }
 
 static gboolean
-fu_dell_toggle_dock_mode (guint32 new_mode, guint32 dock_location,
-				 GError **error)
+fu_dell_toggle_dock_mode (FuDellSmiObj *smi_obj, guint32 new_mode,
+			  guint32 dock_location, GError **error)
 {
-	g_autofree guint32 *input = NULL;
-	g_autofree guint32 *output = NULL;
-
-	input = g_malloc0 (sizeof(guint32) *4);
-	output = g_malloc0 (sizeof(guint32) *4);
-
 	/* Put into mode to accept AR/MST */
-	input[0] = DACI_DOCK_ARG_MODE;
-	input[1] = dock_location;
-	input[2] = new_mode;
-	if (!fu_dell_execute_simple_smi(NULL,
-					DACI_DOCK_CLASS,
-					DACI_DOCK_SELECT,
-					input,
-					output))
+	fu_dell_clear_smi (smi_obj);
+	smi_obj->input[0] = DACI_DOCK_ARG_MODE;
+	smi_obj->input[1] = dock_location;
+	smi_obj->input[2] = new_mode;
+
+	if (!fu_dell_execute_simple_smi (smi_obj,
+					 DACI_DOCK_CLASS,
+					 DACI_DOCK_SELECT))
 		return FALSE;
-	if (output[1] != 0) {
+	if (smi_obj->output[1] != 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Dell: Failed to set dock flash mode: %u",
-			     output[1]);
+			     "Failed to set dock flash mode: %u",
+			     smi_obj->output[1]);
 		return FALSE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_dell_toggle_host_mode (const efi_guid_t guid, int mode)
+fu_dell_toggle_host_mode (FuDellSmiObj *smi_obj, const efi_guid_t guid, int mode)
 {
 	gint ret;
-	g_autoptr(fu_dell_smi_obj) smi = NULL;
 	ADDR_UNION buf;
-	smi = dell_smi_factory (DELL_SMI_DEFAULTS);
-	dell_smi_obj_set_class (smi, DACI_FLASH_INTERFACE_CLASS);
-	dell_smi_obj_set_select (smi, DACI_FLASH_INTERFACE_SELECT);
-	dell_smi_obj_set_arg (smi, cbARG1, DACI_FLASH_ARG_FLASH_MODE);
-	dell_smi_obj_set_arg (smi, cbARG4, mode);
+
+	dell_smi_obj_set_class (smi_obj->smi, DACI_FLASH_INTERFACE_CLASS);
+	dell_smi_obj_set_select (smi_obj->smi, DACI_FLASH_INTERFACE_SELECT);
+	dell_smi_obj_set_arg (smi_obj->smi, cbARG1, DACI_FLASH_ARG_FLASH_MODE);
+	dell_smi_obj_set_arg (smi_obj->smi, cbARG4, mode);
 	/* needs to be padded with an empty GUID */
-	buf.buf = dell_smi_obj_make_buffer_frombios_withoutheader(smi, cbARG2,
+	buf.buf = dell_smi_obj_make_buffer_frombios_withoutheader(smi_obj->smi,
+								  cbARG2,
 								  sizeof(efi_guid_t) * 2);
 	if (!buf.buf) {
-		g_debug ("Dell: Failed to initialize SMI buffer");
+		g_debug ("Failed to initialize SMI buffer");
 		return FALSE;
 	}
 	*buf.guid = guid;
-	ret = dell_smi_obj_execute(smi);
+	ret = dell_smi_obj_execute(smi_obj->smi);
 	if (ret != SMI_SUCCESS){
-		g_debug ("Dell: failed to execute SMI: %d", ret);
+		g_debug ("failed to execute SMI: %d", ret);
 		return FALSE;
 	}
 
-	ret = dell_smi_obj_get_res(smi, cbRES1);
+	ret = dell_smi_obj_get_res(smi_obj->smi, cbRES1);
 	if (ret != SMI_SUCCESS) {
-		g_debug ("Dell: SMI execution returned error: %d", ret);
+		g_debug ("SMI execution returned error: %d", ret);
 		return FALSE;
 	}
 	return TRUE;
@@ -183,6 +216,7 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 	guint32 dock_location;
 	FwupdDeviceFlags flags;
 	const gchar *tmp;
+	g_autoptr (FuDellSmiObj) smi_obj = NULL;
 
 	if (device) {
 		flags = fu_device_get_flags (device);
@@ -192,26 +226,30 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 		if (!((g_strcmp0 (tmp, "thunderbolt") == 0) ||
 			(g_strcmp0 (tmp, "synapticsmst") == 0)))
 			return TRUE;
-		g_debug("Dell: preparing/cleaning update for %s", tmp);
+		g_debug("preparing/cleaning update for %s", tmp);
 	}
 
 	/* Dock MST Hub / TBT Controller */
-	if (fu_dell_detect_dock (NULL, &dock_location)) {
-		if (!fu_dell_toggle_dock_mode (enable, dock_location, error))
-			g_debug("Dell: unable to change dock to %d", enable);
+	smi_obj = g_malloc0 (sizeof(FuDellSmiObj));
+	smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
+
+	if (fu_dell_detect_dock (smi_obj, &dock_location)) {
+		if (!fu_dell_toggle_dock_mode (smi_obj, enable, dock_location,
+					       error))
+			g_debug("unable to change dock to %d", enable);
 		else
-			g_debug("Dell: Toggled dock mode to %d", enable);
+			g_debug("Toggled dock mode to %d", enable);
 	}
 
 	/* System MST hub / TBT controller */
-	if (!fu_dell_toggle_host_mode (TBT_GPIO_GUID, enable))
-		g_debug("Dell: Unable to toggle TBT GPIO to %d", enable);
+	if (!fu_dell_toggle_host_mode (smi_obj, TBT_GPIO_GUID, enable))
+		g_debug("Unable to toggle TBT GPIO to %d", enable);
 	else
-		g_debug("Dell: Toggled TBT GPIO to %d", enable);
-	if (!fu_dell_toggle_host_mode (MST_GPIO_GUID, enable))
-		g_debug("Dell: Unable to toggle MST hub GPIO to %d", enable);
+		g_debug("Toggled TBT GPIO to %d", enable);
+	if (!fu_dell_toggle_host_mode (smi_obj, MST_GPIO_GUID, enable))
+		g_debug("Unable to toggle MST hub GPIO to %d", enable);
 	else
-		g_debug("Dell: Toggled MST hub GPIO to %d", enable);
+		g_debug("Toggled MST hub GPIO to %d", enable);
 
 	return TRUE;
 }
