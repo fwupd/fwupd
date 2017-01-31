@@ -35,7 +35,6 @@
 
 #include "fu-plugin-dell.h"
 #include "fu-quirks.h"
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 /* These are used to indicate the status of a previous DELL flash */
@@ -76,9 +75,9 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
 
 /* These are for matching the components */
 #define WD15_EC_STR		"2 0 2 2 0"
-#define TB15_EC_STR		"2 0 2 1 0"
-#define TB15_PC2_STR		"2 1 0 1 1"
-#define TB15_PC1_STR		"2 1 0 1 0"
+#define TB16_EC_STR		"2 0 2 1 0"
+#define TB16_PC2_STR		"2 1 0 1 1"
+#define TB16_PC1_STR		"2 1 0 1 0"
 #define WD15_PC1_STR		"2 1 0 2 0"
 #define LEGACY_CBL_STR		"2 2 2 1 0"
 #define UNIV_CBL_STR		"2 2 2 2 0"
@@ -87,9 +86,9 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
 /* supported dock related GUIDs */
 #define DOCK_FLASH_GUID		EFI_GUID (0xE7CA1F36, 0xBF73, 0x4574, 0xAFE6, 0xA4, 0xCC, 0xAC, 0xAB, 0xF4, 0x79)
 #define WD15_EC_GUID		EFI_GUID (0xE8445370, 0x0211, 0x449D, 0x9FAA, 0x10, 0x79, 0x06, 0xAB, 0x18, 0x9F)
-#define TB15_EC_GUID		EFI_GUID (0x33CC8870, 0xB1FC, 0x4EC7, 0x948A, 0xC0, 0x74, 0x96, 0x87, 0x4F, 0xAF)
-#define TB15_PC2_GUID		EFI_GUID (0x1B52C630, 0x86F6, 0x4AEE, 0x9F0C, 0x47, 0x4D, 0xC6, 0xBE, 0x49, 0xB6)
-#define TB15_PC1_GUID		EFI_GUID (0x8FE183DA, 0xC94E, 0x4804, 0xB319, 0x0F, 0x1B, 0xA5, 0x45, 0x7A, 0x69)
+#define TB16_EC_GUID		EFI_GUID (0x33CC8870, 0xB1FC, 0x4EC7, 0x948A, 0xC0, 0x74, 0x96, 0x87, 0x4F, 0xAF)
+#define TB16_PC2_GUID		EFI_GUID (0x1B52C630, 0x86F6, 0x4AEE, 0x9F0C, 0x47, 0x4D, 0xC6, 0xBE, 0x49, 0xB6)
+#define TB16_PC1_GUID		EFI_GUID (0x8FE183DA, 0xC94E, 0x4804, 0xB319, 0x0F, 0x1B, 0xA5, 0x45, 0x7A, 0x69)
 #define WD15_PC1_GUID		EFI_GUID (0x8BA2B709, 0x6F97, 0x47FC, 0xB7E7, 0x6A, 0x87, 0xB5, 0x78, 0xFE, 0x25)
 #define LEGACY_CBL_GUID		EFI_GUID (0xFECE1537, 0xD683, 0x4EA8, 0xB968, 0x15, 0x45, 0x30, 0xBB, 0x6F, 0x73)
 #define UNIV_CBL_GUID		EFI_GUID (0xE2BF3AAD, 0x61A3, 0x44BF, 0x91EF, 0x34, 0x9B, 0x39, 0x51, 0x5D, 0x29)
@@ -129,10 +128,10 @@ fu_plugin_dell_match_dock_component (const gchar *query_str,
 {
 	const DOCK_DESCRIPTION list[] = {
 		{WD15_EC_GUID, WD15_EC_STR, EC_DESC},
-		{TB15_EC_GUID, TB15_EC_STR, EC_DESC},
+		{TB16_EC_GUID, TB16_EC_STR, EC_DESC},
 		{WD15_PC1_GUID, WD15_PC1_STR, PC1_DESC},
-		{TB15_PC1_GUID, TB15_PC1_STR, PC1_DESC},
-		{TB15_PC2_GUID, TB15_PC2_STR, PC2_DESC},
+		{TB16_PC1_GUID, TB16_PC1_STR, PC1_DESC},
+		{TB16_PC2_GUID, TB16_PC2_STR, PC2_DESC},
 		{TBT_CBL_GUID, TBT_CBL_STR, TBT_CBL_DESC},
 		{UNIV_CBL_GUID, UNIV_CBL_STR, UNIV_CBL_DESC},
 		{LEGACY_CBL_GUID, LEGACY_CBL_STR, LEGACY_CBL_DESC},
@@ -243,16 +242,9 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	g_autofree gchar *dock_key = NULL;
 	g_autofree gchar *dock_name = NULL;
 
-	switch (type) {
-	case DOCK_TYPE_TB15:
-		dock_type = "TB15/TB16";
-		break;
-	case DOCK_TYPE_WD15:
-		dock_type = "WD15";
-		break;
-	default:
-		g_debug ("Dock type %d unknown",
-			 type);
+	dock_type = fu_dell_get_dock_type (type);
+	if (dock_type == NULL) {
+		g_debug ("Unknown dock type %d", type);
 		return FALSE;
 	}
 
@@ -304,15 +296,11 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	guint16 vid;
 	const gchar *query_str;
 	const gchar *component_name = NULL;
-	INFO_UNION buf;
+	DOCK_UNION buf;
 	DOCK_INFO *dock_info;
-	guint buf_size;
-	gint result;
-	guint32 location;
 	efi_guid_t guid_raw;
 	efi_guid_t tmpguid;
 	gboolean old_ec = FALSE;
-
 	g_autofree gchar *fw_str = NULL;
 
 	/* don't look up immediately if a dock is connected as that would
@@ -328,37 +316,10 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	/* we're going to match on the Realtek NIC in the dock */
 	if (vid != DOCK_NIC_VID || pid != DOCK_NIC_PID)
 		return;
-	if (!fu_dell_detect_dock (data->smi_obj, &location))
-		return;
 
-	fu_dell_clear_smi (data->smi_obj);
-
-	/* look up more information on dock */
-	if (!data->smi_obj->fake_smbios) {
-		dell_smi_obj_set_class (data->smi_obj->smi, DACI_DOCK_CLASS);
-		dell_smi_obj_set_select (data->smi_obj->smi, DACI_DOCK_SELECT);
-		dell_smi_obj_set_arg (data->smi_obj->smi, cbARG1, DACI_DOCK_ARG_INFO);
-		dell_smi_obj_set_arg (data->smi_obj->smi, cbARG2, location);
-		buf_size = sizeof (DOCK_INFO_RECORD);
-		buf.buf = dell_smi_obj_make_buffer_frombios_auto (data->smi_obj->smi, cbARG3, buf_size);
-		if (!buf.buf) {
-			g_debug ("Failed to initialize buffer");
-			return;
-		}
-	} else {
-		buf.buf = data->smi_obj->fake_buffer;
-	}
-	if (!fu_dell_execute_smi (data->smi_obj))
-		return;
-	result = fu_dell_get_res (data->smi_obj, cbARG1);
-	if (result != SMI_SUCCESS) {
-		if (result == SMI_INVALID_BUFFER) {
-			g_debug ("Invalid buffer size, needed %" G_GUINT32_FORMAT,
-				 fu_dell_get_res (data->smi_obj, cbARG2));
-		} else {
-			g_debug ("SMI execution returned error: %d",
-				 result);
-		}
+	buf.buf = NULL;
+	if (!fu_dell_query_dock (data->smi_obj, &buf)) {
+		g_debug ("No dock detected.");
 		return;
 	}
 
@@ -447,8 +408,8 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuPluginDockItem *item;
 	g_autofree gchar *dock_key = NULL;
-	const efi_guid_t guids[] = { WD15_EC_GUID, TB15_EC_GUID, TB15_PC2_GUID,
-				     TB15_PC1_GUID, WD15_PC1_GUID,
+	const efi_guid_t guids[] = { WD15_EC_GUID, TB16_EC_GUID, TB16_PC2_GUID,
+				     TB16_PC1_GUID, WD15_PC1_GUID,
 				     LEGACY_CBL_GUID, UNIV_CBL_GUID,
 				     TBT_CBL_GUID, DOCK_FLASH_GUID};
 	const efi_guid_t *guid_raw;

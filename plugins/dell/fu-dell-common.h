@@ -35,6 +35,57 @@ typedef struct {
 	guint8			*fake_buffer;
 } FuDellSmiObj;
 
+/* Dock Info version 1 */
+#pragma pack(1)
+#define MAX_COMPONENTS 5
+
+typedef struct _COMPONENTS {
+	gchar		description[80];
+	guint32		fw_version; 		/* BCD format: 0x00XXYYZZ */
+} COMPONENTS;
+
+typedef struct _DOCK_INFO {
+	gchar		dock_description[80];
+	guint32		flash_pkg_version;	/* BCD format: 0x00XXYYZZ */
+	guint32		cable_type;		/* bit0-7 cable type, bit7-31 set to 0 */
+	guint8		location;		/* Location of the dock */
+	guint8		reserved;
+	guint8		component_count;
+	COMPONENTS	components[MAX_COMPONENTS];	/* number of component_count */
+} DOCK_INFO;
+
+typedef struct _DOCK_INFO_HEADER {
+	guint8		dir_version;  		/* version 1, 2 … */
+	guint8		dock_type;
+	guint16		reserved;
+} DOCK_INFO_HEADER;
+
+typedef struct _DOCK_INFO_RECORD {
+	DOCK_INFO_HEADER	dock_info_header; /* dock version specific definition */
+	DOCK_INFO		dock_info;
+} DOCK_INFO_RECORD;
+
+typedef union _DOCK_UNION{
+	guint8 *buf;
+	DOCK_INFO_RECORD *record;
+} DOCK_UNION;
+#pragma pack()
+
+typedef enum _DOCK_TYPE
+{
+	DOCK_TYPE_NONE,
+	DOCK_TYPE_TB16,
+	DOCK_TYPE_WD15
+} DOCK_TYPE;
+
+typedef enum _CABLE_TYPE
+{
+	CABLE_TYPE_NONE,
+	CABLE_TYPE_LEGACY,
+	CABLE_TYPE_UNIV,
+	CABLE_TYPE_TBT
+} CABLE_TYPE;
+
 gboolean
 fu_dell_clear_smi (FuDellSmiObj *obj);
 
@@ -49,6 +100,15 @@ fu_dell_execute_simple_smi (FuDellSmiObj *obj, guint16 class, guint16 select);
 
 gboolean
 fu_dell_detect_dock (FuDellSmiObj *obj, guint32 *location);
+
+gboolean
+fu_dell_query_dock (FuDellSmiObj *smi_obj, DOCK_UNION *buf);
+
+const gchar*
+fu_dell_get_dock_type (guint8 type);
+
+guint32
+fu_dell_get_cable_type (guint8 type);
 
 gboolean
 fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable);

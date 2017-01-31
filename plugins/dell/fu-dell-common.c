@@ -21,7 +21,6 @@
 
 #include <appstream-glib.h>
 #include "fu-dell-common.h"
-#include "fu-plugin.h"
 
 /* These are for dock query capabilities */
 struct dock_count_in {
@@ -151,6 +150,96 @@ fu_dell_detect_dock (FuDellSmiObj *smi_obj, guint32 *location)
 	return TRUE;
 }
 
+gboolean
+fu_dell_query_dock (FuDellSmiObj *smi_obj, DOCK_UNION *buf)
+{
+	gint result;
+	guint32 location;
+	guint buf_size;
+
+	if (!fu_dell_detect_dock (smi_obj, &location))
+		return FALSE;
+
+	fu_dell_clear_smi (smi_obj);
+
+	/* look up more information on dock */
+	if (smi_obj->fake_smbios)
+		buf->buf = smi_obj->fake_buffer;
+	else {
+		dell_smi_obj_set_class (smi_obj->smi, DACI_DOCK_CLASS);
+		dell_smi_obj_set_select (smi_obj->smi, DACI_DOCK_SELECT);
+		dell_smi_obj_set_arg (smi_obj->smi, cbARG1, DACI_DOCK_ARG_INFO);
+		dell_smi_obj_set_arg (smi_obj->smi, cbARG2, location);
+		buf_size = sizeof (DOCK_INFO_RECORD);
+		buf->buf = dell_smi_obj_make_buffer_frombios_auto (smi_obj->smi,
+								  cbARG3,
+								  buf_size);
+		if (!buf->buf) {
+			g_debug ("Failed to initialize buffer");
+			return FALSE;
+		}
+	}
+	if (!fu_dell_execute_smi (smi_obj))
+		return FALSE;
+	result = fu_dell_get_res (smi_obj, cbARG1);
+	if (result != SMI_SUCCESS) {
+		if (result == SMI_INVALID_BUFFER) {
+			g_debug ("Invalid buffer size, needed %" G_GUINT32_FORMAT,
+				 fu_dell_get_res (smi_obj, cbARG2));
+		} else {
+			g_debug ("SMI execution returned error: %d",
+				 result);
+		}
+		return FALSE;
+	}
+	return TRUE;
+}
+
+const gchar*
+fu_dell_get_dock_type (guint8 type)
+{
+	g_autoptr (FuDellSmiObj) smi_obj = NULL;
+	DOCK_UNION buf;
+
+	/* not yet initialized, look it up */
+	if (type == DOCK_TYPE_NONE) {
+		smi_obj = g_malloc0 (sizeof(FuDellSmiObj));
+		smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
+		if (!fu_dell_query_dock (smi_obj, &buf))
+			return NULL;
+		type = buf.record->dock_info_header.dock_type;
+	}
+
+	switch (type) {
+	case DOCK_TYPE_TB16:
+		return "TB16";
+	case DOCK_TYPE_WD15:
+		return "WD15";
+	default:
+		g_debug ("Dock type %d unknown",
+			 type);
+	}
+
+	return NULL;
+}
+
+guint32
+fu_dell_get_cable_type (guint8 type)
+{
+	g_autoptr (FuDellSmiObj) smi_obj = NULL;
+	DOCK_UNION buf;
+
+	/* not yet initialized, look it up */
+	if (type == CABLE_TYPE_NONE) {
+		smi_obj = g_malloc0 (sizeof(FuDellSmiObj));
+		smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
+		if (!fu_dell_query_dock (smi_obj, &buf))
+			return 0;
+		type = (buf.record->dock_info).cable_type;
+	}
+	return type;
+}
+
 static gboolean
 fu_dell_toggle_dock_mode (FuDellSmiObj *smi_obj, guint32 new_mode,
 			  guint32 dock_location, GError **error)
@@ -167,8 +256,8 @@ fu_dell_toggle_dock_mode (FuDellSmiObj *smi_obj, guint32 new_mode,
 		return FALSE;
 	if (smi_obj->output[1] != 0) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
 			     "Failed to set dock flash mode: %u",
 			     smi_obj->output[1]);
 		return FALSE;
