@@ -31,7 +31,7 @@
 #include <glib-unix.h>
 #include <libintl.h>
 #include <locale.h>
-#include <libfwupd/fwupd-error.h>
+#include "fu-dell-common.h"
 
 typedef struct {
 	GCancellable		*cancellable;
@@ -39,6 +39,13 @@ typedef struct {
 	gboolean		 force;
 	GPtrArray		*device_array;
 } SynapticsMSTToolPrivate;
+
+/* GUID isn't in use by the -tool, this lets it get by */
+#ifndef fu_dell_get_dock_type
+const gchar *fu_dell_get_dock_type (guint8 type) {
+	return NULL;
+}
+#endif
 
 static void
 synapticsmst_tool_private_free (SynapticsMSTToolPrivate *priv)

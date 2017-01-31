@@ -27,7 +27,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <smbios_c/system_info.h>
-
+#include "fu-dell-common.h"
 #include "synapticsmst-device.h"
 #include "synapticsmst-common.h"
 
@@ -271,8 +271,11 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 
 		/* If this is a dock, ignore system ID */
 		if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE) {
-			priv->guid = g_strdup_printf ("MST-bmeie-%u",
-						      priv->board_id);
+			const gchar *dock_type = fu_dell_get_dock_type (0);
+			if (dock_type != NULL)
+				priv->guid = g_strdup_printf ("MST-%s-%u",
+							      dock_type,
+							      priv->board_id);
 
 		} else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WLD15_WIRELESS) {
 			priv->guid = g_strdup_printf ("MST-wld15-%u",

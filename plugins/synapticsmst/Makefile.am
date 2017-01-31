@@ -16,6 +16,7 @@ plugin_LTLIBRARIES = libfu_plugin_synapticsmst.la
 
 libfu_plugin_synapticsmst_la_SOURCES =				\
 	fu-dell-common.h					\
+	fu-dell-common.c					\
 	synapticsmst-device.c					\
 	synapticsmst-device.h					\
 	synapticsmst-common.c					\
@@ -44,8 +45,7 @@ synapticsmst_tool_LDADD =					\
 	$(lib_LTLIBRARIES)					\
 	$(LIBSMBIOS_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)					\
-	$(GLIB_LIBS)						\
-	$(LIBM)
+	$(GLIB_LIBS)
 
 synapticsmst_tool_CFLAGS = $(AM_CFLAGS) $(WARN_CFLAGS)
 
