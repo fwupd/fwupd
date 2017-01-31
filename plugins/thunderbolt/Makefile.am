@@ -19,9 +19,13 @@ libfu_plugin_thunderbolt_la_CFLAGS = $(WARN_CFLAGS)	\
 
 if HAVE_DELL
 AM_CPPFLAGS +=						\
+	$(EFIVAR_CFLAGS)				\
 	$(LIBSMBIOS_CFLAGS)
 libfu_plugin_thunderbolt_la_LIBADD +=			\
 	$(LIBSMBIOS_LIBS)
+libfu_plugin_thunderbolt_la_SOURCES +=			\
+	fu-dell-common.h				\
+	fu-dell-common.c
 endif
 
 EXTRA_DIST = README.md

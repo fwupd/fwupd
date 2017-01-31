@@ -57,6 +57,19 @@ _dell_smi_obj_free (FuDellSmiObj *obj)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
 
+gboolean
+fu_dell_supported (void)
+{
+	guint8 dell_supported = 0;
+	struct smbios_struct *de_table;
+
+	de_table = smbios_get_next_struct_by_type (0, 0xDE);
+	smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
+	if (dell_supported != 0xDE)
+		return FALSE;
+	return TRUE;
+}
+
 /* don't actually clear if we're testing */
 gboolean
 fu_dell_clear_smi (FuDellSmiObj *obj)

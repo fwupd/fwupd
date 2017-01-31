@@ -859,8 +859,6 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	guint8 dell_supported = 0;
-	struct smbios_struct *de_table;
 
 	/* get USB */
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
@@ -879,15 +877,11 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		return TRUE;
 	}
 
-	/* look at offset 0x00 for identifier meaning DELL is supported */
-	de_table = smbios_get_next_struct_by_type (0, 0xDE);
-	smbios_struct_get_data (de_table, &dell_supported, 0x00, sizeof(guint8));
-	if (dell_supported != 0xDE) {
+	if (!fu_dell_supported ()) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Firmware updating not supported (%x)",
-			     dell_supported);
+			     "Firmware updating not supported");
 		return FALSE;
 	}
 

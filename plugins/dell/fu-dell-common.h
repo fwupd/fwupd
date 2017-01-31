@@ -23,6 +23,7 @@
 #define __FU_DELL_COMMON_H
 
 #include "fu-device.h"
+#include <smbios_c/smbios.h>
 #include <smbios_c/smi.h>
 #include <smbios_c/obj/smi.h>
 #include <efivar.h>
@@ -85,6 +86,9 @@ typedef enum _CABLE_TYPE
 	CABLE_TYPE_UNIV,
 	CABLE_TYPE_TBT
 } CABLE_TYPE;
+
+gboolean
+fu_dell_supported (void);
 
 gboolean
 fu_dell_clear_smi (FuDellSmiObj *obj);
