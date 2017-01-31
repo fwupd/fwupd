@@ -146,33 +146,58 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 	return TRUE;
 }
 
+static void
+fu_plugin_synapticsmst_remove_cascaded (FuPlugin *plugin, const gchar *aux_node)
+{
+	g_autofree gchar *dev_id_str = NULL;
+	FuDevice *fu_dev = NULL;
+
+	for (guint8 i=0; i < 8; i++) {
+		for (guint16 j=0; j < 256; j++) {
+			dev_id_str = g_strdup_printf ("MST-REMOTE-%s-%u-%u",
+						      aux_node, i, j);
+			fu_dev = fu_plugin_cache_lookup (plugin, dev_id_str);
+			if (fu_dev != NULL) {
+				fu_plugin_device_remove (plugin, fu_dev);
+				fu_plugin_cache_remove (plugin, dev_id_str);
+				continue;
+			}
+			break;
+		}
+	}
+}
+
 static gboolean
 fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 				  GError **error)
 {
 	GDir *dir;
 	const gchar *aux_node = NULL;
+	g_autofree gchar *dev_id_str = NULL;
 
 	dir = g_dir_open (SYSFS_DRM_DP_AUX, 0, NULL);
 	do {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(SynapticsMSTDevice) device = NULL;
-		g_autoptr(FuDevice) dev = NULL;
+		FuDevice *fu_dev = NULL;
 
 		aux_node = g_dir_read_name (dir);
 		if (aux_node == NULL)
 			break;
 
-		dev = fu_plugin_cache_lookup (plugin, aux_node);
+		dev_id_str = g_strdup_printf ("MST-DIRECT-%s-0-0", aux_node);
+		fu_dev = fu_plugin_cache_lookup (plugin, dev_id_str);
 
 		/* If we open succesfully a device exists here */
 		device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, aux_node, 0, 0);
 		if (!synapticsmst_device_open (device, NULL)) {
 			/* No device exists here, but was there - remove from DB */
-			if (dev != NULL) {
+			if (fu_dev != NULL) {
 				g_debug ("removing device at %s", aux_node);
-				fu_plugin_device_remove (plugin, dev);
-				fu_plugin_cache_remove (plugin, aux_node);
+				fu_plugin_device_remove (plugin, fu_dev);
+				fu_plugin_cache_remove (plugin, dev_id_str);
+				fu_plugin_synapticsmst_remove_cascaded (plugin,
+									aux_node);
 			} else {
 				/* Nothing to see here - move on*/
 				g_debug ("no device found on %s", aux_node);
@@ -181,7 +206,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 		}
 
 		/* node already exists */
-		if (dev != NULL)
+		if (fu_dev != NULL)
 			continue;
 
 		/* Add direct devices */
