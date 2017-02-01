@@ -262,12 +262,28 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 		return FALSE;
 	}
 	priv->board_id = (byte[0] << 8) | (byte[1]);
-	/* only dell is supported for today */
-	if (byte[0] == CUSTOMERID_DELL) {
-		/* If this is a dock, use dock ID*/
-		if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE)
-			system = g_ascii_strdown (fu_dell_get_dock_type (0), -1);
 
+	/* read board chip_id */
+	rc = synapticsmst_common_read_dpcd (connection,
+					    REG_CHIP_ID,
+					    (gint *)byte, 2);
+	if (rc) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "Failed to read dpcd from device");
+		return FALSE;
+	}
+	priv->chip_id = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
+
+	switch (priv->board_id >> 8) {
+	/* only dell is supported for today */
+	case CUSTOMERID_DELL:
+		/* If this is a dock, use dock ID*/
+		if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE) {
+			system = g_strdup_printf ("%s-%s", fu_dell_get_dock_type(0), priv->chip_id);
+			system = g_ascii_strdown (system, -1);
+		}
 		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WLD15_WIRELESS)
 			system = "wld15";
 
@@ -282,26 +298,16 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 		if (system != NULL)
 			priv->guid = g_strdup_printf ("MST-%s-%u", system,
 						      priv->board_id);
+		break;
 	/* EVB development board */
-	} else if (byte[0] == 0) {
+	case 0:
 		priv->board_id = (byte[0] << 8 | byte[1]);
+		break;
 	/* unknown */
-	} else {
+	default:
+		g_warning ("Unknown board_id %x", priv->board_id);
 		priv->board_id = 0xFF;
 	}
-
-	/* read board chip_id */
-	rc = synapticsmst_common_read_dpcd (connection,
-					    REG_CHIP_ID,
-					    (gint *)byte, 2);
-	if (rc) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to read dpcd from device");
-		return FALSE;
-	}
-	priv->chip_id = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
 
 	/* disable remote control */
 	if (!synapticsmst_device_disable_remote_control (device, error))
