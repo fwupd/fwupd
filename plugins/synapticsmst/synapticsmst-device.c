@@ -221,7 +221,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint8 byte[16];
-	guint16 system_id;
+	g_autofree gchar *system = NULL;
 	guint8 rc;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
@@ -264,27 +264,24 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 	priv->board_id = (byte[0] << 8) | (byte[1]);
 	/* only dell is supported for today */
 	if (byte[0] == CUSTOMERID_DELL) {
+		/* If this is a dock, use dock ID*/
+		if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE)
+			system = g_ascii_strdown (fu_dell_get_dock_type (0), -1);
+
+		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WLD15_WIRELESS)
+			system = "wld15";
+
+		/* This is a host system, use system ID */
+		else
+			system = g_strdup_printf ("%04d",
+						  sysinfo_get_dell_system_id ());
+
 		/* set up GUID
 		 * GUID is MST-$SYSTEMID-$BOARDID
 		 * $BOARDID includes CUSTOMERID in first byte, BOARD in second byte */
-		system_id = (guint16) sysinfo_get_dell_system_id ();
-
-		/* If this is a dock, ignore system ID */
-		if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE) {
-			const gchar *dock_type = fu_dell_get_dock_type (0);
-			if (dock_type != NULL)
-				priv->guid = g_strdup_printf ("MST-%s-%u",
-							      dock_type,
-							      priv->board_id);
-
-		} else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WLD15_WIRELESS) {
-			priv->guid = g_strdup_printf ("MST-wld15-%u",
+		if (system != NULL)
+			priv->guid = g_strdup_printf ("MST-%s-%u", system,
 						      priv->board_id);
-		}
-		/* This is a host system */
-		else
-			priv->guid = g_strdup_printf ("MST-%04x-%u",
-						      system_id, priv->board_id);
 	/* EVB development board */
 	} else if (byte[0] == 0) {
 		priv->board_id = (byte[0] << 8 | byte[1]);
