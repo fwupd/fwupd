@@ -29,7 +29,7 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
-#define SYNAPTICS_FLASH_MODE_DELAY 2
+#define SYNAPTICS_FLASH_MODE_DELAY 3
 
 static gboolean
 synapticsmst_common_check_supported_system (GError **error)
