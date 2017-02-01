@@ -110,7 +110,9 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 				  SynapticsMSTDevice *device,
 				  GError **error)
 {
-	SynapticsMSTDevice *cascade_device;
+	g_autoptr(SynapticsMSTDevice) cascade_device = NULL;
+	g_autofree gchar *dev_id_str = NULL;
+	FuDevice *fu_dev = NULL;
 	const gchar *aux_node;
 	guint8 layer = 0;
 	guint16 rad = 0;
@@ -125,22 +127,46 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 	}
 
 	for (j = 0; j < 2; j++) {
-
-		if (!synapticsmst_device_scan_cascade_device (device, error, j))
-			return FALSE;
-		if (!synapticsmst_device_get_cascade (device))
-			continue;
 		layer = synapticsmst_device_get_layer (device) + 1;
 		rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
-		cascade_device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
-							  aux_node, layer, rad);
+		dev_id_str = g_strdup_printf ("MST-REMOTE-%s-%u-%u",
+					      aux_node, layer, rad);
+		fu_dev = fu_plugin_cache_lookup (plugin, dev_id_str);
 
-		if (!fu_plugin_synaptics_add_device (plugin, cascade_device, error))
+		/* run the scan */
+		if (!synapticsmst_device_scan_cascade_device (device, error, j))
 			return FALSE;
 
-		/* check recursively for more devices */
-		if (!fu_plugin_synaptics_scan_cascade (plugin, cascade_device, error))
-			return FALSE;
+		/* check if cascaded device was found */
+		if (!synapticsmst_device_get_cascade (device)) {
+			/* not found, nothing new to see here, move along */
+			if (fu_dev == NULL)
+				continue;
+			/* not found, but should have existed - remove it */
+			else {
+				fu_plugin_device_remove (plugin, fu_dev);
+				fu_plugin_cache_remove (plugin, dev_id_str);
+				/* don't scan any deeper on this node */
+				continue;
+			}
+		/* Found a device, add it */
+		} else {
+			cascade_device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
+								  aux_node, layer, rad);
+			/* new device */
+			if (fu_dev == NULL) {
+				g_debug ("Adding remote device %s", dev_id_str);
+				if (!fu_plugin_synaptics_add_device (plugin, cascade_device, error))
+					return FALSE;
+			}
+			else
+				g_debug ("Skipping previously added device %s",
+					 dev_id_str);
+
+			/* check recursively for more devices */
+			if (!fu_plugin_synaptics_scan_cascade (plugin, cascade_device, error))
+				return FALSE;
+		}
 	}
 
 	return TRUE;
@@ -215,7 +241,8 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 			g_debug ("Skipping previously added device %s", dev_id_str);
 
 		/* recursively look for cascade devices */
-		fu_plugin_synaptics_scan_cascade (plugin, device, error);
+		if (!fu_plugin_synaptics_scan_cascade (plugin, device, error))
+			return FALSE;
 	} while(TRUE);
 	return TRUE;
 }
