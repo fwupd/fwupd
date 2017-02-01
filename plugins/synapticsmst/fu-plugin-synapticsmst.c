@@ -74,8 +74,8 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	layer = synapticsmst_device_get_layer (device);
 	rad = synapticsmst_device_get_rad (device);
 	board_str = synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device));
-	name = g_strdup_printf ("%s with Synaptics [%s]", board_str,
-				synapticsmst_device_get_chip_id (device));
+	name = g_strdup_printf ("Synaptics %s inside %s", synapticsmst_device_get_chip_id (device),
+				board_str);
 	guid_str =  synapticsmst_device_get_guid (device);
 	if (guid_str == NULL) {
 		g_debug ("invalid GUID for board ID %x",
