@@ -273,8 +273,8 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 
 		/* This is a host system, use system ID */
 		else
-			system = g_strdup_printf ("%04d",
-						  sysinfo_get_dell_system_id ());
+			system = g_strdup_printf ("%04x",
+						  (guint) sysinfo_get_dell_system_id ());
 
 		/* set up GUID
 		 * GUID is MST-$SYSTEMID-$BOARDID
