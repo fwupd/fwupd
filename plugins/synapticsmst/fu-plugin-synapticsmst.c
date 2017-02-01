@@ -193,28 +193,26 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 		if (!synapticsmst_device_open (device, NULL)) {
 			/* No device exists here, but was there - remove from DB */
 			if (fu_dev != NULL) {
-				g_debug ("removing device at %s", aux_node);
+				g_debug ("Removing devices on %s", aux_node);
 				fu_plugin_device_remove (plugin, fu_dev);
 				fu_plugin_cache_remove (plugin, dev_id_str);
 				fu_plugin_synapticsmst_remove_cascaded (plugin,
 									aux_node);
 			} else {
 				/* Nothing to see here - move on*/
-				g_debug ("no device found on %s", aux_node);
+				g_debug ("No device found on %s", aux_node);
 			}
 			continue;
 		}
 
-		/* node already exists */
-		if (fu_dev != NULL)
-			continue;
-
 		/* Add direct devices */
-		g_debug ("adding direct device at %s", aux_node);
-		if (!fu_plugin_synaptics_add_device (plugin, device, &error_local)) {
-			g_warning ("failed to add device: %s", error_local->message);
-			continue;
+		if (fu_dev == NULL) {
+			g_debug ("Adding direct device %s", dev_id_str);
+			if (!fu_plugin_synaptics_add_device (plugin, device, &error_local))
+				g_warning ("failed to add device: %s", error_local->message);
 		}
+		else
+			g_debug ("Skipping previously added device %s", dev_id_str);
 
 		/* recursively look for cascade devices */
 		fu_plugin_synaptics_scan_cascade (plugin, device, error);
