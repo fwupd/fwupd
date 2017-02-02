@@ -34,6 +34,12 @@
 static gboolean
 synapticsmst_common_check_supported_system (GError **error)
 {
+
+	if (g_getenv ("FWUPD_SYNAPTICSMST_FW_DIR") != NULL) {
+		g_debug ("Running Synaptics plugin in test mode");
+		return TRUE;
+	}
+
 	if (!fu_dell_supported ()) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -198,10 +204,16 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 				  GError **error)
 {
 	GDir *dir;
+	const gchar *dp_aux_dir;
 	const gchar *aux_node = NULL;
 	g_autofree gchar *dev_id_str = NULL;
 
-	dir = g_dir_open (SYSFS_DRM_DP_AUX, 0, NULL);
+	dp_aux_dir = g_getenv ("FWUPD_SYNAPTICSMST_FW_DIR");
+	if (dp_aux_dir == NULL)
+		dp_aux_dir = SYSFS_DRM_DP_AUX;
+	else
+		g_debug ("Using %s to look for MST devices", dp_aux_dir);
+	dir = g_dir_open (dp_aux_dir, 0, NULL);
 	do {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(SynapticsMSTDevice) device = NULL;
@@ -342,12 +354,14 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	g_signal_connect (usb_ctx, "device-added",
-			  G_CALLBACK (fu_plugin_synapticsmst_redo_enumeration_cb),
-			  plugin);
-	g_signal_connect (usb_ctx, "device-removed",
-			  G_CALLBACK (fu_plugin_synapticsmst_redo_enumeration_cb),
-			  plugin);
+	if (usb_ctx != NULL) {
+		g_signal_connect (usb_ctx, "device-added",
+				  G_CALLBACK (fu_plugin_synapticsmst_redo_enumeration_cb),
+				  plugin);
+		g_signal_connect (usb_ctx, "device-removed",
+				  G_CALLBACK (fu_plugin_synapticsmst_redo_enumeration_cb),
+				  plugin);
+	}
 	return TRUE;
 }
 

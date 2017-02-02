@@ -45,6 +45,8 @@ typedef struct
 	guint16			 rad;
 	gint			 fd;
 	gboolean		has_cascade;
+	gchar			*fw_dir;
+	gboolean		test_mode;
 } SynapticsMSTDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (SynapticsMSTDevice, synapticsmst_device, G_TYPE_OBJECT)
@@ -105,6 +107,7 @@ synapticsmst_device_finalize (GObject *object)
 	if (priv->fd > 0)
 		close (priv->fd);
 
+	g_free (priv->fw_dir);
 	g_free (priv->aux_node);
 	g_free (priv->version);
 	g_free (priv->chip_id);
@@ -115,6 +118,16 @@ synapticsmst_device_finalize (GObject *object)
 static void
 synapticsmst_device_init (SynapticsMSTDevice *device)
 {
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+	const gchar *tmp;
+
+	priv->test_mode = FALSE;
+	priv->fw_dir = g_strdup ("/dev");
+	tmp = g_getenv ("FWUPD_SYNAPTICSMST_FW_DIR");
+	if (tmp != NULL) {
+		priv->test_mode = TRUE;
+		priv->fw_dir = g_strdup (tmp);
+	}
 }
 
 static void
@@ -144,6 +157,33 @@ synapticsmst_device_enable_remote_control (SynapticsMSTDevice *device, GError **
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
+	/* in test mode we need to open a different file node instead */
+	if (priv->test_mode) {
+		g_autofree gchar *filename;
+		close(priv->fd);
+		filename = g_strdup_printf ("%s/remote/%s",
+					    priv->fw_dir,
+					    priv->aux_node);
+		if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
+			g_set_error (error,
+			     	G_IO_ERROR,
+			     	G_IO_ERROR_NOT_FOUND,
+			     	"no device exists %s",
+			     	filename);
+			return FALSE;
+		}
+		priv->fd = open (filename, O_RDWR);
+		if (priv->fd == -1) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_PERMISSION_DENIED,
+				     "cannot open device %s",
+				     filename);
+			return FALSE;
+		}
+		return TRUE;
+	}
+
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
 	if (synapticsmst_common_enable_remote_control (connection)) {
 		g_set_error_literal (error,
@@ -161,6 +201,33 @@ synapticsmst_device_disable_remote_control (SynapticsMSTDevice *device, GError *
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
+
+	/* in test mode we need to open a different file node instead */
+	if (priv->test_mode) {
+		g_autofree gchar *filename;
+		close(priv->fd);
+		filename = g_strdup_printf ("%s/%s",
+					    priv->fw_dir,
+					    priv->aux_node);
+		if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
+			g_set_error (error,
+			     	G_IO_ERROR,
+			     	G_IO_ERROR_NOT_FOUND,
+			     	"no device exists %s",
+			     	filename);
+			return FALSE;
+		}
+		priv->fd = open (filename, O_RDWR);
+		if (priv->fd == -1) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_PERMISSION_DENIED,
+				     "cannot open device %s",
+				     filename);
+			return FALSE;
+		}
+		return TRUE;
+	}
 
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
 	if (synapticsmst_common_disable_remote_control (connection)) {
@@ -216,6 +283,61 @@ synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device,
 	return TRUE;
 }
 
+static gboolean
+synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
+				   SynapticsMSTConnection *connection,
+				   guint8 *byte,
+				   GError **error)
+{
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+	guint8 rc;
+
+	if (priv->test_mode) {
+		g_autofree gchar *filename;
+		gint fd;
+		filename = g_strdup_printf ("%s/remote/%s_eeprom",
+					    priv->fw_dir,
+					    priv->aux_node);
+		if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_FOUND,
+				     "no device exists %s",
+				     filename);
+			return FALSE;
+		}
+		fd = open (filename, O_RDONLY);
+		if (fd == -1) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_PERMISSION_DENIED,
+				     "cannot open device %s",
+				     filename);
+			return FALSE;
+		}
+		if (read (fd, byte, 2) != 2) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "error reading EEPROM file %s",
+				     filename);
+			return FALSE;
+		}
+	} else {
+		rc = synapticsmst_common_rc_get_command (connection,
+							 UPDC_READ_FROM_EEPROM,
+							 2, ADDR_CUSTOMER_ID, byte);
+		if (rc) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_DATA,
+					     "Failed to read from EEPROM of device");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 gboolean
 synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error)
 {
@@ -251,16 +373,8 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 	priv->version = g_strdup_printf ("%1d.%02d.%03d", byte[0], byte[1], byte[2]);
 
 	/* read board ID */
-	rc = synapticsmst_common_rc_get_command (connection,
-						 UPDC_READ_FROM_EEPROM,
-						 2, ADDR_CUSTOMER_ID, byte);
-	if (rc) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to read from EEPROM of device");
+	if (!synapticsmst_device_read_board_id (device, connection, byte, error))
 		return FALSE;
-	}
 	priv->board_id = (byte[0] << 8) | (byte[1]);
 
 	/* read board chip_id */
@@ -280,7 +394,9 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 	/* only dell is supported for today */
 	case CUSTOMERID_DELL:
 		/* If this is a dock, use dock ID*/
-		if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE) {
+		if (priv->test_mode)
+			system = g_strdup_printf ("test-%s", priv->chip_id);
+		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE) {
 			system = g_strdup_printf ("%s-%s", fu_dell_get_dock_type(0), priv->chip_id);
 			system = g_ascii_strdown (system, -1);
 		}
@@ -639,7 +755,7 @@ synapticsmst_device_open (SynapticsMSTDevice *device, GError **error)
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
 	/* file doesn't exist on this system */
-	filename = g_strdup_printf("/dev/%s", priv->aux_node);
+	filename = g_strdup_printf ("%s/%s", priv->fw_dir, priv->aux_node);
 	if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
 		g_set_error (error,
 			     G_IO_ERROR,
