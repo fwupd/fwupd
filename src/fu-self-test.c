@@ -31,6 +31,41 @@
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
 
+static GMainLoop *_test_loop = NULL;
+static guint _test_loop_timeout_id = 0;
+
+static gboolean
+fu_test_hang_check_cb (gpointer user_data)
+{
+	g_main_loop_quit (_test_loop);
+	_test_loop_timeout_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_test_loop_run_with_timeout (guint timeout_ms)
+{
+	g_assert (_test_loop_timeout_id == 0);
+	g_assert (_test_loop == NULL);
+	_test_loop = g_main_loop_new (NULL, FALSE);
+	_test_loop_timeout_id = g_timeout_add (timeout_ms, fu_test_hang_check_cb, NULL);
+	g_main_loop_run (_test_loop);
+}
+
+static void
+fu_test_loop_quit (void)
+{
+	if (_test_loop_timeout_id > 0) {
+		g_source_remove (_test_loop_timeout_id);
+		_test_loop_timeout_id = 0;
+	}
+	if (_test_loop != NULL) {
+		g_main_loop_quit (_test_loop);
+		g_main_loop_unref (_test_loop);
+		_test_loop = NULL;
+	}
+}
+
 static gchar *
 fu_test_get_filename (const gchar *filename)
 {
@@ -49,6 +84,7 @@ _plugin_status_changed_cb (FuPlugin *plugin, FwupdStatus status, gpointer user_d
 {
 	guint *cnt = (guint *) user_data;
 	(*cnt)++;
+	fu_test_loop_quit ();
 }
 
 static void
@@ -56,10 +92,62 @@ _plugin_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	FuDevice **dev = (FuDevice **) user_data;
 	*dev = g_object_ref (device);
+	fu_test_loop_quit ();
 }
 
 static void
-fu_plugin_func (void)
+fu_plugin_delay_func (void)
+{
+	FuDevice *device_tmp;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuDevice) device = NULL;
+
+	plugin = fu_plugin_new ();
+	g_signal_connect (plugin, "device-added",
+			  G_CALLBACK (_plugin_device_added_cb),
+			  &device_tmp);
+	g_signal_connect (plugin, "device-removed",
+			  G_CALLBACK (_plugin_device_added_cb),
+			  &device_tmp);
+
+	/* add device straight away */
+	device = fu_device_new ();
+	fu_device_set_id (device, "testdev");
+	fu_plugin_device_add (plugin, device);
+	g_assert (device_tmp != NULL);
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_clear_object (&device_tmp);
+
+	/* remove device */
+	fu_plugin_device_remove (plugin, device);
+	g_assert (device_tmp != NULL);
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_clear_object (&device_tmp);
+
+	/* add it with a small delay */
+	fu_plugin_device_add_delay (plugin, device);
+	g_assert (device_tmp == NULL);
+	fu_test_loop_run_with_timeout (1000);
+	g_assert (device_tmp != NULL);
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_clear_object (&device_tmp);
+
+	/* add it again, twice quickly */
+	fu_plugin_device_add_delay (plugin, device);
+	g_test_expect_message (G_LOG_DOMAIN,
+			       G_LOG_LEVEL_WARNING,
+			       "ignoring add-delay as device * already pending");
+	fu_plugin_device_add_delay (plugin, device);
+	g_test_assert_expected_messages ();
+	g_assert (device_tmp == NULL);
+	fu_test_loop_run_with_timeout (1000);
+	g_assert (device_tmp != NULL);
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_clear_object (&device_tmp);
+}
+
+static void
+fu_plugin_module_func (void)
 {
 	GError *error = NULL;
 	FuDevice *device_tmp;
@@ -304,7 +392,8 @@ main (int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
-	g_test_add_func ("/fwupd/plugin", fu_plugin_func);
+	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
+	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
 	g_test_add_func ("/fwupd/keyring", fu_keyring_func);
 	return g_test_run ();
 }

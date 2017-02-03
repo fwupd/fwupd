@@ -378,6 +378,15 @@ fu_plugin_device_add_delay (FuPlugin *plugin, FuDevice *device)
 	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_return_if_fail (FU_IS_DEVICE (device));
 
+	/* already waiting for add */
+	helper = g_hash_table_lookup (priv->devices_delay, device);
+	if (helper != NULL) {
+		g_warning ("ignoring add-delay as device %s already pending",
+			   fu_device_get_id (device));
+		return;
+	}
+
+	/* add after a small delay */
 	g_debug ("waiting a small time for other plugins");
 	helper = g_new0 (FuPluginHelper, 1);
 	helper->plugin = g_object_ref (plugin);
