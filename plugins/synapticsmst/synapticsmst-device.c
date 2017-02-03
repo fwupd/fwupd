@@ -253,6 +253,9 @@ synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device,
 	guint8 rc;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
+	if (priv->test_mode)
+		return TRUE;
+
 	/* reset */
 	priv->has_cascade = FALSE;
 
