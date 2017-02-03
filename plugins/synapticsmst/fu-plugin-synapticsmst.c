@@ -60,7 +60,8 @@ synapticsmst_common_check_supported_system (GError **error)
 static gboolean
 fu_plugin_synaptics_add_device (FuPlugin *plugin,
 				SynapticsMSTDevice *device,
-				GError **error) {
+				GError **error)
+{
 	g_autoptr(FuDevice) dev = NULL;
 	const gchar *kind_str = NULL;
 	const gchar *board_str = NULL;
@@ -248,9 +249,9 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 			g_debug ("Adding direct device %s", dev_id_str);
 			if (!fu_plugin_synaptics_add_device (plugin, device, &error_local))
 				g_warning ("failed to add device: %s", error_local->message);
-		}
-		else
+		} else {
 			g_debug ("Skipping previously added device %s", dev_id_str);
+		}
 
 		/* recursively look for cascade devices */
 		if (!fu_plugin_synaptics_scan_cascade (plugin, device, error))
