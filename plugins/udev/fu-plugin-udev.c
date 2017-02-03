@@ -112,6 +112,7 @@ fu_plugin_verify (FuPlugin *plugin,
 static void
 fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 {
+	FuDevice *dev_tmp;
 	const gchar *display_name;
 	const gchar *guid;
 	const gchar *product;
@@ -136,8 +137,8 @@ fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 
 	/* is already in database */
 	id = fu_plugin_udev_get_id (device);
-	dev = fu_plugin_cache_lookup (plugin, id);
-	if (dev != NULL) {
+	dev_tmp = fu_plugin_cache_lookup (plugin, id);
+	if (dev_tmp != NULL) {
 		g_debug ("ignoring duplicate %s", id);
 		return;
 	}
