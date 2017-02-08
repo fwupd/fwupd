@@ -324,8 +324,10 @@ synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
 				     G_IO_ERROR_INVALID_DATA,
 				     "error reading EEPROM file %s",
 				     filename);
+			close (fd);
 			return FALSE;
 		}
+		close (fd);
 	} else {
 		rc = synapticsmst_common_rc_get_command (connection,
 							 UPDC_READ_FROM_EEPROM,
