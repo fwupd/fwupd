@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-29 09:50+0100\n"
-"PO-Revision-Date: 2016-08-29 08:50+0000\n"
+"POT-Creation-Date: 2017-02-08 12:51+0000\n"
+"PO-Revision-Date: 2017-02-08 12:51+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Slovak (http://www.transifex.com/hughsie/fwupd/language/sk/)\n"
 "MIME-Version: 1.0\n"
@@ -58,6 +58,14 @@ msgstr "Odomknúť zariadenie na umožnenie prístupu"
 msgid "Authentication is required to unlock a device"
 msgstr "Na odomknutie zariadenia sa vyžaduje overenie totožnosti"
 
+msgid "Update the stored device verification information"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr ""
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -67,25 +75,29 @@ msgstr "Prezývka príkazu %s"
 msgid "Command not found"
 msgstr "Príkaz nenájdený"
 
-#. TRANSLATORS: when an action has completed
-msgid "OK"
-msgstr "OK"
+#. TRANSLATORS: read from device to host
+msgid "Reading"
+msgstr ""
 
-#. TRANSLATORS: when moving from runtime to DFU mode
+#. TRANSLATORS: write from host to device
+msgid "Writing"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Verifying"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Erasing"
+msgstr ""
+
+#. TRANSLATORS: waiting for device
 msgid "Detaching"
 msgstr "Uvoľňuje sa"
 
-#. TRANSLATORS: when moving from DFU to runtime mode
+#. TRANSLATORS: waiting for device
 msgid "Attaching"
 msgstr "Pripája sa"
-
-#. TRANSLATORS: when copying from host to device
-msgid "Downloading"
-msgstr "Preberá sa"
-
-#. TRANSLATORS: when copying from device to host
-msgid "Uploading"
-msgstr "Odovzdáva sa"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -149,6 +161,10 @@ msgstr "Režim"
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Stav"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr ""
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -239,6 +255,10 @@ msgstr "Dešifruje údaje firmvéru"
 msgid "Sets metadata on a firmware file"
 msgstr "Nastaví metaúdaje pre súbor s firmvérom"
 
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr ""
+
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "Nástroj pre DFU"
@@ -246,6 +266,17 @@ msgstr "Nástroj pre DFU"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Zlyhalo analyzovanie parametrov"
+
+#. TRANSLATORS: command description
+msgid "Enumerate all Synaptics MST devices"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Flash firmware file to MST device"
+msgstr ""
+
+msgid "Synaptics Multistream Transport Utility"
+msgstr ""
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
@@ -339,6 +370,9 @@ msgstr "Aktualizuje sa %s z verzie %s na verziu %s... "
 msgid "Done!"
 msgstr "Hotovo!"
 
+msgid "OK"
+msgstr "OK"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
@@ -383,8 +417,8 @@ msgid "Show extra debugging information"
 msgstr "Zobrazovať dodatočné ladiace informácie"
 
 #. TRANSLATORS: command line option
-msgid "Perform the installation offline where possible"
-msgstr "Vykoná inštaláciu bez pripojenia, kde je to možné"
+msgid "Schedule installation for next reboot when possible"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
@@ -396,7 +430,7 @@ msgstr "Umožní zníženie verzií firmvéru"
 
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
-msgstr "Nahradí upozornenie poskytovateľa"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -441,10 +475,6 @@ msgstr "Získa výsledky z poslednej aktualizácie"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Obnoví metaúdaje zo vzdialeného servera"
-
-#. TRANSLATORS: command description
-msgid "Dump the ROM checksum"
-msgstr "Stiahne medzisúčet pamäte ROM"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"

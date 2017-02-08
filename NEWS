@@ -1,3 +1,27 @@
+Version 0.8.0
+~~~~~~~~~~~~~
+Released: 2017-02-08
+
+New Features:
+ - Add a set of vfuncs that are run before and after a device update (Richard Hughes)
+ - Add Dell-specific functionality to allow other plugins turn on TBT/GPIO (Mario Limonciello)
+ - Add support for Intel Thunderbolt devices (Richard Hughes, Mario Limonciello)
+ - Add support for Logitech Unifying devices (Richard Hughes)
+ - Add support for Synaptics MST cascades hubs (Mario Limonciello)
+ - Add support for the Altus-Metrum ChaosKey device (Richard Hughes)
+ - Add VerifyUpdate to update the device checksums server-side (Richard Hughes)
+ - Allow the metadata to match a version of fwupd and the existing fw version (Richard Hughes)
+
+Bugfixes:
+ - Add a new method for forcing a controller to flash mode (Mario Limonciello)
+ - Always make sure we're getting a C99 compiler (Richard Hughes)
+ - Close USB devices before error returns (Tsunghan Liu)
+ - Don't read data from some DfuSe targets (Richard Hughes)
+ - Include all debug messages when run with --verbose (Richard Hughes)
+ - Return the pending UEFI update when not on AC power (Richard Hughes)
+ - Use a heuristic for the start address if the firmware has no DfuSe footer (Richard Hughes)
+ - Use more restrictive settings when running under systemd (Richard Hughes, Mario Limonciello)
+
 Version 0.7.5
 ~~~~~~~~~~~~~
 Released: 2016-10-19
