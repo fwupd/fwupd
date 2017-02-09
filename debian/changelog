@@ -1,4 +1,4 @@
-fwupd (0.8.0-1) UNRELEASED; urgency=medium
+fwupd (0.8.0-1) unstable; urgency=medium
 
   * New upstream version (0.8.0)
   * Refresh symbols.
@@ -8,7 +8,7 @@ fwupd (0.8.0-1) UNRELEASED; urgency=medium
   * Fix fwupd process leaking into dbus cgroup
     (Closes: #845406)
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 28 Nov 2016 14:10:57 -0600
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 09 Feb 2017 14:04:38 -0600
 
 fwupd (0.7.4-2) unstable; urgency=medium
 
