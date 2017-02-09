@@ -183,13 +183,33 @@ else
 fi
 AM_CONDITIONAL(HAVE_COLORHUG, test x$has_colorhug = xyes)
 
+# Thunderbolt support
+AC_ARG_ENABLE(thunderbolt,
+	      AS_HELP_STRING([--enable-thunderbolt],
+			     [Enable Thunderbolt support [default=auto]]),,
+	      enable_thunderbolt=maybe)
+if test x$enable_thunderbolt != xno; then
+	PKG_CHECK_MODULES(THUNDERBOLT, [libtbtfwu >= 1],
+			  has_thunderbolt=yes,
+			  has_thunderbolt=no)
+fi
+if test x$has_thunderbolt = xyes; then
+	AC_DEFINE(HAVE_THUNDERBOLT,1,[Use Thunderbolt support])
+else
+	has_thunderbolt=no
+	if test "x$enable_thunderbolt" = "xyes"; then
+		AC_MSG_ERROR([thunderbolt support requested but 'libtbtfwu-dev' was not found])
+	fi
+fi
+AM_CONDITIONAL(HAVE_THUNDERBOLT, test x$has_thunderbolt = xyes)
+
 # libelf support
 AC_ARG_ENABLE(libelf,
 	      AS_HELP_STRING([--enable-libelf],
 			     [Enable libelf support [default=auto]]),,
 	      enable_libelf=maybe)
 if test x$enable_libelf != xno; then
-	PKG_CHECK_MODULES(LIBELF, libelf >= 1.2.12,
+	PKG_CHECK_MODULES(ELF, libelf,
 			  has_libelf=yes,
 			  has_libelf=no)
 fi
@@ -289,6 +309,25 @@ else
 fi
 AM_CONDITIONAL(HAVE_DELL, test x$has_dell = xyes)
 
+# Synaptics mst support
+AC_ARG_ENABLE(synaptics,
+	      AS_HELP_STRING([--enable-synaptics],
+	      [Enable Synaptics MST hub support]),,
+	      enable_synaptics=maybe)
+if test x$enable_synaptics != xno &&
+   test x$has_libsmbios = xyes; then
+	AC_DEFINE(HAVE_SYNAPTICS,1,[Use Synaptics MST hub  support])
+	has_synaptics=yes
+else
+	has_synaptics=no
+	if test "x$enable_synaptics" = "xyes"; then
+		if test x$has_libsmbios = xno; then
+			AC_MSG_ERROR([Synaptics MST support requested but 'libsmbios-dev' was not found])
+		fi
+	fi
+fi
+AM_CONDITIONAL(HAVE_SYNAPTICS, test x$has_synaptics = xyes)
+
 # systemd support
 AC_ARG_WITH([systemdunitdir],
             AS_HELP_STRING([--with-systemdunitdir=DIR], [Directory for systemd service files]),
@@ -327,6 +366,7 @@ policy/Makefile
 po/Makefile.in
 src/Makefile
 plugins/Makefile
+plugins/altos/Makefile
 plugins/colorhug/Makefile
 plugins/dell/Makefile
 plugins/dfu/Makefile
@@ -334,7 +374,9 @@ plugins/ebitdo/Makefile
 plugins/raspberrypi/Makefile
 plugins/raspberrypi/rpiupdate/Makefile
 plugins/steelseries/Makefile
+plugins/synapticsmst/Makefile
 plugins/test/Makefile
+plugins/thunderbolt/Makefile
 plugins/udev/Makefile
 plugins/uefi/Makefile
 plugins/unifying/Makefile
@@ -360,4 +402,6 @@ echo "
 	libelf:                    $has_libelf
 	UEFI:                      $has_fwup
 	Dell:                      $has_dell
+	Synaptics MST:             $has_synaptics
+	Thunderbolt:               $has_thunderbolt
 "

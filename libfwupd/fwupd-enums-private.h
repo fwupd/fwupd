@@ -34,6 +34,7 @@
 #define FWUPD_RESULT_KEY_DEVICE_PLUGIN		"Plugin"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_VERSION		"Version"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST	"VersionLowest"	/* s */
+#define FWUPD_RESULT_KEY_DEVICE_VERSION_BOOTLOADER	"VersionBootloader"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT	"FlashesLeft"	/* u */
 #define FWUPD_RESULT_KEY_DEVICE_VENDOR		"DeviceVendor"	/* s */
 #define FWUPD_RESULT_KEY_GUID			"Guid"		/* s */

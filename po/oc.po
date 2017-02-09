@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-29 09:50+0100\n"
-"PO-Revision-Date: 2016-08-29 08:50+0000\n"
+"POT-Creation-Date: 2017-02-08 12:51+0000\n"
+"PO-Revision-Date: 2017-02-08 12:51+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Occitan (post 1500) (http://www.transifex.com/hughsie/fwupd/language/oc/)\n"
 "MIME-Version: 1.0\n"
@@ -59,6 +59,14 @@ msgstr ""
 msgid "Authentication is required to unlock a device"
 msgstr ""
 
+msgid "Update the stored device verification information"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr ""
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -68,25 +76,29 @@ msgstr "Aliàs de %s"
 msgid "Command not found"
 msgstr "Comanda pas trobada"
 
-#. TRANSLATORS: when an action has completed
-msgid "OK"
-msgstr "D'acòrdi"
+#. TRANSLATORS: read from device to host
+msgid "Reading"
+msgstr ""
 
-#. TRANSLATORS: when moving from runtime to DFU mode
+#. TRANSLATORS: write from host to device
+msgid "Writing"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Verifying"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Erasing"
+msgstr ""
+
+#. TRANSLATORS: waiting for device
 msgid "Detaching"
 msgstr "Destacament"
 
-#. TRANSLATORS: when moving from DFU to runtime mode
+#. TRANSLATORS: waiting for device
 msgid "Attaching"
 msgstr "Estacament"
-
-#. TRANSLATORS: when copying from host to device
-msgid "Downloading"
-msgstr "Telecargament"
-
-#. TRANSLATORS: when copying from device to host
-msgid "Uploading"
-msgstr "Cargament"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -150,6 +162,10 @@ msgstr "Mòde"
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Estat"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr ""
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -240,6 +256,10 @@ msgstr ""
 msgid "Sets metadata on a firmware file"
 msgstr ""
 
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr ""
+
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr ""
@@ -247,6 +267,17 @@ msgstr ""
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Fracàs de l'analisi dels paramètres"
+
+#. TRANSLATORS: command description
+msgid "Enumerate all Synaptics MST devices"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Flash firmware file to MST device"
+msgstr ""
+
+msgid "Synaptics Multistream Transport Utility"
+msgstr ""
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
@@ -340,6 +371,9 @@ msgstr "Mesa a jorn de %s de %s en %s "
 msgid "Done!"
 msgstr "Acabat !"
 
+msgid "OK"
+msgstr "D'acòrdi"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
@@ -384,7 +418,7 @@ msgid "Show extra debugging information"
 msgstr "Mòstra d'informacions de desbugatge complementàrias"
 
 #. TRANSLATORS: command line option
-msgid "Perform the installation offline where possible"
+msgid "Schedule installation for next reboot when possible"
 msgstr ""
 
 #. TRANSLATORS: command line option
@@ -441,10 +475,6 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr ""
-
-#. TRANSLATORS: command description
-msgid "Dump the ROM checksum"
 msgstr ""
 
 #. TRANSLATORS: command description

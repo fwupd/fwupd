@@ -31,6 +31,8 @@
 #include "fu-plugin-private.h"
 #include "fu-pending.h"
 
+#define	FU_PLUGIN_COLDPLUG_DELAY_MAXIMUM	3000u	/* ms */
+
 static void fu_plugin_finalize			 (GObject *object);
 
 typedef struct {
@@ -39,6 +41,7 @@ typedef struct {
 	gboolean		 enabled;
 	gchar			*name;
 	GHashTable		*devices;	/* platform_id:GObject */
+	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
 	FuPluginData		*data;
 } FuPluginPrivate;
 
@@ -47,6 +50,8 @@ enum {
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_STATUS_CHANGED,
 	SIGNAL_PERCENTAGE_CHANGED,
+	SIGNAL_RECOLDPLUG,
+	SIGNAL_SET_COLDPLUG_DELAY,
 	SIGNAL_LAST
 };
 
@@ -72,61 +77,138 @@ typedef gboolean	 (*FuPluginUpdateFunc)		(FuPlugin	*plugin,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 
+/**
+ * fu_plugin_get_name:
+ * @plugin: A #FuPlugin
+ *
+ * Gets the plugin name.
+ *
+ * Returns: a plugin name, or %NULL for unknown.
+ *
+ * Since: 0.8.0
+ **/
 const gchar *
 fu_plugin_get_name (FuPlugin *plugin)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
 	return priv->name;
 }
 
-void
-fu_plugin_set_name (FuPlugin *plugin, const gchar *name)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_free (priv->name);
-	priv->name = g_strdup (name);
-}
-
+/**
+ * fu_plugin_cache_lookup:
+ * @plugin: A #FuPlugin
+ * @id: the key
+ *
+ * Finds an object in the per-plugin cache.
+ *
+ * Returns: (transfer none): a #GObject, or %NULL for unfound.
+ *
+ * Since: 0.8.0
+ **/
 gpointer
 fu_plugin_cache_lookup (FuPlugin *plugin, const gchar *id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
+	g_return_val_if_fail (id != NULL, NULL);
 	return g_hash_table_lookup (priv->devices, id);
 }
 
+/**
+ * fu_plugin_cache_add:
+ * @plugin: A #FuPlugin
+ * @id: the key
+ * @dev: a #GObject, typically a #FuDevice
+ *
+ * Adds an object to the per-plugin cache.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_cache_add (FuPlugin *plugin, const gchar *id, gpointer dev)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (id != NULL);
 	g_hash_table_insert (priv->devices, g_strdup (id), g_object_ref (dev));
 }
 
+/**
+ * fu_plugin_cache_remove:
+ * @plugin: A #FuPlugin
+ * @id: the key
+ *
+ * Removes an object from the per-plugin cache.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_cache_remove (FuPlugin *plugin, const gchar *id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (id != NULL);
 	g_hash_table_remove (priv->devices, id);
 }
 
+/**
+ * fu_plugin_get_data:
+ * @plugin: A #FuPlugin
+ *
+ * Gets the per-plugin allocated private data.
+ *
+ * Returns: (transfer full): a pointer to a structure, or %NULL for unset.
+ *
+ * Since: 0.8.0
+ **/
 FuPluginData *
 fu_plugin_get_data (FuPlugin *plugin)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
 	return priv->data;
 }
 
+/**
+ * fu_plugin_alloc_data:
+ * @plugin: A #FuPlugin
+ * @data_sz: the size to allocate
+ *
+ * Allocates the per-plugin allocated private data.
+ *
+ * Returns: (transfer full): a pointer to a structure, or %NULL for unset.
+ *
+ * Since: 0.8.0
+ **/
 FuPluginData *
 fu_plugin_alloc_data (FuPlugin *plugin, gsize data_sz)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
+	if (priv->data != NULL) {
+		g_critical ("fu_plugin_alloc_data() already used by plugin");
+		return priv->data;
+	}
 	priv->data = g_malloc0 (data_sz);
 	return priv->data;
 }
 
+/**
+ * fu_plugin_get_usb_context:
+ * @plugin: A #FuPlugin
+ *
+ * Gets the shared USB context that all plugins can use.
+ *
+ * Returns: (transfer none): a #GUsbContext.
+ *
+ * Since: 0.8.0
+ **/
 GUsbContext *
 fu_plugin_get_usb_context (FuPlugin *plugin)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
 	return priv->usb_ctx;
 }
 
@@ -137,17 +219,38 @@ fu_plugin_set_usb_context (FuPlugin *plugin, GUsbContext *usb_ctx)
 	g_set_object (&priv->usb_ctx, usb_ctx);
 }
 
+/**
+ * fu_plugin_get_enabled:
+ * @plugin: A #FuPlugin
+ *
+ * Returns if the plugin is enabled.
+ *
+ * Returns: %TRUE if the plugin is currently enabled.
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_get_enabled (FuPlugin *plugin)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_val_if_fail (FU_IS_PLUGIN (plugin), FALSE);
 	return priv->enabled;
 }
 
+/**
+ * fu_plugin_set_enabled:
+ * @plugin: A #FuPlugin
+ * @enabled: the enabled value
+ *
+ * Enables or disables a plugin. Plugins can self-disable at any point.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_set_enabled (FuPlugin *plugin, gboolean enabled)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	priv->enabled = enabled;
 }
 
@@ -185,9 +288,27 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 	return TRUE;
 }
 
+/**
+ * fu_plugin_device_add:
+ * @plugin: A #FuPlugin
+ * @device: A #FuDevice
+ *
+ * Asks the daemon to add a device to the exported list. If this device ID
+ * has already been added by a different plugin then this request will be
+ * ignored.
+ *
+ * Plugins should use fu_plugin_device_add_delay() if they are not capable of
+ * actually flashing an image to the hardware so that higher-priority plugins
+ * can add the device themselves.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 {
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_DEVICE (device));
+
 	g_debug ("emit added from %s: %s",
 		 fu_plugin_get_name (plugin),
 		 fu_device_get_id (device));
@@ -196,26 +317,205 @@ fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
 
+typedef struct {
+	FuPlugin	*plugin;
+	FuDevice	*device;
+	guint		 timeout_id;
+	GHashTable	*devices;
+} FuPluginHelper;
+
+static void
+fu_plugin_helper_free (FuPluginHelper *helper)
+{
+	g_object_unref (helper->plugin);
+	g_object_unref (helper->device);
+	g_hash_table_unref (helper->devices);
+	g_free (helper);
+}
+
+static gboolean
+fu_plugin_device_add_delay_cb (gpointer user_data)
+{
+	FuPluginHelper *helper = (FuPluginHelper *) user_data;
+	g_hash_table_remove (helper->devices, helper->device);
+	fu_plugin_device_add (helper->plugin, helper->device);
+	fu_plugin_helper_free (helper);
+	return FALSE;
+}
+
+/**
+ * fu_plugin_has_device_delay:
+ * @plugin: A #FuPlugin
+ *
+ * Returns if the device has a pending device that is waiting to be added.
+ *
+ * Returns: %TRUE if a device is waiting to be added
+ *
+ * Since: 0.8.0
+ **/
+gboolean
+fu_plugin_has_device_delay (FuPlugin *plugin)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	return g_hash_table_size (priv->devices_delay) > 0;
+}
+
+/**
+ * fu_plugin_device_add_delay:
+ * @plugin: A #FuPlugin
+ * @device: A #FuDevice
+ *
+ * Asks the daemon to add a device to the exported list after a small delay.
+ *
+ * Since: 0.8.0
+ **/
+void
+fu_plugin_device_add_delay (FuPlugin *plugin, FuDevice *device)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginHelper *helper;
+
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_DEVICE (device));
+
+	/* already waiting for add */
+	helper = g_hash_table_lookup (priv->devices_delay, device);
+	if (helper != NULL) {
+		g_warning ("ignoring add-delay as device %s already pending",
+			   fu_device_get_id (device));
+		return;
+	}
+
+	/* add after a small delay */
+	g_debug ("waiting a small time for other plugins");
+	helper = g_new0 (FuPluginHelper, 1);
+	helper->plugin = g_object_ref (plugin);
+	helper->device = g_object_ref (device);
+	helper->timeout_id = g_timeout_add (500, fu_plugin_device_add_delay_cb, helper);
+	helper->devices = g_hash_table_ref (priv->devices_delay);
+	g_hash_table_insert (helper->devices, device, helper);
+}
+
+/**
+ * fu_plugin_device_add:
+ * @plugin: A #FuPlugin
+ * @device: A #FuDevice
+ *
+ * Asks the daemon to remove a device from the exported list.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 {
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginHelper *helper;
+
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_DEVICE (device));
+
+	/* waiting for add */
+	helper = g_hash_table_lookup (priv->devices_delay, device);
+	if (helper != NULL) {
+		g_debug ("ignoring remove from delayed addition");
+		g_source_remove (helper->timeout_id);
+		g_hash_table_remove (priv->devices_delay, helper->device);
+		fu_plugin_helper_free (helper);
+		return;
+	}
+
 	g_debug ("emit removed from %s: %s",
 		 fu_plugin_get_name (plugin),
 		 fu_device_get_id (device));
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_REMOVED], 0, device);
 }
 
+/**
+ * fu_plugin_set_status:
+ * @plugin: A #FuPlugin
+ * @status: A #FwupdStatus, e.g. #FWUPD_STATUS_DECOMPRESSING
+ *
+ * Sets the global state of the daemon according to the current plugin action.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_set_status (FuPlugin *plugin, FwupdStatus status)
 {
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_signal_emit (plugin, signals[SIGNAL_STATUS_CHANGED], 0, status);
 }
 
+/**
+ * fu_plugin_set_percentage:
+ * @plugin: A #FuPlugin
+ * @percentage: the percentage complete
+ *
+ * Sets the global completion of the daemon according to the current plugin
+ * action.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_set_percentage (FuPlugin *plugin, guint percentage)
 {
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (percentage <= 100);
 	g_signal_emit (plugin, signals[SIGNAL_PERCENTAGE_CHANGED], 0,
 		       percentage);
+}
+
+/**
+ * fu_plugin_recoldplug:
+ * @plugin: A #FuPlugin
+ *
+ * Ask all the plugins to coldplug all devices, which will include the prepare()
+ * and cleanup() phases. Duplicate devices added will be ignored.
+ *
+ * Since: 0.8.0
+ **/
+void
+fu_plugin_recoldplug (FuPlugin *plugin)
+{
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_signal_emit (plugin, signals[SIGNAL_RECOLDPLUG], 0);
+}
+
+/**
+ * fu_plugin_set_coldplug_delay:
+ * @plugin: A #FuPlugin
+ * @duration: A delay in milliseconds
+ *
+ * Set the minimum time that should be waited inbetween the call to
+ * fu_plugin_coldplug_prepare() and fu_plugin_coldplug(). This is usually going
+ * to be the minimum hardware initialisation time from a datasheet.
+ *
+ * It is better to use this function rather than using a sleep() in the plugin
+ * itself as then only one delay is done in the daemon rather than waiting for
+ * each coldplug prepare in a serial way.
+ *
+ * Additionally, very long delays should be avoided as the daemon will be
+ * blocked from processing requests whilst the coldplug delay is being
+ * performed.
+ *
+ * Since: 0.8.0
+ **/
+void
+fu_plugin_set_coldplug_delay (FuPlugin *plugin, guint duration)
+{
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (duration > 0);
+
+	/* check sanity */
+	if (duration > FU_PLUGIN_COLDPLUG_DELAY_MAXIMUM) {
+		g_warning ("duration of %ums is crazy, truncating to %ums",
+			   duration,
+			   FU_PLUGIN_COLDPLUG_DELAY_MAXIMUM);
+		duration = FU_PLUGIN_COLDPLUG_DELAY_MAXIMUM;
+	}
+
+	/* emit */
+	g_signal_emit (plugin, signals[SIGNAL_SET_COLDPLUG_DELAY], 0, duration);
 }
 
 gboolean
@@ -301,6 +601,50 @@ fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 	g_debug ("performing coldplug() on %s", priv->name);
 	if (!func (plugin, error)) {
 		g_prefix_error (error, "failed to coldplug %s: ", priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_plugin_runner_coldplug_prepare (FuPlugin *plugin, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginStartupFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_coldplug_prepare", (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing coldplug_prepare() on %s", priv->name);
+	if (!func (plugin, error)) {
+		g_prefix_error (error, "failed to prepare for coldplug %s: ", priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_plugin_runner_coldplug_cleanup (FuPlugin *plugin, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginStartupFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_coldplug_cleanup", (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing coldplug_cleanup() on %s", priv->name);
+	if (!func (plugin, error)) {
+		g_prefix_error (error, "failed to cleanup coldplug %s: ", priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -697,6 +1041,18 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, percentage_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_UINT);
+	signals[SIGNAL_RECOLDPLUG] =
+		g_signal_new ("recoldplug",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuPluginClass, recoldplug),
+			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
+			      G_TYPE_NONE, 0);
+	signals[SIGNAL_SET_COLDPLUG_DELAY] =
+		g_signal_new ("set-coldplug-delay",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuPluginClass, set_coldplug_delay),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
 static void
@@ -706,6 +1062,7 @@ fu_plugin_init (FuPlugin *plugin)
 	priv->enabled = TRUE;
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
+	priv->devices_delay = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
 static void
@@ -729,6 +1086,7 @@ fu_plugin_finalize (GObject *object)
 	if (priv->module != NULL)
 		g_module_close (priv->module);
 	g_hash_table_unref (priv->devices);
+	g_hash_table_unref (priv->devices_delay);
 	g_free (priv->name);
 	g_free (priv->data);
 

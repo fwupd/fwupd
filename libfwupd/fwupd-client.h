@@ -70,6 +70,10 @@ gboolean	 fwupd_client_verify			(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fwupd_client_verify_update		(FwupdClient	*client,
+							 const gchar	*device_id,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 fwupd_client_unlock			(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,

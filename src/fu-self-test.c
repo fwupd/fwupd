@@ -30,7 +30,41 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
-#include "fu-rom.h"
+
+static GMainLoop *_test_loop = NULL;
+static guint _test_loop_timeout_id = 0;
+
+static gboolean
+fu_test_hang_check_cb (gpointer user_data)
+{
+	g_main_loop_quit (_test_loop);
+	_test_loop_timeout_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_test_loop_run_with_timeout (guint timeout_ms)
+{
+	g_assert (_test_loop_timeout_id == 0);
+	g_assert (_test_loop == NULL);
+	_test_loop = g_main_loop_new (NULL, FALSE);
+	_test_loop_timeout_id = g_timeout_add (timeout_ms, fu_test_hang_check_cb, NULL);
+	g_main_loop_run (_test_loop);
+}
+
+static void
+fu_test_loop_quit (void)
+{
+	if (_test_loop_timeout_id > 0) {
+		g_source_remove (_test_loop_timeout_id);
+		_test_loop_timeout_id = 0;
+	}
+	if (_test_loop != NULL) {
+		g_main_loop_quit (_test_loop);
+		g_main_loop_unref (_test_loop);
+		_test_loop = NULL;
+	}
+}
 
 static gchar *
 fu_test_get_filename (const gchar *filename)
@@ -46,121 +80,11 @@ fu_test_get_filename (const gchar *filename)
 }
 
 static void
-fu_rom_func (void)
-{
-	struct {
-		FuRomKind kind;
-		const gchar *fn;
-		const gchar *ver;
-		const gchar *csum;
-		guint16 vendor;
-		guint16 model;
-	} data[] = {
-		    { FU_ROM_KIND_ATI,
-			"Asus.9800PRO.256.unknown.031114.rom",
-			"008.015.041.001",
-			"3137385685298bbf7db2c8304f60d89005c731ed",
-			0x1002, 0x4e48 },
-		    { FU_ROM_KIND_ATI, /* atombios */
-			"Asus.R9290X.4096.131014.rom",
-			"015.039.000.006.003515",
-			"d8e32fa09a00ab9dcc96a990266f3fe5a99eacc5",
-			0x1002, 0x67b0 },
-		    { FU_ROM_KIND_ATI, /* atombios, with serial */
-			"Asus.HD7970.3072.121018.rom",
-			"015.023.000.002.000000",
-			"ba8b6ce38f2499c8463fc9d983b8e0162b1121e4",
-			0x1002, 0x6798 },
-		    { FU_ROM_KIND_NVIDIA,
-			"Asus.GTX480.1536.100406_1.rom",
-			"70.00.1A.00.02",
-			"3fcab24e60934850246fcfc4f42eceb32540a0ad",
-			0x10de, 0x06c0 },
-		    { FU_ROM_KIND_NVIDIA, /* nvgi */
-			"Asus.GTX980.4096.140905.rom",
-			"84.04.1F.00.02",
-			"98f58321145bd347156455356bc04c5b04a292f5",
-			0x10de, 0x13c0 },
-		    { FU_ROM_KIND_NVIDIA, /* nvgi, with serial */
-			"Asus.TitanBlack.6144.140212.rom",
-			"80.80.4E.00.01",
-			"3c80f35d4e3c440ffb427957d9271384113d7721",
-			0x10de, 0x100c },
-		    { FU_ROM_KIND_UNKNOWN, NULL, NULL, NULL, 0x0000, 0x0000 }
-		};
-
-	for (guint i = 0; data[i].fn != NULL; i++) {
-		gboolean ret;
-		g_autoptr(GError) error = NULL;
-		g_autofree gchar *filename = NULL;
-		g_autoptr(FuRom) rom = NULL;
-		g_autoptr(GFile) file = NULL;
-		rom = fu_rom_new ();
-		g_assert (rom != NULL);
-
-		/* load file */
-		filename = fu_test_get_filename (data[i].fn);
-		if (filename == NULL)
-			continue;
-		g_print ("\nparsing %s...", filename);
-		file = g_file_new_for_path (filename);
-		ret = fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, &error);
-		g_assert_no_error (error);
-		g_assert (ret);
-		g_assert_cmpstr (fu_rom_get_version (rom), ==, data[i].ver);
-		g_assert_cmpstr (fu_rom_get_checksum (rom), ==, data[i].csum);
-		g_assert_cmpint (fu_rom_get_kind (rom), ==, data[i].kind);
-		g_assert_cmpint (fu_rom_get_vendor (rom), ==, data[i].vendor);
-		g_assert_cmpint (fu_rom_get_model (rom), ==, data[i].model);
-	}
-}
-
-static void
-fu_rom_all_func (void)
-{
-	GDir *dir;
-	g_autofree gchar *path = NULL;
-
-	/* may or may not exist */
-	path = fu_test_get_filename ("roms");
-	if (path == NULL)
-		return;
-	g_print ("\n");
-	dir = g_dir_open (path, 0, NULL);
-	do {
-		const gchar *fn;
-		gboolean ret;
-		g_autoptr(GError) error = NULL;
-		g_autofree gchar *filename = NULL;
-		g_autoptr(FuRom) rom = NULL;
-		g_autoptr(GFile) file = NULL;
-
-		fn = g_dir_read_name (dir);
-		if (fn == NULL)
-			break;
-		filename = g_build_filename (path, fn, NULL);
-		g_print ("\nparsing %s...", filename);
-		file = g_file_new_for_path (filename);
-		rom = fu_rom_new ();
-		ret = fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, &error);
-		if (!ret) {
-			g_print ("%s %s : %s\n",
-				 fu_rom_kind_to_string (fu_rom_get_kind (rom)),
-				 filename, error->message);
-			continue;
-		}
-		g_assert_cmpstr (fu_rom_get_version (rom), !=, NULL);
-		g_assert_cmpstr (fu_rom_get_version (rom), !=, "\0");
-		g_assert_cmpstr (fu_rom_get_checksum (rom), !=, NULL);
-		g_assert_cmpint (fu_rom_get_kind (rom), !=, FU_ROM_KIND_UNKNOWN);
-	} while (TRUE);
-}
-
-static void
 _plugin_status_changed_cb (FuPlugin *plugin, FwupdStatus status, gpointer user_data)
 {
 	guint *cnt = (guint *) user_data;
 	(*cnt)++;
+	fu_test_loop_quit ();
 }
 
 static void
@@ -168,10 +92,62 @@ _plugin_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	FuDevice **dev = (FuDevice **) user_data;
 	*dev = g_object_ref (device);
+	fu_test_loop_quit ();
 }
 
 static void
-fu_plugin_func (void)
+fu_plugin_delay_func (void)
+{
+	FuDevice *device_tmp;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuDevice) device = NULL;
+
+	plugin = fu_plugin_new ();
+	g_signal_connect (plugin, "device-added",
+			  G_CALLBACK (_plugin_device_added_cb),
+			  &device_tmp);
+	g_signal_connect (plugin, "device-removed",
+			  G_CALLBACK (_plugin_device_added_cb),
+			  &device_tmp);
+
+	/* add device straight away */
+	device = fu_device_new ();
+	fu_device_set_id (device, "testdev");
+	fu_plugin_device_add (plugin, device);
+	g_assert (device_tmp != NULL);
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_clear_object (&device_tmp);
+
+	/* remove device */
+	fu_plugin_device_remove (plugin, device);
+	g_assert (device_tmp != NULL);
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_clear_object (&device_tmp);
+
+	/* add it with a small delay */
+	fu_plugin_device_add_delay (plugin, device);
+	g_assert (device_tmp == NULL);
+	fu_test_loop_run_with_timeout (1000);
+	g_assert (device_tmp != NULL);
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_clear_object (&device_tmp);
+
+	/* add it again, twice quickly */
+	fu_plugin_device_add_delay (plugin, device);
+	g_test_expect_message (G_LOG_DOMAIN,
+			       G_LOG_LEVEL_WARNING,
+			       "ignoring add-delay as device * already pending");
+	fu_plugin_device_add_delay (plugin, device);
+	g_test_assert_expected_messages ();
+	g_assert (device_tmp == NULL);
+	fu_test_loop_run_with_timeout (1000);
+	g_assert (device_tmp != NULL);
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_clear_object (&device_tmp);
+}
+
+static void
+fu_plugin_module_func (void)
 {
 	GError *error = NULL;
 	FuDevice *device_tmp;
@@ -415,10 +391,9 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
-	g_test_add_func ("/fwupd/rom", fu_rom_func);
-	g_test_add_func ("/fwupd/rom{all}", fu_rom_all_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
-	g_test_add_func ("/fwupd/plugin", fu_plugin_func);
+	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
+	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
 	g_test_add_func ("/fwupd/keyring", fu_keyring_func);
 	return g_test_run ();
 }

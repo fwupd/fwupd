@@ -235,7 +235,7 @@ fu_plugin_dell_dock_func (void)
 	gboolean ret;
 	guint cnt = 0;
 	guint32 out[4];
-	INFO_UNION buf;
+	DOCK_UNION buf;
 	DOCK_INFO *dock_info;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuDevice) device = NULL;
@@ -275,11 +275,11 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_device_added_cb (NULL, NULL, plugin);
 	g_assert (device == NULL);
 
-	/* inject valid TB15 dock w/ invalid flash pkg version */
-	buf.record = g_malloc0(sizeof(DOCK_INFO_RECORD));
+	/* inject valid TB16 dock w/ invalid flash pkg version */
+	buf.record = g_malloc0 (sizeof(DOCK_INFO_RECORD));
 	dock_info = &buf.record->dock_info;
 	buf.record->dock_info_header.dir_version = 1;
-	buf.record->dock_info_header.dock_type = DOCK_TYPE_TB15;
+	buf.record->dock_info_header.dock_type = DOCK_TYPE_TB16;
 	memcpy (dock_info->dock_description,
 		"BME_Dock", 8);
 	dock_info->flash_pkg_version = 0x00ffffff;
@@ -312,11 +312,11 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_device_removed_cb (NULL, NULL,
 					    plugin);
 
-	/* inject valid TB15 dock w/ older system EC */
-	buf.record = g_malloc0(sizeof(DOCK_INFO_RECORD));
+	/* inject valid TB16 dock w/ older system EC */
+	buf.record = g_malloc0 (sizeof(DOCK_INFO_RECORD));
 	dock_info = &buf.record->dock_info;
 	buf.record->dock_info_header.dir_version = 1;
-	buf.record->dock_info_header.dock_type = DOCK_TYPE_TB15;
+	buf.record->dock_info_header.dock_type = DOCK_TYPE_TB16;
 	memcpy (dock_info->dock_description,
 		"BME_Dock", 8);
 	dock_info->flash_pkg_version = 0x43;
@@ -351,7 +351,7 @@ fu_plugin_dell_dock_func (void)
 
 
 	/* inject valid WD15 dock w/ invalid flash pkg version */
-	buf.record = g_malloc0(sizeof(DOCK_INFO_RECORD));
+	buf.record = g_malloc0 (sizeof(DOCK_INFO_RECORD));
 	dock_info = &buf.record->dock_info;
 	buf.record->dock_info_header.dir_version = 1;
 	buf.record->dock_info_header.dock_type = DOCK_TYPE_WD15;
@@ -386,7 +386,7 @@ fu_plugin_dell_dock_func (void)
 
 
 	/* inject valid WD15 dock w/ older system EC */
-	buf.record = g_malloc0(sizeof(DOCK_INFO_RECORD));
+	buf.record = g_malloc0 (sizeof(DOCK_INFO_RECORD));
 	dock_info = &buf.record->dock_info;
 	buf.record->dock_info_header.dir_version = 1;
 	buf.record->dock_info_header.dock_type = DOCK_TYPE_WD15;
@@ -408,9 +408,9 @@ fu_plugin_dell_dock_func (void)
 	out[0] = 0;
 	out[1] = 1;
 	fu_plugin_dell_inject_fake_data (plugin,
-					   (guint32 *) &out,
-					   DOCK_NIC_VID, DOCK_NIC_PID,
-					   buf.buf);
+					 (guint32 *) &out,
+					 DOCK_NIC_VID, DOCK_NIC_PID,
+					 buf.buf);
 	fu_plugin_dell_device_added_cb (NULL, NULL,
 					  plugin);
 	g_assert (device != NULL);
@@ -420,7 +420,7 @@ fu_plugin_dell_dock_func (void)
 					    plugin);
 
 	/* inject an invalid future dock */
-	buf.record = g_malloc0(sizeof(DOCK_INFO_RECORD));
+	buf.record = g_malloc0 (sizeof(DOCK_INFO_RECORD));
 	dock_info = &buf.record->dock_info;
 	buf.record->dock_info_header.dir_version = 1;
 	buf.record->dock_info_header.dock_type = 50;
@@ -436,9 +436,9 @@ fu_plugin_dell_dock_func (void)
 	out[0] = 0;
 	out[1] = 1;
 	fu_plugin_dell_inject_fake_data (plugin,
-					   (guint32 *) &out,
-					   DOCK_NIC_VID, DOCK_NIC_PID,
-					   buf.buf);
+					 (guint32 *) &out,
+					 DOCK_NIC_VID, DOCK_NIC_PID,
+					 buf.buf);
 	fu_plugin_dell_device_added_cb (NULL, NULL,
 					  plugin);
 	g_assert (device == NULL);

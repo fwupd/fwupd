@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-29 09:50+0100\n"
-"PO-Revision-Date: 2016-08-29 08:50+0000\n"
+"POT-Creation-Date: 2017-02-08 12:51+0000\n"
+"PO-Revision-Date: 2017-02-08 12:51+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Russian (http://www.transifex.com/hughsie/fwupd/language/ru/)\n"
 "MIME-Version: 1.0\n"
@@ -58,6 +58,14 @@ msgstr "Разблокировать устройство для получен�
 msgid "Authentication is required to unlock a device"
 msgstr "Для разблокировки устройства требуется аутентификация"
 
+msgid "Update the stored device verification information"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr ""
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -67,25 +75,29 @@ msgstr "Псевдоним %s"
 msgid "Command not found"
 msgstr "Команда не найдена"
 
-#. TRANSLATORS: when an action has completed
-msgid "OK"
-msgstr "ОК"
+#. TRANSLATORS: read from device to host
+msgid "Reading"
+msgstr ""
 
-#. TRANSLATORS: when moving from runtime to DFU mode
+#. TRANSLATORS: write from host to device
+msgid "Writing"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Verifying"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Erasing"
+msgstr ""
+
+#. TRANSLATORS: waiting for device
 msgid "Detaching"
 msgstr "Отсоединение"
 
-#. TRANSLATORS: when moving from DFU to runtime mode
+#. TRANSLATORS: waiting for device
 msgid "Attaching"
 msgstr "Присоединение"
-
-#. TRANSLATORS: when copying from host to device
-msgid "Downloading"
-msgstr "Получение"
-
-#. TRANSLATORS: when copying from device to host
-msgid "Uploading"
-msgstr "Выгрузка"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -140,7 +152,7 @@ msgstr "Неизвестно: доступ запрещён"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
 msgid "Serial"
-msgstr ""
+msgstr "Порядковое"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
 msgid "Mode"
@@ -149,6 +161,10 @@ msgstr "Режим"
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Состояние"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr ""
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -173,11 +189,11 @@ msgstr "Установить идентификатор продукта для 
 
 #. TRANSLATORS: command description
 msgid "Set element address on firmware file"
-msgstr ""
+msgstr "Установить адрес элемента для файла микропрограммы"
 
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
-msgstr ""
+msgstr "Установить размер микропрограммы для конечного объекта"
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
@@ -239,6 +255,10 @@ msgstr "Расшифровать данные микропрограммы"
 msgid "Sets metadata on a firmware file"
 msgstr "Устанавливает метаданные файла микропрограммы"
 
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr ""
+
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "Средство работы с DFU"
@@ -246,6 +266,17 @@ msgstr "Средство работы с DFU"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Не удалось разобрать аргументы"
+
+#. TRANSLATORS: command description
+msgid "Enumerate all Synaptics MST devices"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Flash firmware file to MST device"
+msgstr ""
+
+msgid "Synaptics Multistream Transport Utility"
+msgstr ""
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
@@ -277,35 +308,35 @@ msgstr "D-Bus служба обновления микропрограммы"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
-msgstr ""
+msgstr "Бездействие…"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
-msgstr ""
+msgstr "Распаковка…"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
-msgstr ""
+msgstr "Загрузка…"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr ""
+msgstr "Перезапуск устройства…"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
-msgstr ""
+msgstr "Запись…"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr ""
+msgstr "Проверка…"
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
-msgstr ""
+msgstr "Планировка…"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
-msgstr ""
+msgstr "Неизвестно"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -338,6 +369,9 @@ msgstr "Обновление %s с %s на %s…"
 
 msgid "Done!"
 msgstr "Готово!"
+
+msgid "OK"
+msgstr "ОК"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -383,8 +417,8 @@ msgid "Show extra debugging information"
 msgstr "Показать дополнительную отладочную информацию"
 
 #. TRANSLATORS: command line option
-msgid "Perform the installation offline where possible"
-msgstr "Выполнить установку в автономном режиме, где возможно"
+msgid "Schedule installation for next reboot when possible"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
@@ -396,7 +430,7 @@ msgstr "Разрешить понижение версий микропрогр�
 
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
-msgstr "Игнорировать предупреждения поставщика"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -441,10 +475,6 @@ msgstr "Получает результаты с последнего обнов
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Обновить метаданные с удаленного сервера"
-
-#. TRANSLATORS: command description
-msgid "Dump the ROM checksum"
-msgstr "Создать дамп контрольной суммы ПЗУ"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"

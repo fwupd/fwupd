@@ -66,6 +66,10 @@ typedef struct {
 	AsProfile		*profile;
 	AsStore			*store;
 	guint			 store_changed_id;
+	guint			 owner_id;
+	gboolean		 coldplug_running;
+	guint			 coldplug_id;
+	guint			 coldplug_delay;
 	GPtrArray		*plugins;	/* of FuPlugin */
 	GHashTable		*plugins_hash;	/* of name : FuPlugin */
 } FuMainPrivate;
@@ -360,6 +364,7 @@ typedef enum {
 	FU_MAIN_AUTH_KIND_UNKNOWN,
 	FU_MAIN_AUTH_KIND_INSTALL,
 	FU_MAIN_AUTH_KIND_UNLOCK,
+	FU_MAIN_AUTH_KIND_VERIFY_UPDATE,
 	FU_MAIN_AUTH_KIND_LAST
 } FuMainAuthKind;
 
@@ -427,6 +432,113 @@ fu_main_plugin_unlock_authenticated (FuMainAuthHelper *helper, GError **error)
 	return TRUE;
 }
 
+static AsApp *
+fu_main_verify_update_device_to_app (FuDevice *device)
+{
+	AsApp *app = NULL;
+	g_autofree gchar *id = NULL;
+	g_autoptr(AsChecksum) csum = NULL;
+	g_autoptr(AsProvide) prov = NULL;
+	g_autoptr(AsRelease) rel = NULL;
+
+	/* make a plausible ID */
+	id = g_strdup_printf ("%s.firmware", fu_device_get_guid_default (device));
+
+	/* add app to store */
+	app = as_app_new ();
+	as_app_set_id (app, id);
+	as_app_set_kind (app, AS_APP_KIND_FIRMWARE);
+	as_app_set_source_kind (app, AS_APP_SOURCE_KIND_INF);
+	rel = as_release_new ();
+	as_release_set_version (rel, fu_device_get_version (device));
+	csum = as_checksum_new ();
+	as_checksum_set_kind (csum, G_CHECKSUM_SHA1);
+	as_checksum_set_value (csum, fu_device_get_checksum (device));
+	as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
+	as_release_add_checksum (rel, csum);
+	as_app_add_release (app, rel);
+	prov = as_provide_new ();
+	as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
+	as_provide_set_value (prov, fu_device_get_guid_default (device));
+	as_app_add_provide (app, prov);
+	return app;
+}
+
+static gboolean
+fu_main_plugin_verify_update_authenticated (FuMainAuthHelper *helper, GError **error)
+{
+	const gchar *fn = "/var/cache/app-info/xmls/fwupd-verify.xml";
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GFile) xml_file = NULL;
+
+	/* load existing store */
+	store = as_store_new ();
+	as_store_set_api_version (store, 0.9);
+	xml_file = g_file_new_for_path (fn);
+	if (g_file_query_exists (xml_file, NULL)) {
+		if (!as_store_from_file (store, xml_file, NULL, NULL, error))
+			return FALSE;
+	}
+
+	/* check the devices still exists */
+	for (guint i = 0; i < helper->devices->len; i ++) {
+		FuDevice *device = g_ptr_array_index (helper->devices, i);
+		FuDeviceItem *item;
+		g_autoptr(AsApp) app = NULL;
+
+		item = fu_main_get_item_by_id (helper->priv,
+					       fu_device_get_id (device));
+		if (item == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "device %s was removed",
+				     fu_device_get_id (device));
+			return FALSE;
+		}
+
+		/* unlock device if required */
+		if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_LOCKED)) {
+			if (!fu_plugin_runner_unlock (item->plugin,
+						      item->device,
+						      error))
+				return FALSE;
+			fu_main_emit_device_changed (helper->priv, item->device);
+		}
+
+		/* get the checksum */
+		if (fu_device_get_checksum (item->device) == NULL) {
+			if (!fu_plugin_runner_verify (item->plugin,
+						      item->device,
+						      FU_PLUGIN_VERIFY_FLAG_NONE,
+						      error))
+				return FALSE;
+			fu_main_emit_device_changed (helper->priv, item->device);
+		}
+
+		/* we got nothing */
+		if (fu_device_get_checksum (item->device) == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "device verification not supported");
+			return FALSE;
+		}
+
+		/* add to store */
+		app = fu_main_verify_update_device_to_app (item->device);
+		as_store_add_app (store, app);
+	}
+
+	/* write */
+	g_debug ("writing %s", fn);
+	return as_store_to_file (store, xml_file,
+				 AS_NODE_TO_XML_FLAG_ADD_HEADER |
+				 AS_NODE_TO_XML_FLAG_FORMAT_INDENT |
+				 AS_NODE_TO_XML_FLAG_FORMAT_MULTILINE,
+				 NULL, error);
+}
+
 static gboolean
 fu_main_plugin_update_authenticated (FuMainAuthHelper *helper, GError **error)
 {
@@ -489,14 +601,29 @@ fu_main_plugin_update_authenticated (FuMainAuthHelper *helper, GError **error)
 					      helper->blob_cab,
 					      blob_fw,
 					      helper->flags,
-					      error))
+					      error)) {
+			for (guint j = 0; j < priv->plugins->len; j++) {
+				FuPlugin *plugin = g_ptr_array_index (priv->plugins, j);
+				g_autoptr(GError) error_local = NULL;
+				if (!fu_plugin_runner_update_cleanup (plugin,
+								      device,
+								      &error_local)) {
+					g_warning ("failed to update-cleanup "
+						   "after failed update: %s",
+						   error_local->message);
+				}
+			}
 			return FALSE;
+		}
 
 		/* signal to all the plugins the update has happened */
 		for (guint j = 0; j < priv->plugins->len; j++) {
 			FuPlugin *plugin = g_ptr_array_index (priv->plugins, j);
-			if (!fu_plugin_runner_update_cleanup (plugin, device, error))
-				return FALSE;
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_plugin_runner_update_cleanup (plugin, device, &error_local)) {
+				g_warning ("failed to update-cleanup: %s",
+					   error_local->message);
+			}
 		}
 
 		/* make the UI update */
@@ -514,16 +641,18 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 {
 	FuMainAuthHelper *helper = (FuMainAuthHelper *) user_data;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
-							    res, &error);
+							    res, &error_local);
 	if (auth == NULL) {
 		g_set_error (&error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_AUTH_FAILED,
-			     "could not check for auth: %s", error->message);
+			     "could not check for auth: %s",
+			     error_local->message);
 		fu_main_invocation_return_error (helper->priv, helper->invocation, error);
 		fu_main_helper_free (helper);
 		return;
@@ -551,6 +680,14 @@ fu_main_check_authorization_cb (GObject *source, GAsyncResult *res, gpointer use
 		}
 	} else if (helper->auth_kind == FU_MAIN_AUTH_KIND_UNLOCK) {
 		if (!fu_main_plugin_unlock_authenticated (helper, &error)) {
+			fu_main_invocation_return_error (helper->priv,
+							 helper->invocation,
+							 error);
+			fu_main_helper_free (helper);
+			return;
+		}
+	} else if (helper->auth_kind == FU_MAIN_AUTH_KIND_VERIFY_UPDATE) {
+		if (!fu_main_plugin_verify_update_authenticated (helper, &error)) {
 			fu_main_invocation_return_error (helper->priv,
 							 helper->invocation,
 							 error);
@@ -637,6 +774,46 @@ fu_main_vendor_quirk_release_version (AsApp *app)
 	}
 }
 
+#if AS_CHECK_VERSION(0,6,7)
+static gboolean
+fu_main_check_version_requirement (AsApp *app,
+				   AsRequireKind kind,
+				   const gchar *id,
+				   const gchar *version,
+				   GError **error)
+{
+	AsRequire *req;
+
+	/* check args */
+	if (version == NULL) {
+		g_debug ("no paramater given for %s{%s}",
+			 as_require_kind_to_string (kind), id);
+		return TRUE;
+	}
+
+	/* does requirement exist */
+	req = as_app_get_require_by_value (app, kind, id);
+	if (req == NULL) {
+		g_debug ("no requirement on %s{%s}",
+			 as_require_kind_to_string (kind), id);
+		return TRUE;
+	}
+
+	/* check version */
+	if (!as_require_version_compare (req, version, error)) {
+		g_prefix_error (error, "version of %s incorrect: ", id);
+		return FALSE;
+	}
+
+	/* success */
+	g_debug ("requirement %s %s %s on %s passed",
+		 as_require_get_version (req),
+		 as_require_compare_to_string (as_require_get_compare (req)),
+		 version, id);
+	return TRUE;
+}
+#endif
+
 static AsApp *
 fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
 {
@@ -650,6 +827,41 @@ fu_main_store_get_app_by_guids (AsStore *store, FuDevice *device)
 			return app;
 	}
 	return NULL;
+}
+
+static gboolean
+fu_main_check_app_versions (AsApp *app, FuDevice *device, GError **error)
+{
+#if AS_CHECK_VERSION(0,6,7)
+	/* make sure requirements are satisfied */
+	if (!fu_main_check_version_requirement (app,
+						AS_REQUIRE_KIND_ID,
+						"org.freedesktop.fwupd",
+						VERSION,
+						error)) {
+		return FALSE;
+	}
+
+	if (device != NULL) {
+		if (!fu_main_check_version_requirement (app,
+							AS_REQUIRE_KIND_FIRMWARE,
+							NULL,
+							fu_device_get_version (device),
+							error)) {
+			return FALSE;
+		}
+		if (!fu_main_check_version_requirement (app,
+							AS_REQUIRE_KIND_FIRMWARE,
+							"bootloader",
+							fu_device_get_version_bootloader (device),
+							error)) {
+			return FALSE;
+		}
+	}
+#endif
+
+	/* success */
+	return TRUE;
 }
 
 static AsScreenshot *
@@ -687,6 +899,10 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 			     fu_device_get_guid_default (device), guid);
 		return FALSE;
 	}
+
+	/* check we can install it */
+	if (!fu_main_check_app_versions (app, device, error))
+		return FALSE;
 
 	/* parse the DriverVer */
 	rel = as_app_get_release_default (app);
@@ -853,6 +1069,13 @@ fu_main_update_helper (FuMainAuthHelper *helper, GError **error)
 		app = fu_main_store_get_app_by_guids (helper->store, item->device);
 		if (app == NULL)
 			continue;
+
+		/* check we can install it */
+		if (!fu_main_check_app_versions (app, item->device, &error_local)) {
+			if (error_first == NULL)
+				error_first = g_error_copy (error_local);
+			continue;
+		}
 
 		/* try this device, error not fatal */
 		if (!fu_main_update_helper_for_device (helper,
@@ -1175,6 +1398,7 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	GPtrArray *releases;
 	const gchar *tmp;
 	const gchar *version;
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) updates_list = NULL;
 
 	/* get device version */
@@ -1207,6 +1431,12 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	if (as_utils_vercmp (as_release_get_version (rel), version) <= 0) {
 		g_debug ("%s has no firmware updates",
 			 fu_device_get_id (item->device));
+		return FALSE;
+	}
+
+	/* check we can install it */
+	if (!fu_main_check_app_versions (app, item->device, &error)) {
+		g_debug ("can not be installed: %s", error->message);
 		return FALSE;
 	}
 
@@ -1394,6 +1624,10 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 		return NULL;
 	}
 
+	/* check we can install it */
+	if (!fu_main_check_app_versions (app, NULL, error))
+		return NULL;
+
 	/* verify trust */
 	rel = as_app_get_release_default (app);
 	if (!fu_main_get_release_trust_flags (rel, &trust_flags, error))
@@ -1464,6 +1698,10 @@ fu_main_get_details_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 	if (app == NULL)
 		app = AS_APP (g_ptr_array_index (apps, 0));
 
+	/* check we can install it */
+	if (!fu_main_check_app_versions (app, NULL, error))
+		return FALSE;
+
 	/* create a result with all the metadata in */
 	as_app_set_origin (app, as_store_get_origin (store));
 	res = fu_main_get_result_from_app (priv, app, error);
@@ -1499,6 +1737,11 @@ fu_main_get_details_local_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 		g_autoptr(FwupdResult) res = NULL;
 		AsApp *app = g_ptr_array_index (apps, i);
 		GVariant *tmp;
+
+		/* check we can install it */
+		if (!fu_main_check_app_versions (app, NULL, error))
+			return NULL;
+
 		as_app_set_origin (app, as_store_get_origin (store));
 		res = fu_main_get_result_from_app (priv, app, error);
 		if (res == NULL)
@@ -1719,6 +1962,46 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		return;
 	}
 
+	/* return 'b' */
+	if (g_strcmp0 (method_name, "VerifyUpdate") == 0) {
+		FuDeviceItem *item = NULL;
+		FuMainAuthHelper *helper;
+		const gchar *id = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		/* check the id exists */
+		g_variant_get (parameters, "(&s)", &id);
+		g_debug ("Called %s(%s)", method_name, id);
+		item = fu_main_get_item_by_id (priv, id);
+		if (item == NULL) {
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No such device %s", id);
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+
+		/* process the firmware */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->auth_kind = FU_MAIN_AUTH_KIND_VERIFY_UPDATE;
+		helper->invocation = g_object_ref (invocation);
+		helper->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+		helper->priv = priv;
+		g_ptr_array_add (helper->devices, g_object_ref (item->device));
+
+		/* authenticate */
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (helper->priv->authority, subject,
+						      "org.freedesktop.fwupd.verify-update",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_check_authorization_cb,
+						      helper);
+		return;
+	}
+
 	/* return 's' */
 	if (g_strcmp0 (method_name, "Verify") == 0) {
 		AsApp *app;
@@ -1763,6 +2046,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* find version in metadata */
 		version = fu_device_get_version (item->device);
 		release = as_app_get_release (app, version);
+		if (release == NULL)
+			release = as_app_get_release_default (app);
 		if (release == NULL) {
 			g_set_error (&error,
 				     FWUPD_ERROR,
@@ -2054,6 +2339,24 @@ fu_main_plugins_coldplug (FuMainPrivate *priv)
 {
 	g_autoptr(AsProfileTask) ptask = NULL;
 
+	/* don't allow coldplug to be scheduled when in coldplug */
+	priv->coldplug_running = TRUE;
+
+	/* prepare */
+	for (guint i = 0; i < priv->plugins->len; i++) {
+		g_autoptr(GError) error = NULL;
+		FuPlugin *plugin = g_ptr_array_index (priv->plugins, i);
+		if (!fu_plugin_runner_coldplug_prepare (plugin, &error))
+			g_warning ("failed to prepare coldplug: %s", error->message);
+	}
+
+	/* do this in one place */
+	if (priv->coldplug_delay > 0) {
+		g_debug ("sleeping for %ums", priv->coldplug_delay);
+		g_usleep (priv->coldplug_delay * 1000);
+	}
+
+	/* exec */
 	ptask = as_profile_start_literal (priv->profile, "FuMain:coldplug");
 	g_assert (ptask != NULL);
 	for (guint i = 0; i < priv->plugins->len; i++) {
@@ -2069,6 +2372,17 @@ fu_main_plugins_coldplug (FuMainPrivate *priv)
 			g_warning ("disabling plugin because: %s", error->message);
 		}
 	}
+
+	/* cleanup */
+	for (guint i = 0; i < priv->plugins->len; i++) {
+		g_autoptr(GError) error = NULL;
+		FuPlugin *plugin = g_ptr_array_index (priv->plugins, i);
+		if (!fu_plugin_runner_coldplug_cleanup (plugin, &error))
+			g_warning ("failed to cleanup coldplug: %s", error->message);
+	}
+
+	/* we can recoldplug from this point on */
+	priv->coldplug_running = FALSE;
 }
 
 static void
@@ -2094,11 +2408,6 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 							     NULL,  /* user_data_free_func */
 							     NULL); /* GError** */
 	g_assert (registration_id > 0);
-
-	/* add devices */
-	fu_main_plugins_setup (priv);
-	g_usb_context_enumerate (priv->usb_ctx);
-	fu_main_plugins_coldplug (priv);
 
 	/* connect to D-Bus directly */
 	priv->proxy_uid =
@@ -2272,6 +2581,37 @@ fu_main_plugin_percentage_changed_cb (FuPlugin *plugin,
 }
 
 static gboolean
+fu_main_recoldplug_delay_cb (gpointer user_data)
+{
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+	g_debug ("performing a recoldplug");
+	fu_main_plugins_coldplug (priv);
+	priv->coldplug_id = 0;
+	return FALSE;
+}
+
+static void
+fu_main_plugin_recoldplug_cb (FuPlugin *plugin, FuMainPrivate *priv)
+{
+	if (priv->coldplug_running) {
+		g_warning ("coldplug already running, cannot recoldplug");
+		return;
+	}
+	g_debug ("scheduling a recoldplug");
+	if (priv->coldplug_id != 0)
+		g_source_remove (priv->coldplug_id);
+	priv->coldplug_id = g_timeout_add (1500, fu_main_recoldplug_delay_cb, priv);
+}
+
+static void
+fu_main_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuMainPrivate *priv)
+{
+	priv->coldplug_delay = MAX (priv->coldplug_delay, duration);
+	g_debug ("got coldplug delay of %ums, global maximum is now %ums",
+		 duration, priv->coldplug_delay);
+}
+
+static gboolean
 fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 {
 	const gchar *fn;
@@ -2314,6 +2654,12 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 		g_signal_connect (plugin, "percentage-changed",
 				  G_CALLBACK (fu_main_plugin_percentage_changed_cb),
 				  priv);
+		g_signal_connect (plugin, "recoldplug",
+				  G_CALLBACK (fu_main_plugin_recoldplug_cb),
+				  priv);
+		g_signal_connect (plugin, "set-coldplug-delay",
+				  G_CALLBACK (fu_main_plugin_set_coldplug_delay_cb),
+				  priv);
 
 		/* add */
 		g_ptr_array_add (priv->plugins, g_object_ref (plugin));
@@ -2325,6 +2671,49 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 	return TRUE;
 }
 
+/* returns FALSE if any plugins have pending devices to be added */
+static gboolean
+fu_main_check_plugins_pending (FuMainPrivate *priv, GError **error)
+{
+	for (guint i = 0; i < priv->plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (priv->plugins, i);
+		if (fu_plugin_has_device_delay (plugin)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "%s pending",
+				     fu_plugin_get_name (plugin));
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_main_perhaps_own_name (gpointer user_data)
+{
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+	g_autoptr(GError) error = NULL;
+
+	/* are any plugins pending */
+	if (!fu_main_check_plugins_pending (priv, &error)) {
+		g_debug ("trying again: %s", error->message);
+		return G_SOURCE_CONTINUE;
+	}
+
+	/* own the object */
+	g_debug ("registering D-Bus service");
+	priv->owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
+					 FWUPD_DBUS_SERVICE,
+					 G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
+					 G_BUS_NAME_OWNER_FLAGS_REPLACE,
+					 fu_main_on_bus_acquired_cb,
+					 fu_main_on_name_acquired_cb,
+					 fu_main_on_name_lost_cb,
+					 priv, NULL);
+	return G_SOURCE_REMOVE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -2333,7 +2722,6 @@ main (int argc, char *argv[])
 	gboolean ret;
 	gboolean timed_exit = FALSE;
 	GOptionContext *context;
-	guint owner_id = 0;
 	gint retval = 1;
 	const GOptionEntry options[] = {
 		{ "timed-exit", '\0', 0, G_OPTION_ARG_NONE, &timed_exit,
@@ -2445,15 +2833,13 @@ main (int argc, char *argv[])
 		goto out;
 	}
 
-	/* own the object */
-	owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
-				   FWUPD_DBUS_SERVICE,
-				   G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
-				    G_BUS_NAME_OWNER_FLAGS_REPLACE,
-				   fu_main_on_bus_acquired_cb,
-				   fu_main_on_name_acquired_cb,
-				   fu_main_on_name_lost_cb,
-				   priv, NULL);
+	/* add devices */
+	fu_main_plugins_setup (priv);
+	g_usb_context_enumerate (priv->usb_ctx);
+	fu_main_plugins_coldplug (priv);
+
+	/* keep polling until all the plugins are ready */
+	g_timeout_add (200, fu_main_perhaps_own_name, priv);
 
 	/* Only timeout and close the mainloop if we have specified it
 	 * on the command line */
@@ -2470,11 +2856,11 @@ main (int argc, char *argv[])
 	retval = 0;
 out:
 	g_option_context_free (context);
-	if (owner_id > 0)
-		g_bus_unown_name (owner_id);
 	if (priv != NULL) {
 		if (priv->loop != NULL)
 			g_main_loop_unref (priv->loop);
+		if (priv->owner_id > 0)
+			g_bus_unown_name (priv->owner_id);
 		if (priv->proxy_uid != NULL)
 			g_object_unref (priv->proxy_uid);
 		if (priv->usb_ctx != NULL)
@@ -2494,6 +2880,8 @@ out:
 		if (priv->store_changed_id != 0)
 			g_source_remove (priv->store_changed_id);
 		g_object_unref (priv->pending);
+		if (priv->coldplug_id != 0)
+			g_source_remove (priv->coldplug_id);
 		if (priv->plugins != NULL)
 			g_ptr_array_unref (priv->plugins);
 		if (priv->plugins != NULL)

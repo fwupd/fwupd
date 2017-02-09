@@ -38,6 +38,10 @@ gboolean	 fu_plugin_runner_startup		(FuPlugin	*plugin,
 							 GError		**error);
 gboolean	 fu_plugin_runner_coldplug		(FuPlugin	*plugin,
 							 GError		**error);
+gboolean	 fu_plugin_runner_coldplug_prepare	(FuPlugin	*plugin,
+							 GError		**error);
+gboolean	 fu_plugin_runner_coldplug_cleanup	(FuPlugin	*plugin,
+							 GError		**error);
 gboolean	 fu_plugin_runner_update_prepare	(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);

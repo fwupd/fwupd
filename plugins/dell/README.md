@@ -21,7 +21,7 @@ If you don't want or need this functionality you can use the
 
 # Devices powered by the Dell Plugin
 The Dell plugin creates device nodes for PC's that have switchable TPMs as
-well as the Type-C docks (WD15/TB15).
+well as the Type-C docks (WD15/TB16).
 
 These device nodes can be flashed using UEFI capsule (and fwupdate) but don't
 use the ESRT table to communicate device status or version information.
@@ -121,7 +121,7 @@ Keep in mind that **TPM 1.2** and **TPM 2.0** will require different userspace
 tools.
 
 ## Dock Devices
-The *TB15* and *WD15* have a variety of updatable components.  Each component
+The *TB16* and *WD15* have a variety of updatable components.  Each component
 will create a virtual device in ```# fwupdmgr get-devices```
 
 For example the WD15 will display these components:
@@ -132,13 +132,6 @@ Dell WD15 Port Controller 1
   Plugin:               dell
   Flags:                allow-offline|require-ac
   Version:              0.1.1.8
-  Created:              2016-07-19
-
-Dell WD15 MST Hub
-  Guid:                 7bee2a28-b909-540d-9fa9-6a4c9611d992
-  DeviceID:             DELL-7bee2a28-b909-540d-9fa9-6a4c9611d992lu
-  Plugin:               dell
-  Flags:                require-ac
   Created:              2016-07-19
 
 Dell WD15
@@ -156,5 +149,5 @@ Components that can be updated via UEFI capsule will have the
 These updates can be performed the standard method of using:
 ```# fwupdmgr update```
 
-Some components are not currently updatable by fwupd such as multi stream
-transport hub and thunderbolt NVM.
+Some components are updatable via other plugins in fwupd such as multi stream
+transport hub (MST) and thunderbolt NVM.

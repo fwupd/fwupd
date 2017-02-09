@@ -34,25 +34,8 @@
 #include <fcntl.h>
 
 #include "fu-plugin-dell.h"
-
 #include "fu-quirks.h"
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
-
-struct FuPluginData {
-	GHashTable		*devices;	/* DeviceKey:FuPluginDockItem */
-	GUsbContext		*usb_ctx;
-	gboolean		fake_smbios;
-	guint32			fake_output[4];
-	guint16			fake_vid;
-	guint16			fake_pid;
-	guint8			*fake_buffer;
-};
-typedef struct dell_smi_obj fu_dell_smi_obj;
-
-/* SMI return values used */
-#define SMI_SUCCESS			0
-#define SMI_INVALID_BUFFER		-6
 
 /* These are used to indicate the status of a previous DELL flash */
 #define DELL_SUCCESS			0x0000
@@ -71,37 +54,8 @@ typedef struct dell_smi_obj fu_dell_smi_obj;
 #define DELL_IMAGE_MISSING		0x000D
 #define DELL_DID_NOTHING		0xFFFF
 
-
-/* These are DACI class/select needed for
- * flash capability queries
- */
-#define DACI_FLASH_INTERFACE_CLASS	7
-#define DACI_FLASH_INTERFACE_SELECT	3
-#define DACI_FLASH_ARG_TPM		2
-
-/* DACI class/select for dock capabilities */
-#define DACI_DOCK_CLASS			17
-#define DACI_DOCK_SELECT		22
-#define DACI_DOCK_ARG_COUNT		0
-#define DACI_DOCK_ARG_INFO		1
-#define DACI_DOCK_ARG_MODE		2
-#define DACI_DOCK_ARG_MODE_USER		0
-#define DACI_DOCK_ARG_MODE_FLASH	1
-
-/* These are for dock query capabilities */
-struct dock_count_in {
-	guint32 argument;
-	guint32 reserved1;
-	guint32 reserved2;
-	guint32 reserved3;
-};
-
-struct dock_count_out {
-	guint32 ret;
-	guint32 count;
-	guint32 location;
-	guint32 reserved;
-};
+/* Delay for settling */
+#define DELL_FLASH_MODE_DELAY		2
 
 typedef struct _DOCK_DESCRIPTION
 {
@@ -110,11 +64,20 @@ typedef struct _DOCK_DESCRIPTION
 	const gchar *		desc;
 } DOCK_DESCRIPTION;
 
+static void
+_dell_smi_obj_free (FuDellSmiObj *obj)
+{
+	dell_smi_obj_free (obj->smi);
+	g_free (obj);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
+
 /* These are for matching the components */
 #define WD15_EC_STR		"2 0 2 2 0"
-#define TB15_EC_STR		"2 0 2 1 0"
-#define TB15_PC2_STR		"2 1 0 1 1"
-#define TB15_PC1_STR		"2 1 0 1 0"
+#define TB16_EC_STR		"2 0 2 1 0"
+#define TB16_PC2_STR		"2 1 0 1 1"
+#define TB16_PC1_STR		"2 1 0 1 0"
 #define WD15_PC1_STR		"2 1 0 2 0"
 #define LEGACY_CBL_STR		"2 2 2 1 0"
 #define UNIV_CBL_STR		"2 2 2 2 0"
@@ -123,16 +86,13 @@ typedef struct _DOCK_DESCRIPTION
 /* supported dock related GUIDs */
 #define DOCK_FLASH_GUID		EFI_GUID (0xE7CA1F36, 0xBF73, 0x4574, 0xAFE6, 0xA4, 0xCC, 0xAC, 0xAB, 0xF4, 0x79)
 #define WD15_EC_GUID		EFI_GUID (0xE8445370, 0x0211, 0x449D, 0x9FAA, 0x10, 0x79, 0x06, 0xAB, 0x18, 0x9F)
-#define TB15_EC_GUID		EFI_GUID (0x33CC8870, 0xB1FC, 0x4EC7, 0x948A, 0xC0, 0x74, 0x96, 0x87, 0x4F, 0xAF)
-#define TB15_PC2_GUID		EFI_GUID (0x1B52C630, 0x86F6, 0x4AEE, 0x9F0C, 0x47, 0x4D, 0xC6, 0xBE, 0x49, 0xB6)
-#define TB15_PC1_GUID		EFI_GUID (0x8FE183DA, 0xC94E, 0x4804, 0xB319, 0x0F, 0x1B, 0xA5, 0x45, 0x7A, 0x69)
+#define TB16_EC_GUID		EFI_GUID (0x33CC8870, 0xB1FC, 0x4EC7, 0x948A, 0xC0, 0x74, 0x96, 0x87, 0x4F, 0xAF)
+#define TB16_PC2_GUID		EFI_GUID (0x1B52C630, 0x86F6, 0x4AEE, 0x9F0C, 0x47, 0x4D, 0xC6, 0xBE, 0x49, 0xB6)
+#define TB16_PC1_GUID		EFI_GUID (0x8FE183DA, 0xC94E, 0x4804, 0xB319, 0x0F, 0x1B, 0xA5, 0x45, 0x7A, 0x69)
 #define WD15_PC1_GUID		EFI_GUID (0x8BA2B709, 0x6F97, 0x47FC, 0xB7E7, 0x6A, 0x87, 0xB5, 0x78, 0xFE, 0x25)
 #define LEGACY_CBL_GUID		EFI_GUID (0xFECE1537, 0xD683, 0x4EA8, 0xB968, 0x15, 0x45, 0x30, 0xBB, 0x6F, 0x73)
 #define UNIV_CBL_GUID		EFI_GUID (0xE2BF3AAD, 0x61A3, 0x44BF, 0x91EF, 0x34, 0x9B, 0x39, 0x51, 0x5D, 0x29)
 #define TBT_CBL_GUID		EFI_GUID (0x6DC832FC, 0x5BB0, 0x4E63, 0xA2FF, 0x02, 0xAA, 0xBA, 0x5B, 0xC1, 0xDC)
-#define DOCK_MST_GUID		EFI_GUID (0x7BEE2A28, 0xB909, 0x540D, 0x9FA9, 0x6A, 0x4C, 0x96, 0x11, 0xD9, 0x92)
-#define CBL_NVM_GUID		EFI_GUID (0x269dDC59, 0xE1ED, 0x519D, 0x8FF2, 0x6E, 0x49, 0xFF, 0x1D, 0xD8, 0xD7)
-#define TB15_NVM_GUID		EFI_GUID (0x05824E11, 0x0925, 0x572F, 0xAF03, 0x31, 0x0E, 0x89, 0x81, 0x0D, 0x80)
 
 #define EC_DESC			"EC"
 #define PC1_DESC		"Port Controller 1"
@@ -140,9 +100,6 @@ typedef struct _DOCK_DESCRIPTION
 #define LEGACY_CBL_DESC		"Passive Cable"
 #define UNIV_CBL_DESC		"Universal Cable"
 #define TBT_CBL_DESC		"Thunderbolt Cable"
-#define MST_DESC		"MST Hub"
-#define TB15_NVM_DESC		"Thunderbolt NVM"
-#define CBL_NVM_DESC		"Cable Thunderbolt NVM"
 
 /**
  * Devices that should explicitly disable modeswitching
@@ -155,11 +112,6 @@ typedef struct {
 	FuPlugin		*plugin;
 } FuPluginDockItem;
 
-static void
-_dell_smi_obj_free (fu_dell_smi_obj *smi)
-{
-	dell_smi_obj_free (smi);
-}
 
 static void
 _fwup_resource_iter_free (fwup_resource_iter *iter)
@@ -167,26 +119,25 @@ _fwup_resource_iter_free (fwup_resource_iter *iter)
 	fwup_resource_iter_destroy (&iter);
 }
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(fu_dell_smi_obj, _dell_smi_obj_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (fwup_resource_iter, _fwup_resource_iter_free);
 
 static gboolean
-fu_plugin_dell_match_dock_component(const gchar *query_str,
-				 efi_guid_t *guid_out,
-				 const gchar **name_out)
+fu_plugin_dell_match_dock_component (const gchar *query_str,
+				     efi_guid_t *guid_out,
+				     const gchar **name_out)
 {
 	const DOCK_DESCRIPTION list[] = {
 		{WD15_EC_GUID, WD15_EC_STR, EC_DESC},
-		{TB15_EC_GUID, TB15_EC_STR, EC_DESC},
+		{TB16_EC_GUID, TB16_EC_STR, EC_DESC},
 		{WD15_PC1_GUID, WD15_PC1_STR, PC1_DESC},
-		{TB15_PC1_GUID, TB15_PC1_STR, PC1_DESC},
-		{TB15_PC2_GUID, TB15_PC2_STR, PC2_DESC},
+		{TB16_PC1_GUID, TB16_PC1_STR, PC1_DESC},
+		{TB16_PC2_GUID, TB16_PC2_STR, PC2_DESC},
 		{TBT_CBL_GUID, TBT_CBL_STR, TBT_CBL_DESC},
 		{UNIV_CBL_GUID, UNIV_CBL_STR, UNIV_CBL_DESC},
 		{LEGACY_CBL_GUID, LEGACY_CBL_STR, LEGACY_CBL_DESC},
 	};
 
-	for (guint i = 0; i < G_N_ELEMENTS(list); i++) {
+	for (guint i = 0; i < G_N_ELEMENTS (list); i++) {
 		if (g_strcmp0 (query_str,
 			       list[i].query) == 0) {
 			memcpy (guid_out, &list[i].guid, sizeof (efi_guid_t));
@@ -199,98 +150,18 @@ fu_plugin_dell_match_dock_component(const gchar *query_str,
 
 void
 fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
-				   guint32 *output, guint16 vid, guint16 pid,
-				   guint8 *buf)
+				 guint32 *output, guint16 vid, guint16 pid,
+				 guint8 *buf)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
-	if (!data->fake_smbios)
+	if (!data->smi_obj->fake_smbios)
 		return;
 	for (guint i = 0; i < 4; i++)
-		data->fake_output[i] = output[i];
+		data->smi_obj->output[i] = output[i];
 	data->fake_vid = vid;
 	data->fake_pid = pid;
-	data->fake_buffer = buf;
-}
-
-static gboolean
-fu_plugin_dell_execute_smi (FuPlugin *plugin, fu_dell_smi_obj *smi)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	gint ret;
-
-	if (data->fake_smbios)
-		return TRUE;
-
-	ret = dell_smi_obj_execute (smi);
-	if (ret != 0) {
-		g_debug ("Dell: SMI execution failed: %i", ret);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_plugin_dell_execute_simple_smi (FuPlugin *plugin,
-				     guint16 class, guint16 select,
-				     guint32  *args, guint32 *out)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-
-	if (data->fake_smbios) {
-		for (guint i = 0; i < 4; i++)
-			out[i] = data->fake_output[i];
-		return TRUE;
-	}
-	if (dell_simple_ci_smi (class, select, args, out)) {
-		g_debug ("Dell: failed to run query %u/%u", class, select);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static guint32
-fu_plugin_dell_get_res (FuPlugin *plugin,
-			  fu_dell_smi_obj *smi, guint8 arg)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-
-	if (data->fake_smbios)
-		return data->fake_output[arg];
-
-	return dell_smi_obj_get_res (smi, arg);
-}
-
-static gboolean
-fu_plugin_dell_detect_dock (FuPlugin *plugin, guint32 *location)
-{
-	g_autofree struct dock_count_in *count_args = NULL;
-	g_autofree struct dock_count_out *count_out = NULL;
-
-	/* look up dock count */
-	count_args = g_malloc0 (sizeof(struct dock_count_in));
-	count_out  = g_malloc0 (sizeof(struct dock_count_out));
-	count_args->argument = DACI_DOCK_ARG_COUNT;
-	if (!fu_plugin_dell_execute_simple_smi (plugin,
-						  DACI_DOCK_CLASS,
-						  DACI_DOCK_SELECT,
-						  (guint32 *) count_args,
-						  (guint32 *) count_out))
-		return FALSE;
-	if (count_out->ret != 0) {
-		g_debug ("Dell: Failed to query system for dock count: "
-			 "(%" G_GUINT32_FORMAT ")", count_out->ret);
-		return FALSE;
-	}
-	if (count_out->count < 1) {
-		g_debug ("Dell: no dock plugged in");
-		return FALSE;
-	}
-	*location = count_out->location;
-	g_debug ("Dell: Dock count %u, location %u.",
-		 count_out->count, *location);
-	return TRUE;
-
+	data->smi_obj->fake_buffer = buf;
 }
 
 static void
@@ -321,12 +192,12 @@ fu_plugin_dell_get_version_format (void)
 
 static gchar *
 fu_plugin_get_dock_key (FuPlugin *plugin,
-			       GUsbDevice *device, const gchar *guid)
+			GUsbDevice *device, const gchar *guid)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar* platform_id;
 
-	if (data->fake_smbios)
+	if (data->smi_obj->fake_smbios)
 		platform_id = "fake";
 	else
 		platform_id = g_usb_device_get_platform_id (device);
@@ -334,10 +205,34 @@ fu_plugin_get_dock_key (FuPlugin *plugin,
 }
 
 static gboolean
+fu_plugin_dell_capsule_supported (FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	gint uefi_supported;
+
+	if (data->smi_obj->fake_smbios)
+		return TRUE;
+
+	/* If ESRT is not turned on, fwupd will have already created an
+	 * unlock device (if compiled with support).
+	 *
+	 * Once unlocked, that will enable flashing capsules here too.
+	 *
+	 * that means we should only look for supported = 1
+	 */
+	uefi_supported = fwup_supported ();
+	if (uefi_supported != 1) {
+		g_debug ("UEFI capsule firmware updating not supported (%x)",
+			 (guint) uefi_supported);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
-			   guint8 type, const efi_guid_t *guid_raw,
-			   const gchar *component_desc, const gchar *version,
-			   gboolean updates_online)
+		     guint8 type, const efi_guid_t *guid_raw,
+		     const gchar *component_desc, const gchar *version)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuPluginDockItem *item;
@@ -347,22 +242,15 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	g_autofree gchar *dock_key = NULL;
 	g_autofree gchar *dock_name = NULL;
 
-	switch (type) {
-	case DOCK_TYPE_TB15:
-		dock_type = "TB15/TB16";
-		break;
-	case DOCK_TYPE_WD15:
-		dock_type = "WD15";
-		break;
-	default:
-		g_debug ("Dell: Dock type %d unknown",
-			 type);
+	dock_type = fu_dell_get_dock_type (type);
+	if (dock_type == NULL) {
+		g_debug ("Unknown dock type %d", type);
 		return FALSE;
 	}
 
 	guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
 	if (efi_guid_to_str (guid_raw, &guid_str) < 0) {
-		g_debug ("Dell: Failed to convert GUID.");
+		g_debug ("Failed to convert GUID.");
 		return FALSE;
 	}
 
@@ -370,13 +258,13 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 						  guid_str);
 	item = g_hash_table_lookup (data->devices, dock_key);
 	if (item != NULL) {
-		g_debug ("Dell: Item %s is already registered.", dock_key);
+		g_debug ("Item %s is already registered.", dock_key);
 		return FALSE;
 	}
 
 	item = g_new0 (FuPluginDockItem, 1);
 	item->plugin = g_object_ref (plugin);
-	item->device = fu_device_new();
+	item->device = fu_device_new ();
 	dock_id = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, guid_str);
 	dock_name = g_strdup_printf ("Dell %s %s", dock_type,
 				     component_desc);
@@ -386,10 +274,7 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
 		fu_device_set_version (item->device, version);
-		if (updates_online)
-			fu_device_add_flag (item->device,
-					    FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
-		else
+		if (fu_plugin_dell_capsule_supported (plugin))
 			fu_device_add_flag (item->device,
 					    FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 	}
@@ -399,10 +284,11 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	return TRUE;
 }
 
+
 void
 fu_plugin_dell_device_added_cb (GUsbContext *ctx,
-				  GUsbDevice *device,
-				  FuPlugin *plugin)
+				GUsbDevice *device,
+				FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	AsVersionParseFlag parse_flags;
@@ -410,21 +296,16 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	guint16 vid;
 	const gchar *query_str;
 	const gchar *component_name = NULL;
-	INFO_UNION buf;
+	DOCK_UNION buf;
 	DOCK_INFO *dock_info;
-	guint buf_size;
-	g_autoptr(fu_dell_smi_obj) smi = NULL;
-	gint result;
-	guint32 location;
 	efi_guid_t guid_raw;
 	efi_guid_t tmpguid;
 	gboolean old_ec = FALSE;
-
 	g_autofree gchar *fw_str = NULL;
 
 	/* don't look up immediately if a dock is connected as that would
 	   mean a SMI on every USB device that showed up on the system */
-	if (!data->fake_smbios) {
+	if (!data->smi_obj->fake_smbios) {
 		vid = g_usb_device_get_vid (device);
 		pid = g_usb_device_get_pid (device);
 	} else {
@@ -435,74 +316,43 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	/* we're going to match on the Realtek NIC in the dock */
 	if (vid != DOCK_NIC_VID || pid != DOCK_NIC_PID)
 		return;
-	if (!fu_plugin_dell_detect_dock (plugin, &location))
-		return;
 
-	/* look up more information on dock */
-	if (!data->fake_smbios) {
-		smi = dell_smi_factory (DELL_SMI_DEFAULTS);
-		if (!smi) {
-			g_debug ("Dell: failure initializing SMI");
-			return;
-		}
-		dell_smi_obj_set_class (smi, DACI_DOCK_CLASS);
-		dell_smi_obj_set_select (smi, DACI_DOCK_SELECT);
-		dell_smi_obj_set_arg (smi, cbARG1, DACI_DOCK_ARG_INFO);
-		dell_smi_obj_set_arg (smi, cbARG2, location);
-		buf_size = sizeof(DOCK_INFO_RECORD);
-		buf.buf = dell_smi_obj_make_buffer_frombios_auto (smi, cbARG3, buf_size);
-		if (!buf.buf) {
-			g_debug ("Dell: failed to initialize buffer");
-			return;
-		}
-	} else {
-		buf.buf = data->fake_buffer;
-	}
-	if (!fu_plugin_dell_execute_smi (plugin, smi))
-		return;
-	result = fu_plugin_dell_get_res (plugin, smi, cbARG1);
-	if (result != SMI_SUCCESS) {
-		if (result == SMI_INVALID_BUFFER) {
-			g_debug ("Dell: Invalid buffer size, sent %u, needed %" G_GUINT32_FORMAT,
-				 buf_size,
-				 fu_plugin_dell_get_res (plugin, smi, cbARG2));
-		} else {
-			g_debug ("Dell: SMI execution returned error: %d",
-				 result);
-		}
+	buf.buf = NULL;
+	if (!fu_dell_query_dock (data->smi_obj, &buf)) {
+		g_debug ("No dock detected.");
 		return;
 	}
 
 	if (buf.record->dock_info_header.dir_version != 1) {
-		g_debug ("Dell: Dock info header version unknown: %d",
+		g_debug ("Dock info header version unknown: %d",
 			 buf.record->dock_info_header.dir_version);
 		return;
 	}
 
 	dock_info = &buf.record->dock_info;
-	g_debug ("Dell: dock description: %s", dock_info->dock_description);
+	g_debug ("Dock description: %s", dock_info->dock_description);
 	/* Note: fw package version is deprecated, look at components instead */
-	g_debug ("Dell: dock flash pkg ver: 0x%x", dock_info->flash_pkg_version);
+	g_debug ("Dock flash pkg ver: 0x%x", dock_info->flash_pkg_version);
 	if (dock_info->flash_pkg_version == 0x00ffffff)
-		g_debug ("Dell: WARNING: dock flash package version invalid");
-	g_debug ("Dell: dock cable type: %" G_GUINT32_FORMAT, dock_info->cable_type);
-	g_debug ("Dell: dock location: %d", dock_info->location);
-	g_debug ("Dell: dock component count: %d", dock_info->component_count);
+		g_debug ("WARNING: dock flash package version invalid");
+	g_debug ("Dock cable type: %" G_GUINT32_FORMAT, dock_info->cable_type);
+	g_debug ("Dock location: %d", dock_info->location);
+	g_debug ("Dock component count: %d", dock_info->component_count);
 	parse_flags = fu_plugin_dell_get_version_format ();
 
 	for (guint i = 0; i < dock_info->component_count; i++) {
 		if (i >= MAX_COMPONENTS) {
-			g_debug ("Dell: Too many components.  Invalid: #%u", i);
+			g_debug ("Too many components.  Invalid: #%u", i);
 			break;
 		}
-		g_debug ("Dell: dock component %u: %s (version 0x%x)", i,
+		g_debug ("Dock component %u: %s (version 0x%x)", i,
 			 dock_info->components[i].description,
 			 dock_info->components[i].fw_version);
 		query_str = g_strrstr (dock_info->components[i].description,
 				       "Query ") + 6;
 		if (!fu_plugin_dell_match_dock_component (query_str, &guid_raw,
 							    &component_name)) {
-			g_debug ("Dell: unable to match dock component %s",
+			g_debug ("Unable to match dock component %s",
 				query_str);
 			return;
 		}
@@ -527,59 +377,10 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 						 buf.record->dock_info_header.dock_type,
 						 &guid_raw,
 						 component_name,
-						 fw_str,
-						 FALSE)) {
-			g_debug ("Dell: failed to create %s", component_name);
+						 fw_str)) {
+			g_debug ("Failed to create %s", component_name);
 			return;
 		}
-	}
-
-	/* Create devices that we don't get in the dock manifest
-	 * These are currently not updatable.
-	 * Querying the version is also not available at this time
-	 */
-	/* TB15 NVM */
-	if (buf.record->dock_info_header.dock_type == DOCK_TYPE_TB15) {
-		tmpguid = TB15_NVM_GUID;
-		if (!fu_plugin_dock_node (plugin,
-						 device,
-						 buf.record->dock_info_header.dock_type,
-						 &tmpguid,
-						 TB15_NVM_DESC,
-						 NULL,
-						 TRUE)) {
-			g_debug ("Dell: failed to create %s", TB15_NVM_DESC);
-			return;
-		}
-	}
-
-	/* Cable NVM */
-	if (dock_info->cable_type == CABLE_TYPE_TBT ||
-	    dock_info->cable_type == CABLE_TYPE_UNIV) {
-		tmpguid = CBL_NVM_GUID;
-		if (!fu_plugin_dock_node (plugin,
-						 device,
-						 buf.record->dock_info_header.dock_type,
-						 &tmpguid,
-						 CBL_NVM_DESC,
-						 NULL,
-						 TRUE)) {
-			g_debug ("Dell: failed to create %s", CBL_NVM_DESC);
-			return;
-		}
-	}
-
-	/* MST hub */
-	tmpguid = DOCK_MST_GUID;
-	if (!fu_plugin_dock_node (plugin,
-					 device,
-					 buf.record->dock_info_header.dock_type,
-					 &tmpguid,
-					 MST_DESC,
-					 NULL,
-					 TRUE)) {
-		g_debug ("Dell: failed to create %s", MST_DESC);
-		return;
 	}
 
 	/* if an old EC or invalid EC version found, create updatable parent */
@@ -592,9 +393,8 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 						 buf.record->dock_info_header.dock_type,
 						 &tmpguid,
 						 "",
-						 fw_str,
-						 FALSE)) {
-			g_debug ("Dell: failed to create top dock node");
+						 fw_str)) {
+			g_debug ("Failed to create top dock node");
 			return;
 		}
 	}
@@ -602,25 +402,23 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 
 void
 fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
-				    GUsbDevice *device,
-				    FuPlugin *plugin)
+				  GUsbDevice *device,
+				  FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuPluginDockItem *item;
 	g_autofree gchar *dock_key = NULL;
-	const efi_guid_t guids[] = { WD15_EC_GUID, TB15_EC_GUID, TB15_PC2_GUID,
-				     TB15_PC1_GUID, WD15_PC1_GUID,
+	const efi_guid_t guids[] = { WD15_EC_GUID, TB16_EC_GUID, TB16_PC2_GUID,
+				     TB16_PC1_GUID, WD15_PC1_GUID,
 				     LEGACY_CBL_GUID, UNIV_CBL_GUID,
-				     DOCK_MST_GUID, CBL_NVM_GUID,
-				     TB15_NVM_GUID, TBT_CBL_GUID,
-				     DOCK_FLASH_GUID};
+				     TBT_CBL_GUID, DOCK_FLASH_GUID};
 	const efi_guid_t *guid_raw;
 	guint16 pid;
 	guint16 vid;
 
 	g_autofree gchar *guid_str = NULL;
 
-	if (!data->fake_smbios) {
+	if (!data->smi_obj->fake_smbios) {
 		vid = g_usb_device_get_vid (device);
 		pid = g_usb_device_get_pid (device);
 	} else {
@@ -633,7 +431,7 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 		return;
 
 	/* remove any components already in database? */
-	for (guint i = 0; i < G_N_ELEMENTS(guids); i++) {
+	for (guint i = 0; i < G_N_ELEMENTS (guids); i++) {
 		guid_raw = &guids[i];
 		guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
 		efi_guid_to_str (guid_raw, &guid_str);
@@ -657,7 +455,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 
 	/* look at offset 0x06 for identifier meaning completion code */
 	de_table = smbios_get_next_struct_by_type (0, 0xDE);
-	smbios_struct_get_data (de_table, &(completion_code), 0x06, sizeof(guint16));
+	smbios_struct_get_data (de_table, &completion_code, 0x06, sizeof (guint16));
 
 	if (completion_code == DELL_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
@@ -734,37 +532,34 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	g_autofree gchar *tpm_id_alt = NULL;
 	g_autofree gchar *tpm_id = NULL;
 	g_autofree gchar *version_str = NULL;
-	g_autofree guint32 *args = NULL;
-	g_autofree struct tpm_status *out = NULL;
-	g_autoptr(FuDevice) dev_alt = NULL;
-	g_autoptr(FuDevice) dev = NULL;
+	struct tpm_status *out = NULL;
+	g_autoptr (FuDevice) dev_alt = NULL;
+	g_autoptr (FuDevice) dev = NULL;
 
-	args = g_malloc0 (sizeof(guint32) *4);
-	out = g_malloc0 (sizeof(struct tpm_status));
+	fu_dell_clear_smi (data->smi_obj);
+	out = (struct tpm_status *) data->smi_obj->output;
 
 	/* execute TPM Status Query */
-	args[0] = DACI_FLASH_ARG_TPM;
-	if (!fu_plugin_dell_execute_simple_smi (plugin,
-						  DACI_FLASH_INTERFACE_CLASS,
-						  DACI_FLASH_INTERFACE_SELECT,
-						  args,
-						  (guint32 *) out))
+	data->smi_obj->input[0] = DACI_FLASH_ARG_TPM;
+	if (!fu_dell_execute_simple_smi (data->smi_obj,
+					 DACI_FLASH_INTERFACE_CLASS,
+					 DACI_FLASH_INTERFACE_SELECT))
 		return FALSE;
 
 	if (out->ret != 0) {
-		g_debug ("Dell: Failed to query system for TPM information: "
+		g_debug ("Failed to query system for TPM information: "
 			 "(%" G_GUINT32_FORMAT ")", out->ret);
 		return FALSE;
 	}
 	/* HW version is output in second /input/ arg
 	 * it may be relevant as next gen TPM is enabled
 	 */
-	g_debug ("Dell: TPM HW version: 0x%x", args[1]);
-	g_debug ("Dell: TPM Status: 0x%x", out->status);
+	g_debug ("TPM HW version: 0x%x", data->smi_obj->input[1]);
+	g_debug ("TPM Status: 0x%x", out->status);
 
 	/* test TPM enabled (Bit 0) */
 	if (!(out->status & TPM_EN_MASK)) {
-		g_debug ("Dell: TPM not enabled (%x)", out->status);
+		g_debug ("TPM not enabled (%x)", out->status);
 		return FALSE;
 	}
 
@@ -776,14 +571,14 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		tpm_mode = "2.0";
 		tpm_mode_alt = "1.2";
 	} else {
-		g_debug ("Dell: Unable to determine TPM mode");
+		g_debug ("Unable to determine TPM mode");
 		return FALSE;
 	}
 
-	if (!data->fake_smbios)
+	if (!data->smi_obj->fake_smbios)
 		system_id = (guint16) sysinfo_get_dell_system_id ();
 
-	for (guint i = 0; i < G_N_ELEMENTS(tpm_switch_blacklist); i++) {
+	for (guint i = 0; i < G_N_ELEMENTS (tpm_switch_blacklist); i++) {
 		if (tpm_switch_blacklist[i] == system_id) {
 			can_switch_modes = FALSE;
 		}
@@ -797,13 +592,13 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	tpm_guid_alt = as_utils_guid_from_string (tpm_guid_raw_alt);
 	tpm_id_alt = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, tpm_guid_alt);
 
-	g_debug ("Dell: Creating primary TPM GUID %s and secondary TPM GUID %s",
+	g_debug ("Creating primary TPM GUID %s and secondary TPM GUID %s",
 		 tpm_guid_raw, tpm_guid_raw_alt);
 	version_str = as_utils_version_from_uint32 (out->fw_version,
 						    AS_VERSION_PARSE_FLAG_NONE);
 
 	/* make it clear that the TPM is a discrete device of the product */
-	if (!data->fake_smbios) {
+	if (!data->smi_obj->fake_smbios) {
 		if (!g_file_get_contents ("/sys/class/dmi/id/product_name",
 					  &product_name,NULL, NULL)) {
 			g_set_error_literal (error,
@@ -826,14 +621,15 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (out->flashes_left > 0) {
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		if (fu_plugin_dell_capsule_supported (plugin))
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	}
 	fu_plugin_device_add (plugin, dev);
 
 	/* build alternate device node */
 	if (can_switch_modes) {
-		dev_alt = fu_device_new();
+		dev_alt = fu_device_new ();
 		fu_device_set_id (dev_alt, tpm_id_alt);
 		fu_device_add_guid (dev_alt, tpm_guid_alt);
 		fu_device_set_name (dev_alt, pretty_tpm_name_alt);
@@ -851,13 +647,13 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		    out->flashes_left > 0) {
 			fu_device_set_flashes_left (dev_alt, out->flashes_left);
 		} else {
-			g_debug ("Dell: %s mode switch disabled due to TPM ownership",
+			g_debug ("%s mode switch disabled due to TPM ownership",
 				 pretty_tpm_name);
 		}
 		fu_plugin_device_add (plugin, dev_alt);
 	}
 	else
-		g_debug ("Dell: System %04x is on blacklist, disabling TPM modeswitch",
+		g_debug ("System %04x is on blacklist, disabling TPM modeswitch",
 			system_id);
 
 	return TRUE;
@@ -872,13 +668,13 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	guint flashes_left_alt = 0;
 
 	/* for unlocking TPM1.2 <-> TPM2.0 switching */
-	g_debug ("Dell: Unlocking upgrades for: %s (%s)", fu_device_get_name (device),
+	g_debug ("Unlocking upgrades for: %s (%s)", fu_device_get_name (device),
 		 fu_device_get_id (device));
 	device_alt = fu_device_get_alternate (device);
 
 	if (!device_alt)
 		return FALSE;
-	g_debug ("Dell: Preventing upgrades for: %s (%s)", fu_device_get_name (device_alt),
+	g_debug ("Preventing upgrades for: %s (%s)", fu_device_get_name (device_alt),
 		 fu_device_get_id (device_alt));
 
 	flashes_left = fu_device_get_flashes_left (device);
@@ -917,13 +713,13 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 
 gboolean
 fu_plugin_update_offline (FuPlugin *plugin,
-				 FuDevice *device,
-				 GBytes *blob_fw,
-				 FwupdInstallFlags flags,
-				 GError **error)
+			  FuDevice *device,
+			  GBytes *blob_fw,
+			  FwupdInstallFlags flags,
+			  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_autoptr(fwup_resource_iter) iter = NULL;
+	g_autoptr (fwup_resource_iter) iter = NULL;
 	fwup_resource *re = NULL;
 	const gchar *name = NULL;
 	gint rc;
@@ -940,7 +736,7 @@ fu_plugin_update_offline (FuPlugin *plugin,
 	flashes_left = fu_device_get_flashes_left (device);
 	if (flashes_left > 0) {
 		name = fu_device_get_name (device);
-		g_debug ("Dell: %s has %u flashes left", name, flashes_left);
+		g_debug ("%s has %u flashes left", name, flashes_left);
 		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
 			   flashes_left <= 2) {
 			g_set_error (error,
@@ -953,11 +749,11 @@ fu_plugin_update_offline (FuPlugin *plugin,
 		}
 	}
 
-	if (data->fake_smbios)
+	if (data->smi_obj->fake_smbios)
 		return TRUE;
 
 	/* perform the update */
-	g_debug ("Dell: Performing capsule update");
+	g_debug ("Performing capsule update");
 
 	/* Stuff the payload into a different GUID
 	 * - with fwup 0.5 this uses the ESRT GUID
@@ -1008,123 +804,32 @@ fu_plugin_update_offline (FuPlugin *plugin,
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_dell_toggle_dock_mode (FuPlugin *plugin,
-				   guint32 new_mode, guint32 dock_location,
-				   GError **error)
+gboolean
+fu_plugin_update_prepare (FuPlugin *plugin,
+                          FuDevice *device,
+                          GError **error)
 {
-	g_autofree guint32 *input = NULL;
-	g_autofree guint32 *output = NULL;
-
-	input = g_malloc0 (sizeof(guint32) *4);
-	output = g_malloc0 (sizeof(guint32) *4);
-
-	/* Put into mode to accept AR/MST */
-	input[0] = DACI_DOCK_ARG_MODE;
-	input[1] = dock_location;
-	input[2] = new_mode;
-	if (!fu_plugin_dell_execute_simple_smi (plugin,
-						  DACI_DOCK_CLASS,
-						  DACI_DOCK_SELECT,
-						  input,
-						  output))
-		return FALSE;
-	if (output[1] != 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Dell: Failed to set dock flash mode: %u",
-			     output[1]);
-		return FALSE;
-	}
-	return TRUE;
+	return fu_dell_toggle_flash (device, error, TRUE);
 }
 
 gboolean
-fu_plugin_update_online (FuPlugin *plugin,
-				FuDevice *device,
-				GBytes *blob_fw,
-				FwupdInstallFlags flags,
-				GError **error)
+fu_plugin_update_cleanup (FuPlugin *plugin,
+                          FuDevice *device,
+                          GError **error)
 {
-	guint32 dock_location;
-	const gchar *device_guid_str = NULL;
-	efi_guid_t tmpguid;
+	return fu_dell_toggle_flash (device, error, FALSE);
+}
 
-	g_autofree gchar *tb15_nvm_guid_str = NULL;
-	g_autofree gchar *cable_nvm_guid_str = NULL;
-	g_autofree gchar *mst_guid_str = NULL;
+gboolean
+fu_plugin_coldplug_prepare (FuPlugin *plugin, GError **error)
+{
+	return fu_dell_toggle_flash (NULL, error, TRUE);
+}
 
-	/* TODO: if we'll support host MST updates, detect if called with host
-	 * 	 or dock MST
-	 */
-
-	/* Find the dock location (confirm it's still plugged in too) */
-	if (!fu_plugin_dell_detect_dock (plugin, &dock_location)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Failed to detect dock location");
-		return FALSE;
-	}
-
-	/* Put the dock in flash mode */
-	if (!fu_plugin_dell_toggle_dock_mode (plugin,
-						DACI_DOCK_ARG_MODE_FLASH,
-						dock_location, error))
-		return FALSE;
-
-	/* check which device we're flashing by GUID? (MST or AR)*/
-	device_guid_str = fu_device_get_guid_default (device);
-	tb15_nvm_guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
-	cable_nvm_guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
-	mst_guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
-	tmpguid = TB15_NVM_GUID;
-	efi_guid_to_str (&tmpguid, &tb15_nvm_guid_str);
-	tmpguid = CBL_NVM_GUID;
-	efi_guid_to_str (&tmpguid, &cable_nvm_guid_str);
-	tmpguid = DOCK_MST_GUID;
-	efi_guid_to_str (&tmpguid, &mst_guid_str);
-
-	/* Dock MST hub */
-	if (g_strcmp0 (device_guid_str, mst_guid_str) == 0) {
-		/* TODO do the update */
-		/* TODO confirm the version of the update */
-
-	}
-	/* TODO: add support for AR (dock/cable).
-	 * This is dependent upon OS interfaces for flashing these components.
-	 */
-	else if (g_strcmp0 (device_guid_str, tb15_nvm_guid_str) == 0 ||
-		 g_strcmp0 (device_guid_str, cable_nvm_guid_str) == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "NVM updates are not yet supported");
-		fu_plugin_dell_toggle_dock_mode (plugin,
-						   DACI_DOCK_ARG_MODE_USER,
-						   dock_location, error);
-		return FALSE;
-	}
-	else {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Unknown device type: %s",
-			     fu_device_get_name (device));
-		fu_plugin_dell_toggle_dock_mode (plugin,
-						   DACI_DOCK_ARG_MODE_USER,
-						   dock_location, error);
-		return FALSE;
-	}
-
-	 /* Put the dock in user mode */
-	if (!fu_plugin_dell_toggle_dock_mode (plugin,
-						DACI_DOCK_ARG_MODE_USER,
-						dock_location, error))
-		return FALSE;
-
-	return TRUE;
+gboolean
+fu_plugin_coldplug_cleanup (FuPlugin *plugin, GError **error)
+{
+	return fu_dell_toggle_flash (NULL, error, FALSE);
 }
 
 void
@@ -1133,9 +838,12 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	data->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) fu_plugin_device_free);
-	data->fake_smbios = FALSE;
+
+	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
+	data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
+	data->smi_obj->fake_smbios = FALSE;
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
-		data->fake_smbios = TRUE;
+		data->smi_obj->fake_smbios = TRUE;
 }
 
 void
@@ -1143,15 +851,14 @@ fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_hash_table_unref (data->devices);
+	dell_smi_obj_free (data->smi_obj->smi);
+	g_free(data->smi_obj);
 }
 
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	guint8 dell_supported = 0;
-	gint uefi_supported = 0;
-	struct smbios_struct *de_table;
 
 	/* get USB */
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
@@ -1163,44 +870,25 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 				  G_CALLBACK (fu_plugin_dell_device_removed_cb),
 				  plugin);
 	}
-	if (data->fake_smbios) {
-		g_debug ("Dell: called with fake SMBIOS implementation. "
+	if (data->smi_obj->fake_smbios) {
+		g_debug ("Called with fake SMBIOS implementation. "
 			 "We're ignoring test for SBMIOS table and ESRT. "
 			 "Individual calls will need to be properly staged.");
 		return TRUE;
 	}
 
-	/* look at offset 0x00 for identifier meaning DELL is supported */
-	de_table = smbios_get_next_struct_by_type (0, 0xDE);
-	smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
-	if (dell_supported != 0xDE) {
+	if (!fu_dell_supported ()) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Dell: firmware updating not supported (%x)",
-			     dell_supported);
+			     "Firmware updating not supported");
 		return FALSE;
 	}
-	/* Check and make sure that ESRT is supported as well.
-	 *
-	 * This will indicate capsule support on the system.
-	 *
-	 * If ESRT is not turned on, fwupd will have already created an
-	 * unlock device (if compiled with support).
-	 *
-	 * Once unlocked, that will enable this plugin too.
-	 *
-	 * that means we should only look for supported = 1
-	 */
-	uefi_supported = fwup_supported ();
-	if (uefi_supported != 1) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Dell: UEFI capsule firmware updating not supported (%x)",
-			     (guint) uefi_supported);
-		return FALSE;
-	}
+
+#if defined (HAVE_SYNAPTICS) || defined (HAVE_THUNDERBOLT)
+	/* set a delay to allow OS response to settling the GPIO change */
+	fu_plugin_set_coldplug_delay (plugin, DELL_FLASH_MODE_DELAY * 1000);
+#endif
 
 	return TRUE;
 }
@@ -1210,6 +898,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	/* look for switchable TPM */
 	if (!fu_plugin_dell_detect_tpm (plugin, error))
-		g_debug ("Dell: No switchable TPM detected");
+		g_debug ("No switchable TPM detected");
 	return TRUE;
 }

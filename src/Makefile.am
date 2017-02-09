@@ -37,8 +37,6 @@ fwupdmgr_SOURCES =					\
 	fu-device.h					\
 	fu-pending.c					\
 	fu-pending.h					\
-	fu-rom.c					\
-	fu-rom.h					\
 	fu-util.c
 
 fwupdmgr_LDADD =					\
@@ -55,30 +53,6 @@ fwupdmgr_LDFLAGS =					\
 	$(RELRO_LDFLAGS)
 
 fwupdmgr_CFLAGS =					\
-	-DFU_OFFLINE_DESTDIR=\"\"			\
-	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
-	$(WARN_CFLAGS)
-
-noinst_PROGRAMS = fu-fuzzer
-
-fu_fuzzer_SOURCES =					\
-	fu-rom.c					\
-	fu-fuzzer.c
-
-fu_fuzzer_LDADD =					\
-	$(LIBM)						\
-	$(FWUPD_LIBS)					\
-	$(APPSTREAM_GLIB_LIBS)				\
-	$(SQLITE_LIBS)					\
-	$(SOUP_LIBS)					\
-	$(GUDEV_LIBS)					\
-	$(GLIB_LIBS)
-
-fu_fuzzer_LDFLAGS =					\
-	$(PIE_LDFLAGS)					\
-	$(RELRO_LDFLAGS)
-
-fu_fuzzer_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"\"			\
 	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
 	$(WARN_CFLAGS)
@@ -121,8 +95,6 @@ fwupd_SOURCES =						\
 	fu-quirks.h					\
 	fu-resources.c					\
 	fu-resources.h					\
-	fu-rom.c					\
-	fu-rom.h					\
 	fu-main.c
 
 fwupd_LDADD =						\
@@ -164,8 +136,6 @@ fu_self_test_SOURCES =					\
 	fu-pending.h					\
 	fu-plugin.c					\
 	fu-plugin.h					\
-	fu-rom.c					\
-	fu-rom.h					\
 	fu-self-test.c
 
 fu_self_test_LDADD =					\

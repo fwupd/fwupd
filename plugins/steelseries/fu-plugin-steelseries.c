@@ -53,7 +53,7 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 		return;
 
 	/* profile */
-	ptask = as_profile_start (profile, "FuPlugin:added{%04x:%04x}",
+	ptask = as_profile_start (profile, "FuPluginSteelseries:added{%04x:%04x}",
 				  g_usb_device_get_vid (usb_device),
 				  g_usb_device_get_pid (usb_device));
 	g_assert (ptask != NULL);

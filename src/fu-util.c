@@ -38,7 +38,6 @@
 
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
-#include "fu-rom.h"
 
 #ifndef GUdevClient_autoptr
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
@@ -515,160 +514,48 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_dump_rom (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_verify_update_all (FuUtilPrivate *priv, GError **error)
 {
-	if (g_strv_length (values) == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'filename.rom'");
-		return FALSE;
-	}
-	for (guint i = 0; values[i] != NULL; i++) {
-		g_autoptr(FuRom) rom = NULL;
-		g_autoptr(GFile) file = NULL;
-		g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) results = NULL;
 
-		file = g_file_new_for_path (values[i]);
-		rom = fu_rom_new ();
-		g_print ("%s:\n", values[i]);
-		if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID,
-				       NULL, &error_local)) {
-			g_print ("%s\n", error_local->message);
+	/* get devices from daemon */
+	results = fwupd_client_get_devices (priv->client, NULL, error);
+	if (results == NULL)
+		return FALSE;
+
+	/* get results */
+	for (guint i = 0; i < results->len; i++) {
+		g_autoptr(GError) error_local = NULL;
+		FwupdResult *res = g_ptr_array_index (results, i);
+		if (!fwupd_client_verify_update (priv->client,
+					  fwupd_result_get_device_id (res),
+					  NULL,
+					  &error_local)) {
+			g_print ("%s\tFAILED: %s\n",
+				 fwupd_result_get_guid_default (res),
+				 error_local->message);
 			continue;
 		}
-		g_print ("0x%04x:0x%04x -> %s [%s]\n",
-			 fu_rom_get_vendor (rom),
-			 fu_rom_get_model (rom),
-			 fu_rom_get_checksum (rom),
-			 fu_rom_get_version (rom));
+		g_print ("%s\t%s\n",
+			 fwupd_result_get_guid_default (res),
+			 _("OK"));
 	}
 	return TRUE;
-}
-
-static gboolean
-fu_util_verify_update_internal (FuUtilPrivate *priv,
-				const gchar *filename,
-				gchar **values,
-				GError **error)
-{
-	g_autoptr(AsStore) store = NULL;
-	g_autoptr(GFile) xml_file = NULL;
-
-	store = as_store_new ();
-
-	/* open existing file */
-	xml_file = g_file_new_for_path (filename);
-	if (g_file_query_exists (xml_file, NULL)) {
-		if (!as_store_from_file (store, xml_file, NULL, NULL, error))
-			return FALSE;
-	}
-
-	/* add new values */
-	as_store_set_api_version (store, 0.9);
-	for (guint i = 0; values[i] != NULL; i++) {
-		g_autofree gchar *id = NULL;
-		g_autoptr(AsApp) app = NULL;
-		g_autoptr(AsChecksum) csum = NULL;
-		g_autoptr(AsRelease) rel = NULL;
-		g_autoptr(AsProvide) prov = NULL;
-		g_autoptr(FuRom) rom = NULL;
-		g_autoptr(GFile) file = NULL;
-		g_autoptr(GError) error_local = NULL;
-
-		file = g_file_new_for_path (values[i]);
-		rom = fu_rom_new ();
-		g_print ("Processing %s...\n", values[i]);
-		if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID,
-				       NULL, &error_local)) {
-			g_print ("%s\n", error_local->message);
-			continue;
-		}
-
-		/* make a plausible ID */
-		id = g_strdup_printf ("%s.firmware", fu_rom_get_guid (rom));
-
-		/* add app to store */
-		app = as_app_new ();
-		as_app_set_id (app, id);
-		as_app_set_kind (app, AS_APP_KIND_FIRMWARE);
-		as_app_set_source_kind (app, AS_APP_SOURCE_KIND_INF);
-		rel = as_release_new ();
-		as_release_set_version (rel, fu_rom_get_version (rom));
-		csum = as_checksum_new ();
-		as_checksum_set_kind (csum, fu_rom_get_checksum_kind (rom));
-		as_checksum_set_value (csum, fu_rom_get_checksum (rom));
-		as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
-		as_release_add_checksum (rel, csum);
-		as_app_add_release (app, rel);
-		prov = as_provide_new ();
-		as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
-		as_provide_set_value (prov, fu_rom_get_guid (rom));
-		as_app_add_provide (app, prov);
-		as_store_add_app (store, app);
-	}
-	if (!as_store_to_file (store, xml_file,
-			       AS_NODE_TO_XML_FLAG_ADD_HEADER |
-			       AS_NODE_TO_XML_FLAG_FORMAT_INDENT |
-			       AS_NODE_TO_XML_FLAG_FORMAT_MULTILINE,
-			       NULL, error))
-		return FALSE;
-	return TRUE;
-}
-
-static gboolean
-fu_util_verify_update_all (FuUtilPrivate *priv, const gchar *fn, GError **error)
-{
-	GUdevDevice *dev;
-	const gchar *devclass[] = { "pci", NULL };
-	const gchar *subsystems[] = { NULL };
-	g_autoptr(GUdevClient) gudev_client = NULL;
-	g_autoptr(GPtrArray) roms = NULL;
-
-	/* get all devices of class */
-	gudev_client = g_udev_client_new (subsystems);
-	roms = g_ptr_array_new_with_free_func (g_free);
-	for (guint i = 0; devclass[i] != NULL; i++) {
-		GList *devices = g_udev_client_query_by_subsystem (gudev_client,
-							    devclass[i]);
-		for (GList *l = devices; l != NULL; l = l->next) {
-			g_autofree gchar *rom_fn = NULL;
-			dev = l->data;
-			rom_fn = g_build_filename (g_udev_device_get_sysfs_path (dev), "rom", NULL);
-			if (!g_file_test (rom_fn, G_FILE_TEST_EXISTS))
-				continue;
-			g_ptr_array_add (roms, g_strdup (rom_fn));
-		}
-		g_list_foreach (devices, (GFunc) g_object_unref, NULL);
-		g_list_free (devices);
-	}
-
-	/* no ROMs to add */
-	if (roms->len == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No hardware with ROM");
-		return FALSE;
-	}
-	g_ptr_array_add (roms, NULL);
-	return fu_util_verify_update_internal (priv, fn,
-					       (gchar **) roms->pdata,
-					       error);
 }
 
 static gboolean
 fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	const gchar *fn = "/var/cache/app-info/xmls/fwupd-verify.xml";
 	if (g_strv_length (values) == 0)
-		return fu_util_verify_update_all (priv, fn, error);
-	if (g_strv_length (values) == 1)
-		return fu_util_verify_update_all (priv, values[0], error);
-	return fu_util_verify_update_internal (priv,
-					       values[0],
-					       &values[1],
-					       error);
+		return fu_util_verify_update_all (priv, error);
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: expected 'id'");
+		return FALSE;
+	}
+	return fwupd_client_verify_update (priv->client, values[0], NULL, error);
 }
 
 static gboolean
@@ -1236,12 +1123,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Refresh metadata from remote server"),
 		     fu_util_refresh);
-	fu_util_add (priv->cmd_array,
-		     "dump-rom",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Dump the ROM checksum"),
-		     fu_util_dump_rom);
 	fu_util_add (priv->cmd_array,
 		     "verify-update",
 		     NULL,

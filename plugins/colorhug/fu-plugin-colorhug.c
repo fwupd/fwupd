@@ -46,7 +46,7 @@ typedef struct {
 } FuPluginItem;
 
 static gchar *
-fu_plugin_get_device_key (GUsbDevice *device)
+fu_plugin_colorhug_get_device_key (GUsbDevice *device)
 {
 	return g_strdup_printf ("%s_%s",
 				g_usb_device_get_platform_id (device),
@@ -54,7 +54,7 @@ fu_plugin_get_device_key (GUsbDevice *device)
 }
 
 static void
-fu_plugin_device_free (FuPluginItem *item)
+fu_plugin_colorhug_item_free (FuPluginItem *item)
 {
 	g_object_unref (item->device);
 	g_object_unref (item->plugin);
@@ -66,7 +66,7 @@ fu_plugin_device_free (FuPluginItem *item)
 }
 
 static gboolean
-fu_plugin_wait_for_connect (FuPlugin *plugin,
+fu_plugin_colorhug_wait_for_connect (FuPlugin *plugin,
 				   FuPluginItem *item,
 				   GError **error)
 {
@@ -87,7 +87,7 @@ fu_plugin_wait_for_connect (FuPlugin *plugin,
 
 
 static gboolean
-fu_plugin_open (FuPluginItem *item, GError **error)
+fu_plugin_colorhug_open (FuPluginItem *item, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 	if (!ch_device_open (item->usb_device, &error_local)) {
@@ -103,7 +103,7 @@ fu_plugin_open (FuPluginItem *item, GError **error)
 }
 
 static void
-fu_plugin_get_firmware_version (FuPluginItem *item)
+fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 {
 	FuPluginData *data = fu_plugin_get_data (item->plugin);
 	guint16 major;
@@ -187,7 +187,7 @@ fu_plugin_verify (FuPlugin *plugin,
 	}
 
 	/* open */
-	if (!fu_plugin_open (item, error))
+	if (!fu_plugin_colorhug_open (item, error))
 		return FALSE;
 
 	/* get the firmware from the device */
@@ -262,7 +262,7 @@ fu_plugin_update_online (FuPlugin *plugin,
 	/* switch to bootloader mode */
 	if (!item->is_bootloader) {
 		g_debug ("ColorHug: Switching to bootloader mode");
-		if (!fu_plugin_open (item, error))
+		if (!fu_plugin_colorhug_open (item, error))
 			return FALSE;
 		ch_device_queue_reset (data->device_queue, item->usb_device);
 		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
@@ -283,12 +283,12 @@ fu_plugin_update_online (FuPlugin *plugin,
 
 		/* wait for reconnection */
 		g_debug ("ColorHug: Waiting for bootloader");
-		if (!fu_plugin_wait_for_connect (plugin, item, error))
+		if (!fu_plugin_colorhug_wait_for_connect (plugin, item, error))
 			return FALSE;
 	}
 
 	/* open the device, which is now in bootloader mode */
-	if (!fu_plugin_open (item, error))
+	if (!fu_plugin_colorhug_open (item, error))
 		return FALSE;
 
 	/* write firmware */
@@ -347,9 +347,9 @@ fu_plugin_update_online (FuPlugin *plugin,
 	g_usb_device_close (item->usb_device, NULL);
 
 	/* wait for firmware mode */
-	if (!fu_plugin_wait_for_connect (plugin, item, error))
+	if (!fu_plugin_colorhug_wait_for_connect (plugin, item, error))
 		return FALSE;
-	if (!fu_plugin_open (item, error))
+	if (!fu_plugin_colorhug_open (item, error))
 		return FALSE;
 
 	/* set flash success */
@@ -381,7 +381,7 @@ fu_plugin_update_online (FuPlugin *plugin,
 	/* get the new firmware version */
 	g_debug ("ColorHug: Getting new firmware version");
 	item->got_version = FALSE;
-	fu_plugin_get_firmware_version (item);
+	fu_plugin_colorhug_get_firmware_version (item);
 
 	if (item->got_version)
 		g_debug ("ColorHug: DONE!");
@@ -390,13 +390,13 @@ fu_plugin_update_online (FuPlugin *plugin,
 }
 
 static gboolean
-fu_plugin_open_cb (gpointer user_data)
+fu_plugin_colorhug_open_cb (gpointer user_data)
 {
 	FuPluginItem *item = (FuPluginItem *) user_data;
 
 	g_debug ("attempt to open %s",
 		 g_usb_device_get_platform_id (item->usb_device));
-	fu_plugin_get_firmware_version (item);
+	fu_plugin_colorhug_get_firmware_version (item);
 
 	/* success! */
 	if (item->got_version) {
@@ -409,9 +409,9 @@ fu_plugin_open_cb (gpointer user_data)
 }
 
 static void
-fu_plugin_device_added_cb (GUsbContext *ctx,
-				  GUsbDevice *device,
-				  FuPlugin *plugin)
+fu_plugin_colorhug_device_added_cb (GUsbContext *ctx,
+				    GUsbDevice *device,
+				    FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuPluginItem *item;
@@ -429,7 +429,7 @@ fu_plugin_device_added_cb (GUsbContext *ctx,
 		return;
 
 	/* is already in database */
-	device_key = fu_plugin_get_device_key (device);
+	device_key = fu_plugin_colorhug_get_device_key (device);
 	item = g_hash_table_lookup (data->devices, device_key);
 	if (item == NULL) {
 		item = g_new0 (FuPluginItem, 1);
@@ -445,10 +445,10 @@ fu_plugin_device_added_cb (GUsbContext *ctx,
 
 		/* try to get the serial number -- if opening failed then
 		 * poll until the device is not busy */
-		fu_plugin_get_firmware_version (item);
+		fu_plugin_colorhug_get_firmware_version (item);
 		if (!item->got_version && item->timeout_open_id == 0) {
 			item->timeout_open_id = g_timeout_add_seconds (FU_PLUGIN_CHUG_POLL_REOPEN,
-				fu_plugin_open_cb, item);
+				fu_plugin_colorhug_open_cb, item);
 		}
 
 		/* insert to hash */
@@ -499,16 +499,16 @@ fu_plugin_device_added_cb (GUsbContext *ctx,
 }
 
 static void
-fu_plugin_device_removed_cb (GUsbContext *ctx,
-				    GUsbDevice *device,
-				    FuPlugin *plugin)
+fu_plugin_colorhug_device_removed_cb (GUsbContext *ctx,
+				      GUsbDevice *device,
+				      FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuPluginItem *item;
 	g_autofree gchar *device_key = NULL;
 
 	/* already in database */
-	device_key = fu_plugin_get_device_key (device);
+	device_key = fu_plugin_colorhug_get_device_key (device);
 	item = g_hash_table_lookup (data->devices, device_key);
 	if (item == NULL)
 		return;
@@ -526,7 +526,7 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	data->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free, (GDestroyNotify) fu_plugin_device_free);
+					       g_free, (GDestroyNotify) fu_plugin_colorhug_item_free);
 	data->device_queue = ch_device_queue_new ();
 }
 
@@ -543,10 +543,10 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
 	g_signal_connect (usb_ctx, "device-added",
-			  G_CALLBACK (fu_plugin_device_added_cb),
+			  G_CALLBACK (fu_plugin_colorhug_device_added_cb),
 			  plugin);
 	g_signal_connect (usb_ctx, "device-removed",
-			  G_CALLBACK (fu_plugin_device_removed_cb),
+			  G_CALLBACK (fu_plugin_colorhug_device_removed_cb),
 			  plugin);
 	return TRUE;
 }

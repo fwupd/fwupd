@@ -5,12 +5,13 @@
 # Translators:
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2016
 # gogo <trebelnik2@gmail.com>, 2016
+# gogo <trebelnik2@gmail.com>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-29 09:50+0100\n"
-"PO-Revision-Date: 2016-08-29 08:50+0000\n"
+"POT-Creation-Date: 2017-02-08 12:51+0000\n"
+"PO-Revision-Date: 2017-02-08 12:51+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Croatian (http://www.transifex.com/hughsie/fwupd/language/hr/)\n"
 "MIME-Version: 1.0\n"
@@ -59,6 +60,14 @@ msgstr "Otključaj uređaj za dopuštenje pristupa"
 msgid "Authentication is required to unlock a device"
 msgstr "Potrebna je ovjera za otključavanje uređaja"
 
+msgid "Update the stored device verification information"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr ""
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -68,25 +77,29 @@ msgstr "Zamjena za %s"
 msgid "Command not found"
 msgstr "Naredba nije pronađena"
 
-#. TRANSLATORS: when an action has completed
-msgid "OK"
-msgstr "U redu"
+#. TRANSLATORS: read from device to host
+msgid "Reading"
+msgstr ""
 
-#. TRANSLATORS: when moving from runtime to DFU mode
+#. TRANSLATORS: write from host to device
+msgid "Writing"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Verifying"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Erasing"
+msgstr ""
+
+#. TRANSLATORS: waiting for device
 msgid "Detaching"
 msgstr "Odvajanje"
 
-#. TRANSLATORS: when moving from DFU to runtime mode
+#. TRANSLATORS: waiting for device
 msgid "Attaching"
 msgstr "Povezivanje"
-
-#. TRANSLATORS: when copying from host to device
-msgid "Downloading"
-msgstr "Preuzimanje"
-
-#. TRANSLATORS: when copying from device to host
-msgid "Uploading"
-msgstr "Slanje"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -141,7 +154,7 @@ msgstr "Nepoznato: dozvola odbijena"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
 msgid "Serial"
-msgstr ""
+msgstr "Serijski broj"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
 msgid "Mode"
@@ -150,6 +163,10 @@ msgstr "Način"
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Stanje"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr ""
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -174,11 +191,11 @@ msgstr "Postavi ID proizvoda u datoteku firmvera"
 
 #. TRANSLATORS: command description
 msgid "Set element address on firmware file"
-msgstr ""
+msgstr "Postavi adresu elementa na datoteku frimvera"
 
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
-msgstr ""
+msgstr "Postavi veličinu frimvera za metu"
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
@@ -240,6 +257,10 @@ msgstr "Dešifriraj podatke frimvera"
 msgid "Sets metadata on a firmware file"
 msgstr "Postavlja metapodatke u datoteku frimvera"
 
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr ""
+
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "DFU pomagalo"
@@ -247,6 +268,17 @@ msgstr "DFU pomagalo"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Neuspjela obrada argumenata"
+
+#. TRANSLATORS: command description
+msgid "Enumerate all Synaptics MST devices"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Flash firmware file to MST device"
+msgstr ""
+
+msgid "Synaptics Multistream Transport Utility"
+msgstr ""
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
@@ -278,35 +310,35 @@ msgstr "Firmver nadopuna D-Bus usluge"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
-msgstr ""
+msgstr "Mirovanje..."
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
-msgstr ""
+msgstr "Raspakiravanje..."
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
-msgstr ""
+msgstr "Učitavanje..."
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr ""
+msgstr "Ponovno pokretanje uređaja..."
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
-msgstr ""
+msgstr "Zapisivanje..."
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr ""
+msgstr "Provjeravanje..."
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
-msgstr ""
+msgstr "Zakazivanje..."
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
-msgstr ""
+msgstr "Nepoznat"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -339,6 +371,9 @@ msgstr "Nadopuna %s s inačice %s na inačicu %s... "
 
 msgid "Done!"
 msgstr "Završeno!"
+
+msgid "OK"
+msgstr "U redu"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -384,8 +419,8 @@ msgid "Show extra debugging information"
 msgstr "Prikaži dodatne informacije otklanjanja grešaka"
 
 #. TRANSLATORS: command line option
-msgid "Perform the installation offline where possible"
-msgstr "Pokreni instalaciju bez pristupa internetu gdje je moguća"
+msgid "Schedule installation for next reboot when possible"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
@@ -397,7 +432,7 @@ msgstr "Dopusti vraćanje starije inačice frimvera"
 
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
-msgstr "Zanemari upozorenja proizvođača"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -442,10 +477,6 @@ msgstr "Prikazuje rezultate posljednje nadopune"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Osvježava metapodatke s udaljenog poslužitelja"
-
-#. TRANSLATORS: command description
-msgid "Dump the ROM checksum"
-msgstr "Opširnije informacije jedinstvene vrijednosti ROM-a"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"

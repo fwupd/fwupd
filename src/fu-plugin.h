@@ -36,7 +36,7 @@ G_DECLARE_DERIVABLE_TYPE (FuPlugin, fu_plugin, FU, PLUGIN, GObject)
 
 struct _FuPluginClass
 {
-	GObjectClass		 parent_class;
+	GObjectClass	 parent_class;
 	/* signals */
 	void		 (* device_added)		(FuPlugin	*plugin,
 							 FuDevice	*device);
@@ -46,6 +46,11 @@ struct _FuPluginClass
 							 FwupdStatus	 status);
 	void		 (* percentage_changed)		(FuPlugin	*plugin,
 							 guint		 percentage);
+	void		 (* recoldplug)			(FuPlugin	*plugin);
+	void		 (* set_coldplug_delay)		(FuPlugin	*plugin,
+							 guint		 duration);
+	/*< private >*/
+	gpointer	padding[25];
 };
 
 typedef enum {
@@ -58,8 +63,6 @@ typedef struct	FuPluginData	FuPluginData;
 
 /* for plugins to use */
 const gchar	*fu_plugin_get_name			(FuPlugin	*plugin);
-void		 fu_plugin_set_name			(FuPlugin	*plugin,
-							 const gchar	*name);
 FuPluginData	*fu_plugin_get_data			(FuPlugin	*plugin);
 FuPluginData	*fu_plugin_alloc_data			(FuPlugin	*plugin,
 							 gsize		 data_sz);
@@ -69,12 +72,18 @@ void		 fu_plugin_set_enabled			(FuPlugin	*plugin,
 GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*plugin);
 void		 fu_plugin_device_add			(FuPlugin	*plugin,
 							 FuDevice	*device);
+void		 fu_plugin_device_add_delay		(FuPlugin	*plugin,
+							 FuDevice	*device);
 void		 fu_plugin_device_remove		(FuPlugin	*plugin,
 							 FuDevice	*device);
 void		 fu_plugin_set_status			(FuPlugin	*plugin,
 							 FwupdStatus	 status);
 void		 fu_plugin_set_percentage		(FuPlugin	*plugin,
 							 guint		 percentage);
+void		 fu_plugin_recoldplug			(FuPlugin	*plugin);
+void		 fu_plugin_set_coldplug_delay		(FuPlugin	*plugin,
+							 guint		 duration);
+gboolean	 fu_plugin_has_device_delay		(FuPlugin	*plugin);
 GChecksumType	 fu_plugin_get_checksum_type		(FuPluginVerifyFlags flags);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*plugin,
 							 const gchar	*id);

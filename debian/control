@@ -77,11 +77,12 @@ Package: libebitdo1
 Priority: extra
 Section: oldlibs
 Architecture: linux-any
-Depends: ${misc:Depends},
+Depends: ${misc:Depends}
 Multi-Arch: same
-Description: fwupd library for 0bitdo (transitional package)
- This package is a transitional package for 0bitdo support being moved into
- the fwupd package.
+Priority: extra
+Section: oldlibs
+Description: Firmware update daemon library for 0bitdo support (transitional package)
+ This is a transitional package for 0bitdo support that was moved into a plugin.
 
 Package: fwupd
 Architecture: linux-any
@@ -168,6 +169,7 @@ Section: oldlibs
 Architecture: linux-any
 Multi-Arch: same
 Depends: ${misc:Depends}
+Priority: extra
+Section: oldlibs
 Description: development files for libebitdo (transitional package)
- This package is a transitional package for 0bitdo support being moved into
- the fwupd package.
+ This is a transitional package for 0bitdo support that was moved into a plugin.
