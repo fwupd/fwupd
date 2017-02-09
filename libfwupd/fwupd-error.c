@@ -63,6 +63,8 @@ fwupd_error_to_string (FwupdError error)
 		return FWUPD_DBUS_INTERFACE ".NotSupported";
 	if (error == FWUPD_ERROR_SIGNATURE_INVALID)
 		return FWUPD_DBUS_INTERFACE ".SignatureInvalid";
+	if (error == FWUPD_ERROR_AC_POWER_REQUIRED)
+		return FWUPD_DBUS_INTERFACE ".AcPowerRequired";
 	return NULL;
 }
 
@@ -103,6 +105,8 @@ fwupd_error_from_string (const gchar *error)
 		return FWUPD_ERROR_NOT_SUPPORTED;
 	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".SignatureInvalid") == 0)
 		return FWUPD_ERROR_SIGNATURE_INVALID;
+	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".AcPowerRequired") == 0)
+		return FWUPD_ERROR_AC_POWER_REQUIRED;
 	return FWUPD_ERROR_LAST;
 }
 

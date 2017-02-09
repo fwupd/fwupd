@@ -90,7 +90,7 @@
           <option>--offline</option>
         </term>
         <listitem>
-          <para>Perform the installation offline where possible.</para>
+          <para>Schedule installation for next reboot when possible.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -98,7 +98,7 @@
           <option>--force</option>
         </term>
         <listitem>
-          <para>Override provider warning.</para>
+          <para>Override plugin warning.</para>
         </listitem>
       </varlistentry>
     </variablelist>

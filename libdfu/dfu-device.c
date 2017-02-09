@@ -1402,20 +1402,26 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 
 	/* automatically abort any uploads or downloads */
 	if ((flags & DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH) == 0) {
-		if (!dfu_device_refresh (device, cancellable, error))
+		if (!dfu_device_refresh (device, cancellable, error)) {
+			g_usb_device_close (priv->dev, NULL);
 			return FALSE;
+		}
 		switch (priv->state) {
 		case DFU_STATE_DFU_UPLOAD_IDLE:
 		case DFU_STATE_DFU_DNLOAD_IDLE:
 		case DFU_STATE_DFU_DNLOAD_SYNC:
 			g_debug ("aborting transfer %s", dfu_status_to_string (priv->status));
-			if (!dfu_device_abort (device, cancellable, error))
+			if (!dfu_device_abort (device, cancellable, error)) {
+				g_usb_device_close (priv->dev, NULL);
 				return FALSE;
+			}
 			break;
 		case DFU_STATE_DFU_ERROR:
 			g_debug ("clearing error %s", dfu_status_to_string (priv->status));
-			if (!dfu_device_clear_status (device, cancellable, error))
+			if (!dfu_device_clear_status (device, cancellable, error)) {
+				g_usb_device_close (priv->dev, NULL);
 				return FALSE;
+			}
 			break;
 		default:
 			break;
@@ -1852,12 +1858,21 @@ dfu_device_upload (DfuDevice *device,
 	/* upload from each target */
 	for (i = 0; i < priv->targets->len; i++) {
 		DfuTarget *target;
+		const gchar *alt_name;
 		gulong id1;
 		gulong id2;
 		g_autoptr(DfuImage) image = NULL;
 
 		/* upload to target and proxy signals */
 		target = g_ptr_array_index (priv->targets, i);
+
+		/* ignore some target types */
+		alt_name = dfu_target_get_alt_name_for_display (target, NULL);
+		if (g_strcmp0 (alt_name, "Option Bytes") == 0) {
+			g_debug ("ignoring target %s", alt_name);
+			continue;
+		}
+
 		id1 = g_signal_connect (target, "percentage-changed",
 					G_CALLBACK (dfu_device_percentage_cb), device);
 		id2 = g_signal_connect (target, "action-changed",
@@ -2100,6 +2115,8 @@ dfu_device_download (DfuDevice *device,
 		/* download onto target */
 		if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY)
 			flags_local = DFU_TARGET_TRANSFER_FLAG_VERIFY;
+		if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_RAW)
+			flags_local |= DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC;
 		id1 = g_signal_connect (target_tmp, "percentage-changed",
 					G_CALLBACK (dfu_device_percentage_cb), device);
 		id2 = g_signal_connect (target_tmp, "action-changed",

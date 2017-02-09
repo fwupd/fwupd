@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-29 09:50+0100\n"
-"PO-Revision-Date: 2016-08-29 08:50+0000\n"
+"POT-Creation-Date: 2017-02-08 12:51+0000\n"
+"PO-Revision-Date: 2017-02-08 12:51+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Serbian (http://www.transifex.com/hughsie/fwupd/language/sr/)\n"
 "MIME-Version: 1.0\n"
@@ -59,6 +59,14 @@ msgstr "Откључајте уређај да бисте дозволили п�
 msgid "Authentication is required to unlock a device"
 msgstr "Потребна је пријава за откључавање уређаја"
 
+msgid "Update the stored device verification information"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr ""
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -68,25 +76,29 @@ msgstr "Алијас на %s"
 msgid "Command not found"
 msgstr "Наредба није пронађена"
 
-#. TRANSLATORS: when an action has completed
-msgid "OK"
-msgstr "У реду"
+#. TRANSLATORS: read from device to host
+msgid "Reading"
+msgstr ""
 
-#. TRANSLATORS: when moving from runtime to DFU mode
+#. TRANSLATORS: write from host to device
+msgid "Writing"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Verifying"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Erasing"
+msgstr ""
+
+#. TRANSLATORS: waiting for device
 msgid "Detaching"
 msgstr "Откачињем"
 
-#. TRANSLATORS: when moving from DFU to runtime mode
+#. TRANSLATORS: waiting for device
 msgid "Attaching"
 msgstr "Качим"
-
-#. TRANSLATORS: when copying from host to device
-msgid "Downloading"
-msgstr "Преузимам"
-
-#. TRANSLATORS: when copying from device to host
-msgid "Uploading"
-msgstr "Отпремам"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -150,6 +162,10 @@ msgstr "Режим"
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Стање"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr ""
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -240,6 +256,10 @@ msgstr "Дешифруј податке у фирмверу"
 msgid "Sets metadata on a firmware file"
 msgstr "Подешава метаподатке у датотеци фирмвера"
 
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr ""
+
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "ДФУ алатка"
@@ -247,6 +267,17 @@ msgstr "ДФУ алатка"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Не могу да обрадим аргументе"
+
+#. TRANSLATORS: command description
+msgid "Enumerate all Synaptics MST devices"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Flash firmware file to MST device"
+msgstr ""
+
+msgid "Synaptics Multistream Transport Utility"
+msgstr ""
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
@@ -312,7 +343,7 @@ msgstr ""
 msgid "No hardware detected with firmware update capability"
 msgstr "Нема хардвера којем се може ажурирати фирмвер"
 
-#. TRANSLATOR: the provider only supports offline
+#. TRANSLATOR: the plugin only supports offline
 msgid "Retrying as an offline update"
 msgstr "Поново покушавам преко ванмрежног ажурирања"
 
@@ -339,6 +370,9 @@ msgstr "Ажурирам %s са %s на %s..."
 
 msgid "Done!"
 msgstr "Урађено!"
+
+msgid "OK"
+msgstr "У реду"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -384,8 +418,8 @@ msgid "Show extra debugging information"
 msgstr "Прикажи додатне податке за отклањање проблема"
 
 #. TRANSLATORS: command line option
-msgid "Perform the installation offline where possible"
-msgstr "Изврши ажурирања ван мреже где је то могуће"
+msgid "Schedule installation for next reboot when possible"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
@@ -396,7 +430,7 @@ msgid "Allow downgrading firmware versions"
 msgstr "Дозволи уназађивање издања фирмвера"
 
 #. TRANSLATORS: command line option
-msgid "Override provider warning"
+msgid "Override plugin warning"
 msgstr ""
 
 #. TRANSLATORS: command description
@@ -442,10 +476,6 @@ msgstr "Добавља резултате последњег ажурирања"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Освежава метаподатке са удаљеног сервера"
-
-#. TRANSLATORS: command description
-msgid "Dump the ROM checksum"
-msgstr "Извади РОМ чек-суму"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"

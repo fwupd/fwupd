@@ -38,8 +38,6 @@
 
 #include "config.h"
 
-#include <gusb.h>
-
 #include "dfu-device-private.h"
 #include "dfu-error.h"
 #include "dfu-context.h"
@@ -287,16 +285,22 @@ dfu_context_device_removed_cb (GUsbContext *usb_context,
 }
 
 static void
+dfu_context_set_usb_context (DfuContext *context, GUsbContext *usb_ctx)
+{
+	DfuContextPrivate *priv = GET_PRIVATE (context);
+	priv->usb_ctx = g_object_ref (usb_ctx);
+	g_signal_connect (priv->usb_ctx, "device-added",
+			  G_CALLBACK (dfu_context_device_added_cb), context);
+	g_signal_connect (priv->usb_ctx, "device-removed",
+			  G_CALLBACK (dfu_context_device_removed_cb), context);
+}
+
+static void
 dfu_context_init (DfuContext *context)
 {
 	DfuContextPrivate *priv = GET_PRIVATE (context);
 	priv->timeout = 5000;
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) dfu_context_device_free);
-	priv->usb_ctx = g_usb_context_new (NULL);
-	g_signal_connect (priv->usb_ctx, "device-added",
-			  G_CALLBACK (dfu_context_device_added_cb), context);
-	g_signal_connect (priv->usb_ctx, "device-removed",
-			  G_CALLBACK (dfu_context_device_removed_cb), context);
 }
 
 static void
@@ -324,7 +328,29 @@ DfuContext *
 dfu_context_new (void)
 {
 	DfuContext *context;
+	g_autoptr(GUsbContext) usb_ctx = g_usb_context_new (NULL);
 	context = g_object_new (DFU_TYPE_CONTEXT, NULL);
+	dfu_context_set_usb_context (context, usb_ctx);
+	return context;
+}
+
+/**
+ * dfu_context_new_with_context:
+ * @usb_ctx: a #DfuContext
+ *
+ * Creates a new DFU context object.
+ *
+ * Return value: a new #DfuContext
+ *
+ * Since: 0.7.6
+ **/
+DfuContext *
+dfu_context_new_with_context (GUsbContext *usb_ctx)
+{
+	DfuContext *context;
+	g_return_val_if_fail (G_USB_IS_CONTEXT (usb_ctx), NULL);
+	context = g_object_new (DFU_TYPE_CONTEXT, NULL);
+	dfu_context_set_usb_context (context, usb_ctx);
 	return context;
 }
 

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-29 09:50+0100\n"
-"PO-Revision-Date: 2016-08-29 08:50+0000\n"
+"POT-Creation-Date: 2017-02-08 12:51+0000\n"
+"PO-Revision-Date: 2017-02-08 12:51+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Italian (http://www.transifex.com/hughsie/fwupd/language/it/)\n"
 "MIME-Version: 1.0\n"
@@ -58,6 +58,14 @@ msgstr ""
 msgid "Authentication is required to unlock a device"
 msgstr ""
 
+msgid "Update the stored device verification information"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr ""
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -67,25 +75,29 @@ msgstr "Alias di %s"
 msgid "Command not found"
 msgstr "Comando non trovato"
 
-#. TRANSLATORS: when an action has completed
-msgid "OK"
-msgstr "Fatto"
+#. TRANSLATORS: read from device to host
+msgid "Reading"
+msgstr ""
 
-#. TRANSLATORS: when moving from runtime to DFU mode
+#. TRANSLATORS: write from host to device
+msgid "Writing"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Verifying"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Erasing"
+msgstr ""
+
+#. TRANSLATORS: waiting for device
 msgid "Detaching"
 msgstr "Rimozione"
 
-#. TRANSLATORS: when moving from DFU to runtime mode
+#. TRANSLATORS: waiting for device
 msgid "Attaching"
 msgstr "Collegamento"
-
-#. TRANSLATORS: when copying from host to device
-msgid "Downloading"
-msgstr "Scaricamento"
-
-#. TRANSLATORS: when copying from device to host
-msgid "Uploading"
-msgstr "Caricamento"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -149,6 +161,10 @@ msgstr "Modalità"
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Stato"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr ""
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -239,6 +255,10 @@ msgstr "Decifra i dati del firmware"
 msgid "Sets metadata on a firmware file"
 msgstr "Imposta i metadati su un file di firmware"
 
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr ""
+
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "Utilità DFU"
@@ -246,6 +266,17 @@ msgstr "Utilità DFU"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Analisi degli argomenti non riuscita"
+
+#. TRANSLATORS: command description
+msgid "Enumerate all Synaptics MST devices"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Flash firmware file to MST device"
+msgstr ""
+
+msgid "Synaptics Multistream Transport Utility"
+msgstr ""
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
@@ -311,7 +342,7 @@ msgstr ""
 msgid "No hardware detected with firmware update capability"
 msgstr "Non è stato rilevato nessun hardware con capacità di aggiornamento del firmware"
 
-#. TRANSLATOR: the provider only supports offline
+#. TRANSLATOR: the plugin only supports offline
 msgid "Retrying as an offline update"
 msgstr "Ritentare con un aggiornamento fuori rete"
 
@@ -338,6 +369,9 @@ msgstr "Aggiornamento di %s da %s a %s..."
 
 msgid "Done!"
 msgstr "Fatto."
+
+msgid "OK"
+msgstr "Fatto"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -383,8 +417,8 @@ msgid "Show extra debugging information"
 msgstr "Mostra maggiori informazioni di debug"
 
 #. TRANSLATORS: command line option
-msgid "Perform the installation offline where possible"
-msgstr "Se  possibile esegue l'installazione fuori rete"
+msgid "Schedule installation for next reboot when possible"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
@@ -395,7 +429,7 @@ msgid "Allow downgrading firmware versions"
 msgstr "Consente di tornare alle precedenti versioni del firmware"
 
 #. TRANSLATORS: command line option
-msgid "Override provider warning"
+msgid "Override plugin warning"
 msgstr ""
 
 #. TRANSLATORS: command description
@@ -441,10 +475,6 @@ msgstr "Ottiene i risultati dell'ultimo aggiornamento"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Ricarica i metadati dal server remoto"
-
-#. TRANSLATORS: command description
-msgid "Dump the ROM checksum"
-msgstr "Scarta il checksum della ROM"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"

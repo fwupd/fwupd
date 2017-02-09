@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-29 09:50+0100\n"
-"PO-Revision-Date: 2016-08-29 08:50+0000\n"
+"POT-Creation-Date: 2017-02-08 12:51+0000\n"
+"PO-Revision-Date: 2017-02-08 12:51+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Polish (http://www.transifex.com/hughsie/fwupd/language/pl/)\n"
 "MIME-Version: 1.0\n"
@@ -58,6 +58,14 @@ msgstr "Odblokowanie urządzenia"
 msgid "Authentication is required to unlock a device"
 msgstr "Wymagane jest uwierzytelnienie, aby odblokować urządzenie"
 
+msgid "Update the stored device verification information"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr ""
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -67,25 +75,29 @@ msgstr "Alias do „%s”"
 msgid "Command not found"
 msgstr "Nie odnaleziono polecenia"
 
-#. TRANSLATORS: when an action has completed
-msgid "OK"
-msgstr "OK"
+#. TRANSLATORS: read from device to host
+msgid "Reading"
+msgstr ""
 
-#. TRANSLATORS: when moving from runtime to DFU mode
+#. TRANSLATORS: write from host to device
+msgid "Writing"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Verifying"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Erasing"
+msgstr ""
+
+#. TRANSLATORS: waiting for device
 msgid "Detaching"
 msgstr "Odłączanie"
 
-#. TRANSLATORS: when moving from DFU to runtime mode
+#. TRANSLATORS: waiting for device
 msgid "Attaching"
 msgstr "Podłączanie"
-
-#. TRANSLATORS: when copying from host to device
-msgid "Downloading"
-msgstr "Pobieranie"
-
-#. TRANSLATORS: when copying from device to host
-msgid "Uploading"
-msgstr "Wysyłanie"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -140,7 +152,7 @@ msgstr "Nieznane: brak uprawnień"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
 msgid "Serial"
-msgstr ""
+msgstr "Numer seryjny"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
 msgid "Mode"
@@ -149,6 +161,10 @@ msgstr "Tryb"
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Stan"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr ""
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -161,7 +177,7 @@ msgstr "Konwertuje oprogramowanie sprzętowe do formatu DFU"
 
 #. TRANSLATORS: command description
 msgid "Merge multiple firmware files into one"
-msgstr "Łączy wiele plików oprogramowania sprzętowego w jeden plik"
+msgstr "Łączy wiele plików oprogramowania sprzętowego w jeden plik"
 
 #. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
@@ -173,11 +189,11 @@ msgstr "Ustawia identyfikator produktu pliku oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
 msgid "Set element address on firmware file"
-msgstr ""
+msgstr "Ustawia adres elementu pliku oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
-msgstr ""
+msgstr "Ustawia rozmiar oprogramowania sprzętowego dla celu"
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
@@ -193,23 +209,23 @@ msgstr "Ustawia alternatywną nazwę pliku oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
-msgstr "Podłącza urządzenie DFU z powrotem do uruchamiania systemu"
+msgstr "Podłącza urządzenie DFU z powrotem do uruchamiania systemu"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
-msgstr "Odczytuje oprogramowanie sprzętowe z urządzenia do pliku"
+msgstr "Odczytuje oprogramowanie sprzętowe z urządzenia do pliku"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
-msgstr "Odczytuje oprogramowanie sprzętowe z jednej partycji do pliku"
+msgstr "Odczytuje oprogramowanie sprzętowe z jednej partycji do pliku"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"
-msgstr "Zapisuje oprogramowanie sprzętowe z pliku na urządzenie"
+msgstr "Zapisuje oprogramowanie sprzętowe z pliku na urządzenie"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into one partition"
-msgstr "Zapisuje oprogramowanie sprzętowe z pliku na jedną partycję"
+msgstr "Zapisuje oprogramowanie sprzętowe z pliku na jedną partycję"
 
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
@@ -221,11 +237,11 @@ msgstr "Odłącza obecnie podłączone urządzenie DFU"
 
 #. TRANSLATORS: command description
 msgid "Dump details about a firmware file"
-msgstr "Zrzuca informacje o pliku oprogramowania sprzętowego"
+msgstr "Zrzuca informacje o pliku oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
 msgid "Watch DFU devices being hotplugged"
-msgstr "Obserwuje podłączanie urządzeń DFU w czasie działania"
+msgstr "Obserwuje podłączanie urządzeń DFU w czasie działania"
 
 #. TRANSLATORS: command description
 msgid "Encrypt firmware data"
@@ -239,6 +255,10 @@ msgstr "Odszyfrowuje dane oprogramowania sprzętowego"
 msgid "Sets metadata on a firmware file"
 msgstr "Ustawia metadane pliku oprogramowania sprzętowego"
 
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr ""
+
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "Narzędzie DFU"
@@ -247,9 +267,20 @@ msgstr "Narzędzie DFU"
 msgid "Failed to parse arguments"
 msgstr "Przetworzenie parametrów się nie powiodło"
 
+#. TRANSLATORS: command description
+msgid "Enumerate all Synaptics MST devices"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Flash firmware file to MST device"
+msgstr ""
+
+msgid "Synaptics Multistream Transport Utility"
+msgstr ""
+
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
-msgstr "Wyświetla informacje o debugowaniu dla wszystkich plików"
+msgstr "Wyświetla informacje o debugowaniu dla wszystkich plików"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
@@ -277,43 +308,43 @@ msgstr "Usługa D-Bus aktualizacji oprogramowania sprzętowego"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
-msgstr ""
+msgstr "Bezczynne…"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
-msgstr ""
+msgstr "Dekompresowanie…"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
-msgstr ""
+msgstr "Wczytywanie…"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr ""
+msgstr "Ponowne uruchamianie urządzenia…"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
-msgstr ""
+msgstr "Zapisywanie…"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr ""
+msgstr "Sprawdzanie poprawności…"
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
-msgstr ""
+msgstr "Planowanie…"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
-msgstr ""
+msgstr "Nieznane"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
-msgstr "Nie wykryto sprzętu z możliwością aktualizacji jego oprogramowania"
+msgstr "Nie wykryto sprzętu z możliwością aktualizacji jego oprogramowania"
 
-#. TRANSLATOR: the provider only supports offline
+#. TRANSLATOR: the plugin only supports offline
 msgid "Retrying as an offline update"
-msgstr "Próbowanie ponownie jako aktualizacja w trybie offline"
+msgstr "Próbowanie ponownie jako aktualizacja w trybie offline"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -327,17 +358,20 @@ msgstr "Ponowne instalowanie %s za pomocą %s… "
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
-msgstr "Instalowanie poprzedniej wersji %s z %s do %s… "
+msgstr "Instalowanie poprzedniej wersji %s z %s do %s… "
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Updating %s from %s to %s... "
-msgstr "Aktualizowanie %s z wersji %s do %s… "
+msgstr "Aktualizowanie %s z wersji %s do %s… "
 
 msgid "Done!"
 msgstr "Gotowe."
+
+msgid "OK"
+msgstr "OK"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -380,11 +414,11 @@ msgstr "Zmieniono urządzenie:"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
-msgstr "Wyświetla dodatkowe informacje o debugowaniu"
+msgstr "Wyświetla dodatkowe informacje o debugowaniu"
 
 #. TRANSLATORS: command line option
-msgid "Perform the installation offline where possible"
-msgstr "Wykonuje instalację w trybie offline, jeśli to możliwe"
+msgid "Schedule installation for next reboot when possible"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
@@ -395,8 +429,8 @@ msgid "Allow downgrading firmware versions"
 msgstr "Umożliwia instalowanie poprzednich wersji oprogramowania sprzętowego"
 
 #. TRANSLATORS: command line option
-msgid "Override provider warning"
-msgstr "Ignoruje ostrzeżenie dostawcy"
+msgid "Override plugin warning"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -412,7 +446,7 @@ msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
-msgstr "Uzyskuje informacje o pliku oprogramowania sprzętowego"
+msgstr "Uzyskuje informacje o pliku oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -432,19 +466,15 @@ msgstr "Odblokowuje urządzenie"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
-msgstr "Czyści wyniki z ostatniej aktualizacji"
+msgstr "Czyści wyniki z ostatniej aktualizacji"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
-msgstr "Uzyskuje wyniki z ostatniej aktualizacji"
+msgstr "Uzyskuje wyniki z ostatniej aktualizacji"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Odświeża metadane ze zdalnego serwera"
-
-#. TRANSLATORS: command description
-msgid "Dump the ROM checksum"
-msgstr "Zrzuca sumę kontrolną pamięci ROM"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"

@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-29 09:50+0100\n"
-"PO-Revision-Date: 2016-08-29 08:50+0000\n"
+"POT-Creation-Date: 2017-02-08 12:51+0000\n"
+"PO-Revision-Date: 2017-02-08 12:51+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/hughsie/fwupd/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
@@ -60,6 +60,14 @@ msgstr "解锁设备以允许访问"
 msgid "Authentication is required to unlock a device"
 msgstr "需要认证：解锁设备"
 
+msgid "Update the stored device verification information"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr ""
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -69,25 +77,29 @@ msgstr "%s 的别名"
 msgid "Command not found"
 msgstr "未找到命令"
 
-#. TRANSLATORS: when an action has completed
-msgid "OK"
-msgstr "确定"
+#. TRANSLATORS: read from device to host
+msgid "Reading"
+msgstr ""
 
-#. TRANSLATORS: when moving from runtime to DFU mode
+#. TRANSLATORS: write from host to device
+msgid "Writing"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Verifying"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Erasing"
+msgstr ""
+
+#. TRANSLATORS: waiting for device
 msgid "Detaching"
 msgstr "断开中"
 
-#. TRANSLATORS: when moving from DFU to runtime mode
+#. TRANSLATORS: waiting for device
 msgid "Attaching"
 msgstr "连接中"
-
-#. TRANSLATORS: when copying from host to device
-msgid "Downloading"
-msgstr "下载中"
-
-#. TRANSLATORS: when copying from device to host
-msgid "Uploading"
-msgstr "上传中"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -142,7 +154,7 @@ msgstr "未知：访问被拒绝"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
 msgid "Serial"
-msgstr ""
+msgstr "串口"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
 msgid "Mode"
@@ -151,6 +163,10 @@ msgstr "模式"
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "状态"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr ""
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -175,11 +191,11 @@ msgstr "设置固件文件上的产品 ID"
 
 #. TRANSLATORS: command description
 msgid "Set element address on firmware file"
-msgstr ""
+msgstr "设置固件文件上的元件地址"
 
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
-msgstr ""
+msgstr "为目标固件设置大小"
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
@@ -195,7 +211,7 @@ msgstr "设置固件文件上的替代名称"
 
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
-msgstr "将可固件升级（DFU）的设备重新附到运行时上"
+msgstr "将可固件升级 (DFU) 的设备重新附到运行时上"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -227,7 +243,7 @@ msgstr "转储有关某固件文件的详细信息"
 
 #. TRANSLATORS: command description
 msgid "Watch DFU devices being hotplugged"
-msgstr "注意被热插入的固件升级（DFU）设备"
+msgstr "注意被热插入的固件升级 (DFU) 设备"
 
 #. TRANSLATORS: command description
 msgid "Encrypt firmware data"
@@ -241,6 +257,10 @@ msgstr "正在解密固件"
 msgid "Sets metadata on a firmware file"
 msgstr "设置固件文件上的元数据"
 
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr ""
+
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "固件更新实用程序"
@@ -248,6 +268,17 @@ msgstr "固件更新实用程序"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "未能解析参数"
+
+#. TRANSLATORS: command description
+msgid "Enumerate all Synaptics MST devices"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Flash firmware file to MST device"
+msgstr ""
+
+msgid "Synaptics Multistream Transport Utility"
+msgstr ""
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
@@ -279,41 +310,41 @@ msgstr "固件更新 D-Bus 服务"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
-msgstr ""
+msgstr "空闲…"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
-msgstr ""
+msgstr "正在解压缩…"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
-msgstr ""
+msgstr "正在加载…"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr ""
+msgstr "正在重启设备…"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
-msgstr ""
+msgstr "正在写入…"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr ""
+msgstr "正在验证…"
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
-msgstr ""
+msgstr "正在计划…"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
-msgstr ""
+msgstr "未知"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "没有检测到支持更新固件的硬件"
 
-#. TRANSLATOR: the provider only supports offline
+#. TRANSLATOR: the plugin only supports offline
 msgid "Retrying as an offline update"
 msgstr "作为脱机更新重试"
 
@@ -340,6 +371,9 @@ msgstr "正在更新 %s，从 %s 到 %s…"
 
 msgid "Done!"
 msgstr "完成！"
+
+msgid "OK"
+msgstr "确定"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -385,8 +419,8 @@ msgid "Show extra debugging information"
 msgstr "显示额外调试信息"
 
 #. TRANSLATORS: command line option
-msgid "Perform the installation offline where possible"
-msgstr "尽可能地执行脱机安装"
+msgid "Schedule installation for next reboot when possible"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
@@ -397,8 +431,8 @@ msgid "Allow downgrading firmware versions"
 msgstr "允许降级固件版本"
 
 #. TRANSLATORS: command line option
-msgid "Override provider warning"
-msgstr "替代提供商警告"
+msgid "Override plugin warning"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -443,10 +477,6 @@ msgstr "从最后一次更新中获取结果"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "刷新来自远程服务器的元数据"
-
-#. TRANSLATORS: command description
-msgid "Dump the ROM checksum"
-msgstr "转储 ROM 校验和"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"

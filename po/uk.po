@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-29 09:50+0100\n"
-"PO-Revision-Date: 2016-08-29 08:50+0000\n"
+"POT-Creation-Date: 2017-02-08 12:51+0000\n"
+"PO-Revision-Date: 2017-02-08 12:51+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Ukrainian (http://www.transifex.com/hughsie/fwupd/language/uk/)\n"
 "MIME-Version: 1.0\n"
@@ -58,6 +58,14 @@ msgstr "Розблокування пристрою для отримання д
 msgid "Authentication is required to unlock a device"
 msgstr "Щоб розблокувати пристрій, слід пройти розпізнавання"
 
+msgid "Update the stored device verification information"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr ""
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -67,25 +75,29 @@ msgstr "Інша назва %s"
 msgid "Command not found"
 msgstr "Такої команди не знайдено"
 
-#. TRANSLATORS: when an action has completed
-msgid "OK"
-msgstr "Гаразд"
+#. TRANSLATORS: read from device to host
+msgid "Reading"
+msgstr ""
 
-#. TRANSLATORS: when moving from runtime to DFU mode
+#. TRANSLATORS: write from host to device
+msgid "Writing"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Verifying"
+msgstr ""
+
+#. TRANSLATORS: read from device to host
+msgid "Erasing"
+msgstr ""
+
+#. TRANSLATORS: waiting for device
 msgid "Detaching"
 msgstr "Від’єднуємо"
 
-#. TRANSLATORS: when moving from DFU to runtime mode
+#. TRANSLATORS: waiting for device
 msgid "Attaching"
 msgstr "З’єднуємо"
-
-#. TRANSLATORS: when copying from host to device
-msgid "Downloading"
-msgstr "Отримуємо"
-
-#. TRANSLATORS: when copying from device to host
-msgid "Uploading"
-msgstr "Вивантажуємо"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -140,7 +152,7 @@ msgstr "Невідомий: доступ заборонено"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
 msgid "Serial"
-msgstr ""
+msgstr "Порядкове"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
 msgid "Mode"
@@ -149,6 +161,10 @@ msgstr "Режим"
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Стан"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr ""
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -173,11 +189,11 @@ msgstr "Встановити ідентифікатор продукту для 
 
 #. TRANSLATORS: command description
 msgid "Set element address on firmware file"
-msgstr ""
+msgstr "Встановити адресу елемента для файла мікропрограми"
 
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
-msgstr ""
+msgstr "Встановити розмір мікропрограми для призначення"
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
@@ -239,6 +255,10 @@ msgstr "Розшифрувати дані мікропрограми"
 msgid "Sets metadata on a firmware file"
 msgstr "Встановлює метадані щодо файла мікпропрограми"
 
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr ""
+
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "Засіб роботи з DFU"
@@ -246,6 +266,17 @@ msgstr "Засіб роботи з DFU"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Не вдалося обробити аргументи"
+
+#. TRANSLATORS: command description
+msgid "Enumerate all Synaptics MST devices"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Flash firmware file to MST device"
+msgstr ""
+
+msgid "Synaptics Multistream Transport Utility"
+msgstr ""
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
@@ -277,41 +308,41 @@ msgstr "Служба D-Bus оновлення мікропрограми"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
-msgstr ""
+msgstr "Бездіяльність…"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
-msgstr ""
+msgstr "Розпаковування…"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
-msgstr ""
+msgstr "Завантаження…"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr ""
+msgstr "Перезапускаємо пристрій…"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
-msgstr ""
+msgstr "Записуємо…"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr ""
+msgstr "Перевіряємо…"
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
-msgstr ""
+msgstr "Плануємо…"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
-msgstr ""
+msgstr "Невідомий"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Не виявлено обладнання із передбаченою можливістю оновлення мікропрограми"
 
-#. TRANSLATOR: the provider only supports offline
+#. TRANSLATOR: the plugin only supports offline
 msgid "Retrying as an offline update"
 msgstr "Повторна спроба у режимі автономного оновлення"
 
@@ -338,6 +369,9 @@ msgstr "Оновлюємо %s з %s до %s... "
 
 msgid "Done!"
 msgstr "Виконано!"
+
+msgid "OK"
+msgstr "Гаразд"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -383,8 +417,8 @@ msgid "Show extra debugging information"
 msgstr "Показати додаткові діагностичні дані"
 
 #. TRANSLATORS: command line option
-msgid "Perform the installation offline where possible"
-msgstr "Де можливо, виконати встановлення автономно"
+msgid "Schedule installation for next reboot when possible"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
@@ -395,8 +429,8 @@ msgid "Allow downgrading firmware versions"
 msgstr "Дозволити зниження версій мікропрограми"
 
 #. TRANSLATORS: command line option
-msgid "Override provider warning"
-msgstr "Не зважати на попередження надавача"
+msgid "Override plugin warning"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -441,10 +475,6 @@ msgstr "Отримує результати з останнього оновле
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Оновити метадані з віддаленого сервера"
-
-#. TRANSLATORS: command description
-msgid "Dump the ROM checksum"
-msgstr "Створити дамп контрольної суми ROM"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"

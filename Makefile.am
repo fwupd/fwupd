@@ -5,12 +5,12 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 SUBDIRS = 						\
 	libfwupd					\
 	libdfu						\
-	libebitdo					\
 	po						\
 	data						\
 	docs						\
 	policy						\
-	src
+	src						\
+	plugins
 
 snapshot:
 	$(MAKE) dist distdir=$(PACKAGE)-$(VERSION)-`date +"%Y%m%d"`

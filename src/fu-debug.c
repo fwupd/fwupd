@@ -52,7 +52,6 @@ fu_debug_ignore_cb (const gchar *log_domain,
 	/* syslog */
 	switch (log_level) {
 	case G_LOG_LEVEL_INFO:
-		g_print ("%s\n", message);
 	case G_LOG_LEVEL_CRITICAL:
 	case G_LOG_LEVEL_ERROR:
 	case G_LOG_LEVEL_WARNING:
@@ -69,47 +68,53 @@ fu_debug_handler_cb (const gchar *log_domain,
 		     const gchar *message,
 		     gpointer user_data)
 {
-	gchar str_time[255];
-	time_t the_time;
-
-	/* syslog */
-	switch (log_level) {
-	case G_LOG_LEVEL_INFO:
-		g_print ("%s\n", message);
-	case G_LOG_LEVEL_CRITICAL:
-	case G_LOG_LEVEL_ERROR:
-	case G_LOG_LEVEL_WARNING:
-		g_print ("%s\n", message);
-		break;
-	default:
-		break;
-	}
+	g_autofree gchar *tmp = NULL;
+	g_autoptr(GDateTime) dt = g_date_time_new_now_utc ();
+	g_autoptr(GString) domain = NULL;
 
 	/* time header */
-	time (&the_time);
-	strftime (str_time, 254, "%H:%M:%S", localtime (&the_time));
+	tmp = g_strdup_printf ("%02i:%02i:%02i:%04i",
+			       g_date_time_get_hour (dt),
+			       g_date_time_get_minute (dt),
+			       g_date_time_get_second (dt),
+			       g_date_time_get_microsecond (dt) / 1000);
 
-	/* no color please, we're British */
+	/* make these shorter */
+	if (g_str_has_prefix (log_domain, "FuPlugin"))
+		log_domain += 8;
+
+	/* pad out domain */
+	domain = g_string_new (log_domain);
+	for (gsize i = domain->len; i < 3; i++)
+		g_string_append (domain, " ");
+
+	/* to file */
 	if (!_console) {
-		if (log_level == G_LOG_LEVEL_DEBUG) {
-			g_print ("%s\t%s\n",
-				 str_time, message);
-		} else {
-			g_print ("***\n%s\t%s\n***\n",
-				 str_time, message);
-		}
+		if (tmp != NULL)
+			g_print ("%s ", tmp);
+		g_print ("%s ", domain->str);
+		g_print ("%s\n", message);
 		return;
 	}
 
-	/* critical is also in red */
-	if (log_level == G_LOG_LEVEL_CRITICAL ||
-	    log_level == G_LOG_LEVEL_ERROR) {
-		g_print ("%c[%dm%s\t", 0x1B, 32, str_time);
+	/* to screen */
+	switch (log_level) {
+	case G_LOG_LEVEL_ERROR:
+	case G_LOG_LEVEL_CRITICAL:
+	case G_LOG_LEVEL_WARNING:
+		/* critical in red */
+		if (tmp != NULL)
+			g_print ("%c[%dm%s ", 0x1B, 32, tmp);
+		g_print ("%s ", domain->str);
 		g_print ("%c[%dm%s\n%c[%dm", 0x1B, 31, message, 0x1B, 0);
-	} else {
+		break;
+	default:
 		/* debug in blue */
-		g_print ("%c[%dm%s\t", 0x1B, 32, str_time);
+		if (tmp != NULL)
+			g_print ("%c[%dm%s ", 0x1B, 32, tmp);
+		g_print ("%s ", domain->str);
 		g_print ("%c[%dm%s\n%c[%dm", 0x1B, 34, message, 0x1B, 0);
+		break;
 	}
 }
 
@@ -142,12 +147,7 @@ fu_debug_setup (gboolean enabled)
 	if (enabled) {
 		g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR |
 					    G_LOG_LEVEL_CRITICAL);
-		g_log_set_handler (G_LOG_DOMAIN,
-				   G_LOG_LEVEL_ERROR |
-				   G_LOG_LEVEL_CRITICAL |
-				   G_LOG_LEVEL_DEBUG |
-				   G_LOG_LEVEL_WARNING,
-				   fu_debug_handler_cb, NULL);
+		g_log_set_default_handler (fu_debug_handler_cb, NULL);
 	} else {
 		/* hide all debugging */
 		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,

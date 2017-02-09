@@ -412,6 +412,55 @@ fwupd_client_verify (FwupdClient *client, const gchar *device_id,
 }
 
 /**
+ * fwupd_client_verify_update:
+ * @client: A #FwupdClient
+ * @device_id: the device ID
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Update the verification record for a specific device.
+ *
+ * Returns: %TRUE for verification success
+ *
+ * Since: 0.8.0
+ **/
+gboolean
+fwupd_client_verify_update (FwupdClient *client, const gchar *device_id,
+		     GCancellable *cancellable, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return FALSE;
+
+	/* call into daemon */
+	helper = fwupd_client_helper_new ();
+	g_dbus_proxy_call (priv->proxy,
+			   "VerifyUpdate",
+			   g_variant_new ("(s)", device_id),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1,
+			   cancellable,
+			   fwupd_client_proxy_call_cb,
+			   helper);
+	g_main_loop_run (helper->loop);
+	if (!helper->ret) {
+		g_propagate_error (error, helper->error);
+		helper->error = NULL;
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fwupd_client_unlock:
  * @client: A #FwupdClient
  * @device_id: the device ID
@@ -669,7 +718,7 @@ fwupd_client_install (FwupdClient *client,
 
 	/* call into daemon */
 	helper = fwupd_client_helper_new ();
-	body = g_variant_new ("(sha{sv})", device_id, fd > -1 ? 0 : -1, &builder);
+	body = g_variant_new ("(sha{sv})", device_id, fd, &builder);
 	g_dbus_message_set_body (request, body);
 	g_dbus_connection_send_message_with_reply (priv->conn,
 						   request,
@@ -748,7 +797,7 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 
 	/* call into daemon */
 	helper = fwupd_client_helper_new ();
-	body = g_variant_new ("(h)", fd > -1 ? 0 : -1);
+	body = g_variant_new ("(h)", fd);
 	g_dbus_message_set_body (request, body);
 
 	g_dbus_connection_send_message_with_reply (priv->conn,
@@ -830,7 +879,7 @@ fwupd_client_get_details_local (FwupdClient *client, const gchar *filename,
 
 	/* call into daemon */
 	helper = fwupd_client_helper_new ();
-	body = g_variant_new ("(h)", fd > -1 ? 0 : -1);
+	body = g_variant_new ("(h)", fd);
 	g_dbus_message_set_body (request, body);
 
 	g_dbus_connection_send_message_with_reply (priv->conn,
@@ -941,6 +990,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 	}
 	fd_sig = open (signature_fn, O_RDONLY);
 	if (fd_sig < 0) {
+		close (fd);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,

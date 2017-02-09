@@ -1,3 +1,5 @@
+SUBDIRS = tests
+
 if HAVE_INTROSPECTION
 -include $(INTROSPECTION_MAKEFILE)
 INTROSPECTION_GIRS =
@@ -15,8 +17,8 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)						\
 	-I$(top_builddir)					\
 	-DG_USB_API_IS_SUBJECT_TO_CHANGE			\
-	-DG_LOG_DOMAIN=\"libdfu\"				\
-	-DTESTDATADIR=\""$(top_srcdir)/data/tests/dfu"\"	\
+	-DG_LOG_DOMAIN=\"Dfu\"					\
+	-DTESTDATADIR=\""$(top_srcdir)/libdfu/tests"\"		\
 	-DLOCALEDIR=\""$(localedir)"\"
 
 lib_LTLIBRARIES =						\
@@ -158,6 +160,7 @@ introspection_sources =						\
 Dfu-1.0.gir: libdfu.la
 Dfu_1_0_gir_INCLUDES = GObject-2.0 Gio-2.0 GUsb-1.0 AppStreamGlib-1.0
 Dfu_1_0_gir_CFLAGS = $(AM_CPPFLAGS)
+Dfu_1_0_gir_LDFLAGS = $(ELF_LIBS)
 Dfu_1_0_gir_SCANNERFLAGS = --identifier-prefix=Dfu \
 				--symbol-prefix=dfu \
 				--warn-all \

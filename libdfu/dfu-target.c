@@ -312,7 +312,6 @@ gboolean
 dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	guint32 addr;
 	g_autofree gchar *str_debug = NULL;
 	g_auto(GStrv) zones = NULL;
 
@@ -327,11 +326,12 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 	/* From the Neo Freerunner */
 	if (g_str_has_prefix (alt_name, "RAM 0x")) {
 		DfuSector *sector;
-		addr = g_ascii_strtoull (alt_name + 6, NULL, 16);
-		if (addr == 0 && addr > G_MAXUINT32)
+		guint64 addr_tmp;
+		addr_tmp = g_ascii_strtoull (alt_name + 6, NULL, 16);
+		if (addr_tmp == 0 || addr_tmp > G_MAXUINT32)
 			return FALSE;
 		g_debug ("RAM description, so parsing");
-		sector = dfu_sector_new ((guint32) addr, /* addr */
+		sector = dfu_sector_new ((guint32) addr_tmp,
 					 0x0, /* size */
 					 0x0, /* size_left */
 					 0x0, /* zone */
@@ -352,6 +352,7 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 	zones = g_strsplit (alt_name, "/", -1);
 	priv->alt_name_for_display = g_strdup (g_strchomp (zones[0] + 1));
 	for (guint i = 1; zones[i] != NULL; i += 2) {
+		guint32 addr;
 		guint64 addr_tmp;
 		g_auto(GStrv) sectors = NULL;
 
@@ -1720,6 +1721,21 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		element = dfu_image_get_element (image, (guint8) i);
 		g_debug ("downloading element at 0x%04x",
 			 dfu_element_get_address (element));
+
+		/* auto-detect missing firmware address -- this assumes
+		 * that the first target is the main program memory and that
+		 * there is only one element in the firmware file */
+		if (flags & DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC &&
+		    dfu_element_get_address (element) == 0x0 &&
+		    elements->len == 1 &&
+		    priv->sectors->len > 0) {
+			DfuSector *sector = g_ptr_array_index (priv->sectors, 0);
+			g_debug ("fixing up firmware address from 0x0 to 0x%x",
+				 dfu_sector_get_address (sector));
+			dfu_element_set_address (element, dfu_sector_get_address (sector));
+		}
+
+		/* download to device */
 		ret = dfu_target_download_element (target,
 						   element,
 						   flags,

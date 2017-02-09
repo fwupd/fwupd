@@ -1,11 +1,6 @@
-SUBDIRS = 								\
-	colorhug							\
-	dfu								\
-	rpiupdate
+SUBDIRS = colorhug
 
-test_files =								\
-	rpiboot/start.elf						\
-	pki/GPG-KEY-Linux-Vendor-Firmware-Service
+test_files = pki/GPG-KEY-Linux-Vendor-Firmware-Service
 
 EXTRA_DIST = $(test_files)
 
