@@ -73,6 +73,15 @@ Description: Firmware update daemon library for DFU support
  .
  This package provides the library used by the daemon for DFU support.
 
+Package: libebitdo1
+Architecture: linux-any
+Depends: ${misc:Depends}
+Multi-Arch: same
+Priority: extra
+Section: oldlibs
+Description: Firmware update daemon library for 0bitdo support (transitional package)
+ This is a transitional package for 0bitdo support that was moved into a plugin.
+
 Package: fwupd
 Architecture: linux-any
 Depends: ${misc:Depends},
@@ -151,3 +160,12 @@ Description: development files for libdfu
  See <https://github.com/hughsie/fwupd> for details
  .
  This package provides the development files for libdfu
+
+Package: libebitdo-dev
+Architecture: linux-any
+Multi-Arch: same
+Depends: ${misc:Depends}
+Priority: extra
+Section: oldlibs
+Description: development files for libebitdo (transitional package)
+ This is a transitional package for 0bitdo support that was moved into a plugin.
