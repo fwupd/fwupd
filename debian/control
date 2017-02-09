@@ -74,8 +74,6 @@ Description: Firmware update daemon library for DFU support
  This package provides the library used by the daemon for DFU support.
 
 Package: libebitdo1
-Priority: extra
-Section: oldlibs
 Architecture: linux-any
 Depends: ${misc:Depends}
 Multi-Arch: same
@@ -164,8 +162,6 @@ Description: development files for libdfu
  This package provides the development files for libdfu
 
 Package: libebitdo-dev
-Priority: extra
-Section: oldlibs
 Architecture: linux-any
 Multi-Arch: same
 Depends: ${misc:Depends}
