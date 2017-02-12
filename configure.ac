@@ -82,7 +82,6 @@ WARN_CFLAGS_EXTRA="
 	-Wmissing-parameter-type
 	-Wmissing-prototypes
 	-Wnested-externs
-	-Wno-discarded-qualifiers
 	-Wno-missing-field-initializers
 	-Wno-strict-aliasing
 	-Wno-suggest-attribute=format
