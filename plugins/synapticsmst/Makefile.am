@@ -47,6 +47,7 @@ synapticsmst_tool_SOURCES =					\
 
 synapticsmst_tool_LDADD =					\
 	$(LIBSMBIOS_LIBS)					\
+	$(EFIVAR_LIBS)						\
 	$(APPSTREAM_GLIB_LIBS)					\
 	$(GLIB_LIBS)
 
