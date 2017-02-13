@@ -159,7 +159,7 @@ synapticsmst_device_enable_remote_control (SynapticsMSTDevice *device, GError **
 
 	/* in test mode we need to open a different file node instead */
 	if (priv->test_mode) {
-		g_autofree gchar *filename;
+		g_autofree gchar *filename = NULL;
 		close(priv->fd);
 		filename = g_strdup_printf ("%s/remote/%s",
 					    priv->fw_dir,
@@ -204,7 +204,7 @@ synapticsmst_device_disable_remote_control (SynapticsMSTDevice *device, GError *
 
 	/* in test mode we need to open a different file node instead */
 	if (priv->test_mode) {
-		g_autofree gchar *filename;
+		g_autofree gchar *filename = NULL;
 		close(priv->fd);
 		filename = g_strdup_printf ("%s/%s",
 					    priv->fw_dir,
@@ -296,7 +296,7 @@ synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
 	guint8 rc;
 
 	if (priv->test_mode) {
-		g_autofree gchar *filename;
+		g_autofree gchar *filename = NULL;
 		gint fd;
 		filename = g_strdup_printf ("%s/remote/%s_eeprom",
 					    priv->fw_dir,
@@ -755,7 +755,7 @@ gboolean
 synapticsmst_device_open (SynapticsMSTDevice *device, GError **error)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	g_autofree gchar *filename;
+	g_autofree gchar *filename = NULL;
 	guint8 byte[4];
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
