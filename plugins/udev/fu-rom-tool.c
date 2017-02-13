@@ -145,7 +145,7 @@ fu_fuzzer_rom_create (GError **error)
 	g_hash_table_insert (hash, (gpointer) "naked-ifr.rom",
 			     g_string_new_len (blob_ifr, 0x80));
 	str = g_string_new_len ((gchar *) blob_ifr, 0x80);
-	memcpy (&blob_header[0x6], "ifr-hdr-data-payld", 18);
+	memcpy (&blob_header[0x6], (gpointer) "ifr-hdr-data-payld", 18);
 	g_string_append_len (str, (gchar *) blob_header, 0x200);
 	g_hash_table_insert (hash, (gpointer) "ifr-header-data-payload.rom", str);
 
