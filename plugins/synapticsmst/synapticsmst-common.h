@@ -91,14 +91,14 @@ guint8		 synapticsmst_common_read_dpcd 			(SynapticsMSTConnection *connection,
 
 guint8		 synapticsmst_common_write_dpcd 		(SynapticsMSTConnection *connection,
 								 gint	 offset,
-								 gint	*buf,
+								 const gint *buf,
 								 gint	 length);
 
 guint8		 synapticsmst_common_rc_set_command 		(SynapticsMSTConnection *connection,
 								 gint	 rc_cmd,
 								 gint	 length,
 								 gint	 offset,
-								 guint8	*buf);
+								 const guint8	*buf);
 
 guint8		 synapticsmst_common_rc_get_command 		(SynapticsMSTConnection *connection,
 								 gint	 rc_cmd,

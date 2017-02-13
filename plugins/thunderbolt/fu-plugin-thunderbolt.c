@@ -410,7 +410,7 @@ fu_plugin_thunderbolt_uevent_cb (GUdevClient *gudev_client,
 		devpath = fu_plugin_thunderbolt_find_devpath (plugin, udev_device);
 		if (devpath != NULL) {
 			g_debug ("potentially removing tbt device");
-			g_ptr_array_remove (data->devpaths, devpath);
+			g_ptr_array_remove (data->devpaths, (gpointer) devpath);
 			fu_plugin_thunderbolt_schedule_rescan (plugin);
 		}
 		return;
