@@ -406,7 +406,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 			system = g_ascii_strdown (system, -1);
 		}
 		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WLD15_WIRELESS)
-			system = "wld15";
+			system = g_strdup ("wld15");
 
 		/* This is a host system, use system ID */
 		else
