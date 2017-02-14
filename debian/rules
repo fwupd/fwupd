@@ -29,7 +29,6 @@ override_dh_auto_configure:
 	dh_auto_configure -- --with-systemdunitdir=/lib/systemd/system \
 				--enable-gtk-doc \
 				--libexecdir=\$${prefix}/lib \
-				--enable-synaptics \
 				$(COLORHUG) $$UEFI
 
 override_dh_install:
