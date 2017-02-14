@@ -22,10 +22,10 @@
 #include "config.h"
 
 #include <fcntl.h>
-#include <gelf.h>
 #include <gio/gunixinputstream.h>
 
 #ifdef HAVE_LIBELF
+#include <gelf.h>
 #include <libelf.h>
 #include <linux/memfd.h>
 #endif
