@@ -481,9 +481,9 @@ dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
 	guint8 *search_buf;
 	guint cnt = 0;
 
-	data_buf = g_bytes_get_data (data, &data_sz);
-	search_buf = g_bytes_get_data (search, &search_sz);
-	replace_buf = g_bytes_get_data (replace, &replace_sz);
+	data_buf = (gpointer) g_bytes_get_data (data, &data_sz);
+	search_buf = (gpointer) g_bytes_get_data (search, &search_sz);
+	replace_buf = (gpointer) g_bytes_get_data (replace, &replace_sz);
 
 	g_return_val_if_fail (search_sz == replace_sz, FALSE);
 

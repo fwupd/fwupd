@@ -534,7 +534,7 @@ fu_device_altos_write_firmware (FuDeviceAltos *device,
 		return FALSE;
 
 	/* check firmware will fit */
-	data = g_bytes_get_data (fw_blob, &data_len);
+	data = g_bytes_get_data (fw_blob, (gsize *) &data_len);
 	if (data_len > flash_len) {
 		g_set_error (error,
 			     FWUPD_ERROR,

@@ -12,10 +12,10 @@ man_MANS =						\
 
 fwupdmgr.1: fwupdmgr.sgml
 	$(AM_V_GEN)					\
-	docbook2man $? > /dev/null
+	$(DOCBOOK2MAN) $? > /dev/null
 dfu-tool.1: dfu-tool.sgml
 	$(AM_V_GEN)					\
-	docbook2man $? > /dev/null
+	$(DOCBOOK2MAN) $? > /dev/null
 
 MAINTAINERCLEANFILES =					\
 	manpage.links					\

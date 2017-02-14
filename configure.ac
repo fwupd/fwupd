@@ -3,7 +3,7 @@ AC_PREREQ(2.63)
 
 m4_define([fwupd_major_version], [0])
 m4_define([fwupd_minor_version], [8])
-m4_define([fwupd_micro_version], [0])
+m4_define([fwupd_micro_version], [1])
 m4_define([fwupd_version],
           [fwupd_major_version.fwupd_minor_version.fwupd_micro_version])
 
@@ -82,7 +82,6 @@ WARN_CFLAGS_EXTRA="
 	-Wmissing-parameter-type
 	-Wmissing-prototypes
 	-Wnested-externs
-	-Wno-discarded-qualifiers
 	-Wno-missing-field-initializers
 	-Wno-strict-aliasing
 	-Wno-suggest-attribute=format
