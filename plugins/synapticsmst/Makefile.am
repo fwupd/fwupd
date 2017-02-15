@@ -72,6 +72,7 @@ fu_self_test_SOURCES =						\
 fu_self_test_LDADD =						\
 	$(FWUPD_LIBS)						\
 	$(GUSB_LIBS)						\
+	$(EFIVAR_LIBS)						\
 	$(LIBSMBIOS_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)					\
 	$(SQLITE_LIBS)						\

@@ -73,6 +73,7 @@ fu_dell_tool_SOURCES =					\
 fu_dell_tool_LDADD =					\
 	$(GLIB_LIBS)					\
 	$(FWUPD_LIBS)					\
+	$(EFIVAR_LIBS)					\
 	$(LIBSMBIOS_LIBS)
 
 fu_dell_tool_LDFLAGS =					\
