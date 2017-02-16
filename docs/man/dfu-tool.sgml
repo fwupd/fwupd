@@ -1,4 +1,4 @@
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
   <!-- Please adjust the date whenever revising the manpage. -->
   <!ENTITY date        "<date>26 February,2015</date>">
   <!ENTITY package     "dfu-tool">
