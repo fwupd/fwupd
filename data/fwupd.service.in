@@ -9,7 +9,6 @@ Type=dbus
 BusName=org.freedesktop.fwupd
 ExecStart=@servicedir@/fwupd/fwupd
 MemoryDenyWriteExecute=yes
-NoNewPrivileges=yes
 PrivateTmp=yes
 PrivateUsers=yes
 ProtectControlGroups=yes
