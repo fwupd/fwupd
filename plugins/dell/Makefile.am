@@ -6,6 +6,7 @@ AM_CPPFLAGS =						\
 	$(LIBSMBIOS_CFLAGS)				\
 	$(EFIVAR_CFLAGS)				\
 	$(GUDEV_CFLAGS)					\
+	$(VALGRIND_CFLAGS)				\
 	$(PIE_CFLAGS)					\
 	-DLIBEXECDIR=\"$(libexecdir)\"			\
 	-DTESTDATADIR=\""$(top_srcdir)/data/tests"\"	\

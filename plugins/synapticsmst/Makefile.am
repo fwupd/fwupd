@@ -3,6 +3,7 @@ AM_CPPFLAGS = 							\
 	$(GLIB_CFLAGS)						\
 	$(GUSB_CFLAGS)						\
 	$(LIBSMBIOS_CFLAGS)					\
+	$(VALGRIND_CFLAGS)					\
 	$(PIE_CFLAGS)						\
 	$(EFIVAR_CFLAGS)					\
 	-I$(top_srcdir)						\
