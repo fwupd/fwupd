@@ -10,7 +10,6 @@ BusName=org.freedesktop.fwupd
 ExecStart=@servicedir@/fwupd/fwupd
 MemoryDenyWriteExecute=yes
 PrivateTmp=yes
-NoNewPrivileges=yes
 ProtectControlGroups=yes
 ProtectHome=yes
 ProtectKernelModules=yes
