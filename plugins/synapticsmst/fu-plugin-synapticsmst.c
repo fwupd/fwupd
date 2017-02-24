@@ -204,7 +204,7 @@ static gboolean
 fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 				  GError **error)
 {
-	g_autoptr (GDir) dir;
+	g_autoptr(GDir) dir = NULL;
 	const gchar *dp_aux_dir;
 	const gchar *aux_node = NULL;
 	g_autofree gchar *dev_id_str = NULL;
