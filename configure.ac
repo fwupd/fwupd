@@ -144,6 +144,7 @@ PKG_CHECK_MODULES(GUSB, gusb >= 0.2.9)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 PKG_CHECK_MODULES(ARCHIVE, libarchive)
 PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.51.92)
+PKG_CHECK_MODULES(VALGRIND, valgrind)
 AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
 if test -z $DOCBOOK2MAN ; then
 	AC_MSG_ERROR([docbook2man program not found])

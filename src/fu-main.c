@@ -2884,8 +2884,6 @@ out:
 			g_source_remove (priv->coldplug_id);
 		if (priv->plugins != NULL)
 			g_ptr_array_unref (priv->plugins);
-		if (priv->plugins != NULL)
-			g_ptr_array_unref (priv->plugins);
 		if (priv->plugins_hash != NULL)
 			g_hash_table_unref (priv->plugins_hash);
 		g_ptr_array_unref (priv->devices);

@@ -5,6 +5,7 @@ AM_CPPFLAGS =						\
 	$(APPSTREAM_GLIB_CFLAGS)			\
 	$(GUSB_CFLAGS)					\
 	$(GLIB_CFLAGS)					\
+	$(VALGRIND_CFLAGS)				\
 	$(PIE_CFLAGS)					\
 	-DLIBEXECDIR=\"$(libexecdir)\"			\
 	-DTESTDATADIR=\""$(top_srcdir)/plugins/raspberrypi"\" \

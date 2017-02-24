@@ -840,7 +840,8 @@ fu_plugin_init (FuPlugin *plugin)
 					       g_free, (GDestroyNotify) fu_plugin_device_free);
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
-	data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
+	if (fu_dell_supported ())
+		data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
 	data->smi_obj->fake_smbios = FALSE;
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
 		data->smi_obj->fake_smbios = TRUE;
@@ -851,7 +852,8 @@ fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_hash_table_unref (data->devices);
-	dell_smi_obj_free (data->smi_obj->smi);
+	if (data->smi_obj->smi)
+		dell_smi_obj_free (data->smi_obj->smi);
 	g_free(data->smi_obj);
 }
 
@@ -859,17 +861,8 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-
-	/* get USB */
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	if (usb_ctx != NULL) {
-		g_signal_connect (usb_ctx, "device-added",
-				  G_CALLBACK (fu_plugin_dell_device_added_cb),
-				  plugin);
-		g_signal_connect (usb_ctx, "device-removed",
-				  G_CALLBACK (fu_plugin_dell_device_removed_cb),
-				  plugin);
-	}
+
 	if (data->smi_obj->fake_smbios) {
 		g_debug ("Called with fake SMBIOS implementation. "
 			 "We're ignoring test for SBMIOS table and ESRT. "
@@ -883,6 +876,15 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Firmware updating not supported");
 		return FALSE;
+	}
+
+	if (usb_ctx != NULL) {
+		g_signal_connect (usb_ctx, "device-added",
+				  G_CALLBACK (fu_plugin_dell_device_added_cb),
+				  plugin);
+		g_signal_connect (usb_ctx, "device-removed",
+				  G_CALLBACK (fu_plugin_dell_device_removed_cb),
+				  plugin);
 	}
 
 #if defined (HAVE_SYNAPTICS) || defined (HAVE_THUNDERBOLT)

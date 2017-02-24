@@ -13,6 +13,7 @@ AM_CPPFLAGS =						\
 	$(SOUP_CFLAGS)					\
 	$(ARCHIVE_CFLAGS)				\
 	$(GUDEV_CFLAGS)					\
+	$(VALGRIND_CFLAGS)				\
 	-I$(top_srcdir)					\
 	-I$(top_builddir)				\
 	-I$(top_srcdir)/libfwupd			\

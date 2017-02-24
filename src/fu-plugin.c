@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <string.h>
 #include <gio/gunixinputstream.h>
+#include <valgrind.h>
 
 #include "fu-plugin-private.h"
 #include "fu-pending.h"
@@ -1083,8 +1084,10 @@ fu_plugin_finalize (GObject *object)
 
 	if (priv->usb_ctx != NULL)
 		g_object_unref (priv->usb_ctx);
+#ifndef RUNNING_ON_VALGRIND
 	if (priv->module != NULL)
 		g_module_close (priv->module);
+#endif
 	g_hash_table_unref (priv->devices);
 	g_hash_table_unref (priv->devices_delay);
 	g_free (priv->name);
