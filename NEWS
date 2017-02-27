@@ -1,3 +1,15 @@
+Version 0.8.1
+~~~~~~~~~~~~~
+Released: 2017-02-27
+
+Bugfixes:
+ - Adjust systemd confinement restrictions (Mario Limonciello, Richard Hughes)
+ - Do not hardcode docbook2man path (Kai Krakow)
+ - Don't initialize libsmbios on unsupported systems (Mario Limonciello)
+ - Fix a crash when enumerating devices on a Dell WLD15 (Richard Hughes)
+ - Fix compiler warnings (Kai Krakow)
+ - Fix fwupdmgr timeout with missing pending database (Richard Hughes)
+
 Version 0.8.0
 ~~~~~~~~~~~~~
 Released: 2017-02-08

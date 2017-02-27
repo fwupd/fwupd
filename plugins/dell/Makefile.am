@@ -6,6 +6,7 @@ AM_CPPFLAGS =						\
 	$(LIBSMBIOS_CFLAGS)				\
 	$(EFIVAR_CFLAGS)				\
 	$(GUDEV_CFLAGS)					\
+	$(VALGRIND_CFLAGS)				\
 	$(PIE_CFLAGS)					\
 	-DLIBEXECDIR=\"$(libexecdir)\"			\
 	-DTESTDATADIR=\""$(top_srcdir)/data/tests"\"	\
@@ -73,6 +74,7 @@ fu_dell_tool_SOURCES =					\
 fu_dell_tool_LDADD =					\
 	$(GLIB_LIBS)					\
 	$(FWUPD_LIBS)					\
+	$(EFIVAR_LIBS)					\
 	$(LIBSMBIOS_LIBS)
 
 fu_dell_tool_LDFLAGS =					\

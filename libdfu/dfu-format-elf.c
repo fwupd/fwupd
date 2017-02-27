@@ -22,10 +22,10 @@
 #include "config.h"
 
 #include <fcntl.h>
-#include <gelf.h>
 #include <gio/gunixinputstream.h>
 
 #ifdef HAVE_LIBELF
+#include <gelf.h>
 #include <libelf.h>
 #include <linux/memfd.h>
 #endif
@@ -278,7 +278,7 @@ dfu_format_elf_pack_element (Elf *e, DfuElement *element, GError **error)
 	data = elf_newdata (scn);
 	data->d_align = 1;
 	data->d_off = 0;
-	data->d_buf = g_bytes_get_data (bytes, NULL);
+	data->d_buf = (gpointer) g_bytes_get_data (bytes, NULL);
 	data->d_type = ELF_T_BYTE;
 	data->d_size = g_bytes_get_size (bytes);
 	data->d_version = EV_CURRENT;
@@ -338,7 +338,7 @@ dfu_firmware_to_elf (DfuFirmware *firmware, GError **error)
 	goffset fsize;
 	g_autoptr(Elf) e = NULL;
 	g_autoptr(GInputStream) stream = NULL;
-	const gchar string_table2[] =
+	gchar string_table2[] =
 		"\0"
 		".text\0" // FIXME: use the name in the DfuImage?
 		".shstrtab";

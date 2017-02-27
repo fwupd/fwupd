@@ -3,6 +3,7 @@ AM_CPPFLAGS = 							\
 	$(GLIB_CFLAGS)						\
 	$(GUSB_CFLAGS)						\
 	$(LIBSMBIOS_CFLAGS)					\
+	$(VALGRIND_CFLAGS)					\
 	$(PIE_CFLAGS)						\
 	$(EFIVAR_CFLAGS)					\
 	-I$(top_srcdir)						\
@@ -47,6 +48,7 @@ synapticsmst_tool_SOURCES =					\
 
 synapticsmst_tool_LDADD =					\
 	$(LIBSMBIOS_LIBS)					\
+	$(EFIVAR_LIBS)						\
 	$(APPSTREAM_GLIB_LIBS)					\
 	$(GLIB_LIBS)
 
@@ -71,6 +73,7 @@ fu_self_test_SOURCES =						\
 fu_self_test_LDADD =						\
 	$(FWUPD_LIBS)						\
 	$(GUSB_LIBS)						\
+	$(EFIVAR_LIBS)						\
 	$(LIBSMBIOS_LIBS)					\
 	$(APPSTREAM_GLIB_LIBS)					\
 	$(SQLITE_LIBS)						\

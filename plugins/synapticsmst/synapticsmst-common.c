@@ -57,7 +57,7 @@ synapticsmst_common_aux_node_read (SynapticsMSTConnection *connection,
 
 static guint8
 synapticsmst_common_aux_node_write (SynapticsMSTConnection *connection,
-				    gint offset, gint *buf, gint length)
+				    gint offset, const gint *buf, gint length)
 {
 	if (lseek (connection->fd, offset, SEEK_SET) != offset)
 		return DPCD_SEEK_FAIL;
@@ -106,7 +106,7 @@ synapticsmst_common_read_dpcd (SynapticsMSTConnection *connection,
 guint8
 synapticsmst_common_write_dpcd (SynapticsMSTConnection *connection,
 				gint offset,
-				gint *buf,
+				const gint *buf,
 				gint length)
 {
 	if (connection->layer && connection->remain_layer) {
@@ -128,7 +128,7 @@ synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 				    gint rc_cmd,
 				    gint length,
 				    gint offset,
-				    guint8 *buf)
+				    const guint8 *buf)
 {
 	guint8 rc = 0;
 	gint cur_offset = offset;
