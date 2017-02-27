@@ -448,7 +448,6 @@ fu_main_verify_update_device_to_app (FuDevice *device)
 	app = as_app_new ();
 	as_app_set_id (app, id);
 	as_app_set_kind (app, AS_APP_KIND_FIRMWARE);
-	as_app_set_source_kind (app, AS_APP_SOURCE_KIND_INF);
 	rel = as_release_new ();
 	as_release_set_version (rel, fu_device_get_version (device));
 	csum = as_checksum_new ();
