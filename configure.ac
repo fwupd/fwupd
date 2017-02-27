@@ -335,6 +335,13 @@ AC_ARG_WITH([systemdunitdir],
             [with_systemdunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)])
 AC_SUBST([systemdunitdir], [$with_systemdunitdir])
 
+# EFI system partition location
+AC_ARG_WITH([bootdir],
+            AS_HELP_STRING([--with-bootdir=DIR], [Directory for EFI system partition]),
+            [],
+            [with_bootdir=/boot/efi])
+AC_SUBST([bootdir], [$with_bootdir])
+
 # udev rules
 AC_ARG_WITH([udevrulesdir],
             AS_HELP_STRING([--with-udevrulesdir=DIR], [Directory for udev rules files]),
