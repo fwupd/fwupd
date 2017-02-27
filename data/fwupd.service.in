@@ -16,4 +16,4 @@ ProtectKernelModules=yes
 ProtectSystem=full
 RestrictAddressFamilies=AF_NETLINK AF_UNIX
 RestrictRealtime=yes
-ReadWritePaths=/var/lib/fwupd /boot/efi
+ReadWritePaths=@localstatedir@/lib/fwupd /boot/efi
