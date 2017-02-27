@@ -32,7 +32,6 @@ systemdservice_DATA = $(systemdservice_in_files:.service.in=.service)
 install-data-hook:
 	$(MKDIR_P) $(DESTDIR)$(systemdunitdir)/system-update.target.wants
 	ln -sf ../fwupd-offline-update.service $(DESTDIR)$(systemdunitdir)/system-update.target.wants/fwupd-offline-update.service
-	$(MKDIR_P) $(DESTDIR)$(localstatedir)/lib/fwupd
 
 udevrules_DATA =					\
 	90-fwupd-devices.rules
