@@ -27,7 +27,9 @@
 #include <errno.h>
 #include <string.h>
 #include <gio/gunixinputstream.h>
+#ifdef HAVE_VALGRIND
 #include <valgrind.h>
+#endif /* HAVE_VALGRIND */
 
 #include "fu-plugin-private.h"
 #include "fu-pending.h"
