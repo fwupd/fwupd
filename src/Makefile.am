@@ -161,7 +161,7 @@ fu_self_test_CFLAGS =					\
 TESTS = fu-self-test
 
 install-data-hook:
-	if test -w $(DESTDIR)$(prefix)/; then \
+	if test -w $$(dirname $(DESTDIR)$(localstatedir)/); then \
 		mkdir -p $(DESTDIR)$(localstatedir)/lib/fwupd; \
 		chmod 0755 $(DESTDIR)$(localstatedir)/lib/fwupd; \
 		mkdir -p $(DESTDIR)$(localstatedir)/cache/app-info/xmls; \
