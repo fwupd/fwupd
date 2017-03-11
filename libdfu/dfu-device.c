@@ -644,6 +644,10 @@ dfu_device_set_quirks (DfuDevice *device)
 	if (vid == 0x16c0 && pid == 0x0762)
 		priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT;
 
+	/* OpenPICC */
+	if (vid == 0x16c0 && pid == 0x076c)
+		priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT;
+
 	/* Siemens AG, PXM 40 & PXM 50 */
 	if (vid == 0x0908 && (pid == 0x02c4 || pid == 0x02c5) && release == 0x0)
 		priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT;
