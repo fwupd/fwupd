@@ -3,7 +3,13 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginUnifying"']
 shared_module('fu_plugin_unifying',
   sources : [
     'fu-plugin-unifying.c',
-    'fu-device-unifying.c',
+    'lu-common.c',
+    'lu-context.c',
+    'lu-device-bootloader.c',
+    'lu-device-bootloader-nordic.c',
+    'lu-device-bootloader-texas.c',
+    'lu-device.c',
+    'lu-device-runtime.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -15,15 +21,21 @@ shared_module('fu_plugin_unifying',
   c_args : cargs,
   dependencies : [
     plugin_deps,
+    gudev,
   ],
 )
 
 executable(
   'fu-unifying-util',
   sources : [
-    'fu-unifying-tool.c',
-    'fu-device.c',
-    'fu-device-unifying.c',
+    'lu-tool.c',
+    'lu-common.c',
+    'lu-context.c',
+    'lu-device-bootloader.c',
+    'lu-device-bootloader-nordic.c',
+    'lu-device-bootloader-texas.c',
+    'lu-device.c',
+    'lu-device-runtime.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -32,6 +44,7 @@ executable(
   ],
   dependencies : [
     plugin_deps,
+    gudev,
   ],
   link_with : [
     fwupd,
