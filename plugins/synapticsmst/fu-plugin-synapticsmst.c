@@ -87,6 +87,10 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	if (guid_str == NULL) {
 		g_debug ("invalid GUID for board ID %x",
 			 synapticsmst_device_get_board_id(device));
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "Invalid device");
 		return FALSE;
 	}
 	/* Store $KIND-$AUXNODE-$LAYER-$RAD as device ID */
@@ -96,6 +100,10 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 
 	if (board_str == NULL) {
 		g_debug ("invalid board ID (%x)", synapticsmst_device_get_board_id (device));
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "Invalid device");
 		return FALSE;
 	}
 
