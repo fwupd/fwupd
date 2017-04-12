@@ -69,14 +69,17 @@ fu_test_loop_quit (void)
 static gchar *
 fu_test_get_filename (const gchar *filename)
 {
-	gchar *tmp;
-	char full_tmp[PATH_MAX];
-	g_autofree gchar *path = NULL;
-	path = g_build_filename (TESTDATADIR, filename, NULL);
-	tmp = realpath (path, full_tmp);
-	if (tmp == NULL)
-		return NULL;
-	return g_strdup (full_tmp);
+	g_auto(GStrv) split = g_strsplit (TESTDATADIR, ":", -1);
+	for (guint i = 0; split[i] != NULL; i++) {
+		gchar *tmp;
+		char full_tmp[PATH_MAX];
+		g_autofree gchar *path = NULL;
+		path = g_build_filename (split[i], filename, NULL);
+		tmp = realpath (path, full_tmp);
+		if (tmp != NULL)
+			return g_strdup (tmp);
+	}
+	return NULL;
 }
 
 static void
@@ -368,12 +371,14 @@ fu_keyring_func (void)
 
 	/* verify */
 	fw_pass = fu_test_get_filename ("colorhug/firmware.bin");
+	g_assert (fw_pass != NULL);
 	ret = fu_keyring_verify_file (keyring, fw_pass, sig, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* verify will fail */
 	fw_fail = fu_test_get_filename ("colorhug/colorhug-als-3.0.2.cab");
+	g_assert (fw_fail != NULL);
 	ret = fu_keyring_verify_file (keyring, fw_fail, sig, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert (!ret);
@@ -387,6 +392,7 @@ main (int argc, char **argv)
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
+	g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
 
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
