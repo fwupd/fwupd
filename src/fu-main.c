@@ -2622,12 +2622,10 @@ static gboolean
 fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 {
 	const gchar *fn;
-	g_autofree gchar *plugin_dir = NULL;
 	g_autoptr(GDir) dir = NULL;
 
 	/* search */
-	plugin_dir = g_build_filename (LIBDIR, "fwupd-plugins-2", NULL);
-	dir = g_dir_open (plugin_dir, 0, error);
+	dir = g_dir_open (PLUGINDIR, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	while ((fn = g_dir_read_name (dir)) != NULL) {
@@ -2640,7 +2638,7 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 			continue;
 
 		/* open module */
-		filename = g_build_filename (plugin_dir, fn, NULL);
+		filename = g_build_filename (PLUGINDIR, fn, NULL);
 		plugin = fu_plugin_new ();
 		fu_plugin_set_usb_context (plugin, priv->usb_ctx);
 		g_debug ("adding plugin %s", filename);
