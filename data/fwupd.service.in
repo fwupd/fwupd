@@ -7,7 +7,7 @@ Before=gdm.service
 [Service]
 Type=dbus
 BusName=org.freedesktop.fwupd
-ExecStart=@libexec@/fwupd
+ExecStart=@libexecdir@/fwupd
 MemoryDenyWriteExecute=yes
 PrivateTmp=yes
 ProtectControlGroups=yes
