@@ -3,8 +3,9 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 shared_module('fu_plugin_synapticsmst',
   sources : [
     'fu-plugin-synapticsmst.c',
-    'synapticsmst-device.c',
+    'fu-dell-common.c',
     'synapticsmst-common.c',
+    'synapticsmst-device.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -17,6 +18,7 @@ shared_module('fu_plugin_synapticsmst',
   dependencies : [
     plugin_deps,
     efivar,
+    libsmbios_c,
   ],
 )
 
