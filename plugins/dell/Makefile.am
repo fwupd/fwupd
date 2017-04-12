@@ -61,6 +61,7 @@ fu_self_test_LDFLAGS =					\
 fu_self_test_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"/tmp/fwupd-self-test\"	\
 	-DLOCALSTATEDIR=\"/tmp/fwupd-self-test/var\"	\
+	-DPLUGINBUILDDIR=\".libs\"			\
 	$(WARN_CFLAGS)
 
 noinst_PROGRAMS =                                       \

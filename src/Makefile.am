@@ -157,6 +157,7 @@ fu_self_test_LDFLAGS =					\
 fu_self_test_CFLAGS =					\
 	-DFU_OFFLINE_DESTDIR=\"/tmp/fwupd-self-test\"	\
 	-DLOCALSTATEDIR=\"/tmp/fwupd-self-test/var\"	\
+	-DPLUGINBUILDDIR=\"../plugins/test/.libs\"	\
 	$(WARN_CFLAGS)
 
 TESTS = fu-self-test

@@ -78,7 +78,7 @@ fu_plugin_raspberrypi_func (void)
 
 	/* create a fake device */
 	plugin = fu_plugin_new ();
-	ret = fu_plugin_open (plugin, ".libs/libfu_plugin_raspberrypi.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_raspberrypi.so", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 

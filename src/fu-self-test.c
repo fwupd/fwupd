@@ -167,7 +167,7 @@ fu_plugin_module_func (void)
 
 	/* create a fake device */
 	plugin = fu_plugin_new ();
-	ret = fu_plugin_open (plugin, "../plugins/test/.libs/libfu_plugin_test.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);

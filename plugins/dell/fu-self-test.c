@@ -57,7 +57,7 @@ fu_plugin_dell_tpm_func (void)
 
 	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
 	plugin = fu_plugin_new ();
-	ret = fu_plugin_open (plugin, ".libs/libfu_plugin_dell.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_dell.so", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
@@ -243,7 +243,7 @@ fu_plugin_dell_dock_func (void)
 
 	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
 	plugin = fu_plugin_new ();
-	ret = fu_plugin_open (plugin, ".libs/libfu_plugin_dell.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_dell.so", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
