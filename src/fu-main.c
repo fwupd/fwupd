@@ -1266,6 +1266,7 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	g_autoptr(FuKeyring) kr = NULL;
 	g_autoptr(GConverter) converter = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFile) file_parent = NULL;
 	g_autoptr(GInputStream) stream_buf = NULL;
 	g_autoptr(GInputStream) stream_fd = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -1335,9 +1336,16 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 		as_store_add_app (priv->store, app);
 	}
 
+	/* ensure directory exists */
+	file = g_file_new_for_path ("/var/cache/app-info/xmls/fwupd.xml");
+	file_parent = g_file_get_parent (file);
+	if (!g_file_query_exists (file_parent, NULL)) {
+		if (!g_file_make_directory_with_parents (file_parent, NULL, error))
+			return FALSE;
+	}
+
 	/* save the new file */
 	as_store_set_api_version (priv->store, 0.9);
-	file = g_file_new_for_path ("/var/cache/app-info/xmls/fwupd.xml");
 	if (!as_store_to_file (priv->store, file,
 			       AS_NODE_TO_XML_FLAG_ADD_HEADER |
 			       AS_NODE_TO_XML_FLAG_FORMAT_MULTILINE |

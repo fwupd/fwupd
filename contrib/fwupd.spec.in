@@ -162,9 +162,6 @@ make check VERBOSE=1
 %dir %{_localstatedir}/lib/fwupd
 %{_libdir}/libfwupd*.so.*
 %{_libdir}/girepository-1.0/Fwupd-1.0.typelib
-%dir %{_localstatedir}/cache/app-info
-%dir %{_localstatedir}/cache/app-info/icons
-%dir %{_localstatedir}/cache/app-info/xmls
 /usr/lib/udev/rules.d/*.rules
 %dir %{_libdir}/fwupd-plugins-2
 %{_libdir}/fwupd-plugins-2/libfu_plugin_altos.so
