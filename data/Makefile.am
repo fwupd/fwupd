@@ -17,7 +17,7 @@ $(dbusservicemain_DATA): $(dbusservicemain_in_files) Makefile
 	sed -e "s|\@daemon_user\@|$(daemon_user)|" > $@
 
 %.service: %.service.in Makefile
-	$(AM_V_GEN)sed -e 's|\@servicedir\@|$(libexecdir)|' \
+	$(AM_V_GEN)sed -e 's|\@libexecdir\@|$(libexecdir)|' \
 	               -e 's|\@localstatedir\@|$(localstatedir)|' \
 	               -e 's|\@bootdir\@|$(bootdir)|' \
 	               -e 's|\@bindir\@|$(bindir)|' \
