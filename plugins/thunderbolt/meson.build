@@ -14,6 +14,7 @@ shared_module('fu_plugin_thunderbolt',
   c_args : cargs,
   dependencies : [
     plugin_deps,
+    thunderbolt,
     gudev,
     efivar,
   ],

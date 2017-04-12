@@ -147,7 +147,9 @@ if get_option('enable-dell')
   conf.set('HAVE_DELL', '1')
 endif
 
-# FIXME: gpgme support
+if get_option('enable-thunderbolt')
+  thunderbolt = dependency('libtbtfwu', version : '>= 1')
+endif
 
 gnome = import('gnome')
 i18n = import('i18n')
