@@ -1,8 +1,6 @@
-# fixme
-
 gcab = find_program('gcab', required : false)
 if gcab.found()
-  custom_target('colorhug-test-firmware',
+  colorhug_test_firmware = custom_target('colorhug-test-firmware',
     input : [
       'firmware.bin',
       'firmware.bin.asc',

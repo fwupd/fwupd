@@ -77,11 +77,12 @@ executable(
 )
 
 if get_option('enable-tests')
-  testdatadir_src = join_paths(meson.current_source_dir(), '..', 'data', 'tests')
-  testdatadir_dst = join_paths(meson.current_build_dir(), '..', 'data', 'tests')
-  pluginbuilddir = join_paths(meson.current_build_dir(), '..', 'plugins', 'test')
+  testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
+  testdatadir_dst = join_paths(meson.build_root(), 'data', 'tests')
+  pluginbuilddir = join_paths(meson.build_root(), 'plugins', 'test')
   e = executable(
     'fu-self-test',
+    colorhug_test_firmware,
     sources : [
       'fu-self-test.c',
       'fu-device.c',
