@@ -67,6 +67,7 @@ if get_option('enable-tests')
       sqlite,
       gudev,
       libsmbios_c,
+      valgrind,
     ],
     link_with : [
       fwupd,

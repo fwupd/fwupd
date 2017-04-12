@@ -66,6 +66,7 @@ executable(
     sqlite,
     gpgme,
     gpgerror,
+    valgrind,
   ],
   link_with : fwupd,
   c_args : [

@@ -119,10 +119,15 @@ appstream_glib = dependency('appstream-glib', version : '>= 0.5.10')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
+valgrind = dependency('valgrind', required: false)
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 gpgme = cc.find_library('gpgme')
 gpgerror = cc.find_library('libgpg-error')
 libm = cc.find_library('libm', required: false)
+
+if valgrind.found()
+  conf.set('HAVE_VALGRIND', '1')
+endif
 
 if get_option('enable-colorhug')
   colorhug = dependency('colorhug', version : '>= 1.2.12')
