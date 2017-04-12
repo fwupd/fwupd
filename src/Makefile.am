@@ -58,7 +58,7 @@ fwupdmgr_CFLAGS =					\
 	-DLOCALSTATEDIR=\""$(localstatedir)"\"		\
 	$(WARN_CFLAGS)
 
-fu-resources.c: fwupd.gresource.xml $(dist_introspection_DATA)
+fwupd-resources.c: fwupd.gresource.xml $(dist_introspection_DATA)
 	$(AM_V_GEN)					\
 	glib-compile-resources				\
 		--sourcedir=$(srcdir)			\
@@ -67,7 +67,7 @@ fu-resources.c: fwupd.gresource.xml $(dist_introspection_DATA)
 		--generate-source			\
 		--c-name fu				\
 		$(srcdir)/fwupd.gresource.xml
-fu-resources.h: fwupd.gresource.xml
+fwupd-resources.h: fwupd.gresource.xml
 	$(AM_V_GEN)					\
 	glib-compile-resources				\
 		--sourcedir=$(srcdir)			\
@@ -94,8 +94,8 @@ fwupd_SOURCES =						\
 	fu-plugin.c					\
 	fu-plugin.h					\
 	fu-quirks.h					\
-	fu-resources.c					\
-	fu-resources.h					\
+	fwupd-resources.c				\
+	fwupd-resources.h				\
 	fu-main.c
 
 fwupd_LDADD =						\
@@ -167,8 +167,8 @@ install-data-hook:
 	fi
 
 BUILT_SOURCES =						\
-	fu-resources.c					\
-	fu-resources.h
+	fwupd-resources.c				\
+	fwupd-resources.h
 
 CLEANFILES = $(BUILT_SOURCES) *.log *.trs
 

@@ -34,6 +34,7 @@
 #include <fcntl.h>
 
 #include "fwupd-enums-private.h"
+#include "fwupd-resources.h"
 
 #include "fu-debug.h"
 #include "fu-device.h"
@@ -41,7 +42,6 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin.h"
-#include "fu-resources.h"
 #include "fu-quirks.h"
 
 #ifndef HAVE_POLKIT_0_114
