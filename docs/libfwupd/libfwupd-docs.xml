@@ -22,11 +22,6 @@
     </partintro>
   </reference>
 
-  <chapter id="object-tree">
-    <title>Object Hierarchy</title>
-    <xi:include href="xml/tree_index.sgml"/>
-  </chapter>
-
   <reference id="libfwupd">
     <title>libfwupd</title>
     <partintro>

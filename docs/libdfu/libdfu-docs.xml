@@ -63,11 +63,6 @@ if (!dfu_device_download (dfu_device, dfu_firmware,
     </partintro>
   </reference>
 
-  <chapter id="object-tree">
-    <title>Object Hierarchy</title>
-    <xi:include href="xml/tree_index.sgml"/>
-  </chapter>
-
   <reference id="libdfu">
     <title>libdfu</title>
     <partintro>
