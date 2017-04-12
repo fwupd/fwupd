@@ -19,7 +19,7 @@ libfu_plugin_unifying_la_SOURCES =			\
 libfu_plugin_unifying_la_LIBADD = $(GUSB_LIBS)
 libfu_plugin_unifying_la_LDFLAGS = -module -avoid-version
 libfu_plugin_unifying_la_CFLAGS = $(WARN_CFLAGS)	\
-	-DG_LOG_DOMAIN=\"FuPluginDfu\"
+	-DG_LOG_DOMAIN=\"FuPluginUnifying\"
 
 EXTRA_DIST = README.md
 
