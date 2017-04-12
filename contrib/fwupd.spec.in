@@ -119,6 +119,15 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
 %find_lang %{name}
 
+# /usr/libexec/fwupd used to be a directory, and now it's a file and
+# rpm seems completely unable to cope with this
+# see https://bugzilla.redhat.com/show_bug.cgi?id=447156 for details
+%pretrans -p <lua>
+st = posix.stat("/usr/libexec/fwupd")
+if st and st.type == "directory" then
+  os.execute("rm -rf /usr/libexec/fwupd")
+end
+
 %post
 /sbin/ldconfig
 %systemd_post fwupd.service
