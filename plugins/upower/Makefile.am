@@ -13,7 +13,7 @@ libfu_plugin_upower_la_SOURCES =			\
 libfu_plugin_upower_la_LIBADD = $(GLIB_LIBS)
 libfu_plugin_upower_la_LDFLAGS = -module -avoid-version
 libfu_plugin_upower_la_CFLAGS = $(WARN_CFLAGS)		\
-	-DG_LOG_DOMAIN=\"FuPluginTest\"
+	-DG_LOG_DOMAIN=\"FuPluginUpower\"
 
 EXTRA_DIST = README.md
 
