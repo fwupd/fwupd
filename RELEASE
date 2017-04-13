@@ -4,7 +4,7 @@ fwupd Release Notes
 
 git shortlog 0.8.1.. | grep -i -v trivial | grep -v Merge > NEWS.new
 
-Version 0.8.2
+Version 0.9.1
 ~~~~~~~~~~~~~
 Released: 2017-xx-xx
 
@@ -23,7 +23,7 @@ cd ..
 2. Commit changes to git:
 
 # MAKE SURE THESE ARE CORRECT
-export release_ver="0.8.2"
+export release_ver="0.9.1"
 
 git commit -a -m "Release fwupd ${release_ver}"
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
