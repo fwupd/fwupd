@@ -46,6 +46,8 @@ fu_self_test_SOURCES =					\
 	fu-device.c					\
 	fu-plugin-raspberrypi.c				\
 	fu-plugin-raspberrypi.h				\
+	fu-test.c					\
+	fu-test.h					\
 	fu-self-test.c
 
 fu_self_test_LDADD =					\

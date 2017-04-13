@@ -138,6 +138,8 @@ fu_self_test_SOURCES =					\
 	fu-pending.h					\
 	fu-plugin.c					\
 	fu-plugin.h					\
+	fu-test.c					\
+	fu-test.h					\
 	fu-self-test.c
 
 fu_self_test_LDADD =					\

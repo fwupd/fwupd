@@ -28,19 +28,7 @@
 
 #include "fu-plugin-private.h"
 #include "fu-plugin-raspberrypi.h"
-
-static gchar *
-fu_test_get_filename (const gchar *filename)
-{
-	gchar *tmp;
-	char full_tmp[PATH_MAX];
-	g_autofree gchar *path = NULL;
-	path = g_build_filename (TESTDATADIR, filename, NULL);
-	tmp = realpath (path, full_tmp);
-	if (tmp == NULL)
-		return NULL;
-	return g_strdup (full_tmp);
-}
+#include "fu-test.h"
 
 static void
 _plugin_status_changed_cb (FuPlugin *plugin, FwupdStatus status, gpointer user_data)
@@ -70,7 +58,7 @@ fu_plugin_raspberrypi_func (void)
 	g_autoptr(GMappedFile) mapped_file = NULL;
 
 	/* test location */
-	path = fu_test_get_filename ("rpiboot");
+	path = fu_test_get_filename (TESTDATADIR, "rpiboot");
 	if (path == NULL) {
 		g_test_skip ("no rpiboot available");
 		return;
@@ -110,7 +98,7 @@ fu_plugin_raspberrypi_func (void)
 
 	/* do update */
 	fu_plugin_raspberrypi_set_fw_dir (plugin, "/tmp/rpiboot");
-	fwfile = fu_test_get_filename ("rpiupdate/firmware.bin");
+	fwfile = fu_test_get_filename (TESTDATADIR, "rpiupdate/firmware.bin");
 	g_assert (fwfile != NULL);
 	mapped_file = g_mapped_file_new (fwfile, FALSE, &error);
 	g_assert_no_error (error);

@@ -30,57 +30,7 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
-
-static GMainLoop *_test_loop = NULL;
-static guint _test_loop_timeout_id = 0;
-
-static gboolean
-fu_test_hang_check_cb (gpointer user_data)
-{
-	g_main_loop_quit (_test_loop);
-	_test_loop_timeout_id = 0;
-	return G_SOURCE_REMOVE;
-}
-
-static void
-fu_test_loop_run_with_timeout (guint timeout_ms)
-{
-	g_assert (_test_loop_timeout_id == 0);
-	g_assert (_test_loop == NULL);
-	_test_loop = g_main_loop_new (NULL, FALSE);
-	_test_loop_timeout_id = g_timeout_add (timeout_ms, fu_test_hang_check_cb, NULL);
-	g_main_loop_run (_test_loop);
-}
-
-static void
-fu_test_loop_quit (void)
-{
-	if (_test_loop_timeout_id > 0) {
-		g_source_remove (_test_loop_timeout_id);
-		_test_loop_timeout_id = 0;
-	}
-	if (_test_loop != NULL) {
-		g_main_loop_quit (_test_loop);
-		g_main_loop_unref (_test_loop);
-		_test_loop = NULL;
-	}
-}
-
-static gchar *
-fu_test_get_filename (const gchar *filename)
-{
-	g_auto(GStrv) split = g_strsplit (TESTDATADIR, ":", -1);
-	for (guint i = 0; split[i] != NULL; i++) {
-		gchar *tmp;
-		char full_tmp[PATH_MAX];
-		g_autofree gchar *path = NULL;
-		path = g_build_filename (split[i], filename, NULL);
-		tmp = realpath (path, full_tmp);
-		if (tmp != NULL)
-			return g_strdup (tmp);
-	}
-	return NULL;
-}
+#include "fu-test.h"
 
 static void
 _plugin_status_changed_cb (FuPlugin *plugin, FwupdStatus status, gpointer user_data)
@@ -196,7 +146,7 @@ fu_plugin_module_func (void)
 			 "Integrated Webcam™");
 
 	/* schedule an offline update */
-	mapped_file_fn = fu_test_get_filename ("colorhug/firmware.bin");
+	mapped_file_fn = fu_test_get_filename (TESTDATADIR, "colorhug/firmware.bin");
 	mapped_file = g_mapped_file_new (mapped_file_fn, FALSE, &error);
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
@@ -364,20 +314,20 @@ fu_keyring_func (void)
 
 	/* add test keys to keyring */
 	keyring = fu_keyring_new ();
-	pki_dir = fu_test_get_filename ("pki");
+	pki_dir = fu_test_get_filename (TESTDATADIR, "pki");
 	ret = fu_keyring_add_public_keys (keyring, pki_dir, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* verify */
-	fw_pass = fu_test_get_filename ("colorhug/firmware.bin");
+	fw_pass = fu_test_get_filename (TESTDATADIR, "colorhug/firmware.bin");
 	g_assert (fw_pass != NULL);
 	ret = fu_keyring_verify_file (keyring, fw_pass, sig, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* verify will fail */
-	fw_fail = fu_test_get_filename ("colorhug/colorhug-als-3.0.2.cab");
+	fw_fail = fu_test_get_filename (TESTDATADIR, "colorhug/colorhug-als-3.0.2.cab");
 	g_assert (fw_fail != NULL);
 	ret = fu_keyring_verify_file (keyring, fw_fail, sig, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);

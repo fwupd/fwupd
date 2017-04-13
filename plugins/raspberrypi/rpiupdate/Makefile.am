@@ -8,12 +8,11 @@ firmware.bin: $(srcdir)/*.elf $(srcdir)/overlays/* $(srcdir)/README
 		$(srcdir)/*.elf				\
 		$(srcdir)/overlays/*.dtb
 
-rpi-firmware-20150805.cab: firmware.bin firmware.inf firmware.metainfo.xml
+rpi-firmware-20150805.cab: firmware.bin firmware.metainfo.xml
 	$(AM_V_GEN) touch -c -m -d"2000-01-01T00:00:00" $?;	\
 	$(GCAB) --create --nopath $@			\
 		$(builddir)/firmware.bin		\
-		$(srcdir)/firmware.metainfo.xml		\
-		$(srcdir)/firmware.inf
+		$(srcdir)/firmware.metainfo.xml
 
 BUILT_SOURCES =						\
 	firmware.bin					\
@@ -24,7 +23,6 @@ CLEANFILES =						\
 
 EXTRA_DIST =						\
 	$(test_files)					\
-	firmware.inf					\
 	firmware.metainfo.xml				\
 	overlays/test.dtb				\
 	start.elf

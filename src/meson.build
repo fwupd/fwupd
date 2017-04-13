@@ -90,6 +90,7 @@ if get_option('enable-tests')
       'fu-pending.c',
       'fu-keyring.c',
       'fu-plugin.c',
+      'fu-test.c',
     ],
     include_directories : [
       include_directories('../..'),
