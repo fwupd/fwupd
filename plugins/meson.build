@@ -9,7 +9,7 @@ subdir('unifying')
 subdir('upower')
 subdir('usb')
 
-if get_option('enable-thunderbolt')
+if thunderbolt.found()
 subdir('thunderbolt')
 endif
 

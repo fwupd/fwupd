@@ -153,7 +153,7 @@ if get_option('enable-dell')
 endif
 
 if get_option('enable-thunderbolt')
-  thunderbolt = dependency('libtbtfwu', version : '>= 1')
+  thunderbolt = dependency('libtbtfwu', version : '>= 1', required: false)
 endif
 
 gnome = import('gnome')
