@@ -57,8 +57,6 @@ IT_PROG_INTLTOOL([0.35.0])
 AC_PATH_PROG(XSLTPROC, xsltproc)
 
 WARN_CFLAGS_EXTRA="
-	-D_FORTIFY_SOURCE=2
-	-fstack-protector-strong
 	-Waggregate-return
 	-Wunused
 	-Warray-bounds
