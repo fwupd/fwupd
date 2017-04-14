@@ -8,30 +8,36 @@ ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 endif
 
-export COLORHUG="--disable-colorhug"
-COLORHUG_VERSION=$(shell dpkg-query -W libcolorhug-dev | awk '{ print $$2 }' | sed 's,-.*,,')
-ifeq "1.2.12" "$(word 1, $(sort 1.2.12 $(COLORHUG_VERSION)))"
-       export COLORHUG="--enable-colorhug"
-endif
-
 %:
-	dh $@ --with autoreconf,gir
+	dh $@ --with gir
 
-override_dh_autoreconf:
-	NOCONFIGURE=1 dh_autoreconf ./autogen.sh
+override_dh_auto_clean:
+	rm -fr debian/build
 
 override_dh_auto_configure:
+	mkdir -p debian/build
 	if pkg-config --exists fwup; then \
-		export UEFI="--enable-uefi"; \
+		export UEFI="-Denable-uefi=true"; \
 	else \
-		export UEFI="--disable-uefi"; \
+		export UEFI="-Denable-uefi=false"; \
 	fi; \
-	dh_auto_configure -- --with-systemdunitdir=/lib/systemd/system \
-				--enable-gtk-doc \
-				--libexecdir=\$${prefix}/lib \
-				$(COLORHUG) $$UEFI
+	if pkg-config --exists libsmbsios_c; then \
+		export DELL="-Denable-dell=true"; \
+	else \
+		export DELL="-Denable-dell=false"; \
+	fi; \
+	cd debian/build && \
+	meson \
+		--prefix=/usr \
+		--buildtype=plain \
+		$$UEFI \
+		../..
+
+override_dh_auto_build:
+	ninja -Cdebian/build -v
 
 override_dh_install:
+	DESTDIR=debian/tmp ninja -Cdebian/build -v install
 	find debian/tmp/usr -name "*a" | xargs rm -f
 	rm -f debian/tmp/usr/bin/ebitdo-tool
 	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
@@ -39,5 +45,5 @@ override_dh_install:
 
 override_dh_auto_test:
 	if [ -x /usr/bin/valgrind ] ; then \
-		dh_auto_test; \
+		debian/build/fwupd_test; \
 	fi

@@ -6,7 +6,7 @@ Uploaders: Steve McIntyre <93sam@debian.org>,
            Matthias Klumpp <mak@debian.org>,
            Mario Limonciello <mario.limonciello@dell.com>
 Build-Depends: debhelper (>= 9.0.0),
-               dh-autoreconf,
+               meson,
                docbook-utils,
                gettext,
                intltool,
@@ -36,7 +36,6 @@ Build-Depends: debhelper (>= 9.0.0),
                libelf-dev,
 #disabled until ITP 855065 is done
 #              libtbtfwu-dev,
-               autoconf-archive,
                valgrind[!mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha !mips64el !armhf !armel !mipsel !m68k]
 Standards-Version: 3.9.8
 Section: admin
