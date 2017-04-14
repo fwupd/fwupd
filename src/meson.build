@@ -93,7 +93,7 @@ if get_option('enable-tests')
       'fu-test.c',
     ],
     include_directories : [
-      include_directories('../..'),
+      include_directories('..'),
       include_directories('../libfwupd'),
     ],
     dependencies : [

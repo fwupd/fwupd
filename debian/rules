@@ -1,7 +1,8 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+# pie causes build failures
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all,-pie
 
 #GPGME needs this for proper building on 32 bit archs
 ifeq "$(DEB_HOST_ARCH_BITS)" "32"
@@ -28,8 +29,8 @@ override_dh_auto_configure:
 	fi; \
 	cd debian/build && \
 	meson \
-		--prefix=/usr \
 		--buildtype=plain \
+		--prefix=/usr \
 		$$UEFI \
 		../..
 
@@ -37,8 +38,8 @@ override_dh_auto_build:
 	ninja -Cdebian/build -v
 
 override_dh_install:
-	DESTDIR=debian/tmp ninja -Cdebian/build -v install
-	find debian/tmp/usr -name "*a" | xargs rm -f
+	DESTDIR=$(CURDIR)/debian/tmp ninja -Cdebian/build -v install
+	find debian/tmp/usr -name "*a" -type f| xargs rm -f
 	rm -f debian/tmp/usr/bin/ebitdo-tool
 	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install --fail-missing
