@@ -5,6 +5,15 @@
 
 %define alphatag                #ALPHATAG#
 
+%ifarch x86_64 %{ix86}
+%global have_smbios 1
+%endif
+
+# FIXME: should also be aarch64, but efivar not present there yet
+%ifarch x86_64 %{ix86}
+%global have_uefi 1
+%endif
+
 Summary:   Firmware update daemon
 Name:      fwupd
 Version:   #VERSION#
@@ -16,7 +25,6 @@ Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.
 BuildRequires: docbook-utils
 BuildRequires: gettext
 BuildRequires: glib2-devel >= %{glib2_version}
-BuildRequires: intltool
 BuildRequires: libappstream-glib-devel >= %{libappstream_version}
 BuildRequires: libgudev1-devel
 BuildRequires: libgusb-devel >= %{libgusb_version}
@@ -35,11 +43,11 @@ BuildRequires: valgrind-devel
 BuildRequires: elfutils-libelf-devel
 BuildRequires: gtk-doc
 
-%ifarch x86_64 %{ix86}
+%if 0%{?have_smbios}
 BuildRequires: libsmbios-devel >= 2.3.0
 %endif
 
-%ifarch x86_64 %{ix86} aarch64
+%if 0%{?have_uefi}
 BuildRequires: fwupdate-devel >= 7
 %endif
 
@@ -54,7 +62,7 @@ Requires: libgusb%{?_isa} >= %{libgusb_version}
 Requires: libsoup%{?_isa} >= %{libsoup_version}
 
 Obsoletes: fwupd-sign < 0.1.6
-Obsoletes: libebitdo < 0.7.5
+Obsoletes: libebitdo < 0.7.5-3
 
 %description
 fwupd is a daemon to allow session software to update device firmware.
@@ -62,7 +70,7 @@ fwupd is a daemon to allow session software to update device firmware.
 %package devel
 Summary: Development package for %{name}
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: libebitdo-devel < 0.7.5
+Obsoletes: libebitdo-devel < 0.7.5-3
 
 %description devel
 Files for development with %{name}.
@@ -84,36 +92,41 @@ Files for development with libdfu.
 %setup -q
 
 %build
-%configure \
-        --disable-static        \
-        --disable-thunderbolt   \
-        --enable-gtk-doc        \
-        --enable-colorhug       \
-%ifarch x86_64 %{ix86} aarch64
-        --enable-uefi           \
-%else
-        --disable-uefi          \
-%endif
-%ifarch x86_64 %{ix86}
-        --enable-dell           \
-%else
-        --disable-dell          \
-%endif
-        --disable-rpath         \
-        --disable-silent-rules  \
-        --disable-dependency-tracking
 
-make %{?_smp_mflags}
+%meson \
+    -Denable-tests=false \
+    -Denable-thunderbolt=false \
+%if 0%{?have_uefi}
+    -Denable-uefi=true \
+%else
+    -Denable-uefi=false \
+%endif
+%if 0%{?have_smbios}
+    -Denable-dell=true \
+    -Denable-synaptics=true \
+%else
+    -Denable-packdellagekit=false \
+    -Denable-synaptics=false \
+%endif
+    -Denable-colorhug=true
+
+%meson_build
 
 %install
-make install DESTDIR=$RPM_BUILD_ROOT
-find %{buildroot} -name '*.la' -exec rm -f {} ';'
-mkdir --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
+%meson_install
+
+mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
 %find_lang %{name}
 
-%check
-make check VERBOSE=1
+# /usr/libexec/fwupd used to be a directory, and now it's a file and
+# rpm seems completely unable to cope with this
+# see https://bugzilla.redhat.com/show_bug.cgi?id=447156 for details
+%pretrans -p <lua>
+st = posix.stat("/usr/libexec/fwupd")
+if st and st.type == "directory" then
+  os.execute("rm -rf /usr/libexec/fwupd")
+end
 
 %post
 /sbin/ldconfig
@@ -133,8 +146,7 @@ make check VERBOSE=1
 %doc README.md AUTHORS NEWS
 %license COPYING
 %config(noreplace)%{_sysconfdir}/fwupd.conf
-%dir %{_libexecdir}/fwupd
-%{_libexecdir}/fwupd/fwupd
+%{_libexecdir}/fwupd
 %{_bindir}/fwupdmgr
 %{_sysconfdir}/pki/fwupd
 %{_sysconfdir}/pki/fwupd-metadata
@@ -151,22 +163,25 @@ make check VERBOSE=1
 %dir %{_localstatedir}/lib/fwupd
 %{_libdir}/libfwupd*.so.*
 %{_libdir}/girepository-1.0/Fwupd-1.0.typelib
-%dir %{_localstatedir}/cache/app-info
-%dir %{_localstatedir}/cache/app-info/icons
-%dir %{_localstatedir}/cache/app-info/xmls
 /usr/lib/udev/rules.d/*.rules
 %dir %{_libdir}/fwupd-plugins-2
 %{_libdir}/fwupd-plugins-2/libfu_plugin_altos.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_colorhug.so
+%if 0%{?have_smbios}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_dell.so
+%endif
 %{_libdir}/fwupd-plugins-2/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_raspberrypi.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_steelseries.so
+%if 0%{?have_smbios}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_synapticsmst.so
+%endif
 %{_libdir}/fwupd-plugins-2/libfu_plugin_test.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_udev.so
+%if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_uefi.so
+%endif
 %{_libdir}/fwupd-plugins-2/libfu_plugin_unifying.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_upower.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_usb.so

@@ -14,9 +14,9 @@
   <icon_name>application-x-firmware</icon_name>
 
   <action id="org.freedesktop.fwupd.update-internal-trusted">
-    <_description>Install signed system firmware</_description>
+    <description>Install signed system firmware</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
-    <_message>Authentication is required to update the firmware on this machine</_message>
+    <message>Authentication is required to update the firmware on this machine</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -25,9 +25,9 @@
   </action>
 
   <action id="org.freedesktop.fwupd.update-internal">
-    <_description>Install unsigned system firmware</_description>
+    <description>Install unsigned system firmware</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
-    <_message>Authentication is required to update the firmware on this machine</_message>
+    <message>Authentication is required to update the firmware on this machine</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -36,9 +36,9 @@
   </action>
 
   <action id="org.freedesktop.fwupd.downgrade-internal">
-    <_description>Install old version of system firmware</_description>
+    <description>Install old version of system firmware</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
-    <_message>Authentication is required to downgrade the firmware on this machine</_message>
+    <message>Authentication is required to downgrade the firmware on this machine</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -47,9 +47,9 @@
   </action>
 
   <action id="org.freedesktop.fwupd.update-hotplug-trusted">
-    <_description>Install signed device firmware</_description>
+    <description>Install signed device firmware</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
-    <_message>Authentication is required to update the firmware on a removable device</_message>
+    <message>Authentication is required to update the firmware on a removable device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -58,9 +58,9 @@
   </action>
 
   <action id="org.freedesktop.fwupd.update-hotplug">
-    <_description>Install unsigned device firmware</_description>
+    <description>Install unsigned device firmware</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
-    <_message>Authentication is required to update the firmware on a removable device</_message>
+    <message>Authentication is required to update the firmware on a removable device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -69,9 +69,9 @@
   </action>
 
   <action id="org.freedesktop.fwupd.downgrade-hotplug">
-    <_description>Install unsigned device firmware</_description>
+    <description>Install unsigned device firmware</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
-    <_message>Authentication is required to downgrade the firmware on a removable device</_message>
+    <message>Authentication is required to downgrade the firmware on a removable device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -80,9 +80,9 @@
   </action>
 
   <action id="org.freedesktop.fwupd.device-unlock">
-    <_description>Unlock the device to allow access</_description>
+    <description>Unlock the device to allow access</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
-    <_message>Authentication is required to unlock a device</_message>
+    <message>Authentication is required to unlock a device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -91,9 +91,9 @@
   </action>
 
   <action id="org.freedesktop.fwupd.verify-update">
-    <_description>Update the stored device verification information</_description>
+    <description>Update the stored device verification information</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
-    <_message>Authentication is required to update the stored checksums for the device</_message>
+    <message>Authentication is required to update the stored checksums for the device</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>

@@ -66,7 +66,7 @@ fu_plugin_synapticsmst_func (void)
 	g_signal_connect (plugin, "status-changed",
 			  G_CALLBACK (_plugin_status_changed_cb),
 			  &cnt);
-	ret = fu_plugin_open (plugin, ".libs/libfu_plugin_synapticsmst.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_synapticsmst.so", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);

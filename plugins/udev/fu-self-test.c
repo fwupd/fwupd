@@ -31,19 +31,7 @@
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
 #include "fu-rom.h"
-
-static gchar *
-fu_test_get_filename (const gchar *filename)
-{
-	gchar *tmp;
-	char full_tmp[PATH_MAX];
-	g_autofree gchar *path = NULL;
-	path = g_build_filename (TESTDATADIR, filename, NULL);
-	tmp = realpath (path, full_tmp);
-	if (tmp == NULL)
-		return NULL;
-	return g_strdup (full_tmp);
-}
+#include "fu-test.h"
 
 static void
 fu_rom_func (void)
@@ -99,7 +87,7 @@ fu_rom_func (void)
 		g_assert (rom != NULL);
 
 		/* load file */
-		filename = fu_test_get_filename (data[i].fn);
+		filename = fu_test_get_filename (TESTDATADIR, data[i].fn);
 		if (filename == NULL)
 			continue;
 		g_print ("\nparsing %s...", filename);
@@ -122,7 +110,7 @@ fu_rom_all_func (void)
 	g_autofree gchar *path = NULL;
 
 	/* may or may not exist */
-	path = fu_test_get_filename ("roms");
+	path = fu_test_get_filename (TESTDATADIR, "roms");
 	if (path == NULL)
 		return;
 	g_print ("\n");
