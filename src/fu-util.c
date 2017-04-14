@@ -566,6 +566,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 		       GChecksumType checksum_type,
 		       GError **error)
 {
+	const gchar *http_proxy;
 	guint status_code;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *checksum_actual = NULL;
@@ -573,6 +574,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 	g_autoptr(SoupMessage) msg = NULL;
 	g_autoptr(SoupSession) session = NULL;
 
+	/* create the soup session */
 	user_agent = g_strdup_printf ("%s/%s", PACKAGE_NAME, PACKAGE_VERSION);
 	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, user_agent,
 						 SOUP_SESSION_TIMEOUT, 60,
@@ -583,6 +585,20 @@ fu_util_download_file (FuUtilPrivate *priv,
 				     FWUPD_ERROR_INTERNAL,
 				     "%s: failed to setup networking");
 		return FALSE;
+	}
+
+	/* set the proxy */
+	http_proxy = g_getenv ("http_proxy");
+	if (http_proxy != NULL) {
+		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
+		if (proxy_uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid proxy URI: %s", http_proxy);
+			return FALSE;
+		}
+		g_object_set (session, SOUP_SESSION_PROXY_URI, proxy_uri, NULL);
 	}
 
 	/* this disables the double-compression of the firmware.xml.gz file */
