@@ -2624,6 +2624,14 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 {
 	const gchar *fn;
 	g_autoptr(GDir) dir = NULL;
+	g_auto(GStrv) blacklist = NULL;
+
+	/* get plugin blacklist */
+	blacklist = g_key_file_get_string_list (priv->config,
+						"fwupd",
+						"BlacklistPlugins",
+						NULL, /* length */
+						NULL);
 
 	/* search */
 	dir = g_dir_open (PLUGINDIR, 0, error);
@@ -2648,6 +2656,18 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 				   filename, error_local->message);
 			continue;
 		}
+
+		/* is blacklisted */
+		if (blacklist != NULL &&
+		    g_strv_contains ((const gchar * const *) blacklist,
+				     fu_plugin_get_name (plugin))) {
+			fu_plugin_set_enabled (plugin, FALSE);
+			g_debug ("%s blacklisted by config",
+				 fu_plugin_get_name (plugin));
+			continue;
+		}
+
+		/* watch for changes */
 		g_signal_connect (plugin, "device-added",
 				  G_CALLBACK (fu_main_plugin_device_added_cb),
 				  priv);
