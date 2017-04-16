@@ -17,6 +17,9 @@ shared_module('fu_plugin_altos',
     plugin_deps,
     gudev,
   ],
+  link_with : [
+    dfu,
+  ],
 )
 
 executable(
