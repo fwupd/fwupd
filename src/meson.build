@@ -107,6 +107,7 @@ if get_option('enable-tests')
       sqlite,
       gpgme,
       gpgerror,
+      valgrind,
     ],
     link_with : [
       fwupd,
