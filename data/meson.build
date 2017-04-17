@@ -14,7 +14,7 @@ install_data(['org.freedesktop.fwupd.xml'],
 )
 
 install_data(['90-fwupd-devices.rules'],
-  install_dir : join_paths(get_option('prefix'), 'lib', 'udev', 'rules.d')
+  install_dir : '/lib/udev/rules.d'
 )
 
 con2 = configuration_data()
@@ -24,9 +24,7 @@ con2.set('libexecdir',
 con2.set('bindir',
          join_paths(get_option('prefix'),
                     get_option('bindir')))
-con2.set('localstatedir',
-         join_paths(get_option('prefix'),
-                    get_option('localstatedir')))
+con2.set('localstatedir', join_paths(get_option('localstatedir')))
 con2.set('bootdir', get_option('with-bootdir'))
 
 # replace @libexecdir@
@@ -46,10 +44,7 @@ configure_file(
   output : 'fwupd-offline-update.service',
   configuration : con2,
   install: true,
-  install_dir: join_paths(get_option('prefix'),
-                          'lib',
-                          'systemd',
-                          'system'),
+  install_dir: '/lib/systemd/system'
 )
 
 # replace @localstatedir@ and @bootdir@
@@ -58,8 +53,5 @@ configure_file(
   output : 'fwupd.service',
   configuration : con2,
   install: true,
-  install_dir: join_paths(get_option('prefix'),
-                          'lib',
-                          'systemd',
-                          'system'),
+  install_dir: '/lib/systemd/system'
 )
