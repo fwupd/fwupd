@@ -31,6 +31,8 @@ override_dh_auto_configure:
 	meson \
 		--buildtype=plain \
 		--prefix=/usr \
+		--sysconfdir=/etc \
+		--libexecdir=/usr/lib \
 		$$UEFI \
 		../..
 
@@ -40,8 +42,7 @@ override_dh_auto_build:
 override_dh_install:
 	DESTDIR=$(CURDIR)/debian/tmp ninja -Cdebian/build -v install
 	find debian/tmp/usr -name "*a" -type f| xargs rm -f
-	rm -f debian/tmp/usr/bin/ebitdo-tool
-	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
+#	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install --fail-missing
 
 override_dh_auto_test:
