@@ -24,9 +24,7 @@ con2.set('libexecdir',
 con2.set('bindir',
          join_paths(get_option('prefix'),
                     get_option('bindir')))
-con2.set('localstatedir',
-         join_paths(get_option('prefix'),
-                    get_option('localstatedir')))
+con2.set('localstatedir', join_paths(get_option('localstatedir')))
 con2.set('bootdir', get_option('with-bootdir'))
 
 # replace @libexecdir@
