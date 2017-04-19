@@ -33,6 +33,7 @@ override_dh_auto_configure:
 		--prefix=/usr \
 		--sysconfdir=/etc \
 		--libexecdir=/usr/lib \
+		--localstatedir=/var \
 		$$UEFI \
 		../..
 
