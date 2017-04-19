@@ -11,9 +11,9 @@ fwupd_minor_version = varr[1]
 fwupd_micro_version = varr[2]
 
 conf = configuration_data()
-conf.set('FWUPD_MAJOR_VERSION_CONF', fwupd_major_version)
-conf.set('FWUPD_MINOR_VERSION_CONF', fwupd_minor_version)
-conf.set('FWUPD_MICRO_VERSION_CONF', fwupd_micro_version)
+conf.set('FWUPD_MAJOR_VERSION', fwupd_major_version)
+conf.set('FWUPD_MINOR_VERSION', fwupd_minor_version)
+conf.set('FWUPD_MICRO_VERSION', fwupd_micro_version)
 conf.set_quoted('PACKAGE_VERSION', fwupd_version)
 
 # libtool versioning - this applies to libfwupd
@@ -119,7 +119,7 @@ appstream_glib = dependency('appstream-glib', version : '>= 0.5.10')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
-valgrind = dependency('valgrind', required: false)
+valgrind = dependency('valgrindXXX', required: false)
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 gpgme = cc.find_library('gpgme')
 gpgerror = cc.find_library('libgpg-error')
@@ -164,9 +164,7 @@ plugin_dir = join_paths(get_option('prefix'),
                         'fwupd-plugins-2')
 conf.set_quoted('PLUGINDIR', plugin_dir)
 
-conf.set_quoted('SYSCONFDIR',
-                join_paths(get_option('prefix'),
-                           get_option('sysconfdir')))
+conf.set_quoted('SYSCONFDIR', get_option('sysconfdir'))
 conf.set_quoted('LIBEXECDIR',
                 join_paths(get_option('prefix'),
                            get_option('libexecdir')))

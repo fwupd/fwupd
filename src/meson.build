@@ -74,7 +74,7 @@ executable(
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
-  install_dir : 'libexec'
+  install_dir : 'libexec/fwupd'
 )
 
 if get_option('enable-tests')
@@ -107,6 +107,7 @@ if get_option('enable-tests')
       sqlite,
       gpgme,
       gpgerror,
+      valgrind,
     ],
     link_with : [
       fwupd,
