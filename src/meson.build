@@ -74,7 +74,7 @@ executable(
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
-  install_dir : 'libexec/fwupd'
+  install_dir : join_paths(get_option('libexecdir'), 'fwupd')
 )
 
 if get_option('enable-tests')
