@@ -47,5 +47,5 @@ override_dh_install:
 
 override_dh_auto_test:
 	if [ -x /usr/bin/valgrind ] ; then \
-		debian/build/fwupd_test; \
+		ninja -Cdebian/build test -v; \
 	fi
