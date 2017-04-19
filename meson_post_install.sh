@@ -4,8 +4,10 @@ if [ -z $MESON_INSTALL_PREFIX ]; then
     exit 1
 fi
 
+SYSTEMDUNITDIR=$1
+
 #if [ -z $DESTDIR ]; then
     echo 'Updating systemd deps'
-    mkdir -p $DESTDIR/$MESON_INSTALL_PREFIX/lib/systemd/system/system-update.target.wants
-    ln -sf ../fwupd-offline-update.service $DESTDIR/$MESON_INSTALL_PREFIX/lib/systemd/system/system-update.target.wants/fwupd-offline-update.service
+    mkdir -p ${DESTDIR}${SYSTEMDUNITDIR}/system-update.target.wants
+    ln -sf ../fwupd-offline-update.service ${DESTDIR}${SYSTEMDUNITDIR}/system-update.target.wants/fwupd-offline-update.service
 #fi
