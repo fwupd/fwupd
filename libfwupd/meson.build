@@ -2,14 +2,6 @@ cargs = [
   '-DG_LOG_DOMAIN="Fwupd"',
 ]
 
-configure_file(
-  input : 'fwupd.pc.in',
-  output : 'fwupd.pc',
-  install: true,
-  install_dir: join_paths(get_option('libdir'), 'pkgconfig'),
-  configuration : conf
-)
-
 fwupd_version_h = configure_file(
   input : 'fwupd-version.h.in',
   output : 'fwupd-version.h',
@@ -53,6 +45,17 @@ fwupd = shared_library(
   link_args : vflag,
   link_depends : mapfile,
   install : true
+)
+
+pkgg = import('pkgconfig')
+pkgg.generate(
+  libraries : fwupd,
+  requires : [ 'gio-2.0' ],
+  subdirs : 'fwupd-1',
+  version : meson.project_version(),
+  name : 'fwupd',
+  filebase : 'fwupd',
+  description : 'fwupd is a system daemon for installing device firmware',
 )
 
 gnome.generate_gir(fwupd,
