@@ -479,6 +479,43 @@ dfu_firmware_intel_hex_func (void)
 }
 
 static void
+dfu_firmware_intel_hex_signed_func (void)
+{
+	DfuElement *element;
+	DfuImage *image;
+	GBytes *data_sig;
+	const guint8 *data;
+	gboolean ret;
+	gsize len;
+	g_autofree gchar *filename_hex = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_hex = NULL;
+
+	/* load a Intel hex32 file */
+	filename_hex = dfu_test_get_filename ("firmware.shex");
+	g_assert (filename_hex != NULL);
+	file_hex = g_file_new_for_path (filename_hex);
+	firmware = dfu_firmware_new ();
+	ret = dfu_firmware_parse_file (firmware, file_hex,
+				       DFU_FIRMWARE_PARSE_FLAG_NONE,
+				       NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 144);
+
+	/* get the signed image element */
+	image = dfu_firmware_get_image_by_name (firmware, "signature");
+	g_assert (image != NULL);
+	element = dfu_image_get_element_default	(image);
+	data_sig = dfu_element_get_contents (element);
+	g_assert (data_sig != NULL);
+	data = g_bytes_get_data (data_sig, &len);
+	g_assert_cmpint (len, ==, 8);
+	g_assert (data != NULL);
+}
+
+static void
 dfu_device_func (void)
 {
 	GPtrArray *targets;
@@ -787,6 +824,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/libdfu/firmware{xdfu}", dfu_firmware_xdfu_func);
 	g_test_add_func ("/libdfu/firmware{metadata}", dfu_firmware_metadata_func);
 	g_test_add_func ("/libdfu/firmware{intel-hex}", dfu_firmware_intel_hex_func);
+	g_test_add_func ("/libdfu/firmware{intel-hex-signed}", dfu_firmware_intel_hex_signed_func);
 	g_test_add_func ("/libdfu/firmware{elf}", dfu_firmware_elf_func);
 	g_test_add_func ("/libdfu/device", dfu_device_func);
 	g_test_add_func ("/libdfu/colorhug+", dfu_colorhug_plus_func);

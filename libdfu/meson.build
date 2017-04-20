@@ -17,14 +17,6 @@ install_headers([
   subdir : 'libdfu'
 )
 
-configure_file(
-  input : 'dfu.pc.in',
-  output : 'dfu.pc',
-  install: true,
-  install_dir: join_paths(get_option('libdir'), 'pkgconfig'),
-  configuration : conf
-)
-
 deps = [
   appstream_glib,
   giounix,
@@ -67,6 +59,18 @@ dfu = shared_library(
   link_args : vflag,
   link_depends : mapfile,
   install : true
+)
+
+pkgg = import('pkgconfig')
+pkgg.generate(
+  libraries : dfu,
+  requires : [ 'gio-2.0', 'gusb' ],
+  requires_private : [ 'libelf', 'appstream-glib' ],
+  subdirs : 'libdfu',
+  version : meson.project_version(),
+  name : 'dfu',
+  filebase : 'dfu',
+  description : 'libdfu is a library for reading and writing USB device firmware',
 )
 
 executable(

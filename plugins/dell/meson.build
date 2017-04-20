@@ -12,7 +12,10 @@ shared_module('fu_plugin_dell',
   ],
   install : true,
   install_dir: plugin_dir,
-  c_args : cargs,
+  c_args : [
+      cargs,
+      '-DLOCALSTATEDIR="' + localstatedir + '"',
+    ],
   dependencies : [
     plugin_deps,
     efivar,
@@ -72,7 +75,10 @@ if get_option('enable-tests')
     link_with : [
       fwupd,
     ],
-    c_args : cargs
+    c_args : [
+      cargs,
+      '-DLOCALSTATEDIR="/tmp/fwupd-self-test/var"',
+    ],
   )
   test('dell-self-test', e)
 endif

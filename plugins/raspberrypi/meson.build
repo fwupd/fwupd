@@ -13,7 +13,10 @@ shared_module('fu_plugin_raspberrypi',
   ],
   install : true,
   install_dir: plugin_dir,
-  c_args : cargs,
+  c_args : [
+      cargs,
+      '-DLOCALSTATEDIR="' + localstatedir + '"',
+    ],
   dependencies : [
     plugin_deps,
     libarchive,
@@ -52,6 +55,7 @@ if get_option('enable-tests')
       cargs,
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
       '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"',
+      '-DLOCALSTATEDIR="/tmp/fwupd-self-test/var"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
     ],
   )
