@@ -122,5 +122,5 @@ if get_option('enable-tests')
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
     ],
   )
-  test('fu-self-test', e)
+  test('fu-self-test', e, is_parallel:false)
 endif
