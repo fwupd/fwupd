@@ -34,6 +34,7 @@
 #include <fcntl.h>
 
 #include "fwupd-enums-private.h"
+#include "fwupd-resources.h"
 
 #include "fu-debug.h"
 #include "fu-device.h"
@@ -41,7 +42,6 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin.h"
-#include "fu-resources.h"
 #include "fu-quirks.h"
 
 #ifndef HAVE_POLKIT_0_114
@@ -1266,6 +1266,7 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	g_autoptr(FuKeyring) kr = NULL;
 	g_autoptr(GConverter) converter = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFile) file_parent = NULL;
 	g_autoptr(GInputStream) stream_buf = NULL;
 	g_autoptr(GInputStream) stream_fd = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -1335,9 +1336,17 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 		as_store_add_app (priv->store, app);
 	}
 
+	/* ensure directory exists */
+	file = g_file_new_for_path ("/var/cache/app-info/xmls/fwupd.xml");
+	file_parent = g_file_get_parent (file);
+	if (!g_file_query_exists (file_parent, NULL)) {
+		if (!g_file_make_directory_with_parents (file_parent, NULL, error))
+			return FALSE;
+	}
+
 	/* save the new file */
 	as_store_set_api_version (priv->store, 0.9);
-	file = g_file_new_for_path ("/var/cache/app-info/xmls/fwupd.xml");
+	as_store_set_origin (priv->store, as_store_get_origin (store));
 	if (!as_store_to_file (priv->store, file,
 			       AS_NODE_TO_XML_FLAG_ADD_HEADER |
 			       AS_NODE_TO_XML_FLAG_FORMAT_MULTILINE |
@@ -2616,6 +2625,14 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 	const gchar *fn;
 	g_autofree gchar *plugin_dir = NULL;
 	g_autoptr(GDir) dir = NULL;
+	g_auto(GStrv) blacklist = NULL;
+
+	/* get plugin blacklist */
+	blacklist = g_key_file_get_string_list (priv->config,
+						"fwupd",
+						"BlacklistPlugins",
+						NULL, /* length */
+						NULL);
 
 	/* search */
 	plugin_dir = g_build_filename (LIBDIR, "fwupd-plugins-2", NULL);
@@ -2641,6 +2658,18 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 				   filename, error_local->message);
 			continue;
 		}
+
+		/* is blacklisted */
+		if (blacklist != NULL &&
+		    g_strv_contains ((const gchar * const *) blacklist,
+				     fu_plugin_get_name (plugin))) {
+			fu_plugin_set_enabled (plugin, FALSE);
+			g_debug ("%s blacklisted by config",
+				 fu_plugin_get_name (plugin));
+			continue;
+		}
+
+		/* watch for changes */
 		g_signal_connect (plugin, "device-added",
 				  G_CALLBACK (fu_main_plugin_device_added_cb),
 				  priv);

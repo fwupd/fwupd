@@ -3,7 +3,7 @@ AC_PREREQ(2.63)
 
 m4_define([fwupd_major_version], [0])
 m4_define([fwupd_minor_version], [8])
-m4_define([fwupd_micro_version], [1])
+m4_define([fwupd_micro_version], [2])
 m4_define([fwupd_version],
           [fwupd_major_version.fwupd_minor_version.fwupd_micro_version])
 
@@ -57,8 +57,6 @@ IT_PROG_INTLTOOL([0.35.0])
 AC_PATH_PROG(XSLTPROC, xsltproc)
 
 WARN_CFLAGS_EXTRA="
-	-D_FORTIFY_SOURCE=2
-	-fstack-protector-strong
 	-Waggregate-return
 	-Wunused
 	-Warray-bounds
@@ -144,7 +142,16 @@ PKG_CHECK_MODULES(GUSB, gusb >= 0.2.9)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 PKG_CHECK_MODULES(ARCHIVE, libarchive)
 PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.51.92)
-PKG_CHECK_MODULES(VALGRIND, valgrind)
+PKG_CHECK_MODULES(VALGRIND, valgrind,
+		  has_valgrind=yes,
+		  has_valgrind=no)
+if test x$has_valgrind = xyes; then
+	AC_DEFINE(HAVE_VALGRIND,1,
+	          [Define as 1 if you have valgrind])
+else
+	has_valgrind=no
+fi
+
 AC_PATH_PROG(DOCBOOK2MAN, docbook2man)
 if test -z $DOCBOOK2MAN ; then
 	AC_MSG_ERROR([docbook2man program not found])
@@ -335,6 +342,13 @@ AC_ARG_WITH([systemdunitdir],
             [with_systemdunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)])
 AC_SUBST([systemdunitdir], [$with_systemdunitdir])
 
+# EFI system partition location
+AC_ARG_WITH([bootdir],
+            AS_HELP_STRING([--with-bootdir=DIR], [Directory for EFI system partition]),
+            [],
+            [with_bootdir=/boot/efi])
+AC_SUBST([bootdir], [$with_bootdir])
+
 # udev rules
 AC_ARG_WITH([udevrulesdir],
             AS_HELP_STRING([--with-udevrulesdir=DIR], [Directory for udev rules files]),
@@ -361,7 +375,6 @@ docs/Makefile
 docs/libdfu/Makefile
 docs/libfwupd/Makefile
 docs/man/Makefile
-docs/version.xml
 policy/Makefile
 po/Makefile.in
 src/Makefile

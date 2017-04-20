@@ -6,7 +6,7 @@ includedir=@includedir@
 Name: dfu
 Description: libdfu is a library for reading and writing USB device firmware
 Version: @VERSION@
-Requires: glib-2.0, gobject-2.0, gio-2.0
-Requires.private: elf, appstream-glib
+Requires: glib-2.0 gobject-2.0 gio-2.0 gusb
+Requires.private: libelf appstream-glib
 Libs: -L${libdir} -ldfu
 Cflags: -I${includedir}

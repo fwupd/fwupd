@@ -4,7 +4,6 @@ SUBDIRS = 						\
 	man
 
 EXTRA_DIST =						\
-	version.xml.in					\
 	dfu-metadata-store.md
 
 -include $(top_srcdir)/git.mk

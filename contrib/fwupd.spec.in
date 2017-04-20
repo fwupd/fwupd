@@ -5,6 +5,15 @@
 
 %define alphatag                #ALPHATAG#
 
+%ifarch x86_64 %{ix86}
+%global have_smbios 1
+%endif
+
+# FIXME: should also be aarch64, but efivar not present there yet
+%ifarch x86_64 %{ix86}
+%global have_uefi 1
+%endif
+
 Summary:   Firmware update daemon
 Name:      fwupd
 Version:   #VERSION#
@@ -35,11 +44,11 @@ BuildRequires: valgrind-devel
 BuildRequires: elfutils-libelf-devel
 BuildRequires: gtk-doc
 
-%ifarch x86_64 %{ix86}
+%if 0%{?have_smbios}
 BuildRequires: libsmbios-devel >= 2.3.0
 %endif
 
-%ifarch x86_64 %{ix86} aarch64
+%if 0%{?have_uefi}
 BuildRequires: fwupdate-devel >= 7
 %endif
 
@@ -54,7 +63,7 @@ Requires: libgusb%{?_isa} >= %{libgusb_version}
 Requires: libsoup%{?_isa} >= %{libsoup_version}
 
 Obsoletes: fwupd-sign < 0.1.6
-Obsoletes: libebitdo < 0.7.5
+Obsoletes: libebitdo < 0.7.5-3
 
 %description
 fwupd is a daemon to allow session software to update device firmware.
@@ -62,7 +71,7 @@ fwupd is a daemon to allow session software to update device firmware.
 %package devel
 Summary: Development package for %{name}
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: libebitdo-devel < 0.7.5
+Obsoletes: libebitdo-devel < 0.7.5-3
 
 %description devel
 Files for development with %{name}.
@@ -89,15 +98,17 @@ Files for development with libdfu.
         --disable-thunderbolt   \
         --enable-gtk-doc        \
         --enable-colorhug       \
-%ifarch x86_64 %{ix86} aarch64
+%if 0%{?have_uefi}
         --enable-uefi           \
 %else
         --disable-uefi          \
 %endif
-%ifarch x86_64 %{ix86}
+%if 0%{?have_smbios}
         --enable-dell           \
+        --enable-synaptics      \
 %else
         --disable-dell          \
+        --disable-synaptics     \
 %endif
         --disable-rpath         \
         --disable-silent-rules  \
@@ -151,22 +162,25 @@ make check VERBOSE=1
 %dir %{_localstatedir}/lib/fwupd
 %{_libdir}/libfwupd*.so.*
 %{_libdir}/girepository-1.0/Fwupd-1.0.typelib
-%dir %{_localstatedir}/cache/app-info
-%dir %{_localstatedir}/cache/app-info/icons
-%dir %{_localstatedir}/cache/app-info/xmls
 /usr/lib/udev/rules.d/*.rules
 %dir %{_libdir}/fwupd-plugins-2
 %{_libdir}/fwupd-plugins-2/libfu_plugin_altos.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_colorhug.so
+%if 0%{?have_smbios}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_dell.so
+%endif
 %{_libdir}/fwupd-plugins-2/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_raspberrypi.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_steelseries.so
+%if 0%{?have_smbios}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_synapticsmst.so
+%endif
 %{_libdir}/fwupd-plugins-2/libfu_plugin_test.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_udev.so
+%if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_uefi.so
+%endif
 %{_libdir}/fwupd-plugins-2/libfu_plugin_unifying.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_upower.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_usb.so

@@ -1,3 +1,20 @@
+Version 0.8.2
+~~~~~~~~~~~~~
+Released: 2017-04-20
+
+New Features:
+ - Add a config option to allow runtime disabling plugins by name (Richard Hughes)
+
+Bugfixes:
+ - Add DFU quirk for OpenPICC (Richard Hughes)
+ - Add DFU quirk for SIMtrace (Richard Hughes)
+ - Create directories in /var/cache as required (Richard Hughes)
+ - Fix the Requires lines in the dfu pkg-config file (Richard Hughes)
+ - Only try to mkdir the localstatedir if we have the right permissions (Shea Levy)
+ - Set the source origin when saving metadata (Richard Hughes)
+ - Support proxy servers in fwupdmgr (Richard Hughes)
+ - Use a 60 second timeout on all client downloads (Richard Hughes)
+
 Version 0.8.1
 ~~~~~~~~~~~~~
 Released: 2017-02-27

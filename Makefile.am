@@ -57,6 +57,7 @@ DISTCHECK_CONFIGURE_FLAGS =				\
 	--enable-uefi					\
 	--enable-dell					\
 	--with-udevrulesdir=$$dc_install_base/$(udevrulesdir) \
+	--with-bootdir=$$dc_install_base/$(bootdir) \
 	--with-systemdunitdir=$$dc_install_base/$(systemdunitdir)
 
 GITIGNOREFILES =					\
