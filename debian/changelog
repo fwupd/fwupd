@@ -1,3 +1,40 @@
+fwupd (0.8.2-1) unstable; urgency=medium
+
+  [ Richard Hughes ]
+  * trivial: post release version bump
+  * trivial: Sync example spec file with downstream
+  * Add DFU quirk for SIMtrace
+  * Add DFU quirk for OpenPICC
+  * Create directories in /var/cache as required
+  * trivial: Fix the log domains in two plugins
+  * trivial: No not list the API version indexes
+  * trivial: Don't change the documentation output every time the version changes
+  * trivial: Fix the last -Wpointer-sign warning
+  * trivial: Change the name of a generated file
+  * trivial: Remove non-warning flags from the CFLAGS
+  * Use a 60 second timeout on all client downloads
+  * Support proxy servers in fwupdmgr
+  * Set the source origin when saving metadata
+  * Add a config option to allow runtime disabling plugins by name
+  * Fix the Requires lines in the dfu pkg-config file
+  * Release fwupd 0.8.2
+
+  [ Mario Limonciello ]
+  * trivial: install /var/lib/fwupd in make install (#94)
+  * trivial: allow configuring ESP location (#94)
+  * trivial: make valgrind an optional build dependency
+  * trivial: make /boot/efi an optional ReadWritePath (#97)
+  * trivial: set synaptics error message in more scenarios
+  * Drop upstream patches.
+
+  [ Shea Levy ]
+  * Only try to mkdir the localstatedir if we have the right permissions (#96)
+
+  [ AsciiWolf ]
+  * Update Czech translation
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 20 Apr 2017 10:37:23 -0500
+
 fwupd (0.8.1-3) unstable; urgency=medium
 
   * Backport upstream commit to make valgrind optional (Closes: #856344)
