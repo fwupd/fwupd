@@ -11,16 +11,6 @@ Released: 2017-xx-xx
 New Features:
 Bugfixes:
 
-Update translations:
-
-cd po
-make fwupd.pot
-INTLTOOL_EXTRACT="/usr/bin/intltool-extract" XGETTEXT="/usr/bin/xgettext --no-location" srcdir=. /usr/bin/intltool-update --gettext-package fwupd --pot
-tx push --source
-tx pull --all --minimum-perc=5
-git add *.po
-cd ..
-
 2. Commit changes to git:
 
 # MAKE SURE THESE ARE CORRECT
