@@ -170,9 +170,6 @@ conf.set_quoted('SYSCONFDIR', get_option('sysconfdir'))
 conf.set_quoted('LIBEXECDIR',
                 join_paths(get_option('prefix'),
                            get_option('libexecdir')))
-conf.set_quoted('LOCALSTATEDIR',
-                join_paths(get_option('prefix'),
-                           get_option('localstatedir')))
 
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
@@ -182,6 +179,9 @@ configure_file(
   output : 'config.h',
   configuration : conf
 )
+
+localstatedir = join_paths(get_option('prefix'),
+                           get_option('localstatedir'))
 
 plugin_deps = []
 plugin_deps += appstream_glib

@@ -27,6 +27,7 @@ executable(
   link_with : fwupd,
   c_args : [
     cargs,
+    '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -71,6 +72,7 @@ executable(
   link_with : fwupd,
   c_args : [
     cargs,
+    '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -115,6 +117,7 @@ if get_option('enable-tests')
     c_args : [
       cargs,
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
+      '-DLOCALSTATEDIR="/tmp/fwupd-self-test/var"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
     ],
