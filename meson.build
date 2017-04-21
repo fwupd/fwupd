@@ -216,4 +216,4 @@ else
   message('git not found, you will not be able to run `ninja dist`')
 endif
 
-meson.add_install_script('meson_post_install.sh', systemd.get_pkgconfig_variable('systemdsystemunitdir'))
+meson.add_install_script('meson_post_install.sh', systemd.get_pkgconfig_variable('systemdsystemunitdir'), localstatedir)
