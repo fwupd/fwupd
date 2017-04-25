@@ -92,6 +92,8 @@ void		 fu_plugin_cache_remove			(FuPlugin	*plugin,
 void		 fu_plugin_cache_add			(FuPlugin	*plugin,
 							 const gchar	*id,
 							 gpointer	 dev);
+gboolean	 fu_plugin_check_hwid			(FuPlugin	*plugin,
+							 const gchar	*hwid);
 
 G_END_DECLS
 

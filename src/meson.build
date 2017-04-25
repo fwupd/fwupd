@@ -9,6 +9,7 @@ executable(
   sources : [
     'fu-device.c',
     'fu-pending.c',
+    'fu-hwids.c',
     'fu-util.c',
   ],
   include_directories : [
@@ -46,6 +47,7 @@ executable(
   resources_src,
   sources : [
     'fu-main.c',
+    'fu-hwids.c',
     'fu-debug.c',
     'fu-device.c',
     'fu-keyring.c',
@@ -88,6 +90,7 @@ if get_option('enable-tests')
     colorhug_test_firmware,
     sources : [
       'fu-self-test.c',
+      'fu-hwids.c',
       'fu-device.c',
       'fu-pending.c',
       'fu-keyring.c',

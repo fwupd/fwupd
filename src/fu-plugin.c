@@ -43,6 +43,7 @@ typedef struct {
 	GUsbContext		*usb_ctx;
 	gboolean		 enabled;
 	gchar			*name;
+	GHashTable		*hwids;		/* hwid:1 */
 	GHashTable		*devices;	/* platform_id:GObject */
 	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
 	FuPluginData		*data;
@@ -482,6 +483,34 @@ fu_plugin_recoldplug (FuPlugin *plugin)
 {
 	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_signal_emit (plugin, signals[SIGNAL_RECOLDPLUG], 0);
+}
+
+/**
+ * fu_plugin_check_hwid:
+ * @plugin: A #FuPlugin
+ * @hwid: A Hardware ID GUID, e.g. "6de5d951-d755-576b-bd09-c5cf66b27234"
+ *
+ * Checks to see if a specific hardware ID exists. All hardware IDs on a
+ * specific system can be shown using the `fwupdmgr hwids` command.
+ *
+ * Since: 0.9.1
+ **/
+gboolean
+fu_plugin_check_hwid (FuPlugin *plugin, const gchar *hwid)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->hwids == NULL)
+		return FALSE;
+	return g_hash_table_lookup (priv->hwids, hwid) != NULL;
+}
+
+void
+fu_plugin_set_hwids (FuPlugin *plugin, GHashTable *hwids)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->hwids != NULL)
+		g_hash_table_unref (priv->hwids);
+	priv->hwids = g_hash_table_ref (hwids);
 }
 
 /**
@@ -1086,6 +1115,8 @@ fu_plugin_finalize (GObject *object)
 
 	if (priv->usb_ctx != NULL)
 		g_object_unref (priv->usb_ctx);
+	if (priv->hwids != NULL)
+		g_hash_table_unref (priv->hwids);
 #ifndef RUNNING_ON_VALGRIND
 	if (priv->module != NULL)
 		g_module_close (priv->module);

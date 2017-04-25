@@ -30,7 +30,70 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
+#include "fu-hwids.h"
 #include "fu-test.h"
+
+static void
+fu_hwids_func (void)
+{
+	g_autoptr(FuHwids) hwids = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *guid = NULL;
+	g_autofree gchar *testdir = NULL;
+	const gchar *sysfsdir;
+	gboolean ret;
+
+	struct {
+		const gchar *key;
+		const gchar *value;
+	} guids[] = {
+		{ "Manufacturer",	"11b4a036-3b64-5421-a372-22c07df10a4d" },
+		{ "HardwareID-14",	"11b4a036-3b64-5421-a372-22c07df10a4d" },
+		{ "HardwareID-13",	"7ccbb6f1-9641-5f84-b00d-51ff218a4066" },
+		{ "HardwareID-12",	"482f3f58-6045-593a-9be4-611717ce4770" },
+		{ "HardwareID-11",	"6525c6e5-28e9-5f9c-abe4-20fd82504002" },
+		{ "HardwareID-10",	"c00fe015-014c-5301-90d1-b5c8ab037eb4" },
+		{ "HardwareID-9",	"6525c6e5-28e9-5f9c-abe4-20fd82504002" },
+		{ "HardwareID-8",	"c00fe015-014c-5301-90d1-b5c8ab037eb4" },
+		{ "HardwareID-7",	"5a127cba-be28-5d3b-84f0-0e450d266d97" },
+		{ "HardwareID-6",	"2c2d02cc-357e-539d-a44d-d10e902391dd" },
+		{ "HardwareID-5",	"7ccbb6f1-9641-5f84-b00d-51ff218a4066" },
+		{ "HardwareID-4",	"d78b474d-dee0-5412-bc9d-e9f7d7783df2" },
+		{ "HardwareID-3",	"a2f225b3-f4f0-5590-8973-08dd81602d69" },
+		{ "HardwareID-2",	"2e7c87e3-a52c-537f-a5f6-907110143cf7" },
+		{ "HardwareID-1",	"6453b900-1fd8-55fb-a936-7fca22823bcc" },
+		{ "HardwareID-0",	"d777e0a5-4db6-51b4-a927-86d4ccdc5c0d" },
+		{ NULL, NULL }
+	};
+
+	sysfsdir = fu_test_get_filename (TESTDATADIR, "hwids");
+	g_assert (sysfsdir != NULL);
+
+	hwids = fu_hwids_new ();
+	ret = fu_hwids_setup (hwids, sysfsdir, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_MANUFACTURER), ==,
+			 "To be filled by O.E.M.");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_ENCLOSURE_KIND), ==,
+			 "3");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_FAMILY), ==,
+			 "To be filled by O.E.M.");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_NAME), ==,
+			 "To be filled by O.E.M.");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VENDOR), ==,
+			 "American Megatrends Inc.");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VERSION), ==, "1201");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE), ==, "4");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "6");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_SKU), ==, "SKU");
+	for (guint i = 0; guids[i].key != NULL; i++) {
+		guid = fu_hwids_get_guid (hwids, guids[i].key, &error);
+		g_assert_no_error (error);
+		g_assert_cmpstr (guid, ==, guids[i].value);
+	}
+}
 
 static void
 _plugin_status_changed_cb (FuPlugin *plugin, FwupdStatus status, gpointer user_data)
@@ -347,6 +410,7 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
+	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
