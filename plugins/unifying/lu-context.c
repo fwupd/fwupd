@@ -28,17 +28,21 @@
 #include "lu-context.h"
 #include "lu-device-bootloader-nordic.h"
 #include "lu-device-bootloader-texas.h"
+#include "lu-device-peripheral.h"
 #include "lu-device-runtime.h"
+#include "lu-hidpp.h"
 
 struct _LuContext
 {
 	GObject			 parent_instance;
 	GPtrArray		*devices;
+	GHashTable		*devices_active;	/* LuDevice : 1 */
 	GUsbContext		*usb_ctx;
 	GUdevClient		*gudev_client;
 	GHashTable		*hash_replug;
 	gboolean		 done_coldplug;
 	GHashTable		*hash_devices;
+	guint			 poll_id;
 };
 
 G_DEFINE_TYPE (LuContext, lu_context, G_TYPE_OBJECT)
@@ -106,7 +110,12 @@ static void
 lu_context_finalize (GObject *object)
 {
 	LuContext *ctx = LU_CONTEXT (object);
+
+	if (ctx->poll_id != 0)
+		g_source_remove (ctx->poll_id);
+
 	g_ptr_array_unref (ctx->devices);
+	g_hash_table_unref (ctx->devices_active);
 	g_object_unref (ctx->usb_ctx);
 	g_object_unref (ctx->gudev_client);
 	g_hash_table_unref (ctx->hash_devices);
@@ -141,6 +150,27 @@ lu_context_class_init (LuContextClass *klass)
 }
 
 static void
+lu_context_device_flags_notify_cb (GObject *obj,
+				   GParamSpec *pspec,
+				   LuContext *ctx)
+{
+	LuDevice *device = LU_DEVICE (obj);
+	if (g_hash_table_lookup (ctx->devices_active, device) != NULL) {
+		if (!lu_device_has_flag (device, LU_DEVICE_FLAG_ACTIVE)) {
+			g_debug ("existing device now inactive, sending signal");
+			g_signal_emit (ctx, signals[SIGNAL_REMOVED], 0, device);
+			g_hash_table_remove (ctx->devices_active, device);
+		}
+	} else {
+		if (lu_device_has_flag (device, LU_DEVICE_FLAG_ACTIVE)) {
+			g_debug ("existing device now active, sending signal");
+			g_signal_emit (ctx, signals[SIGNAL_ADDED], 0, device);
+			g_hash_table_insert (ctx->devices_active, device, GINT_TO_POINTER (1));
+		}
+	}
+}
+
+static void
 lu_context_add_device (LuContext *ctx, LuDevice *device)
 {
 	GUsbContextReplugHelper *replug_helper;
@@ -152,7 +182,12 @@ lu_context_add_device (LuContext *ctx, LuDevice *device)
 
 	/* emit */
 	g_ptr_array_add (ctx->devices, g_object_ref (device));
-	g_signal_emit (ctx, signals[SIGNAL_ADDED], 0, device);
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_ACTIVE)) {
+		g_signal_emit (ctx, signals[SIGNAL_ADDED], 0, device);
+		g_hash_table_insert (ctx->devices_active, device, GINT_TO_POINTER (1));
+	}
+	g_signal_connect (device, "notify::flags",
+			  G_CALLBACK (lu_context_device_flags_notify_cb), ctx);
 
 	/* if we're waiting for replug, quit the loop */
 	replug_helper = g_hash_table_lookup (ctx->hash_replug,
@@ -179,7 +214,8 @@ lu_context_remove_device (LuContext *ctx, LuDevice *device)
 		      "udev-device", NULL,
 		      NULL);
 
-	g_signal_emit (ctx, signals[SIGNAL_REMOVED], 0, device);
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_ACTIVE))
+		g_signal_emit (ctx, signals[SIGNAL_REMOVED], 0, device);
 	g_ptr_array_remove (ctx->devices, device);
 }
 
@@ -238,8 +274,12 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 		platform_id = lu_context_get_platform_id_for_udev_device (udev_device);
 		device = g_object_new (LU_TYPE_DEVICE_RUNTIME,
 				       "kind", LU_DEVICE_KIND_RUNTIME,
+				       "flags", LU_DEVICE_FLAG_ACTIVE |
+						LU_DEVICE_FLAG_REQUIRES_DETACH |
+						LU_DEVICE_FLAG_DETACH_WILL_REPLUG,
 				       "platform-id", platform_id,
 				       "udev-device", udev_device,
+				       "hidpp-id", HIDPP_DEVICE_ID_RECEIVER,
 				       NULL);
 		g_hash_table_insert (ctx->hash_devices,
 				     g_strdup (lu_device_get_platform_id (device)),
@@ -259,7 +299,7 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 	val = g_udev_device_get_property (udev_parent, "HID_NAME");
 	g_debug ("%s not a matching pid: %04x", val, pid);
 	platform_id = g_udev_device_get_sysfs_path (udev_device);
-	device = g_object_new (LU_TYPE_DEVICE,
+	device = g_object_new (LU_TYPE_DEVICE_PERIPHERAL,
 			       "kind", LU_DEVICE_KIND_PERIPHERAL,
 			       "platform-id", platform_id,
 			       "udev-device", udev_device,
@@ -359,6 +399,50 @@ lu_context_remove_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 	}
 }
 
+static gboolean
+lu_context_poll_cb (gpointer user_data)
+{
+	LuContext *ctx = LU_CONTEXT (user_data);
+	for (guint i = 0; i < ctx->devices->len; i++) {
+		LuDevice *device = g_ptr_array_index (ctx->devices, i);
+		g_autoptr(GError) error = NULL;
+		if (!lu_device_open (device, &error)) {
+			g_debug ("failed to open %s: %s",
+				 lu_device_get_platform_id (device),
+				 error->message);
+			continue;
+		}
+		if (!lu_device_poll (device, &error)) {
+			g_debug ("failed to probe %s: %s",
+				 lu_device_get_platform_id (device),
+				 error->message);
+			continue;
+		}
+	}
+	return TRUE;
+}
+
+void
+lu_context_set_poll_interval (LuContext *ctx, guint poll_interval)
+{
+	/* enable or change */
+	if (poll_interval > 0) {
+		if (ctx->poll_id > 0)
+			g_source_remove (ctx->poll_id);
+		ctx->poll_id = g_timeout_add (poll_interval,
+					      lu_context_poll_cb,
+					      ctx);
+		return;
+	}
+
+	/* disable */
+	if (poll_interval == 0 && ctx->poll_id != 0) {
+		g_source_remove (ctx->poll_id);
+		ctx->poll_id = 0;
+		return;
+	}
+}
+
 static void
 lu_context_udev_uevent_cb (GUdevClient *gudev_client,
 			   const gchar *action,
@@ -383,6 +467,7 @@ lu_context_init (LuContext *ctx)
 	g_signal_connect (ctx->gudev_client, "uevent",
 			  G_CALLBACK (lu_context_udev_uevent_cb), ctx);
 	ctx->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	ctx->devices_active = g_hash_table_new (g_direct_hash, g_direct_equal);
 	ctx->hash_devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 						   g_free, (GDestroyNotify) g_object_unref);
 	ctx->hash_replug = g_hash_table_new_full (g_str_hash, g_str_equal,
@@ -424,7 +509,7 @@ lu_context_find_by_platform_id (LuContext *ctx, const gchar *platform_id, GError
 	for (guint i = 0; i < ctx->devices->len; i++) {
 		LuDevice *device = g_ptr_array_index (ctx->devices, i);
 		if (g_strcmp0 (lu_device_get_platform_id (device), platform_id) == 0)
-			return device;
+			return g_object_ref (device);
 	}
 	g_set_error (error,
 		     G_IO_ERROR,
@@ -451,6 +536,8 @@ lu_context_usb_device_added_cb (GUsbContext *usb_ctx,
 		g_autoptr(LuDevice) device = NULL;
 		device = g_object_new (LU_TYPE_DEVICE_BOOTLOADER_NORDIC,
 				       "kind", LU_DEVICE_KIND_BOOTLOADER_NORDIC,
+				       "flags", LU_DEVICE_FLAG_ACTIVE,
+				       "hidpp-id", HIDPP_DEVICE_ID_RECEIVER,
 				       "usb-device", usb_device,
 				       NULL);
 		lu_context_add_device (ctx, device);
@@ -462,6 +549,8 @@ lu_context_usb_device_added_cb (GUsbContext *usb_ctx,
 		g_autoptr(LuDevice) device = NULL;
 		device = g_object_new (LU_TYPE_DEVICE_BOOTLOADER_TEXAS,
 				       "kind", LU_DEVICE_KIND_BOOTLOADER_TEXAS,
+				       "flags", LU_DEVICE_FLAG_ACTIVE,
+				       "hidpp-id", HIDPP_DEVICE_ID_RECEIVER,
 				       "usb-device", usb_device,
 				       NULL);
 		lu_context_add_device (ctx, device);

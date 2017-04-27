@@ -41,6 +41,8 @@ struct _LuDeviceClass
 						 GError			**error);
 	gboolean	 (*probe)		(LuDevice		*device,
 						 GError			**error);
+	gboolean	 (*poll)		(LuDevice		*device,
+						 GError			**error);
 	gboolean	 (*attach)		(LuDevice		*device,
 						 GError			**error);
 	gboolean	 (*detach)		(LuDevice		*device,
@@ -74,18 +76,24 @@ typedef enum {
 
 typedef enum {
 	LU_DEVICE_FLAG_NONE,
-	LU_DEVICE_FLAG_CAN_FLASH	= 1 << 0,
-	LU_DEVICE_FLAG_SIGNED_FIRMWARE	= 1 << 1,
+	LU_DEVICE_FLAG_ACTIVE			= 1 << 0,
+	LU_DEVICE_FLAG_IS_OPEN			= 1 << 1,
+	LU_DEVICE_FLAG_CAN_FLASH		= 1 << 2,
+	LU_DEVICE_FLAG_REQUIRES_SIGNED_FIRMWARE	= 1 << 3,
+	LU_DEVICE_FLAG_REQUIRES_RESET		= 1 << 4,
+	LU_DEVICE_FLAG_REQUIRES_ATTACH		= 1 << 5,
+	LU_DEVICE_FLAG_REQUIRES_DETACH		= 1 << 6,
+	LU_DEVICE_FLAG_DETACH_WILL_REPLUG	= 1 << 7,
 	/*< private >*/
 	LU_DEVICE_FLAG_LAST
 } LuDeviceFlags;
 
 typedef struct {
 	guint8	 report_id;
-	guint8	 device_idx;
+	guint8	 device_id;
 	guint8	 sub_id;
+	guint8	 function_id; /* funcId:software_id */
 	guint8	 data[128];
-	gsize	 len;
 } LuDeviceHidppMsg;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(LuDeviceHidppMsg, g_free);
@@ -96,12 +104,23 @@ LuDeviceKind	 lu_device_kind_from_string	(const gchar	*kind);
 const gchar	*lu_device_kind_to_string	(LuDeviceKind	 kind);
 
 LuDeviceKind	 lu_device_get_kind		(LuDevice		*device);
+guint8		 lu_device_get_hidpp_id		(LuDevice		*device);
+void		 lu_device_set_hidpp_id		(LuDevice		*device,
+						 guint8			 hidpp_id);
+guint8		 lu_device_get_battery_level	(LuDevice		*device);
+void		 lu_device_set_battery_level	(LuDevice		*device,
+						 guint8			 percentage);
+guint8		 lu_device_get_hidpp_version	(LuDevice		*device);
+void		 lu_device_set_hidpp_version	(LuDevice		*device,
+						 guint8			 hidpp_version);
 const gchar	*lu_device_get_platform_id	(LuDevice		*device);
 void		 lu_device_set_platform_id	(LuDevice		*device,
 						 const gchar		*platform_id);
 gboolean	 lu_device_has_flag		(LuDevice		*device,
 						 LuDeviceFlags		 flag);
 void		 lu_device_add_flag		(LuDevice		*device,
+						 LuDeviceFlags		 flag);
+void		 lu_device_remove_flag		(LuDevice		*device,
 						 LuDeviceFlags		 flag);
 LuDeviceFlags	 lu_device_get_flags		(LuDevice		*device);
 const gchar	*lu_device_get_product		(LuDevice		*device);
@@ -131,6 +150,10 @@ gboolean	 lu_device_detach		(LuDevice		*device,
 						 GError			**error);
 gboolean	 lu_device_attach		(LuDevice		*device,
 						 GError			**error);
+gboolean	 lu_device_probe		(LuDevice		*device,
+						 GError			**error);
+gboolean	 lu_device_poll			(LuDevice		*device,
+						 GError			**error);
 gboolean	 lu_device_write_firmware	(LuDevice		*device,
 						 GBytes			*fw,
 						 GFileProgressCallback	 progress_cb,
@@ -138,13 +161,20 @@ gboolean	 lu_device_write_firmware	(LuDevice		*device,
 						 GError			**error);
 gboolean	 lu_device_hidpp_send		(LuDevice		*device,
 						 LuDeviceHidppMsg	*msg,
+						 guint			 timeout,
 						 GError			**error);
 gboolean	 lu_device_hidpp_receive	(LuDevice		*device,
 						 LuDeviceHidppMsg	*msg,
+						 guint			 timeout,
 						 GError			**error);
 gboolean	 lu_device_hidpp_transfer	(LuDevice		*device,
 						 LuDeviceHidppMsg	*msg,
 						 GError			**error);
+gboolean	 lu_device_hidpp_feature_search	(LuDevice		*device,
+						 guint16		 feature,
+						 GError			**error);
+guint8		 lu_device_hidpp_feature_get_idx (LuDevice		*device,
+						 guint16		 feature);
 
 G_END_DECLS
 

@@ -45,13 +45,23 @@ typedef struct
 	gchar			*version_fw;
 	GPtrArray		*guids;
 	LuDeviceFlags		 flags;
+	guint8			 hidpp_id;
+	guint8			 battery_level;
+	guint8			 hidpp_version;
+	GPtrArray		*feature_index;
 } LuDevicePrivate;
+
+typedef struct {
+	guint8			 idx;
+	guint16			 feature;
+} LuDeviceHidppMap;
 
 G_DEFINE_TYPE_WITH_PRIVATE (LuDevice, lu_device, G_TYPE_OBJECT)
 
 enum {
 	PROP_0,
 	PROP_KIND,
+	PROP_HIDPP_ID,
 	PROP_FLAGS,
 	PROP_PLATFORM_ID,
 	PROP_UDEV_DEVICE,
@@ -89,14 +99,96 @@ lu_device_kind_to_string (LuDeviceKind kind)
 	return NULL;
 }
 
+static const gchar *
+lu_hidpp_feature_to_string (guint feature)
+{
+	if (feature == HIDPP_FEATURE_ROOT)
+		return "Root";
+	if (feature == HIDPP_FEATURE_I_FIRMWARE_INFO)
+		return "IFirmwareInfo";
+	if (feature == HIDPP_FEATURE_BATTERY_LEVEL_STATUS)
+		return "BatteryLevelStatus";
+	if (feature == HIDPP_FEATURE_DFU_CONTROL)
+		return "DfuControl";
+	if (feature == HIDPP_FEATURE_DFU_CONTROL_SIGNED)
+		return "DfuControlSigned";
+	if (feature == HIDPP_FEATURE_DFU)
+		return "Dfu";
+	return NULL;
+}
+
 LuDeviceHidppMsg *
 lu_device_hidpp_new (void)
 {
 	return g_new0 (LuDeviceHidppMsg, 1);
 }
 
+#define HIDPP_REPORT_NOTIFICATION	0x01
+#define HIDPP_REPORT_02			0x02
+#define HIDPP_REPORT_03			0x03
+#define HIDPP_REPORT_04			0x04
+#define HIDPP_REPORT_20			0x20
+
 static void
-lu_device_hidpp_dump (LuDevice *device, const gchar *title, LuDeviceHidppMsg *msg)
+hidpp_device_map_print (LuDevice *device)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	for (guint i = 0; i < priv->feature_index->len; i++) {
+		LuDeviceHidppMap *map = g_ptr_array_index (priv->feature_index, i);
+		g_debug ("%02x\t[%04x] %s",
+			 map->idx,
+			 map->feature,
+			 lu_hidpp_feature_to_string (map->feature));
+	}
+}
+
+guint8
+lu_device_hidpp_feature_get_idx (LuDevice *device, guint16 feature)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	for (guint i = 0; i < priv->feature_index->len; i++) {
+		LuDeviceHidppMap *map = g_ptr_array_index (priv->feature_index, i);
+		if (map->feature == feature)
+			return map->idx;
+	}
+	return 0x00;
+}
+
+static guint16
+lu_device_hidpp_feature_find_by_idx (LuDevice *device, guint8 idx)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	for (guint i = 0; i < priv->feature_index->len; i++) {
+		LuDeviceHidppMap *map = g_ptr_array_index (priv->feature_index, i);
+		if (map->idx == idx)
+			return map->feature;
+	}
+	return 0x0000;
+}
+
+static gsize
+lu_device_hidpp_msg_length (LuDeviceHidppMsg *msg)
+{
+	if (msg->report_id == HIDPP_REPORT_ID_SHORT)
+		return 0x07;
+	if (msg->report_id == HIDPP_REPORT_ID_LONG)
+		return 0x14;
+	if (msg->report_id == HIDPP_REPORT_NOTIFICATION)
+		return 0x08;
+	if (msg->report_id == HIDPP_REPORT_02)
+		return 0x08;
+	if (msg->report_id == HIDPP_REPORT_03)
+		return 0x05;
+	if (msg->report_id == HIDPP_REPORT_04)
+		return 0x02;
+	if (msg->report_id == HIDPP_REPORT_20)
+		return 0x0f;
+	g_warning ("report 0x%02x unknown length", msg->report_id);
+	return 0x08;
+}
+
+static void
+lu_device_hidpp_dump (LuDevice *device, const gchar *title, const guint8 *data, gsize len)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
 	g_autofree gchar *title_prefixed = NULL;
@@ -106,15 +198,19 @@ lu_device_hidpp_dump (LuDevice *device, const gchar *title, LuDeviceHidppMsg *ms
 		title_prefixed = g_strdup_printf ("[HID] %s", title);
 	else
 		title_prefixed = g_strdup_printf ("[EMU] %s", title);
-	lu_dump_raw (title_prefixed, (guint8 *) msg, msg->len + 3);
+	lu_dump_raw (title_prefixed, data, len);
 }
 
 gboolean
-lu_device_hidpp_send (LuDevice *device, LuDeviceHidppMsg *msg, GError **error)
+lu_device_hidpp_send (LuDevice *device,
+		      LuDeviceHidppMsg *msg,
+		      guint timeout,
+		      GError **error)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
+	gsize len = lu_device_hidpp_msg_length (msg);
 
-	lu_device_hidpp_dump (device, "host->device", msg);
+	lu_device_hidpp_dump (device, "host->device", (guint8 *) msg, len);
 
 	/* USB */
 	if (priv->usb_device != NULL) {
@@ -125,35 +221,29 @@ lu_device_hidpp_send (LuDevice *device, LuDeviceHidppMsg *msg, GError **error)
 						    G_USB_DEVICE_RECIPIENT_INTERFACE,
 						    LU_REQUEST_SET_REPORT,
 						    0x0210, 0x0002,
-						    (guint8 *) msg, msg->len + 3,
+						    (guint8 *) msg, len,
 						    &actual_length,
-						    LU_DEVICE_TIMEOUT_MS,
+						    timeout,
 						    NULL,
 						    error)) {
 			g_prefix_error (error, "failed to send data: ");
 			return FALSE;
 		}
-		if (actual_length != msg->len + 3) {
+		if (actual_length != len) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
 				     "failed to send data: "
 				     "wrote %" G_GSIZE_FORMAT " of %" G_GSIZE_FORMAT,
-				     actual_length, msg->len + 3);
+				     actual_length, len);
 			return FALSE;
 		}
 
 	/* HID */
 	} else if (priv->udev_device != NULL) {
-		gssize len;
-		len = write (priv->udev_device_fd, (guint8 *) msg, msg->len + 3);
-		if (len != (gssize) msg->len + 3) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "failed to send data: "
-				     "wrote %" G_GSSIZE_FORMAT " of %" G_GSIZE_FORMAT,
-				     len, msg->len + 3);
+		if (!lu_nonblock_write (priv->udev_device_fd,
+					(guint8 *) msg, len, error)) {
+			g_prefix_error (error, "failed to send: ");
 			return FALSE;
 		}
 	}
@@ -163,75 +253,191 @@ lu_device_hidpp_send (LuDevice *device, LuDeviceHidppMsg *msg, GError **error)
 }
 
 gboolean
-lu_device_hidpp_receive (LuDevice *device, LuDeviceHidppMsg *msg, GError **error)
+lu_device_hidpp_receive (LuDevice *device,
+			 LuDeviceHidppMsg *msg,
+			 guint timeout,
+			 GError **error)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
+	gsize read_size = 0;
 
 	/* USB */
 	if (priv->usb_device != NULL) {
-		gsize actual_length = 0;
 		if (!g_usb_device_interrupt_transfer (priv->usb_device,
 						      LU_DEVICE_EP3,
 						      (guint8 *) msg,
-						      sizeof (msg),
-						      &actual_length,
-						      LU_DEVICE_TIMEOUT_MS,
+						      sizeof(LuDeviceHidppMsg),
+						      &read_size,
+						      timeout,
 						      NULL,
 						      error)) {
 			g_prefix_error (error, "failed to get data: ");
 			return FALSE;
 		}
-		msg->len = actual_length - 3;
 
 	/* HID */
 	} else if (priv->udev_device != NULL) {
-		gssize len = 0;
-		len = read (priv->udev_device_fd, (guint8 *) msg, sizeof (msg));
-		if (len < 0) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_FAILED,
-					     "failed to read data");
+		if (!lu_nonblock_read (priv->udev_device_fd,
+				       (guint8 *) msg,
+				       sizeof(LuDeviceHidppMsg),
+				       &read_size,
+				       timeout,
+				       error)) {
+			g_prefix_error (error, "failed to receive: ");
 			return FALSE;
 		}
-		msg->len = len - 3;
+	}
+
+	/* check length */
+	lu_device_hidpp_dump (device, "device->host", (guint8 *) msg, read_size);
+	if (lu_device_hidpp_msg_length (msg) != read_size) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "not expected message length, "
+			     "got %" G_GSIZE_FORMAT " expected %" G_GSIZE_FORMAT,
+			     read_size, lu_device_hidpp_msg_length (msg));
+		return FALSE;
 	}
 
 	/* success */
-	lu_device_hidpp_dump (device, "device->host", msg);
 	return TRUE;
 }
 
 gboolean
 lu_device_hidpp_transfer (LuDevice *device, LuDeviceHidppMsg *msg, GError **error)
 {
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	const guint timeout = LU_DEVICE_TIMEOUT_MS;
 	g_autoptr(LuDeviceHidppMsg) msg_tmp = lu_device_hidpp_new ();
 
 	/* send */
-	if (!lu_device_hidpp_send (device, msg, error))
+	if (!lu_device_hidpp_send (device, msg, timeout, error))
 		return FALSE;
 
-	/* recieve */
-	if (!lu_device_hidpp_receive (device, msg_tmp, error))
+	/* keep trying to receive until we get a valid reply */
+	while (1) {
+		if (!lu_device_hidpp_receive (device, msg_tmp, timeout, error))
+			return FALSE;
+		if (msg_tmp->report_id == 0x10 || msg_tmp->report_id == 0x11)
+			break;
+		g_debug ("ignoring message with report 0x%02x", msg_tmp->report_id);
+	};
+
+	/* if the HID++ ID is unset, grab it from the reply */
+	if (priv->hidpp_id == HIDPP_DEVICE_ID_UNSET &&
+	    msg_tmp->device_id != HIDPP_DEVICE_ID_UNSET) {
+		priv->hidpp_id = msg_tmp->device_id;
+		g_debug ("HID++ ID now %02x", priv->hidpp_id);
+	}
+
+	/* HID++ 1.0 error */
+	if (msg_tmp->sub_id == HIDPP_SUBID_ERROR_MSG) {
+		const gchar *tmp;
+		guint16 feature;
+		switch (msg_tmp->data[1]) {
+		case HIDPP_ERR_INVALID_SUBID:
+			feature = lu_device_hidpp_feature_find_by_idx (device, msg_tmp->sub_id);
+			tmp = lu_hidpp_feature_to_string (feature);
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_SUPPORTED,
+				     "invalid SubID %s [0x%02x] or command",
+				     tmp, msg->sub_id);
+			break;
+		case HIDPP_ERR_INVALID_ADDRESS:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_DATA,
+					     "invalid address");
+			break;
+		case HIDPP_ERR_INVALID_VALUE:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_DATA,
+					     "invalid value");
+			break;
+		case HIDPP_ERR_CONNECT_FAIL:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_FAILED,
+					     "connection request failed");
+			break;
+		case HIDPP_ERR_TOO_MANY_DEVICES:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_NO_SPACE,
+					     "too many devices connected");
+			break;
+		case HIDPP_ERR_ALREADY_EXISTS:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_EXISTS,
+					     "already exists");
+			break;
+		case HIDPP_ERR_BUSY:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_BUSY,
+					     "busy");
+			break;
+		case HIDPP_ERR_UNKNOWN_DEVICE:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_NOT_FOUND,
+					     "unknown device");
+			break;
+		case HIDPP_ERR_RESOURCE_ERROR:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_HOST_UNREACHABLE,
+					     "resource error");
+			break;
+		case HIDPP_ERR_REQUEST_UNAVAILABLE:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_EXISTS,
+					     "request not valid in current context");
+			break;
+		case HIDPP_ERR_INVALID_PARAM_VALUE:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_DATA,
+					     "request parameter has unsupported value");
+			break;
+		case HIDPP_ERR_WRONG_PIN_CODE:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_CONNECTION_REFUSED,
+					     "the pin code was wrong");
+			break;
+		default:
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_FAILED,
+					     "generic failure");
+			break;
+		}
 		return FALSE;
+	}
 
 	/* check the response was valid */
-	if (msg->report_id != msg_tmp->report_id) {
+	if (0&&msg->report_id != msg_tmp->report_id) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
 				     "invalid report_id response");
 		return FALSE;
 	}
-	if (0&&msg->device_idx != msg_tmp->device_idx) {
+	if (0&&msg->device_id != msg_tmp->device_id) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
-				     "invalid device_idx response");
+				     "invalid device_id response");
 		return FALSE;
 	}
-	if (msg->sub_id == HIDPP_SET_REGISTER_REQ &&
-	    msg_tmp->sub_id != HIDPP_SET_REGISTER_RSP) {
+	if (msg->sub_id == HIDPP_SUBID_SET_REGISTER &&
+	    msg_tmp->sub_id != HIDPP_SUBID_SET_REGISTER) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
@@ -239,20 +445,55 @@ lu_device_hidpp_transfer (LuDevice *device, LuDeviceHidppMsg *msg, GError **erro
 		return FALSE;
 	}
 
-	/* ensure data length correct */
-	if (0 && msg_tmp->len + 3 != HIDPP_SHORT_MESSAGE_LENGTH &&
-	    msg_tmp->len + 3 != HIDPP_LONG_MESSAGE_LENGTH) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "invalid length response");
+	/* copy over data */
+	memset (msg->data, 0x00, sizeof(msg->data));
+	msg->device_id = msg_tmp->device_id;
+	msg->sub_id = msg_tmp->sub_id;
+	msg->function_id = msg_tmp->function_id;
+	memcpy (msg->data, msg_tmp->data, sizeof(msg->data));
+
+	return TRUE;
+}
+
+gboolean
+lu_device_hidpp_feature_search (LuDevice *device, guint16 feature, GError **error)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	LuDeviceHidppMap *map;
+	g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
+
+	/* find the idx for the feature */
+	msg->report_id = HIDPP_REPORT_ID_SHORT;
+	msg->device_id = priv->hidpp_id;
+	msg->sub_id = 0x00; /* rootIndex */
+	msg->function_id = 0x00 << 4; /* getFeature */
+	msg->data[0] = feature >> 8;
+	msg->data[1] = feature;
+	msg->data[2] = 0x00;
+	if (!lu_device_hidpp_transfer (device, msg, error)) {
+		g_prefix_error (error,
+				"failed to get idx for feature %s [0x%04x]: ",
+				lu_hidpp_feature_to_string (feature), feature);
 		return FALSE;
 	}
 
-	/* copy over data */
-	memset (msg->data, 0x00, sizeof(msg->data));
-	memcpy (msg->data, msg_tmp->data, msg_tmp->len);
-	msg->len = msg_tmp->len = 0;
+	/* zero index */
+	if (msg->data[0] == 0x00) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "feature %s [0x%04x] not found",
+			     lu_hidpp_feature_to_string (feature), feature);
+		return FALSE;
+	}
+
+	/* add to map */
+	map = g_new0 (LuDeviceHidppMap, 1);
+	map->idx = msg->data[0];
+	map->feature = feature;
+	g_ptr_array_add (priv->feature_index, map);
+	g_debug ("added feature %s [0x%04x] as idx %02x",
+		 lu_hidpp_feature_to_string (feature), feature, map->idx);
 	return TRUE;
 }
 
@@ -261,6 +502,48 @@ lu_device_get_kind (LuDevice *device)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
 	return priv->kind;
+}
+
+guint8
+lu_device_get_hidpp_id (LuDevice *device)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	return priv->hidpp_id;
+}
+
+void
+lu_device_set_hidpp_id (LuDevice *device, guint8 hidpp_id)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	priv->hidpp_id = hidpp_id;
+}
+
+guint8
+lu_device_get_battery_level (LuDevice *device)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	return priv->battery_level;
+}
+
+void
+lu_device_set_battery_level (LuDevice *device, guint8 percentage)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	priv->battery_level = percentage;
+}
+
+guint8
+lu_device_get_hidpp_version (LuDevice *device)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	return priv->hidpp_version;
+}
+
+void
+lu_device_set_hidpp_version (LuDevice *device, guint8 hidpp_version)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	priv->hidpp_version = hidpp_version;
 }
 
 const gchar *
@@ -364,6 +647,15 @@ lu_device_add_flag (LuDevice *device, LuDeviceFlags flag)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
 	priv->flags |= flag;
+	g_object_notify (G_OBJECT (device), "flags");
+}
+
+void
+lu_device_remove_flag (LuDevice *device, LuDeviceFlags flag)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	priv->flags &= ~flag;
+	g_object_notify (G_OBJECT (device), "flags");
 }
 
 LuDeviceFlags
@@ -388,6 +680,15 @@ lu_device_get_usb_device (LuDevice *device)
 }
 
 gboolean
+lu_device_probe (LuDevice *device, GError **error)
+{
+	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (device);
+	if (klass->probe != NULL)
+		return klass->probe (device, error);
+	return TRUE;
+}
+
+gboolean
 lu_device_open (LuDevice *device, GError **error)
 {
 	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (device);
@@ -395,6 +696,10 @@ lu_device_open (LuDevice *device, GError **error)
 
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* already done */
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_IS_OPEN))
+		return TRUE;
 
 	/* set default vendor */
 	lu_device_set_vendor (device, "Logitech");
@@ -431,15 +736,10 @@ lu_device_open (LuDevice *device, GError **error)
 	/* HID */
 	} else if (priv->udev_device != NULL) {
 		const gchar *devpath = g_udev_device_get_device_file (priv->udev_device);
-		g_debug ("opening unifying device using HID");
-		priv->udev_device_fd = g_open (devpath, O_RDWR, 0);
-		if (priv->udev_device_fd < 0) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "failed to open %s", devpath);
+		g_debug ("opening unifying device using %s", devpath);
+		priv->udev_device_fd = lu_nonblock_open (devpath, error);
+		if (priv->udev_device_fd < 0)
 			return FALSE;
-		}
 	}
 
 	/* subclassed */
@@ -447,11 +747,54 @@ lu_device_open (LuDevice *device, GError **error)
 		if (!klass->open (device, error))
 			return FALSE;
 	}
+	lu_device_add_flag (device, LU_DEVICE_FLAG_IS_OPEN);
 
 	/* subclassed */
-	if (klass->probe != NULL) {
-		if (!klass->probe (device, error))
-			return FALSE;
+	if (!lu_device_probe (device, error))
+		return FALSE;
+
+	/* show the HID++2.0 features we found */
+	hidpp_device_map_print (device);
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+lu_device_poll (LuDevice *device, GError **error)
+{
+	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (device);
+	const guint timeout = 1; /* ms */
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
+
+	/* is there any pending data to read */
+	if (!lu_device_hidpp_receive (device, msg, timeout, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_IO_ERROR,
+				     G_IO_ERROR_TIMED_OUT)) {
+			return TRUE;
+		}
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "failed to get pending read: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* unifying reciever notification */
+	if (msg->report_id == HIDPP_REPORT_ID_SHORT) {
+		switch (msg->sub_id) {
+		case HIDPP_SUBID_DEVICE_CONNECTION:
+		case HIDPP_SUBID_DEVICE_DISCONNECTION:
+		case HIDPP_SUBID_DEVICE_LOCKING_CHANGED:
+			g_debug ("device changed");
+			if (klass->poll != NULL)
+				return klass->poll (device, error);
+		default:
+			break;
+		}
 	}
 	return TRUE;
 }
@@ -505,6 +848,8 @@ lu_device_close (LuDevice *device, GError **error)
 			return FALSE;
 	}
 
+	/* success */
+	lu_device_remove_flag (device, LU_DEVICE_FLAG_IS_OPEN);
 	return TRUE;
 }
 gboolean
@@ -515,21 +860,17 @@ lu_device_detach (LuDevice *device, GError **error)
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	/* check kind */
-	if (lu_device_get_kind (device) != LU_DEVICE_KIND_RUNTIME) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "device is not in runtime state");
-		return FALSE;
-	}
-
 	/* subclassed */
 	g_debug ("detaching device");
 	if (klass->detach != NULL)
 		return klass->detach (device, error);
 
-	return TRUE;
+	/* nothing to do */
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "device detach is not supported");
+	return FALSE;
 }
 
 gboolean
@@ -577,7 +918,7 @@ lu_device_write_firmware (LuDevice *device,
 		return FALSE;
 	}
 
-	/* call distro-specific method */
+	/* call device-specific method */
 	if (klass->write_firmware == NULL) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -643,8 +984,11 @@ lu_device_get_property (GObject *object, guint prop_id,
 	case PROP_KIND:
 		g_value_set_uint (value, priv->kind);
 		break;
+	case PROP_HIDPP_ID:
+		g_value_set_uint (value, priv->hidpp_id);
+		break;
 	case PROP_FLAGS:
-		g_value_set_uint (value, priv->flags);
+		g_value_set_uint64 (value, priv->flags);
 		break;
 	case PROP_PLATFORM_ID:
 		g_value_set_string (value, priv->platform_id);
@@ -671,8 +1015,11 @@ lu_device_set_property (GObject *object, guint prop_id,
 	case PROP_KIND:
 		priv->kind = g_value_get_uint (value);
 		break;
+	case PROP_HIDPP_ID:
+		priv->hidpp_id = g_value_get_uint (value);
+		break;
 	case PROP_FLAGS:
-		priv->flags = g_value_get_uint (value);
+		priv->flags = g_value_get_uint64 (value);
 		break;
 	case PROP_PLATFORM_ID:
 		g_free (priv->platform_id);
@@ -702,6 +1049,7 @@ lu_device_finalize (GObject *object)
 	if (priv->udev_device != NULL)
 		g_object_unref (priv->udev_device);
 	g_ptr_array_unref (priv->guids);
+	g_ptr_array_unref (priv->feature_index);
 	g_free (priv->platform_id);
 	g_free (priv->product);
 	g_free (priv->vendor);
@@ -715,7 +1063,17 @@ static void
 lu_device_init (LuDevice *device)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
+	LuDeviceHidppMap *map;
+
+	priv->hidpp_id = HIDPP_DEVICE_ID_UNSET;
 	priv->guids = g_ptr_array_new_with_free_func (g_free);
+	priv->feature_index = g_ptr_array_new_with_free_func (g_free);
+
+	/* add known root */
+	map = g_new0 (LuDeviceHidppMap, 1);
+	map->idx = 0x00;
+	map->feature = HIDPP_FEATURE_ROOT;
+	g_ptr_array_add (priv->feature_index, map);
 }
 
 static void
@@ -734,11 +1092,18 @@ lu_device_class_init (LuDeviceClass *klass)
 				   G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
 	g_object_class_install_property (object_class, PROP_KIND, pspec);
 
-	pspec = g_param_spec_uint ("flags", NULL, NULL,
-				   LU_DEVICE_FLAG_NONE,
-				   LU_DEVICE_FLAG_LAST,
-				   LU_DEVICE_FLAG_NONE,
+	pspec = g_param_spec_uint ("hidpp-id", NULL, NULL,
+				   HIDPP_DEVICE_ID_WIRED,
+				   HIDPP_DEVICE_ID_RECEIVER,
+				   HIDPP_DEVICE_ID_UNSET,
 				   G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+	g_object_class_install_property (object_class, PROP_HIDPP_ID, pspec);
+
+	pspec = g_param_spec_uint64 ("flags", NULL, NULL,
+				     LU_DEVICE_FLAG_NONE,
+				     0xffff,
+				     LU_DEVICE_FLAG_NONE,
+				     G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
 	g_object_class_install_property (object_class, PROP_FLAGS, pspec);
 
 	pspec = g_param_spec_string ("platform-id", NULL, NULL, NULL,

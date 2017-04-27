@@ -241,7 +241,7 @@ lu_device_bootloader_texas_write_firmware (LuDevice *device,
 static gchar *
 lu_device_bootloader_texas_get_bl_version (LuDevice *device, GError **error)
 {
-	guint16 micro;
+	guint16 build;
 
 	g_autoptr(LuDeviceBootloaderRequest) req = lu_device_bootloader_request_new ();
 	req->cmd = LU_DEVICE_BOOTLOADER_CMD_GET_BL_VERSION;
@@ -252,11 +252,12 @@ lu_device_bootloader_texas_get_bl_version (LuDevice *device, GError **error)
 
 	/* BOTxx.yy_Bzzzz
 	 * 012345678901234 */
-	micro = (guint16) lu_buffer_read_uint8 ((const gchar *) req->data + 10) << 8;
-	micro += lu_buffer_read_uint8 ((const gchar *) req->data + 12);
-	return lu_format_version (lu_buffer_read_uint8 ((const gchar *) req->data + 3),
+	build = (guint16) lu_buffer_read_uint8 ((const gchar *) req->data + 10) << 8;
+	build += lu_buffer_read_uint8 ((const gchar *) req->data + 12);
+	return lu_format_version ("BOT",
+				  lu_buffer_read_uint8 ((const gchar *) req->data + 3),
 				  lu_buffer_read_uint8 ((const gchar *) req->data + 6),
-				  micro);
+				  build);
 }
 
 static gboolean

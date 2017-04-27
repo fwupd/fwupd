@@ -99,11 +99,7 @@ fu_plugin_unifying_get_device (FuPlugin *plugin,
 			       GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	LuDevice *device;
-	device = lu_context_find_by_platform_id (data->ctx, fu_device_get_id (dev), error);
-	if (device == NULL)
-		return NULL;
-	return g_object_ref (device);
+	return lu_context_find_by_platform_id (data->ctx, fu_device_get_id (dev), error);
 }
 
 static gboolean
@@ -235,6 +231,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			  G_CALLBACK (fu_plugin_unifying_device_removed_cb),
 			  plugin);
 	lu_context_coldplug (data->ctx);
+	lu_context_set_poll_interval (data->ctx, 5000);
 	return TRUE;
 }
 

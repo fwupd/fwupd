@@ -24,6 +24,7 @@
 
 #include "lu-context.h"
 #include "lu-device-bootloader.h"
+#include "lu-hidpp.h"
 
 typedef struct {
 	GCancellable		*cancellable;
@@ -201,10 +202,22 @@ static gchar *
 lu_device_flags_to_string (LuDeviceFlags flags)
 {
 	GString *str = g_string_new (NULL);
-	if (flags & LU_DEVICE_FLAG_SIGNED_FIRMWARE)
+	if (flags & LU_DEVICE_FLAG_REQUIRES_SIGNED_FIRMWARE)
 		g_string_append (str, "signed-firmware,");
 	if (flags & LU_DEVICE_FLAG_CAN_FLASH)
 		g_string_append (str, "can-flash,");
+	if (flags & LU_DEVICE_FLAG_REQUIRES_RESET)
+		g_string_append (str, "requires-reset,");
+	if (flags & LU_DEVICE_FLAG_ACTIVE)
+		g_string_append (str, "active,");
+	if (flags & LU_DEVICE_FLAG_IS_OPEN)
+		g_string_append (str, "is-open,");
+	if (flags & LU_DEVICE_FLAG_REQUIRES_ATTACH)
+		g_string_append (str, "requires-attach,");
+	if (flags & LU_DEVICE_FLAG_REQUIRES_DETACH)
+		g_string_append (str, "requires-detach,");
+	if (flags & LU_DEVICE_FLAG_DETACH_WILL_REPLUG)
+		g_string_append (str, "detach-will-replug,");
 	if (str->len == 0) {
 		g_string_append (str, "none");
 	} else {
@@ -217,28 +230,45 @@ static gboolean
 lu_tool_info_device (FuLuToolPrivate *priv, LuDevice *device, GError **error)
 {
 	GPtrArray *guids;
+	g_autoptr(GError) error_local = NULL;
 
 	/* open */
-	if (!lu_device_open (device, error))
-		return FALSE;
+	if (!lu_device_open (device, &error_local)) {
+		g_print ("Error:          Failed to open: %s\n",
+			 error_local->message);
+	}
 
 	/* show on console */
 	g_print ("Type:           %s\n",
 		 lu_device_kind_to_string (lu_device_get_kind (device)));
 	g_print ("Flags:          %s\n",
 		 lu_device_flags_to_string (lu_device_get_flags (device)));
+	if (lu_device_get_hidpp_id (device) != HIDPP_DEVICE_ID_UNSET) {
+		g_print ("Hid++ ID:       0x%02x\n",
+			 lu_device_get_hidpp_id (device));
+	}
+	if (lu_device_get_hidpp_version (device) != 0) {
+		g_print ("Hid++ Version:  0x%02x\n",
+			 lu_device_get_hidpp_version (device));
+	}
 	g_print ("Platform ID:    %s\n",
 		 lu_device_get_platform_id (device));
 	g_print ("Vendor:         %s\n",
 		 lu_device_get_vendor (device));
 	g_print ("Product:        %s\n",
 		 lu_device_get_product (device));
+	if (lu_device_get_battery_level (device) != 0) {
+		g_print ("Battery Level:  %u%%\n",
+			 lu_device_get_battery_level (device));
+	}
 	if (lu_device_get_version_fw (device) != NULL) {
 		g_print ("Firmware Ver:   %s\n",
 			 lu_device_get_version_fw (device));
 	}
-	g_print ("Bootloader Ver: %s\n",
-		 lu_device_get_version_bl (device));
+	if (lu_device_get_version_bl (device) != NULL) {
+		g_print ("Bootloader Ver: %s\n",
+			 lu_device_get_version_bl (device));
+	}
 	if (LU_IS_DEVICE_BOOTLOADER (device)) {
 		g_print ("Flash Addr Hi:  0x%04x\n",
 			 lu_device_bootloader_get_addr_hi (device));
@@ -345,41 +375,59 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(LuDevice) device = NULL;
 
 	/* check args */
-	if (g_strv_length (values) != 1) {
+	if (g_strv_length (values) < 1) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
-				     "Invalid arguments, expected FILENAME"
+				     "Invalid arguments, expected "
+				     "FILENAME [PLATFORM-ID]"
 				     " -- e.g. `firmware.hex`");
 		return FALSE;
 	}
 
 	/* open device */
-	if (priv->emulation_kind == LU_DEVICE_KIND_UNKNOWN) {
+	if (g_strv_length (values) == 2) {
+		device = lu_context_find_by_platform_id (priv->ctx,
+							 values[1],
+							 error);
+	} else if (priv->emulation_kind == LU_DEVICE_KIND_UNKNOWN) {
 		device = lu_get_default_device (priv, error);
-		if (device == NULL)
-			return FALSE;
 	} else {
 		device = lu_device_fake_new (priv->emulation_kind);
 	}
+	if (device == NULL)
+		return FALSE;
 	if (!lu_device_open (device, error))
 		return FALSE;
 
 	/* do we need to go into bootloader mode */
-	if (lu_device_get_kind (device) == LU_DEVICE_KIND_RUNTIME) {
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH)) {
 		if (!lu_device_detach (device, error))
 			return FALSE;
-		if (!lu_context_wait_for_replug (priv->ctx,
-						 device,
-						 5000,
-						 error))
-			return FALSE;
-		g_object_unref (device);
-		device = lu_get_default_device (priv, error);
-		if (device == NULL)
-			return FALSE;
-		if (!lu_device_open (device, error))
-			return FALSE;
+		if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
+			if (!lu_context_wait_for_replug (priv->ctx,
+							 device,
+							 5000,
+							 error))
+				return FALSE;
+			g_usleep (G_USEC_PER_SEC);
+			g_clear_object (&device);
+			if (g_strv_length (values) == 2) {
+				device = lu_context_find_by_platform_id (priv->ctx,
+									 values[1],
+									 error);
+			} else if (priv->emulation_kind == LU_DEVICE_KIND_UNKNOWN) {
+				device = lu_get_default_device (priv, error);
+			} else {
+				device = lu_device_fake_new (priv->emulation_kind);
+			}
+			if (device == NULL)
+				return FALSE;
+			if (!lu_device_open (device, error)) {
+				g_prefix_error (error, "failed to reclaim device: ");
+				return FALSE;
+			}
+		}
 	}
 
 	/* load firmware file */
@@ -408,7 +456,13 @@ static gboolean
 lu_tool_attach (FuLuToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(LuDevice) device = NULL;
-	device = lu_get_default_device (priv, error);
+	if (g_strv_length (values) == 1) {
+		device = lu_context_find_by_platform_id (priv->ctx,
+							 values[0],
+							 error);
+	} else {
+		device = lu_get_default_device (priv, error);
+	}
 	if (device == NULL)
 		return FALSE;
 	if (!lu_device_open (device, error))
@@ -440,12 +494,10 @@ static gboolean
 lu_tool_watch (FuLuToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GMainLoop) loop = g_main_loop_new (NULL, FALSE);
-	g_autoptr(LuContext) ctx = lu_context_new (error);
-	if (ctx == NULL)
-		return FALSE;
-	g_signal_connect (ctx, "added", G_CALLBACK (lu_tool_device_added_cb), priv);
-	g_signal_connect (ctx, "removed", G_CALLBACK (lu_tool_device_removed_cb), priv);
-	lu_context_coldplug (ctx);
+	g_signal_connect (priv->ctx, "added", G_CALLBACK (lu_tool_device_added_cb), priv);
+	g_signal_connect (priv->ctx, "removed", G_CALLBACK (lu_tool_device_removed_cb), priv);
+	lu_context_coldplug (priv->ctx);
+	lu_context_set_poll_interval (priv->ctx, 2000);
 	g_main_loop_run (loop);
 	return TRUE;
 }
@@ -454,7 +506,13 @@ static gboolean
 lu_tool_detach (FuLuToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(LuDevice) device = NULL;
-	device = lu_get_default_device (priv, error);
+	if (g_strv_length (values) == 1) {
+		device = lu_context_find_by_platform_id (priv->ctx,
+							 values[0],
+							 error);
+	} else {
+		device = lu_get_default_device (priv, error);
+	}
 	if (device == NULL)
 		return FALSE;
 	if (!lu_device_open (device, error))

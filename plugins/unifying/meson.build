@@ -9,6 +9,7 @@ shared_module('fu_plugin_unifying',
     'lu-device-bootloader-nordic.c',
     'lu-device-bootloader-texas.c',
     'lu-device.c',
+    'lu-device-peripheral.c',
     'lu-device-runtime.c',
   ],
   include_directories : [
@@ -35,6 +36,7 @@ executable(
     'lu-device-bootloader-nordic.c',
     'lu-device-bootloader-texas.c',
     'lu-device.c',
+    'lu-device-peripheral.c',
     'lu-device-runtime.c',
   ],
   include_directories : [
