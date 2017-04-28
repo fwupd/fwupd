@@ -7,6 +7,8 @@ fwupd (0.9.1-1) UNRELEASED; urgency=medium
     - call tests with ninja
     - Add local state directory while building
   * Require newer gettext for building.
+  * Add a patch to allow building with an older polkit that doesn't include
+    ITS rules yet.
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Fri, 28 Apr 2017 13:52:28 -0500
 
