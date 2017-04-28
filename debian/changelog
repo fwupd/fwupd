@@ -6,6 +6,7 @@ fwupd (0.9.1-1) UNRELEASED; urgency=medium
     - Specify sysconfdir and libexecdir
     - call tests with ninja
     - Add local state directory while building
+  * Require newer gettext for building.
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Fri, 28 Apr 2017 13:52:28 -0500
 
