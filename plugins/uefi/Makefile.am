@@ -14,7 +14,7 @@ libfu_plugin_uefi_la_SOURCES =				\
 	fu-plugin-uefi.c
 libfu_plugin_uefi_la_LIBADD = $(GUSB_LIBS) $(UEFI_LIBS)
 libfu_plugin_uefi_la_LDFLAGS = -module -avoid-version
-libfu_plugin_uefi_la_CFLAGS = $(WARN_CFLAGS)	\
+libfu_plugin_uefi_la_CFLAGS = $(WARN_CFLAGS) $(GUSB_CFLAGS) $(UEFI_CFLAGS) \
 	-DG_LOG_DOMAIN=\"FuPluginUefi\"
 
 EXTRA_DIST = README.md
