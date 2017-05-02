@@ -151,6 +151,7 @@ endif
 if get_option('enable-dell')
   libsmbios_c = dependency('libsmbios_c', version : '>= 2.3.0')
   efivar = dependency('efivar')
+  fwup = dependency('fwup', version : '>= 5')
   conf.set('HAVE_DELL', '1')
 endif
 
