@@ -20,7 +20,7 @@ shared_module('fu_plugin_dell',
     plugin_deps,
     efivar,
     libsmbios_c,
-    fwup
+    fwup,
   ],
 )
 
