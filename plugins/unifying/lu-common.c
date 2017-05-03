@@ -68,7 +68,14 @@ lu_dump_raw (const gchar *title, const guint8 *data, gsize len)
 gchar *
 lu_format_version (const gchar *name, guint8 major, guint8 minor, guint16 build)
 {
-	return g_strdup_printf ("%s%02x.%02x_B%04x", name, major, minor, build);
+	GString *str = g_string_new (NULL);
+	for (guint i = 0; i < 3; i++) {
+		if (g_ascii_isspace (name[i]))
+			continue;
+		g_string_append_c (str, name[i]);
+	}
+	g_string_append_printf (str, "%02x.%02x_B%04x", major, minor, build);
+	return g_string_free (str, FALSE);
 }
 
 static gboolean

@@ -53,3 +53,26 @@ executable(
   ],
   c_args : cargs,
 )
+
+if get_option('enable-tests')
+  e = executable(
+    'unifying-self-test',
+    sources : [
+      'lu-self-test.c',
+      'lu-common.c',
+    ],
+    include_directories : [
+      include_directories('../..'),
+      include_directories('../../libfwupd'),
+    ],
+    dependencies : [
+      plugin_deps,
+      gudev,
+    ],
+    link_with : [
+      fwupd,
+    ],
+    c_args : cargs,
+  )
+  test('unifying-self-test', e)
+endif
