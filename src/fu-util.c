@@ -607,6 +607,13 @@ fu_util_download_file (FuUtilPrivate *priv,
 	/* download data */
 	g_debug ("downloading %s to %s:", uri, fn);
 	msg = soup_message_new (SOUP_METHOD_GET, uri);
+	if (msg == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to parse URI %s", uri);
+		return FALSE;
+	}
 	status_code = soup_session_send_message (session, msg);
 	if (status_code != SOUP_STATUS_OK) {
 		g_set_error (error,
