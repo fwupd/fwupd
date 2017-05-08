@@ -1048,17 +1048,31 @@ fu_util_sigint_cb (gpointer user_data)
 	return FALSE;
 }
 
+static void
+fu_util_private_free (FuUtilPrivate *priv)
+{
+	if (priv->cmd_array != NULL)
+		g_ptr_array_unref (priv->cmd_array);
+	if (priv->client != NULL)
+		g_object_unref (priv->client);
+	g_main_loop_unref (priv->loop);
+	g_object_unref (priv->cancellable);
+	g_option_context_free (priv->context);
+	g_free (priv);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
+
 int
 main (int argc, char *argv[])
 {
-	FuUtilPrivate *priv;
 	gboolean force = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
 	gboolean offline = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
-	gint rc = 1;
+	g_autoptr(FuUtilPrivate) priv = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *cmd_descriptions = NULL;
 	const GOptionEntry options[] = {
@@ -1197,7 +1211,7 @@ main (int argc, char *argv[])
 		/* TRANSLATORS: the user didn't read the man page */
 		g_print ("%s: %s\n", _("Failed to parse arguments"),
 			 error->message);
-		goto out;
+		return EXIT_FAILURE;
 	}
 
 	/* set verbose? */
@@ -1235,21 +1249,9 @@ main (int argc, char *argv[])
 		} else {
 			g_print ("%s\n", error->message);
 		}
-		goto out;
+		return EXIT_FAILURE;
 	}
 
 	/* success */
-	rc = 0;
-out:
-	if (priv != NULL) {
-		if (priv->cmd_array != NULL)
-			g_ptr_array_unref (priv->cmd_array);
-		if (priv->client != NULL)
-			g_object_unref (priv->client);
-		g_main_loop_unref (priv->loop);
-		g_object_unref (priv->cancellable);
-		g_option_context_free (priv->context);
-		g_free (priv);
-	}
-	return rc;
+	return EXIT_SUCCESS;
 }
