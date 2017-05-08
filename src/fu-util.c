@@ -697,6 +697,15 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	data_uri = g_key_file_get_string (config, "fwupd", "DownloadURI", error);
 	if (data_uri == NULL)
 		return FALSE;
+	if (data_uri[0] == '\0') {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Nothing set as DownloadURI in %s",
+			     config_fn);
+		return FALSE;
+
+	}
 	sig_uri = g_strdup_printf ("%s.asc", data_uri);
 	data_fn = g_build_filename (cache_dir, "firmware.xml.gz", NULL);
 	sig_fn = g_strdup_printf ("%s.asc", data_fn);
