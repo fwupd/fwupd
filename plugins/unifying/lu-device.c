@@ -723,6 +723,7 @@ lu_device_open (LuDevice *device, GError **error)
 							   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 							   error)) {
 				g_prefix_error (error, "Failed to claim 0x%02x: ", i);
+				g_usb_device_close (priv->usb_device, NULL);
 				return FALSE;
 			}
 		}
@@ -744,14 +745,18 @@ lu_device_open (LuDevice *device, GError **error)
 
 	/* subclassed */
 	if (klass->open != NULL) {
-		if (!klass->open (device, error))
+		if (!klass->open (device, error)) {
+			g_usb_device_close (priv->usb_device, NULL);
 			return FALSE;
+		}
 	}
 	lu_device_add_flag (device, LU_DEVICE_FLAG_IS_OPEN);
 
 	/* subclassed */
-	if (!lu_device_probe (device, error))
+	if (!lu_device_probe (device, error)) {
+		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
+	}
 
 	/* show the HID++2.0 features we found */
 	hidpp_device_map_print (device);
