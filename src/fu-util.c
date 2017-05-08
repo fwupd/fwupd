@@ -677,6 +677,12 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	/* read config file */
 	config = g_key_file_new ();
 	config_fn = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
+	if (!g_file_test (config_fn, G_FILE_TEST_EXISTS)) {
+		g_warning ("falling back to system config as %s missing",
+			   config_fn);
+		g_free (config_fn);
+		config_fn = g_build_filename ("/etc", "fwupd.conf", NULL);
+	}
 	if (!g_key_file_load_from_file (config, config_fn, G_KEY_FILE_NONE, error)) {
 		g_prefix_error (error, "Failed to load %s: ", config_fn);
 		return FALSE;
