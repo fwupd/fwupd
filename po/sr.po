@@ -1,355 +1,450 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the fwupd package.
 # 
 # Translators:
 # Miloš Popović <gpopac@gmail.com>, 2016
 # Марко М. Костић (Marko M. Kostić) <marko.m.kostic@gmail.com>, 2015-2016
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-02-08 12:51+0000\n"
-"PO-Revision-Date: 2017-02-08 12:51+0000\n"
+"POT-Creation-Date: 2017-05-22 19:30+0100\n"
+"PO-Revision-Date: 2017-05-22 11:02+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
-"Language-Team: Serbian (http://www.transifex.com/hughsie/fwupd/language/sr/)\n"
+"Language-Team: Serbian (http://www.transifex.com/freedesktop/fwupd/language/sr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: sr\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
+#: policy/org.freedesktop.fwupd.policy.in:17
 msgid "Install signed system firmware"
 msgstr "Инсталирајте потписани системски фирмвер"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:19
+#: policy/org.freedesktop.fwupd.policy.in:30
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "Потребна је пријава за ажурирање фирмвера на овој машини"
 
+#: policy/org.freedesktop.fwupd.policy.in:28
 msgid "Install unsigned system firmware"
 msgstr "Инсталирајте непотписани системски фирмвер"
 
+#: policy/org.freedesktop.fwupd.policy.in:39
 msgid "Install old version of system firmware"
 msgstr "Инсталирајте старо издање системског фирмвера"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:41
 msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Потребна је пријава за уназађивање фирмвера на овој машини"
 
+#: policy/org.freedesktop.fwupd.policy.in:50
 msgid "Install signed device firmware"
 msgstr "Инсталирајте потписани фирмвер за уређаје"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:52
+#: policy/org.freedesktop.fwupd.policy.in:63
 msgid ""
 "Authentication is required to update the firmware on a removable device"
 msgstr "Потребна је пријава за ажурирање фирмвера на преносивом уређају"
 
+#: policy/org.freedesktop.fwupd.policy.in:61
+#: policy/org.freedesktop.fwupd.policy.in:72
 msgid "Install unsigned device firmware"
 msgstr "Инсталирајте непотписани фирмвер за уређаје"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:74
 msgid ""
 "Authentication is required to downgrade the firmware on a removable device"
 msgstr "Потребна је пријава за уназађивање фирмвера на преносивом уређају"
 
+#: policy/org.freedesktop.fwupd.policy.in:83
 msgid "Unlock the device to allow access"
 msgstr "Откључајте уређај да бисте дозволили приступ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:85
 msgid "Authentication is required to unlock a device"
 msgstr "Потребна је пријава за откључавање уређаја"
 
+#: policy/org.freedesktop.fwupd.policy.in:94
 msgid "Update the stored device verification information"
-msgstr ""
+msgstr "Ажурирајте причуване податке потврђивања уређаја"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:96
 msgid ""
 "Authentication is required to update the stored checksums for the device"
-msgstr ""
+msgstr "Потребна је пријава за ажурирање причуваних сума провере за уређај"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
+#: libdfu/dfu-tool.c:121 plugins/synapticsmst/synapticsmst-tool.c:115
+#: src/fu-util.c:109
 #, c-format
 msgid "Alias to %s"
 msgstr "Алијас на %s"
 
 #. TRANSLATORS: error message
+#: libdfu/dfu-tool.c:194 plugins/synapticsmst/synapticsmst-tool.c:362
+#: src/fu-util.c:173
 msgid "Command not found"
 msgstr "Наредба није пронађена"
 
 #. TRANSLATORS: read from device to host
+#: libdfu/dfu-tool.c:1115
 msgid "Reading"
-msgstr ""
+msgstr "Читам"
 
 #. TRANSLATORS: write from host to device
+#: libdfu/dfu-tool.c:1121
 msgid "Writing"
-msgstr ""
+msgstr "Пишем"
 
 #. TRANSLATORS: read from device to host
+#: libdfu/dfu-tool.c:1127
 msgid "Verifying"
-msgstr ""
+msgstr "Проверавам"
 
 #. TRANSLATORS: read from device to host
+#: libdfu/dfu-tool.c:1133
 msgid "Erasing"
-msgstr ""
+msgstr "Бришем"
 
 #. TRANSLATORS: waiting for device
+#: libdfu/dfu-tool.c:1139
 msgid "Detaching"
 msgstr "Откачињем"
 
 #. TRANSLATORS: waiting for device
+#: libdfu/dfu-tool.c:1145
 msgid "Attaching"
 msgstr "Качим"
 
 #. TRANSLATORS: this is when a device is hotplugged
+#: libdfu/dfu-tool.c:1367
 msgid "Added"
 msgstr "Додао"
 
 #. TRANSLATORS: this is when a device is hotplugged
+#: libdfu/dfu-tool.c:1378
 msgid "Removed"
 msgstr "Уклонио"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
+#: libdfu/dfu-tool.c:1387 src/fu-util.c:965
 msgid "Changed"
 msgstr "Променио"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#: libdfu/dfu-tool.c:1395 src/fu-util.c:927
 msgid "Cancelled"
 msgstr "Отказао"
 
 #. TRANSLATORS: Appstream ID for the hardware type
+#: libdfu/dfu-tool.c:1904 src/fu-util.c:878
 msgid "ID"
 msgstr "ИБ"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
+#: libdfu/dfu-tool.c:1910 libdfu/dfu-tool.c:1916 libdfu/dfu-tool.c:2003
 msgid "Name"
 msgstr "Назив"
 
 #. TRANSLATORS: this is the encryption method used when writing
+#: libdfu/dfu-tool.c:1923
 msgid "Cipher"
 msgstr "Шифрар"
 
 #. TRANSLATORS: these are areas of memory on the chip
+#: libdfu/dfu-tool.c:1937
 msgid "Region"
 msgstr "Област"
 
 #. TRANSLATORS: detected a DFU device
+#: libdfu/dfu-tool.c:1972
 msgid "Found"
 msgstr "Нашао"
 
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
+#: libdfu/dfu-tool.c:1980
 msgid "Protocol"
-msgstr ""
+msgstr "Протокол"
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
 #. TRANSLATORS: device status, e.g. "OK"
+#: libdfu/dfu-tool.c:1992 libdfu/dfu-tool.c:1995 libdfu/dfu-tool.c:2018
 msgid "Status"
 msgstr "Статус"
 
+#: libdfu/dfu-tool.c:1992
 msgid "Unknown: permission denied"
 msgstr "Непознато: приступ одбијен"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
+#: libdfu/dfu-tool.c:2009
 msgid "Serial"
-msgstr ""
+msgstr "Серијски"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
+#: libdfu/dfu-tool.c:2014
 msgid "Mode"
 msgstr "Режим"
 
 #. TRANSLATORS: device state, i.e. appIDLE
+#: libdfu/dfu-tool.c:2022
 msgid "State"
 msgstr "Стање"
 
 #. TRANSLATORS: transfer size in bytes
+#: libdfu/dfu-tool.c:2030
 msgid "Transfer Size"
-msgstr ""
+msgstr "Величина преноса"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
+#: libdfu/dfu-tool.c:2038
 msgid "Quirks"
 msgstr "Непрецизности"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2117
 msgid "Convert firmware to DFU format"
 msgstr "Претвори фирмвер у ДФУ формат"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2123
 msgid "Merge multiple firmware files into one"
 msgstr "Споји више датотека са фирмвером у једну"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2129
 msgid "Set vendor ID on firmware file"
 msgstr "Подеси ИБ продавца на датотеци са фирмвером"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2135
 msgid "Set product ID on firmware file"
 msgstr "Подеси ИБ производа на датотеци са фирмвером"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2141
 msgid "Set element address on firmware file"
-msgstr ""
+msgstr "Подешава адресу елемента на датотеци фирмвера"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2147
 msgid "Set the firmware size for the target"
-msgstr ""
+msgstr "Подешава величину фирмвера за мету"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2153
 msgid "Set release version on firmware file"
 msgstr "Подеси издање објаве на датотеци са фирмвером"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2159
 msgid "Set alternative number on firmware file"
 msgstr "Подеси алтернативни број на датотеци са фирмвером"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2165
 msgid "Set alternative name on firmware file"
 msgstr "Подеси алтернативно име на датотеци са фирмвером"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2171
 msgid "Attach DFU capable device back to runtime"
 msgstr "Закачи уређај способан за ДФУ назад на извршно окружење"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2177
 msgid "Read firmware from device into a file"
 msgstr "Исчитај фирмвер са уређаја у датотеку"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2183
 msgid "Read firmware from one partition into a file"
 msgstr "Исчитај фирмвер са једне партиције у датотеку"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2189
 msgid "Write firmware from file into device"
 msgstr "Упиши фирмвер из датотеке у уређај"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2195
 msgid "Write firmware from file into one partition"
 msgstr "Упиши фирмвер из датотеке у једну партицију"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2201
 msgid "List currently attached DFU capable devices"
 msgstr "Прикажи списак закачених уређаја способних за ДФУ"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2207
 msgid "Detach currently attached DFU capable device"
 msgstr "Откачи тренутно закачен уређај способан за ДФУ"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2213
 msgid "Dump details about a firmware file"
 msgstr "Истовари детаље о датотеци са фирмвером"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2219
 msgid "Watch DFU devices being hotplugged"
 msgstr "Надгледај ДФУ уређаје док се каче на живо"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2225
 msgid "Encrypt firmware data"
 msgstr "Шифруј податке у фирмверу"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2231
 msgid "Decrypt firmware data"
 msgstr "Дешифруј податке у фирмверу"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2237
 msgid "Sets metadata on a firmware file"
 msgstr "Подешава метаподатке у датотеци фирмвера"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2243
 msgid "Replace data in an existing firmware file"
-msgstr ""
+msgstr "Замењује податке у постојећој датотеци фирмвера"
 
 #. TRANSLATORS: DFU stands for device firmware update
+#: libdfu/dfu-tool.c:2269
 msgid "DFU Utility"
 msgstr "ДФУ алатка"
 
 #. TRANSLATORS: the user didn't read the man page
+#: libdfu/dfu-tool.c:2274 plugins/synapticsmst/synapticsmst-tool.c:439
+#: src/fu-util.c:1212
 msgid "Failed to parse arguments"
 msgstr "Не могу да обрадим аргументе"
 
 #. TRANSLATORS: command description
+#: plugins/synapticsmst/synapticsmst-tool.c:408
 msgid "Enumerate all Synaptics MST devices"
-msgstr ""
+msgstr "Набраја све МСТ уређаје Синаптика"
 
 #. TRANSLATORS: command description
+#: plugins/synapticsmst/synapticsmst-tool.c:414
 msgid "Flash firmware file to MST device"
-msgstr ""
+msgstr "Флешује датотеку фирмвера на МСТ уређај"
 
+#: plugins/synapticsmst/synapticsmst-tool.c:434
 msgid "Synaptics Multistream Transport Utility"
+msgstr "Синаптикова вишетоковна алатка преноса"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+#: plugins/uefi/fu-plugin-uefi.c:193
+msgid "Installing firmware update…"
 msgstr ""
 
 #. TRANSLATORS: turn on all debugging
+#: src/fu-debug.c:130
 msgid "Show debugging information for all files"
 msgstr "Прикажи податке о отклањању проблема за све датотеке"
 
 #. TRANSLATORS: for the --verbose arg
+#: src/fu-debug.c:180
 msgid "Debugging Options"
 msgstr "Опције отклањања проблема"
 
 #. TRANSLATORS: for the --verbose arg
+#: src/fu-debug.c:182
 msgid "Show debugging options"
 msgstr "Прикажи опције за отклањање проблема"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
+#: src/fu-main.c:2755
 msgid "Exit after a small delay"
 msgstr "Изађи након малог застоја"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
+#: src/fu-main.c:2758
 msgid "Exit after the engine has loaded"
 msgstr "Изађи након учитавања мотора"
 
 #. TRANSLATORS: program name
+#: src/fu-main.c:2771
 msgid "Firmware Update Daemon"
 msgstr "Демон за ажурирање фирмвера"
 
 #. TRANSLATORS: program summary
+#: src/fu-main.c:2776
 msgid "Firmware Update D-Bus Service"
 msgstr "Д-Бус услуга ажурирања фирмвера"
 
 #. TRANSLATORS: daemon is inactive
+#: src/fu-util.c:183
 msgid "Idle…"
-msgstr ""
+msgstr "Мирујем…"
 
 #. TRANSLATORS: decompressing the firmware file
+#: src/fu-util.c:187
 msgid "Decompressing…"
-msgstr ""
+msgstr "Распакујем…"
 
 #. TRANSLATORS: parsing the firmware information
+#: src/fu-util.c:191
 msgid "Loading…"
-msgstr ""
+msgstr "Учитавам…"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
+#: src/fu-util.c:195
 msgid "Restarting device…"
-msgstr ""
+msgstr "Поново покрећем уређај…"
 
 #. TRANSLATORS: writing to the flash chips
+#: src/fu-util.c:199
 msgid "Writing…"
-msgstr ""
+msgstr "Пишем…"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
+#: src/fu-util.c:203
 msgid "Verifying…"
-msgstr ""
+msgstr "Проверавам…"
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
+#: src/fu-util.c:207
 msgid "Scheduling…"
-msgstr ""
+msgstr "Заказујем…"
 
 #. TRANSLATORS: currect daemon status is unknown
+#: src/fu-util.c:214
 msgid "Unknown"
-msgstr ""
+msgstr "Непознато"
 
 #. TRANSLATORS: nothing attached that can be upgraded
+#: src/fu-util.c:283
 msgid "No hardware detected with firmware update capability"
 msgstr "Нема хардвера којем се може ажурирати фирмвер"
 
 #. TRANSLATOR: the plugin only supports offline
+#: src/fu-util.c:317
 msgid "Retrying as an offline update"
 msgstr "Поново покушавам преко ванмрежног ажурирања"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
+#: src/fu-util.c:457
 #, c-format
 msgid "Reinstalling %s with %s... "
 msgstr "Поново инсталирам %s са %s..."
@@ -357,6 +452,7 @@ msgstr "Поново инсталирам %s са %s..."
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
+#: src/fu-util.c:464
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "Уназађујем %s са %s на %s..."
@@ -364,127 +460,159 @@ msgstr "Уназађујем %s са %s на %s..."
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
+#: src/fu-util.c:472
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Ажурирам %s са %s на %s..."
 
+#: src/fu-util.c:499
 msgid "Done!"
 msgstr "Урађено!"
 
+#: src/fu-util.c:541 src/fu-util.c:790
 msgid "OK"
 msgstr "У реду"
 
 #. TRANSLATORS: first replacement is device name
+#: src/fu-util.c:874
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s има ажурирања за фирмвер:"
 
+#: src/fu-util.c:884
 msgid "GUID"
 msgstr "ГУИД"
 
 #. TRANSLATORS: section header for firmware version
+#: src/fu-util.c:888
 msgid "Update Version"
-msgstr ""
+msgstr "Верзија ажурирања"
 
 #. TRANSLATORS: section header for firmware checksum
+#: src/fu-util.c:892
 msgid "Update Checksum"
-msgstr ""
+msgstr "Сума провере ажурирања"
 
+#: src/fu-util.c:899
 msgid "Update Checksum Type"
-msgstr ""
+msgstr "Врста суме провере ажурирања"
 
 #. TRANSLATORS: section header for firmware remote http://
+#: src/fu-util.c:903
 msgid "Update Location"
-msgstr ""
+msgstr "Место ажурирања"
 
 #. TRANSLATORS: section header for long firmware desc
+#: src/fu-util.c:914
 msgid "Update Description"
-msgstr ""
+msgstr "Опис ажурирања"
 
 #. TRANSLATORS: this is when a device is hotplugged
+#: src/fu-util.c:938
 msgid "Device added:"
-msgstr ""
+msgstr "Додат је уређај:"
 
 #. TRANSLATORS: this is when a device is hotplugged
+#: src/fu-util.c:948
 msgid "Device removed:"
-msgstr ""
+msgstr "Уклоњен је уређај:"
 
 #. TRANSLATORS: this is when a device has been updated
+#: src/fu-util.c:958
 msgid "Device changed:"
-msgstr ""
+msgstr "Промењен је уређај:"
 
 #. TRANSLATORS: command line option
+#: src/fu-util.c:1081
 msgid "Show extra debugging information"
 msgstr "Прикажи додатне податке за отклањање проблема"
 
 #. TRANSLATORS: command line option
+#: src/fu-util.c:1084
 msgid "Schedule installation for next reboot when possible"
-msgstr ""
+msgstr "Заказује инсталирање за следеће подизање система када је могуће"
 
 #. TRANSLATORS: command line option
+#: src/fu-util.c:1087
 msgid "Allow re-installing existing firmware versions"
 msgstr "Дозволи поновно инсталирање већ постојећих издања фирмвера"
 
 #. TRANSLATORS: command line option
+#: src/fu-util.c:1090
 msgid "Allow downgrading firmware versions"
 msgstr "Дозволи уназађивање издања фирмвера"
 
 #. TRANSLATORS: command line option
+#: src/fu-util.c:1093
 msgid "Override plugin warning"
-msgstr ""
+msgstr "Превазилази упозорења прикључка"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1116
 msgid "Get all devices that support firmware updates"
 msgstr "Добави све уређаје који подржавају ажурирање фирмвера"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1122
 msgid "Install prepared updates now"
 msgstr "Инсталирај припремљена ажурирања сад"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1128
 msgid "Install a firmware file on this hardware"
 msgstr "Инсталирај датотеку са фирмвером на овај уређај"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1134
 msgid "Gets details about a firmware file"
 msgstr "Добави појединости о датотеци са фирмвером"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1140
 msgid "Gets the list of updates for connected hardware"
 msgstr "Добави списак свих ажурирања за повезани уређај"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1146
 msgid "Updates all firmware to latest versions available"
 msgstr "Ажурира сав фирмвер на последња доступна издања"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1152
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "Добавља криптографски хеш извађеног фирмвера"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1158
 msgid "Unlocks the device for firmware access"
 msgstr "Откључава уређај за приступ фирмверу"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1164
 msgid "Clears the results from the last update"
 msgstr "Чисти резултате последњег ажурирања"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1170
 msgid "Gets the results from the last update"
 msgstr "Добавља резултате последњег ажурирања"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1176
 msgid "Refresh metadata from remote server"
 msgstr "Освежава метаподатке са удаљеног сервера"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1182
 msgid "Update the stored metadata with current ROM contents"
 msgstr "Ажурирај ускладиштене метаподатке са тренутним садржајима РОМ-а"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1188
 msgid "Monitor the daemon for events"
-msgstr ""
+msgstr "Прати демона за догађајима"
 
 #. TRANSLATORS: program name
+#: src/fu-util.c:1207
 msgid "Firmware Utility"
 msgstr "Алатка за фирмвер"
