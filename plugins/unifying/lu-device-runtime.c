@@ -111,6 +111,12 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 	memset (config, 0x00, sizeof (config));
 	for (guint i = 0x01; i < 0x05; i++) {
 		g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
+
+		/* workaround a bug in the 12.01 firmware, which fails with
+		 * INVALID_VALUE when reading MCU1_HW_VERSION */
+		if (version_bl_major == 0x01 && i == 0x03)
+			continue;
+
 		msg->report_id = HIDPP_REPORT_ID_SHORT;
 		msg->device_id = lu_device_get_hidpp_id (device);
 		msg->sub_id = HIDPP_SUBID_GET_REGISTER;
