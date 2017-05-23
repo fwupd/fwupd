@@ -288,13 +288,13 @@ lu_device_hidpp_receive (LuDevice *device,
 		}
 	}
 
-	/* check length */
+	/* check long enough, but allow returning oversize packets */
 	lu_device_hidpp_dump (device, "device->host", (guint8 *) msg, read_size);
-	if (lu_device_hidpp_msg_length (msg) != read_size) {
+	if (read_size < lu_device_hidpp_msg_length (msg)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
-			     "not expected message length, "
+			     "message length too small, "
 			     "got %" G_GSIZE_FORMAT " expected %" G_GSIZE_FORMAT,
 			     read_size, lu_device_hidpp_msg_length (msg));
 		return FALSE;
