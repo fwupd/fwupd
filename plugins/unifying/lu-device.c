@@ -746,7 +746,7 @@ lu_device_open (LuDevice *device, GError **error)
 	/* subclassed */
 	if (klass->open != NULL) {
 		if (!klass->open (device, error)) {
-			g_usb_device_close (priv->usb_device, NULL);
+			lu_device_close (device, NULL);
 			return FALSE;
 		}
 	}
@@ -754,7 +754,7 @@ lu_device_open (LuDevice *device, GError **error)
 
 	/* subclassed */
 	if (!lu_device_probe (device, error)) {
-		g_usb_device_close (priv->usb_device, NULL);
+		lu_device_close (device, NULL);
 		return FALSE;
 	}
 
