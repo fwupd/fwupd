@@ -788,7 +788,7 @@ lu_device_poll (LuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* unifying reciever notification */
+	/* unifying receiver notification */
 	if (msg->report_id == HIDPP_REPORT_ID_SHORT) {
 		switch (msg->sub_id) {
 		case HIDPP_SUBID_DEVICE_CONNECTION:

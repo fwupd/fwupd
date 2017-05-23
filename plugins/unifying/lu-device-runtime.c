@@ -156,7 +156,7 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 	lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);
 
 	/* only the bootloader can do the update */
-	lu_device_set_product (device, "Unifying Reciever");
+	lu_device_set_product (device, "Unifying Receiver");
 
 	return TRUE;
 }
