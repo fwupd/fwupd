@@ -118,7 +118,7 @@ if polkit.version() >= '0.114'
 endif
 gcab = dependency('libgcab-1.0')
 gudev = dependency('gudev-1.0')
-appstream_glib = dependency('appstream-glib', version : '>= 0.5.10')
+appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
