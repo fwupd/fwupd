@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '0.9.1',
+  version : '0.9.2',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0'
 )
@@ -113,6 +113,9 @@ gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
 polkit = dependency('polkit-gobject-1', version : '>= 0.103')
+if polkit.version() >= '0.114'
+  conf.set('HAVE_POLKIT_0_114', '1')
+endif
 gcab = dependency('libgcab-1.0')
 gudev = dependency('gudev-1.0')
 appstream_glib = dependency('appstream-glib', version : '>= 0.5.10')
@@ -151,6 +154,7 @@ endif
 if get_option('enable-dell')
   libsmbios_c = dependency('libsmbios_c', version : '>= 2.3.0')
   efivar = dependency('efivar')
+  fwup = dependency('fwup', version : '>= 5')
   conf.set('HAVE_DELL', '1')
 endif
 

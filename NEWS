@@ -1,3 +1,18 @@
+Version 0.9.2
+~~~~~~~~~~~~~
+Released: 2017-05-22
+
+New Features:
+ - Add support for Unifying DFU features (Richard Hughes)
+
+Bugfixes:
+ - Do not spew a critial warning when parsing an invalid URI (Richard Hughes)
+ - Ensure device is closed if did not complete setup (Richard Hughes)
+ - Ensure steelseries device is closed if it returns an invalid packet (Richard Hughes)
+ - Fix man page installation location (Mario Limonciello)
+ - Ignore spaces in the Unifying version prefix (Richard Hughes)
+ - Set HAVE_POLKIT_0_114 when polkit is newer than 0.114 (Moritz Kiefer)
+
 Version 0.9.1
 ~~~~~~~~~~~~~
 Released: 2017-04-28

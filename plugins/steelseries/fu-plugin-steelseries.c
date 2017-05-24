@@ -119,6 +119,7 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 	}
 	if (actual_len != 32) {
 		g_warning ("only read %" G_GSIZE_FORMAT "bytes", actual_len);
+		g_usb_device_close (usb_device, NULL);
 		return;
 	}
 

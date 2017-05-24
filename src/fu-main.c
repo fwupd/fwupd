@@ -2798,6 +2798,7 @@ main (int argc, char *argv[])
 	/* load AppStream */
 	as_store_add_filter (priv->store, AS_APP_KIND_FIRMWARE);
 	if (!as_store_load (priv->store,
+			    AS_STORE_LOAD_FLAG_IGNORE_INVALID |
 			    AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM,
 			    NULL, &error)){
 		g_warning ("FuMain: failed to load AppStream data: %s",

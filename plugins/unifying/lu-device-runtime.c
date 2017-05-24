@@ -37,6 +37,20 @@ G_DEFINE_TYPE (LuDeviceRuntime, lu_device_runtime, LU_TYPE_DEVICE)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 
 static gboolean
+lu_device_runtime_enable_notifications (LuDevice *device, GError **error)
+{
+	g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
+	msg->report_id = HIDPP_REPORT_ID_SHORT;
+	msg->device_id = lu_device_get_hidpp_id (device);
+	msg->sub_id = HIDPP_SUBID_SET_REGISTER;
+	msg->function_id = HIDPP_REGISTER_HIDPP_NOTIFICATIONS;
+	msg->data[0] = 0x00;
+	msg->data[1] = 0x05; /* Wireless + SoftwarePresent */
+	msg->data[2] = 0x00;
+	return lu_device_hidpp_transfer (device, msg, error);
+}
+
+static gboolean
 lu_device_runtime_open (LuDevice *device, GError **error)
 {
 	GUdevDevice *udev_device = lu_device_get_udev_device (device);
@@ -95,23 +109,23 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 
 	/* read all 10 bytes of the version register */
 	memset (config, 0x00, sizeof (config));
-	for (guint i = 0; i < 0x05; i++) {
+	for (guint i = 0x01; i < 0x05; i++) {
 		g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
 		msg->report_id = HIDPP_REPORT_ID_SHORT;
-		msg->device_idx = HIDPP_RECEIVER_IDX;
-		msg->sub_id = HIDPP_GET_REGISTER_REQ;
-		msg->data[0] = HIDPP_REGISTER_DEVICE_FIRMWARE_INFORMATION;
-		msg->data[1] = i;
-		msg->len = 0x4;
+		msg->device_id = lu_device_get_hidpp_id (device);
+		msg->sub_id = HIDPP_SUBID_GET_REGISTER;
+		msg->function_id = HIDPP_REGISTER_DEVICE_FIRMWARE_INFORMATION;
+		msg->data[0] = i;
 		if (!lu_device_hidpp_transfer (device, msg, error)) {
 			g_prefix_error (error, "failed to read device config: ");
 			return FALSE;
 		}
-		memcpy (config + (i * 2), msg->data + 2, 2);
+		memcpy (config + (i * 2), msg->data + 1, 2);
 	}
 
-	/* logitech sends base 16 and then pads as if base 10... */
-	version_fw = lu_format_version (config[2],
+	/* get firmware version */
+	version_fw = lu_format_version ("RQR",
+					config[2],
 					config[3],
 					(guint16) config[4] << 8 |
 					config[5]);
@@ -119,7 +133,8 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 
 	/* get bootloader version */
 	if (version_bl_major > 0) {
-		version_bl = lu_format_version (version_bl_major,
+		version_bl = lu_format_version ("BOT",
+						version_bl_major,
 						config[8],
 						config[9]);
 		lu_device_set_version_bl (device, version_bl);
@@ -127,8 +142,14 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 		/* is the dongle expecting signed firmware */
 		if ((version_bl_major == 0x01 && config[8] >= 0x04) ||
 		    (version_bl_major == 0x03 && config[8] >= 0x02)) {
-			lu_device_add_flag (device, LU_DEVICE_FLAG_SIGNED_FIRMWARE);
+			lu_device_add_flag (device, LU_DEVICE_FLAG_REQUIRES_SIGNED_FIRMWARE);
 		}
+	}
+
+	/* enable HID++ notifications */
+	if (!lu_device_runtime_enable_notifications (device, error)) {
+		g_prefix_error (error, "failed to enable notifications: ");
+		return FALSE;
 	}
 
 	/* we can flash this */
@@ -145,14 +166,13 @@ lu_device_runtime_detach (LuDevice *device, GError **error)
 {
 	g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
 	msg->report_id = HIDPP_REPORT_ID_SHORT;
-	msg->device_idx = HIDPP_RECEIVER_IDX;
-	msg->sub_id = HIDPP_SET_REGISTER_REQ;
-	msg->data[0] = HIDPP_REGISTER_DEVICE_FIRMWARE_UPDATE_MODE;
-	msg->data[1] = 'I';
-	msg->data[2] = 'C';
-	msg->data[3] = 'P';
-	msg->len = 0x4;
-	if (!lu_device_hidpp_send (device, msg, error)) {
+	msg->device_id = lu_device_get_hidpp_id (device);
+	msg->sub_id = HIDPP_SUBID_SET_REGISTER;
+	msg->function_id = HIDPP_REGISTER_DEVICE_FIRMWARE_UPDATE_MODE;
+	msg->data[0] = 'I';
+	msg->data[1] = 'C';
+	msg->data[2] = 'P';
+	if (!lu_device_hidpp_send (device, msg, LU_DEVICE_TIMEOUT_MS, error)) {
 		g_prefix_error (error, "failed to detach to bootloader: ");
 		return FALSE;
 	}

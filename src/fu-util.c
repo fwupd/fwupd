@@ -607,6 +607,13 @@ fu_util_download_file (FuUtilPrivate *priv,
 	/* download data */
 	g_debug ("downloading %s to %s:", uri, fn);
 	msg = soup_message_new (SOUP_METHOD_GET, uri);
+	if (msg == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to parse URI %s", uri);
+		return FALSE;
+	}
 	status_code = soup_session_send_message (session, msg);
 	if (status_code != SOUP_STATUS_OK) {
 		g_set_error (error,
@@ -670,6 +677,12 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	/* read config file */
 	config = g_key_file_new ();
 	config_fn = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
+	if (!g_file_test (config_fn, G_FILE_TEST_EXISTS)) {
+		g_warning ("falling back to system config as %s missing",
+			   config_fn);
+		g_free (config_fn);
+		config_fn = g_build_filename ("/etc", "fwupd.conf", NULL);
+	}
 	if (!g_key_file_load_from_file (config, config_fn, G_KEY_FILE_NONE, error)) {
 		g_prefix_error (error, "Failed to load %s: ", config_fn);
 		return FALSE;
@@ -684,6 +697,15 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	data_uri = g_key_file_get_string (config, "fwupd", "DownloadURI", error);
 	if (data_uri == NULL)
 		return FALSE;
+	if (data_uri[0] == '\0') {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Nothing set as DownloadURI in %s",
+			     config_fn);
+		return FALSE;
+
+	}
 	sig_uri = g_strdup_printf ("%s.asc", data_uri);
 	data_fn = g_build_filename (cache_dir, "firmware.xml.gz", NULL);
 	sig_fn = g_strdup_printf ("%s.asc", data_fn);
@@ -1026,17 +1048,31 @@ fu_util_sigint_cb (gpointer user_data)
 	return FALSE;
 }
 
+static void
+fu_util_private_free (FuUtilPrivate *priv)
+{
+	if (priv->cmd_array != NULL)
+		g_ptr_array_unref (priv->cmd_array);
+	if (priv->client != NULL)
+		g_object_unref (priv->client);
+	g_main_loop_unref (priv->loop);
+	g_object_unref (priv->cancellable);
+	g_option_context_free (priv->context);
+	g_free (priv);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
+
 int
 main (int argc, char *argv[])
 {
-	FuUtilPrivate *priv;
 	gboolean force = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
 	gboolean offline = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
-	gint rc = 1;
+	g_autoptr(FuUtilPrivate) priv = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *cmd_descriptions = NULL;
 	const GOptionEntry options[] = {
@@ -1175,7 +1211,7 @@ main (int argc, char *argv[])
 		/* TRANSLATORS: the user didn't read the man page */
 		g_print ("%s: %s\n", _("Failed to parse arguments"),
 			 error->message);
-		goto out;
+		return EXIT_FAILURE;
 	}
 
 	/* set verbose? */
@@ -1213,21 +1249,9 @@ main (int argc, char *argv[])
 		} else {
 			g_print ("%s\n", error->message);
 		}
-		goto out;
+		return EXIT_FAILURE;
 	}
 
 	/* success */
-	rc = 0;
-out:
-	if (priv != NULL) {
-		if (priv->cmd_array != NULL)
-			g_ptr_array_unref (priv->cmd_array);
-		if (priv->client != NULL)
-			g_object_unref (priv->client);
-		g_main_loop_unref (priv->loop);
-		g_object_unref (priv->cancellable);
-		g_option_context_free (priv->context);
-		g_free (priv);
-	}
-	return rc;
+	return EXIT_SUCCESS;
 }

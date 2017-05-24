@@ -9,6 +9,7 @@ shared_module('fu_plugin_unifying',
     'lu-device-bootloader-nordic.c',
     'lu-device-bootloader-texas.c',
     'lu-device.c',
+    'lu-device-peripheral.c',
     'lu-device-runtime.c',
   ],
   include_directories : [
@@ -35,6 +36,7 @@ executable(
     'lu-device-bootloader-nordic.c',
     'lu-device-bootloader-texas.c',
     'lu-device.c',
+    'lu-device-peripheral.c',
     'lu-device-runtime.c',
   ],
   include_directories : [
@@ -51,3 +53,26 @@ executable(
   ],
   c_args : cargs,
 )
+
+if get_option('enable-tests')
+  e = executable(
+    'unifying-self-test',
+    sources : [
+      'lu-self-test.c',
+      'lu-common.c',
+    ],
+    include_directories : [
+      include_directories('../..'),
+      include_directories('../../libfwupd'),
+    ],
+    dependencies : [
+      plugin_deps,
+      gudev,
+    ],
+    link_with : [
+      fwupd,
+    ],
+    c_args : cargs,
+  )
+  test('unifying-self-test', e)
+endif

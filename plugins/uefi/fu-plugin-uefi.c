@@ -24,6 +24,7 @@
 #include <appstream-glib.h>
 #include <fwup.h>
 #include <fcntl.h>
+#include <glib/gi18n.h>
 
 #include "fu-quirks.h"
 #include "fu-plugin.h"
@@ -180,12 +181,17 @@ fu_plugin_update_offline (FuPlugin *plugin,
 	guint64 hardware_instance = 0;	/* FIXME */
 	int rc;
 	g_autoptr(fwup_resource_iter) iter = NULL;
+	const gchar *str;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
 	re = fu_plugin_uefi_find (iter, fu_device_get_guid_default (device), error);
 	if (re == NULL)
 		return FALSE;
+
+	/* TRANSLATORS: this is shown when updating the firmware after the reboot */
+	str = _("Installing firmware update…");
+	g_assert (str != NULL);
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");

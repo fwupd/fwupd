@@ -37,6 +37,8 @@ LuDevice	*lu_context_find_by_platform_id		(LuContext	*ctx,
 							 const gchar	*platform_id,
 							 GError **error);
 void		 lu_context_coldplug			(LuContext	*ctx);
+void		 lu_context_set_poll_interval		(LuContext	*ctx,
+							 guint		 poll_interval);
 gboolean	 lu_context_wait_for_replug		(LuContext	*ctx,
 							 LuDevice	*device,
 							 guint		 timeout_ms,

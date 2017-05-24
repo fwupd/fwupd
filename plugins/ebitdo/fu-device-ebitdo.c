@@ -351,6 +351,7 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 	if (!g_usb_device_claim_interface (priv->usb_device, 0, /* 0 = idx? */
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					   error)) {
+		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 
@@ -362,12 +363,14 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 					 0,
 					 NULL, 0, /* in */
 					 error)) {
+			g_usb_device_close (priv->usb_device, NULL);
 			return FALSE;
 		}
 		if (!fu_device_ebitdo_receive (device,
 					    (guint8 *) &version_tmp,
 					    sizeof(version_tmp),
 					    error)) {
+			g_usb_device_close (priv->usb_device, NULL);
 			return FALSE;
 		}
 		tmp = (gdouble) GUINT32_FROM_LE (version_tmp);
@@ -382,12 +385,14 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 				 FU_EBITDO_PKT_CMD_FW_GET_VERSION,
 				 NULL, 0, /* in */
 				 error)) {
+		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 	if (!fu_device_ebitdo_receive (device,
 				    (guint8 *) &version_tmp,
 				    sizeof(version_tmp),
 				    error)) {
+		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 	tmp = (gdouble) GUINT32_FROM_LE (version_tmp);
@@ -400,12 +405,14 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 				 0x00, /* cmd */
 				 NULL, 0,
 				 error)) {
+		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 	memset (serial_tmp, 0x00, sizeof (serial_tmp));
 	if (!fu_device_ebitdo_receive (device,
 				    (guint8 *) &serial_tmp, sizeof(serial_tmp),
 				    error)) {
+		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 	for (i = 0; i < 9; i++)
