@@ -1,6 +1,6 @@
 fwupd (0.9.2-1) UNRELEASED; urgency=medium
 
-  * New upstream version (0.9.2)
+  * New upstream version (0.9.2) (Closes: #863250)
   * drop debian/patches
   * Add support for meson build system
     - Specify sysconfdir and libexecdir
