@@ -1,3 +1,10 @@
+fwupd (0.9.2-3) experimental; urgency=medium
+
+  * add explicit dep on policykit-1 0.105-17 to fix FTBFS due ITS rules
+  * use dh_missing as dh_install --fail-missing is deprecated
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 25 May 2017 16:19:23 -0500
+
 fwupd (0.9.2-2) experimental; urgency=medium
 
   * Explicit dependency upon systemd too.
