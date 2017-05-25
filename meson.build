@@ -127,7 +127,7 @@ soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 gpgme = cc.find_library('gpgme')
 gpgerror = cc.find_library('libgpg-error')
 libm = cc.find_library('libm', required: false)
-systemd = dependency('systemd')
+systemd = dependency('systemd', version : '>= 231')
 udev = dependency('udev')
 
 if valgrind.found()
