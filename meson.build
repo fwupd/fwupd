@@ -118,7 +118,7 @@ if polkit.version() >= '0.114'
 endif
 gcab = dependency('libgcab-1.0')
 gudev = dependency('gudev-1.0')
-appstream_glib = dependency('appstream-glib', version : '>= 0.5.10')
+appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
@@ -127,7 +127,7 @@ soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 gpgme = cc.find_library('gpgme')
 gpgerror = cc.find_library('gpg-error')
 libm = cc.find_library('m', required: false)
-systemd = dependency('systemd')
+systemd = dependency('systemd' : '>= 231')
 udev = dependency('udev')
 
 if valgrind.found()
