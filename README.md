@@ -54,7 +54,7 @@ welcome.
 LVFS
 ----
 This project is configured by default to download firmware from the [Linux Vendor
-Firmware Service (LVFS)] (https://secure-lvfs.rhcloud.com/lvfs/).
+Firmware Service (LVFS)](https://secure-lvfs.rhcloud.com/lvfs/).
 
 This service is available to all OEMs and firmware creators who would like to make
 their firmware available to Linux users.
@@ -87,14 +87,14 @@ This will download and apply all updates for your system.
 Other frontends
 -------------------
 
-Currently [GNOME Software] (https://wiki.gnome.org/Apps/Software) is the only graphical
+Currently [GNOME Software](https://wiki.gnome.org/Apps/Software) is the only graphical
 frontend available.  When compiled with firmware support, it will check for updates
 periodically and automatically download firmware in the background.
 
 After the firmware has been downloaded a popup will be displayed in Gnome Software
 to perform the update.
 
-On Dell IoT gateways, [Wyse Cloud Client Manager (CCM)] (http://www.dell.com/us/business/p/wyse-cloud-client-manager/pd)
+On Dell IoT gateways, [Wyse Cloud Client Manager (CCM)](http://www.dell.com/us/business/p/wyse-cloud-client-manager/pd)
 has been built with fwupd support.
 The remote administration interface can be used to download and deploy
 firmware updates.
