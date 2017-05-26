@@ -1,0 +1,29 @@
+From 34510ba0fe764504a14cb5cbdf39dc2fd9e5eb5b Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Thu, 25 May 2017 21:33:54 -0500
+Subject: [PATCH] Fix a logic error with testing for a dell system.
+
+Some Lenovo systems were inadvertently matching.
+---
+This fixes LP: #1671570
+ plugins/dell/fu-dell-common.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/plugins/dell/fu-dell-common.c b/plugins/dell/fu-dell-common.c
+index 18ce31a..4b8366b 100644
+--- a/plugins/dell/fu-dell-common.c
++++ b/plugins/dell/fu-dell-common.c
+@@ -63,7 +63,9 @@ fu_dell_supported (void)
+ 	guint8 dell_supported = 0;
+ 	struct smbios_struct *de_table;
+ 
+-	de_table = smbios_get_next_struct_by_type (0, 0xDE);
++        de_table = smbios_get_next_struct_by_handle (0, 0xDE00);
++        if (!de_table)
++		return FALSE;
+ 	smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
+ 	if (dell_supported != 0xDE)
+ 		return FALSE;
+-- 
+2.7.4
+
