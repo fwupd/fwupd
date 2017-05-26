@@ -35,6 +35,7 @@ override_dh_auto_configure:
 		--libexecdir=/usr/lib \
 		--localstatedir=/var \
 		$$UEFI \
+		$$DELL \
 		../..
 
 override_dh_auto_build:
