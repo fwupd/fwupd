@@ -63,7 +63,9 @@ fu_dell_supported (void)
 	guint8 dell_supported = 0;
 	struct smbios_struct *de_table;
 
-	de_table = smbios_get_next_struct_by_type (0, 0xDE);
+        de_table = smbios_get_next_struct_by_handle (0, 0xDE00);
+        if (!de_table)
+		return FALSE;
 	smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
 	if (dell_supported != 0xDE)
 		return FALSE;
