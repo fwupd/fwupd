@@ -5,7 +5,7 @@ Uploaders: Steve McIntyre <93sam@debian.org>,
            Daniel Jared Dominguez <jared.dominguez@dell.com>,
            Matthias Klumpp <mak@debian.org>,
            Mario Limonciello <mario.limonciello@dell.com>
-Build-Depends: debhelper (>= 9.0.0),
+Build-Depends: debhelper (>= 10.3),
                meson,
                docbook-utils,
                gettext (>= 0.19.8.1),

@@ -1,3 +1,10 @@
+fwupd (0.9.2-4) experimental; urgency=medium
+
+  * Explicitly depend upon >= debhelper 10.3 to ensure
+    it's pulled from experimental on buildd too.
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 25 May 2017 21:04:08 -0500
+
 fwupd (0.9.2-3) experimental; urgency=medium
 
   * add explicit dep on policykit-1 0.105-17 to fix FTBFS due ITS rules
