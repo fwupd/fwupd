@@ -19,13 +19,13 @@ By default meson places `/etc` and `/var` under the prefix, which works incorrec
 Unless you have a version of meson with the fix for https://github.com/mesonbuild/meson/issues/1637 you will need to
 You will need to build setting *sysconfdir* and *localstatedir* manually.
 
-`# meson --sysconfdir-/etc --localstatedir=/var ..`
+`# meson --sysconfdir=/etc --localstatedir=/var ..`
 
 The default compilation options are documented in `meson_options.txt` in the root of the build tree.
 If you would like to override any option. you can do so when generating the build rules.
 For example to disable the *DELL* plugin you would run meson like this:
 
-`# meson --sysconfdir-/etc --localstatedir=/var -Denable-dell=false ..`
+`# meson --sysconfdir=/etc --localstatedir=/var -Denable-dell=false ..`
 
 ### Compile using ninja
 Compilation is executed by one command:
