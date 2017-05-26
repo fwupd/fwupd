@@ -1,0 +1,36 @@
+From fd4558372813bc6dd3b92d28ed8bb9b90604ddbd Mon Sep 17 00:00:00 2001
+From: Richard Hughes <richard@hughsie.com>
+Date: Tue, 23 May 2017 12:27:23 +0100
+Subject: [PATCH 1/3] unifying: Ensure HID devices are closed if the subclassed
+ open() or probe() failed
+
+Fixes the critical warnings in https://github.com/hughsie/fwupd/issues/117
+---
+ plugins/unifying/lu-device.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/plugins/unifying/lu-device.c b/plugins/unifying/lu-device.c
+index 2c14ceb..ac3e68b 100644
+--- a/plugins/unifying/lu-device.c
++++ b/plugins/unifying/lu-device.c
+@@ -746,7 +746,7 @@ lu_device_open (LuDevice *device, GError **error)
+ 	/* subclassed */
+ 	if (klass->open != NULL) {
+ 		if (!klass->open (device, error)) {
+-			g_usb_device_close (priv->usb_device, NULL);
++			lu_device_close (device, NULL);
+ 			return FALSE;
+ 		}
+ 	}
+@@ -754,7 +754,7 @@ lu_device_open (LuDevice *device, GError **error)
+ 
+ 	/* subclassed */
+ 	if (!lu_device_probe (device, error)) {
+-		g_usb_device_close (priv->usb_device, NULL);
++		lu_device_close (device, NULL);
+ 		return FALSE;
+ 	}
+ 
+-- 
+2.7.4
+

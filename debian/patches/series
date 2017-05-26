@@ -1,1 +1,4 @@
 0001-Fix-a-logic-error-with-testing-for-a-dell-system.patch
+0001-unifying-Ensure-HID-devices-are-closed-if-the-subcla.patch
+0002-unifying-Correctly-open-RQR12-devices-with-original-.patch
+0003-unifying-Relax-the-requirement-that-a-SHORT-request-.patch
