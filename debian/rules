@@ -44,7 +44,7 @@ override_dh_auto_build:
 override_dh_install:
 	DESTDIR=$(CURDIR)/debian/tmp ninja -Cdebian/build -v install
 	find debian/tmp/usr -name "*a" -type f| xargs rm -f
-#	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
+	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install
 	dh_missing --fail-missing
 
