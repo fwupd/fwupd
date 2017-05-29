@@ -31,7 +31,7 @@ executable(
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
-  install_dir : 'bin'
+  install_dir : get_option('bindir')
 )
 
 resources_src = gnome.compile_resources(
