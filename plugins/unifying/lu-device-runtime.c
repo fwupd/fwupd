@@ -114,7 +114,7 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 
 		/* workaround a bug in the 12.01 firmware, which fails with
 		 * INVALID_VALUE when reading MCU1_HW_VERSION */
-		if (version_bl_major == 0x01 && i == 0x03)
+		if (i == 0x03)
 			continue;
 
 		msg->report_id = HIDPP_REPORT_ID_SHORT;
