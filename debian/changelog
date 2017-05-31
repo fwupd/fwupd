@@ -1,3 +1,9 @@
+fwupd (0.9.2-6) UNRELEASED; urgency=medium
+
+  * debian/rules: Use debhelper's built in meson support.
+
+ -- Iain Lane <laney@debian.org>  Wed, 31 May 2017 15:24:19 +0100
+
 fwupd (0.9.2-5) experimental; urgency=medium
 
   * Disable DELL plugin on non x86

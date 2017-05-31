@@ -27,28 +27,15 @@ override_dh_auto_configure:
 	else \
 		export DELL="-Denable-dell=false"; \
 	fi; \
-	cd debian/build && \
-	meson \
-		--buildtype=plain \
-		--prefix=/usr \
-		--sysconfdir=/etc \
-		--libexecdir=/usr/lib \
-		--localstatedir=/var \
-		$$UEFI \
-		$$DELL \
-		../..
-
-override_dh_auto_build:
-	ninja -Cdebian/build -v
+	dh_auto_configure -- $$UEFI $$DELL
 
 override_dh_install:
-	DESTDIR=$(CURDIR)/debian/tmp ninja -Cdebian/build -v install
-	find debian/tmp/usr -name "*a" -type f| xargs rm -f
+	find debian/tmp/usr -name "*a" -print -type f | xargs rm -f
 	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install
 	dh_missing --fail-missing
 
 override_dh_auto_test:
 	if [ -x /usr/bin/valgrind ] ; then \
-		ninja -Cdebian/build test -v; \
+		dh_auto_test; \
 	fi
