@@ -42,6 +42,7 @@ BuildRequires: valgrind
 BuildRequires: valgrind-devel
 BuildRequires: elfutils-libelf-devel
 BuildRequires: gtk-doc
+BuildRequires: meson
 
 %if 0%{?have_smbios}
 BuildRequires: libsmbios-devel >= 2.3.0
@@ -107,7 +108,7 @@ Files for development with libdfu.
     -Denable-dell=true \
     -Denable-synaptics=true \
 %else
-    -Denable-packdellagekit=false \
+    -Denable-dell=false \
     -Denable-synaptics=false \
 %endif
     -Denable-colorhug=true
