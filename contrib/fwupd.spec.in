@@ -94,6 +94,8 @@ Files for development with libdfu.
 %build
 
 %meson \
+    -Denable-doc=true \
+    -Denable-man=true \
     -Denable-tests=false \
     -Denable-thunderbolt=false \
 %if 0%{?have_uefi}
