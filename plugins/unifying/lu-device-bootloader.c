@@ -232,6 +232,10 @@ lu_device_bootloader_request (LuDevice *device,
 		}
 	}
 
+	/* no response required or expected */
+	if (req->cmd == LU_DEVICE_BOOTLOADER_CMD_REBOOT)
+		return TRUE;
+
 	/* get response */
 	memset (buf_response, 0x00, sizeof (buf_response));
 	if (usb_device != NULL) {
