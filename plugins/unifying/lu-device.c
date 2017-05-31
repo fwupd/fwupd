@@ -848,9 +848,10 @@ lu_device_close (LuDevice *device, GError **error)
 	}
 
 	/* HID */
-	if (priv->udev_device != NULL) {
+	if (priv->udev_device != NULL && priv->udev_device_fd > 0) {
 		if (!g_close (priv->udev_device_fd, error))
 			return FALSE;
+		priv->udev_device_fd = 0;
 	}
 
 	/* success */
