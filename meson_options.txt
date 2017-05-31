@@ -1,3 +1,5 @@
+option('enable-doc', type : 'boolean', value : true, description : 'enable developer documentation')
+option('enable-man', type : 'boolean', value : true, description : 'enable man pages')
 option('enable-tests', type : 'boolean', value : true, description : 'enable tests')
 option('enable-colorhug', type : 'boolean', value : true, description : 'enable ColorHug support')
 option('enable-libelf', type : 'boolean', value : true, description : 'enable libelf support')
