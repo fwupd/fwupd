@@ -127,7 +127,6 @@ soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 gpgme = cc.find_library('gpgme')
 gpgerror = cc.find_library('gpg-error')
 libm = cc.find_library('m', required: false)
-systemd = dependency('systemd', version : '>= 231')
 udev = dependency('udev')
 
 if valgrind.found()
@@ -160,6 +159,15 @@ endif
 
 if get_option('enable-thunderbolt')
   thunderbolt = dependency('libtbtfwu', version : '>= 1', required: false)
+endif
+
+if get_option('enable-systemd')
+  systemd = dependency('systemd', version : '>= 231')
+  conf.set('HAVE_SYSTEMD' , '1')
+endif
+
+if get_option('enable-consolekit')
+  conf.set('HAVE_CONSOLEKIT' , '1')
 endif
 
 gnome = import('gnome')
@@ -223,4 +231,6 @@ else
   message('git not found, you will not be able to run `ninja dist`')
 endif
 
-meson.add_install_script('meson_post_install.sh', systemd.get_pkgconfig_variable('systemdsystemunitdir'), localstatedir)
+if get_option('enable-systemd')
+  meson.add_install_script('meson_post_install.sh', systemd.get_pkgconfig_variable('systemdsystemunitdir'), localstatedir)
+endif
