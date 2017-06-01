@@ -374,10 +374,12 @@ fu_util_offline_update_reboot (void)
 	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GVariant) val = NULL;
 
-	/* reboot using systemd */
 	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
 	if (connection == NULL)
 		return;
+
+#ifdef HAVE_SYSTEMD
+	/* reboot using systemd */
 	val = g_dbus_connection_call_sync (connection,
 					   "org.freedesktop.systemd1",
 					   "/org/freedesktop/systemd1",
@@ -389,6 +391,26 @@ fu_util_offline_update_reboot (void)
 					   -1,
 					   NULL,
 					   &error);
+#elif HAVE_CONSOLEKIT
+	/* reboot using ConsoleKit */
+	val = g_dbus_connection_call_sync (connection,
+					   "org.freedesktop.ConsoleKit",
+					   "/org/freedesktop/ConsoleKit/Manager",
+					   "org.freedesktop.ConsoleKit.Manager",
+					   "Restart",
+					   NULL,
+					   NULL,
+					   G_DBUS_CALL_FLAGS_NONE,
+					   -1,
+					   NULL,
+					   &error);
+#else
+	g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "No supported backend compiled in to perform the operation.");
+#endif
+
 	if (val == NULL)
 		g_print ("Failed to reboot: %s\n", error->message);
 }
