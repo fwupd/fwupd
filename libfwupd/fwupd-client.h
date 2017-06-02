@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -26,6 +26,7 @@
 #include <gio/gio.h>
 
 #include "fwupd-enums.h"
+#include "fwupd-remote.h"
 #include "fwupd-result.h"
 
 G_BEGIN_DECLS
@@ -104,6 +105,14 @@ gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
 							 GError		**error);
 FwupdStatus	 fwupd_client_get_status		(FwupdClient	*client);
 guint		 fwupd_client_get_percentage		(FwupdClient	*client);
+
+GPtrArray	*fwupd_client_get_remotes		(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
+FwupdRemote	*fwupd_client_get_remote_by_id		(FwupdClient	*client,
+							 const gchar	*remote_id,
+							 GCancellable	*cancellable,
+							 GError		**error);
 
 G_END_DECLS
 

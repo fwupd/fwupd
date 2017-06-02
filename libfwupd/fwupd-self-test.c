@@ -27,6 +27,7 @@
 #include "fwupd-client.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
+#include "fwupd-remote.h"
 #include "fwupd-result.h"
 
 static gboolean
@@ -180,6 +181,53 @@ fwupd_client_devices_func (void)
 }
 
 static void
+fwupd_client_remotes_func (void)
+{
+	FwupdRemote *remote;
+	g_autoptr(FwupdClient) client = NULL;
+	g_autoptr(FwupdRemote) remote2 = NULL;
+	g_autoptr(FwupdRemote) remote3 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
+
+	g_setenv ("FU_SELF_TEST_REMOTES_DIR", FU_SELF_TEST_REMOTES_DIR, TRUE);
+
+	client = fwupd_client_new ();
+	array = fwupd_client_get_remotes (client, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (array != NULL);
+	g_assert_cmpint (array->len, ==, 2);
+
+	/* check remote */
+	remote = g_ptr_array_index (array, 0);
+	g_assert (FWUPD_IS_REMOTE (remote));
+	g_assert_cmpstr (fwupd_remote_get_id (remote), ==, "lvfs");
+	g_assert (fwupd_remote_get_enabled (remote));
+	g_assert (fwupd_remote_get_uri (remote) != NULL);
+	g_assert (fwupd_remote_get_uri_asc (remote) != NULL);
+	g_assert_cmpstr (fwupd_remote_get_filename (remote), ==, "lvfs-firmware.xml.gz");
+	g_assert_cmpstr (fwupd_remote_get_filename_asc (remote), ==, "lvfs-firmware.xml.gz.asc");
+	remote = g_ptr_array_index (array, 1);
+	g_assert_cmpstr (fwupd_remote_get_id (remote), ==, "lvfs-testing");
+	g_assert (!fwupd_remote_get_enabled (remote));
+	g_assert (fwupd_remote_get_uri (remote)!= NULL);
+	g_assert (fwupd_remote_get_uri_asc (remote)!= NULL);
+
+	/* check we can find the right thing */
+	remote2 = fwupd_client_get_remote_by_id (client, "lvfs", NULL, &error);
+	g_assert_no_error (error);
+	g_assert (remote2 != NULL);
+	g_assert_cmpstr (fwupd_remote_get_id (remote2), ==, "lvfs");
+	g_assert (fwupd_remote_get_enabled (remote2));
+	g_assert (fwupd_remote_get_uri (remote2) != NULL);
+
+	/* check we set an error when unfound */
+	remote3 = fwupd_client_get_remote_by_id (client, "XXXX", NULL, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert (remote3 == NULL);
+}
+
+static void
 fwupd_client_updates_func (void)
 {
 	FwupdResult *res;
@@ -229,6 +277,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
 	g_test_add_func ("/fwupd/result", fwupd_result_func);
 	if (fwupd_has_system_bus ()) {
+		g_test_add_func ("/fwupd/client{remotes}", fwupd_client_remotes_func);
 		g_test_add_func ("/fwupd/client{devices}", fwupd_client_devices_func);
 		g_test_add_func ("/fwupd/client{updates}", fwupd_client_updates_func);
 	}

@@ -5,6 +5,10 @@ install_data(['fwupd.conf'],
   install_dir : get_option('sysconfdir')
 )
 
+install_subdir('remotes.d',
+  install_dir: join_paths(get_option('sysconfdir'), 'fwupd')
+)
+
 install_data(['org.freedesktop.fwupd.conf'],
   install_dir : join_paths(get_option('sysconfdir'), 'dbus-1', 'system.d')
 )

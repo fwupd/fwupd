@@ -204,6 +204,7 @@ plugin_deps += gio
 plugin_deps += giounix
 plugin_deps += gmodule
 plugin_deps += gusb
+plugin_deps += soup
 
 subdir('data')
 subdir('docs')

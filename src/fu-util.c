@@ -582,7 +582,7 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 
 static gboolean
 fu_util_download_file (FuUtilPrivate *priv,
-		       const gchar *uri,
+		       SoupURI *uri,
 		       const gchar *fn,
 		       const gchar *checksum_expected,
 		       GChecksumType checksum_type,
@@ -593,6 +593,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *checksum_actual = NULL;
 	g_autofree gchar *user_agent = NULL;
+	g_autofree gchar *uri_str = NULL;
 	g_autoptr(SoupMessage) msg = NULL;
 	g_autoptr(SoupSession) session = NULL;
 
@@ -627,13 +628,14 @@ fu_util_download_file (FuUtilPrivate *priv,
 	soup_session_remove_feature_by_type (session, SOUP_TYPE_CONTENT_DECODER);
 
 	/* download data */
-	g_debug ("downloading %s to %s:", uri, fn);
-	msg = soup_message_new (SOUP_METHOD_GET, uri);
+	uri_str = soup_uri_to_string (uri, FALSE);
+	g_debug ("downloading %s to %s", uri_str, fn);
+	msg = soup_message_new_from_uri (SOUP_METHOD_GET, uri);
 	if (msg == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to parse URI %s", uri);
+			     "Failed to parse URI %s", uri_str);
 		return FALSE;
 	}
 	status_code = soup_session_send_message (session, msg);
@@ -642,7 +644,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "Failed to download %s: %s",
-			     uri, soup_status_get_phrase (status_code));
+			     uri_str, soup_status_get_phrase (status_code));
 		return FALSE;
 	}
 
@@ -686,60 +688,53 @@ fu_util_mkdir_with_parents (const gchar *path, GError **error)
 }
 
 static gboolean
-fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
+fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
+				      FwupdRemote *remote,
+				      GError **error)
 {
 	g_autofree gchar *cache_dir = NULL;
-	g_autofree gchar *config_fn = NULL;
-	g_autofree gchar *data_fn = NULL;
-	g_autofree gchar *data_uri = NULL;
-	g_autofree gchar *sig_fn = NULL;
-	g_autofree gchar *sig_uri = NULL;
-	g_autoptr(GKeyFile) config = NULL;
-
-	/* read config file */
-	config = g_key_file_new ();
-	config_fn = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
-	if (!g_file_test (config_fn, G_FILE_TEST_EXISTS)) {
-		g_warning ("falling back to system config as %s missing",
-			   config_fn);
-		g_free (config_fn);
-		config_fn = g_build_filename ("/etc", "fwupd.conf", NULL);
-	}
-	if (!g_key_file_load_from_file (config, config_fn, G_KEY_FILE_NONE, error)) {
-		g_prefix_error (error, "Failed to load %s: ", config_fn);
-		return FALSE;
-	}
+	g_autofree gchar *filename = NULL;
+	g_autofree gchar *filename_asc = NULL;
 
 	/* ensure cache directory exists */
 	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
 	if (!fu_util_mkdir_with_parents (cache_dir, error))
 		return FALSE;
 
+	/* download the metadata */
+	filename = g_build_filename (cache_dir, fwupd_remote_get_filename (remote), NULL);
+	if (!fu_util_download_file (priv, fwupd_remote_get_uri (remote),
+				    filename, NULL, 0, error))
+		return FALSE;
+
 	/* download the signature */
-	data_uri = g_key_file_get_string (config, "fwupd", "DownloadURI", error);
-	if (data_uri == NULL)
-		return FALSE;
-	if (data_uri[0] == '\0') {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Nothing set as DownloadURI in %s",
-			     config_fn);
-		return FALSE;
-
-	}
-	sig_uri = g_strdup_printf ("%s.asc", data_uri);
-	data_fn = g_build_filename (cache_dir, "firmware.xml.gz", NULL);
-	sig_fn = g_strdup_printf ("%s.asc", data_fn);
-	if (!fu_util_download_file (priv, sig_uri, sig_fn, NULL, 0, error))
-		return FALSE;
-
-	/* download the payload */
-	if (!fu_util_download_file (priv, data_uri, data_fn, NULL, 0, error))
+	filename_asc = g_build_filename (cache_dir, fwupd_remote_get_filename_asc (remote), NULL);
+	if (!fu_util_download_file (priv, fwupd_remote_get_uri_asc (remote),
+				    filename_asc, NULL, 0, error))
 		return FALSE;
 
 	/* send all this to fwupd */
-	return fwupd_client_update_metadata (priv->client, data_fn, sig_fn, NULL, error);
+	return fwupd_client_update_metadata (priv->client,
+					     filename,
+					     filename_asc,
+					     NULL, error);
+}
+
+static gboolean
+fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GPtrArray) remotes = NULL;
+	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
+	if (remotes == NULL)
+		return FALSE;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (!fwupd_remote_get_enabled (remote))
+			continue;
+		if (!fu_util_download_metadata_for_remote (priv, remote, error))
+			return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
@@ -1024,9 +1019,10 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < results->len; i++) {
 		GChecksumType checksum_type;
 		const gchar *checksum;
-		const gchar *uri;
+		const gchar *uri_tmp;
 		g_autofree gchar *basename = NULL;
 		g_autofree gchar *fn = NULL;
+		g_autoptr(SoupURI) uri = NULL;
 
 		FwupdResult *res = g_ptr_array_index (results, i);
 
@@ -1034,13 +1030,14 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		checksum = fwupd_result_get_update_checksum (res);
 		if (checksum == NULL)
 			continue;
-		uri = fwupd_result_get_update_uri (res);
-		if (uri == NULL)
+		uri_tmp = fwupd_result_get_update_uri (res);
+		if (uri_tmp == NULL)
 			continue;
+		uri = soup_uri_new (uri_tmp);
 		g_print ("Downloading %s for %s...\n",
 			 fwupd_result_get_update_version (res),
 			 fwupd_result_get_device_name (res));
-		basename = g_path_get_basename (uri);
+		basename = g_path_get_basename (uri_tmp);
 		fn = g_build_filename (g_get_tmp_dir (), basename, NULL);
 		checksum_type = fwupd_result_get_update_checksum_kind (res);
 		if (!fu_util_download_file (priv, uri, fn, checksum, checksum_type, error))

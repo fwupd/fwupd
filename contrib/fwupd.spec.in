@@ -143,6 +143,10 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %{_bindir}/fwupdmgr
+%dir %{_sysconfdir}/fwupd
+%dir %{_sysconfdir}/fwupd/remotes.d
+%{_sysconfdir}/fwupd/remotes.d/lvfs.conf
+%{_sysconfdir}/fwupd/remotes.d/lvfs-testing.conf
 %{_sysconfdir}/pki/fwupd
 %{_sysconfdir}/pki/fwupd-metadata
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf

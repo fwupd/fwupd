@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -19,24 +19,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-/**
- * SECTION:fwupd
- * @short_description: Helper objects for accessing fwupd
- */
+#ifndef __FWUPD_REMOTE_PRIVATE_H
+#define __FWUPD_REMOTE_PRIVATE_H
 
-#ifndef __FWUPD_H__
-#define __FWUPD_H__
+#include "fwupd-remote.h"
 
-#define __FWUPD_H_INSIDE__
+G_BEGIN_DECLS
 
-#include <libfwupd/fwupd-client.h>
-#include <libfwupd/fwupd-enums.h>
-#include <libfwupd/fwupd-error.h>
-#include <libfwupd/fwupd-remote.h>
-#include <libfwupd/fwupd-result.h>
-#include <libfwupd/fwupd-version.h>
+gboolean	 fwupd_remote_load_from_filename	(FwupdRemote	*self,
+							 const gchar	*filename,
+							 GCancellable	*cancellable,
+							 GError		**error);
 
-#undef __FWUPD_H_INSIDE__
+G_END_DECLS
 
-#endif /* __FWUPD_H__ */
+#endif /* __FWUPD_REMOTE_PRIVATE_H */
 

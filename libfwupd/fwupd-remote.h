@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -19,24 +19,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-/**
- * SECTION:fwupd
- * @short_description: Helper objects for accessing fwupd
- */
+#ifndef __FWUPD_REMOTE_H
+#define __FWUPD_REMOTE_H
 
-#ifndef __FWUPD_H__
-#define __FWUPD_H__
+#include <libsoup/soup.h>
 
-#define __FWUPD_H_INSIDE__
+G_BEGIN_DECLS
 
-#include <libfwupd/fwupd-client.h>
-#include <libfwupd/fwupd-enums.h>
-#include <libfwupd/fwupd-error.h>
-#include <libfwupd/fwupd-remote.h>
-#include <libfwupd/fwupd-result.h>
-#include <libfwupd/fwupd-version.h>
+#define FWUPD_TYPE_REMOTE (fwupd_remote_get_type ())
+G_DECLARE_FINAL_TYPE (FwupdRemote, fwupd_remote, FWUPD, REMOTE, GObject)
 
-#undef __FWUPD_H_INSIDE__
+FwupdRemote	*fwupd_remote_new			(void);
+const gchar	*fwupd_remote_get_id			(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_filename		(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_filename_asc		(FwupdRemote	*self);
+gboolean	 fwupd_remote_get_enabled		(FwupdRemote	*self);
+SoupURI		*fwupd_remote_get_uri			(FwupdRemote	*self);
+SoupURI		*fwupd_remote_get_uri_asc		(FwupdRemote	*self);
+SoupURI		*fwupd_remote_build_uri			(FwupdRemote	*self,
+							 const gchar	*url,
+							 GError		**error);
 
-#endif /* __FWUPD_H__ */
+G_END_DECLS
+
+#endif /* __FWUPD_REMOTE_H */
 
