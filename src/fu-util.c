@@ -1024,6 +1024,7 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < results->len; i++) {
 		GChecksumType checksum_type;
 		const gchar *checksum;
+		const gchar *remote_id;
 		const gchar *uri_tmp;
 		g_autofree gchar *basename = NULL;
 		g_autofree gchar *fn = NULL;
@@ -1038,7 +1039,23 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		uri_tmp = fwupd_result_get_update_uri (res);
 		if (uri_tmp == NULL)
 			continue;
-		uri = soup_uri_new (uri_tmp);
+
+		/* work out what remote-specific URI fields this should use */
+		remote_id = fwupd_result_get_update_remote_id (res);
+		if (remote_id != NULL) {
+			g_autoptr(FwupdRemote) remote = NULL;
+			remote = fwupd_client_get_remote_by_id (priv->client,
+								remote_id,
+								NULL,
+								error);
+			if (remote == NULL)
+				return FALSE;
+			uri = fwupd_remote_build_uri (remote, uri_tmp, error);
+			if (uri == NULL)
+				return FALSE;
+		} else {
+			uri = soup_uri_new (uri_tmp);
+		}
 		g_print ("Downloading %s for %s...\n",
 			 fwupd_result_get_update_version (res),
 			 fwupd_result_get_device_name (res));
