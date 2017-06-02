@@ -961,6 +961,42 @@ fwupd_client_update_metadata (FwupdClient *client,
 			      GCancellable *cancellable,
 			      GError **error)
 {
+	return fwupd_client_update_metadata_with_id (client,
+						     NULL, /* remote_id */
+						     metadata_fn,
+						     signature_fn,
+						     cancellable,
+						     error);
+}
+
+/**
+ * fwupd_client_update_metadata_with_id:
+ * @client: A #FwupdClient
+ * @remote_id: the remote ID, e.g. "lvfs-testing"
+ * @metadata_fn: the XML metadata filename
+ * @signature_fn: the GPG signature file
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Updates the metadata. This allows a session process to download the metadata
+ * and metadata signing file to be passed into the daemon to be checked and
+ * parsed.
+ *
+ * The @remote_id allows the firmware to be tagged so that the remote can be
+ * matched when the firmware is downloaded.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 0.9.3
+ **/
+gboolean
+fwupd_client_update_metadata_with_id (FwupdClient *client,
+				      const gchar *remote_id,
+				      const gchar *metadata_fn,
+				      const gchar *signature_fn,
+				      GCancellable *cancellable,
+				      GError **error)
+{
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	GVariant *body;
 	gint fd;
@@ -1007,7 +1043,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
 						  FWUPD_DBUS_PATH,
 						  FWUPD_DBUS_INTERFACE,
-						  "UpdateMetadata");
+						  "UpdateMetadataWithId");
 	g_dbus_message_set_unix_fd_list (request, fd_list);
 
 	/* g_unix_fd_list_append did a dup() already */
@@ -1015,7 +1051,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 	close (fd_sig);
 
 	/* call into daemon */
-	body = g_variant_new ("(hh)", fd, fd_sig);
+	body = g_variant_new ("(shh)", remote_id != NULL ? remote_id : "", fd, fd_sig);
 	g_dbus_message_set_body (request, body);
 	helper = fwupd_client_helper_new ();
 	g_dbus_connection_send_message_with_reply (priv->conn,

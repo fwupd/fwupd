@@ -103,6 +103,12 @@ gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
 							 const gchar	*signature_fn,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fwupd_client_update_metadata_with_id	(FwupdClient	*client,
+							 const gchar	*remote_id,
+							 const gchar	*metadata_fn,
+							 const gchar	*signature_fn,
+							 GCancellable	*cancellable,
+							 GError		**error);
 FwupdStatus	 fwupd_client_get_status		(FwupdClient	*client);
 guint		 fwupd_client_get_percentage		(FwupdClient	*client);
 

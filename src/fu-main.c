@@ -1253,7 +1253,8 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 }
 
 static gboolean
-fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GError **error)
+fu_main_daemon_update_metadata (FuMainPrivate *priv, const gchar *remote_id,
+				gint fd, gint fd_sig, GError **error)
 {
 	const guint8 *data;
 	gsize size;
@@ -1333,6 +1334,8 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 	apps = as_store_get_apps (store);
 	for (guint i = 0; i < apps->len; i++) {
 		AsApp *app = g_ptr_array_index (apps, i);
+		if (remote_id != NULL && remote_id[0] != '\0')
+			as_app_add_metadata (app, "fwupd::RemoteID", remote_id);
 		as_store_add_app (priv->store, app);
 	}
 
@@ -1889,6 +1892,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		gint fd_data;
 		gint fd_sig;
 
+		g_debug ("Called %s()", method_name);
 		message = g_dbus_method_invocation_get_message (invocation);
 		fd_list = g_dbus_message_get_unix_fd_list (message);
 		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 2) {
@@ -1909,7 +1913,47 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		if (!fu_main_daemon_update_metadata (priv, fd_data, fd_sig, &error)) {
+		if (!fu_main_daemon_update_metadata (priv, NULL, fd_data, fd_sig, &error)) {
+			g_prefix_error (&error, "failed to update metadata: ");
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+		fu_main_invocation_return_value (priv, invocation, NULL);
+		return;
+	}
+
+	/* return '' */
+	if (g_strcmp0 (method_name, "UpdateMetadataWithId") == 0) {
+		GDBusMessage *message;
+		GUnixFDList *fd_list;
+		const gchar *id = NULL;
+		gint fd_data;
+		gint fd_sig;
+
+		g_variant_get (parameters, "(&shh)", &id);
+		g_debug ("Called %s(%s)", method_name, id);
+
+		message = g_dbus_method_invocation_get_message (invocation);
+		fd_list = g_dbus_message_get_unix_fd_list (message);
+		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 2) {
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid handle");
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+		fd_data = g_unix_fd_list_get (fd_list, 0, &error);
+		if (fd_data < 0) {
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+		fd_sig = g_unix_fd_list_get (fd_list, 1, &error);
+		if (fd_sig < 0) {
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+		if (!fu_main_daemon_update_metadata (priv, id, fd_data, fd_sig, &error)) {
 			g_prefix_error (&error, "failed to update metadata: ");
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
