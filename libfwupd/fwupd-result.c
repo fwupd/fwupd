@@ -67,6 +67,7 @@ typedef struct {
 	gchar				*update_uri;
 	gchar				*update_vendor;
 	gchar				*update_version;
+	gchar				*update_remote_id;
 	guint64				 update_size;
 } FwupdResultPrivate;
 
@@ -118,6 +119,42 @@ fwupd_result_set_unique_id (FwupdResult *result, const gchar *unique_id)
 	g_return_if_fail (FWUPD_IS_RESULT (result));
 	g_free (priv->unique_id);
 	priv->unique_id = g_strdup (unique_id);
+}
+
+/**
+ * fwupd_result_get_update_remote_id:
+ * @result: A #FwupdResult
+ *
+ * Gets the remote ID that can be used for downloading.
+ *
+ * Returns: the ID, or %NULL if unset
+ *
+ * Since: 0.9.3
+ **/
+const gchar *
+fwupd_result_get_update_remote_id (FwupdResult *result)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
+	return priv->update_remote_id;
+}
+
+/**
+ * fwupd_result_set_update_remote_id:
+ * @result: A #FwupdResult
+ * @update_remote_id: the result ID, e.g. "USB:foo"
+ *
+ * Sets the remote ID that can be used for downloading.
+ *
+ * Since: 0.9.3
+ **/
+void
+fwupd_result_set_update_remote_id (FwupdResult *result, const gchar *update_remote_id)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_if_fail (FWUPD_IS_RESULT (result));
+	g_free (priv->update_remote_id);
+	priv->update_remote_id = g_strdup (update_remote_id);
 }
 
 /**
@@ -1405,6 +1442,11 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 				       FWUPD_RESULT_KEY_UNIQUE_ID,
 				       g_variant_new_string (priv->unique_id));
 	}
+	if (priv->update_remote_id != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_UPDATE_REMOTE_ID,
+				       g_variant_new_string (priv->update_remote_id));
+	}
 	if (priv->device_name != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_DEVICE_NAME,
@@ -1585,6 +1627,10 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UNIQUE_ID) == 0) {
 		fwupd_result_set_unique_id (result, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_REMOTE_ID) == 0) {
+		fwupd_result_set_update_remote_id (result, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_NAME) == 0) {
@@ -1869,6 +1915,7 @@ fwupd_result_to_string (FwupdResult *result)
 
 	/* updates */
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_ID, priv->update_id);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_REMOTE_ID, priv->update_remote_id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_SUMMARY, priv->update_summary);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_DESCRIPTION, priv->update_description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_VERSION, priv->update_version);
@@ -1991,6 +2038,7 @@ fwupd_result_finalize (GObject *object)
 	g_free (priv->update_homepage);
 	g_free (priv->update_vendor);
 	g_free (priv->update_version);
+	g_free (priv->update_remote_id);
 
 	G_OBJECT_CLASS (fwupd_result_parent_class)->finalize (object);
 }

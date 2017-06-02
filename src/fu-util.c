@@ -906,6 +906,10 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("Update Version"),
 				    fwupd_result_get_update_version (res));
 
+		/* TRANSLATORS: section header for remote ID, e.g. lvfs-testing */
+		fu_util_print_data (_("Update Remote ID"),
+				    fwupd_result_get_update_remote_id (res));
+
 		/* TRANSLATORS: section header for firmware checksum */
 		fu_util_print_data (_("Update Checksum"),
 				    fwupd_result_get_update_checksum (res));

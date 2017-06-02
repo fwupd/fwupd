@@ -158,6 +158,9 @@ void		 fwupd_result_set_update_license	(FwupdResult	*result,
 const gchar	*fwupd_result_get_update_name		(FwupdResult	*result);
 void		 fwupd_result_set_update_name		(FwupdResult	*result,
 							 const gchar	*update_name);
+const gchar	*fwupd_result_get_update_remote_id	(FwupdResult	*result);
+void		 fwupd_result_set_update_remote_id	(FwupdResult	*result,
+							 const gchar	*update_remote_id);
 
 /* helpers */
 GVariant	*fwupd_result_to_data			(FwupdResult	*result,

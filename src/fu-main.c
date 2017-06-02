@@ -1480,6 +1480,9 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	tmp = as_app_get_project_license (app);
 	if (tmp != NULL)
 		fu_device_set_update_license (item->device, tmp);
+	tmp = as_app_get_metadata_item (app, "fwupd::RemoteID");
+	if (tmp != NULL)
+		fu_device_set_update_remote_id (item->device, tmp);
 #if AS_CHECK_VERSION(0,6,1)
 	tmp = as_app_get_unique_id (app);
 	if (tmp != NULL)
