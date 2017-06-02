@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -2787,15 +2787,50 @@ fu_main_perhaps_own_name (gpointer user_data)
 	return G_SOURCE_REMOVE;
 }
 
+static void
+fu_main_private_free (FuMainPrivate *priv)
+{
+	if (priv->loop != NULL)
+		g_main_loop_unref (priv->loop);
+	if (priv->owner_id > 0)
+		g_bus_unown_name (priv->owner_id);
+	if (priv->proxy_uid != NULL)
+		g_object_unref (priv->proxy_uid);
+	if (priv->usb_ctx != NULL)
+		g_object_unref (priv->usb_ctx);
+	if (priv->config != NULL)
+		g_key_file_unref (priv->config);
+	if (priv->connection != NULL)
+		g_object_unref (priv->connection);
+	if (priv->authority != NULL)
+		g_object_unref (priv->authority);
+	if (priv->profile != NULL)
+		g_object_unref (priv->profile);
+	if (priv->store != NULL)
+		g_object_unref (priv->store);
+	if (priv->introspection_daemon != NULL)
+		g_dbus_node_info_unref (priv->introspection_daemon);
+	if (priv->store_changed_id != 0)
+		g_source_remove (priv->store_changed_id);
+	if (priv->pending != NULL)
+		g_object_unref (priv->pending);
+	if (priv->coldplug_id != 0)
+		g_source_remove (priv->coldplug_id);
+	if (priv->plugins != NULL)
+		g_ptr_array_unref (priv->plugins);
+	if (priv->plugins_hash != NULL)
+		g_hash_table_unref (priv->plugins_hash);
+	g_ptr_array_unref (priv->devices);
+	g_free (priv);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMainPrivate, fu_main_private_free)
+
 int
 main (int argc, char *argv[])
 {
-	FuMainPrivate *priv = NULL;
 	gboolean immediate_exit = FALSE;
-	gboolean ret;
 	gboolean timed_exit = FALSE;
-	GOptionContext *context;
-	gint retval = 1;
 	const GOptionEntry options[] = {
 		{ "timed-exit", '\0', 0, G_OPTION_ARG_NONE, &timed_exit,
 		  /* TRANSLATORS: exit after we've started up, used for user profiling */
@@ -2805,7 +2840,9 @@ main (int argc, char *argv[])
 		  _("Exit after the engine has loaded"), NULL },
 		{ NULL}
 	};
+	g_autoptr(FuMainPrivate) priv = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GOptionContext) context = NULL;
 	g_autofree gchar *config_file = NULL;
 
 	setlocale (LC_ALL, "");
@@ -2821,11 +2858,9 @@ main (int argc, char *argv[])
 	g_option_context_add_group (context, fu_debug_get_option_group ());
 	/* TRANSLATORS: program summary */
 	g_option_context_set_summary (context, _("Firmware Update D-Bus Service"));
-	ret = g_option_context_parse (context, &argc, &argv, &error);
-	if (!ret) {
-		g_warning ("FuMain: failed to parse command line arguments: %s",
-			   error->message);
-		goto out;
+	if (!g_option_context_parse (context, &argc, &argv, &error)) {
+		g_printerr ("Failed to parse command line: %s\n", error->message);
+		return EXIT_FAILURE;
 	}
 
 	/* create new objects */
@@ -2848,9 +2883,8 @@ main (int argc, char *argv[])
 			    AS_STORE_LOAD_FLAG_IGNORE_INVALID |
 			    AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM,
 			    NULL, &error)){
-		g_warning ("FuMain: failed to load AppStream data: %s",
-			   error->message);
-		return FALSE;
+		g_printerr ("Failed to load AppStream data: %s\n", error->message);
+		return EXIT_FAILURE;
 	}
 
 	/* read config file */
@@ -2865,18 +2899,16 @@ main (int argc, char *argv[])
 	priv->config = g_key_file_new ();
 	if (!g_key_file_load_from_file (priv->config, config_file,
 					G_KEY_FILE_NONE, &error)) {
-		g_print ("failed to load config file %s: %s\n",
-			  config_file, error->message);
-		retval = EXIT_FAILURE;
-		goto out;
+		g_printerr ("Failed to load config file %s: %s\n",
+			    config_file, error->message);
+		return EXIT_FAILURE;
 	}
 
 	/* set shared USB context */
 	priv->usb_ctx = g_usb_context_new (&error);
 	if (priv->usb_ctx == NULL) {
-		g_warning ("FuMain: failed to get USB context: %s",
-			   error->message);
-		goto out;
+		g_printerr ("Failed to get USB context: %s\n", error->message);
+		return EXIT_FAILURE;
 	}
 
 	/* load plugin */
@@ -2884,9 +2916,8 @@ main (int argc, char *argv[])
 	priv->plugins_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
 	if (!fu_main_load_plugins (priv, &error)) {
-		g_print ("failed to load plugins: %s\n", error->message);
-		retval = EXIT_FAILURE;
-		goto out;
+		g_printerr ("Failed to load plugins: %s\n", error->message);
+		return EXIT_FAILURE;
 	}
 
 	/* disable udev? */
@@ -2900,17 +2931,15 @@ main (int argc, char *argv[])
 	priv->introspection_daemon = fu_main_load_introspection (FWUPD_DBUS_INTERFACE ".xml",
 								 &error);
 	if (priv->introspection_daemon == NULL) {
-		g_warning ("FuMain: failed to load daemon introspection: %s",
-			   error->message);
-		goto out;
+		g_printerr ("Failed to load introspection: %s\n", error->message);
+		return EXIT_FAILURE;
 	}
 
 	/* get authority */
 	priv->authority = polkit_authority_get_sync (NULL, &error);
 	if (priv->authority == NULL) {
-		g_warning ("FuMain: failed to load polkit authority: %s",
-			   error->message);
-		goto out;
+		g_printerr ("Failed to load authority: %s\n", error->message);
+		return EXIT_FAILURE;
 	}
 
 	/* add devices */
@@ -2933,42 +2962,6 @@ main (int argc, char *argv[])
 	g_main_loop_run (priv->loop);
 
 	/* success */
-	retval = 0;
-out:
-	g_option_context_free (context);
-	if (priv != NULL) {
-		if (priv->loop != NULL)
-			g_main_loop_unref (priv->loop);
-		if (priv->owner_id > 0)
-			g_bus_unown_name (priv->owner_id);
-		if (priv->proxy_uid != NULL)
-			g_object_unref (priv->proxy_uid);
-		if (priv->usb_ctx != NULL)
-			g_object_unref (priv->usb_ctx);
-		if (priv->config != NULL)
-			g_key_file_unref (priv->config);
-		if (priv->connection != NULL)
-			g_object_unref (priv->connection);
-		if (priv->authority != NULL)
-			g_object_unref (priv->authority);
-		if (priv->profile != NULL)
-			g_object_unref (priv->profile);
-		if (priv->store != NULL)
-			g_object_unref (priv->store);
-		if (priv->introspection_daemon != NULL)
-			g_dbus_node_info_unref (priv->introspection_daemon);
-		if (priv->store_changed_id != 0)
-			g_source_remove (priv->store_changed_id);
-		g_object_unref (priv->pending);
-		if (priv->coldplug_id != 0)
-			g_source_remove (priv->coldplug_id);
-		if (priv->plugins != NULL)
-			g_ptr_array_unref (priv->plugins);
-		if (priv->plugins_hash != NULL)
-			g_hash_table_unref (priv->plugins_hash);
-		g_ptr_array_unref (priv->devices);
-		g_free (priv);
-	}
-	return retval;
+	return EXIT_SUCCESS;
 }
 
