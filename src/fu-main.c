@@ -1349,7 +1349,7 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, const gchar *remote_id,
 
 	/* save the new file */
 	as_store_set_api_version (priv->store, 0.9);
-	as_store_set_origin (priv->store, as_store_get_origin (store));
+	as_store_set_origin (priv->store, NULL);
 	if (!as_store_to_file (priv->store, file,
 			       AS_NODE_TO_XML_FLAG_ADD_HEADER |
 			       AS_NODE_TO_XML_FLAG_FORMAT_MULTILINE |
