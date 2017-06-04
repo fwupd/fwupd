@@ -1585,6 +1585,54 @@ fu_main_get_updates (FuMainPrivate *priv, GError **error)
 	return updates;
 }
 
+/* find releases for a device */
+static GVariant *
+fu_main_get_releases_to_variant (FuMainPrivate *priv, FuDeviceItem *item, GError **error)
+{
+	GPtrArray *device_guids;
+	GVariantBuilder builder;
+	g_autoptr(GPtrArray) results = NULL;
+
+	/* get all the results for the device */
+	results = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	device_guids = fu_device_get_guids (item->device);
+	for (guint i = 0; i < device_guids->len; i++) {
+		GPtrArray *releases;
+		const gchar *guid = g_ptr_array_index (device_guids, i);
+		AsApp *app = as_store_get_app_by_provide (priv->store,
+							  AS_PROVIDE_KIND_FIRMWARE_FLASHED,
+							  guid);
+		if (app == NULL)
+			continue;
+		releases = as_app_get_releases (app);
+		for (guint j = 0; j < releases->len; j++) {
+			AsRelease *release = g_ptr_array_index (releases, j);
+			FwupdRelease *rel = fwupd_release_new ();
+			fu_main_set_release_from_item (rel, release);
+			g_ptr_array_add (results, rel);
+		}
+	}
+
+	/* no devices */
+	if (results->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No releases for device");
+		return NULL;
+	}
+
+	/* convert the objects to a variant */
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	for (guint i = 0; i < results->len; i++) {
+		GVariant *tmp;
+		FwupdRelease *rel = g_ptr_array_index (results, i);
+		tmp = fwupd_release_to_data (rel, "a{sv}"); //FIXME?
+		g_variant_builder_add_value (&builder, tmp);
+	}
+	return g_variant_new ("(aa{sv})", &builder);
+}
+
 static AsStore *
 fu_main_get_store_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 {
@@ -1832,6 +1880,40 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_NOTHING_TO_DO)) {
 				g_prefix_error (&error, "No devices can be updated: ");
+			}
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+		fu_main_invocation_return_value (priv, invocation, val);
+		return;
+	}
+
+	/* return variant */
+	if (g_strcmp0 (method_name, "GetReleases") == 0) {
+		FuDeviceItem *item;
+		const gchar *device_id = NULL;
+		g_autoptr(GPtrArray) releases = NULL;
+
+		g_variant_get (parameters, "(&s)", &device_id);
+		g_debug ("Called %s(%s)", method_name, device_id);
+
+		/* find the device */
+		item = fu_main_get_item_by_id (priv, device_id);
+		if (item == NULL) {
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "no device with ID %s",
+				     device_id);
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+		val = fu_main_get_releases_to_variant (priv, item, &error);
+		if (val == NULL) {
+			if (g_error_matches (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO)) {
+				g_prefix_error (&error, "No releases found: ");
 			}
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;

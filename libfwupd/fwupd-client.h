@@ -63,6 +63,10 @@ GPtrArray	*fwupd_client_get_devices		(FwupdClient	*client,
 GPtrArray	*fwupd_client_get_updates		(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
+GPtrArray	*fwupd_client_get_releases		(FwupdClient	*client,
+							 const gchar	*device_id,
+							 GCancellable	*cancellable,
+							 GError		**error);
 GPtrArray	*fwupd_client_get_details_local		(FwupdClient	*client,
 							 const gchar	*filename,
 							 GCancellable	*cancellable,

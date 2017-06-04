@@ -239,6 +239,28 @@ fwupd_client_parse_results_from_data (GVariant *devices)
 	return results;
 }
 
+static GPtrArray *
+fwupd_client_parse_releases_from_variant (GVariant *val)
+{
+	FwupdRelease *release;
+	GPtrArray *releases = NULL;
+	gsize sz;
+	guint i;
+	g_autoptr(GVariant) untuple = NULL;
+
+	releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	untuple = g_variant_get_child_value (val, 0);
+	sz = g_variant_n_children (untuple);
+	for (i = 0; i < sz; i++) {
+		g_autoptr(GVariant) data = NULL;
+		data = g_variant_get_child_value (untuple, i);
+		release = fwupd_release_new_from_data (data);
+		g_ptr_array_add (releases, release);
+	}
+
+	return releases;
+}
+
 static void
 fwupd_client_fixup_dbus_error (GError *error)
 {
@@ -349,6 +371,51 @@ fwupd_client_get_updates (FwupdClient *client, GCancellable *cancellable, GError
 		return NULL;
 	}
 	return fwupd_client_parse_results_from_data (val);
+}
+
+/**
+ * fwupd_client_get_releases:
+ * @client: A #FwupdClient
+ * @device_id: the device ID
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets all the releases for a specific device
+ *
+ * Returns: (element-type FwupdRelease) (transfer container): results
+ *
+ * Since: 0.9.3
+ **/
+GPtrArray *
+fwupd_client_get_releases (FwupdClient *client, const gchar *device_id,
+			   GCancellable *cancellable, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (device_id != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "GetReleases",
+				      g_variant_new ("(s)", device_id),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return NULL;
+	}
+	return fwupd_client_parse_releases_from_variant (val);
 }
 
 static void

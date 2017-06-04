@@ -268,6 +268,27 @@ fu_util_client_notify_cb (GObject *object,
 	fu_util_display_panel (priv);
 }
 
+static void
+fu_util_print_data (const gchar *title, const gchar *msg)
+{
+	gsize title_len;
+	g_auto(GStrv) lines = NULL;
+
+	if (msg == NULL)
+		return;
+	g_print ("%s:", title);
+
+	/* pad */
+	title_len = strlen (title) + 1;
+	lines = g_strsplit (msg, "\n", -1);
+	for (guint j = 0; lines[j] != NULL; j++) {
+		for (gsize i = title_len; i < 25; i++)
+			g_print (" ");
+		g_print ("%s\n", lines[j]);
+		title_len = 0;
+	}
+}
+
 static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -806,6 +827,67 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static const gchar *
+_g_checksum_type_to_string (GChecksumType checksum_type)
+{
+	if (checksum_type == G_CHECKSUM_MD5)
+		return "md5";
+	if (checksum_type == G_CHECKSUM_SHA1)
+		return "sha1";
+	if (checksum_type == G_CHECKSUM_SHA256)
+		return "sha256";
+	if (checksum_type == G_CHECKSUM_SHA512)
+		return "sha512";
+	return NULL;
+}
+
+static gboolean
+fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) rels = NULL;
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: expected 'DeviceID'");
+		return FALSE;
+	}
+	rels = fwupd_client_get_releases (priv->client, values[0], NULL, error);
+	if (rels == NULL)
+		return FALSE;
+	for (guint i = 0; i < rels->len; i++) {
+		FwupdRelease *rel = g_ptr_array_index (rels, i);
+		const gchar *tmp = fwupd_release_get_description (rel);
+
+		/* TRANSLATORS: section header for release version number */
+		fu_util_print_data (_("Version"), fwupd_release_get_version (rel));
+
+		/* TRANSLATORS: section header for firmware URI */
+		fu_util_print_data (_("URI"), fwupd_release_get_uri (rel));
+		tmp = fwupd_release_get_description (rel);
+		if (tmp != NULL) {
+			g_autofree gchar *desc = NULL;
+			desc = as_markup_convert_simple (tmp, NULL);
+			/* TRANSLATORS: section header for firmware description */
+			fu_util_print_data (_("Description"), desc);
+		}
+
+		/* TRANSLATORS: section header for firmware checksum */
+		fu_util_print_data (_("Checksum"), fwupd_release_get_checksum (rel));
+		if (fwupd_release_get_checksum (rel) != NULL) {
+			GChecksumType checksum_type = fwupd_release_get_checksum_kind (rel);
+			tmp = _g_checksum_type_to_string (checksum_type);
+			/* TRANSLATORS: section header for firmware checksum type */
+			fu_util_print_data (_("Checksum Type"), tmp);
+		}
+
+		/* new line between all but last entries */
+		if (i != rels->len - 1)
+			g_print ("\n");
+	}
+	return TRUE;
+}
+
 static gboolean
 fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 {
@@ -863,41 +945,6 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	return fwupd_client_unlock (priv->client, values[0], NULL, error);
-}
-
-static void
-fu_util_print_data (const gchar *title, const gchar *msg)
-{
-	gsize title_len;
-	g_auto(GStrv) lines = NULL;
-
-	if (msg == NULL)
-		return;
-	g_print ("%s:", title);
-
-	/* pad */
-	title_len = strlen (title) + 1;
-	lines = g_strsplit (msg, "\n", -1);
-	for (guint j = 0; lines[j] != NULL; j++) {
-		for (gsize i = title_len; i < 25; i++)
-			g_print (" ");
-		g_print ("%s\n", lines[j]);
-		title_len = 0;
-	}
-}
-
-static const gchar *
-_g_checksum_type_to_string (GChecksumType checksum_type)
-{
-	if (checksum_type == G_CHECKSUM_MD5)
-		return "md5";
-	if (checksum_type == G_CHECKSUM_SHA1)
-		return "sha1";
-	if (checksum_type == G_CHECKSUM_SHA256)
-		return "sha256";
-	if (checksum_type == G_CHECKSUM_SHA512)
-		return "sha512";
-	return NULL;
 }
 
 static gboolean
@@ -1308,6 +1355,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets the results from the last update"),
 		     fu_util_get_results);
+	fu_util_add (priv->cmd_array,
+		     "get-releases",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the releases for a device"),
+		     fu_util_get_releases);
 	fu_util_add (priv->cmd_array,
 		     "refresh",
 		     NULL,
