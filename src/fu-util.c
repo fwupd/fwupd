@@ -582,6 +582,22 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_file_exists_with_checksum (const gchar *fn,
+				   const gchar *checksum_expected,
+				   GChecksumType checksum_type)
+{
+	gsize len = 0;
+	g_autofree gchar *checksum_actual = NULL;
+	g_autofree gchar *data = NULL;
+
+	if (!g_file_get_contents (fn, &data, &len, NULL))
+		return FALSE;
+	checksum_actual = g_compute_checksum_for_data (checksum_type,
+						       (guchar *) data, len);
+	return g_strcmp0 (checksum_expected, checksum_actual) == 0;
+}
+
+static gboolean
 fu_util_download_file (FuUtilPrivate *priv,
 		       SoupURI *uri,
 		       const gchar *fn,
@@ -597,6 +613,12 @@ fu_util_download_file (FuUtilPrivate *priv,
 	g_autofree gchar *uri_str = NULL;
 	g_autoptr(SoupMessage) msg = NULL;
 	g_autoptr(SoupSession) session = NULL;
+
+	/* check if the file already exists with the right checksum */
+	if (fu_util_file_exists_with_checksum (fn, checksum_expected, checksum_type)) {
+		g_debug ("skpping download as file already exists");
+		return TRUE;
+	}
 
 	/* create the soup session */
 	user_agent = g_strdup_printf ("%s/%s", PACKAGE_NAME, PACKAGE_VERSION);
