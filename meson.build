@@ -128,6 +128,11 @@ gpgerror = cc.find_library('gpg-error')
 libm = cc.find_library('m', required: false)
 udev = dependency('udev')
 
+cairo = dependency('cairo')
+pango = dependency('pango')
+fontconfig = cc.find_library('fontconfig')
+freetype = cc.find_library('freetype')
+
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
