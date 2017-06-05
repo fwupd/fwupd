@@ -16,7 +16,6 @@ override_dh_auto_clean:
 	rm -fr debian/build
 
 override_dh_auto_configure:
-	mkdir -p debian/build
 	if pkg-config --exists fwup; then \
 		export UEFI="-Denable-uefi=true"; \
 	else \
@@ -27,7 +26,7 @@ override_dh_auto_configure:
 	else \
 		export DELL="-Denable-dell=false"; \
 	fi; \
-	dh_auto_configure -- $$UEFI $$DELL
+	dh_auto_configure -- $$UEFI $$DELL --libexecdir=/usr/lib
 
 override_dh_install:
 	find debian/tmp/usr -name "*a" -print -type f | xargs rm -f

@@ -1,6 +1,11 @@
 fwupd (0.9.2-6) UNRELEASED; urgency=medium
 
+  [ Iain Lane ]
   * debian/rules: Use debhelper's built in meson support.
+    (Closes: #863822)
+
+  [ Mario Limonciello ]
+  * Move the daemon back out of multiarch directory.
 
  -- Iain Lane <laney@debian.org>  Wed, 31 May 2017 15:24:19 +0100
 
