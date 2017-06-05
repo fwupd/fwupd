@@ -910,13 +910,14 @@ fu_plugin_runner_update (FuPlugin *plugin,
 	/* cleanup */
 	if (res_pending != NULL) {
 		const gchar *tmp;
+		FwupdRelease *rel = fwupd_result_get_release (res_pending);
 
 		/* update pending database */
 		fu_pending_set_state (pending, FWUPD_RESULT (device),
 				      FWUPD_UPDATE_STATE_SUCCESS, NULL);
 
 		/* delete cab file */
-		tmp = fwupd_result_get_update_filename (res_pending);
+		tmp = fwupd_release_get_filename (rel);
 		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
 			g_autoptr(GError) error_local = NULL;
 			g_autoptr(GFile) file = NULL;
@@ -983,6 +984,8 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginDeviceFunc func = NULL;
 	FwupdUpdateState update_state;
+	FwupdRelease *rel;
+	FwupdDevice *dev;
 	const gchar *tmp;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FwupdResult) res_pending = NULL;
@@ -1035,10 +1038,12 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	tmp = fwupd_result_get_update_error (res_pending);
 	if (tmp != NULL)
 		fu_device_set_update_error (device, tmp);
-	tmp = fwupd_result_get_device_version (res_pending);
+	dev = fwupd_result_get_device (res_pending);
+	tmp = fwupd_device_get_version (dev);
 	if (tmp != NULL)
 		fu_device_set_version (device, tmp);
-	tmp = fwupd_result_get_update_version (res_pending);
+	rel = fwupd_result_get_release (res_pending);
+	tmp = fwupd_release_get_version (rel);
 	if (tmp != NULL)
 		fu_device_set_update_version (device, tmp);
 	return TRUE;

@@ -465,41 +465,43 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* apply each update */
 	for (guint i = 0; i < results->len; i++) {
 		FwupdResult *res = g_ptr_array_index (results, i);
+		FwupdDevice *dev = fwupd_result_get_device (res);
+		FwupdRelease *rel = fwupd_result_get_release (res);
 
 		/* check not already done */
 		if (fwupd_result_get_update_state (res) != FWUPD_UPDATE_STATE_PENDING)
 			continue;
 
 		/* tell the user what's going to happen */
-		vercmp = as_utils_vercmp (fwupd_result_get_device_version (res),
-					  fwupd_result_get_update_version (res));
+		vercmp = as_utils_vercmp (fwupd_device_get_version (dev),
+					  fwupd_release_get_version (rel));
 		if (vercmp == 0) {
 			/* TRANSLATORS: the first replacement is a display name
 			 * e.g. "ColorHugALS" and the second is a version number
 			 * e.g. "1.2.3" */
 			g_print (_("Reinstalling %s with %s... "),
-				 fwupd_result_get_device_name (res),
-				 fwupd_result_get_update_version (res));
+				 fwupd_device_get_name (dev),
+				 fwupd_release_get_version (rel));
 		} else if (vercmp > 0) {
 			/* TRANSLATORS: the first replacement is a display name
 			 * e.g. "ColorHugALS" and the second and third are
 			 * version numbers e.g. "1.2.3" */
 			g_print (_("Downgrading %s from %s to %s... "),
-				 fwupd_result_get_device_name (res),
-				 fwupd_result_get_device_version (res),
-				 fwupd_result_get_update_version (res));
+				 fwupd_device_get_name (dev),
+				 fwupd_device_get_version (dev),
+				 fwupd_release_get_version (rel));
 		} else if (vercmp < 0) {
 			/* TRANSLATORS: the first replacement is a display name
 			 * e.g. "ColorHugALS" and the second and third are
 			 * version numbers e.g. "1.2.3" */
 			g_print (_("Updating %s from %s to %s... "),
-				 fwupd_result_get_device_name (res),
-				 fwupd_result_get_device_version (res),
-				 fwupd_result_get_update_version (res));
+				 fwupd_device_get_name (dev),
+				 fwupd_device_get_version (dev),
+				 fwupd_release_get_version (rel));
 		}
 		if (!fwupd_client_install (priv->client,
-					   fwupd_result_get_device_id (res),
-					   fwupd_result_get_update_filename (res),
+					   fwupd_device_get_id (dev),
+					   fwupd_release_get_filename (rel),
 					   priv->flags,
 					   NULL,
 					   error))
@@ -550,17 +552,18 @@ fu_util_verify_update_all (FuUtilPrivate *priv, GError **error)
 	for (guint i = 0; i < results->len; i++) {
 		g_autoptr(GError) error_local = NULL;
 		FwupdResult *res = g_ptr_array_index (results, i);
+		FwupdDevice *dev = fwupd_result_get_device (res);
 		if (!fwupd_client_verify_update (priv->client,
-					  fwupd_result_get_device_id (res),
-					  NULL,
-					  &error_local)) {
+						 fwupd_device_get_id (dev),
+						 NULL,
+						 &error_local)) {
 			g_print ("%s\tFAILED: %s\n",
-				 fwupd_result_get_guid_default (res),
+				 fwupd_device_get_guid_default (dev),
 				 error_local->message);
 			continue;
 		}
 		g_print ("%s\t%s\n",
-			 fwupd_result_get_guid_default (res),
+			 fwupd_device_get_guid_default (dev),
 			 _("OK"));
 	}
 	return TRUE;
@@ -817,17 +820,18 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 	for (guint i = 0; i < results->len; i++) {
 		g_autoptr(GError) error_local = NULL;
 		FwupdResult *res = g_ptr_array_index (results, i);
+		FwupdDevice *dev = fwupd_result_get_device (res);
 		if (!fwupd_client_verify (priv->client,
-					  fwupd_result_get_device_id (res),
+					  fwupd_device_get_id (dev),
 					  NULL,
 					  &error_local)) {
 			g_print ("%s\tFAILED: %s\n",
-				 fwupd_result_get_guid_default (res),
+				 fwupd_device_get_guid_default (dev),
 				 error_local->message);
 			continue;
 		}
 		g_print ("%s\t%s\n",
-			 fwupd_result_get_guid_default (res),
+			 fwupd_device_get_guid_default (dev),
 			 _("OK"));
 	}
 	return TRUE;
@@ -910,16 +914,18 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < results->len; i++) {
 		FwupdResult *res = g_ptr_array_index (results, i);
+		FwupdDevice *dev = fwupd_result_get_device (res);
+		FwupdRelease *rel = fwupd_result_get_release (res);
 
 		/* TRANSLATORS: first replacement is device name */
-		g_print (_("%s has firmware updates:"), fwupd_result_get_device_name (res));
+		g_print (_("%s has firmware updates:"), fwupd_device_get_name (dev));
 		g_print ("\n");
 
 		/* TRANSLATORS: Appstream ID for the hardware type */
-		fu_util_print_data (_("ID"), fwupd_result_get_update_id (res));
+		fu_util_print_data (_("ID"), fwupd_release_get_appstream_id (rel));
 
 		/* TRANSLATORS: a GUID for the hardware */
-		guids = fwupd_result_get_guids (res);
+		guids = fwupd_device_get_guids (dev);
 		for (guint j = 0; j < guids->len; j++) {
 			tmp = g_ptr_array_index (guids, j);
 			fu_util_print_data (_("GUID"), tmp);
@@ -927,28 +933,28 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* TRANSLATORS: section header for firmware version */
 		fu_util_print_data (_("Update Version"),
-				    fwupd_result_get_update_version (res));
+				    fwupd_release_get_version (rel));
 
 		/* TRANSLATORS: section header for remote ID, e.g. lvfs-testing */
 		fu_util_print_data (_("Update Remote ID"),
-				    fwupd_result_get_update_remote_id (res));
+				    fwupd_release_get_remote_id (rel));
 
 		/* TRANSLATORS: section header for firmware checksum */
 		fu_util_print_data (_("Update Checksum"),
-				    fwupd_result_get_update_checksum (res));
+				    fwupd_release_get_checksum (rel));
 
 		/* TRANSLATORS: section header for firmware checksum type */
-		if (fwupd_result_get_update_checksum (res) != NULL) {
-			checksum_type = fwupd_result_get_update_checksum_kind (res);
+		if (fwupd_release_get_checksum (rel) != NULL) {
+			checksum_type = fwupd_release_get_checksum_kind (rel);
 			tmp = _g_checksum_type_to_string (checksum_type);
 			fu_util_print_data (_("Update Checksum Type"), tmp);
 		}
 
 		/* TRANSLATORS: section header for firmware remote http:// */
-		fu_util_print_data (_("Update Location"), fwupd_result_get_update_uri (res));
+		fu_util_print_data (_("Update Location"), fwupd_release_get_uri (rel));
 
 		/* convert XML -> text */
-		tmp = fwupd_result_get_update_description (res);
+		tmp = fwupd_release_get_description (rel);
 		if (tmp != NULL) {
 			g_autofree gchar *md = NULL;
 			md = as_markup_convert (tmp,
@@ -1054,17 +1060,19 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autoptr(SoupURI) uri = NULL;
 
 		FwupdResult *res = g_ptr_array_index (results, i);
+		FwupdDevice *dev = fwupd_result_get_device (res);
+		FwupdRelease *rel = fwupd_result_get_release (res);
 
 		/* download file */
-		checksum = fwupd_result_get_update_checksum (res);
+		checksum = fwupd_release_get_checksum (rel);
 		if (checksum == NULL)
 			continue;
-		uri_tmp = fwupd_result_get_update_uri (res);
+		uri_tmp = fwupd_release_get_uri (rel);
 		if (uri_tmp == NULL)
 			continue;
 
 		/* work out what remote-specific URI fields this should use */
-		remote_id = fwupd_result_get_update_remote_id (res);
+		remote_id = fwupd_release_get_remote_id (rel);
 		if (remote_id != NULL) {
 			g_autoptr(FwupdRemote) remote = NULL;
 			remote = fwupd_client_get_remote_by_id (priv->client,
@@ -1080,17 +1088,17 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 			uri = soup_uri_new (uri_tmp);
 		}
 		g_print ("Downloading %s for %s...\n",
-			 fwupd_result_get_update_version (res),
-			 fwupd_result_get_device_name (res));
+			 fwupd_release_get_version (rel),
+			 fwupd_device_get_name (dev));
 		basename = g_path_get_basename (uri_tmp);
 		fn = g_build_filename (g_get_tmp_dir (), basename, NULL);
-		checksum_type = fwupd_result_get_update_checksum_kind (res);
+		checksum_type = fwupd_release_get_checksum_kind (rel);
 		if (!fu_util_download_file (priv, uri, fn, checksum, checksum_type, error))
 			return FALSE;
 		g_print ("Updating %s on %s...\n",
-			 fwupd_result_get_update_version (res),
-			 fwupd_result_get_device_name (res));
-		if (!fu_util_install_with_fallback (priv, fwupd_result_get_device_id (res), fn, error))
+			 fwupd_release_get_version (rel),
+			 fwupd_device_get_name (dev));
+		if (!fu_util_install_with_fallback (priv, fwupd_device_get_id (dev), fn, error))
 			return FALSE;
 	}
 

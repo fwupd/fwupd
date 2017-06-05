@@ -281,6 +281,8 @@ fu_pending_func (void)
 {
 	GError *error = NULL;
 	gboolean ret;
+	FwupdDevice *dev;
+	FwupdRelease *rel;
 	FwupdResult *res;
 	g_autoptr(FuPending) pending = NULL;
 	g_autofree gchar *dirname = NULL;
@@ -327,13 +329,16 @@ fu_pending_func (void)
 	res = fu_pending_get_device (pending, "self-test", &error);
 	g_assert_no_error (error);
 	g_assert (res != NULL);
-	g_assert_cmpstr (fwupd_result_get_device_id (res), ==, "self-test");
-	g_assert_cmpstr (fwupd_result_get_update_filename (res), ==, "/var/lib/dave.cap");
-	g_assert_cmpstr (fwupd_result_get_device_name (res), ==, "ColorHug");
-	g_assert_cmpstr (fwupd_result_get_device_version (res), ==, "3.0.1");
-	g_assert_cmpstr (fwupd_result_get_update_version (res), ==, "3.0.2");
+	dev = fwupd_result_get_device (res);
+	g_assert_cmpstr (fwupd_device_get_id (dev), ==, "self-test");
+	g_assert_cmpstr (fwupd_device_get_name (dev), ==, "ColorHug");
+	g_assert_cmpstr (fwupd_device_get_version (dev), ==, "3.0.1");
 	g_assert_cmpint (fwupd_result_get_update_state (res), ==, FWUPD_UPDATE_STATE_PENDING);
 	g_assert_cmpstr (fwupd_result_get_update_error (res), ==, "word");
+	rel = fwupd_result_get_release (res);
+	g_assert (rel != NULL);
+	g_assert_cmpstr (fwupd_release_get_filename (rel), ==, "/var/lib/dave.cap");
+	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "3.0.2");
 	g_object_unref (res);
 
 	/* get device that does not exist */
