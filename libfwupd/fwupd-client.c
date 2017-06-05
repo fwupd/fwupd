@@ -33,6 +33,7 @@
 #include "fwupd-client.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
+#include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-result.h"
 
@@ -146,7 +147,7 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 	if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
 		res = fwupd_result_new_from_data (parameters);
 		g_debug ("Emitting ::device-added(%s)",
-			 fwupd_result_get_device_id (res));
+			 fwupd_device_get_id (fwupd_result_get_device (res)));
 		g_signal_emit (client, signals[SIGNAL_DEVICE_ADDED], 0, res);
 		return;
 	}
@@ -154,14 +155,14 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 		res = fwupd_result_new_from_data (parameters);
 		g_signal_emit (client, signals[SIGNAL_DEVICE_REMOVED], 0, res);
 		g_debug ("Emitting ::device-removed(%s)",
-			 fwupd_result_get_device_id (res));
+			 fwupd_device_get_id (fwupd_result_get_device (res)));
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
 		res = fwupd_result_new_from_data (parameters);
 		g_signal_emit (client, signals[SIGNAL_DEVICE_CHANGED], 0, res);
 		g_debug ("Emitting ::device-changed(%s)",
-			 fwupd_result_get_device_id (res));
+			 fwupd_device_get_id (fwupd_result_get_device (res)));
 		return;
 	}
 	g_warning ("Unknown signal name '%s' from %s",

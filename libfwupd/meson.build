@@ -15,9 +15,11 @@ install_headers(
 
 install_headers([
     'fwupd-client.h',
+    'fwupd-device.h',
     'fwupd-enums.h',
     'fwupd-error.h',
     'fwupd-remote.h',
+    'fwupd-release.h',
     'fwupd-result.h',
     fwupd_version_h,
   ],
@@ -30,8 +32,10 @@ fwupd = shared_library(
   'fwupd',
   sources : [
     'fwupd-client.c',
+    'fwupd-device.c',
     'fwupd-enums.c',
     'fwupd-error.c',
+    'fwupd-release.c',
     'fwupd-remote.c',
     'fwupd-result.c',
   ],

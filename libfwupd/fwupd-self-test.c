@@ -97,6 +97,8 @@ fwupd_enums_func (void)
 static void
 fwupd_result_func (void)
 {
+	FwupdDevice *dev;
+	FwupdRelease *rel;
 	gboolean ret;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FwupdResult) result = NULL;
@@ -104,31 +106,34 @@ fwupd_result_func (void)
 
 	/* create dummy object */
 	result = fwupd_result_new ();
-	fwupd_result_set_device_checksum (result, "beefdead");
-	fwupd_result_set_device_checksum_kind (result, G_CHECKSUM_SHA256);
-	fwupd_result_set_device_created (result, 1);
-	fwupd_result_set_device_flags (result, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
-	fwupd_result_set_device_id (result, "USB:foo");
-	fwupd_result_set_device_modified (result, 60 * 60 * 24);
-	fwupd_result_set_device_name (result, "ColorHug2");
-	fwupd_result_add_guid (result, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
-	fwupd_result_add_guid (result, "00000000-0000-0000-0000-000000000000");
-	fwupd_result_set_update_checksum (result, "deadbeef");
-	fwupd_result_set_update_description (result, "<p>Hi there!</p>");
-	fwupd_result_set_update_filename (result, "firmware.bin");
-	fwupd_result_set_update_id (result, "org.dave.ColorHug.firmware");
-	fwupd_result_set_update_size (result, 1024);
-	fwupd_result_set_update_uri (result, "http://foo.com");
-	fwupd_result_set_update_version (result, "1.2.3");
-	fwupd_result_add_device_flag (result, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	dev = fwupd_result_get_device (result);
+	fwupd_device_set_checksum (dev, "beefdead");
+	fwupd_device_set_checksum_kind (dev, G_CHECKSUM_SHA256);
+	fwupd_device_set_created (dev, 1);
+	fwupd_device_set_flags (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+	fwupd_device_set_id (dev, "USB:foo");
+	fwupd_device_set_modified (dev, 60 * 60 * 24);
+	fwupd_device_set_name (dev, "ColorHug2");
+	fwupd_device_add_guid (dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
+	fwupd_device_add_guid (dev, "00000000-0000-0000-0000-000000000000");
+	fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fwupd_result_set_update_trust_flags (result, FWUPD_TRUST_FLAG_PAYLOAD);
+
+	rel = fwupd_result_get_release (result);
+	fwupd_release_set_checksum (rel, "deadbeef");
+	fwupd_release_set_description (rel, "<p>Hi there!</p>");
+	fwupd_release_set_filename (rel, "firmware.bin");
+	fwupd_release_set_appstream_id (rel, "org.dave.ColorHug.firmware");
+	fwupd_release_set_size (rel, 1024);
+	fwupd_release_set_uri (rel, "http://foo.com");
+	fwupd_release_set_version (rel, "1.2.3");
 	str = fwupd_result_to_string (result);
 	g_print ("\n%s", str);
 
 	/* check GUIDs */
-	g_assert (fwupd_result_has_guid (result, "2082b5e0-7a64-478a-b1b2-e3404fab6dad"));
-	g_assert (fwupd_result_has_guid (result, "00000000-0000-0000-0000-000000000000"));
-	g_assert (!fwupd_result_has_guid (result, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"));
+	g_assert (fwupd_device_has_guid (dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad"));
+	g_assert (fwupd_device_has_guid (dev, "00000000-0000-0000-0000-000000000000"));
+	g_assert (!fwupd_device_has_guid (dev, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"));
 
 	ret = as_test_compare_lines (str,
 		"ColorHug2\n"
@@ -156,6 +161,7 @@ fwupd_result_func (void)
 static void
 fwupd_client_devices_func (void)
 {
+	FwupdDevice *dev;
 	FwupdResult *res;
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(GPtrArray) array = NULL;
@@ -176,8 +182,9 @@ fwupd_client_devices_func (void)
 	/* check device */
 	res = g_ptr_array_index (array, 0);
 	g_assert (FWUPD_IS_RESULT (res));
-	g_assert_cmpstr (fwupd_result_get_guid_default (res), !=, NULL);
-	g_assert_cmpstr (fwupd_result_get_device_id (res), !=, NULL);
+	dev = fwupd_result_get_device (res);
+	g_assert_cmpstr (fwupd_device_get_guid_default (dev), !=, NULL);
+	g_assert_cmpstr (fwupd_device_get_id (dev), !=, NULL);
 }
 
 static void
@@ -230,6 +237,7 @@ fwupd_client_remotes_func (void)
 static void
 fwupd_client_updates_func (void)
 {
+	FwupdDevice *dev;
 	FwupdResult *res;
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(GPtrArray) array = NULL;
@@ -250,8 +258,9 @@ fwupd_client_updates_func (void)
 	/* check device */
 	res = g_ptr_array_index (array, 0);
 	g_assert (FWUPD_IS_RESULT (res));
-	g_assert_cmpstr (fwupd_result_get_guid_default (res), !=, NULL);
-	g_assert_cmpstr (fwupd_result_get_device_id (res), !=, NULL);
+	dev = fwupd_result_get_device (res);
+	g_assert_cmpstr (fwupd_device_get_guid_default (dev), !=, NULL);
+	g_assert_cmpstr (fwupd_device_get_id (dev), !=, NULL);
 }
 
 static gboolean

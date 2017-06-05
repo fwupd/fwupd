@@ -24,7 +24,9 @@
 
 #include <glib-object.h>
 
+#include "fwupd-device.h"
 #include "fwupd-enums.h"
+#include "fwupd-release.h"
 
 G_BEGIN_DECLS
 
@@ -58,6 +60,10 @@ const gchar	*fwupd_result_get_guid_default		(FwupdResult	*result);
 const gchar	*fwupd_result_get_unique_id		(FwupdResult	*result);
 void		 fwupd_result_set_unique_id		(FwupdResult	*result,
 							 const gchar	*unique_id);
+
+/* helper objects */
+FwupdRelease	*fwupd_result_get_release		(FwupdResult	*result);
+FwupdDevice	*fwupd_result_get_device		(FwupdResult	*result);
 
 /* device-specific */
 const gchar	*fwupd_result_get_device_id		(FwupdResult	*result);

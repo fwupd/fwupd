@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -19,26 +19,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-/**
- * SECTION:fwupd
- * @short_description: Helper objects for accessing fwupd
- */
+#ifndef __FWUPD_RELEASE_PRIVATE_H
+#define __FWUPD_RELEASE_PRIVATE_H
 
-#ifndef __FWUPD_H__
-#define __FWUPD_H__
+#include <glib-object.h>
 
-#define __FWUPD_H_INSIDE__
+#include "fwupd-release.h"
 
-#include <libfwupd/fwupd-client.h>
-#include <libfwupd/fwupd-device.h>
-#include <libfwupd/fwupd-enums.h>
-#include <libfwupd/fwupd-error.h>
-#include <libfwupd/fwupd-release.h>
-#include <libfwupd/fwupd-remote.h>
-#include <libfwupd/fwupd-result.h>
-#include <libfwupd/fwupd-version.h>
+G_BEGIN_DECLS
 
-#undef __FWUPD_H_INSIDE__
+FwupdRelease	*fwupd_release_new_from_data		(GVariant	*data);
+GVariant	*fwupd_release_to_data			(FwupdRelease	*release,
+							 const gchar	*type_string);
+void		 fwupd_release_to_variant_builder	(FwupdRelease	*release,
+							 GVariantBuilder *builder);
+void		 fwupd_release_from_key_value		(FwupdRelease	*release,
+							 const gchar	*key,
+							 GVariant	*value);
 
-#endif /* __FWUPD_H__ */
+G_END_DECLS
+
+#endif /* __FWUPD_RELEASE_PRIVATE_H */
 

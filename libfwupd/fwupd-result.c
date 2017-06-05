@@ -25,50 +25,21 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
+#include "fwupd-release-private.h"
 #include "fwupd-result.h"
 
 static void fwupd_result_finalize	 (GObject *object);
 
 typedef struct {
-	GPtrArray			*guids;
 	gchar				*unique_id;
-
-	/* device-specific */
-	gchar				*device_checksum;
-	GChecksumType			 device_checksum_kind;
-	gchar				*device_description;
-	gchar				*device_id;
-	gchar				*device_name;
-	gchar				*device_provider;
-	gchar				*device_vendor;
-	gchar				*device_version;
-	gchar				*device_version_lowest;
-	gchar				*device_version_bootloader;
-	guint32				 device_flashes_left;
-	guint64				 device_created;
-	guint64				 device_flags;
-	guint64				 device_modified;
-
-	/* update-specific */
 	FwupdTrustFlags			 update_trust_flags;
 	FwupdUpdateState		 update_state;
-	gchar				*update_checksum;
-	GChecksumType			 update_checksum_kind;
-	gchar				*update_description;
 	gchar				*update_error;
-	gchar				*update_filename;
-	gchar				*update_homepage;
-	gchar				*update_id;
-	gchar				*update_license;
-	gchar				*update_name;
-	gchar				*update_summary;
-	gchar				*update_uri;
-	gchar				*update_vendor;
-	gchar				*update_version;
-	gchar				*update_remote_id;
-	guint64				 update_size;
+	FwupdDevice			*device;
+	FwupdRelease			*release;
 } FwupdResultPrivate;
 
 enum {
@@ -136,7 +107,7 @@ fwupd_result_get_update_remote_id (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_remote_id;
+	return fwupd_release_get_remote_id (priv->release);
 }
 
 /**
@@ -153,8 +124,43 @@ fwupd_result_set_update_remote_id (FwupdResult *result, const gchar *update_remo
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_remote_id);
-	priv->update_remote_id = g_strdup (update_remote_id);
+	fwupd_release_set_remote_id (priv->release, update_remote_id);
+}
+
+/**
+ * fwupd_result_get_release:
+ * @result: A #FwupdResult
+ *
+ * Gets the default release for this result.
+ *
+ * Returns: (transfer none): the #FwupdRelease
+ *
+ * Since: 0.9.3
+ **/
+FwupdRelease *
+fwupd_result_get_release (FwupdResult *result)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
+	return priv->release;
+}
+
+/**
+ * fwupd_result_get_device:
+ * @result: A #FwupdResult
+ *
+ * Gets the default device for this result.
+ *
+ * Returns: (transfer none): the #FwupdDevice
+ *
+ * Since: 0.9.3
+ **/
+FwupdDevice *
+fwupd_result_get_device (FwupdResult *result)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
+	return priv->device;
 }
 
 /**
@@ -172,7 +178,7 @@ fwupd_result_get_device_id (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->device_id;
+	return fwupd_device_get_id (priv->device);
 }
 
 /**
@@ -189,8 +195,7 @@ fwupd_result_set_device_id (FwupdResult *result, const gchar *device_id)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->device_id);
-	priv->device_id = g_strdup (device_id);
+	fwupd_device_set_id (priv->device, device_id);
 }
 
 /**
@@ -208,7 +213,7 @@ fwupd_result_get_guids (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->guids;
+	return fwupd_device_get_guids (priv->device);
 }
 
 /**
@@ -226,16 +231,8 @@ gboolean
 fwupd_result_has_guid (FwupdResult *result, const gchar *guid)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
-	guint i;
-
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), FALSE);
-
-	for (i = 0; i < priv->guids->len; i++) {
-		const gchar *guid_tmp = g_ptr_array_index (priv->guids, i);
-		if (g_strcmp0 (guid, guid_tmp) == 0)
-			return TRUE;
-	}
-	return FALSE;
+	return fwupd_device_has_guid (priv->device, guid);
 }
 
 /**
@@ -252,9 +249,7 @@ fwupd_result_add_guid (FwupdResult *result, const gchar *guid)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	if (fwupd_result_has_guid (result, guid))
-		return;
-	g_ptr_array_add (priv->guids, g_strdup (guid));
+	fwupd_device_add_guid (priv->device, guid);
 }
 
 /**
@@ -272,9 +267,7 @@ fwupd_result_get_guid_default (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	if (priv->guids->len == 0)
-		return NULL;
-	return g_ptr_array_index (priv->guids, 0);
+	return fwupd_device_get_guid_default (priv->device);
 }
 
 /**
@@ -292,7 +285,9 @@ fwupd_result_get_guid_default (FwupdResult *result)
 const gchar *
 fwupd_result_get_guid (FwupdResult *result)
 {
-	return fwupd_result_get_guid_default (result);
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
+	return fwupd_device_get_guid_default (priv->device);
 }
 
 /**
@@ -309,7 +304,8 @@ fwupd_result_get_guid (FwupdResult *result)
 void
 fwupd_result_set_guid (FwupdResult *result, const gchar *guid)
 {
-	fwupd_result_add_guid (result, guid);
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	fwupd_device_add_guid (priv->device, guid);
 }
 
 /**
@@ -327,7 +323,7 @@ fwupd_result_get_device_name (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->device_name;
+	return fwupd_device_get_name (priv->device);
 }
 
 /**
@@ -344,8 +340,7 @@ fwupd_result_set_device_name (FwupdResult *result, const gchar *device_name)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->device_name);
-	priv->device_name = g_strdup (device_name);
+	fwupd_device_set_name (priv->device, device_name);
 }
 
 /**
@@ -363,7 +358,7 @@ fwupd_result_get_device_vendor (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->device_vendor;
+	return fwupd_device_get_vendor (priv->device);
 }
 
 /**
@@ -380,8 +375,7 @@ fwupd_result_set_device_vendor (FwupdResult *result, const gchar *device_vendor)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->device_vendor);
-	priv->device_vendor = g_strdup (device_vendor);
+	fwupd_device_set_vendor (priv->device, device_vendor);
 }
 
 /**
@@ -399,7 +393,7 @@ fwupd_result_get_device_description (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->device_description;
+	return fwupd_device_get_description (priv->device);
 }
 
 /**
@@ -416,8 +410,7 @@ fwupd_result_set_device_description (FwupdResult *result, const gchar *device_de
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->device_description);
-	priv->device_description = g_strdup (device_description);
+	fwupd_device_set_description (priv->device, device_description);
 }
 
 /**
@@ -435,7 +428,7 @@ fwupd_result_get_device_version (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->device_version;
+	return fwupd_device_get_version (priv->device);
 }
 
 /**
@@ -452,8 +445,7 @@ fwupd_result_set_device_version (FwupdResult *result, const gchar *device_versio
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->device_version);
-	priv->device_version = g_strdup (device_version);
+	fwupd_device_set_version (priv->device, device_version);
 }
 
 /**
@@ -471,7 +463,7 @@ fwupd_result_get_update_version (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_version;
+	return fwupd_release_get_version (priv->release);
 }
 
 /**
@@ -489,7 +481,7 @@ fwupd_result_get_device_version_lowest (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->device_version_lowest;
+	return fwupd_device_get_version_lowest (priv->device);
 }
 
 /**
@@ -506,8 +498,7 @@ fwupd_result_set_device_version_lowest (FwupdResult *result, const gchar *device
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->device_version_lowest);
-	priv->device_version_lowest = g_strdup (device_version_lowest);
+	fwupd_device_set_version_lowest (priv->device, device_version_lowest);
 }
 
 /**
@@ -525,7 +516,7 @@ fwupd_result_get_device_version_bootloader (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->device_version_bootloader;
+	return fwupd_device_get_version_bootloader (priv->device);
 }
 
 /**
@@ -543,8 +534,7 @@ fwupd_result_set_device_version_bootloader (FwupdResult *result,
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->device_version_bootloader);
-	priv->device_version_bootloader = g_strdup (device_version_bootloader);
+	fwupd_device_set_version_bootloader (priv->device, device_version_bootloader);
 }
 
 /**
@@ -562,7 +552,7 @@ fwupd_result_get_device_flashes_left (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
-	return priv->device_flashes_left;
+	return fwupd_device_get_flashes_left (priv->device);
 }
 
 /**
@@ -579,7 +569,7 @@ fwupd_result_set_device_flashes_left (FwupdResult *result, guint32 flashes_left)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	priv->device_flashes_left = flashes_left;
+	fwupd_device_set_flashes_left (priv->device, flashes_left);
 }
 
 /**
@@ -596,8 +586,7 @@ fwupd_result_set_update_version (FwupdResult *result, const gchar *update_versio
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_version);
-	priv->update_version = g_strdup (update_version);
+	fwupd_release_set_version (priv->release, update_version);
 }
 
 /**
@@ -615,7 +604,7 @@ fwupd_result_get_update_filename (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_filename;
+	return fwupd_release_get_filename (priv->release);
 }
 
 /**
@@ -632,8 +621,7 @@ fwupd_result_set_update_filename (FwupdResult *result, const gchar *update_filen
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_filename);
-	priv->update_filename = g_strdup (update_filename);
+	fwupd_release_set_filename (priv->release, update_filename);
 }
 
 /**
@@ -686,7 +674,7 @@ fwupd_result_get_update_checksum (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_checksum;
+	return fwupd_release_get_checksum (priv->release);
 }
 
 /**
@@ -703,8 +691,7 @@ fwupd_result_set_update_checksum (FwupdResult *result, const gchar *update_check
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_checksum);
-	priv->update_checksum = g_strdup (update_checksum);
+	fwupd_release_set_checksum (priv->release, update_checksum);
 }
 
 /**
@@ -722,7 +709,7 @@ fwupd_result_get_update_checksum_kind (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
-	return priv->update_checksum_kind;
+	return fwupd_release_get_checksum_kind (priv->release);
 }
 
 /**
@@ -739,7 +726,7 @@ fwupd_result_set_update_checksum_kind (FwupdResult *result, GChecksumType checku
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	priv->update_checksum_kind = checkum_kind;
+	fwupd_release_set_checksum_kind (priv->release, checkum_kind);
 }
 
 /**
@@ -757,7 +744,7 @@ fwupd_result_get_update_uri (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_uri;
+	return fwupd_release_get_uri (priv->release);
 }
 
 /**
@@ -774,8 +761,7 @@ fwupd_result_set_update_uri (FwupdResult *result, const gchar *update_uri)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_uri);
-	priv->update_uri = g_strdup (update_uri);
+	fwupd_release_set_uri (priv->release, update_uri);
 }
 
 /**
@@ -793,7 +779,7 @@ fwupd_result_get_update_homepage (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_homepage;
+	return fwupd_release_get_homepage (priv->release);
 }
 
 /**
@@ -810,8 +796,7 @@ fwupd_result_set_update_homepage (FwupdResult *result, const gchar *update_homep
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_homepage);
-	priv->update_homepage = g_strdup (update_homepage);
+	fwupd_release_set_homepage (priv->release, update_homepage);
 }
 
 /**
@@ -829,7 +814,7 @@ fwupd_result_get_update_description (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_description;
+	return fwupd_release_get_description (priv->release);
 }
 
 /**
@@ -846,8 +831,7 @@ fwupd_result_set_update_description (FwupdResult *result, const gchar *update_de
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_description);
-	priv->update_description = g_strdup (update_description);
+	fwupd_release_set_description (priv->release, update_description);
 }
 
 /**
@@ -865,7 +849,7 @@ fwupd_result_get_update_id (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_id;
+	return fwupd_release_get_appstream_id (priv->release);
 }
 
 /**
@@ -882,8 +866,7 @@ fwupd_result_set_update_id (FwupdResult *result, const gchar *update_id)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_id);
-	priv->update_id = g_strdup (update_id);
+	fwupd_release_set_appstream_id (priv->release, update_id);
 }
 
 /**
@@ -901,7 +884,7 @@ fwupd_result_get_update_size (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
-	return priv->update_size;
+	return fwupd_release_get_size (priv->release);
 }
 
 /**
@@ -918,7 +901,7 @@ fwupd_result_set_update_size (FwupdResult *result, guint64 update_size)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	priv->update_size = update_size;
+	fwupd_release_set_size (priv->release, update_size);
 }
 
 /**
@@ -936,7 +919,7 @@ fwupd_result_get_device_checksum (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->device_checksum;
+	return fwupd_device_get_checksum (priv->device);
 }
 
 /**
@@ -953,8 +936,7 @@ fwupd_result_set_device_checksum (FwupdResult *result, const gchar *device_check
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->device_checksum);
-	priv->device_checksum = g_strdup (device_checksum);
+	fwupd_device_set_checksum (priv->device, device_checksum);
 }
 
 /**
@@ -972,7 +954,7 @@ fwupd_result_get_device_checksum_kind (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
-	return priv->device_checksum_kind;
+	return fwupd_device_get_checksum_kind (priv->device);
 }
 
 /**
@@ -989,7 +971,7 @@ fwupd_result_set_device_checksum_kind (FwupdResult *result, GChecksumType checku
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	priv->device_checksum_kind = checkum_kind;
+	fwupd_device_set_checksum_kind (priv->device, checkum_kind);
 }
 
 /**
@@ -1007,7 +989,7 @@ fwupd_result_get_update_summary (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_summary;
+	return fwupd_release_get_summary (priv->release);
 }
 
 /**
@@ -1024,8 +1006,7 @@ fwupd_result_set_update_summary (FwupdResult *result, const gchar *update_summar
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_summary);
-	priv->update_summary = g_strdup (update_summary);
+	fwupd_release_set_summary (priv->release, update_summary);
 }
 
 /**
@@ -1043,7 +1024,7 @@ fwupd_result_get_device_provider (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->device_provider;
+	return fwupd_device_get_provider (priv->device);
 }
 
 /**
@@ -1060,8 +1041,7 @@ fwupd_result_set_device_provider (FwupdResult *result, const gchar *device_provi
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->device_provider);
-	priv->device_provider = g_strdup (device_provider);
+	fwupd_device_set_provider (priv->device, device_provider);
 }
 
 /**
@@ -1150,7 +1130,7 @@ fwupd_result_get_update_vendor (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_vendor;
+	return fwupd_release_get_vendor (priv->release);
 }
 
 /**
@@ -1167,8 +1147,7 @@ fwupd_result_set_update_vendor (FwupdResult *result, const gchar *update_vendor)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_vendor);
-	priv->update_vendor = g_strdup (update_vendor);
+	fwupd_release_set_vendor (priv->release, update_vendor);
 }
 
 /**
@@ -1186,7 +1165,7 @@ fwupd_result_get_update_license (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_license;
+	return fwupd_release_get_license (priv->release);
 }
 
 /**
@@ -1203,8 +1182,7 @@ fwupd_result_set_update_license (FwupdResult *result, const gchar *update_licens
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_license);
-	priv->update_license = g_strdup (update_license);
+	fwupd_release_set_license (priv->release, update_license);
 }
 
 /**
@@ -1222,7 +1200,7 @@ fwupd_result_get_update_name (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_name;
+	return fwupd_release_get_name (priv->release);
 }
 
 /**
@@ -1239,8 +1217,7 @@ fwupd_result_set_update_name (FwupdResult *result, const gchar *update_name)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_name);
-	priv->update_name = g_strdup (update_name);
+	fwupd_release_set_name (priv->release, update_name);
 }
 
 /**
@@ -1258,7 +1235,7 @@ fwupd_result_get_device_flags (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
-	return priv->device_flags;
+	return fwupd_device_get_flags (priv->device);
 }
 
 /**
@@ -1275,7 +1252,7 @@ fwupd_result_set_device_flags (FwupdResult *result, guint64 device_flags)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	priv->device_flags = device_flags;
+	fwupd_device_set_flags (priv->device, device_flags);
 }
 
 /**
@@ -1292,7 +1269,7 @@ fwupd_result_add_device_flag (FwupdResult *result, FwupdDeviceFlags flag)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	priv->device_flags |= flag;
+	fwupd_device_add_flag (priv->device, flag);
 }
 
 /**
@@ -1309,7 +1286,7 @@ fwupd_result_remove_device_flag (FwupdResult *result, FwupdDeviceFlags flag)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	priv->device_flags &= ~flag;
+	fwupd_device_remove_flag (priv->device, flag);
 }
 
 /**
@@ -1328,7 +1305,7 @@ fwupd_result_has_device_flag (FwupdResult *result, FwupdDeviceFlags flag)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), FALSE);
-	return (priv->device_flags & flag) > 0;
+	return fwupd_device_has_flag (priv->device, flag);
 }
 
 /**
@@ -1346,7 +1323,7 @@ fwupd_result_get_device_created (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
-	return priv->device_created;
+	return fwupd_device_get_created (priv->device);
 }
 
 
@@ -1364,7 +1341,7 @@ fwupd_result_set_device_created (FwupdResult *result, guint64 device_created)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	priv->device_created = device_created;
+	fwupd_device_set_created (priv->device, device_created);
 }
 
 /**
@@ -1382,7 +1359,7 @@ fwupd_result_get_device_modified (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
-	return priv->device_modified;
+	return fwupd_device_get_modified (priv->device);
 }
 
 /**
@@ -1399,7 +1376,7 @@ fwupd_result_set_device_modified (FwupdResult *result, guint64 device_modified)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	priv->device_modified = device_modified;
+	fwupd_device_set_modified (priv->device, device_modified);
 }
 
 /**
@@ -1424,87 +1401,10 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	if (priv->guids->len > 0) {
-		guint i;
-		g_autoptr(GString) str = g_string_new ("");
-		for (i = 0; i < priv->guids->len; i++) {
-			const gchar *guid = g_ptr_array_index (priv->guids, i);
-			g_string_append_printf (str, "%s,", guid);
-		}
-		if (str->len > 0)
-			g_string_truncate (str, str->len - 1);
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_GUID,
-				       g_variant_new_string (str->str));
-	}
 	if (priv->unique_id != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_UNIQUE_ID,
 				       g_variant_new_string (priv->unique_id));
-	}
-	if (priv->update_remote_id != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_REMOTE_ID,
-				       g_variant_new_string (priv->update_remote_id));
-	}
-	if (priv->device_name != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_NAME,
-				       g_variant_new_string (priv->device_name));
-	}
-	if (priv->device_vendor != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_VENDOR,
-				       g_variant_new_string (priv->device_vendor));
-	}
-	if (priv->device_flags > 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_FLAGS,
-				       g_variant_new_uint64 (priv->device_flags));
-	}
-	if (priv->device_created > 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_CREATED,
-				       g_variant_new_uint64 (priv->device_created));
-	}
-	if (priv->device_modified > 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_MODIFIED,
-				       g_variant_new_uint64 (priv->device_modified));
-	}
-
-	if (priv->update_id != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_ID,
-				       g_variant_new_string (priv->update_id));
-	}
-	if (priv->device_description != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_DESCRIPTION,
-				       g_variant_new_string (priv->device_description));
-	}
-	if (priv->update_filename != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_FILENAME,
-				       g_variant_new_string (priv->update_filename));
-	}
-	if (priv->device_checksum != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_CHECKSUM,
-				       g_variant_new_string (priv->device_checksum));
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND,
-				       g_variant_new_uint32 (priv->device_checksum_kind));
-	}
-	if (priv->update_license != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_LICENSE,
-				       g_variant_new_string (priv->update_license));
-	}
-	if (priv->update_name != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_NAME,
-				       g_variant_new_string (priv->update_name));
 	}
 	if (priv->update_error != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1516,83 +1416,19 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 				       FWUPD_RESULT_KEY_UPDATE_STATE,
 				       g_variant_new_uint32 (priv->update_state));
 	}
-	if (priv->device_provider != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_PLUGIN,
-				       g_variant_new_string (priv->device_provider));
-	}
-	if (priv->update_size != 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_SIZE,
-				       g_variant_new_uint64 (priv->update_size));
-	}
 	if (priv->update_trust_flags != 0) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS,
 				       g_variant_new_uint64 (priv->update_trust_flags));
 	}
-	if (priv->update_summary != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_SUMMARY,
-				       g_variant_new_string (priv->update_summary));
-	}
-	if (priv->update_description != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_DESCRIPTION,
-				       g_variant_new_string (priv->update_description));
-	}
-	if (priv->update_checksum != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_CHECKSUM,
-				       g_variant_new_string (priv->update_checksum));
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_CHECKSUM_KIND,
-				       g_variant_new_uint32 (priv->update_checksum_kind));
-	}
-	if (priv->update_uri != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_URI,
-				       g_variant_new_string (priv->update_uri));
-	}
-	if (priv->update_homepage != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_HOMEPAGE,
-				       g_variant_new_string (priv->update_homepage));
-	}
-	if (priv->update_version != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_VERSION,
-				       g_variant_new_string (priv->update_version));
-	}
-	if (priv->update_vendor != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_VENDOR,
-				       g_variant_new_string (priv->update_vendor));
-	}
-	if (priv->device_version != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_VERSION,
-				       g_variant_new_string (priv->device_version));
-	}
-	if (priv->device_version_lowest != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST,
-				       g_variant_new_string (priv->device_version_lowest));
-	}
-	if (priv->device_version_bootloader != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_VERSION_BOOTLOADER,
-				       g_variant_new_string (priv->device_version_bootloader));
-	}
-	if (priv->device_flashes_left > 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT,
-				       g_variant_new_uint32 (priv->device_flashes_left));
-	}
+
+	/* device and release objects */
+	fwupd_release_to_variant_builder (priv->release, &builder);
+	fwupd_device_to_variant_builder (priv->device, &builder);
 
 	/* supported types */
 	if (g_strcmp0 (type_string, "{sa{sv}}") == 0) {
-		const gchar *device_id = priv->device_id;
+		const gchar *device_id = fwupd_device_get_id (priv->device);
 		if (device_id == NULL)
 			device_id = "";
 		return g_variant_new ("{sa{sv}}", device_id, &builder);
@@ -1603,78 +1439,14 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 }
 
 static void
-fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
+fwupd_result_from_key_value (FwupdResult *result, const gchar *key, GVariant *value)
 {
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_FLAGS) == 0) {
-		fwupd_result_set_device_flags (result, g_variant_get_uint64 (value));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_CREATED) == 0) {
-		fwupd_result_set_device_created (result, g_variant_get_uint64 (value));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_MODIFIED) == 0) {
-		fwupd_result_set_device_modified (result, g_variant_get_uint64 (value));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_GUID) == 0) {
-		guint i;
-		const gchar *guids = g_variant_get_string (value, NULL);
-		g_auto(GStrv) split = g_strsplit (guids, ",", -1);
-		for (i = 0; split[i] != NULL; i++)
-			fwupd_result_add_guid (result, split[i]);
-		return;
-	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UNIQUE_ID) == 0) {
 		fwupd_result_set_unique_id (result, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_REMOTE_ID) == 0) {
-		fwupd_result_set_update_remote_id (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_NAME) == 0) {
-		fwupd_result_set_device_name (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_VENDOR) == 0) {
-		fwupd_result_set_device_vendor (result, g_variant_get_string (value, NULL));
-		return;
-	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS) == 0) {
 		fwupd_result_set_update_trust_flags (result, g_variant_get_uint64 (value));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_ID) == 0) {
-		fwupd_result_set_update_id (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION) == 0) {
-		fwupd_result_set_device_description (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_FILENAME) == 0) {
-		fwupd_result_set_update_filename (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_CHECKSUM) == 0) {
-		fwupd_result_set_device_checksum (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND) == 0) {
-		fwupd_result_set_device_checksum_kind (result, g_variant_get_uint32 (value));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_LICENSE) == 0) {
-		fwupd_result_set_update_license (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_NAME) == 0) {
-		fwupd_result_set_update_name (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_ERROR) == 0) {
-		fwupd_result_set_update_error (result, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_STATE) == 0) {
@@ -1686,62 +1458,6 @@ fwupd_result_from_kv (FwupdResult *result, const gchar *key, GVariant *value)
 		} else {
 			fwupd_result_set_update_state (result, g_variant_get_uint32 (value));
 		}
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_PLUGIN) == 0) {
-		fwupd_result_set_device_provider (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_SIZE) == 0) {
-		fwupd_result_set_update_size (result, g_variant_get_uint64 (value));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_SUMMARY) == 0) {
-		fwupd_result_set_update_summary (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_DESCRIPTION) == 0) {
-		fwupd_result_set_update_description (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_CHECKSUM) == 0) {
-		fwupd_result_set_update_checksum (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_CHECKSUM_KIND) == 0) {
-		fwupd_result_set_update_checksum_kind (result, g_variant_get_uint32 (value));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_URI) == 0) {
-		fwupd_result_set_update_uri (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_HOMEPAGE) == 0) {
-		fwupd_result_set_update_homepage (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_VERSION) == 0) {
-		fwupd_result_set_update_version (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_VENDOR) == 0) {
-		fwupd_result_set_update_vendor (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_VERSION) == 0) {
-		fwupd_result_set_device_version (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST) == 0) {
-		fwupd_result_set_device_version_lowest (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_VERSION_BOOTLOADER) == 0) {
-		fwupd_result_set_device_version_bootloader (result, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT) == 0) {
-		fwupd_result_set_device_flashes_left (result, g_variant_get_uint32 (value));
 		return;
 	}
 }
@@ -1759,71 +1475,11 @@ fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
 }
 
 static void
-fwupd_pad_kv_unx (GString *str, const gchar *key, guint64 value)
-{
-	g_autoptr(GDateTime) date = NULL;
-	g_autofree gchar *tmp = NULL;
-
-	/* ignore */
-	if (value == 0)
-		return;
-
-	date = g_date_time_new_from_unix_utc ((gint64) value);
-	tmp = g_date_time_format (date, "%F");
-	fwupd_pad_kv_str (str, key, tmp);
-}
-
-static void
 fwupd_pad_kv_ups (GString *str, const gchar *key, FwupdUpdateState value)
 {
 	if (value == FWUPD_UPDATE_STATE_UNKNOWN)
 		return;
 	fwupd_pad_kv_str (str, key, fwupd_update_state_to_string (value));
-}
-
-static void
-fwupd_pad_kv_siz (GString *str, const gchar *key, guint64 value)
-{
-	g_autofree gchar *tmp = NULL;
-
-	/* ignore */
-	if (value == 0)
-		return;
-	tmp = g_format_size (value);
-	fwupd_pad_kv_str (str, key, tmp);
-}
-
-static void
-fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
-{
-	g_autofree gchar *tmp = NULL;
-
-	/* ignore */
-	if (value == 0)
-		return;
-	tmp = g_strdup_printf("%" G_GUINT32_FORMAT, value);
-	fwupd_pad_kv_str (str, key, tmp);
-}
-
-static void
-fwupd_pad_kv_dfl (GString *str, const gchar *key, guint64 device_flags)
-{
-	guint i;
-	g_autoptr(GString) tmp = NULL;
-
-	tmp = g_string_new ("");
-	for (i = 0; i < 64; i++) {
-		if ((device_flags & ((guint64) 1 << i)) == 0)
-			continue;
-		g_string_append_printf (tmp, "%s|",
-					fwupd_device_flag_to_string ((guint64) 1 << i));
-	}
-	if (tmp->len == 0) {
-		g_string_append (tmp, fwupd_device_flag_to_string (0));
-	} else {
-		g_string_truncate (tmp, tmp->len - 1);
-	}
-	fwupd_pad_kv_str (str, key, tmp->str);
 }
 
 static void
@@ -1847,19 +1503,6 @@ fwupd_pad_kv_tfl (GString *str, const gchar *key, FwupdTrustFlags trust_flags)
 	fwupd_pad_kv_str (str, key, tmp->str);
 }
 
-static void
-fwupd_pad_kv_csk (GString *str, const gchar *key, GChecksumType checksum_type)
-{
-	const gchar *tmp = "unknown";
-	if (checksum_type == G_CHECKSUM_SHA1)
-		tmp = "sha1";
-	else if (checksum_type == G_CHECKSUM_SHA256)
-		tmp = "sha256";
-	else if (checksum_type == G_CHECKSUM_SHA512)
-		tmp = "sha512";
-	fwupd_pad_kv_str (str, key, tmp);
-}
-
 /**
  * fwupd_result_to_string:
  * @result: A #FwupdResult
@@ -1875,62 +1518,29 @@ fwupd_result_to_string (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	GString *str;
-	guint i;
+	g_autofree gchar *device_str = NULL;
+	g_autofree gchar *release_str = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
 
 	str = g_string_new ("");
 
 	/* not set when using GetDetails */
-	if (priv->device_name != NULL)
-		g_string_append_printf (str, "%s\n", priv->device_name);
-	else {
-		if (priv->update_name != NULL)
-			g_string_append_printf( str, "%s\n", priv->update_name);
-		else
-			g_string_append_printf (str, "%s\n", "Unknown Device");
-	}
+	if (fwupd_device_get_name (priv->device) != NULL)
+		g_string_append_printf (str, "%s\n", fwupd_device_get_name (priv->device));
+	else
+		g_string_append_printf (str, "%s\n", "Unknown Device");
 
 	/* device */
-	for (i = 0; i < priv->guids->len; i++) {
-		const gchar *guid = g_ptr_array_index (priv->guids, i);
-		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
-	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UNIQUE_ID, priv->unique_id);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->device_id);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION, priv->device_description);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PLUGIN, priv->device_provider);
-	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_DEVICE_FLAGS, priv->device_flags);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_CHECKSUM, priv->device_checksum);
-	if (priv->device_checksum != NULL)
-		fwupd_pad_kv_csk (str, FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND, priv->device_checksum_kind);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VENDOR, priv->device_vendor);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION, priv->device_version);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST, priv->device_version_lowest);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION_BOOTLOADER, priv->device_version_bootloader);
-	if (priv->device_flashes_left < 2)
-		fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT, priv->device_flashes_left);
-	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_CREATED, priv->device_created);
-	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_MODIFIED, priv->device_modified);
-
-	/* updates */
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_ID, priv->update_id);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_REMOTE_ID, priv->update_remote_id);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_SUMMARY, priv->update_summary);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_DESCRIPTION, priv->update_description);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_VERSION, priv->update_version);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_FILENAME, priv->update_filename);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_CHECKSUM, priv->update_checksum);
-	if (priv->update_checksum != NULL)
-		fwupd_pad_kv_csk (str, FWUPD_RESULT_KEY_UPDATE_CHECKSUM_KIND, priv->update_checksum_kind);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_LICENSE, priv->update_license);
-	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_UPDATE_SIZE, priv->update_size);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_URI, priv->update_uri);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_HOMEPAGE, priv->update_homepage);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_VENDOR, priv->update_vendor);
 	fwupd_pad_kv_ups (str, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
-	if (priv->update_version != NULL)
+
+	/* device and release */
+	device_str = fwupd_device_to_string (priv->device);
+	g_string_append (str, device_str);
+	release_str = fwupd_release_to_string (priv->release);
+	g_string_append (str, release_str);
+	if (fwupd_release_get_version (priv->release) != NULL)
 		fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS, priv->update_trust_flags);
 
 	return g_string_free (str, FALSE);
@@ -1945,7 +1555,7 @@ fwupd_result_get_property (GObject *object, guint prop_id,
 
 	switch (prop_id) {
 	case PROP_DEVICE_ID:
-		g_value_set_string (value, priv->device_id);
+		g_value_set_string (value, fwupd_device_get_id (priv->device));
 		break;
 	case PROP_UNIQUE_ID:
 		g_value_set_string (value, priv->unique_id);
@@ -1965,8 +1575,7 @@ fwupd_result_set_property (GObject *object, guint prop_id,
 
 	switch (prop_id) {
 	case PROP_DEVICE_ID:
-		g_free (priv->device_id);
-		priv->device_id = g_strdup (g_value_get_string (value));
+		fwupd_device_set_id (priv->device, g_value_get_string (value));
 		break;
 	case PROP_UNIQUE_ID:
 		g_free (priv->unique_id);
@@ -2004,9 +1613,8 @@ static void
 fwupd_result_init (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
-	priv->device_checksum_kind = G_CHECKSUM_SHA1;
-	priv->update_checksum_kind = G_CHECKSUM_SHA1;
-	priv->guids = g_ptr_array_new_with_free_func (g_free);
+	priv->release = fwupd_release_new ();
+	priv->device = fwupd_device_new ();
 }
 
 static void
@@ -2015,30 +1623,10 @@ fwupd_result_finalize (GObject *object)
 	FwupdResult *result = FWUPD_RESULT (object);
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 
-	g_ptr_array_unref (priv->guids);
+	g_object_unref (priv->device);
+	g_object_unref (priv->release);
 	g_free (priv->unique_id);
-	g_free (priv->device_description);
-	g_free (priv->device_checksum);
-	g_free (priv->device_id);
-	g_free (priv->device_name);
-	g_free (priv->device_vendor);
-	g_free (priv->device_provider);
-	g_free (priv->device_version);
-	g_free (priv->device_version_lowest);
-	g_free (priv->device_version_bootloader);
-	g_free (priv->update_description);
 	g_free (priv->update_error);
-	g_free (priv->update_filename);
-	g_free (priv->update_checksum);
-	g_free (priv->update_id);
-	g_free (priv->update_license);
-	g_free (priv->update_name);
-	g_free (priv->update_summary);
-	g_free (priv->update_uri);
-	g_free (priv->update_homepage);
-	g_free (priv->update_vendor);
-	g_free (priv->update_version);
-	g_free (priv->update_remote_id);
 
 	G_OBJECT_CLASS (fwupd_result_parent_class)->finalize (object);
 }
@@ -2046,10 +1634,13 @@ fwupd_result_finalize (GObject *object)
 static void
 fwupd_result_from_variant_iter (FwupdResult *result, GVariantIter *iter)
 {
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next (iter, "{&sv}", &key, &value)) {
-		fwupd_result_from_kv (result, key, value);
+		fwupd_result_from_key_value (result, key, value);
+		fwupd_release_from_key_value (priv->release, key, value);
+		fwupd_device_from_key_value (priv->device, key, value);
 		g_variant_unref (value);
 	}
 }
@@ -2081,7 +1672,7 @@ fwupd_result_new_from_data (GVariant *data)
 	} else if (g_strcmp0 (type_string, "{sa{sv}}") == 0) {
 		res = fwupd_result_new ();
 		g_variant_get (data, "{&sa{sv}}", &id, &iter);
-		fwupd_result_set_device_id (res, id);
+		fwupd_device_set_id (fwupd_result_get_device (res), id);
 		fwupd_result_from_variant_iter (res, iter);
 	} else {
 		g_warning ("type %s not known", type_string);
