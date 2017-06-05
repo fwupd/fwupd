@@ -73,6 +73,7 @@ FuDevice	*fu_device_new				(void);
 
 /* compat getters */
 #define fu_device_get_checksum(d)		fwupd_device_get_checksum(fwupd_result_get_device(FWUPD_RESULT(d)))
+#define fu_device_get_checksum_kind(d)		fwupd_device_get_checksum_kind(fwupd_result_get_device(FWUPD_RESULT(d)))
 #define fu_device_get_flags(d)			fwupd_device_get_flags(fwupd_result_get_device(FWUPD_RESULT(d)))
 #define fu_device_get_guids(d)			fwupd_device_get_guids(fwupd_result_get_device(FWUPD_RESULT(d)))
 #define fu_device_get_guid_default(d)		fwupd_device_get_guid_default(fwupd_result_get_device(FWUPD_RESULT(d)))
