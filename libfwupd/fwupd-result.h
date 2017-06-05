@@ -225,11 +225,6 @@ const gchar	*fwupd_result_get_update_name		(FwupdResult	*result);
 G_DEPRECATED_FOR(fwupd_release_set_name)
 void		 fwupd_result_set_update_name		(FwupdResult	*result,
 							 const gchar	*update_name);
-G_DEPRECATED_FOR(fwupd_release_get_remote_id)
-const gchar	*fwupd_result_get_update_remote_id	(FwupdResult	*result);
-G_DEPRECATED_FOR(fwupd_release_set_remote_id)
-void		 fwupd_result_set_update_remote_id	(FwupdResult	*result,
-							 const gchar	*update_remote_id);
 
 /* helpers */
 GVariant	*fwupd_result_to_data			(FwupdResult	*result,

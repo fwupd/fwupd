@@ -93,41 +93,6 @@ fwupd_result_set_unique_id (FwupdResult *result, const gchar *unique_id)
 }
 
 /**
- * fwupd_result_get_update_remote_id:
- * @result: A #FwupdResult
- *
- * Gets the remote ID that can be used for downloading.
- *
- * Returns: the ID, or %NULL if unset
- *
- * Since: 0.9.3
- **/
-const gchar *
-fwupd_result_get_update_remote_id (FwupdResult *result)
-{
-	FwupdResultPrivate *priv = GET_PRIVATE (result);
-	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return fwupd_release_get_remote_id (priv->release);
-}
-
-/**
- * fwupd_result_set_update_remote_id:
- * @result: A #FwupdResult
- * @update_remote_id: the result ID, e.g. "USB:foo"
- *
- * Sets the remote ID that can be used for downloading.
- *
- * Since: 0.9.3
- **/
-void
-fwupd_result_set_update_remote_id (FwupdResult *result, const gchar *update_remote_id)
-{
-	FwupdResultPrivate *priv = GET_PRIVATE (result);
-	g_return_if_fail (FWUPD_IS_RESULT (result));
-	fwupd_release_set_remote_id (priv->release, update_remote_id);
-}
-
-/**
  * fwupd_result_get_release:
  * @result: A #FwupdResult
  *
