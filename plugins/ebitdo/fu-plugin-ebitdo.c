@@ -46,7 +46,7 @@ fu_plugin_device_ebitdo_added (FuPlugin *plugin,
 				  g_usb_device_get_pid (usb_device));
 	g_assert (ptask != NULL);
 
-	/* get version */
+	/* create the device */
 	platform_id = g_usb_device_get_platform_id (usb_device);
 	dev = fu_device_ebitdo_new (usb_device);
 	if (dev == NULL) {
@@ -56,17 +56,12 @@ fu_plugin_device_ebitdo_added (FuPlugin *plugin,
 				     "invalid 8Bitdo device type detected");
 		return FALSE;
 	}
+	fu_device_set_id (dev, platform_id);
 
 	/* open the device */
 	if (!fu_device_ebitdo_open (dev, error))
 		return FALSE;
-
-	/* generate name */
 	ebitdo_kind = fu_device_ebitdo_get_kind (dev);
-
-	/* create the device */
-	dev = fu_device_ebitdo_new (usb_device);
-	fu_device_set_id (dev, platform_id);
 
 	/* close the device */
 	if (!fu_device_ebitdo_close (dev, error))
