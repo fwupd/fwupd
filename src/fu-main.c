@@ -451,7 +451,7 @@ fu_main_verify_update_device_to_app (FuDevice *device)
 	rel = as_release_new ();
 	as_release_set_version (rel, fu_device_get_version (device));
 	csum = as_checksum_new ();
-	as_checksum_set_kind (csum, G_CHECKSUM_SHA1);
+	as_checksum_set_kind (csum, fu_device_get_checksum_kind (device));
 	as_checksum_set_value (csum, fu_device_get_checksum (device));
 	as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
 	as_release_add_checksum (rel, csum);
