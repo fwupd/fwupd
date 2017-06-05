@@ -293,6 +293,14 @@ fu_main_get_plugin_by_name (FuMainPrivate *priv, const gchar *name)
 	return NULL;
 }
 
+static const gchar *
+fu_main_get_sysconfig_dir (void)
+{
+	if (g_file_test (SYSCONFDIR, G_FILE_TEST_EXISTS))
+		return SYSCONFDIR;
+	return "/etc";
+}
+
 static gboolean
 fu_main_get_release_trust_flags (AsRelease *release,
 				 FwupdTrustFlags *trust_flags,
@@ -337,7 +345,7 @@ fu_main_get_release_trust_flags (AsRelease *release,
 	}
 
 	/* check we were installed correctly */
-	pki_dir = g_build_filename (SYSCONFDIR, "pki", "fwupd", NULL);
+	pki_dir = g_build_filename (fu_main_get_sysconfig_dir (), "pki", "fwupd", NULL);
 	if (!g_file_test (pki_dir, G_FILE_TEST_EXISTS)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -2928,13 +2936,7 @@ main (int argc, char *argv[])
 	}
 
 	/* read config file */
-	config_file = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
-	if (!g_file_test (config_file, G_FILE_TEST_EXISTS)) {
-		g_warning ("FuMain: falling back to system config as %s missing",
-			   config_file);
-		g_free (config_file);
-		config_file = g_build_filename ("/etc", "fwupd.conf", NULL);
-	}
+	config_file = g_build_filename (fu_main_get_sysconfig_dir (), "fwupd.conf", NULL);
 	g_debug ("loading config values from %s", config_file);
 	priv->config = g_key_file_new ();
 	if (!g_key_file_load_from_file (priv->config, config_file,
