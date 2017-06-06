@@ -1666,7 +1666,7 @@ fu_main_get_store_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 	}
 
 	/* get a checksum of the file and use it as the origin */
-	checksum = g_compute_checksum_for_data (G_CHECKSUM_SHA1,
+	checksum = g_compute_checksum_for_data (G_CHECKSUM_SHA256,
 						g_bytes_get_data (blob_cab, NULL),
 						g_bytes_get_size (blob_cab));
 	as_store_set_origin (store, checksum);
