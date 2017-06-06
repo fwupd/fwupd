@@ -31,7 +31,6 @@ BuildRequires: libgusb-devel >= %{libgusb_version}
 BuildRequires: libsoup-devel >= %{libsoup_version}
 BuildRequires: colord-devel >= 1.0.0
 BuildRequires: polkit-devel >= 0.103
-BuildRequires: libgcab1-devel
 BuildRequires: sqlite-devel
 BuildRequires: gpgme-devel
 BuildRequires: systemd

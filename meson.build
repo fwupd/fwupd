@@ -116,7 +116,6 @@ polkit = dependency('polkit-gobject-1', version : '>= 0.103')
 if polkit.version() >= '0.114'
   conf.set('HAVE_POLKIT_0_114', '1')
 endif
-gcab = dependency('libgcab-1.0')
 gudev = dependency('gudev-1.0')
 appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
 gusb = dependency('gusb', version : '>= 0.2.9')
