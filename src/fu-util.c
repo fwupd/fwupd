@@ -975,6 +975,41 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static FwupdRelease *
+fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error)
+{
+	FwupdRelease *rel;
+	guint idx;
+
+	/* nothing */
+	if (rels->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No supported releases");
+		return NULL;
+	}
+
+	/* exactly one */
+	if (rels->len == 1) {
+		rel = g_ptr_array_index (rels, 0);
+		return g_object_ref (rel);
+	}
+
+	/* TRANSLATORS: get interactive prompt */
+	g_print ("%s\n", _("Choose a release:"));
+	for (guint i = 0; i < rels->len; i++) {
+		rel = g_ptr_array_index (rels, i);
+		g_print ("%u.\t%s (%s)\n",
+			 i + 1,
+			 fwupd_release_get_version (rel),
+			 fwupd_release_get_description (rel));
+	}
+	idx = fu_util_prompt_for_number (rels->len);
+	rel = g_ptr_array_index (rels, idx - 1);
+	return g_object_ref (rel);
+}
+
 static gboolean
 fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 {
@@ -1176,6 +1211,53 @@ fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_update_device_with_release (FuUtilPrivate *priv,
+				    FwupdDevice *dev,
+				    FwupdRelease *rel,
+				    GError **error)
+{
+	const gchar *remote_id;
+	const gchar *uri_tmp;
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+
+	/* work out what remote-specific URI fields this should use */
+	uri_tmp = fwupd_release_get_uri (rel);
+	remote_id = fwupd_release_get_remote_id (rel);
+	if (remote_id != NULL) {
+		g_autoptr(FwupdRemote) remote = NULL;
+		remote = fwupd_client_get_remote_by_id (priv->client,
+							remote_id,
+							NULL,
+							error);
+		if (remote == NULL)
+			return FALSE;
+		uri = fwupd_remote_build_uri (remote, uri_tmp, error);
+		if (uri == NULL)
+			return FALSE;
+	} else {
+		uri = soup_uri_new (uri_tmp);
+	}
+
+	/* download file */
+	g_print ("Downloading %s for %s...\n",
+		 fwupd_release_get_version (rel),
+		 fwupd_device_get_name (dev));
+	basename = g_path_get_basename (uri_tmp);
+	fn = g_build_filename (g_get_tmp_dir (), basename, NULL);
+	if (!fu_util_download_file (priv, uri, fn,
+				    fwupd_release_get_checksum (rel),
+				    fwupd_release_get_checksum_kind (rel),
+				    error))
+		return FALSE;
+	g_print ("Updating %s on %s...\n",
+		 fwupd_release_get_version (rel),
+		 fwupd_device_get_name (dev));
+	return fu_util_install_with_fallback (priv, fwupd_device_get_id (dev), fn, error);
+}
+
+static gboolean
 fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *results = NULL;
@@ -1185,58 +1267,71 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (results == NULL)
 		return FALSE;
 	for (guint i = 0; i < results->len; i++) {
-		GChecksumType checksum_type;
-		const gchar *checksum;
-		const gchar *remote_id;
-		const gchar *uri_tmp;
-		g_autofree gchar *basename = NULL;
-		g_autofree gchar *fn = NULL;
-		g_autoptr(SoupURI) uri = NULL;
-
 		FwupdResult *res = g_ptr_array_index (results, i);
 		FwupdDevice *dev = fwupd_result_get_device (res);
 		FwupdRelease *rel = fwupd_result_get_release (res);
-
-		/* download file */
-		checksum = fwupd_release_get_checksum (rel);
-		if (checksum == NULL)
+		if (fwupd_release_get_checksum (rel) == NULL)
 			continue;
-		uri_tmp = fwupd_release_get_uri (rel);
-		if (uri_tmp == NULL)
+		if (fwupd_release_get_uri (rel) == NULL)
 			continue;
-
-		/* work out what remote-specific URI fields this should use */
-		remote_id = fwupd_release_get_remote_id (rel);
-		if (remote_id != NULL) {
-			g_autoptr(FwupdRemote) remote = NULL;
-			remote = fwupd_client_get_remote_by_id (priv->client,
-								remote_id,
-								NULL,
-								error);
-			if (remote == NULL)
-				return FALSE;
-			uri = fwupd_remote_build_uri (remote, uri_tmp, error);
-			if (uri == NULL)
-				return FALSE;
-		} else {
-			uri = soup_uri_new (uri_tmp);
-		}
-		g_print ("Downloading %s for %s...\n",
-			 fwupd_release_get_version (rel),
-			 fwupd_device_get_name (dev));
-		basename = g_path_get_basename (uri_tmp);
-		fn = g_build_filename (g_get_tmp_dir (), basename, NULL);
-		checksum_type = fwupd_release_get_checksum_kind (rel);
-		if (!fu_util_download_file (priv, uri, fn, checksum, checksum_type, error))
-			return FALSE;
-		g_print ("Updating %s on %s...\n",
-			 fwupd_release_get_version (rel),
-			 fwupd_device_get_name (dev));
-		if (!fu_util_install_with_fallback (priv, fwupd_device_get_id (dev), fn, error))
+		if (!fu_util_update_device_with_release (priv, dev, rel, error))
 			return FALSE;
 	}
 
 	return TRUE;
+}
+
+static gboolean
+fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(FwupdRelease) rel = NULL;
+	g_autoptr(GPtrArray) rels = NULL;
+	g_autoptr(GPtrArray) rels_filtered = NULL;
+
+	/* get device to use */
+	if (g_strv_length (values) == 1) {
+		dev = fwupd_client_get_device_by_id (priv->client, values[1],
+						     NULL, error);
+		if (dev == NULL)
+			return FALSE;
+	} else {
+		dev = fu_util_prompt_for_device (priv, error);
+		if (dev == NULL)
+			return FALSE;
+	}
+
+	/* get the releases for this device and filter for validity */
+	rels = fwupd_client_get_releases (priv->client,
+					  fwupd_device_get_id (dev),
+					  NULL, error);
+	if (rels == NULL)
+		return FALSE;
+	rels_filtered = g_ptr_array_new ();
+	for (guint i = 0; i < rels->len; i++) {
+		FwupdRelease *rel_tmp = g_ptr_array_index (rels, i);
+
+		/* only include older firmware */
+		if (as_utils_vercmp (fwupd_release_get_version (rel_tmp),
+				     fwupd_device_get_version (dev)) >= 0)
+			continue;
+
+		/* don't show releases we are not allowed to dowgrade to */
+		if (fwupd_device_get_version_lowest (dev) != NULL) {
+			if (as_utils_vercmp (fwupd_release_get_version (rel_tmp),
+					     fwupd_device_get_version_lowest (dev)) >= 0)
+				continue;
+		}
+
+		g_ptr_array_add (rels_filtered, rel_tmp);
+	}
+
+	/* get the chosen release */
+	rel = fu_util_prompt_for_release (priv, rels_filtered, error);
+	if (rel == NULL)
+		return FALSE;
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+	return fu_util_update_device_with_release (priv, dev, rel, error);
 }
 
 static gboolean
@@ -1448,6 +1543,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets the releases for a device"),
 		     fu_util_get_releases);
+	fu_util_add (priv->cmd_array,
+		     "downgrade",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Downgrades the firmware on a device"),
+		     fu_util_downgrade);
 	fu_util_add (priv->cmd_array,
 		     "refresh",
 		     NULL,

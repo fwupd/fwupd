@@ -96,6 +96,10 @@ FwupdResult	*fwupd_client_get_details		(FwupdClient	*client,
 							 const gchar	*filename,
 							 GCancellable	*cancellable,
 							 GError		**error);
+FwupdDevice	*fwupd_client_get_device_by_id		(FwupdClient	*client,
+							 const gchar	*device_id,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 fwupd_client_install			(FwupdClient	*client,
 							 const gchar	*device_id,
 							 const gchar	*filename,

@@ -332,6 +332,51 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
 }
 
 /**
+ * fwupd_client_get_device_by_id:
+ * @client: A #FwupdClient
+ * @device_id: the device ID, e.g. "usb:00:01:03:03"
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets a device by it's device ID.
+ *
+ * Returns: (transfer full): a #FwupdDevice or %NULL
+ *
+ * Since: 0.9.3
+ **/
+FwupdDevice *
+fwupd_client_get_device_by_id (FwupdClient *client,
+			       const gchar *device_id,
+			       GCancellable *cancellable,
+			       GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (device_id != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* get all the devices */
+	devices = fwupd_client_get_devices (client, cancellable, error);
+	if (devices == NULL)
+		return NULL;
+
+	/* find the device by ID (client side) */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdResult *res = g_ptr_array_index (devices, i);
+		FwupdDevice *dev = fwupd_result_get_device (res);
+		if (g_strcmp0 (fwupd_device_get_id (dev), device_id) == 0)
+			return g_object_ref (dev);
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_FOUND,
+		     "failed to find %s", device_id);
+	return NULL;
+}
+
+/**
  * fwupd_client_get_updates:
  * @client: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
