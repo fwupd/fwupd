@@ -1216,6 +1216,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	const gchar *remote_id;
 	const gchar *uri_tmp;
 	g_autofree gchar *basename = NULL;
+	g_autofree gchar *cache_dir = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(SoupURI) uri = NULL;
 
@@ -1237,12 +1238,17 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 		uri = soup_uri_new (uri_tmp);
 	}
 
+	/* ensure cache directory exists */
+	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
+	if (!fu_util_mkdir_with_parents (cache_dir, error))
+		return FALSE;
+
 	/* download file */
 	g_print ("Downloading %s for %s...\n",
 		 fwupd_release_get_version (rel),
 		 fwupd_device_get_name (dev));
 	basename = g_path_get_basename (uri_tmp);
-	fn = g_build_filename (g_get_tmp_dir (), basename, NULL);
+	fn = g_build_filename (cache_dir, basename, NULL);
 	if (!fu_util_download_file (priv, uri, fn,
 				    fwupd_release_get_checksum (rel),
 				    fwupd_release_get_checksum_kind (rel),
