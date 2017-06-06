@@ -830,7 +830,7 @@ fwupd_release_finalize (GObject *object)
 }
 
 static void
-fwupd_release_from_variant_iter (FwupdRelease *release, GVariantIter *iter)
+fwupd_release_set_from_variant_iter (FwupdRelease *release, GVariantIter *iter)
 {
 	GVariant *value;
 	const gchar *key;
@@ -853,24 +853,24 @@ fwupd_release_from_variant_iter (FwupdRelease *release, GVariantIter *iter)
 FwupdRelease *
 fwupd_release_new_from_data (GVariant *data)
 {
-	FwupdRelease *res = NULL;
+	FwupdRelease *rel = NULL;
 	const gchar *type_string;
 	g_autoptr(GVariantIter) iter = NULL;
 
 	/* format from GetDetails */
 	type_string = g_variant_get_type_string (data);
 	if (g_strcmp0 (type_string, "(a{sv})") == 0) {
-		res = fwupd_release_new ();
+		rel = fwupd_release_new ();
 		g_variant_get (data, "(a{sv})", &iter);
-		fwupd_release_from_variant_iter (res, iter);
+		fwupd_release_set_from_variant_iter (rel, iter);
 	} else if (g_strcmp0 (type_string, "a{sv}") == 0) {
-		res = fwupd_release_new ();
+		rel = fwupd_release_new ();
 		g_variant_get (data, "a{sv}", &iter);
-		fwupd_release_from_variant_iter (res, iter);
+		fwupd_release_set_from_variant_iter (rel, iter);
 	} else {
 		g_warning ("type %s not known", type_string);
 	}
-	return res;
+	return rel;
 }
 
 /**

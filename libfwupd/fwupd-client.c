@@ -33,6 +33,7 @@
 #include "fwupd-client.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
+#include "fwupd-device-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-result.h"
@@ -242,23 +243,45 @@ fwupd_client_parse_results_from_data (GVariant *devices)
 static GPtrArray *
 fwupd_client_parse_releases_from_variant (GVariant *val)
 {
-	FwupdRelease *release;
-	GPtrArray *releases = NULL;
+	GPtrArray *array = NULL;
 	gsize sz;
-	guint i;
 	g_autoptr(GVariant) untuple = NULL;
 
-	releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	untuple = g_variant_get_child_value (val, 0);
 	sz = g_variant_n_children (untuple);
-	for (i = 0; i < sz; i++) {
+	for (guint i = 0; i < sz; i++) {
+		FwupdRelease *rel;
 		g_autoptr(GVariant) data = NULL;
 		data = g_variant_get_child_value (untuple, i);
-		release = fwupd_release_new_from_data (data);
-		g_ptr_array_add (releases, release);
+		rel = fwupd_release_new_from_data (data);
+		if (rel == NULL)
+			continue;
+		g_ptr_array_add (array, rel);
 	}
+	return array;
+}
 
-	return releases;
+static GPtrArray *
+fwupd_client_parse_devices_from_variant (GVariant *val)
+{
+	GPtrArray *array = NULL;
+	gsize sz;
+	g_autoptr(GVariant) untuple = NULL;
+
+	array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	untuple = g_variant_get_child_value (val, 0);
+	sz = g_variant_n_children (untuple);
+	for (guint i = 0; i < sz; i++) {
+		FwupdDevice *dev;
+		g_autoptr(GVariant) data = NULL;
+		data = g_variant_get_child_value (untuple, i);
+		dev = fwupd_device_new_from_data (data);
+		if (dev == NULL)
+			continue;
+		g_ptr_array_add (array, dev);
+	}
+	return array;
 }
 
 static void
@@ -332,6 +355,48 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
 }
 
 /**
+ * fwupd_client_get_devices_simple:
+ * @client: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets all the devices registered with the daemon.
+ *
+ * Returns: (element-type FwupdDevice) (transfer container): results
+ *
+ * Since: 0.9.2
+ **/
+GPtrArray *
+fwupd_client_get_devices_simple (FwupdClient *client, GCancellable *cancellable, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "GetDevices",
+				      NULL,
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return NULL;
+	}
+	return fwupd_client_parse_devices_from_variant (val);
+}
+
+/**
  * fwupd_client_get_device_by_id:
  * @client: A #FwupdClient
  * @device_id: the device ID, e.g. "usb:00:01:03:03"
@@ -358,14 +423,13 @@ fwupd_client_get_device_by_id (FwupdClient *client,
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* get all the devices */
-	devices = fwupd_client_get_devices (client, cancellable, error);
+	devices = fwupd_client_get_devices_simple (client, cancellable, error);
 	if (devices == NULL)
 		return NULL;
 
 	/* find the device by ID (client side) */
 	for (guint i = 0; i < devices->len; i++) {
-		FwupdResult *res = g_ptr_array_index (devices, i);
-		FwupdDevice *dev = fwupd_result_get_device (res);
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		if (g_strcmp0 (fwupd_device_get_id (dev), device_id) == 0)
 			return g_object_ref (dev);
 	}

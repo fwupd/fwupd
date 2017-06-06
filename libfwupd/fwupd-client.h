@@ -57,7 +57,11 @@ FwupdClient	*fwupd_client_new			(void);
 gboolean	 fwupd_client_connect			(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
+G_DEPRECATED_FOR(fwupd_client_get_devices_simple)
 GPtrArray	*fwupd_client_get_devices		(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
+GPtrArray	*fwupd_client_get_devices_simple	(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
 GPtrArray	*fwupd_client_get_updates		(FwupdClient	*client,

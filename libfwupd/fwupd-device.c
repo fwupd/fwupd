@@ -1058,7 +1058,7 @@ fwupd_device_finalize (GObject *object)
 }
 
 static void
-fwupd_device_from_variant_iter (FwupdDevice *device, GVariantIter *iter)
+fwupd_device_set_from_variant_iter (FwupdDevice *device, GVariantIter *iter)
 {
 	GVariant *value;
 	const gchar *key;
@@ -1081,24 +1081,30 @@ fwupd_device_from_variant_iter (FwupdDevice *device, GVariantIter *iter)
 FwupdDevice *
 fwupd_device_new_from_data (GVariant *data)
 {
-	FwupdDevice *res = NULL;
+	FwupdDevice *dev = NULL;
 	const gchar *type_string;
 	g_autoptr(GVariantIter) iter = NULL;
 
 	/* format from GetDetails */
 	type_string = g_variant_get_type_string (data);
 	if (g_strcmp0 (type_string, "(a{sv})") == 0) {
-		res = fwupd_device_new ();
+		dev = fwupd_device_new ();
 		g_variant_get (data, "(a{sv})", &iter);
-		fwupd_device_from_variant_iter (res, iter);
+		fwupd_device_set_from_variant_iter (dev, iter);
 	} else if (g_strcmp0 (type_string, "a{sv}") == 0) {
-		res = fwupd_device_new ();
+		dev = fwupd_device_new ();
 		g_variant_get (data, "a{sv}", &iter);
-		fwupd_device_from_variant_iter (res, iter);
+		fwupd_device_set_from_variant_iter (dev, iter);
+	} else if (g_strcmp0 (type_string, "{sa{sv}}") == 0) {
+		const gchar *id;
+		dev = fwupd_device_new ();
+		g_variant_get (data, "{&sa{sv}}", &id, &iter);
+		fwupd_device_set_id (dev, id);
+		fwupd_device_set_from_variant_iter (dev, iter);
 	} else {
 		g_warning ("type %s not known", type_string);
 	}
-	return res;
+	return dev;
 }
 
 /**

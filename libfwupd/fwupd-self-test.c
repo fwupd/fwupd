@@ -162,13 +162,12 @@ static void
 fwupd_client_devices_func (void)
 {
 	FwupdDevice *dev;
-	FwupdResult *res;
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GError) error = NULL;
 
 	client = fwupd_client_new ();
-	array = fwupd_client_get_devices (client, NULL, &error);
+	array = fwupd_client_get_devices_simple (client, NULL, &error);
 	if (array == NULL &&
 	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
 		return;
@@ -180,9 +179,8 @@ fwupd_client_devices_func (void)
 	g_assert_cmpint (array->len, >, 0);
 
 	/* check device */
-	res = g_ptr_array_index (array, 0);
-	g_assert (FWUPD_IS_RESULT (res));
-	dev = fwupd_result_get_device (res);
+	dev = g_ptr_array_index (array, 0);
+	g_assert (FWUPD_IS_DEVICE (dev));
 	g_assert_cmpstr (fwupd_device_get_guid_default (dev), !=, NULL);
 	g_assert_cmpstr (fwupd_device_get_id (dev), !=, NULL);
 }

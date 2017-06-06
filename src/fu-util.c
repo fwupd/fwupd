@@ -326,15 +326,14 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	g_autoptr(GPtrArray) devices_filtered = NULL;
 
 	/* get devices from daemon */
-	devices = fwupd_client_get_devices (priv->client, NULL, error);
+	devices = fwupd_client_get_devices_simple (priv->client, NULL, error);
 	if (devices == NULL)
 		return FALSE;
 
 	/* filter results */
 	devices_filtered = g_ptr_array_new ();
 	for (guint i = 0; i < devices->len; i++) {
-		FwupdResult *res = g_ptr_array_index (devices, i);
-		dev = fwupd_result_get_device (res);
+		dev = g_ptr_array_index (devices, i);
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
 			continue;
 		g_ptr_array_add (devices_filtered, dev);
@@ -372,24 +371,24 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(GPtrArray) results = NULL;
+	g_autoptr(GPtrArray) devs = NULL;
 
 	/* get results from daemon */
-	results = fwupd_client_get_devices (priv->client, NULL, error);
-	if (results == NULL)
+	devs = fwupd_client_get_devices_simple (priv->client, NULL, error);
+	if (devs == NULL)
 		return FALSE;
 
 	/* print */
-	if (results->len == 0) {
+	if (devs->len == 0) {
 		/* TRANSLATORS: nothing attached that can be upgraded */
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
 
-	for (guint i = 0; i < results->len; i++) {
+	for (guint i = 0; i < devs->len; i++) {
 		g_autofree gchar *tmp = NULL;
-		FwupdResult *res = g_ptr_array_index (results, i);
-		tmp = fwupd_result_to_string (res);
+		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		tmp = fwupd_device_to_string (dev);
 		g_print ("%s\n", tmp);
 	}
 
@@ -642,18 +641,17 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_verify_update_all (FuUtilPrivate *priv, GError **error)
 {
-	g_autoptr(GPtrArray) results = NULL;
+	g_autoptr(GPtrArray) devs = NULL;
 
 	/* get devices from daemon */
-	results = fwupd_client_get_devices (priv->client, NULL, error);
-	if (results == NULL)
+	devs = fwupd_client_get_devices_simple (priv->client, NULL, error);
+	if (devs == NULL)
 		return FALSE;
 
 	/* get results */
-	for (guint i = 0; i < results->len; i++) {
+	for (guint i = 0; i < devs->len; i++) {
 		g_autoptr(GError) error_local = NULL;
-		FwupdResult *res = g_ptr_array_index (results, i);
-		FwupdDevice *dev = fwupd_result_get_device (res);
+		FwupdDevice *dev = g_ptr_array_index (devs, i);
 		if (!fwupd_client_verify_update (priv->client,
 						 fwupd_device_get_id (dev),
 						 NULL,
@@ -1013,18 +1011,17 @@ fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error
 static gboolean
 fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 {
-	g_autoptr(GPtrArray) results = NULL;
+	g_autoptr(GPtrArray) devs = NULL;
 
 	/* get devices from daemon */
-	results = fwupd_client_get_devices (priv->client, NULL, error);
-	if (results == NULL)
+	devs = fwupd_client_get_devices_simple (priv->client, NULL, error);
+	if (devs == NULL)
 		return FALSE;
 
 	/* get results */
-	for (guint i = 0; i < results->len; i++) {
+	for (guint i = 0; i < devs->len; i++) {
 		g_autoptr(GError) error_local = NULL;
-		FwupdResult *res = g_ptr_array_index (results, i);
-		FwupdDevice *dev = fwupd_result_get_device (res);
+		FwupdDevice *dev = g_ptr_array_index (devs, i);
 		if (!fwupd_client_verify (priv->client,
 					  fwupd_device_get_id (dev),
 					  NULL,
