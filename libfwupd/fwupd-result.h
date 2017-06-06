@@ -129,14 +129,14 @@ guint64		 fwupd_result_get_device_modified	(FwupdResult	*result);
 G_DEPRECATED_FOR(fwupd_device_set_modified)
 void		 fwupd_result_set_device_modified	(FwupdResult	*result,
 							 guint64	 device_modified);
-G_DEPRECATED_FOR(fwupd_device_get_checksum)
+G_DEPRECATED_FOR(fwupd_device_get_checksums)
 const gchar	*fwupd_result_get_device_checksum	(FwupdResult	*result);
-G_DEPRECATED_FOR(fwupd_device_set_checksum)
+G_DEPRECATED_FOR(fwupd_device_add_checksum)
 void		 fwupd_result_set_device_checksum	(FwupdResult	*result,
 							 const gchar	*device_checksum);
-G_DEPRECATED_FOR(fwupd_device_get_checksum_kind)
+G_DEPRECATED_FOR(fwupd_device_get_checksums)
 GChecksumType	 fwupd_result_get_device_checksum_kind	(FwupdResult	*result);
-G_DEPRECATED_FOR(fwupd_device_set_checksum_kind)
+G_DEPRECATED_FOR(fwupd_device_add_checksum)
 void		 fwupd_result_set_device_checksum_kind	(FwupdResult	*result,
 							 GChecksumType	 checkum_kind);
 G_DEPRECATED_FOR(fwupd_device_get_provider)
@@ -169,14 +169,14 @@ void		 fwupd_result_set_update_filename	(FwupdResult	*result,
 FwupdUpdateState fwupd_result_get_update_state		(FwupdResult	*result);
 void		 fwupd_result_set_update_state		(FwupdResult	*result,
 							 FwupdUpdateState update_state);
-G_DEPRECATED_FOR(fwupd_release_get_checksum)
+G_DEPRECATED_FOR(fwupd_release_get_checksums)
 const gchar	*fwupd_result_get_update_checksum	(FwupdResult	*result);
-G_DEPRECATED_FOR(fwupd_release_set_checksum)
+G_DEPRECATED_FOR(fwupd_release_add_checksum)
 void		 fwupd_result_set_update_checksum	(FwupdResult	*result,
 							 const gchar	*update_checksum);
-G_DEPRECATED_FOR(fwupd_release_get_checksum_kind)
+G_DEPRECATED_FOR(fwupd_release_get_checksums)
 GChecksumType	 fwupd_result_get_update_checksum_kind	(FwupdResult	*result);
-G_DEPRECATED_FOR(fwupd_release_set_checksum_kind)
+G_DEPRECATED_FOR(fwupd_release_add_checksum)
 void		 fwupd_result_set_update_checksum_kind	(FwupdResult	*result,
 							 GChecksumType	 checkum_kind);
 G_DEPRECATED_FOR(fwupd_release_get_uri)

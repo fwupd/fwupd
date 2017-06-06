@@ -107,8 +107,7 @@ fwupd_result_func (void)
 	/* create dummy object */
 	result = fwupd_result_new ();
 	dev = fwupd_result_get_device (result);
-	fwupd_device_set_checksum (dev, "beefdead");
-	fwupd_device_set_checksum_kind (dev, G_CHECKSUM_SHA256);
+	fwupd_device_add_checksum (dev, "beefdead");
 	fwupd_device_set_created (dev, 1);
 	fwupd_device_set_flags (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 	fwupd_device_set_id (dev, "USB:foo");
@@ -120,7 +119,7 @@ fwupd_result_func (void)
 	fwupd_result_set_update_trust_flags (result, FWUPD_TRUST_FLAG_PAYLOAD);
 
 	rel = fwupd_result_get_release (result);
-	fwupd_release_set_checksum (rel, "deadbeef");
+	fwupd_release_add_checksum (rel, "deadbeef");
 	fwupd_release_set_description (rel, "<p>Hi there!</p>");
 	fwupd_release_set_filename (rel, "firmware.bin");
 	fwupd_release_set_appstream_id (rel, "org.dave.ColorHug.firmware");
@@ -141,16 +140,14 @@ fwupd_result_func (void)
 		"  Guid:                 00000000-0000-0000-0000-000000000000\n"
 		"  DeviceID:             USB:foo\n"
 		"  Flags:                allow-offline|require-ac\n"
-		"  FirmwareHash:         beefdead\n"
-		"  DeviceChecksumKind:   sha256\n"
+		"  FirmwareHash:         SHA1(beefdead)\n"
 		"  Created:              1970-01-01\n"
 		"  Modified:             1970-01-02\n"
 		"  AppstreamId:          org.dave.ColorHug.firmware\n"
 		"  UpdateDescription:    <p>Hi there!</p>\n"
 		"  UpdateVersion:        1.2.3\n"
 		"  FilenameCab:          firmware.bin\n"
-		"  UpdateHash:           deadbeef\n"
-		"  UpdateChecksumKind:   sha1\n"
+		"  UpdateHash:           SHA1(deadbeef)\n"
 		"  Size:                 1.0 kB\n"
 		"  UpdateUri:            http://foo.com\n"
 		"  Trusted:              payload\n", &error);

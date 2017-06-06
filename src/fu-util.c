@@ -39,6 +39,7 @@
 #include "fu-hwids.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
+#include "fwupd-common-private.h"
 
 #ifndef GUdevClient_autoptr
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
@@ -704,9 +705,9 @@ fu_util_download_file (FuUtilPrivate *priv,
 		       SoupURI *uri,
 		       const gchar *fn,
 		       const gchar *checksum_expected,
-		       GChecksumType checksum_type,
 		       GError **error)
 {
+	GChecksumType checksum_type;
 	const gchar *http_proxy;
 	guint status_code;
 	g_autoptr(GError) error_local = NULL;
@@ -717,6 +718,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 	g_autoptr(SoupSession) session = NULL;
 
 	/* check if the file already exists with the right checksum */
+	checksum_type = fwupd_checksum_guess_kind (checksum_expected);
 	if (fu_util_file_exists_with_checksum (fn, checksum_expected, checksum_type)) {
 		g_debug ("skpping download as file already exists");
 		return TRUE;
@@ -829,13 +831,13 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	/* download the metadata */
 	filename = g_build_filename (cache_dir, fwupd_remote_get_filename (remote), NULL);
 	if (!fu_util_download_file (priv, fwupd_remote_get_uri (remote),
-				    filename, NULL, 0, error))
+				    filename, NULL, error))
 		return FALSE;
 
 	/* download the signature */
 	filename_asc = g_build_filename (cache_dir, fwupd_remote_get_filename_asc (remote), NULL);
 	if (!fu_util_download_file (priv, fwupd_remote_get_uri_asc (remote),
-				    filename_asc, NULL, 0, error))
+				    filename_asc, NULL, error))
 		return FALSE;
 
 	/* send all this to fwupd */
@@ -905,20 +907,6 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-static const gchar *
-_g_checksum_type_to_string (GChecksumType checksum_type)
-{
-	if (checksum_type == G_CHECKSUM_MD5)
-		return "md5";
-	if (checksum_type == G_CHECKSUM_SHA1)
-		return "sha1";
-	if (checksum_type == G_CHECKSUM_SHA256)
-		return "sha256";
-	if (checksum_type == G_CHECKSUM_SHA512)
-		return "sha512";
-	return NULL;
-}
-
 static gboolean
 fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -942,6 +930,7 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index (rels, i);
+		GPtrArray *checksums;
 		const gchar *tmp = fwupd_release_get_description (rel);
 
 		/* TRANSLATORS: section header for release version number */
@@ -956,14 +945,13 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 			/* TRANSLATORS: section header for firmware description */
 			fu_util_print_data (_("Description"), desc);
 		}
-
-		/* TRANSLATORS: section header for firmware checksum */
-		fu_util_print_data (_("Checksum"), fwupd_release_get_checksum (rel));
-		if (fwupd_release_get_checksum (rel) != NULL) {
-			GChecksumType checksum_type = fwupd_release_get_checksum_kind (rel);
-			tmp = _g_checksum_type_to_string (checksum_type);
-			/* TRANSLATORS: section header for firmware checksum type */
-			fu_util_print_data (_("Checksum Type"), tmp);
+		checksums = fwupd_device_get_checksums (dev);
+		for (guint j = 0; j < checksums->len; j++) {
+			const gchar *checksum = g_ptr_array_index (checksums, j);
+			g_autofree gchar *checksum_display;
+			checksum_display = fwupd_checksum_format_for_display (checksum);
+			/* TRANSLATORS: section header for firmware checksum */
+			fu_util_print_data (_("Checksum"), checksum_display);
 		}
 
 		/* new line between all but last entries */
@@ -1071,7 +1059,6 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *results = NULL;
 	GPtrArray *guids;
-	GChecksumType checksum_type;
 	const gchar *tmp;
 
 	/* print any updates */
@@ -1082,6 +1069,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdResult *res = g_ptr_array_index (results, i);
 		FwupdDevice *dev = fwupd_result_get_device (res);
 		FwupdRelease *rel = fwupd_result_get_release (res);
+		GPtrArray *checksums;
 
 		/* TRANSLATORS: first replacement is device name */
 		g_print (_("%s has firmware updates:"), fwupd_device_get_name (dev));
@@ -1105,15 +1093,13 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("Update Remote ID"),
 				    fwupd_release_get_remote_id (rel));
 
-		/* TRANSLATORS: section header for firmware checksum */
-		fu_util_print_data (_("Update Checksum"),
-				    fwupd_release_get_checksum (rel));
-
-		/* TRANSLATORS: section header for firmware checksum type */
-		if (fwupd_release_get_checksum (rel) != NULL) {
-			checksum_type = fwupd_release_get_checksum_kind (rel);
-			tmp = _g_checksum_type_to_string (checksum_type);
-			fu_util_print_data (_("Update Checksum Type"), tmp);
+		checksums = fwupd_device_get_checksums (dev);
+		for (guint j = 0; j < checksums->len; j++) {
+			const gchar *checksum = g_ptr_array_index (checksums, j);
+			g_autofree gchar *checksum_display;
+			checksum_display = fwupd_checksum_format_for_display (checksum);
+			/* TRANSLATORS: section header for firmware checksum */
+			fu_util_print_data (_("Update Checksum"), checksum_display);
 		}
 
 		/* TRANSLATORS: section header for firmware remote http:// */
@@ -1207,12 +1193,32 @@ fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+/* return in order of security */
+static const gchar *
+fu_util_get_best_checksum (GPtrArray *checksums)
+{
+	GChecksumType checksum_types[] = {
+		G_CHECKSUM_SHA512,
+		G_CHECKSUM_SHA256,
+		G_CHECKSUM_SHA1,
+		0 };
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		for (guint j = 0; j < checksums->len; j++) {
+			const gchar *checksum = g_ptr_array_index (checksums, j);
+			if (fwupd_checksum_guess_kind (checksum) == checksum_types[i])
+				return checksum;
+		}
+	}
+	return NULL;
+}
+
 static gboolean
 fu_util_update_device_with_release (FuUtilPrivate *priv,
 				    FwupdDevice *dev,
 				    FwupdRelease *rel,
 				    GError **error)
 {
+	GPtrArray *checksums;
 	const gchar *remote_id;
 	const gchar *uri_tmp;
 	g_autofree gchar *basename = NULL;
@@ -1249,9 +1255,9 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 		 fwupd_device_get_name (dev));
 	basename = g_path_get_basename (uri_tmp);
 	fn = g_build_filename (cache_dir, basename, NULL);
+	checksums = fwupd_release_get_checksums (rel);
 	if (!fu_util_download_file (priv, uri, fn,
-				    fwupd_release_get_checksum (rel),
-				    fwupd_release_get_checksum_kind (rel),
+				    fu_util_get_best_checksum (checksums),
 				    error))
 		return FALSE;
 	g_print ("Updating %s on %s...\n",
@@ -1273,7 +1279,8 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdResult *res = g_ptr_array_index (results, i);
 		FwupdDevice *dev = fwupd_result_get_device (res);
 		FwupdRelease *rel = fwupd_result_get_release (res);
-		if (fwupd_release_get_checksum (rel) == NULL)
+		GPtrArray *checksums = fwupd_release_get_checksums (rel);
+		if (checksums->len == 0)
 			continue;
 		if (fwupd_release_get_uri (rel) == NULL)
 			continue;

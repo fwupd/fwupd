@@ -86,12 +86,9 @@ void		 fwupd_device_set_created		(FwupdDevice	*device,
 guint64		 fwupd_device_get_modified		(FwupdDevice	*device);
 void		 fwupd_device_set_modified		(FwupdDevice	*device,
 							 guint64	 modified);
-const gchar	*fwupd_device_get_checksum		(FwupdDevice	*device);
-void		 fwupd_device_set_checksum		(FwupdDevice	*device,
+GPtrArray	*fwupd_device_get_checksums		(FwupdDevice	*device);
+void		 fwupd_device_add_checksum		(FwupdDevice	*device,
 							 const gchar	*checksum);
-GChecksumType	 fwupd_device_get_checksum_kind		(FwupdDevice	*device);
-void		 fwupd_device_set_checksum_kind		(FwupdDevice	*device,
-							 GChecksumType	 checkum_kind);
 const gchar	*fwupd_device_get_provider		(FwupdDevice	*device);
 void		 fwupd_device_set_provider		(FwupdDevice	*device,
 							 const gchar	*provider);

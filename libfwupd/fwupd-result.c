@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
@@ -638,8 +639,15 @@ const gchar *
 fwupd_result_get_update_checksum (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	GPtrArray *checksums;
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return fwupd_release_get_checksum (priv->release);
+	checksums = fwupd_release_get_checksums (priv->release);
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *checksum = g_ptr_array_index (checksums, i);
+		if (fwupd_checksum_guess_kind (checksum) == G_CHECKSUM_SHA1)
+			return checksum;
+	}
+	return NULL;
 }
 
 /**
@@ -656,7 +664,7 @@ fwupd_result_set_update_checksum (FwupdResult *result, const gchar *update_check
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	fwupd_release_set_checksum (priv->release, update_checksum);
+	fwupd_release_add_checksum (priv->release, update_checksum);
 }
 
 /**
@@ -672,9 +680,7 @@ fwupd_result_set_update_checksum (FwupdResult *result, const gchar *update_check
 GChecksumType
 fwupd_result_get_update_checksum_kind (FwupdResult *result)
 {
-	FwupdResultPrivate *priv = GET_PRIVATE (result);
-	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
-	return fwupd_release_get_checksum_kind (priv->release);
+	return G_CHECKSUM_SHA1;
 }
 
 /**
@@ -689,9 +695,6 @@ fwupd_result_get_update_checksum_kind (FwupdResult *result)
 void
 fwupd_result_set_update_checksum_kind (FwupdResult *result, GChecksumType checkum_kind)
 {
-	FwupdResultPrivate *priv = GET_PRIVATE (result);
-	g_return_if_fail (FWUPD_IS_RESULT (result));
-	fwupd_release_set_checksum_kind (priv->release, checkum_kind);
 }
 
 /**
@@ -883,8 +886,15 @@ const gchar *
 fwupd_result_get_device_checksum (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	GPtrArray *checksums;
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return fwupd_device_get_checksum (priv->device);
+	checksums = fwupd_device_get_checksums (priv->device);
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *checksum = g_ptr_array_index (checksums, i);
+		if (fwupd_checksum_guess_kind (checksum) == G_CHECKSUM_SHA1)
+			return checksum;
+	}
+	return NULL;
 }
 
 /**
@@ -901,7 +911,7 @@ fwupd_result_set_device_checksum (FwupdResult *result, const gchar *device_check
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	fwupd_device_set_checksum (priv->device, device_checksum);
+	fwupd_device_add_checksum (priv->device, device_checksum);
 }
 
 /**
@@ -917,9 +927,7 @@ fwupd_result_set_device_checksum (FwupdResult *result, const gchar *device_check
 GChecksumType
 fwupd_result_get_device_checksum_kind (FwupdResult *result)
 {
-	FwupdResultPrivate *priv = GET_PRIVATE (result);
-	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
-	return fwupd_device_get_checksum_kind (priv->device);
+	return G_CHECKSUM_SHA1;
 }
 
 /**
@@ -934,9 +942,6 @@ fwupd_result_get_device_checksum_kind (FwupdResult *result)
 void
 fwupd_result_set_device_checksum_kind (FwupdResult *result, GChecksumType checkum_kind)
 {
-	FwupdResultPrivate *priv = GET_PRIVATE (result);
-	g_return_if_fail (FWUPD_IS_RESULT (result));
-	fwupd_device_set_checksum_kind (priv->device, checkum_kind);
 }
 
 /**

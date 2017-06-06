@@ -33,6 +33,7 @@ fwupd = shared_library(
   'fwupd',
   sources : [
     'fwupd-client.c',
+    'fwupd-common.c',
     'fwupd-device.c',
     'fwupd-enums.c',
     'fwupd-error.c',

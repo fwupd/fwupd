@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
+#include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-resources.h"
@@ -327,7 +328,7 @@ fu_main_set_release_from_item (FwupdRelease *rel, AsRelease *release)
 	if (csum != NULL) {
 		tmp = as_checksum_get_value (csum);
 		if (tmp != NULL)
-			fwupd_release_set_checksum (rel, tmp);
+			fwupd_release_add_checksum (rel, tmp);
 	}
 	fwupd_release_set_size (rel, as_release_get_size (release, AS_SIZE_KIND_INSTALLED));
 }
@@ -477,8 +478,8 @@ static AsApp *
 fu_main_verify_update_device_to_app (FuDevice *device)
 {
 	AsApp *app = NULL;
+	GPtrArray *checksums;
 	g_autofree gchar *id = NULL;
-	g_autoptr(AsChecksum) csum = NULL;
 	g_autoptr(AsProvide) prov = NULL;
 	g_autoptr(AsRelease) rel = NULL;
 
@@ -491,11 +492,15 @@ fu_main_verify_update_device_to_app (FuDevice *device)
 	as_app_set_kind (app, AS_APP_KIND_FIRMWARE);
 	rel = as_release_new ();
 	as_release_set_version (rel, fu_device_get_version (device));
-	csum = as_checksum_new ();
-	as_checksum_set_kind (csum, fu_device_get_checksum_kind (device));
-	as_checksum_set_value (csum, fu_device_get_checksum (device));
-	as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
-	as_release_add_checksum (rel, csum);
+	checksums = fu_device_get_checksums (device);
+	for (guint j = 0; j < checksums->len; j++) {
+		const gchar *checksum = g_ptr_array_index (checksums, j);
+		g_autoptr(AsChecksum) csum = as_checksum_new ();
+		as_checksum_set_kind (csum, fwupd_checksum_guess_kind (checksum));
+		as_checksum_set_value (csum, checksum);
+		as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
+		as_release_add_checksum (rel, csum);
+	}
 	as_app_add_release (app, rel);
 	prov = as_provide_new ();
 	as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
@@ -524,6 +529,7 @@ fu_main_plugin_verify_update_authenticated (FuMainAuthHelper *helper, GError **e
 	for (guint i = 0; i < helper->devices->len; i ++) {
 		FuDevice *device = g_ptr_array_index (helper->devices, i);
 		FuDeviceItem *item;
+		GPtrArray *checksums;
 		g_autoptr(AsApp) app = NULL;
 
 		item = fu_main_get_item_by_id (helper->priv,
@@ -547,7 +553,8 @@ fu_main_plugin_verify_update_authenticated (FuMainAuthHelper *helper, GError **e
 		}
 
 		/* get the checksum */
-		if (fu_device_get_checksum (item->device) == NULL) {
+		checksums = fu_device_get_checksums (item->device);
+		if (checksums->len == 0) {
 			if (!fu_plugin_runner_verify (item->plugin,
 						      item->device,
 						      FU_PLUGIN_VERIFY_FLAG_NONE,
@@ -557,7 +564,7 @@ fu_main_plugin_verify_update_authenticated (FuMainAuthHelper *helper, GError **e
 		}
 
 		/* we got nothing */
-		if (fu_device_get_checksum (item->device) == NULL) {
+		if (checksums->len == 0) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_NOT_SUPPORTED,
@@ -2170,6 +2177,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		AsChecksum *csum;
 		AsRelease *release;
 		FuDeviceItem *item = NULL;
+		GPtrArray *checksums;
 		const gchar *hash = NULL;
 		const gchar *id = NULL;
 		const gchar *version = NULL;
@@ -2229,7 +2237,33 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		hash = fu_device_get_checksum (item->device);
+
+		/* get the matching checksum */
+		checksums = fu_device_get_checksums (item->device);
+		if (checksums->len == 0) {
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No device checksums for %s", version);
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+		for (guint j = 0; j < checksums->len; j++) {
+			const gchar *hash_tmp = g_ptr_array_index (checksums, j);
+			GChecksumType hash_kind = fwupd_checksum_guess_kind (hash_tmp);
+			if (as_checksum_get_kind (csum) == hash_kind) {
+				hash = hash_tmp;
+				break;
+			}
+		}
+		if (hash == NULL) {
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No matching hash kind for %s", version);
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
 		if (g_strcmp0 (as_checksum_get_value (csum), hash) != 0) {
 			g_set_error (&error,
 				     FWUPD_ERROR,

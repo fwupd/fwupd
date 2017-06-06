@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-release-private.h"
@@ -32,8 +33,7 @@
 static void fwupd_release_finalize	 (GObject *object);
 
 typedef struct {
-	gchar				*checksum;
-	GChecksumType			 checksum_kind;
+	GPtrArray			*checksums;
 	gchar				*description;
 	gchar				*filename;
 	gchar				*homepage;
@@ -160,25 +160,25 @@ fwupd_release_set_filename (FwupdRelease *release, const gchar *filename)
 }
 
 /**
- * fwupd_release_get_checksum:
- * @release: A #FwupdRelease
+ * fwupd_device_get_checksums:
+ * @device: A #FwupdDevice
  *
- * Gets the update checksum.
+ * Gets the device checksums.
  *
- * Returns: the update checksum, or %NULL if unset
+ * Returns: (element-type utf8) (transfer none): the checksums, which may be empty
  *
  * Since: 0.9.3
  **/
-const gchar *
-fwupd_release_get_checksum (FwupdRelease *release)
+GPtrArray *
+fwupd_release_get_checksums (FwupdRelease *release)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
-	return priv->checksum;
+	return priv->checksums;
 }
 
 /**
- * fwupd_release_set_checksum:
+ * fwupd_release_add_checksum:
  * @release: A #FwupdRelease
  * @checksum: the update checksum
  *
@@ -187,47 +187,12 @@ fwupd_release_get_checksum (FwupdRelease *release)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_checksum (FwupdRelease *release, const gchar *checksum)
+fwupd_release_add_checksum (FwupdRelease *release, const gchar *checksum)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	g_return_if_fail (FWUPD_IS_RELEASE (release));
-	g_free (priv->checksum);
-	priv->checksum = g_strdup (checksum);
-}
-
-/**
- * fwupd_release_get_checksum_kind:
- * @release: A #FwupdRelease
- *
- * Gets the update checkum kind.
- *
- * Returns: the #GChecksumType
- *
- * Since: 0.9.3
- **/
-GChecksumType
-fwupd_release_get_checksum_kind (FwupdRelease *release)
-{
-	FwupdReleasePrivate *priv = GET_PRIVATE (release);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (release), 0);
-	return priv->checksum_kind;
-}
-
-/**
- * fwupd_release_set_checksum_kind:
- * @release: A #FwupdRelease
- * @checkum_kind: the checksum kind, e.g. %G_CHECKSUM_SHA1
- *
- * Sets the update checkum kind.
- *
- * Since: 0.9.3
- **/
-void
-fwupd_release_set_checksum_kind (FwupdRelease *release, GChecksumType checkum_kind)
-{
-	FwupdReleasePrivate *priv = GET_PRIVATE (release);
-	g_return_if_fail (FWUPD_IS_RELEASE (release));
-	priv->checksum_kind = checkum_kind;
+	g_return_if_fail (checksum != NULL);
+	g_ptr_array_add (priv->checksums, g_strdup (checksum));
 }
 
 /**
@@ -597,13 +562,18 @@ fwupd_release_to_variant_builder (FwupdRelease *release, GVariantBuilder *builde
 				       FWUPD_RESULT_KEY_UPDATE_DESCRIPTION,
 				       g_variant_new_string (priv->description));
 	}
-	if (priv->checksum != NULL) {
+	if (priv->checksums->len > 0) {
+		guint i;
+		g_autoptr(GString) str = g_string_new ("");
+		for (i = 0; i < priv->checksums->len; i++) {
+			const gchar *checksum = g_ptr_array_index (priv->checksums, i);
+			g_string_append_printf (str, "%s,", checksum);
+		}
+		if (str->len > 0)
+			g_string_truncate (str, str->len - 1);
 		g_variant_builder_add (builder, "{sv}",
 				       FWUPD_RESULT_KEY_UPDATE_CHECKSUM,
-				       g_variant_new_string (priv->checksum));
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_CHECKSUM_KIND,
-				       g_variant_new_uint32 (priv->checksum_kind));
+				       g_variant_new_string (str->str));
 	}
 	if (priv->uri != NULL) {
 		g_variant_builder_add (builder, "{sv}",
@@ -694,11 +664,10 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_CHECKSUM) == 0) {
-		fwupd_release_set_checksum (release, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_CHECKSUM_KIND) == 0) {
-		fwupd_release_set_checksum_kind (release, g_variant_get_uint32 (value));
+		const gchar *checksums = g_variant_get_string (value, NULL);
+		g_auto(GStrv) split = g_strsplit (checksums, ",", -1);
+		for (guint i = 0; split[i] != NULL; i++)
+			fwupd_release_add_checksum (release, split[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_URI) == 0) {
@@ -729,19 +698,6 @@ fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
 	for (gsize i = strlen (key); i < 20; i++)
 		g_string_append (str, " ");
 	g_string_append_printf (str, "%s\n", value);
-}
-
-static void
-fwupd_pad_kv_csk (GString *str, const gchar *key, GChecksumType checksum_type)
-{
-	const gchar *tmp = "unknown";
-	if (checksum_type == G_CHECKSUM_SHA1)
-		tmp = "sha1";
-	else if (checksum_type == G_CHECKSUM_SHA256)
-		tmp = "sha256";
-	else if (checksum_type == G_CHECKSUM_SHA512)
-		tmp = "sha512";
-	fwupd_pad_kv_str (str, key, tmp);
 }
 
 static void
@@ -781,9 +737,11 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_VERSION, priv->version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_FILENAME, priv->filename);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_CHECKSUM, priv->checksum);
-	if (priv->checksum != NULL)
-		fwupd_pad_kv_csk (str, FWUPD_RESULT_KEY_UPDATE_CHECKSUM_KIND, priv->checksum_kind);
+	for (guint i = 0; i < priv->checksums->len; i++) {
+		const gchar *checksum = g_ptr_array_index (priv->checksums, i);
+		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display (checksum);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_CHECKSUM, checksum_display);
+	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_LICENSE, priv->license);
 	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_UPDATE_SIZE, priv->size);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_URI, priv->uri);
@@ -804,7 +762,7 @@ static void
 fwupd_release_init (FwupdRelease *release)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
-	priv->checksum_kind = G_CHECKSUM_SHA1;
+	priv->checksums = g_ptr_array_new_with_free_func (g_free);
 }
 
 static void
@@ -815,7 +773,6 @@ fwupd_release_finalize (GObject *object)
 
 	g_free (priv->description);
 	g_free (priv->filename);
-	g_free (priv->checksum);
 	g_free (priv->appstream_id);
 	g_free (priv->license);
 	g_free (priv->name);
@@ -825,6 +782,7 @@ fwupd_release_finalize (GObject *object)
 	g_free (priv->vendor);
 	g_free (priv->version);
 	g_free (priv->remote_id);
+	g_ptr_array_unref (priv->checksums);
 
 	G_OBJECT_CLASS (fwupd_release_parent_class)->finalize (object);
 }

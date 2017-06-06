@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-device-private.h"
@@ -47,8 +48,7 @@ typedef struct {
 	gchar				*version;
 	gchar				*version_lowest;
 	gchar				*version_bootloader;
-	gchar				*checksum;
-	GChecksumType			 checksum_kind;
+	GPtrArray			*checksums;
 	guint32				 flashes_left;
 } FwupdDevicePrivate;
 
@@ -56,25 +56,25 @@ G_DEFINE_TYPE_WITH_PRIVATE (FwupdDevice, fwupd_device, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_device_get_instance_private (o))
 
 /**
- * fwupd_device_get_checksum:
+ * fwupd_device_get_checksums:
  * @device: A #FwupdDevice
  *
- * Gets the device checksum.
+ * Gets the device checksums.
  *
- * Returns: the device checksum, or %NULL if unset
+ * Returns: (element-type utf8) (transfer none): the checksums, which may be empty
  *
  * Since: 0.9.3
  **/
-const gchar *
-fwupd_device_get_checksum (FwupdDevice *device)
+GPtrArray *
+fwupd_device_get_checksums (FwupdDevice *device)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
-	return priv->checksum;
+	return priv->checksums;
 }
 
 /**
- * fwupd_device_set_checksum:
+ * fwupd_device_add_checksum:
  * @device: A #FwupdDevice
  * @checksum: the device checksum
  *
@@ -83,47 +83,12 @@ fwupd_device_get_checksum (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_checksum (FwupdDevice *device, const gchar *checksum)
+fwupd_device_add_checksum (FwupdDevice *device, const gchar *checksum)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
-	g_free (priv->checksum);
-	priv->checksum = g_strdup (checksum);
-}
-
-/**
- * fwupd_device_get_checksum_kind:
- * @device: A #FwupdDevice
- *
- * Gets the device checkum kind.
- *
- * Returns: the #GChecksumType
- *
- * Since: 0.9.3
- **/
-GChecksumType
-fwupd_device_get_checksum_kind (FwupdDevice *device)
-{
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
-	return priv->checksum_kind;
-}
-
-/**
- * fwupd_device_set_checksum_kind:
- * @device: A #FwupdDevice
- * @checkum_kind: the checksum kind, e.g. %G_CHECKSUM_SHA1
- *
- * Sets the device checkum kind.
- *
- * Since: 0.9.3
- **/
-void
-fwupd_device_set_checksum_kind (FwupdDevice *device, GChecksumType checkum_kind)
-{
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
-	priv->checksum_kind = checkum_kind;
+	g_return_if_fail (checksum != NULL);
+	g_ptr_array_add (priv->checksums, g_strdup (checksum));
 }
 
 /**
@@ -776,13 +741,17 @@ fwupd_device_to_variant_builder (FwupdDevice *device, GVariantBuilder *builder)
 				       FWUPD_RESULT_KEY_DEVICE_DESCRIPTION,
 				       g_variant_new_string (priv->description));
 	}
-	if (priv->checksum != NULL) {
+	if (priv->checksums->len > 0) {
+		g_autoptr(GString) str = g_string_new ("");
+		for (guint i = 0; i < priv->checksums->len; i++) {
+			const gchar *checksum = g_ptr_array_index (priv->checksums, i);
+			g_string_append_printf (str, "%s,", checksum);
+		}
+		if (str->len > 0)
+			g_string_truncate (str, str->len - 1);
 		g_variant_builder_add (builder, "{sv}",
 				       FWUPD_RESULT_KEY_DEVICE_CHECKSUM,
-				       g_variant_new_string (priv->checksum));
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND,
-				       g_variant_new_uint32 (priv->checksum_kind));
+				       g_variant_new_string (str->str));
 	}
 	if (priv->provider != NULL) {
 		g_variant_builder_add (builder, "{sv}",
@@ -878,11 +847,11 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_CHECKSUM) == 0) {
-		fwupd_device_set_checksum (device, g_variant_get_string (value, NULL));
-		return;
-	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND) == 0) {
-		fwupd_device_set_checksum_kind (device, g_variant_get_uint32 (value));
+		guint i;
+		const gchar *checksums = g_variant_get_string (value, NULL);
+		g_auto(GStrv) split = g_strsplit (checksums, ",", -1);
+		for (i = 0; split[i] != NULL; i++)
+			fwupd_device_add_checksum (device, split[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_PLUGIN) == 0) {
@@ -931,19 +900,6 @@ fwupd_pad_kv_unx (GString *str, const gchar *key, guint64 value)
 
 	date = g_date_time_new_from_unix_utc ((gint64) value);
 	tmp = g_date_time_format (date, "%F");
-	fwupd_pad_kv_str (str, key, tmp);
-}
-
-static void
-fwupd_pad_kv_csk (GString *str, const gchar *key, GChecksumType checksum_type)
-{
-	const gchar *tmp = "unknown";
-	if (checksum_type == G_CHECKSUM_SHA1)
-		tmp = "sha1";
-	else if (checksum_type == G_CHECKSUM_SHA256)
-		tmp = "sha256";
-	else if (checksum_type == G_CHECKSUM_SHA512)
-		tmp = "sha512";
 	fwupd_pad_kv_str (str, key, tmp);
 }
 
@@ -1007,9 +963,11 @@ fwupd_device_to_string (FwupdDevice *device)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PLUGIN, priv->provider);
 	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_DEVICE_FLAGS, priv->flags);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_CHECKSUM, priv->checksum);
-	if (priv->checksum != NULL)
-		fwupd_pad_kv_csk (str, FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND, priv->checksum_kind);
+	for (guint i = 0; i < priv->checksums->len; i++) {
+		const gchar *checksum = g_ptr_array_index (priv->checksums, i);
+		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display (checksum);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_CHECKSUM, checksum_display);
+	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VENDOR, priv->vendor);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION, priv->version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST, priv->version_lowest);
@@ -1034,7 +992,7 @@ fwupd_device_init (FwupdDevice *device)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	priv->guids = g_ptr_array_new_with_free_func (g_free);
-	priv->checksum_kind = G_CHECKSUM_SHA1;
+	priv->checksums = g_ptr_array_new_with_free_func (g_free);
 }
 
 static void
@@ -1044,7 +1002,6 @@ fwupd_device_finalize (GObject *object)
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 
 	g_free (priv->description);
-	g_free (priv->checksum);
 	g_free (priv->id);
 	g_free (priv->name);
 	g_free (priv->vendor);
@@ -1053,6 +1010,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->version_lowest);
 	g_free (priv->version_bootloader);
 	g_ptr_array_unref (priv->guids);
+	g_ptr_array_unref (priv->checksums);
 
 	G_OBJECT_CLASS (fwupd_device_parent_class)->finalize (object);
 }

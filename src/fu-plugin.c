@@ -1141,11 +1141,3 @@ fu_plugin_new (void)
 	plugin = g_object_new (FU_TYPE_PLUGIN, NULL);
 	return plugin;
 }
-
-GChecksumType
-fu_plugin_get_checksum_type (FuPluginVerifyFlags flags)
-{
-	if (flags & FU_PLUGIN_VERIFY_FLAG_USE_SHA256)
-		return G_CHECKSUM_SHA256;
-	return G_CHECKSUM_SHA1;
-}

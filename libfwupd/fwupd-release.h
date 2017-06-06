@@ -53,12 +53,10 @@ void		 fwupd_release_set_version		(FwupdRelease	*release,
 const gchar	*fwupd_release_get_uri			(FwupdRelease	*release);
 void		 fwupd_release_set_uri			(FwupdRelease	*release,
 							 const gchar	*uri);
-const gchar	*fwupd_release_get_checksum		(FwupdRelease	*release);
-void		 fwupd_release_set_checksum		(FwupdRelease	*release,
+GPtrArray	*fwupd_release_get_checksums		(FwupdRelease	*release);
+void		 fwupd_release_add_checksum		(FwupdRelease	*release,
 							 const gchar	*checksum);
-GChecksumType	 fwupd_release_get_checksum_kind	(FwupdRelease	*release);
-void		 fwupd_release_set_checksum_kind	(FwupdRelease	*release,
-							 GChecksumType	 checkum_kind);
+
 const gchar	*fwupd_release_get_filename		(FwupdRelease	*release);
 void		 fwupd_release_set_filename		(FwupdRelease	*release,
 							 const gchar	*filename);

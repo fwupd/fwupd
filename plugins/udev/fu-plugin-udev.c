@@ -105,7 +105,7 @@ fu_plugin_verify (FuPlugin *plugin,
 	rom = fu_rom_new ();
 	if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, error))
 		return FALSE;
-	fu_device_set_checksum (device, fu_rom_get_checksum (rom));
+	fu_device_add_checksum (device, fu_rom_get_checksum (rom));
 	return TRUE;
 }
 

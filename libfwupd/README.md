@@ -6,6 +6,7 @@ When we next bump soname the following changes are planned:
  * {sa{sv}} -> {a{sv}} -- we don't always want to send the device ID
  * Rename FU_DEVICE_FLAG -> FWUPD_DEVICE_FLAG
  * Remove all deprecated API
+ * Remove FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND
  * Rename GetDetailsLocal() -> GetDetails()
  * Rename UpdateMetadataWithId() -> UpdateMetadata()
  * Make DeviceAdded emit a FwupdDevice, not a FwupdResult
