@@ -289,6 +289,86 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 	}
 }
 
+static guint
+fu_util_prompt_for_number (guint maxnum)
+{
+	gint retval;
+	guint answer = 0;
+
+	do {
+		char buffer[64];
+
+		/* swallow the \n at end of line too */
+		if (!fgets (buffer, sizeof (buffer), stdin))
+			break;
+		if (strlen (buffer) == sizeof (buffer) - 1)
+			continue;
+
+		/* get a number */
+		retval = sscanf (buffer, "%u", &answer);
+
+		/* positive */
+		if (retval == 1 && answer > 0 && answer <= maxnum)
+			break;
+
+		/* TRANSLATORS: the user isn't reading the question */
+		g_print (_("Please enter a number from 1 to %u: "), maxnum);
+	} while (TRUE);
+	return answer;
+}
+
+static FwupdDevice *
+fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
+{
+	FwupdDevice *dev;
+	guint idx;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_filtered = NULL;
+
+	/* get devices from daemon */
+	devices = fwupd_client_get_devices (priv->client, NULL, error);
+	if (devices == NULL)
+		return FALSE;
+
+	/* filter results */
+	devices_filtered = g_ptr_array_new ();
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdResult *res = g_ptr_array_index (devices, i);
+		dev = fwupd_result_get_device (res);
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+		g_ptr_array_add (devices_filtered, dev);
+	}
+
+	/* nothing */
+	if (devices_filtered->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No supported devices");
+		return NULL;
+	}
+
+	/* exactly one */
+	if (devices_filtered->len == 1) {
+		dev = g_ptr_array_index (devices_filtered, 0);
+		return g_object_ref (dev);
+	}
+
+	/* TRANSLATORS: get interactive prompt */
+	g_print ("%s\n", _("Choose a device:"));
+	for (guint i = 0; i < devices_filtered->len; i++) {
+		dev = g_ptr_array_index (devices_filtered, i);
+		g_print ("%u.\t%s (%s)\n",
+			 i + 1,
+			 fwupd_device_get_id (dev),
+			 fwupd_device_get_name (dev));
+	}
+	idx = fu_util_prompt_for_number (devices_filtered->len);
+	dev = g_ptr_array_index (devices_filtered, idx - 1);
+	return g_object_ref (dev);
+}
+
 static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -844,15 +924,22 @@ _g_checksum_type_to_string (GChecksumType checksum_type)
 static gboolean
 fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
-	if (g_strv_length (values) != 1) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'DeviceID'");
-		return FALSE;
+	const gchar *device_id = NULL;
+
+	/* get device to use */
+	if (g_strv_length (values) == 1) {
+		device_id = values[0];
+	} else {
+		dev = fu_util_prompt_for_device (priv, error);
+		if (dev == NULL)
+			return FALSE;
+		device_id = fwupd_device_get_id (dev);
 	}
-	rels = fwupd_client_get_releases (priv->client, values[0], NULL, error);
+
+	/* get the releases for this device */
+	rels = fwupd_client_get_releases (priv->client, device_id, NULL, error);
 	if (rels == NULL)
 		return FALSE;
 	for (guint i = 0; i < rels->len; i++) {
