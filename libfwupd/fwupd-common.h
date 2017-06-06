@@ -19,27 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-/**
- * SECTION:fwupd
- * @short_description: Helper objects for accessing fwupd
- */
+#ifndef __FWUPD_COMMON_H
+#define __FWUPD_COMMON_H
 
-#ifndef __FWUPD_H__
-#define __FWUPD_H__
+#include <glib.h>
 
-#define __FWUPD_H_INSIDE__
+#define FWUPD_DBUS_PATH			"/"
+#define FWUPD_DBUS_SERVICE		"org.freedesktop.fwupd"
+#define FWUPD_DBUS_INTERFACE		"org.freedesktop.fwupd"
 
-#include <libfwupd/fwupd-client.h>
-#include <libfwupd/fwupd-common.h>
-#include <libfwupd/fwupd-device.h>
-#include <libfwupd/fwupd-enums.h>
-#include <libfwupd/fwupd-error.h>
-#include <libfwupd/fwupd-release.h>
-#include <libfwupd/fwupd-remote.h>
-#include <libfwupd/fwupd-result.h>
-#include <libfwupd/fwupd-version.h>
+#define FWUPD_DEVICE_ID_ANY		"*"
 
-#undef __FWUPD_H_INSIDE__
-
-#endif /* __FWUPD_H__ */
-
+#endif /* __FWUPD_COMMON_H */

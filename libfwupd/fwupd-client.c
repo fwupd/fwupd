@@ -31,6 +31,7 @@
 #include <sys/types.h>
 
 #include "fwupd-client.h"
+#include "fwupd-common.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 #include "fwupd-device-private.h"

@@ -24,12 +24,6 @@
 
 #include <glib.h>
 
-#define FWUPD_DBUS_PATH			"/"
-#define FWUPD_DBUS_SERVICE		"org.freedesktop.fwupd"
-#define FWUPD_DBUS_INTERFACE		"org.freedesktop.fwupd"
-
-#define FWUPD_DEVICE_ID_ANY		"*"
-
 /**
  * FwupdStatus:
  * @FWUPD_STATUS_UNKNOWN:			Unknown state

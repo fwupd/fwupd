@@ -15,6 +15,7 @@ install_headers(
 
 install_headers([
     'fwupd-client.h',
+    'fwupd-common.h',
     'fwupd-device.h',
     'fwupd-enums.h',
     'fwupd-error.h',
