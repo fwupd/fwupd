@@ -1309,7 +1309,6 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, const gchar *remote_id,
 	g_autoptr(GConverter) converter = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFile) file_parent = NULL;
-	g_autoptr(GInputStream) stream_buf = NULL;
 	g_autoptr(GInputStream) stream_fd = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GInputStream) stream_sig = NULL;
@@ -1319,8 +1318,19 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, const gchar *remote_id,
 	bytes_raw = g_input_stream_read_bytes (stream_fd, 0x100000, NULL, error);
 	if (bytes_raw == NULL)
 		return FALSE;
-	stream_buf = g_memory_input_stream_new ();
-	g_memory_input_stream_add_bytes (G_MEMORY_INPUT_STREAM (stream_buf), bytes_raw);
+
+	/* read signature */
+	stream_sig = g_unix_input_stream_new (fd_sig, TRUE);
+	bytes_sig = g_input_stream_read_bytes (stream_sig, 0x800, NULL, error);
+	if (bytes_sig == NULL)
+		return FALSE;
+
+	/* verify file */
+	kr = fu_keyring_new ();
+	if (!fu_keyring_add_public_keys (kr, "/etc/pki/fwupd-metadata", error))
+		return FALSE;
+	if (!fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error))
+		return FALSE;
 
 	/* peek the file type and get data */
 	data = g_bytes_get_data (bytes_raw, &size);
@@ -1332,8 +1342,11 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, const gchar *remote_id,
 		return FALSE;
 	}
 	if (data[0] == 0x1f && data[1] == 0x8b) {
+		g_autoptr(GInputStream) stream_buf = NULL;
 		g_debug ("using GZip decompressor for data");
 		converter = G_CONVERTER (g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP));
+		stream_buf = g_memory_input_stream_new ();
+		g_memory_input_stream_add_bytes (G_MEMORY_INPUT_STREAM (stream_buf), bytes_raw);
 		stream = g_converter_input_stream_new (stream_buf, converter);
 		bytes = g_input_stream_read_bytes (stream, 0x100000, NULL, error);
 		if (bytes == NULL)
@@ -1349,19 +1362,6 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, const gchar *remote_id,
 			     data[0], data[1]);
 		return FALSE;
 	}
-
-	/* read signature */
-	stream_sig = g_unix_input_stream_new (fd_sig, TRUE);
-	bytes_sig = g_input_stream_read_bytes (stream_sig, 0x800, NULL, error);
-	if (bytes_sig == NULL)
-		return FALSE;
-
-	/* verify file */
-	kr = fu_keyring_new ();
-	if (!fu_keyring_add_public_keys (kr, "/etc/pki/fwupd-metadata", error))
-		return FALSE;
-	if (!fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error))
-		return FALSE;
 
 	/* load the store locally until we know it is valid */
 	store = as_store_new ();
