@@ -1,4 +1,4 @@
-%global libglib2_version 2.45.8
+%global glib2_version 2.45.8
 %global libappstream_version 0.6.13
 %global libgusb_version 0.2.9
 %global libsoup_version 2.51.92
