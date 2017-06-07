@@ -1493,7 +1493,7 @@ main (int argc, char *argv[])
 		     "hwids",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Return all the hardare IDs for the machine"),
+		     _("Return all the hardware IDs for the machine"),
 		     fu_util_hwids);
 	fu_util_add (priv->cmd_array,
 		     "install-prepared",
