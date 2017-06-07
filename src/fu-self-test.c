@@ -38,9 +38,8 @@ fu_hwids_func (void)
 {
 	g_autoptr(FuHwids) hwids = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autofree gchar *guid = NULL;
+	g_autofree gchar *sysfsdir = NULL;
 	g_autofree gchar *testdir = NULL;
-	const gchar *sysfsdir;
 	gboolean ret;
 
 	struct {
@@ -89,7 +88,7 @@ fu_hwids_func (void)
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "6");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_SKU), ==, "SKU");
 	for (guint i = 0; guids[i].key != NULL; i++) {
-		guid = fu_hwids_get_guid (hwids, guids[i].key, &error);
+		g_autofree gchar *guid = fu_hwids_get_guid (hwids, guids[i].key, &error);
 		g_assert_no_error (error);
 		g_assert_cmpstr (guid, ==, guids[i].value);
 	}
