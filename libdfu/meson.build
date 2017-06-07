@@ -86,7 +86,7 @@ executable(
   link_with : dfu,
   c_args : cargs,
   install : true,
-  install_dir : 'bin'
+  install_dir : get_option('bindir')
 )
 
 gnome.generate_gir(dfu,

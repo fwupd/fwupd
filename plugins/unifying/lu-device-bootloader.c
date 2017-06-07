@@ -193,32 +193,36 @@ lu_device_bootloader_close (LuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-lu_device_send_request (LuDevice *device,
-			guint16 value,
-			guint16 idx,
-			const guint8 *data_in,
-			gsize data_in_length,
-			guint8 *data_out,
-			gsize data_out_length,
-			guint8 endpoint,
-			GError **error)
+gboolean
+lu_device_bootloader_request (LuDevice *device,
+			      LuDeviceBootloaderRequest *req,
+			      GError **error)
 {
 	GUsbDevice *usb_device = lu_device_get_usb_device (device);
 	gsize actual_length = 0;
-	guint8 buf[32];
+	guint8 buf_request[32];
+	guint8 buf_response[32];
+
+	/* build packet */
+	memset (buf_request, 0x00, sizeof (buf_request));
+	buf_request[0x00] = req->cmd;
+	buf_request[0x01] = req->addr >> 8;
+	buf_request[0x02] = req->addr & 0xff;
+	buf_request[0x03] = req->len;
+	memcpy (buf_request + 0x04, req->data, 28);
 
 	/* send request */
-	lu_dump_raw ("host->device", data_in, data_in_length);
+	lu_dump_raw ("host->device", buf_request, sizeof (buf_request));
 	if (usb_device != NULL) {
-		g_autofree guint8 *data_in_buf = g_memdup (data_in, data_in_length);
+		g_autofree guint8 *data_in_buf = g_memdup (buf_request, sizeof (buf_request));
 		if (!g_usb_device_control_transfer (usb_device,
 						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 						    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 						    G_USB_DEVICE_RECIPIENT_INTERFACE,
 						    LU_REQUEST_SET_REPORT,
-						    value, idx,
-						    data_in_buf, data_in_length,
+						    0x0200, 0x0000,
+						    buf_request,
+						    sizeof (buf_request),
 						    &actual_length,
 						    LU_DEVICE_TIMEOUT_MS,
 						    NULL,
@@ -228,13 +232,17 @@ lu_device_send_request (LuDevice *device,
 		}
 	}
 
+	/* no response required or expected */
+	if (req->cmd == LU_DEVICE_BOOTLOADER_CMD_REBOOT)
+		return TRUE;
+
 	/* get response */
-	memset (buf, 0x00, sizeof (buf));
+	memset (buf_response, 0x00, sizeof (buf_response));
 	if (usb_device != NULL) {
 		if (!g_usb_device_interrupt_transfer (usb_device,
-						      endpoint,
-						      buf,
-						      sizeof (buf),
+						      LU_DEVICE_EP1,
+						      buf_response,
+						      sizeof (buf_response),
 						      &actual_length,
 						      LU_DEVICE_TIMEOUT_MS,
 						      NULL,
@@ -244,73 +252,32 @@ lu_device_send_request (LuDevice *device,
 		}
 	} else {
 		/* emulated */
-		buf[0] = data_in[0];
-		if (buf[0] == LU_DEVICE_BOOTLOADER_CMD_GET_MEMINFO) {
-			buf[3] = 0x06; /* len */
-			buf[4] = 0x40; /* lo MSB */
-			buf[5] = 0x00; /* lo LSB */
-			buf[6] = 0x6b; /* hi MSB */
-			buf[7] = 0xff; /* hi LSB */
-			buf[8] = 0x00; /* bs MSB */
-			buf[9] = 0x80; /* bs LSB */
+		buf_response[0] = buf_request[0];
+		if (buf_response[0] == LU_DEVICE_BOOTLOADER_CMD_GET_MEMINFO) {
+			buf_response[3] = 0x06; /* len */
+			buf_response[4] = 0x40; /* lo MSB */
+			buf_response[5] = 0x00; /* lo LSB */
+			buf_response[6] = 0x6b; /* hi MSB */
+			buf_response[7] = 0xff; /* hi LSB */
+			buf_response[8] = 0x00; /* bs MSB */
+			buf_response[9] = 0x80; /* bs LSB */
 		}
-		actual_length = data_out_length;
+		actual_length = sizeof (buf_response);
 	}
-	lu_dump_raw ("device->host", buf, actual_length);
-
-	/* check sizes */
-	if (data_out != NULL) {
-		if (actual_length > data_out_length) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "device output %" G_GSIZE_FORMAT " bytes, "
-				     "buffer size only %" G_GSIZE_FORMAT,
-				     actual_length, data_out_length);
-			return FALSE;
-		}
-		memcpy (data_out, buf, actual_length);
-	}
-
-	return TRUE;
-}
-
-gboolean
-lu_device_bootloader_request (LuDevice *device,
-			      LuDeviceBootloaderRequest *req,
-			      GError **error)
-{
-	guint8 buf[32];
-
-	/* build packet */
-	memset (buf, 0x00, sizeof (buf));
-	buf[0x00] = req->cmd;
-	buf[0x01] = req->addr >> 8;
-	buf[0x02] = req->addr & 0xff;
-	buf[0x03] = req->len;
-	memcpy (buf + 0x04, req->data, 28);
-
-	/* send request */
-	if (!lu_device_send_request (device, 0x0200, 0x0000,
-				     buf, sizeof (buf),
-				     buf, sizeof (buf),
-				     LU_DEVICE_EP1,
-				     error)) {
-		return FALSE;
-	}
+	lu_dump_raw ("device->host", buf_response, actual_length);
 
 	/* parse response */
-	if ((buf[0x00] & 0xf0) != req->cmd) {
+	if ((buf_response[0x00] & 0xf0) != req->cmd) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "invalid command response of %02x, expected %02x",
-			     buf[0x00], req->cmd);
+			     buf_response[0x00], req->cmd);
 		return FALSE;
 	}
-	req->cmd = buf[0x00];
-	req->addr = ((guint16) buf[0x01] << 8) + buf[0x02];
-	req->len = buf[0x03];
+	req->cmd = buf_response[0x00];
+	req->addr = ((guint16) buf_response[0x01] << 8) + buf_response[0x02];
+	req->len = buf_response[0x03];
 	if (req->len > 28) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -320,7 +287,7 @@ lu_device_bootloader_request (LuDevice *device,
 	}
 	memset (req->data, 0x00, 28);
 	if (req->len > 0)
-		memcpy (req->data, buf + 0x04, req->len);
+		memcpy (req->data, buf_response + 0x04, req->len);
 	return TRUE;
 }
 

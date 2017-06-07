@@ -169,11 +169,13 @@ fu_plugin_verify (FuPlugin *plugin,
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuPluginItem *item;
-	GChecksumType checksum_type;
 	gsize len;
 	g_autoptr(GError) error_local = NULL;
-	g_autofree gchar *hash = NULL;
 	g_autofree guint8 *data2 = NULL;
+	GChecksumType checksum_types[] = {
+		G_CHECKSUM_SHA1,
+		G_CHECKSUM_SHA256,
+		0 };
 
 	/* find item */
 	item = g_hash_table_lookup (data->devices, fu_device_get_id (device));
@@ -208,10 +210,12 @@ fu_plugin_verify (FuPlugin *plugin,
 	}
 
 	/* get the checksum */
-	checksum_type = fu_plugin_get_checksum_type (flags);
-	hash = g_compute_checksum_for_data (checksum_type, (guchar *) data2, len);
-	fu_device_set_checksum (device, hash);
-	fu_device_set_checksum_kind (device, checksum_type);
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		g_autofree gchar *hash = NULL;
+		hash = g_compute_checksum_for_data (checksum_types[i],
+						    (guchar *) data2, len);
+		fu_device_add_checksum (device, hash);
+	}
 
 	/* we're done here */
 	if (!g_usb_device_close (item->usb_device, &error_local))

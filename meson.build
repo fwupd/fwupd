@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '0.9.2',
+  version : '0.9.3',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0'
 )
@@ -116,18 +116,16 @@ polkit = dependency('polkit-gobject-1', version : '>= 0.103')
 if polkit.version() >= '0.114'
   conf.set('HAVE_POLKIT_0_114', '1')
 endif
-gcab = dependency('libgcab-1.0')
 gudev = dependency('gudev-1.0')
-appstream_glib = dependency('appstream-glib', version : '>= 0.5.10')
+appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
 valgrind = dependency('valgrindXXX', required: false)
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 gpgme = cc.find_library('gpgme')
-gpgerror = cc.find_library('libgpg-error')
-libm = cc.find_library('libm', required: false)
-systemd = dependency('systemd')
+gpgerror = cc.find_library('gpg-error')
+libm = cc.find_library('m', required: false)
 udev = dependency('udev')
 
 if valgrind.found()
@@ -162,6 +160,15 @@ if get_option('enable-thunderbolt')
   thunderbolt = dependency('libtbtfwu', version : '>= 1', required: false)
 endif
 
+if get_option('enable-systemd')
+  systemd = dependency('systemd', version : '>= 231')
+  conf.set('HAVE_SYSTEMD' , '1')
+endif
+
+if get_option('enable-consolekit')
+  conf.set('HAVE_CONSOLEKIT' , '1')
+endif
+
 gnome = import('gnome')
 i18n = import('i18n')
 
@@ -171,6 +178,9 @@ plugin_dir = join_paths(get_option('prefix'),
 conf.set_quoted('PLUGINDIR', plugin_dir)
 
 conf.set_quoted('SYSCONFDIR', get_option('sysconfdir'))
+conf.set_quoted('BINDIR',
+                join_paths(get_option('prefix'),
+                           get_option('bindir')))
 conf.set_quoted('LIBEXECDIR',
                 join_paths(get_option('prefix'),
                            get_option('libexecdir')))
@@ -193,6 +203,7 @@ plugin_deps += gio
 plugin_deps += giounix
 plugin_deps += gmodule
 plugin_deps += gusb
+plugin_deps += soup
 
 subdir('data')
 subdir('docs')
@@ -220,4 +231,6 @@ else
   message('git not found, you will not be able to run `ninja dist`')
 endif
 
-meson.add_install_script('meson_post_install.sh', systemd.get_pkgconfig_variable('systemdsystemunitdir'), localstatedir)
+if get_option('enable-systemd')
+  meson.add_install_script('meson_post_install.sh', systemd.get_pkgconfig_variable('systemdsystemunitdir'), localstatedir)
+endif

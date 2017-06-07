@@ -103,9 +103,11 @@ fu_plugin_verify (FuPlugin *plugin,
 		  FuPluginVerifyFlags flags,
 		  GError **error)
 {
-	GChecksumType checksum_type;
-	g_autofree gchar *hash = NULL;
 	g_autoptr(GBytes) blob_fw = NULL;
+	GChecksumType checksum_types[] = {
+		G_CHECKSUM_SHA1,
+		G_CHECKSUM_SHA256,
+		0 };
 
 	/* get data */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
@@ -115,12 +117,11 @@ fu_plugin_verify (FuPlugin *plugin,
 						 error);
 	if (blob_fw == NULL)
 		return FALSE;
-
-	/* set new checksum */
-	checksum_type = fu_plugin_get_checksum_type (flags);
-	hash = g_compute_checksum_for_bytes (checksum_type, blob_fw);
-	fu_device_set_checksum (dev, hash);
-	fu_device_set_checksum_kind (dev, checksum_type);
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		g_autofree gchar *hash = NULL;
+		hash = g_compute_checksum_for_bytes (checksum_types[i], blob_fw);
+		fu_device_add_checksum (dev, hash);
+	}
 	fu_plugin_set_status (plugin, FWUPD_STATUS_IDLE);
 	return TRUE;
 }

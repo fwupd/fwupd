@@ -280,6 +280,7 @@ dfu_firmware_dfuse_func (void)
 	g_autoptr(GFile) file = NULL;
 
 	/* load a DeFUse firmware */
+	g_setenv ("DFU_SELF_TEST_IMAGE_MEMCPY_NAME", "", FALSE);
 	filename = dfu_test_get_filename ("dev_VRBRAIN.dfu");
 	g_assert (filename != NULL);
 	file = g_file_new_for_path (filename);
@@ -309,6 +310,9 @@ dfu_firmware_dfuse_func (void)
 //			     g_bytes_get_size (roundtrip), NULL);
 
 	g_assert_cmpstr (_g_bytes_compare_verbose (roundtrip, roundtrip_orig), ==, NULL);
+
+	/* use usual image name copying */
+	g_unsetenv ("DFU_SELF_TEST_IMAGE_MEMCPY_NAME");
 }
 
 static void
@@ -813,7 +817,6 @@ main (int argc, char **argv)
 
 	/* log everything */
 	g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
-	g_setenv ("DFU_SELF_TEST", "", FALSE);
 
 	/* tests go here */
 	g_test_add_func ("/libdfu/enums", dfu_enums_func);

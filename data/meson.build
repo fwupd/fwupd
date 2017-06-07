@@ -5,6 +5,10 @@ install_data(['fwupd.conf'],
   install_dir : get_option('sysconfdir')
 )
 
+install_subdir('remotes.d',
+  install_dir: join_paths(get_option('sysconfdir'), 'fwupd')
+)
+
 install_data(['org.freedesktop.fwupd.conf'],
   install_dir : join_paths(get_option('sysconfdir'), 'dbus-1', 'system.d')
 )
@@ -38,20 +42,24 @@ configure_file(
                           'system-services'),
 )
 
-# replace @bindir@
-configure_file(
-  input : 'fwupd-offline-update.service.in',
-  output : 'fwupd-offline-update.service',
-  configuration : con2,
-  install: true,
-  install_dir: systemd.get_pkgconfig_variable('systemdsystemunitdir'),
-)
+if get_option('enable-systemd')
+  # replace @bindir@
+  configure_file(
+    input : 'fwupd-offline-update.service.in',
+    output : 'fwupd-offline-update.service',
+    configuration : con2,
+    install: true,
+    install_dir: systemd.get_pkgconfig_variable('systemdsystemunitdir'),
+  )
+endif
 
-# replace @localstatedir@ and @bootdir@
-configure_file(
-  input : 'fwupd.service.in',
-  output : 'fwupd.service',
-  configuration : con2,
-  install: true,
-  install_dir: systemd.get_pkgconfig_variable('systemdsystemunitdir'),
-)
+if get_option('enable-systemd')
+  # replace @localstatedir@ and @bootdir@
+  configure_file(
+    input : 'fwupd.service.in',
+    output : 'fwupd.service',
+    configuration : con2,
+    install: true,
+    install_dir: systemd.get_pkgconfig_variable('systemdsystemunitdir'),
+  )
+endif

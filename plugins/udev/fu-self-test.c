@@ -96,7 +96,7 @@ fu_rom_func (void)
 		g_assert_no_error (error);
 		g_assert (ret);
 		g_assert_cmpstr (fu_rom_get_version (rom), ==, data[i].ver);
-		g_assert_cmpstr (fu_rom_get_checksum (rom), ==, data[i].csum);
+		g_assert_cmpstr (g_ptr_array_index (fu_rom_get_checksums (rom), 0), ==, data[i].csum);
 		g_assert_cmpint (fu_rom_get_kind (rom), ==, data[i].kind);
 		g_assert_cmpint (fu_rom_get_vendor (rom), ==, data[i].vendor);
 		g_assert_cmpint (fu_rom_get_model (rom), ==, data[i].model);
@@ -139,7 +139,7 @@ fu_rom_all_func (void)
 		}
 		g_assert_cmpstr (fu_rom_get_version (rom), !=, NULL);
 		g_assert_cmpstr (fu_rom_get_version (rom), !=, "\0");
-		g_assert_cmpstr (fu_rom_get_checksum (rom), !=, NULL);
+		g_assert_cmpint (fu_rom_get_checksums(rom)->len, !=, 0);
 		g_assert_cmpint (fu_rom_get_kind (rom), !=, FU_ROM_KIND_UNKNOWN);
 	} while (TRUE);
 }

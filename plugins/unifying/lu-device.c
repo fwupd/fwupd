@@ -288,13 +288,13 @@ lu_device_hidpp_receive (LuDevice *device,
 		}
 	}
 
-	/* check length */
+	/* check long enough, but allow returning oversize packets */
 	lu_device_hidpp_dump (device, "device->host", (guint8 *) msg, read_size);
-	if (lu_device_hidpp_msg_length (msg) != read_size) {
+	if (read_size < lu_device_hidpp_msg_length (msg)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
-			     "not expected message length, "
+			     "message length too small, "
 			     "got %" G_GSIZE_FORMAT " expected %" G_GSIZE_FORMAT,
 			     read_size, lu_device_hidpp_msg_length (msg));
 		return FALSE;
@@ -746,7 +746,7 @@ lu_device_open (LuDevice *device, GError **error)
 	/* subclassed */
 	if (klass->open != NULL) {
 		if (!klass->open (device, error)) {
-			g_usb_device_close (priv->usb_device, NULL);
+			lu_device_close (device, NULL);
 			return FALSE;
 		}
 	}
@@ -754,7 +754,7 @@ lu_device_open (LuDevice *device, GError **error)
 
 	/* subclassed */
 	if (!lu_device_probe (device, error)) {
-		g_usb_device_close (priv->usb_device, NULL);
+		lu_device_close (device, NULL);
 		return FALSE;
 	}
 
@@ -788,7 +788,7 @@ lu_device_poll (LuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* unifying reciever notification */
+	/* unifying receiver notification */
 	if (msg->report_id == HIDPP_REPORT_ID_SHORT) {
 		switch (msg->sub_id) {
 		case HIDPP_SUBID_DEVICE_CONNECTION:
@@ -848,9 +848,10 @@ lu_device_close (LuDevice *device, GError **error)
 	}
 
 	/* HID */
-	if (priv->udev_device != NULL) {
+	if (priv->udev_device != NULL && priv->udev_device_fd > 0) {
 		if (!g_close (priv->udev_device_fd, error))
 			return FALSE;
+		priv->udev_device_fd = 0;
 	}
 
 	/* success */

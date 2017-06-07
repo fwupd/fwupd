@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -31,8 +31,12 @@
 #include <sys/types.h>
 
 #include "fwupd-client.h"
+#include "fwupd-common.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
+#include "fwupd-device-private.h"
+#include "fwupd-release-private.h"
+#include "fwupd-remote-private.h"
 #include "fwupd-result.h"
 
 static void fwupd_client_finalize	 (GObject *object);
@@ -145,7 +149,7 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 	if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
 		res = fwupd_result_new_from_data (parameters);
 		g_debug ("Emitting ::device-added(%s)",
-			 fwupd_result_get_device_id (res));
+			 fwupd_device_get_id (fwupd_result_get_device (res)));
 		g_signal_emit (client, signals[SIGNAL_DEVICE_ADDED], 0, res);
 		return;
 	}
@@ -153,14 +157,14 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 		res = fwupd_result_new_from_data (parameters);
 		g_signal_emit (client, signals[SIGNAL_DEVICE_REMOVED], 0, res);
 		g_debug ("Emitting ::device-removed(%s)",
-			 fwupd_result_get_device_id (res));
+			 fwupd_device_get_id (fwupd_result_get_device (res)));
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
 		res = fwupd_result_new_from_data (parameters);
 		g_signal_emit (client, signals[SIGNAL_DEVICE_CHANGED], 0, res);
 		g_debug ("Emitting ::device-changed(%s)",
-			 fwupd_result_get_device_id (res));
+			 fwupd_device_get_id (fwupd_result_get_device (res)));
 		return;
 	}
 	g_warning ("Unknown signal name '%s' from %s",
@@ -237,6 +241,50 @@ fwupd_client_parse_results_from_data (GVariant *devices)
 	return results;
 }
 
+static GPtrArray *
+fwupd_client_parse_releases_from_variant (GVariant *val)
+{
+	GPtrArray *array = NULL;
+	gsize sz;
+	g_autoptr(GVariant) untuple = NULL;
+
+	array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	untuple = g_variant_get_child_value (val, 0);
+	sz = g_variant_n_children (untuple);
+	for (guint i = 0; i < sz; i++) {
+		FwupdRelease *rel;
+		g_autoptr(GVariant) data = NULL;
+		data = g_variant_get_child_value (untuple, i);
+		rel = fwupd_release_new_from_data (data);
+		if (rel == NULL)
+			continue;
+		g_ptr_array_add (array, rel);
+	}
+	return array;
+}
+
+static GPtrArray *
+fwupd_client_parse_devices_from_variant (GVariant *val)
+{
+	GPtrArray *array = NULL;
+	gsize sz;
+	g_autoptr(GVariant) untuple = NULL;
+
+	array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	untuple = g_variant_get_child_value (val, 0);
+	sz = g_variant_n_children (untuple);
+	for (guint i = 0; i < sz; i++) {
+		FwupdDevice *dev;
+		g_autoptr(GVariant) data = NULL;
+		data = g_variant_get_child_value (untuple, i);
+		dev = fwupd_device_new_from_data (data);
+		if (dev == NULL)
+			continue;
+		g_ptr_array_add (array, dev);
+	}
+	return array;
+}
+
 static void
 fwupd_client_fixup_dbus_error (GError *error)
 {
@@ -308,6 +356,92 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
 }
 
 /**
+ * fwupd_client_get_devices_simple:
+ * @client: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets all the devices registered with the daemon.
+ *
+ * Returns: (element-type FwupdDevice) (transfer container): results
+ *
+ * Since: 0.9.2
+ **/
+GPtrArray *
+fwupd_client_get_devices_simple (FwupdClient *client, GCancellable *cancellable, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "GetDevices",
+				      NULL,
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return NULL;
+	}
+	return fwupd_client_parse_devices_from_variant (val);
+}
+
+/**
+ * fwupd_client_get_device_by_id:
+ * @client: A #FwupdClient
+ * @device_id: the device ID, e.g. "usb:00:01:03:03"
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets a device by it's device ID.
+ *
+ * Returns: (transfer full): a #FwupdDevice or %NULL
+ *
+ * Since: 0.9.3
+ **/
+FwupdDevice *
+fwupd_client_get_device_by_id (FwupdClient *client,
+			       const gchar *device_id,
+			       GCancellable *cancellable,
+			       GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (device_id != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* get all the devices */
+	devices = fwupd_client_get_devices_simple (client, cancellable, error);
+	if (devices == NULL)
+		return NULL;
+
+	/* find the device by ID (client side) */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		if (g_strcmp0 (fwupd_device_get_id (dev), device_id) == 0)
+			return g_object_ref (dev);
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_FOUND,
+		     "failed to find %s", device_id);
+	return NULL;
+}
+
+/**
  * fwupd_client_get_updates:
  * @client: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
@@ -347,6 +481,51 @@ fwupd_client_get_updates (FwupdClient *client, GCancellable *cancellable, GError
 		return NULL;
 	}
 	return fwupd_client_parse_results_from_data (val);
+}
+
+/**
+ * fwupd_client_get_releases:
+ * @client: A #FwupdClient
+ * @device_id: the device ID
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets all the releases for a specific device
+ *
+ * Returns: (element-type FwupdRelease) (transfer container): results
+ *
+ * Since: 0.9.3
+ **/
+GPtrArray *
+fwupd_client_get_releases (FwupdClient *client, const gchar *device_id,
+			   GCancellable *cancellable, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (device_id != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "GetReleases",
+				      g_variant_new ("(s)", device_id),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return NULL;
+	}
+	return fwupd_client_parse_releases_from_variant (val);
 }
 
 static void
@@ -960,6 +1139,42 @@ fwupd_client_update_metadata (FwupdClient *client,
 			      GCancellable *cancellable,
 			      GError **error)
 {
+	return fwupd_client_update_metadata_with_id (client,
+						     NULL, /* remote_id */
+						     metadata_fn,
+						     signature_fn,
+						     cancellable,
+						     error);
+}
+
+/**
+ * fwupd_client_update_metadata_with_id:
+ * @client: A #FwupdClient
+ * @remote_id: the remote ID, e.g. "lvfs-testing"
+ * @metadata_fn: the XML metadata filename
+ * @signature_fn: the GPG signature file
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Updates the metadata. This allows a session process to download the metadata
+ * and metadata signing file to be passed into the daemon to be checked and
+ * parsed.
+ *
+ * The @remote_id allows the firmware to be tagged so that the remote can be
+ * matched when the firmware is downloaded.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 0.9.3
+ **/
+gboolean
+fwupd_client_update_metadata_with_id (FwupdClient *client,
+				      const gchar *remote_id,
+				      const gchar *metadata_fn,
+				      const gchar *signature_fn,
+				      GCancellable *cancellable,
+				      GError **error)
+{
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	GVariant *body;
 	gint fd;
@@ -1006,7 +1221,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
 						  FWUPD_DBUS_PATH,
 						  FWUPD_DBUS_INTERFACE,
-						  "UpdateMetadata");
+						  "UpdateMetadataWithId");
 	g_dbus_message_set_unix_fd_list (request, fd_list);
 
 	/* g_unix_fd_list_append did a dup() already */
@@ -1014,7 +1229,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 	close (fd_sig);
 
 	/* call into daemon */
-	body = g_variant_new ("(hh)", fd, fd_sig);
+	body = g_variant_new ("(shh)", remote_id != NULL ? remote_id : "", fd, fd_sig);
 	g_dbus_message_set_body (request, body);
 	helper = fwupd_client_helper_new ();
 	g_dbus_connection_send_message_with_reply (priv->conn,
@@ -1032,6 +1247,178 @@ fwupd_client_update_metadata (FwupdClient *client,
 		return FALSE;
 	}
 	return TRUE;
+}
+
+static GPtrArray *
+fwupd_client_get_config_paths (void)
+{
+	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
+	const gchar *remotes_dir;
+	const gchar *system_prefixlibdir = "/usr/lib/fwupd";
+	const gchar *system_sysconfdir = "/etc/fwupd";
+	g_autofree gchar *sysconfdir = NULL;
+
+	/* only set by the self test program */
+	remotes_dir = g_getenv ("FU_SELF_TEST_REMOTES_DIR");
+	if (remotes_dir != NULL) {
+		g_ptr_array_add (paths, g_strdup (remotes_dir));
+		return paths;
+	}
+
+	/* use sysconfig, and then fall back to /etc */
+	sysconfdir = g_build_filename (SYSCONFDIR, "fwupd", NULL);
+	if (g_file_test (sysconfdir, G_FILE_TEST_EXISTS)) {
+		g_ptr_array_add (paths, g_steal_pointer (&sysconfdir));
+	} else {
+		g_debug ("falling back to system path");
+		if (g_file_test (system_sysconfdir, G_FILE_TEST_EXISTS))
+			g_ptr_array_add (paths, g_strdup (system_sysconfdir));
+	}
+
+	/* add in system-wide locations */
+	if (g_file_test (system_prefixlibdir, G_FILE_TEST_EXISTS))
+		g_ptr_array_add (paths, g_strdup (system_prefixlibdir));
+
+	return paths;
+}
+
+static gboolean
+fwupd_client_add_remotes_for_path (FwupdClient *client,
+				   GPtrArray *remotes,
+				   const gchar *path,
+				   GCancellable *cancellable,
+				   GError **error)
+{
+	const gchar *tmp;
+	g_autofree gchar *path_remotes = NULL;
+	g_autoptr(GDir) dir = NULL;
+
+	path_remotes = g_build_filename (path, "remotes.d", NULL);
+	dir = g_dir_open (path_remotes, 0, error);
+	if (dir == NULL)
+		return FALSE;
+	while ((tmp = g_dir_read_name (dir)) != NULL) {
+		g_autofree gchar *filename = g_build_filename (path_remotes, tmp, NULL);
+		g_autoptr(FwupdRemote) remote = fwupd_remote_new ();
+		g_debug ("loading from %s", filename);
+		if (!fwupd_remote_load_from_filename (remote, filename,
+						      cancellable, error))
+			return FALSE;
+		g_ptr_array_add (remotes, g_steal_pointer (&remote));
+	}
+	return TRUE;
+}
+
+static gint
+fwupd_client_remote_sort_cb (gconstpointer a, gconstpointer b)
+{
+	FwupdRemote *remote_a = *((FwupdRemote **) a);
+	FwupdRemote *remote_b = *((FwupdRemote **) b);
+	return g_strcmp0 (fwupd_remote_get_id (remote_a),
+			  fwupd_remote_get_id (remote_b));
+}
+
+/**
+ * fwupd_client_get_remotes:
+ * @client: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets the list of remotes that have been configured for the system.
+ *
+ * Returns: (element-type FwupdRemote) (transfer container): list of remotes, or %NULL
+ *
+ * Since: 0.9.3
+ **/
+GPtrArray *
+fwupd_client_get_remotes (FwupdClient *client, GCancellable *cancellable, GError **error)
+{
+	g_autoptr(GPtrArray) paths = NULL;
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* get a list of all config paths */
+	paths = fwupd_client_get_config_paths ();
+	if (paths->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No search paths found");
+		return NULL;
+	}
+
+	/* look for all remotes */
+	remotes = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < paths->len; i++) {
+		const gchar *path = g_ptr_array_index (paths, i);
+		g_debug ("using config path of %s", path);
+		if (!fwupd_client_add_remotes_for_path (client, remotes, path,
+							cancellable, error))
+			return FALSE;
+	}
+
+	/* nothing found */
+	if (remotes->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No remotes found in search paths");
+		return NULL;
+	}
+
+	/* order these by name */
+	g_ptr_array_sort (remotes, fwupd_client_remote_sort_cb);
+
+	/* success */
+	return g_steal_pointer (&remotes);
+}
+
+/**
+ * fwupd_client_get_remote_by_id:
+ * @client: A #FwupdClient
+ * @remote_id: the remote ID, e.g. "lvfs-testing"
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets a specific remote that has been configured for the system.
+ *
+ * Returns: (transfer full): a #FwupdRemote, or %NULL if not found
+ *
+ * Since: 0.9.3
+ **/
+FwupdRemote *
+fwupd_client_get_remote_by_id (FwupdClient *client,
+			       const gchar *remote_id,
+			       GCancellable *cancellable,
+			       GError **error)
+{
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (remote_id != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* find remote in list */
+	remotes = fwupd_client_get_remotes (client, cancellable, error);
+	if (remotes == NULL)
+		return NULL;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (g_strcmp0 (remote_id, fwupd_remote_get_id (remote)) == 0)
+			return g_object_ref (remote);
+	}
+
+	/* nothing found */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_FOUND,
+		     "No remote '%s' found in search paths",
+		     remote_id);
+	return NULL;
 }
 
 static void

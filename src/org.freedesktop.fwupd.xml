@@ -81,6 +81,36 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetReleases'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets a list of all the releases for a specific device.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='device_id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              A device ID.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='aa{sv}' name='releases' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              An array of releases (with the release number as the key),
+              with any properties set on each.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='GetDetails'>
       <doc:doc>
         <doc:description>
@@ -293,6 +323,44 @@
           </doc:para>
         </doc:description>
       </doc:doc>
+      <arg type='h' name='data' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              File handle to AppStream metadata.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='h' name='signature' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              File handle to AppStream metadata GPG signature.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='UpdateMetadataWithId'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Adds AppStream resource information from a session client.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='remote_id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              Remote ID to tag the metadata objects with, e.g. 'lvfs-testing'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
       <arg type='h' name='data' direction='in'>
         <doc:doc>
           <doc:summary>

@@ -1,7 +1,8 @@
 %global libglib2_version 2.45.8
-%global libappstream_version 0.5.10
+%global libappstream_version 0.6.13
 %global libgusb_version 0.2.9
 %global libsoup_version 2.51.92
+%global systemd_version 231
 
 %define alphatag                #ALPHATAG#
 
@@ -31,10 +32,9 @@ BuildRequires: libgusb-devel >= %{libgusb_version}
 BuildRequires: libsoup-devel >= %{libsoup_version}
 BuildRequires: colord-devel >= 1.0.0
 BuildRequires: polkit-devel >= 0.103
-BuildRequires: libgcab1-devel
 BuildRequires: sqlite-devel
 BuildRequires: gpgme-devel
-BuildRequires: systemd
+BuildRequires: systemd >= %{systemd_version}
 BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
 BuildRequires: gcab
@@ -42,6 +42,7 @@ BuildRequires: valgrind
 BuildRequires: valgrind-devel
 BuildRequires: elfutils-libelf-devel
 BuildRequires: gtk-doc
+BuildRequires: meson
 
 %if 0%{?have_smbios}
 BuildRequires: libsmbios-devel >= 2.3.0
@@ -94,6 +95,8 @@ Files for development with libdfu.
 %build
 
 %meson \
+    -Denable-doc=true \
+    -Denable-man=true \
     -Denable-tests=false \
     -Denable-thunderbolt=false \
 %if 0%{?have_uefi}
@@ -105,7 +108,7 @@ Files for development with libdfu.
     -Denable-dell=true \
     -Denable-synaptics=true \
 %else
-    -Denable-packdellagekit=false \
+    -Denable-dell=false \
     -Denable-synaptics=false \
 %endif
     -Denable-colorhug=true
@@ -140,6 +143,10 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %{_bindir}/fwupdmgr
+%dir %{_sysconfdir}/fwupd
+%dir %{_sysconfdir}/fwupd/remotes.d
+%{_sysconfdir}/fwupd/remotes.d/lvfs.conf
+%{_sysconfdir}/fwupd/remotes.d/lvfs-testing.conf
 %{_sysconfdir}/pki/fwupd
 %{_sysconfdir}/pki/fwupd-metadata
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf

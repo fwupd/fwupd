@@ -88,6 +88,7 @@ fu_plugin_verify (FuPlugin *plugin,
 		  FuPluginVerifyFlags flags,
 		  GError **error)
 {
+	GPtrArray *checksums;
 	const gchar *rom_fn;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(FuRom) rom = NULL;
@@ -105,7 +106,11 @@ fu_plugin_verify (FuPlugin *plugin,
 	rom = fu_rom_new ();
 	if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, error))
 		return FALSE;
-	fu_device_set_checksum (device, fu_rom_get_checksum (rom));
+	checksums = fu_rom_get_checksums (rom);
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *checksum = g_ptr_array_index (checksums, i);
+		fu_device_add_checksum (device, checksum);
+	}
 	return TRUE;
 }
 

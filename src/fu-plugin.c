@@ -43,6 +43,7 @@ typedef struct {
 	GUsbContext		*usb_ctx;
 	gboolean		 enabled;
 	gchar			*name;
+	GHashTable		*hwids;		/* hwid:1 */
 	GHashTable		*devices;	/* platform_id:GObject */
 	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
 	FuPluginData		*data;
@@ -485,6 +486,34 @@ fu_plugin_recoldplug (FuPlugin *plugin)
 }
 
 /**
+ * fu_plugin_check_hwid:
+ * @plugin: A #FuPlugin
+ * @hwid: A Hardware ID GUID, e.g. "6de5d951-d755-576b-bd09-c5cf66b27234"
+ *
+ * Checks to see if a specific hardware ID exists. All hardware IDs on a
+ * specific system can be shown using the `fwupdmgr hwids` command.
+ *
+ * Since: 0.9.1
+ **/
+gboolean
+fu_plugin_check_hwid (FuPlugin *plugin, const gchar *hwid)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->hwids == NULL)
+		return FALSE;
+	return g_hash_table_lookup (priv->hwids, hwid) != NULL;
+}
+
+void
+fu_plugin_set_hwids (FuPlugin *plugin, GHashTable *hwids)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->hwids != NULL)
+		g_hash_table_unref (priv->hwids);
+	priv->hwids = g_hash_table_ref (hwids);
+}
+
+/**
  * fu_plugin_set_coldplug_delay:
  * @plugin: A #FuPlugin
  * @duration: A delay in milliseconds
@@ -881,13 +910,14 @@ fu_plugin_runner_update (FuPlugin *plugin,
 	/* cleanup */
 	if (res_pending != NULL) {
 		const gchar *tmp;
+		FwupdRelease *rel = fwupd_result_get_release (res_pending);
 
 		/* update pending database */
 		fu_pending_set_state (pending, FWUPD_RESULT (device),
 				      FWUPD_UPDATE_STATE_SUCCESS, NULL);
 
 		/* delete cab file */
-		tmp = fwupd_result_get_update_filename (res_pending);
+		tmp = fwupd_release_get_filename (rel);
 		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
 			g_autoptr(GError) error_local = NULL;
 			g_autoptr(GFile) file = NULL;
@@ -954,6 +984,8 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginDeviceFunc func = NULL;
 	FwupdUpdateState update_state;
+	FwupdRelease *rel;
+	FwupdDevice *dev;
 	const gchar *tmp;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FwupdResult) res_pending = NULL;
@@ -1006,10 +1038,12 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	tmp = fwupd_result_get_update_error (res_pending);
 	if (tmp != NULL)
 		fu_device_set_update_error (device, tmp);
-	tmp = fwupd_result_get_device_version (res_pending);
+	dev = fwupd_result_get_device (res_pending);
+	tmp = fwupd_device_get_version (dev);
 	if (tmp != NULL)
 		fu_device_set_version (device, tmp);
-	tmp = fwupd_result_get_update_version (res_pending);
+	rel = fwupd_result_get_release (res_pending);
+	tmp = fwupd_release_get_version (rel);
 	if (tmp != NULL)
 		fu_device_set_update_version (device, tmp);
 	return TRUE;
@@ -1086,6 +1120,8 @@ fu_plugin_finalize (GObject *object)
 
 	if (priv->usb_ctx != NULL)
 		g_object_unref (priv->usb_ctx);
+	if (priv->hwids != NULL)
+		g_hash_table_unref (priv->hwids);
 #ifndef RUNNING_ON_VALGRIND
 	if (priv->module != NULL)
 		g_module_close (priv->module);
@@ -1104,12 +1140,4 @@ fu_plugin_new (void)
 	FuPlugin *plugin;
 	plugin = g_object_new (FU_TYPE_PLUGIN, NULL);
 	return plugin;
-}
-
-GChecksumType
-fu_plugin_get_checksum_type (FuPluginVerifyFlags flags)
-{
-	if (flags & FU_PLUGIN_VERIFY_FLAG_USE_SHA256)
-		return G_CHECKSUM_SHA256;
-	return G_CHECKSUM_SHA1;
 }
