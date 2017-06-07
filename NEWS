@@ -1,3 +1,32 @@
+Version 0.9.3
+~~~~~~~~~~~~~
+Released: 2017-06-07
+
+New Features:
+ - Add a 'downgrade' command to fwupdmgr (Richard Hughes)
+ - Add a 'get-releases' command to fwupdmgr (Richard Hughes)
+ - Add support for ConsoleKit2 (Eric Koegel)
+ - Add support for Microsoft HardwareIDs (Richard Hughes)
+ - Allow downloading metadata from more than just the LVFS (Richard Hughes)
+ - Allow multiple checksums on devices and releases (Richard Hughes)
+
+Bugfixes:
+ - Allow to specify bindir (Timo Gurr)
+ - Correctly open Unifying devices with original factory firmware (Richard Hughes)
+ - Deprecate some of the old FwupdResult API (Richard Hughes)
+ - Do not copy the origin from the new metadata file (Richard Hughes)
+ - Do not expect a Unifying reply when issuing a REBOOT command (Richard Hughes)
+ - Do not re-download firmware that exists in the cache (Richard Hughes)
+ - Fix a problem when testing for a Dell system (Mario Limonciello)
+ - Fix flashing new firmware to 8bitdo controllers (Richard Hughes)
+ - Increase minimum required AppStream-Glib version to 0.6.13 (Chris Mayo)
+ - Make documentation and man pages optional (Chris Mayo)
+ - Make systemd dependency at least version 231 (Mario Limonciello)
+ - Only decompress the firmware after the signature check (Richard Hughes)
+ - Remove 'lib' prefix when looking for libraries (Mirco Tischler)
+ - Return the remote ID when getting updates about hardware (Richard Hughes)
+ - Send the daemon the remote ID when sending firmware metadata (Richard Hughes)
+
 Version 0.9.2
 ~~~~~~~~~~~~~
 Released: 2017-05-22
