@@ -47,6 +47,9 @@ Adding a new plugin
 An extensible architecture allows for providing new plugin types (for reading
 and writing different firmware) as well as ways quirk their behavior.
 
+You can find more information about the architecture in the developers section
+of the [[http://www.fwupd.org|fwupd website]].
+
 If you have a firmware specification and would like to see support
 in this project, please file an issue and share the spec.  Patches are also
 welcome.
@@ -58,6 +61,9 @@ Firmware Service (LVFS)](https://secure-lvfs.rhcloud.com/lvfs/).
 
 This service is available to all OEMs and firmware creators who would like to make
 their firmware available to Linux users.
+
+You can find more information about the technical details of creating a firmware
+capsule in the hardware vendors section of the [[http://www.fwupd.org|fwupd website]].
 
 Basic usage flow (command line)
 ------------------------------
@@ -83,6 +89,9 @@ This will download and apply all updates for your system.
 
 * Updates that can be applied live *(Online updates)* will be done immediately.
 * Updates that require a reboot *(Offline updates)* will be staged for the next reboot.
+
+You can find more information about the update workflow in the end
+users section of the [[http://www.fwupd.org|fwupd website]].
 
 Other frontends
 -------------------
