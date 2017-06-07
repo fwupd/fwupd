@@ -931,7 +931,7 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index (rels, i);
 		GPtrArray *checksums;
-		const gchar *tmp = fwupd_release_get_description (rel);
+		const gchar *tmp;
 
 		/* TRANSLATORS: section header for release version number */
 		fu_util_print_data (_("Version"), fwupd_release_get_version (rel));
