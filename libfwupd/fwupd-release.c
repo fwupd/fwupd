@@ -192,6 +192,11 @@ fwupd_release_add_checksum (FwupdRelease *release, const gchar *checksum)
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	g_return_if_fail (FWUPD_IS_RELEASE (release));
 	g_return_if_fail (checksum != NULL);
+	for (guint i = 0; i < priv->checksums->len; i++) {
+		const gchar *checksum_tmp = g_ptr_array_index (priv->checksums, i);
+		if (g_strcmp0 (checksum_tmp, checksum) == 0)
+			return;
+	}
 	g_ptr_array_add (priv->checksums, g_strdup (checksum));
 }
 

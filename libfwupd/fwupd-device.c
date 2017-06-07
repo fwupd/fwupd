@@ -88,6 +88,11 @@ fwupd_device_add_checksum (FwupdDevice *device, const gchar *checksum)
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	g_return_if_fail (checksum != NULL);
+	for (guint i = 0; i < priv->checksums->len; i++) {
+		const gchar *checksum_tmp = g_ptr_array_index (priv->checksums, i);
+		if (g_strcmp0 (checksum_tmp, checksum) == 0)
+			return;
+	}
 	g_ptr_array_add (priv->checksums, g_strdup (checksum));
 }
 
