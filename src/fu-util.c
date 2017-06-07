@@ -912,22 +912,24 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
-	const gchar *device_id = NULL;
 
 	/* get device to use */
 	if (g_strv_length (values) == 1) {
-		device_id = values[0];
+		dev = fwupd_client_get_device_by_id (priv->client, values[0],
+						     NULL, error);
+		if (dev == NULL)
+			return FALSE;
 	} else {
 		dev = fu_util_prompt_for_device (priv, error);
 		if (dev == NULL)
 			return FALSE;
-		device_id = fwupd_device_get_id (dev);
 	}
 
 	/* get the releases for this device */
-	rels = fwupd_client_get_releases (priv->client, device_id, NULL, error);
+	rels = fwupd_client_get_releases (priv->client, fwupd_device_get_id (dev), NULL, error);
 	if (rels == NULL)
 		return FALSE;
+	g_print ("%s:\n", fwupd_device_get_name (dev));
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index (rels, i);
 		GPtrArray *checksums;
