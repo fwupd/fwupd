@@ -1,0 +1,15 @@
+language: c
+sudo: required
+dist: trusty
+
+services:
+  - docker
+
+before_script:
+  - docker build -t fwupd-fedora-25 -f contrib/ci/Dockerfile-fedora-25 .
+# currently failing with "Unknown instruction: LIBFWUP-DEV"
+#  - docker build -t fwupd-debian-unstable -f contrib/ci/Dockerfile-debian-unstable .
+
+script:
+  - docker run -t -v `pwd`:/build fwupd-fedora-25 ./contrib/ci/build_and_test.sh
+#  - docker run -t -v `pwd`:/build fwupd-debian-unstable ./contrib/ci/build_and_test.sh

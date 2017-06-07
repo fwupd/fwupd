@@ -1,0 +1,29 @@
+FROM fedora:25
+
+RUN dnf --enablerepo=updates-testing -y update
+RUN dnf --enablerepo=updates-testing -y install \
+	colord-devel \
+	docbook-utils \
+	elfutils-libelf-devel \
+	fwupdate-devel \
+	gcab \
+	gettext \
+	glib2-devel \
+	gobject-introspection-devel \
+	gpgme-devel \
+	gtk-doc \
+	libappstream-glib-devel \
+	libarchive-devel \
+	libgudev1-devel \
+	libgusb-devel \
+	libsmbios-devel \
+	libsoup-devel \
+	meson \
+	polkit-devel \
+	redhat-rpm-config \
+	sqlite-devel \
+	systemd \
+	valgrind \
+	valgrind-devel
+RUN mkdir /build
+WORKDIR /build

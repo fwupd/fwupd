@@ -1,0 +1,36 @@
+FROM debian:unstable
+
+RUN echo "deb-src http://deb.debian.org/debian/ unstable main" >> /etc/apt/sources.list
+RUN apt-get update -qq
+RUN apt-get install -yq --no-install-recommends \
+	debhelper \
+	docbook-utils \
+	gcab \
+	gettext \
+	gir1.2-appstreamglib-1.0 \
+	gobject-introspection \
+	gtk-doc-tools \
+	libappstream-glib-dev \
+	libarchive-dev \
+	libcolord-dev \
+	libcolorhug-dev \
+	libefivar-dev \
+	libelf-dev
+	libfwup-dev \
+	libgcab-dev \
+	libgirepository1.0-dev \
+	libglib2.0-dev \
+	libgpgme11-dev \
+	libgudev-1.0-dev \
+	libgusb-dev \
+	libpolkit-gobject-1-dev \
+	libsmbios-dev \
+	libsoup2.4-dev \
+	libsqlite3-dev \
+	libtool-bin \
+	meson \
+	pkg-config \
+	policykit-1 \
+	systemd
+RUN mkdir /build
+WORKDIR /build
