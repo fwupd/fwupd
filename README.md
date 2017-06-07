@@ -48,7 +48,7 @@ An extensible architecture allows for providing new plugin types (for reading
 and writing different firmware) as well as ways quirk their behavior.
 
 You can find more information about the architecture in the developers section
-of the [[http://www.fwupd.org|fwupd website]].
+of the [fwupd website](http://www.fwupd.org).
 
 If you have a firmware specification and would like to see support
 in this project, please file an issue and share the spec.  Patches are also
@@ -63,7 +63,7 @@ This service is available to all OEMs and firmware creators who would like to ma
 their firmware available to Linux users.
 
 You can find more information about the technical details of creating a firmware
-capsule in the hardware vendors section of the [[http://www.fwupd.org|fwupd website]].
+capsule in the hardware vendors section of the [fwupd website](http://www.fwupd.org).
 
 Basic usage flow (command line)
 ------------------------------
@@ -91,7 +91,7 @@ This will download and apply all updates for your system.
 * Updates that require a reboot *(Offline updates)* will be staged for the next reboot.
 
 You can find more information about the update workflow in the end
-users section of the [[http://www.fwupd.org|fwupd website]].
+users section of the [fwupd website](http://www.fwupd.org).
 
 Other frontends
 -------------------
