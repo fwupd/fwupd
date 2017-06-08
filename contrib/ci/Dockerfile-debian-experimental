@@ -1,15 +1,14 @@
-FROM debian:unstable
+FROM debian:experimental
 
 RUN echo "deb-src http://deb.debian.org/debian/ unstable main" >> /etc/apt/sources.list
+RUN echo "deb-src http://deb.debian.org/debian/ experimental main" >> /etc/apt/sources.list
 RUN apt-get update -qq
 RUN apt-get install -yq --no-install-recommends \
 	docbook-utils \
 	gcab \
 	gettext \
-	gir1.2-appstreamglib-1.0 \
 	gobject-introspection \
 	gtk-doc-tools \
-	libappstream-glib-dev \
 	libarchive-dev \
 	libcolord-dev \
 	libcolorhug-dev \
@@ -32,5 +31,10 @@ RUN apt-get install -yq --no-install-recommends \
 	policykit-1 \
 	udev \
 	systemd
+#deps not yet in unstable:
+# - new appstream-glib is fwupd dependency
+RUN apt-get -t experimental install -yq --no-install-recommends \
+	gir1.2-appstreamglib-1.0 \
+	libappstream-glib-dev
 RUN mkdir /build
 WORKDIR /build

@@ -7,9 +7,8 @@ services:
 
 before_script:
   - docker build -t fwupd-fedora-25 -f contrib/ci/Dockerfile-fedora-25 .
-# currently failing with "Unknown instruction: LIBFWUP-DEV"
-#  - docker build -t fwupd-debian-unstable -f contrib/ci/Dockerfile-debian-unstable .
+  - docker build -t fwupd-debian-experimental -f contrib/ci/Dockerfile-debian-experimental .
 
 script:
   - docker run -t -v `pwd`:/build fwupd-fedora-25 ./contrib/ci/build_and_test.sh
-#  - docker run -t -v `pwd`:/build fwupd-debian-unstable ./contrib/ci/build_and_test.sh
+  - docker run -t -v `pwd`:/build fwupd-debian-experimental ./contrib/ci/build_and_test.sh
