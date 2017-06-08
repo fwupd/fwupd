@@ -777,6 +777,30 @@ fu_main_get_guids_from_store (AsStore *store)
 }
 
 static void
+fu_main_vendor_fixup_provide_value (AsApp *app)
+{
+	GPtrArray *provides;
+
+	/* no quirk required */
+	if (as_app_get_kind (app) != AS_APP_KIND_FIRMWARE)
+		return;
+
+	/* fix each provide to be a GUID */
+	provides = as_app_get_provides (app);
+	for (guint i = 0; i < provides->len; i++) {
+		AsProvide *prov = g_ptr_array_index (provides, i);
+		const gchar *value = as_provide_get_value (prov);
+		g_autofree gchar *guid = NULL;
+		if (as_provide_get_kind (prov) != AS_PROVIDE_KIND_FIRMWARE_FLASHED)
+			continue;
+		if (as_utils_guid_is_valid (value))
+			continue;
+		guid = as_utils_guid_from_string (value);
+		as_provide_set_value (prov, guid);
+	}
+}
+
+static void
 fu_main_vendor_quirk_release_version (AsApp *app)
 {
 	AsVersionParseFlag flags = AS_VERSION_PARSE_FLAG_USE_TRIPLET;
@@ -1017,6 +1041,9 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 
 	/* possibly convert the version from 0x to dotted */
 	fu_main_vendor_quirk_release_version (app);
+
+	/* possibly convert the flashed provide to a GUID */
+	fu_main_vendor_fixup_provide_value (app);
 
 	version = as_release_get_version (rel);
 	fu_device_set_update_version (device, version);
@@ -1472,6 +1499,9 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	/* possibly convert the version from 0x to dotted */
 	fu_main_vendor_quirk_release_version (app);
 
+	/* possibly convert the flashed provide to a GUID */
+	fu_main_vendor_fixup_provide_value (app);
+
 	/* get latest release */
 	release = as_app_get_release_default (app);
 	if (release == NULL) {
@@ -1736,6 +1766,9 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 
 	/* possibly convert the version from 0x to dotted */
 	fu_main_vendor_quirk_release_version (app);
+
+	/* possibly convert the flashed provide to a GUID */
+	fu_main_vendor_fixup_provide_value (app);
 
 	/* create a result with all the metadata in */
 	fwupd_device_set_description (dev, as_app_get_description (app, NULL));
