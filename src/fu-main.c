@@ -872,7 +872,7 @@ fu_main_check_version_requirement (AsApp *app,
 
 	/* check version */
 	if (!as_require_version_compare (req, version, error)) {
-		g_prefix_error (error, "version of %s incorrect: ", id);
+		g_prefix_error (error, "Value of %s incorrect: ", id);
 		return FALSE;
 	}
 
@@ -925,6 +925,13 @@ fu_main_check_app_versions (AsApp *app, FuDevice *device, GError **error)
 							AS_REQUIRE_KIND_FIRMWARE,
 							"bootloader",
 							fu_device_get_version_bootloader (device),
+							error)) {
+			return FALSE;
+		}
+		if (!fu_main_check_version_requirement (app,
+							AS_REQUIRE_KIND_FIRMWARE,
+							"vendor-id",
+							fu_device_get_vendor_id (device),
 							error)) {
 			return FALSE;
 		}

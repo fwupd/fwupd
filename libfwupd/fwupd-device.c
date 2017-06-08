@@ -43,6 +43,7 @@ typedef struct {
 	gchar				*summary;
 	gchar				*description;
 	gchar				*vendor;
+	gchar				*vendor_id;
 	gchar				*homepage;
 	gchar				*provider;
 	gchar				*version;
@@ -322,6 +323,42 @@ fwupd_device_set_vendor (FwupdDevice *device, const gchar *vendor)
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	g_free (priv->vendor);
 	priv->vendor = g_strdup (vendor);
+}
+
+/**
+ * fwupd_device_get_vendor_id:
+ * @device: A #FwupdDevice
+ *
+ * Gets the device vendor ID.
+ *
+ * Returns: the device vendor, e.g. 'USB:0x1234', or %NULL if unset
+ *
+ * Since: 0.9.4
+ **/
+const gchar *
+fwupd_device_get_vendor_id (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->vendor_id;
+}
+
+/**
+ * fwupd_device_set_vendor_id:
+ * @device: A #FwupdDevice
+ * @vendor_id: the ID, e.g. 'USB:0x1234'
+ *
+ * Sets the device vendor ID.
+ *
+ * Since: 0.9.4
+ **/
+void
+fwupd_device_set_vendor_id (FwupdDevice *device, const gchar *vendor_id)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_free (priv->vendor_id);
+	priv->vendor_id = g_strdup (vendor_id);
 }
 
 /**
@@ -725,6 +762,11 @@ fwupd_device_to_variant_builder (FwupdDevice *device, GVariantBuilder *builder)
 				       FWUPD_RESULT_KEY_DEVICE_VENDOR,
 				       g_variant_new_string (priv->vendor));
 	}
+	if (priv->vendor_id != NULL) {
+		g_variant_builder_add (builder, "{sv}",
+				       FWUPD_RESULT_KEY_DEVICE_VENDOR_ID,
+				       g_variant_new_string (priv->vendor_id));
+	}
 	if (priv->flags > 0) {
 		g_variant_builder_add (builder, "{sv}",
 				       FWUPD_RESULT_KEY_DEVICE_FLAGS,
@@ -845,6 +887,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_VENDOR) == 0) {
 		fwupd_device_set_vendor (device, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_VENDOR_ID) == 0) {
+		fwupd_device_set_vendor_id (device, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION) == 0) {
@@ -974,6 +1020,7 @@ fwupd_device_to_string (FwupdDevice *device)
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_CHECKSUM, checksum_display);
 	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VENDOR, priv->vendor);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VENDOR_ID, priv->vendor_id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION, priv->version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST, priv->version_lowest);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION_BOOTLOADER, priv->version_bootloader);
@@ -1010,6 +1057,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->id);
 	g_free (priv->name);
 	g_free (priv->vendor);
+	g_free (priv->vendor_id);
 	g_free (priv->provider);
 	g_free (priv->version);
 	g_free (priv->version_lowest);

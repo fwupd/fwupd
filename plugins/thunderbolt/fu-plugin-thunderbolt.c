@@ -132,6 +132,7 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		gchar tdbid[FU_PLUGIN_THUNDERBOLT_MAX_ID_LEN];
 		gsize tdbid_sz = sizeof (tdbid);
 		g_autofree gchar *guid_id = NULL;
+		g_autofree gchar *vendor_id = NULL;
 		g_autofree gchar *version = NULL;
 		gint safe_mode = 0;
 
@@ -221,6 +222,10 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		if (safe_mode == 0)
 			fu_device_add_flag (info->dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
 		fu_device_set_id (info->dev, info->id);
+
+		/* set vendor ID */
+		vendor_id = g_strdup_printf ("TBT:0x%04X", info->vendor_id));
+		fu_device_set_vendor_id (info->dev, vendor_id);
 
 		/* add GUID that the info firmware uses */
 		guid_id = g_strdup_printf ("TBT-%04x%04x",
