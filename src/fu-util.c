@@ -1195,25 +1195,6 @@ fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-/* return in order of security */
-static const gchar *
-fu_util_get_best_checksum (GPtrArray *checksums)
-{
-	GChecksumType checksum_types[] = {
-		G_CHECKSUM_SHA512,
-		G_CHECKSUM_SHA256,
-		G_CHECKSUM_SHA1,
-		0 };
-	for (guint i = 0; checksum_types[i] != 0; i++) {
-		for (guint j = 0; j < checksums->len; j++) {
-			const gchar *checksum = g_ptr_array_index (checksums, j);
-			if (fwupd_checksum_guess_kind (checksum) == checksum_types[i])
-				return checksum;
-		}
-	}
-	return NULL;
-}
-
 static gboolean
 fu_util_update_device_with_release (FuUtilPrivate *priv,
 				    FwupdDevice *dev,
@@ -1259,7 +1240,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	fn = g_build_filename (cache_dir, basename, NULL);
 	checksums = fwupd_release_get_checksums (rel);
 	if (!fu_util_download_file (priv, uri, fn,
-				    fu_util_get_best_checksum (checksums),
+				    fwupd_checksum_get_best (checksums),
 				    error))
 		return FALSE;
 	g_print ("Updating %s on %s...\n",

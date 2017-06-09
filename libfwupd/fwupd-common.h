@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -29,5 +29,10 @@
 #define FWUPD_DBUS_INTERFACE		"org.freedesktop.fwupd"
 
 #define FWUPD_DEVICE_ID_ANY		"*"
+
+const gchar	*fwupd_checksum_get_best		(GPtrArray	*checksums);
+const gchar	*fwupd_checksum_get_by_kind		(GPtrArray	*checksums,
+							 GChecksumType	 kind);
+GChecksumType	 fwupd_checksum_guess_kind		(const gchar	*checksum);
 
 #endif /* __FWUPD_COMMON_H */

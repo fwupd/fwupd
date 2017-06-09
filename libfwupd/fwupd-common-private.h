@@ -24,7 +24,8 @@
 
 #include <glib.h>
 
-GChecksumType	 fwupd_checksum_guess_kind		(const gchar	*checksum);
+#include "fwupd-common.h"
+
 gchar		*fwupd_checksum_format_for_display	(const gchar	*checksum);
 
 #endif /* __FWUPD_COMMON_PRIVATE_H */
