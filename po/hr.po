@@ -354,7 +354,7 @@ msgstr "Synaptics Multistream Transport pomagalo"
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 #: plugins/uefi/fu-plugin-uefi.c:193
 msgid "Installing firmware update…"
-msgstr "Instalacija nadopune frimvera..."
+msgstr "Instalacija nadopune frimvera…"
 
 #. TRANSLATORS: turn on all debugging
 #: src/fu-debug.c:130
