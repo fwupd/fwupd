@@ -59,7 +59,7 @@ class Rasterizer:
         self.fontmap = PangoCairo.font_map_get_default()
 
         gettext.textdomain(self.domain)
-        gettext.bind_textdomain_codeset(self.domain, self.modir)
+        gettext.bind_textdomain_codeset(self.domain, 'UTF8')
         gettext.install(self.domain, self.modir)
 
     @property

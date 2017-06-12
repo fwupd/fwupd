@@ -352,7 +352,7 @@ msgstr "Utilitat «Synaptics Multistream Transport»"
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 #: plugins/uefi/fu-plugin-uefi.c:193
 msgid "Installing firmware update…"
-msgstr "S'està instal·lant l'actualització de microprogramari..."
+msgstr "S'està instal·lant l'actualització de microprogramari…"
 
 #. TRANSLATORS: turn on all debugging
 #: src/fu-debug.c:130
