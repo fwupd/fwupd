@@ -2,9 +2,15 @@ FROM fedora:25
 
 RUN dnf --enablerepo=updates-testing -y update
 RUN dnf --enablerepo=updates-testing -y install \
+	adobe-source-han-sans-cn-fonts \
+	cairo-devel \
+	cairo-gobject-devel \
 	colord-devel \
+	dejavu-sans-fonts \
 	docbook-utils \
 	elfutils-libelf-devel \
+	freetype \
+	fontconfig \
 	fwupdate-devel \
 	gcab \
 	gettext \
@@ -19,7 +25,12 @@ RUN dnf --enablerepo=updates-testing -y install \
 	libsmbios-devel \
 	libsoup-devel \
 	meson \
+	pango-devel \
 	polkit-devel \
+	python3 \
+	python3-cairo \
+	python3-gobject \
+	python3-pillow \
 	redhat-rpm-config \
 	sqlite-devel \
 	systemd \
