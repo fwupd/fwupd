@@ -16,6 +16,7 @@ RUN dnf --enablerepo=updates-testing -y install \
 	freetype \
 	fontconfig \
 	fwupdate-devel \
+	git \
 	gcab \
 	gettext \
 	glib2-devel \
@@ -35,10 +36,12 @@ RUN dnf --enablerepo=updates-testing -y install \
 	python3-cairo \
 	python3-gobject \
 	python3-pillow \
+	rpm-build \
 	redhat-rpm-config \
 	sqlite-devel \
 	systemd \
 	valgrind \
-	valgrind-devel
+	valgrind-devel \
+	xz
 RUN mkdir /build
 WORKDIR /build
