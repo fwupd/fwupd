@@ -1,0 +1,4 @@
+#these are intended to be d-bus activated
+fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/fwupd-offline-update.service
+fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/fwupd.service
+fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/system-update.target.wants/fwupd-offline-update.service

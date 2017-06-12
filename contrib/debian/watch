@@ -1,0 +1,6 @@
+# You can run the "uscan" command to check for upstream updates and more.
+# See uscan(1) for format
+
+version=3
+opts=filenamemangle=s/.+\/v?(\d\S*)\.tar\.gz/fwupd-$1\.tar\.gz/ \
+https://github.com/hughsie/fwupd/tags .*/v?(\d\S*)\.tar\.gz
