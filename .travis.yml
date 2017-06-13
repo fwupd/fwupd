@@ -10,7 +10,5 @@ before_script:
   - docker build -t fwupd-debian-experimental -f contrib/ci/Dockerfile-debian-experimental .
 
 script:
-  - docker run -t -v `pwd`:/build fwupd-fedora-25 ./contrib/ci/build_and_test.sh
-  - docker run -t -v `pwd`:/build fwupd-debian-experimental ./contrib/ci/build_and_test.sh
   - docker run -t -v `pwd`:/build fwupd-fedora-25 ./contrib/ci/build_and_install_rpms.sh
   - docker run -t -v `pwd`:/build fwupd-debian-experimental ./contrib/ci/build_and_install_debs.sh
