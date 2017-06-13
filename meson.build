@@ -219,7 +219,7 @@ subdir('po')
 subdir('policy')
 subdir('src')
 
-if meson.version().version_compare('<meson-0.41.0')
+if meson.version().version_compare('<0.41.0')
   archiver = find_program('git', required : false)
   if archiver.found()
     run_target('dist',
