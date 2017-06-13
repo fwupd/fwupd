@@ -1294,6 +1294,8 @@ fwupd_client_add_remotes_for_path (FwupdClient *client,
 	g_autoptr(GDir) dir = NULL;
 
 	path_remotes = g_build_filename (path, "remotes.d", NULL);
+	if (!g_file_test (path_remotes, G_FILE_TEST_EXISTS))
+		return TRUE;
 	dir = g_dir_open (path_remotes, 0, error);
 	if (dir == NULL)
 		return FALSE;
