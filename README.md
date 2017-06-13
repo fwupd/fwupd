@@ -42,7 +42,7 @@ While compiling policykit policy: `/home/user/jhbuild/install/bin/msgfmt: cannot
 `# sudo ninja install`
 
 ## Distribution packages
-Scripts for generating distribution packages are available in the (contrib)[https://github.com/hughsie/fwupd/tree/master/contrib] for popular distributions.
+Scripts for generating distribution packages are available in the [contrib](https://github.com/hughsie/fwupd/tree/master/contrib) for popular distributions.
 
 Adding a new plugin
 -------------------
