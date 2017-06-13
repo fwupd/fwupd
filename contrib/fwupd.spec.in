@@ -6,6 +6,8 @@
 
 %define alphatag                #ALPHATAG#
 
+%global enable_tests 0
+
 %ifarch x86_64 %{ix86}
 %global have_smbios 1
 %endif
@@ -112,7 +114,11 @@ Rendered labels for display during system firmware updates.
 %meson \
     -Denable-doc=true \
     -Denable-man=true \
+%if 0%{?enable_tests}
+    -Denable-tests=true \
+%else
     -Denable-tests=false \
+%endif
     -Denable-thunderbolt=false \
 %if 0%{?have_uefi}
     -Denable-uefi=true \
@@ -129,6 +135,9 @@ Rendered labels for display during system firmware updates.
     -Denable-colorhug=true
 
 %meson_build
+%if 0%{?enable_tests}
+%meson_test
+%endif
 
 %install
 %meson_install
