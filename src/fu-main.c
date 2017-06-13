@@ -2087,8 +2087,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		gint fd_data;
 		gint fd_sig;
 
-		g_variant_get (parameters, "(&shh)", &id);
-		g_debug ("Called %s(%s)", method_name, id);
+		g_variant_get (parameters, "(&shh)", &id, &fd_data, &fd_sig);
+		g_debug ("Called %s(%s,%i,%i)", method_name, id, fd_data, fd_sig);
 
 		message = g_dbus_method_invocation_get_message (invocation);
 		fd_list = g_dbus_message_get_unix_fd_list (message);
