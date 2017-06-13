@@ -208,6 +208,10 @@ fu_util_status_to_string (FwupdStatus status)
 		/* TRANSLATORS: scheduing an update to be done on the next boot */
 		return _("Scheduling…");
 		break;
+	case FWUPD_STATUS_DOWNLOADING:
+		/* TRANSLATORS: downloading from a remote server */
+		return _("Downloading…");
+		break;
 	default:
 		break;
 	}
@@ -217,14 +221,12 @@ fu_util_status_to_string (FwupdStatus status)
 }
 
 static void
-fu_util_display_panel (FuUtilPrivate *priv)
+fu_util_display_percentage (FwupdStatus status, guint percentage)
 {
-	FwupdStatus status;
 	const gchar *title;
 	const guint progressbar_len = 40;
 	const guint title_len = 25;
 	guint i;
-	guint percentage;
 	static guint to_erase = 0;
 	g_autoptr(GString) str = g_string_new (NULL);
 
@@ -233,7 +235,6 @@ fu_util_display_panel (FuUtilPrivate *priv)
 		g_print ("\b");
 
 	/* add status */
-	status = fwupd_client_get_status (priv->client);
 	if (status == FWUPD_STATUS_IDLE) {
 		if (to_erase > 0)
 			g_print ("\n");
@@ -246,7 +247,6 @@ fu_util_display_panel (FuUtilPrivate *priv)
 		g_string_append (str, " ");
 
 	/* add progressbar */
-	percentage = fwupd_client_get_percentage (priv->client);
 	if (percentage > 0) {
 		g_string_append (str, "[");
 		for (i = 0; i < progressbar_len * percentage / 100; i++)
@@ -266,7 +266,8 @@ fu_util_client_notify_cb (GObject *object,
 			  GParamSpec *pspec,
 			  FuUtilPrivate *priv)
 {
-	fu_util_display_panel (priv);
+	fu_util_display_percentage (fwupd_client_get_status (priv->client),
+				    fwupd_client_get_percentage (priv->client));
 }
 
 static void
@@ -700,6 +701,34 @@ fu_util_file_exists_with_checksum (const gchar *fn,
 	return g_strcmp0 (checksum_expected, checksum_actual) == 0;
 }
 
+static void
+fu_util_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_data)
+{
+	guint percentage;
+	goffset header_size;
+	goffset body_length;
+
+	/* if it's returning "Found" or an error, ignore the percentage */
+	if (msg->status_code != SOUP_STATUS_OK) {
+		g_debug ("ignoring status code %u (%s)",
+			 msg->status_code, msg->reason_phrase);
+		return;
+	}
+
+	/* get data */
+	body_length = msg->response_body->length;
+	header_size = soup_message_headers_get_content_length (msg->response_headers);
+
+	/* size is not known */
+	if (header_size < body_length)
+		return;
+
+	/* calulate percentage */
+	percentage = (guint) ((100 * body_length) / header_size);
+	g_debug ("progress: %u%%", percentage);
+	fu_util_display_percentage (FWUPD_STATUS_DOWNLOADING, percentage);
+}
+
 static gboolean
 fu_util_download_file (FuUtilPrivate *priv,
 		       SoupURI *uri,
@@ -765,7 +794,23 @@ fu_util_download_file (FuUtilPrivate *priv,
 			     "Failed to parse URI %s", uri_str);
 		return FALSE;
 	}
+	if (g_str_has_suffix (uri_str, ".asc")) {
+		/* TRANSLATORS: downloading new signing file */
+		g_print ("%s %s\n", _("Fetching signature"), uri_str);
+	} else if (g_str_has_suffix (uri_str, ".gz")) {
+		/* TRANSLATORS: downloading new metadata file */
+		g_print ("%s %s\n", _("Fetching metadata"), uri_str);
+	} else if (g_str_has_suffix (uri_str, ".cab")) {
+		/* TRANSLATORS: downloading new firmware file */
+		g_print ("%s %s\n", _("Fetching firmware"), uri_str);
+	} else {
+		/* TRANSLATORS: downloading unknown file */
+		g_print ("%s %s\n", _("Fetching file"), uri_str);
+	}
+	g_signal_connect (msg, "got-chunk",
+			  G_CALLBACK (fu_util_download_chunk_cb), priv);
 	status_code = soup_session_send_message (session, msg);
+	g_print ("\n");
 	if (status_code != SOUP_STATUS_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,

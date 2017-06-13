@@ -52,6 +52,8 @@ fwupd_status_to_string (FwupdStatus status)
 		return "device-verify";
 	if (status == FWUPD_STATUS_SCHEDULING)
 		return "scheduling";
+	if (status == FWUPD_STATUS_DOWNLOADING)
+		return "downloading";
 	return NULL;
 }
 
@@ -84,6 +86,8 @@ fwupd_status_from_string (const gchar *status)
 		return FWUPD_STATUS_DEVICE_VERIFY;
 	if (g_strcmp0 (status, "scheduling") == 0)
 		return FWUPD_STATUS_SCHEDULING;
+	if (g_strcmp0 (status, "downloading") == 0)
+		return FWUPD_STATUS_DOWNLOADING;
 	return FWUPD_STATUS_LAST;
 }
 
