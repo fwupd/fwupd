@@ -35,6 +35,13 @@ Build-Depends: debhelper (>= 10.3),
                gobject-introspection,
                libsmbios-dev [amd64 i386],
                libelf-dev,
+               fontconfig,
+               fontconfig-config,
+               fonts-dejavu,
+               libfreetype6-dev,
+               libpango1.0-dev,
+               python3-gi-cairo,
+               python3-pil,
 #disabled until ITP 855065 is done
 #              libtbtfwu-dev,
                valgrind[!mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha !mips64el !armhf !armel !mipsel !m68k]
