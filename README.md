@@ -17,8 +17,7 @@ All building is done in a temporary directory, and autotools is not required.
 This is done relative to the location of `meson.build`.  Any missing dependencies will be mentioned while running `meson`.
 
 By default meson places `/etc` and `/var` under the prefix, which works incorrectly with fwupd.
-Unless you have a version of meson with the fix for https://github.com/mesonbuild/meson/issues/1637 you will need to
-You will need to build setting *sysconfdir* and *localstatedir* manually.
+Unless you have a version of meson with the fix for https://github.com/mesonbuild/meson/issues/1637 you will need to build setting *sysconfdir* and *localstatedir* manually.
 
 `# meson --sysconfdir=/etc --localstatedir=/var ..`
 
