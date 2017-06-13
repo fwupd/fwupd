@@ -35,13 +35,13 @@ ninja-build dist
 
 3a. Generate the additon verification metadata
 
-sha1sum ../fwupd-${release_ver}.tar.xz > ../fwupd-${release_ver}.tar.xz.sha1
-sha256sum ../fwupd-${release_ver}.tar.xz > ../fwupd-${release_ver}.tar.xz.sha256
-gpg -b -a ../fwupd-${release_ver}.tar.xz
+sha1sum meson-dist/fwupd-${release_ver}.tar.xz > meson-dist/fwupd-${release_ver}.tar.xz.sha1
+sha256sum meson-dist/fwupd-${release_ver}.tar.xz > meson-dist/fwupd-${release_ver}.tar.xz.sha256
+gpg -b -a meson-dist/fwupd-${release_ver}.tar.xz
 
 4. Upload tarball:
 
-scp ../fwupd-${release_ver}.tar.* hughsient@people.freedesktop.org:~/public_html/releases
+scp meson-dist/fwupd-${release_ver}.tar.* hughsient@people.freedesktop.org:~/public_html/releases
 
 5. Do post release version bump in meson.build
 
