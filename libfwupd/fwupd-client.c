@@ -200,8 +200,10 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 
 	/* connect to the daemon */
 	priv->conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (priv->conn == NULL)
+	if (priv->conn == NULL) {
+		g_prefix_error (error, "Failed to connect to system D-Bus: ");
 		return FALSE;
+	}
 	priv->proxy = g_dbus_proxy_new_sync (priv->conn,
 					     G_DBUS_PROXY_FLAGS_NONE,
 					     NULL,
