@@ -33,6 +33,9 @@ override_dh_install:
 	dh_install
 	dh_missing --fail-missing
 
+override_dh_strip_nondeterminism:
+	dh_strip_nondeterminism -Xfirmware-example.xml.gz
+
 override_dh_auto_test:
 	if [ -x /usr/bin/valgrind ] ; then \
 		dh_auto_test; \
