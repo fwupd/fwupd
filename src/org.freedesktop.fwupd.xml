@@ -395,7 +395,7 @@
 
     <!--***********************************************************-->
     <signal name='DeviceAdded'>
-      <arg type='sa{sv}' name='device' direction='out'>
+      <arg type='(sa{sv})' name='device' direction='out'>
         <doc:doc>
           <doc:summary>
             <doc:para>A device structure.</doc:para>
@@ -413,7 +413,7 @@
 
     <!--***********************************************************-->
     <signal name='DeviceRemoved'>
-      <arg type='sa{sv}' name='device' direction='out'>
+      <arg type='(sa{sv})' name='device' direction='out'>
         <doc:doc>
           <doc:summary>
             <doc:para>A device structure.</doc:para>
@@ -431,7 +431,7 @@
 
     <!--***********************************************************-->
     <signal name='DeviceChanged'>
-      <arg type='sa{sv}' name='device' direction='out'>
+      <arg type='(sa{sv})' name='device' direction='out'>
         <doc:doc>
           <doc:summary>
             <doc:para>A device structure.</doc:para>
