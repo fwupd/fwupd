@@ -106,6 +106,13 @@ BuildArch: noarch
 %description labels
 Rendered labels for display during system firmware updates.
 
+%package tests
+Summary: Data files for installed tests
+BuildArch: noarch
+
+%description tests
+Data files for installed tests.
+
 %prep
 %setup -q
 
@@ -234,6 +241,12 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
 %files labels
 %{_datadir}/locale/*/LC_IMAGES/fwupd*
+
+%files tests
+%dir %{_datadir}/installed-tests/fwupd
+%{_datadir}/installed-tests/fwupd/firmware-example.xml.gz
+%{_datadir}/installed-tests/fwupd/firmware-example.xml.gz.asc
+%{_datadir}/installed-tests/fwupd/*.test
 
 %changelog
 * #LONGDATE# Richard Hughes <richard@hughsie.com> #VERSION#-0.#BUILD##ALPHATAG#

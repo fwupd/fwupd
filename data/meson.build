@@ -1,4 +1,5 @@
 subdir('tests')
+subdir('installed-tests')
 subdir('pki')
 
 install_data(['fwupd.conf'],
