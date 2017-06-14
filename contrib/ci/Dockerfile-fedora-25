@@ -43,5 +43,12 @@ RUN dnf --enablerepo=updates-testing -y install \
 	valgrind \
 	valgrind-devel \
 	xz
+#deps needed only for installed tests
+RUN dnf --enablerepo=updates-testing -y install \
+	adobe-source-han-sans-cn-fonts \
+	ca-certificates \
+	dbus-x11 \
+	gnome-desktop-testing \
+	gnupg2
 RUN mkdir /build
 WORKDIR /build

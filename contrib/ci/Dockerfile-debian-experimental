@@ -54,6 +54,9 @@ RUN apt-get -t experimental install -yq --no-install-recommends \
 	debhelper \
 	gir1.2-appstreamglib-1.0 \
 	libappstream-glib-dev
+#deps needed only for installed tests
+RUN apt-get install -yq --no-install-recommends \
+        gnome-desktop-testing dbus-x11 ca-certificates
 #fix locales
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \

@@ -35,3 +35,10 @@ rpmbuild -ba build/fwupd.spec
 dnf install -C -y $HOME/rpmbuild/RPMS/*/*.rpm
 
 cp $HOME/rpmbuild/RPMS/*/*.rpm .
+
+# run the installed tests
+mkdir -p /run/dbus
+mkdir -p /var
+ln -s /var/run /run
+dbus-daemon --system --fork
+gnome-desktop-testing-runner fwupd

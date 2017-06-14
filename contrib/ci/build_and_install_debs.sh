@@ -12,3 +12,7 @@ dpkg-buildpackage
 
 #test the packages install
 dpkg -i ../*.deb
+
+# run the installed tests
+/etc/init.d/dbus start
+gnome-desktop-testing-runner fwupd
