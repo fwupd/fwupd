@@ -1664,9 +1664,13 @@ main (int argc, char *argv[])
 			g_autofree gchar *tmp = NULL;
 			tmp = g_option_context_get_help (priv->context, TRUE, NULL);
 			g_print ("%s\n\n%s", error->message, tmp);
-		} else {
-			g_print ("%s\n", error->message);
+			return EXIT_FAILURE;
 		}
+		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_print ("%s\n", error->message);
+			return EXIT_SUCCESS;
+		}
+		g_print ("%s\n", error->message);
 		return EXIT_FAILURE;
 	}
 
