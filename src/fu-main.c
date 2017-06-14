@@ -2565,7 +2565,7 @@ fu_main_plugins_setup (FuMainPrivate *priv)
 		g_assert (ptask2 != NULL);
 		if (!fu_plugin_runner_startup (plugin, &error)) {
 			fu_plugin_set_enabled (plugin, FALSE);
-			g_warning ("disabling plugin because: %s", error->message);
+			g_message ("disabling plugin because: %s", error->message);
 		}
 	}
 }
@@ -2605,7 +2605,7 @@ fu_main_plugins_coldplug (FuMainPrivate *priv)
 		g_assert (ptask2 != NULL);
 		if (!fu_plugin_runner_coldplug (plugin, &error)) {
 			fu_plugin_set_enabled (plugin, FALSE);
-			g_warning ("disabling plugin because: %s", error->message);
+			g_message ("disabling plugin because: %s", error->message);
 		}
 	}
 
@@ -3178,7 +3178,7 @@ main (int argc, char *argv[])
 		g_timeout_add_seconds (5, fu_main_timed_exit_cb, priv->loop);
 
 	/* wait */
-	g_info ("Daemon ready for requests");
+	g_message ("Daemon ready for requests");
 	g_main_loop_run (priv->loop);
 
 	/* success */
