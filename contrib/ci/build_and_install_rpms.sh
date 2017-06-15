@@ -21,7 +21,6 @@ mv fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
 
 #generate a spec file
 sed "s,#VERSION#,$VERSION,;
-     s,enable_tests 0,enable_tests 1,;
      s,#BUILD#,1,;
      s,#LONGDATE#,`date '+%a %b %d %Y'`,;
      s,#ALPHATAG#,alpha,;

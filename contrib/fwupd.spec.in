@@ -6,7 +6,7 @@
 
 %define alphatag                #ALPHATAG#
 
-%global enable_tests 0
+%global enable_tests 1
 
 %ifarch x86_64 %{ix86}
 %global have_smbios 1
