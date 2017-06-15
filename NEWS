@@ -1,3 +1,21 @@
+Version 0.9.4
+~~~~~~~~~~~~~
+Released: 2017-06-15
+
+New Features:
+ - Add installed tests that use the daemon (Richard Hughes)
+ - Add the ability to restrict firmware to specific vendors (Richard Hughes)
+ - Enable Travis CI for Fedora and Debian (Richard Hughes, Mario Limonciello)
+ - Export some more API for dealing with checksums (Richard Hughes)
+ - Generate a images for status messages during system firmware update (Peter Jones)
+ - Show progress download when refreshing metadata (Richard Hughes)
+
+Bugfixes:
+ - Compile with newer versions of meson (Richard Hughes, Mario Limonciello)
+ - Ensure that firmware provides are legal GUIDs (Richard Hughes)
+ - Fix a common crash when refreshing metadata (Richard Hughes)
+ - Use the correct type signature in the D-Bus introspection file (Richard Hughes)
+
 Version 0.9.3
 ~~~~~~~~~~~~~
 Released: 2017-06-07
