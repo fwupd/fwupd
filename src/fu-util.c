@@ -995,7 +995,7 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 		checksums = fwupd_device_get_checksums (dev);
 		for (guint j = 0; j < checksums->len; j++) {
 			const gchar *checksum = g_ptr_array_index (checksums, j);
-			g_autofree gchar *checksum_display;
+			g_autofree gchar *checksum_display = NULL;
 			checksum_display = fwupd_checksum_format_for_display (checksum);
 			/* TRANSLATORS: section header for firmware checksum */
 			fu_util_print_data (_("Checksum"), checksum_display);
@@ -1143,7 +1143,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		checksums = fwupd_device_get_checksums (dev);
 		for (guint j = 0; j < checksums->len; j++) {
 			const gchar *checksum = g_ptr_array_index (checksums, j);
-			g_autofree gchar *checksum_display;
+			g_autofree gchar *checksum_display = NULL;
 			checksum_display = fwupd_checksum_format_for_display (checksum);
 			/* TRANSLATORS: section header for firmware checksum */
 			fu_util_print_data (_("Update Checksum"), checksum_display);
