@@ -56,7 +56,6 @@ test_args = [
   '-Wignored-qualifiers',
   '-Wimplicit-function-declaration',
   '-Winit-self',
-  '-Winline',
   '-Wmissing-declarations',
   '-Wmissing-format-attribute',
   '-Wmissing-include-dirs',
