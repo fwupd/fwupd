@@ -51,6 +51,12 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 	data = g_utf8_to_utf16 (str, -1, NULL, &items_written, error);
 	if (data == NULL)
 		return NULL;
+
+	/* ensure the data is in little endian format */
+	for (guint i = 0; i < items_written; i++)
+		data[i] = GUINT16_TO_LE(data[i]);
+
+	/* convert to a GUID */
 	return as_utils_guid_from_data (namespace_id,
 					(guint8*) data,
 					items_written * 2,
