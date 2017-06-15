@@ -48,7 +48,9 @@ RUN dnf --enablerepo=updates-testing -y install \
 	adobe-source-han-sans-cn-fonts \
 	ca-certificates \
 	dbus-x11 \
+	dconf \
 	gnome-desktop-testing \
+	polkit \
 	gnupg2
 RUN mkdir /build
 WORKDIR /build
