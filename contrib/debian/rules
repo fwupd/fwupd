@@ -25,7 +25,7 @@ override_dh_auto_configure:
 	else \
 		export DELL="-Denable-dell=false"; \
 	fi; \
-	dh_auto_configure -- $$UEFI $$DELL --libexecdir=/usr/lib
+	dh_auto_configure -- $$UEFI $$DELL -Denable-dummy=true --libexecdir=/usr/lib
 
 override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f

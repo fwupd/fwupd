@@ -12,6 +12,7 @@ testfiles = [
   'fwupdmgr-get-updates.test',
   'fwupdmgr-refresh-offline.test',
   'fwupdmgr-refresh.test',
+  'fwupdmgr-verify.test',
 ]
 
 foreach arg: testfiles

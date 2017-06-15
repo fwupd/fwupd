@@ -178,8 +178,6 @@ fu_plugin_module_func (void)
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
 
-	g_setenv ("FWUPD_ENABLE_TEST_PLUGIN", "1", TRUE);
-
 	/* create a fake device */
 	plugin = fu_plugin_new ();
 	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
@@ -202,8 +200,11 @@ fu_plugin_module_func (void)
 	g_assert_cmpint (cnt, ==, 0);
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==, "FakeDevice");
+	g_assert_cmpstr (fu_device_get_version_lowest (device), ==, "1.2.0");
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
+	g_assert_cmpstr (fu_device_get_version_bootloader (device), ==, "0.1.2");
 	g_assert_cmpstr (fu_device_get_guid_default (device), ==,
-			 "00000000-0000-0000-0000-000000000000");
+			 "b585990a-003e-5270-89d5-3705a17f9a43");
 	g_assert_cmpstr (fu_device_get_name (device), ==,
 			 "Integrated Webcam™");
 
@@ -214,7 +215,7 @@ fu_plugin_module_func (void)
 	g_assert (mapped_file != NULL);
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
 	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
-				  FWUPD_INSTALL_FLAG_OFFLINE, &error);
+				       FWUPD_INSTALL_FLAG_OFFLINE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 1);
@@ -234,10 +235,14 @@ fu_plugin_module_func (void)
 
 	/* lets do this online */
 	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
-				  FWUPD_INSTALL_FLAG_NONE, &error);
+				       FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (cnt, ==, 3);
+	g_assert_cmpint (cnt, ==, 4);
+
+	/* check the new version */
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.4");
+	g_assert_cmpstr (fu_device_get_version_bootloader (device), ==, "0.1.2");
 
 	/* lets check the pending */
 	res = fu_pending_get_device (pending, fu_device_get_id (device), &error);

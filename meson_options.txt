@@ -9,4 +9,5 @@ option('enable-dell', type : 'boolean', value : true, description : 'enable Dell
 option('enable-thunderbolt', type : 'boolean', value : true, description : 'enable Thunderbolt support')
 option('enable-systemd', type : 'boolean', value : true, description : 'enable systemd support')
 option('enable-consolekit', type : 'boolean', value : true, description : 'enable ConsoleKit support')
+option('enable-dummy', type : 'boolean', value : false, description : 'enable the dummy device')
 option('with-bootdir', type : 'string', value : '/boot/efi', description : 'Directory for EFI system partition')

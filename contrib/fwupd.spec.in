@@ -7,6 +7,7 @@
 %define alphatag                #ALPHATAG#
 
 %global enable_tests 1
+%global enable_dummy 1
 
 %ifarch x86_64 %{ix86}
 %global have_smbios 1
@@ -129,6 +130,11 @@ Data files for installed tests.
 %else
     -Denable-tests=false \
 %endif
+%if 0%{?enable_dummy}
+    -Denable-dummy=true \
+%else
+    -Denable-dummy=false \
+%endif
     -Denable-thunderbolt=false \
 %if 0%{?have_uefi}
     -Denable-uefi=true \
@@ -213,7 +219,9 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_smbios}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_synapticsmst.so
 %endif
+%if 0%{?enable_dummy}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_test.so
+%endif
 %{_libdir}/fwupd-plugins-2/libfu_plugin_udev.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_uefi.so

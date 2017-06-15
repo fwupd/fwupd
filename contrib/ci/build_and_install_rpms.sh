@@ -8,6 +8,7 @@ meson .. \
     -Denable-doc=true \
     -Denable-man=true \
     -Denable-tests=true \
+    -Denable-dummy=true \
     -Denable-thunderbolt=false \
     -Denable-uefi=true \
     -Denable-dell=true \
@@ -24,6 +25,7 @@ sed "s,#VERSION#,$VERSION,;
      s,#BUILD#,1,;
      s,#LONGDATE#,`date '+%a %b %d %Y'`,;
      s,#ALPHATAG#,alpha,;
+     s,enable_dummy 0,enable_dummy 1,;
      s,Source0.*,Source0:\tfwupd-$VERSION.tar.xz," \
 	contrib/fwupd.spec.in > build/fwupd.spec
 
