@@ -1,0 +1,66 @@
+FROM debian:experimental
+
+RUN echo "deb-src http://deb.debian.org/debian/ unstable main" >> /etc/apt/sources.list
+RUN echo "deb-src http://deb.debian.org/debian/ experimental main" >> /etc/apt/sources.list
+RUN apt-get update -qq
+RUN apt-get install -yq --no-install-recommends \
+	docbook-utils \
+	fontconfig \
+	fontconfig-config \
+	fonts-dejavu \
+	gcab \
+	gettext \
+	gobject-introspection \
+	gtk-doc-tools \
+	locales \
+	libarchive-dev \
+	libcairo-dev \
+	libcairo-gobject2 \
+	libcolord-dev \
+	libcolorhug-dev \
+	libefivar-dev \
+	libelf-dev \
+	libfreetype6-dev \
+	libfwup-dev \
+	libgcab-dev \
+	libgirepository1.0-dev \
+	libglib2.0-dev \
+	libgpgme11-dev \
+	libgudev-1.0-dev \
+	libgusb-dev \
+	libpango1.0-dev \
+	libpolkit-gobject-1-dev \
+	libsmbios-dev \
+	libsoup2.4-dev \
+	libsqlite3-dev \
+	libtool-bin \
+	meson \
+	pkg-config \
+	policykit-1 \
+	python3 \
+	python3-cairo \
+	python3-gi-cairo \
+	python3-pil \
+	udev \
+	systemd \
+	valgrind
+#deps needed only for packaged build
+RUN apt-get install -yq --no-install-recommends \
+	git-buildpackage
+#deps not yet in unstable:
+# - new debehlper (10.3) for meson building
+# - new appstream-glib is fwupd dependency
+RUN apt-get -t experimental install -yq --no-install-recommends \
+	debhelper \
+	gir1.2-appstreamglib-1.0 \
+	libappstream-glib-dev
+#deps needed only for installed tests
+RUN apt-get install -yq --no-install-recommends \
+        gnome-desktop-testing dbus-x11 ca-certificates
+#fix locales
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=en_US.UTF-8
+ENV LANG en_US.UTF-8
+RUN mkdir /build
+WORKDIR /build

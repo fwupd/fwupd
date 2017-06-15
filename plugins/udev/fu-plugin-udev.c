@@ -114,6 +114,40 @@ fu_plugin_verify (FuPlugin *plugin,
 	return TRUE;
 }
 
+static gchar *
+fu_plugin_udev_generate_vendor_id (GUdevDevice *device)
+{
+	const gchar *pci_id;
+	const gchar *subsys;
+	guint64 vid;
+	g_autofree gchar *subsys_up = NULL;
+	g_autofree gchar *vid_str = NULL;
+
+	/* get upper cased subsystem */
+	subsys = g_udev_device_get_subsystem (device);
+	if (subsys == NULL)
+		return NULL;
+	subsys_up = g_ascii_strup (subsys, -1);
+
+	/* get vendor ID */
+	pci_id = g_udev_device_get_property (device, "PCI_ID");
+	if (pci_id != NULL) {
+		g_auto(GStrv) split = g_strsplit (pci_id, ":", 2);
+		vid_str = g_strdup (split[0]);
+	}
+	if (vid_str == NULL) {
+		g_warning ("no vendor ID for %s",
+			   g_udev_device_get_sysfs_path (device));
+		return NULL;
+	}
+	vid = g_ascii_strtoull (vid_str, NULL, 16);
+	if (vid == 0x0) {
+		g_warning ("failed to parse %s", vid_str);
+		return NULL;
+	}
+	return g_strdup_printf ("%s:0x%04X", subsys_up, (guint) vid);
+}
+
 static void
 fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 {
@@ -124,6 +158,7 @@ fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 	const gchar *vendor;
 	g_autofree gchar *id = NULL;
 	g_autofree gchar *rom_fn = NULL;
+	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *version = NULL;
 	g_auto(GStrv) split = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
@@ -176,6 +211,11 @@ fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 		fu_device_set_vendor (dev, vendor);
 	if (version != NULL)
 		fu_device_set_version (dev, version);
+
+	/* set vendor ID */
+	vendor_id = fu_plugin_udev_generate_vendor_id (device);
+	if (vendor_id != NULL)
+		fu_device_set_vendor_id (FU_DEVICE (dev), vendor_id);
 
 	/* get the FW version from the rom when unlocked */
 	rom_fn = g_build_filename (g_udev_device_get_sysfs_path (device), "rom", NULL);

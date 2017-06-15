@@ -809,6 +809,7 @@ fu_device_altos_init_real (FuDeviceAltos *device)
 {
 	FuDeviceAltosPrivate *priv = GET_PRIVATE (device);
 	g_autofree gchar *devid1 = NULL;
+	g_autofree gchar *vendor_id = NULL;
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device),
@@ -816,6 +817,10 @@ fu_device_altos_init_real (FuDeviceAltos *device)
 
 	/* set default vendor */
 	fu_device_set_vendor (FU_DEVICE (device), "altusmetrum.org");
+
+	/* set vendor ID */
+	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
+	fu_device_set_vendor_id (FU_DEVICE (device), vendor_id);
 
 	/* set name */
 	switch (priv->kind) {

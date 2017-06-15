@@ -125,23 +125,25 @@ gnome.generate_gir(dfu,
   install : true
 )
 
-testdatadir = join_paths(meson.current_source_dir(), 'tests')
-cargs += '-DTESTDATADIR="' + testdatadir + '"'
-e = executable(
-  'dfu-self-test',
-  sources : [
-    'dfu-self-test.c'
-  ],
-  include_directories : [
-    include_directories('..'),
-  ],
-  dependencies : [
-    appstream_glib,
-    gio,
-    gusb,
-    libm,
-  ],
-  link_with : dfu,
-  c_args : cargs
-)
-test('dfu-self-test', e)
+if get_option('enable-tests')
+  testdatadir = join_paths(meson.current_source_dir(), 'tests')
+  cargs += '-DTESTDATADIR="' + testdatadir + '"'
+  e = executable(
+    'dfu-self-test',
+    sources : [
+      'dfu-self-test.c'
+    ],
+    include_directories : [
+      include_directories('..'),
+    ],
+    dependencies : [
+      appstream_glib,
+      gio,
+      gusb,
+      libm,
+    ],
+    link_with : dfu,
+    c_args : cargs
+  )
+  test('dfu-self-test', e)
+endif

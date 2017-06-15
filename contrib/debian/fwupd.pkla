@@ -1,0 +1,5 @@
+[Call internal fwupd actions]
+Identity=unix-group:admin;unix-group:sudo
+Action=org.freedesktop.fwupd.update-internal
+ResultActive=yes
+

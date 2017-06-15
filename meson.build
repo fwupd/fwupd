@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '0.9.3',
+  version : '0.9.4',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0'
 )
@@ -128,6 +128,11 @@ gpgerror = cc.find_library('gpg-error')
 libm = cc.find_library('m', required: false)
 udev = dependency('udev')
 
+cairo = dependency('cairo')
+pango = dependency('pango')
+fontconfig = cc.find_library('fontconfig')
+freetype = cc.find_library('freetype')
+
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
@@ -214,21 +219,23 @@ subdir('po')
 subdir('policy')
 subdir('src')
 
-archiver = find_program('git', required : false)
-if archiver.found()
-  run_target('dist',
-    # git config tar.tar.xz.command "xz -c"
-    command: [
-      'git', 'archive',
-      '--prefix=' + meson.project_name() + '-' + meson.project_version() + '/',
-      'HEAD',
-      '--format=tar.xz',
-      '--output',
-      meson.project_name() + '-' + meson.project_version() + '.tar.xz'
-    ]
-  )
-else
-  message('git not found, you will not be able to run `ninja dist`')
+if meson.version().version_compare('<0.41.0')
+  archiver = find_program('git', required : false)
+  if archiver.found()
+    run_target('dist',
+      # git config tar.tar.xz.command "xz -c"
+      command: [
+        'git', 'archive',
+        '--prefix=' + meson.project_name() + '-' + meson.project_version() + '/',
+        'HEAD',
+        '--format=tar.xz',
+        '--output',
+        meson.project_name() + '-' + meson.project_version() + '.tar.xz'
+      ]
+    )
+  else
+    message('git not found, you will not be able to run `ninja dist`')
+  endif
 endif
 
 if get_option('enable-systemd')

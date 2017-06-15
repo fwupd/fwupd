@@ -89,23 +89,25 @@ gnome.generate_gir(fwupd,
   install : true
 )
 
-testdatadir = join_paths(meson.source_root(), 'data')
-e = executable(
-  'fwupd-self-test',
-  sources : [
-    'fwupd-self-test.c'
-  ],
-  include_directories : [
-    include_directories('..'),
-  ],
-  dependencies : [
-    gio,
-    soup,
-  ],
-  link_with : fwupd,
-  c_args : [
-    cargs,
-    '-DFU_SELF_TEST_REMOTES_DIR="' + testdatadir + '"',
-  ],
-)
-test('fwupd-self-test', e)
+if get_option('enable-tests')
+  testdatadir = join_paths(meson.source_root(), 'data')
+  e = executable(
+    'fwupd-self-test',
+    sources : [
+      'fwupd-self-test.c'
+    ],
+    include_directories : [
+      include_directories('..'),
+    ],
+    dependencies : [
+      gio,
+      soup,
+    ],
+    link_with : fwupd,
+    c_args : [
+      cargs,
+      '-DFU_SELF_TEST_REMOTES_DIR="' + testdatadir + '"',
+    ],
+  )
+  test('fwupd-self-test', e)
+endif

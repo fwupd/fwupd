@@ -355,7 +355,7 @@ msgstr "Synaptics 多流传输工具"
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 #: plugins/uefi/fu-plugin-uefi.c:193
 msgid "Installing firmware update…"
-msgstr "正在安装固件更新..."
+msgstr "正在安装固件更新…"
 
 #. TRANSLATORS: turn on all debugging
 #: src/fu-debug.c:130

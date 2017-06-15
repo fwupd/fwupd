@@ -777,6 +777,30 @@ fu_main_get_guids_from_store (AsStore *store)
 }
 
 static void
+fu_main_vendor_fixup_provide_value (AsApp *app)
+{
+	GPtrArray *provides;
+
+	/* no quirk required */
+	if (as_app_get_kind (app) != AS_APP_KIND_FIRMWARE)
+		return;
+
+	/* fix each provide to be a GUID */
+	provides = as_app_get_provides (app);
+	for (guint i = 0; i < provides->len; i++) {
+		AsProvide *prov = g_ptr_array_index (provides, i);
+		const gchar *value = as_provide_get_value (prov);
+		g_autofree gchar *guid = NULL;
+		if (as_provide_get_kind (prov) != AS_PROVIDE_KIND_FIRMWARE_FLASHED)
+			continue;
+		if (as_utils_guid_is_valid (value))
+			continue;
+		guid = as_utils_guid_from_string (value);
+		as_provide_set_value (prov, guid);
+	}
+}
+
+static void
 fu_main_vendor_quirk_release_version (AsApp *app)
 {
 	AsVersionParseFlag flags = AS_VERSION_PARSE_FLAG_USE_TRIPLET;
@@ -848,7 +872,7 @@ fu_main_check_version_requirement (AsApp *app,
 
 	/* check version */
 	if (!as_require_version_compare (req, version, error)) {
-		g_prefix_error (error, "version of %s incorrect: ", id);
+		g_prefix_error (error, "Value of %s incorrect: ", id);
 		return FALSE;
 	}
 
@@ -901,6 +925,13 @@ fu_main_check_app_versions (AsApp *app, FuDevice *device, GError **error)
 							AS_REQUIRE_KIND_FIRMWARE,
 							"bootloader",
 							fu_device_get_version_bootloader (device),
+							error)) {
+			return FALSE;
+		}
+		if (!fu_main_check_version_requirement (app,
+							AS_REQUIRE_KIND_FIRMWARE,
+							"vendor-id",
+							fu_device_get_vendor_id (device),
 							error)) {
 			return FALSE;
 		}
@@ -1017,6 +1048,9 @@ fu_main_update_helper_for_device (FuMainAuthHelper *helper,
 
 	/* possibly convert the version from 0x to dotted */
 	fu_main_vendor_quirk_release_version (app);
+
+	/* possibly convert the flashed provide to a GUID */
+	fu_main_vendor_fixup_provide_value (app);
 
 	version = as_release_get_version (rel);
 	fu_device_set_update_version (device, version);
@@ -1472,6 +1506,9 @@ fu_main_get_updates_item_update (FuMainPrivate *priv, FuDeviceItem *item)
 	/* possibly convert the version from 0x to dotted */
 	fu_main_vendor_quirk_release_version (app);
 
+	/* possibly convert the flashed provide to a GUID */
+	fu_main_vendor_fixup_provide_value (app);
+
 	/* get latest release */
 	release = as_app_get_release_default (app);
 	if (release == NULL) {
@@ -1736,6 +1773,9 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 
 	/* possibly convert the version from 0x to dotted */
 	fu_main_vendor_quirk_release_version (app);
+
+	/* possibly convert the flashed provide to a GUID */
+	fu_main_vendor_fixup_provide_value (app);
 
 	/* create a result with all the metadata in */
 	fwupd_device_set_description (dev, as_app_get_description (app, NULL));
@@ -2047,8 +2087,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		gint fd_data;
 		gint fd_sig;
 
-		g_variant_get (parameters, "(&shh)", &id);
-		g_debug ("Called %s(%s)", method_name, id);
+		g_variant_get (parameters, "(&shh)", &id, &fd_data, &fd_sig);
+		g_debug ("Called %s(%s,%i,%i)", method_name, id, fd_data, fd_sig);
 
 		message = g_dbus_method_invocation_get_message (invocation);
 		fd_list = g_dbus_message_get_unix_fd_list (message);
@@ -2525,7 +2565,7 @@ fu_main_plugins_setup (FuMainPrivate *priv)
 		g_assert (ptask2 != NULL);
 		if (!fu_plugin_runner_startup (plugin, &error)) {
 			fu_plugin_set_enabled (plugin, FALSE);
-			g_warning ("disabling plugin because: %s", error->message);
+			g_message ("disabling plugin because: %s", error->message);
 		}
 	}
 }
@@ -2565,7 +2605,7 @@ fu_main_plugins_coldplug (FuMainPrivate *priv)
 		g_assert (ptask2 != NULL);
 		if (!fu_plugin_runner_coldplug (plugin, &error)) {
 			fu_plugin_set_enabled (plugin, FALSE);
-			g_warning ("disabling plugin because: %s", error->message);
+			g_message ("disabling plugin because: %s", error->message);
 		}
 	}
 
@@ -3138,7 +3178,7 @@ main (int argc, char *argv[])
 		g_timeout_add_seconds (5, fu_main_timed_exit_cb, priv->loop);
 
 	/* wait */
-	g_info ("Daemon ready for requests");
+	g_message ("Daemon ready for requests");
 	g_main_loop_run (priv->loop);
 
 	/* success */

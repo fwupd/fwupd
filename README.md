@@ -1,5 +1,6 @@
 fwupd
 =====
+[![Build Status](https://travis-ci.org/hughsie/fwupd.png?branch=master)](https://travis-ci.org/hughsie/fwupd)
 
 This project aims to make updating firmware on Linux automatic, safe and reliable.
 
@@ -16,8 +17,7 @@ All building is done in a temporary directory, and autotools is not required.
 This is done relative to the location of `meson.build`.  Any missing dependencies will be mentioned while running `meson`.
 
 By default meson places `/etc` and `/var` under the prefix, which works incorrectly with fwupd.
-Unless you have a version of meson with the fix for https://github.com/mesonbuild/meson/issues/1637 you will need to
-You will need to build setting *sysconfdir* and *localstatedir* manually.
+Unless you have a version of meson with the fix for https://github.com/mesonbuild/meson/issues/1637 you will need to build setting *sysconfdir* and *localstatedir* manually.
 
 `# meson --sysconfdir=/etc --localstatedir=/var ..`
 
@@ -41,11 +41,17 @@ While compiling policykit policy: `/home/user/jhbuild/install/bin/msgfmt: cannot
 
 `# sudo ninja install`
 
+## Distribution packages
+Scripts for generating distribution packages are available in the [contrib](https://github.com/hughsie/fwupd/tree/master/contrib) for popular distributions.
+
 Adding a new plugin
 -------------------
 
 An extensible architecture allows for providing new plugin types (for reading
 and writing different firmware) as well as ways quirk their behavior.
+
+You can find more information about the architecture in the developers section
+of the [fwupd website](http://www.fwupd.org).
 
 If you have a firmware specification and would like to see support
 in this project, please file an issue and share the spec.  Patches are also
@@ -58,6 +64,9 @@ Firmware Service (LVFS)](https://secure-lvfs.rhcloud.com/lvfs/).
 
 This service is available to all OEMs and firmware creators who would like to make
 their firmware available to Linux users.
+
+You can find more information about the technical details of creating a firmware
+capsule in the hardware vendors section of the [fwupd website](http://www.fwupd.org).
 
 Basic usage flow (command line)
 ------------------------------
@@ -83,6 +92,9 @@ This will download and apply all updates for your system.
 
 * Updates that can be applied live *(Online updates)* will be done immediately.
 * Updates that require a reboot *(Offline updates)* will be staged for the next reboot.
+
+You can find more information about the update workflow in the end
+users section of the [fwupd website](http://www.fwupd.org).
 
 Other frontends
 -------------------

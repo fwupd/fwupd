@@ -611,6 +611,7 @@ fu_device_ebitdo_init_real (FuDeviceEbitdo *device)
 	FuDeviceEbitdoPrivate *priv = GET_PRIVATE (device);
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *name = NULL;
+	g_autofree gchar *vendor_id = NULL;
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device),
@@ -621,6 +622,10 @@ fu_device_ebitdo_init_real (FuDeviceEbitdo *device)
 				fu_device_ebitdo_kind_to_string (priv->kind));
 	fu_device_set_name (FU_DEVICE (device), name);
 	fu_device_set_vendor (FU_DEVICE (device), "8bitdo");
+
+	/* set vendor ID */
+	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
+	fu_device_set_vendor_id (FU_DEVICE (device), vendor_id);
 
 	/* add USB\VID_0000&PID_0000 */
 	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",

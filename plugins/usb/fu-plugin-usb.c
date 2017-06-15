@@ -36,6 +36,7 @@ fu_plugin_usb_device_added_cb (GUsbContext *ctx,
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *devid2 = NULL;
 	g_autofree gchar *product = NULL;
+	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
@@ -96,6 +97,10 @@ fu_plugin_usb_device_added_cb (GUsbContext *ctx,
 							AS_VERSION_PARSE_FLAG_NONE);
 	}
 	fu_device_set_version (dev, version);
+
+	/* set vendor ID */
+	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (device));
+	fu_device_set_vendor_id (dev, vendor_id);
 
 	/* get GUID from the descriptor if set */
 	idx = g_usb_device_get_custom_index (device,

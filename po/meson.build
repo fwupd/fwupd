@@ -4,3 +4,5 @@ i18n.gettext(meson.project_name(),
   '--default-domain=' + meson.project_name(),
   ]
 )
+
+meson.add_install_script('make-images.sh')

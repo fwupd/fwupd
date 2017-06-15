@@ -83,3 +83,53 @@ fwupd_checksum_format_for_display (const gchar *checksum)
 	GChecksumType kind = fwupd_checksum_guess_kind (checksum);
 	return g_strdup_printf ("%s(%s)", _g_checksum_type_to_string (kind), checksum);
 }
+
+/**
+ * fwupd_checksum_get_by_kind:
+ * @checksums: (element-type utf8): checksums
+ * @kind: a #GChecksumType, e.g. %G_CHECKSUM_SHA512
+ *
+ * Gets a specific checksum kind.
+ *
+ * Returns: a checksum from the array, or %NULL if not found
+ *
+ * Since: 0.9.4
+ **/
+const gchar *
+fwupd_checksum_get_by_kind (GPtrArray *checksums, GChecksumType kind)
+{
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *checksum = g_ptr_array_index (checksums, i);
+		if (fwupd_checksum_guess_kind (checksum) == kind)
+			return checksum;
+	}
+	return NULL;
+}
+
+/**
+ * fwupd_checksum_get_best:
+ * @checksums: (element-type utf8): checksums
+ *
+ * Gets a the best possible checksum kind.
+ *
+ * Returns: a checksum from the array, or %NULL if nothing was suitable
+ *
+ * Since: 0.9.4
+ **/
+const gchar *
+fwupd_checksum_get_best (GPtrArray *checksums)
+{
+	GChecksumType checksum_types[] = {
+		G_CHECKSUM_SHA512,
+		G_CHECKSUM_SHA256,
+		G_CHECKSUM_SHA1,
+		0 };
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		for (guint j = 0; j < checksums->len; j++) {
+			const gchar *checksum = g_ptr_array_index (checksums, j);
+			if (fwupd_checksum_guess_kind (checksum) == checksum_types[i])
+				return checksum;
+		}
+	}
+	return NULL;
+}

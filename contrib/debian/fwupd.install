@@ -1,0 +1,17 @@
+usr/bin/dfu-tool
+usr/bin/fwupdmgr
+etc/*
+usr/share/app-info/*
+usr/share/dbus-1/*
+usr/share/polkit-1/*
+usr/share/locale
+usr/share/installed-tests/*
+usr/lib/*/fwupd
+usr/share/man/man1/*
+lib/systemd/system/*
+var/lib/fwupd
+lib/udev/rules.d/*
+data/fwupd.conf etc
+debian/fwupd.pkla /var/lib/polkit-1/localauthority/10-vendor.d
+usr/lib/*/fwupd-plugins-*/*.so
+debian/lintian/fwupd usr/share/lintian/overrides
