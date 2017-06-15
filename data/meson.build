@@ -6,6 +6,10 @@ install_data(['fwupd.conf'],
   install_dir : get_option('sysconfdir')
 )
 
+install_data(['org.freedesktop.fwupd.metainfo.xml'],
+  install_dir: join_paths(get_option('datadir'), 'metainfo')
+)
+
 install_subdir('remotes.d',
   install_dir: join_paths(get_option('sysconfdir'), 'fwupd')
 )
