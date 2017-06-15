@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
+export LC_ALL := C.UTF-8
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 #GPGME needs this for proper building on 32 bit archs
