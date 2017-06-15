@@ -1140,7 +1140,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("Update Remote ID"),
 				    fwupd_release_get_remote_id (rel));
 
-		checksums = fwupd_device_get_checksums (dev);
+		checksums = fwupd_release_get_checksums (rel);
 		for (guint j = 0; j < checksums->len; j++) {
 			const gchar *checksum = g_ptr_array_index (checksums, j);
 			g_autofree gchar *checksum_display = NULL;
