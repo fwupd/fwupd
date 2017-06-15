@@ -863,6 +863,7 @@ fu_plugin_runner_update (FuPlugin *plugin,
 	g_autoptr(FuPending) pending = NULL;
 	g_autoptr(FwupdResult) res_pending = NULL;
 	GError *error_update = NULL;
+	GPtrArray *checksums;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -906,6 +907,10 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		g_propagate_error (error, error_update);
 		return FALSE;
 	}
+
+	/* no longer valid */
+	checksums = fu_device_get_checksums (device);
+	g_ptr_array_set_size (checksums, 0);
 
 	/* cleanup */
 	if (res_pending != NULL) {
