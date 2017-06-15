@@ -48,6 +48,9 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
 /* this is only valid in this file */
 #define FWUPD_ERROR_INVALID_ARGS	(FWUPD_ERROR_LAST+1)
 
+/* custom return code */
+#define EXIT_NOTHING_TO_DO		2
+
 typedef struct {
 	GCancellable		*cancellable;
 	GMainLoop		*loop;
@@ -1668,7 +1671,7 @@ main (int argc, char *argv[])
 		}
 		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			g_print ("%s\n", error->message);
-			return EXIT_SUCCESS;
+			return EXIT_NOTHING_TO_DO;
 		}
 		g_print ("%s\n", error->message);
 		return EXIT_FAILURE;

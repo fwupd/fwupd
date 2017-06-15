@@ -33,6 +33,11 @@ fwupdmgr install ${dirname}/fakedevice124.cab
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
+echo "Getting updates (should be none)..."
+fwupdmgr get-updates
+rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
+
+# ---
 echo "Testing the verification of firmware (again)..."
 fwupdmgr verify
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
