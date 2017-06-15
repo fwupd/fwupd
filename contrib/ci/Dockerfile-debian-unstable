@@ -53,8 +53,4 @@ RUN apt-get install -yq --no-install-recommends \
 RUN apt-get install -yq --no-install-recommends \
         gnome-desktop-testing dbus-x11 ca-certificates
 RUN mkdir /build
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    dpkg-reconfigure --frontend=noninteractive locales && \
-    update-locale LANG=en_US.UTF-8
-ENV LANG en_US.UTF-8
 WORKDIR /build
