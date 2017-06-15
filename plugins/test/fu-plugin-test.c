@@ -75,11 +75,13 @@ fu_plugin_verify (FuPlugin *plugin,
 		  GError **error)
 {
 	if (g_strcmp0 (fu_device_get_version (device), "1.2.3") == 0) {
-		fu_device_add_checksum (device, "13fad4329b7e9cc8d0fe05afb5573f328d362f4f");
+		fu_device_add_checksum (device, "7998cd212721e068b2411135e1f90d0ad436d730");
+		fu_device_add_checksum (device, "dbae6a0309b3de8e850921631916a60b2956056e109fc82c586e3f9b64e2401a");
 		return TRUE;
 	}
 	if (g_strcmp0 (fu_device_get_version (device), "1.2.4") == 0) {
-		fu_device_add_checksum (device, "81bc8b33c2cefb1afdbe294b912d20a92c7d0968");
+		fu_device_add_checksum (device, "2b8546ba805ad10bf8a2e5ad539d53f303812ba5");
+		fu_device_add_checksum (device, "b546c241029ce4e16c99eb6bfd77b86e4490aa3826ba71b8a4114e96a2d69bcd");
 		return TRUE;
 	}
 	g_set_error (error,

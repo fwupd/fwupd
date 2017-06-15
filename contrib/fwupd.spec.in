@@ -263,6 +263,8 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_datadir}/installed-tests/fwupd/firmware-example.xml.gz
 %{_datadir}/installed-tests/fwupd/firmware-example.xml.gz.asc
 %{_datadir}/installed-tests/fwupd/*.test
+%{_datadir}/installed-tests/fwupd/*.cab
+%{_datadir}/installed-tests/fwupd/*.sh
 
 %changelog
 * #LONGDATE# Richard Hughes <richard@hughsie.com> #VERSION#-0.#BUILD##ALPHATAG#

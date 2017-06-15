@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2017 Richard Hughes <richard@hughsie.com> -->
+<component type="firmware">
+  <id>fakedevice.firmware</id>
+  <name>FakeDevice Firmware</name>
+  <summary>Firmware for the ACME Corp Integrated Webcam</summary>
+  <description>
+    <p>
+      Updating the firmware on your webcam device improves performance and
+      adds new features.
+    </p>
+  </description>
+  <provides>
+    <firmware type="flashed">b585990a-003e-5270-89d5-3705a17f9a43</firmware>
+  </provides>
+  <url type="homepage">http://www.acme.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0+</project_license>
+  <developer_name>ACME Corp</developer_name>
+  <releases>
+    <release version="1.2.4" date="2017-06-15" urgency="medium">
+      <checksum filename="fakedevice124.bin" target="content"/>
+      <description>
+        <p>Fixes another bug with the flux capacitor to prevent time going backwards.</p>
+      </description>
+    </release>
+  </releases>
+</component>
