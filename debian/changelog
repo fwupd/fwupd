@@ -1,4 +1,4 @@
-fwupd (0.9.3-1) experimental; urgency=medium
+fwupd (0.9.4-1) UNRELEASED; urgency=medium
 
   * New upstream version (0.9.3)
   * Drop all existging patches (now upstream)
@@ -8,8 +8,10 @@ fwupd (0.9.3-1) experimental; urgency=medium
   * Re-enable PIE for builds
   * Add additional build dependencies that will be needed for generating capsule graphics
   * debian/conrol: sort build-dependencies
+  * Drop packaging from debian/, it will be git mv'ed from contrib/ upstream
+  * Move Debian packaging from contrib/ upstream
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 13 Jun 2017 11:33:55 -0500
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 15 Jun 2017 08:59:17 -0500
 
 fwupd (0.9.2-6) experimental; urgency=medium
 
