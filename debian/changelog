@@ -1,15 +1,16 @@
-fwupd (0.9.4-1) UNRELEASED; urgency=medium
+fwupd (0.9.4-1) experimental; urgency=medium
 
-  * New upstream version (0.9.3)
+  * New upstream version (0.9.4)
   * Drop all existging patches (now upstream)
   * Backport a patch to fix test suite.
   * Correct a cleanup rule
   * Drop intltool build dependency
   * Re-enable PIE for builds
   * Add additional build dependencies that will be needed for generating capsule graphics
-  * debian/conrol: sort build-dependencies
+  * debian/control: sort build-dependencies
   * Drop packaging from debian/, it will be git mv'ed from contrib/ upstream
   * Move Debian packaging from contrib/ upstream
+  * Set locale to C.UTF-8 during build to fix unicode file error.
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 15 Jun 2017 08:59:17 -0500
 
