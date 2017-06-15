@@ -47,5 +47,25 @@ echo "Refreshing from the LVFS (requires network access)..."
 fwupdmgr refresh
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
+# ---
+echo "Downgrading to older release (requires network access)"
+fwupdmgr downgrade
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+
+# ---
+echo "Downgrading to older release (should be none)"
+fwupdmgr downgrade
+rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
+
+# ---
+echo "Updating all devices to latest release (requires network access)"
+fwupdmgr update
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+
+# ---
+echo "Getting updates (should be none)..."
+fwupdmgr get-updates
+rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
+
 # success!
 exit 0

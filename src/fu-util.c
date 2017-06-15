@@ -348,7 +348,7 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	if (devices_filtered->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
+				     FWUPD_ERROR_NOTHING_TO_DO,
 				     "No supported devices");
 		return NULL;
 	}
@@ -1021,7 +1021,7 @@ fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error
 	if (rels->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
+				     FWUPD_ERROR_NOTHING_TO_DO,
 				     "No supported releases");
 		return NULL;
 	}
@@ -1354,14 +1354,29 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* only include older firmware */
 		if (as_utils_vercmp (fwupd_release_get_version (rel_tmp),
-				     fwupd_device_get_version (dev)) >= 0)
+				     fwupd_device_get_version (dev)) >= 0) {
+			g_debug ("ignoring %s as older than %s",
+				 fwupd_release_get_version (rel_tmp),
+				 fwupd_device_get_version (dev));
 			continue;
+		}
 
 		/* don't show releases we are not allowed to dowgrade to */
 		if (fwupd_device_get_version_lowest (dev) != NULL) {
 			if (as_utils_vercmp (fwupd_release_get_version (rel_tmp),
-					     fwupd_device_get_version_lowest (dev)) >= 0)
+					     fwupd_device_get_version_lowest (dev)) <= 0) {
+				g_debug ("ignoring %s as older than lowest %s",
+					 fwupd_release_get_version (rel_tmp),
+					 fwupd_device_get_version_lowest (dev));
 				continue;
+			}
+		}
+
+		/* don't show releases without URIs */
+		if (fwupd_release_get_uri (rel_tmp) == NULL) {
+			g_debug ("ignoring %s as no URI",
+				 fwupd_release_get_version (rel_tmp));
+			continue;
 		}
 
 		g_ptr_array_add (rels_filtered, rel_tmp);

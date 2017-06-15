@@ -119,6 +119,12 @@ fu_plugin_update_online (FuPlugin *plugin,
 		g_usleep (1000);
 		fu_plugin_set_percentage (plugin, i);
 	}
-	fu_device_set_version (device, "1.2.4");
+
+	/* upgrade, or downgrade */
+	if ((flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0) {
+		fu_device_set_version (device, "1.2.4");
+	} else {
+		fu_device_set_version (device, "1.2.3");
+	}
 	return TRUE;
 }
