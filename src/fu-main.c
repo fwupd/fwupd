@@ -1426,8 +1426,18 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, const gchar *remote_id,
 	if (!as_store_from_xml (store, xml, NULL, error))
 		return FALSE;
 
+	/* remove all the existing devices from the store with this RemoteID */
+	apps = as_store_get_apps (priv->store);
+	for (guint i = 0; i < apps->len; i++) {
+		AsApp *app = g_ptr_array_index (apps, i);
+		if (g_strcmp0 (as_app_get_metadata_item (app, "fwupd::RemoteID"),
+			       remote_id) == 0) {
+			g_debug ("removing %s", as_app_get_unique_id (app));
+			as_store_remove_app (priv->store, app);
+		}
+	}
+
 	/* add the new application from the store */
-	as_store_remove_all (priv->store);
 	apps = as_store_get_apps (store);
 	for (guint i = 0; i < apps->len; i++) {
 		AsApp *app = g_ptr_array_index (apps, i);
