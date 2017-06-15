@@ -4,6 +4,7 @@ option('enable-tests', type : 'boolean', value : true, description : 'enable tes
 option('enable-colorhug', type : 'boolean', value : true, description : 'enable ColorHug support')
 option('enable-libelf', type : 'boolean', value : true, description : 'enable libelf support')
 option('enable-uefi', type : 'boolean', value : true, description : 'enable UEFI support')
+option('enable-uefi-labels', type : 'boolean', value : true, description : 'enable UEFI labels support')
 option('enable-dell', type : 'boolean', value : true, description : 'enable Dell-specific support')
 option('enable-thunderbolt', type : 'boolean', value : true, description : 'enable Thunderbolt support')
 option('enable-systemd', type : 'boolean', value : true, description : 'enable systemd support')
