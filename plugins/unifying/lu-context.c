@@ -311,7 +311,7 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 	}
 
 	/* generate GUID */
-	devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X", vid, pid);
+	devid = g_strdup_printf ("UFY\\VID_%04X&PID_%04X", vid, pid);
 	lu_device_add_guid (device, devid);
 	g_hash_table_insert (ctx->hash_devices,
 			     g_strdup (lu_device_get_platform_id (device)),
