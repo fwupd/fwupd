@@ -47,7 +47,10 @@ fwupd = shared_library(
     giounix,
     soup,
   ],
-  c_args : cargs,
+  c_args : [
+      cargs,
+      '-DLOCALSTATEDIR="' + localstatedir + '"',
+    ],
   include_directories : include_directories('..'),
   link_args : vflag,
   link_depends : mapfile,

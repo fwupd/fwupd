@@ -103,15 +103,10 @@ fu_config_monitor_changed_cb (GFileMonitor *monitor,
 static guint64
 fu_config_get_remote_mtime (FuConfig *self, FwupdRemote *remote)
 {
-	const gchar *location;
-	g_autofree gchar *path;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileInfo) info = NULL;
 
-	location = fu_config_get_cached_metadata_location (self);
-	path = g_strdup_printf ("%s/%s/metadata.xml.gz",
-				location, fwupd_remote_get_id (remote));
-	file = g_file_new_for_path (path);
+	file = g_file_new_for_path (fwupd_remote_get_filename_cache (remote));
 	if (!g_file_query_exists (file, NULL))
 		return G_MAXUINT64;
 	info = g_file_query_info (file,
@@ -121,6 +116,22 @@ fu_config_get_remote_mtime (FuConfig *self, FwupdRemote *remote)
 	if (info == NULL)
 		return G_MAXUINT64;
 	return g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+}
+
+static gboolean
+fu_config_add_inotify (FuConfig *self, const gchar *filename, GError **error)
+{
+	GFileMonitor *monitor;
+	g_autoptr(GFile) file = g_file_new_for_path (filename);
+
+	/* set up a notify watch */
+	monitor = g_file_monitor (file, G_FILE_MONITOR_NONE, NULL, error);
+	if (monitor == NULL)
+		return FALSE;
+	g_signal_connect (monitor, "changed",
+			  G_CALLBACK (fu_config_monitor_changed_cb), self);
+	g_ptr_array_add (self->monitors, monitor);
+	return TRUE;
 }
 
 static gboolean
@@ -137,24 +148,24 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 	if (dir == NULL)
 		return FALSE;
 	while ((tmp = g_dir_read_name (dir)) != NULL) {
-		GFileMonitor *monitor;
 		g_autofree gchar *filename = g_build_filename (path_remotes, tmp, NULL);
 		g_autoptr(FwupdRemote) remote = fwupd_remote_new ();
-		g_autoptr(GFile) file = g_file_new_for_path (filename);
+
+		/* load from keyfile */
 		g_debug ("loading from %s", filename);
 		if (!fwupd_remote_load_from_filename (remote, filename,
 						      NULL, error))
 			return FALSE;
+
+		/* watch the config file and the XML file itself */
+		if (!fu_config_add_inotify (self, filename, error))
+			return FALSE;
+		if (!fu_config_add_inotify (self, fwupd_remote_get_filename_cache (remote), error))
+			return FALSE;
+
+		/* set mtime */
 		fwupd_remote_set_mtime (remote, fu_config_get_remote_mtime (self, remote));
 		g_ptr_array_add (self->remotes, g_steal_pointer (&remote));
-
-		/* set up a notify watch */
-		monitor = g_file_monitor (file, G_FILE_MONITOR_NONE, NULL, error);
-		if (monitor == NULL)
-			return FALSE;
-		g_signal_connect (monitor, "changed",
-				  G_CALLBACK (fu_config_monitor_changed_cb), self);
-		g_ptr_array_add (self->monitors, monitor);
 	}
 	return TRUE;
 }
@@ -378,13 +389,6 @@ fu_config_get_enable_option_rom (FuConfig *self)
 {
 	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
 	return self->enable_option_rom;
-}
-
-const gchar *
-fu_config_get_cached_metadata_location (FuConfig *self)
-{
-	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
-	return "/var/lib/fwupd/remotes.d";
 }
 
 static void

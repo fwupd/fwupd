@@ -38,7 +38,6 @@ gboolean	 fu_config_load				(FuConfig	*self,
 GPtrArray	*fu_config_get_blacklist_devices	(FuConfig	*self);
 GPtrArray	*fu_config_get_blacklist_plugins	(FuConfig	*self);
 gboolean	 fu_config_get_enable_option_rom	(FuConfig	*self);
-const gchar	*fu_config_get_cached_metadata_location	(FuConfig	*self);
 GPtrArray	*fu_config_get_remotes			(FuConfig	*self);
 FwupdRemote	*fu_config_get_remote_by_id		(FuConfig	*self,
 							 const gchar	*remote_id);

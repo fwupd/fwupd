@@ -35,6 +35,7 @@ struct _FwupdRemote
 	gchar			*password;
 	gchar			*filename;
 	gchar			*filename_asc;
+	gchar			*filename_cache;
 	gboolean		 enabled;
 	SoupURI			*uri;
 	SoupURI			*uri_asc;
@@ -84,6 +85,16 @@ fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
 	g_free (self->id);
 	self->id = g_strdup (id);
 	g_strdelimit (self->id, ".", '\0');
+
+	/* set cache filename */
+	g_free (self->filename_cache);
+	self->filename_cache = g_build_filename (LOCALSTATEDIR,
+						 "lib",
+						 "fwupd",
+						 "remotes.d",
+						 self->id,
+						 "metadata.xml.gz",
+						 NULL);
 }
 
 /* note, this has to be set before username and password */
@@ -207,6 +218,14 @@ fwupd_remote_get_order_before (FwupdRemote *self)
 {
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 	return self->order_before;
+}
+
+/* private */
+const gchar *
+fwupd_remote_get_filename_cache (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->filename_cache;
 }
 
 /**
@@ -578,6 +597,7 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (self->password);
 	g_free (self->filename);
 	g_free (self->filename_asc);
+	g_free (self->filename_cache);
 	g_strfreev (self->order_after);
 	g_strfreev (self->order_before);
 	if (self->uri != NULL)

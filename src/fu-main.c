@@ -1386,9 +1386,7 @@ fu_main_load_metadata_from_file (FuMainPrivate *priv,
 }
 
 static gboolean
-fu_main_load_metadata_store (FuMainPrivate *priv,
-			     const gchar *location,
-			     GError **error)
+fu_main_load_metadata_store (FuMainPrivate *priv, GError **error)
 {
 	GPtrArray *apps;
 	GPtrArray *remotes;
@@ -1399,17 +1397,14 @@ fu_main_load_metadata_store (FuMainPrivate *priv,
 	/* load each enabled metadata file */
 	remotes = fu_config_get_remotes (priv->config);
 	for (guint i = 0; i < remotes->len; i++) {
-		g_autofree gchar *path = NULL;
+		const gchar *path = NULL;
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
 		if (!fwupd_remote_get_enabled (remote)) {
 			g_debug ("remote %s not enabled, so skipping",
 				 fwupd_remote_get_id (remote));
 			continue;
 		}
-		path = g_build_filename (location,
-					 fwupd_remote_get_id (remote),
-					 "metadata.xml.gz",
-					 NULL);
+		path = fwupd_remote_get_filename_cache (remote);
 		if (!g_file_test (path, G_FILE_TEST_EXISTS)) {
 			g_debug ("no %s, so skipping", path);
 			continue;
@@ -1467,14 +1462,12 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, const gchar *remote_id,
 				gint fd, gint fd_sig, GError **error)
 {
 	FwupdRemote *remote;
-	const gchar *location;
 	g_autoptr(GBytes) bytes_raw = NULL;
 	g_autoptr(GBytes) bytes_sig = NULL;
 	g_autoptr(FuKeyring) kr = NULL;
 	g_autoptr(GInputStream) stream_fd = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GInputStream) stream_sig = NULL;
-	g_autofree gchar *path = NULL;
 
 	/* check remote is valid */
 	remote = fu_config_get_remote_by_id (priv->config, remote_id);
@@ -1513,11 +1506,9 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, const gchar *remote_id,
 		return FALSE;
 
 	/* save XML to remotes.d */
-	location = fu_config_get_cached_metadata_location (priv->config);
-	path = g_strdup_printf ("%s/%s/metadata.xml.gz", location, remote_id);
-	if (!fu_main_set_contents (path, bytes_raw, error))
+	if (!fu_main_set_contents (fwupd_remote_get_filename_cache (remote), bytes_raw, error))
 		return FALSE;
-	return fu_main_load_metadata_store (priv, location, error);
+	return fu_main_load_metadata_store (priv, error);
 }
 
 static gboolean
@@ -3155,7 +3146,6 @@ fu_main_cleanup_state (GError **error)
 int
 main (int argc, char *argv[])
 {
-	const gchar *location;
 	gboolean immediate_exit = FALSE;
 	gboolean timed_exit = FALSE;
 	const GOptionEntry options[] = {
@@ -3208,8 +3198,7 @@ main (int argc, char *argv[])
 	/* load AppStream metadata */
 	priv->store = as_store_new ();
 	as_store_add_filter (priv->store, AS_APP_KIND_FIRMWARE);
-	location = fu_config_get_cached_metadata_location (priv->config);
-	if (!fu_main_load_metadata_store (priv, location, &error)) {
+	if (!fu_main_load_metadata_store (priv, &error)) {
 		g_printerr ("Failed to load AppStream data: %s\n", error->message);
 		return EXIT_FAILURE;
 	}
