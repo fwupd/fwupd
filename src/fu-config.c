@@ -328,6 +328,13 @@ fu_config_get_remotes (FuConfig *self)
 	return self->remotes;
 }
 
+FwupdRemote *
+fu_config_get_remote_by_id (FuConfig *self, const gchar *remote_id)
+{
+	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
+	return fu_config_get_remote_by_id_noref (self->remotes, remote_id);
+}
+
 GPtrArray *
 fu_config_get_blacklist_devices (FuConfig *self)
 {

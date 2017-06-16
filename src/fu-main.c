@@ -2148,6 +2148,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "UpdateMetadataWithId") == 0) {
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
+		FwupdRemote *remote;
 		const gchar *id = NULL;
 		gint fd_data;
 		gint fd_sig;
@@ -2155,6 +2156,26 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_variant_get (parameters, "(&shh)", &id, &fd_data, &fd_sig);
 		g_debug ("Called %s(%s,%i,%i)", method_name, id, fd_data, fd_sig);
 
+		/* check remote is valid */
+		remote = fu_config_get_remote_by_id (priv->config, id);
+		if (remote == NULL) {
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "remote %s not found", id);
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+		if (!fwupd_remote_get_enabled (remote)) {
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "remote %s not enabled", id);
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+
+		/* update the metadata store */
 		message = g_dbus_method_invocation_get_message (invocation);
 		fd_list = g_dbus_message_get_unix_fd_list (message);
 		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 2) {

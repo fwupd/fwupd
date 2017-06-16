@@ -26,6 +26,8 @@ G_BEGIN_DECLS
 
 #include <glib-object.h>
 
+#include "fwupd-remote.h"
+
 #define FU_TYPE_CONFIG (fu_config_get_type ())
 G_DECLARE_FINAL_TYPE (FuConfig, fu_config, FU, CONFIG, GObject)
 
@@ -37,6 +39,8 @@ GPtrArray	*fu_config_get_blacklist_devices	(FuConfig	*self);
 GPtrArray	*fu_config_get_blacklist_plugins	(FuConfig	*self);
 gboolean	 fu_config_get_enable_option_rom	(FuConfig	*self);
 GPtrArray	*fu_config_get_remotes			(FuConfig	*self);
+FwupdRemote	*fu_config_get_remote_by_id		(FuConfig	*self,
+							 const gchar	*remote_id);
 
 G_END_DECLS
 
