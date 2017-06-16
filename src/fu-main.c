@@ -2343,8 +2343,19 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* find version in metadata */
 		version = fu_device_get_version (item->device);
 		release = as_app_get_release (app, version);
-		if (release == NULL)
-			release = as_app_get_release_default (app);
+		if (release == NULL) {
+			/* try again with the system metadata */
+			app = fu_main_store_get_app_by_guids (priv->store, item->device);
+			if (app == NULL) {
+				g_set_error_literal (&error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_NOT_FOUND,
+						     "No system metadata");
+				fu_main_invocation_return_error (priv, invocation, error);
+				return;
+			}
+			release = as_app_get_release (app, version);
+		}
 		if (release == NULL) {
 			g_set_error (&error,
 				     FWUPD_ERROR,
