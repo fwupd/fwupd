@@ -34,6 +34,7 @@ const gchar	*fwupd_remote_get_id			(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename_asc		(FwupdRemote	*self);
 gboolean	 fwupd_remote_get_enabled		(FwupdRemote	*self);
+gint		 fwupd_remote_get_priority		(FwupdRemote	*self);
 SoupURI		*fwupd_remote_get_uri			(FwupdRemote	*self);
 SoupURI		*fwupd_remote_get_uri_asc		(FwupdRemote	*self);
 SoupURI		*fwupd_remote_build_uri			(FwupdRemote	*self,

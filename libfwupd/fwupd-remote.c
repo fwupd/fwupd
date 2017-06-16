@@ -35,6 +35,9 @@ struct _FwupdRemote
 	gboolean		 enabled;
 	SoupURI			*uri;
 	SoupURI			*uri_asc;
+	gint			 priority;
+	gchar			**order_after;
+	gchar			**order_before;
 };
 
 enum {
@@ -72,6 +75,8 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	g_autofree gchar *url = NULL;
 	g_autofree gchar *url_asc = NULL;
 	g_autofree gchar *username = NULL;
+	g_autofree gchar *order_after = NULL;
+	g_autofree gchar *order_before = NULL;
 	g_autofree gchar *password = NULL;
 	g_autoptr(GKeyFile) kf = NULL;
 
@@ -112,6 +117,14 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	if (password != NULL && password[0] != '\0')
 		soup_uri_set_password (self->uri, password);
 
+	/* dep logic */
+	order_before = g_key_file_get_string (kf, group, "OrderBefore", NULL);
+	if (order_before != NULL)
+		self->order_before = g_strsplit_set (order_before, ",:;", -1);
+	order_after = g_key_file_get_string (kf, group, "OrderAfter", NULL);
+	if (order_after != NULL)
+		self->order_after = g_strsplit_set (order_after, ",:;", -1);
+
 	/* generate the signature URI too */
 	url_asc = g_strdup_printf ("%s.asc", url);
 	self->uri_asc = fwupd_remote_build_uri (self, url_asc, error);
@@ -126,6 +139,47 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 
 	/* success */
 	return TRUE;
+}
+
+/* private */
+gchar **
+fwupd_remote_get_order_after (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->order_after;
+}
+
+/* private */
+gchar **
+fwupd_remote_get_order_before (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->order_before;
+}
+
+/**
+ * fwupd_remote_get_priority:
+ * @self: A #FwupdRemote
+ *
+ * Gets the priority of the remote, where bigger numbers are better.
+ *
+ * Returns: a priority, or 0 for the default value
+ *
+ * Since: 0.9.5
+ **/
+gint
+fwupd_remote_get_priority (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
+	return self->priority;
+}
+
+/* private */
+void
+fwupd_remote_set_priority (FwupdRemote *self, gint priority)
+{
+	g_return_if_fail (FWUPD_IS_REMOTE (self));
+	self->priority = priority;
 }
 
 const gchar *
@@ -332,6 +386,8 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (self->id);
 	g_free (self->filename);
 	g_free (self->filename_asc);
+	g_strfreev (self->order_after);
+	g_strfreev (self->order_before);
 	if (self->uri != NULL)
 		soup_uri_free (self->uri);
 	if (self->uri_asc != NULL)

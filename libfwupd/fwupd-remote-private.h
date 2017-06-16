@@ -30,6 +30,10 @@ gboolean	 fwupd_remote_load_from_filename	(FwupdRemote	*self,
 							 const gchar	*filename,
 							 GCancellable	*cancellable,
 							 GError		**error);
+void		 fwupd_remote_set_priority		(FwupdRemote	*self,
+							 gint		 priority);
+gchar		**fwupd_remote_get_order_after		(FwupdRemote	*self);
+gchar		**fwupd_remote_get_order_before		(FwupdRemote	*self);
 
 G_END_DECLS
 

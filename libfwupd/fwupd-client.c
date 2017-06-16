@@ -1318,10 +1318,64 @@ fwupd_client_remote_sort_cb (gconstpointer a, gconstpointer b)
 {
 	FwupdRemote *remote_a = *((FwupdRemote **) a);
 	FwupdRemote *remote_b = *((FwupdRemote **) b);
+
+	/* use priority first */
+	if (fwupd_remote_get_priority (remote_a) < fwupd_remote_get_priority (remote_b))
+		return 1;
+	if (fwupd_remote_get_priority (remote_a) > fwupd_remote_get_priority (remote_b))
+		return -1;
+
+	/* fall back to name */
 	return g_strcmp0 (fwupd_remote_get_id (remote_a),
 			  fwupd_remote_get_id (remote_b));
 }
 
+static FwupdRemote *
+fwupd_client_get_remote_by_id_noref (GPtrArray *remotes, const gchar *remote_id)
+{
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (g_strcmp0 (remote_id, fwupd_remote_get_id (remote)) == 0)
+			return remote;
+	}
+	return NULL;
+}
+
+static guint
+fwupd_client_remotes_depsolve_with_direction (GPtrArray *remotes, gint inc)
+{
+	guint cnt = 0;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		gchar **order = inc < 0 ? fwupd_remote_get_order_after (remote) :
+					  fwupd_remote_get_order_before (remote);
+		if (order == NULL)
+			continue;
+		for (guint j = 0; order[j] != NULL; j++) {
+			FwupdRemote *remote2;
+			if (g_strcmp0 (order[j], fwupd_remote_get_id (remote)) == 0) {
+				g_warning ("ignoring self-dep remote %s", order[j]);
+				continue;
+			}
+			remote2 = fwupd_client_get_remote_by_id_noref (remotes, order[j]);
+			if (remote2 == NULL) {
+				g_warning ("ignoring unfound remote %s", order[j]);
+				continue;
+			}
+			if (fwupd_remote_get_priority (remote) > fwupd_remote_get_priority (remote2))
+				continue;
+			g_debug ("ordering %s=%s+%i",
+				 fwupd_remote_get_id (remote),
+				 fwupd_remote_get_id (remote2),
+				 inc);
+			fwupd_remote_set_priority (remote, fwupd_remote_get_priority (remote2) + inc);
+
+			/* increment changes counter */
+			cnt++;
+		}
+	}
+	return cnt;
+}
 /**
  * fwupd_client_get_remotes:
  * @client: A #FwupdClient
@@ -1337,6 +1391,7 @@ fwupd_client_remote_sort_cb (gconstpointer a, gconstpointer b)
 GPtrArray *
 fwupd_client_get_remotes (FwupdClient *client, GCancellable *cancellable, GError **error)
 {
+	guint depsolve_check;
 	g_autoptr(GPtrArray) paths = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
 
@@ -1373,7 +1428,23 @@ fwupd_client_get_remotes (FwupdClient *client, GCancellable *cancellable, GError
 		return NULL;
 	}
 
-	/* order these by name */
+	/* depsolve */
+	for (depsolve_check = 0; depsolve_check < 100; depsolve_check++) {
+		guint cnt = 0;
+		cnt += fwupd_client_remotes_depsolve_with_direction (remotes, 1);
+		cnt += fwupd_client_remotes_depsolve_with_direction (remotes, -1);
+		if (cnt == 0)
+			break;
+	}
+	if (depsolve_check == 100) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Cannot depsolve remotes ordering");
+		return NULL;
+	}
+
+	/* order these by priority, then name */
 	g_ptr_array_sort (remotes, fwupd_client_remote_sort_cb);
 
 	/* success */
@@ -1399,6 +1470,7 @@ fwupd_client_get_remote_by_id (FwupdClient *client,
 			       GCancellable *cancellable,
 			       GError **error)
 {
+	FwupdRemote *remote;
 	g_autoptr(GPtrArray) remotes = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
@@ -1410,19 +1482,18 @@ fwupd_client_get_remote_by_id (FwupdClient *client,
 	remotes = fwupd_client_get_remotes (client, cancellable, error);
 	if (remotes == NULL)
 		return NULL;
-	for (guint i = 0; i < remotes->len; i++) {
-		FwupdRemote *remote = g_ptr_array_index (remotes, i);
-		if (g_strcmp0 (remote_id, fwupd_remote_get_id (remote)) == 0)
-			return g_object_ref (remote);
+	remote = fwupd_client_get_remote_by_id_noref (remotes, remote_id);
+	if (remote == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "No remote '%s' found in search paths",
+			     remote_id);
+		return NULL;
 	}
 
-	/* nothing found */
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_NOT_FOUND,
-		     "No remote '%s' found in search paths",
-		     remote_id);
-	return NULL;
+	/* success */
+	return g_object_ref (remote);
 }
 
 static void
