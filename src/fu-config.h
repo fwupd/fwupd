@@ -36,6 +36,7 @@ gboolean	 fu_config_load				(FuConfig	*self,
 GPtrArray	*fu_config_get_blacklist_devices	(FuConfig	*self);
 GPtrArray	*fu_config_get_blacklist_plugins	(FuConfig	*self);
 gboolean	 fu_config_get_enable_option_rom	(FuConfig	*self);
+GPtrArray	*fu_config_get_remotes			(FuConfig	*self);
 
 G_END_DECLS
 

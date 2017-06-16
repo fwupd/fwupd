@@ -26,6 +26,9 @@
 
 G_BEGIN_DECLS
 
+FwupdRemote	*fwupd_remote_new_from_data		(GVariant	*data);
+GVariant	*fwupd_remote_to_data			(FwupdRemote	*self,
+							 const gchar	*type_string);
 gboolean	 fwupd_remote_load_from_filename	(FwupdRemote	*self,
 							 const gchar	*filename,
 							 GCancellable	*cancellable,

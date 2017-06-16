@@ -369,6 +369,94 @@ fwupd_remote_get_id (FwupdRemote *self)
 }
 
 static void
+fwupd_remote_to_variant_builder (FwupdRemote *self, GVariantBuilder *builder)
+{
+	if (self->id != NULL) {
+		g_variant_builder_add (builder, "{sv}", "Id",
+				       g_variant_new_string (self->id));
+	}
+	if (self->username != NULL) {
+		g_variant_builder_add (builder, "{sv}", "Username",
+				       g_variant_new_string (self->username));
+	}
+	if (self->password != NULL) {
+		g_variant_builder_add (builder, "{sv}", "Password",
+				       g_variant_new_string (self->password));
+	}
+	if (self->url != NULL) {
+		g_variant_builder_add (builder, "{sv}", "Url",
+				       g_variant_new_string (self->url));
+	}
+	if (self->priority != 0) {
+		g_variant_builder_add (builder, "{sv}", "Priority",
+				       g_variant_new_int32 (self->priority));
+	}
+	g_variant_builder_add (builder, "{sv}", "Enabled",
+			       g_variant_new_boolean (self->enabled));
+}
+
+static void
+fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
+{
+	GVariant *value;
+	const gchar *key;
+	g_autoptr(GVariantIter) iter2 = g_variant_iter_copy (iter);
+	g_autoptr(GVariantIter) iter3 = g_variant_iter_copy (iter);
+
+	/* three passes, as we have to construct Id -> Url -> * */
+	while (g_variant_iter_loop (iter, "{sv}", &key, &value)) {
+		if (g_strcmp0 (key, "Id") == 0)
+			fwupd_remote_set_id (self, g_variant_get_string (value, NULL));
+	}
+	while (g_variant_iter_loop (iter2, "{sv}", &key, &value)) {
+		if (g_strcmp0 (key, "Url") == 0)
+			fwupd_remote_set_url (self, g_variant_get_string (value, NULL));
+	}
+	while (g_variant_iter_loop (iter3, "{sv}", &key, &value)) {
+		if (g_strcmp0 (key, "Username") == 0) {
+			fwupd_remote_set_username (self, g_variant_get_string (value, NULL));
+		} else if (g_strcmp0 (key, "Password") == 0) {
+			fwupd_remote_set_password (self, g_variant_get_string (value, NULL));
+		} else if (g_strcmp0 (key, "Enabled") == 0) {
+			self->enabled = g_variant_get_boolean (value);
+		} else if (g_strcmp0 (key, "Priority") == 0) {
+			self->priority = g_variant_get_int32 (value);
+		}
+	}
+}
+
+/**
+ * fwupd_remote_to_data:
+ * @remote: A #FwupdRemote
+ * @type_string: The Gvariant type string, e.g. "a{sv}" or "(a{sv})"
+ *
+ * Creates a GVariant from the remote data.
+ *
+ * Returns: the GVariant, or %NULL for error
+ *
+ * Since: 0.9.5
+ **/
+GVariant *
+fwupd_remote_to_data (FwupdRemote *self, const gchar *type_string)
+{
+	GVariantBuilder builder;
+
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	g_return_val_if_fail (type_string != NULL, NULL);
+
+	/* create an array with all the metadata in */
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	fwupd_remote_to_variant_builder (self, &builder);
+
+	/* supported types */
+	if (g_strcmp0 (type_string, "a{sv}") == 0)
+		return g_variant_new ("a{sv}", &builder);
+	if (g_strcmp0 (type_string, "(a{sv})") == 0)
+		return g_variant_new ("(a{sv})", &builder);
+	return NULL;
+}
+
+static void
 fwupd_remote_get_property (GObject *obj, guint prop_id,
 			   GValue *value, GParamSpec *pspec)
 {
@@ -462,6 +550,39 @@ fwupd_remote_finalize (GObject *obj)
 		soup_uri_free (self->uri_asc);
 
 	G_OBJECT_CLASS (fwupd_remote_parent_class)->finalize (obj);
+}
+
+/**
+ * fwupd_remote_new_from_data:
+ * @data: a #GVariant
+ *
+ * Creates a new remote using packed data.
+ *
+ * Returns: a new #FwupdRemote, or %NULL if @data was invalid
+ *
+ * Since: 0.9.5
+ **/
+FwupdRemote *
+fwupd_remote_new_from_data (GVariant *data)
+{
+	FwupdRemote *rel = NULL;
+	const gchar *type_string;
+	g_autoptr(GVariantIter) iter = NULL;
+
+	type_string = g_variant_get_type_string (data);
+	if (g_strcmp0 (type_string, "(a{sv})") == 0) {
+		rel = fwupd_remote_new ();
+		g_variant_get (data, "(a{sv})", &iter);
+		fwupd_remote_set_from_variant_iter (rel, iter);
+		fwupd_remote_set_from_variant_iter (rel, iter);
+	} else if (g_strcmp0 (type_string, "a{sv}") == 0) {
+		rel = fwupd_remote_new ();
+		g_variant_get (data, "a{sv}", &iter);
+		fwupd_remote_set_from_variant_iter (rel, iter);
+	} else {
+		g_warning ("type %s not known", type_string);
+	}
+	return rel;
 }
 
 /**

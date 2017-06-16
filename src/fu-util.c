@@ -1227,7 +1227,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (uri != NULL) {
 			g_autofree gchar *uri_str = soup_uri_to_string (uri, FALSE);
 			/* TRANSLATORS: remote URI */
-			fu_util_print_data (_("URI"), uri_str);
+			fu_util_print_data (_("URL"), uri_str);
 		}
 		uri = fwupd_remote_get_uri_asc (remote);
 		if (uri != NULL) {

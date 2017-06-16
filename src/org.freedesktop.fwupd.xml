@@ -295,6 +295,24 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetRemotes'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets the list of remotes.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='aa{sv}' name='results' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The array remotes, with properties</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='ClearResults'>
       <doc:doc>
         <doc:description>

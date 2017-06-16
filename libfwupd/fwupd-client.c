@@ -287,6 +287,26 @@ fwupd_client_parse_devices_from_variant (GVariant *val)
 	return array;
 }
 
+static GPtrArray *
+fwupd_client_parse_remotes_from_data (GVariant *devices)
+{
+	GPtrArray *remotes = NULL;
+	gsize sz;
+	g_autoptr(GVariant) untuple = NULL;
+
+	remotes = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	untuple = g_variant_get_child_value (devices, 0);
+	sz = g_variant_n_children (untuple);
+	for (guint i = 0; i < sz; i++) {
+		FwupdRemote *remote;
+		g_autoptr(GVariant) data = g_variant_get_child_value (untuple, i);
+		remote = fwupd_remote_new_from_data (data);
+		g_ptr_array_add (remotes, remote);
+	}
+
+	return remotes;
+}
+
 static void
 fwupd_client_fixup_dbus_error (GError *error)
 {
@@ -1251,131 +1271,6 @@ fwupd_client_update_metadata_with_id (FwupdClient *client,
 	return TRUE;
 }
 
-static GPtrArray *
-fwupd_client_get_config_paths (void)
-{
-	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
-	const gchar *remotes_dir;
-	const gchar *system_prefixlibdir = "/usr/lib/fwupd";
-	const gchar *system_sysconfdir = "/etc/fwupd";
-	g_autofree gchar *sysconfdir = NULL;
-
-	/* only set by the self test program */
-	remotes_dir = g_getenv ("FU_SELF_TEST_REMOTES_DIR");
-	if (remotes_dir != NULL) {
-		g_ptr_array_add (paths, g_strdup (remotes_dir));
-		return paths;
-	}
-
-	/* use sysconfig, and then fall back to /etc */
-	sysconfdir = g_build_filename (SYSCONFDIR, "fwupd", NULL);
-	if (g_file_test (sysconfdir, G_FILE_TEST_EXISTS)) {
-		g_ptr_array_add (paths, g_steal_pointer (&sysconfdir));
-	} else {
-		g_debug ("falling back to system path");
-		if (g_file_test (system_sysconfdir, G_FILE_TEST_EXISTS))
-			g_ptr_array_add (paths, g_strdup (system_sysconfdir));
-	}
-
-	/* add in system-wide locations */
-	if (g_file_test (system_prefixlibdir, G_FILE_TEST_EXISTS))
-		g_ptr_array_add (paths, g_strdup (system_prefixlibdir));
-
-	return paths;
-}
-
-static gboolean
-fwupd_client_add_remotes_for_path (FwupdClient *client,
-				   GPtrArray *remotes,
-				   const gchar *path,
-				   GCancellable *cancellable,
-				   GError **error)
-{
-	const gchar *tmp;
-	g_autofree gchar *path_remotes = NULL;
-	g_autoptr(GDir) dir = NULL;
-
-	path_remotes = g_build_filename (path, "remotes.d", NULL);
-	if (!g_file_test (path_remotes, G_FILE_TEST_EXISTS))
-		return TRUE;
-	dir = g_dir_open (path_remotes, 0, error);
-	if (dir == NULL)
-		return FALSE;
-	while ((tmp = g_dir_read_name (dir)) != NULL) {
-		g_autofree gchar *filename = g_build_filename (path_remotes, tmp, NULL);
-		g_autoptr(FwupdRemote) remote = fwupd_remote_new ();
-		g_debug ("loading from %s", filename);
-		if (!fwupd_remote_load_from_filename (remote, filename,
-						      cancellable, error))
-			return FALSE;
-		g_ptr_array_add (remotes, g_steal_pointer (&remote));
-	}
-	return TRUE;
-}
-
-static gint
-fwupd_client_remote_sort_cb (gconstpointer a, gconstpointer b)
-{
-	FwupdRemote *remote_a = *((FwupdRemote **) a);
-	FwupdRemote *remote_b = *((FwupdRemote **) b);
-
-	/* use priority first */
-	if (fwupd_remote_get_priority (remote_a) < fwupd_remote_get_priority (remote_b))
-		return 1;
-	if (fwupd_remote_get_priority (remote_a) > fwupd_remote_get_priority (remote_b))
-		return -1;
-
-	/* fall back to name */
-	return g_strcmp0 (fwupd_remote_get_id (remote_a),
-			  fwupd_remote_get_id (remote_b));
-}
-
-static FwupdRemote *
-fwupd_client_get_remote_by_id_noref (GPtrArray *remotes, const gchar *remote_id)
-{
-	for (guint i = 0; i < remotes->len; i++) {
-		FwupdRemote *remote = g_ptr_array_index (remotes, i);
-		if (g_strcmp0 (remote_id, fwupd_remote_get_id (remote)) == 0)
-			return remote;
-	}
-	return NULL;
-}
-
-static guint
-fwupd_client_remotes_depsolve_with_direction (GPtrArray *remotes, gint inc)
-{
-	guint cnt = 0;
-	for (guint i = 0; i < remotes->len; i++) {
-		FwupdRemote *remote = g_ptr_array_index (remotes, i);
-		gchar **order = inc < 0 ? fwupd_remote_get_order_after (remote) :
-					  fwupd_remote_get_order_before (remote);
-		if (order == NULL)
-			continue;
-		for (guint j = 0; order[j] != NULL; j++) {
-			FwupdRemote *remote2;
-			if (g_strcmp0 (order[j], fwupd_remote_get_id (remote)) == 0) {
-				g_warning ("ignoring self-dep remote %s", order[j]);
-				continue;
-			}
-			remote2 = fwupd_client_get_remote_by_id_noref (remotes, order[j]);
-			if (remote2 == NULL) {
-				g_warning ("ignoring unfound remote %s", order[j]);
-				continue;
-			}
-			if (fwupd_remote_get_priority (remote) > fwupd_remote_get_priority (remote2))
-				continue;
-			g_debug ("ordering %s=%s+%i",
-				 fwupd_remote_get_id (remote),
-				 fwupd_remote_get_id (remote2),
-				 inc);
-			fwupd_remote_set_priority (remote, fwupd_remote_get_priority (remote2) + inc);
-
-			/* increment changes counter */
-			cnt++;
-		}
-	}
-	return cnt;
-}
 /**
  * fwupd_client_get_remotes:
  * @client: A #FwupdClient
@@ -1391,64 +1286,42 @@ fwupd_client_remotes_depsolve_with_direction (GPtrArray *remotes, gint inc)
 GPtrArray *
 fwupd_client_get_remotes (FwupdClient *client, GCancellable *cancellable, GError **error)
 {
-	guint depsolve_check;
-	g_autoptr(GPtrArray) paths = NULL;
-	g_autoptr(GPtrArray) remotes = NULL;
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	/* get a list of all config paths */
-	paths = fwupd_client_get_config_paths ();
-	if (paths->len == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No search paths found");
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "GetRemotes",
+				      NULL,
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
 		return NULL;
 	}
+	return fwupd_client_parse_remotes_from_data (val);
+}
 
-	/* look for all remotes */
-	remotes = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	for (guint i = 0; i < paths->len; i++) {
-		const gchar *path = g_ptr_array_index (paths, i);
-		g_debug ("using config path of %s", path);
-		if (!fwupd_client_add_remotes_for_path (client, remotes, path,
-							cancellable, error))
-			return FALSE;
+static FwupdRemote *
+fwupd_client_get_remote_by_id_noref (GPtrArray *remotes, const gchar *remote_id)
+{
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (g_strcmp0 (remote_id, fwupd_remote_get_id (remote)) == 0)
+			return remote;
 	}
-
-	/* nothing found */
-	if (remotes->len == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No remotes found in search paths");
-		return NULL;
-	}
-
-	/* depsolve */
-	for (depsolve_check = 0; depsolve_check < 100; depsolve_check++) {
-		guint cnt = 0;
-		cnt += fwupd_client_remotes_depsolve_with_direction (remotes, 1);
-		cnt += fwupd_client_remotes_depsolve_with_direction (remotes, -1);
-		if (cnt == 0)
-			break;
-	}
-	if (depsolve_check == 100) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Cannot depsolve remotes ordering");
-		return NULL;
-	}
-
-	/* order these by priority, then name */
-	g_ptr_array_sort (remotes, fwupd_client_remote_sort_cb);
-
-	/* success */
-	return g_steal_pointer (&remotes);
+	return NULL;
 }
 
 /**

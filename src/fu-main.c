@@ -36,6 +36,7 @@
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-release-private.h"
+#include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 
 #include "fu-config.h"
@@ -1911,6 +1912,32 @@ fu_main_get_details_local_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 	return g_variant_new ("(a{sa{sv}})", &builder);
 }
 
+static GVariant *
+fu_main_get_remotes_as_variant (FuMainPrivate *priv, GError **error)
+{
+	GVariantBuilder builder;
+	GPtrArray *remotes;
+
+	/* get the list of remotes */
+	remotes = fu_config_get_remotes (priv->config);
+	if (remotes->len == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "no remotes configured");
+		return NULL;
+	}
+
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	for (guint i = 0; i < remotes->len; i++) {
+		GVariant *tmp;
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		tmp = fwupd_remote_to_data (remote, "a{sv}");
+		g_variant_builder_add_value (&builder, tmp);
+	}
+	return g_variant_new ("(aa{sv})", &builder);
+}
+
 static void
 fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			    const gchar *object_path, const gchar *interface_name,
@@ -1988,6 +2015,18 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 					     FWUPD_ERROR_NOTHING_TO_DO)) {
 				g_prefix_error (&error, "No releases found: ");
 			}
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+		fu_main_invocation_return_value (priv, invocation, val);
+		return;
+	}
+
+	/* return variant */
+	if (g_strcmp0 (method_name, "GetRemotes") == 0) {
+		g_debug ("Called %s()", method_name);
+		val = fu_main_get_remotes_as_variant (priv, &error);
+		if (val == NULL) {
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
