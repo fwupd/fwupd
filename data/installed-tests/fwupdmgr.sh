@@ -3,6 +3,11 @@
 dirname=`dirname $0`
 
 # ---
+echo "Getting the list of remotes..."
+fwupdmgr get-remotes
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+
+# ---
 echo "Refreshing with dummy metadata..."
 fwupdmgr refresh ${dirname}/firmware-example.xml.gz ${dirname}/firmware-example.xml.gz.asc
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi

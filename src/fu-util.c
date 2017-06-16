@@ -1172,6 +1172,78 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	/* print any updates */
+	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
+	if (remotes == NULL)
+		return FALSE;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		SoupURI *uri;
+		const gchar *tmp;
+		gint priority;
+
+		/* TRANSLATORS: remote identifier, e.g. lvfs-testing */
+		fu_util_print_data (_("Remote ID"),
+				    fwupd_remote_get_id (remote));
+
+		/* TRANSLATORS: if the remote is enabled */
+		fu_util_print_data (_("Enabled"),
+				    fwupd_remote_get_enabled (remote) ? "True" : "False");
+
+		/* optional parameters */
+		priority = fwupd_remote_get_priority (remote);
+		if (priority != 0) {
+			g_autofree gchar *priority_str = NULL;
+			priority_str = g_strdup_printf ("%i", priority);
+			/* TRANSLATORS: the numeric priority */
+			fu_util_print_data (_("Priority"), priority_str);
+		}
+		tmp = fwupd_remote_get_username (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: remote filename base */
+			fu_util_print_data (_("Username"), tmp);
+		}
+		tmp = fwupd_remote_get_password (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: remote filename base */
+			fu_util_print_data (_("Password"), tmp);
+		}
+		tmp = fwupd_remote_get_filename (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: remote filename base */
+			fu_util_print_data (_("Filename"), tmp);
+		}
+		tmp = fwupd_remote_get_filename_asc (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: remote filename base */
+			fu_util_print_data (_("Filename Signature"), tmp);
+		}
+		uri = fwupd_remote_get_uri (remote);
+		if (uri != NULL) {
+			g_autofree gchar *uri_str = soup_uri_to_string (uri, FALSE);
+			/* TRANSLATORS: remote URI */
+			fu_util_print_data (_("URI"), uri_str);
+		}
+		uri = fwupd_remote_get_uri_asc (remote);
+		if (uri != NULL) {
+			g_autofree gchar *uri_str = soup_uri_to_string (uri, FALSE);
+			/* TRANSLATORS: remote URI */
+			fu_util_print_data (_("URI Signature"), uri_str);
+		}
+
+		/* newline */
+		if (i != remotes->len - 1)
+			g_print ("\n");
+	}
+
+	return TRUE;
+}
+
 static void
 fu_util_cancelled_cb (GCancellable *cancellable, gpointer user_data)
 {
@@ -1599,6 +1671,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets the releases for a device"),
 		     fu_util_get_releases);
+	fu_util_add (priv->cmd_array,
+		     "get-remotes",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the configured remotes"),
+		     fu_util_get_remotes);
 	fu_util_add (priv->cmd_array,
 		     "downgrade",
 		     NULL,

@@ -30,6 +30,9 @@ struct _FwupdRemote
 {
 	GObject			 parent_instance;
 	gchar			*id;
+	gchar			*url;
+	gchar			*username;
+	gchar			*password;
 	gchar			*filename;
 	gchar			*filename_asc;
 	gboolean		 enabled;
@@ -48,6 +51,66 @@ enum {
 };
 
 G_DEFINE_TYPE (FwupdRemote, fwupd_remote, G_TYPE_OBJECT)
+
+static void
+fwupd_remote_set_username (FwupdRemote *self, const gchar *username)
+{
+	if (username != NULL && username[0] == '\0')
+		username = NULL;
+	self->username = g_strdup (username);
+	if (self->uri != NULL)
+		soup_uri_set_user (self->uri, username);
+	if (self->uri_asc != NULL)
+		soup_uri_set_user (self->uri_asc, username);
+}
+
+static void
+fwupd_remote_set_password (FwupdRemote *self, const gchar *password)
+{
+	if (password != NULL && password[0] == '\0')
+		password = NULL;
+	self->password = g_strdup (password);
+	if (self->uri != NULL)
+		soup_uri_set_password (self->uri, password);
+	if (self->uri_asc != NULL)
+		soup_uri_set_password (self->uri_asc, password);
+}
+
+/* note, this has to be set before url */
+static void
+fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
+{
+	g_free (self->id);
+	self->id = g_strdup (id);
+	g_strdelimit (self->id, ".", '\0');
+}
+
+/* note, this has to be set before username and password */
+static void
+fwupd_remote_set_url (FwupdRemote *self, const gchar *url)
+{
+	g_autofree gchar *url_asc = NULL;
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *basename_asc = NULL;
+
+	/* save this so we can export the object as a GVariant */
+	self->url = g_strdup (url);
+
+	/* build the URI */
+	self->uri = soup_uri_new (url);
+	if (self->uri == NULL)
+		return;
+
+	/* generate the signature URI too */
+	url_asc = g_strdup_printf ("%s.asc", url);
+	self->uri_asc = fwupd_remote_build_uri (self, url_asc, NULL);
+
+	/* generate some plausible local filenames */
+	basename = g_path_get_basename (soup_uri_get_path (self->uri));
+	self->filename = g_strdup_printf ("%s-%s", self->id, basename);
+	basename_asc = g_path_get_basename (soup_uri_get_path (self->uri_asc));
+	self->filename_asc = g_strdup_printf ("%s-%s", self->id, basename_asc);
+}
 
 /**
  * fwupd_remote_load_from_filename:
@@ -70,14 +133,12 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 				 GError **error)
 {
 	const gchar *group = "fwupd Remote";
-	g_autofree gchar *basename = NULL;
-	g_autofree gchar *basename_asc = NULL;
-	g_autofree gchar *url = NULL;
-	g_autofree gchar *url_asc = NULL;
-	g_autofree gchar *username = NULL;
+	g_autofree gchar *id = NULL;
 	g_autofree gchar *order_after = NULL;
 	g_autofree gchar *order_before = NULL;
 	g_autofree gchar *password = NULL;
+	g_autofree gchar *url = NULL;
+	g_autofree gchar *username = NULL;
 	g_autoptr(GKeyFile) kf = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
@@ -86,8 +147,8 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* set ID */
-	self->id = g_path_get_basename (filename);
-	g_strdelimit (self->id, ".", '\0');
+	id = g_path_get_basename (filename);
+	fwupd_remote_set_id (self, id);
 
 	/* load file */
 	kf = g_key_file_new ();
@@ -99,7 +160,9 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	url = g_key_file_get_string (kf, group, "Url", error);
 	if (url == NULL)
 		return FALSE;
-	self->uri = soup_uri_new (url);
+	fwupd_remote_set_url (self, url);
+
+	/* check the URI was valid */
 	if (self->uri == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -111,11 +174,11 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 
 	/* username and password are optional */
 	username = g_key_file_get_string (kf, group, "Username", NULL);
-	if (username != NULL && username[0] != '\0')
-		soup_uri_set_user (self->uri, username);
+	if (username != NULL)
+		fwupd_remote_set_username (self, username);
 	password = g_key_file_get_string (kf, group, "Password", NULL);
-	if (password != NULL && password[0] != '\0')
-		soup_uri_set_password (self->uri, password);
+	if (password != NULL)
+		fwupd_remote_set_password (self, password);
 
 	/* dep logic */
 	order_before = g_key_file_get_string (kf, group, "OrderBefore", NULL);
@@ -124,18 +187,6 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	order_after = g_key_file_get_string (kf, group, "OrderAfter", NULL);
 	if (order_after != NULL)
 		self->order_after = g_strsplit_set (order_after, ",:;", -1);
-
-	/* generate the signature URI too */
-	url_asc = g_strdup_printf ("%s.asc", url);
-	self->uri_asc = fwupd_remote_build_uri (self, url_asc, error);
-	if (self->uri_asc == NULL)
-		return FALSE;
-
-	/* generate some plausible local filenames */
-	basename = g_path_get_basename (soup_uri_get_path (self->uri));
-	self->filename = g_strdup_printf ("%s-%s", self->id, basename);
-	basename_asc = g_path_get_basename (soup_uri_get_path (self->uri_asc));
-	self->filename_asc = g_strdup_printf ("%s-%s", self->id, basename_asc);
 
 	/* success */
 	return TRUE;
@@ -187,6 +238,20 @@ fwupd_remote_get_filename (FwupdRemote *self)
 {
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 	return self->filename;
+}
+
+const gchar *
+fwupd_remote_get_username (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->username;
+}
+
+const gchar *
+fwupd_remote_get_password (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->password;
 }
 
 const gchar *
@@ -384,6 +449,9 @@ fwupd_remote_finalize (GObject *obj)
 	FwupdRemote *self = FWUPD_REMOTE (obj);
 
 	g_free (self->id);
+	g_free (self->url);
+	g_free (self->username);
+	g_free (self->password);
 	g_free (self->filename);
 	g_free (self->filename_asc);
 	g_strfreev (self->order_after);

@@ -32,6 +32,8 @@ G_DECLARE_FINAL_TYPE (FwupdRemote, fwupd_remote, FWUPD, REMOTE, GObject)
 FwupdRemote	*fwupd_remote_new			(void);
 const gchar	*fwupd_remote_get_id			(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename		(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_username		(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_password		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename_asc		(FwupdRemote	*self);
 gboolean	 fwupd_remote_get_enabled		(FwupdRemote	*self);
 gint		 fwupd_remote_get_priority		(FwupdRemote	*self);
