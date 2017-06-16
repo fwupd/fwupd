@@ -1187,6 +1187,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		SoupURI *uri;
 		const gchar *tmp;
 		gint priority;
+		gdouble age;
 
 		/* TRANSLATORS: remote identifier, e.g. lvfs-testing */
 		fu_util_print_data (_("Remote ID"),
@@ -1197,6 +1198,30 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 				    fwupd_remote_get_enabled (remote) ? "True" : "False");
 
 		/* optional parameters */
+		age = fwupd_remote_get_age (remote);
+		if (age > 0 && age != G_MAXUINT64) {
+			const gchar *unit = "s";
+			g_autofree gchar *age_str = NULL;
+			if (age > 60) {
+				age /= 60.f;
+				unit = "m";
+			}
+			if (age > 60) {
+				age /= 60.f;
+				unit = "h";
+			}
+			if (age > 24) {
+				age /= 24.f;
+				unit = "d";
+			}
+			if (age > 7) {
+				age /= 7.f;
+				unit = "w";
+			}
+			age_str = g_strdup_printf ("%.2f%s", age, unit);
+			/* TRANSLATORS: the age of the metadata */
+			fu_util_print_data (_("Age"), age_str);
+		}
 		priority = fwupd_remote_get_priority (remote);
 		if (priority != 0) {
 			g_autofree gchar *priority_str = NULL;

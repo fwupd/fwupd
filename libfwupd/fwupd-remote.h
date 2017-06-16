@@ -37,6 +37,7 @@ const gchar	*fwupd_remote_get_password		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename_asc		(FwupdRemote	*self);
 gboolean	 fwupd_remote_get_enabled		(FwupdRemote	*self);
 gint		 fwupd_remote_get_priority		(FwupdRemote	*self);
+guint64		 fwupd_remote_get_age			(FwupdRemote	*self);
 SoupURI		*fwupd_remote_get_uri			(FwupdRemote	*self);
 SoupURI		*fwupd_remote_get_uri_asc		(FwupdRemote	*self);
 SoupURI		*fwupd_remote_build_uri			(FwupdRemote	*self,

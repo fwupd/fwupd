@@ -100,6 +100,29 @@ fu_config_monitor_changed_cb (GFileMonitor *monitor,
 		g_warning ("failed to rescan config: %s", error->message);
 }
 
+static guint64
+fu_config_get_remote_mtime (FuConfig *self, FwupdRemote *remote)
+{
+	const gchar *location;
+	g_autofree gchar *path;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileInfo) info = NULL;
+
+	location = fu_config_get_cached_metadata_location (self);
+	path = g_strdup_printf ("%s/%s/metadata.xml.gz",
+				location, fwupd_remote_get_id (remote));
+	file = g_file_new_for_path (path);
+	if (!g_file_query_exists (file, NULL))
+		return G_MAXUINT64;
+	info = g_file_query_info (file,
+				  G_FILE_ATTRIBUTE_TIME_MODIFIED,
+				  G_FILE_QUERY_INFO_NONE,
+				  NULL, NULL);
+	if (info == NULL)
+		return G_MAXUINT64;
+	return g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+}
+
 static gboolean
 fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **error)
 {
@@ -122,6 +145,7 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 		if (!fwupd_remote_load_from_filename (remote, filename,
 						      NULL, error))
 			return FALSE;
+		fwupd_remote_set_mtime (remote, fu_config_get_remote_mtime (self, remote));
 		g_ptr_array_add (self->remotes, g_steal_pointer (&remote));
 
 		/* set up a notify watch */

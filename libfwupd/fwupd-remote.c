@@ -39,6 +39,7 @@ struct _FwupdRemote
 	SoupURI			*uri;
 	SoupURI			*uri_asc;
 	gint			 priority;
+	guint64			 mtime;
 	gchar			**order_after;
 	gchar			**order_before;
 };
@@ -225,12 +226,41 @@ fwupd_remote_get_priority (FwupdRemote *self)
 	return self->priority;
 }
 
+/**
+ * fwupd_remote_get_age:
+ * @self: A #FwupdRemote
+ *
+ * Gets the age of the remote in seconds.
+ *
+ * Returns: a age, or %G_MAXUINT64 for unavailable
+ *
+ * Since: 0.9.5
+ **/
+guint64
+fwupd_remote_get_age (FwupdRemote *self)
+{
+	guint64 now;
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
+	now = (guint64) g_get_real_time () / G_USEC_PER_SEC;
+	if (self->mtime > now)
+		return G_MAXUINT64;
+	return now - self->mtime;
+}
+
 /* private */
 void
 fwupd_remote_set_priority (FwupdRemote *self, gint priority)
 {
 	g_return_if_fail (FWUPD_IS_REMOTE (self));
 	self->priority = priority;
+}
+
+/* private */
+void
+fwupd_remote_set_mtime (FwupdRemote *self, guint64 mtime)
+{
+	g_return_if_fail (FWUPD_IS_REMOTE (self));
+	self->mtime = mtime;
 }
 
 const gchar *
@@ -391,6 +421,10 @@ fwupd_remote_to_variant_builder (FwupdRemote *self, GVariantBuilder *builder)
 		g_variant_builder_add (builder, "{sv}", "Priority",
 				       g_variant_new_int32 (self->priority));
 	}
+	if (self->mtime != 0) {
+		g_variant_builder_add (builder, "{sv}", "ModificationTime",
+				       g_variant_new_uint64 (self->mtime));
+	}
 	g_variant_builder_add (builder, "{sv}", "Enabled",
 			       g_variant_new_boolean (self->enabled));
 }
@@ -421,6 +455,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			self->enabled = g_variant_get_boolean (value);
 		} else if (g_strcmp0 (key, "Priority") == 0) {
 			self->priority = g_variant_get_int32 (value);
+		} else if (g_strcmp0 (key, "ModificationTime") == 0) {
+			self->mtime = g_variant_get_uint64 (value);
 		}
 	}
 }
