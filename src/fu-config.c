@@ -356,6 +356,13 @@ fu_config_get_enable_option_rom (FuConfig *self)
 	return self->enable_option_rom;
 }
 
+const gchar *
+fu_config_get_cached_metadata_location (FuConfig *self)
+{
+	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
+	return "/var/lib/fwupd/remotes.d";
+}
+
 static void
 fu_config_class_init (FuConfigClass *klass)
 {

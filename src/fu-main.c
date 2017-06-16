@@ -70,7 +70,6 @@ typedef struct {
 	FuPending		*pending;
 	AsProfile		*profile;
 	AsStore			*store;
-	guint			 store_changed_id;
 	guint			 owner_id;
 	gboolean		 coldplug_running;
 	guint			 coldplug_id;
@@ -1352,129 +1351,74 @@ fu_main_get_action_id_for_device (FuMainAuthHelper *helper)
 }
 
 static gboolean
-fu_main_daemon_update_metadata (FuMainPrivate *priv, const gchar *remote_id,
-				gint fd, gint fd_sig, GError **error)
+fu_main_load_metadata_from_file (FuMainPrivate *priv,
+				 const gchar *path,
+				 const gchar *remote_id,
+				 GError **error)
 {
-	const guint8 *data;
-	gsize size;
 	GPtrArray *apps;
-	g_autofree gchar *xml = NULL;
 	g_autoptr(AsStore) store = NULL;
-	g_autoptr(GBytes) bytes = NULL;
-	g_autoptr(GBytes) bytes_raw = NULL;
-	g_autoptr(GBytes) bytes_sig = NULL;
-	g_autoptr(FuKeyring) kr = NULL;
-	g_autoptr(GConverter) converter = NULL;
 	g_autoptr(GFile) file = NULL;
-	g_autoptr(GFile) file_parent = NULL;
-	g_autoptr(GInputStream) stream_fd = NULL;
-	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(GInputStream) stream_sig = NULL;
-
-	/* read the entire file into memory */
-	stream_fd = g_unix_input_stream_new (fd, TRUE);
-	bytes_raw = g_input_stream_read_bytes (stream_fd, 0x100000, NULL, error);
-	if (bytes_raw == NULL)
-		return FALSE;
-
-	/* read signature */
-	stream_sig = g_unix_input_stream_new (fd_sig, TRUE);
-	bytes_sig = g_input_stream_read_bytes (stream_sig, 0x800, NULL, error);
-	if (bytes_sig == NULL)
-		return FALSE;
-
-	/* verify file */
-	kr = fu_keyring_new ();
-	if (!fu_keyring_add_public_keys (kr, "/etc/pki/fwupd-metadata", error))
-		return FALSE;
-	if (!fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error))
-		return FALSE;
-
-	/* peek the file type and get data */
-	data = g_bytes_get_data (bytes_raw, &size);
-	if (size < 2) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "file is too small");
-		return FALSE;
-	}
-	if (data[0] == 0x1f && data[1] == 0x8b) {
-		g_autoptr(GInputStream) stream_buf = NULL;
-		g_debug ("using GZip decompressor for data");
-		converter = G_CONVERTER (g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP));
-		stream_buf = g_memory_input_stream_new ();
-		g_memory_input_stream_add_bytes (G_MEMORY_INPUT_STREAM (stream_buf), bytes_raw);
-		stream = g_converter_input_stream_new (stream_buf, converter);
-		bytes = g_input_stream_read_bytes (stream, 0x100000, NULL, error);
-		if (bytes == NULL)
-			return FALSE;
-	} else if (data[0] == '<' && data[1] == '?') {
-		g_debug ("using no decompressor for data");
-		bytes = g_bytes_ref (bytes_raw);
-	} else {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "file type '0x%02x,0x%02x' not supported",
-			     data[0], data[1]);
-		return FALSE;
-	}
 
 	/* load the store locally until we know it is valid */
 	store = as_store_new ();
-	data = g_bytes_get_data (bytes, &size);
-	xml = g_strndup ((const gchar *) data, size);
-	if (!as_store_from_xml (store, xml, NULL, error))
+	file = g_file_new_for_path (path);
+	if (!as_store_from_file (store, file, NULL, NULL, error))
 		return FALSE;
-
-	/* remove all the existing devices from the store with this RemoteID */
-	apps = as_store_get_apps (priv->store);
-	for (guint i = 0; i < apps->len; i++) {
-		AsApp *app = g_ptr_array_index (apps, i);
-		if (g_strcmp0 (as_app_get_metadata_item (app, "fwupd::RemoteID"),
-			       remote_id) == 0) {
-			g_debug ("removing %s", as_app_get_unique_id (app));
-			as_store_remove_app (priv->store, app);
-		}
-	}
 
 	/* add the new application from the store */
 	apps = as_store_get_apps (store);
 	for (guint i = 0; i < apps->len; i++) {
 		AsApp *app = g_ptr_array_index (apps, i);
+
+		/* does this app already exist */
+		if (as_store_get_app_by_id (priv->store, as_app_get_id (app)) != NULL) {
+			g_debug ("%s exists in remote %s, skipping",
+				 as_app_get_unique_id (app),
+				 as_app_get_metadata_item (app, "fwupd::RemoteID"));
+			continue;
+		}
 		if (remote_id != NULL && remote_id[0] != '\0')
 			as_app_add_metadata (app, "fwupd::RemoteID", remote_id);
 		as_store_add_app (priv->store, app);
 	}
-
-	/* ensure directory exists */
-	file = g_file_new_for_path ("/var/cache/app-info/xmls/fwupd.xml");
-	file_parent = g_file_get_parent (file);
-	if (!g_file_query_exists (file_parent, NULL)) {
-		if (!g_file_make_directory_with_parents (file_parent, NULL, error))
-			return FALSE;
-	}
-
-	/* save the new file */
-	as_store_set_api_version (priv->store, 0.9);
-	as_store_set_origin (priv->store, NULL);
-	if (!as_store_to_file (priv->store, file,
-			       AS_NODE_TO_XML_FLAG_ADD_HEADER |
-			       AS_NODE_TO_XML_FLAG_FORMAT_MULTILINE |
-			       AS_NODE_TO_XML_FLAG_FORMAT_INDENT,
-			       NULL, error)) {
-		return FALSE;
-	}
-
 	return TRUE;
 }
 
 static gboolean
-fu_main_store_delay_cb (gpointer user_data)
+fu_main_load_metadata_store (FuMainPrivate *priv,
+			     const gchar *location,
+			     GError **error)
 {
-	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 	GPtrArray *apps;
+	GPtrArray *remotes;
+
+	/* clear existing store */
+	as_store_remove_all (priv->store);
+
+	/* load each enabled metadata file */
+	remotes = fu_config_get_remotes (priv->config);
+	for (guint i = 0; i < remotes->len; i++) {
+		g_autofree gchar *path = NULL;
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (!fwupd_remote_get_enabled (remote)) {
+			g_debug ("remote %s not enabled, so skipping",
+				 fwupd_remote_get_id (remote));
+			continue;
+		}
+		path = g_build_filename (location,
+					 fwupd_remote_get_id (remote),
+					 "metadata.xml.gz",
+					 NULL);
+		if (!g_file_test (path, G_FILE_TEST_EXISTS)) {
+			g_debug ("no %s, so skipping", path);
+			continue;
+		}
+		if (!fu_main_load_metadata_from_file (priv, path,
+						      fwupd_remote_get_id (remote),
+						      error))
+			return FALSE;
+	}
 
 	/* print what we've got */
 	apps = as_store_get_apps (priv->store);
@@ -1497,16 +1441,83 @@ fu_main_store_delay_cb (gpointer user_data)
 			fu_main_emit_device_changed (priv, item->device);
 	}
 
-	priv->store_changed_id = 0;
-	return G_SOURCE_REMOVE;
+	return TRUE;
 }
 
-static void
-fu_main_store_changed_cb (AsStore *store, FuMainPrivate *priv)
+static gboolean
+fu_main_set_contents (const gchar *filename, GBytes *blob, GError **error)
 {
-	if (priv->store_changed_id != 0)
-		return;
-	priv->store_changed_id = g_timeout_add (200, fu_main_store_delay_cb, priv);
+	const gchar *data;
+	gsize size;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFile) file_parent = NULL;
+
+	file = g_file_new_for_path (filename);
+	file_parent = g_file_get_parent (file);
+	if (!g_file_query_exists (file_parent, NULL)) {
+		if (!g_file_make_directory_with_parents (file_parent, NULL, error))
+			return FALSE;
+	}
+	data = g_bytes_get_data (blob, &size);
+	return g_file_set_contents (filename, data, size, error);
+}
+
+static gboolean
+fu_main_daemon_update_metadata (FuMainPrivate *priv, const gchar *remote_id,
+				gint fd, gint fd_sig, GError **error)
+{
+	FwupdRemote *remote;
+	const gchar *location;
+	g_autoptr(GBytes) bytes_raw = NULL;
+	g_autoptr(GBytes) bytes_sig = NULL;
+	g_autoptr(FuKeyring) kr = NULL;
+	g_autoptr(GInputStream) stream_fd = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GInputStream) stream_sig = NULL;
+	g_autofree gchar *path = NULL;
+
+	/* check remote is valid */
+	remote = fu_config_get_remote_by_id (priv->config, remote_id);
+	if (remote == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "remote %s not found", remote_id);
+		return FALSE;
+	}
+	if (!fwupd_remote_get_enabled (remote)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "remote %s not enabled", remote_id);
+		return FALSE;
+	}
+
+	/* read the entire file into memory */
+	stream_fd = g_unix_input_stream_new (fd, TRUE);
+	bytes_raw = g_input_stream_read_bytes (stream_fd, 0x100000, NULL, error);
+	if (bytes_raw == NULL)
+		return FALSE;
+
+	/* read signature */
+	stream_sig = g_unix_input_stream_new (fd_sig, TRUE);
+	bytes_sig = g_input_stream_read_bytes (stream_sig, 0x800, NULL, error);
+	if (bytes_sig == NULL)
+		return FALSE;
+
+	/* verify file */
+	kr = fu_keyring_new ();
+	if (!fu_keyring_add_public_keys (kr, "/etc/pki/fwupd-metadata", error))
+		return FALSE;
+	if (!fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error))
+		return FALSE;
+
+	/* save XML to remotes.d */
+	location = fu_config_get_cached_metadata_location (priv->config);
+	path = g_strdup_printf ("%s/%s/metadata.xml.gz", location, remote_id);
+	if (!fu_main_set_contents (path, bytes_raw, error))
+		return FALSE;
+	return fu_main_load_metadata_store (priv, location, error);
 }
 
 static gboolean
@@ -2135,7 +2146,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
 		}
-		if (!fu_main_daemon_update_metadata (priv, NULL, fd_data, fd_sig, &error)) {
+		if (!fu_main_daemon_update_metadata (priv, "lvfs", fd_data, fd_sig, &error)) {
 			g_prefix_error (&error, "failed to update metadata: ");
 			fu_main_invocation_return_error (priv, invocation, error);
 			return;
@@ -2148,32 +2159,12 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "UpdateMetadataWithId") == 0) {
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
-		FwupdRemote *remote;
 		const gchar *id = NULL;
 		gint fd_data;
 		gint fd_sig;
 
 		g_variant_get (parameters, "(&shh)", &id, &fd_data, &fd_sig);
 		g_debug ("Called %s(%s,%i,%i)", method_name, id, fd_data, fd_sig);
-
-		/* check remote is valid */
-		remote = fu_config_get_remote_by_id (priv->config, id);
-		if (remote == NULL) {
-			g_set_error (&error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "remote %s not found", id);
-			fu_main_invocation_return_error (priv, invocation, error);
-			return;
-		}
-		if (!fwupd_remote_get_enabled (remote)) {
-			g_set_error (&error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "remote %s not enabled", id);
-			fu_main_invocation_return_error (priv, invocation, error);
-			return;
-		}
 
 		/* update the metadata store */
 		message = g_dbus_method_invocation_get_message (invocation);
@@ -3117,8 +3108,6 @@ fu_main_private_free (FuMainPrivate *priv)
 		g_object_unref (priv->store);
 	if (priv->introspection_daemon != NULL)
 		g_dbus_node_info_unref (priv->introspection_daemon);
-	if (priv->store_changed_id != 0)
-		g_source_remove (priv->store_changed_id);
 	if (priv->pending != NULL)
 		g_object_unref (priv->pending);
 	if (priv->coldplug_id != 0)
@@ -3138,17 +3127,24 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMainPrivate, fu_main_private_free)
 static gboolean
 fu_main_cleanup_state (GError **error)
 {
-	g_autoptr(GFile) f1 = NULL;
-	f1 = g_file_new_for_path ("/var/cache/app-info/xmls/fwupd-verify.xml");
-	if (g_file_query_exists (f1, NULL)) {
-		if (!g_file_delete (f1, NULL, error))
-			return FALSE;
+	const gchar *filenames[] = {
+		"/var/cache/app-info/xmls/fwupd-verify.xml",
+		"/var/cache/app-info/xmls/fwupd.xml",
+		NULL };
+	for (guint i = 0; filenames[i] != NULL; i++) {
+		g_autoptr(GFile) file = g_file_new_for_path (filenames[i]);
+		if (g_file_query_exists (file, NULL)) {
+			if (!g_file_delete (file, NULL, error))
+				return FALSE;
+		}
 	}
 	return TRUE;
 }
+
 int
 main (int argc, char *argv[])
 {
+	const gchar *location;
 	gboolean immediate_exit = FALSE;
 	gboolean timed_exit = FALSE;
 	const GOptionEntry options[] = {
@@ -3190,26 +3186,20 @@ main (int argc, char *argv[])
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_main_item_free);
 	priv->loop = g_main_loop_new (NULL, FALSE);
 	priv->pending = fu_pending_new ();
-	priv->store = as_store_new ();
 	priv->profile = as_profile_new ();
-	g_signal_connect (priv->store, "changed",
-			  G_CALLBACK (fu_main_store_changed_cb), priv);
-	as_store_set_watch_flags (priv->store, AS_STORE_WATCH_FLAG_ADDED |
-					       AS_STORE_WATCH_FLAG_REMOVED);
-
-	/* load AppStream */
-	as_store_add_filter (priv->store, AS_APP_KIND_FIRMWARE);
-	if (!as_store_load (priv->store,
-			    AS_STORE_LOAD_FLAG_IGNORE_INVALID |
-			    AS_STORE_LOAD_FLAG_APP_INFO_SYSTEM,
-			    NULL, &error)){
-		g_printerr ("Failed to load AppStream data: %s\n", error->message);
-		return EXIT_FAILURE;
-	}
 
 	/* read config file */
 	if (!fu_config_load (priv->config, &error)) {
 		g_printerr ("Failed to load config: %s\n", error->message);
+		return EXIT_FAILURE;
+	}
+
+	/* load AppStream metadata */
+	priv->store = as_store_new ();
+	as_store_add_filter (priv->store, AS_APP_KIND_FIRMWARE);
+	location = fu_config_get_cached_metadata_location (priv->config);
+	if (!fu_main_load_metadata_store (priv, location, &error)) {
+		g_printerr ("Failed to load AppStream data: %s\n", error->message);
 		return EXIT_FAILURE;
 	}
 

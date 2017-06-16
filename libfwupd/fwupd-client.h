@@ -110,6 +110,7 @@ gboolean	 fwupd_client_install			(FwupdClient	*client,
 							 FwupdInstallFlags install_flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
+G_DEPRECATED_FOR(fwupd_client_update_metadata_with_id)
 gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
 							 const gchar	*metadata_fn,
 							 const gchar	*signature_fn,

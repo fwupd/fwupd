@@ -1162,7 +1162,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 			      GError **error)
 {
 	return fwupd_client_update_metadata_with_id (client,
-						     NULL, /* remote_id */
+						     "lvfs", /* remote_id */
 						     metadata_fn,
 						     signature_fn,
 						     cancellable,
@@ -1206,6 +1206,7 @@ fwupd_client_update_metadata_with_id (FwupdClient *client,
 	g_autoptr(GUnixFDList) fd_list = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (remote_id != NULL, FALSE);
 	g_return_val_if_fail (metadata_fn != NULL, FALSE);
 	g_return_val_if_fail (signature_fn != NULL, FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
@@ -1251,7 +1252,7 @@ fwupd_client_update_metadata_with_id (FwupdClient *client,
 	close (fd_sig);
 
 	/* call into daemon */
-	body = g_variant_new ("(shh)", remote_id != NULL ? remote_id : "", fd, fd_sig);
+	body = g_variant_new ("(shh)", remote_id, fd, fd_sig);
 	g_dbus_message_set_body (request, body);
 	helper = fwupd_client_helper_new ();
 	g_dbus_connection_send_message_with_reply (priv->conn,

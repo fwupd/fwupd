@@ -918,20 +918,21 @@ fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	if (g_strv_length (values) == 0)
 		return fu_util_download_metadata (priv, error);
-	if (g_strv_length (values) != 2) {
+	if (g_strv_length (values) != 3) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'filename.xml' 'filename.xml.asc'");
+				     "Invalid arguments: expected 'filename.xml' 'filename.xml.asc' 'remote-id'");
 		return FALSE;
 	}
 
 	/* open file */
-	return fwupd_client_update_metadata (priv->client,
-					     values[0],
-					     values[1],
-					     NULL,
-					     error);
+	return fwupd_client_update_metadata_with_id (priv->client,
+						     values[2],
+						     values[0],
+						     values[1],
+						     NULL,
+						     error);
 }
 
 static gboolean

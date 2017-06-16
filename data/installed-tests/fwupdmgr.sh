@@ -9,7 +9,7 @@ rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
 echo "Refreshing with dummy metadata..."
-fwupdmgr refresh ${dirname}/firmware-example.xml.gz ${dirname}/firmware-example.xml.gz.asc
+fwupdmgr refresh ${dirname}/firmware-example.xml.gz ${dirname}/firmware-example.xml.gz.asc lvfs
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
