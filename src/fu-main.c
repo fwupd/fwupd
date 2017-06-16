@@ -38,6 +38,7 @@
 #include "fwupd-release-private.h"
 #include "fwupd-resources.h"
 
+#include "fu-config.h"
 #include "fu-debug.h"
 #include "fu-device.h"
 #include "fu-hwids.h"
@@ -59,7 +60,7 @@ typedef struct {
 	GDBusNodeInfo		*introspection_daemon;
 	GDBusProxy		*proxy_uid;
 	GUsbContext		*usb_ctx;
-	GKeyFile		*config;
+	FuConfig		*config;
 	GMainLoop		*loop;
 	GPtrArray		*devices;	/* of FuDeviceItem */
 	PolkitAuthority		*authority;
@@ -2753,8 +2754,7 @@ fu_main_plugin_device_added_cb (FuPlugin *plugin,
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 	FuDeviceItem *item;
-	g_auto(GStrv) guids = NULL;
-	g_autoptr(GError) error = NULL;
+	GPtrArray *blacklisted_devices;
 
 	/* device has no GUIDs set! */
 	if (fu_device_get_guid_default (device) == NULL) {
@@ -2765,19 +2765,16 @@ fu_main_plugin_device_added_cb (FuPlugin *plugin,
 	}
 
 	/* is this GUID blacklisted */
-	guids = g_key_file_get_string_list (priv->config,
-					    "fwupd",
-					    "BlacklistDevices",
-					    NULL, /* length */
-					    NULL);
-	if (guids != NULL &&
-	    g_strv_contains ((const gchar * const *) guids,
-			     fu_device_get_guid_default (device))) {
-		g_debug ("%s is blacklisted [%s], ignoring from %s",
-			 fu_device_get_id (device),
-			 fu_device_get_guid_default (device),
-			 fu_plugin_get_name (plugin));
-		return;
+	blacklisted_devices = fu_config_get_blacklist_devices (priv->config);
+	for (guint i = 0; i < blacklisted_devices->len; i++) {
+		const gchar *guid = g_ptr_array_index (blacklisted_devices, i);
+		if (g_strcmp0 (guid, fu_device_get_guid_default (device)) == 0) {
+			g_debug ("%s is blacklisted [%s], ignoring from %s",
+				 fu_device_get_id (device),
+				 fu_device_get_guid_default (device),
+				 fu_plugin_get_name (plugin));
+			return;
+		}
 	}
 
 	/* remove any fake device */
@@ -2922,20 +2919,13 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 {
 	const gchar *fn;
 	g_autoptr(GDir) dir = NULL;
-	g_auto(GStrv) blacklist = NULL;
-
-	/* get plugin blacklist */
-	blacklist = g_key_file_get_string_list (priv->config,
-						"fwupd",
-						"BlacklistPlugins",
-						NULL, /* length */
-						NULL);
 
 	/* search */
 	dir = g_dir_open (PLUGINDIR, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	while ((fn = g_dir_read_name (dir)) != NULL) {
+		GPtrArray *blacklist;
 		g_autofree gchar *filename = NULL;
 		g_autoptr(FuPlugin) plugin = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -2957,10 +2947,15 @@ fu_main_load_plugins (FuMainPrivate *priv, GError **error)
 		}
 
 		/* is blacklisted */
-		if (blacklist != NULL &&
-		    g_strv_contains ((const gchar * const *) blacklist,
-				     fu_plugin_get_name (plugin))) {
-			fu_plugin_set_enabled (plugin, FALSE);
+		blacklist = fu_config_get_blacklist_plugins (priv->config);
+		for (guint i = 0; i < blacklist->len; i++) {
+			const gchar *name = g_ptr_array_index (blacklist, i);
+			if (g_strcmp0 (name, fu_plugin_get_name (plugin)) == 0) {
+				fu_plugin_set_enabled (plugin, FALSE);
+				break;
+			}
+		}
+		if (!fu_plugin_get_enabled (plugin)) {
 			g_debug ("%s blacklisted by config",
 				 fu_plugin_get_name (plugin));
 			continue;
@@ -3051,7 +3046,7 @@ fu_main_private_free (FuMainPrivate *priv)
 	if (priv->usb_ctx != NULL)
 		g_object_unref (priv->usb_ctx);
 	if (priv->config != NULL)
-		g_key_file_unref (priv->config);
+		g_object_unref (priv->config);
 	if (priv->connection != NULL)
 		g_object_unref (priv->connection);
 	if (priv->authority != NULL)
@@ -3108,7 +3103,6 @@ main (int argc, char *argv[])
 	g_autoptr(FuMainPrivate) priv = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GOptionContext) context = NULL;
-	g_autofree gchar *config_file = NULL;
 
 	setlocale (LC_ALL, "");
 
@@ -3130,6 +3124,7 @@ main (int argc, char *argv[])
 
 	/* create new objects */
 	priv = g_new0 (FuMainPrivate, 1);
+	priv->config = fu_config_new ();
 	priv->status = FWUPD_STATUS_IDLE;
 	priv->percentage = 0;
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_main_item_free);
@@ -3153,13 +3148,8 @@ main (int argc, char *argv[])
 	}
 
 	/* read config file */
-	config_file = g_build_filename (fu_main_get_sysconfig_dir (), "fwupd.conf", NULL);
-	g_debug ("loading config values from %s", config_file);
-	priv->config = g_key_file_new ();
-	if (!g_key_file_load_from_file (priv->config, config_file,
-					G_KEY_FILE_NONE, &error)) {
-		g_printerr ("Failed to load config file %s: %s\n",
-			    config_file, error->message);
+	if (!fu_config_load (priv->config, &error)) {
+		g_printerr ("Failed to load config: %s\n", error->message);
 		return EXIT_FAILURE;
 	}
 
@@ -3193,7 +3183,7 @@ main (int argc, char *argv[])
 	}
 
 	/* disable udev? */
-	if (!g_key_file_get_boolean (priv->config, "fwupd", "EnableOptionROM", NULL)) {
+	if (!fu_config_get_enable_option_rom (priv->config)) {
 		FuPlugin *plugin = g_hash_table_lookup (priv->plugins_hash, "udev");
 		if (plugin != NULL)
 			fu_plugin_set_enabled (plugin, FALSE);
