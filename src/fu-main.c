@@ -509,21 +509,35 @@ fu_main_verify_update_device_to_app (FuDevice *device)
 	return app;
 }
 
-static gboolean
-fu_main_plugin_verify_update_authenticated (FuMainAuthHelper *helper, GError **error)
+static AsStore *
+fu_main_load_verify_store (GError **error)
 {
-	const gchar *fn = "/var/cache/app-info/xmls/fwupd-verify.xml";
+	const gchar *fn = "/var/lib/fwupd/verify.xml";
 	g_autoptr(AsStore) store = NULL;
-	g_autoptr(GFile) xml_file = NULL;
+	g_autoptr(GFile) file = NULL;
 
 	/* load existing store */
 	store = as_store_new ();
 	as_store_set_api_version (store, 0.9);
-	xml_file = g_file_new_for_path (fn);
-	if (g_file_query_exists (xml_file, NULL)) {
-		if (!as_store_from_file (store, xml_file, NULL, NULL, error))
-			return FALSE;
+	file = g_file_new_for_path (fn);
+	if (g_file_query_exists (file, NULL)) {
+		if (!as_store_from_file (store, file, NULL, NULL, error))
+			return NULL;
 	}
+	return g_steal_pointer (&store);
+}
+
+static gboolean
+fu_main_plugin_verify_update_authenticated (FuMainAuthHelper *helper, GError **error)
+{
+	const gchar *fn = "/var/lib/fwupd/verify.xml";
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* load existing store */
+	store = fu_main_load_verify_store (error);
+	if (store == NULL)
+		return FALSE;
 
 	/* check the devices still exists */
 	for (guint i = 0; i < helper->devices->len; i ++) {
@@ -579,7 +593,8 @@ fu_main_plugin_verify_update_authenticated (FuMainAuthHelper *helper, GError **e
 
 	/* write */
 	g_debug ("writing %s", fn);
-	return as_store_to_file (store, xml_file,
+	file = g_file_new_for_path (fn);
+	return as_store_to_file (store, file,
 				 AS_NODE_TO_XML_FLAG_ADD_HEADER |
 				 AS_NODE_TO_XML_FLAG_FORMAT_INDENT |
 				 AS_NODE_TO_XML_FLAG_FORMAT_MULTILINE,
@@ -2221,6 +2236,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		const gchar *hash = NULL;
 		const gchar *id = NULL;
 		const gchar *version = NULL;
+		g_autoptr(AsStore) store = NULL;
 
 		/* check the id exists */
 		g_variant_get (parameters, "(&s)", &id);
@@ -2243,7 +2259,16 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* find component in metadata */
-		app = fu_main_store_get_app_by_guids (priv->store, item->device);
+		store = fu_main_load_verify_store (&error);
+		if (store == NULL) {
+			g_set_error_literal (&error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_FOUND,
+					     "No store could be loaded");
+			fu_main_invocation_return_error (priv, invocation, error);
+			return;
+		}
+		app = fu_main_store_get_app_by_guids (store, item->device);
 		if (app == NULL) {
 			g_set_error_literal (&error,
 					     FWUPD_ERROR,
@@ -3045,6 +3070,17 @@ fu_main_private_free (FuMainPrivate *priv)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMainPrivate, fu_main_private_free)
 
+static gboolean
+fu_main_cleanup_state (GError **error)
+{
+	g_autoptr(GFile) f1 = NULL;
+	f1 = g_file_new_for_path ("/var/cache/app-info/xmls/fwupd-verify.xml");
+	if (g_file_query_exists (f1, NULL)) {
+		if (!g_file_delete (f1, NULL, error))
+			return FALSE;
+	}
+	return TRUE;
+}
 int
 main (int argc, char *argv[])
 {
@@ -3128,6 +3164,12 @@ main (int argc, char *argv[])
 	priv->hwids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 	if (!fu_main_load_hwids (priv, &error)) {
 		g_printerr ("Failed to load hwids: %s\n", error->message);
+		return EXIT_FAILURE;
+	}
+
+	/* delete old data files */
+	if (!fu_main_cleanup_state (&error)) {
+		g_printerr ("Failed to clean up: %s\n", error->message);
 		return EXIT_FAILURE;
 	}
 
