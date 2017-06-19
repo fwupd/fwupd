@@ -12,6 +12,7 @@ RUN apt-get install -yq --no-install-recommends \
 	gettext \
 	gobject-introspection \
 	gtk-doc-tools \
+	texlive-fonts-recommended \
 	locales \
 	libarchive-dev \
 	libcairo-dev \
