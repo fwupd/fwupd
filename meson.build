@@ -120,7 +120,11 @@ appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
-valgrind = dependency('valgrindXXX', required: false)
+if meson.version().version_compare('>0.41.0')
+  valgrind = dependency('valgrind', required: false)
+else
+  valgrind = dependency('valgrindXXX', required: false)
+endif
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 gpgme = cc.find_library('gpgme')
 gpgerror = cc.find_library('gpg-error')
