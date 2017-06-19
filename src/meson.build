@@ -47,6 +47,7 @@ executable(
   resources_src,
   sources : [
     'fu-config.c',
+    'fu-engine.c',
     'fu-main.c',
     'fu-hwids.c',
     'fu-debug.c',
