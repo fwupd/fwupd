@@ -1825,54 +1825,6 @@ fu_main_get_result_from_app (FuMainPrivate *priv, AsApp *app, GError **error)
 }
 
 static GVariant *
-fu_main_get_details_from_fd (FuMainPrivate *priv, gint fd, GError **error)
-{
-	AsApp *app = NULL;
-	GPtrArray *apps;
-	g_autoptr(AsStore) store = NULL;
-	g_autoptr(FwupdResult) res = NULL;
-
-	store = fu_main_get_store_from_fd (priv, fd, error);
-	if (store == NULL)
-		return NULL;
-
-	/* get all apps */
-	apps = as_store_get_apps (store);
-	if (apps->len == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no components");
-		return NULL;
-	}
-	if (apps->len > 1) {
-		/* we've got a .cab file with multiple components,
-		 * so try to find the first thing that's installed */
-		for (guint i = 0; i < priv->devices->len; i++) {
-			FuDeviceItem *item = g_ptr_array_index (priv->devices, i);
-			app = fu_main_store_get_app_by_guids (store, item->device);
-			if (app != NULL)
-				break;
-		}
-	}
-
-	/* well, we've tried our best, just show the first entry */
-	if (app == NULL)
-		app = AS_APP (g_ptr_array_index (apps, 0));
-
-	/* check we can install it */
-	if (!fu_main_check_app_versions (app, NULL, error))
-		return FALSE;
-
-	/* create a result with all the metadata in */
-	as_app_set_origin (app, as_store_get_origin (store));
-	res = fu_main_get_result_from_app (priv, app, error);
-	if (res == NULL)
-		return NULL;
-	return fwupd_result_to_data (res, "(a{sv})");
-}
-
-static GVariant *
 fu_main_get_details_local_from_fd (FuMainPrivate *priv, gint fd, GError **error)
 {
 	GPtrArray *apps;
@@ -2527,44 +2479,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      NULL,
 						      fu_main_check_authorization_cb,
 						      helper);
-		return;
-	}
-
-	/* get a single result object from a local file */
-	if (g_strcmp0 (method_name, "GetDetails") == 0) {
-		GDBusMessage *message;
-		GUnixFDList *fd_list;
-		gint32 fd_handle = 0;
-		gint fd;
-
-		/* get parameters */
-		g_variant_get (parameters, "(h)", &fd_handle);
-		g_debug ("Called %s(%i)", method_name, fd_handle);
-
-		/* get the fd */
-		message = g_dbus_method_invocation_get_message (invocation);
-		fd_list = g_dbus_message_get_unix_fd_list (message);
-		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 1) {
-			g_set_error (&error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "invalid handle");
-			fu_main_invocation_return_error (priv, invocation, error);
-			return;
-		}
-		fd = g_unix_fd_list_get (fd_list, 0, &error);
-		if (fd < 0) {
-			fu_main_invocation_return_error (priv, invocation, error);
-			return;
-		}
-
-		/* get details about the file */
-		val = fu_main_get_details_from_fd (priv, fd, &error);
-		if (val == NULL) {
-			fu_main_invocation_return_error (priv, invocation, error);
-			return;
-		}
-		fu_main_invocation_return_value (priv, invocation, val);
 		return;
 	}
 
