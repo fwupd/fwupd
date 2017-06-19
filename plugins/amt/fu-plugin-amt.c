@@ -136,13 +136,12 @@ mei_send_msg (mei_context *ctx, const guchar *buffer,
 	g_debug ("call write length = %zd", len);
 	written = write (ctx->fd, buffer, len);
 	if (written < 0) {
-		rc = -errno;
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
 			     "write failed with status %zd %s",
-			written, strerror(errno));
-		goto out;
+			     written, strerror(errno));
+		return -errno;
 	}
 
 	FD_ZERO(&set);
@@ -150,23 +149,23 @@ mei_send_msg (mei_context *ctx, const guchar *buffer,
 	rc = select (ctx->fd + 1 , &set, NULL, NULL, &tv);
 	if (rc > 0 && FD_ISSET(ctx->fd, &set)) {
 		g_debug ("write success");
-	} else if (rc == 0) {
+		return written;
+	}
+
+	/* timed out */
+	if (rc == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
 			     "write failed on timeout with status");
-		goto out;
-	} else { /* rc < 0 */
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "write failed on select with status %zd", rc);
-		goto out;
+		return 0;
 	}
 
-	rc = written;
-out:
-
+	/* rc < 0 */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_WRITE,
+		     "write failed on select with status %zd", rc);
 	return rc;
 }
 
@@ -276,40 +275,23 @@ struct amt_host_if {
 static guint32
 amt_verify_code_versions (const struct amt_host_if_resp_header *resp)
 {
-	guint32 status = AMT_STATUS_SUCCESS;
-	struct amt_code_versions *code_ver;
-	gsize code_ver_len;
-	guint32 ver_type_cnt;
-	guint32 len;
-	guint32 i;
-
-	code_ver = (struct amt_code_versions *)resp->data;
-	/* length - sizeof(status) */
-	code_ver_len = resp->header.length - sizeof(guint32);
-	ver_type_cnt = code_ver_len -
-		sizeof(code_ver->bios) -
-		sizeof(code_ver->count);
-	if (code_ver->count != ver_type_cnt / sizeof(struct amt_version_type)) {
-		status = AMT_STATUS_INTERNAL_ERROR;
-		goto out;
-	}
-	for (i = 0; i < code_ver->count; i++) {
-		len = code_ver->versions[i].description.length;
-
-		if (len > AMT_UNICODE_STRING_LEN) {
-			status = AMT_STATUS_INTERNAL_ERROR;
-			goto out;
-		}
-
+	struct amt_code_versions *code_ver = (struct amt_code_versions *)resp->data;
+	gsize code_ver_len = resp->header.length - sizeof(guint32);
+	guint32 ver_type_cnt = code_ver_len -
+					sizeof(code_ver->bios) -
+					sizeof(code_ver->count);
+	if (code_ver->count != ver_type_cnt / sizeof(struct amt_version_type))
+		return AMT_STATUS_INTERNAL_ERROR;
+	for (guint32 i = 0; i < code_ver->count; i++) {
+		guint32 len = code_ver->versions[i].description.length;
+		if (len > AMT_UNICODE_STRING_LEN)
+			return AMT_STATUS_INTERNAL_ERROR;
 		len = code_ver->versions[i].version.length;
 		if (code_ver->versions[i].version.string[len] != '\0' ||
-		    len != strlen(code_ver->versions[i].version.string)) {
-			status = AMT_STATUS_INTERNAL_ERROR;
-			goto out;
-		}
+		    len != strlen(code_ver->versions[i].version.string))
+			return AMT_STATUS_INTERNAL_ERROR;
 	}
-out:
-	return status;
+	return AMT_STATUS_SUCCESS;
 }
 
 static guint32
@@ -350,11 +332,8 @@ amt_host_if_call (mei_context *mei_cl,
 	struct amt_host_if_resp_header *msg_hdr;
 
 	in_buf_sz = mei_cl->buf_size;
-	*read_buf = (guint8 *) g_malloc (in_buf_sz);
-	if (*read_buf == NULL)
-		return AMT_STATUS_SDK_RESOURCES;
-	memset(*read_buf, 0, in_buf_sz);
-	msg_hdr = (struct amt_host_if_resp_header *)*read_buf;
+	*read_buf = (guint8 *) g_malloc0 (in_buf_sz);
+	msg_hdr = (struct amt_host_if_resp_header *) *read_buf;
 
 	written = mei_send_msg (mei_cl, command, command_sz, send_timeout, error);
 	if (written != command_sz)
@@ -368,8 +347,7 @@ amt_host_if_call (mei_context *mei_cl,
 	if (status != AMT_STATUS_SUCCESS)
 		return status;
 
-	status = amt_verify_response_header(rcmd,
-				&msg_hdr->header, out_buf_sz);
+	status = amt_verify_response_header(rcmd, &msg_hdr->header, out_buf_sz);
 	if (status != AMT_STATUS_SUCCESS)
 		return status;
 
@@ -382,7 +360,7 @@ amt_host_if_call (mei_context *mei_cl,
 static guint32
 amt_get_provisioning_state (mei_context *mei_cl, guint8 *state, GError **error)
 {
-	struct amt_host_if_resp_header *response = NULL;
+	g_autofree struct amt_host_if_resp_header *response = NULL;
 	guint32 status;
 
 	status = amt_host_if_call (mei_cl,
@@ -412,11 +390,12 @@ fu_plugin_amt_create_device (GError **error)
 	guint32 status;
 	guint8 state;
 	struct amt_code_versions ver;
-	struct amt_host_if_resp_header *response = NULL;
 	uuid_t uu;
+	g_autofree struct amt_host_if_resp_header *response = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(mei_context) ctx = g_new0 (mei_context, 1);
 
+	/* create context */
 	if (!mei_context_new (ctx, &MEI_IAMTHIF, 0, error))
 		return NULL;
 
@@ -446,8 +425,6 @@ fu_plugin_amt_create_device (GError **error)
 		return NULL;
 	}
 	memcpy (&ver, response->data, sizeof(struct amt_code_versions));
-	if (response != NULL)
-		g_free (response);
 
 	dev = fu_device_new ();
 	fu_device_set_id (dev, "/dev/mei");
