@@ -963,7 +963,7 @@ lu_device_find_udev_device (GUsbDevice *usb_device)
 
 		return g_object_ref (udev_parent);
 	}
-	return FALSE;
+	return NULL;
 }
 
 static void

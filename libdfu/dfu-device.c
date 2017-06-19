@@ -1834,7 +1834,7 @@ dfu_device_upload (DfuDevice *device,
 
 	/* ensure interface is claimed */
 	if (!dfu_device_ensure_interface (device, cancellable, error))
-		return FALSE;
+		return NULL;
 
 	/* create ahead of time */
 	firmware = dfu_firmware_new ();

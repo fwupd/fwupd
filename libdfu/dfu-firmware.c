@@ -677,7 +677,7 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 
 	/* does the format support this many images */
 	if (!dfu_firmware_check_acceptable_for_format (firmware, error))
-		return FALSE;
+		return NULL;
 
 	/* raw */
 	if (priv->format == DFU_FIRMWARE_FORMAT_RAW)

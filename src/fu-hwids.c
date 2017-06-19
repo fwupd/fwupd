@@ -68,7 +68,7 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 			     G_IO_ERROR,
 			     G_IO_ERROR_NOT_SUPPORTED,
 			     "libappstream-glib 0.6.13 is required");
-	return FALSE;
+	return NULL;
 #endif
 }
 

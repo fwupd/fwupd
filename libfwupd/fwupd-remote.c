@@ -338,7 +338,7 @@ fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "Failed to parse URI '%s'", url);
-		return FALSE;
+		return NULL;
 	}
 
 	/* set the username and password from the metadata URI */

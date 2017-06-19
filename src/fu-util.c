@@ -333,7 +333,7 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	/* get devices from daemon */
 	devices = fwupd_client_get_devices_simple (priv->client, NULL, error);
 	if (devices == NULL)
-		return FALSE;
+		return NULL;
 
 	/* filter results */
 	devices_filtered = g_ptr_array_new ();
