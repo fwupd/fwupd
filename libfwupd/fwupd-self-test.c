@@ -139,6 +139,7 @@ fwupd_result_func (void)
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
 		"  Guid:                 00000000-0000-0000-0000-000000000000\n"
 		"  DeviceID:             USB:foo\n"
+		"  DisplayName:          ColorHug2\n"
 		"  Flags:                allow-offline|require-ac\n"
 		"  FirmwareHash:         SHA1(beefdead)\n"
 		"  Created:              1970-01-01\n"
