@@ -126,6 +126,7 @@ gpgme = cc.find_library('gpgme')
 gpgerror = cc.find_library('gpg-error')
 libm = cc.find_library('m', required: false)
 udev = dependency('udev')
+uuid = dependency('uuid')
 
 if get_option('enable-uefi-labels')
   cairo = dependency('cairo')

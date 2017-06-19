@@ -45,6 +45,7 @@ BuildRequires: valgrind
 BuildRequires: valgrind-devel
 BuildRequires: elfutils-libelf-devel
 BuildRequires: gtk-doc
+BuildRequires: libuuid-devel
 BuildRequires: meson
 
 %if 0%{?have_uefi}
@@ -208,6 +209,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 /usr/lib/udev/rules.d/*.rules
 %dir %{_libdir}/fwupd-plugins-2
 %{_libdir}/fwupd-plugins-2/libfu_plugin_altos.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_amt.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_colorhug.so
 %if 0%{?have_smbios}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_dell.so

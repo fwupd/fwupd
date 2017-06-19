@@ -6,6 +6,7 @@ option('enable-libelf', type : 'boolean', value : true, description : 'enable li
 option('enable-uefi', type : 'boolean', value : true, description : 'enable UEFI support')
 option('enable-uefi-labels', type : 'boolean', value : true, description : 'enable UEFI labels support')
 option('enable-dell', type : 'boolean', value : true, description : 'enable Dell-specific support')
+option('enable-amt', type : 'boolean', value : true, description : 'enable Intel AMT support')
 option('enable-thunderbolt', type : 'boolean', value : true, description : 'enable Thunderbolt support')
 option('enable-systemd', type : 'boolean', value : true, description : 'enable systemd support')
 option('enable-consolekit', type : 'boolean', value : true, description : 'enable ConsoleKit support')
