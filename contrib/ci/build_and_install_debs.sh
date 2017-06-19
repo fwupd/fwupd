@@ -14,5 +14,10 @@ dpkg-buildpackage
 dpkg -i ../*.deb
 
 # run the installed tests
-/etc/init.d/dbus start
-gnome-desktop-testing-runner fwupd
+if [ "$CI" = "true" ]; then
+	sed -i "s,Exec=,Exec=/bin/sh -c 'FWUPD_TESTS=$CI ,;
+		s,Exec=.*$,&',;" \
+		/usr/share/dbus-1/system-services/org.freedesktop.fwupd.service
+	/etc/init.d/dbus start
+	gnome-desktop-testing-runner fwupd
+fi

@@ -45,6 +45,13 @@ fu_plugin_destroy (FuPlugin *plugin)
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
+	if (g_getenv ("FWUPD_TESTS") == NULL) {
+                g_set_error (error,
+                             FWUPD_ERROR,
+                             FWUPD_ERROR_NOT_FOUND,
+                             "Test plugin is only used for continuous integration.");
+		return FALSE;
+	}
 	g_debug ("startup");
 	return TRUE;
 }
