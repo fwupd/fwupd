@@ -21,7 +21,7 @@ override_dh_auto_configure:
 	else \
 		export UEFI="-Denable-uefi=false"; \
 	fi; \
-	if pkg-config --exists libsmbsios_c; then \
+	if pkg-config --exists libsmbios_c; then \
 		export DELL="-Denable-dell=true"; \
 	else \
 		export DELL="-Denable-dell=false"; \
