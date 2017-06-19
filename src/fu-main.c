@@ -2062,43 +2062,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	}
 
 	/* return '' */
-	if (g_strcmp0 (method_name, "UpdateMetadata") == 0) {
-		GDBusMessage *message;
-		GUnixFDList *fd_list;
-		gint fd_data;
-		gint fd_sig;
-
-		g_debug ("Called %s()", method_name);
-		message = g_dbus_method_invocation_get_message (invocation);
-		fd_list = g_dbus_message_get_unix_fd_list (message);
-		if (fd_list == NULL || g_unix_fd_list_get_length (fd_list) != 2) {
-			g_set_error (&error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "invalid handle");
-			fu_main_invocation_return_error (priv, invocation, error);
-			return;
-		}
-		fd_data = g_unix_fd_list_get (fd_list, 0, &error);
-		if (fd_data < 0) {
-			fu_main_invocation_return_error (priv, invocation, error);
-			return;
-		}
-		fd_sig = g_unix_fd_list_get (fd_list, 1, &error);
-		if (fd_sig < 0) {
-			fu_main_invocation_return_error (priv, invocation, error);
-			return;
-		}
-		if (!fu_main_daemon_update_metadata (priv, "lvfs", fd_data, fd_sig, &error)) {
-			g_prefix_error (&error, "failed to update metadata: ");
-			fu_main_invocation_return_error (priv, invocation, error);
-			return;
-		}
-		fu_main_invocation_return_value (priv, invocation, NULL);
-		return;
-	}
-
-	/* return '' */
 	if (g_strcmp0 (method_name, "UpdateMetadataWithId") == 0) {
 		GDBusMessage *message;
 		GUnixFDList *fd_list;

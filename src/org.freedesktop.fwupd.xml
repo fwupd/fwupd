@@ -302,35 +302,6 @@
     </method>
 
     <!--***********************************************************-->
-    <method name='UpdateMetadata'>
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Adds AppStream resource information from a session client.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-      <arg type='h' name='data' direction='in'>
-        <doc:doc>
-          <doc:summary>
-            <doc:para>
-              File handle to AppStream metadata.
-            </doc:para>
-          </doc:summary>
-        </doc:doc>
-      </arg>
-      <arg type='h' name='signature' direction='in'>
-        <doc:doc>
-          <doc:summary>
-            <doc:para>
-              File handle to AppStream metadata GPG signature.
-            </doc:para>
-          </doc:summary>
-        </doc:doc>
-      </arg>
-    </method>
-
-    <!--***********************************************************-->
     <method name='UpdateMetadataWithId'>
       <doc:doc>
         <doc:description>
