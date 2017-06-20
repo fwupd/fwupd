@@ -38,8 +38,13 @@ dnf install -C -y $HOME/rpmbuild/RPMS/*/*.rpm
 cp $HOME/rpmbuild/RPMS/*/*.rpm .
 
 # run the installed tests
-mkdir -p /run/dbus
-mkdir -p /var
-ln -s /var/run /run
-dbus-daemon --system --fork
-gnome-desktop-testing-runner fwupd
+if [ "$CI" = "true" ]; then
+        sed -i "s,Exec=,Exec=/bin/sh -c 'FWUPD_TESTS=$CI ,;
+		s,Exec=.*$,&',;" \
+		/usr/share/dbus-1/system-services/org.freedesktop.fwupd.service
+	mkdir -p /run/dbus
+	mkdir -p /var
+	ln -s /var/run /run
+	dbus-daemon --system --fork
+	gnome-desktop-testing-runner fwupd
+fi
