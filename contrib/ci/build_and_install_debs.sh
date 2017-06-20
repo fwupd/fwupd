@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 #build deb packages
-VERSION=`git describe --abbrev=0 --tags`
+VERSION=`head meson.build | sed "/version :/!d; /meson/d; s/,//; s/'//g;" | awk -F ':' '{print $2}'`
 rm -rf build/
 mkdir -p build && pushd build
 ln -s ../* .
