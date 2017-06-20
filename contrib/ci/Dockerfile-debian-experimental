@@ -1,7 +1,5 @@
 FROM debian:experimental
 
-RUN echo "deb-src http://deb.debian.org/debian/ unstable main" >> /etc/apt/sources.list
-RUN echo "deb-src http://deb.debian.org/debian/ experimental main" >> /etc/apt/sources.list
 RUN apt-get update -qq
 RUN apt-get install -yq --no-install-recommends \
 	devscripts \
