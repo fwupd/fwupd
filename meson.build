@@ -134,9 +134,12 @@ uuid = dependency('uuid')
 
 if get_option('enable-uefi-labels')
   cairo = dependency('cairo')
-  pango = dependency('pango')
   fontconfig = cc.find_library('fontconfig')
   freetype = cc.find_library('freetype')
+  r = run_command('po/test-deps')
+  if r.returncode() != 0
+    error(r.stdout())
+  endif
 endif
 
 if valgrind.found()
