@@ -2092,10 +2092,17 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 	/* remove any fake device */
 	item = fu_engine_get_item_by_id (self, fu_device_get_id (device), NULL);
 	if (item != NULL) {
-		g_debug ("already added %s by %s, ignoring same device from %s",
-			 fu_device_get_id (item->device),
-			 fu_device_get_plugin (item->device),
-			 fu_plugin_get_name (plugin));
+		if (g_strcmp0 (fu_device_get_plugin (item->device),
+			       fu_plugin_get_name (plugin)) == 0) {
+			g_warning ("already added %s by %s",
+				   fu_device_get_id (item->device),
+				   fu_device_get_plugin (item->device));
+		} else {
+			g_debug ("already added %s by %s, ignoring device from %s",
+				 fu_device_get_id (item->device),
+				 fu_device_get_plugin (item->device),
+				 fu_plugin_get_name (plugin));
+		}
 		return;
 	}
 
