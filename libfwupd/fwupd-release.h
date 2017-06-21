@@ -62,7 +62,7 @@ void		 fwupd_release_set_filename		(FwupdRelease	*release,
 							 const gchar	*filename);
 const gchar	*fwupd_release_get_appstream_id		(FwupdRelease	*release);
 void		 fwupd_release_set_appstream_id		(FwupdRelease	*release,
-							 const gchar	*id);
+							 const gchar	*appstream_id);
 const gchar	*fwupd_release_get_remote_id		(FwupdRelease	*release);
 void		 fwupd_release_set_remote_id		(FwupdRelease	*release,
 							 const gchar	*remote_id);
