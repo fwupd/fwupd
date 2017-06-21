@@ -42,9 +42,6 @@ FwupdStatus	 fu_engine_get_status			(FuEngine	*self);
 void		 fu_engine_profile_dump			(FuEngine	*self);
 gboolean	 fu_engine_check_plugins_pending	(FuEngine	*self,
 							 GError		**error);
-GBytes		*fu_engine_read_from_fd			(gint		 fd,
-							 gsize		 count,
-							 GError		**error);
 AsStore		*fu_engine_get_store_from_blob		(FuEngine	*self,
 							 GBytes		*blob,
 							 GError		**error);

@@ -33,6 +33,7 @@
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 
+#include "fu-common.h"
 #include "fu-debug.h"
 #include "fu-device.h"
 #include "fu-engine.h"
@@ -614,7 +615,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* parse the cab file before authenticating so we can work out
 		 * what action ID to use, for instance, if this is trusted --
 		 * this will also close the fd when done */
-		helper->blob_cab = fu_engine_read_from_fd (fd, FU_ENGINE_FIRMWARE_SIZE_MAX, &error);
+		helper->blob_cab = fu_common_get_contents_fd (fd, FU_ENGINE_FIRMWARE_SIZE_MAX, &error);
 		if (helper->blob_cab == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;

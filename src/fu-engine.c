@@ -33,6 +33,7 @@
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 
+#include "fu-common.h"
 #include "fu-config.h"
 #include "fu-debug.h"
 #include "fu-device.h"
@@ -1367,24 +1368,6 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_engine_set_contents (const gchar *filename, GBytes *blob, GError **error)
-{
-	const gchar *data;
-	gsize size;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GFile) file_parent = NULL;
-
-	file = g_file_new_for_path (filename);
-	file_parent = g_file_get_parent (file);
-	if (!g_file_query_exists (file_parent, NULL)) {
-		if (!g_file_make_directory_with_parents (file_parent, NULL, error))
-			return FALSE;
-	}
-	data = g_bytes_get_data (blob, &size);
-	return g_file_set_contents (filename, data, size, error);
-}
-
 /**
  * fu_engine_update_metadata:
  * @self: A #FuEngine
@@ -1456,7 +1439,8 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 		return FALSE;
 
 	/* save XML to remotes.d */
-	if (!fu_engine_set_contents (fwupd_remote_get_filename_cache (remote), bytes_raw, error))
+	if (!fu_common_set_contents_bytes (fwupd_remote_get_filename_cache (remote),
+					   bytes_raw, error))
 		return FALSE;
 	return fu_engine_load_metadata_store (self, error);
 }
@@ -1593,42 +1577,6 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 
 	/* success */
 	return TRUE;
-}
-
-/**
- * fu_engine_read_from_fd:
- * @fd: A file descriptor
- * @count: The maximum number of bytes to read
- * @error: A #GError, or %NULL
- *
- * Reads a blob from a specific file descriptor.
- *
- * Note: this will close the fd when done
- *
- * Returns: (transfer container): a #GBytes, or %NULL
- **/
-GBytes *
-fu_engine_read_from_fd (gint fd, gsize count, GError **error) // FIXME: MOVE?
-{
-	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GInputStream) stream = NULL;
-
-	g_return_val_if_fail (fd > 0, NULL);
-	g_return_val_if_fail (count > 0, NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* read the entire fd to a data blob */
-	stream = g_unix_input_stream_new (fd, TRUE);
-	blob = g_input_stream_read_bytes (stream, count, NULL, &error_local);
-	if (blob == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     error_local->message);
-		return NULL;
-	}
-	return g_steal_pointer (&blob);
 }
 
 /**
@@ -1774,7 +1722,7 @@ fu_engine_get_details_local (FuEngine *self, gint fd, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* get all apps */
-	blob = fu_engine_read_from_fd (fd, FU_ENGINE_FIRMWARE_SIZE_MAX, error);
+	blob = fu_common_get_contents_fd (fd, FU_ENGINE_FIRMWARE_SIZE_MAX, error);
 	if (blob == NULL)
 		return NULL;
 	store = fu_engine_get_store_from_blob (self, blob, error);
