@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2017 Richard Hughes <richard@hughsie.com> -->
+<component type="firmware">
+  <id>fakedevice-dfu.firmware</id>
+  <name>FakeDevice Firmware (DFU)</name>
+  <summary>Firmware for the ACME Corp Integrated Webcam</summary>
+  <description>
+    <p>
+      Updating the firmware on your webcam device improves performance and
+      adds new features.
+    </p>
+  </description>
+  <provides>
+    <!-- BL: USB\VID_273F&PID_100A -->
+    <firmware type="flashed">f5b42624-ff57-5073-ba09-b7c9c04241be</firmware>
+    <!-- FW: USB\VID_273F&PID_1009 -->
+    <firmware type="flashed">dfbaaded-754b-5214-a5f2-46aa3331e8ce</firmware>
+  </provides>
+  <url type="homepage">http://www.acme.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0+</project_license>
+  <developer_name>ACME Corp</developer_name>
+  <releases>
+    <release version="0.2" date="2017-06-15" urgency="medium">
+      <checksum target="content" filename="fakedevice02.dfu"/>
+      <description>
+        <p>Fixes another bug with the flux capacitor to prevent time going backwards.</p>
+      </description>
+    </release>
+  </releases>
+</component>
