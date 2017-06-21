@@ -232,9 +232,24 @@ lu_device_bootloader_request (LuDevice *device,
 		}
 	}
 
-	/* no response required or expected */
-	if (req->cmd == LU_DEVICE_BOOTLOADER_CMD_REBOOT)
+	/* no response required when rebooting */
+	if (usb_device != NULL &&
+	    req->cmd == LU_DEVICE_BOOTLOADER_CMD_REBOOT) {
+		g_autoptr(GError) error_ignore = NULL;
+		if (!g_usb_device_interrupt_transfer (usb_device,
+						      LU_DEVICE_EP1,
+						      buf_response,
+						      sizeof (buf_response),
+						      &actual_length,
+						      LU_DEVICE_TIMEOUT_MS,
+						      NULL,
+						      &error_ignore)) {
+			g_debug ("ignoring: %s", error_ignore->message);
+		} else {
+			lu_dump_raw ("device->host", buf_response, actual_length);
+		}
 		return TRUE;
+	}
 
 	/* get response */
 	memset (buf_response, 0x00, sizeof (buf_response));
