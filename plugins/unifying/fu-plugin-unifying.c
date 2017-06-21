@@ -42,6 +42,7 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 				 GError **error)
 {
 	GPtrArray *guids;
+	GUsbDevice *usb_device;
 	g_autofree gchar *name = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
@@ -75,6 +76,13 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 	/* close the device */
 	if (!lu_device_close (device, error))
 		return FALSE;
+
+	/* don't allow the USB plugin to claim this */
+	usb_device = lu_device_get_usb_device (device);
+	if (usb_device != NULL) {
+		const gchar *platform_id = g_usb_device_get_platform_id (usb_device);
+		fu_device_set_equivalent_id (dev, platform_id);
+	}
 
 	/* insert to hash */
 	fu_plugin_device_add (plugin, dev);
