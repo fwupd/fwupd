@@ -33,6 +33,8 @@ override_dh_install:
 	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install
 	dh_missing --fail-missing
+	#this is placed in fwupd-tests
+	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-2/libfu_plugin_test.so
 
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz

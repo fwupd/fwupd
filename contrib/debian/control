@@ -106,6 +106,29 @@ Description: Firmware update daemon
  ColorHug are supported. More formats may be supported in the future.
  See <https://github.com/hughsie/fwupd> for details
 
+Package: fwupd-tests
+Architecture: all
+Depends: ${misc:Depends},
+         ca-certificates,
+         dbus-x11,
+         fwupd,
+         gnome-desktop-testing,
+         python3-gi,
+         python3-requests,
+Breaks: fwupd (<< 0.9.4-1)
+Replaces: fwupd (<< 0.9.4-1)
+Multi-Arch: foreign
+Description: Firmware update daemon
+ fwupd is a daemon to allow session software to update device firmware.
+ You can either use a GUI software manager like GNOME Software to view and
+ apply updates, the command-line tool or the system D-Bus interface directly.
+ Currently, firmware updates using the UEFI capsule format and for the
+ ColorHug are supported. More formats may be supported in the future.
+ See <https://github.com/hughsie/fwupd> for details
+ .
+ This package provides a set of installed tests that can be run to validate
+ the daemon in a continuous integration system.
+
 Package: fwupd-doc
 Section: doc
 Architecture: all
