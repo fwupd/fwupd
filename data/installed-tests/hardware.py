@@ -24,7 +24,7 @@ def _get_by_device_guid(client, guid):
     return None
 
 def _get_cache_file(fn):
-    cachedir = os.path.expanduser('~/home/hughsie/.cache/fwupdmgr')
+    cachedir = os.path.expanduser('~/.cache/fwupdmgr')
     if not os.path.exists(cachedir):
         os.makedirs(cachedir)
     cachefn = os.path.join(cachedir, fn)
