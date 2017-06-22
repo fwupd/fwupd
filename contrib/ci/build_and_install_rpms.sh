@@ -16,9 +16,9 @@ meson .. \
     -Denable-colorhug=true $@
 ninja-build dist
 popd
-VERSION=`ls | sed '/^fwupd-.*.tar.xz/!d; s,^fwupd-,,; s,.tar.xz,,'`
+VERSION=`mesonintrospect build --projectinfo | jq -r .version`
 mkdir -p $HOME/rpmbuild/SOURCES/
-mv fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
+mv build/meson-dist/fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
 
 #generate a spec file
 sed "s,#VERSION#,$VERSION,;

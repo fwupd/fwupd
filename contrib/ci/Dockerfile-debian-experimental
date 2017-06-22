@@ -51,6 +51,7 @@ RUN apt-get -t experimental install -yq --no-install-recommends \
 	libappstream-glib-dev
 #deps needed only for installed tests
 RUN apt-get install -yq --no-install-recommends \
-        gnome-desktop-testing dbus-x11 ca-certificates python-gi
+        gnome-desktop-testing dbus-x11 ca-certificates \
+        python-gi python-requests
 RUN mkdir /build
 WORKDIR /build

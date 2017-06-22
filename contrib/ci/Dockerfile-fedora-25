@@ -23,6 +23,7 @@ RUN dnf --enablerepo=updates-testing -y install \
 	gobject-introspection-devel \
 	gpgme-devel \
 	gtk-doc \
+	jq \
 	libappstream-glib-devel \
 	libarchive-devel \
 	libgudev1-devel \
@@ -51,6 +52,8 @@ RUN dnf --enablerepo=updates-testing -y install \
 	dconf \
 	gnome-desktop-testing \
 	polkit \
+	python-gobject \
+	python2-requests \
 	gnupg2
 RUN mkdir /build
 WORKDIR /build
