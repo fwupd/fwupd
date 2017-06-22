@@ -442,15 +442,6 @@ fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 	if (item == NULL)
 		return FALSE;
 
-	/* unlock device if required */
-	if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_LOCKED)) {
-		if (!fu_plugin_runner_unlock (item->plugin,
-					      item->device,
-					      error))
-			return FALSE;
-		fu_engine_emit_device_changed (self, item->device);
-	}
-
 	/* get the checksum */
 	checksums = fu_device_get_checksums (item->device);
 	if (checksums->len == 0) {

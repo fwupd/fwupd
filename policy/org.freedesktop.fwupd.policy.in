@@ -99,7 +99,6 @@
       <allow_inactive>no</allow_inactive>
       <allow_active>auth_admin_keep</allow_active>
     </defaults>
-    <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.device-unlock</annotate>
   </action>
 
 </policyconfig>
