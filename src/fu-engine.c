@@ -478,6 +478,7 @@ fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 
 	/* add to store */
 	app = fu_engine_verify_update_device_to_app (item->device);
+	as_store_remove_app_by_id (store, as_app_get_id (app));
 	as_store_add_app (store, app);
 
 	/* write */
