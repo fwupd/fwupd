@@ -150,20 +150,25 @@ fu_plugin_update_online (FuPlugin *plugin,
 
 	/* switch to bootloader */
 	data->ignore_replug = TRUE;
-	if (lu_device_get_kind (device) == LU_DEVICE_KIND_RUNTIME) {
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH)) {
 		/* wait for device to come back */
-		g_timeout_add (50, fu_plugin_unifying_detach_cb, device);
-		if (!lu_context_wait_for_replug (data->ctx,
-						 device,
-						 FU_DEVICE_TIMEOUT_REPLUG,
-						 error))
-			return FALSE;
-		g_object_unref (device);
-		device = fu_plugin_unifying_get_device (plugin, dev, error);
-		if (device == NULL)
-			return FALSE;
-		if (!lu_device_open (device, error))
-			return FALSE;
+		if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
+			g_timeout_add (50, fu_plugin_unifying_detach_cb, device);
+			if (!lu_context_wait_for_replug (data->ctx,
+							 device,
+							 FU_DEVICE_TIMEOUT_REPLUG,
+							 error))
+				return FALSE;
+			g_object_unref (device);
+			device = fu_plugin_unifying_get_device (plugin, dev, error);
+			if (device == NULL)
+				return FALSE;
+			if (!lu_device_open (device, error))
+				return FALSE;
+		} else {
+			if (!lu_device_detach (device, error))
+				return FALSE;
+		}
 	}
 
 	/* write the firmware */
