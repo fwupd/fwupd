@@ -52,8 +52,8 @@ RUN dnf --enablerepo=updates-testing -y install \
 	dconf \
 	gnome-desktop-testing \
 	polkit \
-	python-gobject \
-	python2-requests \
+	python3-gobject \
+	python3-requests \
 	gnupg2
 RUN mkdir /build
 WORKDIR /build

@@ -52,6 +52,6 @@ RUN apt-get -t experimental install -yq --no-install-recommends \
 #deps needed only for installed tests
 RUN apt-get install -yq --no-install-recommends \
         gnome-desktop-testing dbus-x11 ca-certificates \
-        python-gi python-requests
+        python3-requests
 RUN mkdir /build
 WORKDIR /build

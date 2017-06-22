@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # pylint: disable=wrong-import-position,too-many-locals,unused-argument,wrong-import-order
 #
 # Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
@@ -30,7 +30,7 @@ def _get_cache_file(fn):
     cachefn = os.path.join(cachedir, fn)
     if not os.path.exists(cachefn):
         url = 'https://secure-lvfs.rhcloud.com/downloads/' +  fn
-        print "Downloading", url
+        print("Downloading", url)
         r = requests.get(url)
         f = open(cachefn, 'wb')
         f.write(r.content)
@@ -49,10 +49,10 @@ class Test:
         client = Fwupd.Client.new()
         dev = _get_by_device_guid(client, self.guid)
         if not dev:
-            print "Skipping hardware test, no", self.name, "attached"
+            print("Skipping hardware test, no", self.name, "attached")
             return
 
-        print dev.get_name(), "is currently version", dev.get_version()
+        print(dev.get_name(), "is currently version", dev.get_version())
 
         # apply each file
         for fn, ver in self.files:
@@ -62,7 +62,7 @@ class Test:
             else:
                 flags = Fwupd.InstallFlags.ALLOW_OLDER
             cancellable = Gio.Cancellable.new()
-            print "Installing", fn_cache
+            print("Installing", fn_cache)
             client.install(dev.get_id(), fn_cache, flags, cancellable)
 
             # verify version
@@ -114,5 +114,5 @@ if __name__ == '__main__':
         try:
             test.run()
         except GLib.Error as e:
-            print str(e)
+            print(str(e))
             rc = 1
