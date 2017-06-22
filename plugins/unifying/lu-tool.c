@@ -407,7 +407,7 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 		if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
 			if (!lu_context_wait_for_replug (priv->ctx,
 							 device,
-							 5000,
+							 FU_DEVICE_TIMEOUT_REPLUG,
 							 error))
 				return FALSE;
 			g_usleep (G_USEC_PER_SEC);

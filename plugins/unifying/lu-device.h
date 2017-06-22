@@ -64,6 +64,9 @@ struct _LuDeviceClass
 #define LU_DEVICE_EP3				0x83
 #define LU_DEVICE_TIMEOUT_MS			2500
 
+/* some USB hubs take a looong time to re-connect the device */
+#define FU_DEVICE_TIMEOUT_REPLUG		10000 /* ms */
+
 typedef enum {
 	LU_DEVICE_KIND_UNKNOWN,
 	LU_DEVICE_KIND_RUNTIME,

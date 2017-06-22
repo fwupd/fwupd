@@ -155,7 +155,7 @@ fu_plugin_update_online (FuPlugin *plugin,
 		g_timeout_add (50, fu_plugin_unifying_detach_cb, device);
 		if (!lu_context_wait_for_replug (data->ctx,
 						 device,
-						 2000,
+						 FU_DEVICE_TIMEOUT_REPLUG,
 						 error))
 			return FALSE;
 		g_object_unref (device);
@@ -169,12 +169,30 @@ fu_plugin_update_online (FuPlugin *plugin,
 	/* write the firmware */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 	if (!lu_device_write_firmware (device, blob_fw,
-					     lu_write_progress_cb, plugin,
-					     error))
+				       lu_write_progress_cb, plugin,
+				       error))
 		return FALSE;
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
 	if (!lu_device_attach (device, error))
 		return FALSE;
+	if (!lu_device_close (device, error))
+		return FALSE;
+
+	/* wait for it to appear back in runtime mode */
+	if (!lu_context_wait_for_replug (data->ctx,
+					 device,
+					 FU_DEVICE_TIMEOUT_REPLUG,
+					 error))
+		return FALSE;
+	g_object_unref (device);
+
+	/* get the new device version */
+	device = fu_plugin_unifying_get_device (plugin, dev, error);
+	if (device == NULL)
+		return FALSE;
+	if (!lu_device_open (device, error))
+		return FALSE;
+	fu_device_set_version (dev, lu_device_get_version_fw (device));
 	if (!lu_device_close (device, error))
 		return FALSE;
 
