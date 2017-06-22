@@ -403,6 +403,13 @@ static gboolean
 lu_context_poll_cb (gpointer user_data)
 {
 	LuContext *ctx = LU_CONTEXT (user_data);
+
+	/* do not poll when we're waiting for device replug */
+	if (g_hash_table_size (ctx->hash_replug) > 0) {
+		g_warning ("NOT POLLING");
+		return TRUE;
+	}
+
 	for (guint i = 0; i < ctx->devices->len; i++) {
 		LuDevice *device = g_ptr_array_index (ctx->devices, i);
 		g_autoptr(GError) error = NULL;
