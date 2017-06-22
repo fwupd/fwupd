@@ -362,6 +362,7 @@ fu_engine_verify_update_device_to_app (FuDevice *device)
 	AsApp *app = NULL;
 	GPtrArray *checksums;
 	g_autofree gchar *id = NULL;
+	g_autoptr(AsFormat) format = NULL;
 	g_autoptr(AsProvide) prov = NULL;
 	g_autoptr(AsRelease) rel = NULL;
 
@@ -388,6 +389,9 @@ fu_engine_verify_update_device_to_app (FuDevice *device)
 	as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
 	as_provide_set_value (prov, fu_device_get_guid_default (device));
 	as_app_add_provide (app, prov);
+	format = as_format_new ();
+	as_format_set_kind (format, AS_FORMAT_KIND_UNKNOWN);
+	as_app_add_format (app, format);
 	return app;
 }
 
