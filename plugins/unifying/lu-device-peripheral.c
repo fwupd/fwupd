@@ -211,8 +211,7 @@ lu_device_peripheral_ping (LuDevice *device, GError **error)
 		lu_device_set_hidpp_version (device, msg->data[0]);
 	}
 
-	/* this device is active right now */
-	lu_device_add_flag (device, LU_DEVICE_FLAG_ACTIVE);
+	/* success */
 	return TRUE;
 }
 
@@ -280,7 +279,8 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 	if (idx != 0x00)
 		lu_device_add_flag (device, LU_DEVICE_FLAG_REQUIRES_ATTACH);
 
-	/* always success */
+	/* this device is active right now */
+	lu_device_add_flag (device, LU_DEVICE_FLAG_ACTIVE);
 	return TRUE;
 }
 
