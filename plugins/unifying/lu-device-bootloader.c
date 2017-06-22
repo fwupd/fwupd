@@ -160,7 +160,7 @@ lu_device_bootloader_open (LuDevice *device, GError **error)
 	/* get memory map */
 	req->cmd = LU_DEVICE_BOOTLOADER_CMD_GET_MEMINFO;
 	if (!lu_device_bootloader_request (device, req, error)) {
-		g_prefix_error (error, "failed to init fw transfer: ");
+		g_prefix_error (error, "failed to get meminfo: ");
 		return FALSE;
 	}
 	if (req->len != 0x06) {
