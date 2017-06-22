@@ -47,6 +47,6 @@ RUN apt-get install -yq --no-install-recommends \
 	valgrind
 #deps needed only for installed tests
 RUN apt-get install -yq --no-install-recommends \
-        gnome-desktop-testing dbus-x11 ca-certificates
+        gnome-desktop-testing dbus-x11 ca-certificates python-gi
 RUN mkdir /build
 WORKDIR /build
