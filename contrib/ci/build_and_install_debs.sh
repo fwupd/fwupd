@@ -11,13 +11,24 @@ EDITOR=/bin/true dch --create --package fwupd -v $VERSION "CI Build"
 dpkg-buildpackage
 
 #test the packages install
-dpkg -i ../*.deb
+dpkg -i `ls ../*.deb | grep -v fwupd-tests`
 
 # run the installed tests
 if [ "$CI" = "true" ]; then
-	sed -i "s,Exec=,Exec=/bin/sh -c 'FWUPD_TESTS=$CI ,;
-		s,Exec=.*$,&',;" \
-		/usr/share/dbus-1/system-services/org.freedesktop.fwupd.service
+	dpkg -i ../fwupd-tests*.deb
 	/etc/init.d/dbus start
 	gnome-desktop-testing-runner fwupd
+	apt purge -y fwupd-tests
 fi
+
+#test the packages remove
+apt purge -y fwupd \
+	     fwupd-doc \
+	     fwupd-dbgsym \
+	     gir1.2-fwupd-1.0 \
+	     libdfu1 \
+	     libdfu1-dbgsym \
+	     libdfu-dev \
+	     libfwupd1 \
+	     libfwupd1-dbgsym \
+	     libfwupd-dev

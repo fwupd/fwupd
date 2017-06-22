@@ -1,0 +1,6 @@
+#!/bin/sh
+if [ "$1" = remove -o "$1" = purge ]; then
+	dpkg-divert --package fwupd-tests --remove --rename \
+                --divert /usr/share/dbus-1/system-services/org.freedesktop.fwupd.service.original \
+                         /usr/share/dbus-1/system-services/org.freedesktop.fwupd.service
+fi

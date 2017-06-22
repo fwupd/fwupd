@@ -1,2 +1,3 @@
 usr/share/installed-tests/*
 usr/lib/*/fwupd-plugins-2/libfu_plugin_test.so
+usr/share/dbus-1/system-services/org.freedesktop.fwupd.service
