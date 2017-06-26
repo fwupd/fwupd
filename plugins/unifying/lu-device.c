@@ -712,6 +712,12 @@ gboolean
 lu_device_probe (LuDevice *device, GError **error)
 {
 	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (device);
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+
+	/* clear the feature map (leaving only the root) */
+	g_ptr_array_set_size (priv->feature_index, 1);
+
+	/* probe the hardware */
 	if (klass->probe != NULL)
 		return klass->probe (device, error);
 	return TRUE;
