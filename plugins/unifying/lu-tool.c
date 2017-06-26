@@ -232,12 +232,6 @@ lu_tool_info_device (FuLuToolPrivate *priv, LuDevice *device, GError **error)
 	GPtrArray *guids;
 	g_autoptr(GError) error_local = NULL;
 
-	/* open */
-	if (!lu_device_open (device, &error_local)) {
-		g_print ("Error:          Failed to open: %s\n",
-			 error_local->message);
-	}
-
 	/* show on console */
 	g_print ("Type:           %s\n",
 		 lu_device_kind_to_string (lu_device_get_kind (device)));
@@ -283,8 +277,8 @@ lu_tool_info_device (FuLuToolPrivate *priv, LuDevice *device, GError **error)
 		g_print ("GUID:           %s\n", guid);
 	}
 
-	/* close device */
-	return lu_device_close (device, error);
+	/* do not need to close device */
+	return TRUE;
 }
 
 static gboolean
@@ -397,8 +391,6 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 	}
 	if (device == NULL)
 		return FALSE;
-	if (!lu_device_open (device, error))
-		return FALSE;
 
 	/* do we need to go into bootloader mode */
 	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH)) {
@@ -446,8 +438,6 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 	/* detach back into runtime */
 	if (!lu_device_attach (device, error))
 		return FALSE;
-	if (!lu_device_close (device, error))
-		return FALSE;
 
 	return TRUE;
 }
@@ -465,11 +455,7 @@ lu_tool_attach (FuLuToolPrivate *priv, gchar **values, GError **error)
 	}
 	if (device == NULL)
 		return FALSE;
-	if (!lu_device_open (device, error))
-		return FALSE;
 	if (!lu_device_attach (device, error))
-		return FALSE;
-	if (!lu_device_close (device, error))
 		return FALSE;
 	return TRUE;
 }
@@ -477,9 +463,12 @@ lu_tool_attach (FuLuToolPrivate *priv, gchar **values, GError **error)
 static void
 lu_tool_device_added_cb (LuContext* ctx, LuDevice *device, FuLuToolPrivate *priv)
 {
+	g_autoptr(GError) error = NULL;
 	g_print ("ADDED\tLogitech Unifying device %s {%p} [%s]\n",
 		 lu_device_kind_to_string (lu_device_get_kind (device)),
 		 device, lu_device_get_platform_id (device));
+	if (!lu_tool_info_device (priv, device, &error))
+		g_print ("Failed to open: %s\n", error->message);
 }
 
 static void
@@ -515,11 +504,7 @@ lu_tool_detach (FuLuToolPrivate *priv, gchar **values, GError **error)
 	}
 	if (device == NULL)
 		return FALSE;
-	if (!lu_device_open (device, error))
-		return FALSE;
 	if (!lu_device_detach (device, error))
-		return FALSE;
-	if (!lu_device_close (device, error))
 		return FALSE;
 	return TRUE;
 }

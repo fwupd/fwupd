@@ -833,6 +833,16 @@ lu_device_poll (LuDevice *device, GError **error)
 	return TRUE;
 }
 
+/**
+ * lu_device_close:
+ * @device: A #LuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Closes the device. If at all unsure about closing a device, don't. The device
+ * will be automatically closed when the last reference to it is dropped.
+ *
+ * Returns: %TRUE for success
+ **/
 gboolean
 lu_device_close (LuDevice *device, GError **error)
 {
@@ -1082,6 +1092,11 @@ lu_device_finalize (GObject *object)
 {
 	LuDevice *device = LU_DEVICE (object);
 	LuDevicePrivate *priv = GET_PRIVATE (device);
+	g_autoptr(GError) error = NULL;
+
+	/* autoclose */
+	if (!lu_device_close (device, &error))
+		g_debug ("failed to close: %s", error->message);
 
 	if (priv->usb_device != NULL)
 		g_object_unref (priv->usb_device);

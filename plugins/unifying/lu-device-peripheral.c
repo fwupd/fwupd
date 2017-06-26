@@ -192,12 +192,20 @@ lu_device_peripheral_ping (LuDevice *device, GError **error)
 		if (g_error_matches (error_local,
 				     G_IO_ERROR,
 				     G_IO_ERROR_HOST_UNREACHABLE)) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_HOST_UNREACHABLE,
+				     "device %s is unreachable: %s",
+				     lu_device_get_product (device),
+				     error_local->message);
 			lu_device_remove_flag (device, LU_DEVICE_FLAG_ACTIVE);
+			return FALSE;
 		}
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
-			     "failed to ping device: %s",
+			     "failed to ping %s: %s",
+			     lu_device_get_product (device),
 			     error_local->message);
 		return FALSE;
 	}

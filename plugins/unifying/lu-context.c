@@ -174,11 +174,24 @@ static void
 lu_context_add_device (LuContext *ctx, LuDevice *device)
 {
 	GUsbContextReplugHelper *replug_helper;
+	g_autoptr(GError) error = NULL;
 
 	g_return_if_fail (LU_IS_CONTEXT (ctx));
 	g_return_if_fail (LU_IS_DEVICE (device));
 
 	g_debug ("device %s added", lu_device_get_platform_id (device));
+
+	/* try to open */
+	if (!lu_device_open (device, &error)) {
+		if (g_error_matches (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_HOST_UNREACHABLE)) {
+			g_debug ("could not open: %s", error->message);
+		} else {
+			g_warning ("failed to open: %s", error->message);
+		}
+		return;
+	}
 
 	/* emit */
 	g_ptr_array_add (ctx->devices, g_object_ref (device));
@@ -350,6 +363,10 @@ lu_context_wait_for_replug (LuContext *ctx,
 
 	g_return_val_if_fail (LU_IS_CONTEXT (ctx), FALSE);
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
+
+	/* enforce the device is closed */
+	if (!lu_device_close (device, error))
+		return FALSE;
 
 	/* create a helper */
 	replug_helper = g_new0 (GUsbContextReplugHelper, 1);
