@@ -202,14 +202,8 @@ lu_device_peripheral_ping (LuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* not sure why this isn't set */
-	if (msg->data[0] != 0x02) {
-		g_debug ("HID++ version %u implausible, using 2.0",
-			 msg->data[0]);
-		lu_device_set_hidpp_version (device, 0x02);
-	} else {
-		lu_device_set_hidpp_version (device, msg->data[0]);
-	}
+	/* FIXME: minor is in msg->data[1] */
+	lu_device_set_hidpp_version (device, msg->data[0]);
 
 	/* success */
 	return TRUE;
