@@ -109,6 +109,11 @@ if __name__ == '__main__':
     test.add_file('4511b9b0d123bdbe8a2007233318ab215a59dfe6-Logitech-Unifying-RQR24.05_B0029.cab', 'RQR24.05_B0029')
     tests.append(test)
 
+    # Logitech K780 Keyboard
+    test = Test('LogitechMPK01', '3932ba15-2bbe-5bbb-817e-6c74e7088509')
+    test.add_file('Logitech-K780-MPK01.03_B0024.cab', 'MPK01.03_B0024')
+    tests.append(test)
+
     # run each test
     rc = 0
     for test in tests:
