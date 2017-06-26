@@ -324,9 +324,17 @@ lu_device_hidpp_transfer (LuDevice *device, LuDeviceHidppMsg *msg, GError **erro
 		g_debug ("ignoring message with report 0x%02x", msg_tmp->report_id);
 	};
 
+	/* kernel not doing it's thing */
+	if (msg_tmp->device_id == HIDPP_DEVICE_ID_UNSET) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "device ID not set");
+		return FALSE;
+	}
+
 	/* if the HID++ ID is unset, grab it from the reply */
-	if (priv->hidpp_id == HIDPP_DEVICE_ID_UNSET &&
-	    msg_tmp->device_id != HIDPP_DEVICE_ID_UNSET) {
+	if (priv->hidpp_id == HIDPP_DEVICE_ID_UNSET) {
 		priv->hidpp_id = msg_tmp->device_id;
 		g_debug ("HID++ ID now %02x", priv->hidpp_id);
 	}
@@ -429,7 +437,8 @@ lu_device_hidpp_transfer (LuDevice *device, LuDeviceHidppMsg *msg, GError **erro
 				     "invalid report_id response");
 		return FALSE;
 	}
-	if (0&&msg->device_id != msg_tmp->device_id) {
+	if (msg->device_id != HIDPP_DEVICE_ID_UNSET &&
+	    msg->device_id != msg_tmp->device_id) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
