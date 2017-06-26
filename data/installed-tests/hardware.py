@@ -32,6 +32,7 @@ def _get_cache_file(fn):
         url = 'https://secure-lvfs.rhcloud.com/downloads/' +  fn
         print("Downloading", url)
         r = requests.get(url)
+        r.raise_for_status()
         f = open(cachefn, 'wb')
         f.write(r.content)
         f.close()
@@ -114,5 +115,8 @@ if __name__ == '__main__':
         try:
             test.run()
         except GLib.Error as e:
+            print(str(e))
+            rc = 1
+        except requests.exceptions.HTTPError as e:
             print(str(e))
             rc = 1
