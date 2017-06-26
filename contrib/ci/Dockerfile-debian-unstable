@@ -8,6 +8,7 @@ RUN apt-get install -yq --no-install-recommends \
 	fontconfig \
 	fontconfig-config \
 	fonts-dejavu \
+	git \
 	gcab \
 	gettext \
 	gir1.2-appstreamglib-1.0 \

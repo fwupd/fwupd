@@ -9,6 +9,7 @@ RUN apt-get install -yq --no-install-recommends \
 	fontconfig-config \
 	fonts-dejavu \
 	gir1.2-pango-1.0 \
+	git \
 	gcab \
 	gettext \
 	gobject-introspection \
