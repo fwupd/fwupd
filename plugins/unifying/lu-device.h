@@ -119,6 +119,7 @@ LuDeviceHidppMsg *lu_device_hidpp_new		(void);
 LuDeviceKind	 lu_device_kind_from_string	(const gchar	*kind);
 const gchar	*lu_device_kind_to_string	(LuDeviceKind	 kind);
 
+gchar		*lu_device_to_string		(LuDevice		*device);
 LuDeviceKind	 lu_device_get_kind		(LuDevice		*device);
 guint8		 lu_device_get_hidpp_id		(LuDevice		*device);
 void		 lu_device_set_hidpp_id		(LuDevice		*device,

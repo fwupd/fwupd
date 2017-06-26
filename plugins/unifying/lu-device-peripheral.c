@@ -110,58 +110,62 @@ lu_device_peripheral_fetch_firmware_info (LuDevice *device, GError **error)
 static gboolean
 lu_device_peripheral_fetch_battery_level (LuDevice *device, GError **error)
 {
-	guint8 idx;
-	g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
-
 	/* try using HID++2.0 */
-	idx = lu_device_hidpp_feature_get_idx (device, HIDPP_FEATURE_BATTERY_LEVEL_STATUS);
-	if (idx != 0x00) {
-		msg->report_id = HIDPP_REPORT_ID_SHORT;
-		msg->device_id = lu_device_get_hidpp_id (device);
-		msg->sub_id = idx;
-		msg->function_id = 0x00; /* GetBatteryLevelStatus */
-		if (!lu_device_hidpp_transfer (device, msg, error)) {
-			g_prefix_error (error, "failed to get battery info: ");
-			return FALSE;
+	if (lu_device_get_hidpp_version (device) >= 2) {
+		guint8 idx;
+		idx = lu_device_hidpp_feature_get_idx (device, HIDPP_FEATURE_BATTERY_LEVEL_STATUS);
+		if (idx != 0x00) {
+			g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
+			msg->report_id = HIDPP_REPORT_ID_SHORT;
+			msg->device_id = lu_device_get_hidpp_id (device);
+			msg->sub_id = idx;
+			msg->function_id = 0x00; /* GetBatteryLevelStatus */
+			if (!lu_device_hidpp_transfer (device, msg, error)) {
+				g_prefix_error (error, "failed to get battery info: ");
+				return FALSE;
+			}
+			if (msg->data[0] != 0x00)
+				lu_device_set_battery_level (device, msg->data[0]);
+			return TRUE;
 		}
-		if (msg->data[0] != 0x00)
-			lu_device_set_battery_level (device, msg->data[0]);
-		return TRUE;
 	}
 
 	/* try HID++1.0 battery mileage */
-	msg->report_id = HIDPP_REPORT_ID_SHORT;
-	msg->device_id = lu_device_get_hidpp_id (device);
-	msg->sub_id = HIDPP_SUBID_GET_REGISTER;
-	msg->function_id = HIDPP_REGISTER_BATTERY_MILEAGE;
-	if (lu_device_hidpp_transfer (device, msg, NULL)) {
-		if (msg->data[0] != 0x00)
-			lu_device_set_battery_level (device, msg->data[0]);
-		return TRUE;
-	}
-
-	/* try HID++1.0 battery status instead */
-	msg->function_id = HIDPP_REGISTER_BATTERY_STATUS;
-	if (lu_device_hidpp_transfer (device, msg, NULL)) {
-		switch (msg->data[0]) {
-		case 1: /* 0 - 10 */
-			lu_device_set_battery_level (device, 5);
-			break;
-		case 3: /* 11 - 30 */
-			lu_device_set_battery_level (device, 20);
-			break;
-		case 5: /* 31 - 80 */
-			lu_device_set_battery_level (device, 55);
-			break;
-		case 7: /* 81 - 100 */
-			lu_device_set_battery_level (device, 90);
-			break;
-		default:
-			g_warning ("unknown battery percentage: 0x%02x",
-				   msg->data[0]);
-			break;
+	if (lu_device_get_hidpp_version (device) == 1) {
+		g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
+		msg->report_id = HIDPP_REPORT_ID_SHORT;
+		msg->device_id = lu_device_get_hidpp_id (device);
+		msg->sub_id = HIDPP_SUBID_GET_REGISTER;
+		msg->function_id = HIDPP_REGISTER_BATTERY_MILEAGE;
+		if (lu_device_hidpp_transfer (device, msg, NULL)) {
+			if (msg->data[0] != 0x00)
+				lu_device_set_battery_level (device, msg->data[0]);
+			return TRUE;
 		}
-		return TRUE;
+
+		/* try HID++1.0 battery status instead */
+		msg->function_id = HIDPP_REGISTER_BATTERY_STATUS;
+		if (lu_device_hidpp_transfer (device, msg, NULL)) {
+			switch (msg->data[0]) {
+			case 1: /* 0 - 10 */
+				lu_device_set_battery_level (device, 5);
+				break;
+			case 3: /* 11 - 30 */
+				lu_device_set_battery_level (device, 20);
+				break;
+			case 5: /* 31 - 80 */
+				lu_device_set_battery_level (device, 55);
+				break;
+			case 7: /* 81 - 100 */
+				lu_device_set_battery_level (device, 90);
+				break;
+			default:
+				g_warning ("unknown battery percentage: 0x%02x",
+					   msg->data[0]);
+				break;
+			}
+			return TRUE;
+		}
 	}
 
 	/* not an error, the device just doesn't support any of the methods */
@@ -240,6 +244,12 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 						     map_features[i],
 						     &error_local)) {
 			g_debug ("%s", error_local->message);
+			if (g_error_matches (error_local,
+					     G_IO_ERROR,
+					     G_IO_ERROR_TIMED_OUT)) {
+				/* timed out, so not trying any more */
+				break;
+			}
 		}
 	}
 
@@ -264,7 +274,7 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 		msg->report_id = HIDPP_REPORT_ID_SHORT;
 		msg->device_id = lu_device_get_hidpp_id (device);
 		msg->sub_id = idx;
-		msg->function_id = 0x01 << 4; /* getDfuStatus */
+		msg->function_id = 0x00 << 4; /* getDfuStatus */
 		if (!lu_device_hidpp_transfer (device, msg, error)) {
 			g_prefix_error (error, "failed to get DFU status: ");
 			return FALSE;
