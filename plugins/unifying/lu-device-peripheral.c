@@ -298,6 +298,7 @@ lu_device_peripheral_detach (LuDevice *device, GError **error)
 		msg->data[4] = 'D';
 		msg->data[5] = 'F';
 		msg->data[6] = 'U';
+		msg->flags = LU_DEVICE_HIDPP_MSG_FLAG_IGNORE_SWID;
 		if (!lu_device_hidpp_transfer (device, msg, error)) {
 			g_prefix_error (error, "failed to put device into DFU mode: ");
 			return FALSE;
@@ -320,6 +321,7 @@ lu_device_peripheral_detach (LuDevice *device, GError **error)
 		msg->data[4] = 'D';
 		msg->data[5] = 'F';
 		msg->data[6] = 'U';
+		msg->flags = LU_DEVICE_HIDPP_MSG_FLAG_IGNORE_SWID;
 		if (!lu_device_hidpp_transfer (device, msg, error)) {
 			g_prefix_error (error, "failed to put device into DFU mode: ");
 			return FALSE;
@@ -623,6 +625,7 @@ lu_device_peripheral_attach (LuDevice *device, GError **error)
 	msg->sub_id = idx;
 	msg->function_id = 0x05 << 4; /* restart */
 	msg->data[0] = self->cached_fw_entity; /* fwEntity */
+	msg->flags = LU_DEVICE_HIDPP_MSG_FLAG_IGNORE_SWID;
 	if (!lu_device_hidpp_transfer (device, msg, error)) {
 		g_prefix_error (error, "failed to restart device: ");
 		return FALSE;

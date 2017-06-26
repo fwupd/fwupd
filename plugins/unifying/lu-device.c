@@ -210,6 +210,10 @@ lu_device_hidpp_send (LuDevice *device,
 	LuDevicePrivate *priv = GET_PRIVATE (device);
 	gsize len = lu_device_hidpp_msg_length (msg);
 
+	/* only for HID++2.0 */
+	if (lu_device_get_hidpp_version (device) >= 2)
+		msg->function_id |= FU_DEVICE_UNIFYING_SW_ID;
+
 	lu_device_hidpp_dump (device, "host->device", (guint8 *) msg, len);
 
 	/* USB */
@@ -300,6 +304,18 @@ lu_device_hidpp_receive (LuDevice *device,
 		return FALSE;
 	}
 
+	/* this is likely an errata somewhere */
+	if (lu_device_get_kind (device) == LU_DEVICE_KIND_PERIPHERAL) {
+		const guint8 bytes[] = { 0x11, 0x02, 0xff, 0x11, 0x17 };
+		if (memcmp (msg, bytes, 5) == 0) {
+			guint8 *buf = (guint8 *) msg;
+			g_debug ("FIXME: using 0xff errata");
+			for (guint i = 2; i < read_size; i++)
+				buf[i] = buf[i + 1];
+			lu_device_hidpp_dump (device, "device->host", buf, read_size);
+		}
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -319,6 +335,18 @@ lu_device_hidpp_transfer (LuDevice *device, LuDeviceHidppMsg *msg, GError **erro
 	while (1) {
 		if (!lu_device_hidpp_receive (device, msg_tmp, timeout, error))
 			return FALSE;
+
+		/* not us */
+		if (lu_device_get_hidpp_version (device) >= 2 &&
+		    (msg->flags & LU_DEVICE_HIDPP_MSG_FLAG_IGNORE_SWID) == 0) {
+			if ((msg_tmp->function_id & 0x0f) != FU_DEVICE_UNIFYING_SW_ID) {
+				g_debug ("ignoring reply with SwId 0x%02i, expected 0x%02i",
+					 msg_tmp->function_id & 0x0f,
+					 FU_DEVICE_UNIFYING_SW_ID);
+				continue;
+			}
+		}
+
 		if (msg_tmp->report_id == 0x10 || msg_tmp->report_id == 0x11)
 			break;
 		g_debug ("ignoring message with report 0x%02x", msg_tmp->report_id);
@@ -443,14 +471,6 @@ lu_device_hidpp_transfer (LuDevice *device, LuDeviceHidppMsg *msg, GError **erro
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
 				     "invalid device_id response");
-		return FALSE;
-	}
-	if (msg->sub_id == HIDPP_SUBID_SET_REGISTER &&
-	    msg_tmp->sub_id != HIDPP_SUBID_SET_REGISTER) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "invalid sub_id response");
 		return FALSE;
 	}
 

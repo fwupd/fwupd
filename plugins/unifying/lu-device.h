@@ -67,6 +67,9 @@ struct _LuDeviceClass
 /* some USB hubs take a looong time to re-connect the device */
 #define FU_DEVICE_TIMEOUT_REPLUG		10000 /* ms */
 
+/* this is specific to fwupd */
+#define FU_DEVICE_UNIFYING_SW_ID		0x07
+
 typedef enum {
 	LU_DEVICE_KIND_UNKNOWN,
 	LU_DEVICE_KIND_RUNTIME,
@@ -91,12 +94,21 @@ typedef enum {
 	LU_DEVICE_FLAG_LAST
 } LuDeviceFlags;
 
+typedef enum {
+	LU_DEVICE_HIDPP_MSG_FLAG_NONE,
+	LU_DEVICE_HIDPP_MSG_FLAG_IGNORE_SWID	= 1 << 0,
+	/*< private >*/
+	LU_DEVICE_HIDPP_MSG_FLAG_LAST
+} LuDeviceHidppMsgFlags;
+
 typedef struct {
 	guint8	 report_id;
 	guint8	 device_id;
 	guint8	 sub_id;
 	guint8	 function_id; /* funcId:software_id */
 	guint8	 data[128];
+	/* not included in the packet sent to the hardware */
+	guint32	 flags;
 } LuDeviceHidppMsg;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(LuDeviceHidppMsg, g_free);
