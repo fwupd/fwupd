@@ -1,0 +1,39 @@
+# Maintainer: Bruno Pagani (a.k.a. ArchangeGabriel) <archange@archlinux.org>
+# Contributor: Mirco Tischler <mt-ml at gmx dot de>
+
+pkgname=fwupd
+pkgver=0.9.4.r53.ge90542f
+pkgrel=1
+pkgdesc='A simple daemon to allow session software to update firmware'
+arch=('i686' 'x86_64')
+url='https://github.com/hughsie/fwupd'
+license=('GPL2')
+depends=('appstream-glib' 'fwupdate' 'colord')
+makedepends=('meson' 'valgrind' 'docbook-utils' 'docbook-sgml' 'perl-sgmls'
+             'gobject-introspection' 'gtk-doc' 'python-pillow' 'python-cairo'
+             'ttf-dejavu' 'adobe-source-han-sans-cn-fonts' 'python-gobject' 'git')
+
+pkgver() {
+    cd ${pkgname}
+    git describe | sed 's/-/.r/;s/-/./'
+}
+
+build() {
+    cd ${pkgname}
+    meson --prefix=/usr \
+        --sysconfdir=/etc \
+        --localstatedir=/var \
+        --libexecdir=/usr/lib \
+        --buildtype=plain \
+        ../build
+
+    ninja -v -C ../build
+}
+
+check() {
+    ninja -C build test
+}
+
+package() {
+    DESTDIR="${pkgdir}" ninja -C build install
+}

@@ -1,7 +1,7 @@
 Distribution packages
 =====================
-The relevant packaging necessary to generate *RPM* and *DEB* distribution packages is contained here.
-It is used regularly for continuous integration using [Travis CI](http://travis-ci.org). The generated packages can be used on a distribution such as Fedora, Debian or Ubuntu.
+The relevant packaging necessary to generate *RPM*, *DEB* and *PKG* distribution packages is contained here.
+It is used regularly for continuous integration using [Travis CI](http://travis-ci.org). The generated packages can be used on a distribution such as Fedora, Debian, Ubuntu or Arch Linux.
 
 The build can be performed using Linux containers with [Docker](www.docker.com).
 
@@ -34,6 +34,19 @@ DEBs will be made available in your working directory when complete.
 
 To use the packages, you may need to enable the experimental repository for dependency resolution.
 Additional information is available here: https://wiki.debian.org/DebianExperimental
+
+## PKG packages
+A Dockerfile is available for Arch Linux.
+
+To prepare the Docker container run this command:
+
+`docker build -t fwupd-arch -f contrib/ci/Dockerfile-arch .`
+
+To build the PKGs run this command (from the root of your git checkout):
+
+```docker run -t -v `pwd`:/build fwupd-arch ./contrib/ci/build_and_install_pkgs.sh```
+
+PKGs will be made available in your working directory when complete.
 
 ## Additional packages
 Submissions for generating additional packages for other distribution mechanisms are also welcome.  
