@@ -822,6 +822,10 @@ lu_device_close (LuDevice *device, GError **error)
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* not open */
+	if (!lu_device_has_flag (device, LU_DEVICE_FLAG_IS_OPEN))
+		return TRUE;
+
 	/* subclassed */
 	g_debug ("closing device");
 	if (klass->close != NULL) {
