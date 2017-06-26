@@ -28,11 +28,6 @@ RUN pacman -S --noconfirm \
               valgrind
 # CI dep
 RUN pacman -S --noconfirm git
-# add an user to build the package with
-RUN useradd -s /bin/bash build
-RUN echo 'build ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 # prepare the build environment
 RUN mkdir /build
-RUN chown build /build
-USER build
 WORKDIR /build
