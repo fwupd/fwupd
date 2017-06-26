@@ -227,6 +227,10 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 		HIDPP_FEATURE_DFU,
 		HIDPP_FEATURE_ROOT };
 
+	/* ping device to get HID++ version */
+	if (!lu_device_peripheral_ping (device, error))
+		return FALSE;
+
 	/* map some *optional* HID++2.0 features we might use */
 	for (guint i = 0; map_features[i] != HIDPP_FEATURE_ROOT; i++) {
 		g_autoptr(GError) error_local = NULL;
@@ -236,10 +240,6 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 			g_debug ("%s", error_local->message);
 		}
 	}
-
-	/* ping device to get HID++ version */
-	if (!lu_device_peripheral_ping (device, error))
-		return FALSE;
 
 	/* get the firmware information */
 	if (!lu_device_peripheral_fetch_firmware_info (device, error))
