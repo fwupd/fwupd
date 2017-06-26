@@ -406,7 +406,7 @@ lu_context_poll_cb (gpointer user_data)
 
 	/* do not poll when we're waiting for device replug */
 	if (g_hash_table_size (ctx->hash_replug) > 0) {
-		g_warning ("NOT POLLING");
+		g_debug ("not polling device as replug in process");
 		return TRUE;
 	}
 
