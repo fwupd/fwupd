@@ -296,14 +296,13 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 	}
 
 	/* is peripheral */
-	val = g_udev_device_get_property (udev_parent, "HID_NAME");
-	g_debug ("%s not a matching pid: %04x", val, pid);
 	platform_id = g_udev_device_get_sysfs_path (udev_device);
 	device = g_object_new (LU_TYPE_DEVICE_PERIPHERAL,
 			       "kind", LU_DEVICE_KIND_PERIPHERAL,
 			       "platform-id", platform_id,
 			       "udev-device", udev_device,
 			       NULL);
+	val = g_udev_device_get_property (udev_parent, "HID_NAME");
 	if (val != NULL) {
 		if (g_str_has_prefix (val, "Logitech "))
 			val += 9;
