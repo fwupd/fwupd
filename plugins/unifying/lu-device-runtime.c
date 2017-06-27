@@ -178,6 +178,7 @@ lu_device_runtime_detach (LuDevice *device, GError **error)
 	msg->data[0] = 'I';
 	msg->data[1] = 'C';
 	msg->data[2] = 'P';
+	msg->flags = LU_DEVICE_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
 	if (!lu_device_hidpp_send (device, msg, LU_DEVICE_TIMEOUT_MS, error)) {
 		g_prefix_error (error, "failed to detach to bootloader: ");
 		return FALSE;

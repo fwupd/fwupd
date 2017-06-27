@@ -324,8 +324,12 @@ gboolean
 lu_device_hidpp_transfer (LuDevice *device, LuDeviceHidppMsg *msg, GError **error)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
-	const guint timeout = LU_DEVICE_TIMEOUT_MS;
+	guint timeout = LU_DEVICE_TIMEOUT_MS;
 	g_autoptr(LuDeviceHidppMsg) msg_tmp = lu_device_hidpp_new ();
+
+	/* increase timeout for some operations */
+	if (msg->flags & LU_DEVICE_HIDPP_MSG_FLAG_LONGER_TIMEOUT)
+		timeout *= 5;
 
 	/* send */
 	if (!lu_device_hidpp_send (device, msg, timeout, error))

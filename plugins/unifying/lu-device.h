@@ -97,6 +97,7 @@ typedef enum {
 typedef enum {
 	LU_DEVICE_HIDPP_MSG_FLAG_NONE,
 	LU_DEVICE_HIDPP_MSG_FLAG_IGNORE_SWID	= 1 << 0,
+	LU_DEVICE_HIDPP_MSG_FLAG_LONGER_TIMEOUT	= 1 << 1,
 	/*< private >*/
 	LU_DEVICE_HIDPP_MSG_FLAG_LAST
 } LuDeviceHidppMsgFlags;
