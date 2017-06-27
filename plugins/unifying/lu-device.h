@@ -101,7 +101,7 @@ typedef enum {
 	LU_DEVICE_HIDPP_MSG_FLAG_LAST
 } LuDeviceHidppMsgFlags;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	guint8	 report_id;
 	guint8	 device_id;
 	guint8	 sub_id;
