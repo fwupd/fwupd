@@ -58,6 +58,7 @@ lu_device_peripheral_fetch_firmware_info (LuDevice *device, GError **error)
 		return FALSE;
 	}
 	entity_count = msg->data[0];
+	g_debug ("firmware entity count is %u", entity_count);
 
 	/* get firmware, bootloader, hardware versions */
 	for (guint8 i = 0; i < entity_count; i++) {
@@ -100,6 +101,8 @@ lu_device_peripheral_fetch_firmware_info (LuDevice *device, GError **error)
 			self->cached_fw_entity = i;
 		} else if (msg->data[0] == 1) {
 			lu_device_set_version_bl (device, version);
+		} else if (msg->data[0] == 2) {
+			lu_device_set_version_hw (device, version);
 		}
 	}
 

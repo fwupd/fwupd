@@ -43,6 +43,7 @@ typedef struct
 	gchar			*vendor;
 	gchar			*version_bl;
 	gchar			*version_fw;
+	gchar			*version_hw;
 	GPtrArray		*guids;
 	LuDeviceFlags		 flags;
 	guint8			 hidpp_id;
@@ -184,6 +185,8 @@ lu_device_to_string (LuDevice *device)
 		g_string_append_printf (str, "version-bootloader:\t%s\n", priv->version_bl);
 	if (priv->version_fw != NULL)
 		g_string_append_printf (str, "version-firmware:\t%s\n", priv->version_fw);
+	if (priv->version_hw != NULL)
+		g_string_append_printf (str, "version-hardware:\t%s\n", priv->version_hw);
 	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid = g_ptr_array_index (priv->guids, i);
 		g_string_append_printf (str, "guid:\t\t\t%s\n", guid);
@@ -819,6 +822,21 @@ lu_device_set_version_fw (LuDevice *device, const gchar *version_fw)
 	priv->version_fw = g_strdup (version_fw);
 }
 
+const gchar *
+lu_device_get_version_hw (LuDevice *device)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	return priv->version_hw;
+}
+
+void
+lu_device_set_version_hw (LuDevice *device, const gchar *version_hw)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	g_free (priv->version_hw);
+	priv->version_hw = g_strdup (version_hw);
+}
+
 GPtrArray *
 lu_device_get_guids (LuDevice *device)
 {
@@ -1293,6 +1311,7 @@ lu_device_finalize (GObject *object)
 	g_free (priv->product);
 	g_free (priv->vendor);
 	g_free (priv->version_fw);
+	g_free (priv->version_hw);
 	g_free (priv->version_bl);
 
 	G_OBJECT_CLASS (lu_device_parent_class)->finalize (object);
