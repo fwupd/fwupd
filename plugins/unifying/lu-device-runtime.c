@@ -159,7 +159,7 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 	}
 
 	/* this only exists with the original HID++1.0 version */
-	lu_device_set_hidpp_version (device, 1);
+	lu_device_set_hidpp_version (device, 1.f);
 
 	/* we can flash this */
 	lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);

@@ -111,7 +111,7 @@ static gboolean
 lu_device_peripheral_fetch_battery_level (LuDevice *device, GError **error)
 {
 	/* try using HID++2.0 */
-	if (lu_device_get_hidpp_version (device) >= 2) {
+	if (lu_device_get_hidpp_version (device) >= 2.f) {
 		guint8 idx;
 		idx = lu_device_hidpp_feature_get_idx (device, HIDPP_FEATURE_BATTERY_LEVEL_STATUS);
 		if (idx != 0x00) {
@@ -131,7 +131,7 @@ lu_device_peripheral_fetch_battery_level (LuDevice *device, GError **error)
 	}
 
 	/* try HID++1.0 battery mileage */
-	if (lu_device_get_hidpp_version (device) == 1) {
+	if (lu_device_get_hidpp_version (device) == 1.f) {
 		g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
 		msg->report_id = HIDPP_REPORT_ID_SHORT;
 		msg->device_id = lu_device_get_hidpp_id (device);
@@ -175,6 +175,7 @@ lu_device_peripheral_fetch_battery_level (LuDevice *device, GError **error)
 static gboolean
 lu_device_peripheral_ping (LuDevice *device, GError **error)
 {
+	gdouble version;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
 
@@ -190,7 +191,7 @@ lu_device_peripheral_ping (LuDevice *device, GError **error)
 		if (g_error_matches (error_local,
 				     G_IO_ERROR,
 				     G_IO_ERROR_NOT_SUPPORTED)) {
-			lu_device_set_hidpp_version (device, 0x01);
+			lu_device_set_hidpp_version (device, 1.f);
 			return TRUE;
 		}
 		if (g_error_matches (error_local,
@@ -214,8 +215,9 @@ lu_device_peripheral_ping (LuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* FIXME: minor is in msg->data[1] */
-	lu_device_set_hidpp_version (device, msg->data[0]);
+	/* format version in BCD format */
+	version = (gdouble) msg->data[0] + ((gdouble) msg->data[1]) / 100.f;
+	lu_device_set_hidpp_version (device, version);
 
 	/* success */
 	return TRUE;

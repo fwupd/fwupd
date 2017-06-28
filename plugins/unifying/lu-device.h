@@ -127,9 +127,9 @@ void		 lu_device_set_hidpp_id		(LuDevice		*device,
 guint8		 lu_device_get_battery_level	(LuDevice		*device);
 void		 lu_device_set_battery_level	(LuDevice		*device,
 						 guint8			 percentage);
-guint8		 lu_device_get_hidpp_version	(LuDevice		*device);
+gdouble		 lu_device_get_hidpp_version	(LuDevice		*device);
 void		 lu_device_set_hidpp_version	(LuDevice		*device,
-						 guint8			 hidpp_version);
+						 gdouble		 hidpp_version);
 const gchar	*lu_device_get_platform_id	(LuDevice		*device);
 void		 lu_device_set_platform_id	(LuDevice		*device,
 						 const gchar		*platform_id);

@@ -47,7 +47,7 @@ typedef struct
 	LuDeviceFlags		 flags;
 	guint8			 hidpp_id;
 	guint8			 battery_level;
-	guint8			 hidpp_version;
+	gdouble			 hidpp_version;
 	GPtrArray		*feature_index;
 } LuDevicePrivate;
 
@@ -167,7 +167,7 @@ lu_device_to_string (LuDevice *device)
 	g_string_append_printf (str, "type:\t\t\t%s\n", lu_device_kind_to_string (priv->kind));
 	flags_str = lu_device_flags_to_string (priv->flags);
 	g_string_append_printf (str, "flags:\t\t\t%s\n", flags_str);
-	g_string_append_printf (str, "hidpp-version:\t\t%u\n", priv->hidpp_version);
+	g_string_append_printf (str, "hidpp-version:\t\t%.2f\n", priv->hidpp_version);
 	if (priv->hidpp_id != HIDPP_DEVICE_ID_UNSET)
 		g_string_append_printf (str, "hidpp-id:\t\t0x%02x\n", (guint) priv->hidpp_id);
 	if (priv->udev_device_fd > 0)
@@ -279,7 +279,7 @@ lu_device_hidpp_send (LuDevice *device,
 	gsize len = lu_device_hidpp_msg_length (msg);
 
 	/* only for HID++2.0 */
-	if (lu_device_get_hidpp_version (device) >= 2)
+	if (lu_device_get_hidpp_version (device) >= 2.f)
 		msg->function_id |= FU_DEVICE_UNIFYING_SW_ID;
 
 	lu_device_hidpp_dump (device, "host->device", (guint8 *) msg, len);
@@ -616,7 +616,7 @@ lu_device_hidpp_transfer (LuDevice *device, LuDeviceHidppMsg *msg, GError **erro
 		 * connected to an HID++ 1.0 receiver, any feature index
 		 * corresponding to an HID++ 1.0 sub-identifier which could be
 		 * sent by the receiver, must be assigned to a dummy feature */
-		if (lu_device_get_hidpp_version (device) >= 2 &&
+		if (lu_device_get_hidpp_version (device) >= 2.f &&
 		    lu_device_hidpp_msg_is_hidpp_10 (msg_tmp)) {
 			g_debug ("ignoring HID++1.0 reply");
 			continue;
@@ -627,7 +627,7 @@ lu_device_hidpp_transfer (LuDevice *device, LuDeviceHidppMsg *msg, GError **erro
 			return FALSE;
 
 		/* not us */
-		if (lu_device_get_hidpp_version (device) >= 2 &&
+		if (lu_device_get_hidpp_version (device) >= 2.f &&
 		    (msg->flags & LU_DEVICE_HIDPP_MSG_FLAG_IGNORE_SWID) == 0) {
 			if (!lu_device_hidpp_msg_check_swid (msg, msg_tmp)) {
 				g_debug ("ignoring reply with SwId 0x%02i, expected 0x%02i",
@@ -730,7 +730,7 @@ lu_device_set_battery_level (LuDevice *device, guint8 percentage)
 	priv->battery_level = percentage;
 }
 
-guint8
+gdouble
 lu_device_get_hidpp_version (LuDevice *device)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
@@ -738,7 +738,7 @@ lu_device_get_hidpp_version (LuDevice *device)
 }
 
 void
-lu_device_set_hidpp_version (LuDevice *device, guint8 hidpp_version)
+lu_device_set_hidpp_version (LuDevice *device, gdouble hidpp_version)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
 	priv->hidpp_version = hidpp_version;
