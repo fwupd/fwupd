@@ -884,7 +884,7 @@ lu_device_probe (LuDevice *device, GError **error)
 	LuDevicePrivate *priv = GET_PRIVATE (device);
 
 	/* clear the feature map (leaving only the root) */
-	g_ptr_array_set_size (priv->feature_index, 1);
+	g_ptr_array_set_size (priv->feature_index, 0);
 
 	/* probe the hardware */
 	if (klass->probe != NULL)
@@ -961,6 +961,14 @@ lu_device_open (LuDevice *device, GError **error)
 	if (!lu_device_probe (device, error)) {
 		lu_device_close (device, NULL);
 		return FALSE;
+	}
+
+	/* add known root for HID++2.0 */
+	if (lu_device_get_hidpp_version (device) >= 2.f) {
+		LuDeviceHidppMap *map = g_new0 (LuDeviceHidppMap, 1);
+		map->idx = 0x00;
+		map->feature = HIDPP_FEATURE_ROOT;
+		g_ptr_array_add (priv->feature_index, map);
 	}
 
 	/* show the device */
@@ -1294,17 +1302,9 @@ static void
 lu_device_init (LuDevice *device)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
-	LuDeviceHidppMap *map;
-
 	priv->hidpp_id = HIDPP_DEVICE_ID_UNSET;
 	priv->guids = g_ptr_array_new_with_free_func (g_free);
 	priv->feature_index = g_ptr_array_new_with_free_func (g_free);
-
-	/* add known root */
-	map = g_new0 (LuDeviceHidppMap, 1);
-	map->idx = 0x00;
-	map->feature = HIDPP_FEATURE_ROOT;
-	g_ptr_array_add (priv->feature_index, map);
 }
 
 static void
