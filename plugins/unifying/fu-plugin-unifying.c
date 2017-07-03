@@ -123,6 +123,22 @@ fu_plugin_unifying_detach_cb (gpointer user_data)
 	return FALSE;
 }
 
+static gboolean
+fu_plugin_unifying_attach_cb (gpointer user_data)
+{
+	LuDevice *device = LU_DEVICE (user_data);
+	g_autoptr(GError) error = NULL;
+
+	/* ditch this device */
+	g_debug ("attaching");
+	if (!lu_device_attach (device, &error)) {
+		g_warning ("failed to detach: %s", error->message);
+		return FALSE;
+	}
+
+	return FALSE;
+}
+
 gboolean
 fu_plugin_update_online (FuPlugin *plugin,
 			 FuDevice *dev,
@@ -143,10 +159,13 @@ fu_plugin_update_online (FuPlugin *plugin,
 	/* switch to bootloader */
 	data->ignore_replug = TRUE;
 	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH)) {
-		if (!lu_device_detach (device, error))
-			return FALSE;
 		/* wait for device to come back */
 		if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
+			g_debug ("doing detach in idle");
+			g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+					 fu_plugin_unifying_detach_cb,
+					 g_object_ref (device),
+					 (GDestroyNotify) g_object_unref);
 			if (!lu_context_wait_for_replug (data->ctx,
 							 device,
 							 FU_DEVICE_TIMEOUT_REPLUG,
@@ -158,6 +177,10 @@ fu_plugin_update_online (FuPlugin *plugin,
 				return FALSE;
 			if (!lu_device_open (device, error))
 				return FALSE;
+		} else {
+			g_debug ("doing detach in main thread");
+			if (!lu_device_detach (device, error))
+				return FALSE;
 		}
 	}
 
@@ -168,23 +191,34 @@ fu_plugin_update_online (FuPlugin *plugin,
 				       error))
 		return FALSE;
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
-	if (!lu_device_attach (device, error))
-		return FALSE;
 
 	/* wait for it to appear back in runtime mode */
-	if (!lu_context_wait_for_replug (data->ctx,
-					 device,
-					 FU_DEVICE_TIMEOUT_REPLUG,
-					 error))
-		return FALSE;
-	g_object_unref (device);
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_ATTACH)) {
+		if (lu_device_has_flag (device, LU_DEVICE_FLAG_ATTACH_WILL_REPLUG)) {
+			g_debug ("doing attach in idle");
+			g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+					 fu_plugin_unifying_attach_cb,
+					 g_object_ref (device),
+					 (GDestroyNotify) g_object_unref);
+			if (!lu_context_wait_for_replug (data->ctx,
+							 device,
+							 FU_DEVICE_TIMEOUT_REPLUG,
+							 error))
+				return FALSE;
+			g_object_unref (device);
+			device = fu_plugin_unifying_get_device (plugin, dev, error);
+			if (device == NULL)
+				return FALSE;
+			if (!lu_device_open (device, error))
+				return FALSE;
+		} else {
+			g_debug ("doing attach in main thread");
+			if (!lu_device_attach (device, error))
+				return FALSE;
+		}
+	}
 
-	/* get the new device version */
-	device = fu_plugin_unifying_get_device (plugin, dev, error);
-	if (device == NULL)
-		return FALSE;
-	if (!lu_device_open (device, error))
-		return FALSE;
+	/* set new version */
 	fu_device_set_version (dev, lu_device_get_version_fw (device));
 
 	/* success */

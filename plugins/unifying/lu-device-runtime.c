@@ -39,7 +39,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 static gboolean
 lu_device_runtime_enable_notifications (LuDevice *device, GError **error)
 {
-	g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
+	g_autoptr(LuHidppMsg) msg = lu_hidpp_msg_new ();
 	msg->report_id = HIDPP_REPORT_ID_SHORT;
 	msg->device_id = lu_device_get_hidpp_id (device);
 	msg->sub_id = HIDPP_SUBID_SET_REGISTER;
@@ -110,7 +110,7 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 	/* read all 10 bytes of the version register */
 	memset (config, 0x00, sizeof (config));
 	for (guint i = 0x01; i < 0x05; i++) {
-		g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
+		g_autoptr(LuHidppMsg) msg = lu_hidpp_msg_new ();
 
 		/* workaround a bug in the 12.01 firmware, which fails with
 		 * INVALID_VALUE when reading MCU1_HW_VERSION */
@@ -173,7 +173,7 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 static gboolean
 lu_device_runtime_detach (LuDevice *device, GError **error)
 {
-	g_autoptr(LuDeviceHidppMsg) msg = lu_device_hidpp_new ();
+	g_autoptr(LuHidppMsg) msg = lu_hidpp_msg_new ();
 	msg->report_id = HIDPP_REPORT_ID_SHORT;
 	msg->device_id = lu_device_get_hidpp_id (device);
 	msg->sub_id = HIDPP_SUBID_SET_REGISTER;
@@ -181,10 +181,58 @@ lu_device_runtime_detach (LuDevice *device, GError **error)
 	msg->data[0] = 'I';
 	msg->data[1] = 'C';
 	msg->data[2] = 'P';
-	msg->flags = LU_DEVICE_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
+	msg->flags = LU_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
 	if (!lu_device_hidpp_send (device, msg, LU_DEVICE_TIMEOUT_MS, error)) {
 		g_prefix_error (error, "failed to detach to bootloader: ");
 		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+lu_device_runtime_poll (LuDevice *device, GError **error)
+{
+	const guint timeout = 1; /* ms */
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(LuHidppMsg) msg = lu_hidpp_msg_new ();
+
+	/* is there any pending data to read */
+	if (!lu_device_hidpp_receive (device, msg, timeout, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_IO_ERROR,
+				     G_IO_ERROR_TIMED_OUT)) {
+			return TRUE;
+		}
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "failed to get pending read: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* HID++1.0 error */
+	if (!lu_hidpp_msg_is_error (msg, error))
+		return FALSE;
+
+	/* unifying receiver notification */
+	if (msg->report_id == HIDPP_REPORT_ID_SHORT) {
+		switch (msg->sub_id) {
+		case HIDPP_SUBID_DEVICE_CONNECTION:
+		case HIDPP_SUBID_DEVICE_DISCONNECTION:
+		case HIDPP_SUBID_DEVICE_LOCKING_CHANGED:
+			g_debug ("device connection event, do something");
+			break;
+		case HIDPP_SUBID_LINK_QUALITY:
+			g_debug ("ignoring link quality message");
+			break;
+		case HIDPP_SUBID_ERROR_MSG:
+			g_debug ("ignoring link quality message");
+			break;
+		default:
+			g_warning ("unknown SubID %02x", msg->sub_id);
+			break;
+		}
 	}
 	return TRUE;
 }
@@ -194,6 +242,7 @@ lu_device_runtime_class_init (LuDeviceRuntimeClass *klass)
 {
 	LuDeviceClass *klass_device = LU_DEVICE_CLASS (klass);
 	klass_device->open = lu_device_runtime_open;
+	klass_device->poll = lu_device_runtime_poll;
 	klass_device->detach = lu_device_runtime_detach;
 }
 

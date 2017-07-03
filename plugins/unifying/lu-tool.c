@@ -373,11 +373,27 @@ lu_tool_attach (FuLuToolPrivate *priv, gchar **values, GError **error)
 		device = lu_context_find_by_platform_id (priv->ctx,
 							 values[0],
 							 error);
+		if (device == NULL)
+			return FALSE;
 	} else {
-		device = lu_get_default_device (priv, error);
+		GPtrArray *devices = NULL;
+		devices = lu_context_get_devices (priv->ctx);
+		for (guint i = 0; i < devices->len; i++) {
+			LuDevice *device_tmp = g_ptr_array_index (devices, i);
+			g_debug ("got %s", lu_device_kind_to_string (lu_device_get_kind (device_tmp)));
+			if (lu_device_has_flag (device_tmp, LU_DEVICE_FLAG_REQUIRES_ATTACH)) {
+				device = g_object_ref (device_tmp);
+				break;
+			}
+		}
+		if (device == NULL) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_FAILED,
+					     "No attachable device plugged in");
+			return FALSE;
+		}
 	}
-	if (device == NULL)
-		return FALSE;
 	if (!lu_device_attach (device, error))
 		return FALSE;
 	return TRUE;

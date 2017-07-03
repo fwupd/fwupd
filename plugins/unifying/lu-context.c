@@ -181,6 +181,14 @@ lu_context_add_device (LuContext *ctx, LuDevice *device)
 
 	g_debug ("device %s added", lu_device_get_platform_id (device));
 
+	/* HID++1.0 devices have to sleep to allow Solaar to talk to the device
+	 * first -- we can't use the SwID as this is a HID++2.0 feature */
+	if (ctx->done_coldplug &&
+	    lu_device_get_hidpp_version (device) <= 1.f) {
+		g_debug ("waiting for device to settle...");
+		g_usleep (G_USEC_PER_SEC);
+	}
+
 	/* try to open */
 	if (!lu_device_open (device, &error)) {
 		if (g_error_matches (error,
@@ -363,10 +371,6 @@ lu_context_wait_for_replug (LuContext *ctx,
 
 	g_return_val_if_fail (LU_IS_CONTEXT (ctx), FALSE);
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
-
-	/* enforce the device is closed */
-	if (!lu_device_close (device, error))
-		return FALSE;
 
 	/* create a helper */
 	replug_helper = g_new0 (GUsbContextReplugHelper, 1);
@@ -559,7 +563,9 @@ lu_context_usb_device_added_cb (GUsbContext *usb_ctx,
 		g_autoptr(LuDevice) device = NULL;
 		device = g_object_new (LU_TYPE_DEVICE_BOOTLOADER_NORDIC,
 				       "kind", LU_DEVICE_KIND_BOOTLOADER_NORDIC,
-				       "flags", LU_DEVICE_FLAG_ACTIVE,
+				       "flags", LU_DEVICE_FLAG_ACTIVE |
+						LU_DEVICE_FLAG_REQUIRES_ATTACH |
+						LU_DEVICE_FLAG_ATTACH_WILL_REPLUG,
 				       "hidpp-id", HIDPP_DEVICE_ID_RECEIVER,
 				       "usb-device", usb_device,
 				       NULL);
@@ -572,7 +578,9 @@ lu_context_usb_device_added_cb (GUsbContext *usb_ctx,
 		g_autoptr(LuDevice) device = NULL;
 		device = g_object_new (LU_TYPE_DEVICE_BOOTLOADER_TEXAS,
 				       "kind", LU_DEVICE_KIND_BOOTLOADER_TEXAS,
-				       "flags", LU_DEVICE_FLAG_ACTIVE,
+				       "flags", LU_DEVICE_FLAG_ACTIVE |
+						LU_DEVICE_FLAG_REQUIRES_ATTACH |
+						LU_DEVICE_FLAG_ATTACH_WILL_REPLUG,
 				       "hidpp-id", HIDPP_DEVICE_ID_RECEIVER,
 				       "usb-device", usb_device,
 				       NULL);

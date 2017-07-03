@@ -27,6 +27,8 @@
 
 #include "fu-plugin.h"
 
+#include "lu-hidpp-msg.h"
+
 G_BEGIN_DECLS
 
 #define LU_TYPE_DEVICE (lu_device_get_type ())
@@ -67,9 +69,6 @@ struct _LuDeviceClass
 /* some USB hubs take a looong time to re-connect the device */
 #define FU_DEVICE_TIMEOUT_REPLUG		10000 /* ms */
 
-/* this is specific to fwupd */
-#define FU_DEVICE_UNIFYING_SW_ID		0x07
-
 typedef enum {
 	LU_DEVICE_KIND_UNKNOWN,
 	LU_DEVICE_KIND_RUNTIME,
@@ -89,32 +88,11 @@ typedef enum {
 	LU_DEVICE_FLAG_REQUIRES_RESET		= 1 << 4,
 	LU_DEVICE_FLAG_REQUIRES_ATTACH		= 1 << 5,
 	LU_DEVICE_FLAG_REQUIRES_DETACH		= 1 << 6,
-	LU_DEVICE_FLAG_DETACH_WILL_REPLUG	= 1 << 7,
+	LU_DEVICE_FLAG_ATTACH_WILL_REPLUG	= 1 << 7,
+	LU_DEVICE_FLAG_DETACH_WILL_REPLUG	= 1 << 8,
 	/*< private >*/
 	LU_DEVICE_FLAG_LAST
 } LuDeviceFlags;
-
-typedef enum {
-	LU_DEVICE_HIDPP_MSG_FLAG_NONE,
-	LU_DEVICE_HIDPP_MSG_FLAG_IGNORE_SWID	= 1 << 0,
-	LU_DEVICE_HIDPP_MSG_FLAG_LONGER_TIMEOUT	= 1 << 1,
-	/*< private >*/
-	LU_DEVICE_HIDPP_MSG_FLAG_LAST
-} LuDeviceHidppMsgFlags;
-
-typedef struct __attribute__((packed)) {
-	guint8	 report_id;
-	guint8	 device_id;
-	guint8	 sub_id;
-	guint8	 function_id;	/* funcId:software_id */
-	guint8	 data[47];	/* maximum supported by Windows XP SP2 */
-	/* not included in the packet sent to the hardware */
-	guint32	 flags;
-} LuDeviceHidppMsg;
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(LuDeviceHidppMsg, g_free);
-
-LuDeviceHidppMsg *lu_device_hidpp_new		(void);
 
 LuDeviceKind	 lu_device_kind_from_string	(const gchar	*kind);
 const gchar	*lu_device_kind_to_string	(LuDeviceKind	 kind);
@@ -180,21 +158,23 @@ gboolean	 lu_device_write_firmware	(LuDevice		*device,
 						 gpointer		 progress_data,
 						 GError			**error);
 gboolean	 lu_device_hidpp_send		(LuDevice		*device,
-						 LuDeviceHidppMsg	*msg,
+						 LuHidppMsg		*msg,
 						 guint			 timeout,
 						 GError			**error);
 gboolean	 lu_device_hidpp_receive	(LuDevice		*device,
-						 LuDeviceHidppMsg	*msg,
+						 LuHidppMsg		*msg,
 						 guint			 timeout,
 						 GError			**error);
 gboolean	 lu_device_hidpp_transfer	(LuDevice		*device,
-						 LuDeviceHidppMsg	*msg,
+						 LuHidppMsg		*msg,
 						 GError			**error);
 gboolean	 lu_device_hidpp_feature_search	(LuDevice		*device,
 						 guint16		 feature,
 						 GError			**error);
 guint8		 lu_device_hidpp_feature_get_idx (LuDevice		*device,
 						 guint16		 feature);
+guint16		 lu_device_hidpp_feature_find_by_idx (LuDevice		*device,
+						 guint8			 idx);
 
 G_END_DECLS
 
