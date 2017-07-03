@@ -106,8 +106,8 @@ typedef struct __attribute__((packed)) {
 	guint8	 report_id;
 	guint8	 device_id;
 	guint8	 sub_id;
-	guint8	 function_id; /* funcId:software_id */
-	guint8	 data[128];
+	guint8	 function_id;	/* funcId:software_id */
+	guint8	 data[47];	/* maximum supported by Windows XP SP2 */
 	/* not included in the packet sent to the hardware */
 	guint32	 flags;
 } LuDeviceHidppMsg;
