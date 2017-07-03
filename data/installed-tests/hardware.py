@@ -85,6 +85,12 @@ if __name__ == '__main__':
 
     tests = []
 
+    # Logitech K780 Keyboard
+    test = Test('LogitechMPK01', '3932ba15-2bbe-5bbb-817e-6c74e7088509')
+    test.add_file('d81a81e13952e871ca2eb86cba7e66199e576a38-Logitech-K780-MPK01.02_B0021.cab', 'MPK01.02_B0021')
+    test.add_file('b0dffe84c6d3681e7ae5f27509781bc1cf924dd7-Logitech-K780-MPK01.03_B0024.cab', 'MPK01.03_B0024')
+    tests.append(test)
+
     # Hughski ColorHug (a special variant) using 'dfu'
     test = Test('ColorHugDFU', 'dfbaaded-754b-5214-a5f2-46aa3331e8ce')
     test.add_file('77b315dcaa7edc1d5fbb77016b94d8a0c0133838-fakedevice01_dfu.cab', '0.1')
@@ -107,11 +113,6 @@ if __name__ == '__main__':
     test = Test('UnifyingRQR24', 'cc4cbfa9-bf9d-540b-b92b-172ce31013c1')
     test.add_file('82b90b2614a9a4d0aced1ab8a4a99e228c95585c-Logitech-Unifying-RQ024.03_B0027.cab', 'RQR24.03_B0027')
     test.add_file('4511b9b0d123bdbe8a2007233318ab215a59dfe6-Logitech-Unifying-RQR24.05_B0029.cab', 'RQR24.05_B0029')
-    tests.append(test)
-
-    # Logitech K780 Keyboard
-    test = Test('LogitechMPK01', '3932ba15-2bbe-5bbb-817e-6c74e7088509')
-    test.add_file('Logitech-K780-MPK01.03_B0024.cab', 'MPK01.03_B0024')
     tests.append(test)
 
     # run each test
