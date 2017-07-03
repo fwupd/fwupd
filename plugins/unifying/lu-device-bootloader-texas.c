@@ -268,6 +268,7 @@ lu_device_bootloader_texas_probe (LuDevice *device, GError **error)
 	if (version_bl == NULL)
 		return FALSE;
 	lu_device_set_version_bl (device, version_bl);
+	lu_device_set_version_fw (device, "RQR24.xx_Bxxxx");
 	return TRUE;
 }
 

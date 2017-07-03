@@ -293,8 +293,14 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 		}
 	}
 	idx = lu_device_hidpp_feature_get_idx (device, HIDPP_FEATURE_DFU);
-	if (idx != 0x00)
+	if (idx != 0x00) {
+		lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);
 		lu_device_add_flag (device, LU_DEVICE_FLAG_REQUIRES_ATTACH);
+		if (lu_device_get_version_fw (device) == NULL) {
+			g_debug ("repairing device in bootloader mode");
+			lu_device_set_version_fw (device, "MPKxx.xx_Bxxxx");
+		}
+	}
 
 	/* this device is active right now */
 	lu_device_add_flag (device, LU_DEVICE_FLAG_ACTIVE);

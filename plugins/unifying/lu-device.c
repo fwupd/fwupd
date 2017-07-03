@@ -604,7 +604,7 @@ lu_device_hidpp_transfer (LuDevice *device, LuDeviceHidppMsg *msg, GError **erro
 
 	/* increase timeout for some operations */
 	if (msg->flags & LU_DEVICE_HIDPP_MSG_FLAG_LONGER_TIMEOUT)
-		timeout *= 5;
+		timeout *= 10;
 
 	/* send request */
 	if (!lu_device_hidpp_send (device, msg, timeout, error))
