@@ -1588,6 +1588,7 @@ main (int argc, char *argv[])
 	gboolean offline = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
+	gboolean version = FALSE;
 	g_autoptr(FuUtilPrivate) priv = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *cmd_descriptions = NULL;
@@ -1595,6 +1596,9 @@ main (int argc, char *argv[])
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			/* TRANSLATORS: command line option */
 			_("Show extra debugging information"), NULL },
+		{ "version", '\0', 0, G_OPTION_ARG_NONE, &version,
+			/* TRANSLATORS: command line option */
+			_("Show client and daemon versions"), NULL },
 		{ "offline", '\0', 0, G_OPTION_ARG_NONE, &offline,
 			/* TRANSLATORS: command line option */
 			_("Schedule installation for next reboot when possible"), NULL },
@@ -1778,6 +1782,22 @@ main (int argc, char *argv[])
 			  G_CALLBACK (fu_util_client_notify_cb), priv);
 	g_signal_connect (priv->client, "notify::status",
 			  G_CALLBACK (fu_util_client_notify_cb), priv);
+
+	/* just show versions and exit */
+	if (version) {
+		g_print ("client version:\t%i.%i.%i\n",
+			 FWUPD_MAJOR_VERSION,
+			 FWUPD_MINOR_VERSION,
+			 FWUPD_MICRO_VERSION);
+		if (!fwupd_client_connect (priv->client, priv->cancellable, &error)) {
+			g_printerr ("Failed to connect to daemon: %s\n",
+				    error->message);
+			return EXIT_FAILURE;
+		}
+		g_print ("daemon version:\t%s\n",
+			 fwupd_client_get_daemon_version (priv->client));
+		return EXIT_SUCCESS;
+	}
 
 	/* run the specified command */
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);

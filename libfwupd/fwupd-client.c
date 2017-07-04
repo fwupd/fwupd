@@ -44,6 +44,7 @@ static void fwupd_client_finalize	 (GObject *object);
 typedef struct {
 	FwupdStatus			 status;
 	guint				 percentage;
+	gchar				*daemon_version;
 	GDBusConnection			*conn;
 	GDBusProxy			*proxy;
 } FwupdClientPrivate;
@@ -61,6 +62,7 @@ enum {
 	PROP_0,
 	PROP_STATUS,
 	PROP_PERCENTAGE,
+	PROP_DAEMON_VERSION,
 	PROP_LAST
 };
 
@@ -102,6 +104,15 @@ fwupd_client_helper_new (void)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdClientHelper, fwupd_client_helper_free)
 
 static void
+fwupd_client_set_daemon_version (FwupdClient *client, const gchar *daemon_version)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_free (priv->daemon_version);
+	priv->daemon_version = g_strdup (daemon_version);
+	g_object_notify (G_OBJECT (client), "daemon-version");
+}
+
+static void
 fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 				    GVariant *changed_properties,
 				    GStrv invalidated_properties,
@@ -130,6 +141,12 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 			priv->percentage = g_variant_get_uint32 (val);
 			g_object_notify (G_OBJECT (client), "percentage");
 		}
+	}
+	if (g_variant_dict_contains (&dict, "DaemonVersion")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy, "DaemonVersion");
+		if (val != NULL)
+			fwupd_client_set_daemon_version (client, g_variant_get_string (val, NULL));
 	}
 }
 
@@ -189,6 +206,7 @@ gboolean
 fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
@@ -218,6 +236,9 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 			  G_CALLBACK (fwupd_client_properties_changed_cb), client);
 	g_signal_connect (priv->proxy, "g-signal",
 			  G_CALLBACK (fwupd_client_signal_cb), client);
+	val = g_dbus_proxy_get_cached_property (priv->proxy, "DaemonVersion");
+	if (val != NULL)
+		fwupd_client_set_daemon_version (client, g_variant_get_string (val, NULL));
 	return TRUE;
 }
 
@@ -1071,6 +1092,24 @@ fwupd_client_get_percentage (FwupdClient *client)
 }
 
 /**
+ * fwupd_client_get_daemon_version:
+ * @client: A #FwupdClient
+ *
+ * Gets the daemon version number.
+ *
+ * Returns: a string, or %NULL for unknown.
+ *
+ * Since: 0.9.6
+ **/
+const gchar *
+fwupd_client_get_daemon_version (FwupdClient *client)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	return priv->daemon_version;
+}
+
+/**
  * fwupd_client_get_status:
  * @client: A #FwupdClient
  *
@@ -1334,6 +1373,9 @@ fwupd_client_get_property (GObject *object, guint prop_id,
 	case PROP_PERCENTAGE:
 		g_value_set_uint (value, priv->percentage);
 		break;
+	case PROP_DAEMON_VERSION:
+		g_value_set_string (value, priv->daemon_version);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -1476,6 +1518,17 @@ fwupd_client_class_init (FwupdClientClass *klass)
 				   0, 100, 0,
 				   G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_PERCENTAGE, pspec);
+
+	/**
+	 * FwupdClient:daemon-version:
+	 *
+	 * The daemon version number.
+	 *
+	 * Since: 0.9.6
+	 */
+	pspec = g_param_spec_string ("daemon-version", NULL, NULL,
+				     NULL, G_PARAM_READABLE);
+	g_object_class_install_property (object_class, PROP_DAEMON_VERSION, pspec);
 }
 
 static void
@@ -1489,6 +1542,7 @@ fwupd_client_finalize (GObject *object)
 	FwupdClient *client = FWUPD_CLIENT (object);
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 
+	g_free (priv->daemon_version);
 	if (priv->conn != NULL)
 		g_object_unref (priv->conn);
 	if (priv->proxy != NULL)
