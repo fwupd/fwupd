@@ -104,6 +104,7 @@ gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
 							 GError		**error);
 FwupdStatus	 fwupd_client_get_status		(FwupdClient	*client);
 guint		 fwupd_client_get_percentage		(FwupdClient	*client);
+const gchar	*fwupd_client_get_daemon_version	(FwupdClient	*client);
 
 G_END_DECLS
 
