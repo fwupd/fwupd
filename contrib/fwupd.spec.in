@@ -2,6 +2,7 @@
 %global libappstream_version 0.6.13
 %global libgusb_version 0.2.9
 %global libsoup_version 2.51.92
+%global colord_version 1.2.12
 %global systemd_version 231
 
 %define alphatag                #ALPHATAG#
@@ -33,7 +34,7 @@ BuildRequires: libappstream-glib-devel >= %{libappstream_version}
 BuildRequires: libgudev1-devel
 BuildRequires: libgusb-devel >= %{libgusb_version}
 BuildRequires: libsoup-devel >= %{libsoup_version}
-BuildRequires: colord-devel >= 1.0.0
+BuildRequires: colord-devel >= %{colord_version}
 BuildRequires: polkit-devel >= 0.103
 BuildRequires: sqlite-devel
 BuildRequires: gpgme-devel
