@@ -16,6 +16,17 @@ conf.set('FWUPD_MINOR_VERSION', fwupd_minor_version)
 conf.set('FWUPD_MICRO_VERSION', fwupd_micro_version)
 conf.set_quoted('PACKAGE_VERSION', fwupd_version)
 
+archiver = find_program('git', required : false)
+if archiver.found()
+  result = run_command('git', 'describe')
+  if result.returncode() == 0
+    describe = result.stdout().strip()
+    conf.set_quoted('FWUPD_GIT_DESCRIBE', describe)
+  else
+    conf.set('FWUPD_GIT_DESCRIBE', 0)
+  endif
+endif
+
 # libtool versioning - this applies to libfwupd
 #
 # See http://sources.redhat.com/autobook/autobook/autobook_91.html#SEC91 for details
@@ -229,7 +240,6 @@ subdir('policy')
 subdir('src')
 
 if meson.version().version_compare('<0.41.0')
-  archiver = find_program('git', required : false)
   if archiver.found()
     run_target('dist',
       # git config tar.tar.xz.command "xz -c"
