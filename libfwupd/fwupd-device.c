@@ -1006,12 +1006,12 @@ fwupd_device_to_string (FwupdDevice *device)
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
 
 	str = g_string_new ("");
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_NAME, priv->name);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
 	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid = g_ptr_array_index (priv->guids, i);
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
 	}
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_NAME, priv->name);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PLUGIN, priv->provider);
 	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_DEVICE_FLAGS, priv->flags);
