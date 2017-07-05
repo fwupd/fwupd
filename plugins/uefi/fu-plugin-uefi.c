@@ -263,7 +263,7 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	AsVersionParseFlag parse_flags;
-	g_autofree gchar *display_name = NULL;
+	g_autofree gchar *product_name = NULL;
 	fwup_resource *re;
 	gint supported;
 	g_autofree gchar *guid = NULL;
@@ -307,9 +307,9 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* set Display Name to the system for all capsules */
 	if (g_file_get_contents ("/sys/class/dmi/id/product_name",
-				 &display_name, NULL, NULL)) {
-		if (display_name != NULL)
-			g_strchomp (display_name);
+				 &product_name, NULL, NULL)) {
+		if (product_name != NULL)
+			g_strchomp (product_name);
 	}
 
 	/* add each device */
@@ -322,6 +322,42 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		g_autofree gchar *id = NULL;
 		g_autofree gchar *version = NULL;
 		g_autofree gchar *version_lowest = NULL;
+		g_autofree gchar *display_name = NULL;
+		guint32 uefi_type;
+		const gchar *uefi_type_str = NULL;
+
+		/* set up proper DisplayName */
+		fwup_get_fw_type(re, &uefi_type);
+		switch (uefi_type) {
+			case FWUP_RESOURCE_TYPE_UNKNOWN:
+			uefi_type_str = "Unknown Firmware";
+			break;
+		case FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE:
+			uefi_type_str = "System Firmware";
+			break;
+		case FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE:
+			uefi_type_str = "Device Firmware";
+			break;
+		case FWUP_RESOURCE_TYPE_UEFI_DRIVER:
+			uefi_type_str = "UEFI Driver";
+			break;
+		case FWUP_RESOURCE_TYPE_FMP:
+			uefi_type_str = "Firmware Management Protocol";
+			break;
+		default:
+			break;
+		}
+		if (uefi_type_str != NULL) {
+			if (product_name != NULL)
+				display_name = g_strconcat (product_name,
+							    " ",
+							    uefi_type_str,
+							    NULL);
+			else
+				display_name = uefi_type_str;
+		}
+		else
+			display_name = product_name;
 
 		/* convert to strings */
 		fwup_get_guid (re, &guid_raw);
