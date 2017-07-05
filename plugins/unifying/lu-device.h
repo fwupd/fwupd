@@ -27,6 +27,8 @@
 
 #include "fu-plugin.h"
 
+#include "lu-hidpp-msg.h"
+
 G_BEGIN_DECLS
 
 #define LU_TYPE_DEVICE (lu_device_get_type ())
@@ -64,6 +66,9 @@ struct _LuDeviceClass
 #define LU_DEVICE_EP3				0x83
 #define LU_DEVICE_TIMEOUT_MS			2500
 
+/* some USB hubs take a looong time to re-connect the device */
+#define FU_DEVICE_TIMEOUT_REPLUG		10000 /* ms */
+
 typedef enum {
 	LU_DEVICE_KIND_UNKNOWN,
 	LU_DEVICE_KIND_RUNTIME,
@@ -83,26 +88,16 @@ typedef enum {
 	LU_DEVICE_FLAG_REQUIRES_RESET		= 1 << 4,
 	LU_DEVICE_FLAG_REQUIRES_ATTACH		= 1 << 5,
 	LU_DEVICE_FLAG_REQUIRES_DETACH		= 1 << 6,
-	LU_DEVICE_FLAG_DETACH_WILL_REPLUG	= 1 << 7,
+	LU_DEVICE_FLAG_ATTACH_WILL_REPLUG	= 1 << 7,
+	LU_DEVICE_FLAG_DETACH_WILL_REPLUG	= 1 << 8,
 	/*< private >*/
 	LU_DEVICE_FLAG_LAST
 } LuDeviceFlags;
 
-typedef struct {
-	guint8	 report_id;
-	guint8	 device_id;
-	guint8	 sub_id;
-	guint8	 function_id; /* funcId:software_id */
-	guint8	 data[128];
-} LuDeviceHidppMsg;
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(LuDeviceHidppMsg, g_free);
-
-LuDeviceHidppMsg *lu_device_hidpp_new		(void);
-
 LuDeviceKind	 lu_device_kind_from_string	(const gchar	*kind);
 const gchar	*lu_device_kind_to_string	(LuDeviceKind	 kind);
 
+gchar		*lu_device_to_string		(LuDevice		*device);
 LuDeviceKind	 lu_device_get_kind		(LuDevice		*device);
 guint8		 lu_device_get_hidpp_id		(LuDevice		*device);
 void		 lu_device_set_hidpp_id		(LuDevice		*device,
@@ -110,9 +105,9 @@ void		 lu_device_set_hidpp_id		(LuDevice		*device,
 guint8		 lu_device_get_battery_level	(LuDevice		*device);
 void		 lu_device_set_battery_level	(LuDevice		*device,
 						 guint8			 percentage);
-guint8		 lu_device_get_hidpp_version	(LuDevice		*device);
+gdouble		 lu_device_get_hidpp_version	(LuDevice		*device);
 void		 lu_device_set_hidpp_version	(LuDevice		*device,
-						 guint8			 hidpp_version);
+						 gdouble		 hidpp_version);
 const gchar	*lu_device_get_platform_id	(LuDevice		*device);
 void		 lu_device_set_platform_id	(LuDevice		*device,
 						 const gchar		*platform_id);
@@ -135,6 +130,9 @@ void		 lu_device_set_version_bl	(LuDevice		*device,
 const gchar	*lu_device_get_version_fw	(LuDevice		*device);
 void		 lu_device_set_version_fw	(LuDevice		*device,
 						 const gchar		*version_fw);
+const gchar	*lu_device_get_version_hw	(LuDevice		*device);
+void		 lu_device_set_version_hw	(LuDevice		*device,
+						 const gchar		*version_hw);
 GPtrArray	*lu_device_get_guids		(LuDevice		*device);
 void		 lu_device_add_guid		(LuDevice		*device,
 						 const gchar		*guid);
@@ -160,21 +158,23 @@ gboolean	 lu_device_write_firmware	(LuDevice		*device,
 						 gpointer		 progress_data,
 						 GError			**error);
 gboolean	 lu_device_hidpp_send		(LuDevice		*device,
-						 LuDeviceHidppMsg	*msg,
+						 LuHidppMsg		*msg,
 						 guint			 timeout,
 						 GError			**error);
 gboolean	 lu_device_hidpp_receive	(LuDevice		*device,
-						 LuDeviceHidppMsg	*msg,
+						 LuHidppMsg		*msg,
 						 guint			 timeout,
 						 GError			**error);
 gboolean	 lu_device_hidpp_transfer	(LuDevice		*device,
-						 LuDeviceHidppMsg	*msg,
+						 LuHidppMsg		*msg,
 						 GError			**error);
 gboolean	 lu_device_hidpp_feature_search	(LuDevice		*device,
 						 guint16		 feature,
 						 GError			**error);
 guint8		 lu_device_hidpp_feature_get_idx (LuDevice		*device,
 						 guint16		 feature);
+guint16		 lu_device_hidpp_feature_find_by_idx (LuDevice		*device,
+						 guint8			 idx);
 
 G_END_DECLS
 

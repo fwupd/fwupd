@@ -1834,7 +1834,7 @@ dfu_device_upload (DfuDevice *device,
 
 	/* ensure interface is claimed */
 	if (!dfu_device_ensure_interface (device, cancellable, error))
-		return FALSE;
+		return NULL;
 
 	/* create ahead of time */
 	firmware = dfu_firmware_new ();
@@ -2011,33 +2011,37 @@ dfu_device_download (DfuDevice *device,
 	}
 
 	/* check vendor matches */
-	if (!dfu_device_id_compatible (dfu_firmware_get_vid (firmware),
-				       priv->runtime_vid,
-				       g_usb_device_get_vid (priv->dev))) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
-			     "vendor ID incorrect, expected 0x%04x "
-			     "got 0x%04x and 0x%04x\n",
-			     dfu_firmware_get_vid (firmware),
-			     priv->runtime_vid,
-			     g_usb_device_get_vid (priv->dev));
-		return FALSE;
+	if (priv->runtime_vid != 0xffff) {
+		if (!dfu_device_id_compatible (dfu_firmware_get_vid (firmware),
+					       priv->runtime_vid,
+					       g_usb_device_get_vid (priv->dev))) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "vendor ID incorrect, expected 0x%04x "
+				     "got 0x%04x and 0x%04x\n",
+				     dfu_firmware_get_vid (firmware),
+				     priv->runtime_vid,
+				     g_usb_device_get_vid (priv->dev));
+			return FALSE;
+		}
 	}
 
 	/* check product matches */
-	if (!dfu_device_id_compatible (dfu_firmware_get_pid (firmware),
-				       priv->runtime_pid,
-				       g_usb_device_get_pid (priv->dev))) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
-			     "product ID incorrect, expected 0x%04x "
-			     "got 0x%04x and 0x%04x",
-			     dfu_firmware_get_pid (firmware),
-			     priv->runtime_pid,
-			     g_usb_device_get_pid (priv->dev));
-		return FALSE;
+	if (priv->runtime_pid != 0xffff) {
+		if (!dfu_device_id_compatible (dfu_firmware_get_pid (firmware),
+					       priv->runtime_pid,
+					       g_usb_device_get_pid (priv->dev))) {
+			g_set_error (error,
+				     DFU_ERROR,
+				     DFU_ERROR_NOT_SUPPORTED,
+				     "product ID incorrect, expected 0x%04x "
+				     "got 0x%04x and 0x%04x",
+				     dfu_firmware_get_pid (firmware),
+				     priv->runtime_pid,
+				     g_usb_device_get_pid (priv->dev));
+			return FALSE;
+		}
 	}
 
 	/* APP -> DFU */

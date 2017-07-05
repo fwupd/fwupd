@@ -23,6 +23,7 @@ RUN dnf --enablerepo=updates-testing -y install \
 	gobject-introspection-devel \
 	gpgme-devel \
 	gtk-doc \
+	jq \
 	libappstream-glib-devel \
 	libarchive-devel \
 	libgudev1-devel \
@@ -48,7 +49,11 @@ RUN dnf --enablerepo=updates-testing -y install \
 	adobe-source-han-sans-cn-fonts \
 	ca-certificates \
 	dbus-x11 \
+	dconf \
 	gnome-desktop-testing \
+	polkit \
+	python3-gobject \
+	python3-requests \
 	gnupg2
 RUN mkdir /build
 WORKDIR /build

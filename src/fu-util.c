@@ -48,6 +48,9 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
 /* this is only valid in this file */
 #define FWUPD_ERROR_INVALID_ARGS	(FWUPD_ERROR_LAST+1)
 
+/* custom return code */
+#define EXIT_NOTHING_TO_DO		2
+
 typedef struct {
 	GCancellable		*cancellable;
 	GMainLoop		*loop;
@@ -330,7 +333,7 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	/* get devices from daemon */
 	devices = fwupd_client_get_devices_simple (priv->client, NULL, error);
 	if (devices == NULL)
-		return FALSE;
+		return NULL;
 
 	/* filter results */
 	devices_filtered = g_ptr_array_new ();
@@ -345,7 +348,7 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	if (devices_filtered->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
+				     FWUPD_ERROR_NOTHING_TO_DO,
 				     "No supported devices");
 		return NULL;
 	}
@@ -915,20 +918,21 @@ fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	if (g_strv_length (values) == 0)
 		return fu_util_download_metadata (priv, error);
-	if (g_strv_length (values) != 2) {
+	if (g_strv_length (values) != 3) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'filename.xml' 'filename.xml.asc'");
+				     "Invalid arguments: expected 'filename.xml' 'filename.xml.asc' 'remote-id'");
 		return FALSE;
 	}
 
 	/* open file */
-	return fwupd_client_update_metadata (priv->client,
-					     values[0],
-					     values[1],
-					     NULL,
-					     error);
+	return fwupd_client_update_metadata_with_id (priv->client,
+						     values[2],
+						     values[0],
+						     values[1],
+						     NULL,
+						     error);
 }
 
 static gboolean
@@ -992,10 +996,10 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 			/* TRANSLATORS: section header for firmware description */
 			fu_util_print_data (_("Description"), desc);
 		}
-		checksums = fwupd_device_get_checksums (dev);
+		checksums = fwupd_release_get_checksums (rel);
 		for (guint j = 0; j < checksums->len; j++) {
 			const gchar *checksum = g_ptr_array_index (checksums, j);
-			g_autofree gchar *checksum_display;
+			g_autofree gchar *checksum_display = NULL;
 			checksum_display = fwupd_checksum_format_for_display (checksum);
 			/* TRANSLATORS: section header for firmware checksum */
 			fu_util_print_data (_("Checksum"), checksum_display);
@@ -1018,7 +1022,7 @@ fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error
 	if (rels->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
+				     FWUPD_ERROR_NOTHING_TO_DO,
 				     "No supported releases");
 		return NULL;
 	}
@@ -1140,10 +1144,10 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("Update Remote ID"),
 				    fwupd_release_get_remote_id (rel));
 
-		checksums = fwupd_device_get_checksums (dev);
+		checksums = fwupd_release_get_checksums (rel);
 		for (guint j = 0; j < checksums->len; j++) {
 			const gchar *checksum = g_ptr_array_index (checksums, j);
-			g_autofree gchar *checksum_display;
+			g_autofree gchar *checksum_display = NULL;
 			checksum_display = fwupd_checksum_format_for_display (checksum);
 			/* TRANSLATORS: section header for firmware checksum */
 			fu_util_print_data (_("Update Checksum"), checksum_display);
@@ -1164,6 +1168,103 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 				fu_util_print_data (_("Update Description"), md);
 			}
 		}
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	/* print any updates */
+	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
+	if (remotes == NULL)
+		return FALSE;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		SoupURI *uri;
+		const gchar *tmp;
+		gint priority;
+		gdouble age;
+
+		/* TRANSLATORS: remote identifier, e.g. lvfs-testing */
+		fu_util_print_data (_("Remote ID"),
+				    fwupd_remote_get_id (remote));
+
+		/* TRANSLATORS: if the remote is enabled */
+		fu_util_print_data (_("Enabled"),
+				    fwupd_remote_get_enabled (remote) ? "True" : "False");
+
+		/* optional parameters */
+		age = fwupd_remote_get_age (remote);
+		if (age > 0 && age != G_MAXUINT64) {
+			const gchar *unit = "s";
+			g_autofree gchar *age_str = NULL;
+			if (age > 60) {
+				age /= 60.f;
+				unit = "m";
+			}
+			if (age > 60) {
+				age /= 60.f;
+				unit = "h";
+			}
+			if (age > 24) {
+				age /= 24.f;
+				unit = "d";
+			}
+			if (age > 7) {
+				age /= 7.f;
+				unit = "w";
+			}
+			age_str = g_strdup_printf ("%.2f%s", age, unit);
+			/* TRANSLATORS: the age of the metadata */
+			fu_util_print_data (_("Age"), age_str);
+		}
+		priority = fwupd_remote_get_priority (remote);
+		if (priority != 0) {
+			g_autofree gchar *priority_str = NULL;
+			priority_str = g_strdup_printf ("%i", priority);
+			/* TRANSLATORS: the numeric priority */
+			fu_util_print_data (_("Priority"), priority_str);
+		}
+		tmp = fwupd_remote_get_username (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: remote filename base */
+			fu_util_print_data (_("Username"), tmp);
+		}
+		tmp = fwupd_remote_get_password (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: remote filename base */
+			fu_util_print_data (_("Password"), tmp);
+		}
+		tmp = fwupd_remote_get_filename (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: remote filename base */
+			fu_util_print_data (_("Filename"), tmp);
+		}
+		tmp = fwupd_remote_get_filename_asc (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: remote filename base */
+			fu_util_print_data (_("Filename Signature"), tmp);
+		}
+		uri = fwupd_remote_get_uri (remote);
+		if (uri != NULL) {
+			g_autofree gchar *uri_str = soup_uri_to_string (uri, FALSE);
+			/* TRANSLATORS: remote URI */
+			fu_util_print_data (_("URL"), uri_str);
+		}
+		uri = fwupd_remote_get_uri_asc (remote);
+		if (uri != NULL) {
+			g_autofree gchar *uri_str = soup_uri_to_string (uri, FALSE);
+			/* TRANSLATORS: remote URI */
+			fu_util_print_data (_("URI Signature"), uri_str);
+		}
+
+		/* newline */
+		if (i != remotes->len - 1)
+			g_print ("\n");
 	}
 
 	return TRUE;
@@ -1351,14 +1452,29 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* only include older firmware */
 		if (as_utils_vercmp (fwupd_release_get_version (rel_tmp),
-				     fwupd_device_get_version (dev)) >= 0)
+				     fwupd_device_get_version (dev)) >= 0) {
+			g_debug ("ignoring %s as older than %s",
+				 fwupd_release_get_version (rel_tmp),
+				 fwupd_device_get_version (dev));
 			continue;
+		}
 
 		/* don't show releases we are not allowed to dowgrade to */
 		if (fwupd_device_get_version_lowest (dev) != NULL) {
 			if (as_utils_vercmp (fwupd_release_get_version (rel_tmp),
-					     fwupd_device_get_version_lowest (dev)) >= 0)
+					     fwupd_device_get_version_lowest (dev)) <= 0) {
+				g_debug ("ignoring %s as older than lowest %s",
+					 fwupd_release_get_version (rel_tmp),
+					 fwupd_device_get_version_lowest (dev));
 				continue;
+			}
+		}
+
+		/* don't show releases without URIs */
+		if (fwupd_release_get_uri (rel_tmp) == NULL) {
+			g_debug ("ignoring %s as no URI",
+				 fwupd_release_get_version (rel_tmp));
+			continue;
 		}
 
 		g_ptr_array_add (rels_filtered, rel_tmp);
@@ -1582,6 +1698,12 @@ main (int argc, char *argv[])
 		     _("Gets the releases for a device"),
 		     fu_util_get_releases);
 	fu_util_add (priv->cmd_array,
+		     "get-remotes",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the configured remotes"),
+		     fu_util_get_remotes);
+	fu_util_add (priv->cmd_array,
 		     "downgrade",
 		     NULL,
 		     /* TRANSLATORS: command description */
@@ -1634,7 +1756,7 @@ main (int argc, char *argv[])
 
 	/* set verbose? */
 	if (verbose) {
-		g_setenv ("FWUPD_VERBOSE", "1", FALSE);
+		g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
 	} else {
 		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
 				   fu_util_ignore_cb, NULL);
@@ -1668,7 +1790,7 @@ main (int argc, char *argv[])
 		}
 		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			g_print ("%s\n", error->message);
-			return EXIT_SUCCESS;
+			return EXIT_NOTHING_TO_DO;
 		}
 		g_print ("%s\n", error->message);
 		return EXIT_FAILURE;

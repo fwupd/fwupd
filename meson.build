@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '0.9.4',
+  version : '0.9.5',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0'
 )
@@ -56,7 +56,6 @@ test_args = [
   '-Wignored-qualifiers',
   '-Wimplicit-function-declaration',
   '-Winit-self',
-  '-Winline',
   '-Wmissing-declarations',
   '-Wmissing-format-attribute',
   '-Wmissing-include-dirs',
@@ -121,17 +120,27 @@ appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
-valgrind = dependency('valgrindXXX', required: false)
+if meson.version().version_compare('>0.41.0')
+  valgrind = dependency('valgrind', required: false)
+else
+  valgrind = dependency('valgrindXXX', required: false)
+endif
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 gpgme = cc.find_library('gpgme')
 gpgerror = cc.find_library('gpg-error')
 libm = cc.find_library('m', required: false)
 udev = dependency('udev')
+uuid = dependency('uuid')
 
-cairo = dependency('cairo')
-pango = dependency('pango')
-fontconfig = cc.find_library('fontconfig')
-freetype = cc.find_library('freetype')
+if get_option('enable-uefi-labels')
+  cairo = dependency('cairo')
+  fontconfig = cc.find_library('fontconfig')
+  freetype = cc.find_library('freetype')
+  r = run_command('po/test-deps')
+  if r.returncode() != 0
+    error(r.stdout())
+  endif
+endif
 
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')

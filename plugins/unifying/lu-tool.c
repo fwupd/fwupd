@@ -198,93 +198,12 @@ lu_get_default_device (FuLuToolPrivate *priv, GError **error)
 	return device;
 }
 
-static gchar *
-lu_device_flags_to_string (LuDeviceFlags flags)
-{
-	GString *str = g_string_new (NULL);
-	if (flags & LU_DEVICE_FLAG_REQUIRES_SIGNED_FIRMWARE)
-		g_string_append (str, "signed-firmware,");
-	if (flags & LU_DEVICE_FLAG_CAN_FLASH)
-		g_string_append (str, "can-flash,");
-	if (flags & LU_DEVICE_FLAG_REQUIRES_RESET)
-		g_string_append (str, "requires-reset,");
-	if (flags & LU_DEVICE_FLAG_ACTIVE)
-		g_string_append (str, "active,");
-	if (flags & LU_DEVICE_FLAG_IS_OPEN)
-		g_string_append (str, "is-open,");
-	if (flags & LU_DEVICE_FLAG_REQUIRES_ATTACH)
-		g_string_append (str, "requires-attach,");
-	if (flags & LU_DEVICE_FLAG_REQUIRES_DETACH)
-		g_string_append (str, "requires-detach,");
-	if (flags & LU_DEVICE_FLAG_DETACH_WILL_REPLUG)
-		g_string_append (str, "detach-will-replug,");
-	if (str->len == 0) {
-		g_string_append (str, "none");
-	} else {
-		g_string_truncate (str, str->len - 1);
-	}
-	return g_string_free (str, FALSE);
-}
-
 static gboolean
-lu_tool_info_device (FuLuToolPrivate *priv, LuDevice *device, GError **error)
+lu_tool_info_device (LuDevice *device)
 {
-	GPtrArray *guids;
-	g_autoptr(GError) error_local = NULL;
-
-	/* open */
-	if (!lu_device_open (device, &error_local)) {
-		g_print ("Error:          Failed to open: %s\n",
-			 error_local->message);
-	}
-
-	/* show on console */
-	g_print ("Type:           %s\n",
-		 lu_device_kind_to_string (lu_device_get_kind (device)));
-	g_print ("Flags:          %s\n",
-		 lu_device_flags_to_string (lu_device_get_flags (device)));
-	if (lu_device_get_hidpp_id (device) != HIDPP_DEVICE_ID_UNSET) {
-		g_print ("Hid++ ID:       0x%02x\n",
-			 lu_device_get_hidpp_id (device));
-	}
-	if (lu_device_get_hidpp_version (device) != 0) {
-		g_print ("Hid++ Version:  0x%02x\n",
-			 lu_device_get_hidpp_version (device));
-	}
-	g_print ("Platform ID:    %s\n",
-		 lu_device_get_platform_id (device));
-	g_print ("Vendor:         %s\n",
-		 lu_device_get_vendor (device));
-	g_print ("Product:        %s\n",
-		 lu_device_get_product (device));
-	if (lu_device_get_battery_level (device) != 0) {
-		g_print ("Battery Level:  %u%%\n",
-			 lu_device_get_battery_level (device));
-	}
-	if (lu_device_get_version_fw (device) != NULL) {
-		g_print ("Firmware Ver:   %s\n",
-			 lu_device_get_version_fw (device));
-	}
-	if (lu_device_get_version_bl (device) != NULL) {
-		g_print ("Bootloader Ver: %s\n",
-			 lu_device_get_version_bl (device));
-	}
-	if (LU_IS_DEVICE_BOOTLOADER (device)) {
-		g_print ("Flash Addr Hi:  0x%04x\n",
-			 lu_device_bootloader_get_addr_hi (device));
-		g_print ("Flash Addr Lo:  0x%04x\n",
-			 lu_device_bootloader_get_addr_lo (device));
-		g_print ("Flash Block Sz: 0x%04x\n",
-			 lu_device_bootloader_get_blocksize (device));
-	}
-	guids = lu_device_get_guids (device);
-	for (guint i = 0; i < guids->len; i++) {
-		const gchar *guid = g_ptr_array_index (guids, i);
-		g_print ("GUID:           %s\n", guid);
-	}
-
-	/* close device */
-	return lu_device_close (device, error);
+	g_autofree gchar *str = lu_device_to_string (device);
+	g_print ("%s", str);
+	return TRUE;
 }
 
 static gboolean
@@ -297,8 +216,7 @@ lu_tool_info (FuLuToolPrivate *priv, gchar **values, GError **error)
 	if (priv->emulation_kind != LU_DEVICE_KIND_UNKNOWN) {
 		g_autoptr(LuDevice) device = NULL;
 		device = lu_device_fake_new (priv->emulation_kind);
-		if (!lu_tool_info_device (priv, device, error))
-			return FALSE;
+		lu_tool_info_device (device);
 	}
 
 	/* get the devices */
@@ -310,8 +228,7 @@ lu_tool_info (FuLuToolPrivate *priv, gchar **values, GError **error)
 	devices = lu_context_get_devices (ctx);
 	for (guint i = 0; i < devices->len; i++) {
 		LuDevice *device = g_ptr_array_index (devices, i);
-		if (!lu_tool_info_device (priv, device, error))
-			return FALSE;
+		lu_tool_info_device (device);
 		if (i != devices->len - 1)
 			g_print ("\n");
 	}
@@ -397,8 +314,6 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 	}
 	if (device == NULL)
 		return FALSE;
-	if (!lu_device_open (device, error))
-		return FALSE;
 
 	/* do we need to go into bootloader mode */
 	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH)) {
@@ -407,7 +322,7 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 		if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
 			if (!lu_context_wait_for_replug (priv->ctx,
 							 device,
-							 5000,
+							 FU_DEVICE_TIMEOUT_REPLUG,
 							 error))
 				return FALSE;
 			g_usleep (G_USEC_PER_SEC);
@@ -446,8 +361,6 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 	/* detach back into runtime */
 	if (!lu_device_attach (device, error))
 		return FALSE;
-	if (!lu_device_close (device, error))
-		return FALSE;
 
 	return TRUE;
 }
@@ -460,16 +373,28 @@ lu_tool_attach (FuLuToolPrivate *priv, gchar **values, GError **error)
 		device = lu_context_find_by_platform_id (priv->ctx,
 							 values[0],
 							 error);
+		if (device == NULL)
+			return FALSE;
 	} else {
-		device = lu_get_default_device (priv, error);
+		GPtrArray *devices = NULL;
+		devices = lu_context_get_devices (priv->ctx);
+		for (guint i = 0; i < devices->len; i++) {
+			LuDevice *device_tmp = g_ptr_array_index (devices, i);
+			g_debug ("got %s", lu_device_kind_to_string (lu_device_get_kind (device_tmp)));
+			if (lu_device_has_flag (device_tmp, LU_DEVICE_FLAG_REQUIRES_ATTACH)) {
+				device = g_object_ref (device_tmp);
+				break;
+			}
+		}
+		if (device == NULL) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_FAILED,
+					     "No attachable device plugged in");
+			return FALSE;
+		}
 	}
-	if (device == NULL)
-		return FALSE;
-	if (!lu_device_open (device, error))
-		return FALSE;
 	if (!lu_device_attach (device, error))
-		return FALSE;
-	if (!lu_device_close (device, error))
 		return FALSE;
 	return TRUE;
 }
@@ -477,9 +402,11 @@ lu_tool_attach (FuLuToolPrivate *priv, gchar **values, GError **error)
 static void
 lu_tool_device_added_cb (LuContext* ctx, LuDevice *device, FuLuToolPrivate *priv)
 {
+	g_autoptr(GError) error = NULL;
 	g_print ("ADDED\tLogitech Unifying device %s {%p} [%s]\n",
 		 lu_device_kind_to_string (lu_device_get_kind (device)),
 		 device, lu_device_get_platform_id (device));
+	lu_tool_info_device (device);
 }
 
 static void
@@ -515,11 +442,7 @@ lu_tool_detach (FuLuToolPrivate *priv, gchar **values, GError **error)
 	}
 	if (device == NULL)
 		return FALSE;
-	if (!lu_device_open (device, error))
-		return FALSE;
 	if (!lu_device_detach (device, error))
-		return FALSE;
-	if (!lu_device_close (device, error))
 		return FALSE;
 	return TRUE;
 }

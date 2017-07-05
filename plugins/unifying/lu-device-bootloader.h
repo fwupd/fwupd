@@ -73,7 +73,7 @@ typedef enum {
 } LuDeviceBootloaderCmd;
 
 /* packet to and from device */
-typedef struct {
+typedef struct __attribute__((packed)) {
 	guint8		 cmd;
 	guint16		 addr;
 	guint8		 len;

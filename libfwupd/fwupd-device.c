@@ -154,7 +154,7 @@ fwupd_device_get_id (FwupdDevice *device)
 /**
  * fwupd_device_set_id:
  * @device: A #FwupdDevice
- * @device_id: the device ID, e.g. "USB:foo"
+ * @id: the device ID, e.g. "USB:foo"
  *
  * Sets the ID.
  *
@@ -274,7 +274,7 @@ fwupd_device_get_name (FwupdDevice *device)
 /**
  * fwupd_device_set_name:
  * @device: A #FwupdDevice
- * @device_name: the device name, e.g. "ColorHug2"
+ * @name: the device name, e.g. "ColorHug2"
  *
  * Sets the device name.
  *
@@ -310,7 +310,7 @@ fwupd_device_get_vendor (FwupdDevice *device)
 /**
  * fwupd_device_set_vendor:
  * @device: A #FwupdDevice
- * @device_vendor: the description
+ * @vendor: the description
  *
  * Sets the device vendor.
  *
@@ -382,7 +382,7 @@ fwupd_device_get_description (FwupdDevice *device)
 /**
  * fwupd_device_set_description:
  * @device: A #FwupdDevice
- * @device_description: the description in AppStream markup format
+ * @description: the description in AppStream markup format
  *
  * Sets the device description.
  *
@@ -418,7 +418,7 @@ fwupd_device_get_version (FwupdDevice *device)
 /**
  * fwupd_device_set_version:
  * @device: A #FwupdDevice
- * @device_version: the device version, e.g. "1.2.3"
+ * @version: the device version, e.g. "1.2.3"
  *
  * Sets the device version.
  *
@@ -454,7 +454,7 @@ fwupd_device_get_version_lowest (FwupdDevice *device)
 /**
  * fwupd_device_set_version_lowest:
  * @device: A #FwupdDevice
- * @device_version_lowest: the description
+ * @version_lowest: the description
  *
  * Sets the lowest version of firmware the device will accept.
  *
@@ -490,7 +490,7 @@ fwupd_device_get_version_bootloader (FwupdDevice *device)
 /**
  * fwupd_device_set_version_bootloader:
  * @device: A #FwupdDevice
- * @device_version_bootloader: the description
+ * @version_bootloader: the description
  *
  * Sets the bootloader version.
  *
@@ -561,7 +561,7 @@ fwupd_device_get_provider (FwupdDevice *device)
 /**
  * fwupd_device_set_provider:
  * @device: A #FwupdDevice
- * @device_provider: the provider name, e.g. "colorhug"
+ * @provider: the provider name, e.g. "colorhug"
  *
  * Sets the device provider.
  *
@@ -597,7 +597,7 @@ fwupd_device_get_flags (FwupdDevice *device)
 /**
  * fwupd_device_set_flags:
  * @device: A #FwupdDevice
- * @device_flags: the device flags, e.g. %FWUPD_DEVICE_FLAG_REQUIRE_AC
+ * @flags: the device flags, e.g. %FWUPD_DEVICE_FLAG_REQUIRE_AC
  *
  * Sets the device flags.
  *
@@ -686,7 +686,7 @@ fwupd_device_get_created (FwupdDevice *device)
 /**
  * fwupd_device_set_created:
  * @device: A #FwupdDevice
- * @device_created: the UNIX time
+ * @created: the UNIX time
  *
  * Sets when the device was created.
  *
@@ -721,7 +721,7 @@ fwupd_device_get_modified (FwupdDevice *device)
 /**
  * fwupd_device_set_modified:
  * @device: A #FwupdDevice
- * @device_modified: the UNIX time
+ * @modified: the UNIX time
  *
  * Sets when the device was modified.
  *
@@ -1011,6 +1011,7 @@ fwupd_device_to_string (FwupdDevice *device)
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
 	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_NAME, priv->name);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PLUGIN, priv->provider);
 	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_DEVICE_FLAGS, priv->flags);

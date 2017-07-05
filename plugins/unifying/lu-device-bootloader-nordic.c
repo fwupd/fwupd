@@ -108,6 +108,7 @@ lu_device_bootloader_nordic_probe (LuDevice *device, GError **error)
 	if (version_fw == NULL) {
 		g_warning ("failed to get firmware version: %s",
 			   error_local->message);
+		lu_device_set_version_fw (device, "RQR12.xx_Bxxxx");
 	} else {
 		lu_device_set_version_fw (device, version_fw);
 	}

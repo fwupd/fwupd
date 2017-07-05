@@ -46,6 +46,9 @@ executable(
   'fwupd',
   resources_src,
   sources : [
+    'fu-common.c',
+    'fu-config.c',
+    'fu-engine.c',
     'fu-main.c',
     'fu-hwids.c',
     'fu-debug.c',

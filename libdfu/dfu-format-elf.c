@@ -350,7 +350,7 @@ dfu_firmware_to_elf (DfuFirmware *firmware, GError **error)
 				     DFU_ERROR,
 				     DFU_ERROR_INTERNAL,
 				     "no image to write");
-		return FALSE;
+		return NULL;
 	}
 
 	/* load library */
@@ -360,7 +360,7 @@ dfu_firmware_to_elf (DfuFirmware *firmware, GError **error)
 			     DFU_ERROR_INTERNAL,
 			     "ELF library init failed: %s",
 			     elf_errmsg (-1));
-		return FALSE;
+		return NULL;
 	}
 
 	/* create from buffer */
@@ -396,7 +396,7 @@ dfu_firmware_to_elf (DfuFirmware *firmware, GError **error)
 
 	/* pack the image */
 	if (!dfu_format_elf_pack_image (e, image, error))
-		return FALSE;
+		return NULL;
 
 	/* allocate section for holding the string table */
 	scn = elf_newscn (e);
@@ -468,6 +468,6 @@ dfu_firmware_to_elf (DfuFirmware *firmware, GError **error)
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
 			     "compiled without libelf support");
-	return FALSE;
+	return NULL;
 #endif
 }

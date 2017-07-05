@@ -11,6 +11,7 @@ shared_module('fu_plugin_unifying',
     'lu-device.c',
     'lu-device-peripheral.c',
     'lu-device-runtime.c',
+    'lu-hidpp-msg.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -38,6 +39,7 @@ executable(
     'lu-device.c',
     'lu-device-peripheral.c',
     'lu-device-runtime.c',
+    'lu-hidpp-msg.c',
   ],
   include_directories : [
     include_directories('../..'),

@@ -400,7 +400,7 @@ dfu_firmware_to_ihex (DfuFirmware *firmware, GError **error)
 	for (guint i = 0; i < images->len; i++) {
 		DfuImage *image = g_ptr_array_index (images, i);
 		if (!dfu_firmware_to_ihex_image (image, str, error))
-			return FALSE;
+			return NULL;
 	}
 
 	/* add EOF */

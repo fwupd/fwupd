@@ -111,37 +111,6 @@
     </method>
 
     <!--***********************************************************-->
-    <method name='GetDetails'>
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Gets details about a firmware file.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-      <arg type='h' name='handle' direction='in'>
-        <doc:doc>
-          <doc:summary>
-            <doc:para>
-              An index into the array of file descriptors that may have
-              been sent with the DBus message.
-            </doc:para>
-          </doc:summary>
-        </doc:doc>
-      </arg>
-      <arg type='a{sv}' name='details' direction='out'>
-        <doc:doc>
-          <doc:summary>
-            <doc:para>
-              Properties about the firmware, e.g.
-              <doc:tt>DisplayName=ColorHug</doc:tt>.
-            </doc:para>
-          </doc:summary>
-        </doc:doc>
-      </arg>
-    </method>
-
-    <!--***********************************************************-->
     <method name='GetDetailsLocal'>
       <doc:doc>
         <doc:description>
@@ -295,6 +264,24 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetRemotes'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets the list of remotes.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='aa{sv}' name='results' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The array remotes, with properties</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='ClearResults'>
       <doc:doc>
         <doc:description>
@@ -309,35 +296,6 @@
             <doc:para>
               An ID, typically a GUID of the hardware that was updated, or the
               string <doc:tt>*</doc:tt> to match any hardware.</doc:para>
-          </doc:summary>
-        </doc:doc>
-      </arg>
-    </method>
-
-    <!--***********************************************************-->
-    <method name='UpdateMetadata'>
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Adds AppStream resource information from a session client.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-      <arg type='h' name='data' direction='in'>
-        <doc:doc>
-          <doc:summary>
-            <doc:para>
-              File handle to AppStream metadata.
-            </doc:para>
-          </doc:summary>
-        </doc:doc>
-      </arg>
-      <arg type='h' name='signature' direction='in'>
-        <doc:doc>
-          <doc:summary>
-            <doc:para>
-              File handle to AppStream metadata GPG signature.
-            </doc:para>
           </doc:summary>
         </doc:doc>
       </arg>

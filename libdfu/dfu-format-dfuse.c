@@ -310,7 +310,7 @@ dfu_firmware_to_dfuse (DfuFirmware *firmware, GError **error)
 			     DFU_ERROR_INTERNAL,
 			     "too many (%u) images to write DfuSe file",
 			     images->len);
-		return FALSE;
+		return NULL;
 	}
 	prefix->targets = (guint8) images->len;
 

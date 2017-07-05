@@ -30,11 +30,19 @@ struct _FwupdRemote
 {
 	GObject			 parent_instance;
 	gchar			*id;
+	gchar			*url;
+	gchar			*username;
+	gchar			*password;
 	gchar			*filename;
 	gchar			*filename_asc;
+	gchar			*filename_cache;
 	gboolean		 enabled;
 	SoupURI			*uri;
 	SoupURI			*uri_asc;
+	gint			 priority;
+	guint64			 mtime;
+	gchar			**order_after;
+	gchar			**order_before;
 };
 
 enum {
@@ -45,6 +53,76 @@ enum {
 };
 
 G_DEFINE_TYPE (FwupdRemote, fwupd_remote, G_TYPE_OBJECT)
+
+static void
+fwupd_remote_set_username (FwupdRemote *self, const gchar *username)
+{
+	if (username != NULL && username[0] == '\0')
+		username = NULL;
+	self->username = g_strdup (username);
+	if (self->uri != NULL)
+		soup_uri_set_user (self->uri, username);
+	if (self->uri_asc != NULL)
+		soup_uri_set_user (self->uri_asc, username);
+}
+
+static void
+fwupd_remote_set_password (FwupdRemote *self, const gchar *password)
+{
+	if (password != NULL && password[0] == '\0')
+		password = NULL;
+	self->password = g_strdup (password);
+	if (self->uri != NULL)
+		soup_uri_set_password (self->uri, password);
+	if (self->uri_asc != NULL)
+		soup_uri_set_password (self->uri_asc, password);
+}
+
+/* note, this has to be set before url */
+static void
+fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
+{
+	g_free (self->id);
+	self->id = g_strdup (id);
+	g_strdelimit (self->id, ".", '\0');
+
+	/* set cache filename */
+	g_free (self->filename_cache);
+	self->filename_cache = g_build_filename (LOCALSTATEDIR,
+						 "lib",
+						 "fwupd",
+						 "remotes.d",
+						 self->id,
+						 "metadata.xml.gz",
+						 NULL);
+}
+
+/* note, this has to be set before username and password */
+static void
+fwupd_remote_set_url (FwupdRemote *self, const gchar *url)
+{
+	g_autofree gchar *url_asc = NULL;
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *basename_asc = NULL;
+
+	/* save this so we can export the object as a GVariant */
+	self->url = g_strdup (url);
+
+	/* build the URI */
+	self->uri = soup_uri_new (url);
+	if (self->uri == NULL)
+		return;
+
+	/* generate the signature URI too */
+	url_asc = g_strdup_printf ("%s.asc", url);
+	self->uri_asc = fwupd_remote_build_uri (self, url_asc, NULL);
+
+	/* generate some plausible local filenames */
+	basename = g_path_get_basename (soup_uri_get_path (self->uri));
+	self->filename = g_strdup_printf ("%s-%s", self->id, basename);
+	basename_asc = g_path_get_basename (soup_uri_get_path (self->uri_asc));
+	self->filename_asc = g_strdup_printf ("%s-%s", self->id, basename_asc);
+}
 
 /**
  * fwupd_remote_load_from_filename:
@@ -67,12 +145,12 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 				 GError **error)
 {
 	const gchar *group = "fwupd Remote";
-	g_autofree gchar *basename = NULL;
-	g_autofree gchar *basename_asc = NULL;
-	g_autofree gchar *url = NULL;
-	g_autofree gchar *url_asc = NULL;
-	g_autofree gchar *username = NULL;
+	g_autofree gchar *id = NULL;
+	g_autofree gchar *order_after = NULL;
+	g_autofree gchar *order_before = NULL;
 	g_autofree gchar *password = NULL;
+	g_autofree gchar *url = NULL;
+	g_autofree gchar *username = NULL;
 	g_autoptr(GKeyFile) kf = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
@@ -81,8 +159,8 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* set ID */
-	self->id = g_path_get_basename (filename);
-	g_strdelimit (self->id, ".", '\0');
+	id = g_path_get_basename (filename);
+	fwupd_remote_set_id (self, id);
 
 	/* load file */
 	kf = g_key_file_new ();
@@ -94,7 +172,9 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	url = g_key_file_get_string (kf, group, "Url", error);
 	if (url == NULL)
 		return FALSE;
-	self->uri = soup_uri_new (url);
+	fwupd_remote_set_url (self, url);
+
+	/* check the URI was valid */
 	if (self->uri == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -106,26 +186,100 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 
 	/* username and password are optional */
 	username = g_key_file_get_string (kf, group, "Username", NULL);
-	if (username != NULL && username[0] != '\0')
-		soup_uri_set_user (self->uri, username);
+	if (username != NULL)
+		fwupd_remote_set_username (self, username);
 	password = g_key_file_get_string (kf, group, "Password", NULL);
-	if (password != NULL && password[0] != '\0')
-		soup_uri_set_password (self->uri, password);
+	if (password != NULL)
+		fwupd_remote_set_password (self, password);
 
-	/* generate the signature URI too */
-	url_asc = g_strdup_printf ("%s.asc", url);
-	self->uri_asc = fwupd_remote_build_uri (self, url_asc, error);
-	if (self->uri_asc == NULL)
-		return FALSE;
-
-	/* generate some plausible local filenames */
-	basename = g_path_get_basename (soup_uri_get_path (self->uri));
-	self->filename = g_strdup_printf ("%s-%s", self->id, basename);
-	basename_asc = g_path_get_basename (soup_uri_get_path (self->uri_asc));
-	self->filename_asc = g_strdup_printf ("%s-%s", self->id, basename_asc);
+	/* dep logic */
+	order_before = g_key_file_get_string (kf, group, "OrderBefore", NULL);
+	if (order_before != NULL)
+		self->order_before = g_strsplit_set (order_before, ",:;", -1);
+	order_after = g_key_file_get_string (kf, group, "OrderAfter", NULL);
+	if (order_after != NULL)
+		self->order_after = g_strsplit_set (order_after, ",:;", -1);
 
 	/* success */
 	return TRUE;
+}
+
+/* private */
+gchar **
+fwupd_remote_get_order_after (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->order_after;
+}
+
+/* private */
+gchar **
+fwupd_remote_get_order_before (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->order_before;
+}
+
+/* private */
+const gchar *
+fwupd_remote_get_filename_cache (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->filename_cache;
+}
+
+/**
+ * fwupd_remote_get_priority:
+ * @self: A #FwupdRemote
+ *
+ * Gets the priority of the remote, where bigger numbers are better.
+ *
+ * Returns: a priority, or 0 for the default value
+ *
+ * Since: 0.9.5
+ **/
+gint
+fwupd_remote_get_priority (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
+	return self->priority;
+}
+
+/**
+ * fwupd_remote_get_age:
+ * @self: A #FwupdRemote
+ *
+ * Gets the age of the remote in seconds.
+ *
+ * Returns: a age, or %G_MAXUINT64 for unavailable
+ *
+ * Since: 0.9.5
+ **/
+guint64
+fwupd_remote_get_age (FwupdRemote *self)
+{
+	guint64 now;
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
+	now = (guint64) g_get_real_time () / G_USEC_PER_SEC;
+	if (self->mtime > now)
+		return G_MAXUINT64;
+	return now - self->mtime;
+}
+
+/* private */
+void
+fwupd_remote_set_priority (FwupdRemote *self, gint priority)
+{
+	g_return_if_fail (FWUPD_IS_REMOTE (self));
+	self->priority = priority;
+}
+
+/* private */
+void
+fwupd_remote_set_mtime (FwupdRemote *self, guint64 mtime)
+{
+	g_return_if_fail (FWUPD_IS_REMOTE (self));
+	self->mtime = mtime;
 }
 
 const gchar *
@@ -133,6 +287,20 @@ fwupd_remote_get_filename (FwupdRemote *self)
 {
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 	return self->filename;
+}
+
+const gchar *
+fwupd_remote_get_username (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->username;
+}
+
+const gchar *
+fwupd_remote_get_password (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->password;
 }
 
 const gchar *
@@ -170,7 +338,7 @@ fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "Failed to parse URI '%s'", url);
-		return FALSE;
+		return NULL;
 	}
 
 	/* set the username and password from the metadata URI */
@@ -247,6 +415,100 @@ fwupd_remote_get_id (FwupdRemote *self)
 {
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 	return self->id;
+}
+
+static void
+fwupd_remote_to_variant_builder (FwupdRemote *self, GVariantBuilder *builder)
+{
+	if (self->id != NULL) {
+		g_variant_builder_add (builder, "{sv}", "Id",
+				       g_variant_new_string (self->id));
+	}
+	if (self->username != NULL) {
+		g_variant_builder_add (builder, "{sv}", "Username",
+				       g_variant_new_string (self->username));
+	}
+	if (self->password != NULL) {
+		g_variant_builder_add (builder, "{sv}", "Password",
+				       g_variant_new_string (self->password));
+	}
+	if (self->url != NULL) {
+		g_variant_builder_add (builder, "{sv}", "Url",
+				       g_variant_new_string (self->url));
+	}
+	if (self->priority != 0) {
+		g_variant_builder_add (builder, "{sv}", "Priority",
+				       g_variant_new_int32 (self->priority));
+	}
+	if (self->mtime != 0) {
+		g_variant_builder_add (builder, "{sv}", "ModificationTime",
+				       g_variant_new_uint64 (self->mtime));
+	}
+	g_variant_builder_add (builder, "{sv}", "Enabled",
+			       g_variant_new_boolean (self->enabled));
+}
+
+static void
+fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
+{
+	GVariant *value;
+	const gchar *key;
+	g_autoptr(GVariantIter) iter2 = g_variant_iter_copy (iter);
+	g_autoptr(GVariantIter) iter3 = g_variant_iter_copy (iter);
+
+	/* three passes, as we have to construct Id -> Url -> * */
+	while (g_variant_iter_loop (iter, "{sv}", &key, &value)) {
+		if (g_strcmp0 (key, "Id") == 0)
+			fwupd_remote_set_id (self, g_variant_get_string (value, NULL));
+	}
+	while (g_variant_iter_loop (iter2, "{sv}", &key, &value)) {
+		if (g_strcmp0 (key, "Url") == 0)
+			fwupd_remote_set_url (self, g_variant_get_string (value, NULL));
+	}
+	while (g_variant_iter_loop (iter3, "{sv}", &key, &value)) {
+		if (g_strcmp0 (key, "Username") == 0) {
+			fwupd_remote_set_username (self, g_variant_get_string (value, NULL));
+		} else if (g_strcmp0 (key, "Password") == 0) {
+			fwupd_remote_set_password (self, g_variant_get_string (value, NULL));
+		} else if (g_strcmp0 (key, "Enabled") == 0) {
+			self->enabled = g_variant_get_boolean (value);
+		} else if (g_strcmp0 (key, "Priority") == 0) {
+			self->priority = g_variant_get_int32 (value);
+		} else if (g_strcmp0 (key, "ModificationTime") == 0) {
+			self->mtime = g_variant_get_uint64 (value);
+		}
+	}
+}
+
+/**
+ * fwupd_remote_to_data:
+ * @remote: A #FwupdRemote
+ * @type_string: The Gvariant type string, e.g. "a{sv}" or "(a{sv})"
+ *
+ * Creates a GVariant from the remote data.
+ *
+ * Returns: the GVariant, or %NULL for error
+ *
+ * Since: 0.9.5
+ **/
+GVariant *
+fwupd_remote_to_data (FwupdRemote *self, const gchar *type_string)
+{
+	GVariantBuilder builder;
+
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	g_return_val_if_fail (type_string != NULL, NULL);
+
+	/* create an array with all the metadata in */
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	fwupd_remote_to_variant_builder (self, &builder);
+
+	/* supported types */
+	if (g_strcmp0 (type_string, "a{sv}") == 0)
+		return g_variant_new ("a{sv}", &builder);
+	if (g_strcmp0 (type_string, "(a{sv})") == 0)
+		return g_variant_new ("(a{sv})", &builder);
+	return NULL;
 }
 
 static void
@@ -330,14 +592,53 @@ fwupd_remote_finalize (GObject *obj)
 	FwupdRemote *self = FWUPD_REMOTE (obj);
 
 	g_free (self->id);
+	g_free (self->url);
+	g_free (self->username);
+	g_free (self->password);
 	g_free (self->filename);
 	g_free (self->filename_asc);
+	g_free (self->filename_cache);
+	g_strfreev (self->order_after);
+	g_strfreev (self->order_before);
 	if (self->uri != NULL)
 		soup_uri_free (self->uri);
 	if (self->uri_asc != NULL)
 		soup_uri_free (self->uri_asc);
 
 	G_OBJECT_CLASS (fwupd_remote_parent_class)->finalize (obj);
+}
+
+/**
+ * fwupd_remote_new_from_data:
+ * @data: a #GVariant
+ *
+ * Creates a new remote using packed data.
+ *
+ * Returns: a new #FwupdRemote, or %NULL if @data was invalid
+ *
+ * Since: 0.9.5
+ **/
+FwupdRemote *
+fwupd_remote_new_from_data (GVariant *data)
+{
+	FwupdRemote *rel = NULL;
+	const gchar *type_string;
+	g_autoptr(GVariantIter) iter = NULL;
+
+	type_string = g_variant_get_type_string (data);
+	if (g_strcmp0 (type_string, "(a{sv})") == 0) {
+		rel = fwupd_remote_new ();
+		g_variant_get (data, "(a{sv})", &iter);
+		fwupd_remote_set_from_variant_iter (rel, iter);
+		fwupd_remote_set_from_variant_iter (rel, iter);
+	} else if (g_strcmp0 (type_string, "a{sv}") == 0) {
+		rel = fwupd_remote_new ();
+		g_variant_get (data, "a{sv}", &iter);
+		fwupd_remote_set_from_variant_iter (rel, iter);
+	} else {
+		g_warning ("type %s not known", type_string);
+	}
+	return rel;
 }
 
 /**

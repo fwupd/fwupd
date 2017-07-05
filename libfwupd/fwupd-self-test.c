@@ -139,6 +139,7 @@ fwupd_result_func (void)
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
 		"  Guid:                 00000000-0000-0000-0000-000000000000\n"
 		"  DeviceID:             USB:foo\n"
+		"  DisplayName:          ColorHug2\n"
 		"  Flags:                allow-offline|require-ac\n"
 		"  FirmwareHash:         SHA1(beefdead)\n"
 		"  Created:              1970-01-01\n"
@@ -201,16 +202,18 @@ fwupd_client_remotes_func (void)
 	g_assert_cmpint (array->len, ==, 2);
 
 	/* check remote */
-	remote = g_ptr_array_index (array, 0);
+	remote = g_ptr_array_index (array, 1);
 	g_assert (FWUPD_IS_REMOTE (remote));
 	g_assert_cmpstr (fwupd_remote_get_id (remote), ==, "lvfs");
+	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
 	g_assert (fwupd_remote_get_enabled (remote));
 	g_assert (fwupd_remote_get_uri (remote) != NULL);
 	g_assert (fwupd_remote_get_uri_asc (remote) != NULL);
 	g_assert_cmpstr (fwupd_remote_get_filename (remote), ==, "lvfs-firmware.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_filename_asc (remote), ==, "lvfs-firmware.xml.gz.asc");
-	remote = g_ptr_array_index (array, 1);
+	remote = g_ptr_array_index (array, 0);
 	g_assert_cmpstr (fwupd_remote_get_id (remote), ==, "lvfs-testing");
+	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 1);
 	g_assert (!fwupd_remote_get_enabled (remote));
 	g_assert (fwupd_remote_get_uri (remote)!= NULL);
 	g_assert (fwupd_remote_get_uri_asc (remote)!= NULL);
@@ -276,6 +279,7 @@ main (int argc, char **argv)
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
+	g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
 
 	/* tests go here */
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);

@@ -10,6 +10,7 @@ Build-Depends: debhelper (>= 10.3),
                gcab,
                gettext (>= 0.19.8.1),
                gir1.2-appstreamglib-1.0,
+               gir1.2-pango-1.0,
                gobject-introspection,
                gtk-doc-tools,
                fontconfig,
@@ -30,7 +31,6 @@ Build-Depends: debhelper (>= 10.3),
                libgpgme11-dev,
                libgudev-1.0-dev,
                libgusb-dev (>= 0.2.9),
-               libpango1.0-dev,
                libpolkit-gobject-1-dev,
                libsoup2.4-dev,
                libsqlite3-dev,
@@ -105,6 +105,29 @@ Description: Firmware update daemon
  Currently, firmware updates using the UEFI capsule format and for the
  ColorHug are supported. More formats may be supported in the future.
  See <https://github.com/hughsie/fwupd> for details
+
+Package: fwupd-tests
+Architecture: all
+Depends: ${misc:Depends},
+         ca-certificates,
+         dbus-x11,
+         fwupd,
+         gnome-desktop-testing,
+         python3-gi,
+         python3-requests,
+Breaks: fwupd (<< 0.9.4-1)
+Replaces: fwupd (<< 0.9.4-1)
+Multi-Arch: foreign
+Description: Firmware update daemon
+ fwupd is a daemon to allow session software to update device firmware.
+ You can either use a GUI software manager like GNOME Software to view and
+ apply updates, the command-line tool or the system D-Bus interface directly.
+ Currently, firmware updates using the UEFI capsule format and for the
+ ColorHug are supported. More formats may be supported in the future.
+ See <https://github.com/hughsie/fwupd> for details
+ .
+ This package provides a set of installed tests that can be run to validate
+ the daemon in a continuous integration system.
 
 Package: fwupd-doc
 Section: doc

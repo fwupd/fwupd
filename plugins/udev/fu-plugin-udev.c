@@ -43,14 +43,17 @@ fu_plugin_udev_get_id (GUdevDevice *device)
 }
 
 gboolean
-fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_verify (FuPlugin *plugin,
+		  FuDevice *device,
+		  FuPluginVerifyFlags flags,
+		  GError **error)
 {
+	GPtrArray *checksums;
 	const gchar *rom_fn;
-	g_autoptr(FuRom) rom = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(FuRom) rom = NULL;
 
-	/* get the FW version from the rom */
-	g_debug ("unlocking UDev device %s", fu_device_get_id (device));
+	/* open the file */
 	rom_fn = fu_device_get_metadata (device, "RomFilename");
 	if (rom_fn == NULL) {
 		g_set_error_literal (error,
@@ -79,33 +82,7 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	 * on a device with a different PID to the firmware */
 	fu_device_add_guid (device, fu_rom_get_guid (rom));
 
-	return TRUE;
-}
-
-gboolean
-fu_plugin_verify (FuPlugin *plugin,
-		  FuDevice *device,
-		  FuPluginVerifyFlags flags,
-		  GError **error)
-{
-	GPtrArray *checksums;
-	const gchar *rom_fn;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(FuRom) rom = NULL;
-
-	/* open the file */
-	rom_fn = fu_device_get_metadata (device, "RomFilename");
-	if (rom_fn == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Unable to read firmware from device");
-		return FALSE;
-	}
-	file = g_file_new_for_path (rom_fn);
-	rom = fu_rom_new ();
-	if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, error))
-		return FALSE;
+	/* update checksums */
 	checksums = fu_rom_get_checksums (rom);
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (checksums, i);
@@ -219,10 +196,8 @@ fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 
 	/* get the FW version from the rom when unlocked */
 	rom_fn = g_build_filename (g_udev_device_get_sysfs_path (device), "rom", NULL);
-	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS)) {
+	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS))
 		fu_device_set_metadata (dev, "RomFilename", rom_fn);
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
-	}
 
 	/* insert to hash */
 	fu_plugin_cache_add (plugin, id, dev);

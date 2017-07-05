@@ -793,10 +793,15 @@ fu_plugin_runner_verify (FuPlugin *plugin,
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginVerifyFunc func = NULL;
+	GPtrArray *checksums;
 
 	/* not enabled */
 	if (!priv->enabled)
 		return TRUE;
+
+	/* clear any existing verification checksums */
+	checksums = fu_device_get_checksums (device);
+	g_ptr_array_set_size (checksums, 0);
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_verify", (gpointer *) &func);
@@ -863,6 +868,7 @@ fu_plugin_runner_update (FuPlugin *plugin,
 	g_autoptr(FuPending) pending = NULL;
 	g_autoptr(FwupdResult) res_pending = NULL;
 	GError *error_update = NULL;
+	GPtrArray *checksums;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -906,6 +912,10 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		g_propagate_error (error, error_update);
 		return FALSE;
 	}
+
+	/* no longer valid */
+	checksums = fu_device_get_checksums (device);
+	g_ptr_array_set_size (checksums, 0);
 
 	/* cleanup */
 	if (res_pending != NULL) {

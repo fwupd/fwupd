@@ -174,11 +174,32 @@ static void
 lu_context_add_device (LuContext *ctx, LuDevice *device)
 {
 	GUsbContextReplugHelper *replug_helper;
+	g_autoptr(GError) error = NULL;
 
 	g_return_if_fail (LU_IS_CONTEXT (ctx));
 	g_return_if_fail (LU_IS_DEVICE (device));
 
 	g_debug ("device %s added", lu_device_get_platform_id (device));
+
+	/* HID++1.0 devices have to sleep to allow Solaar to talk to the device
+	 * first -- we can't use the SwID as this is a HID++2.0 feature */
+	if (ctx->done_coldplug &&
+	    lu_device_get_hidpp_version (device) <= 1.f) {
+		g_debug ("waiting for device to settle...");
+		g_usleep (G_USEC_PER_SEC);
+	}
+
+	/* try to open */
+	if (!lu_device_open (device, &error)) {
+		if (g_error_matches (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_HOST_UNREACHABLE)) {
+			g_debug ("could not open: %s", error->message);
+		} else {
+			g_warning ("failed to open: %s", error->message);
+		}
+		return;
+	}
 
 	/* emit */
 	g_ptr_array_add (ctx->devices, g_object_ref (device));
@@ -296,14 +317,13 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 	}
 
 	/* is peripheral */
-	val = g_udev_device_get_property (udev_parent, "HID_NAME");
-	g_debug ("%s not a matching pid: %04x", val, pid);
 	platform_id = g_udev_device_get_sysfs_path (udev_device);
 	device = g_object_new (LU_TYPE_DEVICE_PERIPHERAL,
 			       "kind", LU_DEVICE_KIND_PERIPHERAL,
 			       "platform-id", platform_id,
 			       "udev-device", udev_device,
 			       NULL);
+	val = g_udev_device_get_property (udev_parent, "HID_NAME");
 	if (val != NULL) {
 		if (g_str_has_prefix (val, "Logitech "))
 			val += 9;
@@ -311,7 +331,7 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 	}
 
 	/* generate GUID */
-	devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X", vid, pid);
+	devid = g_strdup_printf ("UFY\\VID_%04X&PID_%04X", vid, pid);
 	lu_device_add_guid (device, devid);
 	g_hash_table_insert (ctx->hash_devices,
 			     g_strdup (lu_device_get_platform_id (device)),
@@ -403,6 +423,13 @@ static gboolean
 lu_context_poll_cb (gpointer user_data)
 {
 	LuContext *ctx = LU_CONTEXT (user_data);
+
+	/* do not poll when we're waiting for device replug */
+	if (g_hash_table_size (ctx->hash_replug) > 0) {
+		g_debug ("not polling device as replug in process");
+		return TRUE;
+	}
+
 	for (guint i = 0; i < ctx->devices->len; i++) {
 		LuDevice *device = g_ptr_array_index (ctx->devices, i);
 		g_autoptr(GError) error = NULL;
@@ -536,7 +563,9 @@ lu_context_usb_device_added_cb (GUsbContext *usb_ctx,
 		g_autoptr(LuDevice) device = NULL;
 		device = g_object_new (LU_TYPE_DEVICE_BOOTLOADER_NORDIC,
 				       "kind", LU_DEVICE_KIND_BOOTLOADER_NORDIC,
-				       "flags", LU_DEVICE_FLAG_ACTIVE,
+				       "flags", LU_DEVICE_FLAG_ACTIVE |
+						LU_DEVICE_FLAG_REQUIRES_ATTACH |
+						LU_DEVICE_FLAG_ATTACH_WILL_REPLUG,
 				       "hidpp-id", HIDPP_DEVICE_ID_RECEIVER,
 				       "usb-device", usb_device,
 				       NULL);
@@ -549,7 +578,9 @@ lu_context_usb_device_added_cb (GUsbContext *usb_ctx,
 		g_autoptr(LuDevice) device = NULL;
 		device = g_object_new (LU_TYPE_DEVICE_BOOTLOADER_TEXAS,
 				       "kind", LU_DEVICE_KIND_BOOTLOADER_TEXAS,
-				       "flags", LU_DEVICE_FLAG_ACTIVE,
+				       "flags", LU_DEVICE_FLAG_ACTIVE |
+						LU_DEVICE_FLAG_REQUIRES_ATTACH |
+						LU_DEVICE_FLAG_ATTACH_WILL_REPLUG,
 				       "hidpp-id", HIDPP_DEVICE_ID_RECEIVER,
 				       "usb-device", usb_device,
 				       NULL);

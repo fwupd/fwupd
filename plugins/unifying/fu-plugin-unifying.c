@@ -42,6 +42,7 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 				 GError **error)
 {
 	GPtrArray *guids;
+	GUsbDevice *usb_device;
 	g_autofree gchar *name = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
@@ -72,9 +73,12 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 		fu_device_add_guid (dev, guid);
 	}
 
-	/* close the device */
-	if (!lu_device_close (device, error))
-		return FALSE;
+	/* don't allow the USB plugin to claim this */
+	usb_device = lu_device_get_usb_device (device);
+	if (usb_device != NULL) {
+		const gchar *platform_id = g_usb_device_get_platform_id (usb_device);
+		fu_device_set_equivalent_id (dev, platform_id);
+	}
 
 	/* insert to hash */
 	fu_plugin_device_add (plugin, dev);
@@ -115,8 +119,20 @@ fu_plugin_unifying_detach_cb (gpointer user_data)
 		g_warning ("failed to detach: %s", error->message);
 		return FALSE;
 	}
-	if (!lu_device_close (device, &error)) {
-		g_warning ("failed to close: %s", error->message);
+
+	return FALSE;
+}
+
+static gboolean
+fu_plugin_unifying_attach_cb (gpointer user_data)
+{
+	LuDevice *device = LU_DEVICE (user_data);
+	g_autoptr(GError) error = NULL;
+
+	/* ditch this device */
+	g_debug ("attaching");
+	if (!lu_device_attach (device, &error)) {
+		g_warning ("failed to detach: %s", error->message);
 		return FALSE;
 	}
 
@@ -142,33 +158,68 @@ fu_plugin_update_online (FuPlugin *plugin,
 
 	/* switch to bootloader */
 	data->ignore_replug = TRUE;
-	if (lu_device_get_kind (device) == LU_DEVICE_KIND_RUNTIME) {
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH)) {
 		/* wait for device to come back */
-		g_timeout_add (50, fu_plugin_unifying_detach_cb, device);
-		if (!lu_context_wait_for_replug (data->ctx,
-						 device,
-						 2000,
-						 error))
-			return FALSE;
-		g_object_unref (device);
-		device = fu_plugin_unifying_get_device (plugin, dev, error);
-		if (device == NULL)
-			return FALSE;
-		if (!lu_device_open (device, error))
-			return FALSE;
+		if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
+			g_debug ("doing detach in idle");
+			g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+					 fu_plugin_unifying_detach_cb,
+					 g_object_ref (device),
+					 (GDestroyNotify) g_object_unref);
+			if (!lu_context_wait_for_replug (data->ctx,
+							 device,
+							 FU_DEVICE_TIMEOUT_REPLUG,
+							 error))
+				return FALSE;
+			g_object_unref (device);
+			device = fu_plugin_unifying_get_device (plugin, dev, error);
+			if (device == NULL)
+				return FALSE;
+			if (!lu_device_open (device, error))
+				return FALSE;
+		} else {
+			g_debug ("doing detach in main thread");
+			if (!lu_device_detach (device, error))
+				return FALSE;
+		}
 	}
 
 	/* write the firmware */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 	if (!lu_device_write_firmware (device, blob_fw,
-					     lu_write_progress_cb, plugin,
-					     error))
+				       lu_write_progress_cb, plugin,
+				       error))
 		return FALSE;
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
-	if (!lu_device_attach (device, error))
-		return FALSE;
-	if (!lu_device_close (device, error))
-		return FALSE;
+
+	/* wait for it to appear back in runtime mode */
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_ATTACH)) {
+		if (lu_device_has_flag (device, LU_DEVICE_FLAG_ATTACH_WILL_REPLUG)) {
+			g_debug ("doing attach in idle");
+			g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+					 fu_plugin_unifying_attach_cb,
+					 g_object_ref (device),
+					 (GDestroyNotify) g_object_unref);
+			if (!lu_context_wait_for_replug (data->ctx,
+							 device,
+							 FU_DEVICE_TIMEOUT_REPLUG,
+							 error))
+				return FALSE;
+			g_object_unref (device);
+			device = fu_plugin_unifying_get_device (plugin, dev, error);
+			if (device == NULL)
+				return FALSE;
+			if (!lu_device_open (device, error))
+				return FALSE;
+		} else {
+			g_debug ("doing attach in main thread");
+			if (!lu_device_attach (device, error))
+				return FALSE;
+		}
+	}
+
+	/* set new version */
+	fu_device_set_version (dev, lu_device_get_version_fw (device));
 
 	/* success */
 	data->ignore_replug = FALSE;
@@ -189,9 +240,12 @@ fu_plugin_unifying_device_added_cb (LuContext *ctx,
 
 	/* add */
 	if (!fu_plugin_unifying_device_added (plugin, device, &error)) {
-		if (!g_error_matches (error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_NOT_SUPPORTED)) {
+		if (g_error_matches (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug ("Failed to add Logitech device: %s",
+				  error->message);
+		} else {
 			g_warning ("Failed to add Logitech device: %s",
 				   error->message);
 		}

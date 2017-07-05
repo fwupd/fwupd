@@ -160,10 +160,10 @@ fwupd_release_set_filename (FwupdRelease *release, const gchar *filename)
 }
 
 /**
- * fwupd_device_get_checksums:
- * @device: A #FwupdDevice
+ * fwupd_release_get_checksums:
+ * @release: A #FwupdRelease
  *
- * Gets the device checksums.
+ * Gets the release checksums.
  *
  * Returns: (element-type utf8) (transfer none): the checksums, which may be empty
  *

@@ -21,18 +21,24 @@ override_dh_auto_configure:
 	else \
 		export UEFI="-Denable-uefi=false"; \
 	fi; \
-	if pkg-config --exists libsmbsios_c; then \
+	if pkg-config --exists libsmbios_c; then \
 		export DELL="-Denable-dell=true"; \
 	else \
 		export DELL="-Denable-dell=false"; \
 	fi; \
-	dh_auto_configure -- $$UEFI $$DELL --libexecdir=/usr/lib
+	dh_auto_configure -- $$UEFI $$DELL -Denable-dummy=true --libexecdir=/usr/lib
 
 override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
 	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install
 	dh_missing --fail-missing
+
+	#this is placed in fwupd-tests
+	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-2/libfu_plugin_test.so
+
+	sed -i "s,Exec=,Exec=/bin/sh -c 'FWUPD_TESTS=1 ,; s,Exec=.*$$,&',;" \
+		debian/fwupd-tests/usr/share/dbus-1/system-services/org.freedesktop.fwupd.service
 
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz
