@@ -182,6 +182,8 @@ fu_plugin_update_offline (FuPlugin *plugin,
 	int rc;
 	g_autoptr(fwup_resource_iter) iter = NULL;
 	const gchar *str;
+	g_autofree gchar *efibootmgr_path = NULL;
+	g_autofree gchar *boot_variables = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
@@ -221,6 +223,16 @@ fu_plugin_update_offline (FuPlugin *plugin,
 			     filename, line, function, message, strerror(err));
 		return FALSE;
 	}
+
+	/* record boot information to system log for future debugging */
+	efibootmgr_path = g_find_program_in_path ("efibootmgr");
+	if (efibootmgr_path != NULL) {
+		if (!g_spawn_command_line_sync ("efibootmgr -v",
+                                        &boot_variables, NULL, NULL, error))
+                return FALSE;
+		g_message ("Boot Information:\n%s", boot_variables);
+	}
+
 	return TRUE;
 }
 
