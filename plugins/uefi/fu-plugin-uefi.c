@@ -228,8 +228,8 @@ fu_plugin_update_offline (FuPlugin *plugin,
 	efibootmgr_path = g_find_program_in_path ("efibootmgr");
 	if (efibootmgr_path != NULL) {
 		if (!g_spawn_command_line_sync ("efibootmgr -v",
-                                        &boot_variables, NULL, NULL, error))
-                return FALSE;
+						&boot_variables, NULL, NULL, error))
+			return FALSE;
 		g_message ("Boot Information:\n%s", boot_variables);
 	}
 
@@ -270,11 +270,11 @@ fu_plugin_unlock (FuPlugin *plugin,
 				     "failed to unlock UEFI device");
 		return FALSE;
 	} else if (rc == 1)
-		g_debug("UEFI device is already unlocked");
+		g_debug ("UEFI device is already unlocked");
 	else if (rc == 2)
-		g_debug("Succesfully unlocked UEFI device");
+		g_debug ("Succesfully unlocked UEFI device");
 	else if (rc == 3)
-		g_debug("UEFI device will be unlocked on next reboot");
+		g_debug ("UEFI device will be unlocked on next reboot");
 	return TRUE;
 #else
 	g_set_error_literal (error,
