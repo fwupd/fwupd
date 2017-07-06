@@ -273,6 +273,22 @@ fu_plugin_unlock (FuPlugin *plugin,
 #endif
 }
 
+static const gchar *
+fu_plugin_uefi_uefi_type_to_string (guint32 uefi_type)
+{
+	if (uefi_type == FWUP_RESOURCE_TYPE_UNKNOWN)
+		return "Unknown Firmware";
+	if (uefi_type == FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE)
+		return "System Firmware";
+	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE)
+		return "Device Firmware";
+	if (uefi_type == FWUP_RESOURCE_TYPE_UEFI_DRIVER)
+		return "UEFI Driver";
+	if (uefi_type == FWUP_RESOURCE_TYPE_FMP)
+		return "Firmware Management Protocol";
+	return NULL;
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -330,48 +346,26 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	guid = g_strdup ("00000000-0000-0000-0000-000000000000");
 	parse_flags = fu_plugin_uefi_get_version_format ();
 	while (fwup_resource_iter_next (iter, &re) > 0) {
+		const gchar *uefi_type_str = NULL;
 		efi_guid_t *guid_raw;
+		guint32 uefi_type;
 		guint32 version_raw;
 		guint64 hardware_instance = 0;	/* FIXME */
 		g_autofree gchar *id = NULL;
 		g_autofree gchar *version = NULL;
 		g_autofree gchar *version_lowest = NULL;
-		g_autofree gchar *display_name = NULL;
-		guint32 uefi_type;
-		const gchar *uefi_type_str = NULL;
+		g_autoptr(GString) display_name = g_string_new (NULL);
 
 		/* set up proper DisplayName */
-		fwup_get_fw_type(re, &uefi_type);
-		switch (uefi_type) {
-			case FWUP_RESOURCE_TYPE_UNKNOWN:
-			uefi_type_str = "Unknown Firmware";
-			break;
-		case FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE:
-			uefi_type_str = "System Firmware";
-			break;
-		case FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE:
-			uefi_type_str = "Device Firmware";
-			break;
-		case FWUP_RESOURCE_TYPE_UEFI_DRIVER:
-			uefi_type_str = "UEFI Driver";
-			break;
-		case FWUP_RESOURCE_TYPE_FMP:
-			uefi_type_str = "Firmware Management Protocol";
-			break;
-		default:
-			break;
-		}
+		fwup_get_fw_type (re, &uefi_type);
+		if (product_name != NULL)
+			g_string_append (display_name, product_name);
+		uefi_type_str = fu_plugin_uefi_uefi_type_to_string (uefi_type);
 		if (uefi_type_str != NULL) {
-			if (product_name != NULL)
-				display_name = g_strconcat (product_name,
-							    " ",
-							    uefi_type_str,
-							    NULL);
-			else
-				display_name = uefi_type_str;
+			if (display_name->len > 0)
+				g_string_append (display_name, " ");
+			g_string_append (display_name, uefi_type_str);
 		}
-		else
-			display_name = product_name;
 
 		/* convert to strings */
 		fwup_get_guid (re, &guid_raw);
@@ -389,8 +383,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_set_id (dev, id);
 		fu_device_add_guid (dev, guid);
 		fu_device_set_version (dev, version);
-		if (display_name != NULL)
-			fu_device_set_name(dev, display_name);
+		if (display_name->len > 0)
+			fu_device_set_name(dev, display_name->str);
 		fwup_get_lowest_supported_fw_version (re, &version_raw);
 		if (version_raw != 0) {
 			version_lowest = as_utils_version_from_uint32 (version_raw,
