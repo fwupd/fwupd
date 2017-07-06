@@ -1796,8 +1796,9 @@ main (int argc, char *argv[])
 		}
 		g_print ("daemon version:\t%s\n",
 			 fwupd_client_get_daemon_version (priv->client));
-		if (FWUPD_GIT_DESCRIBE != 0)
-			g_print ("checkout info:\t%s\n", FWUPD_GIT_DESCRIBE);
+#ifdef FWUPD_GIT_DESCRIBE
+		g_print ("checkout info:\t%s\n", FWUPD_GIT_DESCRIBE);
+#endif
 		return EXIT_SUCCESS;
 	}
 
