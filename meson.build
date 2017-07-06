@@ -17,13 +17,12 @@ conf.set('FWUPD_MICRO_VERSION', fwupd_micro_version)
 conf.set_quoted('PACKAGE_VERSION', fwupd_version)
 
 archiver = find_program('git', required : false)
+conf.set('FWUPD_GIT_DESCRIBE', 0)
 if archiver.found()
   result = run_command('git', 'describe')
   if result.returncode() == 0
     describe = result.stdout().strip()
     conf.set_quoted('FWUPD_GIT_DESCRIBE', describe)
-  else
-    conf.set('FWUPD_GIT_DESCRIBE', 0)
   endif
 endif
 
