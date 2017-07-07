@@ -498,6 +498,13 @@ lu_device_hidpp_transfer (LuDevice *device, LuHidppMsg *msg, GError **error)
 		if (!lu_device_hidpp_receive (device, msg_tmp, timeout, error))
 			return FALSE;
 
+		/* we don't know how to handle this report packet */
+		if (lu_hidpp_msg_get_payload_length (msg_tmp) == 0x0) {
+			g_debug ("HID++1.0 report 0x%02x has unknown length, ignoring",
+				 msg_tmp->report_id);
+			continue;
+		}
+
 		if (!lu_hidpp_msg_is_error (msg_tmp, error))
 			return FALSE;
 

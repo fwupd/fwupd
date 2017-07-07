@@ -70,8 +70,7 @@ lu_hidpp_msg_get_payload_length (LuHidppMsg *msg)
 		return 0x2f;
 	if (msg->report_id == HIDPP_REPORT_NOTIFICATION)
 		return 0x08;
-	g_warning ("report 0x%02x unknown length", msg->report_id);
-	return 0x08;
+	return 0x0;
 }
 
 const gchar *
