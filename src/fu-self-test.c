@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <appstream-glib.h>
 #include <fwupd.h>
 #include <glib-object.h>
 #include <glib/gstdio.h>
@@ -422,7 +423,9 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
+#if AS_CHECK_VERSION(0,6,13)
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
+#endif
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
