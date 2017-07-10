@@ -407,7 +407,11 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			fu_device_set_version_lowest (dev, version_lowest);
 		}
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		if (g_file_test ("/sys/firmware/efi/efivars", G_FILE_TEST_IS_DIR) ||
+		    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR))
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		else
+			g_warning ("Kernel support for EFI variables missing");
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 		fu_plugin_device_add (plugin, dev);
 	}
