@@ -22,7 +22,8 @@ fwupd (0.9.4-1) experimental; urgency=medium
   * Correct a cleanup rule
   * Drop intltool build dependency
   * Re-enable PIE for builds
-  * Add additional build dependencies that will be needed for generating capsule graphics
+  * Add additional build dependencies that will be needed for generating 
+    capsule graphics
   * debian/control: sort build-dependencies
   * Drop packaging from debian/, it will be git mv'ed from contrib/ upstream
   * Move Debian packaging from contrib/ upstream
