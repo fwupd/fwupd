@@ -5,9 +5,14 @@ subdir('raspberrypi')
 subdir('steelseries')
 subdir('test')
 subdir('udev')
-subdir('unifying')
 subdir('upower')
 subdir('usb')
+
+if appstream_glib.version().version_compare('>=0.6.13')
+subdir('unifying')
+else
+message('appstream-glib 0.6.13+ not found, disabling unifying plugin')
+endif
 
 if get_option('enable-amt')
 subdir('amt')
