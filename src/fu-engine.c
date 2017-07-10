@@ -2195,6 +2195,7 @@ fu_engine_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuEngi
 		 duration, self->coldplug_delay);
 }
 
+#if AS_CHECK_VERSION(0,6,13)
 static gboolean
 fu_engine_load_hwids (FuEngine *self, GError **error)
 {
@@ -2229,6 +2230,7 @@ fu_engine_load_hwids (FuEngine *self, GError **error)
 
 	return TRUE;
 }
+#endif
 
 static gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
@@ -2388,11 +2390,13 @@ fu_engine_load (FuEngine *self, GError **error)
 		return FALSE;
 	}
 
+#if AS_CHECK_VERSION(0,6,13)
 	/* load the hwids */
 	if (!fu_engine_load_hwids (self, error)) {
 		g_prefix_error (error, "Failed to load hwids: ");
 		return FALSE;
 	}
+#endif
 
 	/* delete old data files */
 	if (!fu_engine_cleanup_state (error)) {
