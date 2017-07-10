@@ -26,8 +26,11 @@
       </para>
     </partintro>
     <xi:include href="xml/fwupd-client.xml"/>
+    <xi:include href="xml/fwupd-device.xml"/>
     <xi:include href="xml/fwupd-error.xml"/>
     <xi:include href="xml/fwupd-enums.xml"/>
+    <xi:include href="xml/fwupd-release.xml"/>
+    <xi:include href="xml/fwupd-remote.xml"/>
     <xi:include href="xml/fwupd-result.xml"/>
     <xi:include href="xml/fwupd-version.xml"/>
   </reference>
