@@ -1635,12 +1635,14 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Get all devices that support firmware updates"),
 		     fu_util_get_devices);
+#if AS_CHECK_VERSION(0,6,13)
 	fu_util_add (priv->cmd_array,
 		     "hwids",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Return all the hardware IDs for the machine"),
 		     fu_util_hwids);
+#endif
 	fu_util_add (priv->cmd_array,
 		     "install-prepared",
 		     NULL,
