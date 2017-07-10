@@ -121,7 +121,7 @@ gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
 polkit = dependency('polkit-gobject-1', version : '>= 0.103')
-if polkit.version() >= '0.114'
+if polkit.version().version_compare('>= 0.114')
   conf.set('HAVE_POLKIT_0_114', '1')
 endif
 gudev = dependency('gudev-1.0')
