@@ -202,25 +202,28 @@ fu_plugin_update_offline (FuPlugin *plugin,
 					  g_bytes_get_data (blob_fw, NULL),
 					  g_bytes_get_size (blob_fw));
 	if (rc < 0) {
-		char *filename = NULL;
-		char *function = NULL;
-		char *message = NULL;
-		int line = 0;
-		int err = 0;
-		rc = efi_error_get (0, &filename, &function, &line, &message, &err);
-		if (rc <= 0) {
-			g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "UEFI firmware update failed");
-			return FALSE;
-		}
+		g_autoptr(GString) err_string = g_string_new ("UEFI firmware update failed:\n");
 
+		rc = 1;
+		for (int i =0; rc > 0; i++) {
+			char *filename = NULL;
+			char *function = NULL;
+			char *message = NULL;
+			int line = 0;
+			int err = 0;
+
+			rc = efi_error_get (i, &filename, &function, &line, &message, &err);
+			if (rc <= 0)
+				break;
+			g_string_append_printf (err_string,
+						"{error #%d} %s:%d %s(): %s: %s \n",
+						i, filename, line, function, message, strerror(err));
+		}
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "UEFI firmware update failed: %s:%d %s(): %s: %s",
-			     filename, line, function, message, strerror(err));
+			     "%s",
+			     err_string->str);
 		return FALSE;
 	}
 
