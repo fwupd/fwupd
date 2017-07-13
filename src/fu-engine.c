@@ -1072,6 +1072,7 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* make the UI update */
+	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
 	fu_device_set_modified (item->device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	fu_engine_emit_device_changed (self, item->device);
 	fu_engine_emit_changed (self);
@@ -1613,6 +1614,7 @@ fu_engine_get_store_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 						g_bytes_get_size (blob_cab));
 	as_store_set_origin (store, checksum);
 
+	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
 	return g_steal_pointer (&store);
 }
 
