@@ -2063,9 +2063,11 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 	FuEngine *self = (FuEngine *) user_data;
 	FuDeviceItem *item;
 	GPtrArray *blacklisted_devices;
+	GPtrArray *device_guids;
 
 	/* device has no GUIDs set! */
-	if (fu_device_get_guid_default (device) == NULL) {
+	device_guids = fu_device_get_guids (device);
+	if (device_guids->len == 0) {
 		g_warning ("no GUIDs for device %s [%s]",
 			   fu_device_get_id (device),
 			   fu_device_get_name (device));
@@ -2075,13 +2077,15 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 	/* is this GUID blacklisted */
 	blacklisted_devices = fu_config_get_blacklist_devices (self->config);
 	for (guint i = 0; i < blacklisted_devices->len; i++) {
-		const gchar *guid = g_ptr_array_index (blacklisted_devices, i);
-		if (g_strcmp0 (guid, fu_device_get_guid_default (device)) == 0) {
-			g_debug ("%s is blacklisted [%s], ignoring from %s",
-				 fu_device_get_id (device),
-				 fu_device_get_guid_default (device),
-				 fu_plugin_get_name (plugin));
-			return;
+		const gchar *blacklisted_guid = g_ptr_array_index (blacklisted_devices, i);
+		for (guint j = 0; j < device_guids->len; j++) {
+			const gchar *device_guid = g_ptr_array_index (device_guids, j);
+			if (g_strcmp0 (blacklisted_guid, device_guid) == 0) {
+				g_debug ("%s is blacklisted [%s], ignoring from %s",
+					 fu_device_get_id (device), device_guid,
+					 fu_plugin_get_name (plugin));
+				return;
+			}
 		}
 	}
 
