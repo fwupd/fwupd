@@ -1644,6 +1644,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 			continue;
 		item = fu_engine_get_item_by_guid (self, guid);
 		if (item != NULL) {
+			fwupd_device_set_name (dev, fu_device_get_name (item->device));
 			fwupd_device_set_flags (dev, fu_device_get_flags (item->device));
 			fwupd_device_set_id (dev, fu_device_get_id (item->device));
 		}
