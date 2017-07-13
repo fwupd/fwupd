@@ -136,7 +136,6 @@ fwupd_result_func (void)
 
 	ret = as_test_compare_lines (str,
 		"ColorHug2\n"
-		"  DisplayName:          ColorHug2\n"
 		"  DeviceID:             USB:foo\n"
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
 		"  Guid:                 00000000-0000-0000-0000-000000000000\n"
