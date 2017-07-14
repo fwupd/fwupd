@@ -68,39 +68,41 @@ pkgg.generate(
   description : 'fwupd is a system daemon for installing device firmware',
 )
 
-gnome.generate_gir(fwupd,
-  sources : [
-    'fwupd-client.c',
-    'fwupd-client.h',
-    'fwupd-device.c',
-    'fwupd-device.h',
-    'fwupd-enums.c',
-    'fwupd-enums.h',
-    'fwupd-error.c',
-    'fwupd-error.h',
-    'fwupd-release.c',
-    'fwupd-release.h',
-    'fwupd-remote.c',
-    'fwupd-remote.h',
-    'fwupd-result.c',
-    'fwupd-result.h',
-  ],
-  nsversion : '1.0',
-  namespace : 'Fwupd',
-  symbol_prefix : 'fwupd',
-  identifier_prefix : 'Fwupd',
-  export_packages : 'fwupd',
-  dependencies : [
-    giounix,
-    soup,
-  ],
-  includes : [
-    'Gio-2.0',
-    'GObject-2.0',
-    'Soup-2.4',
-  ],
-  install : true
-)
+if get_option('enable-introspection')
+  gnome.generate_gir(fwupd,
+    sources : [
+      'fwupd-client.c',
+      'fwupd-client.h',
+      'fwupd-device.c',
+      'fwupd-device.h',
+      'fwupd-enums.c',
+      'fwupd-enums.h',
+      'fwupd-error.c',
+      'fwupd-error.h',
+      'fwupd-release.c',
+      'fwupd-release.h',
+      'fwupd-remote.c',
+      'fwupd-remote.h',
+      'fwupd-result.c',
+      'fwupd-result.h',
+    ],
+    nsversion : '1.0',
+    namespace : 'Fwupd',
+    symbol_prefix : 'fwupd',
+    identifier_prefix : 'Fwupd',
+    export_packages : 'fwupd',
+    dependencies : [
+      giounix,
+      soup,
+    ],
+    includes : [
+      'Gio-2.0',
+      'GObject-2.0',
+      'Soup-2.4',
+    ],
+    install : true
+  )
+endif
 
 if get_option('enable-tests')
   testdatadir = join_paths(meson.source_root(), 'data')
