@@ -3,6 +3,6 @@
 #DEBHELPER#
 
 if [ "$1" = purge ]; then
-	rm -f /var/lib/fwupd/gnupg
+	rm -rf /var/lib/fwupd/gnupg
 	rm -f /var/cache/app-info/xmls/fwupd.xml
 fi
