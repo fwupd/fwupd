@@ -352,6 +352,13 @@ fu_config_load (FuConfig *self, GError **error)
 	if (!fu_config_load_remotes (self, error))
 		return FALSE;
 
+	/* enable the test suite */
+	if (g_key_file_get_boolean (self->keyfile,
+				    "fwupd",
+				    "EnableTestSuite",
+				    NULL))
+		g_setenv ("FWUPD_TESTS", "true", TRUE);
+
 	/* success */
 	return TRUE;
 }
