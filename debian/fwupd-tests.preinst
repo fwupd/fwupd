@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/sh -e
+
+#DEBHELPER#
 
 if [ "$1" = "upgrade" ] || [ "$1" = "install" ]; then
 	dpkg-divert --package fwupd-tests --add --rename \

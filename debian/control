@@ -108,12 +108,14 @@ Description: Firmware update daemon
  See <https://github.com/hughsie/fwupd> for details
 
 Package: fwupd-tests
-Architecture: all
+Architecture: linux-any
 Depends: ${misc:Depends},
+         ${shlibs:Depends},
          ca-certificates,
          dbus-x11,
          fwupd,
          gnome-desktop-testing,
+         python3,
          python3-gi,
          python3-requests,
 Breaks: fwupd (<< 0.9.4-1)
