@@ -1109,7 +1109,7 @@ fu_plugin_init (FuPlugin *plugin)
 	priv->enabled = TRUE;
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
-	priv->devices_delay = g_hash_table_new (g_str_hash, g_str_equal);
+	priv->devices_delay = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 static void
