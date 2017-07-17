@@ -151,6 +151,7 @@ Architecture: linux-any
 Multi-Arch: same
 Depends: libfwupd1 (= ${binary:Version}),
          gir1.2-fwupd-1.0 (= ${binary:Version}),
+         gir1.2-dfu-1.0 (= ${binary:Version}),
          ${misc:Depends}
 Breaks: fwupd-dev (<< 0.5.4-2~)
 Replaces: fwupd-dev (<< 0.5.4-2~)
@@ -179,10 +180,25 @@ Description: GObject introspection data for libfwupd
  It can be used by packages using the GIRepository format to generate
  dynamic bindings.
 
+Package: gir1.2-dfu-1.0
+Architecture: linux-any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         ${gir:Depends}
+Breaks: libdfu1 (<< 0.9.5-1~)
+Replaces: libdfu1 (<< 0.9.5-1~)
+Section: introspection
+Description: GObject introspection data for libdfu
+ This package provides the introspection data for libfwupd.
+ .
+ It can be used by packages using the GIRepository format to generate
+ dynamic bindings.
+
 Package: libdfu-dev
 Architecture: linux-any
 Multi-Arch: same
 Depends: libdfu1 (= ${binary:Version}),
+         gir1.2-dfu-1.0 (= ${binary:Version}),
          ${misc:Depends}
 Section: libdevel
 Description: development files for libdfu
