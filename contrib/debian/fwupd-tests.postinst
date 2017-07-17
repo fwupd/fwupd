@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+#DEBHELPER#
+
+#only enable on installation not upgrade
+if [ "$1" = configure ] && [ -z "$2" ]; then
+	if [ -f /etc/fwupd.conf ]; then
+		sed "s,^EnableTestSuite=.*,EnableTestSuite=true," -i /etc/fwupd.conf
+	fi
+fi

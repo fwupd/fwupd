@@ -3,7 +3,7 @@
 #DEBHELPER#
 
 if [ "$1" = remove -o "$1" = purge ]; then
-	dpkg-divert --package fwupd-tests --remove --rename \
-                --divert /usr/share/dbus-1/system-services/org.freedesktop.fwupd.service.original \
-                         /usr/share/dbus-1/system-services/org.freedesktop.fwupd.service
+	if [ -f /etc/fwupd.conf ]; then
+		sed "s,^EnableTestSuite=.*,EnableTestSuite=false," -i /etc/fwupd.conf
+	fi
 fi
