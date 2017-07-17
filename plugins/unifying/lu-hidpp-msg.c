@@ -40,7 +40,7 @@ lu_hidpp_msg_dev_id_to_string (LuHidppMsg *msg)
 	if (msg->device_id == HIDPP_DEVICE_ID_WIRED)
 		return "wired";
 	if (msg->device_id == HIDPP_DEVICE_ID_RECEIVER)
-		return "recieiver";
+		return "receiver";
 	if (msg->device_id == HIDPP_DEVICE_ID_UNSET)
 		return "unset";
 	return NULL;

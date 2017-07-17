@@ -275,7 +275,7 @@ fu_plugin_unlock (FuPlugin *plugin,
 	} else if (rc == 1)
 		g_debug ("UEFI device is already unlocked");
 	else if (rc == 2)
-		g_debug ("Succesfully unlocked UEFI device");
+		g_debug ("Successfully unlocked UEFI device");
 	else if (rc == 3)
 		g_debug ("UEFI device will be unlocked on next reboot");
 	return TRUE;

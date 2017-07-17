@@ -56,7 +56,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 					       NULL,
 					       error);
 	if (data->proxy == NULL) {
-		g_prefix_error (error, "failed to conect to upower: ");
+		g_prefix_error (error, "failed to connect to upower: ");
 		return FALSE;
 	}
 	return TRUE;
