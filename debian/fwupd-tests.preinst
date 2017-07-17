@@ -1,9 +1,0 @@
-#!/bin/sh -e
-
-#DEBHELPER#
-
-if [ "$1" = "upgrade" ] || [ "$1" = "install" ]; then
-	dpkg-divert --package fwupd-tests --add --rename \
-		--divert /usr/share/dbus-1/system-services/org.freedesktop.fwupd.service.original \
-		         /usr/share/dbus-1/system-services/org.freedesktop.fwupd.service
-fi
