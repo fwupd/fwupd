@@ -7,12 +7,17 @@ fwupd (0.9.5-1) experimental; urgency=medium
   * Adjust debian dependencies
   * split out the test suite to it's own package
   * use dpkg-divert to adjust the launch script for CI testing
+  * Fix long changelog in 0.9.4-1
+  * move DFU introspection to it's own package
+  * add missing dh-strip-nondeterminism dependency
+  * debian: update standards version
+  * Backport fix to build capsule graphics in right language
 
   [ Richard Hughes ]
   * Add an AppStream metainfo file
   * Add an installed test for verification
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Wed, 05 Jul 2017 11:18:20 -0500
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 17 Jul 2017 12:23:40 -0500
 
 fwupd (0.9.4-1) experimental; urgency=medium
 
