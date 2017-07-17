@@ -639,7 +639,7 @@ fu_engine_check_version_requirement (AsApp *app,
 
 	/* check args */
 	if (version == NULL) {
-		g_debug ("no paramater given for %s{%s}",
+		g_debug ("no parameter given for %s{%s}",
 			 as_require_kind_to_string (kind), id);
 		return TRUE;
 	}
