@@ -12,6 +12,7 @@ fwupd (0.9.5-1) experimental; urgency=medium
   * add missing dh-strip-nondeterminism dependency
   * debian: update standards version
   * Backport fix to build capsule graphics in right language
+  * Backport patch to allow enabling test suite via conf file.
 
   [ Richard Hughes ]
   * Add an AppStream metainfo file

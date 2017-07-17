@@ -1,0 +1,43 @@
+From 5033d9c92e84f6d1dd4881d0153ed0e48e521520 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Mon, 17 Jul 2017 14:45:51 -0500
+Subject: [PATCH] Add capability to enable test suite via /etc/fwupd.conf
+
+---
+ data/fwupd.conf | 4 ++++
+ src/fu-config.c | 7 +++++++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/data/fwupd.conf b/data/fwupd.conf
+index f3dc70d..f6b85ce 100644
+--- a/data/fwupd.conf
++++ b/data/fwupd.conf
+@@ -12,3 +12,7 @@ BlacklistDevices=
+ 
+ # Allow blacklisting specific plugins
+ BlacklistPlugins=
++
++# Turns on support for running the test suite
++# this will cause an extraneous "test" device to be present on the system
++EnableTestSuite=false
+diff --git a/src/fu-config.c b/src/fu-config.c
+index ddeb0ba..9300381 100644
+--- a/src/fu-config.c
++++ b/src/fu-config.c
+@@ -352,6 +352,13 @@ fu_config_load (FuConfig *self, GError **error)
+ 	if (!fu_config_load_remotes (self, error))
+ 		return FALSE;
+ 
++	/* enable the test suite */
++	if (g_key_file_get_boolean (self->keyfile,
++				    "fwupd",
++				    "EnableTestSuite",
++				    NULL))
++		g_setenv ("FWUPD_TESTS", "true", TRUE);
++
+ 	/* success */
+ 	return TRUE;
+ }
+-- 
+2.7.4
+
