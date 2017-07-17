@@ -72,7 +72,7 @@ class Rasterizer:
             if x == 'hi':
                 continue
             yield x
-        yield "C"
+        yield "en"
 
     def render(self):
         """ Do the work... """
@@ -167,7 +167,7 @@ class Rasterizer:
                 'directory': self.directory,
                 'language': lang,
             }
-            if lang == 'C':
+            if lang == 'en':
                 string = self.text
             else:
                 tl = gettext.translation(self.domain, self.modir,
