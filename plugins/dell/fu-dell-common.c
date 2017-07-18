@@ -159,8 +159,6 @@ fu_dell_detect_dock (FuDellSmiObj *smi_obj, guint32 *location)
 		g_debug ("no dock plugged in");
 		return FALSE;
 	}
-	g_debug ("Dock count %u, location %u.",
-		 count_out->count, count_out->location);
 	if (location != NULL)
 		*location = count_out->location;
 	return TRUE;
