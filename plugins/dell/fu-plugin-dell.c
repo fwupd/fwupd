@@ -302,7 +302,6 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	efi_guid_t guid_raw;
 	efi_guid_t tmpguid;
 	gboolean old_ec = FALSE;
-	g_autofree gchar *fw_str = NULL;
 
 	/* don't look up immediately if a dock is connected as that would
 	   mean a SMI on every USB device that showed up on the system */
@@ -342,6 +341,7 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	parse_flags = fu_plugin_dell_get_version_format ();
 
 	for (guint i = 0; i < dock_info->component_count; i++) {
+		g_autofree gchar *fw_str = NULL;
 		if (i >= MAX_COMPONENTS) {
 			g_debug ("Too many components.  Invalid: #%u", i);
 			break;
@@ -386,6 +386,7 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 
 	/* if an old EC or invalid EC version found, create updatable parent */
 	if (old_ec) {
+		g_autofree gchar *fw_str = NULL;
 		tmpguid = DOCK_FLASH_GUID;
 		fw_str = as_utils_version_from_uint32 (dock_info->flash_pkg_version,
 						       parse_flags);
@@ -408,7 +409,6 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuPluginDockItem *item;
-	g_autofree gchar *dock_key = NULL;
 	const efi_guid_t guids[] = { WD15_EC_GUID, TB16_EC_GUID, TB16_PC2_GUID,
 				     TB16_PC1_GUID, WD15_PC1_GUID,
 				     LEGACY_CBL_GUID, UNIV_CBL_GUID,
@@ -416,8 +416,6 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 	const efi_guid_t *guid_raw;
 	guint16 pid;
 	guint16 vid;
-
-	g_autofree gchar *guid_str = NULL;
 
 	if (!data->smi_obj->fake_smbios) {
 		vid = g_usb_device_get_vid (device);
@@ -433,6 +431,8 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 
 	/* remove any components already in database? */
 	for (guint i = 0; i < G_N_ELEMENTS (guids); i++) {
+		g_autofree gchar *dock_key = NULL;
+		g_autofree gchar *guid_str = NULL;
 		guid_raw = &guids[i];
 		guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
 		efi_guid_to_str (guid_raw, &guid_str);
