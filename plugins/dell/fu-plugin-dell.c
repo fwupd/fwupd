@@ -169,6 +169,7 @@ fu_plugin_device_free (FuPluginDockItem *item)
 {
 	g_object_unref (item->device);
 	g_object_unref (item->plugin);
+	g_free (item);
 }
 
 static AsVersionParseFlag
