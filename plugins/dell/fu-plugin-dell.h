@@ -27,7 +27,6 @@
 #include "fu-dell-common.h"
 
 struct FuPluginData {
-	GHashTable		*devices;	/* DeviceKey:FuPluginDockItem */
 	FuDellSmiObj		*smi_obj;
 	guint16			fake_vid;
 	guint16			fake_pid;
