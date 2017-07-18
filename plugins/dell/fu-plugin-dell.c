@@ -107,12 +107,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
 static guint16 tpm_switch_blacklist[] = {0x06D6, 0x06E6, 0x06E7, 0x06EB, 0x06EA,
 					 0x0702};
 
-typedef struct {
-	FuDevice		*device;
-	FuPlugin		*plugin;
-} FuPluginDockItem;
-
-
 static void
 _fwup_resource_iter_free (fwup_resource_iter *iter)
 {
@@ -162,14 +156,6 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 	data->fake_vid = vid;
 	data->fake_pid = pid;
 	data->smi_obj->fake_buffer = buf;
-}
-
-static void
-fu_plugin_device_free (FuPluginDockItem *item)
-{
-	g_object_unref (item->device);
-	g_object_unref (item->plugin);
-	g_free (item);
 }
 
 static AsVersionParseFlag
@@ -235,13 +221,12 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 		     guint8 type, const efi_guid_t *guid_raw,
 		     const gchar *component_desc, const gchar *version)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	FuPluginDockItem *item;
 	const gchar *dock_type;
 	g_autofree gchar *dock_id = NULL;
 	g_autofree gchar *guid_str = NULL;
 	g_autofree gchar *dock_key = NULL;
 	g_autofree gchar *dock_name = NULL;
+	g_autoptr(FuDevice) dev = NULL;
 
 	dock_type = fu_dell_get_dock_type (type);
 	if (dock_type == NULL) {
@@ -257,31 +242,28 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 
 	dock_key = fu_plugin_get_dock_key (plugin, device,
 						  guid_str);
-	item = g_hash_table_lookup (data->devices, dock_key);
-	if (item != NULL) {
-		g_debug ("Item %s is already registered.", dock_key);
+	if (fu_plugin_cache_lookup (plugin, dock_key) != NULL) {
+		g_debug ("%s is already registered.", dock_key);
 		return FALSE;
 	}
 
-	item = g_new0 (FuPluginDockItem, 1);
-	item->plugin = g_object_ref (plugin);
-	item->device = fu_device_new ();
+	dev = fu_device_new ();
 	dock_id = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, guid_str);
 	dock_name = g_strdup_printf ("Dell %s %s", dock_type,
 				     component_desc);
-	fu_device_set_id (item->device, dock_id);
-	fu_device_set_name (item->device, dock_name);
-	fu_device_add_guid (item->device, guid_str);
-	fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_set_id (dev, dock_id);
+	fu_device_set_name (dev, dock_name);
+	fu_device_add_guid (dev, guid_str);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
-		fu_device_set_version (item->device, version);
+		fu_device_set_version (dev, version);
 		if (fu_plugin_dell_capsule_supported (plugin))
-			fu_device_add_flag (item->device,
+			fu_device_add_flag (dev,
 					    FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 	}
 
-	g_hash_table_insert (data->devices, g_strdup (dock_key), item);
-	fu_plugin_device_add (plugin, item->device);
+	fu_plugin_device_add (plugin, dev);
+	fu_plugin_cache_add (plugin, g_strdup (dock_key), dev);
 	return TRUE;
 }
 
@@ -408,7 +390,6 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 				  FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	FuPluginDockItem *item;
 	const efi_guid_t guids[] = { WD15_EC_GUID, TB16_EC_GUID, TB16_PC2_GUID,
 				     TB16_PC1_GUID, WD15_PC1_GUID,
 				     LEGACY_CBL_GUID, UNIV_CBL_GUID,
@@ -416,6 +397,7 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 	const efi_guid_t *guid_raw;
 	guint16 pid;
 	guint16 vid;
+	FuDevice *dev = NULL;
 
 	if (!data->smi_obj->fake_smbios) {
 		vid = g_usb_device_get_vid (device);
@@ -438,11 +420,11 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 		efi_guid_to_str (guid_raw, &guid_str);
 		dock_key = fu_plugin_get_dock_key (plugin, device,
 							  guid_str);
-		item = g_hash_table_lookup (data->devices, dock_key);
-		if (item != NULL) {
+		dev = fu_plugin_cache_lookup (plugin, dock_key);
+		if (dev != NULL) {
 			fu_plugin_device_remove (plugin,
-						   item->device);
-			g_hash_table_remove (data->devices, dock_key);
+						   dev);
+			fu_plugin_cache_remove (plugin, dock_key);
 		}
 	}
 }
@@ -854,8 +836,6 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-	data->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free, (GDestroyNotify) fu_plugin_device_free);
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
 	if (fu_dell_supported ())
@@ -869,7 +849,6 @@ void
 fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_hash_table_unref (data->devices);
 	if (data->smi_obj->smi)
 		dell_smi_obj_free (data->smi_obj->smi);
 	g_free(data->smi_obj);
