@@ -160,6 +160,8 @@ fu_dell_detect_dock (FuDellSmiObj *smi_obj, guint32 *location)
 		return FALSE;
 	}
 	*location = count_out->location;
+	g_debug ("Dock count %u, location %u.",
+		 count_out->count, *location);
 	return TRUE;
 }
 
