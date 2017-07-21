@@ -122,7 +122,7 @@ Depends: ${misc:Depends},
 Breaks: fwupd (<< 0.9.4-1)
 Replaces: fwupd (<< 0.9.4-1)
 Multi-Arch: foreign
-Description: Firmware update daemon
+Description: Test suite for firmware update daemon
  fwupd is a daemon to allow session software to update device firmware.
  You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
@@ -192,7 +192,7 @@ Breaks: libdfu1 (<< 0.9.5-1~)
 Replaces: libdfu1 (<< 0.9.5-1~)
 Section: introspection
 Description: GObject introspection data for libdfu
- This package provides the introspection data for libfwupd.
+ This package provides the introspection data for libdfu.
  .
  It can be used by packages using the GIRepository format to generate
  dynamic bindings.
