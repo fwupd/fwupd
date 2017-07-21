@@ -386,7 +386,10 @@ dfu_firmware_to_elf (DfuFirmware *firmware, GError **error)
 	/* add executable header */
 	ehdr = elf32_newehdr (e);
 	if (ehdr == NULL) {
-		g_warning ("failed to create executable header: %s",
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_INTERNAL,
+			     "failed to create executable header: %s",
 			     elf_errmsg (-1));
 		return NULL;
 	}
