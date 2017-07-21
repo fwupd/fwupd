@@ -152,11 +152,7 @@ fu_plugin_delay_func (void)
 
 	/* add it again, twice quickly */
 	fu_plugin_device_add_delay (plugin, device);
-	g_test_expect_message (G_LOG_DOMAIN,
-			       G_LOG_LEVEL_WARNING,
-			       "ignoring add-delay as device * already pending");
 	fu_plugin_device_add_delay (plugin, device);
-	g_test_assert_expected_messages ();
 	g_assert (device_tmp == NULL);
 	fu_test_loop_run_with_timeout (1000);
 	g_assert (device_tmp != NULL);
