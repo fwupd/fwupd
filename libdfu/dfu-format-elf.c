@@ -74,13 +74,10 @@ _get_element_from_section_name (Elf *e, const gchar *desired_name)
 	const gchar *name;
 	size_t shstrndx;
 
-	if (elf_getshdrstrndx (e, &shstrndx) != 0) {
-		g_warning ("failed elf_getshdrstrndx");
+	if (elf_getshdrstrndx (e, &shstrndx) != 0)
 		return NULL;
-	}
 	while ((scn = elf_nextscn (e, scn)) != NULL ) {
 		if (gelf_getshdr (scn, &shdr ) != & shdr) {
-			g_warning ("failed gelf_getshdr");
 			continue;
 		}
 
@@ -90,7 +87,6 @@ _get_element_from_section_name (Elf *e, const gchar *desired_name)
 
 		/* not the same section name */
 		if ((name = elf_strptr (e, shstrndx, shdr.sh_name)) == NULL) {
-			g_warning ("failed elf_strptr");
 			continue;
 		}
 		if (g_strcmp0 (name, desired_name) == 0) {
@@ -116,19 +112,15 @@ dfu_format_elf_symbols_from_symtab (DfuFirmware *firmware, Elf *e)
 	Elf_Scn *scn = NULL;
 	gsize shstrndx;
 
-	if (elf_getshdrstrndx (e, &shstrndx) != 0) {
-		g_warning ("failed elf_getshdrstrndx");
+	if (elf_getshdrstrndx (e, &shstrndx) != 0)
 		return;
-	}
 	while ((scn = elf_nextscn (e, scn)) != NULL ) {
 		Elf_Data *data;
 		GElf_Shdr shdr;
 		const gchar *name;
 		gssize ns;
-		if (gelf_getshdr (scn, &shdr) != &shdr) {
-			g_warning ("failed gelf_getshdr");
+		if (gelf_getshdr (scn, &shdr) != &shdr)
 			continue;
-		}
 
 		/* not program data */
 		if (shdr.sh_type != SHT_SYMTAB)

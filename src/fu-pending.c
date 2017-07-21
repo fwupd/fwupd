@@ -302,7 +302,6 @@ fu_pending_device_sqlite_cb (void *data,
 				fwupd_result_set_update_error (res, argv[i]);
 			continue;
 		}
-		g_warning ("unhandled %s=%s", col_name[i], argv[i]);
 	}
 
 	return 0;

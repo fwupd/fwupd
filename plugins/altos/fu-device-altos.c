@@ -747,7 +747,7 @@ fu_device_altos_probe_bootloader (FuDeviceAltos *device, GError **error)
 		}
 
 		/* unknown line */
-		g_warning ("unknown data: '%s'", lines[i]);
+		g_debug ("unknown data: '%s'", lines[i]);
 	}
 
 	/* done */

@@ -211,12 +211,12 @@ fu_config_remotes_depsolve_with_direction (FuConfig *self, gint inc)
 		for (guint j = 0; order[j] != NULL; j++) {
 			FwupdRemote *remote2;
 			if (g_strcmp0 (order[j], fwupd_remote_get_id (remote)) == 0) {
-				g_warning ("ignoring self-dep remote %s", order[j]);
+				g_debug ("ignoring self-dep remote %s", order[j]);
 				continue;
 			}
 			remote2 = fu_config_get_remote_by_id_noref (self->remotes, order[j]);
 			if (remote2 == NULL) {
-				g_warning ("ignoring unfound remote %s", order[j]);
+				g_debug ("ignoring unfound remote %s", order[j]);
 				continue;
 			}
 			if (fwupd_remote_get_priority (remote) > fwupd_remote_get_priority (remote2))

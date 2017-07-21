@@ -184,8 +184,7 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 			 fwupd_device_get_id (fwupd_result_get_device (res)));
 		return;
 	}
-	g_warning ("Unknown signal name '%s' from %s",
-		   signal_name, sender_name);
+	g_debug ("Unknown signal name '%s' from %s", signal_name, sender_name);
 }
 
 /**
