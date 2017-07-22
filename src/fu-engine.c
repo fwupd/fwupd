@@ -2419,6 +2419,10 @@ fu_engine_load (FuEngine *self, GError **error)
 		g_prefix_error (error, "Failed to get USB context: ");
 		return FALSE;
 	}
+#if G_USB_CHECK_VERSION(0,2,11)
+	g_usb_context_set_flags (self->usb_ctx,
+				 G_USB_CONTEXT_FLAGS_AUTO_OPEN_DEVICES);
+#endif
 
 #if AS_CHECK_VERSION(0,6,13)
 	/* load the hwids */
