@@ -2011,6 +2011,7 @@ static void
 fu_engine_plugins_coldplug (FuEngine *self)
 {
 	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* don't allow coldplug to be scheduled when in coldplug */
 	self->coldplug_running = TRUE;
@@ -2052,6 +2053,18 @@ fu_engine_plugins_coldplug (FuEngine *self)
 		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
 		if (!fu_plugin_runner_coldplug_cleanup (plugin, &error))
 			g_warning ("failed to cleanup coldplug: %s", error->message);
+	}
+
+	/* print what we do have */
+	for (guint i = 0; i < self->plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+		if (!fu_plugin_get_enabled (plugin))
+			continue;
+		g_string_append_printf (str, "%s, ", fu_plugin_get_name (plugin));
+	}
+	if (str->len > 2) {
+		g_string_truncate (str, str->len - 2);
+		g_message ("using plugins: %s", str->str);
 	}
 
 	/* we can recoldplug from this point on */
@@ -2239,6 +2252,15 @@ fu_engine_load_hwids (FuEngine *self, GError **error)
 }
 #endif
 
+static gint
+fu_engine_plugin_sort_cb (gconstpointer a, gconstpointer b)
+{
+	FuPlugin *plugin1 = *((FuPlugin **) a);
+	FuPlugin *plugin2 = *((FuPlugin **) b);
+	return g_strcmp0 (fu_plugin_get_name (plugin1),
+			  fu_plugin_get_name (plugin2));
+}
+
 static gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {
@@ -2312,6 +2334,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				     g_strdup (fu_plugin_get_name (plugin)),
 				     g_object_ref (plugin));
 	}
+	g_ptr_array_sort (self->plugins, fu_engine_plugin_sort_cb);
 
 	return TRUE;
 }
