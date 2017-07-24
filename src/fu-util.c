@@ -1801,6 +1801,15 @@ main (int argc, char *argv[])
 #ifdef FWUPD_GIT_DESCRIBE
 		g_print ("checkout info:\t%s\n", FWUPD_GIT_DESCRIBE);
 #endif
+		g_print ("compile-time dependency versions\n");
+		g_print ("\tappstream-glib:\t%d.%d.%d\n",
+			AS_MAJOR_VERSION,
+			AS_MINOR_VERSION,
+			AS_MICRO_VERSION);
+		g_print ("\tgusb:\t%d.%d.%d\n",
+			G_USB_MAJOR_VERSION,
+			G_USB_MINOR_VERSION,
+			G_USB_MICRO_VERSION);
 		return EXIT_SUCCESS;
 	}
 
