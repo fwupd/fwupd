@@ -263,7 +263,7 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	}
 
 	fu_plugin_device_add (plugin, dev);
-	fu_plugin_cache_add (plugin, g_strdup (dock_key), dev);
+	fu_plugin_cache_add (plugin, dock_key, dev);
 	return TRUE;
 }
 
