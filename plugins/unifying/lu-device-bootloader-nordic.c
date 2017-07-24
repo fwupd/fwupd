@@ -236,16 +236,12 @@ lu_device_bootloader_nordic_write_firmware (LuDevice *device,
 	}
 
 	/* transfer payload */
-	reqs = lu_device_bootloader_parse_requests (fw, error);
+	reqs = lu_device_bootloader_parse_requests (device, fw, error);
 	if (reqs == NULL)
 		return FALSE;
+
 	for (guint i = 1; i < reqs->len; i++) {
 		payload = g_ptr_array_index (reqs, i);
-
-		/* skip the bootloader */
-		if (payload->addr > lu_device_bootloader_get_addr_hi (device))
-			break;
-
 		if (!lu_device_bootloader_nordic_write (device,
 							payload->addr,
 							payload->len,
