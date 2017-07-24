@@ -84,7 +84,8 @@ LuDeviceBootloaderRequest	*lu_device_bootloader_request_new	(void);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(LuDeviceBootloaderRequest, g_free);
 
-GPtrArray	*lu_device_bootloader_parse_requests	(GBytes		*fw,
+GPtrArray	*lu_device_bootloader_parse_requests	(LuDevice	*device,
+							 GBytes		*fw,
 							 GError		**error);
 gboolean	 lu_device_bootloader_request		(LuDevice	*device,
 							 LuDeviceBootloaderRequest *req,
