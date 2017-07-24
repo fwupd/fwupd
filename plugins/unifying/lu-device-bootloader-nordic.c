@@ -166,6 +166,7 @@ lu_device_bootloader_nordic_write (LuDevice *device,
 				     G_IO_ERROR_FAILED,
 				     "failed to write @%04x: only 1 byte write supported",
 				     addr);
+			return FALSE;
 		}
 		g_set_error (error,
 			     G_IO_ERROR,
