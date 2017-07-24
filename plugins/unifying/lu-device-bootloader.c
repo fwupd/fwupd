@@ -112,6 +112,22 @@ lu_device_bootloader_get_addr_hi (LuDevice *device)
 	return priv->flash_addr_hi;
 }
 
+void
+lu_device_bootloader_set_addr_lo (LuDevice *device, guint16 addr)
+{
+	LuDeviceBootloader *device_bootloader = LU_DEVICE_BOOTLOADER (device);
+	LuDeviceBootloaderPrivate *priv = GET_PRIVATE (device_bootloader);
+	priv->flash_addr_lo = addr;
+}
+
+void
+lu_device_bootloader_set_addr_hi (LuDevice *device, guint16 addr)
+{
+	LuDeviceBootloader *device_bootloader = LU_DEVICE_BOOTLOADER (device);
+	LuDeviceBootloaderPrivate *priv = GET_PRIVATE (device_bootloader);
+	priv->flash_addr_hi = addr;
+}
+
 guint16
 lu_device_bootloader_get_blocksize (LuDevice *device)
 {

@@ -92,6 +92,10 @@ gboolean	 lu_device_bootloader_request		(LuDevice	*device,
 
 guint16		 lu_device_bootloader_get_addr_lo	(LuDevice	*device);
 guint16		 lu_device_bootloader_get_addr_hi	(LuDevice	*device);
+void		 lu_device_bootloader_set_addr_lo	(LuDevice	*device,
+							 guint16	 addr);
+void		 lu_device_bootloader_set_addr_hi	(LuDevice	*device,
+							 guint16	 addr);
 guint16		 lu_device_bootloader_get_blocksize	(LuDevice	*device);
 
 G_END_DECLS
