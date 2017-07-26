@@ -1,6 +1,7 @@
 subdir('tests')
 subdir('installed-tests')
 subdir('pki')
+subdir('remotes.d')
 
 install_data(['fwupd.conf'],
   install_dir : get_option('sysconfdir')
@@ -10,16 +11,12 @@ install_data(['org.freedesktop.fwupd.metainfo.xml'],
   install_dir: join_paths(get_option('datadir'), 'metainfo')
 )
 
-install_subdir('remotes.d',
-  install_dir: join_paths(get_option('sysconfdir'), 'fwupd')
-)
-
 install_data(['org.freedesktop.fwupd.conf'],
   install_dir : join_paths(get_option('sysconfdir'), 'dbus-1', 'system.d')
 )
 
-install_data(['org.freedesktop.fwupd.xml'],
-  install_dir : join_paths(get_option('datadir'), 'app-info', 'xmls')
+install_data(['metadata.xml'],
+  install_dir : join_paths(get_option('datadir'), 'fwupd', 'remotes.d', 'fwupd')
 )
 
 install_data(['90-fwupd-devices.rules'],
@@ -34,6 +31,7 @@ con2.set('bindir',
          join_paths(get_option('prefix'),
                     get_option('bindir')))
 con2.set('localstatedir', join_paths(get_option('localstatedir')))
+con2.set('datadir', join_paths(get_option('datadir')))
 con2.set('bootdir', get_option('with-bootdir'))
 
 # replace @libexecdir@

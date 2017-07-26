@@ -907,6 +907,8 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
 		if (!fwupd_remote_get_enabled (remote))
 			continue;
+		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
+			continue;
 		if (!fu_util_download_metadata_for_remote (priv, remote, error))
 			return FALSE;
 	}
@@ -1184,6 +1186,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		FwupdRemoteKind kind = fwupd_remote_get_kind (remote);
 		SoupURI *uri;
 		const gchar *tmp;
 		gint priority;
@@ -1193,13 +1196,18 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("Remote ID"),
 				    fwupd_remote_get_id (remote));
 
+		/* TRANSLATORS: remote type, e.g. remote or local */
+		fu_util_print_data (_("Type"),
+				    fwupd_remote_kind_to_string (kind));
+
 		/* TRANSLATORS: if the remote is enabled */
 		fu_util_print_data (_("Enabled"),
 				    fwupd_remote_get_enabled (remote) ? "True" : "False");
 
 		/* optional parameters */
 		age = fwupd_remote_get_age (remote);
-		if (age > 0 && age != G_MAXUINT64) {
+		if (kind == FWUPD_REMOTE_KIND_DOWNLOAD &&
+		    age > 0 && age != G_MAXUINT64) {
 			const gchar *unit = "s";
 			g_autofree gchar *age_str = NULL;
 			if (age > 60) {
@@ -1248,6 +1256,11 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (tmp != NULL) {
 			/* TRANSLATORS: remote filename base */
 			fu_util_print_data (_("Filename Signature"), tmp);
+		}
+		tmp = fwupd_remote_get_filename_cache (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: locatation of the local file */
+			fu_util_print_data (_("Location"), tmp);
 		}
 		uri = fwupd_remote_get_uri (remote);
 		if (uri != NULL) {
@@ -1366,6 +1379,17 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 							error);
 		if (remote == NULL)
 			return FALSE;
+
+		/* local remotes have the firmware already */
+		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
+			const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
+			g_autofree gchar *path = g_path_get_dirname (fn_cache);
+			fn = g_build_filename (path, uri_tmp, NULL);
+			return fu_util_install_with_fallback (priv,
+							      fwupd_device_get_id (dev),
+							      fn, error);
+		}
+
 		uri = fwupd_remote_build_uri (remote, uri_tmp, error);
 		if (uri == NULL)
 			return FALSE;
