@@ -121,6 +121,7 @@ if get_option('enable-tests')
     link_with : fwupd,
     c_args : [
       cargs,
+      '-DLOCALSTATEDIR="' + localstatedir + '"',
       '-DFU_SELF_TEST_REMOTES_DIR="' + testdatadir + '"',
     ],
   )
