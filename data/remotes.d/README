@@ -1,5 +1,0 @@
-Steps to make vendor firmware work:
-
-* Change /etc/fwupd/remotes.d/vendor.conf to have `Enabled=true`
-* Add the metadata to /usr/share/fwupd/remotes.d/vendor/vendor.xml.gz
-* Add the firmware to /usr/share/fwupd/remotes.d/vendor/firmware

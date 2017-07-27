@@ -4,7 +4,7 @@ install_data([
   ],
   install_dir : join_paths(get_option('sysconfdir'), 'fwupd', 'remotes.d')
 )
-install_data('README',
+install_data('README.md',
   install_dir : join_paths(get_option('datadir'), 'fwupd', 'remotes.d', 'vendor', 'firmware')
 )
 
