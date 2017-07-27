@@ -1108,9 +1108,9 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	GPtrArray *results = NULL;
 	GPtrArray *guids;
 	const gchar *tmp;
+	g_autoptr(GPtrArray) results = NULL;
 
 	/* print any updates */
 	results = fwupd_client_get_updates (priv->client, NULL, error);
@@ -1398,7 +1398,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 static gboolean
 fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	GPtrArray *results = NULL;
+	g_autoptr(GPtrArray) results = NULL;
 
 	/* apply any updates */
 	results = fwupd_client_get_updates (priv->client, NULL, error);
