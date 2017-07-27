@@ -907,7 +907,7 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
 		if (!fwupd_remote_get_enabled (remote))
 			continue;
-		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_HTTP)
+		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
 		if (!fu_util_download_metadata_for_remote (priv, remote, error))
 			return FALSE;
@@ -1206,7 +1206,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* optional parameters */
 		age = fwupd_remote_get_age (remote);
-		if (kind == FWUPD_REMOTE_KIND_HTTP &&
+		if (kind == FWUPD_REMOTE_KIND_DOWNLOAD &&
 		    age > 0 && age != G_MAXUINT64) {
 			const gchar *unit = "s";
 			g_autofree gchar *age_str = NULL;

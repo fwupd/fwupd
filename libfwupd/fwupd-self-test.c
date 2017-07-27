@@ -95,7 +95,7 @@ fwupd_enums_func (void)
 }
 
 static void
-fwupd_remote_http_func (void)
+fwupd_remote_download_func (void)
 {
 	gboolean ret;
 	g_autofree gchar *fn = NULL;
@@ -108,7 +108,7 @@ fwupd_remote_http_func (void)
 	ret = fwupd_remote_load_from_filename (remote, fn, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (fwupd_remote_get_kind (remote), ==, FWUPD_REMOTE_KIND_HTTP);
+	g_assert_cmpint (fwupd_remote_get_kind (remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
 	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
 	g_assert (fwupd_remote_get_enabled (remote));
 	g_assert (fwupd_remote_get_uri (remote) != NULL);
@@ -313,7 +313,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
 	g_test_add_func ("/fwupd/result", fwupd_result_func);
-	g_test_add_func ("/fwupd/remote{http}", fwupd_remote_http_func);
+	g_test_add_func ("/fwupd/remote{download}", fwupd_remote_download_func);
 	g_test_add_func ("/fwupd/remote{local}", fwupd_remote_local_func);
 	if (fwupd_has_system_bus ()) {
 		g_test_add_func ("/fwupd/client{remotes}", fwupd_client_remotes_func);

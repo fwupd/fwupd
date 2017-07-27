@@ -123,19 +123,19 @@ fwupd_remote_set_url (FwupdRemote *self, const gchar *url)
 
 /**
  * fwupd_remote_kind_from_string:
- * @kind: a string, e.g. "http"
+ * @kind: a string, e.g. "download"
  *
  * Converts an printable string to an enumerated type.
  *
- * Returns: a #FwupdRemoteKind, e.g. %FWUPD_REMOTE_KIND_HTTP
+ * Returns: a #FwupdRemoteKind, e.g. %FWUPD_REMOTE_KIND_DOWNLOAD
  *
  * Since: 0.9.6
  **/
 FwupdRemoteKind
 fwupd_remote_kind_from_string (const gchar *kind)
 {
-	if (g_strcmp0 (kind, "http") == 0)
-		return FWUPD_REMOTE_KIND_HTTP;
+	if (g_strcmp0 (kind, "download") == 0)
+		return FWUPD_REMOTE_KIND_DOWNLOAD;
 	if (g_strcmp0 (kind, "local") == 0)
 		return FWUPD_REMOTE_KIND_LOCAL;
 	return FWUPD_REMOTE_KIND_UNKNOWN;
@@ -143,19 +143,19 @@ fwupd_remote_kind_from_string (const gchar *kind)
 
 /**
  * fwupd_remote_kind_to_string:
- * @kind: a #FwupdRemoteKind, e.g. %FWUPD_REMOTE_KIND_HTTP
+ * @kind: a #FwupdRemoteKind, e.g. %FWUPD_REMOTE_KIND_DOWNLOAD
  *
  * Converts an enumerated type to a printable string.
  *
- * Returns: a string, e.g. "http"
+ * Returns: a string, e.g. "download"
  *
  * Since: 0.9.6
  **/
 const gchar *
 fwupd_remote_kind_to_string (FwupdRemoteKind kind)
 {
-	if (kind == FWUPD_REMOTE_KIND_HTTP)
-		return "http";
+	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD)
+		return "download";
 	if (kind == FWUPD_REMOTE_KIND_LOCAL)
 		return "local";
 	return NULL;
@@ -203,10 +203,10 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	if (!g_key_file_load_from_file (kf, filename, G_KEY_FILE_NONE, error))
 		return FALSE;
 
-	/* get kind, failing back to http */
+	/* get kind, failing back to download */
 	kind = g_key_file_get_string (kf, group, "Type", NULL);
 	if (kind == NULL) {
-		self->kind = FWUPD_REMOTE_KIND_HTTP;
+		self->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
 	} else {
 		self->kind = fwupd_remote_kind_from_string (kind);
 		if (self->kind == FWUPD_REMOTE_KIND_UNKNOWN) {
@@ -223,7 +223,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	self->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
 
 	/* HTTP-type remotes */
-	if (self->kind == FWUPD_REMOTE_KIND_HTTP) {
+	if (self->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
 		g_autofree gchar *url = NULL;
 		g_autofree gchar *username = NULL;
 		g_autofree gchar *password = NULL;
