@@ -29,15 +29,28 @@ G_BEGIN_DECLS
 #define FWUPD_TYPE_REMOTE (fwupd_remote_get_type ())
 G_DECLARE_FINAL_TYPE (FwupdRemote, fwupd_remote, FWUPD, REMOTE, GObject)
 
+typedef enum {
+	FWUPD_REMOTE_KIND_UNKNOWN,
+	FWUPD_REMOTE_KIND_DOWNLOAD,
+	FWUPD_REMOTE_KIND_LOCAL,
+	/*< private >*/
+	FWUPD_REMOTE_KIND_LAST
+} FwupdRemoteKind;
+
+FwupdRemoteKind	 fwupd_remote_kind_from_string		(const gchar	*kind);
+const gchar	*fwupd_remote_kind_to_string		(FwupdRemoteKind kind);
+
 FwupdRemote	*fwupd_remote_new			(void);
 const gchar	*fwupd_remote_get_id			(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_username		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_password		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename_asc		(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_filename_cache	(FwupdRemote	*self);
 gboolean	 fwupd_remote_get_enabled		(FwupdRemote	*self);
 gint		 fwupd_remote_get_priority		(FwupdRemote	*self);
 guint64		 fwupd_remote_get_age			(FwupdRemote	*self);
+FwupdRemoteKind	 fwupd_remote_get_kind			(FwupdRemote	*self);
 SoupURI		*fwupd_remote_get_uri			(FwupdRemote	*self);
 SoupURI		*fwupd_remote_get_uri_asc		(FwupdRemote	*self);
 SoupURI		*fwupd_remote_build_uri			(FwupdRemote	*self,

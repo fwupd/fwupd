@@ -39,7 +39,6 @@ void		 fwupd_remote_set_mtime			(FwupdRemote	*self,
 							 guint64	 mtime);
 gchar		**fwupd_remote_get_order_after		(FwupdRemote	*self);
 gchar		**fwupd_remote_get_order_before		(FwupdRemote	*self);
-const gchar	*fwupd_remote_get_filename_cache	(FwupdRemote	*self);
 
 G_END_DECLS
 
