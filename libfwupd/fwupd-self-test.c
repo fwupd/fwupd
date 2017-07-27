@@ -115,8 +115,8 @@ fwupd_remote_http_func (void)
 	g_assert (fwupd_remote_get_uri_asc (remote) != NULL);
 	g_assert_cmpstr (fwupd_remote_get_filename (remote), ==, "lvfs-firmware.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_filename_asc (remote), ==, "lvfs-firmware.xml.gz.asc");
-	g_assert (g_str_has_suffix (fwupd_remote_get_filename_cache (remote),
-				    "/var/lib/fwupd/remotes.d/lvfs/metadata.xml.gz"));
+	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==,
+			 LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz");
 }
 
 static void
