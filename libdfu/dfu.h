@@ -36,6 +36,7 @@
 #include <libdfu/dfu-error.h>
 #include <libdfu/dfu-firmware.h>
 #include <libdfu/dfu-image.h>
+#include <libdfu/dfu-patch.h>
 #include <libdfu/dfu-sector.h>
 #include <libdfu/dfu-target.h>
 
