@@ -1,7 +1,8 @@
 project('fwupd', 'c',
   version : '0.9.6',
   license : 'LGPL-2.1+',
-  meson_version : '>=0.37.0'
+  meson_version : '>=0.37.0',
+  default_options : 'warning_level=2',
 )
 
 fwupd_version = meson.project_version()
@@ -57,7 +58,6 @@ test_args = [
   '-Wclobbered',
   '-Wdeclaration-after-statement',
   '-Wempty-body',
-  '-Wextra',
   '-Wformat=2',
   '-Wformat-nonliteral',
   '-Wformat-security',
