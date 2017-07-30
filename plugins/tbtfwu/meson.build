@@ -1,8 +1,8 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginTbtfwu"']
 
-shared_module('fu_plugin_thunderbolt',
+shared_module('fu_plugin_tbtfwu',
   sources : [
-    'fu-plugin-thunderbolt.c',
+    'fu-plugin-tbtfwu.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -14,7 +14,7 @@ shared_module('fu_plugin_thunderbolt',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    thunderbolt,
+    tbtfwu,
     gudev,
     efivar,
   ],

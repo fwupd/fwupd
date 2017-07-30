@@ -48,7 +48,7 @@ struct FuPluginData {
 	 */
 	gsize					 controllers_len;
 
-	/* the FuThunderboltInfo objects found using the last rescan */
+	/* the FuTbtfwuInfo objects found using the last rescan */
 	GPtrArray				*infos;
 
 	/* the array of sysfs paths */
@@ -71,23 +71,23 @@ typedef struct {
 	guint32					 version_major;
 	guint32					 version_minor;
 	FuDevice				*dev;
-} FuThunderboltInfo;
+} FuTbtfwuInfo;
 
 static void
-fu_plugin_thunderbolt_info_free (FuThunderboltInfo *info)
+fu_plugin_tbtfwu_info_free (FuTbtfwuInfo *info)
 {
 	g_free (info->id);
 	if (info->dev != NULL)
 		g_object_unref (info->dev);
-	g_slice_free (FuThunderboltInfo, info);
+	g_slice_free (FuTbtfwuInfo, info);
 }
 
-static FuThunderboltInfo *
-fu_plugin_thunderbolt_get_info_by_id (FuPlugin *plugin, const gchar *id)
+static FuTbtfwuInfo *
+fu_plugin_tbtfwu_get_info_by_id (FuPlugin *plugin, const gchar *id)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	for (guint i = 0; i < data->infos->len; i++) {
-		FuThunderboltInfo *info = g_ptr_array_index (data->infos, i);
+		FuTbtfwuInfo *info = g_ptr_array_index (data->infos, i);
 		if (g_strcmp0 (info->id, id) == 0)
 			return info;
 	}
@@ -95,7 +95,7 @@ fu_plugin_thunderbolt_get_info_by_id (FuPlugin *plugin, const gchar *id)
 }
 
 static gboolean
-fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
+fu_plugin_tbtfwu_rescan (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	gint rc;
@@ -122,13 +122,13 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 
 	/* no longer valid */
 	for (guint i = 0; i < data->infos->len; i++) {
-		FuThunderboltInfo *info = g_ptr_array_index (data->infos, i);
+		FuTbtfwuInfo *info = g_ptr_array_index (data->infos, i);
 		info->controller = NULL;
 	}
 
 	/* go through each device in results */
 	for (guint i = 0; i < data->controllers_len; i++) {
-		FuThunderboltInfo *info;
+		FuTbtfwuInfo *info;
 		gchar tdbid[FU_PLUGIN_THUNDERBOLT_MAX_ID_LEN];
 		gsize tdbid_sz = sizeof (tdbid);
 		g_autofree gchar *guid_id = NULL;
@@ -146,14 +146,14 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		}
 
 		/* find any existing info struct */
-		info = fu_plugin_thunderbolt_get_info_by_id (plugin, tdbid);
+		info = fu_plugin_tbtfwu_get_info_by_id (plugin, tdbid);
 		if (info != NULL) {
 			info->controller = data->controllers[i];
 			continue;
 		}
 
 		/* create a new info struct */
-		info = g_slice_new0 (FuThunderboltInfo);
+		info = g_slice_new0 (FuTbtfwuInfo);
 		info->controller = data->controllers[i];
 		info->id = g_strdup (tdbid);
 		g_ptr_array_add (data->infos, info);
@@ -245,7 +245,7 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 	/* any devices were removed */
 	infos_remove = g_ptr_array_new ();
 	for (guint i = 0; i < data->infos->len; i++) {
-		FuThunderboltInfo *info = g_ptr_array_index (data->infos, i);
+		FuTbtfwuInfo *info = g_ptr_array_index (data->infos, i);
 		if (info->controller == NULL) {
 			if (info->dev != NULL)
 				fu_plugin_device_remove (plugin, info->dev);
@@ -253,7 +253,7 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 		}
 	}
 	for (guint i = 0; i < infos_remove->len; i++) {
-		FuThunderboltInfo *info = g_ptr_array_index (infos_remove, i);
+		FuTbtfwuInfo *info = g_ptr_array_index (infos_remove, i);
 		g_ptr_array_remove (data->infos, info);
 	}
 
@@ -262,7 +262,7 @@ fu_plugin_thunderbolt_rescan (FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_plugin_thunderbolt_schedule_rescan_cb (gpointer user_data)
+fu_plugin_tbtfwu_schedule_rescan_cb (gpointer user_data)
 {
 	FuPlugin *plugin = FU_PLUGIN (user_data);
 	FuPluginData *data = fu_plugin_get_data (plugin);
@@ -272,13 +272,13 @@ fu_plugin_thunderbolt_schedule_rescan_cb (gpointer user_data)
 	data->refresh_id = 0;
 
 	/* rescan */
-	if (!fu_plugin_thunderbolt_rescan (plugin, &error))
+	if (!fu_plugin_tbtfwu_rescan (plugin, &error))
 		g_warning ("%s", error->message);
 	return FALSE;
 }
 
 static void
-fu_plugin_thunderbolt_schedule_rescan (FuPlugin *plugin)
+fu_plugin_tbtfwu_schedule_rescan (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
@@ -287,12 +287,12 @@ fu_plugin_thunderbolt_schedule_rescan (FuPlugin *plugin)
 	if (data->refresh_id != 0)
 		g_source_remove (data->refresh_id);
 	data->refresh_id = g_timeout_add (FU_PLUGIN_THUNDERBOLT_DAEMON_DELAY,
-					  fu_plugin_thunderbolt_schedule_rescan_cb,
+					  fu_plugin_tbtfwu_schedule_rescan_cb,
 					  plugin);
 }
 
 static gboolean
-fu_plugin_thunderbolt_device_matches (GUdevDevice *device)
+fu_plugin_tbtfwu_device_matches (GUdevDevice *device)
 {
 	guint16 device_id;
 	guint16 vendor_id;
@@ -316,7 +316,7 @@ fu_plugin_thunderbolt_device_matches (GUdevDevice *device)
 }
 
 static void
-fu_plugin_thunderbolt_percentage_changed_cb (guint percentage, gpointer user_data)
+fu_plugin_tbtfwu_percentage_changed_cb (guint percentage, gpointer user_data)
 {
 	FuPlugin *plugin = FU_PLUGIN (user_data);
 	fu_plugin_set_percentage (plugin, percentage);
@@ -329,13 +329,13 @@ fu_plugin_update_online (FuPlugin *plugin,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
-	FuThunderboltInfo *info;
+	FuTbtfwuInfo *info;
 	const guint8 *blob;
 	gint rc;
 	gsize blob_sz;
 
 	/* find controller */
-	info = fu_plugin_thunderbolt_get_info_by_id (plugin, fu_device_get_id (dev));
+	info = fu_plugin_tbtfwu_get_info_by_id (plugin, fu_device_get_id (dev));
 	if (info == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -361,7 +361,7 @@ fu_plugin_update_online (FuPlugin *plugin,
 	rc = tbt_fwu_Controller_updateFW (info->controller,
 					  blob,
 					  blob_sz,
-					  fu_plugin_thunderbolt_percentage_changed_cb,
+					  fu_plugin_tbtfwu_percentage_changed_cb,
 					  plugin);
 	if (rc != TBT_OK) {
 		g_set_error (error,
@@ -377,7 +377,7 @@ fu_plugin_update_online (FuPlugin *plugin,
 }
 
 static const gchar *
-fu_plugin_thunderbolt_find_devpath (FuPlugin *plugin, GUdevDevice *udev_device)
+fu_plugin_tbtfwu_find_devpath (FuPlugin *plugin, GUdevDevice *udev_device)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *devpath = g_udev_device_get_sysfs_path (udev_device);
@@ -390,12 +390,12 @@ fu_plugin_thunderbolt_find_devpath (FuPlugin *plugin, GUdevDevice *udev_device)
 }
 
 static void
-fu_plugin_thunderbolt_add_devpath (FuPlugin *plugin, GUdevDevice *udev_device)
+fu_plugin_tbtfwu_add_devpath (FuPlugin *plugin, GUdevDevice *udev_device)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
 	/* already exists */
-	if (fu_plugin_thunderbolt_find_devpath (plugin, udev_device) != NULL)
+	if (fu_plugin_tbtfwu_find_devpath (plugin, udev_device) != NULL)
 		return;
 
 	/* add new sysfs-path */
@@ -404,7 +404,7 @@ fu_plugin_thunderbolt_add_devpath (FuPlugin *plugin, GUdevDevice *udev_device)
 }
 
 static void
-fu_plugin_thunderbolt_uevent_cb (GUdevClient *gudev_client,
+fu_plugin_tbtfwu_uevent_cb (GUdevClient *gudev_client,
 				 const gchar *action,
 				 GUdevDevice *udev_device,
 				 FuPlugin *plugin)
@@ -412,19 +412,19 @@ fu_plugin_thunderbolt_uevent_cb (GUdevClient *gudev_client,
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	if (g_strcmp0 (action, "remove") == 0) {
 		const gchar *devpath = NULL;
-		devpath = fu_plugin_thunderbolt_find_devpath (plugin, udev_device);
+		devpath = fu_plugin_tbtfwu_find_devpath (plugin, udev_device);
 		if (devpath != NULL) {
 			g_debug ("potentially removing tbt device");
 			g_ptr_array_remove (data->devpaths, (gpointer) devpath);
-			fu_plugin_thunderbolt_schedule_rescan (plugin);
+			fu_plugin_tbtfwu_schedule_rescan (plugin);
 		}
 		return;
 	}
 	if (g_strcmp0 (action, "add") == 0) {
-		if (fu_plugin_thunderbolt_device_matches (udev_device)) {
+		if (fu_plugin_tbtfwu_device_matches (udev_device)) {
 			g_debug ("potentially adding tbt device");
-			fu_plugin_thunderbolt_add_devpath (plugin, udev_device);
-			fu_plugin_thunderbolt_schedule_rescan (plugin);
+			fu_plugin_tbtfwu_add_devpath (plugin, udev_device);
+			fu_plugin_tbtfwu_schedule_rescan (plugin);
 		}
 		return;
 	}
@@ -435,11 +435,11 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	const gchar *subsystems[] = { "pci", NULL };
-	data->infos = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_plugin_thunderbolt_info_free);
+	data->infos = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_plugin_tbtfwu_info_free);
 	data->devpaths = g_ptr_array_new_with_free_func (g_free);
 	data->gudev_client = g_udev_client_new (subsystems);
 	g_signal_connect (data->gudev_client, "uevent",
-			  G_CALLBACK (fu_plugin_thunderbolt_uevent_cb), plugin);
+			  G_CALLBACK (fu_plugin_tbtfwu_uevent_cb), plugin);
 }
 
 void
@@ -481,15 +481,15 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	devices = g_udev_client_query_by_subsystem (data->gudev_client, "pci");
 	for (GList *l = devices; l != NULL; l = l->next) {
 		GUdevDevice *udev_device = l->data;
-		if (fu_plugin_thunderbolt_device_matches (udev_device)) {
-			fu_plugin_thunderbolt_add_devpath (plugin, udev_device);
+		if (fu_plugin_tbtfwu_device_matches (udev_device)) {
+			fu_plugin_tbtfwu_add_devpath (plugin, udev_device);
 			found = TRUE;
 			break;
 		}
 	}
 	if (found) {
 		g_debug ("found thunderbolt PCI device on coldplug");
-		if (!fu_plugin_thunderbolt_rescan (plugin, error))
+		if (!fu_plugin_tbtfwu_rescan (plugin, error))
 			return FALSE;
 	}
 	g_list_foreach (devices, (GFunc) g_object_unref, NULL);

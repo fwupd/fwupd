@@ -13,8 +13,8 @@ if get_option('enable-amt')
 subdir('amt')
 endif
 
-if get_option('enable-thunderbolt') and thunderbolt.found()
-subdir('thunderbolt')
+if get_option('enable-tbtfwu') and tbtfwu.found()
+subdir('tbtfwu')
 endif
 
 if get_option('enable-colorhug')

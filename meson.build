@@ -179,8 +179,8 @@ if get_option('enable-dell')
   conf.set('HAVE_DELL', '1')
 endif
 
-if get_option('enable-thunderbolt')
-  thunderbolt = dependency('libtbtfwu', version : '>= 1', required: false)
+if get_option('enable-tbtfwu')
+  tbtfwu = dependency('libtbtfwu', version : '>= 1', required: false)
 endif
 
 if get_option('enable-systemd')
