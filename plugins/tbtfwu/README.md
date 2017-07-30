@@ -38,4 +38,4 @@ For Thunderbolt online update support, you need to install libtbtfwu.
 * source:		https://github.com/01org/thunderbolt-software-user-space/tree/fwupdate
 
 If you don't want or need this functionality you can use the
-`--disable-thunderbolt` option.
+`--disable-tbtfwu` option.
