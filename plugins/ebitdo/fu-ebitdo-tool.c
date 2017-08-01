@@ -89,7 +89,7 @@ main (int argc, char **argv)
 		g_print ("\t%u = 0x%08x\n", i, fu_device_ebitdo_get_serial(dev)[i]);
 
 	/* not in bootloader mode, so print what to do */
-	if (!fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+	if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
 		g_print ("1. Disconnect the controller\n");
 		switch (fu_device_ebitdo_get_kind (dev)) {
 		case FU_DEVICE_EBITDO_KIND_FC30:
