@@ -70,6 +70,7 @@ fwupd (0.9.6-1) UNRELEASED; urgency=medium
   * trivial: debian: correct duplicate descriptions in control file
   * fix some more memory leaks in dell plugin (#158)
   * Add information about compile-time dependency versions
+  * Drop all patches in debian/patches
 
   [ Patrick Ohly ]
   * meson: introspection optional
