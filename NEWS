@@ -1,3 +1,30 @@
+Version 0.9.6
+~~~~~~~~~~~~~
+Released: 2017-08-03
+
+New Features:
+ - Add DfuPatch to support forward-only firmware patching (Richard Hughes)
+ - Add --version option to fwupdmgr (Richard Hughes, Mario Limonciello)
+ - Display all errors recorded by efi_error tracing (Mario Limonciello)
+ - Make building introspection optional (Patrick Ohly)
+ - Support embedded devices with local firmware metadata (Richard Hughes)
+
+Bugfixes:
+ - Check all the device GUIDs against the blacklist when added (Richard Hughes)
+ - Correct a memory leak in Dell plugin (Mario Limonciello, Richard Hughes)
+ - Default to "en" for UEFI capsule graphics (Mario Limonciello)
+ - Don't log a warning when an unknown unifying report is parsed (Richard Hughes)
+ - Enable test suite via /etc/fwupd.conf (Mario Limonciello)
+ - Fix a hang on 32 bit computers (Richard Hughes)
+ - Fix compilation of the policy on a variety of configurations (Mario Limonciello)
+ - Fix UEFI crash when the product name is NULL (Richard Hughes)
+ - Make flashing ebitdo devices work with fu-ebitdo-tool (Chris Lee)
+ - Make messages from installing capsules useful (Mario Limonciello)
+ - Make sure the unifying percentage completion goes from 0% to 100% (Richard Hughes)
+ - Run the plugin coldplug methods in a predictable order (Richard Hughes)
+ - Test UEFI for kernel support during coldplug (Mario Limonciello)
+ - Use new GUsb functionality to fix flashing Unifying devices (Richard Hughes)
+
 Version 0.9.5
 ~~~~~~~~~~~~~
 Released: 2017-07-04
