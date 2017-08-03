@@ -639,7 +639,7 @@ fu_engine_check_version_requirement (AsApp *app,
 
 	/* check args */
 	if (version == NULL) {
-		g_debug ("no paramater given for %s{%s}",
+		g_debug ("no parameter given for %s{%s}",
 			 as_require_kind_to_string (kind), id);
 		return TRUE;
 	}
@@ -1072,6 +1072,7 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* make the UI update */
+	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
 	fu_device_set_modified (item->device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	fu_engine_emit_device_changed (self, item->device);
 	fu_engine_emit_changed (self);
@@ -1613,6 +1614,7 @@ fu_engine_get_store_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 						g_bytes_get_size (blob_cab));
 	as_store_set_origin (store, checksum);
 
+	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
 	return g_steal_pointer (&store);
 }
 
@@ -1644,6 +1646,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 			continue;
 		item = fu_engine_get_item_by_guid (self, guid);
 		if (item != NULL) {
+			fwupd_device_set_name (dev, fu_device_get_name (item->device));
 			fwupd_device_set_flags (dev, fu_device_get_flags (item->device));
 			fwupd_device_set_id (dev, fu_device_get_id (item->device));
 		}
@@ -2008,6 +2011,7 @@ static void
 fu_engine_plugins_coldplug (FuEngine *self)
 {
 	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* don't allow coldplug to be scheduled when in coldplug */
 	self->coldplug_running = TRUE;
@@ -2051,6 +2055,18 @@ fu_engine_plugins_coldplug (FuEngine *self)
 			g_warning ("failed to cleanup coldplug: %s", error->message);
 	}
 
+	/* print what we do have */
+	for (guint i = 0; i < self->plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+		if (!fu_plugin_get_enabled (plugin))
+			continue;
+		g_string_append_printf (str, "%s, ", fu_plugin_get_name (plugin));
+	}
+	if (str->len > 2) {
+		g_string_truncate (str, str->len - 2);
+		g_message ("using plugins: %s", str->str);
+	}
+
 	/* we can recoldplug from this point on */
 	self->coldplug_running = FALSE;
 }
@@ -2063,9 +2079,11 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 	FuEngine *self = (FuEngine *) user_data;
 	FuDeviceItem *item;
 	GPtrArray *blacklisted_devices;
+	GPtrArray *device_guids;
 
 	/* device has no GUIDs set! */
-	if (fu_device_get_guid_default (device) == NULL) {
+	device_guids = fu_device_get_guids (device);
+	if (device_guids->len == 0) {
 		g_warning ("no GUIDs for device %s [%s]",
 			   fu_device_get_id (device),
 			   fu_device_get_name (device));
@@ -2075,13 +2093,15 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 	/* is this GUID blacklisted */
 	blacklisted_devices = fu_config_get_blacklist_devices (self->config);
 	for (guint i = 0; i < blacklisted_devices->len; i++) {
-		const gchar *guid = g_ptr_array_index (blacklisted_devices, i);
-		if (g_strcmp0 (guid, fu_device_get_guid_default (device)) == 0) {
-			g_debug ("%s is blacklisted [%s], ignoring from %s",
-				 fu_device_get_id (device),
-				 fu_device_get_guid_default (device),
-				 fu_plugin_get_name (plugin));
-			return;
+		const gchar *blacklisted_guid = g_ptr_array_index (blacklisted_devices, i);
+		for (guint j = 0; j < device_guids->len; j++) {
+			const gchar *device_guid = g_ptr_array_index (device_guids, j);
+			if (g_strcmp0 (blacklisted_guid, device_guid) == 0) {
+				g_debug ("%s is blacklisted [%s], ignoring from %s",
+					 fu_device_get_id (device), device_guid,
+					 fu_plugin_get_name (plugin));
+				return;
+			}
 		}
 	}
 
@@ -2195,6 +2215,7 @@ fu_engine_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuEngi
 		 duration, self->coldplug_delay);
 }
 
+#if AS_CHECK_VERSION(0,6,13)
 static gboolean
 fu_engine_load_hwids (FuEngine *self, GError **error)
 {
@@ -2228,6 +2249,16 @@ fu_engine_load_hwids (FuEngine *self, GError **error)
 	}
 
 	return TRUE;
+}
+#endif
+
+static gint
+fu_engine_plugin_sort_cb (gconstpointer a, gconstpointer b)
+{
+	FuPlugin *plugin1 = *((FuPlugin **) a);
+	FuPlugin *plugin2 = *((FuPlugin **) b);
+	return g_strcmp0 (fu_plugin_get_name (plugin1),
+			  fu_plugin_get_name (plugin2));
 }
 
 static gboolean
@@ -2303,6 +2334,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				     g_strdup (fu_plugin_get_name (plugin)),
 				     g_object_ref (plugin));
 	}
+	g_ptr_array_sort (self->plugins, fu_engine_plugin_sort_cb);
 
 	return TRUE;
 }
@@ -2387,12 +2419,18 @@ fu_engine_load (FuEngine *self, GError **error)
 		g_prefix_error (error, "Failed to get USB context: ");
 		return FALSE;
 	}
+#if G_USB_CHECK_VERSION(0,2,11)
+	g_usb_context_set_flags (self->usb_ctx,
+				 G_USB_CONTEXT_FLAGS_AUTO_OPEN_DEVICES);
+#endif
 
+#if AS_CHECK_VERSION(0,6,13)
 	/* load the hwids */
 	if (!fu_engine_load_hwids (self, error)) {
 		g_prefix_error (error, "Failed to load hwids: ");
 		return FALSE;
 	}
+#endif
 
 	/* delete old data files */
 	if (!fu_engine_cleanup_state (error)) {

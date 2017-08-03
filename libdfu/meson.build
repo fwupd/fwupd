@@ -11,6 +11,7 @@ install_headers([
     'dfu-error.h',
     'dfu-firmware.h',
     'dfu-image.h',
+    'dfu-patch.h',
     'dfu-sector.h',
     'dfu-target.h',
   ],
@@ -48,6 +49,7 @@ dfu = shared_library(
     'dfu-format-metadata.c',
     'dfu-format-raw.c',
     'dfu-image.c',
+    'dfu-patch.c',
     'dfu-sector.c',
     'dfu-target.c',
   ],
@@ -89,41 +91,45 @@ executable(
   install_dir : get_option('bindir')
 )
 
-gnome.generate_gir(dfu,
-  sources : [
-    'dfu-common.c',
-    'dfu-common.h',
-    'dfu-context.c',
-    'dfu-context.h',
-    'dfu-device.c',
-    'dfu-device.h',
-    'dfu-element.c',
-    'dfu-element.h',
-    'dfu-error.c',
-    'dfu-error.h',
-    'dfu-firmware.c',
-    'dfu-firmware.h',
-    'dfu-image.c',
-    'dfu-image.h',
-    'dfu-sector.c',
-    'dfu-sector.h',
-    'dfu-target.c',
-    'dfu-target.h',
-  ],
-  nsversion : '1.0',
-  namespace : 'Dfu',
-  symbol_prefix : 'dfu',
-  identifier_prefix : 'Dfu',
-  export_packages : 'dfu',
-  dependencies : deps,
-  includes : [
-    'AppStreamGlib-1.0',
-    'Gio-2.0',
-    'GObject-2.0',
-    'GUsb-1.0',
-  ],
-  install : true
-)
+if get_option('enable-introspection')
+  gnome.generate_gir(dfu,
+    sources : [
+      'dfu-common.c',
+      'dfu-common.h',
+      'dfu-context.c',
+      'dfu-context.h',
+      'dfu-device.c',
+      'dfu-device.h',
+      'dfu-element.c',
+      'dfu-element.h',
+      'dfu-error.c',
+      'dfu-error.h',
+      'dfu-firmware.c',
+      'dfu-firmware.h',
+      'dfu-image.c',
+      'dfu-image.h',
+      'dfu-patch.c',
+      'dfu-patch.h',
+      'dfu-sector.c',
+      'dfu-sector.h',
+      'dfu-target.c',
+      'dfu-target.h',
+    ],
+    nsversion : '1.0',
+    namespace : 'Dfu',
+    symbol_prefix : 'dfu',
+    identifier_prefix : 'Dfu',
+    export_packages : 'dfu',
+    dependencies : deps,
+    includes : [
+      'AppStreamGlib-1.0',
+      'Gio-2.0',
+      'GObject-2.0',
+      'GUsb-1.0',
+    ],
+    install : true
+  )
+endif
 
 if get_option('enable-tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')

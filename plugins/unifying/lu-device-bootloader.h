@@ -84,7 +84,8 @@ LuDeviceBootloaderRequest	*lu_device_bootloader_request_new	(void);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(LuDeviceBootloaderRequest, g_free);
 
-GPtrArray	*lu_device_bootloader_parse_requests	(GBytes		*fw,
+GPtrArray	*lu_device_bootloader_parse_requests	(LuDevice	*device,
+							 GBytes		*fw,
 							 GError		**error);
 gboolean	 lu_device_bootloader_request		(LuDevice	*device,
 							 LuDeviceBootloaderRequest *req,
@@ -92,6 +93,10 @@ gboolean	 lu_device_bootloader_request		(LuDevice	*device,
 
 guint16		 lu_device_bootloader_get_addr_lo	(LuDevice	*device);
 guint16		 lu_device_bootloader_get_addr_hi	(LuDevice	*device);
+void		 lu_device_bootloader_set_addr_lo	(LuDevice	*device,
+							 guint16	 addr);
+void		 lu_device_bootloader_set_addr_hi	(LuDevice	*device,
+							 guint16	 addr);
 guint16		 lu_device_bootloader_get_blocksize	(LuDevice	*device);
 
 G_END_DECLS

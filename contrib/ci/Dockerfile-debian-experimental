@@ -36,6 +36,7 @@ RUN apt-get install -yq --no-install-recommends \
 	libsoup2.4-dev \
 	libsqlite3-dev \
 	libtool-bin \
+	lintian \
 	meson \
 	pkg-config \
 	policykit-1 \

@@ -46,17 +46,18 @@ lu_device_bootloader_request_new (void)
 }
 
 GPtrArray *
-lu_device_bootloader_parse_requests (GBytes *fw, GError **error)
+lu_device_bootloader_parse_requests (LuDevice *device, GBytes *fw, GError **error)
 {
 	const gchar *tmp;
 	g_auto(GStrv) lines = NULL;
 	g_autoptr(GPtrArray) reqs = NULL;
+	guint32 last_addr = 0;
 
 	reqs = g_ptr_array_new_with_free_func (g_free);
 	tmp = g_bytes_get_data (fw, NULL);
 	lines = g_strsplit_set (tmp, "\n\r", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
-		LuDeviceBootloaderRequest *payload;
+		g_autoptr(LuDeviceBootloaderRequest) payload = NULL;
 
 		/* skip empty lines */
 		tmp = lines[i];
@@ -89,7 +90,35 @@ lu_device_bootloader_parse_requests (GBytes *fw, GError **error)
 			}
 			payload->data[j] = lu_buffer_read_uint8 (ptr);
 		}
-		g_ptr_array_add (reqs, payload);
+
+		/* skip the bootloader */
+		if (payload->addr > lu_device_bootloader_get_addr_hi (device)) {
+			g_debug ("skipping write @ %04x", payload->addr);
+			continue;
+		}
+
+		/* skip the header */
+		if (payload->addr < lu_device_bootloader_get_addr_lo (device)) {
+			g_debug ("skipping write @ %04x", payload->addr);
+			continue;
+		}
+
+		/* make sure firmware addresses only go up */
+		if (payload->addr < last_addr) {
+			g_debug ("skipping write @ %04x", payload->addr);
+			continue;
+		}
+		last_addr = payload->addr;
+
+		/* pending */
+		g_ptr_array_add (reqs, g_steal_pointer (&payload));
+	}
+	if (reqs->len == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "firmware data invalid: no payloads found");
+		return NULL;
 	}
 	return g_steal_pointer (&reqs);
 }
@@ -110,6 +139,22 @@ lu_device_bootloader_get_addr_hi (LuDevice *device)
 	LuDeviceBootloaderPrivate *priv = GET_PRIVATE (device_bootloader);
 	g_return_val_if_fail (LU_IS_DEVICE (device), 0x0000);
 	return priv->flash_addr_hi;
+}
+
+void
+lu_device_bootloader_set_addr_lo (LuDevice *device, guint16 addr)
+{
+	LuDeviceBootloader *device_bootloader = LU_DEVICE_BOOTLOADER (device);
+	LuDeviceBootloaderPrivate *priv = GET_PRIVATE (device_bootloader);
+	priv->flash_addr_lo = addr;
+}
+
+void
+lu_device_bootloader_set_addr_hi (LuDevice *device, guint16 addr)
+{
+	LuDeviceBootloader *device_bootloader = LU_DEVICE_BOOTLOADER (device);
+	LuDeviceBootloaderPrivate *priv = GET_PRIVATE (device_bootloader);
+	priv->flash_addr_hi = addr;
 }
 
 guint16

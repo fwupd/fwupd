@@ -1,7 +1,8 @@
 project('fwupd', 'c',
-  version : '0.9.5',
+  version : '0.9.6',
   license : 'LGPL-2.1+',
-  meson_version : '>=0.37.0'
+  meson_version : '>=0.37.0',
+  default_options : 'warning_level=2',
 )
 
 fwupd_version = meson.project_version()
@@ -15,6 +16,15 @@ conf.set('FWUPD_MAJOR_VERSION', fwupd_major_version)
 conf.set('FWUPD_MINOR_VERSION', fwupd_minor_version)
 conf.set('FWUPD_MICRO_VERSION', fwupd_micro_version)
 conf.set_quoted('PACKAGE_VERSION', fwupd_version)
+
+archiver = find_program('git', required : false)
+if archiver.found()
+  result = run_command('git', 'describe')
+  if result.returncode() == 0
+    describe = result.stdout().strip()
+    conf.set_quoted('FWUPD_GIT_DESCRIBE', describe)
+  endif
+endif
 
 # libtool versioning - this applies to libfwupd
 #
@@ -48,7 +58,6 @@ test_args = [
   '-Wclobbered',
   '-Wdeclaration-after-statement',
   '-Wempty-body',
-  '-Wextra',
   '-Wformat=2',
   '-Wformat-nonliteral',
   '-Wformat-security',
@@ -112,11 +121,11 @@ gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
 polkit = dependency('polkit-gobject-1', version : '>= 0.103')
-if polkit.version() >= '0.114'
+if polkit.version().version_compare('>= 0.114')
   conf.set('HAVE_POLKIT_0_114', '1')
 endif
 gudev = dependency('gudev-1.0')
-appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
+appstream_glib = dependency('appstream-glib', version : '>= 0.6.9')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
@@ -170,8 +179,8 @@ if get_option('enable-dell')
   conf.set('HAVE_DELL', '1')
 endif
 
-if get_option('enable-thunderbolt')
-  thunderbolt = dependency('libtbtfwu', version : '>= 1', required: false)
+if get_option('enable-tbtfwu')
+  tbtfwu = dependency('libtbtfwu', version : '>= 1', required: false)
 endif
 
 if get_option('enable-systemd')
@@ -229,7 +238,6 @@ subdir('policy')
 subdir('src')
 
 if meson.version().version_compare('<0.41.0')
-  archiver = find_program('git', required : false)
   if archiver.found()
     run_target('dist',
       # git config tar.tar.xz.command "xz -c"

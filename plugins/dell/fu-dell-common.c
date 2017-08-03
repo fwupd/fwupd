@@ -159,9 +159,8 @@ fu_dell_detect_dock (FuDellSmiObj *smi_obj, guint32 *location)
 		g_debug ("no dock plugged in");
 		return FALSE;
 	}
-	*location = count_out->location;
-	g_debug ("Dock count %u, location %u.",
-		 count_out->count, *location);
+	if (location != NULL)
+		*location = count_out->location;
 	return TRUE;
 }
 
@@ -327,7 +326,7 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 		if (!(flags & FWUPD_DEVICE_FLAG_ALLOW_ONLINE))
 			return TRUE;
 		tmp = fu_device_get_plugin(device);
-		if (!((g_strcmp0 (tmp, "thunderbolt") == 0) ||
+		if (!((g_strcmp0 (tmp, "tbtfwu") == 0) ||
 			(g_strcmp0 (tmp, "synapticsmst") == 0)))
 			return TRUE;
 		g_debug("preparing/cleaning update for %s", tmp);

@@ -1,7 +1,8 @@
 %global glib2_version 2.45.8
-%global libappstream_version 0.6.13
-%global libgusb_version 0.2.9
+%global libappstream_version 0.6.9
+%global libgusb_version 0.2.11
 %global libsoup_version 2.51.92
+%global colord_version 1.2.12
 %global systemd_version 231
 
 %define alphatag                #ALPHATAG#
@@ -33,7 +34,7 @@ BuildRequires: libappstream-glib-devel >= %{libappstream_version}
 BuildRequires: libgudev1-devel
 BuildRequires: libgusb-devel >= %{libgusb_version}
 BuildRequires: libsoup-devel >= %{libsoup_version}
-BuildRequires: colord-devel >= 1.0.0
+BuildRequires: colord-devel >= %{colord_version}
 BuildRequires: polkit-devel >= 0.103
 BuildRequires: sqlite-devel
 BuildRequires: gpgme-devel
@@ -188,12 +189,15 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_bindir}/fwupdmgr
 %dir %{_sysconfdir}/fwupd
 %dir %{_sysconfdir}/fwupd/remotes.d
+%{_sysconfdir}/fwupd/remotes.d/fwupd.conf
 %{_sysconfdir}/fwupd/remotes.d/lvfs.conf
 %{_sysconfdir}/fwupd/remotes.d/lvfs-testing.conf
+%{_sysconfdir}/fwupd/remotes.d/vendor.conf
 %{_sysconfdir}/pki/fwupd
 %{_sysconfdir}/pki/fwupd-metadata
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf
-%{_datadir}/app-info/xmls/org.freedesktop.fwupd.xml
+%{_datadir}/fwupd/remotes.d/fwupd/metadata.xml
+%{_datadir}/fwupd/remotes.d/vendor/firmware/README.md
 %{_datadir}/dbus-1/interfaces/org.freedesktop.fwupd.xml
 %{_datadir}/polkit-1/actions/org.freedesktop.fwupd.policy
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules

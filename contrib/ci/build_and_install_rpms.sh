@@ -39,9 +39,7 @@ cp $HOME/rpmbuild/RPMS/*/*.rpm .
 
 # run the installed tests
 if [ "$CI" = "true" ]; then
-        sed -i "s,Exec=,Exec=/bin/sh -c 'FWUPD_TESTS=$CI ,;
-		s,Exec=.*$,&',;" \
-		/usr/share/dbus-1/system-services/org.freedesktop.fwupd.service
+	sed "s,^EnableTestSuite=.*,EnableTestSuite=true," -i /etc/fwupd.conf
 	mkdir -p /run/dbus
 	mkdir -p /var
 	ln -s /var/run /run

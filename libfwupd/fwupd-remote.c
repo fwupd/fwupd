@@ -29,6 +29,7 @@ static void fwupd_remote_finalize	 (GObject *obj);
 struct _FwupdRemote
 {
 	GObject			 parent_instance;
+	FwupdRemoteKind		 kind;
 	gchar			*id;
 	gchar			*url;
 	gchar			*username;
@@ -78,6 +79,12 @@ fwupd_remote_set_password (FwupdRemote *self, const gchar *password)
 		soup_uri_set_password (self->uri_asc, password);
 }
 
+static void
+fwupd_remote_set_kind (FwupdRemote *self, FwupdRemoteKind kind)
+{
+	self->kind = kind;
+}
+
 /* note, this has to be set before url */
 static void
 fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
@@ -85,16 +92,6 @@ fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
 	g_free (self->id);
 	self->id = g_strdup (id);
 	g_strdelimit (self->id, ".", '\0');
-
-	/* set cache filename */
-	g_free (self->filename_cache);
-	self->filename_cache = g_build_filename (LOCALSTATEDIR,
-						 "lib",
-						 "fwupd",
-						 "remotes.d",
-						 self->id,
-						 "metadata.xml.gz",
-						 NULL);
 }
 
 /* note, this has to be set before username and password */
@@ -125,12 +122,53 @@ fwupd_remote_set_url (FwupdRemote *self, const gchar *url)
 }
 
 /**
+ * fwupd_remote_kind_from_string:
+ * @kind: a string, e.g. "download"
+ *
+ * Converts an printable string to an enumerated type.
+ *
+ * Returns: a #FwupdRemoteKind, e.g. %FWUPD_REMOTE_KIND_DOWNLOAD
+ *
+ * Since: 0.9.6
+ **/
+FwupdRemoteKind
+fwupd_remote_kind_from_string (const gchar *kind)
+{
+	if (g_strcmp0 (kind, "download") == 0)
+		return FWUPD_REMOTE_KIND_DOWNLOAD;
+	if (g_strcmp0 (kind, "local") == 0)
+		return FWUPD_REMOTE_KIND_LOCAL;
+	return FWUPD_REMOTE_KIND_UNKNOWN;
+}
+
+/**
+ * fwupd_remote_kind_to_string:
+ * @kind: a #FwupdRemoteKind, e.g. %FWUPD_REMOTE_KIND_DOWNLOAD
+ *
+ * Converts an enumerated type to a printable string.
+ *
+ * Returns: a string, e.g. "download"
+ *
+ * Since: 0.9.6
+ **/
+const gchar *
+fwupd_remote_kind_to_string (FwupdRemoteKind kind)
+{
+	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD)
+		return "download";
+	if (kind == FWUPD_REMOTE_KIND_LOCAL)
+		return "local";
+	return NULL;
+}
+
+/**
  * fwupd_remote_load_from_filename:
  * @self: A #FwupdRemote
+ * @filename: A filename
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
- * Sets up the self ready for use. Most other methods call this
+ * Sets up the remote ready for use. Most other methods call this
  * for you, and do you only need to call this if you are just watching
  * the self.
  *
@@ -146,11 +184,9 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 {
 	const gchar *group = "fwupd Remote";
 	g_autofree gchar *id = NULL;
+	g_autofree gchar *kind = NULL;
 	g_autofree gchar *order_after = NULL;
 	g_autofree gchar *order_before = NULL;
-	g_autofree gchar *password = NULL;
-	g_autofree gchar *url = NULL;
-	g_autofree gchar *username = NULL;
 	g_autoptr(GKeyFile) kf = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
@@ -167,30 +203,71 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	if (!g_key_file_load_from_file (kf, filename, G_KEY_FILE_NONE, error))
 		return FALSE;
 
-	/* extract data */
-	self->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
-	url = g_key_file_get_string (kf, group, "Url", error);
-	if (url == NULL)
-		return FALSE;
-	fwupd_remote_set_url (self, url);
-
-	/* check the URI was valid */
-	if (self->uri == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to parse URI '%s' in %s",
-			     url, filename);
-		return FALSE;
+	/* get kind, failing back to download */
+	kind = g_key_file_get_string (kf, group, "Type", NULL);
+	if (kind == NULL) {
+		self->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
+	} else {
+		self->kind = fwupd_remote_kind_from_string (kind);
+		if (self->kind == FWUPD_REMOTE_KIND_UNKNOWN) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse type '%s'",
+				     kind);
+			return FALSE;
+		}
 	}
 
-	/* username and password are optional */
-	username = g_key_file_get_string (kf, group, "Username", NULL);
-	if (username != NULL)
-		fwupd_remote_set_username (self, username);
-	password = g_key_file_get_string (kf, group, "Password", NULL);
-	if (password != NULL)
-		fwupd_remote_set_password (self, password);
+	/* extract data */
+	self->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
+
+	/* DOWNLOAD-type remotes */
+	if (self->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
+		g_autofree gchar *url = NULL;
+		g_autofree gchar *username = NULL;
+		g_autofree gchar *password = NULL;
+
+		/* remotes have to include a valid Url */
+		url = g_key_file_get_string (kf, group, "Url", error);
+		if (url == NULL)
+			return FALSE;
+		fwupd_remote_set_url (self, url);
+
+		/* check the URI was valid */
+		if (self->uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse URI '%s' in %s",
+				     url, filename);
+			return FALSE;
+		}
+
+		/* username and password are optional */
+		username = g_key_file_get_string (kf, group, "Username", NULL);
+		if (username != NULL)
+			fwupd_remote_set_username (self, username);
+		password = g_key_file_get_string (kf, group, "Password", NULL);
+		if (password != NULL)
+			fwupd_remote_set_password (self, password);
+
+		/* set cache to /var/lib... */
+		self->filename_cache = g_build_filename (LOCALSTATEDIR,
+							 "lib",
+							 "fwupd",
+							 "remotes.d",
+							 self->id,
+							 "metadata.xml.gz",
+							 NULL);
+	}
+
+	/* all LOCAL remotes have to include a valid File */
+	if (self->kind == FWUPD_REMOTE_KIND_LOCAL) {
+		self->filename_cache = g_key_file_get_string (kf, group, "File", error);
+		if (self->filename_cache == NULL)
+			return FALSE;
+	}
 
 	/* dep logic */
 	order_before = g_key_file_get_string (kf, group, "OrderBefore", NULL);
@@ -220,12 +297,29 @@ fwupd_remote_get_order_before (FwupdRemote *self)
 	return self->order_before;
 }
 
-/* private */
+/**
+ * fwupd_remote_get_filename_cache:
+ * @self: A #FwupdRemote
+ *
+ * Gets the path and filename that the remote is using for a cache.
+ *
+ * Returns: a string, or %NULL for unset
+ *
+ * Since: 0.9.6
+ **/
 const gchar *
 fwupd_remote_get_filename_cache (FwupdRemote *self)
 {
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 	return self->filename_cache;
+}
+
+static void
+fwupd_remote_set_filename_cache (FwupdRemote *self, const gchar *filename)
+{
+	g_return_if_fail (FWUPD_IS_REMOTE (self));
+	g_free (self->filename_cache);
+	self->filename_cache = g_strdup (filename);
 }
 
 /**
@@ -243,6 +337,23 @@ fwupd_remote_get_priority (FwupdRemote *self)
 {
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
 	return self->priority;
+}
+
+/**
+ * fwupd_remote_get_kind:
+ * @self: A #FwupdRemote
+ *
+ * Gets the kind of the remote.
+ *
+ * Returns: a #FwupdRemoteKind, e.g. #FWUPD_REMOTE_KIND_LOCAL
+ *
+ * Since: 0.9.6
+ **/
+FwupdRemoteKind
+fwupd_remote_get_kind (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
+	return self->kind;
 }
 
 /**
@@ -440,9 +551,17 @@ fwupd_remote_to_variant_builder (FwupdRemote *self, GVariantBuilder *builder)
 		g_variant_builder_add (builder, "{sv}", "Priority",
 				       g_variant_new_int32 (self->priority));
 	}
+	if (self->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
+		g_variant_builder_add (builder, "{sv}", "Type",
+				       g_variant_new_uint32 (self->kind));
+	}
 	if (self->mtime != 0) {
 		g_variant_builder_add (builder, "{sv}", "ModificationTime",
 				       g_variant_new_uint64 (self->mtime));
+	}
+	if (self->filename_cache != NULL) {
+		g_variant_builder_add (builder, "{sv}", "FilenameCache",
+				       g_variant_new_string (self->filename_cache));
 	}
 	g_variant_builder_add (builder, "{sv}", "Enabled",
 			       g_variant_new_boolean (self->enabled));
@@ -460,10 +579,14 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 	while (g_variant_iter_loop (iter, "{sv}", &key, &value)) {
 		if (g_strcmp0 (key, "Id") == 0)
 			fwupd_remote_set_id (self, g_variant_get_string (value, NULL));
+		if (g_strcmp0 (key, "Type") == 0)
+			fwupd_remote_set_kind (self, g_variant_get_uint32 (value));
 	}
 	while (g_variant_iter_loop (iter2, "{sv}", &key, &value)) {
 		if (g_strcmp0 (key, "Url") == 0)
 			fwupd_remote_set_url (self, g_variant_get_string (value, NULL));
+		if (g_strcmp0 (key, "FilenameCache") == 0)
+			fwupd_remote_set_filename_cache (self, g_variant_get_string (value, NULL));
 	}
 	while (g_variant_iter_loop (iter3, "{sv}", &key, &value)) {
 		if (g_strcmp0 (key, "Username") == 0) {

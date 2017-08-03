@@ -1495,16 +1495,6 @@ fwupd_result_to_string (FwupdResult *result)
 
 	str = g_string_new ("");
 
-	/* not set when using GetDetails */
-	if (fwupd_device_get_name (priv->device) != NULL)
-		g_string_append_printf (str, "%s\n", fwupd_device_get_name (priv->device));
-	else
-		g_string_append_printf (str, "%s\n", "Unknown Device");
-
-	/* device */
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UNIQUE_ID, priv->unique_id);
-	fwupd_pad_kv_ups (str, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
-
 	/* device and release */
 	device_str = fwupd_device_to_string (priv->device);
 	g_string_append (str, device_str);
@@ -1512,6 +1502,10 @@ fwupd_result_to_string (FwupdResult *result)
 	g_string_append (str, release_str);
 	if (fwupd_release_get_version (priv->release) != NULL)
 		fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS, priv->update_trust_flags);
+
+	/* device */
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UNIQUE_ID, priv->unique_id);
+	fwupd_pad_kv_ups (str, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
 
 	return g_string_free (str, FALSE);
 }

@@ -252,6 +252,7 @@ static gboolean
 lu_tool_dump (FuLuToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) reqs = NULL;
+	g_autoptr(LuDevice) device = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autofree gchar *data = NULL;
 	gsize len = 0;
@@ -266,11 +267,16 @@ lu_tool_dump (FuLuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	/* fake a huge device */
+	device = g_object_new (LU_TYPE_DEVICE_BOOTLOADER, NULL);
+	lu_device_bootloader_set_addr_lo (device, 0x0000);
+	lu_device_bootloader_set_addr_hi (device, 0xffff);
+
 	/* load file and display */
 	if (!g_file_get_contents (values[0], &data, &len, error))
 		return FALSE;
 	fw = g_bytes_new_static (data, len);
-	reqs = lu_device_bootloader_parse_requests (fw, error);
+	reqs = lu_device_bootloader_parse_requests (device, fw, error);
 	if (reqs == NULL)
 		return FALSE;
 	for (guint i = 0; i < reqs->len; i++) {

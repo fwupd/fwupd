@@ -1,4 +1,4 @@
-FROM debian:unstable
+FROM ubuntu:zesty
 
 RUN apt-get update -qq
 RUN apt-get install -yq --no-install-recommends \

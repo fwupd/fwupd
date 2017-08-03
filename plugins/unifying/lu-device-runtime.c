@@ -230,7 +230,7 @@ lu_device_runtime_poll (LuDevice *device, GError **error)
 			g_debug ("ignoring link quality message");
 			break;
 		default:
-			g_warning ("unknown SubID %02x", msg->sub_id);
+			g_debug ("unknown SubID %02x", msg->sub_id);
 			break;
 		}
 	}

@@ -40,7 +40,7 @@ lu_hidpp_msg_dev_id_to_string (LuHidppMsg *msg)
 	if (msg->device_id == HIDPP_DEVICE_ID_WIRED)
 		return "wired";
 	if (msg->device_id == HIDPP_DEVICE_ID_RECEIVER)
-		return "recieiver";
+		return "receiver";
 	if (msg->device_id == HIDPP_DEVICE_ID_UNSET)
 		return "unset";
 	return NULL;
@@ -70,8 +70,7 @@ lu_hidpp_msg_get_payload_length (LuHidppMsg *msg)
 		return 0x2f;
 	if (msg->report_id == HIDPP_REPORT_NOTIFICATION)
 		return 0x08;
-	g_warning ("report 0x%02x unknown length", msg->report_id);
-	return 0x08;
+	return 0x0;
 }
 
 const gchar *
