@@ -10,11 +10,11 @@ A Dockerfile for Fedora 25 is available here in `contrib`.
 
 To prepare the Docker container run this command:
 
-`docker build -t fwupd-fedora-25 -f contrib/ci/Dockerfile-fedora-25 .`
+`docker build -t fwupd-fedora -f contrib/ci/Dockerfile-fedora .`
 
 To build the RPMs run this command (from the root of your git checkout):
 
-```docker run -t -v `pwd`:/build fwupd-fedora-25 ./contrib/ci/build_and_install_rpms.sh```
+```docker run -t -v `pwd`:/build fwupd-fedora ./contrib/ci/build_and_install_rpms.sh```
 
 RPMs will be made available in your working directory when complete.
 
