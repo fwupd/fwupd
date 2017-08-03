@@ -1,3 +1,84 @@
+fwupd (0.9.6-1) UNRELEASED; urgency=medium
+
+  [ Richard Hughes ]
+  * trivial: post release version bump
+  * trivial: Fix the colord version check in the example spec file
+  * Add --version option to fwupdmgr
+  * uefi: Fix crash when the product name is NULL
+  * trivial: Never compare a string against zero to avoid warnings
+  * unifying: Don't log a warning when an unknown report is parsed
+  * trivial: Include all the GTypes in the generated docs
+  * Check all the device GUIDs against the blacklist when added
+  * Fix a hang on 32 bit computers
+  * trivial: Fix a -Wsign-compare warning on 32 bit
+  * trivial: Fix spelling of delimiter
+  * trivial: Make fu_dell_detect_dock() slightly more NULL-deref safe
+  * libdfu: Fix a crash if elf32_newehdr() fails
+  * trivial: Remove or downgrade some superfluous warnings
+  * trivial: Fix self tests after downgrading warnings commit
+  * Run the plugin coldplug methods in a predictable order
+  * trivial: Fix a tiny leak in the Dell plugin
+  * dell: Fix the last of the memory leaks in the self tests
+  * Use new GUsb functionality to fix flashing Unifying devices
+  * unifying: Fix trivial error handler warning
+  * trivial: Allow setting the unifying bootloader address for self tests
+  * unifying: Make sure the percentage completion goes from 0% to 100%
+  * trivial: Fix two tiny leaks in fwupdmgr
+  * Support embedded devices with local firmware metadata
+  * Rename the thunderbolt plugin to tbtfwu
+  * trivial: Use warning_level in the top level meson file
+  * libdfu: Add DfuPatch
+  * Release fwupd 0.9.6
+
+  [ Mario Limonciello ]
+  * trivial: debian: Add libcairo-dev to build-dependencies
+  * Display UEFI firmware type
+  * trivial: Adjust get-devices output order
+  * Include optional git checkout information in --version
+  * trivial: set FWUPD_GIT_DESCRIBE even if git isn't installed
+  * uefi,dell: make error messages from installing capsules useful
+  * uefi: record boot variables to system log during updates (#152)
+  * trivial: uefi: whitespace
+  * dell, uefi: Display all errors recorded by efi_error tracing, not just the first one
+  * uefi: test for kernel support during coldplug
+  * trivial: back the requirement on appstream-glib to 0.6.9
+  * trivial: packaging: lower appstream-glib requirements to match meson.build
+  * trivial: correct version comparison for polkit 0.114 in meson.build
+  * policy: fix compilation on a variety of configurations
+  * trivial: debian: back off polkit-1 dependency
+  * trivial: Add a Dockerfile for Ubuntu zesty (17.04)
+  * trivial: move compilation instructions to github wiki
+  * Default to "en" for UEFI capsule graphics
+  * trivial: debian: move DFU introspection to it's own package
+  * trivial: debian: correct some linitian errors about fwupd-tests
+  * trivial: debian: add missing dh-strip-nondeterminism dependency
+  * trivial: debian: update standards version
+  * trivial: debian: remove transient items on purge (Closes: #868464, #868465)
+  * trivial: debian: recusively cleanup on purge
+  * trivial: fix various spelling errors
+  * debian: run lintian as part of CI
+  * Add capability to enable test suite via /etc/fwupd.conf
+  * rpm: enable test suite via /etc/fwupd.conf
+  * debian: enable test suite via /etc/fwupd.conf
+  * trivial: clarify delimitter in use for fwupd.conf is a semicolon
+  * trivial: adjust get-details and get-devices output Display Name output
+  * trivial: set engine back to idle
+  * Correct a memory leak in Dell plugin (Fixes #158)
+  * trivial: fix some more memory leaks in dell plugin (#158)
+  * dell: use plugin hash table instead
+  * Revert "trivial: fix some more memory leaks in dell plugin (#158)"
+  * trivial: debian: correct duplicate descriptions in control file
+  * fix some more memory leaks in dell plugin (#158)
+  * Add information about compile-time dependency versions
+
+  [ Patrick Ohly ]
+  * meson: introspection optional
+
+  [ Chris Lee ]
+  * Make flashing ebitdo devices actually work
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 03 Aug 2017 09:42:24 -0500
+
 fwupd (0.9.5-1) experimental; urgency=medium
 
   [ Mario Limonciello ]
