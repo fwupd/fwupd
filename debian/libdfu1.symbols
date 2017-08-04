@@ -128,6 +128,15 @@ libdfu.so.1 libdfu1 #MINVER#
  dfu_image_set_name@Base 0.6.3
  dfu_image_to_string@Base 0.6.3
  dfu_mode_to_string@Base 0.6.3
+ dfu_patch_apply@Base 0.9.6
+ dfu_patch_create@Base 0.9.6
+ dfu_patch_export@Base 0.9.6
+ dfu_patch_get_checksum_new@Base 0.9.6
+ dfu_patch_get_checksum_old@Base 0.9.6
+ dfu_patch_get_type@Base 0.9.6
+ dfu_patch_import@Base 0.9.6
+ dfu_patch_new@Base 0.9.6
+ dfu_patch_to_string@Base 0.9.6
  dfu_sector_get_address@Base 0.6.3
  dfu_sector_get_id@Base 0.6.3
  dfu_sector_get_number@Base 0.7.5

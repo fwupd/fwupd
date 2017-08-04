@@ -5,6 +5,7 @@ libfwupd.so.1 libfwupd1 #MINVER#
  fwupd_checksum_guess_kind@Base 0.9.3
  fwupd_client_clear_results@Base 0.7.0
  fwupd_client_connect@Base 0.7.2
+ fwupd_client_get_daemon_version@Base 0.9.6
  fwupd_client_get_details@Base 0.7.0
  fwupd_client_get_details_local@Base 0.7.2
  fwupd_client_get_device_by_id@Base 0.9.3
@@ -114,6 +115,7 @@ libfwupd.so.1 libfwupd1 #MINVER#
  fwupd_remote_get_filename_asc@Base 0.9.3
  fwupd_remote_get_filename_cache@Base 0.9.5
  fwupd_remote_get_id@Base 0.9.3
+ fwupd_remote_get_kind@Base 0.9.6
  fwupd_remote_get_order_after@Base 0.9.5
  fwupd_remote_get_order_before@Base 0.9.5
  fwupd_remote_get_password@Base 0.9.5
@@ -122,6 +124,8 @@ libfwupd.so.1 libfwupd1 #MINVER#
  fwupd_remote_get_uri@Base 0.9.3
  fwupd_remote_get_uri_asc@Base 0.9.3
  fwupd_remote_get_username@Base 0.9.5
+ fwupd_remote_kind_from_string@Base 0.9.6
+ fwupd_remote_kind_to_string@Base 0.9.6
  fwupd_remote_load_from_filename@Base 0.9.3
  fwupd_remote_new@Base 0.9.3
  fwupd_remote_new_from_data@Base 0.9.5
