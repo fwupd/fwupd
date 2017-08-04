@@ -7,10 +7,10 @@ services:
 
 before_script:
   - docker build -t fwupd-fedora -f contrib/ci/Dockerfile-fedora .
-  - docker build -t fwupd-debian-experimental -f contrib/ci/Dockerfile-debian-experimental .
+  - docker build -t fwupd-debian -f contrib/ci/Dockerfile-debian .
   - docker build -t fwupd-arch -f contrib/ci/Dockerfile-arch .
 
 script:
   - docker run -e CI=true -t -v `pwd`:/build fwupd-fedora ./contrib/ci/build_and_install_rpms.sh
-  - docker run -e CI=true -t -v `pwd`:/build fwupd-debian-experimental ./contrib/ci/build_and_install_debs.sh
+  - docker run -e CI=true -t -v `pwd`:/build fwupd-debian ./contrib/ci/build_and_install_debs.sh
   - docker run -e CI=true -t -v `pwd`:/build fwupd-arch ./contrib/ci/build_and_install_pkgs.sh
