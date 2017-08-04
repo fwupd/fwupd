@@ -39,7 +39,8 @@ fwupd (0.9.6-1) UNRELEASED; urgency=medium
   * uefi,dell: make error messages from installing capsules useful
   * uefi: record boot variables to system log during updates (#152)
   * trivial: uefi: whitespace
-  * dell, uefi: Display all errors recorded by efi_error tracing, not just the first one
+  * dell, uefi: Display all errors recorded by efi_error tracing, not just
+    the first one
   * uefi: test for kernel support during coldplug
   * trivial: back the requirement on appstream-glib to 0.6.9
   * trivial: packaging: lower appstream-glib requirements to match meson.build
