@@ -27,6 +27,7 @@
 #include <glib-object.h>
 #include <gusb.h>
 
+#include "fu-common.h"
 #include "fu-device.h"
 #include "fu-hwids.h"
 

@@ -22,6 +22,8 @@
 #include <config.h>
 
 #include <gio/gunixinputstream.h>
+#include <archive_entry.h>
+#include <archive.h>
 
 #include "fwupd-error.h"
 
@@ -109,4 +111,94 @@ fu_common_get_contents_fd (gint fd, gsize count, GError **error)
 		return NULL;
 	}
 	return g_steal_pointer (&blob);
+}
+
+static gboolean
+fu_common_extract_archive_entry (struct archive_entry *entry, const gchar *dir)
+{
+	const gchar *tmp;
+	g_autofree gchar *buf = NULL;
+
+	/* no output file */
+	if (archive_entry_pathname (entry) == NULL)
+		return FALSE;
+
+	/* update output path */
+	tmp = archive_entry_pathname (entry);
+	buf = g_build_filename (dir, tmp, NULL);
+	archive_entry_update_pathname_utf8 (entry, buf);
+	return TRUE;
+}
+
+/**
+ * fu_common_extract_archive:
+ * @blob: a #GBytes archive as a blob
+ * @directory: a directory name to extract to
+ * @error: A #GError, or %NULL
+ *
+ * Extracts an achive to a directory.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_common_extract_archive (GBytes *blob, const gchar *dir, GError **error)
+{
+	gboolean ret = TRUE;
+	int r;
+	struct archive *arch = NULL;
+	struct archive_entry *entry;
+
+	/* decompress anything matching either glob */
+	arch = archive_read_new ();
+	archive_read_support_format_all (arch);
+	archive_read_support_filter_all (arch);
+	r = archive_read_open_memory (arch,
+				      (void *) g_bytes_get_data (blob, NULL),
+				      (size_t) g_bytes_get_size (blob));
+	if (r != 0) {
+		ret = FALSE;
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Cannot open: %s",
+			     archive_error_string (arch));
+		goto out;
+	}
+	for (;;) {
+		gboolean valid;
+		g_autofree gchar *path = NULL;
+		r = archive_read_next_header (arch, &entry);
+		if (r == ARCHIVE_EOF)
+			break;
+		if (r != ARCHIVE_OK) {
+			ret = FALSE;
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Cannot read header: %s",
+				     archive_error_string (arch));
+			goto out;
+		}
+
+		/* only extract if valid */
+		valid = fu_common_extract_archive_entry (entry, dir);
+		if (!valid)
+			continue;
+		r = archive_read_extract (arch, entry, 0);
+		if (r != ARCHIVE_OK) {
+			ret = FALSE;
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Cannot extract: %s",
+				     archive_error_string (arch));
+			goto out;
+		}
+	}
+out:
+	if (arch != NULL) {
+		archive_read_close (arch);
+		archive_read_free (arch);
+	}
+	return ret;
 }

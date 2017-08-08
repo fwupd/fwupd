@@ -32,5 +32,8 @@ GBytes		*fu_common_get_contents_bytes	(const gchar	*filename,
 GBytes		*fu_common_get_contents_fd	(gint		 fd,
 						 gsize		 count,
 						 GError		**error);
+gboolean	 fu_common_extract_archive	(GBytes		*blob,
+						 const gchar	*dir,
+						 GError		**error);
 
 #endif /* __FU_COMMON_H__ */

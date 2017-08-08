@@ -19,7 +19,6 @@ shared_module('fu_plugin_raspberrypi',
     ],
   dependencies : [
     plugin_deps,
-    libarchive,
   ],
 )
 
@@ -41,7 +40,6 @@ if get_option('enable-tests')
     dependencies : [
       plugin_deps,
       sqlite,
-      libarchive,
       valgrind,
     ],
     link_with : [

@@ -22,8 +22,6 @@
 #include "config.h"
 
 #include <appstream-glib.h>
-#include <archive_entry.h>
-#include <archive.h>
 #include <string.h>
 
 #include "fu-plugin.h"
@@ -143,23 +141,6 @@ fu_plugin_raspberrypi_parse_firmware (FuDevice *device, const gchar *fn, GError 
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_raspberrypi_explode_file (struct archive_entry *entry, const gchar *dir)
-{
-	const gchar *tmp;
-	g_autofree gchar *buf = NULL;
-
-	/* no output file */
-	if (archive_entry_pathname (entry) == NULL)
-		return FALSE;
-
-	/* update output path */
-	tmp = archive_entry_pathname (entry);
-	buf = g_build_filename (dir, tmp, NULL);
-	archive_entry_update_pathname_utf8 (entry, buf);
-	return TRUE;
-}
-
 gboolean
 fu_plugin_update_online (FuPlugin *plugin,
 			 FuDevice *device,
@@ -168,75 +149,19 @@ fu_plugin_update_online (FuPlugin *plugin,
 			 GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	gboolean ret = TRUE;
-	gboolean valid;
-	int r;
-	struct archive *arch = NULL;
-	struct archive_entry *entry;
 	g_autofree gchar *fwfn = NULL;
 
 	/* decompress anything matching either glob */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DECOMPRESSING);
-	arch = archive_read_new ();
-	archive_read_support_format_all (arch);
-	archive_read_support_filter_all (arch);
-	r = archive_read_open_memory (arch,
-				      (void *) g_bytes_get_data (blob_fw, NULL),
-				      (size_t) g_bytes_get_size (blob_fw));
-	if (r) {
-		ret = FALSE;
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Cannot open: %s",
-			     archive_error_string (arch));
-		goto out;
-	}
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
-	for (;;) {
-		g_autofree gchar *path = NULL;
-		r = archive_read_next_header (arch, &entry);
-		if (r == ARCHIVE_EOF)
-			break;
-		if (r != ARCHIVE_OK) {
-			ret = FALSE;
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Cannot read header: %s",
-				     archive_error_string (arch));
-			goto out;
-		}
-
-		/* only extract if valid */
-		valid = fu_plugin_raspberrypi_explode_file (entry, data->fw_dir);
-		if (!valid)
-			continue;
-		r = archive_read_extract (arch, entry, 0);
-		if (r != ARCHIVE_OK) {
-			ret = FALSE;
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Cannot extract: %s",
-				     archive_error_string (arch));
-			goto out;
-		}
-	}
+	if (!fu_common_extract_archive (blob_fw, data->fw_dir, error))
+		return FALSE;
 
 	/* get the new VC build info */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
 	fwfn = g_build_filename (data->fw_dir,
 				 FU_PLUGIN_RPI_FIRMWARE_FILENAME,
 				 NULL);
-	if (!fu_plugin_raspberrypi_parse_firmware (device, fwfn, error))
-		return FALSE;
-out:
-	if (arch != NULL) {
-		archive_read_close (arch);
-		archive_read_free (arch);
-	}
-	return ret;
+	return fu_plugin_raspberrypi_parse_firmware (device, fwfn, error);
 }
 
 void

@@ -108,7 +108,7 @@ fu_plugin_raspberrypi_func (void)
 				       FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (cnt, ==, 3);
+	g_assert_cmpint (cnt, ==, 2);
 
 	/* check the file was exploded to the right place */
 	g_assert (g_file_test ("/tmp/rpiboot/start.elf", G_FILE_TEST_EXISTS));

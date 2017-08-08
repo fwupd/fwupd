@@ -227,6 +227,7 @@ plugin_deps += giounix
 plugin_deps += gmodule
 plugin_deps += gusb
 plugin_deps += soup
+plugin_deps += libarchive
 
 subdir('data')
 subdir('docs')

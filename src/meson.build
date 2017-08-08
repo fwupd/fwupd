@@ -7,6 +7,7 @@ install_data(['org.freedesktop.fwupd.xml'],
 libfwupdprivate = static_library(
   'fwupdprivate',
   sources : [
+    'fu-common.c',
     'fu-device.c',
     'fu-hwids.c',
     'fu-pending.c',
@@ -52,6 +53,7 @@ executable(
     polkit,
     soup,
     sqlite,
+    libarchive,
   ],
   link_with : [
     fwupd,
@@ -104,6 +106,7 @@ executable(
     gpgme,
     gpgerror,
     valgrind,
+    libarchive,
   ],
   link_with : fwupd,
   c_args : [
