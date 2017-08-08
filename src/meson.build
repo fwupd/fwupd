@@ -4,12 +4,40 @@ install_data(['org.freedesktop.fwupd.xml'],
   install_dir : join_paths(get_option('datadir'), 'dbus-1', 'interfaces')
 )
 
+libfwupdprivate = static_library(
+  'fwupdprivate',
+  sources : [
+    'fu-device.c',
+    'fu-hwids.c',
+    'fu-pending.c',
+    'fu-plugin.c',
+    'fu-test.c',
+  ],
+  include_directories : [
+    include_directories('..'),
+    include_directories('../libfwupd'),
+  ],
+  dependencies : [
+    appstream_glib,
+    giounix,
+    gudev,
+    gusb,
+    polkit,
+    soup,
+    sqlite,
+    libarchive,
+    valgrind,
+  ],
+  c_args : [
+    cargs,
+    '-DLOCALSTATEDIR="' + localstatedir + '"',
+    '-DFU_OFFLINE_DESTDIR=""',
+  ],
+)
+
 executable(
   'fwupdmgr',
   sources : [
-    'fu-device.c',
-    'fu-pending.c',
-    'fu-hwids.c',
     'fu-util.c',
   ],
   include_directories : [
@@ -25,7 +53,10 @@ executable(
     soup,
     sqlite,
   ],
-  link_with : fwupd,
+  link_with : [
+    fwupd,
+    libfwupdprivate,
+  ],
   c_args : [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',

@@ -53,9 +53,6 @@ if get_option('enable-tests')
     sources : [
       'fu-self-test.c',
       'fu-dell-common.c',
-      'fu-device.c',
-      'fu-pending.c',
-      'fu-plugin.c',
     ],
     include_directories : [
       include_directories('../..'),
@@ -71,6 +68,7 @@ if get_option('enable-tests')
     ],
     link_with : [
       fwupd,
+      libfwupdprivate,
     ],
     c_args : [
       cargs,

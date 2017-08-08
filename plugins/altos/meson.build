@@ -26,7 +26,6 @@ executable(
   'fu-altos-tool',
   sources : [
     'fu-altos-tool.c',
-    'fu-device.c',
     'fu-device-altos.c',
   ],
   include_directories : [
@@ -39,8 +38,9 @@ executable(
     gudev,
   ],
   link_with : [
-    fwupd,
     dfu,
+    fwupd,
+    libfwupdprivate,
   ],
   c_args : cargs,
 )
