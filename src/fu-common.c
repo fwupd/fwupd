@@ -22,12 +22,61 @@
 #include <config.h>
 
 #include <gio/gunixinputstream.h>
+#include <glib/gstdio.h>
+
 #include <archive_entry.h>
 #include <archive.h>
 
 #include "fwupd-error.h"
 
 #include "fu-common.h"
+
+/**
+ * fu_common_rmtree:
+ * @directory: a directory name
+ * @error: A #GError or %NULL
+ *
+ * Recursively removes a directory.
+ *
+ * Returns: %TRUE for success, %FALSE otherwise
+ **/
+gboolean
+fu_common_rmtree (const gchar *directory, GError **error)
+{
+	const gchar *filename;
+	g_autoptr(GDir) dir = NULL;
+
+	/* try to open */
+	dir = g_dir_open (directory, 0, error);
+	if (dir == NULL)
+		return FALSE;
+
+	/* find each */
+	while ((filename = g_dir_read_name (dir))) {
+		g_autofree gchar *src = NULL;
+		src = g_build_filename (directory, filename, NULL);
+		if (g_file_test (src, G_FILE_TEST_IS_DIR)) {
+			if (!fu_common_rmtree (src, error))
+				return FALSE;
+		} else {
+			if (g_unlink (src) != 0) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "Failed to delete: %s", src);
+				return FALSE;
+			}
+		}
+	}
+	if (g_remove (directory) != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to delete: %s", directory);
+		return FALSE;
+	}
+	return TRUE;
+}
 
 /**
  * fu_common_set_contents_bytes:

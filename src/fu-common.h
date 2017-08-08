@@ -24,6 +24,8 @@
 
 #include <glib.h>
 
+gboolean	 fu_common_rmtree		(const gchar	*directory,
+						 GError		**error);
 gboolean	 fu_common_set_contents_bytes	(const gchar	*filename,
 						 GBytes		*blob,
 						 GError		**error);
