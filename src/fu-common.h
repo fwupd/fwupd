@@ -27,6 +27,8 @@
 gboolean	 fu_common_set_contents_bytes	(const gchar	*filename,
 						 GBytes		*blob,
 						 GError		**error);
+GBytes		*fu_common_get_contents_bytes	(const gchar	*filename,
+						 GError		**error);
 GBytes		*fu_common_get_contents_fd	(gint		 fd,
 						 gsize		 count,
 						 GError		**error);

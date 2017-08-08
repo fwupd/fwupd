@@ -56,6 +56,24 @@ fu_common_set_contents_bytes (const gchar *filename, GBytes *bytes, GError **err
 	return g_file_set_contents (filename, data, size, error);
 }
 
+/**
+ * fu_common_get_contents_bytes:
+ * @filename: A filename
+ * @error: A #GError, or %NULL
+ *
+ * Reads a blob of data from a file.
+ *
+ * Returns: a #GBytes, or %NULL for failure
+ **/
+GBytes *
+fu_common_get_contents_bytes (const gchar *filename, GError **error)
+{
+	gchar *data = NULL;
+	gsize len = 0;
+	if (!g_file_get_contents (filename, &data, &len, error))
+		return NULL;
+	return g_bytes_new_take (data, len);
+}
 
 /**
  * fu_common_get_contents_fd:
