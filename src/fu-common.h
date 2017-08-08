@@ -37,5 +37,9 @@ GBytes		*fu_common_get_contents_fd	(gint		 fd,
 gboolean	 fu_common_extract_archive	(GBytes		*blob,
 						 const gchar	*dir,
 						 GError		**error);
+GBytes		*fu_common_firmware_builder	(GBytes		*bytes,
+						 const gchar	*script_fn,
+						 const gchar	*output_fn,
+						 GError		**error);
 
 #endif /* __FU_COMMON_H__ */

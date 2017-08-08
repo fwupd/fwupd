@@ -414,6 +414,41 @@ fu_keyring_func (void)
 	g_clear_error (&error);
 }
 
+static void
+fu_common_firmware_builder_func (void)
+{
+	const gchar *data;
+	g_autofree gchar *archive_fn = NULL;
+	g_autoptr(GBytes) archive_blob = NULL;
+	g_autoptr(GBytes) firmware_blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* we can't do this in travis: capset failed: Operation not permitted */
+	if (!g_file_test ("/usr/bin/bwrap", G_FILE_TEST_EXISTS)) {
+		g_test_skip ("no /usr/bin/bwrap, so skipping");
+		return;
+	}
+
+	/* get test file */
+	archive_fn = fu_test_get_filename (TESTDATADIR, "builder/firmware.tar");
+	g_assert (archive_fn != NULL);
+	archive_blob = fu_common_get_contents_bytes (archive_fn, &error);
+	g_assert_no_error (error);
+	g_assert (archive_blob != NULL);
+
+	/* generate the firmware */
+	firmware_blob = fu_common_firmware_builder (archive_blob,
+						    "startup.sh",
+						    "firmware.bin",
+						    &error);
+	g_assert_no_error (error);
+	g_assert (firmware_blob != NULL);
+
+	/* check it */
+	data = g_bytes_get_data (firmware_blob, NULL);
+	g_assert_cmpstr (data, ==, "xobdnas eht ni gninnur");
+}
+
 int
 main (int argc, char **argv)
 {
@@ -431,5 +466,6 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
 	g_test_add_func ("/fwupd/keyring", fu_keyring_func);
+	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	return g_test_run ();
 }

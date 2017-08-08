@@ -77,6 +77,7 @@ Requires: libappstream-glib%{?_isa} >= %{libappstream_version}
 Requires: libgusb%{?_isa} >= %{libgusb_version}
 Requires: libsoup%{?_isa} >= %{libsoup_version}
 Requires: fwupd-labels = %{version}-%{release}
+Requires: bubblewrap
 
 Obsoletes: fwupd-sign < 0.1.6
 Obsoletes: libebitdo < 0.7.5-3
@@ -208,6 +209,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_unitdir}/fwupd.service
 %{_unitdir}/system-update.target.wants/
 %dir %{_localstatedir}/lib/fwupd
+%{_localstatedir}/lib/fwupd/builder/README.md
 %{_libdir}/libfwupd*.so.*
 %{_libdir}/girepository-1.0/Fwupd-1.0.typelib
 /usr/lib/udev/rules.d/*.rules

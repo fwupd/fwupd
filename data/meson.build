@@ -1,3 +1,4 @@
+subdir('builder')
 subdir('tests')
 subdir('installed-tests')
 subdir('pki')

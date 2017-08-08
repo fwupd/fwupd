@@ -1,1 +1,2 @@
+subdir('builder')
 subdir('colorhug')

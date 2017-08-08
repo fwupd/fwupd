@@ -125,8 +125,10 @@ if get_option('enable-tests')
   e = executable(
     'fu-self-test',
     colorhug_test_firmware,
+    builder_test_firmware,
     sources : [
       'fu-self-test.c',
+      'fu-common.c',
       'fu-hwids.c',
       'fu-device.c',
       'fu-pending.c',
@@ -150,6 +152,7 @@ if get_option('enable-tests')
       gpgme,
       gpgerror,
       valgrind,
+      libarchive,
     ],
     link_with : [
       fwupd,

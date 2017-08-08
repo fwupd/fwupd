@@ -251,3 +251,127 @@ out:
 	}
 	return ret;
 }
+
+static void
+fu_common_add_argv (GPtrArray *argv, const gchar *fmt, ...)
+{
+	va_list args;
+	g_autofree gchar *tmp = NULL;
+	g_auto(GStrv) split = NULL;
+
+	va_start (args, fmt);
+	tmp = g_strdup_vprintf (fmt, args);
+	va_end (args);
+
+	split = g_strsplit (tmp, " ", -1);
+	for (guint i = 0; split[i] != NULL; i++)
+		g_ptr_array_add (argv, g_strdup (split[i]));
+}
+
+/**
+ * fu_common_firmware_builder:
+ * @bytes: The data to use
+ * @script_fn: Name of the script to run in the tarball, e.g. "startup.sh"
+ * @output_fn: Name of the generated firmware, e.g. "firmware.bin"
+ * @error: A #GError, or %NULL
+ *
+ * Builds a firmware file using tools from the host session in a bubblewrap
+ * jail. Several things happen during build:
+ *
+ * 1. The @bytes data is untarred to a temporary location
+ * 2. A bubblewrap container is set up
+ * 3. The startup.sh script is run inside the container
+ * 4. The firmware.bin is extracted from the container
+ * 5. The temporary location is deleted
+ *
+ * Returns: a new #GBytes, or %NULL for error
+ **/
+GBytes *
+fu_common_firmware_builder (GBytes *bytes,
+			    const gchar *script_fn,
+			    const gchar *output_fn,
+			    GError **error)
+{
+	gint rc = 0;
+	g_autofree gchar *argv_str = NULL;
+	g_autofree gchar *localstatedir = NULL;
+	g_autofree gchar *output2_fn = NULL;
+	g_autofree gchar *standard_error = NULL;
+	g_autofree gchar *standard_output = NULL;
+	g_autofree gchar *startup_fn = NULL;
+	g_autofree gchar *tmpdir = NULL;
+	g_autoptr(GBytes) firmware_blob = NULL;
+	g_autoptr(GPtrArray) argv = g_ptr_array_new_with_free_func (g_free);
+
+	g_return_val_if_fail (bytes != NULL, NULL);
+	g_return_val_if_fail (script_fn != NULL, NULL);
+	g_return_val_if_fail (output_fn != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* untar file to temp location */
+	tmpdir = g_dir_make_tmp ("fwupd-gen-XXXXXX", error);
+	if (tmpdir == NULL)
+		return NULL;
+	startup_fn = g_build_filename (tmpdir, "startup.sh", NULL);
+	if (!fu_common_extract_archive (bytes, tmpdir, error))
+		return NULL;
+
+	/* this is shared with the plugins */
+	localstatedir = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", "builder", NULL);
+
+	/* launch bubblewrap and generate firmware */
+	g_ptr_array_add (argv, g_strdup ("/usr/bin/bwrap"));
+	fu_common_add_argv (argv, "--die-with-parent");
+	fu_common_add_argv (argv, "--ro-bind /usr /usr");
+	fu_common_add_argv (argv, "--dir /tmp");
+	fu_common_add_argv (argv, "--dir /var");
+	fu_common_add_argv (argv, "--bind %s /tmp", tmpdir);
+	if (g_file_test (localstatedir, G_FILE_TEST_EXISTS))
+		fu_common_add_argv (argv, "--ro-bind %s /boot", localstatedir);
+	fu_common_add_argv (argv, "--dev /dev");
+	fu_common_add_argv (argv, "--symlink usr/lib /lib");
+	fu_common_add_argv (argv, "--symlink usr/lib64 /lib64");
+	fu_common_add_argv (argv, "--symlink usr/bin /bin");
+	fu_common_add_argv (argv, "--symlink usr/sbin /sbin");
+	fu_common_add_argv (argv, "--chdir /tmp");
+	fu_common_add_argv (argv, "--unshare-all");
+	fu_common_add_argv (argv, "/bin/sh /tmp/%s", script_fn);
+	g_ptr_array_add (argv, NULL);
+	argv_str = g_strjoinv (" ", (gchar **) argv->pdata);
+	g_debug ("running '%s' in %s", argv_str, tmpdir);
+	if (!g_spawn_sync ("/tmp",
+			   (gchar **) argv->pdata,
+			   NULL,
+			   G_SPAWN_DEFAULT,
+			   NULL, NULL, /* child_setup */
+			   &standard_output,
+			   &standard_error,
+			   &rc,
+			   error)) {
+		g_prefix_error (error, "failed to run '%s': ", argv_str);
+		return NULL;
+	}
+	if (standard_output != NULL && standard_output[0] != '\0')
+		g_debug ("console output was: %s", standard_output);
+	if (rc != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to build firmware: %s",
+			     standard_error);
+		return NULL;
+	}
+
+	/* get generated file */
+	output2_fn = g_build_filename (tmpdir, output_fn, NULL);
+	firmware_blob = fu_common_get_contents_bytes (output2_fn, error);
+	if (firmware_blob == NULL)
+		return NULL;
+
+	/* cleanup temp directory */
+	if (!fu_common_rmtree (tmpdir, error))
+		return NULL;
+
+	/* success */
+	return g_steal_pointer (&firmware_blob);
+}

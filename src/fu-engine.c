@@ -852,6 +852,7 @@ fu_engine_install (FuEngine *self,
 	const gchar *version;
 	gboolean is_downgrade;
 	gint vercmp;
+	g_autoptr(GBytes) blob_fw2 = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -990,6 +991,19 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 	}
 
+	/* use a bubblewrap helper script to build the firmware */
+	tmp = as_app_get_metadata_item (app, "fwupd::BuilderScript");
+	if (tmp != NULL) {
+		const gchar *tmp2 = as_app_get_metadata_item (app, "fwupd::BuilderOutput");
+		if (tmp2 == NULL)
+			tmp2 = "firmware.bin";
+		blob_fw2 = fu_common_firmware_builder (blob_fw, tmp, tmp2, error);
+		if (blob_fw2 == NULL)
+			return FALSE;
+	} else {
+		blob_fw2 = g_bytes_ref (blob_fw);
+	}
+
 	version = as_release_get_version (rel);
 	fu_device_set_update_version (item->device, version);
 
@@ -1044,7 +1058,7 @@ fu_engine_install (FuEngine *self,
 	if (!fu_plugin_runner_update (item->plugin,
 				      item->device,
 				      blob_cab,
-				      blob_fw,
+				      blob_fw2,
 				      flags,
 				      error)) {
 		for (guint j = 0; j < self->plugins->len; j++) {
