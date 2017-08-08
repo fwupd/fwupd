@@ -28,6 +28,7 @@
 #include <gusb.h>
 
 #include "fu-device.h"
+#include "fu-hwids.h"
 
 G_BEGIN_DECLS
 
@@ -92,6 +93,8 @@ void		 fu_plugin_cache_add			(FuPlugin	*plugin,
 							 gpointer	 dev);
 gboolean	 fu_plugin_check_hwid			(FuPlugin	*plugin,
 							 const gchar	*hwid);
+const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*plugin,
+							 const gchar	*dmi_id);
 
 G_END_DECLS
 

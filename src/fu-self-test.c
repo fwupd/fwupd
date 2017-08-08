@@ -34,7 +34,6 @@
 #include "fu-hwids.h"
 #include "fu-test.h"
 
-#if AS_CHECK_VERSION(0,6,13)
 static void
 fu_hwids_func (void)
 {
@@ -43,6 +42,11 @@ fu_hwids_func (void)
 	g_autofree gchar *sysfsdir = NULL;
 	g_autofree gchar *testdir = NULL;
 	gboolean ret;
+
+#if !AS_CHECK_VERSION(0,6,13)
+	g_test_skip ("appstreaml-glib too old, skipping");
+	return;
+#endif
 
 	struct {
 		const gchar *key;
@@ -94,8 +98,9 @@ fu_hwids_func (void)
 		g_assert_no_error (error);
 		g_assert_cmpstr (guid, ==, guids[i].value);
 	}
+	for (guint i = 0; guids[i].key != NULL; i++)
+		g_assert (fu_hwids_has_guid (hwids, guids[i].value));
 }
-#endif
 
 static void
 _plugin_status_changed_cb (FuPlugin *plugin, FwupdStatus status, gpointer user_data)
@@ -421,9 +426,7 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
-#if AS_CHECK_VERSION(0,6,13)
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
-#endif
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);

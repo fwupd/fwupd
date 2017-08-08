@@ -240,14 +240,15 @@ fu_plugin_update_offline (FuPlugin *plugin,
 }
 
 static AsVersionParseFlag
-fu_plugin_uefi_get_version_format (void)
+fu_plugin_uefi_get_version_format (FuPlugin *plugin)
 {
-	g_autofree gchar *content = NULL;
-	/* any vendors match */
-	if (!g_file_get_contents ("/sys/class/dmi/id/sys_vendor",
-				  &content, NULL, NULL))
+	const gchar *content;
+
+	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
+	if (content == NULL)
 		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
-	g_strchomp (content);
+
+	/* any vendors match */
 	for (guint i = 0; quirk_table[i].sys_vendor != NULL; i++) {
 		if (g_strcmp0 (content, quirk_table[i].sys_vendor) == 0)
 			return quirk_table[i].flags;
@@ -308,7 +309,7 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	AsVersionParseFlag parse_flags;
-	g_autofree gchar *product_name = NULL;
+	const gchar *product_name;
 	fwup_resource *re;
 	gint supported;
 	g_autofree gchar *guid = NULL;
@@ -351,15 +352,11 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 
 	/* set Display Name to the system for all capsules */
-	if (g_file_get_contents ("/sys/class/dmi/id/product_name",
-				 &product_name, NULL, NULL)) {
-		if (product_name != NULL)
-			g_strchomp (product_name);
-	}
+	product_name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
 
 	/* add each device */
 	guid = g_strdup ("00000000-0000-0000-0000-000000000000");
-	parse_flags = fu_plugin_uefi_get_version_format ();
+	parse_flags = fu_plugin_uefi_get_version_format (plugin);
 	while (fwup_resource_iter_next (iter, &re) > 0) {
 		const gchar *uefi_type_str = NULL;
 		efi_guid_t *guid_raw;

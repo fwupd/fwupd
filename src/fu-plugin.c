@@ -43,7 +43,7 @@ typedef struct {
 	GUsbContext		*usb_ctx;
 	gboolean		 enabled;
 	gchar			*name;
-	GHashTable		*hwids;		/* hwid:1 */
+	FuHwids			*hwids;
 	GHashTable		*devices;	/* platform_id:GObject */
 	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
 	FuPluginData		*data;
@@ -490,7 +490,7 @@ fu_plugin_recoldplug (FuPlugin *plugin)
  * @plugin: A #FuPlugin
  * @hwid: A Hardware ID GUID, e.g. "6de5d951-d755-576b-bd09-c5cf66b27234"
  *
- * Checks to see if a specific hardware ID exists. All hardware IDs on a
+ * Checks to see if a specific GUID exists. All hardware IDs on a
  * specific system can be shown using the `fwupdmgr hwids` command.
  *
  * Since: 0.9.1
@@ -501,16 +501,32 @@ fu_plugin_check_hwid (FuPlugin *plugin, const gchar *hwid)
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	if (priv->hwids == NULL)
 		return FALSE;
-	return g_hash_table_lookup (priv->hwids, hwid) != NULL;
+	return fu_hwids_has_guid (priv->hwids, hwid);
+}
+
+/**
+ * fu_plugin_get_dmi_value:
+ * @plugin: A #FuPlugin
+ * @dmi_id: A DMI ID, e.g. "BiosVersion"
+ *
+ * Gets a hardware DMI value.
+ *
+ * Since: 0.9.7
+ **/
+const gchar *
+fu_plugin_get_dmi_value (FuPlugin *plugin, const gchar *dmi_id)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->hwids == NULL)
+		return FALSE;
+	return fu_hwids_get_value (priv->hwids, dmi_id);
 }
 
 void
-fu_plugin_set_hwids (FuPlugin *plugin, GHashTable *hwids)
+fu_plugin_set_hwids (FuPlugin *plugin, FuHwids *hwids)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	if (priv->hwids != NULL)
-		g_hash_table_unref (priv->hwids);
-	priv->hwids = g_hash_table_ref (hwids);
+	g_set_object (&priv->hwids, hwids);
 }
 
 /**
@@ -1131,7 +1147,7 @@ fu_plugin_finalize (GObject *object)
 	if (priv->usb_ctx != NULL)
 		g_object_unref (priv->usb_ctx);
 	if (priv->hwids != NULL)
-		g_hash_table_unref (priv->hwids);
+		g_object_unref (priv->hwids);
 #ifndef RUNNING_ON_VALGRIND
 	if (priv->module != NULL)
 		g_module_close (priv->module);

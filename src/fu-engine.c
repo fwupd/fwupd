@@ -63,7 +63,7 @@ struct _FuEngine
 	guint			 coldplug_delay;
 	GPtrArray		*plugins;	/* of FuPlugin */
 	GHashTable		*plugins_hash;	/* of name : FuPlugin */
-	GHashTable		*hwids;		/* of hwid : 1 */
+	FuHwids			*hwids;
 };
 
 enum {
@@ -2215,43 +2215,6 @@ fu_engine_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuEngi
 		 duration, self->coldplug_delay);
 }
 
-#if AS_CHECK_VERSION(0,6,13)
-static gboolean
-fu_engine_load_hwids (FuEngine *self, GError **error)
-{
-	g_autoptr(FuHwids) hwids = fu_hwids_new ();
-
-	/* read files in /sys */
-	if (!fu_hwids_setup (hwids, NULL, error))
-		return FALSE;
-
-	/* add GUIDs */
-	for (guint i = 0; i < 15; i++) {
-		g_autofree gchar *guid = NULL;
-		g_autofree gchar *key = NULL;
-		g_autofree gchar *values = NULL;
-		g_autoptr(GError) error_local = NULL;
-
-		/* get the GUID and add to hash */
-		key = g_strdup_printf ("HardwareID-%u", i);
-		guid = fu_hwids_get_guid (hwids, key, &error_local);
-		if (guid == NULL) {
-			g_debug ("%s is not available, %s", key, error_local->message);
-			continue;
-		}
-		g_hash_table_insert (self->hwids,
-				     g_strdup (guid),
-				     GUINT_TO_POINTER (1));
-
-		/* show what makes up the GUID */
-		values = fu_hwids_get_replace_values (hwids, key, NULL);
-		g_debug ("{%s}   <- %s", guid, values);
-	}
-
-	return TRUE;
-}
-#endif
-
 static gint
 fu_engine_plugin_sort_cb (gconstpointer a, gconstpointer b)
 {
@@ -2424,13 +2387,11 @@ fu_engine_load (FuEngine *self, GError **error)
 				 G_USB_CONTEXT_FLAGS_AUTO_OPEN_DEVICES);
 #endif
 
-#if AS_CHECK_VERSION(0,6,13)
 	/* load the hwids */
-	if (!fu_engine_load_hwids (self, error)) {
+	if (!fu_hwids_setup (self->hwids, NULL, error)) {
 		g_prefix_error (error, "Failed to load hwids: ");
 		return FALSE;
 	}
-#endif
 
 	/* delete old data files */
 	if (!fu_engine_cleanup_state (error)) {
@@ -2505,7 +2466,7 @@ fu_engine_init (FuEngine *self)
 	self->status = FWUPD_STATUS_IDLE;
 	self->config = fu_config_new ();
 	self->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_engine_item_free);
-	self->hwids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+	self->hwids = fu_hwids_new ();
 	self->pending = fu_pending_new ();
 	self->profile = as_profile_new ();
 	self->store = as_store_new ();
@@ -2524,9 +2485,9 @@ fu_engine_finalize (GObject *obj)
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
 
-	g_hash_table_unref (self->hwids);
 	g_hash_table_unref (self->plugins_hash);
 	g_object_unref (self->config);
+	g_object_unref (self->hwids);
 	g_object_unref (self->pending);
 	g_object_unref (self->profile);
 	g_object_unref (self->store);
