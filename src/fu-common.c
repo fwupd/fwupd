@@ -333,7 +333,7 @@ fu_common_firmware_builder (GBytes *bytes,
 	fu_common_add_argv (argv, "--symlink usr/sbin /sbin");
 	fu_common_add_argv (argv, "--chdir /tmp");
 	fu_common_add_argv (argv, "--unshare-all");
-	fu_common_add_argv (argv, "/bin/sh /tmp/%s", script_fn);
+	fu_common_add_argv (argv, "/tmp/%s", script_fn);
 	g_ptr_array_add (argv, NULL);
 	argv_str = g_strjoinv (" ", (gchar **) argv->pdata);
 	g_debug ("running '%s' in %s", argv_str, tmpdir);
