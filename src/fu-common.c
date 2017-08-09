@@ -318,7 +318,7 @@ fu_common_firmware_builder (GBytes *bytes,
 	localstatedir = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", "builder", NULL);
 
 	/* launch bubblewrap and generate firmware */
-	g_ptr_array_add (argv, g_strdup ("/usr/bin/bwrap"));
+	g_ptr_array_add (argv, g_strdup ("bwrap"));
 	fu_common_add_argv (argv, "--die-with-parent");
 	fu_common_add_argv (argv, "--ro-bind /usr /usr");
 	fu_common_add_argv (argv, "--dir /tmp");
@@ -340,7 +340,7 @@ fu_common_firmware_builder (GBytes *bytes,
 	if (!g_spawn_sync ("/tmp",
 			   (gchar **) argv->pdata,
 			   NULL,
-			   G_SPAWN_DEFAULT,
+			   G_SPAWN_SEARCH_PATH,
 			   NULL, NULL, /* child_setup */
 			   &standard_output,
 			   &standard_error,

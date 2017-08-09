@@ -419,13 +419,15 @@ fu_common_firmware_builder_func (void)
 {
 	const gchar *data;
 	g_autofree gchar *archive_fn = NULL;
+	g_autofree gchar *bwrap_fn = NULL;
 	g_autoptr(GBytes) archive_blob = NULL;
 	g_autoptr(GBytes) firmware_blob = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* we can't do this in travis: capset failed: Operation not permitted */
-	if (!g_file_test ("/usr/bin/bwrap", G_FILE_TEST_EXISTS)) {
-		g_test_skip ("no /usr/bin/bwrap, so skipping");
+	bwrap_fn = g_find_program_in_path ("bwrap");
+	if (bwrap_fn == NULL) {
+		g_test_skip ("no bwrap in path, so skipping");
 		return;
 	}
 
