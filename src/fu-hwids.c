@@ -71,7 +71,6 @@ fu_hwids_has_guid (FuHwids *self, const gchar *guid)
 static gchar *
 fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 {
-#if AS_CHECK_VERSION(0,6,13)
 	const gchar *namespace_id = "70ffd812-4c7f-4c7d-0000-000000000000";
 	glong items_written = 0;
 	g_autofree gunichar2 *data = NULL;
@@ -90,13 +89,6 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 					(guint8*) data,
 					items_written * 2,
 					error);
-#else
-	g_set_error_literal (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_SUPPORTED,
-			     "libappstream-glib 0.6.13 is required");
-	return NULL;
-#endif
 }
 
 /**

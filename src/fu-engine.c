@@ -627,7 +627,6 @@ _as_app_get_screenshot_default (AsApp *app)
 	return g_ptr_array_index (array, 0);
 }
 
-#if AS_CHECK_VERSION(0,6,7)
 static gboolean
 fu_engine_check_version_requirement (AsApp *app,
 				   AsRequireKind kind,
@@ -665,12 +664,10 @@ fu_engine_check_version_requirement (AsApp *app,
 		 version, id);
 	return TRUE;
 }
-#endif
 
 static gboolean
 fu_engine_check_requirements (AsApp *app, FuDevice *device, GError **error)
 {
-#if AS_CHECK_VERSION(0,6,7)
 	/* make sure requirements are satisfied */
 	if (!fu_engine_check_version_requirement (app,
 						AS_REQUIRE_KIND_ID,
@@ -703,7 +700,6 @@ fu_engine_check_requirements (AsApp *app, FuDevice *device, GError **error)
 			return FALSE;
 		}
 	}
-#endif
 
 	/* success */
 	return TRUE;
@@ -1541,13 +1537,9 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 	tmp = as_app_get_metadata_item (app, "fwupd::RemoteID");
 	if (tmp != NULL)
 		fu_device_set_update_remote_id (item->device, tmp);
-#if AS_CHECK_VERSION(0,6,1)
 	tmp = as_app_get_unique_id (app);
 	if (tmp != NULL)
 		fu_device_set_unique_id (item->device, tmp);
-#else
-	fu_device_set_unique_id (item->device, as_app_get_id (app));
-#endif
 
 	/* add release information */
 	fu_engine_set_release_from_item (fwupd_result_get_release (FWUPD_RESULT (item->device)), release);
@@ -1700,11 +1692,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	fwupd_release_set_name (rel, as_app_get_name (app, NULL));
 	fwupd_release_set_summary (rel, as_app_get_comment (app, NULL));
 	fwupd_release_set_vendor (rel, as_app_get_developer_name (app, NULL));
-#if AS_CHECK_VERSION(0,6,1)
 	fwupd_result_set_unique_id (res, as_app_get_unique_id (app));
-#else
-	fwupd_result_set_unique_id (res, as_app_get_id (app));
-#endif
 	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
 	fu_engine_set_release_from_item (rel, release);
 	return g_steal_pointer (&res);
@@ -1982,18 +1970,12 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 		g_autofree gchar *id2 = NULL;
 		FwupdResult *res = FWUPD_RESULT (item->device);
 		FwupdDevice *dev = fwupd_result_get_device (res);
-#if AS_CHECK_VERSION(0,6,1)
 		id2 = as_utils_unique_id_build (AS_APP_SCOPE_SYSTEM,
 						AS_BUNDLE_KIND_UNKNOWN,
 						NULL,
 						AS_APP_KIND_FIRMWARE,
 						fwupd_device_get_name (dev),
 						fwupd_device_get_version (dev));
-#else
-		id2 = g_strdup_printf ("system/*/*/firmware/%s/%s",
-				       fwupd_device_get_name (dev),
-				       fwupd_device_get_version (dev));
-#endif
 		fwupd_result_set_unique_id (res, id2);
 	}
 	return g_object_ref (item->device);

@@ -43,11 +43,6 @@ fu_hwids_func (void)
 	g_autofree gchar *testdir = NULL;
 	gboolean ret;
 
-#if !AS_CHECK_VERSION(0,6,13)
-	g_test_skip ("appstreaml-glib too old, skipping");
-	return;
-#endif
-
 	struct {
 		const gchar *key;
 		const gchar *value;
