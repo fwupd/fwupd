@@ -298,7 +298,6 @@ fu_common_firmware_builder (GBytes *bytes,
 	g_autofree gchar *output2_fn = NULL;
 	g_autofree gchar *standard_error = NULL;
 	g_autofree gchar *standard_output = NULL;
-	g_autofree gchar *startup_fn = NULL;
 	g_autofree gchar *tmpdir = NULL;
 	g_autoptr(GBytes) firmware_blob = NULL;
 	g_autoptr(GPtrArray) argv = g_ptr_array_new_with_free_func (g_free);
@@ -312,7 +311,6 @@ fu_common_firmware_builder (GBytes *bytes,
 	tmpdir = g_dir_make_tmp ("fwupd-gen-XXXXXX", error);
 	if (tmpdir == NULL)
 		return NULL;
-	startup_fn = g_build_filename (tmpdir, "startup.sh", NULL);
 	if (!fu_common_extract_archive (bytes, tmpdir, error))
 		return NULL;
 
