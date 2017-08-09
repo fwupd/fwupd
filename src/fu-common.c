@@ -375,3 +375,120 @@ fu_common_firmware_builder (GBytes *bytes,
 	/* success */
 	return g_steal_pointer (&firmware_blob);
 }
+
+typedef struct {
+	FuOutputHandler		 handler_cb;
+	gpointer		 handler_user_data;
+	GMainLoop		*loop;
+	GSource			*source;
+	GInputStream		*stream;
+	GCancellable		*cancellable;
+} FuCommonSpawnHelper;
+
+static void fu_common_spawn_create_pollable_source (FuCommonSpawnHelper *helper);
+
+static gboolean
+fu_common_spawn_source_pollable_cb (GObject *stream, gpointer user_data)
+{
+	FuCommonSpawnHelper *helper = (FuCommonSpawnHelper *) user_data;
+	gchar buffer[1024];
+	gssize sz;
+	g_auto(GStrv) split = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* read from stream */
+	sz = g_pollable_input_stream_read_nonblocking (G_POLLABLE_INPUT_STREAM (stream),
+						       buffer,
+						       sizeof(buffer) - 1,
+						       NULL,
+						       &error);
+	if (sz < 0) {
+		if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK))
+			g_error ("err=%s", error->message);
+		return G_SOURCE_REMOVE;
+	}
+
+	/* no read possible */
+	if (sz == 0)
+		g_main_loop_quit (helper->loop);
+
+	/* emit lines */
+	if (helper->handler_cb != NULL) {
+		buffer[sz] = '\0';
+		split = g_strsplit (buffer, "\n", -1);
+		for (guint i = 0; split[i] != NULL; i++) {
+			if (split[i][0] == '\0')
+				continue;
+			helper->handler_cb (split[i], helper->handler_user_data);
+		}
+	}
+
+	/* set up the source for the next read */
+	fu_common_spawn_create_pollable_source (helper);
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_common_spawn_create_pollable_source (FuCommonSpawnHelper *helper)
+{
+	if (helper->source != NULL)
+		g_source_destroy (helper->source);
+	helper->source = g_pollable_input_stream_create_source (G_POLLABLE_INPUT_STREAM (helper->stream),
+								helper->cancellable);
+	g_source_attach (helper->source, NULL);
+	g_source_set_callback (helper->source, (GSourceFunc) fu_common_spawn_source_pollable_cb, helper, NULL);
+}
+
+static void
+fu_common_spawn_helper_free (FuCommonSpawnHelper *helper)
+{
+	if (helper->stream != NULL)
+		g_object_unref (helper->stream);
+	if (helper->source != NULL)
+		g_source_destroy (helper->source);
+	if (helper->loop != NULL)
+		g_main_loop_unref (helper->loop);
+	g_free (helper);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCommonSpawnHelper, fu_common_spawn_helper_free)
+
+/**
+ * fu_common_spawn_sync:
+ * @argv: The argument list to run
+ * @handler_cb: A #FuOutputHandler or %NULL
+ * @handler_user_data: the user data to pass to @handler
+ * @cancellable: a #GCancellable, or %NULL
+ * @error: A #GError or %NULL
+ *
+ * Runs a subprocess and waits for it to exit. Any output on standard out or
+ * standard error will be forwarded to @handler_cb as whole lines.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_common_spawn_sync (const gchar * const * argv,
+		      FuOutputHandler handler_cb,
+		      gpointer handler_user_data,
+		      GCancellable *cancellable, GError **error)
+{
+	g_autoptr(FuCommonSpawnHelper) helper = NULL;
+	g_autoptr(GSubprocess) subprocess = NULL;
+
+	/* create subprocess */
+	subprocess = g_subprocess_newv (argv, G_SUBPROCESS_FLAGS_STDOUT_PIPE |
+					      G_SUBPROCESS_FLAGS_STDERR_MERGE, error);
+	if (subprocess == NULL)
+		return FALSE;
+
+	/* watch for process to exit */
+	helper = g_new0 (FuCommonSpawnHelper, 1);
+	helper->handler_cb = handler_cb;
+	helper->handler_user_data = handler_user_data;
+	helper->loop = g_main_loop_new (NULL, FALSE);
+	helper->stream = g_subprocess_get_stdout_pipe (subprocess);
+	helper->cancellable = cancellable;
+	fu_common_spawn_create_pollable_source (helper);
+	g_main_loop_run (helper->loop);
+	return g_subprocess_wait_check (subprocess, cancellable, error);
+}

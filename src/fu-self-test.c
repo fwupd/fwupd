@@ -449,6 +449,33 @@ fu_common_firmware_builder_func (void)
 	g_assert_cmpstr (data, ==, "xobdnas eht ni gninnur");
 }
 
+static void
+fu_test_stdout_cb (const gchar *line, gpointer user_data)
+{
+	guint *lines = (guint *) user_data;
+	g_debug ("got '%s'", line);
+	(*lines)++;
+}
+
+static void
+fu_common_spawn_func (void)
+{
+	gboolean ret;
+	guint lines = 0;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *fn = NULL;
+	gchar *argv[3] = { "replace", "test", NULL };
+
+	fn = fu_test_get_filename (TESTDATADIR, "spawn.sh");
+	g_assert (fn != NULL);
+	argv[0] = fn;
+	ret = fu_common_spawn_sync ((const gchar * const *) argv,
+				    fu_test_stdout_cb, &lines, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (lines, ==, 6);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -466,6 +493,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
 	g_test_add_func ("/fwupd/keyring", fu_keyring_func);
+	g_test_add_func ("/fwupd/common{spawn)", fu_common_spawn_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	return g_test_run ();
 }
