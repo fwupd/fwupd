@@ -30,6 +30,7 @@ struct _FwupdRemote
 {
 	GObject			 parent_instance;
 	FwupdRemoteKind		 kind;
+	FwupdKeyringKind	 keyring_kind;
 	gchar			*id;
 	gchar			*url;
 	gchar			*username;
@@ -85,6 +86,12 @@ fwupd_remote_set_kind (FwupdRemote *self, FwupdRemoteKind kind)
 	self->kind = kind;
 }
 
+static void
+fwupd_remote_set_keyring_kind (FwupdRemote *self, FwupdKeyringKind keyring_kind)
+{
+	self->keyring_kind = keyring_kind;
+}
+
 /* note, this has to be set before url */
 static void
 fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
@@ -110,15 +117,26 @@ fwupd_remote_set_url (FwupdRemote *self, const gchar *url)
 	if (self->uri == NULL)
 		return;
 
-	/* generate the signature URI too */
-	url_asc = g_strdup_printf ("%s.asc", url);
-	self->uri_asc = fwupd_remote_build_uri (self, url_asc, NULL);
-
 	/* generate some plausible local filenames */
 	basename = g_path_get_basename (soup_uri_get_path (self->uri));
 	self->filename = g_strdup_printf ("%s-%s", self->id, basename);
-	basename_asc = g_path_get_basename (soup_uri_get_path (self->uri_asc));
-	self->filename_asc = g_strdup_printf ("%s-%s", self->id, basename_asc);
+
+	/* generate the signature URI too */
+	switch (self->keyring_kind) {
+	case FWUPD_KEYRING_KIND_GPG:
+		url_asc = g_strdup_printf ("%s.asc", url);
+		break;
+	case FWUPD_KEYRING_KIND_PKCS7:
+		url_asc = g_strdup_printf ("%s.p7b", url);
+		break;
+	default:
+		break;
+	}
+	if (url_asc != NULL) {
+		self->uri_asc = fwupd_remote_build_uri (self, url_asc, NULL);
+		basename_asc = g_path_get_basename (soup_uri_get_path (self->uri_asc));
+		self->filename_asc = g_strdup_printf ("%s-%s", self->id, basename_asc);
+	}
 }
 
 /**
@@ -185,6 +203,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	const gchar *group = "fwupd Remote";
 	g_autofree gchar *id = NULL;
 	g_autofree gchar *kind = NULL;
+	g_autofree gchar *keyring_kind = NULL;
 	g_autofree gchar *order_after = NULL;
 	g_autofree gchar *order_before = NULL;
 	g_autoptr(GKeyFile) kf = NULL;
@@ -215,6 +234,22 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "Failed to parse type '%s'",
 				     kind);
+			return FALSE;
+		}
+	}
+
+	/* get verification type, falling back to GPG */
+	keyring_kind = g_key_file_get_string (kf, group, "Keyring", NULL);
+	if (keyring_kind == NULL) {
+		self->keyring_kind = FWUPD_KEYRING_KIND_GPG;
+	} else {
+		self->keyring_kind = fwupd_keyring_kind_from_string (keyring_kind);
+		if (self->keyring_kind == FWUPD_KEYRING_KIND_UNKNOWN) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse type '%s'",
+				     keyring_kind);
 			return FALSE;
 		}
 	}
@@ -354,6 +389,23 @@ fwupd_remote_get_kind (FwupdRemote *self)
 {
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
 	return self->kind;
+}
+
+/**
+ * fwupd_remote_get_keyring_kind:
+ * @self: A #FwupdRemote
+ *
+ * Gets the keyring kind of the remote.
+ *
+ * Returns: a #FwupdKeyringKind, e.g. #FWUPD_KEYRING_KIND_GPG
+ *
+ * Since: 0.9.7
+ **/
+FwupdKeyringKind
+fwupd_remote_get_keyring_kind (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
+	return self->keyring_kind;
 }
 
 /**
@@ -555,6 +607,10 @@ fwupd_remote_to_variant_builder (FwupdRemote *self, GVariantBuilder *builder)
 		g_variant_builder_add (builder, "{sv}", "Type",
 				       g_variant_new_uint32 (self->kind));
 	}
+	if (self->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
+		g_variant_builder_add (builder, "{sv}", "Keyring",
+				       g_variant_new_uint32 (self->keyring_kind));
+	}
 	if (self->mtime != 0) {
 		g_variant_builder_add (builder, "{sv}", "ModificationTime",
 				       g_variant_new_uint64 (self->mtime));
@@ -581,6 +637,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_id (self, g_variant_get_string (value, NULL));
 		if (g_strcmp0 (key, "Type") == 0)
 			fwupd_remote_set_kind (self, g_variant_get_uint32 (value));
+		if (g_strcmp0 (key, "Keyring") == 0)
+			fwupd_remote_set_keyring_kind (self, g_variant_get_uint32 (value));
 	}
 	while (g_variant_iter_loop (iter2, "{sv}", &key, &value)) {
 		if (g_strcmp0 (key, "Url") == 0)
