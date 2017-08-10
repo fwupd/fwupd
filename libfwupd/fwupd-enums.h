@@ -142,6 +142,24 @@ typedef enum {
 	FWUPD_UPDATE_STATE_LAST
 } FwupdUpdateState;
 
+/**
+ * FwupdKeyringKind:
+ * @FWUPD_KEYRING_KIND_UNKNOWN:			Unknown
+ * @FWUPD_KEYRING_KIND_NONE:			No verification
+ * @FWUPD_KEYRING_KIND_GPG:			Verification using GPG
+ * @FWUPD_KEYRING_KIND_PKCS7:			Verification using PKCS7
+ *
+ * The update state.
+ **/
+typedef enum {
+	FWUPD_KEYRING_KIND_UNKNOWN,			/* Since: 0.9.7 */
+	FWUPD_KEYRING_KIND_NONE,			/* Since: 0.9.7 */
+	FWUPD_KEYRING_KIND_GPG,				/* Since: 0.9.7 */
+	FWUPD_KEYRING_KIND_PKCS7,			/* Since: 0.9.7 */
+	/*< private >*/
+	FWUPD_KEYRING_KIND_LAST
+} FwupdKeyringKind;
+
 const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
 const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
@@ -150,5 +168,7 @@ const gchar	*fwupd_update_state_to_string		(FwupdUpdateState update_state);
 FwupdUpdateState fwupd_update_state_from_string		(const gchar	*update_state);
 const gchar	*fwupd_trust_flag_to_string		(FwupdTrustFlags trust_flag);
 FwupdTrustFlags	 fwupd_trust_flag_from_string		(const gchar	*trust_flag);
+FwupdKeyringKind fwupd_keyring_kind_from_string		(const gchar	*keyring_kind);
+const gchar	*fwupd_keyring_kind_to_string		(FwupdKeyringKind keyring_kind);
 
 #endif /* __FWUPD_ENUMS_H */

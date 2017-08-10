@@ -45,6 +45,13 @@
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
 
+#ifdef ENABLE_GPG
+#include "fu-keyring-gpg.h"
+#endif
+#ifdef ENABLE_PKCS7
+#include "fu-keyring-pkcs7.h"
+#endif
+
 static void fu_engine_finalize	 (GObject *obj);
 
 struct _FuEngine
@@ -251,12 +258,46 @@ fu_engine_set_release_from_item (FwupdRelease *rel, AsRelease *release)
 	fwupd_release_set_size (rel, as_release_get_size (release, AS_SIZE_KIND_INSTALLED));
 }
 
+static FuKeyring *
+fu_engine_get_keyring_for_kind (FwupdKeyringKind kind, GError **error)
+{
+	if (kind == FWUPD_KEYRING_KIND_GPG) {
+#ifdef ENABLE_GPG
+		return fu_keyring_gpg_new ();
+#else
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Not compiled with GPG support");
+		return NULL;
+#endif
+	}
+	if (kind == FWUPD_KEYRING_KIND_GPG) {
+#ifdef ENABLE_PKCS7
+		return fu_keyring_pkcs7_new ();
+#else
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Not compiled with PKCS7 support");
+		return NULL;
+#endif
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "Keyring kind %s not supported",
+		     fwupd_keyring_kind_to_string (kind));
+	return NULL;
+}
+
 static gboolean
 fu_engine_get_release_trust_flags (AsRelease *release,
 				 FwupdTrustFlags *trust_flags,
 				 GError **error)
 {
 	AsChecksum *csum_tmp;
+	FwupdKeyringKind keyring_kind = FWUPD_KEYRING_KIND_UNKNOWN;
 	GBytes *blob_payload;
 	GBytes *blob_signature;
 	const gchar *fn;
@@ -264,6 +305,15 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 	g_autofree gchar *fn_signature = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuKeyring) kr = NULL;
+	struct {
+		FwupdKeyringKind kind;
+		const gchar *ext;
+	} keyrings[] = {
+		{ FWUPD_KEYRING_KIND_GPG,	"asc" },
+		{ FWUPD_KEYRING_KIND_PKCS7,	"p7b" },
+		{ FWUPD_KEYRING_KIND_PKCS7,	"p7c" },
+		{ FWUPD_KEYRING_KIND_NONE,	NULL }
+	};
 
 	/* no filename? */
 	csum_tmp = as_release_get_checksum_by_target (release, AS_CHECKSUM_TARGET_CONTENT);
@@ -277,10 +327,16 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 	}
 
 	/* no signature == no trust */
-	fn_signature = g_strdup_printf ("%s.asc", fn);
-	blob_signature = as_release_get_blob (release, fn_signature);
-	if (blob_signature == NULL) {
-		g_debug ("firmware archive contained no GPG signature");
+	for (guint i = 0; keyrings[i].ext != NULL; i++) {
+		g_autofree gchar *fn_tmp = g_strdup_printf ("%s.%s", fn, keyrings[i].ext);
+		blob_signature = as_release_get_blob (release, fn_signature);
+		if (blob_signature != NULL) {
+			keyring_kind = keyrings[i].kind;
+			break;
+		}
+	}
+	if (keyring_kind == FWUPD_KEYRING_KIND_UNKNOWN) {
+		g_debug ("firmware archive contained no signature");
 		return TRUE;
 	}
 
@@ -305,8 +361,10 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 	}
 
 	/* verify against the system trusted keys */
-	kr = fu_keyring_new ();
-	if (!fu_keyring_add_public_keys (kr, pki_dir, error))
+	kr = fu_engine_get_keyring_for_kind (keyring_kind, error);
+	if (kr == NULL)
+		return FALSE;
+	if (!fu_keyring_setup (kr, pki_dir, error))
 		return FALSE;
 	if (!fu_keyring_verify_data (kr, blob_payload, blob_signature, &error_local)) {
 		g_warning ("untrusted as failed to verify: %s",
@@ -1393,10 +1451,10 @@ gboolean
 fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 			   gint fd, gint fd_sig, GError **error)
 {
+	FwupdKeyringKind keyring_kind;
 	FwupdRemote *remote;
 	g_autoptr(GBytes) bytes_raw = NULL;
 	g_autoptr(GBytes) bytes_sig = NULL;
-	g_autoptr(FuKeyring) kr = NULL;
 	g_autoptr(GInputStream) stream_fd = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GInputStream) stream_sig = NULL;
@@ -1439,11 +1497,17 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 		return FALSE;
 
 	/* verify file */
-	kr = fu_keyring_new ();
-	if (!fu_keyring_add_public_keys (kr, "/etc/pki/fwupd-metadata", error))
-		return FALSE;
-	if (!fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error))
-		return FALSE;
+	keyring_kind = fwupd_remote_get_keyring_kind (remote);
+	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
+		g_autoptr(FuKeyring) kr = NULL;
+		kr = fu_engine_get_keyring_for_kind (keyring_kind, error);
+		if (kr == NULL)
+			return FALSE;
+		if (!fu_keyring_setup (kr, "/etc/pki/fwupd-metadata", error))
+			return FALSE;
+		if (!fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error))
+			return FALSE;
+	}
 
 	/* save XML to remotes.d */
 	if (!fu_common_set_contents_bytes (fwupd_remote_get_filename_cache (remote),

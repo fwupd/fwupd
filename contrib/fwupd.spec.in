@@ -47,6 +47,8 @@ BuildRequires: valgrind-devel
 BuildRequires: elfutils-libelf-devel
 BuildRequires: gtk-doc
 BuildRequires: libuuid-devel
+BuildRequires: gnutls-devel
+BuildRequires: gnutls-utils
 BuildRequires: meson
 
 %if 0%{?have_uefi}
