@@ -135,8 +135,15 @@ else
   valgrind = dependency('valgrindXXX', required: false)
 endif
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
-gpgme = cc.find_library('gpgme')
-gpgerror = cc.find_library('gpg-error')
+if get_option('enable-pkcs7')
+  gnutls = dependency('gnutls')
+  conf.set('ENABLE_PKCS7', '1')
+endif
+if get_option('enable-gpg')
+  gpgme = cc.find_library('gpgme')
+  gpgerror = cc.find_library('gpg-error')
+  conf.set('ENABLE_GPG', '1')
+endif
 libm = cc.find_library('m', required: false)
 udev = dependency('udev')
 uuid = dependency('uuid')

@@ -797,7 +797,9 @@ fu_util_download_file (FuUtilPrivate *priv,
 			     "Failed to parse URI %s", uri_str);
 		return FALSE;
 	}
-	if (g_str_has_suffix (uri_str, ".asc")) {
+	if (g_str_has_suffix (uri_str, ".asc") ||
+	    g_str_has_suffix (uri_str, ".p7b") ||
+	    g_str_has_suffix (uri_str, ".p7c")) {
 		/* TRANSLATORS: downloading new signing file */
 		g_print ("%s %s\n", _("Fetching signature"), uri_str);
 	} else if (g_str_has_suffix (uri_str, ".gz")) {
@@ -1187,6 +1189,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
 		FwupdRemoteKind kind = fwupd_remote_get_kind (remote);
+		FwupdKeyringKind keyring_kind = fwupd_remote_get_keyring_kind (remote);
 		SoupURI *uri;
 		const gchar *tmp;
 		gint priority;
@@ -1199,6 +1202,12 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		/* TRANSLATORS: remote type, e.g. remote or local */
 		fu_util_print_data (_("Type"),
 				    fwupd_remote_kind_to_string (kind));
+
+		/* TRANSLATORS: keyring type, e.g. GPG or PKCS7 */
+		if (keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
+			fu_util_print_data (_("Keyring"),
+					    fwupd_keyring_kind_to_string (keyring_kind));
+		}
 
 		/* TRANSLATORS: if the remote is enabled */
 		fu_util_print_data (_("Enabled"),

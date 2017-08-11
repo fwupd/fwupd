@@ -24,6 +24,8 @@
 
 #include <libsoup/soup.h>
 
+#include "fwupd-enums.h"
+
 G_BEGIN_DECLS
 
 #define FWUPD_TYPE_REMOTE (fwupd_remote_get_type ())
@@ -51,6 +53,7 @@ gboolean	 fwupd_remote_get_enabled		(FwupdRemote	*self);
 gint		 fwupd_remote_get_priority		(FwupdRemote	*self);
 guint64		 fwupd_remote_get_age			(FwupdRemote	*self);
 FwupdRemoteKind	 fwupd_remote_get_kind			(FwupdRemote	*self);
+FwupdKeyringKind fwupd_remote_get_keyring_kind		(FwupdRemote	*self);
 SoupURI		*fwupd_remote_get_uri			(FwupdRemote	*self);
 SoupURI		*fwupd_remote_get_uri_asc		(FwupdRemote	*self);
 SoupURI		*fwupd_remote_build_uri			(FwupdRemote	*self,

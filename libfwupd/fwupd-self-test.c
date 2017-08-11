@@ -108,6 +108,7 @@ fwupd_remote_download_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fwupd_remote_get_kind (remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
+	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_GPG);
 	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
 	g_assert (fwupd_remote_get_enabled (remote));
 	g_assert (fwupd_remote_get_uri (remote) != NULL);
@@ -132,6 +133,7 @@ fwupd_remote_local_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fwupd_remote_get_kind (remote), ==, FWUPD_REMOTE_KIND_LOCAL);
+	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_NONE);
 	g_assert (fwupd_remote_get_enabled (remote));
 	g_assert (fwupd_remote_get_uri (remote) == NULL);
 	g_assert (fwupd_remote_get_uri_asc (remote) == NULL);

@@ -12,4 +12,6 @@ option('enable-tbtfwu', type : 'boolean', value : true, description : 'enable Th
 option('enable-systemd', type : 'boolean', value : true, description : 'enable systemd support')
 option('enable-consolekit', type : 'boolean', value : true, description : 'enable ConsoleKit support')
 option('enable-dummy', type : 'boolean', value : false, description : 'enable the dummy device')
+option('enable-gpg', type : 'boolean', value : true, description : 'enable the GPG verification support')
+option('enable-pkcs7', type : 'boolean', value : true, description : 'enable the PKCS7 verification support')
 option('with-bootdir', type : 'string', value : '/boot/efi', description : 'Directory for EFI system partition')

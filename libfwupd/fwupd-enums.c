@@ -248,3 +248,47 @@ fwupd_trust_flag_from_string (const gchar *trust_flag)
 		return FWUPD_TRUST_FLAG_METADATA;
 	return FWUPD_TRUST_FLAG_LAST;
 }
+
+/**
+ * fwupd_keyring_kind_from_string:
+ * @keyring_kind: a string, e.g. "gpg"
+ *
+ * Converts an printable string to an enumerated type.
+ *
+ * Returns: a #FwupdKeyringKind, e.g. %FWUPD_KEYRING_KIND_GPG
+ *
+ * Since: 0.9.7
+ **/
+FwupdKeyringKind
+fwupd_keyring_kind_from_string (const gchar *keyring_kind)
+{
+	if (g_strcmp0 (keyring_kind, "none") == 0)
+		return FWUPD_KEYRING_KIND_NONE;
+	if (g_strcmp0 (keyring_kind, "gpg") == 0)
+		return FWUPD_KEYRING_KIND_GPG;
+	if (g_strcmp0 (keyring_kind, "pkcs7") == 0)
+		return FWUPD_KEYRING_KIND_PKCS7;
+	return FWUPD_KEYRING_KIND_UNKNOWN;
+}
+
+/**
+ * fwupd_keyring_kind_to_string:
+ * @keyring_kind: a #FwupdKeyringKind, e.g. %FWUPD_KEYRING_KIND_GPG
+ *
+ * Converts an enumerated type to a printable string.
+ *
+ * Returns: a string, e.g. "gpg"
+ *
+ * Since: 0.9.7
+ **/
+const gchar *
+fwupd_keyring_kind_to_string (FwupdKeyringKind keyring_kind)
+{
+	if (keyring_kind == FWUPD_KEYRING_KIND_NONE)
+		return "none";
+	if (keyring_kind == FWUPD_KEYRING_KIND_GPG)
+		return "gpg";
+	if (keyring_kind == FWUPD_KEYRING_KIND_PKCS7)
+		return "pkcs7";
+	return NULL;
+}

@@ -22,6 +22,8 @@ RUN dnf --enablerepo=updates-testing -y install \
 	glib2-devel \
 	gobject-introspection-devel \
 	gpgme-devel \
+	gnutls-devel \
+	gnutls-utils \
 	gtk-doc \
 	jq \
 	libappstream-glib-devel \
