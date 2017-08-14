@@ -43,6 +43,7 @@ RUN dnf --enablerepo=updates-testing -y install \
 	redhat-rpm-config \
 	sqlite-devel \
 	systemd \
+	umockdev-devel \
 	valgrind \
 	valgrind-devel \
 	xz
