@@ -117,6 +117,9 @@ add_global_link_arguments(
   language: 'c'
 )
 
+# Needed for realpath(), syscall(), cfmakeraw(), etc.
+add_project_arguments('-D_DEFAULT_SOURCE', language : 'c')
+
 gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
