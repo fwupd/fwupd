@@ -856,15 +856,6 @@ fu_util_download_file (FuUtilPrivate *priv,
 }
 
 static gboolean
-fu_util_mkdir_with_parents (const gchar *path, GError **error)
-{
-	g_autoptr(GFile) file = g_file_new_for_path (path);
-	if (g_file_query_exists (file, NULL))
-		return TRUE;
-	return g_file_make_directory_with_parents (file, NULL, error);
-}
-
-static gboolean
 fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 				      FwupdRemote *remote,
 				      GError **error)
@@ -873,13 +864,11 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *filename_asc = NULL;
 
-	/* ensure cache directory exists */
-	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
-	if (!fu_util_mkdir_with_parents (cache_dir, error))
-		return FALSE;
-
 	/* download the metadata */
+	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
 	filename = g_build_filename (cache_dir, fwupd_remote_get_filename (remote), NULL);
+	if (!fu_common_mkdir_parent (filename, error))
+		return FALSE;
 	if (!fu_util_download_file (priv, fwupd_remote_get_uri (remote),
 				    filename, NULL, error))
 		return FALSE;
@@ -1400,7 +1389,6 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	const gchar *remote_id;
 	const gchar *uri_tmp;
 	g_autofree gchar *basename = NULL;
-	g_autofree gchar *cache_dir = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(SoupURI) uri = NULL;
 
@@ -1433,17 +1421,14 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 		uri = soup_uri_new (uri_tmp);
 	}
 
-	/* ensure cache directory exists */
-	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
-	if (!fu_util_mkdir_with_parents (cache_dir, error))
-		return FALSE;
-
 	/* download file */
 	g_print ("Downloading %s for %s...\n",
 		 fwupd_release_get_version (rel),
 		 fwupd_device_get_name (dev));
 	basename = g_path_get_basename (uri_tmp);
-	fn = g_build_filename (cache_dir, basename, NULL);
+	fn = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", basename, NULL);
+	if (!fu_common_mkdir_parent (fn, error))
+		return FALSE;
 	checksums = fwupd_release_get_checksums (rel);
 	if (!fu_util_download_file (priv, uri, fn,
 				    fwupd_checksum_get_best (checksums),

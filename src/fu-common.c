@@ -26,6 +26,7 @@
 
 #include <archive_entry.h>
 #include <archive.h>
+#include <errno.h>
 
 #include "fwupd-error.h"
 
@@ -73,6 +74,31 @@ fu_common_rmtree (const gchar *directory, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "Failed to delete: %s", directory);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_common_mkdir_parent:
+ * @filename: A full pathname
+ * @error: A #GError, or %NULL
+ *
+ * Creates any required directories, including any parent directories.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_common_mkdir_parent (const gchar *filename, GError **error)
+{
+	g_autofree gchar *parent = NULL;
+	parent = g_path_get_dirname (filename);
+	if (g_mkdir_with_parents (parent, 0755) == -1) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to create '%s': %s",
+			     parent, g_strerror (errno));
 		return FALSE;
 	}
 	return TRUE;

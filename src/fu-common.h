@@ -35,6 +35,8 @@ gboolean	 fu_common_spawn_sync		(const gchar * const *argv,
 
 gboolean	 fu_common_rmtree		(const gchar	*directory,
 						 GError		**error);
+gboolean	 fu_common_mkdir_parent		(const gchar	*filename,
+						 GError		**error);
 gboolean	 fu_common_set_contents_bytes	(const gchar	*filename,
 						 GBytes		*blob,
 						 GError		**error);
