@@ -2,7 +2,7 @@ project('fwupd', 'c',
   version : '0.9.7',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0',
-  default_options : 'warning_level=2',
+  default_options : ['warning_level=2', 'c_std=c99'],
 )
 
 fwupd_version = meson.project_version()
