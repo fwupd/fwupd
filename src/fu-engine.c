@@ -302,7 +302,6 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 	GBytes *blob_signature;
 	const gchar *fn;
 	g_autofree gchar *pki_dir = NULL;
-	g_autofree gchar *fn_signature = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuKeyring) kr = NULL;
 	struct {
@@ -329,7 +328,7 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 	/* no signature == no trust */
 	for (guint i = 0; keyrings[i].ext != NULL; i++) {
 		g_autofree gchar *fn_tmp = g_strdup_printf ("%s.%s", fn, keyrings[i].ext);
-		blob_signature = as_release_get_blob (release, fn_signature);
+		blob_signature = as_release_get_blob (release, fn_tmp);
 		if (blob_signature != NULL) {
 			keyring_kind = keyrings[i].kind;
 			break;
