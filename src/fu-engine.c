@@ -272,7 +272,7 @@ fu_engine_get_keyring_for_kind (FwupdKeyringKind kind, GError **error)
 		return NULL;
 #endif
 	}
-	if (kind == FWUPD_KEYRING_KIND_GPG) {
+	if (kind == FWUPD_KEYRING_KIND_PKCS7) {
 #ifdef ENABLE_PKCS7
 		return fu_keyring_pkcs7_new ();
 #else
