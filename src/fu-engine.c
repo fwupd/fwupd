@@ -304,6 +304,7 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 	g_autofree gchar *pki_dir = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuKeyring) kr = NULL;
+	g_autoptr(FuKeyringResult) kr_result = NULL;
 	struct {
 		FwupdKeyringKind kind;
 		const gchar *ext;
@@ -365,7 +366,8 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 		return FALSE;
 	if (!fu_keyring_setup (kr, pki_dir, error))
 		return FALSE;
-	if (!fu_keyring_verify_data (kr, blob_payload, blob_signature, &error_local)) {
+	kr_result = fu_keyring_verify_data (kr, blob_payload, blob_signature, &error_local);
+	if (kr_result == NULL) {
 		g_warning ("untrusted as failed to verify: %s",
 			   error_local->message);
 		return TRUE;
@@ -1432,6 +1434,23 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 	return TRUE;
 }
 
+static FuKeyringResult *
+fu_engine_get_existing_keyring_result (FuEngine *self,
+				       FuKeyring *kr,
+				       FwupdRemote *remote,
+				       GError **error)
+{
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob_sig = NULL;
+	blob = fu_common_get_contents_bytes (fwupd_remote_get_filename_cache (remote), error);
+	if (blob == NULL)
+		return NULL;
+	blob_sig = fu_common_get_contents_bytes (fwupd_remote_get_filename_cache_sig (remote), error);
+	if (blob_sig == NULL)
+		return NULL;
+	return fu_keyring_verify_data (kr, blob, blob_sig, error);
+}
+
 /**
  * fu_engine_update_metadata:
  * @self: A #FuEngine
@@ -1499,13 +1518,52 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 	keyring_kind = fwupd_remote_get_keyring_kind (remote);
 	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
 		g_autoptr(FuKeyring) kr = NULL;
+		g_autoptr(FuKeyringResult) kr_result = NULL;
+		g_autoptr(FuKeyringResult) kr_result_old = NULL;
+		g_autoptr(GError) error_local = NULL;
 		kr = fu_engine_get_keyring_for_kind (keyring_kind, error);
 		if (kr == NULL)
 			return FALSE;
 		if (!fu_keyring_setup (kr, "/etc/pki/fwupd-metadata", error))
 			return FALSE;
-		if (!fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error))
+		kr_result = fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error);
+		if (kr_result == NULL)
 			return FALSE;
+
+		/* verify the metadata was signed later than the existing
+		 * metadata for this remote to mitigate a rollback attack */
+		kr_result_old = fu_engine_get_existing_keyring_result (self, kr,
+								       remote,
+								       &error_local);
+		if (kr_result_old == NULL) {
+			if (g_error_matches (error_local,
+					     G_FILE_ERROR,
+					     G_FILE_ERROR_NOENT)) {
+				g_debug ("no existing valid keyrings: %s",
+					 error_local->message);
+			} else {
+				g_warning ("could not get existing keyring result: %s",
+					   error_local->message);
+			}
+		} else {
+			gint64 delta = 0;
+			if (fu_keyring_result_get_timestamp (kr_result) > 0 &&
+			    fu_keyring_result_get_timestamp (kr_result_old) > 0) {
+				delta = fu_keyring_result_get_timestamp (kr_result) -
+					fu_keyring_result_get_timestamp (kr_result_old);
+			}
+			if (delta < 0) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "new signing timestamp was %"
+					     G_GINT64_FORMAT " seconds older",
+					     -delta);
+				return FALSE;
+			} else if (delta > 0) {
+				g_debug ("timestamp increased, so no rollback");
+			}
+		}
 	}
 
 	/* save XML and signature to remotes.d */

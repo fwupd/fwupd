@@ -36,6 +36,7 @@ struct _FuKeyringPkcs7
 G_DEFINE_TYPE (FuKeyringPkcs7, fu_keyring_pkcs7, FU_TYPE_KEYRING)
 
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_pkcs7_t, gnutls_pkcs7_deinit, NULL)
+G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_dn_t, gnutls_x509_dn_deinit, NULL)
 
 static gboolean
 fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
@@ -120,7 +121,35 @@ fu_keyring_pkcs7_setup (FuKeyring *keyring, const gchar *public_key_dir, GError 
 	return TRUE;
 }
 
-static gboolean
+static void
+_gnutls_datum_deinit (gnutls_datum_t *d)
+{
+	gnutls_free (d->data);
+	gnutls_free (d);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(gnutls_datum_t, _gnutls_datum_deinit)
+
+static gchar *
+fu_keyring_pkcs7_datum_to_dn_str (const gnutls_datum_t *raw)
+{
+	g_auto(gnutls_x509_dn_t) dn = NULL;
+	g_autoptr(gnutls_datum_t) str = NULL;
+	int rc;
+	rc = gnutls_x509_dn_init (&dn);
+	if (rc < 0)
+		return NULL;
+	rc = gnutls_x509_dn_import (dn, raw);
+	if (rc < 0)
+		return NULL;
+	str = (gnutls_datum_t *) gnutls_malloc (sizeof (gnutls_datum_t));
+	rc = gnutls_x509_dn_get_str2 (dn, str, 0);
+	if (rc < 0)
+		return NULL;
+	return g_strndup ((const gchar *) str->data, str->size);
+}
+
+static FuKeyringResult *
 fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 			     GBytes *blob,
 			     GBytes *blob_signature,
@@ -128,9 +157,11 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 {
 	FuKeyringPkcs7 *self = FU_KEYRING_PKCS7 (keyring);
 	gnutls_datum_t datum;
+	gint64 timestamp_newest = 0;
 	int count;
 	int rc;
 	g_auto(gnutls_pkcs7_t) pkcs7 = NULL;
+	g_autoptr(GString) authority_newest = g_string_new (NULL);
 
 	/* startup */
 	rc = gnutls_pkcs7_init (&pkcs7);
@@ -140,7 +171,7 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 			     FWUPD_ERROR_SIGNATURE_INVALID,
 			     "failed to init pkcs7: %s [%i]",
 			     gnutls_strerror (rc), rc);
-		return FALSE;
+		return NULL;
 	}
 
 	/* import the signature */
@@ -153,7 +184,7 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 			     FWUPD_ERROR_SIGNATURE_INVALID,
 			     "failed to import the PKCS7 signature: %s [%i]",
 			     gnutls_strerror (rc), rc);
-		return FALSE;
+		return NULL;
 	}
 
 	/* verify the blob */
@@ -166,9 +197,13 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_SIGNATURE_INVALID,
 				     "no PKCS7 signatures found");
-		return FALSE;
+		return NULL;
 	}
 	for (gint i = 0; i < count; i++) {
+		gnutls_pkcs7_signature_info_st info;
+		gint64 signing_time = 0;
+
+		/* verify the data against the detached signature */
 		rc = gnutls_pkcs7_verify (pkcs7, self->tl,
 					  NULL, /* vdata */
 					  0,    /* vdata_size */
@@ -181,12 +216,34 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 				     FWUPD_ERROR_SIGNATURE_INVALID,
 				     "failed to verify data: %s [%i]",
 				     gnutls_strerror (rc), rc);
-			return FALSE;
+			return NULL;
 		}
+
+		/* save details about the key for the result */
+		rc = gnutls_pkcs7_get_signature_info (pkcs7, i, &info);
+		if (rc < 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_SIGNATURE_INVALID,
+				     "failed to get signature info: %s [%i]",
+				     gnutls_strerror (rc), rc);
+			return NULL;
+		}
+		signing_time = info.signing_time > 0 ? (gint64) info.signing_time : 1;
+		if (signing_time > timestamp_newest) {
+			g_autofree gchar *dn = NULL;
+			timestamp_newest = signing_time;
+			dn = fu_keyring_pkcs7_datum_to_dn_str (&info.issuer_dn);
+			g_string_assign (authority_newest, dn);
+		}
+		gnutls_pkcs7_signature_info_deinit (&info);
 	}
 
 	/* success */
-	return TRUE;
+	return FU_KEYRING_RESULT (g_object_new (FU_TYPE_KEYRING_RESULT,
+						"timestamp", timestamp_newest,
+						"authority", authority_newest->str,
+						NULL));
 }
 
 static void

@@ -41,7 +41,7 @@ fu_keyring_setup (FuKeyring *keyring, const gchar *public_key_dir, GError **erro
 	return klass->setup (keyring, public_key_dir, error);
 }
 
-gboolean
+FuKeyringResult *
 fu_keyring_verify_data (FuKeyring *keyring,
 		       GBytes *blob,
 		       GBytes *blob_signature,

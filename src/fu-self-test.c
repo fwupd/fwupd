@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -385,6 +385,8 @@ fu_keyring_gpg_func (void)
 	g_autofree gchar *fw_pass = NULL;
 	g_autofree gchar *pki_dir = NULL;
 	g_autoptr(FuKeyring) keyring = NULL;
+	g_autoptr(FuKeyringResult) result_fail = NULL;
+	g_autoptr(FuKeyringResult) result_pass = NULL;
 	g_autoptr(GBytes) blob_fail = NULL;
 	g_autoptr(GBytes) blob_pass = NULL;
 	g_autoptr(GBytes) blob_sig = NULL;
@@ -415,9 +417,12 @@ fu_keyring_gpg_func (void)
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_pass);
 	blob_sig = g_bytes_new_static (sig_gpgme, strlen (sig_gpgme));
-	ret = fu_keyring_verify_data (keyring, blob_pass, blob_sig, &error);
+	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig, &error);
 	g_assert_no_error (error);
-	g_assert_true (ret);
+	g_assert_nonnull (result_pass);
+	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), == , 1438072952);
+	g_assert_cmpstr (fu_keyring_result_get_authority (result_pass), == ,
+			 "3FC6B804410ED0840D8F2F9748A6D80E4538BAC2");
 
 	/* verify will fail with GnuPG */
 	fw_fail = fu_test_get_filename (TESTDATADIR, "colorhug/colorhug-als-3.0.2.cab");
@@ -425,9 +430,9 @@ fu_keyring_gpg_func (void)
 	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_fail);
-	ret = fu_keyring_verify_data (keyring, blob_fail, blob_sig, &error);
+	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
-	g_assert_false (ret);
+	g_assert_null (result_fail);
 	g_clear_error (&error);
 #else
 	g_test_skip ("no GnuPG support enabled");
@@ -444,6 +449,8 @@ fu_keyring_pkcs7_func (void)
 	g_autofree gchar *pki_dir = NULL;
 	g_autofree gchar *sig_fn = NULL;
 	g_autoptr(FuKeyring) keyring = NULL;
+	g_autoptr(FuKeyringResult) result_fail = NULL;
+	g_autoptr(FuKeyringResult) result_pass = NULL;
 	g_autoptr(GBytes) blob_fail = NULL;
 	g_autoptr(GBytes) blob_pass = NULL;
 	g_autoptr(GBytes) blob_sig = NULL;
@@ -468,9 +475,11 @@ fu_keyring_pkcs7_func (void)
 	blob_sig = fu_common_get_contents_bytes (sig_fn, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_sig);
-	ret = fu_keyring_verify_data (keyring, blob_pass, blob_sig, &error);
+	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig, &error);
 	g_assert_no_error (error);
-	g_assert_true (ret);
+	g_assert_nonnull (result_pass);
+	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), >= , 1502871248);
+	g_assert_cmpstr (fu_keyring_result_get_authority (result_pass), == , "O=Hughski Limited");
 
 	/* verify will fail with GnuTLS */
 	fw_fail = fu_test_get_filename (TESTDATADIR, "colorhug/colorhug-als-3.0.2.cab");
@@ -478,9 +487,9 @@ fu_keyring_pkcs7_func (void)
 	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_fail);
-	ret = fu_keyring_verify_data (keyring, blob_fail, blob_sig, &error);
+	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
-	g_assert_false (ret);
+	g_assert_null (result_fail);
 	g_clear_error (&error);
 #else
 	g_test_skip ("no GnuTLS support enabled");
