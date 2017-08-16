@@ -1,4 +1,4 @@
-fwupd (0.9.6-1) unstable; urgency=medium
+fwupd (0.9.6-1) UNRELEASED; urgency=medium
 
   [ Richard Hughes ]
   * trivial: post release version bump
@@ -80,6 +80,12 @@ fwupd (0.9.6-1) unstable; urgency=medium
   * Make flashing ebitdo devices actually work
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 03 Aug 2017 09:42:24 -0500
+
+fwupd (0.9.5-2) unstable; urgency=medium
+
+  * Upload to unstable
+
+ -- Matthias Klumpp <mak@debian.org>  Wed, 16 Aug 2017 22:34:46 +0200
 
 fwupd (0.9.5-1) experimental; urgency=medium
 
