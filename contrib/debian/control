@@ -100,7 +100,8 @@ Package: fwupd
 Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
-Recommends: fwupdate
+Recommends: fwupdate,
+            python3
 Multi-Arch: foreign
 Description: Firmware update daemon
  fwupd is a daemon to allow session software to update device firmware.

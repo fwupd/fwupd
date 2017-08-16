@@ -257,6 +257,7 @@ subdir('po')
 subdir('policy')
 subdir('src')
 subdir('plugins')
+subdir('contrib')
 
 if meson.version().version_compare('<0.41.0')
   if archiver.found()
