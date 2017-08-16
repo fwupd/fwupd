@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+#DEBHELPER#
+
+if [ "$1" = purge ]; then
+	rm -rf /var/lib/fwupd/gnupg
+	rm -f /var/cache/app-info/xmls/fwupd.xml
+fi

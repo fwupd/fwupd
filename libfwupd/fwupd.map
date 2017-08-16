@@ -1,0 +1,6 @@
+{
+global:
+    fwupd_*;
+local:
+    *;
+};

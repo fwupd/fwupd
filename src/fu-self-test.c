@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <appstream-glib.h>
 #include <fwupd.h>
 #include <glib-object.h>
 #include <glib/gstdio.h>
@@ -30,54 +31,71 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
+#include "fu-hwids.h"
+#include "fu-test.h"
 
-static GMainLoop *_test_loop = NULL;
-static guint _test_loop_timeout_id = 0;
-
-static gboolean
-fu_test_hang_check_cb (gpointer user_data)
-{
-	g_main_loop_quit (_test_loop);
-	_test_loop_timeout_id = 0;
-	return G_SOURCE_REMOVE;
-}
-
+#if AS_CHECK_VERSION(0,6,13)
 static void
-fu_test_loop_run_with_timeout (guint timeout_ms)
+fu_hwids_func (void)
 {
-	g_assert (_test_loop_timeout_id == 0);
-	g_assert (_test_loop == NULL);
-	_test_loop = g_main_loop_new (NULL, FALSE);
-	_test_loop_timeout_id = g_timeout_add (timeout_ms, fu_test_hang_check_cb, NULL);
-	g_main_loop_run (_test_loop);
-}
+	g_autoptr(FuHwids) hwids = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *sysfsdir = NULL;
+	g_autofree gchar *testdir = NULL;
+	gboolean ret;
 
-static void
-fu_test_loop_quit (void)
-{
-	if (_test_loop_timeout_id > 0) {
-		g_source_remove (_test_loop_timeout_id);
-		_test_loop_timeout_id = 0;
-	}
-	if (_test_loop != NULL) {
-		g_main_loop_quit (_test_loop);
-		g_main_loop_unref (_test_loop);
-		_test_loop = NULL;
-	}
-}
+	struct {
+		const gchar *key;
+		const gchar *value;
+	} guids[] = {
+		{ "Manufacturer",	"11b4a036-3b64-5421-a372-22c07df10a4d" },
+		{ "HardwareID-14",	"11b4a036-3b64-5421-a372-22c07df10a4d" },
+		{ "HardwareID-13",	"7ccbb6f1-9641-5f84-b00d-51ff218a4066" },
+		{ "HardwareID-12",	"482f3f58-6045-593a-9be4-611717ce4770" },
+		{ "HardwareID-11",	"6525c6e5-28e9-5f9c-abe4-20fd82504002" },
+		{ "HardwareID-10",	"c00fe015-014c-5301-90d1-b5c8ab037eb4" },
+		{ "HardwareID-9",	"6525c6e5-28e9-5f9c-abe4-20fd82504002" },
+		{ "HardwareID-8",	"c00fe015-014c-5301-90d1-b5c8ab037eb4" },
+		{ "HardwareID-7",	"5a127cba-be28-5d3b-84f0-0e450d266d97" },
+		{ "HardwareID-6",	"2c2d02cc-357e-539d-a44d-d10e902391dd" },
+		{ "HardwareID-5",	"7ccbb6f1-9641-5f84-b00d-51ff218a4066" },
+		{ "HardwareID-4",	"d78b474d-dee0-5412-bc9d-e9f7d7783df2" },
+		{ "HardwareID-3",	"a2f225b3-f4f0-5590-8973-08dd81602d69" },
+		{ "HardwareID-2",	"2e7c87e3-a52c-537f-a5f6-907110143cf7" },
+		{ "HardwareID-1",	"6453b900-1fd8-55fb-a936-7fca22823bcc" },
+		{ "HardwareID-0",	"d777e0a5-4db6-51b4-a927-86d4ccdc5c0d" },
+		{ NULL, NULL }
+	};
 
-static gchar *
-fu_test_get_filename (const gchar *filename)
-{
-	gchar *tmp;
-	char full_tmp[PATH_MAX];
-	g_autofree gchar *path = NULL;
-	path = g_build_filename (TESTDATADIR, filename, NULL);
-	tmp = realpath (path, full_tmp);
-	if (tmp == NULL)
-		return NULL;
-	return g_strdup (full_tmp);
+	sysfsdir = fu_test_get_filename (TESTDATADIR, "hwids");
+	g_assert (sysfsdir != NULL);
+
+	hwids = fu_hwids_new ();
+	ret = fu_hwids_setup (hwids, sysfsdir, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_MANUFACTURER), ==,
+			 "To be filled by O.E.M.");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_ENCLOSURE_KIND), ==,
+			 "3");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_FAMILY), ==,
+			 "To be filled by O.E.M.");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_NAME), ==,
+			 "To be filled by O.E.M.");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VENDOR), ==,
+			 "American Megatrends Inc.");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VERSION), ==, "1201");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE), ==, "4");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "6");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_SKU), ==, "SKU");
+	for (guint i = 0; guids[i].key != NULL; i++) {
+		g_autofree gchar *guid = fu_hwids_get_guid (hwids, guids[i].key, &error);
+		g_assert_no_error (error);
+		g_assert_cmpstr (guid, ==, guids[i].value);
+	}
 }
+#endif
 
 static void
 _plugin_status_changed_cb (FuPlugin *plugin, FwupdStatus status, gpointer user_data)
@@ -134,11 +152,7 @@ fu_plugin_delay_func (void)
 
 	/* add it again, twice quickly */
 	fu_plugin_device_add_delay (plugin, device);
-	g_test_expect_message (G_LOG_DOMAIN,
-			       G_LOG_LEVEL_WARNING,
-			       "ignoring add-delay as device * already pending");
 	fu_plugin_device_add_delay (plugin, device);
-	g_test_assert_expected_messages ();
 	g_assert (device_tmp == NULL);
 	fu_test_loop_run_with_timeout (1000);
 	g_assert (device_tmp != NULL);
@@ -163,11 +177,12 @@ fu_plugin_module_func (void)
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
 
-	g_setenv ("FWUPD_ENABLE_TEST_PLUGIN", "1", TRUE);
+	/* the test plugin is only usable if this is set */
+	g_setenv ("FWUPD_TESTS", "true", TRUE);
 
 	/* create a fake device */
 	plugin = fu_plugin_new ();
-	ret = fu_plugin_open (plugin, "../plugins/test/.libs/libfu_plugin_test.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
@@ -187,19 +202,22 @@ fu_plugin_module_func (void)
 	g_assert_cmpint (cnt, ==, 0);
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==, "FakeDevice");
+	g_assert_cmpstr (fu_device_get_version_lowest (device), ==, "1.2.0");
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
+	g_assert_cmpstr (fu_device_get_version_bootloader (device), ==, "0.1.2");
 	g_assert_cmpstr (fu_device_get_guid_default (device), ==,
-			 "00000000-0000-0000-0000-000000000000");
+			 "b585990a-003e-5270-89d5-3705a17f9a43");
 	g_assert_cmpstr (fu_device_get_name (device), ==,
 			 "Integrated Webcam™");
 
 	/* schedule an offline update */
-	mapped_file_fn = fu_test_get_filename ("colorhug/firmware.bin");
+	mapped_file_fn = fu_test_get_filename (TESTDATADIR, "colorhug/firmware.bin");
 	mapped_file = g_mapped_file_new (mapped_file_fn, FALSE, &error);
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
 	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
-				  FWUPD_INSTALL_FLAG_OFFLINE, &error);
+				       FWUPD_INSTALL_FLAG_OFFLINE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 1);
@@ -219,10 +237,14 @@ fu_plugin_module_func (void)
 
 	/* lets do this online */
 	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
-				  FWUPD_INSTALL_FLAG_NONE, &error);
+				       FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (cnt, ==, 3);
+	g_assert_cmpint (cnt, ==, 4);
+
+	/* check the new version */
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.4");
+	g_assert_cmpstr (fu_device_get_version_bootloader (device), ==, "0.1.2");
 
 	/* lets check the pending */
 	res = fu_pending_get_device (pending, fu_device_get_id (device), &error);
@@ -265,6 +287,8 @@ fu_pending_func (void)
 {
 	GError *error = NULL;
 	gboolean ret;
+	FwupdDevice *dev;
+	FwupdRelease *rel;
 	FwupdResult *res;
 	g_autoptr(FuPending) pending = NULL;
 	g_autofree gchar *dirname = NULL;
@@ -311,13 +335,16 @@ fu_pending_func (void)
 	res = fu_pending_get_device (pending, "self-test", &error);
 	g_assert_no_error (error);
 	g_assert (res != NULL);
-	g_assert_cmpstr (fwupd_result_get_device_id (res), ==, "self-test");
-	g_assert_cmpstr (fwupd_result_get_update_filename (res), ==, "/var/lib/dave.cap");
-	g_assert_cmpstr (fwupd_result_get_device_name (res), ==, "ColorHug");
-	g_assert_cmpstr (fwupd_result_get_device_version (res), ==, "3.0.1");
-	g_assert_cmpstr (fwupd_result_get_update_version (res), ==, "3.0.2");
+	dev = fwupd_result_get_device (res);
+	g_assert_cmpstr (fwupd_device_get_id (dev), ==, "self-test");
+	g_assert_cmpstr (fwupd_device_get_name (dev), ==, "ColorHug");
+	g_assert_cmpstr (fwupd_device_get_version (dev), ==, "3.0.1");
 	g_assert_cmpint (fwupd_result_get_update_state (res), ==, FWUPD_UPDATE_STATE_PENDING);
 	g_assert_cmpstr (fwupd_result_get_update_error (res), ==, "word");
+	rel = fwupd_result_get_release (res);
+	g_assert (rel != NULL);
+	g_assert_cmpstr (fwupd_release_get_filename (rel), ==, "/var/lib/dave.cap");
+	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "3.0.2");
 	g_object_unref (res);
 
 	/* get device that does not exist */
@@ -361,19 +388,21 @@ fu_keyring_func (void)
 
 	/* add test keys to keyring */
 	keyring = fu_keyring_new ();
-	pki_dir = fu_test_get_filename ("pki");
+	pki_dir = fu_test_get_filename (TESTDATADIR, "pki");
 	ret = fu_keyring_add_public_keys (keyring, pki_dir, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* verify */
-	fw_pass = fu_test_get_filename ("colorhug/firmware.bin");
+	fw_pass = fu_test_get_filename (TESTDATADIR, "colorhug/firmware.bin");
+	g_assert (fw_pass != NULL);
 	ret = fu_keyring_verify_file (keyring, fw_pass, sig, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* verify will fail */
-	fw_fail = fu_test_get_filename ("colorhug/colorhug-als-3.0.2.cab");
+	fw_fail = fu_test_get_filename (TESTDATADIR, "colorhug/colorhug-als-3.0.2.cab");
+	g_assert (fw_fail != NULL);
 	ret = fu_keyring_verify_file (keyring, fw_fail, sig, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert (!ret);
@@ -387,10 +416,14 @@ main (int argc, char **argv)
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
+	g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
 
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
+#if AS_CHECK_VERSION(0,6,13)
+	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
+#endif
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);

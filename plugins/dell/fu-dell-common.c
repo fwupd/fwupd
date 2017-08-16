@@ -63,7 +63,9 @@ fu_dell_supported (void)
 	guint8 dell_supported = 0;
 	struct smbios_struct *de_table;
 
-	de_table = smbios_get_next_struct_by_type (0, 0xDE);
+        de_table = smbios_get_next_struct_by_handle (0, 0xDE00);
+        if (!de_table)
+		return FALSE;
 	smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
 	if (dell_supported != 0xDE)
 		return FALSE;
@@ -157,9 +159,8 @@ fu_dell_detect_dock (FuDellSmiObj *smi_obj, guint32 *location)
 		g_debug ("no dock plugged in");
 		return FALSE;
 	}
-	*location = count_out->location;
-	g_debug ("Dock count %u, location %u.",
-		 count_out->count, *location);
+	if (location != NULL)
+		*location = count_out->location;
 	return TRUE;
 }
 
@@ -325,7 +326,7 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 		if (!(flags & FWUPD_DEVICE_FLAG_ALLOW_ONLINE))
 			return TRUE;
 		tmp = fu_device_get_plugin(device);
-		if (!((g_strcmp0 (tmp, "thunderbolt") == 0) ||
+		if (!((g_strcmp0 (tmp, "tbtfwu") == 0) ||
 			(g_strcmp0 (tmp, "synapticsmst") == 0)))
 			return TRUE;
 		g_debug("preparing/cleaning update for %s", tmp);

@@ -619,6 +619,34 @@ dfu_firmware_remove_metadata (DfuFirmware *firmware, const gchar *key)
 	g_hash_table_remove (priv->metadata, key);
 }
 
+static gboolean
+dfu_firmware_check_acceptable_for_format (DfuFirmware *firmware, GError **error)
+{
+	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+
+	/* always okay */
+	if (priv->images->len <= 1)
+		return TRUE;
+	if (priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
+		return TRUE;
+
+	/* one is usual, and 2 is okay if one image is the signature */
+	if (priv->format == DFU_FIRMWARE_FORMAT_INTEL_HEX) {
+		if (priv->images->len == 2 &&
+		    dfu_firmware_get_image_by_name (firmware, "signature") != NULL)
+			return TRUE;
+	}
+
+	/* unsupported */
+	g_set_error (error,
+		     DFU_ERROR,
+		     DFU_ERROR_INTERNAL,
+		     "multiple images (%u) not supported for %s",
+		     priv->images->len,
+		     dfu_firmware_format_to_string (priv->format));
+	return TRUE;
+}
+
 /**
  * dfu_firmware_write_data:
  * @firmware: a #DfuFirmware
@@ -647,16 +675,9 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 		return NULL;
 	}
 
-	/* DFU only supports one image */
-	if (priv->images->len > 1 &&
-	    priv->format != DFU_FIRMWARE_FORMAT_DFUSE) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
-			     "only DfuSe format supports multiple images (%u)",
-			     priv->images->len);
+	/* does the format support this many images */
+	if (!dfu_firmware_check_acceptable_for_format (firmware, error))
 		return NULL;
-	}
 
 	/* raw */
 	if (priv->format == DFU_FIRMWARE_FORMAT_RAW)

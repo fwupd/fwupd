@@ -31,19 +31,7 @@
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
 #include "fu-rom.h"
-
-static gchar *
-fu_test_get_filename (const gchar *filename)
-{
-	gchar *tmp;
-	char full_tmp[PATH_MAX];
-	g_autofree gchar *path = NULL;
-	path = g_build_filename (TESTDATADIR, filename, NULL);
-	tmp = realpath (path, full_tmp);
-	if (tmp == NULL)
-		return NULL;
-	return g_strdup (full_tmp);
-}
+#include "fu-test.h"
 
 static void
 fu_rom_func (void)
@@ -99,7 +87,7 @@ fu_rom_func (void)
 		g_assert (rom != NULL);
 
 		/* load file */
-		filename = fu_test_get_filename (data[i].fn);
+		filename = fu_test_get_filename (TESTDATADIR, data[i].fn);
 		if (filename == NULL)
 			continue;
 		g_print ("\nparsing %s...", filename);
@@ -108,7 +96,7 @@ fu_rom_func (void)
 		g_assert_no_error (error);
 		g_assert (ret);
 		g_assert_cmpstr (fu_rom_get_version (rom), ==, data[i].ver);
-		g_assert_cmpstr (fu_rom_get_checksum (rom), ==, data[i].csum);
+		g_assert_cmpstr (g_ptr_array_index (fu_rom_get_checksums (rom), 0), ==, data[i].csum);
 		g_assert_cmpint (fu_rom_get_kind (rom), ==, data[i].kind);
 		g_assert_cmpint (fu_rom_get_vendor (rom), ==, data[i].vendor);
 		g_assert_cmpint (fu_rom_get_model (rom), ==, data[i].model);
@@ -122,7 +110,7 @@ fu_rom_all_func (void)
 	g_autofree gchar *path = NULL;
 
 	/* may or may not exist */
-	path = fu_test_get_filename ("roms");
+	path = fu_test_get_filename (TESTDATADIR, "roms");
 	if (path == NULL)
 		return;
 	g_print ("\n");
@@ -151,7 +139,7 @@ fu_rom_all_func (void)
 		}
 		g_assert_cmpstr (fu_rom_get_version (rom), !=, NULL);
 		g_assert_cmpstr (fu_rom_get_version (rom), !=, "\0");
-		g_assert_cmpstr (fu_rom_get_checksum (rom), !=, NULL);
+		g_assert_cmpint (fu_rom_get_checksums(rom)->len, !=, 0);
 		g_assert_cmpint (fu_rom_get_kind (rom), !=, FU_ROM_KIND_UNKNOWN);
 	} while (TRUE);
 }

@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+#DEBHELPER#
+
+if [ "$1" = remove -o "$1" = purge ]; then
+	if [ -f /etc/fwupd.conf ]; then
+		sed "s,^EnableTestSuite=.*,EnableTestSuite=false," -i /etc/fwupd.conf
+	fi
+fi

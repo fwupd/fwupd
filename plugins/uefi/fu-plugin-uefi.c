@@ -24,6 +24,7 @@
 #include <appstream-glib.h>
 #include <fwup.h>
 #include <fcntl.h>
+#include <glib/gi18n.h>
 
 #include "fu-quirks.h"
 #include "fu-plugin.h"
@@ -180,12 +181,19 @@ fu_plugin_update_offline (FuPlugin *plugin,
 	guint64 hardware_instance = 0;	/* FIXME */
 	int rc;
 	g_autoptr(fwup_resource_iter) iter = NULL;
+	const gchar *str;
+	g_autofree gchar *efibootmgr_path = NULL;
+	g_autofree gchar *boot_variables = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
 	re = fu_plugin_uefi_find (iter, fu_device_get_guid_default (device), error);
 	if (re == NULL)
 		return FALSE;
+
+	/* TRANSLATORS: this is shown when updating the firmware after the reboot */
+	str = _("Installing firmware update…");
+	g_assert (str != NULL);
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
@@ -194,13 +202,40 @@ fu_plugin_update_offline (FuPlugin *plugin,
 					  g_bytes_get_data (blob_fw, NULL),
 					  g_bytes_get_size (blob_fw));
 	if (rc < 0) {
+		g_autoptr(GString) err_string = g_string_new ("UEFI firmware update failed:\n");
+
+		rc = 1;
+		for (int i =0; rc > 0; i++) {
+			char *filename = NULL;
+			char *function = NULL;
+			char *message = NULL;
+			int line = 0;
+			int err = 0;
+
+			rc = efi_error_get (i, &filename, &function, &line, &message, &err);
+			if (rc <= 0)
+				break;
+			g_string_append_printf (err_string,
+						"{error #%d} %s:%d %s(): %s: %s \n",
+						i, filename, line, function, message, strerror(err));
+		}
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "UEFI firmware update failed: %s",
-			     strerror (rc));
+			     "%s",
+			     err_string->str);
 		return FALSE;
 	}
+
+	/* record boot information to system log for future debugging */
+	efibootmgr_path = g_find_program_in_path ("efibootmgr");
+	if (efibootmgr_path != NULL) {
+		if (!g_spawn_command_line_sync ("efibootmgr -v",
+						&boot_variables, NULL, NULL, error))
+			return FALSE;
+		g_message ("Boot Information:\n%s", boot_variables);
+	}
+
 	return TRUE;
 }
 
@@ -238,11 +273,11 @@ fu_plugin_unlock (FuPlugin *plugin,
 				     "failed to unlock UEFI device");
 		return FALSE;
 	} else if (rc == 1)
-		g_debug("UEFI device is already unlocked");
+		g_debug ("UEFI device is already unlocked");
 	else if (rc == 2)
-		g_debug("Succesfully unlocked UEFI device");
+		g_debug ("Successfully unlocked UEFI device");
 	else if (rc == 3)
-		g_debug("UEFI device will be unlocked on next reboot");
+		g_debug ("UEFI device will be unlocked on next reboot");
 	return TRUE;
 #else
 	g_set_error_literal (error,
@@ -253,11 +288,27 @@ fu_plugin_unlock (FuPlugin *plugin,
 #endif
 }
 
+static const gchar *
+fu_plugin_uefi_uefi_type_to_string (guint32 uefi_type)
+{
+	if (uefi_type == FWUP_RESOURCE_TYPE_UNKNOWN)
+		return "Unknown Firmware";
+	if (uefi_type == FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE)
+		return "System Firmware";
+	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE)
+		return "Device Firmware";
+	if (uefi_type == FWUP_RESOURCE_TYPE_UEFI_DRIVER)
+		return "UEFI Driver";
+	if (uefi_type == FWUP_RESOURCE_TYPE_FMP)
+		return "Firmware Management Protocol";
+	return NULL;
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	AsVersionParseFlag parse_flags;
-	g_autofree gchar *display_name = NULL;
+	g_autofree gchar *product_name = NULL;
 	fwup_resource *re;
 	gint supported;
 	g_autofree gchar *guid = NULL;
@@ -301,21 +352,35 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* set Display Name to the system for all capsules */
 	if (g_file_get_contents ("/sys/class/dmi/id/product_name",
-				 &display_name, NULL, NULL)) {
-		if (display_name != NULL)
-			g_strchomp (display_name);
+				 &product_name, NULL, NULL)) {
+		if (product_name != NULL)
+			g_strchomp (product_name);
 	}
 
 	/* add each device */
 	guid = g_strdup ("00000000-0000-0000-0000-000000000000");
 	parse_flags = fu_plugin_uefi_get_version_format ();
 	while (fwup_resource_iter_next (iter, &re) > 0) {
+		const gchar *uefi_type_str = NULL;
 		efi_guid_t *guid_raw;
+		guint32 uefi_type;
 		guint32 version_raw;
 		guint64 hardware_instance = 0;	/* FIXME */
 		g_autofree gchar *id = NULL;
 		g_autofree gchar *version = NULL;
 		g_autofree gchar *version_lowest = NULL;
+		g_autoptr(GString) display_name = g_string_new (NULL);
+
+		/* set up proper DisplayName */
+		fwup_get_fw_type (re, &uefi_type);
+		if (product_name != NULL)
+			g_string_append (display_name, product_name);
+		uefi_type_str = fu_plugin_uefi_uefi_type_to_string (uefi_type);
+		if (uefi_type_str != NULL) {
+			if (display_name->len > 0)
+				g_string_append (display_name, " ");
+			g_string_append (display_name, uefi_type_str);
+		}
 
 		/* convert to strings */
 		fwup_get_guid (re, &guid_raw);
@@ -333,8 +398,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_set_id (dev, id);
 		fu_device_add_guid (dev, guid);
 		fu_device_set_version (dev, version);
-		if (display_name != NULL)
-			fu_device_set_name(dev, display_name);
+		if (display_name->len > 0)
+			fu_device_set_name(dev, display_name->str);
 		fwup_get_lowest_supported_fw_version (re, &version_raw);
 		if (version_raw != 0) {
 			version_lowest = as_utils_version_from_uint32 (version_raw,
@@ -342,7 +407,11 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			fu_device_set_version_lowest (dev, version_lowest);
 		}
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		if (g_file_test ("/sys/firmware/efi/efivars", G_FILE_TEST_IS_DIR) ||
+		    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR))
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		else
+			g_warning ("Kernel support for EFI variables missing");
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 		fu_plugin_device_add (plugin, dev);
 	}

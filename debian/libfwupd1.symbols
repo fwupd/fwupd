@@ -1,10 +1,20 @@
 libfwupd.so.1 libfwupd1 #MINVER#
+ fwupd_checksum_format_for_display@Base 0.9.3
+ fwupd_checksum_get_best@Base 0.9.3
+ fwupd_checksum_get_by_kind@Base 0.9.3
+ fwupd_checksum_guess_kind@Base 0.9.3
  fwupd_client_clear_results@Base 0.7.0
  fwupd_client_connect@Base 0.7.2
+ fwupd_client_get_daemon_version@Base 0.9.6
  fwupd_client_get_details@Base 0.7.0
  fwupd_client_get_details_local@Base 0.7.2
+ fwupd_client_get_device_by_id@Base 0.9.3
  fwupd_client_get_devices@Base 0.7.0
+ fwupd_client_get_devices_simple@Base 0.9.3
  fwupd_client_get_percentage@Base 0.7.3
+ fwupd_client_get_releases@Base 0.9.3
+ fwupd_client_get_remote_by_id@Base 0.9.3
+ fwupd_client_get_remotes@Base 0.9.3
  fwupd_client_get_results@Base 0.7.0
  fwupd_client_get_status@Base 0.7.3
  fwupd_client_get_type@Base 0.7.0
@@ -13,15 +23,118 @@ libfwupd.so.1 libfwupd1 #MINVER#
  fwupd_client_new@Base 0.7.0
  fwupd_client_unlock@Base 0.7.0
  fwupd_client_update_metadata@Base 0.7.0
+ fwupd_client_update_metadata_with_id@Base 0.9.3
  fwupd_client_verify@Base 0.7.0
  fwupd_client_verify_update@Base 0.8.0
+ fwupd_device_add_checksum@Base 0.9.3
+ fwupd_device_add_flag@Base 0.9.3
+ fwupd_device_add_guid@Base 0.9.3
  fwupd_device_flag_from_string@Base 0.7.0
  fwupd_device_flag_to_string@Base 0.7.0
+ fwupd_device_from_key_value@Base 0.9.3
+ fwupd_device_get_checksums@Base 0.9.3
+ fwupd_device_get_created@Base 0.9.3
+ fwupd_device_get_description@Base 0.9.3
+ fwupd_device_get_flags@Base 0.9.3
+ fwupd_device_get_flashes_left@Base 0.9.3
+ fwupd_device_get_guid_default@Base 0.9.3
+ fwupd_device_get_guids@Base 0.9.3
+ fwupd_device_get_id@Base 0.9.3
+ fwupd_device_get_modified@Base 0.9.3
+ fwupd_device_get_name@Base 0.9.3
+ fwupd_device_get_provider@Base 0.9.3
+ fwupd_device_get_summary@Base 0.9.3
+ fwupd_device_get_type@Base 0.9.3
+ fwupd_device_get_vendor@Base 0.9.3
+ fwupd_device_get_vendor_id@Base 0.9.3
+ fwupd_device_get_version@Base 0.9.3
+ fwupd_device_get_version_bootloader@Base 0.9.3
+ fwupd_device_get_version_lowest@Base 0.9.3
+ fwupd_device_has_flag@Base 0.9.3
+ fwupd_device_has_guid@Base 0.9.3
+ fwupd_device_new@Base 0.9.3
+ fwupd_device_new_from_data@Base 0.9.3
+ fwupd_device_remove_flag@Base 0.9.3
+ fwupd_device_set_created@Base 0.9.3
+ fwupd_device_set_description@Base 0.9.3
+ fwupd_device_set_flags@Base 0.9.3
+ fwupd_device_set_flashes_left@Base 0.9.3
+ fwupd_device_set_id@Base 0.9.3
+ fwupd_device_set_modified@Base 0.9.3
+ fwupd_device_set_name@Base 0.9.3
+ fwupd_device_set_provider@Base 0.9.3
+ fwupd_device_set_summary@Base 0.9.3
+ fwupd_device_set_vendor@Base 0.9.3
+ fwupd_device_set_vendor_id@Base 0.9.3
+ fwupd_device_set_version@Base 0.9.3
+ fwupd_device_set_version_bootloader@Base 0.9.3
+ fwupd_device_set_version_lowest@Base 0.9.3
+ fwupd_device_to_data@Base 0.9.3
+ fwupd_device_to_string@Base 0.9.3
+ fwupd_device_to_variant_builder@Base 0.9.3
  fwupd_error_from_string@Base 0.7.0
  fwupd_error_quark@Base 0.6.3
  fwupd_error_to_string@Base 0.7.0
+ fwupd_release_add_checksum@Base 0.9.3
+ fwupd_release_from_key_value@Base 0.9.3
+ fwupd_release_get_appstream_id@Base 0.9.3
+ fwupd_release_get_checksums@Base 0.9.3
+ fwupd_release_get_description@Base 0.9.3
+ fwupd_release_get_filename@Base 0.9.3
+ fwupd_release_get_homepage@Base 0.9.3
+ fwupd_release_get_license@Base 0.9.3
+ fwupd_release_get_name@Base 0.9.3
+ fwupd_release_get_remote_id@Base 0.9.3
+ fwupd_release_get_size@Base 0.9.3
+ fwupd_release_get_summary@Base 0.9.3
+ fwupd_release_get_type@Base 0.9.3
+ fwupd_release_get_uri@Base 0.9.3
+ fwupd_release_get_vendor@Base 0.9.3
+ fwupd_release_get_version@Base 0.9.3
+ fwupd_release_new@Base 0.9.3
+ fwupd_release_new_from_data@Base 0.9.3
+ fwupd_release_set_appstream_id@Base 0.9.3
+ fwupd_release_set_description@Base 0.9.3
+ fwupd_release_set_filename@Base 0.9.3
+ fwupd_release_set_homepage@Base 0.9.3
+ fwupd_release_set_license@Base 0.9.3
+ fwupd_release_set_name@Base 0.9.3
+ fwupd_release_set_remote_id@Base 0.9.3
+ fwupd_release_set_size@Base 0.9.3
+ fwupd_release_set_summary@Base 0.9.3
+ fwupd_release_set_uri@Base 0.9.3
+ fwupd_release_set_vendor@Base 0.9.3
+ fwupd_release_set_version@Base 0.9.3
+ fwupd_release_to_data@Base 0.9.3
+ fwupd_release_to_string@Base 0.9.3
+ fwupd_release_to_variant_builder@Base 0.9.3
+ fwupd_remote_build_uri@Base 0.9.3
+ fwupd_remote_get_age@Base 0.9.5
+ fwupd_remote_get_enabled@Base 0.9.3
+ fwupd_remote_get_filename@Base 0.9.3
+ fwupd_remote_get_filename_asc@Base 0.9.3
+ fwupd_remote_get_filename_cache@Base 0.9.5
+ fwupd_remote_get_id@Base 0.9.3
+ fwupd_remote_get_kind@Base 0.9.6
+ fwupd_remote_get_order_after@Base 0.9.5
+ fwupd_remote_get_order_before@Base 0.9.5
+ fwupd_remote_get_password@Base 0.9.5
+ fwupd_remote_get_priority@Base 0.9.5
+ fwupd_remote_get_type@Base 0.9.3
+ fwupd_remote_get_uri@Base 0.9.3
+ fwupd_remote_get_uri_asc@Base 0.9.3
+ fwupd_remote_get_username@Base 0.9.5
+ fwupd_remote_kind_from_string@Base 0.9.6
+ fwupd_remote_kind_to_string@Base 0.9.6
+ fwupd_remote_load_from_filename@Base 0.9.3
+ fwupd_remote_new@Base 0.9.3
+ fwupd_remote_new_from_data@Base 0.9.5
+ fwupd_remote_set_mtime@Base 0.9.5
+ fwupd_remote_set_priority@Base 0.9.5
+ fwupd_remote_to_data@Base 0.9.5
  fwupd_result_add_device_flag@Base 0.7.0
  fwupd_result_add_guid@Base 0.7.2
+ fwupd_result_get_device@Base 0.9.3
  fwupd_result_get_device_checksum@Base 0.7.0
  fwupd_result_get_device_checksum_kind@Base 0.7.0
  fwupd_result_get_device_created@Base 0.7.0
@@ -39,6 +152,7 @@ libfwupd.so.1 libfwupd1 #MINVER#
  fwupd_result_get_guid@Base 0.7.0
  fwupd_result_get_guid_default@Base 0.7.2
  fwupd_result_get_guids@Base 0.7.2
+ fwupd_result_get_release@Base 0.9.3
  fwupd_result_get_type@Base 0.7.0
  fwupd_result_get_unique_id@Base 0.7.3
  fwupd_result_get_update_checksum@Base 0.7.0

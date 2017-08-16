@@ -39,21 +39,27 @@
  *
  * The compile-time major version
  */
+#ifndef FWUPD_MAJOR_VERSION
 #define FWUPD_MAJOR_VERSION				(@FWUPD_MAJOR_VERSION@)
+#endif
 
 /**
  * FWUPD_MINOR_VERSION:
  *
  * The compile-time minor version
  */
+#ifndef FWUPD_MINOR_VERSION
 #define FWUPD_MINOR_VERSION				(@FWUPD_MINOR_VERSION@)
+#endif
 
 /**
  * FWUPD_MICRO_VERSION:
  *
  * The compile-time micro version
  */
+#ifndef FWUPD_MICRO_VERSION
 #define FWUPD_MICRO_VERSION				(@FWUPD_MICRO_VERSION@)
+#endif
 
 /**
  * FWUPD_CHECK_VERSION:

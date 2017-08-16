@@ -40,7 +40,7 @@ static void
 _plugin_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	FuDevice **dev = (FuDevice **) user_data;
-	*dev = g_object_ref (device);
+	g_set_object (dev, device);
 }
 
 static void
@@ -57,7 +57,7 @@ fu_plugin_dell_tpm_func (void)
 
 	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
 	plugin = fu_plugin_new ();
-	ret = fu_plugin_open (plugin, ".libs/libfu_plugin_dell.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_dell.so", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
@@ -117,6 +117,7 @@ fu_plugin_dell_tpm_func (void)
 	/* cleanup */
 	fu_plugin_device_remove (plugin, device_alt);
 	fu_plugin_device_remove (plugin, device);
+	g_clear_object (&device);
 
 	/* inject fake data:
 	 * - that hasflashes
@@ -148,6 +149,7 @@ fu_plugin_dell_tpm_func (void)
 	/* cleanup */
 	fu_plugin_device_remove (plugin, device_alt);
 	fu_plugin_device_remove (plugin, device);
+	g_clear_object (&device);
 
 	/* inject fake data:
 	 * - that has flashes
@@ -186,6 +188,7 @@ fu_plugin_dell_tpm_func (void)
 	/* cleanup */
 	fu_plugin_device_remove (plugin, device_alt);
 	fu_plugin_device_remove (plugin, device);
+	g_clear_object (&device);
 
 	/* inject fake data:
 	 * - that has 1 flash left
@@ -227,6 +230,7 @@ fu_plugin_dell_tpm_func (void)
 	/* cleanup */
 	fu_plugin_device_remove (plugin, device_alt);
 	fu_plugin_device_remove (plugin, device);
+	g_clear_object (&device);
 }
 
 static void
@@ -243,7 +247,7 @@ fu_plugin_dell_dock_func (void)
 
 	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
 	plugin = fu_plugin_new ();
-	ret = fu_plugin_open (plugin, ".libs/libfu_plugin_dell.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_dell.so", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
@@ -307,7 +311,7 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_device_added_cb (NULL, NULL,
 					  plugin);
 	g_assert (device != NULL);
-	device = NULL;
+	g_clear_object (&device);
 	g_free (buf.record);
 	fu_plugin_dell_device_removed_cb (NULL, NULL,
 					    plugin);
@@ -344,7 +348,7 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_device_added_cb (NULL, NULL,
 					  plugin);
 	g_assert (device != NULL);
-	device = NULL;
+	g_clear_object (&device);
 	g_free (buf.record);
 	fu_plugin_dell_device_removed_cb (NULL, NULL,
 					    plugin);
@@ -379,7 +383,7 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_device_added_cb (NULL, NULL,
 					  plugin);
 	g_assert (device != NULL);
-	device = NULL;
+	g_clear_object (&device);
 	g_free (buf.record);
 	fu_plugin_dell_device_removed_cb (NULL, NULL,
 					    plugin);
@@ -414,7 +418,7 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_device_added_cb (NULL, NULL,
 					  plugin);
 	g_assert (device != NULL);
-	device = NULL;
+	g_clear_object (&device);
 	g_free (buf.record);
 	fu_plugin_dell_device_removed_cb (NULL, NULL,
 					    plugin);

@@ -351,6 +351,7 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 	if (!g_usb_device_claim_interface (priv->usb_device, 0, /* 0 = idx? */
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					   error)) {
+		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 
@@ -362,12 +363,14 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 					 0,
 					 NULL, 0, /* in */
 					 error)) {
+			g_usb_device_close (priv->usb_device, NULL);
 			return FALSE;
 		}
 		if (!fu_device_ebitdo_receive (device,
 					    (guint8 *) &version_tmp,
 					    sizeof(version_tmp),
 					    error)) {
+			g_usb_device_close (priv->usb_device, NULL);
 			return FALSE;
 		}
 		tmp = (gdouble) GUINT32_FROM_LE (version_tmp);
@@ -382,12 +385,14 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 				 FU_EBITDO_PKT_CMD_FW_GET_VERSION,
 				 NULL, 0, /* in */
 				 error)) {
+		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 	if (!fu_device_ebitdo_receive (device,
 				    (guint8 *) &version_tmp,
 				    sizeof(version_tmp),
 				    error)) {
+		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 	tmp = (gdouble) GUINT32_FROM_LE (version_tmp);
@@ -400,12 +405,14 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 				 0x00, /* cmd */
 				 NULL, 0,
 				 error)) {
+		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 	memset (serial_tmp, 0x00, sizeof (serial_tmp));
 	if (!fu_device_ebitdo_receive (device,
 				    (guint8 *) &serial_tmp, sizeof(serial_tmp),
 				    error)) {
+		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 	for (i = 0; i < 9; i++)
@@ -604,6 +611,7 @@ fu_device_ebitdo_init_real (FuDeviceEbitdo *device)
 	FuDeviceEbitdoPrivate *priv = GET_PRIVATE (device);
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *name = NULL;
+	g_autofree gchar *vendor_id = NULL;
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device),
@@ -614,6 +622,10 @@ fu_device_ebitdo_init_real (FuDeviceEbitdo *device)
 				fu_device_ebitdo_kind_to_string (priv->kind));
 	fu_device_set_name (FU_DEVICE (device), name);
 	fu_device_set_vendor (FU_DEVICE (device), "8bitdo");
+
+	/* set vendor ID */
+	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
+	fu_device_set_vendor_id (FU_DEVICE (device), vendor_id);
 
 	/* add USB\VID_0000&PID_0000 */
 	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
@@ -651,6 +663,7 @@ fu_device_ebitdo_new (GUsbDevice *usb_device)
 	FuDeviceEbitdoPrivate *priv;
 	guint j;
 	const FuEbitdoVidPid vidpids[] = {
+		/* legacy VIDs */
 		{ 0x0483, 0x5750, FU_DEVICE_EBITDO_KIND_BOOTLOADER },
 		{ 0x1235, 0xab11, FU_DEVICE_EBITDO_KIND_FC30 },
 		{ 0x1235, 0xab12, FU_DEVICE_EBITDO_KIND_NES30 },
@@ -659,6 +672,15 @@ fu_device_ebitdo_new (GUsbDevice *usb_device)
 		{ 0x1002, 0x9000, FU_DEVICE_EBITDO_KIND_FC30PRO },
 		{ 0x2002, 0x9000, FU_DEVICE_EBITDO_KIND_NES30PRO },
 		{ 0x8000, 0x1002, FU_DEVICE_EBITDO_KIND_FC30_ARCADE },
+		/* new VID */
+		{ 0x2dc8, 0x5750, FU_DEVICE_EBITDO_KIND_BOOTLOADER },
+		{ 0x2dc8, 0xab11, FU_DEVICE_EBITDO_KIND_FC30 },
+		{ 0x2dc8, 0xab12, FU_DEVICE_EBITDO_KIND_NES30 },
+		{ 0x2dc8, 0xab21, FU_DEVICE_EBITDO_KIND_SFC30 },
+		{ 0x2dc8, 0xab20, FU_DEVICE_EBITDO_KIND_SNES30 },
+		{ 0x2dc8, 0x9000, FU_DEVICE_EBITDO_KIND_FC30PRO },
+		{ 0x2dc8, 0x9001, FU_DEVICE_EBITDO_KIND_NES30PRO },
+		{ 0x2dc8, 0x1002, FU_DEVICE_EBITDO_KIND_FC30_ARCADE },
 		{ 0x0000, 0x0000, FU_DEVICE_EBITDO_KIND_UNKNOWN }
 	};
 

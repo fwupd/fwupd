@@ -55,7 +55,6 @@ struct _FuPluginClass
 
 typedef enum {
 	FU_PLUGIN_VERIFY_FLAG_NONE		= 0,
-	FU_PLUGIN_VERIFY_FLAG_USE_SHA256	= 1 << 0,
 	FU_PLUGIN_VERIFY_FLAG_LAST
 } FuPluginVerifyFlags;
 
@@ -84,7 +83,6 @@ void		 fu_plugin_recoldplug			(FuPlugin	*plugin);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*plugin,
 							 guint		 duration);
 gboolean	 fu_plugin_has_device_delay		(FuPlugin	*plugin);
-GChecksumType	 fu_plugin_get_checksum_type		(FuPluginVerifyFlags flags);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*plugin,
 							 const gchar	*id);
 void		 fu_plugin_cache_remove			(FuPlugin	*plugin,
@@ -92,6 +90,8 @@ void		 fu_plugin_cache_remove			(FuPlugin	*plugin,
 void		 fu_plugin_cache_add			(FuPlugin	*plugin,
 							 const gchar	*id,
 							 gpointer	 dev);
+gboolean	 fu_plugin_check_hwid			(FuPlugin	*plugin,
+							 const gchar	*hwid);
 
 G_END_DECLS
 

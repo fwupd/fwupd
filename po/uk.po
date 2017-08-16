@@ -1,354 +1,502 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the fwupd package.
 # 
 # Translators:
-# Yuri Chornoivan <yurchor@ukr.net>, 2015-2016
+# Yuri Chornoivan <yurchor@ukr.net>, 2015-2017
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-02-08 12:51+0000\n"
-"PO-Revision-Date: 2017-02-08 12:51+0000\n"
+"POT-Creation-Date: 2017-08-03 10:43+0100\n"
+"PO-Revision-Date: 2017-08-03 09:43+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
-"Language-Team: Ukrainian (http://www.transifex.com/hughsie/fwupd/language/uk/)\n"
+"Language-Team: Ukrainian (http://www.transifex.com/freedesktop/fwupd/language/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: uk\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
+#: data/org.freedesktop.fwupd.metainfo.xml:7
+msgid "fwupd"
+msgstr "fwupd"
+
+#: data/org.freedesktop.fwupd.metainfo.xml:8
+msgid "Update device firmware on Linux"
+msgstr "Оновлення мікропрограм пристроїв у Linux"
+
+#: data/org.freedesktop.fwupd.metainfo.xml:10
+msgid ""
+"This project aims to make updating firmware on Linux automatic, safe and "
+"reliable. You can either use a GUI software manager like GNOME Software to "
+"view and apply updates, the command-line tool or the D-Bus interface "
+"directly."
+msgstr "Метою цього проекту є автоматизація оновлення мікропрограм обладнання у Linux, безпечно і надійно. Для перегляду і застосування оновлень ви можете скористатися або програмою для керування програмним забезпеченням, зокрема Програмними засобами GNOME, або інструментом командного рядка, або безпосередньо інтерфейсом D-Bus."
+
+#: data/org.freedesktop.fwupd.metainfo.xml:16
+msgid ""
+"The fwupd process is a simple daemon to allow session software to update "
+"device firmware on your local machine. It is designed for desktops, but this"
+" project is also usable on phones, tablets and on headless servers."
+msgstr "Процес fwupd є простою фоновою службою, яка надає змогу оновлювати мікропрограми пристроїв на вашому локальному комп’ютері у межах сеансу користування. Програму розроблено для робочих станцій, але нею можна скористатися на телефонах, планшетах та серверах без дисплеїв."
+
+#: policy/org.freedesktop.fwupd.policy.in:17
 msgid "Install signed system firmware"
 msgstr "Встановити підписану мікропрограму системи"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:19
+#: policy/org.freedesktop.fwupd.policy.in:30
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "Щоб отримати доступ до оновлення мікропрограми цього комп’ютера, вам слід пройти розпізнавання"
 
+#: policy/org.freedesktop.fwupd.policy.in:28
 msgid "Install unsigned system firmware"
 msgstr "Встановити непідписану мікропрограму системи"
 
+#: policy/org.freedesktop.fwupd.policy.in:39
 msgid "Install old version of system firmware"
 msgstr "Встановити стару версію мікропрограми системи"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:41
 msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Для встановлення застарілої версії мікропрограми на цей комп’ютер слід пройти розпізнавання"
 
+#: policy/org.freedesktop.fwupd.policy.in:50
 msgid "Install signed device firmware"
 msgstr "Встановити підписану мікропрограму пристрою"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:52
+#: policy/org.freedesktop.fwupd.policy.in:63
 msgid ""
 "Authentication is required to update the firmware on a removable device"
 msgstr "Для оновлення мікропрограми на портативному пристрої слід пройти розпізнавання"
 
+#: policy/org.freedesktop.fwupd.policy.in:61
+#: policy/org.freedesktop.fwupd.policy.in:72
 msgid "Install unsigned device firmware"
 msgstr "Встановити непідписану мікропрограму пристрою"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:74
 msgid ""
 "Authentication is required to downgrade the firmware on a removable device"
 msgstr "Для встановлення застарілої версії мікропрограми на портативний пристрій слід пройти розпізнавання"
 
+#: policy/org.freedesktop.fwupd.policy.in:83
 msgid "Unlock the device to allow access"
 msgstr "Розблокування пристрою для отримання доступу"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:85
 msgid "Authentication is required to unlock a device"
 msgstr "Щоб розблокувати пристрій, слід пройти розпізнавання"
 
+#: policy/org.freedesktop.fwupd.policy.in:94
 msgid "Update the stored device verification information"
-msgstr ""
+msgstr "Оновлення збережених даних щодо верифікації пристрою"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:96
 msgid ""
 "Authentication is required to update the stored checksums for the device"
-msgstr ""
+msgstr "Щоб отримати доступ до оновлення збережених контрольних сум для пристрою, вам слід пройти розпізнавання"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
+#: libdfu/dfu-tool.c:121 plugins/synapticsmst/synapticsmst-tool.c:115
+#: src/fu-util.c:114
 #, c-format
 msgid "Alias to %s"
 msgstr "Інша назва %s"
 
 #. TRANSLATORS: error message
+#: libdfu/dfu-tool.c:194 plugins/synapticsmst/synapticsmst-tool.c:362
+#: src/fu-util.c:178
 msgid "Command not found"
 msgstr "Такої команди не знайдено"
 
 #. TRANSLATORS: read from device to host
+#: libdfu/dfu-tool.c:1236
 msgid "Reading"
-msgstr ""
+msgstr "Читання"
 
 #. TRANSLATORS: write from host to device
+#: libdfu/dfu-tool.c:1242
 msgid "Writing"
-msgstr ""
+msgstr "Запис"
 
 #. TRANSLATORS: read from device to host
+#: libdfu/dfu-tool.c:1248
 msgid "Verifying"
-msgstr ""
+msgstr "Перевірка"
 
 #. TRANSLATORS: read from device to host
+#: libdfu/dfu-tool.c:1254
 msgid "Erasing"
-msgstr ""
+msgstr "Витирання"
 
 #. TRANSLATORS: waiting for device
+#: libdfu/dfu-tool.c:1260
 msgid "Detaching"
 msgstr "Від’єднуємо"
 
 #. TRANSLATORS: waiting for device
+#: libdfu/dfu-tool.c:1266
 msgid "Attaching"
 msgstr "З’єднуємо"
 
 #. TRANSLATORS: this is when a device is hotplugged
+#: libdfu/dfu-tool.c:1488
 msgid "Added"
 msgstr "Додано"
 
 #. TRANSLATORS: this is when a device is hotplugged
+#: libdfu/dfu-tool.c:1499
 msgid "Removed"
 msgstr "Вилучено"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
+#: libdfu/dfu-tool.c:1508 src/fu-util.c:1329
 msgid "Changed"
 msgstr "Змінено"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#: libdfu/dfu-tool.c:1516 src/fu-util.c:1291
 msgid "Cancelled"
 msgstr "Скасовано"
 
 #. TRANSLATORS: Appstream ID for the hardware type
+#: libdfu/dfu-tool.c:2025 src/fu-util.c:1132
 msgid "ID"
 msgstr "Ід."
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
+#: libdfu/dfu-tool.c:2031 libdfu/dfu-tool.c:2037 libdfu/dfu-tool.c:2124
 msgid "Name"
 msgstr "Назва"
 
 #. TRANSLATORS: this is the encryption method used when writing
+#: libdfu/dfu-tool.c:2044
 msgid "Cipher"
 msgstr "Шифр"
 
 #. TRANSLATORS: these are areas of memory on the chip
+#: libdfu/dfu-tool.c:2058
 msgid "Region"
 msgstr "Регіон"
 
 #. TRANSLATORS: detected a DFU device
+#: libdfu/dfu-tool.c:2093
 msgid "Found"
 msgstr "Знайдено"
 
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
+#: libdfu/dfu-tool.c:2101
 msgid "Protocol"
 msgstr "Протокол"
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
 #. TRANSLATORS: device status, e.g. "OK"
+#: libdfu/dfu-tool.c:2113 libdfu/dfu-tool.c:2116 libdfu/dfu-tool.c:2139
 msgid "Status"
 msgstr "Стан"
 
+#: libdfu/dfu-tool.c:2113
 msgid "Unknown: permission denied"
 msgstr "Невідомий: доступ заборонено"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
+#: libdfu/dfu-tool.c:2130
 msgid "Serial"
 msgstr "Порядкове"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
+#: libdfu/dfu-tool.c:2135
 msgid "Mode"
 msgstr "Режим"
 
 #. TRANSLATORS: device state, i.e. appIDLE
+#: libdfu/dfu-tool.c:2143
 msgid "State"
 msgstr "Стан"
 
 #. TRANSLATORS: transfer size in bytes
+#: libdfu/dfu-tool.c:2151
 msgid "Transfer Size"
-msgstr ""
+msgstr "Об’єм перенесеного"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
+#: libdfu/dfu-tool.c:2159
 msgid "Quirks"
 msgstr "Негаразди"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2238
 msgid "Convert firmware to DFU format"
 msgstr "Перетворити мікропрограму у формат DFU"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2244
 msgid "Merge multiple firmware files into one"
 msgstr "Об’єднати декілька файлів мікропрограм у один"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2250
 msgid "Set vendor ID on firmware file"
 msgstr "Встановити ідентифікатор виробника для файла мікропрограми"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2256
 msgid "Set product ID on firmware file"
 msgstr "Встановити ідентифікатор продукту для файла мікропрограми"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2262
 msgid "Set element address on firmware file"
 msgstr "Встановити адресу елемента для файла мікропрограми"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2268
 msgid "Set the firmware size for the target"
 msgstr "Встановити розмір мікропрограми для призначення"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2274
 msgid "Set release version on firmware file"
 msgstr "Встановити версію випуску для файла мікропрограми"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2280
 msgid "Set alternative number on firmware file"
 msgstr "Встановити альтернативний номер для файла мікропрограми"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2286
 msgid "Set alternative name on firmware file"
 msgstr "Встановити альтернативну назву для файла мікропрограми"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2292
 msgid "Attach DFU capable device back to runtime"
 msgstr "Повернути пристрій із можливостями DFU до використання"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2298
 msgid "Read firmware from device into a file"
 msgstr "Прочитати мікропрограму з пристрою до файла"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2304
 msgid "Read firmware from one partition into a file"
 msgstr "Прочитати мікропрограму з одного розділу до файла"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2310
 msgid "Write firmware from file into device"
 msgstr "Записати мікропрограму з файла на пристрій"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2316
 msgid "Write firmware from file into one partition"
 msgstr "Записати мікропрограму з файла на один розділ"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2322
 msgid "List currently attached DFU capable devices"
 msgstr "Вивести поточний список долучених пристроїв із можливостями DFU"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2328
 msgid "Detach currently attached DFU capable device"
 msgstr "Від’єднати поточний з’єднаний пристрій із можливостями DFU"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2334
 msgid "Dump details about a firmware file"
 msgstr "Створити дамп даних щодо файла мікропрограми"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2340
 msgid "Watch DFU devices being hotplugged"
 msgstr "Спостерігати за пристроями DFU, які з’єднують із комп’ютером"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2346
 msgid "Encrypt firmware data"
 msgstr "Зашифрувати дані мікропрограми"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2352
 msgid "Decrypt firmware data"
 msgstr "Розшифрувати дані мікропрограми"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2358
 msgid "Sets metadata on a firmware file"
 msgstr "Встановлює метадані щодо файла мікпропрограми"
 
 #. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2364
 msgid "Replace data in an existing firmware file"
+msgstr "Замінити дані у наявному файлі мікропрограми"
+
+#. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2370
+msgid "Create a binary patch using two files"
+msgstr ""
+
+#. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2376
+msgid "Apply a binary patch"
+msgstr ""
+
+#. TRANSLATORS: command description
+#: libdfu/dfu-tool.c:2382
+msgid "Dump information about a binary patch to the screen"
 msgstr ""
 
 #. TRANSLATORS: DFU stands for device firmware update
+#: libdfu/dfu-tool.c:2408
 msgid "DFU Utility"
 msgstr "Засіб роботи з DFU"
 
 #. TRANSLATORS: the user didn't read the man page
+#: libdfu/dfu-tool.c:2413 plugins/synapticsmst/synapticsmst-tool.c:439
+#: src/fu-util.c:1782
 msgid "Failed to parse arguments"
 msgstr "Не вдалося обробити аргументи"
 
 #. TRANSLATORS: command description
+#: plugins/synapticsmst/synapticsmst-tool.c:408
 msgid "Enumerate all Synaptics MST devices"
-msgstr ""
+msgstr "Нумерувати усі пристрої MST Synaptics"
 
 #. TRANSLATORS: command description
+#: plugins/synapticsmst/synapticsmst-tool.c:414
 msgid "Flash firmware file to MST device"
-msgstr ""
+msgstr "Записати файл мікропрограми на пристрій MST"
 
+#: plugins/synapticsmst/synapticsmst-tool.c:434
 msgid "Synaptics Multistream Transport Utility"
-msgstr ""
+msgstr "Засіб багатопотокового передавання Synaptics"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+#: plugins/uefi/fu-plugin-uefi.c:195
+msgid "Installing firmware update…"
+msgstr "Встановлюємо оновлення мікропрограми…"
 
 #. TRANSLATORS: turn on all debugging
+#: src/fu-debug.c:130
 msgid "Show debugging information for all files"
 msgstr "Показувати діагностичні дані для всіх файлів"
 
 #. TRANSLATORS: for the --verbose arg
+#: src/fu-debug.c:180
 msgid "Debugging Options"
 msgstr "Параметри діагностики"
 
 #. TRANSLATORS: for the --verbose arg
+#: src/fu-debug.c:182
 msgid "Show debugging options"
 msgstr "Показувати параметри діагностики"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
+#: src/fu-main.c:863
 msgid "Exit after a small delay"
 msgstr "Завершити роботу з невеличкою затримкою"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
+#: src/fu-main.c:866
 msgid "Exit after the engine has loaded"
 msgstr "Завершити роботу після завантаження рушія"
 
 #. TRANSLATORS: program name
+#: src/fu-main.c:880
 msgid "Firmware Update Daemon"
 msgstr "Служба оновлення мікропрограми"
 
 #. TRANSLATORS: program summary
+#: src/fu-main.c:885
 msgid "Firmware Update D-Bus Service"
 msgstr "Служба D-Bus оновлення мікропрограми"
 
 #. TRANSLATORS: daemon is inactive
+#: src/fu-util.c:188
 msgid "Idle…"
 msgstr "Бездіяльність…"
 
 #. TRANSLATORS: decompressing the firmware file
+#: src/fu-util.c:192
 msgid "Decompressing…"
 msgstr "Розпаковування…"
 
 #. TRANSLATORS: parsing the firmware information
+#: src/fu-util.c:196
 msgid "Loading…"
 msgstr "Завантаження…"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
+#: src/fu-util.c:200
 msgid "Restarting device…"
 msgstr "Перезапускаємо пристрій…"
 
 #. TRANSLATORS: writing to the flash chips
+#: src/fu-util.c:204
 msgid "Writing…"
 msgstr "Записуємо…"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
+#: src/fu-util.c:208
 msgid "Verifying…"
 msgstr "Перевіряємо…"
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
+#: src/fu-util.c:212
 msgid "Scheduling…"
 msgstr "Плануємо…"
 
+#. TRANSLATORS: downloading from a remote server
+#: src/fu-util.c:216
+msgid "Downloading…"
+msgstr "Отримуємо дані…"
+
 #. TRANSLATORS: currect daemon status is unknown
+#: src/fu-util.c:223
 msgid "Unknown"
 msgstr "Невідомий"
 
+#. TRANSLATORS: the user isn't reading the question
+#: src/fu-util.c:320
+#, c-format
+msgid "Please enter a number from 1 to %u: "
+msgstr "Будь ласка, введіть число від 1 до %u: "
+
+#. TRANSLATORS: get interactive prompt
+#: src/fu-util.c:363
+msgid "Choose a device:"
+msgstr "Виберіть пристрій:"
+
 #. TRANSLATORS: nothing attached that can be upgraded
+#: src/fu-util.c:389
 msgid "No hardware detected with firmware update capability"
 msgstr "Не виявлено обладнання із передбаченою можливістю оновлення мікропрограми"
 
 #. TRANSLATOR: the plugin only supports offline
+#: src/fu-util.c:423
 msgid "Retrying as an offline update"
 msgstr "Повторна спроба у режимі автономного оновлення"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
+#: src/fu-util.c:587
 #, c-format
 msgid "Reinstalling %s with %s... "
 msgstr "Повторно встановлюємо %s з номером версії %s... "
@@ -356,6 +504,7 @@ msgstr "Повторно встановлюємо %s з номером верс�
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
+#: src/fu-util.c:594
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "Знижуємо версію %s з %s до %s... "
@@ -363,127 +512,290 @@ msgstr "Знижуємо версію %s з %s до %s... "
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
+#: src/fu-util.c:602
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Оновлюємо %s з %s до %s... "
 
+#: src/fu-util.c:629
 msgid "Done!"
 msgstr "Виконано!"
 
+#: src/fu-util.c:671 src/fu-util.c:1077
 msgid "OK"
 msgstr "Гаразд"
 
+#. TRANSLATORS: downloading new signing file
+#: src/fu-util.c:802
+msgid "Fetching signature"
+msgstr "Отримуємо підпис"
+
+#. TRANSLATORS: downloading new metadata file
+#: src/fu-util.c:805
+msgid "Fetching metadata"
+msgstr "Отримуємо метадані"
+
+#. TRANSLATORS: downloading new firmware file
+#: src/fu-util.c:808
+msgid "Fetching firmware"
+msgstr "Отримуємо мікропрограму"
+
+#. TRANSLATORS: downloading unknown file
+#: src/fu-util.c:811
+msgid "Fetching file"
+msgstr "Отримуємо файл"
+
+#. TRANSLATORS: section header for release version number
+#: src/fu-util.c:990
+msgid "Version"
+msgstr "Версія"
+
+#. TRANSLATORS: section header for firmware URI
+#: src/fu-util.c:993
+msgid "URI"
+msgstr "Адреса"
+
+#. TRANSLATORS: section header for firmware description
+#: src/fu-util.c:999
+msgid "Description"
+msgstr "Опис"
+
+#. TRANSLATORS: section header for firmware checksum
+#: src/fu-util.c:1007
+msgid "Checksum"
+msgstr "Контрольна сума"
+
+#. TRANSLATORS: get interactive prompt
+#: src/fu-util.c:1039
+msgid "Choose a release:"
+msgstr "Виберіть випуск:"
+
 #. TRANSLATORS: first replacement is device name
+#: src/fu-util.c:1128
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s має такі оновлення мікропрограми:"
 
+#: src/fu-util.c:1138
 msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
+#: src/fu-util.c:1142
 msgid "Update Version"
 msgstr "Версія оновлення"
 
+#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
+#: src/fu-util.c:1146
+msgid "Update Remote ID"
+msgstr "Оновити віддалений ідентифікатор"
+
 #. TRANSLATORS: section header for firmware checksum
+#: src/fu-util.c:1155
 msgid "Update Checksum"
 msgstr "Контрольна сума оновлення"
 
-msgid "Update Checksum Type"
-msgstr "Тип контрольної суми оновлення"
-
 #. TRANSLATORS: section header for firmware remote http://
+#: src/fu-util.c:1159
 msgid "Update Location"
 msgstr "Місце оновлення"
 
 #. TRANSLATORS: section header for long firmware desc
+#: src/fu-util.c:1170
 msgid "Update Description"
 msgstr "Опис оновлення"
 
+#. TRANSLATORS: remote identifier, e.g. lvfs-testing
+#: src/fu-util.c:1196
+msgid "Remote ID"
+msgstr "Віддалений ідентифікатор"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+#: src/fu-util.c:1200
+msgid "Type"
+msgstr ""
+
+#. TRANSLATORS: if the remote is enabled
+#: src/fu-util.c:1204
+msgid "Enabled"
+msgstr "Увімкнено"
+
+#. TRANSLATORS: the age of the metadata
+#: src/fu-util.c:1231
+msgid "Age"
+msgstr "Вік"
+
+#. TRANSLATORS: the numeric priority
+#: src/fu-util.c:1238
+msgid "Priority"
+msgstr "Пріоритетність"
+
+#. TRANSLATORS: remote filename base
+#: src/fu-util.c:1243
+msgid "Username"
+msgstr "Користувач"
+
+#. TRANSLATORS: remote filename base
+#: src/fu-util.c:1248
+msgid "Password"
+msgstr "Пароль"
+
+#. TRANSLATORS: remote filename base
+#: src/fu-util.c:1253
+msgid "Filename"
+msgstr "Назва файла"
+
+#. TRANSLATORS: remote filename base
+#: src/fu-util.c:1258
+msgid "Filename Signature"
+msgstr "Підпис назви файла"
+
+#. TRANSLATORS: locatation of the local file
+#: src/fu-util.c:1263
+msgid "Location"
+msgstr "Місце"
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1269
+msgid "URL"
+msgstr "Адреса"
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1275
+msgid "URI Signature"
+msgstr "Підпис адреси"
+
 #. TRANSLATORS: this is when a device is hotplugged
+#: src/fu-util.c:1302
 msgid "Device added:"
 msgstr "Додано пристрій:"
 
 #. TRANSLATORS: this is when a device is hotplugged
+#: src/fu-util.c:1312
 msgid "Device removed:"
 msgstr "Вилучено пристрій:"
 
 #. TRANSLATORS: this is when a device has been updated
+#: src/fu-util.c:1322
 msgid "Device changed:"
 msgstr "Змінено пристрій:"
 
 #. TRANSLATORS: command line option
+#: src/fu-util.c:1622
 msgid "Show extra debugging information"
 msgstr "Показати додаткові діагностичні дані"
 
 #. TRANSLATORS: command line option
-msgid "Schedule installation for next reboot when possible"
-msgstr ""
+#: src/fu-util.c:1625
+msgid "Show client and daemon versions"
+msgstr "Вивести дані щодо версій клієнат і фонової служби"
 
 #. TRANSLATORS: command line option
+#: src/fu-util.c:1628
+msgid "Schedule installation for next reboot when possible"
+msgstr "Якщо можливо, запланувати встановлення на наступне перезавантаження"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:1631
 msgid "Allow re-installing existing firmware versions"
 msgstr "Дозволити повторне встановлення наявних версій мікропрограми"
 
 #. TRANSLATORS: command line option
+#: src/fu-util.c:1634
 msgid "Allow downgrading firmware versions"
 msgstr "Дозволити зниження версій мікропрограми"
 
 #. TRANSLATORS: command line option
+#: src/fu-util.c:1637
 msgid "Override plugin warning"
-msgstr ""
+msgstr "Перевизначити попередження для додатка"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1660
 msgid "Get all devices that support firmware updates"
 msgstr "Отримати список усіх пристроїв, у яких передбачено оновлення мікропрограми"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1667
+msgid "Return all the hardware IDs for the machine"
+msgstr "Повернути усі ідентифікатори апаратного забезпечення комп’ютера"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1674
 msgid "Install prepared updates now"
 msgstr "Встановити приготовані оновлення зараз"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1680
 msgid "Install a firmware file on this hardware"
 msgstr "Встановити файл мікропрограми на це обладнання"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1686
 msgid "Gets details about a firmware file"
 msgstr "Отримати параметри файла мікропрограми"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1692
 msgid "Gets the list of updates for connected hardware"
 msgstr "Отримує список оновлень для з’єднаного обладнання"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1698
 msgid "Updates all firmware to latest versions available"
 msgstr "Оновлює усі мікропрограми до найновіших доступних версій"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1704
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "Отримує криптографічні хеш-суми для дампів мікропрограм"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1710
 msgid "Unlocks the device for firmware access"
 msgstr "Розблоковує пристрій для доступу до мікропрограми"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1716
 msgid "Clears the results from the last update"
 msgstr "Вилучає результати останнього оновлення"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1722
 msgid "Gets the results from the last update"
 msgstr "Отримує результати з останнього оновлення"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1728
+msgid "Gets the releases for a device"
+msgstr "Отримує випуски для пристрою"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1734
+msgid "Gets the configured remotes"
+msgstr "Отримує налаштовані віддалені пристрої"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1740
+msgid "Downgrades the firmware on a device"
+msgstr "Знижує версію мікропрограми на пристрої"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1746
 msgid "Refresh metadata from remote server"
 msgstr "Оновити метадані з віддаленого сервера"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1752
 msgid "Update the stored metadata with current ROM contents"
 msgstr "Оновити збережені метадані на основі поточного вмісту ROM"
 
 #. TRANSLATORS: command description
+#: src/fu-util.c:1758
 msgid "Monitor the daemon for events"
 msgstr "Стежити за подіями у фоновій службі"
 
 #. TRANSLATORS: program name
+#: src/fu-util.c:1777
 msgid "Firmware Utility"
 msgstr "Засіб роботи з мікропрограмами"

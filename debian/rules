@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
+export LC_ALL := C.UTF-8
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 #GPGME needs this for proper building on 32 bit archs
@@ -8,34 +9,36 @@ ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 endif
 
-export COLORHUG="--disable-colorhug"
-COLORHUG_VERSION=$(shell dpkg-query -W libcolorhug-dev | awk '{ print $$2 }' | sed 's,-.*,,')
-ifeq "1.2.12" "$(word 1, $(sort 1.2.12 $(COLORHUG_VERSION)))"
-       export COLORHUG="--enable-colorhug"
-endif
-
 %:
-	dh $@ --with autoreconf,gir
+	dh $@ --with gir
 
-override_dh_autoreconf:
-	NOCONFIGURE=1 dh_autoreconf ./autogen.sh
+override_dh_auto_clean:
+	rm -fr debian/build
 
 override_dh_auto_configure:
 	if pkg-config --exists fwup; then \
-		export UEFI="--enable-uefi"; \
+		export UEFI="-Denable-uefi=true"; \
 	else \
-		export UEFI="--disable-uefi"; \
+		export UEFI="-Denable-uefi=false"; \
 	fi; \
-	dh_auto_configure -- --with-systemdunitdir=/lib/systemd/system \
-				--enable-gtk-doc \
-				--libexecdir=\$${prefix}/lib \
-				$(COLORHUG) $$UEFI
+	if pkg-config --exists libsmbios_c; then \
+		export DELL="-Denable-dell=true"; \
+	else \
+		export DELL="-Denable-dell=false"; \
+	fi; \
+	dh_auto_configure -- $$UEFI $$DELL -Denable-dummy=true --libexecdir=/usr/lib
 
 override_dh_install:
-	find debian/tmp/usr -name "*a" | xargs rm -f
-	rm -f debian/tmp/usr/bin/ebitdo-tool
+	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
 	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
-	dh_install --fail-missing
+	dh_install
+	dh_missing --fail-missing
+
+	#this is placed in fwupd-tests
+	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-2/libfu_plugin_test.so
+
+override_dh_strip_nondeterminism:
+	dh_strip_nondeterminism -Xfirmware-example.xml.gz
 
 override_dh_auto_test:
 	if [ -x /usr/bin/valgrind ] ; then \

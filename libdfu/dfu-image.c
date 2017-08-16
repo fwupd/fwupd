@@ -274,7 +274,7 @@ dfu_image_set_name (DfuImage *image, const gchar *name)
 	}
 
 	/* copy junk data in self tests for 1:1 copies */
-	if (name != NULL && G_UNLIKELY (g_getenv ("DFU_SELF_TEST") != NULL))
+	if (name != NULL && G_UNLIKELY (g_getenv ("DFU_SELF_TEST_IMAGE_MEMCPY_NAME") != NULL))
 		memcpy (priv->name, name, 0xff);
 }
 

@@ -24,12 +24,6 @@
 
 #include <glib.h>
 
-#define FWUPD_DBUS_PATH			"/"
-#define FWUPD_DBUS_SERVICE		"org.freedesktop.fwupd"
-#define FWUPD_DBUS_INTERFACE		"org.freedesktop.fwupd"
-
-#define FWUPD_DEVICE_ID_ANY		"*"
-
 /**
  * FwupdStatus:
  * @FWUPD_STATUS_UNKNOWN:			Unknown state
@@ -40,6 +34,7 @@
  * @FWUPD_STATUS_DEVICE_WRITE:			Writing to a device
  * @FWUPD_STATUS_DEVICE_VERIFY:			Verifying (reading) a device
  * @FWUPD_STATUS_SCHEDULING:			Scheduling an offline update
+ * @FWUPD_STATUS_DOWNLOADING:			A file is downloading
  *
  * The flags to show daemon status.
  **/
@@ -52,6 +47,7 @@ typedef enum {
 	FWUPD_STATUS_DEVICE_WRITE,			/* Since: 0.1.1 */
 	FWUPD_STATUS_DEVICE_VERIFY,			/* Since: 0.1.1 */
 	FWUPD_STATUS_SCHEDULING,			/* Since: 0.1.1 */
+	FWUPD_STATUS_DOWNLOADING,			/* Since: 0.9.4 */
 	/*< private >*/
 	FWUPD_STATUS_LAST
 } FwupdStatus;

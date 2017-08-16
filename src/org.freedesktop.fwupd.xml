@@ -81,30 +81,29 @@
     </method>
 
     <!--***********************************************************-->
-    <method name='GetDetails'>
+    <method name='GetReleases'>
       <doc:doc>
         <doc:description>
           <doc:para>
-            Gets details about a firmware file.
+            Gets a list of all the releases for a specific device.
           </doc:para>
         </doc:description>
       </doc:doc>
-      <arg type='h' name='handle' direction='in'>
+      <arg type='s' name='device_id' direction='in'>
         <doc:doc>
           <doc:summary>
             <doc:para>
-              An index into the array of file descriptors that may have
-              been sent with the DBus message.
+              A device ID.
             </doc:para>
           </doc:summary>
         </doc:doc>
       </arg>
-      <arg type='a{sv}' name='details' direction='out'>
+      <arg type='aa{sv}' name='releases' direction='out'>
         <doc:doc>
           <doc:summary>
             <doc:para>
-              Properties about the firmware, e.g.
-              <doc:tt>DisplayName=ColorHug</doc:tt>.
+              An array of releases (with the release number as the key),
+              with any properties set on each.
             </doc:para>
           </doc:summary>
         </doc:doc>
@@ -265,6 +264,24 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetRemotes'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets the list of remotes.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='aa{sv}' name='results' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The array remotes, with properties</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='ClearResults'>
       <doc:doc>
         <doc:description>
@@ -285,7 +302,7 @@
     </method>
 
     <!--***********************************************************-->
-    <method name='UpdateMetadata'>
+    <method name='UpdateMetadataWithId'>
       <doc:doc>
         <doc:description>
           <doc:para>
@@ -293,6 +310,15 @@
           </doc:para>
         </doc:description>
       </doc:doc>
+      <arg type='s' name='remote_id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              Remote ID to tag the metadata objects with, e.g. 'lvfs-testing'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
       <arg type='h' name='data' direction='in'>
         <doc:doc>
           <doc:summary>
@@ -327,7 +353,7 @@
 
     <!--***********************************************************-->
     <signal name='DeviceAdded'>
-      <arg type='sa{sv}' name='device' direction='out'>
+      <arg type='a{sv}' name='device' direction='out'>
         <doc:doc>
           <doc:summary>
             <doc:para>A device structure.</doc:para>
@@ -345,7 +371,7 @@
 
     <!--***********************************************************-->
     <signal name='DeviceRemoved'>
-      <arg type='sa{sv}' name='device' direction='out'>
+      <arg type='a{sv}' name='device' direction='out'>
         <doc:doc>
           <doc:summary>
             <doc:para>A device structure.</doc:para>
@@ -363,7 +389,7 @@
 
     <!--***********************************************************-->
     <signal name='DeviceChanged'>
-      <arg type='sa{sv}' name='device' direction='out'>
+      <arg type='a{sv}' name='device' direction='out'>
         <doc:doc>
           <doc:summary>
             <doc:para>A device structure.</doc:para>

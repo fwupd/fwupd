@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+""" Check dependencies needed for rasterization """
+
+"""
+ Licensed under the GNU General Public License Version 2
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, see <http://www.gnu.org/licenses/>.
+
+"""
+
+import sys
+err = 0
+
+try:
+    import gi
+except ImportError:
+    print("Error: missing dependency python gobject introspection (python3-gi)")
+    err = 1
+try:
+    gi.require_version('Pango', '1.0')
+    from gi.repository import Pango
+except ValueError:
+    print("Error: missing pango gobject introspection library")
+    err = 1
+try:
+    gi.require_version('PangoCairo', '1.0')
+    from gi.repository import PangoCairo
+except ValueError:
+    print("Error: missing pangocairo gobject introspection library")
+    err = 1
+
+try:
+    gi.require_version("cairo", '1.0')
+    from gi.repository import cairo
+except ValueError:
+    print("Error: missing cairo gobject introspection library")
+    err = 1
+
+try:
+    from PIL import Image
+except ImportError:
+    print("Error: missing dependency python pillow (python3-pil)")
+    err = 1
+
+try:
+    import cairo
+except ImportError:
+    print("Error: missing dependency python cairo (python3-cairo)")
+    err = 1
+
+sys.exit(err)
+

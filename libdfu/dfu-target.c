@@ -350,6 +350,7 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 
 	/* parse zones */
 	zones = g_strsplit (alt_name, "/", -1);
+	g_free (priv->alt_name_for_display);
 	priv->alt_name_for_display = g_strdup (g_strchomp (zones[0] + 1));
 	for (guint i = 1; zones[i] != NULL; i += 2) {
 		guint32 addr;

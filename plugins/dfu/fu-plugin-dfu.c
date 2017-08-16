@@ -287,13 +287,15 @@ fu_plugin_verify (FuPlugin *plugin,
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GBytes *blob_fw;
-	GChecksumType checksum_type;
 	DfuDevice *device;
 	const gchar *platform_id;
-	g_autofree gchar *hash = NULL;
 	g_autoptr(DfuDevice) dfu_device = NULL;
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(GError) error_local = NULL;
+	GChecksumType checksum_types[] = {
+		G_CHECKSUM_SHA1,
+		G_CHECKSUM_SHA256,
+		0 };
 
 	/* get device */
 	platform_id = fu_device_get_id (dev);
@@ -347,10 +349,11 @@ fu_plugin_verify (FuPlugin *plugin,
 	blob_fw = dfu_firmware_write_data (dfu_firmware, error);
 	if (blob_fw == NULL)
 		return FALSE;
-	checksum_type = fu_plugin_get_checksum_type (flags);
-	hash = g_compute_checksum_for_bytes (checksum_type, blob_fw);
-	fu_device_set_checksum (dev, hash);
-	fu_device_set_checksum_kind (dev, checksum_type);
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		g_autofree gchar *hash = NULL;
+		hash = g_compute_checksum_for_bytes (checksum_types[i], blob_fw);
+		fu_device_add_checksum (dev, hash);
+	}
 	fu_plugin_set_status (plugin, FWUPD_STATUS_IDLE);
 	return TRUE;
 }

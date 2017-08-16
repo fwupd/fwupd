@@ -1,6 +1,6 @@
 [D-BUS Service]
 Name=org.freedesktop.fwupd
 Documentation=http://www.fwupd.org/
-Exec=@servicedir@/fwupd/fwupd
+Exec=@libexecdir@/fwupd/fwupd
 User=root
 SystemdService=fwupd.service

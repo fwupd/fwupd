@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2017 Richard Hughes <richard@hughsie.com> -->
+<component type="generic">
+  <id>org.freedesktop.fwupd</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0+</project_license>
+  <name>fwupd</name>
+  <summary>Update device firmware on Linux</summary>
+  <description>
+    <p>
+      This project aims to make updating firmware on Linux automatic, safe and
+      reliable.
+      You can either use a GUI software manager like GNOME Software to view and
+      apply updates, the command-line tool or the D-Bus interface directly.
+    </p>
+    <p>
+      The fwupd process is a simple daemon to allow session software to update
+      device firmware on your local machine.
+      It is designed for desktops, but this project is also usable on phones,
+      tablets and on headless servers.
+    </p>
+  </description>
+  <url type="bugtracker">https://github.com/hughsie/fwupd/issues</url>
+  <url type="donation"/>
+  <url type="help"/>
+  <url type="homepage">http://www.fwupd.org/</url>
+  <url type="translate">https://www.transifex.com/freedesktop/fwupd/</url>
+  <update_contact>richard_at_hughsie.com</update_contact>
+  <translation type="gettext">fwupd</translation>
+</component>

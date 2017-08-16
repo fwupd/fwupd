@@ -282,7 +282,7 @@ dfu_firmware_to_dfuse (DfuFirmware *firmware, GError **error)
 	guint i;
 	guint32 image_size_total = 0;
 	guint32 offset = sizeof (DfuSePrefix);
-	guint8 *buf;
+	g_autofree guint8 *buf = NULL;
 	g_autoptr(GPtrArray) dfuse_images = NULL;
 
 	/* get all the image data */
@@ -310,7 +310,7 @@ dfu_firmware_to_dfuse (DfuFirmware *firmware, GError **error)
 			     DFU_ERROR_INTERNAL,
 			     "too many (%u) images to write DfuSe file",
 			     images->len);
-		return FALSE;
+		return NULL;
 	}
 	prefix->targets = (guint8) images->len;
 
@@ -325,7 +325,7 @@ dfu_firmware_to_dfuse (DfuFirmware *firmware, GError **error)
 	}
 
 	/* return blob */
-	return g_bytes_new_take (buf, sizeof (DfuSePrefix) + image_size_total);
+	return g_bytes_new (buf, sizeof (DfuSePrefix) + image_size_total);
 }
 
 /**

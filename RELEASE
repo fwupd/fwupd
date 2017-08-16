@@ -2,19 +2,26 @@ fwupd Release Notes
 
 1. Write NEWS entries for fwupd in the same format as usual.
 
-git shortlog 0.8.1.. | grep -i -v trivial | grep -v Merge > NEWS.new
+git shortlog 0.9.5.. | grep -i -v trivial | grep -v Merge > NEWS.new
 
-Version 0.8.2
+Version 0.9.6
 ~~~~~~~~~~~~~
 Released: 2017-xx-xx
 
 New Features:
 Bugfixes:
 
+Update translations:
+
+ninja-build fwupd-pot
+tx push --source
+tx pull --all --minimum-perc=5
+git add ../po/*.po
+
 2. Commit changes to git:
 
 # MAKE SURE THESE ARE CORRECT
-export release_ver="0.8.2"
+export release_ver="0.9.6"
 
 git commit -a -m "Release fwupd ${release_ver}"
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
@@ -24,18 +31,17 @@ git push
 
 3. Generate the tarball:
 
-make distcheck
+ninja-build dist
 
 3a. Generate the additon verification metadata
 
-sha1sum fwupd-${release_ver}.tar.xz > fwupd-${release_ver}.tar.xz.sha1
-gpg -b -a fwupd-${release_ver}.tar.xz
+gpg -b -a meson-dist/fwupd-${release_ver}.tar.xz
 
 4. Upload tarball:
 
-scp fwupd-${release_ver}.tar.* hughsient@people.freedesktop.org:~/public_html/releases
+scp meson-dist/fwupd-${release_ver}.tar.* hughsient@people.freedesktop.org:~/public_html/releases
 
-5. Do post release version bump in configure.ac
+5. Do post release version bump in meson.build
 
 6. Commit changes:
 

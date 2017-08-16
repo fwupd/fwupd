@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -37,8 +37,10 @@
 #define FWUPD_RESULT_KEY_DEVICE_VERSION_BOOTLOADER	"VersionBootloader"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT	"FlashesLeft"	/* u */
 #define FWUPD_RESULT_KEY_DEVICE_VENDOR		"DeviceVendor"	/* s */
+#define FWUPD_RESULT_KEY_DEVICE_VENDOR_ID	"DeviceVendorId"	/* s */
 #define FWUPD_RESULT_KEY_GUID			"Guid"		/* s */
 #define FWUPD_RESULT_KEY_UNIQUE_ID		"UniqueID"	/* s */
+#define FWUPD_RESULT_KEY_UPDATE_REMOTE_ID	"RemoteID"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_DESCRIPTION	"UpdateDescription" /* s */
 #define FWUPD_RESULT_KEY_UPDATE_ERROR		"PendingError"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_FILENAME	"FilenameCab"	/* s */

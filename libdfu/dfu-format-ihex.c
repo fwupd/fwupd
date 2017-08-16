@@ -72,6 +72,7 @@ dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
 #define	DFU_INHX32_RECORD_TYPE_EOF		0x01
 #define	DFU_INHX32_RECORD_TYPE_EXTENDED		0x04
 #define	DFU_INHX32_RECORD_TYPE_SYMTAB		0xfe
+#define	DFU_INHX32_RECORD_TYPE_SIGNATURE	0xfd
 
 static gboolean
 dfu_firmware_ihex_symbol_name_valid (const GString *symbol_name)
@@ -118,6 +119,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 	g_autoptr(DfuImage) image = NULL;
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GString) string = NULL;
+	g_autoptr(GString) signature = g_string_new (NULL);
 
 	g_return_val_if_fail (bytes != NULL, FALSE);
 
@@ -259,6 +261,12 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			}
 			break;
 		}
+		case DFU_INHX32_RECORD_TYPE_SIGNATURE:
+			for (i = offset + 9; i < end; i += 2) {
+				guint8 tmp_c = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
+				g_string_append_c (signature, tmp_c);
+			}
+			break;
 		default:
 			/* vendors sneak in nonstandard sections past the EOF */
 			if (got_eof)
@@ -296,6 +304,17 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 	dfu_image_add_element (image, element);
 	dfu_firmware_add_image (firmware, image);
 	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_INTEL_HEX);
+
+	/* add optional signature */
+	if (signature->len > 0) {
+		g_autoptr(DfuElement) element_sig = dfu_element_new ();
+		g_autoptr(DfuImage) image_sig = dfu_image_new ();
+		g_autoptr(GBytes) data = g_bytes_new_static (signature->str, signature->len);
+		dfu_element_set_contents (element_sig, data);
+		dfu_image_add_element (image_sig, element_sig);
+		dfu_image_set_name (image_sig, "signature");
+		dfu_firmware_add_image (firmware, image_sig);
+	}
 	return TRUE;
 }
 
@@ -329,12 +348,33 @@ dfu_firmware_to_ihex_bytes (GString *str, guint8 record_type,
 }
 
 static gboolean
-dfu_firmware_to_ihex_element (DfuElement *element, GString *str, GError **error)
+dfu_firmware_to_ihex_element (DfuElement *element, GString *str,
+			      guint8 record_type, GError **error)
 {
 	GBytes *contents = dfu_element_get_contents (element);
-	dfu_firmware_to_ihex_bytes (str, DFU_INHX32_RECORD_TYPE_DATA,
+	dfu_firmware_to_ihex_bytes (str, record_type,
 				    dfu_element_get_address (element),
 				    contents);
+	return TRUE;
+}
+
+static gboolean
+dfu_firmware_to_ihex_image (DfuImage *image, GString *str, GError **error)
+{
+	GPtrArray *elements;
+	guint8 record_type = DFU_INHX32_RECORD_TYPE_DATA;
+
+	if (g_strcmp0 (dfu_image_get_name (image), "signature") == 0)
+		record_type = DFU_INHX32_RECORD_TYPE_SIGNATURE;
+	elements = dfu_image_get_elements (image);
+	for (guint i = 0; i < elements->len; i++) {
+		DfuElement *element = g_ptr_array_index (elements, i);
+		if (!dfu_firmware_to_ihex_element (element,
+						   str,
+						   record_type,
+						   error))
+			return FALSE;
+	}
 	return TRUE;
 }
 
@@ -350,28 +390,17 @@ dfu_firmware_to_ihex_element (DfuElement *element, GString *str, GError **error)
 GBytes *
 dfu_firmware_to_ihex (DfuFirmware *firmware, GError **error)
 {
-	DfuElement *element;
-	DfuImage *image;
 	GPtrArray *images;
-	GPtrArray *elements;
-	guint i;
-	guint j;
 	g_autoptr(GPtrArray) symbols = NULL;
 	g_autoptr(GString) str = NULL;
 
 	/* write all the element data */
 	str = g_string_new ("");
 	images = dfu_firmware_get_images (firmware);
-	for (i = 0; i < images->len; i++) {
-		image = g_ptr_array_index (images, i);
-		elements = dfu_image_get_elements (image);
-		for (j = 0; j < elements->len; j++) {
-			element = g_ptr_array_index (elements, j);
-			if (!dfu_firmware_to_ihex_element (element,
-								   str,
-								   error))
-				return NULL;
-		}
+	for (guint i = 0; i < images->len; i++) {
+		DfuImage *image = g_ptr_array_index (images, i);
+		if (!dfu_firmware_to_ihex_image (image, str, error))
+			return NULL;
 	}
 
 	/* add EOF */
@@ -380,7 +409,7 @@ dfu_firmware_to_ihex (DfuFirmware *firmware, GError **error)
 
 	/* add any symbol table */
 	symbols = dfu_firmware_get_symbols (firmware);
-	for (i = 0; i < symbols->len; i++) {
+	for (guint i = 0; i < symbols->len; i++) {
 		const gchar *name = g_ptr_array_index (symbols, i);
 		guint32 addr = dfu_firmware_lookup_symbol (firmware, name);
 		g_autoptr(GBytes) contents = g_bytes_new_static (name, strlen (name));

@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -26,6 +26,7 @@
 #include <gio/gio.h>
 
 #include "fwupd-enums.h"
+#include "fwupd-remote.h"
 #include "fwupd-result.h"
 
 G_BEGIN_DECLS
@@ -56,10 +57,18 @@ FwupdClient	*fwupd_client_new			(void);
 gboolean	 fwupd_client_connect			(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
+G_DEPRECATED_FOR(fwupd_client_get_devices_simple)
 GPtrArray	*fwupd_client_get_devices		(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
+GPtrArray	*fwupd_client_get_devices_simple	(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
 GPtrArray	*fwupd_client_get_updates		(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
+GPtrArray	*fwupd_client_get_releases		(FwupdClient	*client,
+							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
 GPtrArray	*fwupd_client_get_details_local		(FwupdClient	*client,
@@ -91,19 +100,39 @@ FwupdResult	*fwupd_client_get_details		(FwupdClient	*client,
 							 const gchar	*filename,
 							 GCancellable	*cancellable,
 							 GError		**error);
+FwupdDevice	*fwupd_client_get_device_by_id		(FwupdClient	*client,
+							 const gchar	*device_id,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 fwupd_client_install			(FwupdClient	*client,
 							 const gchar	*device_id,
 							 const gchar	*filename,
 							 FwupdInstallFlags install_flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
+G_DEPRECATED_FOR(fwupd_client_update_metadata_with_id)
 gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
+							 const gchar	*metadata_fn,
+							 const gchar	*signature_fn,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 fwupd_client_update_metadata_with_id	(FwupdClient	*client,
+							 const gchar	*remote_id,
 							 const gchar	*metadata_fn,
 							 const gchar	*signature_fn,
 							 GCancellable	*cancellable,
 							 GError		**error);
 FwupdStatus	 fwupd_client_get_status		(FwupdClient	*client);
 guint		 fwupd_client_get_percentage		(FwupdClient	*client);
+const gchar	*fwupd_client_get_daemon_version	(FwupdClient	*client);
+
+GPtrArray	*fwupd_client_get_remotes		(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
+FwupdRemote	*fwupd_client_get_remote_by_id		(FwupdClient	*client,
+							 const gchar	*remote_id,
+							 GCancellable	*cancellable,
+							 GError		**error);
 
 G_END_DECLS
 

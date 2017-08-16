@@ -322,7 +322,7 @@ fu_device_altos_tty_read (FuDeviceAltos *device,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
-			     "no data recieved from device in %ums",
+			     "no data received from device in %ums",
 			     timeout_ms);
 		return NULL;
 	}
@@ -747,7 +747,7 @@ fu_device_altos_probe_bootloader (FuDeviceAltos *device, GError **error)
 		}
 
 		/* unknown line */
-		g_warning ("unknown data: '%s'", lines[i]);
+		g_debug ("unknown data: '%s'", lines[i]);
 	}
 
 	/* done */
@@ -809,6 +809,7 @@ fu_device_altos_init_real (FuDeviceAltos *device)
 {
 	FuDeviceAltosPrivate *priv = GET_PRIVATE (device);
 	g_autofree gchar *devid1 = NULL;
+	g_autofree gchar *vendor_id = NULL;
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device),
@@ -816,6 +817,10 @@ fu_device_altos_init_real (FuDeviceAltos *device)
 
 	/* set default vendor */
 	fu_device_set_vendor (FU_DEVICE (device), "altusmetrum.org");
+
+	/* set vendor ID */
+	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
+	fu_device_set_vendor_id (FU_DEVICE (device), vendor_id);
 
 	/* set name */
 	switch (priv->kind) {

@@ -31,6 +31,7 @@
 #include "dfu-device.h"
 #include "dfu-error.h"
 #include "dfu-firmware.h"
+#include "dfu-patch.h"
 #include "dfu-sector-private.h"
 #include "dfu-target-private.h"
 
@@ -280,6 +281,7 @@ dfu_firmware_dfuse_func (void)
 	g_autoptr(GFile) file = NULL;
 
 	/* load a DeFUse firmware */
+	g_setenv ("DFU_SELF_TEST_IMAGE_MEMCPY_NAME", "", FALSE);
 	filename = dfu_test_get_filename ("dev_VRBRAIN.dfu");
 	g_assert (filename != NULL);
 	file = g_file_new_for_path (filename);
@@ -309,6 +311,9 @@ dfu_firmware_dfuse_func (void)
 //			     g_bytes_get_size (roundtrip), NULL);
 
 	g_assert_cmpstr (_g_bytes_compare_verbose (roundtrip, roundtrip_orig), ==, NULL);
+
+	/* use usual image name copying */
+	g_unsetenv ("DFU_SELF_TEST_IMAGE_MEMCPY_NAME");
 }
 
 static void
@@ -476,6 +481,43 @@ dfu_firmware_intel_hex_func (void)
 	g_assert_no_error (error);
 	g_assert (data_bin2 != NULL);
 	g_assert_cmpstr (_g_bytes_compare_verbose (data_bin, data_bin2), ==, NULL);
+}
+
+static void
+dfu_firmware_intel_hex_signed_func (void)
+{
+	DfuElement *element;
+	DfuImage *image;
+	GBytes *data_sig;
+	const guint8 *data;
+	gboolean ret;
+	gsize len;
+	g_autofree gchar *filename_hex = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_hex = NULL;
+
+	/* load a Intel hex32 file */
+	filename_hex = dfu_test_get_filename ("firmware.shex");
+	g_assert (filename_hex != NULL);
+	file_hex = g_file_new_for_path (filename_hex);
+	firmware = dfu_firmware_new ();
+	ret = dfu_firmware_parse_file (firmware, file_hex,
+				       DFU_FIRMWARE_PARSE_FLAG_NONE,
+				       NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 144);
+
+	/* get the signed image element */
+	image = dfu_firmware_get_image_by_name (firmware, "signature");
+	g_assert (image != NULL);
+	element = dfu_image_get_element_default	(image);
+	data_sig = dfu_element_get_contents (element);
+	g_assert (data_sig != NULL);
+	data = g_bytes_get_data (data_sig, &len);
+	g_assert_cmpint (len, ==, 8);
+	g_assert (data != NULL);
 }
 
 static void
@@ -766,6 +808,156 @@ dfu_target_dfuse_func (void)
 	g_assert_cmpint (dfu_target_get_cipher_kind (target), ==, DFU_CIPHER_KIND_XTEA);
 }
 
+static gboolean
+dfu_patch_create_from_strings (DfuPatch *patch,
+			       const gchar *dold,
+			       const gchar *dnew,
+			       GError **error)
+{
+	guint32 sz1 = strlen (dold);
+	guint32 sz2 = strlen (dnew);
+	g_autoptr(GBytes) blob1 = g_bytes_new (dold, sz1);
+	g_autoptr(GBytes) blob2 = g_bytes_new (dnew, sz2);
+	g_debug ("compare:\n%s\n%s", dold, dnew);
+	return dfu_patch_create (patch, blob1, blob2, error);
+}
+
+static void
+dfu_patch_merges_func (void)
+{
+	const guint8 *data;
+	gboolean ret;
+	gsize sz;
+	g_autoptr(DfuPatch) patch = dfu_patch_new ();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* check merges happen */
+	ret = dfu_patch_create_from_strings (patch, "XXX", "YXY", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	blob = dfu_patch_export (patch, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	data = g_bytes_get_data (blob, &sz);
+	g_assert_cmpint (data[0x00], ==, 'D');
+	g_assert_cmpint (data[0x01], ==, 'f');
+	g_assert_cmpint (data[0x02], ==, 'u');
+	g_assert_cmpint (data[0x03], ==, 'P');
+	g_assert_cmpint (data[0x04], ==, 0x00); /* reserved */
+	g_assert_cmpint (data[0x05], ==, 0x00);
+	g_assert_cmpint (data[0x06], ==, 0x00);
+	g_assert_cmpint (data[0x07], ==, 0x00);
+	g_assert_cmpint (data[0x08 + 0x28], ==, 0x00); /* chunk1, offset */
+	g_assert_cmpint (data[0x09 + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x0a + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x0b + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x0c + 0x28], ==, 0x03); /* chunk1, size */
+	g_assert_cmpint (data[0x0d + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x0e + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x0f + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x10 + 0x28], ==, 0x00); /* reserved */
+	g_assert_cmpint (data[0x11 + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x12 + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x13 + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x14 + 0x28], ==, 'Y');
+	g_assert_cmpint (data[0x15 + 0x28], ==, 'X');
+	g_assert_cmpint (data[0x16 + 0x28], ==, 'Y');
+	g_assert_cmpint (sz, ==, 48 /* hdr */ + 12 /* chunk */ + 3 /* data */);
+}
+
+static void
+dfu_patch_apply_func (void)
+{
+	gboolean ret;
+	g_autoptr(DfuPatch) patch = dfu_patch_new ();
+	g_autoptr(GBytes) blob_new2 = NULL;
+	g_autoptr(GBytes) blob_new3 = NULL;
+	g_autoptr(GBytes) blob_new4 = NULL;
+	g_autoptr(GBytes) blob_new = NULL;
+	g_autoptr(GBytes) blob_old = NULL;
+	g_autoptr(GBytes) blob_wrong = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* create a patch */
+	blob_old = g_bytes_new_static ("helloworldhelloworldhelloworldhelloworld", 40);
+	blob_new = g_bytes_new_static ("XelloXorldhelloworldhelloworldhelloworlXXX", 42);
+	ret = dfu_patch_create (patch, blob_old, blob_new, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* apply the patch */
+	blob_new2 = dfu_patch_apply (patch, blob_old, DFU_PATCH_APPLY_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (blob_new2 != NULL);
+	g_assert_cmpint (g_bytes_compare (blob_new, blob_new2), ==, 0);
+
+	/* check we force the patch to an unrelated blob */
+	blob_wrong = g_bytes_new_static ("wrongwrongwrongwrongwrongwrongwrongwrong", 40);
+	blob_new3 = dfu_patch_apply (patch, blob_wrong, DFU_PATCH_APPLY_FLAG_IGNORE_CHECKSUM, &error);
+	g_assert_no_error (error);
+	g_assert (blob_new3 != NULL);
+
+	/* check we can't apply the patch to an unrelated blob */
+	blob_new4 = dfu_patch_apply (patch, blob_wrong, DFU_PATCH_APPLY_FLAG_NONE, &error);
+	g_assert_error (error, DFU_ERROR, DFU_ERROR_INVALID_DEVICE);
+	g_assert (blob_new4 == NULL);
+}
+
+static void
+dfu_patch_func (void)
+{
+	const guint8 *data;
+	gboolean ret;
+	gsize sz;
+	g_autoptr(DfuPatch) patch = dfu_patch_new ();
+	g_autoptr(DfuPatch) patch2 = dfu_patch_new ();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *serialized_str = NULL;
+
+	/* create binary diff */
+	ret = dfu_patch_create_from_strings (patch, "XXX", "XYY", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* check we can serialize this object to a blob */
+	blob = dfu_patch_export (patch, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	data = g_bytes_get_data (blob, &sz);
+	g_assert_cmpint (data[0x00], ==, 'D');
+	g_assert_cmpint (data[0x01], ==, 'f');
+	g_assert_cmpint (data[0x02], ==, 'u');
+	g_assert_cmpint (data[0x03], ==, 'P');
+	g_assert_cmpint (data[0x04], ==, 0x00); /* reserved */
+	g_assert_cmpint (data[0x05], ==, 0x00);
+	g_assert_cmpint (data[0x06], ==, 0x00);
+	g_assert_cmpint (data[0x07], ==, 0x00);
+	g_assert_cmpint (data[0x08 + 0x28], ==, 0x01); /* chunk1, offset */
+	g_assert_cmpint (data[0x09 + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x0a + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x0b + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x0c + 0x28], ==, 0x02); /* chunk1, size */
+	g_assert_cmpint (data[0x0d + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x0e + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x0f + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x10 + 0x28], ==, 0x00); /* reserved */
+	g_assert_cmpint (data[0x11 + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x12 + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x13 + 0x28], ==, 0x00);
+	g_assert_cmpint (data[0x14 + 0x28], ==, 'Y');
+	g_assert_cmpint (data[0x15 + 0x28], ==, 'Y');
+	g_assert_cmpint (sz, ==, 48 /* hdr */ + 12 /* chunk */ + 2 /* data */);
+
+	/* try to load it from the serialized blob */
+	ret = dfu_patch_import (patch2, blob, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	serialized_str = dfu_patch_to_string (patch2);
+	g_debug ("serialized blob %s", serialized_str);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -776,9 +968,11 @@ main (int argc, char **argv)
 
 	/* log everything */
 	g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
-	g_setenv ("DFU_SELF_TEST", "", FALSE);
 
 	/* tests go here */
+	g_test_add_func ("/libdfu/patch", dfu_patch_func);
+	g_test_add_func ("/libdfu/patch{merges}", dfu_patch_merges_func);
+	g_test_add_func ("/libdfu/patch{apply}", dfu_patch_apply_func);
 	g_test_add_func ("/libdfu/enums", dfu_enums_func);
 	g_test_add_func ("/libdfu/target(DfuSe}", dfu_target_dfuse_func);
 	g_test_add_func ("/libdfu/firmware{raw}", dfu_firmware_raw_func);
@@ -787,6 +981,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/libdfu/firmware{xdfu}", dfu_firmware_xdfu_func);
 	g_test_add_func ("/libdfu/firmware{metadata}", dfu_firmware_metadata_func);
 	g_test_add_func ("/libdfu/firmware{intel-hex}", dfu_firmware_intel_hex_func);
+	g_test_add_func ("/libdfu/firmware{intel-hex-signed}", dfu_firmware_intel_hex_signed_func);
 	g_test_add_func ("/libdfu/firmware{elf}", dfu_firmware_elf_func);
 	g_test_add_func ("/libdfu/device", dfu_device_func);
 	g_test_add_func ("/libdfu/colorhug+", dfu_colorhug_plus_func);
