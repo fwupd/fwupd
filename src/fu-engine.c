@@ -1508,10 +1508,15 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 			return FALSE;
 	}
 
-	/* save XML to remotes.d */
+	/* save XML and signature to remotes.d */
 	if (!fu_common_set_contents_bytes (fwupd_remote_get_filename_cache (remote),
 					   bytes_raw, error))
 		return FALSE;
+	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
+		if (!fu_common_set_contents_bytes (fwupd_remote_get_filename_cache_sig (remote),
+						   bytes_sig, error))
+			return FALSE;
+	}
 	return fu_engine_load_metadata_store (self, error);
 }
 

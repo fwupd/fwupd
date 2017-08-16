@@ -38,6 +38,7 @@ struct _FwupdRemote
 	gchar			*filename;
 	gchar			*filename_asc;
 	gchar			*filename_cache;
+	gchar			*filename_cache_sig;
 	gboolean		 enabled;
 	SoupURI			*uri;
 	SoupURI			*uri_asc;
@@ -101,11 +102,21 @@ fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
 	g_strdelimit (self->id, ".", '\0');
 }
 
+static const gchar *
+fwupd_remote_get_suffix_for_keyring_kind (FwupdKeyringKind keyring_kind)
+{
+	if (keyring_kind == FWUPD_KEYRING_KIND_GPG)
+		return ".asc";
+	if (keyring_kind == FWUPD_KEYRING_KIND_PKCS7)
+		return ".p7b";
+	return NULL;
+}
+
 /* note, this has to be set before username and password */
 static void
 fwupd_remote_set_url (FwupdRemote *self, const gchar *url)
 {
-	g_autofree gchar *url_asc = NULL;
+	const gchar *suffix;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *basename_asc = NULL;
 
@@ -122,17 +133,9 @@ fwupd_remote_set_url (FwupdRemote *self, const gchar *url)
 	self->filename = g_strdup_printf ("%s-%s", self->id, basename);
 
 	/* generate the signature URI too */
-	switch (self->keyring_kind) {
-	case FWUPD_KEYRING_KIND_GPG:
-		url_asc = g_strdup_printf ("%s.asc", url);
-		break;
-	case FWUPD_KEYRING_KIND_PKCS7:
-		url_asc = g_strdup_printf ("%s.p7b", url);
-		break;
-	default:
-		break;
-	}
-	if (url_asc != NULL) {
+	suffix = fwupd_remote_get_suffix_for_keyring_kind (self->keyring_kind);
+	if (suffix != NULL) {
+		g_autofree gchar *url_asc = g_strconcat (url, suffix, NULL);
 		self->uri_asc = fwupd_remote_build_uri (self, url_asc, NULL);
 		basename_asc = g_path_get_basename (soup_uri_get_path (self->uri_asc));
 		self->filename_asc = g_strdup_printf ("%s-%s", self->id, basename_asc);
@@ -177,6 +180,24 @@ fwupd_remote_kind_to_string (FwupdRemoteKind kind)
 	if (kind == FWUPD_REMOTE_KIND_LOCAL)
 		return "local";
 	return NULL;
+}
+
+static void
+fwupd_remote_set_filename_cache (FwupdRemote *self, const gchar *filename)
+{
+	const gchar *suffix;
+
+	g_return_if_fail (FWUPD_IS_REMOTE (self));
+
+	g_free (self->filename_cache);
+	self->filename_cache = g_strdup (filename);
+
+	/* create for all remote types */
+	suffix = fwupd_remote_get_suffix_for_keyring_kind (self->keyring_kind);
+	if (suffix != NULL) {
+		g_free (self->filename_cache_sig);
+		self->filename_cache_sig = g_strconcat (filename, suffix, NULL);
+	}
 }
 
 /**
@@ -259,6 +280,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 
 	/* DOWNLOAD-type remotes */
 	if (self->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
+		g_autofree gchar *filename_cache = NULL;
 		g_autofree gchar *url = NULL;
 		g_autofree gchar *username = NULL;
 		g_autofree gchar *password = NULL;
@@ -288,20 +310,23 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 			fwupd_remote_set_password (self, password);
 
 		/* set cache to /var/lib... */
-		self->filename_cache = g_build_filename (LOCALSTATEDIR,
-							 "lib",
-							 "fwupd",
-							 "remotes.d",
-							 self->id,
-							 "metadata.xml.gz",
-							 NULL);
+		filename_cache = g_build_filename (LOCALSTATEDIR,
+						   "lib",
+						   "fwupd",
+						   "remotes.d",
+						   self->id,
+						   "metadata.xml.gz",
+						   NULL);
+		fwupd_remote_set_filename_cache (self, filename_cache);
 	}
 
 	/* all LOCAL remotes have to include a valid File */
 	if (self->kind == FWUPD_REMOTE_KIND_LOCAL) {
-		self->filename_cache = g_key_file_get_string (kf, group, "File", error);
-		if (self->filename_cache == NULL)
+		g_autofree gchar *filename_cache = NULL;
+		filename_cache = g_key_file_get_string (kf, group, "File", error);
+		if (filename_cache == NULL)
 			return FALSE;
+		fwupd_remote_set_filename_cache (self, filename_cache);
 	}
 
 	/* dep logic */
@@ -349,12 +374,21 @@ fwupd_remote_get_filename_cache (FwupdRemote *self)
 	return self->filename_cache;
 }
 
-static void
-fwupd_remote_set_filename_cache (FwupdRemote *self, const gchar *filename)
+/**
+ * fwupd_remote_get_filename_cache_sig:
+ * @self: A #FwupdRemote
+ *
+ * Gets the path and filename that the remote is using for a signature cache.
+ *
+ * Returns: a string, or %NULL for unset
+ *
+ * Since: 0.9.7
+ **/
+const gchar *
+fwupd_remote_get_filename_cache_sig (FwupdRemote *self)
 {
-	g_return_if_fail (FWUPD_IS_REMOTE (self));
-	g_free (self->filename_cache);
-	self->filename_cache = g_strdup (filename);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->filename_cache_sig;
 }
 
 /**
@@ -779,6 +813,7 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (self->filename);
 	g_free (self->filename_asc);
 	g_free (self->filename_cache);
+	g_free (self->filename_cache_sig);
 	g_strfreev (self->order_after);
 	g_strfreev (self->order_before);
 	if (self->uri != NULL)

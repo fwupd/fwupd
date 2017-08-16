@@ -1260,6 +1260,11 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 			/* TRANSLATORS: locatation of the local file */
 			fu_util_print_data (_("Location"), tmp);
 		}
+		tmp = fwupd_remote_get_filename_cache_sig (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: locatation of the local file */
+			fu_util_print_data (_("Location Signature"), tmp);
+		}
 		uri = fwupd_remote_get_uri (remote);
 		if (uri != NULL) {
 			g_autofree gchar *uri_str = soup_uri_to_string (uri, FALSE);

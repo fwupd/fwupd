@@ -117,6 +117,8 @@ fwupd_remote_download_func (void)
 	g_assert_cmpstr (fwupd_remote_get_filename_asc (remote), ==, "lvfs-firmware.xml.gz.asc");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==,
 			 LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz");
+	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==,
+			 LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz.asc");
 }
 
 static void
@@ -140,6 +142,7 @@ fwupd_remote_local_func (void)
 	g_assert_cmpstr (fwupd_remote_get_filename (remote), ==, NULL);
 	g_assert_cmpstr (fwupd_remote_get_filename_asc (remote), ==, NULL);
 	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==, "@datadir@/fwupd/remotes.d/fwupd/metadata.xml");
+	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==, NULL);
 }
 
 static void

@@ -49,6 +49,7 @@ const gchar	*fwupd_remote_get_filename_asc		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_username		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_password		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename_cache	(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_filename_cache_sig	(FwupdRemote	*self);
 gboolean	 fwupd_remote_get_enabled		(FwupdRemote	*self);
 gint		 fwupd_remote_get_priority		(FwupdRemote	*self);
 guint64		 fwupd_remote_get_age			(FwupdRemote	*self);
