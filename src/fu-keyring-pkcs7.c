@@ -179,7 +179,7 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_SIGNATURE_INVALID,
-				     "failed to keyring data: %s [%i]",
+				     "failed to verify data: %s [%i]",
 				     gnutls_strerror (rc), rc);
 			return FALSE;
 		}

@@ -226,7 +226,7 @@ fu_keyring_gpg_check_signature (gpgme_signature_t signature, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_SIGNATURE_INVALID,
-			     "gpgme failed to keyring signature '%s'",
+			     "gpgme failed to verify signature '%s'",
 			     signature->fpr);
 		break;
 	}
@@ -270,19 +270,19 @@ fu_keyring_gpg_verify_data (FuKeyring *keyring,
 		return FALSE;
 	}
 
-	/* keyring */
+	/* verify */
 	rc = gpgme_op_verify (self->ctx, sig, data, NULL);
 	if (rc != GPG_ERR_NO_ERROR) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "failed to keyring data: %s",
+			     "failed to verify data: %s",
 			     gpgme_strerror (rc));
 		return FALSE;
 	}
 
 
-	/* keyring the result */
+	/* verify the result */
 	result = gpgme_op_verify_result (self->ctx);
 	if (result == NULL) {
 		g_set_error_literal (error,
