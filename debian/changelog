@@ -1,3 +1,9 @@
+fwupd (0.9.5-2) unstable; urgency=medium
+
+  * Upload to unstable
+
+ -- Matthias Klumpp <mak@debian.org>  Wed, 16 Aug 2017 22:34:46 +0200
+
 fwupd (0.9.5-1) experimental; urgency=medium
 
   [ Mario Limonciello ]
