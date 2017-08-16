@@ -427,8 +427,10 @@ fu_common_spawn_source_pollable_cb (GObject *stream, gpointer user_data)
 						       NULL,
 						       &error);
 	if (sz < 0) {
-		if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK))
-			g_error ("err=%s", error->message);
+		if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
+			g_warning ("failed to get read from nonblocking fd: %s",
+				   error->message);
+		}
 		return G_SOURCE_REMOVE;
 	}
 
