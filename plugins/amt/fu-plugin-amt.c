@@ -235,7 +235,7 @@ struct amt_host_if_resp_header {
 	guchar data[0];
 } __attribute__((packed));
 
-uuid_le MEI_IAMTHIF = UUID_LE(0x12f80028, 0xb4b7, 0x4b2d,  \
+const uuid_le MEI_IAMTHIF = UUID_LE(0x12f80028, 0xb4b7, 0x4b2d,  \
 				0xac, 0xa8, 0x46, 0xe0, 0xff, 0x65, 0x81, 0x4c);
 
 #define AMT_HOST_IF_CODE_VERSIONS_REQUEST  0x0400001A
