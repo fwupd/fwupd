@@ -48,6 +48,7 @@ fu_common_rmtree (const gchar *directory, GError **error)
 	g_autoptr(GDir) dir = NULL;
 
 	/* try to open */
+	g_debug ("removing %s", directory);
 	dir = g_dir_open (directory, 0, error);
 	if (dir == NULL)
 		return FALSE;
@@ -92,7 +93,9 @@ gboolean
 fu_common_mkdir_parent (const gchar *filename, GError **error)
 {
 	g_autofree gchar *parent = NULL;
+
 	parent = g_path_get_dirname (filename);
+	g_debug ("creating path %s", parent);
 	if (g_mkdir_with_parents (parent, 0755) == -1) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -130,6 +133,7 @@ fu_common_set_contents_bytes (const gchar *filename, GBytes *bytes, GError **err
 			return FALSE;
 	}
 	data = g_bytes_get_data (bytes, &size);
+	g_debug ("writing %s with %" G_GSIZE_FORMAT " bytes", filename, size);
 	return g_file_set_contents (filename, data, size, error);
 }
 
@@ -149,6 +153,7 @@ fu_common_get_contents_bytes (const gchar *filename, GError **error)
 	gsize len = 0;
 	if (!g_file_get_contents (filename, &data, &len, error))
 		return NULL;
+	g_debug ("reading %s with %" G_GSIZE_FORMAT " bytes", filename, len);
 	return g_bytes_new_take (data, len);
 }
 
@@ -224,6 +229,7 @@ fu_common_extract_archive (GBytes *blob, const gchar *dir, GError **error)
 	struct archive_entry *entry;
 
 	/* decompress anything matching either glob */
+	g_debug ("decompressing into %s", dir);
 	arch = archive_read_new ();
 	archive_read_support_format_all (arch);
 	archive_read_support_filter_all (arch);
@@ -500,8 +506,11 @@ fu_common_spawn_sync (const gchar * const * argv,
 {
 	g_autoptr(FuCommonSpawnHelper) helper = NULL;
 	g_autoptr(GSubprocess) subprocess = NULL;
+	g_autofree gchar *argv_str = NULL;
 
 	/* create subprocess */
+	argv_str = g_strjoinv (" ", (gchar **) argv);
+	g_debug ("running '%s'", argv_str);
 	subprocess = g_subprocess_newv (argv, G_SUBPROCESS_FLAGS_STDOUT_PIPE |
 					      G_SUBPROCESS_FLAGS_STDERR_MERGE, error);
 	if (subprocess == NULL)
