@@ -1,5 +1,7 @@
 #!/bin/sh
 set -e
+set -x
+
 export LC_ALL=C.UTF-8
 mkdir -p build && cd build
 rm * -rf

@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
+set -x
 
 #generate a tarball
 git config tar.tar.xz.command "xz -c"
