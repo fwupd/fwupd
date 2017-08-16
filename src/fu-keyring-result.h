@@ -19,42 +19,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FU_KEYRING_H
-#define __FU_KEYRING_H
+#ifndef __FU_KEYRING_RESULT_H
+#define __FU_KEYRING_RESULT_H
 
 #include <glib-object.h>
-#include <gio/gio.h>
-
-#include "fu-keyring-result.h"
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_KEYRING (fu_keyring_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuKeyring, fu_keyring, FU, KEYRING, GObject)
+#define FU_TYPE_KEYRING_RESULT (fu_keyring_result_get_type ())
 
-struct _FuKeyringClass
-{
-	GObjectClass		 parent_class;
-	gboolean		 (*setup)		(FuKeyring	*keyring,
-							 const gchar	*public_key_dir,
-							 GError		**error);
-	FuKeyringResult		*(*verify_data)		(FuKeyring	*keyring,
-							 GBytes		*payload,
-							 GBytes		*payload_signature,
-							 GError		**error);
-};
+G_DECLARE_FINAL_TYPE (FuKeyringResult, fu_keyring_result, FU, KEYRING_RESULT, GObject)
 
-gboolean	 fu_keyring_setup			(FuKeyring	*keyring,
-							 const gchar	*public_key_dir,
-							 GError		**error);
-FuKeyringResult	*fu_keyring_verify_data			(FuKeyring	*keyring,
-							 GBytes		*blob,
-							 GBytes		*blob_signature,
-							 GError		**error);
-const gchar	*fu_keyring_get_name			(FuKeyring	*self);
-void		 fu_keyring_set_name			(FuKeyring	*self,
-							 const gchar	*name);
+gint64		 fu_keyring_result_get_timestamp	(FuKeyringResult	*self);
+const gchar	*fu_keyring_result_get_authority	(FuKeyringResult	*self);
 
 G_END_DECLS
 
-#endif /* __FU_KEYRING_H */
+#endif /* __FU_KEYRING_RESULT_H */

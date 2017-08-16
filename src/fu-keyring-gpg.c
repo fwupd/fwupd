@@ -233,7 +233,7 @@ fu_keyring_gpg_check_signature (gpgme_signature_t signature, GError **error)
 	return ret;
 }
 
-static gboolean
+static FuKeyringResult *
 fu_keyring_gpg_verify_data (FuKeyring *keyring,
 			    GBytes *blob,
 			    GBytes *blob_signature,
@@ -243,8 +243,10 @@ fu_keyring_gpg_verify_data (FuKeyring *keyring,
 	gpgme_error_t rc;
 	gpgme_signature_t s;
 	gpgme_verify_result_t result;
+	gint64 timestamp_newest = 0;
 	g_auto(gpgme_data_t) data = NULL;
 	g_auto(gpgme_data_t) sig = NULL;
+	g_autoptr(GString) authority_newest = g_string_new (NULL);
 
 	/* load file data */
 	rc = gpgme_data_new_from_mem (&data,
@@ -256,7 +258,7 @@ fu_keyring_gpg_verify_data (FuKeyring *keyring,
 			     FWUPD_ERROR_INTERNAL,
 			     "failed to load data: %s",
 			     gpgme_strerror (rc));
-		return FALSE;
+		return NULL;
 	}
 	rc = gpgme_data_new_from_mem (&sig,
 				      g_bytes_get_data (blob_signature, NULL),
@@ -267,7 +269,7 @@ fu_keyring_gpg_verify_data (FuKeyring *keyring,
 			     FWUPD_ERROR_INTERNAL,
 			     "failed to load signature: %s",
 			      gpgme_strerror (rc));
-		return FALSE;
+		return NULL;
 	}
 
 	/* verify */
@@ -278,7 +280,7 @@ fu_keyring_gpg_verify_data (FuKeyring *keyring,
 			     FWUPD_ERROR_INTERNAL,
 			     "failed to verify data: %s",
 			     gpgme_strerror (rc));
-		return FALSE;
+		return NULL;
 	}
 
 
@@ -289,16 +291,25 @@ fu_keyring_gpg_verify_data (FuKeyring *keyring,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "no result record from libgpgme");
-		return FALSE;
+		return NULL;
 	}
 
 	/* look at each signature */
 	for (s = result->signatures; s != NULL ; s = s->next ) {
 		g_debug ("returned signature fingerprint %s", s->fpr);
 		if (!fu_keyring_gpg_check_signature (s, error))
-			return FALSE;
+			return NULL;
+
+		/* save details about the key for the result */
+		if ((gint64) s->timestamp > timestamp_newest) {
+			timestamp_newest = (gint64) s->timestamp;
+			g_string_assign (authority_newest, s->fpr);
+		}
 	}
-	return TRUE;
+	return FU_KEYRING_RESULT (g_object_new (FU_TYPE_KEYRING_RESULT,
+						"timestamp", timestamp_newest,
+						"authority", authority_newest->str,
+						NULL));
 }
 
 static void
