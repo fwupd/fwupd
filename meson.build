@@ -202,6 +202,16 @@ if get_option('enable-consolekit')
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
 
+systemdunitdir = get_option('with-systemdunitdir')
+if systemdunitdir == 'dynamic'
+  systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
+endif
+
+udevdir = get_option('with-udevdir')
+if udevdir == 'dynamic'
+  udevdir = udev.get_pkgconfig_variable('udevdir')
+endif
+
 gnome = import('gnome')
 i18n = import('i18n')
 
@@ -267,5 +277,5 @@ if meson.version().version_compare('<0.41.0')
 endif
 
 if get_option('enable-systemd')
-  meson.add_install_script('meson_post_install.sh', systemd.get_pkgconfig_variable('systemdsystemunitdir'), localstatedir)
+  meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)
 endif

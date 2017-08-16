@@ -15,3 +15,5 @@ option('enable-dummy', type : 'boolean', value : false, description : 'enable th
 option('enable-gpg', type : 'boolean', value : true, description : 'enable the GPG verification support')
 option('enable-pkcs7', type : 'boolean', value : true, description : 'enable the PKCS7 verification support')
 option('with-bootdir', type : 'string', value : '/boot/efi', description : 'Directory for EFI system partition')
+option('with-systemdunitdir', type: 'string', value: 'dynamic', description: 'Directory for systemd units')
+option('with-udevdir', type: 'string', value: 'dynamic', description: 'Directory for udev rules')
