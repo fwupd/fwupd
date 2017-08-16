@@ -235,9 +235,6 @@ struct amt_host_if_resp_header {
 	guchar data[0];
 } __attribute__((packed));
 
-const uuid_le MEI_IAMTHIF = UUID_LE(0x12f80028, 0xb4b7, 0x4b2d,  \
-				0xac, 0xa8, 0x46, 0xe0, 0xff, 0x65, 0x81, 0x4c);
-
 #define AMT_HOST_IF_CODE_VERSIONS_REQUEST  0x0400001A
 #define AMT_HOST_IF_CODE_VERSIONS_RESPONSE 0x0480001A
 
@@ -394,6 +391,9 @@ fu_plugin_amt_create_device (GError **error)
 	g_autofree struct amt_host_if_resp_header *response = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(mei_context) ctx = g_new0 (mei_context, 1);
+
+	const uuid_le MEI_IAMTHIF = UUID_LE(0x12f80028, 0xb4b7, 0x4b2d,  \
+				0xac, 0xa8, 0x46, 0xe0, 0xff, 0x65, 0x81, 0x4c);
 
 	/* create context */
 	if (!mei_context_new (ctx, &MEI_IAMTHIF, 0, error))
