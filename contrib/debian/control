@@ -223,4 +223,5 @@ Depends: ${misc:Depends}
 Priority: extra
 Section: oldlibs
 Description: development files for libebitdo (transitional package)
- This is a transitional package for 0bitdo support that was moved into a plugin.
+ This is a transitional package for the 0bitdo support development patckage
+ that was moved into a plugin.
