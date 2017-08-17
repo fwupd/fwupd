@@ -203,12 +203,12 @@ if get_option('enable-consolekit')
 endif
 
 systemdunitdir = get_option('with-systemdunitdir')
-if systemdunitdir == 'dynamic'
+if systemdunitdir == ''
   systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
 endif
 
 udevdir = get_option('with-udevdir')
-if udevdir == 'dynamic'
+if udevdir == ''
   udevdir = udev.get_pkgconfig_variable('udevdir')
 endif
 
