@@ -7,11 +7,12 @@ export DEBFULLNAME="CI Builder"
 export DEBEMAIL="ci@travis-ci.org"
 VERSION=`git describe | sed 's/-/+r/;s/-/+/'`
 [ -z $VERSION ] && VERSION=`head meson.build | grep ' version :' | cut -d \' -f2`
-
 rm -rf build/
-mkdir -p build && pushd build
-ln -s ../* .
-cp contrib/debian . -R
+mkdir -p build
+shopt -s extglob
+cp -lR !(build) build/
+pushd build
+mv contrib/debian .
 sed s/quilt/native/ debian/source/format -i
 EDITOR=/bin/true dch --create --package fwupd -v $VERSION "CI Build"
 debuild --no-lintian
