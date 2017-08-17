@@ -224,7 +224,7 @@ fu_plugin_tbtfwu_rescan (FuPlugin *plugin, GError **error)
 		fu_device_set_id (info->dev, info->id);
 
 		/* set vendor ID */
-		vendor_id = g_strdup_printf ("TBT:0x%04X", info->vendor_id));
+		vendor_id = g_strdup_printf ("TBT:0x%04X", info->vendor_id);
 		fu_device_set_vendor_id (info->dev, vendor_id);
 
 		/* add GUID that the info firmware uses */
