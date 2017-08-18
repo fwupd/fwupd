@@ -405,8 +405,12 @@ fu_keyring_gpg_func (void)
 
 	/* add keys to keyring */
 	keyring = fu_keyring_gpg_new ();
+	ret = fu_keyring_setup (keyring, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 	pki_dir = fu_test_get_filename (TESTDATADIR, "pki");
-	ret = fu_keyring_setup (keyring, pki_dir, &error);
+	g_assert_nonnull (pki_dir);
+	ret = fu_keyring_add_public_keys (keyring, pki_dir, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
@@ -458,9 +462,12 @@ fu_keyring_pkcs7_func (void)
 
 	/* add keys to keyring */
 	keyring = fu_keyring_pkcs7_new ();
+	ret = fu_keyring_setup (keyring, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 	pki_dir = fu_test_get_filename (TESTDATADIR_DST, "pki");
 	g_assert_nonnull (pki_dir);
-	ret = fu_keyring_setup (keyring, pki_dir, &error);
+	ret = fu_keyring_add_public_keys (keyring, pki_dir, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 

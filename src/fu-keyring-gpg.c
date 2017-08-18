@@ -92,13 +92,11 @@ fu_keyring_gpg_add_public_key (FuKeyringGpg *self,
 }
 
 static gboolean
-fu_keyring_gpg_setup (FuKeyring *keyring, const gchar *public_key_dir, GError **error)
+fu_keyring_gpg_setup (FuKeyring *keyring, GError **error)
 {
 	FuKeyringGpg *self = FU_KEYRING_GPG (keyring);
-	const gchar *fn_tmp;
 	gpgme_error_t rc;
 	g_autofree gchar *gpg_home = NULL;
-	g_autoptr(GDir) dir = NULL;
 
 	if (self->ctx != NULL)
 		return TRUE;
@@ -166,20 +164,30 @@ fu_keyring_gpg_setup (FuKeyring *keyring, const gchar *public_key_dir, GError **
 
 	/* enable armor mode */
 	gpgme_set_armor (self->ctx, TRUE);
+	return TRUE;
+}
+
+static gboolean
+fu_keyring_gpg_add_public_keys (FuKeyring *keyring,
+				const gchar *path,
+				GError **error)
+{
+	FuKeyringGpg *self = FU_KEYRING_GPG (keyring);
+	const gchar *fn_tmp;
+	g_autoptr(GDir) dir = NULL;
 
 	/* search all the public key files */
-	dir = g_dir_open (public_key_dir, 0, error);
+	dir = g_dir_open (path, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	while ((fn_tmp = g_dir_read_name (dir)) != NULL) {
 		g_autofree gchar *path_tmp = NULL;
 		if (!g_str_has_prefix (fn_tmp, "GPG-KEY-"))
 			continue;
-		path_tmp = g_build_filename (public_key_dir, fn_tmp, NULL);
+		path_tmp = g_build_filename (path, fn_tmp, NULL);
 		if (!fu_keyring_gpg_add_public_key (self, path_tmp, error))
 			return FALSE;
 	}
-
 	return TRUE;
 }
 
@@ -327,6 +335,7 @@ fu_keyring_gpg_class_init (FuKeyringGpgClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuKeyringClass *klass_app = FU_KEYRING_CLASS (klass);
 	klass_app->setup = fu_keyring_gpg_setup;
+	klass_app->add_public_keys = fu_keyring_gpg_add_public_keys;
 	klass_app->verify_data = fu_keyring_gpg_verify_data;
 	object_class->finalize = fu_keyring_gpg_finalize;
 }

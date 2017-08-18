@@ -74,34 +74,21 @@ fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
 }
 
 static gboolean
-fu_keyring_pkcs7_setup (FuKeyring *keyring, const gchar *public_key_dir, GError **error)
+fu_keyring_pkcs7_add_public_keys (FuKeyring *keyring,
+				  const gchar *path,
+				  GError **error)
 {
 	FuKeyringPkcs7 *self = FU_KEYRING_PKCS7 (keyring);
 	const gchar *fn_tmp;
-	int rc;
 	g_autoptr(GDir) dir = NULL;
 
-	if (self->tl != NULL)
-		return TRUE;
-
-	/* create trust list, a bit like a keyring */
-	rc = gnutls_x509_trust_list_init (&self->tl, 0);
-	if (rc != GNUTLS_E_SUCCESS) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_SIGNATURE_INVALID,
-			     "failed to create trust list: %s [%i]",
-			     gnutls_strerror (rc), rc);
-		return FALSE;
-	}
-
 	/* search all the public key files */
-	dir = g_dir_open (public_key_dir, 0, error);
+	dir = g_dir_open (path, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	while ((fn_tmp = g_dir_read_name (dir)) != NULL) {
 		g_autofree gchar *path_tmp = NULL;
-		path_tmp = g_build_filename (public_key_dir, fn_tmp, NULL);
+		path_tmp = g_build_filename (path, fn_tmp, NULL);
 		if (g_str_has_suffix (fn_tmp, ".pem")) {
 			if (!fu_keyring_pkcs7_add_public_key (self, path_tmp,
 							      GNUTLS_X509_FMT_PEM,
@@ -117,7 +104,28 @@ fu_keyring_pkcs7_setup (FuKeyring *keyring, const gchar *public_key_dir, GError 
 				return FALSE;
 		}
 	}
+	return TRUE;
+}
 
+static gboolean
+fu_keyring_pkcs7_setup (FuKeyring *keyring, GError **error)
+{
+	FuKeyringPkcs7 *self = FU_KEYRING_PKCS7 (keyring);
+	int rc;
+
+	if (self->tl != NULL)
+		return TRUE;
+
+	/* create trust list, a bit like a keyring */
+	rc = gnutls_x509_trust_list_init (&self->tl, 0);
+	if (rc != GNUTLS_E_SUCCESS) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "failed to create trust list: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -260,6 +268,7 @@ fu_keyring_pkcs7_class_init (FuKeyringPkcs7Class *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuKeyringClass *klass_app = FU_KEYRING_CLASS (klass);
 	klass_app->setup = fu_keyring_pkcs7_setup;
+	klass_app->add_public_keys = fu_keyring_pkcs7_add_public_keys;
 	klass_app->verify_data = fu_keyring_pkcs7_verify_data;
 	object_class->finalize = fu_keyring_pkcs7_finalize;
 }

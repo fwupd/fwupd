@@ -33,12 +33,20 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuKeyring, fu_keyring, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_keyring_get_instance_private (o))
 
 gboolean
-fu_keyring_setup (FuKeyring *keyring, const gchar *public_key_dir, GError **error)
+fu_keyring_setup (FuKeyring *keyring, GError **error)
 {
 	FuKeyringClass *klass = FU_KEYRING_GET_CLASS (keyring);
 	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
-	g_return_val_if_fail (public_key_dir != NULL, FALSE);
-	return klass->setup (keyring, public_key_dir, error);
+	return klass->setup (keyring, error);
+}
+
+gboolean
+fu_keyring_add_public_keys (FuKeyring *keyring, const gchar *path, GError **error)
+{
+	FuKeyringClass *klass = FU_KEYRING_GET_CLASS (keyring);
+	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
+	g_return_val_if_fail (path != NULL, FALSE);
+	return klass->add_public_keys (keyring, path, error);
 }
 
 FuKeyringResult *

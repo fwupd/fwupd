@@ -364,7 +364,9 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 	kr = fu_engine_get_keyring_for_kind (keyring_kind, error);
 	if (kr == NULL)
 		return FALSE;
-	if (!fu_keyring_setup (kr, pki_dir, error))
+	if (!fu_keyring_setup (kr, error))
+		return FALSE;
+	if (!fu_keyring_add_public_keys (kr, pki_dir, error))
 		return FALSE;
 	kr_result = fu_keyring_verify_data (kr, blob_payload, blob_signature, &error_local);
 	if (kr_result == NULL) {
@@ -1524,7 +1526,9 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 		kr = fu_engine_get_keyring_for_kind (keyring_kind, error);
 		if (kr == NULL)
 			return FALSE;
-		if (!fu_keyring_setup (kr, "/etc/pki/fwupd-metadata", error))
+		if (!fu_keyring_setup (kr, error))
+			return FALSE;
+		if (!fu_keyring_add_public_keys (kr, "/etc/pki/fwupd-metadata", error))
 			return FALSE;
 		kr_result = fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error);
 		if (kr_result == NULL)

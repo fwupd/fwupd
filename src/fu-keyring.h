@@ -36,7 +36,9 @@ struct _FuKeyringClass
 {
 	GObjectClass		 parent_class;
 	gboolean		 (*setup)		(FuKeyring	*keyring,
-							 const gchar	*public_key_dir,
+							 GError		**error);
+	gboolean		 (*add_public_keys)	(FuKeyring	*keyring,
+							 const gchar	*path,
 							 GError		**error);
 	FuKeyringResult		*(*verify_data)		(FuKeyring	*keyring,
 							 GBytes		*payload,
@@ -45,7 +47,9 @@ struct _FuKeyringClass
 };
 
 gboolean	 fu_keyring_setup			(FuKeyring	*keyring,
-							 const gchar	*public_key_dir,
+							 GError		**error);
+gboolean	 fu_keyring_add_public_keys		(FuKeyring	*keyring,
+							 const gchar	*path,
 							 GError		**error);
 FuKeyringResult	*fu_keyring_verify_data			(FuKeyring	*keyring,
 							 GBytes		*blob,
