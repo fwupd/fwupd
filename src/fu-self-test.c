@@ -452,12 +452,14 @@ fu_keyring_pkcs7_func (void)
 	g_autofree gchar *fw_pass = NULL;
 	g_autofree gchar *pki_dir = NULL;
 	g_autofree gchar *sig_fn = NULL;
+	g_autofree gchar *sig_fn2 = NULL;
 	g_autoptr(FuKeyring) keyring = NULL;
 	g_autoptr(FuKeyringResult) result_fail = NULL;
 	g_autoptr(FuKeyringResult) result_pass = NULL;
 	g_autoptr(GBytes) blob_fail = NULL;
 	g_autoptr(GBytes) blob_pass = NULL;
 	g_autoptr(GBytes) blob_sig = NULL;
+	g_autoptr(GBytes) blob_sig2 = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* add keys to keyring */
@@ -465,19 +467,19 @@ fu_keyring_pkcs7_func (void)
 	ret = fu_keyring_setup (keyring, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
-	pki_dir = fu_test_get_filename (TESTDATADIR_DST, "pki");
+	pki_dir = fu_test_get_filename (TESTDATADIR_SRC, "pki");
 	g_assert_nonnull (pki_dir);
 	ret = fu_keyring_add_public_keys (keyring, pki_dir, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
-	/* verify with GnuTLS */
-	fw_pass = fu_test_get_filename (TESTDATADIR, "colorhug/firmware.bin");
+	/* verify with a signature from the old LVFS */
+	fw_pass = fu_test_get_filename (TESTDATADIR_SRC, "colorhug/firmware.bin");
 	g_assert_nonnull (fw_pass);
 	blob_pass = fu_common_get_contents_bytes (fw_pass, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_pass);
-	sig_fn = fu_test_get_filename (TESTDATADIR, "colorhug/firmware.bin.p7b");
+	sig_fn = fu_test_get_filename (TESTDATADIR_SRC, "colorhug/firmware.bin.p7b");
 	g_assert_nonnull (sig_fn);
 	blob_sig = fu_common_get_contents_bytes (sig_fn, &error);
 	g_assert_no_error (error);
@@ -486,9 +488,20 @@ fu_keyring_pkcs7_func (void)
 	g_assert_no_error (error);
 	g_assert_nonnull (result_pass);
 	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), >= , 1502871248);
-	g_assert_cmpstr (fu_keyring_result_get_authority (result_pass), == , "O=Hughski Limited");
+	g_assert_cmpstr (fu_keyring_result_get_authority (result_pass), == , "O=Linux Vendor Firmware Project,CN=LVFS CA");
 
-	/* verify will fail with GnuTLS */
+	/* verify will fail with a self-signed signature */
+	sig_fn2 = fu_test_get_filename (TESTDATADIR_DST, "colorhug/firmware.bin.p7c");
+	g_assert_nonnull (sig_fn2);
+	blob_sig2 = fu_common_get_contents_bytes (sig_fn2, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (blob_sig2);
+	result_fail = fu_keyring_verify_data (keyring, blob_pass, blob_sig2, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
+	g_assert_null (result_fail);
+	g_clear_error (&error);
+
+	/* verify will fail with valid signature and different data */
 	fw_fail = fu_test_get_filename (TESTDATADIR, "colorhug/colorhug-als-3.0.2.cab");
 	g_assert_nonnull (fw_fail);
 	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);

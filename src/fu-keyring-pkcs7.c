@@ -56,6 +56,7 @@ fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
 	}
 	datum.data = (guint8 *) pem_data;
 	datum.size = sz;
+	g_debug ("trying to load CA from %s", filename);
 	rc = gnutls_x509_trust_list_add_trust_mem (self->tl, &datum,
 						   NULL, /* crls */
 						   format,

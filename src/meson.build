@@ -178,6 +178,7 @@ if get_option('enable-tests')
     ],
     c_args : [
       cargs,
+      '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
       '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
       '-DLOCALSTATEDIR="/tmp/fwupd-self-test/var"',
