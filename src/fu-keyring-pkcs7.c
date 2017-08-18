@@ -36,6 +36,7 @@ struct _FuKeyringPkcs7
 G_DEFINE_TYPE (FuKeyringPkcs7, fu_keyring_pkcs7, FU_TYPE_KEYRING)
 
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_pkcs7_t, gnutls_pkcs7_deinit, NULL)
+G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_crt_t, gnutls_x509_crt_deinit, NULL)
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_dn_t, gnutls_x509_dn_deinit, NULL)
 
 static gboolean
@@ -48,6 +49,7 @@ fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
 	gsize sz;
 	int rc;
 	g_autofree gchar *pem_data = NULL;
+	g_auto(gnutls_x509_crt_t) cert = NULL;
 
 	/* load file and add to the trust list */
 	if (!g_file_get_contents (filename, &pem_data, &sz, error)) {
@@ -57,11 +59,33 @@ fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
 	datum.data = (guint8 *) pem_data;
 	datum.size = sz;
 	g_debug ("trying to load CA from %s", filename);
-	rc = gnutls_x509_trust_list_add_trust_mem (self->tl, &datum,
-						   NULL, /* crls */
-						   format,
-						   0, /* tl_flags */
-						   0); /* tl_vflags */
+	rc = gnutls_x509_crt_init (&cert);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "failed to initialize certificate: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+	rc = gnutls_x509_crt_import (cert, &datum, format);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "failed to import certificate: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+	if (gnutls_x509_crt_check_key_purpose (cert, GNUTLS_KP_ANY, 0) != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "certificate %s not suitable for use",
+			     filename);
+		return FALSE;
+	}
+	rc = gnutls_x509_trust_list_add_cas (self->tl, &cert, 1, 0);
 	if (rc < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -71,6 +95,9 @@ fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
 		return FALSE;
 	}
 	g_debug ("loaded %i CAs", rc);
+
+	/* confusingly the trust list does not copy the certificate */
+	cert = NULL;
 	return TRUE;
 }
 
