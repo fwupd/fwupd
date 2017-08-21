@@ -117,9 +117,10 @@ fu_progressbar_refresh (FuProgressbar *self)
 		for (i = i + 1; i < self->length_percentage; i++)
 			g_string_append_c (str, ' ');
 	} else {
+		const gchar chars[] = { '-', '\\', '|', '/', };
 		for (i = 0; i < self->spinner_idx; i++)
 			g_string_append_c (str, ' ');
-		g_string_append_c (str, '*');
+		g_string_append_c (str, chars[i / 4 % G_N_ELEMENTS(chars)]);
 		for (i = i + 1; i < self->length_percentage; i++)
 			g_string_append_c (str, ' ');
 	}
