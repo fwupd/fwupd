@@ -39,6 +39,7 @@
 #include "fu-hwids.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
+#include "fu-progressbar.h"
 #include "fwupd-common-private.h"
 
 #ifndef GUdevClient_autoptr
@@ -58,6 +59,7 @@ typedef struct {
 	GPtrArray		*cmd_array;
 	FwupdInstallFlags	 flags;
 	FwupdClient		*client;
+	FuProgressbar		*progressbar;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -179,98 +181,14 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 	return FALSE;
 }
 
-static const gchar *
-fu_util_status_to_string (FwupdStatus status)
-{
-	switch (status) {
-	case FWUPD_STATUS_IDLE:
-		/* TRANSLATORS: daemon is inactive */
-		return _("Idle…");
-		break;
-	case FWUPD_STATUS_DECOMPRESSING:
-		/* TRANSLATORS: decompressing the firmware file */
-		return _("Decompressing…");
-		break;
-	case FWUPD_STATUS_LOADING:
-		/* TRANSLATORS: parsing the firmware information */
-		return _("Loading…");
-		break;
-	case FWUPD_STATUS_DEVICE_RESTART:
-		/* TRANSLATORS: restarting the device to pick up new F/W */
-		return _("Restarting device…");
-		break;
-	case FWUPD_STATUS_DEVICE_WRITE:
-		/* TRANSLATORS: writing to the flash chips */
-		return _("Writing…");
-		break;
-	case FWUPD_STATUS_DEVICE_VERIFY:
-		/* TRANSLATORS: verifying we wrote the firmware correctly */
-		return _("Verifying…");
-		break;
-	case FWUPD_STATUS_SCHEDULING:
-		/* TRANSLATORS: scheduing an update to be done on the next boot */
-		return _("Scheduling…");
-		break;
-	case FWUPD_STATUS_DOWNLOADING:
-		/* TRANSLATORS: downloading from a remote server */
-		return _("Downloading…");
-		break;
-	default:
-		break;
-	}
-
-	/* TRANSLATORS: currect daemon status is unknown */
-	return _("Unknown");
-}
-
-static void
-fu_util_display_percentage (FwupdStatus status, guint percentage)
-{
-	const gchar *title;
-	const guint progressbar_len = 40;
-	const guint title_len = 25;
-	guint i;
-	static guint to_erase = 0;
-	g_autoptr(GString) str = g_string_new (NULL);
-
-	/* erase previous line */
-	for (i = 0; i < to_erase; i++)
-		g_print ("\b");
-
-	/* add status */
-	if (status == FWUPD_STATUS_IDLE) {
-		if (to_erase > 0)
-			g_print ("\n");
-		to_erase = 0;
-		return;
-	}
-	title = fu_util_status_to_string (status);
-	g_string_append (str, title);
-	for (i = str->len; i < title_len; i++)
-		g_string_append (str, " ");
-
-	/* add progressbar */
-	if (percentage > 0) {
-		g_string_append (str, "[");
-		for (i = 0; i < progressbar_len * percentage / 100; i++)
-			g_string_append (str, "*");
-		for (i = i + 1; i < progressbar_len; i++)
-			g_string_append (str, " ");
-		g_string_append (str, "]");
-	}
-
-	/* dump to screen */
-	g_print ("%s", str->str);
-	to_erase = str->len;
-}
-
 static void
 fu_util_client_notify_cb (GObject *object,
 			  GParamSpec *pspec,
 			  FuUtilPrivate *priv)
 {
-	fu_util_display_percentage (fwupd_client_get_status (priv->client),
-				    fwupd_client_get_percentage (priv->client));
+	fu_progressbar_update (priv->progressbar,
+			       fwupd_client_get_status (priv->client),
+			       fwupd_client_get_percentage (priv->client));
 }
 
 static void
@@ -710,6 +628,7 @@ fu_util_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_da
 	guint percentage;
 	goffset header_size;
 	goffset body_length;
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
 
 	/* if it's returning "Found" or an error, ignore the percentage */
 	if (msg->status_code != SOUP_STATUS_OK) {
@@ -729,7 +648,7 @@ fu_util_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_da
 	/* calulate percentage */
 	percentage = (guint) ((100 * body_length) / header_size);
 	g_debug ("progress: %u%%", percentage);
-	fu_util_display_percentage (FWUPD_STATUS_DOWNLOADING, percentage);
+	fu_progressbar_update (priv->progressbar, FWUPD_STATUS_DOWNLOADING, percentage);
 }
 
 static gboolean
@@ -1623,6 +1542,7 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->client);
 	g_main_loop_unref (priv->loop);
 	g_object_unref (priv->cancellable);
+	g_object_unref (priv->progressbar);
 	g_option_context_free (priv->context);
 	g_free (priv);
 }
@@ -1676,6 +1596,7 @@ main (int argc, char *argv[])
 	/* create helper object */
 	priv = g_new0 (FuUtilPrivate, 1);
 	priv->loop = g_main_loop_new (NULL, FALSE);
+	priv->progressbar = fu_progressbar_new ();
 
 	/* add commands */
 	priv->cmd_array = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_util_item_free);
