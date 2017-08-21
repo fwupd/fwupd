@@ -39,8 +39,6 @@ Build-Depends: debhelper (>= 10.3),
                libsoup2.4-dev,
                libsqlite3-dev,
                libsmbios-dev [amd64 i386],
-#disabled until ITP 855065 is done
-#              libtbtfwu-dev,
                libtool-bin,
                meson,
                pkg-config,
