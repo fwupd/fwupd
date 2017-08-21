@@ -1061,6 +1061,15 @@ fu_engine_install (FuEngine *self,
 		blob_fw2 = g_bytes_ref (blob_fw);
 	}
 
+	/* test the firmware is not an empty blob */
+	if (g_bytes_get_size (blob_fw2) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Firmware is invalid as has zero size");
+		return FALSE;
+	}
+
 	version = as_release_get_version (rel);
 	fu_device_set_update_version (item->device, version);
 
