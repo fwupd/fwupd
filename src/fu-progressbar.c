@@ -43,7 +43,7 @@ struct _FuProgressbar
 G_DEFINE_TYPE (FuProgressbar, fu_progressbar, G_TYPE_OBJECT)
 
 static const gchar *
-fu_util_status_to_string (FwupdStatus status)
+fu_progressbar_status_to_string (FwupdStatus status)
 {
 	switch (status) {
 	case FWUPD_STATUS_IDLE:
@@ -104,7 +104,7 @@ fu_progressbar_refresh (FuProgressbar *self)
 		self->to_erase = 0;
 		return;
 	}
-	title = fu_util_status_to_string (self->status);
+	title = fu_progressbar_status_to_string (self->status);
 	g_string_append (str, title);
 	for (i = str->len; i < self->length_status; i++)
 		g_string_append_c (str, ' ');
