@@ -107,23 +107,23 @@ fu_progressbar_refresh (FuProgressbar *self)
 	title = fu_util_status_to_string (self->status);
 	g_string_append (str, title);
 	for (i = str->len; i < self->length_status; i++)
-		g_string_append (str, " ");
+		g_string_append_c (str, ' ');
 
 	/* add progressbar */
 	g_string_append (str, "[");
 	if (self->percentage > 0) {
 		for (i = 0; i < self->length_percentage * self->percentage / 100; i++)
-			g_string_append (str, "*");
+			g_string_append_c (str, '*');
 		for (i = i + 1; i < self->length_percentage; i++)
-			g_string_append (str, " ");
+			g_string_append_c (str, ' ');
 	} else {
 		for (i = 0; i < self->spinner_idx; i++)
-			g_string_append (str, " ");
-		g_string_append (str, "*");
+			g_string_append_c (str, ' ');
+		g_string_append_c (str, '*');
 		for (i = i + 1; i < self->length_percentage; i++)
-			g_string_append (str, " ");
+			g_string_append_c (str, ' ');
 	}
-	g_string_append (str, "]");
+	g_string_append_c (str, ']');
 
 	/* dump to screen */
 	g_print ("%s", str->str);
