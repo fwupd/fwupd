@@ -13,10 +13,6 @@ if get_option('enable-amt')
 subdir('amt')
 endif
 
-if get_option('enable-tbtfwu') and tbtfwu.found()
-subdir('tbtfwu')
-endif
-
 if get_option('enable-thunderbolt') and udev.found()
 subdir('thunderbolt')
 endif
