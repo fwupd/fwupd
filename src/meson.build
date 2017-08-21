@@ -53,6 +53,7 @@ libfwupdprivate = static_library(
 executable(
   'fwupdmgr',
   sources : [
+    'fu-progressbar.c',
     'fu-util.c',
   ],
   include_directories : [

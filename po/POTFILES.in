@@ -5,4 +5,5 @@ plugins/synapticsmst/synapticsmst-tool.c
 plugins/uefi/fu-plugin-uefi.c
 src/fu-debug.c
 src/fu-main.c
+src/fu-progressbar.c
 src/fu-util.c
