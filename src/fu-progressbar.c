@@ -93,8 +93,6 @@ fu_progressbar_refresh (FuProgressbar *self)
 	guint i;
 	g_autoptr(GString) str = g_string_new (NULL);
 
-	g_return_if_fail (FU_IS_PROGRESSBAR (self));
-
 	/* erase previous line */
 	for (i = 0; i < self->to_erase; i++)
 		g_print ("\b");
@@ -196,12 +194,16 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 void
 fu_progressbar_set_length_status (FuProgressbar *self, guint len)
 {
+	g_return_if_fail (FU_IS_PROGRESSBAR (self));
+	g_return_if_fail (len > 3);
 	self->length_status = len;
 }
 
 void
 fu_progressbar_set_length_percentage (FuProgressbar *self, guint len)
 {
+	g_return_if_fail (FU_IS_PROGRESSBAR (self));
+	g_return_if_fail (len > 3);
 	self->length_percentage = len;
 }
 
