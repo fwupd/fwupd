@@ -111,14 +111,47 @@ fwupd_remote_download_func (void)
 	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_GPG);
 	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
 	g_assert (fwupd_remote_get_enabled (remote));
-	g_assert (fwupd_remote_get_uri (remote) != NULL);
-	g_assert (fwupd_remote_get_uri_asc (remote) != NULL);
+	g_assert (fwupd_remote_get_metadata_uri (remote) != NULL);
+	g_assert (fwupd_remote_get_metadata_uri_sig (remote) != NULL);
 	g_assert_cmpstr (fwupd_remote_get_filename (remote), ==, "lvfs-firmware.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_filename_asc (remote), ==, "lvfs-firmware.xml.gz.asc");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==,
 			 LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==,
 			 LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz.asc");
+}
+
+/* verify we used the FirmwareBaseURI just for firmware */
+static void
+fwupd_remote_baseuri_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *firmware_uri_str = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(SoupURI) firmware_uri = NULL;
+
+	remote = fwupd_remote_new ();
+	fn = g_build_filename (TESTDATADIR, "tests", "firmware-base-uri.conf", NULL);
+	ret = fwupd_remote_load_from_filename (remote, fn, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (fwupd_remote_get_kind (remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
+	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_GPG);
+	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
+	g_assert (fwupd_remote_get_enabled (remote));
+	g_assert_cmpstr (fwupd_remote_get_metadata_uri (remote), ==,
+			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz");
+	g_assert_cmpstr (fwupd_remote_get_metadata_uri_sig (remote), ==,
+			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz.asc");
+
+	firmware_uri = fwupd_remote_build_uri (remote, "http://bbc.co.uk/firmware.cab", &error);
+	g_assert_no_error (error);
+	g_assert (firmware_uri != NULL);
+	firmware_uri_str = soup_uri_to_string (firmware_uri, FALSE);
+	g_assert_cmpstr (firmware_uri_str, ==,
+			 "https://my.fancy.cdn/firmware.cab");
 }
 
 static void
@@ -137,8 +170,8 @@ fwupd_remote_local_func (void)
 	g_assert_cmpint (fwupd_remote_get_kind (remote), ==, FWUPD_REMOTE_KIND_LOCAL);
 	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_NONE);
 	g_assert (fwupd_remote_get_enabled (remote));
-	g_assert (fwupd_remote_get_uri (remote) == NULL);
-	g_assert (fwupd_remote_get_uri_asc (remote) == NULL);
+	g_assert (fwupd_remote_get_metadata_uri (remote) == NULL);
+	g_assert (fwupd_remote_get_metadata_uri_sig (remote) == NULL);
 	g_assert_cmpstr (fwupd_remote_get_filename (remote), ==, NULL);
 	g_assert_cmpstr (fwupd_remote_get_filename_asc (remote), ==, NULL);
 	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==, "@datadir@/fwupd/remotes.d/fwupd/metadata.xml");
@@ -256,7 +289,7 @@ fwupd_client_remotes_func (void)
 	g_assert (remote2 != NULL);
 	g_assert_cmpstr (fwupd_remote_get_id (remote2), ==, "lvfs");
 	g_assert (fwupd_remote_get_enabled (remote2));
-	g_assert (fwupd_remote_get_uri (remote2) != NULL);
+	g_assert (fwupd_remote_get_metadata_uri (remote2) != NULL);
 
 	/* check we set an error when unfound */
 	remote3 = fwupd_client_get_remote_by_id (client, "XXXX", NULL, &error);
@@ -317,6 +350,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
 	g_test_add_func ("/fwupd/result", fwupd_result_func);
 	g_test_add_func ("/fwupd/remote{download}", fwupd_remote_download_func);
+	g_test_add_func ("/fwupd/remote{base-uri}", fwupd_remote_baseuri_func);
 	g_test_add_func ("/fwupd/remote{local}", fwupd_remote_local_func);
 	if (fwupd_has_system_bus ()) {
 		g_test_add_func ("/fwupd/client{remotes}", fwupd_client_remotes_func);

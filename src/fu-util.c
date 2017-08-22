@@ -782,20 +782,22 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	g_autofree gchar *cache_dir = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *filename_asc = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+	g_autoptr(SoupURI) uri_sig = NULL;
 
 	/* download the metadata */
 	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
 	filename = g_build_filename (cache_dir, fwupd_remote_get_filename (remote), NULL);
 	if (!fu_common_mkdir_parent (filename, error))
 		return FALSE;
-	if (!fu_util_download_file (priv, fwupd_remote_get_uri (remote),
-				    filename, NULL, error))
+	uri = soup_uri_new (fwupd_remote_get_metadata_uri (remote));
+	if (!fu_util_download_file (priv, uri, filename, NULL, error))
 		return FALSE;
 
 	/* download the signature */
 	filename_asc = g_build_filename (cache_dir, fwupd_remote_get_filename_asc (remote), NULL);
-	if (!fu_util_download_file (priv, fwupd_remote_get_uri_asc (remote),
-				    filename_asc, NULL, error))
+	uri_sig = soup_uri_new (fwupd_remote_get_metadata_uri_sig (remote));
+	if (!fu_util_download_file (priv, uri_sig, filename_asc, NULL, error))
 		return FALSE;
 
 	/* send all this to fwupd */
@@ -1098,7 +1100,6 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
 		FwupdRemoteKind kind = fwupd_remote_get_kind (remote);
 		FwupdKeyringKind keyring_kind = fwupd_remote_get_keyring_kind (remote);
-		SoupURI *uri;
 		const gchar *tmp;
 		gint priority;
 		gdouble age;
@@ -1184,17 +1185,20 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 			/* TRANSLATORS: locatation of the local file */
 			fu_util_print_data (_("Location Signature"), tmp);
 		}
-		uri = fwupd_remote_get_uri (remote);
-		if (uri != NULL) {
-			g_autofree gchar *uri_str = soup_uri_to_string (uri, FALSE);
+		tmp = fwupd_remote_get_metadata_uri (remote);
+		if (tmp != NULL) {
 			/* TRANSLATORS: remote URI */
-			fu_util_print_data (_("Metadata URI"), uri_str);
+			fu_util_print_data (_("Metadata URI"), tmp);
 		}
-		uri = fwupd_remote_get_uri_asc (remote);
-		if (uri != NULL) {
-			g_autofree gchar *uri_str = soup_uri_to_string (uri, FALSE);
+		tmp = fwupd_remote_get_metadata_uri_sig (remote);
+		if (tmp != NULL) {
 			/* TRANSLATORS: remote URI */
-			fu_util_print_data (_("Metadata URI Signature"), uri_str);
+			fu_util_print_data (_("Metadata URI Signature"), tmp);
+		}
+		tmp = fwupd_remote_get_firmware_base_uri (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: remote URI */
+			fu_util_print_data (_("Firmware Base URI"), tmp);
 		}
 
 		/* newline */

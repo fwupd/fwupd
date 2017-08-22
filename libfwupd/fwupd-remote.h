@@ -50,16 +50,26 @@ const gchar	*fwupd_remote_get_username		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_password		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename_cache	(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename_cache_sig	(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_firmware_base_uri	(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_metadata_uri		(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_metadata_uri_sig	(FwupdRemote	*self);
 gboolean	 fwupd_remote_get_enabled		(FwupdRemote	*self);
 gint		 fwupd_remote_get_priority		(FwupdRemote	*self);
 guint64		 fwupd_remote_get_age			(FwupdRemote	*self);
 FwupdRemoteKind	 fwupd_remote_get_kind			(FwupdRemote	*self);
 FwupdKeyringKind fwupd_remote_get_keyring_kind		(FwupdRemote	*self);
-SoupURI		*fwupd_remote_get_uri			(FwupdRemote	*self);
-SoupURI		*fwupd_remote_get_uri_asc		(FwupdRemote	*self);
+gchar		*fwupd_remote_build_firmware_uri	(FwupdRemote	*self,
+							 const gchar	*url,
+							 GError		**error);
 SoupURI		*fwupd_remote_build_uri			(FwupdRemote	*self,
 							 const gchar	*url,
 							 GError		**error);
+
+/* deprecated */
+SoupURI		*fwupd_remote_get_uri			(FwupdRemote	*self)
+G_DEPRECATED_FOR(fwupd_remote_get_metadata_uri);
+SoupURI		*fwupd_remote_get_uri_asc		(FwupdRemote	*self)
+G_DEPRECATED_FOR(fwupd_remote_get_metadata_uri_sig);
 
 G_END_DECLS
 
