@@ -1,9 +1,10 @@
-FROM ubuntu:zesty
+FROM ubuntu:devel
 
 RUN apt-get update -qq
 RUN apt-get install -yq --no-install-recommends \
 	debhelper \
 	devscripts \
+	fakeroot \
 	docbook-utils \
 	fontconfig \
 	fontconfig-config \
@@ -40,6 +41,7 @@ RUN apt-get install -yq --no-install-recommends \
 	libsoup2.4-dev \
 	libsqlite3-dev \
 	libtool-bin \
+	libumockdev-dev \
 	lintian \
 	meson \
 	pkg-config \
@@ -47,6 +49,7 @@ RUN apt-get install -yq --no-install-recommends \
 	python3-gi-cairo \
 	python3-pil \
 	udev \
+	umockdev \
 	systemd \
 	valgrind
 #deps needed only for installed tests
