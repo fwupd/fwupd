@@ -1,9 +1,12 @@
-install_data([
-    'lvfs.conf',
-    'lvfs-testing.conf',
-  ],
-  install_dir : join_paths(get_option('sysconfdir'), 'fwupd', 'remotes.d')
-)
+if get_option('enable-lvfs')
+  install_data([
+      'lvfs.conf',
+      'lvfs-testing.conf',
+    ],
+    install_dir : join_paths(get_option('sysconfdir'), 'fwupd', 'remotes.d')
+  )
+endif
+
 install_data('README.md',
   install_dir : join_paths(get_option('datadir'), 'fwupd', 'remotes.d', 'vendor', 'firmware')
 )
