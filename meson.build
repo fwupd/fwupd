@@ -203,7 +203,7 @@ if get_option('enable-consolekit')
 endif
 
 systemdunitdir = get_option('with-systemdunitdir')
-if systemdunitdir == ''
+if systemdunitdir == '' and get_option('enable-systemd')
   systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
 endif
 
