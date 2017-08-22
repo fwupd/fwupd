@@ -552,7 +552,7 @@ fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
  *
  * Gets the URI for the remote metadata.
  *
- * Returns: a #SoupURI, or %NULL for invalid.
+ * Returns: (transfer none): a #SoupURI, or %NULL for invalid.
  *
  * Since: 0.9.3
  **/
@@ -569,7 +569,7 @@ fwupd_remote_get_uri (FwupdRemote *self)
  *
  * Gets the URI for the remote signature.
  *
- * Returns: a #SoupURI, or %NULL for invalid.
+ * Returns: (transfer none): a #SoupURI, or %NULL for invalid.
  *
  * Since: 0.9.3
  **/
