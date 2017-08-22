@@ -229,10 +229,24 @@ fu_engine_get_sysconfig_dir (void)
 }
 
 static void
-fu_engine_set_release_from_item (FwupdRelease *rel, AsRelease *release)
+fu_engine_set_release_from_appstream (FuEngine *self, FwupdRelease *rel,
+				      AsApp *app, AsRelease *release)
 {
 	AsChecksum *csum;
+	FwupdRemote *remote = NULL;
+	const gchar *remote_id;
 	const gchar *tmp;
+
+	/* find the remote */
+	remote_id = as_app_get_metadata_item (app, "fwupd::RemoteID");
+	if (remote_id != NULL) {
+		remote = fu_config_get_remote_by_id (self->config, remote_id);
+		if (remote == NULL)
+			g_warning ("failed to find remote %s", remote_id);
+	} else {
+		g_warning ("no fwupd::RemoteID set on %s",
+			   as_app_get_unique_id (app));
+	}
 
 	tmp = as_release_get_version (release);
 	if (tmp != NULL)
@@ -241,8 +255,14 @@ fu_engine_set_release_from_item (FwupdRelease *rel, AsRelease *release)
 	if (tmp != NULL)
 		fwupd_release_set_description (rel, tmp);
 	tmp = as_release_get_location_default (release);
-	if (tmp != NULL)
-		fwupd_release_set_uri (rel, tmp);
+	if (tmp != NULL) {
+		g_autofree gchar *uri = NULL;
+		if (remote != NULL)
+			uri = fwupd_remote_build_firmware_uri (remote, tmp, NULL);
+		if (uri == NULL)
+			uri = g_strdup (tmp);
+		fwupd_release_set_uri (rel, uri);
+	}
 	csum = as_release_get_checksum_by_target (release, AS_CHECKSUM_TARGET_CONTENT);
 	if (csum != NULL) {
 		tmp = as_checksum_get_filename (csum);
@@ -1681,7 +1701,9 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 		fu_device_set_unique_id (item->device, tmp);
 
 	/* add release information */
-	fu_engine_set_release_from_item (fwupd_result_get_release (FWUPD_RESULT (item->device)), release);
+	fu_engine_set_release_from_appstream (self,
+					      fwupd_result_get_release (FWUPD_RESULT (item->device)),
+					      app, release);
 
 	/* get the list of releases newer than the one installed */
 	updates_list = g_ptr_array_new ();
@@ -1833,7 +1855,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	fwupd_release_set_vendor (rel, as_app_get_developer_name (app, NULL));
 	fwupd_result_set_unique_id (res, as_app_get_unique_id (app));
 	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
-	fu_engine_set_release_from_item (rel, release);
+	fu_engine_set_release_from_appstream (self, rel, app, release);
 	return g_steal_pointer (&res);
 }
 
@@ -2032,7 +2054,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 		for (guint j = 0; j < releases_tmp->len; j++) {
 			AsRelease *release = g_ptr_array_index (releases_tmp, j);
 			FwupdRelease *rel = fwupd_release_new ();
-			fu_engine_set_release_from_item (rel, release);
+			fu_engine_set_release_from_appstream (self, rel, app, release);
 			g_ptr_array_add (releases, g_object_ref (rel));
 		}
 	}

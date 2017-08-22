@@ -32,7 +32,9 @@ struct _FwupdRemote
 	FwupdRemoteKind		 kind;
 	FwupdKeyringKind	 keyring_kind;
 	gchar			*id;
+	gchar			*firmware_base_uri;
 	gchar			*metadata_uri;
+	gchar			*metadata_uri_sig;
 	gchar			*username;
 	gchar			*password;
 	gchar			*filename;
@@ -135,11 +137,18 @@ fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
 	/* generate the signature URI too */
 	suffix = fwupd_remote_get_suffix_for_keyring_kind (self->keyring_kind);
 	if (suffix != NULL) {
-		g_autofree gchar *url_asc = g_strconcat (metadata_uri, suffix, NULL);
-		self->uri_asc = fwupd_remote_build_uri (self, url_asc, NULL);
+		self->metadata_uri_sig = g_strconcat (metadata_uri, suffix, NULL);
+		self->uri_asc = fwupd_remote_build_uri (self, self->metadata_uri_sig, NULL);
 		basename_asc = g_path_get_basename (soup_uri_get_path (self->uri_asc));
 		self->filename_asc = g_strdup_printf ("%s-%s", self->id, basename_asc);
 	}
+}
+
+/* note, this has to be set after MetadataURI */
+static void
+fwupd_remote_set_firmware_base_uri (FwupdRemote *self, const gchar *firmware_base_uri)
+{
+	self->firmware_base_uri = g_strdup (firmware_base_uri);
 }
 
 /**
@@ -222,6 +231,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 				 GError **error)
 {
 	const gchar *group = "fwupd Remote";
+	g_autofree gchar *firmware_base_uri = NULL;
 	g_autofree gchar *id = NULL;
 	g_autofree gchar *keyring_kind = NULL;
 	g_autofree gchar *metadata_uri = NULL;
@@ -325,6 +335,11 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 			filename_cache += 7;
 		fwupd_remote_set_filename_cache (self, filename_cache);
 	}
+
+	/* the base URI is optional */
+	firmware_base_uri = g_key_file_get_string (kf, group, "FirmwareBaseURI", NULL);
+	if (firmware_base_uri != NULL)
+		fwupd_remote_set_firmware_base_uri (self, firmware_base_uri);
 
 	/* dep logic */
 	order_before = g_key_file_get_string (kf, group, "OrderBefore", NULL);
@@ -510,7 +525,8 @@ fwupd_remote_get_filename_asc (FwupdRemote *self)
  * @url: the URL to use
  * @error: the #GError, or %NULL
  *
- * Builds a URI for the URL using the username and password set for the remote.
+ * Builds a URI for the URL using the username and password set for the remote,
+ * including any basename URI substitution.
  *
  * Returns: (transfer full): a #SoupURI, or %NULL for error
  *
@@ -525,14 +541,38 @@ fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 	g_return_val_if_fail (url != NULL, NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	/* create URI */
-	uri = soup_uri_new (url);
-	if (uri == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to parse URI '%s'", url);
-		return NULL;
+	/* create URI, substituting if required */
+	if (self->firmware_base_uri != NULL) {
+		g_autoptr(SoupURI) uri_tmp = NULL;
+		g_autofree gchar *basename = NULL;
+		g_autofree gchar *url2 = NULL;
+		uri_tmp = soup_uri_new (url);
+		if (uri_tmp == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse URI '%s'", url);
+			return NULL;
+		}
+		basename = g_path_get_basename (soup_uri_get_path (uri_tmp));
+		url2 = g_build_filename (self->firmware_base_uri, basename, NULL);
+		uri = soup_uri_new (url2);
+		if (uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse URI '%s'", url2);
+			return NULL;
+		}
+	} else {
+		uri = soup_uri_new (url);
+		if (uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse URI '%s'", url);
+			return NULL;
+		}
 	}
 
 	/* set the username and password from the metadata URI */
@@ -541,6 +581,28 @@ fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 		soup_uri_set_password (uri, soup_uri_get_password (self->uri));
 	}
 	return uri;
+}
+
+/**
+ * fwupd_remote_build_firmware_uri:
+ * @self: A #FwupdRemote
+ * @url: the URL to use
+ * @error: the #GError, or %NULL
+ *
+ * Builds a URI for the URL using the username and password set for the remote,
+ * including any basename URI substitution.
+ *
+ * Returns: (transfer full): a URI, or %NULL for error
+ *
+ * Since: 0.9.7
+ **/
+gchar *
+fwupd_remote_build_firmware_uri (FwupdRemote *self, const gchar *url, GError **error)
+{
+	g_autoptr(SoupURI) uri = fwupd_remote_build_uri (self, url, error);
+	if (uri == NULL)
+		return NULL;
+	return soup_uri_to_string (uri, FALSE);
 }
 
 /**
@@ -575,6 +637,57 @@ fwupd_remote_get_uri_asc (FwupdRemote *self)
 {
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 	return self->uri_asc;
+}
+
+/**
+ * fwupd_remote_get_metadata_uri:
+ * @self: A #FwupdRemote
+ *
+ * Gets the URI for the remote metadata.
+ *
+ * Returns: (transfer none): a URI, or %NULL for invalid.
+ *
+ * Since: 0.9.7
+ **/
+const gchar *
+fwupd_remote_get_metadata_uri (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->metadata_uri;
+}
+
+/**
+ * fwupd_remote_get_metadata_uri_sig:
+ * @self: A #FwupdRemote
+ *
+ * Gets the URI for the remote metadata signature.
+ *
+ * Returns: (transfer none): a URI, or %NULL for invalid.
+ *
+ * Since: 0.9.7
+ **/
+const gchar *
+fwupd_remote_get_metadata_uri_sig (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->metadata_uri_sig;
+}
+
+/**
+ * fwupd_remote_get_firmware_base_uri:
+ * @self: A #FwupdRemote
+ *
+ * Gets the base URI for firmware.
+ *
+ * Returns: (transfer none): a URI, or %NULL for unset.
+ *
+ * Since: 0.9.7
+ **/
+const gchar *
+fwupd_remote_get_firmware_base_uri (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->firmware_base_uri;
 }
 
 /**
@@ -629,6 +742,10 @@ fwupd_remote_to_variant_builder (FwupdRemote *self, GVariantBuilder *builder)
 	if (self->metadata_uri != NULL) {
 		g_variant_builder_add (builder, "{sv}", "Url",
 				       g_variant_new_string (self->metadata_uri));
+	}
+	if (self->firmware_base_uri != NULL) {
+		g_variant_builder_add (builder, "{sv}", "FirmwareBaseUri",
+				       g_variant_new_string (self->firmware_base_uri));
 	}
 	if (self->priority != 0) {
 		g_variant_builder_add (builder, "{sv}", "Priority",
@@ -688,6 +805,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			self->priority = g_variant_get_int32 (value);
 		} else if (g_strcmp0 (key, "ModificationTime") == 0) {
 			self->mtime = g_variant_get_uint64 (value);
+		} else if (g_strcmp0 (key, "FirmwareBaseUri") == 0) {
+			fwupd_remote_set_firmware_base_uri (self, g_variant_get_string (value, NULL));
 		}
 	}
 }
@@ -805,6 +924,7 @@ fwupd_remote_finalize (GObject *obj)
 
 	g_free (self->id);
 	g_free (self->metadata_uri);
+	g_free (self->firmware_base_uri);
 	g_free (self->username);
 	g_free (self->password);
 	g_free (self->filename);
