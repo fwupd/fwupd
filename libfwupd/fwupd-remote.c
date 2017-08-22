@@ -32,7 +32,7 @@ struct _FwupdRemote
 	FwupdRemoteKind		 kind;
 	FwupdKeyringKind	 keyring_kind;
 	gchar			*id;
-	gchar			*url;
+	gchar			*metadata_uri;
 	gchar			*username;
 	gchar			*password;
 	gchar			*filename;
@@ -114,17 +114,17 @@ fwupd_remote_get_suffix_for_keyring_kind (FwupdKeyringKind keyring_kind)
 
 /* note, this has to be set before username and password */
 static void
-fwupd_remote_set_url (FwupdRemote *self, const gchar *url)
+fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
 {
 	const gchar *suffix;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *basename_asc = NULL;
 
 	/* save this so we can export the object as a GVariant */
-	self->url = g_strdup (url);
+	self->metadata_uri = g_strdup (metadata_uri);
 
 	/* build the URI */
-	self->uri = soup_uri_new (url);
+	self->uri = soup_uri_new (metadata_uri);
 	if (self->uri == NULL)
 		return;
 
@@ -135,7 +135,7 @@ fwupd_remote_set_url (FwupdRemote *self, const gchar *url)
 	/* generate the signature URI too */
 	suffix = fwupd_remote_get_suffix_for_keyring_kind (self->keyring_kind);
 	if (suffix != NULL) {
-		g_autofree gchar *url_asc = g_strconcat (url, suffix, NULL);
+		g_autofree gchar *url_asc = g_strconcat (metadata_uri, suffix, NULL);
 		self->uri_asc = fwupd_remote_build_uri (self, url_asc, NULL);
 		basename_asc = g_path_get_basename (soup_uri_get_path (self->uri_asc));
 		self->filename_asc = g_strdup_printf ("%s-%s", self->id, basename_asc);
@@ -225,6 +225,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	g_autofree gchar *id = NULL;
 	g_autofree gchar *kind = NULL;
 	g_autofree gchar *keyring_kind = NULL;
+	g_autofree gchar *metadata_uri = NULL;
 	g_autofree gchar *order_after = NULL;
 	g_autofree gchar *order_before = NULL;
 	g_autoptr(GKeyFile) kf = NULL;
@@ -275,21 +276,22 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 		}
 	}
 
+	/* all remotes need a URI, even if it's file:// to the cache */
+	metadata_uri = g_key_file_get_string (kf, group, "MetadataURI", error);
+	if (metadata_uri == NULL)
+		return FALSE;
+
 	/* extract data */
 	self->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
 
 	/* DOWNLOAD-type remotes */
 	if (self->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
 		g_autofree gchar *filename_cache = NULL;
-		g_autofree gchar *url = NULL;
 		g_autofree gchar *username = NULL;
 		g_autofree gchar *password = NULL;
 
-		/* remotes have to include a valid Url */
-		url = g_key_file_get_string (kf, group, "Url", error);
-		if (url == NULL)
-			return FALSE;
-		fwupd_remote_set_url (self, url);
+		/* the client has to download this and the signature */
+		fwupd_remote_set_metadata_uri (self, metadata_uri);
 
 		/* check the URI was valid */
 		if (self->uri == NULL) {
@@ -297,7 +299,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "Failed to parse URI '%s' in %s",
-				     url, filename);
+				     metadata_uri, filename);
 			return FALSE;
 		}
 
@@ -320,12 +322,11 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 		fwupd_remote_set_filename_cache (self, filename_cache);
 	}
 
-	/* all LOCAL remotes have to include a valid File */
+	/* all LOCAL remotes have to include a valid MetadataURI */
 	if (self->kind == FWUPD_REMOTE_KIND_LOCAL) {
-		g_autofree gchar *filename_cache = NULL;
-		filename_cache = g_key_file_get_string (kf, group, "File", error);
-		if (filename_cache == NULL)
-			return FALSE;
+		const gchar *filename_cache = metadata_uri;
+		if (g_str_has_prefix (filename_cache, "file://"))
+			filename_cache += 7;
 		fwupd_remote_set_filename_cache (self, filename_cache);
 	}
 
@@ -629,9 +630,9 @@ fwupd_remote_to_variant_builder (FwupdRemote *self, GVariantBuilder *builder)
 		g_variant_builder_add (builder, "{sv}", "Password",
 				       g_variant_new_string (self->password));
 	}
-	if (self->url != NULL) {
+	if (self->metadata_uri != NULL) {
 		g_variant_builder_add (builder, "{sv}", "Url",
-				       g_variant_new_string (self->url));
+				       g_variant_new_string (self->metadata_uri));
 	}
 	if (self->priority != 0) {
 		g_variant_builder_add (builder, "{sv}", "Priority",
@@ -676,7 +677,7 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 	}
 	while (g_variant_iter_loop (iter2, "{sv}", &key, &value)) {
 		if (g_strcmp0 (key, "Url") == 0)
-			fwupd_remote_set_url (self, g_variant_get_string (value, NULL));
+			fwupd_remote_set_metadata_uri (self, g_variant_get_string (value, NULL));
 		if (g_strcmp0 (key, "FilenameCache") == 0)
 			fwupd_remote_set_filename_cache (self, g_variant_get_string (value, NULL));
 	}
@@ -807,7 +808,7 @@ fwupd_remote_finalize (GObject *obj)
 	FwupdRemote *self = FWUPD_REMOTE (obj);
 
 	g_free (self->id);
-	g_free (self->url);
+	g_free (self->metadata_uri);
 	g_free (self->username);
 	g_free (self->password);
 	g_free (self->filename);
