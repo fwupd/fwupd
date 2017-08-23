@@ -233,7 +233,6 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	const gchar *group = "fwupd Remote";
 	g_autofree gchar *firmware_base_uri = NULL;
 	g_autofree gchar *id = NULL;
-	g_autofree gchar *kind = NULL;
 	g_autofree gchar *keyring_kind = NULL;
 	g_autofree gchar *metadata_uri = NULL;
 	g_autofree gchar *order_after = NULL;
@@ -253,22 +252,6 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	kf = g_key_file_new ();
 	if (!g_key_file_load_from_file (kf, filename, G_KEY_FILE_NONE, error))
 		return FALSE;
-
-	/* get kind, failing back to download */
-	kind = g_key_file_get_string (kf, group, "Type", NULL);
-	if (kind == NULL) {
-		self->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
-	} else {
-		self->kind = fwupd_remote_kind_from_string (kind);
-		if (self->kind == FWUPD_REMOTE_KIND_UNKNOWN) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse type '%s'",
-				     kind);
-			return FALSE;
-		}
-	}
 
 	/* get verification type, falling back to GPG */
 	keyring_kind = g_key_file_get_string (kf, group, "Keyring", NULL);
@@ -290,6 +273,19 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	metadata_uri = g_key_file_get_string (kf, group, "MetadataURI", error);
 	if (metadata_uri == NULL)
 		return FALSE;
+	if (g_str_has_prefix (metadata_uri, "file://")) {
+		self->kind = FWUPD_REMOTE_KIND_LOCAL;
+	} else if (g_str_has_prefix (metadata_uri, "http://") ||
+		   g_str_has_prefix (metadata_uri, "https://")) {
+		self->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
+	} else {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to parse MetadataURI type '%s'",
+			     metadata_uri);
+		return FALSE;
+	}
 
 	/* extract data */
 	self->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
