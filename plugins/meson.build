@@ -23,6 +23,9 @@ endif
 
 if get_option('enable-dell')
 subdir('dell')
+endif
+
+if get_option('enable-synaptics')
 subdir('synapticsmst')
 endif
 

@@ -189,8 +189,17 @@ if get_option('enable-dell')
   conf.set('HAVE_DELL', '1')
 endif
 
+if get_option('enable-synaptics')
+  if get_option('enable-dell')
+    conf.set('HAVE_SYNAPTICS', '1')
+  else
+    error('compiling --enable-synaptics requires --enable-dell')
+  endif
+endif
+
 if get_option('enable-thunderbolt')
   umockdev = dependency('umockdev-1.0', required: false)
+  conf.set('HAVE_THUNDERBOLT', '1')
 endif
 
 if get_option('enable-systemd')
