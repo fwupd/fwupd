@@ -518,7 +518,7 @@ fu_plugin_get_dmi_value (FuPlugin *plugin, const gchar *dmi_id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	if (priv->hwids == NULL)
-		return FALSE;
+		return NULL;
 	return fu_hwids_get_value (priv->hwids, dmi_id);
 }
 

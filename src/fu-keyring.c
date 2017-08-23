@@ -56,9 +56,9 @@ fu_keyring_verify_data (FuKeyring *keyring,
 		       GError **error)
 {
 	FuKeyringClass *klass = FU_KEYRING_GET_CLASS (keyring);
-	g_return_val_if_fail (FU_IS_KEYRING (keyring), FALSE);
-	g_return_val_if_fail (blob != NULL, FALSE);
-	g_return_val_if_fail (blob_signature != NULL, FALSE);
+	g_return_val_if_fail (FU_IS_KEYRING (keyring), NULL);
+	g_return_val_if_fail (blob != NULL, NULL);
+	g_return_val_if_fail (blob_signature != NULL, NULL);
 	return klass->verify_data (keyring, blob, blob_signature, error);
 }
 
