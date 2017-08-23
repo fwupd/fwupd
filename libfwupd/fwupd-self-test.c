@@ -126,11 +126,10 @@ static void
 fwupd_remote_baseuri_func (void)
 {
 	gboolean ret;
-	g_autofree gchar *firmware_uri_str = NULL;
+	g_autofree gchar *firmware_uri = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(SoupURI) firmware_uri = NULL;
 
 	remote = fwupd_remote_new ();
 	fn = g_build_filename (TESTDATADIR, "tests", "firmware-base-uri.conf", NULL);
@@ -145,13 +144,9 @@ fwupd_remote_baseuri_func (void)
 			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_metadata_uri_sig (remote), ==,
 			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz.asc");
-
-	firmware_uri = fwupd_remote_build_uri (remote, "http://bbc.co.uk/firmware.cab", &error);
+	firmware_uri = fwupd_remote_build_firmware_uri (remote, "http://bbc.co.uk/firmware.cab", &error);
 	g_assert_no_error (error);
-	g_assert (firmware_uri != NULL);
-	firmware_uri_str = soup_uri_to_string (firmware_uri, FALSE);
-	g_assert_cmpstr (firmware_uri_str, ==,
-			 "https://my.fancy.cdn/firmware.cab");
+	g_assert_cmpstr (firmware_uri, ==, "https://my.fancy.cdn/firmware.cab");
 }
 
 static void
