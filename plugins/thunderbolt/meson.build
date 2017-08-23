@@ -48,5 +48,5 @@ if get_option('enable-tests') and umockdev.found()
   )
   test_env = environment()
   test_env.prepend('LD_PRELOAD', 'libumockdev-preload.so.0')
-  test('thunderbolt-self-test', e, env: test_env)
+  test('thunderbolt-self-test', e, env: test_env, timeout : 120)
 endif
