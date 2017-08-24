@@ -52,6 +52,7 @@ typedef struct {
 enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
+	SIGNAL_DEVICE_REGISTER,
 	SIGNAL_STATUS_CHANGED,
 	SIGNAL_PERCENTAGE_CHANGED,
 	SIGNAL_RECOLDPLUG,
@@ -68,6 +69,8 @@ typedef const gchar	*(*FuPluginGetNameFunc)		(void);
 typedef void		 (*FuPluginInitFunc)		(FuPlugin	*plugin);
 typedef gboolean	 (*FuPluginStartupFunc)		(FuPlugin	*plugin,
 							 GError		**error);
+typedef void		 (*FuPluginDeviceRegisterFunc)	(FuPlugin	*plugin,
+							 FuDevice	*device);
 typedef gboolean	 (*FuPluginDeviceFunc)		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
@@ -319,6 +322,32 @@ fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 	fu_device_set_created (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	fu_device_set_plugin (device, fu_plugin_get_name (plugin));
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_ADDED], 0, device);
+}
+
+/**
+ * fu_plugin_device_register:
+ * @plugin: A #FuPlugin
+ * @device: A #FuDevice
+ *
+ * Registers the device with other plugins so they can set metadata.
+ *
+ * Plugins do not have to call this manually as this is done automatically
+ * when using fu_plugin_device_add(). They may wish to use this manually
+ * if for intance the coldplug should be ignored based on the metadata
+ * set from other plugins.
+ *
+ * Since: 0.9.7
+ **/
+void
+fu_plugin_device_register (FuPlugin *plugin, FuDevice *device)
+{
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_DEVICE (device));
+
+	g_debug ("emit device-register from %s: %s",
+		 fu_plugin_get_name (plugin),
+		 fu_device_get_id (device));
+	g_signal_emit (plugin, signals[SIGNAL_DEVICE_REGISTER], 0, device);
 }
 
 typedef struct {
@@ -742,6 +771,24 @@ fu_plugin_runner_update_cleanup (FuPlugin *plugin, FuDevice *device, GError **er
 	return TRUE;
 }
 
+void
+fu_plugin_runner_device_register (FuPlugin *plugin, FuDevice *device)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginDeviceRegisterFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_device_registered", (gpointer *) &func);
+	if (func != NULL) {
+		g_debug ("performing device_added() on %s", priv->name);
+		func (plugin, device);
+	}
+}
+
 static gboolean
 fu_plugin_runner_schedule_update (FuPlugin *plugin,
 			     FuDevice *device,
@@ -1090,6 +1137,12 @@ fu_plugin_class_init (FuPluginClass *klass)
 		g_signal_new ("device-removed",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (FuPluginClass, device_removed),
+			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
+	signals[SIGNAL_DEVICE_REGISTER] =
+		g_signal_new ("device-register",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuPluginClass, device_register),
 			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
 			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
 	signals[SIGNAL_STATUS_CHANGED] =

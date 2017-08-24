@@ -71,8 +71,22 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_set_version_bootloader (device, "0.1.2");
 	fu_device_set_version (device, "1.2.3");
 	fu_device_set_version_lowest (device, "1.2.0");
+	fu_plugin_device_register (plugin, device);
+	if (fu_device_get_metadata (device, "BestDevice") == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "Device not set by another plugin");
+		return FALSE;
+	}
 	fu_plugin_device_add (plugin, device);
 	return TRUE;
+}
+
+void
+fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
+{
+	fu_device_set_metadata (device, "BestDevice", "/dev/urandom");
 }
 
 gboolean

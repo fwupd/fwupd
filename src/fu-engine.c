@@ -2229,6 +2229,30 @@ fu_engine_plugins_coldplug (FuEngine *self)
 }
 
 static void
+fu_engine_plugin_device_register (FuEngine *self, FuDevice *device)
+{
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED)) {
+		g_warning ("already registered %s, ignoring",
+			   fu_device_get_id (device));
+		return;
+	}
+	for (guint i = 0; i < self->plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+		fu_plugin_runner_device_register (plugin, device);
+	}
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REGISTERED);
+}
+
+static void
+fu_engine_plugin_device_register_cb (FuPlugin *plugin,
+				    FuDevice *device,
+				    gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE (user_data);
+	fu_engine_plugin_device_register (self, device);
+}
+
+static void
 fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 				  FuDevice *device,
 				  gpointer user_data)
@@ -2278,6 +2302,10 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 		}
 		return;
 	}
+
+	/* notify all plugins about this new device */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
+		fu_engine_plugin_device_register (self, device);
 
 	/* create new device */
 	item = g_new0 (FuDeviceItem, 1);
@@ -2434,6 +2462,9 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 		g_signal_connect (plugin, "device-removed",
 				  G_CALLBACK (fu_engine_plugin_device_removed_cb),
+				  self);
+		g_signal_connect (plugin, "device-register",
+				  G_CALLBACK (fu_engine_plugin_device_register_cb),
 				  self);
 		g_signal_connect (plugin, "status-changed",
 				  G_CALLBACK (fu_engine_plugin_status_changed_cb),

@@ -66,6 +66,8 @@ gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
 gboolean	 fu_plugin_update_cleanup		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
+void		 fu_plugin_device_registered		(FuPlugin	*plugin,
+							 FuDevice	*dev);
 
 G_END_DECLS
 
