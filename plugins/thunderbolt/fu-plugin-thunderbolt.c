@@ -34,6 +34,7 @@
 
 #include "fu-plugin-thunderbolt.h"
 #include "fu-plugin-vfuncs.h"
+#include "fu-device-metadata.h"
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 
@@ -175,6 +176,9 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	id = fu_plugin_thunderbolt_gen_id (device);
 	dev_tmp = fu_plugin_cache_lookup (plugin, id);
 	if (dev_tmp != NULL) {
+		/* When devices are force-powered they'll
+                 * come through again but be ignored
+                 */
 		g_debug ("ignoring duplicate %s", id);
 		return;
 	}
@@ -221,6 +225,9 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	if (is_host)
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 
+	fu_device_set_metadata (dev, FU_DEVICE_TBT_CAN_FORCE_POWER,
+				FU_DEVICE_TBT_FORCE_POWER_DIS);
+
 	fu_plugin_cache_add (plugin, id, dev);
 	fu_plugin_device_add (plugin, dev);
 }
@@ -235,6 +242,17 @@ fu_plugin_thunderbolt_remove (FuPlugin *plugin, GUdevDevice *device)
 	dev = fu_plugin_cache_lookup (plugin, id);
 	if (dev == NULL)
 		return;
+
+	/* on supported systems other plugins may use a GPIO to force
+	 * power on supported devices even if in low power mode.
+	 * this will happen both in coldplug_prepare and prepare_for_update
+	 */
+	if (fu_plugin_thunderbolt_is_host (device) &&
+	    g_strcmp0 (fu_device_get_metadata (dev, FU_DEVICE_TBT_CAN_FORCE_POWER),
+		       FU_DEVICE_TBT_FORCE_POWER_EN) == 0) {
+		g_debug ("Ignoring remove event due to being force powered.");
+		return;
+	}
 
 	fu_plugin_device_remove (plugin, dev);
 	fu_plugin_cache_remove (plugin, id);
