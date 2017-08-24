@@ -34,6 +34,7 @@
 
 #include "fu-plugin-thunderbolt.h"
 #include "fu-plugin-vfuncs.h"
+#include "fu-device-metadata.h"
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 
@@ -175,6 +176,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	id = fu_plugin_thunderbolt_gen_id (device);
 	dev_tmp = fu_plugin_cache_lookup (plugin, id);
 	if (dev_tmp != NULL) {
+		/* devices that are force-powered are re-added */
 		g_debug ("ignoring duplicate %s", id);
 		return;
 	}
@@ -235,6 +237,15 @@ fu_plugin_thunderbolt_remove (FuPlugin *plugin, GUdevDevice *device)
 	dev = fu_plugin_cache_lookup (plugin, id);
 	if (dev == NULL)
 		return;
+
+	/* on supported systems other plugins may use a GPIO to force
+	 * power on supported devices even when in low power mode --
+	 * this will happen in coldplug_prepare and prepare_for_update */
+	if (fu_plugin_thunderbolt_is_host (device) &&
+	    fu_device_get_metadata_boolean (dev, FU_DEVICE_METADATA_TBT_CAN_FORCE_POWER)) {
+		g_debug ("ignoring remove event as force powered");
+		return;
+	}
 
 	fu_plugin_device_remove (plugin, dev);
 	fu_plugin_cache_remove (plugin, id);

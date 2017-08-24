@@ -36,6 +36,7 @@
 #include "fu-plugin-dell.h"
 #include "fu-quirks.h"
 #include "fu-plugin-vfuncs.h"
+#include "fu-device-metadata.h"
 
 /* These are used to indicate the status of a previous DELL flash */
 #define DELL_SUCCESS			0x0000
@@ -802,6 +803,19 @@ fu_plugin_update_offline (FuPlugin *plugin,
                 return FALSE;
         }
 	return TRUE;
+}
+
+void
+fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
+{
+	/* thunderbolt plugin */
+	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") == 0 &&
+	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL)) {
+		/* prevent thunderbolt controllers in the system from going away */
+		fu_device_set_metadata_boolean (device,
+						FU_DEVICE_METADATA_TBT_CAN_FORCE_POWER,
+						TRUE);
+	}
 }
 
 gboolean
