@@ -10,19 +10,6 @@ Additional information is available at the website: http://www.fwupd.org
 
 The most up to date compilation instructions are available in the [Wiki](https://github.com/hughsie/fwupd/wiki/Compilation)
 
-Adding a new plugin
--------------------
-
-An extensible architecture allows for providing new plugin types (for reading
-and writing different firmware) as well as ways quirk their behavior.
-
-You can find more information about the architecture in the developers section
-of the [fwupd website](http://www.fwupd.org).
-
-If you have a firmware specification and would like to see support
-in this project, please file an issue and share the spec.  Patches are also
-welcome.
-
 LVFS
 ----
 This project is configured by default to download firmware from the [Linux Vendor
