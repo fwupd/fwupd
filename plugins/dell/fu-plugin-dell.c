@@ -809,15 +809,30 @@ void
 fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 {
 	FwupdDeviceFlags flags = 0;
+	const gchar *metadata_output;
+	g_autofree gchar *vendor_id = NULL;
+	g_autofree gchar *device_id = NULL;
+
 	flags = fu_device_get_flags (device);
 
 	/* thunderbolt plugin */
 	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") == 0 &&
-	    (flags & FWUPD_DEVICE_FLAG_INTERNAL) == 1)
+	    (flags & FWUPD_DEVICE_FLAG_INTERNAL) == 1) {
 		/* Prevent thunderbolt controllers in the system from going away */
 		fu_device_set_metadata (device,
 					FU_DEVICE_TBT_CAN_FORCE_POWER,
 					FU_DEVICE_TBT_FORCE_POWER_EN);
+		/* fix VID/DID of safe mode devices */
+		metadata_output = fu_device_get_metadata (device,
+							  FU_DEVICE_TBT_IS_SAFE_MODE);
+		if (g_strcmp0 (metadata_output, FU_DEVICE_TBT_SAFE_MODE) == 0) {
+			vendor_id = g_strdup_printf ("TBT:0x%04d", 0x00d4);
+			device_id = g_strdup_printf ("TBT-%04d%04d", 0x00d4,
+						     sysinfo_get_dell_system_id ());
+			fu_device_set_vendor_id (device, vendor_id);
+			fu_device_add_guid (device, device_id);
+		}
+	}
 }
 
 gboolean

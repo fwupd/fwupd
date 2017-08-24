@@ -154,8 +154,11 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	const gchar *version;
 	const gchar *devpath;
 	gboolean is_host;
+	gboolean is_safemode = FALSE;
 	guint16 did;
 	guint16 vid;
+	g_autofree gchar *test_safe = NULL;
+	g_autofree gchar *safe_path = NULL;
 	g_autofree gchar *id = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *device_id = NULL;
@@ -165,7 +168,6 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	uuid = g_udev_device_get_sysfs_attr (device, "unique_id");
 	if (uuid == NULL) {
 		/* most likely the domain itself, ignore */
-		/* TODO: handle devices in safe-mode */
 		return;
 	}
 
@@ -184,21 +186,40 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	}
 
 	vid = fu_plugin_thunderbolt_udev_get_id (device, "vendor", &error);
-	if (vid == 0x0) {
+	if (vid == 0x0)
 		g_warning ("failed to get Vendor ID: %s", error->message);
-		return;
-	}
+
 	did = fu_plugin_thunderbolt_udev_get_id (device, "device", &error);
-	if (did == 0x0) {
+	if (did == 0x0)
 		g_warning ("failed to get Device ID: %s", error->message);
-		return;
-	}
 
 	is_host = fu_plugin_thunderbolt_is_host (device);
-	vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
-	device_id = g_strdup_printf ("TBT-%04x%04x", (guint) vid, (guint) did);
+
+	version = g_udev_device_get_sysfs_attr (device, "nvm_version");
+
+	/* test for safe mode */
+	if (is_host && (version == NULL)) {
+		/* this is a bit hacky due to glib can't return a properly mapped
+		 * -ENODATA. the kernel only returns -ENODATA or -EAGAIN.
+                 * if new returns are added, those should be added to this too.
+		 */
+		safe_path = g_build_path ("/", devpath, "nvm_version", NULL);
+		if (!g_file_get_contents (safe_path, &test_safe, NULL, &error) &&
+		    !g_error_matches (error, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
+			g_warning ("%s is in safe mode.  VID/DID will need to be set by another plugin for normal use.",
+				   devpath);
+			version = "0.0";
+			is_safemode = TRUE;
+		}
+	}
+
+	if (!is_safemode) {
+		vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
+		device_id = g_strdup_printf ("TBT-%04x%04x", (guint) vid, (guint) did);
+	}
 
 	dev = fu_device_new ();
+
 	fu_device_set_id (dev, uuid);
 
 	fu_device_set_metadata (dev, "sysfs-path", devpath);
@@ -216,9 +237,10 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	vendor = g_udev_device_get_sysfs_attr (device, "vendor_name");
 	if (vendor != NULL)
 		fu_device_set_vendor (dev, vendor);
-	fu_device_set_vendor_id (dev, vendor_id);
-	fu_device_add_guid (dev, device_id);
-	version = g_udev_device_get_sysfs_attr (device, "nvm_version");
+	if (vendor_id != NULL)
+		fu_device_set_vendor_id (dev, vendor_id);
+	if (device_id != NULL)
+		fu_device_add_guid (dev, device_id);
 	if (version != NULL)
 		fu_device_set_version (dev, version);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
@@ -227,6 +249,10 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 
 	fu_device_set_metadata (dev, FU_DEVICE_TBT_CAN_FORCE_POWER,
 				FU_DEVICE_TBT_FORCE_POWER_DIS);
+
+	fu_device_set_metadata (dev, FU_DEVICE_TBT_IS_SAFE_MODE,
+				is_safemode ? FU_DEVICE_TBT_SAFE_MODE :
+					      FU_DEVICE_TBT_NORMAL_MODE);
 
 	fu_plugin_cache_add (plugin, id, dev);
 	fu_plugin_device_add (plugin, dev);
