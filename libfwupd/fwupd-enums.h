@@ -78,6 +78,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_LOCKED:			Is locked and can be unlocked
  * @FWUPD_DEVICE_FLAG_SUPPORTED:		Is found in current metadata
  * @FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER:		Requires a bootloader mode
+ * @FWUPD_DEVICE_FLAG_REGISTERED:		Has been registered with other plugins
  *
  * FIXME: rename FU_DEVICE_ -> FWUPD_DEVICE_ when we break API
  *
@@ -91,6 +92,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_LOCKED		(1u << 4)	/* Since: 0.6.3 */
 #define FWUPD_DEVICE_FLAG_SUPPORTED		(1u << 5)	/* Since: 0.7.1 */
 #define FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER	(1u << 6)	/* Since: 0.7.3 */
+#define FWUPD_DEVICE_FLAG_REGISTERED		(1u << 7)	/* Since: 0.9.7 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 

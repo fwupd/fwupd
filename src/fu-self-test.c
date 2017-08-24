@@ -169,6 +169,13 @@ fu_plugin_delay_func (void)
 }
 
 static void
+_plugin_device_register_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
+{
+	/* fake being a daemon */
+	fu_plugin_runner_device_register (plugin, device);
+}
+
+static void
 fu_plugin_module_func (void)
 {
 	GError *error = NULL;
@@ -198,6 +205,9 @@ fu_plugin_module_func (void)
 	g_assert (ret);
 	g_signal_connect (plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
+			  &device);
+	g_signal_connect (plugin, "device-register",
+			  G_CALLBACK (_plugin_device_register_cb),
 			  &device);
 	g_signal_connect (plugin, "status-changed",
 			  G_CALLBACK (_plugin_status_changed_cb),
