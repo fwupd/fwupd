@@ -6,6 +6,10 @@ set -e
 #only enable on installation not upgrade
 if [ "$1" = configure ] && [ -z "$2" ]; then
 	if [ -f /etc/fwupd.conf ]; then
-		sed "s,^EnableTestSuite=.*,EnableTestSuite=true," -i /etc/fwupd.conf
+		if [ "$CI" = "true" ]; then
+			sed "s,^EnableTestSuite=.*,EnableTestSuite=true," -i /etc/fwupd.conf
+		else
+			echo "To enable test suite, modify /etc/fwupd.conf"
+		fi
 	fi
 fi
