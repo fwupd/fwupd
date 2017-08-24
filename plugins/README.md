@@ -14,7 +14,7 @@ welcome.
 Plugin interaction
 ------------------
 Some plugins may be able to influence the behavior of other plugins.
-This includes things like one plugin turnin on a device, or providing missing
+This includes things like one plugin turning on a device, or providing missing
 metadata to another plugin.
 
 The ABI for these interactions is defined in:
