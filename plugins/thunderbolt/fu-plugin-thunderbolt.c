@@ -288,6 +288,7 @@ fu_plugin_thunderbolt_change (FuPlugin *plugin, GUdevDevice *device)
 
 	version = g_udev_device_get_sysfs_attr (device, "nvm_version");
 	fu_device_set_version (dev, version);
+	fu_plugin_device_add (plugin, dev);
 }
 
 static gboolean
