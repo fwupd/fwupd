@@ -391,6 +391,91 @@ mock_tree_attach_device (gpointer user_data)
 	return FALSE;
 }
 
+typedef struct SyncContext {
+	MockTree  *tree;
+	GMainLoop *loop;
+} SyncContext;
+
+static gboolean
+on_sync_timeout (gpointer user_data)
+{
+	SyncContext *ctx = (SyncContext *) user_data;
+	g_main_loop_quit (ctx->loop);
+	return FALSE;
+}
+
+static void
+sync_device_added (FuPlugin *plugin, FuDevice *device, gpointer user_data)
+{
+	SyncContext *ctx = (SyncContext *) user_data;
+	MockTree *tree = ctx->tree;
+	const char *uuid = fu_device_get_id (device);
+	MockTree *target;
+
+	target = (MockTree *) mock_tree_find_uuid (tree, uuid);
+
+	if (target == NULL) {
+		g_warning ("Got device that could not be matched: %s", uuid);
+		return;
+	}
+
+	if (target->fu_device != NULL)
+		g_object_unref (target->fu_device);
+
+	target->fu_device = g_object_ref (device);
+}
+
+static void
+sync_device_removed (FuPlugin *plugin, FuDevice *device, gpointer user_data)
+{
+	SyncContext *ctx = (SyncContext *) user_data;
+	MockTree *tree = ctx->tree;
+	const char *uuid = fu_device_get_id (device);
+	MockTree *target;
+
+	target = (MockTree *) mock_tree_find_uuid (tree, uuid);
+
+	if (target == NULL) {
+		g_warning ("Got device that could not be matched: %s", uuid);
+		return;
+	} else if (target->fu_device == NULL) {
+		g_warning ("Got remove event for out-of-tree device %s", uuid);
+		return;
+	}
+
+	g_object_unref (target->fu_device);
+	target->fu_device = NULL;
+}
+
+static void
+mock_tree_sync (MockTree *root, FuPlugin *plugin, int timeout_ms)
+{
+	g_autoptr(GMainLoop) mainloop = g_main_loop_new (NULL, FALSE);
+	gulong id_add;
+	gulong id_del;
+	SyncContext ctx = {
+		.tree = root,
+		.loop = mainloop,
+	};
+
+	id_add = g_signal_connect (plugin, "device-added",
+				   G_CALLBACK (sync_device_added),
+				   &ctx);
+
+	id_del = g_signal_connect (plugin, "device-removed",
+				   G_CALLBACK (sync_device_removed),
+				   &ctx);
+
+	if (timeout_ms > 0)
+		g_timeout_add (timeout_ms, on_sync_timeout, &ctx);
+
+	g_main_loop_run (mainloop);
+
+	g_signal_handler_disconnect (plugin, id_add);
+	g_signal_handler_disconnect (plugin, id_del);
+}
+
+
 typedef struct AttachContext {
 	/* in */
 	MockTree  *tree;
@@ -442,7 +527,6 @@ mock_tree_settle (MockTree *root, FuPlugin *plugin)
 
 	return ctx.complete;
 }
-
 
 static gboolean
 mock_tree_attach (MockTree *root, UMockdevTestbed *bed, FuPlugin *plugin)
@@ -842,6 +926,36 @@ test_tree (ThunderboltTest *tt, gconstpointer user_data)
 }
 
 static void
+test_change_uevent (ThunderboltTest *tt, gconstpointer user_data)
+{
+	FuPlugin *plugin = tt->plugin;
+	MockTree *tree = tt->tree;
+	gboolean ret;
+	const gchar *version_after;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(UpdateContext) up_ctx = NULL;
+
+	/* test sanity check */
+	g_assert_nonnull (tree);
+
+	/* simulate change of version via a change even, i.e.
+	 * without add, remove. */
+	umockdev_testbed_set_attribute (tt->bed, tree->path, "nvm_version", "42.23");
+	umockdev_testbed_uevent (tt->bed, tree->path, "change");
+
+	/* we just "wait" for 500ms, should be enough */
+	mock_tree_sync (tree, plugin, 500);
+
+	/* the tree should not have changed */
+	ret = mock_tree_all (tree, mock_tree_node_have_fu_device, NULL);
+	g_assert_true (ret);
+
+	/* we should have the version change in the FuDevice */
+	version_after = fu_device_get_version (tree->fu_device);
+	g_assert_cmpstr (version_after, ==, "42.23");
+}
+
+static void
 test_update_working (ThunderboltTest *tt, gconstpointer user_data)
 {
 	FuPlugin *plugin = tt->plugin;
@@ -1003,6 +1117,14 @@ main (int argc, char **argv)
 		    NULL,
 		    test_set_up,
 		    test_tree,
+		    test_tear_down);
+
+	g_test_add ("/thunderbolt/change-uevent",
+		    ThunderboltTest,
+		    GUINT_TO_POINTER (TEST_INITIALIZE_TREE |
+				      TEST_ATTACH_AND_COLDPLUG),
+		    test_set_up,
+		    test_change_uevent,
 		    test_tear_down);
 
 	g_test_add ("/thunderbolt/update{working}",
