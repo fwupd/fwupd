@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "fu-device.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
@@ -41,6 +42,37 @@
 #ifdef ENABLE_PKCS7
 #include "fu-keyring-pkcs7.h"
 #endif
+
+static void
+fu_device_metadata_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+
+	/* string */
+	fu_device_set_metadata (device, "foo", "bar");
+	g_assert_cmpstr (fu_device_get_metadata (device, "foo"), ==, "bar");
+	fu_device_set_metadata (device, "foo", "baz");
+	g_assert_cmpstr (fu_device_get_metadata (device, "foo"), ==, "baz");
+	g_assert_null (fu_device_get_metadata (device, "unknown"));
+
+	/* boolean */
+	fu_device_set_metadata_boolean (device, "baz", TRUE);
+	g_assert_cmpstr (fu_device_get_metadata (device, "baz"), ==, "true");
+	g_assert_true (fu_device_get_metadata_boolean (device, "baz"));
+	g_assert_false (fu_device_get_metadata_boolean (device, "unknown"));
+
+	/* integer */
+	fu_device_set_metadata_integer (device, "dum", 12345);
+	g_assert_cmpstr (fu_device_get_metadata (device, "dum"), ==, "12345");
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "dum"), ==, 12345);
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "unknown"), ==, G_MAXUINT);
+
+	/* broken integer */
+	fu_device_set_metadata (device, "dum", "123junk");
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "dum"), ==, G_MAXUINT);
+	fu_device_set_metadata (device, "huge", "4294967296"); /* not 32 bit */
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "huge"), ==, G_MAXUINT);
+}
 
 static void
 fu_hwids_func (void)
@@ -602,6 +634,7 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
+	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);

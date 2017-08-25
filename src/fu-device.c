@@ -86,6 +86,17 @@ fu_device_add_guid (FuDevice *device, const gchar *guid)
 	fwupd_device_add_guid (fwupd_result_get_device (FWUPD_RESULT (device)), guid);
 }
 
+/**
+ * fu_device_get_metadata:
+ * @device: A #FuDevice
+ * @key: the key
+ *
+ * Gets an item of metadata from the device.
+ *
+ * Returns: a string value, or %NULL for unfound.
+ *
+ * Since: 0.1.0
+ **/
 const gchar *
 fu_device_get_metadata (FuDevice *device, const gchar *key)
 {
@@ -95,6 +106,73 @@ fu_device_get_metadata (FuDevice *device, const gchar *key)
 	return g_hash_table_lookup (priv->metadata, key);
 }
 
+/**
+ * fu_device_get_metadata_boolean:
+ * @device: A #FuDevice
+ * @key: the key
+ *
+ * Gets an item of metadata from the device.
+ *
+ * Returns: a boolean value, or %FALSE for unfound or failure to parse.
+ *
+ * Since: 0.9.7
+ **/
+gboolean
+fu_device_get_metadata_boolean (FuDevice *device, const gchar *key)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	const gchar *tmp;
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (key != NULL, FALSE);
+	tmp = g_hash_table_lookup (priv->metadata, key);
+	if (tmp == NULL)
+		return FALSE;
+	return g_strcmp0 (tmp, "true") == 0;
+}
+
+/**
+ * fu_device_get_metadata_integer:
+ * @device: A #FuDevice
+ * @key: the key
+ *
+ * Gets an item of metadata from the device.
+ *
+ * Returns: a string value, or %G_MAXUINT for unfound or failure to parse.
+ *
+ * Since: 0.9.7
+ **/
+guint
+fu_device_get_metadata_integer (FuDevice *device, const gchar *key)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	const gchar *tmp;
+	gchar *endptr = NULL;
+	guint64 val;
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), G_MAXUINT);
+	g_return_val_if_fail (key != NULL, G_MAXUINT);
+
+	tmp = g_hash_table_lookup (priv->metadata, key);
+	if (tmp == NULL)
+		return G_MAXUINT;
+	val = g_ascii_strtoull (tmp, &endptr, 10);
+	if (endptr != NULL && endptr[0] != '\0')
+		return G_MAXUINT;
+	if (val > G_MAXUINT)
+		return G_MAXUINT;
+	return (guint) val;
+}
+
+/**
+ * fu_device_set_metadata:
+ * @device: A #FuDevice
+ * @key: the key
+ * @value: the string value
+ *
+ * Sets an item of metadata on the device.
+ *
+ * Since: 0.1.0
+ **/
 void
 fu_device_set_metadata (FuDevice *device, const gchar *key, const gchar *value)
 {
@@ -103,6 +181,41 @@ fu_device_set_metadata (FuDevice *device, const gchar *key, const gchar *value)
 	g_return_if_fail (key != NULL);
 	g_return_if_fail (value != NULL);
 	g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
+}
+
+/**
+ * fu_device_set_metadata_boolean:
+ * @device: A #FuDevice
+ * @key: the key
+ * @value: the boolean value
+ *
+ * Sets an item of metadata on the device. When @value is set to %TRUE
+ * the actual stored value is "true".
+ *
+ * Since: 0.9.7
+ **/
+void
+fu_device_set_metadata_boolean (FuDevice *device, const gchar *key, gboolean value)
+{
+	fu_device_set_metadata (device, key, value ? "true" : "false");
+}
+
+/**
+ * fu_device_set_metadata_integer:
+ * @device: A #FuDevice
+ * @key: the key
+ * @value: the unsigned integer value
+ *
+ * Sets an item of metadata on the device. The integer is stored as a
+ * base-10 string internally.
+ *
+ * Since: 0.9.7
+ **/
+void
+fu_device_set_metadata_integer (FuDevice *device, const gchar *key, guint value)
+{
+	g_autofree gchar *tmp = g_strdup_printf ("%u", value);
+	fu_device_set_metadata (device, key, tmp);
 }
 
 void
