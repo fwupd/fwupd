@@ -24,5 +24,6 @@
 
 /* thunderbolt plugin */
 #define FU_DEVICE_METADATA_TBT_CAN_FORCE_POWER	"Thunderbolt::CanForcePower"
+#define FU_DEVICE_METADATA_TBT_IS_SAFE_MODE	"Thunderbolt::IsSafeMode"
 
 #endif /* __FU_DEVICE_METADATA_H__ */

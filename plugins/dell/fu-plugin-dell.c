@@ -815,6 +815,16 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 		fu_device_set_metadata_boolean (device,
 						FU_DEVICE_METADATA_TBT_CAN_FORCE_POWER,
 						TRUE);
+		/* fix VID/DID of safe mode devices */
+		if (fu_device_get_metadata_boolean (device, FU_DEVICE_METADATA_TBT_IS_SAFE_MODE)) {
+			g_autofree gchar *vendor_id = NULL;
+			g_autofree gchar *device_id = NULL;
+			vendor_id = g_strdup_printf ("TBT:0x%04d", 0x00d4);
+			device_id = g_strdup_printf ("TBT-%04d%04d", 0x00d4,
+						     sysinfo_get_dell_system_id ());
+			fu_device_set_vendor_id (device, vendor_id);
+			fu_device_add_guid (device, device_id);
+		}
 	}
 }
 
