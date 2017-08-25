@@ -56,10 +56,8 @@ fu_plugin_dfu_device_update (FuPlugin *plugin,
 	}
 
 	/* check capabilities */
-	if (dfu_device_can_download (device)) {
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
-	}
+	if (dfu_device_can_download (device))
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* needs a manual action */
 	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)) {
@@ -212,11 +210,11 @@ fu_plugin_dfu_percentage_changed_cb (DfuDevice *device,
 }
 
 gboolean
-fu_plugin_update_online (FuPlugin *plugin,
-			 FuDevice *dev,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *dev,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	DfuDevice *device;

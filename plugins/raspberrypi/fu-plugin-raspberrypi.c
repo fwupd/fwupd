@@ -142,11 +142,11 @@ fu_plugin_raspberrypi_parse_firmware (FuDevice *device, const gchar *fn, GError 
 }
 
 gboolean
-fu_plugin_update_online (FuPlugin *plugin,
-			 FuDevice *device,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *device,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autofree gchar *fwfn = NULL;
@@ -220,8 +220,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_add_guid (device, "raspberrypi");
 	fu_device_set_name (device, "Raspberry Pi");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 
 	/* get the VC build info */

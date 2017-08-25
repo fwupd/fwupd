@@ -188,7 +188,7 @@ fwupd_result_func (void)
 	dev = fwupd_result_get_device (result);
 	fwupd_device_add_checksum (dev, "beefdead");
 	fwupd_device_set_created (dev, 1);
-	fwupd_device_set_flags (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+	fwupd_device_set_flags (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fwupd_device_set_id (dev, "USB:foo");
 	fwupd_device_set_modified (dev, 60 * 60 * 24);
 	fwupd_device_set_name (dev, "ColorHug2");
@@ -218,7 +218,7 @@ fwupd_result_func (void)
 		"  DeviceID:             USB:foo\n"
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
 		"  Guid:                 00000000-0000-0000-0000-000000000000\n"
-		"  Flags:                allow-offline|require-ac\n"
+		"  Flags:                updatable|require-ac\n"
 		"  FirmwareHash:         SHA1(beefdead)\n"
 		"  Created:              1970-01-01\n"
 		"  Modified:             1970-01-02\n"

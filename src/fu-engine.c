@@ -905,7 +905,7 @@ fu_engine_get_item_by_wildcard (FuEngine *self, AsStore *store, GError **error)
  * @device_id: A device ID
  * @store: The #AsStore with the firmware metadata
  * @blob_cab: The #GBytes of the .cab file
- * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_ALLOW_ONLINE
+ * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
  * @error: A #GError, or %NULL
  *
  * Installs a specfic firmware file on a device.
@@ -960,8 +960,7 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* no update abilities */
-	if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE) &&
-	    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE)) {
+	if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -970,24 +969,14 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 	}
 
-	/* Called with online update, test if device is supposed to allow this */
-	if (!(flags & FWUPD_INSTALL_FLAG_OFFLINE) &&
-	    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device %s does not allow online updates",
-			    device_id);
-		return FALSE;
-	}
 
-	/* Called with offline update, test if device is supposed to allow this */
-	if (flags & FWUPD_INSTALL_FLAG_OFFLINE &&
-	    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE)) {
+	/* called with online update, test if device is supposed to allow this */
+	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) == 0 &&
+	    fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device %s does not allow offline updates",
+			    "Device %s only allows offline updates",
 			    device_id);
 		return FALSE;
 	}
@@ -1243,7 +1232,7 @@ fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GErr
  * @self: A #FuEngine
  * @device_id: A device ID
  * @store: The #AsStore with the firmware metadata
- * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_ALLOW_ONLINE
+ * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
  * @error: A #GError, or %NULL
  *
  * Gets the PolicyKit action ID to use for the install operation.
@@ -1665,9 +1654,8 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 	}
 
 	/* only show devices that can be updated */
-	if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE) &&
-	    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE)) {
-		g_debug ("ignoring %s [%s] as not updatable live or offline",
+	if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_debug ("ignoring %s [%s] as not updatable",
 			 fu_device_get_id (item->device),
 			 fu_device_get_name (item->device));
 		return FALSE;

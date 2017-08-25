@@ -106,7 +106,7 @@ fu_plugin_dell_tpm_func (void)
 
 	/* make sure not allowed to flash 1.2 */
 	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, !=, 1);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, !=, 1);
 
 	/* try to unlock 2.0 */
 	ret = fu_plugin_runner_unlock (plugin, device, &error);
@@ -138,7 +138,7 @@ fu_plugin_dell_tpm_func (void)
 
 	/* make sure allowed to flash 1.2 */
 	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint(flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+	g_assert_cmpint(flags & FWUPD_DEVICE_FLAG_UPDATABLE, >, 0);
 
 	/* try to unlock 2.0 */
 	ret = fu_plugin_runner_unlock (plugin, device, &error);
@@ -170,9 +170,9 @@ fu_plugin_dell_tpm_func (void)
 
 	/* make sure allowed to flash 1.2 but not 2.0 */
 	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, >, 0);
 	flags = fu_device_get_flags (device);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, ==, 0);
 
 	/* try to unlock 2.0 */
 	ret = fu_plugin_runner_unlock (plugin, device, &error);
@@ -181,9 +181,9 @@ fu_plugin_dell_tpm_func (void)
 
 	/* make sure no longer allowed to flash 1.2 but can flash 2.0 */
 	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, ==, 0);
 	flags = fu_device_get_flags (device);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, >, 0);
 
 	/* cleanup */
 	fu_plugin_device_remove (plugin, device_alt);
@@ -209,21 +209,20 @@ fu_plugin_dell_tpm_func (void)
 
 	/* make sure allowed to flash 2.0 but not 1.2 */
 	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, >, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, >, 0);
 	flags = fu_device_get_flags (device);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_ALLOW_OFFLINE, ==, 0);
+	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, ==, 0);
 
 	/* With one flash left we need an override */
 	ret = fu_plugin_runner_update (plugin, device_alt, NULL, NULL,
-				  FWUPD_INSTALL_FLAG_OFFLINE, &error);
+				  FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert (!ret);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error (&error);
 
 	/* test override */
 	ret = fu_plugin_runner_update (plugin, device_alt, NULL, NULL,
-				  FWUPD_INSTALL_FLAG_FORCE |
-				  FWUPD_INSTALL_FLAG_OFFLINE, &error);
+				  FWUPD_INSTALL_FLAG_FORCE, &error);
 	g_assert (ret);
 	g_assert_no_error (error);
 

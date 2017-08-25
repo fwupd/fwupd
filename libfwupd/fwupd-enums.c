@@ -108,10 +108,10 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "none";
 	if (device_flag == FWUPD_DEVICE_FLAG_INTERNAL)
 		return "internal";
-	if (device_flag == FWUPD_DEVICE_FLAG_ALLOW_ONLINE)
-		return "allow-online";
-	if (device_flag == FWUPD_DEVICE_FLAG_ALLOW_OFFLINE)
-		return "allow-offline";
+	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE)
+		return "updatable";
+	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_OFFLINE)
+		return "only-offline";
 	if (device_flag == FWUPD_DEVICE_FLAG_REQUIRE_AC)
 		return "require-ac";
 	if (device_flag == FWUPD_DEVICE_FLAG_LOCKED)
@@ -122,6 +122,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "needs-bootloader";
 	if (device_flag == FWUPD_DEVICE_FLAG_REGISTERED)
 		return "registered";
+	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_REBOOT)
+		return "needs-reboot";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -144,10 +146,12 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_NONE;
 	if (g_strcmp0 (device_flag, "internal") == 0)
 		return FWUPD_DEVICE_FLAG_INTERNAL;
-	if (g_strcmp0 (device_flag, "allow-online") == 0)
-		return FWUPD_DEVICE_FLAG_ALLOW_ONLINE;
-	if (g_strcmp0 (device_flag, "allow-offline") == 0)
-		return FWUPD_DEVICE_FLAG_ALLOW_OFFLINE;
+	if (g_strcmp0 (device_flag, "updatable") == 0 ||
+	    g_strcmp0 (device_flag, "allow-online") == 0)
+		return FWUPD_DEVICE_FLAG_UPDATABLE;
+	if (g_strcmp0 (device_flag, "only-offline") == 0 ||
+	    g_strcmp0 (device_flag, "allow-offline") == 0)
+		return FWUPD_DEVICE_FLAG_ONLY_OFFLINE;
 	if (g_strcmp0 (device_flag, "require-ac") == 0)
 		return FWUPD_DEVICE_FLAG_REQUIRE_AC;
 	if (g_strcmp0 (device_flag, "locked") == 0)
@@ -158,6 +162,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER;
 	if (g_strcmp0 (device_flag, "registered") == 0)
 		return FWUPD_DEVICE_FLAG_REGISTERED;
+	if (g_strcmp0 (device_flag, "needs-reboot") == 0)
+		return FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

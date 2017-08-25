@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -919,15 +919,14 @@ fu_plugin_runner_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 
 gboolean
 fu_plugin_runner_update (FuPlugin *plugin,
-		    FuDevice *device,
-		    GBytes *blob_cab,
-		    GBytes *blob_fw,
-		    FwupdInstallFlags flags,
-		    GError **error)
+			 FuDevice *device,
+			 GBytes *blob_cab,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginUpdateFunc func_online;
-	FuPluginUpdateFunc func_offline;
+	FuPluginUpdateFunc update_func;
 	g_autoptr(FuPending) pending = NULL;
 	g_autoptr(FwupdResult) res_pending = NULL;
 	GError *error_update = NULL;
@@ -938,18 +937,21 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		return TRUE;
 
 	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_update_online", (gpointer *) &func_online);
-	g_module_symbol (priv->module, "fu_plugin_update_offline", (gpointer *) &func_offline);
+	g_module_symbol (priv->module, "fu_plugin_update", (gpointer *) &update_func);
+	if (update_func == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "No update possible");
+		return FALSE;
+	}
 
-	/* schedule for next reboot, or handle in the plugin */
+	/* just schedule this for the next reboot  */
 	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
-		if (func_offline == NULL) {
-			return fu_plugin_runner_schedule_update (plugin,
-								 device,
-								 blob_cab,
-								 error);
-		}
-		return func_offline (plugin, device, blob_fw, flags, error);
+		return fu_plugin_runner_schedule_update (plugin,
+							 device,
+							 blob_cab,
+							 error);
 	}
 
 	/* cancel the pending action */
@@ -957,16 +959,9 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* online */
-	if (func_online == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "No online update possible");
-		return FALSE;
-	}
 	pending = fu_pending_new ();
 	res_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
-	if (!func_online (plugin, device, blob_fw, flags, &error_update)) {
+	if (!update_func (plugin, device, blob_fw, flags, &error_update)) {
 		/* save the error to the database */
 		if (res_pending != NULL) {
 			fu_pending_set_error_msg (pending, FWUPD_RESULT (device),
