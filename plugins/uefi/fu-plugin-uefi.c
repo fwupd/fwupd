@@ -170,11 +170,11 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 }
 
 gboolean
-fu_plugin_update_offline (FuPlugin *plugin,
-			  FuDevice *device,
-			  GBytes *blob_fw,
-			  FwupdInstallFlags flags,
-			  GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *device,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 	fwup_resource *re = NULL;
@@ -336,7 +336,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
 		fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 		fu_device_set_version (dev, "0");
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
 		fu_plugin_device_add (plugin, dev);
 		return TRUE;
@@ -405,10 +405,12 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		}
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 		if (g_file_test ("/sys/firmware/efi/efivars", G_FILE_TEST_IS_DIR) ||
-		    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR))
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
-		else
+		    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR)) {
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		} else {
 			g_warning ("Kernel support for EFI variables missing");
+		}
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 		fu_plugin_device_add (plugin, dev);
 	}

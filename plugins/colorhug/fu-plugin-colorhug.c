@@ -225,11 +225,11 @@ fu_plugin_verify (FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_update_online (FuPlugin *plugin,
-			 FuDevice *device,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *device,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuPluginItem *item;
@@ -444,8 +444,7 @@ fu_plugin_colorhug_device_added_cb (GUsbContext *ctx,
 		fu_device_set_equivalent_id (item->device,
 					     g_usb_device_get_platform_id (device));
 		fu_device_add_guid (item->device, ch_device_get_guid (device));
-		fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
-		fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+		fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 		/* try to get the serial number -- if opening failed then
 		 * poll until the device is not busy */

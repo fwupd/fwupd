@@ -110,7 +110,7 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	/* create the device */
 	dev = fu_device_new ();
 	fu_device_set_id (dev, dev_id_str);
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_name (dev, name);
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
 	fu_device_add_guid (dev, guid_str);
@@ -281,11 +281,11 @@ fu_synapticsmst_write_progress_cb (goffset current, goffset total, gpointer user
 }
 
 gboolean
-fu_plugin_update_online (FuPlugin *plugin,
-			 FuDevice *dev,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *dev,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	g_autoptr(SynapticsMSTDevice) device = NULL;
 	const gchar *device_id;

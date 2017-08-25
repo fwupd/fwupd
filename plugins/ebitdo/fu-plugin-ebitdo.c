@@ -102,11 +102,11 @@ ebitdo_write_progress_cb (goffset current, goffset total, gpointer user_data)
 }
 
 gboolean
-fu_plugin_update_online (FuPlugin *plugin,
-			 FuDevice *dev,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *dev,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
 	const gchar *platform_id;

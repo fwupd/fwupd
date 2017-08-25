@@ -258,9 +258,10 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
 		fu_device_set_version (dev, version);
-		if (fu_plugin_dell_capsule_supported (plugin))
-			fu_device_add_flag (dev,
-					    FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		if (fu_plugin_dell_capsule_supported (plugin)) {
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		}
 	}
 
 	fu_plugin_device_add (plugin, dev);
@@ -605,8 +606,10 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (out->flashes_left > 0) {
-		if (fu_plugin_dell_capsule_supported (plugin))
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		if (fu_plugin_dell_capsule_supported (plugin)) {
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		}
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	}
 	fu_plugin_device_add (plugin, dev);
@@ -687,7 +690,7 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	/* clone the info from real device but prevent it from being flashed */
 	device_flags_alt = fu_device_get_flags (device_alt);
 	fu_device_set_flags (device, device_flags_alt);
-	fu_device_set_flags (device_alt, device_flags_alt & ~FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+	fu_device_set_flags (device_alt, device_flags_alt & ~FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* make sure that this unlocked device can be updated */
 	fu_device_set_version (device, "0.0.0.0");
@@ -696,11 +699,11 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 }
 
 gboolean
-fu_plugin_update_offline (FuPlugin *plugin,
-			  FuDevice *device,
-			  GBytes *blob_fw,
-			  FwupdInstallFlags flags,
-			  GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *device,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr (fwup_resource_iter) iter = NULL;

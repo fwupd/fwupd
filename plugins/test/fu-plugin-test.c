@@ -64,7 +64,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_set_id (device, "FakeDevice");
 	fu_device_add_guid (device, "b585990a-003e-5270-89d5-3705a17f9a43");
 	fu_device_set_name (device, "Integrated_Webcam(TM)");
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_description (device, "A fake webcam");
 	fu_device_set_vendor (device, "ACME Corp.");
 	fu_device_set_vendor_id (device, "USB:0x046D");
@@ -113,18 +113,12 @@ fu_plugin_verify (FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_update_online (FuPlugin *plugin,
-			 FuDevice *device,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *device,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
-	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "cannot handle offline");
-	}
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DECOMPRESSING);
 	for (guint i = 1; i <= 100; i++) {
 		g_usleep (1000);

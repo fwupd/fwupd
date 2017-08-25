@@ -237,7 +237,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		fu_device_add_guid (dev, device_id);
 	if (version != NULL)
 		fu_device_set_version (dev, version);
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	if (is_host)
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	if (is_safemode)
@@ -710,11 +710,11 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 
 gboolean
-fu_plugin_update_online (FuPlugin *plugin,
-			 FuDevice *dev,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *dev,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *devpath;
