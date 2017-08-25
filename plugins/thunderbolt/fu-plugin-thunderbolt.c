@@ -35,6 +35,7 @@
 #include "fu-plugin-thunderbolt.h"
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
+#include "fu-thunderbolt-image.h"
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 
@@ -56,7 +57,6 @@ struct FuPluginData {
 	 *  FU_PLUGIN_THUNDERBOLT_UPDATE_TIMEOUT_MS */
 	guint timeout;
 };
-
 
 static gchar *
 fu_plugin_thunderbolt_gen_id_from_syspath (const gchar *syspath)
@@ -322,17 +322,12 @@ udev_uevent_cb (GUdevClient *udev,
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_thunderbolt_validate_firmware (GBytes *blob_fw, GError **error)
-{
-	/* FIXME: need to implement */
-	return TRUE;
-}
-
 static GFile *
 fu_plugin_thunderbolt_find_nvmem (GUdevDevice  *udevice,
+				  gboolean      active,
 				  GError      **error)
 {
+	const gchar *nvmem_dir = active ? "nvm_active" : "nvm_non_active";
 	const gchar *devpath;
 	const gchar *name;
 	g_autoptr(GDir) d = NULL;
@@ -350,7 +345,7 @@ fu_plugin_thunderbolt_find_nvmem (GUdevDevice  *udevice,
 		return NULL;
 
 	while ((name = g_dir_read_name (d)) != NULL) {
-		if (g_str_has_prefix (name, "nvm_non_active")) {
+		if (g_str_has_prefix (name, nvmem_dir)) {
 			g_autoptr(GFile) parent = g_file_new_for_path (devpath);
 			g_autoptr(GFile) nvm_dir = g_file_get_child (parent, name);
 			return g_file_get_child (nvm_dir, "nvmem");
@@ -361,6 +356,30 @@ fu_plugin_thunderbolt_find_nvmem (GUdevDevice  *udevice,
 			     FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 			     "Could not find non-volatile memory location");
 	return NULL;
+}
+
+static FuPluginValidation
+fu_plugin_thunderbolt_validate_firmware (GUdevDevice  *udevice,
+					 GBytes       *blob_fw,
+					 GError      **error)
+{
+	g_autoptr(GFile) nvmem = NULL;
+	g_autoptr(GBytes) controller_fw = NULL;
+	gchar *content;
+	gsize length;
+
+	nvmem = fu_plugin_thunderbolt_find_nvmem (udevice, TRUE, error);
+	if (nvmem == NULL)
+		return VALIDATION_FAILED;
+
+	if (!g_file_load_contents (nvmem, NULL, &content, &length, NULL, error))
+		return VALIDATION_FAILED;
+
+	controller_fw = g_bytes_new_take (content, length);
+
+	return fu_plugin_thunderbolt_validate_image (controller_fw,
+						     blob_fw,
+						     error);
 }
 
 static gboolean
@@ -436,7 +455,7 @@ fu_plugin_thunderbolt_write_firmware (FuPlugin     *plugin,
 	g_autoptr(GFile) nvmem = NULL;
 	g_autoptr(GOutputStream) os = NULL;
 
-	nvmem = fu_plugin_thunderbolt_find_nvmem (udevice, error);
+	nvmem = fu_plugin_thunderbolt_find_nvmem (udevice, FALSE, error);
 	if (nvmem == NULL)
 		return FALSE;
 
@@ -721,15 +740,8 @@ fu_plugin_update (FuPlugin *plugin,
 	guint64 status;
 	g_autoptr(GUdevDevice) udevice = NULL;
 	g_autoptr(GError) error_local = NULL;
-
-	if (!fu_plugin_thunderbolt_validate_firmware (blob_fw, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "could not validate firmware: %s",
-			     error_local->message);
-		return FALSE;
-	}
+	gboolean force = (flags & FWUPD_INSTALL_FLAG_FORCE) != 0;
+	FuPluginValidation validation;
 
 	devpath = fu_device_get_metadata (dev, "sysfs-path");
 	g_return_val_if_fail (devpath, FALSE);
@@ -742,6 +754,33 @@ fu_plugin_update (FuPlugin *plugin,
 			     "could not find thunderbolt device at %s",
 			     devpath);
 		return FALSE;
+	}
+
+	validation = fu_plugin_thunderbolt_validate_firmware (udevice,
+							      blob_fw,
+							      &error_local);
+	if (validation != VALIDATION_PASSED) {
+		g_autofree gchar* msg = NULL;
+		switch (validation) {
+		case VALIDATION_FAILED:
+			msg = g_strdup_printf ("could not validate firmware: %s",
+					       error_local->message);
+			break;
+		case UNKNOWN_DEVICE:
+			msg = g_strdup ("firmware validation seems to be passed but the device is unknown");
+			break;
+		default:
+			break;
+		}
+		if (!force) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "%s",
+				     msg);
+			return FALSE;
+		}
+		g_warning ("%s", msg);
 	}
 
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);

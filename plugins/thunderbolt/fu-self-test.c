@@ -64,14 +64,15 @@ udev_mock_add_domain (UMockdevTestbed *bed, int id)
 
 
 static gchar *
-udev_mock_add_nvme_nonactive (UMockdevTestbed *bed,
-			      const char      *parent,
-			      int              id)
+udev_mock_add_nvmem (UMockdevTestbed *bed,
+		     gboolean         active,
+		     const char      *parent,
+		     int              id)
 {
 	g_autofree gchar *name = NULL;
 	gchar *path;
 
-	name = g_strdup_printf ("nvm_non_active%d", id);
+	name = g_strdup_printf ("%s%d", active ? "nvm_active" : "nvm_non_active", id);
 	path = umockdev_testbed_add_device (bed, "nvmem", name,
 					    parent,
 					    "nvmem", "",
@@ -116,7 +117,8 @@ struct MockTree {
 
 	UMockdevTestbed *bed;
 	gchar  *path;
-	gchar  *nvm_device;
+	gchar  *nvm_non_active;
+	gchar  *nvm_active;
 	guint   nvm_authenticate;
 	gchar  *nvm_version;
 
@@ -158,9 +160,14 @@ mock_tree_free (MockTree *tree)
 
 	g_free (tree->uuid);
 	if (tree->bed != NULL) {
-		if (tree->nvm_device) {
-			umockdev_testbed_uevent (tree->bed, tree->nvm_device, "remove");
-			umockdev_testbed_remove_device (tree->bed, tree->nvm_device);
+		if (tree->nvm_active) {
+			umockdev_testbed_uevent (tree->bed, tree->nvm_active, "remove");
+			umockdev_testbed_remove_device (tree->bed, tree->nvm_active);
+		}
+
+		if (tree->nvm_non_active) {
+			umockdev_testbed_uevent (tree->bed, tree->nvm_non_active, "remove");
+			umockdev_testbed_remove_device (tree->bed, tree->nvm_non_active);
 		}
 
 		if (tree->path) {
@@ -173,7 +180,8 @@ mock_tree_free (MockTree *tree)
 	}
 
 	g_free (tree->nvm_version);
-	g_free (tree->nvm_device);
+	g_free (tree->nvm_active);
+	g_free (tree->nvm_non_active);
 	g_free (tree->path);
 	g_free (tree->sysfs_parent);
 	g_slice_free (MockTree, tree);
@@ -216,8 +224,10 @@ mock_tree_dump (const MockTree *node, int level)
 	if (node->path) {
 		g_debug ("%*s * %s [%s] at %s", level, " ",
 			 node->device->name, node->uuid, node->path);
-		g_debug ("%*s   nvmem at %s", level, " ",
-			 node->nvm_device);
+		g_debug ("%*s   non-active nvmem at %s", level, " ",
+			 node->nvm_non_active);
+		g_debug ("%*s   active nvmem at %s", level, " ",
+			 node->nvm_active);
 	} else {
 		g_debug ("%*s * %s [%s] %d", level, " ",
 			 node->device->name, node->uuid, node->sysfs_id);
@@ -245,9 +255,9 @@ mock_tree_firmware_verify (const MockTree *node, GBytes *data)
 	chk = g_checksum_new (G_CHECKSUM_SHA1);
 
 	g_assert_nonnull (node);
-	g_assert_nonnull (node->nvm_device);
+	g_assert_nonnull (node->nvm_non_active);
 
-	nvm_device = g_file_new_for_path (node->nvm_device);
+	nvm_device = g_file_new_for_path (node->nvm_non_active);
 	nvm = g_file_get_child (nvm_device, "nvmem");
 
 	is = (GInputStream *) g_file_read (nvm, NULL, &error);
@@ -338,6 +348,50 @@ mock_tree_node_have_fu_device (const MockTree *node, gpointer data)
 	return node->fu_device != NULL;
 }
 
+static void
+write_controller_fw (const gchar *nvm)
+{
+	g_autoptr(GFile) nvm_device = NULL;
+	g_autoptr(GFile) nvmem = NULL;
+	g_autofree gchar *fw_path = NULL;
+	g_autoptr(GFile) fw_file = NULL;
+	g_autoptr(GInputStream) is = NULL;
+	g_autoptr(GOutputStream) os = NULL;
+	g_autoptr(GError) error = NULL;
+	gssize n;
+
+	fw_path = fu_test_get_filename (TESTDATADIR, "thunderbolt/minimal-fw-controller.bin");
+	g_assert_nonnull (fw_path);
+
+	fw_file = g_file_new_for_path (fw_path);
+	g_assert_nonnull (fw_file);
+
+	nvm_device = g_file_new_for_path (nvm);
+	g_assert_nonnull (nvm_device);
+
+	nvmem = g_file_get_child (nvm_device, "nvmem");
+	g_assert_nonnull (nvmem);
+
+	os = (GOutputStream *) g_file_append_to (nvmem,
+						 G_FILE_CREATE_NONE,
+						 NULL,
+						 &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (os);
+
+	is = (GInputStream *) g_file_read (fw_file, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (is);
+
+	n = g_output_stream_splice (os,
+				    is,
+				    G_OUTPUT_STREAM_SPLICE_NONE,
+				    NULL,
+				    &error);
+	g_assert_no_error (error);
+	g_assert_cmpuint (n, >, 0);
+}
+
 static gboolean
 mock_tree_attach_device (gpointer user_data)
 {
@@ -368,12 +422,21 @@ mock_tree_attach_device (gpointer user_data)
 						  "thunderbolt_device",
 						  NULL);
 
-	tree->nvm_device = udev_mock_add_nvme_nonactive (tree->bed,
-							 tree->path,
-							 tree->sysfs_id);
+	tree->nvm_non_active = udev_mock_add_nvmem (tree->bed,
+						    FALSE,
+						    tree->path,
+						    tree->sysfs_id);
+
+	tree->nvm_active = udev_mock_add_nvmem (tree->bed,
+						TRUE,
+						tree->path,
+						tree->sysfs_id);
 
 	g_assert_nonnull (tree->path);
-	g_assert_nonnull (tree->nvm_device);
+	g_assert_nonnull (tree->nvm_non_active);
+	g_assert_nonnull (tree->nvm_active);
+
+	write_controller_fw (tree->nvm_active);
 
 	for (guint i = 0; i < tree->children->len; i++) {
 		MockTree *child;
@@ -550,10 +613,12 @@ mock_tree_node_is_detached (const MockTree *node, gpointer unused)
 	/* consistency checks: if ret, make sure we are
 	 * fully detached */
 	if (ret) {
-		g_assert_null (node->nvm_device);
+		g_assert_null (node->nvm_active);
+		g_assert_null (node->nvm_non_active);
 		g_assert_null (node->bed);
 	} else {
-		g_assert_nonnull (node->nvm_device);
+		g_assert_nonnull (node->nvm_active);
+		g_assert_nonnull (node->nvm_non_active);
 		g_assert_nonnull (node->bed);
 	}
 
@@ -577,17 +642,22 @@ mock_tree_detach (MockTree *node)
 	}
 
 	bed  = node->bed;
-	umockdev_testbed_uevent (bed, node->nvm_device, "remove");
-	umockdev_testbed_remove_device (bed, node->nvm_device);
+	umockdev_testbed_uevent (bed, node->nvm_active, "remove");
+	umockdev_testbed_remove_device (bed, node->nvm_active);
+
+	umockdev_testbed_uevent (bed, node->nvm_non_active, "remove");
+	umockdev_testbed_remove_device (bed, node->nvm_non_active);
 
 	umockdev_testbed_uevent (bed, node->path, "remove");
 	umockdev_testbed_remove_device (bed, node->path);
 
 	g_free (node->path);
-	g_free (node->nvm_device);
+	g_free (node->nvm_non_active);
+	g_free (node->nvm_active);
 
 	node->path = NULL;
-	node->nvm_device = NULL;
+	node->nvm_non_active = NULL;
+	node->nvm_active = NULL;
 
 	g_object_unref (bed);
 	node->bed = NULL;
@@ -848,7 +918,7 @@ test_set_up (ThunderboltTest *tt, gconstpointer params)
 	if (flags & TEST_PREPARE_FIRMWARE) {
 		g_autofree gchar *fw_path = NULL;
 
-		fw_path = fu_test_get_filename (TESTDATADIR, "colorhug/firmware.bin");
+		fw_path = fu_test_get_filename (TESTDATADIR, "thunderbolt/minimal-fw.bin");
 		g_assert_nonnull (fw_path);
 		tt->fw_file = g_mapped_file_new (fw_path, FALSE, &error);
 		g_assert_no_error (error);
@@ -932,8 +1002,6 @@ test_change_uevent (ThunderboltTest *tt, gconstpointer user_data)
 	MockTree *tree = tt->tree;
 	gboolean ret;
 	const gchar *version_after;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(UpdateContext) up_ctx = NULL;
 
 	/* test sanity check */
 	g_assert_nonnull (tree);
