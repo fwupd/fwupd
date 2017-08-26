@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -49,7 +49,6 @@ fu_plugin_dell_tpm_func (void)
 	gboolean ret;
 	guint cnt = 0;
 	struct tpm_status tpm_out;
-	FwupdDeviceFlags flags = 0;
 	FuDevice *device_alt = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuDevice) device = NULL;
@@ -101,12 +100,10 @@ fu_plugin_dell_tpm_func (void)
 	g_assert (device_alt != NULL);
 
 	/* make sure 2.0 is locked */
-	flags = fu_device_get_flags (device);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_LOCKED, >, 0);
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_LOCKED));
 
 	/* make sure not allowed to flash 1.2 */
-	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, !=, 1);
+	g_assert_false (fu_device_has_flag (device_alt, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* try to unlock 2.0 */
 	ret = fu_plugin_runner_unlock (plugin, device, &error);
@@ -137,8 +134,7 @@ fu_plugin_dell_tpm_func (void)
 	g_assert (device_alt != NULL);
 
 	/* make sure allowed to flash 1.2 */
-	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint(flags & FWUPD_DEVICE_FLAG_UPDATABLE, >, 0);
+	g_assert_true (fu_device_has_flag (device_alt, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* try to unlock 2.0 */
 	ret = fu_plugin_runner_unlock (plugin, device, &error);
@@ -169,10 +165,8 @@ fu_plugin_dell_tpm_func (void)
 	g_assert (device_alt != NULL);
 
 	/* make sure allowed to flash 1.2 but not 2.0 */
-	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, >, 0);
-	flags = fu_device_get_flags (device);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, ==, 0);
+	g_assert_true (fu_device_has_flag (device_alt, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* try to unlock 2.0 */
 	ret = fu_plugin_runner_unlock (plugin, device, &error);
@@ -180,10 +174,8 @@ fu_plugin_dell_tpm_func (void)
 	g_assert (ret);
 
 	/* make sure no longer allowed to flash 1.2 but can flash 2.0 */
-	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, ==, 0);
-	flags = fu_device_get_flags (device);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, >, 0);
+	g_assert_false (fu_device_has_flag (device_alt, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* cleanup */
 	fu_plugin_device_remove (plugin, device_alt);
@@ -208,10 +200,8 @@ fu_plugin_dell_tpm_func (void)
 	g_assert (device_alt != NULL);
 
 	/* make sure allowed to flash 2.0 but not 1.2 */
-	flags = fu_device_get_flags (device_alt);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, >, 0);
-	flags = fu_device_get_flags (device);
-	g_assert_cmpint (flags & FWUPD_DEVICE_FLAG_UPDATABLE, ==, 0);
+	g_assert_true (fu_device_has_flag (device_alt, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* With one flash left we need an override */
 	ret = fu_plugin_runner_update (plugin, device_alt, NULL, NULL,
