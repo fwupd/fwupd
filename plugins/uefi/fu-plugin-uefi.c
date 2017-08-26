@@ -219,11 +219,10 @@ fu_plugin_update (FuPlugin *plugin,
 						"{error #%d} %s:%d %s(): %s: %s \n",
 						i, filename, line, function, message, strerror(err));
 		}
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "%s",
-			     err_string->str);
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     err_string->str);
 		return FALSE;
 	}
 
