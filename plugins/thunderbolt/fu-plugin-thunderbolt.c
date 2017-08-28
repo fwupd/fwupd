@@ -189,6 +189,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	if (did == 0x0)
 		g_warning ("failed to get Device ID: %s", error->message);
 
+	dev = fu_device_new ();
+
 	/* test for safe mode */
 	is_host = fu_plugin_thunderbolt_is_host (device);
 	version = g_udev_device_get_sysfs_attr (device, "nvm_version");
@@ -205,14 +207,15 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 				   devpath);
 			version = "0.0";
 			is_safemode = TRUE;
+			device_id = g_strdup ("TBT-safemode");
+			fu_device_set_metadata_boolean (dev, FU_DEVICE_METADATA_TBT_IS_SAFE_MODE, TRUE);
 		}
 	}
 	if (!is_safemode) {
 		vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
 		device_id = g_strdup_printf ("TBT-%04x%04x", (guint) vid, (guint) did);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
-
-	dev = fu_device_new ();
 
 	fu_device_set_id (dev, uuid);
 
@@ -237,11 +240,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		fu_device_add_guid (dev, device_id);
 	if (version != NULL)
 		fu_device_set_version (dev, version);
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	if (is_host)
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-	if (is_safemode)
-		fu_device_set_metadata_boolean (dev, FU_DEVICE_METADATA_TBT_IS_SAFE_MODE, TRUE);
 
 	fu_plugin_cache_add (plugin, id, dev);
 	fu_plugin_device_add (plugin, dev);
