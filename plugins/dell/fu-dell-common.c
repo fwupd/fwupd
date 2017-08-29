@@ -60,17 +60,48 @@ _dell_smi_obj_free (FuDellSmiObj *obj)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
 
 gboolean
-fu_dell_supported (void)
+fu_dell_supported (GError **error)
 {
 	guint8 dell_supported = 0;
 	struct smbios_struct *de_table;
+	g_autofree gchar *dmidecode_path = NULL;
+	g_autofree gchar *dmidecode_version = NULL;
+	g_autofree gchar *oem_string = NULL;
+	gboolean ret;
 
+	/* hwids are not reliable enough to detect this due to potential OEM rebranding
+	 * and systems that are branded but don't support all SMBIOS extensions
+	 */
+	dmidecode_path = g_find_program_in_path ("dmidecode");
+	if (dmidecode_path != NULL) {
+		ret = g_spawn_command_line_sync ("dmidecode --v",
+						 &dmidecode_version, NULL, NULL, error);
+		if (!ret)
+			goto smbios_method;
+		g_strchomp (dmidecode_version);
+		ret = g_strcmp0 (dmidecode_version, DMIDECODE_VERSION) >= 0;
+		if (!ret)
+			goto smbios_method;
+		ret = g_spawn_command_line_sync ("dmidecode --oem-string 1",
+						 &oem_string, NULL, NULL, error);
+		if (!ret)
+			goto smbios_method;
+		g_strchomp (oem_string);
+		if (g_strcmp0 (oem_string, DELL_SYSTEM) == 0) {
+			g_debug ("Verified running on supported %s via dmidecode %s",
+				 oem_string, dmidecode_version);
+			return TRUE;
+		}
+	}
+
+smbios_method:
         de_table = smbios_get_next_struct_by_handle (0, 0xDE00);
         if (!de_table)
 		return FALSE;
 	smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
 	if (dell_supported != 0xDE)
 		return FALSE;
+	g_debug ("Verified via SMBIOS tables: %02x", dell_supported);
 	return TRUE;
 }
 

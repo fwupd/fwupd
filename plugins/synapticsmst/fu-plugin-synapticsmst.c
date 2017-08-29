@@ -40,7 +40,7 @@ synapticsmst_common_check_supported_system (GError **error)
 		return TRUE;
 	}
 
-	if (!fu_dell_supported ()) {
+	if (!fu_dell_supported (error)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
