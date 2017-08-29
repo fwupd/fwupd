@@ -730,7 +730,7 @@ fu_plugin_update (FuPlugin *plugin,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "WARNING: %s only has %u flashes left. "
-				     "To update anyway please run the update with --force.",
+				     "See https://github.com/hughsie/fwupd/wiki/Dell-TPM:-flashes-left for more information.",
 				     name, flashes_left);
 			return FALSE;
 		}
