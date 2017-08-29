@@ -31,8 +31,10 @@
 
 #define SYNAPTICS_FLASH_MODE_DELAY 3
 
+#define HWID_DELL_INC	"85d38fda-fc0e-5c6f-808f-076984ae7978"
+
 static gboolean
-synapticsmst_common_check_supported_system (GError **error)
+synapticsmst_common_check_supported_system (FuPlugin *plugin, GError **error)
 {
 
 	if (g_getenv ("FWUPD_SYNAPTICSMST_FW_DIR") != NULL) {
@@ -40,7 +42,10 @@ synapticsmst_common_check_supported_system (GError **error)
 		return TRUE;
 	}
 
-	if (!fu_dell_supported (error)) {
+	/* tests for "Dell Inc." manufacturer string
+	 * this isn't strictly a complete tests due to OEM rebranded
+	 * systems being excluded, but should cover most cases */
+	if (!fu_plugin_check_hwid (plugin, HWID_DELL_INC)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
@@ -378,7 +383,7 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	/* verify that this is a supported system */
-	if (!synapticsmst_common_check_supported_system (error))
+	if (!synapticsmst_common_check_supported_system (plugin, error))
 		return FALSE;
 
 	/* look for host devices or already plugged in dock devices */
