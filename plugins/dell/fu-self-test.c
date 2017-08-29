@@ -75,7 +75,8 @@ fu_plugin_dell_tpm_func (void)
 	/* inject fake data (no TPM) */
 	tpm_out.ret = -2;
 	fu_plugin_dell_inject_fake_data (plugin,
-					   (guint32 *) &tpm_out, 0, 0, NULL);
+					 (guint32 *) &tpm_out, 0, 0,
+					 NULL, FALSE);
 	ret = fu_plugin_dell_detect_tpm (plugin, &error);
 	g_assert_no_error (error);
 	g_assert (!ret);
@@ -91,7 +92,8 @@ fu_plugin_dell_tpm_func (void)
 	tpm_out.status = TPM_EN_MASK | (TPM_1_2_MODE << 8);
 	tpm_out.flashes_left = 0;
 	fu_plugin_dell_inject_fake_data (plugin,
-					   (guint32 *) &tpm_out, 0, 0, NULL);
+					 (guint32 *) &tpm_out, 0, 0,
+					 NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (plugin, &error);
 	device_alt = fu_device_get_alternate (device);
 	g_assert_no_error (error);
@@ -125,7 +127,8 @@ fu_plugin_dell_tpm_func (void)
 	tpm_out.status = TPM_EN_MASK | TPM_OWN_MASK | (TPM_1_2_MODE << 8);
 	tpm_out.flashes_left = 125;
 	fu_plugin_dell_inject_fake_data (plugin,
-					   (guint32 *) &tpm_out, 0, 0, NULL);
+					 (guint32 *) &tpm_out, 0, 0,
+					 NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (plugin, &error);
 	device_alt = fu_device_get_alternate (device);
 	g_assert_no_error (error);
@@ -156,7 +159,8 @@ fu_plugin_dell_tpm_func (void)
 	tpm_out.status = TPM_EN_MASK | (TPM_1_2_MODE << 8);
 	tpm_out.flashes_left = 125;
 	fu_plugin_dell_inject_fake_data (plugin,
-					   (guint32 *) &tpm_out, 0, 0, NULL);
+					 (guint32 *) &tpm_out, 0, 0,
+					 NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (plugin, &error);
 	device_alt = fu_device_get_alternate (device);
 	g_assert_no_error (error);
@@ -191,7 +195,8 @@ fu_plugin_dell_tpm_func (void)
 	tpm_out.status = TPM_EN_MASK | (TPM_2_0_MODE << 8);
 	tpm_out.flashes_left = 1;
 	fu_plugin_dell_inject_fake_data (plugin,
-					   (guint32 *) &tpm_out, 0, 0, NULL);
+					 (guint32 *) &tpm_out, 0, 0,
+					 NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (plugin, &error);
 	device_alt = fu_device_get_alternate (device);
 	g_assert_no_error (error);
@@ -255,7 +260,7 @@ fu_plugin_dell_dock_func (void)
 	/* make sure bad device doesn't trigger this */
 	fu_plugin_dell_inject_fake_data (plugin,
 					   (guint32 *) &out,
-					   0x1234, 0x4321, NULL);
+					   0x1234, 0x4321, NULL, FALSE);
 	fu_plugin_dell_device_added_cb (NULL, NULL, plugin);
 	g_assert (device == NULL);
 
@@ -264,7 +269,8 @@ fu_plugin_dell_dock_func (void)
 	out[1] = 0;
 	fu_plugin_dell_inject_fake_data (plugin,
 					   (guint32 *) &out,
-					   DOCK_NIC_VID, DOCK_NIC_PID, NULL);
+					   DOCK_NIC_VID, DOCK_NIC_PID,
+					   NULL, FALSE);
 	fu_plugin_dell_device_added_cb (NULL, NULL, plugin);
 	g_assert (device == NULL);
 
@@ -296,7 +302,7 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_inject_fake_data (plugin,
 					   (guint32 *) &out,
 					   DOCK_NIC_VID, DOCK_NIC_PID,
-					   buf.buf);
+					   buf.buf, FALSE);
 	fu_plugin_dell_device_added_cb (NULL, NULL,
 					  plugin);
 	g_assert (device != NULL);
@@ -333,7 +339,7 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_inject_fake_data (plugin,
 					   (guint32 *) &out,
 					   DOCK_NIC_VID, DOCK_NIC_PID,
-					   buf.buf);
+					   buf.buf, FALSE);
 	fu_plugin_dell_device_added_cb (NULL, NULL,
 					  plugin);
 	g_assert (device != NULL);
@@ -368,7 +374,7 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_inject_fake_data (plugin,
 					   (guint32 *) &out,
 					   DOCK_NIC_VID, DOCK_NIC_PID,
-					   buf.buf);
+					   buf.buf, FALSE);
 	fu_plugin_dell_device_added_cb (NULL, NULL,
 					  plugin);
 	g_assert (device != NULL);
@@ -403,7 +409,7 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_inject_fake_data (plugin,
 					 (guint32 *) &out,
 					 DOCK_NIC_VID, DOCK_NIC_PID,
-					 buf.buf);
+					 buf.buf, FALSE);
 	fu_plugin_dell_device_added_cb (NULL, NULL,
 					  plugin);
 	g_assert (device != NULL);
@@ -431,7 +437,7 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_inject_fake_data (plugin,
 					 (guint32 *) &out,
 					 DOCK_NIC_VID, DOCK_NIC_PID,
-					 buf.buf);
+					 buf.buf, FALSE);
 	fu_plugin_dell_device_added_cb (NULL, NULL,
 					  plugin);
 	g_assert (device == NULL);
