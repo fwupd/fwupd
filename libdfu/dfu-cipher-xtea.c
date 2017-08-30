@@ -34,7 +34,6 @@ dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
 {
 	guint i;
 	gsize key_len;
-	g_autofree gchar *key_pad = NULL;
 
 	/* too long */
 	key_len = strlen (key);

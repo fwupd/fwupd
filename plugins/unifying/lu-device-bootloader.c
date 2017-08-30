@@ -259,7 +259,6 @@ lu_device_bootloader_request (LuDevice *device,
 	/* send request */
 	lu_dump_raw ("host->device", buf_request, sizeof (buf_request));
 	if (usb_device != NULL) {
-		g_autofree guint8 *data_in_buf = g_memdup (buf_request, sizeof (buf_request));
 		if (!g_usb_device_control_transfer (usb_device,
 						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 						    G_USB_DEVICE_REQUEST_TYPE_CLASS,

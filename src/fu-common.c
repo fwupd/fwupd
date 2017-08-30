@@ -247,7 +247,6 @@ fu_common_extract_archive (GBytes *blob, const gchar *dir, GError **error)
 	}
 	for (;;) {
 		gboolean valid;
-		g_autofree gchar *path = NULL;
 		r = archive_read_next_header (arch, &entry);
 		if (r == ARCHIVE_EOF)
 			break;
@@ -283,6 +282,9 @@ out:
 	}
 	return ret;
 }
+
+static void
+fu_common_add_argv (GPtrArray *argv, const gchar *fmt, ...) G_GNUC_PRINTF (2, 3);
 
 static void
 fu_common_add_argv (GPtrArray *argv, const gchar *fmt, ...)

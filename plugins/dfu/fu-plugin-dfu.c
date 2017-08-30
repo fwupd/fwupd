@@ -39,7 +39,6 @@ fu_plugin_dfu_device_update (FuPlugin *plugin,
 {
 	const gchar *platform_id;
 	guint16 release;
-	g_autofree gchar *guid = NULL;
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *devid2 = NULL;
@@ -118,7 +117,6 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 {
 	const gchar *platform_id;
 	const gchar *display_name;
-	g_autofree gchar *id = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDevice) dev = NULL;
@@ -219,7 +217,6 @@ fu_plugin_update (FuPlugin *plugin,
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	DfuDevice *device;
 	const gchar *platform_id;
-	g_autoptr(DfuDevice) dfu_device = NULL;
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -287,7 +284,6 @@ fu_plugin_verify (FuPlugin *plugin,
 	GBytes *blob_fw;
 	DfuDevice *device;
 	const gchar *platform_id;
-	g_autoptr(DfuDevice) dfu_device = NULL;
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(GError) error_local = NULL;
 	GChecksumType checksum_types[] = {

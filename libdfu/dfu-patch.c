@@ -168,7 +168,7 @@ dfu_patch_export (DfuPatch *self, GError **error)
 		DfuPatchChunk *chunk = g_ptr_array_index (priv->chunks, i);
 		DfuPatchChunkHeader chunkhdr;
 		gsize sz_tmp = 0;
-		guint8 *data_new = g_bytes_get_data (chunk->blob, &sz_tmp);
+		const guint8 *data_new = g_bytes_get_data (chunk->blob, &sz_tmp);
 
 		/* build chunk header and append data */
 		chunkhdr.off = GUINT32_TO_LE (chunk->off);
@@ -342,8 +342,8 @@ dfu_patch_create (DfuPatch *self, GBytes *blob1, GBytes *blob2, GError **error)
 {
 	DfuPatchPrivate *priv = GET_PRIVATE (self);
 	DfuPatchCreateHelper helper;
-	guint8 *data1;
-	guint8 *data2;
+	const guint8 *data1;
+	const guint8 *data2;
 	gsize sz1 = 0;
 	gsize sz2 = 0;
 	guint32 same_sz = 0;

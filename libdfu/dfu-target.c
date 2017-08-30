@@ -616,7 +616,6 @@ static gboolean
 dfu_target_setup (DfuTarget *target, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1405,7 +1404,6 @@ dfu_target_download_element_dfu (DfuTarget *target,
 	guint i;
 	guint nr_chunks;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
-	g_autoptr(GError) error_local = NULL;
 
 	/* round up as we have to transfer incomplete blocks */
 	bytes = dfu_element_get_contents (element);
@@ -1471,7 +1469,6 @@ dfu_target_download_element_dfuse (DfuTarget *target,
 	guint nr_chunks;
 	guint zone_last = G_MAXUINT;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) sectors_array = NULL;
 	g_autoptr(GHashTable) sectors_hash = NULL;
 

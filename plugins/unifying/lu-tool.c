@@ -410,7 +410,6 @@ lu_tool_attach (FuLuToolPrivate *priv, gchar **values, GError **error)
 static void
 lu_tool_device_added_cb (LuContext* ctx, LuDevice *device, FuLuToolPrivate *priv)
 {
-	g_autoptr(GError) error = NULL;
 	g_print ("ADDED\tLogitech Unifying device %s {%p} [%s]\n",
 		 lu_device_kind_to_string (lu_device_get_kind (device)),
 		 device, lu_device_get_platform_id (device));
@@ -472,7 +471,6 @@ main (int argc, char **argv)
 	g_autofree gchar *emulation_kind = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GOptionContext) context = NULL;
-	g_autoptr(LuDevice) device = NULL;
 	g_autoptr(FuLuToolPrivate) priv = g_new0 (FuLuToolPrivate, 1);
 	const GOptionEntry options[] = {
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
