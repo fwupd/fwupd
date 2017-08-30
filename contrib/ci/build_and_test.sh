@@ -9,7 +9,7 @@ meson .. \
     -Denable-doc=true \
     -Denable-man=true \
     -Denable-tests=true \
-    -Denable-thunderbolt=false \
+    -Denable-thunderbolt=true \
     -Denable-uefi=true \
     -Denable-dell=true \
     -Denable-synaptics=true \
