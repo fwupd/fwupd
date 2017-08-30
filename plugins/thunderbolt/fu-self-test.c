@@ -992,7 +992,8 @@ test_tree (ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_true (ret);
 
 	mock_tree_detach (tree);
-	mock_tree_all (tree, mock_tree_node_is_detached, NULL);
+	ret = mock_tree_all (tree, mock_tree_node_is_detached, NULL);
+	g_assert_true (ret);
 }
 
 static void
