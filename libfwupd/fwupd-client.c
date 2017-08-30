@@ -602,7 +602,6 @@ fwupd_client_verify (FwupdClient *client, const gchar *device_id,
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	g_autoptr(FwupdClientHelper) helper = NULL;
-	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -651,7 +650,6 @@ fwupd_client_verify_update (FwupdClient *client, const gchar *device_id,
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	g_autoptr(FwupdClientHelper) helper = NULL;
-	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -700,7 +698,6 @@ fwupd_client_unlock (FwupdClient *client, const gchar *device_id,
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	g_autoptr(FwupdClientHelper) helper = NULL;
-	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -749,7 +746,6 @@ fwupd_client_clear_results (FwupdClient *client, const gchar *device_id,
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	g_autoptr(FwupdClientHelper) helper = NULL;
-	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -798,7 +794,6 @@ fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	g_autoptr(FwupdClientHelper) helper = NULL;
-	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
 	g_return_val_if_fail (device_id != NULL, NULL);
@@ -878,7 +873,6 @@ fwupd_client_install (FwupdClient *client,
 	g_autoptr(FwupdClientHelper) helper = NULL;
 	g_autoptr(GDBusMessage) request = NULL;
 	g_autoptr(GUnixFDList) fd_list = NULL;
-	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);

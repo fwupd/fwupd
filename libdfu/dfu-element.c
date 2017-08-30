@@ -240,7 +240,6 @@ dfu_element_set_target_size (DfuElement *element, guint32 target_size)
 	const guint8 *data;
 	gsize length;
 	guint8 *buf;
-	g_autoptr(GBytes) contents_padded = NULL;
 
 	g_return_if_fail (DFU_IS_ELEMENT (element));
 

@@ -1385,7 +1385,6 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(DfuImage) image = NULL;
 	g_autoptr(GFile) file = NULL;
 
 	/* check args */

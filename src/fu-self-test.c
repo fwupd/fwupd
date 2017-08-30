@@ -80,7 +80,6 @@ fu_hwids_func (void)
 	g_autoptr(FuHwids) hwids = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *sysfsdir = NULL;
-	g_autofree gchar *testdir = NULL;
 	gboolean ret;
 
 	struct {
@@ -610,12 +609,12 @@ fu_common_spawn_func (void)
 	guint lines = 0;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *fn = NULL;
-	gchar *argv[3] = { "replace", "test", NULL };
+	const gchar *argv[3] = { "replace", "test", NULL };
 
 	fn = fu_test_get_filename (TESTDATADIR, "spawn.sh");
 	g_assert (fn != NULL);
 	argv[0] = fn;
-	ret = fu_common_spawn_sync ((const gchar * const *) argv,
+	ret = fu_common_spawn_sync (argv,
 				    fu_test_stdout_cb, &lines, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);

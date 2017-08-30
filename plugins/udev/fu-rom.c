@@ -571,9 +571,7 @@ fu_rom_load_data (FuRom *rom,
 	gssize sz = buffer_sz;
 	guint32 jump = 0;
 	guint32 hdr_sz = 0;
-	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *id = NULL;
-	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(GChecksum) checksum_sha1 = g_checksum_new (G_CHECKSUM_SHA1);
 	g_autoptr(GChecksum) checksum_sha256 = g_checksum_new (G_CHECKSUM_SHA256);
 

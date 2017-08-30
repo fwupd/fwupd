@@ -64,7 +64,6 @@ fu_fuzzer_write_files (GHashTable *hash, GError **error)
 	g_autoptr(GList) keys = g_hash_table_get_keys (hash);
 
 	for (l = keys; l != NULL; l = l->next) {
-		g_autoptr(FuRom) rom = fu_rom_new ();
 		g_autofree gchar *filename = NULL;
 		const gchar *fn = l->data;
 		filename = g_build_filename ("fuzzing", fn, NULL);

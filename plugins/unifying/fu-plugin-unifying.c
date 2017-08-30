@@ -43,7 +43,6 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 {
 	GPtrArray *guids;
 	GUsbDevice *usb_device;
-	g_autofree gchar *name = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDevice) dev = NULL;

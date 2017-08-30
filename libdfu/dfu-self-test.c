@@ -156,7 +156,6 @@ dfu_firmware_raw_func (void)
 	gboolean ret;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GBytes) roundtrip_orig = NULL;
 	g_autoptr(GBytes) roundtrip = NULL;
 	g_autoptr(GError) error = NULL;
 

@@ -198,7 +198,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autofree gchar *fwfn = NULL;
-	g_autofree gchar *fwver = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	/* anything interesting */

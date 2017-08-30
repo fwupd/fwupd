@@ -1494,7 +1494,6 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 	g_autoptr(GBytes) bytes_raw = NULL;
 	g_autoptr(GBytes) bytes_sig = NULL;
 	g_autoptr(GInputStream) stream_fd = NULL;
-	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GInputStream) stream_sig = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);

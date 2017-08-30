@@ -176,7 +176,6 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	g_autoptr(GError) error_local = NULL;
 	fwup_resource *re = NULL;
 	guint64 hardware_instance = 0;	/* FIXME */
 	int rc;
