@@ -11,7 +11,7 @@ meson .. \
     -Denable-man=true \
     -Denable-tests=true \
     -Denable-dummy=true \
-    -Denable-thunderbolt=false \
+    -Denable-thunderbolt=true \
     -Denable-uefi=true \
     -Denable-dell=true \
     -Denable-synaptics=true \
