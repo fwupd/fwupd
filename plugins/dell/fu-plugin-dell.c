@@ -65,15 +65,6 @@ typedef struct _DOCK_DESCRIPTION
 	const gchar *		desc;
 } DOCK_DESCRIPTION;
 
-static void
-_dell_smi_obj_free (FuDellSmiObj *obj)
-{
-	dell_smi_obj_free (obj->smi);
-	g_free (obj);
-}
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
-
 /* These are for matching the components */
 #define WD15_EC_STR		"2 0 2 2 0"
 #define TB16_EC_STR		"2 0 2 1 0"
