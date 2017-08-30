@@ -54,6 +54,8 @@ fu_plugin_dell_tpm_func (void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuPlugin) plugin = NULL;
 
+	memset (&tpm_out, 0x0, sizeof(tpm_out));
+
 	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
 	plugin = fu_plugin_new ();
 	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_dell.so", &error);
@@ -232,7 +234,7 @@ fu_plugin_dell_dock_func (void)
 {
 	gboolean ret;
 	guint cnt = 0;
-	guint32 out[4];
+	guint32 out[4] = { 0x0, 0x0, 0x0, 0x0 };
 	DOCK_UNION buf;
 	DOCK_INFO *dock_info;
 	g_autoptr(GError) error = NULL;
