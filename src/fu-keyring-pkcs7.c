@@ -211,7 +211,7 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 	}
 
 	/* import the signature */
-	datum.data = g_bytes_get_data (blob_signature, NULL);
+	datum.data = (guchar *) g_bytes_get_data (blob_signature, NULL);
 	datum.size = g_bytes_get_size (blob_signature);
 	rc = gnutls_pkcs7_import (pkcs7, &datum, GNUTLS_X509_FMT_PEM);
 	if (rc != GNUTLS_E_SUCCESS) {
@@ -224,7 +224,7 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 	}
 
 	/* verify the blob */
-	datum.data = g_bytes_get_data (blob, NULL);
+	datum.data = (guchar *) g_bytes_get_data (blob, NULL);
 	datum.size = g_bytes_get_size (blob);
 	count = gnutls_pkcs7_get_signature_count (pkcs7);
 	g_debug ("got %i PKCS7 signatures", count);
