@@ -42,10 +42,6 @@
 #include "fu-progressbar.h"
 #include "fwupd-common-private.h"
 
-#ifndef GUdevClient_autoptr
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
-#endif
-
 /* this is only valid in this file */
 #define FWUPD_ERROR_INVALID_ARGS	(FWUPD_ERROR_LAST+1)
 
