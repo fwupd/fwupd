@@ -872,7 +872,7 @@ fwupd_remote_set_property (GObject *obj, guint prop_id,
 		self->enabled = g_value_get_boolean (value);
 		break;
 	case PROP_ID:
-		self->id = g_value_get_string (value);
+		fwupd_remote_set_id (self, g_value_get_string (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
