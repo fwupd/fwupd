@@ -88,7 +88,7 @@ typedef enum _CABLE_TYPE
 } CABLE_TYPE;
 
 gboolean
-fu_dell_supported (GError **error);
+fu_dell_supported (void);
 
 gboolean
 fu_dell_clear_smi (FuDellSmiObj *obj);
@@ -144,9 +144,5 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable);
 /* VID/PID of ethernet controller on dock */
 #define DOCK_NIC_VID		0x0bda
 #define DOCK_NIC_PID		0x8153
-
-/* For detecting a Dell system properly */
-#define DMIDECODE_VERSION		"3.1"
-#define DELL_SYSTEM			"Dell System"
 
 #endif /* __FU_DELL_COMMON_H */

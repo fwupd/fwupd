@@ -868,6 +868,8 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
+	if (fu_dell_supported ())
+		data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
 	data->smi_obj->fake_smbios = FALSE;
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
 		data->smi_obj->fake_smbios = TRUE;
@@ -895,14 +897,13 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		return TRUE;
 	}
 
-	if (!fu_dell_supported (error)) {
+	if (!fu_dell_supported ()) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Firmware updating not supported");
 		return FALSE;
 	}
-	data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
 
 	if (usb_ctx != NULL) {
 		g_signal_connect (usb_ctx, "device-added",
