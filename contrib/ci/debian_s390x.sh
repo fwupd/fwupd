@@ -12,6 +12,7 @@ meson .. \
 	--werror \
 	-Dplugin_uefi=false \
 	-Dplugin_dell=false \
+	-Dplugin_redfish=false \
 	-Dplugin_synaptics=false \
 	-Dintrospection=false \
 	-Dgtkdoc=false \
