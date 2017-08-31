@@ -128,16 +128,16 @@ read_farb_pointer_impl (const FuThunderboltFwLocation  *location,
 static guint32
 read_farb_pointer (const FuThunderboltFwObject *fw, GError **error)
 {
-	const FuThunderboltFwLocation farb1 = { .offset = 0,      .len = 3 };
-	const FuThunderboltFwLocation farb2 = { .offset = 0x1000, .len = 3 };
+	const FuThunderboltFwLocation farb0 = { .offset = 0,      .len = 3, .description = "farb0" };
+	const FuThunderboltFwLocation farb1 = { .offset = 0x1000, .len = 3, .description = "farb1" };
 
 	guint32 value;
-	if (!read_farb_pointer_impl (&farb1, fw, &value, error))
+	if (!read_farb_pointer_impl (&farb0, fw, &value, error))
 		return 0;
 	if (valid_farb_pointer (value))
 		return value;
 
-	if (!read_farb_pointer_impl (&farb2, fw, &value, error))
+	if (!read_farb_pointer_impl (&farb1, fw, &value, error))
 		return 0;
 	if (!valid_farb_pointer (value)) {
 		g_set_error_literal (error,
@@ -237,7 +237,7 @@ read_ucode_section_len (guint32                       offset,
 			guint16                      *value,
 			GError                      **error)
 {
-	const FuThunderboltFwLocation section_size = { .offset = offset, .len = 2 };
+	const FuThunderboltFwLocation section_size = { .offset = offset, .len = 2, .description = "size field" };
 	if (!read_uint16 (&section_size, fw, value, error))
 		return FALSE;
 	*value *= sizeof (guint32);
@@ -252,8 +252,8 @@ read_ucode_section_len (guint32                       offset,
 static gboolean
 read_sections (const FuThunderboltFwObject *fw, gboolean is_host, guint gen, GError **error)
 {
-	const FuThunderboltFwLocation arc_params_offset = { .offset = 0x75,  .len = 4 };
-	const FuThunderboltFwLocation drom_offset       = { .offset = 0x10E, .len = 4 };
+	const FuThunderboltFwLocation arc_params_offset = { .offset = 0x75,  .len = 4, .description = "arc params offset" };
+	const FuThunderboltFwLocation drom_offset       = { .offset = 0x10E, .len = 4, .description = "DROM offset" };
 	guint32 offset;
 
 	if (gen >= 3 || gen == 0) {
@@ -284,8 +284,8 @@ read_sections (const FuThunderboltFwObject *fw, gboolean is_host, guint gen, GEr
 		 * already have the next section offset...
 		 */
 		const unsigned DRAM_FLAG = 1 << 6;
-		const FuThunderboltFwLocation available_sections_loc  = { .offset = 0x2, .len = 1 };
-		const FuThunderboltFwLocation ee_ucode_start_addr_loc = { .offset = 0x3, .len = 2 };
+		const FuThunderboltFwLocation available_sections_loc  = { .offset = 0x2, .len = 1, .description = "sections" };
+		const FuThunderboltFwLocation ee_ucode_start_addr_loc = { .offset = 0x3, .len = 2, .description = "ucode start" };
 
 		guint16 ucode_offset;
 
@@ -490,8 +490,8 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 	const FuThunderboltFwObject controller = { fw_data,   fw_size,   controller_sections };
 	const FuThunderboltFwObject image      = { blob_data, blob_size, image_sections };
 
-	const FuThunderboltFwLocation is_host_loc   = { .offset = 0x10, .len = 1, .mask = 1 << 1 };
-	const FuThunderboltFwLocation device_id_loc = { .offset = 0x5,  .len = 2 };
+	const FuThunderboltFwLocation is_host_loc   = { .offset = 0x10, .len = 1, .mask = 1 << 1, .description = "host flag" };
+	const FuThunderboltFwLocation device_id_loc = { .offset = 0x5,  .len = 2, .description = "devID" };
 
 	image_sections[DIGITAL_SECTION] = read_farb_pointer (&image, error);
 	if (image_sections[DIGITAL_SECTION] == 0)
