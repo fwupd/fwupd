@@ -680,7 +680,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "%s: failed to setup networking");
+				     "failed to setup networking");
 		return FALSE;
 	}
 
