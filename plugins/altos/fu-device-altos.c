@@ -813,7 +813,7 @@ fu_device_altos_init_real (FuDeviceAltos *device)
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device),
-			    FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+			    FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* set default vendor */
 	fu_device_set_vendor (FU_DEVICE (device), "altusmetrum.org");

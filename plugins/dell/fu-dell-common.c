@@ -350,13 +350,11 @@ gboolean
 fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 {
 	guint32 dock_location;
-	FwupdDeviceFlags flags;
 	const gchar *tmp;
 	g_autoptr (FuDellSmiObj) smi_obj = NULL;
 
 	if (device) {
-		flags = fu_device_get_flags (device);
-		if (!(flags & FWUPD_DEVICE_FLAG_ALLOW_ONLINE))
+		if (!fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE))
 			return TRUE;
 		tmp = fu_device_get_plugin(device);
 		if (!((g_strcmp0 (tmp, "tbtfwu") == 0) ||

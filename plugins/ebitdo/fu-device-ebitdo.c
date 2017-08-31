@@ -615,7 +615,7 @@ fu_device_ebitdo_init_real (FuDeviceEbitdo *device)
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device),
-			    FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+			    FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* set name and vendor */
 	name = g_strdup_printf ("%s Gamepad",
