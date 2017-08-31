@@ -94,7 +94,7 @@ read_location (const FuThunderboltFwLocation  *location,
 		g_set_error (error,
 			     FWUPD_ERROR, FWUPD_ERROR_READ,
 			     "Given location is outside of the given FW (%s)",
-			     location->description);
+			     location->description ? location->description : "N/A");
 		return NULL;
 	}
 
