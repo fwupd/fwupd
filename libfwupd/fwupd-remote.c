@@ -924,6 +924,7 @@ fwupd_remote_finalize (GObject *obj)
 
 	g_free (self->id);
 	g_free (self->metadata_uri);
+	g_free (self->metadata_uri_sig);
 	g_free (self->firmware_base_uri);
 	g_free (self->username);
 	g_free (self->password);
