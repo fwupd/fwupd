@@ -354,7 +354,7 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 	g_autoptr (FuDellSmiObj) smi_obj = NULL;
 
 	if (device) {
-		if (!fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE))
+		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE))
 			return TRUE;
 		tmp = fu_device_get_plugin (device);
 		if (!((g_strcmp0 (tmp, "thunderbolt") == 0) ||
