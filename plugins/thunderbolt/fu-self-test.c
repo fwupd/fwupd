@@ -41,6 +41,7 @@
 
 #include "fu-plugin-private.h"
 #include "fu-plugin-thunderbolt.h"
+#include "fu-thunderbolt-image.h"
 #include "fu-test.h"
 
 static gchar *
@@ -861,6 +862,7 @@ typedef enum TestFlags {
 } TestFlags;
 
 #define TEST_INIT_FULL (GUINT_TO_POINTER (TEST_PREPARE_ALL))
+#define TEST_INIT_NONE (GUINT_TO_POINTER (0))
 
 typedef struct ThunderboltTest {
 	UMockdevTestbed *bed;
@@ -994,6 +996,96 @@ test_tree (ThunderboltTest *tt, gconstpointer user_data)
 	mock_tree_detach (tree);
 	ret = mock_tree_all (tree, mock_tree_node_is_detached, NULL);
 	g_assert_true (ret);
+}
+
+static void
+test_image_validation (ThunderboltTest *tt, gconstpointer user_data)
+{
+	FuPluginValidation val;
+	g_autofree gchar *ctl_path = NULL;
+	g_autofree gchar *fwi_path = NULL;
+	g_autofree gchar *bad_path = NULL;
+	g_autoptr(GMappedFile) fwi_file = NULL;
+	g_autoptr(GMappedFile) ctl_file = NULL;
+	g_autoptr(GMappedFile) bad_file = NULL;
+	g_autoptr(GBytes)      fwi_data = NULL;
+	g_autoptr(GBytes)      ctl_data = NULL;
+	g_autoptr(GBytes)      bad_data = NULL;
+	g_autoptr(GError)      error = NULL;
+
+	/* image as if read from the controller (i.e. no headers) */
+	ctl_path = fu_test_get_filename (TESTDATADIR,
+					 "thunderbolt/minimal-fw-controller.bin");
+	g_assert_nonnull (ctl_path);
+
+	ctl_file = g_mapped_file_new (ctl_path, FALSE, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (ctl_file);
+
+	ctl_data = g_mapped_file_get_bytes (ctl_file);
+	g_assert_nonnull (ctl_data);
+
+	/* valid firmware update image */
+	fwi_path = fu_test_get_filename (TESTDATADIR, "thunderbolt/minimal-fw.bin");
+	g_assert_nonnull (fwi_path);
+
+	fwi_file = g_mapped_file_new (fwi_path, FALSE, &error);
+ 	g_assert_no_error (error);
+	g_assert_nonnull (fwi_file);
+
+	fwi_data = g_mapped_file_get_bytes (fwi_file);
+	g_assert_nonnull (fwi_data);
+
+	/* a wrong/bad firmware update image */
+ 	bad_path = fu_test_get_filename (TESTDATADIR, "colorhug/firmware.bin");
+	g_assert_nonnull (bad_path);
+
+	bad_file = g_mapped_file_new (bad_path, FALSE, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (bad_file);
+
+	bad_data = g_mapped_file_get_bytes (bad_file);
+	g_assert_nonnull (bad_data);
+
+	/* now for some testing ... this should work */
+	val = fu_plugin_thunderbolt_validate_image (ctl_data, fwi_data, &error);
+	g_assert_no_error (error);
+	g_assert_cmpint (val, ==, VALIDATION_PASSED);
+
+
+	/* these all should fail */
+	/*  valid controller, bad update data */
+	val = fu_plugin_thunderbolt_validate_image (ctl_data, ctl_data, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_READ);
+	g_assert_cmpint (val, ==, VALIDATION_FAILED);
+	g_debug ("expected image validation error [ctl, ctl]: %s", error->message);
+	g_clear_error (&error);
+
+	val = fu_plugin_thunderbolt_validate_image (ctl_data, bad_data, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_READ);
+	g_assert_cmpint (val, ==, VALIDATION_FAILED);
+	g_debug ("expected image validation error [ctl, bad]: %s", error->message);
+	g_clear_error (&error);
+
+	/* bad controller data, valid update data */
+	val = fu_plugin_thunderbolt_validate_image (fwi_data, fwi_data, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_cmpint (val, ==, VALIDATION_FAILED);
+	g_debug ("expected image validation error [fwi, fwi]: %s", error->message);
+	g_clear_error (&error);
+
+	val = fu_plugin_thunderbolt_validate_image (bad_data, fwi_data, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_cmpint (val, ==, VALIDATION_FAILED);
+	g_debug ("expected image validation error [bad, fwi]: %s", error->message);
+	g_clear_error (&error);
+
+	/* both bad */
+	val = fu_plugin_thunderbolt_validate_image (bad_data, bad_data, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_READ);
+	g_assert_cmpint (val, ==, VALIDATION_FAILED);
+	g_debug ("expected image validation error [bad, bad]: %s", error->message);
+	g_clear_error (&error);
 }
 
 static void
@@ -1186,6 +1278,13 @@ main (int argc, char **argv)
 		    NULL,
 		    test_set_up,
 		    test_tree,
+		    test_tear_down);
+
+	g_test_add ("/thunderbolt/image-validation",
+		    ThunderboltTest,
+		    TEST_INIT_NONE,
+		    test_set_up,
+		    test_image_validation,
 		    test_tear_down);
 
 	g_test_add ("/thunderbolt/change-uevent",
