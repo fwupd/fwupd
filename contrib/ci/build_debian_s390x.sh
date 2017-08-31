@@ -14,6 +14,7 @@ meson .. \
 	-Denable-uefi-labels=false \
 	-Denable-dell=false \
 	-Denable-synaptics=false \
+	-Denable-redfish=false \
 	-Denable-introspection=false \
 	-Denable-doc=false \
 	-Denable-man=false
