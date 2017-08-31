@@ -356,11 +356,11 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 	if (device) {
 		if (!fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE))
 			return TRUE;
-		tmp = fu_device_get_plugin(device);
-		if (!((g_strcmp0 (tmp, "tbtfwu") == 0) ||
+		tmp = fu_device_get_plugin (device);
+		if (!((g_strcmp0 (tmp, "thunderbolt") == 0) ||
 			(g_strcmp0 (tmp, "synapticsmst") == 0)))
 			return TRUE;
-		g_debug("preparing/cleaning update for %s", tmp);
+		g_debug ("preparing/cleaning update for %s", tmp);
 	}
 
 	/* Dock MST Hub / TBT Controller */
@@ -370,16 +370,16 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 	if (fu_dell_detect_dock (smi_obj, &dock_location)) {
 		if (!fu_dell_toggle_dock_mode (smi_obj, enable, dock_location,
 					       error))
-			g_debug("unable to change dock to %d", enable);
+			g_debug ("unable to change dock to %d", enable);
 		else
-			g_debug("Toggled dock mode to %d", enable);
+			g_debug ("Toggled dock mode to %d", enable);
 	}
 
 	/* System MST hub / TBT controller */
 	if (!fu_dell_toggle_host_mode (smi_obj, TBT_GPIO_GUID, enable))
-		g_debug("Unable to toggle TBT GPIO to %d", enable);
+		g_debug ("Unable to toggle TBT GPIO to %d", enable);
 	else
-		g_debug("Toggled TBT GPIO to %d", enable);
+		g_debug ("Toggled TBT GPIO to %d", enable);
 	if (!fu_dell_toggle_host_mode (smi_obj, MST_GPIO_GUID, enable))
 		g_debug("Unable to toggle MST hub GPIO to %d", enable);
 	else
