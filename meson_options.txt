@@ -12,6 +12,7 @@ option('plugin_dell', type : 'boolean', value : true, description : 'enable Dell
 option('plugin_dummy', type : 'boolean', value : false, description : 'enable the dummy device')
 option('plugin_synaptics', type: 'boolean', value: true, description : 'enable Synaptics MST hub support')
 option('plugin_thunderbolt', type : 'boolean', value : true, description : 'enable Thunderbolt support')
+option('plugin_redfish', type : 'boolean', value : true, description : 'enable Redfish support')
 option('plugin_uefi', type : 'boolean', value : true, description : 'enable UEFI support')
 option('systemd', type : 'boolean', value : true, description : 'enable systemd support')
 option('systemdunitdir', type: 'string', value: '', description: 'Directory for systemd units')
