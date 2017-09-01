@@ -37,7 +37,9 @@
 #include "fu-device-metadata.h"
 #include "fu-thunderbolt-image.h"
 
+#ifndef HAVE_GUDEV_232
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
+#endif
 
 typedef void (*UEventNotify) (FuPlugin	  *plugin,
 			      GUdevDevice *udevice,

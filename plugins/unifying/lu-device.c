@@ -1048,8 +1048,10 @@ lu_device_write_firmware (LuDevice *device,
 	return klass->write_firmware (device, fw, progress_cb, progress_data, error);
 }
 
+#ifndef HAVE_GUDEV_232
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
+#endif
 
 static GUdevDevice *
 lu_device_find_udev_device (GUsbDevice *usb_device)

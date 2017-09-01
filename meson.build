@@ -128,6 +128,9 @@ if polkit.version().version_compare('>= 0.114')
   conf.set('HAVE_POLKIT_0_114', '1')
 endif
 gudev = dependency('gudev-1.0')
+if gudev.version().version_compare('>= 232')
+  conf.set('HAVE_GUDEV_232', '1')
+endif
 appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')

@@ -240,7 +240,9 @@ lu_context_remove_device (LuContext *ctx, LuDevice *device)
 	g_ptr_array_remove (ctx->devices, device);
 }
 
+#ifndef HAVE_GUDEV_232
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
+#endif
 
 static const gchar *
 lu_context_get_platform_id_for_udev_device (GUdevDevice *udev_device)
