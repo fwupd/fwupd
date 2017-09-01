@@ -1,1 +1,0 @@
-../../src/fu-pending.c

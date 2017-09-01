@@ -13,8 +13,8 @@ if get_option('enable-amt')
 subdir('amt')
 endif
 
-if get_option('enable-tbtfwu') and tbtfwu.found()
-subdir('tbtfwu')
+if get_option('enable-thunderbolt') and udev.found()
+subdir('thunderbolt')
 endif
 
 if get_option('enable-colorhug')
@@ -23,6 +23,9 @@ endif
 
 if get_option('enable-dell')
 subdir('dell')
+endif
+
+if get_option('enable-synaptics')
 subdir('synapticsmst')
 endif
 

@@ -1,3 +1,4 @@
+subdir('builder')
 subdir('tests')
 subdir('installed-tests')
 subdir('pki')
@@ -20,7 +21,7 @@ install_data(['metadata.xml'],
 )
 
 install_data(['90-fwupd-devices.rules'],
-  install_dir : join_paths(udev.get_pkgconfig_variable('udevdir'), 'rules.d')
+  install_dir : join_paths(udevdir, 'rules.d')
 )
 
 con2 = configuration_data()
@@ -52,7 +53,7 @@ if get_option('enable-systemd')
     output : 'fwupd-offline-update.service',
     configuration : con2,
     install: true,
-    install_dir: systemd.get_pkgconfig_variable('systemdsystemunitdir'),
+    install_dir: systemdunitdir,
   )
 endif
 
@@ -63,6 +64,6 @@ if get_option('enable-systemd')
     output : 'fwupd.service',
     configuration : con2,
     install: true,
-    install_dir: systemd.get_pkgconfig_variable('systemdsystemunitdir'),
+    install_dir: systemdunitdir,
   )
 endif

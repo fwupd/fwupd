@@ -26,6 +26,7 @@
 #include <string.h>
 #include <fnmatch.h>
 
+#include "dfu-cipher-xtea.h"
 #include "dfu-common.h"
 #include "dfu-context.h"
 #include "dfu-device.h"
@@ -105,6 +106,40 @@ _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 }
 
 static void
+dfu_cipher_xtea_func (void)
+{
+	gboolean ret;
+	guint8 buf[] = { 'H', 'i', 'y', 'a', 'D', 'a', 'v', 'e' };
+	g_autoptr(GError) error = NULL;
+
+	ret = dfu_cipher_encrypt_xtea ("test", buf, sizeof(buf), &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	g_assert_cmpint (buf[0], ==, 128);
+	g_assert_cmpint (buf[1], ==, 220);
+	g_assert_cmpint (buf[2], ==, 23);
+	g_assert_cmpint (buf[3], ==, 55);
+	g_assert_cmpint (buf[4], ==, 201);
+	g_assert_cmpint (buf[5], ==, 207);
+	g_assert_cmpint (buf[6], ==, 182);
+	g_assert_cmpint (buf[7], ==, 177);
+
+	ret = dfu_cipher_decrypt_xtea ("test", buf, sizeof(buf), &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	g_assert_cmpint (buf[0], ==, 'H');
+	g_assert_cmpint (buf[1], ==, 'i');
+	g_assert_cmpint (buf[2], ==, 'y');
+	g_assert_cmpint (buf[3], ==, 'a');
+	g_assert_cmpint (buf[4], ==, 'D');
+	g_assert_cmpint (buf[5], ==, 'a');
+	g_assert_cmpint (buf[6], ==, 'v');
+	g_assert_cmpint (buf[7], ==, 'e');
+}
+
+static void
 dfu_firmware_xdfu_func (void)
 {
 	gboolean ret;
@@ -156,7 +191,6 @@ dfu_firmware_raw_func (void)
 	gboolean ret;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GBytes) roundtrip_orig = NULL;
 	g_autoptr(GBytes) roundtrip = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -975,6 +1009,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/libdfu/patch{apply}", dfu_patch_apply_func);
 	g_test_add_func ("/libdfu/enums", dfu_enums_func);
 	g_test_add_func ("/libdfu/target(DfuSe}", dfu_target_dfuse_func);
+	g_test_add_func ("/libdfu/cipher{xtea}", dfu_cipher_xtea_func);
 	g_test_add_func ("/libdfu/firmware{raw}", dfu_firmware_raw_func);
 	g_test_add_func ("/libdfu/firmware{dfu}", dfu_firmware_dfu_func);
 	g_test_add_func ("/libdfu/firmware{dfuse}", dfu_firmware_dfuse_func);

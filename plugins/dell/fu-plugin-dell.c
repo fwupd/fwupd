@@ -36,6 +36,7 @@
 #include "fu-plugin-dell.h"
 #include "fu-quirks.h"
 #include "fu-plugin-vfuncs.h"
+#include "fu-device-metadata.h"
 
 /* These are used to indicate the status of a previous DELL flash */
 #define DELL_SUCCESS			0x0000
@@ -63,15 +64,6 @@ typedef struct _DOCK_DESCRIPTION
 	const gchar *		query;
 	const gchar *		desc;
 } DOCK_DESCRIPTION;
-
-static void
-_dell_smi_obj_free (FuDellSmiObj *obj)
-{
-	dell_smi_obj_free (obj->smi);
-	g_free (obj);
-}
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
 
 /* These are for matching the components */
 #define WD15_EC_STR		"2 0 2 2 0"
@@ -102,11 +94,18 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
 #define TBT_CBL_DESC		"Thunderbolt Cable"
 
 /**
- * Devices that should explicitly disable modeswitching
+ * Devices that should allow modeswitching
  */
-static guint16 tpm_switch_blacklist[] = {0x06D6, 0x06E6, 0x06E7, 0x06EB, 0x06EA,
-					 0x0702};
-
+static guint16 tpm_switch_whitelist[] = {0x06F2, 0x06F3, 0x06DD, 0x06DE, 0x06DF,
+					 0x06DB, 0x06DC, 0x06BB, 0x06C6, 0x06BA,
+					 0x06B9, 0x05CA, 0x06C7, 0x06B7, 0x06E0,
+					 0x06E5, 0x06D9, 0x06DA, 0x06E4, 0x0704,
+					 0x0720, 0x0730, 0x0758, 0x0759, 0x075B,
+					 0x07A0, 0x079F, 0x07A4, 0x07A5, 0x07A6,
+					 0x07A7, 0x07A8, 0x07A9, 0x07AA, 0x07AB,
+					 0x07B0, 0x07B1, 0x07B2, 0x07B4, 0x07B7,
+					 0x07B8, 0x07B9, 0x07BE, 0x07BF, 0x077A,
+					 0x07CF};
 static void
 _fwup_resource_iter_free (fwup_resource_iter *iter)
 {
@@ -145,7 +144,7 @@ fu_plugin_dell_match_dock_component (const gchar *query_str,
 void
 fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 				 guint32 *output, guint16 vid, guint16 pid,
-				 guint8 *buf)
+				 guint8 *buf, gboolean can_switch_modes)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
@@ -156,6 +155,7 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 	data->fake_vid = vid;
 	data->fake_pid = pid;
 	data->smi_obj->fake_buffer = buf;
+	data->can_switch_modes = TRUE;
 }
 
 static AsVersionParseFlag
@@ -257,9 +257,10 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
 		fu_device_set_version (dev, version);
-		if (fu_plugin_dell_capsule_supported (plugin))
-			fu_device_add_flag (dev,
-					    FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		if (fu_plugin_dell_capsule_supported (plugin)) {
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		}
 	}
 
 	fu_plugin_device_add (plugin, dev);
@@ -504,7 +505,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	const gchar *tpm_mode;
 	const gchar *tpm_mode_alt;
 	guint16 system_id = 0;
-	gboolean can_switch_modes = TRUE;
+	gboolean can_switch_modes = FALSE;
 	g_autofree gchar *pretty_tpm_name_alt = NULL;
 	g_autofree gchar *pretty_tpm_name = NULL;
 	g_autofree gchar *product_name = NULL;
@@ -560,10 +561,12 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 
 	if (!data->smi_obj->fake_smbios)
 		system_id = (guint16) sysinfo_get_dell_system_id ();
+	else
+		can_switch_modes = data->can_switch_modes;
 
-	for (guint i = 0; i < G_N_ELEMENTS (tpm_switch_blacklist); i++) {
-		if (tpm_switch_blacklist[i] == system_id) {
-			can_switch_modes = FALSE;
+	for (guint i = 0; i < G_N_ELEMENTS (tpm_switch_whitelist); i++) {
+		if (tpm_switch_whitelist[i] == system_id) {
+			can_switch_modes = TRUE;
 		}
 	}
 
@@ -604,8 +607,10 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (out->flashes_left > 0) {
-		if (fu_plugin_dell_capsule_supported (plugin))
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+		if (fu_plugin_dell_capsule_supported (plugin)) {
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		}
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	}
 	fu_plugin_device_add (plugin, dev);
@@ -636,7 +641,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		fu_plugin_device_add (plugin, dev_alt);
 	}
 	else
-		g_debug ("System %04x is on blacklist, disabling TPM modeswitch",
+		g_debug ("System %04x does not offer TPM modeswitching",
 			system_id);
 
 	return TRUE;
@@ -686,7 +691,7 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	/* clone the info from real device but prevent it from being flashed */
 	device_flags_alt = fu_device_get_flags (device_alt);
 	fu_device_set_flags (device, device_flags_alt);
-	fu_device_set_flags (device_alt, device_flags_alt & ~FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
+	fu_device_set_flags (device_alt, device_flags_alt & ~FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* make sure that this unlocked device can be updated */
 	fu_device_set_version (device, "0.0.0.0");
@@ -695,11 +700,11 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 }
 
 gboolean
-fu_plugin_update_offline (FuPlugin *plugin,
-			  FuDevice *device,
-			  GBytes *blob_fw,
-			  FwupdInstallFlags flags,
-			  GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *device,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr (fwup_resource_iter) iter = NULL;
@@ -726,7 +731,7 @@ fu_plugin_update_offline (FuPlugin *plugin,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "WARNING: %s only has %u flashes left. "
-				     "To update anyway please run the update with --force.",
+				     "See https://github.com/hughsie/fwupd/wiki/Dell-TPM:-flashes-left for more information.",
 				     name, flashes_left);
 			return FALSE;
 		}
@@ -802,6 +807,31 @@ fu_plugin_update_offline (FuPlugin *plugin,
                 return FALSE;
         }
 	return TRUE;
+}
+
+void
+fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
+{
+	/* thunderbolt plugin */
+	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") == 0 &&
+	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL)) {
+		/* prevent thunderbolt controllers in the system from going away */
+		fu_device_set_metadata_boolean (device,
+						FU_DEVICE_METADATA_TBT_CAN_FORCE_POWER,
+						TRUE);
+		/* fix VID/DID of safe mode devices */
+		if (fu_device_get_metadata_boolean (device, FU_DEVICE_METADATA_TBT_IS_SAFE_MODE)) {
+			g_autofree gchar *vendor_id = NULL;
+			g_autofree gchar *device_id = NULL;
+			vendor_id = g_strdup ("TBT:0x00D4");
+			/* the kernel returns lowercase in sysfs, need to match it */
+			device_id = g_strdup_printf ("TBT-%04x%04x", 0x00d4u,
+						     (unsigned) sysinfo_get_dell_system_id ());
+			fu_device_set_vendor_id (device, vendor_id);
+			fu_device_add_guid (device, device_id);
+			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		}
+	}
 }
 
 gboolean

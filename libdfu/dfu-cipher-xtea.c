@@ -34,7 +34,6 @@ dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
 {
 	guint i;
 	gsize key_len;
-	g_autofree gchar *key_pad = NULL;
 
 	/* too long */
 	key_len = strlen (key);
@@ -99,16 +98,42 @@ dfu_cipher_decrypt_xtea (const gchar *key,
 			 GError **error)
 {
 	guint32 sum;
-	guint32 *tmp = (guint32 *) data;
 	guint32 v0;
 	guint32 v1;
 	guint8 i;
 	guint j;
+	guint32 chunks = length / 4;
 	guint32 keys[4];
+	g_autofree guint32 *tmp = NULL;
 
+	/* sanity check */
+	if (length < 8) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
+			     "8 bytes data required, got %" G_GUINT32_FORMAT,
+			     length);
+		return FALSE;
+	}
+	if (length % 4 != 0) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
+			     "Multiples of 4 bytes required, got %" G_GUINT32_FORMAT,
+			     length);
+		return FALSE;
+	}
+
+	/* parse key */
 	if (!dfu_tool_parse_xtea_key (key, keys, error))
 		return FALSE;
-	for (j = 0; j < length / 4; j += 2) {
+
+	/* allocate a buffer that can be addressed in 4-byte chunks */
+	tmp = g_new0 (guint32, chunks);
+	memcpy (tmp, data, length);
+
+	/* process buffer using XTEA keys */
+	for (j = 0; j < chunks; j += 2) {
 		v0 = tmp[j];
 		v1 = tmp[j+1];
 		sum = XTEA_DELTA * XTEA_NUM_ROUNDS;
@@ -120,6 +145,9 @@ dfu_cipher_decrypt_xtea (const gchar *key,
 		tmp[j] = v0;
 		tmp[j+1] = v1;
 	}
+
+	/* copy the temp buffer back to data */
+	memcpy (data, tmp, length);
 	return TRUE;
 }
 
@@ -141,16 +169,42 @@ dfu_cipher_encrypt_xtea (const gchar *key,
 			 GError **error)
 {
 	guint32 sum;
-	guint32 *tmp = (guint32 *) data;
 	guint32 v0;
 	guint32 v1;
 	guint8 i;
 	guint j;
+	guint32 chunks = length / 4;
 	guint32 keys[4];
+	g_autofree guint32 *tmp = NULL;
 
+	/* sanity check */
+	if (length < 8) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
+			     "8 bytes data required, got %" G_GUINT32_FORMAT,
+			     length);
+		return FALSE;
+	}
+	if (length % 4 != 0) {
+		g_set_error (error,
+			     DFU_ERROR,
+			     DFU_ERROR_NOT_SUPPORTED,
+			     "Multiples of 4 bytes required, got %" G_GUINT32_FORMAT,
+			     length);
+		return FALSE;
+	}
+
+	/* parse key */
 	if (!dfu_tool_parse_xtea_key (key, keys, error))
 		return FALSE;
-	for (j = 0; j < length / 4; j += 2) {
+
+	/* allocate a buffer that can be addressed in 4-byte chunks */
+	tmp = g_new0 (guint32, chunks);
+	memcpy (tmp, data, length);
+
+	/* process buffer using XTEA keys */
+	for (j = 0; j < chunks; j += 2) {
 		sum = 0;
 		v0 = tmp[j];
 		v1 = tmp[j+1];
@@ -162,5 +216,8 @@ dfu_cipher_encrypt_xtea (const gchar *key,
 		tmp[j] = v0;
 		tmp[j+1] = v1;
 	}
+
+	/* copy the temp buffer back to data */
+	memcpy (data, tmp, length);
 	return TRUE;
 }

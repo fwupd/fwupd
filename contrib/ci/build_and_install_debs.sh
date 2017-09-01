@@ -1,22 +1,27 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
+set -x
 
 #build deb packages
 export DEBFULLNAME="CI Builder"
 export DEBEMAIL="ci@travis-ci.org"
 VERSION=`git describe | sed 's/-/+r/;s/-/+/'`
 [ -z $VERSION ] && VERSION=`head meson.build | grep ' version :' | cut -d \' -f2`
-
 rm -rf build/
-mkdir -p build && pushd build
-ln -s ../* .
-cp contrib/debian . -R
+mkdir -p build
+shopt -s extglob
+cp -lR !(build) build/
+pushd build
+mv contrib/debian .
 sed s/quilt/native/ debian/source/format -i
 EDITOR=/bin/true dch --create --package fwupd -v $VERSION "CI Build"
-dpkg-buildpackage
+debuild --no-lintian
 
 #check lintian output
 #suppress tags that are side effects of building in docker this way
 lintian ../*changes \
+	-IE \
+	--pedantic \
 	--no-tag-display-limit \
 	--suppress-tags bad-distribution-in-changes-file \
 	--suppress-tags source-contains-unsafe-symlink \
@@ -31,7 +36,7 @@ dpkg -i `ls ../*.deb | grep -v fwupd-tests`
 # run the installed tests
 if [ "$CI" = "true" ]; then
 	dpkg -i ../fwupd-tests*.deb
-	/etc/init.d/dbus start
+	service dbus restart
 	gnome-desktop-testing-runner fwupd
 	apt purge -y fwupd-tests
 fi

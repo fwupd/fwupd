@@ -589,7 +589,7 @@ lu_device_peripheral_write_firmware (LuDevice *device,
 				     GError **error)
 {
 	gsize sz = 0;
-	guint8 *data;
+	const guint8 *data;
 	guint8 cmd = 0x04;
 	guint8 idx;
 

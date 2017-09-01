@@ -39,7 +39,6 @@ fu_plugin_dfu_device_update (FuPlugin *plugin,
 {
 	const gchar *platform_id;
 	guint16 release;
-	g_autofree gchar *guid = NULL;
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *devid2 = NULL;
@@ -56,10 +55,8 @@ fu_plugin_dfu_device_update (FuPlugin *plugin,
 	}
 
 	/* check capabilities */
-	if (dfu_device_can_download (device)) {
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
-	}
+	if (dfu_device_can_download (device))
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* needs a manual action */
 	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)) {
@@ -120,7 +117,6 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 {
 	const gchar *platform_id;
 	const gchar *display_name;
-	g_autofree gchar *id = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDevice) dev = NULL;
@@ -212,16 +208,15 @@ fu_plugin_dfu_percentage_changed_cb (DfuDevice *device,
 }
 
 gboolean
-fu_plugin_update_online (FuPlugin *plugin,
-			 FuDevice *dev,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *dev,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	DfuDevice *device;
 	const gchar *platform_id;
-	g_autoptr(DfuDevice) dfu_device = NULL;
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -289,7 +284,6 @@ fu_plugin_verify (FuPlugin *plugin,
 	GBytes *blob_fw;
 	DfuDevice *device;
 	const gchar *platform_id;
-	g_autoptr(DfuDevice) dfu_device = NULL;
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(GError) error_local = NULL;
 	GChecksumType checksum_types[] = {

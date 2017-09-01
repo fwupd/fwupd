@@ -22,9 +22,9 @@ override_dh_auto_configure:
 		export UEFI="-Denable-uefi=false"; \
 	fi; \
 	if pkg-config --exists libsmbios_c; then \
-		export DELL="-Denable-dell=true"; \
+		export DELL="-Denable-dell=true -Denable-synaptics=true"; \
 	else \
-		export DELL="-Denable-dell=false"; \
+		export DELL="-Denable-dell=false -Denable-synaptics=false"; \
 	fi; \
 	dh_auto_configure -- $$UEFI $$DELL -Denable-dummy=true --libexecdir=/usr/lib
 

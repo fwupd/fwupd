@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
+set -x
 
 VERSION=`git describe | sed 's/-/.r/;s/-/./'`
 [ -z $VERSION ] && VERSION=`head meson.build | grep ' version :' | cut -d \' -f2`

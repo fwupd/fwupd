@@ -1,5 +1,5 @@
 %global glib2_version 2.45.8
-%global libappstream_version 0.6.9
+%global libappstream_version 0.6.13
 %global libgusb_version 0.2.11
 %global libsoup_version 2.51.92
 %global colord_version 1.2.12
@@ -10,13 +10,14 @@
 %global enable_tests 1
 %global enable_dummy 1
 
-%ifarch x86_64 %{ix86}
-%global have_smbios 1
+# fwupdate is only available on these arches
+%ifarch x86_64 aarch64
+%global have_uefi 1
 %endif
 
-# FIXME: should also be aarch64, but efivar not present there yet
-%ifarch x86_64 %{ix86}
-%global have_uefi 1
+# libsmbios is only available on x86, and fwupdate is available on just x86_64
+%ifarch x86_64
+%global have_dell 1
 %endif
 
 Summary:   Firmware update daemon
@@ -47,6 +48,8 @@ BuildRequires: valgrind-devel
 BuildRequires: elfutils-libelf-devel
 BuildRequires: gtk-doc
 BuildRequires: libuuid-devel
+BuildRequires: gnutls-devel
+BuildRequires: gnutls-utils
 BuildRequires: meson
 
 %if 0%{?have_uefi}
@@ -59,7 +62,8 @@ BuildRequires: dejavu-sans-fonts
 BuildRequires: adobe-source-han-sans-cn-fonts
 %endif
 
-%if 0%{?have_smbios}
+%if 0%{?have_dell}
+BuildRequires: efivar-devel
 BuildRequires: libsmbios-devel >= 2.3.0
 %endif
 
@@ -77,6 +81,9 @@ Requires: libappstream-glib%{?_isa} >= %{libappstream_version}
 Requires: libgusb%{?_isa} >= %{libgusb_version}
 Requires: libsoup%{?_isa} >= %{libsoup_version}
 Requires: fwupd-labels = %{version}-%{release}
+Requires: bubblewrap
+
+Recommends: python3
 
 Obsoletes: fwupd-sign < 0.1.6
 Obsoletes: libebitdo < 0.7.5-3
@@ -107,7 +114,9 @@ Files for development with libdfu.
 
 %package labels
 Summary: Rendered labels for display during system firmware updates.
-BuildArch: noarch
+# BuildArch: noarch is disabled as we can get "different" .BMP files even when
+# running the build on the same architecture due to the randomness introduced
+# by the TTF files.
 
 %description labels
 Rendered labels for display during system firmware updates.
@@ -137,7 +146,7 @@ Data files for installed tests.
 %else
     -Denable-dummy=false \
 %endif
-    -Denable-thunderbolt=false \
+    -Denable-thunderbolt=true \
 %if 0%{?have_uefi}
     -Denable-uefi=true \
     -Denable-uefi-labels=true \
@@ -145,7 +154,7 @@ Data files for installed tests.
     -Denable-uefi=false \
     -Denable-uefi-labels=false \
 %endif
-%if 0%{?have_smbios}
+%if 0%{?have_dell}
     -Denable-dell=true \
     -Denable-synaptics=true \
 %else
@@ -155,7 +164,9 @@ Data files for installed tests.
     -Denable-colorhug=true
 
 %meson_build
+
 %if 0%{?enable_tests}
+%check
 %meson_test
 %endif
 
@@ -204,10 +215,12 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
 %{_datadir}/man/man1/fwupdmgr.1.gz
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
+%{_datadir}/fwupd/firmware-packager
 %{_unitdir}/fwupd-offline-update.service
 %{_unitdir}/fwupd.service
 %{_unitdir}/system-update.target.wants/
 %dir %{_localstatedir}/lib/fwupd
+%{_localstatedir}/lib/fwupd/builder/README.md
 %{_libdir}/libfwupd*.so.*
 %{_libdir}/girepository-1.0/Fwupd-1.0.typelib
 /usr/lib/udev/rules.d/*.rules
@@ -215,19 +228,20 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-2/libfu_plugin_altos.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_amt.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_colorhug.so
-%if 0%{?have_smbios}
+%if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_dell.so
 %endif
 %{_libdir}/fwupd-plugins-2/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_raspberrypi.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_steelseries.so
-%if 0%{?have_smbios}
+%if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_synapticsmst.so
 %endif
 %if 0%{?enable_dummy}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_test.so
 %endif
+%{_libdir}/fwupd-plugins-2/libfu_plugin_thunderbolt.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_udev.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_uefi.so

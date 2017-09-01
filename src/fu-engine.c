@@ -45,6 +45,13 @@
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
 
+#ifdef ENABLE_GPG
+#include "fu-keyring-gpg.h"
+#endif
+#ifdef ENABLE_PKCS7
+#include "fu-keyring-pkcs7.h"
+#endif
+
 static void fu_engine_finalize	 (GObject *obj);
 
 struct _FuEngine
@@ -63,7 +70,7 @@ struct _FuEngine
 	guint			 coldplug_delay;
 	GPtrArray		*plugins;	/* of FuPlugin */
 	GHashTable		*plugins_hash;	/* of name : FuPlugin */
-	GHashTable		*hwids;		/* of hwid : 1 */
+	FuHwids			*hwids;
 };
 
 enum {
@@ -222,10 +229,24 @@ fu_engine_get_sysconfig_dir (void)
 }
 
 static void
-fu_engine_set_release_from_item (FwupdRelease *rel, AsRelease *release)
+fu_engine_set_release_from_appstream (FuEngine *self, FwupdRelease *rel,
+				      AsApp *app, AsRelease *release)
 {
 	AsChecksum *csum;
+	FwupdRemote *remote = NULL;
+	const gchar *remote_id;
 	const gchar *tmp;
+
+	/* find the remote */
+	remote_id = as_app_get_metadata_item (app, "fwupd::RemoteID");
+	if (remote_id != NULL) {
+		remote = fu_config_get_remote_by_id (self->config, remote_id);
+		if (remote == NULL)
+			g_warning ("failed to find remote %s", remote_id);
+	} else {
+		g_warning ("no fwupd::RemoteID set on %s",
+			   as_app_get_unique_id (app));
+	}
 
 	tmp = as_release_get_version (release);
 	if (tmp != NULL)
@@ -234,8 +255,14 @@ fu_engine_set_release_from_item (FwupdRelease *rel, AsRelease *release)
 	if (tmp != NULL)
 		fwupd_release_set_description (rel, tmp);
 	tmp = as_release_get_location_default (release);
-	if (tmp != NULL)
-		fwupd_release_set_uri (rel, tmp);
+	if (tmp != NULL) {
+		g_autofree gchar *uri = NULL;
+		if (remote != NULL)
+			uri = fwupd_remote_build_firmware_uri (remote, tmp, NULL);
+		if (uri == NULL)
+			uri = g_strdup (tmp);
+		fwupd_release_set_uri (rel, uri);
+	}
 	csum = as_release_get_checksum_by_target (release, AS_CHECKSUM_TARGET_CONTENT);
 	if (csum != NULL) {
 		tmp = as_checksum_get_filename (csum);
@@ -251,19 +278,62 @@ fu_engine_set_release_from_item (FwupdRelease *rel, AsRelease *release)
 	fwupd_release_set_size (rel, as_release_get_size (release, AS_SIZE_KIND_INSTALLED));
 }
 
+static FuKeyring *
+fu_engine_get_keyring_for_kind (FwupdKeyringKind kind, GError **error)
+{
+	if (kind == FWUPD_KEYRING_KIND_GPG) {
+#ifdef ENABLE_GPG
+		return fu_keyring_gpg_new ();
+#else
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Not compiled with GPG support");
+		return NULL;
+#endif
+	}
+	if (kind == FWUPD_KEYRING_KIND_PKCS7) {
+#ifdef ENABLE_PKCS7
+		return fu_keyring_pkcs7_new ();
+#else
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Not compiled with PKCS7 support");
+		return NULL;
+#endif
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "Keyring kind %s not supported",
+		     fwupd_keyring_kind_to_string (kind));
+	return NULL;
+}
+
 static gboolean
 fu_engine_get_release_trust_flags (AsRelease *release,
 				 FwupdTrustFlags *trust_flags,
 				 GError **error)
 {
 	AsChecksum *csum_tmp;
+	FwupdKeyringKind keyring_kind = FWUPD_KEYRING_KIND_UNKNOWN;
 	GBytes *blob_payload;
 	GBytes *blob_signature;
 	const gchar *fn;
 	g_autofree gchar *pki_dir = NULL;
-	g_autofree gchar *fn_signature = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuKeyring) kr = NULL;
+	g_autoptr(FuKeyringResult) kr_result = NULL;
+	struct {
+		FwupdKeyringKind kind;
+		const gchar *ext;
+	} keyrings[] = {
+		{ FWUPD_KEYRING_KIND_GPG,	"asc" },
+		{ FWUPD_KEYRING_KIND_PKCS7,	"p7b" },
+		{ FWUPD_KEYRING_KIND_PKCS7,	"p7c" },
+		{ FWUPD_KEYRING_KIND_NONE,	NULL }
+	};
 
 	/* no filename? */
 	csum_tmp = as_release_get_checksum_by_target (release, AS_CHECKSUM_TARGET_CONTENT);
@@ -277,10 +347,16 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 	}
 
 	/* no signature == no trust */
-	fn_signature = g_strdup_printf ("%s.asc", fn);
-	blob_signature = as_release_get_blob (release, fn_signature);
-	if (blob_signature == NULL) {
-		g_debug ("firmware archive contained no GPG signature");
+	for (guint i = 0; keyrings[i].ext != NULL; i++) {
+		g_autofree gchar *fn_tmp = g_strdup_printf ("%s.%s", fn, keyrings[i].ext);
+		blob_signature = as_release_get_blob (release, fn_tmp);
+		if (blob_signature != NULL) {
+			keyring_kind = keyrings[i].kind;
+			break;
+		}
+	}
+	if (keyring_kind == FWUPD_KEYRING_KIND_UNKNOWN) {
+		g_debug ("firmware archive contained no signature");
 		return TRUE;
 	}
 
@@ -305,10 +381,15 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 	}
 
 	/* verify against the system trusted keys */
-	kr = fu_keyring_new ();
+	kr = fu_engine_get_keyring_for_kind (keyring_kind, error);
+	if (kr == NULL)
+		return FALSE;
+	if (!fu_keyring_setup (kr, error))
+		return FALSE;
 	if (!fu_keyring_add_public_keys (kr, pki_dir, error))
 		return FALSE;
-	if (!fu_keyring_verify_data (kr, blob_payload, blob_signature, &error_local)) {
+	kr_result = fu_keyring_verify_data (kr, blob_payload, blob_signature, &error_local);
+	if (kr_result == NULL) {
 		g_warning ("untrusted as failed to verify: %s",
 			   error_local->message);
 		return TRUE;
@@ -627,7 +708,6 @@ _as_app_get_screenshot_default (AsApp *app)
 	return g_ptr_array_index (array, 0);
 }
 
-#if AS_CHECK_VERSION(0,6,7)
 static gboolean
 fu_engine_check_version_requirement (AsApp *app,
 				   AsRequireKind kind,
@@ -665,12 +745,10 @@ fu_engine_check_version_requirement (AsApp *app,
 		 version, id);
 	return TRUE;
 }
-#endif
 
 static gboolean
 fu_engine_check_requirements (AsApp *app, FuDevice *device, GError **error)
 {
-#if AS_CHECK_VERSION(0,6,7)
 	/* make sure requirements are satisfied */
 	if (!fu_engine_check_version_requirement (app,
 						AS_REQUIRE_KIND_ID,
@@ -703,7 +781,6 @@ fu_engine_check_requirements (AsApp *app, FuDevice *device, GError **error)
 			return FALSE;
 		}
 	}
-#endif
 
 	/* success */
 	return TRUE;
@@ -828,7 +905,7 @@ fu_engine_get_item_by_wildcard (FuEngine *self, AsStore *store, GError **error)
  * @device_id: A device ID
  * @store: The #AsStore with the firmware metadata
  * @blob_cab: The #GBytes of the .cab file
- * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_ALLOW_ONLINE
+ * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
  * @error: A #GError, or %NULL
  *
  * Installs a specfic firmware file on a device.
@@ -852,6 +929,7 @@ fu_engine_install (FuEngine *self,
 	const gchar *version;
 	gboolean is_downgrade;
 	gint vercmp;
+	g_autoptr(GBytes) blob_fw2 = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -882,8 +960,7 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* no update abilities */
-	if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE) &&
-	    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE)) {
+	if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -892,24 +969,14 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 	}
 
-	/* Called with online update, test if device is supposed to allow this */
-	if (!(flags & FWUPD_INSTALL_FLAG_OFFLINE) &&
-	    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device %s does not allow online updates",
-			    device_id);
-		return FALSE;
-	}
 
-	/* Called with offline update, test if device is supposed to allow this */
-	if (flags & FWUPD_INSTALL_FLAG_OFFLINE &&
-	    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE)) {
+	/* called with online update, test if device is supposed to allow this */
+	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) == 0 &&
+	    fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device %s does not allow offline updates",
+			    "Device %s only allows offline updates",
 			    device_id);
 		return FALSE;
 	}
@@ -990,6 +1057,28 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 	}
 
+	/* use a bubblewrap helper script to build the firmware */
+	tmp = as_app_get_metadata_item (app, "fwupd::BuilderScript");
+	if (tmp != NULL) {
+		const gchar *tmp2 = as_app_get_metadata_item (app, "fwupd::BuilderOutput");
+		if (tmp2 == NULL)
+			tmp2 = "firmware.bin";
+		blob_fw2 = fu_common_firmware_builder (blob_fw, tmp, tmp2, error);
+		if (blob_fw2 == NULL)
+			return FALSE;
+	} else {
+		blob_fw2 = g_bytes_ref (blob_fw);
+	}
+
+	/* test the firmware is not an empty blob */
+	if (g_bytes_get_size (blob_fw2) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Firmware is invalid as has zero size");
+		return FALSE;
+	}
+
 	version = as_release_get_version (rel);
 	fu_device_set_update_version (item->device, version);
 
@@ -1044,7 +1133,7 @@ fu_engine_install (FuEngine *self,
 	if (!fu_plugin_runner_update (item->plugin,
 				      item->device,
 				      blob_cab,
-				      blob_fw,
+				      blob_fw2,
 				      flags,
 				      error)) {
 		for (guint j = 0; j < self->plugins->len; j++) {
@@ -1143,7 +1232,7 @@ fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GErr
  * @self: A #FuEngine
  * @device_id: A device ID
  * @store: The #AsStore with the firmware metadata
- * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_ALLOW_ONLINE
+ * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
  * @error: A #GError, or %NULL
  *
  * Gets the PolicyKit action ID to use for the install operation.
@@ -1365,6 +1454,23 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 	return TRUE;
 }
 
+static FuKeyringResult *
+fu_engine_get_existing_keyring_result (FuEngine *self,
+				       FuKeyring *kr,
+				       FwupdRemote *remote,
+				       GError **error)
+{
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob_sig = NULL;
+	blob = fu_common_get_contents_bytes (fwupd_remote_get_filename_cache (remote), error);
+	if (blob == NULL)
+		return NULL;
+	blob_sig = fu_common_get_contents_bytes (fwupd_remote_get_filename_cache_sig (remote), error);
+	if (blob_sig == NULL)
+		return NULL;
+	return fu_keyring_verify_data (kr, blob, blob_sig, error);
+}
+
 /**
  * fu_engine_update_metadata:
  * @self: A #FuEngine
@@ -1383,12 +1489,11 @@ gboolean
 fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 			   gint fd, gint fd_sig, GError **error)
 {
+	FwupdKeyringKind keyring_kind;
 	FwupdRemote *remote;
 	g_autoptr(GBytes) bytes_raw = NULL;
 	g_autoptr(GBytes) bytes_sig = NULL;
-	g_autoptr(FuKeyring) kr = NULL;
 	g_autoptr(GInputStream) stream_fd = NULL;
-	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GInputStream) stream_sig = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
@@ -1429,16 +1534,68 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 		return FALSE;
 
 	/* verify file */
-	kr = fu_keyring_new ();
-	if (!fu_keyring_add_public_keys (kr, "/etc/pki/fwupd-metadata", error))
-		return FALSE;
-	if (!fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error))
-		return FALSE;
+	keyring_kind = fwupd_remote_get_keyring_kind (remote);
+	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
+		g_autoptr(FuKeyring) kr = NULL;
+		g_autoptr(FuKeyringResult) kr_result = NULL;
+		g_autoptr(FuKeyringResult) kr_result_old = NULL;
+		g_autoptr(GError) error_local = NULL;
+		kr = fu_engine_get_keyring_for_kind (keyring_kind, error);
+		if (kr == NULL)
+			return FALSE;
+		if (!fu_keyring_setup (kr, error))
+			return FALSE;
+		if (!fu_keyring_add_public_keys (kr, "/etc/pki/fwupd-metadata", error))
+			return FALSE;
+		kr_result = fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error);
+		if (kr_result == NULL)
+			return FALSE;
 
-	/* save XML to remotes.d */
+		/* verify the metadata was signed later than the existing
+		 * metadata for this remote to mitigate a rollback attack */
+		kr_result_old = fu_engine_get_existing_keyring_result (self, kr,
+								       remote,
+								       &error_local);
+		if (kr_result_old == NULL) {
+			if (g_error_matches (error_local,
+					     G_FILE_ERROR,
+					     G_FILE_ERROR_NOENT)) {
+				g_debug ("no existing valid keyrings: %s",
+					 error_local->message);
+			} else {
+				g_warning ("could not get existing keyring result: %s",
+					   error_local->message);
+			}
+		} else {
+			gint64 delta = 0;
+			if (fu_keyring_result_get_timestamp (kr_result) > 0 &&
+			    fu_keyring_result_get_timestamp (kr_result_old) > 0) {
+				delta = fu_keyring_result_get_timestamp (kr_result) -
+					fu_keyring_result_get_timestamp (kr_result_old);
+			}
+			if (delta < 0) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "new signing timestamp was %"
+					     G_GINT64_FORMAT " seconds older",
+					     -delta);
+				return FALSE;
+			} else if (delta > 0) {
+				g_debug ("timestamp increased, so no rollback");
+			}
+		}
+	}
+
+	/* save XML and signature to remotes.d */
 	if (!fu_common_set_contents_bytes (fwupd_remote_get_filename_cache (remote),
 					   bytes_raw, error))
 		return FALSE;
+	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
+		if (!fu_common_set_contents_bytes (fwupd_remote_get_filename_cache_sig (remote),
+						   bytes_sig, error))
+			return FALSE;
+	}
 	return fu_engine_load_metadata_store (self, error);
 }
 
@@ -1496,9 +1653,8 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 	}
 
 	/* only show devices that can be updated */
-	if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE) &&
-	    !fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ALLOW_ONLINE)) {
-		g_debug ("ignoring %s [%s] as not updatable live or offline",
+	if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_debug ("ignoring %s [%s] as not updatable",
 			 fu_device_get_id (item->device),
 			 fu_device_get_name (item->device));
 		return FALSE;
@@ -1527,16 +1683,14 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 	tmp = as_app_get_metadata_item (app, "fwupd::RemoteID");
 	if (tmp != NULL)
 		fu_device_set_update_remote_id (item->device, tmp);
-#if AS_CHECK_VERSION(0,6,1)
 	tmp = as_app_get_unique_id (app);
 	if (tmp != NULL)
 		fu_device_set_unique_id (item->device, tmp);
-#else
-	fu_device_set_unique_id (item->device, as_app_get_id (app));
-#endif
 
 	/* add release information */
-	fu_engine_set_release_from_item (fwupd_result_get_release (FWUPD_RESULT (item->device)), release);
+	fu_engine_set_release_from_appstream (self,
+					      fwupd_result_get_release (FWUPD_RESULT (item->device)),
+					      app, release);
 
 	/* get the list of releases newer than the one installed */
 	updates_list = g_ptr_array_new ();
@@ -1686,13 +1840,9 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	fwupd_release_set_name (rel, as_app_get_name (app, NULL));
 	fwupd_release_set_summary (rel, as_app_get_comment (app, NULL));
 	fwupd_release_set_vendor (rel, as_app_get_developer_name (app, NULL));
-#if AS_CHECK_VERSION(0,6,1)
 	fwupd_result_set_unique_id (res, as_app_get_unique_id (app));
-#else
-	fwupd_result_set_unique_id (res, as_app_get_id (app));
-#endif
 	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
-	fu_engine_set_release_from_item (rel, release);
+	fu_engine_set_release_from_appstream (self, rel, app, release);
 	return g_steal_pointer (&res);
 }
 
@@ -1891,7 +2041,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 		for (guint j = 0; j < releases_tmp->len; j++) {
 			AsRelease *release = g_ptr_array_index (releases_tmp, j);
 			FwupdRelease *rel = fwupd_release_new ();
-			fu_engine_set_release_from_item (rel, release);
+			fu_engine_set_release_from_appstream (self, rel, app, release);
 			g_ptr_array_add (releases, g_object_ref (rel));
 		}
 	}
@@ -1968,18 +2118,12 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 		g_autofree gchar *id2 = NULL;
 		FwupdResult *res = FWUPD_RESULT (item->device);
 		FwupdDevice *dev = fwupd_result_get_device (res);
-#if AS_CHECK_VERSION(0,6,1)
 		id2 = as_utils_unique_id_build (AS_APP_SCOPE_SYSTEM,
 						AS_BUNDLE_KIND_UNKNOWN,
 						NULL,
 						AS_APP_KIND_FIRMWARE,
 						fwupd_device_get_name (dev),
 						fwupd_device_get_version (dev));
-#else
-		id2 = g_strdup_printf ("system/*/*/firmware/%s/%s",
-				       fwupd_device_get_name (dev),
-				       fwupd_device_get_version (dev));
-#endif
 		fwupd_result_set_unique_id (res, id2);
 	}
 	return g_object_ref (item->device);
@@ -2072,6 +2216,30 @@ fu_engine_plugins_coldplug (FuEngine *self)
 }
 
 static void
+fu_engine_plugin_device_register (FuEngine *self, FuDevice *device)
+{
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED)) {
+		g_warning ("already registered %s, ignoring",
+			   fu_device_get_id (device));
+		return;
+	}
+	for (guint i = 0; i < self->plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+		fu_plugin_runner_device_register (plugin, device);
+	}
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REGISTERED);
+}
+
+static void
+fu_engine_plugin_device_register_cb (FuPlugin *plugin,
+				    FuDevice *device,
+				    gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE (user_data);
+	fu_engine_plugin_device_register (self, device);
+}
+
+static void
 fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 				  FuDevice *device,
 				  gpointer user_data)
@@ -2121,6 +2289,10 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 		}
 		return;
 	}
+
+	/* notify all plugins about this new device */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
+		fu_engine_plugin_device_register (self, device);
 
 	/* create new device */
 	item = g_new0 (FuDeviceItem, 1);
@@ -2215,43 +2387,6 @@ fu_engine_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuEngi
 		 duration, self->coldplug_delay);
 }
 
-#if AS_CHECK_VERSION(0,6,13)
-static gboolean
-fu_engine_load_hwids (FuEngine *self, GError **error)
-{
-	g_autoptr(FuHwids) hwids = fu_hwids_new ();
-
-	/* read files in /sys */
-	if (!fu_hwids_setup (hwids, NULL, error))
-		return FALSE;
-
-	/* add GUIDs */
-	for (guint i = 0; i < 15; i++) {
-		g_autofree gchar *guid = NULL;
-		g_autofree gchar *key = NULL;
-		g_autofree gchar *values = NULL;
-		g_autoptr(GError) error_local = NULL;
-
-		/* get the GUID and add to hash */
-		key = g_strdup_printf ("HardwareID-%u", i);
-		guid = fu_hwids_get_guid (hwids, key, &error_local);
-		if (guid == NULL) {
-			g_debug ("%s is not available, %s", key, error_local->message);
-			continue;
-		}
-		g_hash_table_insert (self->hwids,
-				     g_strdup (guid),
-				     GUINT_TO_POINTER (1));
-
-		/* show what makes up the GUID */
-		values = fu_hwids_get_replace_values (hwids, key, NULL);
-		g_debug ("{%s}   <- %s", guid, values);
-	}
-
-	return TRUE;
-}
-#endif
-
 static gint
 fu_engine_plugin_sort_cb (gconstpointer a, gconstpointer b)
 {
@@ -2314,6 +2449,9 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 		g_signal_connect (plugin, "device-removed",
 				  G_CALLBACK (fu_engine_plugin_device_removed_cb),
+				  self);
+		g_signal_connect (plugin, "device-register",
+				  G_CALLBACK (fu_engine_plugin_device_register_cb),
 				  self);
 		g_signal_connect (plugin, "status-changed",
 				  G_CALLBACK (fu_engine_plugin_status_changed_cb),
@@ -2424,13 +2562,11 @@ fu_engine_load (FuEngine *self, GError **error)
 				 G_USB_CONTEXT_FLAGS_AUTO_OPEN_DEVICES);
 #endif
 
-#if AS_CHECK_VERSION(0,6,13)
 	/* load the hwids */
-	if (!fu_engine_load_hwids (self, error)) {
+	if (!fu_hwids_setup (self->hwids, NULL, error)) {
 		g_prefix_error (error, "Failed to load hwids: ");
 		return FALSE;
 	}
-#endif
 
 	/* delete old data files */
 	if (!fu_engine_cleanup_state (error)) {
@@ -2505,7 +2641,7 @@ fu_engine_init (FuEngine *self)
 	self->status = FWUPD_STATUS_IDLE;
 	self->config = fu_config_new ();
 	self->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_engine_item_free);
-	self->hwids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+	self->hwids = fu_hwids_new ();
 	self->pending = fu_pending_new ();
 	self->profile = as_profile_new ();
 	self->store = as_store_new ();
@@ -2524,9 +2660,9 @@ fu_engine_finalize (GObject *obj)
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
 
-	g_hash_table_unref (self->hwids);
 	g_hash_table_unref (self->plugins_hash);
 	g_object_unref (self->config);
+	g_object_unref (self->hwids);
 	g_object_unref (self->pending);
 	g_object_unref (self->profile);
 	g_object_unref (self->store);

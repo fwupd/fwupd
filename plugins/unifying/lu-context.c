@@ -240,7 +240,9 @@ lu_context_remove_device (LuContext *ctx, LuDevice *device)
 	g_ptr_array_remove (ctx->devices, device);
 }
 
+#ifndef HAVE_GUDEV_232
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
+#endif
 
 static const gchar *
 lu_context_get_platform_id_for_udev_device (GUdevDevice *udev_device)
@@ -311,7 +313,9 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 
 	/* is unifying bootloader */
 	if (pid == LU_DEVICE_PID_BOOTLOADER_NORDIC ||
-	    pid == LU_DEVICE_PID_BOOTLOADER_TEXAS) {
+	    pid == LU_DEVICE_PID_BOOTLOADER_NORDIC_PICO ||
+	    pid == LU_DEVICE_PID_BOOTLOADER_TEXAS ||
+	    pid == LU_DEVICE_PID_BOOTLOADER_TEXAS_PICO) {
 		g_debug ("ignoring bootloader in HID mode");
 		return;
 	}
@@ -559,7 +563,8 @@ lu_context_usb_device_added_cb (GUsbContext *usb_ctx,
 	g_debug ("USB add %s", g_usb_device_get_platform_id (usb_device));
 
 	/* nordic, in bootloader mode */
-	if (g_usb_device_get_pid (usb_device) == LU_DEVICE_PID_BOOTLOADER_NORDIC) {
+	if (g_usb_device_get_pid (usb_device) == LU_DEVICE_PID_BOOTLOADER_NORDIC ||
+	    g_usb_device_get_pid (usb_device) == LU_DEVICE_PID_BOOTLOADER_NORDIC_PICO) {
 		g_autoptr(LuDevice) device = NULL;
 		device = g_object_new (LU_TYPE_DEVICE_BOOTLOADER_NORDIC,
 				       "kind", LU_DEVICE_KIND_BOOTLOADER_NORDIC,
@@ -574,7 +579,8 @@ lu_context_usb_device_added_cb (GUsbContext *usb_ctx,
 	}
 
 	/* texas, in bootloader mode */
-	if (g_usb_device_get_pid (usb_device) == LU_DEVICE_PID_BOOTLOADER_TEXAS) {
+	if (g_usb_device_get_pid (usb_device) == LU_DEVICE_PID_BOOTLOADER_TEXAS ||
+	    g_usb_device_get_pid (usb_device) == LU_DEVICE_PID_BOOTLOADER_TEXAS_PICO) {
 		g_autoptr(LuDevice) device = NULL;
 		device = g_object_new (LU_TYPE_DEVICE_BOOTLOADER_TEXAS,
 				       "kind", LU_DEVICE_KIND_BOOTLOADER_TEXAS,

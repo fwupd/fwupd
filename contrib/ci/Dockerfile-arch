@@ -25,6 +25,7 @@ RUN pacman -S --noconfirm \
               python-gobject \
               python-pillow \
               ttf-dejavu \
+              umockdev \
               valgrind
 # CI dep
 RUN pacman -S --noconfirm git

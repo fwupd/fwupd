@@ -122,6 +122,7 @@ if get_option('enable-tests')
     c_args : [
       cargs,
       '-DLOCALSTATEDIR="' + localstatedir + '"',
+      '-DTESTDATADIR="' + testdatadir + '"',
       '-DFU_SELF_TEST_REMOTES_DIR="' + testdatadir + '"',
     ],
   )

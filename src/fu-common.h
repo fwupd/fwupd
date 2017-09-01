@@ -24,11 +24,33 @@
 
 #include <glib.h>
 
+typedef void	(*FuOutputHandler)		(const gchar	*line,
+						 gpointer	 user_data);
+
+gboolean	 fu_common_spawn_sync		(const gchar * const *argv,
+						 FuOutputHandler handler,
+						 gpointer	 handler_user_data,
+						 GCancellable	*cancellable,
+						 GError		**error);
+
+gboolean	 fu_common_rmtree		(const gchar	*directory,
+						 GError		**error);
+gboolean	 fu_common_mkdir_parent		(const gchar	*filename,
+						 GError		**error);
 gboolean	 fu_common_set_contents_bytes	(const gchar	*filename,
 						 GBytes		*blob,
 						 GError		**error);
+GBytes		*fu_common_get_contents_bytes	(const gchar	*filename,
+						 GError		**error);
 GBytes		*fu_common_get_contents_fd	(gint		 fd,
 						 gsize		 count,
+						 GError		**error);
+gboolean	 fu_common_extract_archive	(GBytes		*blob,
+						 const gchar	*dir,
+						 GError		**error);
+GBytes		*fu_common_firmware_builder	(GBytes		*bytes,
+						 const gchar	*script_fn,
+						 const gchar	*output_fn,
 						 GError		**error);
 
 #endif /* __FU_COMMON_H__ */

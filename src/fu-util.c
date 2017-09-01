@@ -39,11 +39,8 @@
 #include "fu-hwids.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
+#include "fu-progressbar.h"
 #include "fwupd-common-private.h"
-
-#ifndef GUdevClient_autoptr
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
-#endif
 
 /* this is only valid in this file */
 #define FWUPD_ERROR_INVALID_ARGS	(FWUPD_ERROR_LAST+1)
@@ -58,6 +55,7 @@ typedef struct {
 	GPtrArray		*cmd_array;
 	FwupdInstallFlags	 flags;
 	FwupdClient		*client;
+	FuProgressbar		*progressbar;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -179,98 +177,14 @@ fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError *
 	return FALSE;
 }
 
-static const gchar *
-fu_util_status_to_string (FwupdStatus status)
-{
-	switch (status) {
-	case FWUPD_STATUS_IDLE:
-		/* TRANSLATORS: daemon is inactive */
-		return _("Idle…");
-		break;
-	case FWUPD_STATUS_DECOMPRESSING:
-		/* TRANSLATORS: decompressing the firmware file */
-		return _("Decompressing…");
-		break;
-	case FWUPD_STATUS_LOADING:
-		/* TRANSLATORS: parsing the firmware information */
-		return _("Loading…");
-		break;
-	case FWUPD_STATUS_DEVICE_RESTART:
-		/* TRANSLATORS: restarting the device to pick up new F/W */
-		return _("Restarting device…");
-		break;
-	case FWUPD_STATUS_DEVICE_WRITE:
-		/* TRANSLATORS: writing to the flash chips */
-		return _("Writing…");
-		break;
-	case FWUPD_STATUS_DEVICE_VERIFY:
-		/* TRANSLATORS: verifying we wrote the firmware correctly */
-		return _("Verifying…");
-		break;
-	case FWUPD_STATUS_SCHEDULING:
-		/* TRANSLATORS: scheduing an update to be done on the next boot */
-		return _("Scheduling…");
-		break;
-	case FWUPD_STATUS_DOWNLOADING:
-		/* TRANSLATORS: downloading from a remote server */
-		return _("Downloading…");
-		break;
-	default:
-		break;
-	}
-
-	/* TRANSLATORS: currect daemon status is unknown */
-	return _("Unknown");
-}
-
-static void
-fu_util_display_percentage (FwupdStatus status, guint percentage)
-{
-	const gchar *title;
-	const guint progressbar_len = 40;
-	const guint title_len = 25;
-	guint i;
-	static guint to_erase = 0;
-	g_autoptr(GString) str = g_string_new (NULL);
-
-	/* erase previous line */
-	for (i = 0; i < to_erase; i++)
-		g_print ("\b");
-
-	/* add status */
-	if (status == FWUPD_STATUS_IDLE) {
-		if (to_erase > 0)
-			g_print ("\n");
-		to_erase = 0;
-		return;
-	}
-	title = fu_util_status_to_string (status);
-	g_string_append (str, title);
-	for (i = str->len; i < title_len; i++)
-		g_string_append (str, " ");
-
-	/* add progressbar */
-	if (percentage > 0) {
-		g_string_append (str, "[");
-		for (i = 0; i < progressbar_len * percentage / 100; i++)
-			g_string_append (str, "*");
-		for (i = i + 1; i < progressbar_len; i++)
-			g_string_append (str, " ");
-		g_string_append (str, "]");
-	}
-
-	/* dump to screen */
-	g_print ("%s", str->str);
-	to_erase = str->len;
-}
-
 static void
 fu_util_client_notify_cb (GObject *object,
 			  GParamSpec *pspec,
 			  FuUtilPrivate *priv)
 {
-	fu_util_display_percentage (fwupd_client_get_status (priv->client),
-				    fwupd_client_get_percentage (priv->client));
+	fu_progressbar_update (priv->progressbar,
+			       fwupd_client_get_status (priv->client),
+			       fwupd_client_get_percentage (priv->client));
 }
 
 static void
@@ -710,6 +624,7 @@ fu_util_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_da
 	guint percentage;
 	goffset header_size;
 	goffset body_length;
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
 
 	/* if it's returning "Found" or an error, ignore the percentage */
 	if (msg->status_code != SOUP_STATUS_OK) {
@@ -729,7 +644,7 @@ fu_util_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_da
 	/* calulate percentage */
 	percentage = (guint) ((100 * body_length) / header_size);
 	g_debug ("progress: %u%%", percentage);
-	fu_util_display_percentage (FWUPD_STATUS_DOWNLOADING, percentage);
+	fu_progressbar_update (priv->progressbar, FWUPD_STATUS_DOWNLOADING, percentage);
 }
 
 static gboolean
@@ -765,7 +680,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "%s: failed to setup networking");
+				     "failed to setup networking");
 		return FALSE;
 	}
 
@@ -797,7 +712,9 @@ fu_util_download_file (FuUtilPrivate *priv,
 			     "Failed to parse URI %s", uri_str);
 		return FALSE;
 	}
-	if (g_str_has_suffix (uri_str, ".asc")) {
+	if (g_str_has_suffix (uri_str, ".asc") ||
+	    g_str_has_suffix (uri_str, ".p7b") ||
+	    g_str_has_suffix (uri_str, ".p7c")) {
 		/* TRANSLATORS: downloading new signing file */
 		g_print ("%s %s\n", _("Fetching signature"), uri_str);
 	} else if (g_str_has_suffix (uri_str, ".gz")) {
@@ -854,15 +771,6 @@ fu_util_download_file (FuUtilPrivate *priv,
 }
 
 static gboolean
-fu_util_mkdir_with_parents (const gchar *path, GError **error)
-{
-	g_autoptr(GFile) file = g_file_new_for_path (path);
-	if (g_file_query_exists (file, NULL))
-		return TRUE;
-	return g_file_make_directory_with_parents (file, NULL, error);
-}
-
-static gboolean
 fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 				      FwupdRemote *remote,
 				      GError **error)
@@ -870,22 +778,22 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	g_autofree gchar *cache_dir = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *filename_asc = NULL;
-
-	/* ensure cache directory exists */
-	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
-	if (!fu_util_mkdir_with_parents (cache_dir, error))
-		return FALSE;
+	g_autoptr(SoupURI) uri = NULL;
+	g_autoptr(SoupURI) uri_sig = NULL;
 
 	/* download the metadata */
+	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
 	filename = g_build_filename (cache_dir, fwupd_remote_get_filename (remote), NULL);
-	if (!fu_util_download_file (priv, fwupd_remote_get_uri (remote),
-				    filename, NULL, error))
+	if (!fu_common_mkdir_parent (filename, error))
+		return FALSE;
+	uri = soup_uri_new (fwupd_remote_get_metadata_uri (remote));
+	if (!fu_util_download_file (priv, uri, filename, NULL, error))
 		return FALSE;
 
 	/* download the signature */
 	filename_asc = g_build_filename (cache_dir, fwupd_remote_get_filename_asc (remote), NULL);
-	if (!fu_util_download_file (priv, fwupd_remote_get_uri_asc (remote),
-				    filename_asc, NULL, error))
+	uri_sig = soup_uri_new (fwupd_remote_get_metadata_uri_sig (remote));
+	if (!fu_util_download_file (priv, uri_sig, filename_asc, NULL, error))
 		return FALSE;
 
 	/* send all this to fwupd */
@@ -1187,7 +1095,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
 		FwupdRemoteKind kind = fwupd_remote_get_kind (remote);
-		SoupURI *uri;
+		FwupdKeyringKind keyring_kind = fwupd_remote_get_keyring_kind (remote);
 		const gchar *tmp;
 		gint priority;
 		gdouble age;
@@ -1199,6 +1107,12 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		/* TRANSLATORS: remote type, e.g. remote or local */
 		fu_util_print_data (_("Type"),
 				    fwupd_remote_kind_to_string (kind));
+
+		/* TRANSLATORS: keyring type, e.g. GPG or PKCS7 */
+		if (keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
+			fu_util_print_data (_("Keyring"),
+					    fwupd_keyring_kind_to_string (keyring_kind));
+		}
 
 		/* TRANSLATORS: if the remote is enabled */
 		fu_util_print_data (_("Enabled"),
@@ -1262,17 +1176,25 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 			/* TRANSLATORS: locatation of the local file */
 			fu_util_print_data (_("Location"), tmp);
 		}
-		uri = fwupd_remote_get_uri (remote);
-		if (uri != NULL) {
-			g_autofree gchar *uri_str = soup_uri_to_string (uri, FALSE);
-			/* TRANSLATORS: remote URI */
-			fu_util_print_data (_("URL"), uri_str);
+		tmp = fwupd_remote_get_filename_cache_sig (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: locatation of the local file */
+			fu_util_print_data (_("Location Signature"), tmp);
 		}
-		uri = fwupd_remote_get_uri_asc (remote);
-		if (uri != NULL) {
-			g_autofree gchar *uri_str = soup_uri_to_string (uri, FALSE);
+		tmp = fwupd_remote_get_metadata_uri (remote);
+		if (tmp != NULL) {
 			/* TRANSLATORS: remote URI */
-			fu_util_print_data (_("URI Signature"), uri_str);
+			fu_util_print_data (_("Metadata URI"), tmp);
+		}
+		tmp = fwupd_remote_get_metadata_uri_sig (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: remote URI */
+			fu_util_print_data (_("Metadata URI Signature"), tmp);
+		}
+		tmp = fwupd_remote_get_firmware_base_uri (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: remote URI */
+			fu_util_print_data (_("Firmware Base URI"), tmp);
 		}
 
 		/* newline */
@@ -1330,6 +1252,33 @@ fu_util_changed_cb (FwupdClient *client, gpointer user_data)
 }
 
 static gboolean
+fu_util_firmware_builder (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	const gchar *script_fn = "startup.sh";
+	const gchar *output_fn = "firmware.bin";
+	g_autoptr(GBytes) archive_blob = NULL;
+	g_autoptr(GBytes) firmware_blob = NULL;
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: expected FILENAME-IN FILENAME-OUT [SCRIPT] [OUTPUT]");
+		return FALSE;
+	}
+	archive_blob = fu_common_get_contents_bytes (values[0], error);
+	if (archive_blob == NULL)
+		return FALSE;
+	if (g_strv_length (values) > 2)
+		script_fn = values[2];
+	if (g_strv_length (values) > 3)
+		output_fn = values[3];
+	firmware_blob = fu_common_firmware_builder (archive_blob, script_fn, output_fn, error);
+	if (firmware_blob == NULL)
+		return FALSE;
+	return fu_common_set_contents_bytes (values[1], firmware_blob, error);
+}
+
+static gboolean
 fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdClient) client = NULL;
@@ -1364,7 +1313,6 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	const gchar *remote_id;
 	const gchar *uri_tmp;
 	g_autofree gchar *basename = NULL;
-	g_autofree gchar *cache_dir = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(SoupURI) uri = NULL;
 
@@ -1397,17 +1345,14 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 		uri = soup_uri_new (uri_tmp);
 	}
 
-	/* ensure cache directory exists */
-	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
-	if (!fu_util_mkdir_with_parents (cache_dir, error))
-		return FALSE;
-
 	/* download file */
 	g_print ("Downloading %s for %s...\n",
 		 fwupd_release_get_version (rel),
 		 fwupd_device_get_name (dev));
 	basename = g_path_get_basename (uri_tmp);
-	fn = g_build_filename (cache_dir, basename, NULL);
+	fn = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", basename, NULL);
+	if (!fu_common_mkdir_parent (fn, error))
+		return FALSE;
 	checksums = fwupd_release_get_checksums (rel);
 	if (!fu_util_download_file (priv, uri, fn,
 				    fwupd_checksum_get_best (checksums),
@@ -1597,6 +1542,7 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->client);
 	g_main_loop_unref (priv->loop);
 	g_object_unref (priv->cancellable);
+	g_object_unref (priv->progressbar);
 	g_option_context_free (priv->context);
 	g_free (priv);
 }
@@ -1650,6 +1596,7 @@ main (int argc, char *argv[])
 	/* create helper object */
 	priv = g_new0 (FuUtilPrivate, 1);
 	priv->loop = g_main_loop_new (NULL, FALSE);
+	priv->progressbar = fu_progressbar_new ();
 
 	/* add commands */
 	priv->cmd_array = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_util_item_free);
@@ -1659,14 +1606,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Get all devices that support firmware updates"),
 		     fu_util_get_devices);
-#if AS_CHECK_VERSION(0,6,13)
 	fu_util_add (priv->cmd_array,
 		     "hwids",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Return all the hardware IDs for the machine"),
 		     fu_util_hwids);
-#endif
 	fu_util_add (priv->cmd_array,
 		     "install-prepared",
 		     NULL,
@@ -1757,6 +1702,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Monitor the daemon for events"),
 		     fu_util_monitor);
+	fu_util_add (priv->cmd_array,
+		     "build-firmware",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Build firmware using a sandbox"),
+		     fu_util_firmware_builder);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

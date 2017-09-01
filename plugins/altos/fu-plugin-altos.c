@@ -127,11 +127,11 @@ fu_plugin_verify (FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_update_online (FuPlugin *plugin,
-			 FuDevice *dev,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *dev,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_device_altos_write_firmware (FU_DEVICE_ALTOS (dev),

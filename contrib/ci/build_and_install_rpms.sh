@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
+set -x
 
 #generate a tarball
 git config tar.tar.xz.command "xz -c"
@@ -9,7 +11,7 @@ meson .. \
     -Denable-man=true \
     -Denable-tests=true \
     -Denable-dummy=true \
-    -Denable-thunderbolt=false \
+    -Denable-thunderbolt=true \
     -Denable-uefi=true \
     -Denable-dell=true \
     -Denable-synaptics=true \

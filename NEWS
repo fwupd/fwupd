@@ -1,3 +1,31 @@
+Version 0.9.7
+~~~~~~~~~~~~~
+Released: 2017-09-01
+
+New Features:
+ - Add a configure switch for the LVFS remotes (Richard Hughes)
+ - Add a FirmwareBaseURI parameter to the remote config (Richard Hughes)
+ - Add a firmware builder that uses bubblewrap (Richard Hughes)
+ - Add a python script to create fwupd compatible cab files from Microsoft .exe files (Max Ehrlich)
+ - Add a thunderbolt plugin for new kernel interface (Christian Kellner, Yehezkel Bernat)
+ - Allow plugins to get DMI data from the hardware in a safe way (Richard Hughes)
+ - Allow plugins to set metadata on devices created by other plugins (Richard Hughes, Mario Limonciello)
+ - Optionally install the LVFS PKCS7 root certificate (Richard Hughes)
+ - Optionally use GnuTLS to verify PKCS7 certificates (Richard Hughes)
+
+Bugfixes:
+ - Add back options for HAVE_SYNAPTICS and HAVE_THUNDERBOLT (Mario Limonciello)
+ - Allow configuring systemd and udev directories (Mario Limonciello)
+ - Enable C99 support in meson.build (Philip Withnall)
+ - Fix an incomplete cipher when using XTEA on data not in 4 byte chunks (Richard Hughes)
+ - Fix minor const-correctness issues (Philip Withnall)
+ - Implement thunderbolt image validation  (Yehezkel Bernat, Christian Kellner)
+ - Remove the confusing ALLOW_OFFLINE and ALLOW_ONLINE flags (Richard Hughes)
+ - Show a bouncing progress bar if the percentage remains at zero (Richard Hughes)
+ - Use a hwid to match supported systems for synapticsmst (Mario Limonciello)
+ - Use the new bootloader PIDs for Unifying pico receivers (Richard Hughes)
+ - When thunderbolt is in safe mode on a Dell recover using SMBIOS (Mario Limonciello)
+
 Version 0.9.6
 ~~~~~~~~~~~~~
 Released: 2017-08-03

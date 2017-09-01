@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include "fu-keyring-result.h"
+
 G_BEGIN_DECLS
 
 #define FU_TYPE_KEYRING (fu_keyring_get_type ())
@@ -33,26 +35,30 @@ G_DECLARE_DERIVABLE_TYPE (FuKeyring, fu_keyring, FU, KEYRING, GObject)
 struct _FuKeyringClass
 {
 	GObjectClass		 parent_class;
-};
-
-FuKeyring	*fu_keyring_new				(void);
-
-gboolean	 fu_keyring_add_public_keys		(FuKeyring	*keyring,
-							 const gchar	*dirname,
+	gboolean		 (*setup)		(FuKeyring	*keyring,
 							 GError		**error);
-gboolean	 fu_keyring_add_public_key		(FuKeyring	*keyring,
-							 const gchar	*filename,
+	gboolean		 (*add_public_keys)	(FuKeyring	*keyring,
+							 const gchar	*path,
 							 GError		**error);
-gboolean	 fu_keyring_verify_file			(FuKeyring	*keyring,
-							 const gchar	*filename,
-							 const gchar	*signature,
-							 GError		**error);
-gboolean	 fu_keyring_verify_data			(FuKeyring	*keyring,
+	FuKeyringResult		*(*verify_data)		(FuKeyring	*keyring,
 							 GBytes		*payload,
 							 GBytes		*payload_signature,
 							 GError		**error);
+};
+
+gboolean	 fu_keyring_setup			(FuKeyring	*keyring,
+							 GError		**error);
+gboolean	 fu_keyring_add_public_keys		(FuKeyring	*keyring,
+							 const gchar	*path,
+							 GError		**error);
+FuKeyringResult	*fu_keyring_verify_data			(FuKeyring	*keyring,
+							 GBytes		*blob,
+							 GBytes		*blob_signature,
+							 GError		**error);
+const gchar	*fu_keyring_get_name			(FuKeyring	*self);
+void		 fu_keyring_set_name			(FuKeyring	*self,
+							 const gchar	*name);
 
 G_END_DECLS
 
 #endif /* __FU_KEYRING_H */
-

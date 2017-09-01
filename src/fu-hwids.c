@@ -30,21 +30,47 @@
 
 struct _FuHwids {
 	GObject			 parent_instance;
-	GHashTable		*hash;
+	GHashTable		*hash_dmi_hw;		/* BiosVersion->"1.2.3 " */
+	GHashTable		*hash_dmi_display;	/* BiosVersion->"1.2.3" */
+	GHashTable		*hash_guid;		/* a-c-b-d->1 */
 };
 
 G_DEFINE_TYPE (FuHwids, fu_hwids, G_TYPE_OBJECT)
 
+/**
+ * fu_hwids_get_value:
+ * @self: A #FuHwids
+ * @key: A DMI ID, e.g. "BiosVersion"
+ *
+ * Gets the cached value for one specific key that is valid ASCII and suitable
+ * for display.
+ *
+ * Returns: the string, e.g. "1.2.3", or %NULL if not found
+ **/
 const gchar *
 fu_hwids_get_value (FuHwids *self, const gchar *key)
 {
-	return g_hash_table_lookup (self->hash, key);
+	return g_hash_table_lookup (self->hash_dmi_display, key);
+}
+
+/**
+ * fu_hwids_has_guid:
+ * @self: A #FuHwids
+ * @guid: A GUID, e.g. "059eb22d-6dc7-59af-abd3-94bbe017f67c"
+ *
+ * Finds out if a hardware GUID exists.
+ *
+ * Returns: %TRUE if the GUID exists
+ **/
+gboolean
+fu_hwids_has_guid (FuHwids *self, const gchar *guid)
+{
+	return g_hash_table_lookup (self->hash_guid, guid) != NULL;
 }
 
 static gchar *
 fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 {
-#if AS_CHECK_VERSION(0,6,13)
 	const gchar *namespace_id = "70ffd812-4c7f-4c7d-0000-000000000000";
 	glong items_written = 0;
 	g_autofree gunichar2 *data = NULL;
@@ -63,13 +89,6 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 					(guint8*) data,
 					items_written * 2,
 					error);
-#else
-	g_set_error_literal (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_SUPPORTED,
-			     "libappstream-glib 0.6.13 is required");
-	return NULL;
-#endif
 }
 
 /**
@@ -182,7 +201,7 @@ fu_hwids_get_replace_values (FuHwids *self, const gchar *keys, GError **error)
 	/* get each part of the HWID */
 	split = g_strsplit (keys, "&", -1);
 	for (guint j = 0; split[j] != NULL; j++) {
-		const gchar *tmp = g_hash_table_lookup (self->hash, split[j]);
+		const gchar *tmp = g_hash_table_lookup (self->hash_dmi_hw, split[j]);
 		if (tmp == NULL) {
 			g_set_error (error,
 				     G_IO_ERROR,
@@ -261,6 +280,7 @@ fu_hwids_setup (FuHwids *self, const gchar *sysfsdir, GError **error)
 	/* get all DMI data */
 	for (guint i = 0; sysfsfile[i].key != NULL; i++) {
 		g_autofree gchar *contents = NULL;
+		g_autofree gchar *contents_safe = NULL;
 		g_autofree gchar *fn = NULL;
 		const gchar *contents_hdr;
 
@@ -282,9 +302,39 @@ fu_hwids_setup (FuHwids *self, const gchar *sysfsdir, GError **error)
 		contents_hdr = contents;
 		while (contents_hdr[0] == '0')
 			contents_hdr++;
-		g_hash_table_insert (self->hash,
+		g_hash_table_insert (self->hash_dmi_hw,
 				     g_strdup (sysfsfile[i].key),
 				     g_strdup (contents_hdr));
+
+		/* make suitable for display */
+		contents_safe = g_str_to_ascii (contents_hdr, "C");
+		g_strchomp (contents_safe);
+		g_hash_table_insert (self->hash_dmi_display,
+				     g_strdup (sysfsfile[i].key),
+				     g_steal_pointer (&contents_safe));
+	}
+
+	/* add GUIDs */
+	for (guint i = 0; i < 15; i++) {
+		g_autofree gchar *guid = NULL;
+		g_autofree gchar *key = NULL;
+		g_autofree gchar *values = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* get the GUID and add to hash */
+		key = g_strdup_printf ("HardwareID-%u", i);
+		guid = fu_hwids_get_guid (self, key, &error_local);
+		if (guid == NULL) {
+			g_debug ("%s is not available, %s", key, error_local->message);
+			continue;
+		}
+		g_hash_table_insert (self->hash_guid,
+				     g_strdup (guid),
+				     GUINT_TO_POINTER (1));
+
+		/* show what makes up the GUID */
+		values = fu_hwids_get_replace_values (self, key, NULL);
+		g_debug ("{%s}   <- %s", guid, values);
 	}
 
 	return TRUE;
@@ -297,7 +347,9 @@ fu_hwids_finalize (GObject *object)
 	g_return_if_fail (FU_IS_HWIDS (object));
 	self = FU_HWIDS (object);
 
-	g_hash_table_unref (self->hash);
+	g_hash_table_unref (self->hash_dmi_hw);
+	g_hash_table_unref (self->hash_dmi_display);
+	g_hash_table_unref (self->hash_guid);
 	G_OBJECT_CLASS (fu_hwids_parent_class)->finalize (object);
 }
 
@@ -311,7 +363,9 @@ fu_hwids_class_init (FuHwidsClass *klass)
 static void
 fu_hwids_init (FuHwids *self)
 {
-	self->hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	self->hash_dmi_hw = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	self->hash_dmi_display = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	self->hash_guid = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
 FuHwids *

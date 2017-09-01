@@ -170,13 +170,12 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 }
 
 gboolean
-fu_plugin_update_offline (FuPlugin *plugin,
-			  FuDevice *device,
-			  GBytes *blob_fw,
-			  FwupdInstallFlags flags,
-			  GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *device,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
-	g_autoptr(GError) error_local = NULL;
 	fwup_resource *re = NULL;
 	guint64 hardware_instance = 0;	/* FIXME */
 	int rc;
@@ -219,11 +218,10 @@ fu_plugin_update_offline (FuPlugin *plugin,
 						"{error #%d} %s:%d %s(): %s: %s \n",
 						i, filename, line, function, message, strerror(err));
 		}
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "%s",
-			     err_string->str);
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     err_string->str);
 		return FALSE;
 	}
 
@@ -240,14 +238,15 @@ fu_plugin_update_offline (FuPlugin *plugin,
 }
 
 static AsVersionParseFlag
-fu_plugin_uefi_get_version_format (void)
+fu_plugin_uefi_get_version_format (FuPlugin *plugin)
 {
-	g_autofree gchar *content = NULL;
-	/* any vendors match */
-	if (!g_file_get_contents ("/sys/class/dmi/id/sys_vendor",
-				  &content, NULL, NULL))
+	const gchar *content;
+
+	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
+	if (content == NULL)
 		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
-	g_strchomp (content);
+
+	/* any vendors match */
 	for (guint i = 0; quirk_table[i].sys_vendor != NULL; i++) {
 		if (g_strcmp0 (content, quirk_table[i].sys_vendor) == 0)
 			return quirk_table[i].flags;
@@ -308,7 +307,7 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	AsVersionParseFlag parse_flags;
-	g_autofree gchar *product_name = NULL;
+	const gchar *product_name;
 	fwup_resource *re;
 	gint supported;
 	g_autofree gchar *guid = NULL;
@@ -335,7 +334,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
 		fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 		fu_device_set_version (dev, "0");
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
 		fu_plugin_device_add (plugin, dev);
 		return TRUE;
@@ -351,15 +350,11 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 
 	/* set Display Name to the system for all capsules */
-	if (g_file_get_contents ("/sys/class/dmi/id/product_name",
-				 &product_name, NULL, NULL)) {
-		if (product_name != NULL)
-			g_strchomp (product_name);
-	}
+	product_name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
 
 	/* add each device */
 	guid = g_strdup ("00000000-0000-0000-0000-000000000000");
-	parse_flags = fu_plugin_uefi_get_version_format ();
+	parse_flags = fu_plugin_uefi_get_version_format (plugin);
 	while (fwup_resource_iter_next (iter, &re) > 0) {
 		const gchar *uefi_type_str = NULL;
 		efi_guid_t *guid_raw;
@@ -408,10 +403,12 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		}
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 		if (g_file_test ("/sys/firmware/efi/efivars", G_FILE_TEST_IS_DIR) ||
-		    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR))
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
-		else
+		    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR)) {
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		} else {
 			g_warning ("Kernel support for EFI variables missing");
+		}
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 		fu_plugin_device_add (plugin, dev);
 	}

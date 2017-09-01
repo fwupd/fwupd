@@ -12,6 +12,8 @@ Build-Depends: debhelper (>= 10.3),
                gettext (>= 0.19.8.1),
                gir1.2-appstreamglib-1.0,
                gir1.2-pango-1.0,
+               gnutls-dev,
+               gnutls-bin,
                gobject-introspection,
                gtk-doc-tools,
                fontconfig,
@@ -37,8 +39,6 @@ Build-Depends: debhelper (>= 10.3),
                libsoup2.4-dev,
                libsqlite3-dev,
                libsmbios-dev [amd64 i386],
-#disabled until ITP 855065 is done
-#              libtbtfwu-dev,
                libtool-bin,
                meson,
                pkg-config,
@@ -98,7 +98,8 @@ Package: fwupd
 Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
-Recommends: fwupdate
+Recommends: fwupdate,
+            python3
 Multi-Arch: foreign
 Description: Firmware update daemon
  fwupd is a daemon to allow session software to update device firmware.
@@ -221,4 +222,5 @@ Depends: ${misc:Depends}
 Priority: extra
 Section: oldlibs
 Description: development files for libebitdo (transitional package)
- This is a transitional package for 0bitdo support that was moved into a plugin.
+ This is a transitional package for the 0bitdo support development patckage
+ that was moved into a plugin.

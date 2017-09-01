@@ -43,7 +43,6 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 {
 	GPtrArray *guids;
 	GUsbDevice *usb_device;
-	g_autofree gchar *name = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDevice) dev = NULL;
@@ -60,7 +59,7 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 	/* create new FuDevice */
 	dev = fu_device_new ();
 	if (lu_device_has_flag (device, LU_DEVICE_FLAG_CAN_FLASH))
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_id (dev, lu_device_get_platform_id (device));
 	fu_device_set_name (dev, lu_device_get_product (device));
 	fu_device_set_vendor (dev, lu_device_get_vendor (device));
@@ -140,11 +139,11 @@ fu_plugin_unifying_attach_cb (gpointer user_data)
 }
 
 gboolean
-fu_plugin_update_online (FuPlugin *plugin,
-			 FuDevice *dev,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *dev,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(LuDevice) device = NULL;

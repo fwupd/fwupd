@@ -1,9 +1,14 @@
-#!/bin/sh -e
+#!/bin/sh
+set -e
 
 #DEBHELPER#
 
 if [ "$1" = remove -o "$1" = purge ]; then
 	if [ -f /etc/fwupd.conf ]; then
-		sed "s,^EnableTestSuite=.*,EnableTestSuite=false," -i /etc/fwupd.conf
+		if [ "$CI" = "true" ]; then
+			sed "s,^EnableTestSuite=.*,EnableTestSuite=false," -i /etc/fwupd.conf
+		else
+			echo "To disable test suite, modify /etc/fwupd.conf"
+		fi
 	fi
 fi

@@ -1719,7 +1719,6 @@ gboolean
 dfu_device_attach (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1974,7 +1973,6 @@ dfu_device_download (DfuDevice *device,
 	GPtrArray *images;
 	gboolean ret;
 	guint i;
-	g_autoptr(GPtrArray) targets = NULL;
 
 	/* no backing USB device */
 	if (priv->dev == NULL) {

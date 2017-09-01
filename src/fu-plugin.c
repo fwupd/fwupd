@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -43,7 +43,7 @@ typedef struct {
 	GUsbContext		*usb_ctx;
 	gboolean		 enabled;
 	gchar			*name;
-	GHashTable		*hwids;		/* hwid:1 */
+	FuHwids			*hwids;
 	GHashTable		*devices;	/* platform_id:GObject */
 	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
 	FuPluginData		*data;
@@ -52,6 +52,7 @@ typedef struct {
 enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
+	SIGNAL_DEVICE_REGISTER,
 	SIGNAL_STATUS_CHANGED,
 	SIGNAL_PERCENTAGE_CHANGED,
 	SIGNAL_RECOLDPLUG,
@@ -68,6 +69,8 @@ typedef const gchar	*(*FuPluginGetNameFunc)		(void);
 typedef void		 (*FuPluginInitFunc)		(FuPlugin	*plugin);
 typedef gboolean	 (*FuPluginStartupFunc)		(FuPlugin	*plugin,
 							 GError		**error);
+typedef void		 (*FuPluginDeviceRegisterFunc)	(FuPlugin	*plugin,
+							 FuDevice	*device);
 typedef gboolean	 (*FuPluginDeviceFunc)		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
@@ -321,6 +324,32 @@ fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
 
+/**
+ * fu_plugin_device_register:
+ * @plugin: A #FuPlugin
+ * @device: A #FuDevice
+ *
+ * Registers the device with other plugins so they can set metadata.
+ *
+ * Plugins do not have to call this manually as this is done automatically
+ * when using fu_plugin_device_add(). They may wish to use this manually
+ * if for intance the coldplug should be ignored based on the metadata
+ * set from other plugins.
+ *
+ * Since: 0.9.7
+ **/
+void
+fu_plugin_device_register (FuPlugin *plugin, FuDevice *device)
+{
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_DEVICE (device));
+
+	g_debug ("emit device-register from %s: %s",
+		 fu_plugin_get_name (plugin),
+		 fu_device_get_id (device));
+	g_signal_emit (plugin, signals[SIGNAL_DEVICE_REGISTER], 0, device);
+}
+
 typedef struct {
 	FuPlugin	*plugin;
 	FuDevice	*device;
@@ -490,7 +519,7 @@ fu_plugin_recoldplug (FuPlugin *plugin)
  * @plugin: A #FuPlugin
  * @hwid: A Hardware ID GUID, e.g. "6de5d951-d755-576b-bd09-c5cf66b27234"
  *
- * Checks to see if a specific hardware ID exists. All hardware IDs on a
+ * Checks to see if a specific GUID exists. All hardware IDs on a
  * specific system can be shown using the `fwupdmgr hwids` command.
  *
  * Since: 0.9.1
@@ -501,16 +530,32 @@ fu_plugin_check_hwid (FuPlugin *plugin, const gchar *hwid)
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	if (priv->hwids == NULL)
 		return FALSE;
-	return g_hash_table_lookup (priv->hwids, hwid) != NULL;
+	return fu_hwids_has_guid (priv->hwids, hwid);
+}
+
+/**
+ * fu_plugin_get_dmi_value:
+ * @plugin: A #FuPlugin
+ * @dmi_id: A DMI ID, e.g. "BiosVersion"
+ *
+ * Gets a hardware DMI value.
+ *
+ * Since: 0.9.7
+ **/
+const gchar *
+fu_plugin_get_dmi_value (FuPlugin *plugin, const gchar *dmi_id)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->hwids == NULL)
+		return NULL;
+	return fu_hwids_get_value (priv->hwids, dmi_id);
 }
 
 void
-fu_plugin_set_hwids (FuPlugin *plugin, GHashTable *hwids)
+fu_plugin_set_hwids (FuPlugin *plugin, FuHwids *hwids)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	if (priv->hwids != NULL)
-		g_hash_table_unref (priv->hwids);
-	priv->hwids = g_hash_table_ref (hwids);
+	g_set_object (&priv->hwids, hwids);
 }
 
 /**
@@ -726,6 +771,24 @@ fu_plugin_runner_update_cleanup (FuPlugin *plugin, FuDevice *device, GError **er
 	return TRUE;
 }
 
+void
+fu_plugin_runner_device_register (FuPlugin *plugin, FuDevice *device)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginDeviceRegisterFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_device_registered", (gpointer *) &func);
+	if (func != NULL) {
+		g_debug ("performing device_added() on %s", priv->name);
+		func (plugin, device);
+	}
+}
+
 static gboolean
 fu_plugin_runner_schedule_update (FuPlugin *plugin,
 			     FuDevice *device,
@@ -856,15 +919,14 @@ fu_plugin_runner_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 
 gboolean
 fu_plugin_runner_update (FuPlugin *plugin,
-		    FuDevice *device,
-		    GBytes *blob_cab,
-		    GBytes *blob_fw,
-		    FwupdInstallFlags flags,
-		    GError **error)
+			 FuDevice *device,
+			 GBytes *blob_cab,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginUpdateFunc func_online;
-	FuPluginUpdateFunc func_offline;
+	FuPluginUpdateFunc update_func;
 	g_autoptr(FuPending) pending = NULL;
 	g_autoptr(FwupdResult) res_pending = NULL;
 	GError *error_update = NULL;
@@ -875,18 +937,21 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		return TRUE;
 
 	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_update_online", (gpointer *) &func_online);
-	g_module_symbol (priv->module, "fu_plugin_update_offline", (gpointer *) &func_offline);
+	g_module_symbol (priv->module, "fu_plugin_update", (gpointer *) &update_func);
+	if (update_func == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "No update possible");
+		return FALSE;
+	}
 
-	/* schedule for next reboot, or handle in the plugin */
+	/* just schedule this for the next reboot  */
 	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
-		if (func_offline == NULL) {
-			return fu_plugin_runner_schedule_update (plugin,
-								 device,
-								 blob_cab,
-								 error);
-		}
-		return func_offline (plugin, device, blob_fw, flags, error);
+		return fu_plugin_runner_schedule_update (plugin,
+							 device,
+							 blob_cab,
+							 error);
 	}
 
 	/* cancel the pending action */
@@ -894,16 +959,9 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* online */
-	if (func_online == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "No online update possible");
-		return FALSE;
-	}
 	pending = fu_pending_new ();
 	res_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
-	if (!func_online (plugin, device, blob_fw, flags, &error_update)) {
+	if (!update_func (plugin, device, blob_fw, flags, &error_update)) {
 		/* save the error to the database */
 		if (res_pending != NULL) {
 			fu_pending_set_error_msg (pending, FWUPD_RESULT (device),
@@ -1076,6 +1134,12 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, device_removed),
 			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
 			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
+	signals[SIGNAL_DEVICE_REGISTER] =
+		g_signal_new ("device-register",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuPluginClass, device_register),
+			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
 	signals[SIGNAL_STATUS_CHANGED] =
 		g_signal_new ("status-changed",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
@@ -1131,7 +1195,7 @@ fu_plugin_finalize (GObject *object)
 	if (priv->usb_ctx != NULL)
 		g_object_unref (priv->usb_ctx);
 	if (priv->hwids != NULL)
-		g_hash_table_unref (priv->hwids);
+		g_object_unref (priv->hwids);
 #ifndef RUNNING_ON_VALGRIND
 	if (priv->module != NULL)
 		g_module_close (priv->module);

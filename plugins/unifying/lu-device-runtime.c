@@ -34,7 +34,9 @@ struct _LuDeviceRuntime
 
 G_DEFINE_TYPE (LuDeviceRuntime, lu_device_runtime, LU_TYPE_DEVICE)
 
+#ifndef HAVE_GUDEV_232
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
+#endif
 
 static gboolean
 lu_device_runtime_enable_notifications (LuDevice *device, GError **error)

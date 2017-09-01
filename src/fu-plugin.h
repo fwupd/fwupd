@@ -27,7 +27,9 @@
 #include <glib-object.h>
 #include <gusb.h>
 
+#include "fu-common.h"
 #include "fu-device.h"
+#include "fu-hwids.h"
 
 G_BEGIN_DECLS
 
@@ -49,8 +51,10 @@ struct _FuPluginClass
 	void		 (* recoldplug)			(FuPlugin	*plugin);
 	void		 (* set_coldplug_delay)		(FuPlugin	*plugin,
 							 guint		 duration);
+	void		 (* device_register)		(FuPlugin	*plugin,
+							 FuDevice	*device);
 	/*< private >*/
-	gpointer	padding[25];
+	gpointer	padding[24];
 };
 
 typedef enum {
@@ -75,6 +79,8 @@ void		 fu_plugin_device_add_delay		(FuPlugin	*plugin,
 							 FuDevice	*device);
 void		 fu_plugin_device_remove		(FuPlugin	*plugin,
 							 FuDevice	*device);
+void		 fu_plugin_device_register		(FuPlugin	*plugin,
+							 FuDevice	*device);
 void		 fu_plugin_set_status			(FuPlugin	*plugin,
 							 FwupdStatus	 status);
 void		 fu_plugin_set_percentage		(FuPlugin	*plugin,
@@ -92,6 +98,8 @@ void		 fu_plugin_cache_add			(FuPlugin	*plugin,
 							 gpointer	 dev);
 gboolean	 fu_plugin_check_hwid			(FuPlugin	*plugin,
 							 const gchar	*hwid);
+const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*plugin,
+							 const gchar	*dmi_id);
 
 G_END_DECLS
 

@@ -4,12 +4,56 @@ install_data(['org.freedesktop.fwupd.xml'],
   install_dir : join_paths(get_option('datadir'), 'dbus-1', 'interfaces')
 )
 
+keyring_deps = []
+keyring_src = []
+
+if get_option('enable-gpg')
+  keyring_src += 'fu-keyring-gpg.c'
+  keyring_deps += gpgme
+  keyring_deps += gpgerror
+endif
+
+if get_option('enable-pkcs7')
+  keyring_src += 'fu-keyring-pkcs7.c'
+  keyring_deps += gnutls
+endif
+
+libfwupdprivate = static_library(
+  'fwupdprivate',
+  sources : [
+    'fu-common.c',
+    'fu-device.c',
+    'fu-hwids.c',
+    'fu-pending.c',
+    'fu-plugin.c',
+    'fu-test.c',
+  ],
+  include_directories : [
+    include_directories('..'),
+    include_directories('../libfwupd'),
+  ],
+  dependencies : [
+    appstream_glib,
+    giounix,
+    gudev,
+    gusb,
+    polkit,
+    soup,
+    sqlite,
+    libarchive,
+    valgrind,
+  ],
+  c_args : [
+    cargs,
+    '-DLOCALSTATEDIR="' + localstatedir + '"',
+    '-DFU_OFFLINE_DESTDIR=""',
+  ],
+)
+
 executable(
   'fwupdmgr',
   sources : [
-    'fu-device.c',
-    'fu-pending.c',
-    'fu-hwids.c',
+    'fu-progressbar.c',
     'fu-util.c',
   ],
   include_directories : [
@@ -24,8 +68,12 @@ executable(
     polkit,
     soup,
     sqlite,
+    libarchive,
   ],
-  link_with : fwupd,
+  link_with : [
+    fwupd,
+    libfwupdprivate,
+  ],
   c_args : [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
@@ -46,8 +94,11 @@ executable(
   'fwupd',
   resources_src,
   sources : [
+    keyring_src,
     'fu-common.c',
     'fu-config.c',
+    'fu-keyring.c',
+    'fu-keyring-result.c',
     'fu-engine.c',
     'fu-main.c',
     'fu-hwids.c',
@@ -62,6 +113,7 @@ executable(
     include_directories('../libfwupd'),
   ],
   dependencies : [
+    keyring_deps,
     appstream_glib,
     giounix,
     gmodule,
@@ -70,9 +122,8 @@ executable(
     polkit,
     soup,
     sqlite,
-    gpgme,
-    gpgerror,
     valgrind,
+    libarchive,
   ],
   link_with : fwupd,
   c_args : [
@@ -91,12 +142,18 @@ if get_option('enable-tests')
   e = executable(
     'fu-self-test',
     colorhug_test_firmware,
+    colorhug_pkcs7_signature,
+    builder_test_firmware,
     sources : [
+      keyring_src,
       'fu-self-test.c',
+      'fu-common.c',
+      'fu-keyring.c',
       'fu-hwids.c',
       'fu-device.c',
       'fu-pending.c',
       'fu-keyring.c',
+      'fu-keyring-result.c',
       'fu-plugin.c',
       'fu-test.c',
     ],
@@ -105,6 +162,7 @@ if get_option('enable-tests')
       include_directories('../libfwupd'),
     ],
     dependencies : [
+      keyring_deps,
       appstream_glib,
       giounix,
       gmodule,
@@ -113,15 +171,16 @@ if get_option('enable-tests')
       polkit,
       soup,
       sqlite,
-      gpgme,
-      gpgerror,
       valgrind,
+      libarchive,
     ],
     link_with : [
       fwupd,
     ],
     c_args : [
       cargs,
+      '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
+      '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
       '-DLOCALSTATEDIR="/tmp/fwupd-self-test/var"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',

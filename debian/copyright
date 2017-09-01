@@ -6,11 +6,11 @@ Files: *
 Copyright: 2015 Richard Hughes <richard@hughsie.com>
 License: GPL-2.0+
 
-Files: libfwupd/fwupd*
+Files: libfwupd/*
 Copyright: 2015 Richard Hughes <richard@hughsie.com>
 License: LGPL-2.1+
 
-Files: data/tests/*/firmware.metainfo.xml
+Files: data/tests/colorhug/firmware.metainfo.xml
 Copyright: 2015 Richard Hughes <richard@hughsie.com>
 License: CC0-1.0
 

@@ -50,7 +50,6 @@ if get_option('enable-tests')
     sources : [
       'fu-self-test.c',
       'fu-rom.c',
-      'fu-test.c',
     ],
     include_directories : [
       include_directories('../..'),
@@ -63,6 +62,7 @@ if get_option('enable-tests')
     ],
     link_with : [
       fwupd,
+      libfwupdprivate,
     ],
     c_args : cargs
   )

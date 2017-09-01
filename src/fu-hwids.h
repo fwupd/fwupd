@@ -54,6 +54,8 @@ gchar		*fu_hwids_get_replace_values	(FuHwids	*self,
 gchar		*fu_hwids_get_guid		(FuHwids	*self,
 						 const gchar	*keys,
 						 GError		**error);
+gboolean	 fu_hwids_has_guid		(FuHwids	*self,
+						 const gchar	*guid);
 gboolean	 fu_hwids_setup			(FuHwids	*self,
 						 const gchar	*sysfsdir,
 						 GError		**error);

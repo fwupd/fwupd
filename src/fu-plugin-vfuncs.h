@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -37,12 +37,7 @@ gboolean	 fu_plugin_coldplug_prepare		(FuPlugin	*plugin,
 							 GError		**error);
 gboolean	 fu_plugin_coldplug_cleanup		(FuPlugin	*plugin,
 							 GError		**error);
-gboolean	 fu_plugin_update_online		(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GBytes		*blob_fw,
-							 FwupdInstallFlags flags,
-							 GError		**error);
-gboolean	 fu_plugin_update_offline		(FuPlugin	*plugin,
+gboolean	 fu_plugin_update			(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GBytes		*blob_fw,
 							 FwupdInstallFlags flags,
@@ -66,6 +61,8 @@ gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
 gboolean	 fu_plugin_update_cleanup		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
+void		 fu_plugin_device_registered		(FuPlugin	*plugin,
+							 FuDevice	*dev);
 
 G_END_DECLS
 

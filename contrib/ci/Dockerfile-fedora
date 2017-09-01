@@ -1,0 +1,62 @@
+FROM fedora:26
+
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+
+RUN dnf --enablerepo=updates-testing -y update
+RUN dnf --enablerepo=updates-testing -y install \
+	adobe-source-han-sans-cn-fonts \
+	cairo-devel \
+	cairo-gobject-devel \
+	colord-devel \
+	dejavu-sans-fonts \
+	docbook-utils \
+	elfutils-libelf-devel \
+	freetype \
+	fontconfig \
+	fwupdate-devel \
+	git \
+	gcab \
+	gettext \
+	glib2-devel \
+	gobject-introspection-devel \
+	gpgme-devel \
+	gnutls-devel \
+	gnutls-utils \
+	gtk-doc \
+	jq \
+	libappstream-glib-devel \
+	libarchive-devel \
+	libgudev1-devel \
+	libgusb-devel \
+	libsmbios-devel \
+	libsoup-devel \
+	meson \
+	pango-devel \
+	polkit-devel \
+	python3 \
+	python3-cairo \
+	python3-gobject \
+	python3-pillow \
+	rpm-build \
+	redhat-rpm-config \
+	sqlite-devel \
+	systemd \
+	umockdev-devel \
+	valgrind \
+	valgrind-devel \
+	xz
+#deps needed only for installed tests
+RUN dnf --enablerepo=updates-testing -y install \
+	adobe-source-han-sans-cn-fonts \
+	ca-certificates \
+	dbus-x11 \
+	dconf \
+	gnome-desktop-testing \
+	polkit \
+	python3-gobject \
+	python3-requests \
+	gnupg2
+RUN mkdir /build
+WORKDIR /build

@@ -19,6 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include "config.h"
+
 #include <appstream-glib.h>
 #include "fu-dell-common.h"
 
@@ -63,8 +65,8 @@ fu_dell_supported (void)
 	guint8 dell_supported = 0;
 	struct smbios_struct *de_table;
 
-        de_table = smbios_get_next_struct_by_handle (0, 0xDE00);
-        if (!de_table)
+	de_table = smbios_get_next_struct_by_handle (0, 0xDE00);
+	if (!de_table)
 		return FALSE;
 	smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
 	if (dell_supported != 0xDE)
@@ -317,19 +319,17 @@ gboolean
 fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 {
 	guint32 dock_location;
-	FwupdDeviceFlags flags;
 	const gchar *tmp;
 	g_autoptr (FuDellSmiObj) smi_obj = NULL;
 
 	if (device) {
-		flags = fu_device_get_flags (device);
-		if (!(flags & FWUPD_DEVICE_FLAG_ALLOW_ONLINE))
+		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE))
 			return TRUE;
-		tmp = fu_device_get_plugin(device);
-		if (!((g_strcmp0 (tmp, "tbtfwu") == 0) ||
+		tmp = fu_device_get_plugin (device);
+		if (!((g_strcmp0 (tmp, "thunderbolt") == 0) ||
 			(g_strcmp0 (tmp, "synapticsmst") == 0)))
 			return TRUE;
-		g_debug("preparing/cleaning update for %s", tmp);
+		g_debug ("preparing/cleaning update for %s", tmp);
 	}
 
 	/* Dock MST Hub / TBT Controller */
@@ -339,16 +339,16 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 	if (fu_dell_detect_dock (smi_obj, &dock_location)) {
 		if (!fu_dell_toggle_dock_mode (smi_obj, enable, dock_location,
 					       error))
-			g_debug("unable to change dock to %d", enable);
+			g_debug ("unable to change dock to %d", enable);
 		else
-			g_debug("Toggled dock mode to %d", enable);
+			g_debug ("Toggled dock mode to %d", enable);
 	}
 
 	/* System MST hub / TBT controller */
 	if (!fu_dell_toggle_host_mode (smi_obj, TBT_GPIO_GUID, enable))
-		g_debug("Unable to toggle TBT GPIO to %d", enable);
+		g_debug ("Unable to toggle TBT GPIO to %d", enable);
 	else
-		g_debug("Toggled TBT GPIO to %d", enable);
+		g_debug ("Toggled TBT GPIO to %d", enable);
 	if (!fu_dell_toggle_host_mode (smi_obj, MST_GPIO_GUID, enable))
 		g_debug("Unable to toggle MST hub GPIO to %d", enable);
 	else

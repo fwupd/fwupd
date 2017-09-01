@@ -10,30 +10,26 @@ A Dockerfile for Fedora 25 is available here in `contrib`.
 
 To prepare the Docker container run this command:
 
-`docker build -t fwupd-fedora-25 -f contrib/ci/Dockerfile-fedora-25 .`
+`docker build -t fwupd-fedora -f contrib/ci/Dockerfile-fedora .`
 
 To build the RPMs run this command (from the root of your git checkout):
 
-```docker run -t -v `pwd`:/build fwupd-fedora-25 ./contrib/ci/build_and_install_rpms.sh```
+```docker run -t -v `pwd`:/build fwupd-fedora ./contrib/ci/build_and_install_rpms.sh```
 
 RPMs will be made available in your working directory when complete.
 
 ## DEB packages
-A Dockerfile is available for Debian unstable and Debian experimental.
-*(Currently)* builds can only be performed in Debian experimental due to dependencies not yet available in Debian unstable.
+A Dockerfile is available for Debian unstable.
 
 To prepare the Docker container run this command:
 
-`docker build -t fwupd-debian-experimental -f contrib/ci/Dockerfile-debian-experimental .`
+`docker build -t fwupd-debian -f contrib/ci/Dockerfile-debian .`
 
 To build the DEBs run this command (from the root of your git checkout):
 
-```docker run -t -v `pwd`:/build fwupd-debian-experimental ./contrib/ci/build_and_install_debs.sh```
+```docker run -t -v `pwd`:/build fwupd-debian ./contrib/ci/build_and_install_debs.sh```
 
 DEBs will be made available in your working directory when complete.
-
-To use the packages, you may need to enable the experimental repository for dependency resolution.
-Additional information is available here: https://wiki.debian.org/DebianExperimental
 
 ## PKG packages
 A Dockerfile is available for Arch Linux.

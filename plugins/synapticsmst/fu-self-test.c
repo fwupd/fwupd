@@ -52,9 +52,6 @@ fu_plugin_synapticsmst_func (void)
 	g_autoptr(GError) error = NULL;
 	FuDevice *device = NULL;
 	g_autoptr(FuPlugin) plugin = NULL;
-	g_autoptr(GBytes) blob_fw = NULL;
-	g_autoptr(GMappedFile) mapped_file = NULL;
-	g_autofree gchar *fwfile = NULL;
 	const gchar *test_directory;
 
 	devices = g_ptr_array_new ();

@@ -19,7 +19,6 @@ shared_module('fu_plugin_raspberrypi',
     ],
   dependencies : [
     plugin_deps,
-    libarchive,
   ],
 )
 
@@ -32,10 +31,6 @@ if get_option('enable-tests')
     sources : [
       'fu-self-test.c',
       'fu-plugin-raspberrypi.c',
-      'fu-device.c',
-      'fu-pending.c',
-      'fu-plugin.c',
-      'fu-test.c',
     ],
     include_directories : [
       include_directories('../..'),
@@ -45,11 +40,11 @@ if get_option('enable-tests')
     dependencies : [
       plugin_deps,
       sqlite,
-      libarchive,
       valgrind,
     ],
     link_with : [
       fwupd,
+      libfwupdprivate,
     ],
     c_args : [
       cargs,

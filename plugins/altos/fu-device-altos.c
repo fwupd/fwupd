@@ -51,7 +51,9 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuDeviceAltos, fu_device_altos, FU_TYPE_DEVICE)
 
 #define GET_PRIVATE(o) (fu_device_altos_get_instance_private (o))
 
+#ifndef HAVE_GUDEV_232
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
+#endif
 
 /**
  * fu_device_altos_kind_from_string:
@@ -813,7 +815,7 @@ fu_device_altos_init_real (FuDeviceAltos *device)
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device),
-			    FWUPD_DEVICE_FLAG_ALLOW_ONLINE);
+			    FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* set default vendor */
 	fu_device_set_vendor (FU_DEVICE (device), "altusmetrum.org");

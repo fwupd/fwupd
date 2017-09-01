@@ -24,7 +24,6 @@ executable(
   sources : [
     'fu-ebitdo-tool.c',
     'fu-ebitdo-common.c',
-    'fu-device.c',
     'fu-device-ebitdo.c',
   ],
   include_directories : [
@@ -37,6 +36,7 @@ executable(
   ],
   link_with : [
     fwupd,
+    libfwupdprivate,
   ],
   c_args : cargs,
 )

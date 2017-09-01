@@ -1,8 +1,8 @@
 project('fwupd', 'c',
-  version : '0.9.6',
+  version : '0.9.7',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0',
-  default_options : 'warning_level=2',
+  default_options : ['warning_level=2', 'c_std=c99'],
 )
 
 fwupd_version = meson.project_version()
@@ -117,6 +117,9 @@ add_global_link_arguments(
   language: 'c'
 )
 
+# Needed for realpath(), syscall(), cfmakeraw(), etc.
+add_project_arguments('-D_DEFAULT_SOURCE', language : 'c')
+
 gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
@@ -125,7 +128,10 @@ if polkit.version().version_compare('>= 0.114')
   conf.set('HAVE_POLKIT_0_114', '1')
 endif
 gudev = dependency('gudev-1.0')
-appstream_glib = dependency('appstream-glib', version : '>= 0.6.9')
+if gudev.version().version_compare('>= 232')
+  conf.set('HAVE_GUDEV_232', '1')
+endif
+appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
@@ -135,8 +141,15 @@ else
   valgrind = dependency('valgrindXXX', required: false)
 endif
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
-gpgme = cc.find_library('gpgme')
-gpgerror = cc.find_library('gpg-error')
+if get_option('enable-pkcs7')
+  gnutls = dependency('gnutls')
+  conf.set('ENABLE_PKCS7', '1')
+endif
+if get_option('enable-gpg')
+  gpgme = cc.find_library('gpgme')
+  gpgerror = cc.find_library('gpg-error')
+  conf.set('ENABLE_GPG', '1')
+endif
 libm = cc.find_library('m', required: false)
 udev = dependency('udev')
 uuid = dependency('uuid')
@@ -179,8 +192,17 @@ if get_option('enable-dell')
   conf.set('HAVE_DELL', '1')
 endif
 
-if get_option('enable-tbtfwu')
-  tbtfwu = dependency('libtbtfwu', version : '>= 1', required: false)
+if get_option('enable-synaptics')
+  if get_option('enable-dell')
+    conf.set('HAVE_SYNAPTICS', '1')
+  else
+    error('compiling --enable-synaptics requires --enable-dell')
+  endif
+endif
+
+if get_option('enable-thunderbolt')
+  umockdev = dependency('umockdev-1.0', required: false)
+  conf.set('HAVE_THUNDERBOLT', '1')
 endif
 
 if get_option('enable-systemd')
@@ -190,6 +212,16 @@ endif
 
 if get_option('enable-consolekit')
   conf.set('HAVE_CONSOLEKIT' , '1')
+endif
+
+systemdunitdir = get_option('with-systemdunitdir')
+if systemdunitdir == '' and get_option('enable-systemd')
+  systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
+endif
+
+udevdir = get_option('with-udevdir')
+if udevdir == ''
+  udevdir = udev.get_pkgconfig_variable('udevdir')
 endif
 
 gnome = import('gnome')
@@ -227,15 +259,17 @@ plugin_deps += giounix
 plugin_deps += gmodule
 plugin_deps += gusb
 plugin_deps += soup
+plugin_deps += libarchive
 
 subdir('data')
 subdir('docs')
 subdir('libdfu')
 subdir('libfwupd')
-subdir('plugins')
 subdir('po')
 subdir('policy')
 subdir('src')
+subdir('plugins')
+subdir('contrib')
 
 if meson.version().version_compare('<0.41.0')
   if archiver.found()
@@ -256,5 +290,5 @@ if meson.version().version_compare('<0.41.0')
 endif
 
 if get_option('enable-systemd')
-  meson.add_install_script('meson_post_install.sh', systemd.get_pkgconfig_variable('systemdsystemunitdir'), localstatedir)
+  meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)
 endif

@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -100,9 +100,19 @@ void		 fu_device_set_alternate		(FuDevice	*device,
 							 FuDevice	*alternate);
 const gchar	*fu_device_get_metadata			(FuDevice	*device,
 							 const gchar	*key);
+gboolean	 fu_device_get_metadata_boolean		(FuDevice	*device,
+							 const gchar	*key);
+guint		 fu_device_get_metadata_integer		(FuDevice	*device,
+							 const gchar	*key);
 void		 fu_device_set_metadata			(FuDevice	*device,
 							 const gchar	*key,
 							 const gchar	*value);
+void		 fu_device_set_metadata_boolean		(FuDevice	*device,
+							 const gchar	*key,
+							 gboolean	 value);
+void		 fu_device_set_metadata_integer		(FuDevice	*device,
+							 const gchar	*key,
+							 guint		 value);
 void		 fu_device_set_name			(FuDevice	*device,
 							 const gchar	*value);
 

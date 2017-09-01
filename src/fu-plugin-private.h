@@ -32,7 +32,7 @@ FuPlugin	*fu_plugin_new				(void);
 void		 fu_plugin_set_usb_context		(FuPlugin	*plugin,
 							 GUsbContext	*usb_ctx);
 void		 fu_plugin_set_hwids			(FuPlugin	*plugin,
-							 GHashTable	*hwids);
+							 FuHwids	*hwids);
 gboolean	 fu_plugin_open				(FuPlugin	*plugin,
 							 const gchar	*filename,
 							 GError		**error);
@@ -50,6 +50,8 @@ gboolean	 fu_plugin_runner_update_prepare	(FuPlugin	*plugin,
 gboolean	 fu_plugin_runner_update_cleanup	(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
+void		 fu_plugin_runner_device_register	(FuPlugin	*plugin,
+							 FuDevice	*device);
 gboolean	 fu_plugin_runner_update		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GBytes		*blob_cab,
