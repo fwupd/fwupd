@@ -1,0 +1,95 @@
+From 499429a4e9ff96db0e04bd1d3e1523389d66fc50 Mon Sep 17 00:00:00 2001
+From: Richard Hughes <richard@hughsie.com>
+Date: Fri, 1 Sep 2017 17:43:16 +0100
+Subject: [PATCH] Fix the libdfu self test failure on s390 and ppc64
+
+We have to be careful converting the little endian keys and values to and from
+a 'bare' uint8 buffer.
+---
+ libdfu/dfu-cipher-xtea.c | 32 +++++++++++++++++++++++++++-----
+ 1 file changed, 27 insertions(+), 5 deletions(-)
+
+diff --git a/libdfu/dfu-cipher-xtea.c b/libdfu/dfu-cipher-xtea.c
+index fd97c9f..b697916 100644
+--- a/libdfu/dfu-cipher-xtea.c
++++ b/libdfu/dfu-cipher-xtea.c
+@@ -29,6 +29,26 @@
+ #define XTEA_DELTA		0x9e3779b9
+ #define XTEA_NUM_ROUNDS		32
+ 
++static void
++dfu_cipher_buf_to_uint32 (const guint8 *buf, guint buflen, guint32 *array)
++{
++	guint32 tmp_le;
++	for (guint i = 0; i < buflen / 4; i++) {
++		memcpy (&tmp_le, &buf[i * 4], 4);
++		array[i] = GUINT32_FROM_LE (tmp_le);
++	}
++}
++
++static void
++dfu_cipher_uint32_to_buf (guint8 *buf, guint buflen, const guint32 *array)
++{
++	guint32 tmp_le;
++	for (guint i = 0; i < buflen / 4; i++) {
++		tmp_le = GUINT32_TO_LE (array[i]);
++		memcpy (&buf[i * 4], &tmp_le, 4);
++	}
++}
++
+ static gboolean
+ dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
+ {
+@@ -67,11 +87,13 @@ dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
+ 		}
+ 	} else {
+ 		gsize buf_len = 16;
++		guint8 buf[16];
+ 		g_autoptr(GChecksum) csum = NULL;
+ 		csum = g_checksum_new (G_CHECKSUM_MD5);
+ 		g_checksum_update (csum, (const guchar *) key, (gssize) key_len);
+-		g_checksum_get_digest (csum, (guint8 *) keys, &buf_len);
++		g_checksum_get_digest (csum, buf, &buf_len);
+ 		g_assert (buf_len == 16);
++		dfu_cipher_buf_to_uint32 (buf, buf_len, keys);
+ 	}
+ 
+ 	/* success */
+@@ -130,7 +152,7 @@ dfu_cipher_decrypt_xtea (const gchar *key,
+ 
+ 	/* allocate a buffer that can be addressed in 4-byte chunks */
+ 	tmp = g_new0 (guint32, chunks);
+-	memcpy (tmp, data, length);
++	dfu_cipher_buf_to_uint32 (data, length, tmp);
+ 
+ 	/* process buffer using XTEA keys */
+ 	for (j = 0; j < chunks; j += 2) {
+@@ -147,7 +169,7 @@ dfu_cipher_decrypt_xtea (const gchar *key,
+ 	}
+ 
+ 	/* copy the temp buffer back to data */
+-	memcpy (data, tmp, length);
++	dfu_cipher_uint32_to_buf (data, length, tmp);
+ 	return TRUE;
+ }
+ 
+@@ -201,7 +223,7 @@ dfu_cipher_encrypt_xtea (const gchar *key,
+ 
+ 	/* allocate a buffer that can be addressed in 4-byte chunks */
+ 	tmp = g_new0 (guint32, chunks);
+-	memcpy (tmp, data, length);
++	dfu_cipher_buf_to_uint32 (data, length, tmp);
+ 
+ 	/* process buffer using XTEA keys */
+ 	for (j = 0; j < chunks; j += 2) {
+@@ -218,6 +240,6 @@ dfu_cipher_encrypt_xtea (const gchar *key,
+ 	}
+ 
+ 	/* copy the temp buffer back to data */
+-	memcpy (data, tmp, length);
++	dfu_cipher_uint32_to_buf (data, length, tmp);
+ 	return TRUE;
+ }
+-- 
+2.7.4
+
