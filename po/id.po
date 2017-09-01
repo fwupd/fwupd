@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-03 10:43+0100\n"
-"PO-Revision-Date: 2017-08-03 09:43+0000\n"
+"POT-Creation-Date: 2017-09-01 14:26+0100\n"
+"PO-Revision-Date: 2017-09-01 13:27+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Indonesian (http://www.transifex.com/freedesktop/fwupd/language/id/)\n"
 "MIME-Version: 1.0\n"
@@ -20,11 +20,11 @@ msgstr ""
 
 #: data/org.freedesktop.fwupd.metainfo.xml:7
 msgid "fwupd"
-msgstr ""
+msgstr "fwupd"
 
 #: data/org.freedesktop.fwupd.metainfo.xml:8
 msgid "Update device firmware on Linux"
-msgstr ""
+msgstr "Perbarui firmware peranti pada Linux"
 
 #: data/org.freedesktop.fwupd.metainfo.xml:10
 msgid ""
@@ -32,14 +32,14 @@ msgid ""
 "reliable. You can either use a GUI software manager like GNOME Software to "
 "view and apply updates, the command-line tool or the D-Bus interface "
 "directly."
-msgstr ""
+msgstr "Proyek ini bertujuan membuat pemutakhiran firmware pada Linux otomatis, aman, dan handal. Anda dapat memakai manajer perangkat lunak GUI seperti GNOME Perangkat Lunak untuk melihat dan menerapkan pembaruan, perkakas perintah baris, atau antar muka D-Bus secara langsung."
 
 #: data/org.freedesktop.fwupd.metainfo.xml:16
 msgid ""
 "The fwupd process is a simple daemon to allow session software to update "
 "device firmware on your local machine. It is designed for desktops, but this"
 " project is also usable on phones, tablets and on headless servers."
-msgstr ""
+msgstr "Proses fwupd adalah sebuah daemon sederhana yang memungkinkan perangkat lunak sesi memperbarui firmware peranti pada mesin lokal Anda. Ini dirancang untuk desktop, tapi proyek ini juga dapat dipakai pada telepon, tablet, dan server headless."
 
 #: policy/org.freedesktop.fwupd.policy.in:17
 msgid "Install signed system firmware"
@@ -107,14 +107,14 @@ msgstr "Otentikasi diperlukan untuk memutakhirkan checksum tersimpan bagi perang
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #: libdfu/dfu-tool.c:121 plugins/synapticsmst/synapticsmst-tool.c:115
-#: src/fu-util.c:114
+#: src/fu-util.c:112
 #, c-format
 msgid "Alias to %s"
 msgstr "Alias ke %s"
 
 #. TRANSLATORS: error message
 #: libdfu/dfu-tool.c:194 plugins/synapticsmst/synapticsmst-tool.c:362
-#: src/fu-util.c:178
+#: src/fu-util.c:176
 msgid "Command not found"
 msgstr "Perintah tidak ditemukan"
 
@@ -149,227 +149,227 @@ msgid "Attaching"
 msgstr "Mencantol"
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: libdfu/dfu-tool.c:1488
+#: libdfu/dfu-tool.c:1487
 msgid "Added"
 msgstr "Ditambahkan"
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: libdfu/dfu-tool.c:1499
+#: libdfu/dfu-tool.c:1498
 msgid "Removed"
 msgstr "Dihapus"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
-#: libdfu/dfu-tool.c:1508 src/fu-util.c:1329
+#: libdfu/dfu-tool.c:1507 src/fu-util.c:1251
 msgid "Changed"
 msgstr "Diubah"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
-#: libdfu/dfu-tool.c:1516 src/fu-util.c:1291
+#: libdfu/dfu-tool.c:1515 src/fu-util.c:1213
 msgid "Cancelled"
 msgstr "Dibatalkan"
 
 #. TRANSLATORS: Appstream ID for the hardware type
-#: libdfu/dfu-tool.c:2025 src/fu-util.c:1132
+#: libdfu/dfu-tool.c:2024 src/fu-util.c:1040
 msgid "ID"
 msgstr "ID"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#: libdfu/dfu-tool.c:2031 libdfu/dfu-tool.c:2037 libdfu/dfu-tool.c:2124
+#: libdfu/dfu-tool.c:2030 libdfu/dfu-tool.c:2036 libdfu/dfu-tool.c:2123
 msgid "Name"
 msgstr "Nama"
 
 #. TRANSLATORS: this is the encryption method used when writing
-#: libdfu/dfu-tool.c:2044
+#: libdfu/dfu-tool.c:2043
 msgid "Cipher"
 msgstr "Cipher"
 
 #. TRANSLATORS: these are areas of memory on the chip
-#: libdfu/dfu-tool.c:2058
+#: libdfu/dfu-tool.c:2057
 msgid "Region"
 msgstr "Wilayah"
 
 #. TRANSLATORS: detected a DFU device
-#: libdfu/dfu-tool.c:2093
+#: libdfu/dfu-tool.c:2092
 msgid "Found"
 msgstr "Ditemukan"
 
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
-#: libdfu/dfu-tool.c:2101
+#: libdfu/dfu-tool.c:2100
 msgid "Protocol"
 msgstr "Protokol"
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
 #. TRANSLATORS: device status, e.g. "OK"
-#: libdfu/dfu-tool.c:2113 libdfu/dfu-tool.c:2116 libdfu/dfu-tool.c:2139
+#: libdfu/dfu-tool.c:2112 libdfu/dfu-tool.c:2115 libdfu/dfu-tool.c:2138
 msgid "Status"
 msgstr "Status"
 
-#: libdfu/dfu-tool.c:2113
+#: libdfu/dfu-tool.c:2112
 msgid "Unknown: permission denied"
 msgstr "Tidak diketahui: izin ditolak"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
-#: libdfu/dfu-tool.c:2130
+#: libdfu/dfu-tool.c:2129
 msgid "Serial"
 msgstr "Serial"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
-#: libdfu/dfu-tool.c:2135
+#: libdfu/dfu-tool.c:2134
 msgid "Mode"
 msgstr "Mode"
 
 #. TRANSLATORS: device state, i.e. appIDLE
-#: libdfu/dfu-tool.c:2143
+#: libdfu/dfu-tool.c:2142
 msgid "State"
 msgstr "Keadaan"
 
 #. TRANSLATORS: transfer size in bytes
-#: libdfu/dfu-tool.c:2151
+#: libdfu/dfu-tool.c:2150
 msgid "Transfer Size"
 msgstr "Ukuran Transfer"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
-#: libdfu/dfu-tool.c:2159
+#: libdfu/dfu-tool.c:2158
 msgid "Quirks"
 msgstr "Keanehan"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2238
+#: libdfu/dfu-tool.c:2237
 msgid "Convert firmware to DFU format"
 msgstr "Konversikan firmware ke format DFU"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2244
+#: libdfu/dfu-tool.c:2243
 msgid "Merge multiple firmware files into one"
 msgstr "Gabungkan beberapa berkas firmware menjadi satu"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2250
+#: libdfu/dfu-tool.c:2249
 msgid "Set vendor ID on firmware file"
 msgstr "Atur ID vendor pada berkas firmware"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2256
+#: libdfu/dfu-tool.c:2255
 msgid "Set product ID on firmware file"
 msgstr "Atur ID produk pada berkas firmware"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2262
+#: libdfu/dfu-tool.c:2261
 msgid "Set element address on firmware file"
 msgstr "Atur alamat elemen pada berkas firmware"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2268
+#: libdfu/dfu-tool.c:2267
 msgid "Set the firmware size for the target"
 msgstr "Atur ukuran firmware bagi target"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2274
+#: libdfu/dfu-tool.c:2273
 msgid "Set release version on firmware file"
 msgstr "Atur versi rilis pada berkas firmware"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2280
+#: libdfu/dfu-tool.c:2279
 msgid "Set alternative number on firmware file"
 msgstr "Atur nomor alternatif pada berkas firmware"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2286
+#: libdfu/dfu-tool.c:2285
 msgid "Set alternative name on firmware file"
 msgstr "Atur nama alternatif pada berkas firmware"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2292
+#: libdfu/dfu-tool.c:2291
 msgid "Attach DFU capable device back to runtime"
 msgstr "Cantolkan kembali perangkat mampu-DFU ke runtime"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2298
+#: libdfu/dfu-tool.c:2297
 msgid "Read firmware from device into a file"
 msgstr "Baca firmware dari perangkat ke dalam suatu berkas"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2304
+#: libdfu/dfu-tool.c:2303
 msgid "Read firmware from one partition into a file"
 msgstr "Baca firmware dari satu partisi ke dalam suatu berkas"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2310
+#: libdfu/dfu-tool.c:2309
 msgid "Write firmware from file into device"
 msgstr "Tulis firmware dari berkas ke dalam perangkat"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2316
+#: libdfu/dfu-tool.c:2315
 msgid "Write firmware from file into one partition"
 msgstr "Tulis firmware dari berkas ke dalam suatu partisi"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2322
+#: libdfu/dfu-tool.c:2321
 msgid "List currently attached DFU capable devices"
 msgstr "Tampilkan daftar perangkat mampu-DFU yang kini tercantol"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2328
+#: libdfu/dfu-tool.c:2327
 msgid "Detach currently attached DFU capable device"
 msgstr "Lepas perangkat mampu-DFU yang kini tercantol"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2334
+#: libdfu/dfu-tool.c:2333
 msgid "Dump details about a firmware file"
 msgstr "Curahkan rincian tentang suatu berkas firmware"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2340
+#: libdfu/dfu-tool.c:2339
 msgid "Watch DFU devices being hotplugged"
 msgstr "Amati perangkat DFU yang sedang di-hotplug"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2346
+#: libdfu/dfu-tool.c:2345
 msgid "Encrypt firmware data"
 msgstr "Enkripsikan data firmware"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2352
+#: libdfu/dfu-tool.c:2351
 msgid "Decrypt firmware data"
 msgstr "Dekripsikan data firmware"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2358
+#: libdfu/dfu-tool.c:2357
 msgid "Sets metadata on a firmware file"
 msgstr "Atur metadata pada suatu berkas firmware"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2364
+#: libdfu/dfu-tool.c:2363
 msgid "Replace data in an existing firmware file"
 msgstr "Gantikan data dalam suatu berkas firmware yang telah ada"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2370
+#: libdfu/dfu-tool.c:2369
 msgid "Create a binary patch using two files"
-msgstr ""
+msgstr "Buat suatu patch biner mamakai dua berkas"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2376
+#: libdfu/dfu-tool.c:2375
 msgid "Apply a binary patch"
-msgstr ""
+msgstr "Terapkan sebuah patch biner"
 
 #. TRANSLATORS: command description
-#: libdfu/dfu-tool.c:2382
+#: libdfu/dfu-tool.c:2381
 msgid "Dump information about a binary patch to the screen"
-msgstr ""
+msgstr "Curahkan informasi tentang suatu patch biner ke layar"
 
 #. TRANSLATORS: DFU stands for device firmware update
-#: libdfu/dfu-tool.c:2408
+#: libdfu/dfu-tool.c:2407
 msgid "DFU Utility"
 msgstr "Utilitas DFU"
 
 #. TRANSLATORS: the user didn't read the man page
-#: libdfu/dfu-tool.c:2413 plugins/synapticsmst/synapticsmst-tool.c:439
-#: src/fu-util.c:1782
+#: libdfu/dfu-tool.c:2412 plugins/synapticsmst/synapticsmst-tool.c:439
+#: src/fu-util.c:1733
 msgid "Failed to parse arguments"
 msgstr "Gagal mengurai argumen"
 
@@ -388,9 +388,9 @@ msgid "Synaptics Multistream Transport Utility"
 msgstr "Utilitas Transport Multistream Synaptics"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
-#: plugins/uefi/fu-plugin-uefi.c:195
+#: plugins/uefi/fu-plugin-uefi.c:194
 msgid "Installing firmware update…"
-msgstr ""
+msgstr "Sedang memasang pembaruan firmware..."
 
 #. TRANSLATORS: turn on all debugging
 #: src/fu-debug.c:130
@@ -428,75 +428,75 @@ msgid "Firmware Update D-Bus Service"
 msgstr "Layanan D-Bus Pemutakhiran Firmware"
 
 #. TRANSLATORS: daemon is inactive
-#: src/fu-util.c:188
+#: src/fu-progressbar.c:51
 msgid "Idle…"
 msgstr "Menganggur..."
 
 #. TRANSLATORS: decompressing the firmware file
-#: src/fu-util.c:192
+#: src/fu-progressbar.c:55
 msgid "Decompressing…"
 msgstr "Mendekompresi..."
 
 #. TRANSLATORS: parsing the firmware information
-#: src/fu-util.c:196
+#: src/fu-progressbar.c:59
 msgid "Loading…"
 msgstr "Memuat..."
 
 #. TRANSLATORS: restarting the device to pick up new F/W
-#: src/fu-util.c:200
+#: src/fu-progressbar.c:63
 msgid "Restarting device…"
 msgstr "Memulai ulang perangkat..."
 
 #. TRANSLATORS: writing to the flash chips
-#: src/fu-util.c:204
+#: src/fu-progressbar.c:67
 msgid "Writing…"
 msgstr "Menulis..."
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
-#: src/fu-util.c:208
+#: src/fu-progressbar.c:71
 msgid "Verifying…"
 msgstr "Verifikasi..."
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
-#: src/fu-util.c:212
+#: src/fu-progressbar.c:75
 msgid "Scheduling…"
 msgstr "Menjadwalkan..."
 
 #. TRANSLATORS: downloading from a remote server
-#: src/fu-util.c:216
+#: src/fu-progressbar.c:79
 msgid "Downloading…"
-msgstr ""
+msgstr "Sedang mengunduh..."
 
 #. TRANSLATORS: currect daemon status is unknown
-#: src/fu-util.c:223
+#: src/fu-progressbar.c:86
 msgid "Unknown"
 msgstr "Tidak diketahui"
 
 #. TRANSLATORS: the user isn't reading the question
-#: src/fu-util.c:320
+#: src/fu-util.c:234
 #, c-format
 msgid "Please enter a number from 1 to %u: "
-msgstr ""
+msgstr "Harap masukkan suatu bilangan dari 1 sampai %u:"
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:363
+#: src/fu-util.c:277
 msgid "Choose a device:"
-msgstr ""
+msgstr "Pilih suatu peranti:"
 
 #. TRANSLATORS: nothing attached that can be upgraded
-#: src/fu-util.c:389
+#: src/fu-util.c:303
 msgid "No hardware detected with firmware update capability"
 msgstr "Tidak terdeteksi perangkat keras dengan kapabilitas pemutakhiran firmware"
 
 #. TRANSLATOR: the plugin only supports offline
-#: src/fu-util.c:423
+#: src/fu-util.c:337
 msgid "Retrying as an offline update"
 msgstr "Mencoba lagi sebagai pemutakhiran luring"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
-#: src/fu-util.c:587
+#: src/fu-util.c:501
 #, c-format
 msgid "Reinstalling %s with %s... "
 msgstr "Memasang ulang %s dengan %s..."
@@ -504,7 +504,7 @@ msgstr "Memasang ulang %s dengan %s..."
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:594
+#: src/fu-util.c:508
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "Menuruntingkatkan %s dari %s ke %s..."
@@ -512,290 +512,309 @@ msgstr "Menuruntingkatkan %s dari %s ke %s..."
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:602
+#: src/fu-util.c:516
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Memutakhirkan %s dari %s ke %s..."
 
-#: src/fu-util.c:629
+#: src/fu-util.c:543
 msgid "Done!"
 msgstr "Selesai!"
 
-#: src/fu-util.c:671 src/fu-util.c:1077
+#: src/fu-util.c:585 src/fu-util.c:985
 msgid "OK"
 msgstr "OK"
 
 #. TRANSLATORS: downloading new signing file
-#: src/fu-util.c:802
+#: src/fu-util.c:719
 msgid "Fetching signature"
-msgstr ""
+msgstr "Sedang mengambil tanda tangan"
 
 #. TRANSLATORS: downloading new metadata file
-#: src/fu-util.c:805
+#: src/fu-util.c:722
 msgid "Fetching metadata"
-msgstr ""
+msgstr "Sedang mengambil metadata"
 
 #. TRANSLATORS: downloading new firmware file
-#: src/fu-util.c:808
+#: src/fu-util.c:725
 msgid "Fetching firmware"
-msgstr ""
+msgstr "Sedang mengambil firmware"
 
 #. TRANSLATORS: downloading unknown file
-#: src/fu-util.c:811
+#: src/fu-util.c:728
 msgid "Fetching file"
-msgstr ""
+msgstr "Sedang mengambil berkas"
 
 #. TRANSLATORS: section header for release version number
-#: src/fu-util.c:990
+#: src/fu-util.c:898
 msgid "Version"
-msgstr ""
+msgstr "Versi"
 
 #. TRANSLATORS: section header for firmware URI
-#: src/fu-util.c:993
+#: src/fu-util.c:901
 msgid "URI"
-msgstr ""
+msgstr "URI"
 
 #. TRANSLATORS: section header for firmware description
-#: src/fu-util.c:999
+#: src/fu-util.c:907
 msgid "Description"
-msgstr ""
+msgstr "Deskripsi"
 
 #. TRANSLATORS: section header for firmware checksum
-#: src/fu-util.c:1007
+#: src/fu-util.c:915
 msgid "Checksum"
-msgstr ""
+msgstr "Checksum"
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:1039
+#: src/fu-util.c:947
 msgid "Choose a release:"
-msgstr ""
+msgstr "Pilih sebuah rilis:"
 
 #. TRANSLATORS: first replacement is device name
-#: src/fu-util.c:1128
+#: src/fu-util.c:1036
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s memiliki pemutakhiran firmware:"
 
-#: src/fu-util.c:1138
+#: src/fu-util.c:1046
 msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
-#: src/fu-util.c:1142
+#: src/fu-util.c:1050
 msgid "Update Version"
 msgstr "Mutakhirkan Versi"
 
 #. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-#: src/fu-util.c:1146
+#: src/fu-util.c:1054
 msgid "Update Remote ID"
-msgstr ""
+msgstr "Mutakhirkan ID Remote"
 
 #. TRANSLATORS: section header for firmware checksum
-#: src/fu-util.c:1155
+#: src/fu-util.c:1063
 msgid "Update Checksum"
 msgstr "Mutakhirkan Checksum"
 
 #. TRANSLATORS: section header for firmware remote http://
-#: src/fu-util.c:1159
+#: src/fu-util.c:1067
 msgid "Update Location"
 msgstr "Mutakhirkan Lokasi"
 
 #. TRANSLATORS: section header for long firmware desc
-#: src/fu-util.c:1170
+#: src/fu-util.c:1078
 msgid "Update Description"
 msgstr "Mutakhirkan Keterangan"
 
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
-#: src/fu-util.c:1196
+#: src/fu-util.c:1104
 msgid "Remote ID"
-msgstr ""
+msgstr "ID Remote"
 
 #. TRANSLATORS: remote type, e.g. remote or local
-#: src/fu-util.c:1200
+#: src/fu-util.c:1108
 msgid "Type"
+msgstr "Tipe"
+
+#: src/fu-util.c:1113
+msgid "Keyring"
 msgstr ""
 
 #. TRANSLATORS: if the remote is enabled
-#: src/fu-util.c:1204
+#: src/fu-util.c:1118
 msgid "Enabled"
-msgstr ""
+msgstr "Difungsikan"
 
 #. TRANSLATORS: the age of the metadata
-#: src/fu-util.c:1231
+#: src/fu-util.c:1145
 msgid "Age"
-msgstr ""
+msgstr "Usia"
 
 #. TRANSLATORS: the numeric priority
-#: src/fu-util.c:1238
+#: src/fu-util.c:1152
 msgid "Priority"
-msgstr ""
+msgstr "Prioritas"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1243
+#: src/fu-util.c:1157
 msgid "Username"
-msgstr ""
+msgstr "Nama Pengguna"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1248
+#: src/fu-util.c:1162
 msgid "Password"
-msgstr ""
+msgstr "Kata Sandi"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1253
+#: src/fu-util.c:1167
 msgid "Filename"
-msgstr ""
+msgstr "Nama Berkas"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1258
+#: src/fu-util.c:1172
 msgid "Filename Signature"
-msgstr ""
+msgstr "Tanda Tangan Nama Berkas"
 
 #. TRANSLATORS: locatation of the local file
-#: src/fu-util.c:1263
+#: src/fu-util.c:1177
 msgid "Location"
+msgstr "Lokasi"
+
+#. TRANSLATORS: locatation of the local file
+#: src/fu-util.c:1182
+msgid "Location Signature"
 msgstr ""
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1269
-msgid "URL"
+#: src/fu-util.c:1187
+msgid "Metadata URI"
 msgstr ""
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1275
-msgid "URI Signature"
+#: src/fu-util.c:1192
+msgid "Metadata URI Signature"
+msgstr ""
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1197
+msgid "Firmware Base URI"
 msgstr ""
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1302
+#: src/fu-util.c:1224
 msgid "Device added:"
 msgstr "Perangkat ditambahkan:"
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1312
+#: src/fu-util.c:1234
 msgid "Device removed:"
 msgstr "Perangkat dilepas:"
 
 #. TRANSLATORS: this is when a device has been updated
-#: src/fu-util.c:1322
+#: src/fu-util.c:1244
 msgid "Device changed:"
 msgstr "Perangkat diubah:"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1622
+#: src/fu-util.c:1568
 msgid "Show extra debugging information"
 msgstr "Tampilkan informasi pengawakutuan ekstra"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1625
+#: src/fu-util.c:1571
 msgid "Show client and daemon versions"
-msgstr ""
+msgstr "Tampilkan versi daemon dan klien"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1628
+#: src/fu-util.c:1574
 msgid "Schedule installation for next reboot when possible"
 msgstr "Jadwalkan instalasi untuk boot ulang selanjutnya bila mungkin"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1631
+#: src/fu-util.c:1577
 msgid "Allow re-installing existing firmware versions"
 msgstr "Izinkan pemasangan ulang versi firmware yang telah ada"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1634
+#: src/fu-util.c:1580
 msgid "Allow downgrading firmware versions"
 msgstr "Izinkan penuruntingkatan versi firmware"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1637
+#: src/fu-util.c:1583
 msgid "Override plugin warning"
 msgstr "Timpa peringatan plugin"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1660
+#: src/fu-util.c:1607
 msgid "Get all devices that support firmware updates"
 msgstr "Dapatkan semua perangkat yang mendukung pemutakhiran firmware"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1667
+#: src/fu-util.c:1613
 msgid "Return all the hardware IDs for the machine"
-msgstr ""
+msgstr "Kembalikan semua ID perangkat keras bagi mesin"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1674
+#: src/fu-util.c:1619
 msgid "Install prepared updates now"
 msgstr "Pasang pemutakhiran yang disiapkan sekarang"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1680
+#: src/fu-util.c:1625
 msgid "Install a firmware file on this hardware"
 msgstr "Pasang suatu berkas firmware pada perangkat keras ini"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1686
+#: src/fu-util.c:1631
 msgid "Gets details about a firmware file"
 msgstr "Dapatkan rincian tentang suatu berkas firmware"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1692
+#: src/fu-util.c:1637
 msgid "Gets the list of updates for connected hardware"
 msgstr "Dapatkan daftar pemutakhiran bagi perangkat keras yang tersambung"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1698
+#: src/fu-util.c:1643
 msgid "Updates all firmware to latest versions available"
 msgstr "Mutakhirkan semua firmware ke versi terbaru yang tersedia"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1704
+#: src/fu-util.c:1649
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "Dapatkan hash kriptografis dari firmware yang dicurahkan"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1710
+#: src/fu-util.c:1655
 msgid "Unlocks the device for firmware access"
 msgstr "Buka kunci perangkat bagi akses firmware"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1716
+#: src/fu-util.c:1661
 msgid "Clears the results from the last update"
 msgstr "Bersihkan hasil dari pemutakhiran terakhir"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1722
+#: src/fu-util.c:1667
 msgid "Gets the results from the last update"
 msgstr "Dapatkan hasil dari pemutakhiran terakhir"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1728
+#: src/fu-util.c:1673
 msgid "Gets the releases for a device"
-msgstr ""
+msgstr "Dapatkan rilis-rilis bagi sebuah peranti"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1734
+#: src/fu-util.c:1679
 msgid "Gets the configured remotes"
-msgstr ""
+msgstr "Dapatkan remote-remote yang terkonfigurasi"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1740
+#: src/fu-util.c:1685
 msgid "Downgrades the firmware on a device"
-msgstr ""
+msgstr "Turuntingkatkan firmware pada suatu peranti"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1746
+#: src/fu-util.c:1691
 msgid "Refresh metadata from remote server"
 msgstr "Segarkan metadata dari server remote"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1752
+#: src/fu-util.c:1697
 msgid "Update the stored metadata with current ROM contents"
 msgstr "Mutakhirkan metadata tersimpan dengan isi ROM saat ini"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1758
+#: src/fu-util.c:1703
 msgid "Monitor the daemon for events"
 msgstr "Pantau daemon untuk kejadian"
 
+#. TRANSLATORS: command description
+#: src/fu-util.c:1709
+msgid "Build firmware using a sandbox"
+msgstr ""
+
 #. TRANSLATORS: program name
-#: src/fu-util.c:1777
+#: src/fu-util.c:1728
 msgid "Firmware Utility"
 msgstr "Utilitas Firmware"
