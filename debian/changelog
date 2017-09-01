@@ -1,3 +1,27 @@
+fwupd (0.9.7-1) unstable; urgency=medium
+
+  [ Mario Limonciello ]
+  * New upstream version (0.9.7)
+
+  [ Mario Limonciello ]
+  * trivial: debian: clarify why installed tests get installed in a generic
+    directory (Closes: #872458)
+  * trivial: fix some insignificant debian linitan warnings
+  * trivial: debian: add autopkgtest tests to run the CI suite
+
+  [ Max Ehrlich ]
+  * Add a python script to create fwupd compatible cab files
+    from Microsoft .exe files
+
+  [ Christian Kellner ]
+  * tbtfwu: remove references to legacy thunderbolt plugin
+
+  [ Mario Limonciello ]
+  * trivial: debian: update for --enable-synaptics
+  * trivial: debian: only modify /etc/fwupd.conf in CI context
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Fri, 01 Sep 2017 09:40:28 -0500
+
 fwupd (0.9.6-1) unstable; urgency=medium
 
   [ Richard Hughes ]
