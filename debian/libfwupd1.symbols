@@ -75,6 +75,8 @@ libfwupd.so.1 libfwupd1 #MINVER#
  fwupd_error_from_string@Base 0.7.0
  fwupd_error_quark@Base 0.6.3
  fwupd_error_to_string@Base 0.7.0
+ fwupd_keyring_kind_from_string@Base 0.9.7
+ fwupd_keyring_kind_to_string@Base 0.9.7
  fwupd_release_add_checksum@Base 0.9.3
  fwupd_release_from_key_value@Base 0.9.3
  fwupd_release_get_appstream_id@Base 0.9.3
@@ -108,14 +110,20 @@ libfwupd.so.1 libfwupd1 #MINVER#
  fwupd_release_to_data@Base 0.9.3
  fwupd_release_to_string@Base 0.9.3
  fwupd_release_to_variant_builder@Base 0.9.3
+ fwupd_remote_build_firmware_uri@Base 0.9.7
  fwupd_remote_build_uri@Base 0.9.3
  fwupd_remote_get_age@Base 0.9.5
  fwupd_remote_get_enabled@Base 0.9.3
  fwupd_remote_get_filename@Base 0.9.3
  fwupd_remote_get_filename_asc@Base 0.9.3
  fwupd_remote_get_filename_cache@Base 0.9.5
+ fwupd_remote_get_filename_cache_sig@Base 0.9.7
+ fwupd_remote_get_firmware_base_uri@Base 0.9.7
  fwupd_remote_get_id@Base 0.9.3
+ fwupd_remote_get_keyring_kind@Base 0.9.7
  fwupd_remote_get_kind@Base 0.9.6
+ fwupd_remote_get_metadata_uri@Base 0.9.7
+ fwupd_remote_get_metadata_uri_sig@Base 0.9.7
  fwupd_remote_get_order_after@Base 0.9.5
  fwupd_remote_get_order_before@Base 0.9.5
  fwupd_remote_get_password@Base 0.9.5
