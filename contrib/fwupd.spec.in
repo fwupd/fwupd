@@ -10,13 +10,14 @@
 %global enable_tests 1
 %global enable_dummy 1
 
-%ifarch x86_64 %{ix86}
-%global have_smbios 1
+# fwupdate is only available on these arches
+%ifarch x86_64 aarch64
+%global have_uefi 1
 %endif
 
-# FIXME: should also be aarch64, but efivar not present there yet
-%ifarch x86_64 %{ix86}
-%global have_uefi 1
+# libsmbios is only available on x86, and fwupdate is available on just x86_64
+%ifarch x86_64
+%global have_dell 1
 %endif
 
 Summary:   Firmware update daemon
@@ -61,7 +62,8 @@ BuildRequires: dejavu-sans-fonts
 BuildRequires: adobe-source-han-sans-cn-fonts
 %endif
 
-%if 0%{?have_smbios}
+%if 0%{?have_dell}
+BuildRequires: efivar-devel
 BuildRequires: libsmbios-devel >= 2.3.0
 %endif
 
@@ -112,7 +114,9 @@ Files for development with libdfu.
 
 %package labels
 Summary: Rendered labels for display during system firmware updates.
-BuildArch: noarch
+# BuildArch: noarch is disabled as we can get "different" .BMP files even when
+# running the build on the same architecture due to the randomness introduced
+# by the TTF files.
 
 %description labels
 Rendered labels for display during system firmware updates.
@@ -150,7 +154,7 @@ Data files for installed tests.
     -Denable-uefi=false \
     -Denable-uefi-labels=false \
 %endif
-%if 0%{?have_smbios}
+%if 0%{?have_dell}
     -Denable-dell=true \
     -Denable-synaptics=true \
 %else
@@ -160,7 +164,9 @@ Data files for installed tests.
     -Denable-colorhug=true
 
 %meson_build
+
 %if 0%{?enable_tests}
+%check
 %meson_test
 %endif
 
@@ -222,14 +228,14 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-2/libfu_plugin_altos.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_amt.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_colorhug.so
-%if 0%{?have_smbios}
+%if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_dell.so
 %endif
 %{_libdir}/fwupd-plugins-2/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_raspberrypi.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_steelseries.so
-%if 0%{?have_smbios}
+%if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_synapticsmst.so
 %endif
 %if 0%{?enable_dummy}
