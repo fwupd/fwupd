@@ -289,7 +289,7 @@ dfu_patch_calculate_checksum (GBytes *blob)
 	data = g_bytes_get_data (blob, &sz);
 	g_checksum_update (csum, data, (gssize) sz);
 	g_checksum_get_digest (csum, buf, &digest_len);
-	return g_bytes_new (buf, digest_len);
+	return g_bytes_new_take (buf, digest_len);
 }
 
 typedef struct {
