@@ -23,6 +23,7 @@
 #define __FU_PLUGIN_PRIVATE_H
 
 #include "fu-plugin.h"
+#include "fu-smbios.h"
 
 G_BEGIN_DECLS
 
@@ -33,6 +34,8 @@ void		 fu_plugin_set_usb_context		(FuPlugin	*plugin,
 							 GUsbContext	*usb_ctx);
 void		 fu_plugin_set_hwids			(FuPlugin	*plugin,
 							 FuHwids	*hwids);
+void		 fu_plugin_set_smbios			(FuPlugin	*plugin,
+							 FuSmbios	*smbios);
 gboolean	 fu_plugin_open				(FuPlugin	*plugin,
 							 const gchar	*filename,
 							 GError		**error);

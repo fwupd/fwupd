@@ -100,6 +100,11 @@ gboolean	 fu_plugin_check_hwid			(FuPlugin	*plugin,
 							 const gchar	*hwid);
 const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*plugin,
 							 const gchar	*dmi_id);
+const gchar	*fu_plugin_get_smbios_string		(FuPlugin	*plugin,
+							 guint8		 structure_type,
+							 guint8		 offset);
+GBytes		*fu_plugin_get_smbios_data		(FuPlugin	*plugin,
+							 guint8		 structure_type);
 
 G_END_DECLS
 

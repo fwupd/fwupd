@@ -1252,6 +1252,26 @@ fu_util_changed_cb (FwupdClient *client, gpointer user_data)
 }
 
 static gboolean
+fu_util_smbios_dump (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autofree gchar *tmp = NULL;
+	g_autoptr(FuSmbios) smbios = NULL;
+	if (g_strv_length (values) < 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: expected FILENAME");
+		return FALSE;
+	}
+	smbios = fu_smbios_new ();
+	if (!fu_smbios_setup_from_file (smbios, values[0], error))
+		return FALSE;
+	tmp = fu_smbios_to_string (smbios);
+	g_print ("%s\n", tmp);
+	return TRUE;
+}
+
+static gboolean
 fu_util_firmware_builder (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *script_fn = "startup.sh";
@@ -1460,6 +1480,7 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	g_autoptr(FuSmbios) smbios = fu_smbios_new ();
 	g_autoptr(FuHwids) hwids = fu_hwids_new ();
 	const gchar *hwid_keys[] = {
 		FU_HWIDS_KEY_BIOS_VENDOR,
@@ -1475,8 +1496,10 @@ fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
 		FU_HWIDS_KEY_BASEBOARD_PRODUCT,
 		NULL };
 
-	/* read files in /sys */
-	if (!fu_hwids_setup (hwids, g_getenv ("SYSFSPATH"), error))
+	/* read DMI data */
+	if (!fu_smbios_setup (smbios, g_getenv ("SYSFSPATH"), error))
+		return FALSE;
+	if (!fu_hwids_setup (hwids, smbios, error))
 		return FALSE;
 
 	/* show debug output */
@@ -1708,6 +1731,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Build firmware using a sandbox"),
 		     fu_util_firmware_builder);
+	fu_util_add (priv->cmd_array,
+		     "smbios-dump",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Dump SMBIOS data from a file"),
+		     fu_util_smbios_dump);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

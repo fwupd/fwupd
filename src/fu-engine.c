@@ -44,6 +44,7 @@
 #include "fu-plugin.h"
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
+#include "fu-smbios.h"
 
 #ifdef ENABLE_GPG
 #include "fu-keyring-gpg.h"
@@ -70,6 +71,7 @@ struct _FuEngine
 	guint			 coldplug_delay;
 	GPtrArray		*plugins;	/* of FuPlugin */
 	GHashTable		*plugins_hash;	/* of name : FuPlugin */
+	FuSmbios		*smbios;
 	FuHwids			*hwids;
 };
 
@@ -2421,6 +2423,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		plugin = fu_plugin_new ();
 		fu_plugin_set_usb_context (plugin, self->usb_ctx);
 		fu_plugin_set_hwids (plugin, self->hwids);
+		fu_plugin_set_smbios (plugin, self->smbios);
 		g_debug ("adding plugin %s", filename);
 		if (!fu_plugin_open (plugin, filename, &error_local)) {
 			g_warning ("failed to open plugin %s: %s",
@@ -2535,6 +2538,9 @@ fu_engine_cleanup_state (GError **error)
 gboolean
 fu_engine_load (FuEngine *self, GError **error)
 {
+	g_autoptr(GError) error_hwids = NULL;
+	g_autoptr(GError) error_smbios = NULL;
+
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -2562,11 +2568,11 @@ fu_engine_load (FuEngine *self, GError **error)
 				 G_USB_CONTEXT_FLAGS_AUTO_OPEN_DEVICES);
 #endif
 
-	/* load the hwids */
-	if (!fu_hwids_setup (self->hwids, NULL, error)) {
-		g_prefix_error (error, "Failed to load hwids: ");
-		return FALSE;
-	}
+	/* load SMBIOS and the hwids */
+	if (!fu_smbios_setup (self->smbios, NULL, &error_smbios))
+		g_warning ("Failed to load SMBIOS: %s", error_smbios->message);
+	if (!fu_hwids_setup (self->hwids, self->smbios, &error_hwids))
+		g_warning ("Failed to load HWIDs: %s", error_hwids->message);
 
 	/* delete old data files */
 	if (!fu_engine_cleanup_state (error)) {
@@ -2641,6 +2647,7 @@ fu_engine_init (FuEngine *self)
 	self->status = FWUPD_STATUS_IDLE;
 	self->config = fu_config_new ();
 	self->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_engine_item_free);
+	self->smbios = fu_smbios_new ();
 	self->hwids = fu_hwids_new ();
 	self->pending = fu_pending_new ();
 	self->profile = as_profile_new ();
@@ -2662,6 +2669,7 @@ fu_engine_finalize (GObject *obj)
 
 	g_hash_table_unref (self->plugins_hash);
 	g_object_unref (self->config);
+	g_object_unref (self->smbios);
 	g_object_unref (self->hwids);
 	g_object_unref (self->pending);
 	g_object_unref (self->profile);
