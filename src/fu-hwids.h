@@ -24,6 +24,8 @@
 
 #include <glib-object.h>
 
+#include "fu-smbios.h"
+
 G_BEGIN_DECLS
 
 #define FU_TYPE_HWIDS (fu_hwids_get_type ())
@@ -57,7 +59,7 @@ gchar		*fu_hwids_get_guid		(FuHwids	*self,
 gboolean	 fu_hwids_has_guid		(FuHwids	*self,
 						 const gchar	*guid);
 gboolean	 fu_hwids_setup			(FuHwids	*self,
-						 const gchar	*sysfsdir,
+						 FuSmbios	*smbios,
 						 GError		**error);
 
 G_END_DECLS

@@ -26,6 +26,7 @@ libfwupdprivate = static_library(
     'fu-hwids.c',
     'fu-pending.c',
     'fu-plugin.c',
+    'fu-smbios.c',
     'fu-test.c',
   ],
   include_directories : [
@@ -107,6 +108,7 @@ executable(
     'fu-keyring.c',
     'fu-pending.c',
     'fu-plugin.c',
+    'fu-smbios.c',
   ],
   include_directories : [
     include_directories('..'),
@@ -155,6 +157,7 @@ if get_option('enable-tests')
       'fu-keyring.c',
       'fu-keyring-result.c',
       'fu-plugin.c',
+      'fu-smbios.c',
       'fu-test.c',
     ],
     include_directories : [

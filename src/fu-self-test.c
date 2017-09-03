@@ -34,6 +34,7 @@
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
 #include "fu-hwids.h"
+#include "fu-smbios.h"
 #include "fu-test.h"
 
 #ifdef ENABLE_GPG
@@ -75,9 +76,49 @@ fu_device_metadata_func (void)
 }
 
 static void
+fu_smbios_func (void)
+{
+	const gchar *str;
+	gboolean ret;
+	g_autofree gchar *dump = NULL;
+	g_autofree gchar *sysfsdir = NULL;
+	g_autoptr(FuSmbios) smbios = NULL;
+	g_autoptr(GError) error = NULL;
+
+	sysfsdir = fu_test_get_filename (TESTDATADIR, ".");
+	g_assert (sysfsdir != NULL);
+
+	smbios = fu_smbios_new ();
+	ret = fu_smbios_setup (smbios, sysfsdir, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	dump = fu_smbios_to_string (smbios);
+	if (g_getenv ("VERBOSE") != NULL)
+		g_debug ("%s", dump);
+
+	/* test for missing table */
+	str = fu_smbios_get_string (smbios, 0xff, 0, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null (str);
+	g_clear_error (&error);
+
+	/* check for invalid offset */
+	str = fu_smbios_get_string (smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0xff, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null (str);
+	g_clear_error (&error);
+
+	/* get vendor */
+	str = fu_smbios_get_string (smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x04, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (str, ==, "LENOVO");
+}
+
+static void
 fu_hwids_func (void)
 {
 	g_autoptr(FuHwids) hwids = NULL;
+	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *sysfsdir = NULL;
 	gboolean ret;
@@ -86,47 +127,54 @@ fu_hwids_func (void)
 		const gchar *key;
 		const gchar *value;
 	} guids[] = {
-		{ "Manufacturer",	"11b4a036-3b64-5421-a372-22c07df10a4d" },
-		{ "HardwareID-14",	"11b4a036-3b64-5421-a372-22c07df10a4d" },
-		{ "HardwareID-13",	"7ccbb6f1-9641-5f84-b00d-51ff218a4066" },
-		{ "HardwareID-12",	"482f3f58-6045-593a-9be4-611717ce4770" },
-		{ "HardwareID-11",	"6525c6e5-28e9-5f9c-abe4-20fd82504002" },
-		{ "HardwareID-10",	"c00fe015-014c-5301-90d1-b5c8ab037eb4" },
-		{ "HardwareID-9",	"6525c6e5-28e9-5f9c-abe4-20fd82504002" },
-		{ "HardwareID-8",	"c00fe015-014c-5301-90d1-b5c8ab037eb4" },
-		{ "HardwareID-7",	"5a127cba-be28-5d3b-84f0-0e450d266d97" },
-		{ "HardwareID-6",	"2c2d02cc-357e-539d-a44d-d10e902391dd" },
-		{ "HardwareID-5",	"7ccbb6f1-9641-5f84-b00d-51ff218a4066" },
-		{ "HardwareID-4",	"d78b474d-dee0-5412-bc9d-e9f7d7783df2" },
-		{ "HardwareID-3",	"a2f225b3-f4f0-5590-8973-08dd81602d69" },
-		{ "HardwareID-2",	"2e7c87e3-a52c-537f-a5f6-907110143cf7" },
-		{ "HardwareID-1",	"6453b900-1fd8-55fb-a936-7fca22823bcc" },
-		{ "HardwareID-0",	"d777e0a5-4db6-51b4-a927-86d4ccdc5c0d" },
+		{ "Manufacturer",	"6de5d951-d755-576b-bd09-c5cf66b27234" },
+		{ "HardwareID-14",	"6de5d951-d755-576b-bd09-c5cf66b27234" },
+		{ "HardwareID-13",	"f8e1de5f-b68c-5f52-9d1a-f1ba52f1f773" },
+		{ "HardwareID-12",	"5e820764-888e-529d-a6f9-dfd12bacb160" },
+		{ "HardwareID-11",	"db73af4c-4612-50f7-b8a7-787cf4871847" },
+		{ "HardwareID-10",	"f4275c1f-6130-5191-845c-3426247eb6a1" },
+		{ "HardwareID-9",	"0cf8618d-9eff-537c-9f35-46861406eb9c" },
+		{ "HardwareID-8",	"059eb22d-6dc7-59af-abd3-94bbe017f67c" },
+		{ "HardwareID-7",	"da1da9b6-62f5-5f22-8aaa-14db7eeda2a4" },
+		{ "HardwareID-6",	"178cd22d-ad9f-562d-ae0a-34009822cdbe" },
+		{ "HardwareID-5",	"8dc9b7c5-f5d5-5850-9ab3-bd6f0549d814" },
+		{ "HardwareID-4",	"660ccba8-1b78-5a33-80e6-9fb8354ee873" },
+		{ "HardwareID-3",	"3faec92a-3ae3-5744-be88-495e90a7d541" },
+		{ "HardwareID-2",	"705f45c6-fbca-5245-b9dd-6d4fab25e262" },
+		{ "HardwareID-1",	"309d9985-e453-587e-8486-ff7c835a9ef2" },
+		{ "HardwareID-0",	"d37363b8-5ec4-5725-b618-b75368a1ad28" },
 		{ NULL, NULL }
 	};
 
-	sysfsdir = fu_test_get_filename (TESTDATADIR, "hwids");
+	sysfsdir = fu_test_get_filename (TESTDATADIR, ".");
 	g_assert (sysfsdir != NULL);
 
+	smbios = fu_smbios_new ();
+	ret = fu_smbios_setup (smbios, sysfsdir, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
 	hwids = fu_hwids_new ();
-	ret = fu_hwids_setup (hwids, sysfsdir, &error);
+	ret = fu_hwids_setup (hwids, smbios, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_MANUFACTURER), ==,
-			 "To be filled by O.E.M.");
+			 "LENOVO");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_ENCLOSURE_KIND), ==,
-			 "3");
+			 "10");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_FAMILY), ==,
-			 "To be filled by O.E.M.");
+			 "ThinkPad T440s");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_NAME), ==,
-			 "To be filled by O.E.M.");
+			 "20ARS19C0C");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VENDOR), ==,
-			 "American Megatrends Inc.");
-	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VERSION), ==, "1201");
-	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE), ==, "4");
-	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "6");
-	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_SKU), ==, "SKU");
+			 "LENOVO");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VERSION), ==,
+			 "GJET75WW (2.25 )");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE), ==, "2");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "25");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_SKU), ==,
+			 "LENOVO_MT_20AR_BU_Think_FM_ThinkPad T440s");
 	for (guint i = 0; guids[i].key != NULL; i++) {
 		g_autofree gchar *guid = fu_hwids_get_guid (hwids, guids[i].key, &error);
 		g_assert_no_error (error);
@@ -635,6 +683,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
+	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);

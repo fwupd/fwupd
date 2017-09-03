@@ -44,6 +44,7 @@ typedef struct {
 	gboolean		 enabled;
 	gchar			*name;
 	FuHwids			*hwids;
+	FuSmbios			*smbios;
 	GHashTable		*devices;	/* platform_id:GObject */
 	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
 	FuPluginData		*data;
@@ -551,11 +552,58 @@ fu_plugin_get_dmi_value (FuPlugin *plugin, const gchar *dmi_id)
 	return fu_hwids_get_value (priv->hwids, dmi_id);
 }
 
+/**
+ * fu_plugin_get_smbios_string:
+ * @plugin: A #FuPlugin
+ * @structure_type: A SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @offset: A SMBIOS offset
+ *
+ * Gets a hardware SMBIOS string.
+ *
+ * The @type and @offset can be referenced from the DMTF SMBIOS specification:
+ * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
+ *
+ * Since: 0.9.8
+ **/
+const gchar *
+fu_plugin_get_smbios_string (FuPlugin *plugin, guint8 structure_type, guint8 offset)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->smbios == NULL)
+		return NULL;
+	return fu_smbios_get_string (priv->smbios, structure_type, offset, NULL);
+}
+
+/**
+ * fu_plugin_get_smbios_data:
+ * @plugin: A #FuPlugin
+ * @structure_type: A SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ *
+ * Gets a hardware SMBIOS data.
+ *
+ * Since: 0.9.8
+ **/
+GBytes *
+fu_plugin_get_smbios_data (FuPlugin *plugin, guint8 structure_type)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->smbios == NULL)
+		return NULL;
+	return fu_smbios_get_data (priv->smbios, structure_type, NULL);
+}
+
 void
 fu_plugin_set_hwids (FuPlugin *plugin, FuHwids *hwids)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	g_set_object (&priv->hwids, hwids);
+}
+
+void
+fu_plugin_set_smbios (FuPlugin *plugin, FuSmbios *smbios)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_set_object (&priv->smbios, smbios);
 }
 
 /**
@@ -1196,6 +1244,8 @@ fu_plugin_finalize (GObject *object)
 		g_object_unref (priv->usb_ctx);
 	if (priv->hwids != NULL)
 		g_object_unref (priv->hwids);
+	if (priv->smbios != NULL)
+		g_object_unref (priv->smbios);
 #ifndef RUNNING_ON_VALGRIND
 	if (priv->module != NULL)
 		g_module_close (priv->module);
