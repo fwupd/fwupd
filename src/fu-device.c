@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <string.h>
 #include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -225,6 +226,61 @@ fu_device_set_name (FuDevice *device, const gchar *value)
 	g_strdelimit (new->str, "_", ' ');
 	as_utils_string_replace (new, "(TM)", "™");
 	fwupd_device_set_name (fwupd_result_get_device (FWUPD_RESULT (device)), new->str);
+}
+
+static void
+fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
+{
+	/* ignore */
+	if (key == NULL || value == NULL)
+		return;
+	g_string_append_printf (str, "  %s: ", key);
+	for (gsize i = strlen (key); i < 20; i++)
+		g_string_append (str, " ");
+	g_string_append_printf (str, "%s\n", value);
+}
+
+/**
+ * fu_device_to_string:
+ * @device: A #FuDevice
+ *
+ * This allows us to easily print the FwupdDevice, the FwupdRelease and the
+ * daemon-specific metadata.
+ *
+ * Returns: a string value, or %NULL for invalid.
+ *
+ * Since: 0.9.8
+ **/
+gchar *
+fu_device_to_string (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevice *dev;
+	FwupdRelease *rel;
+	GString *str = g_string_new ("");
+	g_autoptr(GList) keys = NULL;
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+
+	dev = fwupd_result_get_device (FWUPD_RESULT (device));
+	if (dev != NULL) {
+		g_autofree gchar *tmp = fwupd_device_to_string (dev);
+		g_string_append_printf (str, "%s\n", tmp);
+	}
+	rel = fwupd_result_get_release (FWUPD_RESULT (device));
+	if (rel != NULL) {
+		g_autofree gchar *tmp = fwupd_release_to_string (rel);
+		g_string_append_printf (str, "%s\n", tmp);
+	}
+	if (priv->equivalent_id != NULL)
+		fwupd_pad_kv_str (str, "EquivalentId", priv->equivalent_id);
+	keys = g_hash_table_get_keys (priv->metadata);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (priv->metadata, key);
+		fwupd_pad_kv_str (str, key, value);
+	}
+	return g_string_free (str, FALSE);
 }
 
 static void

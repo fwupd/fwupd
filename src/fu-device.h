@@ -115,6 +115,7 @@ void		 fu_device_set_metadata_integer		(FuDevice	*device,
 							 guint		 value);
 void		 fu_device_set_name			(FuDevice	*device,
 							 const gchar	*value);
+gchar		*fu_device_to_string			(FuDevice	*device);
 
 G_END_DECLS
 
