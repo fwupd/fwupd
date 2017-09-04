@@ -22,7 +22,7 @@
 #ifndef __FU_COMMON_H__
 #define __FU_COMMON_H__
 
-#include <glib.h>
+#include <gio/gio.h>
 
 typedef void	(*FuOutputHandler)		(const gchar	*line,
 						 gpointer	 user_data);
