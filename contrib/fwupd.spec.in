@@ -248,7 +248,6 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %endif
 %{_libdir}/fwupd-plugins-2/libfu_plugin_unifying.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_upower.so
-%{_libdir}/fwupd-plugins-2/libfu_plugin_usb.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 
 %files devel
