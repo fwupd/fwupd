@@ -60,12 +60,16 @@ except ImportError:
     print("Error: missing dependency python cairo (python3-cairo)")
     err = 1
 
+# check that LINUGAS lists every language with a .po file
 with open('po/LINGUAS') as f:
-   langs = f.read().splitlines()
+    langs = f.read().splitlines()
 for root, dirs, files in os.walk('po'):
-   for file in files:
-       l = file.split('.po')
-       if len(l) > 1 and not l[0] in langs:
-           err = 1
-           print("Error: missing translations for %s" % l[0])
+    for file in files:
+        if not file.endswith('.po'):
+            continue
+        l = file.split('.po')
+        if len(l) > 1 and not l[0] in langs:
+            err = 1
+            print("Error: missing translations for %s" % l[0])
+
 sys.exit(err)
