@@ -20,6 +20,7 @@ build() {
         --localstatedir=/var \
         --libexecdir=/usr/lib \
         --buildtype=plain \
+        -Denable-usb-fallback=true \
         ../build
 
     ninja -v -C ../build

@@ -7,7 +7,6 @@ subdir('test')
 subdir('udev')
 subdir('unifying')
 subdir('upower')
-subdir('usb')
 
 if get_option('enable-amt')
 subdir('amt')
@@ -31,5 +30,9 @@ endif
 
 if get_option('enable-uefi')
 subdir('uefi')
+endif
+
+if get_option('enable-usb-fallback')
+subdir('usb')
 endif
 
