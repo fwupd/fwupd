@@ -20,6 +20,7 @@
 """
 
 import sys
+import os
 err = 0
 
 try:
@@ -59,5 +60,12 @@ except ImportError:
     print("Error: missing dependency python cairo (python3-cairo)")
     err = 1
 
+with open('po/LINGUAS') as f:
+   langs = f.read().splitlines()
+for root, dirs, files in os.walk('po'):
+   for file in files:
+       l = file.split('.po')
+       if len(l) > 1 and not l[0] in langs:
+           err = 1
+           print("Error: missing translations for %s" % l[0])
 sys.exit(err)
-
