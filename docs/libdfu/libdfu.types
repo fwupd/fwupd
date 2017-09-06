@@ -1,7 +1,0 @@
-dfu_context_get_type
-dfu_device_get_type
-dfu_element_get_type
-dfu_firmware_get_type
-dfu_image_get_type
-dfu_target_get_type
-dfu_sector_get_type

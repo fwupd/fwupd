@@ -45,10 +45,6 @@ fi
 apt purge -y fwupd \
 	     fwupd-doc \
 	     fwupd-dbgsym \
-	     gir1.2-fwupd-1.0 \
-	     libdfu1 \
-	     libdfu1-dbgsym \
-	     libdfu-dev \
 	     libfwupd1 \
 	     libfwupd1-dbgsym \
 	     libfwupd-dev

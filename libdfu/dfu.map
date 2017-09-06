@@ -1,6 +1,0 @@
-{
-global:
-    dfu_*;
-local:
-    *;
-};
