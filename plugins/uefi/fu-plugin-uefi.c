@@ -146,6 +146,46 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_uefi_update_resource (fwup_resource *re,
+				guint64 hardware_instance,
+				GBytes *blob,
+				GError **error)
+{
+	int rc;
+	rc = fwup_set_up_update_with_buf (re, hardware_instance,
+					  g_bytes_get_data (blob, NULL),
+					  g_bytes_get_size (blob));
+	if (rc < 0) {
+		g_autoptr(GString) str = g_string_new (NULL);
+		rc = 1;
+		for (int i = 0; rc > 0; i++) {
+			char *filename = NULL;
+			char *function = NULL;
+			char *message = NULL;
+			int line = 0;
+			int err = 0;
+
+			rc = efi_error_get (i, &filename, &function, &line,
+					    &message, &err);
+			if (rc <= 0)
+				break;
+			g_string_append_printf (str, "{error #%d} %s:%d %s(): %s: %s\t",
+						i, filename, line, function,
+						message, strerror (err));
+		}
+		if (str->len > 1)
+			g_string_truncate (str, str->len - 1);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "UEFI firmware update failed: %s",
+			     str->str);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 gboolean
 fu_plugin_update (FuPlugin *plugin,
 		  FuDevice *device,
@@ -155,7 +195,6 @@ fu_plugin_update (FuPlugin *plugin,
 {
 	fwup_resource *re = NULL;
 	guint64 hardware_instance = 0;	/* FIXME */
-	int rc;
 	g_autoptr(fwup_resource_iter) iter = NULL;
 	const gchar *str;
 	g_autofree gchar *efibootmgr_path = NULL;
@@ -174,33 +213,8 @@ fu_plugin_update (FuPlugin *plugin,
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
 	fu_plugin_set_status (plugin, FWUPD_STATUS_SCHEDULING);
-	rc = fwup_set_up_update_with_buf (re, hardware_instance,
-					  g_bytes_get_data (blob_fw, NULL),
-					  g_bytes_get_size (blob_fw));
-	if (rc < 0) {
-		g_autoptr(GString) err_string = g_string_new ("UEFI firmware update failed:\n");
-
-		rc = 1;
-		for (int i =0; rc > 0; i++) {
-			char *filename = NULL;
-			char *function = NULL;
-			char *message = NULL;
-			int line = 0;
-			int err = 0;
-
-			rc = efi_error_get (i, &filename, &function, &line, &message, &err);
-			if (rc <= 0)
-				break;
-			g_string_append_printf (err_string,
-						"{error #%d} %s:%d %s(): %s: %s \n",
-						i, filename, line, function, message, strerror(err));
-		}
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     err_string->str);
+	if (!fu_plugin_uefi_update_resource (re, hardware_instance, blob_fw, error))
 		return FALSE;
-	}
 
 	/* record boot information to system log for future debugging */
 	efibootmgr_path = g_find_program_in_path ("efibootmgr");
