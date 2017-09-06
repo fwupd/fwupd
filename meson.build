@@ -265,7 +265,6 @@ plugin_deps += libarchive
 
 subdir('data')
 subdir('docs')
-subdir('libdfu')
 subdir('libfwupd')
 subdir('po')
 subdir('policy')

@@ -944,21 +944,21 @@ main (int argc, char **argv)
 	g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
 
 	/* tests go here */
-	g_test_add_func ("/libdfu/patch", dfu_patch_func);
-	g_test_add_func ("/libdfu/patch{merges}", dfu_patch_merges_func);
-	g_test_add_func ("/libdfu/patch{apply}", dfu_patch_apply_func);
-	g_test_add_func ("/libdfu/enums", dfu_enums_func);
-	g_test_add_func ("/libdfu/target(DfuSe}", dfu_target_dfuse_func);
-	g_test_add_func ("/libdfu/cipher{xtea}", dfu_cipher_xtea_func);
-	g_test_add_func ("/libdfu/firmware{raw}", dfu_firmware_raw_func);
-	g_test_add_func ("/libdfu/firmware{dfu}", dfu_firmware_dfu_func);
-	g_test_add_func ("/libdfu/firmware{dfuse}", dfu_firmware_dfuse_func);
-	g_test_add_func ("/libdfu/firmware{xdfu}", dfu_firmware_xdfu_func);
-	g_test_add_func ("/libdfu/firmware{metadata}", dfu_firmware_metadata_func);
-	g_test_add_func ("/libdfu/firmware{intel-hex}", dfu_firmware_intel_hex_func);
-	g_test_add_func ("/libdfu/firmware{intel-hex-signed}", dfu_firmware_intel_hex_signed_func);
-	g_test_add_func ("/libdfu/device", dfu_device_func);
-	g_test_add_func ("/libdfu/colorhug+", dfu_colorhug_plus_func);
+	g_test_add_func ("/dfu/patch", dfu_patch_func);
+	g_test_add_func ("/dfu/patch{merges}", dfu_patch_merges_func);
+	g_test_add_func ("/dfu/patch{apply}", dfu_patch_apply_func);
+	g_test_add_func ("/dfu/enums", dfu_enums_func);
+	g_test_add_func ("/dfu/target(DfuSe}", dfu_target_dfuse_func);
+	g_test_add_func ("/dfu/cipher{xtea}", dfu_cipher_xtea_func);
+	g_test_add_func ("/dfu/firmware{raw}", dfu_firmware_raw_func);
+	g_test_add_func ("/dfu/firmware{dfu}", dfu_firmware_dfu_func);
+	g_test_add_func ("/dfu/firmware{dfuse}", dfu_firmware_dfuse_func);
+	g_test_add_func ("/dfu/firmware{xdfu}", dfu_firmware_xdfu_func);
+	g_test_add_func ("/dfu/firmware{metadata}", dfu_firmware_metadata_func);
+	g_test_add_func ("/dfu/firmware{intel-hex}", dfu_firmware_intel_hex_func);
+	g_test_add_func ("/dfu/firmware{intel-hex-signed}", dfu_firmware_intel_hex_signed_func);
+	g_test_add_func ("/dfu/device", dfu_device_func);
+	g_test_add_func ("/dfu/colorhug+", dfu_colorhug_plus_func);
 	return g_test_run ();
 }
 

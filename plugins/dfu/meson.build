@@ -1,5 +1,38 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfu"']
 
+dfu = static_library(
+  'dfu',
+  sources : [
+    'dfu-cipher-devo.c',
+    'dfu-cipher-xtea.c',
+    'dfu-common.c',
+    'dfu-context.c',
+    'dfu-device.c',
+    'dfu-element.c',
+    'dfu-error.c',
+    'dfu-firmware.c',
+    'dfu-format-dfu.c',
+    'dfu-format-dfuse.c',
+    'dfu-format-ihex.c',
+    'dfu-format-metadata.c',
+    'dfu-format-raw.c',
+    'dfu-image.c',
+    'dfu-patch.c',
+    'dfu-sector.c',
+    'dfu-target.c',
+  ],
+  dependencies : [
+    appstream_glib,
+    giounix,
+    libm,
+    gusb,
+  ],
+  c_args : cargs,
+  include_directories : [
+    include_directories('../..'),
+  ],
+)
+
 shared_module('fu_plugin_dfu',
   sources : [
     'fu-plugin-dfu.c',
@@ -19,3 +52,49 @@ shared_module('fu_plugin_dfu',
     dfu,
   ],
 )
+
+executable(
+  'dfu-tool',
+  sources : [
+    'dfu-progress-bar.c',
+    'dfu-tool.c',
+  ],
+  include_directories : [
+    include_directories('..'),
+    include_directories('../..'),
+  ],
+  dependencies : [
+    appstream_glib,
+    giounix,
+    libm,
+    gusb,
+  ],
+  link_with : dfu,
+  c_args : cargs,
+  install : true,
+  install_dir : get_option('bindir')
+)
+
+if get_option('enable-tests')
+  testdatadir = join_paths(meson.current_source_dir(), 'tests')
+  cargs += '-DTESTDATADIR="' + testdatadir + '"'
+  e = executable(
+    'dfu-self-test',
+    sources : [
+      'dfu-self-test.c'
+    ],
+    include_directories : [
+      include_directories('..'),
+      include_directories('../..'),
+    ],
+    dependencies : [
+      appstream_glib,
+      gio,
+      gusb,
+      libm,
+    ],
+    link_with : dfu,
+    c_args : cargs
+  )
+  test('dfu-self-test', e)
+endif
