@@ -227,7 +227,6 @@ fu_plugin_unlock (FuPlugin *plugin,
 			 FuDevice *device,
 			 GError **error)
 {
-#ifdef HAVE_UEFI_UNLOCK
 	gint rc;
 	g_debug ("unlocking UEFI device %s", fu_device_get_id (device));
 	rc = fwup_enable_esrt();
@@ -244,13 +243,6 @@ fu_plugin_unlock (FuPlugin *plugin,
 	else if (rc == 3)
 		g_debug ("UEFI device will be unlocked on next reboot");
 	return TRUE;
-#else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Not supported, update libfwupdate!");
-	return FALSE;
-#endif
 }
 
 static const gchar *
