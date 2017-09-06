@@ -189,6 +189,9 @@ endif
 
 if get_option('enable-uefi')
   fwup = dependency('fwup', version : '>= 5')
+  if fwup.version().version_compare('>= 10')
+    conf.set('HAVE_FWUP_GET_BGRT_INFO', '1')
+  endif
 endif
 
 if get_option('enable-dell')

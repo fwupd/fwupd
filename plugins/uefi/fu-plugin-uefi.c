@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -30,10 +30,23 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
+#ifndef UX_CAPSULE_GUID
+#define UX_CAPSULE_GUID EFI_GUID(0x3b8c8162,0x188c,0x46a4,0xaec9,0xbe,0x43,0xf1,0xd6,0x56,0x97)
+#endif
+
 void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
+}
+
+static gchar *
+fu_plugin_uefi_guid_to_string (efi_guid_t *guid_raw)
+{
+	g_autofree gchar *guid = g_strdup ("00000000-0000-0000-0000-000000000000");
+	if (efi_guid_to_str (guid_raw, &guid) < 0)
+		return NULL;
+	return g_steal_pointer (&guid);
 }
 
 static fwup_resource *
@@ -42,21 +55,21 @@ fu_plugin_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError **e
 	efi_guid_t *guid_raw;
 	fwup_resource *re_matched = NULL;
 	fwup_resource *re = NULL;
-	g_autofree gchar *guid_str_tmp = NULL;
 
 	/* get the hardware we're referencing */
-	guid_str_tmp = g_strdup ("00000000-0000-0000-0000-000000000000");
 	while (fwup_resource_iter_next (iter, &re) > 0) {
+		g_autofree gchar *guid_tmp = NULL;
 
 		/* convert to strings */
 		fwup_get_guid (re, &guid_raw);
-		if (efi_guid_to_str (guid_raw, &guid_str_tmp) < 0) {
+		guid_tmp = fu_plugin_uefi_guid_to_string (guid_raw);
+		if (guid_tmp == NULL) {
 			g_warning ("failed to convert guid to string");
 			continue;
 		}
 
 		/* FIXME: also match hardware_instance too */
-		if (g_strcmp0 (guid_str, guid_str_tmp) == 0) {
+		if (g_strcmp0 (guid_str, guid_tmp) == 0) {
 			re_matched = re;
 			break;
 		}
@@ -71,6 +84,22 @@ fu_plugin_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError **e
 			     guid_str);
 	}
 
+	return re_matched;
+}
+
+static fwup_resource *
+fu_plugin_uefi_find_raw (fwup_resource_iter *iter, efi_guid_t *guid)
+{
+	fwup_resource *re_matched = NULL;
+	fwup_resource *re = NULL;
+	while (fwup_resource_iter_next (iter, &re) > 0) {
+		efi_guid_t *guid_tmp;
+		fwup_get_guid (re, &guid_tmp);
+		if (efi_guid_cmp (guid_tmp, guid) == 0) {
+			re_matched = re;
+			break;
+		}
+	}
 	return re_matched;
 }
 
@@ -186,6 +215,162 @@ fu_plugin_uefi_update_resource (fwup_resource *re,
 	return TRUE;
 }
 
+static GBytes *
+fu_plugin_uefi_get_splash_data (guint width, guint height, GError **error)
+{
+	const gchar * const *langs = g_get_language_names ();
+	const gchar *localedir = LOCALEDIR;
+	const gsize chunk_size = 1024 * 1024;
+	gsize buf_idx = 0;
+	gsize buf_sz = chunk_size;
+	gssize len;
+	g_autofree gchar *basename = NULL;
+	g_autofree guint8 *buf = NULL;
+	g_autoptr(GBytes) compressed_data = NULL;
+	g_autoptr(GConverter) conv = NULL;
+	g_autoptr(GInputStream) stream_compressed = NULL;
+	g_autoptr(GInputStream) stream_raw = NULL;
+
+	/* ensure this is sane */
+	if (!g_str_has_prefix (localedir, "/"))
+		localedir = "/usr/share/locale";
+
+	/* find the closest locale match, falling back to `en` and `C` */
+	basename = g_strdup_printf ("fwupd-%u-%u.bmp.gz", width, height);
+	for (guint i = 0; langs[i] != NULL; i++) {
+		g_autofree gchar *fn = NULL;
+		if (g_str_has_suffix (langs[i], ".UTF-8"))
+			continue;
+		fn = g_build_filename (localedir, langs[i],
+				       "LC_IMAGES", basename, NULL);
+		if (g_file_test (fn, G_FILE_TEST_EXISTS)) {
+			compressed_data = fu_common_get_contents_bytes (fn, error);
+			if (compressed_data == NULL)
+				return NULL;
+			break;
+		}
+		g_debug ("no %s found", fn);
+	}
+
+	/* we found nothing */
+	if (compressed_data == NULL) {
+		g_autofree gchar *tmp = g_strjoinv (",", (gchar **) langs);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "failed to get splash file for %s in %s",
+			     tmp, localedir);
+		return NULL;
+	}
+
+	/* decompress data */
+	stream_compressed = g_memory_input_stream_new_from_bytes (compressed_data);
+	conv = G_CONVERTER (g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP));
+	stream_raw = g_converter_input_stream_new (stream_compressed, conv);
+	buf = g_malloc0 (buf_sz);
+	while ((len = g_input_stream_read (stream_raw,
+					   buf + buf_idx,
+					   buf_sz - buf_idx,
+					   NULL, error)) > 0) {
+		buf_idx += len;
+		if (buf_sz - buf_idx < chunk_size) {
+			buf_sz += chunk_size;
+			buf = g_realloc (buf, buf_sz);
+		}
+	}
+	if (len < 0) {
+		g_prefix_error (error, "failed to decompress file: ");
+		return NULL;
+	}
+	g_debug ("decompressed image to %" G_GSIZE_FORMAT "kb", buf_idx / 1024);
+	return g_bytes_new_take (g_steal_pointer (&buf), buf_idx);
+}
+
+static gboolean
+fu_plugin_uefi_update_splash (GError **error)
+{
+	fwup_resource *re = NULL;
+	guint best_idx = G_MAXUINT;
+	guint32 lowest_border_pixels = G_MAXUINT;
+#ifdef HAVE_FWUP_GET_BGRT_INFO
+	int rc;
+#endif
+	guint32 screen_height = 768;
+	guint32 screen_width = 1024;
+	g_autoptr(fwup_resource_iter) iter = NULL;
+	g_autoptr(GBytes) image_bmp = NULL;
+	struct {
+		guint32	 width;
+		guint32	 height;
+	} sizes[] = {
+		{ 640, 480 },	/* matching the sizes in po/make-images */
+		{ 800, 600 },
+		{ 1024, 768 },
+		{ 1920, 1080 },
+		{ 3840, 2160 },
+		{ 5120, 2880 },
+		{ 5688, 3200 },
+		{ 7680, 4320 },
+		{ 0, 0 }
+	};
+
+	/* is this supported? */
+	fwup_resource_iter_create (&iter);
+	re = fu_plugin_uefi_find_raw (iter, &UX_CAPSULE_GUID);
+	if (re == NULL)
+		return TRUE;
+
+	/* get the boot graphics resource table data */
+#ifdef HAVE_FWUP_GET_BGRT_INFO
+	rc = fwup_get_ux_capsule_info (&screen_width, &screen_height);
+	if (rc < 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "failed to get BGRT screen size");
+		return FALSE;
+	}
+	g_debug ("BGRT screen size %" G_GUINT32_FORMAT " x%" G_GUINT32_FORMAT,
+		 screen_width, screen_height);
+#endif
+
+	/* find the 'best sized' pre-generated image */
+	for (guint i = 0; sizes[i].width != 0; i++) {
+		guint32 border_pixels;
+
+		/* disregard any images that are bigger than the screen */
+		if (sizes[i].width > screen_width)
+			continue;
+		if (sizes[i].height > screen_height)
+			continue;
+
+		/* is this the best fit for the display */
+		border_pixels = (screen_width * screen_height) -
+				(sizes[i].width * sizes[i].height);
+		if (border_pixels < lowest_border_pixels) {
+			lowest_border_pixels = border_pixels;
+			best_idx = i;
+		}
+	}
+	if (best_idx == G_MAXUINT) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "failed to find a suitable image to use");
+		return FALSE;
+	}
+
+	/* get the raw data */
+	image_bmp = fu_plugin_uefi_get_splash_data (sizes[best_idx].width,
+						    sizes[best_idx].height,
+						    error);
+	if (image_bmp == NULL)
+		return FALSE;
+
+	/* perform the upload */
+	return fu_plugin_uefi_update_resource (re, 0, image_bmp, error);
+}
+
 gboolean
 fu_plugin_update (FuPlugin *plugin,
 		  FuDevice *device,
@@ -199,6 +384,7 @@ fu_plugin_update (FuPlugin *plugin,
 	const gchar *str;
 	g_autofree gchar *efibootmgr_path = NULL;
 	g_autofree gchar *boot_variables = NULL;
+	g_autoptr(GError) error_splash = NULL;
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
@@ -213,6 +399,10 @@ fu_plugin_update (FuPlugin *plugin,
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
 	fu_plugin_set_status (plugin, FWUPD_STATUS_SCHEDULING);
+	if (!fu_plugin_uefi_update_splash (&error_splash)) {
+		g_warning ("failed to upload BGRT splash text: %s",
+			   error_splash->message);
+	}
 	if (!fu_plugin_uefi_update_resource (re, hardware_instance, blob_fw, error))
 		return FALSE;
 
@@ -293,7 +483,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	const gchar *product_name;
 	fwup_resource *re;
 	gint supported;
-	g_autofree gchar *guid = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(fwup_resource_iter) iter = NULL;
 
@@ -337,7 +526,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	product_name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
 
 	/* add each device */
-	guid = g_strdup ("00000000-0000-0000-0000-000000000000");
 	parse_flags = fu_plugin_uefi_get_version_format (plugin);
 	while (fwup_resource_iter_next (iter, &re) > 0) {
 		const gchar *uefi_type_str = NULL;
@@ -345,6 +533,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		guint32 uefi_type;
 		guint32 version_raw;
 		guint64 hardware_instance = 0;	/* FIXME */
+		g_autofree gchar *guid = NULL;
 		g_autofree gchar *id = NULL;
 		g_autofree gchar *version = NULL;
 		g_autofree gchar *version_lowest = NULL;
@@ -361,12 +550,20 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			g_string_append (display_name, uefi_type_str);
 		}
 
-		/* convert to strings */
+		/* detect the fake GUID used for uploading the image */
 		fwup_get_guid (re, &guid_raw);
-		if (efi_guid_to_str (guid_raw, &guid) < 0) {
+		if (efi_guid_cmp (guid_raw, &UX_CAPSULE_GUID) == 0) {
+			g_debug ("skipping entry, detected fake BGRT");
+			continue;
+		}
+
+		/* convert to strings */
+		guid = fu_plugin_uefi_guid_to_string (guid_raw);
+		if (guid == NULL) {
 			g_warning ("failed to convert guid to string");
 			continue;
 		}
+
 		fwup_get_fw_version(re, &version_raw);
 		version = as_utils_version_from_uint32 (version_raw,
 							parse_flags);
