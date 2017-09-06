@@ -69,22 +69,6 @@ Description: Firmware update daemon library
  .
  This package provides the library used by the daemon.
 
-Package: libdfu1
-Architecture: linux-any
-Depends: ${misc:Depends},
-         ${gir:Depends},
-         ${shlibs:Depends}
-Multi-Arch: same
-Description: Firmware update daemon library for DFU support
- fwupd is a daemon to allow session software to update device firmware.
- You can either use a GUI software manager like GNOME Software to view and
- apply updates, the command-line tool or the system D-Bus interface directly.
- Currently, firmware updates using the UEFI capsule format and for the
- ColorHug are supported. More formats may be supported in the future.
- See <https://github.com/hughsie/fwupd> for details
- .
- This package provides the library used by the daemon for DFU support.
-
 Package: libebitdo1
 Architecture: linux-any
 Depends: ${misc:Depends}
@@ -100,6 +84,12 @@ Depends: ${misc:Depends},
          ${shlibs:Depends}
 Recommends: fwupdate,
             python3
+Breaks: gir1.2-dfu-1.0 (<< 0.9.7-1),
+	libdfu1 (<< 0.9.7-1),
+	libdfu-dev (<< 0.9.7-1)
+Replaces: gir1.2-dfu-1.0 (<< 0.9.7-1),
+	  libdfu1 (<< 0.9.7-1),
+	  libdfu-dev (<< 0.9.7-1)
 Multi-Arch: foreign
 Description: Firmware update daemon
  fwupd is a daemon to allow session software to update device firmware.
@@ -155,7 +145,6 @@ Architecture: linux-any
 Multi-Arch: same
 Depends: libfwupd1 (= ${binary:Version}),
          gir1.2-fwupd-1.0 (= ${binary:Version}),
-         gir1.2-dfu-1.0 (= ${binary:Version}),
          ${misc:Depends}
 Breaks: fwupd-dev (<< 0.5.4-2~)
 Replaces: fwupd-dev (<< 0.5.4-2~)
@@ -183,37 +172,6 @@ Description: GObject introspection data for libfwupd
  .
  It can be used by packages using the GIRepository format to generate
  dynamic bindings.
-
-Package: gir1.2-dfu-1.0
-Architecture: linux-any
-Multi-Arch: same
-Depends: ${misc:Depends},
-         ${gir:Depends}
-Breaks: libdfu1 (<< 0.9.5-1~)
-Replaces: libdfu1 (<< 0.9.5-1~)
-Section: introspection
-Description: GObject introspection data for libdfu
- This package provides the introspection data for libdfu.
- .
- It can be used by packages using the GIRepository format to generate
- dynamic bindings.
-
-Package: libdfu-dev
-Architecture: linux-any
-Multi-Arch: same
-Depends: libdfu1 (= ${binary:Version}),
-         gir1.2-dfu-1.0 (= ${binary:Version}),
-         ${misc:Depends}
-Section: libdevel
-Description: development files for libdfu
- fwupd is a daemon to allow session software to update device firmware.
- You can either use a GUI software manager like GNOME Software to view and
- apply updates, the command-line tool or the system D-Bus interface directly.
- Currently, firmware updates using the UEFI capsule format and for the
- ColorHug are supported. More formats may be supported in the future.
- See <https://github.com/hughsie/fwupd> for details
- .
- This package provides the development files for libdfu
 
 Package: libebitdo-dev
 Architecture: linux-any
