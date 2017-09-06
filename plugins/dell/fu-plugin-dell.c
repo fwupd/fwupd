@@ -712,10 +712,8 @@ fu_plugin_update (FuPlugin *plugin,
 	const gchar *name = NULL;
 	gint rc;
 	guint flashes_left;
-#ifdef HAVE_UEFI_GUID
 	const gchar *guidstr = NULL;
 	efi_guid_t guid;
-#endif
 
 	/* test the flash counter
 	 * - devices with 0 left at setup aren't allowed offline updates
@@ -752,7 +750,6 @@ fu_plugin_update (FuPlugin *plugin,
 	 */
 	fwup_resource_iter_create (&iter);
 	fwup_resource_iter_next (iter, &re);
-#ifdef HAVE_UEFI_GUID
 	guidstr = fu_device_get_guid_default (device);
 	rc = efi_str_to_guid (guidstr, &guid);
 	if (rc < 0) {
@@ -771,7 +768,7 @@ fu_plugin_update (FuPlugin *plugin,
 			     strerror (rc));
 		return FALSE;
 	}
-#endif
+
 	/* NOTE: if there are problems with this working, adjust the
 	 * GUID in the capsule header to match something in ESRT.
 	 * This won't actually cause any bad behavior because the real
