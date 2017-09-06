@@ -98,28 +98,6 @@ fu_plugin_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static const gchar *
-fu_plugin_uefi_last_attempt_status_to_str (guint32 status)
-{
-	if (status == FWUP_LAST_ATTEMPT_STATUS_SUCCESS)
-		return "Success";
-	if (status == FWUP_LAST_ATTEMPT_STATUS_ERROR_UNSUCCESSFUL)
-		return "Unsuccessful";
-	if (status == FWUP_LAST_ATTEMPT_STATUS_ERROR_INSUFFICIENT_RESOURCES)
-		return "Insufficient resources";
-	if (status == FWUP_LAST_ATTEMPT_STATUS_ERROR_INCORRECT_VERSION)
-		return "Incorrect version";
-	if (status == FWUP_LAST_ATTEMPT_STATUS_ERROR_INVALID_FORMAT)
-		return "Invalid firmware format";
-	if (status == FWUP_LAST_ATTEMPT_STATUS_ERROR_AUTH_ERROR)
-		return "Authentication signing error";
-	if (status == FWUP_LAST_ATTEMPT_STATUS_ERROR_PWR_EVT_AC)
-		return "AC power required";
-	if (status == FWUP_LAST_ATTEMPT_STATUS_ERROR_PWR_EVT_BATT)
-		return "Battery level is too low";
-	return NULL;
-}
-
 gboolean
 fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
@@ -150,7 +128,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	} else {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		tmp = fu_plugin_uefi_last_attempt_status_to_str (status);
+		tmp = fwup_last_attempt_status_to_string (status);
 		if (tmp != NULL)
 			fu_device_set_update_error (device, tmp);
 	}
