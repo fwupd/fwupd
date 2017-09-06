@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -19,24 +19,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#ifndef __DFU_FORMAT_ELF_H
-#define __DFU_FORMAT_ELF_H
+#ifndef __FU_ALTOS_FIRMWARE_H
+#define __FU_ALTOS_FIRMWARE_H
 
 #include <glib-object.h>
-#include <gio/gio.h>
-
-#include "dfu-firmware.h"
 
 G_BEGIN_DECLS
 
-DfuFirmwareFormat	 dfu_firmware_detect_elf	(GBytes		*bytes);
-GBytes			*dfu_firmware_to_elf		(DfuFirmware	*firmware,
-							 GError		**error);
-gboolean		 dfu_firmware_from_elf		(DfuFirmware	*firmware,
-							 GBytes		*bytes,
-							 DfuFirmwareParseFlags flags,
-							 GError		**error);
+#define FU_TYPE_ALTOS_FIRMWARE (fu_altos_firmware_get_type ())
+
+G_DECLARE_FINAL_TYPE (FuAltosFirmware, fu_altos_firmware, FU, ALTOS_FIRMWARE, GObject)
+
+FuAltosFirmware	*fu_altos_firmware_new		(void);
+GBytes		*fu_altos_firmware_get_data	(FuAltosFirmware	*self);
+guint64		 fu_altos_firmware_get_address	(FuAltosFirmware	*self);
+gboolean	 fu_altos_firmware_parse	(FuAltosFirmware	*self,
+						 GBytes			*blob,
+						 GError			**error);
 
 G_END_DECLS
 
-#endif /* __DFU_FORMAT_ELF_H */
+#endif /* __FU_ALTOS_FIRMWARE_H */

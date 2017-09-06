@@ -1,4 +1,3 @@
-subdir('altos')
 subdir('dfu')
 subdir('ebitdo')
 subdir('raspberrypi')
@@ -7,6 +6,10 @@ subdir('test')
 subdir('udev')
 subdir('unifying')
 subdir('upower')
+
+if get_option('enable-altos')
+subdir('altos')
+endif
 
 if get_option('enable-amt')
 subdir('amt')

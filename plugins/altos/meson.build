@@ -2,6 +2,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginAltos"']
 
 shared_module('fu_plugin_altos',
   sources : [
+    'fu-altos-firmware.c',
     'fu-plugin-altos.c',
     'fu-device-altos.c',
   ],
@@ -14,17 +15,16 @@ shared_module('fu_plugin_altos',
   install_dir: plugin_dir,
   c_args : cargs,
   dependencies : [
-    plugin_deps,
     gudev,
-  ],
-  link_with : [
-    dfu,
+    libelf,
+    plugin_deps,
   ],
 )
 
 executable(
   'fu-altos-tool',
   sources : [
+    'fu-altos-firmware.c',
     'fu-altos-tool.c',
     'fu-device-altos.c',
   ],
@@ -34,11 +34,11 @@ executable(
     include_directories('../../src'),
   ],
   dependencies : [
-    plugin_deps,
     gudev,
+    libelf,
+    plugin_deps,
   ],
   link_with : [
-    dfu,
     fwupd,
     libfwupdprivate,
   ],

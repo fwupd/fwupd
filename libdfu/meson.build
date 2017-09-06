@@ -2,17 +2,6 @@ cargs = [
   '-DG_LOG_DOMAIN="Dfu"',
 ]
 
-deps = [
-  appstream_glib,
-  giounix,
-  libm,
-  gusb,
-]
-
-if get_option('enable-libelf')
-  deps += libelf
-endif
-
 dfu = static_library(
   'dfu',
   sources : [
@@ -26,7 +15,6 @@ dfu = static_library(
     'dfu-firmware.c',
     'dfu-format-dfu.c',
     'dfu-format-dfuse.c',
-    'dfu-format-elf.c',
     'dfu-format-ihex.c',
     'dfu-format-metadata.c',
     'dfu-format-raw.c',
@@ -35,7 +23,12 @@ dfu = static_library(
     'dfu-sector.c',
     'dfu-target.c',
   ],
-  dependencies : deps,
+  dependencies : [
+    appstream_glib,
+    giounix,
+    libm,
+    gusb,
+  ],
   c_args : cargs,
   include_directories : include_directories('..'),
 )
@@ -49,7 +42,12 @@ executable(
   include_directories : [
     include_directories('..'),
   ],
-  dependencies : deps,
+  dependencies : [
+    appstream_glib,
+    giounix,
+    libm,
+    gusb,
+  ],
   link_with : dfu,
   c_args : cargs,
   install : true,
