@@ -180,9 +180,6 @@ endif
 
 if get_option('enable-uefi')
   fwup = dependency('fwup', version : '>= 5')
-  conf.set('HAVE_UEFI', '1')
-  conf.set('HAVE_UEFI_UNLOCK', '1')
-  conf.set('HAVE_UEFI_GUID', '1')
 endif
 
 if get_option('enable-dell')
