@@ -1,7 +1,2 @@
-#this isn't used in any of the binaries, only for fuzz testing
-#the interface for libdfu
-fwupd source: source-is-missing libdfu/fuzzing/firmware.elf
-fwupd source: source-contains-prebuilt-binary libdfu/fuzzing/firmware.elf
-
 #github doesn't have these
 fwupd source: debian-watch-may-check-gpg-signature

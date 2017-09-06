@@ -29,8 +29,7 @@
 #include <termios.h>
 #include <errno.h>
 
-#include <libdfu/dfu.h>
-
+#include "fu-altos-firmware.h"
 #include "fu-device-altos.h"
 
 typedef struct
@@ -432,49 +431,6 @@ fu_device_altos_write_page (FuDeviceAltos *device,
 	return TRUE;
 }
 
-static gboolean
-fu_device_check_firmware (FuDeviceAltos *device, DfuFirmware *firmware, GError **error)
-{
-	FuDeviceAltosPrivate *priv = GET_PRIVATE (device);
-	DfuElement *dfu_element;
-	DfuImage *dfu_image;
-
-	/* get default image */
-	dfu_image = dfu_firmware_get_image_default (firmware);
-	if (dfu_image == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no firmware image");
-		return FALSE;
-	}
-
-	/* get default element */
-	dfu_element = dfu_image_get_element_default (dfu_image);
-	if (dfu_element == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no firmware element");
-		return FALSE;
-	}
-
-	/* check the start address */
-	if (dfu_element_get_address (dfu_element) != priv->addr_base) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "start address not correct %" G_GUINT32_FORMAT ":"
-			     "%" G_GUINT64_FORMAT,
-			     dfu_element_get_address (dfu_element),
-			     priv->addr_base);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
 gboolean
 fu_device_altos_write_firmware (FuDeviceAltos *device,
 				GBytes *fw,
@@ -484,11 +440,11 @@ fu_device_altos_write_firmware (FuDeviceAltos *device,
 				GError **error)
 {
 	FuDeviceAltosPrivate *priv = GET_PRIVATE (device);
+	GBytes *fw_blob;
 	const gchar *data;
 	const gsize data_len;
 	guint flash_len;
-	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(GBytes) fw_blob = NULL;
+	g_autoptr(FuAltosFirmware) altos_firmware = NULL;
 	g_autoptr(GString) buf = g_string_new (NULL);
 
 	/* check kind */
@@ -520,22 +476,24 @@ fu_device_altos_write_firmware (FuDeviceAltos *device,
 	}
 
 	/* load ihex blob */
-	firmware = dfu_firmware_new ();
-	if (!dfu_firmware_parse_data (firmware, fw,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      error)) {
+	altos_firmware = fu_altos_firmware_new ();
+	if (!fu_altos_firmware_parse (altos_firmware, fw, error))
+		return FALSE;
+
+	/* check the start address */
+	if (fu_altos_firmware_get_address (altos_firmware) != priv->addr_base) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "start address not correct %" G_GUINT64_FORMAT ":"
+			     "%" G_GUINT64_FORMAT,
+			     fu_altos_firmware_get_address (altos_firmware),
+			     priv->addr_base);
 		return FALSE;
 	}
-	if (!fu_device_check_firmware (device, firmware, error))
-		return FALSE;
-
-	/* convert from ihex to a blob */
-	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_RAW);
-	fw_blob = dfu_firmware_write_data (firmware, error);
-	if (fw_blob == NULL)
-		return FALSE;
 
 	/* check firmware will fit */
+	fw_blob = fu_altos_firmware_get_data (altos_firmware);
 	data = g_bytes_get_data (fw_blob, (gsize *) &data_len);
 	if (data_len > flash_len) {
 		g_set_error (error,

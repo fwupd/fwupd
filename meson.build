@@ -179,9 +179,8 @@ if get_option('enable-colorhug')
   conf.set('HAVE_COLORHUG', '1')
 endif
 
-if get_option('enable-libelf')
+if get_option('enable-altos')
   libelf = dependency('libelf')
-  conf.set('HAVE_LIBELF', '1')
 endif
 
 if get_option('enable-uefi')
