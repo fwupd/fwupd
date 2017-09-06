@@ -69,15 +69,6 @@ Description: Firmware update daemon library
  .
  This package provides the library used by the daemon.
 
-Package: libebitdo1
-Architecture: linux-any
-Depends: ${misc:Depends}
-Multi-Arch: same
-Priority: extra
-Section: oldlibs
-Description: Firmware update daemon library for 0bitdo support (transitional package)
- This is a transitional package for 0bitdo support that was moved into a plugin.
-
 Package: fwupd
 Architecture: linux-any
 Depends: ${misc:Depends},
@@ -172,13 +163,3 @@ Description: GObject introspection data for libfwupd
  .
  It can be used by packages using the GIRepository format to generate
  dynamic bindings.
-
-Package: libebitdo-dev
-Architecture: linux-any
-Multi-Arch: same
-Depends: ${misc:Depends}
-Priority: extra
-Section: oldlibs
-Description: development files for libebitdo (transitional package)
- This is a transitional package for the 0bitdo support development patckage
- that was moved into a plugin.
