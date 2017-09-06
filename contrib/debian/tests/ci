@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
-service dbus restart
+/usr/sbin/service dbus restart
 gnome-desktop-testing-runner fwupd
