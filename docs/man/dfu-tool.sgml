@@ -53,13 +53,11 @@
       `targets' can be specified with the alternative name or number.
     </para>
     <para>
-      <command>&package;</command> uses the <literal>libdfu</literal> shared
-      library to perform actions.
       All synchronous actions can be safely cancelled and on failure will return
       errors with both a type and a full textual description.
-      libdfu supports DFU 1.0, DFU 1.1 and the ST DfuSe vendor extension, and
-      handles many device `quirks' necessary for the real-world implementations
-      of <acronym>DFU</acronym>.
+      <command>&package;</command> supports DFU 1.0, DFU 1.1 and the ST DfuSe
+      vendor extension, and handles many device `quirks' necessary for the
+      real-world implementations of <acronym>DFU</acronym>.
     </para>
     <para>
       Additionally <command>&package;</command> can be used to convert firmware
@@ -74,19 +72,6 @@
       Merging two DfuSe files together is also possible, although specifying
       different alt-setting numbers before merging is a good idea to avoid
       confusion.
-    </para>
-    <para>
-      Although <command>&package;</command> tries to provide a large number of
-      easy-to-use commands, it may only be possible to do certain operations
-      using the <literal>libdfu</literal> library directly.
-      This is easier than it sounds, as the library is built with GObject
-      Introspection support making it usable in many languages such as C,
-      Javascript and Python.
-      Furthermore, using the library is a good idea if you want to perform
-      multiple operations on large firmware files, for instance,
-      converting from an Intel HEX file, padding to a certain size, setting
-      vendor and adding licensing information and then saving to a remote
-      location.
     </para>
   </refsect1>
   <refsect1>
@@ -153,7 +138,7 @@
             Force the operation, disregarding warnings or sanity checks like
             file CRC and checksums.
             This is useful if you really know what you are doing, or in the
-            specialised case of fuzz-testing libdfu.
+            specialised case of fuzz-testing the binary loaders.
           </para>
         </listitem>
       </varlistentry>

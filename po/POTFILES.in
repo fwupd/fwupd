@@ -1,6 +1,6 @@
 data/org.freedesktop.fwupd.metainfo.xml
 policy/org.freedesktop.fwupd.policy.in
-libdfu/dfu-tool.c
+plugins/dfu/dfu-tool.c
 plugins/synapticsmst/synapticsmst-tool.c
 plugins/uefi/fu-plugin-uefi.c
 src/fu-debug.c

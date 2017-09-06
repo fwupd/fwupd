@@ -21,7 +21,6 @@
 
 #include "config.h"
 
-#include <dfu.h>
 #include <libintl.h>
 #include <locale.h>
 #include <stdlib.h>
@@ -31,8 +30,12 @@
 
 #include "dfu-cipher-devo.h"
 #include "dfu-cipher-xtea.h"
+#include "dfu-context.h"
 #include "dfu-device-private.h"
+#include "dfu-error.h"
+#include "dfu-patch.h"
 #include "dfu-progress-bar.h"
+#include "dfu-sector.h"
 
 typedef struct {
 	GCancellable		*cancellable;

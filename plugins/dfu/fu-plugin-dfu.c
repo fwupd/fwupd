@@ -22,10 +22,11 @@
 #include "config.h"
 
 #include <appstream-glib.h>
-#include <libdfu/dfu.h>
 
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
+
+#include "dfu-context.h"
 
 struct FuPluginData {
 	DfuContext		*context;
