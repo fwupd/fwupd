@@ -28,7 +28,6 @@
 #include <glib-unix.h>
 #include <appstream-glib.h>
 
-#include "dfu-cipher-devo.h"
 #include "dfu-cipher-xtea.h"
 #include "dfu-context.h"
 #include "dfu-device-private.h"
@@ -1615,17 +1614,11 @@ dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 		dfu_firmware_set_metadata (firmware,
 					   DFU_METADATA_KEY_CIPHER_KIND,
 					   "XTEA");
-	} else if (g_strcmp0 (values[2], "devo") == 0) {
-		if (!dfu_cipher_encrypt_devo (values[3], data, (guint32) len, error))
-			return FALSE;
-		dfu_firmware_set_metadata (firmware,
-					   DFU_METADATA_KEY_CIPHER_KIND,
-					   "DEVO");
 	} else {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "unknown type '%s', expected [xtea|devo]",
+			     "unknown type '%s', expected [xtea]",
 			     values[2]);
 		return FALSE;
 	}
@@ -1698,16 +1691,11 @@ dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		dfu_firmware_remove_metadata (firmware,
 					      DFU_METADATA_KEY_CIPHER_KIND);
-	} else if (g_strcmp0 (values[2], "devo") == 0) {
-		if (!dfu_cipher_decrypt_devo (values[3], data, (guint32) len, error))
-			return FALSE;
-		dfu_firmware_remove_metadata (firmware,
-					      DFU_METADATA_KEY_CIPHER_KIND);
 	} else {
 		g_set_error (error,
 			     DFU_ERROR,
 			     DFU_ERROR_INTERNAL,
-			     "unknown type '%s', expected [xtea:devo]",
+			     "unknown type '%s', expected [xtea]",
 			     values[2]);
 		return FALSE;
 	}

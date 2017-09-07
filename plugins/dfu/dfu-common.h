@@ -145,7 +145,6 @@ typedef enum {
  * DfuCipherKind:
  * @DFU_CIPHER_KIND_NONE:			No cipher detected
  * @DFU_CIPHER_KIND_XTEA:			XTEA cipher detected
- * @DFU_CIPHER_KIND_DEVO:			DEVO cipher detected
  * @DFU_CIPHER_KIND_RSA:			RSA cipher detected
  *
  * The type of cipher used for transfering the firmware.
@@ -153,7 +152,6 @@ typedef enum {
 typedef enum {
 	DFU_CIPHER_KIND_NONE,
 	DFU_CIPHER_KIND_XTEA,
-	DFU_CIPHER_KIND_DEVO,
 	DFU_CIPHER_KIND_RSA,
 	/*< private >*/
 	DFU_CIPHER_KIND_LAST
