@@ -91,6 +91,7 @@ test_args = [
   '-Wundef',
   '-Wuninitialized',
   '-Wunused-but-set-variable',
+  '-Wunused-variable',
   '-Wwrite-strings'
 ]
 cc = meson.get_compiler('c')
