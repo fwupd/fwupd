@@ -23,6 +23,7 @@ libfwupdprivate = static_library(
   sources : [
     'fu-common.c',
     'fu-device.c',
+    'fu-device-locker.c',
     'fu-hwids.c',
     'fu-pending.c',
     'fu-plugin.c',
@@ -105,6 +106,7 @@ executable(
     'fu-hwids.c',
     'fu-debug.c',
     'fu-device.c',
+    'fu-device-locker.c',
     'fu-keyring.c',
     'fu-pending.c',
     'fu-plugin.c',
@@ -153,6 +155,7 @@ if get_option('enable-tests')
       'fu-keyring.c',
       'fu-hwids.c',
       'fu-device.c',
+      'fu-device-locker.c',
       'fu-pending.c',
       'fu-keyring.c',
       'fu-keyring-result.c',

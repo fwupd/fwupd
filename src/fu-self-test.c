@@ -650,6 +650,62 @@ fu_test_stdout_cb (const gchar *line, gpointer user_data)
 	(*lines)++;
 }
 
+static gboolean
+_open_cb (GObject *device, GError **error)
+{
+	g_assert_cmpstr (g_object_get_data (device, "state"), ==, "closed");
+	g_object_set_data (device, "state", "opened");
+	return TRUE;
+}
+
+static gboolean
+_close_cb (GObject *device, GError **error)
+{
+	g_assert_cmpstr (g_object_get_data (device, "state"), ==, "opened");
+	g_object_set_data (device, "state", "closed-on-unref");
+	return TRUE;
+}
+
+static void
+fu_device_locker_func (void)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GObject) device = g_object_new (G_TYPE_OBJECT, NULL);
+
+	g_object_set_data (device, "state", "closed");
+	locker = fu_device_locker_new_full (device, _open_cb, _close_cb, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (locker);
+	g_clear_object (&locker);
+	g_assert_cmpstr (g_object_get_data (device, "state"), ==, "closed-on-unref");
+}
+
+static gboolean
+_fail_open_cb (GObject *device, GError **error)
+{
+	g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, "fail");
+	return FALSE;
+}
+
+static gboolean
+_fail_close_cb (GObject *device, GError **error)
+{
+	g_assert_not_reached ();
+	return TRUE;
+}
+
+static void
+fu_device_locker_fail_func (void)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GObject) device = g_object_new (G_TYPE_OBJECT, NULL);
+	locker = fu_device_locker_new_full (device, _fail_open_cb, _fail_close_cb, &error);
+	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_FAILED);
+	g_assert_null (locker);
+}
+
 static void
 fu_common_spawn_func (void)
 {
@@ -681,6 +737,8 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
+	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
+	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
