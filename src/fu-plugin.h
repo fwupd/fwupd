@@ -29,6 +29,7 @@
 
 #include "fu-common.h"
 #include "fu-device.h"
+#include "fu-device-locker.h"
 #include "fu-hwids.h"
 
 G_BEGIN_DECLS
