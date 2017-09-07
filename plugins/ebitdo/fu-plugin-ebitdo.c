@@ -38,6 +38,7 @@ fu_plugin_device_ebitdo_added (FuPlugin *plugin,
 	g_autofree gchar *runtime_id = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuDeviceEbitdo) dev = NULL;
 
 	/* ignore hubs */
@@ -59,13 +60,13 @@ fu_plugin_device_ebitdo_added (FuPlugin *plugin,
 	fu_device_set_id (dev, platform_id);
 
 	/* open the device */
-	if (!fu_device_ebitdo_open (dev, error))
+	locker = fu_device_locker_new_full (dev,
+					    (FuDeviceLockerFunc) fu_device_ebitdo_open,
+					    (FuDeviceLockerFunc) fu_device_ebitdo_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
 	ebitdo_kind = fu_device_ebitdo_get_kind (dev);
-
-	/* close the device */
-	if (!fu_device_ebitdo_close (dev, error))
-		return FALSE;
 
 	/* only the bootloader can do the update */
 	runtime_id = g_strdup_printf ("%s-runtime", platform_id);
@@ -110,6 +111,7 @@ fu_plugin_update (FuPlugin *plugin,
 {
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
 	const gchar *platform_id;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuDeviceEbitdo) ebitdo_dev = FU_DEVICE_EBITDO (dev);
 	g_autoptr(GUsbDevice) usb_device = NULL;
 
@@ -129,7 +131,11 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 
 	/* write the firmware */
-	if (!fu_device_ebitdo_open (ebitdo_dev, error))
+	locker = fu_device_locker_new_full (ebitdo_dev,
+					    (FuDeviceLockerFunc) fu_device_ebitdo_open,
+					    (FuDeviceLockerFunc) fu_device_ebitdo_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_device_ebitdo_write_firmware (ebitdo_dev, blob_fw,
@@ -137,8 +143,6 @@ fu_plugin_update (FuPlugin *plugin,
 					   error))
 		return FALSE;
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_device_ebitdo_close (ebitdo_dev, error))
-		return FALSE;
 
 	/* success */
 	return TRUE;
