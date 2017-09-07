@@ -29,7 +29,8 @@
 #include "dfu-format-dfuse.h"
 #include "dfu-format-raw.h"
 #include "dfu-image.h"
-#include "dfu-error.h"
+
+#include "fwupd-error.h"
 
 typedef struct __attribute__((packed)) {
 	guint16		release;
@@ -163,8 +164,8 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 	data = (guint8 *) g_bytes_get_data (bytes, &len);
 	if (len < 16) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "size check failed, too small");
 		return FALSE;
 	}
@@ -173,8 +174,8 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 	ftr = (DfuFirmwareFooter *) &data[len - sizeof(DfuFirmwareFooter)];
 	if (memcmp (ftr->sig, "UFD", 3) != 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "no DFU signature");
 		return FALSE;
 	}
@@ -184,8 +185,8 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 		if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFU &&
 		    dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFUSE) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "version check failed, got %04x",
 				     dfu_firmware_get_format (firmware));
 			return FALSE;
@@ -198,8 +199,8 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 		crc_new = dfu_firmware_generate_crc32 (data, len - 4);
 		if (crc != crc_new) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "CRC failed, expected %04x, got %04x",
 				     crc_new, GUINT32_FROM_LE (ftr->crc));
 			return FALSE;
@@ -214,8 +215,8 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 	/* check reported length */
 	if (ftr->len > len) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "reported firmware size %04x larger than file %04x",
 			     (guint) ftr->len, (guint) len);
 		return FALSE;
@@ -320,8 +321,8 @@ dfu_firmware_to_dfu (DfuFirmware *firmware, GError **error)
 		element = dfu_image_get_element (image, 0);
 		if (element == NULL) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_FOUND,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "no firmware element data to write");
 			return NULL;
 		}

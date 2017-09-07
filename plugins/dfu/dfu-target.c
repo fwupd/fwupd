@@ -40,9 +40,10 @@
 
 #include "dfu-common.h"
 #include "dfu-device-private.h"
-#include "dfu-error.h"
 #include "dfu-sector-private.h"
 #include "dfu-target-private.h"
+
+#include "fwupd-error.h"
 
 static void dfu_target_finalize			 (GObject *object);
 
@@ -201,8 +202,8 @@ dfu_target_parse_sector (DfuTarget *target,
 	nr_sectors = g_ascii_strtoull (dfuse_sector_id, &tmp, 10);
 	if (nr_sectors > 999) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Invalid number of sectors: %s",
 			     dfuse_sector_id);
 		return FALSE;
@@ -211,8 +212,8 @@ dfu_target_parse_sector (DfuTarget *target,
 	/* check this is the delimiter */
 	if (tmp[0] != '*') {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Invalid sector ID: %s",
 			     dfuse_sector_id);
 		return FALSE;
@@ -222,8 +223,8 @@ dfu_target_parse_sector (DfuTarget *target,
 	sector_size = g_ascii_strtoull (tmp + 1, &tmp, 10);
 	if (sector_size > 999) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Invalid sector size: %s",
 			     dfuse_sector_id);
 		return FALSE;
@@ -242,8 +243,8 @@ dfu_target_parse_sector (DfuTarget *target,
 		break;
 	default:
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Invalid sector multiplier: %s",
 			     tmp);
 		return FALSE;
@@ -279,8 +280,8 @@ dfu_target_parse_sector (DfuTarget *target,
 		break;
 	default:
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Invalid sector type: %s",
 			     tmp);
 		return FALSE;
@@ -356,16 +357,16 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 		/* parse address */
 		if (!g_str_has_prefix (zones[i], "0x")) {
 			g_set_error_literal (error,
-					     DFU_ERROR,
-					     DFU_ERROR_NOT_SUPPORTED,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "No sector address");
 			return FALSE;
 		}
 		addr_tmp = g_ascii_strtoull (zones[i] + 2, NULL, 16);
 		if (addr_tmp > G_MAXUINT32) {
 			g_set_error_literal (error,
-					     DFU_ERROR,
-					     DFU_ERROR_NOT_SUPPORTED,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "Sector address too large");
 			return FALSE;
 		}
@@ -374,8 +375,8 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 		/* no sectors?! */
 		if (zones[i+1] == NULL) {
 			g_set_error_literal (error,
-					     DFU_ERROR,
-					     DFU_ERROR_NOT_SUPPORTED,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "No sector section");
 			return FALSE;
 		}
@@ -523,15 +524,15 @@ dfu_target_check_status (DfuTarget *target,
 	if (dfu_device_has_dfuse_support (priv->device)) {
 		if (status == DFU_STATUS_ERR_VENDOR) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "Read protection is active");
 			return FALSE;
 		}
 		if (status == DFU_STATUS_ERR_TARGET) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "Address is wrong or unsupported");
 			return FALSE;
 		}
@@ -539,8 +540,8 @@ dfu_target_check_status (DfuTarget *target,
 
 	/* use a proper error description */
 	g_set_error_literal (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     dfu_target_status_to_error_msg (status));
 	return FALSE;
 }
@@ -576,8 +577,8 @@ dfu_target_use_alt_setting (DfuTarget *target, GError **error)
 						     (gint) priv->alt_setting,
 						     &error_local)) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "cannot set alternate setting 0x%02x on interface %i: %s",
 				     priv->alt_setting,
 				     dfu_device_get_interface (priv->device),
@@ -668,8 +669,8 @@ dfu_target_download_chunk (DfuTarget *target, guint8 index, GBytes *bytes,
 		/* refresh the error code */
 		dfu_device_error_fixup (priv->device, cancellable, &error_local);
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "cannot download data: %s",
 			     error_local->message);
 		return FALSE;
@@ -712,8 +713,8 @@ dfu_target_set_address (DfuTarget *target,
 	/* invalid */
 	if (!dfu_device_has_dfuse_support (priv->device)) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "only supported for DfuSe targets");
 		return FALSE;
 	}
@@ -758,8 +759,8 @@ dfu_target_erase_address (DfuTarget *target,
 	/* invalid */
 	if (!dfu_device_has_dfuse_support (priv->device)) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "only supported for DfuSe targets");
 		return FALSE;
 	}
@@ -807,8 +808,8 @@ dfu_target_mass_erase (DfuTarget *target,
 	/* invalid */
 	if (!dfu_device_has_dfuse_support (priv->device)) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "only supported for DfuSe targets");
 		return FALSE;
 	}
@@ -849,8 +850,8 @@ dfu_target_read_unprotect (DfuTarget *target,
 	/* invalid */
 	if (!dfu_device_has_dfuse_support (priv->device)) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "only supported for DfuSe targets");
 		return FALSE;
 	}
@@ -896,8 +897,8 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 		/* refresh the error code */
 		dfu_device_error_fixup (priv->device, cancellable, &error_local);
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "cannot upload data: %s",
 			     error_local->message);
 		return NULL;
@@ -1007,8 +1008,8 @@ dfu_target_upload_element_dfuse (DfuTarget *target,
 	sector = dfu_target_get_sector_for_addr (target, offset);
 	if (sector == NULL) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_DEVICE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "no memory sector at 0x%04x",
 			     (guint) offset);
 		return NULL;
@@ -1018,8 +1019,8 @@ dfu_target_upload_element_dfuse (DfuTarget *target,
 		 offset);
 	if (!dfu_sector_has_cap (sector, DFU_SECTOR_CAP_READABLE)) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_DEVICE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "memory sector at 0x%04x is not readble",
 			     (guint) offset);
 		return NULL;
@@ -1085,8 +1086,8 @@ dfu_target_upload_element_dfuse (DfuTarget *target,
 	if (expected_size > 0) {
 		if (total_size < expected_size) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "invalid size, got %" G_GSIZE_FORMAT ", "
 				     "expected %" G_GSIZE_FORMAT ,
 				     total_size, expected_size);
@@ -1168,8 +1169,8 @@ dfu_target_upload_element_dfu (DfuTarget *target,
 	if (expected_size > 0) {
 		if (total_size != expected_size) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "invalid size, got %" G_GSIZE_FORMAT ", "
 				     "expected %" G_GSIZE_FORMAT ,
 				     total_size, expected_size);
@@ -1263,8 +1264,8 @@ dfu_target_upload (DfuTarget *target,
 	/* can the target do this? */
 	if (!dfu_device_can_upload (priv->device)) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "target cannot do uploading");
 		return NULL;
 	}
@@ -1276,8 +1277,8 @@ dfu_target_upload (DfuTarget *target,
 	/* no open?! */
 	if (priv->sectors->len == 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "no sectors defined for target");
 		return NULL;
 	}
@@ -1387,8 +1388,8 @@ dfu_target_download_element_dfu (DfuTarget *target,
 				  (gdouble) transfer_size);
 	if (nr_chunks == 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "zero-length firmware");
 		return FALSE;
 	}
@@ -1454,8 +1455,8 @@ dfu_target_download_element_dfuse (DfuTarget *target,
 				  (gdouble) transfer_size);
 	if (nr_chunks == 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "zero-length firmware");
 		return FALSE;
 	}
@@ -1472,16 +1473,16 @@ dfu_target_download_element_dfuse (DfuTarget *target,
 		sector = dfu_target_get_sector_for_addr (target, offset_dev);
 		if (sector == NULL) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_DEVICE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "no memory sector at 0x%04x",
 				     (guint) offset_dev);
 			return FALSE;
 		}
 		if (!dfu_sector_has_cap (sector, DFU_SECTOR_CAP_WRITEABLE)) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_DEVICE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "memory sector at 0x%04x is not writable",
 				     (guint) offset_dev);
 			return FALSE;
@@ -1622,8 +1623,8 @@ dfu_target_download_element (DfuTarget *target,
 			g_autofree gchar *bytes_cmp_str = NULL;
 			bytes_cmp_str = _g_bytes_compare_verbose (bytes_tmp, bytes);
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_VERIFY_FAILED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
 				     "verify failed: %s",
 				     bytes_cmp_str);
 			return FALSE;
@@ -1670,8 +1671,8 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 	/* can the target do this? */
 	if (!dfu_device_can_download (priv->device)) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "target cannot do downloading");
 		return FALSE;
 	}
@@ -1684,8 +1685,8 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 	elements = dfu_image_get_elements (image);
 	if (elements->len == 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "no image elements");
 		return FALSE;
 	}
@@ -1751,8 +1752,8 @@ dfu_target_get_commands (DfuTarget *target,
 	/* invalid */
 	if (!dfu_device_has_dfuse_support (priv->device)) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "only supported for DfuSe targets");
 		return FALSE;
 	}
@@ -1816,8 +1817,8 @@ dfu_target_get_alt_name (DfuTarget *target, GError **error)
 	/* nothing */
 	if (priv->alt_name == NULL) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_FOUND,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "no alt-name");
 		return NULL;
 	}
@@ -1848,8 +1849,8 @@ dfu_target_get_alt_name_for_display (DfuTarget *target, GError **error)
 	/* nothing */
 	if (priv->alt_name_for_display == NULL) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_FOUND,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "no alt-name");
 		return NULL;
 	}

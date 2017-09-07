@@ -24,10 +24,11 @@
 #include <string.h>
 
 #include "dfu-element.h"
-#include "dfu-error.h"
 #include "dfu-firmware.h"
 #include "dfu-format-ihex.h"
 #include "dfu-image.h"
+
+#include "fwupd-error.h"
 
 /**
  * dfu_firmware_detect_ihex: (skip)
@@ -127,8 +128,8 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		/* check starting token */
 		if (in_buffer[offset] != ':') {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "invalid starting token, got %c at %x",
 				     in_buffer[offset], offset);
 			return FALSE;
@@ -137,8 +138,8 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		/* check there's enough data for the smallest possible record */
 		if (offset + 12 > (guint) len_in) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "record incomplete at %u, length %u",
 				     offset, (guint) len_in);
 			return FALSE;
@@ -153,8 +154,8 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		end = offset + 9 + len_tmp * 2;
 		if (end > (guint) len_in) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "checksum > file length: %u",
 				     end);
 			return FALSE;
@@ -169,8 +170,8 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			}
 			if (checksum != 0)  {
 				g_set_error_literal (error,
-						     DFU_ERROR,
-						     DFU_ERROR_INVALID_FILE,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
 						     "invalid record checksum");
 				return FALSE;
 			}
@@ -193,8 +194,8 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			/* does not make sense */
 			if (addr32 < addr32_last) {
 				g_set_error (error,
-					     DFU_ERROR,
-					     DFU_ERROR_INVALID_FILE,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
 					     "invalid address 0x%x, last was 0x%x",
 					     (guint) addr32,
 					     (guint) addr32_last);
@@ -224,8 +225,8 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		case DFU_INHX32_RECORD_TYPE_EOF:
 			if (got_eof) {
 				g_set_error_literal (error,
-						     DFU_ERROR,
-						     DFU_ERROR_INVALID_FILE,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
 						     "duplicate EOF, perhaps "
 						     "corrupt file");
 				return FALSE;
@@ -247,8 +248,8 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			if (got_eof)
 				break;
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "invalid ihex record type %i",
 				     type);
 			return FALSE;
@@ -266,8 +267,8 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 	/* no EOF */
 	if (!got_eof) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "no EOF, perhaps truncated file");
 		return FALSE;
 	}

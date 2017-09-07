@@ -36,7 +36,6 @@
 
 #include "dfu-common.h"
 #include "dfu-element.h"
-#include "dfu-error.h"
 #include "dfu-image.h"
 
 static void dfu_image_finalize			 (GObject *object);

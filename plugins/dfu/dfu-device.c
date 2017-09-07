@@ -41,10 +41,11 @@
 
 #include "dfu-common.h"
 #include "dfu-device-private.h"
-#include "dfu-error.h"
 #include "dfu-target-private.h"
 
 #include "fu-device-locker.h"
+
+#include "fwupd-error.h"
 
 static void dfu_device_finalize			 (GObject *object);
 
@@ -737,8 +738,8 @@ dfu_device_get_target_by_alt_setting (DfuDevice *device,
 
 	/* failed */
 	g_set_error (error,
-		     DFU_ERROR,
-		     DFU_ERROR_NOT_FOUND,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_FOUND,
 		     "No target with alt-setting %i",
 		     alt_setting);
 	return NULL;
@@ -775,8 +776,8 @@ dfu_device_get_target_by_alt_name (DfuDevice *device,
 
 	/* failed */
 	g_set_error (error,
-		     DFU_ERROR,
-		     DFU_ERROR_NOT_FOUND,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_FOUND,
 		     "No target with alt-name %s",
 		     alt_name);
 	return NULL;
@@ -938,8 +939,8 @@ dfu_device_ensure_interface (DfuDevice *device,
 					   (gint) priv->iface_number,
 					   0, &error_local)) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_DEVICE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "cannot claim interface %i: %s",
 			     priv->iface_number, error_local->message);
 		return FALSE;
@@ -974,8 +975,8 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 	/* no backing USB device */
 	if (priv->dev == NULL) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "failed to refresh: no GUsbDevice for %s",
 			     priv->platform_id);
 		return FALSE;
@@ -984,8 +985,8 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 	/* the device has no DFU runtime, so cheat */
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "not supported as no DFU runtime");
 		return FALSE;
 	}
@@ -1006,16 +1007,16 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 					    cancellable,
 					    &error_local)) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "cannot get device state: %s",
 			     error_local->message);
 		return FALSE;
 	}
 	if (actual_length != 6) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "cannot get device status, invalid size: %04x",
 			     (guint) actual_length);
 	}
@@ -1063,8 +1064,8 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 		break;
 	default:
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Already in DFU mode");
 		return FALSE;
 	}
@@ -1072,8 +1073,8 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 	/* no backing USB device */
 	if (priv->dev == NULL) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "failed to detach: no GUsbDevice for %s",
 			     priv->platform_id);
 		return FALSE;
@@ -1082,8 +1083,8 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 	/* the device has no DFU runtime, so cheat */
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "not supported as no DFU runtime");
 		return FALSE;
 	}
@@ -1109,8 +1110,8 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 		/* refresh the error code */
 		dfu_device_error_fixup (device, cancellable, &error_local);
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "cannot detach device: %s",
 			     error_local->message);
 		return FALSE;
@@ -1150,8 +1151,8 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
 	/* no backing USB device */
 	if (priv->dev == NULL) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "failed to abort: no GUsbDevice for %s",
 			     priv->platform_id);
 		return FALSE;
@@ -1160,8 +1161,8 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
 	/* the device has no DFU runtime, so cheat */
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "not supported as no DFU runtime");
 		return FALSE;
 	}
@@ -1184,8 +1185,8 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
 		/* refresh the error code */
 		dfu_device_error_fixup (device, cancellable, &error_local);
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "cannot abort device: %s",
 			     error_local->message);
 		return FALSE;
@@ -1216,8 +1217,8 @@ dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **
 	/* no backing USB device */
 	if (priv->dev == NULL) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "failed to clear status: no GUsbDevice for %s",
 			     priv->platform_id);
 		return FALSE;
@@ -1226,8 +1227,8 @@ dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **
 	/* the device has no DFU runtime, so cheat */
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "not supported as no DFU runtime");
 		return FALSE;
 	}
@@ -1250,8 +1251,8 @@ dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **
 		/* refresh the error code */
 		dfu_device_error_fixup (device, cancellable, &error_local);
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "cannot clear status on the device: %s",
 			     error_local->message);
 		return FALSE;
@@ -1299,8 +1300,8 @@ dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags,
 	/* no backing USB device */
 	if (priv->dev == NULL) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "failed to open: no GUsbDevice for %s",
 			     priv->platform_id);
 		return FALSE;
@@ -1317,14 +1318,14 @@ dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags,
 				     G_USB_DEVICE_ERROR,
 				     G_USB_DEVICE_ERROR_PERMISSION_DENIED)) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_PERMISSION_DENIED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_PERMISSION_DENIED,
 				     "%s", error_local->message);
 			return FALSE;
 		}
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_DEVICE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "cannot open device %s: %s",
 			     g_usb_device_get_platform_id (priv->dev),
 			     error_local->message);
@@ -1474,8 +1475,8 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 	/* update all the targets */
 	if (!dfu_device_add_targets (device)) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "replugged device is not DFU-capable");
 		return FALSE;
 	}
@@ -1533,13 +1534,13 @@ dfu_device_replug_helper_cb (gpointer user_data)
 		g_debug ("gave up waiting for device replug");
 		if (helper->dev == NULL) {
 			g_set_error_literal (helper->error,
-					     DFU_ERROR,
-					     DFU_ERROR_INVALID_DEVICE,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "target went away but did not come back");
 		} else {
 			g_set_error_literal (helper->error,
-					     DFU_ERROR,
-					     DFU_ERROR_INVALID_DEVICE,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "target did not disconnect");
 		}
 		g_main_loop_quit (helper->loop);
@@ -1615,8 +1616,8 @@ dfu_device_reset (DfuDevice *device, GError **error)
 	/* no backing USB device */
 	if (priv->dev == NULL) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "failed to reset: no GUsbDevice for %s",
 			     priv->platform_id);
 		return FALSE;
@@ -1624,8 +1625,8 @@ dfu_device_reset (DfuDevice *device, GError **error)
 
 	if (!g_usb_device_reset (priv->dev, &error_local)) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_DEVICE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "cannot reset USB device: %s [%i]",
 			     error_local->message,
 			     error_local->code);
@@ -1656,8 +1657,8 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	case DFU_STATE_APP_IDLE:
 	case DFU_STATE_APP_DETACH:
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Already in application runtime mode");
 		return FALSE;
 	default:
@@ -1750,8 +1751,8 @@ dfu_device_upload (DfuDevice *device,
 	/* no backing USB device */
 	if (priv->dev == NULL) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "failed to upload: no GUsbDevice for %s",
 			     priv->platform_id);
 		return NULL;
@@ -1771,8 +1772,8 @@ dfu_device_upload (DfuDevice *device,
 	if (priv->mode == DFU_MODE_RUNTIME) {
 		if ((flags & DFU_TARGET_TRANSFER_FLAG_DETACH) == 0) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "device is not in DFU mode");
 			return NULL;
 		}
@@ -1901,8 +1902,8 @@ dfu_device_download (DfuDevice *device,
 	/* no backing USB device */
 	if (priv->dev == NULL) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "failed to download: no GUsbDevice for %s",
 			     priv->platform_id);
 		return FALSE;
@@ -1916,8 +1917,8 @@ dfu_device_download (DfuDevice *device,
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID) == 0) {
 		if (dfu_firmware_get_vid (firmware) == 0xffff) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "firmware vendor ID not specified");
 			return FALSE;
 		}
@@ -1925,8 +1926,8 @@ dfu_device_download (DfuDevice *device,
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID) == 0) {
 		if (dfu_firmware_get_pid (firmware) == 0xffff) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "firmware product ID not specified");
 			return FALSE;
 		}
@@ -1938,8 +1939,8 @@ dfu_device_download (DfuDevice *device,
 					       priv->runtime_vid,
 					       g_usb_device_get_vid (priv->dev))) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "vendor ID incorrect, expected 0x%04x "
 				     "got 0x%04x and 0x%04x\n",
 				     dfu_firmware_get_vid (firmware),
@@ -1955,8 +1956,8 @@ dfu_device_download (DfuDevice *device,
 					       priv->runtime_pid,
 					       g_usb_device_get_pid (priv->dev))) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "product ID incorrect, expected 0x%04x "
 				     "got 0x%04x and 0x%04x",
 				     dfu_firmware_get_pid (firmware),
@@ -1970,8 +1971,8 @@ dfu_device_download (DfuDevice *device,
 	if (priv->mode == DFU_MODE_RUNTIME) {
 		if ((flags & DFU_TARGET_TRANSFER_FLAG_DETACH) == 0) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "device is not in DFU mode");
 			return FALSE;
 		}
@@ -1991,8 +1992,8 @@ dfu_device_download (DfuDevice *device,
 	images = dfu_firmware_get_images (firmware);
 	if (images->len == 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "no images in firmware file");
 		return FALSE;
 	}
@@ -2027,8 +2028,8 @@ dfu_device_download (DfuDevice *device,
 			if (cipher_fw != DFU_CIPHER_KIND_NONE &&
 			    cipher_target == DFU_CIPHER_KIND_NONE) {
 				g_set_error (error,
-					     DFU_ERROR,
-					     DFU_ERROR_INVALID_FILE,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
 					     "Device is only accepting "
 					     "unsigned firmware, not %s",
 					     dfu_cipher_kind_to_string (cipher_fw));
@@ -2037,8 +2038,8 @@ dfu_device_download (DfuDevice *device,
 			if (cipher_fw == DFU_CIPHER_KIND_NONE &&
 			    cipher_target != DFU_CIPHER_KIND_NONE) {
 				g_set_error (error,
-					     DFU_ERROR,
-					     DFU_ERROR_INVALID_FILE,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
 					     "Device is only accepting "
 					     "firmware with %s cipher kind",
 					     dfu_cipher_kind_to_string (cipher_target));

@@ -40,7 +40,8 @@
 
 #include "dfu-common.h"
 #include "dfu-patch.h"
-#include "dfu-error.h"
+
+#include "fwupd-error.h"
 
 static void dfu_patch_finalize			 (GObject *object);
 
@@ -129,8 +130,8 @@ dfu_patch_export (DfuPatch *self, GError **error)
 	/* check we have something to write */
 	if (priv->chunks->len == 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "no chunks to process");
 		return NULL;
 	}
@@ -206,8 +207,8 @@ dfu_patch_import (DfuPatch *self, GBytes *blob, GError **error)
 	/* cannot reuse object */
 	if (priv->chunks->len > 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "patch has already been loaded");
 		return FALSE;
 	}
@@ -216,8 +217,8 @@ dfu_patch_import (DfuPatch *self, GBytes *blob, GError **error)
 	data = g_bytes_get_data (blob, &sz);
 	if (sz < sizeof(DfuPatchFileHeader) + sizeof(DfuPatchChunkHeader) + 1) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "file is too small");
 		return FALSE;
 	}
@@ -225,8 +226,8 @@ dfu_patch_import (DfuPatch *self, GBytes *blob, GError **error)
 	/* check header */
 	if (memcmp (data, "DfuP", 4) != 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "header signature is not correct");
 		return FALSE;
 	}
@@ -246,8 +247,8 @@ dfu_patch_import (DfuPatch *self, GBytes *blob, GError **error)
 		/* check chunk size, assuming it can overflow */
 		if (chunk_sz > sz || off + chunk_sz > sz) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "chunk offset 0x%04x outsize file size 0x%04x",
 				     (guint) (off + chunk_sz), (guint) sz);
 			return FALSE;
@@ -262,8 +263,8 @@ dfu_patch_import (DfuPatch *self, GBytes *blob, GError **error)
 	/* check we finished properly */
 	if (off != sz) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "blob chunk sizes did not sum to total");
 		return FALSE;
 	}
@@ -349,8 +350,8 @@ dfu_patch_create (DfuPatch *self, GBytes *blob1, GBytes *blob2, GError **error)
 	/* are the blobs the same */
 	if (g_bytes_equal (blob1, blob2)) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "old and new binaries are the same");
 		return FALSE;
 	}
@@ -358,8 +359,8 @@ dfu_patch_create (DfuPatch *self, GBytes *blob1, GBytes *blob2, GError **error)
 	/* cannot reuse object */
 	if (priv->chunks->len > 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "patch has already been loaded");
 		return FALSE;
 	}
@@ -373,8 +374,8 @@ dfu_patch_create (DfuPatch *self, GBytes *blob1, GBytes *blob2, GError **error)
 	data2 = g_bytes_get_data (blob2, &sz2);
 	if (sz1 > sz2) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "firmware binary cannot go down, got "
 			     "%" G_GSIZE_FORMAT " and %" G_GSIZE_FORMAT,
 			     sz1, sz2);
@@ -475,8 +476,8 @@ dfu_patch_apply (DfuPatch *self, GBytes *blob, DfuPatchApplyFlags flags, GError 
 	/* not loaded yet */
 	if (priv->chunks->len == 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_DEVICE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "no patches loaded");
 		return NULL;
 	}
@@ -488,8 +489,8 @@ dfu_patch_apply (DfuPatch *self, GBytes *blob, DfuPatchApplyFlags flags, GError 
 		g_autofree gchar *actual = _g_bytes_to_string (blob_checksum);
 		g_autofree gchar *expect = _g_bytes_to_string (priv->checksum_old);
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_DEVICE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "checksum for source did not match, expected %s, got %s",
 			     expect, actual);
 		return NULL;
@@ -507,8 +508,8 @@ dfu_patch_apply (DfuPatch *self, GBytes *blob, DfuPatchApplyFlags flags, GError 
 	data_old = g_bytes_get_data (blob, &sz);
 	if (sz_max < sz) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "binary patch cannot truncate binary");
 		return NULL;
 	}
@@ -530,8 +531,8 @@ dfu_patch_apply (DfuPatch *self, GBytes *blob, DfuPatchApplyFlags flags, GError 
 		chunk_data = g_bytes_get_data (chunk->blob, &chunk_sz);
 		if (chunk->off + chunk_sz > sz_max) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "cannot apply chunk as larger than max size");
 			return NULL;
 		}
@@ -550,8 +551,8 @@ dfu_patch_apply (DfuPatch *self, GBytes *blob, DfuPatchApplyFlags flags, GError 
 		g_autofree gchar *actual = _g_bytes_to_string (blob_checksum_new);
 		g_autofree gchar *expect = _g_bytes_to_string (priv->checksum_new);
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INVALID_DEVICE,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
 			     "checksum for result did not match, expected %s, got %s",
 			     expect, actual);
 		return NULL;

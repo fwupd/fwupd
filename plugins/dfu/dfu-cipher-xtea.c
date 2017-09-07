@@ -24,7 +24,8 @@
 #include <string.h>
 
 #include "dfu-cipher-xtea.h"
-#include "dfu-error.h"
+
+#include "fwupd-error.h"
 
 #define XTEA_DELTA		0x9e3779b9
 #define XTEA_NUM_ROUNDS		32
@@ -59,8 +60,8 @@ dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
 	key_len = strlen (key);
 	if (key_len > 32) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Key string too long at %" G_GSIZE_FORMAT " chars, max 16",
 			     key_len);
 		return FALSE;
@@ -78,8 +79,8 @@ dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
 			tmp = g_ascii_strtoull (buf, &endptr, 16);
 			if (endptr && endptr[0] != '\0') {
 				g_set_error (error,
-					     DFU_ERROR,
-					     DFU_ERROR_NOT_SUPPORTED,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "Failed to parse key '%s'", key);
 				return FALSE;
 			}
@@ -131,16 +132,16 @@ dfu_cipher_decrypt_xtea (const gchar *key,
 	/* sanity check */
 	if (length < 8) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "8 bytes data required, got %" G_GUINT32_FORMAT,
 			     length);
 		return FALSE;
 	}
 	if (length % 4 != 0) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Multiples of 4 bytes required, got %" G_GUINT32_FORMAT,
 			     length);
 		return FALSE;
@@ -202,16 +203,16 @@ dfu_cipher_encrypt_xtea (const gchar *key,
 	/* sanity check */
 	if (length < 8) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "8 bytes data required, got %" G_GUINT32_FORMAT,
 			     length);
 		return FALSE;
 	}
 	if (length % 4 != 0) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Multiples of 4 bytes required, got %" G_GUINT32_FORMAT,
 			     length);
 		return FALSE;

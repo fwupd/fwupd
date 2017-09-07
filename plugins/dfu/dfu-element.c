@@ -38,7 +38,6 @@
 
 #include "dfu-common.h"
 #include "dfu-element.h"
-#include "dfu-error.h"
 
 static void dfu_element_finalize			 (GObject *object);
 

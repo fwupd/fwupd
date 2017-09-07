@@ -39,12 +39,13 @@
 #include <appstream-glib.h>
 
 #include "dfu-common.h"
-#include "dfu-error.h"
 #include "dfu-firmware.h"
 #include "dfu-format-dfu.h"
 #include "dfu-format-ihex.h"
 #include "dfu-format-raw.h"
 #include "dfu-image.h"
+
+#include "fwupd-error.h"
 
 static void dfu_firmware_finalize			 (GObject *object);
 
@@ -534,8 +535,8 @@ dfu_firmware_check_acceptable_for_format (DfuFirmware *firmware, GError **error)
 
 	/* unsupported */
 	g_set_error (error,
-		     DFU_ERROR,
-		     DFU_ERROR_INTERNAL,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_INTERNAL,
 		     "multiple images (%u) not supported for %s",
 		     priv->images->len,
 		     dfu_firmware_format_to_string (priv->format));
@@ -562,8 +563,8 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 	/* at least one image */
 	if (priv->images == 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "no image data to write");
 		return NULL;
 	}
@@ -587,8 +588,8 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 
 	/* invalid */
 	g_set_error (error,
-		     DFU_ERROR,
-		     DFU_ERROR_INTERNAL,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_INTERNAL,
 		     "invalid format for write (0x%04x)",
 		     priv->format);
 	return NULL;
