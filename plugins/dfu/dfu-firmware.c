@@ -40,7 +40,7 @@
 
 #include "dfu-common.h"
 #include "dfu-error.h"
-#include "dfu-firmware-private.h"
+#include "dfu-firmware.h"
 #include "dfu-format-dfu.h"
 #include "dfu-format-ihex.h"
 #include "dfu-format-raw.h"
@@ -50,7 +50,6 @@ static void dfu_firmware_finalize			 (GObject *object);
 
 typedef struct {
 	GHashTable		*metadata;
-	GHashTable		*symtab;
 	GPtrArray		*images;
 	guint16			 vid;
 	guint16			 pid;
@@ -78,7 +77,6 @@ dfu_firmware_init (DfuFirmware *firmware)
 	priv->release = 0xffff;
 	priv->images = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-	priv->symtab = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
 static void
@@ -89,7 +87,6 @@ dfu_firmware_finalize (GObject *object)
 
 	g_ptr_array_unref (priv->images);
 	g_hash_table_destroy (priv->metadata);
-	g_hash_table_destroy (priv->symtab);
 
 	G_OBJECT_CLASS (dfu_firmware_parent_class)->finalize (object);
 }
@@ -392,56 +389,6 @@ dfu_firmware_set_format (DfuFirmware *firmware, DfuFirmwareFormat format)
 	priv->format = format;
 }
 
-static void
-dfu_firmware_parse_altos_vid_pid (DfuFirmware *firmware)
-{
-	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	guint32 addr32;
-
-	/* find symbol */
-	addr32 = dfu_firmware_lookup_symbol (firmware, "ao_usb_descriptors");
-	if (addr32 == 0x0)
-		return;
-
-	/* search each element */
-	for (guint i = 0; i < priv->images->len; i++) {
-		DfuImage *image = g_ptr_array_index (priv->images, i);
-		DfuElement *element;
-		GBytes *bytes_tmp;
-		const guint8 *data;
-		gsize length;
-		guint32 element_address;
-		guint16 vid, pid, release;
-
-		/* get element data */
-		element = dfu_image_get_element_default (image);
-		if (element == NULL)
-			continue;
-
-		/* check address is in this element */
-		element_address = dfu_element_get_address (element);
-		if (element_address > addr32)
-			continue;
-		bytes_tmp = dfu_element_get_contents (element);
-		if (bytes_tmp == NULL)
-			continue;
-
-		/* check this element is big enough */
-		data = g_bytes_get_data (bytes_tmp, &length);
-		if (addr32 - element_address > length)
-			continue;
-
-		/* read the USB descriptor */
-		addr32 -= element_address;
-		memcpy (&vid, &data[addr32 + 8], 2);
-		memcpy (&pid, &data[addr32 + 10], 2);
-		memcpy (&release, &data[addr32 + 12], 2);
-		dfu_firmware_set_vid (firmware, GUINT32_FROM_LE (vid));
-		dfu_firmware_set_pid (firmware, GUINT32_FROM_LE (pid));
-		dfu_firmware_set_release (firmware, GUINT32_FROM_LE (release));
-	}
-}
-
 /**
  * dfu_firmware_parse_data:
  * @firmware: a #DfuFirmware
@@ -494,9 +441,6 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 			return FALSE;
 		break;
 	}
-
-	/* get the VID/PID for altos devices */
-	dfu_firmware_parse_altos_vid_pid (firmware);
 
 	return TRUE;
 }
@@ -881,70 +825,4 @@ dfu_firmware_set_cipher_kind (DfuFirmware *firmware, DfuCipherKind cipher_kind)
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 	g_return_if_fail (DFU_IS_FIRMWARE (firmware));
 	priv->cipher_kind = cipher_kind;
-}
-
-/**
- * dfu_firmware_add_symbol:
- * @firmware: a #DfuFirmware
- * @symbol_name: a valid symbol name
- * @symbol_addr: a symbol memory address
- *
- * Adds a symbol to the global map for the firmware.
- *
- * NOTE: Only certain types of firmware can contain a symbol table.
- *
- * Since: 0.7.4
- **/
-void
-dfu_firmware_add_symbol (DfuFirmware *firmware,
-			 const gchar *symbol_name,
-			 guint32 symbol_addr)
-{
-	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	g_hash_table_insert (priv->symtab,
-			     g_strdup (symbol_name),
-			     GUINT_TO_POINTER (symbol_addr));
-}
-
-/**
- * dfu_firmware_lookup_symbol:
- * @firmware: a #DfuFirmware
- * @symbol_name: a valid symbol name
- *
- * Returns the address of a symbol from the global map.
- *
- * NOTE: Only certain types of firmware can contain a symbol table.
- *
- * Return value: address of the symbol, or 0x0 for not found.
- *
- * Since: 0.7.4
- **/
-guint32
-dfu_firmware_lookup_symbol (DfuFirmware *firmware, const gchar *symbol_name)
-{
-	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	return GPOINTER_TO_UINT (g_hash_table_lookup (priv->symtab,
-						      symbol_name));
-}
-
-/**
- * dfu_firmware_get_symbols:
- * @firmware: a #DfuFirmware
- *
- * Gets all the symbols currently defined.
- *
- * Return value: (element-type utf8) (transfer container): symbol names
- *
- * Since: 0.7.4
- **/
-GPtrArray *
-dfu_firmware_get_symbols (DfuFirmware *firmware)
-{
-	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	GPtrArray *array = g_ptr_array_new_with_free_func (g_free);
-	GList *l;
-	g_autoptr(GList) keys = g_hash_table_get_keys (priv->symtab);
-	for (l = keys; l != NULL; l = l->next)
-		g_ptr_array_add (array, g_strdup (l->data));
-	return array;
 }

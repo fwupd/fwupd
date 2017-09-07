@@ -25,7 +25,7 @@
 
 #include "dfu-element.h"
 #include "dfu-error.h"
-#include "dfu-firmware-private.h"
+#include "dfu-firmware.h"
 #include "dfu-format-ihex.h"
 #include "dfu-image.h"
 
@@ -71,16 +71,7 @@ dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
 #define	DFU_INHX32_RECORD_TYPE_DATA		0x00
 #define	DFU_INHX32_RECORD_TYPE_EOF		0x01
 #define	DFU_INHX32_RECORD_TYPE_EXTENDED		0x04
-#define	DFU_INHX32_RECORD_TYPE_SYMTAB		0xfe
 #define	DFU_INHX32_RECORD_TYPE_SIGNATURE	0xfd
-
-static gboolean
-dfu_firmware_ihex_symbol_name_valid (const GString *symbol_name)
-{
-	if (symbol_name->len == 2 && symbol_name->str[0] == '$')
-		return FALSE;
-	return TRUE;
-}
 
 /**
  * dfu_firmware_from_ihex: (skip)
@@ -245,22 +236,6 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			addr_high = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+9);
 			addr32 = ((guint32) addr_high << 16) + addr_low;
 			break;
-		case DFU_INHX32_RECORD_TYPE_SYMTAB:
-		{
-			g_autoptr(GString) str = g_string_new ("");
-			for (i = offset + 9; i < end; i += 2) {
-				guint8 tmp_c = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
-				g_string_append_c (str, tmp_c);
-			}
-			addr32 = ((guint32) addr_high << 16) + addr_low;
-			if (addr32 != 0x0 && dfu_firmware_ihex_symbol_name_valid (str)) {
-				g_debug ("symtab 0x%08x: %s", addr32, str->str);
-				dfu_firmware_add_symbol (firmware,
-							 str->str,
-							 (guint64) addr32);
-			}
-			break;
-		}
 		case DFU_INHX32_RECORD_TYPE_SIGNATURE:
 			for (i = offset + 9; i < end; i += 2) {
 				guint8 tmp_c = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
@@ -391,7 +366,6 @@ GBytes *
 dfu_firmware_to_ihex (DfuFirmware *firmware, GError **error)
 {
 	GPtrArray *images;
-	g_autoptr(GPtrArray) symbols = NULL;
 	g_autoptr(GString) str = NULL;
 
 	/* write all the element data */
@@ -406,16 +380,6 @@ dfu_firmware_to_ihex (DfuFirmware *firmware, GError **error)
 	/* add EOF */
 	g_string_append_printf (str, ":000000%02XFF\n",
 				(guint) DFU_INHX32_RECORD_TYPE_EOF);
-
-	/* add any symbol table */
-	symbols = dfu_firmware_get_symbols (firmware);
-	for (guint i = 0; i < symbols->len; i++) {
-		const gchar *name = g_ptr_array_index (symbols, i);
-		guint32 addr = dfu_firmware_lookup_symbol (firmware, name);
-		g_autoptr(GBytes) contents = g_bytes_new_static (name, strlen (name));
-		dfu_firmware_to_ihex_bytes (str, DFU_INHX32_RECORD_TYPE_SYMTAB,
-					    addr, contents);
-	}
 
 	return g_bytes_new (str->str, str->len);
 }
