@@ -110,11 +110,13 @@ fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 	guint16 micro;
 	guint16 minor;
 	guint8 idx;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* try to get the version without claiming interface */
-	if (!g_usb_device_open (item->usb_device, &error)) {
+	locker = fu_device_locker_new (item->usb_device, &error);
+	if (locker == NULL) {
 		g_debug ("Failed to open, polling: %s", error->message);
 		return;
 	}
@@ -129,10 +131,9 @@ fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 			item->got_version = TRUE;
 			g_debug ("obtained fwver using extension '%s'", tmp);
 			fu_device_set_version (item->device, tmp);
-			goto out;
+			return;
 		}
 	}
-	g_usb_device_close (item->usb_device, NULL);
 
 	/* attempt to open the device and get the serial number */
 	if (!ch_device_open (item->usb_device, &error)) {
@@ -145,7 +146,7 @@ fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 				      NULL, &error)) {
 		g_warning ("Failed to get serial: %s", error->message);
-		goto out;
+		return;
 	}
 
 	/* got things the old fashioned way */
@@ -153,12 +154,6 @@ fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 	version = g_strdup_printf ("%i.%i.%i", major, minor, micro);
 	g_debug ("obtained fwver using API '%s'", version);
 	fu_device_set_version (item->device, version);
-
-out:
-	/* we're done here */
-	g_clear_error (&error);
-	if (!g_usb_device_close (item->usb_device, &error))
-		g_debug ("Failed to close: %s", error->message);
 }
 
 gboolean
