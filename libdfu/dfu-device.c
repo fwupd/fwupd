@@ -665,7 +665,7 @@ dfu_device_set_quirks (DfuDevice *device)
 		priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION;
 
 	/* m-stack DFU implementation */
-	if (vid == 0x273f && pid == 0x1003)
+	if (vid == 0x273f && (pid == 0x1003 || pid == 0x100a))
 		priv->quirks |= DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD;
 
 	/* HydraBus */
