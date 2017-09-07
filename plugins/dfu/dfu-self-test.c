@@ -534,7 +534,7 @@ dfu_device_func (void)
 	g_assert (target1 != NULL);
 
 	/* ensure open */
-	ret = dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, &error);
+	ret = dfu_device_open (device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -574,7 +574,7 @@ dfu_colorhug_plus_func (void)
 						     0x1002,
 						     NULL);
 	if (device2 != NULL) {
-		ret = dfu_device_open (device2, DFU_DEVICE_OPEN_FLAG_NONE, NULL, &error);
+		ret = dfu_device_open (device2, &error);
 		g_assert_no_error (error);
 		g_assert (ret);
 		ret = dfu_device_detach (device2, NULL, &error);
@@ -607,7 +607,7 @@ dfu_colorhug_plus_func (void)
 	}
 
 	/* open it */
-	ret = dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, &error);
+	ret = dfu_device_open (device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 

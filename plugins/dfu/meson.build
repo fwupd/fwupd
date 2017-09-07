@@ -29,6 +29,10 @@ dfu = static_library(
   c_args : cargs,
   include_directories : [
     include_directories('../..'),
+    include_directories('../../src'),
+  ],
+  link_with : [
+    libfwupdprivate,
   ],
 )
 
@@ -61,6 +65,7 @@ executable(
   include_directories : [
     include_directories('..'),
     include_directories('../..'),
+    include_directories('../../src'),
   ],
   dependencies : [
     appstream_glib,
@@ -68,7 +73,10 @@ executable(
     libm,
     gusb,
   ],
-  link_with : dfu,
+  link_with : [
+    dfu,
+    libfwupdprivate,
+  ],
   c_args : cargs,
   install : true,
   install_dir : get_option('bindir')

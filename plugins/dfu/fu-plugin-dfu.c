@@ -111,6 +111,13 @@ fu_plugin_dfu_device_changed_cb (DfuContext *ctx,
 	}
 }
 
+static gboolean
+dfu_device_open_no_refresh (DfuDevice *device, GError **error)
+{
+	return dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH,
+				     NULL, error);
+}
+
 static void
 fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 			       DfuDevice *device,
@@ -121,6 +128,7 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GError) error = NULL;
 
 	platform_id = dfu_device_get_platform_id (device);
@@ -146,18 +154,17 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 	}
 
 	/* open device to get display name */
-	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH,
-			      NULL, &error)) {
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open_no_refresh,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    &error);
+	if (locker == NULL) {
 		g_warning ("Failed to open DFU device: %s", error->message);
 		return;
 	}
 	display_name = dfu_device_get_display_name (device);
 	if (display_name != NULL)
 		fu_device_set_name (dev, display_name);
-
-	/* we're done here */
-	if (!dfu_device_close (device, &error))
-		g_debug ("Failed to close %s: %s", platform_id, error->message);
 
 	/* attempt to add */
 	fu_plugin_device_add (plugin, dev);
@@ -219,6 +226,7 @@ fu_plugin_update (FuPlugin *plugin,
 	DfuDevice *device;
 	const gchar *platform_id;
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get device */
@@ -236,8 +244,11 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 
 	/* open it */
-	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE,
-			      NULL, &error_local)) {
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    &error_local);
+	if (locker == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -264,13 +275,6 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* we're done */
-	if (!dfu_device_close (device, &error_local)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     error_local->message);
-		return FALSE;
-	}
 	fu_plugin_set_status (plugin, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
@@ -286,6 +290,7 @@ fu_plugin_verify (FuPlugin *plugin,
 	DfuDevice *device;
 	const gchar *platform_id;
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GError) error_local = NULL;
 	GChecksumType checksum_types[] = {
 		G_CHECKSUM_SHA1,
@@ -307,8 +312,11 @@ fu_plugin_verify (FuPlugin *plugin,
 	}
 
 	/* open it */
-	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE,
-			      NULL, &error_local)) {
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    &error_local);
+	if (locker == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -330,15 +338,6 @@ fu_plugin_verify (FuPlugin *plugin,
 					  error);
 	if (dfu_firmware == NULL)
 		return FALSE;
-
-	/* we're done */
-	if (!dfu_device_close (device, &error_local)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     error_local->message);
-		return FALSE;
-	}
 
 	/* get the checksum */
 	blob_fw = dfu_firmware_write_data (dfu_firmware, error);

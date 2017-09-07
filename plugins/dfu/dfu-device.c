@@ -44,6 +44,8 @@
 #include "dfu-error.h"
 #include "dfu-target-private.h"
 
+#include "fu-device-locker.h"
+
 static void dfu_device_finalize			 (GObject *object);
 
 typedef struct {
@@ -55,6 +57,7 @@ typedef struct {
 	DfuAction		 action_last;
 	GPtrArray		*targets;
 	GUsbDevice		*dev;
+	FuDeviceLocker		*dev_locker;
 	gboolean		 open_new_dev;		/* if set new GUsbDevice */
 	gboolean		 dfuse_supported;
 	gboolean		 done_upload_or_download;
@@ -259,10 +262,10 @@ dfu_device_finalize (GObject *object)
 	DfuDevice *device = DFU_DEVICE (object);
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 
-	/* don't rely on this */
+	if (priv->dev_locker != NULL)
+		g_object_unref (priv->dev_locker);
 	if (priv->dev != NULL)
-		g_usb_device_close (priv->dev, NULL);
-
+		g_object_unref (priv->dev);
 	g_free (priv->display_name);
 	g_free (priv->serial_number);
 	g_free (priv->platform_id);
@@ -485,6 +488,22 @@ dfu_device_can_download (DfuDevice *device)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	return (priv->attributes & DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD) > 0;
+}
+
+/**
+ * dfu_device_is_open:
+ * @device: a #GUsbDevice
+ *
+ * Gets if the device is currently open.
+ *
+ * Return value: %TRUE if the device is open
+ **/
+gboolean
+dfu_device_is_open (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
+	return priv->dev_locker != NULL;
 }
 
 /**
@@ -970,16 +989,6 @@ dfu_device_ensure_interface (DfuDevice *device,
 	if (priv->iface_number == 0xff)
 		return TRUE;
 
-	/* ensure open */
-	if (!dfu_device_open (device,
-			      DFU_DEVICE_OPEN_FLAG_NONE,
-			      cancellable,
-			      error)) {
-		g_prefix_error (error, "cannot claim interface %i: ",
-				priv->iface_number);
-		return FALSE;
-	}
-
 	/* claim, without detaching kernel driver */
 	if (!g_usb_device_claim_interface (priv->dev,
 					   (gint) priv->iface_number,
@@ -1331,7 +1340,7 @@ dfu_device_get_interface (DfuDevice *device)
 }
 
 /**
- * dfu_device_open:
+ * dfu_device_open_full:
  * @device: a #DfuDevice
  * @flags: #DfuDeviceOpenFlags, e.g. %DFU_DEVICE_OPEN_FLAG_NONE
  * @cancellable: a #GCancellable, or %NULL
@@ -1344,12 +1353,13 @@ dfu_device_get_interface (DfuDevice *device)
  * Since: 0.5.4
  **/
 gboolean
-dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
-		 GCancellable *cancellable, GError **error)
+dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags,
+		      GCancellable *cancellable, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	guint8 idx;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1364,14 +1374,13 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 		return FALSE;
 	}
 
+	/* already open */
+	if (priv->dev_locker != NULL)
+		return TRUE;
+
 	/* open */
-	if (!g_usb_device_open (priv->dev, &error_local)) {
-		if (g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_ALREADY_OPEN)) {
-			g_debug ("device already open, ignoring");
-			return TRUE;
-		}
+	locker = fu_device_locker_new (priv->dev, &error_local);
+	if (locker == NULL) {
 		if (g_error_matches (error_local,
 				     G_USB_DEVICE_ERROR,
 				     G_USB_DEVICE_ERROR_PERMISSION_DENIED)) {
@@ -1408,36 +1417,52 @@ dfu_device_open (DfuDevice *device, DfuDeviceOpenFlags flags,
 		flags |= DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH;
 	}
 
+	/* device locker is now valid */
+	priv->dev_locker = g_steal_pointer (&locker);
+
 	/* automatically abort any uploads or downloads */
 	if ((flags & DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH) == 0) {
-		if (!dfu_device_refresh (device, cancellable, error)) {
-			g_usb_device_close (priv->dev, NULL);
+		if (!dfu_device_refresh (device, cancellable, error))
 			return FALSE;
-		}
 		switch (priv->state) {
 		case DFU_STATE_DFU_UPLOAD_IDLE:
 		case DFU_STATE_DFU_DNLOAD_IDLE:
 		case DFU_STATE_DFU_DNLOAD_SYNC:
 			g_debug ("aborting transfer %s", dfu_status_to_string (priv->status));
-			if (!dfu_device_abort (device, cancellable, error)) {
-				g_usb_device_close (priv->dev, NULL);
+			if (!dfu_device_abort (device, cancellable, error))
 				return FALSE;
-			}
 			break;
 		case DFU_STATE_DFU_ERROR:
 			g_debug ("clearing error %s", dfu_status_to_string (priv->status));
-			if (!dfu_device_clear_status (device, cancellable, error)) {
-				g_usb_device_close (priv->dev, NULL);
+			if (!dfu_device_clear_status (device, cancellable, error))
 				return FALSE;
-			}
 			break;
 		default:
 			break;
 		}
 	}
 
+	/* success */
 	priv->open_new_dev = TRUE;
 	return TRUE;
+}
+
+/**
+ * dfu_device_open:
+ * @device: a #DfuDevice
+ * @flags: #DfuDeviceOpenFlags, e.g. %DFU_DEVICE_OPEN_FLAG_NONE
+ * @error: a #GError, or %NULL
+ *
+ * Opens a DFU-capable device.
+ *
+ * Return value: %TRUE for success
+ *
+ * Since: 0.5.4
+ **/
+gboolean
+dfu_device_open (DfuDevice *device, GError **error)
+{
+	return dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, error);
 }
 
 /**
@@ -1455,32 +1480,13 @@ gboolean
 dfu_device_close (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_autoptr(GError) error_local = NULL;
 
 	/* no backing USB device */
-	if (priv->dev == NULL) {
-		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
-			     "failed to close: no GUsbDevice for %s",
-			     priv->platform_id);
-		return FALSE;
-	}
+	if (priv->dev == NULL)
+		return TRUE;
 
-	/* close if open */
-	if (!g_usb_device_close (priv->dev, &error_local)) {
-		if (g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NOT_OPEN)) {
-			g_debug ("device not open, so ignoring error for close");
-			return TRUE;
-		}
-		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
-				     error_local->message);
-		return FALSE;
-	}
+	/* just clear the locker */
+	g_clear_object (&priv->dev_locker);
 	priv->claimed_interface = FALSE;
 	priv->open_new_dev = FALSE;
 	return TRUE;
@@ -1501,6 +1507,7 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 	/* device removed */
 	if (dev == NULL) {
 		g_debug ("invalidating backing GUsbDevice");
+		g_clear_object (&priv->dev_locker);
 		g_clear_object (&priv->dev);
 		g_ptr_array_set_size (priv->targets, 0);
 		priv->claimed_interface = FALSE;
@@ -1510,8 +1517,7 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 	/* close */
 	if (priv->dev != NULL) {
 		gboolean tmp = priv->open_new_dev;
-		if (!dfu_device_close (device, error))
-			return FALSE;
+		g_clear_object (&priv->dev_locker);
 		priv->open_new_dev = tmp;
 	}
 
@@ -1549,8 +1555,8 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 	/* reclaim */
 	if (priv->open_new_dev) {
 		g_debug ("automatically reopening device");
-		if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE,
-				      cancellable, error))
+		if (!dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NONE,
+					   cancellable, error))
 			return FALSE;
 	}
 	return TRUE;

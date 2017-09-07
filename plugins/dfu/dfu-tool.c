@@ -36,6 +36,8 @@
 #include "dfu-progress-bar.h"
 #include "dfu-sector.h"
 
+#include "fu-device-locker.h"
+
 typedef struct {
 	GCancellable		*cancellable;
 	GPtrArray		*cmd_array;
@@ -1200,18 +1202,18 @@ static gboolean
 dfu_tool_attach (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
 
 	device = dfu_tool_get_defalt_device (priv, error);
 	if (device == NULL)
 		return FALSE;
-	if (!dfu_device_open (device,
-			      DFU_DEVICE_OPEN_FLAG_NONE,
-			      priv->cancellable,
-			      error))
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
-	if (!dfu_device_attach (device, error))
-		return FALSE;
-	return TRUE;
+	return dfu_device_attach (device, error);
 }
 
 static void
@@ -1282,6 +1284,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(DfuImage) image = NULL;
 	g_autoptr(DfuTarget) target = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GFile) file = NULL;
 
 	/* check args */
@@ -1300,10 +1303,11 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	if (priv->transfer_size > 0)
 		dfu_device_set_transfer_size (device, priv->transfer_size);
-	if (!dfu_device_open (device,
-			      DFU_DEVICE_OPEN_FLAG_NONE,
-			      priv->cancellable,
-			      error))
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
 
 	/* set up progress */
@@ -1387,6 +1391,7 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GFile) file = NULL;
 
 	/* check args */
@@ -1402,10 +1407,11 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	device = dfu_tool_get_defalt_device (priv, error);
 	if (device == NULL)
 		return FALSE;
-	if (!dfu_device_open (device,
-			      DFU_DEVICE_OPEN_FLAG_NONE,
-			      priv->cancellable,
-			      error))
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
 
 	/* optional reset */
@@ -1448,11 +1454,10 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 static gchar *
 dfu_tool_get_device_string (DfuToolPrivate *priv, DfuDevice *device)
 {
-	gchar *dstr;
 	GUsbDevice *dev;
-	g_autoptr(GError) error = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
 
-	/* open, and get status */
+	/* open if required, and get status */
 	dev = dfu_device_get_usb_dev (device);
 	if (dev == NULL) {
 		return g_strdup_printf ("%04x:%04x [%s]",
@@ -1460,22 +1465,24 @@ dfu_tool_get_device_string (DfuToolPrivate *priv, DfuDevice *device)
 					dfu_device_get_runtime_pid (device),
 					"removed");
 	}
-	if (!dfu_device_open (device,
-			      DFU_DEVICE_OPEN_FLAG_NONE,
-			      priv->cancellable,
-			      &error)) {
-		return g_strdup_printf ("%04x:%04x [%s]",
-					g_usb_device_get_vid (dev),
-					g_usb_device_get_pid (dev),
-					error->message);
+	if (!dfu_device_is_open (device)) {
+		g_autoptr(GError) error = NULL;
+		locker = fu_device_locker_new_full (device,
+						    (FuDeviceLockerFunc) dfu_device_open,
+						    (FuDeviceLockerFunc) dfu_device_close,
+						    &error);
+		if (locker == NULL) {
+			return g_strdup_printf ("%04x:%04x [%s]",
+						g_usb_device_get_vid (dev),
+						g_usb_device_get_pid (dev),
+						error->message);
+		}
 	}
-	dstr = g_strdup_printf ("%04x:%04x [%s:%s]",
+	return g_strdup_printf ("%04x:%04x [%s:%s]",
 				g_usb_device_get_vid (dev),
 				g_usb_device_get_pid (dev),
 				dfu_state_to_string (dfu_device_get_state (device)),
 				dfu_status_to_string (dfu_device_get_status (device)));
-	dfu_device_close (device, NULL);
-	return dstr;
 }
 
 static void
@@ -1795,6 +1802,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(DfuTarget) target = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GFile) file = NULL;
 
 	/* check args */
@@ -1822,10 +1830,11 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	if (priv->transfer_size > 0)
 		dfu_device_set_transfer_size (device, priv->transfer_size);
-	if (!dfu_device_open (device,
-			      DFU_DEVICE_OPEN_FLAG_NONE,
-			      priv->cancellable,
-			      error))
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
 
 	/* set up progress */
@@ -1935,6 +1944,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GFile) file = NULL;
 
 	/* check args */
@@ -1958,10 +1968,11 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	device = dfu_tool_get_defalt_device (priv, error);
 	if (device == NULL)
 		return FALSE;
-	if (!dfu_device_open (device,
-			      DFU_DEVICE_OPEN_FLAG_NONE,
-			      priv->cancellable,
-			      error))
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
 
 	/* print the new object */
@@ -2071,6 +2082,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		guint16 transfer_size;
 		g_autofree gchar *quirks = NULL;
 		g_autofree gchar *version = NULL;
+		g_autoptr(FuDeviceLocker) locker  = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* device specific */
@@ -2092,10 +2104,11 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		}
 
 		/* open */
-		if (!dfu_device_open (device,
-				      DFU_DEVICE_OPEN_FLAG_NONE,
-				      priv->cancellable,
-				      &error_local)) {
+		locker = fu_device_locker_new_full (device,
+						    (FuDeviceLockerFunc) dfu_device_open,
+						    (FuDeviceLockerFunc) dfu_device_close,
+						    &error_local);
+		if (locker == NULL) {
 			if (g_error_matches (error_local,
 					     DFU_ERROR,
 					     DFU_ERROR_PERMISSION_DENIED)) {
@@ -2163,6 +2176,7 @@ static gboolean
 dfu_tool_detach (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
 
 	/* open correct device */
 	device = dfu_tool_get_defalt_device (priv, error);
@@ -2172,12 +2186,13 @@ dfu_tool_detach (DfuToolPrivate *priv, gchar **values, GError **error)
 		dfu_device_set_transfer_size (device, priv->transfer_size);
 
 	/* detatch */
-	if (!dfu_device_open (device, DFU_DEVICE_OPEN_FLAG_NONE,
-			      priv->cancellable, error))
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
-	if (!dfu_device_detach (device, priv->cancellable, error))
-		return FALSE;
-	return TRUE;
+	return dfu_device_detach (device, priv->cancellable, error);
 }
 
 static gboolean

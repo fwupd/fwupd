@@ -126,6 +126,8 @@ struct _DfuDeviceClass
 
 DfuDevice	*dfu_device_new				(GUsbDevice	*dev);
 gboolean	 dfu_device_open			(DfuDevice	*device,
+							 GError		**error);
+gboolean	 dfu_device_open_full			(DfuDevice	*device,
 							 DfuDeviceOpenFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
@@ -183,6 +185,7 @@ guint16		 dfu_device_get_version			(DfuDevice	*device);
 guint		 dfu_device_get_timeout			(DfuDevice	*device);
 gboolean	 dfu_device_can_upload			(DfuDevice	*device);
 gboolean	 dfu_device_can_download		(DfuDevice	*device);
+gboolean	 dfu_device_is_open			(DfuDevice	*device);
 
 gboolean	 dfu_device_has_attribute		(DfuDevice	*device,
 							 DfuDeviceAttributes attribute);
