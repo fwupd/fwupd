@@ -7,6 +7,7 @@ git config tar.tar.xz.command "xz -c"
 mkdir -p build && pushd build
 rm -rf *
 meson .. \
+    -Denable-werror=true \
     -Denable-doc=true \
     -Denable-man=true \
     -Denable-tests=true \

@@ -15,12 +15,16 @@ makedepends=('meson' 'valgrind' 'docbook-utils' 'docbook-sgml' 'perl-sgmls'
 
 build() {
     cd ${pkgname}
+    if [ -n "$CI" ]; then
+        export CI="-Denable-werror=true \
+                   -Denable-usb-fallback=true"
+    fi
     meson --prefix=/usr \
         --sysconfdir=/etc \
         --localstatedir=/var \
         --libexecdir=/usr/lib \
         --buildtype=plain \
-        -Denable-usb-fallback=true \
+        $CI \
         ../build
 
     ninja -v -C ../build

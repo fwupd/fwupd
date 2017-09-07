@@ -117,6 +117,12 @@ add_global_link_arguments(
   language: 'c'
 )
 
+# ONLY for CI, do not enable this for distro builds
+if get_option('enable-werror')
+  add_project_arguments('-Werror', language : 'c')
+  add_project_arguments('-Wno-error=cpp', language : 'c')
+endif
+
 # Needed for realpath(), syscall(), cfmakeraw(), etc.
 add_project_arguments('-D_DEFAULT_SOURCE', language : 'c')
 
