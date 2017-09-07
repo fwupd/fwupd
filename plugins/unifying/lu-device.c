@@ -1163,7 +1163,6 @@ lu_device_finalize (GObject *object)
 {
 	LuDevice *device = LU_DEVICE (object);
 	LuDevicePrivate *priv = GET_PRIVATE (device);
-	g_autoptr(GError) error = NULL;
 
 	if (priv->usb_device != NULL)
 		g_object_unref (priv->usb_device);
