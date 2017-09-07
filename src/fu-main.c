@@ -242,6 +242,9 @@ typedef struct {
 	GBytes			*blob_cab;
 	FuMainPrivate		*priv;
 	gchar			*device_id;
+	gchar			*remote_id;
+	gchar			*key;
+	gchar			*value;
 } FuMainAuthHelper;
 
 static void
@@ -252,6 +255,9 @@ fu_main_auth_helper_free (FuMainAuthHelper *helper)
 	if (helper->store != NULL)
 		g_object_unref (helper->store);
 	g_free (helper->device_id);
+	g_free (helper->remote_id);
+	g_free (helper->key);
+	g_free (helper->value);
 	g_object_unref (helper->invocation);
 	g_free (helper);
 }
@@ -328,6 +334,35 @@ fu_main_authorize_verify_update_cb (GObject *source, GAsyncResult *res, gpointer
 
 	/* authenticated */
 	if (!fu_engine_verify_update (helper->priv->engine, helper->device_id, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+}
+
+static void
+fu_main_authorize_modify_remote_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
+							    res, &error);
+	if (!fu_main_authorization_is_valid (auth, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	if (!fu_engine_modify_remote (helper->priv->engine,
+				      helper->remote_id,
+				      helper->key,
+				      helper->value,
+				      &error)) {
 		g_dbus_method_invocation_return_gerror (helper->invocation, error);
 		return;
 	}
@@ -513,6 +548,36 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_unlock_cb,
+						      helper);
+		return;
+	}
+	if (g_strcmp0 (method_name, "ModifyRemote") == 0) {
+		FuMainAuthHelper *helper;
+		const gchar *remote_id = NULL;
+		const gchar *key = NULL;
+		const gchar *value = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		/* check the id exists */
+		g_variant_get (parameters, "(&s&s&s)", &remote_id, &key, &value);
+		g_debug ("Called %s(%s,%s=%s)", method_name, remote_id, key, value);
+
+		/* create helper object */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->invocation = g_object_ref (invocation);
+		helper->remote_id = g_strdup (remote_id);
+		helper->key = g_strdup (key);
+		helper->value = g_strdup (value);
+		helper->priv = priv;
+
+		/* authenticate */
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (helper->priv->authority, subject,
+						      "org.freedesktop.fwupd.modify-remote",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_authorize_modify_remote_cb,
 						      helper);
 		return;
 	}

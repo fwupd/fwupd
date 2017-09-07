@@ -1410,6 +1410,21 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_modify_remote (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) < 3) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: expected REMOTE-ID KEY VALUE");
+		return FALSE;
+	}
+	return fwupd_client_modify_remote (priv->client,
+					   values[0], values[1], values[2],
+					   NULL, error);
+}
+
+static gboolean
 fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
@@ -1737,6 +1752,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Dump SMBIOS data from a file"),
 		     fu_util_smbios_dump);
+	fu_util_add (priv->cmd_array,
+		     "modify-remote",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Modifies a given remote"),
+		     fu_util_modify_remote);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

@@ -1296,6 +1296,61 @@ fwupd_client_get_remotes (FwupdClient *client, GCancellable *cancellable, GError
 	return fwupd_client_parse_remotes_from_data (val);
 }
 
+/**
+ * fwupd_client_modify_remote:
+ * @client: A #FwupdClient
+ * @remote_id: the remote ID, e.g. "lvfs-testing"
+ * @key: the key, e.g. "Enabled"
+ * @value: the key, e.g. "true"
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Modifies a system remote in a specific way.
+ *
+ * NOTE: User authentication may be required to complete this action.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 0.9.8
+ **/
+gboolean
+fwupd_client_modify_remote (FwupdClient *client,
+			    const gchar *remote_id,
+			    const gchar *key,
+			    const gchar *value,
+			    GCancellable *cancellable,
+			    GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (remote_id != NULL, FALSE);
+	g_return_val_if_fail (key != NULL, FALSE);
+	g_return_val_if_fail (value != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return FALSE;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "ModifyRemote",
+				      g_variant_new ("(sss)", remote_id, key, value),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 static FwupdRemote *
 fwupd_client_get_remote_by_id_noref (GPtrArray *remotes, const gchar *remote_id)
 {
