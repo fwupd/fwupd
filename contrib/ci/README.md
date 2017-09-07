@@ -1,6 +1,6 @@
 Continuous Integration
 ======================
-Continuous integration for fwupd is provided by (Travis CI)[www.travis-ci.org].
+Continuous integration for fwupd is provided by [Travis CI](https://travis-ci.org/hughsie/fwupd).
 
 By using Travis CI, builds are exercised across a variety of environments attempting to maximize code coverage.
 For every commit or pull request 4 builds are performed:
