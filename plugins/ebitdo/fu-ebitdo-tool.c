@@ -43,6 +43,7 @@ main (int argc, char **argv)
 	guint i;
 	g_autofree guint8 *data = NULL;
 	g_autoptr(FuDeviceEbitdo) dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -80,7 +81,11 @@ main (int argc, char **argv)
 	}
 
 	/* open device */
-	if (!fu_device_ebitdo_open (dev, &error)) {
+	locker = fu_device_locker_new_full (dev,
+					    (FuDeviceLockerFunc) fu_device_ebitdo_open,
+					    (FuDeviceLockerFunc) fu_device_ebitdo_close,
+					    &error);
+	if (locker == NULL) {
 		g_print ("Failed to open USB device: %s\n", error->message);
 		return 1;
 	}
@@ -130,12 +135,6 @@ main (int argc, char **argv)
 					      fu_ebitdo_write_progress_cb, NULL,
 					      &error)) {
 		g_print ("Failed to write firmware: %s\n", error->message);
-		return 1;
-	}
-
-	/* close device */
-	if (!fu_device_ebitdo_close (dev, &error)) {
-		g_print ("Failed to close USB device: %s\n", error->message);
 		return 1;
 	}
 
