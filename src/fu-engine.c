@@ -497,6 +497,61 @@ fu_engine_load_verify_store (GError **error)
 }
 
 /**
+ * fu_engine_modify_remote:
+ * @self: A #FuEngine
+ * @remote_id: A remote ID
+ * @key: the key, e.g. "Enabled"
+ * @value: the key, e.g. "true"
+ * @error: A #GError, or %NULL
+ *
+ * Updates the verification store entry for a specific device.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_modify_remote (FuEngine *self,
+			 const gchar *remote_id,
+			 const gchar *key,
+			 const gchar *value,
+			 GError **error)
+{
+	FwupdRemote *remote;
+	const gchar *filename;
+	const gchar *keys[] = { "Enabled", "MetadataURI", "FirmwareBaseURI", NULL };
+	g_autoptr(GKeyFile) keyfile = g_key_file_new ();
+
+	/* check remote is valid */
+	remote = fu_config_get_remote_by_id (self->config, remote_id);
+	if (remote == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "remote %s not found", remote_id);
+		return FALSE;
+	}
+
+	/* check keys are valid */
+	if (!g_strv_contains (keys, key)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "key %s not supported", key);
+		return FALSE;
+	}
+
+	/* modify the remote filename */
+	filename = fwupd_remote_get_filename_source (remote);
+	if (!g_key_file_load_from_file (keyfile, filename,
+					G_KEY_FILE_KEEP_COMMENTS,
+					error)) {
+		g_prefix_error (error, "failed to load %s: ", filename);
+		return FALSE;
+	}
+	g_key_file_set_string (keyfile, "fwupd Remote", key, value);
+	return g_key_file_save_to_file (keyfile, filename, error);
+}
+
+/**
  * fu_engine_verify_update:
  * @self: A #FuEngine
  * @device_id: A device ID

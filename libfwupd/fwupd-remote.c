@@ -41,6 +41,7 @@ struct _FwupdRemote
 	gchar			*filename_asc;
 	gchar			*filename_cache;
 	gchar			*filename_cache_sig;
+	gchar			*filename_source;
 	gboolean		 enabled;
 	SoupURI			*uri;
 	SoupURI			*uri_asc;
@@ -102,6 +103,13 @@ fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
 	g_free (self->id);
 	self->id = g_strdup (id);
 	g_strdelimit (self->id, ".", '\0');
+}
+
+static void
+fwupd_remote_set_filename_source (FwupdRemote *self, const gchar *filename_source)
+{
+	g_free (self->filename_source);
+	self->filename_source = g_strdup (filename_source);
 }
 
 static const gchar *
@@ -350,6 +358,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 		self->order_after = g_strsplit_set (order_after, ",:;", -1);
 
 	/* success */
+	fwupd_remote_set_filename_source (self, filename);
 	return TRUE;
 }
 
@@ -401,6 +410,23 @@ fwupd_remote_get_filename_cache_sig (FwupdRemote *self)
 {
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 	return self->filename_cache_sig;
+}
+
+/**
+ * fwupd_remote_get_filename_source:
+ * @self: A #FwupdRemote
+ *
+ * Gets the path and filename of the remote itself, typically a `.conf` file.
+ *
+ * Returns: a string, or %NULL for unset
+ *
+ * Since: 0.9.8
+ **/
+const gchar *
+fwupd_remote_get_filename_source (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->filename_source;
 }
 
 /**
@@ -767,6 +793,10 @@ fwupd_remote_to_variant_builder (FwupdRemote *self, GVariantBuilder *builder)
 		g_variant_builder_add (builder, "{sv}", "FilenameCache",
 				       g_variant_new_string (self->filename_cache));
 	}
+	if (self->filename_source != NULL) {
+		g_variant_builder_add (builder, "{sv}", "FilenameSource",
+				       g_variant_new_string (self->filename_source));
+	}
 	g_variant_builder_add (builder, "{sv}", "Enabled",
 			       g_variant_new_boolean (self->enabled));
 }
@@ -793,6 +823,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_metadata_uri (self, g_variant_get_string (value, NULL));
 		if (g_strcmp0 (key, "FilenameCache") == 0)
 			fwupd_remote_set_filename_cache (self, g_variant_get_string (value, NULL));
+		if (g_strcmp0 (key, "FilenameSource") == 0)
+			fwupd_remote_set_filename_source (self, g_variant_get_string (value, NULL));
 	}
 	while (g_variant_iter_loop (iter3, "{sv}", &key, &value)) {
 		if (g_strcmp0 (key, "Username") == 0) {
@@ -932,6 +964,7 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (self->filename_asc);
 	g_free (self->filename_cache);
 	g_free (self->filename_cache_sig);
+	g_free (self->filename_source);
 	g_strfreev (self->order_after);
 	g_strfreev (self->order_before);
 	if (self->uri != NULL)

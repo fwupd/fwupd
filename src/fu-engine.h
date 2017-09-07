@@ -80,6 +80,11 @@ gboolean	 fu_engine_verify			(FuEngine	*self,
 gboolean	 fu_engine_verify_update		(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
+gboolean	 fu_engine_modify_remote		(FuEngine	*self,
+							 const gchar	*remote_id,
+							 const gchar	*key,
+							 const gchar	*value,
+							 GError		**error);
 gboolean	 fu_engine_install			(FuEngine	*self,
 							 const gchar	*device_id,
 							 AsStore	*store,

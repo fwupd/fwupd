@@ -340,6 +340,44 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='ModifyRemote'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Modifies a remote in some way.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='remote_id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              Remote ID, e.g. 'lvfs-testing'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='s' name='key' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The key, e.g. 'Enabled'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='s' name='value' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The value of the correct type, e.g. a URL.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <signal name='Changed'>
       <doc:doc>
         <doc:description>
