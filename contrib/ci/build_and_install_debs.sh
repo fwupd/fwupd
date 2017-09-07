@@ -15,7 +15,7 @@ pushd build
 mv contrib/debian .
 sed s/quilt/native/ debian/source/format -i
 EDITOR=/bin/true dch --create --package fwupd -v $VERSION "CI Build"
-debuild --no-lintian --preserve-envvar CI
+debuild --no-lintian --preserve-envvar CI --preserve-envvar CC
 
 #check lintian output
 #suppress tags that are side effects of building in docker this way
