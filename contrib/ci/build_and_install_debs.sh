@@ -31,7 +31,7 @@ lintian ../*changes \
 	--allow-root
 
 #test the packages install
-dpkg -i `ls ../*.deb | grep -v fwupd-tests`
+dpkg -i `ls ../*.deb | grep -v 'fwupd-tests\|dbgsym'`
 
 # run the installed tests
 if [ "$CI" = "true" ]; then
@@ -44,7 +44,5 @@ fi
 #test the packages remove
 apt purge -y fwupd \
 	     fwupd-doc \
-	     fwupd-dbgsym \
 	     libfwupd1 \
-	     libfwupd1-dbgsym \
 	     libfwupd-dev

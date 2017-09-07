@@ -8,7 +8,7 @@ For every commit or pull request 4 builds are performed:
 Fedora
 ------
 
-* A fully packaged RPM build with all plugins enabled\
+* A fully packaged RPM build with all plugins enabled
 * Compiled under gcc
 * Tests with -Werror enabled
 * Tests with the built in local test suite for all plugins.
