@@ -8,7 +8,6 @@ dfu = static_library(
     'dfu-context.c',
     'dfu-device.c',
     'dfu-element.c',
-    'dfu-error.c',
     'dfu-firmware.c',
     'dfu-format-dfu.c',
     'dfu-format-dfuse.c',
@@ -29,6 +28,7 @@ dfu = static_library(
   c_args : cargs,
   include_directories : [
     include_directories('../..'),
+    include_directories('../../libfwupd'),
     include_directories('../../src'),
   ],
   link_with : [
@@ -66,6 +66,7 @@ executable(
     include_directories('..'),
     include_directories('../..'),
     include_directories('../../src'),
+    include_directories('../../libfwupd'),
   ],
   dependencies : [
     appstream_glib,
@@ -75,6 +76,7 @@ executable(
   ],
   link_with : [
     dfu,
+    fwupd,
     libfwupdprivate,
   ],
   c_args : cargs,
@@ -93,6 +95,7 @@ if get_option('enable-tests')
     include_directories : [
       include_directories('..'),
       include_directories('../..'),
+      include_directories('../../libfwupd'),
     ],
     dependencies : [
       appstream_glib,
@@ -100,7 +103,10 @@ if get_option('enable-tests')
       gusb,
       libm,
     ],
-    link_with : dfu,
+    link_with : [
+      dfu,
+      fwupd,
+    ],
     c_args : cargs
   )
   test('dfu-self-test', e)

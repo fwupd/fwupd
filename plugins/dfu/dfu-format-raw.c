@@ -26,7 +26,8 @@
 #include "dfu-element.h"
 #include "dfu-format-raw.h"
 #include "dfu-image.h"
-#include "dfu-error.h"
+
+#include "fwupd-error.h"
 
 /**
  * dfu_firmware_detect_raw: (skip)
@@ -88,16 +89,16 @@ dfu_firmware_to_raw (DfuFirmware *firmware, GError **error)
 	image = dfu_firmware_get_image_default (firmware);
 	if (image == NULL) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_FOUND,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "no firmware image data to write");
 		return NULL;
 	}
 	element = dfu_image_get_element (image, 0);
 	if (element == NULL) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_FOUND,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "no firmware element data to write");
 		return NULL;
 	}

@@ -30,11 +30,12 @@
 #include "dfu-common.h"
 #include "dfu-context.h"
 #include "dfu-device.h"
-#include "dfu-error.h"
 #include "dfu-firmware.h"
 #include "dfu-patch.h"
 #include "dfu-sector-private.h"
 #include "dfu-target-private.h"
+
+#include "fwupd-error.h"
 
 static gchar *
 dfu_test_get_filename (const gchar *filename)
@@ -634,8 +635,8 @@ dfu_colorhug_plus_func (void)
 					   DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME,
 					   NULL, &error);
 		g_assert_error (error,
-				DFU_ERROR,
-				DFU_ERROR_INTERNAL);
+				FWUPD_ERROR,
+				FWUPD_ERROR_INTERNAL);
 		g_assert (ret);
 		g_clear_error (&error);
 	}
@@ -874,7 +875,7 @@ dfu_patch_apply_func (void)
 
 	/* check we can't apply the patch to an unrelated blob */
 	blob_new4 = dfu_patch_apply (patch, blob_wrong, DFU_PATCH_APPLY_FLAG_NONE, &error);
-	g_assert_error (error, DFU_ERROR, DFU_ERROR_INVALID_DEVICE);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert (blob_new4 == NULL);
 }
 

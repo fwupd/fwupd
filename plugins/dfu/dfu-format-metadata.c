@@ -26,7 +26,8 @@
 #include "dfu-element.h"
 #include "dfu-format-metadata.h"
 #include "dfu-image.h"
-#include "dfu-error.h"
+
+#include "fwupd-error.h"
 
 /**
  * dfu_firmware_from_metadata: (skip)
@@ -82,16 +83,16 @@ dfu_firmware_from_metadata (DfuFirmware *firmware,
 		kvlen = data[idx++];
 		if (kvlen > 233) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "metadata table corrupt, key=%u",
 				     kvlen);
 			return FALSE;
 		}
 		if (idx + kvlen + 0x10 > data_length) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "metadata table corrupt, k-kvlen=%u",
 				     kvlen);
 			return FALSE;
@@ -103,16 +104,16 @@ dfu_firmware_from_metadata (DfuFirmware *firmware,
 		kvlen = data[idx++];
 		if (kvlen > 233) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "metadata table corrupt, value=%u",
 				     kvlen);
 			return FALSE;
 		}
 		if (idx + kvlen + 0x10 > data_length) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "metadata table corrupt, v-kvlen=%u",
 				     kvlen);
 			return FALSE;
@@ -153,8 +154,8 @@ dfu_firmware_to_metadata (DfuFirmware *firmware, GError **error)
 	number_keys = g_list_length (keys);
 	if (number_keys > 59) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_SUPPORTED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "too many metadata keys (%u)",
 			     number_keys);
 		return NULL;
@@ -175,8 +176,8 @@ dfu_firmware_to_metadata (DfuFirmware *firmware, GError **error)
 		key_len = (guint) strlen (key);
 		if (key_len > 233) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "metdata key too long: %s",
 				     key);
 			return NULL;
@@ -185,8 +186,8 @@ dfu_firmware_to_metadata (DfuFirmware *firmware, GError **error)
 		value_len = (guint) strlen (value);
 		if (value_len > 233) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "value too long: %s",
 				     value);
 			return NULL;
@@ -195,8 +196,8 @@ dfu_firmware_to_metadata (DfuFirmware *firmware, GError **error)
 		/* do we still have space? */
 		if (idx + key_len + value_len + 2 > sizeof(mdbuf)) {
 			g_set_error (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_SUPPORTED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "not enough space in metadata table, "
 				     "already used %u bytes", idx);
 			return NULL;

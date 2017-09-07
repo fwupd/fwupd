@@ -39,8 +39,9 @@
 #include "config.h"
 
 #include "dfu-device-private.h"
-#include "dfu-error.h"
 #include "dfu-context.h"
+
+#include "fwupd-error.h"
 
 static void dfu_context_finalize			 (GObject *object);
 
@@ -462,8 +463,8 @@ dfu_context_get_device_by_vid_pid (DfuContext *context,
 		    g_usb_device_get_pid (dev) == pid) {
 			if (device != NULL) {
 				g_set_error (error,
-					     DFU_ERROR,
-					     DFU_ERROR_INVALID_DEVICE,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "multiple device matches for %04x:%04x",
 					     vid, pid);
 				return NULL;
@@ -474,8 +475,8 @@ dfu_context_get_device_by_vid_pid (DfuContext *context,
 	}
 	if (device == NULL) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_NOT_FOUND,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
 			     "no device matches for %04x:%04x",
 			     vid, pid);
 		return NULL;
@@ -514,8 +515,8 @@ dfu_context_get_device_by_platform_id (DfuContext *context,
 		}
 	}
 	g_set_error (error,
-		     DFU_ERROR,
-		     DFU_ERROR_NOT_FOUND,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_FOUND,
 		     "no device matches for %s",
 		     platform_id);
 	return NULL;
@@ -543,8 +544,8 @@ dfu_context_get_device_default (DfuContext *context, GError **error)
 	/* none */
 	if (priv->devices->len == 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_NOT_FOUND,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "no attached DFU device");
 		return NULL;
 	}
@@ -552,8 +553,8 @@ dfu_context_get_device_default (DfuContext *context, GError **error)
 	/* multiple */
 	if (priv->devices->len > 1) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_DEVICE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "more than one attached DFU device");
 		return NULL;
 	}

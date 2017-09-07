@@ -26,7 +26,8 @@
 #include "dfu-element.h"
 #include "dfu-format-dfuse.h"
 #include "dfu-image.h"
-#include "dfu-error.h"
+
+#include "fwupd-error.h"
 
 /* DfuSe element header */
 typedef struct __attribute__((packed)) {
@@ -61,8 +62,8 @@ dfu_element_from_dfuse (const guint8 *data,
 	/* check input buffer size */
 	if (length < sizeof(DfuSeElementPrefix)) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "invalid element data size %u",
 			     (guint32) length);
 		return NULL;
@@ -72,8 +73,8 @@ dfu_element_from_dfuse (const guint8 *data,
 	size = GUINT32_FROM_LE (el->size);
 	if (size + sizeof(DfuSeElementPrefix) > length) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "invalid element size %u, only %u bytes left",
 			     size,
 			     (guint32) (length - sizeof(DfuSeElementPrefix)));
@@ -157,8 +158,8 @@ dfu_image_from_dfuse (const guint8 *data,
 	/* check input buffer size */
 	if (length < sizeof(DfuSeImagePrefix)) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "invalid image data size %u",
 			     (guint32) length);
 		return NULL;
@@ -168,8 +169,8 @@ dfu_image_from_dfuse (const guint8 *data,
 	im = (DfuSeImagePrefix *) data;
 	if (memcmp (im->sig, "Target", 6) != 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INVALID_FILE,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
 				     "invalid DfuSe target signature");
 		return NULL;
 	}
@@ -306,8 +307,8 @@ dfu_firmware_to_dfuse (DfuFirmware *firmware, GError **error)
 	prefix->image_size = GUINT32_TO_LE (offset + image_size_total);
 	if (images->len > G_MAXUINT8) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "too many (%u) images to write DfuSe file",
 			     images->len);
 		return NULL;
@@ -356,8 +357,8 @@ dfu_firmware_from_dfuse (DfuFirmware *firmware,
 	prefix = (DfuSePrefix *) data;
 	if (memcmp (prefix->sig, "DfuSe", 5) != 0) {
 		g_set_error_literal (error,
-				     DFU_ERROR,
-				     DFU_ERROR_INTERNAL,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
 				     "invalid DfuSe prefix");
 		return FALSE;
 	}
@@ -365,8 +366,8 @@ dfu_firmware_from_dfuse (DfuFirmware *firmware,
 	/* check the version */
 	if (prefix->ver != 0x01) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "invalid DfuSe version, got %02x",
 			     prefix->ver);
 		return FALSE;
@@ -375,8 +376,8 @@ dfu_firmware_from_dfuse (DfuFirmware *firmware,
 	/* check image size */
 	if (GUINT32_FROM_LE (prefix->image_size) != len) {
 		g_set_error (error,
-			     DFU_ERROR,
-			     DFU_ERROR_INTERNAL,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
 			     "invalid DfuSe image size, "
 			     "got %" G_GUINT32_FORMAT ", "
 			     "expected %" G_GSIZE_FORMAT,
