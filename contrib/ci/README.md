@@ -3,7 +3,7 @@ Continuous Integration
 Continuous integration for fwupd is provided by [Travis CI](https://travis-ci.org/hughsie/fwupd).
 
 By using Travis CI, builds are exercised across a variety of environments attempting to maximize code coverage.
-For every commit or pull request 4 builds are performed:
+For every commit or pull request 5 builds are performed:
 
 Fedora
 ------
@@ -42,7 +42,7 @@ Debian unstable (cross compile s390x)
 
 * Not packaged
 * Compiled under gcc
-* Tests without -Werror enabled
+* Tests with -Werror enabled
 * Runs local test suite using qemu-user
 
 Arch Linux
