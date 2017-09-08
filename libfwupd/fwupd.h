@@ -39,6 +39,10 @@
 #include <libfwupd/fwupd-result.h>
 #include <libfwupd/fwupd-version.h>
 
+#ifndef FWUPD_DISABLE_DEPRECATED
+#include <libfwupd/fwupd-deprecated.h>
+#endif
+
 #undef __FWUPD_H_INSIDE__
 
 #endif /* __FWUPD_H__ */

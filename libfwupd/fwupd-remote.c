@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include "fwupd-deprecated.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 

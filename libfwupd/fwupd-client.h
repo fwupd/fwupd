@@ -57,10 +57,6 @@ FwupdClient	*fwupd_client_new			(void);
 gboolean	 fwupd_client_connect			(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
-G_DEPRECATED_FOR(fwupd_client_get_devices_simple)
-GPtrArray	*fwupd_client_get_devices		(FwupdClient	*client,
-							 GCancellable	*cancellable,
-							 GError		**error);
 GPtrArray	*fwupd_client_get_devices_simple	(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
@@ -95,11 +91,6 @@ FwupdResult	*fwupd_client_get_results		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-G_DEPRECATED_FOR(fwupd_client_get_details_local)
-FwupdResult	*fwupd_client_get_details		(FwupdClient	*client,
-							 const gchar	*filename,
-							 GCancellable	*cancellable,
-							 GError		**error);
 FwupdDevice	*fwupd_client_get_device_by_id		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
@@ -108,12 +99,6 @@ gboolean	 fwupd_client_install			(FwupdClient	*client,
 							 const gchar	*device_id,
 							 const gchar	*filename,
 							 FwupdInstallFlags install_flags,
-							 GCancellable	*cancellable,
-							 GError		**error);
-G_DEPRECATED_FOR(fwupd_client_update_metadata_with_id)
-gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
-							 const gchar	*metadata_fn,
-							 const gchar	*signature_fn,
 							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 fwupd_client_update_metadata_with_id	(FwupdClient	*client,
