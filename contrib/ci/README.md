@@ -37,6 +37,14 @@ Debian unstable (clang)
 * An installed testing run with the "test" plugin and pulling from LVFS.
 * All packages are removed
 
+Debian unstable (cross compile s390x)
+------
+
+* Not packaged
+* Compiled under gcc
+* Tests without -Werror enabled
+* Runs local test suite using qemu-user
+
 Arch Linux
 ----------
 
