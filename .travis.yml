@@ -10,15 +10,18 @@ env:
   - OS=Debian
   - OS=Arch
   - OS=Debian-clang
+  - OS=Debian-s390x
 
 install:
   - if [[ "$OS" == "Fedora" ]]; then docker build -t fwupd-fedora -f contrib/ci/Dockerfile-fedora .; fi
   - if [[ "$OS" == "Debian" ]]; then docker build -t fwupd-debian -f contrib/ci/Dockerfile-debian .; fi
   - if [[ "$OS" == "Arch" ]];   then docker build -t fwupd-arch -f contrib/ci/Dockerfile-arch .; fi
   - if [[ "$OS" == "Debian-clang" ]]; then docker build -t fwupd-debian -f contrib/ci/Dockerfile-debian .; fi
+  - if [[ "$OS" == "Debian-s390x" ]]; then docker build -t fwupd-debian-s390x -f contrib/ci/Dockerfile-debian-s390x .; fi
 
 script:
   - if [[ "$OS" == "Fedora" ]]; then docker run -e CI=true -t -v `pwd`:/build fwupd-fedora ./contrib/ci/build_and_install_rpms.sh; fi
   - if [[ "$OS" == "Debian" ]]; then docker run -e CI=true -t -v `pwd`:/build fwupd-debian ./contrib/ci/build_and_install_debs.sh; fi
   - if [[ "$OS" == "Arch" ]];   then docker run -e CI=true -t -v `pwd`:/build fwupd-arch ./contrib/ci/build_and_install_pkgs.sh; fi
   - if [[ "$OS" == "Debian-clang" ]]; then docker run -e CC=clang -e CI=true -t -v `pwd`:/build fwupd-debian ./contrib/ci/build_and_install_debs.sh; fi
+  - if [[ "$OS" == "Debian-s390x" ]]; then docker run -t -v `pwd`:/build fwupd-debian-s390x ./contrib/ci/build_debian_s390x.sh; fi
