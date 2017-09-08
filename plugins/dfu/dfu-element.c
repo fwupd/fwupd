@@ -82,8 +82,6 @@ dfu_element_finalize (GObject *object)
  * Creates a new DFU element object.
  *
  * Return value: a new #DfuElement
- *
- * Since: 0.5.4
  **/
 DfuElement *
 dfu_element_new (void)
@@ -100,8 +98,6 @@ dfu_element_new (void)
  * Gets the element data.
  *
  * Return value: (transfer none): element data
- *
- * Since: 0.5.4
  **/
 GBytes *
 dfu_element_get_contents (DfuElement *element)
@@ -118,8 +114,6 @@ dfu_element_get_contents (DfuElement *element)
  * Gets the offset address of the element.
  *
  * Return value: memory offset value, or 0x00 for unset
- *
- * Since: 0.5.4
  **/
 guint32
 dfu_element_get_address (DfuElement *element)
@@ -135,8 +129,6 @@ dfu_element_get_address (DfuElement *element)
  * @contents: element data
  *
  * Sets the element data.
- *
- * Since: 0.5.4
  **/
 void
 dfu_element_set_contents (DfuElement *element, GBytes *contents)
@@ -157,8 +149,6 @@ dfu_element_set_contents (DfuElement *element, GBytes *contents)
  * @address: memory offset value
  *
  * Sets the offset address of the element.
- *
- * Since: 0.5.4
  **/
 void
 dfu_element_set_address (DfuElement *element, guint32 address)
@@ -175,8 +165,6 @@ dfu_element_set_address (DfuElement *element, guint32 address)
  * Returns a string representaiton of the object.
  *
  * Return value: NULL terminated string, or %NULL for invalid
- *
- * Since: 0.5.4
  **/
 gchar *
 dfu_element_to_string (DfuElement *element)
@@ -208,8 +196,6 @@ dfu_element_to_string (DfuElement *element)
  *
  * Sets a the value of the padding byte to be used in the function
  * dfu_element_set_target_size().
- *
- * Since: 0.7.3
  **/
 void
 dfu_element_set_padding_value (DfuElement *element, guint8 padding_value)
@@ -230,8 +216,6 @@ dfu_element_set_padding_value (DfuElement *element, guint8 padding_value)
  * If a padding byte other than 0x00 is required then the function
  * dfu_element_set_padding_value() should be used before this function is
  * called.
- *
- * Since: 0.5.4
  **/
 void
 dfu_element_set_target_size (DfuElement *element, guint32 target_size)

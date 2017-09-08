@@ -89,8 +89,6 @@ dfu_target_class_init (DfuTargetClass *klass)
 	 * @percentage: the new percentage
 	 *
 	 * The ::percentage-changed signal is emitted when the percentage changes.
-	 *
-	 * Since: 0.5.4
 	 **/
 	signals [SIGNAL_PERCENTAGE_CHANGED] =
 		g_signal_new ("percentage-changed",
@@ -105,8 +103,6 @@ dfu_target_class_init (DfuTargetClass *klass)
 	 * @action: the new DfuAction
 	 *
 	 * The ::action-changed signal is emitted when the high level action changes.
-	 *
-	 * Since: 0.7.5
 	 **/
 	signals [SIGNAL_ACTION_CHANGED] =
 		g_signal_new ("action-changed",
@@ -415,8 +411,6 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
  * DFU-capable device.
  *
  * Return value: a #DfuTarget, or %NULL if @iface was not DFU-capable
- *
- * Since: 0.5.4
  **/
 DfuTarget *
 dfu_target_new (DfuDevice *device, GUsbInterface *iface)
@@ -443,8 +437,6 @@ dfu_target_new (DfuDevice *device, GUsbInterface *iface)
  * Gets the sectors exported by the device.
  *
  * Return value: (transfer none) (element-type DfuSector): sectors
- *
- * Since: 0.5.4
  **/
 GPtrArray *
 dfu_target_get_sectors (DfuTarget *target)
@@ -461,8 +453,6 @@ dfu_target_get_sectors (DfuTarget *target)
  * Converts an enumerated value to an error description.
  *
  * Return value: a string
- *
- * Since: 0.5.4
  **/
 static const gchar *
 dfu_target_status_to_error_msg (DfuStatus status)
@@ -563,8 +553,6 @@ dfu_target_check_status (DfuTarget *target,
  * Opens a DFU-capable target.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 static gboolean
 dfu_target_use_alt_setting (DfuTarget *target, GError **error)
@@ -609,8 +597,6 @@ dfu_target_use_alt_setting (DfuTarget *target, GError **error)
  * Opens a DFU-capable target.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 static gboolean
 dfu_target_setup (DfuTarget *target, GError **error)
@@ -712,8 +698,6 @@ dfu_target_download_chunk (DfuTarget *target, guint8 index, GBytes *bytes,
  * IMPORTANT: This only works on DfuSe-capable devices from ST.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 static gboolean
 dfu_target_set_address (DfuTarget *target,
@@ -760,8 +744,6 @@ dfu_target_set_address (DfuTarget *target,
  * IMPORTANT: This only works on DfuSe-capable devices from ST.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 static gboolean
 dfu_target_erase_address (DfuTarget *target,
@@ -812,8 +794,6 @@ dfu_target_erase_address (DfuTarget *target,
  * IMPORTANT: This only works on DfuSe-capable devices from ST.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 static gboolean
 dfu_target_mass_erase (DfuTarget *target,
@@ -856,8 +836,6 @@ dfu_target_mass_erase (DfuTarget *target,
  * IMPORTANT: This only works on DfuSe-capable devices from ST.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 static gboolean
 dfu_target_read_unprotect (DfuTarget *target,
@@ -1260,8 +1238,6 @@ dfu_target_get_size_of_zone (DfuTarget *target, guint16 zone)
  * Uploads firmware from the target to the host.
  *
  * Return value: (transfer full): the uploaded image, or %NULL for error
- *
- * Since: 0.5.4
  **/
 DfuImage *
 dfu_target_upload (DfuTarget *target,
@@ -1670,8 +1646,6 @@ dfu_target_download_element (DfuTarget *target,
  * the transfer.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_target_download (DfuTarget *target, DfuImage *image,
@@ -1811,8 +1785,6 @@ dfu_target_get_commands (DfuTarget *target,
  * Gets the alternate setting to use for this interface.
  *
  * Return value: the alternative setting, typically zero
- *
- * Since: 0.5.4
  **/
 guint8
 dfu_target_get_alt_setting (DfuTarget *target)
@@ -1830,8 +1802,6 @@ dfu_target_get_alt_setting (DfuTarget *target)
  * Gets the alternate setting name to use for this interface.
  *
  * Return value: the alternative setting name, typically %NULL
- *
- * Since: 0.5.4
  **/
 const gchar *
 dfu_target_get_alt_name (DfuTarget *target, GError **error)
@@ -1864,8 +1834,6 @@ dfu_target_get_alt_name (DfuTarget *target, GError **error)
  * shown on the display.
  *
  * Return value: the alternative setting name
- *
- * Since: 0.7.5
  **/
 const gchar *
 dfu_target_get_alt_name_for_display (DfuTarget *target, GError **error)
@@ -1896,8 +1864,6 @@ dfu_target_get_alt_name_for_display (DfuTarget *target, GError **error)
  * Gets the cipher used for data sent to this interface.
  *
  * Return value: the cipher, typically %DFU_CIPHER_KIND_NONE
- *
- * Since: 0.5.4
  **/
 DfuCipherKind
 dfu_target_get_cipher_kind (DfuTarget *target)

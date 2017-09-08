@@ -99,8 +99,6 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	 * @status: the new #DfuStatus
 	 *
 	 * The ::status-changed signal is emitted when the status changes.
-	 *
-	 * Since: 0.5.4
 	 **/
 	signals [SIGNAL_STATUS_CHANGED] =
 		g_signal_new ("status-changed",
@@ -115,8 +113,6 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	 * @state: the new #DfuState
 	 *
 	 * The ::state-changed signal is emitted when the state changes.
-	 *
-	 * Since: 0.5.4
 	 **/
 	signals [SIGNAL_STATE_CHANGED] =
 		g_signal_new ("state-changed",
@@ -131,8 +127,6 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	 * @percentage: the new percentage
 	 *
 	 * The ::percentage-changed signal is emitted when the percentage changes.
-	 *
-	 * Since: 0.5.4
 	 **/
 	signals [SIGNAL_PERCENTAGE_CHANGED] =
 		g_signal_new ("percentage-changed",
@@ -147,8 +141,6 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	 * @action: the new #DfuAction
 	 *
 	 * The ::action-changed signal is emitted when the high level action changes.
-	 *
-	 * Since: 0.7.5
 	 **/
 	signals [SIGNAL_ACTION_CHANGED] =
 		g_signal_new ("action-changed",
@@ -192,8 +184,6 @@ dfu_device_set_action (DfuDevice *device, DfuAction action)
  * Gets the transfer size in bytes.
  *
  * Return value: packet size, or 0 for unknown
- *
- * Since: 0.5.4
  **/
 guint16
 dfu_device_get_transfer_size (DfuDevice *device)
@@ -210,8 +200,6 @@ dfu_device_get_transfer_size (DfuDevice *device)
  * Gets the DFU specification version supported by the device.
  *
  * Return value: integer, or 0 for unknown, e.g. %DFU_VERSION_DFU_1_1
- *
- * Since: 0.7.2
  **/
 guint16
 dfu_device_get_version (DfuDevice *device)
@@ -228,8 +216,6 @@ dfu_device_get_version (DfuDevice *device)
  * Gets the download timeout in ms.
  *
  * Return value: delay, or 0 for unknown
- *
- * Since: 0.5.4
  **/
 guint
 dfu_device_get_download_timeout (DfuDevice *device)
@@ -245,8 +231,6 @@ dfu_device_get_download_timeout (DfuDevice *device)
  * @transfer_size: maximum packet size
  *
  * Sets the transfer size in bytes.
- *
- * Since: 0.5.4
  **/
 void
 dfu_device_set_transfer_size (DfuDevice *device, guint16 transfer_size)
@@ -443,8 +427,6 @@ dfu_device_add_targets (DfuDevice *device)
  * Returns if a device has a specific quirk
  *
  * Return value: %TRUE if the device has this quirk
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_has_quirk (DfuDevice *device, DfuDeviceQuirks quirk)
@@ -461,8 +443,6 @@ dfu_device_has_quirk (DfuDevice *device, DfuDeviceQuirks quirk)
  * Gets if the device can upload.
  *
  * Return value: %TRUE if the device can upload from device to host
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_can_upload (DfuDevice *device)
@@ -479,8 +459,6 @@ dfu_device_can_upload (DfuDevice *device)
  * Gets if the device can download.
  *
  * Return value: %TRUE if the device can download from host to device
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_can_download (DfuDevice *device)
@@ -512,8 +490,6 @@ dfu_device_is_open (DfuDevice *device)
  * @timeout_ms: the timeout in ms
  *
  * Sets the USB timeout to use when contacting the USB device.
- *
- * Since: 0.5.4
  **/
 void
 dfu_device_set_timeout (DfuDevice *device, guint timeout_ms)
@@ -530,8 +506,6 @@ dfu_device_set_timeout (DfuDevice *device, guint timeout_ms)
  * Gets the device mode.
  *
  * Return value: enumerated mode, e.g. %DFU_MODE_RUNTIME
- *
- * Since: 0.5.4
  **/
 DfuMode
 dfu_device_get_mode (DfuDevice *device)
@@ -548,8 +522,6 @@ dfu_device_get_mode (DfuDevice *device)
  * Gets the device timeout.
  *
  * Return value: enumerated timeout in ms
- *
- * Since: 0.5.4
  **/
 guint
 dfu_device_get_timeout (DfuDevice *device)
@@ -566,8 +538,6 @@ dfu_device_get_timeout (DfuDevice *device)
  * Gets the device state.
  *
  * Return value: enumerated state, e.g. %DFU_STATE_DFU_UPLOAD_IDLE
- *
- * Since: 0.5.4
  **/
 DfuState
 dfu_device_get_state (DfuDevice *device)
@@ -584,8 +554,6 @@ dfu_device_get_state (DfuDevice *device)
  * Gets the device status.
  *
  * Return value: enumerated status, e.g. %DFU_STATUS_ERR_ADDRESS
- *
- * Since: 0.5.4
  **/
 DfuStatus
 dfu_device_get_status (DfuDevice *device)
@@ -603,8 +571,6 @@ dfu_device_get_status (DfuDevice *device)
  * Returns if an attribute set for the device.
  *
  * Return value: %TRUE if the attribute is set
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_has_attribute (DfuDevice *device, DfuDeviceAttributes attribute)
@@ -621,8 +587,6 @@ dfu_device_has_attribute (DfuDevice *device, DfuDeviceAttributes attribute)
  * Returns is DfuSe is supported on a device.
  *
  * Return value: %TRUE for DfuSe
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_has_dfuse_support (DfuDevice *device)
@@ -702,8 +666,6 @@ dfu_device_set_quirks (DfuDevice *device)
  * Creates a new DFU device object.
  *
  * Return value: a new #DfuDevice, or %NULL if @dev was not DFU-capable
- *
- * Since: 0.5.4
  **/
 DfuDevice *
 dfu_device_new (GUsbDevice *dev)
@@ -735,8 +697,6 @@ dfu_device_new (GUsbDevice *dev)
  * Gets all the targets for this device.
  *
  * Return value: (transfer none) (element-type DfuTarget): #DfuTarget, or %NULL
- *
- * Since: 0.5.4
  **/
 GPtrArray *
 dfu_device_get_targets (DfuDevice *device)
@@ -755,8 +715,6 @@ dfu_device_get_targets (DfuDevice *device)
  * Gets a target with a specific alternative setting.
  *
  * Return value: (transfer full): a #DfuTarget, or %NULL
- *
- * Since: 0.5.4
  **/
 DfuTarget *
 dfu_device_get_target_by_alt_setting (DfuDevice *device,
@@ -795,8 +753,6 @@ dfu_device_get_target_by_alt_setting (DfuDevice *device,
  * Gets a target with a specific alternative name.
  *
  * Return value: (transfer full): a #DfuTarget, or %NULL
- *
- * Since: 0.5.4
  **/
 DfuTarget *
 dfu_device_get_target_by_alt_name (DfuDevice *device,
@@ -833,8 +789,6 @@ dfu_device_get_target_by_alt_name (DfuDevice *device,
  * Gets the platform ID which normally corresponds to the port in some way.
  *
  * Return value: string or %NULL
- *
- * Since: 0.5.4
  **/
 const gchar *
 dfu_device_get_platform_id (DfuDevice *device)
@@ -851,8 +805,6 @@ dfu_device_get_platform_id (DfuDevice *device)
  * Gets the runtime vendor ID.
  *
  * Return value: vendor ID, or 0xffff for unknown
- *
- * Since: 0.5.4
  **/
 guint16
 dfu_device_get_runtime_vid (DfuDevice *device)
@@ -869,8 +821,6 @@ dfu_device_get_runtime_vid (DfuDevice *device)
  * Gets the runtime product ID.
  *
  * Return value: product ID, or 0xffff for unknown
- *
- * Since: 0.5.4
  **/
 guint16
 dfu_device_get_runtime_pid (DfuDevice *device)
@@ -887,8 +837,6 @@ dfu_device_get_runtime_pid (DfuDevice *device)
  * Gets the runtime release number in BCD format.
  *
  * Return value: release number, or 0xffff for unknown
- *
- * Since: 0.5.4
  **/
 guint16
 dfu_device_get_runtime_release (DfuDevice *device)
@@ -924,8 +872,6 @@ dfu_device_get_usb_dev (DfuDevice *device)
  * Gets the display name to use for the device.
  *
  * Return value: string or %NULL for unset
- *
- * Since: 0.5.4
  **/
 const gchar *
 dfu_device_get_display_name (DfuDevice *device)
@@ -942,8 +888,6 @@ dfu_device_get_display_name (DfuDevice *device)
  * Gets the serial number for the device.
  *
  * Return value: string or %NULL for unset
- *
- * Since: 0.7.3
  **/
 const gchar *
 dfu_device_get_serial_number (DfuDevice *device)
@@ -1015,8 +959,6 @@ dfu_device_ensure_interface (DfuDevice *device,
  * Refreshes the cached properties on the DFU device.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error)
@@ -1104,8 +1046,6 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
  * Detaches the device putting it into DFU-mode.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
@@ -1197,8 +1137,6 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
  * Aborts any upload or download in progress.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
@@ -1265,8 +1203,6 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
  * Clears any error status on the DFU device.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **error)
@@ -1328,8 +1264,6 @@ dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **
  * @device: a #DfuDevice
  *
  * Gets the interface number.
- *
- * Since: 0.5.4
  **/
 guint8
 dfu_device_get_interface (DfuDevice *device)
@@ -1349,8 +1283,6 @@ dfu_device_get_interface (DfuDevice *device)
  * Opens a DFU-capable device.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags,
@@ -1456,8 +1388,6 @@ dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags,
  * Opens a DFU-capable device.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_open (DfuDevice *device, GError **error)
@@ -1473,8 +1403,6 @@ dfu_device_open (DfuDevice *device, GError **error)
  * Closes a DFU device.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_close (DfuDevice *device, GError **error)
@@ -1635,8 +1563,6 @@ dfu_device_replug_helper_cb (gpointer user_data)
  * This does rely on a #DfuContext being set up before this is called.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_wait_for_replug (DfuDevice *device, guint timeout,
@@ -1676,8 +1602,6 @@ dfu_device_wait_for_replug (DfuDevice *device, guint timeout,
  * Resets the USB device.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_reset (DfuDevice *device, GError **error)
@@ -1718,8 +1642,6 @@ dfu_device_reset (DfuDevice *device, GError **error)
  * Move device from DFU mode to runtime.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_attach (DfuDevice *device, GError **error)
@@ -1814,8 +1736,6 @@ dfu_device_action_cb (DfuTarget *target, DfuAction action, DfuDevice *device)
  * Uploads firmware from the target to the host.
  *
  * Return value: (transfer full): the uploaded firmware, or %NULL for error
- *
- * Since: 0.5.4
  **/
 DfuFirmware *
 dfu_device_upload (DfuDevice *device,
@@ -1965,8 +1885,6 @@ dfu_device_id_compatible (guint16 id_file, guint16 id_runtime, guint16 id_dev)
  * the transfer.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_device_download (DfuDevice *device,
@@ -2221,8 +2139,6 @@ dfu_device_error_fixup (DfuDevice *device,
  * Gets a string describing the quirks set for a device.
  *
  * Return value: string, or %NULL for no quirks
- *
- * Since: 0.5.4
  **/
 gchar *
 dfu_device_get_quirks_as_string (DfuDevice *device)

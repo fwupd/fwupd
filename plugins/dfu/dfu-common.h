@@ -189,14 +189,14 @@ typedef enum {
  * The device DFU attributes.
  **/
 typedef enum {
-	DFU_ACTION_UNKNOWN,				/* Since: 0.7.5 */
-	DFU_ACTION_IDLE,				/* Since: 0.7.5 */
-	DFU_ACTION_READ,				/* Since: 0.7.5 */
-	DFU_ACTION_WRITE,				/* Since: 0.7.5 */
-	DFU_ACTION_VERIFY,				/* Since: 0.7.5 */
-	DFU_ACTION_ERASE,				/* Since: 0.7.5 */
-	DFU_ACTION_DETACH,				/* Since: 0.7.5 */
-	DFU_ACTION_ATTACH,				/* Since: 0.7.5 */
+	DFU_ACTION_UNKNOWN,
+	DFU_ACTION_IDLE,
+	DFU_ACTION_READ,
+	DFU_ACTION_WRITE,
+	DFU_ACTION_VERIFY,
+	DFU_ACTION_ERASE,
+	DFU_ACTION_DETACH,
+	DFU_ACTION_ATTACH,
 	/*< private >*/
 	DFU_ACTION_LAST
 } DfuAction;

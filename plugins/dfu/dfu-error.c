@@ -36,8 +36,6 @@
  * dfu_error_quark:
  *
  * Return value: An error quark.
- *
- * Since: 0.5.4
  **/
 GQuark
 dfu_error_quark (void)

@@ -82,8 +82,6 @@ dfu_image_finalize (GObject *object)
  * Creates a new DFU image object.
  *
  * Return value: a new #DfuImage
- *
- * Since: 0.5.4
  **/
 DfuImage *
 dfu_image_new (void)
@@ -100,8 +98,6 @@ dfu_image_new (void)
  * Gets the element data.
  *
  * Return value: (transfer none) (element-type DfuElement): element data
- *
- * Since: 0.5.4
  **/
 GPtrArray *
 dfu_image_get_elements (DfuImage *image)
@@ -119,8 +115,6 @@ dfu_image_get_elements (DfuImage *image)
  * Gets the element.
  *
  * Return value: (transfer none): element data, or %NULL for invalid
- *
- * Since: 0.5.4
  **/
 DfuElement *
 dfu_image_get_element (DfuImage *image, guint8 idx)
@@ -139,8 +133,6 @@ dfu_image_get_element (DfuImage *image, guint8 idx)
  * Gets the default element.
  *
  * Return value: (transfer none): element data, or %NULL for invalid
- *
- * Since: 0.7.1
  **/
 DfuElement *
 dfu_image_get_element_default (DfuImage *image)
@@ -159,8 +151,6 @@ dfu_image_get_element_default (DfuImage *image)
  * Gets the alternate setting.
  *
  * Return value: integer, or 0x00 for unset
- *
- * Since: 0.5.4
  **/
 guint8
 dfu_image_get_alt_setting (DfuImage *image)
@@ -177,8 +167,6 @@ dfu_image_get_alt_setting (DfuImage *image)
  * Gets the target name.
  *
  * Return value: a string, or %NULL for unset
- *
- * Since: 0.5.4
  **/
 const gchar *
 dfu_image_get_name (DfuImage *image)
@@ -198,8 +186,6 @@ dfu_image_get_name (DfuImage *image)
  * does not include any padding.
  *
  * Return value: a integer value, or 0 if there are no elements.
- *
- * Since: 0.5.4
  **/
 guint32
 dfu_image_get_size (DfuImage *image)
@@ -221,8 +207,6 @@ dfu_image_get_size (DfuImage *image)
  * @element: a #DfuElement
  *
  * Adds an element to the image.
- *
- * Since: 0.5.4
  **/
 void
 dfu_image_add_element (DfuImage *image, DfuElement *element)
@@ -239,8 +223,6 @@ dfu_image_add_element (DfuImage *image, DfuElement *element)
  * @alt_setting: vendor ID, or 0xffff for unset
  *
  * Sets the vendor ID.
- *
- * Since: 0.5.4
  **/
 void
 dfu_image_set_alt_setting (DfuImage *image, guint8 alt_setting)
@@ -256,8 +238,6 @@ dfu_image_set_alt_setting (DfuImage *image, guint8 alt_setting)
  * @name: a target string, or %NULL
  *
  * Sets the target name.
- *
- * Since: 0.5.4
  **/
 void
 dfu_image_set_name (DfuImage *image, const gchar *name)
@@ -285,8 +265,6 @@ dfu_image_set_name (DfuImage *image, const gchar *name)
  * Returns a string representaiton of the object.
  *
  * Return value: NULL terminated string, or %NULL for invalid
- *
- * Since: 0.5.4
  **/
 gchar *
 dfu_image_to_string (DfuImage *image)

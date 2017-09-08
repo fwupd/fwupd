@@ -93,8 +93,6 @@ dfu_context_class_init (DfuContextClass *klass)
 	 * @device: the #DfuDevice
 	 *
 	 * The ::device-added signal is emitted when a new DFU device is connected.
-	 *
-	 * Since: 0.5.4
 	 **/
 	signals [SIGNAL_DEVICE_ADDED] =
 		g_signal_new ("device-added",
@@ -109,8 +107,6 @@ dfu_context_class_init (DfuContextClass *klass)
 	 * @device: the #DfuDevice
 	 *
 	 * The ::device-removed signal is emitted when a DFU device is removed.
-	 *
-	 * Since: 0.5.4
 	 **/
 	signals [SIGNAL_DEVICE_REMOVED] =
 		g_signal_new ("device-removed",
@@ -126,8 +122,6 @@ dfu_context_class_init (DfuContextClass *klass)
 	 *
 	 * The ::device-changed signal is emitted when a DFU device is changed,
 	 * typically when it has detached or been reset.
-	 *
-	 * Since: 0.5.4
 	 **/
 	signals [SIGNAL_DEVICE_CHANGED] =
 		g_signal_new ("device-changed",
@@ -321,8 +315,6 @@ dfu_context_finalize (GObject *object)
  * Creates a new DFU context object.
  *
  * Return value: a new #DfuContext
- *
- * Since: 0.5.4
  **/
 DfuContext *
 dfu_context_new (void)
@@ -341,8 +333,6 @@ dfu_context_new (void)
  * Creates a new DFU context object.
  *
  * Return value: a new #DfuContext
- *
- * Since: 0.7.6
  **/
 DfuContext *
 dfu_context_new_with_context (GUsbContext *usb_ctx)
@@ -361,8 +351,6 @@ dfu_context_new_with_context (GUsbContext *usb_ctx)
  * Gets the wait-for-replug timeout.
  *
  * Return value: value in milliseconds
- *
- * Since: 0.5.4
  **/
 guint
 dfu_context_get_timeout (DfuContext *context)
@@ -383,8 +371,6 @@ dfu_context_get_timeout (DfuContext *context)
  * disconnecting. Using longer values will result in any UI not updating in a
  * good time, but using too short values will result in devices being removed
  * and re-added as different #DfuDevice's.
- *
- * Since: 0.5.4
  **/
 void
 dfu_context_set_timeout (DfuContext *context, guint timeout)
@@ -403,8 +389,6 @@ dfu_context_set_timeout (DfuContext *context, guint timeout)
  * Opens a DFU-capable context.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_context_enumerate (DfuContext *context, GError **error)
@@ -423,8 +407,6 @@ dfu_context_enumerate (DfuContext *context, GError **error)
  * Gets all the DFU-capable devices on the system.
  *
  * Return value: (element-type DfuDevice) (transfer container): array of devices
- *
- * Since: 0.5.4
  **/
 GPtrArray *
 dfu_context_get_devices (DfuContext *context)
@@ -455,8 +437,6 @@ dfu_context_get_devices (DfuContext *context)
  * An error is returned if more than one device matches.
  *
  * Return value: (transfer full): a #DfuDevice for success, or %NULL for an error
- *
- * Since: 0.5.4
  **/
 DfuDevice *
 dfu_context_get_device_by_vid_pid (DfuContext *context,
@@ -512,8 +492,6 @@ dfu_context_get_device_by_vid_pid (DfuContext *context,
  * Finds a device in the context with a specific platform ID.
  *
  * Return value: (transfer full): a #DfuDevice for success, or %NULL for an error
- *
- * Since: 0.5.4
  **/
 DfuDevice *
 dfu_context_get_device_by_platform_id (DfuContext *context,
@@ -552,8 +530,6 @@ dfu_context_get_device_by_platform_id (DfuContext *context,
  * An error is returned if more than one device exists.
  *
  * Return value: (transfer full): a #DfuDevice for success, or %NULL for an error
- *
- * Since: 0.5.4
  **/
 DfuDevice *
 dfu_context_get_device_default (DfuContext *context, GError **error)

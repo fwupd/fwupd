@@ -37,8 +37,6 @@
  * Converts an enumerated value to a string.
  *
  * Return value: a string
- *
- * Since: 0.5.4
  **/
 const gchar *
 dfu_state_to_string (DfuState state)
@@ -75,8 +73,6 @@ dfu_state_to_string (DfuState state)
  * Converts an enumerated value to a string.
  *
  * Return value: a string
- *
- * Since: 0.5.4
  **/
 const gchar *
 dfu_status_to_string (DfuStatus status)
@@ -123,8 +119,6 @@ dfu_status_to_string (DfuStatus status)
  * Converts an enumerated value to a string.
  *
  * Return value: a string
- *
- * Since: 0.5.4
  **/
 const gchar *
 dfu_mode_to_string (DfuMode mode)
@@ -143,8 +137,6 @@ dfu_mode_to_string (DfuMode mode)
  * Converts an enumerated value to a string.
  *
  * Return value: a string
- *
- * Since: 0.5.4
  **/
 const gchar *
 dfu_cipher_kind_to_string (DfuCipherKind cipher_kind)
@@ -165,8 +157,6 @@ dfu_cipher_kind_to_string (DfuCipherKind cipher_kind)
  * Converts an enumerated value to a string.
  *
  * Return value: a string
- *
- * Since: 0.7.2
  **/
 const gchar *
 dfu_version_to_string (DfuVersion version)
@@ -187,8 +177,6 @@ dfu_version_to_string (DfuVersion version)
  * Converts an enumerated value to a string.
  *
  * Return value: a string
- *
- * Since: 0.7.5
  **/
 const gchar *
 dfu_action_to_string (DfuAction action)

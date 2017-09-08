@@ -115,8 +115,6 @@ dfu_patch_finalize (GObject *object)
  * Converts the patch to a binary blob that can be stored as a file.
  *
  * Return value: (transfer full): blob
- *
- * Since: 0.9.6
  **/
 GBytes *
 dfu_patch_export (DfuPatch *self, GError **error)
@@ -193,8 +191,6 @@ dfu_patch_export (DfuPatch *self, GError **error)
  * Creates a patch from a serialized patch, possibly from a file.
  *
  * Return value: %TRUE on success
- *
- * Since: 0.9.6
  **/
 gboolean
 dfu_patch_import (DfuPatch *self, GBytes *blob, GError **error)
@@ -334,8 +330,6 @@ dfu_patch_flush (DfuPatch *self, DfuPatchCreateHelper *helper)
  * the firmware cannot be truncated by this format.
  *
  * Return value: %TRUE on success
- *
- * Since: 0.9.6
  **/
 gboolean
 dfu_patch_create (DfuPatch *self, GBytes *blob1, GBytes *blob2, GError **error)
@@ -432,8 +426,6 @@ _g_bytes_to_string (GBytes *blob)
  * Get the checksum for the old firmware image.
  *
  * Return value: A #GBytes, or %NULL if nothing has been loaded.
- *
- * Since: 0.9.6
  **/
 GBytes *
 dfu_patch_get_checksum_old (DfuPatch *self)
@@ -449,8 +441,6 @@ dfu_patch_get_checksum_old (DfuPatch *self)
  * Get the checksum for the new firmware image.
  *
  * Return value: A #GBytes, or %NULL if nothing has been loaded.
- *
- * Since: 0.9.6
  **/
 GBytes *
 dfu_patch_get_checksum_new (DfuPatch *self)
@@ -469,8 +459,6 @@ dfu_patch_get_checksum_new (DfuPatch *self)
  * Apply the currently loaded patch to a new firmware image.
  *
  * Return value: A #GBytes, typically saved as the new firmware file
- *
- * Since: 0.9.6
  **/
 GBytes *
 dfu_patch_apply (DfuPatch *self, GBytes *blob, DfuPatchApplyFlags flags, GError **error)
@@ -580,8 +568,6 @@ dfu_patch_apply (DfuPatch *self, GBytes *blob, DfuPatchApplyFlags flags, GError 
  * Returns a string representaiton of the object.
  *
  * Return value: NULL terminated string, or %NULL for invalid
- *
- * Since: 0.9.6
  **/
 gchar *
 dfu_patch_to_string (DfuPatch *self)
@@ -615,8 +601,6 @@ dfu_patch_to_string (DfuPatch *self)
  * Creates a new DFU patch object.
  *
  * Return value: a new #DfuPatch
- *
- * Since: 0.9.6
  **/
 DfuPatch *
 dfu_patch_new (void)

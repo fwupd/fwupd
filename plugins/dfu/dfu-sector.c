@@ -77,8 +77,6 @@ dfu_sector_init (DfuSector *sector)
  * Creates a new DFU sector object.
  *
  * Return value: a new #DfuSector
- *
- * Since: 0.5.4
  **/
 DfuSector *
 dfu_sector_new (guint32 address, guint32 size, guint32 size_left,
@@ -104,8 +102,6 @@ dfu_sector_new (guint32 address, guint32 size, guint32 size_left,
  * Gets the alternate setting.
  *
  * Return value: integer, or 0x00 for unset
- *
- * Since: 0.5.4
  **/
 guint32
 dfu_sector_get_address (DfuSector *sector)
@@ -122,8 +118,6 @@ dfu_sector_get_address (DfuSector *sector)
  * Gets the sector size.
  *
  * Return value: integer, or 0x00 for unset
- *
- * Since: 0.5.4
  **/
 guint32
 dfu_sector_get_size (DfuSector *sector)
@@ -140,8 +134,6 @@ dfu_sector_get_size (DfuSector *sector)
  * Gets the size of the rest of the sector.
  *
  * Return value: integer, or 0x00 for unset
- *
- * Since: 0.5.4
  **/
 guint32
 dfu_sector_get_size_left (DfuSector *sector)
@@ -158,8 +150,6 @@ dfu_sector_get_size_left (DfuSector *sector)
  * Gets the sector zone number.
  *
  * Return value: integer, or 0x00 for unset
- *
- * Since: 0.7.5
  **/
 guint16
 dfu_sector_get_zone (DfuSector *sector)
@@ -176,8 +166,6 @@ dfu_sector_get_zone (DfuSector *sector)
  * Gets the sector index number.
  *
  * Return value: integer, or 0x00 for unset
- *
- * Since: 0.7.5
  **/
 guint16
 dfu_sector_get_number (DfuSector *sector)
@@ -196,8 +184,6 @@ dfu_sector_get_number (DfuSector *sector)
  * written or read sector.
  *
  * Return value: integer ID, or 0x00 for unset
- *
- * Since: 0.5.4
  **/
 guint32
 dfu_sector_get_id (DfuSector *sector)
@@ -215,8 +201,6 @@ dfu_sector_get_id (DfuSector *sector)
  * Finds out if the sector has the required capability.
  *
  * Return value: %TRUE if the sector has the capabilily
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_sector_has_cap (DfuSector *sector, DfuSectorCap cap)
@@ -246,8 +230,6 @@ dfu_sector_cap_to_string (DfuSectorCap cap)
  * Returns a string representaiton of the object.
  *
  * Return value: NULL terminated string, or %NULL for invalid
- *
- * Since: 0.5.4
  **/
 gchar *
 dfu_sector_to_string (DfuSector *sector)

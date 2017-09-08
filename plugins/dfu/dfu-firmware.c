@@ -97,8 +97,6 @@ dfu_firmware_finalize (GObject *object)
  * Creates a new DFU firmware object.
  *
  * Return value: a new #DfuFirmware
- *
- * Since: 0.5.4
  **/
 DfuFirmware *
 dfu_firmware_new (void)
@@ -116,8 +114,6 @@ dfu_firmware_new (void)
  * Gets an image from the firmware file.
  *
  * Return value: (transfer none): a #DfuImage, or %NULL for not found
- *
- * Since: 0.5.4
  **/
 DfuImage *
 dfu_firmware_get_image (DfuFirmware *firmware, guint8 alt_setting)
@@ -145,8 +141,6 @@ dfu_firmware_get_image (DfuFirmware *firmware, guint8 alt_setting)
  * Gets an image from the firmware file.
  *
  * Return value: (transfer none): a #DfuImage, or %NULL for not found
- *
- * Since: 0.5.4
  **/
 DfuImage *
 dfu_firmware_get_image_by_name (DfuFirmware *firmware, const gchar *name)
@@ -173,8 +167,6 @@ dfu_firmware_get_image_by_name (DfuFirmware *firmware, const gchar *name)
  * Gets the default image from the firmware file.
  *
  * Return value: (transfer none): a #DfuImage, or %NULL for not found
- *
- * Since: 0.5.4
  **/
 DfuImage *
 dfu_firmware_get_image_default (DfuFirmware *firmware)
@@ -193,8 +185,6 @@ dfu_firmware_get_image_default (DfuFirmware *firmware)
  * Gets all the images contained in this firmware file.
  *
  * Return value: (transfer none) (element-type DfuImage): list of images
- *
- * Since: 0.5.4
  **/
 GPtrArray *
 dfu_firmware_get_images (DfuFirmware *firmware)
@@ -214,8 +204,6 @@ dfu_firmware_get_images (DfuFirmware *firmware)
  * does not include any padding.
  *
  * Return value: a integer value, or 0 if there are no images.
- *
- * Since: 0.5.4
  **/
 guint32
 dfu_firmware_get_size (DfuFirmware *firmware)
@@ -237,8 +225,6 @@ dfu_firmware_get_size (DfuFirmware *firmware)
  * @image: a #DfuImage
  *
  * Adds an image to the list of images.
- *
- * Since: 0.5.4
  **/
 void
 dfu_firmware_add_image (DfuFirmware *firmware, DfuImage *image)
@@ -256,8 +242,6 @@ dfu_firmware_add_image (DfuFirmware *firmware, DfuImage *image)
  * Gets the vendor ID.
  *
  * Return value: a vendor ID, or 0xffff for unset
- *
- * Since: 0.5.4
  **/
 guint16
 dfu_firmware_get_vid (DfuFirmware *firmware)
@@ -274,8 +258,6 @@ dfu_firmware_get_vid (DfuFirmware *firmware)
  * Gets the product ID.
  *
  * Return value: a product ID, or 0xffff for unset
- *
- * Since: 0.5.4
  **/
 guint16
 dfu_firmware_get_pid (DfuFirmware *firmware)
@@ -292,8 +274,6 @@ dfu_firmware_get_pid (DfuFirmware *firmware)
  * Gets the device ID.
  *
  * Return value: a device ID, or 0xffff for unset
- *
- * Since: 0.5.4
  **/
 guint16
 dfu_firmware_get_release (DfuFirmware *firmware)
@@ -310,8 +290,6 @@ dfu_firmware_get_release (DfuFirmware *firmware)
  * Gets the DFU version.
  *
  * Return value: a version, or 0x0 for unset
- *
- * Since: 0.5.4
  **/
 guint16
 dfu_firmware_get_format (DfuFirmware *firmware)
@@ -327,8 +305,6 @@ dfu_firmware_get_format (DfuFirmware *firmware)
  * @vid: vendor ID, or 0xffff for unset
  *
  * Sets the vendor ID.
- *
- * Since: 0.5.4
  **/
 void
 dfu_firmware_set_vid (DfuFirmware *firmware, guint16 vid)
@@ -344,8 +320,6 @@ dfu_firmware_set_vid (DfuFirmware *firmware, guint16 vid)
  * @pid: product ID, or 0xffff for unset
  *
  * Sets the product ID.
- *
- * Since: 0.5.4
  **/
 void
 dfu_firmware_set_pid (DfuFirmware *firmware, guint16 pid)
@@ -361,8 +335,6 @@ dfu_firmware_set_pid (DfuFirmware *firmware, guint16 pid)
  * @release: device ID, or 0xffff for unset
  *
  * Sets the device ID.
- *
- * Since: 0.5.4
  **/
 void
 dfu_firmware_set_release (DfuFirmware *firmware, guint16 release)
@@ -378,8 +350,6 @@ dfu_firmware_set_release (DfuFirmware *firmware, guint16 release)
  * @format: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_DFUSE
  *
  * Sets the DFU version in BCD format.
- *
- * Since: 0.5.4
  **/
 void
 dfu_firmware_set_format (DfuFirmware *firmware, DfuFirmwareFormat format)
@@ -399,8 +369,6 @@ dfu_firmware_set_format (DfuFirmware *firmware, DfuFirmwareFormat format)
  * Parses firmware data which may have an optional DFU suffix.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
@@ -456,8 +424,6 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
  * Parses a DFU firmware, which may contain an optional footer.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_firmware_parse_file (DfuFirmware *firmware, GFile *file,
@@ -494,8 +460,6 @@ dfu_firmware_parse_file (DfuFirmware *firmware, GFile *file,
  * Gets metadata from the store with a specific key.
  *
  * Return value: the metadata value, or %NULL for unset
- *
- * Since: 0.5.4
  **/
 const gchar *
 dfu_firmware_get_metadata (DfuFirmware *firmware, const gchar *key)
@@ -511,8 +475,6 @@ dfu_firmware_get_metadata (DfuFirmware *firmware, const gchar *key)
  * Gets all metadata from the store.
  *
  * Return value: (transfer none): the metadata hash table
- *
- * Since: 0.6.3
  **/
 GHashTable *
 dfu_firmware_get_metadata_table (DfuFirmware *firmware)
@@ -528,8 +490,6 @@ dfu_firmware_get_metadata_table (DfuFirmware *firmware)
  * @value: metadata string value
  *
  * Sets a metadata value with a specific key.
- *
- * Since: 0.5.4
  **/
 void
 dfu_firmware_set_metadata (DfuFirmware *firmware, const gchar *key, const gchar *value)
@@ -545,8 +505,6 @@ dfu_firmware_set_metadata (DfuFirmware *firmware, const gchar *key, const gchar 
  * @key: metadata string key
  *
  * Removes a metadata item from the store
- *
- * Since: 0.5.4
  **/
 void
 dfu_firmware_remove_metadata (DfuFirmware *firmware, const gchar *key)
@@ -592,8 +550,6 @@ dfu_firmware_check_acceptable_for_format (DfuFirmware *firmware, GError **error)
  * Writes DFU data to a data blob with a DFU-specific footer.
  *
  * Return value: (transfer none): firmware data
- *
- * Since: 0.5.4
  **/
 GBytes *
 dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
@@ -648,8 +604,6 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
  * Writes a DFU firmware with the optional footer.
  *
  * Return value: %TRUE for success
- *
- * Since: 0.5.4
  **/
 gboolean
 dfu_firmware_write_file (DfuFirmware *firmware, GFile *file,
@@ -688,8 +642,6 @@ dfu_firmware_write_file (DfuFirmware *firmware, GFile *file,
  * Returns a string representaiton of the object.
  *
  * Return value: NULL terminated string, or %NULL for invalid
- *
- * Since: 0.5.4
  **/
 gchar *
 dfu_firmware_to_string (DfuFirmware *firmware)
@@ -747,8 +699,6 @@ dfu_firmware_to_string (DfuFirmware *firmware)
  * Returns a string representaiton of the format.
  *
  * Return value: NULL terminated string, or %NULL for invalid
- *
- * Since: 0.5.4
  **/
 const gchar *
 dfu_firmware_format_to_string (DfuFirmwareFormat format)
@@ -771,8 +721,6 @@ dfu_firmware_format_to_string (DfuFirmwareFormat format)
  * Returns an enumerated version of the format.
  *
  * Return value: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_DFUSE
- *
- * Since: 0.7.3
  **/
 DfuFirmwareFormat
 dfu_firmware_format_from_string (const gchar *format)
@@ -799,8 +747,6 @@ dfu_firmware_format_from_string (const gchar *format)
  * is not recognised.
  *
  * Return value: NULL terminated string, or %NULL for invalid
- *
- * Since: 0.5.4
  **/
 DfuCipherKind
 dfu_firmware_get_cipher_kind (DfuFirmware *firmware)
@@ -816,8 +762,6 @@ dfu_firmware_get_cipher_kind (DfuFirmware *firmware)
  * @cipher_kind: a #DfuCipherKind, e.g. %DFU_CIPHER_KIND_XTEA
  *
  * Sets the kind of cipher used by the firmware file.
- *
- * Since: 0.6.3
  **/
 void
 dfu_firmware_set_cipher_kind (DfuFirmware *firmware, DfuCipherKind cipher_kind)
