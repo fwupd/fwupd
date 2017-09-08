@@ -1,6 +1,7 @@
 fwupd
 =====
 [![Build Status](https://travis-ci.org/hughsie/fwupd.png?branch=master)](https://travis-ci.org/hughsie/fwupd)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/10744/badge.svg)](https://scan.coverity.com/projects/10744)
 
 This project aims to make updating firmware on Linux automatic, safe and reliable.
 
