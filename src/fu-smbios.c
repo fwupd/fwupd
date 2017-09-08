@@ -221,7 +221,7 @@ fu_smbios_setup (FuSmbios *self, const gchar *sysfsdir, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "invalid DMI data size, got %" G_GSIZE_FORMAT
-			     " bytes, expected %" G_GSIZE_FORMAT,
+			     " bytes, expected %" G_GUINT16_FORMAT,
 			     sz, ep->structure_table_len);
 		return FALSE;
 	}
