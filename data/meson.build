@@ -1,8 +1,11 @@
 subdir('builder')
-subdir('tests')
-subdir('installed-tests')
 subdir('pki')
 subdir('remotes.d')
+
+if get_option('enable-tests')
+  subdir('tests')
+  subdir('installed-tests')
+endif
 
 install_data(['fwupd.conf'],
   install_dir : get_option('sysconfdir')
