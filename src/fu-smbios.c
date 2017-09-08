@@ -33,6 +33,7 @@ struct _FuSmbios {
 	GPtrArray		*items;
 };
 
+/* little endian */
 typedef struct __attribute__((packed)) {
 	gchar			 anchor_str[4];
 	guint8			 entry_point_csum;
@@ -50,6 +51,7 @@ typedef struct __attribute__((packed)) {
 	guint8			 smbios_bcd_rev;
 } FuSmbiosStructureEntryPoint;
 
+/* little endian */
 typedef struct __attribute__((packed)) {
 	guint8			 type;
 	guint8			 len;
@@ -87,7 +89,7 @@ fu_smbios_setup_from_data (FuSmbios *self, const guint8 *buf, gsize sz, GError *
 		/* create a new result */
 		item = g_new0 (FuSmbiosItem, 1);
 		item->type = str->type;
-		item->handle = str->handle;
+		item->handle = GUINT16_FROM_LE (str->handle);
 		item->data = g_bytes_new (buf + i, str->len);
 		item->strings = g_ptr_array_new_with_free_func (g_free);
 		g_ptr_array_add (self->items, item);
@@ -216,13 +218,13 @@ fu_smbios_setup (FuSmbios *self, const gchar *sysfsdir, GError **error)
 	dmi_fn = g_build_filename (sysfsdir, "dmi", "tables", "DMI", NULL);
 	if (!g_file_get_contents (dmi_fn, &dmi_raw, &sz, error))
 		return FALSE;
-	if (sz != ep->structure_table_len) {
+	if (sz != GUINT16_FROM_LE (ep->structure_table_len)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "invalid DMI data size, got %" G_GSIZE_FORMAT
 			     " bytes, expected %" G_GUINT16_FORMAT,
-			     sz, ep->structure_table_len);
+			     sz, GUINT16_FROM_LE (ep->structure_table_len));
 		return FALSE;
 	}
 
