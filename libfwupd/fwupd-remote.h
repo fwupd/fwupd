@@ -66,12 +66,6 @@ SoupURI		*fwupd_remote_build_uri			(FwupdRemote	*self,
 							 const gchar	*url,
 							 GError		**error);
 
-/* deprecated */
-SoupURI		*fwupd_remote_get_uri			(FwupdRemote	*self)
-G_DEPRECATED_FOR(fwupd_remote_get_metadata_uri);
-SoupURI		*fwupd_remote_get_uri_asc		(FwupdRemote	*self)
-G_DEPRECATED_FOR(fwupd_remote_get_metadata_uri_sig);
-
 G_END_DECLS
 
 #endif /* __FWUPD_REMOTE_H */

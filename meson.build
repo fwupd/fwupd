@@ -127,6 +127,9 @@ endif
 # Needed for realpath(), syscall(), cfmakeraw(), etc.
 add_project_arguments('-D_DEFAULT_SOURCE', language : 'c')
 
+# do not use deprecated symbols or defines internally
+add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
+
 gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
