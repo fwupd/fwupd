@@ -446,6 +446,8 @@ fu_plugin_amt_create_device (GError **error)
 		fu_device_set_name (dev, "Intel AMT (unknown)");
 		break;
 	}
+	fu_device_set_summary (dev, "Hardware and firmware technology for remote "
+				    "out-of-band management");
 
 	/* add guid */
 	memcpy (&uu, &ctx->guid, 16);

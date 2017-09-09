@@ -118,6 +118,7 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_name (dev, name);
 	fu_device_set_vendor (dev, "Synaptics");
+	fu_device_set_summary (dev, "Multi-Stream Transport Device");
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
 	fu_device_add_guid (dev, guid_str);
 

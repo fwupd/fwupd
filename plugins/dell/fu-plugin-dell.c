@@ -254,6 +254,11 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	fu_device_set_id (dev, dock_id);
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, dock_name);
+	if (type == DOCK_TYPE_TB16) {
+		fu_device_set_summary (dev, "A Thunderbolt™ 3 docking station");
+	} else if (type == DOCK_TYPE_WD15) {
+		fu_device_set_summary (dev, "A USB type-C docking station");
+	}
 	fu_device_add_guid (dev, guid_str);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
@@ -605,6 +610,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_add_guid (dev, tpm_guid);
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, pretty_tpm_name);
+	fu_device_set_summary (dev, "Platform TPM device");
 	fu_device_set_version (dev, version_str);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
@@ -624,6 +630,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		fu_device_add_guid (dev_alt, tpm_guid_alt);
 		fu_device_set_vendor (dev, "Dell Inc.");
 		fu_device_set_name (dev_alt, pretty_tpm_name_alt);
+		fu_device_set_summary (dev_alt, "Alternate mode for platform TPM device");
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_INTERNAL);
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_LOCKED);

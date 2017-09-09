@@ -219,6 +219,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_add_guid (device, "raspberrypi");
 	fu_device_set_name (device, "Raspberry Pi");
 	fu_device_set_vendor (device, "Raspberry Pi Foundation");
+	fu_device_set_summary (device, "A tiny and affordable computer");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
