@@ -196,6 +196,8 @@ fwupd_result_func (void)
 	fwupd_device_set_name (dev, "ColorHug2");
 	fwupd_device_add_guid (dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
 	fwupd_device_add_guid (dev, "00000000-0000-0000-0000-000000000000");
+	fwupd_device_add_icon (dev, "input-gaming");
+	fwupd_device_add_icon (dev, "input-mouse");
 	fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fwupd_result_set_update_trust_flags (result, FWUPD_TRUST_FLAG_PAYLOAD);
 
@@ -222,6 +224,7 @@ fwupd_result_func (void)
 		"  Guid:                 00000000-0000-0000-0000-000000000000\n"
 		"  Flags:                updatable|require-ac\n"
 		"  FirmwareHash:         SHA1(beefdead)\n"
+		"  Icons:                input-gaming,input-mouse\n"
 		"  Created:              1970-01-01\n"
 		"  Modified:             1970-01-02\n"
 		"  AppstreamId:          org.dave.ColorHug.firmware\n"

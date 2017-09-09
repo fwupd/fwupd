@@ -29,6 +29,21 @@ G_BEGIN_DECLS
 #define LU_TYPE_DEVICE_PERIPHERAL (lu_device_peripheral_get_type ())
 G_DECLARE_FINAL_TYPE (LuDevicePeripheral, lu_device_peripheral, LU, DEVICE_PERIPHERAL, LuDevice)
 
+typedef enum {
+	LU_DEVICE_PERIPHERAL_KIND_KEYBOARD,
+	LU_DEVICE_PERIPHERAL_KIND_REMOTE_CONTROL,
+	LU_DEVICE_PERIPHERAL_KIND_NUMPAD,
+	LU_DEVICE_PERIPHERAL_KIND_MOUSE,
+	LU_DEVICE_PERIPHERAL_KIND_TOUCHPAD,
+	LU_DEVICE_PERIPHERAL_KIND_TRACKBALL,
+	LU_DEVICE_PERIPHERAL_KIND_PRESENTER,
+	LU_DEVICE_PERIPHERAL_KIND_RECEIVER,
+	LU_DEVICE_PERIPHERAL_KIND_LAST
+} LuDevicePeripheralKind;
+
+LuDevicePeripheralKind	 lu_device_peripheral_get_kind		(LuDevicePeripheral *self);
+const gchar		*lu_device_peripheral_get_icon	(LuDevicePeripheral *self);
+
 G_END_DECLS
 
 #endif /* __LU_DEVICE_PERIPHERAL_H */

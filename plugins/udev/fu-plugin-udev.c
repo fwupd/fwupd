@@ -176,6 +176,7 @@ fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_id (dev, id);
 	fu_device_add_guid (dev, guid);
+	fu_device_add_icon (dev, "audio-card");
 	display_name = g_udev_device_get_property (device, "FWUPD_MODEL");
 	if (display_name == NULL)
 		display_name = g_udev_device_get_property (device, "ID_MODEL_FROM_DATABASE");

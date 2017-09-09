@@ -166,6 +166,9 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 	if (display_name != NULL)
 		fu_device_set_name (dev, display_name);
 
+	/* this is a guess and can be overridden in the metainfo file */
+	fu_device_add_icon (dev, "drive-harddisk-usb");
+
 	/* attempt to add */
 	fu_plugin_device_add (plugin, dev);
 	fu_plugin_cache_add (plugin, platform_id, dev);

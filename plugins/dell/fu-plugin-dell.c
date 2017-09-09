@@ -259,6 +259,7 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	} else if (type == DOCK_TYPE_WD15) {
 		fu_device_set_summary (dev, "A USB type-C docking station");
 	}
+	fu_device_add_icon (dev, "computer");
 	fu_device_add_guid (dev, guid_str);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {

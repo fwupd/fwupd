@@ -292,6 +292,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
 		fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 		fu_device_set_version (dev, "0");
+		fu_device_add_icon (dev, "computer");
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
 		fu_plugin_device_add (plugin, dev);
@@ -348,6 +349,13 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 				      guid, hardware_instance);
 
 		dev = fu_device_new ();
+		if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
+			/* nothing better in the icon naming spec */
+			fu_device_add_icon (dev, "audio-card");
+		} else {
+			/* this is probably system firmware */
+			fu_device_add_icon (dev, "computer");
+		}
 		fu_device_set_id (dev, id);
 		fu_device_add_guid (dev, guid);
 		fu_device_set_version (dev, version);

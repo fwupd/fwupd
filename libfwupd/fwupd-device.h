@@ -104,6 +104,9 @@ gboolean	 fwupd_device_has_guid			(FwupdDevice	*device,
 							 const gchar	*guid);
 GPtrArray	*fwupd_device_get_guids			(FwupdDevice	*device);
 const gchar	*fwupd_device_get_guid_default		(FwupdDevice	*device);
+void		 fwupd_device_add_icon			(FwupdDevice	*device,
+							 const gchar	*icon);
+GPtrArray	*fwupd_device_get_icons			(FwupdDevice	*device);
 
 G_END_DECLS
 
