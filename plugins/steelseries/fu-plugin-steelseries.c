@@ -126,6 +126,7 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 	fu_device_set_id (dev, platform_id);
 	fu_device_set_name (dev, "SteelSeries Rival 100");
 	fu_device_set_vendor (dev, "SteelSeries");
+	fu_device_set_summary (dev, "An optical gaming mouse");
 	version = g_strdup_printf ("%i.%i.%i",
 				   data[0], data[1], data[2]);
 	fu_device_set_version (dev, version);

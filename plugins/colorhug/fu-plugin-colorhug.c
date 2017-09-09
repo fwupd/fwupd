@@ -465,18 +465,26 @@ fu_plugin_colorhug_device_added_cb (GUsbContext *ctx,
 	case CH_DEVICE_MODE_FIRMWARE:
 	case CH_DEVICE_MODE_LEGACY:
 		fu_device_set_name (item->device, "ColorHug");
+		fu_device_set_summary (item->device,
+				       "An open source display colorimeter");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER2:
 	case CH_DEVICE_MODE_FIRMWARE2:
 		fu_device_set_name (item->device, "ColorHug2");
+		fu_device_set_summary (item->device,
+				       "An open source display colorimeter");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
 	case CH_DEVICE_MODE_FIRMWARE_PLUS:
 		fu_device_set_name (item->device, "ColorHug+");
+		fu_device_set_summary (item->device,
+				       "An open source spectrophotometer");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_ALS:
 	case CH_DEVICE_MODE_FIRMWARE_ALS:
 		fu_device_set_name (item->device, "ColorHugALS");
+		fu_device_set_summary (item->device,
+				       "An open source ambient light sensor");
 		break;
 	default:
 		fu_device_set_name (item->device, "ColorHug??");

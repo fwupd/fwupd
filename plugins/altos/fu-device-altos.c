@@ -793,6 +793,10 @@ fu_device_altos_init_real (FuDeviceAltos *device)
 		break;
 	}
 
+	/* set one line summary */
+	fu_device_set_summary (FU_DEVICE (device),
+			       "A USB hardware random number generator");
+
 	/* add USB\VID_0000&PID_0000 */
 	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 				  g_usb_device_get_vid (priv->usb_device),

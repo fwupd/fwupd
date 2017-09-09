@@ -232,6 +232,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 			fu_device_set_name (dev, name);
 		}
 	}
+	if (is_host)
+		fu_device_set_summary (dev, "Unmatched performance for high-speed I/O");
 
 	vendor = g_udev_device_get_sysfs_attr (device, "vendor_name");
 	if (vendor != NULL)
