@@ -788,6 +788,11 @@ fwupd_device_to_variant_builder (FwupdDevice *device, GVariantBuilder *builder)
 				       FWUPD_RESULT_KEY_DEVICE_DESCRIPTION,
 				       g_variant_new_string (priv->description));
 	}
+	if (priv->summary != NULL) {
+		g_variant_builder_add (builder, "{sv}",
+				       FWUPD_RESULT_KEY_DEVICE_SUMMARY,
+				       g_variant_new_string (priv->summary));
+	}
 	if (priv->checksums->len > 0) {
 		g_autoptr(GString) str = g_string_new ("");
 		for (guint i = 0; i < priv->checksums->len; i++) {
@@ -891,6 +896,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_VENDOR_ID) == 0) {
 		fwupd_device_set_vendor_id (device, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_SUMMARY) == 0) {
+		fwupd_device_set_summary (device, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION) == 0) {
@@ -1015,6 +1024,7 @@ fwupd_device_to_string (FwupdDevice *device)
 		const gchar *guid = g_ptr_array_index (priv->guids, i);
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
 	}
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_SUMMARY, priv->summary);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PLUGIN, priv->provider);
 	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_DEVICE_FLAGS, priv->flags);

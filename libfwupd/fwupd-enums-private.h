@@ -24,6 +24,7 @@
 
 /* FIXME: change the keys to the new names when we bump major version */
 #define FWUPD_RESULT_KEY_DEVICE_CREATED		"Created"	/* t */
+#define FWUPD_RESULT_KEY_DEVICE_SUMMARY		"Summary"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_DESCRIPTION	"Description"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_FLAGS		"Flags"		/* t */
 #define FWUPD_RESULT_KEY_DEVICE_CHECKSUM	"FirmwareHash"	/* s */
