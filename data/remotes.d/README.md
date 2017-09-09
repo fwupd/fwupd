@@ -4,6 +4,7 @@ Vendor Firmware
 These are the steps to add vendor that is installed as part of an OSTree image:
 
 * Change `/etc/fwupd/remotes.d/vendor.conf` to have `Enabled=true`
+* Change `/etc/fwupd/remotes.d/vendor.conf` to have the correct `Title`
 * Deploy the firmware to `/usr/share/fwupd/remotes.d/vendor/firmware`
 * Deploy the metadata to `/usr/share/fwupd/remotes.d/vendor/vendor.xml`
 
