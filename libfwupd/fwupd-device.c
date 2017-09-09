@@ -39,6 +39,7 @@ typedef struct {
 	guint64				 flags;
 	gchar				*appstream_id;
 	GPtrArray			*guids;
+	GPtrArray			*icons;
 	gchar				*name;
 	gchar				*summary;
 	gchar				*description;
@@ -251,6 +252,58 @@ fwupd_device_get_guid_default (FwupdDevice *device)
 	if (priv->guids->len == 0)
 		return NULL;
 	return g_ptr_array_index (priv->guids, 0);
+}
+
+/**
+ * fwupd_device_get_icons:
+ * @device: A #FwupdDevice
+ *
+ * Gets the icon names to use for the device.
+ *
+ * NOTE: Icons specified without a full path are stock icons and should
+ * be loaded from the users icon theme.
+ *
+ * Returns: (element-type utf8) (transfer none): an array of icon names
+ *
+ * Since: 0.9.8
+ **/
+GPtrArray *
+fwupd_device_get_icons (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->icons;
+}
+
+static gboolean
+fwupd_device_has_icon (FwupdDevice *device, const gchar *icon)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	for (guint i = 0; i < priv->icons->len; i++) {
+		const gchar *icon_tmp = g_ptr_array_index (priv->icons, i);
+		if (g_strcmp0 (icon, icon_tmp) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fwupd_device_add_icon:
+ * @device: A #FwupdDevice
+ * @icon: the name, e.g. "input-mouse" or "/usr/share/icons/foo.png"
+ *
+ * Adds the icon name if it does not already exist.
+ *
+ * Since: 0.9.8
+ **/
+void
+fwupd_device_add_icon (FwupdDevice *device, const gchar *icon)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	if (fwupd_device_has_icon (device, icon))
+		return;
+	g_ptr_array_add (priv->icons, g_strdup (icon));
 }
 
 /**
@@ -752,6 +805,12 @@ fwupd_device_to_variant_builder (FwupdDevice *device, GVariantBuilder *builder)
 				       FWUPD_RESULT_KEY_GUID,
 				       g_variant_new_string (str->str));
 	}
+	if (priv->icons->len > 0) {
+		const gchar * const *tmp = (const gchar * const *) priv->icons->pdata;
+		g_variant_builder_add (builder, "{sv}",
+				       FWUPD_RESULT_KEY_DEVICE_ICONS,
+				       g_variant_new_strv (tmp, priv->icons->len));
+	}
 	if (priv->name != NULL) {
 		g_variant_builder_add (builder, "{sv}",
 				       FWUPD_RESULT_KEY_DEVICE_NAME,
@@ -884,6 +943,12 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		g_auto(GStrv) split = g_strsplit (guids, ",", -1);
 		for (i = 0; split[i] != NULL; i++)
 			fwupd_device_add_guid (device, split[i]);
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_ICONS) == 0) {
+		g_autofree const gchar **icons = g_variant_get_strv (value, NULL);
+		for (guint i = 0; icons[i] != NULL; i++)
+			fwupd_device_add_icon (device, icons[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_NAME) == 0) {
@@ -1040,6 +1105,16 @@ fwupd_device_to_string (FwupdDevice *device)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_VERSION_BOOTLOADER, priv->version_bootloader);
 	if (priv->flashes_left < 2)
 		fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT, priv->flashes_left);
+	if (priv->icons->len > 0) {
+		GString *tmp = g_string_new (NULL);
+		for (guint i = 0; i < priv->icons->len; i++) {
+			const gchar *icon = g_ptr_array_index (priv->icons, i);
+			g_string_append_printf (tmp, "%s,", icon);
+		}
+		if (tmp->len > 1)
+			g_string_truncate (tmp, tmp->len - 1);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ICONS, tmp->str);
+	}
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_CREATED, priv->created);
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_MODIFIED, priv->modified);
 
@@ -1058,6 +1133,7 @@ fwupd_device_init (FwupdDevice *device)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	priv->guids = g_ptr_array_new_with_free_func (g_free);
+	priv->icons = g_ptr_array_new_with_free_func (g_free);
 	priv->checksums = g_ptr_array_new_with_free_func (g_free);
 }
 
@@ -1077,6 +1153,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->version_lowest);
 	g_free (priv->version_bootloader);
 	g_ptr_array_unref (priv->guids);
+	g_ptr_array_unref (priv->icons);
 	g_ptr_array_unref (priv->checksums);
 
 	G_OBJECT_CLASS (fwupd_device_parent_class)->finalize (object);

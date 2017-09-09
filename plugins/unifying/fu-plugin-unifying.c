@@ -30,6 +30,7 @@
 
 #include "lu-context.h"
 #include "lu-device.h"
+#include "lu-device-peripheral.h"
 
 struct FuPluginData {
 	LuContext		*ctx;
@@ -72,6 +73,17 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 	for (guint i = 0; i < guids->len; i++) {
 		const gchar *guid = g_ptr_array_index (guids, i);
 		fu_device_add_guid (dev, guid);
+	}
+
+	/* add icon */
+	if (lu_device_get_kind (device) == LU_DEVICE_KIND_PERIPHERAL) {
+		const gchar *tmp = lu_device_peripheral_get_icon (LU_DEVICE_PERIPHERAL (device));
+		if (tmp != NULL)
+			fu_device_add_icon (dev, tmp);
+	} else {
+		/* FIXME: we need something better in the icon name spec for
+		 * the USB Unifying receiver dongle */
+		fu_device_add_icon (dev, "preferences-desktop-keyboard");
 	}
 
 	/* don't allow the USB plugin to claim this */

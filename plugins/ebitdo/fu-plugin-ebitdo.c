@@ -59,6 +59,9 @@ fu_plugin_device_ebitdo_added (FuPlugin *plugin,
 	}
 	fu_device_set_id (dev, platform_id);
 
+	/* add a hardcoded icon name */
+	fu_device_add_icon (dev, "input-gaming");
+
 	/* open the device */
 	locker = fu_device_locker_new_full (dev,
 					    (FuDeviceLockerFunc) fu_device_ebitdo_open,
