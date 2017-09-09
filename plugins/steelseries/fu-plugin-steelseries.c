@@ -125,6 +125,7 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 	dev = fu_device_new ();
 	fu_device_set_id (dev, platform_id);
 	fu_device_set_name (dev, "SteelSeries Rival 100");
+	fu_device_set_vendor (dev, "SteelSeries");
 	version = g_strdup_printf ("%i.%i.%i",
 				   data[0], data[1], data[2]);
 	fu_device_set_version (dev, version);

@@ -428,6 +428,7 @@ fu_plugin_amt_create_device (GError **error)
 
 	dev = fu_device_new ();
 	fu_device_set_id (dev, "/dev/mei");
+	fu_device_set_vendor (dev, "Intel Corporation");
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	if (!amt_get_provisioning_state (ctx, &state, error))
 		return NULL;

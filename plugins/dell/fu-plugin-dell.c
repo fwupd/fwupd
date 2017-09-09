@@ -252,6 +252,7 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	dock_name = g_strdup_printf ("Dell %s %s", dock_type,
 				     component_desc);
 	fu_device_set_id (dev, dock_id);
+	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, dock_name);
 	fu_device_add_guid (dev, guid_str);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
@@ -602,6 +603,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	dev = fu_device_new ();
 	fu_device_set_id (dev, tpm_id);
 	fu_device_add_guid (dev, tpm_guid);
+	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, pretty_tpm_name);
 	fu_device_set_version (dev, version_str);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
@@ -620,6 +622,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		dev_alt = fu_device_new ();
 		fu_device_set_id (dev_alt, tpm_id_alt);
 		fu_device_add_guid (dev_alt, tpm_guid_alt);
+		fu_device_set_vendor (dev, "Dell Inc.");
 		fu_device_set_name (dev_alt, pretty_tpm_name_alt);
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_INTERNAL);
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_REQUIRE_AC);
