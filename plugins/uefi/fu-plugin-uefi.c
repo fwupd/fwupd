@@ -351,6 +351,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_set_id (dev, id);
 		fu_device_add_guid (dev, guid);
 		fu_device_set_version (dev, version);
+		fu_device_set_vendor (dev, NULL); //FIXME?
 		if (display_name->len > 0)
 			fu_device_set_name(dev, display_name->str);
 		fwup_get_lowest_supported_fw_version (re, &version_raw);
