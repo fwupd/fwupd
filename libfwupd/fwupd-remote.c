@@ -38,6 +38,7 @@ struct _FwupdRemote
 	gchar			*metadata_uri_sig;
 	gchar			*username;
 	gchar			*password;
+	gchar			*title;
 	gchar			*filename;
 	gchar			*filename_asc;
 	gchar			*filename_cache;
@@ -71,6 +72,13 @@ fwupd_remote_set_username (FwupdRemote *self, const gchar *username)
 		soup_uri_set_user (self->uri, username);
 	if (self->uri_asc != NULL)
 		soup_uri_set_user (self->uri_asc, username);
+}
+
+static void
+fwupd_remote_set_title (FwupdRemote *self, const gchar *title)
+{
+	g_free (self->title);
+	self->title = g_strdup (title);
 }
 
 static void
@@ -298,6 +306,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 
 	/* extract data */
 	self->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
+	self->title = g_key_file_get_string (kf, group, "Title", NULL);
 
 	/* DOWNLOAD-type remotes */
 	if (self->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
@@ -547,6 +556,23 @@ fwupd_remote_get_filename_asc (FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_get_title:
+ * @self: A #FwupdRemote
+ *
+ * Gets the remote title, e.g. "Linux Vendor Firmware Service".
+ *
+ * Returns: a string, or %NULL if unset
+ *
+ * Since: 0.9.8
+ **/
+const gchar *
+fwupd_remote_get_title (FwupdRemote *self)
+{
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return self->title;
+}
+
+/**
  * fwupd_remote_build_uri:
  * @self: A #FwupdRemote
  * @url: the URL to use
@@ -766,6 +792,10 @@ fwupd_remote_to_variant_builder (FwupdRemote *self, GVariantBuilder *builder)
 		g_variant_builder_add (builder, "{sv}", "Password",
 				       g_variant_new_string (self->password));
 	}
+	if (self->title != NULL) {
+		g_variant_builder_add (builder, "{sv}", "Title",
+				       g_variant_new_string (self->title));
+	}
 	if (self->metadata_uri != NULL) {
 		g_variant_builder_add (builder, "{sv}", "Url",
 				       g_variant_new_string (self->metadata_uri));
@@ -832,6 +862,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_username (self, g_variant_get_string (value, NULL));
 		} else if (g_strcmp0 (key, "Password") == 0) {
 			fwupd_remote_set_password (self, g_variant_get_string (value, NULL));
+		} else if (g_strcmp0 (key, "Title") == 0) {
+			fwupd_remote_set_title (self, g_variant_get_string (value, NULL));
 		} else if (g_strcmp0 (key, "Enabled") == 0) {
 			self->enabled = g_variant_get_boolean (value);
 		} else if (g_strcmp0 (key, "Priority") == 0) {
@@ -961,6 +993,7 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (self->firmware_base_uri);
 	g_free (self->username);
 	g_free (self->password);
+	g_free (self->title);
 	g_free (self->filename);
 	g_free (self->filename_asc);
 	g_free (self->filename_cache);

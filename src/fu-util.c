@@ -1104,6 +1104,10 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("Remote ID"),
 				    fwupd_remote_get_id (remote));
 
+		/* TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service" */
+		fu_util_print_data (_("Title"),
+				    fwupd_remote_get_title (remote));
+
 		/* TRANSLATORS: remote type, e.g. remote or local */
 		fu_util_print_data (_("Type"),
 				    fwupd_remote_kind_to_string (kind));
