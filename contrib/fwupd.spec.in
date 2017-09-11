@@ -229,6 +229,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-2/libfu_plugin_test.so
 %endif
 %{_libdir}/fwupd-plugins-2/libfu_plugin_thunderbolt.so
+%{_libdir}/fwupd-plugins-2/libfu_plugin_thunderbolt_power.so
 %{_libdir}/fwupd-plugins-2/libfu_plugin_udev.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-2/libfu_plugin_uefi.so

@@ -17,6 +17,7 @@ endif
 
 if get_option('enable-thunderbolt') and udev.found()
 subdir('thunderbolt')
+subdir('thunderbolt-power')
 endif
 
 if get_option('enable-colorhug')
