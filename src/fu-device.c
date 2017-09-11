@@ -265,12 +265,14 @@ fu_device_to_string (FuDevice *device)
 	dev = fwupd_result_get_device (FWUPD_RESULT (device));
 	if (dev != NULL) {
 		g_autofree gchar *tmp = fwupd_device_to_string (dev);
-		g_string_append_printf (str, "%s\n", tmp);
+		if (tmp != NULL && tmp[0] != '\0')
+			g_string_append (str, tmp);
 	}
 	rel = fwupd_result_get_release (FWUPD_RESULT (device));
 	if (rel != NULL) {
 		g_autofree gchar *tmp = fwupd_release_to_string (rel);
-		g_string_append_printf (str, "%s\n", tmp);
+		if (tmp != NULL && tmp[0] != '\0')
+			g_string_append (str, tmp);
 	}
 	if (priv->equivalent_id != NULL)
 		fwupd_pad_kv_str (str, "EquivalentId", priv->equivalent_id);
