@@ -1,0 +1,8 @@
+FROM fedora:26
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+RUN dnf --enablerepo=updates-testing -y update
+%%%INSTALL_DEPENDENCIES_COMMAND%%%
+RUN mkdir /build
+WORKDIR /build
