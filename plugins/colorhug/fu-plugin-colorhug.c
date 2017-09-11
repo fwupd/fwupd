@@ -437,6 +437,7 @@ fu_plugin_colorhug_device_added_cb (GUsbContext *ctx,
 		item->device = fu_device_new ();
 		fu_device_set_id (item->device, device_key);
 		fu_device_set_vendor (item->device, "Hughski Limited");
+		fu_device_set_vendor_id (item->device, "USB:0x273F");
 		fu_device_set_equivalent_id (item->device,
 					     g_usb_device_get_platform_id (device));
 		fu_device_add_guid (item->device, ch_device_get_guid (device));
