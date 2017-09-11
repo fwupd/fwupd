@@ -2564,6 +2564,14 @@ fu_engine_add_device (FuEngine *self, FuPlugin *plugin, FuDevice *device)
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register (self, device);
 
+	/* warn if the device is updatable by any vendor */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    fu_device_get_vendor_id (device) == 0) {
+		g_warning ("device %s [%s] is updatable by any vendor",
+			   fu_device_get_id (device),
+			   fu_device_get_name (device));
+	}
+
 	/* create new device */
 	item = g_new0 (FuDeviceItem, 1);
 	item->device = g_object_ref (device);
