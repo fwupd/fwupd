@@ -52,41 +52,36 @@ if len(split) >= 2:
     OS = split[0]
     SUBOS = split[1]
 
+input = os.path.join(directory, "Dockerfile-%s.in" % OS)
+if not os.path.exists(input):
+    print("Missing input file %s for %s" % (input, OS))
+    sys.exit(1)
+
+with open(input, 'r') as rfd:
+    lines = rfd.readlines()
+
 out = os.path.join(directory, "Dockerfile")
 
 with open(out, 'w') as wfd:
-    if OS == "fedora":
-        wfd.write("FROM fedora:26\n")
-        wfd.write("ENV LANG en_US.UTF-8\n")
-        wfd.write("ENV LANGUAGE en_US:en\n")
-        wfd.write("ENV LC_ALL en_US.UTF-8\n")
-        wfd.write("RUN dnf --enablerepo=updates-testing -y update\n")
-        wfd.write("RUN dnf --enablerepo=updates-testing -y install \\\n")
-    elif OS == "debian":
-        wfd.write("FROM debian:unstable\n")
-        if SUBOS == "s390x":
-            wfd.write('RUN cat /etc/apt/sources.list | sed "s/deb/deb-src/" >> /etc/apt/sources.list\n')
-            wfd.write('RUN dpkg --add-architecture s390x\n')
-    elif OS == "ubuntu":
-        wfd.write("FROM ubuntu:devel\n")
-    elif OS == "arch":
-        wfd.write("FROM archlinux/base\n")
-        # set the locale
-        wfd.write("ENV LANG en_US.UTF-8\n")
-        wfd.write("ENV LC_ALL en_US.UTF-8\n")
-        # keep the package DB
-        wfd.write("RUN rm /usr/share/libalpm/hooks/package-cleanup.hook\n")
-        # update the image
-        wfd.write("RUN pacman -Syu --noconfirm \\\n")
-    if OS == "debian" or OS == "ubuntu":
-        wfd.write("RUN apt-get update -qq && \\\n")
-        wfd.write("\tapt-get install -yq --no-install-recommends\\\n")
-    #write dependencies
-    for i in range(0, len(deps)):
-       if i < len(deps)-1:
-           wfd.write("\t%s \\\n" % deps[i])
-       else:
-           wfd.write("\t%s \n" % deps[i])
-    #write build directory
-    wfd.write("RUN mkdir /build\n")
-    wfd.write("WORKDIR /build\n")
+    for line in lines:
+        if line == "%%%INSTALL_DEPENDENCIES_COMMAND%%%\n":
+            if OS == "fedora":
+                wfd.write("RUN dnf --enablerepo=updates-testing -y install \\\n")
+            elif OS == "debian" or OS == "ubuntu":
+                wfd.write("RUN apt update -qq && \\\n")
+                wfd.write("\tapt install -yq --no-install-recommends\\\n")
+            elif OS == "arch":
+                wfd.write("RUN pacman -Syu --noconfirm \\\n")
+            for i in range(0, len(deps)):
+                if i < len(deps)-1:
+                    wfd.write("\t%s \\\n" % deps[i])
+                else:
+                    wfd.write("\t%s \n" % deps[i])
+        elif line == "%%%ARCH_SPECIFIC_COMMAND%%%\n":
+            if OS == "debian" and SUBOS == "s390x":
+                #add sources
+                wfd.write('RUN cat /etc/apt/sources.list | sed "s/deb/deb-src/" >> /etc/apt/sources.list\n')
+                #add new architecture
+                wfd.write('RUN dpkg --add-architecture %s\n' % SUBOS)
+        else:
+            wfd.write(line)
