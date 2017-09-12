@@ -1106,7 +1106,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	if (priv->flashes_left < 2)
 		fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT, priv->flashes_left);
 	if (priv->icons->len > 0) {
-		GString *tmp = g_string_new (NULL);
+		g_autoptr(GString) tmp = g_string_new (NULL);
 		for (guint i = 0; i < priv->icons->len; i++) {
 			const gchar *icon = g_ptr_array_index (priv->icons, i);
 			g_string_append_printf (tmp, "%s,", icon);
