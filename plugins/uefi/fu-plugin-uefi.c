@@ -480,6 +480,40 @@ fu_plugin_uefi_uefi_type_to_string (guint32 uefi_type)
 	return NULL;
 }
 
+static const gchar *
+fu_plugin_uefi_get_vendor_for_type (FuPlugin *plugin, guint32 uefi_type)
+{
+	/* system firmware is assumed from the device manufacturer */
+	if (uefi_type == FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE)
+		return fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
+
+	//FIXME: map the ESRT device entry to a device in /sys/class/pci_bus/ */
+	return NULL;
+}
+
+static gchar *
+fu_plugin_uefi_get_vendor_id_for_type (FuPlugin *plugin, guint32 uefi_type)
+{
+	/* anything marked as system firmware has to be updated only by the
+	 * device manufacturer */
+	if (uefi_type == FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE) {
+		const gchar *tmp;
+		g_autofree gchar *vendor = NULL;
+		tmp = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
+		if (tmp == NULL)
+			return NULL;
+		vendor = g_strdup (tmp);
+		for (gsize i = 0; vendor[i] != '\0'; i++) {
+			if (!g_ascii_isalnum (vendor[i]))
+				vendor[i] = '_';
+		}
+		return g_strdup_printf ("SMBIOS:%s", vendor);
+	}
+
+	//FIXME: map the ESRT device entry to a device in /sys/class/pci_bus/ */
+	return NULL;
+}
+
 static gchar *
 fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, guint32 uefi_type)
 {
@@ -504,6 +538,7 @@ static void
 fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 {
 	AsVersionParseFlag parse_flags;
+	const gchar *vendor;
 	efi_guid_t *guid_raw;
 	guint32 uefi_type;
 	guint32 version_raw;
@@ -513,6 +548,7 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version_lowest = NULL;
 	g_autofree gchar *version = NULL;
+	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
 	/* detect the fake GUID used for uploading the image */
@@ -556,6 +592,12 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 							       parse_flags);
 		fu_device_set_version_lowest (dev, version_lowest);
 	}
+	vendor = fu_plugin_uefi_get_vendor_for_type (plugin, uefi_type);
+	if (vendor != NULL)
+		fu_device_set_vendor (dev, vendor);
+	vendor_id = fu_plugin_uefi_get_vendor_id_for_type (plugin, uefi_type);
+	if (vendor_id != NULL)
+		fu_device_set_vendor_id (dev, vendor_id);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	if (g_file_test ("/sys/firmware/efi/efivars", G_FILE_TEST_IS_DIR) ||
 	    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR)) {
