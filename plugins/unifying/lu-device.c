@@ -108,6 +108,8 @@ lu_hidpp_feature_to_string (guint16 feature)
 		return "Root";
 	if (feature == HIDPP_FEATURE_I_FIRMWARE_INFO)
 		return "IFirmwareInfo";
+	if (feature == HIDPP_FEATURE_GET_DEVICE_NAME_TYPE)
+		return "GetDevicenameType";
 	if (feature == HIDPP_FEATURE_BATTERY_LEVEL_STATUS)
 		return "BatteryLevelStatus";
 	if (feature == HIDPP_FEATURE_DFU_CONTROL)
