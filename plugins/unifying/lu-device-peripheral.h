@@ -42,7 +42,8 @@ typedef enum {
 } LuDevicePeripheralKind;
 
 LuDevicePeripheralKind	 lu_device_peripheral_get_kind		(LuDevicePeripheral *self);
-const gchar		*lu_device_peripheral_get_icon	(LuDevicePeripheral *self);
+const gchar		*lu_device_peripheral_get_icon		(LuDevicePeripheral *self);
+const gchar		*lu_device_peripheral_get_summary	(LuDevicePeripheral *self);
 
 G_END_DECLS
 

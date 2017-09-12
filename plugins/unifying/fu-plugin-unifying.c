@@ -63,8 +63,14 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_id (dev, lu_device_get_platform_id (device));
 	fu_device_set_name (dev, lu_device_get_product (device));
-	if (lu_device_get_kind (device) != LU_DEVICE_KIND_PERIPHERAL)
+	if (lu_device_get_kind (device) == LU_DEVICE_KIND_PERIPHERAL) {
+		const gchar *tmp;
+		tmp = lu_device_peripheral_get_summary (LU_DEVICE_PERIPHERAL (device));
+		if (tmp != NULL)
+			fu_device_set_summary (dev, tmp);
+	} else {
 		fu_device_set_summary (dev, "A miniaturised USB wireless receiver");
+	}
 	fu_device_set_vendor (dev, lu_device_get_vendor (device));
 	fu_device_set_vendor_id (dev, "USB:0x046D");
 	fu_device_set_version (dev, lu_device_get_version_fw (device));

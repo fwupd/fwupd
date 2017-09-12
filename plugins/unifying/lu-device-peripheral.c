@@ -64,6 +64,28 @@ lu_device_peripheral_get_icon (LuDevicePeripheral *self)
 	return NULL;
 }
 
+const gchar *
+lu_device_peripheral_get_summary (LuDevicePeripheral *self)
+{
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_KEYBOARD)
+		return "Unifying Keyboard";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_REMOTE_CONTROL)
+		return "Unifying Remote Control";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_NUMPAD)
+		return "Unifying Number Pad";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_MOUSE)
+		return "Unifying Mouse";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_TOUCHPAD)
+		return "Unifying Touchpad";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_TRACKBALL)
+		return "Unifying Trackball";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_PRESENTER)
+		return "Unifying Presenter";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_RECEIVER)
+		return "Unifying Receiver";
+	return NULL;
+}
+
 static gboolean
 lu_device_peripheral_fetch_firmware_info (LuDevice *device, GError **error)
 {
