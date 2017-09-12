@@ -1146,6 +1146,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->description);
 	g_free (priv->id);
 	g_free (priv->name);
+	g_free (priv->summary);
 	g_free (priv->vendor);
 	g_free (priv->vendor_id);
 	g_free (priv->provider);
