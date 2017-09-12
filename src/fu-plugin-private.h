@@ -36,6 +36,11 @@ void		 fu_plugin_set_hwids			(FuPlugin	*plugin,
 							 FuHwids	*hwids);
 void		 fu_plugin_set_smbios			(FuPlugin	*plugin,
 							 FuSmbios	*smbios);
+guint		 fu_plugin_get_order			(FuPlugin	*plugin);
+void		 fu_plugin_set_order			(FuPlugin	*plugin,
+							 guint		 order);
+GPtrArray	*fu_plugin_get_rules			(FuPlugin	*plugin,
+							 FuPluginRule	 rule);
 gboolean	 fu_plugin_open				(FuPlugin	*plugin,
 							 const gchar	*filename,
 							 GError		**error);

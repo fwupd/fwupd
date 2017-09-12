@@ -63,6 +63,22 @@ typedef enum {
 	FU_PLUGIN_VERIFY_FLAG_LAST
 } FuPluginVerifyFlags;
 
+/**
+ * FuPluginRule:
+ * @FU_PLUGIN_RULE_CONFLICTS:		The plugin conflicts with another
+ * @FU_PLUGIN_RULE_RUN_AFTER:		Order the plugin after another
+ * @FU_PLUGIN_RULE_RUN_BEFORE:		Order the plugin before another
+ *
+ * The rules used for ordering plugins.
+ * Plugins are expected to add rules in fu_plugin_initialize().
+ **/
+typedef enum {
+	FU_PLUGIN_RULE_CONFLICTS,
+	FU_PLUGIN_RULE_RUN_AFTER,
+	FU_PLUGIN_RULE_RUN_BEFORE,
+	FU_PLUGIN_RULE_LAST
+} FuPluginRule;
+
 typedef struct	FuPluginData	FuPluginData;
 
 /* for plugins to use */
@@ -106,6 +122,9 @@ const gchar	*fu_plugin_get_smbios_string		(FuPlugin	*plugin,
 							 guint8		 offset);
 GBytes		*fu_plugin_get_smbios_data		(FuPlugin	*plugin,
 							 guint8		 structure_type);
+void		 fu_plugin_add_rule			(FuPlugin	*plugin,
+							 FuPluginRule	 rule,
+							 const gchar	*name);
 
 G_END_DECLS
 

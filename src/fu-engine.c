@@ -2447,16 +2447,23 @@ fu_engine_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuEngi
 static gint
 fu_engine_plugin_sort_cb (gconstpointer a, gconstpointer b)
 {
-	FuPlugin *plugin1 = *((FuPlugin **) a);
-	FuPlugin *plugin2 = *((FuPlugin **) b);
-	return g_strcmp0 (fu_plugin_get_name (plugin1),
-			  fu_plugin_get_name (plugin2));
+	FuPlugin **pa = (FuPlugin **) a;
+	FuPlugin **pb = (FuPlugin **) b;
+	if (fu_plugin_get_order (*pa) < fu_plugin_get_order (*pb))
+		return -1;
+	if (fu_plugin_get_order (*pa) > fu_plugin_get_order (*pb))
+		return 1;
+	return 0;
 }
 
 static gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {
+	FuPlugin *dep;
+	GPtrArray *deps;
 	const gchar *fn;
+	gboolean changes;
+	guint dep_loop_check = 0;
 	g_autoptr(GDir) dir = NULL;
 
 	/* search */
@@ -2530,8 +2537,99 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				     g_strdup (fu_plugin_get_name (plugin)),
 				     g_object_ref (plugin));
 	}
-	g_ptr_array_sort (self->plugins, fu_engine_plugin_sort_cb);
 
+	/* order by deps */
+	do {
+		changes = FALSE;
+		for (guint i = 0; i < self->plugins->len; i++) {
+			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_AFTER);
+			for (guint j = 0; j < deps->len && !changes; j++) {
+				const gchar *plugin_name = g_ptr_array_index (deps, j);
+				dep = fu_engine_get_plugin_by_name (self, plugin_name);
+				if (dep == NULL) {
+					g_debug ("cannot find plugin '%s' "
+						 "requested by '%s'",
+						 plugin_name,
+						 fu_plugin_get_name (plugin));
+					continue;
+				}
+				if (!fu_plugin_get_enabled (dep))
+					continue;
+				if (fu_plugin_get_order (plugin) <= fu_plugin_get_order (dep)) {
+					g_debug ("%s [%u] to be ordered after %s [%u] "
+						 "so promoting to [%u]",
+						 fu_plugin_get_name (plugin),
+						 fu_plugin_get_order (plugin),
+						 fu_plugin_get_name (dep),
+						 fu_plugin_get_order (dep),
+						 fu_plugin_get_order (dep) + 1);
+					fu_plugin_set_order (plugin, fu_plugin_get_order (dep) + 1);
+					changes = TRUE;
+				}
+			}
+		}
+		for (guint i = 0; i < self->plugins->len; i++) {
+			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_BEFORE);
+			for (guint j = 0; j < deps->len && !changes; j++) {
+				const gchar *plugin_name = g_ptr_array_index (deps, j);
+				dep = fu_engine_get_plugin_by_name (self, plugin_name);
+				if (dep == NULL) {
+					g_debug ("cannot find plugin '%s' "
+						 "requested by '%s'",
+						 plugin_name,
+						 fu_plugin_get_name (plugin));
+					continue;
+				}
+				if (!fu_plugin_get_enabled (dep))
+					continue;
+				if (fu_plugin_get_order (plugin) >= fu_plugin_get_order (dep)) {
+					g_debug ("%s [%u] to be ordered before %s [%u] "
+						 "so promoting to [%u]",
+						 fu_plugin_get_name (plugin),
+						 fu_plugin_get_order (plugin),
+						 fu_plugin_get_name (dep),
+						 fu_plugin_get_order (dep),
+						 fu_plugin_get_order (dep) + 1);
+					fu_plugin_set_order (dep, fu_plugin_get_order (plugin) + 1);
+					changes = TRUE;
+				}
+			}
+		}
+
+		/* check we're not stuck */
+		if (dep_loop_check++ > 100) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "got stuck in dep loop");
+			return FALSE;
+		}
+	} while (changes);
+
+	/* check for conflicts */
+	for (guint i = 0; i < self->plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+		if (!fu_plugin_get_enabled (plugin))
+			continue;
+		deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_CONFLICTS);
+		for (guint j = 0; j < deps->len && !changes; j++) {
+			const gchar *plugin_name = g_ptr_array_index (deps, j);
+			dep = fu_engine_get_plugin_by_name (self, plugin_name);
+			if (dep == NULL)
+				continue;
+			if (!fu_plugin_get_enabled (dep))
+				continue;
+			g_debug ("disabling %s as conflicts with %s",
+				 fu_plugin_get_name (dep),
+				 fu_plugin_get_name (plugin));
+			fu_plugin_set_enabled (dep, FALSE);
+		}
+	}
+
+	/* sort by order */
+	g_ptr_array_sort (self->plugins, fu_engine_plugin_sort_cb);
 	return TRUE;
 }
 

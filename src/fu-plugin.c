@@ -42,6 +42,8 @@ typedef struct {
 	GModule			*module;
 	GUsbContext		*usb_ctx;
 	gboolean		 enabled;
+	guint			 order;
+	GPtrArray		*rules[FU_PLUGIN_RULE_LAST];
 	gchar			*name;
 	FuHwids			*hwids;
 	FuSmbios			*smbios;
@@ -1165,6 +1167,73 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	return TRUE;
 }
 
+/**
+ * fu_plugin_get_order:
+ * @plugin: a #FuPlugin
+ *
+ * Gets the plugin order, where higher numbers are run after lower
+ * numbers.
+ *
+ * Returns: the integer value
+ **/
+guint
+fu_plugin_get_order (FuPlugin *plugin)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	return priv->order;
+}
+
+/**
+ * fu_plugin_set_order:
+ * @plugin: a #FuPlugin
+ * @order: a integer value
+ *
+ * Sets the plugin order, where higher numbers are run after lower
+ * numbers.
+ **/
+void
+fu_plugin_set_order (FuPlugin *plugin, guint order)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	priv->order = order;
+}
+
+/**
+ * fu_plugin_add_rule:
+ * @plugin: a #FuPlugin
+ * @rule: a #FuPluginRule, e.g. %FU_PLUGIN_RULE_CONFLICTS
+ * @name: a plugin name, e.g. "upower"
+ *
+ * If the plugin name is found, the rule will be used to sort the plugin list,
+ * for example the plugin specified by @name will be ordered after this plugin
+ * when %FU_PLUGIN_RULE_RUN_AFTER is used.
+ *
+ * NOTE: The depsolver is iterative and may not solve overly-complicated rules;
+ * If depsolving fails then fwupd will not start.
+ **/
+void
+fu_plugin_add_rule (FuPlugin *plugin, FuPluginRule rule, const gchar *name)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	g_ptr_array_add (priv->rules[rule], g_strdup (name));
+}
+
+/**
+ * fu_plugin_get_rules:
+ * @plugin: a #FuPlugin
+ * @rule: a #FuPluginRule, e.g. %FU_PLUGIN_RULE_CONFLICTS
+ *
+ * Gets the plugin IDs that should be run after this plugin.
+ *
+ * Returns: (element-type utf8) (transfer none): the list of plugin names, e.g. ['appstream']
+ **/
+GPtrArray *
+fu_plugin_get_rules (FuPlugin *plugin, FuPluginRule rule)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	return priv->rules[rule];
+}
+
 static void
 fu_plugin_class_init (FuPluginClass *klass)
 {
@@ -1222,6 +1291,8 @@ fu_plugin_init (FuPlugin *plugin)
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
 	priv->devices_delay = g_hash_table_new (g_direct_hash, g_direct_equal);
+	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++)
+		priv->rules[i] = g_ptr_array_new_with_free_func (g_free);
 }
 
 static void
@@ -1239,6 +1310,9 @@ fu_plugin_finalize (GObject *object)
 			func (plugin);
 		}
 	}
+
+	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++)
+		g_ptr_array_unref (priv->rules[i]);
 
 	if (priv->usb_ctx != NULL)
 		g_object_unref (priv->usb_ctx);

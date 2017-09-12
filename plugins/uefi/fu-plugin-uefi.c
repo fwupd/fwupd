@@ -30,6 +30,12 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
+void
+fu_plugin_init (FuPlugin *plugin)
+{
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
+}
+
 static fwup_resource *
 fu_plugin_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError **error)
 {
