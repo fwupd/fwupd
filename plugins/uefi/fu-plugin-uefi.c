@@ -419,9 +419,13 @@ fu_plugin_update (FuPlugin *plugin,
 }
 
 static AsVersionParseFlag
-fu_plugin_uefi_get_version_format (FuPlugin *plugin)
+fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, guint32 uefi_type)
 {
 	const gchar *content;
+
+	/* we have no information for devices */
+	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE)
+		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (content == NULL)
@@ -476,38 +480,40 @@ fu_plugin_uefi_uefi_type_to_string (guint32 uefi_type)
 	return NULL;
 }
 
+static gchar *
+fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, guint32 uefi_type)
+{
+	GString *display_name;
+
+	/* set Display Name prefix for capsules that are not PCI cards */
+	display_name = g_string_new (fu_plugin_uefi_uefi_type_to_string (uefi_type));
+	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
+		g_string_prepend (display_name, "UEFI ");
+	} else {
+		const gchar *tmp;
+		tmp = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
+		if (tmp != NULL && tmp[0] != '\0') {
+			g_string_prepend (display_name, " ");
+			g_string_prepend (display_name, tmp);
+		}
+	}
+	return g_string_free (display_name, FALSE);
+}
+
 static void
 fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 {
 	AsVersionParseFlag parse_flags;
-	const gchar *product_name;
-	const gchar *uefi_type_str = NULL;
 	efi_guid_t *guid_raw;
 	guint32 uefi_type;
 	guint32 version_raw;
 	guint64 hardware_instance = 0;	/* FIXME */
 	g_autofree gchar *guid = NULL;
 	g_autofree gchar *id = NULL;
-	g_autofree gchar *version = NULL;
+	g_autofree gchar *name = NULL;
 	g_autofree gchar *version_lowest = NULL;
+	g_autofree gchar *version = NULL;
 	g_autoptr(FuDevice) dev = NULL;
-	g_autoptr(GString) display_name = g_string_new (NULL);
-
-	parse_flags = fu_plugin_uefi_get_version_format (plugin);
-
-	/* set Display Name to the system for all capsules */
-	product_name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
-
-	/* set up proper DisplayName */
-	fwup_get_fw_type (re, &uefi_type);
-	if (product_name != NULL)
-		g_string_append (display_name, product_name);
-	uefi_type_str = fu_plugin_uefi_uefi_type_to_string (uefi_type);
-	if (uefi_type_str != NULL) {
-		if (display_name->len > 0)
-			g_string_append (display_name, " ");
-		g_string_append (display_name, uefi_type_str);
-	}
 
 	/* detect the fake GUID used for uploading the image */
 	fwup_get_guid (re, &guid_raw);
@@ -523,9 +529,10 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 		return;
 	}
 
-	fwup_get_fw_version(re, &version_raw);
-	version = as_utils_version_from_uint32 (version_raw,
-						parse_flags);
+	fwup_get_fw_type (re, &uefi_type);
+	parse_flags = fu_plugin_uefi_get_version_format_for_type (plugin, uefi_type);
+	fwup_get_fw_version (re, &version_raw);
+	version = as_utils_version_from_uint32 (version_raw, parse_flags);
 	id = g_strdup_printf ("UEFI-%s-dev%" G_GUINT64_FORMAT,
 			      guid, hardware_instance);
 
@@ -540,8 +547,9 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 	fu_device_set_id (dev, id);
 	fu_device_add_guid (dev, guid);
 	fu_device_set_version (dev, version);
-	if (display_name->len > 0)
-		fu_device_set_name(dev, display_name->str);
+	name = fu_plugin_uefi_get_name_for_type (plugin, uefi_type);
+	if (name != NULL)
+		fu_device_set_name (dev, name);
 	fwup_get_lowest_supported_fw_version (re, &version_raw);
 	if (version_raw != 0) {
 		version_lowest = as_utils_version_from_uint32 (version_raw,
