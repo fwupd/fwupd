@@ -47,7 +47,6 @@ typedef union _ADDR_UNION{
 #pragma pack()
 
 /* supported host related GUIDs */
-#define TBT_GPIO_GUID		EFI_GUID (0x2EFD333F, 0x65EC, 0x41D3, 0x86D3, 0x08, 0xF0, 0x9F, 0x4F, 0xB1, 0x14)
 #define MST_GPIO_GUID		EFI_GUID (0xF24F9bE4, 0x2a13, 0x4344, 0xBC05, 0x01, 0xCE, 0xF7, 0xDA, 0xEF, 0x92)
 
 static void
@@ -326,13 +325,12 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE))
 			return TRUE;
 		tmp = fu_device_get_plugin (device);
-		if (!((g_strcmp0 (tmp, "thunderbolt") == 0) ||
-			(g_strcmp0 (tmp, "synapticsmst") == 0)))
+		if (g_strcmp0 (tmp, "synapticsmst") != 0)
 			return TRUE;
 		g_debug ("preparing/cleaning update for %s", tmp);
 	}
 
-	/* Dock MST Hub / TBT Controller */
+	/* Dock MST Hub */
 	smi_obj = g_malloc0 (sizeof(FuDellSmiObj));
 	smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
 
@@ -344,11 +342,7 @@ fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable)
 			g_debug ("Toggled dock mode to %d", enable);
 	}
 
-	/* System MST hub / TBT controller */
-	if (!fu_dell_toggle_host_mode (smi_obj, TBT_GPIO_GUID, enable))
-		g_debug ("Unable to toggle TBT GPIO to %d", enable);
-	else
-		g_debug ("Toggled TBT GPIO to %d", enable);
+	/* System MST hub  */
 	if (!fu_dell_toggle_host_mode (smi_obj, MST_GPIO_GUID, enable))
 		g_debug("Unable to toggle MST hub GPIO to %d", enable);
 	else

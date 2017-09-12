@@ -823,10 +823,6 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	/* thunderbolt plugin */
 	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") == 0 &&
 	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL)) {
-		/* prevent thunderbolt controllers in the system from going away */
-		fu_device_set_metadata_boolean (device,
-						FU_DEVICE_METADATA_TBT_CAN_FORCE_POWER,
-						TRUE);
 		/* fix VID/DID of safe mode devices */
 		if (fu_device_get_metadata_boolean (device, FU_DEVICE_METADATA_TBT_IS_SAFE_MODE)) {
 			g_autofree gchar *vendor_id = NULL;
@@ -922,7 +918,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 				  plugin);
 	}
 
-#if defined (HAVE_SYNAPTICS) || defined (HAVE_THUNDERBOLT)
+#if defined (HAVE_SYNAPTICS)
 	/* set a delay to allow OS response to settling the GPIO change */
 	fu_plugin_set_coldplug_delay (plugin, DELL_FLASH_MODE_DELAY * 1000);
 #endif
