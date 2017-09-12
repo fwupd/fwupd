@@ -31,9 +31,6 @@ dfu = static_library(
     include_directories('../../libfwupd'),
     include_directories('../../src'),
   ],
-  link_with : [
-    libfwupdprivate,
-  ],
 )
 
 shared_module('fu_plugin_dfu',
@@ -106,6 +103,7 @@ if get_option('enable-tests')
     link_with : [
       dfu,
       fwupd,
+      libfwupdprivate,
     ],
     c_args : cargs
   )
