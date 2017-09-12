@@ -2098,6 +2098,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 		for (guint j = 0; j < releases_tmp->len; j++) {
 			AsRelease *release = g_ptr_array_index (releases_tmp, j);
 			FwupdRelease *rel = fwupd_release_new ();
+			fwupd_release_set_appstream_id (rel, as_app_get_id (app));
 			fu_engine_set_release_from_appstream (self, rel, app, release);
 			g_ptr_array_add (releases, g_object_ref (rel));
 		}
