@@ -476,14 +476,95 @@ fu_plugin_uefi_uefi_type_to_string (guint32 uefi_type)
 	return NULL;
 }
 
-gboolean
-fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+static void
+fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 {
 	AsVersionParseFlag parse_flags;
 	const gchar *product_name;
+	const gchar *uefi_type_str = NULL;
+	efi_guid_t *guid_raw;
+	guint32 uefi_type;
+	guint32 version_raw;
+	guint64 hardware_instance = 0;	/* FIXME */
+	g_autofree gchar *guid = NULL;
+	g_autofree gchar *id = NULL;
+	g_autofree gchar *version = NULL;
+	g_autofree gchar *version_lowest = NULL;
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GString) display_name = g_string_new (NULL);
+
+	parse_flags = fu_plugin_uefi_get_version_format (plugin);
+
+	/* set Display Name to the system for all capsules */
+	product_name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
+
+	/* set up proper DisplayName */
+	fwup_get_fw_type (re, &uefi_type);
+	if (product_name != NULL)
+		g_string_append (display_name, product_name);
+	uefi_type_str = fu_plugin_uefi_uefi_type_to_string (uefi_type);
+	if (uefi_type_str != NULL) {
+		if (display_name->len > 0)
+			g_string_append (display_name, " ");
+		g_string_append (display_name, uefi_type_str);
+	}
+
+	/* detect the fake GUID used for uploading the image */
+	fwup_get_guid (re, &guid_raw);
+	if (efi_guid_cmp (guid_raw, &UX_CAPSULE_GUID) == 0) {
+		g_debug ("skipping entry, detected fake BGRT");
+		return;
+	}
+
+	/* convert to strings */
+	guid = fu_plugin_uefi_guid_to_string (guid_raw);
+	if (guid == NULL) {
+		g_warning ("failed to convert guid to string");
+		return;
+	}
+
+	fwup_get_fw_version(re, &version_raw);
+	version = as_utils_version_from_uint32 (version_raw,
+						parse_flags);
+	id = g_strdup_printf ("UEFI-%s-dev%" G_GUINT64_FORMAT,
+			      guid, hardware_instance);
+
+	dev = fu_device_new ();
+	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
+		/* nothing better in the icon naming spec */
+		fu_device_add_icon (dev, "audio-card");
+	} else {
+		/* this is probably system firmware */
+		fu_device_add_icon (dev, "computer");
+	}
+	fu_device_set_id (dev, id);
+	fu_device_add_guid (dev, guid);
+	fu_device_set_version (dev, version);
+	if (display_name->len > 0)
+		fu_device_set_name(dev, display_name->str);
+	fwup_get_lowest_supported_fw_version (re, &version_raw);
+	if (version_raw != 0) {
+		version_lowest = as_utils_version_from_uint32 (version_raw,
+							       parse_flags);
+		fu_device_set_version_lowest (dev, version_lowest);
+	}
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
+	if (g_file_test ("/sys/firmware/efi/efivars", G_FILE_TEST_IS_DIR) ||
+	    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR)) {
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	} else {
+		g_warning ("Kernel support for EFI variables missing");
+	}
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_plugin_device_add (plugin, dev);
+}
+
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
 	fwup_resource *re;
 	gint supported;
-	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(fwup_resource_iter) iter = NULL;
 
 	/* supported = 0 : ESRT unspported
@@ -502,7 +583,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 
 	if (supported == 2) {
-		dev = fu_device_new ();
+		g_autoptr(FuDevice) dev = fu_device_new ();
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
 		fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 		fu_device_set_version (dev, "0");
@@ -513,7 +594,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		return TRUE;
 	}
 
-	/* this can fail if we have no permissions */
+	/* add each device */
 	if (fwup_resource_iter_create (&iter) < 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -521,84 +602,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 				     "Cannot create fwup iter");
 		return FALSE;
 	}
-
-	/* set Display Name to the system for all capsules */
-	product_name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
-
-	/* add each device */
-	parse_flags = fu_plugin_uefi_get_version_format (plugin);
-	while (fwup_resource_iter_next (iter, &re) > 0) {
-		const gchar *uefi_type_str = NULL;
-		efi_guid_t *guid_raw;
-		guint32 uefi_type;
-		guint32 version_raw;
-		guint64 hardware_instance = 0;	/* FIXME */
-		g_autofree gchar *guid = NULL;
-		g_autofree gchar *id = NULL;
-		g_autofree gchar *version = NULL;
-		g_autofree gchar *version_lowest = NULL;
-		g_autoptr(GString) display_name = g_string_new (NULL);
-
-		/* set up proper DisplayName */
-		fwup_get_fw_type (re, &uefi_type);
-		if (product_name != NULL)
-			g_string_append (display_name, product_name);
-		uefi_type_str = fu_plugin_uefi_uefi_type_to_string (uefi_type);
-		if (uefi_type_str != NULL) {
-			if (display_name->len > 0)
-				g_string_append (display_name, " ");
-			g_string_append (display_name, uefi_type_str);
-		}
-
-		/* detect the fake GUID used for uploading the image */
-		fwup_get_guid (re, &guid_raw);
-		if (efi_guid_cmp (guid_raw, &UX_CAPSULE_GUID) == 0) {
-			g_debug ("skipping entry, detected fake BGRT");
-			continue;
-		}
-
-		/* convert to strings */
-		guid = fu_plugin_uefi_guid_to_string (guid_raw);
-		if (guid == NULL) {
-			g_warning ("failed to convert guid to string");
-			continue;
-		}
-
-		fwup_get_fw_version(re, &version_raw);
-		version = as_utils_version_from_uint32 (version_raw,
-							parse_flags);
-		id = g_strdup_printf ("UEFI-%s-dev%" G_GUINT64_FORMAT,
-				      guid, hardware_instance);
-
-		dev = fu_device_new ();
-		if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
-			/* nothing better in the icon naming spec */
-			fu_device_add_icon (dev, "audio-card");
-		} else {
-			/* this is probably system firmware */
-			fu_device_add_icon (dev, "computer");
-		}
-		fu_device_set_id (dev, id);
-		fu_device_add_guid (dev, guid);
-		fu_device_set_version (dev, version);
-		if (display_name->len > 0)
-			fu_device_set_name(dev, display_name->str);
-		fwup_get_lowest_supported_fw_version (re, &version_raw);
-		if (version_raw != 0) {
-			version_lowest = as_utils_version_from_uint32 (version_raw,
-								       parse_flags);
-			fu_device_set_version_lowest (dev, version_lowest);
-		}
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-		if (g_file_test ("/sys/firmware/efi/efivars", G_FILE_TEST_IS_DIR) ||
-		    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR)) {
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-		} else {
-			g_warning ("Kernel support for EFI variables missing");
-		}
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-		fu_plugin_device_add (plugin, dev);
-	}
+	while (fwup_resource_iter_next (iter, &re) > 0)
+		fu_plugin_uefi_coldplug_resource (plugin, re);
 	return TRUE;
 }
