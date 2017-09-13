@@ -111,6 +111,36 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetDowngrades'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets a list of all the downgrades possible for a specific device.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='device_id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              A device ID.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='aa{sv}' name='releases' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              An array of releases (with the release number as the key),
+              with any properties set on each.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='GetDetailsLocal'>
       <doc:doc>
         <doc:description>

@@ -2133,6 +2133,72 @@ fu_engine_sort_releases_cb (gconstpointer a, gconstpointer b)
 				fwupd_release_get_version (rel_b));
 }
 
+static GPtrArray *
+fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **error)
+{
+	GPtrArray *device_guids;
+	GPtrArray *releases;
+	const gchar *version;
+
+	/* get device version */
+	version = fu_device_get_version (device);
+	if (version == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "no version set");
+		return NULL;
+	}
+
+	/* only show devices that can be updated */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "ignoring %s [%s] as not updatable",
+			     fu_device_get_id (device),
+			     fu_device_get_name (device));
+		return NULL;
+	}
+
+	releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	device_guids = fu_device_get_guids (device);
+	for (guint i = 0; i < device_guids->len; i++) {
+		GPtrArray *releases_tmp;
+		const gchar *guid = g_ptr_array_index (device_guids, i);
+		AsApp *app = as_store_get_app_by_provide (self->store,
+							  AS_PROVIDE_KIND_FIRMWARE_FLASHED,
+							  guid);
+		if (app == NULL)
+			continue;
+
+		/* check we can install it */
+		if (!fu_engine_check_requirements (app, device, error))
+			return NULL;
+		releases_tmp = as_app_get_releases (app);
+		for (guint j = 0; j < releases_tmp->len; j++) {
+			AsRelease *release = g_ptr_array_index (releases_tmp, j);
+			GPtrArray *checksums;
+			g_autoptr(FwupdRelease) rel = fwupd_release_new ();
+
+			/* create new FwupdRelease for the AsRelease */
+			fwupd_release_set_appstream_id (rel, as_app_get_id (app));
+			fu_engine_set_release_from_appstream (self, rel, app, release);
+
+			/* invalid */
+			if (fwupd_release_get_uri (rel) == NULL)
+				continue;
+			checksums = fwupd_release_get_checksums (rel);
+			if (checksums->len == 0)
+				continue;
+
+			/* success */
+			g_ptr_array_add (releases, g_steal_pointer (&rel));
+		}
+	}
+	return releases;
+}
+
 /**
  * fu_engine_get_releases:
  * @self: A #FuEngine
@@ -2147,7 +2213,6 @@ GPtrArray *
 fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuDeviceItem *item;
-	GPtrArray *device_guids;
 	g_autoptr(GPtrArray) releases = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
@@ -2160,32 +2225,106 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 		return NULL;
 
 	/* get all the releases for the device */
-	releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	device_guids = fu_device_get_guids (item->device);
-	for (guint i = 0; i < device_guids->len; i++) {
-		GPtrArray *releases_tmp;
-		const gchar *guid = g_ptr_array_index (device_guids, i);
-		AsApp *app = as_store_get_app_by_provide (self->store,
-							  AS_PROVIDE_KIND_FIRMWARE_FLASHED,
-							  guid);
-		if (app == NULL)
-			continue;
-		releases_tmp = as_app_get_releases (app);
-		for (guint j = 0; j < releases_tmp->len; j++) {
-			AsRelease *release = g_ptr_array_index (releases_tmp, j);
-			FwupdRelease *rel = fwupd_release_new ();
-			fwupd_release_set_appstream_id (rel, as_app_get_id (app));
-			fu_engine_set_release_from_appstream (self, rel, release);
-			g_ptr_array_add (releases, g_object_ref (rel));
-		}
-	}
-
-	/* no devices */
+	releases = fu_engine_get_releases_for_device (self, item->device, error);
+	if (releases == NULL)
+		return NULL;
 	if (releases->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
 				     "No releases for device");
+		return NULL;
+	}
+	return g_steal_pointer (&releases);
+}
+
+/**
+ * fu_engine_get_downgrades:
+ * @self: A #FuEngine
+ * @device_id: A device ID
+ * @error: A #GError, or %NULL
+ *
+ * Gets the downgrades available for a specific device.
+ *
+ * Returns: (transfer container) (element-type FwupdResult): results
+ **/
+GPtrArray *
+fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error)
+{
+	FuDeviceItem *item;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(GPtrArray) releases_tmp = NULL;
+	g_autoptr(GString) error_str = g_string_new (NULL);
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	g_return_val_if_fail (device_id != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* find the device */
+	item = fu_engine_get_item_by_id (self, device_id, error);
+	if (item == NULL)
+		return NULL;
+
+	/* get all the releases for the device */
+	releases_tmp = fu_engine_get_releases_for_device (self, item->device, error);
+	if (releases_tmp == NULL)
+		return NULL;
+	releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < releases_tmp->len; i++) {
+		FwupdRelease *rel_tmp = g_ptr_array_index (releases_tmp, i);
+		gint vercmp;
+
+		/* only include older firmware */
+		vercmp = as_utils_vercmp (fwupd_release_get_version (rel_tmp),
+					  fu_device_get_version (item->device));
+		if (vercmp == 0) {
+			g_string_append_printf (error_str, "%s=same, ",
+						fwupd_release_get_version (rel_tmp));
+			g_debug ("ignoring %s as the same as %s",
+				 fwupd_release_get_version (rel_tmp),
+				 fu_device_get_version (item->device));
+			continue;
+		}
+		if (vercmp > 0) {
+			g_string_append_printf (error_str, "%s=newer, ",
+						fwupd_release_get_version (rel_tmp));
+			g_debug ("ignoring %s as newer than %s",
+				 fwupd_release_get_version (rel_tmp),
+				 fu_device_get_version (item->device));
+			continue;
+		}
+
+		/* don't show releases we are not allowed to dowgrade to */
+		if (fu_device_get_version_lowest (item->device) != NULL) {
+			if (as_utils_vercmp (fwupd_release_get_version (rel_tmp),
+					     fu_device_get_version_lowest (item->device)) <= 0) {
+				g_string_append_printf (error_str, "%s=lowest, ",
+							fwupd_release_get_version (rel_tmp));
+				g_debug ("ignoring %s as older than lowest %s",
+					 fwupd_release_get_version (rel_tmp),
+					 fu_device_get_version_lowest (item->device));
+				continue;
+			}
+		}
+		g_ptr_array_add (releases, g_object_ref (rel_tmp));
+	}
+	if (error_str->len > 2)
+		g_string_truncate (error_str, error_str->len - 2);
+	if (releases->len == 0) {
+		if (error_str->len > 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No downgrades for device, current is %s: %s",
+				     fu_device_get_version (item->device),
+				     error_str->str);
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No downgrades for device, current is %s",
+				     fu_device_get_version (item->device));
+		}
 		return NULL;
 	}
 	g_ptr_array_sort (releases, fu_engine_sort_releases_cb);

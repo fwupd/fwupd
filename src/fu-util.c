@@ -1422,7 +1422,6 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
-	g_autoptr(GPtrArray) rels_filtered = NULL;
 
 	/* get device to use */
 	if (g_strv_length (values) == 1) {
@@ -1437,47 +1436,14 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* get the releases for this device and filter for validity */
-	rels = fwupd_client_get_releases (priv->client,
-					  fwupd_device_get_id (dev),
-					  NULL, error);
+	rels = fwupd_client_get_downgrades (priv->client,
+					    fwupd_device_get_id (dev),
+					    NULL, error);
 	if (rels == NULL)
 		return FALSE;
-	rels_filtered = g_ptr_array_new ();
-	for (guint i = 0; i < rels->len; i++) {
-		FwupdRelease *rel_tmp = g_ptr_array_index (rels, i);
-
-		/* only include older firmware */
-		if (as_utils_vercmp (fwupd_release_get_version (rel_tmp),
-				     fwupd_device_get_version (dev)) >= 0) {
-			g_debug ("ignoring %s as older than %s",
-				 fwupd_release_get_version (rel_tmp),
-				 fwupd_device_get_version (dev));
-			continue;
-		}
-
-		/* don't show releases we are not allowed to dowgrade to */
-		if (fwupd_device_get_version_lowest (dev) != NULL) {
-			if (as_utils_vercmp (fwupd_release_get_version (rel_tmp),
-					     fwupd_device_get_version_lowest (dev)) <= 0) {
-				g_debug ("ignoring %s as older than lowest %s",
-					 fwupd_release_get_version (rel_tmp),
-					 fwupd_device_get_version_lowest (dev));
-				continue;
-			}
-		}
-
-		/* don't show releases without URIs */
-		if (fwupd_release_get_uri (rel_tmp) == NULL) {
-			g_debug ("ignoring %s as no URI",
-				 fwupd_release_get_version (rel_tmp));
-			continue;
-		}
-
-		g_ptr_array_add (rels_filtered, rel_tmp);
-	}
 
 	/* get the chosen release */
-	rel = fu_util_prompt_for_release (priv, rels_filtered, error);
+	rel = fu_util_prompt_for_release (priv, rels, error);
 	if (rel == NULL)
 		return FALSE;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
