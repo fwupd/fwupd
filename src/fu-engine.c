@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 #include <gio/gunixinputstream.h>
 #include <glib-object.h>
+#include <string.h>
 
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
@@ -231,23 +232,27 @@ fu_engine_get_sysconfig_dir (void)
 }
 
 static void
-fu_engine_set_release_from_appstream (FuEngine *self, FwupdRelease *rel,
-				      AsApp *app, AsRelease *release)
+fu_engine_set_release_from_appstream (FuEngine *self,
+				      FwupdRelease *rel,
+				      AsRelease *release)
 {
 	AsChecksum *csum;
 	FwupdRemote *remote = NULL;
-	const gchar *remote_id;
 	const gchar *tmp;
+	GBytes *remote_blob;
 
 	/* find the remote */
-	remote_id = as_app_get_metadata_item (app, "fwupd::RemoteID");
-	if (remote_id != NULL) {
-		remote = fu_config_get_remote_by_id (self->config, remote_id);
-		if (remote == NULL)
-			g_warning ("failed to find remote %s", remote_id);
-	} else {
-		g_warning ("no fwupd::RemoteID set on %s",
-			   as_app_get_unique_id (app));
+	remote_blob = as_release_get_blob (release, "fwupd::RemoteID");
+	if (remote_blob != NULL) {
+		const gchar *remote_id = g_bytes_get_data (remote_blob, NULL);
+		if (remote_id != NULL) {
+			fwupd_release_set_remote_id (rel, remote_id);
+			remote = fu_config_get_remote_by_id (self->config, remote_id);
+		}
+	}
+	if (remote == NULL) {
+		g_warning ("no remote found for release %s",
+			   as_release_get_version (release));
 	}
 
 	tmp = as_release_get_version (release);
@@ -1422,6 +1427,47 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 	return "org.freedesktop.fwupd.update-internal";
 }
 
+static AsRelease *
+_as_app_get_release_by_version (AsApp *app, const gchar *version)
+{
+	GPtrArray *releases = as_app_get_releases (app);
+	for (guint i = 0; i < releases->len; i++) {
+		AsRelease *release = g_ptr_array_index (releases, i);
+		if (g_strcmp0 (version, as_release_get_version (release)) == 0)
+			return release;
+	}
+	return NULL;
+}
+
+static void
+fu_engine_add_component_to_store (FuEngine *self, AsApp *app)
+{
+	AsApp *app_old = as_store_get_app_by_id (self->store, as_app_get_id (app));
+	GPtrArray *releases = as_app_get_releases (app);
+
+	/* the app does not already exist */
+	if (app_old == NULL) {
+		as_store_add_app (self->store, app);
+		return;
+	}
+
+	/* add releases that do not exist from a higher priority remote */
+	for (guint j = 0; j < releases->len; j++) {
+		AsRelease *release = g_ptr_array_index (releases, j);
+		AsRelease *release_old;
+		const gchar *version = as_release_get_version (release);
+		release_old = _as_app_get_release_by_version (app_old, version);
+		if (release_old != NULL) {
+			g_debug ("skipping release %s that already exists for %s",
+				 version, as_app_get_id (app_old));
+			continue;
+		}
+		g_debug ("adding release %s to existing %s",
+			 version, as_app_get_id (app_old));
+		as_app_add_release (app_old, release);
+	}
+}
+
 static gboolean
 fu_engine_load_metadata_from_file (FuEngine *self,
 				 const gchar *path,
@@ -1431,6 +1477,7 @@ fu_engine_load_metadata_from_file (FuEngine *self,
 	GPtrArray *apps;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(GBytes) remote_blob = NULL;
 
 	/* load the store locally until we know it is valid */
 	store = as_store_new ();
@@ -1438,21 +1485,28 @@ fu_engine_load_metadata_from_file (FuEngine *self,
 	if (!as_store_from_file (store, file, NULL, NULL, error))
 		return FALSE;
 
+	/* save the remote to the release */
+	if (remote_id != NULL && remote_id[0] != '\0')
+		remote_blob = g_bytes_new (remote_id, strlen (remote_id) + 1);
+
 	/* add the new application from the store */
 	apps = as_store_get_apps (store);
 	for (guint i = 0; i < apps->len; i++) {
 		AsApp *app = g_ptr_array_index (apps, i);
 
-		/* does this app already exist */
-		if (as_store_get_app_by_id (self->store, as_app_get_id (app)) != NULL) {
-			g_debug ("%s exists in remote %s, skipping",
-				 as_app_get_unique_id (app),
-				 as_app_get_metadata_item (app, "fwupd::RemoteID"));
-			continue;
+		/* save the remote-id to all the releases for this component */
+		if (remote_blob != NULL) {
+			GPtrArray *releases = as_app_get_releases (app);
+			for (guint j = 0; j < releases->len; j++) {
+				AsRelease *release = g_ptr_array_index (releases, j);
+				as_release_set_blob (release,
+						     "fwupd::RemoteID",
+						     remote_blob);
+			}
 		}
-		if (remote_id != NULL && remote_id[0] != '\0')
-			as_app_add_metadata (app, "fwupd::RemoteID", remote_id);
-		as_store_add_app (self->store, app);
+
+		/* either add component, or merge in new releases */
+		fu_engine_add_component_to_store (self, app);
 	}
 	return TRUE;
 }
@@ -1676,6 +1730,7 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 {
 	AsApp *app;
 	AsRelease *release;
+	GBytes *remote_blob;
 	GPtrArray *releases;
 	const gchar *tmp;
 	const gchar *version;
@@ -1752,14 +1807,16 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 	tmp = as_app_get_project_license (app);
 	if (tmp != NULL)
 		fu_device_set_update_license (item->device, tmp);
-	tmp = as_app_get_metadata_item (app, "fwupd::RemoteID");
-	if (tmp != NULL)
-		fu_device_set_update_remote_id (item->device, tmp);
+	remote_blob = as_release_get_blob (release, "fwupd::RemoteID");
+	if (remote_blob != NULL) {
+		fu_device_set_update_remote_id (item->device,
+						g_bytes_get_data (remote_blob, NULL));
+	}
 
 	/* add release information */
 	fu_engine_set_release_from_appstream (self,
 					      fwupd_result_get_release (FWUPD_RESULT (item->device)),
-					      app, release);
+					      release);
 
 	/* get the list of releases newer than the one installed */
 	updates_list = g_ptr_array_new ();
@@ -1910,7 +1967,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	fwupd_release_set_summary (rel, as_app_get_comment (app, NULL));
 	fwupd_release_set_vendor (rel, as_app_get_developer_name (app, NULL));
 	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
-	fu_engine_set_release_from_appstream (self, rel, app, release);
+	fu_engine_set_release_from_appstream (self, rel, release);
 	return g_steal_pointer (&res);
 }
 
@@ -2119,7 +2176,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 			AsRelease *release = g_ptr_array_index (releases_tmp, j);
 			FwupdRelease *rel = fwupd_release_new ();
 			fwupd_release_set_appstream_id (rel, as_app_get_id (app));
-			fu_engine_set_release_from_appstream (self, rel, app, release);
+			fu_engine_set_release_from_appstream (self, rel, release);
 			g_ptr_array_add (releases, g_object_ref (rel));
 		}
 	}
