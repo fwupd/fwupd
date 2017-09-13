@@ -1002,26 +1002,35 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	GPtrArray *guids;
-	const gchar *tmp;
-	g_autoptr(GPtrArray) results = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 
-	/* print any updates */
-	results = fwupd_client_get_updates (priv->client, NULL, error);
-	if (results == NULL)
+	/* get devices from daemon */
+	devices = fwupd_client_get_devices_simple (priv->client, NULL, error);
+	if (devices == NULL)
 		return FALSE;
-	for (guint i = 0; i < results->len; i++) {
-		FwupdResult *res = g_ptr_array_index (results, i);
-		FwupdDevice *dev = fwupd_result_get_device (res);
-		FwupdRelease *rel = fwupd_result_get_release (res);
-		GPtrArray *checksums;
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		GPtrArray *guids;
+		const gchar *tmp;
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* not going to have results, so save a D-Bus round-trip */
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+
+		/* get the releases for this device and filter for validity */
+		rels = fwupd_client_get_upgrades (priv->client,
+						  fwupd_device_get_id (dev),
+						  NULL, &error_local);
+		if (rels == NULL) {
+			g_printerr ("%s\n", error_local->message);
+			continue;
+		}
 
 		/* TRANSLATORS: first replacement is device name */
 		g_print (_("%s has firmware updates:"), fwupd_device_get_name (dev));
 		g_print ("\n");
-
-		/* TRANSLATORS: Appstream ID for the hardware type */
-		fu_util_print_data (_("ID"), fwupd_release_get_appstream_id (rel));
 
 		/* TRANSLATORS: a GUID for the hardware */
 		guids = fwupd_device_get_guids (dev);
@@ -1030,40 +1039,48 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 			fu_util_print_data (_("GUID"), tmp);
 		}
 
-		/* TRANSLATORS: section header for firmware version */
-		fu_util_print_data (_("Update Version"),
-				    fwupd_release_get_version (rel));
+		/* print all releases */
+		for (guint j = 0; j < rels->len; j++) {
+			FwupdRelease *rel = g_ptr_array_index (rels, j);
+			GPtrArray *checksums;
 
-		/* TRANSLATORS: section header for remote ID, e.g. lvfs-testing */
-		fu_util_print_data (_("Update Remote ID"),
-				    fwupd_release_get_remote_id (rel));
+			/* TRANSLATORS: Appstream ID for the hardware type */
+			fu_util_print_data (_("ID"), fwupd_release_get_appstream_id (rel));
 
-		checksums = fwupd_release_get_checksums (rel);
-		for (guint j = 0; j < checksums->len; j++) {
-			const gchar *checksum = g_ptr_array_index (checksums, j);
-			g_autofree gchar *checksum_display = NULL;
-			checksum_display = fwupd_checksum_format_for_display (checksum);
-			/* TRANSLATORS: section header for firmware checksum */
-			fu_util_print_data (_("Update Checksum"), checksum_display);
-		}
+			/* TRANSLATORS: section header for firmware version */
+			fu_util_print_data (_("Update Version"),
+					    fwupd_release_get_version (rel));
 
-		/* TRANSLATORS: section header for firmware remote http:// */
-		fu_util_print_data (_("Update Location"), fwupd_release_get_uri (rel));
+			/* TRANSLATORS: section header for remote ID, e.g. lvfs-testing */
+			fu_util_print_data (_("Update Remote ID"),
+					    fwupd_release_get_remote_id (rel));
 
-		/* convert XML -> text */
-		tmp = fwupd_release_get_description (rel);
-		if (tmp != NULL) {
-			g_autofree gchar *md = NULL;
-			md = as_markup_convert (tmp,
-						AS_MARKUP_CONVERT_FORMAT_SIMPLE,
-						NULL);
-			if (md != NULL) {
-				/* TRANSLATORS: section header for long firmware desc */
-				fu_util_print_data (_("Update Description"), md);
+			checksums = fwupd_release_get_checksums (rel);
+			for (guint k = 0; k < checksums->len; k++) {
+				const gchar *checksum = g_ptr_array_index (checksums, k);
+				g_autofree gchar *checksum_display = NULL;
+				checksum_display = fwupd_checksum_format_for_display (checksum);
+				/* TRANSLATORS: section header for firmware checksum */
+				fu_util_print_data (_("Update Checksum"), checksum_display);
+			}
+
+			/* TRANSLATORS: section header for firmware remote http:// */
+			fu_util_print_data (_("Update Location"), fwupd_release_get_uri (rel));
+
+			/* convert XML -> text */
+			tmp = fwupd_release_get_description (rel);
+			if (tmp != NULL) {
+				g_autofree gchar *md = NULL;
+				md = as_markup_convert (tmp,
+							AS_MARKUP_CONVERT_FORMAT_SIMPLE,
+							NULL);
+				if (md != NULL) {
+					/* TRANSLATORS: section header for long firmware desc */
+					fu_util_print_data (_("Update Description"), md);
+				}
 			}
 		}
 	}
-
 	return TRUE;
 }
 
@@ -1379,25 +1396,34 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 static gboolean
 fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(GPtrArray) results = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 
-	/* apply any updates */
-	results = fwupd_client_get_updates (priv->client, NULL, error);
-	if (results == NULL)
+	/* get devices from daemon */
+	devices = fwupd_client_get_devices_simple (priv->client, NULL, error);
+	if (devices == NULL)
 		return FALSE;
-	for (guint i = 0; i < results->len; i++) {
-		FwupdResult *res = g_ptr_array_index (results, i);
-		FwupdDevice *dev = fwupd_result_get_device (res);
-		FwupdRelease *rel = fwupd_result_get_release (res);
-		GPtrArray *checksums = fwupd_release_get_checksums (rel);
-		if (checksums->len == 0)
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		FwupdRelease *rel;
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* not going to have results, so save a D-Bus round-trip */
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
 			continue;
-		if (fwupd_release_get_uri (rel) == NULL)
+
+		/* get the releases for this device and filter for validity */
+		rels = fwupd_client_get_upgrades (priv->client,
+						  fwupd_device_get_id (dev),
+						  NULL, &error_local);
+		if (rels == NULL) {
+			g_printerr ("%s\n", error_local->message);
 			continue;
+		}
+		rel = g_ptr_array_index (rels, 0);
 		if (!fu_util_update_device_with_release (priv, dev, rel, error))
 			return FALSE;
 	}
-
 	return TRUE;
 }
 
