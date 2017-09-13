@@ -1740,9 +1740,6 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 	tmp = as_app_get_metadata_item (app, "fwupd::RemoteID");
 	if (tmp != NULL)
 		fu_device_set_update_remote_id (item->device, tmp);
-	tmp = as_app_get_unique_id (app);
-	if (tmp != NULL)
-		fu_device_set_unique_id (item->device, tmp);
 
 	/* add release information */
 	fu_engine_set_release_from_appstream (self,
@@ -1897,7 +1894,6 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	fwupd_release_set_name (rel, as_app_get_name (app, NULL));
 	fwupd_release_set_summary (rel, as_app_get_comment (app, NULL));
 	fwupd_release_set_vendor (rel, as_app_get_developer_name (app, NULL));
-	fwupd_result_set_unique_id (res, as_app_get_unique_id (app));
 	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
 	fu_engine_set_release_from_appstream (self, rel, app, release);
 	return g_steal_pointer (&res);
@@ -2171,19 +2167,6 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 	if (!fu_plugin_runner_get_results (item->plugin, item->device, error))
 		return NULL;
 
-	/* ensure the unique ID is set */
-	if (fwupd_result_get_unique_id (FWUPD_RESULT (item->device)) == NULL) {
-		g_autofree gchar *id2 = NULL;
-		FwupdResult *res = FWUPD_RESULT (item->device);
-		FwupdDevice *dev = fwupd_result_get_device (res);
-		id2 = as_utils_unique_id_build (AS_APP_SCOPE_SYSTEM,
-						AS_BUNDLE_KIND_UNKNOWN,
-						NULL,
-						AS_APP_KIND_FIRMWARE,
-						fwupd_device_get_name (dev),
-						fwupd_device_get_version (dev));
-		fwupd_result_set_unique_id (res, id2);
-	}
 	return g_object_ref (item->device);
 }
 

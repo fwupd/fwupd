@@ -27,7 +27,6 @@
 G_BEGIN_DECLS
 
 #define fu_device_get_update_filename(d)	fwupd_release_get_filename(fwupd_result_get_release(FWUPD_RESULT(d)))
-#define fu_device_set_unique_id(d,v)		fwupd_result_set_unique_id(FWUPD_RESULT(d),v)
 #define fu_device_set_update_description(d,v)	fwupd_release_set_description(fwupd_result_get_release(FWUPD_RESULT(d)),v)
 #define fu_device_set_update_filename(d,v)	fwupd_release_set_filename(fwupd_result_get_release(FWUPD_RESULT(d)),v)
 #define fu_device_set_update_homepage(d,v)	fwupd_release_set_homepage(fwupd_result_get_release(FWUPD_RESULT(d)),v)

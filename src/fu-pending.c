@@ -82,7 +82,7 @@ fu_pending_load (FuPending *pending, GError **error)
 		sqlite3_free (error_msg);
 		statement = "CREATE TABLE pending ("
 			    "device_id TEXT PRIMARY KEY,"
-			    "unique_id TEXT,"
+			    "appstream_id TEXT,"
 			    "state INTEGER DEFAULT 0,"
 			    "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,"
 			    "error TEXT,"
@@ -130,14 +130,14 @@ fu_pending_load (FuPending *pending, GError **error)
 		sqlite3_exec (priv->db, statement, NULL, NULL, NULL);
 	}
 
-	/* check pending has unique_id (since 0.7.3) */
+	/* check pending has appstream_id (since 0.9.8) */
 	rc = sqlite3_exec (priv->db,
-			   "SELECT unique_id FROM pending LIMIT 1",
+			   "SELECT appstream_id FROM pending LIMIT 1",
 			   NULL, NULL, &error_msg);
 	if (rc != SQLITE_OK) {
 		g_debug ("FuPending: altering table to repair: %s", error_msg);
 		sqlite3_free (error_msg);
-		statement = "ALTER TABLE pending ADD COLUMN unique_id TEXT;";
+		statement = "ALTER TABLE pending ADD COLUMN appstream_id TEXT;";
 		sqlite3_exec (priv->db, statement, NULL, NULL, NULL);
 	}
 
@@ -165,7 +165,7 @@ fu_pending_add_device (FuPending *pending, FwupdResult *res, GError **error)
 
 	g_debug ("FuPending: add device %s", fwupd_device_get_id (dev));
 	statement = sqlite3_mprintf ("INSERT INTO pending (device_id,"
-							  "unique_id,"
+							  "appstream_id,"
 							  "state,"
 							  "filename,"
 							  "display_name,"
@@ -174,7 +174,7 @@ fu_pending_add_device (FuPending *pending, FwupdResult *res, GError **error)
 							  "version_new) "
 				     "VALUES ('%q','%q','%i','%q','%q','%q','%q','%q')",
 				     fwupd_device_get_id (dev),
-				     fwupd_result_get_unique_id (res),
+				     fwupd_release_get_appstream_id (rel),
 				     FWUPD_UPDATE_STATE_PENDING,
 				     fwupd_release_get_filename (rel),
 				     fwupd_device_get_name (dev),
@@ -262,8 +262,8 @@ fu_pending_device_sqlite_cb (void *data,
 			fwupd_device_set_id (dev, argv[i]);
 			continue;
 		}
-		if (g_strcmp0 (col_name[i], "unique_id") == 0) {
-			fwupd_result_set_unique_id (res, argv[i]);
+		if (g_strcmp0 (col_name[i], "appstream_id") == 0) {
+			fwupd_release_set_appstream_id (rel, argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "filename") == 0) {

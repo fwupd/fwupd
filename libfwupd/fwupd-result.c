@@ -71,6 +71,10 @@ fwupd_result_get_unique_id (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
+	if (priv->unique_id == NULL) {
+		priv->unique_id = g_strdup_printf ("system/*/*/firmware/%s/*",
+						   fwupd_release_get_appstream_id (priv->release));
+	}
 	return priv->unique_id;
 }
 
@@ -1369,11 +1373,6 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	if (priv->unique_id != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UNIQUE_ID,
-				       g_variant_new_string (priv->unique_id));
-	}
 	if (priv->update_trust_flags != 0) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS,
@@ -1399,10 +1398,6 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 static void
 fwupd_result_from_key_value (FwupdResult *result, const gchar *key, GVariant *value)
 {
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UNIQUE_ID) == 0) {
-		fwupd_result_set_unique_id (result, g_variant_get_string (value, NULL));
-		return;
-	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS) == 0) {
 		fwupd_result_set_update_trust_flags (result, g_variant_get_uint64 (value));
 		return;
@@ -1471,9 +1466,6 @@ fwupd_result_to_string (FwupdResult *result)
 	g_string_append (str, release_str);
 	if (fwupd_release_get_version (priv->release) != NULL)
 		fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS, priv->update_trust_flags);
-
-	/* device */
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UNIQUE_ID, priv->unique_id);
 
 	return g_string_free (str, FALSE);
 }

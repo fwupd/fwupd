@@ -236,4 +236,10 @@ G_DEPRECATED_FOR(fwupd_result_add_guid)
 void		 fwupd_result_set_guid			(FwupdResult	*result,
 							 const gchar	*guid);
 
+G_DEPRECATED_FOR(fwupd_release_get_appstream_id)
+const gchar	*fwupd_result_get_unique_id		(FwupdResult	*result);
+G_DEPRECATED_FOR(fwupd_release_set_appstream_id)
+void		 fwupd_result_set_unique_id		(FwupdResult	*result,
+							 const gchar	*unique_id);
+
 #endif /* __FWUPD_DEPRECATED_H */

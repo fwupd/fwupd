@@ -48,9 +48,6 @@ struct _FwupdResultClass
 
 FwupdResult	*fwupd_result_new			(void);
 FwupdResult	*fwupd_result_new_from_data		(GVariant	*data);
-const gchar	*fwupd_result_get_unique_id		(FwupdResult	*result);
-void		 fwupd_result_set_unique_id		(FwupdResult	*result,
-							 const gchar	*unique_id);
 FwupdRelease	*fwupd_result_get_release		(FwupdResult	*result);
 FwupdDevice	*fwupd_result_get_device		(FwupdResult	*result);
 
