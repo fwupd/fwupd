@@ -1579,7 +1579,7 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 	/* are any devices now supported? */
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
-		if (fu_engine_get_updates_item_update (self, item))
+		if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_SUPPORTED))
 			fu_engine_emit_device_changed (self, item->device);
 	}
 
