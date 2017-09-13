@@ -108,6 +108,13 @@ void		 fwupd_device_add_icon			(FwupdDevice	*device,
 							 const gchar	*icon);
 GPtrArray	*fwupd_device_get_icons			(FwupdDevice	*device);
 
+FwupdUpdateState fwupd_device_get_update_state		(FwupdDevice	*device);
+void		 fwupd_device_set_update_state		(FwupdDevice	*device,
+							 FwupdUpdateState update_state);
+const gchar	*fwupd_device_get_update_error		(FwupdDevice	*device);
+void		 fwupd_device_set_update_error		(FwupdDevice	*device,
+							 const gchar	*update_error);
+
 G_END_DECLS
 
 #endif /* __FWUPD_DEVICE_H */

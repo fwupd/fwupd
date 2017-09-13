@@ -1138,7 +1138,8 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	}
 
 	/* copy the important parts from the pending device to the real one */
-	update_state = fwupd_result_get_update_state (res_pending);
+	dev = fwupd_result_get_device (res_pending);
+	update_state = fwupd_device_get_update_state (dev);
 	if (update_state == FWUPD_UPDATE_STATE_UNKNOWN ||
 	    update_state == FWUPD_UPDATE_STATE_PENDING) {
 		g_set_error (error,
@@ -1151,10 +1152,9 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 
 	/* copy */
 	fu_device_set_update_state (device, update_state);
-	tmp = fwupd_result_get_update_error (res_pending);
+	tmp = fwupd_device_get_update_error (dev);
 	if (tmp != NULL)
 		fu_device_set_update_error (device, tmp);
-	dev = fwupd_result_get_device (res_pending);
 	tmp = fwupd_device_get_version (dev);
 	if (tmp != NULL)
 		fu_device_set_version (device, tmp);

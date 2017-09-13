@@ -52,6 +52,8 @@ typedef struct {
 	gchar				*version_bootloader;
 	GPtrArray			*checksums;
 	guint32				 flashes_left;
+	FwupdUpdateState		 update_state;
+	gchar				*update_error;
 } FwupdDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdDevice, fwupd_device, G_TYPE_OBJECT)
@@ -889,6 +891,16 @@ fwupd_device_to_variant_builder (FwupdDevice *device, GVariantBuilder *builder)
 				       FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT,
 				       g_variant_new_uint32 (priv->flashes_left));
 	}
+	if (priv->update_error != NULL) {
+		g_variant_builder_add (builder, "{sv}",
+				       FWUPD_RESULT_KEY_UPDATE_ERROR,
+				       g_variant_new_string (priv->update_error));
+	}
+	if (priv->update_state != FWUPD_UPDATE_STATE_UNKNOWN) {
+		g_variant_builder_add (builder, "{sv}",
+				       FWUPD_RESULT_KEY_UPDATE_STATE,
+				       g_variant_new_uint32 (priv->update_state));
+	}
 }
 
 /**
@@ -999,6 +1011,17 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		fwupd_device_set_flashes_left (device, g_variant_get_uint32 (value));
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_STATE) == 0) {
+		/* old daemon version and new client */
+		if (g_strcmp0 (g_variant_get_type_string (value), "s") == 0) {
+			FwupdUpdateState tmp;
+			tmp = fwupd_update_state_from_string (g_variant_get_string (value, NULL));
+			fwupd_device_set_update_state (device, tmp);
+		} else {
+			fwupd_device_set_update_state (device, g_variant_get_uint32 (value));
+		}
+		return;
+	}
 }
 
 static void
@@ -1062,6 +1085,85 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
 }
 
 /**
+ * fwupd_device_get_update_state:
+ * @device: A #FwupdDevice
+ *
+ * Gets the update state.
+ *
+ * Returns: the update state, or %FWUPD_UPDATE_STATE_UNKNOWN if unset
+ *
+ * Since: 0.9.8
+ **/
+FwupdUpdateState
+fwupd_device_get_update_state (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FWUPD_UPDATE_STATE_UNKNOWN);
+	return priv->update_state;
+}
+
+/**
+ * fwupd_device_set_update_state:
+ * @device: A #FwupdDevice
+ * @update_state: the state, e.g. %FWUPD_UPDATE_STATE_PENDING
+ *
+ * Sets the update state.
+ *
+ * Since: 0.9.8
+ **/
+void
+fwupd_device_set_update_state (FwupdDevice *device, FwupdUpdateState update_state)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	priv->update_state = update_state;
+}
+
+/**
+ * fwupd_device_get_update_error:
+ * @device: A #FwupdDevice
+ *
+ * Gets the update error.
+ *
+ * Returns: the update error, or %NULL if unset
+ *
+ * Since: 0.9.8
+ **/
+const gchar *
+fwupd_device_get_update_error (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->update_error;
+}
+
+/**
+ * fwupd_device_set_update_error:
+ * @device: A #FwupdDevice
+ * @update_error: the update error string
+ *
+ * Sets the update error.
+ *
+ * Since: 0.9.8
+ **/
+void
+fwupd_device_set_update_error (FwupdDevice *device, const gchar *update_error)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_free (priv->update_error);
+	priv->update_error = g_strdup (update_error);
+}
+
+static void
+fwupd_pad_kv_ups (GString *str, const gchar *key, FwupdUpdateState value)
+{
+	if (value == FWUPD_UPDATE_STATE_UNKNOWN)
+		return;
+	fwupd_pad_kv_str (str, key, fwupd_update_state_to_string (value));
+}
+
+/**
  * fwupd_device_to_string:
  * @device: A #FwupdDevice
  *
@@ -1117,6 +1219,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	}
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_CREATED, priv->created);
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_MODIFIED, priv->modified);
+	fwupd_pad_kv_ups (str, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
 
 	return g_string_free (str, FALSE);
 }
@@ -1150,6 +1253,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->vendor);
 	g_free (priv->vendor_id);
 	g_free (priv->provider);
+	g_free (priv->update_error);
 	g_free (priv->version);
 	g_free (priv->version_lowest);
 	g_free (priv->version_bootloader);

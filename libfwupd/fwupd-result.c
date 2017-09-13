@@ -38,8 +38,6 @@ static void fwupd_result_finalize	 (GObject *object);
 typedef struct {
 	gchar				*unique_id;
 	FwupdTrustFlags			 update_trust_flags;
-	FwupdUpdateState		 update_state;
-	gchar				*update_error;
 	FwupdDevice			*device;
 	FwupdRelease			*release;
 } FwupdResultPrivate;
@@ -606,7 +604,7 @@ fwupd_result_get_update_state (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), FWUPD_UPDATE_STATE_UNKNOWN);
-	return priv->update_state;
+	return fwupd_device_get_update_state (priv->device);
 }
 
 /**
@@ -623,7 +621,7 @@ fwupd_result_set_update_state (FwupdResult *result, FwupdUpdateState update_stat
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	priv->update_state = update_state;
+	fwupd_device_set_update_state (priv->device, update_state);
 }
 
 /**
@@ -1030,7 +1028,7 @@ fwupd_result_get_update_error (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
-	return priv->update_error;
+	return fwupd_device_get_update_error (priv->device);
 }
 
 /**
@@ -1047,8 +1045,7 @@ fwupd_result_set_update_error (FwupdResult *result, const gchar *update_error)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	g_free (priv->update_error);
-	priv->update_error = g_strdup (update_error);
+	fwupd_device_set_update_error (priv->device, update_error);
 }
 
 /**
@@ -1377,16 +1374,6 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 				       FWUPD_RESULT_KEY_UNIQUE_ID,
 				       g_variant_new_string (priv->unique_id));
 	}
-	if (priv->update_error != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_ERROR,
-				       g_variant_new_string (priv->update_error));
-	}
-	if (priv->update_state != FWUPD_UPDATE_STATE_UNKNOWN) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_STATE,
-				       g_variant_new_uint32 (priv->update_state));
-	}
 	if (priv->update_trust_flags != 0) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS,
@@ -1420,17 +1407,6 @@ fwupd_result_from_key_value (FwupdResult *result, const gchar *key, GVariant *va
 		fwupd_result_set_update_trust_flags (result, g_variant_get_uint64 (value));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_STATE) == 0) {
-		/* old daemon version and new client */
-		if (g_strcmp0 (g_variant_get_type_string (value), "s") == 0) {
-			FwupdUpdateState tmp;
-			tmp = fwupd_update_state_from_string (g_variant_get_string (value, NULL));
-			fwupd_result_set_update_state (result, tmp);
-		} else {
-			fwupd_result_set_update_state (result, g_variant_get_uint32 (value));
-		}
-		return;
-	}
 }
 
 static void
@@ -1443,14 +1419,6 @@ fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
 	for (gsize i = strlen (key); i < 20; i++)
 		g_string_append (str, " ");
 	g_string_append_printf (str, "%s\n", value);
-}
-
-static void
-fwupd_pad_kv_ups (GString *str, const gchar *key, FwupdUpdateState value)
-{
-	if (value == FWUPD_UPDATE_STATE_UNKNOWN)
-		return;
-	fwupd_pad_kv_str (str, key, fwupd_update_state_to_string (value));
 }
 
 static void
@@ -1506,7 +1474,6 @@ fwupd_result_to_string (FwupdResult *result)
 
 	/* device */
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UNIQUE_ID, priv->unique_id);
-	fwupd_pad_kv_ups (str, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
 
 	return g_string_free (str, FALSE);
 }
@@ -1591,7 +1558,6 @@ fwupd_result_finalize (GObject *object)
 	g_object_unref (priv->device);
 	g_object_unref (priv->release);
 	g_free (priv->unique_id);
-	g_free (priv->update_error);
 
 	G_OBJECT_CLASS (fwupd_result_parent_class)->finalize (object);
 }

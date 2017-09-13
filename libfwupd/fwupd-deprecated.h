@@ -153,6 +153,16 @@ const gchar	*fwupd_result_get_device_vendor		(FwupdResult	*result);
 G_DEPRECATED_FOR(fwupd_device_set_vendor)
 void		 fwupd_result_set_device_vendor		(FwupdResult	*result,
 							 const gchar	*device_vendor);
+G_DEPRECATED_FOR(fwupd_device_get_update_state)
+FwupdUpdateState fwupd_result_get_update_state		(FwupdResult	*result);
+G_DEPRECATED_FOR(fwupd_device_set_update_state)
+void		 fwupd_result_set_update_state		(FwupdResult	*result,
+							 FwupdUpdateState update_state);
+G_DEPRECATED_FOR(fwupd_device_get_update_error)
+const gchar	*fwupd_result_get_update_error		(FwupdResult	*result);
+G_DEPRECATED_FOR(fwupd_device_set_update_error)
+void		 fwupd_result_set_update_error		(FwupdResult	*result,
+							 const gchar	*update_error);
 
 /* update-specific */
 G_DEPRECATED_FOR(fwupd_release_get_size)
