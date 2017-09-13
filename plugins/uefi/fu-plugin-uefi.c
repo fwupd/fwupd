@@ -106,7 +106,6 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	guint32 status = 0;
 	guint32 version = 0;
 	time_t when = 0;
-	g_autofree gchar *version_str = NULL;
 	g_autoptr(fwup_resource_iter) iter = NULL;
 
 	/* get the hardware we're referencing */
@@ -122,15 +121,21 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 			     fu_device_get_guid_default (device));
 		return FALSE;
 	}
-	version_str = g_strdup_printf ("%u", version);
-	fu_device_set_update_version (device, version_str);
 	if (status == FWUP_LAST_ATTEMPT_STATUS_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	} else {
+		g_autofree gchar *err_msg = NULL;
+		g_autofree gchar *version_str = g_strdup_printf ("%u", version);
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		tmp = fwup_last_attempt_status_to_string (status);
-		if (tmp != NULL)
-			fu_device_set_update_error (device, tmp);
+		if (tmp == NULL) {
+			err_msg = g_strdup_printf ("failed to update to %s",
+						   version_str);
+		} else {
+			err_msg = g_strdup_printf ("failed to update to %s: %s",
+						   version_str, tmp);
+		}
+		fu_device_set_update_error (device, err_msg);
 	}
 	return TRUE;
 }
