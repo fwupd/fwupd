@@ -54,12 +54,6 @@ void		 fwupd_result_set_unique_id		(FwupdResult	*result,
 FwupdRelease	*fwupd_result_get_release		(FwupdResult	*result);
 FwupdDevice	*fwupd_result_get_device		(FwupdResult	*result);
 
-FwupdUpdateState fwupd_result_get_update_state		(FwupdResult	*result);
-void		 fwupd_result_set_update_state		(FwupdResult	*result,
-							 FwupdUpdateState update_state);
-const gchar	*fwupd_result_get_update_error		(FwupdResult	*result);
-void		 fwupd_result_set_update_error		(FwupdResult	*result,
-							 const gchar	*update_error);
 FwupdTrustFlags	 fwupd_result_get_update_trust_flags	(FwupdResult	*result);
 void		 fwupd_result_set_update_trust_flags	(FwupdResult	*result,
 							 FwupdTrustFlags trust_flags);

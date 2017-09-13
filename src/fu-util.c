@@ -488,7 +488,7 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdRelease *rel = fwupd_result_get_release (res);
 
 		/* check not already done */
-		if (fwupd_result_get_update_state (res) != FWUPD_UPDATE_STATE_PENDING)
+		if (fwupd_device_get_update_state (dev) != FWUPD_UPDATE_STATE_PENDING)
 			continue;
 
 		/* tell the user what's going to happen */

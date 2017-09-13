@@ -288,7 +288,7 @@ fu_pending_device_sqlite_cb (void *data,
 		}
 		if (g_strcmp0 (col_name[i], "state") == 0) {
 			FwupdUpdateState state = atoi (argv[i]);
-			fwupd_result_set_update_state (res, state);
+			fwupd_device_set_update_state (dev, state);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "timestamp") == 0) {
@@ -299,7 +299,7 @@ fu_pending_device_sqlite_cb (void *data,
 		}
 		if (g_strcmp0 (col_name[i], "error") == 0) {
 			if (argv[i] != NULL)
-				fwupd_result_set_update_error (res, argv[i]);
+				fwupd_device_set_update_error (dev, argv[i]);
 			continue;
 		}
 	}

@@ -436,8 +436,8 @@ fu_pending_func (void)
 	g_assert_cmpstr (fwupd_device_get_id (dev), ==, "self-test");
 	g_assert_cmpstr (fwupd_device_get_name (dev), ==, "ColorHug");
 	g_assert_cmpstr (fwupd_device_get_version (dev), ==, "3.0.1");
-	g_assert_cmpint (fwupd_result_get_update_state (res), ==, FWUPD_UPDATE_STATE_PENDING);
-	g_assert_cmpstr (fwupd_result_get_update_error (res), ==, "word");
+	g_assert_cmpint (fwupd_device_get_update_state (dev), ==, FWUPD_UPDATE_STATE_PENDING);
+	g_assert_cmpstr (fwupd_device_get_update_error (dev), ==, "word");
 	rel = fwupd_result_get_release (res);
 	g_assert (rel != NULL);
 	g_assert_cmpstr (fwupd_release_get_filename (rel), ==, "/var/lib/dave.cap");
