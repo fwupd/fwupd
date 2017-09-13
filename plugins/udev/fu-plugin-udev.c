@@ -146,6 +146,8 @@ fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 	guid = g_udev_device_get_property (device, "FWUPD_GUID");
 	if (guid == NULL)
 		return;
+	if (g_strcmp0 (g_udev_device_get_subsystem (device), "usb") == 0)
+		return;
 
 	/* get data */
 	ptask = as_profile_start (profile, "FuPluginUdev:client-add{%s}", guid);
