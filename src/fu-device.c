@@ -34,9 +34,10 @@ typedef struct {
 	gchar				*equivalent_id;
 	FuDevice			*alternate;
 	GHashTable			*metadata;
+	FwupdRelease			*release;
 } FuDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuDevice, fu_device, FWUPD_TYPE_RESULT)
+G_DEFINE_TYPE_WITH_PRIVATE (FuDevice, fu_device, FWUPD_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_device_get_instance_private (o))
 
 const gchar *
@@ -54,6 +55,14 @@ fu_device_set_equivalent_id (FuDevice *device, const gchar *equivalent_id)
 	g_return_if_fail (FU_IS_DEVICE (device));
 	g_free (priv->equivalent_id);
 	priv->equivalent_id = g_strdup (equivalent_id);
+}
+
+FwupdRelease *
+fu_device_get_release (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->release;
 }
 
 FuDevice *
@@ -79,12 +88,12 @@ fu_device_add_guid (FuDevice *device, const gchar *guid)
 	if (!as_utils_guid_is_valid (guid)) {
 		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
 		g_debug ("using %s for %s", tmp, guid);
-		fwupd_device_add_guid (fwupd_result_get_device (FWUPD_RESULT (device)), tmp);
+		fwupd_device_add_guid (FWUPD_DEVICE (device), tmp);
 		return;
 	}
 
 	/* already valid */
-	fwupd_device_add_guid (fwupd_result_get_device (FWUPD_RESULT (device)), guid);
+	fwupd_device_add_guid (FWUPD_DEVICE (device), guid);
 }
 
 /**
@@ -225,7 +234,7 @@ fu_device_set_name (FuDevice *device, const gchar *value)
 	g_autoptr(GString) new = g_string_new (value);
 	g_strdelimit (new->str, "_", ' ');
 	as_utils_string_replace (new, "(TM)", "™");
-	fwupd_device_set_name (fwupd_result_get_device (FWUPD_RESULT (device)), new->str);
+	fwupd_device_set_name (FWUPD_DEVICE (device), new->str);
 }
 
 static void
@@ -255,22 +264,18 @@ gchar *
 fu_device_to_string (FuDevice *device)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (device);
-	FwupdDevice *dev;
-	FwupdRelease *rel;
 	GString *str = g_string_new ("");
 	g_autoptr(GList) keys = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
 
-	dev = fwupd_result_get_device (FWUPD_RESULT (device));
-	if (dev != NULL) {
-		g_autofree gchar *tmp = fwupd_device_to_string (dev);
+	if (TRUE) {
+		g_autofree gchar *tmp = fwupd_device_to_string (FWUPD_DEVICE (device));
 		if (tmp != NULL && tmp[0] != '\0')
 			g_string_append (str, tmp);
 	}
-	rel = fwupd_result_get_release (FWUPD_RESULT (device));
-	if (rel != NULL) {
-		g_autofree gchar *tmp = fwupd_release_to_string (rel);
+	if (TRUE) {
+		g_autofree gchar *tmp = fwupd_release_to_string (priv->release);
 		if (tmp != NULL && tmp[0] != '\0')
 			g_string_append (str, tmp);
 	}
@@ -296,6 +301,7 @@ static void
 fu_device_init (FuDevice *device)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (device);
+	priv->release = fwupd_release_new ();
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
 						g_free, g_free);
 }
@@ -310,6 +316,7 @@ fu_device_finalize (GObject *object)
 		g_object_unref (priv->alternate);
 	g_hash_table_unref (priv->metadata);
 	g_free (priv->equivalent_id);
+	g_object_unref (priv->release);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }

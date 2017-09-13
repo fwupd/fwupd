@@ -27,6 +27,7 @@
 #include <sqlite3.h>
 #include <stdlib.h>
 
+#include "fu-device-private.h"
 #include "fu-pending.h"
 
 static void fu_pending_finalize			 (GObject *object);
@@ -133,11 +134,11 @@ fu_pending_load (FuPending *pending, GError **error)
 }
 
 gboolean
-fu_pending_add_device (FuPending *pending, FwupdResult *res, GError **error)
+fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
-	FwupdDevice *dev = fwupd_result_get_device (res);
-	FwupdRelease *rel = fwupd_result_get_release (res);
+	FwupdDevice *dev = FWUPD_DEVICE (device);
+	FwupdRelease *rel = fu_device_get_release (device);
 	char *error_msg = NULL;
 	char *statement;
 	gboolean ret = TRUE;
@@ -215,10 +216,10 @@ fu_pending_remove_all (FuPending *pending, GError **error)
 }
 
 gboolean
-fu_pending_remove_device (FuPending *pending, FwupdResult *res, GError **error)
+fu_pending_remove_device (FuPending *pending, FuDevice *device, GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
-	FwupdDevice *dev = fwupd_result_get_device (res);
+	FwupdDevice *dev = FWUPD_DEVICE (device);
 	char *error_msg = NULL;
 	char *statement;
 	gboolean ret = TRUE;
@@ -263,13 +264,13 @@ fu_pending_device_sqlite_cb (void *data,
 	GPtrArray *array = (GPtrArray *) data;
 	FwupdDevice *dev;
 	FwupdRelease *rel;
-	FwupdResult *res;
+	FuDevice *device;
 
 	/* create new result */
-	res = fwupd_result_new ();
-	rel = fwupd_result_get_release (res);
-	dev = fwupd_result_get_device (res);
-	g_ptr_array_add (array, res);
+	device = fu_device_new ();
+	rel = fu_device_get_release (device);
+	dev = FWUPD_DEVICE (device);
+	g_ptr_array_add (array, device);
 
 	g_debug ("FuPending: got sql result %s", argv[0]);
 	for (gint i = 0; i < argc; i++) {
@@ -318,11 +319,11 @@ fu_pending_device_sqlite_cb (void *data,
 	return 0;
 }
 
-FwupdResult *
+FuDevice *
 fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
-	FwupdResult *res = NULL;
+	FuDevice *device = NULL;
 	char *error_msg = NULL;
 	char *statement;
 	gint rc;
@@ -337,7 +338,7 @@ fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **erro
 	}
 
 	/* get all the devices */
-	g_debug ("FuPending: get res");
+	g_debug ("FuPending: get device");
 	statement = sqlite3_mprintf ("SELECT * FROM pending WHERE "
 				     "device_id = '%q';",
 				     device_id);
@@ -363,10 +364,10 @@ fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **erro
 				     "No devices found");
 		goto out;
 	}
-	res = g_object_ref (g_ptr_array_index (array_tmp, 0));
+	device = g_object_ref (g_ptr_array_index (array_tmp, 0));
 out:
 	sqlite3_free (statement);
-	return res;
+	return device;
 }
 
 GPtrArray *
@@ -415,12 +416,12 @@ out:
 
 gboolean
 fu_pending_set_state (FuPending *pending,
-		      FwupdResult *res,
+		      FuDevice *device,
 		      FwupdUpdateState state,
 		      GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
-	FwupdDevice *dev = fwupd_result_get_device (res);
+	FwupdDevice *dev = FWUPD_DEVICE (device);
 	char *error_msg = NULL;
 	char *statement;
 	gboolean ret = TRUE;
@@ -460,12 +461,12 @@ out:
 
 gboolean
 fu_pending_set_error_msg (FuPending *pending,
-			  FwupdResult *res,
+			  FuDevice *device,
 			  const gchar *error_msg2,
 			  GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
-	FwupdDevice *dev = fwupd_result_get_device (res);
+	FwupdDevice *dev = FWUPD_DEVICE (device);
 	char *error_msg = NULL;
 	char *statement;
 	gboolean ret = TRUE;

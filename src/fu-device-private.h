@@ -26,20 +26,21 @@
 
 G_BEGIN_DECLS
 
-#define fu_device_get_update_filename(d)	fwupd_release_get_filename(fwupd_result_get_release(FWUPD_RESULT(d)))
-#define fu_device_set_update_description(d,v)	fwupd_release_set_description(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_filename(d,v)	fwupd_release_set_filename(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_homepage(d,v)	fwupd_release_set_homepage(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_id(d,v)		fwupd_release_set_appstream_id(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_license(d,v)	fwupd_release_set_license(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_name(d,v)		fwupd_release_set_name(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_remote_id(d,v)	fwupd_release_set_remote_id(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_summary(d,v)	fwupd_release_set_summary(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_uri(d,v)		fwupd_release_set_uri(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_vendor(d,v)	fwupd_release_set_vendor(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_version(d,v)	fwupd_release_set_version(fwupd_result_get_release(FWUPD_RESULT(d)),v)
+#define fu_device_get_update_filename(d)	fwupd_release_get_filename(fu_device_get_release(d))
+#define fu_device_set_update_description(d,v)	fwupd_release_set_description(fu_device_get_release(d),v)
+#define fu_device_set_update_filename(d,v)	fwupd_release_set_filename(fu_device_get_release(d),v)
+#define fu_device_set_update_homepage(d,v)	fwupd_release_set_homepage(fu_device_get_release(d),v)
+#define fu_device_set_update_id(d,v)		fwupd_release_set_appstream_id(fu_device_get_release(d),v)
+#define fu_device_set_update_license(d,v)	fwupd_release_set_license(fu_device_get_release(d),v)
+#define fu_device_set_update_name(d,v)		fwupd_release_set_name(fu_device_get_release(d),v)
+#define fu_device_set_update_remote_id(d,v)	fwupd_release_set_remote_id(fu_device_get_release(d),v)
+#define fu_device_set_update_summary(d,v)	fwupd_release_set_summary(fu_device_get_release(d),v)
+#define fu_device_set_update_uri(d,v)		fwupd_release_set_uri(fu_device_get_release(d),v)
+#define fu_device_set_update_vendor(d,v)	fwupd_release_set_vendor(fu_device_get_release(d),v)
+#define fu_device_set_update_version(d,v)	fwupd_release_set_version(fu_device_get_release(d),v)
 
 gchar		*fu_device_to_string			(FuDevice	*device);
+FwupdRelease	*fu_device_get_release			(FuDevice	*device);
 
 G_END_DECLS
 

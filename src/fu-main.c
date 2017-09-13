@@ -29,13 +29,15 @@
 #include <polkit/polkit.h>
 #include <stdlib.h>
 
+#include "fwupd-device-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
+#include "fwupd-result-private.h"
 #include "fwupd-resources.h"
 
 #include "fu-common.h"
 #include "fu-debug.h"
-#include "fu-device.h"
+#include "fu-device-private.h"
 #include "fu-engine.h"
 
 #ifndef HAVE_POLKIT_0_114
@@ -77,7 +79,7 @@ fu_main_engine_device_added_cb (FuEngine *engine,
 	/* not yet connected */
 	if (priv->connection == NULL)
 		return;
-	val = fwupd_result_to_data (FWUPD_RESULT (device), "(a{sv})");
+	val = fwupd_device_to_data (FWUPD_DEVICE (device), "(a{sv})");
 	g_dbus_connection_emit_signal (priv->connection,
 				       NULL,
 				       FWUPD_DBUS_PATH,
@@ -96,7 +98,7 @@ fu_main_engine_device_removed_cb (FuEngine *engine,
 	/* not yet connected */
 	if (priv->connection == NULL)
 		return;
-	val = fwupd_result_to_data (FWUPD_RESULT (device), "(a{sv})");
+	val = fwupd_device_to_data (FWUPD_DEVICE (device), "(a{sv})");
 	g_dbus_connection_emit_signal (priv->connection,
 				       NULL,
 				       FWUPD_DBUS_PATH,
@@ -115,7 +117,7 @@ fu_main_engine_device_changed_cb (FuEngine *engine,
 	/* not yet connected */
 	if (priv->connection == NULL)
 		return;
-	val = fwupd_result_to_data (FWUPD_RESULT (device), "(a{sv})");
+	val = fwupd_device_to_data (FWUPD_DEVICE (device), "(a{sv})");
 	g_dbus_connection_emit_signal (priv->connection,
 				       NULL,
 				       FWUPD_DBUS_PATH,
@@ -187,7 +189,11 @@ fu_main_device_array_to_variant (GPtrArray *devices)
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		GVariant *tmp = fwupd_result_to_data (FWUPD_RESULT (device), "{sa{sv}}");
+		GVariant *tmp;
+		g_autoptr(FwupdResult) result = fwupd_result_new ();
+		fwupd_result_set_device (result, FWUPD_DEVICE (device));
+		fwupd_result_set_release (result, fu_device_get_release (device));
+		tmp = fwupd_result_to_data (result, "{sa{sv}}");
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(a{sa{sv}})", &builder);

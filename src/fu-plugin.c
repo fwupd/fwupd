@@ -847,7 +847,7 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	gchar tmpname[] = {"XXXXXX.cap"};
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(FwupdResult) res_tmp = NULL;
+	g_autoptr(FuDevice) res_tmp = NULL;
 	g_autoptr(FuPending) pending = NULL;
 	g_autoptr(GFile) file = NULL;
 
@@ -890,7 +890,7 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	fu_device_set_update_filename (device, filename);
 
 	/* add to database */
-	if (!fu_pending_add_device (pending, FWUPD_RESULT (device), error))
+	if (!fu_pending_add_device (pending, device, error))
 		return FALSE;
 
 	/* next boot we run offline */
@@ -977,7 +977,7 @@ fu_plugin_runner_update (FuPlugin *plugin,
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginUpdateFunc update_func;
 	g_autoptr(FuPending) pending = NULL;
-	g_autoptr(FwupdResult) res_pending = NULL;
+	g_autoptr(FuDevice) device_pending = NULL;
 	GError *error_update = NULL;
 	GPtrArray *checksums;
 
@@ -1009,11 +1009,11 @@ fu_plugin_runner_update (FuPlugin *plugin,
 
 	/* online */
 	pending = fu_pending_new ();
-	res_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
+	device_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
 	if (!update_func (plugin, device, blob_fw, flags, &error_update)) {
 		/* save the error to the database */
-		if (res_pending != NULL) {
-			fu_pending_set_error_msg (pending, FWUPD_RESULT (device),
+		if (device_pending != NULL) {
+			fu_pending_set_error_msg (pending, device,
 						  error_update->message, NULL);
 		}
 		g_propagate_error (error, error_update);
@@ -1025,12 +1025,12 @@ fu_plugin_runner_update (FuPlugin *plugin,
 	g_ptr_array_set_size (checksums, 0);
 
 	/* cleanup */
-	if (res_pending != NULL) {
+	if (device_pending != NULL) {
 		const gchar *tmp;
-		FwupdRelease *rel = fwupd_result_get_release (res_pending);
+		FwupdRelease *rel = fu_device_get_release (device_pending);
 
 		/* update pending database */
-		fu_pending_set_state (pending, FWUPD_RESULT (device),
+		fu_pending_set_state (pending, device,
 				      FWUPD_UPDATE_STATE_SUCCESS, NULL);
 
 		/* delete cab file */
@@ -1058,7 +1058,7 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginDeviceFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FwupdResult) res_pending = NULL;
+	g_autoptr(FuDevice) device_pending = NULL;
 	g_autoptr(FuPending) pending = NULL;
 
 	/* not enabled */
@@ -1078,10 +1078,10 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 
 	/* handled using the database */
 	pending = fu_pending_new ();
-	res_pending = fu_pending_get_device (pending,
+	device_pending = fu_pending_get_device (pending,
 					     fu_device_get_id (device),
 					     &error_local);
-	if (res_pending == NULL) {
+	if (device_pending == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
@@ -1092,7 +1092,7 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 	}
 
 	/* remove from pending database */
-	return fu_pending_remove_device (pending, FWUPD_RESULT (device), error);
+	return fu_pending_remove_device (pending, device, error);
 }
 
 gboolean
@@ -1105,7 +1105,7 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	FwupdDevice *dev;
 	const gchar *tmp;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FwupdResult) res_pending = NULL;
+	g_autoptr(FuDevice) device_pending = NULL;
 	g_autoptr(FuPending) pending = NULL;
 
 	/* not enabled */
@@ -1125,10 +1125,10 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 
 	/* handled using the database */
 	pending = fu_pending_new ();
-	res_pending = fu_pending_get_device (pending,
+	device_pending = fu_pending_get_device (pending,
 					     fu_device_get_id (device),
 					     &error_local);
-	if (res_pending == NULL) {
+	if (device_pending == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOTHING_TO_DO,
@@ -1139,7 +1139,7 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	}
 
 	/* copy the important parts from the pending device to the real one */
-	dev = fwupd_result_get_device (res_pending);
+	dev = FWUPD_DEVICE (device_pending);
 	update_state = fwupd_device_get_update_state (dev);
 	if (update_state == FWUPD_UPDATE_STATE_UNKNOWN ||
 	    update_state == FWUPD_UPDATE_STATE_PENDING) {
@@ -1159,7 +1159,7 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	tmp = fwupd_device_get_version (dev);
 	if (tmp != NULL)
 		fu_device_set_version (device, tmp);
-	rel = fwupd_result_get_release (res_pending);
+	rel = fu_device_get_release (device_pending);
 	tmp = fwupd_release_get_version (rel);
 	if (tmp != NULL)
 		fu_device_set_update_version (device, tmp);

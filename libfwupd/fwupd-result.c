@@ -31,7 +31,7 @@
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-release-private.h"
-#include "fwupd-result.h"
+#include "fwupd-result-private.h"
 
 static void fwupd_result_finalize	 (GObject *object);
 
@@ -129,6 +129,22 @@ fwupd_result_get_device (FwupdResult *result)
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), NULL);
 	return priv->device;
+}
+
+void
+fwupd_result_set_release (FwupdResult *result, FwupdRelease *release)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_if_fail (FWUPD_IS_RESULT (result));
+	g_set_object (&priv->release, release);
+}
+
+void
+fwupd_result_set_device (FwupdResult *result, FwupdDevice *device)
+{
+	FwupdResultPrivate *priv = GET_PRIVATE (result);
+	g_return_if_fail (FWUPD_IS_RESULT (result));
+	g_set_object (&priv->device, device);
 }
 
 /**
