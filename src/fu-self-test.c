@@ -259,13 +259,14 @@ fu_plugin_module_func (void)
 {
 	GError *error = NULL;
 	FuDevice *device_tmp;
-	FwupdResult *res;
 	gboolean ret;
 	guint cnt = 0;
 	g_autofree gchar *mapped_file_fn = NULL;
 	g_autofree gchar *pending_cap = NULL;
 	g_autofree gchar *pending_db = NULL;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device2 = NULL;
+	g_autoptr(FuDevice) device3 = NULL;
 	g_autoptr(FuPending) pending = NULL;
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
@@ -321,16 +322,15 @@ fu_plugin_module_func (void)
 
 	/* lets check the pending */
 	pending = fu_pending_new ();
-	res = fu_pending_get_device (pending, fu_device_get_id (device), &error);
+	device2 = fu_pending_get_device (pending, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
-	g_assert (res != NULL);
-	g_assert_cmpint (fu_device_get_update_state (res), ==, FWUPD_UPDATE_STATE_PENDING);
-	g_assert_cmpstr (fu_device_get_update_error (res), ==, NULL);
-	g_assert_cmpstr (fu_device_get_update_filename (res), !=, NULL);
+	g_assert (device2 != NULL);
+	g_assert_cmpint (fu_device_get_update_state (device2), ==, FWUPD_UPDATE_STATE_PENDING);
+	g_assert_cmpstr (fu_device_get_update_error (device2), ==, NULL);
+	g_assert_cmpstr (fu_device_get_update_filename (device2), !=, NULL);
 
 	/* save this; we'll need to delete it later */
-	pending_cap = g_strdup (fu_device_get_update_filename (res));
-	g_object_unref (res);
+	pending_cap = g_strdup (fu_device_get_update_filename (device2));
 
 	/* lets do this online */
 	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
@@ -344,12 +344,11 @@ fu_plugin_module_func (void)
 	g_assert_cmpstr (fu_device_get_version_bootloader (device), ==, "0.1.2");
 
 	/* lets check the pending */
-	res = fu_pending_get_device (pending, fu_device_get_id (device), &error);
+	device3 = fu_pending_get_device (pending, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
-	g_assert (res != NULL);
-	g_assert_cmpint (fu_device_get_update_state (res), ==, FWUPD_UPDATE_STATE_SUCCESS);
-	g_assert_cmpstr (fu_device_get_update_error (res), ==, NULL);
-	g_object_unref (res);
+	g_assert (device3 != NULL);
+	g_assert_cmpint (fu_device_get_update_state (device3), ==, FWUPD_UPDATE_STATE_SUCCESS);
+	g_assert_cmpstr (fu_device_get_update_error (device3), ==, NULL);
 
 	/* get the status */
 	device_tmp = fu_device_new ();
@@ -384,9 +383,9 @@ fu_pending_func (void)
 {
 	GError *error = NULL;
 	gboolean ret;
+	FuDevice *device;
 	FwupdDevice *dev;
 	FwupdRelease *rel;
-	FwupdResult *res;
 	g_autoptr(FuPending) pending = NULL;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
@@ -403,65 +402,65 @@ fu_pending_func (void)
 	g_unlink (filename);
 
 	/* add a device */
-	res = FWUPD_RESULT (fu_device_new ());
-	fu_device_set_id (res, "self-test");
-	fu_device_set_update_filename (res, "/var/lib/dave.cap"),
-	fu_device_set_name (FU_DEVICE (res), "ColorHug"),
-	fu_device_set_version (res, "3.0.1"),
-	fu_device_set_update_version (res, "3.0.2");
-	ret = fu_pending_add_device (pending, res, &error);
+	device = fu_device_new ();
+	fu_device_set_id (device, "self-test");
+	fu_device_set_update_filename (device, "/var/lib/dave.cap"),
+	fu_device_set_name (device, "ColorHug"),
+	fu_device_set_version (device, "3.0.1"),
+	fu_device_set_update_version (device, "3.0.2");
+	ret = fu_pending_add_device (pending, device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_object_unref (res);
+	g_object_unref (device);
 
 	/* ensure database was created */
 	g_assert (g_file_test (filename, G_FILE_TEST_EXISTS));
 
 	/* add some extra data */
-	res = fwupd_result_new ();
-	fu_device_set_id (res, "self-test");
-	ret = fu_pending_set_state (pending, res, FWUPD_UPDATE_STATE_PENDING, &error);
+	device = fu_device_new ();
+	fu_device_set_id (device, "self-test");
+	ret = fu_pending_set_state (pending, device, FWUPD_UPDATE_STATE_PENDING, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	ret = fu_pending_set_error_msg (pending, res, "word", &error);
+	ret = fu_pending_set_error_msg (pending, device, "word", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_object_unref (res);
+	g_object_unref (device);
 
 	/* get device */
-	res = fu_pending_get_device (pending, "self-test", &error);
+	device = fu_pending_get_device (pending, "self-test", &error);
 	g_assert_no_error (error);
-	g_assert (res != NULL);
-	dev = fwupd_result_get_device (res);
+	g_assert (device != NULL);
+	dev = FWUPD_DEVICE (device);
 	g_assert_cmpstr (fwupd_device_get_id (dev), ==, "self-test");
 	g_assert_cmpstr (fwupd_device_get_name (dev), ==, "ColorHug");
 	g_assert_cmpstr (fwupd_device_get_version (dev), ==, "3.0.1");
 	g_assert_cmpint (fwupd_device_get_update_state (dev), ==, FWUPD_UPDATE_STATE_PENDING);
 	g_assert_cmpstr (fwupd_device_get_update_error (dev), ==, "word");
-	rel = fwupd_result_get_release (res);
+	rel = fu_device_get_release (device);
 	g_assert (rel != NULL);
 	g_assert_cmpstr (fwupd_release_get_filename (rel), ==, "/var/lib/dave.cap");
 	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "3.0.2");
-	g_object_unref (res);
+	g_object_unref (device);
 
 	/* get device that does not exist */
-	res = fu_pending_get_device (pending, "XXXXXXXXXXXXX", &error);
+	device = fu_pending_get_device (pending, "XXXXXXXXXXXXX", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert (res == NULL);
+	g_assert (device == NULL);
 	g_clear_error (&error);
 
 	/* remove device */
-	res = fwupd_result_new ();
-	fu_device_set_id (res, "self-test");
-	ret = fu_pending_remove_device (pending, res, &error);
+	device = fu_device_new ();
+	fu_device_set_id (device, "self-test");
+	ret = fu_pending_remove_device (pending, device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_object_unref (res);
+	g_object_unref (device);
 
 	/* get device that does not exist */
-	res = fu_pending_get_device (pending, "self-test", &error);
+	device = fu_pending_get_device (pending, "self-test", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert (res == NULL);
+	g_assert (device == NULL);
 	g_clear_error (&error);
 }
 

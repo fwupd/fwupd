@@ -1763,8 +1763,7 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 	}
 
 	/* supported in metadata */
-	fwupd_device_add_flag (fwupd_result_get_device (FWUPD_RESULT (item->device)),
-			       FWUPD_DEVICE_FLAG_SUPPORTED);
+	fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_SUPPORTED);
 
 	/* check if actually newer than what we have installed */
 	if (as_utils_vercmp (as_release_get_version (release), version) <= 0) {
@@ -1815,7 +1814,7 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 
 	/* add release information */
 	fu_engine_set_release_from_appstream (self,
-					      fwupd_result_get_release (FWUPD_RESULT (item->device)),
+					      fu_device_get_release (item->device),
 					      release);
 
 	/* get the list of releases newer than the one installed */
