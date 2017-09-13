@@ -31,6 +31,7 @@
 #include <valgrind.h>
 #endif /* HAVE_VALGRIND */
 
+#include "fu-device-private.h"
 #include "fu-plugin-private.h"
 #include "fu-pending.h"
 

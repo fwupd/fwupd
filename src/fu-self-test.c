@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fu-device.h"
+#include "fu-device-private.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"

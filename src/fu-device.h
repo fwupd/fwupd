@@ -37,7 +37,7 @@ struct _FuDeviceClass
 
 FuDevice	*fu_device_new				(void);
 
-/* compat setters */
+/* helpful casting macros */
 #define fu_device_add_flag(d,v)			fwupd_device_add_flag(fwupd_result_get_device(FWUPD_RESULT(d)),v)
 #define fu_device_remove_flag(d,v)		fwupd_device_remove_flag(fwupd_result_get_device(FWUPD_RESULT(d)),v)
 #define fu_device_has_flag(d,v)			fwupd_device_has_flag(fwupd_result_get_device(FWUPD_RESULT(d)),v)
@@ -53,26 +53,12 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_summary(d,v)		fwupd_device_set_summary(fwupd_result_get_device(FWUPD_RESULT(d)),v)
 #define fu_device_set_update_error(d,v)		fwupd_device_set_update_error(fwupd_result_get_device(FWUPD_RESULT(d)),v)
 #define fu_device_set_update_state(d,v)		fwupd_device_set_update_state(fwupd_result_get_device(FWUPD_RESULT(d)),v)
-#define fu_device_set_unique_id(d,v)		fwupd_result_set_unique_id(FWUPD_RESULT(d),v)
-#define fu_device_set_update_description(d,v)	fwupd_release_set_description(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_filename(d,v)	fwupd_release_set_filename(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_homepage(d,v)	fwupd_release_set_homepage(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_id(d,v)		fwupd_release_set_appstream_id(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_license(d,v)	fwupd_release_set_license(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_name(d,v)		fwupd_release_set_name(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_summary(d,v)	fwupd_release_set_summary(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_uri(d,v)		fwupd_release_set_uri(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_vendor(d,v)	fwupd_release_set_vendor(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_version(d,v)	fwupd_release_set_version(fwupd_result_get_release(FWUPD_RESULT(d)),v)
-#define fu_device_set_update_remote_id(d,v)	fwupd_release_set_remote_id(fwupd_result_get_release(FWUPD_RESULT(d)),v)
 #define fu_device_set_vendor(d,v)		fwupd_device_set_vendor(fwupd_result_get_device(FWUPD_RESULT(d)),v)
 #define fu_device_set_vendor_id(d,v)		fwupd_device_set_vendor_id(fwupd_result_get_device(FWUPD_RESULT(d)),v)
 #define fu_device_set_version(d,v)		fwupd_device_set_version(fwupd_result_get_device(FWUPD_RESULT(d)),v)
 #define fu_device_set_version_lowest(d,v)	fwupd_device_set_version_lowest(fwupd_result_get_device(FWUPD_RESULT(d)),v)
 #define fu_device_set_version_bootloader(d,v)	fwupd_device_set_version_bootloader(fwupd_result_get_device(FWUPD_RESULT(d)),v)
 #define fu_device_set_flashes_left(d,v)		fwupd_device_set_flashes_left(fwupd_result_get_device(FWUPD_RESULT(d)),v)
-
-/* compat getters */
 #define fu_device_get_checksums(d)		fwupd_device_get_checksums(fwupd_result_get_device(FWUPD_RESULT(d)))
 #define fu_device_get_flags(d)			fwupd_device_get_flags(fwupd_result_get_device(FWUPD_RESULT(d)))
 #define fu_device_get_guids(d)			fwupd_device_get_guids(fwupd_result_get_device(FWUPD_RESULT(d)))
@@ -83,9 +69,6 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_plugin(d)			fwupd_device_get_provider(fwupd_result_get_device(FWUPD_RESULT(d)))
 #define fu_device_get_update_error(d)		fwupd_device_get_update_error(fwupd_result_get_device(FWUPD_RESULT(d)))
 #define fu_device_get_update_state(d)		fwupd_device_get_update_state(fwupd_result_get_device(FWUPD_RESULT(d)))
-#define fu_device_get_update_filename(d)	fwupd_release_get_filename(fwupd_result_get_release(FWUPD_RESULT(d)))
-#define fu_device_get_update_version(d)		fwupd_release_get_version(fwupd_result_get_release(FWUPD_RESULT(d)))
-#define fu_device_get_update_remote_id(d)	fwupd_release_get_remote_id(fwupd_result_get_release(FWUPD_RESULT(d)))
 #define fu_device_get_version(d)		fwupd_device_get_version(fwupd_result_get_device(FWUPD_RESULT(d)))
 #define fu_device_get_version_lowest(d)		fwupd_device_get_version_lowest(fwupd_result_get_device(FWUPD_RESULT(d)))
 #define fu_device_get_version_bootloader(d)	fwupd_device_get_version_bootloader(fwupd_result_get_device(FWUPD_RESULT(d)))
@@ -118,7 +101,6 @@ void		 fu_device_set_metadata_integer		(FuDevice	*device,
 							 guint		 value);
 void		 fu_device_set_name			(FuDevice	*device,
 							 const gchar	*value);
-gchar		*fu_device_to_string			(FuDevice	*device);
 
 G_END_DECLS
 

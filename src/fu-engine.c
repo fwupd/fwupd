@@ -36,7 +36,7 @@
 #include "fu-common.h"
 #include "fu-config.h"
 #include "fu-debug.h"
-#include "fu-device.h"
+#include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-hwids.h"
 #include "fu-keyring.h"

@@ -26,7 +26,7 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include "fu-device.h"
+#include "fu-device-private.h"
 
 static void fu_device_finalize			 (GObject *object);
 
