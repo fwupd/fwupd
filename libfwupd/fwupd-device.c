@@ -1011,6 +1011,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		fwupd_device_set_flashes_left (device, g_variant_get_uint32 (value));
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_ERROR) == 0) {
+		fwupd_device_set_update_error (device, g_variant_get_string (value, NULL));
+		return;
+	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_STATE) == 0) {
 		/* old daemon version and new client */
 		if (g_strcmp0 (g_variant_get_type_string (value), "s") == 0) {
@@ -1220,6 +1224,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_CREATED, priv->created);
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_MODIFIED, priv->modified);
 	fwupd_pad_kv_ups (str, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
 
 	return g_string_free (str, FALSE);
 }
