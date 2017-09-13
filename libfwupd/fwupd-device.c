@@ -931,6 +931,12 @@ fwupd_device_to_data (FwupdDevice *device, const gchar *type_string)
 		return g_variant_new ("a{sv}", &builder);
 	if (g_strcmp0 (type_string, "(a{sv})") == 0)
 		return g_variant_new ("(a{sv})", &builder);
+	if (g_strcmp0 (type_string, "{sa{sv}}") == 0) {
+		const gchar *device_id = fwupd_device_get_id (device);
+		if (device_id == NULL)
+			device_id = "";
+		return g_variant_new ("{sa{sv}}", device_id, &builder);
+	}
 	return NULL;
 }
 

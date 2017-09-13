@@ -887,7 +887,7 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	/* schedule for next boot */
 	g_debug ("schedule %s to be installed to %s on next boot",
 		 filename, fu_device_get_id (device));
-	fu_device_set_update_filename (device, filename);
+	fu_device_set_filename_pending (device, filename);
 
 	/* add to database */
 	if (!fu_pending_add_device (pending, device, error))
@@ -1027,14 +1027,13 @@ fu_plugin_runner_update (FuPlugin *plugin,
 	/* cleanup */
 	if (device_pending != NULL) {
 		const gchar *tmp;
-		FwupdRelease *rel = fu_device_get_release (device_pending);
 
 		/* update pending database */
 		fu_pending_set_state (pending, device,
 				      FWUPD_UPDATE_STATE_SUCCESS, NULL);
 
 		/* delete cab file */
-		tmp = fwupd_release_get_filename (rel);
+		tmp = fu_device_get_filename_pending (device_pending);
 		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
 			g_autoptr(GError) error_local = NULL;
 			g_autoptr(GFile) file = NULL;
@@ -1101,8 +1100,6 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginDeviceFunc func = NULL;
 	FwupdUpdateState update_state;
-	FwupdRelease *rel;
-	FwupdDevice *dev;
 	const gchar *tmp;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDevice) device_pending = NULL;
@@ -1139,8 +1136,7 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	}
 
 	/* copy the important parts from the pending device to the real one */
-	dev = FWUPD_DEVICE (device_pending);
-	update_state = fwupd_device_get_update_state (dev);
+	update_state = fu_device_get_update_state (device_pending);
 	if (update_state == FWUPD_UPDATE_STATE_UNKNOWN ||
 	    update_state == FWUPD_UPDATE_STATE_PENDING) {
 		g_set_error (error,
@@ -1153,16 +1149,15 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 
 	/* copy */
 	fu_device_set_update_state (device, update_state);
-	tmp = fwupd_device_get_update_error (dev);
+	tmp = fu_device_get_update_error (device_pending);
 	if (tmp != NULL)
 		fu_device_set_update_error (device, tmp);
-	tmp = fwupd_device_get_version (dev);
+	tmp = fu_device_get_version (device_pending);
 	if (tmp != NULL)
 		fu_device_set_version (device, tmp);
-	rel = fu_device_get_release (device_pending);
-	tmp = fwupd_release_get_version (rel);
+	tmp = fu_device_get_version_new (device_pending);
 	if (tmp != NULL)
-		fu_device_set_update_version (device, tmp);
+		fu_device_set_version_new (device, tmp);
 	return TRUE;
 }
 

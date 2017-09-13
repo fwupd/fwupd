@@ -189,11 +189,7 @@ fu_main_device_array_to_variant (GPtrArray *devices)
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		GVariant *tmp;
-		g_autoptr(FwupdResult) result = fwupd_result_new ();
-		fwupd_result_set_device (result, FWUPD_DEVICE (device));
-		fwupd_result_set_release (result, fu_device_get_release (device));
-		tmp = fwupd_result_to_data (result, "{sa{sv}}");
+		GVariant *tmp = fwupd_device_to_data (FWUPD_DEVICE (device), "{sa{sv}}");
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(a{sa{sv}})", &builder);
@@ -437,7 +433,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		val = fu_main_device_array_to_variant (updates);
+		val = fu_main_result_array_to_variant (updates);
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}

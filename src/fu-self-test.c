@@ -327,10 +327,10 @@ fu_plugin_module_func (void)
 	g_assert (device2 != NULL);
 	g_assert_cmpint (fu_device_get_update_state (device2), ==, FWUPD_UPDATE_STATE_PENDING);
 	g_assert_cmpstr (fu_device_get_update_error (device2), ==, NULL);
-	g_assert_cmpstr (fu_device_get_update_filename (device2), !=, NULL);
+	g_assert_cmpstr (fu_device_get_filename_pending (device2), !=, NULL);
 
 	/* save this; we'll need to delete it later */
-	pending_cap = g_strdup (fu_device_get_update_filename (device2));
+	pending_cap = g_strdup (fu_device_get_filename_pending (device2));
 
 	/* lets do this online */
 	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
@@ -384,8 +384,6 @@ fu_pending_func (void)
 	GError *error = NULL;
 	gboolean ret;
 	FuDevice *device;
-	FwupdDevice *dev;
-	FwupdRelease *rel;
 	g_autoptr(FuPending) pending = NULL;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
@@ -404,10 +402,10 @@ fu_pending_func (void)
 	/* add a device */
 	device = fu_device_new ();
 	fu_device_set_id (device, "self-test");
-	fu_device_set_update_filename (device, "/var/lib/dave.cap"),
+	fu_device_set_filename_pending (device, "/var/lib/dave.cap"),
 	fu_device_set_name (device, "ColorHug"),
 	fu_device_set_version (device, "3.0.1"),
-	fu_device_set_update_version (device, "3.0.2");
+	fu_device_set_version_new (device, "3.0.2");
 	ret = fu_pending_add_device (pending, device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -431,16 +429,13 @@ fu_pending_func (void)
 	device = fu_pending_get_device (pending, "self-test", &error);
 	g_assert_no_error (error);
 	g_assert (device != NULL);
-	dev = FWUPD_DEVICE (device);
-	g_assert_cmpstr (fwupd_device_get_id (dev), ==, "self-test");
-	g_assert_cmpstr (fwupd_device_get_name (dev), ==, "ColorHug");
-	g_assert_cmpstr (fwupd_device_get_version (dev), ==, "3.0.1");
-	g_assert_cmpint (fwupd_device_get_update_state (dev), ==, FWUPD_UPDATE_STATE_PENDING);
-	g_assert_cmpstr (fwupd_device_get_update_error (dev), ==, "word");
-	rel = fu_device_get_release (device);
-	g_assert (rel != NULL);
-	g_assert_cmpstr (fwupd_release_get_filename (rel), ==, "/var/lib/dave.cap");
-	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "3.0.2");
+	g_assert_cmpstr (fu_device_get_id (device), ==, "self-test");
+	g_assert_cmpstr (fu_device_get_name (device), ==, "ColorHug");
+	g_assert_cmpstr (fu_device_get_version (device), ==, "3.0.1");
+	g_assert_cmpint (fu_device_get_update_state (device), ==, FWUPD_UPDATE_STATE_PENDING);
+	g_assert_cmpstr (fu_device_get_update_error (device), ==, "word");
+	g_assert_cmpstr (fu_device_get_filename_pending (device), ==, "/var/lib/dave.cap");
+	g_assert_cmpstr (fu_device_get_version_new (device), ==, "3.0.2");
 	g_object_unref (device);
 
 	/* get device that does not exist */
