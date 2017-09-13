@@ -2053,6 +2053,15 @@ fu_engine_get_remotes (FuEngine *self, GError **error)
 	return g_ptr_array_ref (remotes);
 }
 
+static gint
+fu_engine_sort_releases_cb (gconstpointer a, gconstpointer b)
+{
+	FwupdRelease *rel_a = FWUPD_RELEASE (*((FwupdRelease **) a));
+	FwupdRelease *rel_b = FWUPD_RELEASE (*((FwupdRelease **) b));
+	return as_utils_vercmp (fwupd_release_get_version (rel_a),
+				fwupd_release_get_version (rel_b));
+}
+
 /**
  * fu_engine_get_releases:
  * @self: A #FuEngine
@@ -2108,6 +2117,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 				     "No releases for device");
 		return NULL;
 	}
+	g_ptr_array_sort (releases, fu_engine_sort_releases_cb);
 	return g_steal_pointer (&releases);
 }
 
