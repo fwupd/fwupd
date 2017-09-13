@@ -469,6 +469,20 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
+	if (g_strcmp0 (method_name, "GetUpgrades") == 0) {
+		const gchar *device_id;
+		g_autoptr(GPtrArray) releases = NULL;
+		g_variant_get (parameters, "(&s)", &device_id);
+		g_debug ("Called %s(%s)", method_name, device_id);
+		releases = fu_engine_get_upgrades (priv->engine, device_id, &error);
+		if (releases == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		val = fu_main_release_array_to_variant (releases);
+		g_dbus_method_invocation_return_value (invocation, val);
+		return;
+	}
 	if (g_strcmp0 (method_name, "GetRemotes") == 0) {
 		g_autoptr(GPtrArray) remotes = NULL;
 		g_debug ("Called %s()", method_name);

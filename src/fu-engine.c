@@ -2235,6 +2235,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 				     "No releases for device");
 		return NULL;
 	}
+	g_ptr_array_sort (releases, fu_engine_sort_releases_cb);
 	return g_steal_pointer (&releases);
 }
 
@@ -2323,6 +2324,86 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
 				     "No downgrades for device, current is %s",
+				     fu_device_get_version (item->device));
+		}
+		return NULL;
+	}
+	g_ptr_array_sort (releases, fu_engine_sort_releases_cb);
+	return g_steal_pointer (&releases);
+}
+
+/**
+ * fu_engine_get_upgrades:
+ * @self: A #FuEngine
+ * @device_id: A device ID
+ * @error: A #GError, or %NULL
+ *
+ * Gets the upgrades available for a specific device.
+ *
+ * Returns: (transfer container) (element-type FwupdResult): results
+ **/
+GPtrArray *
+fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
+{
+	FuDeviceItem *item;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(GPtrArray) releases_tmp = NULL;
+	g_autoptr(GString) error_str = g_string_new (NULL);
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	g_return_val_if_fail (device_id != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* find the device */
+	item = fu_engine_get_item_by_id (self, device_id, error);
+	if (item == NULL)
+		return NULL;
+
+	/* get all the releases for the device */
+	releases_tmp = fu_engine_get_releases_for_device (self, item->device, error);
+	if (releases_tmp == NULL)
+		return NULL;
+	releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < releases_tmp->len; i++) {
+		FwupdRelease *rel_tmp = g_ptr_array_index (releases_tmp, i);
+		gint vercmp;
+
+		/* only include older firmware */
+		vercmp = as_utils_vercmp (fwupd_release_get_version (rel_tmp),
+					  fu_device_get_version (item->device));
+		if (vercmp == 0) {
+			g_string_append_printf (error_str, "%s=same, ",
+						fwupd_release_get_version (rel_tmp));
+			g_debug ("ignoring %s as the same as %s",
+				 fwupd_release_get_version (rel_tmp),
+				 fu_device_get_version (item->device));
+			continue;
+		}
+		if (vercmp < 0) {
+			g_string_append_printf (error_str, "%s=older, ",
+						fwupd_release_get_version (rel_tmp));
+			g_debug ("ignoring %s as older than %s",
+				 fwupd_release_get_version (rel_tmp),
+				 fu_device_get_version (item->device));
+			continue;
+		}
+		g_ptr_array_add (releases, g_object_ref (rel_tmp));
+	}
+	if (error_str->len > 2)
+		g_string_truncate (error_str, error_str->len - 2);
+	if (releases->len == 0) {
+		if (error_str->len > 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No upgrades for device, current is %s: %s",
+				     fu_device_get_version (item->device),
+				     error_str->str);
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No upgrades for device, current is %s",
 				     fu_device_get_version (item->device));
 		}
 		return NULL;

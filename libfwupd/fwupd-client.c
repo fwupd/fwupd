@@ -616,6 +616,51 @@ fwupd_client_get_downgrades (FwupdClient *client, const gchar *device_id,
 	return fwupd_client_parse_releases_from_variant (val);
 }
 
+/**
+ * fwupd_client_get_upgrades:
+ * @client: A #FwupdClient
+ * @device_id: the device ID
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets all the upgrades for a specific device.
+ *
+ * Returns: (element-type FwupdRelease) (transfer container): results
+ *
+ * Since: 0.9.8
+ **/
+GPtrArray *
+fwupd_client_get_upgrades (FwupdClient *client, const gchar *device_id,
+			   GCancellable *cancellable, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (device_id != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "GetUpgrades",
+				      g_variant_new ("(s)", device_id),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return NULL;
+	}
+	return fwupd_client_parse_releases_from_variant (val);
+}
+
 static void
 fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
