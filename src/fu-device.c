@@ -251,6 +251,7 @@ fu_device_finalize (GObject *object)
 	if (priv->alternate != NULL)
 		g_object_unref (priv->alternate);
 	g_hash_table_unref (priv->metadata);
+	g_free (priv->equivalent_id);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }
