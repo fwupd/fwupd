@@ -1445,6 +1445,12 @@ fu_engine_add_component_to_store (FuEngine *self, AsApp *app)
 	AsApp *app_old = as_store_get_app_by_id (self->store, as_app_get_id (app));
 	GPtrArray *releases = as_app_get_releases (app);
 
+	/* possibly convert the version from 0x to dotted */
+	fu_engine_vendor_quirk_release_version (app);
+
+	/* possibly convert the flashed provide to a GUID */
+	fu_engine_vendor_fixup_provide_value (app);
+
 	/* the app does not already exist */
 	if (app_old == NULL) {
 		as_store_add_app (self->store, app);
@@ -1746,12 +1752,6 @@ fu_engine_get_updates_item_update (FuEngine *self, FuDeviceItem *item)
 	app = fu_engine_store_get_app_by_guids (self->store, item->device);
 	if (app == NULL)
 		return FALSE;
-
-	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (app);
-
-	/* possibly convert the flashed provide to a GUID */
-	fu_engine_vendor_fixup_provide_value (app);
 
 	/* get latest release */
 	release = as_app_get_release_default (app);
