@@ -897,6 +897,9 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 		/* TRANSLATORS: section header for release version number */
 		fu_util_print_data (_("Version"), fwupd_release_get_version (rel));
 
+		/* TRANSLATORS: section header for the remote the file is coming from */
+		fu_util_print_data (_("Remote"), fwupd_release_get_remote_id (rel));
+
 		/* TRANSLATORS: section header for firmware URI */
 		fu_util_print_data (_("URI"), fwupd_release_get_uri (rel));
 		tmp = fwupd_release_get_description (rel);
