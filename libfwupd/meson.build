@@ -61,7 +61,7 @@ fwupd = shared_library(
 pkgg = import('pkgconfig')
 pkgg.generate(
   libraries : fwupd,
-  requires : [ 'gio-2.0', 'libsoup-2.4' ],
+  requires : [ 'gio-2.0' ],
   subdirs : 'fwupd-1',
   version : meson.project_version(),
   name : 'fwupd',

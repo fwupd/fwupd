@@ -22,8 +22,6 @@
 #ifndef __FWUPD_REMOTE_H
 #define __FWUPD_REMOTE_H
 
-#include <libsoup/soup.h>
-
 #include "fwupd-enums.h"
 
 G_BEGIN_DECLS
@@ -61,9 +59,6 @@ guint64		 fwupd_remote_get_age			(FwupdRemote	*self);
 FwupdRemoteKind	 fwupd_remote_get_kind			(FwupdRemote	*self);
 FwupdKeyringKind fwupd_remote_get_keyring_kind		(FwupdRemote	*self);
 gchar		*fwupd_remote_build_firmware_uri	(FwupdRemote	*self,
-							 const gchar	*url,
-							 GError		**error);
-SoupURI		*fwupd_remote_build_uri			(FwupdRemote	*self,
 							 const gchar	*url,
 							 GError		**error);
 

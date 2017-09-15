@@ -18,3 +18,6 @@ Migration from Version 0.9.x
  * Rename fwupd_client_get_devices_simple -> fwupd_client_get_devices
  * Rename fwupd_client_get_details_local -> fwupd_client_get_details
  * Rename fwupd_client_update_metadata_with_id -> fwupd_client_update_metadata
+ * Rename fwupd_remote_get_uri -> fwupd_remote_get_metadata_uri
+ * Rename fwupd_remote_get_uri_asc -> fwupd_remote_get_metadata_uri_sig
+ * Rename fwupd_remote_build_uri -> fwupd_remote_build_firmware_uri
