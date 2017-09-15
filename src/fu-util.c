@@ -1339,6 +1339,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	const gchar *uri_tmp;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *fn = NULL;
+	g_autofree gchar *uri_str = NULL;
 	g_autoptr(SoupURI) uri = NULL;
 
 	/* work out what remote-specific URI fields this should use */
@@ -1365,11 +1366,11 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 						     fn, priv->flags, NULL, error);
 		}
 
-		uri = fwupd_remote_build_uri (remote, uri_tmp, error);
-		if (uri == NULL)
+		uri_str = fwupd_remote_build_firmware_uri (remote, uri_tmp, error);
+		if (uri_str == NULL)
 			return FALSE;
 	} else {
-		uri = soup_uri_new (uri_tmp);
+		uri_str = g_strdup (uri_tmp);
 	}
 
 	/* download file */
@@ -1381,6 +1382,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	if (!fu_common_mkdir_parent (fn, error))
 		return FALSE;
 	checksums = fwupd_release_get_checksums (rel);
+	uri = soup_uri_new (uri_tmp);
 	if (!fu_util_download_file (priv, uri, fn,
 				    fwupd_checksum_get_best (checksums),
 				    error))

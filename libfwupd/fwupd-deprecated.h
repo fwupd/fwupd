@@ -23,13 +23,6 @@
 #define __FWUPD_DEPRECATED_H
 
 #include "fwupd-client.h"
-#include "fwupd-remote.h"
-
-SoupURI		*fwupd_remote_get_uri			(FwupdRemote	*self)
-G_DEPRECATED_FOR(fwupd_remote_get_metadata_uri);
-SoupURI		*fwupd_remote_get_uri_asc		(FwupdRemote	*self)
-G_DEPRECATED_FOR(fwupd_remote_get_metadata_uri_sig);
-
 
 /* matches */
 G_DEPRECATED_FOR(fwupd_device_add_guid)

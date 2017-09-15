@@ -21,6 +21,8 @@
 
 #include "config.h"
 
+#include <libsoup/soup.h>
+
 #include "fwupd-deprecated.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
@@ -45,8 +47,6 @@ struct _FwupdRemote
 	gchar			*filename_cache_sig;
 	gchar			*filename_source;
 	gboolean		 enabled;
-	SoupURI			*uri;
-	SoupURI			*uri_asc;
 	gint			 priority;
 	guint64			 mtime;
 	gchar			**order_after;
@@ -68,10 +68,6 @@ fwupd_remote_set_username (FwupdRemote *self, const gchar *username)
 	if (username != NULL && username[0] == '\0')
 		username = NULL;
 	self->username = g_strdup (username);
-	if (self->uri != NULL)
-		soup_uri_set_user (self->uri, username);
-	if (self->uri_asc != NULL)
-		soup_uri_set_user (self->uri_asc, username);
 }
 
 static void
@@ -87,10 +83,6 @@ fwupd_remote_set_password (FwupdRemote *self, const gchar *password)
 	if (password != NULL && password[0] == '\0')
 		password = NULL;
 	self->password = g_strdup (password);
-	if (self->uri != NULL)
-		soup_uri_set_password (self->uri, password);
-	if (self->uri_asc != NULL)
-		soup_uri_set_password (self->uri_asc, password);
 }
 
 static void
@@ -131,6 +123,57 @@ fwupd_remote_get_suffix_for_keyring_kind (FwupdKeyringKind keyring_kind)
 	return NULL;
 }
 
+static SoupURI *
+fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
+{
+	SoupURI *uri;
+
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	g_return_val_if_fail (url != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* create URI, substituting if required */
+	if (self->firmware_base_uri != NULL) {
+		g_autoptr(SoupURI) uri_tmp = NULL;
+		g_autofree gchar *basename = NULL;
+		g_autofree gchar *url2 = NULL;
+		uri_tmp = soup_uri_new (url);
+		if (uri_tmp == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse URI '%s'", url);
+			return NULL;
+		}
+		basename = g_path_get_basename (soup_uri_get_path (uri_tmp));
+		url2 = g_build_filename (self->firmware_base_uri, basename, NULL);
+		uri = soup_uri_new (url2);
+		if (uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse URI '%s'", url2);
+			return NULL;
+		}
+	} else {
+		uri = soup_uri_new (url);
+		if (uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse URI '%s'", url);
+			return NULL;
+		}
+	}
+
+	/* set the username and password */
+	if (self->username != NULL)
+		soup_uri_set_user (uri, self->username);
+	if (self->password != NULL)
+		soup_uri_set_password (uri, self->password);
+	return uri;
+}
+
 /* note, this has to be set before username and password */
 static void
 fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
@@ -138,25 +181,27 @@ fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
 	const gchar *suffix;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *basename_asc = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+	g_autoptr(SoupURI) uri_asc = NULL;
+
+	/* build the URI */
+	uri = soup_uri_new (metadata_uri);
+	if (uri == NULL)
+		return;
 
 	/* save this so we can export the object as a GVariant */
 	self->metadata_uri = g_strdup (metadata_uri);
 
-	/* build the URI */
-	self->uri = soup_uri_new (metadata_uri);
-	if (self->uri == NULL)
-		return;
-
 	/* generate some plausible local filenames */
-	basename = g_path_get_basename (soup_uri_get_path (self->uri));
+	basename = g_path_get_basename (soup_uri_get_path (uri));
 	self->filename = g_strdup_printf ("%s-%s", self->id, basename);
 
 	/* generate the signature URI too */
 	suffix = fwupd_remote_get_suffix_for_keyring_kind (self->keyring_kind);
 	if (suffix != NULL) {
 		self->metadata_uri_sig = g_strconcat (metadata_uri, suffix, NULL);
-		self->uri_asc = fwupd_remote_build_uri (self, self->metadata_uri_sig, NULL);
-		basename_asc = g_path_get_basename (soup_uri_get_path (self->uri_asc));
+		uri_asc = fwupd_remote_build_uri (self, self->metadata_uri_sig, NULL);
+		basename_asc = g_path_get_basename (soup_uri_get_path (uri_asc));
 		self->filename_asc = g_strdup_printf ("%s-%s", self->id, basename_asc);
 	}
 }
@@ -318,7 +363,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 		fwupd_remote_set_metadata_uri (self, metadata_uri);
 
 		/* check the URI was valid */
-		if (self->uri == NULL) {
+		if (self->metadata_uri == NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
@@ -627,70 +672,6 @@ fwupd_remote_get_title (FwupdRemote *self)
 }
 
 /**
- * fwupd_remote_build_uri:
- * @self: A #FwupdRemote
- * @url: the URL to use
- * @error: the #GError, or %NULL
- *
- * Builds a URI for the URL using the username and password set for the remote,
- * including any basename URI substitution.
- *
- * Returns: (transfer full): a #SoupURI, or %NULL for error
- *
- * Since: 0.9.3
- **/
-SoupURI *
-fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
-{
-	SoupURI *uri;
-
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	g_return_val_if_fail (url != NULL, NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* create URI, substituting if required */
-	if (self->firmware_base_uri != NULL) {
-		g_autoptr(SoupURI) uri_tmp = NULL;
-		g_autofree gchar *basename = NULL;
-		g_autofree gchar *url2 = NULL;
-		uri_tmp = soup_uri_new (url);
-		if (uri_tmp == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse URI '%s'", url);
-			return NULL;
-		}
-		basename = g_path_get_basename (soup_uri_get_path (uri_tmp));
-		url2 = g_build_filename (self->firmware_base_uri, basename, NULL);
-		uri = soup_uri_new (url2);
-		if (uri == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse URI '%s'", url2);
-			return NULL;
-		}
-	} else {
-		uri = soup_uri_new (url);
-		if (uri == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse URI '%s'", url);
-			return NULL;
-		}
-	}
-
-	/* set the username and password from the metadata URI */
-	if (self->uri != NULL) {
-		soup_uri_set_user (uri, soup_uri_get_user (self->uri));
-		soup_uri_set_password (uri, soup_uri_get_password (self->uri));
-	}
-	return uri;
-}
-
-/**
  * fwupd_remote_build_firmware_uri:
  * @self: A #FwupdRemote
  * @url: the URL to use
@@ -710,40 +691,6 @@ fwupd_remote_build_firmware_uri (FwupdRemote *self, const gchar *url, GError **e
 	if (uri == NULL)
 		return NULL;
 	return soup_uri_to_string (uri, FALSE);
-}
-
-/**
- * fwupd_remote_get_uri:
- * @self: A #FwupdRemote
- *
- * Gets the URI for the remote metadata.
- *
- * Returns: (transfer none): a #SoupURI, or %NULL for invalid.
- *
- * Since: 0.9.3
- **/
-SoupURI *
-fwupd_remote_get_uri (FwupdRemote *self)
-{
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->uri;
-}
-
-/**
- * fwupd_remote_get_uri_asc:
- * @self: A #FwupdRemote
- *
- * Gets the URI for the remote signature.
- *
- * Returns: (transfer none): a #SoupURI, or %NULL for invalid.
- *
- * Since: 0.9.3
- **/
-SoupURI *
-fwupd_remote_get_uri_asc (FwupdRemote *self)
-{
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->uri_asc;
 }
 
 /**
@@ -1055,10 +1002,6 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (self->filename_source);
 	g_strfreev (self->order_after);
 	g_strfreev (self->order_before);
-	if (self->uri != NULL)
-		soup_uri_free (self->uri);
-	if (self->uri_asc != NULL)
-		soup_uri_free (self->uri_asc);
 
 	G_OBJECT_CLASS (fwupd_remote_parent_class)->finalize (obj);
 }
