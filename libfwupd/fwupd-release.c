@@ -559,90 +559,6 @@ fwupd_release_set_trust_flags (FwupdRelease *release, FwupdTrustFlags trust_flag
 	priv->trust_flags = trust_flags;
 }
 
-void
-fwupd_release_to_variant_builder (FwupdRelease *release, GVariantBuilder *builder)
-{
-	FwupdReleasePrivate *priv = GET_PRIVATE (release);
-	if (priv->remote_id != NULL) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_REMOTE_ID,
-				       g_variant_new_string (priv->remote_id));
-	}
-	if (priv->appstream_id != NULL) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_ID,
-				       g_variant_new_string (priv->appstream_id));
-	}
-	if (priv->filename != NULL) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_FILENAME,
-				       g_variant_new_string (priv->filename));
-	}
-	if (priv->license != NULL) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_LICENSE,
-				       g_variant_new_string (priv->license));
-	}
-	if (priv->name != NULL) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_NAME,
-				       g_variant_new_string (priv->name));
-	}
-	if (priv->size != 0) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_SIZE,
-				       g_variant_new_uint64 (priv->size));
-	}
-	if (priv->summary != NULL) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_SUMMARY,
-				       g_variant_new_string (priv->summary));
-	}
-	if (priv->description != NULL) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_DESCRIPTION,
-				       g_variant_new_string (priv->description));
-	}
-	if (priv->checksums->len > 0) {
-		guint i;
-		g_autoptr(GString) str = g_string_new ("");
-		for (i = 0; i < priv->checksums->len; i++) {
-			const gchar *checksum = g_ptr_array_index (priv->checksums, i);
-			g_string_append_printf (str, "%s,", checksum);
-		}
-		if (str->len > 0)
-			g_string_truncate (str, str->len - 1);
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_CHECKSUM,
-				       g_variant_new_string (str->str));
-	}
-	if (priv->uri != NULL) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_URI,
-				       g_variant_new_string (priv->uri));
-	}
-	if (priv->homepage != NULL) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_HOMEPAGE,
-				       g_variant_new_string (priv->homepage));
-	}
-	if (priv->version != NULL) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_VERSION,
-				       g_variant_new_string (priv->version));
-	}
-	if (priv->vendor != NULL) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_VENDOR,
-				       g_variant_new_string (priv->vendor));
-	}
-	if (priv->trust_flags != 0) {
-		g_variant_builder_add (builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS,
-				       g_variant_new_uint64 (priv->trust_flags));
-	}
-}
-
 /**
  * fwupd_release_to_data:
  * @release: A #FwupdRelease
@@ -657,6 +573,7 @@ fwupd_release_to_variant_builder (FwupdRelease *release, GVariantBuilder *builde
 GVariant *
 fwupd_release_to_data (FwupdRelease *release, const gchar *type_string)
 {
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	GVariantBuilder builder;
 
 	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
@@ -664,7 +581,84 @@ fwupd_release_to_data (FwupdRelease *release, const gchar *type_string)
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	fwupd_release_to_variant_builder (release, &builder);
+	if (priv->remote_id != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_REMOTE_ID,
+				       g_variant_new_string (priv->remote_id));
+	}
+	if (priv->appstream_id != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_APPSTREAM_ID,
+				       g_variant_new_string (priv->appstream_id));
+	}
+	if (priv->filename != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_FILENAME,
+				       g_variant_new_string (priv->filename));
+	}
+	if (priv->license != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_LICENSE,
+				       g_variant_new_string (priv->license));
+	}
+	if (priv->name != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_NAME,
+				       g_variant_new_string (priv->name));
+	}
+	if (priv->size != 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_SIZE,
+				       g_variant_new_uint64 (priv->size));
+	}
+	if (priv->summary != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_SUMMARY,
+				       g_variant_new_string (priv->summary));
+	}
+	if (priv->description != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_DESCRIPTION,
+				       g_variant_new_string (priv->description));
+	}
+	if (priv->checksums->len > 0) {
+		guint i;
+		g_autoptr(GString) str = g_string_new ("");
+		for (i = 0; i < priv->checksums->len; i++) {
+			const gchar *checksum = g_ptr_array_index (priv->checksums, i);
+			g_string_append_printf (str, "%s,", checksum);
+		}
+		if (str->len > 0)
+			g_string_truncate (str, str->len - 1);
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_CHECKSUM,
+				       g_variant_new_string (str->str));
+	}
+	if (priv->uri != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_URI,
+				       g_variant_new_string (priv->uri));
+	}
+	if (priv->homepage != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_HOMEPAGE,
+				       g_variant_new_string (priv->homepage));
+	}
+	if (priv->version != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_VERSION,
+				       g_variant_new_string (priv->version));
+	}
+	if (priv->vendor != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_VENDOR,
+				       g_variant_new_string (priv->vendor));
+	}
+	if (priv->trust_flags != 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_TRUST_FLAGS,
+				       g_variant_new_uint64 (priv->trust_flags));
+	}
 
 	/* supported types */
 	if (g_strcmp0 (type_string, "a{sv}") == 0)
@@ -674,65 +668,65 @@ fwupd_release_to_data (FwupdRelease *release, const gchar *type_string)
 	return NULL;
 }
 
-void
+static void
 fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant *value)
 {
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_REMOTE_ID) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_REMOTE_ID) == 0) {
 		fwupd_release_set_remote_id (release, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_ID) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
 		fwupd_release_set_appstream_id (release, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_FILENAME) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_FILENAME) == 0) {
 		fwupd_release_set_filename (release, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_LICENSE) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_LICENSE) == 0) {
 		fwupd_release_set_license (release, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_NAME) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_NAME) == 0) {
 		fwupd_release_set_name (release, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_SIZE) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SIZE) == 0) {
 		fwupd_release_set_size (release, g_variant_get_uint64 (value));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_SUMMARY) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
 		fwupd_release_set_summary (release, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_DESCRIPTION) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
 		fwupd_release_set_description (release, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_CHECKSUM) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
 		const gchar *checksums = g_variant_get_string (value, NULL);
 		g_auto(GStrv) split = g_strsplit (checksums, ",", -1);
 		for (guint i = 0; split[i] != NULL; i++)
 			fwupd_release_add_checksum (release, split[i]);
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_URI) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_URI) == 0) {
 		fwupd_release_set_uri (release, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_HOMEPAGE) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_HOMEPAGE) == 0) {
 		fwupd_release_set_homepage (release, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_VERSION) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION) == 0) {
 		fwupd_release_set_version (release, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_VENDOR) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VENDOR) == 0) {
 		fwupd_release_set_vendor (release, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS) == 0) {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_TRUST_FLAGS) == 0) {
 		fwupd_release_set_trust_flags (release, g_variant_get_uint64 (value));
 		return;
 	}
@@ -802,23 +796,23 @@ fwupd_release_to_string (FwupdRelease *release)
 	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
 
 	str = g_string_new ("");
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_ID, priv->appstream_id);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_REMOTE_ID, priv->remote_id);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_SUMMARY, priv->summary);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_DESCRIPTION, priv->description);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_VERSION, priv->version);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_FILENAME, priv->filename);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION, priv->version);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_FILENAME, priv->filename);
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (priv->checksums, i);
 		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display (checksum);
-		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_CHECKSUM, checksum_display);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_CHECKSUM, checksum_display);
 	}
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_LICENSE, priv->license);
-	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_UPDATE_SIZE, priv->size);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_URI, priv->uri);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_HOMEPAGE, priv->homepage);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_VENDOR, priv->vendor);
-	fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS, priv->trust_flags);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_LICENSE, priv->license);
+	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_SIZE, priv->size);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_URI, priv->uri);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_TRUST_FLAGS, priv->trust_flags);
 
 	return g_string_free (str, FALSE);
 }
