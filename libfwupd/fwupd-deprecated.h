@@ -25,10 +25,6 @@
 #include "fwupd-client.h"
 #include "fwupd-remote.h"
 
-G_DEPRECATED_FOR(fwupd_client_get_devices_simple)
-GPtrArray	*fwupd_client_get_devices		(FwupdClient	*client,
-							 GCancellable	*cancellable,
-							 GError		**error);
 G_DEPRECATED_FOR(fwupd_client_get_details_local)
 FwupdResult	*fwupd_client_get_details		(FwupdClient	*client,
 							 const gchar	*filename,

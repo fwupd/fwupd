@@ -17,3 +17,4 @@ Migration from Version 0.9.x
  * Rename FU_DEVICE_FLAG -> FWUPD_DEVICE_FLAG
  * Rename FWUPD_DEVICE_FLAG_ALLOW_ONLINE -> FWUPD_DEVICE_FLAG_UPDATABLE
  * Rename FWUPD_DEVICE_FLAG_ALLOW_OFFLINE -> FWUPD_DEVICE_FLAG_ONLY_OFFLINE
+ * Rename fwupd_client_get_devices_simple -> fwupd_client_get_devices
