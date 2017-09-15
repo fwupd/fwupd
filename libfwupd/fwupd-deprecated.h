@@ -25,13 +25,6 @@
 #include "fwupd-client.h"
 #include "fwupd-remote.h"
 
-G_DEPRECATED_FOR(fwupd_client_update_metadata_with_id)
-gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
-							 const gchar	*metadata_fn,
-							 const gchar	*signature_fn,
-							 GCancellable	*cancellable,
-							 GError		**error);
-
 SoupURI		*fwupd_remote_get_uri			(FwupdRemote	*self)
 G_DEPRECATED_FOR(fwupd_remote_get_metadata_uri);
 SoupURI		*fwupd_remote_get_uri_asc		(FwupdRemote	*self)

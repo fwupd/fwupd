@@ -516,7 +516,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
-	if (g_strcmp0 (method_name, "UpdateMetadataWithId") == 0) {
+	if (g_strcmp0 (method_name, "UpdateMetadata") == 0) {
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		const gchar *remote_id = NULL;
