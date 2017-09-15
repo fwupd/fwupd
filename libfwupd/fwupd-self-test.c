@@ -249,7 +249,7 @@ fwupd_client_devices_func (void)
 	g_autoptr(GError) error = NULL;
 
 	client = fwupd_client_new ();
-	array = fwupd_client_get_devices_simple (client, NULL, &error);
+	array = fwupd_client_get_devices (client, NULL, &error);
 	if (array == NULL &&
 	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
 		return;

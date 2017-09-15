@@ -364,54 +364,12 @@ fwupd_client_fixup_dbus_error (GError *error)
  *
  * Gets all the devices registered with the daemon.
  *
- * Returns: (element-type FwupdResult) (transfer container): results
- *
- * Since: 0.7.0
- **/
-GPtrArray *
-fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError **error)
-{
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_autoptr(GVariant) val = NULL;
-
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
-		return NULL;
-
-	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetDevices",
-				      NULL,
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	return fwupd_client_parse_results_from_data (val);
-}
-
-/**
- * fwupd_client_get_devices_simple:
- * @client: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
- *
- * Gets all the devices registered with the daemon.
- *
  * Returns: (element-type FwupdDevice) (transfer container): results
  *
  * Since: 0.9.2
  **/
 GPtrArray *
-fwupd_client_get_devices_simple (FwupdClient *client, GCancellable *cancellable, GError **error)
+fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	g_autoptr(GVariant) val = NULL;
@@ -467,7 +425,7 @@ fwupd_client_get_device_by_id (FwupdClient *client,
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* get all the devices */
-	devices = fwupd_client_get_devices_simple (client, cancellable, error);
+	devices = fwupd_client_get_devices (client, cancellable, error);
 	if (devices == NULL)
 		return NULL;
 

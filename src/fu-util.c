@@ -245,7 +245,7 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	g_autoptr(GPtrArray) devices_filtered = NULL;
 
 	/* get devices from daemon */
-	devices = fwupd_client_get_devices_simple (priv->client, NULL, error);
+	devices = fwupd_client_get_devices (priv->client, NULL, error);
 	if (devices == NULL)
 		return NULL;
 
@@ -293,7 +293,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* get results from daemon */
-	devs = fwupd_client_get_devices_simple (priv->client, NULL, error);
+	devs = fwupd_client_get_devices (priv->client, NULL, error);
 	if (devs == NULL)
 		return FALSE;
 
@@ -544,7 +544,7 @@ fu_util_verify_update_all (FuUtilPrivate *priv, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* get devices from daemon */
-	devs = fwupd_client_get_devices_simple (priv->client, NULL, error);
+	devs = fwupd_client_get_devices (priv->client, NULL, error);
 	if (devs == NULL)
 		return FALSE;
 
@@ -947,7 +947,7 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* get devices from daemon */
-	devs = fwupd_client_get_devices_simple (priv->client, NULL, error);
+	devs = fwupd_client_get_devices (priv->client, NULL, error);
 	if (devs == NULL)
 		return FALSE;
 
@@ -1005,7 +1005,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get devices from daemon */
-	devices = fwupd_client_get_devices_simple (priv->client, NULL, error);
+	devices = fwupd_client_get_devices (priv->client, NULL, error);
 	if (devices == NULL)
 		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
@@ -1399,7 +1399,7 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get devices from daemon */
-	devices = fwupd_client_get_devices_simple (priv->client, NULL, error);
+	devices = fwupd_client_get_devices (priv->client, NULL, error);
 	if (devices == NULL)
 		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
