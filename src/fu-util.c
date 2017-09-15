@@ -558,6 +558,13 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_clear_offline (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuPending) pending = fu_pending_new ();
+	return fu_pending_remove_all (pending, error);
+}
+
+static gboolean
 fu_util_verify_update_all (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GPtrArray) devs = NULL;
@@ -1705,6 +1712,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Clears the results from the last update"),
 		     fu_util_clear_results);
+	fu_util_add (priv->cmd_array,
+		     "clear-offline",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Clears any updates scheduled to be updated offline"),
+		     fu_util_clear_offline);
 	fu_util_add (priv->cmd_array,
 		     "get-results",
 		     NULL,

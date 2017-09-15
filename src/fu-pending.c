@@ -186,6 +186,35 @@ out:
 }
 
 gboolean
+fu_pending_remove_all (FuPending *pending, GError **error)
+{
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
+	char *error_msg = NULL;
+	gint rc;
+
+	g_return_val_if_fail (FU_IS_PENDING (pending), FALSE);
+
+	/* lazy load */
+	if (priv->db == NULL) {
+		if (!fu_pending_load (pending, error))
+			return FALSE;
+	}
+
+	/* remove entries */
+	g_debug ("FuPending: removing all devices");
+	rc = sqlite3_exec (priv->db, "DELETE FROM pending;", NULL, NULL, &error_msg);
+	if (rc != SQLITE_OK) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "SQL error: %s", error_msg);
+		sqlite3_free (error_msg);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
 fu_pending_remove_device (FuPending *pending, FwupdResult *res, GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
