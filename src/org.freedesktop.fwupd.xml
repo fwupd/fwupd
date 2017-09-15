@@ -362,7 +362,7 @@
     </method>
 
     <!--***********************************************************-->
-    <method name='UpdateMetadataWithId'>
+    <method name='UpdateMetadata'>
       <doc:doc>
         <doc:description>
           <doc:para>

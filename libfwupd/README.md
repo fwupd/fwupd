@@ -6,7 +6,6 @@ When we next bump soname the following changes are planned:
  * {sa{sv}} -> {a{sv}} -- we don't always want to send the device ID
  * Remove all deprecated API
  * Remove FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND
- * Rename UpdateMetadataWithId() -> UpdateMetadata()
  * Make DeviceAdded emit a FwupdDevice, not a FwupdResult
  * Unexport fwupd_result_to_data() and fwupd_result_new_from_data()
 
@@ -18,3 +17,4 @@ Migration from Version 0.9.x
  * Rename FWUPD_DEVICE_FLAG_ALLOW_OFFLINE -> FWUPD_DEVICE_FLAG_ONLY_OFFLINE
  * Rename fwupd_client_get_devices_simple -> fwupd_client_get_devices
  * Rename fwupd_client_get_details_local -> fwupd_client_get_details
+ * Rename fwupd_client_update_metadata_with_id -> fwupd_client_update_metadata
