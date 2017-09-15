@@ -27,7 +27,7 @@ G_BEGIN_DECLS
 #include <appstream-glib.h>
 #include <glib-object.h>
 
-#include "fwupd-result.h"
+#include "fwupd-device.h"
 #include "fwupd-enums.h"
 
 #include "fu-plugin.h"

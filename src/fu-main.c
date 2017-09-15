@@ -32,7 +32,6 @@
 #include "fwupd-device-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
-#include "fwupd-result-private.h"
 #include "fwupd-resources.h"
 
 #include "fu-common.h"

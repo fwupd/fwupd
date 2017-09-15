@@ -36,7 +36,6 @@
 #include <libfwupd/fwupd-error.h>
 #include <libfwupd/fwupd-release.h>
 #include <libfwupd/fwupd-remote.h>
-#include <libfwupd/fwupd-result.h>
 #include <libfwupd/fwupd-version.h>
 
 #ifndef FWUPD_DISABLE_DEPRECATED
