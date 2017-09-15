@@ -188,10 +188,10 @@ fu_main_device_array_to_variant (GPtrArray *devices)
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		GVariant *tmp = fwupd_device_to_data (FWUPD_DEVICE (device), "{sa{sv}}");
+		GVariant *tmp = fwupd_device_to_data (FWUPD_DEVICE (device), "a{sv}");
 		g_variant_builder_add_value (&builder, tmp);
 	}
-	return g_variant_new ("(a{sa{sv}})", &builder);
+	return g_variant_new ("(aa{sv})", &builder);
 }
 
 static GVariant *
@@ -230,10 +230,10 @@ fu_main_result_array_to_variant (GPtrArray *results)
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < results->len; i++) {
 		FwupdDevice *result = g_ptr_array_index (results, i);
-		GVariant *tmp = fwupd_device_to_data (result, "{sa{sv}}");
+		GVariant *tmp = fwupd_device_to_data (result, "a{sv}");
 		g_variant_builder_add_value (&builder, tmp);
 	}
-	return g_variant_new ("(a{sa{sv}})", &builder);
+	return g_variant_new ("(aa{sv})", &builder);
 }
 
 typedef struct {

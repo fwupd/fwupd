@@ -805,6 +805,11 @@ void
 fwupd_device_to_variant_builder (FwupdDevice *device, GVariantBuilder *builder)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	if (priv->id != NULL) {
+		g_variant_builder_add (builder, "{sv}",
+				       FWUPD_RESULT_KEY_DEVICE_ID,
+				       g_variant_new_string (priv->id));
+	}
 	if (priv->guids->len > 0) {
 		guint i;
 		g_autoptr(GString) str = g_string_new ("");
@@ -947,18 +952,16 @@ fwupd_device_to_data (FwupdDevice *device, const gchar *type_string)
 		return g_variant_new ("a{sv}", &builder);
 	if (g_strcmp0 (type_string, "(a{sv})") == 0)
 		return g_variant_new ("(a{sv})", &builder);
-	if (g_strcmp0 (type_string, "{sa{sv}}") == 0) {
-		const gchar *device_id = fwupd_device_get_id (device);
-		if (device_id == NULL)
-			device_id = "";
-		return g_variant_new ("{sa{sv}}", device_id, &builder);
-	}
 	return NULL;
 }
 
 void
 fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *value)
 {
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_ID) == 0) {
+		fwupd_device_set_id (device, g_variant_get_string (value, NULL));
+		return;
+	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_FLAGS) == 0) {
 		fwupd_device_set_flags (device, g_variant_get_uint64 (value));
 		return;
@@ -1389,12 +1392,6 @@ fwupd_device_new_from_data (GVariant *data)
 	} else if (g_strcmp0 (type_string, "a{sv}") == 0) {
 		dev = fwupd_device_new ();
 		g_variant_get (data, "a{sv}", &iter);
-		fwupd_device_set_from_variant_iter (dev, iter);
-	} else if (g_strcmp0 (type_string, "{sa{sv}}") == 0) {
-		const gchar *id;
-		dev = fwupd_device_new ();
-		g_variant_get (data, "{&sa{sv}}", &id, &iter);
-		fwupd_device_set_id (dev, id);
 		fwupd_device_set_from_variant_iter (dev, iter);
 	} else {
 		g_warning ("type %s not known", type_string);

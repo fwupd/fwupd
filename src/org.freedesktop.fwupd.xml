@@ -53,7 +53,7 @@
           </doc:para>
         </doc:description>
       </doc:doc>
-      <arg type='a{sa{sv}}' name='devices' direction='out'>
+      <arg type='aa{sv}' name='devices' direction='out'>
         <doc:doc>
           <doc:summary>
             <doc:para>An array of devices, with any properties set on each.</doc:para>
@@ -71,7 +71,7 @@
           </doc:para>
         </doc:description>
       </doc:doc>
-      <arg type='a{sa{sv}}' name='devices' direction='out'>
+      <arg type='aa{sv}' name='devices' direction='out'>
         <doc:doc>
           <doc:summary>
             <doc:para>An array of devices, with any properties set on each.</doc:para>
@@ -189,7 +189,7 @@
           </doc:summary>
         </doc:doc>
       </arg>
-      <arg type='a{sa{sv}}' name='results' direction='out'>
+      <arg type='aa{sv}' name='results' direction='out'>
         <doc:doc>
           <doc:summary>
             <doc:para>An array of results, with any properties set on each.</doc:para>

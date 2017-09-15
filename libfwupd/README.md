@@ -3,7 +3,6 @@ Planned API Changes
 
 When we next bump soname the following changes are planned:
 
- * {sa{sv}} -> {a{sv}} -- we don't always want to send the device ID
  * Unexport fwupd_result_to_data() and fwupd_result_new_from_data()
 
 Migration from Version 0.9.x
@@ -23,3 +22,4 @@ Migration from Version 0.9.x
  * Rename fwupd_result_*() to fwupd_device_*()
  * Convert FwupdResult to FwupdDevice in all callbacks
  * Rename fwupd_device_*_provider -> fwupd_device_*_plugin
+ * Convert hash types sa{sv} -> a{sv}
