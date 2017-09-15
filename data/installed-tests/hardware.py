@@ -9,7 +9,7 @@ import os
 import requests
 import time
 
-gi.require_version('Fwupd', '1.0')
+gi.require_version('Fwupd', '2.0')
 
 from gi.repository import Fwupd
 from gi.repository import Gio

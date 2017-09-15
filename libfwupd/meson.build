@@ -87,7 +87,7 @@ if get_option('enable-introspection')
       'fwupd-result.c',
       'fwupd-result.h',
     ],
-    nsversion : '1.0',
+    nsversion : '2.0',
     namespace : 'Fwupd',
     symbol_prefix : 'fwupd',
     identifier_prefix : 'Fwupd',

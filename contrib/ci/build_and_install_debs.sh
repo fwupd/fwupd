@@ -50,5 +50,5 @@ fi
 #test the packages remove
 apt purge -y fwupd \
 	     fwupd-doc \
-	     libfwupd1 \
+	     libfwupd2 \
 	     libfwupd-dev
