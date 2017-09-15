@@ -54,7 +54,7 @@ Homepage: https://github.com/hughsie/fwupd
 Vcs-Git: https://anonscm.debian.org/git/uefi/fwupd.git
 Vcs-Browser: https://anonscm.debian.org/gitweb/?p=uefi/fwupd.git
 
-Package: libfwupd1
+Package: libfwupd2
 Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
@@ -134,8 +134,8 @@ Description: Firmware update daemon documentation (HTML format)
 Package: libfwupd-dev
 Architecture: linux-any
 Multi-Arch: same
-Depends: libfwupd1 (= ${binary:Version}),
-         gir1.2-fwupd-1.0 (= ${binary:Version}),
+Depends: libfwupd2 (= ${binary:Version}),
+         gir1.2-fwupd-2.0 (= ${binary:Version}),
          ${misc:Depends}
 Breaks: fwupd-dev (<< 0.5.4-2~)
 Replaces: fwupd-dev (<< 0.5.4-2~)
@@ -150,13 +150,11 @@ Description: development files for libfwupd
  .
  This package provides the development files for libfwupd
 
-Package: gir1.2-fwupd-1.0
+Package: gir1.2-fwupd-2.0
 Architecture: linux-any
 Multi-Arch: same
 Depends: ${misc:Depends},
          ${gir:Depends}
-Breaks: libfwupd1 (<< 0.7.2-1~)
-Replaces: libfwupd1 (<< 0.7.2-1~)
 Section: introspection
 Description: GObject introspection data for libfwupd
  This package provides the introspection data for libfwupd.

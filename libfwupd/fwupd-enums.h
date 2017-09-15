@@ -81,8 +81,6 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_REGISTERED:		Has been registered with other plugins
  * @FWUPD_DEVICE_FLAG_NEEDS_REBOOT:		Requires a reboot to apply firmware or to reload hardware
  *
- * FIXME: rename FU_DEVICE_ -> FWUPD_DEVICE_ when we break API
- *
  * The device flags.
  **/
 #define FWUPD_DEVICE_FLAG_NONE			(0u)		/* Since: 0.1.3 */
