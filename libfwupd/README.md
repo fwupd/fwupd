@@ -4,7 +4,6 @@ Planned API Changes
 When we next bump soname the following changes are planned:
 
  * {sa{sv}} -> {a{sv}} -- we don't always want to send the device ID
- * Make DeviceAdded emit a FwupdDevice, not a FwupdResult
  * Unexport fwupd_result_to_data() and fwupd_result_new_from_data()
 
 Migration from Version 0.9.x
@@ -22,3 +21,4 @@ Migration from Version 0.9.x
  * Switch FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND to fwupd_checksum_guess_kind()
  * Rename fwupd_result_update_*() to fwupd_release_*()
  * Rename fwupd_result_*() to fwupd_device_*()
+ * Convert FwupdResult to FwupdDevice in all callbacks

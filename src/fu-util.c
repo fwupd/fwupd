@@ -353,9 +353,9 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (array == NULL)
 		return FALSE;
 	for (guint i = 0; i < array->len; i++) {
-		FwupdResult *res = g_ptr_array_index (array, i);
+		FwupdDevice *dev = g_ptr_array_index (array, i);
 		g_autofree gchar *tmp = NULL;
-		tmp = fwupd_result_to_string (res);
+		tmp = fwupd_device_to_string (dev);
 		g_print ("%s", tmp);
 	}
 	return TRUE;
@@ -457,9 +457,8 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* apply each update */
 	for (guint i = 0; i < results->len; i++) {
-		FwupdResult *res = g_ptr_array_index (results, i);
-		FwupdDevice *dev = fwupd_result_get_device (res);
-		FwupdRelease *rel = fwupd_result_get_release (res);
+		FwupdDevice *dev = g_ptr_array_index (results, i);
+		FwupdRelease *rel = fwupd_device_get_release_default (dev);
 
 		/* check not already done */
 		if (fwupd_device_get_update_state (dev) != FWUPD_UPDATE_STATE_PENDING)
@@ -830,7 +829,7 @@ static gboolean
 fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *tmp = NULL;
-	g_autoptr(FwupdResult) res = NULL;
+	g_autoptr(FwupdDevice) dev = NULL;
 
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
@@ -839,10 +838,10 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments: expected 'DeviceID'");
 		return FALSE;
 	}
-	res = fwupd_client_get_results (priv->client, values[0], NULL, error);
-	if (res == NULL)
+	dev = fwupd_client_get_results (priv->client, values[0], NULL, error);
+	if (dev == NULL)
 		return FALSE;
-	tmp = fwupd_result_to_string (res);
+	tmp = fwupd_device_to_string (dev);
 	g_print ("%s", tmp);
 	return TRUE;
 }
@@ -1221,30 +1220,30 @@ fu_util_cancelled_cb (GCancellable *cancellable, gpointer user_data)
 
 static void
 fu_util_device_added_cb (FwupdClient *client,
-			 FwupdResult *device,
+			 FwupdDevice *device,
 			 gpointer user_data)
 {
-	g_autofree gchar *tmp = fwupd_result_to_string (device);
+	g_autofree gchar *tmp = fwupd_device_to_string (device);
 	/* TRANSLATORS: this is when a device is hotplugged */
 	g_print ("%s\n%s", _("Device added:"), tmp);
 }
 
 static void
 fu_util_device_removed_cb (FwupdClient *client,
-			   FwupdResult *device,
+			   FwupdDevice *device,
 			   gpointer user_data)
 {
-	g_autofree gchar *tmp = fwupd_result_to_string (device);
+	g_autofree gchar *tmp = fwupd_device_to_string (device);
 	/* TRANSLATORS: this is when a device is hotplugged */
 	g_print ("%s\n%s", _("Device removed:"), tmp);
 }
 
 static void
 fu_util_device_changed_cb (FwupdClient *client,
-			   FwupdResult *device,
+			   FwupdDevice *device,
 			   gpointer user_data)
 {
-	g_autofree gchar *tmp = fwupd_result_to_string (device);
+	g_autofree gchar *tmp = fwupd_device_to_string (device);
 	/* TRANSLATORS: this is when a device has been updated */
 	g_print ("%s\n%s", _("Device changed:"), tmp);
 }

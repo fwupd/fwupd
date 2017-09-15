@@ -1302,6 +1302,10 @@ fwupd_device_to_string (FwupdDevice *device)
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_DEVICE_MODIFIED, priv->modified);
 	fwupd_pad_kv_ups (str, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
+	if (priv->release_default != NULL) {
+		g_autofree gchar *tmp = fwupd_release_to_string (priv->release_default);
+		g_string_append (str, tmp);
+	}
 
 	return g_string_free (str, FALSE);
 }

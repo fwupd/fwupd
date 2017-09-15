@@ -26,8 +26,8 @@
 #include <gio/gio.h>
 
 #include "fwupd-enums.h"
+#include "fwupd-device.h"
 #include "fwupd-remote.h"
-#include "fwupd-result.h"
 
 G_BEGIN_DECLS
 
@@ -41,11 +41,11 @@ struct _FwupdClientClass
 	void			(*status_changed)	(FwupdClient	*client,
 							 FwupdStatus	 status);
 	void			(*device_added)		(FwupdClient	*client,
-							 FwupdResult	*result);
+							 FwupdDevice	*result);
 	void			(*device_removed)	(FwupdClient	*client,
-							 FwupdResult	*result);
+							 FwupdDevice	*result);
 	void			(*device_changed)	(FwupdClient	*client,
-							 FwupdResult	*result);
+							 FwupdDevice	*result);
 	/*< private >*/
 	void (*_fwupd_reserved1)	(void);
 	void (*_fwupd_reserved2)	(void);
@@ -95,7 +95,7 @@ gboolean	 fwupd_client_clear_results		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-FwupdResult	*fwupd_client_get_results		(FwupdClient	*client,
+FwupdDevice	*fwupd_client_get_results		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);

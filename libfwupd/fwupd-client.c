@@ -38,7 +38,6 @@
 #include "fwupd-device-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
-#include "fwupd-result.h"
 
 static void fwupd_client_finalize	 (GObject *object);
 
@@ -158,31 +157,31 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 			GVariant *parameters,
 			FwupdClient *client)
 {
-	g_autoptr(FwupdResult) res = NULL;
+	g_autoptr(FwupdDevice) dev = NULL;
 	if (g_strcmp0 (signal_name, "Changed") == 0) {
 		g_debug ("Emitting ::changed()");
 		g_signal_emit (client, signals[SIGNAL_CHANGED], 0);
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
-		res = fwupd_result_new_from_data (parameters);
+		dev = fwupd_device_new_from_data (parameters);
 		g_debug ("Emitting ::device-added(%s)",
-			 fwupd_device_get_id (fwupd_result_get_device (res)));
-		g_signal_emit (client, signals[SIGNAL_DEVICE_ADDED], 0, res);
+			 fwupd_device_get_id (dev));
+		g_signal_emit (client, signals[SIGNAL_DEVICE_ADDED], 0, dev);
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
-		res = fwupd_result_new_from_data (parameters);
-		g_signal_emit (client, signals[SIGNAL_DEVICE_REMOVED], 0, res);
+		dev = fwupd_device_new_from_data (parameters);
+		g_signal_emit (client, signals[SIGNAL_DEVICE_REMOVED], 0, dev);
 		g_debug ("Emitting ::device-removed(%s)",
-			 fwupd_device_get_id (fwupd_result_get_device (res)));
+			 fwupd_device_get_id (dev));
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
-		res = fwupd_result_new_from_data (parameters);
-		g_signal_emit (client, signals[SIGNAL_DEVICE_CHANGED], 0, res);
+		dev = fwupd_device_new_from_data (parameters);
+		g_signal_emit (client, signals[SIGNAL_DEVICE_CHANGED], 0, dev);
 		g_debug ("Emitting ::device-changed(%s)",
-			 fwupd_device_get_id (fwupd_result_get_device (res)));
+			 fwupd_device_get_id (dev));
 		return;
 	}
 	g_debug ("Unknown signal name '%s' from %s", signal_name, sender_name);
@@ -240,28 +239,6 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 	if (val != NULL)
 		fwupd_client_set_daemon_version (client, g_variant_get_string (val, NULL));
 	return TRUE;
-}
-
-static GPtrArray *
-fwupd_client_parse_results_from_data (GVariant *devices)
-{
-	FwupdResult *res;
-	GPtrArray *results = NULL;
-	gsize sz;
-	guint i;
-	g_autoptr(GVariant) untuple = NULL;
-
-	results = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	untuple = g_variant_get_child_value (devices, 0);
-	sz = g_variant_n_children (untuple);
-	for (i = 0; i < sz; i++) {
-		g_autoptr(GVariant) data = NULL;
-		data = g_variant_get_child_value (untuple, i);
-		res = fwupd_result_new_from_data (data);
-		g_ptr_array_add (results, res);
-	}
-
-	return results;
 }
 
 static GPtrArray *
@@ -450,7 +427,7 @@ fwupd_client_get_device_by_id (FwupdClient *client,
  *
  * Gets all the devices with known updates.
  *
- * Returns: (element-type FwupdResult) (transfer container): results
+ * Returns: (element-type FwupdDevice) (transfer container): results
  *
  * Since: 0.7.0
  **/
@@ -481,7 +458,7 @@ fwupd_client_get_updates (FwupdClient *client, GCancellable *cancellable, GError
 			fwupd_client_fixup_dbus_error (*error);
 		return NULL;
 	}
-	return fwupd_client_parse_results_from_data (val);
+	return fwupd_client_parse_devices_from_variant (val);
 }
 
 /**
@@ -833,11 +810,11 @@ fwupd_client_clear_results (FwupdClient *client, const gchar *device_id,
  *
  * Gets the results of a previous firmware update for a specific device.
  *
- * Returns: (transfer full): a #FwupdResult, or %NULL for failure
+ * Returns: (transfer full): a #FwupdDevice, or %NULL for failure
  *
  * Since: 0.7.0
  **/
-FwupdResult *
+FwupdDevice *
 fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
 			  GCancellable *cancellable, GError **error)
 {
@@ -869,7 +846,7 @@ fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
 		helper->error = NULL;
 		return NULL;
 	}
-	return fwupd_result_new_from_data (helper->val);
+	return fwupd_device_new_from_data (helper->val);
 }
 
 static void
@@ -1010,7 +987,7 @@ fwupd_client_install (FwupdClient *client,
  *
  * Gets details about a specific firmware file.
  *
- * Returns: (transfer container) (element-type FwupdResult): an array of results
+ * Returns: (transfer container) (element-type FwupdDevice): an array of results
  *
  * Since: 1.0.0
  **/
@@ -1080,7 +1057,7 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 	}
 
 	/* return results */
-	return fwupd_client_parse_results_from_data (helper->val);
+	return fwupd_client_parse_devices_from_variant (helper->val);
 }
 
 /**
@@ -1481,7 +1458,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	/**
 	 * FwupdClient::device-added:
 	 * @client: the #FwupdClient instance that emitted the signal
-	 * @result: the #FwupdResult
+	 * @result: the #FwupdDevice
 	 *
 	 * The ::device-added signal is emitted when a device has been
 	 * added.
@@ -1493,12 +1470,12 @@ fwupd_client_class_init (FwupdClientClass *klass)
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (FwupdClientClass, device_added),
 			      NULL, NULL, g_cclosure_marshal_generic,
-			      G_TYPE_NONE, 1, FWUPD_TYPE_RESULT);
+			      G_TYPE_NONE, 1, FWUPD_TYPE_DEVICE);
 
 	/**
 	 * FwupdClient::device-removed:
 	 * @client: the #FwupdClient instance that emitted the signal
-	 * @result: the #FwupdResult
+	 * @result: the #FwupdDevice
 	 *
 	 * The ::device-removed signal is emitted when a device has been
 	 * removed.
@@ -1510,12 +1487,12 @@ fwupd_client_class_init (FwupdClientClass *klass)
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (FwupdClientClass, device_removed),
 			      NULL, NULL, g_cclosure_marshal_generic,
-			      G_TYPE_NONE, 1, FWUPD_TYPE_RESULT);
+			      G_TYPE_NONE, 1, FWUPD_TYPE_DEVICE);
 
 	/**
 	 * FwupdClient::device-changed:
 	 * @client: the #FwupdClient instance that emitted the signal
-	 * @result: the #FwupdResult
+	 * @result: the #FwupdDevice
 	 *
 	 * The ::device-changed signal is emitted when a device has been
 	 * changed in some way, e.g. the version number is updated.
@@ -1527,7 +1504,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (FwupdClientClass, device_changed),
 			      NULL, NULL, g_cclosure_marshal_generic,
-			      G_TYPE_NONE, 1, FWUPD_TYPE_RESULT);
+			      G_TYPE_NONE, 1, FWUPD_TYPE_DEVICE);
 
 	/**
 	 * FwupdClient:status:

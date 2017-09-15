@@ -28,7 +28,6 @@
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
-#include "fwupd-result.h"
 
 static gboolean
 as_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
@@ -176,18 +175,16 @@ fwupd_remote_local_func (void)
 }
 
 static void
-fwupd_result_func (void)
+fwupd_device_func (void)
 {
-	FwupdDevice *dev;
-	FwupdRelease *rel;
 	gboolean ret;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FwupdResult) result = NULL;
+	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* create dummy object */
-	result = fwupd_result_new ();
-	dev = fwupd_result_get_device (result);
+	dev = fwupd_device_new ();
 	fwupd_device_add_checksum (dev, "beefdead");
 	fwupd_device_set_created (dev, 1);
 	fwupd_device_set_flags (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -199,10 +196,8 @@ fwupd_result_func (void)
 	fwupd_device_add_icon (dev, "input-gaming");
 	fwupd_device_add_icon (dev, "input-mouse");
 	fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	rel = fwupd_result_get_release (result);
+	rel = fwupd_release_new ();
 	fwupd_release_set_trust_flags (rel, FWUPD_TRUST_FLAG_PAYLOAD);
-
-	rel = fwupd_result_get_release (result);
 	fwupd_release_add_checksum (rel, "deadbeef");
 	fwupd_release_set_description (rel, "<p>Hi there!</p>");
 	fwupd_release_set_filename (rel, "firmware.bin");
@@ -210,7 +205,8 @@ fwupd_result_func (void)
 	fwupd_release_set_size (rel, 1024);
 	fwupd_release_set_uri (rel, "http://foo.com");
 	fwupd_release_set_version (rel, "1.2.3");
-	str = fwupd_result_to_string (result);
+	fwupd_device_add_release (dev, rel);
+	str = fwupd_device_to_string (dev);
 	g_print ("\n%s", str);
 
 	/* check GUIDs */
@@ -302,7 +298,6 @@ static void
 fwupd_client_updates_func (void)
 {
 	FwupdDevice *dev;
-	FwupdResult *res;
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GError) error = NULL;
@@ -320,9 +315,8 @@ fwupd_client_updates_func (void)
 	g_assert_cmpint (array->len, >, 0);
 
 	/* check device */
-	res = g_ptr_array_index (array, 0);
-	g_assert (FWUPD_IS_RESULT (res));
-	dev = fwupd_result_get_device (res);
+	dev = g_ptr_array_index (array, 0);
+	g_assert (FWUPD_IS_DEVICE (dev));
 	g_assert_cmpstr (fwupd_device_get_guid_default (dev), !=, NULL);
 	g_assert_cmpstr (fwupd_device_get_id (dev), !=, NULL);
 }
@@ -349,7 +343,7 @@ main (int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
-	g_test_add_func ("/fwupd/result", fwupd_result_func);
+	g_test_add_func ("/fwupd/device", fwupd_device_func);
 	g_test_add_func ("/fwupd/remote{download}", fwupd_remote_download_func);
 	g_test_add_func ("/fwupd/remote{base-uri}", fwupd_remote_baseuri_func);
 	g_test_add_func ("/fwupd/remote{local}", fwupd_remote_local_func);
