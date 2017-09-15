@@ -242,4 +242,10 @@ G_DEPRECATED_FOR(fwupd_release_set_appstream_id)
 void		 fwupd_result_set_unique_id		(FwupdResult	*result,
 							 const gchar	*unique_id);
 
+G_DEPRECATED_FOR(fwupd_release_get_trust_flags)
+FwupdTrustFlags	 fwupd_result_get_update_trust_flags	(FwupdResult	*result);
+G_DEPRECATED_FOR(fwupd_release_set_trust_flags)
+void		 fwupd_result_set_update_trust_flags	(FwupdResult	*result,
+							 FwupdTrustFlags trust_flags);
+
 #endif /* __FWUPD_DEPRECATED_H */

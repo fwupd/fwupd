@@ -51,10 +51,6 @@ FwupdResult	*fwupd_result_new_from_data		(GVariant	*data);
 FwupdRelease	*fwupd_result_get_release		(FwupdResult	*result);
 FwupdDevice	*fwupd_result_get_device		(FwupdResult	*result);
 
-FwupdTrustFlags	 fwupd_result_get_update_trust_flags	(FwupdResult	*result);
-void		 fwupd_result_set_update_trust_flags	(FwupdResult	*result,
-							 FwupdTrustFlags trust_flags);
-
 GVariant	*fwupd_result_to_data			(FwupdResult	*result,
 							 const gchar	*type_string);
 gchar		*fwupd_result_to_string			(FwupdResult	*result);

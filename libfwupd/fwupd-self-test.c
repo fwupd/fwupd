@@ -199,7 +199,8 @@ fwupd_result_func (void)
 	fwupd_device_add_icon (dev, "input-gaming");
 	fwupd_device_add_icon (dev, "input-mouse");
 	fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fwupd_result_set_update_trust_flags (result, FWUPD_TRUST_FLAG_PAYLOAD);
+	rel = fwupd_result_get_release (result);
+	fwupd_release_set_trust_flags (rel, FWUPD_TRUST_FLAG_PAYLOAD);
 
 	rel = fwupd_result_get_release (result);
 	fwupd_release_add_checksum (rel, "deadbeef");

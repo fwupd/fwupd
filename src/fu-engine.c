@@ -1950,7 +1950,6 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	release = as_app_get_release_default (app);
 	if (!fu_engine_get_release_trust_flags (release, &trust_flags, error))
 		return NULL;
-	fwupd_result_set_update_trust_flags (res, trust_flags);
 
 	/* possibly convert the version from 0x to dotted */
 	fu_engine_vendor_quirk_release_version (app);
@@ -1961,6 +1960,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	/* create a result with all the metadata in */
 	fwupd_device_set_description (dev, as_app_get_description (app, NULL));
 	rel = fwupd_result_get_release (res);
+	fwupd_release_set_trust_flags (rel, trust_flags);
 	fwupd_release_set_homepage (rel, as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE));
 	fwupd_release_set_license (rel, as_app_get_project_license (app));
 	fwupd_release_set_name (rel, as_app_get_name (app, NULL));

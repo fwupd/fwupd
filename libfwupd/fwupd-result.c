@@ -37,7 +37,6 @@ static void fwupd_result_finalize	 (GObject *object);
 
 typedef struct {
 	gchar				*unique_id;
-	FwupdTrustFlags			 update_trust_flags;
 	FwupdDevice			*device;
 	FwupdRelease			*release;
 } FwupdResultPrivate;
@@ -1067,7 +1066,7 @@ fwupd_result_get_update_trust_flags (FwupdResult *result)
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_val_if_fail (FWUPD_IS_RESULT (result), 0);
-	return priv->update_trust_flags;
+	return fwupd_release_get_trust_flags (priv->release);
 }
 
 /**
@@ -1084,7 +1083,7 @@ fwupd_result_set_update_trust_flags (FwupdResult *result, FwupdTrustFlags trust_
 {
 	FwupdResultPrivate *priv = GET_PRIVATE (result);
 	g_return_if_fail (FWUPD_IS_RESULT (result));
-	priv->update_trust_flags = trust_flags;
+	fwupd_release_set_trust_flags (priv->release, trust_flags);
 }
 
 /**
@@ -1373,11 +1372,6 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	if (priv->update_trust_flags != 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS,
-				       g_variant_new_uint64 (priv->update_trust_flags));
-	}
 
 	/* device and release objects */
 	fwupd_release_to_variant_builder (priv->release, &builder);
@@ -1393,48 +1387,6 @@ fwupd_result_to_data (FwupdResult *result, const gchar *type_string)
 	if (g_strcmp0 (type_string, "(a{sv})") == 0)
 		return g_variant_new ("(a{sv})", &builder);
 	return NULL;
-}
-
-static void
-fwupd_result_from_key_value (FwupdResult *result, const gchar *key, GVariant *value)
-{
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS) == 0) {
-		fwupd_result_set_update_trust_flags (result, g_variant_get_uint64 (value));
-		return;
-	}
-}
-
-static void
-fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
-{
-	/* ignore */
-	if (key == NULL || value == NULL)
-		return;
-	g_string_append_printf (str, "  %s: ", key);
-	for (gsize i = strlen (key); i < 20; i++)
-		g_string_append (str, " ");
-	g_string_append_printf (str, "%s\n", value);
-}
-
-static void
-fwupd_pad_kv_tfl (GString *str, const gchar *key, FwupdTrustFlags trust_flags)
-{
-	guint i;
-	g_autoptr(GString) tmp = NULL;
-
-	tmp = g_string_new ("");
-	for (i = 1; i < FWUPD_TRUST_FLAG_LAST; i *= 2) {
-		if ((trust_flags & i) == 0)
-			continue;
-		g_string_append_printf (tmp, "%s|",
-					fwupd_trust_flag_to_string (i));
-	}
-	if (tmp->len == 0) {
-		g_string_append (tmp, fwupd_trust_flag_to_string (0));
-	} else {
-		g_string_truncate (tmp, tmp->len - 1);
-	}
-	fwupd_pad_kv_str (str, key, tmp->str);
 }
 
 /**
@@ -1464,8 +1416,6 @@ fwupd_result_to_string (FwupdResult *result)
 	g_string_append (str, device_str);
 	release_str = fwupd_release_to_string (priv->release);
 	g_string_append (str, release_str);
-	if (fwupd_release_get_version (priv->release) != NULL)
-		fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS, priv->update_trust_flags);
 
 	return g_string_free (str, FALSE);
 }
@@ -1561,7 +1511,6 @@ fwupd_result_from_variant_iter (FwupdResult *result, GVariantIter *iter)
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next (iter, "{&sv}", &key, &value)) {
-		fwupd_result_from_key_value (result, key, value);
 		fwupd_release_from_key_value (priv->release, key, value);
 		fwupd_device_from_key_value (priv->device, key, value);
 		g_variant_unref (value);

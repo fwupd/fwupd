@@ -46,6 +46,7 @@ typedef struct {
 	gchar				*version;
 	gchar				*remote_id;
 	guint64				 size;
+	FwupdTrustFlags			 trust_flags;
 } FwupdReleasePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdRelease, fwupd_release, G_TYPE_OBJECT)
@@ -523,6 +524,41 @@ fwupd_release_set_name (FwupdRelease *release, const gchar *name)
 	priv->name = g_strdup (name);
 }
 
+/**
+ * fwupd_release_get_trust_flags:
+ * @release: A #FwupdRelease
+ *
+ * Gets the trust level of the release.
+ *
+ * Returns: the trust bitfield, e.g. #FWUPD_TRUST_FLAG_PAYLOAD
+ *
+ * Since: 0.9.8
+ **/
+FwupdTrustFlags
+fwupd_release_get_trust_flags (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), 0);
+	return priv->trust_flags;
+}
+
+/**
+ * fwupd_release_set_trust_flags:
+ * @release: A #FwupdRelease
+ * @trust_flags: the bitfield, e.g. #FWUPD_TRUST_FLAG_PAYLOAD
+ *
+ * Sets the trust level of the release.
+ *
+ * Since: 0.9.8
+ **/
+void
+fwupd_release_set_trust_flags (FwupdRelease *release, FwupdTrustFlags trust_flags)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	priv->trust_flags = trust_flags;
+}
+
 void
 fwupd_release_to_variant_builder (FwupdRelease *release, GVariantBuilder *builder)
 {
@@ -599,6 +635,11 @@ fwupd_release_to_variant_builder (FwupdRelease *release, GVariantBuilder *builde
 		g_variant_builder_add (builder, "{sv}",
 				       FWUPD_RESULT_KEY_UPDATE_VENDOR,
 				       g_variant_new_string (priv->vendor));
+	}
+	if (priv->trust_flags != 0) {
+		g_variant_builder_add (builder, "{sv}",
+				       FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS,
+				       g_variant_new_uint64 (priv->trust_flags));
 	}
 }
 
@@ -691,6 +732,10 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 		fwupd_release_set_vendor (release, g_variant_get_string (value, NULL));
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS) == 0) {
+		fwupd_release_set_trust_flags (release, g_variant_get_uint64 (value));
+		return;
+	}
 }
 
 static void
@@ -715,6 +760,27 @@ fwupd_pad_kv_siz (GString *str, const gchar *key, guint64 value)
 		return;
 	tmp = g_format_size (value);
 	fwupd_pad_kv_str (str, key, tmp);
+}
+
+static void
+fwupd_pad_kv_tfl (GString *str, const gchar *key, FwupdTrustFlags trust_flags)
+{
+	guint i;
+	g_autoptr(GString) tmp = NULL;
+
+	tmp = g_string_new ("");
+	for (i = 1; i < FWUPD_TRUST_FLAG_LAST; i *= 2) {
+		if ((trust_flags & i) == 0)
+			continue;
+		g_string_append_printf (tmp, "%s|",
+					fwupd_trust_flag_to_string (i));
+	}
+	if (tmp->len == 0) {
+		g_string_append (tmp, fwupd_trust_flag_to_string (0));
+	} else {
+		g_string_truncate (tmp, tmp->len - 1);
+	}
+	fwupd_pad_kv_str (str, key, tmp->str);
 }
 
 /**
@@ -752,6 +818,7 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_URI, priv->uri);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_HOMEPAGE, priv->homepage);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_VENDOR, priv->vendor);
+	fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS, priv->trust_flags);
 
 	return g_string_free (str, FALSE);
 }
