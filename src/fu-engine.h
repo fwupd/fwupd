@@ -66,7 +66,7 @@ GPtrArray	*fu_engine_get_downgrades		(FuEngine	*self,
 GPtrArray	*fu_engine_get_upgrades			(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
-FwupdResult	*fu_engine_get_results			(FuEngine	*self,
+FwupdDevice	*fu_engine_get_results			(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
 gboolean	 fu_engine_clear_results		(FuEngine	*self,

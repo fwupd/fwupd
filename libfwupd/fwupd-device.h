@@ -25,6 +25,7 @@
 #include <glib-object.h>
 
 #include "fwupd-enums.h"
+#include "fwupd-release.h"
 
 G_BEGIN_DECLS
 
@@ -114,6 +115,9 @@ void		 fwupd_device_set_update_state		(FwupdDevice	*device,
 const gchar	*fwupd_device_get_update_error		(FwupdDevice	*device);
 void		 fwupd_device_set_update_error		(FwupdDevice	*device,
 							 const gchar	*update_error);
+void		 fwupd_device_add_release		(FwupdDevice	*device,
+							 FwupdRelease	*release);
+FwupdRelease	*fwupd_device_get_release_default	(FwupdDevice	*device);
 
 G_END_DECLS
 
