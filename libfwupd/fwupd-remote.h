@@ -27,7 +27,20 @@
 G_BEGIN_DECLS
 
 #define FWUPD_TYPE_REMOTE (fwupd_remote_get_type ())
-G_DECLARE_FINAL_TYPE (FwupdRemote, fwupd_remote, FWUPD, REMOTE, GObject)
+G_DECLARE_DERIVABLE_TYPE (FwupdRemote, fwupd_remote, FWUPD, REMOTE, GObject)
+
+struct _FwupdRemoteClass
+{
+	GObjectClass		 parent_class;
+	/*< private >*/
+	void (*_fwupd_reserved1)	(void);
+	void (*_fwupd_reserved2)	(void);
+	void (*_fwupd_reserved3)	(void);
+	void (*_fwupd_reserved4)	(void);
+	void (*_fwupd_reserved5)	(void);
+	void (*_fwupd_reserved6)	(void);
+	void (*_fwupd_reserved7)	(void);
+};
 
 typedef enum {
 	FWUPD_REMOTE_KIND_UNKNOWN,
