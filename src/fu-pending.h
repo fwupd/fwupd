@@ -52,6 +52,8 @@ gboolean	 fu_pending_set_error_msg		(FuPending	*pending,
 gboolean	 fu_pending_remove_device		(FuPending	*pending,
 							 FwupdResult	*res,
 							 GError		**error);
+gboolean	 fu_pending_remove_all			(FuPending	*pending,
+							 GError		**error);
 FwupdResult	*fu_pending_get_device			(FuPending	*pending,
 							 const gchar	*device_id,
 							 GError		**error);
