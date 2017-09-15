@@ -216,22 +216,24 @@ fwupd_device_func (void)
 
 	ret = as_test_compare_lines (str,
 		"ColorHug2\n"
-		"  DeviceID:             USB:foo\n"
+		"  DeviceId:             USB:foo\n"
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
 		"  Guid:                 00000000-0000-0000-0000-000000000000\n"
 		"  Flags:                updatable|require-ac\n"
-		"  FirmwareHash:         SHA1(beefdead)\n"
-		"  Icons:                input-gaming,input-mouse\n"
+		"  Checksum:             SHA1(beefdead)\n"
+		"  Icon:                 input-gaming,input-mouse\n"
 		"  Created:              1970-01-01\n"
 		"  Modified:             1970-01-02\n"
+		"  \n"
+		"  [Release]\n"
 		"  AppstreamId:          org.dave.ColorHug.firmware\n"
-		"  UpdateDescription:    <p>Hi there!</p>\n"
-		"  UpdateVersion:        1.2.3\n"
-		"  FilenameCab:          firmware.bin\n"
-		"  UpdateHash:           SHA1(deadbeef)\n"
+		"  Description:          <p>Hi there!</p>\n"
+		"  Version:              1.2.3\n"
+		"  Filename:             firmware.bin\n"
+		"  Checksum:             SHA1(deadbeef)\n"
 		"  Size:                 1.0 kB\n"
-		"  UpdateUri:            http://foo.com\n"
-		"  Trusted:              payload\n", &error);
+		"  Uri:                  http://foo.com\n"
+		"  TrustFlags:           payload\n", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 }

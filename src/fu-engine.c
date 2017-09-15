@@ -233,7 +233,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	GBytes *remote_blob;
 
 	/* find the remote */
-	remote_blob = as_release_get_blob (release, "fwupd::RemoteID");
+	remote_blob = as_release_get_blob (release, "fwupd::RemoteId");
 	if (remote_blob != NULL) {
 		const gchar *remote_id = g_bytes_get_data (remote_blob, NULL);
 		if (remote_id != NULL) {
@@ -1504,7 +1504,7 @@ fu_engine_load_metadata_from_file (FuEngine *self,
 			for (guint j = 0; j < releases->len; j++) {
 				AsRelease *release = g_ptr_array_index (releases, j);
 				as_release_set_blob (release,
-						     "fwupd::RemoteID",
+						     "fwupd::RemoteId",
 						     remote_blob);
 			}
 		}
