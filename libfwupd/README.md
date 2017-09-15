@@ -22,3 +22,4 @@ Migration from Version 0.9.x
  * Rename fwupd_result_update_*() to fwupd_release_*()
  * Rename fwupd_result_*() to fwupd_device_*()
  * Convert FwupdResult to FwupdDevice in all callbacks
+ * Rename fwupd_device_*_provider -> fwupd_device_*_plugin
