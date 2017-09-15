@@ -29,6 +29,7 @@
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-device-private.h"
+#include "fwupd-release-private.h"
 
 static void fwupd_device_finalize	 (GObject *object);
 
@@ -54,6 +55,7 @@ typedef struct {
 	guint32				 flashes_left;
 	FwupdUpdateState		 update_state;
 	gchar				*update_error;
+	FwupdRelease			*release_default;
 } FwupdDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdDevice, fwupd_device, G_TYPE_OBJECT)
@@ -917,6 +919,7 @@ fwupd_device_to_variant_builder (FwupdDevice *device, GVariantBuilder *builder)
 GVariant *
 fwupd_device_to_data (FwupdDevice *device, const gchar *type_string)
 {
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	GVariantBuilder builder;
 
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
@@ -925,6 +928,8 @@ fwupd_device_to_data (FwupdDevice *device, const gchar *type_string)
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	fwupd_device_to_variant_builder (device, &builder);
+	if (priv->release_default != NULL)
+		fwupd_release_to_variant_builder (priv->release_default, &builder);
 
 	/* supported types */
 	if (g_strcmp0 (type_string, "a{sv}") == 0)
@@ -1165,6 +1170,43 @@ fwupd_device_set_update_error (FwupdDevice *device, const gchar *update_error)
 	priv->update_error = g_strdup (update_error);
 }
 
+/**
+ * fwupd_device_get_release_default:
+ * @device: A #FwupdDevice
+ *
+ * Gets the default release for this device.
+ *
+ * Returns: (transfer none): the #FwupdRelease, or %NULL if not set
+ *
+ * Since: 0.9.8
+ **/
+FwupdRelease *
+fwupd_device_get_release_default (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->release_default;
+}
+
+/**
+ * fwupd_device_add_release:
+ * @device: A #FwupdDevice
+ * @release: a #FwupdRelease
+ *
+ * Adds a release for this device.
+ *
+ * NOTE: devices can only store one release at this point in time.
+ *
+ * Since: 0.9.8
+ **/
+void
+fwupd_device_add_release (FwupdDevice *device, FwupdRelease *release)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_set_object (&priv->release_default, release);
+}
+
 static void
 fwupd_pad_kv_ups (GString *str, const gchar *key, FwupdUpdateState value)
 {
@@ -1257,6 +1299,8 @@ fwupd_device_finalize (GObject *object)
 	FwupdDevice *device = FWUPD_DEVICE (object);
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 
+	if (priv->release_default != NULL)
+		g_object_unref (priv->release_default);
 	g_free (priv->description);
 	g_free (priv->id);
 	g_free (priv->name);

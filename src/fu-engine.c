@@ -1790,18 +1790,16 @@ fu_engine_get_store_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 	return g_steal_pointer (&store);
 }
 
-static FwupdResult *
+static FwupdDevice *
 fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 {
 	FwupdTrustFlags trust_flags = FWUPD_TRUST_FLAG_NONE;
 	AsRelease *release;
-	FwupdDevice *dev;
-	FwupdRelease *rel;
 	GPtrArray *provides;
-	g_autoptr(FwupdResult) res = NULL;
+	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(FwupdRelease) rel = NULL;
 
-	res = fwupd_result_new ();
-	dev = fwupd_result_get_device (res);
+	dev = fwupd_device_new ();
 	provides = as_app_get_provides (app);
 	for (guint i = 0; i < provides->len; i++) {
 		AsProvide *prov = AS_PROVIDE (g_ptr_array_index (provides, i));
@@ -1851,7 +1849,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 
 	/* create a result with all the metadata in */
 	fwupd_device_set_description (dev, as_app_get_description (app, NULL));
-	rel = fwupd_result_get_release (res);
+	rel = fwupd_release_new ();
 	fwupd_release_set_trust_flags (rel, trust_flags);
 	fwupd_release_set_homepage (rel, as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE));
 	fwupd_release_set_license (rel, as_app_get_project_license (app));
@@ -1860,7 +1858,8 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	fwupd_release_set_vendor (rel, as_app_get_developer_name (app, NULL));
 	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
 	fu_engine_set_release_from_appstream (self, rel, release);
-	return g_steal_pointer (&res);
+	fwupd_device_add_release (dev, rel);
+	return g_steal_pointer (&dev);
 }
 
 /**
@@ -1873,7 +1872,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
  *
  * Note: this will close the fd when done
  *
- * Returns: (transfer container) (element-type FwupdResult): results
+ * Returns: (transfer container) (element-type FwupdDevice): results
  **/
 GPtrArray *
 fu_engine_get_details_local (FuEngine *self, gint fd, GError **error)
@@ -1907,7 +1906,7 @@ fu_engine_get_details_local (FuEngine *self, gint fd, GError **error)
 	details = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < apps->len; i++) {
 		AsApp *app = g_ptr_array_index (apps, i);
-		FwupdResult *res = NULL;
+		FwupdDevice *res = NULL;
 
 		/* check we can install it */
 		if (!fu_engine_check_requirements (app, NULL, error))
@@ -1962,7 +1961,7 @@ fu_engine_get_devices (FuEngine *self, GError **error)
  *
  * Gets the list of updates.
  *
- * Returns: (transfer container) (element-type FwupdResult): results
+ * Returns: (transfer container) (element-type FwupdDevice): results
  **/
 GPtrArray *
 fu_engine_get_updates (FuEngine *self, GError **error)
@@ -1977,7 +1976,6 @@ fu_engine_get_updates (FuEngine *self, GError **error)
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
-		g_autoptr(FwupdResult) result = fwupd_result_new ();
 		FwupdRelease *rel_default;
 
 		rels = fu_engine_get_upgrades (self, fu_device_get_id (item->device), &error_local);
@@ -1986,9 +1984,8 @@ fu_engine_get_updates (FuEngine *self, GError **error)
 			continue;
 		}
 		rel_default = g_ptr_array_index (rels, 0);
-		fwupd_result_set_release (result, rel_default);
-		fwupd_result_set_device (result, FWUPD_DEVICE (item->device));
-		g_ptr_array_add (updates, g_steal_pointer (&result));
+		fwupd_device_add_release (FWUPD_DEVICE (item->device), rel_default);
+		g_ptr_array_add (updates, g_object_ref (item->device));
 	}
 	if (updates->len == 0) {
 		g_set_error_literal (error,
@@ -2112,7 +2109,7 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
  *
  * Gets the releases available for a specific device.
  *
- * Returns: (transfer container) (element-type FwupdResult): results
+ * Returns: (transfer container) (element-type FwupdDevice): results
  **/
 GPtrArray *
 fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
@@ -2152,7 +2149,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
  *
  * Gets the downgrades available for a specific device.
  *
- * Returns: (transfer container) (element-type FwupdResult): results
+ * Returns: (transfer container) (element-type FwupdDevice): results
  **/
 GPtrArray *
 fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error)
@@ -2245,7 +2242,7 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
  *
  * Gets the upgrades available for a specific device.
  *
- * Returns: (transfer container) (element-type FwupdResult): results
+ * Returns: (transfer container) (element-type FwupdDevice): results
  **/
 GPtrArray *
 fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
@@ -2353,9 +2350,9 @@ fu_engine_clear_results (FuEngine *self, const gchar *device_id, GError **error)
  *
  * Gets the historical state of a specific device operation.
  *
- * Returns: (transfer container): a #FwupdResult, or %NULL
+ * Returns: (transfer container): a #FwupdDevice, or %NULL
  **/
-FwupdResult *
+FwupdDevice *
 fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuDeviceItem *item;

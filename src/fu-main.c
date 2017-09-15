@@ -230,8 +230,8 @@ fu_main_result_array_to_variant (GPtrArray *results)
 	g_return_val_if_fail (results->len > 0, NULL);
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < results->len; i++) {
-		FwupdResult *result = g_ptr_array_index (results, i);
-		GVariant *tmp = fwupd_result_to_data (result, "{sa{sv}}");
+		FwupdDevice *result = g_ptr_array_index (results, i);
+		GVariant *tmp = fwupd_device_to_data (result, "{sa{sv}}");
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(a{sa{sv}})", &builder);
@@ -504,7 +504,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	}
 	if (g_strcmp0 (method_name, "GetResults") == 0) {
 		const gchar *device_id = NULL;
-		g_autoptr(FwupdResult) result = NULL;
+		g_autoptr(FwupdDevice) result = NULL;
 		g_variant_get (parameters, "(&s)", &device_id);
 		g_debug ("Called %s(%s)", method_name, device_id);
 		result = fu_engine_get_results (priv->engine, device_id, &error);
@@ -512,7 +512,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		val = fwupd_result_to_data (result, "(a{sv})");
+		val = fwupd_device_to_data (result, "(a{sv})");
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
