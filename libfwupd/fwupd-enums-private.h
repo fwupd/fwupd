@@ -28,7 +28,6 @@
 #define FWUPD_RESULT_KEY_DEVICE_DESCRIPTION	"Description"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_FLAGS		"Flags"		/* t */
 #define FWUPD_RESULT_KEY_DEVICE_CHECKSUM	"FirmwareHash"	/* s */
-#define FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND	"DeviceChecksumKind"	/* u */
 #define FWUPD_RESULT_KEY_DEVICE_MODIFIED	"Modified"	/* t */
 #define FWUPD_RESULT_KEY_DEVICE_NAME		"DisplayName"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_ICONS		"Icons"		/* as */
@@ -46,7 +45,6 @@
 #define FWUPD_RESULT_KEY_UPDATE_ERROR		"PendingError"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_FILENAME	"FilenameCab"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_CHECKSUM	"UpdateHash"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_CHECKSUM_KIND	"UpdateChecksumKind"	/* u */
 #define FWUPD_RESULT_KEY_UPDATE_ID		"AppstreamId"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_LICENSE		"License"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_NAME		"Name"		/* s */
