@@ -55,7 +55,7 @@ typedef struct {
 	guint32				 flashes_left;
 	FwupdUpdateState		 update_state;
 	gchar				*update_error;
-	FwupdRelease			*release_default;
+	GPtrArray			*releases;
 } FwupdDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdDevice, fwupd_device, G_TYPE_OBJECT)
@@ -928,8 +928,10 @@ fwupd_device_to_data (FwupdDevice *device, const gchar *type_string)
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	fwupd_device_to_variant_builder (device, &builder);
-	if (priv->release_default != NULL)
-		fwupd_release_to_variant_builder (priv->release_default, &builder);
+	if (priv->releases->len > 0) {
+		FwupdRelease *release = g_ptr_array_index (priv->releases, 0);
+		fwupd_release_to_variant_builder (release, &builder);
+	}
 
 	/* supported types */
 	if (g_strcmp0 (type_string, "a{sv}") == 0)
@@ -1185,7 +1187,27 @@ fwupd_device_get_release_default (FwupdDevice *device)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
-	return priv->release_default;
+	if (priv->releases->len == 0)
+		return NULL;
+	return FWUPD_RELEASE (g_ptr_array_index (priv->releases, 0));
+}
+
+/**
+ * fwupd_device_get_releases:
+ * @device: A #FwupdDevice
+ *
+ * Gets all the releases for this device.
+ *
+ * Returns: (transfer none) (element-type FwupdRelease): array of releases
+ *
+ * Since: 0.9.8
+ **/
+GPtrArray *
+fwupd_device_get_releases (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->releases;
 }
 
 /**
@@ -1195,8 +1217,6 @@ fwupd_device_get_release_default (FwupdDevice *device)
  *
  * Adds a release for this device.
  *
- * NOTE: devices can only store one release at this point in time.
- *
  * Since: 0.9.8
  **/
 void
@@ -1204,7 +1224,7 @@ fwupd_device_add_release (FwupdDevice *device, FwupdRelease *release)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
-	g_set_object (&priv->release_default, release);
+	g_ptr_array_add (priv->releases, g_object_ref (release));
 }
 
 static void
@@ -1291,6 +1311,7 @@ fwupd_device_init (FwupdDevice *device)
 	priv->guids = g_ptr_array_new_with_free_func (g_free);
 	priv->icons = g_ptr_array_new_with_free_func (g_free);
 	priv->checksums = g_ptr_array_new_with_free_func (g_free);
+	priv->releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 }
 
 static void
@@ -1299,8 +1320,6 @@ fwupd_device_finalize (GObject *object)
 	FwupdDevice *device = FWUPD_DEVICE (object);
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 
-	if (priv->release_default != NULL)
-		g_object_unref (priv->release_default);
 	g_free (priv->description);
 	g_free (priv->id);
 	g_free (priv->name);
@@ -1315,6 +1334,7 @@ fwupd_device_finalize (GObject *object)
 	g_ptr_array_unref (priv->guids);
 	g_ptr_array_unref (priv->icons);
 	g_ptr_array_unref (priv->checksums);
+	g_ptr_array_unref (priv->releases);
 
 	G_OBJECT_CLASS (fwupd_device_parent_class)->finalize (object);
 }

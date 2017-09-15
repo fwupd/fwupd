@@ -117,6 +117,7 @@ void		 fwupd_device_set_update_error		(FwupdDevice	*device,
 							 const gchar	*update_error);
 void		 fwupd_device_add_release		(FwupdDevice	*device,
 							 FwupdRelease	*release);
+GPtrArray	*fwupd_device_get_releases		(FwupdDevice	*device);
 FwupdRelease	*fwupd_device_get_release_default	(FwupdDevice	*device);
 
 G_END_DECLS
