@@ -742,7 +742,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      helper);
 		return;
 	}
-	if (g_strcmp0 (method_name, "GetDetailsLocal") == 0) {
+	if (g_strcmp0 (method_name, "GetDetails") == 0) {
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		gint32 fd_handle = 0;
@@ -771,7 +771,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* get details about the file (will close the fd when done) */
-		results = fu_engine_get_details_local (priv->engine, fd, &error);
+		results = fu_engine_get_details (priv->engine, fd, &error);
 		if (results == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;

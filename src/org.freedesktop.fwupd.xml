@@ -171,7 +171,7 @@
     </method>
 
     <!--***********************************************************-->
-    <method name='GetDetailsLocal'>
+    <method name='GetDetails'>
       <doc:doc>
         <doc:description>
           <doc:para>

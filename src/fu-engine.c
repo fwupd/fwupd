@@ -1880,7 +1880,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 }
 
 /**
- * fu_engine_get_details_local:
+ * fu_engine_get_details:
  * @self: A #FuEngine
  * @fd: A file descriptor
  * @error: A #GError, or %NULL
@@ -1892,7 +1892,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
  * Returns: (transfer container) (element-type FwupdDevice): results
  **/
 GPtrArray *
-fu_engine_get_details_local (FuEngine *self, gint fd, GError **error)
+fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 {
 	GPtrArray *apps;
 	g_autoptr(AsStore) store = NULL;

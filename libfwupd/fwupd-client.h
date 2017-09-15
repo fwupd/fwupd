@@ -75,7 +75,7 @@ GPtrArray	*fwupd_client_get_upgrades		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GPtrArray	*fwupd_client_get_details_local		(FwupdClient	*client,
+GPtrArray	*fwupd_client_get_details		(FwupdClient	*client,
 							 const gchar	*filename,
 							 GCancellable	*cancellable,
 							 GError		**error);

@@ -349,7 +349,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments: expected 'filename'");
 		return FALSE;
 	}
-	array = fwupd_client_get_details_local (priv->client, values[0], NULL, error);
+	array = fwupd_client_get_details (priv->client, values[0], NULL, error);
 	if (array == NULL)
 		return FALSE;
 	for (guint i = 0; i < array->len; i++) {

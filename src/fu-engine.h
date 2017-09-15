@@ -99,7 +99,7 @@ gboolean	 fu_engine_install			(FuEngine	*self,
 							 GBytes		*blob_cab,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-GPtrArray	*fu_engine_get_details_local		(FuEngine	*self,
+GPtrArray	*fu_engine_get_details			(FuEngine	*self,
 							 gint		 fd,
 							 GError		**error);
 
