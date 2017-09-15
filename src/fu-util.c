@@ -315,32 +315,6 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_install_with_fallback (FuUtilPrivate *priv, const gchar *id,
-			       const gchar *filename, GError **error)
-{
-	g_autoptr(GError) error_local = NULL;
-
-	/* install with flags chosen by the user */
-	if (fwupd_client_install (priv->client, id, filename, priv->flags,
-				  NULL, &error_local))
-		return TRUE;
-
-	/* some other failure */
-	if ((priv->flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0 ||
-	    !g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-		g_propagate_error (error, error_local);
-		error_local = NULL;
-		return FALSE;
-	}
-
-	/* TRANSLATOR: the plugin only supports offline */
-	g_print ("%s...\n", _("Retrying as an offline update"));
-	priv->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
-	return fwupd_client_install (priv->client, id, filename, priv->flags,
-				     NULL, error);
-}
-
-static gboolean
 fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *id;
@@ -358,8 +332,8 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	/* install with flags chosen by the user then falling back to offline */
-	return fu_util_install_with_fallback (priv, id, values[0], error);
+	/* install with flags chosen by the user */
+	return fwupd_client_install (priv->client, id, values[0], priv->flags, NULL, error);
 }
 
 static gboolean
@@ -1366,10 +1340,12 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
 			const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
 			g_autofree gchar *path = g_path_get_dirname (fn_cache);
+
+			/* install with flags chosen by the user */
 			fn = g_build_filename (path, uri_tmp, NULL);
-			return fu_util_install_with_fallback (priv,
-							      fwupd_device_get_id (dev),
-							      fn, error);
+			return fwupd_client_install (priv->client,
+						     fwupd_device_get_id (dev),
+						     fn, priv->flags, NULL, error);
 		}
 
 		uri = fwupd_remote_build_uri (remote, uri_tmp, error);
@@ -1395,7 +1371,9 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	g_print ("Updating %s on %s...\n",
 		 fwupd_release_get_version (rel),
 		 fwupd_device_get_name (dev));
-	return fu_util_install_with_fallback (priv, fwupd_device_get_id (dev), fn, error);
+	return fwupd_client_install (priv->client,
+				     fwupd_device_get_id (dev), fn,
+				     priv->flags, NULL, error);
 }
 
 static gboolean
