@@ -25,11 +25,6 @@
 #include "fwupd-client.h"
 #include "fwupd-remote.h"
 
-G_DEPRECATED_FOR(fwupd_client_get_details_local)
-FwupdResult	*fwupd_client_get_details		(FwupdClient	*client,
-							 const gchar	*filename,
-							 GCancellable	*cancellable,
-							 GError		**error);
 G_DEPRECATED_FOR(fwupd_client_update_metadata_with_id)
 gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
 							 const gchar	*metadata_fn,

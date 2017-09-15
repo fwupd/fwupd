@@ -1010,45 +1010,13 @@ fwupd_client_install (FwupdClient *client,
  *
  * Gets details about a specific firmware file.
  *
- * Returns: (transfer full): a #FwupdResult, or %NULL for failure
- *
- * Since: 0.7.0
- **/
-FwupdResult *
-fwupd_client_get_details (FwupdClient *client, const gchar *filename,
-			  GCancellable *cancellable, GError **error)
-{
-	g_autoptr(GPtrArray) results = NULL;
-	results = fwupd_client_get_details_local (client, filename, cancellable, error);
-	if (results == NULL)
-		return NULL;
-	if (results->len == 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to open %s",
-			     filename);
-		return NULL;
-	}
-	return g_object_ref (g_ptr_array_index (results, 0));
-}
-
-/**
- * fwupd_client_get_details_local:
- * @client: A #FwupdClient
- * @filename: the firmware filename, e.g. "firmware.cab"
- * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
- *
- * Gets details about a specific firmware file.
- *
  * Returns: (transfer container) (element-type FwupdResult): an array of results
  *
- * Since: 0.7.2
+ * Since: 1.0.0
  **/
 GPtrArray *
-fwupd_client_get_details_local (FwupdClient *client, const gchar *filename,
-				GCancellable *cancellable, GError **error)
+fwupd_client_get_details (FwupdClient *client, const gchar *filename,
+			  GCancellable *cancellable, GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	GVariant *body;
@@ -1085,7 +1053,7 @@ fwupd_client_get_details_local (FwupdClient *client, const gchar *filename,
 	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
 						  FWUPD_DBUS_PATH,
 						  FWUPD_DBUS_INTERFACE,
-						  "GetDetailsLocal");
+						  "GetDetails");
 	g_dbus_message_set_unix_fd_list (request, fd_list);
 
 	/* g_unix_fd_list_append did a dup() already */
