@@ -56,7 +56,7 @@ typedef struct {
 	gchar				*vendor;
 	gchar				*vendor_id;
 	gchar				*homepage;
-	gchar				*provider;
+	gchar				*plugin;
 	gchar				*version;
 	gchar				*version_lowest;
 	gchar				*version_bootloader;
@@ -607,39 +607,39 @@ fwupd_device_set_flashes_left (FwupdDevice *device, guint32 flashes_left)
 }
 
 /**
- * fwupd_device_get_provider:
+ * fwupd_device_get_plugin:
  * @device: A #FwupdDevice
  *
- * Gets the device provider.
+ * Gets the plugin that created the device.
  *
- * Returns: the device provider, or %NULL if unset
+ * Returns: the plugin name, or %NULL if unset
  *
- * Since: 0.9.3
+ * Since: 1.0.0
  **/
 const gchar *
-fwupd_device_get_provider (FwupdDevice *device)
+fwupd_device_get_plugin (FwupdDevice *device)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
-	return priv->provider;
+	return priv->plugin;
 }
 
 /**
- * fwupd_device_set_provider:
+ * fwupd_device_set_plugin:
  * @device: A #FwupdDevice
- * @provider: the provider name, e.g. "colorhug"
+ * @plugin: the plugin name, e.g. "colorhug"
  *
- * Sets the device provider.
+ * Sets the plugin that created the device.
  *
- * Since: 0.9.3
+ * Since: 1.0.0
  **/
 void
-fwupd_device_set_provider (FwupdDevice *device, const gchar *provider)
+fwupd_device_set_plugin (FwupdDevice *device, const gchar *plugin)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
-	g_free (priv->provider);
-	priv->provider = g_strdup (provider);
+	g_free (priv->plugin);
+	priv->plugin = g_strdup (plugin);
 }
 
 /**
@@ -877,10 +877,10 @@ fwupd_device_to_variant_builder (FwupdDevice *device, GVariantBuilder *builder)
 				       FWUPD_RESULT_KEY_DEVICE_CHECKSUM,
 				       g_variant_new_string (str->str));
 	}
-	if (priv->provider != NULL) {
+	if (priv->plugin != NULL) {
 		g_variant_builder_add (builder, "{sv}",
 				       FWUPD_RESULT_KEY_DEVICE_PLUGIN,
-				       g_variant_new_string (priv->provider));
+				       g_variant_new_string (priv->plugin));
 	}
 	if (priv->version != NULL) {
 		g_variant_builder_add (builder, "{sv}",
@@ -1014,7 +1014,7 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_PLUGIN) == 0) {
-		fwupd_device_set_provider (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_plugin (device, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_VERSION) == 0) {
@@ -1274,7 +1274,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_SUMMARY, priv->summary);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_DESCRIPTION, priv->description);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PLUGIN, priv->provider);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_PLUGIN, priv->plugin);
 	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_DEVICE_FLAGS, priv->flags);
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (priv->checksums, i);
@@ -1339,7 +1339,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->summary);
 	g_free (priv->vendor);
 	g_free (priv->vendor_id);
-	g_free (priv->provider);
+	g_free (priv->plugin);
 	g_free (priv->update_error);
 	g_free (priv->version);
 	g_free (priv->version_lowest);
