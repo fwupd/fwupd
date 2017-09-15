@@ -23,11 +23,7 @@
 #define __FWUPD_DEPRECATED_H
 
 #include "fwupd-client.h"
-#include "fwupd-enums.h"
 #include "fwupd-remote.h"
-
-#define FWUPD_DEVICE_FLAG_ALLOW_ONLINE	FWUPD_DEVICE_FLAG_UPDATABLE
-#define FWUPD_DEVICE_FLAG_ALLOW_OFFLINE	FWUPD_DEVICE_FLAG_ONLY_OFFLINE
 
 G_DEPRECATED_FOR(fwupd_client_get_devices_simple)
 GPtrArray	*fwupd_client_get_devices		(FwupdClient	*client,
