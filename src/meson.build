@@ -166,6 +166,7 @@ if get_option('enable-tests')
       'fu-keyring.c',
       'fu-keyring-result.c',
       'fu-plugin.c',
+      'fu-progressbar.c',
       'fu-smbios.c',
       'fu-test.c',
     ],

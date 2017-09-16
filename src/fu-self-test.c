@@ -34,6 +34,7 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
+#include "fu-progressbar.h"
 #include "fu-hwids.h"
 #include "fu-smbios.h"
 #include "fu-test.h"
@@ -735,6 +736,34 @@ fu_common_spawn_func (void)
 	g_assert_cmpint (lines, ==, 6);
 }
 
+static void
+fu_progressbar_func (void)
+{
+	g_autoptr(FuProgressbar) progressbar = fu_progressbar_new ();
+
+	fu_progressbar_set_length_status (progressbar, 20);
+	fu_progressbar_set_length_percentage (progressbar, 50);
+
+	g_print ("\n");
+	for (guint i = 0; i < 100; i++) {
+		fu_progressbar_update (progressbar, FWUPD_STATUS_DECOMPRESSING, i);
+		g_usleep (10000);
+	}
+	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
+	for (guint i = 0; i < 100; i++) {
+		guint pc = (i > 25 && i < 75) ? 0 : i;
+		fu_progressbar_update (progressbar, FWUPD_STATUS_LOADING, pc);
+		g_usleep (10000);
+	}
+	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
+
+	for (guint i = 0; i < 5000; i++) {
+		fu_progressbar_update (progressbar, FWUPD_STATUS_LOADING, 0);
+		g_usleep (1000);
+	}
+	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -747,6 +776,8 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
+	if (g_test_slow ())
+		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);

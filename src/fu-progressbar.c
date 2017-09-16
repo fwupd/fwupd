@@ -38,6 +38,7 @@ struct _FuProgressbar
 	guint			 percentage;
 	guint			 to_erase;		/* chars */
 	guint			 timer_id;
+	gint64			 last_animated;		/* monotonic */
 };
 
 G_DEFINE_TYPE (FuProgressbar, fu_progressbar, G_TYPE_OBJECT)
@@ -87,10 +88,11 @@ fu_progressbar_status_to_string (FwupdStatus status)
 }
 
 static void
-fu_progressbar_refresh (FuProgressbar *self)
+fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentage)
 {
 	const gchar *title;
 	guint i;
+	gboolean is_idle_newline = FALSE;
 	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* erase previous line */
@@ -98,21 +100,20 @@ fu_progressbar_refresh (FuProgressbar *self)
 		g_print ("\b");
 
 	/* add status */
-	if (self->status == FWUPD_STATUS_IDLE) {
-		if (self->to_erase > 0)
-			g_print ("\n");
-		self->to_erase = 0;
-		return;
+	if (status == FWUPD_STATUS_IDLE) {
+		percentage = 100;
+		status = self->status;
+		is_idle_newline = TRUE;
 	}
-	title = fu_progressbar_status_to_string (self->status);
+	title = fu_progressbar_status_to_string (status);
 	g_string_append (str, title);
 	for (i = str->len; i < self->length_status; i++)
 		g_string_append_c (str, ' ');
 
 	/* add progressbar */
 	g_string_append (str, "[");
-	if (self->percentage > 0) {
-		for (i = 0; i < self->length_percentage * self->percentage / 100; i++)
+	if (percentage > 0) {
+		for (i = 0; i < (self->length_percentage - 1) * percentage / 100; i++)
 			g_string_append_c (str, '*');
 		for (i = i + 1; i < self->length_percentage; i++)
 			g_string_append_c (str, ' ');
@@ -121,14 +122,37 @@ fu_progressbar_refresh (FuProgressbar *self)
 		for (i = 0; i < self->spinner_idx; i++)
 			g_string_append_c (str, ' ');
 		g_string_append_c (str, chars[i / 4 % G_N_ELEMENTS(chars)]);
-		for (i = i + 1; i < self->length_percentage; i++)
+		for (i = i + 1; i < self->length_percentage - 1; i++)
 			g_string_append_c (str, ' ');
 	}
 	g_string_append_c (str, ']');
 
 	/* dump to screen */
 	g_print ("%s", str->str);
-	self->to_erase = str->len;
+	self->to_erase = str->len - 2;
+
+	/* done */
+	if (is_idle_newline) {
+		g_print ("\n");
+		self->to_erase = 0;
+		return;
+	}
+}
+
+static void
+fu_progressbar_spin_inc (FuProgressbar *self)
+{
+	/* reset */
+	self->last_animated = g_get_monotonic_time ();
+
+	/* up to down */
+	if (self->spinner_count_up) {
+		if (++self->spinner_idx > self->length_percentage - 3)
+			self->spinner_count_up = FALSE;
+	} else {
+		if (--self->spinner_idx == 0)
+			self->spinner_count_up = TRUE;
+	}
 }
 
 static gboolean
@@ -137,16 +161,10 @@ fu_progressbar_spin_cb (gpointer user_data)
 	FuProgressbar *self = FU_PROGRESSBAR (user_data);
 
 	/* move the spinner index up to down */
-	if (self->spinner_count_up) {
-		if (++self->spinner_idx > self->length_percentage - 2)
-			self->spinner_count_up = FALSE;
-	} else {
-		if (--self->spinner_idx == 0)
-			self->spinner_count_up = TRUE;
-	}
+	fu_progressbar_spin_inc (self);
 
 	/* update the terminal */
-	fu_progressbar_refresh (self);
+	fu_progressbar_refresh (self, self->status, self->percentage);
 
 	return G_SOURCE_CONTINUE;
 }
@@ -177,9 +195,21 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 {
 	g_return_if_fail (FU_IS_PROGRESSBAR (self));
 
-	/* cache */
-	self->status = status;
-	self->percentage = percentage;
+	/* if the main loop isn't spinning and we've not had a chance to
+	 * execute the callback just do the refresh now manually */
+	if (percentage == 0 &&
+	    status != FWUPD_STATUS_IDLE &&
+	    self->status != FWUPD_STATUS_UNKNOWN) {
+		if ((g_get_monotonic_time () - self->last_animated) / 1000 > 40) {
+			fu_progressbar_spin_inc (self);
+			fu_progressbar_refresh (self, status, percentage);
+		}
+	}
+
+	/* ignore duplicates */
+	if (self->status == status &&
+	    self->percentage == percentage)
+		return;
 
 	/* enable or disable the spinner timeout */
 	if (percentage > 0) {
@@ -189,7 +219,11 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 	}
 
 	/* update the terminal */
-	fu_progressbar_refresh (self);
+	fu_progressbar_refresh (self, status, percentage);
+
+	/* cache */
+	self->status = status;
+	self->percentage = percentage;
 }
 
 void
