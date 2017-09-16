@@ -128,9 +128,8 @@ static guint32 _crctbl[] = {
 static guint32
 dfu_firmware_generate_crc32 (const guint8 *data, gsize length)
 {
-	guint i;
 	guint32 accum = 0xffffffff;
-	for (i = 0; i < length; i++)
+	for (guint i = 0; i < length; i++)
 		accum = _crctbl[(accum^data[i]) & 0xff] ^ (accum >> 8);
 	return accum;
 }

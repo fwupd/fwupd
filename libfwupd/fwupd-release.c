@@ -622,9 +622,8 @@ fwupd_release_to_data (FwupdRelease *release, const gchar *type_string)
 				       g_variant_new_string (priv->description));
 	}
 	if (priv->checksums->len > 0) {
-		guint i;
 		g_autoptr(GString) str = g_string_new ("");
-		for (i = 0; i < priv->checksums->len; i++) {
+		for (guint i = 0; i < priv->checksums->len; i++) {
 			const gchar *checksum = g_ptr_array_index (priv->checksums, i);
 			g_string_append_printf (str, "%s,", checksum);
 		}
@@ -759,11 +758,8 @@ fwupd_pad_kv_siz (GString *str, const gchar *key, guint64 value)
 static void
 fwupd_pad_kv_tfl (GString *str, const gchar *key, FwupdTrustFlags trust_flags)
 {
-	guint i;
-	g_autoptr(GString) tmp = NULL;
-
-	tmp = g_string_new ("");
-	for (i = 1; i < FWUPD_TRUST_FLAG_LAST; i *= 2) {
+	g_autoptr(GString) tmp = g_string_new ("");
+	for (guint i = 1; i < FWUPD_TRUST_FLAG_LAST; i *= 2) {
 		if ((trust_flags & i) == 0)
 			continue;
 		g_string_append_printf (tmp, "%s|",

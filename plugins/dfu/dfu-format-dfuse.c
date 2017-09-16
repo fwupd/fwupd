@@ -150,7 +150,6 @@ dfu_image_from_dfuse (const guint8 *data,
 	DfuSeImagePrefix *im;
 	guint32 elements;
 	guint32 offset = sizeof(DfuSeImagePrefix);
-	guint j;
 	g_autoptr(DfuImage) image = NULL;
 
 	g_assert_cmpint(sizeof(DfuSeImagePrefix), ==, 274);
@@ -184,7 +183,7 @@ dfu_image_from_dfuse (const guint8 *data,
 	/* parse elements */
 	length -= offset;
 	elements = GUINT32_FROM_LE (im->elements);
-	for (j = 0; j < elements; j++) {
+	for (guint j = 0; j < elements; j++) {
 		guint32 consumed_local;
 		g_autoptr(DfuElement) element = NULL;
 		element = dfu_element_from_dfuse (data + offset, length,
@@ -214,22 +213,19 @@ dfu_image_from_dfuse (const guint8 *data,
 static GBytes *
 dfu_image_to_dfuse (DfuImage *image)
 {
-	DfuElement *element;
 	DfuSeImagePrefix *im;
-	GBytes *bytes;
 	GPtrArray *elements;
 	guint32 length_total = 0;
 	guint32 offset = sizeof (DfuSeImagePrefix);
 	guint8 *buf;
-	guint i;
 	g_autoptr(GPtrArray) element_array = NULL;
 
 	/* get total size */
 	element_array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 	elements = dfu_image_get_elements (image);
-	for (i = 0; i < elements->len; i++) {
-		element = g_ptr_array_index (elements, i);
-		bytes = dfu_element_to_dfuse (element);
+	for (guint i = 0; i < elements->len; i++) {
+		DfuElement *element = g_ptr_array_index (elements, i);
+		GBytes *bytes = dfu_element_to_dfuse (element);
 		g_ptr_array_add (element_array, bytes);
 		length_total += (guint32) g_bytes_get_size (bytes);
 	}
@@ -247,11 +243,10 @@ dfu_image_to_dfuse (DfuImage *image)
 	im->elements = GUINT32_TO_LE (elements->len);
 
 	/* copy data */
-	for (i = 0; i < element_array->len; i++) {
-		const guint8 *data;
+	for (guint i = 0; i < element_array->len; i++) {
 		gsize length;
-		bytes = g_ptr_array_index (element_array, i);
-		data = g_bytes_get_data (bytes, &length);
+		GBytes *bytes = g_ptr_array_index (element_array, i);
+		const guint8 *data = g_bytes_get_data (bytes, &length);
 		memcpy (buf + offset, data, length);
 		offset += (guint32) length;
 	}
@@ -280,7 +275,6 @@ dfu_firmware_to_dfuse (DfuFirmware *firmware, GError **error)
 {
 	DfuSePrefix *prefix;
 	GPtrArray *images;
-	guint i;
 	guint32 image_size_total = 0;
 	guint32 offset = sizeof (DfuSePrefix);
 	g_autofree guint8 *buf = NULL;
@@ -289,7 +283,7 @@ dfu_firmware_to_dfuse (DfuFirmware *firmware, GError **error)
 	/* get all the image data */
 	dfuse_images = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 	images = dfu_firmware_get_images (firmware);
-	for (i = 0; i < images->len; i++) {
+	for (guint i = 0; i < images->len; i++) {
 		DfuImage *im = g_ptr_array_index (images, i);
 		GBytes *contents;
 		contents = dfu_image_to_dfuse (im);
@@ -316,7 +310,7 @@ dfu_firmware_to_dfuse (DfuFirmware *firmware, GError **error)
 	prefix->targets = (guint8) images->len;
 
 	/* copy images */
-	for (i = 0; i < dfuse_images->len; i++) {
+	for (guint i = 0; i < dfuse_images->len; i++) {
 		GBytes *contents = g_ptr_array_index (dfuse_images, i);
 		gsize length;
 		const guint8 *data;
@@ -350,7 +344,6 @@ dfu_firmware_from_dfuse (DfuFirmware *firmware,
 	gsize len;
 	guint32 offset = sizeof(DfuSePrefix);
 	guint8 *data;
-	guint i;
 
 	/* check the prefix (BE) */
 	data = (guint8 *) g_bytes_get_data (bytes, &len);
@@ -388,7 +381,7 @@ dfu_firmware_from_dfuse (DfuFirmware *firmware,
 
 	/* parse the image targets */
 	len -= sizeof(DfuSePrefix);
-	for (i = 0; i < prefix->targets; i++) {
+	for (guint i = 0; i < prefix->targets; i++) {
 		guint consumed;
 		g_autoptr(DfuImage) image = NULL;
 		image = dfu_image_from_dfuse (data + offset, (guint32) len,

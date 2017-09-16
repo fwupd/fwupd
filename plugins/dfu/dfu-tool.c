@@ -51,11 +51,10 @@ typedef struct {
 static void
 dfu_tool_print_indent (const gchar *title, const gchar *message, guint indent)
 {
-	gsize i;
-	for (i = 0; i < indent; i++)
+	for (gsize i = 0; i < indent; i++)
 		g_print (" ");
 	g_print ("%s:", title);
-	for (i = strlen (title) + indent; i < 15; i++)
+	for (gsize i = strlen (title) + indent; i < 15; i++)
 		g_print (" ");
 	g_print ("%s\n", message);
 }
@@ -106,8 +105,6 @@ dfu_tool_add (GPtrArray *array,
 	      const gchar *description,
 	      FuUtilPrivateCb callback)
 {
-	guint i;
-	FuUtilItem *item;
 	g_auto(GStrv) names = NULL;
 
 	g_return_if_fail (name != NULL);
@@ -116,8 +113,8 @@ dfu_tool_add (GPtrArray *array,
 
 	/* add each one */
 	names = g_strsplit (name, ",", -1);
-	for (i = 0; names[i] != NULL; i++) {
-		item = g_new0 (FuUtilItem, 1);
+	for (guint i = 0; names[i] != NULL; i++) {
+		FuUtilItem *item = g_new0 (FuUtilItem, 1);
 		item->name = g_strdup (names[i]);
 		if (i == 0) {
 			item->description = g_strdup (description);
@@ -135,8 +132,6 @@ dfu_tool_add (GPtrArray *array,
 static gchar *
 dfu_tool_get_descriptions (GPtrArray *array)
 {
-	guint i;
-	gsize j;
 	gsize len;
 	const gsize max_len = 31;
 	FuUtilItem *item;
@@ -144,7 +139,7 @@ dfu_tool_get_descriptions (GPtrArray *array)
 
 	/* print each command */
 	string = g_string_new ("");
-	for (i = 0; i < array->len; i++) {
+	for (guint i = 0; i < array->len; i++) {
 		item = g_ptr_array_index (array, i);
 		g_string_append (string, "  ");
 		g_string_append (string, item->name);
@@ -155,13 +150,13 @@ dfu_tool_get_descriptions (GPtrArray *array)
 			len += strlen (item->arguments) + 1;
 		}
 		if (len < max_len) {
-			for (j = len; j < max_len + 1; j++)
+			for (guint j = len; j < max_len + 1; j++)
 				g_string_append_c (string, ' ');
 			g_string_append (string, item->description);
 			g_string_append_c (string, '\n');
 		} else {
 			g_string_append_c (string, '\n');
-			for (j = 0; j < max_len + 1; j++)
+			for (guint j = 0; j < max_len + 1; j++)
 				g_string_append_c (string, ' ');
 			g_string_append (string, item->description);
 			g_string_append_c (string, '\n');
@@ -181,12 +176,9 @@ dfu_tool_run (DfuToolPrivate *priv,
 	      gchar **values,
 	      GError **error)
 {
-	guint i;
-	FuUtilItem *item;
-
 	/* find command */
-	for (i = 0; i < priv->cmd_array->len; i++) {
-		item = g_ptr_array_index (priv->cmd_array, i);
+	for (guint i = 0; i < priv->cmd_array->len; i++) {
+		FuUtilItem *item = g_ptr_array_index (priv->cmd_array, i);
 		if (g_strcmp0 (item->name, command) == 0)
 			return item->callback (priv, values, error);
 	}
@@ -439,7 +431,6 @@ static GBytes *
 dfu_tool_parse_hex_string (const gchar *val, GError **error)
 {
 	gsize result_size;
-	guint i;
 	g_autofree guint8 *result = NULL;
 
 	/* sanity check */
@@ -454,7 +445,7 @@ dfu_tool_parse_hex_string (const gchar *val, GError **error)
 	/* parse each hex byte */
 	result_size = strlen (val) / 2;
 	result = g_malloc (result_size);
-	for (i = 0; i < result_size; i++) {
+	for (guint i = 0; i < result_size; i++) {
 		gchar buf[3] = { "xx" };
 		gchar *endptr = NULL;
 		guint64 tmp;
@@ -478,7 +469,6 @@ static guint
 dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
 {
 	gsize data_sz;
-	gsize i;
 	gsize replace_sz;
 	gsize search_sz;
 	guint8 *data_buf;
@@ -493,7 +483,7 @@ dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
 	g_return_val_if_fail (search_sz == replace_sz, FALSE);
 
 	/* find and replace each one */
-	for (i = 0; i < data_sz - search_sz; i++) {
+	for (gsize i = 0; i < data_sz - search_sz; i++) {
 		if (memcmp (data_buf + i, search_buf, search_sz) == 0) {
 			g_print ("Replacing %" G_GSIZE_FORMAT " bytes @0x%04x\n",
 				 replace_sz, (guint) i);
@@ -630,8 +620,6 @@ static gboolean
 dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *images;
-	guint i;
-	guint j;
 	guint cnt = 0;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -675,10 +663,10 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* get each data segment */
 	images = dfu_firmware_get_images (firmware);
-	for (i = 0; i < images->len; i++) {
+	for (guint i = 0; i < images->len; i++) {
 		DfuImage *image = g_ptr_array_index (images, i);
 		GPtrArray *elements = dfu_image_get_elements (image);
-		for (j = 0; j < elements->len; j++) {
+		for (guint j = 0; j < elements->len; j++) {
 			DfuElement *element = g_ptr_array_index (elements, j);
 			GBytes *contents = dfu_element_get_contents (element);
 			if (contents == NULL)
@@ -1020,7 +1008,6 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 	guint16 pid = 0xffff;
 	guint16 rel = 0xffff;
 	guint16 vid = 0xffff;
-	guint i;
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -1039,9 +1026,8 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* parse source files */
 	firmware = dfu_firmware_new ();
 	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
-	for (i = 1; values[i] != NULL; i++) {
+	for (guint i = 1; values[i] != NULL; i++) {
 		GPtrArray *images;
-		guint j;
 		g_autoptr(GFile) file_tmp = NULL;
 		g_autoptr(DfuFirmware) firmware_tmp = NULL;
 
@@ -1092,7 +1078,7 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 
 		/* add all images to destination */
 		images = dfu_firmware_get_images (firmware_tmp);
-		for (j = 0; j < images->len; j++) {
+		for (guint j = 0; j < images->len; j++) {
 			DfuImage *image;
 			guint8 alt_id;
 
@@ -1720,8 +1706,6 @@ dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	guint i;
-	DfuDevice *device;
 	g_autoptr(DfuContext) dfu_context = NULL;
 	g_autoptr(GMainLoop) loop = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1732,8 +1716,8 @@ dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* print what's already attached */
 	devices = dfu_context_get_devices (dfu_context);
-	for (i = 0; i < devices->len; i++) {
-		device = g_ptr_array_index (devices, i);
+	for (guint i = 0; i < devices->len; i++) {
+		DfuDevice *device = g_ptr_array_index (devices, i);
 		dfu_tool_device_added_cb (dfu_context, device, priv);
 	}
 
@@ -1755,7 +1739,6 @@ static gboolean
 dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	DfuFirmwareParseFlags flags = DFU_FIRMWARE_PARSE_FLAG_NONE;
-	guint i;
 
 	/* check args */
 	if (g_strv_length (values) < 1) {
@@ -1773,7 +1756,7 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open files */
-	for (i = 0; values[i] != NULL; i++) {
+	for (guint i = 0; values[i] != NULL; i++) {
 		g_autoptr(DfuFirmware) firmware = NULL;
 		g_autoptr(GFile) file = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -2018,7 +2001,6 @@ dfu_tool_list_target (DfuTarget *target)
 	DfuCipherKind cipher_kind;
 	GPtrArray *sectors;
 	const gchar *tmp;
-	guint i;
 	g_autofree gchar *alt_id = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -2050,7 +2032,7 @@ dfu_tool_list_target (DfuTarget *target)
 
 	/* print sector information */
 	sectors = dfu_target_get_sectors (target);
-	for (i = 0; i < sectors->len; i++) {
+	for (guint i = 0; i < sectors->len; i++) {
 		DfuSector *sector;
 		g_autofree gchar *msg = NULL;
 		g_autofree gchar *title = NULL;
@@ -2065,7 +2047,6 @@ dfu_tool_list_target (DfuTarget *target)
 static gboolean
 dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	guint i;
 	g_autoptr(DfuContext) dfu_context = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -2073,13 +2054,12 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 	dfu_context = dfu_context_new ();
 	dfu_context_enumerate (dfu_context, NULL);
 	devices = dfu_context_get_devices (dfu_context);
-	for (i = 0; i < devices->len; i++) {
+	for (guint i = 0; i < devices->len; i++) {
 		DfuDevice *device = NULL;
 		DfuTarget *target;
 		GUsbDevice *dev;
 		GPtrArray *dfu_targets;
 		const gchar *tmp;
-		guint j;
 		guint16 transfer_size;
 		g_autofree gchar *quirks = NULL;
 		g_autofree gchar *version = NULL;
@@ -2165,7 +2145,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 
 		/* list targets */
 		dfu_targets = dfu_device_get_targets (device);
-		for (j = 0; j < dfu_targets->len; j++) {
+		for (guint j = 0; j < dfu_targets->len; j++) {
 			target = g_ptr_array_index (dfu_targets, j);
 			dfu_tool_list_target (target);
 		}

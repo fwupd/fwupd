@@ -191,9 +191,8 @@ dfu_image_get_size (DfuImage *image)
 {
 	DfuImagePrivate *priv = GET_PRIVATE (image);
 	guint32 length = 0;
-	guint i;
 	g_return_val_if_fail (DFU_IS_IMAGE (image), 0);
-	for (i = 0; i < priv->elements->len; i++) {
+	for (guint i = 0; i < priv->elements->len; i++) {
 		DfuElement *element = g_ptr_array_index (priv->elements, i);
 		length += (guint32) g_bytes_get_size (dfu_element_get_contents (element));
 	}
@@ -270,7 +269,6 @@ dfu_image_to_string (DfuImage *image)
 {
 	DfuImagePrivate *priv = GET_PRIVATE (image);
 	GString *str;
-	guint i;
 
 	g_return_val_if_fail (DFU_IS_IMAGE (image), NULL);
 
@@ -282,7 +280,7 @@ dfu_image_to_string (DfuImage *image)
 				priv->elements->len);
 
 	/* add elements */
-	for (i = 0; i < priv->elements->len; i++) {
+	for (guint i = 0; i < priv->elements->len; i++) {
 		DfuElement *element = g_ptr_array_index (priv->elements, i);
 		g_autofree gchar *tmp = NULL;
 		tmp = dfu_element_to_string (element);

@@ -53,7 +53,6 @@ dfu_cipher_uint32_to_buf (guint8 *buf, guint buflen, const guint32 *array)
 static gboolean
 dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
 {
-	guint i;
 	gsize key_len;
 
 	/* too long */
@@ -69,7 +68,7 @@ dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
 
 	/* parse 4x32b values or generate a hash */
 	if (key_len == 32) {
-		for (i = 0; i < 4; i++) {
+		for (guint8 i = 0; i < 4; i++) {
 			gchar buf[] = "xxxxxxxx";
 			gchar *endptr;
 			guint64 tmp;
@@ -123,8 +122,6 @@ dfu_cipher_decrypt_xtea (const gchar *key,
 	guint32 sum;
 	guint32 v0;
 	guint32 v1;
-	guint8 i;
-	guint j;
 	guint32 chunks = length / 4;
 	guint32 keys[4];
 	g_autofree guint32 *tmp = NULL;
@@ -156,11 +153,11 @@ dfu_cipher_decrypt_xtea (const gchar *key,
 	dfu_cipher_buf_to_uint32 (data, length, tmp);
 
 	/* process buffer using XTEA keys */
-	for (j = 0; j < chunks; j += 2) {
+	for (guint j = 0; j < chunks; j += 2) {
 		v0 = tmp[j];
 		v1 = tmp[j+1];
 		sum = XTEA_DELTA * XTEA_NUM_ROUNDS;
-		for (i = 0; i < XTEA_NUM_ROUNDS; i++) {
+		for (guint8 i = 0; i < XTEA_NUM_ROUNDS; i++) {
 			v1 -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + keys[(sum >> 11) & 3]);
 			sum -= XTEA_DELTA;
 			v0 -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + keys[sum & 3]);
@@ -194,8 +191,6 @@ dfu_cipher_encrypt_xtea (const gchar *key,
 	guint32 sum;
 	guint32 v0;
 	guint32 v1;
-	guint8 i;
-	guint j;
 	guint32 chunks = length / 4;
 	guint32 keys[4];
 	g_autofree guint32 *tmp = NULL;
@@ -227,11 +222,11 @@ dfu_cipher_encrypt_xtea (const gchar *key,
 	dfu_cipher_buf_to_uint32 (data, length, tmp);
 
 	/* process buffer using XTEA keys */
-	for (j = 0; j < chunks; j += 2) {
+	for (guint j = 0; j < chunks; j += 2) {
 		sum = 0;
 		v0 = tmp[j];
 		v1 = tmp[j+1];
-		for (i = 0; i < XTEA_NUM_ROUNDS; i++) {
+		for (guint8 i = 0; i < XTEA_NUM_ROUNDS; i++) {
 			v0 += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + keys[sum & 3]);
 			sum += XTEA_DELTA;
 			v1 += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + keys[(sum >> 11) & 3]);

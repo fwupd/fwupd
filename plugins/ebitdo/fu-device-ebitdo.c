@@ -346,7 +346,6 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 	gdouble tmp;
 	guint32 version_tmp = 0;
 	guint32 serial_tmp[9];
-	guint i;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* already open */
@@ -417,7 +416,7 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 				    error)) {
 		return FALSE;
 	}
-	for (i = 0; i < 9; i++)
+	for (guint i = 0; i < 9; i++)
 		priv->serial[i] = GUINT32_FROM_LE (serial_tmp[i]);
 
 	/* success */
@@ -450,10 +449,8 @@ fu_device_ebitdo_write_firmware (FuDeviceEbitdo *device, GBytes *fw,
 	FuEbitdoFirmwareHeader *hdr;
 	const guint8 *payload_data;
 	const guint chunk_sz = 32;
-	guint32 offset;
 	guint32 payload_len;
 	guint32 serial_new[3];
-	guint i;
 	g_autoptr(GError) error_local = NULL;
 	const guint32 app_key_index[16] = {
 		0x186976e5, 0xcac67acd, 0x38f27fee, 0x0a4948f1,
@@ -488,7 +485,7 @@ fu_device_ebitdo_write_firmware (FuDeviceEbitdo *device, GBytes *fw,
 	}
 
 	/* check if this is firmware */
-	for (i = 0; i < 4; i++) {
+	for (guint i = 0; i < 4; i++) {
 		if (hdr->reserved[i] != 0x0) {
 			g_set_error (error,
 				     G_IO_ERROR,
@@ -525,7 +522,7 @@ fu_device_ebitdo_write_firmware (FuDeviceEbitdo *device, GBytes *fw,
 	/* flash the firmware in 32 byte blocks */
 	payload_data = g_bytes_get_data (fw, NULL);
 	payload_data += sizeof(FuEbitdoFirmwareHeader);
-	for (offset = 0; offset < payload_len; offset += chunk_sz) {
+	for (guint32 offset = 0; offset < payload_len; offset += chunk_sz) {
 		if (g_getenv ("FU_EBITDO_DEBUG") != NULL) {
 			g_debug ("writing %u bytes to 0x%04x of 0x%04x",
 				 chunk_sz, offset, payload_len);
@@ -666,7 +663,6 @@ fu_device_ebitdo_new (GUsbDevice *usb_device)
 {
 	FuDeviceEbitdo *device;
 	FuDeviceEbitdoPrivate *priv;
-	guint j;
 	const FuEbitdoVidPid vidpids[] = {
 		/* legacy VIDs */
 		{ 0x0483, 0x5750, FU_DEVICE_EBITDO_KIND_BOOTLOADER },
@@ -690,7 +686,7 @@ fu_device_ebitdo_new (GUsbDevice *usb_device)
 	};
 
 	/* set kind */
-	for (j = 0; vidpids[j].vid != 0x0000; j++) {
+	for (guint j = 0; vidpids[j].vid != 0x0000; j++) {
 		if (g_usb_device_get_vid (usb_device) != vidpids[j].vid)
 			continue;
 		if (g_usb_device_get_pid (usb_device) != vidpids[j].pid)

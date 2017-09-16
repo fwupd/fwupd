@@ -59,7 +59,6 @@ dfu_firmware_from_metadata (DfuFirmware *firmware,
 {
 	const guint8 *data;
 	gsize data_length;
-	guint i;
 	guint idx = 2;
 	guint kvlen;
 	guint number_keys;
@@ -75,7 +74,7 @@ dfu_firmware_from_metadata (DfuFirmware *firmware,
 
 	/* parse key=value store */
 	number_keys = data[idx++];
-	for (i = 0; i < number_keys; i++) {
+	for (guint i = 0; i < number_keys; i++) {
 		g_autofree gchar *key = NULL;
 		g_autofree gchar *value = NULL;
 
@@ -137,7 +136,6 @@ dfu_firmware_from_metadata (DfuFirmware *firmware,
 GBytes *
 dfu_firmware_to_metadata (DfuFirmware *firmware, GError **error)
 {
-	GList *l;
 	GHashTable *metadata;
 	guint8 mdbuf[239];
 	guint idx = 0;
@@ -165,7 +163,7 @@ dfu_firmware_to_metadata (DfuFirmware *firmware, GError **error)
 	mdbuf[idx++] = 'M';
 	mdbuf[idx++] = 'D';
 	mdbuf[idx++] = (guint8) number_keys;
-	for (l = keys; l != NULL; l = l->next) {
+	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key;
 		const gchar *value;
 		guint key_len;

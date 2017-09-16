@@ -84,7 +84,6 @@ _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 	const guint8 *data2;
 	gsize length1;
 	gsize length2;
-	guint i;
 
 	data1 = g_bytes_get_data (bytes1, &length1);
 	data2 = g_bytes_get_data (bytes2, &length2);
@@ -97,7 +96,7 @@ _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 	}
 
 	/* return 00 01 02 03 */
-	for (i = 0; i < length1; i++) {
+	for (guint i = 0; i < length1; i++) {
 		if (data1[i] != data2[i]) {
 			return g_strdup_printf ("got 0x%02x, expected 0x%02x @ 0x%04x",
 						data1[i], data2[i], i);
@@ -164,10 +163,9 @@ dfu_firmware_xdfu_func (void)
 static void
 dfu_enums_func (void)
 {
-	guint i;
-	for (i = 0; i < DFU_STATE_LAST; i++)
+	for (guint i = 0; i < DFU_STATE_LAST; i++)
 		g_assert_cmpstr (dfu_state_to_string (i), !=, NULL);
-	for (i = 0; i < DFU_STATUS_LAST; i++)
+	for (guint i = 0; i < DFU_STATUS_LAST; i++)
 		g_assert_cmpstr (dfu_status_to_string (i), !=, NULL);
 }
 
@@ -188,7 +186,6 @@ dfu_firmware_raw_func (void)
 	DfuImage *image_tmp;
 	GBytes *no_suffix_contents;
 	gchar buf[256];
-	guint i;
 	gboolean ret;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -196,7 +193,7 @@ dfu_firmware_raw_func (void)
 	g_autoptr(GError) error = NULL;
 
 	/* set up some dummy data */
-	for (i = 0; i < 256; i++)
+	for (guint i = 0; i < 256; i++)
 		buf[i] = (gchar) i;
 	fw = g_bytes_new_static (buf, 256);
 
@@ -232,7 +229,6 @@ static void
 dfu_firmware_dfu_func (void)
 {
 	gchar buf[256];
-	guint i;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
@@ -246,7 +242,7 @@ dfu_firmware_dfu_func (void)
 	g_autoptr(GFile) file = NULL;
 
 	/* set up some dummy data */
-	for (i = 0; i < 256; i++)
+	for (guint i = 0; i < 256; i++)
 		buf[i] = (gchar) i;
 	fw = g_bytes_new_static (buf, 256);
 
@@ -674,17 +670,14 @@ dfu_colorhug_plus_func (void)
 static gchar *
 dfu_target_sectors_to_string (DfuTarget *target)
 {
-	DfuSector *sector;
 	GPtrArray *sectors;
 	GString *str;
-	guint i;
 
 	str = g_string_new ("");
 	sectors = dfu_target_get_sectors (target);
-	for (i = 0; i < sectors->len; i++) {
-		g_autofree gchar *tmp = NULL;
-		sector = g_ptr_array_index (sectors, i);
-		tmp = dfu_sector_to_string (sector);
+	for (guint i = 0; i < sectors->len; i++) {
+		DfuSector *sector = g_ptr_array_index (sectors, i);
+		g_autofree gchar *tmp = dfu_sector_to_string (sector);
 		g_string_append_printf (str, "%s\n", tmp);
 	}
 	if (str->len > 0)

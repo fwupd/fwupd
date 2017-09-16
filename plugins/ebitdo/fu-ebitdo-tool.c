@@ -40,7 +40,6 @@ int
 main (int argc, char **argv)
 {
 	gsize len;
-	guint i;
 	g_autofree guint8 *data = NULL;
 	g_autoptr(FuDeviceEbitdo) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -65,7 +64,7 @@ main (int argc, char **argv)
 	}
 	g_usb_context_enumerate (usb_ctx);
 	devices = g_usb_context_get_devices (usb_ctx);
-	for (i = 0; i < devices->len; i++) {
+	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_dev_tmp = g_ptr_array_index (devices, i);
 		g_autoptr(FuDeviceEbitdo) dev_tmp = fu_device_ebitdo_new (usb_dev_tmp);
 		if (dev_tmp != NULL) {
@@ -92,7 +91,7 @@ main (int argc, char **argv)
 	g_print ("Device Firmware Ver: %s\n",
 		 fu_device_get_version (FU_DEVICE (dev)));
 	g_print ("Device Verification ID:\n");
-	for (i = 0; i < 9; i++)
+	for (guint i = 0; i < 9; i++)
 		g_print ("\t%u = 0x%08x\n", i, fu_device_ebitdo_get_serial(dev)[i]);
 
 	/* not in bootloader mode, so print what to do */

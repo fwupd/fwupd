@@ -104,8 +104,6 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 	guint8 len_tmp;
 	guint8 type;
 	guint end;
-	guint i;
-	guint j;
 	guint offset = 0;
 	g_autoptr(DfuElement) element = NULL;
 	g_autoptr(DfuImage) image = NULL;
@@ -164,7 +162,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		/* verify checksum */
 		if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST) == 0) {
 			checksum = 0;
-			for (i = offset + 1; i < end + 2; i += 2) {
+			for (guint i = offset + 1; i < end + 2; i += 2) {
 				data_tmp = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
 				checksum += data_tmp;
 			}
@@ -204,11 +202,11 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 
 			/* parse bytes from line */
 			g_debug ("writing data 0x%08x", (guint32) addr32);
-			for (i = offset + 9; i < end; i += 2) {
+			for (guint i = offset + 9; i < end; i += 2) {
 				/* any holes in the hex record */
 				guint32 len_hole = addr32 - addr32_last;
 				if (addr32_last > 0x0 && len_hole > 1) {
-					for (j = 1; j < len_hole; j++) {
+					for (guint j = 1; j < len_hole; j++) {
 						g_debug ("filling address 0x%08x",
 							 addr32_last + j);
 						/* although 0xff might be clearer,
@@ -238,7 +236,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			addr32 = ((guint32) addr_high << 16) + addr_low;
 			break;
 		case DFU_INHX32_RECORD_TYPE_SIGNATURE:
-			for (i = offset + 9; i < end; i += 2) {
+			for (guint i = offset + 9; i < end; i += 2) {
 				guint8 tmp_c = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
 				g_string_append_c (signature, tmp_c);
 			}
