@@ -247,11 +247,11 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		if (remote_id != NULL) {
 			fwupd_release_set_remote_id (rel, remote_id);
 			remote = fu_config_get_remote_by_id (self->config, remote_id);
+			if (remote == NULL) {
+				g_warning ("no remote found for release %s",
+					   as_release_get_version (release));
+			}
 		}
-	}
-	if (remote == NULL) {
-		g_warning ("no remote found for release %s",
-			   as_release_get_version (release));
 	}
 
 	tmp = as_release_get_version (release);
