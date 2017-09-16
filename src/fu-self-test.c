@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "fu-device-private.h"
+#include "fu-engine.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
@@ -43,6 +44,29 @@
 #ifdef ENABLE_PKCS7
 #include "fu-keyring-pkcs7.h"
 #endif
+
+static void
+fu_engine_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *testdatadir = NULL;
+
+	ret = g_file_set_contents ("/tmp/fwupd-self-test/broken.xml.gz",
+				   "this is not a valid", -1, &error);
+	g_test_expect_message (G_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
+			       "failed to load remote broken: *");
+
+	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
+	g_assert (testdatadir != NULL);
+	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	ret = fu_engine_load (engine, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
+	g_test_assert_expected_messages ();
+}
 
 static void
 fu_device_metadata_func (void)
@@ -726,6 +750,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
+	g_test_add_func ("/fwupd/engine", fu_engine_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);

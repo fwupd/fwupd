@@ -155,6 +155,8 @@ if get_option('enable-tests')
       keyring_src,
       'fu-self-test.c',
       'fu-common.c',
+      'fu-config.c',
+      'fu-engine.c',
       'fu-keyring.c',
       'fu-hwids.c',
       'fu-device.c',
