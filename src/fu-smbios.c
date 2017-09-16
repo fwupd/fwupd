@@ -138,7 +138,6 @@ fu_smbios_setup_from_file (FuSmbios *self, const gchar *filename, GError **error
 /**
  * fu_smbios_setup:
  * @self: A #FuSmbios
- * @sysfsdir: A file path, e.g. '/sys/firmware' or %NULL
  * @error: A #GError or %NULL
  *
  * Reads all the SMBIOS values from the hardware.
@@ -146,7 +145,7 @@ fu_smbios_setup_from_file (FuSmbios *self, const gchar *filename, GError **error
  * Returns: %TRUE for success
  **/
 gboolean
-fu_smbios_setup (FuSmbios *self, const gchar *sysfsdir, GError **error)
+fu_smbios_setup (FuSmbios *self, GError **error)
 {
 	FuSmbiosStructureEntryPoint *ep;
 	gsize sz = 0;
@@ -158,12 +157,8 @@ fu_smbios_setup (FuSmbios *self, const gchar *sysfsdir, GError **error)
 
 	g_return_val_if_fail (FU_IS_SMBIOS (self), FALSE);
 
-	/* default value */
-	if (sysfsdir == NULL)
-		sysfsdir = "/sys/firmware";
-
 	/* get the smbios entry point */
-	ep_fn = g_build_filename (sysfsdir, "dmi", "tables", "smbios_entry_point", NULL);
+	ep_fn = g_build_filename (SYSFSFIRMWAREDIR, "dmi", "tables", "smbios_entry_point", NULL);
 	if (!g_file_get_contents (ep_fn, &ep_raw, &sz, error))
 		return FALSE;
 	if (sz != sizeof(FuSmbiosStructureEntryPoint)) {
@@ -215,7 +210,7 @@ fu_smbios_setup (FuSmbios *self, const gchar *sysfsdir, GError **error)
 					    ep->smbios_minor_ver);
 
 	/* get the DMI data */
-	dmi_fn = g_build_filename (sysfsdir, "dmi", "tables", "DMI", NULL);
+	dmi_fn = g_build_filename (SYSFSFIRMWAREDIR, "dmi", "tables", "DMI", NULL);
 	if (!g_file_get_contents (dmi_fn, &dmi_raw, &sz, error))
 		return FALSE;
 	if (sz != GUINT16_FROM_LE (ep->structure_table_len)) {

@@ -81,15 +81,11 @@ fu_smbios_func (void)
 	const gchar *str;
 	gboolean ret;
 	g_autofree gchar *dump = NULL;
-	g_autofree gchar *sysfsdir = NULL;
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 
-	sysfsdir = fu_test_get_filename (TESTDATADIR, ".");
-	g_assert (sysfsdir != NULL);
-
 	smbios = fu_smbios_new ();
-	ret = fu_smbios_setup (smbios, sysfsdir, &error);
+	ret = fu_smbios_setup (smbios, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	dump = fu_smbios_to_string (smbios);
@@ -120,7 +116,6 @@ fu_hwids_func (void)
 	g_autoptr(FuHwids) hwids = NULL;
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autofree gchar *sysfsdir = NULL;
 	gboolean ret;
 
 	struct {
@@ -146,11 +141,8 @@ fu_hwids_func (void)
 		{ NULL, NULL }
 	};
 
-	sysfsdir = fu_test_get_filename (TESTDATADIR, ".");
-	g_assert (sysfsdir != NULL);
-
 	smbios = fu_smbios_new ();
-	ret = fu_smbios_setup (smbios, sysfsdir, &error);
+	ret = fu_smbios_setup (smbios, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 

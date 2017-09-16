@@ -48,6 +48,7 @@ libfwupdprivate = static_library(
   c_args : [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
+    '-DSYSFSFIRMWAREDIR="/sys/firmware"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
@@ -134,6 +135,7 @@ executable(
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DPLUGINDIR="' + plugin_dir + '"',
+    '-DSYSFSFIRMWAREDIR="/sys/firmware"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -193,6 +195,7 @@ if get_option('enable-tests')
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
       '-DPLUGINDIR="' + testdatadir_src + '"',
+      '-DSYSFSFIRMWAREDIR="' + testdatadir_src + '"',
     ],
   )
   test('fu-self-test', e, is_parallel:false)

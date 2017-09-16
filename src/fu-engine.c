@@ -2813,7 +2813,7 @@ fu_engine_load (FuEngine *self, GError **error)
 	}
 
 	/* load SMBIOS and the hwids */
-	if (!fu_smbios_setup (self->smbios, NULL, &error_smbios))
+	if (!fu_smbios_setup (self->smbios, &error_smbios))
 		g_warning ("Failed to load SMBIOS: %s", error_smbios->message);
 	if (!fu_hwids_setup (self->hwids, self->smbios, &error_hwids))
 		g_warning ("Failed to load HWIDs: %s", error_hwids->message);

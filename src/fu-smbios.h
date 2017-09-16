@@ -38,7 +38,6 @@ FuSmbios	*fu_smbios_new			(void);
 #define FU_SMBIOS_STRUCTURE_TYPE_CHASSIS	0x03
 
 gboolean	 fu_smbios_setup		(FuSmbios	*self,
-						 const gchar	*sysfsdir,
 						 GError		**error);
 gboolean	 fu_smbios_setup_from_file	(FuSmbios	*self,
 						 const gchar	*filename,

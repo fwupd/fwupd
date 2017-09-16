@@ -1496,7 +1496,7 @@ fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
 		NULL };
 
 	/* read DMI data */
-	if (!fu_smbios_setup (smbios, g_getenv ("SYSFSPATH"), error))
+	if (!fu_smbios_setup (smbios, error))
 		return FALSE;
 	if (!fu_hwids_setup (hwids, smbios, error))
 		return FALSE;
