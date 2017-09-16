@@ -790,30 +790,30 @@ fu_plugin_update (FuPlugin *plugin,
 					  g_bytes_get_data (blob_fw, NULL),
 					  g_bytes_get_size (blob_fw));
 	if (rc < 0) {
-                g_autoptr(GString) err_string = g_string_new ("Dell firmware update failed:\n");
+		g_autoptr(GString) err_string = g_string_new ("Dell firmware update failed:\n");
 
-                rc = 1;
-                for (int i =0; rc > 0; i++) {
-                        char *filename = NULL;
-                        char *function = NULL;
-                        char *message = NULL;
-                        int line = 0;
-                        int err = 0;
+		rc = 1;
+		for (int i = 0; rc > 0; i++) {
+			char *filename = NULL;
+			char *function = NULL;
+			char *message = NULL;
+			int line = 0;
+			int err = 0;
 
-                        rc = efi_error_get (i, &filename, &function, &line, &message, &err);
-                        if (rc <= 0)
-                                break;
-                        g_string_append_printf (err_string,
-                                                "{error #%d} %s:%d %s(): %s: %s \n",
-                                                i, filename, line, function, message, strerror(err));
-                }
-                g_set_error (error,
-                             FWUPD_ERROR,
-                             FWUPD_ERROR_NOT_SUPPORTED,
-                             "%s",
-                             err_string->str);
-                return FALSE;
-        }
+			rc = efi_error_get (i, &filename, &function, &line, &message, &err);
+			if (rc <= 0)
+				break;
+			g_string_append_printf (err_string,
+						"{error #%d} %s:%d %s(): %s: %s \n",
+						i, filename, line, function, message, strerror(err));
+		}
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "%s",
+			     err_string->str);
+		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -840,16 +840,16 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 
 gboolean
 fu_plugin_update_prepare (FuPlugin *plugin,
-                          FuDevice *device,
-                          GError **error)
+			  FuDevice *device,
+			  GError **error)
 {
 	return fu_dell_toggle_flash (device, error, TRUE);
 }
 
 gboolean
 fu_plugin_update_cleanup (FuPlugin *plugin,
-                          FuDevice *device,
-                          GError **error)
+			  FuDevice *device,
+			  GError **error)
 {
 	return fu_dell_toggle_flash (device, error, FALSE);
 }
