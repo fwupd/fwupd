@@ -1521,6 +1521,7 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 {
 	GPtrArray *apps;
 	GPtrArray *remotes;
+	g_autoptr(GError) error_local = NULL;
 
 	/* clear existing store */
 	as_store_remove_all (self->store);
@@ -1541,9 +1542,13 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 			continue;
 		}
 		if (!fu_engine_load_metadata_from_file (self, path,
-						      fwupd_remote_get_id (remote),
-						      error))
-			return FALSE;
+							fwupd_remote_get_id (remote),
+							&error_local)) {
+			g_warning ("failed to load remote %s: %s",
+				   fwupd_remote_get_id (remote),
+				   error_local->message);
+			continue;
+		}
 	}
 
 	/* print what we've got */
