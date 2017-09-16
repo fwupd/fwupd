@@ -51,6 +51,9 @@ struct _FwupdClientClass
 	void (*_fwupd_reserved2)	(void);
 	void (*_fwupd_reserved3)	(void);
 	void (*_fwupd_reserved4)	(void);
+	void (*_fwupd_reserved5)	(void);
+	void (*_fwupd_reserved6)	(void);
+	void (*_fwupd_reserved7)	(void);
 };
 
 FwupdClient	*fwupd_client_new			(void);
