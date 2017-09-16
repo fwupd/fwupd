@@ -211,31 +211,31 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/libfwupd*.so.*
 %{_libdir}/girepository-1.0/Fwupd-1.0.typelib
 /usr/lib/udev/rules.d/*.rules
-%dir %{_libdir}/fwupd-plugins-2
-%{_libdir}/fwupd-plugins-2/libfu_plugin_altos.so
-%{_libdir}/fwupd-plugins-2/libfu_plugin_amt.so
-%{_libdir}/fwupd-plugins-2/libfu_plugin_colorhug.so
+%dir %{_libdir}/fwupd-plugins-3
+%{_libdir}/fwupd-plugins-3/libfu_plugin_altos.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_amt.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_colorhug.so
 %if 0%{?have_dell}
-%{_libdir}/fwupd-plugins-2/libfu_plugin_dell.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_dell.so
 %endif
-%{_libdir}/fwupd-plugins-2/libfu_plugin_dfu.so
-%{_libdir}/fwupd-plugins-2/libfu_plugin_ebitdo.so
-%{_libdir}/fwupd-plugins-2/libfu_plugin_raspberrypi.so
-%{_libdir}/fwupd-plugins-2/libfu_plugin_steelseries.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_raspberrypi.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_steelseries.so
 %if 0%{?have_dell}
-%{_libdir}/fwupd-plugins-2/libfu_plugin_synapticsmst.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_synapticsmst.so
 %endif
 %if 0%{?enable_dummy}
-%{_libdir}/fwupd-plugins-2/libfu_plugin_test.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_test.so
 %endif
-%{_libdir}/fwupd-plugins-2/libfu_plugin_thunderbolt.so
-%{_libdir}/fwupd-plugins-2/libfu_plugin_thunderbolt_power.so
-%{_libdir}/fwupd-plugins-2/libfu_plugin_udev.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt_power.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_udev.so
 %if 0%{?have_uefi}
-%{_libdir}/fwupd-plugins-2/libfu_plugin_uefi.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi.so
 %endif
-%{_libdir}/fwupd-plugins-2/libfu_plugin_unifying.so
-%{_libdir}/fwupd-plugins-2/libfu_plugin_upower.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_unifying.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_upower.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 
 %files devel

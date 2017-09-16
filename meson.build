@@ -235,7 +235,7 @@ i18n = import('i18n')
 
 plugin_dir = join_paths(get_option('prefix'),
                         get_option('libdir'),
-                        'fwupd-plugins-2')
+                        'fwupd-plugins-3')
 
 conf.set_quoted('BINDIR',
                 join_paths(get_option('prefix'),

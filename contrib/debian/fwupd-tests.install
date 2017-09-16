@@ -3,4 +3,4 @@
 #find them. for more information see:
 #https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872458
 usr/share/installed-tests/*
-usr/lib/*/fwupd-plugins-2/libfu_plugin_test.so
+usr/lib/*/fwupd-plugins-3/libfu_plugin_test.so
