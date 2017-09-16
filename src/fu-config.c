@@ -151,11 +151,19 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 		g_autofree gchar *filename = g_build_filename (path_remotes, tmp, NULL);
 		g_autoptr(FwupdRemote) remote = fwupd_remote_new ();
 
+		/* skip invalid files */
+		if (!g_str_has_suffix (tmp, ".conf")) {
+			g_debug ("skipping invalid file %s", filename);
+			continue;
+		}
+
 		/* load from keyfile */
-		g_debug ("loading from %s", filename);
+		g_debug ("loading config from %s", filename);
 		if (!fwupd_remote_load_from_filename (remote, filename,
-						      NULL, error))
+						      NULL, error)) {
+			g_prefix_error (error, "failed to load %s: ", filename);
 			return FALSE;
+		}
 
 		/* watch the config file and the XML file itself */
 		if (!fu_config_add_inotify (self, filename, error))
