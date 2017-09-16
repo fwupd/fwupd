@@ -133,6 +133,7 @@ executable(
   c_args : [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
+    '-DPLUGINDIR="' + plugin_dir + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -191,6 +192,7 @@ if get_option('enable-tests')
       '-DLOCALSTATEDIR="/tmp/fwupd-self-test/var"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
+      '-DPLUGINDIR="' + testdatadir_src + '"',
     ],
   )
   test('fu-self-test', e, is_parallel:false)

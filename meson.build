@@ -236,7 +236,6 @@ i18n = import('i18n')
 plugin_dir = join_paths(get_option('prefix'),
                         get_option('libdir'),
                         'fwupd-plugins-2')
-conf.set_quoted('PLUGINDIR', plugin_dir)
 
 conf.set_quoted('SYSCONFDIR', get_option('sysconfdir'))
 conf.set_quoted('BINDIR',
