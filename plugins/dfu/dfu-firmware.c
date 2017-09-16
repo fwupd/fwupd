@@ -120,14 +120,12 @@ DfuImage *
 dfu_firmware_get_image (DfuFirmware *firmware, guint8 alt_setting)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	DfuImage *im;
-	guint i;
 
 	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
 
 	/* find correct image */
-	for (i = 0; i < priv->images->len; i++) {
-		im = g_ptr_array_index (priv->images, i);
+	for (guint i = 0; i < priv->images->len; i++) {
+		DfuImage *im = g_ptr_array_index (priv->images, i);
 		if (dfu_image_get_alt_setting (im) == alt_setting)
 			return im;
 	}
@@ -147,14 +145,12 @@ DfuImage *
 dfu_firmware_get_image_by_name (DfuFirmware *firmware, const gchar *name)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	DfuImage *im;
-	guint i;
 
 	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
 
 	/* find correct image */
-	for (i = 0; i < priv->images->len; i++) {
-		im = g_ptr_array_index (priv->images, i);
+	for (guint i = 0; i < priv->images->len; i++) {
+		DfuImage *im = g_ptr_array_index (priv->images, i);
 		if (g_strcmp0 (dfu_image_get_name (im), name) == 0)
 			return im;
 	}
@@ -211,9 +207,8 @@ dfu_firmware_get_size (DfuFirmware *firmware)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 	guint32 length = 0;
-	guint i;
 	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), 0);
-	for (i = 0; i < priv->images->len; i++) {
+	for (guint i = 0; i < priv->images->len; i++) {
 		DfuImage *image = g_ptr_array_index (priv->images, i);
 		length += dfu_image_get_size (image);
 	}
@@ -649,9 +644,7 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 	DfuImage *image;
-	GList *l;
 	GString *str;
-	guint i;
 	g_autofree gchar *release_str = NULL;
 	g_autoptr(GList) keys = NULL;
 
@@ -672,16 +665,15 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 
 	/* print metadata */
 	keys = g_hash_table_get_keys (priv->metadata);
-	for (l = keys; l != NULL; l = l->next) {
-		const gchar *key;
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
 		const gchar *value;
-		key = l->data;
 		value = g_hash_table_lookup (priv->metadata, key);
 		g_string_append_printf (str, "metadata:    %s=%s\n", key, value);
 	}
 
 	/* print images */
-	for (i = 0; i < priv->images->len; i++) {
+	for (guint i = 0; i < priv->images->len; i++) {
 		g_autofree gchar *tmp = NULL;
 		image = g_ptr_array_index (priv->images, i);
 		tmp = dfu_image_to_string (image);

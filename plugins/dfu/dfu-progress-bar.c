@@ -83,7 +83,6 @@ static gboolean
 dfu_progress_bar_draw (DfuProgressBar *self, gint percentage)
 {
 	guint section;
-	guint i;
 	GString *str;
 
 	/* no value yet */
@@ -96,9 +95,9 @@ dfu_progress_bar_draw (DfuProgressBar *self, gint percentage)
 
 	section = (guint) ((gfloat) self->size / (gfloat) 100.0 * (gfloat) percentage);
 	g_string_append (str, "[");
-	for (i = 0; i < section; i++)
+	for (guint i = 0; i < section; i++)
 		g_string_append (str, "=");
-	for (i = 0; i < self->size - section; i++)
+	for (guint i = 0; i < self->size - section; i++)
 		g_string_append (str, " ");
 	g_string_append (str, "] ");
 	if (percentage >= 0 && percentage < 100)

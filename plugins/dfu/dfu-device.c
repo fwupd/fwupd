@@ -373,8 +373,6 @@ static gboolean
 dfu_device_add_targets (DfuDevice *device)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	guint i;
-	GUsbInterface *iface;
 	g_autoptr(GPtrArray) ifaces = NULL;
 
 	/* add all DFU-capable targets */
@@ -382,10 +380,10 @@ dfu_device_add_targets (DfuDevice *device)
 	if (ifaces == NULL)
 		return FALSE;
 	g_ptr_array_set_size (priv->targets, 0);
-	for (i = 0; i < ifaces->len; i++) {
+	for (guint i = 0; i < ifaces->len; i++) {
 		GBytes *iface_data = NULL;
 		DfuTarget *target;
-		iface = g_ptr_array_index (ifaces, i);
+		GUsbInterface *iface = g_ptr_array_index (ifaces, i);
 		if (g_usb_interface_get_class (iface) != G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
 			continue;
 		if (g_usb_interface_get_subclass (iface) != 0x01)
@@ -725,15 +723,13 @@ dfu_device_get_target_by_alt_setting (DfuDevice *device,
 				      GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	DfuTarget *target;
-	guint i;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find by ID */
-	for (i = 0; i < priv->targets->len; i++) {
-		target = g_ptr_array_index (priv->targets, i);
+	for (guint i = 0; i < priv->targets->len; i++) {
+		DfuTarget *target = g_ptr_array_index (priv->targets, i);
 		if (dfu_target_get_alt_setting (target) == alt_setting)
 			return g_object_ref (target);
 	}
@@ -763,15 +759,13 @@ dfu_device_get_target_by_alt_name (DfuDevice *device,
 				   GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	DfuTarget *target;
-	guint i;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find by ID */
-	for (i = 0; i < priv->targets->len; i++) {
-		target = g_ptr_array_index (priv->targets, i);
+	for (guint i = 0; i < priv->targets->len; i++) {
+		DfuTarget *target = g_ptr_array_index (priv->targets, i);
 		if (g_strcmp0 (dfu_target_get_alt_name (target, NULL), alt_name) == 0)
 			return g_object_ref (target);
 	}
@@ -1747,7 +1741,6 @@ dfu_device_upload (DfuDevice *device,
 		   GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	guint i;
 	g_autoptr(DfuFirmware) firmware = NULL;
 
 	/* no backing USB device */
@@ -1792,7 +1785,7 @@ dfu_device_upload (DfuDevice *device,
 	}
 
 	/* upload from each target */
-	for (i = 0; i < priv->targets->len; i++) {
+	for (guint i = 0; i < priv->targets->len; i++) {
 		DfuTarget *target;
 		const gchar *alt_name;
 		gulong id1;
@@ -1899,7 +1892,6 @@ dfu_device_download (DfuDevice *device,
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	GPtrArray *images;
 	gboolean ret;
-	guint i;
 
 	/* no backing USB device */
 	if (priv->dev == NULL) {
@@ -1999,7 +1991,7 @@ dfu_device_download (DfuDevice *device,
 				     "no images in firmware file");
 		return FALSE;
 	}
-	for (i = 0; i < images->len; i++) {
+	for (guint i = 0; i < images->len; i++) {
 		DfuCipherKind cipher_fw;
 		DfuCipherKind cipher_target;
 		DfuImage *image;

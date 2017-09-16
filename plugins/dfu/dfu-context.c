@@ -151,12 +151,10 @@ static DfuContextItem *
 dfu_context_find_item_by_platform_id (DfuContext *context, const gchar *platform_id)
 {
 	DfuContextPrivate *priv = GET_PRIVATE (context);
-	DfuContextItem *item;
-	guint i;
 
 	/* do we have this device */
-	for (i = 0; i < priv->devices->len; i++) {
-		item = g_ptr_array_index (priv->devices, i);
+	for (guint i = 0; i < priv->devices->len; i++) {
+		DfuContextItem *item = g_ptr_array_index (priv->devices, i);
 		if (g_strcmp0 (dfu_device_get_platform_id (item->device), platform_id) == 0)
 			return item;
 	}
@@ -413,15 +411,13 @@ GPtrArray *
 dfu_context_get_devices (DfuContext *context)
 {
 	DfuContextPrivate *priv = GET_PRIVATE (context);
-	DfuContextItem *item;
 	GPtrArray *devices;
-	guint i;
 
 	g_return_val_if_fail (DFU_IS_CONTEXT (context), NULL);
 
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	for (i = 0; i < priv->devices->len; i++) {
-		item = g_ptr_array_index (priv->devices, i);
+	for (guint i = 0; i < priv->devices->len; i++) {
+		DfuContextItem *item = g_ptr_array_index (priv->devices, i);
 		g_ptr_array_add (devices, g_object_ref (item->device));
 	}
 	return devices;
@@ -445,20 +441,17 @@ dfu_context_get_device_by_vid_pid (DfuContext *context,
 				   GError **error)
 {
 	DfuContextPrivate *priv = GET_PRIVATE (context);
-	DfuContextItem *item;
 	DfuDevice *device = NULL;
-	GUsbDevice *dev;
-	guint i;
 
 	g_return_val_if_fail (DFU_IS_CONTEXT (context), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* search all devices */
-	for (i = 0; i < priv->devices->len; i++) {
+	for (guint i = 0; i < priv->devices->len; i++) {
 
 		/* match */
-		item = g_ptr_array_index (priv->devices, i);
-		dev = dfu_device_get_usb_dev (item->device);
+		DfuContextItem *item = g_ptr_array_index (priv->devices, i);
+		GUsbDevice *dev = dfu_device_get_usb_dev (item->device);
 		if (g_usb_device_get_vid (dev) == vid &&
 		    g_usb_device_get_pid (dev) == pid) {
 			if (device != NULL) {
@@ -500,15 +493,13 @@ dfu_context_get_device_by_platform_id (DfuContext *context,
 				       GError **error)
 {
 	DfuContextPrivate *priv = GET_PRIVATE (context);
-	DfuContextItem *item;
-	guint i;
 
 	g_return_val_if_fail (DFU_IS_CONTEXT (context), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* search all devices */
-	for (i = 0; i < priv->devices->len; i++) {
-		item = g_ptr_array_index (priv->devices, i);
+	for (guint i = 0; i < priv->devices->len; i++) {
+		DfuContextItem *item = g_ptr_array_index (priv->devices, i);
 		if (g_strcmp0 (dfu_device_get_platform_id (item->device),
 			       platform_id) == 0) {
 			return g_object_ref (item->device);

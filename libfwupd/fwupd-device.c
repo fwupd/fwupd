@@ -216,11 +216,10 @@ gboolean
 fwupd_device_has_guid (FwupdDevice *device, const gchar *guid)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	guint i;
 
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FALSE);
 
-	for (i = 0; i < priv->guids->len; i++) {
+	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid_tmp = g_ptr_array_index (priv->guids, i);
 		if (g_strcmp0 (guid, guid_tmp) == 0)
 			return TRUE;
@@ -1016,10 +1015,9 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
-		guint i;
 		const gchar *checksums = g_variant_get_string (value, NULL);
 		g_auto(GStrv) split = g_strsplit (checksums, ",", -1);
-		for (i = 0; split[i] != NULL; i++)
+		for (guint i = 0; split[i] != NULL; i++)
 			fwupd_device_add_checksum (device, split[i]);
 		return;
 	}
@@ -1083,11 +1081,8 @@ fwupd_pad_kv_unx (GString *str, const gchar *key, guint64 value)
 static void
 fwupd_pad_kv_dfl (GString *str, const gchar *key, guint64 device_flags)
 {
-	guint i;
-	g_autoptr(GString) tmp = NULL;
-
-	tmp = g_string_new ("");
-	for (i = 0; i < 64; i++) {
+	g_autoptr(GString) tmp = g_string_new ("");
+	for (guint i = 0; i < 64; i++) {
 		if ((device_flags & ((guint64) 1 << i)) == 0)
 			continue;
 		g_string_append_printf (tmp, "%s|",

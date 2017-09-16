@@ -36,9 +36,7 @@ fu_altos_tool_write_progress_cb (goffset current, goffset total, gpointer user_d
 int
 main (int argc, char **argv)
 {
-
 	gsize len;
-	guint i;
 	g_autofree guint8 *data = NULL;
 	g_autoptr(FuDeviceAltos) dev = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -62,7 +60,7 @@ main (int argc, char **argv)
 	}
 	g_usb_context_enumerate (usb_ctx);
 	devices = g_usb_context_get_devices (usb_ctx);
-	for (i = 0; i < devices->len; i++) {
+	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_dev_tmp = g_ptr_array_index (devices, i);
 		g_autoptr(FuDeviceAltos) dev_tmp = fu_device_altos_new (usb_dev_tmp);
 		if (dev_tmp == NULL)
