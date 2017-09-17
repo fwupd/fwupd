@@ -2546,6 +2546,15 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 		return;
 	}
 
+	/* success */
+	fu_engine_add_device (self, plugin, device);
+}
+
+void
+fu_engine_add_device (FuEngine *self, FuPlugin *plugin, FuDevice *device)
+{
+	FuDeviceItem *item;
+
 	/* notify all plugins about this new device */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register (self, device);

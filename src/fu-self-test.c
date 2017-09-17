@@ -49,13 +49,82 @@
 static void
 fu_engine_func (void)
 {
+	FwupdDevice *dev;
+	FwupdRelease *rel;
 	gboolean ret;
-	g_autoptr(FuEngine) engine = fu_engine_new ();
-	g_autoptr(GError) error = NULL;
 	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_pre = NULL;
+	g_autoptr(GPtrArray) devices_up_all = NULL;
+	g_autoptr(GPtrArray) releases_dg = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(GPtrArray) releases_up = NULL;
+	g_autoptr(GPtrArray) remotes = NULL;
 
+	/* write a broken file */
 	ret = g_file_set_contents ("/tmp/fwupd-self-test/broken.xml.gz",
 				   "this is not a valid", -1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* write the main file */
+	ret = g_file_set_contents ("/tmp/fwupd-self-test/stable.xml",
+				   "<components>"
+				   "  <component type=\"firmware\">"
+				   "    <id>test</id>"
+				   "    <name>Test Device</name>"
+				   "    <provides>"
+				   "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
+				   "    </provides>"
+				   "    <releases>"
+				   "      <release version=\"1.2.3\" date=\"2017-09-15\">"
+				   "        <size type=\"installed\">123</size>"
+				   "        <size type=\"download\">456</size>"
+				   "        <location>https://test.org/foo.cab</location>"
+				   "        <checksum filename=\"foo.cab\" target=\"container\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "        <checksum filename=\"firmware.bin\" target=\"content\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "      </release>"
+				   "      <release version=\"1.2.2\" date=\"2017-09-01\">"
+				   "        <size type=\"installed\">123</size>"
+				   "        <size type=\"download\">456</size>"
+				   "        <location>https://test.org/foo.cab</location>"
+				   "        <checksum filename=\"foo.cab\" target=\"container\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "        <checksum filename=\"firmware.bin\" target=\"content\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "      </release>"
+				   "    </releases>"
+				   "  </component>"
+				   "</components>", -1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* write the extra file */
+	ret = g_file_set_contents ("/tmp/fwupd-self-test/testing.xml",
+				   "<components>"
+				   "  <component type=\"firmware\">"
+				   "    <id>test</id>"
+				   "    <name>Test Device</name>"
+				   "    <provides>"
+				   "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
+				   "    </provides>"
+				   "    <releases>"
+				   "      <release version=\"1.2.4\" date=\"2017-09-15\">"
+				   "        <size type=\"installed\">123</size>"
+				   "        <size type=\"download\">456</size>"
+				   "        <location>https://test.org/foo.cab</location>"
+				   "        <checksum filename=\"foo.cab\" target=\"container\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "        <checksum filename=\"firmware.bin\" target=\"content\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "      </release>"
+				   "    </releases>"
+				   "  </component>"
+				   "</components>", -1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* expect just one broken remote to fail */
 	g_test_expect_message (G_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
 			       "failed to load remote broken: *");
 
@@ -67,6 +136,65 @@ fu_engine_func (void)
 	g_assert (ret);
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
 	g_test_assert_expected_messages ();
+
+	/* return all the remotes, even the broken one */
+	remotes = fu_engine_get_remotes (engine, &error);
+	g_assert_no_error (error);
+	g_assert (remotes != NULL);
+	g_assert_cmpint (remotes->len, ==, 3);
+
+	/* ensure there are no devices already */
+	devices_pre = fu_engine_get_devices (engine, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+	g_assert (devices_pre == NULL);
+	g_clear_error (&error);
+
+	/* add a device so we can get upgrades and downgrades */
+	fu_device_set_version (device, "1.2.3");
+	fu_device_set_id (device, "test_device");
+	fu_device_set_name (device, "Test Device");
+	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_engine_add_device (engine, plugin, device);
+	devices = fu_engine_get_devices (engine, &error);
+	g_assert_no_error (error);
+	g_assert (devices != NULL);
+	g_assert_cmpint (devices->len, ==, 1);
+	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED));
+	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED));
+
+	/* get the releases for one device */
+	releases = fu_engine_get_releases (engine, fu_device_get_id (device), &error);
+	g_assert_no_error (error);
+	g_assert (releases != NULL);
+	g_assert_cmpint (releases->len, ==, 3);
+
+	/* upgrades */
+	releases_up = fu_engine_get_upgrades (engine, fu_device_get_id (device), &error);
+	g_assert_no_error (error);
+	g_assert (releases_up != NULL);
+	g_assert_cmpint (releases_up->len, ==, 1);
+	rel = FWUPD_RELEASE (g_ptr_array_index (releases_up, 0));
+	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.4");
+
+	/* downgrades */
+	releases_dg = fu_engine_get_downgrades (engine, fu_device_get_id (device), &error);
+	g_assert_no_error (error);
+	g_assert (releases_dg != NULL);
+	g_assert_cmpint (releases_dg->len, ==, 1);
+	rel = FWUPD_RELEASE (g_ptr_array_index (releases_dg, 0));
+	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.2");
+
+	/* upgrades for all devices */
+	devices_up_all = fu_engine_get_updates (engine, &error);
+	g_assert_no_error (error);
+	g_assert (devices_up_all != NULL);
+	g_assert_cmpint (devices_up_all->len, ==, 1);
+	dev = FWUPD_DEVICE (g_ptr_array_index (devices_up_all, 0));
+	g_assert_cmpstr (fwupd_device_get_id (dev), ==, "test_device");
+	rel = fwupd_device_get_release_default (dev);
+	g_assert (rel != NULL);
+	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.4");
 }
 
 static void

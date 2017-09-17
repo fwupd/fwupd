@@ -30,6 +30,8 @@ G_BEGIN_DECLS
 #include "fwupd-result.h"
 #include "fwupd-enums.h"
 
+#include "fu-plugin.h"
+
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 
@@ -100,6 +102,11 @@ gboolean	 fu_engine_install			(FuEngine	*self,
 GPtrArray	*fu_engine_get_details_local		(FuEngine	*self,
 							 gint		 fd,
 							 GError		**error);
+
+/* for the self tests */
+void		 fu_engine_add_device			(FuEngine	*self,
+							 FuPlugin	*plugin,
+							 FuDevice	*device);
 
 G_END_DECLS
 
