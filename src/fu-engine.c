@@ -384,13 +384,20 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 	kr = fu_engine_get_keyring_for_kind (keyring_kind, error);
 	if (kr == NULL)
 		return FALSE;
-	if (!fu_keyring_setup (kr, error))
+	if (!fu_keyring_setup (kr, error)) {
+		g_prefix_error (error, "failed to set up %s keyring: ",
+				fu_keyring_get_name (kr));
 		return FALSE;
-	if (!fu_keyring_add_public_keys (kr, pki_dir, error))
+	}
+	if (!fu_keyring_add_public_keys (kr, pki_dir, error)) {
+		g_prefix_error (error, "failed to add public keys to %s keyring: ",
+				fu_keyring_get_name (kr));
 		return FALSE;
+	}
 	kr_result = fu_keyring_verify_data (kr, blob_payload, blob_signature, &error_local);
 	if (kr_result == NULL) {
-		g_warning ("untrusted as failed to verify: %s",
+		g_warning ("untrusted as failed to verify from %s keyring: %s",
+			   fu_keyring_get_name (kr),
 			   error_local->message);
 		return TRUE;
 	}
