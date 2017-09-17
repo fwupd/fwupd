@@ -65,7 +65,7 @@ typedef struct {
 	gchar			*alt_name_for_display;
 	GPtrArray		*sectors;		/* of DfuSector */
 	guint			 old_percentage;
-	DfuAction		 old_action;
+	FwupdStatus		 old_action;
 } DfuTargetPrivate;
 
 enum {
@@ -101,7 +101,7 @@ dfu_target_class_init (DfuTargetClass *klass)
 	/**
 	 * DfuTarget::action-changed:
 	 * @device: the #DfuTarget instance that emitted the signal
-	 * @action: the new DfuAction
+	 * @action: the new FwupdStatus
 	 *
 	 * The ::action-changed signal is emitted when the high level action changes.
 	 **/
@@ -121,7 +121,7 @@ dfu_target_init (DfuTarget *target)
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	priv->sectors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->old_percentage = G_MAXUINT;
-	priv->old_action = DFU_ACTION_IDLE;
+	priv->old_action = FWUPD_STATUS_IDLE;
 }
 
 static void
@@ -900,21 +900,21 @@ dfu_target_upload_chunk (DfuTarget *target, guint8 index,
 }
 
 static void
-dfu_target_set_action (DfuTarget *target, DfuAction action)
+dfu_target_set_action (DfuTarget *target, FwupdStatus action)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 
 	/* unchanged */
 	if (priv->old_action == action)
 		return;
-	if (priv->old_action != DFU_ACTION_IDLE &&
-	    action != DFU_ACTION_IDLE) {
+	if (priv->old_action != FWUPD_STATUS_IDLE &&
+	    action != FWUPD_STATUS_IDLE) {
 		g_debug ("ignoring action %s as %s already set and not idle",
-			 dfu_action_to_string (action),
-			 dfu_action_to_string (priv->old_action));
+			 fwupd_status_to_string (action),
+			 fwupd_status_to_string (priv->old_action));
 		return;
 	}
-	g_debug ("setting action %s", dfu_action_to_string (action));
+	g_debug ("setting action %s", fwupd_status_to_string (action));
 	g_signal_emit (target, signals[SIGNAL_ACTION_CHANGED], 0, action);
 	priv->old_action = action;
 }
@@ -926,7 +926,7 @@ dfu_target_set_percentage_raw (DfuTarget *target, guint percentage)
 	if (percentage == priv->old_percentage)
 		return;
 	g_debug ("setting percentage %u%% of %s",
-		 percentage, dfu_action_to_string (priv->old_action));
+		 percentage, fwupd_status_to_string (priv->old_action));
 	g_signal_emit (target,
 		       signals[SIGNAL_PERCENTAGE_CHANGED],
 		       0, percentage);
@@ -1017,7 +1017,7 @@ dfu_target_upload_element_dfuse (DfuTarget *target,
 	}
 
 	/* update UI */
-	dfu_target_set_action (target, DFU_ACTION_READ);
+	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_READ);
 
 	/* manually set the sector address */
 	g_debug ("setting DfuSe address to 0x%04x", (guint) offset);
@@ -1087,7 +1087,7 @@ dfu_target_upload_element_dfuse (DfuTarget *target,
 
 	/* done */
 	dfu_target_set_percentage_raw (target, 100);
-	dfu_target_set_action (target, DFU_ACTION_IDLE);
+	dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 
 	/* create new image */
 	contents = _g_bytes_array_join (chunks);
@@ -1120,7 +1120,7 @@ dfu_target_upload_element_dfu (DfuTarget *target,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* update UI */
-	dfu_target_set_action (target, DFU_ACTION_READ);
+	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_READ);
 
 	/* get all the chunks from the hardware */
 	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
@@ -1169,7 +1169,7 @@ dfu_target_upload_element_dfu (DfuTarget *target,
 
 	/* done */
 	dfu_target_set_percentage_raw (target, 100);
-	dfu_target_set_action (target, DFU_ACTION_IDLE);
+	dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 
 	/* create new image */
 	contents = _g_bytes_array_join (chunks);
@@ -1378,7 +1378,7 @@ dfu_target_download_element_dfu (DfuTarget *target,
 				     "zero-length firmware");
 		return FALSE;
 	}
-	dfu_target_set_action (target, DFU_ACTION_WRITE);
+	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < nr_chunks + 1; i++) {
 		gsize length;
 		guint32 offset;
@@ -1411,7 +1411,7 @@ dfu_target_download_element_dfu (DfuTarget *target,
 
 	/* done */
 	dfu_target_set_percentage_raw (target, 100);
-	dfu_target_set_action (target, DFU_ACTION_IDLE);
+	dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 
 	/* success */
 	return TRUE;
@@ -1486,7 +1486,7 @@ dfu_target_download_element_dfuse (DfuTarget *target,
 	}
 
 	/* 2nd pass: actually erase sectors */
-	dfu_target_set_action (target, DFU_ACTION_ERASE);
+	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_ERASE);
 	for (guint i = 0; i < sectors_array->len; i++) {
 		sector = g_ptr_array_index (sectors_array, i);
 		g_debug ("erasing sector at 0x%04x",
@@ -1499,10 +1499,10 @@ dfu_target_download_element_dfuse (DfuTarget *target,
 		dfu_target_set_percentage (target, i + 1, sectors_array->len);
 	}
 	dfu_target_set_percentage_raw (target, 100);
-	dfu_target_set_action (target, DFU_ACTION_IDLE);
+	dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 
 	/* 3rd pass: write data */
-	dfu_target_set_action (target, DFU_ACTION_WRITE);
+	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < nr_chunks; i++) {
 		gsize length;
 		guint32 offset;
@@ -1555,7 +1555,7 @@ dfu_target_download_element_dfuse (DfuTarget *target,
 
 	/* done */
 	dfu_target_set_percentage_raw (target, 100);
-	dfu_target_set_action (target, DFU_ACTION_IDLE);
+	dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 
 	/* success */
 	return TRUE;
@@ -1592,7 +1592,7 @@ dfu_target_download_element (DfuTarget *target,
 		GBytes *bytes;
 		GBytes *bytes_tmp;
 		g_autoptr(DfuElement) element_tmp = NULL;
-		dfu_target_set_action (target, DFU_ACTION_VERIFY);
+		dfu_target_set_action (target, FWUPD_STATUS_DEVICE_VERIFY);
 		bytes = dfu_element_get_contents (element);
 		element_tmp = dfu_target_upload_element (target,
 							 dfu_element_get_address (element),
@@ -1613,7 +1613,7 @@ dfu_target_download_element (DfuTarget *target,
 				     bytes_cmp_str);
 			return FALSE;
 		}
-		dfu_target_set_action (target, DFU_ACTION_IDLE);
+		dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 	}
 
 	return TRUE;

@@ -55,7 +55,7 @@ typedef struct {
 	DfuMode			 mode;
 	DfuState		 state;
 	DfuStatus		 status;
-	DfuAction		 action_last;
+	FwupdStatus		 action_last;
 	GPtrArray		*targets;
 	GUsbDevice		*dev;
 	FuDeviceLocker		*dev_locker;
@@ -139,7 +139,7 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	/**
 	 * DfuDevice::action-changed:
 	 * @device: the #DfuDevice instance that emitted the signal
-	 * @action: the new #DfuAction
+	 * @action: the new #FwupdStatus
 	 *
 	 * The ::action-changed signal is emitted when the high level action changes.
 	 **/
@@ -169,7 +169,7 @@ dfu_device_init (DfuDevice *device)
 }
 
 static void
-dfu_device_set_action (DfuDevice *device, DfuAction action)
+dfu_device_set_action (DfuDevice *device, FwupdStatus action)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	if (action == priv->action_last)
@@ -1090,7 +1090,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 		return FALSE;
 
 	/* inform UI there's going to be a detach:attach */
-	dfu_device_set_action (device, DFU_ACTION_DETACH);
+	dfu_device_set_action (device, FWUPD_STATUS_DEVICE_RESTART);
 
 	if (!g_usb_device_control_transfer (priv->dev,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -1121,7 +1121,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 	}
 
 	/* success */
-	dfu_device_set_action (device, DFU_ACTION_IDLE);
+	dfu_device_set_action (device, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -1587,7 +1587,7 @@ dfu_device_wait_for_replug (DfuDevice *device, guint timeout,
 	}
 
 	/* success */
-	dfu_device_set_action (device, DFU_ACTION_IDLE);
+	dfu_device_set_action (device, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -1662,7 +1662,7 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	}
 
 	/* inform UI there's going to be a re-attach */
-	dfu_device_set_action (device, DFU_ACTION_ATTACH);
+	dfu_device_set_action (device, FWUPD_STATUS_DEVICE_RESTART);
 
 	/* handle m-stack DFU bootloaders */
 	if (!priv->done_upload_or_download &&
@@ -1697,7 +1697,7 @@ dfu_device_attach (DfuDevice *device, GError **error)
 						error))
 			return FALSE;
 
-		dfu_device_set_action (device, DFU_ACTION_IDLE);
+		dfu_device_set_action (device, FWUPD_STATUS_IDLE);
 		return TRUE;
 	}
 
@@ -1706,7 +1706,7 @@ dfu_device_attach (DfuDevice *device, GError **error)
 		return FALSE;
 
 	/* success */
-	dfu_device_set_action (device, DFU_ACTION_IDLE);
+	dfu_device_set_action (device, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -1718,7 +1718,7 @@ dfu_device_percentage_cb (DfuTarget *target, guint percentage, DfuDevice *device
 }
 
 static void
-dfu_device_action_cb (DfuTarget *target, DfuAction action, DfuDevice *device)
+dfu_device_action_cb (DfuTarget *target, FwupdStatus action, DfuDevice *device)
 {
 	dfu_device_set_action (device, action);
 }
@@ -1846,7 +1846,7 @@ dfu_device_upload (DfuDevice *device,
 	}
 
 	/* success */
-	dfu_device_set_action (device, DFU_ACTION_IDLE);
+	dfu_device_set_action (device, FWUPD_STATUS_IDLE);
 	return g_object_ref (firmware);
 }
 
@@ -2082,7 +2082,7 @@ dfu_device_download (DfuDevice *device,
 	}
 
 	/* success */
-	dfu_device_set_action (device, DFU_ACTION_IDLE);
+	dfu_device_set_action (device, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 

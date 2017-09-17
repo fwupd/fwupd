@@ -48,6 +48,8 @@ typedef enum {
 	FWUPD_STATUS_DEVICE_VERIFY,			/* Since: 0.1.1 */
 	FWUPD_STATUS_SCHEDULING,			/* Since: 0.1.1 */
 	FWUPD_STATUS_DOWNLOADING,			/* Since: 0.9.4 */
+	FWUPD_STATUS_DEVICE_READ,			/* Since: 1.0.0 */
+	FWUPD_STATUS_DEVICE_ERASE,			/* Since: 1.0.0 */
 	/*< private >*/
 	FWUPD_STATUS_LAST
 } FwupdStatus;

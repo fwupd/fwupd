@@ -169,31 +169,3 @@ dfu_version_to_string (DfuVersion version)
 		return "DfuSe";
 	return NULL;
 }
-
-/**
- * dfu_action_to_string:
- * @action: a #DfuAction, e.g. %DFU_ACTION_VERIFY
- *
- * Converts an enumerated value to a string.
- *
- * Return value: a string
- **/
-const gchar *
-dfu_action_to_string (DfuAction action)
-{
-	if (action == DFU_ACTION_IDLE)
-		return "idle";
-	if (action == DFU_ACTION_READ)
-		return "read";
-	if (action == DFU_ACTION_WRITE)
-		return "write";
-	if (action == DFU_ACTION_VERIFY)
-		return "verify";
-	if (action == DFU_ACTION_ERASE)
-		return "erase";
-	if (action == DFU_ACTION_DETACH)
-		return "detach";
-	if (action == DFU_ACTION_ATTACH)
-		return "attach";
-	return NULL;
-}

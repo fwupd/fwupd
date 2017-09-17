@@ -175,32 +175,6 @@ typedef enum {
 	DFU_VERSION_LAST
 } DfuVersion;
 
-/**
- * DfuAction:
- * @DFU_ACTION_UNKNOWN:			No progress state
- * @DFU_ACTION_IDLE:			Device is idle
- * @DFU_ACTION_READ:			Reading from the device
- * @DFU_ACTION_WRITE:			Writing to the device
- * @DFU_ACTION_VERIFY:			Verifying the write
- * @DFU_ACTION_ERASE:			Erasing the device
- * @DFU_ACTION_DETACH:			Detach into DFU mode
- * @DFU_ACTION_ATTACH:			Attach into APP mode
- *
- * The device DFU attributes.
- **/
-typedef enum {
-	DFU_ACTION_UNKNOWN,
-	DFU_ACTION_IDLE,
-	DFU_ACTION_READ,
-	DFU_ACTION_WRITE,
-	DFU_ACTION_VERIFY,
-	DFU_ACTION_ERASE,
-	DFU_ACTION_DETACH,
-	DFU_ACTION_ATTACH,
-	/*< private >*/
-	DFU_ACTION_LAST
-} DfuAction;
-
 #define DFU_METADATA_KEY_LICENSE		"License"
 #define DFU_METADATA_KEY_COPYRIGHT		"Copyright"
 #define DFU_METADATA_KEY_CIPHER_KIND		"CipherKind"
@@ -210,7 +184,6 @@ const gchar	*dfu_status_to_string			(DfuStatus	 status);
 const gchar	*dfu_mode_to_string			(DfuMode	 mode);
 const gchar	*dfu_cipher_kind_to_string		(DfuCipherKind	 cipher_kind);
 const gchar	*dfu_version_to_string			(DfuVersion	 version);
-const gchar	*dfu_action_to_string			(DfuAction	 action);
 
 G_END_DECLS
 

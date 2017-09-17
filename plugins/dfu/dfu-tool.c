@@ -1213,48 +1213,42 @@ fu_tool_percentage_changed_cb (DfuDevice *device,
 
 static void
 fu_tool_action_changed_cb (DfuDevice *device,
-			   DfuAction action,
+			   FwupdStatus action,
 			   DfuToolPrivate *priv)
 {
 	switch (action) {
-	case DFU_ACTION_IDLE:
+	case FWUPD_STATUS_IDLE:
 		dfu_progress_bar_set_percentage (priv->progress_bar, 100);
 		dfu_progress_bar_end (priv->progress_bar);
 		break;
-	case DFU_ACTION_READ:
+	case FWUPD_STATUS_DEVICE_READ:
 		dfu_progress_bar_start (priv->progress_bar,
 				       /* TRANSLATORS: read from device to host */
 				       _("Reading"));
 		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
 		break;
-	case DFU_ACTION_WRITE:
+	case FWUPD_STATUS_DEVICE_WRITE:
 		dfu_progress_bar_start (priv->progress_bar,
 				       /* TRANSLATORS: write from host to device */
 				       _("Writing"));
 		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
 		break;
-	case DFU_ACTION_VERIFY:
+	case FWUPD_STATUS_DEVICE_VERIFY:
 		dfu_progress_bar_start (priv->progress_bar,
 				       /* TRANSLATORS: read from device to host */
 				       _("Verifying"));
 		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
 		break;
-	case DFU_ACTION_ERASE:
+	case FWUPD_STATUS_DEVICE_ERASE:
 		dfu_progress_bar_start (priv->progress_bar,
 				       /* TRANSLATORS: read from device to host */
 				       _("Erasing"));
 		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
 		break;
-	case DFU_ACTION_DETACH:
+	case FWUPD_STATUS_DEVICE_RESTART:
 		dfu_progress_bar_start (priv->progress_bar,
 				       /* TRANSLATORS: waiting for device */
 				       _("Detaching"));
-		dfu_progress_bar_set_percentage (priv->progress_bar, -1);
-		break;
-	case DFU_ACTION_ATTACH:
-		dfu_progress_bar_start (priv->progress_bar,
-				       /* TRANSLATORS: waiting for device */
-				       _("Attaching"));
 		dfu_progress_bar_set_percentage (priv->progress_bar, -1);
 		break;
 	default:
