@@ -55,8 +55,6 @@ const gchar	*fu_engine_get_action_id_for_device	(FuEngine	*self,
 
 GPtrArray	*fu_engine_get_devices			(FuEngine	*self,
 							 GError		**error);
-GPtrArray	*fu_engine_get_updates			(FuEngine	*self,
-							 GError		**error);
 GPtrArray	*fu_engine_get_remotes			(FuEngine	*self,
 							 GError		**error);
 GPtrArray	*fu_engine_get_releases			(FuEngine	*self,

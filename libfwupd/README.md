@@ -16,3 +16,4 @@ Migration from Version 0.9.x
  * Convert FwupdResult to FwupdDevice in all callbacks
  * Rename fwupd_device_*_provider -> fwupd_device_*_plugin
  * Convert hash types sa{sv} -> a{sv}
+ * Convert fwupd_client_get_updates() -> fwupd_client_get_upgrades()

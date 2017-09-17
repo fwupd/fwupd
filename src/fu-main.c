@@ -424,18 +424,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
-	if (g_strcmp0 (method_name, "GetUpdates") == 0) {
-		g_autoptr(GPtrArray) updates = NULL;
-		g_debug ("Called %s()", method_name);
-		updates = fu_engine_get_updates (priv->engine, &error);
-		if (updates == NULL) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
-			return;
-		}
-		val = fu_main_result_array_to_variant (updates);
-		g_dbus_method_invocation_return_value (invocation, val);
-		return;
-	}
 	if (g_strcmp0 (method_name, "GetReleases") == 0) {
 		const gchar *device_id;
 		g_autoptr(GPtrArray) releases = NULL;
