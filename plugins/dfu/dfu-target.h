@@ -29,6 +29,8 @@
 #include "dfu-common.h"
 #include "dfu-image.h"
 
+#include "fwupd-enums.h"
+
 G_BEGIN_DECLS
 
 #define DFU_TYPE_TARGET (dfu_target_get_type ())
@@ -40,7 +42,7 @@ struct _DfuTargetClass
 	void			(*percentage_changed)	(DfuTarget	*target,
 							 guint		 percentage);
 	void			(*action_changed)	(DfuTarget	*target,
-							 DfuAction	 action);
+							 FwupdStatus	 action);
 	/*< private >*/
 	/* Padding for future expansion */
 	void (*_dfu_target_reserved1) (void);

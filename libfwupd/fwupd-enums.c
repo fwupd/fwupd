@@ -48,6 +48,10 @@ fwupd_status_to_string (FwupdStatus status)
 		return "device-restart";
 	if (status == FWUPD_STATUS_DEVICE_WRITE)
 		return "device-write";
+	if (status == FWUPD_STATUS_DEVICE_READ)
+		return "device-read";
+	if (status == FWUPD_STATUS_DEVICE_ERASE)
+		return "device-erase";
 	if (status == FWUPD_STATUS_DEVICE_VERIFY)
 		return "device-verify";
 	if (status == FWUPD_STATUS_SCHEDULING)
@@ -88,6 +92,10 @@ fwupd_status_from_string (const gchar *status)
 		return FWUPD_STATUS_SCHEDULING;
 	if (g_strcmp0 (status, "downloading") == 0)
 		return FWUPD_STATUS_DOWNLOADING;
+	if (g_strcmp0 (status, "device-read") == 0)
+		return FWUPD_STATUS_DEVICE_READ;
+	if (g_strcmp0 (status, "device-erase") == 0)
+		return FWUPD_STATUS_DEVICE_ERASE;
 	return FWUPD_STATUS_LAST;
 }
 

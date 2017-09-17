@@ -63,9 +63,17 @@ fu_progressbar_status_to_string (FwupdStatus status)
 		/* TRANSLATORS: restarting the device to pick up new F/W */
 		return _("Restarting device…");
 		break;
+	case FWUPD_STATUS_DEVICE_READ:
+		/* TRANSLATORS: reading from the flash chips */
+		return _("Reading…");
+		break;
 	case FWUPD_STATUS_DEVICE_WRITE:
 		/* TRANSLATORS: writing to the flash chips */
 		return _("Writing…");
+		break;
+	case FWUPD_STATUS_DEVICE_ERASE:
+		/* TRANSLATORS: erasing contents of the flash chips */
+		return _("Erasing…");
 		break;
 	case FWUPD_STATUS_DEVICE_VERIFY:
 		/* TRANSLATORS: verifying we wrote the firmware correctly */

@@ -111,7 +111,7 @@ struct _DfuDeviceClass
 	void			(*percentage_changed)	(DfuDevice	*device,
 							 guint		 percentage);
 	void			(*action_changed)	(DfuDevice	*device,
-							 DfuAction	 action);
+							 FwupdStatus	 action);
 	/*< private >*/
 	/* Padding for future expansion */
 	void (*_dfu_device_reserved1) (void);
