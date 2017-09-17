@@ -78,13 +78,13 @@ fu_main_engine_device_added_cb (FuEngine *engine,
 	/* not yet connected */
 	if (priv->connection == NULL)
 		return;
-	val = fwupd_device_to_data (FWUPD_DEVICE (device), "(a{sv})");
+	val = fwupd_device_to_variant (FWUPD_DEVICE (device));
 	g_dbus_connection_emit_signal (priv->connection,
 				       NULL,
 				       FWUPD_DBUS_PATH,
 				       FWUPD_DBUS_INTERFACE,
 				       "DeviceAdded",
-				       val, NULL);
+				       g_variant_new_tuple (&val, 1), NULL);
 }
 
 static void
@@ -97,13 +97,13 @@ fu_main_engine_device_removed_cb (FuEngine *engine,
 	/* not yet connected */
 	if (priv->connection == NULL)
 		return;
-	val = fwupd_device_to_data (FWUPD_DEVICE (device), "(a{sv})");
+	val = fwupd_device_to_variant (FWUPD_DEVICE (device));
 	g_dbus_connection_emit_signal (priv->connection,
 				       NULL,
 				       FWUPD_DBUS_PATH,
 				       FWUPD_DBUS_INTERFACE,
 				       "DeviceRemoved",
-				       val, NULL);
+				       g_variant_new_tuple (&val, 1), NULL);
 }
 
 static void
@@ -116,13 +116,13 @@ fu_main_engine_device_changed_cb (FuEngine *engine,
 	/* not yet connected */
 	if (priv->connection == NULL)
 		return;
-	val = fwupd_device_to_data (FWUPD_DEVICE (device), "(a{sv})");
+	val = fwupd_device_to_variant (FWUPD_DEVICE (device));
 	g_dbus_connection_emit_signal (priv->connection,
 				       NULL,
 				       FWUPD_DBUS_PATH,
 				       FWUPD_DBUS_INTERFACE,
 				       "DeviceChanged",
-				       val, NULL);
+				       g_variant_new_tuple (&val, 1), NULL);
 }
 
 static void
@@ -188,7 +188,7 @@ fu_main_device_array_to_variant (GPtrArray *devices)
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		GVariant *tmp = fwupd_device_to_data (FWUPD_DEVICE (device), "a{sv}");
+		GVariant *tmp = fwupd_device_to_variant (FWUPD_DEVICE (device));
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(aa{sv})", &builder);
@@ -202,7 +202,7 @@ fu_main_release_array_to_variant (GPtrArray *results)
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < results->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index (results, i);
-		GVariant *tmp = fwupd_release_to_data (rel, "a{sv}");
+		GVariant *tmp = fwupd_release_to_variant (rel);
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(aa{sv})", &builder);
@@ -216,7 +216,7 @@ fu_main_remote_array_to_variant (GPtrArray *remotes)
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
-		GVariant *tmp = fwupd_remote_to_data (remote, "a{sv}");
+		GVariant *tmp = fwupd_remote_to_variant (remote);
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(aa{sv})", &builder);
@@ -230,7 +230,7 @@ fu_main_result_array_to_variant (GPtrArray *results)
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < results->len; i++) {
 		FwupdDevice *result = g_ptr_array_index (results, i);
-		GVariant *tmp = fwupd_device_to_data (result, "a{sv}");
+		GVariant *tmp = fwupd_device_to_variant (result);
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(aa{sv})", &builder);
@@ -511,8 +511,9 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		val = fwupd_device_to_data (result, "(a{sv})");
-		g_dbus_method_invocation_return_value (invocation, val);
+		val = fwupd_device_to_variant (result);
+		g_dbus_method_invocation_return_value (invocation,
+						       g_variant_new_tuple (&val, 1));
 		return;
 	}
 	if (g_strcmp0 (method_name, "UpdateMetadata") == 0) {

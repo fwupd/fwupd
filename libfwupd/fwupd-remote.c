@@ -812,62 +812,6 @@ fwupd_remote_get_id (FwupdRemote *self)
 }
 
 static void
-fwupd_remote_to_variant_builder (FwupdRemote *self, GVariantBuilder *builder)
-{
-	FwupdRemotePrivate *priv = GET_PRIVATE (self);
-	if (priv->id != NULL) {
-		g_variant_builder_add (builder, "{sv}", "Id",
-				       g_variant_new_string (priv->id));
-	}
-	if (priv->username != NULL) {
-		g_variant_builder_add (builder, "{sv}", "Username",
-				       g_variant_new_string (priv->username));
-	}
-	if (priv->password != NULL) {
-		g_variant_builder_add (builder, "{sv}", "Password",
-				       g_variant_new_string (priv->password));
-	}
-	if (priv->title != NULL) {
-		g_variant_builder_add (builder, "{sv}", "Title",
-				       g_variant_new_string (priv->title));
-	}
-	if (priv->metadata_uri != NULL) {
-		g_variant_builder_add (builder, "{sv}", "Url",
-				       g_variant_new_string (priv->metadata_uri));
-	}
-	if (priv->firmware_base_uri != NULL) {
-		g_variant_builder_add (builder, "{sv}", "FirmwareBaseUri",
-				       g_variant_new_string (priv->firmware_base_uri));
-	}
-	if (priv->priority != 0) {
-		g_variant_builder_add (builder, "{sv}", "Priority",
-				       g_variant_new_int32 (priv->priority));
-	}
-	if (priv->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
-		g_variant_builder_add (builder, "{sv}", "Type",
-				       g_variant_new_uint32 (priv->kind));
-	}
-	if (priv->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
-		g_variant_builder_add (builder, "{sv}", "Keyring",
-				       g_variant_new_uint32 (priv->keyring_kind));
-	}
-	if (priv->mtime != 0) {
-		g_variant_builder_add (builder, "{sv}", "ModificationTime",
-				       g_variant_new_uint64 (priv->mtime));
-	}
-	if (priv->filename_cache != NULL) {
-		g_variant_builder_add (builder, "{sv}", "FilenameCache",
-				       g_variant_new_string (priv->filename_cache));
-	}
-	if (priv->filename_source != NULL) {
-		g_variant_builder_add (builder, "{sv}", "FilenameSource",
-				       g_variant_new_string (priv->filename_source));
-	}
-	g_variant_builder_add (builder, "{sv}", "Enabled",
-			       g_variant_new_boolean (priv->enabled));
-}
-
-static void
 fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
@@ -913,34 +857,76 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 }
 
 /**
- * fwupd_remote_to_data:
- * @remote: A #FwupdRemote
- * @type_string: The Gvariant type string, e.g. "a{sv}" or "(a{sv})"
+ * fwupd_remote_to_variant:
+ * @self: A #FwupdRemote
  *
  * Creates a GVariant from the remote data.
  *
  * Returns: the GVariant, or %NULL for error
  *
- * Since: 0.9.5
+ * Since: 1.0.0
  **/
 GVariant *
-fwupd_remote_to_data (FwupdRemote *self, const gchar *type_string)
+fwupd_remote_to_variant (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	GVariantBuilder builder;
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	g_return_val_if_fail (type_string != NULL, NULL);
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	fwupd_remote_to_variant_builder (self, &builder);
-
-	/* supported types */
-	if (g_strcmp0 (type_string, "a{sv}") == 0)
-		return g_variant_new ("a{sv}", &builder);
-	if (g_strcmp0 (type_string, "(a{sv})") == 0)
-		return g_variant_new ("(a{sv})", &builder);
-	return NULL;
+	if (priv->id != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "Id",
+				       g_variant_new_string (priv->id));
+	}
+	if (priv->username != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "Username",
+				       g_variant_new_string (priv->username));
+	}
+	if (priv->password != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "Password",
+				       g_variant_new_string (priv->password));
+	}
+	if (priv->title != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "Title",
+				       g_variant_new_string (priv->title));
+	}
+	if (priv->metadata_uri != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "Url",
+				       g_variant_new_string (priv->metadata_uri));
+	}
+	if (priv->firmware_base_uri != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "FirmwareBaseUri",
+				       g_variant_new_string (priv->firmware_base_uri));
+	}
+	if (priv->priority != 0) {
+		g_variant_builder_add (&builder, "{sv}", "Priority",
+				       g_variant_new_int32 (priv->priority));
+	}
+	if (priv->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
+		g_variant_builder_add (&builder, "{sv}", "Type",
+				       g_variant_new_uint32 (priv->kind));
+	}
+	if (priv->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
+		g_variant_builder_add (&builder, "{sv}", "Keyring",
+				       g_variant_new_uint32 (priv->keyring_kind));
+	}
+	if (priv->mtime != 0) {
+		g_variant_builder_add (&builder, "{sv}", "ModificationTime",
+				       g_variant_new_uint64 (priv->mtime));
+	}
+	if (priv->filename_cache != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "FilenameCache",
+				       g_variant_new_string (priv->filename_cache));
+	}
+	if (priv->filename_source != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "FilenameSource",
+				       g_variant_new_string (priv->filename_source));
+	}
+	g_variant_builder_add (&builder, "{sv}", "Enabled",
+			       g_variant_new_boolean (priv->enabled));
+	return g_variant_new ("a{sv}", &builder);
 }
 
 static void
@@ -1045,17 +1031,17 @@ fwupd_remote_finalize (GObject *obj)
 }
 
 /**
- * fwupd_remote_new_from_data:
+ * fwupd_remote_from_variant:
  * @data: a #GVariant
  *
  * Creates a new remote using packed data.
  *
- * Returns: a new #FwupdRemote, or %NULL if @data was invalid
+ * Returns: (transfer full): a new #FwupdRemote, or %NULL if @data was invalid
  *
- * Since: 0.9.5
+ * Since: 1.0.0
  **/
 FwupdRemote *
-fwupd_remote_new_from_data (GVariant *data)
+fwupd_remote_from_variant (GVariant *data)
 {
 	FwupdRemote *rel = NULL;
 	const gchar *type_string;

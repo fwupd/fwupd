@@ -801,24 +801,22 @@ fwupd_device_set_modified (FwupdDevice *device, guint64 modified)
 }
 
 /**
- * fwupd_device_to_data:
+ * fwupd_device_to_variant:
  * @device: A #FwupdDevice
- * @type_string: The Gvariant type string, e.g. "a{sv}" or "(a{sv})"
  *
  * Creates a GVariant from the device data.
  *
  * Returns: the GVariant, or %NULL for error
  *
- * Since: 0.9.3
+ * Since: 1.0.0
  **/
 GVariant *
-fwupd_device_to_data (FwupdDevice *device, const gchar *type_string)
+fwupd_device_to_variant (FwupdDevice *device)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	GVariantBuilder builder;
 
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
-	g_return_val_if_fail (type_string != NULL, NULL);
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
@@ -934,7 +932,7 @@ fwupd_device_to_data (FwupdDevice *device, const gchar *type_string)
 		children = g_new0 (GVariant *, priv->releases->len);
 		for (guint i = 0; i < priv->releases->len; i++) {
 			FwupdRelease *release = g_ptr_array_index (priv->releases, i);
-			children[i] = fwupd_release_to_data (release, "a{sv}");
+			children[i] = fwupd_release_to_variant (release);
 		}
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_RELEASE,
@@ -942,13 +940,7 @@ fwupd_device_to_data (FwupdDevice *device, const gchar *type_string)
 							    children,
 							    priv->releases->len));
 	}
-
-	/* supported types */
-	if (g_strcmp0 (type_string, "a{sv}") == 0)
-		return g_variant_new ("a{sv}", &builder);
-	if (g_strcmp0 (type_string, "(a{sv})") == 0)
-		return g_variant_new ("(a{sv})", &builder);
-	return NULL;
+	return g_variant_new ("a{sv}", &builder);
 }
 
 static void
@@ -959,7 +951,7 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		GVariant *child;
 		g_variant_iter_init (&iter, value);
 		while ((child = g_variant_iter_next_value (&iter))) {
-			g_autoptr(FwupdRelease) release = fwupd_release_new_from_data (child);
+			g_autoptr(FwupdRelease) release = fwupd_release_from_variant (child);
 			if (release != NULL)
 				fwupd_device_add_release (device, release);
 			g_variant_unref (child);
@@ -1364,17 +1356,17 @@ fwupd_device_set_from_variant_iter (FwupdDevice *device, GVariantIter *iter)
 }
 
 /**
- * fwupd_device_new_from_data:
+ * fwupd_device_from_variant:
  * @data: a #GVariant
  *
  * Creates a new device using packed data.
  *
- * Returns: a new #FwupdDevice, or %NULL if @data was invalid
+ * Returns: (transfer full): a new #FwupdDevice, or %NULL if @data was invalid
  *
- * Since: 0.9.3
+ * Since: 1.0.0
  **/
 FwupdDevice *
-fwupd_device_new_from_data (GVariant *data)
+fwupd_device_from_variant (GVariant *data)
 {
 	FwupdDevice *dev = NULL;
 	const gchar *type_string;
