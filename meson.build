@@ -237,7 +237,6 @@ plugin_dir = join_paths(get_option('prefix'),
                         get_option('libdir'),
                         'fwupd-plugins-2')
 
-conf.set_quoted('SYSCONFDIR', get_option('sysconfdir'))
 conf.set_quoted('BINDIR',
                 join_paths(get_option('prefix'),
                            get_option('bindir')))

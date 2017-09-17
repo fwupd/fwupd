@@ -136,6 +136,7 @@ executable(
     '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DPLUGINDIR="' + plugin_dir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
+    '-DSYSCONFDIR="' + get_option('sysconfdir') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -198,6 +199,7 @@ if get_option('enable-tests')
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
       '-DPLUGINDIR="' + testdatadir_src + '"',
       '-DSYSFSFIRMWAREDIR="' + testdatadir_src + '"',
+      '-DSYSCONFDIR="' + testdatadir_src + '"',
     ],
   )
   test('fu-self-test', e, is_parallel:false)
