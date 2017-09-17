@@ -56,7 +56,6 @@ shared_module('fu_plugin_dfu',
 executable(
   'dfu-tool',
   sources : [
-    'dfu-progress-bar.c',
     'dfu-tool.c',
   ],
   include_directories : [

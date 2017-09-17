@@ -32,10 +32,10 @@
 #include "dfu-context.h"
 #include "dfu-device-private.h"
 #include "dfu-patch.h"
-#include "dfu-progress-bar.h"
 #include "dfu-sector.h"
 
 #include "fu-device-locker.h"
+#include "fu-progressbar.h"
 
 #include "fwupd-error.h"
 
@@ -45,7 +45,7 @@ typedef struct {
 	gboolean		 force;
 	gchar			*device_vid_pid;
 	guint16			 transfer_size;
-	DfuProgressBar		*progress_bar;
+	FuProgressbar		*progressbar;
 } DfuToolPrivate;
 
 static void
@@ -1208,7 +1208,7 @@ fu_tool_percentage_changed_cb (DfuDevice *device,
 			       guint percentage,
 			       DfuToolPrivate *priv)
 {
-	dfu_progress_bar_set_percentage (priv->progress_bar, percentage);
+	fu_progressbar_update (priv->progressbar, FWUPD_STATUS_UNKNOWN, percentage);
 }
 
 static void
@@ -1216,44 +1216,7 @@ fu_tool_action_changed_cb (DfuDevice *device,
 			   FwupdStatus action,
 			   DfuToolPrivate *priv)
 {
-	switch (action) {
-	case FWUPD_STATUS_IDLE:
-		dfu_progress_bar_set_percentage (priv->progress_bar, 100);
-		dfu_progress_bar_end (priv->progress_bar);
-		break;
-	case FWUPD_STATUS_DEVICE_READ:
-		dfu_progress_bar_start (priv->progress_bar,
-				       /* TRANSLATORS: read from device to host */
-				       _("Reading"));
-		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
-		break;
-	case FWUPD_STATUS_DEVICE_WRITE:
-		dfu_progress_bar_start (priv->progress_bar,
-				       /* TRANSLATORS: write from host to device */
-				       _("Writing"));
-		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
-		break;
-	case FWUPD_STATUS_DEVICE_VERIFY:
-		dfu_progress_bar_start (priv->progress_bar,
-				       /* TRANSLATORS: read from device to host */
-				       _("Verifying"));
-		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
-		break;
-	case FWUPD_STATUS_DEVICE_ERASE:
-		dfu_progress_bar_start (priv->progress_bar,
-				       /* TRANSLATORS: read from device to host */
-				       _("Erasing"));
-		dfu_progress_bar_set_percentage (priv->progress_bar, 0);
-		break;
-	case FWUPD_STATUS_DEVICE_RESTART:
-		dfu_progress_bar_start (priv->progress_bar,
-				       /* TRANSLATORS: waiting for device */
-				       _("Detaching"));
-		dfu_progress_bar_set_percentage (priv->progress_bar, -1);
-		break;
-	default:
-		break;
-	}
+	fu_progressbar_update (priv->progressbar, action, 0);
 }
 
 static gboolean
@@ -2363,9 +2326,9 @@ main (int argc, char *argv[])
 		     dfu_tool_patch_dump);
 
 	/* use animated progress bar */
-	priv->progress_bar = dfu_progress_bar_new ();
-	dfu_progress_bar_set_size (priv->progress_bar, 50);
-	dfu_progress_bar_set_padding (priv->progress_bar, 20);
+	priv->progressbar = fu_progressbar_new ();
+	fu_progressbar_set_length_percentage (priv->progressbar, 50);
+	fu_progressbar_set_length_status (priv->progressbar, 20);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
@@ -2418,6 +2381,6 @@ main (int argc, char *argv[])
 	}
 
 	/* success/ */
-	g_object_unref (priv->progress_bar);
+	g_object_unref (priv->progressbar);
 	return EXIT_SUCCESS;
 }

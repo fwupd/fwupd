@@ -203,6 +203,10 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 {
 	g_return_if_fail (FU_IS_PROGRESSBAR (self));
 
+	/* use cached value */
+	if (status == FWUPD_STATUS_UNKNOWN)
+		status = self->status;
+
 	/* if the main loop isn't spinning and we've not had a chance to
 	 * execute the callback just do the refresh now manually */
 	if (percentage == 0 &&
