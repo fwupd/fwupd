@@ -27,6 +27,7 @@ libfwupdprivate = static_library(
     'fu-hwids.c',
     'fu-pending.c',
     'fu-plugin.c',
+    'fu-progressbar.c',
     'fu-smbios.c',
     'fu-test.c',
   ],
@@ -56,7 +57,6 @@ libfwupdprivate = static_library(
 executable(
   'fwupdmgr',
   sources : [
-    'fu-progressbar.c',
     'fu-util.c',
   ],
   include_directories : [
