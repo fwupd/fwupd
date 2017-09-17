@@ -149,6 +149,7 @@ if get_option('enable-tests')
   pluginbuilddir = join_paths(meson.build_root(), 'plugins', 'test')
   e = executable(
     'fu-self-test',
+    resources_src,
     colorhug_test_firmware,
     colorhug_pkcs7_signature,
     builder_test_firmware,
