@@ -63,9 +63,6 @@ gboolean	 fwupd_client_connect			(FwupdClient	*client,
 GPtrArray	*fwupd_client_get_devices		(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GPtrArray	*fwupd_client_get_updates		(FwupdClient	*client,
-							 GCancellable	*cancellable,
-							 GError		**error);
 GPtrArray	*fwupd_client_get_releases		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,

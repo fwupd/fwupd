@@ -293,33 +293,6 @@ fwupd_client_remotes_func (void)
 	g_assert (remote3 == NULL);
 }
 
-static void
-fwupd_client_updates_func (void)
-{
-	FwupdDevice *dev;
-	g_autoptr(FwupdClient) client = NULL;
-	g_autoptr(GPtrArray) array = NULL;
-	g_autoptr(GError) error = NULL;
-
-	client = fwupd_client_new ();
-	array = fwupd_client_get_updates (client, NULL, &error);
-	if (array == NULL &&
-	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-		return;
-	if (array == NULL &&
-	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
-		return;
-	g_assert_no_error (error);
-	g_assert (array != NULL);
-	g_assert_cmpint (array->len, >, 0);
-
-	/* check device */
-	dev = g_ptr_array_index (array, 0);
-	g_assert (FWUPD_IS_DEVICE (dev));
-	g_assert_cmpstr (fwupd_device_get_guid_default (dev), !=, NULL);
-	g_assert_cmpstr (fwupd_device_get_id (dev), !=, NULL);
-}
-
 static gboolean
 fwupd_has_system_bus (void)
 {
@@ -349,7 +322,6 @@ main (int argc, char **argv)
 	if (fwupd_has_system_bus ()) {
 		g_test_add_func ("/fwupd/client{remotes}", fwupd_client_remotes_func);
 		g_test_add_func ("/fwupd/client{devices}", fwupd_client_devices_func);
-		g_test_add_func ("/fwupd/client{updates}", fwupd_client_updates_func);
 	}
 	return g_test_run ();
 }

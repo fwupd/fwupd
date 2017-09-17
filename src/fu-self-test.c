@@ -49,7 +49,6 @@
 static void
 fu_engine_func (void)
 {
-	FwupdDevice *dev;
 	FwupdRelease *rel;
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
@@ -59,7 +58,6 @@ fu_engine_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_pre = NULL;
-	g_autoptr(GPtrArray) devices_up_all = NULL;
 	g_autoptr(GPtrArray) releases_dg = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(GPtrArray) releases_up = NULL;
@@ -184,17 +182,6 @@ fu_engine_func (void)
 	g_assert_cmpint (releases_dg->len, ==, 1);
 	rel = FWUPD_RELEASE (g_ptr_array_index (releases_dg, 0));
 	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.2");
-
-	/* upgrades for all devices */
-	devices_up_all = fu_engine_get_updates (engine, &error);
-	g_assert_no_error (error);
-	g_assert (devices_up_all != NULL);
-	g_assert_cmpint (devices_up_all->len, ==, 1);
-	dev = FWUPD_DEVICE (g_ptr_array_index (devices_up_all, 0));
-	g_assert_cmpstr (fwupd_device_get_id (dev), ==, "test_device");
-	rel = fwupd_device_get_release_default (dev);
-	g_assert (rel != NULL);
-	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.4");
 }
 
 static void

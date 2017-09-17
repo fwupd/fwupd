@@ -419,48 +419,6 @@ fwupd_client_get_device_by_id (FwupdClient *client,
 }
 
 /**
- * fwupd_client_get_updates:
- * @client: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
- *
- * Gets all the devices with known updates.
- *
- * Returns: (element-type FwupdDevice) (transfer container): results
- *
- * Since: 0.7.0
- **/
-GPtrArray *
-fwupd_client_get_updates (FwupdClient *client, GCancellable *cancellable, GError **error)
-{
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_autoptr(GVariant) val = NULL;
-
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
-		return NULL;
-
-	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetUpdates",
-				      NULL,
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	return fwupd_client_parse_devices_from_variant (val);
-}
-
-/**
  * fwupd_client_get_releases:
  * @client: A #FwupdClient
  * @device_id: the device ID

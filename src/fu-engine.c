@@ -1971,49 +1971,6 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 }
 
 /**
- * fu_engine_get_updates:
- * @self: A #FuEngine
- * @error: A #GError, or %NULL
- *
- * Gets the list of updates.
- *
- * Returns: (transfer container) (element-type FwupdDevice): results
- **/
-GPtrArray *
-fu_engine_get_updates (FuEngine *self, GError **error)
-{
-	g_autoptr(GPtrArray) updates = NULL;
-
-	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	updates = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	for (guint i = 0; i < self->devices->len; i++) {
-		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
-		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GPtrArray) rels = NULL;
-		FwupdRelease *rel_default;
-
-		rels = fu_engine_get_upgrades (self, fu_device_get_id (item->device), &error_local);
-		if (rels == NULL) {
-			g_debug ("no upgrades: %s", error_local->message);
-			continue;
-		}
-		rel_default = g_ptr_array_index (rels, 0);
-		fwupd_device_add_release (FWUPD_DEVICE (item->device), rel_default);
-		g_ptr_array_add (updates, g_object_ref (item->device));
-	}
-	if (updates->len == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No devices can be updated");
-		return NULL;
-	}
-	return g_steal_pointer (&updates);
-}
-
-/**
  * fu_engine_get_remotes:
  * @self: A #FuEngine
  * @device_id: A device ID
