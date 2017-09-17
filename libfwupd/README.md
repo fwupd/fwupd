@@ -1,10 +1,3 @@
-Planned API Changes
-===================
-
-When we next bump soname the following changes are planned:
-
- * Unexport fwupd_result_to_data() and fwupd_result_new_from_data()
-
 Migration from Version 0.9.x
 ============================
 

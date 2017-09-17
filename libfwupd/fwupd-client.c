@@ -164,21 +164,21 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
-		dev = fwupd_device_new_from_data (parameters);
+		dev = fwupd_device_from_variant (parameters);
 		g_debug ("Emitting ::device-added(%s)",
 			 fwupd_device_get_id (dev));
 		g_signal_emit (client, signals[SIGNAL_DEVICE_ADDED], 0, dev);
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
-		dev = fwupd_device_new_from_data (parameters);
+		dev = fwupd_device_from_variant (parameters);
 		g_signal_emit (client, signals[SIGNAL_DEVICE_REMOVED], 0, dev);
 		g_debug ("Emitting ::device-removed(%s)",
 			 fwupd_device_get_id (dev));
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
-		dev = fwupd_device_new_from_data (parameters);
+		dev = fwupd_device_from_variant (parameters);
 		g_signal_emit (client, signals[SIGNAL_DEVICE_CHANGED], 0, dev);
 		g_debug ("Emitting ::device-changed(%s)",
 			 fwupd_device_get_id (dev));
@@ -255,7 +255,7 @@ fwupd_client_parse_releases_from_variant (GVariant *val)
 		FwupdRelease *rel;
 		g_autoptr(GVariant) data = NULL;
 		data = g_variant_get_child_value (untuple, i);
-		rel = fwupd_release_new_from_data (data);
+		rel = fwupd_release_from_variant (data);
 		if (rel == NULL)
 			continue;
 		g_ptr_array_add (array, rel);
@@ -277,7 +277,7 @@ fwupd_client_parse_devices_from_variant (GVariant *val)
 		FwupdDevice *dev;
 		g_autoptr(GVariant) data = NULL;
 		data = g_variant_get_child_value (untuple, i);
-		dev = fwupd_device_new_from_data (data);
+		dev = fwupd_device_from_variant (data);
 		if (dev == NULL)
 			continue;
 		g_ptr_array_add (array, dev);
@@ -296,9 +296,8 @@ fwupd_client_parse_remotes_from_data (GVariant *devices)
 	untuple = g_variant_get_child_value (devices, 0);
 	sz = g_variant_n_children (untuple);
 	for (guint i = 0; i < sz; i++) {
-		FwupdRemote *remote;
 		g_autoptr(GVariant) data = g_variant_get_child_value (untuple, i);
-		remote = fwupd_remote_new_from_data (data);
+		FwupdRemote *remote = fwupd_remote_from_variant (data);
 		g_ptr_array_add (remotes, remote);
 	}
 
@@ -846,7 +845,7 @@ fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
 		helper->error = NULL;
 		return NULL;
 	}
-	return fwupd_device_new_from_data (helper->val);
+	return fwupd_device_from_variant (helper->val);
 }
 
 static void

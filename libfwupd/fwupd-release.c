@@ -560,24 +560,22 @@ fwupd_release_set_trust_flags (FwupdRelease *release, FwupdTrustFlags trust_flag
 }
 
 /**
- * fwupd_release_to_data:
+ * fwupd_release_to_variant:
  * @release: A #FwupdRelease
- * @type_string: The Gvariant type string, e.g. "a{sv}" or "(a{sv})"
  *
  * Creates a GVariant from the release data.
  *
  * Returns: the GVariant, or %NULL for error
  *
- * Since: 0.9.3
+ * Since: 1.0.0
  **/
 GVariant *
-fwupd_release_to_data (FwupdRelease *release, const gchar *type_string)
+fwupd_release_to_variant (FwupdRelease *release)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	GVariantBuilder builder;
 
 	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
-	g_return_val_if_fail (type_string != NULL, NULL);
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
@@ -658,13 +656,7 @@ fwupd_release_to_data (FwupdRelease *release, const gchar *type_string)
 				       FWUPD_RESULT_KEY_TRUST_FLAGS,
 				       g_variant_new_uint64 (priv->trust_flags));
 	}
-
-	/* supported types */
-	if (g_strcmp0 (type_string, "a{sv}") == 0)
-		return g_variant_new ("a{sv}", &builder);
-	if (g_strcmp0 (type_string, "(a{sv})") == 0)
-		return g_variant_new ("(a{sv})", &builder);
-	return NULL;
+	return g_variant_new ("a{sv}", &builder);
 }
 
 static void
@@ -861,17 +853,17 @@ fwupd_release_set_from_variant_iter (FwupdRelease *release, GVariantIter *iter)
 }
 
 /**
- * fwupd_release_new_from_data:
+ * fwupd_release_from_variant:
  * @data: a #GVariant
  *
  * Creates a new release using packed data.
  *
- * Returns: a new #FwupdRelease, or %NULL if @data was invalid
+ * Returns: (transfer full): a new #FwupdRelease, or %NULL if @data was invalid
  *
- * Since: 0.9.3
+ * Since: 1.0.0
  **/
 FwupdRelease *
-fwupd_release_new_from_data (GVariant *data)
+fwupd_release_from_variant (GVariant *data)
 {
 	FwupdRelease *rel = NULL;
 	const gchar *type_string;
