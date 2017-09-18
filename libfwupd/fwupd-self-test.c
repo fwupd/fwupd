@@ -135,6 +135,7 @@ fwupd_remote_baseuri_func (void)
 	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_GPG);
 	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
 	g_assert (fwupd_remote_get_enabled (remote));
+	g_assert_cmpstr (fwupd_remote_get_checksum (remote), ==, NULL);
 	g_assert_cmpstr (fwupd_remote_get_metadata_uri (remote), ==,
 			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_metadata_uri_sig (remote), ==,
@@ -165,6 +166,7 @@ fwupd_remote_local_func (void)
 	g_assert_cmpstr (fwupd_remote_get_title (remote), ==, "Core");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==, "@datadir@/fwupd/remotes.d/fwupd/metadata.xml");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==, NULL);
+	g_assert_cmpstr (fwupd_remote_get_checksum (remote), ==, NULL);
 }
 
 static void

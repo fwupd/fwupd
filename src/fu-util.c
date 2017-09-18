@@ -1132,6 +1132,10 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("Enabled"),
 				    fwupd_remote_get_enabled (remote) ? "True" : "False");
 
+		/* TRANSLATORS: remote checksum */
+		fu_util_print_data (_("Checksum"),
+				    fwupd_remote_get_checksum (remote));
+
 		/* optional parameters */
 		age = fwupd_remote_get_age (remote);
 		if (kind == FWUPD_REMOTE_KIND_DOWNLOAD &&

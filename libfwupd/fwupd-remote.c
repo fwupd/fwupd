@@ -41,6 +41,7 @@ typedef struct {
 	gchar			*username;
 	gchar			*password;
 	gchar			*title;
+	gchar			*checksum;
 	gchar			*filename_cache;
 	gchar			*filename_cache_sig;
 	gchar			*filename_source;
@@ -76,6 +77,14 @@ fwupd_remote_set_title (FwupdRemote *self, const gchar *title)
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_free (priv->title);
 	priv->title = g_strdup (title);
+}
+
+static void
+fwupd_remote_set_checksum (FwupdRemote *self, const gchar *checksum)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_free (priv->checksum);
+	priv->checksum = g_strdup (checksum);
 }
 
 static void
@@ -402,6 +411,22 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 		fwupd_remote_set_filename_cache (self, filename_cache);
 	}
 
+	/* load the checksum */
+	if (priv->filename_cache_sig != NULL &&
+	    g_file_test (priv->filename_cache_sig, G_FILE_TEST_EXISTS)) {
+		gsize sz = 0;
+		g_autofree gchar *buf = NULL;
+		g_autoptr(GChecksum) checksum = g_checksum_new (G_CHECKSUM_SHA256);
+		if (!g_file_get_contents (priv->filename_cache_sig, &buf, &sz, error)) {
+			g_prefix_error (error, "failed to get checksum: ");
+			return FALSE;
+		}
+		g_checksum_update (checksum, (guchar *) buf, (gssize) sz);
+		fwupd_remote_set_checksum (self, g_checksum_get_string (checksum));
+	} else {
+		fwupd_remote_set_checksum (self, NULL);
+	}
+
 	/* the base URI is optional */
 	firmware_base_uri = g_key_file_get_string (kf, group, "FirmwareBaseURI", NULL);
 	if (firmware_base_uri != NULL)
@@ -675,6 +700,24 @@ fwupd_remote_get_title (FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_get_checksum:
+ * @self: A #FwupdRemote
+ *
+ * Gets the remote checksum.
+ *
+ * Returns: a string, or %NULL if unset
+ *
+ * Since: 1.0.0
+ **/
+const gchar *
+fwupd_remote_get_checksum (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return priv->checksum;
+}
+
+/**
  * fwupd_remote_build_firmware_uri:
  * @self: A #FwupdRemote
  * @url: the URL to use
@@ -819,6 +862,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_password (self, g_variant_get_string (value, NULL));
 		} else if (g_strcmp0 (key, "Title") == 0) {
 			fwupd_remote_set_title (self, g_variant_get_string (value, NULL));
+		} else if (g_strcmp0 (key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
+			fwupd_remote_set_checksum (self, g_variant_get_string (value, NULL));
 		} else if (g_strcmp0 (key, "Enabled") == 0) {
 			priv->enabled = g_variant_get_boolean (value);
 		} else if (g_strcmp0 (key, "Priority") == 0) {
@@ -866,6 +911,10 @@ fwupd_remote_to_variant (FwupdRemote *self)
 	if (priv->title != NULL) {
 		g_variant_builder_add (&builder, "{sv}", "Title",
 				       g_variant_new_string (priv->title));
+	}
+	if (priv->checksum != NULL) {
+		g_variant_builder_add (&builder, "{sv}", FWUPD_RESULT_KEY_CHECKSUM,
+				       g_variant_new_string (priv->checksum));
 	}
 	if (priv->metadata_uri != NULL) {
 		g_variant_builder_add (&builder, "{sv}", FWUPD_RESULT_KEY_URI,
@@ -994,6 +1043,7 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (priv->username);
 	g_free (priv->password);
 	g_free (priv->title);
+	g_free (priv->checksum);
 	g_free (priv->filename_cache);
 	g_free (priv->filename_cache_sig);
 	g_free (priv->filename_source);
