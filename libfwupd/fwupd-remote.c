@@ -24,6 +24,7 @@
 #include <libsoup/soup.h>
 
 #include "fwupd-deprecated.h"
+#include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 
@@ -796,7 +797,7 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 
 	/* three passes, as we have to construct Id -> Url -> * */
 	while (g_variant_iter_loop (iter, "{sv}", &key, &value)) {
-		if (g_strcmp0 (key, "Id") == 0)
+		if (g_strcmp0 (key, FWUPD_RESULT_KEY_REMOTE_ID) == 0)
 			fwupd_remote_set_id (self, g_variant_get_string (value, NULL));
 		if (g_strcmp0 (key, "Type") == 0)
 			fwupd_remote_set_kind (self, g_variant_get_uint32 (value));
@@ -804,7 +805,7 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_keyring_kind (self, g_variant_get_uint32 (value));
 	}
 	while (g_variant_iter_loop (iter2, "{sv}", &key, &value)) {
-		if (g_strcmp0 (key, "Url") == 0)
+		if (g_strcmp0 (key, FWUPD_RESULT_KEY_URI) == 0)
 			fwupd_remote_set_metadata_uri (self, g_variant_get_string (value, NULL));
 		if (g_strcmp0 (key, "FilenameCache") == 0)
 			fwupd_remote_set_filename_cache (self, g_variant_get_string (value, NULL));
@@ -851,7 +852,7 @@ fwupd_remote_to_variant (FwupdRemote *self)
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	if (priv->id != NULL) {
-		g_variant_builder_add (&builder, "{sv}", "Id",
+		g_variant_builder_add (&builder, "{sv}", FWUPD_RESULT_KEY_REMOTE_ID,
 				       g_variant_new_string (priv->id));
 	}
 	if (priv->username != NULL) {
@@ -867,7 +868,7 @@ fwupd_remote_to_variant (FwupdRemote *self)
 				       g_variant_new_string (priv->title));
 	}
 	if (priv->metadata_uri != NULL) {
-		g_variant_builder_add (&builder, "{sv}", "Url",
+		g_variant_builder_add (&builder, "{sv}", FWUPD_RESULT_KEY_URI,
 				       g_variant_new_string (priv->metadata_uri));
 	}
 	if (priv->firmware_base_uri != NULL) {
