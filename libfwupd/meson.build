@@ -68,20 +68,27 @@ pkgg.generate(
 )
 
 if get_option('enable-introspection')
-  gnome.generate_gir(fwupd,
+  gir = gnome.generate_gir(fwupd,
     sources : [
       'fwupd-client.c',
       'fwupd-client.h',
+      'fwupd-common.c',
+      'fwupd-common.h',
+      'fwupd-common-private.h',
       'fwupd-device.c',
       'fwupd-device.h',
+      'fwupd-device-private.h',
       'fwupd-enums.c',
       'fwupd-enums.h',
+      'fwupd-enums-private.h',
       'fwupd-error.c',
       'fwupd-error.h',
       'fwupd-release.c',
       'fwupd-release.h',
+      'fwupd-release-private.h',
       'fwupd-remote.c',
       'fwupd-remote.h',
+      'fwupd-remote-private.h',
     ],
     nsversion : '2.0',
     namespace : 'Fwupd',
@@ -99,6 +106,33 @@ if get_option('enable-introspection')
     ],
     install : true
   )
+
+  # Verify the map file is correct -- note we can't actually use the generated
+  # file for two reasons:
+  #
+  #  1. We don't hard depend on GObject Introspection
+  #  2. The map file is required to build the lib that the GIR is built from
+  #
+  # To avoid the circular dep, and to ensure we don't change exported API
+  # accidentaly actually check in a version of the version script to git.
+  mapfile_target = custom_target('mapfile',
+    input: gir[0],
+    output: 'fwupd.map',
+    command: [
+      join_paths(meson.current_source_dir(), 'generate-version-script.py'),
+      'LIBFWUPD',
+      '@INPUT@',
+      '@OUTPUT@',
+    ],
+  )
+  diffcmd = find_program('diff')
+  test('fwupd-exported-api', diffcmd,
+       args : [
+        '-urNp',
+        join_paths(meson.current_source_dir(), 'fwupd.map'),
+        mapfile_target,
+        ],
+      )
 endif
 
 if get_option('enable-tests')
