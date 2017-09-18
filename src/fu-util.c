@@ -755,15 +755,23 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 				      FwupdRemote *remote,
 				      GError **error)
 {
+	g_autofree gchar *basename_asc = NULL;
+	g_autofree gchar *basename_id_asc = NULL;
+	g_autofree gchar *basename_id = NULL;
+	g_autofree gchar *basename = NULL;
 	g_autofree gchar *cache_dir = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *filename_asc = NULL;
 	g_autoptr(SoupURI) uri = NULL;
 	g_autoptr(SoupURI) uri_sig = NULL;
 
+	/* generate some plausible local filenames */
+	basename = g_path_get_basename (fwupd_remote_get_filename_cache (remote));
+	basename_id = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename);
+
 	/* download the metadata */
 	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
-	filename = g_build_filename (cache_dir, fwupd_remote_get_filename (remote), NULL);
+	filename = g_build_filename (cache_dir, basename_id, NULL);
 	if (!fu_common_mkdir_parent (filename, error))
 		return FALSE;
 	uri = soup_uri_new (fwupd_remote_get_metadata_uri (remote));
@@ -771,7 +779,9 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 		return FALSE;
 
 	/* download the signature */
-	filename_asc = g_build_filename (cache_dir, fwupd_remote_get_filename_asc (remote), NULL);
+	basename_asc = g_path_get_basename (fwupd_remote_get_filename_cache_sig (remote));
+	basename_id_asc = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename_asc);
+	filename_asc = g_build_filename (cache_dir, basename_id_asc, NULL);
 	uri_sig = soup_uri_new (fwupd_remote_get_metadata_uri_sig (remote));
 	if (!fu_util_download_file (priv, uri_sig, filename_asc, NULL, error))
 		return FALSE;
@@ -1165,25 +1175,15 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 			/* TRANSLATORS: remote filename base */
 			fu_util_print_data (_("Password"), tmp);
 		}
-		tmp = fwupd_remote_get_filename (remote);
-		if (tmp != NULL) {
-			/* TRANSLATORS: remote filename base */
-			fu_util_print_data (_("Filename"), tmp);
-		}
-		tmp = fwupd_remote_get_filename_asc (remote);
-		if (tmp != NULL) {
-			/* TRANSLATORS: remote filename base */
-			fu_util_print_data (_("Filename Signature"), tmp);
-		}
 		tmp = fwupd_remote_get_filename_cache (remote);
 		if (tmp != NULL) {
-			/* TRANSLATORS: locatation of the local file */
-			fu_util_print_data (_("Location"), tmp);
+			/* TRANSLATORS: filename of the local file */
+			fu_util_print_data (_("Filename"), tmp);
 		}
 		tmp = fwupd_remote_get_filename_cache_sig (remote);
 		if (tmp != NULL) {
-			/* TRANSLATORS: locatation of the local file */
-			fu_util_print_data (_("Location Signature"), tmp);
+			/* TRANSLATORS: filename of the local file */
+			fu_util_print_data (_("Filename Signature"), tmp);
 		}
 		tmp = fwupd_remote_get_metadata_uri (remote);
 		if (tmp != NULL) {
