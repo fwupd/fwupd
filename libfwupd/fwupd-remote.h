@@ -56,8 +56,6 @@ const gchar	*fwupd_remote_kind_to_string		(FwupdRemoteKind kind);
 FwupdRemote	*fwupd_remote_new			(void);
 const gchar	*fwupd_remote_get_id			(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_title			(FwupdRemote	*self);
-const gchar	*fwupd_remote_get_filename		(FwupdRemote	*self);
-const gchar	*fwupd_remote_get_filename_asc		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_username		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_password		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename_cache	(FwupdRemote	*self);

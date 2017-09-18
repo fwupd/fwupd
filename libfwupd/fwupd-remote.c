@@ -40,8 +40,6 @@ typedef struct {
 	gchar			*username;
 	gchar			*password;
 	gchar			*title;
-	gchar			*filename;
-	gchar			*filename_asc;
 	gchar			*filename_cache;
 	gchar			*filename_cache_sig;
 	gchar			*filename_source;
@@ -188,8 +186,6 @@ fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	const gchar *suffix;
-	g_autofree gchar *basename = NULL;
-	g_autofree gchar *basename_asc = NULL;
 	g_autoptr(SoupURI) uri = NULL;
 	g_autoptr(SoupURI) uri_asc = NULL;
 
@@ -201,17 +197,11 @@ fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
 	/* save this so we can export the object as a GVariant */
 	priv->metadata_uri = g_strdup (metadata_uri);
 
-	/* generate some plausible local filenames */
-	basename = g_path_get_basename (soup_uri_get_path (uri));
-	priv->filename = g_strdup_printf ("%s-%s", priv->id, basename);
-
 	/* generate the signature URI too */
 	suffix = fwupd_remote_get_suffix_for_keyring_kind (priv->keyring_kind);
 	if (suffix != NULL) {
 		priv->metadata_uri_sig = g_strconcat (metadata_uri, suffix, NULL);
 		uri_asc = fwupd_remote_build_uri (self, priv->metadata_uri_sig, NULL);
-		basename_asc = g_path_get_basename (soup_uri_get_path (uri_asc));
-		priv->filename_asc = g_strdup_printf ("%s-%s", priv->id, basename_asc);
 	}
 }
 
@@ -629,14 +619,6 @@ fwupd_remote_set_mtime (FwupdRemote *self, guint64 mtime)
 	priv->mtime = mtime;
 }
 
-const gchar *
-fwupd_remote_get_filename (FwupdRemote *self)
-{
-	FwupdRemotePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return priv->filename;
-}
-
 /**
  * fwupd_remote_get_username:
  * @self: A #FwupdRemote
@@ -671,14 +653,6 @@ fwupd_remote_get_password (FwupdRemote *self)
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 	return priv->password;
-}
-
-const gchar *
-fwupd_remote_get_filename_asc (FwupdRemote *self)
-{
-	FwupdRemotePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return priv->filename_asc;
 }
 
 /**
@@ -1019,8 +993,6 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (priv->username);
 	g_free (priv->password);
 	g_free (priv->title);
-	g_free (priv->filename);
-	g_free (priv->filename_asc);
 	g_free (priv->filename_cache);
 	g_free (priv->filename_cache_sig);
 	g_free (priv->filename_source);
