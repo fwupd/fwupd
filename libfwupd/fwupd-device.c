@@ -31,6 +31,15 @@
 #include "fwupd-device-private.h"
 #include "fwupd-release-private.h"
 
+/**
+ * SECTION:fwupd-device
+ * @short_description: a hardware device
+ *
+ * An object that represents a physical device on the host.
+ *
+ * See also: #FwupdRelease
+ */
+
 static void fwupd_device_finalize	 (GObject *object);
 
 typedef struct {
@@ -563,7 +572,7 @@ fwupd_device_set_version_bootloader (FwupdDevice *device, const gchar *version_b
 }
 
 /**
- * fwupd_device_device_get_flashes_left:
+ * fwupd_device_get_flashes_left:
  * @device: A #FwupdDevice
  *
  * Gets the number of flash cycles left on the device
@@ -581,7 +590,7 @@ fwupd_device_get_flashes_left (FwupdDevice *device)
 }
 
 /**
- * fwupd_device_device_set_flashes_left:
+ * fwupd_device_set_flashes_left:
  * @device: A #FwupdDevice
  * @flashes_left: the description
  *

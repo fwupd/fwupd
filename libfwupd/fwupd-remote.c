@@ -372,7 +372,16 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	return TRUE;
 }
 
-/* private */
+/**
+ * fwupd_remote_get_order_after:
+ * @self: A #FwupdRemote
+ *
+ * Gets the list of remotes this plugin should be ordered after.
+ *
+ * Returns: (transfer none): an array
+ *
+ * Since: 0.9.5
+ **/
 gchar **
 fwupd_remote_get_order_after (FwupdRemote *self)
 {
@@ -380,7 +389,16 @@ fwupd_remote_get_order_after (FwupdRemote *self)
 	return self->order_after;
 }
 
-/* private */
+/**
+ * fwupd_remote_get_order_before:
+ * @self: A #FwupdRemote
+ *
+ * Gets the list of remotes this plugin should be ordered before.
+ *
+ * Returns: (transfer none): an array
+ *
+ * Since: 0.9.5
+ **/
 gchar **
 fwupd_remote_get_order_before (FwupdRemote *self)
 {
@@ -511,7 +529,15 @@ fwupd_remote_get_age (FwupdRemote *self)
 	return now - self->mtime;
 }
 
-/* private */
+/**
+ * fwupd_remote_set_priority:
+ * @self: A #FwupdRemote
+ * @priority: an integer, where 1 is better
+ *
+ * Sets the plugin priority.
+ *
+ * Since: 0.9.5
+ **/
 void
 fwupd_remote_set_priority (FwupdRemote *self, gint priority)
 {
@@ -519,7 +545,15 @@ fwupd_remote_set_priority (FwupdRemote *self, gint priority)
 	self->priority = priority;
 }
 
-/* private */
+/**
+ * fwupd_remote_set_mtime:
+ * @self: A #FwupdRemote
+ * @mtime: a UNIX itmestamp
+ *
+ * Sets the plugin modification time.
+ *
+ * Since: 0.9.5
+ **/
 void
 fwupd_remote_set_mtime (FwupdRemote *self, guint64 mtime)
 {
@@ -534,6 +568,16 @@ fwupd_remote_get_filename (FwupdRemote *self)
 	return self->filename;
 }
 
+/**
+ * fwupd_remote_get_username:
+ * @self: A #FwupdRemote
+ *
+ * Gets the username configured for the remote.
+ *
+ * Returns: a string, or %NULL for unset
+ *
+ * Since: 0.9.5
+ **/
 const gchar *
 fwupd_remote_get_username (FwupdRemote *self)
 {
@@ -541,6 +585,16 @@ fwupd_remote_get_username (FwupdRemote *self)
 	return self->username;
 }
 
+/**
+ * fwupd_remote_get_password:
+ * @self: A #FwupdRemote
+ *
+ * Gets the password configured for the remote.
+ *
+ * Returns: a string, or %NULL for unset
+ *
+ * Since: 0.9.5
+ **/
 const gchar *
 fwupd_remote_get_password (FwupdRemote *self)
 {
