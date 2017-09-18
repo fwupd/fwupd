@@ -290,7 +290,9 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 	/* parse the functional descriptor */
 	desc = g_bytes_get_data (iface_data, &iface_data_length);
 	if (iface_data_length != 0x09) {
-		g_warning ("interface found, but not interface data");
+		g_warning ("interface found, but not the correct length for "
+			   "functional data: %" G_GSIZE_FORMAT " bytes",
+			   iface_data_length);
 		return;
 	}
 
