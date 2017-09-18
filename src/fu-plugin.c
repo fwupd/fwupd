@@ -372,8 +372,8 @@ static gboolean
 fu_plugin_device_add_delay_cb (gpointer user_data)
 {
 	FuPluginHelper *helper = (FuPluginHelper *) user_data;
-	g_hash_table_remove (helper->devices, helper->device);
 	fu_plugin_device_add (helper->plugin, helper->device);
+	g_hash_table_remove (helper->devices, helper->device);
 	fu_plugin_helper_free (helper);
 	return FALSE;
 }
