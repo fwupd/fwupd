@@ -211,6 +211,7 @@ LIBFWUPD_1.0.0 {
     fwupd_release_from_variant;
     fwupd_release_to_variant;
     fwupd_remote_from_variant;
+    fwupd_remote_get_checksum;
     fwupd_remote_to_variant;
   local: *;
 } LIBFWUPD_0.9.8;
