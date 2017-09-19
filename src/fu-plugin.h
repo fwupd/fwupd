@@ -89,7 +89,6 @@ void		 fu_plugin_set_percentage		(FuPlugin	*plugin,
 void		 fu_plugin_recoldplug			(FuPlugin	*plugin);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*plugin,
 							 guint		 duration);
-gboolean	 fu_plugin_has_device_delay		(FuPlugin	*plugin);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*plugin,
 							 const gchar	*id);
 void		 fu_plugin_cache_remove			(FuPlugin	*plugin,
