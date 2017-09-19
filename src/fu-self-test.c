@@ -417,9 +417,6 @@ fu_plugin_module_func (void)
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
 
-	/* the test plugin is only usable if this is set */
-	g_setenv ("FWUPD_TESTS", "true", TRUE);
-
 	/* create a fake device */
 	plugin = fu_plugin_new ();
 	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
