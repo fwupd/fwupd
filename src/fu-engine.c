@@ -2852,13 +2852,6 @@ fu_engine_load (FuEngine *self, GError **error)
 		return FALSE;
 	}
 
-	/* disable udev? */
-	if (!fu_config_get_enable_option_rom (self->config)) {
-		FuPlugin *plugin = g_hash_table_lookup (self->plugins_hash, "udev");
-		if (plugin != NULL)
-			fu_plugin_set_enabled (plugin, FALSE);
-	}
-
 	/* add devices */
 	fu_engine_plugins_setup (self);
 	g_usb_context_enumerate (self->usb_ctx);
