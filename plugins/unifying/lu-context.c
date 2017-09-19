@@ -255,21 +255,6 @@ lu_context_get_platform_id_for_udev_device (GUdevDevice *udev_device)
 	return g_udev_device_get_sysfs_path (udev_device1);
 }
 
-static gboolean
-lu_context_peripheral_pid_in_whitelist (guint16 pid)
-{
-	const guint16 pids[] = {
-		0x4027,	/* T620, read only */
-		0x405B,	/* K780, signed */
-		0x0000,
-	};
-	for (guint i = 0; pids[i] != 0x0; i++) {
-		if (pids[i] == pid)
-			return TRUE;
-	}
-	return FALSE;
-}
-
 static void
 lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 {
@@ -277,6 +262,7 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 	const gchar *platform_id;
 	guint16 pid;
 	guint16 vid;
+	g_autofree gchar *devid = NULL;
 	g_autoptr(GUdevDevice) udev_parent = NULL;
 	g_autoptr(LuDevice) device = NULL;
 
@@ -334,31 +320,27 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 		return;
 	}
 
-	/* is supported peripheral */
-	if (lu_context_peripheral_pid_in_whitelist (pid)) {
-		g_autofree gchar *devid = NULL;
-		platform_id = g_udev_device_get_sysfs_path (udev_device);
-		device = g_object_new (LU_TYPE_DEVICE_PERIPHERAL,
-				       "kind", LU_DEVICE_KIND_PERIPHERAL,
-				       "platform-id", platform_id,
-				       "udev-device", udev_device,
-				       NULL);
-		val = g_udev_device_get_property (udev_parent, "HID_NAME");
-		if (val != NULL) {
-			if (g_str_has_prefix (val, "Logitech "))
-				val += 9;
-			lu_device_set_product (device, val);
-		}
-
-		/* generate GUID */
-		devid = g_strdup_printf ("UFY\\VID_%04X&PID_%04X", vid, pid);
-		lu_device_add_guid (device, devid);
-		g_hash_table_insert (ctx->hash_devices,
-				     g_strdup (lu_device_get_platform_id (device)),
-				     g_object_ref (device));
-		lu_context_add_device (ctx, device);
-		return;
+	/* is peripheral */
+	platform_id = g_udev_device_get_sysfs_path (udev_device);
+	device = g_object_new (LU_TYPE_DEVICE_PERIPHERAL,
+			       "kind", LU_DEVICE_KIND_PERIPHERAL,
+			       "platform-id", platform_id,
+			       "udev-device", udev_device,
+			       NULL);
+	val = g_udev_device_get_property (udev_parent, "HID_NAME");
+	if (val != NULL) {
+		if (g_str_has_prefix (val, "Logitech "))
+			val += 9;
+		lu_device_set_product (device, val);
 	}
+
+	/* generate GUID */
+	devid = g_strdup_printf ("UFY\\VID_%04X&PID_%04X", vid, pid);
+	lu_device_add_guid (device, devid);
+	g_hash_table_insert (ctx->hash_devices,
+			     g_strdup (lu_device_get_platform_id (device)),
+			     g_object_ref (device));
+	lu_context_add_device (ctx, device);
 }
 
 static gboolean
