@@ -39,7 +39,6 @@ struct _FuConfig
 	GPtrArray		*monitors;
 	GPtrArray		*blacklist_devices;
 	GPtrArray		*blacklist_plugins;
-	gboolean		 enable_option_rom;
 };
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
@@ -308,13 +307,6 @@ fu_config_load (FuConfig *self, GError **error)
 			  G_CALLBACK (fu_config_monitor_changed_cb), self);
 	g_ptr_array_add (self->monitors, monitor);
 
-	/* optional, at the moment */
-	self->enable_option_rom =
-		g_key_file_get_boolean (self->keyfile,
-					"fwupd",
-					"EnableOptionROM",
-					NULL);
-
 	/* get blacklisted devices */
 	devices = g_key_file_get_string_list (self->keyfile,
 					      "fwupd",
@@ -382,13 +374,6 @@ fu_config_get_blacklist_plugins (FuConfig *self)
 {
 	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
 	return self->blacklist_plugins;
-}
-
-gboolean
-fu_config_get_enable_option_rom (FuConfig *self)
-{
-	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
-	return self->enable_option_rom;
 }
 
 static void
