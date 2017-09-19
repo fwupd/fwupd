@@ -223,14 +223,6 @@ fu_engine_get_plugin_by_name (FuEngine *self, const gchar *name)
 	return NULL;
 }
 
-static const gchar *
-fu_engine_get_sysconfig_dir (void)
-{
-	if (g_file_test (SYSCONFDIR, G_FILE_TEST_EXISTS))
-		return SYSCONFDIR;
-	return "/etc";
-}
-
 static void
 fu_engine_set_release_from_appstream (FuEngine *self,
 				      FwupdRelease *rel,
@@ -378,7 +370,7 @@ fu_engine_get_release_trust_flags (AsRelease *release,
 	}
 
 	/* check we were installed correctly */
-	pki_dir = g_build_filename (fu_engine_get_sysconfig_dir (), "pki", "fwupd", NULL);
+	pki_dir = g_build_filename (SYSCONFDIR, "pki", "fwupd", NULL);
 	if (!g_file_test (pki_dir, G_FILE_TEST_EXISTS)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
