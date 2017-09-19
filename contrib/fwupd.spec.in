@@ -179,7 +179,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %files -f %{name}.lang
 %doc README.md AUTHORS NEWS
 %license COPYING
-%config(noreplace)%{_sysconfdir}/fwupd.conf
+%config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %{_bindir}/dfu-tool
