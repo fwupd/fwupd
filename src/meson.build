@@ -136,7 +136,7 @@ executable(
     '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DPLUGINDIR="' + plugin_dir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
-    '-DSYSCONFDIR="' + get_option('sysconfdir') + '"',
+    '-DSYSCONFDIR="' + default_sysconfdir + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,

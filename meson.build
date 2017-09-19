@@ -253,6 +253,12 @@ configure_file(
   configuration : conf
 )
 
+default_sysconfdir = get_option('sysconfdir')
+if default_sysconfdir == 'etc'
+  message('sysconfdir of etc makes no sense, using /etc')
+  default_sysconfdir = '/etc'
+endif
+
 localstatedir = join_paths(get_option('prefix'),
                            get_option('localstatedir'))
 

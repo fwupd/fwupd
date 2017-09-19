@@ -44,21 +44,12 @@ struct _FuConfig
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
 
-static const gchar *
-fu_config_get_sysconfig_dir (void)
-{
-	if (g_file_test (SYSCONFDIR, G_FILE_TEST_EXISTS))
-		return SYSCONFDIR;
-	return "/etc";
-}
-
 static GPtrArray *
 fu_config_get_config_paths (void)
 {
 	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
 	const gchar *remotes_dir;
 	const gchar *system_prefixlibdir = "/usr/lib/fwupd";
-	const gchar *system_sysconfdir = "/etc/fwupd";
 	g_autofree gchar *sysconfdir = NULL;
 
 	/* only set by the self test program */
@@ -70,13 +61,8 @@ fu_config_get_config_paths (void)
 
 	/* use sysconfig, and then fall back to /etc */
 	sysconfdir = g_build_filename (SYSCONFDIR, "fwupd", NULL);
-	if (g_file_test (sysconfdir, G_FILE_TEST_EXISTS)) {
+	if (g_file_test (sysconfdir, G_FILE_TEST_EXISTS))
 		g_ptr_array_add (paths, g_steal_pointer (&sysconfdir));
-	} else {
-		g_debug ("falling back to system path");
-		if (g_file_test (system_sysconfdir, G_FILE_TEST_EXISTS))
-			g_ptr_array_add (paths, g_strdup (system_sysconfdir));
-	}
 
 	/* add in system-wide locations */
 	if (g_file_test (system_prefixlibdir, G_FILE_TEST_EXISTS))
@@ -307,8 +293,7 @@ fu_config_load (FuConfig *self, GError **error)
 	g_ptr_array_set_size (self->remotes, 0);
 
 	/* load the main daemon config file */
-	config_file = g_build_filename (fu_config_get_sysconfig_dir (),
-					"fwupd.conf", NULL);
+	config_file = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
 	g_debug ("loading config values from %s", config_file);
 	if (!g_key_file_load_from_file (self->keyfile, config_file,
 					G_KEY_FILE_NONE, error))
