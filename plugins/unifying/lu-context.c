@@ -35,6 +35,7 @@
 struct _LuContext
 {
 	GObject			 parent_instance;
+	GPtrArray		*supported_guids;
 	GPtrArray		*devices;
 	GHashTable		*devices_active;	/* LuDevice : 1 */
 	GUsbContext		*usb_ctx;
@@ -74,6 +75,29 @@ lu_context_get_devices (LuContext *ctx)
 	if (!ctx->done_coldplug)
 		lu_context_coldplug (ctx);
 	return ctx->devices;
+}
+
+static gboolean
+lu_context_check_supported (LuContext *ctx, const gchar *guid)
+{
+	if (ctx->supported_guids == NULL) {
+		g_debug ("no list of supported GUIDs so assuming supported");
+		return TRUE;
+	}
+	for (guint i = 0; i < ctx->supported_guids->len; i++) {
+		const gchar *guid_tmp = g_ptr_array_index (ctx->supported_guids, i);
+		if (g_strcmp0 (guid, guid_tmp) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+void
+lu_context_set_supported (LuContext *ctx, GPtrArray *supported_guids)
+{
+	if (ctx->supported_guids != NULL)
+		g_ptr_array_unref (ctx->supported_guids);
+	ctx->supported_guids = g_ptr_array_ref (supported_guids);
 }
 
 static void
@@ -337,6 +361,10 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 	/* generate GUID */
 	devid = g_strdup_printf ("UFY\\VID_%04X&PID_%04X", vid, pid);
 	lu_device_add_guid (device, devid);
+	if (!lu_context_check_supported (ctx, lu_device_get_guid_default (device))) {
+		g_debug ("%s not supported, so ignoring device", devid);
+		return;
+	}
 	g_hash_table_insert (ctx->hash_devices,
 			     g_strdup (lu_device_get_platform_id (device)),
 			     g_object_ref (device));

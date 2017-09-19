@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <glib/gstdio.h>
 #include <string.h>
+#include <appstream-glib.h>
 
 #include "lu-common.h"
 #include "lu-device-bootloader-nordic.h"
@@ -732,6 +733,15 @@ lu_device_set_version_hw (LuDevice *device, const gchar *version_hw)
 	priv->version_hw = g_strdup (version_hw);
 }
 
+const gchar *
+lu_device_get_guid_default (LuDevice *device)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	if (priv->guids->len == 0)
+		return NULL;
+	return g_ptr_array_index (priv->guids, 0);
+}
+
 GPtrArray *
 lu_device_get_guids (LuDevice *device)
 {
@@ -743,6 +753,10 @@ void
 lu_device_add_guid (LuDevice *device, const gchar *guid)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
+	if (!as_utils_guid_is_valid (guid)) {
+		g_ptr_array_add (priv->guids, as_utils_guid_from_string (guid));
+		return;
+	}
 	g_ptr_array_add (priv->guids, g_strdup (guid));
 }
 

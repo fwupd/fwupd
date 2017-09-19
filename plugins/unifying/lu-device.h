@@ -135,6 +135,7 @@ void		 lu_device_set_version_fw	(LuDevice		*device,
 const gchar	*lu_device_get_version_hw	(LuDevice		*device);
 void		 lu_device_set_version_hw	(LuDevice		*device,
 						 const gchar		*version_hw);
+const gchar	*lu_device_get_guid_default	(LuDevice		*device);
 GPtrArray	*lu_device_get_guids		(LuDevice		*device);
 void		 lu_device_add_guid		(LuDevice		*device,
 						 const gchar		*guid);
