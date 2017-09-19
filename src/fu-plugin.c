@@ -45,7 +45,8 @@ typedef struct {
 	gboolean		 enabled;
 	gchar			*name;
 	FuHwids			*hwids;
-	FuSmbios			*smbios;
+	GPtrArray		*supported_guids;
+	FuSmbios		*smbios;
 	GHashTable		*devices;	/* platform_id:GObject */
 	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
 	FuPluginData		*data;
@@ -536,6 +537,30 @@ fu_plugin_check_hwid (FuPlugin *plugin, const gchar *hwid)
 }
 
 /**
+ * fu_plugin_check_supported:
+ * @plugin: A #FuPlugin
+ * @guid: A Hardware ID GUID, e.g. "6de5d951-d755-576b-bd09-c5cf66b27234"
+ *
+ * Checks to see if a specific device GUID is supported, i.e. available in the
+ * AppStream metadata.
+ *
+ * Since: 1.0.0
+ **/
+gboolean
+fu_plugin_check_supported (FuPlugin *plugin, const gchar *guid)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->supported_guids == NULL)
+		return FALSE;
+	for (guint i = 0; i < priv->supported_guids->len; i++) {
+		const gchar *guid_tmp = g_ptr_array_index (priv->supported_guids, i);
+		if (g_strcmp0 (guid, guid_tmp) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
  * fu_plugin_get_dmi_value:
  * @plugin: A #FuPlugin
  * @dmi_id: A DMI ID, e.g. "BiosVersion"
@@ -598,6 +623,30 @@ fu_plugin_set_hwids (FuPlugin *plugin, FuHwids *hwids)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	g_set_object (&priv->hwids, hwids);
+}
+
+void
+fu_plugin_set_supported (FuPlugin *plugin, GPtrArray *supported_guids)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->supported_guids != NULL)
+		g_ptr_array_unref (priv->supported_guids);
+	priv->supported_guids = g_ptr_array_ref (supported_guids);
+}
+
+/**
+ * fu_plugin_get_supported:
+ * @plugin: A #FuPlugin
+ *
+ * Gets all the device GUIDs supported by the daemon.
+ *
+ * Since: 1.0.0
+ **/
+GPtrArray *
+fu_plugin_get_supported (FuPlugin *plugin)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	return priv->supported_guids;
 }
 
 void
@@ -1240,6 +1289,8 @@ fu_plugin_finalize (GObject *object)
 		g_object_unref (priv->usb_ctx);
 	if (priv->hwids != NULL)
 		g_object_unref (priv->hwids);
+	if (priv->supported_guids != NULL)
+		g_ptr_array_unref (priv->supported_guids);
 	if (priv->smbios != NULL)
 		g_object_unref (priv->smbios);
 #ifndef RUNNING_ON_VALGRIND

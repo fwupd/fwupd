@@ -73,6 +73,7 @@ struct _FuEngine
 	guint			 coldplug_delay;
 	GPtrArray		*plugins;	/* of FuPlugin */
 	GHashTable		*plugins_hash;	/* of name : FuPlugin */
+	GPtrArray		*supported_guids;
 	FuSmbios		*smbios;
 	FuHwids			*hwids;
 };
@@ -1528,6 +1529,7 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 {
 	GPtrArray *apps;
 	GPtrArray *remotes;
+	g_autofree gchar *guids_str = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* clear existing store */
@@ -1584,6 +1586,17 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 				 as_app_get_id (app),
 				 as_app_get_name (app, NULL),
 				 releases_str->str);
+		}
+	}
+
+	/* update the list of supported GUIDs */
+	g_ptr_array_set_size (self->supported_guids, 0);
+	guids_str = fu_engine_get_guids_from_store (self->store);
+	if (guids_str != NULL) {
+		g_auto(GStrv) guids = g_strsplit (guids_str, ",", -1);
+		for (guint i = 0; guids[i] != NULL; i++) {
+			g_ptr_array_add (self->supported_guids,
+					 g_steal_pointer (&guids[i]));
 		}
 	}
 
@@ -2688,6 +2701,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		fu_plugin_set_usb_context (plugin, self->usb_ctx);
 		fu_plugin_set_hwids (plugin, self->hwids);
 		fu_plugin_set_smbios (plugin, self->smbios);
+		fu_plugin_set_supported (plugin, self->supported_guids);
 		g_debug ("adding plugin %s", filename);
 		if (!fu_plugin_open (plugin, filename, &error_local)) {
 			g_warning ("failed to open plugin %s: %s",
@@ -2912,6 +2926,7 @@ fu_engine_init (FuEngine *self)
 	self->pending = fu_pending_new ();
 	self->profile = as_profile_new ();
 	self->store = as_store_new ();
+	self->supported_guids = g_ptr_array_new_with_free_func (g_free);
 	self->plugins = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	self->plugins_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
@@ -2935,6 +2950,7 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->profile);
 	g_object_unref (self->store);
 	g_ptr_array_unref (self->devices);
+	g_ptr_array_unref (self->supported_guids);
 	g_ptr_array_unref (self->plugins);
 
 	G_OBJECT_CLASS (fu_engine_parent_class)->finalize (obj);

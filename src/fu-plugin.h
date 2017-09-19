@@ -74,6 +74,7 @@ gboolean	 fu_plugin_get_enabled			(FuPlugin	*plugin);
 void		 fu_plugin_set_enabled			(FuPlugin	*plugin,
 							 gboolean	 enabled);
 GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*plugin);
+GPtrArray	*fu_plugin_get_supported		(FuPlugin	*plugin);
 void		 fu_plugin_device_add			(FuPlugin	*plugin,
 							 FuDevice	*device);
 void		 fu_plugin_device_add_delay		(FuPlugin	*plugin,
@@ -98,6 +99,8 @@ void		 fu_plugin_cache_add			(FuPlugin	*plugin,
 							 gpointer	 dev);
 gboolean	 fu_plugin_check_hwid			(FuPlugin	*plugin,
 							 const gchar	*hwid);
+gboolean	 fu_plugin_check_supported		(FuPlugin	*plugin,
+							 const gchar	*guid);
 const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*plugin,
 							 const gchar	*dmi_id);
 const gchar	*fu_plugin_get_smbios_string		(FuPlugin	*plugin,

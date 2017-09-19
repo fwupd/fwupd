@@ -35,6 +35,8 @@ void		 fu_plugin_set_usb_context		(FuPlugin	*plugin,
 							 GUsbContext	*usb_ctx);
 void		 fu_plugin_set_hwids			(FuPlugin	*plugin,
 							 FuHwids	*hwids);
+void		 fu_plugin_set_supported		(FuPlugin	*plugin,
+							 GPtrArray	*supported_guids);
 void		 fu_plugin_set_smbios			(FuPlugin	*plugin,
 							 FuSmbios	*smbios);
 gboolean	 fu_plugin_open				(FuPlugin	*plugin,
