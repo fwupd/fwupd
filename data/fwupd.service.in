@@ -17,3 +17,4 @@ ProtectSystem=full
 RestrictAddressFamilies=AF_NETLINK AF_UNIX
 RestrictRealtime=yes
 ReadWritePaths=@localstatedir@/lib/fwupd -@bootdir@
+CapabilityBoundingSet=~CAP_SYS_ADMIN
