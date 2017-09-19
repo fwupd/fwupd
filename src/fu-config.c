@@ -60,7 +60,7 @@ fu_config_get_config_paths (void)
 	}
 
 	/* use sysconfig, and then fall back to /etc */
-	sysconfdir = g_build_filename (SYSCONFDIR, "fwupd", NULL);
+	sysconfdir = g_build_filename (FWUPDCONFIGDIR, NULL);
 	if (g_file_test (sysconfdir, G_FILE_TEST_EXISTS))
 		g_ptr_array_add (paths, g_steal_pointer (&sysconfdir));
 
@@ -293,7 +293,7 @@ fu_config_load (FuConfig *self, GError **error)
 	g_ptr_array_set_size (self->remotes, 0);
 
 	/* load the main daemon config file */
-	config_file = g_build_filename (SYSCONFDIR, "fwupd.conf", NULL);
+	config_file = g_build_filename (FWUPDCONFIGDIR, "daemon.conf", NULL);
 	g_debug ("loading config values from %s", config_file);
 	if (!g_key_file_load_from_file (self->keyfile, config_file,
 					G_KEY_FILE_NONE, error))

@@ -42,7 +42,7 @@ cp $HOME/rpmbuild/RPMS/*/*.rpm .
 
 # run the installed tests
 if [ "$CI" = "true" ]; then
-	sed "s,^EnableTestSuite=.*,EnableTestSuite=true," -i /etc/fwupd.conf
+	sed "s,^EnableTestSuite=.*,EnableTestSuite=true," -i /etc/fwupd/daemon.conf
 	mkdir -p /run/dbus
 	mkdir -p /var
 	ln -s /var/run /run
