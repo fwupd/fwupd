@@ -159,15 +159,15 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 }
 
 static AsVersionParseFlag
-fu_plugin_dell_get_version_format (void)
+fu_plugin_dell_get_version_format (FuPlugin *plugin)
 {
-	g_autofree gchar *content = NULL;
+	const gchar *content = NULL;
+
+	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
+	if (content == NULL)
+		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 
 	/* any vendors match */
-	if (!g_file_get_contents ("/sys/class/dmi/id/sys_vendor",
-				  &content, NULL, NULL))
-		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
-	g_strchomp (content);
 	for (guint i = 0; quirk_table[i].sys_vendor != NULL; i++) {
 		if (g_strcmp0 (content, quirk_table[i].sys_vendor) == 0)
 			return quirk_table[i].flags;
@@ -328,7 +328,7 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	g_debug ("Dock cable type: %" G_GUINT32_FORMAT, dock_info->cable_type);
 	g_debug ("Dock location: %d", dock_info->location);
 	g_debug ("Dock component count: %d", dock_info->component_count);
-	parse_flags = fu_plugin_dell_get_version_format ();
+	parse_flags = fu_plugin_dell_get_version_format (plugin);
 
 	for (guint i = 0; i < dock_info->component_count; i++) {
 		g_autofree gchar *fw_str = NULL;
@@ -440,19 +440,28 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 gboolean
 fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	struct smbios_struct *de_table;
-	guint16 completion_code = 0xFFFF;
+	GBytes *de_table = NULL;
 	const gchar *tmp = NULL;
+	const guint16 *completion_code;
+	gsize len;
 
-	/* look at offset 0x06 for identifier meaning completion code */
-	de_table = smbios_get_next_struct_by_type (0, 0xDE);
-	smbios_struct_get_data (de_table, &completion_code, 0x06, sizeof (guint16));
+	de_table = fu_plugin_get_smbios_data (plugin, 0xDE);
+	completion_code = g_bytes_get_data (de_table, &len);
+	if (len < 8) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "ERROR: Unable to read results of %s: %lu < 8",
+			     fu_device_get_name (device), len);
+		return FALSE;
+	}
 
-	if (completion_code == DELL_SUCCESS) {
+	/* look at byte offset 0x06  for identifier meaning completion code */
+	if (completion_code[3] == DELL_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	} else {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		switch (completion_code) {
+		switch (completion_code[3]) {
 		case DELL_CONSISTENCY_FAIL:
 			tmp = "The image failed one or more consistency checks.";
 			break;
@@ -515,7 +524,6 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	gboolean can_switch_modes = FALSE;
 	g_autofree gchar *pretty_tpm_name_alt = NULL;
 	g_autofree gchar *pretty_tpm_name = NULL;
-	g_autofree gchar *product_name = NULL;
 	g_autofree gchar *tpm_guid_raw_alt = NULL;
 	g_autofree gchar *tpm_guid_alt = NULL;
 	g_autofree gchar *tpm_guid = NULL;
@@ -526,6 +534,9 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	struct tpm_status *out = NULL;
 	g_autoptr (FuDevice) dev_alt = NULL;
 	g_autoptr (FuDevice) dev = NULL;
+	const gchar *system_id_str = NULL;
+	const gchar *product_name = NULL;
+	gchar *endptr = NULL;
 
 	fu_dell_clear_smi (data->smi_obj);
 	out = (struct tpm_status *) data->smi_obj->output;
@@ -566,10 +577,18 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
-	if (!data->smi_obj->fake_smbios)
-		system_id = (guint16) sysinfo_get_dell_system_id ();
-	else
+	system_id_str = fu_plugin_get_dmi_value (plugin,
+						 FU_HWIDS_KEY_PRODUCT_SKU);
+	if (system_id_str != NULL)
+		system_id = g_ascii_strtoull (system_id_str, &endptr, 16);
+	if (data->smi_obj->fake_smbios)
 		can_switch_modes = data->can_switch_modes;
+	else {
+		if (system_id == 0 || endptr == system_id_str)
+			system_id = (guint16) sysinfo_get_dell_system_id ();
+		if (system_id == 0)
+			return FALSE;
+	}
 
 	for (guint i = 0; i < G_N_ELEMENTS (tpm_switch_whitelist); i++) {
 		if (tpm_switch_whitelist[i] == system_id) {
@@ -592,15 +611,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 
 	/* make it clear that the TPM is a discrete device of the product */
 	if (!data->smi_obj->fake_smbios) {
-		if (!g_file_get_contents ("/sys/class/dmi/id/product_name",
-					  &product_name,NULL, NULL)) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "Unable to read product information");
-			return FALSE;
-		}
-		g_strchomp (product_name);
+		product_name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
 	}
 	pretty_tpm_name = g_strdup_printf ("%s TPM %s", product_name, tpm_mode);
 	pretty_tpm_name_alt = g_strdup_printf ("%s TPM %s", product_name, tpm_mode_alt);
@@ -827,10 +838,24 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 		if (fu_device_get_metadata_boolean (device, FU_DEVICE_METADATA_TBT_IS_SAFE_MODE)) {
 			g_autofree gchar *vendor_id = NULL;
 			g_autofree gchar *device_id = NULL;
+			const gchar *system_id_str = NULL;
+			gchar *endptr = NULL;
+			guint16 system_id = 0;
+
 			vendor_id = g_strdup ("TBT:0x00D4");
+			system_id_str = fu_plugin_get_dmi_value (plugin,
+								 FU_HWIDS_KEY_PRODUCT_SKU);
+			if (system_id_str != NULL) {
+				system_id = g_ascii_strtoull (system_id_str,
+							      &endptr, 16);
+			}
+			if (system_id == 0 || endptr == system_id_str)
+				system_id = (guint16) sysinfo_get_dell_system_id ();
+			if (system_id == 0)
+				return;
 			/* the kernel returns lowercase in sysfs, need to match it */
 			device_id = g_strdup_printf ("TBT-%04x%04x", 0x00d4u,
-						     (unsigned) sysinfo_get_dell_system_id ());
+						     (unsigned) system_id);
 			fu_device_set_vendor_id (device, vendor_id);
 			fu_device_add_guid (device, device_id);
 			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -872,7 +897,7 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
-	if (fu_dell_supported ())
+	if (fu_dell_supported (plugin))
 		data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
 	data->smi_obj->fake_smbios = FALSE;
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
@@ -901,7 +926,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		return TRUE;
 	}
 
-	if (!fu_dell_supported ()) {
+	if (!fu_dell_supported (plugin)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,

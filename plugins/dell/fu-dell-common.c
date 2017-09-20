@@ -59,16 +59,19 @@ _dell_smi_obj_free (FuDellSmiObj *obj)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
 
 gboolean
-fu_dell_supported (void)
+fu_dell_supported (FuPlugin *plugin)
 {
-	guint8 dell_supported = 0;
-	struct smbios_struct *de_table;
+	GBytes *de_table = NULL;
+	const guint8 *value;
+	gsize len;
 
-	de_table = smbios_get_next_struct_by_handle (0, 0xDE00);
-	if (!de_table)
+	de_table = fu_plugin_get_smbios_data (plugin, 0xDE);
+	if (de_table == NULL)
 		return FALSE;
-	smbios_struct_get_data (de_table, &(dell_supported), 0x00, sizeof(guint8));
-	if (dell_supported != 0xDE)
+	value = g_bytes_get_data (de_table, &len);
+	if (len == 0)
+		return FALSE;
+	if (*value != 0xDE)
 		return FALSE;
 	return TRUE;
 }
