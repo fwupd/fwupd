@@ -39,6 +39,9 @@ FuSmbios	*fu_smbios_new			(void);
 
 gboolean	 fu_smbios_setup		(FuSmbios	*self,
 						 GError		**error);
+gboolean	 fu_smbios_setup_from_path	(FuSmbios	*self,
+						 const gchar	*path,
+						 GError		**error);
 gboolean	 fu_smbios_setup_from_file	(FuSmbios	*self,
 						 const gchar	*filename,
 						 GError		**error);

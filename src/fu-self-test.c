@@ -264,6 +264,33 @@ fu_smbios_func (void)
 }
 
 static void
+fu_smbios3_func (void)
+{
+	const gchar *str;
+	gboolean ret;
+	g_autofree gchar *path = NULL;
+	g_autoptr(FuSmbios) smbios = NULL;
+	g_autoptr(GError) error = NULL;
+
+	path = fu_test_get_filename (TESTDATADIR, "dmi/tables64");
+	g_assert_nonnull (path);
+
+	smbios = fu_smbios_new ();
+	ret = fu_smbios_setup_from_path (smbios, path, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	if (g_getenv ("VERBOSE") != NULL) {
+		g_autofree gchar *dump = fu_smbios_to_string (smbios);
+		g_debug ("%s", dump);
+	}
+
+	/* get vendor */
+	str = fu_smbios_get_string (smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x04, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (str, ==, "Dell Inc.");
+}
+
+static void
 fu_hwids_func (void)
 {
 	g_autoptr(FuHwids) hwids = NULL;
@@ -909,6 +936,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/engine", fu_engine_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
+	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);

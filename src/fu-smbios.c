@@ -30,6 +30,7 @@
 struct _FuSmbios {
 	GObject			 parent_instance;
 	gchar			*smbios_ver;
+	guint32			 structure_table_len;
 	GPtrArray		*items;
 };
 
@@ -49,7 +50,21 @@ typedef struct __attribute__((packed)) {
 	guint32			 structure_table_addr;
 	guint16			 number_smbios_structs;
 	guint8			 smbios_bcd_rev;
-} FuSmbiosStructureEntryPoint;
+} FuSmbiosStructureEntryPoint32;
+
+/* little endian */
+typedef struct __attribute__((packed)) {
+	gchar			 anchor_str[5];
+	guint8			 entry_point_csum;
+	guint8			 entry_point_len;
+	guint8			 smbios_major_ver;
+	guint8			 smbios_minor_ver;
+	guint8			 smbios_docrev;
+	guint8			 entry_point_rev;
+	guint8			 reserved0;
+	guint32			 structure_table_len;
+	guint64			 structure_table_addr;
+} FuSmbiosStructureEntryPoint64;
 
 /* little endian */
 typedef struct __attribute__((packed)) {
@@ -135,6 +150,168 @@ fu_smbios_setup_from_file (FuSmbios *self, const gchar *filename, GError **error
 	return fu_smbios_setup_from_data (self, (guint8 *) buf, sz, error);
 }
 
+static gboolean
+fu_smbios_parse_ep32 (FuSmbios *self, const gchar *buf, gsize sz, GError **error)
+{
+	FuSmbiosStructureEntryPoint32 *ep;
+	guint8 csum = 0;
+
+	/* verify size */
+	if (sz != sizeof(FuSmbiosStructureEntryPoint32)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "invalid smbios entry point got %" G_GSIZE_FORMAT
+			     " bytes, expected %" G_GSIZE_FORMAT,
+			     sz, sizeof(FuSmbiosStructureEntryPoint32));
+		return FALSE;
+	}
+
+	/* verify checksum */
+	for (guint i = 0; i < sz; i++)
+		csum += buf[i];
+	if (csum != 0x00) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "entry point checksum invalid");
+		return FALSE;
+	}
+
+	/* verify intermediate section */
+	ep = (FuSmbiosStructureEntryPoint32 *) buf;
+	if (memcmp (ep->intermediate_anchor_str, "_DMI_", 5) != 0) {
+		g_autofree gchar *tmp = g_strndup (ep->intermediate_anchor_str, 5);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "intermediate anchor signature invalid, got %s", tmp);
+		return FALSE;
+	}
+	for (guint i = 10; i < sz; i++)
+		csum += buf[i];
+	if (csum != 0x00) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "intermediate checksum invalid");
+		return FALSE;
+	}
+	self->structure_table_len = GUINT16_FROM_LE (ep->structure_table_len);
+	self->smbios_ver = g_strdup_printf ("%u.%u",
+					    ep->smbios_major_ver,
+					    ep->smbios_minor_ver);
+	return TRUE;
+}
+
+static gboolean
+fu_smbios_parse_ep64 (FuSmbios *self, const gchar *buf, gsize sz, GError **error)
+{
+	FuSmbiosStructureEntryPoint64 *ep;
+	guint8 csum = 0;
+
+	/* verify size */
+	if (sz != sizeof(FuSmbiosStructureEntryPoint64)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "invalid smbios3 entry point got %" G_GSIZE_FORMAT
+			     " bytes, expected %" G_GSIZE_FORMAT,
+			     sz, sizeof(FuSmbiosStructureEntryPoint32));
+		return FALSE;
+	}
+
+	/* verify checksum */
+	for (guint i = 0; i < sz; i++)
+		csum += buf[i];
+	if (csum != 0x00) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "entry point checksum invalid");
+		return FALSE;
+	}
+	ep = (FuSmbiosStructureEntryPoint64 *) buf;
+	self->structure_table_len = GUINT32_FROM_LE (ep->structure_table_len);
+	self->smbios_ver = g_strdup_printf ("%u.%u",
+					    ep->smbios_major_ver,
+					    ep->smbios_minor_ver);
+	return TRUE;
+}
+
+/**
+ * fu_smbios_setup:
+ * @self: A #FuSmbios
+ * @path: A path, e.g. "/sys/firmware/dmi/tables"
+ * @error: A #GError or %NULL
+ *
+ * Reads all the SMBIOS values from a specific path.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_smbios_setup_from_path (FuSmbios *self, const gchar *path, GError **error)
+{
+	gsize sz = 0;
+	g_autofree gchar *dmi_fn = NULL;
+	g_autofree gchar *dmi_raw = NULL;
+	g_autofree gchar *ep_fn = NULL;
+	g_autofree gchar *ep_raw = NULL;
+
+	g_return_val_if_fail (FU_IS_SMBIOS (self), FALSE);
+
+	/* get the smbios entry point */
+	ep_fn = g_build_filename (path, "smbios_entry_point", NULL);
+	if (!g_file_get_contents (ep_fn, &ep_raw, &sz, error))
+		return FALSE;
+
+	/* check we got enough data to read the signature */
+	if (sz < 5) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "invalid smbios entry point got %" G_GSIZE_FORMAT
+			     " bytes, expected %" G_GSIZE_FORMAT
+			     " or %" G_GSIZE_FORMAT, sz,
+			     sizeof(FuSmbiosStructureEntryPoint32),
+			     sizeof(FuSmbiosStructureEntryPoint64));
+		return FALSE;
+	}
+
+	/* parse 32 bit structure */
+	if (memcmp (ep_raw, "_SM_", 4) == 0) {
+		if (!fu_smbios_parse_ep32 (self, ep_raw, sz, error))
+			return FALSE;
+	} else if (memcmp (ep_raw, "_SM3_", 5) == 0) {
+		if (!fu_smbios_parse_ep64 (self, ep_raw, sz, error))
+			return FALSE;
+	} else {
+		g_autofree gchar *tmp = g_strndup (ep_raw, 4);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "SMBIOS signature invalid, got %s", tmp);
+		return FALSE;
+	}
+
+	/* get the DMI data */
+	dmi_fn = g_build_filename (path, "DMI", NULL);
+	if (!g_file_get_contents (dmi_fn, &dmi_raw, &sz, error))
+		return FALSE;
+	if (sz != self->structure_table_len) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "invalid DMI data size, got %" G_GSIZE_FORMAT
+			     " bytes, expected %" G_GUINT32_FORMAT,
+			     sz, self->structure_table_len);
+		return FALSE;
+	}
+
+	/* parse blob */
+	return fu_smbios_setup_from_data (self, (guint8 *) dmi_raw, sz, error);
+}
+
 /**
  * fu_smbios_setup:
  * @self: A #FuSmbios
@@ -147,84 +324,10 @@ fu_smbios_setup_from_file (FuSmbios *self, const gchar *filename, GError **error
 gboolean
 fu_smbios_setup (FuSmbios *self, GError **error)
 {
-	FuSmbiosStructureEntryPoint *ep;
-	gsize sz = 0;
-	guint8 csum = 0;
-	g_autofree gchar *dmi_fn = NULL;
-	g_autofree gchar *dmi_raw = NULL;
-	g_autofree gchar *ep_fn = NULL;
-	g_autofree gchar *ep_raw = NULL;
-
+	g_autofree gchar *path = NULL;
 	g_return_val_if_fail (FU_IS_SMBIOS (self), FALSE);
-
-	/* get the smbios entry point */
-	ep_fn = g_build_filename (SYSFSFIRMWAREDIR, "dmi", "tables", "smbios_entry_point", NULL);
-	if (!g_file_get_contents (ep_fn, &ep_raw, &sz, error))
-		return FALSE;
-	if (sz != sizeof(FuSmbiosStructureEntryPoint)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "invalid smbios entry point got %" G_GSIZE_FORMAT
-			     " bytes, expected %" G_GSIZE_FORMAT,
-			     sz, sizeof(FuSmbiosStructureEntryPoint));
-		return FALSE;
-	}
-	ep = (FuSmbiosStructureEntryPoint *) ep_raw;
-	if (memcmp (ep->anchor_str, "_SM_", 4) != 0) {
-		g_autofree gchar *tmp = g_strndup (ep->anchor_str, 4);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "anchor signature invalid, got %s", tmp);
-		return FALSE;
-	}
-	for (guint i = 0; i < sz; i++)
-		csum += ep_raw[i];
-	if (csum != 0x00) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "entry point checksum invalid");
-		return FALSE;
-	}
-	if (memcmp (ep->intermediate_anchor_str, "_DMI_", 5) != 0) {
-		g_autofree gchar *tmp = g_strndup (ep->intermediate_anchor_str, 5);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "intermediate anchor signature invalid, got %s", tmp);
-		return FALSE;
-	}
-	for (guint i = 10; i < sz; i++)
-		csum += ep_raw[i];
-	if (csum != 0x00) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "intermediate checksum invalid");
-		return FALSE;
-	}
-	self->smbios_ver = g_strdup_printf ("%u.%u",
-					    ep->smbios_major_ver,
-					    ep->smbios_minor_ver);
-
-	/* get the DMI data */
-	dmi_fn = g_build_filename (SYSFSFIRMWAREDIR, "dmi", "tables", "DMI", NULL);
-	if (!g_file_get_contents (dmi_fn, &dmi_raw, &sz, error))
-		return FALSE;
-	if (sz != GUINT16_FROM_LE (ep->structure_table_len)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "invalid DMI data size, got %" G_GSIZE_FORMAT
-			     " bytes, expected %" G_GUINT16_FORMAT,
-			     sz, GUINT16_FROM_LE (ep->structure_table_len));
-		return FALSE;
-	}
-
-	/* parse blob */
-	return fu_smbios_setup_from_data (self, (guint8 *) dmi_raw, sz, error);
+	path = g_build_filename (SYSFSFIRMWAREDIR, "dmi", "tables", NULL);
+	return fu_smbios_setup_from_path (self, path, error);
 }
 
 /**
