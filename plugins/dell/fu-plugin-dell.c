@@ -112,6 +112,24 @@ _fwup_resource_iter_free (fwup_resource_iter *iter)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (fwup_resource_iter, _fwup_resource_iter_free);
 
 static gboolean
+fu_dell_supported (FuPlugin *plugin)
+{
+	GBytes *de_table = NULL;
+	const guint8 *value;
+	gsize len;
+
+	de_table = fu_plugin_get_smbios_data (plugin, 0xDE);
+	if (de_table == NULL)
+		return FALSE;
+	value = g_bytes_get_data (de_table, &len);
+	if (len == 0)
+		return FALSE;
+	if (*value != 0xDE)
+		return FALSE;
+	return TRUE;
+}
+
+static gboolean
 fu_plugin_dell_match_dock_component (const gchar *query_str,
 				     efi_guid_t *guid_out,
 				     const gchar **name_out)

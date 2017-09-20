@@ -58,24 +58,6 @@ _dell_smi_obj_free (FuDellSmiObj *obj)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
 
-gboolean
-fu_dell_supported (FuPlugin *plugin)
-{
-	GBytes *de_table = NULL;
-	const guint8 *value;
-	gsize len;
-
-	de_table = fu_plugin_get_smbios_data (plugin, 0xDE);
-	if (de_table == NULL)
-		return FALSE;
-	value = g_bytes_get_data (de_table, &len);
-	if (len == 0)
-		return FALSE;
-	if (*value != 0xDE)
-		return FALSE;
-	return TRUE;
-}
-
 /* don't actually clear if we're testing */
 gboolean
 fu_dell_clear_smi (FuDellSmiObj *obj)
@@ -89,7 +71,6 @@ fu_dell_clear_smi (FuDellSmiObj *obj)
 	}
 	return TRUE;
 }
-
 
 gboolean
 fu_dell_execute_smi (FuDellSmiObj *obj)
