@@ -26,9 +26,6 @@
 #include <appstream-glib.h>
 #include <glib/gstdio.h>
 #include <smbios_c/system_info.h>
-#include <smbios_c/smbios.h>
-#include <smbios_c/smi.h>
-#include <smbios_c/obj/smi.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
