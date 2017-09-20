@@ -24,7 +24,6 @@
 
 #include "fu-plugin.h"
 #include "fu-device.h"
-#include <smbios_c/smbios.h>
 #include <smbios_c/smi.h>
 #include <smbios_c/obj/smi.h>
 #include <efivar.h>
