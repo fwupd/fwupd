@@ -1929,7 +1929,7 @@ fu_engine_get_details_local (FuEngine *self, gint fd, GError **error)
 GPtrArray *
 fu_engine_get_devices (FuEngine *self, GError **error)
 {
-	GPtrArray *devices;
+	g_autoptr(GPtrArray) devices = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
@@ -1947,7 +1947,7 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 				     "No detected devices");
 		return NULL;
 	}
-	return devices;
+	return g_steal_pointer (&devices);
 }
 
 /**
@@ -1962,7 +1962,7 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 GPtrArray *
 fu_engine_get_updates (FuEngine *self, GError **error)
 {
-	GPtrArray *updates;
+	g_autoptr(GPtrArray) updates = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
@@ -1980,7 +1980,7 @@ fu_engine_get_updates (FuEngine *self, GError **error)
 				     "No devices can be updated");
 		return NULL;
 	}
-	return updates;
+	return g_steal_pointer (&updates);
 }
 
 /**
