@@ -30,6 +30,12 @@ lintian ../*changes \
 	--suppress-tags source-nmu-has-incorrect-version-number \
 	--allow-root
 
+#if invoked outside of CI
+if [ ! -f /.dockerenv ]; then
+	echo "Not running in a container, please manually install packages"
+	exit 0
+fi
+
 #test the packages install
 dpkg -i `ls ../*.deb | grep -v 'fwupd-tests\|dbgsym'`
 

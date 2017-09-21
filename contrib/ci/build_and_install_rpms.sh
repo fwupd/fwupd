@@ -35,6 +35,12 @@ sed "s,#VERSION#,$VERSION,;
 #build RPM packages
 rpmbuild -ba build/fwupd.spec
 
+#if invoked outside of CI
+if [ ! -f /.dockerenv ]; then
+        echo "Not running in a container, please manually install packages"
+        exit 0
+fi
+
 #install RPM packages
 dnf install -C -y $HOME/rpmbuild/RPMS/*/*.rpm
 
