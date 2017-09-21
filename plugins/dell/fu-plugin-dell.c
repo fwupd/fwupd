@@ -103,6 +103,23 @@ static guint16 tpm_switch_whitelist[] = {0x06F2, 0x06F3, 0x06DD, 0x06DE, 0x06DF,
 					 0x07B0, 0x07B1, 0x07B2, 0x07B4, 0x07B7,
 					 0x07B8, 0x07B9, 0x07BE, 0x07BF, 0x077A,
 					 0x07CF};
+/**
+  * Dell device types to run
+  */
+static guint8 enclosure_whitelist [] = { 0x03, /* desktop */
+					 0x04, /* low profile desktop */
+					 0x06, /* mini tower */
+					 0x07, /* tower */
+					 0x08, /* portable */
+					 0x09, /* laptop */
+					 0x0A, /* notebook */
+					 0x0D, /* AIO */
+					 0x1E, /* tablet */
+					 0x1F, /* convertible */
+					 0x21, /* IoT gateway */
+					 0x22, /* embedded PC */};
+
+
 static void
 _fwup_resource_iter_free (fwup_resource_iter *iter)
 {
@@ -115,9 +132,11 @@ static gboolean
 fu_dell_supported (FuPlugin *plugin)
 {
 	GBytes *de_table = NULL;
+	GBytes *enclosure = NULL;
 	const guint8 *value;
 	gsize len;
 
+	/* make sure that Dell SMBIOS methods are available */
 	de_table = fu_plugin_get_smbios_data (plugin, 0xDE);
 	if (de_table == NULL)
 		return FALSE;
@@ -126,7 +145,21 @@ fu_dell_supported (FuPlugin *plugin)
 		return FALSE;
 	if (*value != 0xDE)
 		return FALSE;
-	return TRUE;
+
+	/* only run on intended Dell hw types */
+	enclosure = fu_plugin_get_smbios_data (plugin,
+					       FU_SMBIOS_STRUCTURE_TYPE_CHASSIS);
+	if (enclosure == NULL)
+		return FALSE;
+	value = g_bytes_get_data (enclosure, &len);
+	if (len == 0)
+		return FALSE;
+	for (guint i = 0; i < G_N_ELEMENTS (enclosure_whitelist); i++) {
+		if (enclosure_whitelist[i] == value[0])
+			return TRUE;
+	}
+
+	return FALSE;
 }
 
 static gboolean
