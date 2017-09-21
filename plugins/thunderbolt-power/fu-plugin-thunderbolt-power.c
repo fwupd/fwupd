@@ -184,6 +184,9 @@ fu_plugin_init (FuPlugin *plugin)
 
 	/* determines whether to run device_registered */
 	fu_plugin_thunderbolt_power_get_path (plugin);
+
+	/* make sure it's tried to coldplug */
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "thunderbolt");
 }
 
 void
