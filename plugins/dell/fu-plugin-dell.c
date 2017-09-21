@@ -133,16 +133,31 @@ _fwup_resource_iter_free (fwup_resource_iter *iter)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (fwup_resource_iter, _fwup_resource_iter_free);
 
+static guint16
+fu_dell_get_system_id (FuPlugin *plugin)
+{
+	const gchar *system_id_str = NULL;
+	guint16 system_id = 0;
+	gchar *endptr = NULL;
+
+	system_id_str = fu_plugin_get_dmi_value (plugin,
+		FU_HWIDS_KEY_PRODUCT_SKU);
+	if (system_id_str != NULL)
+		system_id = g_ascii_strtoull (system_id_str, &endptr, 16);
+	if (system_id == 0 || endptr == system_id_str)
+		system_id = (guint16) sysinfo_get_dell_system_id ();
+
+	return system_id;
+}
+
 static gboolean
 fu_dell_supported (FuPlugin *plugin)
 {
 	GBytes *de_table = NULL;
 	GBytes *enclosure = NULL;
-	const gchar *system_id_str = NULL;
 	guint16 system_id = 0;
 	const guint8 *value;
 	gsize len;
-	gchar *endptr = NULL;
 
 	/* make sure that Dell SMBIOS methods are available */
 	de_table = fu_plugin_get_smbios_data (plugin, 0xDE);
@@ -155,17 +170,12 @@ fu_dell_supported (FuPlugin *plugin)
 		return FALSE;
 
 	/* skip blacklisted hw */
-	system_id_str = fu_plugin_get_dmi_value (plugin,
-		FU_HWIDS_KEY_PRODUCT_SKU);
-	if (system_id_str != NULL) {
-		system_id = g_ascii_strtoull (system_id_str, &endptr, 16);
-		if (system_id_str != endptr) {
-			for (guint i = 0; i < G_N_ELEMENTS (system_blacklist); i++) {
-				if (system_blacklist[i] == system_id) {
-					return FALSE;
-				}
-			}
-		}
+	system_id = fu_dell_get_system_id (plugin);
+	if (system_id == 0)
+		return FALSE;
+	for (guint i = 0; i < G_N_ELEMENTS (system_blacklist); i++) {
+		if (system_blacklist[i] == system_id)
+			return FALSE;
 	}
 
 	/* only run on intended Dell hw types */
@@ -604,9 +614,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	struct tpm_status *out = NULL;
 	g_autoptr (FuDevice) dev_alt = NULL;
 	g_autoptr (FuDevice) dev = NULL;
-	const gchar *system_id_str = NULL;
 	const gchar *product_name = NULL;
-	gchar *endptr = NULL;
 
 	fu_dell_clear_smi (data->smi_obj);
 	out = (struct tpm_status *) data->smi_obj->output;
@@ -647,18 +655,11 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
-	system_id_str = fu_plugin_get_dmi_value (plugin,
-						 FU_HWIDS_KEY_PRODUCT_SKU);
-	if (system_id_str != NULL)
-		system_id = g_ascii_strtoull (system_id_str, &endptr, 16);
+	system_id = fu_dell_get_system_id (plugin);
 	if (data->smi_obj->fake_smbios)
 		can_switch_modes = data->can_switch_modes;
-	else {
-		if (system_id == 0 || endptr == system_id_str)
-			system_id = (guint16) sysinfo_get_dell_system_id ();
-		if (system_id == 0)
-			return FALSE;
-	}
+	else if (system_id == 0)
+		return FALSE;
 
 	for (guint i = 0; i < G_N_ELEMENTS (tpm_switch_whitelist); i++) {
 		if (tpm_switch_whitelist[i] == system_id) {
@@ -908,19 +909,10 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 		if (fu_device_get_metadata_boolean (device, FU_DEVICE_METADATA_TBT_IS_SAFE_MODE)) {
 			g_autofree gchar *vendor_id = NULL;
 			g_autofree gchar *device_id = NULL;
-			const gchar *system_id_str = NULL;
-			gchar *endptr = NULL;
 			guint16 system_id = 0;
 
 			vendor_id = g_strdup ("TBT:0x00D4");
-			system_id_str = fu_plugin_get_dmi_value (plugin,
-								 FU_HWIDS_KEY_PRODUCT_SKU);
-			if (system_id_str != NULL) {
-				system_id = g_ascii_strtoull (system_id_str,
-							      &endptr, 16);
-			}
-			if (system_id == 0 || endptr == system_id_str)
-				system_id = (guint16) sysinfo_get_dell_system_id ();
+			system_id = fu_dell_get_system_id (plugin);
 			if (system_id == 0)
 				return;
 			/* the kernel returns lowercase in sysfs, need to match it */
