@@ -119,6 +119,11 @@ static guint8 enclosure_whitelist [] = { 0x03, /* desktop */
 					 0x21, /* IoT gateway */
 					 0x22, /* embedded PC */};
 
+/**
+  * System blacklist
+  */
+static guint16 system_blacklist [] =	{ 0x071E, /* latitude 5414 */
+					  0x077A, /* xps 9365 */ };
 
 static void
 _fwup_resource_iter_free (fwup_resource_iter *iter)
@@ -133,8 +138,11 @@ fu_dell_supported (FuPlugin *plugin)
 {
 	GBytes *de_table = NULL;
 	GBytes *enclosure = NULL;
+	const gchar *system_id_str = NULL;
+	guint16 system_id = 0;
 	const guint8 *value;
 	gsize len;
+	gchar *endptr = NULL;
 
 	/* make sure that Dell SMBIOS methods are available */
 	de_table = fu_plugin_get_smbios_data (plugin, 0xDE);
@@ -145,6 +153,20 @@ fu_dell_supported (FuPlugin *plugin)
 		return FALSE;
 	if (*value != 0xDE)
 		return FALSE;
+
+	/* skip blacklisted hw */
+	system_id_str = fu_plugin_get_dmi_value (plugin,
+		FU_HWIDS_KEY_PRODUCT_SKU);
+	if (system_id_str != NULL) {
+		system_id = g_ascii_strtoull (system_id_str, &endptr, 16);
+		if (system_id_str != endptr) {
+			for (guint i = 0; i < G_N_ELEMENTS (system_blacklist); i++) {
+				if (system_blacklist[i] == system_id) {
+					return FALSE;
+				}
+			}
+		}
+	}
 
 	/* only run on intended Dell hw types */
 	enclosure = fu_plugin_get_smbios_data (plugin,
