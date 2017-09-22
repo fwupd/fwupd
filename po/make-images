@@ -56,7 +56,6 @@ class Rasterizer:
         self.domain = "fwupd"
         self.font_face = "sans-serif"
         self.pattern = "{directory}/{language}/LC_IMAGES/fwupd-{width}-{height}.{suffix}"
-        self.fontmap = PangoCairo.font_map_get_default()
 
         gettext.textdomain(self.domain)
         gettext.bind_textdomain_codeset(self.domain, 'UTF8')
