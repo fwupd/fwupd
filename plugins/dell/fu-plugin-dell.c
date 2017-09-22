@@ -966,6 +966,7 @@ fu_dell_toggle_flash (FuPlugin *plugin, FuDevice *device,
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	gboolean has_host = fu_dell_host_mst_supported (plugin);
+	gboolean has_dock;
 	guint32 dock_location;
 	const gchar *tmp;
 
@@ -979,7 +980,8 @@ fu_dell_toggle_flash (FuPlugin *plugin, FuDevice *device,
 	}
 
 	/* Dock MST Hub */
-	if (fu_dell_detect_dock (data->smi_obj, &dock_location)) {
+	has_dock = fu_dell_detect_dock (data->smi_obj, &dock_location);
+	if (has_dock) {
 		if (!fu_dell_toggle_dock_mode (data->smi_obj, enable,
 					       dock_location, error))
 			g_debug ("unable to change dock to %d", enable);
@@ -995,6 +997,11 @@ fu_dell_toggle_flash (FuPlugin *plugin, FuDevice *device,
 			g_debug ("Toggled MST hub GPIO to %d", enable);
 	}
 
+#if defined (HAVE_SYNAPTICS)
+	/* set a delay to allow OS response to settling the GPIO change */
+	if (enable && device == NULL && (has_dock || has_host))
+		fu_plugin_set_coldplug_delay (plugin, DELL_FLASH_MODE_DELAY * 1000);
+#endif
 	return TRUE;
 }
 
@@ -1078,11 +1085,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 				  G_CALLBACK (fu_plugin_dell_device_removed_cb),
 				  plugin);
 	}
-
-#if defined (HAVE_SYNAPTICS)
-	/* set a delay to allow OS response to settling the GPIO change */
-	fu_plugin_set_coldplug_delay (plugin, DELL_FLASH_MODE_DELAY * 1000);
-#endif
 
 	return TRUE;
 }
