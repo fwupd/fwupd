@@ -90,6 +90,9 @@ typedef struct _DOCK_DESCRIPTION
 #define UNIV_CBL_DESC		"Universal Cable"
 #define TBT_CBL_DESC		"Thunderbolt Cable"
 
+/* supported host related GUIDs */
+#define MST_GPIO_GUID		EFI_GUID (0xF24F9bE4, 0x2a13, 0x4344, 0xBC05, 0x01, 0xCE, 0xF7, 0xDA, 0xEF, 0x92)
+
 /**
  * Devices that should allow modeswitching
  */
@@ -125,6 +128,24 @@ static guint8 enclosure_whitelist [] = { 0x03, /* desktop */
 static guint16 system_blacklist [] =	{ 0x071E, /* latitude 5414 */
 					  0x077A, /* xps 9365 */ };
 
+/**
+  * Systems containing host MST device
+  */
+static guint16 systems_host_mst [] =	{ 0x062d, /* Latitude E7250 */
+					  0x062e, /* Latitude E7450 */
+					  0x062a, /* Latitude E5250 */
+					  0x062b, /* Latitude E5450 */
+					  0x062c, /* Latitude E5550 */
+					  0x06db, /* Latitude E7270 */
+					  0x06dc, /* Latitude E7470 */
+					  0x06dd, /* Latitude E5270 */
+					  0x06de, /* Latitude E5470 */
+					  0x06df, /* Latitude E5570 */
+					  0x06e0, /* Precision 3510 */
+					  0x071d, /* Latitude Rugged 7214 */
+					  0x071e, /* Latitude Rugged 5414 */
+					  0x071c, /* Latitude Rugged 7414 */};
+
 static void
 _fwup_resource_iter_free (fwup_resource_iter *iter)
 {
@@ -148,6 +169,20 @@ fu_dell_get_system_id (FuPlugin *plugin)
 		system_id = (guint16) sysinfo_get_dell_system_id ();
 
 	return system_id;
+}
+
+static gboolean
+fu_dell_host_mst_supported (FuPlugin *plugin)
+{
+	guint16 system_id = fu_dell_get_system_id (plugin);
+
+	system_id = fu_dell_get_system_id (plugin);
+	if (system_id == 0)
+		return FALSE;
+	for (guint i = 0; i < G_N_ELEMENTS (systems_host_mst); i++)
+		if (systems_host_mst[i] == system_id)
+			return TRUE;
+	return FALSE;
 }
 
 static gboolean
@@ -925,12 +960,51 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 }
 
+static gboolean
+fu_dell_toggle_flash (FuPlugin *plugin, FuDevice *device,
+		      gboolean enable, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	gboolean has_host = fu_dell_host_mst_supported (plugin);
+	guint32 dock_location;
+	const gchar *tmp;
+
+	if (device) {
+		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE))
+			return TRUE;
+		tmp = fu_device_get_plugin (device);
+		if (g_strcmp0 (tmp, "synapticsmst") != 0)
+			return TRUE;
+		g_debug ("preparing/cleaning update for %s", tmp);
+	}
+
+	/* Dock MST Hub */
+	if (fu_dell_detect_dock (data->smi_obj, &dock_location)) {
+		if (!fu_dell_toggle_dock_mode (data->smi_obj, enable,
+					       dock_location, error))
+			g_debug ("unable to change dock to %d", enable);
+		else
+			g_debug ("Toggled dock mode to %d", enable);
+	}
+
+	/* System MST hub */
+	if (has_host) {
+		if (!fu_dell_toggle_host_mode (data->smi_obj, MST_GPIO_GUID, enable))
+			g_debug ("Unable to toggle MST hub GPIO to %d", enable);
+		else
+			g_debug ("Toggled MST hub GPIO to %d", enable);
+	}
+
+	return TRUE;
+}
+
 gboolean
 fu_plugin_update_prepare (FuPlugin *plugin,
 			  FuDevice *device,
 			  GError **error)
 {
-	return fu_dell_toggle_flash (device, error, TRUE);
+
+	return fu_dell_toggle_flash (plugin, device, TRUE, error);
 }
 
 gboolean
@@ -938,19 +1012,19 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
 			  FuDevice *device,
 			  GError **error)
 {
-	return fu_dell_toggle_flash (device, error, FALSE);
+	return fu_dell_toggle_flash (plugin, device , FALSE, error);
 }
 
 gboolean
 fu_plugin_coldplug_prepare (FuPlugin *plugin, GError **error)
 {
-	return fu_dell_toggle_flash (NULL, error, TRUE);
+	return fu_dell_toggle_flash (plugin, NULL, TRUE, error);
 }
 
 gboolean
 fu_plugin_coldplug_cleanup (FuPlugin *plugin, GError **error)
 {
-	return fu_dell_toggle_flash (NULL, error, FALSE);
+	return fu_dell_toggle_flash (plugin, NULL, FALSE, error);
 }
 
 void
