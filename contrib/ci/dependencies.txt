@@ -1,4 +1,4 @@
-fedora,				arch,				debian,				debian-clang,			debian-s390x,
+fedora,				arch,				debian,				ubuntu-clang,			debian-s390x,
 ,				base-devel,			,				,				,
 adobe-source-han-sans-cn-fonts,	adobe-source-han-sans-cn-fonts,	,				,				,
 ,				,				,				,				binutils-multiarch

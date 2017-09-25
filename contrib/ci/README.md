@@ -26,7 +26,7 @@ Debian unstable (gcc)
 * An installed testing run with the "test" plugin and pulling from LVFS.
 * All packages are removed
 
-Debian unstable (clang)
+Ubuntu devel release (clang)
 ------
 
 * A fully packaged DEB build with all plugins enabled
