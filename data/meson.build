@@ -37,6 +37,7 @@ con2.set('bindir',
 con2.set('localstatedir', join_paths(get_option('localstatedir')))
 con2.set('datadir', join_paths(get_option('datadir')))
 con2.set('bootdir', get_option('with-bootdir'))
+con2.set('sysconfdir', default_sysconfdir)
 
 # replace @libexecdir@
 configure_file(
@@ -61,7 +62,7 @@ if get_option('enable-systemd')
 endif
 
 if get_option('enable-systemd')
-  # replace @localstatedir@ and @bootdir@
+  # replace @localstatedir@, @sysconfdir@ and @bootdir@
   configure_file(
     input : 'fwupd.service.in',
     output : 'fwupd.service',
