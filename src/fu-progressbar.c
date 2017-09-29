@@ -168,6 +168,10 @@ fu_progressbar_spin_cb (gpointer user_data)
 {
 	FuProgressbar *self = FU_PROGRESSBAR (user_data);
 
+	/* ignore */
+	if (self->status == FWUPD_STATUS_IDLE)
+		return G_SOURCE_CONTINUE;
+
 	/* move the spinner index up to down */
 	fu_progressbar_spin_inc (self);
 
