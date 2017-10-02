@@ -87,6 +87,10 @@ fu_progressbar_status_to_string (FwupdStatus status)
 		/* TRANSLATORS: downloading from a remote server */
 		return _("Downloading…");
 		break;
+	case FWUPD_STATUS_WAITING_FOR_AUTH:
+		/* TRANSLATORS: waiting for user to authenticate */
+		return _("Authenticating…");
+		break;
 	default:
 		break;
 	}

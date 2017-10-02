@@ -158,16 +158,21 @@ fu_main_emit_property_changed (FuMainPrivate *priv,
 	g_variant_builder_clear (&invalidated_builder);
 }
 
+static void
+fu_main_set_status (FuMainPrivate *priv, FwupdStatus status)
+{
+	g_debug ("Emitting PropertyChanged('Status'='%s')",
+		 fwupd_status_to_string (status));
+	fu_main_emit_property_changed (priv, "Status",
+				       g_variant_new_uint32 (status));
+}
 
 static void
 fu_main_engine_status_changed_cb (FuEngine *engine,
 				  FwupdStatus status,
 				  FuMainPrivate *priv)
 {
-	g_debug ("Emitting PropertyChanged('Status'='%s')",
-		 fwupd_status_to_string (status));
-	fu_main_emit_property_changed (priv, "Status",
-				       g_variant_new_uint32 (status));
+	fu_main_set_status (priv, status);
 }
 
 static void
@@ -300,7 +305,9 @@ fu_main_authorize_unlock_cb (GObject *source, GAsyncResult *res, gpointer user_d
 	g_autoptr(GError) error = NULL;
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
+
 	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
 							    res, &error);
 	if (!fu_main_authorization_is_valid (auth, &error)) {
@@ -326,6 +333,7 @@ fu_main_authorize_verify_update_cb (GObject *source, GAsyncResult *res, gpointer
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
 							    res, &error);
 	if (!fu_main_authorization_is_valid (auth, &error)) {
@@ -351,6 +359,7 @@ fu_main_authorize_modify_remote_cb (GObject *source, GAsyncResult *res, gpointer
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
 							    res, &error);
 	if (!fu_main_authorization_is_valid (auth, &error)) {
@@ -380,6 +389,7 @@ fu_main_authorize_install_cb (GObject *source, GAsyncResult *res, gpointer user_
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
 							    res, &error);
 	if (!fu_main_authorization_is_valid (auth, &error)) {
@@ -555,6 +565,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_debug ("Called %s(%s)", method_name, device_id);
 
 		/* authenticate */
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		helper = g_new0 (FuMainAuthHelper, 1);
 		helper->priv = priv;
 		helper->invocation = g_object_ref (invocation);
@@ -589,6 +600,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		helper->priv = priv;
 
 		/* authenticate */
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		subject = polkit_system_bus_name_new (sender);
 		polkit_authority_check_authorization (helper->priv->authority, subject,
 						      "org.freedesktop.fwupd.modify-remote",
@@ -615,6 +627,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		helper->priv = priv;
 
 		/* authenticate */
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		subject = polkit_system_bus_name_new (sender);
 		polkit_authority_check_authorization (helper->priv->authority, subject,
 						      "org.freedesktop.fwupd.verify-update",
@@ -721,6 +734,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		subject = polkit_system_bus_name_new (sender);
 		polkit_authority_check_authorization (priv->authority, subject,
 						      action_id, NULL,
