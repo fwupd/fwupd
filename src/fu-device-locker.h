@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (FuDeviceLocker, fu_device_locker, FU, DEVICE_LOCKER, GObject)
 
 typedef gboolean (*FuDeviceLockerFunc)		(GObject		*device,
-						GError			**error);
+						 GError			**error);
 
 FuDeviceLocker	*fu_device_locker_new		(gpointer		 device,
 						 GError			**error);

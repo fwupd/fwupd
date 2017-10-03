@@ -41,12 +41,12 @@ G_DEFINE_TYPE (FuHwids, fu_hwids, G_TYPE_OBJECT)
 /**
  * fu_hwids_get_value:
  * @self: A #FuHwids
- * @key: A DMI ID, e.g. "BiosVersion"
+ * @key: A DMI ID, e.g. `BiosVersion`
  *
  * Gets the cached value for one specific key that is valid ASCII and suitable
  * for display.
  *
- * Returns: the string, e.g. "1.2.3", or %NULL if not found
+ * Returns: the string, e.g. `1.2.3`, or %NULL if not found
  **/
 const gchar *
 fu_hwids_get_value (FuHwids *self, const gchar *key)
@@ -57,7 +57,7 @@ fu_hwids_get_value (FuHwids *self, const gchar *key)
 /**
  * fu_hwids_has_guid:
  * @self: A #FuHwids
- * @guid: A GUID, e.g. "059eb22d-6dc7-59af-abd3-94bbe017f67c"
+ * @guid: A GUID, e.g. `059eb22d-6dc7-59af-abd3-94bbe017f67c`
  *
  * Finds out if a hardware GUID exists.
  *
@@ -95,11 +95,11 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 /**
  * fu_hwids_get_replace_keys:
  * @self: A #FuHwids
- * @key: A HardwareID key, e.g. "HardwareID-3"
+ * @key: A HardwareID key, e.g. `HardwareID-3`
  *
  * Gets the replacement key for a well known value.
  *
- * Returns: the replacement value, e.g. "Manufacturer&ProductName", or %NULL for error.
+ * Returns: the replacement value, e.g. `Manufacturer&ProductName`, or %NULL for error.
  **/
 const gchar *
 fu_hwids_get_replace_keys (FuHwids *self, const gchar *key)
@@ -183,12 +183,12 @@ fu_hwids_get_replace_keys (FuHwids *self, const gchar *key)
 /**
  * fu_hwids_get_replace_values:
  * @self: A #FuHwids
- * @keys: A key, e.g. "HardwareID-3" or %FU_HWIDS_KEY_PRODUCT_SKU
+ * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
  * @error: A #GError or %NULL
  *
  * Gets the replacement values for a HardwareID key or plain key.
  *
- * Returns: a string, e.g. "LENOVO&ThinkPad T440s", or %NULL for error.
+ * Returns: a string, e.g. `LENOVO&ThinkPad T440s`, or %NULL for error.
  **/
 gchar *
 fu_hwids_get_replace_values (FuHwids *self, const gchar *keys, GError **error)
@@ -221,7 +221,7 @@ fu_hwids_get_replace_values (FuHwids *self, const gchar *keys, GError **error)
 /**
  * fu_hwids_get_guid:
  * @self: A #FuHwids
- * @keys: A key, e.g. "HardwareID-3" or %FU_HWIDS_KEY_PRODUCT_SKU
+ * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
  * @error: A #GError or %NULL
  *
  * Gets the GUID for a specific key.

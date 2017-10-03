@@ -242,7 +242,7 @@ fu_smbios_parse_ep64 (FuSmbios *self, const gchar *buf, gsize sz, GError **error
 /**
  * fu_smbios_setup:
  * @self: A #FuSmbios
- * @path: A path, e.g. "/sys/firmware/dmi/tables"
+ * @path: A path, e.g. `/sys/firmware/dmi/tables`
  * @error: A #GError or %NULL
  *
  * Reads all the SMBIOS values from a specific path.

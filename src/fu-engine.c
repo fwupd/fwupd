@@ -123,8 +123,6 @@ fu_engine_emit_device_changed (FuEngine *self, FuDevice *device)
 /**
  * fu_engine_get_status:
  * @self: A #FuEngine
- * @device_id: A device ID
- * @error: A #GError, or %NULL
  *
  * Gets the current engine status.
  *
@@ -503,8 +501,8 @@ fu_engine_load_verify_store (GError **error)
  * fu_engine_modify_remote:
  * @self: A #FuEngine
  * @remote_id: A remote ID
- * @key: the key, e.g. "Enabled"
- * @value: the key, e.g. "true"
+ * @key: the key, e.g. `Enabled`
+ * @value: the key, e.g. `true`
  * @error: A #GError, or %NULL
  *
  * Updates the verification store entry for a specific device.
@@ -1297,7 +1295,7 @@ fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GErr
  *
  * Gets the PolicyKit action ID to use for the install operation.
  *
- * Returns: string, e.g. "org.freedesktop.fwupd.update-internal-trusted"
+ * Returns: string, e.g. `org.freedesktop.fwupd.update-internal-trusted`
  **/
 const gchar *
 fu_engine_get_action_id_for_device (FuEngine *self,
@@ -1621,7 +1619,7 @@ fu_engine_get_existing_keyring_result (FuEngine *self,
 /**
  * fu_engine_update_metadata:
  * @self: A #FuEngine
- * @remote_id: A remote ID, e.g. "lvfs"
+ * @remote_id: A remote ID, e.g. `lvfs`
  * @fd: file descriptor of the metadata
  * @fd_sig: file descriptor of the metadata signature
  * @error: A #GError, or %NULL
@@ -1973,7 +1971,6 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 /**
  * fu_engine_get_remotes:
  * @self: A #FuEngine
- * @device_id: A device ID
  * @error: A #GError, or %NULL
  *
  * Gets the list of remotes in use by the engine.

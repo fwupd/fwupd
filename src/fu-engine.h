@@ -45,7 +45,7 @@ void		 fu_engine_profile_dump			(FuEngine	*self);
 gboolean	 fu_engine_check_plugins_pending	(FuEngine	*self,
 							 GError		**error);
 AsStore		*fu_engine_get_store_from_blob		(FuEngine	*self,
-							 GBytes		*blob,
+							 GBytes		*blob_cab,
 							 GError		**error);
 const gchar	*fu_engine_get_action_id_for_device	(FuEngine	*self,
 							 const gchar	*device_id,
