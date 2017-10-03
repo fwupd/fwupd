@@ -26,6 +26,17 @@
 
 #include "fu-device-locker.h"
 
+/**
+ * SECTION:fu-device-locker
+ * @title: FuDeviceLocker
+ * @short_description: a device helper object
+ *
+ * An object that makes it easy to close a device when an object goes out of
+ * scope.
+ *
+ * See also: #FuDevice
+ */
+
 struct _FuDeviceLocker {
 	GObject			 parent_instance;
 	GObject			*device;
@@ -107,8 +118,8 @@ fu_device_locker_new (gpointer device, GError **error)
 /**
  * fu_device_locker_new_full:
  * @device: A #GObject
- * @open_func: A function to open the device
- * @close_func: A function to close the device
+ * @open_func: (scope async): A function to open the device
+ * @close_func: (scope async): A function to close the device
  * @error: A #GError, or %NULL
  *
  * Opens the device for use. When the #FuDeviceLocker is deallocated the device
@@ -124,9 +135,9 @@ fu_device_locker_new (gpointer device, GError **error)
  **/
 FuDeviceLocker *
 fu_device_locker_new_full (gpointer device,
-		      FuDeviceLockerFunc open_func,
-		      FuDeviceLockerFunc close_func,
-		      GError **error)
+			   FuDeviceLockerFunc open_func,
+			   FuDeviceLockerFunc close_func,
+			   GError **error)
 {
 	g_autoptr(FuDeviceLocker) self = NULL;
 

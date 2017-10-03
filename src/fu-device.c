@@ -28,6 +28,15 @@
 
 #include "fu-device-private.h"
 
+/**
+ * SECTION:fu-device
+ * @short_description: a physical or logical device
+ *
+ * An object that represents a physical or logical device.
+ *
+ * See also: #FuDeviceLocker
+ */
+
 static void fu_device_finalize			 (GObject *object);
 
 typedef struct {
@@ -92,6 +101,17 @@ fu_device_set_filename_pending (FuDevice *device, const gchar *filename_pending)
 	priv->filename_pending = g_strdup (filename_pending);
 }
 
+/**
+ * fu_device_get_alternate:
+ * @device: A #FuDevice
+ *
+ * Gets any alternate device. An alternate device may be linked to the primary
+ * device in some way.
+ *
+ * Returns: (transfer none): a #FuDevice or %NULL
+ *
+ * Since: 0.7.2
+ **/
 FuDevice *
 fu_device_get_alternate (FuDevice *device)
 {
@@ -100,6 +120,16 @@ fu_device_get_alternate (FuDevice *device)
 	return priv->alternate;
 }
 
+/**
+ * fu_device_set_alternate:
+ * @device: A #FuDevice
+ * @alternate: Another #FuDevice
+ *
+ * Sets any alternate device. An alternate device may be linked to the primary
+ * device in some way.
+ *
+ * Since: 0.7.2
+ **/
 void
 fu_device_set_alternate (FuDevice *device, FuDevice *alternate)
 {
@@ -108,6 +138,16 @@ fu_device_set_alternate (FuDevice *device, FuDevice *alternate)
 	g_set_object (&priv->alternate, alternate);
 }
 
+/**
+ * fu_device_add_guid:
+ * @device: A #FuDevice
+ * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
+ *
+ * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
+ * is converted to a GUID using as_utils_guid_from_string().
+ *
+ * Since: 0.7.2
+ **/
 void
 fu_device_add_guid (FuDevice *device, const gchar *guid)
 {
@@ -255,6 +295,15 @@ fu_device_set_metadata_integer (FuDevice *device, const gchar *key, guint value)
 	fu_device_set_metadata (device, key, tmp);
 }
 
+/**
+ * fu_device_set_name:
+ * @device: A #FuDevice
+ * @value: a device name
+ *
+ * Sets the name on the device. Any invalid parts will be converted or removed.
+ *
+ * Since: 0.7.1
+ **/
 void
 fu_device_set_name (FuDevice *device, const gchar *value)
 {

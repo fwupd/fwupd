@@ -35,6 +35,15 @@
 #include "fu-plugin-private.h"
 #include "fu-pending.h"
 
+/**
+ * SECTION:fu-plugin
+ * @short_description: a daemon plugin
+ *
+ * An object that represents a plugin run by the daemon.
+ *
+ * See also: #FuDevice
+ */
+
 #define	FU_PLUGIN_COLDPLUG_DELAY_MAXIMUM	3000u	/* ms */
 
 static void fu_plugin_finalize			 (GObject *object);
@@ -168,9 +177,10 @@ fu_plugin_cache_remove (FuPlugin *plugin, const gchar *id)
  * fu_plugin_get_data:
  * @plugin: A #FuPlugin
  *
- * Gets the per-plugin allocated private data.
+ * Gets the per-plugin allocated private data. This will return %NULL unless
+ * fu_plugin_alloc_data() has been called by the plugin.
  *
- * Returns: (transfer full): a pointer to a structure, or %NULL for unset.
+ * Returns: (transfer none): a pointer to a structure, or %NULL for unset.
  *
  * Since: 0.8.0
  **/
@@ -235,7 +245,8 @@ fu_plugin_set_usb_context (FuPlugin *plugin, GUsbContext *usb_ctx)
  * fu_plugin_get_enabled:
  * @plugin: A #FuPlugin
  *
- * Returns if the plugin is enabled.
+ * Returns if the plugin is enabled. Plugins may self-disable using
+ * fu_plugin_set_enabled() or can be disabled by the daemon.
  *
  * Returns: %TRUE if the plugin is currently enabled.
  *
@@ -435,7 +446,7 @@ fu_plugin_device_add_delay (FuPlugin *plugin, FuDevice *device)
 }
 
 /**
- * fu_plugin_device_add:
+ * fu_plugin_device_remove:
  * @plugin: A #FuPlugin
  * @device: A #FuDevice
  *
@@ -522,10 +533,12 @@ fu_plugin_recoldplug (FuPlugin *plugin)
 /**
  * fu_plugin_check_hwid:
  * @plugin: A #FuPlugin
- * @hwid: A Hardware ID GUID, e.g. "6de5d951-d755-576b-bd09-c5cf66b27234"
+ * @hwid: A Hardware ID GUID, e.g. `6de5d951-d755-576b-bd09-c5cf66b27234`
  *
  * Checks to see if a specific GUID exists. All hardware IDs on a
  * specific system can be shown using the `fwupdmgr hwids` command.
+ *
+ * Returns: %TRUE if the HwId is found on the system.
  *
  * Since: 0.9.1
  **/
@@ -541,10 +554,12 @@ fu_plugin_check_hwid (FuPlugin *plugin, const gchar *hwid)
 /**
  * fu_plugin_check_supported:
  * @plugin: A #FuPlugin
- * @guid: A Hardware ID GUID, e.g. "6de5d951-d755-576b-bd09-c5cf66b27234"
+ * @guid: A Hardware ID GUID, e.g. `6de5d951-d755-576b-bd09-c5cf66b27234`
  *
  * Checks to see if a specific device GUID is supported, i.e. available in the
  * AppStream metadata.
+ *
+ * Returns: %TRUE if the device is supported.
  *
  * Since: 1.0.0
  **/
@@ -565,9 +580,11 @@ fu_plugin_check_supported (FuPlugin *plugin, const gchar *guid)
 /**
  * fu_plugin_get_dmi_value:
  * @plugin: A #FuPlugin
- * @dmi_id: A DMI ID, e.g. "BiosVersion"
+ * @dmi_id: A DMI ID, e.g. `BiosVersion`
  *
  * Gets a hardware DMI value.
+ *
+ * Returns: The string, or %NULL
  *
  * Since: 0.9.7
  **/
@@ -591,6 +608,8 @@ fu_plugin_get_dmi_value (FuPlugin *plugin, const gchar *dmi_id)
  * The @type and @offset can be referenced from the DMTF SMBIOS specification:
  * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
  *
+ * Returns: A string, or %NULL
+ *
  * Since: 0.9.8
  **/
 const gchar *
@@ -608,6 +627,8 @@ fu_plugin_get_smbios_string (FuPlugin *plugin, guint8 structure_type, guint8 off
  * @structure_type: A SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
  *
  * Gets a hardware SMBIOS data.
+ *
+ * Returns: (transfer none): A #GBytes, or %NULL
  *
  * Since: 0.9.8
  **/
@@ -641,6 +662,8 @@ fu_plugin_set_supported (FuPlugin *plugin, GPtrArray *supported_guids)
  * @plugin: A #FuPlugin
  *
  * Gets all the device GUIDs supported by the daemon.
+ *
+ * Returns: (element-type utf8) (transfer none): GUIDs
  *
  * Since: 1.0.0
  **/
@@ -1247,7 +1270,7 @@ fu_plugin_set_order (FuPlugin *plugin, guint order)
  * fu_plugin_add_rule:
  * @plugin: a #FuPlugin
  * @rule: a #FuPluginRule, e.g. %FU_PLUGIN_RULE_CONFLICTS
- * @name: a plugin name, e.g. "upower"
+ * @name: a plugin name, e.g. `upower`
  *
  * If the plugin name is found, the rule will be used to sort the plugin list,
  * for example the plugin specified by @name will be ordered after this plugin

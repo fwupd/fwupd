@@ -58,8 +58,15 @@ struct _FuPluginClass
 	gpointer	padding[24];
 };
 
+/**
+ * FuPluginVerifyFlags:
+ * @FU_PLUGIN_VERIFY_FLAG_NONE:		No flags set
+ *
+ * Flags used when verifying, currently unused.
+ **/
 typedef enum {
 	FU_PLUGIN_VERIFY_FLAG_NONE		= 0,
+	/*< private >*/
 	FU_PLUGIN_VERIFY_FLAG_LAST
 } FuPluginVerifyFlags;
 
@@ -76,6 +83,7 @@ typedef enum {
 	FU_PLUGIN_RULE_CONFLICTS,
 	FU_PLUGIN_RULE_RUN_AFTER,
 	FU_PLUGIN_RULE_RUN_BEFORE,
+	/*< private >*/
 	FU_PLUGIN_RULE_LAST
 } FuPluginRule;
 

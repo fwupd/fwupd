@@ -28,7 +28,7 @@ typedef void	(*FuOutputHandler)		(const gchar	*line,
 						 gpointer	 user_data);
 
 gboolean	 fu_common_spawn_sync		(const gchar * const *argv,
-						 FuOutputHandler handler,
+						 FuOutputHandler handler_cb,
 						 gpointer	 handler_user_data,
 						 GCancellable	*cancellable,
 						 GError		**error);
@@ -38,7 +38,7 @@ gboolean	 fu_common_rmtree		(const gchar	*directory,
 gboolean	 fu_common_mkdir_parent		(const gchar	*filename,
 						 GError		**error);
 gboolean	 fu_common_set_contents_bytes	(const gchar	*filename,
-						 GBytes		*blob,
+						 GBytes		*bytes,
 						 GError		**error);
 GBytes		*fu_common_get_contents_bytes	(const gchar	*filename,
 						 GError		**error);
