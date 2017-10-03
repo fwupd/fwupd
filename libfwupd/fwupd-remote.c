@@ -28,6 +28,15 @@
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 
+/**
+ * SECTION:fwupd-remote
+ * @short_description: a source of firmware
+ *
+ * An object that represents a source of metadata that provides firmware.
+ *
+ * See also: #FwupdClient
+ */
+
 static void fwupd_remote_finalize	 (GObject *obj);
 
 typedef struct {
@@ -225,7 +234,7 @@ fwupd_remote_set_firmware_base_uri (FwupdRemote *self, const gchar *firmware_bas
 
 /**
  * fwupd_remote_kind_from_string:
- * @kind: a string, e.g. "download"
+ * @kind: a string, e.g. `download`
  *
  * Converts an printable string to an enumerated type.
  *
@@ -249,7 +258,7 @@ fwupd_remote_kind_from_string (const gchar *kind)
  *
  * Converts an enumerated type to a printable string.
  *
- * Returns: a string, e.g. "download"
+ * Returns: a string, e.g. `download`
  *
  * Since: 0.9.6
  **/
@@ -685,7 +694,7 @@ fwupd_remote_get_password (FwupdRemote *self)
  * fwupd_remote_get_title:
  * @self: A #FwupdRemote
  *
- * Gets the remote title, e.g. "Linux Vendor Firmware Service".
+ * Gets the remote title, e.g. `Linux Vendor Firmware Service`.
  *
  * Returns: a string, or %NULL if unset
  *
@@ -815,7 +824,7 @@ fwupd_remote_get_enabled (FwupdRemote *self)
  * fwupd_remote_get_id:
  * @self: A #FwupdRemote
  *
- * Gets the remote ID, e.g. "lvfs-testing".
+ * Gets the remote ID, e.g. `lvfs-testing`.
  *
  * Returns: a string, or %NULL if unset
  *

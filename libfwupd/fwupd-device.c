@@ -168,7 +168,7 @@ fwupd_device_get_id (FwupdDevice *device)
 /**
  * fwupd_device_set_id:
  * @device: A #FwupdDevice
- * @id: the device ID, e.g. "USB:foo"
+ * @id: the device ID, e.g. `USB:foo`
  *
  * Sets the ID.
  *
@@ -204,7 +204,7 @@ fwupd_device_get_guids (FwupdDevice *device)
 /**
  * fwupd_device_has_guid:
  * @device: A #FwupdDevice
- * @guid: the GUID, e.g. "2082b5e0-7a64-478a-b1b2-e3404fab6dad"
+ * @guid: the GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Finds out if the device has this specific GUID.
  *
@@ -230,7 +230,7 @@ fwupd_device_has_guid (FwupdDevice *device, const gchar *guid)
 /**
  * fwupd_device_add_guid:
  * @device: A #FwupdDevice
- * @guid: the GUID, e.g. "2082b5e0-7a64-478a-b1b2-e3404fab6dad"
+ * @guid: the GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Adds the GUID if it does not already exist.
  *
@@ -302,7 +302,7 @@ fwupd_device_has_icon (FwupdDevice *device, const gchar *icon)
 /**
  * fwupd_device_add_icon:
  * @device: A #FwupdDevice
- * @icon: the name, e.g. "input-mouse" or "/usr/share/icons/foo.png"
+ * @icon: the name, e.g. `input-mouse` or `/usr/share/icons/foo.png`
  *
  * Adds the icon name if it does not already exist.
  *
@@ -339,7 +339,7 @@ fwupd_device_get_name (FwupdDevice *device)
 /**
  * fwupd_device_set_name:
  * @device: A #FwupdDevice
- * @name: the device name, e.g. "ColorHug2"
+ * @name: the device name, e.g. `ColorHug2`
  *
  * Sets the device name.
  *
@@ -483,7 +483,7 @@ fwupd_device_get_version (FwupdDevice *device)
 /**
  * fwupd_device_set_version:
  * @device: A #FwupdDevice
- * @version: the device version, e.g. "1.2.3"
+ * @version: the device version, e.g. `1.2.3`
  *
  * Sets the device version.
  *
@@ -626,7 +626,7 @@ fwupd_device_get_plugin (FwupdDevice *device)
 /**
  * fwupd_device_set_plugin:
  * @device: A #FwupdDevice
- * @plugin: the plugin name, e.g. "colorhug"
+ * @plugin: the plugin name, e.g. `colorhug`
  *
  * Sets the plugin that created the device.
  *

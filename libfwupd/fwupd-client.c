@@ -39,6 +39,15 @@
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 
+/**
+ * SECTION:fwupd-client
+ * @short_description: a way of interfacing with the daemon
+ *
+ * An object that allows client code to call the daemon methods synchronously.
+ *
+ * See also: #FwupdDevice
+ */
+
 static void fwupd_client_finalize	 (GObject *object);
 
 typedef struct {
@@ -377,7 +386,7 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
 /**
  * fwupd_client_get_device_by_id:
  * @client: A #FwupdClient
- * @device_id: the device ID, e.g. "usb:00:01:03:03"
+ * @device_id: the device ID, e.g. `usb:00:01:03:03`
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -938,7 +947,7 @@ fwupd_client_install (FwupdClient *client,
 /**
  * fwupd_client_get_details:
  * @client: A #FwupdClient
- * @filename: the firmware filename, e.g. "firmware.cab"
+ * @filename: the firmware filename, e.g. `firmware.cab`
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -1074,7 +1083,7 @@ fwupd_client_get_status (FwupdClient *client)
 /**
  * fwupd_client_update_metadata:
  * @client: A #FwupdClient
- * @remote_id: the remote ID, e.g. "lvfs-testing"
+ * @remote_id: the remote ID, e.g. `lvfs-testing`
  * @metadata_fn: the XML metadata filename
  * @signature_fn: the GPG signature file
  * @cancellable: the #GCancellable, or %NULL
@@ -1219,9 +1228,9 @@ fwupd_client_get_remotes (FwupdClient *client, GCancellable *cancellable, GError
 /**
  * fwupd_client_modify_remote:
  * @client: A #FwupdClient
- * @remote_id: the remote ID, e.g. "lvfs-testing"
- * @key: the key, e.g. "Enabled"
- * @value: the key, e.g. "true"
+ * @remote_id: the remote ID, e.g. `lvfs-testing`
+ * @key: the key, e.g. `Enabled`
+ * @value: the key, e.g. `true`
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -1285,7 +1294,7 @@ fwupd_client_get_remote_by_id_noref (GPtrArray *remotes, const gchar *remote_id)
 /**
  * fwupd_client_get_remote_by_id:
  * @client: A #FwupdClient
- * @remote_id: the remote ID, e.g. "lvfs-testing"
+ * @remote_id: the remote ID, e.g. `lvfs-testing`
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *

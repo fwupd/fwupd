@@ -28,6 +28,16 @@
 #include "fwupd-error.h"
 
 /**
+ * SECTION:fwupd-error
+ * @short_description: an error domain shared by the daemon and library
+ *
+ * This file also provides helper functions to map errors to strings and back
+ * again.
+ *
+ * See also: #fwupd-enums
+ */
+
+/**
  * fwupd_error_to_string:
  * @error: A #FwupdError, e.g. %FWUPD_ERROR_VERSION_NEWER
  *
@@ -73,7 +83,7 @@ fwupd_error_to_string (FwupdError error)
 
 /**
  * fwupd_error_from_string:
- * @error: A string, e.g. "org.freedesktop.fwupd.VersionNewer"
+ * @error: A string, e.g. `org.freedesktop.fwupd.VersionNewer`
  *
  * Converts a string to a #FwupdError.
  *
