@@ -35,6 +35,8 @@
  * @FWUPD_STATUS_DEVICE_VERIFY:			Verifying (reading) a device
  * @FWUPD_STATUS_SCHEDULING:			Scheduling an offline update
  * @FWUPD_STATUS_DOWNLOADING:			A file is downloading
+ * @FWUPD_STATUS_DEVICE_READ:			Reading from a device
+ * @FWUPD_STATUS_DEVICE_ERASE:			Erasing a device
  * @FWUPD_STATUS_WAITING_FOR_AUTH:		Waiting for authentication
  *
  * The flags to show daemon status.
@@ -106,6 +108,7 @@ typedef guint64 FwupdDeviceFlags;
  * @FWUPD_INSTALL_FLAG_OFFLINE:			Schedule this for next boot
  * @FWUPD_INSTALL_FLAG_ALLOW_REINSTALL:		Allow reinstalling the same version
  * @FWUPD_INSTALL_FLAG_ALLOW_OLDER:		Allow downgrading firmware
+ * @FWUPD_INSTALL_FLAG_FORCE:			Force the update even if not a good idea
  *
  * Flags to set when performing the firwmare update or install.
  **/

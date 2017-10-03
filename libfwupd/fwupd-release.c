@@ -30,6 +30,17 @@
 #include "fwupd-error.h"
 #include "fwupd-release-private.h"
 
+/**
+ * SECTION:fwupd-release
+ * @short_description: a firmware release
+ *
+ * An object that represents a firmware release with a specific version.
+ * Devices can have more than one release, and the releases are typically
+ * ordered by their version.
+ *
+ * See also: #FwupdDevice
+ */
+
 static void fwupd_release_finalize	 (GObject *object);
 
 typedef struct {
@@ -73,7 +84,7 @@ fwupd_release_get_remote_id (FwupdRelease *release)
 /**
  * fwupd_release_set_remote_id:
  * @release: A #FwupdRelease
- * @remote_id: the release ID, e.g. "USB:foo"
+ * @remote_id: the release ID, e.g. `USB:foo`
  *
  * Sets the remote ID that can be used for downloading.
  *
@@ -109,7 +120,7 @@ fwupd_release_get_version (FwupdRelease *release)
 /**
  * fwupd_release_set_version:
  * @release: A #FwupdRelease
- * @version: the update version, e.g. "1.2.4"
+ * @version: the update version, e.g. `1.2.4`
  *
  * Sets the update version.
  *
@@ -330,7 +341,7 @@ fwupd_release_get_appstream_id (FwupdRelease *release)
 /**
  * fwupd_release_set_appstream_id:
  * @release: A #FwupdRelease
- * @appstream_id: the AppStream component ID, e.g. "org.hughski.ColorHug2.firmware"
+ * @appstream_id: the AppStream component ID, e.g. `org.hughski.ColorHug2.firmware`
  *
  * Sets the AppStream ID.
  *
@@ -437,7 +448,7 @@ fwupd_release_get_vendor (FwupdRelease *release)
 /**
  * fwupd_release_set_vendor:
  * @release: A #FwupdRelease
- * @vendor: the vendor name, e.g. "Hughski Limited"
+ * @vendor: the vendor name, e.g. `Hughski Limited`
  *
  * Sets the update vendor.
  *
