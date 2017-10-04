@@ -208,3 +208,44 @@ if get_option('enable-tests')
   )
   test('fu-self-test', e, is_parallel:false)
 endif
+
+if get_option('enable-introspection')
+  gir_dep = declare_dependency(sources: gir)
+  gnome.generate_gir(fwupd,
+    sources : [
+      'fu-common.c',
+      'fu-common.h',
+      'fu-device.c',
+      'fu-device.h',
+      'fu-device-locker.c',
+      'fu-device-locker.h',
+      'fu-plugin.c',
+      'fu-plugin.h',
+    ],
+    nsversion : '1.0',
+    namespace : 'Fu',
+    symbol_prefix : 'fu',
+    identifier_prefix : 'Fu',
+    export_packages : 'fu',
+    include_directories : [
+      include_directories('..'),
+      include_directories('../libfwupd'),
+    ],
+    dependencies : [
+      appstream_glib,
+      gir_dep,
+      giounix,
+      gusb,
+      soup,
+      sqlite,
+    ],
+    link_with : [
+      libfwupdprivate,
+    ],
+    includes : [
+      'Gio-2.0',
+      'GObject-2.0',
+      'GUsb-1.0',
+    ],
+  )
+endif
