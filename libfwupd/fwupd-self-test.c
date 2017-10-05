@@ -23,6 +23,7 @@
 
 #include <glib-object.h>
 #include <fnmatch.h>
+#include <appstream-glib.h>
 
 #include "fwupd-client.h"
 #include "fwupd-enums.h"
@@ -237,11 +238,22 @@ static void
 fwupd_client_devices_func (void)
 {
 	FwupdDevice *dev;
+	gboolean ret;
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GError) error = NULL;
 
 	client = fwupd_client_new ();
+
+	/* only run if running fwupd is new enough */
+	ret = fwupd_client_connect (client, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	if (as_utils_vercmp (fwupd_client_get_daemon_version (client), "1.0.0") < 0) {
+		g_test_skip ("running fwupd is too old");
+		return;
+	}
+
 	array = fwupd_client_get_devices (client, NULL, &error);
 	if (array == NULL &&
 	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
@@ -263,6 +275,7 @@ fwupd_client_devices_func (void)
 static void
 fwupd_client_remotes_func (void)
 {
+	gboolean ret;
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(FwupdRemote) remote2 = NULL;
 	g_autoptr(FwupdRemote) remote3 = NULL;
@@ -272,6 +285,16 @@ fwupd_client_remotes_func (void)
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", FU_SELF_TEST_REMOTES_DIR, TRUE);
 
 	client = fwupd_client_new ();
+
+	/* only run if running fwupd is new enough */
+	ret = fwupd_client_connect (client, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	if (as_utils_vercmp (fwupd_client_get_daemon_version (client), "1.0.0") < 0) {
+		g_test_skip ("running fwupd is too old");
+		return;
+	}
+
 	array = fwupd_client_get_remotes (client, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (array != NULL);

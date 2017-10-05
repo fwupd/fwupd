@@ -146,6 +146,7 @@ if get_option('enable-tests')
       include_directories('..'),
     ],
     dependencies : [
+      appstream_glib,
       gio,
       soup,
     ],
