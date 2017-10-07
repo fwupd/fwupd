@@ -133,15 +133,13 @@ fu_rom_blank_serial_numbers (guint8 *buffer, guint buffer_sz)
 }
 
 static gchar *
-fu_rom_get_hex_dump (guint8 *buffer, gssize sz)
+fu_rom_get_hex_dump (guint8 *buffer, guint32 sz)
 {
 	GString *str = g_string_new ("");
-	if (sz <= 0)
-		return NULL;
-	for (guint i = 0; i < (guint) sz; i++)
+	for (guint32 i = 0; i < sz; i++)
 		g_string_append_printf (str, "%02x ", buffer[i]);
 	g_string_append (str, "   ");
-	for (guint i = 0; i < (guint) sz; i++) {
+	for (guint32 i = 0; i < sz; i++) {
 		gchar tmp = '?';
 		if (g_ascii_isprint (buffer[i]))
 			tmp = (gchar) buffer[i];
@@ -421,7 +419,7 @@ fu_rom_pci_parse_data (FuRomPciHeader *hdr)
 }
 
 static FuRomPciHeader *
-fu_rom_pci_get_header (guint8 *buffer, gssize sz)
+fu_rom_pci_get_header (guint8 *buffer, guint32 sz)
 {
 	FuRomPciHeader *hdr;
 
@@ -444,7 +442,7 @@ fu_rom_pci_get_header (guint8 *buffer, gssize sz)
 	/* fix up misreporting */
 	if (hdr->rom_len == 0) {
 		g_debug ("fixing up last image size");
-		hdr->rom_len = (guint32) sz;
+		hdr->rom_len = sz;
 	}
 
 	/* copy this locally to the header */
@@ -568,7 +566,7 @@ fu_rom_load_data (FuRom *rom,
 {
 	FuRomPrivate *priv = GET_PRIVATE (rom);
 	FuRomPciHeader *hdr = NULL;
-	gssize sz = buffer_sz;
+	guint32 sz = buffer_sz;
 	guint32 jump = 0;
 	guint32 hdr_sz = 0;
 	g_autofree gchar *id = NULL;
@@ -608,7 +606,7 @@ fu_rom_load_data (FuRom *rom,
 				hdr->code_type = 0x00;
 				hdr->last_image = 0x80;
 				hdr->rom_offset = hdr_sz + jump;
-				hdr->rom_len = (guint32) (sz - hdr->rom_offset);
+				hdr->rom_len = sz - hdr->rom_offset;
 				hdr->rom_data = g_memdup (&buffer[hdr->rom_offset], hdr->rom_len);
 				hdr->image_len = hdr->rom_len;
 				g_ptr_array_add (priv->hdrs, hdr);
