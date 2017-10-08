@@ -35,7 +35,7 @@ sed "s,#VERSION#,$VERSION,;
 rpmbuild -ba build/fwupd.spec
 
 #install RPM packages
-dnf install -C -y $HOME/rpmbuild/RPMS/*/*.rpm
+dnf install -y $HOME/rpmbuild/RPMS/*/*.rpm
 
 cp $HOME/rpmbuild/RPMS/*/*.rpm .
 
