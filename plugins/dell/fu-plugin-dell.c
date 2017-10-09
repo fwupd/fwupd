@@ -566,7 +566,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "ERROR: Unable to read results of %s: %lu < 8",
+			     "ERROR: Unable to read results of %s: %" G_GSIZE_FORMAT " < 8",
 			     fu_device_get_name (device), len);
 		return FALSE;
 	}
