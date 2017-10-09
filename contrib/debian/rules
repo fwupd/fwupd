@@ -14,7 +14,7 @@ ifneq ($(CI),)
 endif
 
 %:
-	dh $@ --with gir
+	dh $@ --with gir,systemd
 
 override_dh_auto_clean:
 	rm -fr debian/build
