@@ -760,10 +760,14 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 static AsScreenshot *
 _as_app_get_screenshot_default (AsApp *app)
 {
+#if AS_CHECK_VERSION(0,7,3)
+	return as_app_get_screenshot_default (app);
+#else
 	GPtrArray *array = as_app_get_screenshots (app);
 	if (array->len == 0)
 		return NULL;
 	return g_ptr_array_index (array, 0);
+#endif
 }
 
 static gboolean
@@ -1426,6 +1430,9 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 static AsRelease *
 _as_app_get_release_by_version (AsApp *app, const gchar *version)
 {
+#if AS_CHECK_VERSION(0,7,3)
+	return as_app_get_release_by_version (app, version);
+#else
 	GPtrArray *releases = as_app_get_releases (app);
 	for (guint i = 0; i < releases->len; i++) {
 		AsRelease *release = g_ptr_array_index (releases, i);
@@ -1433,6 +1440,7 @@ _as_app_get_release_by_version (AsApp *app, const gchar *version)
 			return release;
 	}
 	return NULL;
+#endif
 }
 
 static void
