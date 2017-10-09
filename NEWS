@@ -1,3 +1,41 @@
+Version 1.0.0
+~~~~~~~~~~~~~
+Released: 2017-10-09
+
+Notes:
+ - This release breaks API and ABI to remove deprecated symbols
+ - libdfu is now not installed as a shared library
+
+New Features:
+ - Add a human-readable title for each remote (Richard Hughes)
+ - Add a method to return a list of upgrades for a specific device (Richard Hughes)
+ - Add an 'Summary' and 'Icons' properties to each device (Richard Hughes)
+ - Add FuDeviceLocker to simplify device open/close lifecycles (Richard Hughes)
+ - Add functionality to blacklist Dell HW with problems (Mario Limonciello)
+ - Add fu_plugin_check_supported() (Richard Hughes)
+ - Add fwupd_remote_get_checksum() to use in client programs (Richard Hughes)
+ - Add ModifyRemote as an easy way to enable and disable remotes (Richard Hughes)
+ - Add the plugin documentation to the main gtk-doc (Richard Hughes)
+ - Allow plugins to depend on each other (Richard Hughes)
+ - Disable the fallback USB plugin (Richard Hughes)
+ - Parse the SMBIOS v2 and v3 DMI tables directly (Richard Hughes)
+ - Support uploading the UEFI firmware splash image (Richard Hughes)
+ - Use the intel-wmi-thunderbolt kernel module to force power (Mario Limonciello)
+
+Bugfixes:
+ - Only run SMI to toggle host MST GPIO on Dell systems with host MST (Mario Limonciello)
+ - Disable unifying support if no CONFIG_HIDRAW support (Richard Hughes)
+ - Do not auto-open all USB devices at startup (Richard Hughes)
+ - Do not fail to load the daemon if cached metadata is invalid (Richard Hughes)
+ - Do not use system-specific infomation for UEFI PCI devices (Richard Hughes)
+ - Fix a crash when using fu_plugin_device_add_delay() (Richard Hughes)
+ - Fix the libdfu self test failure on s390 and ppc64 (Richard Hughes)
+ - Fix various printing issues with the progressbar (Richard Hughes)
+ - Generate the LD script from the GObject introspection data (Richard Hughes)
+ - Never fallback to an offline update from client code (Richard Hughes)
+ - Only set the Dell coldplug delay when we know we need it (Mario Limonciello)
+ - Prefer to use HWIDs to get DMI keys and DE table (Mario Limonciello)
+
 Version 0.9.7
 ~~~~~~~~~~~~~
 Released: 2017-09-01
