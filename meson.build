@@ -1,7 +1,7 @@
 project('fwupd', 'c',
   version : '1.0.8',
   license : 'LGPL-2.1+',
-  meson_version : '>=0.41.0',
+  meson_version : '>=0.43.0',
   default_options : ['warning_level=2', 'c_std=c99'],
 )
 
@@ -49,7 +49,7 @@ lt_age = '0'
 lt_version = '@0@.@1@.@2@'.format(lt_current, lt_age, lt_revision)
 
 # get suported warning flags
-test_args = [
+warning_flags = [
   '-fstack-protector-strong',
   '-Waggregate-return',
   '-Wunused',
@@ -103,11 +103,7 @@ test_args = [
   '-Wwrite-strings'
 ]
 cc = meson.get_compiler('c')
-foreach arg: test_args
-  if cc.has_argument(arg)
-    add_project_arguments(arg, language : 'c')
-  endif
-endforeach
+add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
 
 # enable full RELRO where possible
 # FIXME: until https://github.com/mesonbuild/meson/issues/1140 is fixed
