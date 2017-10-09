@@ -86,6 +86,20 @@ executable(
   install_dir : get_option('bindir')
 )
 
+if get_option('enable-man')
+  docbook2man = find_program('docbook2man')
+  custom_target('fwupdmgr-man',
+    input : 'fwupdmgr.sgml',
+    output : 'fwupdmgr.1',
+    command : [
+      docbook2man, '@INPUT@',
+      '--output', meson.current_build_dir(),
+    ],
+    install : true,
+    install_dir : join_paths(get_option('mandir'), 'man1'),
+  )
+endif
+
 resources_src = gnome.compile_resources(
   'fwupd-resources',
   'fwupd.gresource.xml',
