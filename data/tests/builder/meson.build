@@ -8,7 +8,7 @@ if get_option('enable-tests')
     output : 'firmware.tar',
     command : [
       tar, '--xform', 's,.*/,,',
-           '--create', '--file', '@OUTPUT@', '@INPUT@',
+           '--absolute-names', '--create', '--file', '@OUTPUT@', '@INPUT@',
     ],
   )
 endif
