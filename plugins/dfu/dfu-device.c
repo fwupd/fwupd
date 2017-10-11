@@ -291,9 +291,11 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 	}
 
 	/* check transfer size */
-	priv->transfer_size = desc->wTransferSize;
-	if (priv->transfer_size == 0x0000) {
-		g_warning ("DFU transfer size invalid, using default: 0x%04x",
+	priv->transfer_size = GUINT16_FROM_LE (desc->wTransferSize);
+	if (priv->transfer_size > 0x0000) {
+		g_debug ("using DFU transfer size 0x%04x bytes", priv->transfer_size);
+	} else {
+		g_warning ("DFU transfer size 0x%04x invalid, using default",
 			   desc->wTransferSize);
 		priv->transfer_size = 64;
 	}
