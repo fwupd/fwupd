@@ -33,11 +33,11 @@ DfuTarget	*dfu_target_new				(DfuDevice	*device,
 							 GUsbInterface	*iface);
 
 GBytes		*dfu_target_upload_chunk		(DfuTarget	*target,
-							 guint8		 index,
+							 guint16	 index,
 							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_target_download_chunk		(DfuTarget	*target,
-							 guint8		 index,
+							 guint16	 index,
 							 GBytes		*bytes,
 							 GCancellable	*cancellable,
 							 GError		**error);

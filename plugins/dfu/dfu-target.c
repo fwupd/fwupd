@@ -638,7 +638,7 @@ dfu_target_setup (DfuTarget *target, GError **error)
 }
 
 gboolean
-dfu_target_download_chunk (DfuTarget *target, guint8 index, GBytes *bytes,
+dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 			   GCancellable *cancellable, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -864,7 +864,7 @@ dfu_target_read_unprotect (DfuTarget *target,
 #endif
 
 GBytes *
-dfu_target_upload_chunk (DfuTarget *target, guint8 index,
+dfu_target_upload_chunk (DfuTarget *target, guint16 index,
 			 GCancellable *cancellable, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -1033,13 +1033,13 @@ dfu_target_upload_element_dfuse (DfuTarget *target,
 
 	/* get all the chunks from the hardware */
 	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
-	for (guint idx = 0; idx < G_MAXUINT16; idx++) {
+	for (guint16 idx = 0; idx < G_MAXUINT16; idx++) {
 		guint32 chunk_size;
 
 		/* read chunk of data -- ST uses wBlockNum=0 for DfuSe commands
 		 * and wBlockNum=1 is reserved */
 		chunk_tmp = dfu_target_upload_chunk (target,
-						     (guint8) (idx + 2),
+						     idx + 2,
 						     cancellable,
 						     error);
 		if (chunk_tmp == NULL)
@@ -1124,12 +1124,12 @@ dfu_target_upload_element_dfu (DfuTarget *target,
 
 	/* get all the chunks from the hardware */
 	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
-	for (guint idx = 0; idx < G_MAXUINT16; idx++) {
+	for (guint16 idx = 0; idx < G_MAXUINT16; idx++) {
 		guint32 chunk_size;
 
 		/* read chunk of data */
 		chunk_tmp = dfu_target_upload_chunk (target,
-						     (guint8) idx,
+						     idx,
 						     cancellable,
 						     error);
 		if (chunk_tmp == NULL)
@@ -1364,7 +1364,7 @@ dfu_target_download_element_dfu (DfuTarget *target,
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	GBytes *bytes;
-	guint nr_chunks;
+	guint16 nr_chunks;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 
 	/* round up as we have to transfer incomplete blocks */
@@ -1379,7 +1379,7 @@ dfu_target_download_element_dfu (DfuTarget *target,
 		return FALSE;
 	}
 	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_WRITE);
-	for (guint i = 0; i < nr_chunks + 1; i++) {
+	for (guint16 i = 0; i < nr_chunks + 1; i++) {
 		gsize length;
 		guint32 offset;
 		g_autoptr(GBytes) bytes_tmp = NULL;
@@ -1398,11 +1398,7 @@ dfu_target_download_element_dfu (DfuTarget *target,
 		}
 		g_debug ("writing #%04x chunk of size %" G_GSIZE_FORMAT,
 			 i, g_bytes_get_size (bytes_tmp));
-		if (!dfu_target_download_chunk (target,
-						(guint8) i,
-						bytes_tmp,
-						cancellable,
-						error))
+		if (!dfu_target_download_chunk (target, i, bytes_tmp, cancellable, error))
 			return FALSE;
 
 		/* update UI */
