@@ -5,7 +5,7 @@ Continuous integration for fwupd is provided by [Travis CI](https://travis-ci.or
 By using Travis CI, builds are exercised across a variety of environments attempting to maximize code coverage.
 For every commit or pull request 5 builds are performed:
 
-Fedora
+Fedora (x86_64)
 ------
 
 * A fully packaged RPM build with all plugins enabled
@@ -15,7 +15,7 @@ Fedora
 * All packages are installed
 * An installed testing run with the "test" plugin and pulling from LVFS.
 
-Debian unstable (gcc)
+Debian testing (x86_64)
 ------
 
 * A fully packaged DEB build with all plugins enabled
@@ -26,7 +26,18 @@ Debian unstable (gcc)
 * An installed testing run with the "test" plugin and pulling from LVFS.
 * All packages are removed
 
-Ubuntu devel release (clang)
+Debian testing (i386)
+------
+
+* A fully packaged DEB build with all plugins enabled
+* Compiled under gcc
+* Tests with -Werror enabled
+* Tests with the built in local test suite for all plugins.
+* All packages are installed
+* An installed testing run with the "test" plugin and pulling from LVFS.
+* All packages are removed
+
+Ubuntu devel release (x86_64)
 ------
 
 * A fully packaged DEB build with all plugins enabled
@@ -37,7 +48,7 @@ Ubuntu devel release (clang)
 * An installed testing run with the "test" plugin and pulling from LVFS.
 * All packages are removed
 
-Debian unstable (cross compile s390x)
+Debian testing (cross compile s390x)
 ------
 
 * Not packaged
@@ -45,7 +56,7 @@ Debian unstable (cross compile s390x)
 * Tests with -Werror enabled
 * Runs local test suite using qemu-user
 
-Arch Linux
+Arch Linux (x86_64)
 ----------
 
 * A fully packaged pkg build with all plugins enabled

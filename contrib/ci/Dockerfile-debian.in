@@ -1,4 +1,4 @@
-FROM debian:testing
+FROM %%%ARCH_PREFIX%%%debian:testing
 %%%ARCH_SPECIFIC_COMMAND%%%
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
 RUN mkdir /build

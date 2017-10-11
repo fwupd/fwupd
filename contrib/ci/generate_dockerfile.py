@@ -64,7 +64,13 @@ out = os.path.join(directory, "Dockerfile")
 
 with open(out, 'w') as wfd:
     for line in lines:
-        if line == "%%%INSTALL_DEPENDENCIES_COMMAND%%%\n":
+        if line.startswith("FROM %%%ARCH_PREFIX%%%"):
+            if OS == "debian" and SUBOS == "i386":
+                replace = SUBOS + "/"
+            else:
+                replace = ''
+            wfd.write(line.replace("%%%ARCH_PREFIX%%%", replace))
+        elif line == "%%%INSTALL_DEPENDENCIES_COMMAND%%%\n":
             if OS == "fedora":
                 wfd.write("RUN dnf --enablerepo=updates-testing -y install \\\n")
             elif OS == "debian" or OS == "ubuntu":
