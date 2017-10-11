@@ -307,6 +307,10 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 		    priv->version == DFU_VERSION_DFU_1_1) {
 			g_debug ("basic DFU, no DfuSe support");
 			priv->dfuse_supported = FALSE;
+		} else if (priv->version == 0x0101) {
+			g_debug ("basic DFU 1.1 assumed, no DfuSe support");
+			priv->version = DFU_VERSION_DFU_1_1;
+			priv->dfuse_supported = FALSE;
 		} else if (priv->version == DFU_VERSION_DFUSE) {
 			g_debug ("DfuSe support");
 			priv->dfuse_supported = TRUE;
