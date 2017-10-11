@@ -2009,6 +2009,7 @@ dfu_device_download (DfuDevice *device,
 		gulong id1;
 		gulong id2;
 		g_autoptr(DfuTarget) target_tmp = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		image = g_ptr_array_index (images, i);
 		target_tmp = dfu_device_get_target_by_alt_setting (device,
@@ -2019,9 +2020,15 @@ dfu_device_download (DfuDevice *device,
 
 		/* we don't actually need to print this, but it makes sure the
 		 * target is setup prior to doing the cipher checks */
-		alt_name = dfu_target_get_alt_name (target_tmp, error);
-		if (alt_name == NULL)
-			return FALSE;
+		alt_name = dfu_target_get_alt_name (target_tmp, &error_local);
+		if (alt_name == NULL) {
+			if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				alt_name = "unknown";
+			} else {
+				g_propagate_error (error, g_steal_pointer (&error_local));
+				return FALSE;
+			}
+		}
 		g_debug ("downloading to target: %s", alt_name);
 
 		/* check we're flashing a compatible firmware */

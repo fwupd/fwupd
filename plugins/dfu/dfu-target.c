@@ -1829,7 +1829,7 @@ dfu_target_get_alt_name_for_display (DfuTarget *target, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_FOUND,
-				     "no alt-name");
+				     "no alt-name for display");
 		return NULL;
 	}
 
