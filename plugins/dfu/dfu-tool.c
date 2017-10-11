@@ -1203,6 +1203,24 @@ dfu_tool_attach (DfuToolPrivate *priv, gchar **values, GError **error)
 	return dfu_device_attach (device, error);
 }
 
+static gboolean
+dfu_tool_reset (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
+
+	device = dfu_tool_get_defalt_device (priv, error);
+	if (device == NULL)
+		return FALSE;
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    error);
+	if (locker == NULL)
+		return FALSE;
+	return dfu_device_reset (device, error);
+}
+
 static void
 fu_tool_percentage_changed_cb (DfuDevice *device,
 			       guint percentage,
@@ -2234,6 +2252,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Attach DFU capable device back to runtime"),
 		     dfu_tool_attach);
+	dfu_tool_add (priv->cmd_array,
+		     "reset",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Reset a DFU device"),
+		     dfu_tool_reset);
 	dfu_tool_add (priv->cmd_array,
 		     "read",
 		     NULL,

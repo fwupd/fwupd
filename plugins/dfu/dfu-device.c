@@ -1612,6 +1612,7 @@ dfu_device_reset (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GTimer) timer = g_timer_new ();
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1635,6 +1636,7 @@ dfu_device_reset (DfuDevice *device, GError **error)
 			     error_local->code);
 		return FALSE;
 	}
+	g_debug ("reset took %.2lfms", g_timer_elapsed (timer, NULL) * 1000);
 	return TRUE;
 }
 
