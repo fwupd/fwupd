@@ -420,6 +420,18 @@ dfu_device_add_targets (DfuDevice *device)
 			priv->attributes = DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD |
 					   DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD;
 		}
+
+		/* inverse, but it's the best we can do */
+		if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_JABRA_MAGIC)) {
+			if (g_usb_device_get_pid (priv->dev) == 0x0412)
+				priv->runtime_pid = 0x0411;
+			if (g_usb_device_get_pid (priv->dev) == 0x0420)
+				priv->runtime_pid = 0x0421;
+			if (g_usb_device_get_pid (priv->dev) == 0x2475)
+				priv->runtime_pid = 0x0982;
+			if (g_usb_device_get_pid (priv->dev) == 0x2456)
+				priv->runtime_pid = 0x0971;
+		}
 		return TRUE;
 	}
 
@@ -667,6 +679,30 @@ dfu_device_set_quirks (DfuDevice *device)
 	if (vid == 0x1d50 && pid == 0x60a7) {
 		priv->quirks |= DFU_DEVICE_QUIRK_NO_DFU_RUNTIME |
 				DFU_DEVICE_QUIRK_ACTION_REQUIRED;
+	}
+
+	/* Jabra */
+	if (vid == 0x0b0e) {
+		switch (pid) {
+		case 0x0412:	/* Speak 410 */
+		case 0x0420:	/* Speak 510 */
+		case 0x2475:	/* Speak 710 */
+		case 0x2456:	/* Speak 810 */
+			priv->quirks |= DFU_DEVICE_QUIRK_NO_DFU_RUNTIME |
+					DFU_DEVICE_QUIRK_JABRA_MAGIC;
+			break;
+		case 0x0411:	/* Speak 410 DFU */
+		case 0x0421:	/* Speak 510 DFU */
+		case 0x0982:	/* Speak 710 DFU */
+		case 0x0971:	/* Speak 810 DFU */
+			priv->quirks |= DFU_DEVICE_QUIRK_NO_PID_CHANGE |
+					DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO |
+					DFU_DEVICE_QUIRK_IGNORE_UPLOAD |
+					DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET;
+			break;
+		default:
+			break;
+		}
 	}
 
 	/* the DSO Nano has uses 0 instead of 2 when in DFU mode */
@@ -1089,6 +1125,71 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 			     "failed to detach: no GUsbDevice for %s",
 			     priv->platform_id);
 		return FALSE;
+	}
+
+	/* handle jabra devices */
+	if (priv->quirks & DFU_DEVICE_QUIRK_JABRA_MAGIC) {
+		guint8 adr = 0x00;
+		guint8 rep = 0x00;
+		g_autofree guint8 *buf = g_malloc0 (33);
+		g_autoptr(GError) error_jabra = NULL;
+
+		switch (g_usb_device_get_pid (priv->dev)) {
+		case 0x0412: /* SPEAK-410 */
+		case 0x0420: /* SPEAK-510 */
+			rep = 0x02;
+			adr = 0x01;
+			break;
+		case 0x2475: /* SPEAK-710 */
+		case 0x2456: /* SPEAK-810 */
+			rep = 0x05;
+			adr = 0x08;
+			break;
+		default:
+			break;
+		}
+		if (rep == 0x00 || adr == 0x00) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "unsupported PID: %04x",
+				     g_usb_device_get_pid (priv->dev));
+			return FALSE;
+		}
+		buf[0] = rep;
+		buf[1] = adr;
+		buf[2] = 0x00;
+		buf[3] = 0x01;
+		buf[4] = 0x85;
+		buf[5] = 0x07;
+
+		/* send magic to device */
+		if (!dfu_device_ensure_interface (device, cancellable, error))
+			return FALSE;
+		if (!g_usb_device_control_transfer (priv->dev,
+						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+						    G_USB_DEVICE_REQUEST_TYPE_CLASS,
+						    G_USB_DEVICE_RECIPIENT_INTERFACE,
+						    0x09,
+						    0x0200 | rep,
+						    0x0003,
+						    buf, 33, NULL,
+						    5000,
+						    cancellable,
+						    &error_jabra)) {
+			g_debug ("whilst sending magic: %s, ignoring",
+				 error_jabra->message);
+		}
+
+		/* wait for device to re-appear */
+		dfu_device_set_action (device, FWUPD_STATUS_DEVICE_RESTART);
+		if (!dfu_device_wait_for_replug (device, 5000, cancellable, error))
+			return FALSE;
+
+		/* wait 10 seconds for DFU mode to settle */
+		g_debug ("waiting for Jabra device to settle...");
+		dfu_device_set_action (device, FWUPD_STATUS_DEVICE_BUSY);
+		g_usleep (10 * G_USEC_PER_SEC);
 	}
 
 	/* the device has no DFU runtime, so cheat */
@@ -2202,6 +2303,8 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "ignore-upload|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET)
 		g_string_append_printf (str, "attach-extra-reset|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_JABRA_MAGIC)
+		g_string_append_printf (str, "jabra-magic|");
 
 	/* a well behaved device */
 	if (str->len == 0) {
