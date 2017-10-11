@@ -659,7 +659,7 @@ dfu_target_setup (DfuTarget *target, GError **error)
 }
 
 gboolean
-dfu_target_download_chunk (DfuTarget *target, guint8 index, GBytes *bytes,
+dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 			   GCancellable *cancellable, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -893,7 +893,7 @@ dfu_target_read_unprotect (DfuTarget *target,
 #endif
 
 GBytes *
-dfu_target_upload_chunk (DfuTarget *target, guint8 index,
+dfu_target_upload_chunk (DfuTarget *target, guint16 index,
 			 GCancellable *cancellable, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -1020,7 +1020,7 @@ dfu_target_upload_element_dfuse (DfuTarget *target,
 	guint percentage_size = expected_size > 0 ? expected_size : maximum_size;
 	gsize total_size = 0;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
-	guint idx;
+	guint16 idx;
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GBytes) contents_truncated = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -1070,7 +1070,7 @@ dfu_target_upload_element_dfuse (DfuTarget *target,
 		/* read chunk of data -- ST uses wBlockNum=0 for DfuSe commands
 		 * and wBlockNum=1 is reserved */
 		chunk_tmp = dfu_target_upload_chunk (target,
-						     (guint8) (idx + 2),
+						     idx + 2,
 						     cancellable,
 						     error);
 		if (chunk_tmp == NULL)
@@ -1147,7 +1147,7 @@ dfu_target_upload_element_dfu (DfuTarget *target,
 	guint percentage_size = expected_size > 0 ? expected_size : maximum_size;
 	gsize total_size = 0;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
-	guint idx;
+	guint16 idx;
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -1161,7 +1161,7 @@ dfu_target_upload_element_dfu (DfuTarget *target,
 
 		/* read chunk of data */
 		chunk_tmp = dfu_target_upload_chunk (target,
-						     (guint8) idx,
+						     idx,
 						     cancellable,
 						     error);
 		if (chunk_tmp == NULL)
@@ -1401,8 +1401,8 @@ dfu_target_download_element_dfu (DfuTarget *target,
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	GBytes *bytes;
-	guint i;
-	guint nr_chunks;
+	guint16 i;
+	guint16 nr_chunks;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 
 	/* round up as we have to transfer incomplete blocks */
@@ -1436,11 +1436,7 @@ dfu_target_download_element_dfu (DfuTarget *target,
 		}
 		g_debug ("writing #%04x chunk of size %" G_GSIZE_FORMAT,
 			 i, g_bytes_get_size (bytes_tmp));
-		if (!dfu_target_download_chunk (target,
-						(guint8) i,
-						bytes_tmp,
-						cancellable,
-						error))
+		if (!dfu_target_download_chunk (target, i, bytes_tmp, cancellable, error))
 			return FALSE;
 
 		/* update UI */
