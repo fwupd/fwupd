@@ -673,7 +673,8 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 		return FALSE;
 
 	/* give the target a chance to update */
-	g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
+	if (dfu_device_get_state (priv->device) != DFU_STATE_DFU_DNLOAD_IDLE)
+		g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
 
 	g_assert (actual_length == g_bytes_get_size (bytes));
 	return TRUE;
