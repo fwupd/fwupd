@@ -1048,6 +1048,7 @@ gboolean
 dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	const guint16 timeout_reset_ms = 1000;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
@@ -1097,7 +1098,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
 					    DFU_REQUEST_DETACH,
-					    0,
+					    timeout_reset_ms,
 					    priv->iface_number,
 					    NULL, 0, NULL,
 					    priv->timeout_ms,
