@@ -23,16 +23,31 @@
 #define __FU_DELL_COMMON_H
 
 #include "fu-device.h"
+#include <efivar.h>
+#include <sys/ioctl.h>
+#include <linux/version.h>
+
+/* TODO: not yet upstream, make sure to update to where it really lands */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,16,0)
+#include <linux/wmi.h>
+#else
+#include "wmi.h"
+#endif
+
+#ifdef HAVE_LIBSMBIOS
 #include <smbios_c/smi.h>
 #include <smbios_c/obj/smi.h>
-#include <efivar.h>
+#endif
 
 typedef struct {
+#ifdef HAVE_LIBSMBIOS
 	struct dell_smi_obj	*smi;
-	guint32			input[4];
-	guint32			output[4];
+#endif
+	struct dell_wmi_smbios_buffer *buffer;
+	gchar			*wmi_smbios;
 	gboolean		fake_smbios;
 	guint8			*fake_buffer;
+	u64			buffer_size;
 } FuDellSmiObj;
 
 /* Dock Info version 1 */
@@ -96,23 +111,17 @@ gboolean
 fu_dell_execute_smi (FuDellSmiObj *obj);
 
 gboolean
-fu_dell_execute_simple_smi (FuDellSmiObj *obj, guint16 class, guint16 select);
-
-gboolean
 fu_dell_detect_dock (FuDellSmiObj *obj, guint32 *location);
 
 gboolean
 fu_dell_query_dock (FuDellSmiObj *smi_obj, DOCK_UNION *buf);
 
-const gchar*
-fu_dell_get_dock_type (guint8 type);
-
 gboolean
-fu_dell_toggle_dock_mode (FuDellSmiObj *smi_obj, guint32 new_mode,
+fu_dell_toggle_dock_mode (FuDellSmiObj *obj, guint32 new_mode,
 			  guint32 dock_location, GError **error);
 
 gboolean
-fu_dell_toggle_host_mode (FuDellSmiObj *smi_obj, const efi_guid_t guid, int mode);
+fu_dell_toggle_host_mode (FuDellSmiObj *obj, const efi_guid_t guid, int mode);
 
 /* SMI return values used */
 #define SMI_SUCCESS			0

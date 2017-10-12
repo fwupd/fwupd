@@ -199,10 +199,13 @@ if get_option('enable-uefi')
 endif
 
 if get_option('enable-dell')
-  libsmbios_c = dependency('libsmbios_c', version : '>= 2.3.0')
+  libsmbios_c = dependency('libsmbios_c', required: false)
   efivar = dependency('efivar')
   fwup = dependency('fwup', version : '>= 5')
   conf.set('HAVE_DELL', '1')
+  if libsmbios_c.found() and libsmbios_c.version().version_compare('>=2.3.0')
+    conf.set('HAVE_LIBSMBIOS', '1')
+  endif
 endif
 
 if get_option('enable-synaptics')
