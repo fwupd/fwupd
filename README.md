@@ -14,7 +14,7 @@ The most up to date compilation instructions are available in the [Wiki](https:/
 LVFS
 ----
 This project is configured by default to download firmware from the [Linux Vendor
-Firmware Service (LVFS)](https://secure-lvfs.rhcloud.com/lvfs/).
+Firmware Service (LVFS)](https://fwupd.org/).
 
 This service is available to all OEMs and firmware creators who would like to make
 their firmware available to Linux users.

@@ -29,7 +29,7 @@ def _get_cache_file(fn):
         os.makedirs(cachedir)
     cachefn = os.path.join(cachedir, fn)
     if not os.path.exists(cachefn):
-        url = 'https://secure-lvfs.rhcloud.com/downloads/' +  fn
+        url = 'https://fwupd.org/downloads/' +  fn
         print("Downloading", url)
         r = requests.get(url)
         r.raise_for_status()
