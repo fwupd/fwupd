@@ -1585,7 +1585,8 @@ dfu_target_download_element (DfuTarget *target,
 	}
 
 	/* verify */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY) {
+	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY &&
+	    dfu_device_has_attribute (priv->device, DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD)) {
 		GBytes *bytes;
 		GBytes *bytes_tmp;
 		g_autoptr(DfuElement) element_tmp = NULL;
