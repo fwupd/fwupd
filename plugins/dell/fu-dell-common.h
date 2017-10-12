@@ -107,9 +107,6 @@ fu_dell_query_dock (FuDellSmiObj *smi_obj, DOCK_UNION *buf);
 const gchar*
 fu_dell_get_dock_type (guint8 type);
 
-guint32
-fu_dell_get_cable_type (guint8 type);
-
 gboolean
 fu_dell_toggle_dock_mode (FuDellSmiObj *smi_obj, guint32 new_mode,
 			  guint32 dock_location, GError **error);
