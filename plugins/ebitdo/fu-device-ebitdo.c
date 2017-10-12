@@ -339,6 +339,40 @@ fu_device_ebitdo_set_version (FuDeviceEbitdo *device, guint32 version)
 	fu_device_set_version (FU_DEVICE (device), tmp);
 }
 
+static gboolean
+fu_device_ebitdo_validate (FuDeviceEbitdo *device, GError **error)
+{
+	FuDeviceEbitdoPrivate *priv = GET_PRIVATE (device);
+	guint8 idx;
+	g_autofree gchar *ven = NULL;
+	const gchar *whitelist[] = {
+		"8Bitdo",
+		"SFC30",
+		NULL };
+
+	/* this is a new, always valid, VID */
+	if (g_usb_device_get_vid (priv->usb_device) == 0x2dc8)
+		return TRUE;
+
+	/* verify the vendor prefix against a whitelist */
+	idx = g_usb_device_get_manufacturer_index (priv->usb_device);
+	ven = g_usb_device_get_string_descriptor (priv->usb_device, idx, error);
+	if (ven == NULL) {
+		g_prefix_error (error, "could not check vendor descriptor");
+		return FALSE;
+	}
+	for (guint i = 0; whitelist[i] != NULL; i++) {
+		if (g_str_has_prefix (ven, whitelist[i]))
+			return TRUE;
+	}
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_INVALID_DATA,
+		     "vendor '%s' did not match whitelist, "
+		     "probably not a 8Bitdo device…", ven);
+	return FALSE;
+}
+
 gboolean
 fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 {
@@ -352,9 +386,12 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 	if (priv->usb_device_locker != NULL)
 		return TRUE;
 
+	/* open, then ensure this is actually 8Bitdo hardware */
 	g_debug ("opening %s", fu_device_ebitdo_kind_to_string (priv->kind));
 	locker = fu_device_locker_new (priv->usb_device, error);
 	if (locker == NULL)
+		return FALSE;
+	if (!fu_device_ebitdo_validate (device, error))
 		return FALSE;
 	if (!g_usb_device_claim_interface (priv->usb_device, 0, /* 0 = idx? */
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
@@ -623,7 +660,7 @@ fu_device_ebitdo_init_real (FuDeviceEbitdo *device)
 	fu_device_set_name (FU_DEVICE (device), name);
 	fu_device_set_summary (FU_DEVICE (device),
 			       "A resdesigned classic game controller");
-	fu_device_set_vendor (FU_DEVICE (device), "8bitdo");
+	fu_device_set_vendor (FU_DEVICE (device), "8Bitdo");
 
 	/* set vendor ID */
 	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
