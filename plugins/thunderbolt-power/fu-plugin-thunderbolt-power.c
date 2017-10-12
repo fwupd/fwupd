@@ -241,6 +241,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 
 	data->needs_forcepower = TRUE;
 	/* wait for the device to come back onto the bus */
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
 	g_usleep (TBT_NEW_DEVICE_TIMEOUT * G_USEC_PER_SEC);
 
 	return TRUE;
