@@ -22,7 +22,7 @@
 #include "config.h"
 
 #include <appstream-glib.h>
-#include "fu-dell-common.h"
+#include "fu-dell-smi.h"
 
 /* These are for dock query capabilities */
 struct dock_count_in {

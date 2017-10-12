@@ -24,7 +24,7 @@
 
 #include <gusb.h>
 #include "fu-plugin.h"
-#include "fu-dell-common.h"
+#include "fu-dell-smi.h"
 
 struct FuPluginData {
 	FuDellSmiObj		*smi_obj;
