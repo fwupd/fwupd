@@ -624,6 +624,7 @@ dfu_device_set_quirks (DfuDevice *device)
 		priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT |
 				DFU_DEVICE_QUIRK_NO_PID_CHANGE |
 				DFU_DEVICE_QUIRK_NO_DFU_RUNTIME |
+				DFU_DEVICE_QUIRK_ACTION_REQUIRED |
 				DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD;
 
 	/* OpenPCD Reader */
@@ -659,8 +660,10 @@ dfu_device_set_quirks (DfuDevice *device)
 		priv->quirks |= DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD;
 
 	/* HydraBus */
-	if (vid == 0x1d50 && pid == 0x60a7)
-		priv->quirks |= DFU_DEVICE_QUIRK_NO_DFU_RUNTIME;
+	if (vid == 0x1d50 && pid == 0x60a7) {
+		priv->quirks |= DFU_DEVICE_QUIRK_NO_DFU_RUNTIME |
+				DFU_DEVICE_QUIRK_ACTION_REQUIRED;
+	}
 
 	/* the DSO Nano has uses 0 instead of 2 when in DFU mode */
 //	quirks |= DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO;
@@ -2178,6 +2181,8 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "attach-upload-download|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_RUNTIME)
 		g_string_append_printf (str, "ignore-runtime|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_ACTION_REQUIRED)
+		g_string_append_printf (str, "action-required|");
 
 	/* a well behaved device */
 	if (str->len == 0) {

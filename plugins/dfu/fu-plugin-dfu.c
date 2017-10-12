@@ -72,7 +72,7 @@ fu_plugin_dfu_device_update (FuPlugin *plugin,
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* needs a manual action */
-	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)) {
+	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_ACTION_REQUIRED)) {
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	} else {
 		fu_device_remove_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);

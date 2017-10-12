@@ -61,6 +61,7 @@ typedef enum {
  * @DFU_DEVICE_QUIRK_NO_DFU_RUNTIME:		No DFU runtime interface is provided
  * @DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD:	An upload or download is required for attach
  * @DFU_DEVICE_QUIRK_IGNORE_RUNTIME:		Device has broken DFU runtime support
+ * @DFU_DEVICE_QUIRK_ACTION_REQUIRED:		User has to do something manually, e.g. press a button
  *
  * The workarounds for different devices.
  **/
@@ -75,6 +76,7 @@ typedef enum {
 	DFU_DEVICE_QUIRK_NO_DFU_RUNTIME		= (1 << 6),
 	DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD	= (1 << 7),
 	DFU_DEVICE_QUIRK_IGNORE_RUNTIME		= (1 << 8),
+	DFU_DEVICE_QUIRK_ACTION_REQUIRED	= (1 << 9),
 	/*< private >*/
 	DFU_DEVICE_QUIRK_LAST
 } DfuDeviceQuirks;
