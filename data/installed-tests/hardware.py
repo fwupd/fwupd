@@ -17,7 +17,7 @@ from gi.repository import GLib
 
 def _get_by_device_guid(client, guid):
     cancellable = Gio.Cancellable.new()
-    devices = client.get_devices_simple(cancellable)
+    devices = client.get_devices(cancellable)
     for d in devices:
         if d.has_guid(guid):
             return d
