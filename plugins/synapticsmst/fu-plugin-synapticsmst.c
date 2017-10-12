@@ -22,16 +22,20 @@
  */
 
 #include "config.h"
-#include <smbios_c/smbios.h>
 #include "synapticsmst-device.h"
 #include "synapticsmst-common.h"
-#include "fu-dell-common.h"
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
+#include "fu-device-metadata.h"
 
 #define SYNAPTICS_FLASH_MODE_DELAY 3
 
 #define HWID_DELL_INC	"85d38fda-fc0e-5c6f-808f-076984ae7978"
+
+struct FuPluginData {
+	const gchar	*dock_type;
+	const gchar	*system_type;
+};
 
 static gboolean
 synapticsmst_common_check_supported_system (FuPlugin *plugin, GError **error)
@@ -67,6 +71,8 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 				SynapticsMSTDevice *device,
 				GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
+
 	g_autoptr(FuDevice) dev = NULL;
 	const gchar *kind_str = NULL;
 	const gchar *board_str = NULL;
@@ -78,7 +84,10 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	guint16 rad;
 
 	aux_node = synapticsmst_device_get_aux_node (device);
-	if (!synapticsmst_device_enumerate_device (device, error)) {
+	if (!synapticsmst_device_enumerate_device (device,
+						   data->dock_type,
+						   data->system_type,
+						   error)) {
 		g_debug ("error enumerating device at %s", aux_node);
 		return FALSE;
 	}
@@ -292,6 +301,7 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(SynapticsMSTDevice) device = NULL;
 	const gchar *device_id;
 	SynapticsMSTDeviceKind kind;
@@ -317,7 +327,8 @@ fu_plugin_update (FuPlugin *plugin,
 
 	device = synapticsmst_device_new (kind, aux_node, layer, rad);
 
-	if (!synapticsmst_device_enumerate_device (device, error))
+	if (!synapticsmst_device_enumerate_device (device, data->dock_type,
+						   data->system_type, error))
 		return FALSE;
 	if (synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device)) != NULL) {
 		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
@@ -338,7 +349,8 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* Re-run device enumeration to find the new device version */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
-	if (!synapticsmst_device_enumerate_device (device, error)) {
+	if (!synapticsmst_device_enumerate_device (device, data->dock_type,
+						   data->system_type, error)) {
 		return FALSE;
 	}
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
@@ -346,38 +358,24 @@ fu_plugin_update (FuPlugin *plugin,
 	return TRUE;
 }
 
-static void
-fu_plugin_synapticsmst_redo_enumeration_cb (GUsbContext *ctx,
-					    GUsbDevice *usb_device,
-					    FuPlugin *plugin)
+void
+fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 {
-	guint16 pid;
-	guint16 vid;
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *tmp;
 
-	vid = g_usb_device_get_vid (usb_device);
-	pid = g_usb_device_get_pid (usb_device);
+	/* dell plugin */
+	if (g_strcmp0 (fu_device_get_plugin (device), "dell") == 0) {
+		/* only look at external devices from dell plugin */
+		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL))
+			return;
 
-	/* Only look up if this was a dock connected */
-	if (vid != DOCK_NIC_VID || pid != DOCK_NIC_PID)
-		return;
+		tmp = fu_device_get_metadata (device,
+					      FU_DEVICE_METADATA_DELL_DOCK_TYPE);
 
-	/* Request daemon to redo coldplug, this wakes up Dell devices */
-	fu_plugin_recoldplug (plugin);
-}
-
-gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
-{
-	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	if (usb_ctx != NULL) {
-		g_signal_connect (usb_ctx, "device-added",
-				  G_CALLBACK (fu_plugin_synapticsmst_redo_enumeration_cb),
-				  plugin);
-		g_signal_connect (usb_ctx, "device-removed",
-				  G_CALLBACK (fu_plugin_synapticsmst_redo_enumeration_cb),
-				  plugin);
+		if (tmp)
+			data->dock_type = g_strdup (tmp);
 	}
-	return TRUE;
 }
 
 gboolean
@@ -391,4 +389,26 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	if (!fu_plugin_synapticsmst_enumerate (plugin, error))
 		g_debug ("error enumerating");
 	return TRUE;
+}
+
+void
+fu_plugin_destroy (FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+
+	g_free(data->dock_type);
+	g_free(data->system_type);
+}
+
+void
+fu_plugin_init (FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+
+	data->system_type =
+		g_strdup (fu_plugin_get_dmi_value (plugin,
+						   FU_HWIDS_KEY_PRODUCT_SKU));
+
+	/* make sure dell is already coldplugged */
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "dell");
 }

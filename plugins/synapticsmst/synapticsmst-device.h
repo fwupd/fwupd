@@ -105,6 +105,8 @@ synapticsmst_device_get_cascade					(SynapticsMSTDevice *device);
 
 /* object methods */
 gboolean	 synapticsmst_device_enumerate_device 		(SynapticsMSTDevice *devices,
+								const gchar *dock_type,
+								const gchar *sytem_type,
 								 GError **error);
 gboolean	 synapticsmst_device_write_firmware		(SynapticsMSTDevice *device,
 								 GBytes	*fw,

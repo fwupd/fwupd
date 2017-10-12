@@ -26,8 +26,6 @@
 #include <glib-object.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <smbios_c/system_info.h>
-#include "fu-dell-common.h"
 #include "synapticsmst-device.h"
 #include "synapticsmst-common.h"
 
@@ -344,7 +342,10 @@ synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
 }
 
 gboolean
-synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error)
+synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
+				      const gchar *dock_type,
+				      const gchar *system_type,
+				      GError **error)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint8 byte[16];
@@ -402,7 +403,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 		if (priv->test_mode)
 			system = g_strdup_printf ("test-%s", priv->chip_id);
 		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE) {
-			system = g_strdup_printf ("%s-%s", fu_dell_get_dock_type(0), priv->chip_id);
+			system = g_strdup_printf ("%s-%s", dock_type, priv->chip_id);
 			system = g_ascii_strdown (system, -1);
 		}
 		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WLD15_WIRELESS)
@@ -410,8 +411,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device, GError **error
 
 		/* This is a host system, use system ID */
 		else
-			system = g_strdup_printf ("%04x",
-						  (guint) sysinfo_get_dell_system_id ());
+			system = g_strdup (system_type);
 
 		/* set up GUID
 		 * GUID is MST-$SYSTEMID-$BOARDID

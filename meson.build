@@ -206,11 +206,7 @@ if get_option('enable-dell')
 endif
 
 if get_option('enable-synaptics')
-  if get_option('enable-dell')
     conf.set('HAVE_SYNAPTICS', '1')
-  else
-    error('compiling --enable-synaptics requires --enable-dell')
-  endif
 endif
 
 if get_option('enable-thunderbolt')

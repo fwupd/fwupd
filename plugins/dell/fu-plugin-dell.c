@@ -505,6 +505,10 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 			return;
 		}
 	}
+
+#if defined (HAVE_SYNAPTICS)
+	fu_plugin_recoldplug (plugin);
+#endif
 }
 
 void
@@ -550,6 +554,9 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 			fu_plugin_cache_remove (plugin, dock_key);
 		}
 	}
+#if defined (HAVE_SYNAPTICS)
+	fu_plugin_recoldplug (plugin);
+#endif
 }
 
 gboolean

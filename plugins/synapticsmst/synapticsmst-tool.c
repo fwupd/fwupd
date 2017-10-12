@@ -31,7 +31,6 @@
 #include <glib-unix.h>
 #include <libintl.h>
 #include <locale.h>
-#include "fu-dell-common.h"
 
 typedef struct {
 	GCancellable		*cancellable;
@@ -39,13 +38,6 @@ typedef struct {
 	gboolean		 force;
 	GPtrArray		*device_array;
 } SynapticsMSTToolPrivate;
-
-/* GUID isn't in use by the -tool, this lets it get by */
-#ifndef fu_dell_get_dock_type
-const gchar *fu_dell_get_dock_type (guint8 type) {
-	return NULL;
-}
-#endif
 
 static void
 synapticsmst_tool_private_free (SynapticsMSTToolPrivate *priv)
@@ -253,7 +245,8 @@ synapticsmst_tool_enumerate (SynapticsMSTToolPrivate *priv,
 		const gchar *board_id = NULL;
 		device = g_ptr_array_index (priv->device_array, i);
 		g_print ("[Device %1d]\n", i+1);
-		if (!synapticsmst_device_enumerate_device (device, error))
+		if (!synapticsmst_device_enumerate_device (device, NULL, NULL,
+							   error))
 			return FALSE;
 
 		board_id = synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device));
@@ -299,7 +292,7 @@ synapticsmst_tool_flash (SynapticsMSTToolPrivate *priv,
 		return FALSE;
 
 	device = g_ptr_array_index (priv->device_array, (device_index - 1));
-	if (!synapticsmst_device_enumerate_device (device, error))
+	if (!synapticsmst_device_enumerate_device (device, NULL, NULL, error))
 		return FALSE;
 
 	if (synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device)) == NULL) {
