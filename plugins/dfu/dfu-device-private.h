@@ -41,6 +41,7 @@ void		 dfu_device_error_fixup			(DfuDevice	*device,
 							 GError		**error);
 guint		 dfu_device_get_download_timeout	(DfuDevice	*device);
 gchar		*dfu_device_get_quirks_as_string	(DfuDevice	*device);
+gchar		*dfu_device_get_attributes_as_string	(DfuDevice	*device);
 gboolean	 dfu_device_set_new_usb_dev		(DfuDevice	*device,
 							 GUsbDevice	*dev,
 							 GCancellable	*cancellable,

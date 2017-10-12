@@ -2036,6 +2036,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		GPtrArray *dfu_targets;
 		const gchar *tmp;
 		guint16 transfer_size;
+		g_autofree gchar *attrs = NULL;
 		g_autofree gchar *quirks = NULL;
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuDeviceLocker) locker  = NULL;
@@ -2108,6 +2109,14 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 						  G_FORMAT_SIZE_LONG_FORMAT);
 			/* TRANSLATORS: transfer size in bytes */
 			dfu_tool_print_indent (_("Transfer Size"), str, 1);
+		}
+
+		/* attributes can be an empty string */
+		attrs = dfu_device_get_attributes_as_string (device);
+		if (attrs != NULL && attrs[0] != '\0') {
+			/* TRANSLATORS: device attributes, i.e. things that
+			 * the device can do */
+			dfu_tool_print_indent (_("Attributes"), attrs, 1);
 		}
 
 		/* quirks are NULL if none are set */

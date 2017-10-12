@@ -2188,3 +2188,35 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 	g_string_truncate (str, str->len - 1);
 	return g_string_free (str, FALSE);
 }
+
+/**
+ * dfu_device_get_attributes_as_string: (skip)
+ * @device: a #DfuDevice
+ *
+ * Gets a string describing the attributes for a device.
+ *
+ * Return value: a string, possibly empty
+ **/
+gchar *
+dfu_device_get_attributes_as_string (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	GString *str;
+
+	/* just append to a string */
+	str = g_string_new ("");
+	if (priv->attributes & DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD)
+		g_string_append_printf (str, "can-download|");
+	if (priv->attributes & DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD)
+		g_string_append_printf (str, "can-upload|");
+	if (priv->attributes & DFU_DEVICE_ATTRIBUTE_MANIFEST_TOL)
+		g_string_append_printf (str, "manifest-tol|");
+	if (priv->attributes & DFU_DEVICE_ATTRIBUTE_WILL_DETACH)
+		g_string_append_printf (str, "will-detach|");
+	if (priv->attributes & DFU_DEVICE_ATTRIBUTE_CAN_ACCELERATE)
+		g_string_append_printf (str, "can-accelerate|");
+
+	/* remove trailing pipe */
+	g_string_truncate (str, str->len - 1);
+	return g_string_free (str, FALSE);
+}
