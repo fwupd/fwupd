@@ -312,6 +312,7 @@ fu_plugin_update (FuPlugin *plugin,
 	/* sleep to allow device wakeup to complete */
 	g_debug ("waiting %d seconds for MST hub wakeup",
 		 SYNAPTICS_FLASH_MODE_DELAY);
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_BUSY);
 	g_usleep (SYNAPTICS_FLASH_MODE_DELAY * 1000000);
 
 	device = synapticsmst_device_new (kind, aux_node, layer, rad);

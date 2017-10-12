@@ -64,6 +64,8 @@ fwupd_status_to_string (FwupdStatus status)
 		return "device-erase";
 	if (status == FWUPD_STATUS_DEVICE_VERIFY)
 		return "device-verify";
+	if (status == FWUPD_STATUS_DEVICE_BUSY)
+		return "device-busy";
 	if (status == FWUPD_STATUS_SCHEDULING)
 		return "scheduling";
 	if (status == FWUPD_STATUS_DOWNLOADING)
@@ -108,6 +110,8 @@ fwupd_status_from_string (const gchar *status)
 		return FWUPD_STATUS_DEVICE_READ;
 	if (g_strcmp0 (status, "device-erase") == 0)
 		return FWUPD_STATUS_DEVICE_ERASE;
+	if (g_strcmp0 (status, "device-busy") == 0)
+		return FWUPD_STATUS_DEVICE_BUSY;
 	if (g_strcmp0 (status, "waiting-for-auth") == 0)
 		return FWUPD_STATUS_WAITING_FOR_AUTH;
 	return FWUPD_STATUS_LAST;

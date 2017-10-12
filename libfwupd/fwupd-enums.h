@@ -38,6 +38,7 @@
  * @FWUPD_STATUS_DEVICE_READ:			Reading from a device
  * @FWUPD_STATUS_DEVICE_ERASE:			Erasing a device
  * @FWUPD_STATUS_WAITING_FOR_AUTH:		Waiting for authentication
+ * @FWUPD_STATUS_DEVICE_BUSY:			The device is busy
  *
  * The flags to show daemon status.
  **/
@@ -54,6 +55,7 @@ typedef enum {
 	FWUPD_STATUS_DEVICE_READ,			/* Since: 1.0.0 */
 	FWUPD_STATUS_DEVICE_ERASE,			/* Since: 1.0.0 */
 	FWUPD_STATUS_WAITING_FOR_AUTH,			/* Since: 1.0.0 */
+	FWUPD_STATUS_DEVICE_BUSY,			/* Since: 1.0.1 */
 	/*< private >*/
 	FWUPD_STATUS_LAST
 } FwupdStatus;
