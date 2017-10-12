@@ -32,6 +32,18 @@ struct FuPluginData {
 	DfuContext		*context;
 };
 
+static gchar *
+_bcd_version_from_uint16 (guint16 val)
+{
+#if AS_CHECK_VERSION(0,7,3)
+	return as_utils_version_from_uint16 (val, AS_VERSION_PARSE_FLAG_USE_BCD);
+#else
+	guint maj = ((val >> 12) & 0x0f) * 10 + ((val >> 8) & 0x0f);
+	guint min = ((val >> 4) & 0x0f) * 10 + (val & 0x0f);
+	return g_strdup_printf ("%u.%u", maj, min);
+#endif
+}
+
 static gboolean
 fu_plugin_dfu_device_update (FuPlugin *plugin,
 			     FuDevice *dev,
@@ -69,8 +81,7 @@ fu_plugin_dfu_device_update (FuPlugin *plugin,
 	/* get version number, falling back to the DFU device release */
 	release = dfu_device_get_runtime_release (device);
 	if (release != 0xffff) {
-		version = as_utils_version_from_uint16 (release,
-							AS_VERSION_PARSE_FLAG_NONE);
+		version = _bcd_version_from_uint16 (release);
 		fu_device_set_version (dev, version);
 	}
 
