@@ -939,7 +939,8 @@ dfu_device_ensure_interface (DfuDevice *device,
 	/* claim, without detaching kernel driver */
 	if (!g_usb_device_claim_interface (priv->dev,
 					   (gint) priv->iface_number,
-					   0, &error_local)) {
+					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					   &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
