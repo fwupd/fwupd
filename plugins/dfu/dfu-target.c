@@ -46,6 +46,7 @@
 #include "fwupd-error.h"
 
 static void dfu_target_finalize			 (GObject *object);
+static void dfu_target_set_action		 (DfuTarget *target, FwupdStatus action);
 
 typedef enum {
 	DFU_CMD_DFUSE_GET_COMMAND		= 0x00,
@@ -669,12 +670,24 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 	}
 
 	/* for ST devices, the action only occurs when we do GetStatus */
+	if (dfu_device_has_dfuse_support (priv->device)) {
+		if (!dfu_device_refresh (priv->device, cancellable, error))
+			return FALSE;
+	}
+
+	/* wait for the device to write contents to the EEPROM */
+	if (g_bytes_get_size (bytes) == 0 &&
+	    dfu_device_get_download_timeout (priv->device) > 0) {
+		dfu_target_set_action (target, FWUPD_STATUS_IDLE);
+		dfu_target_set_action (target, FWUPD_STATUS_DEVICE_BUSY);
+	}
+	g_debug ("sleeping for %ums…",
+		 dfu_device_get_download_timeout (priv->device));
+	g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
+
+	/* find out if the write was successful */
 	if (!dfu_device_refresh (priv->device, cancellable, error))
 		return FALSE;
-
-	/* give the target a chance to update */
-	if (dfu_device_get_state (priv->device) != DFU_STATE_DFU_DNLOAD_IDLE)
-		g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
 
 	g_assert (actual_length == g_bytes_get_size (bytes));
 	return TRUE;
