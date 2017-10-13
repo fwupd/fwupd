@@ -63,6 +63,7 @@ typedef enum {
  * @DFU_DEVICE_QUIRK_IGNORE_RUNTIME:		Device has broken DFU runtime support
  * @DFU_DEVICE_QUIRK_ACTION_REQUIRED:		User has to do something manually, e.g. press a button
  * @DFU_DEVICE_QUIRK_IGNORE_UPLOAD:		Uploading from the device is broken
+ * @DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET:	Device needs resetting twice for attach
  *
  * The workarounds for different devices.
  **/
@@ -79,6 +80,7 @@ typedef enum {
 	DFU_DEVICE_QUIRK_IGNORE_RUNTIME		= (1 << 8),
 	DFU_DEVICE_QUIRK_ACTION_REQUIRED	= (1 << 9),
 	DFU_DEVICE_QUIRK_IGNORE_UPLOAD		= (1 << 10),
+	DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET	= (1 << 11),
 	/*< private >*/
 	DFU_DEVICE_QUIRK_LAST
 } DfuDeviceQuirks;

@@ -1722,6 +1722,17 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	if (!dfu_device_reset (device, error))
 		return FALSE;
 
+	/* some devices need yet another reset */
+	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET)) {
+		if (!dfu_device_wait_for_replug (device,
+						 DFU_DEVICE_REPLUG_TIMEOUT,
+						 NULL,
+						 error))
+			return FALSE;
+		if (!dfu_device_reset (device, error))
+			return FALSE;
+	}
+
 	/* success */
 	dfu_device_set_action (device, FWUPD_STATUS_IDLE);
 	return TRUE;
@@ -2189,6 +2200,8 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "action-required|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_UPLOAD)
 		g_string_append_printf (str, "ignore-upload|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET)
+		g_string_append_printf (str, "attach-extra-reset|");
 
 	/* a well behaved device */
 	if (str->len == 0) {
