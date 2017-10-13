@@ -423,6 +423,10 @@ dfu_device_add_targets (DfuDevice *device)
 		return TRUE;
 	}
 
+	/* the device upload is broken */
+	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_UPLOAD)
+		priv->attributes &= ~DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD;
+
 	return priv->targets->len > 0;
 }
 
@@ -2183,6 +2187,8 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "ignore-runtime|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_ACTION_REQUIRED)
 		g_string_append_printf (str, "action-required|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_UPLOAD)
+		g_string_append_printf (str, "ignore-upload|");
 
 	/* a well behaved device */
 	if (str->len == 0) {
