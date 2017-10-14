@@ -54,6 +54,7 @@ fu_plugin_dfu_device_update (FuPlugin *plugin,
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *devid2 = NULL;
+	g_autofree gchar *vendor_id = NULL;
 
 	/* check mode */
 	platform_id = dfu_device_get_platform_id (device);
@@ -83,6 +84,10 @@ fu_plugin_dfu_device_update (FuPlugin *plugin,
 		version = _bcd_version_from_uint16 (release);
 		fu_device_set_version (dev, version);
 	}
+
+	/* set vendor ID */
+	vendor_id = g_strdup_printf ("USB:0x%04X", dfu_device_get_runtime_vid (device));
+	fu_device_set_vendor_id (dev, vendor_id);
 
 	/* add USB\VID_0000&PID_0000 */
 	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
