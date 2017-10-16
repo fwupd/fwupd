@@ -41,6 +41,7 @@ fu_plugin_usb_device_added_cb (GUsbContext *ctx,
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* ignore hubs */
@@ -60,7 +61,8 @@ fu_plugin_usb_device_added_cb (GUsbContext *ctx,
 	}
 
 	/* try to get the version without claiming interface */
-	if (!g_usb_device_open (device, &error)) {
+	locker = fu_device_locker_new (device, &error);
+	if (locker == NULL) {
 		g_debug ("Failed to open: %s", error->message);
 		return;
 	}
@@ -79,7 +81,6 @@ fu_plugin_usb_device_added_cb (GUsbContext *ctx,
 	}
 	if (product == NULL) {
 		g_debug ("no product string descriptor");
-		g_usb_device_close (device, NULL);
 		return;
 	}
 	fu_device_set_name (dev, product);
@@ -122,10 +123,6 @@ fu_plugin_usb_device_added_cb (GUsbContext *ctx,
 				  g_usb_device_get_pid (device),
 				  g_usb_device_get_release (device));
 	fu_device_add_guid (dev, devid2);
-
-	/* we're done here */
-	if (!g_usb_device_close (device, &error))
-		g_debug ("Failed to close: %s", error->message);
 
 	/* use a small delay for hotplugging so that other, better, plugins
 	 * can claim this interface and add the FuDevice */

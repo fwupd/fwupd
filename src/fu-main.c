@@ -29,13 +29,14 @@
 #include <polkit/polkit.h>
 #include <stdlib.h>
 
+#include "fwupd-device-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 
 #include "fu-common.h"
 #include "fu-debug.h"
-#include "fu-device.h"
+#include "fu-device-private.h"
 #include "fu-engine.h"
 
 #ifndef HAVE_POLKIT_0_114
@@ -77,13 +78,13 @@ fu_main_engine_device_added_cb (FuEngine *engine,
 	/* not yet connected */
 	if (priv->connection == NULL)
 		return;
-	val = fwupd_result_to_data (FWUPD_RESULT (device), "(a{sv})");
+	val = fwupd_device_to_variant (FWUPD_DEVICE (device));
 	g_dbus_connection_emit_signal (priv->connection,
 				       NULL,
 				       FWUPD_DBUS_PATH,
 				       FWUPD_DBUS_INTERFACE,
 				       "DeviceAdded",
-				       val, NULL);
+				       g_variant_new_tuple (&val, 1), NULL);
 }
 
 static void
@@ -96,13 +97,13 @@ fu_main_engine_device_removed_cb (FuEngine *engine,
 	/* not yet connected */
 	if (priv->connection == NULL)
 		return;
-	val = fwupd_result_to_data (FWUPD_RESULT (device), "(a{sv})");
+	val = fwupd_device_to_variant (FWUPD_DEVICE (device));
 	g_dbus_connection_emit_signal (priv->connection,
 				       NULL,
 				       FWUPD_DBUS_PATH,
 				       FWUPD_DBUS_INTERFACE,
 				       "DeviceRemoved",
-				       val, NULL);
+				       g_variant_new_tuple (&val, 1), NULL);
 }
 
 static void
@@ -115,13 +116,13 @@ fu_main_engine_device_changed_cb (FuEngine *engine,
 	/* not yet connected */
 	if (priv->connection == NULL)
 		return;
-	val = fwupd_result_to_data (FWUPD_RESULT (device), "(a{sv})");
+	val = fwupd_device_to_variant (FWUPD_DEVICE (device));
 	g_dbus_connection_emit_signal (priv->connection,
 				       NULL,
 				       FWUPD_DBUS_PATH,
 				       FWUPD_DBUS_INTERFACE,
 				       "DeviceChanged",
-				       val, NULL);
+				       g_variant_new_tuple (&val, 1), NULL);
 }
 
 static void
@@ -157,16 +158,21 @@ fu_main_emit_property_changed (FuMainPrivate *priv,
 	g_variant_builder_clear (&invalidated_builder);
 }
 
+static void
+fu_main_set_status (FuMainPrivate *priv, FwupdStatus status)
+{
+	g_debug ("Emitting PropertyChanged('Status'='%s')",
+		 fwupd_status_to_string (status));
+	fu_main_emit_property_changed (priv, "Status",
+				       g_variant_new_uint32 (status));
+}
 
 static void
 fu_main_engine_status_changed_cb (FuEngine *engine,
 				  FwupdStatus status,
 				  FuMainPrivate *priv)
 {
-	g_debug ("Emitting PropertyChanged('Status'='%s')",
-		 fwupd_status_to_string (status));
-	fu_main_emit_property_changed (priv, "Status",
-				       g_variant_new_uint32 (status));
+	fu_main_set_status (priv, status);
 }
 
 static void
@@ -187,10 +193,10 @@ fu_main_device_array_to_variant (GPtrArray *devices)
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		GVariant *tmp = fwupd_result_to_data (FWUPD_RESULT (device), "{sa{sv}}");
+		GVariant *tmp = fwupd_device_to_variant (FWUPD_DEVICE (device));
 		g_variant_builder_add_value (&builder, tmp);
 	}
-	return g_variant_new ("(a{sa{sv}})", &builder);
+	return g_variant_new ("(aa{sv})", &builder);
 }
 
 static GVariant *
@@ -201,7 +207,7 @@ fu_main_release_array_to_variant (GPtrArray *results)
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < results->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index (results, i);
-		GVariant *tmp = fwupd_release_to_data (rel, "a{sv}");
+		GVariant *tmp = fwupd_release_to_variant (rel);
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(aa{sv})", &builder);
@@ -215,7 +221,7 @@ fu_main_remote_array_to_variant (GPtrArray *remotes)
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
-		GVariant *tmp = fwupd_remote_to_data (remote, "a{sv}");
+		GVariant *tmp = fwupd_remote_to_variant (remote);
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(aa{sv})", &builder);
@@ -228,11 +234,11 @@ fu_main_result_array_to_variant (GPtrArray *results)
 	g_return_val_if_fail (results->len > 0, NULL);
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 	for (guint i = 0; i < results->len; i++) {
-		FwupdResult *result = g_ptr_array_index (results, i);
-		GVariant *tmp = fwupd_result_to_data (result, "{sa{sv}}");
+		FwupdDevice *result = g_ptr_array_index (results, i);
+		GVariant *tmp = fwupd_device_to_variant (result);
 		g_variant_builder_add_value (&builder, tmp);
 	}
-	return g_variant_new ("(a{sa{sv}})", &builder);
+	return g_variant_new ("(aa{sv})", &builder);
 }
 
 typedef struct {
@@ -242,6 +248,9 @@ typedef struct {
 	GBytes			*blob_cab;
 	FuMainPrivate		*priv;
 	gchar			*device_id;
+	gchar			*remote_id;
+	gchar			*key;
+	gchar			*value;
 } FuMainAuthHelper;
 
 static void
@@ -252,6 +261,9 @@ fu_main_auth_helper_free (FuMainAuthHelper *helper)
 	if (helper->store != NULL)
 		g_object_unref (helper->store);
 	g_free (helper->device_id);
+	g_free (helper->remote_id);
+	g_free (helper->key);
+	g_free (helper->value);
 	g_object_unref (helper->invocation);
 	g_free (helper);
 }
@@ -293,7 +305,9 @@ fu_main_authorize_unlock_cb (GObject *source, GAsyncResult *res, gpointer user_d
 	g_autoptr(GError) error = NULL;
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
+
 	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
 							    res, &error);
 	if (!fu_main_authorization_is_valid (auth, &error)) {
@@ -319,6 +333,7 @@ fu_main_authorize_verify_update_cb (GObject *source, GAsyncResult *res, gpointer
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
 							    res, &error);
 	if (!fu_main_authorization_is_valid (auth, &error)) {
@@ -337,6 +352,36 @@ fu_main_authorize_verify_update_cb (GObject *source, GAsyncResult *res, gpointer
 }
 
 static void
+fu_main_authorize_modify_remote_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
+	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
+							    res, &error);
+	if (!fu_main_authorization_is_valid (auth, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	if (!fu_engine_modify_remote (helper->priv->engine,
+				      helper->remote_id,
+				      helper->key,
+				      helper->value,
+				      &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+}
+
+static void
 fu_main_authorize_install_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
@@ -344,6 +389,7 @@ fu_main_authorize_install_cb (GObject *source, GAsyncResult *res, gpointer user_
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
 							    res, &error);
 	if (!fu_main_authorization_is_valid (auth, &error)) {
@@ -388,24 +434,40 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
-	if (g_strcmp0 (method_name, "GetUpdates") == 0) {
-		g_autoptr(GPtrArray) updates = NULL;
-		g_debug ("Called %s()", method_name);
-		updates = fu_engine_get_updates (priv->engine, &error);
-		if (updates == NULL) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
-			return;
-		}
-		val = fu_main_device_array_to_variant (updates);
-		g_dbus_method_invocation_return_value (invocation, val);
-		return;
-	}
 	if (g_strcmp0 (method_name, "GetReleases") == 0) {
 		const gchar *device_id;
 		g_autoptr(GPtrArray) releases = NULL;
 		g_variant_get (parameters, "(&s)", &device_id);
 		g_debug ("Called %s(%s)", method_name, device_id);
 		releases = fu_engine_get_releases (priv->engine, device_id, &error);
+		if (releases == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		val = fu_main_release_array_to_variant (releases);
+		g_dbus_method_invocation_return_value (invocation, val);
+		return;
+	}
+	if (g_strcmp0 (method_name, "GetDowngrades") == 0) {
+		const gchar *device_id;
+		g_autoptr(GPtrArray) releases = NULL;
+		g_variant_get (parameters, "(&s)", &device_id);
+		g_debug ("Called %s(%s)", method_name, device_id);
+		releases = fu_engine_get_downgrades (priv->engine, device_id, &error);
+		if (releases == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		val = fu_main_release_array_to_variant (releases);
+		g_dbus_method_invocation_return_value (invocation, val);
+		return;
+	}
+	if (g_strcmp0 (method_name, "GetUpgrades") == 0) {
+		const gchar *device_id;
+		g_autoptr(GPtrArray) releases = NULL;
+		g_variant_get (parameters, "(&s)", &device_id);
+		g_debug ("Called %s(%s)", method_name, device_id);
+		releases = fu_engine_get_upgrades (priv->engine, device_id, &error);
 		if (releases == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
@@ -439,7 +501,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	}
 	if (g_strcmp0 (method_name, "GetResults") == 0) {
 		const gchar *device_id = NULL;
-		g_autoptr(FwupdResult) result = NULL;
+		g_autoptr(FwupdDevice) result = NULL;
 		g_variant_get (parameters, "(&s)", &device_id);
 		g_debug ("Called %s(%s)", method_name, device_id);
 		result = fu_engine_get_results (priv->engine, device_id, &error);
@@ -447,11 +509,12 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		val = fwupd_result_to_data (result, "(a{sv})");
-		g_dbus_method_invocation_return_value (invocation, val);
+		val = fwupd_device_to_variant (result);
+		g_dbus_method_invocation_return_value (invocation,
+						       g_variant_new_tuple (&val, 1));
 		return;
 	}
-	if (g_strcmp0 (method_name, "UpdateMetadataWithId") == 0) {
+	if (g_strcmp0 (method_name, "UpdateMetadata") == 0) {
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		const gchar *remote_id = NULL;
@@ -502,6 +565,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_debug ("Called %s(%s)", method_name, device_id);
 
 		/* authenticate */
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		helper = g_new0 (FuMainAuthHelper, 1);
 		helper->priv = priv;
 		helper->invocation = g_object_ref (invocation);
@@ -513,6 +577,37 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_unlock_cb,
+						      helper);
+		return;
+	}
+	if (g_strcmp0 (method_name, "ModifyRemote") == 0) {
+		FuMainAuthHelper *helper;
+		const gchar *remote_id = NULL;
+		const gchar *key = NULL;
+		const gchar *value = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		/* check the id exists */
+		g_variant_get (parameters, "(&s&s&s)", &remote_id, &key, &value);
+		g_debug ("Called %s(%s,%s=%s)", method_name, remote_id, key, value);
+
+		/* create helper object */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->invocation = g_object_ref (invocation);
+		helper->remote_id = g_strdup (remote_id);
+		helper->key = g_strdup (key);
+		helper->value = g_strdup (value);
+		helper->priv = priv;
+
+		/* authenticate */
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (helper->priv->authority, subject,
+						      "org.freedesktop.fwupd.modify-remote",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_authorize_modify_remote_cb,
 						      helper);
 		return;
 	}
@@ -532,6 +627,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		helper->priv = priv;
 
 		/* authenticate */
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		subject = polkit_system_bus_name_new (sender);
 		polkit_authority_check_authorization (helper->priv->authority, subject,
 						      "org.freedesktop.fwupd.verify-update",
@@ -638,6 +734,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		subject = polkit_system_bus_name_new (sender);
 		polkit_authority_check_authorization (priv->authority, subject,
 						      action_id, NULL,
@@ -647,7 +744,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      helper);
 		return;
 	}
-	if (g_strcmp0 (method_name, "GetDetailsLocal") == 0) {
+	if (g_strcmp0 (method_name, "GetDetails") == 0) {
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		gint32 fd_handle = 0;
@@ -676,7 +773,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* get details about the file (will close the fd when done) */
-		results = fu_engine_get_details_local (priv->engine, fd, &error);
+		results = fu_engine_get_details (priv->engine, fd, &error);
 		if (results == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;

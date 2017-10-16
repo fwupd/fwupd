@@ -24,28 +24,6 @@ shared_module('fu_plugin_dell',
   ],
 )
 
-executable(
-  'fu-dell-tool',
-  sources : [
-    'fu-dell-tool.c',
-    'fu-dell-common.c',
-  ],
-  include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
-  ],
-  dependencies : [
-    plugin_deps,
-    efivar,
-    libsmbios_c,
-  ],
-  link_with : [
-    fwupd,
-  ],
-  c_args : cargs,
-)
-
 if get_option('enable-tests')
   cargs += '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"'
   cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'

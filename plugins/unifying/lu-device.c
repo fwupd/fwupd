@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <glib/gstdio.h>
 #include <string.h>
+#include <appstream-glib.h>
 
 #include "lu-common.h"
 #include "lu-device-bootloader-nordic.h"
@@ -38,6 +39,7 @@ typedef struct
 	GUdevDevice		*udev_device;
 	gint			 udev_device_fd;
 	GUsbDevice		*usb_device;
+	FuDeviceLocker		*usb_device_locker;
 	gchar			*platform_id;
 	gchar			*product;
 	gchar			*vendor;
@@ -107,6 +109,8 @@ lu_hidpp_feature_to_string (guint16 feature)
 		return "Root";
 	if (feature == HIDPP_FEATURE_I_FIRMWARE_INFO)
 		return "IFirmwareInfo";
+	if (feature == HIDPP_FEATURE_GET_DEVICE_NAME_TYPE)
+		return "GetDevicenameType";
 	if (feature == HIDPP_FEATURE_BATTERY_LEVEL_STATUS)
 		return "BatteryLevelStatus";
 	if (feature == HIDPP_FEATURE_DFU_CONTROL)
@@ -729,6 +733,15 @@ lu_device_set_version_hw (LuDevice *device, const gchar *version_hw)
 	priv->version_hw = g_strdup (version_hw);
 }
 
+const gchar *
+lu_device_get_guid_default (LuDevice *device)
+{
+	LuDevicePrivate *priv = GET_PRIVATE (device);
+	if (priv->guids->len == 0)
+		return NULL;
+	return g_ptr_array_index (priv->guids, 0);
+}
+
 GPtrArray *
 lu_device_get_guids (LuDevice *device)
 {
@@ -740,6 +753,10 @@ void
 lu_device_add_guid (LuDevice *device, const gchar *guid)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
+	if (!as_utils_guid_is_valid (guid)) {
+		g_ptr_array_add (priv->guids, as_utils_guid_from_string (guid));
+		return;
+	}
 	g_ptr_array_add (priv->guids, g_strdup (guid));
 }
 
@@ -819,28 +836,30 @@ lu_device_open (LuDevice *device, GError **error)
 	/* set default vendor */
 	lu_device_set_vendor (device, "Logitech");
 
-	/* open device */
-	if (priv->usb_device != NULL) {
-		g_debug ("opening unifying device using USB");
-		if (!g_usb_device_open (priv->usb_device, error))
-			return FALSE;
-	}
-
 	/* USB */
 	if (priv->usb_device != NULL) {
-		g_autofree gchar *devid = NULL;
 		guint8 num_interfaces = 0x01;
-		if (priv->kind == LU_DEVICE_KIND_RUNTIME)
-			num_interfaces = 0x03;
-		for (guint i = 0; i < num_interfaces; i++) {
-			g_debug ("claiming interface 0x%02x", i);
-			if (!g_usb_device_claim_interface (priv->usb_device, i,
-							   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-							   error)) {
-				g_prefix_error (error, "Failed to claim 0x%02x: ", i);
-				g_usb_device_close (priv->usb_device, NULL);
+		g_autofree gchar *devid = NULL;
+
+		/* open device */
+		if (priv->usb_device_locker == NULL) {
+			g_autoptr(FuDeviceLocker) locker = NULL;
+			g_debug ("opening unifying device using USB");
+			locker = fu_device_locker_new (priv->usb_device, error);
+			if (locker == NULL)
 				return FALSE;
+			if (priv->kind == LU_DEVICE_KIND_RUNTIME)
+				num_interfaces = 0x03;
+			for (guint i = 0; i < num_interfaces; i++) {
+				g_debug ("claiming interface 0x%02x", i);
+				if (!g_usb_device_claim_interface (priv->usb_device, i,
+								   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+								   error)) {
+					g_prefix_error (error, "Failed to claim 0x%02x: ", i);
+					return FALSE;
+				}
 			}
+			priv->usb_device_locker = g_steal_pointer (&locker);
 		}
 
 		/* generate GUID */
@@ -905,8 +924,7 @@ lu_device_poll (LuDevice *device, GError **error)
  * @device: A #LuDevice
  * @error: A #GError, or %NULL
  *
- * Closes the device. If at all unsure about closing a device, don't. The device
- * will be automatically closed when the last reference to it is dropped.
+ * Closes the device.
  *
  * Returns: %TRUE for success
  **/
@@ -931,7 +949,7 @@ lu_device_close (LuDevice *device, GError **error)
 	}
 
 	/* USB */
-	if (priv->usb_device != NULL) {
+	if (priv->usb_device_locker != NULL) {
 		guint8 num_interfaces = 0x01;
 		if (priv->kind == LU_DEVICE_KIND_RUNTIME)
 			num_interfaces = 0x03;
@@ -953,9 +971,9 @@ lu_device_close (LuDevice *device, GError **error)
 				}
 			}
 		}
-		if (!g_usb_device_close (priv->usb_device, error))
-			return FALSE;
+		g_clear_object (&priv->usb_device_locker);
 	}
+	g_clear_object (&priv->usb_device);
 
 	/* HID */
 	if (priv->udev_device != NULL && priv->udev_device_fd > 0) {
@@ -1161,14 +1179,11 @@ lu_device_finalize (GObject *object)
 {
 	LuDevice *device = LU_DEVICE (object);
 	LuDevicePrivate *priv = GET_PRIVATE (device);
-	g_autoptr(GError) error = NULL;
-
-	/* autoclose */
-	if (!lu_device_close (device, &error))
-		g_debug ("failed to close: %s", error->message);
 
 	if (priv->usb_device != NULL)
 		g_object_unref (priv->usb_device);
+	if (priv->usb_device_locker != NULL)
+		g_object_unref (priv->usb_device_locker);
 	if (priv->udev_device != NULL)
 		g_object_unref (priv->udev_device);
 	g_ptr_array_unref (priv->guids);

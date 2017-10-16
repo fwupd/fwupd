@@ -29,6 +29,7 @@
 
 #include "fu-common.h"
 #include "fu-device.h"
+#include "fu-device-locker.h"
 #include "fu-hwids.h"
 
 G_BEGIN_DECLS
@@ -57,10 +58,34 @@ struct _FuPluginClass
 	gpointer	padding[24];
 };
 
+/**
+ * FuPluginVerifyFlags:
+ * @FU_PLUGIN_VERIFY_FLAG_NONE:		No flags set
+ *
+ * Flags used when verifying, currently unused.
+ **/
 typedef enum {
 	FU_PLUGIN_VERIFY_FLAG_NONE		= 0,
+	/*< private >*/
 	FU_PLUGIN_VERIFY_FLAG_LAST
 } FuPluginVerifyFlags;
+
+/**
+ * FuPluginRule:
+ * @FU_PLUGIN_RULE_CONFLICTS:		The plugin conflicts with another
+ * @FU_PLUGIN_RULE_RUN_AFTER:		Order the plugin after another
+ * @FU_PLUGIN_RULE_RUN_BEFORE:		Order the plugin before another
+ *
+ * The rules used for ordering plugins.
+ * Plugins are expected to add rules in fu_plugin_initialize().
+ **/
+typedef enum {
+	FU_PLUGIN_RULE_CONFLICTS,
+	FU_PLUGIN_RULE_RUN_AFTER,
+	FU_PLUGIN_RULE_RUN_BEFORE,
+	/*< private >*/
+	FU_PLUGIN_RULE_LAST
+} FuPluginRule;
 
 typedef struct	FuPluginData	FuPluginData;
 
@@ -73,6 +98,7 @@ gboolean	 fu_plugin_get_enabled			(FuPlugin	*plugin);
 void		 fu_plugin_set_enabled			(FuPlugin	*plugin,
 							 gboolean	 enabled);
 GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*plugin);
+GPtrArray	*fu_plugin_get_supported		(FuPlugin	*plugin);
 void		 fu_plugin_device_add			(FuPlugin	*plugin,
 							 FuDevice	*device);
 void		 fu_plugin_device_add_delay		(FuPlugin	*plugin,
@@ -88,7 +114,6 @@ void		 fu_plugin_set_percentage		(FuPlugin	*plugin,
 void		 fu_plugin_recoldplug			(FuPlugin	*plugin);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*plugin,
 							 guint		 duration);
-gboolean	 fu_plugin_has_device_delay		(FuPlugin	*plugin);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*plugin,
 							 const gchar	*id);
 void		 fu_plugin_cache_remove			(FuPlugin	*plugin,
@@ -98,8 +123,18 @@ void		 fu_plugin_cache_add			(FuPlugin	*plugin,
 							 gpointer	 dev);
 gboolean	 fu_plugin_check_hwid			(FuPlugin	*plugin,
 							 const gchar	*hwid);
+gboolean	 fu_plugin_check_supported		(FuPlugin	*plugin,
+							 const gchar	*guid);
 const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*plugin,
 							 const gchar	*dmi_id);
+const gchar	*fu_plugin_get_smbios_string		(FuPlugin	*plugin,
+							 guint8		 structure_type,
+							 guint8		 offset);
+GBytes		*fu_plugin_get_smbios_data		(FuPlugin	*plugin,
+							 guint8		 structure_type);
+void		 fu_plugin_add_rule			(FuPlugin	*plugin,
+							 FuPluginRule	 rule,
+							 const gchar	*name);
 
 G_END_DECLS
 

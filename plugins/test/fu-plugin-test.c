@@ -43,20 +43,6 @@ fu_plugin_destroy (FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
-{
-	if (g_getenv ("FWUPD_TESTS") == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "Test plugin is only used for continuous integration");
-		return FALSE;
-	}
-	g_debug ("startup");
-	return TRUE;
-}
-
-gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
@@ -64,8 +50,9 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_set_id (device, "FakeDevice");
 	fu_device_add_guid (device, "b585990a-003e-5270-89d5-3705a17f9a43");
 	fu_device_set_name (device, "Integrated_Webcam(TM)");
+	fu_device_add_icon (device, "preferences-desktop-keyboard");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_description (device, "A fake webcam");
+	fu_device_set_summary (device, "A fake webcam");
 	fu_device_set_vendor (device, "ACME Corp.");
 	fu_device_set_vendor_id (device, "USB:0x046D");
 	fu_device_set_version_bootloader (device, "0.1.2");

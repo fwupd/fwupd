@@ -9,6 +9,10 @@ ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 endif
 
+ifneq ($(CI),)
+	export CI=-Denable-werror=true
+endif
+
 %:
 	dh $@ --with gir
 
@@ -26,7 +30,7 @@ override_dh_auto_configure:
 	else \
 		export DELL="-Denable-dell=false -Denable-synaptics=false"; \
 	fi; \
-	dh_auto_configure -- $$UEFI $$DELL -Denable-dummy=true --libexecdir=/usr/lib
+	dh_auto_configure -- $$UEFI $$DELL $$CI -Denable-dummy=true --libexecdir=/usr/lib
 
 override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
@@ -35,7 +39,7 @@ override_dh_install:
 	dh_missing --fail-missing
 
 	#this is placed in fwupd-tests
-	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-2/libfu_plugin_test.so
+	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-3/libfu_plugin_test.so
 
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz

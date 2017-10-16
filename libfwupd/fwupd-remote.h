@@ -22,14 +22,25 @@
 #ifndef __FWUPD_REMOTE_H
 #define __FWUPD_REMOTE_H
 
-#include <libsoup/soup.h>
-
 #include "fwupd-enums.h"
 
 G_BEGIN_DECLS
 
 #define FWUPD_TYPE_REMOTE (fwupd_remote_get_type ())
-G_DECLARE_FINAL_TYPE (FwupdRemote, fwupd_remote, FWUPD, REMOTE, GObject)
+G_DECLARE_DERIVABLE_TYPE (FwupdRemote, fwupd_remote, FWUPD, REMOTE, GObject)
+
+struct _FwupdRemoteClass
+{
+	GObjectClass		 parent_class;
+	/*< private >*/
+	void (*_fwupd_reserved1)	(void);
+	void (*_fwupd_reserved2)	(void);
+	void (*_fwupd_reserved3)	(void);
+	void (*_fwupd_reserved4)	(void);
+	void (*_fwupd_reserved5)	(void);
+	void (*_fwupd_reserved6)	(void);
+	void (*_fwupd_reserved7)	(void);
+};
 
 typedef enum {
 	FWUPD_REMOTE_KIND_UNKNOWN,
@@ -44,12 +55,13 @@ const gchar	*fwupd_remote_kind_to_string		(FwupdRemoteKind kind);
 
 FwupdRemote	*fwupd_remote_new			(void);
 const gchar	*fwupd_remote_get_id			(FwupdRemote	*self);
-const gchar	*fwupd_remote_get_filename		(FwupdRemote	*self);
-const gchar	*fwupd_remote_get_filename_asc		(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_title			(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_checksum		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_username		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_password		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename_cache	(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename_cache_sig	(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_filename_source	(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_firmware_base_uri	(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_metadata_uri		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_metadata_uri_sig	(FwupdRemote	*self);
@@ -61,15 +73,6 @@ FwupdKeyringKind fwupd_remote_get_keyring_kind		(FwupdRemote	*self);
 gchar		*fwupd_remote_build_firmware_uri	(FwupdRemote	*self,
 							 const gchar	*url,
 							 GError		**error);
-SoupURI		*fwupd_remote_build_uri			(FwupdRemote	*self,
-							 const gchar	*url,
-							 GError		**error);
-
-/* deprecated */
-SoupURI		*fwupd_remote_get_uri			(FwupdRemote	*self)
-G_DEPRECATED_FOR(fwupd_remote_get_metadata_uri);
-SoupURI		*fwupd_remote_get_uri_asc		(FwupdRemote	*self)
-G_DEPRECATED_FOR(fwupd_remote_get_metadata_uri_sig);
 
 G_END_DECLS
 

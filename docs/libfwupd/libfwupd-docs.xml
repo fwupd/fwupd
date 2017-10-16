@@ -6,14 +6,14 @@
 ]>
 <book id="index">
   <bookinfo>
-    <title>libfwupd Reference Manual</title>
+    <title>fwupd Reference Manual</title>
   </bookinfo>
 
   <reference id="intro">
-    <title>About libfwupd</title>
+    <title>About fwupd</title>
     <partintro>
       <para>
-        libfwupd is a library for querying the fwupd daemon.
+        fwupd is a daemon for updating firmware.
       </para>
     </partintro>
   </reference>
@@ -22,17 +22,30 @@
     <title>libfwupd</title>
     <partintro>
       <para>
-        Functionality exported by libfwupd.
+        Functionality exported by libfwupd for client applications.
       </para>
     </partintro>
     <xi:include href="xml/fwupd-client.xml"/>
     <xi:include href="xml/fwupd-device.xml"/>
-    <xi:include href="xml/fwupd-error.xml"/>
-    <xi:include href="xml/fwupd-enums.xml"/>
     <xi:include href="xml/fwupd-release.xml"/>
     <xi:include href="xml/fwupd-remote.xml"/>
-    <xi:include href="xml/fwupd-result.xml"/>
+    <xi:include href="xml/fwupd-error.xml"/>
+    <xi:include href="xml/fwupd-enums.xml"/>
     <xi:include href="xml/fwupd-version.xml"/>
+  </reference>
+
+  <reference id="plugin-reference">
+    <title>Plugin Reference</title>
+    <partintro>
+      <para>
+        Functionality available to plugins.
+      </para>
+    </partintro>
+    <xi:include href="xml/fu-plugin.xml"/>
+    <xi:include href="xml/fu-device.xml"/>
+    <xi:include href="xml/fu-device-locker.xml"/>
+    <xi:include href="xml/fu-common.xml"/>
+    <xi:include href="xml/fu-device-metadata.xml"/>
   </reference>
 
   <index id="api-index-full">

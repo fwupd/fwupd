@@ -26,8 +26,8 @@
 #include <gio/gio.h>
 
 #include "fwupd-enums.h"
+#include "fwupd-device.h"
 #include "fwupd-remote.h"
-#include "fwupd-result.h"
 
 G_BEGIN_DECLS
 
@@ -41,37 +41,41 @@ struct _FwupdClientClass
 	void			(*status_changed)	(FwupdClient	*client,
 							 FwupdStatus	 status);
 	void			(*device_added)		(FwupdClient	*client,
-							 FwupdResult	*result);
+							 FwupdDevice	*result);
 	void			(*device_removed)	(FwupdClient	*client,
-							 FwupdResult	*result);
+							 FwupdDevice	*result);
 	void			(*device_changed)	(FwupdClient	*client,
-							 FwupdResult	*result);
+							 FwupdDevice	*result);
 	/*< private >*/
 	void (*_fwupd_reserved1)	(void);
 	void (*_fwupd_reserved2)	(void);
 	void (*_fwupd_reserved3)	(void);
 	void (*_fwupd_reserved4)	(void);
+	void (*_fwupd_reserved5)	(void);
+	void (*_fwupd_reserved6)	(void);
+	void (*_fwupd_reserved7)	(void);
 };
 
 FwupdClient	*fwupd_client_new			(void);
 gboolean	 fwupd_client_connect			(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
-G_DEPRECATED_FOR(fwupd_client_get_devices_simple)
 GPtrArray	*fwupd_client_get_devices		(FwupdClient	*client,
-							 GCancellable	*cancellable,
-							 GError		**error);
-GPtrArray	*fwupd_client_get_devices_simple	(FwupdClient	*client,
-							 GCancellable	*cancellable,
-							 GError		**error);
-GPtrArray	*fwupd_client_get_updates		(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
 GPtrArray	*fwupd_client_get_releases		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GPtrArray	*fwupd_client_get_details_local		(FwupdClient	*client,
+GPtrArray	*fwupd_client_get_downgrades		(FwupdClient	*client,
+							 const gchar	*device_id,
+							 GCancellable	*cancellable,
+							 GError		**error);
+GPtrArray	*fwupd_client_get_upgrades		(FwupdClient	*client,
+							 const gchar	*device_id,
+							 GCancellable	*cancellable,
+							 GError		**error);
+GPtrArray	*fwupd_client_get_details		(FwupdClient	*client,
 							 const gchar	*filename,
 							 GCancellable	*cancellable,
 							 GError		**error);
@@ -91,13 +95,8 @@ gboolean	 fwupd_client_clear_results		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-FwupdResult	*fwupd_client_get_results		(FwupdClient	*client,
+FwupdDevice	*fwupd_client_get_results		(FwupdClient	*client,
 							 const gchar	*device_id,
-							 GCancellable	*cancellable,
-							 GError		**error);
-G_DEPRECATED_FOR(fwupd_client_get_details_local)
-FwupdResult	*fwupd_client_get_details		(FwupdClient	*client,
-							 const gchar	*filename,
 							 GCancellable	*cancellable,
 							 GError		**error);
 FwupdDevice	*fwupd_client_get_device_by_id		(FwupdClient	*client,
@@ -110,16 +109,16 @@ gboolean	 fwupd_client_install			(FwupdClient	*client,
 							 FwupdInstallFlags install_flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-G_DEPRECATED_FOR(fwupd_client_update_metadata_with_id)
 gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
+							 const gchar	*remote_id,
 							 const gchar	*metadata_fn,
 							 const gchar	*signature_fn,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_update_metadata_with_id	(FwupdClient	*client,
+gboolean	 fwupd_client_modify_remote		(FwupdClient	*client,
 							 const gchar	*remote_id,
-							 const gchar	*metadata_fn,
-							 const gchar	*signature_fn,
+							 const gchar	*key,
+							 const gchar	*value,
 							 GCancellable	*cancellable,
 							 GError		**error);
 FwupdStatus	 fwupd_client_get_status		(FwupdClient	*client);

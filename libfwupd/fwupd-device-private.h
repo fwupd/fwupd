@@ -28,14 +28,8 @@
 
 G_BEGIN_DECLS
 
-FwupdDevice	*fwupd_device_new_from_data		(GVariant	*data);
-GVariant	*fwupd_device_to_data			(FwupdDevice	*device,
-							 const gchar	*type_string);
-void		 fwupd_device_to_variant_builder	(FwupdDevice	*device,
-							 GVariantBuilder *builder);
-void		 fwupd_device_from_key_value		(FwupdDevice	*device,
-							 const gchar	*key,
-							 GVariant	*value);
+FwupdDevice	*fwupd_device_from_variant		(GVariant	*data);
+GVariant	*fwupd_device_to_variant		(FwupdDevice	*device);
 
 G_END_DECLS
 

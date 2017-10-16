@@ -41,6 +41,7 @@
  * @FWUPD_ERROR_NOT_SUPPORTED:			Action was not possible
  * @FWUPD_ERROR_SIGNATURE_INVALID:		Signature was invalid
  * @FWUPD_ERROR_AC_POWER_REQUIRED:		AC power was required
+ * @FWUPD_ERROR_PERMISSION_DENIED:		Permission was denied
  *
  * The error code.
  **/
@@ -58,6 +59,7 @@ typedef enum {
 	FWUPD_ERROR_NOT_SUPPORTED,		/* Since: 0.1.1 */
 	FWUPD_ERROR_SIGNATURE_INVALID,		/* Since: 0.1.2 */
 	FWUPD_ERROR_AC_POWER_REQUIRED,		/* Since: 0.8.0 */
+	FWUPD_ERROR_PERMISSION_DENIED,		/* Since: 0.9.8 */
 	/*< private >*/
 	FWUPD_ERROR_LAST
 } FwupdError;

@@ -59,11 +59,10 @@ fu_fuzzer_rom_parse (const gchar *fn, GError **error)
 static gboolean
 fu_fuzzer_write_files (GHashTable *hash, GError **error)
 {
-	GList *l;
 	GString *str;
 	g_autoptr(GList) keys = g_hash_table_get_keys (hash);
 
-	for (l = keys; l != NULL; l = l->next) {
+	for (GList *l = keys; l != NULL; l = l->next) {
 		g_autofree gchar *filename = NULL;
 		const gchar *fn = l->data;
 		filename = g_build_filename ("fuzzing", fn, NULL);
@@ -164,7 +163,6 @@ fu_fuzzer_rom_create (GError **error)
 int
 main (int argc, char *argv[])
 {
-	guint i;
 	gboolean verbose = FALSE;
 	g_autoptr(GError) error_parse = NULL;
 	g_autoptr(GOptionContext) context = NULL;
@@ -190,7 +188,7 @@ main (int argc, char *argv[])
 		g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
 	if (g_strcmp0 (argv[1], "rom") == 0) {
 		gboolean all_successful = TRUE;
-		for (i = 2; i < (guint) argc; i++) {
+		for (guint i = 2; i < (guint) argc; i++) {
 			g_autoptr(GError) error = NULL;
 			if (!fu_fuzzer_rom_parse (argv[i], &error)) {
 				g_print ("Failed to parse %s: %s\n",

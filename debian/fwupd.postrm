@@ -7,3 +7,8 @@ if [ "$1" = purge ]; then
 	rm -rf /var/lib/fwupd/gnupg
 	rm -f /var/cache/app-info/xmls/fwupd.xml
 fi
+
+if dpkg-maintscript-helper supports rm_conffile 2>/dev/null; then
+	dpkg-maintscript-helper rm_conffile \
+		/etc/fwupd.conf 1.0.0~ -- "$@"
+fi

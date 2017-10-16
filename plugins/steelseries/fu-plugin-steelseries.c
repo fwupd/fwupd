@@ -44,6 +44,7 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* not the right kind of device */
@@ -67,7 +68,8 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 	}
 
 	/* get exclusive access */
-	if (!g_usb_device_open (usb_device, &error_local)) {
+	locker = fu_device_locker_new (usb_device, &error_local);
+	if (locker == NULL) {
 		g_warning ("failed to open device: %s", error_local->message);
 		return;
 	}
@@ -75,7 +77,6 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					   &error_local)) {
 		g_warning ("failed to claim interface: %s", error_local->message);
-		g_usb_device_close (usb_device, NULL);
 		return;
 	}
 
@@ -97,7 +98,6 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 					     &error_local);
 	if (!ret) {
 		g_debug ("failed to do control transfer: %s", error_local->message);
-		g_usb_device_close (usb_device, NULL);
 		return;
 	}
 	if (actual_len != 32) {
@@ -114,12 +114,10 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 					       &error_local);
 	if (!ret) {
 		g_debug ("failed to do EP1 transfer: %s", error_local->message);
-		g_usb_device_close (usb_device, NULL);
 		return;
 	}
 	if (actual_len != 32) {
 		g_warning ("only read %" G_GSIZE_FORMAT "bytes", actual_len);
-		g_usb_device_close (usb_device, NULL);
 		return;
 	}
 
@@ -127,6 +125,9 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 	dev = fu_device_new ();
 	fu_device_set_id (dev, platform_id);
 	fu_device_set_name (dev, "SteelSeries Rival 100");
+	fu_device_set_vendor (dev, "SteelSeries");
+	fu_device_set_summary (dev, "An optical gaming mouse");
+	fu_device_add_icon (dev, "input-mouse");
 	version = g_strdup_printf ("%i.%i.%i",
 				   data[0], data[1], data[2]);
 	fu_device_set_version (dev, version);
@@ -142,11 +143,8 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					     &error_local)) {
 		g_warning ("failed to release interface: %s", error_local->message);
-		g_usb_device_close (usb_device, NULL);
 		return;
 	}
-	if (!g_usb_device_close (usb_device, &error_local))
-		g_debug ("Failed to close: %s", error_local->message);
 	fu_plugin_device_add (plugin, dev);
 	fu_plugin_cache_add (plugin, platform_id, dev);
 }

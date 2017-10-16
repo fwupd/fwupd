@@ -21,13 +21,25 @@
 
 #include "config.h"
 
+#include <libsoup/soup.h>
+
+#include "fwupd-deprecated.h"
+#include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 
+/**
+ * SECTION:fwupd-remote
+ * @short_description: a source of firmware
+ *
+ * An object that represents a source of metadata that provides firmware.
+ *
+ * See also: #FwupdClient
+ */
+
 static void fwupd_remote_finalize	 (GObject *obj);
 
-struct _FwupdRemote
-{
+typedef struct {
 	GObject			 parent_instance;
 	FwupdRemoteKind		 kind;
 	FwupdKeyringKind	 keyring_kind;
@@ -37,18 +49,17 @@ struct _FwupdRemote
 	gchar			*metadata_uri_sig;
 	gchar			*username;
 	gchar			*password;
-	gchar			*filename;
-	gchar			*filename_asc;
+	gchar			*title;
+	gchar			*checksum;
 	gchar			*filename_cache;
 	gchar			*filename_cache_sig;
+	gchar			*filename_source;
 	gboolean		 enabled;
-	SoupURI			*uri;
-	SoupURI			*uri_asc;
 	gint			 priority;
 	guint64			 mtime;
 	gchar			**order_after;
 	gchar			**order_before;
-};
+} FwupdRemotePrivate;
 
 enum {
 	PROP_0,
@@ -57,51 +68,73 @@ enum {
 	PROP_LAST
 };
 
-G_DEFINE_TYPE (FwupdRemote, fwupd_remote, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (FwupdRemote, fwupd_remote, G_TYPE_OBJECT)
+#define GET_PRIVATE(o) (fwupd_remote_get_instance_private (o))
 
 static void
 fwupd_remote_set_username (FwupdRemote *self, const gchar *username)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	if (username != NULL && username[0] == '\0')
 		username = NULL;
-	self->username = g_strdup (username);
-	if (self->uri != NULL)
-		soup_uri_set_user (self->uri, username);
-	if (self->uri_asc != NULL)
-		soup_uri_set_user (self->uri_asc, username);
+	priv->username = g_strdup (username);
+}
+
+static void
+fwupd_remote_set_title (FwupdRemote *self, const gchar *title)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_free (priv->title);
+	priv->title = g_strdup (title);
+}
+
+static void
+fwupd_remote_set_checksum (FwupdRemote *self, const gchar *checksum)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_free (priv->checksum);
+	priv->checksum = g_strdup (checksum);
 }
 
 static void
 fwupd_remote_set_password (FwupdRemote *self, const gchar *password)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	if (password != NULL && password[0] == '\0')
 		password = NULL;
-	self->password = g_strdup (password);
-	if (self->uri != NULL)
-		soup_uri_set_password (self->uri, password);
-	if (self->uri_asc != NULL)
-		soup_uri_set_password (self->uri_asc, password);
+	priv->password = g_strdup (password);
 }
 
 static void
 fwupd_remote_set_kind (FwupdRemote *self, FwupdRemoteKind kind)
 {
-	self->kind = kind;
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	priv->kind = kind;
 }
 
 static void
 fwupd_remote_set_keyring_kind (FwupdRemote *self, FwupdKeyringKind keyring_kind)
 {
-	self->keyring_kind = keyring_kind;
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	priv->keyring_kind = keyring_kind;
 }
 
 /* note, this has to be set before url */
 static void
 fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
 {
-	g_free (self->id);
-	self->id = g_strdup (id);
-	g_strdelimit (self->id, ".", '\0');
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_free (priv->id);
+	priv->id = g_strdup (id);
+	g_strdelimit (priv->id, ".", '\0');
+}
+
+static void
+fwupd_remote_set_filename_source (FwupdRemote *self, const gchar *filename_source)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_free (priv->filename_source);
+	priv->filename_source = g_strdup (filename_source);
 }
 
 static const gchar *
@@ -114,33 +147,80 @@ fwupd_remote_get_suffix_for_keyring_kind (FwupdKeyringKind keyring_kind)
 	return NULL;
 }
 
+static SoupURI *
+fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	SoupURI *uri;
+
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	g_return_val_if_fail (url != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* create URI, substituting if required */
+	if (priv->firmware_base_uri != NULL) {
+		g_autoptr(SoupURI) uri_tmp = NULL;
+		g_autofree gchar *basename = NULL;
+		g_autofree gchar *url2 = NULL;
+		uri_tmp = soup_uri_new (url);
+		if (uri_tmp == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse URI '%s'", url);
+			return NULL;
+		}
+		basename = g_path_get_basename (soup_uri_get_path (uri_tmp));
+		url2 = g_build_filename (priv->firmware_base_uri, basename, NULL);
+		uri = soup_uri_new (url2);
+		if (uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse URI '%s'", url2);
+			return NULL;
+		}
+	} else {
+		uri = soup_uri_new (url);
+		if (uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse URI '%s'", url);
+			return NULL;
+		}
+	}
+
+	/* set the username and password */
+	if (priv->username != NULL)
+		soup_uri_set_user (uri, priv->username);
+	if (priv->password != NULL)
+		soup_uri_set_password (uri, priv->password);
+	return uri;
+}
+
 /* note, this has to be set before username and password */
 static void
 fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	const gchar *suffix;
-	g_autofree gchar *basename = NULL;
-	g_autofree gchar *basename_asc = NULL;
-
-	/* save this so we can export the object as a GVariant */
-	self->metadata_uri = g_strdup (metadata_uri);
+	g_autoptr(SoupURI) uri = NULL;
+	g_autoptr(SoupURI) uri_asc = NULL;
 
 	/* build the URI */
-	self->uri = soup_uri_new (metadata_uri);
-	if (self->uri == NULL)
+	uri = soup_uri_new (metadata_uri);
+	if (uri == NULL)
 		return;
 
-	/* generate some plausible local filenames */
-	basename = g_path_get_basename (soup_uri_get_path (self->uri));
-	self->filename = g_strdup_printf ("%s-%s", self->id, basename);
+	/* save this so we can export the object as a GVariant */
+	priv->metadata_uri = g_strdup (metadata_uri);
 
 	/* generate the signature URI too */
-	suffix = fwupd_remote_get_suffix_for_keyring_kind (self->keyring_kind);
+	suffix = fwupd_remote_get_suffix_for_keyring_kind (priv->keyring_kind);
 	if (suffix != NULL) {
-		self->metadata_uri_sig = g_strconcat (metadata_uri, suffix, NULL);
-		self->uri_asc = fwupd_remote_build_uri (self, self->metadata_uri_sig, NULL);
-		basename_asc = g_path_get_basename (soup_uri_get_path (self->uri_asc));
-		self->filename_asc = g_strdup_printf ("%s-%s", self->id, basename_asc);
+		priv->metadata_uri_sig = g_strconcat (metadata_uri, suffix, NULL);
+		uri_asc = fwupd_remote_build_uri (self, priv->metadata_uri_sig, NULL);
 	}
 }
 
@@ -148,12 +228,13 @@ fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
 static void
 fwupd_remote_set_firmware_base_uri (FwupdRemote *self, const gchar *firmware_base_uri)
 {
-	self->firmware_base_uri = g_strdup (firmware_base_uri);
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	priv->firmware_base_uri = g_strdup (firmware_base_uri);
 }
 
 /**
  * fwupd_remote_kind_from_string:
- * @kind: a string, e.g. "download"
+ * @kind: a string, e.g. `download`
  *
  * Converts an printable string to an enumerated type.
  *
@@ -177,7 +258,7 @@ fwupd_remote_kind_from_string (const gchar *kind)
  *
  * Converts an enumerated type to a printable string.
  *
- * Returns: a string, e.g. "download"
+ * Returns: a string, e.g. `download`
  *
  * Since: 0.9.6
  **/
@@ -194,18 +275,19 @@ fwupd_remote_kind_to_string (FwupdRemoteKind kind)
 static void
 fwupd_remote_set_filename_cache (FwupdRemote *self, const gchar *filename)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	const gchar *suffix;
 
 	g_return_if_fail (FWUPD_IS_REMOTE (self));
 
-	g_free (self->filename_cache);
-	self->filename_cache = g_strdup (filename);
+	g_free (priv->filename_cache);
+	priv->filename_cache = g_strdup (filename);
 
 	/* create for all remote types */
-	suffix = fwupd_remote_get_suffix_for_keyring_kind (self->keyring_kind);
+	suffix = fwupd_remote_get_suffix_for_keyring_kind (priv->keyring_kind);
 	if (suffix != NULL) {
-		g_free (self->filename_cache_sig);
-		self->filename_cache_sig = g_strconcat (filename, suffix, NULL);
+		g_free (priv->filename_cache_sig);
+		priv->filename_cache_sig = g_strconcat (filename, suffix, NULL);
 	}
 }
 
@@ -230,6 +312,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 				 GCancellable *cancellable,
 				 GError **error)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	const gchar *group = "fwupd Remote";
 	g_autofree gchar *firmware_base_uri = NULL;
 	g_autofree gchar *id = NULL;
@@ -256,10 +339,10 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	/* get verification type, falling back to GPG */
 	keyring_kind = g_key_file_get_string (kf, group, "Keyring", NULL);
 	if (keyring_kind == NULL) {
-		self->keyring_kind = FWUPD_KEYRING_KIND_GPG;
+		priv->keyring_kind = FWUPD_KEYRING_KIND_GPG;
 	} else {
-		self->keyring_kind = fwupd_keyring_kind_from_string (keyring_kind);
-		if (self->keyring_kind == FWUPD_KEYRING_KIND_UNKNOWN) {
+		priv->keyring_kind = fwupd_keyring_kind_from_string (keyring_kind);
+		if (priv->keyring_kind == FWUPD_KEYRING_KIND_UNKNOWN) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
@@ -274,10 +357,10 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	if (metadata_uri == NULL)
 		return FALSE;
 	if (g_str_has_prefix (metadata_uri, "file://")) {
-		self->kind = FWUPD_REMOTE_KIND_LOCAL;
+		priv->kind = FWUPD_REMOTE_KIND_LOCAL;
 	} else if (g_str_has_prefix (metadata_uri, "http://") ||
 		   g_str_has_prefix (metadata_uri, "https://")) {
-		self->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
+		priv->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
 	} else {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -288,10 +371,11 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	}
 
 	/* extract data */
-	self->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
+	priv->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
+	priv->title = g_key_file_get_string (kf, group, "Title", NULL);
 
 	/* DOWNLOAD-type remotes */
-	if (self->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
+	if (priv->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
 		g_autofree gchar *filename_cache = NULL;
 		g_autofree gchar *username = NULL;
 		g_autofree gchar *password = NULL;
@@ -300,7 +384,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 		fwupd_remote_set_metadata_uri (self, metadata_uri);
 
 		/* check the URI was valid */
-		if (self->uri == NULL) {
+		if (priv->metadata_uri == NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
@@ -322,18 +406,34 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 						   "lib",
 						   "fwupd",
 						   "remotes.d",
-						   self->id,
+						   priv->id,
 						   "metadata.xml.gz",
 						   NULL);
 		fwupd_remote_set_filename_cache (self, filename_cache);
 	}
 
 	/* all LOCAL remotes have to include a valid MetadataURI */
-	if (self->kind == FWUPD_REMOTE_KIND_LOCAL) {
+	if (priv->kind == FWUPD_REMOTE_KIND_LOCAL) {
 		const gchar *filename_cache = metadata_uri;
 		if (g_str_has_prefix (filename_cache, "file://"))
 			filename_cache += 7;
 		fwupd_remote_set_filename_cache (self, filename_cache);
+	}
+
+	/* load the checksum */
+	if (priv->filename_cache_sig != NULL &&
+	    g_file_test (priv->filename_cache_sig, G_FILE_TEST_EXISTS)) {
+		gsize sz = 0;
+		g_autofree gchar *buf = NULL;
+		g_autoptr(GChecksum) checksum = g_checksum_new (G_CHECKSUM_SHA256);
+		if (!g_file_get_contents (priv->filename_cache_sig, &buf, &sz, error)) {
+			g_prefix_error (error, "failed to get checksum: ");
+			return FALSE;
+		}
+		g_checksum_update (checksum, (guchar *) buf, (gssize) sz);
+		fwupd_remote_set_checksum (self, g_checksum_get_string (checksum));
+	} else {
+		fwupd_remote_set_checksum (self, NULL);
 	}
 
 	/* the base URI is optional */
@@ -344,29 +444,50 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	/* dep logic */
 	order_before = g_key_file_get_string (kf, group, "OrderBefore", NULL);
 	if (order_before != NULL)
-		self->order_before = g_strsplit_set (order_before, ",:;", -1);
+		priv->order_before = g_strsplit_set (order_before, ",:;", -1);
 	order_after = g_key_file_get_string (kf, group, "OrderAfter", NULL);
 	if (order_after != NULL)
-		self->order_after = g_strsplit_set (order_after, ",:;", -1);
+		priv->order_after = g_strsplit_set (order_after, ",:;", -1);
 
 	/* success */
+	fwupd_remote_set_filename_source (self, filename);
 	return TRUE;
 }
 
-/* private */
+/**
+ * fwupd_remote_get_order_after:
+ * @self: A #FwupdRemote
+ *
+ * Gets the list of remotes this plugin should be ordered after.
+ *
+ * Returns: (transfer none): an array
+ *
+ * Since: 0.9.5
+ **/
 gchar **
 fwupd_remote_get_order_after (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->order_after;
+	return priv->order_after;
 }
 
-/* private */
+/**
+ * fwupd_remote_get_order_before:
+ * @self: A #FwupdRemote
+ *
+ * Gets the list of remotes this plugin should be ordered before.
+ *
+ * Returns: (transfer none): an array
+ *
+ * Since: 0.9.5
+ **/
 gchar **
 fwupd_remote_get_order_before (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->order_before;
+	return priv->order_before;
 }
 
 /**
@@ -382,8 +503,9 @@ fwupd_remote_get_order_before (FwupdRemote *self)
 const gchar *
 fwupd_remote_get_filename_cache (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->filename_cache;
+	return priv->filename_cache;
 }
 
 /**
@@ -399,8 +521,27 @@ fwupd_remote_get_filename_cache (FwupdRemote *self)
 const gchar *
 fwupd_remote_get_filename_cache_sig (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->filename_cache_sig;
+	return priv->filename_cache_sig;
+}
+
+/**
+ * fwupd_remote_get_filename_source:
+ * @self: A #FwupdRemote
+ *
+ * Gets the path and filename of the remote itself, typically a `.conf` file.
+ *
+ * Returns: a string, or %NULL for unset
+ *
+ * Since: 0.9.8
+ **/
+const gchar *
+fwupd_remote_get_filename_source (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return priv->filename_source;
 }
 
 /**
@@ -416,8 +557,9 @@ fwupd_remote_get_filename_cache_sig (FwupdRemote *self)
 gint
 fwupd_remote_get_priority (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
-	return self->priority;
+	return priv->priority;
 }
 
 /**
@@ -433,8 +575,9 @@ fwupd_remote_get_priority (FwupdRemote *self)
 FwupdRemoteKind
 fwupd_remote_get_kind (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
-	return self->kind;
+	return priv->kind;
 }
 
 /**
@@ -450,8 +593,9 @@ fwupd_remote_get_kind (FwupdRemote *self)
 FwupdKeyringKind
 fwupd_remote_get_keyring_kind (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
-	return self->keyring_kind;
+	return priv->keyring_kind;
 }
 
 /**
@@ -467,120 +611,119 @@ fwupd_remote_get_keyring_kind (FwupdRemote *self)
 guint64
 fwupd_remote_get_age (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	guint64 now;
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), 0);
 	now = (guint64) g_get_real_time () / G_USEC_PER_SEC;
-	if (self->mtime > now)
+	if (priv->mtime > now)
 		return G_MAXUINT64;
-	return now - self->mtime;
-}
-
-/* private */
-void
-fwupd_remote_set_priority (FwupdRemote *self, gint priority)
-{
-	g_return_if_fail (FWUPD_IS_REMOTE (self));
-	self->priority = priority;
-}
-
-/* private */
-void
-fwupd_remote_set_mtime (FwupdRemote *self, guint64 mtime)
-{
-	g_return_if_fail (FWUPD_IS_REMOTE (self));
-	self->mtime = mtime;
-}
-
-const gchar *
-fwupd_remote_get_filename (FwupdRemote *self)
-{
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->filename;
-}
-
-const gchar *
-fwupd_remote_get_username (FwupdRemote *self)
-{
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->username;
-}
-
-const gchar *
-fwupd_remote_get_password (FwupdRemote *self)
-{
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->password;
-}
-
-const gchar *
-fwupd_remote_get_filename_asc (FwupdRemote *self)
-{
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->filename_asc;
+	return now - priv->mtime;
 }
 
 /**
- * fwupd_remote_build_uri:
+ * fwupd_remote_set_priority:
  * @self: A #FwupdRemote
- * @url: the URL to use
- * @error: the #GError, or %NULL
+ * @priority: an integer, where 1 is better
  *
- * Builds a URI for the URL using the username and password set for the remote,
- * including any basename URI substitution.
+ * Sets the plugin priority.
  *
- * Returns: (transfer full): a #SoupURI, or %NULL for error
- *
- * Since: 0.9.3
+ * Since: 0.9.5
  **/
-SoupURI *
-fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
+void
+fwupd_remote_set_priority (FwupdRemote *self, gint priority)
 {
-	SoupURI *uri;
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_REMOTE (self));
+	priv->priority = priority;
+}
 
+/**
+ * fwupd_remote_set_mtime:
+ * @self: A #FwupdRemote
+ * @mtime: a UNIX itmestamp
+ *
+ * Sets the plugin modification time.
+ *
+ * Since: 0.9.5
+ **/
+void
+fwupd_remote_set_mtime (FwupdRemote *self, guint64 mtime)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_REMOTE (self));
+	priv->mtime = mtime;
+}
+
+/**
+ * fwupd_remote_get_username:
+ * @self: A #FwupdRemote
+ *
+ * Gets the username configured for the remote.
+ *
+ * Returns: a string, or %NULL for unset
+ *
+ * Since: 0.9.5
+ **/
+const gchar *
+fwupd_remote_get_username (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	g_return_val_if_fail (url != NULL, NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return priv->username;
+}
 
-	/* create URI, substituting if required */
-	if (self->firmware_base_uri != NULL) {
-		g_autoptr(SoupURI) uri_tmp = NULL;
-		g_autofree gchar *basename = NULL;
-		g_autofree gchar *url2 = NULL;
-		uri_tmp = soup_uri_new (url);
-		if (uri_tmp == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse URI '%s'", url);
-			return NULL;
-		}
-		basename = g_path_get_basename (soup_uri_get_path (uri_tmp));
-		url2 = g_build_filename (self->firmware_base_uri, basename, NULL);
-		uri = soup_uri_new (url2);
-		if (uri == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse URI '%s'", url2);
-			return NULL;
-		}
-	} else {
-		uri = soup_uri_new (url);
-		if (uri == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse URI '%s'", url);
-			return NULL;
-		}
-	}
+/**
+ * fwupd_remote_get_password:
+ * @self: A #FwupdRemote
+ *
+ * Gets the password configured for the remote.
+ *
+ * Returns: a string, or %NULL for unset
+ *
+ * Since: 0.9.5
+ **/
+const gchar *
+fwupd_remote_get_password (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return priv->password;
+}
 
-	/* set the username and password from the metadata URI */
-	if (self->uri != NULL) {
-		soup_uri_set_user (uri, soup_uri_get_user (self->uri));
-		soup_uri_set_password (uri, soup_uri_get_password (self->uri));
-	}
-	return uri;
+/**
+ * fwupd_remote_get_title:
+ * @self: A #FwupdRemote
+ *
+ * Gets the remote title, e.g. `Linux Vendor Firmware Service`.
+ *
+ * Returns: a string, or %NULL if unset
+ *
+ * Since: 0.9.8
+ **/
+const gchar *
+fwupd_remote_get_title (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return priv->title;
+}
+
+/**
+ * fwupd_remote_get_checksum:
+ * @self: A #FwupdRemote
+ *
+ * Gets the remote checksum.
+ *
+ * Returns: a string, or %NULL if unset
+ *
+ * Since: 1.0.0
+ **/
+const gchar *
+fwupd_remote_get_checksum (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return priv->checksum;
 }
 
 /**
@@ -606,40 +749,6 @@ fwupd_remote_build_firmware_uri (FwupdRemote *self, const gchar *url, GError **e
 }
 
 /**
- * fwupd_remote_get_uri:
- * @self: A #FwupdRemote
- *
- * Gets the URI for the remote metadata.
- *
- * Returns: (transfer none): a #SoupURI, or %NULL for invalid.
- *
- * Since: 0.9.3
- **/
-SoupURI *
-fwupd_remote_get_uri (FwupdRemote *self)
-{
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->uri;
-}
-
-/**
- * fwupd_remote_get_uri_asc:
- * @self: A #FwupdRemote
- *
- * Gets the URI for the remote signature.
- *
- * Returns: (transfer none): a #SoupURI, or %NULL for invalid.
- *
- * Since: 0.9.3
- **/
-SoupURI *
-fwupd_remote_get_uri_asc (FwupdRemote *self)
-{
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->uri_asc;
-}
-
-/**
  * fwupd_remote_get_metadata_uri:
  * @self: A #FwupdRemote
  *
@@ -652,8 +761,9 @@ fwupd_remote_get_uri_asc (FwupdRemote *self)
 const gchar *
 fwupd_remote_get_metadata_uri (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->metadata_uri;
+	return priv->metadata_uri;
 }
 
 /**
@@ -669,8 +779,9 @@ fwupd_remote_get_metadata_uri (FwupdRemote *self)
 const gchar *
 fwupd_remote_get_metadata_uri_sig (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->metadata_uri_sig;
+	return priv->metadata_uri_sig;
 }
 
 /**
@@ -686,8 +797,9 @@ fwupd_remote_get_metadata_uri_sig (FwupdRemote *self)
 const gchar *
 fwupd_remote_get_firmware_base_uri (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->firmware_base_uri;
+	return priv->firmware_base_uri;
 }
 
 /**
@@ -703,15 +815,16 @@ fwupd_remote_get_firmware_base_uri (FwupdRemote *self)
 gboolean
 fwupd_remote_get_enabled (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
-	return self->enabled;
+	return priv->enabled;
 }
 
 /**
  * fwupd_remote_get_id:
  * @self: A #FwupdRemote
  *
- * Gets the remote ID, e.g. "lvfs-testing".
+ * Gets the remote ID, e.g. `lvfs-testing`.
  *
  * Returns: a string, or %NULL if unset
  *
@@ -720,60 +833,15 @@ fwupd_remote_get_enabled (FwupdRemote *self)
 const gchar *
 fwupd_remote_get_id (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	return self->id;
-}
-
-static void
-fwupd_remote_to_variant_builder (FwupdRemote *self, GVariantBuilder *builder)
-{
-	if (self->id != NULL) {
-		g_variant_builder_add (builder, "{sv}", "Id",
-				       g_variant_new_string (self->id));
-	}
-	if (self->username != NULL) {
-		g_variant_builder_add (builder, "{sv}", "Username",
-				       g_variant_new_string (self->username));
-	}
-	if (self->password != NULL) {
-		g_variant_builder_add (builder, "{sv}", "Password",
-				       g_variant_new_string (self->password));
-	}
-	if (self->metadata_uri != NULL) {
-		g_variant_builder_add (builder, "{sv}", "Url",
-				       g_variant_new_string (self->metadata_uri));
-	}
-	if (self->firmware_base_uri != NULL) {
-		g_variant_builder_add (builder, "{sv}", "FirmwareBaseUri",
-				       g_variant_new_string (self->firmware_base_uri));
-	}
-	if (self->priority != 0) {
-		g_variant_builder_add (builder, "{sv}", "Priority",
-				       g_variant_new_int32 (self->priority));
-	}
-	if (self->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
-		g_variant_builder_add (builder, "{sv}", "Type",
-				       g_variant_new_uint32 (self->kind));
-	}
-	if (self->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
-		g_variant_builder_add (builder, "{sv}", "Keyring",
-				       g_variant_new_uint32 (self->keyring_kind));
-	}
-	if (self->mtime != 0) {
-		g_variant_builder_add (builder, "{sv}", "ModificationTime",
-				       g_variant_new_uint64 (self->mtime));
-	}
-	if (self->filename_cache != NULL) {
-		g_variant_builder_add (builder, "{sv}", "FilenameCache",
-				       g_variant_new_string (self->filename_cache));
-	}
-	g_variant_builder_add (builder, "{sv}", "Enabled",
-			       g_variant_new_boolean (self->enabled));
+	return priv->id;
 }
 
 static void
 fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	GVariant *value;
 	const gchar *key;
 	g_autoptr(GVariantIter) iter2 = g_variant_iter_copy (iter);
@@ -781,7 +849,7 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 
 	/* three passes, as we have to construct Id -> Url -> * */
 	while (g_variant_iter_loop (iter, "{sv}", &key, &value)) {
-		if (g_strcmp0 (key, "Id") == 0)
+		if (g_strcmp0 (key, FWUPD_RESULT_KEY_REMOTE_ID) == 0)
 			fwupd_remote_set_id (self, g_variant_get_string (value, NULL));
 		if (g_strcmp0 (key, "Type") == 0)
 			fwupd_remote_set_kind (self, g_variant_get_uint32 (value));
@@ -789,22 +857,28 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_keyring_kind (self, g_variant_get_uint32 (value));
 	}
 	while (g_variant_iter_loop (iter2, "{sv}", &key, &value)) {
-		if (g_strcmp0 (key, "Url") == 0)
+		if (g_strcmp0 (key, FWUPD_RESULT_KEY_URI) == 0)
 			fwupd_remote_set_metadata_uri (self, g_variant_get_string (value, NULL));
 		if (g_strcmp0 (key, "FilenameCache") == 0)
 			fwupd_remote_set_filename_cache (self, g_variant_get_string (value, NULL));
+		if (g_strcmp0 (key, "FilenameSource") == 0)
+			fwupd_remote_set_filename_source (self, g_variant_get_string (value, NULL));
 	}
 	while (g_variant_iter_loop (iter3, "{sv}", &key, &value)) {
 		if (g_strcmp0 (key, "Username") == 0) {
 			fwupd_remote_set_username (self, g_variant_get_string (value, NULL));
 		} else if (g_strcmp0 (key, "Password") == 0) {
 			fwupd_remote_set_password (self, g_variant_get_string (value, NULL));
+		} else if (g_strcmp0 (key, "Title") == 0) {
+			fwupd_remote_set_title (self, g_variant_get_string (value, NULL));
+		} else if (g_strcmp0 (key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
+			fwupd_remote_set_checksum (self, g_variant_get_string (value, NULL));
 		} else if (g_strcmp0 (key, "Enabled") == 0) {
-			self->enabled = g_variant_get_boolean (value);
+			priv->enabled = g_variant_get_boolean (value);
 		} else if (g_strcmp0 (key, "Priority") == 0) {
-			self->priority = g_variant_get_int32 (value);
+			priv->priority = g_variant_get_int32 (value);
 		} else if (g_strcmp0 (key, "ModificationTime") == 0) {
-			self->mtime = g_variant_get_uint64 (value);
+			priv->mtime = g_variant_get_uint64 (value);
 		} else if (g_strcmp0 (key, "FirmwareBaseUri") == 0) {
 			fwupd_remote_set_firmware_base_uri (self, g_variant_get_string (value, NULL));
 		}
@@ -812,34 +886,80 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 }
 
 /**
- * fwupd_remote_to_data:
- * @remote: A #FwupdRemote
- * @type_string: The Gvariant type string, e.g. "a{sv}" or "(a{sv})"
+ * fwupd_remote_to_variant:
+ * @self: A #FwupdRemote
  *
  * Creates a GVariant from the remote data.
  *
  * Returns: the GVariant, or %NULL for error
  *
- * Since: 0.9.5
+ * Since: 1.0.0
  **/
 GVariant *
-fwupd_remote_to_data (FwupdRemote *self, const gchar *type_string)
+fwupd_remote_to_variant (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	GVariantBuilder builder;
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	g_return_val_if_fail (type_string != NULL, NULL);
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	fwupd_remote_to_variant_builder (self, &builder);
-
-	/* supported types */
-	if (g_strcmp0 (type_string, "a{sv}") == 0)
-		return g_variant_new ("a{sv}", &builder);
-	if (g_strcmp0 (type_string, "(a{sv})") == 0)
-		return g_variant_new ("(a{sv})", &builder);
-	return NULL;
+	if (priv->id != NULL) {
+		g_variant_builder_add (&builder, "{sv}", FWUPD_RESULT_KEY_REMOTE_ID,
+				       g_variant_new_string (priv->id));
+	}
+	if (priv->username != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "Username",
+				       g_variant_new_string (priv->username));
+	}
+	if (priv->password != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "Password",
+				       g_variant_new_string (priv->password));
+	}
+	if (priv->title != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "Title",
+				       g_variant_new_string (priv->title));
+	}
+	if (priv->checksum != NULL) {
+		g_variant_builder_add (&builder, "{sv}", FWUPD_RESULT_KEY_CHECKSUM,
+				       g_variant_new_string (priv->checksum));
+	}
+	if (priv->metadata_uri != NULL) {
+		g_variant_builder_add (&builder, "{sv}", FWUPD_RESULT_KEY_URI,
+				       g_variant_new_string (priv->metadata_uri));
+	}
+	if (priv->firmware_base_uri != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "FirmwareBaseUri",
+				       g_variant_new_string (priv->firmware_base_uri));
+	}
+	if (priv->priority != 0) {
+		g_variant_builder_add (&builder, "{sv}", "Priority",
+				       g_variant_new_int32 (priv->priority));
+	}
+	if (priv->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
+		g_variant_builder_add (&builder, "{sv}", "Type",
+				       g_variant_new_uint32 (priv->kind));
+	}
+	if (priv->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
+		g_variant_builder_add (&builder, "{sv}", "Keyring",
+				       g_variant_new_uint32 (priv->keyring_kind));
+	}
+	if (priv->mtime != 0) {
+		g_variant_builder_add (&builder, "{sv}", "ModificationTime",
+				       g_variant_new_uint64 (priv->mtime));
+	}
+	if (priv->filename_cache != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "FilenameCache",
+				       g_variant_new_string (priv->filename_cache));
+	}
+	if (priv->filename_source != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "FilenameSource",
+				       g_variant_new_string (priv->filename_source));
+	}
+	g_variant_builder_add (&builder, "{sv}", "Enabled",
+			       g_variant_new_boolean (priv->enabled));
+	return g_variant_new ("a{sv}", &builder);
 }
 
 static void
@@ -847,13 +967,14 @@ fwupd_remote_get_property (GObject *obj, guint prop_id,
 			   GValue *value, GParamSpec *pspec)
 {
 	FwupdRemote *self = FWUPD_REMOTE (obj);
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 
 	switch (prop_id) {
 	case PROP_ENABLED:
-		g_value_set_boolean (value, self->enabled);
+		g_value_set_boolean (value, priv->enabled);
 		break;
 	case PROP_ID:
-		g_value_set_string (value, self->id);
+		g_value_set_string (value, priv->id);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -866,10 +987,11 @@ fwupd_remote_set_property (GObject *obj, guint prop_id,
 			   const GValue *value, GParamSpec *pspec)
 {
 	FwupdRemote *self = FWUPD_REMOTE (obj);
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 
 	switch (prop_id) {
 	case PROP_ENABLED:
-		self->enabled = g_value_get_boolean (value);
+		priv->enabled = g_value_get_boolean (value);
 		break;
 	case PROP_ID:
 		fwupd_remote_set_id (self, g_value_get_string (value));
@@ -921,39 +1043,37 @@ static void
 fwupd_remote_finalize (GObject *obj)
 {
 	FwupdRemote *self = FWUPD_REMOTE (obj);
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 
-	g_free (self->id);
-	g_free (self->metadata_uri);
-	g_free (self->metadata_uri_sig);
-	g_free (self->firmware_base_uri);
-	g_free (self->username);
-	g_free (self->password);
-	g_free (self->filename);
-	g_free (self->filename_asc);
-	g_free (self->filename_cache);
-	g_free (self->filename_cache_sig);
-	g_strfreev (self->order_after);
-	g_strfreev (self->order_before);
-	if (self->uri != NULL)
-		soup_uri_free (self->uri);
-	if (self->uri_asc != NULL)
-		soup_uri_free (self->uri_asc);
+	g_free (priv->id);
+	g_free (priv->metadata_uri);
+	g_free (priv->metadata_uri_sig);
+	g_free (priv->firmware_base_uri);
+	g_free (priv->username);
+	g_free (priv->password);
+	g_free (priv->title);
+	g_free (priv->checksum);
+	g_free (priv->filename_cache);
+	g_free (priv->filename_cache_sig);
+	g_free (priv->filename_source);
+	g_strfreev (priv->order_after);
+	g_strfreev (priv->order_before);
 
 	G_OBJECT_CLASS (fwupd_remote_parent_class)->finalize (obj);
 }
 
 /**
- * fwupd_remote_new_from_data:
+ * fwupd_remote_from_variant:
  * @data: a #GVariant
  *
  * Creates a new remote using packed data.
  *
- * Returns: a new #FwupdRemote, or %NULL if @data was invalid
+ * Returns: (transfer full): a new #FwupdRemote, or %NULL if @data was invalid
  *
- * Since: 0.9.5
+ * Since: 1.0.0
  **/
 FwupdRemote *
-fwupd_remote_new_from_data (GVariant *data)
+fwupd_remote_from_variant (GVariant *data)
 {
 	FwupdRemote *rel = NULL;
 	const gchar *type_string;

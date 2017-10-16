@@ -24,6 +24,16 @@
 #include "fwupd-enums.h"
 
 /**
+ * SECTION:fwupd-enums
+ * @short_description: enumerated values shared by the daemon and library
+ *
+ * This file also provides helper functions to map enums to strings and back
+ * again.
+ *
+ * See also: #fwupd-error
+ */
+
+/**
  * fwupd_status_to_string:
  * @status: A #FwupdStatus, e.g. %FWUPD_STATUS_DECOMPRESSING
  *
@@ -48,18 +58,24 @@ fwupd_status_to_string (FwupdStatus status)
 		return "device-restart";
 	if (status == FWUPD_STATUS_DEVICE_WRITE)
 		return "device-write";
+	if (status == FWUPD_STATUS_DEVICE_READ)
+		return "device-read";
+	if (status == FWUPD_STATUS_DEVICE_ERASE)
+		return "device-erase";
 	if (status == FWUPD_STATUS_DEVICE_VERIFY)
 		return "device-verify";
 	if (status == FWUPD_STATUS_SCHEDULING)
 		return "scheduling";
 	if (status == FWUPD_STATUS_DOWNLOADING)
 		return "downloading";
+	if (status == FWUPD_STATUS_WAITING_FOR_AUTH)
+		return "waiting-for-auth";
 	return NULL;
 }
 
 /**
  * fwupd_status_from_string:
- * @status: A string, e.g. "decompressing"
+ * @status: A string, e.g. `decompressing`
  *
  * Converts a string to a #FwupdStatus.
  *
@@ -88,6 +104,12 @@ fwupd_status_from_string (const gchar *status)
 		return FWUPD_STATUS_SCHEDULING;
 	if (g_strcmp0 (status, "downloading") == 0)
 		return FWUPD_STATUS_DOWNLOADING;
+	if (g_strcmp0 (status, "device-read") == 0)
+		return FWUPD_STATUS_DEVICE_READ;
+	if (g_strcmp0 (status, "device-erase") == 0)
+		return FWUPD_STATUS_DEVICE_ERASE;
+	if (g_strcmp0 (status, "waiting-for-auth") == 0)
+		return FWUPD_STATUS_WAITING_FOR_AUTH;
 	return FWUPD_STATUS_LAST;
 }
 
@@ -131,7 +153,7 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 
 /**
  * fwupd_device_flag_from_string:
- * @device_flag: A string, e.g. "require-ac"
+ * @device_flag: A string, e.g. `require-ac`
  *
  * Converts a string to a #FwupdDeviceFlags.
  *
@@ -193,7 +215,7 @@ fwupd_update_state_to_string (FwupdUpdateState update_state)
 
 /**
  * fwupd_update_state_from_string:
- * @update_state: A string, e.g. "pending"
+ * @update_state: A string, e.g. `pending`
  *
  * Converts a string to a #FwupdUpdateState.
  *
@@ -239,7 +261,7 @@ fwupd_trust_flag_to_string (FwupdTrustFlags trust_flag)
 
 /**
  * fwupd_trust_flag_from_string:
- * @trust_flag: A string, e.g. "payload"
+ * @trust_flag: A string, e.g. `payload`
  *
  * Converts a string to a #FwupdTrustFlags.
  *
@@ -261,7 +283,7 @@ fwupd_trust_flag_from_string (const gchar *trust_flag)
 
 /**
  * fwupd_keyring_kind_from_string:
- * @keyring_kind: a string, e.g. "gpg"
+ * @keyring_kind: a string, e.g. `gpg`
  *
  * Converts an printable string to an enumerated type.
  *
@@ -287,7 +309,7 @@ fwupd_keyring_kind_from_string (const gchar *keyring_kind)
  *
  * Converts an enumerated type to a printable string.
  *
- * Returns: a string, e.g. "gpg"
+ * Returns: a string, e.g. `gpg`
  *
  * Since: 0.9.7
  **/

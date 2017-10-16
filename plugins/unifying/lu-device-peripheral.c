@@ -29,11 +29,62 @@
 
 struct _LuDevicePeripheral
 {
-	LuDevice	 parent_instance;
-	guint8		 cached_fw_entity;
+	LuDevice		 parent_instance;
+	guint8			 cached_fw_entity;
+	LuDevicePeripheralKind	 kind;
 };
 
 G_DEFINE_TYPE (LuDevicePeripheral, lu_device_peripheral, LU_TYPE_DEVICE)
+
+LuDevicePeripheralKind
+lu_device_peripheral_get_kind (LuDevicePeripheral *self)
+{
+	return self->kind;
+}
+
+const gchar *
+lu_device_peripheral_get_icon (LuDevicePeripheral *self)
+{
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_KEYBOARD)
+		return "input-keyboard";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_REMOTE_CONTROL)
+		return "pda"; // ish
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_NUMPAD)
+		return "input-dialpad";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_MOUSE)
+		return "input-mouse";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_TOUCHPAD)
+		return "input-touchpad";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_TRACKBALL)
+		return "input-mouse"; // ish
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_PRESENTER)
+		return "pda"; // ish
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_RECEIVER)
+		return "preferences-desktop-keyboard";
+	return NULL;
+}
+
+const gchar *
+lu_device_peripheral_get_summary (LuDevicePeripheral *self)
+{
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_KEYBOARD)
+		return "Unifying Keyboard";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_REMOTE_CONTROL)
+		return "Unifying Remote Control";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_NUMPAD)
+		return "Unifying Number Pad";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_MOUSE)
+		return "Unifying Mouse";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_TOUCHPAD)
+		return "Unifying Touchpad";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_TRACKBALL)
+		return "Unifying Trackball";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_PRESENTER)
+		return "Unifying Presenter";
+	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_RECEIVER)
+		return "Unifying Receiver";
+	return NULL;
+}
 
 static gboolean
 lu_device_peripheral_fetch_firmware_info (LuDevice *device, GError **error)
@@ -229,8 +280,10 @@ lu_device_peripheral_ping (LuDevice *device, GError **error)
 static gboolean
 lu_device_peripheral_probe (LuDevice *device, GError **error)
 {
+	LuDevicePeripheral *self = LU_DEVICE_PERIPHERAL (device);
 	guint8 idx;
 	const guint16 map_features[] = {
+		HIDPP_FEATURE_GET_DEVICE_NAME_TYPE,
 		HIDPP_FEATURE_I_FIRMWARE_INFO,
 		HIDPP_FEATURE_BATTERY_LEVEL_STATUS,
 		HIDPP_FEATURE_DFU_CONTROL,
@@ -267,6 +320,20 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 		return FALSE;
 
 	/* try using HID++2.0 */
+	idx = lu_device_hidpp_feature_get_idx (device, HIDPP_FEATURE_GET_DEVICE_NAME_TYPE);
+	if (idx != 0x00) {
+		/* check the feature is available */
+		g_autoptr(LuHidppMsg) msg = lu_hidpp_msg_new ();
+		msg->report_id = HIDPP_REPORT_ID_SHORT;
+		msg->device_id = lu_device_get_hidpp_id (device);
+		msg->sub_id = idx;
+		msg->function_id = 0x02 << 4; /* getDeviceType */
+		if (!lu_device_hidpp_transfer (device, msg, error)) {
+			g_prefix_error (error, "failed to get device type: ");
+			return FALSE;
+		}
+		self->kind = msg->data[0];
+	}
 	idx = lu_device_hidpp_feature_get_idx (device, HIDPP_FEATURE_DFU_CONTROL);
 	if (idx != 0x00) {
 		lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);

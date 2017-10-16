@@ -30,6 +30,7 @@
 
 #include "lu-context.h"
 #include "lu-device.h"
+#include "lu-device-peripheral.h"
 
 struct FuPluginData {
 	LuContext		*ctx;
@@ -62,6 +63,14 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_id (dev, lu_device_get_platform_id (device));
 	fu_device_set_name (dev, lu_device_get_product (device));
+	if (lu_device_get_kind (device) == LU_DEVICE_KIND_PERIPHERAL) {
+		const gchar *tmp;
+		tmp = lu_device_peripheral_get_summary (LU_DEVICE_PERIPHERAL (device));
+		if (tmp != NULL)
+			fu_device_set_summary (dev, tmp);
+	} else {
+		fu_device_set_summary (dev, "A miniaturised USB wireless receiver");
+	}
 	fu_device_set_vendor (dev, lu_device_get_vendor (device));
 	fu_device_set_vendor_id (dev, "USB:0x046D");
 	fu_device_set_version (dev, lu_device_get_version_fw (device));
@@ -70,6 +79,17 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 	for (guint i = 0; i < guids->len; i++) {
 		const gchar *guid = g_ptr_array_index (guids, i);
 		fu_device_add_guid (dev, guid);
+	}
+
+	/* add icon */
+	if (lu_device_get_kind (device) == LU_DEVICE_KIND_PERIPHERAL) {
+		const gchar *tmp = lu_device_peripheral_get_icon (LU_DEVICE_PERIPHERAL (device));
+		if (tmp != NULL)
+			fu_device_add_icon (dev, tmp);
+	} else {
+		/* FIXME: we need something better in the icon name spec for
+		 * the USB Unifying receiver dongle */
+		fu_device_add_icon (dev, "preferences-desktop-keyboard");
 	}
 
 	/* don't allow the USB plugin to claim this */
@@ -278,12 +298,24 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+
+	/* check the kernel has CONFIG_HIDRAW */
+	if (!g_file_test ("/sys/class/hidraw", G_FILE_TEST_IS_DIR)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "no kernel support for CONFIG_HIDRAW");
+		return FALSE;
+	}
+
+	/* coldplug */
 	g_signal_connect (data->ctx, "added",
 			  G_CALLBACK (fu_plugin_unifying_device_added_cb),
 			  plugin);
 	g_signal_connect (data->ctx, "removed",
 			  G_CALLBACK (fu_plugin_unifying_device_removed_cb),
 			  plugin);
+	lu_context_set_supported (data->ctx, fu_plugin_get_supported (plugin));
 	lu_context_coldplug (data->ctx);
 	lu_context_set_poll_interval (data->ctx, 5000);
 	return TRUE;

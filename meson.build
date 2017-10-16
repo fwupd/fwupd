@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '0.9.7',
+  version : '1.0.0',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -43,8 +43,8 @@ endif
 # - If the interface is the same as the previous version, but bugs are
 #   fixed, change:
 #      REVISION += 1
-lt_current = '1'
-lt_revision = '1'
+lt_current = '2'
+lt_revision = '0'
 lt_age = '0'
 lt_version = '@0@.@1@.@2@'.format(lt_current, lt_age, lt_revision)
 
@@ -57,6 +57,8 @@ test_args = [
   '-Wcast-align',
   '-Wclobbered',
   '-Wdeclaration-after-statement',
+  '-Wduplicated-branches',
+  '-Wduplicated-cond',
   '-Wempty-body',
   '-Wformat=2',
   '-Wformat-nonliteral',
@@ -65,6 +67,7 @@ test_args = [
   '-Wignored-qualifiers',
   '-Wimplicit-function-declaration',
   '-Winit-self',
+  '-Wlogical-op',
   '-Wmissing-declarations',
   '-Wmissing-format-attribute',
   '-Wmissing-include-dirs',
@@ -77,6 +80,7 @@ test_args = [
   '-Wno-strict-aliasing',
   '-Wno-suggest-attribute=format',
   '-Wno-unused-parameter',
+  '-Wnull-dereference',
   '-Wold-style-definition',
   '-Woverride-init',
   '-Wpointer-arith',
@@ -91,6 +95,7 @@ test_args = [
   '-Wundef',
   '-Wuninitialized',
   '-Wunused-but-set-variable',
+  '-Wunused-variable',
   '-Wwrite-strings'
 ]
 cc = meson.get_compiler('c')
@@ -117,8 +122,17 @@ add_global_link_arguments(
   language: 'c'
 )
 
+# ONLY for CI and only when using gcc, do not enable this for distro builds
+if get_option('enable-werror') and meson.get_compiler('c').get_id() == 'gcc'
+  add_project_arguments('-Werror', language : 'c')
+  add_project_arguments('-Wno-error=cpp', language : 'c')
+endif
+
 # Needed for realpath(), syscall(), cfmakeraw(), etc.
 add_project_arguments('-D_DEFAULT_SOURCE', language : 'c')
+
+# do not use deprecated symbols or defines internally
+add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
 
 gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
@@ -173,16 +187,15 @@ if get_option('enable-colorhug')
   conf.set('HAVE_COLORHUG', '1')
 endif
 
-if get_option('enable-libelf')
+if get_option('enable-altos')
   libelf = dependency('libelf')
-  conf.set('HAVE_LIBELF', '1')
 endif
 
 if get_option('enable-uefi')
   fwup = dependency('fwup', version : '>= 5')
-  conf.set('HAVE_UEFI', '1')
-  conf.set('HAVE_UEFI_UNLOCK', '1')
-  conf.set('HAVE_UEFI_GUID', '1')
+  if fwup.version().version_compare('>= 10')
+    conf.set('HAVE_FWUP_GET_BGRT_INFO', '1')
+  endif
 endif
 
 if get_option('enable-dell')
@@ -229,10 +242,8 @@ i18n = import('i18n')
 
 plugin_dir = join_paths(get_option('prefix'),
                         get_option('libdir'),
-                        'fwupd-plugins-2')
-conf.set_quoted('PLUGINDIR', plugin_dir)
+                        'fwupd-plugins-3')
 
-conf.set_quoted('SYSCONFDIR', get_option('sysconfdir'))
 conf.set_quoted('BINDIR',
                 join_paths(get_option('prefix'),
                            get_option('bindir')))
@@ -249,6 +260,12 @@ configure_file(
   configuration : conf
 )
 
+default_sysconfdir = get_option('sysconfdir')
+if default_sysconfdir == 'etc'
+  message('sysconfdir of etc makes no sense, using /etc')
+  default_sysconfdir = '/etc'
+endif
+
 localstatedir = join_paths(get_option('prefix'),
                            get_option('localstatedir'))
 
@@ -263,7 +280,6 @@ plugin_deps += libarchive
 
 subdir('data')
 subdir('docs')
-subdir('libdfu')
 subdir('libfwupd')
 subdir('po')
 subdir('policy')

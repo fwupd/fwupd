@@ -117,6 +117,9 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	fu_device_set_id (dev, dev_id_str);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_name (dev, name);
+	fu_device_set_vendor (dev, "Synaptics");
+	fu_device_set_summary (dev, "Multi-Stream Transport Device");
+	fu_device_add_icon (dev, "computer");
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
 	fu_device_add_guid (dev, guid_str);
 
@@ -134,9 +137,6 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 	g_autofree gchar *dev_id_str = NULL;
 	FuDevice *fu_dev = NULL;
 	const gchar *aux_node;
-	guint8 layer = 0;
-	guint16 rad = 0;
-	guint8 j;
 
 	aux_node = synapticsmst_device_get_aux_node (device);
 	if (!synapticsmst_device_open (device, error)) {
@@ -146,9 +146,9 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 		return FALSE;
 	}
 
-	for (j = 0; j < 2; j++) {
-		layer = synapticsmst_device_get_layer (device) + 1;
-		rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
+	for (guint8 j = 0; j < 2; j++) {
+		guint8 layer = synapticsmst_device_get_layer (device) + 1;
+		guint16 rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
 		dev_id_str = g_strdup_printf ("MST-REMOTE-%s-%u-%u",
 					      aux_node, layer, rad);
 		fu_dev = fu_plugin_cache_lookup (plugin, dev_id_str);

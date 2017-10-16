@@ -87,6 +87,9 @@ void		 fwupd_release_set_size			(FwupdRelease	*release,
 const gchar	*fwupd_release_get_license		(FwupdRelease	*release);
 void		 fwupd_release_set_license		(FwupdRelease	*release,
 							 const gchar	*license);
+FwupdTrustFlags	 fwupd_release_get_trust_flags		(FwupdRelease	*release);
+void		 fwupd_release_set_trust_flags		(FwupdRelease	*release,
+							 FwupdTrustFlags trust_flags);
 
 G_END_DECLS
 

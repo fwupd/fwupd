@@ -221,7 +221,6 @@ mock_tree_init (MockDevice *device)
 static void
 mock_tree_dump (const MockTree *node, int level)
 {
-	guint i;
 	if (node->path) {
 		g_debug ("%*s * %s [%s] at %s", level, " ",
 			 node->device->name, node->uuid, node->path);
@@ -234,7 +233,7 @@ mock_tree_dump (const MockTree *node, int level)
 			 node->device->name, node->uuid, node->sysfs_id);
 	}
 
-	for (i = 0; i < node->children->len; i++) {
+	for (guint i = 0; i < node->children->len; i++) {
 		const MockTree *child = g_ptr_array_index (node->children, i);
 		mock_tree_dump (child, level + 2);
 	}
@@ -291,12 +290,10 @@ mock_tree_contains (const MockTree    *node,
 		    MockTreePredicate  predicate,
 		    gpointer           data)
 {
-	guint i;
-
 	if (predicate (node, data))
 		return node;
 
-	for (i = 0; i < node->children->len; i++) {
+	for (guint i = 0; i < node->children->len; i++) {
 		const MockTree *child;
 		const MockTree *match;
 
@@ -630,12 +627,11 @@ static void
 mock_tree_detach (MockTree *node)
 {
 	UMockdevTestbed *bed;
-	guint i;
 
 	if (mock_tree_node_is_detached (node, NULL))
 		return;
 
-	for (i = 0; i < node->children->len; i++) {
+	for (guint i = 0; i < node->children->len; i++) {
 		MockTree *child = g_ptr_array_index (node->children, i);
 		mock_tree_detach (child);
 		g_free (child->sysfs_parent);

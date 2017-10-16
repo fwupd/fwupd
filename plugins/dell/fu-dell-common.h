@@ -23,7 +23,6 @@
 #define __FU_DELL_COMMON_H
 
 #include "fu-device.h"
-#include <smbios_c/smbios.h>
 #include <smbios_c/smi.h>
 #include <smbios_c/obj/smi.h>
 #include <efivar.h>
@@ -88,9 +87,6 @@ typedef enum _CABLE_TYPE
 } CABLE_TYPE;
 
 gboolean
-fu_dell_supported (void);
-
-gboolean
 fu_dell_clear_smi (FuDellSmiObj *obj);
 
 guint32
@@ -115,7 +111,11 @@ guint32
 fu_dell_get_cable_type (guint8 type);
 
 gboolean
-fu_dell_toggle_flash (FuDevice *device, GError **error, gboolean enable);
+fu_dell_toggle_dock_mode (FuDellSmiObj *smi_obj, guint32 new_mode,
+			  guint32 dock_location, GError **error);
+
+gboolean
+fu_dell_toggle_host_mode (FuDellSmiObj *smi_obj, const efi_guid_t guid, int mode);
 
 /* SMI return values used */
 #define SMI_SUCCESS			0

@@ -23,9 +23,12 @@ libfwupdprivate = static_library(
   sources : [
     'fu-common.c',
     'fu-device.c',
+    'fu-device-locker.c',
     'fu-hwids.c',
     'fu-pending.c',
     'fu-plugin.c',
+    'fu-progressbar.c',
+    'fu-smbios.c',
     'fu-test.c',
   ],
   include_directories : [
@@ -46,6 +49,7 @@ libfwupdprivate = static_library(
   c_args : [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
+    '-DSYSFSFIRMWAREDIR="/sys/firmware"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
@@ -53,7 +57,6 @@ libfwupdprivate = static_library(
 executable(
   'fwupdmgr',
   sources : [
-    'fu-progressbar.c',
     'fu-util.c',
   ],
   include_directories : [
@@ -83,6 +86,20 @@ executable(
   install_dir : get_option('bindir')
 )
 
+if get_option('enable-man')
+  docbook2man = find_program('docbook2man')
+  custom_target('fwupdmgr-man',
+    input : 'fwupdmgr.sgml',
+    output : 'fwupdmgr.1',
+    command : [
+      docbook2man, '@INPUT@',
+      '--output', meson.current_build_dir(),
+    ],
+    install : true,
+    install_dir : join_paths(get_option('mandir'), 'man1'),
+  )
+endif
+
 resources_src = gnome.compile_resources(
   'fwupd-resources',
   'fwupd.gresource.xml',
@@ -104,9 +121,11 @@ executable(
     'fu-hwids.c',
     'fu-debug.c',
     'fu-device.c',
+    'fu-device-locker.c',
     'fu-keyring.c',
     'fu-pending.c',
     'fu-plugin.c',
+    'fu-smbios.c',
   ],
   include_directories : [
     include_directories('..'),
@@ -129,6 +148,10 @@ executable(
   c_args : [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
+    '-DPLUGINDIR="' + plugin_dir + '"',
+    '-DSYSFSFIRMWAREDIR="/sys/firmware"',
+    '-DSYSCONFDIR="' + default_sysconfdir + '"',
+    '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -141,6 +164,7 @@ if get_option('enable-tests')
   pluginbuilddir = join_paths(meson.build_root(), 'plugins', 'test')
   e = executable(
     'fu-self-test',
+    resources_src,
     colorhug_test_firmware,
     colorhug_pkcs7_signature,
     builder_test_firmware,
@@ -148,13 +172,18 @@ if get_option('enable-tests')
       keyring_src,
       'fu-self-test.c',
       'fu-common.c',
+      'fu-config.c',
+      'fu-engine.c',
       'fu-keyring.c',
       'fu-hwids.c',
       'fu-device.c',
+      'fu-device-locker.c',
       'fu-pending.c',
       'fu-keyring.c',
       'fu-keyring-result.c',
       'fu-plugin.c',
+      'fu-progressbar.c',
+      'fu-smbios.c',
       'fu-test.c',
     ],
     include_directories : [
@@ -185,7 +214,52 @@ if get_option('enable-tests')
       '-DLOCALSTATEDIR="/tmp/fwupd-self-test/var"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
+      '-DPLUGINDIR="' + testdatadir_src + '"',
+      '-DSYSFSFIRMWAREDIR="' + testdatadir_src + '"',
+      '-DSYSCONFDIR="' + testdatadir_src + '"',
+      '-DFWUPDCONFIGDIR="' + testdatadir_src + '"',
     ],
   )
   test('fu-self-test', e, is_parallel:false)
+endif
+
+if get_option('enable-introspection')
+  gir_dep = declare_dependency(sources: gir)
+  gnome.generate_gir(fwupd,
+    sources : [
+      'fu-common.c',
+      'fu-common.h',
+      'fu-device.c',
+      'fu-device.h',
+      'fu-device-locker.c',
+      'fu-device-locker.h',
+      'fu-plugin.c',
+      'fu-plugin.h',
+    ],
+    nsversion : '1.0',
+    namespace : 'Fu',
+    symbol_prefix : 'fu',
+    identifier_prefix : 'Fu',
+    export_packages : 'fu',
+    include_directories : [
+      include_directories('..'),
+      include_directories('../libfwupd'),
+    ],
+    dependencies : [
+      appstream_glib,
+      gir_dep,
+      giounix,
+      gusb,
+      soup,
+      sqlite,
+    ],
+    link_with : [
+      libfwupdprivate,
+    ],
+    includes : [
+      'Gio-2.0',
+      'GObject-2.0',
+      'GUsb-1.0',
+    ],
+  )
 endif

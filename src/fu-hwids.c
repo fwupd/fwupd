@@ -27,6 +27,7 @@
 #include <appstream-glib.h>
 
 #include "fu-hwids.h"
+#include "fwupd-error.h"
 
 struct _FuHwids {
 	GObject			 parent_instance;
@@ -40,12 +41,12 @@ G_DEFINE_TYPE (FuHwids, fu_hwids, G_TYPE_OBJECT)
 /**
  * fu_hwids_get_value:
  * @self: A #FuHwids
- * @key: A DMI ID, e.g. "BiosVersion"
+ * @key: A DMI ID, e.g. `BiosVersion`
  *
  * Gets the cached value for one specific key that is valid ASCII and suitable
  * for display.
  *
- * Returns: the string, e.g. "1.2.3", or %NULL if not found
+ * Returns: the string, e.g. `1.2.3`, or %NULL if not found
  **/
 const gchar *
 fu_hwids_get_value (FuHwids *self, const gchar *key)
@@ -56,7 +57,7 @@ fu_hwids_get_value (FuHwids *self, const gchar *key)
 /**
  * fu_hwids_has_guid:
  * @self: A #FuHwids
- * @guid: A GUID, e.g. "059eb22d-6dc7-59af-abd3-94bbe017f67c"
+ * @guid: A GUID, e.g. `059eb22d-6dc7-59af-abd3-94bbe017f67c`
  *
  * Finds out if a hardware GUID exists.
  *
@@ -94,11 +95,11 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 /**
  * fu_hwids_get_replace_keys:
  * @self: A #FuHwids
- * @key: A HardwareID key, e.g. "HardwareID-3"
+ * @key: A HardwareID key, e.g. `HardwareID-3`
  *
  * Gets the replacement key for a well known value.
  *
- * Returns: the replacement value, e.g. "Manufacturer&ProductName", or %NULL for error.
+ * Returns: the replacement value, e.g. `Manufacturer&ProductName`, or %NULL for error.
  **/
 const gchar *
 fu_hwids_get_replace_keys (FuHwids *self, const gchar *key)
@@ -182,12 +183,12 @@ fu_hwids_get_replace_keys (FuHwids *self, const gchar *key)
 /**
  * fu_hwids_get_replace_values:
  * @self: A #FuHwids
- * @keys: A key, e.g. "HardwareID-3" or %FU_HWIDS_KEY_PRODUCT_SKU
+ * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
  * @error: A #GError or %NULL
  *
  * Gets the replacement values for a HardwareID key or plain key.
  *
- * Returns: a string, e.g. "LENOVO&ThinkPad T440s", or %NULL for error.
+ * Returns: a string, e.g. `LENOVO&ThinkPad T440s`, or %NULL for error.
  **/
 gchar *
 fu_hwids_get_replace_values (FuHwids *self, const gchar *keys, GError **error)
@@ -220,7 +221,7 @@ fu_hwids_get_replace_values (FuHwids *self, const gchar *keys, GError **error)
 /**
  * fu_hwids_get_guid:
  * @self: A #FuHwids
- * @keys: A key, e.g. "HardwareID-3" or %FU_HWIDS_KEY_PRODUCT_SKU
+ * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
  * @error: A #GError or %NULL
  *
  * Gets the GUID for a specific key.
@@ -236,10 +237,49 @@ fu_hwids_get_guid (FuHwids *self, const gchar *keys, GError **error)
 	return fu_hwids_get_guid_for_str (tmp, error);
 }
 
+typedef gchar	*(*FuHwidsConvertFunc)	(FuSmbios	*smbios,
+					 guint8		 type,
+					 guint8		 offset,
+					 GError		**error);
+
+static gchar *
+fu_hwids_convert_string_table_cb (FuSmbios *smbios,
+				  guint8 type, guint8 offset,
+				  GError **error)
+{
+	const gchar *tmp;
+	tmp = fu_smbios_get_string (smbios, type, offset, error);
+	if (tmp == NULL)
+		return NULL;
+	return g_strdup (tmp);
+}
+
+static gchar *
+fu_hwids_convert_base10_integer_cb (FuSmbios *smbios,
+				    guint8 type, guint8 offset,
+				    GError **error)
+{
+	GBytes *data;
+	const guint8 *data_raw;
+	gsize data_sz = 0;
+	data = fu_smbios_get_data (smbios, type, error);
+	if (data == NULL)
+		return NULL;
+	data_raw = g_bytes_get_data (data, &data_sz);
+	if (offset >= data_sz) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "offset bigger than data");
+		return NULL;
+	}
+	return g_strdup_printf ("%u", data_raw[offset]);
+}
+
 /**
  * fu_hwids_setup:
  * @self: A #FuHwids
- * @sysfsdir: The sysfs directory, or %NULL for the default
+ * @smbios: A #FuSmbios
  * @error: A #GError or %NULL
  *
  * Reads all the SMBIOS values from the hardware.
@@ -247,70 +287,71 @@ fu_hwids_get_guid (FuHwids *self, const gchar *keys, GError **error)
  * Returns: %TRUE for success
  **/
 gboolean
-fu_hwids_setup (FuHwids *self, const gchar *sysfsdir, GError **error)
+fu_hwids_setup (FuHwids *self, FuSmbios *smbios, GError **error)
 {
 	struct {
-		const gchar *key;
-		const gchar *value;
-	} sysfsfile[] = {
-		{ FU_HWIDS_KEY_MANUFACTURER,		"sys_vendor" },
-		{ FU_HWIDS_KEY_ENCLOSURE_KIND,		"chassis_type" },
-		{ FU_HWIDS_KEY_FAMILY,			"product_family" },
-		{ FU_HWIDS_KEY_PRODUCT_NAME,		"product_name" },
-		{ FU_HWIDS_KEY_PRODUCT_SKU,		"product_sku" },
-		{ FU_HWIDS_KEY_BIOS_VENDOR,		"bios_vendor" },
-		{ FU_HWIDS_KEY_BIOS_VERSION,		"bios_version" },
-		{ FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,	"bios_major_release" },
-		{ FU_HWIDS_KEY_BIOS_MINOR_RELEASE,	"bios_minor_release" },
-		{ FU_HWIDS_KEY_BASEBOARD_MANUFACTURER,	"board_vendor" },
-		{ FU_HWIDS_KEY_BASEBOARD_PRODUCT,	"board_name" },
-		{ NULL, NULL }
+		const gchar		*key;
+		guint8			 type;
+		guint8			 offset;
+		FuHwidsConvertFunc	 func;
+	} map[] = {
+		{ FU_HWIDS_KEY_MANUFACTURER,		FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x04,
+							fu_hwids_convert_string_table_cb },
+		{ FU_HWIDS_KEY_ENCLOSURE_KIND,		FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05,
+							fu_hwids_convert_base10_integer_cb },
+		{ FU_HWIDS_KEY_FAMILY,			FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x1a,
+							fu_hwids_convert_string_table_cb },
+		{ FU_HWIDS_KEY_PRODUCT_NAME,		FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x05,
+							fu_hwids_convert_string_table_cb },
+		{ FU_HWIDS_KEY_PRODUCT_SKU,		FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x19,
+							fu_hwids_convert_string_table_cb },
+		{ FU_HWIDS_KEY_BIOS_VENDOR,		FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x04,
+							fu_hwids_convert_string_table_cb },
+		{ FU_HWIDS_KEY_BIOS_VERSION,		FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x05,
+							fu_hwids_convert_string_table_cb },
+		{ FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,	FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x14,
+							fu_hwids_convert_base10_integer_cb },
+		{ FU_HWIDS_KEY_BIOS_MINOR_RELEASE,	FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x15,
+							fu_hwids_convert_base10_integer_cb },
+		{ FU_HWIDS_KEY_BASEBOARD_MANUFACTURER,	FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD, 0x04,
+							fu_hwids_convert_string_table_cb },
+		{ FU_HWIDS_KEY_BASEBOARD_PRODUCT,	FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD, 0x05,
+							fu_hwids_convert_string_table_cb },
+		{ NULL, 0x00, 0x00, NULL }
 	};
 
 	g_return_val_if_fail (FU_IS_HWIDS (self), FALSE);
-
-	/* default value */
-	if (sysfsdir == NULL)
-		sysfsdir = "/sys/class/dmi/id";
-
-	/* does not exist in a container */
-	if (!g_file_test (sysfsdir, G_FILE_TEST_EXISTS))
-		return TRUE;
+	g_return_val_if_fail (FU_IS_SMBIOS (smbios), FALSE);
 
 	/* get all DMI data */
-	for (guint i = 0; sysfsfile[i].key != NULL; i++) {
+	for (guint i = 0; map[i].key != NULL; i++) {
+		const gchar *contents_hdr;
 		g_autofree gchar *contents = NULL;
 		g_autofree gchar *contents_safe = NULL;
-		g_autofree gchar *fn = NULL;
-		const gchar *contents_hdr;
+		g_autoptr(GError) error_local = NULL;
 
-		fn = g_build_filename (sysfsdir, sysfsfile[i].value, NULL);
-		if (!g_file_test (fn, G_FILE_TEST_EXISTS)) {
-			g_debug ("no %s so ignoring", fn);
+		/* get the data from a SMBIOS table */
+		contents = map[i].func (smbios, map[i].type, map[i].offset, &error_local);
+		if (contents == NULL) {
+			g_debug ("ignoring %s: %s", map[i].key, error_local->message);
 			continue;
 		}
-		if (!g_file_get_contents (fn, &contents, NULL, error))
-			return FALSE;
-		g_strdelimit (contents, "\n\r", '\0');
-		g_debug ("smbios property %s=%s", fn, contents);
-		if (g_strcmp0 (contents, "Not Available") == 0)
-			continue;
-		if (g_strcmp0 (contents, "Not Defined") == 0)
-			continue;
+		g_debug ("smbios property %s=%s", map[i].key, contents);
 
 		/* weirdly, remove leading zeros */
 		contents_hdr = contents;
 		while (contents_hdr[0] == '0')
 			contents_hdr++;
 		g_hash_table_insert (self->hash_dmi_hw,
-				     g_strdup (sysfsfile[i].key),
+				     g_strdup (map[i].key),
 				     g_strdup (contents_hdr));
 
 		/* make suitable for display */
 		contents_safe = g_str_to_ascii (contents_hdr, "C");
+		g_strdelimit (contents_safe, "\n\r", '\0');
 		g_strchomp (contents_safe);
 		g_hash_table_insert (self->hash_dmi_display,
-				     g_strdup (sysfsfile[i].key),
+				     g_strdup (map[i].key),
 				     g_steal_pointer (&contents_safe));
 	}
 

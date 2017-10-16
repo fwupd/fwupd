@@ -16,4 +16,5 @@ ProtectKernelModules=yes
 ProtectSystem=full
 RestrictAddressFamilies=AF_NETLINK AF_UNIX
 RestrictRealtime=yes
-ReadWritePaths=@localstatedir@/lib/fwupd -@bootdir@
+ReadWritePaths=@localstatedir@/lib/fwupd @sysconfdir@/fwupd/remotes.d -@bootdir@
+SystemCallFilter=~@mount

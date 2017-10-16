@@ -107,7 +107,7 @@ fu_keyring_gpg_setup (FuKeyring *keyring, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "failed to startup GPG: %s",
+			     "failed to init: %s",
 			     gpgme_strerror (rc));
 		return FALSE;
 	}

@@ -29,11 +29,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fu-device.h"
+#include "fu-device-private.h"
+#include "fu-engine.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
+#include "fu-progressbar.h"
 #include "fu-hwids.h"
+#include "fu-smbios.h"
 #include "fu-test.h"
 
 #ifdef ENABLE_GPG
@@ -42,6 +45,144 @@
 #ifdef ENABLE_PKCS7
 #include "fu-keyring-pkcs7.h"
 #endif
+
+static void
+fu_engine_func (void)
+{
+	FwupdRelease *rel;
+	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_pre = NULL;
+	g_autoptr(GPtrArray) releases_dg = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(GPtrArray) releases_up = NULL;
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	/* write a broken file */
+	ret = g_file_set_contents ("/tmp/fwupd-self-test/broken.xml.gz",
+				   "this is not a valid", -1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* write the main file */
+	ret = g_file_set_contents ("/tmp/fwupd-self-test/stable.xml",
+				   "<components>"
+				   "  <component type=\"firmware\">"
+				   "    <id>test</id>"
+				   "    <name>Test Device</name>"
+				   "    <provides>"
+				   "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
+				   "    </provides>"
+				   "    <releases>"
+				   "      <release version=\"1.2.3\" date=\"2017-09-15\">"
+				   "        <size type=\"installed\">123</size>"
+				   "        <size type=\"download\">456</size>"
+				   "        <location>https://test.org/foo.cab</location>"
+				   "        <checksum filename=\"foo.cab\" target=\"container\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "        <checksum filename=\"firmware.bin\" target=\"content\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "      </release>"
+				   "      <release version=\"1.2.2\" date=\"2017-09-01\">"
+				   "        <size type=\"installed\">123</size>"
+				   "        <size type=\"download\">456</size>"
+				   "        <location>https://test.org/foo.cab</location>"
+				   "        <checksum filename=\"foo.cab\" target=\"container\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "        <checksum filename=\"firmware.bin\" target=\"content\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "      </release>"
+				   "    </releases>"
+				   "  </component>"
+				   "</components>", -1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* write the extra file */
+	ret = g_file_set_contents ("/tmp/fwupd-self-test/testing.xml",
+				   "<components>"
+				   "  <component type=\"firmware\">"
+				   "    <id>test</id>"
+				   "    <name>Test Device</name>"
+				   "    <provides>"
+				   "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
+				   "    </provides>"
+				   "    <releases>"
+				   "      <release version=\"1.2.4\" date=\"2017-09-15\">"
+				   "        <size type=\"installed\">123</size>"
+				   "        <size type=\"download\">456</size>"
+				   "        <location>https://test.org/foo.cab</location>"
+				   "        <checksum filename=\"foo.cab\" target=\"container\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "        <checksum filename=\"firmware.bin\" target=\"content\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "      </release>"
+				   "    </releases>"
+				   "  </component>"
+				   "</components>", -1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* expect just one broken remote to fail */
+	g_test_expect_message (G_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
+			       "failed to load remote broken: *");
+
+	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
+	g_assert (testdatadir != NULL);
+	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	ret = fu_engine_load (engine, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
+	g_test_assert_expected_messages ();
+
+	/* return all the remotes, even the broken one */
+	remotes = fu_engine_get_remotes (engine, &error);
+	g_assert_no_error (error);
+	g_assert (remotes != NULL);
+	g_assert_cmpint (remotes->len, ==, 3);
+
+	/* ensure there are no devices already */
+	devices_pre = fu_engine_get_devices (engine, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+	g_assert (devices_pre == NULL);
+	g_clear_error (&error);
+
+	/* add a device so we can get upgrades and downgrades */
+	fu_device_set_version (device, "1.2.3");
+	fu_device_set_id (device, "test_device");
+	fu_device_set_name (device, "Test Device");
+	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_engine_add_device (engine, plugin, device);
+	devices = fu_engine_get_devices (engine, &error);
+	g_assert_no_error (error);
+	g_assert (devices != NULL);
+	g_assert_cmpint (devices->len, ==, 1);
+	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED));
+	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED));
+
+	/* get the releases for one device */
+	releases = fu_engine_get_releases (engine, fu_device_get_id (device), &error);
+	g_assert_no_error (error);
+	g_assert (releases != NULL);
+	g_assert_cmpint (releases->len, ==, 3);
+
+	/* upgrades */
+	releases_up = fu_engine_get_upgrades (engine, fu_device_get_id (device), &error);
+	g_assert_no_error (error);
+	g_assert (releases_up != NULL);
+	g_assert_cmpint (releases_up->len, ==, 1);
+	rel = FWUPD_RELEASE (g_ptr_array_index (releases_up, 0));
+	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.4");
+
+	/* downgrades */
+	releases_dg = fu_engine_get_downgrades (engine, fu_device_get_id (device), &error);
+	g_assert_no_error (error);
+	g_assert (releases_dg != NULL);
+	g_assert_cmpint (releases_dg->len, ==, 1);
+	rel = FWUPD_RELEASE (g_ptr_array_index (releases_dg, 0));
+	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.2");
+}
 
 static void
 fu_device_metadata_func (void)
@@ -75,58 +216,124 @@ fu_device_metadata_func (void)
 }
 
 static void
+fu_smbios_func (void)
+{
+	const gchar *str;
+	gboolean ret;
+	g_autofree gchar *dump = NULL;
+	g_autoptr(FuSmbios) smbios = NULL;
+	g_autoptr(GError) error = NULL;
+
+	smbios = fu_smbios_new ();
+	ret = fu_smbios_setup (smbios, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	dump = fu_smbios_to_string (smbios);
+	if (g_getenv ("VERBOSE") != NULL)
+		g_debug ("%s", dump);
+
+	/* test for missing table */
+	str = fu_smbios_get_string (smbios, 0xff, 0, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null (str);
+	g_clear_error (&error);
+
+	/* check for invalid offset */
+	str = fu_smbios_get_string (smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0xff, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null (str);
+	g_clear_error (&error);
+
+	/* get vendor */
+	str = fu_smbios_get_string (smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x04, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (str, ==, "LENOVO");
+}
+
+static void
+fu_smbios3_func (void)
+{
+	const gchar *str;
+	gboolean ret;
+	g_autofree gchar *path = NULL;
+	g_autoptr(FuSmbios) smbios = NULL;
+	g_autoptr(GError) error = NULL;
+
+	path = fu_test_get_filename (TESTDATADIR, "dmi/tables64");
+	g_assert_nonnull (path);
+
+	smbios = fu_smbios_new ();
+	ret = fu_smbios_setup_from_path (smbios, path, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	if (g_getenv ("VERBOSE") != NULL) {
+		g_autofree gchar *dump = fu_smbios_to_string (smbios);
+		g_debug ("%s", dump);
+	}
+
+	/* get vendor */
+	str = fu_smbios_get_string (smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x04, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (str, ==, "Dell Inc.");
+}
+
+static void
 fu_hwids_func (void)
 {
 	g_autoptr(FuHwids) hwids = NULL;
+	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autofree gchar *sysfsdir = NULL;
 	gboolean ret;
 
 	struct {
 		const gchar *key;
 		const gchar *value;
 	} guids[] = {
-		{ "Manufacturer",	"11b4a036-3b64-5421-a372-22c07df10a4d" },
-		{ "HardwareID-14",	"11b4a036-3b64-5421-a372-22c07df10a4d" },
-		{ "HardwareID-13",	"7ccbb6f1-9641-5f84-b00d-51ff218a4066" },
-		{ "HardwareID-12",	"482f3f58-6045-593a-9be4-611717ce4770" },
-		{ "HardwareID-11",	"6525c6e5-28e9-5f9c-abe4-20fd82504002" },
-		{ "HardwareID-10",	"c00fe015-014c-5301-90d1-b5c8ab037eb4" },
-		{ "HardwareID-9",	"6525c6e5-28e9-5f9c-abe4-20fd82504002" },
-		{ "HardwareID-8",	"c00fe015-014c-5301-90d1-b5c8ab037eb4" },
-		{ "HardwareID-7",	"5a127cba-be28-5d3b-84f0-0e450d266d97" },
-		{ "HardwareID-6",	"2c2d02cc-357e-539d-a44d-d10e902391dd" },
-		{ "HardwareID-5",	"7ccbb6f1-9641-5f84-b00d-51ff218a4066" },
-		{ "HardwareID-4",	"d78b474d-dee0-5412-bc9d-e9f7d7783df2" },
-		{ "HardwareID-3",	"a2f225b3-f4f0-5590-8973-08dd81602d69" },
-		{ "HardwareID-2",	"2e7c87e3-a52c-537f-a5f6-907110143cf7" },
-		{ "HardwareID-1",	"6453b900-1fd8-55fb-a936-7fca22823bcc" },
-		{ "HardwareID-0",	"d777e0a5-4db6-51b4-a927-86d4ccdc5c0d" },
+		{ "Manufacturer",	"6de5d951-d755-576b-bd09-c5cf66b27234" },
+		{ "HardwareID-14",	"6de5d951-d755-576b-bd09-c5cf66b27234" },
+		{ "HardwareID-13",	"f8e1de5f-b68c-5f52-9d1a-f1ba52f1f773" },
+		{ "HardwareID-12",	"5e820764-888e-529d-a6f9-dfd12bacb160" },
+		{ "HardwareID-11",	"db73af4c-4612-50f7-b8a7-787cf4871847" },
+		{ "HardwareID-10",	"f4275c1f-6130-5191-845c-3426247eb6a1" },
+		{ "HardwareID-9",	"0cf8618d-9eff-537c-9f35-46861406eb9c" },
+		{ "HardwareID-8",	"059eb22d-6dc7-59af-abd3-94bbe017f67c" },
+		{ "HardwareID-7",	"da1da9b6-62f5-5f22-8aaa-14db7eeda2a4" },
+		{ "HardwareID-6",	"178cd22d-ad9f-562d-ae0a-34009822cdbe" },
+		{ "HardwareID-5",	"8dc9b7c5-f5d5-5850-9ab3-bd6f0549d814" },
+		{ "HardwareID-4",	"660ccba8-1b78-5a33-80e6-9fb8354ee873" },
+		{ "HardwareID-3",	"3faec92a-3ae3-5744-be88-495e90a7d541" },
+		{ "HardwareID-2",	"705f45c6-fbca-5245-b9dd-6d4fab25e262" },
+		{ "HardwareID-1",	"309d9985-e453-587e-8486-ff7c835a9ef2" },
+		{ "HardwareID-0",	"d37363b8-5ec4-5725-b618-b75368a1ad28" },
 		{ NULL, NULL }
 	};
 
-	sysfsdir = fu_test_get_filename (TESTDATADIR, "hwids");
-	g_assert (sysfsdir != NULL);
+	smbios = fu_smbios_new ();
+	ret = fu_smbios_setup (smbios, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 
 	hwids = fu_hwids_new ();
-	ret = fu_hwids_setup (hwids, sysfsdir, &error);
+	ret = fu_hwids_setup (hwids, smbios, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_MANUFACTURER), ==,
-			 "To be filled by O.E.M.");
+			 "LENOVO");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_ENCLOSURE_KIND), ==,
-			 "3");
+			 "10");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_FAMILY), ==,
-			 "To be filled by O.E.M.");
+			 "ThinkPad T440s");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_NAME), ==,
-			 "To be filled by O.E.M.");
+			 "20ARS19C0C");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VENDOR), ==,
-			 "American Megatrends Inc.");
-	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VERSION), ==, "1201");
-	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE), ==, "4");
-	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "6");
-	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_SKU), ==, "SKU");
+			 "LENOVO");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VERSION), ==,
+			 "GJET75WW (2.25 )");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE), ==, "2");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "25");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_SKU), ==,
+			 "LENOVO_MT_20AR_BU_Think_FM_ThinkPad T440s");
 	for (guint i = 0; guids[i].key != NULL; i++) {
 		g_autofree gchar *guid = fu_hwids_get_guid (hwids, guids[i].key, &error);
 		g_assert_no_error (error);
@@ -211,20 +418,18 @@ fu_plugin_module_func (void)
 {
 	GError *error = NULL;
 	FuDevice *device_tmp;
-	FwupdResult *res;
 	gboolean ret;
 	guint cnt = 0;
 	g_autofree gchar *mapped_file_fn = NULL;
 	g_autofree gchar *pending_cap = NULL;
 	g_autofree gchar *pending_db = NULL;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device2 = NULL;
+	g_autoptr(FuDevice) device3 = NULL;
 	g_autoptr(FuPending) pending = NULL;
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
-
-	/* the test plugin is only usable if this is set */
-	g_setenv ("FWUPD_TESTS", "true", TRUE);
 
 	/* create a fake device */
 	plugin = fu_plugin_new ();
@@ -273,16 +478,15 @@ fu_plugin_module_func (void)
 
 	/* lets check the pending */
 	pending = fu_pending_new ();
-	res = fu_pending_get_device (pending, fu_device_get_id (device), &error);
+	device2 = fu_pending_get_device (pending, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
-	g_assert (res != NULL);
-	g_assert_cmpint (fu_device_get_update_state (res), ==, FWUPD_UPDATE_STATE_PENDING);
-	g_assert_cmpstr (fu_device_get_update_error (res), ==, NULL);
-	g_assert_cmpstr (fu_device_get_update_filename (res), !=, NULL);
+	g_assert (device2 != NULL);
+	g_assert_cmpint (fu_device_get_update_state (device2), ==, FWUPD_UPDATE_STATE_PENDING);
+	g_assert_cmpstr (fu_device_get_update_error (device2), ==, NULL);
+	g_assert_cmpstr (fu_device_get_filename_pending (device2), !=, NULL);
 
 	/* save this; we'll need to delete it later */
-	pending_cap = g_strdup (fu_device_get_update_filename (res));
-	g_object_unref (res);
+	pending_cap = g_strdup (fu_device_get_filename_pending (device2));
 
 	/* lets do this online */
 	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
@@ -296,12 +500,11 @@ fu_plugin_module_func (void)
 	g_assert_cmpstr (fu_device_get_version_bootloader (device), ==, "0.1.2");
 
 	/* lets check the pending */
-	res = fu_pending_get_device (pending, fu_device_get_id (device), &error);
+	device3 = fu_pending_get_device (pending, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
-	g_assert (res != NULL);
-	g_assert_cmpint (fu_device_get_update_state (res), ==, FWUPD_UPDATE_STATE_SUCCESS);
-	g_assert_cmpstr (fu_device_get_update_error (res), ==, NULL);
-	g_object_unref (res);
+	g_assert (device3 != NULL);
+	g_assert_cmpint (fu_device_get_update_state (device3), ==, FWUPD_UPDATE_STATE_SUCCESS);
+	g_assert_cmpstr (fu_device_get_update_error (device3), ==, NULL);
 
 	/* get the status */
 	device_tmp = fu_device_new ();
@@ -336,9 +539,7 @@ fu_pending_func (void)
 {
 	GError *error = NULL;
 	gboolean ret;
-	FwupdDevice *dev;
-	FwupdRelease *rel;
-	FwupdResult *res;
+	FuDevice *device;
 	g_autoptr(FuPending) pending = NULL;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
@@ -355,65 +556,62 @@ fu_pending_func (void)
 	g_unlink (filename);
 
 	/* add a device */
-	res = FWUPD_RESULT (fu_device_new ());
-	fu_device_set_id (res, "self-test");
-	fu_device_set_update_filename (res, "/var/lib/dave.cap"),
-	fu_device_set_name (FU_DEVICE (res), "ColorHug"),
-	fu_device_set_version (res, "3.0.1"),
-	fu_device_set_update_version (res, "3.0.2");
-	ret = fu_pending_add_device (pending, res, &error);
+	device = fu_device_new ();
+	fu_device_set_id (device, "self-test");
+	fu_device_set_filename_pending (device, "/var/lib/dave.cap"),
+	fu_device_set_name (device, "ColorHug"),
+	fu_device_set_version (device, "3.0.1"),
+	fu_device_set_version_new (device, "3.0.2");
+	ret = fu_pending_add_device (pending, device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_object_unref (res);
+	g_object_unref (device);
 
 	/* ensure database was created */
 	g_assert (g_file_test (filename, G_FILE_TEST_EXISTS));
 
 	/* add some extra data */
-	res = fwupd_result_new ();
-	fu_device_set_id (res, "self-test");
-	ret = fu_pending_set_state (pending, res, FWUPD_UPDATE_STATE_PENDING, &error);
+	device = fu_device_new ();
+	fu_device_set_id (device, "self-test");
+	ret = fu_pending_set_state (pending, device, FWUPD_UPDATE_STATE_PENDING, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	ret = fu_pending_set_error_msg (pending, res, "word", &error);
+	ret = fu_pending_set_error_msg (pending, device, "word", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_object_unref (res);
+	g_object_unref (device);
 
 	/* get device */
-	res = fu_pending_get_device (pending, "self-test", &error);
+	device = fu_pending_get_device (pending, "self-test", &error);
 	g_assert_no_error (error);
-	g_assert (res != NULL);
-	dev = fwupd_result_get_device (res);
-	g_assert_cmpstr (fwupd_device_get_id (dev), ==, "self-test");
-	g_assert_cmpstr (fwupd_device_get_name (dev), ==, "ColorHug");
-	g_assert_cmpstr (fwupd_device_get_version (dev), ==, "3.0.1");
-	g_assert_cmpint (fwupd_result_get_update_state (res), ==, FWUPD_UPDATE_STATE_PENDING);
-	g_assert_cmpstr (fwupd_result_get_update_error (res), ==, "word");
-	rel = fwupd_result_get_release (res);
-	g_assert (rel != NULL);
-	g_assert_cmpstr (fwupd_release_get_filename (rel), ==, "/var/lib/dave.cap");
-	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "3.0.2");
-	g_object_unref (res);
+	g_assert (device != NULL);
+	g_assert_cmpstr (fu_device_get_id (device), ==, "self-test");
+	g_assert_cmpstr (fu_device_get_name (device), ==, "ColorHug");
+	g_assert_cmpstr (fu_device_get_version (device), ==, "3.0.1");
+	g_assert_cmpint (fu_device_get_update_state (device), ==, FWUPD_UPDATE_STATE_PENDING);
+	g_assert_cmpstr (fu_device_get_update_error (device), ==, "word");
+	g_assert_cmpstr (fu_device_get_filename_pending (device), ==, "/var/lib/dave.cap");
+	g_assert_cmpstr (fu_device_get_version_new (device), ==, "3.0.2");
+	g_object_unref (device);
 
 	/* get device that does not exist */
-	res = fu_pending_get_device (pending, "XXXXXXXXXXXXX", &error);
+	device = fu_pending_get_device (pending, "XXXXXXXXXXXXX", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert (res == NULL);
+	g_assert (device == NULL);
 	g_clear_error (&error);
 
 	/* remove device */
-	res = fwupd_result_new ();
-	fu_device_set_id (res, "self-test");
-	ret = fu_pending_remove_device (pending, res, &error);
+	device = fu_device_new ();
+	fu_device_set_id (device, "self-test");
+	ret = fu_pending_remove_device (pending, device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_object_unref (res);
+	g_object_unref (device);
 
 	/* get device that does not exist */
-	res = fu_pending_get_device (pending, "self-test", &error);
+	device = fu_pending_get_device (pending, "self-test", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert (res == NULL);
+	g_assert (device == NULL);
 	g_clear_error (&error);
 }
 
@@ -602,6 +800,62 @@ fu_test_stdout_cb (const gchar *line, gpointer user_data)
 	(*lines)++;
 }
 
+static gboolean
+_open_cb (GObject *device, GError **error)
+{
+	g_assert_cmpstr (g_object_get_data (device, "state"), ==, "closed");
+	g_object_set_data (device, "state", "opened");
+	return TRUE;
+}
+
+static gboolean
+_close_cb (GObject *device, GError **error)
+{
+	g_assert_cmpstr (g_object_get_data (device, "state"), ==, "opened");
+	g_object_set_data (device, "state", "closed-on-unref");
+	return TRUE;
+}
+
+static void
+fu_device_locker_func (void)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GObject) device = g_object_new (G_TYPE_OBJECT, NULL);
+
+	g_object_set_data (device, "state", "closed");
+	locker = fu_device_locker_new_full (device, _open_cb, _close_cb, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (locker);
+	g_clear_object (&locker);
+	g_assert_cmpstr (g_object_get_data (device, "state"), ==, "closed-on-unref");
+}
+
+static gboolean
+_fail_open_cb (GObject *device, GError **error)
+{
+	g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, "fail");
+	return FALSE;
+}
+
+static gboolean
+_fail_close_cb (GObject *device, GError **error)
+{
+	g_assert_not_reached ();
+	return TRUE;
+}
+
+static void
+fu_device_locker_fail_func (void)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GObject) device = g_object_new (G_TYPE_OBJECT, NULL);
+	locker = fu_device_locker_new_full (device, _fail_open_cb, _fail_close_cb, &error);
+	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_FAILED);
+	g_assert_null (locker);
+}
+
 static void
 fu_common_spawn_func (void)
 {
@@ -621,6 +875,34 @@ fu_common_spawn_func (void)
 	g_assert_cmpint (lines, ==, 6);
 }
 
+static void
+fu_progressbar_func (void)
+{
+	g_autoptr(FuProgressbar) progressbar = fu_progressbar_new ();
+
+	fu_progressbar_set_length_status (progressbar, 20);
+	fu_progressbar_set_length_percentage (progressbar, 50);
+
+	g_print ("\n");
+	for (guint i = 0; i < 100; i++) {
+		fu_progressbar_update (progressbar, FWUPD_STATUS_DECOMPRESSING, i);
+		g_usleep (10000);
+	}
+	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
+	for (guint i = 0; i < 100; i++) {
+		guint pc = (i > 25 && i < 75) ? 0 : i;
+		fu_progressbar_update (progressbar, FWUPD_STATUS_LOADING, pc);
+		g_usleep (10000);
+	}
+	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
+
+	for (guint i = 0; i < 5000; i++) {
+		fu_progressbar_update (progressbar, FWUPD_STATUS_LOADING, 0);
+		g_usleep (1000);
+	}
+	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -633,8 +915,15 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
+	if (g_test_slow ())
+		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
+	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
+	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
+	g_test_add_func ("/fwupd/engine", fu_engine_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
+	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
+	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);

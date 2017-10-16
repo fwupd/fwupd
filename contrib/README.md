@@ -6,9 +6,10 @@ It is used regularly for continuous integration using [Travis CI](http://travis-
 The build can be performed using Linux containers with [Docker](www.docker.com).
 
 ## RPM packages
-A Dockerfile for Fedora 25 is available here in `contrib`.
+A Dockerfile for Fedora can be generated in `contrib`.
 
 To prepare the Docker container run this command:
+```OS=fedora ./generate_dockerfile.py; docker build -t fwupd-fedora -f contrib/ci/Dockerfile .```
 
 `docker build -t fwupd-fedora -f contrib/ci/Dockerfile-fedora .`
 
@@ -19,11 +20,11 @@ To build the RPMs run this command (from the root of your git checkout):
 RPMs will be made available in your working directory when complete.
 
 ## DEB packages
-A Dockerfile is available for Debian unstable.
+A Dockerfile for Debian or Ubuntu can be generated in `contrib`.
 
 To prepare the Docker container run this command:
 
-`docker build -t fwupd-debian -f contrib/ci/Dockerfile-debian .`
+```OS=debian ./generate_dockerfile.py; docker build -t fwupd-debian -f contrib/ci/Dockerfile .```
 
 To build the DEBs run this command (from the root of your git checkout):
 
@@ -32,11 +33,11 @@ To build the DEBs run this command (from the root of your git checkout):
 DEBs will be made available in your working directory when complete.
 
 ## PKG packages
-A Dockerfile is available for Arch Linux.
+A Dockerfile for Arch can be generated in `contrib`.
 
 To prepare the Docker container run this command:
 
-`docker build -t fwupd-arch -f contrib/ci/Dockerfile-arch .`
+```OS=arch ./generate_dockerfile.py; docker build -t fwupd-arch -f contrib/ci/Dockerfile .```
 
 To build the PKGs run this command (from the root of your git checkout):
 

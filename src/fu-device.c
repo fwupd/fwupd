@@ -21,21 +21,33 @@
 
 #include "config.h"
 
+#include <string.h>
 #include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include "fu-device.h"
+#include "fu-device-private.h"
+
+/**
+ * SECTION:fu-device
+ * @short_description: a physical or logical device
+ *
+ * An object that represents a physical or logical device.
+ *
+ * See also: #FuDeviceLocker
+ */
 
 static void fu_device_finalize			 (GObject *object);
 
 typedef struct {
 	gchar				*equivalent_id;
+	gchar				*version_new;
+	gchar				*filename_pending;
 	FuDevice			*alternate;
 	GHashTable			*metadata;
 } FuDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuDevice, fu_device, FWUPD_TYPE_RESULT)
+G_DEFINE_TYPE_WITH_PRIVATE (FuDevice, fu_device, FWUPD_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_device_get_instance_private (o))
 
 const gchar *
@@ -55,6 +67,51 @@ fu_device_set_equivalent_id (FuDevice *device, const gchar *equivalent_id)
 	priv->equivalent_id = g_strdup (equivalent_id);
 }
 
+const gchar *
+fu_device_get_version_new (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->version_new;
+}
+
+void
+fu_device_set_version_new (FuDevice *device, const gchar *version_new)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_free (priv->version_new);
+	priv->version_new = g_strdup (version_new);
+}
+
+const gchar *
+fu_device_get_filename_pending (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->filename_pending;
+}
+
+void
+fu_device_set_filename_pending (FuDevice *device, const gchar *filename_pending)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_free (priv->filename_pending);
+	priv->filename_pending = g_strdup (filename_pending);
+}
+
+/**
+ * fu_device_get_alternate:
+ * @device: A #FuDevice
+ *
+ * Gets any alternate device. An alternate device may be linked to the primary
+ * device in some way.
+ *
+ * Returns: (transfer none): a #FuDevice or %NULL
+ *
+ * Since: 0.7.2
+ **/
 FuDevice *
 fu_device_get_alternate (FuDevice *device)
 {
@@ -63,6 +120,16 @@ fu_device_get_alternate (FuDevice *device)
 	return priv->alternate;
 }
 
+/**
+ * fu_device_set_alternate:
+ * @device: A #FuDevice
+ * @alternate: Another #FuDevice
+ *
+ * Sets any alternate device. An alternate device may be linked to the primary
+ * device in some way.
+ *
+ * Since: 0.7.2
+ **/
 void
 fu_device_set_alternate (FuDevice *device, FuDevice *alternate)
 {
@@ -71,6 +138,16 @@ fu_device_set_alternate (FuDevice *device, FuDevice *alternate)
 	g_set_object (&priv->alternate, alternate);
 }
 
+/**
+ * fu_device_add_guid:
+ * @device: A #FuDevice
+ * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
+ *
+ * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
+ * is converted to a GUID using as_utils_guid_from_string().
+ *
+ * Since: 0.7.2
+ **/
 void
 fu_device_add_guid (FuDevice *device, const gchar *guid)
 {
@@ -78,12 +155,12 @@ fu_device_add_guid (FuDevice *device, const gchar *guid)
 	if (!as_utils_guid_is_valid (guid)) {
 		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
 		g_debug ("using %s for %s", tmp, guid);
-		fwupd_device_add_guid (fwupd_result_get_device (FWUPD_RESULT (device)), tmp);
+		fwupd_device_add_guid (FWUPD_DEVICE (device), tmp);
 		return;
 	}
 
 	/* already valid */
-	fwupd_device_add_guid (fwupd_result_get_device (FWUPD_RESULT (device)), guid);
+	fwupd_device_add_guid (FWUPD_DEVICE (device), guid);
 }
 
 /**
@@ -218,13 +295,73 @@ fu_device_set_metadata_integer (FuDevice *device, const gchar *key, guint value)
 	fu_device_set_metadata (device, key, tmp);
 }
 
+/**
+ * fu_device_set_name:
+ * @device: A #FuDevice
+ * @value: a device name
+ *
+ * Sets the name on the device. Any invalid parts will be converted or removed.
+ *
+ * Since: 0.7.1
+ **/
 void
 fu_device_set_name (FuDevice *device, const gchar *value)
 {
 	g_autoptr(GString) new = g_string_new (value);
 	g_strdelimit (new->str, "_", ' ');
 	as_utils_string_replace (new, "(TM)", "™");
-	fwupd_device_set_name (fwupd_result_get_device (FWUPD_RESULT (device)), new->str);
+	fwupd_device_set_name (FWUPD_DEVICE (device), new->str);
+}
+
+static void
+fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
+{
+	/* ignore */
+	if (key == NULL || value == NULL)
+		return;
+	g_string_append_printf (str, "  %s: ", key);
+	for (gsize i = strlen (key); i < 20; i++)
+		g_string_append (str, " ");
+	g_string_append_printf (str, "%s\n", value);
+}
+
+/**
+ * fu_device_to_string:
+ * @device: A #FuDevice
+ *
+ * This allows us to easily print the FwupdDevice, the FwupdRelease and the
+ * daemon-specific metadata.
+ *
+ * Returns: a string value, or %NULL for invalid.
+ *
+ * Since: 0.9.8
+ **/
+gchar *
+fu_device_to_string (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	GString *str = g_string_new ("");
+	g_autofree gchar *tmp = NULL;
+	g_autoptr(GList) keys = NULL;
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+
+	tmp = fwupd_device_to_string (FWUPD_DEVICE (device));
+	if (tmp != NULL && tmp[0] != '\0')
+		g_string_append (str, tmp);
+	if (priv->equivalent_id != NULL)
+		fwupd_pad_kv_str (str, "EquivalentId", priv->equivalent_id);
+	if (priv->filename_pending != NULL)
+		fwupd_pad_kv_str (str, "FilenamePending", priv->filename_pending);
+	if (priv->version_new != NULL)
+		fwupd_pad_kv_str (str, "VersionNew", priv->version_new);
+	keys = g_hash_table_get_keys (priv->metadata);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (priv->metadata, key);
+		fwupd_pad_kv_str (str, key, value);
+	}
+	return g_string_free (str, FALSE);
 }
 
 static void
@@ -251,6 +388,9 @@ fu_device_finalize (GObject *object)
 	if (priv->alternate != NULL)
 		g_object_unref (priv->alternate);
 	g_hash_table_unref (priv->metadata);
+	g_free (priv->equivalent_id);
+	g_free (priv->version_new);
+	g_free (priv->filename_pending);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }

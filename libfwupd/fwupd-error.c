@@ -28,6 +28,16 @@
 #include "fwupd-error.h"
 
 /**
+ * SECTION:fwupd-error
+ * @short_description: an error domain shared by the daemon and library
+ *
+ * This file also provides helper functions to map errors to strings and back
+ * again.
+ *
+ * See also: #fwupd-enums
+ */
+
+/**
  * fwupd_error_to_string:
  * @error: A #FwupdError, e.g. %FWUPD_ERROR_VERSION_NEWER
  *
@@ -66,12 +76,14 @@ fwupd_error_to_string (FwupdError error)
 		return FWUPD_DBUS_INTERFACE ".SignatureInvalid";
 	if (error == FWUPD_ERROR_AC_POWER_REQUIRED)
 		return FWUPD_DBUS_INTERFACE ".AcPowerRequired";
+	if (error == FWUPD_ERROR_PERMISSION_DENIED)
+		return FWUPD_DBUS_INTERFACE ".PermissionDenied";
 	return NULL;
 }
 
 /**
  * fwupd_error_from_string:
- * @error: A string, e.g. "org.freedesktop.fwupd.VersionNewer"
+ * @error: A string, e.g. `org.freedesktop.fwupd.VersionNewer`
  *
  * Converts a string to a #FwupdError.
  *
@@ -108,6 +120,8 @@ fwupd_error_from_string (const gchar *error)
 		return FWUPD_ERROR_SIGNATURE_INVALID;
 	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".AcPowerRequired") == 0)
 		return FWUPD_ERROR_AC_POWER_REQUIRED;
+	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".PermissionDenied") == 0)
+		return FWUPD_ERROR_PERMISSION_DENIED;
 	return FWUPD_ERROR_LAST;
 }
 

@@ -25,6 +25,7 @@
 #include <glib-object.h>
 
 #include "fwupd-enums.h"
+#include "fwupd-release.h"
 
 G_BEGIN_DECLS
 
@@ -89,9 +90,9 @@ void		 fwupd_device_set_modified		(FwupdDevice	*device,
 GPtrArray	*fwupd_device_get_checksums		(FwupdDevice	*device);
 void		 fwupd_device_add_checksum		(FwupdDevice	*device,
 							 const gchar	*checksum);
-const gchar	*fwupd_device_get_provider		(FwupdDevice	*device);
-void		 fwupd_device_set_provider		(FwupdDevice	*device,
-							 const gchar	*provider);
+const gchar	*fwupd_device_get_plugin		(FwupdDevice	*device);
+void		 fwupd_device_set_plugin		(FwupdDevice	*device,
+							 const gchar	*plugin);
 const gchar	*fwupd_device_get_vendor		(FwupdDevice	*device);
 void		 fwupd_device_set_vendor		(FwupdDevice	*device,
 							 const gchar	*vendor);
@@ -104,6 +105,20 @@ gboolean	 fwupd_device_has_guid			(FwupdDevice	*device,
 							 const gchar	*guid);
 GPtrArray	*fwupd_device_get_guids			(FwupdDevice	*device);
 const gchar	*fwupd_device_get_guid_default		(FwupdDevice	*device);
+void		 fwupd_device_add_icon			(FwupdDevice	*device,
+							 const gchar	*icon);
+GPtrArray	*fwupd_device_get_icons			(FwupdDevice	*device);
+
+FwupdUpdateState fwupd_device_get_update_state		(FwupdDevice	*device);
+void		 fwupd_device_set_update_state		(FwupdDevice	*device,
+							 FwupdUpdateState update_state);
+const gchar	*fwupd_device_get_update_error		(FwupdDevice	*device);
+void		 fwupd_device_set_update_error		(FwupdDevice	*device,
+							 const gchar	*update_error);
+void		 fwupd_device_add_release		(FwupdDevice	*device,
+							 FwupdRelease	*release);
+GPtrArray	*fwupd_device_get_releases		(FwupdDevice	*device);
+FwupdRelease	*fwupd_device_get_release_default	(FwupdDevice	*device);
 
 G_END_DECLS
 

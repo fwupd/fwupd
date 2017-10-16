@@ -22,40 +22,34 @@
 #ifndef __FWUPD_ENUMS_PRIVATE_H
 #define __FWUPD_ENUMS_PRIVATE_H
 
-/* FIXME: change the keys to the new names when we bump major version */
-#define FWUPD_RESULT_KEY_DEVICE_CREATED		"Created"	/* t */
-#define FWUPD_RESULT_KEY_DEVICE_DESCRIPTION	"Description"	/* s */
-#define FWUPD_RESULT_KEY_DEVICE_FLAGS		"Flags"		/* t */
-#define FWUPD_RESULT_KEY_DEVICE_CHECKSUM	"FirmwareHash"	/* s */
-#define FWUPD_RESULT_KEY_DEVICE_CHECKSUM_KIND	"DeviceChecksumKind"	/* u */
-#define FWUPD_RESULT_KEY_DEVICE_MODIFIED	"Modified"	/* t */
-#define FWUPD_RESULT_KEY_DEVICE_NAME		"DisplayName"	/* s */
-#define FWUPD_RESULT_KEY_DEVICE_ID		"DeviceID"	/* s */
-#define FWUPD_RESULT_KEY_DEVICE_PLUGIN		"Plugin"	/* s */
-#define FWUPD_RESULT_KEY_DEVICE_VERSION		"Version"	/* s */
-#define FWUPD_RESULT_KEY_DEVICE_VERSION_LOWEST	"VersionLowest"	/* s */
-#define FWUPD_RESULT_KEY_DEVICE_VERSION_BOOTLOADER	"VersionBootloader"	/* s */
-#define FWUPD_RESULT_KEY_DEVICE_FLASHES_LEFT	"FlashesLeft"	/* u */
-#define FWUPD_RESULT_KEY_DEVICE_VENDOR		"DeviceVendor"	/* s */
-#define FWUPD_RESULT_KEY_DEVICE_VENDOR_ID	"DeviceVendorId"	/* s */
-#define FWUPD_RESULT_KEY_GUID			"Guid"		/* s */
-#define FWUPD_RESULT_KEY_UNIQUE_ID		"UniqueID"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_REMOTE_ID	"RemoteID"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_DESCRIPTION	"UpdateDescription" /* s */
-#define FWUPD_RESULT_KEY_UPDATE_ERROR		"PendingError"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_FILENAME	"FilenameCab"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_CHECKSUM	"UpdateHash"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_CHECKSUM_KIND	"UpdateChecksumKind"	/* u */
-#define FWUPD_RESULT_KEY_UPDATE_ID		"AppstreamId"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_LICENSE		"License"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_NAME		"Name"		/* s */
-#define FWUPD_RESULT_KEY_UPDATE_SIZE		"Size"		/* t */
-#define FWUPD_RESULT_KEY_UPDATE_STATE		"PendingState"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_SUMMARY		"Summary"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_TRUST_FLAGS	"Trusted"	/* t */
-#define FWUPD_RESULT_KEY_UPDATE_URI		"UpdateUri"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_HOMEPAGE	"UrlHomepage"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_VENDOR		"Vendor"	/* s */
-#define FWUPD_RESULT_KEY_UPDATE_VERSION		"UpdateVersion"	/* s */
+#define FWUPD_RESULT_KEY_APPSTREAM_ID		"AppstreamId"	/* s */
+#define FWUPD_RESULT_KEY_CHECKSUM		"Checksum"	/* as */
+#define FWUPD_RESULT_KEY_CREATED		"Created"	/* t */
+#define FWUPD_RESULT_KEY_DESCRIPTION		"Description"	/* s */
+#define FWUPD_RESULT_KEY_DEVICE_ID		"DeviceId"	/* s */
+#define FWUPD_RESULT_KEY_FILENAME		"Filename"	/* s */
+#define FWUPD_RESULT_KEY_FLAGS			"Flags"		/* t */
+#define FWUPD_RESULT_KEY_FLASHES_LEFT		"FlashesLeft"	/* u */
+#define FWUPD_RESULT_KEY_GUID			"Guid"		/* as */
+#define FWUPD_RESULT_KEY_HOMEPAGE		"Homepage"	/* s */
+#define FWUPD_RESULT_KEY_ICON			"Icon"		/* as */
+#define FWUPD_RESULT_KEY_LICENSE		"License"	/* s */
+#define FWUPD_RESULT_KEY_MODIFIED		"Modified"	/* t */
+#define FWUPD_RESULT_KEY_NAME			"Name"		/* s */
+#define FWUPD_RESULT_KEY_PLUGIN			"Plugin"	/* s */
+#define FWUPD_RESULT_KEY_RELEASE		"Release"	/* a{sv} */
+#define FWUPD_RESULT_KEY_REMOTE_ID		"RemoteId"	/* s */
+#define FWUPD_RESULT_KEY_SIZE			"Size"		/* t */
+#define FWUPD_RESULT_KEY_SUMMARY		"Summary"	/* s */
+#define FWUPD_RESULT_KEY_TRUST_FLAGS		"TrustFlags"	/* t */
+#define FWUPD_RESULT_KEY_UPDATE_ERROR		"UpdateError"	/* s */
+#define FWUPD_RESULT_KEY_UPDATE_STATE		"UpdateState"	/* u */
+#define FWUPD_RESULT_KEY_URI			"Uri"		/* s */
+#define FWUPD_RESULT_KEY_VENDOR_ID		"VendorId"	/* s */
+#define FWUPD_RESULT_KEY_VENDOR			"Vendor"	/* s */
+#define FWUPD_RESULT_KEY_VENDOR			"Vendor"	/* s */
+#define FWUPD_RESULT_KEY_VERSION_BOOTLOADER	"VersionBootloader"	/* s */
+#define FWUPD_RESULT_KEY_VERSION_LOWEST		"VersionLowest"	/* s */
+#define FWUPD_RESULT_KEY_VERSION		"Version"	/* s */
 
 #endif /* __FWUPD_ENUMS_PRIVATE_H */

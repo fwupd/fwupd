@@ -28,14 +28,8 @@
 
 G_BEGIN_DECLS
 
-FwupdRelease	*fwupd_release_new_from_data		(GVariant	*data);
-GVariant	*fwupd_release_to_data			(FwupdRelease	*release,
-							 const gchar	*type_string);
-void		 fwupd_release_to_variant_builder	(FwupdRelease	*release,
-							 GVariantBuilder *builder);
-void		 fwupd_release_from_key_value		(FwupdRelease	*release,
-							 const gchar	*key,
-							 GVariant	*value);
+FwupdRelease	*fwupd_release_from_variant		(GVariant	*data);
+GVariant	*fwupd_release_to_variant		(FwupdRelease	*release);
 
 G_END_DECLS
 

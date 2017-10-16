@@ -23,12 +23,12 @@
 
 #include <glib-object.h>
 #include <fnmatch.h>
+#include <appstream-glib.h>
 
 #include "fwupd-client.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
-#include "fwupd-result.h"
 
 static gboolean
 as_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
@@ -60,34 +60,31 @@ as_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 static void
 fwupd_enums_func (void)
 {
-	const gchar *tmp;
-	guint64 i;
-
 	/* enums */
-	for (i = 0; i < FWUPD_ERROR_LAST; i++) {
-		tmp = fwupd_error_to_string (i);
+	for (guint i = 0; i < FWUPD_ERROR_LAST; i++) {
+		const gchar *tmp = fwupd_error_to_string (i);
 		g_assert_cmpstr (tmp, !=, NULL);
 		g_assert_cmpint (fwupd_error_from_string (tmp), ==, i);
 	}
-	for (i = 0; i < FWUPD_STATUS_LAST; i++) {
-		tmp = fwupd_status_to_string (i);
+	for (guint i = 0; i < FWUPD_STATUS_LAST; i++) {
+		const gchar *tmp = fwupd_status_to_string (i);
 		g_assert_cmpstr (tmp, !=, NULL);
 		g_assert_cmpint (fwupd_status_from_string (tmp), ==, i);
 	}
-	for (i = 0; i < FWUPD_UPDATE_STATE_LAST; i++) {
-		tmp = fwupd_update_state_to_string (i);
+	for (guint i = 0; i < FWUPD_UPDATE_STATE_LAST; i++) {
+		const gchar *tmp = fwupd_update_state_to_string (i);
 		g_assert_cmpstr (tmp, !=, NULL);
 		g_assert_cmpint (fwupd_update_state_from_string (tmp), ==, i);
 	}
-	for (i = 0; i < FWUPD_TRUST_FLAG_LAST; i++) {
-		tmp = fwupd_trust_flag_to_string (i);
+	for (guint i = 0; i < FWUPD_TRUST_FLAG_LAST; i++) {
+		const gchar *tmp = fwupd_trust_flag_to_string (i);
 		g_assert_cmpstr (tmp, !=, NULL);
 		g_assert_cmpint (fwupd_trust_flag_from_string (tmp), ==, i);
 	}
 
 	/* bitfield */
-	for (i = 1; i < FWUPD_DEVICE_FLAG_UNKNOWN; i *= 2) {
-		tmp = fwupd_device_flag_to_string (i);
+	for (guint64 i = 1; i < FWUPD_DEVICE_FLAG_UNKNOWN; i *= 2) {
+		const gchar *tmp = fwupd_device_flag_to_string (i);
 		if (tmp == NULL)
 			break;
 		g_assert_cmpint (fwupd_device_flag_from_string (tmp), ==, i);
@@ -113,8 +110,7 @@ fwupd_remote_download_func (void)
 	g_assert (fwupd_remote_get_enabled (remote));
 	g_assert (fwupd_remote_get_metadata_uri (remote) != NULL);
 	g_assert (fwupd_remote_get_metadata_uri_sig (remote) != NULL);
-	g_assert_cmpstr (fwupd_remote_get_filename (remote), ==, "lvfs-firmware.xml.gz");
-	g_assert_cmpstr (fwupd_remote_get_filename_asc (remote), ==, "lvfs-firmware.xml.gz.asc");
+	g_assert_cmpstr (fwupd_remote_get_title (remote), ==, "Linux Vendor Firmware Service");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==,
 			 LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==,
@@ -140,6 +136,7 @@ fwupd_remote_baseuri_func (void)
 	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_GPG);
 	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
 	g_assert (fwupd_remote_get_enabled (remote));
+	g_assert_cmpstr (fwupd_remote_get_checksum (remote), ==, NULL);
 	g_assert_cmpstr (fwupd_remote_get_metadata_uri (remote), ==,
 			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_metadata_uri_sig (remote), ==,
@@ -167,25 +164,23 @@ fwupd_remote_local_func (void)
 	g_assert (fwupd_remote_get_enabled (remote));
 	g_assert (fwupd_remote_get_metadata_uri (remote) == NULL);
 	g_assert (fwupd_remote_get_metadata_uri_sig (remote) == NULL);
-	g_assert_cmpstr (fwupd_remote_get_filename (remote), ==, NULL);
-	g_assert_cmpstr (fwupd_remote_get_filename_asc (remote), ==, NULL);
+	g_assert_cmpstr (fwupd_remote_get_title (remote), ==, "Core");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==, "@datadir@/fwupd/remotes.d/fwupd/metadata.xml");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==, NULL);
+	g_assert_cmpstr (fwupd_remote_get_checksum (remote), ==, NULL);
 }
 
 static void
-fwupd_result_func (void)
+fwupd_device_func (void)
 {
-	FwupdDevice *dev;
-	FwupdRelease *rel;
 	gboolean ret;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FwupdResult) result = NULL;
+	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* create dummy object */
-	result = fwupd_result_new ();
-	dev = fwupd_result_get_device (result);
+	dev = fwupd_device_new ();
 	fwupd_device_add_checksum (dev, "beefdead");
 	fwupd_device_set_created (dev, 1);
 	fwupd_device_set_flags (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -194,10 +189,11 @@ fwupd_result_func (void)
 	fwupd_device_set_name (dev, "ColorHug2");
 	fwupd_device_add_guid (dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
 	fwupd_device_add_guid (dev, "00000000-0000-0000-0000-000000000000");
+	fwupd_device_add_icon (dev, "input-gaming");
+	fwupd_device_add_icon (dev, "input-mouse");
 	fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fwupd_result_set_update_trust_flags (result, FWUPD_TRUST_FLAG_PAYLOAD);
-
-	rel = fwupd_result_get_release (result);
+	rel = fwupd_release_new ();
+	fwupd_release_set_trust_flags (rel, FWUPD_TRUST_FLAG_PAYLOAD);
 	fwupd_release_add_checksum (rel, "deadbeef");
 	fwupd_release_set_description (rel, "<p>Hi there!</p>");
 	fwupd_release_set_filename (rel, "firmware.bin");
@@ -205,7 +201,8 @@ fwupd_result_func (void)
 	fwupd_release_set_size (rel, 1024);
 	fwupd_release_set_uri (rel, "http://foo.com");
 	fwupd_release_set_version (rel, "1.2.3");
-	str = fwupd_result_to_string (result);
+	fwupd_device_add_release (dev, rel);
+	str = fwupd_device_to_string (dev);
 	g_print ("\n%s", str);
 
 	/* check GUIDs */
@@ -215,21 +212,24 @@ fwupd_result_func (void)
 
 	ret = as_test_compare_lines (str,
 		"ColorHug2\n"
-		"  DeviceID:             USB:foo\n"
+		"  DeviceId:             USB:foo\n"
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
 		"  Guid:                 00000000-0000-0000-0000-000000000000\n"
 		"  Flags:                updatable|require-ac\n"
-		"  FirmwareHash:         SHA1(beefdead)\n"
+		"  Checksum:             SHA1(beefdead)\n"
+		"  Icon:                 input-gaming,input-mouse\n"
 		"  Created:              1970-01-01\n"
 		"  Modified:             1970-01-02\n"
+		"  \n"
+		"  [Release]\n"
 		"  AppstreamId:          org.dave.ColorHug.firmware\n"
-		"  UpdateDescription:    <p>Hi there!</p>\n"
-		"  UpdateVersion:        1.2.3\n"
-		"  FilenameCab:          firmware.bin\n"
-		"  UpdateHash:           SHA1(deadbeef)\n"
+		"  Description:          <p>Hi there!</p>\n"
+		"  Version:              1.2.3\n"
+		"  Filename:             firmware.bin\n"
+		"  Checksum:             SHA1(deadbeef)\n"
 		"  Size:                 1.0 kB\n"
-		"  UpdateUri:            http://foo.com\n"
-		"  Trusted:              payload\n", &error);
+		"  Uri:                  http://foo.com\n"
+		"  TrustFlags:           payload\n", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 }
@@ -238,12 +238,23 @@ static void
 fwupd_client_devices_func (void)
 {
 	FwupdDevice *dev;
+	gboolean ret;
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GError) error = NULL;
 
 	client = fwupd_client_new ();
-	array = fwupd_client_get_devices_simple (client, NULL, &error);
+
+	/* only run if running fwupd is new enough */
+	ret = fwupd_client_connect (client, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	if (as_utils_vercmp (fwupd_client_get_daemon_version (client), "1.0.0") < 0) {
+		g_test_skip ("running fwupd is too old");
+		return;
+	}
+
+	array = fwupd_client_get_devices (client, NULL, &error);
 	if (array == NULL &&
 	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
 		return;
@@ -264,6 +275,7 @@ fwupd_client_devices_func (void)
 static void
 fwupd_client_remotes_func (void)
 {
+	gboolean ret;
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(FwupdRemote) remote2 = NULL;
 	g_autoptr(FwupdRemote) remote3 = NULL;
@@ -273,6 +285,16 @@ fwupd_client_remotes_func (void)
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", FU_SELF_TEST_REMOTES_DIR, TRUE);
 
 	client = fwupd_client_new ();
+
+	/* only run if running fwupd is new enough */
+	ret = fwupd_client_connect (client, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	if (as_utils_vercmp (fwupd_client_get_daemon_version (client), "1.0.0") < 0) {
+		g_test_skip ("running fwupd is too old");
+		return;
+	}
+
 	array = fwupd_client_get_remotes (client, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (array != NULL);
@@ -290,35 +312,6 @@ fwupd_client_remotes_func (void)
 	remote3 = fwupd_client_get_remote_by_id (client, "XXXX", NULL, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (remote3 == NULL);
-}
-
-static void
-fwupd_client_updates_func (void)
-{
-	FwupdDevice *dev;
-	FwupdResult *res;
-	g_autoptr(FwupdClient) client = NULL;
-	g_autoptr(GPtrArray) array = NULL;
-	g_autoptr(GError) error = NULL;
-
-	client = fwupd_client_new ();
-	array = fwupd_client_get_updates (client, NULL, &error);
-	if (array == NULL &&
-	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-		return;
-	if (array == NULL &&
-	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
-		return;
-	g_assert_no_error (error);
-	g_assert (array != NULL);
-	g_assert_cmpint (array->len, >, 0);
-
-	/* check device */
-	res = g_ptr_array_index (array, 0);
-	g_assert (FWUPD_IS_RESULT (res));
-	dev = fwupd_result_get_device (res);
-	g_assert_cmpstr (fwupd_device_get_guid_default (dev), !=, NULL);
-	g_assert_cmpstr (fwupd_device_get_id (dev), !=, NULL);
 }
 
 static gboolean
@@ -343,14 +336,13 @@ main (int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
-	g_test_add_func ("/fwupd/result", fwupd_result_func);
+	g_test_add_func ("/fwupd/device", fwupd_device_func);
 	g_test_add_func ("/fwupd/remote{download}", fwupd_remote_download_func);
 	g_test_add_func ("/fwupd/remote{base-uri}", fwupd_remote_baseuri_func);
 	g_test_add_func ("/fwupd/remote{local}", fwupd_remote_local_func);
 	if (fwupd_has_system_bus ()) {
 		g_test_add_func ("/fwupd/client{remotes}", fwupd_client_remotes_func);
 		g_test_add_func ("/fwupd/client{devices}", fwupd_client_devices_func);
-		g_test_add_func ("/fwupd/client{updates}", fwupd_client_updates_func);
 	}
 	return g_test_run ();
 }

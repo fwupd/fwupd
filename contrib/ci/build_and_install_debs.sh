@@ -15,7 +15,7 @@ pushd build
 mv contrib/debian .
 sed s/quilt/native/ debian/source/format -i
 EDITOR=/bin/true dch --create --package fwupd -v $VERSION "CI Build"
-debuild --no-lintian
+debuild --no-lintian --preserve-envvar CI --preserve-envvar CC
 
 #check lintian output
 #suppress tags that are side effects of building in docker this way
@@ -28,10 +28,17 @@ lintian ../*changes \
 	--suppress-tags changelog-should-mention-nmu \
 	--suppress-tags debian-watch-file-in-native-package \
 	--suppress-tags source-nmu-has-incorrect-version-number \
+	--suppress-tags no-symbols-control-file \
 	--allow-root
 
+#if invoked outside of CI
+if [ ! -f /.dockerenv ]; then
+	echo "Not running in a container, please manually install packages"
+	exit 0
+fi
+
 #test the packages install
-dpkg -i `ls ../*.deb | grep -v fwupd-tests`
+dpkg -i `ls ../*.deb | grep -v 'fwupd-tests\|dbgsym'`
 
 # run the installed tests
 if [ "$CI" = "true" ]; then
@@ -44,11 +51,5 @@ fi
 #test the packages remove
 apt purge -y fwupd \
 	     fwupd-doc \
-	     fwupd-dbgsym \
-	     gir1.2-fwupd-1.0 \
-	     libdfu1 \
-	     libdfu1-dbgsym \
-	     libdfu-dev \
-	     libfwupd1 \
-	     libfwupd1-dbgsym \
+	     libfwupd2 \
 	     libfwupd-dev

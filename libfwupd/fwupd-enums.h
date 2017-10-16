@@ -35,6 +35,9 @@
  * @FWUPD_STATUS_DEVICE_VERIFY:			Verifying (reading) a device
  * @FWUPD_STATUS_SCHEDULING:			Scheduling an offline update
  * @FWUPD_STATUS_DOWNLOADING:			A file is downloading
+ * @FWUPD_STATUS_DEVICE_READ:			Reading from a device
+ * @FWUPD_STATUS_DEVICE_ERASE:			Erasing a device
+ * @FWUPD_STATUS_WAITING_FOR_AUTH:		Waiting for authentication
  *
  * The flags to show daemon status.
  **/
@@ -48,6 +51,9 @@ typedef enum {
 	FWUPD_STATUS_DEVICE_VERIFY,			/* Since: 0.1.1 */
 	FWUPD_STATUS_SCHEDULING,			/* Since: 0.1.1 */
 	FWUPD_STATUS_DOWNLOADING,			/* Since: 0.9.4 */
+	FWUPD_STATUS_DEVICE_READ,			/* Since: 1.0.0 */
+	FWUPD_STATUS_DEVICE_ERASE,			/* Since: 1.0.0 */
+	FWUPD_STATUS_WAITING_FOR_AUTH,			/* Since: 1.0.0 */
 	/*< private >*/
 	FWUPD_STATUS_LAST
 } FwupdStatus;
@@ -81,8 +87,6 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_REGISTERED:		Has been registered with other plugins
  * @FWUPD_DEVICE_FLAG_NEEDS_REBOOT:		Requires a reboot to apply firmware or to reload hardware
  *
- * FIXME: rename FU_DEVICE_ -> FWUPD_DEVICE_ when we break API
- *
  * The device flags.
  **/
 #define FWUPD_DEVICE_FLAG_NONE			(0u)		/* Since: 0.1.3 */
@@ -98,25 +102,13 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 
-/* deprecated names */
-#define FU_DEVICE_FLAG_NONE		FWUPD_DEVICE_FLAG_NONE
-#define FU_DEVICE_FLAG_INTERNAL		FWUPD_DEVICE_FLAG_INTERNAL
-#define FU_DEVICE_FLAG_ALLOW_ONLINE	FWUPD_DEVICE_FLAG_UPDATABLE
-#define FU_DEVICE_FLAG_ALLOW_OFFLINE	FWUPD_DEVICE_FLAG_ONLY_OFFLINE
-#define FU_DEVICE_FLAG_REQUIRE_AC	FWUPD_DEVICE_FLAG_REQUIRE_AC
-#define FU_DEVICE_FLAG_LOCKED		FWUPD_DEVICE_FLAG_LOCKED
-#define FU_DEVICE_FLAG_SUPPORTED	FWUPD_DEVICE_FLAG_SUPPORTED
-#define FU_DEVICE_FLAG_NEEDS_BOOTLOADER	FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER
-#define FU_DEVICE_FLAG_UNKNOWN		FWUPD_DEVICE_FLAG_UNKNOWN
-#define FWUPD_DEVICE_FLAG_ALLOW_ONLINE	FWUPD_DEVICE_FLAG_UPDATABLE
-#define FWUPD_DEVICE_FLAG_ALLOW_OFFLINE	FWUPD_DEVICE_FLAG_ONLY_OFFLINE
-
 /**
  * FwupdInstallFlags:
  * @FWUPD_INSTALL_FLAG_NONE:			No flags set
  * @FWUPD_INSTALL_FLAG_OFFLINE:			Schedule this for next boot
  * @FWUPD_INSTALL_FLAG_ALLOW_REINSTALL:		Allow reinstalling the same version
  * @FWUPD_INSTALL_FLAG_ALLOW_OLDER:		Allow downgrading firmware
+ * @FWUPD_INSTALL_FLAG_FORCE:			Force the update even if not a good idea
  *
  * Flags to set when performing the firwmare update or install.
  **/

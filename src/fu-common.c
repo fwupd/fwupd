@@ -33,6 +33,15 @@
 #include "fu-common.h"
 
 /**
+ * SECTION:fu-common
+ * @short_description: common functionality for plugins to use
+ *
+ * Helper functions that can be used by the daemon and plugins.
+ *
+ * See also: #FuPlugin
+ */
+
+/**
  * fu_common_rmtree:
  * @directory: a directory name
  * @error: A #GError or %NULL
@@ -167,7 +176,7 @@ fu_common_get_contents_bytes (const gchar *filename, GError **error)
  *
  * Note: this will close the fd when done
  *
- * Returns: (transfer container): a #GBytes, or %NULL
+ * Returns: (transfer full): a #GBytes, or %NULL
  **/
 GBytes *
 fu_common_get_contents_fd (gint fd, gsize count, GError **error)
@@ -213,7 +222,7 @@ fu_common_extract_archive_entry (struct archive_entry *entry, const gchar *dir)
 /**
  * fu_common_extract_archive:
  * @blob: a #GBytes archive as a blob
- * @directory: a directory name to extract to
+ * @dir: a directory name to extract to
  * @error: A #GError, or %NULL
  *
  * Extracts an achive to a directory.
@@ -305,8 +314,8 @@ fu_common_add_argv (GPtrArray *argv, const gchar *fmt, ...)
 /**
  * fu_common_firmware_builder:
  * @bytes: The data to use
- * @script_fn: Name of the script to run in the tarball, e.g. "startup.sh"
- * @output_fn: Name of the generated firmware, e.g. "firmware.bin"
+ * @script_fn: Name of the script to run in the tarball, e.g. `startup.sh`
+ * @output_fn: Name of the generated firmware, e.g. `firmware.bin`
  * @error: A #GError, or %NULL
  *
  * Builds a firmware file using tools from the host session in a bubblewrap
@@ -490,8 +499,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCommonSpawnHelper, fu_common_spawn_helper_free)
 /**
  * fu_common_spawn_sync:
  * @argv: The argument list to run
- * @handler_cb: A #FuOutputHandler or %NULL
- * @handler_user_data: the user data to pass to @handler
+ * @handler_cb: (scope call): A #FuOutputHandler or %NULL
+ * @handler_user_data: the user data to pass to @handler_cb
  * @cancellable: a #GCancellable, or %NULL
  * @error: A #GError or %NULL
  *

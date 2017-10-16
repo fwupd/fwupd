@@ -31,6 +31,7 @@ typedef struct
 {
 	FuDeviceEbitdoKind	 kind;
 	GUsbDevice		*usb_device;
+	FuDeviceLocker		*usb_device_locker;
 	guint32			 serial[9];
 } FuDeviceEbitdoPrivate;
 
@@ -108,6 +109,8 @@ fu_device_ebitdo_finalize (GObject *object)
 	FuDeviceEbitdo *device = FU_DEVICE_EBITDO (object);
 	FuDeviceEbitdoPrivate *priv = GET_PRIVATE (device);
 
+	if (priv->usb_device_locker != NULL)
+		g_object_unref (priv->usb_device_locker);
 	if (priv->usb_device != NULL)
 		g_object_unref (priv->usb_device);
 
@@ -343,15 +346,19 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 	gdouble tmp;
 	guint32 version_tmp = 0;
 	guint32 serial_tmp[9];
-	guint i;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* already open */
+	if (priv->usb_device_locker != NULL)
+		return TRUE;
 
 	g_debug ("opening %s", fu_device_ebitdo_kind_to_string (priv->kind));
-	if (!g_usb_device_open (priv->usb_device, error))
+	locker = fu_device_locker_new (priv->usb_device, error);
+	if (locker == NULL)
 		return FALSE;
 	if (!g_usb_device_claim_interface (priv->usb_device, 0, /* 0 = idx? */
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					   error)) {
-		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 
@@ -363,14 +370,12 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 					 0,
 					 NULL, 0, /* in */
 					 error)) {
-			g_usb_device_close (priv->usb_device, NULL);
 			return FALSE;
 		}
 		if (!fu_device_ebitdo_receive (device,
 					    (guint8 *) &version_tmp,
 					    sizeof(version_tmp),
 					    error)) {
-			g_usb_device_close (priv->usb_device, NULL);
 			return FALSE;
 		}
 		tmp = (gdouble) GUINT32_FROM_LE (version_tmp);
@@ -385,14 +390,12 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 				 FU_EBITDO_PKT_CMD_FW_GET_VERSION,
 				 NULL, 0, /* in */
 				 error)) {
-		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 	if (!fu_device_ebitdo_receive (device,
 				    (guint8 *) &version_tmp,
 				    sizeof(version_tmp),
 				    error)) {
-		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 	tmp = (gdouble) GUINT32_FROM_LE (version_tmp);
@@ -405,19 +408,19 @@ fu_device_ebitdo_open (FuDeviceEbitdo *device, GError **error)
 				 0x00, /* cmd */
 				 NULL, 0,
 				 error)) {
-		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
 	memset (serial_tmp, 0x00, sizeof (serial_tmp));
 	if (!fu_device_ebitdo_receive (device,
 				    (guint8 *) &serial_tmp, sizeof(serial_tmp),
 				    error)) {
-		g_usb_device_close (priv->usb_device, NULL);
 		return FALSE;
 	}
-	for (i = 0; i < 9; i++)
+	for (guint i = 0; i < 9; i++)
 		priv->serial[i] = GUINT32_FROM_LE (serial_tmp[i]);
 
+	/* success */
+	priv->usb_device_locker = g_steal_pointer (&locker);
 	return TRUE;
 }
 
@@ -425,8 +428,7 @@ gboolean
 fu_device_ebitdo_close (FuDeviceEbitdo *device, GError **error)
 {
 	FuDeviceEbitdoPrivate *priv = GET_PRIVATE (device);
-	if (!g_usb_device_close (priv->usb_device, error))
-		return FALSE;
+	g_clear_object (&priv->usb_device_locker);
 	return TRUE;
 }
 
@@ -447,10 +449,8 @@ fu_device_ebitdo_write_firmware (FuDeviceEbitdo *device, GBytes *fw,
 	FuEbitdoFirmwareHeader *hdr;
 	const guint8 *payload_data;
 	const guint chunk_sz = 32;
-	guint32 offset;
 	guint32 payload_len;
 	guint32 serial_new[3];
-	guint i;
 	g_autoptr(GError) error_local = NULL;
 	const guint32 app_key_index[16] = {
 		0x186976e5, 0xcac67acd, 0x38f27fee, 0x0a4948f1,
@@ -485,7 +485,7 @@ fu_device_ebitdo_write_firmware (FuDeviceEbitdo *device, GBytes *fw,
 	}
 
 	/* check if this is firmware */
-	for (i = 0; i < 4; i++) {
+	for (guint i = 0; i < 4; i++) {
 		if (hdr->reserved[i] != 0x0) {
 			g_set_error (error,
 				     G_IO_ERROR,
@@ -522,7 +522,7 @@ fu_device_ebitdo_write_firmware (FuDeviceEbitdo *device, GBytes *fw,
 	/* flash the firmware in 32 byte blocks */
 	payload_data = g_bytes_get_data (fw, NULL);
 	payload_data += sizeof(FuEbitdoFirmwareHeader);
-	for (offset = 0; offset < payload_len; offset += chunk_sz) {
+	for (guint32 offset = 0; offset < payload_len; offset += chunk_sz) {
 		if (g_getenv ("FU_EBITDO_DEBUG") != NULL) {
 			g_debug ("writing %u bytes to 0x%04x of 0x%04x",
 				 chunk_sz, offset, payload_len);
@@ -621,6 +621,8 @@ fu_device_ebitdo_init_real (FuDeviceEbitdo *device)
 	name = g_strdup_printf ("%s Gamepad",
 				fu_device_ebitdo_kind_to_string (priv->kind));
 	fu_device_set_name (FU_DEVICE (device), name);
+	fu_device_set_summary (FU_DEVICE (device),
+			       "A resdesigned classic game controller");
 	fu_device_set_vendor (FU_DEVICE (device), "8bitdo");
 
 	/* set vendor ID */
@@ -661,7 +663,6 @@ fu_device_ebitdo_new (GUsbDevice *usb_device)
 {
 	FuDeviceEbitdo *device;
 	FuDeviceEbitdoPrivate *priv;
-	guint j;
 	const FuEbitdoVidPid vidpids[] = {
 		/* legacy VIDs */
 		{ 0x0483, 0x5750, FU_DEVICE_EBITDO_KIND_BOOTLOADER },
@@ -685,7 +686,7 @@ fu_device_ebitdo_new (GUsbDevice *usb_device)
 	};
 
 	/* set kind */
-	for (j = 0; vidpids[j].vid != 0x0000; j++) {
+	for (guint j = 0; vidpids[j].vid != 0x0000; j++) {
 		if (g_usb_device_get_vid (usb_device) != vidpids[j].vid)
 			continue;
 		if (g_usb_device_get_pid (usb_device) != vidpids[j].pid)

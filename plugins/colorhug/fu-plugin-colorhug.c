@@ -110,11 +110,13 @@ fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 	guint16 micro;
 	guint16 minor;
 	guint8 idx;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* try to get the version without claiming interface */
-	if (!g_usb_device_open (item->usb_device, &error)) {
+	locker = fu_device_locker_new (item->usb_device, &error);
+	if (locker == NULL) {
 		g_debug ("Failed to open, polling: %s", error->message);
 		return;
 	}
@@ -129,10 +131,9 @@ fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 			item->got_version = TRUE;
 			g_debug ("obtained fwver using extension '%s'", tmp);
 			fu_device_set_version (item->device, tmp);
-			goto out;
+			return;
 		}
 	}
-	g_usb_device_close (item->usb_device, NULL);
 
 	/* attempt to open the device and get the serial number */
 	if (!ch_device_open (item->usb_device, &error)) {
@@ -145,7 +146,7 @@ fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 				      NULL, &error)) {
 		g_warning ("Failed to get serial: %s", error->message);
-		goto out;
+		return;
 	}
 
 	/* got things the old fashioned way */
@@ -153,12 +154,6 @@ fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 	version = g_strdup_printf ("%i.%i.%i", major, minor, micro);
 	g_debug ("obtained fwver using API '%s'", version);
 	fu_device_set_version (item->device, version);
-
-out:
-	/* we're done here */
-	g_clear_error (&error);
-	if (!g_usb_device_close (item->usb_device, &error))
-		g_debug ("Failed to close: %s", error->message);
 }
 
 gboolean
@@ -441,9 +436,12 @@ fu_plugin_colorhug_device_added_cb (GUsbContext *ctx,
 		item->usb_device = g_object_ref (device);
 		item->device = fu_device_new ();
 		fu_device_set_id (item->device, device_key);
+		fu_device_set_vendor (item->device, "Hughski Limited");
+		fu_device_set_vendor_id (item->device, "USB:0x273F");
 		fu_device_set_equivalent_id (item->device,
 					     g_usb_device_get_platform_id (device));
 		fu_device_add_guid (item->device, ch_device_get_guid (device));
+		fu_device_add_icon (item->device, "colorimeter-colorhug");
 		fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 		/* try to get the serial number -- if opening failed then
@@ -468,18 +466,26 @@ fu_plugin_colorhug_device_added_cb (GUsbContext *ctx,
 	case CH_DEVICE_MODE_FIRMWARE:
 	case CH_DEVICE_MODE_LEGACY:
 		fu_device_set_name (item->device, "ColorHug");
+		fu_device_set_summary (item->device,
+				       "An open source display colorimeter");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER2:
 	case CH_DEVICE_MODE_FIRMWARE2:
 		fu_device_set_name (item->device, "ColorHug2");
+		fu_device_set_summary (item->device,
+				       "An open source display colorimeter");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
 	case CH_DEVICE_MODE_FIRMWARE_PLUS:
 		fu_device_set_name (item->device, "ColorHug+");
+		fu_device_set_summary (item->device,
+				       "An open source spectrophotometer");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_ALS:
 	case CH_DEVICE_MODE_FIRMWARE_ALS:
 		fu_device_set_name (item->device, "ColorHugALS");
+		fu_device_set_summary (item->device,
+				       "An open source ambient light sensor");
 		break;
 	default:
 		fu_device_set_name (item->device, "ColorHug??");

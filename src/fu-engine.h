@@ -27,8 +27,10 @@ G_BEGIN_DECLS
 #include <appstream-glib.h>
 #include <glib-object.h>
 
-#include "fwupd-result.h"
+#include "fwupd-device.h"
 #include "fwupd-enums.h"
+
+#include "fu-plugin.h"
 
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
@@ -43,7 +45,7 @@ void		 fu_engine_profile_dump			(FuEngine	*self);
 gboolean	 fu_engine_check_plugins_pending	(FuEngine	*self,
 							 GError		**error);
 AsStore		*fu_engine_get_store_from_blob		(FuEngine	*self,
-							 GBytes		*blob,
+							 GBytes		*blob_cab,
 							 GError		**error);
 const gchar	*fu_engine_get_action_id_for_device	(FuEngine	*self,
 							 const gchar	*device_id,
@@ -53,14 +55,18 @@ const gchar	*fu_engine_get_action_id_for_device	(FuEngine	*self,
 
 GPtrArray	*fu_engine_get_devices			(FuEngine	*self,
 							 GError		**error);
-GPtrArray	*fu_engine_get_updates			(FuEngine	*self,
-							 GError		**error);
 GPtrArray	*fu_engine_get_remotes			(FuEngine	*self,
 							 GError		**error);
 GPtrArray	*fu_engine_get_releases			(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
-FwupdResult	*fu_engine_get_results			(FuEngine	*self,
+GPtrArray	*fu_engine_get_downgrades		(FuEngine	*self,
+							 const gchar	*device_id,
+							 GError		**error);
+GPtrArray	*fu_engine_get_upgrades			(FuEngine	*self,
+							 const gchar	*device_id,
+							 GError		**error);
+FwupdDevice	*fu_engine_get_results			(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
 gboolean	 fu_engine_clear_results		(FuEngine	*self,
@@ -80,15 +86,25 @@ gboolean	 fu_engine_verify			(FuEngine	*self,
 gboolean	 fu_engine_verify_update		(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
+gboolean	 fu_engine_modify_remote		(FuEngine	*self,
+							 const gchar	*remote_id,
+							 const gchar	*key,
+							 const gchar	*value,
+							 GError		**error);
 gboolean	 fu_engine_install			(FuEngine	*self,
 							 const gchar	*device_id,
 							 AsStore	*store,
 							 GBytes		*blob_cab,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-GPtrArray	*fu_engine_get_details_local		(FuEngine	*self,
+GPtrArray	*fu_engine_get_details			(FuEngine	*self,
 							 gint		 fd,
 							 GError		**error);
+
+/* for the self tests */
+void		 fu_engine_add_device			(FuEngine	*self,
+							 FuPlugin	*plugin,
+							 FuDevice	*device);
 
 G_END_DECLS
 

@@ -4,11 +4,11 @@ set -e
 #DEBHELPER#
 
 if [ "$1" = remove -o "$1" = purge ]; then
-	if [ -f /etc/fwupd.conf ]; then
+	if [ -f /etc/fwupd/daemon.conf ]; then
 		if [ "$CI" = "true" ]; then
-			sed "s,^EnableTestSuite=.*,EnableTestSuite=false," -i /etc/fwupd.conf
+			sed "s,^BlacklistPlugins=,BlacklistPlugins=test," -i /etc/fwupd/daemon.conf
 		else
-			echo "To disable test suite, modify /etc/fwupd.conf"
+			echo "To disable test suite, modify /etc/fwupd/daemon.conf"
 		fi
 	fi
 fi
