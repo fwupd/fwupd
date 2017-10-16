@@ -1,4 +1,4 @@
-fwupd (1.0.0-1) UNRELEASED; urgency=medium
+fwupd (1.0.0-1) unstable; urgency=medium
 
   [ Mario Limonciello ]
   * new upstream version (1.0.0)
@@ -10,6 +10,7 @@ fwupd (1.0.0-1) UNRELEASED; urgency=medium
   * update standards version
   * explicitly set section for libfwupd2
   * run systemd in postinst (Closes: #877991)
+  * Drop patches.
 
   [ Richard Hughes ]
   * Do not install the libdfu helper library
