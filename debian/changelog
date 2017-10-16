@@ -1,3 +1,21 @@
+fwupd (1.0.0-1) UNRELEASED; urgency=medium
+
+  [ Mario Limonciello ]
+  * new upstream version (1.0.0)
+  * remove /etc/fwupd.conf on upgrade
+  * fix missing-call-to-dpkg-maintscript-helper
+  * update debci configuration
+  * drop libebitdo transitional packages
+  * try to fix debci
+  * update standards version
+  * explicitly set section for libfwupd2
+  * run systemd in postinst (Closes: #877991)
+
+  [ Richard Hughes ]
+  * Do not install the libdfu helper library
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 16 Oct 2017 09:12:03 -0500
+
 fwupd (0.9.7-2) unstable; urgency=medium
 
   * Backport a patch to fix FTBFS on big endian architectures.
