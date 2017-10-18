@@ -1,5 +1,5 @@
 #!/bin/sh
 set -e
-CI=true dpkg-reconfigure fwupd-tests
+sed "s,^BlacklistPlugins=test,BlacklistPlugins=," -i /etc/fwupd/daemon.conf
 /usr/sbin/service dbus restart
 gnome-desktop-testing-runner fwupd
