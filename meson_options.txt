@@ -17,7 +17,7 @@ option('enable-consolekit', type : 'boolean', value : true, description : 'enabl
 option('enable-dummy', type : 'boolean', value : false, description : 'enable the dummy device')
 option('enable-gpg', type : 'boolean', value : true, description : 'enable the GPG verification support')
 option('enable-pkcs7', type : 'boolean', value : true, description : 'enable the PKCS7 verification support')
-option('enable-werror', type : 'boolean', value : true, description : 'build with -Werror (only for CI!)')
+option('enable-werror', type : 'boolean', value : false, description : 'build with -Werror (only for CI!)')
 option('with-bootdir', type : 'string', value : '/boot/efi', description : 'Directory for EFI system partition')
 option('with-systemdunitdir', type: 'string', value: '', description: 'Directory for systemd units')
 option('with-udevdir', type: 'string', value: '', description: 'Directory for udev rules')
