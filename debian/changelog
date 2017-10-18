@@ -1,7 +1,8 @@
-fwupd (1.0.0-2) UNRELEASED; urgency=medium
+fwupd (1.0.0-2) unstable; urgency=medium
 
   * Backport a patch from upstream which fixes FTBFS
     on alpha and hppa (Closes #879022)
+  * Don't use dpkg-reconfigure in CI script.
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Wed, 18 Oct 2017 10:16:22 -0500
 
