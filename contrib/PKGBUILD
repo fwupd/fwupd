@@ -19,13 +19,7 @@ build() {
         export CI="-Denable-werror=true \
                    -Denable-usb-fallback=true"
     fi
-    meson --prefix=/usr \
-        --sysconfdir=/etc \
-        --localstatedir=/var \
-        --libexecdir=/usr/lib \
-        --buildtype=plain \
-        $CI \
-        ../build
+    arch-meson -D b_lto=false $CI ../build
 
     ninja -v -C ../build
 }
