@@ -476,7 +476,7 @@ sync_device_added (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 	target = (MockTree *) mock_tree_find_uuid (tree, uuid);
 
 	if (target == NULL) {
-		g_warning ("Got device that could not be matched: %s", uuid);
+		g_critical ("Got device that could not be matched: %s", uuid);
 		return;
 	}
 
@@ -902,6 +902,12 @@ test_set_up (ThunderboltTest *tt, gconstpointer params)
 		g_assert_nonnull (tt->tree);
 	}
 
+	if (!umockdev_in_mock_environment ()) {
+		g_warning ("Need to run within umockdev wrapper (umockdev-wrapper %s)!",
+			   program_invocation_short_name);
+		return;
+	}
+
 	if (flags & TEST_ATTACH_AND_COLDPLUG) {
 		g_assert_true (flags & TEST_INITIALIZE_TREE);
 
@@ -1263,11 +1269,6 @@ main (int argc, char **argv)
 	g_test_init (&argc, &argv, NULL);
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
-	if (!umockdev_in_mock_environment ()) {
-		g_warning ("Need to run within umockdev wrapper (umockdev-wrapper %s)!",
-			   program_invocation_short_name);
-		return EXIT_FAILURE;
-	}
 
 	g_test_add ("/thunderbolt/basic",
 		    ThunderboltTest,
