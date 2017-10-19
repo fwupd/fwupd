@@ -119,11 +119,11 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 				    FwupdClient *client)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	GVariantDict dict;
+	g_autoptr(GVariantDict) dict = NULL;
 
 	/* print to the console */
-	g_variant_dict_init (&dict, changed_properties);
-	if (g_variant_dict_contains (&dict, "Status")) {
+	dict = g_variant_dict_new (changed_properties);
+	if (g_variant_dict_contains (dict, "Status")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "Status");
 		if (val != NULL) {
@@ -134,7 +134,7 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 			g_object_notify (G_OBJECT (client), "status");
 		}
 	}
-	if (g_variant_dict_contains (&dict, "Percentage")) {
+	if (g_variant_dict_contains (dict, "Percentage")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "Percentage");
 		if (val != NULL) {
@@ -142,7 +142,7 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 			g_object_notify (G_OBJECT (client), "percentage");
 		}
 	}
-	if (g_variant_dict_contains (&dict, "DaemonVersion")) {
+	if (g_variant_dict_contains (dict, "DaemonVersion")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "DaemonVersion");
 		if (val != NULL)
