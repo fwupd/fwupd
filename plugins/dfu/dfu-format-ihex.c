@@ -69,9 +69,19 @@ dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
 	return (guint16) g_ascii_strtoull (buffer, NULL, 16);
 }
 
+static guint32
+dfu_firmware_ihex_parse_uint32 (const gchar *data, guint pos)
+{
+	gchar buffer[9];
+	memcpy (buffer, data + pos, 8);
+	buffer[8] = '\0';
+	return (guint32) g_ascii_strtoull (buffer, NULL, 16);
+}
+
 #define	DFU_INHX32_RECORD_TYPE_DATA		0x00
 #define	DFU_INHX32_RECORD_TYPE_EOF		0x01
 #define	DFU_INHX32_RECORD_TYPE_EXTENDED		0x04
+#define	DFU_INHX32_RECORD_TYPE_ADDR32		0x05
 #define	DFU_INHX32_RECORD_TYPE_SIGNATURE	0xfd
 
 /**
@@ -234,6 +244,9 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		case DFU_INHX32_RECORD_TYPE_EXTENDED:
 			addr_high = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+9);
 			addr32 = ((guint32) addr_high << 16) + addr_low;
+			break;
+		case DFU_INHX32_RECORD_TYPE_ADDR32:
+			addr32 = dfu_firmware_ihex_parse_uint32 (in_buffer, offset+9);
 			break;
 		case DFU_INHX32_RECORD_TYPE_SIGNATURE:
 			for (guint i = offset + 9; i < end; i += 2) {
