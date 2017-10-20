@@ -659,7 +659,7 @@ fu_device_ebitdo_init_real (FuDeviceEbitdo *device)
 				fu_device_ebitdo_kind_to_string (priv->kind));
 	fu_device_set_name (FU_DEVICE (device), name);
 	fu_device_set_summary (FU_DEVICE (device),
-			       "A resdesigned classic game controller");
+			       "A redesigned classic game controller");
 	fu_device_set_vendor (FU_DEVICE (device), "8Bitdo");
 
 	/* set vendor ID */
