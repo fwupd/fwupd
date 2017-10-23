@@ -33,6 +33,7 @@ gnutls-devel,			,				gnutls-dev,			gnutls-dev,			libgnutls28-dev:s390x,		libgnut
 ,				,				gnutls-bin,			gnutls-bin,			gnutls-bin,			gnutls-bin,
 gnutls-utils,			,				,				,				,				,
 gtk-doc,			gtk-doc,			gtk-doc-tools,			gtk-doc-tools,			,				gtk-doc-tools,
+help2man,			help2man,			help2man,			help2man,			help2man,			help2man,
 jq,				,				,				,				,				,
 libappstream-glib-devel,	appstream-glib,			libappstream-glib-dev,		libappstream-glib-dev,		libappstream-glib-dev:s390x,	libappstream-glib-dev,
 libarchive-devel,		,				libarchive-dev,			libarchive-dev,			libarchive-dev:s390x,,		libarchive-dev,

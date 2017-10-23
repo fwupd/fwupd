@@ -328,7 +328,7 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'filename' [id]");
+				     "Invalid arguments");
 		return FALSE;
 	}
 
@@ -346,7 +346,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'filename'");
+				     "Invalid arguments");
 		return FALSE;
 	}
 	array = fwupd_client_get_details (priv->client, values[0], NULL, error);
@@ -524,7 +524,7 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'id'");
+				     "Invalid arguments");
 		return FALSE;
 	}
 	return fwupd_client_clear_results (priv->client, values[0], NULL, error);
@@ -576,7 +576,7 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'id'");
+				     "Invalid arguments");
 		return FALSE;
 	}
 	return fwupd_client_verify_update (priv->client, values[0], NULL, error);
@@ -822,7 +822,7 @@ fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'filename.xml' 'filename.xml.asc' 'remote-id'");
+				     "Invalid arguments");
 		return FALSE;
 	}
 
@@ -845,7 +845,7 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'DeviceID'");
+				     "Invalid arguments");
 		return FALSE;
 	}
 	dev = fwupd_client_get_results (priv->client, values[0], NULL, error);
@@ -989,7 +989,7 @@ fu_util_verify (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'id'");
+				     "Invalid arguments");
 		return FALSE;
 	}
 	return fwupd_client_verify (priv->client, values[0], NULL, error);
@@ -1002,7 +1002,7 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected 'id'");
+				     "Invalid arguments");
 		return FALSE;
 	}
 	return fwupd_client_unlock (priv->client, values[0], NULL, error);
@@ -1268,7 +1268,7 @@ fu_util_smbios_dump (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected FILENAME");
+				     "Invalid arguments");
 		return FALSE;
 	}
 	smbios = fu_smbios_new ();
@@ -1290,7 +1290,7 @@ fu_util_firmware_builder (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected FILENAME-IN FILENAME-OUT [SCRIPT] [OUTPUT]");
+				     "Invalid arguments");
 		return FALSE;
 	}
 	archive_blob = fu_common_get_contents_bytes (values[0], error);
@@ -1439,7 +1439,7 @@ fu_util_modify_remote (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: expected REMOTE-ID KEY VALUE");
+				     "Invalid arguments");
 		return FALSE;
 	}
 	return fwupd_client_modify_remote (priv->client,
@@ -1647,13 +1647,13 @@ main (int argc, char *argv[])
 		     fu_util_install_prepared);
 	fu_util_add (priv->cmd_array,
 		     "install",
-		     NULL,
+		     "FILE [ID]",
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware file on this hardware"),
 		     fu_util_install);
 	fu_util_add (priv->cmd_array,
 		     "get-details",
-		     NULL,
+		     "FILE",
 		     /* TRANSLATORS: command description */
 		     _("Gets details about a firmware file"),
 		     fu_util_get_details);
@@ -1671,19 +1671,19 @@ main (int argc, char *argv[])
 		     fu_util_update);
 	fu_util_add (priv->cmd_array,
 		     "verify",
-		     NULL,
+		     "[DEVICE_ID]",
 		     /* TRANSLATORS: command description */
 		     _("Gets the cryptographic hash of the dumped firmware"),
 		     fu_util_verify);
 	fu_util_add (priv->cmd_array,
 		     "unlock",
-		     NULL,
+		     "DEVICE_ID",
 		     /* TRANSLATORS: command description */
 		     _("Unlocks the device for firmware access"),
 		     fu_util_unlock);
 	fu_util_add (priv->cmd_array,
 		     "clear-results",
-		     NULL,
+		     "DEVICE_ID",
 		     /* TRANSLATORS: command description */
 		     _("Clears the results from the last update"),
 		     fu_util_clear_results);
@@ -1695,13 +1695,13 @@ main (int argc, char *argv[])
 		     fu_util_clear_offline);
 	fu_util_add (priv->cmd_array,
 		     "get-results",
-		     NULL,
+		     "DEVICE_ID",
 		     /* TRANSLATORS: command description */
 		     _("Gets the results from the last update"),
 		     fu_util_get_results);
 	fu_util_add (priv->cmd_array,
 		     "get-releases",
-		     NULL,
+		     "[DEVICE_ID]",
 		     /* TRANSLATORS: command description */
 		     _("Gets the releases for a device"),
 		     fu_util_get_releases);
@@ -1713,19 +1713,19 @@ main (int argc, char *argv[])
 		     fu_util_get_remotes);
 	fu_util_add (priv->cmd_array,
 		     "downgrade",
-		     NULL,
+		     "[DEVICE_ID]",
 		     /* TRANSLATORS: command description */
 		     _("Downgrades the firmware on a device"),
 		     fu_util_downgrade);
 	fu_util_add (priv->cmd_array,
 		     "refresh",
-		     NULL,
+		     "[FILE FILE_SIG REMOTE_ID]",
 		     /* TRANSLATORS: command description */
 		     _("Refresh metadata from remote server"),
 		     fu_util_refresh);
 	fu_util_add (priv->cmd_array,
 		     "verify-update",
-		     NULL,
+		     "[DEVICE_ID]",
 		     /* TRANSLATORS: command description */
 		     _("Update the stored metadata with current ROM contents"),
 		     fu_util_verify_update);
@@ -1737,19 +1737,19 @@ main (int argc, char *argv[])
 		     fu_util_monitor);
 	fu_util_add (priv->cmd_array,
 		     "build-firmware",
-		     NULL,
+		     "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]",
 		     /* TRANSLATORS: command description */
 		     _("Build firmware using a sandbox"),
 		     fu_util_firmware_builder);
 	fu_util_add (priv->cmd_array,
 		     "smbios-dump",
-		     NULL,
+		     "FILE",
 		     /* TRANSLATORS: command description */
 		     _("Dump SMBIOS data from a file"),
 		     fu_util_smbios_dump);
 	fu_util_add (priv->cmd_array,
 		     "modify-remote",
-		     NULL,
+		     "REMOTE-ID KEY VALUE",
 		     /* TRANSLATORS: command description */
 		     _("Modifies a given remote"),
 		     fu_util_modify_remote);
@@ -1768,6 +1768,10 @@ main (int argc, char *argv[])
 	priv->context = g_option_context_new (NULL);
 	cmd_descriptions = fu_util_get_descriptions (priv->cmd_array);
 	g_option_context_set_summary (priv->context, cmd_descriptions);
+	g_option_context_set_description (priv->context,
+		"This tool allows an administrator to query and control the "
+		"fwupd daemon, allowing them to perform actions such as "
+		"installing or downgrading firmware.");
 
 	/* TRANSLATORS: program name */
 	g_set_application_name (_("Firmware Utility"));
