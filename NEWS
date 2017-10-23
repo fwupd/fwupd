@@ -1,3 +1,24 @@
+Version 0.9.8
+~~~~~~~~~~~~~
+Released: 2017-10-23
+
+New Features:
+ - Add a command 'clear-offline' to fwupdmgr (Richard Hughes)
+
+Bugfixes:
+ - Disable unifying support if the kernel has no CONFIG_HIDRAW (Richard Hughes)
+ - Do not fail to load the daemon if cached metadata is invalid (Richard Hughes)
+ - Do not set the UEFI release version (Richard Hughes)
+ - Do not try to verify the DFU write if upload is unsupported (Richard Hughes)
+ - Fix a crash when using fu_plugin_device_add_delay() (Richard Hughes)
+ - Fix the libdfu self test failure on s390 and ppc64 (Richard Hughes)
+ - Fix thunderbolt tests with newer umockdev (Mario Limonciello)
+ - Fix uploading large firmware files using DFU (Richard Hughes)
+ - Format the BCD USB revision numbers correctly (Richard Hughes)
+ - Include the reset timeout as DFU wValue to fix some hardware (Richard Hughes)
+ - Never fallback to an offline update from client code (Richard Hughes)
+ - Prevent fwupd from mounting filesystems (Richard Hughes)
+
 Version 0.9.7
 ~~~~~~~~~~~~~
 Released: 2017-09-01
