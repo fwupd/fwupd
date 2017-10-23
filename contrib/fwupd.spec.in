@@ -51,6 +51,7 @@ BuildRequires: libuuid-devel
 BuildRequires: gnutls-devel
 BuildRequires: gnutls-utils
 BuildRequires: meson
+BuildRequires: help2man
 
 %if 0%{?have_uefi}
 BuildRequires: python3 python3-cairo python3-gobject python3-pillow

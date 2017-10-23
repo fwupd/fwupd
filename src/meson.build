@@ -54,7 +54,7 @@ libfwupdprivate = static_library(
   ],
 )
 
-executable(
+fwupdmgr = executable(
   'fwupdmgr',
   sources : [
     'fu-util.c',
@@ -87,13 +87,17 @@ executable(
 )
 
 if get_option('enable-man')
-  docbook2man = find_program('docbook2man')
+  help2man = find_program('help2man')
   custom_target('fwupdmgr-man',
-    input : 'fwupdmgr.sgml',
+    input : fwupdmgr,
     output : 'fwupdmgr.1',
     command : [
-      docbook2man, '@INPUT@',
-      '--output', meson.current_build_dir(),
+      help2man, '@INPUT@',
+      '--no-info',
+      '--output', '@OUTPUT@',
+      '--name', 'fwupd',
+      '--manual', 'User Commands',
+      '--version-string', fwupd_version,
     ],
     install : true,
     install_dir : join_paths(get_option('mandir'), 'man1'),
