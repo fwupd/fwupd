@@ -1,3 +1,11 @@
+fwupd (1.0.0-3) unstable; urgency=medium
+
+  * minor correction to changelog
+  * debci: use the needs-root restriction
+  * debian: update standards version
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 24 Oct 2017 16:21:54 -0500
+
 fwupd (1.0.0-2) unstable; urgency=medium
 
   * Backport a patch from upstream which fixes FTBFS
