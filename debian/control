@@ -48,7 +48,7 @@ Build-Depends: debhelper (>= 10.3),
                udev,
                valgrind[!mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha !mips64el !armhf !armel !mipsel !m68k],
                systemd (>= 231)
-Standards-Version: 4.1.0
+Standards-Version: 4.1.1
 Section: admin
 Homepage: https://github.com/hughsie/fwupd
 Vcs-Git: https://anonscm.debian.org/git/uefi/fwupd.git
