@@ -1,3 +1,9 @@
+fwupd (1.0.0-4) unstable; urgency=medium
+
+  * debian/debci: add explicit dependency on policykit-1 for the test
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Wed, 25 Oct 2017 10:47:14 -0500
+
 fwupd (1.0.0-3) unstable; urgency=medium
 
   * minor correction to changelog
