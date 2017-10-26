@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -42,6 +42,7 @@
 #include "dfu-common.h"
 #include "dfu-device-private.h"
 #include "dfu-target-private.h"
+#include "dfu-target-stm.h"
 
 #include "fu-device-locker.h"
 
@@ -323,12 +324,12 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 	} else {
 		if (priv->version == DFU_VERSION_DFU_1_0 ||
 		    priv->version == DFU_VERSION_DFU_1_1) {
-			g_debug ("basic DFU, no DfuSe support");
-		} else if (priv->version == 0x0101) {
-			g_debug ("basic DFU 1.1 assumed, no DfuSe support");
-			priv->version = DFU_VERSION_DFU_1_1;
+			g_debug ("basic DFU 1.1");
 		} else if (priv->version == DFU_VERSION_DFUSE) {
-			g_debug ("DfuSe support");
+			g_debug ("STM-DFU support");
+		} else if (priv->version == 0x0101) {
+			g_debug ("basic DFU 1.1 assumed");
+			priv->version = DFU_VERSION_DFU_1_1;
 		} else {
 			g_warning ("DFU version is invalid: 0x%04x",
 				   priv->version);
@@ -407,19 +408,29 @@ dfu_device_add_targets (DfuDevice *device)
 			continue;
 		if (g_usb_interface_get_subclass (iface) != 0x01)
 			continue;
-		target = dfu_target_new (device, iface);
-		if (target == NULL)
-			continue;
-
-		/* add target */
-		priv->iface_number = g_usb_interface_get_number (iface);
-		g_ptr_array_add (priv->targets, target);
-		dfu_device_update_from_iface (device, iface);
 
 		/* parse any interface data */
 		iface_data = g_usb_interface_get_extra (iface);
 		if (g_bytes_get_size (iface_data) > 0)
 			dfu_device_parse_iface_data (device, iface_data);
+
+		/* create a target of the required type */
+		switch (priv->version) {
+		case DFU_VERSION_DFUSE:
+			target = dfu_target_stm_new ();
+			break;
+		default:
+			target = dfu_target_new ();
+			break;
+		}
+		dfu_target_set_device (target, device);
+		dfu_target_set_alt_idx (target, g_usb_interface_get_index (iface));
+		dfu_target_set_alt_setting (target, g_usb_interface_get_alternate (iface));
+
+		/* add target */
+		priv->iface_number = g_usb_interface_get_number (iface);
+		g_ptr_array_add (priv->targets, target);
+		dfu_device_update_from_iface (device, iface);
 	}
 
 	/* the device has no DFU runtime, so cheat */
@@ -1824,6 +1835,7 @@ gboolean
 dfu_device_attach (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_autoptr(DfuTarget) target = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1848,41 +1860,23 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	if (!priv->done_upload_or_download &&
 	    (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD) > 0) {
 		g_autoptr(GBytes) chunk = NULL;
-		g_autoptr(DfuTarget) target = NULL;
+		g_autoptr(DfuTarget) target_zero = NULL;
 		g_debug ("doing dummy upload to work around m-stack quirk");
-		target = dfu_device_get_target_by_alt_setting (device, 0, error);
-		if (target == NULL)
+		target_zero = dfu_device_get_target_by_alt_setting (device, 0, error);
+		if (target_zero == NULL)
 			return FALSE;
-		chunk = dfu_target_upload_chunk (target, 0, NULL, error);
+		chunk = dfu_target_upload_chunk (target_zero, 0, NULL, error);
 		if (chunk == NULL)
 			return FALSE;
 	}
 
-	/* there's a a special command for ST devices */
-	if (priv->version == DFU_VERSION_DFUSE) {
-		g_autoptr(DfuTarget) target = NULL;
-		g_autoptr(GBytes) bytes_tmp = NULL;
-
-		/* get default target */
-		target = dfu_device_get_target_by_alt_setting (device, 0, error);
-		if (target == NULL)
-			return FALSE;
-
-		/* do zero byte download */
-		bytes_tmp = g_bytes_new (NULL, 0);
-		if (!dfu_target_download_chunk (target,
-						0 + 2,
-						bytes_tmp,
-						NULL,
-						error))
-			return FALSE;
-
-		dfu_device_set_action (device, FWUPD_STATUS_IDLE);
-		return TRUE;
-	}
+	/* get default target */
+	target = dfu_device_get_target_by_alt_setting (device, 0, error);
+	if (target == NULL)
+		return FALSE;
 
 	/* normal DFU mode just needs a bus reset */
-	if (!dfu_device_reset (device, error))
+	if (!dfu_target_attach (target, NULL, error))
 		return FALSE;
 
 	/* some devices need yet another reset */
