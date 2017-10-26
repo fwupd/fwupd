@@ -26,6 +26,7 @@
 #include <string.h>
 #include <fnmatch.h>
 
+#include "dfu-chunked.h"
 #include "dfu-cipher-xtea.h"
 #include "dfu-common.h"
 #include "dfu-context.h"
@@ -926,6 +927,50 @@ dfu_patch_func (void)
 	g_debug ("serialized blob %s", serialized_str);
 }
 
+static void
+dfu_chunked_func (void)
+{
+	g_autofree gchar *chunked1_str = NULL;
+	g_autofree gchar *chunked2_str = NULL;
+	g_autofree gchar *chunked3_str = NULL;
+	g_autofree gchar *chunked4_str = NULL;
+	g_autoptr(GPtrArray) chunked1 = NULL;
+	g_autoptr(GPtrArray) chunked2 = NULL;
+	g_autoptr(GPtrArray) chunked3 = NULL;
+	g_autoptr(GPtrArray) chunked4 = NULL;
+
+	chunked3 = dfu_chunked_new ((const guint8 *) "123456", 6, 0x0, 3, 3);
+	chunked3_str = dfu_chunked_to_string (chunked3);
+	g_print ("\n%s", chunked3_str);
+	g_assert_cmpstr (chunked3_str, ==, "#00: page:00 addr:0000 len:03 123\n"
+					   "#01: page:01 addr:0000 len:03 456\n");
+
+	chunked4 = dfu_chunked_new ((const guint8 *) "123456", 6, 0x4, 4, 4);
+	chunked4_str = dfu_chunked_to_string (chunked4);
+	g_print ("\n%s", chunked4_str);
+	g_assert_cmpstr (chunked4_str, ==, "#00: page:01 addr:0000 len:04 1234\n"
+					   "#01: page:02 addr:0000 len:02 56\n");
+
+	chunked1 = dfu_chunked_new ((const guint8 *) "0123456789abcdef", 16, 0x0, 10, 4);
+	chunked1_str = dfu_chunked_to_string (chunked1);
+	g_print ("\n%s", chunked1_str);
+	g_assert_cmpstr (chunked1_str, ==, "#00: page:00 addr:0000 len:04 0123\n"
+					   "#01: page:00 addr:0004 len:04 4567\n"
+					   "#02: page:00 addr:0008 len:02 89\n"
+					   "#03: page:01 addr:0000 len:04 abcd\n"
+					   "#04: page:01 addr:0004 len:02 ef\n");
+
+	chunked2 = dfu_chunked_new ((const guint8 *) "XXXXXXYYYYYYZZZZZZ", 18, 0x0, 6, 4);
+	chunked2_str = dfu_chunked_to_string (chunked2);
+	g_print ("\n%s", chunked2_str);
+	g_assert_cmpstr (chunked2_str, ==, "#00: page:00 addr:0000 len:04 XXXX\n"
+					   "#01: page:00 addr:0004 len:02 XX\n"
+					   "#02: page:01 addr:0000 len:04 YYYY\n"
+					   "#03: page:01 addr:0004 len:02 YY\n"
+					   "#04: page:02 addr:0000 len:04 ZZZZ\n"
+					   "#05: page:02 addr:0004 len:02 ZZ\n");
+}
+
 int
 main (int argc, char **argv)
 {
@@ -938,6 +983,7 @@ main (int argc, char **argv)
 	g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
 
 	/* tests go here */
+	g_test_add_func ("/dfu/chunked", dfu_chunked_func);
 	g_test_add_func ("/dfu/patch", dfu_patch_func);
 	g_test_add_func ("/dfu/patch{merges}", dfu_patch_merges_func);
 	g_test_add_func ("/dfu/patch{apply}", dfu_patch_apply_func);
