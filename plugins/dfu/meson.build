@@ -20,6 +20,7 @@ dfu = static_library(
     'dfu-sector.c',
     'dfu-target.c',
     'dfu-target-stm.c',
+    'dfu-target-avr.c',
   ],
   dependencies : [
     appstream_glib,

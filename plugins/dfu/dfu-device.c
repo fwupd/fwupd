@@ -41,6 +41,7 @@
 
 #include "dfu-common.h"
 #include "dfu-device-private.h"
+#include "dfu-target-avr.h"
 #include "dfu-target-private.h"
 #include "dfu-target-stm.h"
 
@@ -252,6 +253,7 @@ dfu_device_finalize (GObject *object)
 		g_object_unref (priv->dev_locker);
 	if (priv->dev != NULL)
 		g_object_unref (priv->dev);
+	g_free (priv->chip_id);
 	g_free (priv->display_name);
 	g_free (priv->serial_number);
 	g_free (priv->platform_id);
@@ -325,6 +327,10 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 		if (priv->version == DFU_VERSION_DFU_1_0 ||
 		    priv->version == DFU_VERSION_DFU_1_1) {
 			g_debug ("basic DFU 1.1");
+		} else if (priv->version == 0x0101 &&
+			   dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_USE_ATMEL_AVR)) {
+			g_debug ("AVR-DFU support forced");
+			priv->version = DFU_VERSION_ATMEL_AVR;
 		} else if (priv->version == DFU_VERSION_DFUSE) {
 			g_debug ("STM-DFU support");
 		} else if (priv->version == 0x0101) {
@@ -418,6 +424,9 @@ dfu_device_add_targets (DfuDevice *device)
 		switch (priv->version) {
 		case DFU_VERSION_DFUSE:
 			target = dfu_target_stm_new ();
+			break;
+		case DFU_VERSION_ATMEL_AVR:
+			target = dfu_target_avr_new ();
 			break;
 		default:
 			target = dfu_target_new ();
@@ -712,6 +721,10 @@ dfu_device_set_quirks (DfuDevice *device)
 			break;
 		}
 	}
+
+	/* Atmel bootloader */
+	if (vid == 0x03eb)
+		priv->quirks |= DFU_DEVICE_QUIRK_USE_ATMEL_AVR;
 
 	/* the DSO Nano has uses 0 instead of 2 when in DFU mode */
 //	quirks |= DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO;
@@ -2361,6 +2374,8 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "attach-extra-reset|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_JABRA_MAGIC)
 		g_string_append_printf (str, "jabra-magic|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_USE_ATMEL_AVR)
+		g_string_append_printf (str, "use-atmel-avr|");
 
 	/* a well behaved device */
 	if (str->len == 0) {
