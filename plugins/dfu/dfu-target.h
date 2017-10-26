@@ -37,15 +37,6 @@ G_BEGIN_DECLS
 #define DFU_TYPE_TARGET (dfu_target_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuTarget, dfu_target, DFU, TARGET, GUsbDevice)
 
-struct _DfuTargetClass
-{
-	GUsbDeviceClass		 parent_class;
-	void			(*percentage_changed)	(DfuTarget	*target,
-							 guint		 percentage);
-	void			(*action_changed)	(DfuTarget	*target,
-							 FwupdStatus	 action);
-};
-
 /**
  * DfuTargetTransferFlags:
  * @DFU_TARGET_TRANSFER_FLAG_NONE:		No flags set
@@ -74,6 +65,35 @@ typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_LAST
 } DfuTargetTransferFlags;
 
+struct _DfuTargetClass
+{
+	GUsbDeviceClass		 parent_class;
+	void			 (*percentage_changed)	(DfuTarget	*target,
+							 guint		 percentage);
+	void			 (*action_changed)	(DfuTarget	*target,
+							 FwupdStatus	 action);
+	gboolean		 (*attach)		(DfuTarget	*target,
+							 GCancellable	*cancellable,
+							 GError		**error);
+	gboolean		 (*detach)		(DfuTarget	*target,
+							 GCancellable	*cancellable,
+							 GError		**error);
+	gboolean		 (*mass_erase)		(DfuTarget	*target,
+							 GCancellable	*cancellable,
+							 GError		**error);
+	DfuElement		*(*upload_element)	(DfuTarget	*target,
+							 guint32	 address,
+							 gsize		 expected_size,
+							 gsize		 maximum_size,
+							 GCancellable	*cancellable,
+							 GError		**error);
+	gboolean		 (*download_element)	(DfuTarget	*target,
+							 DfuElement	*element,
+							 DfuTargetTransferFlags flags,
+							 GCancellable	*cancellable,
+							 GError		**error);
+};
+
 GPtrArray	*dfu_target_get_sectors			(DfuTarget	*target);
 DfuSector	*dfu_target_get_sector_default		(DfuTarget	*target);
 guint8		 dfu_target_get_alt_setting		(DfuTarget	*target);
@@ -91,6 +111,9 @@ gboolean	 dfu_target_setup			(DfuTarget	*target,
 gboolean	 dfu_target_download			(DfuTarget	*target,
 							 DfuImage	*image,
 							 DfuTargetTransferFlags flags,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 dfu_target_mass_erase			(DfuTarget	*target,
 							 GCancellable	*cancellable,
 							 GError		**error);
 DfuCipherKind	 dfu_target_get_cipher_kind		(DfuTarget	*target);

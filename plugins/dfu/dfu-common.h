@@ -170,7 +170,7 @@ typedef enum {
 	DFU_VERSION_UNKNOWN			= 0,
 	DFU_VERSION_DFU_1_0			= 0x0100,
 	DFU_VERSION_DFU_1_1			= 0x0110,
-	DFU_VERSION_DFUSE			= 0x011a,
+	DFU_VERSION_DFUSE			= 0x011a, /* defined by ST */
 	/*< private >*/
 	DFU_VERSION_LAST
 } DfuVersion;
