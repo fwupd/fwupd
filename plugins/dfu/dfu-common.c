@@ -28,6 +28,8 @@
 
 #include "config.h"
 
+#include <string.h>
+
 #include "dfu-common.h"
 
 /**
@@ -168,4 +170,60 @@ dfu_version_to_string (DfuVersion version)
 	if (version == DFU_VERSION_DFUSE)
 		return "DfuSe";
 	return NULL;
+}
+
+/**
+ * dfu_utils_bytes_join_array:
+ * @chunks: (element-kind GBytes): bytes
+ *
+ * Creates a monolithic block of memory from an array of #GBytes.
+ *
+ * Return value: (transfer full): a new GBytes
+ **/
+GBytes *
+dfu_utils_bytes_join_array (GPtrArray *chunks)
+{
+	gsize total_size = 0;
+	guint32 offset = 0;
+	guint8 *buffer;
+
+	/* get the size of all the chunks */
+	for (guint i = 0; i < chunks->len; i++) {
+		GBytes *chunk_tmp = g_ptr_array_index (chunks, i);
+		total_size += g_bytes_get_size (chunk_tmp);
+	}
+
+	/* copy them into a buffer */
+	buffer = g_malloc0 (total_size);
+	for (guint i = 0; i < chunks->len; i++) {
+		const guint8 *chunk_data;
+		gsize chunk_size = 0;
+		GBytes *chunk_tmp = g_ptr_array_index (chunks, i);
+		chunk_data = g_bytes_get_data (chunk_tmp, &chunk_size);
+		if (chunk_size == 0)
+			continue;
+		memcpy (buffer + offset, chunk_data, chunk_size);
+		offset += chunk_size;
+	}
+	return g_bytes_new_take (buffer, total_size);
+}
+
+/**
+ * dfu_utils_bytes_is_empty:
+ * @bytes: a #GBytes
+ *
+ * Checks if a byte array are just empty (0xff) bytes.
+ *
+ * Return value: %TRUE if @bytes is empty
+ **/
+gboolean
+dfu_utils_bytes_is_empty (GBytes *bytes)
+{
+	gsize sz = 0;
+	const guint8 *buf = g_bytes_get_data (bytes, &sz);
+	for (gsize i = 0; i < sz; i++) {
+		if (buf[i] != 0xff)
+			return FALSE;
+	}
+	return TRUE;
 }

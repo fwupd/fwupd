@@ -978,34 +978,6 @@ dfu_target_set_percentage (DfuTarget *target, guint value, guint total)
 	dfu_target_set_percentage_raw (target, percentage);
 }
 
-static GBytes *
-_g_bytes_array_join (GPtrArray *chunks)
-{
-	gsize total_size = 0;
-	guint32 offset = 0;
-	guint8 *buffer;
-
-	/* get the size of all the chunks */
-	for (guint i = 0; i < chunks->len; i++) {
-		GBytes *chunk_tmp = g_ptr_array_index (chunks, i);
-		total_size += g_bytes_get_size (chunk_tmp);
-	}
-
-	/* copy them into a buffer */
-	buffer = g_malloc0 (total_size);
-	for (guint i = 0; i < chunks->len; i++) {
-		const guint8 *chunk_data;
-		gsize chunk_size = 0;
-		GBytes *chunk_tmp = g_ptr_array_index (chunks, i);
-		chunk_data = g_bytes_get_data (chunk_tmp, &chunk_size);
-		if (chunk_size == 0)
-			continue;
-		memcpy (buffer + offset, chunk_data, chunk_size);
-		offset += chunk_size;
-	}
-	return g_bytes_new_take (buffer, total_size);
-}
-
 static DfuElement *
 dfu_target_upload_element_dfuse (DfuTarget *target,
 				 guint32 address,
@@ -1122,7 +1094,7 @@ dfu_target_upload_element_dfuse (DfuTarget *target,
 	dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 
 	/* create new image */
-	contents = _g_bytes_array_join (chunks);
+	contents = dfu_utils_bytes_join_array (chunks);
 	if (expected_size > 0)
 		contents_truncated = g_bytes_new_from_bytes (contents, 0, expected_size);
 	else
@@ -1204,7 +1176,7 @@ dfu_target_upload_element_dfu (DfuTarget *target,
 	dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 
 	/* create new image */
-	contents = _g_bytes_array_join (chunks);
+	contents = dfu_utils_bytes_join_array (chunks);
 	element = dfu_element_new ();
 	dfu_element_set_contents (element, contents);
 	return element;

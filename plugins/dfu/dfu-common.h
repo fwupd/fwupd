@@ -185,6 +185,10 @@ const gchar	*dfu_mode_to_string			(DfuMode	 mode);
 const gchar	*dfu_cipher_kind_to_string		(DfuCipherKind	 cipher_kind);
 const gchar	*dfu_version_to_string			(DfuVersion	 version);
 
+/* helpers */
+GBytes		*dfu_utils_bytes_join_array		(GPtrArray	*chunks);
+gboolean	 dfu_utils_bytes_is_empty		(GBytes		*bytes);
+
 G_END_DECLS
 
 #endif /* __DFU_COMMON_H */
