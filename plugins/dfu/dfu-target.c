@@ -612,6 +612,7 @@ dfu_target_set_device (DfuTarget *target, DfuDevice *device)
 gboolean
 dfu_target_setup (DfuTarget *target, GCancellable *cancellable, GError **error)
 {
+	DfuTargetClass *klass = DFU_TARGET_GET_CLASS (target);
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
@@ -620,6 +621,12 @@ dfu_target_setup (DfuTarget *target, GCancellable *cancellable, GError **error)
 	/* already done */
 	if (priv->done_setup)
 		return TRUE;
+
+	/* superclassed */
+	if (klass->setup != NULL) {
+		if (!klass->setup (target, cancellable, error))
+			return FALSE;
+	}
 
 	/* get string */
 	if (priv->alt_idx != 0x00 && priv->alt_name == NULL) {
@@ -662,7 +669,7 @@ dfu_target_setup (DfuTarget *target, GCancellable *cancellable, GError **error)
  *
  * Mass erases the device clearing all SRAM and EEPROM memory.
  *
- * IMPORTANT: This only works on STM32 devices from ST.
+ * IMPORTANT: This only works on STM32 devices from ST and AVR32 devices from Atmel.
  *
  * Return value: %TRUE for success
  **/
@@ -672,6 +679,8 @@ dfu_target_mass_erase (DfuTarget *target,
 		       GError **error)
 {
 	DfuTargetClass *klass = DFU_TARGET_GET_CLASS (target);
+	if (!dfu_target_setup (target, cancellable, error))
+		return FALSE;
 	if (klass->mass_erase == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -862,6 +871,10 @@ dfu_target_attach (DfuTarget *target, GCancellable *cancellable, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	DfuTargetClass *klass = DFU_TARGET_GET_CLASS (target);
+
+	/* ensure populated */
+	if (!dfu_target_setup (target, cancellable, error))
+		return FALSE;
 
 	/* implemented as part of a superclass */
 	if (klass->attach != NULL)

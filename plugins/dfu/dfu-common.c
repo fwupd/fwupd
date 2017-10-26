@@ -169,6 +169,8 @@ dfu_version_to_string (DfuVersion version)
 		return "1.1";
 	if (version == DFU_VERSION_DFUSE)
 		return "DfuSe";
+	if (version == DFU_VERSION_ATMEL_AVR)
+		return "AtmelAVR";
 	return NULL;
 }
 

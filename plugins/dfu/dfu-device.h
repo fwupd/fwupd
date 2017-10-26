@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -65,6 +65,7 @@ typedef enum {
  * @DFU_DEVICE_QUIRK_IGNORE_UPLOAD:		Uploading from the device is broken
  * @DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET:	Device needs resetting twice for attach
  * @DFU_DEVICE_QUIRK_JABRA_MAGIC:		Device needs a magic replug sequence
+ * @DFU_DEVICE_QUIRK_USE_ATMEL_AVR:		Device uses the ATMEL bootloader
  *
  * The workarounds for different devices.
  **/
@@ -83,6 +84,7 @@ typedef enum {
 	DFU_DEVICE_QUIRK_IGNORE_UPLOAD		= (1 << 10),
 	DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET	= (1 << 11),
 	DFU_DEVICE_QUIRK_JABRA_MAGIC		= (1 << 12),
+	DFU_DEVICE_QUIRK_USE_ATMEL_AVR		= (1 << 13),
 	/*< private >*/
 	DFU_DEVICE_QUIRK_LAST
 } DfuDeviceQuirks;

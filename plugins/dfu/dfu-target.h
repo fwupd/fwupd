@@ -72,6 +72,9 @@ struct _DfuTargetClass
 							 guint		 percentage);
 	void			 (*action_changed)	(DfuTarget	*target,
 							 FwupdStatus	 action);
+	gboolean		 (*setup)		(DfuTarget	*target,
+							 GCancellable	*cancellable,
+							 GError		**error);
 	gboolean		 (*attach)		(DfuTarget	*target,
 							 GCancellable	*cancellable,
 							 GError		**error);
