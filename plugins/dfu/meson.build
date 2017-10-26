@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginDfu"']
 dfu = static_library(
   'dfu',
   sources : [
+    'dfu-chunked.c',
     'dfu-cipher-xtea.c',
     'dfu-common.c',
     'dfu-context.c',
