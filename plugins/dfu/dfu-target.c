@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -428,7 +428,7 @@ dfu_target_new (DfuDevice *device, GUsbInterface *iface)
  * dfu_target_get_sectors:
  * @target: a #GUsbDevice
  *
- * Gets the sectors exported by the device.
+ * Gets the sectors exported by the target.
  *
  * Return value: (transfer none) (element-type DfuSector): sectors
  **/
@@ -438,6 +438,24 @@ dfu_target_get_sectors (DfuTarget *target)
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
 	return priv->sectors;
+}
+
+/**
+ * dfu_target_get_sector_default:
+ * @target: a #GUsbDevice
+ *
+ * Gets the default (first) sector exported by the target.
+ *
+ * Return value: (transfer none): a #DfuSector, or %NULL
+ **/
+DfuSector *
+dfu_target_get_sector_default (DfuTarget *target)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
+	if (priv->sectors->len == 0)
+		return NULL;
+	return DFU_SECTOR (g_ptr_array_index (priv->sectors, 0));
 }
 
 /**

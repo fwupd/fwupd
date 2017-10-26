@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -28,6 +28,7 @@
 
 #include "dfu-common.h"
 #include "dfu-image.h"
+#include "dfu-sector.h"
 
 #include "fwupd-enums.h"
 
@@ -84,6 +85,7 @@ typedef enum {
 } DfuTargetTransferFlags;
 
 GPtrArray	*dfu_target_get_sectors			(DfuTarget	*target);
+DfuSector	*dfu_target_get_sector_default		(DfuTarget	*target);
 guint8		 dfu_target_get_alt_setting		(DfuTarget	*target);
 const gchar	*dfu_target_get_alt_name		(DfuTarget	*target,
 							 GError		**error);
