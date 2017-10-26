@@ -699,9 +699,11 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 		dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 		dfu_target_set_action (target, FWUPD_STATUS_DEVICE_BUSY);
 	}
-	g_debug ("sleeping for %ums…",
-		 dfu_device_get_download_timeout (priv->device));
-	g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
+	if (dfu_device_get_download_timeout (priv->device) > 0) {
+		g_debug ("sleeping for %ums…",
+			 dfu_device_get_download_timeout (priv->device));
+		g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
+	}
 
 	/* find out if the write was successful */
 	if (!dfu_device_refresh (priv->device, cancellable, error))
