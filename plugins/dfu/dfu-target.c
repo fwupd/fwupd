@@ -665,6 +665,14 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 	g_autoptr(GError) error_local = NULL;
 	gsize actual_length;
 
+	/* low level packet debugging */
+	if (g_getenv ("DFU_TRACE") != NULL) {
+		gsize sz = 0;
+		const guint8 *data = g_bytes_get_data (bytes, &sz);
+		for (gsize i = 0; i < sz; i++)
+			g_print ("Message: m[%" G_GSIZE_FORMAT "] = 0x%02x\n", i, (guint) data[i]);
+	}
+
 	if (!g_usb_device_control_transfer (dfu_device_get_usb_dev (priv->device),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -929,6 +937,12 @@ dfu_target_upload_chunk (DfuTarget *target, guint16 index,
 			     "cannot upload data: %s",
 			     error_local->message);
 		return NULL;
+	}
+
+	/* low level packet debugging */
+	if (g_getenv ("DFU_TRACE") != NULL) {
+		for (gsize i = 0; i < actual_length; i++)
+			g_print ("Message: r[%" G_GSIZE_FORMAT "] = 0x%02x\n", i, (guint) buf[i]);
 	}
 
 	return g_bytes_new_take (buf, actual_length);
