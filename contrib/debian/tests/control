@@ -1,3 +1,2 @@
 Tests: ci
-Depends: policykit-1
 Restrictions: needs-root
