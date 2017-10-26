@@ -60,7 +60,6 @@ typedef struct {
 	GUsbDevice		*dev;
 	FuDeviceLocker		*dev_locker;
 	gboolean		 open_new_dev;		/* if set new GUsbDevice */
-	gboolean		 dfuse_supported;
 	gboolean		 done_upload_or_download;
 	gboolean		 claimed_interface;
 	gchar			*display_name;
@@ -308,14 +307,11 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 		if (priv->version == DFU_VERSION_DFU_1_0 ||
 		    priv->version == DFU_VERSION_DFU_1_1) {
 			g_debug ("basic DFU, no DfuSe support");
-			priv->dfuse_supported = FALSE;
 		} else if (priv->version == 0x0101) {
 			g_debug ("basic DFU 1.1 assumed, no DfuSe support");
 			priv->version = DFU_VERSION_DFU_1_1;
-			priv->dfuse_supported = FALSE;
 		} else if (priv->version == DFU_VERSION_DFUSE) {
 			g_debug ("DfuSe support");
-			priv->dfuse_supported = TRUE;
 		} else {
 			g_warning ("DFU version is invalid: 0x%04x",
 				   priv->version);
@@ -323,7 +319,7 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 	}
 
 	/* ST-specific */
-	if (priv->dfuse_supported &&
+	if (priv->version == DFU_VERSION_DFUSE &&
 	    desc->bmAttributes & DFU_DEVICE_ATTRIBUTE_CAN_ACCELERATE)
 		priv->transfer_size = 0x1000;
 
@@ -601,22 +597,6 @@ dfu_device_has_attribute (DfuDevice *device, DfuDeviceAttributes attribute)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_val_if_fail (DFU_IS_DEVICE (device), 0x0);
 	return (priv->attributes & attribute) > 0;
-}
-
-/**
- * dfu_device_has_dfuse_support:
- * @device: A #DfuDevice
- *
- * Returns is DfuSe is supported on a device.
- *
- * Return value: %TRUE for DfuSe
- **/
-gboolean
-dfu_device_has_dfuse_support (DfuDevice *device)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
-	return priv->dfuse_supported;
 }
 
 static void
@@ -1797,7 +1777,7 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	}
 
 	/* there's a a special command for ST devices */
-	if (priv->dfuse_supported) {
+	if (priv->version == DFU_VERSION_DFUSE) {
 		g_autoptr(DfuTarget) target = NULL;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 

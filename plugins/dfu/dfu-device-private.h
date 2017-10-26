@@ -34,8 +34,6 @@ G_BEGIN_DECLS
 
 GUsbDevice	*dfu_device_get_usb_dev			(DfuDevice	*device);
 
-gboolean	 dfu_device_has_dfuse_support		(DfuDevice	*device);
-
 void		 dfu_device_error_fixup			(DfuDevice	*device,
 							 GCancellable	*cancellable,
 							 GError		**error);

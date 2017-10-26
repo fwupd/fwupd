@@ -517,7 +517,7 @@ dfu_target_check_status (DfuTarget *target,
 		return FALSE;
 
 	/* wait for dfuDNBUSY to not be set */
-	if (dfu_device_has_dfuse_support (priv->device)) {
+	if (dfu_device_get_version (priv->device) == DFU_VERSION_DFUSE) {
 		while (dfu_device_get_state (priv->device) == DFU_STATE_DFU_DNBUSY) {
 			g_debug ("waiting for DFU_STATE_DFU_DNBUSY to clear");
 			g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
@@ -532,7 +532,7 @@ dfu_target_check_status (DfuTarget *target,
 
 	/* DfuSe-specific long errors */
 	status = dfu_device_get_status (priv->device);
-	if (dfu_device_has_dfuse_support (priv->device)) {
+	if (dfu_device_get_version (priv->device) == DFU_VERSION_DFUSE) {
 		if (status == DFU_STATUS_ERR_VENDOR) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -688,7 +688,7 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 	}
 
 	/* for ST devices, the action only occurs when we do GetStatus */
-	if (dfu_device_has_dfuse_support (priv->device)) {
+	if (dfu_device_get_version (priv->device) == DFU_VERSION_DFUSE) {
 		if (!dfu_device_refresh (priv->device, cancellable, error))
 			return FALSE;
 	}
@@ -735,7 +735,7 @@ dfu_target_set_address (DfuTarget *target,
 	guint8 buf[5];
 
 	/* invalid */
-	if (!dfu_device_has_dfuse_support (priv->device)) {
+	if (dfu_device_get_version (priv->device) != DFU_VERSION_DFUSE) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -781,7 +781,7 @@ dfu_target_erase_address (DfuTarget *target,
 	guint8 buf[5];
 
 	/* invalid */
-	if (!dfu_device_has_dfuse_support (priv->device)) {
+	if (dfu_device_get_version (priv->device) != DFU_VERSION_DFUSE) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -830,7 +830,7 @@ dfu_target_mass_erase (DfuTarget *target,
 	guint8 buf[1];
 
 	/* invalid */
-	if (!dfu_device_has_dfuse_support (priv->device)) {
+	if (dfu_device_get_version (priv->device) != DFU_VERSION_DFUSE) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -872,7 +872,7 @@ dfu_target_read_unprotect (DfuTarget *target,
 	guint8 buf[5];
 
 	/* invalid */
-	if (!dfu_device_has_dfuse_support (priv->device)) {
+	if (dfu_device_get_version (priv->device) != DFU_VERSION_DFUSE) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1071,7 +1071,7 @@ dfu_target_upload_element_dfuse (DfuTarget *target,
 	}
 
 	/* abort back to IDLE */
-	if (dfu_device_has_dfuse_support (priv->device)) {
+	if (dfu_device_get_version (priv->device) == DFU_VERSION_DFUSE) {
 		if (!dfu_device_abort (priv->device, cancellable, error))
 			return NULL;
 	}
@@ -1191,7 +1191,7 @@ dfu_target_upload_element (DfuTarget *target,
 			   GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	if (dfu_device_has_dfuse_support (priv->device)) {
+	if (dfu_device_get_version (priv->device) == DFU_VERSION_DFUSE) {
 		return dfu_target_upload_element_dfuse (target,
 							address,
 							expected_size,
@@ -1571,7 +1571,7 @@ dfu_target_download_element (DfuTarget *target,
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 
 	/* DfuSe specific */
-	if (dfu_device_has_dfuse_support (priv->device)) {
+	if (dfu_device_get_version (priv->device) == DFU_VERSION_DFUSE) {
 		if (!dfu_target_download_element_dfuse (target,
 							element,
 							flags,
@@ -1733,7 +1733,7 @@ dfu_target_get_commands (DfuTarget *target,
 	guint8 buf[1];
 
 	/* invalid */
-	if (!dfu_device_has_dfuse_support (priv->device)) {
+	if (dfu_device_get_version (priv->device) != DFU_VERSION_DFUSE) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
