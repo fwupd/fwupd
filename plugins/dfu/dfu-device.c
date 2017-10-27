@@ -271,26 +271,38 @@ static void
 dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	const DfuFuncDescriptor *desc;
-	gsize iface_data_length;
+	DfuFuncDescriptor desc;
+	const guint8 *buf;
+	gsize sz;
 
 	/* parse the functional descriptor */
-	desc = g_bytes_get_data (iface_data, &iface_data_length);
-	if (iface_data_length != 0x09) {
+	buf = g_bytes_get_data (iface_data, &sz);
+	if (sz == sizeof(DfuFuncDescriptor)) {
+		memcpy (&desc, buf, sz);
+	} else if (sz == sizeof(DfuFuncDescriptor) - 2) {
+		g_warning ("truncated DFU interface data, no bcdDFUVersion");
+		memcpy (&desc, buf, sz);
+		desc.bcdDFUVersion = DFU_VERSION_DFU_1_1;
+	} else {
+		g_autoptr(GString) bufstr = g_string_new (NULL);
+		for (gsize i = 0; i < sz; i++)
+			g_string_append_printf (bufstr, "%02x ", buf[i]);
+		if (bufstr->len > 0)
+			g_string_truncate (bufstr, bufstr->len - 1);
 		g_warning ("interface found, but not the correct length for "
-			   "functional data: %" G_GSIZE_FORMAT " bytes",
-			   iface_data_length);
+			   "functional data: %" G_GSIZE_FORMAT " bytes: %s",
+			   sz, bufstr->str);
 		return;
 	}
 
 	/* check sanity */
-	if (desc->bLength != 0x09) {
+	if (desc.bLength != sz) {
 		g_warning ("DFU interface data has incorrect length: 0x%02x",
-			   desc->bLength);
+			   desc.bLength);
 	}
 
 	/* check transfer size */
-	priv->transfer_size = GUINT16_FROM_LE (desc->wTransferSize);
+	priv->transfer_size = GUINT16_FROM_LE (desc.wTransferSize);
 	if (priv->transfer_size == 0xffff) {
 		priv->transfer_size = 0x0400;
 		g_debug ("DFU transfer size unspecified, guessing");
@@ -299,12 +311,12 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 		g_debug ("using DFU transfer size 0x%04x bytes", priv->transfer_size);
 	} else {
 		g_warning ("DFU transfer size 0x%04x invalid, using default",
-			   desc->wTransferSize);
+			   desc.wTransferSize);
 		priv->transfer_size = 64;
 	}
 
 	/* check DFU version */
-	priv->version = GUINT16_FROM_LE (desc->bcdDFUVersion);
+	priv->version = GUINT16_FROM_LE (desc.bcdDFUVersion);
 	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION) {
 		g_debug ("ignoring quirked DFU version");
 	} else {
@@ -324,11 +336,11 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 
 	/* ST-specific */
 	if (priv->version == DFU_VERSION_DFUSE &&
-	    desc->bmAttributes & DFU_DEVICE_ATTRIBUTE_CAN_ACCELERATE)
+	    desc.bmAttributes & DFU_DEVICE_ATTRIBUTE_CAN_ACCELERATE)
 		priv->transfer_size = 0x1000;
 
 	/* get attributes about the DFU operation */
-	priv->attributes = desc->bmAttributes;
+	priv->attributes = desc.bmAttributes;
 }
 
 static gboolean
