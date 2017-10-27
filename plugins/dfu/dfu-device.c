@@ -1068,6 +1068,23 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 	return TRUE;
 }
 
+static guint8
+_g_usb_device_get_interface_for_class (GUsbDevice *dev,
+				       guint8 intf_class,
+				       GError **error)
+{
+	g_autoptr(GPtrArray) intfs = NULL;
+	intfs = g_usb_device_get_interfaces (dev, error);
+	if (intfs == NULL)
+		return 0xff;
+	for (guint i = 0; i < intfs->len; i++) {
+		GUsbInterface *intf = g_ptr_array_index (intfs, i);
+		if (g_usb_interface_get_class (intf) == intf_class)
+			return g_usb_interface_get_number (intf);
+	}
+	return 0xff;
+}
+
 /**
  * dfu_device_detach:
  * @device: a #DfuDevice
@@ -1115,6 +1132,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 	if (priv->quirks & DFU_DEVICE_QUIRK_JABRA_MAGIC) {
 		guint8 adr = 0x00;
 		guint8 rep = 0x00;
+		guint8 iface_hid;
 		g_autofree guint8 *buf = g_malloc0 (33);
 		g_autoptr(GError) error_jabra = NULL;
 
@@ -1147,9 +1165,31 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 		buf[4] = 0x85;
 		buf[5] = 0x07;
 
-		/* send magic to device */
-		if (!dfu_device_ensure_interface (device, cancellable, error))
+		/* detach the HID interface from the kernel driver */
+		iface_hid = _g_usb_device_get_interface_for_class (priv->dev,
+								   G_USB_DEVICE_CLASS_HID,
+								   &error_local);
+		if (iface_hid == 0xff) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "cannot find HID interface: %s",
+				     error_local->message);
 			return FALSE;
+		}
+		g_debug ("claiming interface 0x%02x", iface_hid);
+		if (!g_usb_device_claim_interface (priv->dev, (gint) iface_hid,
+						   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+						   &error_local)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "cannot claim interface 0x%02x: %s",
+				     iface_hid, error_local->message);
+			return FALSE;
+		}
+
+		/* send magic to device */
 		if (!g_usb_device_control_transfer (priv->dev,
 						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 						    G_USB_DEVICE_REQUEST_TYPE_CLASS,
