@@ -2138,6 +2138,13 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 			dfu_tool_print_indent (_("Quirks"), quirks, 1);
 		}
 
+		/* this is optional */
+		tmp = dfu_device_get_chip_id (device);
+		if (tmp != NULL) {
+			/* TRANSLATORS: chip ID, e.g. "0x58200204" */
+			dfu_tool_print_indent (_("Chip ID"), tmp, 1);
+		}
+
 		/* list targets */
 		dfu_targets = dfu_device_get_targets (device);
 		for (guint j = 0; j < dfu_targets->len; j++) {
