@@ -636,6 +636,21 @@ dfu_device_has_attribute (DfuDevice *device, DfuDeviceAttributes attribute)
 	return (priv->attributes & attribute) > 0;
 }
 
+/**
+ * dfu_device_remove_attribute: (skip)
+ * @device: A #DfuDevice
+ * @attribute: A #DfuDeviceAttributes, e.g. %DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD
+ *
+ * Removes an attribute from the device.
+ **/
+void
+dfu_device_remove_attribute (DfuDevice *device, DfuDeviceAttributes attribute)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (DFU_IS_DEVICE (device));
+	priv->attributes &= ~attribute;
+}
+
 static void
 dfu_device_set_quirks (DfuDevice *device)
 {
