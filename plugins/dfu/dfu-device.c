@@ -62,6 +62,7 @@ typedef struct {
 	gboolean		 open_new_dev;		/* if set new GUsbDevice */
 	gboolean		 done_upload_or_download;
 	gboolean		 claimed_interface;
+	gchar			*chip_id;
 	gchar			*display_name;
 	gchar			*serial_number;
 	gchar			*platform_id;
@@ -937,6 +938,23 @@ dfu_device_get_serial_number (DfuDevice *device)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_val_if_fail (DFU_IS_DEVICE (device), NULL);
 	return priv->serial_number;
+}
+
+const gchar *
+dfu_device_get_chip_id (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), NULL);
+	return priv->chip_id;
+}
+
+void
+dfu_device_set_chip_id (DfuDevice *device, const gchar *chip_id)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (DFU_IS_DEVICE (device));
+	g_debug ("chip ID set to: %s", chip_id);
+	priv->chip_id = g_strdup (chip_id);
 }
 
 static void
