@@ -85,6 +85,9 @@ DfuImage	*dfu_target_upload			(DfuTarget	*target,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 dfu_target_setup			(DfuTarget	*target,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 dfu_target_download			(DfuTarget	*target,
 							 DfuImage	*image,
 							 DfuTargetTransferFlags flags,

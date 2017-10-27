@@ -604,14 +604,15 @@ dfu_target_use_alt_setting (DfuTarget *target, GError **error)
 /**
  * dfu_target_setup:
  * @target: a #DfuTarget
+ * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Opens a DFU-capable target.
  *
  * Return value: %TRUE for success
  **/
-static gboolean
-dfu_target_setup (DfuTarget *target, GError **error)
+gboolean
+dfu_target_setup (DfuTarget *target, GCancellable *cancellable, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 
@@ -1251,7 +1252,7 @@ dfu_target_upload (DfuTarget *target,
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* ensure populated */
-	if (!dfu_target_setup (target, error))
+	if (!dfu_target_setup (target, cancellable, error))
 		return NULL;
 
 	/* can the target do this? */
@@ -1650,7 +1651,7 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* ensure populated */
-	if (!dfu_target_setup (target, error))
+	if (!dfu_target_setup (target, cancellable, error))
 		return FALSE;
 
 	/* can the target do this? */
@@ -1796,7 +1797,7 @@ dfu_target_get_alt_name (DfuTarget *target, GError **error)
 	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
 
 	/* ensure populated */
-	if (!dfu_target_setup (target, error))
+	if (!dfu_target_setup (target, NULL, error))
 		return NULL;
 
 	/* nothing */
@@ -1828,7 +1829,7 @@ dfu_target_get_alt_name_for_display (DfuTarget *target, GError **error)
 	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
 
 	/* ensure populated */
-	if (!dfu_target_setup (target, error))
+	if (!dfu_target_setup (target, NULL, error))
 		return NULL;
 
 	/* nothing */

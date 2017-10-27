@@ -1456,6 +1456,7 @@ dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags,
 		      GCancellable *cancellable, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	GPtrArray *targets = dfu_device_get_targets (device);
 	guint8 idx;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -1539,6 +1540,13 @@ dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags,
 		default:
 			break;
 		}
+	}
+
+	/* set up target ready for use */
+	for (guint j = 0; j < targets->len; j++) {
+		DfuTarget *target = g_ptr_array_index (targets, j);
+		if (!dfu_target_setup (target, cancellable, error))
+			return FALSE;
 	}
 
 	/* success */
