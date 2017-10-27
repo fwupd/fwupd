@@ -2081,12 +2081,17 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_PERMISSION_DENIED)) {
 				/* TRANSLATORS: probably not run as root... */
-				dfu_tool_print_indent (_("Status"), _("Unknown: permission denied"), 2);
+				dfu_tool_print_indent (_("Status"), _("Permission denied"), 1);
+				continue;
+			}
+			if (g_error_matches (error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug ("ignoring warning, continuing...");
 			} else {
 				/* TRANSLATORS: device has failed to report status */
-				dfu_tool_print_indent (_("Status"), error_local->message, 2);
+				dfu_tool_print_indent (_("Status"), error_local->message, 1);
 			}
-			continue;
 		}
 
 		tmp = dfu_device_get_display_name (device);
