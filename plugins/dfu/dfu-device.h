@@ -192,6 +192,8 @@ gboolean	 dfu_device_is_open			(DfuDevice	*device);
 
 gboolean	 dfu_device_has_attribute		(DfuDevice	*device,
 							 DfuDeviceAttributes attribute);
+void		 dfu_device_remove_attribute		(DfuDevice	*device,
+							 DfuDeviceAttributes attribute);
 gboolean	 dfu_device_has_quirk			(DfuDevice	*device,
 							 DfuDeviceQuirks quirk);
 

@@ -297,6 +297,10 @@ dfu_target_avr_setup (DfuTarget *target, GCancellable *cancellable, GError **err
 	/* we don't support this chip */
 	if (dfu_target_get_alt_name (target, NULL) == NULL) {
 		g_autoptr(GString) devstr = g_string_new (NULL);
+		dfu_device_remove_attribute (dfu_target_get_device (target),
+					     DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD);
+		dfu_device_remove_attribute (dfu_target_get_device (target),
+					     DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD);
 		for (guint i = 0; device_ids[i].id != 0x0; i++) {
 			g_string_append_printf (devstr, "%s,",
 						device_ids[i].name);
