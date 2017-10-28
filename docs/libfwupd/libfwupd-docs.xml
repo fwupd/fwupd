@@ -45,6 +45,7 @@
     <xi:include href="xml/fu-device.xml"/>
     <xi:include href="xml/fu-device-locker.xml"/>
     <xi:include href="xml/fu-common.xml"/>
+    <xi:include href="xml/fu-quirks.xml"/>
     <xi:include href="xml/fu-device-metadata.xml"/>
   </reference>
 
