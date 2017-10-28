@@ -42,17 +42,6 @@ struct _DfuContextClass
 							 DfuDevice	*device);
 	void			(*device_changed)	(DfuContext	*context,
 							 DfuDevice	*device);
-	/*< private >*/
-	/* Padding for future expansion */
-	void (*_dfu_context_reserved1) (void);
-	void (*_dfu_context_reserved2) (void);
-	void (*_dfu_context_reserved3) (void);
-	void (*_dfu_context_reserved4) (void);
-	void (*_dfu_context_reserved5) (void);
-	void (*_dfu_context_reserved6) (void);
-	void (*_dfu_context_reserved7) (void);
-	void (*_dfu_context_reserved8) (void);
-	void (*_dfu_context_reserved9) (void);
 };
 
 DfuContext	*dfu_context_new			(void);

@@ -36,17 +36,6 @@ G_DECLARE_DERIVABLE_TYPE (DfuFirmware, dfu_firmware, DFU, FIRMWARE, GObject)
 struct _DfuFirmwareClass
 {
 	GObjectClass		 parent_class;
-	/*< private >*/
-	/* Padding for future expansion */
-	void (*_dfu_firmware_reserved1) (void);
-	void (*_dfu_firmware_reserved2) (void);
-	void (*_dfu_firmware_reserved3) (void);
-	void (*_dfu_firmware_reserved4) (void);
-	void (*_dfu_firmware_reserved5) (void);
-	void (*_dfu_firmware_reserved6) (void);
-	void (*_dfu_firmware_reserved7) (void);
-	void (*_dfu_firmware_reserved8) (void);
-	void (*_dfu_firmware_reserved9) (void);
 };
 
 /**

@@ -33,17 +33,6 @@ G_DECLARE_DERIVABLE_TYPE (DfuElement, dfu_element, DFU, ELEMENT, GObject)
 struct _DfuElementClass
 {
 	GObjectClass		 parent_class;
-	/*< private >*/
-	/* Padding for future expansion */
-	void (*_dfu_element_reserved1) (void);
-	void (*_dfu_element_reserved2) (void);
-	void (*_dfu_element_reserved3) (void);
-	void (*_dfu_element_reserved4) (void);
-	void (*_dfu_element_reserved5) (void);
-	void (*_dfu_element_reserved6) (void);
-	void (*_dfu_element_reserved7) (void);
-	void (*_dfu_element_reserved8) (void);
-	void (*_dfu_element_reserved9) (void);
 };
 
 DfuElement	*dfu_element_new		(void);

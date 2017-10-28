@@ -44,16 +44,6 @@ struct _DfuTargetClass
 							 guint		 percentage);
 	void			(*action_changed)	(DfuTarget	*target,
 							 FwupdStatus	 action);
-	/*< private >*/
-	/* Padding for future expansion */
-	void (*_dfu_target_reserved1) (void);
-	void (*_dfu_target_reserved2) (void);
-	void (*_dfu_target_reserved3) (void);
-	void (*_dfu_target_reserved4) (void);
-	void (*_dfu_target_reserved5) (void);
-	void (*_dfu_target_reserved6) (void);
-	void (*_dfu_target_reserved7) (void);
-	void (*_dfu_target_reserved8) (void);
 };
 
 /**

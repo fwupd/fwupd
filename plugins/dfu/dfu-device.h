@@ -120,16 +120,6 @@ struct _DfuDeviceClass
 							 guint		 percentage);
 	void			(*action_changed)	(DfuDevice	*device,
 							 FwupdStatus	 action);
-	/*< private >*/
-	/* Padding for future expansion */
-	void (*_dfu_device_reserved1) (void);
-	void (*_dfu_device_reserved2) (void);
-	void (*_dfu_device_reserved3) (void);
-	void (*_dfu_device_reserved4) (void);
-	void (*_dfu_device_reserved5) (void);
-	void (*_dfu_device_reserved6) (void);
-	void (*_dfu_device_reserved7) (void);
-	void (*_dfu_device_reserved8) (void);
 };
 
 DfuDevice	*dfu_device_new				(GUsbDevice	*dev);
