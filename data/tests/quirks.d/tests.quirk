@@ -1,0 +1,12 @@
+[fwupd-plugin-test]
+
+USB\VID_0A5C&PID_6412=ignore-runtime
+
+# this is an empty key
+USB\VID_FFFF&PID_FFFF=
+
+# this is a key with a space
+ACME Inc.=awesome
+
+# this is a wildcard
+CORP*=town
