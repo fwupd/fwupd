@@ -177,10 +177,12 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 				checksum += data_tmp;
 			}
 			if (checksum != 0)  {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "invalid record checksum");
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "invalid record checksum at 0x%04x "
+					     "to 0x%04x, got 0x%02x",
+					     offset, end, checksum);
 				return FALSE;
 			}
 		}
@@ -306,31 +308,55 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 }
 
 static void
+dfu_firmware_ihex_emit_chunk (GString *str,
+			      guint16 address,
+			      guint8 record_type,
+			      const guint8 *data,
+			      gsize sz)
+{
+	guint8 checksum = 0x00;
+	g_string_append_printf (str, ":%02X%04X%02X",
+				(guint) sz,
+				(guint) address,
+				(guint) record_type);
+	for (gsize j = 0; j < sz; j++)
+		g_string_append_printf (str, "%02X", data[j]);
+	checksum = (guint8) sz;
+	checksum += (guint8) ((address & 0xff00) >> 8);
+	checksum += (guint8) (address & 0xff);
+	checksum += record_type;
+	for (gsize j = 0; j < sz; j++)
+		checksum += data[j];
+	g_string_append_printf (str, "%02X\n", (guint) (((~checksum) + 0x01) & 0xff));
+}
+
+static void
 dfu_firmware_to_ihex_bytes (GString *str, guint8 record_type,
 			    guint32 address, GBytes *contents)
 {
 	const guint8 *data;
 	const guint chunk_size = 16;
 	gsize len;
+	guint32 address_offset_last = 0x0;
 
 	/* get number of chunks */
 	data = g_bytes_get_data (contents, &len);
 	for (gsize i = 0; i < len; i += chunk_size) {
-		guint8 checksum = 0;
-
-		/* length, 16-bit address, type */
+		guint32 address_tmp = address + i;
+		guint32 address_offset = (address_tmp >> 16) & 0xffff;
 		gsize chunk_len = MIN (len - i, 16);
-		g_string_append_printf (str, ":%02X%04X%02X",
-					(guint) chunk_len,
-					(guint) (address + i),
-					(guint) record_type);
-		for (gsize j = 0; j < chunk_len; j++)
-			g_string_append_printf (str, "%02X", data[i+j]);
 
-		/* add checksum */
-		for (gsize j = 0; j < (chunk_len * 2) + 8; j++)
-			checksum += (guint8) str->str[str->len - (j + 1)];
-		g_string_append_printf (str, "%02X\n", checksum);
+		/* need to offset */
+		if (address_offset != address_offset_last) {
+			guint16 tmp = GUINT16_TO_BE (address_offset);
+			dfu_firmware_ihex_emit_chunk (str, 0x0,
+						      DFU_INHX32_RECORD_TYPE_EXTENDED,
+						      (guint8 *) &tmp, 2);
+			address_offset_last = address_offset;
+		}
+		address_tmp &= 0xffff;
+		dfu_firmware_ihex_emit_chunk (str, address_tmp,
+					      record_type, data + i, chunk_len);
 	}
 }
 
@@ -390,8 +416,6 @@ dfu_firmware_to_ihex (DfuFirmware *firmware, GError **error)
 	}
 
 	/* add EOF */
-	g_string_append_printf (str, ":000000%02XFF\n",
-				(guint) DFU_INHX32_RECORD_TYPE_EOF);
-
+	dfu_firmware_ihex_emit_chunk (str, 0x0, DFU_INHX32_RECORD_TYPE_EOF, NULL, 0);
 	return g_bytes_new (str->str, str->len);
 }
