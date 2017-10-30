@@ -874,19 +874,22 @@ fu_engine_vendor_fixup_provide_value (AsApp *app)
 }
 
 static void
-fu_engine_vendor_quirk_release_version (AsApp *app)
+fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 {
 	AsVersionParseFlag flags = AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 	GPtrArray *releases;
+	const gchar *quirk;
 
 	/* no quirk required */
 	if (as_app_get_kind (app) != AS_APP_KIND_FIRMWARE)
 		return;
 
-	for (guint i = 0; quirk_table[i].identifier != NULL; i++) {
-		if (g_str_has_prefix (as_app_get_id(app), quirk_table[i].identifier))
-			flags = quirk_table[i].flags;
-	}
+	/* any quirks match */
+	quirk = fu_quirks_lookup_by_glob (self->quirks,
+					  FU_QUIRKS_DAEMON_VERSION_FORMAT,
+					  as_app_get_id (app));
+	if (g_strcmp0 (quirk, "none") == 0)
+		flags = AS_VERSION_PARSE_FLAG_NONE;
 
 	/* fix each release */
 	releases = as_app_get_releases (app);
@@ -1080,7 +1083,7 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (app);
+	fu_engine_vendor_quirk_release_version (self, app);
 
 	/* possibly convert the flashed provide to a GUID */
 	fu_engine_vendor_fixup_provide_value (app);
@@ -1361,7 +1364,7 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 	}
 
 	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (app);
+	fu_engine_vendor_quirk_release_version (self, app);
 
 	/* possibly convert the flashed provide to a GUID */
 	fu_engine_vendor_fixup_provide_value (app);
@@ -1451,7 +1454,7 @@ fu_engine_add_component_to_store (FuEngine *self, AsApp *app)
 	GPtrArray *releases = as_app_get_releases (app);
 
 	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (app);
+	fu_engine_vendor_quirk_release_version (self, app);
 
 	/* possibly convert the flashed provide to a GUID */
 	fu_engine_vendor_fixup_provide_value (app);
@@ -1865,7 +1868,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 		return NULL;
 
 	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (app);
+	fu_engine_vendor_quirk_release_version (self, app);
 
 	/* possibly convert the flashed provide to a GUID */
 	fu_engine_vendor_fixup_provide_value (app);

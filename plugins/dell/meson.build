@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 
+install_data(['dell.quirk'],
+  install_dir: join_paths(get_option('datadir'), 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_dell',
   sources : [
     'fu-plugin-dell.c',

@@ -1,0 +1,8 @@
+[fwupd-uefi-version-format]
+
+# Dell & Alienware use AA.BB.CC.DD rather than AA.BB.CCDD
+Dell Inc.=none
+Alienware=none
+
+[fwupd-daemon-version-format]
+com.dell.uefi*.firmware=none
