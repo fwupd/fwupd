@@ -124,7 +124,7 @@ struct _DfuDeviceClass
 							 FwupdStatus	 action);
 };
 
-DfuDevice	*dfu_device_new				(GUsbDevice	*dev);
+DfuDevice	*dfu_device_new				(void);
 gboolean	 dfu_device_open			(DfuDevice	*device,
 							 GError		**error);
 gboolean	 dfu_device_open_full			(DfuDevice	*device,

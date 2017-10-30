@@ -376,7 +376,8 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	data->context = dfu_context_new_with_context (usb_ctx);
+	FuQuirks *quirks = fu_plugin_get_quirks (plugin);
+	data->context = dfu_context_new_full (usb_ctx, quirks);
 }
 
 void
