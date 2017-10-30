@@ -44,22 +44,6 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 							 const gchar	*prefix,
 							 GUsbDevice	*dev);
 
-#include <appstream-glib.h>
-
-/* FIXME: port to above */
-typedef struct {
-	const gchar             *sys_vendor;
-	const gchar		*identifier;
-	AsVersionParseFlag       flags;
-} FuVendorQuirks;
-
-static const FuVendorQuirks quirk_table[] = {
-	/* Dell & Alienware use AA.BB.CC.DD rather than AA.BB.CCDD */
-	{ "Dell Inc.",	"com.dell.uefi",	AS_VERSION_PARSE_FLAG_NONE },
-	{ "Alienware",	"com.dell.uefi",	AS_VERSION_PARSE_FLAG_NONE },
-	{ NULL,		NULL,			AS_VERSION_PARSE_FLAG_NONE }
-};
-
 /**
  * FU_QUIRKS_DFU:
  * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
@@ -88,6 +72,36 @@ static const FuVendorQuirks quirk_table[] = {
  * Since: 1.0.1
  */
 #define	FU_QUIRKS_DFU				"fwupd-dfu"
+
+/**
+ * FU_QUIRKS_UEFI_VERSION_FORMAT:
+ * @key: a %FU_HWIDS_KEY_MANUFACTURER, e.g. `Alienware`
+ * @value: the version format, e.g. `none`
+ *
+ * Assigns the version format to use for a specific manufacturer.
+ * A specific version format is sometimes chosen to match the appearance of
+ * other systems or specifications.
+ *
+ * Default value: `use-triplet`
+ *
+ * Since: 1.0.1
+ */
+#define	FU_QUIRKS_UEFI_VERSION_FORMAT		"fwupd-uefi-version-format"
+
+/**
+ * FU_QUIRKS_DAEMON_VERSION_FORMAT:
+ * @key: the optionally wildcarded AppStream ID e.g. `com.dell.uefi*.firmware`
+ * @value: the version format, e.g. `none`
+ *
+ * Assigns the version format to use for a specific AppStream component.
+ * A specific version format is sometimes chosen to match the appearance of
+ * other systems or specifications.
+ *
+ * Default value: `use-triplet`
+ *
+ * Since: 1.0.1
+ */
+#define	FU_QUIRKS_DAEMON_VERSION_FORMAT		"fwupd-daemon-version-format"
 
 G_END_DECLS
 
