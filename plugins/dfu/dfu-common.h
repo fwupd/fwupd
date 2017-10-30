@@ -190,6 +190,9 @@ const gchar	*dfu_version_to_string			(DfuVersion	 version);
 /* helpers */
 GBytes		*dfu_utils_bytes_join_array		(GPtrArray	*chunks);
 gboolean	 dfu_utils_bytes_is_empty		(GBytes		*bytes);
+guint8		 dfu_utils_buffer_parse_uint8		(const gchar	*data);
+guint16		 dfu_utils_buffer_parse_uint16		(const gchar	*data);
+guint32		 dfu_utils_buffer_parse_uint32		(const gchar	*data);
 
 G_END_DECLS
 
