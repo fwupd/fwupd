@@ -115,6 +115,24 @@ if __name__ == '__main__':
     test.add_file('4511b9b0d123bdbe8a2007233318ab215a59dfe6-Logitech-Unifying-RQR24.05_B0029.cab', 'RQR24.05_B0029')
     tests.append(test)
 
+    # Jabra Speak 510
+    test = Test('JabraSpeak510', '443b9b32-7603-5c3a-bb30-291a7d8d6dbd')
+    test.add_file('45f88c50e79cfd30b6599df463463578d52f2fe9-Jabra-SPEAK_510-2.10.cab', '2.10')
+    test.add_file('c0523a98ef72508b5c7ddd687418b915ad5f4eb9-Jabra-SPEAK_510-2.14.cab', '2.14')
+    tests.append(test)
+
+    # Jabra Speak 410
+    test = Test('JabraSpeak410', '1764c519-4723-5514-baf9-3b42970de487')
+    test.add_file('eab97d7e745e372e435dbd76404c3929730ac082-Jabra-SPEAK_410-1.8.cab', '1.8')
+    test.add_file('50a03efc5df333a948e159854ea40e1a3786c34c-Jabra-SPEAK_410-1.11.cab', '1.11')
+    tests.append(test)
+
+    # Jabra Speak 710
+    test = Test('JabraSpeak710', '0c503ad9-4969-5668-81e5-a3748682fc16')
+    test.add_file('d2910cdbc45cf172767d05e60d9e39a07a10d242-Jabra-SPEAK_710-1.10.cab', '1.10')
+    test.add_file('a5c627ae42de4e5c3ae3df28977f480624f96f66-Jabra-SPEAK_710-1.28.cab', '1.28')
+    tests.append(test)
+
     # run each test
     rc = 0
     for test in tests:
