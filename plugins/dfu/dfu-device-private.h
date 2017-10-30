@@ -26,6 +26,8 @@
 #include <gio/gio.h>
 #include <gusb.h>
 
+#include "fu-quirks.h"
+
 #include "dfu-device.h"
 
 G_BEGIN_DECLS
@@ -44,6 +46,9 @@ gboolean	 dfu_device_set_new_usb_dev		(DfuDevice	*device,
 							 GUsbDevice	*dev,
 							 GCancellable	*cancellable,
 							 GError		**error);
+void		 dfu_device_set_system_quirks		(DfuDevice	*device,
+							 FuQuirks	*quirks);
+FuQuirks	*dfu_device_get_system_quirks		(DfuDevice	*device);
 gboolean	 dfu_device_ensure_interface		(DfuDevice	*device,
 							 GCancellable	*cancellable,
 							 GError		**error);

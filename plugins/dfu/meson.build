@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfu"']
 
+install_data(['dfu.quirk'],
+  install_dir: join_paths(get_option('datadir'), 'fwupd', 'quirks.d')
+)
+
 dfu = static_library(
   'dfu',
   sources : [
@@ -109,6 +113,7 @@ if get_option('enable-tests')
       include_directories('..'),
       include_directories('../..'),
       include_directories('../../libfwupd'),
+      include_directories('../../src'),
     ],
     dependencies : [
       appstream_glib,

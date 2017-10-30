@@ -47,6 +47,7 @@ static void dfu_context_finalize			 (GObject *object);
 
 typedef struct {
 	GUsbContext		*usb_ctx;
+	FuQuirks		*quirks;
 	GPtrArray		*devices;		/* of DfuContextItem */
 	guint			 timeout;		/* in ms */
 } DfuContextPrivate;
@@ -203,10 +204,10 @@ dfu_context_device_added_cb (GUsbContext *usb_context,
 			     DfuContext *context)
 {
 	DfuContextPrivate *priv = GET_PRIVATE (context);
-	DfuDevice *device;
 	DfuContextItem *item;
 	const gchar *platform_id;
 	g_autofree gchar *device_id = NULL;
+	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* are we waiting for this device to come back? */
@@ -233,16 +234,17 @@ dfu_context_device_added_cb (GUsbContext *usb_context,
 	}
 
 	/* is this a DFU-capable device */
-	device = dfu_device_new (usb_device);
-	if (device == NULL) {
-		g_debug ("device was not DFU capable");
+	device = dfu_device_new ();
+	dfu_device_set_system_quirks (device, priv->quirks);
+	if (!dfu_device_set_new_usb_dev (device, usb_device, NULL, &error)) {
+		g_debug ("failed to set USB device: %s", error->message);
 		return;
 	}
 
 	/* add */
 	item = g_new0 (DfuContextItem, 1);
 	item->context = context;
-	item->device = device;
+	item->device = g_object_ref (device);
 	item->state_change_id =
 		g_signal_connect (item->device, "state-changed",
 				  G_CALLBACK (dfu_context_device_state_cb), context);
@@ -289,6 +291,13 @@ dfu_context_set_usb_context (DfuContext *context, GUsbContext *usb_ctx)
 }
 
 static void
+dfu_context_set_quirks (DfuContext *context, FuQuirks *quirks)
+{
+	DfuContextPrivate *priv = GET_PRIVATE (context);
+	g_set_object (&priv->quirks, quirks);
+}
+
+static void
 dfu_context_init (DfuContext *context)
 {
 	DfuContextPrivate *priv = GET_PRIVATE (context);
@@ -320,26 +329,30 @@ dfu_context_new (void)
 {
 	DfuContext *context;
 	g_autoptr(GUsbContext) usb_ctx = g_usb_context_new (NULL);
+	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
 	context = g_object_new (DFU_TYPE_CONTEXT, NULL);
 	dfu_context_set_usb_context (context, usb_ctx);
+	dfu_context_set_quirks (context, quirks);
 	return context;
 }
 
 /**
- * dfu_context_new_with_context:
+ * dfu_context_new_full:
  * @usb_ctx: a #DfuContext
+ * @quirks: a #FuQuirks
  *
  * Creates a new DFU context object.
  *
  * Return value: a new #DfuContext
  **/
 DfuContext *
-dfu_context_new_with_context (GUsbContext *usb_ctx)
+dfu_context_new_full (GUsbContext *usb_ctx, FuQuirks *quirks)
 {
 	DfuContext *context;
 	g_return_val_if_fail (G_USB_IS_CONTEXT (usb_ctx), NULL);
 	context = g_object_new (DFU_TYPE_CONTEXT, NULL);
 	dfu_context_set_usb_context (context, usb_ctx);
+	dfu_context_set_quirks (context, quirks);
 	return context;
 }
 
@@ -395,6 +408,11 @@ dfu_context_enumerate (DfuContext *context, GError **error)
 	DfuContextPrivate *priv = GET_PRIVATE (context);
 	g_return_val_if_fail (DFU_IS_CONTEXT (context), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* ensure open */
+	if (!fu_quirks_load (priv->quirks, error))
+		return FALSE;
+
 	g_usb_context_enumerate (priv->usb_ctx);
 	return TRUE;
 }

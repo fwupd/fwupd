@@ -60,6 +60,35 @@ static const FuVendorQuirks quirk_table[] = {
 	{ NULL,		NULL,			AS_VERSION_PARSE_FLAG_NONE }
 };
 
+/**
+ * FU_QUIRKS_DFU:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: a string, separated using `|`, e.g. `ignore-polltimeout|no-pid-change`
+ *
+ * Assigns optional quirks to use for a DFU device which does not follow the
+ * DFU 1.0 or 1.1 specification. The list of supported quirks is thus:
+ *
+ * * `none`:			No device quirks
+ * * `action-required`:		User has to do something manually, e.g. press a button
+ * * `attach-extra-reset`:	Device needs resetting twice for attach
+ * * `attach-upload-download`:	An upload or download is required for attach
+ * * `force-dfu-mode`:		Force DFU mode
+ * * `ignore-invalid-version`:	Ignore invalid version numbers
+ * * `ignore-polltimeout`:	Ignore the device download timeout
+ * * `ignore-runtime`:		Device has broken DFU runtime support
+ * * `ignore-upload`:		Uploading from the device is broken
+ * * `no-dfu-runtime`:		No DFU runtime interface is provided
+ * * `no-get-status-upload`:	Do not do GetStatus when uploading
+ * * `no-pid-change`:		Accept the same VID:PID when changing modes
+ * * `use-atmel-avr`:		Device uses the ATMEL bootloader
+ * * `use-protocol-zero`:	Fix up the protocol number
+ *
+ * Default value: `none`
+ *
+ * Since: 1.0.1
+ */
+#define	FU_QUIRKS_DFU				"fwupd-dfu"
+
 G_END_DECLS
 
 #endif /* __FU_QUIRKS_H */

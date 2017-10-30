@@ -30,7 +30,7 @@
 #include "dfu-cipher-xtea.h"
 #include "dfu-common.h"
 #include "dfu-context.h"
-#include "dfu-device.h"
+#include "dfu-device-private.h"
 #include "dfu-firmware.h"
 #include "dfu-patch.h"
 #include "dfu-sector-private.h"
@@ -569,8 +569,10 @@ dfu_device_func (void)
 	g_assert (usb_device != NULL);
 
 	/* check it's DFU-capable */
-	device = dfu_device_new (usb_device);
-	g_assert (device != NULL);
+	device = dfu_device_new ();
+	ret = dfu_device_set_new_usb_dev (device, usb_device, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 
 	/* get targets */
 	targets = dfu_device_get_targets (device);

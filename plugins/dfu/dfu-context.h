@@ -26,6 +26,8 @@
 #include <gio/gio.h>
 #include <gusb.h>
 
+#include "fu-quirks.h"
+
 #include "dfu-device.h"
 
 G_BEGIN_DECLS
@@ -45,7 +47,8 @@ struct _DfuContextClass
 };
 
 DfuContext	*dfu_context_new			(void);
-DfuContext	*dfu_context_new_with_context		(GUsbContext	*usb_ctx);
+DfuContext	*dfu_context_new_full			(GUsbContext	*usb_ctx,
+							 FuQuirks	*quirks);
 gboolean	 dfu_context_enumerate			(DfuContext	*context,
 							 GError		**error);
 GPtrArray	*dfu_context_get_devices		(DfuContext	*context);
