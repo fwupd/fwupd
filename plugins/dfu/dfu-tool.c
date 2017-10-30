@@ -1349,6 +1349,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 {
+	DfuFirmwareFormat format;
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuDevice) device = NULL;
@@ -1357,11 +1358,44 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GFile) file = NULL;
 
 	/* check args */
-	if (g_strv_length (values) < 1) {
+	if (g_strv_length (values) == 1) {
+		/* guess output format */
+		if (g_str_has_suffix (values[0], ".dfu")) {
+			format = DFU_FIRMWARE_FORMAT_DFU;
+		} else if (g_str_has_suffix (values[0], ".bin") ||
+			   g_str_has_suffix (values[0], ".rom")) {
+			format = DFU_FIRMWARE_FORMAT_RAW;
+		} else if (g_str_has_suffix (values[0], ".ihex") ||
+			   g_str_has_suffix (values[0], ".hex")) {
+			format = DFU_FIRMWARE_FORMAT_INTEL_HEX;
+		} else {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "Could not guess a file format");
+			return FALSE;
+		}
+	} else if (g_strv_length (values) == 2) {
+		format = dfu_firmware_format_from_string (values[1]);
+		if (format == DFU_FIRMWARE_FORMAT_UNKNOWN) {
+			g_autoptr(GString) tmp = g_string_new (NULL);
+			for (guint i = 1; i < DFU_FIRMWARE_FORMAT_LAST; i++) {
+				if (tmp->len > 0)
+					g_string_append (tmp, "|");
+				g_string_append (tmp, dfu_firmware_format_to_string (i));
+			}
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "unknown format '%s', expected [%s]",
+				     values[0], tmp->str);
+			return FALSE;
+		}
+	} else {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments, expected FILENAME");
+				     "Invalid arguments, expected FILENAME [FORMAT]");
 		return FALSE;
 	}
 
@@ -1397,6 +1431,7 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* save file */
 	file = g_file_new_for_path (values[0]);
+	dfu_firmware_set_format (firmware, format);
 	if (!dfu_firmware_write_file (firmware,
 				      file,
 				      priv->cancellable,
