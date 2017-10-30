@@ -103,6 +103,31 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  */
 #define	FU_QUIRKS_DAEMON_VERSION_FORMAT		"fwupd-daemon-version-format"
 
+/**
+ * FU_QUIRKS_DFU_JABRA_DETACH:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the two uint8_t unlock values, encoded in base 16, e.g. `0201`
+ *
+ * Assigns the two magic bytes sent to the Jabra hardware when the device is
+ * in runtime mode to make it switch into DFU mode.
+ *
+ * Since: 1.0.1
+ */
+#define	FU_QUIRKS_DFU_JABRA_DETACH		"fwupd-dfu-jabra-detach"
+
+/**
+ * FU_QUIRKS_DFU_ALTERNATE_VIDPID:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the uint16_t VID and uint16_t PID values, encoded in base 16, e.g. `0B0E0411`
+ *
+ * Assigns the USB vendor ID and product ID when the device is in the alternate
+ * mode. For instance this can be used to set the application VID/PID when in DFU
+ * mode or the bootloader VID/PID when in application mode.
+ *
+ * Since: 1.0.1
+ */
+#define	FU_QUIRKS_DFU_ALTERNATE_VIDPID		"fwupd-dfu-alternate-vidpid"
+
 G_END_DECLS
 
 #endif /* __FU_QUIRKS_H */

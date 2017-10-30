@@ -447,6 +447,7 @@ dfu_device_add_targets (DfuDevice *device)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+		const gchar *quirk_str;
 		if (priv->targets->len == 0) {
 			g_debug ("no DFU runtime, so faking device");
 			priv->iface_number = 0xff;
@@ -458,15 +459,14 @@ dfu_device_add_targets (DfuDevice *device)
 		}
 
 		/* inverse, but it's the best we can do */
-		if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_JABRA_MAGIC)) {
-			if (g_usb_device_get_pid (priv->dev) == 0x0412)
-				priv->runtime_pid = 0x0411;
-			if (g_usb_device_get_pid (priv->dev) == 0x0420)
-				priv->runtime_pid = 0x0421;
-			if (g_usb_device_get_pid (priv->dev) == 0x2475)
-				priv->runtime_pid = 0x0982;
-			if (g_usb_device_get_pid (priv->dev) == 0x2456)
-				priv->runtime_pid = 0x0971;
+		quirk_str = fu_quirks_lookup_by_usb_device (priv->system_quirks,
+							    FU_QUIRKS_DFU_ALTERNATE_VIDPID,
+							    priv->dev);
+		if (quirk_str != NULL && strlen (quirk_str) == 8) {
+			priv->runtime_vid = dfu_utils_buffer_parse_uint16 (quirk_str + 0);
+			priv->runtime_pid = dfu_utils_buffer_parse_uint16 (quirk_str + 4);
+			g_debug ("using VID_%04X&PID_%04X as the runtime",
+				 priv->runtime_vid, priv->runtime_pid);
 		}
 		return TRUE;
 	}
@@ -706,10 +706,6 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 		}
 		if (g_strcmp0 (split[i], "attach-extra-reset") == 0) {
 			priv->quirks |= DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "jabra-magic") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_JABRA_MAGIC;
 			continue;
 		}
 		if (g_strcmp0 (split[i], "use-atmel-avr") == 0) {
@@ -1156,6 +1152,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	const guint16 timeout_reset_ms = 1000;
+	const gchar *quirk_str;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
@@ -1184,36 +1181,28 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 		return FALSE;
 	}
 
-	/* handle jabra devices */
-	if (priv->quirks & DFU_DEVICE_QUIRK_JABRA_MAGIC) {
+	/* handle Jabra devices that need a magic HID packet */
+	quirk_str = fu_quirks_lookup_by_usb_device (priv->system_quirks,
+						    FU_QUIRKS_DFU_JABRA_DETACH,
+						    priv->dev);
+	if (quirk_str != NULL) {
 		guint8 adr = 0x00;
 		guint8 rep = 0x00;
 		guint8 iface_hid;
 		g_autofree guint8 *buf = g_malloc0 (33);
 		g_autoptr(GError) error_jabra = NULL;
 
-		switch (g_usb_device_get_pid (priv->dev)) {
-		case 0x0412: /* SPEAK-410 */
-		case 0x0420: /* SPEAK-510 */
-			rep = 0x02;
-			adr = 0x01;
-			break;
-		case 0x2475: /* SPEAK-710 */
-		case 0x2456: /* SPEAK-810 */
-			rep = 0x05;
-			adr = 0x08;
-			break;
-		default:
-			break;
-		}
-		if (rep == 0x00 || adr == 0x00) {
+		/* parse string and create magic packet */
+		if (strlen (quirk_str) != 4) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "unsupported PID: %04x",
-				     g_usb_device_get_pid (priv->dev));
+				     "unsupported jabra quirk format: '%s'",
+				     quirk_str);
 			return FALSE;
 		}
+		rep = dfu_utils_buffer_parse_uint8 (quirk_str + 0);
+		adr = dfu_utils_buffer_parse_uint8 (quirk_str + 2);
 		buf[0] = rep;
 		buf[1] = adr;
 		buf[2] = 0x00;
@@ -2369,8 +2358,6 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "ignore-upload|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET)
 		g_string_append_printf (str, "attach-extra-reset|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_JABRA_MAGIC)
-		g_string_append_printf (str, "jabra-magic|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_USE_ATMEL_AVR)
 		g_string_append_printf (str, "use-atmel-avr|");
 
