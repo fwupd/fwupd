@@ -229,3 +229,63 @@ dfu_utils_bytes_is_empty (GBytes *bytes)
 	}
 	return TRUE;
 }
+
+/**
+ * dfu_utils_buffer_parse_uint8:
+ * @data: a string
+ *
+ * Parses a base 16 number from a string.
+ *
+ * The string MUST be at least 2 bytes long as this function cannot check the
+ * length of @data. Checking the size must be done in the caller.
+ *
+ * Return value: A parsed value, or 0 for error
+ **/
+guint8
+dfu_utils_buffer_parse_uint8 (const gchar *data)
+{
+	gchar buffer[3];
+	memcpy (buffer, data, 2);
+	buffer[2] = '\0';
+	return (guint8) g_ascii_strtoull (buffer, NULL, 16);
+}
+
+/**
+ * dfu_utils_buffer_parse_uint16:
+ * @data: a string
+ *
+ * Parses a base 16 number from a string.
+ *
+ * The string MUST be at least 4 bytes long as this function cannot check the
+ * length of @data. Checking the size must be done in the caller.
+ *
+ * Return value: A parsed value, or 0 for error
+ **/
+guint16
+dfu_utils_buffer_parse_uint16 (const gchar *data)
+{
+	gchar buffer[5];
+	memcpy (buffer, data, 4);
+	buffer[4] = '\0';
+	return (guint16) g_ascii_strtoull (buffer, NULL, 16);
+}
+
+/**
+ * dfu_utils_buffer_parse_uint32:
+ * @data: a string
+ *
+ * Parses a base 16 number from a string.
+ *
+ * The string MUST be at least 8 bytes long as this function cannot check the
+ * length of @data. Checking the size must be done in the caller.
+ *
+ * Return value: A parsed value, or 0 for error
+ **/
+guint32
+dfu_utils_buffer_parse_uint32 (const gchar *data)
+{
+	gchar buffer[9];
+	memcpy (buffer, data, 8);
+	buffer[8] = '\0';
+	return (guint32) g_ascii_strtoull (buffer, NULL, 16);
+}

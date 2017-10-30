@@ -51,33 +51,6 @@ dfu_firmware_detect_ihex (GBytes *bytes)
 	return DFU_FIRMWARE_FORMAT_INTEL_HEX;
 }
 
-static guint8
-dfu_firmware_ihex_parse_uint8 (const gchar *data, guint pos)
-{
-	gchar buffer[3];
-	memcpy (buffer, data + pos, 2);
-	buffer[2] = '\0';
-	return (guint8) g_ascii_strtoull (buffer, NULL, 16);
-}
-
-static guint16
-dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
-{
-	gchar buffer[5];
-	memcpy (buffer, data + pos, 4);
-	buffer[4] = '\0';
-	return (guint16) g_ascii_strtoull (buffer, NULL, 16);
-}
-
-static guint32
-dfu_firmware_ihex_parse_uint32 (const gchar *data, guint pos)
-{
-	gchar buffer[9];
-	memcpy (buffer, data + pos, 8);
-	buffer[8] = '\0';
-	return (guint32) g_ascii_strtoull (buffer, NULL, 16);
-}
-
 #define	DFU_INHX32_RECORD_TYPE_DATA		0x00
 #define	DFU_INHX32_RECORD_TYPE_EOF		0x01
 #define	DFU_INHX32_RECORD_TYPE_EXTENDED		0x04
@@ -154,9 +127,9 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		}
 
 		/* length, 16-bit address, type */
-		len_tmp = dfu_firmware_ihex_parse_uint8 (in_buffer, offset+1);
-		addr_low = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+3);
-		type = dfu_firmware_ihex_parse_uint8 (in_buffer, offset+7);
+		len_tmp = dfu_utils_buffer_parse_uint8 (in_buffer + offset + 1);
+		addr_low = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 3);
+		type = dfu_utils_buffer_parse_uint8 (in_buffer + offset + 7);
 
 		/* position of checksum */
 		end = offset + 9 + len_tmp * 2;
@@ -173,7 +146,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST) == 0) {
 			checksum = 0;
 			for (guint i = offset + 1; i < end + 2; i += 2) {
-				data_tmp = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
+				data_tmp = dfu_utils_buffer_parse_uint8 (in_buffer + i);
 				checksum += data_tmp;
 			}
 			if (checksum != 0)  {
@@ -227,7 +200,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 					}
 				}
 				/* write into buf */
-				data_tmp = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
+				data_tmp = dfu_utils_buffer_parse_uint8 (in_buffer + i);
 				g_string_append_c (string, (gchar) data_tmp);
 				addr32_last = addr32++;
 			}
@@ -244,15 +217,15 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			got_eof = TRUE;
 			break;
 		case DFU_INHX32_RECORD_TYPE_EXTENDED:
-			addr_high = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+9);
+			addr_high = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 9);
 			addr32 = ((guint32) addr_high << 16) + addr_low;
 			break;
 		case DFU_INHX32_RECORD_TYPE_ADDR32:
-			addr32 = dfu_firmware_ihex_parse_uint32 (in_buffer, offset+9);
+			addr32 = dfu_utils_buffer_parse_uint32 (in_buffer + offset + 9);
 			break;
 		case DFU_INHX32_RECORD_TYPE_SIGNATURE:
 			for (guint i = offset + 9; i < end; i += 2) {
-				guint8 tmp_c = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
+				guint8 tmp_c = dfu_utils_buffer_parse_uint8 (in_buffer + i);
 				g_string_append_c (signature, tmp_c);
 			}
 			break;
