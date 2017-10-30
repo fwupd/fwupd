@@ -40,13 +40,31 @@ USB\VID_1D50&PID_60A7=no-dfu-runtime|action-required
 USB\VID_03EB=use-atmel-avr
 
 # Jabra 410, 510, 710 and 810
-USB\VID_0B0E&PID_0412=no-dfu-runtime|jabra-magic
-USB\VID_0B0E&PID_0420=no-dfu-runtime|jabra-magic
-USB\VID_0B0E&PID_2475=no-dfu-runtime|jabra-magic
-USB\VID_0B0E&PID_2456=no-dfu-runtime|jabra-magic
+USB\VID_0B0E&PID_0412=no-dfu-runtime
+USB\VID_0B0E&PID_0420=no-dfu-runtime
+USB\VID_0B0E&PID_2475=no-dfu-runtime
+USB\VID_0B0E&PID_2456=no-dfu-runtime
 
 # Jabra 410, 510, 710 and 810 (DFU mode)
 USB\VID_0B0E&PID_0411=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
 USB\VID_0B0E&PID_0421=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
 USB\VID_0B0E&PID_0982=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
 USB\VID_0B0E&PID_0971=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
+
+[fwupd-dfu-jabra-detach]
+
+# Jabra 410 and 510
+USB\VID_0B0E&PID_0412=0201
+USB\VID_0B0E&PID_0420=0201
+
+# Jabra 710 and 810
+USB\VID_0B0E&PID_2475=0508
+USB\VID_0B0E&PID_2456=0508
+
+[fwupd-dfu-alternate-vidpid]
+
+# Jabra 410, 510, 710 and 810
+USB\VID_0B0E&PID_0412=0B0E0411
+USB\VID_0B0E&PID_0420=0B0E0421
+USB\VID_0B0E&PID_2475=0B0E0982
+USB\VID_0B0E&PID_2456=0B0E0971
