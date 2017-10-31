@@ -128,6 +128,22 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  */
 #define	FU_QUIRKS_DFU_ALTERNATE_VIDPID		"fwupd-dfu-alternate-vidpid"
 
+/**
+ * FU_QUIRKS_DFU_AVR_CHIP_ID:
+ * @key: the AVR chip ID, e.g. `0x58200204`
+ * @value: the UM0424 sector description, e.g. `@Flash/0x2000/1*248Kg`
+ *
+ * Assigns a sector description for the chip ID. This is required so fwupd can
+ * program the user firmware avoiding the bootloader and for checking the total
+ * element size.
+ *
+ * The chip ID can be found from a datasheet or using `dfu-tool list` when the
+ * hardware is connected and in bootloader mode.
+ *
+ * Since: 1.0.1
+ */
+#define	FU_QUIRKS_DFU_AVR_CHIP_ID		"fwupd-dfu-avr-chip-id"
+
 G_END_DECLS
 
 #endif /* __FU_QUIRKS_H */
