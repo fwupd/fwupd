@@ -29,6 +29,7 @@
 #include "dfu-sector.h"
 #include "dfu-target-avr.h"
 #include "dfu-target-private.h"
+#include "dfu-device-private.h"
 
 #include "fwupd-error.h"
 
@@ -229,21 +230,15 @@ dfu_target_avr_read_memory (DfuTarget *target,
 static gboolean
 dfu_target_avr_setup (DfuTarget *target, GCancellable *cancellable, GError **error)
 {
+	DfuDevice *device;
 	DfuTargetAvr *target_avr = DFU_TARGET_AVR (target);
 	DfuTargetAvrPrivate *priv = GET_PRIVATE (target_avr);
+	const gchar *quirk_str;
 	const guint8 *buf;
 	gsize sz;
 	guint32 device_id_be;
 	g_autofree gchar *chip_id = NULL;
 	g_autoptr(GBytes) chunk_tmp = NULL;
-	struct {
-		guint32		 id;
-		const gchar	*name;
-		const gchar	*alt_name;
-	} device_ids[] = {
-		{ 0x58200204,	"AT32UC3A3",	"@Flash/0x2000/1*248Kg" },	/* BL @0x2000, Size: 0x40000 */
-		{ 0x00000000,	NULL,		NULL }
-	};
 
 	/* already done */
 	if (priv->device_id > 0x0)
@@ -281,39 +276,26 @@ dfu_target_avr_setup (DfuTarget *target, GCancellable *cancellable, GError **err
 	memcpy (&device_id_be, buf, 4);
 	priv->device_id = GINT32_FROM_BE (device_id_be);
 
-	/* set something suitable on the parent device */
-	chip_id = g_strdup_printf ("AVR:0x%08x", (guint) priv->device_id);
+	/* set the alt-name using the device ID */
+	chip_id = g_strdup_printf ("0x%08x", (guint) priv->device_id);
 	dfu_device_set_chip_id (dfu_target_get_device (target), chip_id);
-
-	/* match the device ID to actual hardware */
-	for (guint i = 0; device_ids[i].id != 0x0; i++) {
-		if (priv->device_id == device_ids[i].id) {
-			g_debug ("got a %s", device_ids[i].name);
-			dfu_target_set_alt_name (target, device_ids[i].alt_name);
-			break;
-		}
-	}
-
-	/* we don't support this chip */
-	if (dfu_target_get_alt_name (target, NULL) == NULL) {
-		g_autoptr(GString) devstr = g_string_new (NULL);
+	device = dfu_target_get_device (target);
+	quirk_str = fu_quirks_lookup_by_id (dfu_device_get_system_quirks (device),
+					    FU_QUIRKS_DFU_AVR_CHIP_ID,
+					    chip_id);
+	if (quirk_str == NULL) {
 		dfu_device_remove_attribute (dfu_target_get_device (target),
 					     DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD);
 		dfu_device_remove_attribute (dfu_target_get_device (target),
 					     DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD);
-		for (guint i = 0; device_ids[i].id != 0x0; i++) {
-			g_string_append_printf (devstr, "%s,",
-						device_ids[i].name);
-		}
-		if (devstr->len > 1)
-			g_string_truncate (devstr, devstr->len - 1);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "DeviceID 0x%08x is not supported, known: %s",
-			     (guint) priv->device_id, devstr->str);
+			     "DeviceID 0x%08x is not supported",
+			     (guint) priv->device_id);
 		return FALSE;
 	}
+	dfu_target_set_alt_name (target, quirk_str);
 
 	return TRUE;
 }
