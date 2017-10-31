@@ -271,6 +271,7 @@ fu_engine_set_release_from_appstream (FuEngine *self, FwupdRelease *rel,
 	}
 	csum = as_release_get_checksum_by_target (release, AS_CHECKSUM_TARGET_CONTAINER);
 	if (csum != NULL) {
+		g_ptr_array_set_size (fwupd_release_get_checksums (rel), 0);
 		tmp = as_checksum_get_value (csum);
 		if (tmp != NULL)
 			fwupd_release_add_checksum (rel, tmp);
