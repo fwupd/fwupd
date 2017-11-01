@@ -1,5 +1,10 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 
+smbios_deps = []
+if libsmbios_c.found() and libsmbios_c.version().version_compare('>=2.3.0')
+  smbios_deps += libsmbios_c
+endif
+
 shared_module('fu_plugin_dell',
   sources : [
     'fu-plugin-dell.c',
@@ -18,8 +23,9 @@ shared_module('fu_plugin_dell',
     ],
   dependencies : [
     plugin_deps,
+    gudev,
     efivar,
-    libsmbios_c,
+    smbios_deps,
     fwup,
   ],
 )
@@ -41,11 +47,12 @@ if get_option('enable-tests')
     ],
     dependencies : [
       plugin_deps,
+      gudev,
       efivar,
       fwup,
       sqlite,
       gudev,
-      libsmbios_c,
+      smbios_deps,
       valgrind,
     ],
     link_with : [

@@ -23,15 +23,11 @@
 
 #include <appstream-glib.h>
 #include "fu-dell-smi.h"
+#include <fcntl.h>
+#include <glib.h>
+#include <glib/gstdio.h>
 
 /* These are for dock query capabilities */
-struct dock_count_in {
-	guint32 argument;
-	guint32 reserved1;
-	guint32 reserved2;
-	guint32 reserved3;
-};
-
 struct dock_count_out {
 	guint32 ret;
 	guint32 count;
@@ -49,7 +45,10 @@ typedef union _ADDR_UNION{
 static void
 _dell_smi_obj_free (FuDellSmiObj *obj)
 {
+#ifdef HAVE_LIBSMBIOS
 	dell_smi_obj_free (obj->smi);
+#endif
+	g_free(obj->buffer);
 	g_free(obj);
 }
 
@@ -63,8 +62,8 @@ fu_dell_clear_smi (FuDellSmiObj *obj)
 		return TRUE;
 
 	for (gint i=0; i < 4; i++) {
-		obj->input[i] = 0;
-		obj->output[i] = 0;
+		obj->buffer->std.input[i] = 0;
+		obj->buffer->std.output[i] = 0;
 	}
 	return TRUE;
 }
@@ -72,65 +71,68 @@ fu_dell_clear_smi (FuDellSmiObj *obj)
 gboolean
 fu_dell_execute_smi (FuDellSmiObj *obj)
 {
-	gint ret;
+	gint ret = -1;
+	gint fd;
 
 	if (obj->fake_smbios)
 		return TRUE;
-
-	ret = dell_smi_obj_execute (obj->smi);
-	if (ret != 0) {
-		g_debug ("SMI execution failed: %i", ret);
-		return FALSE;
+	else if (obj->wmi_smbios != NULL) {
+		fd = g_open (obj->wmi_smbios, O_NONBLOCK);
+		ret = ioctl (fd, DELL_WMI_SMBIOS_CMD, obj->buffer);
+		close(fd);
 	}
-	return TRUE;
+#ifdef HAVE_LIBSMBIOS
+	else {
+		dell_smi_obj_set_class (obj->smi, obj->buffer->std.class);
+		dell_smi_obj_set_select (obj->smi, obj->buffer->std.select);
+		if ((obj->buffer->ext.argattrib & 1) == 0)
+			dell_smi_obj_set_arg (obj->smi, cbARG1,
+				obj->buffer->std.input[0]);
+		if ((obj->buffer->ext.argattrib & (1 << 8)) == 0)
+			dell_smi_obj_set_arg (obj->smi, cbARG2,
+				obj->buffer->std.input[1]);
+		if ((obj->buffer->ext.argattrib & (1 << 16)) == 0)
+			dell_smi_obj_set_arg (obj->smi, cbARG3,
+				obj->buffer->std.input[2]);
+		if ((obj->buffer->ext.argattrib & (1 << 24)) == 0)
+			dell_smi_obj_set_arg (obj->smi, cbARG4,
+				obj->buffer->std.input[3]);
+		ret = dell_smi_obj_execute (obj->smi);
+	}
+#endif
+	if (ret != 0)
+		g_debug ("failed to run query %u/%u: %i",
+			obj->buffer->std.class, obj->buffer->std.select, ret);
+	return ret == 0 ? TRUE : FALSE;
 }
 
 guint32
-fu_dell_get_res (FuDellSmiObj *smi_obj, guint8 arg)
+fu_dell_get_res (FuDellSmiObj *obj, guint8 arg)
 {
-	if (smi_obj->fake_smbios)
-		return smi_obj->output[arg];
-
-	return dell_smi_obj_get_res (smi_obj->smi, arg);
+	if (obj->fake_smbios || obj->wmi_smbios != NULL)
+		return obj->buffer->std.output[arg];
+#ifdef HAVE_LIBSMBIOS
+	else
+		return dell_smi_obj_get_res (obj->smi, arg);
+#endif
+	return 0;
 }
 
 gboolean
-fu_dell_execute_simple_smi (FuDellSmiObj *obj, guint16 class, guint16 select)
+fu_dell_detect_dock (FuDellSmiObj *obj, guint32 *location)
 {
-	/* test suite will mean don't actually call */
-	if (obj->fake_smbios)
-		return TRUE;
-
-	if (dell_simple_ci_smi (class,
-				select,
-				obj->input,
-				obj->output)) {
-		g_debug ("failed to run query %u/%u",
-			 class,
-			 select);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-gboolean
-fu_dell_detect_dock (FuDellSmiObj *smi_obj, guint32 *location)
-{
-	struct dock_count_in *count_args;
 	struct dock_count_out *count_out;
 
 	/* look up dock count */
-	count_args = (struct dock_count_in *) smi_obj->input;
-	count_out  = (struct dock_count_out *) smi_obj->output;
-	if (!fu_dell_clear_smi (smi_obj)) {
+	count_out  = (struct dock_count_out *) obj->buffer->std.output;
+	if (!fu_dell_clear_smi (obj)) {
 		g_debug ("failed to clear SMI buffers");
 		return FALSE;
 	}
-	count_args->argument = DACI_DOCK_ARG_COUNT;
-
-	if (!fu_dell_execute_simple_smi (smi_obj,
-					 DACI_DOCK_CLASS,
-					 DACI_DOCK_SELECT))
+	obj->buffer->std.class = DACI_DOCK_CLASS;
+	obj->buffer->std.select = DACI_DOCK_SELECT;
+	obj->buffer->std.input[0] = DACI_DOCK_ARG_COUNT;
+	if (!fu_dell_execute_smi (obj))
 		return FALSE;
 	if (count_out->ret != 0) {
 		g_debug ("Failed to query system for dock count: "
@@ -147,41 +149,59 @@ fu_dell_detect_dock (FuDellSmiObj *smi_obj, guint32 *location)
 }
 
 gboolean
-fu_dell_query_dock (FuDellSmiObj *smi_obj, DOCK_UNION *buf)
+fu_dell_query_dock (FuDellSmiObj *obj, DOCK_UNION *buf)
 {
-	gint result;
+	const char *bufpat = "DSCI";
 	guint32 location;
-	guint buf_size;
+	gint result;
 
-	if (!fu_dell_detect_dock (smi_obj, &location))
+	if (!fu_dell_detect_dock (obj, &location))
 		return FALSE;
 
-	fu_dell_clear_smi (smi_obj);
+	if (!fu_dell_clear_smi (obj)) {
+		g_debug ("failed to clear SMI buffers");
+		return FALSE;
+	}
+
+	obj->buffer->std.class = DACI_DOCK_CLASS;
+	obj->buffer->std.select = DACI_DOCK_SELECT;
+	obj->buffer->std.input[0] = DACI_DOCK_ARG_INFO;
+	obj->buffer->std.input[1] = location;
+	/* size of the returned buffer */
+	obj->buffer->ext.blength = sizeof (DOCK_INFO_RECORD);
+	/* cbARG3 is a buffer */
+	obj->buffer->ext.argattrib = 1 << 16;
 
 	/* look up more information on dock */
-	if (smi_obj->fake_smbios)
-		buf->buf = smi_obj->fake_buffer;
+	if (obj->fake_smbios)
+		buf->buf = obj->fake_buffer;
+	else if (obj->wmi_smbios != NULL) {
+		buf->buf = obj->buffer->ext.data;
+		/* our return buffer will start at offset 40 - buffer length*/
+		obj->buffer->std.input[2] = 40;
+		/* write out the requisite pattern */
+		for (guint i=0; i < obj->buffer->ext.blength; i++)
+			obj->buffer->ext.data[i] = bufpat[i%4];
+	}
+#ifdef HAVE_LIBSMBIOS
 	else {
-		dell_smi_obj_set_class (smi_obj->smi, DACI_DOCK_CLASS);
-		dell_smi_obj_set_select (smi_obj->smi, DACI_DOCK_SELECT);
-		dell_smi_obj_set_arg (smi_obj->smi, cbARG1, DACI_DOCK_ARG_INFO);
-		dell_smi_obj_set_arg (smi_obj->smi, cbARG2, location);
-		buf_size = sizeof (DOCK_INFO_RECORD);
-		buf->buf = dell_smi_obj_make_buffer_frombios_auto (smi_obj->smi,
+		/* create the buffer */
+		buf->buf = dell_smi_obj_make_buffer_frombios_auto (obj->smi,
 								  cbARG3,
-								  buf_size);
+								  obj->buffer->ext.blength);
 		if (!buf->buf) {
 			g_debug ("Failed to initialize buffer");
 			return FALSE;
 		}
 	}
-	if (!fu_dell_execute_smi (smi_obj))
+#endif
+	if (!fu_dell_execute_smi (obj))
 		return FALSE;
-	result = fu_dell_get_res (smi_obj, cbARG1);
+	result = fu_dell_get_res (obj, cbARG1);
 	if (result != SMI_SUCCESS) {
 		if (result == SMI_INVALID_BUFFER) {
 			g_debug ("Invalid buffer size, needed %" G_GUINT32_FORMAT,
-				 fu_dell_get_res (smi_obj, cbARG2));
+				 fu_dell_get_res (obj, cbARG2));
 		} else {
 			g_debug ("SMI execution returned error: %d",
 				 result);
@@ -191,87 +211,81 @@ fu_dell_query_dock (FuDellSmiObj *smi_obj, DOCK_UNION *buf)
 	return TRUE;
 }
 
-const gchar*
-fu_dell_get_dock_type (guint8 type)
-{
-	g_autoptr (FuDellSmiObj) smi_obj = NULL;
-	DOCK_UNION buf;
-
-	/* not yet initialized, look it up */
-	if (type == DOCK_TYPE_NONE) {
-		smi_obj = g_malloc0 (sizeof(FuDellSmiObj));
-		smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
-		if (!fu_dell_query_dock (smi_obj, &buf))
-			return NULL;
-		type = buf.record->dock_info_header.dock_type;
-	}
-
-	switch (type) {
-	case DOCK_TYPE_TB16:
-		return "TB16";
-	case DOCK_TYPE_WD15:
-		return "WD15";
-	default:
-		g_debug ("Dock type %d unknown",
-			 type);
-	}
-
-	return NULL;
-}
-
 gboolean
-fu_dell_toggle_dock_mode (FuDellSmiObj *smi_obj, guint32 new_mode,
+fu_dell_toggle_dock_mode (FuDellSmiObj *obj, guint32 new_mode,
 			  guint32 dock_location, GError **error)
 {
-	/* Put into mode to accept AR/MST */
-	fu_dell_clear_smi (smi_obj);
-	smi_obj->input[0] = DACI_DOCK_ARG_MODE;
-	smi_obj->input[1] = dock_location;
-	smi_obj->input[2] = new_mode;
-
-	if (!fu_dell_execute_simple_smi (smi_obj,
-					 DACI_DOCK_CLASS,
-					 DACI_DOCK_SELECT))
+	if (!fu_dell_clear_smi (obj)) {
+		g_debug ("failed to clear SMI buffers");
 		return FALSE;
-	if (smi_obj->output[1] != 0) {
+	}
+
+	/* Put into mode to accept AR/MST */
+	obj->buffer->std.class = DACI_DOCK_CLASS;
+	obj->buffer->std.select = DACI_DOCK_SELECT;
+	obj->buffer->std.input[0] = DACI_DOCK_ARG_MODE;
+	obj->buffer->std.input[1] = dock_location;
+	obj->buffer->std.input[2] = new_mode;
+
+	if (!fu_dell_execute_smi (obj))
+		return FALSE;
+	if (obj->buffer->std.output[1] != 0) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "Failed to set dock flash mode: %u",
-			     smi_obj->output[1]);
+			     obj->buffer->std.output[1]);
 		return FALSE;
 	}
 	return TRUE;
 }
 
 gboolean
-fu_dell_toggle_host_mode (FuDellSmiObj *smi_obj, const efi_guid_t guid, int mode)
+fu_dell_toggle_host_mode (FuDellSmiObj *obj, const efi_guid_t guid, int mode)
 {
 	gint ret;
 	ADDR_UNION buf;
 
-	dell_smi_obj_set_class (smi_obj->smi, DACI_FLASH_INTERFACE_CLASS);
-	dell_smi_obj_set_select (smi_obj->smi, DACI_FLASH_INTERFACE_SELECT);
-	dell_smi_obj_set_arg (smi_obj->smi, cbARG1, DACI_FLASH_ARG_FLASH_MODE);
-	dell_smi_obj_set_arg (smi_obj->smi, cbARG4, mode);
-	/* needs to be padded with an empty GUID */
-	buf.buf = dell_smi_obj_make_buffer_frombios_withoutheader(smi_obj->smi,
-								  cbARG2,
-								  sizeof(efi_guid_t) * 2);
-	if (!buf.buf) {
-		g_debug ("Failed to initialize SMI buffer");
-		return FALSE;
-	}
-	*buf.guid = guid;
-	ret = dell_smi_obj_execute(smi_obj->smi);
-	if (ret != SMI_SUCCESS){
-		g_debug ("failed to execute SMI: %d", ret);
+	if (!fu_dell_clear_smi (obj)) {
+		g_debug ("failed to clear SMI buffers");
 		return FALSE;
 	}
 
-	ret = dell_smi_obj_get_res(smi_obj->smi, cbRES1);
-	if (ret != SMI_SUCCESS) {
-		g_debug ("SMI execution returned error: %d", ret);
+	obj->buffer->std.class = DACI_FLASH_INTERFACE_CLASS;
+	obj->buffer->std.select = DACI_FLASH_INTERFACE_SELECT;
+	obj->buffer->std.input[0] = DACI_FLASH_ARG_FLASH_MODE;
+	obj->buffer->std.input[3] = mode;
+	obj->buffer->ext.argattrib = 1 << 8;
+	/* needs to be padded with an empty GUID */
+	obj->buffer->ext.blength = sizeof(efi_guid_t) * 2;
+
+	/* cbARG2 is a buffer */
+	if (obj->wmi_smbios != NULL) {
+		buf.buf = obj->buffer->ext.data;
+		/* our return buffer will start at offset 40 - buffer length */
+		obj->buffer->std.input[1] = 40;
+		/* clear the return area */
+		memset(obj->buffer->ext.data, 0, obj->buffer->ext.blength);
+	}
+#ifdef HAVE_LIBSMBIOS
+	else {
+		buf.buf =
+			dell_smi_obj_make_buffer_frombios_withoutheader(obj->smi,
+									cbARG2,
+									obj->buffer->ext.blength);
+		if (!buf.buf) {
+			g_debug ("Failed to initialize SMI buffer");
+			return FALSE;
+		}
+	}
+#endif
+	/* set the GUID */
+	*buf.guid = guid;
+	if (!fu_dell_execute_smi (obj))
+		return FALSE;
+	ret = fu_dell_get_res (obj, cbARG1);
+	if (ret != SMI_SUCCESS){
+		g_debug ("failed to execute SMI: %d", ret);
 		return FALSE;
 	}
 	return TRUE;

@@ -25,10 +25,14 @@
 #include <fwup.h>
 #include <appstream-glib.h>
 #include <glib/gstdio.h>
-#include <smbios_c/system_info.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <gudev/gudev.h>
+
+#ifdef HAVE_LIBSMBIOS
+#include <smbios_c/system_info.h>
+#endif
 
 #include "fu-plugin-dell.h"
 #include "fu-quirks.h"
@@ -165,9 +169,10 @@ fu_dell_get_system_id (FuPlugin *plugin)
 		FU_HWIDS_KEY_PRODUCT_SKU);
 	if (system_id_str != NULL)
 		system_id = g_ascii_strtoull (system_id_str, &endptr, 16);
+#ifdef HAVE_LIBSMBIOS
 	if (system_id == 0 || endptr == system_id_str)
 		system_id = (guint16) sysinfo_get_dell_system_id ();
-
+#endif
 	return system_id;
 }
 
@@ -266,7 +271,7 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 	if (!data->smi_obj->fake_smbios)
 		return;
 	for (guint i = 0; i < 4; i++)
-		data->smi_obj->output[i] = output[i];
+		data->smi_obj->buffer->std.output[i] = output[i];
 	data->fake_vid = vid;
 	data->fake_pid = pid;
 	data->smi_obj->fake_buffer = buf;
@@ -331,6 +336,22 @@ fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 	return TRUE;
 }
 
+static const gchar*
+fu_dell_get_dock_type (guint8 type)
+{
+	switch (type) {
+	case DOCK_TYPE_TB16:
+		return "TB16";
+	case DOCK_TYPE_WD15:
+		return "WD15";
+	default:
+		g_debug ("Dock type %d unknown",
+			 type);
+	}
+
+	return NULL;
+}
+
 static gboolean
 fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 		     guint8 type, const efi_guid_t *guid_raw,
@@ -369,6 +390,8 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	fu_device_set_id (dev, dock_id);
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, dock_name);
+	fu_device_set_metadata(dev, FU_DEVICE_METADATA_DELL_DOCK_TYPE,
+			       dock_type);
 	if (type == DOCK_TYPE_TB16) {
 		fu_device_set_summary (dev, "A Thunderbolt™ 3 docking station");
 	} else if (type == DOCK_TYPE_WD15) {
@@ -659,13 +682,13 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	const gchar *product_name = NULL;
 
 	fu_dell_clear_smi (data->smi_obj);
-	out = (struct tpm_status *) data->smi_obj->output;
+	out = (struct tpm_status *) data->smi_obj->buffer->std.output;
 
 	/* execute TPM Status Query */
-	data->smi_obj->input[0] = DACI_FLASH_ARG_TPM;
-	if (!fu_dell_execute_simple_smi (data->smi_obj,
-					 DACI_FLASH_INTERFACE_CLASS,
-					 DACI_FLASH_INTERFACE_SELECT))
+	data->smi_obj->buffer->std.class = DACI_FLASH_INTERFACE_CLASS;
+	data->smi_obj->buffer->std.select = DACI_FLASH_INTERFACE_SELECT;
+	data->smi_obj->buffer->std.input[0] = DACI_FLASH_ARG_TPM;
+	if (!fu_dell_execute_smi (data->smi_obj))
 		return FALSE;
 
 	if (out->ret != 0) {
@@ -676,7 +699,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	/* HW version is output in second /input/ arg
 	 * it may be relevant as next gen TPM is enabled
 	 */
-	g_debug ("TPM HW version: 0x%x", data->smi_obj->input[1]);
+	g_debug ("TPM HW version: 0x%x", data->smi_obj->buffer->std.input[1]);
 	g_debug ("TPM Status: 0x%x", out->status);
 
 	/* test TPM enabled (Bit 0) */
@@ -1043,25 +1066,84 @@ fu_plugin_coldplug_cleanup (FuPlugin *plugin, GError **error)
 	return fu_dell_toggle_flash (plugin, NULL, FALSE, error);
 }
 
+static void
+fu_plugin_dell_detect_wmi_support (FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	GUdevClient   *udev;
+	g_autoptr(GList) devices_misc = NULL;
+	const gchar *tmp;
+	gint ret;
+	FILE *f;
+
+	data->smi_obj->wmi_smbios = NULL;
+	udev = g_udev_client_new (NULL);
+	/* find character device */
+	devices_misc = g_udev_client_query_by_subsystem (udev, "misc");
+	for (GList* l = devices_misc; l != NULL; l = l->next) {
+		GUdevDevice *device = l->data;
+
+		tmp = g_udev_device_get_name (device);
+		if (g_strcmp0 (tmp, "wmi/dell-smbios") != 0)
+			continue;
+		data->smi_obj->wmi_smbios =
+			g_strdup (g_udev_device_get_device_file (device));
+		break;
+	}
+	g_list_foreach (devices_misc, (GFunc) g_object_unref, NULL);
+	g_object_unref (udev);
+
+	/* find memory needed */
+	f = g_fopen (data->smi_obj->wmi_smbios, "rb");
+	if (!f)
+		return;
+	ret = fread (&data->smi_obj->buffer_size, sizeof(gint64), 1, f);
+	if (ret <= 0)
+		return;
+	fclose (f);
+
+	if (data->smi_obj->wmi_smbios && data->smi_obj->buffer_size > 0)
+		g_debug ("detected WMI SMBIOS interface: %s (%llu)",
+			data->smi_obj->wmi_smbios, data->smi_obj->buffer_size);
+	else {
+		g_free(data->smi_obj->wmi_smbios);
+		data->smi_obj->buffer_size =
+				sizeof (struct calling_interface_buffer);
+	}
+}
+
 void
 fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
-	if (fu_dell_supported (plugin))
-		data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
 	data->smi_obj->fake_smbios = FALSE;
+
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
 		data->smi_obj->fake_smbios = TRUE;
+
+	fu_plugin_dell_detect_wmi_support (plugin);
+
+	if (fu_dell_supported (plugin) || data->smi_obj->fake_smbios) {
+		data->smi_obj->buffer = g_malloc0 (data->smi_obj->buffer_size);
+		data->smi_obj->buffer->length = data->smi_obj->buffer_size;
+#ifdef HAVE_LIBSMBIOS
+		data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
+#endif
+	}
 }
 
 void
 fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+#ifdef HAVE_LIBSMBIOS
 	if (data->smi_obj->smi)
 		dell_smi_obj_free (data->smi_obj->smi);
+#endif
+	g_free(data->smi_obj->wmi_smbios);
+	g_free(data->smi_obj->buffer);
 	g_free(data->smi_obj);
 }
 
@@ -1086,6 +1168,15 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
+#ifndef HAVE_LIBSMBIOS
+	if (data->smi_obj->wmi_smbios == NULL) {
+		g_set_error (error,
+			FWUPD_ERROR,
+			FWUPD_ERROR_NOT_SUPPORTED,
+			"No supported BIOS communication mechanism");
+		return FALSE;
+	}
+#endif
 	if (usb_ctx != NULL) {
 		g_signal_connect (usb_ctx, "device-added",
 				  G_CALLBACK (fu_plugin_dell_device_added_cb),
