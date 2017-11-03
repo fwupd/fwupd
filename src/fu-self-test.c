@@ -49,6 +49,48 @@
 #endif
 
 static void
+fu_engine_require_hwid_func (void)
+{
+	const gchar *device_id = "test_device";
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GError) error = NULL;
+
+#if !AS_CHECK_VERSION(0,7,4)
+	g_test_skip ("HWID requirements only supported with appstream-glib 0.7.4");
+	return;
+#endif
+
+	/* get generated file as a blob */
+	filename = fu_test_get_filename (TESTDATADIR, "missing-hwid/hwid-1.2.3.cab");
+	g_assert (filename != NULL);
+	blob_cab = fu_common_get_contents_bytes	(filename, &error);
+	g_assert_no_error (error);
+	g_assert (blob_cab != NULL);
+	store = fu_engine_get_store_from_blob (engine, blob_cab, &error);
+	g_assert_no_error (error);
+	g_assert (store != NULL);
+
+	/* add a dummy device */
+	fu_device_set_id (device, "test_device");
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_engine_add_device (engine, plugin, device);
+
+	/* install it */
+	ret = fu_engine_install (engine, device_id, store, blob_cab, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_cmpstr (error->message, ==,
+			 "no HWIDs matched 9342d47a-1bab-5709-9869-c840b2eac501");
+	g_assert (!ret);
+}
+
+static void
 fu_engine_func (void)
 {
 	FwupdRelease *rel;
@@ -962,6 +1004,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/engine", fu_engine_func);
+	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);

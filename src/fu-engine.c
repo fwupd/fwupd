@@ -809,8 +809,35 @@ fu_engine_check_version_requirement (AsApp *app,
 	return TRUE;
 }
 
+#if AS_CHECK_VERSION(0,7,4)
 static gboolean
-fu_engine_check_requirements (AsApp *app, FuDevice *device, GError **error)
+fu_engine_check_hardware_requirement (FuEngine *self, AsApp *app, GError **error)
+{
+	GPtrArray *requires = as_app_get_requires (app);
+
+	/* check each HWID requirement */
+	for (guint i = 0; i < requires->len; i++) {
+		AsRequire *req = g_ptr_array_index (requires, i);
+		if (as_require_get_kind (req) != AS_REQUIRE_KIND_HARDWARE)
+			continue;
+		if (!fu_hwids_has_guid (self->hwids, as_require_get_value (req))) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no HWIDs matched %s",
+				     as_require_get_value (req));
+			return FALSE;
+		}
+		g_debug ("HWID provided %s", as_require_get_value (req));
+	}
+
+	/* success */
+	return TRUE;
+}
+#endif
+
+static gboolean
+fu_engine_check_requirements (FuEngine *self, AsApp *app, FuDevice *device, GError **error)
 {
 	/* make sure requirements are satisfied */
 	if (!fu_engine_check_version_requirement (app,
@@ -820,6 +847,10 @@ fu_engine_check_requirements (AsApp *app, FuDevice *device, GError **error)
 						error)) {
 		return FALSE;
 	}
+#if AS_CHECK_VERSION(0,7,4)
+	if (!fu_engine_check_hardware_requirement (self, app, error))
+		return FALSE;
+#endif
 
 	if (device != NULL) {
 		if (!fu_engine_check_version_requirement (app,
@@ -1089,7 +1120,7 @@ fu_engine_install (FuEngine *self,
 	fu_engine_vendor_fixup_provide_value (app);
 
 	/* check we can install it */
-	if (!fu_engine_check_requirements (app, item->device, error))
+	if (!fu_engine_check_requirements (self, app, item->device, error))
 		return FALSE;
 
 	/* parse the DriverVer */
@@ -1859,7 +1890,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	}
 
 	/* check we can install it */
-	if (!fu_engine_check_requirements (app, NULL, error))
+	if (!fu_engine_check_requirements (self, app, NULL, error))
 		return NULL;
 
 	/* verify trust */
@@ -1935,7 +1966,7 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 		FwupdDevice *res = NULL;
 
 		/* check we can install it */
-		if (!fu_engine_check_requirements (app, NULL, error))
+		if (!fu_engine_check_requirements (self, app, NULL, error))
 			return NULL;
 
 		as_app_set_origin (app, as_store_get_origin (store));
@@ -2057,7 +2088,7 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 			continue;
 
 		/* check we can install it */
-		if (!fu_engine_check_requirements (app, device, error))
+		if (!fu_engine_check_requirements (self, app, device, error))
 			return NULL;
 		releases_tmp = as_app_get_releases (app);
 		for (guint j = 0; j < releases_tmp->len; j++) {
