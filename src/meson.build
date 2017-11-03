@@ -176,6 +176,7 @@ if get_option('enable-tests')
     colorhug_test_firmware,
     colorhug_pkcs7_signature,
     builder_test_firmware,
+    hwid_test_firmware,
     sources : [
       keyring_src,
       'fu-self-test.c',
