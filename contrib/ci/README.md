@@ -52,6 +52,7 @@ Debian testing (cross compile s390x)
 ------
 
 * Not packaged
+* No redfish support
 * Compiled under gcc
 * Tests with -Werror enabled
 * Runs local test suite using qemu-user
