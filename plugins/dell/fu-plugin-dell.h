@@ -31,6 +31,7 @@ struct FuPluginData {
 	guint16			fake_vid;
 	guint16			fake_pid;
 	gboolean		can_switch_modes;
+	gboolean		capsule_supported;
 };
 
 void
