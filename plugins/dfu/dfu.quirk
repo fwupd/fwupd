@@ -26,18 +26,12 @@ USB\VID_0763&PID_2806=ignore-polltimeout
 # LPC DFU bootloader
 USB\VID_1FC9&PID_000C=force-dfu-mode
 
-# Leaflabs Maple3
-USB\VID_1EAF&PID_0003&REV_0200=ignore-invalid-version
-
 # m-stack DFU
 USB\VID_273F&PID_1003=attach-upload-download
 USB\VID_273F&PID_100A=attach-upload-download
 
 # HydraBus
 USB\VID_1D50&PID_60A7=no-dfu-runtime|action-required
-
-# Atmel bootloader
-USB\VID_03EB=use-atmel-avr
 
 # Jabra 410, 510, 710 and 810
 USB\VID_0B0E&PID_0412=no-dfu-runtime
@@ -50,6 +44,14 @@ USB\VID_0B0E&PID_0411=no-pid-change|use-protocol-zero|ignore-upload|attach-extra
 USB\VID_0B0E&PID_0421=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
 USB\VID_0B0E&PID_0982=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
 USB\VID_0B0E&PID_0971=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
+
+[fwupd-dfu-force-version]
+
+# Leaflabs Maple3
+USB\VID_1EAF&PID_0003&REV_0200=0110
+
+# Atmel FLIP Bootloader
+USB\VID_03EB=ff01
 
 [fwupd-dfu-jabra-detach]
 

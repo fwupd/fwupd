@@ -57,7 +57,6 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  * * `attach-extra-reset`:	Device needs resetting twice for attach
  * * `attach-upload-download`:	An upload or download is required for attach
  * * `force-dfu-mode`:		Force DFU mode
- * * `ignore-invalid-version`:	Ignore invalid version numbers
  * * `ignore-polltimeout`:	Ignore the device download timeout
  * * `ignore-runtime`:		Device has broken DFU runtime support
  * * `ignore-upload`:		Uploading from the device is broken
@@ -143,6 +142,19 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  * Since: 1.0.1
  */
 #define	FU_QUIRKS_DFU_AVR_CHIP_ID		"fwupd-dfu-avr-chip-id"
+
+/**
+ * FU_QUIRKS_DFU_FORCE_VERSION:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the uint16_t DFU version, encoded in base 16, e.g. `0110`
+ *
+ * Forces a specific DFU version for the hardware device. This is required
+ * if the device does not set, or sets incorrectly, items in the DFU functional
+ * descriptor.
+ *
+ * Since: 1.0.1
+ */
+#define	FU_QUIRKS_DFU_FORCE_VERSION		"fwupd-dfu-force-version"
 
 G_END_DECLS
 
