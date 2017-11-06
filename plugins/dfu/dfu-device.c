@@ -274,8 +274,8 @@ typedef struct __attribute__((packed)) {
 	guint16		bcdDFUVersion;
 } DfuFuncDescriptor;
 
-static void
-dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
+static gboolean
+dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	DfuFuncDescriptor desc;
@@ -297,16 +297,23 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 			g_string_append_printf (bufstr, "%02x ", buf[i]);
 		if (bufstr->len > 0)
 			g_string_truncate (bufstr, bufstr->len - 1);
-		g_warning ("interface found, but not the correct length for "
-			   "functional data: %" G_GSIZE_FORMAT " bytes: %s",
-			   sz, bufstr->str);
-		return;
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "interface found, but not the correct length for "
+			     "functional data: %" G_GSIZE_FORMAT " bytes: %s",
+			     sz, bufstr->str);
+		return FALSE;
 	}
 
 	/* check sanity */
 	if (desc.bLength != sz) {
-		g_warning ("DFU interface data has incorrect length: 0x%02x",
-			   desc.bLength);
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "DFU interface data has incorrect length: 0x%02x",
+			     desc.bLength);
+		return FALSE;
 	}
 
 	/* check transfer size */
@@ -352,6 +359,7 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 
 	/* get attributes about the DFU operation */
 	priv->attributes = desc.bmAttributes;
+	return TRUE;
 }
 
 static gboolean
@@ -399,19 +407,21 @@ dfu_device_update_from_iface (DfuDevice *device, GUsbInterface *iface)
 }
 
 static gboolean
-dfu_device_add_targets (DfuDevice *device)
+dfu_device_add_targets (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(GPtrArray) ifaces = NULL;
 
 	/* add all DFU-capable targets */
-	ifaces = g_usb_device_get_interfaces (priv->dev, NULL);
+	ifaces = g_usb_device_get_interfaces (priv->dev, error);
 	if (ifaces == NULL)
 		return FALSE;
 	g_ptr_array_set_size (priv->targets, 0);
 	for (guint i = 0; i < ifaces->len; i++) {
 		GBytes *iface_data = NULL;
 		DfuTarget *target;
+		g_autoptr(GError) error_local = NULL;
+
 		GUsbInterface *iface = g_ptr_array_index (ifaces, i);
 		if (g_usb_interface_get_class (iface) != G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
 			continue;
@@ -420,8 +430,13 @@ dfu_device_add_targets (DfuDevice *device)
 
 		/* parse any interface data */
 		iface_data = g_usb_interface_get_extra (iface);
-		if (g_bytes_get_size (iface_data) > 0)
-			dfu_device_parse_iface_data (device, iface_data);
+		if (g_bytes_get_size (iface_data) > 0) {
+			if (!dfu_device_parse_iface_data (device, iface_data, &error_local)) {
+				g_warning ("failed to parse interface data: %s",
+					   error_local->message);
+				continue;
+			}
+		}
 
 		/* create a target of the required type */
 		switch (priv->version) {
@@ -471,11 +486,20 @@ dfu_device_add_targets (DfuDevice *device)
 		return TRUE;
 	}
 
+	/* no targets */
+	if (priv->targets->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "no DFU interfaces");
+		return FALSE;
+	}
+
 	/* the device upload is broken */
 	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_UPLOAD)
 		priv->attributes &= ~DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD;
 
-	return priv->targets->len > 0;
+	return TRUE;
 }
 
 /**
@@ -1650,11 +1674,10 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 	dfu_device_apply_quirks (device);
 
 	/* update all the targets */
-	if (!dfu_device_add_targets (device)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "replugged device is not DFU-capable");
+	if (!dfu_device_add_targets (device, error)) {
+		g_prefix_error (error, "%04x:%04x is not supported: ",
+				g_usb_device_get_vid (dev),
+				g_usb_device_get_pid (dev));
 		return FALSE;
 	}
 
