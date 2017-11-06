@@ -31,6 +31,7 @@ struct FuPluginData {
 	FuDellSmiObj		*smi_obj;
 	guint16			fake_vid;
 	guint16			fake_pid;
+	gboolean		capsule_supported;
 };
 
 void
