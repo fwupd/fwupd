@@ -78,3 +78,111 @@ USB\VID_0B0E&PID_2456=0B0E0971
 
 # AT32UC3A3 is BL @0x2000, Size: 0x40000
 0x58200204=@Flash/0x2000/1*248Kg
+
+# ATxmega16A4 size:0x4000
+0x1e9441=@Flash/0x0/1*16Kg
+
+# ATxmega16C4 size:0x4000
+0x1e9544=@Flash/0x0/1*16Kg
+
+# ATxmega16D4 size:0x4000
+0x1e9442=@Flash/0x0/1*16Kg
+
+# ATxmega32A4 size:0x8000
+0x1e9541=@Flash/0x0/1*32Kg
+
+# ATxmega32C4 size:0x8000
+0x1e9443=@Flash/0x0/1*32Kg
+
+# ATxmega32D4 size:0x8000
+0x1e9542=@Flash/0x0/1*32Kg
+
+# ATxmega64A4 size:0x10000
+0x1e9646=@Flash/0x0/1*64Kg
+
+# ATxmega64C3 size:0x10000
+0x1e9649=@Flash/0x0/1*64Kg
+
+# ATxmega64D3 size:0x10000
+0x1e964a=@Flash/0x0/1*64Kg
+
+# ATxmega64D4 size:0x10000
+0x1e9647=@Flash/0x0/1*64Kg
+
+# ATxmega64A1 size:0x10000
+0x1e964e=@Flash/0x0/1*64Kg
+
+# ATxmega64A3 size:0x10000
+0x1e9642=@Flash/0x0/1*64Kg
+
+# ATxmega64B1 size:0x10000
+0x1e9652=@Flash/0x0/1*64Kg
+
+# ATxmega64B3 size:0x10000
+0x1e9651=@Flash/0x0/1*64Kg
+
+# ATxmega128C3 size:0x20000
+0x1e9752=@Flash/0x0/1*128Kg
+
+# ATxmega128D3 size:0x20000
+0x1e9748=@Flash/0x0/1*128Kg
+
+# ATxmega128D4 size:0x20000
+0x1e9747=@Flash/0x0/1*128Kg
+
+# ATxmega128A1 size:0x20000
+0x1e974c=@Flash/0x0/1*128Kg
+
+# ATxmega128A1revD size:0x20000
+0x1e9741=@Flash/0x0/1*128Kg
+
+# ATxmega128A3 size:0x20000
+0x1e9742=@Flash/0x0/1*128Kg
+
+# ATxmega128A4 size:0x20000
+0x1e9746=@Flash/0x0/1*128Kg
+
+# ATxmega128B1 size:0x20000
+0x1e974d=@Flash/0x0/1*128Kg
+
+# ATxmega128B3 size:0x20000
+0x1e974b=@Flash/0x0/1*128Kg
+
+# ATxmega192C3 size:0x30000
+0x1e9751=@Flash/0x0/1*192Kg
+
+# ATxmega192D3 size:0x30000
+0x1e9749=@Flash/0x0/1*192Kg
+
+# ATxmega192A1 size:0x30000
+0x1e974e=@Flash/0x0/1*192Kg
+
+# ATxmega192A3 size:0x30000
+0x1e9744=@Flash/0x0/1*192Kg
+
+# ATxmega256 size:0x40000
+0x1e9846=@Flash/0x0/1*256Kg
+
+# ATxmega256D3 size:0x40000
+0x1e9844=@Flash/0x0/1*256Kg
+
+# ATxmega256A3 size:0x40000
+0x1e9842=@Flash/0x0/1*256Kg
+
+# ATxmega256A3B size:0x40000
+0x1e9843=@Flash/0x0/1*256Kg
+
+# ATxmega384C3 size:0x60000
+0x1e9845=@Flash/0x0/1*384Kg
+
+# ATxmega384D3 size:0x60000
+0x1e9847=@Flash/0x0/1*384Kg
+
+# ATxmega8E5 size:0x2000
+0x1e9341=@Flash/0x0/1*8Kg
+
+# ATxmega16E5 size:0x4000
+0x1e9445=@Flash/0x0/1*16Kg
+
+# ATxmega32E5 size:0x8000
+0x1e954c=@Flash/0x0/1*32Kg
