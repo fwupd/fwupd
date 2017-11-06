@@ -279,6 +279,7 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	DfuFuncDescriptor desc;
+	const gchar *quirk_str;
 	const guint8 *buf;
 	gsize sz;
 
@@ -324,25 +325,24 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data)
 
 	/* check DFU version */
 	priv->version = GUINT16_FROM_LE (desc.bcdDFUVersion);
-	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION) {
-		g_debug ("ignoring quirked DFU version");
+	quirk_str = fu_quirks_lookup_by_usb_device (priv->system_quirks,
+						    FU_QUIRKS_DFU_FORCE_VERSION,
+						    priv->dev);
+	if (quirk_str != NULL && strlen (quirk_str) == 4)
+		priv->version = dfu_utils_buffer_parse_uint16 (quirk_str);
+	if (priv->version == DFU_VERSION_DFU_1_0 ||
+	    priv->version == DFU_VERSION_DFU_1_1) {
+		g_debug ("basic DFU 1.1");
+	} else if (priv->version == DFU_VERSION_ATMEL_AVR) {
+		g_debug ("AVR-DFU support");
+		priv->version = DFU_VERSION_ATMEL_AVR;
+	} else if (priv->version == DFU_VERSION_DFUSE) {
+		g_debug ("STM-DFU support");
+	} else if (priv->version == 0x0101) {
+		g_debug ("basic DFU 1.1 assumed");
+		priv->version = DFU_VERSION_DFU_1_1;
 	} else {
-		if (priv->version == DFU_VERSION_DFU_1_0 ||
-		    priv->version == DFU_VERSION_DFU_1_1) {
-			g_debug ("basic DFU 1.1");
-		} else if (priv->version == 0x0101 &&
-			   dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_USE_ATMEL_AVR)) {
-			g_debug ("AVR-DFU support forced");
-			priv->version = DFU_VERSION_ATMEL_AVR;
-		} else if (priv->version == DFU_VERSION_DFUSE) {
-			g_debug ("STM-DFU support");
-		} else if (priv->version == 0x0101) {
-			g_debug ("basic DFU 1.1 assumed");
-			priv->version = DFU_VERSION_DFU_1_1;
-		} else {
-			g_warning ("DFU version is invalid: 0x%04x",
-				   priv->version);
-		}
+		g_warning ("DFU version is invalid: 0x%04x", priv->version);
 	}
 
 	/* ST-specific */
@@ -668,10 +668,6 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 			priv->quirks |= DFU_DEVICE_QUIRK_FORCE_DFU_MODE;
 			continue;
 		}
-		if (g_strcmp0 (split[i], "ignore-invalid-version") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION;
-			continue;
-		}
 		if (g_strcmp0 (split[i], "use-protocol-zero") == 0) {
 			priv->quirks |= DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO;
 			continue;
@@ -706,10 +702,6 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 		}
 		if (g_strcmp0 (split[i], "attach-extra-reset") == 0) {
 			priv->quirks |= DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "use-atmel-avr") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_USE_ATMEL_AVR;
 			continue;
 		}
 	}
@@ -2339,8 +2331,6 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "ignore-polltimeout|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_FORCE_DFU_MODE)
 		g_string_append_printf (str, "force-dfu-mode|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION)
-		g_string_append_printf (str, "ignore-invalid-version|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO)
 		g_string_append_printf (str, "use-protocol-zero|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_PID_CHANGE)
@@ -2359,8 +2349,6 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "ignore-upload|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET)
 		g_string_append_printf (str, "attach-extra-reset|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_USE_ATMEL_AVR)
-		g_string_append_printf (str, "use-atmel-avr|");
 
 	/* a well behaved device */
 	if (str->len == 0) {

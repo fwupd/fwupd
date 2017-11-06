@@ -54,7 +54,6 @@ typedef enum {
  * @DFU_DEVICE_QUIRK_NONE:			No device quirks
  * @DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT:	Ignore the device download timeout
  * @DFU_DEVICE_QUIRK_FORCE_DFU_MODE:		Force DFU mode
- * @DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION:	Ignore invalid version numbers
  * @DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO:		Fix up the protocol number
  * @DFU_DEVICE_QUIRK_NO_PID_CHANGE:		Accept the same VID:PID when changing modes
  * @DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD:	Do not do GetStatus when uploading
@@ -64,7 +63,6 @@ typedef enum {
  * @DFU_DEVICE_QUIRK_ACTION_REQUIRED:		User has to do something manually, e.g. press a button
  * @DFU_DEVICE_QUIRK_IGNORE_UPLOAD:		Uploading from the device is broken
  * @DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET:	Device needs resetting twice for attach
- * @DFU_DEVICE_QUIRK_USE_ATMEL_AVR:		Device uses the ATMEL bootloader
  *
  * The workarounds for different devices.
  **/
@@ -72,7 +70,6 @@ typedef enum {
 	DFU_DEVICE_QUIRK_NONE			= 0,
 	DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT	= (1 << 0),
 	DFU_DEVICE_QUIRK_FORCE_DFU_MODE		= (1 << 1),
-	DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION	= (1 << 2),
 	DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO	= (1 << 3),
 	DFU_DEVICE_QUIRK_NO_PID_CHANGE		= (1 << 4),
 	DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD	= (1 << 5),
@@ -82,7 +79,6 @@ typedef enum {
 	DFU_DEVICE_QUIRK_ACTION_REQUIRED	= (1 << 9),
 	DFU_DEVICE_QUIRK_IGNORE_UPLOAD		= (1 << 10),
 	DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET	= (1 << 11),
-	DFU_DEVICE_QUIRK_USE_ATMEL_AVR		= (1 << 13),
 	/*< private >*/
 	DFU_DEVICE_QUIRK_LAST
 } DfuDeviceQuirks;
