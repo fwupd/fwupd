@@ -600,6 +600,138 @@ dfu_device_func (void)
 }
 
 static void
+dfu_device_dfu_v11 (void)
+{
+	gboolean ret;
+	g_autoptr(DfuContext) context = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+
+	/* create context */
+	context = dfu_context_new ();
+	ret = dfu_context_enumerate (context, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* does device exist */
+	device = dfu_context_get_device_by_vid_pid (context,
+						    0x273f,
+						    0x100a,
+						    &error);
+	if (device == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+		g_test_skip ("no ColorHugDFU, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+
+	/* read contents */
+	ret = dfu_device_open (device, &error);
+	if (!ret &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
+		g_test_skip ("no permissions, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (ret);
+	firmware = dfu_device_upload (device, DFU_TARGET_TRANSFER_FLAG_NONE,
+				      NULL, &error);
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 16384);
+}
+
+static void
+dfu_device_dfu_avr32 (void)
+{
+	gboolean ret;
+	g_autoptr(DfuContext) context = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+
+	/* create context */
+	context = dfu_context_new ();
+	ret = dfu_context_enumerate (context, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* does device exist */
+	device = dfu_context_get_device_by_vid_pid (context,
+						    0x03eb,
+						    0x2ff1,
+						    &error);
+	if (device == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+		g_test_skip ("no UC3-A3 Xplained, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+
+	/* read contents */
+	ret = dfu_device_open (device, &error);
+	if (!ret &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
+		g_test_skip ("no permissions, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (ret);
+	firmware = dfu_device_upload (device, DFU_TARGET_TRANSFER_FLAG_NONE,
+				      NULL, &error);
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 11264);
+}
+
+static void
+dfu_device_dfu_xmega (void)
+{
+	gboolean ret;
+	g_autoptr(DfuContext) context = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+
+	/* create context */
+	context = dfu_context_new ();
+	ret = dfu_context_enumerate (context, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* does device exist */
+	device = dfu_context_get_device_by_vid_pid (context,
+						    0x03eb,
+						    0x2fe2,
+						    &error);
+	if (device == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+		g_test_skip ("no XMEGA-A3BU Xplained, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+
+	/* read contents */
+	ret = dfu_device_open (device, &error);
+	if (!ret &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
+		g_test_skip ("no permissions, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (ret);
+	firmware = dfu_device_upload (device, DFU_TARGET_TRANSFER_FLAG_NONE,
+				      NULL, &error);
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 29696);
+}
+
+static void
 dfu_colorhug_plus_func (void)
 {
 	GPtrArray *elements;
@@ -1051,6 +1183,9 @@ main (int argc, char **argv)
 	g_test_add_func ("/dfu/firmware{intel-hex}", dfu_firmware_intel_hex_func);
 	g_test_add_func ("/dfu/firmware{intel-hex-signed}", dfu_firmware_intel_hex_signed_func);
 	g_test_add_func ("/dfu/device", dfu_device_func);
+	g_test_add_func ("/dfu/device{v1.1}", dfu_device_dfu_v11);
+	g_test_add_func ("/dfu/device{avr32}", dfu_device_dfu_avr32);
+	g_test_add_func ("/dfu/device{xmega}", dfu_device_dfu_xmega);
 	g_test_add_func ("/dfu/colorhug+", dfu_colorhug_plus_func);
 	return g_test_run ();
 }
