@@ -173,6 +173,7 @@ dfu_target_stm_upload_element (DfuTarget *target,
 		 * and wBlockNum=1 is reserved */
 		chunk_tmp = dfu_target_upload_chunk (target,
 						     idx + 2,
+						     0, /* device transfer size */
 						     cancellable,
 						     error);
 		if (chunk_tmp == NULL)

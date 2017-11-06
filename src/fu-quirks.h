@@ -63,6 +63,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  * * `no-dfu-runtime`:		No DFU runtime interface is provided
  * * `no-get-status-upload`:	Do not do GetStatus when uploading
  * * `no-pid-change`:		Accept the same VID:PID when changing modes
+ * * `use-any-interface`:	Use any interface for DFU
  * * `use-atmel-avr`:		Device uses the ATMEL bootloader
  * * `use-protocol-zero`:	Fix up the protocol number
  *
