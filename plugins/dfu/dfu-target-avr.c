@@ -67,7 +67,8 @@ G_DEFINE_TYPE_WITH_PRIVATE (DfuTargetAvr, dfu_target_avr, DFU_TYPE_TARGET)
 
 #define ATMEL_64KB_PAGE				0x10000
 #define ATMEL_MAX_TRANSFER_SIZE			0x0400
-#define ATMEL_MANUFACTURER_CODE			0x58
+#define ATMEL_MANUFACTURER_CODE1		0x58
+#define ATMEL_MANUFACTURER_CODE2		0x1e
 
 static gboolean
 dfu_target_avr_mass_erase (DfuTarget *target,
@@ -267,19 +268,25 @@ dfu_target_avr_setup (DfuTarget *target, GCancellable *cancellable, GError **err
 			     (guint) sz);
 		return FALSE;
 	}
-	if (buf[0] != ATMEL_MANUFACTURER_CODE) {
+	memcpy (&device_id_be, buf, 4);
+	priv->device_id = GINT32_FROM_BE (device_id_be);
+	if (buf[0] == ATMEL_MANUFACTURER_CODE1) {
+		chip_id = g_strdup_printf ("0x%08x", (guint) priv->device_id);
+	} else if (buf[0] == ATMEL_MANUFACTURER_CODE2) {
+		chip_id = g_strdup_printf ("0x%06x", (guint) priv->device_id >> 8);
+	} else {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
-			     "cannot read config vendor, got 0x%02x, expected 0x%02x",
-			     (guint) buf[0], (guint) ATMEL_MANUFACTURER_CODE);
+			     "cannot read config vendor, got 0x%08x, "
+			     "expected 0x%02x or 0x%02x",
+			     (guint) priv->device_id,
+			     (guint) ATMEL_MANUFACTURER_CODE1,
+			     (guint) ATMEL_MANUFACTURER_CODE2);
 		return FALSE;
 	}
-	memcpy (&device_id_be, buf, 4);
-	priv->device_id = GINT32_FROM_BE (device_id_be);
 
 	/* set the alt-name using the device ID */
-	chip_id = g_strdup_printf ("0x%08x", (guint) priv->device_id);
 	dfu_device_set_chip_id (dfu_target_get_device (target), chip_id);
 	device = dfu_target_get_device (target);
 	quirk_str = fu_quirks_lookup_by_id (dfu_device_get_system_quirks (device),
@@ -293,8 +300,8 @@ dfu_target_avr_setup (DfuTarget *target, GCancellable *cancellable, GError **err
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "DeviceID 0x%08x is not supported",
-			     (guint) priv->device_id);
+			     "DeviceID %s is not supported",
+			     chip_id);
 		return FALSE;
 	}
 	dfu_target_set_alt_name (target, quirk_str);
