@@ -237,7 +237,7 @@ dfu_context_device_added_cb (GUsbContext *usb_context,
 	device = dfu_device_new ();
 	dfu_device_set_system_quirks (device, priv->quirks);
 	if (!dfu_device_set_new_usb_dev (device, usb_device, NULL, &error)) {
-		g_debug ("failed to set USB device: %s", error->message);
+		g_debug ("failed to use USB device: %s", error->message);
 		return;
 	}
 
