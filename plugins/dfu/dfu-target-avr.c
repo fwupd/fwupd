@@ -245,7 +245,9 @@ dfu_target_avr_setup (DfuTarget *target, GCancellable *cancellable, GError **err
 		return TRUE;
 
 	/* select unit, and request 4 bytes */
-	if (!dfu_target_avr_select_memory_unit (target, 0x05, cancellable, error))
+	if (!dfu_target_avr_select_memory_unit (target,
+						DFU_AVR_MEMORY_UNIT_SIGNATURE,
+						cancellable, error))
 		return FALSE;
 	if (!dfu_target_avr_select_memory_page (target, 0x00, cancellable, error))
 		return FALSE;
