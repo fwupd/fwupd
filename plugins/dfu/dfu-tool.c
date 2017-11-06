@@ -2142,9 +2142,10 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		}
 
 		tmp = dfu_mode_to_string (dfu_device_get_mode (device));
-		/* TRANSLATORS: device mode, e.g. runtime or DFU */
-		dfu_tool_print_indent (_("Mode"), tmp, 1);
-
+		if (tmp != NULL) {
+			/* TRANSLATORS: device mode, e.g. runtime or DFU */
+			dfu_tool_print_indent (_("Mode"), tmp, 1);
+		}
 		tmp = dfu_status_to_string (dfu_device_get_status (device));
 		/* TRANSLATORS: device status, e.g. "OK" */
 		dfu_tool_print_indent (_("Status"), tmp, 1);
