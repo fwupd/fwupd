@@ -439,9 +439,14 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 			 dock_info->components[i].description,
 			 dock_info->components[i].fw_version);
 		query_str = g_strrstr (dock_info->components[i].description,
-				       "Query ") + 6;
-		if (!fu_plugin_dell_match_dock_component (query_str, &guid_raw,
-							    &component_name)) {
+				       "Query ");
+		if (query_str == NULL) {
+			g_debug ("Invalid dock component request");
+			return;
+		}
+		if (!fu_plugin_dell_match_dock_component (query_str + 6,
+							  &guid_raw,
+							  &component_name)) {
 			g_debug ("Unable to match dock component %s",
 				query_str);
 			return;
