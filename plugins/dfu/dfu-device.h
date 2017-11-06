@@ -54,6 +54,7 @@ typedef enum {
  * @DFU_DEVICE_QUIRK_NONE:			No device quirks
  * @DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT:	Ignore the device download timeout
  * @DFU_DEVICE_QUIRK_FORCE_DFU_MODE:		Force DFU mode
+ * @DFU_DEVICE_QUIRK_USE_ANY_INTERFACE:		Use any interface for DFU
  * @DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO:		Fix up the protocol number
  * @DFU_DEVICE_QUIRK_NO_PID_CHANGE:		Accept the same VID:PID when changing modes
  * @DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD:	Do not do GetStatus when uploading
@@ -70,6 +71,7 @@ typedef enum {
 	DFU_DEVICE_QUIRK_NONE			= 0,
 	DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT	= (1 << 0),
 	DFU_DEVICE_QUIRK_FORCE_DFU_MODE		= (1 << 1),
+	DFU_DEVICE_QUIRK_USE_ANY_INTERFACE	= (1 << 2),
 	DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO	= (1 << 3),
 	DFU_DEVICE_QUIRK_NO_PID_CHANGE		= (1 << 4),
 	DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD	= (1 << 5),

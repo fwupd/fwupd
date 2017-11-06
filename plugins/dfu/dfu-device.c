@@ -279,7 +279,6 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data, GError **err
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	DfuFuncDescriptor desc;
-	const gchar *quirk_str;
 	const guint8 *buf;
 	gsize sz;
 
@@ -316,41 +315,9 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data, GError **err
 		return FALSE;
 	}
 
-	/* check transfer size */
+	/* get transfer size and version */
 	priv->transfer_size = GUINT16_FROM_LE (desc.wTransferSize);
-	if (priv->transfer_size == 0xffff) {
-		priv->transfer_size = 0x0400;
-		g_debug ("DFU transfer size unspecified, guessing");
-	}
-	if (priv->transfer_size > 0x0000) {
-		g_debug ("using DFU transfer size 0x%04x bytes", priv->transfer_size);
-	} else {
-		g_warning ("DFU transfer size 0x%04x invalid, using default",
-			   desc.wTransferSize);
-		priv->transfer_size = 64;
-	}
-
-	/* check DFU version */
 	priv->version = GUINT16_FROM_LE (desc.bcdDFUVersion);
-	quirk_str = fu_quirks_lookup_by_usb_device (priv->system_quirks,
-						    FU_QUIRKS_DFU_FORCE_VERSION,
-						    priv->dev);
-	if (quirk_str != NULL && strlen (quirk_str) == 4)
-		priv->version = dfu_utils_buffer_parse_uint16 (quirk_str);
-	if (priv->version == DFU_VERSION_DFU_1_0 ||
-	    priv->version == DFU_VERSION_DFU_1_1) {
-		g_debug ("basic DFU 1.1");
-	} else if (priv->version == DFU_VERSION_ATMEL_AVR) {
-		g_debug ("AVR-DFU support");
-		priv->version = DFU_VERSION_ATMEL_AVR;
-	} else if (priv->version == DFU_VERSION_DFUSE) {
-		g_debug ("STM-DFU support");
-	} else if (priv->version == 0x0101) {
-		g_debug ("basic DFU 1.1 assumed");
-		priv->version = DFU_VERSION_DFU_1_1;
-	} else {
-		g_warning ("DFU version is invalid: 0x%04x", priv->version);
-	}
 
 	/* ST-specific */
 	if (priv->version == DFU_VERSION_DFUSE &&
@@ -420,14 +387,18 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 	for (guint i = 0; i < ifaces->len; i++) {
 		GBytes *iface_data = NULL;
 		DfuTarget *target;
+		const gchar *quirk_str;
 		g_autoptr(GError) error_local = NULL;
 
 		GUsbInterface *iface = g_ptr_array_index (ifaces, i);
-		if (g_usb_interface_get_class (iface) != G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
-			continue;
-		if (g_usb_interface_get_subclass (iface) != 0x01)
-			continue;
 
+		/* some devices don't use the right class and subclass */
+		if (!dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_USE_ANY_INTERFACE)) {
+			if (g_usb_interface_get_class (iface) != G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
+				continue;
+			if (g_usb_interface_get_subclass (iface) != 0x01)
+				continue;
+		}
 		/* parse any interface data */
 		iface_data = g_usb_interface_get_extra (iface);
 		if (g_bytes_get_size (iface_data) > 0) {
@@ -436,6 +407,42 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 					   error_local->message);
 				continue;
 			}
+		} else {
+			priv->attributes |= DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD |
+					    DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD;
+		}
+
+		/* fix up the version */
+		quirk_str = fu_quirks_lookup_by_usb_device (priv->system_quirks,
+							    FU_QUIRKS_DFU_FORCE_VERSION,
+							    priv->dev);
+		if (quirk_str != NULL && strlen (quirk_str) == 4)
+			priv->version = dfu_utils_buffer_parse_uint16 (quirk_str);
+		if (priv->version == DFU_VERSION_DFU_1_0 ||
+		    priv->version == DFU_VERSION_DFU_1_1) {
+			g_debug ("basic DFU 1.1");
+		} else if (priv->version == DFU_VERSION_ATMEL_AVR) {
+			g_debug ("AVR-DFU support");
+			priv->version = DFU_VERSION_ATMEL_AVR;
+		} else if (priv->version == DFU_VERSION_DFUSE) {
+			g_debug ("STM-DFU support");
+		} else if (priv->version == 0x0101) {
+			g_debug ("basic DFU 1.1 assumed");
+			priv->version = DFU_VERSION_DFU_1_1;
+		} else {
+			g_warning ("DFU version is invalid: 0x%04x", priv->version);
+		}
+
+		/* fix up the transfer size */
+		if (priv->transfer_size == 0xffff) {
+			priv->transfer_size = 0x0400;
+			g_debug ("DFU transfer size unspecified, guessing");
+		}
+		if (priv->transfer_size > 0x0000) {
+			g_debug ("using DFU transfer size 0x%04x bytes", priv->transfer_size);
+		} else {
+			g_warning ("DFU transfer size invalid, using default");
+			priv->transfer_size = 64;
 		}
 
 		/* create a target of the required type */
@@ -726,6 +733,10 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 		}
 		if (g_strcmp0 (split[i], "attach-extra-reset") == 0) {
 			priv->quirks |= DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET;
+			continue;
+		}
+		if (g_strcmp0 (split[i], "use-any-interface") == 0) {
+			priv->quirks |= DFU_DEVICE_QUIRK_USE_ANY_INTERFACE;
 			continue;
 		}
 	}
@@ -1880,7 +1891,7 @@ dfu_device_attach (DfuDevice *device, GError **error)
 		target_zero = dfu_device_get_target_by_alt_setting (device, 0, error);
 		if (target_zero == NULL)
 			return FALSE;
-		chunk = dfu_target_upload_chunk (target_zero, 0, NULL, error);
+		chunk = dfu_target_upload_chunk (target_zero, 0, 0, NULL, error);
 		if (chunk == NULL)
 			return FALSE;
 	}
@@ -2372,6 +2383,8 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "ignore-upload|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET)
 		g_string_append_printf (str, "attach-extra-reset|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_USE_ANY_INTERFACE)
+		g_string_append_printf (str, "use-any-interface|");
 
 	/* a well behaved device */
 	if (str->len == 0) {

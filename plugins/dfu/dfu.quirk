@@ -45,6 +45,9 @@ USB\VID_0B0E&PID_0421=no-pid-change|use-protocol-zero|ignore-upload|attach-extra
 USB\VID_0B0E&PID_0982=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
 USB\VID_0B0E&PID_0971=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
 
+# Atmel XMEGA Bootloader
+USB\VID_03EB&PID_2FE2=use-any-interface
+
 [fwupd-dfu-force-version]
 
 # Leaflabs Maple3

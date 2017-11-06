@@ -34,6 +34,7 @@ DfuTarget	*dfu_target_new				(void);
 
 GBytes		*dfu_target_upload_chunk		(DfuTarget	*target,
 							 guint16	 index,
+							 gsize		 buf_sz,
 							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_target_download_chunk		(DfuTarget	*target,

@@ -757,16 +757,19 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 }
 
 GBytes *
-dfu_target_upload_chunk (DfuTarget *target, guint16 index,
+dfu_target_upload_chunk (DfuTarget *target, guint16 index, gsize buf_sz,
 			 GCancellable *cancellable, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	g_autoptr(GError) error_local = NULL;
 	guint8 *buf;
 	gsize actual_length;
-	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 
-	buf = g_new0 (guint8, transfer_size);
+	/* unset */
+	if (buf_sz == 0)
+		buf_sz = (gsize) dfu_device_get_transfer_size (priv->device);
+
+	buf = g_new0 (guint8, buf_sz);
 	if (!g_usb_device_control_transfer (dfu_device_get_usb_dev (priv->device),
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -774,7 +777,7 @@ dfu_target_upload_chunk (DfuTarget *target, guint16 index,
 					    DFU_REQUEST_UPLOAD,
 					    index,
 					    dfu_device_get_interface (priv->device),
-					    buf, (gsize) transfer_size,
+					    buf, buf_sz,
 					    &actual_length,
 					    dfu_device_get_timeout (priv->device),
 					    cancellable,
@@ -913,6 +916,7 @@ dfu_target_upload_element_dfu (DfuTarget *target,
 		/* read chunk of data */
 		chunk_tmp = dfu_target_upload_chunk (target,
 						     idx,
+						     0, /* device transfer size */
 						     cancellable,
 						     error);
 		if (chunk_tmp == NULL)

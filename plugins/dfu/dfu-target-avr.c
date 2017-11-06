@@ -255,7 +255,7 @@ dfu_target_avr_setup (DfuTarget *target, GCancellable *cancellable, GError **err
 		return FALSE;
 
 	/* get data back */
-	chunk_tmp = dfu_target_upload_chunk (target, 0x00, cancellable, error);
+	chunk_tmp = dfu_target_upload_chunk (target, 0x00, 0, cancellable, error);
 	if (chunk_tmp == NULL)
 		return FALSE;
 	buf = g_bytes_get_data (chunk_tmp, &sz);
@@ -500,7 +500,9 @@ dfu_target_avr_upload_element (DfuTarget *target,
 		/* upload data */
 		g_debug ("requesting %i bytes from the hardware",
 			 ATMEL_MAX_TRANSFER_SIZE);
-		chunk_tmp = dfu_target_upload_chunk (target, i, cancellable, error);
+		chunk_tmp = dfu_target_upload_chunk (target, i,
+						     ATMEL_MAX_TRANSFER_SIZE,
+						     cancellable, error);
 		if (chunk_tmp == NULL)
 			return NULL;
 		g_ptr_array_add (chunks, chunk_tmp);
