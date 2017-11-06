@@ -2,7 +2,7 @@ To help us pinpoint your issue, please insert the output of the
 following commands when ran on the system with the issue:
 
 ```shell
-$ fwupdgmr --version
+$ fwupdmgr --version
 **INSERT OUTPUT HERE**
 ```
 
