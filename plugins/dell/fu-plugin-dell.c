@@ -195,25 +195,8 @@ static gboolean
 fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	gint uefi_supported;
 
-	if (data->smi_obj->fake_smbios)
-		return TRUE;
-
-	/* If ESRT is not turned on, fwupd will have already created an
-	 * unlock device (if compiled with support).
-	 *
-	 * Once unlocked, that will enable flashing capsules here too.
-	 *
-	 * that means we should only look for supported = 1
-	 */
-	uefi_supported = fwup_supported ();
-	if (uefi_supported != 1) {
-		g_debug ("UEFI capsule firmware updating not supported (%x)",
-			 (guint) uefi_supported);
-		return FALSE;
-	}
-	return TRUE;
+	return data->smi_obj->fake_smbios || data->capsule_supported;
 }
 
 static gboolean
@@ -886,6 +869,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
+	gint uefi_supported;
 
 	if (data->smi_obj->fake_smbios) {
 		g_debug ("Called with fake SMBIOS implementation. "
@@ -900,6 +884,20 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Firmware updating not supported");
 		return FALSE;
+	}
+
+	/* If ESRT is not turned on, fwupd will have already created an
+	 * unlock device (if compiled with support).
+	 *
+	 * Once unlocked, that will enable flashing capsules here too.
+	 *
+	 * that means we should only look for supported = 1
+	 */
+	uefi_supported = fwup_supported ();
+	data->capsule_supported = (uefi_supported == 1);
+	if (!data->capsule_supported) {
+		g_debug ("UEFI capsule firmware updating not supported (%x)",
+			 (guint) uefi_supported);
 	}
 
 	if (usb_ctx != NULL) {
