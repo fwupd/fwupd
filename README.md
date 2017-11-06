@@ -48,7 +48,7 @@ This will download and apply all updates for your system.
 * Updates that require a reboot *(Offline updates)* will be staged for the next reboot.
 
 You can find more information about the update workflow in the end
-users section of the [fwupd website](http://www.fwupd.org).
+users section of the [fwupd website](https://www.fwupd.org).
 
 Other frontends
 -------------------
