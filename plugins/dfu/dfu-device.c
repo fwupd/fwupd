@@ -1101,6 +1101,7 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 			     FWUPD_ERROR_INTERNAL,
 			     "cannot get device status, invalid size: %04x",
 			     (guint) actual_length);
+		return FALSE;
 	}
 
 	/* status or state changed */
