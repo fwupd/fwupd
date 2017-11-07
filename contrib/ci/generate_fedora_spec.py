@@ -20,6 +20,7 @@
 #
 import os
 import sys
+import datetime
 import xml.etree.ElementTree as etree
 from collections import defaultdict
 
@@ -119,19 +120,9 @@ output = sys.argv[2]
 fwupd_version = sys.argv[3]
 with open(output, 'w') as wfd:
     for line in lines:
-        if "#VERSION#" in line:
-            wfd.write(line.replace("#VERSION#", fwupd_version))
-        elif "#BUILD#" in line:
-            wfd.write(line.replace("#BUILD#", "1"))
-        elif "#ALPHATAG" in line:
-            wfd.write(line.replace("#ALPHATAG#", "alpha"))
-        elif "enable_dummy 0" in line:
-            wfd.write(line.replace("enable_dummy 0, enable_dummy 1"))
-        elif "Source0" in line:
-            wfd.write("Source0:\tfwupd-%s.tar.xz\n" % fwupd_version)
-        elif "#LONGDATE#" in line:
-            wfd.write(line.replace("#LONGDATE#", ))
-        elif line.startswith("BuildRequires: %%%DYNAMIC%%%"):
+        #sed type stuff
+        #dynamic stuff
+        if line.startswith("BuildRequires: %%%DYNAMIC%%%"):
             for i in range(0, len(build_deps)):
                 wfd.write("%s\n" % build_deps[i])
             wfd.write("\n")
@@ -144,4 +135,16 @@ with open(output, 'w') as wfd:
             for i in range(0, len(runtime_deps)):
                 wfd.write("%s\n" % runtime_deps[i])
         else:
+            if "#VERSION#" in line:
+                line = line.replace("#VERSION#", fwupd_version)
+            if "#BUILD#" in line:
+                line = line.replace("#BUILD#", "1")
+            if "#ALPHATAG" in line:
+                line = line.replace("#ALPHATAG#", "alpha")
+            if "enable_dummy 0" in line:
+                line = line.replace("enable_dummy 0, enable_dummy 1")
+            if "Source0" in line:
+                line = "Source0:\tfwupd-%s.tar.xz\n" % fwupd_version
+            if "#LONGDATE#" in line:
+                line = line.replace("#LONGDATE#", datetime.date.today().strftime('%a %b %d %Y'))
             wfd.write(line)
