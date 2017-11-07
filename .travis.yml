@@ -18,8 +18,8 @@ install:
 
 script:
   - if [[ "$OS" == "fedora" ]]; then docker run -e CI=true -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_rpms.sh; fi
-  - if [[ "$OS" == "debian-x86_64" ]]; then docker run -e CI=true -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_debs.sh; fi
-  - if [[ "$OS" == "ubuntu-clang" ]]; then docker run -e CC=clang -e CI=true -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_debs.sh; fi
+  - if [[ "$OS" == "debian-x86_64" ]]; then docker run -e OS=$OS -e CI=true -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_debs.sh; fi
+  - if [[ "$OS" == "ubuntu-clang" ]]; then docker run -e OS=$OS -e CC=clang -e CI=true -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_debs.sh; fi
   - if [[ "$OS" == "arch" ]];   then docker run -e CI=true -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_pkgs.sh; fi
   - if [[ "$OS" == "debian-s390x" ]]; then docker run -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_debian_s390x.sh; fi
-  - if [[ "$OS" == "debian-i386" ]]; then docker run -e CI=true -e ARCH="i386" -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_debs.sh; fi
+  - if [[ "$OS" == "debian-i386" ]]; then docker run -e OS=$OS -e CI=true -e ARCH="i386" -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_debs.sh; fi
