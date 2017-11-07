@@ -92,6 +92,10 @@ Each distribution will have ***package*** elements and ***control*** elements.
 * ___inclusive___ elements represent an inclusive list of architectures to be installed on
 * ___exclusive___ elements represent an exclusive list of architectures to not be installed on
 
+If runtime dependencies are specified with the same name as build dependencies
+along with empty control stanzas they will take the same requirements as the control
+stanza for build dependencies.
+
 Dockerfile.in
 -------------
 The ***Dockerfile.in*** file will be used as a template to build the container.  No hardcoded dependencies should be put in this file.  They should be stored in ***dependencies.xml***.
