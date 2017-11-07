@@ -113,9 +113,9 @@ fu_plugin_update (FuPlugin *plugin,
 		  GError **error)
 {
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
+	FuDeviceEbitdo *ebitdo_dev = FU_DEVICE_EBITDO (dev);
 	const gchar *platform_id;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuDeviceEbitdo) ebitdo_dev = FU_DEVICE_EBITDO (dev);
 	g_autoptr(GUsbDevice) usb_device = NULL;
 
 	/* get version */
