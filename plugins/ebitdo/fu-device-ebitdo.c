@@ -358,7 +358,7 @@ fu_device_ebitdo_validate (FuDeviceEbitdo *device, GError **error)
 	idx = g_usb_device_get_manufacturer_index (priv->usb_device);
 	ven = g_usb_device_get_string_descriptor (priv->usb_device, idx, error);
 	if (ven == NULL) {
-		g_prefix_error (error, "could not check vendor descriptor");
+		g_prefix_error (error, "could not check vendor descriptor: ");
 		return FALSE;
 	}
 	for (guint i = 0; whitelist[i] != NULL; i++) {
