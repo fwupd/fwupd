@@ -24,13 +24,7 @@ mkdir -p $HOME/rpmbuild/SOURCES/
 mv build/meson-dist/fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
 
 #generate a spec file
-sed "s,#VERSION#,$VERSION,;
-     s,#BUILD#,1,;
-     s,#LONGDATE#,`date '+%a %b %d %Y'`,;
-     s,#ALPHATAG#,alpha,;
-     s,enable_dummy 0,enable_dummy 1,;
-     s,Source0.*,Source0:\tfwupd-$VERSION.tar.xz," \
-	contrib/fwupd.spec.in > build/fwupd.spec
+./contrib/ci/generate_fedora_spec.py contrib/fwupd.spec.in build/fwupd.spec $VERSION
 
 #build RPM packages
 rpmbuild -ba build/fwupd.spec
