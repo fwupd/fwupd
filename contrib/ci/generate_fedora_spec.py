@@ -84,7 +84,7 @@ def parse_control_dependencies():
                     if version is None:
                         version = find_build_version(root, OS, child.attrib["id"])
                     if version is not None:
-                        dep = "Requires: %s{?_isa} %s" % (dep, version.text)
+                        dep = "Requires: %s%%{?_isa} %s" % (dep, version.text)
                     else:
                         dep = "Requires: %s" % dep
                     runtime_deps.append(dep)
