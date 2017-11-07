@@ -138,10 +138,13 @@ dfu_chunked_new (const guint8 *data,
 			page_old = page;
 		} else if (page != page_old) {
 			const guint8 *data_offset = data != NULL ? data + last_flush : 0x0;
+			guint32 address_offset = addr_start + last_flush;
+			if (page_sz > 0)
+				address_offset %= page_sz;
 			g_ptr_array_add (segments,
 					 dfu_chunked_packet_new (segments->len,
 								 page_old,
-								 (addr_start + last_flush) % page_sz,
+								 address_offset,
 								 data_offset,
 								 idx - last_flush));
 			last_flush = idx;
@@ -150,10 +153,13 @@ dfu_chunked_new (const guint8 *data,
 		}
 		if (packet_sz > 0 && idx - last_flush >= packet_sz) {
 			const guint8 *data_offset = data != NULL ? data + last_flush : 0x0;
+			guint32 address_offset = addr_start + last_flush;
+			if (page_sz > 0)
+				address_offset %= page_sz;
 			g_ptr_array_add (segments,
 					 dfu_chunked_packet_new (segments->len,
 								 page,
-								 (addr_start + last_flush) % page_sz,
+								 address_offset,
 								 data_offset,
 								 idx - last_flush));
 			last_flush = idx;
@@ -162,13 +168,16 @@ dfu_chunked_new (const guint8 *data,
 	}
 	if (last_flush != idx) {
 		const guint8 *data_offset = data != NULL ? data + last_flush : 0x0;
+		guint32 address_offset = addr_start + last_flush;
 		guint32 page = 0;
-		if (page_sz > 0)
+		if (page_sz > 0) {
+			address_offset %= page_sz;
 			page = (addr_start + (idx - 1)) / page_sz;
+		}
 		g_ptr_array_add (segments,
 				 dfu_chunked_packet_new (segments->len,
 							 page,
-							 (addr_start + last_flush) % page_sz,
+							 address_offset,
 							 data_offset,
 							 data_sz - last_flush));
 	}
