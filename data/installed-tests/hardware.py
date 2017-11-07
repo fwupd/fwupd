@@ -139,6 +139,16 @@ if __name__ == '__main__':
     test.add_file('a5c627ae42de4e5c3ae3df28977f480624f96f66-Jabra-SPEAK_710-1.28.cab', '1.28')
     tests.append(test)
 
+    # 8Bitdo SFC30 Gamepad
+    test = Test('8BitdoSFC30', 'f94d3231-f6e1-5ef3-a4a0-dc819d74ae54')
+    test.add_file('fe066b57c69265f4cce8a999a5f8ab90d1c13b24-8Bitdo-SFC30_NES30_SFC30_SNES30-4.01.cab', '4.01')
+    tests.append(test)
+
+    # 8Bitdo NES30Pro Gamepad
+    test = Test('8BitdoNES30Pro', 'c6566b1b-0c6e-5d2e-9376-78c23ab57bf2')
+    test.add_file('1cb9a0277f536ecd81ca1cea6fd80d60cdbbdcd8-8Bitdo-SFC30PRO_NES30PRO-4.01.cab', '4.01')
+    tests.append(test)
+
     # run each test
     rc = 0
     for test in tests:
