@@ -95,6 +95,7 @@ G_DEFINE_TYPE (FuEngine, fu_engine, G_TYPE_OBJECT)
 typedef struct {
 	FuDevice		*device;
 	FuPlugin		*plugin;
+	FuEngine		*self;		/* no ref */
 } FuDeviceItem;
 
 static void
@@ -173,10 +174,49 @@ fu_engine_set_percentage (FuEngine *self, guint percentage)
 	g_signal_emit (self, signals[SIGNAL_PERCENTAGE_CHANGED], 0, percentage);
 }
 
+static FuDeviceItem *
+fu_engine_get_item_by_device (FuEngine *self, FuDevice *device)
+{
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (item->device == device)
+			return item;
+	}
+	return NULL;
+}
+
+static void
+fu_engine_device_finalized_cb (gpointer data, GObject *where_the_object_was)
+{
+	FuEngine *self = FU_ENGINE (data);
+	FuDevice *device = (FuDevice *) where_the_object_was;
+	FuDeviceItem *item;
+
+	item = fu_engine_get_item_by_device (self, device);
+	if (item == NULL) {
+		g_critical ("device was finalized with no item!");
+		return;
+	}
+
+	/* no longer valid */
+	item->device = NULL;
+
+	/* the best we can do is just log a warning to the journal and remove
+	 * the device from the daemon list -- DeviceRemoved is not emitted */
+	g_critical ("device from plugin %s was finalized without being removed!",
+		    fu_plugin_get_name (item->plugin));
+	g_ptr_array_remove (self->devices, item);
+	fu_engine_emit_changed (self);
+}
+
 static void
 fu_engine_item_free (FuDeviceItem *item)
 {
-	g_object_unref (item->device);
+	if (item->device != NULL) {
+		g_object_weak_unref (G_OBJECT (item->device),
+				     fu_engine_device_finalized_cb, item->self);
+		g_object_unref (item->device);
+	}
 	g_object_unref (item->plugin);
 	g_free (item);
 }
@@ -1266,6 +1306,24 @@ fu_engine_install (FuEngine *self,
 }
 
 static FuDeviceItem *
+fu_engine_add_item (FuEngine *self, FuDevice *device, FuPlugin *plugin)
+{
+	FuDeviceItem *item;
+
+	/* add helper */
+	item = g_new0 (FuDeviceItem, 1);
+	item->self = self; /* no ref */
+	item->device = g_object_ref (device);
+	item->plugin = g_object_ref (plugin);
+	g_ptr_array_add (self->devices, item);
+
+	/* make some noise if the item is unreffed from under our feet */
+	g_object_weak_ref (G_OBJECT (item->device),
+			   fu_engine_device_finalized_cb, self);
+	return item;
+}
+
+static FuDeviceItem *
 fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GError **error)
 {
 	FuDevice *dev;
@@ -1303,10 +1361,7 @@ fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GErr
 					     "no plugin %s found", tmp);
 				return NULL;
 			}
-			item = g_new0 (FuDeviceItem, 1);
-			item->device = g_object_ref (dev);
-			item->plugin = g_object_ref (plugin);
-			g_ptr_array_add (self->devices, item);
+			item = fu_engine_add_item (self, dev, plugin);
 
 			/* FIXME: just a boolean on FuDeviceItem? */
 			fu_device_set_metadata (dev, "FakeDevice", "TRUE");
@@ -2554,25 +2609,20 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 void
 fu_engine_add_device (FuEngine *self, FuPlugin *plugin, FuDevice *device)
 {
-	FuDeviceItem *item;
-
 	/* notify all plugins about this new device */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register (self, device);
 
 	/* create new device */
-	item = g_new0 (FuDeviceItem, 1);
-	item->device = g_object_ref (device);
-	item->plugin = g_object_ref (plugin);
-	g_ptr_array_add (self->devices, item);
+	fu_engine_add_item (self, device, plugin);
 
 	/* match the metadata at this point so clients can tell if the
 	 * device is worthy */
-	if (fu_engine_is_device_supported (self, item->device))
-		fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_SUPPORTED);
+	if (fu_engine_is_device_supported (self, device))
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
 
 	/* notify clients */
-	fu_engine_emit_device_added (self, item->device);
+	fu_engine_emit_device_added (self, device);
 	fu_engine_emit_changed (self);
 }
 
