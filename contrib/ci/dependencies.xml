@@ -1,0 +1,960 @@
+<?xml version="1.0"?>
+<dependencies>
+  <dependency type="build" id="base-devel">
+    <distro id="arch">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="adobe-source-han-sans-cn-fonts">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="arch">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="binutils-multiarch">
+    <distro id="debian">
+      <package variant="s390x" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="ca-certificates">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="clang">
+    <distro id="ubuntu">
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gcc-multilib-s390x-linux-gnu">
+    <distro id="debian">
+      <package variant="s390x" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libcairo-dev">
+    <distro id="fedora">
+      <package>cairo-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libcairo-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libcairo-gobject2">
+    <distro id="fedora">
+      <package>cairo-gobject-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libcairo-gobject2:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libcolord-dev">
+    <distro id="arch">
+      <package>colord</package>
+    </distro>
+    <distro id="fedora">
+      <package>colord-devel</package>
+    </distro>
+    <distro id="debian">
+      <control>
+        <version>(>= 1.0.0)</version>
+      </control>
+      <package variant="x86_64" />
+      <package variant="s390x">libcolord-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <version>(>= 1.0.0)</version>
+      </control>
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="fonts-dejavu">
+    <distro id="arch">
+      <package>ttf-dejavu</package>
+    </distro>
+    <distro id="fedora">
+      <package>dejavu-sans-fonts</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="devscripts">
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="debhelper">
+    <distro id="debian">
+      <control>
+        <version>(>= 10.3)</version>
+      </control>
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <version>(>= 10.3)</version>
+      </control>
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="dbus-x11">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="dconf">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="dh-strip-nondeterminism">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="docbook-utils">
+    <distro id="arch">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="docbook-sgml">
+    <distro id="arch">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libelf-dev">
+    <distro id="fedora">
+      <package>elfutils-libelf-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libelf-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="fakeroot">
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libfreetype6-dev">
+    <distro id="fedora">
+      <package>freetype</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libfreetype6-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="fontconfig">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libfwup-dev">
+    <distro id="arch">
+      <package>fwupdate</package>
+    </distro>
+    <distro id="fedora">
+      <package>fwupdate-devel</package>
+    </distro>
+    <distro id="debian">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gcab">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gettext">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <control>
+        <version>(>= 0.19.8.1)</version>
+      </control>
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <version>(>= 0.19.8.1)</version>
+      </control>
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gnupg2">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gir1.2-appstreamglib-1.0">
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="git">
+    <distro id="arch">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libglib2.0-dev">
+    <distro id="fedora">
+      <package>glib2-devel</package>
+    </distro>
+    <distro id="debian">
+      <control>
+        <version>(>= 2.45.8)</version>
+      </control>
+      <package variant="x86_64" />
+      <package variant="s390x">libglib2.0-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <version>(>= 2.45.8)</version>
+      </control>
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gobject-introspection">
+    <distro id="arch">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package>gobject-introspection-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libgpgme11-dev">
+    <distro id="fedora">
+      <package>gpgme-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libgpgme-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gnome-desktop-testing">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gnutls-dev">
+    <distro id="fedora">
+      <package>gnutls-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libgnutls28-dev:s390x</package>
+      <package variant="i386">libgnutls28-dev</package>
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gnutls-bin">
+    <distro id="fedora">
+      <package>gnutls-utils</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gtk-doc-tools">
+    <distro id="arch">
+      <package>gtk-doc</package>
+    </distro>
+    <distro id="fedora">
+      <package>gtk-doc</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="help2man">
+    <distro id="arch">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="jq">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libappstream-glib-dev">
+    <distro id="arch">
+      <package>appstream-glib</package>
+    </distro>
+    <distro id="fedora">
+      <package>libappstream-glib-devel</package>
+    </distro>
+    <distro id="debian">
+      <control>
+        <version>(>= 0.6.9)</version>
+      </control>
+      <package variant="x86_64" />
+      <package variant="s390x">libappstream-glib-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <version>(>= 0.6.9)</version>
+      </control>
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libarchive-dev">
+    <distro id="fedora">
+      <package>libarchive-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libarchive-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libcolorhug-dev">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libcolorhug-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libefivar-dev">
+    <distro id="debian">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>armel</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>armel</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libgcab-dev">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libgcab-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libgirepository1.0-dev">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libgudev-1.0-dev">
+    <distro id="fedora">
+      <package>libgudev1-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libgudev-1.0-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libgusb-dev">
+    <distro id="fedora">
+      <package>libgusb-devel</package>
+    </distro>
+    <distro id="debian">
+      <control>
+        <version>(>= 0.2.9)</version>
+      </control>
+      <package variant="x86_64" />
+      <package variant="s390x">libgusb-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <version>(>= 0.2.9)</version>
+      </control>
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libicu-dev">
+    <distro id="debian">
+      <package variant="s390x">libicu-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libidn2-0-dev">
+    <distro id="debian">
+      <package variant="s390x">libidn2-0-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libsmbios-dev">
+    <distro id="fedora">
+      <package>libsmbios-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libsoup2.4-dev">
+    <distro id="fedora">
+      <package>libsoup-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libsoup2.4-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libtool-bin">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libumockdev-dev">
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libxml2-dev:s390x">
+    <distro id="debian">
+      <package variant="s390x" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="lintian">
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="locales">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="meson">
+    <distro id="arch">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gir1.2-pango-1.0">
+    <distro id="fedora">
+      <package>pango-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="perl-sgmls">
+    <distro id="arch">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="pkg-config">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="policykit-1">
+    <distro id="fedora">
+      <package>polkit</package>
+    </distro>
+    <distro id="debian">
+      <control>
+        <version>(>> 0.105-14)</version>
+      </control>
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <version>(>> 0.105-14)</version>
+      </control>
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libpolkit-gobject-1-dev">
+    <distro id="fedora">
+      <package>polkit-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libpolkit-gobject-1-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-gi-cairo">
+    <distro id="arch">
+      <package>python-cairo</package>
+    </distro>
+    <distro id="fedora">
+      <package>python3-cairo</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-gobject">
+    <distro id="arch">
+      <package>python-gobject</package>
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-pil">
+    <distro id="arch">
+      <package>python-pillow</package>
+    </distro>
+    <distro id="fedora">
+      <package>python3-pillow</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-requests">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-requests">
+    <distro id="debian">
+      <package variant="s390x">qemu-user</package>
+    </distro>
+  </dependency>
+  <dependency type="build" id="rpm-build">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="redhat-rpm-config">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libsqlite3-dev">
+    <distro id="fedora">
+      <package>sqlite-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libsqlite3-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="systemd">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <control>
+        <version>(>= 231)</version>
+      </control>
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <version>(>= 231)</version>
+      </control>
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="texlive-fonts-recommended">
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="udev">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="umockdev">
+    <distro id="arch">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package>umockdev-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="valgrind">
+    <distro id="arch">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package>valgrind-devel</package>
+    </distro>
+    <distro id="debian">
+      <control>
+        <exclusive>mips</exclusive>
+        <exclusive>sparc64</exclusive>
+        <exclusive>sh4</exclusive>
+        <exclusive>ppc64</exclusive>
+        <exclusive>powerpcspe</exclusive>
+        <exclusive>hppa</exclusive>
+        <exclusive>alpha</exclusive>
+        <exclusive>mips64el</exclusive>
+        <exclusive>armhf</exclusive>
+        <exclusive>armel</exclusive>
+        <exclusive>mipsel</exclusive>
+        <exclusive>m68k</exclusive>
+      </control>
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <exclusive>mips</exclusive>
+        <exclusive>sparc64</exclusive>
+        <exclusive>sh4</exclusive>
+        <exclusive>ppc64</exclusive>
+        <exclusive>powerpcspe</exclusive>
+        <exclusive>hppa</exclusive>
+        <exclusive>alpha</exclusive>
+        <exclusive>mips64el</exclusive>
+        <exclusive>armhf</exclusive>
+        <exclusive>armel</exclusive>
+        <exclusive>mipsel</exclusive>
+        <exclusive>m68k</exclusive>
+      </control>
+      <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="xz">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+</dependencies>
