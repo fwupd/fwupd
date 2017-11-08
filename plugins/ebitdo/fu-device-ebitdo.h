@@ -51,7 +51,10 @@ typedef enum {
 	FU_DEVICE_EBITDO_KIND_LAST
 } FuDeviceEbitdoKind;
 
-FuDeviceEbitdo	*fu_device_ebitdo_new			(GUsbDevice *usb_device);
+FuDeviceEbitdo	*fu_device_ebitdo_new			(GUsbDevice	*usb_device);
+gboolean	 fu_device_ebitdo_set_usb_device	(FuDeviceEbitdo	*device,
+							 GUsbDevice	*usb_device,
+							 GError		**error);
 
 /* helpers */
 FuDeviceEbitdoKind fu_device_ebitdo_kind_from_string	(const gchar	*kind);

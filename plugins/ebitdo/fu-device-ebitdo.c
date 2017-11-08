@@ -686,20 +686,12 @@ typedef struct {
 	FuDeviceEbitdoKind	 kind;
 } FuEbitdoVidPid;
 
-/**
- * fu_device_ebitdo_new:
- *
- * Creates a new #FuDeviceEbitdo.
- *
- * Returns: (transfer full): a #FuDeviceEbitdo
- *
- * Since: 0.1.0
- **/
-FuDeviceEbitdo *
-fu_device_ebitdo_new (GUsbDevice *usb_device)
+gboolean
+fu_device_ebitdo_set_usb_device (FuDeviceEbitdo *device,
+				 GUsbDevice *usb_device,
+				 GError **error)
 {
-	FuDeviceEbitdo *device;
-	FuDeviceEbitdoPrivate *priv;
+	FuDeviceEbitdoPrivate *priv = GET_PRIVATE (device);
 	const FuEbitdoVidPid vidpids[] = {
 		/* legacy VIDs */
 		{ 0x0483, 0x5750, FU_DEVICE_EBITDO_KIND_BOOTLOADER },
@@ -722,18 +714,41 @@ fu_device_ebitdo_new (GUsbDevice *usb_device)
 		{ 0x0000, 0x0000, FU_DEVICE_EBITDO_KIND_UNKNOWN }
 	};
 
-	/* set kind */
+	/* find correct kind */
 	for (guint j = 0; vidpids[j].vid != 0x0000; j++) {
 		if (g_usb_device_get_vid (usb_device) != vidpids[j].vid)
 			continue;
 		if (g_usb_device_get_pid (usb_device) != vidpids[j].pid)
 			continue;
-		device = g_object_new (FU_TYPE_DEVICE_EBITDO, NULL);
-		priv = GET_PRIVATE (device);
 		priv->kind = vidpids[j].kind;
-		priv->usb_device = g_object_ref (usb_device);
+		g_set_object (&priv->usb_device, usb_device);
 		fu_device_ebitdo_init_real (device);
-		return device;
+		return TRUE;
 	}
-	return NULL;
+
+	/* unsupported */
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "not a supported 8Bitdo game-pad");
+	return FALSE;
+}
+
+/**
+ * fu_device_ebitdo_new:
+ *
+ * Creates a new #FuDeviceEbitdo.
+ *
+ * Returns: (transfer full): a #FuDeviceEbitdo, or %NULL if not a game pad
+ *
+ * Since: 0.1.0
+ **/
+FuDeviceEbitdo *
+fu_device_ebitdo_new (GUsbDevice *usb_device)
+{
+	g_autoptr(FuDeviceEbitdo) device = NULL;
+	device = g_object_new (FU_TYPE_DEVICE_EBITDO, NULL);
+	if (!fu_device_ebitdo_set_usb_device (device, usb_device, NULL))
+		return NULL;
+	return g_steal_pointer (&device);
 }
