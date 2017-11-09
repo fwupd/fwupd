@@ -113,10 +113,11 @@ fu_plugin_update (FuPlugin *plugin,
 		  GError **error)
 {
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
+	FuDeviceEbitdo *ebitdo_dev = FU_DEVICE_EBITDO (dev);
 	const gchar *platform_id;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuDeviceEbitdo) ebitdo_dev = FU_DEVICE_EBITDO (dev);
 	g_autoptr(GUsbDevice) usb_device = NULL;
+	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
 	/* get version */
 	platform_id = fu_device_get_id (dev);
@@ -142,10 +143,38 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_device_ebitdo_write_firmware (ebitdo_dev, blob_fw,
-					   ebitdo_write_progress_cb, plugin,
-					   error))
+					      ebitdo_write_progress_cb, plugin,
+					      error))
 		return FALSE;
+
+	/* when doing a soft-reboot the device does not re-enumerate properly
+	 * so manually reboot the GUsbDevice */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
+	if (!g_usb_device_reset (usb_device, error)) {
+		g_prefix_error (error, "failed to force-reset device: ");
+		return FALSE;
+	}
+	g_clear_object (&locker);
+	usb_device2 = g_usb_context_wait_for_replug (fu_plugin_get_usb_context (plugin),
+						     usb_device, 10000, error);
+	if (usb_device2 == NULL) {
+		g_prefix_error (error, "device did not come back: ");
+		return FALSE;
+	}
+	if (!fu_device_ebitdo_set_usb_device (ebitdo_dev, usb_device2, error)) {
+		g_prefix_error (error, "wrong device came back: ");
+		return FALSE;
+	}
+
+	/* get the new version number */
+	locker = fu_device_locker_new_full (ebitdo_dev,
+					    (FuDeviceLockerFunc) fu_device_ebitdo_open,
+					    (FuDeviceLockerFunc) fu_device_ebitdo_close,
+					    error);
+	if (locker == NULL) {
+		g_prefix_error (error, "failed to re-open device: ");
+		return FALSE;
+	}
 
 	/* success */
 	return TRUE;

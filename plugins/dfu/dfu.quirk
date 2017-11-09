@@ -1,0 +1,188 @@
+[fwupd-dfu]
+
+# on PC platforms the DW1820A firmware is loaded at runtime and can't
+# be stored on the device itself as the flash chip is unpopulated
+USB\VID_0A5C&PID_6412=ignore-runtime
+
+# Openmoko Freerunner / GTA02
+USB\VID_1D50&PID_5119=ignore-polltimeout|no-pid-change|no-dfu-runtime|action-required|no-get-status-upload
+
+# OpenPCD Reader
+USB\VID_16C0&PID_076B=ignore-polltimeout
+
+# SIMtrace
+USB\VID_16C0&PID_0762=ignore-polltimeout
+
+# OpenPICC
+USB\VID_16C0&PID_076C=ignore-polltimeout
+
+# Siemens AG, PXM 40 & PXM 50
+USB\VID_0908&PID_02C4&REV_0000=ignore-polltimeout
+USB\VID_0908&PID_02C5&REV_0000=ignore-polltimeout
+
+# Midiman M-Audio Transit
+USB\VID_0763&PID_2806=ignore-polltimeout
+
+# LPC DFU bootloader
+USB\VID_1FC9&PID_000C=force-dfu-mode
+
+# m-stack DFU
+USB\VID_273F&PID_1003=attach-upload-download
+USB\VID_273F&PID_100A=attach-upload-download
+
+# HydraBus
+USB\VID_1D50&PID_60A7=no-dfu-runtime|action-required
+
+# Jabra 410, 510, 710 and 810
+USB\VID_0B0E&PID_0412=no-dfu-runtime
+USB\VID_0B0E&PID_0420=no-dfu-runtime
+USB\VID_0B0E&PID_2475=no-dfu-runtime
+USB\VID_0B0E&PID_2456=no-dfu-runtime
+
+# Jabra 410, 510, 710 and 810 (DFU mode)
+USB\VID_0B0E&PID_0411=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
+USB\VID_0B0E&PID_0421=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
+USB\VID_0B0E&PID_0982=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
+USB\VID_0B0E&PID_0971=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
+
+# Atmel XMEGA Bootloader
+USB\VID_03EB&PID_2FE2=use-any-interface
+
+[fwupd-dfu-force-version]
+
+# Leaflabs Maple3
+USB\VID_1EAF&PID_0003&REV_0200=0110
+
+# Atmel FLIP Bootloader
+USB\VID_03EB=ff01
+
+[fwupd-dfu-jabra-detach]
+
+# Jabra 410 and 510
+USB\VID_0B0E&PID_0412=0201
+USB\VID_0B0E&PID_0420=0201
+
+# Jabra 710 and 810
+USB\VID_0B0E&PID_2475=0508
+USB\VID_0B0E&PID_2456=0508
+
+[fwupd-dfu-alternate-vidpid]
+
+# Jabra 410, 510, 710 and 810
+USB\VID_0B0E&PID_0412=0B0E0411
+USB\VID_0B0E&PID_0420=0B0E0421
+USB\VID_0B0E&PID_2475=0B0E0982
+USB\VID_0B0E&PID_2456=0B0E0971
+
+[fwupd-dfu-avr-chip-id]
+
+# AT32UC3A3 is BL @0x2000, Size: 0x40000
+0x58200204=@Flash/0x2000/1*248Kg
+
+# ATxmega16A4 size:0x4000
+0x1e9441=@Flash/0x0/1*16Kg
+
+# ATxmega16C4 size:0x4000
+0x1e9544=@Flash/0x0/1*16Kg
+
+# ATxmega16D4 size:0x4000
+0x1e9442=@Flash/0x0/1*16Kg
+
+# ATxmega32A4 size:0x8000
+0x1e9541=@Flash/0x0/1*32Kg
+
+# ATxmega32C4 size:0x8000
+0x1e9443=@Flash/0x0/1*32Kg
+
+# ATxmega32D4 size:0x8000
+0x1e9542=@Flash/0x0/1*32Kg
+
+# ATxmega64A4 size:0x10000
+0x1e9646=@Flash/0x0/1*64Kg
+
+# ATxmega64C3 size:0x10000
+0x1e9649=@Flash/0x0/1*64Kg
+
+# ATxmega64D3 size:0x10000
+0x1e964a=@Flash/0x0/1*64Kg
+
+# ATxmega64D4 size:0x10000
+0x1e9647=@Flash/0x0/1*64Kg
+
+# ATxmega64A1 size:0x10000
+0x1e964e=@Flash/0x0/1*64Kg
+
+# ATxmega64A3 size:0x10000
+0x1e9642=@Flash/0x0/1*64Kg
+
+# ATxmega64B1 size:0x10000
+0x1e9652=@Flash/0x0/1*64Kg
+
+# ATxmega64B3 size:0x10000
+0x1e9651=@Flash/0x0/1*64Kg
+
+# ATxmega128C3 size:0x20000
+0x1e9752=@Flash/0x0/1*128Kg
+
+# ATxmega128D3 size:0x20000
+0x1e9748=@Flash/0x0/1*128Kg
+
+# ATxmega128D4 size:0x20000
+0x1e9747=@Flash/0x0/1*128Kg
+
+# ATxmega128A1 size:0x20000
+0x1e974c=@Flash/0x0/1*128Kg
+
+# ATxmega128A1revD size:0x20000
+0x1e9741=@Flash/0x0/1*128Kg
+
+# ATxmega128A3 size:0x20000
+0x1e9742=@Flash/0x0/1*128Kg
+
+# ATxmega128A4 size:0x20000
+0x1e9746=@Flash/0x0/1*128Kg
+
+# ATxmega128B1 size:0x20000
+0x1e974d=@Flash/0x0/1*128Kg
+
+# ATxmega128B3 size:0x20000
+0x1e974b=@Flash/0x0/1*128Kg
+
+# ATxmega192C3 size:0x30000
+0x1e9751=@Flash/0x0/1*192Kg
+
+# ATxmega192D3 size:0x30000
+0x1e9749=@Flash/0x0/1*192Kg
+
+# ATxmega192A1 size:0x30000
+0x1e974e=@Flash/0x0/1*192Kg
+
+# ATxmega192A3 size:0x30000
+0x1e9744=@Flash/0x0/1*192Kg
+
+# ATxmega256 size:0x40000
+0x1e9846=@Flash/0x0/1*256Kg
+
+# ATxmega256D3 size:0x40000
+0x1e9844=@Flash/0x0/1*256Kg
+
+# ATxmega256A3 size:0x40000
+0x1e9842=@Flash/0x0/1*256Kg
+
+# ATxmega256A3B size:0x40000
+0x1e9843=@Flash/0x0/1*256Kg
+
+# ATxmega384C3 size:0x60000
+0x1e9845=@Flash/0x0/1*384Kg
+
+# ATxmega384D3 size:0x60000
+0x1e9847=@Flash/0x0/1*384Kg
+
+# ATxmega8E5 size:0x2000
+0x1e9341=@Flash/0x0/1*8Kg
+
+# ATxmega16E5 size:0x4000
+0x1e9445=@Flash/0x0/1*16Kg
+
+# ATxmega32E5 size:0x8000
+0x1e954c=@Flash/0x0/1*32Kg

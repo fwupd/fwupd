@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -28,6 +28,7 @@
 
 #include "dfu-common.h"
 #include "dfu-image.h"
+#include "dfu-sector.h"
 
 #include "fwupd-enums.h"
 
@@ -35,25 +36,6 @@ G_BEGIN_DECLS
 
 #define DFU_TYPE_TARGET (dfu_target_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuTarget, dfu_target, DFU, TARGET, GUsbDevice)
-
-struct _DfuTargetClass
-{
-	GUsbDeviceClass		 parent_class;
-	void			(*percentage_changed)	(DfuTarget	*target,
-							 guint		 percentage);
-	void			(*action_changed)	(DfuTarget	*target,
-							 FwupdStatus	 action);
-	/*< private >*/
-	/* Padding for future expansion */
-	void (*_dfu_target_reserved1) (void);
-	void (*_dfu_target_reserved2) (void);
-	void (*_dfu_target_reserved3) (void);
-	void (*_dfu_target_reserved4) (void);
-	void (*_dfu_target_reserved5) (void);
-	void (*_dfu_target_reserved6) (void);
-	void (*_dfu_target_reserved7) (void);
-	void (*_dfu_target_reserved8) (void);
-};
 
 /**
  * DfuTargetTransferFlags:
@@ -83,7 +65,40 @@ typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_LAST
 } DfuTargetTransferFlags;
 
+struct _DfuTargetClass
+{
+	GUsbDeviceClass		 parent_class;
+	void			 (*percentage_changed)	(DfuTarget	*target,
+							 guint		 percentage);
+	void			 (*action_changed)	(DfuTarget	*target,
+							 FwupdStatus	 action);
+	gboolean		 (*setup)		(DfuTarget	*target,
+							 GCancellable	*cancellable,
+							 GError		**error);
+	gboolean		 (*attach)		(DfuTarget	*target,
+							 GCancellable	*cancellable,
+							 GError		**error);
+	gboolean		 (*detach)		(DfuTarget	*target,
+							 GCancellable	*cancellable,
+							 GError		**error);
+	gboolean		 (*mass_erase)		(DfuTarget	*target,
+							 GCancellable	*cancellable,
+							 GError		**error);
+	DfuElement		*(*upload_element)	(DfuTarget	*target,
+							 guint32	 address,
+							 gsize		 expected_size,
+							 gsize		 maximum_size,
+							 GCancellable	*cancellable,
+							 GError		**error);
+	gboolean		 (*download_element)	(DfuTarget	*target,
+							 DfuElement	*element,
+							 DfuTargetTransferFlags flags,
+							 GCancellable	*cancellable,
+							 GError		**error);
+};
+
 GPtrArray	*dfu_target_get_sectors			(DfuTarget	*target);
+DfuSector	*dfu_target_get_sector_default		(DfuTarget	*target);
 guint8		 dfu_target_get_alt_setting		(DfuTarget	*target);
 const gchar	*dfu_target_get_alt_name		(DfuTarget	*target,
 							 GError		**error);
@@ -93,9 +108,15 @@ DfuImage	*dfu_target_upload			(DfuTarget	*target,
 							 DfuTargetTransferFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 dfu_target_setup			(DfuTarget	*target,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 dfu_target_download			(DfuTarget	*target,
 							 DfuImage	*image,
 							 DfuTargetTransferFlags flags,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 dfu_target_mass_erase			(DfuTarget	*target,
 							 GCancellable	*cancellable,
 							 GError		**error);
 DfuCipherKind	 dfu_target_get_cipher_kind		(DfuTarget	*target);

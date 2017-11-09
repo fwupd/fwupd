@@ -28,6 +28,7 @@ libfwupdprivate = static_library(
     'fu-pending.c',
     'fu-plugin.c',
     'fu-progressbar.c',
+    'fu-quirks.c',
     'fu-smbios.c',
     'fu-test.c',
   ],
@@ -50,11 +51,12 @@ libfwupdprivate = static_library(
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
+    '-DFWUPDDATADIR="' + join_paths(get_option('prefix'), get_option('datadir'), 'fwupd') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
 
-executable(
+fwupdmgr = executable(
   'fwupdmgr',
   sources : [
     'fu-util.c',
@@ -87,13 +89,17 @@ executable(
 )
 
 if get_option('enable-man')
-  docbook2man = find_program('docbook2man')
+  help2man = find_program('help2man')
   custom_target('fwupdmgr-man',
-    input : 'fwupdmgr.sgml',
+    input : fwupdmgr,
     output : 'fwupdmgr.1',
     command : [
-      docbook2man, '@INPUT@',
-      '--output', meson.current_build_dir(),
+      help2man, '@INPUT@',
+      '--no-info',
+      '--output', '@OUTPUT@',
+      '--name', 'fwupd',
+      '--manual', 'User Commands',
+      '--version-string', fwupd_version,
     ],
     install : true,
     install_dir : join_paths(get_option('mandir'), 'man1'),
@@ -125,6 +131,7 @@ executable(
     'fu-keyring.c',
     'fu-pending.c',
     'fu-plugin.c',
+    'fu-quirks.c',
     'fu-smbios.c',
   ],
   include_directories : [
@@ -151,6 +158,7 @@ executable(
     '-DPLUGINDIR="' + plugin_dir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
     '-DSYSCONFDIR="' + default_sysconfdir + '"',
+    '-DFWUPDDATADIR="' + join_paths(get_option('prefix'), get_option('datadir'), 'fwupd') + '"',
     '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
@@ -168,6 +176,7 @@ if get_option('enable-tests')
     colorhug_test_firmware,
     colorhug_pkcs7_signature,
     builder_test_firmware,
+    hwid_test_firmware,
     sources : [
       keyring_src,
       'fu-self-test.c',
@@ -183,6 +192,7 @@ if get_option('enable-tests')
       'fu-keyring-result.c',
       'fu-plugin.c',
       'fu-progressbar.c',
+      'fu-quirks.c',
       'fu-smbios.c',
       'fu-test.c',
     ],
@@ -216,6 +226,7 @@ if get_option('enable-tests')
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
       '-DPLUGINDIR="' + testdatadir_src + '"',
       '-DSYSFSFIRMWAREDIR="' + testdatadir_src + '"',
+      '-DFWUPDDATADIR="' + testdatadir_src + '"',
       '-DSYSCONFDIR="' + testdatadir_src + '"',
       '-DFWUPDCONFIGDIR="' + testdatadir_src + '"',
     ],
@@ -235,6 +246,8 @@ if get_option('enable-introspection')
       'fu-device-locker.h',
       'fu-plugin.c',
       'fu-plugin.h',
+      'fu-quirks.c',
+      'fu-quirks.h',
     ],
     nsversion : '1.0',
     namespace : 'Fu',

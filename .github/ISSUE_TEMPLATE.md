@@ -2,9 +2,13 @@ To help us pinpoint your issue, please insert the output of the
 following commands when ran on the system with the issue:
 
 ```shell
-$ fwupdgmr --version
+$ fwupdmgr --version
 **INSERT OUTPUT HERE**
 ```
+
+Note, the switch `--version` is only present since version 0.9.6. If you use an
+earlier version, please use the package manager to find out the package
+version. For example, `dpkg -l fwupd`.
 
 ```shell
 $ fwupdmgr get-devices

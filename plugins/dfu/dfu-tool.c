@@ -1203,6 +1203,24 @@ dfu_tool_attach (DfuToolPrivate *priv, gchar **values, GError **error)
 	return dfu_device_attach (device, error);
 }
 
+static gboolean
+dfu_tool_reset (DfuToolPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
+
+	device = dfu_tool_get_defalt_device (priv, error);
+	if (device == NULL)
+		return FALSE;
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    error);
+	if (locker == NULL)
+		return FALSE;
+	return dfu_device_reset (device, error);
+}
+
 static void
 fu_tool_percentage_changed_cb (DfuDevice *device,
 			       guint percentage,
@@ -1331,6 +1349,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 {
+	DfuFirmwareFormat format;
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuDevice) device = NULL;
@@ -1339,11 +1358,44 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GFile) file = NULL;
 
 	/* check args */
-	if (g_strv_length (values) < 1) {
+	if (g_strv_length (values) == 1) {
+		/* guess output format */
+		if (g_str_has_suffix (values[0], ".dfu")) {
+			format = DFU_FIRMWARE_FORMAT_DFU;
+		} else if (g_str_has_suffix (values[0], ".bin") ||
+			   g_str_has_suffix (values[0], ".rom")) {
+			format = DFU_FIRMWARE_FORMAT_RAW;
+		} else if (g_str_has_suffix (values[0], ".ihex") ||
+			   g_str_has_suffix (values[0], ".hex")) {
+			format = DFU_FIRMWARE_FORMAT_INTEL_HEX;
+		} else {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "Could not guess a file format");
+			return FALSE;
+		}
+	} else if (g_strv_length (values) == 2) {
+		format = dfu_firmware_format_from_string (values[1]);
+		if (format == DFU_FIRMWARE_FORMAT_UNKNOWN) {
+			g_autoptr(GString) tmp = g_string_new (NULL);
+			for (guint i = 1; i < DFU_FIRMWARE_FORMAT_LAST; i++) {
+				if (tmp->len > 0)
+					g_string_append (tmp, "|");
+				g_string_append (tmp, dfu_firmware_format_to_string (i));
+			}
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "unknown format '%s', expected [%s]",
+				     values[0], tmp->str);
+			return FALSE;
+		}
+	} else {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments, expected FILENAME");
+				     "Invalid arguments, expected FILENAME [FORMAT]");
 		return FALSE;
 	}
 
@@ -1379,6 +1431,7 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* save file */
 	file = g_file_new_for_path (values[0]);
+	dfu_firmware_set_format (firmware, format);
 	if (!dfu_firmware_write_file (firmware,
 				      file,
 				      priv->cancellable,
@@ -2001,6 +2054,18 @@ dfu_tool_list_target (DfuTarget *target)
 	}
 }
 
+static gchar *
+_bcd_version_from_uint16 (guint16 val)
+{
+#if AS_CHECK_VERSION(0,7,3)
+	return as_utils_version_from_uint16 (val, AS_VERSION_PARSE_FLAG_USE_BCD);
+#else
+	guint maj = ((val >> 12) & 0x0f) * 10 + ((val >> 8) & 0x0f);
+	guint min = ((val >> 4) & 0x0f) * 10 + (val & 0x0f);
+	return g_strdup_printf ("%u.%u", maj, min);
+#endif
+}
+
 static gboolean
 dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -2018,6 +2083,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		GPtrArray *dfu_targets;
 		const gchar *tmp;
 		guint16 transfer_size;
+		g_autofree gchar *attrs = NULL;
 		g_autofree gchar *quirks = NULL;
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuDeviceLocker) locker  = NULL;
@@ -2026,8 +2092,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		/* device specific */
 		device = g_ptr_array_index (devices, i);
 		dev = dfu_device_get_usb_dev (device);
-		version = as_utils_version_from_uint16 (g_usb_device_get_release (dev),
-							AS_VERSION_PARSE_FLAG_NONE);
+		version = _bcd_version_from_uint16 (g_usb_device_get_release (dev));
 		g_print ("%s %04x:%04x [v%s]:\n",
 			 /* TRANSLATORS: detected a DFU device */
 			 _("Found"),
@@ -2051,12 +2116,17 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_PERMISSION_DENIED)) {
 				/* TRANSLATORS: probably not run as root... */
-				dfu_tool_print_indent (_("Status"), _("Unknown: permission denied"), 2);
+				dfu_tool_print_indent (_("Status"), _("Permission denied"), 1);
+				continue;
+			}
+			if (g_error_matches (error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug ("ignoring warning, continuing...");
 			} else {
 				/* TRANSLATORS: device has failed to report status */
-				dfu_tool_print_indent (_("Status"), error_local->message, 2);
+				dfu_tool_print_indent (_("Status"), error_local->message, 1);
 			}
-			continue;
 		}
 
 		tmp = dfu_device_get_display_name (device);
@@ -2072,9 +2142,10 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		}
 
 		tmp = dfu_mode_to_string (dfu_device_get_mode (device));
-		/* TRANSLATORS: device mode, e.g. runtime or DFU */
-		dfu_tool_print_indent (_("Mode"), tmp, 1);
-
+		if (tmp != NULL) {
+			/* TRANSLATORS: device mode, e.g. runtime or DFU */
+			dfu_tool_print_indent (_("Mode"), tmp, 1);
+		}
 		tmp = dfu_status_to_string (dfu_device_get_status (device));
 		/* TRANSLATORS: device status, e.g. "OK" */
 		dfu_tool_print_indent (_("Status"), tmp, 1);
@@ -2092,12 +2163,27 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 			dfu_tool_print_indent (_("Transfer Size"), str, 1);
 		}
 
+		/* attributes can be an empty string */
+		attrs = dfu_device_get_attributes_as_string (device);
+		if (attrs != NULL && attrs[0] != '\0') {
+			/* TRANSLATORS: device attributes, i.e. things that
+			 * the device can do */
+			dfu_tool_print_indent (_("Attributes"), attrs, 1);
+		}
+
 		/* quirks are NULL if none are set */
 		quirks = dfu_device_get_quirks_as_string (device);
 		if (quirks != NULL) {
 			/* TRANSLATORS: device quirks, i.e. things that
 			 * it does that we have to work around */
 			dfu_tool_print_indent (_("Quirks"), quirks, 1);
+		}
+
+		/* this is optional */
+		tmp = dfu_device_get_chip_id (device);
+		if (tmp != NULL) {
+			/* TRANSLATORS: chip ID, e.g. "0x58200204" */
+			dfu_tool_print_indent (_("Chip ID"), tmp, 1);
 		}
 
 		/* list targets */
@@ -2234,6 +2320,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Attach DFU capable device back to runtime"),
 		     dfu_tool_attach);
+	dfu_tool_add (priv->cmd_array,
+		     "reset",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Reset a DFU device"),
+		     dfu_tool_reset);
 	dfu_tool_add (priv->cmd_array,
 		     "read",
 		     NULL,

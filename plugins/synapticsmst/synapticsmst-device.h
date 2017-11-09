@@ -37,15 +37,6 @@ G_DECLARE_DERIVABLE_TYPE (SynapticsMSTDevice, synapticsmst_device, SYNAPTICSMST,
 struct _SynapticsMSTDeviceClass
 {
 	GObjectClass		parent_class;
-	/*< private >*/
-	void (*_as_reserved1)	(void);
-	void (*_as_reserved2)	(void);
-	void (*_as_reserved3)	(void);
-	void (*_as_reserved4)	(void);
-	void (*_as_reserved5)	(void);
-	void (*_as_reserved6)	(void);
-	void (*_as_reserved7)	(void);
-	void (*_as_reserved8)	(void);
 };
 
 /**
@@ -105,6 +96,8 @@ synapticsmst_device_get_cascade					(SynapticsMSTDevice *device);
 
 /* object methods */
 gboolean	 synapticsmst_device_enumerate_device 		(SynapticsMSTDevice *devices,
+								const gchar *dock_type,
+								const gchar *sytem_type,
 								 GError **error);
 gboolean	 synapticsmst_device_write_firmware		(SynapticsMSTDevice *device,
 								 GBytes	*fw,

@@ -31,7 +31,6 @@
 #include <fcntl.h>
 
 #include "fu-plugin-dell.h"
-#include "fu-quirks.h"
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
 
@@ -174,7 +173,7 @@ fu_dell_get_system_id (FuPlugin *plugin)
 static gboolean
 fu_dell_host_mst_supported (FuPlugin *plugin)
 {
-	guint16 system_id = fu_dell_get_system_id (plugin);
+	guint16 system_id;
 
 	system_id = fu_dell_get_system_id (plugin);
 	if (system_id == 0)
@@ -276,17 +275,19 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 static AsVersionParseFlag
 fu_plugin_dell_get_version_format (FuPlugin *plugin)
 {
-	const gchar *content = NULL;
+	const gchar *content;
+	const gchar *quirk;
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (content == NULL)
 		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 
-	/* any vendors match */
-	for (guint i = 0; quirk_table[i].sys_vendor != NULL; i++) {
-		if (g_strcmp0 (content, quirk_table[i].sys_vendor) == 0)
-			return quirk_table[i].flags;
-	}
+	/* any quirks match */
+	quirk = fu_plugin_lookup_quirk_by_id (plugin,
+					      FU_QUIRKS_UEFI_VERSION_FORMAT,
+					      content);
+	if (g_strcmp0 (quirk, "none") == 0)
+		return AS_VERSION_PARSE_FLAG_NONE;
 
 	/* fall back */
 	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
@@ -310,25 +311,8 @@ static gboolean
 fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	gint uefi_supported;
 
-	if (data->smi_obj->fake_smbios)
-		return TRUE;
-
-	/* If ESRT is not turned on, fwupd will have already created an
-	 * unlock device (if compiled with support).
-	 *
-	 * Once unlocked, that will enable flashing capsules here too.
-	 *
-	 * that means we should only look for supported = 1
-	 */
-	uefi_supported = fwup_supported ();
-	if (uefi_supported != 1) {
-		g_debug ("UEFI capsule firmware updating not supported (%x)",
-			 (guint) uefi_supported);
-		return FALSE;
-	}
-	return TRUE;
+	return data->smi_obj->fake_smbios || data->capsule_supported;
 }
 
 static gboolean
@@ -455,9 +439,14 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 			 dock_info->components[i].description,
 			 dock_info->components[i].fw_version);
 		query_str = g_strrstr (dock_info->components[i].description,
-				       "Query ") + 6;
-		if (!fu_plugin_dell_match_dock_component (query_str, &guid_raw,
-							    &component_name)) {
+				       "Query ");
+		if (query_str == NULL) {
+			g_debug ("Invalid dock component request");
+			return;
+		}
+		if (!fu_plugin_dell_match_dock_component (query_str + 6,
+							  &guid_raw,
+							  &component_name)) {
 			g_debug ("Unable to match dock component %s",
 				query_str);
 			return;
@@ -505,6 +494,10 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 			return;
 		}
 	}
+
+#if defined (HAVE_SYNAPTICS)
+	fu_plugin_recoldplug (plugin);
+#endif
 }
 
 void
@@ -550,6 +543,9 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 			fu_plugin_cache_remove (plugin, dock_key);
 		}
 	}
+#if defined (HAVE_SYNAPTICS)
+	fu_plugin_recoldplug (plugin);
+#endif
 }
 
 gboolean
@@ -1063,6 +1059,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
+	gint uefi_supported;
 
 	if (data->smi_obj->fake_smbios) {
 		g_debug ("Called with fake SMBIOS implementation. "
@@ -1077,6 +1074,20 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Firmware updating not supported");
 		return FALSE;
+	}
+
+	/* If ESRT is not turned on, fwupd will have already created an
+	 * unlock device (if compiled with support).
+	 *
+	 * Once unlocked, that will enable flashing capsules here too.
+	 *
+	 * that means we should only look for supported = 1
+	 */
+	uefi_supported = fwup_supported ();
+	data->capsule_supported = (uefi_supported == 1);
+	if (!data->capsule_supported) {
+		g_debug ("UEFI capsule firmware updating not supported (%x)",
+			 (guint) uefi_supported);
 	}
 
 	if (usb_ctx != NULL) {

@@ -26,6 +26,18 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
+static gchar *
+_bcd_version_from_uint16 (guint16 val)
+{
+#if AS_CHECK_VERSION(0,7,3)
+	return as_utils_version_from_uint16 (val, AS_VERSION_PARSE_FLAG_USE_BCD);
+#else
+	guint maj = ((val >> 12) & 0x0f) * 10 + ((val >> 8) & 0x0f);
+	guint min = ((val >> 4) & 0x0f) * 10 + (val & 0x0f);
+	return g_strdup_printf ("%u.%u", maj, min);
+#endif
+}
+
 static void
 fu_plugin_usb_device_added_cb (GUsbContext *ctx,
 				 GUsbDevice *device,
@@ -92,10 +104,8 @@ fu_plugin_usb_device_added_cb (GUsbContext *ctx,
 	if (idx != 0x00)
 		version = g_usb_device_get_string_descriptor (device, idx, NULL);
 	if (version == NULL) {
-		guint16 release;
-		release = g_usb_device_get_release (device);
-		version = as_utils_version_from_uint16 (release,
-							AS_VERSION_PARSE_FLAG_NONE);
+		guint16 release = g_usb_device_get_release (device);
+		version = _bcd_version_from_uint16 (release);
 	}
 	fu_device_set_version (dev, version);
 

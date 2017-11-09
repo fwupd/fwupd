@@ -22,6 +22,7 @@
 #ifndef __FU_PLUGIN_PRIVATE_H
 #define __FU_PLUGIN_PRIVATE_H
 
+#include "fu-quirks.h"
 #include "fu-plugin.h"
 #include "fu-smbios.h"
 
@@ -37,6 +38,8 @@ void		 fu_plugin_set_hwids			(FuPlugin	*plugin,
 							 FuHwids	*hwids);
 void		 fu_plugin_set_supported		(FuPlugin	*plugin,
 							 GPtrArray	*supported_guids);
+void		 fu_plugin_set_quirks			(FuPlugin	*plugin,
+							 FuQuirks	*quirks);
 void		 fu_plugin_set_smbios			(FuPlugin	*plugin,
 							 FuSmbios	*smbios);
 guint		 fu_plugin_get_order			(FuPlugin	*plugin);

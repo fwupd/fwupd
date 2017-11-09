@@ -33,16 +33,6 @@ G_DECLARE_DERIVABLE_TYPE (DfuPatch, dfu_patch, DFU, PATCH, GObject)
 struct _DfuPatchClass
 {
 	GObjectClass		 parent_class;
-	/*< private >*/
-	void (*_dfu_patch_reserved1) (void);
-	void (*_dfu_patch_reserved2) (void);
-	void (*_dfu_patch_reserved3) (void);
-	void (*_dfu_patch_reserved4) (void);
-	void (*_dfu_patch_reserved5) (void);
-	void (*_dfu_patch_reserved6) (void);
-	void (*_dfu_patch_reserved7) (void);
-	void (*_dfu_patch_reserved8) (void);
-	void (*_dfu_patch_reserved9) (void);
 };
 
 /**

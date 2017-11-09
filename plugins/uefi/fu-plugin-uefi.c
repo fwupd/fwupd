@@ -26,7 +26,6 @@
 #include <fcntl.h>
 #include <glib/gi18n.h>
 
-#include "fu-quirks.h"
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
@@ -422,6 +421,7 @@ static AsVersionParseFlag
 fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, guint32 uefi_type)
 {
 	const gchar *content;
+	const gchar *quirk;
 
 	/* we have no information for devices */
 	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE)
@@ -431,11 +431,12 @@ fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, guint32 uefi_type)
 	if (content == NULL)
 		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 
-	/* any vendors match */
-	for (guint i = 0; quirk_table[i].sys_vendor != NULL; i++) {
-		if (g_strcmp0 (content, quirk_table[i].sys_vendor) == 0)
-			return quirk_table[i].flags;
-	}
+	/* any quirks match */
+	quirk = fu_plugin_lookup_quirk_by_id (plugin,
+					      FU_QUIRKS_UEFI_VERSION_FORMAT,
+					      content);
+	if (g_strcmp0 (quirk, "none") == 0)
+		return AS_VERSION_PARSE_FLAG_NONE;
 
 	/* fall back */
 	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;

@@ -3,7 +3,6 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 shared_module('fu_plugin_synapticsmst',
   sources : [
     'fu-plugin-synapticsmst.c',
-    'fu-dell-common.c',
     'synapticsmst-common.c',
     'synapticsmst-device.c',
   ],
@@ -21,7 +20,6 @@ shared_module('fu_plugin_synapticsmst',
   dependencies : [
     plugin_deps,
     efivar,
-    libsmbios_c,
   ],
 )
 
@@ -39,8 +37,6 @@ executable(
   ],
   dependencies : [
     plugin_deps,
-    efivar,
-    libsmbios_c,
   ],
   c_args : cargs,
 )
@@ -52,7 +48,6 @@ if get_option('enable-tests')
     'synapticsmst-self-test',
     sources : [
       'fu-self-test.c',
-      'fu-dell-common.c',
     ],
     include_directories : [
       include_directories('../..'),
@@ -62,8 +57,6 @@ if get_option('enable-tests')
     dependencies : [
       plugin_deps,
       sqlite,
-      efivar,
-      libsmbios_c,
       valgrind,
     ],
     link_with : [

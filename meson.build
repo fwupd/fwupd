@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.0.0',
+  version : '1.0.1',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -206,11 +206,7 @@ if get_option('enable-dell')
 endif
 
 if get_option('enable-synaptics')
-  if get_option('enable-dell')
     conf.set('HAVE_SYNAPTICS', '1')
-  else
-    error('compiling --enable-synaptics requires --enable-dell')
-  endif
 endif
 
 if get_option('enable-thunderbolt')

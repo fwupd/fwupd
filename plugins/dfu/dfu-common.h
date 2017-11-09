@@ -163,6 +163,7 @@ typedef enum {
  * @DFU_VERSION_DFU_1_0:			DFU 1.0
  * @DFU_VERSION_DFU_1_1:			DFU 1.1
  * @DFU_VERSION_DFUSE:				DfuSe
+ * @DFU_VERSION_ATMEL_AVR:			Atmel AVR
  *
  * The known versions of the DFU standard in BCD format.
  **/
@@ -170,7 +171,8 @@ typedef enum {
 	DFU_VERSION_UNKNOWN			= 0,
 	DFU_VERSION_DFU_1_0			= 0x0100,
 	DFU_VERSION_DFU_1_1			= 0x0110,
-	DFU_VERSION_DFUSE			= 0x011a,
+	DFU_VERSION_DFUSE			= 0x011a, /* defined by ST */
+	DFU_VERSION_ATMEL_AVR			= 0xff01, /* made up */
 	/*< private >*/
 	DFU_VERSION_LAST
 } DfuVersion;
@@ -184,6 +186,13 @@ const gchar	*dfu_status_to_string			(DfuStatus	 status);
 const gchar	*dfu_mode_to_string			(DfuMode	 mode);
 const gchar	*dfu_cipher_kind_to_string		(DfuCipherKind	 cipher_kind);
 const gchar	*dfu_version_to_string			(DfuVersion	 version);
+
+/* helpers */
+GBytes		*dfu_utils_bytes_join_array		(GPtrArray	*chunks);
+gboolean	 dfu_utils_bytes_is_empty		(GBytes		*bytes);
+guint8		 dfu_utils_buffer_parse_uint8		(const gchar	*data);
+guint16		 dfu_utils_buffer_parse_uint16		(const gchar	*data);
+guint32		 dfu_utils_buffer_parse_uint32		(const gchar	*data);
 
 G_END_DECLS
 

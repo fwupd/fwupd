@@ -22,7 +22,7 @@
 #include "config.h"
 
 #include <appstream-glib.h>
-#include "fu-dell-common.h"
+#include "fu-dell-smi.h"
 
 /* These are for dock query capabilities */
 struct dock_count_in {
@@ -217,23 +217,6 @@ fu_dell_get_dock_type (guint8 type)
 	}
 
 	return NULL;
-}
-
-guint32
-fu_dell_get_cable_type (guint8 type)
-{
-	g_autoptr (FuDellSmiObj) smi_obj = NULL;
-	DOCK_UNION buf;
-
-	/* not yet initialized, look it up */
-	if (type == CABLE_TYPE_NONE) {
-		smi_obj = g_malloc0 (sizeof(FuDellSmiObj));
-		smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
-		if (!fu_dell_query_dock (smi_obj, &buf))
-			return 0;
-		type = (buf.record->dock_info).cable_type;
-	}
-	return type;
 }
 
 gboolean

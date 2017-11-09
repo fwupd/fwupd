@@ -91,6 +91,10 @@ fu_progressbar_status_to_string (FwupdStatus status)
 		/* TRANSLATORS: waiting for user to authenticate */
 		return _("Authenticating…");
 		break;
+	case FWUPD_STATUS_DEVICE_BUSY:
+		/* TRANSLATORS: waiting for device to do something */
+		return _("Waiting…");
+		break;
 	default:
 		break;
 	}

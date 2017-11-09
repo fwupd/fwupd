@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -54,13 +54,16 @@ typedef enum {
  * @DFU_DEVICE_QUIRK_NONE:			No device quirks
  * @DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT:	Ignore the device download timeout
  * @DFU_DEVICE_QUIRK_FORCE_DFU_MODE:		Force DFU mode
- * @DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION:	Ignore invalid version numbers
+ * @DFU_DEVICE_QUIRK_USE_ANY_INTERFACE:		Use any interface for DFU
  * @DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO:		Fix up the protocol number
  * @DFU_DEVICE_QUIRK_NO_PID_CHANGE:		Accept the same VID:PID when changing modes
  * @DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD:	Do not do GetStatus when uploading
  * @DFU_DEVICE_QUIRK_NO_DFU_RUNTIME:		No DFU runtime interface is provided
  * @DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD:	An upload or download is required for attach
  * @DFU_DEVICE_QUIRK_IGNORE_RUNTIME:		Device has broken DFU runtime support
+ * @DFU_DEVICE_QUIRK_ACTION_REQUIRED:		User has to do something manually, e.g. press a button
+ * @DFU_DEVICE_QUIRK_IGNORE_UPLOAD:		Uploading from the device is broken
+ * @DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET:	Device needs resetting twice for attach
  *
  * The workarounds for different devices.
  **/
@@ -68,13 +71,16 @@ typedef enum {
 	DFU_DEVICE_QUIRK_NONE			= 0,
 	DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT	= (1 << 0),
 	DFU_DEVICE_QUIRK_FORCE_DFU_MODE		= (1 << 1),
-	DFU_DEVICE_QUIRK_IGNORE_INVALID_VERSION	= (1 << 2),
+	DFU_DEVICE_QUIRK_USE_ANY_INTERFACE	= (1 << 2),
 	DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO	= (1 << 3),
 	DFU_DEVICE_QUIRK_NO_PID_CHANGE		= (1 << 4),
 	DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD	= (1 << 5),
 	DFU_DEVICE_QUIRK_NO_DFU_RUNTIME		= (1 << 6),
 	DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD	= (1 << 7),
 	DFU_DEVICE_QUIRK_IGNORE_RUNTIME		= (1 << 8),
+	DFU_DEVICE_QUIRK_ACTION_REQUIRED	= (1 << 9),
+	DFU_DEVICE_QUIRK_IGNORE_UPLOAD		= (1 << 10),
+	DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET	= (1 << 11),
 	/*< private >*/
 	DFU_DEVICE_QUIRK_LAST
 } DfuDeviceQuirks;
@@ -112,19 +118,9 @@ struct _DfuDeviceClass
 							 guint		 percentage);
 	void			(*action_changed)	(DfuDevice	*device,
 							 FwupdStatus	 action);
-	/*< private >*/
-	/* Padding for future expansion */
-	void (*_dfu_device_reserved1) (void);
-	void (*_dfu_device_reserved2) (void);
-	void (*_dfu_device_reserved3) (void);
-	void (*_dfu_device_reserved4) (void);
-	void (*_dfu_device_reserved5) (void);
-	void (*_dfu_device_reserved6) (void);
-	void (*_dfu_device_reserved7) (void);
-	void (*_dfu_device_reserved8) (void);
 };
 
-DfuDevice	*dfu_device_new				(GUsbDevice	*dev);
+DfuDevice	*dfu_device_new				(void);
 gboolean	 dfu_device_open			(DfuDevice	*device,
 							 GError		**error);
 gboolean	 dfu_device_open_full			(DfuDevice	*device,
@@ -143,6 +139,9 @@ DfuTarget	*dfu_device_get_target_by_alt_name	(DfuDevice	*device,
 							 GError		**error);
 const gchar	*dfu_device_get_display_name		(DfuDevice	*device);
 const gchar	*dfu_device_get_serial_number		(DfuDevice	*device);
+const gchar	*dfu_device_get_chip_id			(DfuDevice	*device);
+void		 dfu_device_set_chip_id			(DfuDevice	*device,
+							 const gchar	*chip_id);
 guint16		 dfu_device_get_runtime_vid		(DfuDevice	*device);
 guint16		 dfu_device_get_runtime_pid		(DfuDevice	*device);
 guint16		 dfu_device_get_runtime_release		(DfuDevice	*device);
@@ -188,6 +187,8 @@ gboolean	 dfu_device_can_download		(DfuDevice	*device);
 gboolean	 dfu_device_is_open			(DfuDevice	*device);
 
 gboolean	 dfu_device_has_attribute		(DfuDevice	*device,
+							 DfuDeviceAttributes attribute);
+void		 dfu_device_remove_attribute		(DfuDevice	*device,
 							 DfuDeviceAttributes attribute);
 gboolean	 dfu_device_has_quirk			(DfuDevice	*device,
 							 DfuDeviceQuirks quirk);

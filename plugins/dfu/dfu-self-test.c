@@ -26,10 +26,11 @@
 #include <string.h>
 #include <fnmatch.h>
 
+#include "dfu-chunked.h"
 #include "dfu-cipher-xtea.h"
 #include "dfu-common.h"
 #include "dfu-context.h"
-#include "dfu-device.h"
+#include "dfu-device-private.h"
 #include "dfu-firmware.h"
 #include "dfu-patch.h"
 #include "dfu-sector-private.h"
@@ -384,6 +385,56 @@ dfu_firmware_metadata_func (void)
 }
 
 static void
+dfu_firmware_intel_hex_offset_func (void)
+{
+	DfuElement *element_verify;
+	DfuImage *image_verify;
+	const guint8 *data;
+	gboolean ret;
+	gsize len;
+	g_autofree gchar *str = NULL;
+	g_autoptr(DfuElement) element = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(DfuFirmware) firmware_verify = NULL;
+	g_autoptr(DfuImage) image = NULL;
+	g_autoptr(GBytes) data_bin = NULL;
+	g_autoptr(GBytes) data_dummy = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* add a 4 byte image in high memory */
+	element = dfu_element_new ();
+	data_dummy = g_bytes_new_static ("foo", 4);
+	dfu_element_set_address (element, 0x80000000);
+	dfu_element_set_contents (element, data_dummy);
+	image = dfu_image_new ();
+	dfu_image_add_element (image, element);
+	firmware = dfu_firmware_new ();
+	dfu_firmware_add_image (firmware, image);
+	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_INTEL_HEX);
+	data_bin = dfu_firmware_write_data (firmware, &error);
+	g_assert_no_error (error);
+	g_assert (data_bin != NULL);
+	data = g_bytes_get_data (data_bin, &len);
+	str = g_strndup ((const gchar *) data, len);
+	g_assert_cmpstr (str, ==,
+			 ":0200000480007A\n"
+			 ":04000000666F6F00B8\n"
+			 ":00000001FF\n");
+
+	/* check we can load it too */
+	firmware_verify = dfu_firmware_new ();
+	ret = dfu_firmware_parse_data (firmware_verify, data_bin, DFU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	image_verify = dfu_firmware_get_image_default (firmware_verify);
+	g_assert (image_verify != NULL);
+	element_verify = dfu_image_get_element_default (image);
+	g_assert (element_verify != NULL);
+	g_assert_cmpint (dfu_element_get_address (element_verify), ==, 0x80000000);
+	g_assert_cmpint (g_bytes_get_size (dfu_element_get_contents (element_verify)), ==, 0x4);
+}
+
+static void
 dfu_firmware_intel_hex_func (void)
 {
 	const guint8 *data;
@@ -435,15 +486,15 @@ dfu_firmware_intel_hex_func (void)
 	data = g_bytes_get_data (data_hex, &len);
 	str = g_strndup ((const gchar *) data, len);
 	g_assert_cmpstr (str, ==,
-			 ":104000003DEF20F000000000FACF01F0FBCF02F0AF\n"
-			 ":10401000E9CF03F0EACF04F0E1CF05F0E2CF06F005\n"
-			 ":10402000D9CF07F0DACF08F0F3CF09F0F4CF0AF021\n"
-			 ":10403000F6CF0BF0F7CF0CF0F8CF0DF0F5CF0EF044\n"
-			 ":104040000EC0F5FF0DC0F8FF0CC0F7FF0BC0F6FF45\n"
-			 ":104050000AC0F4FF09C0F3FF08C0DAFF07C0D9FF24\n"
-			 ":1040600006C0E2FF05C0E1FF04C0EAFF03C0E9FF0A\n"
-			 ":1040700002C0FBFF01C0FAFF11003FEF20F00001BB\n"
-			 ":0840800042EF20F03DEF20F037\n"
+			 ":104000003DEF20F000000000FACF01F0FBCF02F0FE\n"
+			 ":10401000E9CF03F0EACF04F0E1CF05F0E2CF06F0FC\n"
+			 ":10402000D9CF07F0DACF08F0F3CF09F0F4CF0AF0D8\n"
+			 ":10403000F6CF0BF0F7CF0CF0F8CF0DF0F5CF0EF078\n"
+			 ":104040000EC0F5FF0DC0F8FF0CC0F7FF0BC0F6FF68\n"
+			 ":104050000AC0F4FF09C0F3FF08C0DAFF07C0D9FFA8\n"
+			 ":1040600006C0E2FF05C0E1FF04C0EAFF03C0E9FFAC\n"
+			 ":1040700002C0FBFF01C0FAFF11003FEF20F000017A\n"
+			 ":0840800042EF20F03DEF20F0BB\n"
 			 ":00000001FF\n");
 
 	/* do we match the binary file again */
@@ -518,8 +569,10 @@ dfu_device_func (void)
 	g_assert (usb_device != NULL);
 
 	/* check it's DFU-capable */
-	device = dfu_device_new (usb_device);
-	g_assert (device != NULL);
+	device = dfu_device_new ();
+	ret = dfu_device_set_new_usb_dev (device, usb_device, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 
 	/* get targets */
 	targets = dfu_device_get_targets (device);
@@ -544,6 +597,138 @@ dfu_device_func (void)
 	ret = dfu_device_close (device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
+}
+
+static void
+dfu_device_dfu_v11 (void)
+{
+	gboolean ret;
+	g_autoptr(DfuContext) context = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+
+	/* create context */
+	context = dfu_context_new ();
+	ret = dfu_context_enumerate (context, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* does device exist */
+	device = dfu_context_get_device_by_vid_pid (context,
+						    0x273f,
+						    0x100a,
+						    &error);
+	if (device == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+		g_test_skip ("no ColorHugDFU, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+
+	/* read contents */
+	ret = dfu_device_open (device, &error);
+	if (!ret &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
+		g_test_skip ("no permissions, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (ret);
+	firmware = dfu_device_upload (device, DFU_TARGET_TRANSFER_FLAG_NONE,
+				      NULL, &error);
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 16384);
+}
+
+static void
+dfu_device_dfu_avr32 (void)
+{
+	gboolean ret;
+	g_autoptr(DfuContext) context = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+
+	/* create context */
+	context = dfu_context_new ();
+	ret = dfu_context_enumerate (context, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* does device exist */
+	device = dfu_context_get_device_by_vid_pid (context,
+						    0x03eb,
+						    0x2ff1,
+						    &error);
+	if (device == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+		g_test_skip ("no UC3-A3 Xplained, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+
+	/* read contents */
+	ret = dfu_device_open (device, &error);
+	if (!ret &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
+		g_test_skip ("no permissions, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (ret);
+	firmware = dfu_device_upload (device, DFU_TARGET_TRANSFER_FLAG_NONE,
+				      NULL, &error);
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 11264);
+}
+
+static void
+dfu_device_dfu_xmega (void)
+{
+	gboolean ret;
+	g_autoptr(DfuContext) context = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(DfuFirmware) firmware = NULL;
+
+	/* create context */
+	context = dfu_context_new ();
+	ret = dfu_context_enumerate (context, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* does device exist */
+	device = dfu_context_get_device_by_vid_pid (context,
+						    0x03eb,
+						    0x2fe2,
+						    &error);
+	if (device == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+		g_test_skip ("no XMEGA-A3BU Xplained, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+
+	/* read contents */
+	ret = dfu_device_open (device, &error);
+	if (!ret &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
+		g_test_skip ("no permissions, skipping");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert (ret);
+	firmware = dfu_device_upload (device, DFU_TARGET_TRANSFER_FLAG_NONE,
+				      NULL, &error);
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 29696);
 }
 
 static void
@@ -926,6 +1111,50 @@ dfu_patch_func (void)
 	g_debug ("serialized blob %s", serialized_str);
 }
 
+static void
+dfu_chunked_func (void)
+{
+	g_autofree gchar *chunked1_str = NULL;
+	g_autofree gchar *chunked2_str = NULL;
+	g_autofree gchar *chunked3_str = NULL;
+	g_autofree gchar *chunked4_str = NULL;
+	g_autoptr(GPtrArray) chunked1 = NULL;
+	g_autoptr(GPtrArray) chunked2 = NULL;
+	g_autoptr(GPtrArray) chunked3 = NULL;
+	g_autoptr(GPtrArray) chunked4 = NULL;
+
+	chunked3 = dfu_chunked_new ((const guint8 *) "123456", 6, 0x0, 3, 3);
+	chunked3_str = dfu_chunked_to_string (chunked3);
+	g_print ("\n%s", chunked3_str);
+	g_assert_cmpstr (chunked3_str, ==, "#00: page:00 addr:0000 len:03 123\n"
+					   "#01: page:01 addr:0000 len:03 456\n");
+
+	chunked4 = dfu_chunked_new ((const guint8 *) "123456", 6, 0x4, 4, 4);
+	chunked4_str = dfu_chunked_to_string (chunked4);
+	g_print ("\n%s", chunked4_str);
+	g_assert_cmpstr (chunked4_str, ==, "#00: page:01 addr:0000 len:04 1234\n"
+					   "#01: page:02 addr:0000 len:02 56\n");
+
+	chunked1 = dfu_chunked_new ((const guint8 *) "0123456789abcdef", 16, 0x0, 10, 4);
+	chunked1_str = dfu_chunked_to_string (chunked1);
+	g_print ("\n%s", chunked1_str);
+	g_assert_cmpstr (chunked1_str, ==, "#00: page:00 addr:0000 len:04 0123\n"
+					   "#01: page:00 addr:0004 len:04 4567\n"
+					   "#02: page:00 addr:0008 len:02 89\n"
+					   "#03: page:01 addr:0000 len:04 abcd\n"
+					   "#04: page:01 addr:0004 len:02 ef\n");
+
+	chunked2 = dfu_chunked_new ((const guint8 *) "XXXXXXYYYYYYZZZZZZ", 18, 0x0, 6, 4);
+	chunked2_str = dfu_chunked_to_string (chunked2);
+	g_print ("\n%s", chunked2_str);
+	g_assert_cmpstr (chunked2_str, ==, "#00: page:00 addr:0000 len:04 XXXX\n"
+					   "#01: page:00 addr:0004 len:02 XX\n"
+					   "#02: page:01 addr:0000 len:04 YYYY\n"
+					   "#03: page:01 addr:0004 len:02 YY\n"
+					   "#04: page:02 addr:0000 len:04 ZZZZ\n"
+					   "#05: page:02 addr:0004 len:02 ZZ\n");
+}
+
 int
 main (int argc, char **argv)
 {
@@ -938,6 +1167,7 @@ main (int argc, char **argv)
 	g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
 
 	/* tests go here */
+	g_test_add_func ("/dfu/chunked", dfu_chunked_func);
 	g_test_add_func ("/dfu/patch", dfu_patch_func);
 	g_test_add_func ("/dfu/patch{merges}", dfu_patch_merges_func);
 	g_test_add_func ("/dfu/patch{apply}", dfu_patch_apply_func);
@@ -949,9 +1179,13 @@ main (int argc, char **argv)
 	g_test_add_func ("/dfu/firmware{dfuse}", dfu_firmware_dfuse_func);
 	g_test_add_func ("/dfu/firmware{xdfu}", dfu_firmware_xdfu_func);
 	g_test_add_func ("/dfu/firmware{metadata}", dfu_firmware_metadata_func);
+	g_test_add_func ("/dfu/firmware{intel-hex-offset}", dfu_firmware_intel_hex_offset_func);
 	g_test_add_func ("/dfu/firmware{intel-hex}", dfu_firmware_intel_hex_func);
 	g_test_add_func ("/dfu/firmware{intel-hex-signed}", dfu_firmware_intel_hex_signed_func);
 	g_test_add_func ("/dfu/device", dfu_device_func);
+	g_test_add_func ("/dfu/device{v1.1}", dfu_device_dfu_v11);
+	g_test_add_func ("/dfu/device{avr32}", dfu_device_dfu_avr32);
+	g_test_add_func ("/dfu/device{xmega}", dfu_device_dfu_xmega);
 	g_test_add_func ("/dfu/colorhug+", dfu_colorhug_plus_func);
 	return g_test_run ();
 }

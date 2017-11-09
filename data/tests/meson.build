@@ -8,3 +8,4 @@ pkcs7_privkey = custom_target('test-privkey.pem',
 subdir('builder')
 subdir('pki')
 subdir('colorhug')
+subdir('missing-hwid')

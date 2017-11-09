@@ -30,6 +30,7 @@
 #include "fu-common.h"
 #include "fu-device.h"
 #include "fu-device-locker.h"
+#include "fu-quirks.h"
 #include "fu-hwids.h"
 
 G_BEGIN_DECLS
@@ -135,6 +136,13 @@ GBytes		*fu_plugin_get_smbios_data		(FuPlugin	*plugin,
 void		 fu_plugin_add_rule			(FuPlugin	*plugin,
 							 FuPluginRule	 rule,
 							 const gchar	*name);
+FuQuirks	*fu_plugin_get_quirks			(FuPlugin	*plugin);
+const gchar	*fu_plugin_lookup_quirk_by_id		(FuPlugin	*plugin,
+							 const gchar	*prefix,
+							 const gchar	*id);
+const gchar	*fu_plugin_lookup_quirk_by_usb_device	(FuPlugin	*plugin,
+							 const gchar	*prefix,
+							 GUsbDevice	*dev);
 
 G_END_DECLS
 

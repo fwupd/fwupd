@@ -48,4 +48,13 @@
  */
 #define FU_DEVICE_METADATA_TBT_IS_SAFE_MODE	"Thunderbolt::IsSafeMode"
 
+/**
+ * FU_DEVICE_METADATA_DELL_DOCK_TYPE:
+ *
+ * The type of dock plugged into the system
+ * (if any)
+ * Consumed by the synaptics plugin.
+ */
+#define FU_DEVICE_METADATA_DELL_DOCK_TYPE	"Dell::DockType"
+
 #endif /* __FU_DEVICE_METADATA_H__ */

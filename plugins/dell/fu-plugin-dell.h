@@ -24,13 +24,14 @@
 
 #include <gusb.h>
 #include "fu-plugin.h"
-#include "fu-dell-common.h"
+#include "fu-dell-smi.h"
 
 struct FuPluginData {
 	FuDellSmiObj		*smi_obj;
 	guint16			fake_vid;
 	guint16			fake_pid;
 	gboolean		can_switch_modes;
+	gboolean		capsule_supported;
 };
 
 void

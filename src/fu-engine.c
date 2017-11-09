@@ -75,6 +75,7 @@ struct _FuEngine
 	GPtrArray		*supported_guids;
 	FuSmbios		*smbios;
 	FuHwids			*hwids;
+	FuQuirks		*quirks;
 };
 
 enum {
@@ -94,6 +95,7 @@ G_DEFINE_TYPE (FuEngine, fu_engine, G_TYPE_OBJECT)
 typedef struct {
 	FuDevice		*device;
 	FuPlugin		*plugin;
+	FuEngine		*self;		/* no ref */
 } FuDeviceItem;
 
 static void
@@ -172,10 +174,49 @@ fu_engine_set_percentage (FuEngine *self, guint percentage)
 	g_signal_emit (self, signals[SIGNAL_PERCENTAGE_CHANGED], 0, percentage);
 }
 
+static FuDeviceItem *
+fu_engine_get_item_by_device (FuEngine *self, FuDevice *device)
+{
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (item->device == device)
+			return item;
+	}
+	return NULL;
+}
+
+static void
+fu_engine_device_finalized_cb (gpointer data, GObject *where_the_object_was)
+{
+	FuEngine *self = FU_ENGINE (data);
+	FuDevice *device = (FuDevice *) where_the_object_was;
+	FuDeviceItem *item;
+
+	item = fu_engine_get_item_by_device (self, device);
+	if (item == NULL) {
+		g_critical ("device was finalized with no item!");
+		return;
+	}
+
+	/* no longer valid */
+	item->device = NULL;
+
+	/* the best we can do is just log a warning to the journal and remove
+	 * the device from the daemon list -- DeviceRemoved is not emitted */
+	g_critical ("device from plugin %s was finalized without being removed!",
+		    fu_plugin_get_name (item->plugin));
+	g_ptr_array_remove (self->devices, item);
+	fu_engine_emit_changed (self);
+}
+
 static void
 fu_engine_item_free (FuDeviceItem *item)
 {
-	g_object_unref (item->device);
+	if (item->device != NULL) {
+		g_object_weak_unref (G_OBJECT (item->device),
+				     fu_engine_device_finalized_cb, item->self);
+		g_object_unref (item->device);
+	}
 	g_object_unref (item->plugin);
 	g_free (item);
 }
@@ -760,10 +801,14 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 static AsScreenshot *
 _as_app_get_screenshot_default (AsApp *app)
 {
+#if AS_CHECK_VERSION(0,7,3)
+	return as_app_get_screenshot_default (app);
+#else
 	GPtrArray *array = as_app_get_screenshots (app);
 	if (array->len == 0)
 		return NULL;
 	return g_ptr_array_index (array, 0);
+#endif
 }
 
 static gboolean
@@ -804,8 +849,35 @@ fu_engine_check_version_requirement (AsApp *app,
 	return TRUE;
 }
 
+#if AS_CHECK_VERSION(0,7,4)
 static gboolean
-fu_engine_check_requirements (AsApp *app, FuDevice *device, GError **error)
+fu_engine_check_hardware_requirement (FuEngine *self, AsApp *app, GError **error)
+{
+	GPtrArray *requires = as_app_get_requires (app);
+
+	/* check each HWID requirement */
+	for (guint i = 0; i < requires->len; i++) {
+		AsRequire *req = g_ptr_array_index (requires, i);
+		if (as_require_get_kind (req) != AS_REQUIRE_KIND_HARDWARE)
+			continue;
+		if (!fu_hwids_has_guid (self->hwids, as_require_get_value (req))) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no HWIDs matched %s",
+				     as_require_get_value (req));
+			return FALSE;
+		}
+		g_debug ("HWID provided %s", as_require_get_value (req));
+	}
+
+	/* success */
+	return TRUE;
+}
+#endif
+
+static gboolean
+fu_engine_check_requirements (FuEngine *self, AsApp *app, FuDevice *device, GError **error)
 {
 	/* make sure requirements are satisfied */
 	if (!fu_engine_check_version_requirement (app,
@@ -815,6 +887,10 @@ fu_engine_check_requirements (AsApp *app, FuDevice *device, GError **error)
 						error)) {
 		return FALSE;
 	}
+#if AS_CHECK_VERSION(0,7,4)
+	if (!fu_engine_check_hardware_requirement (self, app, error))
+		return FALSE;
+#endif
 
 	if (device != NULL) {
 		if (!fu_engine_check_version_requirement (app,
@@ -869,19 +945,22 @@ fu_engine_vendor_fixup_provide_value (AsApp *app)
 }
 
 static void
-fu_engine_vendor_quirk_release_version (AsApp *app)
+fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 {
 	AsVersionParseFlag flags = AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 	GPtrArray *releases;
+	const gchar *quirk;
 
 	/* no quirk required */
 	if (as_app_get_kind (app) != AS_APP_KIND_FIRMWARE)
 		return;
 
-	for (guint i = 0; quirk_table[i].identifier != NULL; i++) {
-		if (g_str_has_prefix (as_app_get_id(app), quirk_table[i].identifier))
-			flags = quirk_table[i].flags;
-	}
+	/* any quirks match */
+	quirk = fu_quirks_lookup_by_glob (self->quirks,
+					  FU_QUIRKS_DAEMON_VERSION_FORMAT,
+					  as_app_get_id (app));
+	if (g_strcmp0 (quirk, "none") == 0)
+		flags = AS_VERSION_PARSE_FLAG_NONE;
 
 	/* fix each release */
 	releases = as_app_get_releases (app);
@@ -1075,13 +1154,13 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (app);
+	fu_engine_vendor_quirk_release_version (self, app);
 
 	/* possibly convert the flashed provide to a GUID */
 	fu_engine_vendor_fixup_provide_value (app);
 
 	/* check we can install it */
-	if (!fu_engine_check_requirements (app, item->device, error))
+	if (!fu_engine_check_requirements (self, app, item->device, error))
 		return FALSE;
 
 	/* parse the DriverVer */
@@ -1227,6 +1306,24 @@ fu_engine_install (FuEngine *self,
 }
 
 static FuDeviceItem *
+fu_engine_add_item (FuEngine *self, FuDevice *device, FuPlugin *plugin)
+{
+	FuDeviceItem *item;
+
+	/* add helper */
+	item = g_new0 (FuDeviceItem, 1);
+	item->self = self; /* no ref */
+	item->device = g_object_ref (device);
+	item->plugin = g_object_ref (plugin);
+	g_ptr_array_add (self->devices, item);
+
+	/* make some noise if the item is unreffed from under our feet */
+	g_object_weak_ref (G_OBJECT (item->device),
+			   fu_engine_device_finalized_cb, self);
+	return item;
+}
+
+static FuDeviceItem *
 fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GError **error)
 {
 	FuDevice *dev;
@@ -1264,10 +1361,7 @@ fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GErr
 					     "no plugin %s found", tmp);
 				return NULL;
 			}
-			item = g_new0 (FuDeviceItem, 1);
-			item->device = g_object_ref (dev);
-			item->plugin = g_object_ref (plugin);
-			g_ptr_array_add (self->devices, item);
+			item = fu_engine_add_item (self, dev, plugin);
 
 			/* FIXME: just a boolean on FuDeviceItem? */
 			fu_device_set_metadata (dev, "FakeDevice", "TRUE");
@@ -1356,7 +1450,7 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 	}
 
 	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (app);
+	fu_engine_vendor_quirk_release_version (self, app);
 
 	/* possibly convert the flashed provide to a GUID */
 	fu_engine_vendor_fixup_provide_value (app);
@@ -1426,6 +1520,9 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 static AsRelease *
 _as_app_get_release_by_version (AsApp *app, const gchar *version)
 {
+#if AS_CHECK_VERSION(0,7,3)
+	return as_app_get_release_by_version (app, version);
+#else
 	GPtrArray *releases = as_app_get_releases (app);
 	for (guint i = 0; i < releases->len; i++) {
 		AsRelease *release = g_ptr_array_index (releases, i);
@@ -1433,6 +1530,7 @@ _as_app_get_release_by_version (AsApp *app, const gchar *version)
 			return release;
 	}
 	return NULL;
+#endif
 }
 
 static void
@@ -1442,7 +1540,7 @@ fu_engine_add_component_to_store (FuEngine *self, AsApp *app)
 	GPtrArray *releases = as_app_get_releases (app);
 
 	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (app);
+	fu_engine_vendor_quirk_release_version (self, app);
 
 	/* possibly convert the flashed provide to a GUID */
 	fu_engine_vendor_fixup_provide_value (app);
@@ -1847,7 +1945,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	}
 
 	/* check we can install it */
-	if (!fu_engine_check_requirements (app, NULL, error))
+	if (!fu_engine_check_requirements (self, app, NULL, error))
 		return NULL;
 
 	/* verify trust */
@@ -1856,7 +1954,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 		return NULL;
 
 	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (app);
+	fu_engine_vendor_quirk_release_version (self, app);
 
 	/* possibly convert the flashed provide to a GUID */
 	fu_engine_vendor_fixup_provide_value (app);
@@ -1923,7 +2021,7 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 		FwupdDevice *res = NULL;
 
 		/* check we can install it */
-		if (!fu_engine_check_requirements (app, NULL, error))
+		if (!fu_engine_check_requirements (self, app, NULL, error))
 			return NULL;
 
 		as_app_set_origin (app, as_store_get_origin (store));
@@ -2045,7 +2143,7 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 			continue;
 
 		/* check we can install it */
-		if (!fu_engine_check_requirements (app, device, error))
+		if (!fu_engine_check_requirements (self, app, device, error))
 			return NULL;
 		releases_tmp = as_app_get_releases (app);
 		for (guint j = 0; j < releases_tmp->len; j++) {
@@ -2511,25 +2609,20 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 void
 fu_engine_add_device (FuEngine *self, FuPlugin *plugin, FuDevice *device)
 {
-	FuDeviceItem *item;
-
 	/* notify all plugins about this new device */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register (self, device);
 
 	/* create new device */
-	item = g_new0 (FuDeviceItem, 1);
-	item->device = g_object_ref (device);
-	item->plugin = g_object_ref (plugin);
-	g_ptr_array_add (self->devices, item);
+	fu_engine_add_item (self, device, plugin);
 
 	/* match the metadata at this point so clients can tell if the
 	 * device is worthy */
-	if (fu_engine_is_device_supported (self, item->device))
-		fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_SUPPORTED);
+	if (fu_engine_is_device_supported (self, device))
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
 
 	/* notify clients */
-	fu_engine_emit_device_added (self, item->device);
+	fu_engine_emit_device_added (self, device);
 	fu_engine_emit_changed (self);
 }
 
@@ -2654,6 +2747,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		fu_plugin_set_hwids (plugin, self->hwids);
 		fu_plugin_set_smbios (plugin, self->smbios);
 		fu_plugin_set_supported (plugin, self->supported_guids);
+		fu_plugin_set_quirks (plugin, self->quirks);
 		g_debug ("adding plugin %s", filename);
 		if (!fu_plugin_open (plugin, filename, &error_local)) {
 			g_warning ("failed to open plugin %s: %s",
@@ -2859,6 +2953,7 @@ fu_engine_cleanup_state (GError **error)
 gboolean
 fu_engine_load (FuEngine *self, GError **error)
 {
+	g_autoptr(GError) error_quirks = NULL;
 	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_smbios = NULL;
 
@@ -2870,6 +2965,10 @@ fu_engine_load (FuEngine *self, GError **error)
 		g_prefix_error (error, "Failed to load config: ");
 		return FALSE;
 	}
+
+	/* load the quirk files */
+	if (!fu_quirks_load (self->quirks, &error_quirks))
+		g_warning ("Failed to load quirks: %s", error_quirks->message);
 
 	/* load AppStream metadata */
 	as_store_add_filter (self->store, AS_APP_KIND_FIRMWARE);
@@ -2959,6 +3058,7 @@ fu_engine_init (FuEngine *self)
 	self->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_engine_item_free);
 	self->smbios = fu_smbios_new ();
 	self->hwids = fu_hwids_new ();
+	self->quirks = fu_quirks_new ();
 	self->pending = fu_pending_new ();
 	self->profile = as_profile_new ();
 	self->store = as_store_new ();
@@ -2981,6 +3081,7 @@ fu_engine_finalize (GObject *obj)
 	g_hash_table_unref (self->plugins_hash);
 	g_object_unref (self->config);
 	g_object_unref (self->smbios);
+	g_object_unref (self->quirks);
 	g_object_unref (self->hwids);
 	g_object_unref (self->pending);
 	g_object_unref (self->profile);

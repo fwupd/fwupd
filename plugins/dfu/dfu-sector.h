@@ -33,17 +33,6 @@ G_DECLARE_DERIVABLE_TYPE (DfuSector, dfu_sector, DFU, SECTOR, GObject)
 struct _DfuSectorClass
 {
 	GObjectClass		 parent_class;
-	/*< private >*/
-	/* Padding for future expansion */
-	void (*_dfu_sector_reserved1) (void);
-	void (*_dfu_sector_reserved2) (void);
-	void (*_dfu_sector_reserved3) (void);
-	void (*_dfu_sector_reserved4) (void);
-	void (*_dfu_sector_reserved5) (void);
-	void (*_dfu_sector_reserved6) (void);
-	void (*_dfu_sector_reserved7) (void);
-	void (*_dfu_sector_reserved8) (void);
-	void (*_dfu_sector_reserved9) (void);
 };
 
 /**

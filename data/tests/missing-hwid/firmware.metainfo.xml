@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2017 Richard Hughes <richard@hughsie.com> -->
+<component type="firmware">
+  <id>com.hughski.test.firmware</id>
+  <provides>
+    <firmware type="flashed">12345678-1234-1234-1234-123456789012</firmware>
+  </provides>
+  <requires>
+    <hardware>9342d47a-1bab-5709-9869-c840b2eac501</hardware>
+  </requires>
+  <releases>
+    <release version="1.2.3" timestamp="1424116753"/>
+  </releases>
+</component>

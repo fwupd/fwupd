@@ -20,6 +20,35 @@
 #
 import os
 import sys
+import xml.etree.ElementTree as etree
+
+def parse_dependencies(OS, SUBOS, requested_type):
+    deps = []
+    dep = ''
+    tree = etree.parse(os.path.join(directory, "dependencies.xml"))
+    root = tree.getroot()
+    for child in root:
+        if not "type" in child.attrib or not "id" in child.attrib:
+            continue
+        for distro in child:
+            if not "id" in distro.attrib:
+                continue
+            if distro.attrib["id"] != OS:
+                continue
+            packages = distro.findall("package")
+            for package in packages:
+                if SUBOS:
+                    if not 'variant' in package.attrib:
+                        continue
+                    if package.attrib['variant'] != SUBOS:
+                        continue
+                if package.text:
+                    dep = package.text
+                else:
+                    dep = child.attrib["id"]
+                if child.attrib["type"] == requested_type and dep:
+                    deps.append(dep)
+    return deps
 
 directory = os.path.dirname(sys.argv[0])
 TARGET=os.getenv('OS')
@@ -27,30 +56,14 @@ TARGET=os.getenv('OS')
 if TARGET == '':
     print("Missing OS environment variable")
     sys.exit(1)
-
-deps = []
-with open (os.path.join(directory,"dependencies.txt"), 'r') as rfd:
-    header = rfd.readline().split(',')
-    pos = -1
-    for i in range(0,len(header)):
-        if header[i].strip() == TARGET:
-            pos = i
-            break
-    if pos == -1:
-        print("Unknown OS: %s" % TARGET)
-        sys.exit(1)
-    for line in rfd.readlines():
-       dep = line.split(',')[pos].strip()
-       if dep == '':
-           continue
-       deps.append(dep)
-
 OS = TARGET
 SUBOS = ''
 split = TARGET.split('-')
 if len(split) >= 2:
     OS = split[0]
     SUBOS = split[1]
+
+deps = parse_dependencies(OS, SUBOS, "build")
 
 input = os.path.join(directory, "Dockerfile-%s.in" % OS)
 if not os.path.exists(input):
@@ -64,7 +77,13 @@ out = os.path.join(directory, "Dockerfile")
 
 with open(out, 'w') as wfd:
     for line in lines:
-        if line == "%%%INSTALL_DEPENDENCIES_COMMAND%%%\n":
+        if line.startswith("FROM %%%ARCH_PREFIX%%%"):
+            if OS == "debian" and SUBOS == "i386":
+                replace = SUBOS + "/"
+            else:
+                replace = ''
+            wfd.write(line.replace("%%%ARCH_PREFIX%%%", replace))
+        elif line == "%%%INSTALL_DEPENDENCIES_COMMAND%%%\n":
             if OS == "fedora":
                 wfd.write("RUN dnf --enablerepo=updates-testing -y install \\\n")
             elif OS == "debian" or OS == "ubuntu":

@@ -631,6 +631,18 @@ dfu_firmware_write_file (DfuFirmware *firmware, GFile *file,
 					error);
 }
 
+static gchar *
+_bcd_version_from_uint16 (guint16 val)
+{
+#if AS_CHECK_VERSION(0,7,3)
+	return as_utils_version_from_uint16 (val, AS_VERSION_PARSE_FLAG_USE_BCD);
+#else
+	guint maj = ((val >> 12) & 0x0f) * 10 + ((val >> 8) & 0x0f);
+	guint min = ((val >> 4) & 0x0f) * 10 + (val & 0x0f);
+	return g_strdup_printf ("%u.%u", maj, min);
+#endif
+}
+
 /**
  * dfu_firmware_to_string:
  * @firmware: a #DfuFirmware
@@ -650,8 +662,7 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 
 	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
 
-	release_str = as_utils_version_from_uint16 (priv->release,
-						    AS_VERSION_PARSE_FLAG_NONE);
+	release_str = _bcd_version_from_uint16 (priv->release);
 	str = g_string_new ("");
 	g_string_append_printf (str, "vid:         0x%04x\n", priv->vid);
 	g_string_append_printf (str, "pid:         0x%04x\n", priv->pid);

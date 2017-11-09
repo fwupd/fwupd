@@ -51,6 +51,7 @@ BuildRequires: libuuid-devel
 BuildRequires: gnutls-devel
 BuildRequires: gnutls-utils
 BuildRequires: meson
+BuildRequires: help2man
 
 %if 0%{?have_uefi}
 BuildRequires: python3 python3-cairo python3-gobject python3-pillow
@@ -207,6 +208,8 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_unitdir}/fwupd.service
 %{_unitdir}/system-update.target.wants/
 %dir %{_localstatedir}/lib/fwupd
+%dir %{_datadir}/fwupd/quirks.d
+%{_datadir}/fwupd/quirks.d/*.quirk
 %{_localstatedir}/lib/fwupd/builder/README.md
 %{_libdir}/libfwupd*.so.*
 %{_libdir}/girepository-1.0/Fwupd-2.0.typelib

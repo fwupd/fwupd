@@ -51,27 +51,10 @@ dfu_firmware_detect_ihex (GBytes *bytes)
 	return DFU_FIRMWARE_FORMAT_INTEL_HEX;
 }
 
-static guint8
-dfu_firmware_ihex_parse_uint8 (const gchar *data, guint pos)
-{
-	gchar buffer[3];
-	memcpy (buffer, data + pos, 2);
-	buffer[2] = '\0';
-	return (guint8) g_ascii_strtoull (buffer, NULL, 16);
-}
-
-static guint16
-dfu_firmware_ihex_parse_uint16 (const gchar *data, guint pos)
-{
-	gchar buffer[5];
-	memcpy (buffer, data + pos, 4);
-	buffer[4] = '\0';
-	return (guint16) g_ascii_strtoull (buffer, NULL, 16);
-}
-
 #define	DFU_INHX32_RECORD_TYPE_DATA		0x00
 #define	DFU_INHX32_RECORD_TYPE_EOF		0x01
 #define	DFU_INHX32_RECORD_TYPE_EXTENDED		0x04
+#define	DFU_INHX32_RECORD_TYPE_ADDR32		0x05
 #define	DFU_INHX32_RECORD_TYPE_SIGNATURE	0xfd
 
 /**
@@ -144,9 +127,9 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		}
 
 		/* length, 16-bit address, type */
-		len_tmp = dfu_firmware_ihex_parse_uint8 (in_buffer, offset+1);
-		addr_low = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+3);
-		type = dfu_firmware_ihex_parse_uint8 (in_buffer, offset+7);
+		len_tmp = dfu_utils_buffer_parse_uint8 (in_buffer + offset + 1);
+		addr_low = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 3);
+		type = dfu_utils_buffer_parse_uint8 (in_buffer + offset + 7);
 
 		/* position of checksum */
 		end = offset + 9 + len_tmp * 2;
@@ -163,14 +146,16 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST) == 0) {
 			checksum = 0;
 			for (guint i = offset + 1; i < end + 2; i += 2) {
-				data_tmp = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
+				data_tmp = dfu_utils_buffer_parse_uint8 (in_buffer + i);
 				checksum += data_tmp;
 			}
 			if (checksum != 0)  {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "invalid record checksum");
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "invalid record checksum at 0x%04x "
+					     "to 0x%04x, got 0x%02x",
+					     offset, end, checksum);
 				return FALSE;
 			}
 		}
@@ -215,7 +200,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 					}
 				}
 				/* write into buf */
-				data_tmp = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
+				data_tmp = dfu_utils_buffer_parse_uint8 (in_buffer + i);
 				g_string_append_c (string, (gchar) data_tmp);
 				addr32_last = addr32++;
 			}
@@ -232,12 +217,15 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			got_eof = TRUE;
 			break;
 		case DFU_INHX32_RECORD_TYPE_EXTENDED:
-			addr_high = dfu_firmware_ihex_parse_uint16 (in_buffer, offset+9);
+			addr_high = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 9);
 			addr32 = ((guint32) addr_high << 16) + addr_low;
+			break;
+		case DFU_INHX32_RECORD_TYPE_ADDR32:
+			addr32 = dfu_utils_buffer_parse_uint32 (in_buffer + offset + 9);
 			break;
 		case DFU_INHX32_RECORD_TYPE_SIGNATURE:
 			for (guint i = offset + 9; i < end; i += 2) {
-				guint8 tmp_c = dfu_firmware_ihex_parse_uint8 (in_buffer, i);
+				guint8 tmp_c = dfu_utils_buffer_parse_uint8 (in_buffer + i);
 				g_string_append_c (signature, tmp_c);
 			}
 			break;
@@ -293,31 +281,55 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 }
 
 static void
+dfu_firmware_ihex_emit_chunk (GString *str,
+			      guint16 address,
+			      guint8 record_type,
+			      const guint8 *data,
+			      gsize sz)
+{
+	guint8 checksum = 0x00;
+	g_string_append_printf (str, ":%02X%04X%02X",
+				(guint) sz,
+				(guint) address,
+				(guint) record_type);
+	for (gsize j = 0; j < sz; j++)
+		g_string_append_printf (str, "%02X", data[j]);
+	checksum = (guint8) sz;
+	checksum += (guint8) ((address & 0xff00) >> 8);
+	checksum += (guint8) (address & 0xff);
+	checksum += record_type;
+	for (gsize j = 0; j < sz; j++)
+		checksum += data[j];
+	g_string_append_printf (str, "%02X\n", (guint) (((~checksum) + 0x01) & 0xff));
+}
+
+static void
 dfu_firmware_to_ihex_bytes (GString *str, guint8 record_type,
 			    guint32 address, GBytes *contents)
 {
 	const guint8 *data;
 	const guint chunk_size = 16;
 	gsize len;
+	guint32 address_offset_last = 0x0;
 
 	/* get number of chunks */
 	data = g_bytes_get_data (contents, &len);
 	for (gsize i = 0; i < len; i += chunk_size) {
-		guint8 checksum = 0;
-
-		/* length, 16-bit address, type */
+		guint32 address_tmp = address + i;
+		guint32 address_offset = (address_tmp >> 16) & 0xffff;
 		gsize chunk_len = MIN (len - i, 16);
-		g_string_append_printf (str, ":%02X%04X%02X",
-					(guint) chunk_len,
-					(guint) (address + i),
-					(guint) record_type);
-		for (gsize j = 0; j < chunk_len; j++)
-			g_string_append_printf (str, "%02X", data[i+j]);
 
-		/* add checksum */
-		for (gsize j = 0; j < (chunk_len * 2) + 8; j++)
-			checksum += (guint8) str->str[str->len - (j + 1)];
-		g_string_append_printf (str, "%02X\n", checksum);
+		/* need to offset */
+		if (address_offset != address_offset_last) {
+			guint16 tmp = GUINT16_TO_BE (address_offset);
+			dfu_firmware_ihex_emit_chunk (str, 0x0,
+						      DFU_INHX32_RECORD_TYPE_EXTENDED,
+						      (guint8 *) &tmp, 2);
+			address_offset_last = address_offset;
+		}
+		address_tmp &= 0xffff;
+		dfu_firmware_ihex_emit_chunk (str, address_tmp,
+					      record_type, data + i, chunk_len);
 	}
 }
 
@@ -377,8 +389,6 @@ dfu_firmware_to_ihex (DfuFirmware *firmware, GError **error)
 	}
 
 	/* add EOF */
-	g_string_append_printf (str, ":000000%02XFF\n",
-				(guint) DFU_INHX32_RECORD_TYPE_EOF);
-
+	dfu_firmware_ihex_emit_chunk (str, 0x0, DFU_INHX32_RECORD_TYPE_EOF, NULL, 0);
 	return g_bytes_new (str->str, str->len);
 }
