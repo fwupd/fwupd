@@ -4,13 +4,14 @@
 # 
 # Translators:
 # Daniel Rusek <mail@asciiwolf.com>, 2017
+# Daniel Rusek <mail@asciiwolf.com>, 2017
 # Marek Černocký <marek@manet.cz>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-10-09 10:22+0100\n"
-"PO-Revision-Date: 2017-10-09 09:22+0000\n"
+"POT-Creation-Date: 2017-11-09 15:18+0000\n"
+"PO-Revision-Date: 2017-11-09 15:18+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Czech (http://www.transifex.com/freedesktop/fwupd/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -33,14 +34,14 @@ msgid ""
 "reliable. You can either use a GUI software manager like GNOME Software to "
 "view and apply updates, the command-line tool or the D-Bus interface "
 "directly."
-msgstr ""
+msgstr "Cílem tohoto projektu je učinit aktualizaci firmwaru na Linuxu automatickou, bezpečnou a spolehlivou. Pro zobrazení a aplikaci aktualizací můžete použít GUI správce softwaru typu GNOME Software, nástroj pro příkazovou řádku nebo přímo D-Bus."
 
 #: data/org.freedesktop.fwupd.metainfo.xml:16
 msgid ""
 "The fwupd process is a simple daemon to allow session software to update "
 "device firmware on your local machine. It is designed for desktops, but this"
 " project is also usable on phones, tablets and on headless servers."
-msgstr ""
+msgstr "Proces fwupd je jednoduchý démon, který umožňuje softwaru sezení aktualizovat firmware zařízení na vašem počítači. Je navržen pro stolní počítače, ale je možno jej použít také na telefonech, tabletech a serverech bez monitoru."
 
 #: policy/org.freedesktop.fwupd.policy.in:17
 msgid "Install signed system firmware"
@@ -98,7 +99,7 @@ msgstr "Pro odemknutí zařízení je požadováno ověření"
 
 #: policy/org.freedesktop.fwupd.policy.in:94
 msgid "Update the stored device verification information"
-msgstr "Aktualizovat uložené informace o ověření zařízení"
+msgstr "Aktualizace uložené informace o ověření zařízení"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 #: policy/org.freedesktop.fwupd.policy.in:96
@@ -108,271 +109,287 @@ msgstr "K aktualizaci uložených kontrolních součtů zařízení je vyžadov�
 
 #: policy/org.freedesktop.fwupd.policy.in:105
 msgid "Modify a configured remote"
-msgstr ""
+msgstr "Upravit nastavený vzdálený zdroj"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 #: policy/org.freedesktop.fwupd.policy.in:107
 msgid ""
 "Authentication is required to modify a configured remote used for firmware "
 "updates"
-msgstr ""
+msgstr "K úpravě nastaveného vzdáleného zdroje používaného pro aktualizace firmwaru je vyžadováno ověření"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
-#: plugins/dfu/dfu-tool.c:123 plugins/synapticsmst/synapticsmst-tool.c:113
+#: plugins/dfu/dfu-tool.c:123 plugins/synapticsmst/synapticsmst-tool.c:105
 #: src/fu-util.c:112
 #, c-format
 msgid "Alias to %s"
 msgstr "Alias pro %s"
 
 #. TRANSLATORS: error message
-#: plugins/dfu/dfu-tool.c:191 plugins/synapticsmst/synapticsmst-tool.c:354
+#: plugins/dfu/dfu-tool.c:191 plugins/synapticsmst/synapticsmst-tool.c:347
 #: src/fu-util.c:176
 msgid "Command not found"
 msgstr "Příkaz nebyl nalezen"
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: plugins/dfu/dfu-tool.c:1440
+#: plugins/dfu/dfu-tool.c:1493
 msgid "Added"
 msgstr "Přidáno"
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: plugins/dfu/dfu-tool.c:1451
+#: plugins/dfu/dfu-tool.c:1504
 msgid "Removed"
 msgstr "Odebráno"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
-#: plugins/dfu/dfu-tool.c:1460 src/fu-util.c:1259
+#: plugins/dfu/dfu-tool.c:1513 src/fu-util.c:1259
 msgid "Changed"
 msgstr "Změněno"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
-#: plugins/dfu/dfu-tool.c:1468 src/fu-util.c:1221
+#: plugins/dfu/dfu-tool.c:1521 src/fu-util.c:1221
 msgid "Cancelled"
 msgstr "Zrušeno"
 
 #. TRANSLATORS: Appstream ID for the hardware type
-#: plugins/dfu/dfu-tool.c:1966 src/fu-util.c:1057
+#: plugins/dfu/dfu-tool.c:2019 src/fu-util.c:1057
 msgid "ID"
 msgstr "ID"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#: plugins/dfu/dfu-tool.c:1972 plugins/dfu/dfu-tool.c:1978
-#: plugins/dfu/dfu-tool.c:2065
+#: plugins/dfu/dfu-tool.c:2025 plugins/dfu/dfu-tool.c:2031
+#: plugins/dfu/dfu-tool.c:2135
 msgid "Name"
 msgstr "Název"
 
 #. TRANSLATORS: this is the encryption method used when writing
-#: plugins/dfu/dfu-tool.c:1985
+#: plugins/dfu/dfu-tool.c:2038
 msgid "Cipher"
 msgstr "Šifra"
 
 #. TRANSLATORS: these are areas of memory on the chip
-#: plugins/dfu/dfu-tool.c:1999
+#: plugins/dfu/dfu-tool.c:2052
 msgid "Region"
 msgstr "Oblast"
 
 #. TRANSLATORS: detected a DFU device
-#: plugins/dfu/dfu-tool.c:2033
+#: plugins/dfu/dfu-tool.c:2098
 msgid "Found"
 msgstr "Nalezeno"
 
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
-#: plugins/dfu/dfu-tool.c:2041
+#: plugins/dfu/dfu-tool.c:2106
 msgid "Protocol"
 msgstr "Protokol"
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
 #. TRANSLATORS: device status, e.g. "OK"
-#: plugins/dfu/dfu-tool.c:2054 plugins/dfu/dfu-tool.c:2057
-#: plugins/dfu/dfu-tool.c:2080
+#: plugins/dfu/dfu-tool.c:2119 plugins/dfu/dfu-tool.c:2128
+#: plugins/dfu/dfu-tool.c:2151
 msgid "Status"
 msgstr "Stav"
 
-#: plugins/dfu/dfu-tool.c:2054
-msgid "Unknown: permission denied"
-msgstr "Neznámý: přístup odepřen"
+#: plugins/dfu/dfu-tool.c:2119
+msgid "Permission denied"
+msgstr ""
 
 #. TRANSLATORS: serial number, e.g. '00012345'
-#: plugins/dfu/dfu-tool.c:2071
+#: plugins/dfu/dfu-tool.c:2141
 msgid "Serial"
 msgstr "Sériové číslo"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
-#: plugins/dfu/dfu-tool.c:2076
+#: plugins/dfu/dfu-tool.c:2147
 msgid "Mode"
 msgstr "Režim"
 
 #. TRANSLATORS: device state, i.e. appIDLE
-#: plugins/dfu/dfu-tool.c:2084
+#: plugins/dfu/dfu-tool.c:2155
 msgid "State"
 msgstr "Stav"
 
 #. TRANSLATORS: transfer size in bytes
-#: plugins/dfu/dfu-tool.c:2092
+#: plugins/dfu/dfu-tool.c:2163
 msgid "Transfer Size"
 msgstr "Přenášená velikost"
 
+#. TRANSLATORS: device attributes, i.e. things that
+#. * the device can do
+#: plugins/dfu/dfu-tool.c:2171
+msgid "Attributes"
+msgstr ""
+
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
-#: plugins/dfu/dfu-tool.c:2100
+#: plugins/dfu/dfu-tool.c:2179
 msgid "Quirks"
 msgstr "Zvláštní požadavky"
 
+#. TRANSLATORS: chip ID, e.g. "0x58200204"
+#: plugins/dfu/dfu-tool.c:2186
+msgid "Chip ID"
+msgstr ""
+
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2181
+#: plugins/dfu/dfu-tool.c:2267
 msgid "Convert firmware to DFU format"
 msgstr "Převést firmware do formátu DFU"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2187
+#: plugins/dfu/dfu-tool.c:2273
 msgid "Merge multiple firmware files into one"
 msgstr "Sloučit více firmwarů do jednoho"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2193
+#: plugins/dfu/dfu-tool.c:2279
 msgid "Set vendor ID on firmware file"
 msgstr "Nastavit ID výrobce v souboru s firmwarem"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2199
+#: plugins/dfu/dfu-tool.c:2285
 msgid "Set product ID on firmware file"
 msgstr "Nastavit ID produktu v souboru s firmwarem"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2205
+#: plugins/dfu/dfu-tool.c:2291
 msgid "Set element address on firmware file"
-msgstr ""
+msgstr "Nastavit adresu prvku na firmwaru zařízení"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2211
+#: plugins/dfu/dfu-tool.c:2297
 msgid "Set the firmware size for the target"
-msgstr ""
+msgstr "Nastavit velikost firmwaru pro cíl"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2217
+#: plugins/dfu/dfu-tool.c:2303
 msgid "Set release version on firmware file"
 msgstr "Nastavit verzi vydání v souboru s firmwarem"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2223
+#: plugins/dfu/dfu-tool.c:2309
 msgid "Set alternative number on firmware file"
 msgstr "Nastavit alternativní číslo v souboru s firmwarem"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2229
+#: plugins/dfu/dfu-tool.c:2315
 msgid "Set alternative name on firmware file"
 msgstr "Nastavit alternativní název v souboru s firmwarem"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2235
+#: plugins/dfu/dfu-tool.c:2321
 msgid "Attach DFU capable device back to runtime"
 msgstr "Napojit zařízení podporující DFU zpět do běhového režimu"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2241
+#: plugins/dfu/dfu-tool.c:2327
+msgid "Reset a DFU device"
+msgstr ""
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2333
 msgid "Read firmware from device into a file"
 msgstr "Přečíst firmware ze zařízení do souboru"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2247
+#: plugins/dfu/dfu-tool.c:2339
 msgid "Read firmware from one partition into a file"
 msgstr "Přečíst firmware z jednoho oddílu do souboru"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2253
+#: plugins/dfu/dfu-tool.c:2345
 msgid "Write firmware from file into device"
 msgstr "Zapsat firmware ze souboru do zařízení"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2259
+#: plugins/dfu/dfu-tool.c:2351
 msgid "Write firmware from file into one partition"
 msgstr "Zapsat firmware ze souboru do jednoho oddílu"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2265
+#: plugins/dfu/dfu-tool.c:2357
 msgid "List currently attached DFU capable devices"
 msgstr "Vypsat právě napojená zařízení podporující DFU"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2271
+#: plugins/dfu/dfu-tool.c:2363
 msgid "Detach currently attached DFU capable device"
 msgstr "Odpojit aktuálně napojené zařízení podporující DFU"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2277
+#: plugins/dfu/dfu-tool.c:2369
 msgid "Dump details about a firmware file"
 msgstr "Vypsat podrobnosti o souboru s firmwarem"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2283
+#: plugins/dfu/dfu-tool.c:2375
 msgid "Watch DFU devices being hotplugged"
 msgstr "Sledovat připojení zařízení podporujících DFU"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2289
+#: plugins/dfu/dfu-tool.c:2381
 msgid "Encrypt firmware data"
 msgstr "Zašifrovat data firmwaru"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2295
+#: plugins/dfu/dfu-tool.c:2387
 msgid "Decrypt firmware data"
 msgstr "Dešifrovat data firmwaru"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2301
+#: plugins/dfu/dfu-tool.c:2393
 msgid "Sets metadata on a firmware file"
 msgstr "Nastavit metadata v souboru s firmwarem"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2307
+#: plugins/dfu/dfu-tool.c:2399
 msgid "Replace data in an existing firmware file"
-msgstr ""
+msgstr "Nahradit data v existujícím souboru s firmwarem"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2313
+#: plugins/dfu/dfu-tool.c:2405
 msgid "Create a binary patch using two files"
-msgstr ""
+msgstr "Vytvořit binární záplatu za použití dvou souborů"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2319
+#: plugins/dfu/dfu-tool.c:2411
 msgid "Apply a binary patch"
-msgstr ""
+msgstr "Použít binární záplatu"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2325
+#: plugins/dfu/dfu-tool.c:2417
 msgid "Dump information about a binary patch to the screen"
-msgstr ""
+msgstr "Vypsat na obrazovku informace o binární záplatě"
 
 #. TRANSLATORS: DFU stands for device firmware update
-#: plugins/dfu/dfu-tool.c:2351
+#: plugins/dfu/dfu-tool.c:2443
 msgid "DFU Utility"
 msgstr "Nástroj pro práci s DFU"
 
 #. TRANSLATORS: the user didn't read the man page
-#: plugins/dfu/dfu-tool.c:2356 plugins/synapticsmst/synapticsmst-tool.c:431
-#: src/fu-util.c:1778
+#: plugins/dfu/dfu-tool.c:2448 plugins/synapticsmst/synapticsmst-tool.c:424
+#: src/fu-util.c:1782
 msgid "Failed to parse arguments"
 msgstr "Selhalo zpracování argumentů"
 
 #. TRANSLATORS: command description
-#: plugins/synapticsmst/synapticsmst-tool.c:400
+#: plugins/synapticsmst/synapticsmst-tool.c:393
 msgid "Enumerate all Synaptics MST devices"
-msgstr ""
+msgstr "Enumerovat všechny zařízení Synaptics MST"
 
 #. TRANSLATORS: command description
-#: plugins/synapticsmst/synapticsmst-tool.c:406
+#: plugins/synapticsmst/synapticsmst-tool.c:399
 msgid "Flash firmware file to MST device"
-msgstr ""
+msgstr "Zapsat soubor firmwaru do zařízení MST"
 
-#: plugins/synapticsmst/synapticsmst-tool.c:426
+#: plugins/synapticsmst/synapticsmst-tool.c:419
 msgid "Synaptics Multistream Transport Utility"
-msgstr ""
+msgstr "Synaptics Multistream Transport Utility"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
-#: plugins/uefi/fu-plugin-uefi.c:396
+#: plugins/uefi/fu-plugin-uefi.c:395
 msgid "Installing firmware update…"
 msgstr "Instaluje se aktualizace firmwaru…"
 
@@ -434,7 +451,7 @@ msgstr "Zařízení se restartuje…"
 #. TRANSLATORS: reading from the flash chips
 #: src/fu-progressbar.c:68
 msgid "Reading…"
-msgstr ""
+msgstr "Čte se…"
 
 #. TRANSLATORS: writing to the flash chips
 #: src/fu-progressbar.c:72
@@ -444,7 +461,7 @@ msgstr "Zapisuje se…"
 #. TRANSLATORS: erasing contents of the flash chips
 #: src/fu-progressbar.c:76
 msgid "Erasing…"
-msgstr ""
+msgstr "Maže se…"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 #: src/fu-progressbar.c:80
@@ -464,10 +481,15 @@ msgstr "Stahuje se…"
 #. TRANSLATORS: waiting for user to authenticate
 #: src/fu-progressbar.c:92
 msgid "Authenticating…"
+msgstr "Ověřuje se…"
+
+#. TRANSLATORS: waiting for device to do something
+#: src/fu-progressbar.c:96
+msgid "Waiting…"
 msgstr ""
 
 #. TRANSLATORS: currect daemon status is unknown
-#: src/fu-progressbar.c:99
+#: src/fu-progressbar.c:103
 msgid "Unknown"
 msgstr "Neznámý"
 
@@ -522,22 +544,22 @@ msgstr "V pořádku"
 #. TRANSLATORS: downloading new signing file
 #: src/fu-util.c:699
 msgid "Fetching signature"
-msgstr ""
+msgstr "Stahuje se podpis"
 
 #. TRANSLATORS: downloading new metadata file
 #: src/fu-util.c:702
 msgid "Fetching metadata"
-msgstr ""
+msgstr "Stahují se metadata"
 
 #. TRANSLATORS: downloading new firmware file
 #: src/fu-util.c:705
 msgid "Fetching firmware"
-msgstr ""
+msgstr "Stahuje se firmware"
 
 #. TRANSLATORS: downloading unknown file
 #: src/fu-util.c:708
 msgid "Fetching file"
-msgstr ""
+msgstr "Stahuje se soubor"
 
 #. TRANSLATORS: section header for release version number
 #: src/fu-util.c:888
@@ -547,12 +569,12 @@ msgstr "Verze"
 #. TRANSLATORS: section header for the remote the file is coming from
 #: src/fu-util.c:891
 msgid "Remote"
-msgstr ""
+msgstr "Vzdálený zdroj"
 
 #. TRANSLATORS: section header for firmware URI
 #: src/fu-util.c:894
 msgid "URI"
-msgstr ""
+msgstr "URI"
 
 #. TRANSLATORS: section header for firmware description
 #: src/fu-util.c:900
@@ -608,71 +630,71 @@ msgstr "Popis aktualizace"
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 #: src/fu-util.c:1114
 msgid "Remote ID"
-msgstr ""
+msgstr "Vzdálené ID"
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 #: src/fu-util.c:1118
 msgid "Title"
-msgstr ""
+msgstr "Název"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 #: src/fu-util.c:1122
 msgid "Type"
-msgstr ""
+msgstr "Typ"
 
 #: src/fu-util.c:1127
 msgid "Keyring"
-msgstr ""
+msgstr "Klíčenka"
 
 #. TRANSLATORS: if the remote is enabled
 #: src/fu-util.c:1132
 msgid "Enabled"
-msgstr ""
+msgstr "Povoleno"
 
 #. TRANSLATORS: the age of the metadata
 #: src/fu-util.c:1163
 msgid "Age"
-msgstr ""
+msgstr "Věk"
 
 #. TRANSLATORS: the numeric priority
 #: src/fu-util.c:1170
 msgid "Priority"
-msgstr ""
+msgstr "Priorita"
 
 #. TRANSLATORS: remote filename base
 #: src/fu-util.c:1175
 msgid "Username"
-msgstr ""
+msgstr "Uživatelské jméno"
 
 #. TRANSLATORS: remote filename base
 #: src/fu-util.c:1180
 msgid "Password"
-msgstr ""
+msgstr "Heslo"
 
 #. TRANSLATORS: filename of the local file
 #: src/fu-util.c:1185
 msgid "Filename"
-msgstr ""
+msgstr "Název souboru"
 
 #. TRANSLATORS: filename of the local file
 #: src/fu-util.c:1190
 msgid "Filename Signature"
-msgstr ""
+msgstr "Podpis názvu souboru"
 
 #. TRANSLATORS: remote URI
 #: src/fu-util.c:1195
 msgid "Metadata URI"
-msgstr ""
+msgstr "URI metadat"
 
 #. TRANSLATORS: remote URI
 #: src/fu-util.c:1200
 msgid "Metadata URI Signature"
-msgstr ""
+msgstr "Podpis URI metadat"
 
 #. TRANSLATORS: remote URI
 #: src/fu-util.c:1205
 msgid "Firmware Base URI"
-msgstr ""
+msgstr "Základní URI firmwaru"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #: src/fu-util.c:1232
@@ -697,7 +719,7 @@ msgstr "Zobrazovat doplňující informace pro ladění"
 #. TRANSLATORS: command line option
 #: src/fu-util.c:1598
 msgid "Show client and daemon versions"
-msgstr ""
+msgstr "Zobrazit verzi klienta a démonu"
 
 #. TRANSLATORS: command line option
 #: src/fu-util.c:1601
@@ -727,7 +749,7 @@ msgstr "Zjistit všechna zařízení podporující aktualizaci firmwaru"
 #. TRANSLATORS: command description
 #: src/fu-util.c:1640
 msgid "Return all the hardware IDs for the machine"
-msgstr ""
+msgstr "Vrátit všechna ID hardwaru počítače"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:1646
@@ -757,7 +779,7 @@ msgstr "Aktualizovat všechen firmware na nejnovější dostupné verze"
 #. TRANSLATORS: command description
 #: src/fu-util.c:1676
 msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "Získat kryptografický otisk vypsaného firmwaru"
+msgstr "Vypsat kryptografický otisk vypsaného firmwaru"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:1682
@@ -772,7 +794,7 @@ msgstr "Smazat výsledky z poslední aktualizace"
 #. TRANSLATORS: command description
 #: src/fu-util.c:1694
 msgid "Clears any updates scheduled to be updated offline"
-msgstr ""
+msgstr "Smazat všechny aktualizace naplánované pro offline aktualizaci"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:1700
@@ -782,17 +804,17 @@ msgstr "Vypsat výsledky z poslední aktualizace"
 #. TRANSLATORS: command description
 #: src/fu-util.c:1706
 msgid "Gets the releases for a device"
-msgstr ""
+msgstr "Vypsat vydání pro zařízení"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:1712
 msgid "Gets the configured remotes"
-msgstr ""
+msgstr "Vypsat nastavené vzdálené zdroje"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:1718
 msgid "Downgrades the firmware on a device"
-msgstr ""
+msgstr "Ponížit verzi firmwaru na zařízení"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:1724
@@ -812,19 +834,19 @@ msgstr "Sledovat události démonu"
 #. TRANSLATORS: command description
 #: src/fu-util.c:1742
 msgid "Build firmware using a sandbox"
-msgstr ""
+msgstr "Sestavit firmware za použití izolovaného prostředí"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:1748
 msgid "Dump SMBIOS data from a file"
-msgstr ""
+msgstr "Vypsat SMBIOS data ze souboru"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:1754
 msgid "Modifies a given remote"
-msgstr ""
+msgstr "Upraví zadaný vzdálený zdroj"
 
 #. TRANSLATORS: program name
-#: src/fu-util.c:1773
+#: src/fu-util.c:1777
 msgid "Firmware Utility"
 msgstr "Nástroj pro práci s firmwarem"

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-10-09 10:22+0100\n"
-"PO-Revision-Date: 2017-10-09 09:22+0000\n"
+"POT-Creation-Date: 2017-11-09 15:18+0000\n"
+"PO-Revision-Date: 2017-11-09 15:18+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Ukrainian (http://www.transifex.com/freedesktop/fwupd/language/uk/)\n"
 "MIME-Version: 1.0\n"
@@ -107,271 +107,287 @@ msgstr "Щоб отримати доступ до оновлення збере�
 
 #: policy/org.freedesktop.fwupd.policy.in:105
 msgid "Modify a configured remote"
-msgstr ""
+msgstr "Зміна налаштованих віддалених пристроїв"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 #: policy/org.freedesktop.fwupd.policy.in:107
 msgid ""
 "Authentication is required to modify a configured remote used for firmware "
 "updates"
-msgstr ""
+msgstr "Для внесення змін до записів налаштованих віддалених пристроїв, які використовуються для оновлення мікропрограм, слід пройти розпізнавання"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
-#: plugins/dfu/dfu-tool.c:123 plugins/synapticsmst/synapticsmst-tool.c:113
+#: plugins/dfu/dfu-tool.c:123 plugins/synapticsmst/synapticsmst-tool.c:105
 #: src/fu-util.c:112
 #, c-format
 msgid "Alias to %s"
 msgstr "Інша назва %s"
 
 #. TRANSLATORS: error message
-#: plugins/dfu/dfu-tool.c:191 plugins/synapticsmst/synapticsmst-tool.c:354
+#: plugins/dfu/dfu-tool.c:191 plugins/synapticsmst/synapticsmst-tool.c:347
 #: src/fu-util.c:176
 msgid "Command not found"
 msgstr "Такої команди не знайдено"
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: plugins/dfu/dfu-tool.c:1440
+#: plugins/dfu/dfu-tool.c:1493
 msgid "Added"
 msgstr "Додано"
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: plugins/dfu/dfu-tool.c:1451
+#: plugins/dfu/dfu-tool.c:1504
 msgid "Removed"
 msgstr "Вилучено"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
-#: plugins/dfu/dfu-tool.c:1460 src/fu-util.c:1259
+#: plugins/dfu/dfu-tool.c:1513 src/fu-util.c:1259
 msgid "Changed"
 msgstr "Змінено"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
-#: plugins/dfu/dfu-tool.c:1468 src/fu-util.c:1221
+#: plugins/dfu/dfu-tool.c:1521 src/fu-util.c:1221
 msgid "Cancelled"
 msgstr "Скасовано"
 
 #. TRANSLATORS: Appstream ID for the hardware type
-#: plugins/dfu/dfu-tool.c:1966 src/fu-util.c:1057
+#: plugins/dfu/dfu-tool.c:2019 src/fu-util.c:1057
 msgid "ID"
 msgstr "Ід."
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#: plugins/dfu/dfu-tool.c:1972 plugins/dfu/dfu-tool.c:1978
-#: plugins/dfu/dfu-tool.c:2065
+#: plugins/dfu/dfu-tool.c:2025 plugins/dfu/dfu-tool.c:2031
+#: plugins/dfu/dfu-tool.c:2135
 msgid "Name"
 msgstr "Назва"
 
 #. TRANSLATORS: this is the encryption method used when writing
-#: plugins/dfu/dfu-tool.c:1985
+#: plugins/dfu/dfu-tool.c:2038
 msgid "Cipher"
 msgstr "Шифр"
 
 #. TRANSLATORS: these are areas of memory on the chip
-#: plugins/dfu/dfu-tool.c:1999
+#: plugins/dfu/dfu-tool.c:2052
 msgid "Region"
 msgstr "Регіон"
 
 #. TRANSLATORS: detected a DFU device
-#: plugins/dfu/dfu-tool.c:2033
+#: plugins/dfu/dfu-tool.c:2098
 msgid "Found"
 msgstr "Знайдено"
 
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
-#: plugins/dfu/dfu-tool.c:2041
+#: plugins/dfu/dfu-tool.c:2106
 msgid "Protocol"
 msgstr "Протокол"
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
 #. TRANSLATORS: device status, e.g. "OK"
-#: plugins/dfu/dfu-tool.c:2054 plugins/dfu/dfu-tool.c:2057
-#: plugins/dfu/dfu-tool.c:2080
+#: plugins/dfu/dfu-tool.c:2119 plugins/dfu/dfu-tool.c:2128
+#: plugins/dfu/dfu-tool.c:2151
 msgid "Status"
 msgstr "Стан"
 
-#: plugins/dfu/dfu-tool.c:2054
-msgid "Unknown: permission denied"
-msgstr "Невідомий: доступ заборонено"
+#: plugins/dfu/dfu-tool.c:2119
+msgid "Permission denied"
+msgstr ""
 
 #. TRANSLATORS: serial number, e.g. '00012345'
-#: plugins/dfu/dfu-tool.c:2071
+#: plugins/dfu/dfu-tool.c:2141
 msgid "Serial"
 msgstr "Порядкове"
 
 #. TRANSLATORS: device mode, e.g. runtime or DFU
-#: plugins/dfu/dfu-tool.c:2076
+#: plugins/dfu/dfu-tool.c:2147
 msgid "Mode"
 msgstr "Режим"
 
 #. TRANSLATORS: device state, i.e. appIDLE
-#: plugins/dfu/dfu-tool.c:2084
+#: plugins/dfu/dfu-tool.c:2155
 msgid "State"
 msgstr "Стан"
 
 #. TRANSLATORS: transfer size in bytes
-#: plugins/dfu/dfu-tool.c:2092
+#: plugins/dfu/dfu-tool.c:2163
 msgid "Transfer Size"
 msgstr "Об’єм перенесеного"
 
+#. TRANSLATORS: device attributes, i.e. things that
+#. * the device can do
+#: plugins/dfu/dfu-tool.c:2171
+msgid "Attributes"
+msgstr ""
+
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
-#: plugins/dfu/dfu-tool.c:2100
+#: plugins/dfu/dfu-tool.c:2179
 msgid "Quirks"
 msgstr "Негаразди"
 
+#. TRANSLATORS: chip ID, e.g. "0x58200204"
+#: plugins/dfu/dfu-tool.c:2186
+msgid "Chip ID"
+msgstr ""
+
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2181
+#: plugins/dfu/dfu-tool.c:2267
 msgid "Convert firmware to DFU format"
 msgstr "Перетворити мікропрограму у формат DFU"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2187
+#: plugins/dfu/dfu-tool.c:2273
 msgid "Merge multiple firmware files into one"
 msgstr "Об’єднати декілька файлів мікропрограм у один"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2193
+#: plugins/dfu/dfu-tool.c:2279
 msgid "Set vendor ID on firmware file"
 msgstr "Встановити ідентифікатор виробника для файла мікропрограми"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2199
+#: plugins/dfu/dfu-tool.c:2285
 msgid "Set product ID on firmware file"
 msgstr "Встановити ідентифікатор продукту для файла мікропрограми"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2205
+#: plugins/dfu/dfu-tool.c:2291
 msgid "Set element address on firmware file"
 msgstr "Встановити адресу елемента для файла мікропрограми"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2211
+#: plugins/dfu/dfu-tool.c:2297
 msgid "Set the firmware size for the target"
 msgstr "Встановити розмір мікропрограми для призначення"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2217
+#: plugins/dfu/dfu-tool.c:2303
 msgid "Set release version on firmware file"
 msgstr "Встановити версію випуску для файла мікропрограми"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2223
+#: plugins/dfu/dfu-tool.c:2309
 msgid "Set alternative number on firmware file"
 msgstr "Встановити альтернативний номер для файла мікропрограми"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2229
+#: plugins/dfu/dfu-tool.c:2315
 msgid "Set alternative name on firmware file"
 msgstr "Встановити альтернативну назву для файла мікропрограми"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2235
+#: plugins/dfu/dfu-tool.c:2321
 msgid "Attach DFU capable device back to runtime"
 msgstr "Повернути пристрій із можливостями DFU до використання"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2241
+#: plugins/dfu/dfu-tool.c:2327
+msgid "Reset a DFU device"
+msgstr ""
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2333
 msgid "Read firmware from device into a file"
 msgstr "Прочитати мікропрограму з пристрою до файла"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2247
+#: plugins/dfu/dfu-tool.c:2339
 msgid "Read firmware from one partition into a file"
 msgstr "Прочитати мікропрограму з одного розділу до файла"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2253
+#: plugins/dfu/dfu-tool.c:2345
 msgid "Write firmware from file into device"
 msgstr "Записати мікропрограму з файла на пристрій"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2259
+#: plugins/dfu/dfu-tool.c:2351
 msgid "Write firmware from file into one partition"
 msgstr "Записати мікропрограму з файла на один розділ"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2265
+#: plugins/dfu/dfu-tool.c:2357
 msgid "List currently attached DFU capable devices"
 msgstr "Вивести поточний список долучених пристроїв із можливостями DFU"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2271
+#: plugins/dfu/dfu-tool.c:2363
 msgid "Detach currently attached DFU capable device"
 msgstr "Від’єднати поточний з’єднаний пристрій із можливостями DFU"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2277
+#: plugins/dfu/dfu-tool.c:2369
 msgid "Dump details about a firmware file"
 msgstr "Створити дамп даних щодо файла мікропрограми"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2283
+#: plugins/dfu/dfu-tool.c:2375
 msgid "Watch DFU devices being hotplugged"
 msgstr "Спостерігати за пристроями DFU, які з’єднують із комп’ютером"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2289
+#: plugins/dfu/dfu-tool.c:2381
 msgid "Encrypt firmware data"
 msgstr "Зашифрувати дані мікропрограми"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2295
+#: plugins/dfu/dfu-tool.c:2387
 msgid "Decrypt firmware data"
 msgstr "Розшифрувати дані мікропрограми"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2301
+#: plugins/dfu/dfu-tool.c:2393
 msgid "Sets metadata on a firmware file"
 msgstr "Встановлює метадані щодо файла мікпропрограми"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2307
+#: plugins/dfu/dfu-tool.c:2399
 msgid "Replace data in an existing firmware file"
 msgstr "Замінити дані у наявному файлі мікропрограми"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2313
+#: plugins/dfu/dfu-tool.c:2405
 msgid "Create a binary patch using two files"
 msgstr "Створити бінарну латку на основі двох файлів"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2319
+#: plugins/dfu/dfu-tool.c:2411
 msgid "Apply a binary patch"
 msgstr "Застосувати бінарну латку"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2325
+#: plugins/dfu/dfu-tool.c:2417
 msgid "Dump information about a binary patch to the screen"
 msgstr "Вивести дамп інформації щодо бінарної латки на екран"
 
 #. TRANSLATORS: DFU stands for device firmware update
-#: plugins/dfu/dfu-tool.c:2351
+#: plugins/dfu/dfu-tool.c:2443
 msgid "DFU Utility"
 msgstr "Засіб роботи з DFU"
 
 #. TRANSLATORS: the user didn't read the man page
-#: plugins/dfu/dfu-tool.c:2356 plugins/synapticsmst/synapticsmst-tool.c:431
-#: src/fu-util.c:1778
+#: plugins/dfu/dfu-tool.c:2448 plugins/synapticsmst/synapticsmst-tool.c:424
+#: src/fu-util.c:1782
 msgid "Failed to parse arguments"
 msgstr "Не вдалося обробити аргументи"
 
 #. TRANSLATORS: command description
-#: plugins/synapticsmst/synapticsmst-tool.c:400
+#: plugins/synapticsmst/synapticsmst-tool.c:393
 msgid "Enumerate all Synaptics MST devices"
 msgstr "Нумерувати усі пристрої MST Synaptics"
 
 #. TRANSLATORS: command description
-#: plugins/synapticsmst/synapticsmst-tool.c:406
+#: plugins/synapticsmst/synapticsmst-tool.c:399
 msgid "Flash firmware file to MST device"
 msgstr "Записати файл мікропрограми на пристрій MST"
 
-#: plugins/synapticsmst/synapticsmst-tool.c:426
+#: plugins/synapticsmst/synapticsmst-tool.c:419
 msgid "Synaptics Multistream Transport Utility"
 msgstr "Засіб багатопотокового передавання Synaptics"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
-#: plugins/uefi/fu-plugin-uefi.c:396
+#: plugins/uefi/fu-plugin-uefi.c:395
 msgid "Installing firmware update…"
 msgstr "Встановлюємо оновлення мікропрограми…"
 
@@ -433,7 +449,7 @@ msgstr "Перезапускаємо пристрій…"
 #. TRANSLATORS: reading from the flash chips
 #: src/fu-progressbar.c:68
 msgid "Reading…"
-msgstr ""
+msgstr "Читаємо…"
 
 #. TRANSLATORS: writing to the flash chips
 #: src/fu-progressbar.c:72
@@ -443,7 +459,7 @@ msgstr "Записуємо…"
 #. TRANSLATORS: erasing contents of the flash chips
 #: src/fu-progressbar.c:76
 msgid "Erasing…"
-msgstr ""
+msgstr "Витираємо…"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 #: src/fu-progressbar.c:80
@@ -463,10 +479,15 @@ msgstr "Отримуємо дані…"
 #. TRANSLATORS: waiting for user to authenticate
 #: src/fu-progressbar.c:92
 msgid "Authenticating…"
+msgstr "Проходимо розпізнавання…"
+
+#. TRANSLATORS: waiting for device to do something
+#: src/fu-progressbar.c:96
+msgid "Waiting…"
 msgstr ""
 
 #. TRANSLATORS: currect daemon status is unknown
-#: src/fu-progressbar.c:99
+#: src/fu-progressbar.c:103
 msgid "Unknown"
 msgstr "Невідомий"
 
@@ -546,7 +567,7 @@ msgstr "Версія"
 #. TRANSLATORS: section header for the remote the file is coming from
 #: src/fu-util.c:891
 msgid "Remote"
-msgstr ""
+msgstr "Віддалений пристрій"
 
 #. TRANSLATORS: section header for firmware URI
 #: src/fu-util.c:894
@@ -612,7 +633,7 @@ msgstr "Віддалений ідентифікатор"
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 #: src/fu-util.c:1118
 msgid "Title"
-msgstr ""
+msgstr "Заголовок"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 #: src/fu-util.c:1122
@@ -771,7 +792,7 @@ msgstr "Вилучає результати останнього оновлен�
 #. TRANSLATORS: command description
 #: src/fu-util.c:1694
 msgid "Clears any updates scheduled to be updated offline"
-msgstr ""
+msgstr "Спорожняє список усіх оновлень, які заплановано для автономного режиму"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:1700
@@ -816,14 +837,14 @@ msgstr "Зібрати мікропрограму за допомогою піс
 #. TRANSLATORS: command description
 #: src/fu-util.c:1748
 msgid "Dump SMBIOS data from a file"
-msgstr ""
+msgstr "Записати дані SMBIOS з файла"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:1754
 msgid "Modifies a given remote"
-msgstr ""
+msgstr "Змінює вказаний запис віддаленого пристрою"
 
 #. TRANSLATORS: program name
-#: src/fu-util.c:1773
+#: src/fu-util.c:1777
 msgid "Firmware Utility"
 msgstr "Засіб роботи з мікропрограмами"

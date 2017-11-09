@@ -1,3 +1,33 @@
+Version 1.0.1
+~~~~~~~~~~~~~
+Released: 2017-11-09
+
+New Features:
+ - Add support for HWID requirements (Richard Hughes)
+ - Add support for programming various AVR32 and XMEGA parts using DFU (Richard Hughes)
+ - Add the various DFU quirks for the Jabra Speak devices (Richard Hughes)
+ - Allow specifying the output file type for 'dfu-tool read' (Richard Hughes)
+ - Move the database of supported devices out into runtime loaded files (Richard Hughes)
+ - Support the IHEX record type 0x05 (Richard Hughes)
+ - Use help2man to generate the man page at build time (Richard Hughes)
+ - Use the new quirk infrastructure for version numbers (Richard Hughes)
+
+Bugfixes:
+ - Catch invalid Dell dock component requests (Mario Limonciello)
+ - Correctly output Intel HEX files with > 16bit offset addresses (Richard Hughes)
+ - Do not try to verify the element write if upload is unsupported (Richard Hughes)
+ - Fix a double-unref when updating any 8Bitdo device (Richard Hughes)
+ - Fix crash when enumerating with Dell dock connected but with no UEFI (Mario Limonciello)
+ - Fix uploading large firmware files over DFU (Richard Hughes)
+ - Format the BCD USB revision numbers correctly (Richard Hughes)
+ - Guess the DFU transfer size if it is not specified (Richard Hughes)
+ - Include the reset timeout as wValue to fix some DFU bootloaders (Richard Hughes)
+ - Make the error message clearer when sans fonts are missing (Mario Limonciello)
+ - Support devices with truncated DFU interface data (Richard Hughes)
+ - Use the correct remote-specified username and passord when using fwupdmgr (Richard Hughes)
+ - Use the correct wDetachTimeOut when writing DFU firmware (Richard Hughes)
+ - Verify devices with legacy VIDs are actually 8Bitdo controllers (Richard Hughes)
+
 Version 1.0.0
 ~~~~~~~~~~~~~
 Released: 2017-10-09
