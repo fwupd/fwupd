@@ -173,7 +173,7 @@ fu_dell_get_system_id (FuPlugin *plugin)
 static gboolean
 fu_dell_host_mst_supported (FuPlugin *plugin)
 {
-	guint16 system_id = fu_dell_get_system_id (plugin);
+	guint16 system_id;
 
 	system_id = fu_dell_get_system_id (plugin);
 	if (system_id == 0)
