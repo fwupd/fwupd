@@ -1,3 +1,14 @@
+fwupd (1.0.1-1) unstable; urgency=medium
+
+  * New upstream version (1.0.1)
+  * Generate debian/control dynamically based on XML build dependencies
+    declared from upstream CI builder.
+  * Drop all patches, upstream.
+  * debian: re-generate debian/control in clean rule
+  * Build depend on appstream-glib 0.7.4.
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 09 Nov 2017 12:49:07 -0600
+
 fwupd (1.0.0-5) unstable; urgency=medium
 
   * debian/debci: shuffle dependency location
