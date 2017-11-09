@@ -1,5 +1,4 @@
 #!/bin/sh
 set -e
 sed "s,^BlacklistPlugins=test,BlacklistPlugins=," -i /etc/fwupd/daemon.conf
-/usr/sbin/service dbus restart
 gnome-desktop-testing-runner fwupd
