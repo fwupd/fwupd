@@ -117,7 +117,7 @@ fu_nitrokey_device_class_init (FuNitrokeyDeviceClass *klass)
 static void
 _dump_to_console (const gchar *title, const guint8 *buf, gsize buf_sz)
 {
-	if (g_getenv ("NITROKEY_DEBUG") == NULL)
+	if (g_getenv ("FWUPD_NITROKEY_VERBOSE") == NULL)
 		return;
 	g_debug ("%s", title);
 	for (gsize i = 0; i < buf_sz; i++)
