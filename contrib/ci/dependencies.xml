@@ -469,7 +469,7 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.6.9)</version>
+        <version>(>= 0.7.4)</version>
       </control>
       <package variant="x86_64" />
       <package variant="s390x">libappstream-glib-dev:s390x</package>
