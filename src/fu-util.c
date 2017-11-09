@@ -1380,12 +1380,12 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	g_print ("Downloading %s for %s...\n",
 		 fwupd_release_get_version (rel),
 		 fwupd_device_get_name (dev));
-	basename = g_path_get_basename (uri_tmp);
+	basename = g_path_get_basename (uri_str);
 	fn = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", basename, NULL);
 	if (!fu_common_mkdir_parent (fn, error))
 		return FALSE;
 	checksums = fwupd_release_get_checksums (rel);
-	uri = soup_uri_new (uri_tmp);
+	uri = soup_uri_new (uri_str);
 	if (!fu_util_download_file (priv, uri, fn,
 				    fwupd_checksum_get_best (checksums),
 				    error))
