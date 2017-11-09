@@ -324,7 +324,6 @@ dfu_target_avr_download_element (DfuTarget *target,
 	guint32 address_offset = 0x0;
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GPtrArray) packets = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
 	const guint8 footer[] = { 0x00, 0x00, 0x00, 0x00,	/* CRC */
 				  16,				/* len */
 				  'D', 'F', 'U',		/* signature */
@@ -382,7 +381,6 @@ dfu_target_avr_download_element (DfuTarget *target,
 	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_WRITE);
 
 	/* process each chunk */
-	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 	for (guint i = 0; i < packets->len; i++) {
 		const DfuChunkedPacket *packet = g_ptr_array_index (packets, i);
 		const gsize header_sz = 64;
