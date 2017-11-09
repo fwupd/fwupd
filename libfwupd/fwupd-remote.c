@@ -206,7 +206,6 @@ fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	const gchar *suffix;
 	g_autoptr(SoupURI) uri = NULL;
-	g_autoptr(SoupURI) uri_asc = NULL;
 
 	/* build the URI */
 	uri = soup_uri_new (metadata_uri);
@@ -218,10 +217,8 @@ fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
 
 	/* generate the signature URI too */
 	suffix = fwupd_remote_get_suffix_for_keyring_kind (priv->keyring_kind);
-	if (suffix != NULL) {
+	if (suffix != NULL)
 		priv->metadata_uri_sig = g_strconcat (metadata_uri, suffix, NULL);
-		uri_asc = fwupd_remote_build_uri (self, priv->metadata_uri_sig, NULL);
-	}
 }
 
 /* note, this has to be set after MetadataURI */
