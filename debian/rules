@@ -13,10 +13,14 @@ ifneq ($(CI),)
 	export CI=-Denable-werror=true
 endif
 
+regenerate_control:
+	OS=debian-x86_64 ./contrib/ci/generate_debian_control.py debian/control.in debian/control
+
 %:
+	[ -f debian/control ] || debian/rules regenerate_control
 	dh $@ --with gir,systemd
 
-override_dh_auto_clean:
+override_dh_auto_clean: regenerate_control
 	rm -fr debian/build
 
 override_dh_auto_configure:
