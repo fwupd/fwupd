@@ -449,7 +449,7 @@ dfu_target_avr_upload_element (DfuTarget *target,
 						dfu_target_get_alt_setting (target),
 						cancellable,
 						error))
-		return FALSE;
+		return NULL;
 
 	/* verify the element isn't lower than the flash area */
 	sector = dfu_target_get_sector_default (target);
@@ -458,14 +458,14 @@ dfu_target_avr_upload_element (DfuTarget *target,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "no sector defined for target");
-		return FALSE;
+		return NULL;
 	}
 	if (address < dfu_sector_get_address (sector)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "cannot read from below sector start");
-		return FALSE;
+		return NULL;
 	}
 
 	/* the flash starts at 0x80000000, but is indexed from zero */
