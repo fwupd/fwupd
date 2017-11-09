@@ -184,7 +184,7 @@ fu_ebitdo_device_send (FuEbitdoDevice *device,
 	}
 
 	/* debug */
-	if (g_getenv ("FU_EBITDO_DEBUG") != NULL) {
+	if (g_getenv ("FWUPD_EBITDO_VERBOSE") != NULL) {
 		fu_ebitdo_dump_raw ("->DEVICE", packet, (gsize) hdr->pkt_len + 1);
 		fu_ebitdo_dump_pkt (hdr);
 	}
@@ -246,7 +246,7 @@ fu_ebitdo_device_receive (FuEbitdoDevice *device,
 	}
 
 	/* debug */
-	if (g_getenv ("FU_EBITDO_DEBUG") != NULL) {
+	if (g_getenv ("FWUPD_EBITDO_VERBOSE") != NULL) {
 		fu_ebitdo_dump_raw ("<-DEVICE", packet, (gsize) hdr->pkt_len - 1);
 		fu_ebitdo_dump_pkt (hdr);
 	}
@@ -560,7 +560,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw,
 	payload_data = g_bytes_get_data (fw, NULL);
 	payload_data += sizeof(FuEbitdoFirmwareHeader);
 	for (guint32 offset = 0; offset < payload_len; offset += chunk_sz) {
-		if (g_getenv ("FU_EBITDO_DEBUG") != NULL) {
+		if (g_getenv ("FWUPD_EBITDO_VERBOSE") != NULL) {
 			g_debug ("writing %u bytes to 0x%04x of 0x%04x",
 				 chunk_sz, offset, payload_len);
 		}

@@ -700,7 +700,7 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 	gsize actual_length;
 
 	/* low level packet debugging */
-	if (g_getenv ("DFU_TRACE") != NULL) {
+	if (g_getenv ("FWUPD_DFU_VERBOSE") != NULL) {
 		gsize sz = 0;
 		const guint8 *data = g_bytes_get_data (bytes, &sz);
 		for (gsize i = 0; i < sz; i++)
@@ -793,7 +793,7 @@ dfu_target_upload_chunk (DfuTarget *target, guint16 index, gsize buf_sz,
 	}
 
 	/* low level packet debugging */
-	if (g_getenv ("DFU_TRACE") != NULL) {
+	if (g_getenv ("FWUPD_DFU_VERBOSE") != NULL) {
 		for (gsize i = 0; i < actual_length; i++)
 			g_print ("Message: r[%" G_GSIZE_FORMAT "] = 0x%02x\n", i, (guint) buf[i]);
 	}

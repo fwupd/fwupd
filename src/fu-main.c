@@ -853,7 +853,7 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 	}
 
 	/* dump startup profile data */
-	if (fu_debug_is_verbose ())
+	if (g_getenv ("FWUPD_VERBOSE") != NULL)
 		fu_engine_profile_dump (priv->engine);
 }
 

@@ -379,7 +379,7 @@ lu_device_hidpp_send (LuDevice *device,
 	lu_device_hidpp_dump (device, "host->device", (guint8 *) msg, len);
 
 	/* detailed debugging */
-	if (g_getenv ("UNIFYING_HW_DEBUG") != NULL) {
+	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL) {
 		g_autofree gchar *str = lu_device_hidpp_msg_to_string (device, msg);
 		g_print ("%s", str);
 	}
@@ -473,7 +473,7 @@ lu_device_hidpp_receive (LuDevice *device,
 	}
 
 	/* detailed debugging */
-	if (g_getenv ("UNIFYING_HW_DEBUG") != NULL) {
+	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL) {
 		g_autofree gchar *str = lu_device_hidpp_msg_to_string (device, msg);
 		g_print ("%s", str);
 	}

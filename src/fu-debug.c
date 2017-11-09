@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2010-2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2010-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -26,22 +26,18 @@
 
 #include <fu-debug.h>
 
-static gboolean _verbose = FALSE;
-static gboolean _console = FALSE;
+typedef struct {
+	gboolean	 verbose;
+	gboolean	 console;
+	gchar		**plugin_verbose;
+} FuDebug;
 
-gboolean
-fu_debug_is_verbose (void)
+static void
+fu_debug_free (FuDebug *self)
 {
-	/* local first */
-	if (_verbose)
-		return TRUE;
-
-	/* fall back to env variable */
-	if (g_getenv ("VERBOSE") != NULL)
-		return TRUE;
-	return FALSE;
+	g_strfreev (self->plugin_verbose);
+	g_free (self);
 }
-
 
 static void
 fu_debug_ignore_cb (const gchar *log_domain,
@@ -68,6 +64,7 @@ fu_debug_handler_cb (const gchar *log_domain,
 		     const gchar *message,
 		     gpointer user_data)
 {
+	FuDebug *self = (FuDebug *) user_data;
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(GDateTime) dt = g_date_time_new_now_utc ();
 	g_autoptr(GString) domain = NULL;
@@ -89,7 +86,7 @@ fu_debug_handler_cb (const gchar *log_domain,
 		g_string_append (domain, " ");
 
 	/* to file */
-	if (!_console) {
+	if (!self->console) {
 		if (tmp != NULL)
 			g_print ("%s ", tmp);
 		g_print ("%s ", domain->str);
@@ -124,10 +121,14 @@ fu_debug_pre_parse_hook (GOptionContext *context,
 			 gpointer data,
 			 GError **error)
 {
+	FuDebug *self = (FuDebug *) data;
 	const GOptionEntry main_entries[] = {
-		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &_verbose,
+		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &self->verbose,
 		  /* TRANSLATORS: turn on all debugging */
 		  N_("Show debugging information for all files"), NULL },
+		{ "plugin-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->plugin_verbose,
+		  /* TRANSLATORS: this is for plugin development */
+		  N_("Show plugin verbose information"), "PLUGIN-NAME" },
 		{ NULL}
 	};
 
@@ -136,38 +137,42 @@ fu_debug_pre_parse_hook (GOptionContext *context,
 	return TRUE;
 }
 
-void
-fu_debug_destroy (void)
-{
-}
-
-void
-fu_debug_setup (gboolean enabled)
-{
-	if (enabled) {
-		g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR |
-					    G_LOG_LEVEL_CRITICAL);
-		g_log_set_default_handler (fu_debug_handler_cb, NULL);
-	} else {
-		/* hide all debugging */
-		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-				   fu_debug_ignore_cb, NULL);
-	}
-
-	/* are we on an actual TTY? */
-	_console = (isatty (fileno (stdout)) == 1);
-}
-
 static gboolean
 fu_debug_post_parse_hook (GOptionContext *context,
 			  GOptionGroup *group,
 			  gpointer data,
 			  GError **error)
 {
+	FuDebug *self = (FuDebug *) data;
+
 	/* verbose? */
-	fu_debug_setup (_verbose);
+	if (self->verbose) {
+		g_setenv ("FWUPD_VERBOSE", "1", TRUE);
+		g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR |
+					    G_LOG_LEVEL_CRITICAL);
+		g_log_set_default_handler (fu_debug_handler_cb, self);
+	} else {
+		/* hide all debugging */
+		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
+				   fu_debug_ignore_cb, self);
+	}
+
+	/* are we on an actual TTY? */
+	self->console = (isatty (fileno (stdout)) == 1);
 	g_debug ("Verbose debugging %s (on console %i)",
-		 _verbose ? "enabled" : "disabled", _console);
+		 self->verbose ? "enabled" : "disabled", self->console);
+
+	/* allow each plugin to be extra verbose */
+	if (self->plugin_verbose != NULL) {
+		for (guint i = 0; self->plugin_verbose[i] != NULL; i++) {
+			g_autofree gchar *name_caps = NULL;
+			g_autofree gchar *varname = NULL;
+			name_caps = g_ascii_strup (self->plugin_verbose[i], -1);
+			varname = g_strdup_printf ("FWUPD_%s_VERBOSE", name_caps);
+			g_debug ("setting %s=1", varname);
+			g_setenv (varname, "1", TRUE);
+		}
+	}
 	return TRUE;
 }
 
@@ -175,12 +180,13 @@ GOptionGroup *
 fu_debug_get_option_group (void)
 {
 	GOptionGroup *group;
+	FuDebug *self = g_new0 (FuDebug, 1);
 	group = g_option_group_new ("debug",
 				    /* TRANSLATORS: for the --verbose arg */
 				    _("Debugging Options"),
 				    /* TRANSLATORS: for the --verbose arg */
 				    _("Show debugging options"),
-				    NULL, NULL);
+				    self, (GDestroyNotify) fu_debug_free);
 	g_option_group_set_parse_hooks (group,
 					fu_debug_pre_parse_hook,
 					fu_debug_post_parse_hook);
