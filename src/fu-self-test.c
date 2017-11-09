@@ -85,6 +85,7 @@ fu_engine_require_hwid_func (void)
 	/* install it */
 	ret = fu_engine_install (engine, device_id, store, blob_cab, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert (error != NULL);
 	g_assert_cmpstr (error->message, ==,
 			 "no HWIDs matched 9342d47a-1bab-5709-9869-c840b2eac501");
 	g_assert (!ret);
