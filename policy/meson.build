@@ -1,5 +1,5 @@
 install_data('org.freedesktop.fwupd.rules',
-             install_dir : 'share/polkit-1/rules.d')
+             install_dir : join_paths(get_option('datadir'), 'polkit-1', 'rules.d'))
 
 #meson 0.41.0 added support for data_dirs argument
 if meson.version().version_compare('>=0.41.0')
