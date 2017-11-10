@@ -1,1 +1,2 @@
 0001-Bump-minimum-appstream-glib-version-to-0.7.4.patch
+0001-debian-only-do-libsmbios-on-supported-architectures.patch
