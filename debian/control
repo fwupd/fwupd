@@ -36,7 +36,7 @@ Build-Depends:
 	libgudev-1.0-dev,
 	libgusb-dev (>= 0.2.9),
 	libpolkit-gobject-1-dev,
-	libsmbios-dev,
+	libsmbios-dev [i386 amd64],
 	libsoup2.4-dev,
 	libsqlite3-dev,
 	libtool-bin,
