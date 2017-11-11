@@ -193,7 +193,7 @@ fu_plugin_verify (FuPlugin *plugin,
 		return FALSE;
 
 	/* get the firmware from the device */
-	g_debug ("ColorHug: Verifying firmware");
+	g_debug ("verifying firmware");
 	ch_device_queue_read_firmware (data->device_queue, item->usb_device,
 				       &data2, &len);
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
@@ -265,7 +265,7 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* switch to bootloader mode */
 	if (!item->is_bootloader) {
-		g_debug ("ColorHug: Switching to bootloader mode");
+		g_debug ("switching to bootloader mode");
 		if (!fu_plugin_colorhug_open (item, error))
 			return FALSE;
 		ch_device_queue_reset (data->device_queue, item->usb_device);
@@ -286,7 +286,7 @@ fu_plugin_update (FuPlugin *plugin,
 		g_usb_device_close (item->usb_device, NULL);
 
 		/* wait for reconnection */
-		g_debug ("ColorHug: Waiting for bootloader");
+		g_debug ("waiting for bootloader");
 		if (!fu_plugin_colorhug_wait_for_connect (plugin, item, error))
 			return FALSE;
 	}
@@ -296,7 +296,7 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* write firmware */
-	g_debug ("ColorHug: Writing firmware");
+	g_debug ("writing firmware");
 	ch_device_queue_write_firmware (data->device_queue, item->usb_device,
 					g_bytes_get_data (item->fw_bin, NULL),
 					g_bytes_get_size (item->fw_bin));
@@ -314,7 +314,7 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 
 	/* verify firmware */
-	g_debug ("ColorHug: Veifying firmware");
+	g_debug ("verifying firmware");
 	ch_device_queue_verify_firmware (data->device_queue, item->usb_device,
 					 g_bytes_get_data (item->fw_bin, NULL),
 					 g_bytes_get_size (item->fw_bin));
@@ -332,7 +332,7 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 
 	/* boot into the new firmware */
-	g_debug ("ColorHug: Booting new firmware");
+	g_debug ("booting new firmware");
 	ch_device_queue_boot_flash (data->device_queue, item->usb_device);
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
 	if (!ch_device_queue_process (data->device_queue,
@@ -357,7 +357,7 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* set flash success */
-	g_debug ("ColorHug: Setting flash success");
+	g_debug ("setting flash success");
 	ch_device_queue_set_flash_success (data->device_queue, item->usb_device, 1);
 	if (!ch_device_queue_process (data->device_queue,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
@@ -383,12 +383,12 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 
 	/* get the new firmware version */
-	g_debug ("ColorHug: Getting new firmware version");
+	g_debug ("getting new firmware version");
 	item->got_version = FALSE;
 	fu_plugin_colorhug_get_firmware_version (item);
 
 	if (item->got_version)
-		g_debug ("ColorHug: DONE!");
+		g_debug ("DONE!");
 
 	return TRUE;
 }
