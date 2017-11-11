@@ -857,6 +857,32 @@ fu_plugin_runner_offline_setup (GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_runner_device_generic (FuPlugin *plugin, FuDevice *device,
+				 const gchar *symbol_name, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginDeviceFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, symbol_name, (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
+	if (!func (plugin, device, error)) {
+		g_prefix_error (error, "failed to run %s(%s) on %s: ",
+				symbol_name + 10,
+				fu_device_get_id (device),
+				priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 gboolean
 fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -926,45 +952,36 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *plugin, GError **error)
 gboolean
 fu_plugin_runner_update_prepare (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginDeviceFunc func = NULL;
-
-	/* not enabled */
-	if (!priv->enabled)
-		return TRUE;
-
-	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_update_prepare", (gpointer *) &func);
-	if (func == NULL)
-		return TRUE;
-	g_debug ("performing update_prepare() on %s", priv->name);
-	if (!func (plugin, device, error)) {
-		g_prefix_error (error, "failed to prepare for update %s: ", priv->name);
-		return FALSE;
-	}
-	return TRUE;
+	return fu_plugin_runner_device_generic (plugin, device,
+						"fu_plugin_update_prepare", error);
 }
 
 gboolean
 fu_plugin_runner_update_cleanup (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginDeviceFunc func = NULL;
+	return fu_plugin_runner_device_generic (plugin, device,
+						"fu_plugin_update_cleanup", error);
+}
 
-	/* not enabled */
-	if (!priv->enabled)
-		return TRUE;
+gboolean
+fu_plugin_runner_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	return fu_plugin_runner_device_generic (plugin, device,
+						"fu_plugin_update_attach", error);
+}
 
-	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_update_cleanup", (gpointer *) &func);
-	if (func == NULL)
-		return TRUE;
-	g_debug ("performing update_cleanup() on %s", priv->name);
-	if (!func (plugin, device, error)) {
-		g_prefix_error (error, "failed to cleanup update %s: ", priv->name);
-		return FALSE;
-	}
-	return TRUE;
+gboolean
+fu_plugin_runner_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	return fu_plugin_runner_device_generic (plugin, device,
+						"fu_plugin_update_detach", error);
+}
+
+gboolean
+fu_plugin_runner_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	return fu_plugin_runner_device_generic (plugin, device,
+						"fu_plugin_update_reload", error);
 }
 
 void

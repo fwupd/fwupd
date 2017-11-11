@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -62,6 +62,15 @@ gboolean	 fu_plugin_runner_update_prepare	(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
 gboolean	 fu_plugin_runner_update_cleanup	(FuPlugin	*plugin,
+							 FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_plugin_runner_update_attach		(FuPlugin	*plugin,
+							 FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_plugin_runner_update_detach		(FuPlugin	*plugin,
+							 FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_plugin_runner_update_reload		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
 void		 fu_plugin_runner_device_register	(FuPlugin	*plugin,
