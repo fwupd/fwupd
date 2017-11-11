@@ -217,19 +217,14 @@ fu_plugin_verify (FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
+fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuPluginItem *item;
 	g_autoptr(GError) error_local = NULL;
 
 	/* find item */
-	item = g_hash_table_lookup (data->devices,
-				    fu_device_get_id (device));
+	item = g_hash_table_lookup (data->devices, fu_device_get_id (device));
 	if (item == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -239,86 +234,60 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	}
 
-	/* check this firmware is actually for this device */
-	if (!ch_device_check_firmware (item->usb_device,
-				       g_bytes_get_data (blob_fw, NULL),
-				       g_bytes_get_size (blob_fw),
-				       &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "firmware is not suitable: %s",
-			     error_local->message);
-		return FALSE;
-	}
+	/* switch to bootloader mode if required */
+	if (item->is_bootloader)
+		return TRUE;
 
-	/* switch to bootloader mode */
-	if (!item->is_bootloader) {
-		g_debug ("switching to bootloader mode");
-		if (!fu_plugin_colorhug_open (item, error))
-			return FALSE;
-		ch_device_queue_reset (data->device_queue, item->usb_device);
-		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
-		if (!ch_device_queue_process (data->device_queue,
-					      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-					      NULL, &error_local)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_WRITE,
-				     "failed to reset device: %s",
-				     error_local->message);
-			g_usb_device_close (item->usb_device, NULL);
-			return FALSE;
-		}
-
-		/* this device has just gone away, no error possible */
-		g_usb_device_close (item->usb_device, NULL);
-
-		/* wait for reconnection */
-		g_debug ("waiting for bootloader");
-		if (!fu_plugin_colorhug_wait_for_connect (plugin, item, error))
-			return FALSE;
-	}
-
-	/* open the device, which is now in bootloader mode */
+	g_debug ("switching to bootloader mode");
 	if (!fu_plugin_colorhug_open (item, error))
 		return FALSE;
-
-	/* write firmware */
-	g_debug ("writing firmware");
-	ch_device_queue_write_firmware (data->device_queue, item->usb_device,
-					g_bytes_get_data (blob_fw, NULL),
-					g_bytes_get_size (blob_fw));
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
+	ch_device_queue_reset (data->device_queue, item->usb_device);
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
 	if (!ch_device_queue_process (data->device_queue,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 				      NULL, &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
-			     "failed to write firmware: %s",
+			     "failed to reset device: %s",
 			     error_local->message);
 		g_usb_device_close (item->usb_device, NULL);
 		return FALSE;
 	}
 
-	/* verify firmware */
-	g_debug ("verifying firmware");
-	ch_device_queue_verify_firmware (data->device_queue, item->usb_device,
-					 g_bytes_get_data (blob_fw, NULL),
-					 g_bytes_get_size (blob_fw));
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
-	if (!ch_device_queue_process (data->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
+	/* this device has just gone away, no error possible */
+	g_usb_device_close (item->usb_device, NULL);
+
+	/* wait for reconnection */
+	g_debug ("waiting for bootloader");
+	if (!fu_plugin_colorhug_wait_for_connect (plugin, item, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	FuPluginItem *item;
+	g_autoptr(GError) error_local = NULL;
+
+	/* find item */
+	item = g_hash_table_lookup (data->devices, fu_device_get_id (device));
+	if (item == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to verify firmware: %s",
-			     error_local->message);
-		g_usb_device_close (item->usb_device, NULL);
+			     FWUPD_ERROR_NOT_FOUND,
+			     "cannot find: %s",
+			     fu_device_get_id (device));
 		return FALSE;
 	}
+
+	/* switch to runtime mode if required */
+	if (!item->is_bootloader)
+		return TRUE;
 
 	/* boot into the new firmware */
 	g_debug ("booting new firmware");
@@ -371,13 +340,108 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	}
 
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	FuPluginItem *item;
+
+	/* find item */
+	item = g_hash_table_lookup (data->devices, fu_device_get_id (device));
+	if (item == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "cannot find: %s",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
 	/* get the new firmware version */
 	g_debug ("getting new firmware version");
 	item->got_version = FALSE;
 	fu_plugin_colorhug_get_firmware_version (item);
+	return TRUE;
+}
 
-	if (item->got_version)
-		g_debug ("DONE!");
+gboolean
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *device,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	FuPluginItem *item;
+	g_autoptr(GError) error_local = NULL;
+
+	/* find item */
+	item = g_hash_table_lookup (data->devices, fu_device_get_id (device));
+	if (item == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "cannot find: %s",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* check this firmware is actually for this device */
+	if (!ch_device_check_firmware (item->usb_device,
+				       g_bytes_get_data (blob_fw, NULL),
+				       g_bytes_get_size (blob_fw),
+				       &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "firmware is not suitable: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* open the device, which is now in bootloader mode */
+	if (!fu_plugin_colorhug_open (item, error))
+		return FALSE;
+
+	/* write firmware */
+	g_debug ("writing firmware");
+	ch_device_queue_write_firmware (data->device_queue, item->usb_device,
+					g_bytes_get_data (blob_fw, NULL),
+					g_bytes_get_size (blob_fw));
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
+	if (!ch_device_queue_process (data->device_queue,
+				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
+				      NULL, &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "failed to write firmware: %s",
+			     error_local->message);
+		g_usb_device_close (item->usb_device, NULL);
+		return FALSE;
+	}
+
+	/* verify firmware */
+	g_debug ("verifying firmware");
+	ch_device_queue_verify_firmware (data->device_queue, item->usb_device,
+					 g_bytes_get_data (blob_fw, NULL),
+					 g_bytes_get_size (blob_fw));
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
+	if (!ch_device_queue_process (data->device_queue,
+				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
+				      NULL, &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "failed to verify firmware: %s",
+			     error_local->message);
+		g_usb_device_close (item->usb_device, NULL);
+		return FALSE;
+	}
 
 	return TRUE;
 }
