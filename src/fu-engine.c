@@ -1066,6 +1066,7 @@ fu_engine_install (FuEngine *self,
 	const gchar *version;
 	gboolean is_downgrade;
 	gint vercmp;
+	g_autofree gchar *device_id_orig = NULL;
 	g_autoptr(GBytes) blob_fw2 = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
@@ -1266,13 +1267,28 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 	}
 
+	/* save the chosen device ID in case the item goes away */
+	device_id_orig = g_strdup (fu_device_get_id (item->device));
+
 	/* do the update */
+	if (!fu_plugin_runner_update_detach (item->plugin, item->device, error))
+		return FALSE;
+	item = fu_engine_get_item_by_id (self, device_id_orig, error);
+	if (item == NULL)
+		return FALSE;
 	if (!fu_plugin_runner_update (item->plugin,
 				      item->device,
 				      blob_cab,
 				      blob_fw2,
 				      flags,
 				      error)) {
+		g_autoptr(GError) error_attach = NULL;
+		if (!fu_plugin_runner_update_attach (item->plugin,
+						     item->device,
+						     &error_attach)) {
+			g_warning ("failed to attach device after failed update: %s",
+				   error_attach->message);
+		}
 		for (guint j = 0; j < self->plugins->len; j++) {
 			FuPlugin *plugin = g_ptr_array_index (self->plugins, j);
 			g_autoptr(GError) error_local = NULL;
@@ -1286,6 +1302,18 @@ fu_engine_install (FuEngine *self,
 		}
 		return FALSE;
 	}
+	item = fu_engine_get_item_by_id (self, device_id_orig, error);
+	if (item == NULL)
+		return FALSE;
+	if (!fu_plugin_runner_update_attach (item->plugin, item->device, error))
+		return FALSE;
+
+	/* get the new version number */
+	item = fu_engine_get_item_by_id (self, device_id_orig, error);
+	if (item == NULL)
+		return FALSE;
+	if (!fu_plugin_runner_update_reload (item->plugin, item->device, error))
+		return FALSE;
 
 	/* signal to all the plugins the update has happened */
 	for (guint j = 0; j < self->plugins->len; j++) {

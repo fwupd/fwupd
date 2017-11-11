@@ -55,6 +55,15 @@ gboolean	 fu_plugin_clear_results		(FuPlugin	*plugin,
 gboolean	 fu_plugin_get_results			(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
+gboolean	 fu_plugin_update_attach		(FuPlugin	*plugin,
+							 FuDevice	*dev,
+							 GError		**error);
+gboolean	 fu_plugin_update_detach		(FuPlugin	*plugin,
+							 FuDevice	*dev,
+							 GError		**error);
+gboolean	 fu_plugin_update_reload		(FuPlugin	*plugin,
+							 FuDevice	*dev,
+							 GError		**error);
 gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
