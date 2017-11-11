@@ -939,6 +939,54 @@ dfu_device_get_runtime_release (DfuDevice *device)
 }
 
 /**
+ * dfu_device_get_vid:
+ * @device: a #DfuDevice
+ *
+ * Gets the present vendor ID.
+ *
+ * Return value: vendor ID, or 0xffff for unknown
+ **/
+guint16
+dfu_device_get_vid (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
+	return g_usb_device_get_vid (priv->dev);
+}
+
+/**
+ * dfu_device_get_pid:
+ * @device: a #DfuDevice
+ *
+ * Gets the present product ID.
+ *
+ * Return value: product ID, or 0xffff for unknown
+ **/
+guint16
+dfu_device_get_pid (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
+	return g_usb_device_get_pid (priv->dev);
+}
+
+/**
+ * dfu_device_get_release:
+ * @device: a #DfuDevice
+ *
+ * Gets the present release number in BCD format.
+ *
+ * Return value: release number, or 0xffff for unknown
+ **/
+guint16
+dfu_device_get_release (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
+	return g_usb_device_get_release (priv->dev);
+}
+
+/**
  * dfu_device_get_usb_dev: (skip)
  * @device: a #DfuDevice
  *
