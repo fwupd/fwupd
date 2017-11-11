@@ -42,7 +42,6 @@ typedef struct {
 	gboolean		 got_version;
 	gboolean		 is_bootloader;
 	guint			 timeout_open_id;
-	GBytes			*fw_bin;
 } FuPluginItem;
 
 static gchar *
@@ -59,8 +58,6 @@ fu_plugin_colorhug_item_free (FuPluginItem *item)
 	g_object_unref (item->device);
 	g_object_unref (item->plugin);
 	g_object_unref (item->usb_device);
-	if (item->fw_bin != NULL)
-		g_bytes_unref (item->fw_bin);
 	if (item->timeout_open_id != 0)
 		g_source_remove (item->timeout_open_id);
 }
@@ -242,13 +239,10 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	}
 
-	/* this file is so small, just slurp it all in one go */
-	item->fw_bin = g_bytes_ref (blob_fw);
-
 	/* check this firmware is actually for this device */
 	if (!ch_device_check_firmware (item->usb_device,
-				       g_bytes_get_data (item->fw_bin, NULL),
-				       g_bytes_get_size (item->fw_bin),
+				       g_bytes_get_data (blob_fw, NULL),
+				       g_bytes_get_size (blob_fw),
 				       &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -293,8 +287,8 @@ fu_plugin_update (FuPlugin *plugin,
 	/* write firmware */
 	g_debug ("writing firmware");
 	ch_device_queue_write_firmware (data->device_queue, item->usb_device,
-					g_bytes_get_data (item->fw_bin, NULL),
-					g_bytes_get_size (item->fw_bin));
+					g_bytes_get_data (blob_fw, NULL),
+					g_bytes_get_size (blob_fw));
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 	if (!ch_device_queue_process (data->device_queue,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
@@ -311,8 +305,8 @@ fu_plugin_update (FuPlugin *plugin,
 	/* verify firmware */
 	g_debug ("verifying firmware");
 	ch_device_queue_verify_firmware (data->device_queue, item->usb_device,
-					 g_bytes_get_data (item->fw_bin, NULL),
-					 g_bytes_get_size (item->fw_bin));
+					 g_bytes_get_data (blob_fw, NULL),
+					 g_bytes_get_size (blob_fw));
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
 	if (!ch_device_queue_process (data->device_queue,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
