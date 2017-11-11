@@ -163,7 +163,7 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 
 	/* create new device */
 	dev = fu_device_new ();
-	fu_device_set_id (dev, platform_id);
+	fu_device_set_platform_id (dev, platform_id);
 	if (!fu_plugin_dfu_device_update (plugin, dev, device, &error)) {
 		g_debug ("ignoring device: %s", error->message);
 		return;
@@ -245,7 +245,7 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 
 	/* get device */
 	device = dfu_context_get_device_by_platform_id (data->context,
-							fu_device_get_id (dev),
+							fu_device_get_platform_id (dev),
 							error);
 	if (device == NULL)
 		return FALSE;
@@ -290,7 +290,7 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
 
 	/* get device */
 	device = dfu_context_get_device_by_platform_id (data->context,
-							fu_device_get_id (dev),
+							fu_device_get_platform_id (dev),
 							error);
 	if (device == NULL)
 		return FALSE;
@@ -342,7 +342,7 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* get device */
 	device = dfu_context_get_device_by_platform_id (data->context,
-							fu_device_get_id (dev),
+							fu_device_get_platform_id (dev),
 							error);
 	if (device == NULL)
 		return FALSE;
@@ -390,7 +390,6 @@ fu_plugin_verify (FuPlugin *plugin,
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GBytes *blob_fw;
 	DfuDevice *device;
-	const gchar *platform_id;
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -400,18 +399,11 @@ fu_plugin_verify (FuPlugin *plugin,
 		0 };
 
 	/* get device */
-	platform_id = fu_device_get_id (dev);
 	device = dfu_context_get_device_by_platform_id (data->context,
-							platform_id,
-							&error_local);
-	if (device == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "cannot find device %s: %s",
-			     platform_id, error_local->message);
+							fu_device_get_platform_id (dev),
+							error);
+	if (device == NULL)
 		return FALSE;
-	}
 
 	/* open it */
 	locker = fu_device_locker_new_full (device,
@@ -423,7 +415,8 @@ fu_plugin_verify (FuPlugin *plugin,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "failed to open DFU device %s: %s",
-			     platform_id, error_local->message);
+			     fu_device_get_id (dev),
+			     error_local->message);
 		return FALSE;
 	}
 	g_signal_connect (device, "state-changed",

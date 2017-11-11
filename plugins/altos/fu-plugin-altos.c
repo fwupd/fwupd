@@ -55,15 +55,12 @@ fu_plugin_altos_device_added (FuPlugin *plugin,
 		return FALSE;
 	}
 
-	/* create the device */
-	platform_id = g_usb_device_get_platform_id (usb_device);
-	fu_device_set_id (FU_DEVICE (dev), platform_id);
-
 	/* get device properties */
 	if (!fu_altos_device_probe (dev, error))
 		return FALSE;
 
 	/* only the bootloader can do the update */
+	platform_id = g_usb_device_get_platform_id (usb_device);
 	runtime_id = g_strdup_printf ("%s-runtime", platform_id);
 	if (fu_altos_device_get_kind (dev) == FU_ALTOS_DEVICE_KIND_BOOTLOADER) {
 		FuDevice *dev_runtime;

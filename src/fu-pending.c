@@ -268,7 +268,8 @@ fu_pending_device_sqlite_cb (void *data,
 	g_debug ("FuPending: got sql result %s", argv[0]);
 	for (gint i = 0; i < argc; i++) {
 		if (g_strcmp0 (col_name[i], "device_id") == 0) {
-			fu_device_set_id (device, argv[i]);
+			/* we don't want to hash-the-hash */
+			fwupd_device_set_id (FWUPD_DEVICE (device), argv[i]);
 			continue;
 		}
 		if (g_strcmp0 (col_name[i], "filename") == 0) {
