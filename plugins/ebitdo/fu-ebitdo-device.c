@@ -651,8 +651,11 @@ fu_ebitdo_device_init_real (FuEbitdoDevice *device)
 	g_autofree gchar *vendor_id = NULL;
 
 	/* allowed, but requires manual bootloader step */
-	fu_device_add_flag (FU_DEVICE (device),
-			    FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+
+	/* set USB platform ID */
+	fu_device_set_platform_id (FU_DEVICE (device),
+				   g_usb_device_get_platform_id (priv->usb_device));
 
 	/* set name and vendor */
 	name = g_strdup_printf ("%s Gamepad",
@@ -665,6 +668,9 @@ fu_ebitdo_device_init_real (FuEbitdoDevice *device)
 	/* set vendor ID */
 	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
 	fu_device_set_vendor_id (FU_DEVICE (device), vendor_id);
+
+	/* add a hardcoded icon name */
+	fu_device_add_icon (FU_DEVICE (device), "input-gaming");
 
 	/* add USB\VID_0000&PID_0000 */
 	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",

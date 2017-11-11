@@ -313,6 +313,72 @@ fu_device_set_name (FuDevice *device, const gchar *value)
 	fwupd_device_set_name (FWUPD_DEVICE (device), new->str);
 }
 
+/**
+ * fu_device_set_id:
+ * @device: A #FuDevice
+ * @id: a string, e.g. `tbt-port1`
+ *
+ * Sets the ID on the device. The ID should represent the *connection* of the
+ * device, so that any similar device plugged into a different slot will
+ * have a different @id string.
+ *
+ * The @id will be converted to a SHA1 hash before the device is added to the
+ * daemon, and plugins should not assume that the ID that is set here is the
+ * same as what is returned by fu_device_get_id().
+ *
+ * Since: 0.7.1
+ **/
+void
+fu_device_set_id (FuDevice *device, const gchar *id)
+{
+	g_autofree gchar *id_hash = NULL;
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_return_if_fail (id != NULL);
+	id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
+	g_debug ("using %s for %s", id_hash, id);
+	fwupd_device_set_id (FWUPD_DEVICE (device), id_hash);
+}
+
+/**
+ * fu_device_set_platform_id:
+ * @device: A #FuDevice
+ * @platform_id: a platform string, e.g. `/sys/devices/usb1/1-1/1-1.2`
+ *
+ * Sets the Platform ID on the device. If unset, the ID will automatically
+ * be set using a hash of the @platform_id value.
+ *
+ * Since: 1.0.2
+ **/
+void
+fu_device_set_platform_id (FuDevice *device, const gchar *platform_id)
+{
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_return_if_fail (platform_id != NULL);
+
+	/* automatically use this */
+	if (fu_device_get_id (device) == NULL)
+		fu_device_set_id (device, platform_id);
+	fu_device_set_metadata (device, "platform-id", platform_id);
+}
+
+/**
+ * fu_device_get_platform_id:
+ * @device: A #FuDevice
+ *
+ * Gets the Platform ID set for the device, which represents the connection
+ * string used to compare devices.
+ *
+ * Returns: a string value, or %NULL if never set.
+ *
+ * Since: 1.0.2
+ **/
+const gchar *
+fu_device_get_platform_id (FuDevice *device)
+{
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return fu_device_get_metadata (device, "platform-id");
+}
+
 static void
 fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
 {

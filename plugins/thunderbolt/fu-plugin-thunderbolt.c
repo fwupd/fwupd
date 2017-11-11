@@ -219,7 +219,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
 
-	fu_device_set_id (dev, uuid);
+	fu_device_set_platform_id (dev, uuid);
 
 	fu_device_set_metadata (dev, "sysfs-path", devpath);
 	name = g_udev_device_get_sysfs_attr (device, "device_name");
@@ -589,7 +589,7 @@ on_wait_for_device_removed (FuPlugin    *plugin,
 		return;
 
 	fu_plugin_cache_remove (plugin, id);
-	uuid = fu_device_get_id (dev);
+	uuid = fu_device_get_platform_id (dev);
 	g_hash_table_insert (up_data->changes,
 			     (gpointer) uuid,
 			     g_object_ref (dev));
@@ -647,7 +647,7 @@ fu_plugin_thunderbolt_wait_for_device (FuPlugin  *plugin,
 	g_autoptr(GHashTable) changes = NULL;
 
 	up_data.mainloop = mainloop = g_main_loop_new (NULL, FALSE);
-	up_data.target_uuid = fu_device_get_id (dev);
+	up_data.target_uuid = fu_device_get_platform_id (dev);
 
 	/* this will limit the maximum amount of time we wait for
 	 * the device (i.e. 'dev') to re-appear. */

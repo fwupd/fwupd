@@ -224,19 +224,53 @@ fu_engine_item_free (FuDeviceItem *item)
 static FuDeviceItem *
 fu_engine_get_item_by_id (FuEngine *self, const gchar *device_id, GError **error)
 {
-	for (guint i = 0; i < self->devices->len; i++) {
-		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
-		if (g_strcmp0 (fu_device_get_id (item->device), device_id) == 0)
-			return item;
-		if (g_strcmp0 (fu_device_get_equivalent_id (item->device), device_id) == 0)
-			return item;
+	FuDeviceItem *item = NULL;
+	gboolean multiple_matches = FALSE;
+	gsize device_id_len;
+
+	g_return_val_if_fail (device_id != NULL, NULL);
+
+	/* support abbreviated hashes */
+	device_id_len = strlen (device_id);
+	for (gsize i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
+		const gchar *ids[] = {
+			fu_device_get_id (item_tmp->device),
+			fu_device_get_equivalent_id (item_tmp->device),
+			NULL };
+		for (guint j = 0; ids[j] != NULL; j++) {
+			if (ids[j] == NULL)
+				continue;
+			if (strncmp (ids[j], device_id, device_id_len) == 0) {
+				if (item != NULL)
+					multiple_matches = TRUE;
+				item = item_tmp;
+			}
+		}
 	}
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_INVALID_FILE,
-		     "Device %s was not found",
-		     device_id);
-	return NULL;
+
+	/* nothing at all matched */
+	if (item == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "device ID %s was not found",
+			     device_id);
+		return NULL;
+	}
+
+	/* multiple things matched */
+	if (multiple_matches) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "device ID %s was not unique",
+			     device_id);
+		return NULL;
+	}
+
+	/* something found */
+	return item;
 }
 
 static FuDeviceItem *

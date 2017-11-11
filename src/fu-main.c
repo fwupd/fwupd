@@ -412,6 +412,21 @@ fu_main_authorize_install_cb (GObject *source, GAsyncResult *res, gpointer user_
 	g_dbus_method_invocation_return_value (helper->invocation, NULL);
 }
 
+static gboolean
+fu_main_device_id_valid (const gchar *device_id, GError **error)
+{
+	if (g_strcmp0 (device_id, FWUPD_DEVICE_ID_ANY) == 0)
+		return TRUE;
+	if (device_id != NULL && strlen (device_id) >= 4)
+		return TRUE;
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_INTERNAL,
+		     "invalid device ID: %s",
+		     device_id);
+	return FALSE;
+}
+
 static void
 fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			    const gchar *object_path, const gchar *interface_name,
@@ -439,6 +454,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_autoptr(GPtrArray) releases = NULL;
 		g_variant_get (parameters, "(&s)", &device_id);
 		g_debug ("Called %s(%s)", method_name, device_id);
+		if (!fu_main_device_id_valid (device_id, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
 		releases = fu_engine_get_releases (priv->engine, device_id, &error);
 		if (releases == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
@@ -453,6 +472,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_autoptr(GPtrArray) releases = NULL;
 		g_variant_get (parameters, "(&s)", &device_id);
 		g_debug ("Called %s(%s)", method_name, device_id);
+		if (!fu_main_device_id_valid (device_id, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
 		releases = fu_engine_get_downgrades (priv->engine, device_id, &error);
 		if (releases == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
@@ -467,6 +490,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_autoptr(GPtrArray) releases = NULL;
 		g_variant_get (parameters, "(&s)", &device_id);
 		g_debug ("Called %s(%s)", method_name, device_id);
+		if (!fu_main_device_id_valid (device_id, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
 		releases = fu_engine_get_upgrades (priv->engine, device_id, &error);
 		if (releases == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
@@ -504,6 +531,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_autoptr(FwupdDevice) result = NULL;
 		g_variant_get (parameters, "(&s)", &device_id);
 		g_debug ("Called %s(%s)", method_name, device_id);
+		if (!fu_main_device_id_valid (device_id, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
 		result = fu_engine_get_results (priv->engine, device_id, &error);
 		if (result == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
@@ -563,6 +594,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 		g_variant_get (parameters, "(&s)", &device_id);
 		g_debug ("Called %s(%s)", method_name, device_id);
+		if (!fu_main_device_id_valid (device_id, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
 
 		/* authenticate */
 		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
@@ -619,6 +654,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* check the id exists */
 		g_variant_get (parameters, "(&s)", &device_id);
 		g_debug ("Called %s(%s)", method_name, device_id);
+		if (!fu_main_device_id_valid (device_id, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
 
 		/* create helper object */
 		helper = g_new0 (FuMainAuthHelper, 1);
@@ -642,6 +681,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		const gchar *device_id = NULL;
 		g_variant_get (parameters, "(&s)", &device_id);
 		g_debug ("Called %s(%s)", method_name, device_id);
+		if (!fu_main_device_id_valid (device_id, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
 		if (!fu_engine_verify (priv->engine, device_id, &error)) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
@@ -665,6 +708,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* check the id exists */
 		g_variant_get (parameters, "(&sha{sv})", &device_id, &fd_handle, &iter);
 		g_debug ("Called %s(%s,%i)", method_name, device_id, fd_handle);
+		if (!fu_main_device_id_valid (device_id, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
 
 		/* create helper object */
 		helper = g_new0 (FuMainAuthHelper, 1);

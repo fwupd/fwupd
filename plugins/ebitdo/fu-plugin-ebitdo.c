@@ -48,7 +48,6 @@ fu_plugin_ebitdo_device_added (FuPlugin *plugin,
 	g_assert (ptask != NULL);
 
 	/* create the device */
-	platform_id = g_usb_device_get_platform_id (usb_device);
 	dev = fu_ebitdo_device_new (usb_device);
 	if (dev == NULL) {
 		g_set_error_literal (error,
@@ -57,10 +56,6 @@ fu_plugin_ebitdo_device_added (FuPlugin *plugin,
 				     "invalid 8Bitdo device type detected");
 		return FALSE;
 	}
-	fu_device_set_id (dev, platform_id);
-
-	/* add a hardcoded icon name */
-	fu_device_add_icon (dev, "input-gaming");
 
 	/* open the device */
 	locker = fu_device_locker_new_full (dev,
@@ -72,6 +67,7 @@ fu_plugin_ebitdo_device_added (FuPlugin *plugin,
 	ebitdo_kind = fu_ebitdo_device_get_kind (dev);
 
 	/* only the bootloader can do the update */
+	platform_id = g_usb_device_get_platform_id (usb_device);
 	runtime_id = g_strdup_printf ("%s-runtime", platform_id);
 	if (ebitdo_kind == FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
 		FuEbitdoDevice *dev_runtime;
@@ -114,15 +110,13 @@ fu_plugin_update (FuPlugin *plugin,
 {
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
 	FuEbitdoDevice *ebitdo_dev = FU_EBITDO_DEVICE (dev);
-	const gchar *platform_id;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GUsbDevice) usb_device = NULL;
 	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
 	/* get version */
-	platform_id = fu_device_get_id (dev);
 	usb_device = g_usb_context_find_by_platform_id (usb_ctx,
-							platform_id,
+							fu_device_get_platform_id (dev),
 							error);
 	if (usb_device == NULL)
 		return FALSE;

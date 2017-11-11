@@ -61,7 +61,7 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 	dev = fu_device_new ();
 	if (lu_device_has_flag (device, LU_DEVICE_FLAG_CAN_FLASH))
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_id (dev, lu_device_get_platform_id (device));
+	fu_device_set_platform_id (dev, lu_device_get_platform_id (device));
 	fu_device_set_name (dev, lu_device_get_product (device));
 	if (lu_device_get_kind (device) == LU_DEVICE_KIND_PERIPHERAL) {
 		const gchar *tmp;
@@ -123,7 +123,9 @@ fu_plugin_unifying_get_device (FuPlugin *plugin,
 			       GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	return lu_context_find_by_platform_id (data->ctx, fu_device_get_id (dev), error);
+	return lu_context_find_by_platform_id (data->ctx,
+					       fu_device_get_platform_id (dev),
+					       error);
 }
 
 static gboolean

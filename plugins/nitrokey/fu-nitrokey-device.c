@@ -304,7 +304,7 @@ fu_nitrokey_device_open (FuNitrokeyDevice *device, GError **error)
 	 * handled by multiple plugins this won't be required... */
 	platform_id = g_usb_device_get_platform_id (priv->usb_device);
 	platform_id_fixed = g_strdup_printf ("%s_workaround", platform_id);
-	fu_device_set_id (FU_DEVICE (device), platform_id_fixed);
+	fu_device_set_platform_id (FU_DEVICE (device), platform_id_fixed);
 	fu_device_set_name (FU_DEVICE (device), "Nitrokey Storage");
 	fu_device_set_vendor (FU_DEVICE (device), "Nitrokey");
 	fu_device_set_summary (FU_DEVICE (device), "A secure memory stick");

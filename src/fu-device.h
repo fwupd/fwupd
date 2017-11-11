@@ -47,7 +47,6 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_description(d,v)		fwupd_device_set_description(FWUPD_DEVICE(d),v)
 #define fu_device_set_flags(d,v)		fwupd_device_set_flags(FWUPD_DEVICE(d),v)
 #define fu_device_has_guid(d,v)			fwupd_device_has_guid(FWUPD_DEVICE(d),v)
-#define fu_device_set_id(d,v)			fwupd_device_set_id(FWUPD_DEVICE(d),v)
 #define fu_device_set_modified(d,v)		fwupd_device_set_modified(FWUPD_DEVICE(d),v)
 #define fu_device_set_plugin(d,v)		fwupd_device_set_plugin(FWUPD_DEVICE(d),v)
 #define fu_device_set_summary(d,v)		fwupd_device_set_summary(FWUPD_DEVICE(d),v)
@@ -99,6 +98,11 @@ void		 fu_device_set_metadata_boolean		(FuDevice	*device,
 void		 fu_device_set_metadata_integer		(FuDevice	*device,
 							 const gchar	*key,
 							 guint		 value);
+void		 fu_device_set_id			(FuDevice	*device,
+							 const gchar	*id);
+const gchar	*fu_device_get_platform_id		(FuDevice	*device);
+void		 fu_device_set_platform_id		(FuDevice	*device,
+							 const gchar	*platform_id);
 void		 fu_device_set_name			(FuDevice	*device,
 							 const gchar	*value);
 

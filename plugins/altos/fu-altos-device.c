@@ -770,8 +770,11 @@ fu_altos_device_init_real (FuAltosDevice *device)
 	g_autofree gchar *vendor_id = NULL;
 
 	/* allowed, but requires manual bootloader step */
-	fu_device_add_flag (FU_DEVICE (device),
-			    FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+
+	/* set USB platform ID */
+	fu_device_set_platform_id (FU_DEVICE (device),
+				   g_usb_device_get_platform_id (priv->usb_device));
 
 	/* set default vendor */
 	fu_device_set_vendor (FU_DEVICE (device), "altusmetrum.org");

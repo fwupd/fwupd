@@ -49,9 +49,61 @@
 #endif
 
 static void
+fu_engine_partial_hash_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_none = NULL;
+	g_autoptr(GError) error_both = NULL;
+
+	/* add two dummy devices */
+	fu_device_set_id (device1, "device1");
+	fu_device_add_guid (device1, "12345678-1234-1234-1234-123456789012");
+	fu_engine_add_device (engine, plugin, device1);
+	fu_device_set_id (device2, "device21");
+	fu_device_set_equivalent_id (device2, "b92f5b7560b84ca005a79f5a15de3c003ce494cf");
+	fu_device_add_guid (device2, "12345678-1234-1234-1234-123456789012");
+	fu_engine_add_device (engine, plugin, device2);
+
+	/* match nothing */
+	ret = fu_engine_unlock (engine, "deadbeef", &error_none);
+	g_assert_error (error_none, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert (!ret);
+
+	/* match both */
+	ret = fu_engine_unlock (engine, "9", &error_both);
+	g_assert_error (error_both, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert (!ret);
+
+	/* match one exactly */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_LOCKED);
+	ret = fu_engine_unlock (engine, "934b4162a6daa0b033d649c8d464529cec41d3de", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* match one partially */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_LOCKED);
+	ret = fu_engine_unlock (engine, "934b", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* match equivalent ID */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_LOCKED);
+	ret = fu_engine_unlock (engine, "b92f", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+}
+
+static void
 fu_engine_require_hwid_func (void)
 {
-	const gchar *device_id = "test_device";
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(AsStore) store = NULL;
@@ -83,7 +135,8 @@ fu_engine_require_hwid_func (void)
 	fu_engine_add_device (engine, plugin, device);
 
 	/* install it */
-	ret = fu_engine_install (engine, device_id, store, blob_cab, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_install (engine, fu_device_get_id (device),
+				 store, blob_cab, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert (error != NULL);
 	g_assert_cmpstr (error->message, ==,
@@ -424,13 +477,13 @@ fu_plugin_delay_func (void)
 	fu_device_set_id (device, "testdev");
 	fu_plugin_device_add (plugin, device);
 	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
 	g_clear_object (&device_tmp);
 
 	/* remove device */
 	fu_plugin_device_remove (plugin, device);
 	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
 	g_clear_object (&device_tmp);
 
 	/* add it with a small delay */
@@ -438,7 +491,7 @@ fu_plugin_delay_func (void)
 	g_assert (device_tmp == NULL);
 	fu_test_loop_run_with_timeout (1000);
 	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
 	g_clear_object (&device_tmp);
 
 	/* add it again, twice quickly */
@@ -447,7 +500,7 @@ fu_plugin_delay_func (void)
 	g_assert (device_tmp == NULL);
 	fu_test_loop_run_with_timeout (1000);
 	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
 	g_clear_object (&device_tmp);
 }
 
@@ -539,7 +592,7 @@ fu_plugin_module_func (void)
 	/* check we did the right thing */
 	g_assert_cmpint (cnt, ==, 0);
 	g_assert (device != NULL);
-	g_assert_cmpstr (fu_device_get_id (device), ==, "FakeDevice");
+	g_assert_cmpstr (fu_device_get_id (device), ==, "08d460be0f1f9f128413f816022a6439e0078018");
 	g_assert_cmpstr (fu_device_get_version_lowest (device), ==, "1.2.0");
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
 	g_assert_cmpstr (fu_device_get_version_bootloader (device), ==, "0.1.2");
@@ -656,6 +709,7 @@ fu_pending_func (void)
 
 	/* add some extra data */
 	device = fu_device_new ();
+	/* the SHA1SUM of this is 2ba16d10df45823dd4494ff10a0bfccfef512c9d */
 	fu_device_set_id (device, "self-test");
 	ret = fu_pending_set_state (pending, device, FWUPD_UPDATE_STATE_PENDING, &error);
 	g_assert_no_error (error);
@@ -666,10 +720,10 @@ fu_pending_func (void)
 	g_object_unref (device);
 
 	/* get device */
-	device = fu_pending_get_device (pending, "self-test", &error);
+	device = fu_pending_get_device (pending, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
 	g_assert_no_error (error);
 	g_assert (device != NULL);
-	g_assert_cmpstr (fu_device_get_id (device), ==, "self-test");
+	g_assert_cmpstr (fu_device_get_id (device), ==, "2ba16d10df45823dd4494ff10a0bfccfef512c9d");
 	g_assert_cmpstr (fu_device_get_name (device), ==, "ColorHug");
 	g_assert_cmpstr (fu_device_get_version (device), ==, "3.0.1");
 	g_assert_cmpint (fu_device_get_update_state (device), ==, FWUPD_UPDATE_STATE_PENDING);
@@ -693,7 +747,7 @@ fu_pending_func (void)
 	g_object_unref (device);
 
 	/* get device that does not exist */
-	device = fu_pending_get_device (pending, "self-test", &error);
+	device = fu_pending_get_device (pending, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (device == NULL);
 	g_clear_error (&error);
@@ -1006,6 +1060,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/engine", fu_engine_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
+	g_test_add_func ("/fwupd/engine{partial-hash}", fu_engine_partial_hash_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
