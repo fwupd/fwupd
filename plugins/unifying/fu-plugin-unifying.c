@@ -159,13 +159,107 @@ fu_plugin_unifying_attach_cb (gpointer user_data)
 }
 
 gboolean
+fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autoptr(LuDevice) device = NULL;
+
+	/* get device */
+	device = fu_plugin_unifying_get_device (plugin, dev, error);
+	if (device == NULL)
+		return FALSE;
+	if (!lu_device_open (device, error))
+		return FALSE;
+
+	/* switch to bootloader if required */
+	data->ignore_replug = TRUE;
+	if (!lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH))
+		return TRUE;
+
+	/* wait for device to come back */
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
+		g_debug ("doing detach in idle");
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+				 fu_plugin_unifying_detach_cb,
+				 g_object_ref (device),
+				 (GDestroyNotify) g_object_unref);
+		if (!lu_context_wait_for_replug (data->ctx,
+						 device,
+						 FU_DEVICE_TIMEOUT_REPLUG,
+						 error))
+			return FALSE;
+	} else {
+		g_debug ("doing detach in main thread");
+		if (!lu_device_detach (device, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autoptr(LuDevice) device = NULL;
+
+	/* get device */
+	device = fu_plugin_unifying_get_device (plugin, dev, error);
+	if (device == NULL)
+		return FALSE;
+	if (!lu_device_open (device, error))
+		return FALSE;
+
+	/* wait for it to appear back in runtime mode if required */
+	if (!lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_ATTACH))
+		return TRUE;
+
+	/* wait for device to come back */
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_ATTACH_WILL_REPLUG)) {
+		g_debug ("doing attach in idle");
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+				 fu_plugin_unifying_attach_cb,
+				 g_object_ref (device),
+				 (GDestroyNotify) g_object_unref);
+		if (!lu_context_wait_for_replug (data->ctx,
+						 device,
+						 FU_DEVICE_TIMEOUT_REPLUG,
+						 error))
+			return FALSE;
+	} else {
+		g_debug ("doing attach in main thread");
+		if (!lu_device_attach (device, error))
+			return FALSE;
+	}
+	data->ignore_replug = FALSE;
+	return TRUE;
+}
+
+gboolean
+fu_plugin_update_reload (FuPlugin *plugin, FuDevice *dev, GError **error)
+{
+	g_autoptr(LuDevice) device = NULL;
+
+	/* get device */
+	device = fu_plugin_unifying_get_device (plugin, dev, error);
+	if (device == NULL)
+		return FALSE;
+	if (!lu_device_open (device, error))
+		return FALSE;
+
+	/* set new version */
+	fu_device_set_version (dev, lu_device_get_version_fw (device));
+	return TRUE;
+}
+
+gboolean
 fu_plugin_update (FuPlugin *plugin,
 		  FuDevice *dev,
 		  GBytes *blob_fw,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(LuDevice) device = NULL;
 
 	/* get version */
@@ -175,73 +269,14 @@ fu_plugin_update (FuPlugin *plugin,
 	if (!lu_device_open (device, error))
 		return FALSE;
 
-	/* switch to bootloader */
-	data->ignore_replug = TRUE;
-	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH)) {
-		/* wait for device to come back */
-		if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
-			g_debug ("doing detach in idle");
-			g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
-					 fu_plugin_unifying_detach_cb,
-					 g_object_ref (device),
-					 (GDestroyNotify) g_object_unref);
-			if (!lu_context_wait_for_replug (data->ctx,
-							 device,
-							 FU_DEVICE_TIMEOUT_REPLUG,
-							 error))
-				return FALSE;
-			g_object_unref (device);
-			device = fu_plugin_unifying_get_device (plugin, dev, error);
-			if (device == NULL)
-				return FALSE;
-			if (!lu_device_open (device, error))
-				return FALSE;
-		} else {
-			g_debug ("doing detach in main thread");
-			if (!lu_device_detach (device, error))
-				return FALSE;
-		}
-	}
-
 	/* write the firmware */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
 	if (!lu_device_write_firmware (device, blob_fw,
 				       lu_write_progress_cb, plugin,
 				       error))
 		return FALSE;
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
-
-	/* wait for it to appear back in runtime mode */
-	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_ATTACH)) {
-		if (lu_device_has_flag (device, LU_DEVICE_FLAG_ATTACH_WILL_REPLUG)) {
-			g_debug ("doing attach in idle");
-			g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
-					 fu_plugin_unifying_attach_cb,
-					 g_object_ref (device),
-					 (GDestroyNotify) g_object_unref);
-			if (!lu_context_wait_for_replug (data->ctx,
-							 device,
-							 FU_DEVICE_TIMEOUT_REPLUG,
-							 error))
-				return FALSE;
-			g_object_unref (device);
-			device = fu_plugin_unifying_get_device (plugin, dev, error);
-			if (device == NULL)
-				return FALSE;
-			if (!lu_device_open (device, error))
-				return FALSE;
-		} else {
-			g_debug ("doing attach in main thread");
-			if (!lu_device_attach (device, error))
-				return FALSE;
-		}
-	}
-
-	/* set new version */
-	fu_device_set_version (dev, lu_device_get_version_fw (device));
 
 	/* success */
-	data->ignore_replug = FALSE;
 	return TRUE;
 }
 
