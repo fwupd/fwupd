@@ -235,32 +235,20 @@ fu_plugin_dfu_percentage_changed_cb (DfuDevice *device,
 }
 
 gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *dev,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
+fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	DfuDevice *device;
-	const gchar *platform_id;
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get device */
-	platform_id = fu_device_get_id (dev);
 	device = dfu_context_get_device_by_platform_id (data->context,
-							platform_id,
-							&error_local);
-	if (device == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "cannot find device %s: %s",
-			     platform_id, error_local->message);
+							fu_device_get_id (dev),
+							error);
+	if (device == NULL)
 		return FALSE;
-	}
 
 	/* open it */
 	locker = fu_device_locker_new_full (device,
@@ -272,7 +260,105 @@ fu_plugin_update (FuPlugin *plugin,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "failed to open DFU device %s: %s",
-			     platform_id, error_local->message);
+			     fu_device_get_id (dev),
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* already in DFU mode */
+	if (dfu_device_get_mode (device) == DFU_MODE_DFU)
+		return TRUE;
+
+	/* detach and USB reset */
+	if (!dfu_device_detach (device, NULL, error))
+		return FALSE;
+	if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	DfuDevice *device;
+	g_autoptr(DfuFirmware) dfu_firmware = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* get device */
+	device = dfu_context_get_device_by_platform_id (data->context,
+							fu_device_get_id (dev),
+							error);
+	if (device == NULL)
+		return FALSE;
+
+	/* open it */
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    &error_local);
+	if (locker == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to open DFU device %s: %s",
+			     fu_device_get_id (dev),
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* already in runtime mode */
+	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME)
+		return TRUE;
+
+	/* attach it */
+	if (!dfu_device_attach (device, error))
+		return FALSE;
+
+	/* boot to runtime */
+	g_debug ("booting to runtime");
+	if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *dev,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	DfuDevice *device;
+	g_autoptr(DfuFirmware) dfu_firmware = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* get device */
+	device = dfu_context_get_device_by_platform_id (data->context,
+							fu_device_get_id (dev),
+							error);
+	if (device == NULL)
+		return FALSE;
+
+	/* open it */
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    &error_local);
+	if (locker == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to open DFU device %s: %s",
+			     fu_device_get_id (dev),
+			     error_local->message);
 		return FALSE;
 	}
 	g_signal_connect (device, "state-changed",
@@ -286,11 +372,8 @@ fu_plugin_update (FuPlugin *plugin,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
 	if (!dfu_device_download (device, dfu_firmware,
-				  DFU_TARGET_TRANSFER_FLAG_DETACH |
-				  DFU_TARGET_TRANSFER_FLAG_VERIFY |
-				  DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME,
-				  NULL,
-				  error))
+				  DFU_TARGET_TRANSFER_FLAG_VERIFY,
+				  NULL, error))
 		return FALSE;
 
 	/* we're done */
