@@ -32,8 +32,6 @@ fu_plugin_ebitdo_device_added (FuPlugin *plugin,
 				 GError **error)
 {
 	FuEbitdoDeviceKind ebitdo_kind;
-	const gchar *platform_id = NULL;
-	g_autofree gchar *runtime_id = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuEbitdoDevice) dev = NULL;
 
@@ -48,26 +46,9 @@ fu_plugin_ebitdo_device_added (FuPlugin *plugin,
 	if (locker == NULL)
 		return FALSE;
 
-	/* only the bootloader can do the update */
-	platform_id = g_usb_device_get_platform_id (usb_device);
-	runtime_id = g_strdup_printf ("%s-runtime", platform_id);
-	if (ebitdo_kind == FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
-		FuEbitdoDevice *dev_runtime;
-
-		/* add the last seen runtime GUID too */
-		dev_runtime = fu_plugin_cache_lookup (plugin, runtime_id);
-		if (dev_runtime != NULL) {
-			const gchar *guid = fu_device_get_guid_default (FU_DEVICE (dev_runtime));
-			g_debug ("adding runtime GUID of %s", guid);
-			fu_device_add_guid (FU_DEVICE (dev), guid);
-		}
-	} else {
-		fu_plugin_cache_add (plugin, runtime_id, dev);
-	}
-
 	/* insert to hash */
 	fu_plugin_device_add (plugin, FU_DEVICE (dev));
-	fu_plugin_cache_add (plugin, platform_id, dev);
+	fu_plugin_cache_add (plugin, g_usb_device_get_platform_id (usb_device), dev);
 	return TRUE;
 }
 
