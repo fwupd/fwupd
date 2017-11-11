@@ -609,6 +609,7 @@ fu_ebitdo_device_init_real (FuEbitdoDevice *device)
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 
 	/* set name and vendor */
 	name = g_strdup_printf ("%s Gamepad",
@@ -623,6 +624,8 @@ fu_ebitdo_device_init_real (FuEbitdoDevice *device)
 
 	/* only the bootloader can do the update */
 	if (priv->kind != FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
+		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_0483&PID_5750");
+		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
 		fu_device_add_flag (FU_DEVICE (device),
 				    FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	}
