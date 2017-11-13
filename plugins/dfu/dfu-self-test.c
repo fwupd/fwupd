@@ -550,6 +550,7 @@ dfu_device_func (void)
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(DfuTarget) target1 = NULL;
 	g_autoptr(DfuTarget) target2 = NULL;
+	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GUsbContext) usb_ctx = NULL;
 	g_autoptr(GUsbDevice) usb_device = NULL;
@@ -570,6 +571,7 @@ dfu_device_func (void)
 
 	/* check it's DFU-capable */
 	device = dfu_device_new ();
+	dfu_device_set_system_quirks (device, quirks);
 	ret = dfu_device_set_new_usb_dev (device, usb_device, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
