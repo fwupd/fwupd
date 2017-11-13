@@ -120,8 +120,8 @@ _dump_to_console (const gchar *title, const guint8 *buf, gsize buf_sz)
 	if (g_getenv ("NITROKEY_DEBUG") == NULL)
 		return;
 	g_debug ("%s", title);
-	for (guint i = 0; i < 64; i++)
-		g_debug ("%u=0x%02x", i, buf[i]);
+	for (gsize i = 0; i < buf_sz; i++)
+		g_debug ("%" G_GSIZE_FORMAT "=0x%02x", i, buf[i]);
 }
 
 static gboolean
