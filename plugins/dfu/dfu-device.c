@@ -472,6 +472,7 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 		const gchar *quirk_str;
 		if (priv->targets->len == 0) {
 			g_debug ("no DFU runtime, so faking device");
+			priv->mode = DFU_MODE_RUNTIME;
 			priv->iface_number = 0xff;
 			priv->runtime_vid = g_usb_device_get_vid (priv->dev);
 			priv->runtime_pid = g_usb_device_get_pid (priv->dev);
