@@ -2,9 +2,9 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginAltos"']
 
 shared_module('fu_plugin_altos',
   sources : [
+    'fu-altos-device.c',
     'fu-altos-firmware.c',
     'fu-plugin-altos.c',
-    'fu-device-altos.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -24,9 +24,9 @@ shared_module('fu_plugin_altos',
 executable(
   'fu-altos-tool',
   sources : [
+    'fu-altos-device.c',
     'fu-altos-firmware.c',
     'fu-altos-tool.c',
-    'fu-device-altos.c',
   ],
   include_directories : [
     include_directories('../..'),

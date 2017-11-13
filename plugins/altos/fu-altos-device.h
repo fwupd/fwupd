@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#ifndef __FU_DEVICE_ALTOS_H
-#define __FU_DEVICE_ALTOS_H
+#ifndef __FU_ALTOS_DEVICE_H
+#define __FU_ALTOS_DEVICE_H
 
 #include <glib-object.h>
 #include <gusb.h>
@@ -29,46 +29,46 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_DEVICE_ALTOS (fu_device_altos_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuDeviceAltos, fu_device_altos, FU, DEVICE_ALTOS, FuDevice)
+#define FU_TYPE_ALTOS_DEVICE (fu_altos_device_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuAltosDevice, fu_altos_device, FU, ALTOS_DEVICE, FuDevice)
 
-struct _FuDeviceAltosClass
+struct _FuAltosDeviceClass
 {
 	FuDeviceClass		parent_class;
 };
 
 typedef enum {
-	FU_DEVICE_ALTOS_KIND_UNKNOWN,
-	FU_DEVICE_ALTOS_KIND_BOOTLOADER,
-	FU_DEVICE_ALTOS_KIND_CHAOSKEY,
+	FU_ALTOS_DEVICE_KIND_UNKNOWN,
+	FU_ALTOS_DEVICE_KIND_BOOTLOADER,
+	FU_ALTOS_DEVICE_KIND_CHAOSKEY,
 	/*< private >*/
-	FU_DEVICE_ALTOS_KIND_LAST
-} FuDeviceAltosKind;
+	FU_ALTOS_DEVICE_KIND_LAST
+} FuAltosDeviceKind;
 
 typedef enum {
-	FU_DEVICE_ALTOS_WRITE_FIRMWARE_FLAG_NONE	= 0,
-	FU_DEVICE_ALTOS_WRITE_FIRMWARE_FLAG_REBOOT	= 1 << 0,
+	FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_NONE	= 0,
+	FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_REBOOT	= 1 << 0,
 	/*< private >*/
-	FU_DEVICE_ALTOS_WRITE_FIRMWARE_FLAG_LAST
-} FuDeviceAltosWriteFirmwareFlag;
+	FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_LAST
+} FuAltosDeviceWriteFirmwareFlag;
 
-FuDeviceAltos	*fu_device_altos_new			(GUsbDevice *usb_device);
-FuDeviceAltosKind fu_device_altos_kind_from_string	(const gchar	*kind);
-const gchar	*fu_device_altos_kind_to_string		(FuDeviceAltosKind kind);
-FuDeviceAltosKind fu_device_altos_get_kind		(FuDeviceAltos	*device);
-gboolean	 fu_device_altos_probe			(FuDeviceAltos	*device,
+FuAltosDevice	*fu_altos_device_new			(GUsbDevice *usb_device);
+FuAltosDeviceKind fu_altos_device_kind_from_string	(const gchar	*kind);
+const gchar	*fu_altos_device_kind_to_string		(FuAltosDeviceKind kind);
+FuAltosDeviceKind fu_altos_device_get_kind		(FuAltosDevice	*device);
+gboolean	 fu_altos_device_probe			(FuAltosDevice	*device,
 							 GError		**error);
-gboolean	 fu_device_altos_write_firmware		(FuDeviceAltos	*device,
+gboolean	 fu_altos_device_write_firmware		(FuAltosDevice	*device,
 							 GBytes		*fw,
-							 FuDeviceAltosWriteFirmwareFlag flags,
+							 FuAltosDeviceWriteFirmwareFlag flags,
 							 GFileProgressCallback progress_cb,
 							 gpointer	 progress_data,
 							 GError		**error);
-GBytes		*fu_device_altos_read_firmware		(FuDeviceAltos	*device,
+GBytes		*fu_altos_device_read_firmware		(FuAltosDevice	*device,
 							 GFileProgressCallback progress_cb,
 							 gpointer	 progress_data,
 							 GError		**error);
 
 G_END_DECLS
 
-#endif /* __FU_DEVICE_ALTOS_H */
+#endif /* __FU_ALTOS_DEVICE_H */

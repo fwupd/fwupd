@@ -26,7 +26,7 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
-#include "fu-device-altos.h"
+#include "fu-altos-device.h"
 
 static gboolean
 fu_plugin_altos_device_added (FuPlugin *plugin,
@@ -37,7 +37,7 @@ fu_plugin_altos_device_added (FuPlugin *plugin,
 	g_autofree gchar *runtime_id = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
-	g_autoptr(FuDeviceAltos) dev = NULL;
+	g_autoptr(FuAltosDevice) dev = NULL;
 
 	/* profile */
 	ptask = as_profile_start (profile, "FuPluginAltos:added{%04x:%04x}",
@@ -46,7 +46,7 @@ fu_plugin_altos_device_added (FuPlugin *plugin,
 	g_assert (ptask != NULL);
 
 	/* get kind */
-	dev = fu_device_altos_new (usb_device);
+	dev = fu_altos_device_new (usb_device);
 	if (dev == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -60,12 +60,12 @@ fu_plugin_altos_device_added (FuPlugin *plugin,
 	fu_device_set_id (FU_DEVICE (dev), platform_id);
 
 	/* get device properties */
-	if (!fu_device_altos_probe (dev, error))
+	if (!fu_altos_device_probe (dev, error))
 		return FALSE;
 
 	/* only the bootloader can do the update */
 	runtime_id = g_strdup_printf ("%s-runtime", platform_id);
-	if (fu_device_altos_get_kind (dev) == FU_DEVICE_ALTOS_KIND_BOOTLOADER) {
+	if (fu_altos_device_get_kind (dev) == FU_ALTOS_DEVICE_KIND_BOOTLOADER) {
 		FuDevice *dev_runtime;
 		dev_runtime = fu_plugin_cache_lookup (plugin, runtime_id);
 		if (dev_runtime != NULL) {
@@ -111,7 +111,7 @@ fu_plugin_verify (FuPlugin *plugin,
 
 	/* get data */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
-	blob_fw = fu_device_altos_read_firmware (FU_DEVICE_ALTOS (dev),
+	blob_fw = fu_altos_device_read_firmware (FU_ALTOS_DEVICE (dev),
 						 fu_plugin_altos_progress_cb,
 						 plugin,
 						 error);
@@ -134,9 +134,9 @@ fu_plugin_update (FuPlugin *plugin,
 		  GError **error)
 {
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_device_altos_write_firmware (FU_DEVICE_ALTOS (dev),
+	if (!fu_altos_device_write_firmware (FU_ALTOS_DEVICE (dev),
 					     blob_fw,
-					     FU_DEVICE_ALTOS_WRITE_FIRMWARE_FLAG_REBOOT,
+					     FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_REBOOT,
 					     fu_plugin_altos_progress_cb,
 					     plugin,
 					     error)) {
