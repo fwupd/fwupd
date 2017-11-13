@@ -23,23 +23,23 @@
 
 #include <appstream-glib.h>
 
-#include "fu-device-ebitdo.h"
+#include "fu-ebitdo-device.h"
 
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 static gboolean
-fu_plugin_device_ebitdo_added (FuPlugin *plugin,
+fu_plugin_ebitdo_device_added (FuPlugin *plugin,
 				 GUsbDevice *usb_device,
 				 GError **error)
 {
-	FuDeviceEbitdoKind ebitdo_kind;
+	FuEbitdoDeviceKind ebitdo_kind;
 	const gchar *platform_id = NULL;
 	g_autofree gchar *runtime_id = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuDeviceEbitdo) dev = NULL;
+	g_autoptr(FuEbitdoDevice) dev = NULL;
 
 	/* ignore hubs */
 	ptask = as_profile_start (profile, "FuPluginEbitdo:added{%04x:%04x}",
@@ -49,7 +49,7 @@ fu_plugin_device_ebitdo_added (FuPlugin *plugin,
 
 	/* create the device */
 	platform_id = g_usb_device_get_platform_id (usb_device);
-	dev = fu_device_ebitdo_new (usb_device);
+	dev = fu_ebitdo_device_new (usb_device);
 	if (dev == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -64,17 +64,17 @@ fu_plugin_device_ebitdo_added (FuPlugin *plugin,
 
 	/* open the device */
 	locker = fu_device_locker_new_full (dev,
-					    (FuDeviceLockerFunc) fu_device_ebitdo_open,
-					    (FuDeviceLockerFunc) fu_device_ebitdo_close,
+					    (FuDeviceLockerFunc) fu_ebitdo_device_open,
+					    (FuDeviceLockerFunc) fu_ebitdo_device_close,
 					    error);
 	if (locker == NULL)
 		return FALSE;
-	ebitdo_kind = fu_device_ebitdo_get_kind (dev);
+	ebitdo_kind = fu_ebitdo_device_get_kind (dev);
 
 	/* only the bootloader can do the update */
 	runtime_id = g_strdup_printf ("%s-runtime", platform_id);
-	if (ebitdo_kind == FU_DEVICE_EBITDO_KIND_BOOTLOADER) {
-		FuDeviceEbitdo *dev_runtime;
+	if (ebitdo_kind == FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
+		FuEbitdoDevice *dev_runtime;
 
 		/* add the last seen runtime GUID too */
 		dev_runtime = fu_plugin_cache_lookup (plugin, runtime_id);
@@ -113,7 +113,7 @@ fu_plugin_update (FuPlugin *plugin,
 		  GError **error)
 {
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	FuDeviceEbitdo *ebitdo_dev = FU_DEVICE_EBITDO (dev);
+	FuEbitdoDevice *ebitdo_dev = FU_EBITDO_DEVICE (dev);
 	const gchar *platform_id;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GUsbDevice) usb_device = NULL;
@@ -126,7 +126,7 @@ fu_plugin_update (FuPlugin *plugin,
 							error);
 	if (usb_device == NULL)
 		return FALSE;
-	if (fu_device_ebitdo_get_kind (ebitdo_dev) != FU_DEVICE_EBITDO_KIND_BOOTLOADER) {
+	if (fu_ebitdo_device_get_kind (ebitdo_dev) != FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -136,13 +136,13 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* write the firmware */
 	locker = fu_device_locker_new_full (ebitdo_dev,
-					    (FuDeviceLockerFunc) fu_device_ebitdo_open,
-					    (FuDeviceLockerFunc) fu_device_ebitdo_close,
+					    (FuDeviceLockerFunc) fu_ebitdo_device_open,
+					    (FuDeviceLockerFunc) fu_ebitdo_device_close,
 					    error);
 	if (locker == NULL)
 		return FALSE;
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_device_ebitdo_write_firmware (ebitdo_dev, blob_fw,
+	if (!fu_ebitdo_device_write_firmware (ebitdo_dev, blob_fw,
 					      ebitdo_write_progress_cb, plugin,
 					      error))
 		return FALSE;
@@ -161,15 +161,15 @@ fu_plugin_update (FuPlugin *plugin,
 		g_prefix_error (error, "device did not come back: ");
 		return FALSE;
 	}
-	if (!fu_device_ebitdo_set_usb_device (ebitdo_dev, usb_device2, error)) {
+	if (!fu_ebitdo_device_set_usb_device (ebitdo_dev, usb_device2, error)) {
 		g_prefix_error (error, "wrong device came back: ");
 		return FALSE;
 	}
 
 	/* get the new version number */
 	locker = fu_device_locker_new_full (ebitdo_dev,
-					    (FuDeviceLockerFunc) fu_device_ebitdo_open,
-					    (FuDeviceLockerFunc) fu_device_ebitdo_close,
+					    (FuDeviceLockerFunc) fu_ebitdo_device_open,
+					    (FuDeviceLockerFunc) fu_ebitdo_device_close,
 					    error);
 	if (locker == NULL) {
 		g_prefix_error (error, "failed to re-open device: ");
@@ -181,12 +181,12 @@ fu_plugin_update (FuPlugin *plugin,
 }
 
 static void
-fu_plugin_device_ebitdo_added_cb (GUsbContext *ctx,
+fu_plugin_ebitdo_device_added_cb (GUsbContext *ctx,
 				    GUsbDevice *usb_device,
 				    FuPlugin *plugin)
 {
 	g_autoptr(GError) error = NULL;
-	if (!fu_plugin_device_ebitdo_added (plugin, usb_device, &error)) {
+	if (!fu_plugin_ebitdo_device_added (plugin, usb_device, &error)) {
 		if (!g_error_matches (error,
 				      FWUPD_ERROR,
 				      FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -197,7 +197,7 @@ fu_plugin_device_ebitdo_added_cb (GUsbContext *ctx,
 }
 
 static void
-fu_plugin_device_ebitdo_removed_cb (GUsbContext *ctx,
+fu_plugin_ebitdo_device_removed_cb (GUsbContext *ctx,
 				    GUsbDevice *usb_device,
 				    FuPlugin *plugin)
 {
@@ -219,10 +219,10 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
 	g_signal_connect (usb_ctx, "device-added",
-			  G_CALLBACK (fu_plugin_device_ebitdo_added_cb),
+			  G_CALLBACK (fu_plugin_ebitdo_device_added_cb),
 			  plugin);
 	g_signal_connect (usb_ctx, "device-removed",
-			  G_CALLBACK (fu_plugin_device_ebitdo_removed_cb),
+			  G_CALLBACK (fu_plugin_ebitdo_device_removed_cb),
 			  plugin);
 	return TRUE;
 }

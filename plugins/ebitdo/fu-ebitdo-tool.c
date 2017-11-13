@@ -24,7 +24,7 @@
 #include <gusb.h>
 
 #include "fu-ebitdo-common.h"
-#include "fu-device-ebitdo.h"
+#include "fu-ebitdo-device.h"
 
 static void
 fu_ebitdo_write_progress_cb (goffset current, goffset total, gpointer user_data)
@@ -41,7 +41,7 @@ main (int argc, char **argv)
 {
 	gsize len;
 	g_autofree guint8 *data = NULL;
-	g_autoptr(FuDeviceEbitdo) dev = NULL;
+	g_autoptr(FuEbitdoDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
@@ -66,7 +66,7 @@ main (int argc, char **argv)
 	devices = g_usb_context_get_devices (usb_ctx);
 	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_dev_tmp = g_ptr_array_index (devices, i);
-		g_autoptr(FuDeviceEbitdo) dev_tmp = fu_device_ebitdo_new (usb_dev_tmp);
+		g_autoptr(FuEbitdoDevice) dev_tmp = fu_ebitdo_device_new (usb_dev_tmp);
 		if (dev_tmp != NULL) {
 			dev = g_object_ref (dev_tmp);
 			break;
@@ -81,8 +81,8 @@ main (int argc, char **argv)
 
 	/* open device */
 	locker = fu_device_locker_new_full (dev,
-					    (FuDeviceLockerFunc) fu_device_ebitdo_open,
-					    (FuDeviceLockerFunc) fu_device_ebitdo_close,
+					    (FuDeviceLockerFunc) fu_ebitdo_device_open,
+					    (FuDeviceLockerFunc) fu_ebitdo_device_close,
 					    &error);
 	if (locker == NULL) {
 		g_print ("Failed to open USB device: %s\n", error->message);
@@ -92,25 +92,25 @@ main (int argc, char **argv)
 		 fu_device_get_version (FU_DEVICE (dev)));
 	g_print ("Device Verification ID:\n");
 	for (guint i = 0; i < 9; i++)
-		g_print ("\t%u = 0x%08x\n", i, fu_device_ebitdo_get_serial(dev)[i]);
+		g_print ("\t%u = 0x%08x\n", i, fu_ebitdo_device_get_serial(dev)[i]);
 
 	/* not in bootloader mode, so print what to do */
 	if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
 		g_print ("1. Disconnect the controller\n");
-		switch (fu_device_ebitdo_get_kind (dev)) {
-		case FU_DEVICE_EBITDO_KIND_FC30:
-		case FU_DEVICE_EBITDO_KIND_NES30:
-		case FU_DEVICE_EBITDO_KIND_SFC30:
-		case FU_DEVICE_EBITDO_KIND_SNES30:
+		switch (fu_ebitdo_device_get_kind (dev)) {
+		case FU_EBITDO_DEVICE_KIND_FC30:
+		case FU_EBITDO_DEVICE_KIND_NES30:
+		case FU_EBITDO_DEVICE_KIND_SFC30:
+		case FU_EBITDO_DEVICE_KIND_SNES30:
 			g_print ("2. Hold down L+R+START for 3 seconds until "
 				 "both LED lights flashing.\n");
 			break;
-		case FU_DEVICE_EBITDO_KIND_FC30PRO:
-		case FU_DEVICE_EBITDO_KIND_NES30PRO:
+		case FU_EBITDO_DEVICE_KIND_FC30PRO:
+		case FU_EBITDO_DEVICE_KIND_NES30PRO:
 			g_print ("2. Hold down RETURN+POWER for 3 seconds until "
 				 "both LED lights flashing.\n");
 			break;
-		case FU_DEVICE_EBITDO_KIND_FC30_ARCADE:
+		case FU_EBITDO_DEVICE_KIND_FC30_ARCADE:
 			g_print ("2. Hold down L1+R1+HOME for 3 seconds until "
 				 "both blue LED and green LED blink.\n");
 			break;
@@ -130,7 +130,7 @@ main (int argc, char **argv)
 
 	/* update with data blob */
 	fw = g_bytes_new (data, len);
-	if (!fu_device_ebitdo_write_firmware (dev, fw,
+	if (!fu_ebitdo_device_write_firmware (dev, fw,
 					      fu_ebitdo_write_progress_cb, NULL,
 					      &error)) {
 		g_print ("Failed to write firmware: %s\n", error->message);

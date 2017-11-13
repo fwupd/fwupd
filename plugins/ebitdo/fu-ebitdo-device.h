@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#ifndef __FU_DEVICE_EBITDO_H
-#define __FU_DEVICE_EBITDO_H
+#ifndef __FU_EBITDO_DEVICE_H
+#define __FU_EBITDO_DEVICE_H
 
 #include <glib-object.h>
 #include <gusb.h>
@@ -29,47 +29,47 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_DEVICE_EBITDO (fu_device_ebitdo_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuDeviceEbitdo, fu_device_ebitdo, FU, DEVICE_EBITDO, FuDevice)
+#define FU_TYPE_EBITDO_DEVICE (fu_ebitdo_device_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuEbitdoDevice, fu_ebitdo_device, FU, EBITDO_DEVICE, FuDevice)
 
-struct _FuDeviceEbitdoClass
+struct _FuEbitdoDeviceClass
 {
 	FuDeviceClass		parent_class;
 };
 
 typedef enum {
-	FU_DEVICE_EBITDO_KIND_UNKNOWN,
-	FU_DEVICE_EBITDO_KIND_BOOTLOADER,
-	FU_DEVICE_EBITDO_KIND_FC30,
-	FU_DEVICE_EBITDO_KIND_NES30,
-	FU_DEVICE_EBITDO_KIND_SFC30,
-	FU_DEVICE_EBITDO_KIND_SNES30,
-	FU_DEVICE_EBITDO_KIND_FC30PRO,
-	FU_DEVICE_EBITDO_KIND_NES30PRO,
-	FU_DEVICE_EBITDO_KIND_FC30_ARCADE,
+	FU_EBITDO_DEVICE_KIND_UNKNOWN,
+	FU_EBITDO_DEVICE_KIND_BOOTLOADER,
+	FU_EBITDO_DEVICE_KIND_FC30,
+	FU_EBITDO_DEVICE_KIND_NES30,
+	FU_EBITDO_DEVICE_KIND_SFC30,
+	FU_EBITDO_DEVICE_KIND_SNES30,
+	FU_EBITDO_DEVICE_KIND_FC30PRO,
+	FU_EBITDO_DEVICE_KIND_NES30PRO,
+	FU_EBITDO_DEVICE_KIND_FC30_ARCADE,
 	/*< private >*/
-	FU_DEVICE_EBITDO_KIND_LAST
-} FuDeviceEbitdoKind;
+	FU_EBITDO_DEVICE_KIND_LAST
+} FuEbitdoDeviceKind;
 
-FuDeviceEbitdo	*fu_device_ebitdo_new			(GUsbDevice	*usb_device);
-gboolean	 fu_device_ebitdo_set_usb_device	(FuDeviceEbitdo	*device,
+FuEbitdoDevice	*fu_ebitdo_device_new			(GUsbDevice	*usb_device);
+gboolean	 fu_ebitdo_device_set_usb_device	(FuEbitdoDevice	*device,
 							 GUsbDevice	*usb_device,
 							 GError		**error);
 
 /* helpers */
-FuDeviceEbitdoKind fu_device_ebitdo_kind_from_string	(const gchar	*kind);
-const gchar	*fu_device_ebitdo_kind_to_string	(FuDeviceEbitdoKind kind);
+FuEbitdoDeviceKind fu_ebitdo_device_kind_from_string	(const gchar	*kind);
+const gchar	*fu_ebitdo_device_kind_to_string	(FuEbitdoDeviceKind kind);
 
 /* getters */
-FuDeviceEbitdoKind fu_device_ebitdo_get_kind		(FuDeviceEbitdo	*device);
-const guint32	*fu_device_ebitdo_get_serial		(FuDeviceEbitdo	*device);
+FuEbitdoDeviceKind fu_ebitdo_device_get_kind		(FuEbitdoDevice	*device);
+const guint32	*fu_ebitdo_device_get_serial		(FuEbitdoDevice	*device);
 
 /* object methods */
-gboolean	 fu_device_ebitdo_open			(FuDeviceEbitdo	*device,
+gboolean	 fu_ebitdo_device_open			(FuEbitdoDevice	*device,
 							 GError		**error);
-gboolean	 fu_device_ebitdo_close			(FuDeviceEbitdo	*device,
+gboolean	 fu_ebitdo_device_close			(FuEbitdoDevice	*device,
 							 GError		**error);
-gboolean	 fu_device_ebitdo_write_firmware	(FuDeviceEbitdo	*device,
+gboolean	 fu_ebitdo_device_write_firmware	(FuEbitdoDevice	*device,
 							 GBytes		*fw,
 							 GFileProgressCallback progress_cb,
 							 gpointer	 progress_data,
@@ -77,4 +77,4 @@ gboolean	 fu_device_ebitdo_write_firmware	(FuDeviceEbitdo	*device,
 
 G_END_DECLS
 
-#endif /* __FU_DEVICE_EBITDO_H */
+#endif /* __FU_EBITDO_DEVICE_H */
