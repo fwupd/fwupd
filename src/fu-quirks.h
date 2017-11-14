@@ -66,6 +66,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  * * `use-any-interface`:	Use any interface for DFU
  * * `use-atmel-avr`:		Device uses the ATMEL bootloader
  * * `use-protocol-zero`:	Fix up the protocol number
+ * * `legacy-protocol`:		Use a legacy protocol version
  *
  * Default value: `none`
  *

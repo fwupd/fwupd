@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2017 Richard Hughes <richard@hughsie.com> -->
+<component type="firmware">
+  <id>com.acme.at90usbkey.firmware</id>
+  <name>AT90USBKEY Firmware</name>
+  <summary>Firmware for the ACME AT90USBKEY</summary>
+  <description>
+    <p>
+      Updating the firmware on your AT90USBKEY improves performance and
+      adds new features.
+    </p>
+  </description>
+  <provides>
+    <!-- USB\VID_273F&PID_2000 -->
+    <firmware type="flashed">c1874c52-5f6a-5864-926d-ea84bcdc82ea</firmware>
+  </provides>
+  <url type="homepage">http://www.acme.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0+</project_license>
+  <developer_name>ACME Corp</developer_name>
+  <releases>
+    <release version="1.23" date="2017-06-15" urgency="medium">
+      <checksum filename="at90usbkey123.hex" target="content"/>
+      <description>
+        <p>Fixes a bug with the flux capacitor to avoid year 2038 overflow.</p>
+      </description>
+    </release>
+  </releases>
+</component>

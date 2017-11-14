@@ -45,6 +45,20 @@ USB\VID_0B0E&PID_0421=no-pid-change|use-protocol-zero|ignore-upload|attach-extra
 USB\VID_0B0E&PID_0982=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
 USB\VID_0B0E&PID_0971=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
 
+# Atmel AT90USB Bootloader
+USB\VID_03EB&PID_2FF7=use-any-interface|legacy-protocol
+USB\VID_03EB&PID_2FF9=use-any-interface|legacy-protocol
+USB\VID_03EB&PID_2FFA=use-any-interface|legacy-protocol
+USB\VID_03EB&PID_2FFB=use-any-interface|legacy-protocol
+
+# Atmel ATMEGA Bootloader
+USB\VID_03EB&PID_2FEE=use-any-interface|legacy-protocol
+USB\VID_03EB&PID_2FEF=use-any-interface|legacy-protocol
+USB\VID_03EB&PID_2FF0=use-any-interface|legacy-protocol
+USB\VID_03EB&PID_2FF2=use-any-interface|legacy-protocol
+USB\VID_03EB&PID_2FF3=use-any-interface|legacy-protocol
+USB\VID_03EB&PID_2FF4=use-any-interface|legacy-protocol
+
 # Atmel XMEGA Bootloader
 USB\VID_03EB&PID_2FE2=use-any-interface
 
@@ -81,6 +95,36 @@ USB\VID_0B0E&PID_2456=0B0E0971
 
 # AT32UC3A3256	[BLDR][USER]	USER@0x2000, BLDR+USER=0x40000
 0x58200204=@Flash/0x2000/1*248Kg
+
+# AT90USB1287	[USER][BLDR]	BLDR@0x1e000, BLDR+USER=0x20000
+0x581e9782=@Flash/0x0/1*120Kg
+
+# AT90USB647	[USER][BLDR]	BLDR@0x0e000, BLDR+USER=0x10000
+0x581e9682=@Flash/0x0/1*56Kg
+
+# AT90USB646	[USER][BLDR]	BLDR@0x0e000, BLDR+USER=0x10000
+0x581e9682=@Flash/0x0/1*56Kg
+
+# ATmega32U4	[USER][BLDR]	BLDR@0x07000, BLDR+USER=0x08000
+0x581e9587=@Flash/0x0/1*28Kg
+
+# ATmega16U4	[USER][BLDR]	BLDR@0x03000, BLDR+USER=0x04000
+0x581e9488=@Flash/0x0/1*12Kg
+
+# ATmega32U2	[USER][BLDR]	BLDR@0x07000, BLDR+USER=0x08000
+0x581e958a=@Flash/0x0/1*28Kg
+
+# ATmega16U2	[USER][BLDR]	BLDR@0x03000, BLDR+USER=0x04000
+0x581e9489=@Flash/0x0/1*12Kg
+
+# AT90USB162	[USER][BLDR]	BLDR@0x03000, BLDR+USER=0x04000
+0x581e9482=@Flash/0x0/1*12Kg
+
+# ATmega8U2	[USER][BLDR]	BLDR@0x01000, BLDR+USER=0x02000
+0x581e9389=@Flash/0x0/1*4Kg
+
+# AT90USB82	[USER][BLDR]	BLDR@0x01000, BLDR+USER=0x02000
+0x581e9382=@Flash/0x0/1*4Kg
 
 # ATxmega16A4	[USER]		USER=0x4000
 0x1e9441=@Flash/0x0/1*16Kg

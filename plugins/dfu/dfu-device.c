@@ -740,6 +740,10 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 			priv->quirks |= DFU_DEVICE_QUIRK_USE_ANY_INTERFACE;
 			continue;
 		}
+		if (g_strcmp0 (split[i], "legacy-protocol") == 0) {
+			priv->quirks |= DFU_DEVICE_QUIRK_LEGACY_PROTOCOL;
+			continue;
+		}
 	}
 }
 
@@ -2439,6 +2443,8 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "attach-extra-reset|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_USE_ANY_INTERFACE)
 		g_string_append_printf (str, "use-any-interface|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)
+		g_string_append_printf (str, "legacy-protocol|");
 
 	/* a well behaved device */
 	if (str->len == 0) {
