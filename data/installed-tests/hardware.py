@@ -85,6 +85,12 @@ if __name__ == '__main__':
 
     tests = []
 
+    # DFU AT90USBKEY Mouse
+    test = Test('DfuAT90USBKEY', 'c1874c52-5f6a-5864-926d-ea84bcdc82ea')
+    test.add_file('b6bef375597e848971f230cf992c9740f7bf5b92-at90usbkey123.cab', '1.23')
+    test.add_file('47807fd4a94a4d5514ac6bf7a73038e00ed63225-at90usbkey124.cab', '1.24')
+    tests.append(test)
+
     # Logitech K780 Keyboard
     test = Test('LogitechMPK01', '3932ba15-2bbe-5bbb-817e-6c74e7088509')
     test.add_file('d81a81e13952e871ca2eb86cba7e66199e576a38-Logitech-K780-MPK01.02_B0021.cab', 'MPK01.02_B0021')
