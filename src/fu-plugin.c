@@ -868,6 +868,10 @@ fu_plugin_runner_device_generic (FuPlugin *plugin, FuDevice *device,
 	if (!priv->enabled)
 		return TRUE;
 
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
 	/* optional */
 	g_module_symbol (priv->module, symbol_name, (gpointer *) &func);
 	if (func == NULL)
