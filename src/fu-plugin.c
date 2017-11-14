@@ -1099,12 +1099,6 @@ gboolean
 fu_plugin_runner_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	guint64 flags;
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginDeviceFunc func = NULL;
-
-	/* not enabled */
-	if (!priv->enabled)
-		return TRUE;
 
 	/* final check */
 	flags = fu_device_get_flags (device);
@@ -1117,15 +1111,10 @@ fu_plugin_runner_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_unlock", (gpointer *) &func);
-	if (func != NULL) {
-		g_debug ("performing unlock() on %s", priv->name);
-		if (!func (plugin, device, error)) {
-			g_prefix_error (error, "failed to unlock %s: ", priv->name);
-			return FALSE;
-		}
-	}
+	/* run vfunc */
+	if (!fu_plugin_runner_device_generic (plugin, device,
+					      "fu_plugin_unlock", error))
+		return FALSE;
 
 	/* update with correct flags */
 	flags = fu_device_get_flags (device);
