@@ -896,6 +896,14 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
+	if (data->smi_obj->smi == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to initialize libsmbios library");
+		return FALSE;
+	}
+
 	/* If ESRT is not turned on, fwupd will have already created an
 	 * unlock device (if compiled with support).
 	 *
