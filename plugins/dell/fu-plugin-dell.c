@@ -1038,6 +1038,8 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
+	if (g_getenv ("FWUPD_DELL_VERBOSE") != NULL)
+		g_setenv ("LIBSMBIOS_C_DEBUG_OUTPUT_ALL", "1", TRUE);
 	if (fu_dell_supported (plugin))
 		data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
 	data->smi_obj->fake_smbios = FALSE;
