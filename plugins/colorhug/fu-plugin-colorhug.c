@@ -114,7 +114,7 @@ fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 	/* try to get the version without claiming interface */
 	locker = fu_device_locker_new (item->usb_device, &error);
 	if (locker == NULL) {
-		g_debug ("Failed to open, polling: %s", error->message);
+		g_debug ("failed to open, polling: %s", error->message);
 		return;
 	}
 	idx = g_usb_device_get_custom_index (item->usb_device,
@@ -134,7 +134,7 @@ fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 
 	/* attempt to open the device and get the serial number */
 	if (!ch_device_open (item->usb_device, &error)) {
-		g_debug ("Failed to claim interface, polling: %s", error->message);
+		g_debug ("failed to claim interface, polling: %s", error->message);
 		return;
 	}
 	ch_device_queue_get_firmware_ver (data->device_queue, item->usb_device,
@@ -142,7 +142,7 @@ fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
 	if (!ch_device_queue_process (data->device_queue,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
 				      NULL, &error)) {
-		g_warning ("Failed to get serial: %s", error->message);
+		g_warning ("failed to get serial: %s", error->message);
 		return;
 	}
 
