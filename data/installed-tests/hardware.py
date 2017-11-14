@@ -140,7 +140,7 @@ if __name__ == '__main__':
     tests.append(test)
 
     # 8Bitdo SFC30 Gamepad
-    test = Test('8BitdoSFC30', 'f94d3231-f6e1-5ef3-a4a0-dc819d74ae54')
+    test = Test('8BitdoSFC30', 'a7fcfbaf-e9e8-59f4-920d-7691dc6c8699')
     test.add_file('fe066b57c69265f4cce8a999a5f8ab90d1c13b24-8Bitdo-SFC30_NES30_SFC30_SNES30-4.01.cab', '4.01')
     tests.append(test)
 
