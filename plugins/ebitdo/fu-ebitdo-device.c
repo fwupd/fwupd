@@ -247,7 +247,7 @@ fu_ebitdo_device_receive (FuEbitdoDevice *device,
 
 	/* debug */
 	if (g_getenv ("FWUPD_EBITDO_VERBOSE") != NULL) {
-		fu_ebitdo_dump_raw ("<-DEVICE", packet, (gsize) hdr->pkt_len - 1);
+		fu_ebitdo_dump_raw ("<-DEVICE", packet, actual_length);
 		fu_ebitdo_dump_pkt (hdr);
 	}
 
