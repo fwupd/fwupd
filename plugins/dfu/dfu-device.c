@@ -1706,6 +1706,9 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 		g_clear_object (&priv->dev);
 		g_ptr_array_set_size (priv->targets, 0);
 		priv->claimed_interface = FALSE;
+		priv->mode = DFU_MODE_UNKNOWN;
+		priv->state = DFU_STATE_LAST;
+		priv->status = DFU_STATUS_LAST;
 		return TRUE;
 	}
 
@@ -2029,7 +2032,8 @@ dfu_device_upload (DfuDevice *device,
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "device is not in DFU mode");
+				     "device is not in DFU mode, got %s",
+				     dfu_mode_to_string (priv->mode));
 			return NULL;
 		}
 		g_debug ("detaching");
@@ -2227,7 +2231,8 @@ dfu_device_download (DfuDevice *device,
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "device is not in DFU mode");
+				     "device is not in DFU mode, got %s",
+				     dfu_mode_to_string (priv->mode));
 			return FALSE;
 		}
 
