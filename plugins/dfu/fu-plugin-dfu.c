@@ -135,6 +135,39 @@ dfu_device_open_no_refresh (DfuDevice *device, GError **error)
 }
 
 static void
+fu_plugin_dfu_action_changed_cb (DfuDevice *device,
+				 FwupdStatus action,
+				 FuPlugin *plugin)
+{
+	fu_plugin_set_status (plugin, action);
+}
+
+static void
+fu_plugin_dfu_state_changed_cb (DfuDevice *device,
+				  DfuState state,
+				  FuPlugin *plugin)
+{
+	switch (state) {
+	case DFU_STATE_DFU_UPLOAD_IDLE:
+		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
+		break;
+	case DFU_STATE_DFU_DNLOAD_IDLE:
+		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
+		break;
+	default:
+		break;
+	}
+}
+
+static void
+fu_plugin_dfu_percentage_changed_cb (DfuDevice *device,
+				       guint percentage,
+				       FuPlugin *plugin)
+{
+	fu_plugin_set_percentage (plugin, percentage);
+}
+
+static void
 fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 			       DfuDevice *device,
 			       FuPlugin *plugin)
@@ -182,6 +215,14 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 	if (display_name != NULL)
 		fu_device_set_name (dev, display_name);
 
+	/* watch all signals */
+	g_signal_connect (device, "action-changed",
+			  G_CALLBACK (fu_plugin_dfu_action_changed_cb), plugin);
+	g_signal_connect (device, "state-changed",
+			  G_CALLBACK (fu_plugin_dfu_state_changed_cb), plugin);
+	g_signal_connect (device, "percentage-changed",
+			  G_CALLBACK (fu_plugin_dfu_percentage_changed_cb), plugin);
+
 	/* this is a guess and can be overridden in the metainfo file */
 	fu_device_add_icon (dev, "drive-harddisk-usb");
 
@@ -207,31 +248,6 @@ fu_plugin_dfu_device_removed_cb (DfuContext *ctx,
 	}
 
 	fu_plugin_device_remove (plugin, dev);
-}
-
-static void
-fu_plugin_dfu_state_changed_cb (DfuDevice *device,
-				  DfuState state,
-				  FuPlugin *plugin)
-{
-	switch (state) {
-	case DFU_STATE_DFU_UPLOAD_IDLE:
-		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
-		break;
-	case DFU_STATE_DFU_DNLOAD_IDLE:
-		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
-		break;
-	default:
-		break;
-	}
-}
-
-static void
-fu_plugin_dfu_percentage_changed_cb (DfuDevice *device,
-				       guint percentage,
-				       FuPlugin *plugin)
-{
-	fu_plugin_set_percentage (plugin, percentage);
 }
 
 gboolean
@@ -361,10 +377,6 @@ fu_plugin_update (FuPlugin *plugin,
 			     error_local->message);
 		return FALSE;
 	}
-	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_plugin_dfu_state_changed_cb), plugin);
-	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_plugin_dfu_percentage_changed_cb), plugin);
 
 	/* hit hardware */
 	dfu_firmware = dfu_firmware_new ();
@@ -421,10 +433,6 @@ fu_plugin_verify (FuPlugin *plugin,
 			     error_local->message);
 		return FALSE;
 	}
-	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_plugin_dfu_state_changed_cb), plugin);
-	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_plugin_dfu_percentage_changed_cb), plugin);
 
 	/* get data from hardware */
 	g_debug ("uploading from device->host");
