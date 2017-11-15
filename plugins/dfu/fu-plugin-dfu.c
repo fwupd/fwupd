@@ -372,7 +372,9 @@ fu_plugin_update (FuPlugin *plugin,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
 	if (!dfu_device_download (device, dfu_firmware,
-				  DFU_TARGET_TRANSFER_FLAG_VERIFY,
+				  DFU_TARGET_TRANSFER_FLAG_VERIFY |
+				  DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID |
+				  DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID,
 				  NULL, error))
 		return FALSE;
 
