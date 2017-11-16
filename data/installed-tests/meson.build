@@ -78,28 +78,4 @@ if gcab.found()
     install: true,
     install_dir: join_paths('share', 'installed-tests', 'fwupd'),
   )
-  custom_target('at90usbkey-123',
-    input : [
-      'at90usbkey123.hex',
-      'at90usbkey123.metainfo.xml',
-    ],
-    output : 'at90usbkey123.cab',
-    command : [
-      gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
-    ],
-    install: true,
-    install_dir: join_paths('share', 'installed-tests', 'fwupd'),
-  )
-  custom_target('at90usbkey-124',
-    input : [
-      'at90usbkey124.hex',
-      'at90usbkey124.metainfo.xml',
-    ],
-    output : 'at90usbkey124.cab',
-    command : [
-      gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
-    ],
-    install: true,
-    install_dir: join_paths('share', 'installed-tests', 'fwupd'),
-  )
 endif
