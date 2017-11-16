@@ -52,30 +52,4 @@ if gcab.found()
     install: true,
     install_dir: join_paths('share', 'installed-tests', 'fwupd'),
   )
-  custom_target('installed-cab01',
-    input : [
-      'fakedevice01.dfu',
-      'fakedevice01.dfu.asc',
-      'fakedevice01_dfu.metainfo.xml',
-    ],
-    output : 'fakedevice01_dfu.cab',
-    command : [
-      gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
-    ],
-    install: true,
-    install_dir: join_paths('share', 'installed-tests', 'fwupd'),
-  )
-  custom_target('installed-cab02',
-    input : [
-      'fakedevice02.dfu',
-      'fakedevice02.dfu.asc',
-      'fakedevice02_dfu.metainfo.xml',
-    ],
-    output : 'fakedevice02_dfu.cab',
-    command : [
-      gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
-    ],
-    install: true,
-    install_dir: join_paths('share', 'installed-tests', 'fwupd'),
-  )
 endif
