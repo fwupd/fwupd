@@ -2161,8 +2161,8 @@ fu_engine_sort_releases_cb (gconstpointer a, gconstpointer b)
 {
 	FwupdRelease *rel_a = FWUPD_RELEASE (*((FwupdRelease **) a));
 	FwupdRelease *rel_b = FWUPD_RELEASE (*((FwupdRelease **) b));
-	return as_utils_vercmp (fwupd_release_get_version (rel_a),
-				fwupd_release_get_version (rel_b));
+	return as_utils_vercmp (fwupd_release_get_version (rel_b),
+				fwupd_release_get_version (rel_a));
 }
 
 static GPtrArray *
