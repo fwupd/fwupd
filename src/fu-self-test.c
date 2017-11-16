@@ -213,6 +213,13 @@ fu_engine_func (void)
 				   "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
 				   "    </provides>"
 				   "    <releases>"
+				   "      <release version=\"1.2.5\" date=\"2017-09-16\">"
+				   "        <size type=\"installed\">123</size>"
+				   "        <size type=\"download\">456</size>"
+				   "        <location>https://test.org/foo.cab</location>"
+				   "        <checksum filename=\"foo.cab\" target=\"container\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "        <checksum filename=\"firmware.bin\" target=\"content\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "      </release>"
 				   "      <release version=\"1.2.4\" date=\"2017-09-15\">"
 				   "        <size type=\"installed\">123</size>"
 				   "        <size type=\"download\">456</size>"
@@ -269,14 +276,18 @@ fu_engine_func (void)
 	releases = fu_engine_get_releases (engine, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
 	g_assert (releases != NULL);
-	g_assert_cmpint (releases->len, ==, 3);
+	g_assert_cmpint (releases->len, ==, 4);
 
 	/* upgrades */
 	releases_up = fu_engine_get_upgrades (engine, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
 	g_assert (releases_up != NULL);
-	g_assert_cmpint (releases_up->len, ==, 1);
+	g_assert_cmpint (releases_up->len, ==, 2);
+
+	/* ensure the list is sorted */
 	rel = FWUPD_RELEASE (g_ptr_array_index (releases_up, 0));
+	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.5");
+	rel = FWUPD_RELEASE (g_ptr_array_index (releases_up, 1));
 	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.4");
 
 	/* downgrades */
