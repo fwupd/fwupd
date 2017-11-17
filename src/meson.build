@@ -1,7 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="Fu"']
 
 install_data(['org.freedesktop.fwupd.xml'],
-  install_dir : join_paths(get_option('datadir'), 'dbus-1', 'interfaces')
+  install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
 )
 
 keyring_deps = []
@@ -51,7 +51,7 @@ libfwupdprivate = static_library(
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
-    '-DFWUPDDATADIR="' + join_paths(get_option('prefix'), get_option('datadir'), 'fwupd') + '"',
+    '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
@@ -85,7 +85,7 @@ fwupdmgr = executable(
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
-  install_dir : get_option('bindir')
+  install_dir : bindir
 )
 
 if get_option('enable-man')
@@ -102,7 +102,7 @@ if get_option('enable-man')
       '--version-string', fwupd_version,
     ],
     install : true,
-    install_dir : join_paths(get_option('mandir'), 'man1'),
+    install_dir : join_paths(mandir, 'man1'),
   )
 endif
 
@@ -158,12 +158,12 @@ executable(
     '-DPLUGINDIR="' + plugin_dir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
     '-DSYSCONFDIR="' + default_sysconfdir + '"',
-    '-DFWUPDDATADIR="' + join_paths(get_option('prefix'), get_option('datadir'), 'fwupd') + '"',
+    '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
     '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
-  install_dir : join_paths(get_option('libexecdir'), 'fwupd')
+  install_dir : join_paths(libexecdir, 'fwupd')
 )
 
 if get_option('enable-tests')
