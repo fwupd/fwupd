@@ -1,7 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfu"']
 
 install_data(['dfu.quirk'],
-  install_dir: join_paths(get_option('datadir'), 'fwupd', 'quirks.d')
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
 dfu = static_library(
@@ -84,7 +84,7 @@ executable(
   ],
   c_args : cargs,
   install : true,
-  install_dir : get_option('bindir')
+  install_dir : bindir
 )
 
 if get_option('enable-man')
@@ -97,7 +97,7 @@ if get_option('enable-man')
       '--output', meson.current_build_dir(),
     ],
     install : true,
-    install_dir : join_paths(get_option('mandir'), 'man1'),
+    install_dir : join_paths(mandir, 'man1'),
   )
 endif
 

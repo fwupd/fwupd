@@ -1,11 +1,7 @@
 con2 = configuration_data()
 con2.set('installedtestsdir',
-         join_paths(get_option('prefix'),
-                    get_option('datadir'),
-                    'installed-tests', 'fwupd'))
-con2.set('bindir',
-         join_paths(get_option('prefix'),
-                    get_option('bindir')))
+         join_paths(datadir, 'installed-tests', 'fwupd'))
+con2.set('bindir', bindir)
 
 configure_file(
   input : 'fwupdmgr.test.in',

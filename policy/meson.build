@@ -1,5 +1,5 @@
 install_data('org.freedesktop.fwupd.rules',
-             install_dir : join_paths(get_option('datadir'), 'polkit-1', 'rules.d'))
+             install_dir : join_paths(datadir, 'polkit-1', 'rules.d'))
 
 #meson 0.41.0 added support for data_dirs argument
 if meson.version().version_compare('>=0.41.0')
@@ -9,7 +9,7 @@ if meson.version().version_compare('>=0.41.0')
       input: 'org.freedesktop.fwupd.policy.in',
       output: 'org.freedesktop.fwupd.policy',
       install: true,
-      install_dir: join_paths(get_option('datadir'), 'polkit-1', 'actions') ,
+      install_dir: join_paths(datadir, 'polkit-1', 'actions') ,
       type: 'xml',
       po_dir: join_paths(meson.source_root(), 'po')
     )
@@ -19,7 +19,7 @@ if meson.version().version_compare('>=0.41.0')
       input: 'org.freedesktop.fwupd.policy.in',
       output: 'org.freedesktop.fwupd.policy',
       install: true,
-      install_dir: join_paths(get_option('datadir'), 'polkit-1', 'actions') ,
+      install_dir: join_paths(datadir, 'polkit-1', 'actions') ,
       type: 'xml',
       data_dirs: join_paths(meson.source_root(), 'policy'),
       po_dir: join_paths(meson.source_root(), 'po')
@@ -38,6 +38,6 @@ else
               '-d', join_paths(meson.source_root(), 'po'),
               '-o', '@OUTPUT@'],
     install: true,
-    install_dir: join_paths(get_option('datadir'), 'polkit-1', 'actions')
+    install_dir: join_paths(datadir, 'polkit-1', 'actions')
    )
 endif

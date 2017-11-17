@@ -223,6 +223,17 @@ if get_option('enable-consolekit')
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
 
+prefix = get_option('prefix')
+
+bindir = join_paths(prefix, get_option('bindir'))
+libdir = join_paths(prefix, get_option('libdir'))
+datadir = join_paths(prefix, get_option('datadir'))
+libexecdir = join_paths(prefix, get_option('libexecdir'))
+sysconfdir = join_paths(prefix, get_option('sysconfdir'))
+localstatedir = join_paths(prefix, get_option('localstatedir'))
+mandir = join_paths(prefix, get_option('mandir'))
+localedir = join_paths(prefix, get_option('localedir'))
+
 systemdunitdir = get_option('with-systemdunitdir')
 if systemdunitdir == '' and get_option('enable-systemd')
   systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
@@ -236,21 +247,15 @@ endif
 gnome = import('gnome')
 i18n = import('i18n')
 
-plugin_dir = join_paths(get_option('prefix'),
-                        get_option('libdir'),
-                        'fwupd-plugins-3')
+plugin_dir = join_paths(libdir, 'fwupd-plugins-3')
 
-conf.set_quoted('BINDIR',
-                join_paths(get_option('prefix'),
-                           get_option('bindir')))
-conf.set_quoted('LIBEXECDIR',
-                join_paths(get_option('prefix'),
-                           get_option('libexecdir')))
+conf.set_quoted('BINDIR', bindir)
+conf.set_quoted('LIBEXECDIR', libexecdir)
 
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set_quoted('VERSION', meson.project_version())
-conf.set_quoted('LOCALEDIR', get_option('localedir'))
+conf.set_quoted('LOCALEDIR', localedir)
 configure_file(
   output : 'config.h',
   configuration : conf
@@ -261,9 +266,6 @@ if default_sysconfdir == 'etc'
   message('sysconfdir of etc makes no sense, using /etc')
   default_sysconfdir = '/etc'
 endif
-
-localstatedir = join_paths(get_option('prefix'),
-                           get_option('localstatedir'))
 
 plugin_deps = []
 plugin_deps += appstream_glib

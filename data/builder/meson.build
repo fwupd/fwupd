@@ -1,3 +1,3 @@
 install_data('README.md',
-  install_dir : join_paths(get_option('localstatedir'), 'lib', 'fwupd', 'builder')
+  install_dir : join_paths(localstatedir, 'lib', 'fwupd', 'builder')
 )
