@@ -167,6 +167,10 @@ endif
 libm = cc.find_library('m', required: false)
 udev = dependency('udev')
 uuid = dependency('uuid')
+gcab = dependency('libgcab-1.0')
+if gcab.version().version_compare('>= 0.8')
+  conf.set('HAVE_GCAB_0_8', '1')
+endif
 
 if get_option('enable-uefi-labels')
   cairo = dependency('cairo')

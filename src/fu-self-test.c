@@ -118,7 +118,7 @@ fu_engine_require_hwid_func (void)
 	return;
 #endif
 
-#ifdef __s390x__
+#if !defined(HAVE_GCAB_0_8) && defined(__s390x__)
 	/* See https://github.com/hughsie/fwupd/issues/318 for more information */
 	g_test_skip ("Skipping HWID test on s390x due to known problem with gcab");
 	return;
