@@ -155,6 +155,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	const gchar *vendor;
 	const gchar *version;
 	const gchar *devpath;
+	const gchar *devtype;
 	gboolean is_host;
 	gboolean is_safemode = FALSE;
 	guint16 did;
@@ -172,6 +173,12 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	}
 
 	devpath = g_udev_device_get_sysfs_path (device);
+
+	devtype = g_udev_device_get_devtype (device);
+	if (g_strcmp0 (devtype, "thunderbolt_device") != 0) {
+		g_debug ("ignoring %s device at %s", devtype, devpath);
+		return;
+	}
 
 	g_debug ("adding udev device: %s at %s", uuid, devpath);
 
