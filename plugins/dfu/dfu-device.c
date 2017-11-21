@@ -420,17 +420,18 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 			priv->version = dfu_utils_buffer_parse_uint16 (quirk_str);
 		if (priv->version == DFU_VERSION_DFU_1_0 ||
 		    priv->version == DFU_VERSION_DFU_1_1) {
-			g_debug ("basic DFU 1.1");
+			g_debug ("DFU v1.1");
 		} else if (priv->version == DFU_VERSION_ATMEL_AVR) {
 			g_debug ("AVR-DFU support");
 			priv->version = DFU_VERSION_ATMEL_AVR;
 		} else if (priv->version == DFU_VERSION_DFUSE) {
 			g_debug ("STM-DFU support");
 		} else if (priv->version == 0x0101) {
-			g_debug ("basic DFU 1.1 assumed");
+			g_debug ("DFU v1.1 assumed");
 			priv->version = DFU_VERSION_DFU_1_1;
 		} else {
-			g_warning ("DFU version is invalid: 0x%04x", priv->version);
+			g_warning ("DFU version 0x%04x invalid, v1.1 assumed", priv->version);
+			priv->version = DFU_VERSION_DFU_1_1;
 		}
 
 		/* fix up the transfer size */
