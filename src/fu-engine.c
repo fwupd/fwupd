@@ -245,13 +245,17 @@ fu_engine_get_item_by_guid (FuEngine *self, const gchar *guid)
 }
 
 static FuPlugin *
-fu_engine_get_plugin_by_name (FuEngine *self, const gchar *name)
+fu_engine_get_plugin_by_name (FuEngine *self, const gchar *name, GError **error)
 {
 	for (guint i = 0; i < self->plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
 		if (g_strcmp0 (fu_plugin_get_name (plugin), name) == 0)
 			return plugin;
 	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_FOUND,
+		     "no plugin %s found", name);
 	return NULL;
 }
 
@@ -1371,14 +1375,9 @@ fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GErr
 		item = fu_engine_get_item_by_id (self, fu_device_get_id (dev), NULL);
 		if (item == NULL) {
 			tmp = fu_device_get_plugin (dev);
-			plugin = fu_engine_get_plugin_by_name (self, tmp);
-			if (plugin == NULL) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_FOUND,
-					     "no plugin %s found", tmp);
+			plugin = fu_engine_get_plugin_by_name (self, tmp, error);
+			if (plugin == NULL)
 				return NULL;
-			}
 			item = fu_engine_add_item (self, dev, plugin);
 
 			/* FIXME: just a boolean on FuDeviceItem? */
@@ -2826,7 +2825,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_AFTER);
 			for (guint j = 0; j < deps->len && !changes; j++) {
 				const gchar *plugin_name = g_ptr_array_index (deps, j);
-				dep = fu_engine_get_plugin_by_name (self, plugin_name);
+				dep = fu_engine_get_plugin_by_name (self, plugin_name, NULL);
 				if (dep == NULL) {
 					g_debug ("cannot find plugin '%s' "
 						 "requested by '%s'",
@@ -2854,7 +2853,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_BEFORE);
 			for (guint j = 0; j < deps->len && !changes; j++) {
 				const gchar *plugin_name = g_ptr_array_index (deps, j);
-				dep = fu_engine_get_plugin_by_name (self, plugin_name);
+				dep = fu_engine_get_plugin_by_name (self, plugin_name, NULL);
 				if (dep == NULL) {
 					g_debug ("cannot find plugin '%s' "
 						 "requested by '%s'",
@@ -2896,7 +2895,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_CONFLICTS);
 		for (guint j = 0; j < deps->len && !changes; j++) {
 			const gchar *plugin_name = g_ptr_array_index (deps, j);
-			dep = fu_engine_get_plugin_by_name (self, plugin_name);
+			dep = fu_engine_get_plugin_by_name (self, plugin_name, NULL);
 			if (dep == NULL)
 				continue;
 			if (!fu_plugin_get_enabled (dep))
