@@ -94,7 +94,6 @@ G_DEFINE_TYPE (FuEngine, fu_engine, G_TYPE_OBJECT)
 
 typedef struct {
 	FuDevice		*device;
-	FuPlugin		*plugin;
 } FuDeviceItem;
 
 static void
@@ -177,7 +176,6 @@ static void
 fu_engine_item_free (FuDeviceItem *item)
 {
 	g_object_unref (item->device);
-	g_object_unref (item->plugin);
 	g_free (item);
 }
 
@@ -457,6 +455,7 @@ gboolean
 fu_engine_unlock (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuDeviceItem *item;
+	FuPlugin *plugin;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -467,8 +466,13 @@ fu_engine_unlock (FuEngine *self, const gchar *device_id, GError **error)
 	if (item == NULL)
 		return FALSE;
 
+	/* get the plugin */
+	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	if (plugin == NULL)
+		return FALSE;
+
 	/* run the correct plugin that added this */
-	if (!fu_plugin_runner_unlock (item->plugin,
+	if (!fu_plugin_runner_unlock (plugin,
 				      item->device,
 				      error))
 		return FALSE;
@@ -605,6 +609,7 @@ gboolean
 fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuDeviceItem *item;
+	FuPlugin *plugin;
 	GPtrArray *checksums;
 	const gchar *fn = "/var/lib/fwupd/verify.xml";
 	g_autoptr(AsApp) app = NULL;
@@ -620,10 +625,15 @@ fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 	if (item == NULL)
 		return FALSE;
 
+	/* get the plugin */
+	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	if (plugin == NULL)
+		return FALSE;
+
 	/* get the checksum */
 	checksums = fu_device_get_checksums (item->device);
 	if (checksums->len == 0) {
-		if (!fu_plugin_runner_verify (item->plugin,
+		if (!fu_plugin_runner_verify (plugin,
 					      item->device,
 					      FU_PLUGIN_VERIFY_FLAG_NONE,
 					      error))
@@ -692,6 +702,7 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 	AsChecksum *csum;
 	AsRelease *release;
 	FuDeviceItem *item = NULL;
+	FuPlugin *plugin;
 	GPtrArray *checksums;
 	const gchar *hash = NULL;
 	const gchar *version = NULL;
@@ -706,8 +717,13 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 	if (item == NULL)
 		return FALSE;
 
+	/* get the plugin */
+	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	if (plugin == NULL)
+		return FALSE;
+
 	/* set the device firmware hash */
-	if (!fu_plugin_runner_verify (item->plugin, item->device,
+	if (!fu_plugin_runner_verify (plugin, item->device,
 				      FU_PLUGIN_VERIFY_FLAG_NONE, error))
 		return FALSE;
 
@@ -1059,6 +1075,7 @@ fu_engine_install (FuEngine *self,
 	AsChecksum *csum_tmp;
 	AsRelease *rel;
 	FuDeviceItem *item;
+	FuPlugin *plugin;
 	GBytes *blob_fw;
 	const gchar *tmp;
 	const gchar *version;
@@ -1229,6 +1246,11 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 	}
 
+	/* get the plugin */
+	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	if (plugin == NULL)
+		return FALSE;
+
 	/* compare the versions of what we have installed */
 	tmp = fu_device_get_version (item->device);
 	if (tmp == NULL) {
@@ -1260,8 +1282,8 @@ fu_engine_install (FuEngine *self,
 
 	/* signal to all the plugins the update is about to happen */
 	for (guint j = 0; j < self->plugins->len; j++) {
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, j);
-		if (!fu_plugin_runner_update_prepare (plugin, item->device, error))
+		FuPlugin *plugin_tmp = g_ptr_array_index (self->plugins, j);
+		if (!fu_plugin_runner_update_prepare (plugin_tmp, item->device, error))
 			return FALSE;
 	}
 
@@ -1269,28 +1291,28 @@ fu_engine_install (FuEngine *self,
 	device_id_orig = g_strdup (fu_device_get_id (item->device));
 
 	/* do the update */
-	if (!fu_plugin_runner_update_detach (item->plugin, item->device, error))
+	if (!fu_plugin_runner_update_detach (plugin, item->device, error))
 		return FALSE;
 	item = fu_engine_get_item_by_id (self, device_id_orig, error);
 	if (item == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_update (item->plugin,
+	if (!fu_plugin_runner_update (plugin,
 				      item->device,
 				      blob_cab,
 				      blob_fw2,
 				      flags,
 				      error)) {
 		g_autoptr(GError) error_attach = NULL;
-		if (!fu_plugin_runner_update_attach (item->plugin,
+		if (!fu_plugin_runner_update_attach (plugin,
 						     item->device,
 						     &error_attach)) {
 			g_warning ("failed to attach device after failed update: %s",
 				   error_attach->message);
 		}
 		for (guint j = 0; j < self->plugins->len; j++) {
-			FuPlugin *plugin = g_ptr_array_index (self->plugins, j);
+			FuPlugin *plugin_tmp = g_ptr_array_index (self->plugins, j);
 			g_autoptr(GError) error_local = NULL;
-			if (!fu_plugin_runner_update_cleanup (plugin,
+			if (!fu_plugin_runner_update_cleanup (plugin_tmp,
 							      item->device,
 							      &error_local)) {
 				g_warning ("failed to update-cleanup "
@@ -1303,21 +1325,21 @@ fu_engine_install (FuEngine *self,
 	item = fu_engine_get_item_by_id (self, device_id_orig, error);
 	if (item == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_update_attach (item->plugin, item->device, error))
+	if (!fu_plugin_runner_update_attach (plugin, item->device, error))
 		return FALSE;
 
 	/* get the new version number */
 	item = fu_engine_get_item_by_id (self, device_id_orig, error);
 	if (item == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_update_reload (item->plugin, item->device, error))
+	if (!fu_plugin_runner_update_reload (plugin, item->device, error))
 		return FALSE;
 
 	/* signal to all the plugins the update has happened */
 	for (guint j = 0; j < self->plugins->len; j++) {
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, j);
+		FuPlugin *plugin_tmp = g_ptr_array_index (self->plugins, j);
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_plugin_runner_update_cleanup (plugin, item->device, &error_local)) {
+		if (!fu_plugin_runner_update_cleanup (plugin_tmp, item->device, &error_local)) {
 			g_warning ("failed to update-cleanup: %s",
 				   error_local->message);
 		}
@@ -1339,7 +1361,6 @@ fu_engine_add_item (FuEngine *self, FuDevice *device, FuPlugin *plugin)
 	/* add helper */
 	item = g_new0 (FuDeviceItem, 1);
 	item->device = g_object_ref (device);
-	item->plugin = g_object_ref (plugin);
 	g_ptr_array_add (self->devices, item);
 
 	return item;
@@ -2413,6 +2434,7 @@ gboolean
 fu_engine_clear_results (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuDeviceItem *item;
+	FuPlugin *plugin;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -2423,8 +2445,13 @@ fu_engine_clear_results (FuEngine *self, const gchar *device_id, GError **error)
 	if (item == NULL)
 		return FALSE;
 
+	/* get the plugin */
+	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	if (plugin == NULL)
+		return FALSE;
+
 	/* call into the plugin */
-	return fu_plugin_runner_clear_results (item->plugin, item->device, error);
+	return fu_plugin_runner_clear_results (plugin, item->device, error);
 }
 
 /**
@@ -2441,6 +2468,7 @@ FwupdDevice *
 fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuDeviceItem *item;
+	FuPlugin *plugin;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
 	g_return_val_if_fail (device_id != NULL, NULL);
@@ -2451,8 +2479,13 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 	if (item == NULL)
 		return NULL;
 
+	/* get the plugin */
+	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	if (plugin == NULL)
+		return FALSE;
+
 	/* call into the plugin */
-	if (!fu_plugin_runner_get_results (item->plugin, item->device, error))
+	if (!fu_plugin_runner_get_results (plugin, item->device, error))
 		return NULL;
 
 	return g_object_ref (item->device);
@@ -2650,6 +2683,7 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 {
 	FuEngine *self = (FuEngine *) user_data;
 	FuDeviceItem *item;
+	FuPlugin *plugin_old;
 	g_autoptr(GError) error = NULL;
 
 	item = fu_engine_get_item_by_id (self, fu_device_get_id (device), &error);
@@ -2658,9 +2692,16 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 		return;
 	}
 
+	/* get the plugin */
+	plugin_old = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), &error);
+	if (plugin_old == NULL) {
+		g_debug ("%s", error->message);
+		return;
+	}
+
 	/* check this came from the same plugin */
 	if (g_strcmp0 (fu_plugin_get_name (plugin),
-		       fu_plugin_get_name (item->plugin)) != 0) {
+		       fu_plugin_get_name (plugin_old)) != 0) {
 		g_debug ("ignoring duplicate removal from %s",
 			 fu_plugin_get_name (plugin));
 		return;
@@ -2731,6 +2772,15 @@ fu_engine_plugin_sort_cb (gconstpointer a, gconstpointer b)
 	if (fu_plugin_get_order (*pa) > fu_plugin_get_order (*pb))
 		return 1;
 	return 0;
+}
+
+void
+fu_engine_add_plugin (FuEngine *self, FuPlugin *plugin)
+{
+	g_ptr_array_add (self->plugins, g_object_ref (plugin));
+	g_hash_table_insert (self->plugins_hash,
+			     g_strdup (fu_plugin_get_name (plugin)),
+			     g_object_ref (plugin));
 }
 
 static gboolean
@@ -2811,10 +2861,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 
 		/* add */
-		g_ptr_array_add (self->plugins, g_object_ref (plugin));
-		g_hash_table_insert (self->plugins_hash,
-				     g_strdup (fu_plugin_get_name (plugin)),
-				     g_object_ref (plugin));
+		fu_engine_add_plugin (self, plugin);
 	}
 
 	/* order by deps */

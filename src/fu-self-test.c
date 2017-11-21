@@ -60,11 +60,17 @@ fu_engine_partial_hash_func (void)
 	g_autoptr(GError) error_none = NULL;
 	g_autoptr(GError) error_both = NULL;
 
+	/* set up dummy plugin */
+	fu_plugin_set_name (plugin, "test");
+	fu_engine_add_plugin (engine, plugin);
+
 	/* add two dummy devices */
 	fu_device_set_id (device1, "device1");
+	fu_device_set_plugin (device1, "test");
 	fu_device_add_guid (device1, "12345678-1234-1234-1234-123456789012");
 	fu_engine_add_device (engine, plugin, device1);
 	fu_device_set_id (device2, "device21");
+	fu_device_set_plugin (device2, "test");
 	fu_device_set_equivalent_id (device2, "b92f5b7560b84ca005a79f5a15de3c003ce494cf");
 	fu_device_add_guid (device2, "12345678-1234-1234-1234-123456789012");
 	fu_engine_add_device (engine, plugin, device2);

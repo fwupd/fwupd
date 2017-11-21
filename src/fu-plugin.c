@@ -117,6 +117,16 @@ fu_plugin_get_name (FuPlugin *plugin)
 	return priv->name;
 }
 
+void
+fu_plugin_set_name (FuPlugin *plugin, const gchar *name)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (name != NULL);
+	g_free (priv->name);
+	priv->name = g_strdup (name);
+}
+
 /**
  * fu_plugin_cache_lookup:
  * @plugin: A #FuPlugin
@@ -996,6 +1006,8 @@ fu_plugin_runner_device_register (FuPlugin *plugin, FuDevice *device)
 
 	/* not enabled */
 	if (!priv->enabled)
+		return;
+	if (priv->module == NULL)
 		return;
 
 	/* optional */
