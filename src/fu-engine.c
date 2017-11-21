@@ -93,6 +93,11 @@ static guint signals[SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE (FuEngine, fu_engine, G_TYPE_OBJECT)
 
+#define FU_ENGINE_REQUIREMENT_FIRMWARE_RUNTIME		NULL /* yes, NULL */
+#define FU_ENGINE_REQUIREMENT_FIRMWARE_BOOTLOADER	"bootloader"
+#define FU_ENGINE_REQUIREMENT_FIRMWARE_VENDOR		"vendor-id"
+#define FU_ENGINE_REQUIREMENT_ID_FWUPD			"org.freedesktop.fwupd"
+
 static void
 fu_engine_emit_changed (FuEngine *self)
 {
@@ -754,6 +759,7 @@ fu_engine_check_version_requirement (AsApp *app,
 				   GError **error)
 {
 	AsRequire *req;
+	g_autoptr(GError) error_local = NULL;
 
 	/* check args */
 	if (version == NULL) {
@@ -771,8 +777,86 @@ fu_engine_check_version_requirement (AsApp *app,
 	}
 
 	/* check version */
-	if (!as_require_version_compare (req, version, error)) {
-		g_prefix_error (error, "Value of %s incorrect: ", id);
+	if (!as_require_version_compare (req, version, &error_local)) {
+
+		/* firmware */
+		if (g_strcmp0 (id, FU_ENGINE_REQUIREMENT_FIRMWARE_RUNTIME) == 0) {
+			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Not compatible with firmware version %s, requires >= %s",
+					     version, as_require_get_version (req));
+			} else {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Not compatible with firmware version: %s",
+					     error_local->message);
+			}
+			return FALSE;
+		}
+
+		/* fwupd */
+		if (g_strcmp0 (id, FU_ENGINE_REQUIREMENT_ID_FWUPD) == 0) {
+			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Not compatible with fwupd version %s, requires >= %s",
+					     version, as_require_get_version (req));
+			} else {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Not compatible with fwupd version: %s",
+					     error_local->message);
+			}
+			return FALSE;
+		}
+
+		/* bootloader */
+		if (g_strcmp0 (id, FU_ENGINE_REQUIREMENT_FIRMWARE_BOOTLOADER) == 0) {
+			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Not compatible with bootloader version %s, requires >= %s",
+					     version, as_require_get_version (req));
+			} else {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Not compatible with bootloader version: %s",
+					     error_local->message);
+			}
+			return FALSE;
+		}
+
+		/* vendor */
+		if (g_strcmp0 (id, FU_ENGINE_REQUIREMENT_FIRMWARE_VENDOR) == 0) {
+			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Not compatible with vendor %s, requires >= %s",
+					     version, as_require_get_version (req));
+			} else {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Not compatible with vendor: %s",
+					     error_local->message);
+			}
+			return FALSE;
+		}
+
+		/* anything else */
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Not compatible with %s: %s",
+			     id, error_local->message);
 		return FALSE;
 	}
 
@@ -816,10 +900,10 @@ fu_engine_check_requirements (FuEngine *self, AsApp *app, FuDevice *device, GErr
 {
 	/* make sure requirements are satisfied */
 	if (!fu_engine_check_version_requirement (app,
-						AS_REQUIRE_KIND_ID,
-						"org.freedesktop.fwupd",
-						VERSION,
-						error)) {
+						  AS_REQUIRE_KIND_ID,
+						  FU_ENGINE_REQUIREMENT_ID_FWUPD,
+						  VERSION,
+						  error)) {
 		return FALSE;
 	}
 #if AS_CHECK_VERSION(0,7,4)
@@ -829,24 +913,24 @@ fu_engine_check_requirements (FuEngine *self, AsApp *app, FuDevice *device, GErr
 
 	if (device != NULL) {
 		if (!fu_engine_check_version_requirement (app,
-							AS_REQUIRE_KIND_FIRMWARE,
-							NULL,
-							fu_device_get_version (device),
-							error)) {
+							  AS_REQUIRE_KIND_FIRMWARE,
+							  FU_ENGINE_REQUIREMENT_FIRMWARE_RUNTIME,
+							  fu_device_get_version (device),
+							  error)) {
 			return FALSE;
 		}
 		if (!fu_engine_check_version_requirement (app,
-							AS_REQUIRE_KIND_FIRMWARE,
-							"bootloader",
-							fu_device_get_version_bootloader (device),
-							error)) {
+							  AS_REQUIRE_KIND_FIRMWARE,
+							  FU_ENGINE_REQUIREMENT_FIRMWARE_BOOTLOADER,
+							  fu_device_get_version_bootloader (device),
+							  error)) {
 			return FALSE;
 		}
 		if (!fu_engine_check_version_requirement (app,
-							AS_REQUIRE_KIND_FIRMWARE,
-							"vendor-id",
-							fu_device_get_vendor_id (device),
-							error)) {
+							  AS_REQUIRE_KIND_FIRMWARE,
+							  FU_ENGINE_REQUIREMENT_FIRMWARE_VENDOR,
+							  fu_device_get_vendor_id (device),
+							  error)) {
 			return FALSE;
 		}
 	}
