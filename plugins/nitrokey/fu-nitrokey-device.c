@@ -260,6 +260,10 @@ fu_nitrokey_device_open (FuUsbDevice *device, GError **error)
 	version = g_strdup_printf ("%u.%u", payload.VersionMinor, payload.VersionMajor);
 	fu_device_set_version (FU_DEVICE (device), version);
 
+	/* also add the USB VID:PID hash of the bootloader */
+	fu_device_add_guid (FU_DEVICE (device), "USB\\VID_03EB&PID_2FF1");
+	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
