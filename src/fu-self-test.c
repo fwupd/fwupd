@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "fu-config.h"
+#include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-quirks.h"
@@ -69,12 +70,12 @@ fu_engine_partial_hash_func (void)
 	fu_device_set_id (device1, "device1");
 	fu_device_set_plugin (device1, "test");
 	fu_device_add_guid (device1, "12345678-1234-1234-1234-123456789012");
-	fu_engine_add_device (engine, plugin, device1);
+	fu_engine_add_device (engine, device1);
 	fu_device_set_id (device2, "device21");
 	fu_device_set_plugin (device2, "test");
 	fu_device_set_equivalent_id (device2, "b92f5b7560b84ca005a79f5a15de3c003ce494cf");
 	fu_device_add_guid (device2, "12345678-1234-1234-1234-123456789012");
-	fu_engine_add_device (engine, plugin, device2);
+	fu_engine_add_device (engine, device2);
 
 	/* match nothing */
 	ret = fu_engine_unlock (engine, "deadbeef", &error_none);
@@ -145,7 +146,7 @@ fu_engine_require_hwid_func (void)
 	fu_device_set_id (device, "test_device");
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_engine_add_device (engine, plugin, device);
+	fu_engine_add_device (engine, device);
 
 	/* install it */
 	ret = fu_engine_install (engine, fu_device_get_id (device),
@@ -271,7 +272,7 @@ fu_engine_func (void)
 	fu_device_set_name (device, "Test Device");
 	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_engine_add_device (engine, plugin, device);
+	fu_engine_add_device (engine, device);
 	devices = fu_engine_get_devices (engine, &error);
 	g_assert_no_error (error);
 	g_assert (devices != NULL);
@@ -305,6 +306,65 @@ fu_engine_func (void)
 	rel = FWUPD_RELEASE (g_ptr_array_index (releases_dg, 0));
 	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.2");
 }
+
+static void
+fu_device_list_func (void)
+{
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices2 = NULL;
+	g_autoptr(GError) error = NULL;
+	FuDevice *device;
+
+	/* add both */
+	fu_device_set_id (device1, "device1");
+	fu_device_add_guid (device1, "foobar");
+	fu_device_list_add (device_list, device1);
+	fu_device_set_id (device2, "device2");
+	fu_device_add_guid (device2, "baz");
+	fu_device_list_add (device_list, device2);
+
+	/* get all */
+	devices = fu_device_list_get_all (device_list);
+	g_assert_cmpint (devices->len, ==, 2);
+	device = g_ptr_array_index (devices, 0);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
+
+	/* find by ID */
+	device = fu_device_list_find_by_id (device_list,
+					    "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a",
+					    &error);
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+					   "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
+
+	/* find by GUID */
+	device = fu_device_list_find_by_guid (device_list,
+					      "579a3b1c-d1db-5bdc-b6b9-e2c1b28d5b8a",
+					      &error);
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+
+	/* find by missing GUID */
+	device = fu_device_list_find_by_guid (device_list, "notfound", &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert (device == NULL);
+
+	/* remove device */
+	fu_device_list_remove (device_list, device1);
+	devices2 = fu_device_list_get_all (device_list);
+	g_assert_cmpint (devices2->len, ==, 1);
+	device = g_ptr_array_index (devices2, 0);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+}
+
 
 static void
 fu_device_metadata_func (void)
@@ -1156,6 +1216,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
+	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
 	g_test_add_func ("/fwupd/engine", fu_engine_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
 	g_test_add_func ("/fwupd/engine{partial-hash}", fu_engine_partial_hash_func);
