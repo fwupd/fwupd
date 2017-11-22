@@ -35,6 +35,9 @@
  * This list of devices provides a way to find a device using either the
  * device-id or a GUID.
  *
+ * The device list will emit ::added and ::removed signals when the device list
+ * has been changed.
+ *
  * See also: #FuDevice
  */
 
@@ -46,12 +49,35 @@ struct _FuDeviceList
 	GPtrArray		*devices;	/* of FuDeviceItem */
 };
 
+enum {
+	SIGNAL_ADDED,
+	SIGNAL_REMOVED,
+	SIGNAL_CHANGED,
+	SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST] = { 0 };
+
 /* although this seems a waste of time, there are great plans for this... */
 typedef struct {
 	FuDevice		*device;
 } FuDeviceItem;
 
 G_DEFINE_TYPE (FuDeviceList, fu_device_list, G_TYPE_OBJECT)
+
+static void
+fu_device_list_emit_device_added (FuDeviceList *self, FuDevice *device)
+{
+	g_debug ("::added %s", fu_device_get_id (device));
+	g_signal_emit (self, signals[SIGNAL_ADDED], 0, device);
+}
+
+static void
+fu_device_list_emit_device_removed (FuDeviceList *self, FuDevice *device)
+{
+	g_debug ("::removed %s", fu_device_get_id (device));
+	g_signal_emit (self, signals[SIGNAL_REMOVED], 0, device);
+}
 
 /**
  * fu_device_list_get_all:
@@ -83,6 +109,8 @@ fu_device_list_get_all (FuDeviceList *self)
  *
  * Removes a specific device from the list if it exists.
  *
+ * The ::removed signal will also be emitted if @device is found in the list.
+ *
  * Since: 1.0.2
  **/
 void
@@ -95,6 +123,7 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		if (item->device == device) {
 			g_ptr_array_remove (self->devices, item);
+			fu_device_list_emit_device_removed (self, device);
 			return;
 		}
 	}
@@ -107,6 +136,9 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
  * @error: A #GError, or %NULL
  *
  * Adds a specific device to the device list.
+ *
+ * The ::added signal will also be emitted if @device is not already found in
+ * the list.
  *
  * Returns: (transfer none): a device, or %NULL if not found
  *
@@ -126,6 +158,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	item = g_new0 (FuDeviceItem, 1);
 	item->device = g_object_ref (device);
 	g_ptr_array_add (self->devices, item);
+	fu_device_list_emit_device_added (self, device);
 }
 
 /**
@@ -236,6 +269,22 @@ fu_device_list_class_init (FuDeviceListClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = fu_device_list_finalize;
+
+	signals[SIGNAL_ADDED] =
+		g_signal_new ("added",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
+	signals[SIGNAL_REMOVED] =
+		g_signal_new ("removed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
+	signals[SIGNAL_CHANGED] =
+		g_signal_new ("changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
 }
 
 static void
