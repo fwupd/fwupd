@@ -35,6 +35,24 @@ struct _FuDeviceClass
 	FwupdDeviceClass	 parent_class;
 };
 
+/**
+ * FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE:
+ *
+ * The default removal delay for device re-enumeration taking into account a
+ * chain of slow USB hubs. This should be used when the device is able to
+ * reset itself between bootloader->runtime->bootloader.
+ */
+#define FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE		5000
+
+/**
+ * FU_DEVICE_REMOVE_DELAY_USER_REPLUG:
+ *
+ * The default removal delay for device re-plug taking into account humans
+ * being slow and clumsy. This should be used when the user has to do something,
+ * e.g. unplug, press a magic button and then replug.
+ */
+#define FU_DEVICE_REMOVE_DELAY_USER_REPLUG		20000
+
 FuDevice	*fu_device_new				(void);
 
 /* helpful casting macros */
@@ -105,6 +123,9 @@ void		 fu_device_set_platform_id		(FuDevice	*device,
 							 const gchar	*platform_id);
 void		 fu_device_set_name			(FuDevice	*device,
 							 const gchar	*value);
+guint		 fu_device_get_remove_delay		(FuDevice	*device);
+void		 fu_device_set_remove_delay		(FuDevice	*device,
+							 guint		 remove_delay);
 
 G_END_DECLS
 
