@@ -43,6 +43,7 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin.h"
+#include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
 #include "fu-smbios.h"
@@ -70,8 +71,7 @@ struct _FuEngine
 	gboolean		 coldplug_running;
 	guint			 coldplug_id;
 	guint			 coldplug_delay;
-	GPtrArray		*plugins;	/* of FuPlugin */
-	GHashTable		*plugins_hash;	/* of name : FuPlugin */
+	FuPluginList		*plugin_list;
 	GPtrArray		*supported_guids;
 	FuSmbios		*smbios;
 	FuHwids			*hwids;
@@ -239,21 +239,6 @@ fu_engine_get_item_by_guid (FuEngine *self, const gchar *guid)
 		if (fu_device_has_guid (item->device, guid))
 			return item;
 	}
-	return NULL;
-}
-
-static FuPlugin *
-fu_engine_get_plugin_by_name (FuEngine *self, const gchar *name, GError **error)
-{
-	for (guint i = 0; i < self->plugins->len; i++) {
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
-		if (g_strcmp0 (fu_plugin_get_name (plugin), name) == 0)
-			return plugin;
-	}
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_NOT_FOUND,
-		     "no plugin %s found", name);
 	return NULL;
 }
 
@@ -467,7 +452,9 @@ fu_engine_unlock (FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 
 	/* get the plugin */
-	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (item->device),
+					      error);
 	if (plugin == NULL)
 		return FALSE;
 
@@ -626,7 +613,9 @@ fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 
 	/* get the plugin */
-	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (item->device),
+					      error);
 	if (plugin == NULL)
 		return FALSE;
 
@@ -718,7 +707,9 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 
 	/* get the plugin */
-	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (item->device),
+					      error);
 	if (plugin == NULL)
 		return FALSE;
 
@@ -1077,6 +1068,7 @@ fu_engine_install (FuEngine *self,
 	FuDeviceItem *item;
 	FuPlugin *plugin;
 	GBytes *blob_fw;
+	GPtrArray *plugins;
 	const gchar *tmp;
 	const gchar *version;
 	gboolean is_downgrade;
@@ -1247,7 +1239,9 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* get the plugin */
-	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (item->device),
+					      error);
 	if (plugin == NULL)
 		return FALSE;
 
@@ -1281,8 +1275,9 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* signal to all the plugins the update is about to happen */
-	for (guint j = 0; j < self->plugins->len; j++) {
-		FuPlugin *plugin_tmp = g_ptr_array_index (self->plugins, j);
+	plugins = fu_plugin_list_get_all (self->plugin_list);
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		if (!fu_plugin_runner_update_prepare (plugin_tmp, item->device, error))
 			return FALSE;
 	}
@@ -1309,8 +1304,8 @@ fu_engine_install (FuEngine *self,
 			g_warning ("failed to attach device after failed update: %s",
 				   error_attach->message);
 		}
-		for (guint j = 0; j < self->plugins->len; j++) {
-			FuPlugin *plugin_tmp = g_ptr_array_index (self->plugins, j);
+		for (guint j = 0; j < plugins->len; j++) {
+			FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 			g_autoptr(GError) error_local = NULL;
 			if (!fu_plugin_runner_update_cleanup (plugin_tmp,
 							      item->device,
@@ -1336,8 +1331,8 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 
 	/* signal to all the plugins the update has happened */
-	for (guint j = 0; j < self->plugins->len; j++) {
-		FuPlugin *plugin_tmp = g_ptr_array_index (self->plugins, j);
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_plugin_runner_update_cleanup (plugin_tmp, item->device, &error_local)) {
 			g_warning ("failed to update-cleanup: %s",
@@ -1396,7 +1391,7 @@ fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GErr
 		item = fu_engine_get_item_by_id (self, fu_device_get_id (dev), NULL);
 		if (item == NULL) {
 			tmp = fu_device_get_plugin (dev);
-			plugin = fu_engine_get_plugin_by_name (self, tmp, error);
+			plugin = fu_plugin_list_find_by_name (self->plugin_list, tmp, error);
 			if (plugin == NULL)
 				return NULL;
 			item = fu_engine_add_item (self, dev, plugin);
@@ -2446,7 +2441,9 @@ fu_engine_clear_results (FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 
 	/* get the plugin */
-	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (item->device),
+					      error);
 	if (plugin == NULL)
 		return FALSE;
 
@@ -2480,7 +2477,9 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 		return NULL;
 
 	/* get the plugin */
-	plugin = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), error);
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (item->device),
+					      error);
 	if (plugin == NULL)
 		return FALSE;
 
@@ -2494,14 +2493,16 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 static void
 fu_engine_plugins_setup (FuEngine *self)
 {
+	GPtrArray *plugins;
 	g_autoptr(AsProfileTask) ptask = NULL;
 
 	ptask = as_profile_start_literal (self->profile, "FuMain:setup");
 	g_assert (ptask != NULL);
-	for (guint i = 0; i < self->plugins->len; i++) {
+	plugins = fu_plugin_list_get_all (self->plugin_list);
+	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		g_autoptr(AsProfileTask) ptask2 = NULL;
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+		FuPlugin *plugin = g_ptr_array_index (plugins, i);
 		ptask2 = as_profile_start (self->profile,
 					   "FuMain:setup{%s}",
 					   fu_plugin_get_name (plugin));
@@ -2516,6 +2517,7 @@ fu_engine_plugins_setup (FuEngine *self)
 static void
 fu_engine_plugins_coldplug (FuEngine *self)
 {
+	GPtrArray *plugins;
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(GString) str = g_string_new (NULL);
 
@@ -2523,9 +2525,10 @@ fu_engine_plugins_coldplug (FuEngine *self)
 	self->coldplug_running = TRUE;
 
 	/* prepare */
-	for (guint i = 0; i < self->plugins->len; i++) {
+	plugins = fu_plugin_list_get_all (self->plugin_list);
+	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+		FuPlugin *plugin = g_ptr_array_index (plugins, i);
 		if (!fu_plugin_runner_coldplug_prepare (plugin, &error))
 			g_warning ("failed to prepare coldplug: %s", error->message);
 	}
@@ -2539,10 +2542,10 @@ fu_engine_plugins_coldplug (FuEngine *self)
 	/* exec */
 	ptask = as_profile_start_literal (self->profile, "FuMain:coldplug");
 	g_assert (ptask != NULL);
-	for (guint i = 0; i < self->plugins->len; i++) {
+	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		g_autoptr(AsProfileTask) ptask2 = NULL;
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+		FuPlugin *plugin = g_ptr_array_index (plugins, i);
 		ptask2 = as_profile_start (self->profile,
 					   "FuMain:coldplug{%s}",
 					   fu_plugin_get_name (plugin));
@@ -2554,16 +2557,16 @@ fu_engine_plugins_coldplug (FuEngine *self)
 	}
 
 	/* cleanup */
-	for (guint i = 0; i < self->plugins->len; i++) {
+	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+		FuPlugin *plugin = g_ptr_array_index (plugins, i);
 		if (!fu_plugin_runner_coldplug_cleanup (plugin, &error))
 			g_warning ("failed to cleanup coldplug: %s", error->message);
 	}
 
 	/* print what we do have */
-	for (guint i = 0; i < self->plugins->len; i++) {
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (plugins, i);
 		if (!fu_plugin_get_enabled (plugin))
 			continue;
 		g_string_append_printf (str, "%s, ", fu_plugin_get_name (plugin));
@@ -2580,13 +2583,15 @@ fu_engine_plugins_coldplug (FuEngine *self)
 static void
 fu_engine_plugin_device_register (FuEngine *self, FuDevice *device)
 {
+	GPtrArray *plugins;
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED)) {
 		g_warning ("already registered %s, ignoring",
 			   fu_device_get_id (device));
 		return;
 	}
-	for (guint i = 0; i < self->plugins->len; i++) {
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+	plugins = fu_plugin_list_get_all (self->plugin_list);
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (plugins, i);
 		fu_plugin_runner_device_register (plugin, device);
 	}
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REGISTERED);
@@ -2693,7 +2698,9 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 	}
 
 	/* get the plugin */
-	plugin_old = fu_engine_get_plugin_by_name (self, fu_device_get_plugin (item->device), &error);
+	plugin_old = fu_plugin_list_find_by_name (self->plugin_list,
+						  fu_device_get_plugin (item->device),
+						  &error);
 	if (plugin_old == NULL) {
 		g_debug ("%s", error->message);
 		return;
@@ -2762,35 +2769,17 @@ fu_engine_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuEngi
 		 duration, self->coldplug_delay);
 }
 
-static gint
-fu_engine_plugin_sort_cb (gconstpointer a, gconstpointer b)
-{
-	FuPlugin **pa = (FuPlugin **) a;
-	FuPlugin **pb = (FuPlugin **) b;
-	if (fu_plugin_get_order (*pa) < fu_plugin_get_order (*pb))
-		return -1;
-	if (fu_plugin_get_order (*pa) > fu_plugin_get_order (*pb))
-		return 1;
-	return 0;
-}
-
+/* for the self tests to use */
 void
 fu_engine_add_plugin (FuEngine *self, FuPlugin *plugin)
 {
-	g_ptr_array_add (self->plugins, g_object_ref (plugin));
-	g_hash_table_insert (self->plugins_hash,
-			     g_strdup (fu_plugin_get_name (plugin)),
-			     g_object_ref (plugin));
+	fu_plugin_list_add (self->plugin_list, plugin);
 }
 
 static gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {
-	FuPlugin *dep;
-	GPtrArray *deps;
 	const gchar *fn;
-	gboolean changes;
-	guint dep_loop_check = 0;
 	g_autoptr(GDir) dir = NULL;
 
 	/* search */
@@ -2861,101 +2850,14 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 
 		/* add */
-		fu_engine_add_plugin (self, plugin);
+		fu_plugin_list_add (self->plugin_list, plugin);
 	}
 
-	/* order by deps */
-	do {
-		changes = FALSE;
-		for (guint i = 0; i < self->plugins->len; i++) {
-			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
-			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_AFTER);
-			for (guint j = 0; j < deps->len && !changes; j++) {
-				const gchar *plugin_name = g_ptr_array_index (deps, j);
-				dep = fu_engine_get_plugin_by_name (self, plugin_name, NULL);
-				if (dep == NULL) {
-					g_debug ("cannot find plugin '%s' "
-						 "requested by '%s'",
-						 plugin_name,
-						 fu_plugin_get_name (plugin));
-					continue;
-				}
-				if (!fu_plugin_get_enabled (dep))
-					continue;
-				if (fu_plugin_get_order (plugin) <= fu_plugin_get_order (dep)) {
-					g_debug ("%s [%u] to be ordered after %s [%u] "
-						 "so promoting to [%u]",
-						 fu_plugin_get_name (plugin),
-						 fu_plugin_get_order (plugin),
-						 fu_plugin_get_name (dep),
-						 fu_plugin_get_order (dep),
-						 fu_plugin_get_order (dep) + 1);
-					fu_plugin_set_order (plugin, fu_plugin_get_order (dep) + 1);
-					changes = TRUE;
-				}
-			}
-		}
-		for (guint i = 0; i < self->plugins->len; i++) {
-			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
-			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_BEFORE);
-			for (guint j = 0; j < deps->len && !changes; j++) {
-				const gchar *plugin_name = g_ptr_array_index (deps, j);
-				dep = fu_engine_get_plugin_by_name (self, plugin_name, NULL);
-				if (dep == NULL) {
-					g_debug ("cannot find plugin '%s' "
-						 "requested by '%s'",
-						 plugin_name,
-						 fu_plugin_get_name (plugin));
-					continue;
-				}
-				if (!fu_plugin_get_enabled (dep))
-					continue;
-				if (fu_plugin_get_order (plugin) >= fu_plugin_get_order (dep)) {
-					g_debug ("%s [%u] to be ordered before %s [%u] "
-						 "so promoting to [%u]",
-						 fu_plugin_get_name (plugin),
-						 fu_plugin_get_order (plugin),
-						 fu_plugin_get_name (dep),
-						 fu_plugin_get_order (dep),
-						 fu_plugin_get_order (dep) + 1);
-					fu_plugin_set_order (dep, fu_plugin_get_order (plugin) + 1);
-					changes = TRUE;
-				}
-			}
-		}
+	/* depsolve into the correct order */
+	if (!fu_plugin_list_depsolve (self->plugin_list, error))
+		return FALSE;
 
-		/* check we're not stuck */
-		if (dep_loop_check++ > 100) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "got stuck in dep loop");
-			return FALSE;
-		}
-	} while (changes);
-
-	/* check for conflicts */
-	for (guint i = 0; i < self->plugins->len; i++) {
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
-		if (!fu_plugin_get_enabled (plugin))
-			continue;
-		deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_CONFLICTS);
-		for (guint j = 0; j < deps->len && !changes; j++) {
-			const gchar *plugin_name = g_ptr_array_index (deps, j);
-			dep = fu_engine_get_plugin_by_name (self, plugin_name, NULL);
-			if (dep == NULL)
-				continue;
-			if (!fu_plugin_get_enabled (dep))
-				continue;
-			g_debug ("disabling %s as conflicts with %s",
-				 fu_plugin_get_name (dep),
-				 fu_plugin_get_name (plugin));
-			fu_plugin_set_enabled (dep, FALSE);
-		}
-	}
-
-	/* sort by order */
-	g_ptr_array_sort (self->plugins, fu_engine_plugin_sort_cb);
+	/* success */
 	return TRUE;
 }
 
@@ -2971,11 +2873,14 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 gboolean
 fu_engine_check_plugins_pending (FuEngine *self, GError **error)
 {
+	GPtrArray *plugins;
+
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	for (guint i = 0; i < self->plugins->len; i++) {
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+	plugins = fu_plugin_list_get_all (self->plugin_list);
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (plugins, i);
 		if (fu_plugin_has_device_delay (plugin)) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -3124,12 +3029,10 @@ fu_engine_init (FuEngine *self)
 	self->hwids = fu_hwids_new ();
 	self->quirks = fu_quirks_new ();
 	self->pending = fu_pending_new ();
+	self->plugin_list = fu_plugin_list_new ();
 	self->profile = as_profile_new ();
 	self->store = as_store_new ();
 	self->supported_guids = g_ptr_array_new_with_free_func (g_free);
-	self->plugins = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	self->plugins_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free, (GDestroyNotify) g_object_unref);
 }
 
 static void
@@ -3142,17 +3045,16 @@ fu_engine_finalize (GObject *obj)
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
 
-	g_hash_table_unref (self->plugins_hash);
 	g_object_unref (self->config);
 	g_object_unref (self->smbios);
 	g_object_unref (self->quirks);
 	g_object_unref (self->hwids);
 	g_object_unref (self->pending);
+	g_object_unref (self->plugin_list);
 	g_object_unref (self->profile);
 	g_object_unref (self->store);
 	g_ptr_array_unref (self->devices);
 	g_ptr_array_unref (self->supported_guids);
-	g_ptr_array_unref (self->plugins);
 
 	G_OBJECT_CLASS (fu_engine_parent_class)->finalize (obj);
 }

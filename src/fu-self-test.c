@@ -36,6 +36,7 @@
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
+#include "fu-plugin-list.h"
 #include "fu-progressbar.h"
 #include "fu-hwids.h"
 #include "fu-smbios.h"
@@ -695,6 +696,80 @@ fu_plugin_module_func (void)
 }
 
 static void
+fu_plugin_list_func (void)
+{
+	GPtrArray *plugins;
+	FuPlugin *plugin;
+	g_autoptr(FuPluginList) plugin_list = fu_plugin_list_new ();
+	g_autoptr(FuPlugin) plugin1 = fu_plugin_new ();
+	g_autoptr(FuPlugin) plugin2 = fu_plugin_new ();
+	g_autoptr(GError) error = NULL;
+
+	fu_plugin_set_name (plugin1, "plugin1");
+	fu_plugin_set_name (plugin2, "plugin2");
+
+	/* get all the plugins */
+	fu_plugin_list_add (plugin_list, plugin1);
+	fu_plugin_list_add (plugin_list, plugin2);
+	plugins = fu_plugin_list_get_all (plugin_list);
+	g_assert_cmpint (plugins->len, ==, 2);
+
+	/* get a single plugin */
+	plugin = fu_plugin_list_find_by_name (plugin_list, "plugin1", &error);
+	g_assert_no_error (error);
+	g_assert (plugin != NULL);
+	g_assert_cmpstr (fu_plugin_get_name (plugin), ==, "plugin1");
+
+	/* does not exist */
+	plugin = fu_plugin_list_find_by_name (plugin_list, "nope", &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert (plugin == NULL);
+}
+
+static void
+fu_plugin_list_depsolve_func (void)
+{
+	GPtrArray *plugins;
+	FuPlugin *plugin;
+	gboolean ret;
+	g_autoptr(FuPluginList) plugin_list = fu_plugin_list_new ();
+	g_autoptr(FuPlugin) plugin1 = fu_plugin_new ();
+	g_autoptr(FuPlugin) plugin2 = fu_plugin_new ();
+	g_autoptr(GError) error = NULL;
+
+	fu_plugin_set_name (plugin1, "plugin1");
+	fu_plugin_set_name (plugin2, "plugin2");
+
+	/* add rule then depsolve */
+	fu_plugin_list_add (plugin_list, plugin1);
+	fu_plugin_list_add (plugin_list, plugin2);
+	fu_plugin_add_rule (plugin1, FU_PLUGIN_RULE_RUN_AFTER, "plugin2");
+	ret = fu_plugin_list_depsolve (plugin_list, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	plugins = fu_plugin_list_get_all (plugin_list);
+	g_assert_cmpint (plugins->len, ==, 2);
+	plugin = g_ptr_array_index (plugins, 0);
+	g_assert_cmpstr (fu_plugin_get_name (plugin), ==, "plugin2");
+	g_assert_cmpint (fu_plugin_get_order (plugin), ==, 0);
+	g_assert (fu_plugin_get_enabled (plugin));
+
+	/* add another rule, then re-depsolve */
+	fu_plugin_add_rule (plugin1, FU_PLUGIN_RULE_CONFLICTS, "plugin2");
+	ret = fu_plugin_list_depsolve (plugin_list, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	plugin = fu_plugin_list_find_by_name (plugin_list, "plugin1", &error);
+	g_assert_no_error (error);
+	g_assert (plugin != NULL);
+	g_assert (fu_plugin_get_enabled (plugin));
+	plugin = fu_plugin_list_find_by_name (plugin_list, "plugin2", &error);
+	g_assert_no_error (error);
+	g_assert (plugin != NULL);
+	g_assert (!fu_plugin_get_enabled (plugin));
+}
+
+static void
 fu_pending_func (void)
 {
 	GError *error = NULL;
@@ -1088,6 +1163,8 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
+	g_test_add_func ("/fwupd/plugin-list", fu_plugin_list_func);
+	g_test_add_func ("/fwupd/plugin-list{depsolve}", fu_plugin_list_depsolve_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
