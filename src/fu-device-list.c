@@ -259,6 +259,19 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 	g_ptr_array_remove (self->devices, item);
 }
 
+static void
+fu_device_list_add_missing_guids (FuDevice *device_new, FuDevice *device_old)
+{
+	GPtrArray *guids_old = fu_device_get_guids (device_old);
+	for (guint i = 0; i < guids_old->len; i++) {
+		const gchar *guid_tmp = g_ptr_array_index (guids_old, i);
+		if (!fu_device_has_guid (device_new, guid_tmp)) {
+			g_debug ("adding GUID %s to device", guid_tmp);
+			fu_device_add_guid (device_new, guid_tmp);
+		}
+	}
+}
+
 /**
  * fu_device_list_add:
  * @self: A #FuDeviceList
@@ -274,6 +287,9 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
  * Compatible devices are defined as #FuDevice objects that share at least one
  * device GUID. If a compatible device is matched then the vendor ID and
  * version will be copied to the new object if they are not already set.
+ *
+ * Any GUIDs present on the old device and not on the new device will be
+ * inherited and do not have to be copied over by plugins manually.
  *
  * Returns: (transfer none): a device, or %NULL if not found
  *
@@ -312,6 +328,9 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 			g_source_remove (item->remove_id);
 			item->remove_id = 0;
 		}
+
+		/* copy over any GUIDs that used to exist */
+		fu_device_list_add_missing_guids (device, item->device);
 
 		/* enforce the vendor ID if specified */
 		if (fu_device_get_vendor_id (item->device) != NULL &&
