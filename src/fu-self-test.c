@@ -356,6 +356,71 @@ fu_device_list_delay_func (void)
 }
 
 static void
+fu_device_list_compatible_func (void)
+{
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	g_autoptr(GPtrArray) devices_all = NULL;
+	g_autoptr(GPtrArray) devices_active = NULL;
+	FuDevice *device;
+	guint added_cnt = 0;
+	guint changed_cnt = 0;
+	guint removed_cnt = 0;
+
+	g_signal_connect (device_list, "added",
+			  G_CALLBACK (_device_list_count_cb),
+			  &added_cnt);
+	g_signal_connect (device_list, "removed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &removed_cnt);
+	g_signal_connect (device_list, "changed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &changed_cnt);
+
+	/* add one device in runtime mode */
+	fu_device_set_id (device1, "device1");
+	fu_device_set_plugin (device1, "plugin-for-runtime");
+	fu_device_add_guid (device1, "foobar");
+	fu_device_add_guid (device1, "bootloader");
+	fu_device_set_remove_delay (device1, 100);
+	fu_device_list_add (device_list, device1);
+	g_assert_cmpint (added_cnt, ==, 1);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
+
+	/* add another device in bootloader mode */
+	fu_device_set_id (device2, "device2");
+	fu_device_set_plugin (device2, "plugin-for-bootloader");
+	fu_device_add_guid (device2, "bootloader");
+
+	/* verify only a changed event was generated */
+	added_cnt = removed_cnt = changed_cnt = 0;
+	fu_device_list_remove (device_list, device1);
+	fu_device_list_add (device_list, device2);
+	g_assert_cmpint (added_cnt, ==, 0);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 1);
+
+	/* one device is active */
+	devices_active = fu_device_list_get_active (device_list);
+	g_assert_cmpint (devices_active->len, ==, 1);
+	device = g_ptr_array_index (devices_active, 0);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+
+	/* the list knows about both devices, list in order of active->old */
+	devices_all = fu_device_list_get_all (device_list);
+	g_assert_cmpint (devices_all->len, ==, 2);
+	device = g_ptr_array_index (devices_all, 0);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+	device = g_ptr_array_index (devices_all, 1);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
+}
+
+static void
 fu_device_list_func (void)
 {
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
@@ -1286,6 +1351,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
 	g_test_add_func ("/fwupd/device-list{delay}", fu_device_list_delay_func);
+	g_test_add_func ("/fwupd/device-list{compatible}", fu_device_list_compatible_func);
 	g_test_add_func ("/fwupd/engine", fu_engine_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
 	g_test_add_func ("/fwupd/engine{partial-hash}", fu_engine_partial_hash_func);

@@ -61,6 +61,7 @@ static guint signals[SIGNAL_LAST] = { 0 };
 
 typedef struct {
 	FuDevice		*device;
+	FuDevice		*device_old;
 	FuDeviceList		*self;		/* no ref */
 	guint			 remove_id;
 } FuDeviceItem;
@@ -93,6 +94,8 @@ fu_device_list_emit_device_changed (FuDeviceList *self, FuDevice *device)
  * @self: A #FuDeviceList
  *
  * Returns all the devices that have been added to the device list.
+ * This includes devices that are no longer active, for instance where a
+ * different plugin has taken over responsibility of the #FuDevice.
  *
  * Returns: (transfer container) (element-type FuDevice): the devices
  *
@@ -100,6 +103,37 @@ fu_device_list_emit_device_changed (FuDeviceList *self, FuDevice *device)
  **/
 GPtrArray *
 fu_device_list_get_all (FuDeviceList *self)
+{
+	GPtrArray *devices;
+	g_return_val_if_fail (FU_IS_DEVICE_LIST (self), NULL);
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		g_ptr_array_add (devices, g_object_ref (item->device));
+	}
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (item->device_old == NULL)
+			continue;
+		g_ptr_array_add (devices, g_object_ref (item->device_old));
+	}
+	return devices;
+}
+
+/**
+ * fu_device_list_get_active:
+ * @self: A #FuDeviceList
+ *
+ * Returns all the active devices that have been added to the device list.
+ * An active device is defined as a device that is currently conected and has
+ * is owned by a plugin.
+ *
+ * Returns: (transfer container) (element-type FuDevice): the devices
+ *
+ * Since: 1.0.2
+ **/
+GPtrArray *
+fu_device_list_get_active (FuDeviceList *self)
 {
 	GPtrArray *devices;
 	g_return_val_if_fail (FU_IS_DEVICE_LIST (self), NULL);
@@ -118,6 +152,35 @@ fu_device_list_find_by_device (FuDeviceList *self, FuDevice *device)
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		if (item->device == device)
 			return item;
+	}
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (item->device_old == device)
+			return item;
+	}
+	return NULL;
+}
+
+static FuDeviceItem *
+fu_device_list_find_by_guids (FuDeviceList *self, GPtrArray *guids)
+{
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		for (guint j = 0; j < guids->len; j++) {
+			const gchar *guid = g_ptr_array_index (guids, j);
+			if (fu_device_has_guid (item->device, guid))
+				return item;
+		}
+	}
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (item->device_old == NULL)
+			continue;
+		for (guint j = 0; j < guids->len; j++) {
+			const gchar *guid = g_ptr_array_index (guids, j);
+			if (fu_device_has_guid (item->device_old, guid))
+				return item;
+		}
 	}
 	return NULL;
 }
@@ -233,6 +296,24 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 		return;
 	}
 
+	/* verify a compatible device does not already exist */
+	item = fu_device_list_find_by_guids (self, fu_device_get_guids (device));
+	if (item != NULL) {
+		g_debug ("found compatible device %s, reusing item "
+			 "from plugin %s for plugin %s",
+			 fu_device_get_id (item->device),
+			 fu_device_get_plugin (item->device),
+			 fu_device_get_plugin (device));
+		if (item->remove_id != 0) {
+			g_source_remove (item->remove_id);
+			item->remove_id = 0;
+		}
+		g_set_object (&item->device_old, item->device);
+		g_set_object (&item->device, device);
+		fu_device_list_emit_device_changed (self, device);
+		return;
+	}
+
 	/* add helper */
 	item = g_new0 (FuDeviceItem, 1);
 	item->self = self; /* no ref */
@@ -262,6 +343,13 @@ fu_device_list_find_by_guid (FuDeviceList *self, const gchar *guid, GError **err
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		if (fu_device_has_guid (item->device, guid))
+			return item->device;
+	}
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (item->device_old == NULL)
+			continue;
+		if (fu_device_has_guid (item->device_old, guid))
 			return item->device;
 	}
 	g_set_error (error,
@@ -342,6 +430,8 @@ fu_device_list_item_free (FuDeviceItem *item)
 {
 	if (item->remove_id != 0)
 		g_source_remove (item->remove_id);
+	if (item->device_old != NULL)
+		g_object_unref (item->device_old);
 	g_object_unref (item->device);
 	g_free (item);
 }
