@@ -267,9 +267,13 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
  *
  * Adds a specific device to the device list if not already present.
  *
- * If the @device has been previously removed within the remove-timeout then
- * only the ::changed signal will be emitted on calling this function.
- * Otherwise the ::added signal will be emitted straight away.
+ * If the @device (or a compatible @device) has been previously removed within
+ * the remove-timeout then only the ::changed signal will be emitted on calling
+ * this function. Otherwise the ::added signal will be emitted straight away.
+ *
+ * Compatible devices are defined as #FuDevice objects that share at least one
+ * device GUID. If a compatible device is matched then the vendor ID will be
+ * copied to the new object if it is not already set.
  *
  * Returns: (transfer none): a device, or %NULL if not found
  *
@@ -308,6 +312,16 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 			g_source_remove (item->remove_id);
 			item->remove_id = 0;
 		}
+
+		/* enforce the vendor ID if specified */
+		if (fu_device_get_vendor_id (item->device) != NULL &&
+		    fu_device_get_vendor_id (device) == NULL) {
+			const gchar *vendor_id = fu_device_get_vendor_id (item->device);
+			g_debug ("copying old vendor ID %s to new device", vendor_id);
+			fu_device_set_vendor_id (device, vendor_id);
+		}
+
+		/* assign the new device */
 		g_set_object (&item->device_old, item->device);
 		g_set_object (&item->device, device);
 		fu_device_list_emit_device_changed (self, device);
