@@ -2005,7 +2005,7 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	devices = fu_device_list_get_all (self->device_list);
+	devices = fu_device_list_get_active (self->device_list);
 	if (devices->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
