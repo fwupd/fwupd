@@ -308,6 +308,13 @@ fu_engine_func (void)
 }
 
 static void
+_device_list_count_cb (FuDeviceList *device_list, FuDevice *device, gpointer user_data)
+{
+	guint *cnt = (guint *) user_data;
+	(*cnt)++;
+}
+
+static void
 fu_device_list_func (void)
 {
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
@@ -317,6 +324,19 @@ fu_device_list_func (void)
 	g_autoptr(GPtrArray) devices2 = NULL;
 	g_autoptr(GError) error = NULL;
 	FuDevice *device;
+	guint added_cnt = 0;
+	guint changed_cnt = 0;
+	guint removed_cnt = 0;
+
+	g_signal_connect (device_list, "added",
+			  G_CALLBACK (_device_list_count_cb),
+			  &added_cnt);
+	g_signal_connect (device_list, "removed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &removed_cnt);
+	g_signal_connect (device_list, "changed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &changed_cnt);
 
 	/* add both */
 	fu_device_set_id (device1, "device1");
@@ -325,6 +345,9 @@ fu_device_list_func (void)
 	fu_device_set_id (device2, "device2");
 	fu_device_add_guid (device2, "baz");
 	fu_device_list_add (device_list, device2);
+	g_assert_cmpint (added_cnt, ==, 2);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
 
 	/* get all */
 	devices = fu_device_list_get_all (device_list);
@@ -357,7 +380,11 @@ fu_device_list_func (void)
 	g_assert (device == NULL);
 
 	/* remove device */
+	added_cnt = removed_cnt = changed_cnt = 0;
 	fu_device_list_remove (device_list, device1);
+	g_assert_cmpint (added_cnt, ==, 0);
+	g_assert_cmpint (removed_cnt, ==, 1);
+	g_assert_cmpint (changed_cnt, ==, 0);
 	devices2 = fu_device_list_get_all (device_list);
 	g_assert_cmpint (devices2->len, ==, 1);
 	device = g_ptr_array_index (devices2, 0);

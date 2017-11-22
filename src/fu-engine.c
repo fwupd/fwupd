@@ -100,21 +100,27 @@ fu_engine_emit_changed (FuEngine *self)
 }
 
 static void
-fu_engine_emit_device_added (FuEngine *self, FuDevice *device)
+fu_engine_emit_device_changed (FuEngine *self, FuDevice *device)
+{
+	g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
+}
+
+static void
+fu_engine_device_added_cb (FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
 	g_signal_emit (self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
 
 static void
-fu_engine_emit_device_removed (FuEngine *self, FuDevice *device)
+fu_engine_device_removed_cb (FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
 	g_signal_emit (self, signals[SIGNAL_DEVICE_REMOVED], 0, device);
 }
 
 static void
-fu_engine_emit_device_changed (FuEngine *self, FuDevice *device)
+fu_engine_device_changed_cb (FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
-	g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
+	fu_engine_emit_device_changed (self, device);
 }
 
 /**
@@ -2571,16 +2577,13 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register (self, device);
 
-	/* create new device */
-	fu_device_list_add (self->device_list, device);
-
 	/* match the metadata at this point so clients can tell if the
 	 * device is worthy */
 	if (fu_engine_is_device_supported (self, device))
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
 
-	/* notify clients */
-	fu_engine_emit_device_added (self, device);
+	/* create new device */
+	fu_device_list_add (self->device_list, device);
 	fu_engine_emit_changed (self);
 }
 
@@ -2621,7 +2624,6 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 
 	/* make the UI update */
 	fu_device_list_remove (self->device_list, device);
-	fu_engine_emit_device_removed (self, device);
 	fu_engine_emit_changed (self);
 }
 
@@ -2875,6 +2877,17 @@ fu_engine_load (FuEngine *self, GError **error)
 		g_prefix_error (error, "Failed to load plugins: ");
 		return FALSE;
 	}
+
+	/* watch the device list for updates and proxy */
+	g_signal_connect (self->device_list, "added",
+			  G_CALLBACK (fu_engine_device_added_cb),
+			  self);
+	g_signal_connect (self->device_list, "removed",
+			  G_CALLBACK (fu_engine_device_removed_cb),
+			  self);
+	g_signal_connect (self->device_list, "changed",
+			  G_CALLBACK (fu_engine_device_changed_cb),
+			  self);
 
 	/* add devices */
 	fu_engine_plugins_setup (self);
