@@ -45,6 +45,7 @@ typedef struct {
 	gchar				*filename_pending;
 	FuDevice			*alternate;
 	GHashTable			*metadata;
+	guint				 remove_delay;	/* ms */
 } FuDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuDevice, fu_device, FWUPD_TYPE_DEVICE)
@@ -389,6 +390,47 @@ fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
 	for (gsize i = strlen (key); i < 20; i++)
 		g_string_append (str, " ");
 	g_string_append_printf (str, "%s\n", value);
+}
+
+/**
+ * fu_device_get_remove_delay:
+ * @device: A #FuDevice
+ *
+ * Returns the maximum delay expected when replugging the device going into
+ * bootloader mode.
+ *
+ * Returns: time in milliseconds
+ *
+ * Since: 1.0.2
+ **/
+guint
+fu_device_get_remove_delay (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), 0);
+	return priv->remove_delay;
+}
+
+/**
+ * fu_device_set_remove_delay:
+ * @device: A #FuDevice
+ * @remove_delay: the remove_delay value
+ *
+ * Sets the amount of time a device is allowed to return in bootloader mode.
+ *
+ * NOTE: this should be less than 3000ms for devices that just have to reset
+ * and automatically re-enumerate, but significantly longer if it involves a
+ * user removing a cable, pressing several buttons and removing a cable.
+ * A suggested value for this would be 10,000ms.
+ *
+ * Since: 1.0.2
+ **/
+void
+fu_device_set_remove_delay (FuDevice *device, guint remove_delay)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	priv->remove_delay = remove_delay;
 }
 
 /**

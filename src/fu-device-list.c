@@ -36,7 +36,8 @@
  * device-id or a GUID.
  *
  * The device list will emit ::added and ::removed signals when the device list
- * has been changed.
+ * has been changed. If the #FuDevice has changed during a device replug then
+ * the ::changed signal will be emitted instead of ::added and then ::removed.
  *
  * See also: #FuDevice
  */
@@ -58,9 +59,10 @@ enum {
 
 static guint signals[SIGNAL_LAST] = { 0 };
 
-/* although this seems a waste of time, there are great plans for this... */
 typedef struct {
 	FuDevice		*device;
+	FuDeviceList		*self;		/* no ref */
+	guint			 remove_id;
 } FuDeviceItem;
 
 G_DEFINE_TYPE (FuDeviceList, fu_device_list, G_TYPE_OBJECT)
@@ -77,6 +79,13 @@ fu_device_list_emit_device_removed (FuDeviceList *self, FuDevice *device)
 {
 	g_debug ("::removed %s", fu_device_get_id (device));
 	g_signal_emit (self, signals[SIGNAL_REMOVED], 0, device);
+}
+
+static void
+fu_device_list_emit_device_changed (FuDeviceList *self, FuDevice *device)
+{
+	g_debug ("::changed %s", fu_device_get_id (device));
+	g_signal_emit (self, signals[SIGNAL_CHANGED], 0, device);
 }
 
 /**
@@ -102,6 +111,33 @@ fu_device_list_get_all (FuDeviceList *self)
 	return devices;
 }
 
+static FuDeviceItem *
+fu_device_list_find_by_device (FuDeviceList *self, FuDevice *device)
+{
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (item->device == device)
+			return item;
+	}
+	return NULL;
+}
+
+static gboolean
+fu_device_list_device_delayed_remove_cb (gpointer user_data)
+{
+	FuDeviceItem *item = (FuDeviceItem *) user_data;
+	FuDeviceList *self = FU_DEVICE_LIST (item->self);
+
+	/* no longer valid */
+	item->remove_id = 0;
+
+	/* just remove now */
+	g_debug ("doing delayed removal");
+	fu_device_list_emit_device_removed (self, item->device);
+	g_ptr_array_remove (self->devices, item);
+	return G_SOURCE_REMOVE;
+}
+
 /**
  * fu_device_list_remove:
  * @self: A #FuDeviceList
@@ -109,24 +145,55 @@ fu_device_list_get_all (FuDeviceList *self)
  *
  * Removes a specific device from the list if it exists.
  *
- * The ::removed signal will also be emitted if @device is found in the list.
+ * If the @device has a remove-delay set then a timeout will be started. If
+ * the exact same #FuDevice is added to the list with fu_device_list_add()
+ * within the timeout then only a ::changed signal will be emitted.
+ *
+ * If there is no remove-delay set, the ::removed signal will be emitted
+ * straight away.
  *
  * Since: 1.0.2
  **/
 void
 fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 {
+	FuDeviceItem *item;
+
 	g_return_if_fail (FU_IS_DEVICE_LIST (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
 
-	for (guint i = 0; i < self->devices->len; i++) {
-		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
-		if (item->device == device) {
-			g_ptr_array_remove (self->devices, item);
-			fu_device_list_emit_device_removed (self, device);
-			return;
-		}
+	/* check the device already exists */
+	item = fu_device_list_find_by_device (self, device);
+	if (item == NULL) {
+		g_debug ("device %s not found", fu_device_get_id (device));
+		return;
 	}
+
+	/* ensure never fired if the remove delay is changed */
+	if (item->remove_id > 0) {
+		g_source_remove (item->remove_id);
+		item->remove_id = 0;
+	}
+
+	/* delay the removal and check for replug */
+	if (fu_device_get_remove_delay (item->device) > 0) {
+
+		/* we can't do anything with an unconnected device */
+		fu_device_set_flags (item->device, FWUPD_DEVICE_FLAG_NONE);
+
+		/* give the hardware time to re-enumerate or the user time to
+		 * re-insert the device with a magic button pressed */
+		g_debug ("waiting %ums for device removal",
+			 fu_device_get_remove_delay (item->device));
+		item->remove_id = g_timeout_add (fu_device_get_remove_delay (item->device),
+						 fu_device_list_device_delayed_remove_cb,
+						 item);
+		return;
+	}
+
+	/* remove right now */
+	fu_device_list_emit_device_removed (self, item->device);
+	g_ptr_array_remove (self->devices, item);
 }
 
 /**
@@ -135,10 +202,11 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
  * @device: A #FuDevice
  * @error: A #GError, or %NULL
  *
- * Adds a specific device to the device list.
+ * Adds a specific device to the device list if not already present.
  *
- * The ::added signal will also be emitted if @device is not already found in
- * the list.
+ * If the @device has been previously removed within the remove-timeout then
+ * only the ::changed signal will be emitted on calling this function.
+ * Otherwise the ::added signal will be emitted straight away.
  *
  * Returns: (transfer none): a device, or %NULL if not found
  *
@@ -152,10 +220,22 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	g_return_if_fail (FU_IS_DEVICE_LIST (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
 
-	/* FIXME: verify the device does not already exist */
+	/* verify the device does not already exist */
+	item = fu_device_list_find_by_device (self, device);
+	if (item != NULL) {
+		g_debug ("found existing device %s, reusing item",
+			 fu_device_get_id (item->device));
+		if (item->remove_id != 0) {
+			g_source_remove (item->remove_id);
+			item->remove_id = 0;
+		}
+		fu_device_list_emit_device_changed (self, device);
+		return;
+	}
 
 	/* add helper */
 	item = g_new0 (FuDeviceItem, 1);
+	item->self = self; /* no ref */
 	item->device = g_object_ref (device);
 	g_ptr_array_add (self->devices, item);
 	fu_device_list_emit_device_added (self, device);
@@ -260,6 +340,8 @@ fu_device_list_find_by_id (FuDeviceList *self, const gchar *device_id, GError **
 static void
 fu_device_list_item_free (FuDeviceItem *item)
 {
+	if (item->remove_id != 0)
+		g_source_remove (item->remove_id);
 	g_object_unref (item->device);
 	g_free (item);
 }

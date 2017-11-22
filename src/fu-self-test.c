@@ -315,6 +315,47 @@ _device_list_count_cb (FuDeviceList *device_list, FuDevice *device, gpointer use
 }
 
 static void
+fu_device_list_delay_func (void)
+{
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	guint added_cnt = 0;
+	guint changed_cnt = 0;
+	guint removed_cnt = 0;
+
+	g_signal_connect (device_list, "added",
+			  G_CALLBACK (_device_list_count_cb),
+			  &added_cnt);
+	g_signal_connect (device_list, "removed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &removed_cnt);
+	g_signal_connect (device_list, "changed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &changed_cnt);
+
+	/* add one device */
+	fu_device_set_id (device1, "device1");
+	fu_device_add_guid (device1, "foobar");
+	fu_device_set_remove_delay (device1, 100);
+	fu_device_list_add (device_list, device1);
+	g_assert_cmpint (added_cnt, ==, 1);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
+
+	/* spin a bit */
+	fu_test_loop_run_with_timeout (10);
+	fu_test_loop_quit ();
+
+	/* verify only a changed event was generated */
+	added_cnt = removed_cnt = changed_cnt = 0;
+	fu_device_list_remove (device_list, device1);
+	fu_device_list_add (device_list, device1);
+	g_assert_cmpint (added_cnt, ==, 0);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 1);
+}
+
+static void
 fu_device_list_func (void)
 {
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
@@ -1244,6 +1285,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
+	g_test_add_func ("/fwupd/device-list{delay}", fu_device_list_delay_func);
 	g_test_add_func ("/fwupd/engine", fu_engine_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
 	g_test_add_func ("/fwupd/engine{partial-hash}", fu_engine_partial_hash_func);
