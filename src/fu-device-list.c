@@ -272,8 +272,8 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
  * this function. Otherwise the ::added signal will be emitted straight away.
  *
  * Compatible devices are defined as #FuDevice objects that share at least one
- * device GUID. If a compatible device is matched then the vendor ID will be
- * copied to the new object if it is not already set.
+ * device GUID. If a compatible device is matched then the vendor ID and
+ * version will be copied to the new object if they are not already set.
  *
  * Returns: (transfer none): a device, or %NULL if not found
  *
@@ -319,6 +319,14 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 			const gchar *vendor_id = fu_device_get_vendor_id (item->device);
 			g_debug ("copying old vendor ID %s to new device", vendor_id);
 			fu_device_set_vendor_id (device, vendor_id);
+		}
+
+		/* copy over the version strings if not set */
+		if (fu_device_get_version (item->device) != NULL &&
+		    fu_device_get_version (device) == NULL) {
+			const gchar *version = fu_device_get_version (item->device);
+			g_debug ("copying old version %s to new device", version);
+			fu_device_set_version (device, version);
 		}
 
 		/* assign the new device */

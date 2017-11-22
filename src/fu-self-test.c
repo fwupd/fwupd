@@ -382,6 +382,7 @@ fu_device_list_compatible_func (void)
 	fu_device_set_id (device1, "device1");
 	fu_device_set_plugin (device1, "plugin-for-runtime");
 	fu_device_set_vendor_id (device1, "USB:0x20A0");
+	fu_device_set_version (device1, "1.2.3");
 	fu_device_add_guid (device1, "foobar");
 	fu_device_add_guid (device1, "bootloader");
 	fu_device_set_remove_delay (device1, 100);
@@ -403,8 +404,9 @@ fu_device_list_compatible_func (void)
 	g_assert_cmpint (removed_cnt, ==, 0);
 	g_assert_cmpint (changed_cnt, ==, 1);
 
-	/* device2 should inherit the vendor ID from device1 */
+	/* device2 should inherit the vendor ID and version from device1 */
 	g_assert_cmpstr (fu_device_get_vendor_id (device2), ==, "USB:0x20A0");
+	g_assert_cmpstr (fu_device_get_version (device2), ==, "1.2.3");
 
 	/* one device is active */
 	devices_active = fu_device_list_get_active (device_list);
