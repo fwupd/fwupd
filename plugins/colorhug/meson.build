@@ -2,6 +2,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginColorHug"']
 
 shared_module('fu_plugin_colorhug',
   sources : [
+    'fu-colorhug-device.c',
     'fu-plugin-colorhug.c',
   ],
   include_directories : [

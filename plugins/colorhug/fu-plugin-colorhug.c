@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,247 +21,53 @@
 
 #include "config.h"
 
+#include <appstream-glib.h>
 #include <colord.h>
 #include <colorhug.h>
 
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
-#define FU_PLUGIN_CHUG_POLL_REOPEN		5		/* seconds */
-#define FU_PLUGIN_CHUG_FIRMWARE_MAX		(64 * 1024)	/* bytes */
-
-struct FuPluginData {
-	GHashTable		*devices;	/* DeviceKey:FuPluginItem */
-	ChDeviceQueue		*device_queue;
-};
-
-typedef struct {
-	FuDevice		*device;
-	FuPlugin		*plugin;
-	GUsbDevice		*usb_device;
-	gboolean		 got_version;
-	gboolean		 is_bootloader;
-	guint			 timeout_open_id;
-} FuPluginItem;
-
-static gchar *
-fu_plugin_colorhug_get_device_key (GUsbDevice *device)
-{
-	return g_strdup_printf ("%s_%s",
-				g_usb_device_get_platform_id (device),
-				ch_device_get_guid (device));
-}
-
-static void
-fu_plugin_colorhug_item_free (FuPluginItem *item)
-{
-	g_object_unref (item->device);
-	g_object_unref (item->plugin);
-	g_object_unref (item->usb_device);
-	if (item->timeout_open_id != 0)
-		g_source_remove (item->timeout_open_id);
-}
-
-static gboolean
-fu_plugin_colorhug_wait_for_connect (FuPlugin *plugin,
-				   FuPluginItem *item,
-				   GError **error)
-{
-	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	g_autoptr(GUsbDevice) device = NULL;
-
-	device = g_usb_context_wait_for_replug (usb_ctx,
-						item->usb_device,
-						CH_DEVICE_USB_TIMEOUT,
-						error);
-	if (device == NULL)
-		return FALSE;
-
-	/* update item */
-	g_set_object (&item->usb_device, device);
-	return TRUE;
-}
-
-
-static gboolean
-fu_plugin_colorhug_open (FuPluginItem *item, GError **error)
-{
-	g_autoptr(GError) error_local = NULL;
-	if (!ch_device_open (item->usb_device, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_READ,
-			     "failed to open %s device: %s",
-			     fu_device_get_platform_id (item->device),
-			     error_local->message);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static void
-fu_plugin_colorhug_get_firmware_version (FuPluginItem *item)
-{
-	FuPluginData *data = fu_plugin_get_data (item->plugin);
-	guint16 major;
-	guint16 micro;
-	guint16 minor;
-	guint8 idx;
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autofree gchar *version = NULL;
-
-	/* try to get the version without claiming interface */
-	locker = fu_device_locker_new (item->usb_device, &error);
-	if (locker == NULL) {
-		g_debug ("failed to open, polling: %s", error->message);
-		return;
-	}
-	idx = g_usb_device_get_custom_index (item->usb_device,
-					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-					     'F', 'W', NULL);
-	if (idx != 0x00) {
-		g_autofree gchar *tmp = NULL;
-		tmp = g_usb_device_get_string_descriptor (item->usb_device,
-							  idx, NULL);
-		if (tmp != NULL) {
-			item->got_version = TRUE;
-			g_debug ("obtained fwver using extension '%s'", tmp);
-			fu_device_set_version (item->device, tmp);
-			return;
-		}
-	}
-
-	/* attempt to open the device and get the serial number */
-	if (!ch_device_open (item->usb_device, &error)) {
-		g_debug ("failed to claim interface, polling: %s", error->message);
-		return;
-	}
-	ch_device_queue_get_firmware_ver (data->device_queue, item->usb_device,
-					  &major, &minor, &micro);
-	if (!ch_device_queue_process (data->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error)) {
-		g_warning ("failed to get serial: %s", error->message);
-		return;
-	}
-
-	/* got things the old fashioned way */
-	item->got_version = TRUE;
-	version = g_strdup_printf ("%i.%i.%i", major, minor, micro);
-	g_debug ("obtained fwver using API '%s'", version);
-	fu_device_set_version (item->device, version);
-}
-
-gboolean
-fu_plugin_verify (FuPlugin *plugin,
-		  FuDevice *device,
-		  FuPluginVerifyFlags flags,
-		  GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	FuPluginItem *item;
-	gsize len;
-	g_autoptr(GError) error_local = NULL;
-	g_autofree guint8 *data2 = NULL;
-	GChecksumType checksum_types[] = {
-		G_CHECKSUM_SHA1,
-		G_CHECKSUM_SHA256,
-		0 };
-
-	/* find item */
-	item = g_hash_table_lookup (data->devices, fu_device_get_platform_id (device));
-	if (item == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "cannot find: %s",
-			     fu_device_get_platform_id (device));
-		return FALSE;
-	}
-
-	/* open */
-	if (!fu_plugin_colorhug_open (item, error))
-		return FALSE;
-
-	/* get the firmware from the device */
-	g_debug ("verifying firmware");
-	ch_device_queue_read_firmware (data->device_queue, item->usb_device,
-				       &data2, &len);
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
-	if (!ch_device_queue_process (data->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to dump firmware: %s",
-			     error_local->message);
-		g_usb_device_close (item->usb_device, NULL);
-		return FALSE;
-	}
-
-	/* get the checksum */
-	for (guint i = 0; checksum_types[i] != 0; i++) {
-		g_autofree gchar *hash = NULL;
-		hash = g_compute_checksum_for_data (checksum_types[i],
-						    (guchar *) data2, len);
-		fu_device_add_checksum (device, hash);
-	}
-
-	/* we're done here */
-	if (!g_usb_device_close (item->usb_device, &error_local))
-		g_debug ("Failed to close: %s", error_local->message);
-
-	return TRUE;
-}
+#include "fu-colorhug-device.h"
 
 gboolean
 fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	FuPluginItem *item;
-	g_autoptr(GError) error_local = NULL;
+	FuColorhugDevice *colorhug_dev = FU_COLORHUG_DEVICE (device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
-	/* find item */
-	item = g_hash_table_lookup (data->devices, fu_device_get_platform_id (device));
-	if (item == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "cannot find: %s",
-			     fu_device_get_platform_id (device));
+	/* open device */
+	locker = fu_device_locker_new_full (colorhug_dev,
+					    (FuDeviceLockerFunc) fu_colorhug_device_open,
+					    (FuDeviceLockerFunc) fu_colorhug_device_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
-	}
 
-	/* switch to bootloader mode if required */
-	if (item->is_bootloader)
+	/* switch to bootloader mode is not required */
+	if (fu_colorhug_device_get_is_bootloader (colorhug_dev)) {
+		g_debug ("already in bootloader mode, skipping");
 		return TRUE;
+	}
 
-	g_debug ("switching to bootloader mode");
-	if (!fu_plugin_colorhug_open (item, error))
-		return FALSE;
-	ch_device_queue_reset (data->device_queue, item->usb_device);
+	/* reset */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
-	if (!ch_device_queue_process (data->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to reset device: %s",
-			     error_local->message);
-		g_usb_device_close (item->usb_device, NULL);
+	if (!fu_colorhug_device_detach (colorhug_dev, error))
+		return FALSE;
+
+	/* wait for replug */
+	g_clear_object (&locker);
+	usb_device2 = g_usb_context_wait_for_replug (fu_plugin_get_usb_context (plugin),
+						     fu_colorhug_device_get_usb_device (colorhug_dev),
+						     10000, error);
+	if (usb_device2 == NULL) {
+		g_prefix_error (error, "device did not come back: ");
 		return FALSE;
 	}
 
-	/* this device has just gone away, no error possible */
-	g_usb_device_close (item->usb_device, NULL);
-
-	/* wait for reconnection */
-	g_debug ("waiting for bootloader");
-	if (!fu_plugin_colorhug_wait_for_connect (plugin, item, error))
-		return FALSE;
+	/* set the new device until we can use a new FuDevice */
+	fu_colorhug_device_set_usb_device (colorhug_dev, usb_device2, NULL);
 
 	/* success */
 	return TRUE;
@@ -270,75 +76,41 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 gboolean
 fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	FuPluginItem *item;
-	g_autoptr(GError) error_local = NULL;
+	FuColorhugDevice *colorhug_dev = FU_COLORHUG_DEVICE (device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
-	/* find item */
-	item = g_hash_table_lookup (data->devices, fu_device_get_platform_id (device));
-	if (item == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "cannot find: %s",
-			     fu_device_get_platform_id (device));
+	/* open device */
+	locker = fu_device_locker_new_full (colorhug_dev,
+					    (FuDeviceLockerFunc) fu_colorhug_device_open,
+					    (FuDeviceLockerFunc) fu_colorhug_device_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
-	}
 
-	/* switch to runtime mode if required */
-	if (!item->is_bootloader)
+	/* switch to runtime mode is not required */
+	if (!fu_colorhug_device_get_is_bootloader (colorhug_dev)) {
+		g_debug ("already in runtime mode, skipping");
 		return TRUE;
+	}
 
-	/* boot into the new firmware */
-	g_debug ("booting new firmware");
-	ch_device_queue_boot_flash (data->device_queue, item->usb_device);
+	/* reset */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
-	if (!ch_device_queue_process (data->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to boot flash: %s",
-			     error_local->message);
-		g_usb_device_close (item->usb_device, NULL);
+	if (!fu_colorhug_device_attach (colorhug_dev, error))
+		return FALSE;
+
+	/* wait for replug */
+	g_clear_object (&locker);
+	usb_device2 = g_usb_context_wait_for_replug (fu_plugin_get_usb_context (plugin),
+						     fu_colorhug_device_get_usb_device (colorhug_dev),
+						     10000, error);
+	if (usb_device2 == NULL) {
+		g_prefix_error (error, "device did not come back: ");
 		return FALSE;
 	}
 
-	/* this device has just gone away, no error possible */
-	g_usb_device_close (item->usb_device, NULL);
-
-	/* wait for firmware mode */
-	if (!fu_plugin_colorhug_wait_for_connect (plugin, item, error))
-		return FALSE;
-	if (!fu_plugin_colorhug_open (item, error))
-		return FALSE;
-
-	/* set flash success */
-	g_debug ("setting flash success");
-	ch_device_queue_set_flash_success (data->device_queue, item->usb_device, 1);
-	if (!ch_device_queue_process (data->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to set flash success: %s",
-			     error_local->message);
-		g_usb_device_close (item->usb_device, NULL);
-		return FALSE;
-	}
-
-	/* close, orderly */
-	if (!g_usb_device_close (item->usb_device, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to close device: %s",
-			     error_local->message);
-		g_usb_device_close (item->usb_device, NULL);
-		return FALSE;
-	}
+	/* set the new device until we can use a new FuDevice */
+	fu_colorhug_device_set_usb_device (colorhug_dev, usb_device2, NULL);
 
 	/* success */
 	return TRUE;
@@ -347,25 +119,26 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 gboolean
 fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	FuPluginItem *item;
+	FuColorhugDevice *colorhug_dev = FU_COLORHUG_DEVICE (device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	/* find item */
-	item = g_hash_table_lookup (data->devices, fu_device_get_platform_id (device));
-	if (item == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "cannot find: %s",
-			     fu_device_get_platform_id (device));
+	/* also set flash success */
+	locker = fu_device_locker_new_full (colorhug_dev,
+					    (FuDeviceLockerFunc) fu_colorhug_device_open,
+					    (FuDeviceLockerFunc) fu_colorhug_device_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
-	}
-
-	/* get the new firmware version */
-	g_debug ("getting new firmware version");
-	item->got_version = FALSE;
-	fu_plugin_colorhug_get_firmware_version (item);
+	if (!fu_colorhug_device_set_flash_success (colorhug_dev, error))
+		return FALSE;
 	return TRUE;
+}
+
+static void
+fu_plugin_colorhug_progress_cb (goffset current, goffset total, gpointer user_data)
+{
+	FuPlugin *plugin = FU_PLUGIN (user_data);
+	fu_plugin_set_percentage (plugin, (guint) current);
 }
 
 gboolean
@@ -375,23 +148,12 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	FuPluginItem *item;
+	FuColorhugDevice *colorhug_dev = FU_COLORHUG_DEVICE (device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	/* find item */
-	item = g_hash_table_lookup (data->devices, fu_device_get_platform_id (device));
-	if (item == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "cannot find: %s",
-			     fu_device_get_platform_id (device));
-		return FALSE;
-	}
-
 	/* check this firmware is actually for this device */
-	if (!ch_device_check_firmware (item->usb_device,
+	if (!ch_device_check_firmware (fu_colorhug_device_get_usb_device (colorhug_dev),
 				       g_bytes_get_data (blob_fw, NULL),
 				       g_bytes_get_size (blob_fw),
 				       &error_local)) {
@@ -403,80 +165,57 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	}
 
-	/* open the device, which is now in bootloader mode */
-	if (!fu_plugin_colorhug_open (item, error))
-		return FALSE;
-
 	/* write firmware */
-	g_debug ("writing firmware");
-	ch_device_queue_write_firmware (data->device_queue, item->usb_device,
-					g_bytes_get_data (blob_fw, NULL),
-					g_bytes_get_size (blob_fw));
+	locker = fu_device_locker_new_full (colorhug_dev,
+					    (FuDeviceLockerFunc) fu_colorhug_device_open,
+					    (FuDeviceLockerFunc) fu_colorhug_device_close,
+					    error);
+	if (locker == NULL)
+		return FALSE;
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
-	if (!ch_device_queue_process (data->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to write firmware: %s",
-			     error_local->message);
-		g_usb_device_close (item->usb_device, NULL);
-		return FALSE;
-	}
-
-	/* verify firmware */
-	g_debug ("verifying firmware");
-	ch_device_queue_verify_firmware (data->device_queue, item->usb_device,
-					 g_bytes_get_data (blob_fw, NULL),
-					 g_bytes_get_size (blob_fw));
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
-	if (!ch_device_queue_process (data->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to verify firmware: %s",
-			     error_local->message);
-		g_usb_device_close (item->usb_device, NULL);
-		return FALSE;
-	}
-
-	return TRUE;
+	return fu_colorhug_device_write_firmware (colorhug_dev, blob_fw,
+						  fu_plugin_colorhug_progress_cb,
+						  plugin,
+						  error);
 }
 
-static gboolean
-fu_plugin_colorhug_open_cb (gpointer user_data)
+gboolean
+fu_plugin_verify (FuPlugin *plugin,
+		  FuDevice *device,
+		  FuPluginVerifyFlags flags,
+		  GError **error)
 {
-	FuPluginItem *item = (FuPluginItem *) user_data;
+	FuColorhugDevice *colorhug_dev = FU_COLORHUG_DEVICE (device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	g_debug ("attempt to open %s",
-		 g_usb_device_get_platform_id (item->usb_device));
-	fu_plugin_colorhug_get_firmware_version (item);
-
-	/* success! */
-	if (item->got_version) {
-		item->timeout_open_id = 0;
+	/* write firmware */
+	locker = fu_device_locker_new_full (colorhug_dev,
+					    (FuDeviceLockerFunc) fu_colorhug_device_open,
+					    (FuDeviceLockerFunc) fu_colorhug_device_close,
+					    error);
+	if (locker == NULL)
 		return FALSE;
-	}
-
-	/* keep trying */
-	return TRUE;
+	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
+	return fu_colorhug_device_verify_firmware (colorhug_dev,
+						   fu_plugin_colorhug_progress_cb,
+						   plugin,
+						   error);
 }
 
 static void
 fu_plugin_colorhug_device_added_cb (GUsbContext *ctx,
-				    GUsbDevice *device,
+				    GUsbDevice *usb_device,
 				    FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	FuPluginItem *item;
 	ChDeviceMode mode;
-	g_autofree gchar *device_key = NULL;
+	g_autoptr(AsProfile) profile = as_profile_new ();
+	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuColorhugDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
 
 	/* ignore */
-	mode = ch_device_get_mode (device);
+	mode = ch_device_get_mode (usb_device);
 	if (mode == CH_DEVICE_MODE_UNKNOWN)
 		return;
 
@@ -485,124 +224,50 @@ fu_plugin_colorhug_device_added_cb (GUsbContext *ctx,
 	    mode == CH_DEVICE_MODE_FIRMWARE_PLUS)
 		return;
 
-	/* is already in database */
-	device_key = fu_plugin_colorhug_get_device_key (device);
-	item = g_hash_table_lookup (data->devices, device_key);
-	if (item == NULL) {
-		item = g_new0 (FuPluginItem, 1);
-		item->plugin = g_object_ref (plugin);
-		item->usb_device = g_object_ref (device);
-		item->device = fu_device_new ();
-		fu_device_set_platform_id (item->device, device_key);
-		fu_device_set_vendor (item->device, "Hughski Limited");
-		fu_device_set_vendor_id (item->device, "USB:0x273F");
-		fu_device_set_equivalent_id (item->device,
-					     g_usb_device_get_platform_id (device));
-		fu_device_add_guid (item->device, ch_device_get_guid (device));
-		fu_device_add_icon (item->device, "colorimeter-colorhug");
-		fu_device_add_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	/* profile */
+	ptask = as_profile_start (profile, "FuPluginColorhug:added{%04x:%04x}",
+				  g_usb_device_get_vid (usb_device),
+				  g_usb_device_get_pid (usb_device));
+	g_assert (ptask != NULL);
 
-		/* try to get the serial number -- if opening failed then
-		 * poll until the device is not busy */
-		fu_plugin_colorhug_get_firmware_version (item);
-		if (!item->got_version && item->timeout_open_id == 0) {
-			item->timeout_open_id = g_timeout_add_seconds (FU_PLUGIN_CHUG_POLL_REOPEN,
-				fu_plugin_colorhug_open_cb, item);
-		}
-
-		/* insert to hash */
-		g_hash_table_insert (data->devices, g_strdup (device_key), item);
-	} else {
-		/* update the device */
-		g_object_unref (item->usb_device);
-		item->usb_device = g_object_ref (device);
+	/* create the device */
+	dev = fu_colorhug_device_new (usb_device);
+	if (dev == NULL) {
+		g_warning ("invalid device type detected!");
+		return;
 	}
 
-	/* set the display name */
-	switch (mode) {
-	case CH_DEVICE_MODE_BOOTLOADER:
-	case CH_DEVICE_MODE_FIRMWARE:
-	case CH_DEVICE_MODE_LEGACY:
-		fu_device_set_name (item->device, "ColorHug");
-		fu_device_set_summary (item->device,
-				       "An open source display colorimeter");
-		break;
-	case CH_DEVICE_MODE_BOOTLOADER2:
-	case CH_DEVICE_MODE_FIRMWARE2:
-		fu_device_set_name (item->device, "ColorHug2");
-		fu_device_set_summary (item->device,
-				       "An open source display colorimeter");
-		break;
-	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
-	case CH_DEVICE_MODE_FIRMWARE_PLUS:
-		fu_device_set_name (item->device, "ColorHug+");
-		fu_device_set_summary (item->device,
-				       "An open source spectrophotometer");
-		break;
-	case CH_DEVICE_MODE_BOOTLOADER_ALS:
-	case CH_DEVICE_MODE_FIRMWARE_ALS:
-		fu_device_set_name (item->device, "ColorHugALS");
-		fu_device_set_summary (item->device,
-				       "An open source ambient light sensor");
-		break;
-	default:
-		fu_device_set_name (item->device, "ColorHug??");
-		break;
+	/* open the device */
+	locker = fu_device_locker_new_full (dev,
+					    (FuDeviceLockerFunc) fu_colorhug_device_open,
+					    (FuDeviceLockerFunc) fu_colorhug_device_close,
+					    &error);
+	if (locker == NULL) {
+		g_warning ("failed to open device: %s", error->message);
+		return;
 	}
 
-	/* is the device in bootloader mode */
-	switch (mode) {
-	case CH_DEVICE_MODE_BOOTLOADER:
-	case CH_DEVICE_MODE_BOOTLOADER2:
-	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
-	case CH_DEVICE_MODE_BOOTLOADER_ALS:
-		item->is_bootloader = TRUE;
-		break;
-	default:
-		item->is_bootloader = FALSE;
-		break;
-	}
-	fu_plugin_device_add (plugin, item->device);
+	/* insert to hash */
+	fu_plugin_device_add (plugin, FU_DEVICE (dev));
+	fu_plugin_cache_add (plugin, g_usb_device_get_platform_id (usb_device), dev);
 }
 
 static void
 fu_plugin_colorhug_device_removed_cb (GUsbContext *ctx,
-				      GUsbDevice *device,
+				      GUsbDevice *usb_device,
 				      FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	FuPluginItem *item;
-	g_autofree gchar *device_key = NULL;
+	FuDevice *dev;
+	const gchar *platform_id = NULL;
 
 	/* already in database */
-	device_key = fu_plugin_colorhug_get_device_key (device);
-	item = g_hash_table_lookup (data->devices, device_key);
-	if (item == NULL)
+	platform_id = g_usb_device_get_platform_id (usb_device);
+	dev = fu_plugin_cache_lookup (plugin, platform_id);
+	if (dev == NULL)
 		return;
 
-	/* no more polling for open */
-	if (item->timeout_open_id != 0) {
-		g_source_remove (item->timeout_open_id);
-		item->timeout_open_id = 0;
-	}
-	fu_plugin_device_remove (plugin, item->device);
-}
-
-void
-fu_plugin_init (FuPlugin *plugin)
-{
-	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-	data->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free, (GDestroyNotify) fu_plugin_colorhug_item_free);
-	data->device_queue = ch_device_queue_new ();
-}
-
-void
-fu_plugin_destroy (FuPlugin *plugin)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_hash_table_unref (data->devices);
-	g_object_unref (data->device_queue);
+	fu_plugin_device_remove (plugin, dev);
+	fu_plugin_cache_remove (plugin, platform_id);
 }
 
 gboolean
