@@ -92,7 +92,7 @@ fu_plugin_colorhug_open (FuPluginItem *item, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
 			     "failed to open %s device: %s",
-			     fu_device_get_id (item->device),
+			     fu_device_get_platform_id (item->device),
 			     error_local->message);
 		return FALSE;
 	}
@@ -170,13 +170,13 @@ fu_plugin_verify (FuPlugin *plugin,
 		0 };
 
 	/* find item */
-	item = g_hash_table_lookup (data->devices, fu_device_get_id (device));
+	item = g_hash_table_lookup (data->devices, fu_device_get_platform_id (device));
 	if (item == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
 			     "cannot find: %s",
-			     fu_device_get_id (device));
+			     fu_device_get_platform_id (device));
 		return FALSE;
 	}
 
@@ -224,13 +224,13 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* find item */
-	item = g_hash_table_lookup (data->devices, fu_device_get_id (device));
+	item = g_hash_table_lookup (data->devices, fu_device_get_platform_id (device));
 	if (item == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
 			     "cannot find: %s",
-			     fu_device_get_id (device));
+			     fu_device_get_platform_id (device));
 		return FALSE;
 	}
 
@@ -275,13 +275,13 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* find item */
-	item = g_hash_table_lookup (data->devices, fu_device_get_id (device));
+	item = g_hash_table_lookup (data->devices, fu_device_get_platform_id (device));
 	if (item == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
 			     "cannot find: %s",
-			     fu_device_get_id (device));
+			     fu_device_get_platform_id (device));
 		return FALSE;
 	}
 
@@ -351,13 +351,13 @@ fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
 	FuPluginItem *item;
 
 	/* find item */
-	item = g_hash_table_lookup (data->devices, fu_device_get_id (device));
+	item = g_hash_table_lookup (data->devices, fu_device_get_platform_id (device));
 	if (item == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
 			     "cannot find: %s",
-			     fu_device_get_id (device));
+			     fu_device_get_platform_id (device));
 		return FALSE;
 	}
 
@@ -380,13 +380,13 @@ fu_plugin_update (FuPlugin *plugin,
 	g_autoptr(GError) error_local = NULL;
 
 	/* find item */
-	item = g_hash_table_lookup (data->devices, fu_device_get_id (device));
+	item = g_hash_table_lookup (data->devices, fu_device_get_platform_id (device));
 	if (item == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
 			     "cannot find: %s",
-			     fu_device_get_id (device));
+			     fu_device_get_platform_id (device));
 		return FALSE;
 	}
 
@@ -493,7 +493,7 @@ fu_plugin_colorhug_device_added_cb (GUsbContext *ctx,
 		item->plugin = g_object_ref (plugin);
 		item->usb_device = g_object_ref (device);
 		item->device = fu_device_new ();
-		fu_device_set_id (item->device, device_key);
+		fu_device_set_platform_id (item->device, device_key);
 		fu_device_set_vendor (item->device, "Hughski Limited");
 		fu_device_set_vendor_id (item->device, "USB:0x273F");
 		fu_device_set_equivalent_id (item->device,
