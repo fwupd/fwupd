@@ -160,6 +160,16 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	}
 
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_plugin_update_reload (FuPlugin *plugin, FuDevice *dev, GError **error)
+{
+	FuEbitdoDevice *ebitdo_dev = FU_EBITDO_DEVICE (dev);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
 	/* get the new version number */
 	locker = fu_device_locker_new_full (ebitdo_dev,
 					    (FuDeviceLockerFunc) fu_ebitdo_device_open,
