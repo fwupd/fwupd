@@ -1249,7 +1249,8 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Already in DFU mode");
+			     "Already in DFU mode; state is %s",
+			     dfu_state_to_string (priv->state));
 		return FALSE;
 	}
 
