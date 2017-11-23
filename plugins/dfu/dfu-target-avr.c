@@ -110,23 +110,37 @@ dfu_target_avr_mass_erase (DfuTarget *target,
 static gboolean
 dfu_target_avr_attach (DfuTarget *target, GCancellable *cancellable, GError **error)
 {
-	g_autoptr(GBytes) data_in = NULL;
 	guint8 buf[3];
+	g_autoptr(GBytes) data_empty = NULL;
+	g_autoptr(GBytes) data_in = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* format buffer */
 	buf[0] = DFU_AVR32_GROUP_EXEC;
 	buf[1] = DFU_AVR32_CMD_START_APPLI;
-	buf[2] = 0x00;
+	buf[2] = DFU_AVR32_START_APPLI_RESET;
 	data_in = g_bytes_new_static (buf, sizeof(buf));
 	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, &error_local)) {
 		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug ("ignoring as device rebooting: %s", error_local->message);
 			return TRUE;
 		}
-		g_prefix_error (error, "cannot attach: ");
+		g_prefix_error (error, "cannot start application reset attach: ");
 		return FALSE;
 	}
+
+	/* do zero-sized download to initiate the reset */
+	data_empty = g_bytes_new (NULL, 0);
+	if (!dfu_target_download_chunk (target, 0, data_empty, cancellable, &error_local)) {
+		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug ("ignoring as device rebooting: %s", error_local->message);
+			return TRUE;
+		}
+		g_prefix_error (error, "cannot initiate reset for attach: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
