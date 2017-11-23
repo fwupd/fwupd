@@ -1371,14 +1371,21 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 					    priv->timeout_ms,
 					    cancellable,
 					    &error_local)) {
-		/* refresh the error code */
-		dfu_device_error_fixup (device, cancellable, &error_local);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "cannot detach device: %s",
-			     error_local->message);
-		return FALSE;
+		/* some devices just reboot and stall the endpoint :/ */
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_NOT_SUPPORTED)) {
+			g_debug ("ignoring while detaching: %s", error_local->message);
+		} else {
+			/* refresh the error code */
+			dfu_device_error_fixup (device, cancellable, &error_local);
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "cannot detach device: %s",
+				     error_local->message);
+			return FALSE;
+		}
 	}
 
 	/* do a host reset */
