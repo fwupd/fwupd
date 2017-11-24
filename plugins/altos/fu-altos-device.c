@@ -35,7 +35,6 @@
 typedef struct
 {
 	FuAltosDeviceKind	 kind;
-	GUsbDevice		*usb_device;
 	guint32			 serial[9];
 	gchar			*guid;
 	gchar			*tty;
@@ -46,7 +45,7 @@ typedef struct
 	gint			 tty_fd;
 } FuAltosDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuAltosDevice, fu_altos_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE (FuAltosDevice, fu_altos_device, FU_TYPE_USB_DEVICE)
 
 #define GET_PRIVATE(o) (fu_altos_device_get_instance_private (o))
 
@@ -103,8 +102,6 @@ fu_altos_device_finalize (GObject *object)
 	g_free (priv->guid);
 	g_free (priv->tty);
 	g_free (priv->version);
-	if (priv->usb_device != NULL)
-		g_object_unref (priv->usb_device);
 
 	G_OBJECT_CLASS (fu_altos_device_parent_class)->finalize (object);
 }
@@ -132,6 +129,7 @@ static gboolean
 fu_altos_device_find_tty (FuAltosDevice *device, GError **error)
 {
 	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(GList) devices = NULL;
 	g_autoptr(GUdevClient) gudev_client = g_udev_client_new (NULL);
 
@@ -155,10 +153,10 @@ fu_altos_device_find_tty (FuAltosDevice *device, GError **error)
 
 		/* check correct device */
 		if (g_udev_device_get_sysfs_attr_as_int (dev, "busnum") !=
-		    g_usb_device_get_bus (priv->usb_device))
+		    g_usb_device_get_bus (usb_device))
 			continue;
 		if (g_udev_device_get_sysfs_attr_as_int (dev, "devnum") !=
-		    g_usb_device_get_address (priv->usb_device))
+		    g_usb_device_get_address (usb_device))
 			continue;
 
 		/* success */
@@ -171,8 +169,8 @@ fu_altos_device_find_tty (FuAltosDevice *device, GError **error)
 		     FWUPD_ERROR,
 		     FWUPD_ERROR_NOT_SUPPORTED,
 		     "failed to find tty for %u:%u",
-		     g_usb_device_get_bus (priv->usb_device),
-		     g_usb_device_get_address (priv->usb_device));
+		     g_usb_device_get_bus (usb_device),
+		     g_usb_device_get_address (usb_device));
 	return FALSE;
 }
 
@@ -722,6 +720,7 @@ gboolean
 fu_altos_device_probe (FuAltosDevice *device, GError **error)
 {
 	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 
 	/* bootloader uses tty */
 	if (priv->kind == FU_ALTOS_DEVICE_KIND_BOOTLOADER)
@@ -735,13 +734,13 @@ fu_altos_device_probe (FuAltosDevice *device, GError **error)
 		g_autoptr(FuDeviceLocker) locker = NULL;
 
 		/* open */
-		locker = fu_device_locker_new (priv->usb_device, error);
+		locker = fu_device_locker_new (usb_device, error);
 		if (locker == NULL)
 			return FALSE;
 
 		/* get string */
-		version_idx = g_usb_device_get_product_index (priv->usb_device);
-		version = g_usb_device_get_string_descriptor (priv->usb_device,
+		version_idx = g_usb_device_get_product_index (usb_device);
+		version = g_usb_device_get_string_descriptor (usb_device,
 							      version_idx,
 							      error);
 		if (version == NULL)
@@ -766,22 +765,12 @@ static void
 fu_altos_device_init_real (FuAltosDevice *device)
 {
 	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
-	g_autofree gchar *devid1 = NULL;
-	g_autofree gchar *vendor_id = NULL;
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 
-	/* set USB platform ID */
-	fu_device_set_platform_id (FU_DEVICE (device),
-				   g_usb_device_get_platform_id (priv->usb_device));
-
 	/* set default vendor */
 	fu_device_set_vendor (FU_DEVICE (device), "altusmetrum.org");
-
-	/* set vendor ID */
-	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
-	fu_device_set_vendor_id (FU_DEVICE (device), vendor_id);
 
 	/* set name */
 	switch (priv->kind) {
@@ -800,13 +789,6 @@ fu_altos_device_init_real (FuAltosDevice *device)
 	fu_device_set_summary (FU_DEVICE (device),
 			       "A USB hardware random number generator");
 
-	/* add USB\VID_0000&PID_0000 */
-	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
-				  g_usb_device_get_vid (priv->usb_device),
-				  g_usb_device_get_pid (priv->usb_device));
-	fu_device_add_guid (FU_DEVICE (device), devid1);
-	g_debug ("saving runtime GUID of %s", devid1);
-
 	/* only the bootloader can do the update */
 	if (priv->kind != FU_ALTOS_DEVICE_KIND_BOOTLOADER) {
 		fu_device_add_flag (FU_DEVICE (device),
@@ -823,8 +805,6 @@ typedef struct {
 FuAltosDevice *
 fu_altos_device_new (GUsbDevice *usb_device)
 {
-	FuAltosDevice *device;
-	FuAltosDevicePrivate *priv;
 	const FuAltosDeviceVidPid vidpids[] = {
 		{ 0xfffe, 0x000a, FU_ALTOS_DEVICE_KIND_BOOTLOADER },
 		{ 0x1d50, 0x60c6, FU_ALTOS_DEVICE_KIND_CHAOSKEY },
@@ -833,16 +813,18 @@ fu_altos_device_new (GUsbDevice *usb_device)
 
 	/* set kind */
 	for (guint j = 0; vidpids[j].vid != 0x0000; j++) {
-		if (g_usb_device_get_vid (usb_device) != vidpids[j].vid)
-			continue;
-		if (g_usb_device_get_pid (usb_device) != vidpids[j].pid)
-			continue;
-		device = g_object_new (FU_TYPE_ALTOS_DEVICE, NULL);
-		priv = GET_PRIVATE (device);
-		priv->kind = vidpids[j].kind;
-		priv->usb_device = g_object_ref (usb_device);
-		fu_altos_device_init_real (device);
-		return device;
+		if (g_usb_device_get_vid (usb_device) == vidpids[j].vid &&
+		    g_usb_device_get_pid (usb_device) == vidpids[j].pid) {
+			FuAltosDevice *device;
+			FuAltosDevicePrivate *priv;
+			device = g_object_new (FU_TYPE_ALTOS_DEVICE,
+					       "usb-device", usb_device,
+					       NULL);
+			priv = GET_PRIVATE (device);
+			priv->kind = vidpids[j].kind;
+			fu_altos_device_init_real (device);
+			return device;
+		}
 	}
 	return NULL;
 }

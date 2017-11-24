@@ -31,6 +31,7 @@ libfwupdprivate = static_library(
     'fu-quirks.c',
     'fu-smbios.c',
     'fu-test.c',
+    'fu-usb-device.c',
   ],
   include_directories : [
     include_directories('..'),
@@ -133,6 +134,7 @@ executable(
     'fu-plugin.c',
     'fu-quirks.c',
     'fu-smbios.c',
+    'fu-usb-device.c',
   ],
   include_directories : [
     include_directories('..'),
@@ -195,6 +197,7 @@ if get_option('enable-tests')
       'fu-quirks.c',
       'fu-smbios.c',
       'fu-test.c',
+      'fu-usb-device.c',
     ],
     include_directories : [
       include_directories('..'),
@@ -248,6 +251,7 @@ if get_option('enable-introspection')
       'fu-plugin.h',
       'fu-quirks.c',
       'fu-quirks.h',
+      'fu-usb-device.c',
     ],
     nsversion : '1.0',
     namespace : 'Fu',

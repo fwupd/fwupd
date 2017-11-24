@@ -25,6 +25,7 @@
 #include <gusb.h>
 
 #include "fu-device-locker.h"
+#include "fu-usb-device.h"
 
 /**
  * SECTION:fu-device-locker
@@ -86,8 +87,10 @@ fu_device_locker_init (FuDeviceLocker *self)
  * manually closed using g_clear_object().
  *
  * The functions used for opening and closing the device are set automatically.
- * If the @device is not a type or supertype of @GUsbDevice then this function
- * will not work. For custom objects please use fu_device_locker_new_full().
+ * If the @device is not a type or supertype of #GUsbDevice or #FuUsbDevice
+ * then this function will not work.
+ *
+ * For custom objects please use fu_device_locker_new_full().
  *
  * NOTE: If the @open_func failed then the @close_func will not be called.
  *
@@ -106,6 +109,14 @@ fu_device_locker_new (gpointer device, GError **error)
 		return fu_device_locker_new_full (device,
 						  (FuDeviceLockerFunc) g_usb_device_open,
 						  (FuDeviceLockerFunc) g_usb_device_close,
+						  error);
+	}
+
+	/* FuUsbDevice */
+	if (FU_IS_USB_DEVICE (device)) {
+		return fu_device_locker_new_full (device,
+						  (FuDeviceLockerFunc) fu_usb_device_open,
+						  (FuDeviceLockerFunc) fu_usb_device_close,
 						  error);
 	}
 	g_set_error_literal (error,

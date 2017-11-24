@@ -21,7 +21,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <string.h>
 
 #include "fu-plugin.h"
@@ -36,8 +35,6 @@ fu_plugin_nitrokey_device_added_cb (GUsbContext *ctx,
 				    FuPlugin *plugin)
 {
 	const gchar *platform_id = NULL;
-	g_autoptr(AsProfile) profile = as_profile_new ();
-	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuNitrokeyDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
@@ -47,12 +44,6 @@ fu_plugin_nitrokey_device_added_cb (GUsbContext *ctx,
 		return;
 	if (g_usb_device_get_pid (usb_device) != 0x4109)
 		return;
-
-	/* profile */
-	ptask = as_profile_start (profile, "FuPluginNitrokey:added{%04x:%04x}",
-				  g_usb_device_get_vid (usb_device),
-				  g_usb_device_get_pid (usb_device));
-	g_assert (ptask != NULL);
 
 	/* is already in database */
 	platform_id = g_usb_device_get_platform_id (usb_device);
@@ -64,10 +55,7 @@ fu_plugin_nitrokey_device_added_cb (GUsbContext *ctx,
 
 	/* open the device */
 	dev = fu_nitrokey_device_new (usb_device);
-	locker = fu_device_locker_new_full (dev,
-					    (FuDeviceLockerFunc) fu_nitrokey_device_open,
-					    (FuDeviceLockerFunc) fu_nitrokey_device_close,
-					    &error);
+	locker = fu_device_locker_new (dev, &error);
 	if (locker == NULL) {
 		g_warning ("failed to open device: %s", error->message);
 		return;

@@ -30,23 +30,17 @@
 G_BEGIN_DECLS
 
 #define FU_TYPE_COLORHUG_DEVICE (fu_colorhug_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuColorhugDevice, fu_colorhug_device, FU, COLORHUG_DEVICE, FuDevice)
+G_DECLARE_DERIVABLE_TYPE (FuColorhugDevice, fu_colorhug_device, FU, COLORHUG_DEVICE, FuUsbDevice)
 
 struct _FuColorhugDeviceClass
 {
-	FuDeviceClass		parent_class;
+	FuUsbDeviceClass	parent_class;
 };
 
 FuColorhugDevice *fu_colorhug_device_new		(GUsbDevice		*usb_device);
-gboolean	 fu_colorhug_device_set_usb_device	(FuColorhugDevice	*device,
-							 GUsbDevice		*usb_device,
-							 GError			**error);
-GUsbDevice	*fu_colorhug_device_get_usb_device	(FuColorhugDevice	*device);
 gboolean	 fu_colorhug_device_get_is_bootloader	(FuColorhugDevice	*device);
 
 /* object methods */
-gboolean	 fu_colorhug_device_open		(FuColorhugDevice	*device,
-							 GError			**error);
 gboolean	 fu_colorhug_device_close		(FuColorhugDevice	*device,
 							 GError			**error);
 gboolean	 fu_colorhug_device_detach		(FuColorhugDevice	*device,
