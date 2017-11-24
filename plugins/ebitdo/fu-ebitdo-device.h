@@ -30,11 +30,11 @@
 G_BEGIN_DECLS
 
 #define FU_TYPE_EBITDO_DEVICE (fu_ebitdo_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuEbitdoDevice, fu_ebitdo_device, FU, EBITDO_DEVICE, FuDevice)
+G_DECLARE_DERIVABLE_TYPE (FuEbitdoDevice, fu_ebitdo_device, FU, EBITDO_DEVICE, FuUsbDevice)
 
 struct _FuEbitdoDeviceClass
 {
-	FuDeviceClass		parent_class;
+	FuUsbDeviceClass	parent_class;
 };
 
 typedef enum {
@@ -51,13 +51,12 @@ typedef enum {
 	FU_EBITDO_DEVICE_KIND_LAST
 } FuEbitdoDeviceKind;
 
-FuEbitdoDevice	*fu_ebitdo_device_new			(GUsbDevice	*usb_device);
-gboolean	 fu_ebitdo_device_set_usb_device	(FuEbitdoDevice	*device,
-							 GUsbDevice	*usb_device,
-							 GError		**error);
+FuEbitdoDevice	*fu_ebitdo_device_new			(FuEbitdoDeviceKind kind,
+							 GUsbDevice	*usb_device);
 
 /* helpers */
 FuEbitdoDeviceKind fu_ebitdo_device_kind_from_string	(const gchar	*kind);
+FuEbitdoDeviceKind fu_ebitdo_device_kind_from_dev	(GUsbDevice	*usb_device);
 const gchar	*fu_ebitdo_device_kind_to_string	(FuEbitdoDeviceKind kind);
 
 /* getters */
@@ -65,10 +64,6 @@ FuEbitdoDeviceKind fu_ebitdo_device_get_kind		(FuEbitdoDevice	*device);
 const guint32	*fu_ebitdo_device_get_serial		(FuEbitdoDevice	*device);
 
 /* object methods */
-gboolean	 fu_ebitdo_device_open			(FuEbitdoDevice	*device,
-							 GError		**error);
-gboolean	 fu_ebitdo_device_close			(FuEbitdoDevice	*device,
-							 GError		**error);
 gboolean	 fu_ebitdo_device_write_firmware	(FuEbitdoDevice	*device,
 							 GBytes		*fw,
 							 GFileProgressCallback progress_cb,

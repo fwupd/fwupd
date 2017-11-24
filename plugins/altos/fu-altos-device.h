@@ -30,11 +30,11 @@
 G_BEGIN_DECLS
 
 #define FU_TYPE_ALTOS_DEVICE (fu_altos_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuAltosDevice, fu_altos_device, FU, ALTOS_DEVICE, FuDevice)
+G_DECLARE_DERIVABLE_TYPE (FuAltosDevice, fu_altos_device, FU, ALTOS_DEVICE, FuUsbDevice)
 
 struct _FuAltosDeviceClass
 {
-	FuDeviceClass		parent_class;
+	FuUsbDeviceClass	parent_class;
 };
 
 typedef enum {

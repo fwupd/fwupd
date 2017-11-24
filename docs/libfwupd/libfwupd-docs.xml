@@ -43,6 +43,7 @@
     </partintro>
     <xi:include href="xml/fu-plugin.xml"/>
     <xi:include href="xml/fu-device.xml"/>
+    <xi:include href="xml/fu-usb-device.xml"/>
     <xi:include href="xml/fu-device-locker.xml"/>
     <xi:include href="xml/fu-common.xml"/>
     <xi:include href="xml/fu-quirks.xml"/>

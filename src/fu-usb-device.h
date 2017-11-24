@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#ifndef __FU_NITROKEY_DEVICE_H
-#define __FU_NITROKEY_DEVICE_H
+#ifndef __FU_USB_DEVICE_H
+#define __FU_USB_DEVICE_H
 
 #include <glib-object.h>
 #include <gusb.h>
@@ -29,16 +29,28 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_NITROKEY_DEVICE (fu_nitrokey_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuNitrokeyDevice, fu_nitrokey_device, FU, NITROKEY_DEVICE, FuUsbDevice)
+#define FU_TYPE_USB_DEVICE (fu_usb_device_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)
 
-struct _FuNitrokeyDeviceClass
+struct _FuUsbDeviceClass
 {
-	FuUsbDeviceClass	parent_class;
+	FuDeviceClass	parent_class;
+	gboolean	 (*open)		(FuUsbDevice		*device,
+						 GError			**error);
+	gboolean	 (*close)		(FuUsbDevice		*device,
+						 GError			**error);
+	gpointer	__reserved[29];
 };
 
-FuNitrokeyDevice *fu_nitrokey_device_new	(GUsbDevice		*usb_device);
+FuDevice	*fu_usb_device_new			(GUsbDevice	*usb_device);
+GUsbDevice	*fu_usb_device_get_dev			(FuUsbDevice	*device);
+void		 fu_usb_device_set_dev			(FuUsbDevice	*device,
+							 GUsbDevice	*usb_device);
+gboolean	 fu_usb_device_open			(FuUsbDevice	*device,
+							 GError		**error);
+gboolean	 fu_usb_device_close			(FuUsbDevice	*device,
+							 GError		**error);
 
 G_END_DECLS
 
-#endif /* __FU_NITROKEY_DEVICE_H */
+#endif /* __FU_USB_DEVICE_H */

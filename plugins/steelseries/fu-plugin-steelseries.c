@@ -21,7 +21,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <string.h>
 
 #include "fu-plugin.h"
@@ -39,10 +38,7 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 	gboolean ret;
 	gsize actual_len = 0;
 	guint8 data[32];
-	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *version = NULL;
-	g_autoptr(AsProfile) profile = as_profile_new ();
-	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -52,12 +48,6 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 		return;
 	if (g_usb_device_get_pid (usb_device) != 0x1702)
 		return;
-
-	/* profile */
-	ptask = as_profile_start (profile, "FuPluginSteelseries:added{%04x:%04x}",
-				  g_usb_device_get_vid (usb_device),
-				  g_usb_device_get_pid (usb_device));
-	g_assert (ptask != NULL);
 
 	/* is already in database */
 	platform_id = g_usb_device_get_platform_id (usb_device);
@@ -122,8 +112,7 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 	}
 
 	/* insert to hash if valid */
-	dev = fu_device_new ();
-	fu_device_set_id (dev, platform_id);
+	dev = fu_usb_device_new (usb_device);
 	fu_device_set_name (dev, "SteelSeries Rival 100");
 	fu_device_set_vendor (dev, "SteelSeries");
 	fu_device_set_summary (dev, "An optical gaming mouse");
@@ -131,12 +120,6 @@ fu_plugin_steelseries_device_added_cb (GUsbContext *ctx,
 	version = g_strdup_printf ("%i.%i.%i",
 				   data[0], data[1], data[2]);
 	fu_device_set_version (dev, version);
-
-	/* use the USB VID:PID hash */
-	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
-				  g_usb_device_get_vid (usb_device),
-				  g_usb_device_get_pid (usb_device));
-	fu_device_add_guid (dev, devid1);
 
 	/* we're done here */
 	if (!g_usb_device_release_interface (usb_device, iface_idx,

@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -27,15 +27,7 @@
 #include "fu-nitrokey-common.h"
 #include "fu-nitrokey-device.h"
 
-typedef struct
-{
-	GUsbDevice		*usb_device;
-	FuDeviceLocker		*usb_device_locker;
-} FuNitrokeyDevicePrivate;
-
-G_DEFINE_TYPE_WITH_PRIVATE (FuNitrokeyDevice, fu_nitrokey_device, FU_TYPE_DEVICE)
-
-#define GET_PRIVATE(o) (fu_nitrokey_device_get_instance_private (o))
+G_DEFINE_TYPE (FuNitrokeyDevice, fu_nitrokey_device, FU_TYPE_USB_DEVICE)
 
 #define NITROKEY_TRANSACTION_TIMEOUT		100 /* ms */
 #define NITROKEY_NR_RETRIES			5
@@ -86,33 +78,6 @@ typedef struct __attribute__((packed)) {
 	guint32		ActiveSmartCardID;
 	guint8		StickKeysNotInitiated;
 } NitrokeyGetDeviceStatusPayload;
-
-static void
-fu_nitrokey_device_finalize (GObject *object)
-{
-	FuNitrokeyDevice *device = FU_NITROKEY_DEVICE (object);
-	FuNitrokeyDevicePrivate *priv = GET_PRIVATE (device);
-
-	if (priv->usb_device_locker != NULL)
-		g_object_unref (priv->usb_device_locker);
-	if (priv->usb_device != NULL)
-		g_object_unref (priv->usb_device);
-
-	G_OBJECT_CLASS (fu_nitrokey_device_parent_class)->finalize (object);
-}
-
-static void
-fu_nitrokey_device_init (FuNitrokeyDevice *device)
-{
-}
-
-static void
-fu_nitrokey_device_class_init (FuNitrokeyDeviceClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	object_class->finalize = fu_nitrokey_device_finalize;
-}
-
 
 static void
 _dump_to_console (const gchar *title, const guint8 *buf, gsize buf_sz)
@@ -258,29 +223,18 @@ nitrokey_execute_cmd_full (GUsbDevice *usb_device, guint8 command,
 	return FALSE;
 }
 
-gboolean
-fu_nitrokey_device_open (FuNitrokeyDevice *device, GError **error)
+static gboolean
+fu_nitrokey_device_open (FuUsbDevice *device, GError **error)
 {
-	FuNitrokeyDevicePrivate *priv = GET_PRIVATE (device);
-	g_autofree gchar *vendor_id = NULL;
+	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	NitrokeyGetDeviceStatusPayload payload;
-	const gchar *platform_id = NULL;
 	guint8 buf_reply[NITROKEY_REPLY_DATA_LENGTH];
-	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *platform_id_fixed = NULL;
 	g_autofree gchar *version = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	/* already open */
-	if (priv->usb_device_locker != NULL)
-		return TRUE;
-
-	/* open, then ensure this is actually 8Bitdo hardware */
-	locker = fu_device_locker_new (priv->usb_device, error);
-	if (locker == NULL)
-		return FALSE;
-	if (!g_usb_device_claim_interface (priv->usb_device, 0x02, /* idx */
+	/* claim interface */
+	if (!g_usb_device_claim_interface (usb_device, 0x02, /* idx */
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					   error)) {
 		g_prefix_error (error, "failed to do claim nitrokey: ");
@@ -288,7 +242,7 @@ fu_nitrokey_device_open (FuNitrokeyDevice *device, GError **error)
 	}
 
 	/* get firmware version */
-	if (!nitrokey_execute_cmd_full (priv->usb_device,
+	if (!nitrokey_execute_cmd_full (usb_device,
 					NITROKEY_CMD_GET_DEVICE_STATUS,
 					NULL, 0,
 					buf_reply, sizeof(buf_reply),
@@ -299,12 +253,6 @@ fu_nitrokey_device_open (FuNitrokeyDevice *device, GError **error)
 	_dump_to_console ("payload", buf_reply, sizeof(buf_reply));
 	memcpy (&payload, buf_reply, sizeof(buf_reply));
 
-	/* we use a modified version of the platform ID so we can have multiple
-	 * FuDeviceItems for the same device -- when we can have the same device
-	 * handled by multiple plugins this won't be required... */
-	platform_id = g_usb_device_get_platform_id (priv->usb_device);
-	platform_id_fixed = g_strdup_printf ("%s_workaround", platform_id);
-	fu_device_set_platform_id (FU_DEVICE (device), platform_id_fixed);
 	fu_device_set_name (FU_DEVICE (device), "Nitrokey Storage");
 	fu_device_set_vendor (FU_DEVICE (device), "Nitrokey");
 	fu_device_set_summary (FU_DEVICE (device), "A secure memory stick");
@@ -312,54 +260,48 @@ fu_nitrokey_device_open (FuNitrokeyDevice *device, GError **error)
 	version = g_strdup_printf ("%u.%u", payload.VersionMinor, payload.VersionMajor);
 	fu_device_set_version (FU_DEVICE (device), version);
 
-	/* set vendor ID */
-	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
-	fu_device_set_vendor_id (FU_DEVICE (device), vendor_id);
-
-	/* use the USB VID:PID hash */
-	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
-				  g_usb_device_get_vid (priv->usb_device),
-				  g_usb_device_get_pid (priv->usb_device));
-	fu_device_add_guid (FU_DEVICE (device), devid1);
-
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 
 	/* success */
-	priv->usb_device_locker = g_steal_pointer (&locker);
 	return TRUE;
 }
 
-gboolean
-fu_nitrokey_device_close (FuNitrokeyDevice *device, GError **error)
+static gboolean
+fu_nitrokey_device_close (FuUsbDevice *device, GError **error)
 {
-	FuNitrokeyDevicePrivate *priv = GET_PRIVATE (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* reconnect kernel driver */
-	if (!g_usb_device_release_interface (priv->usb_device, 0x02,
+	if (!g_usb_device_release_interface (usb_device, 0x02,
 					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					     &error_local)) {
 		g_warning ("failed to release interface: %s", error_local->message);
 	}
-
-	g_clear_object (&priv->usb_device_locker);
 	return TRUE;
 }
 
 static void
-fu_nitrokey_device_set_usb_device (FuNitrokeyDevice *device, GUsbDevice *usb_device)
+fu_nitrokey_device_init (FuNitrokeyDevice *device)
 {
-	FuNitrokeyDevicePrivate *priv = GET_PRIVATE (device);
-	g_set_object (&priv->usb_device, usb_device);
+}
+
+static void
+fu_nitrokey_device_class_init (FuNitrokeyDeviceClass *klass)
+{
+	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	klass_usb_device->open = fu_nitrokey_device_open;
+	klass_usb_device->close = fu_nitrokey_device_close;
 }
 
 FuNitrokeyDevice *
 fu_nitrokey_device_new (GUsbDevice *usb_device)
 {
-	g_autoptr(FuNitrokeyDevice) device = NULL;
-	device = g_object_new (FU_TYPE_NITROKEY_DEVICE, NULL);
-	fu_nitrokey_device_set_usb_device (device, usb_device);
-	return g_steal_pointer (&device);
+	FuNitrokeyDevice *device;
+	device = g_object_new (FU_TYPE_NITROKEY_DEVICE,
+			       "usb-device", usb_device,
+			       NULL);
+	return FU_NITROKEY_DEVICE (device);
 }

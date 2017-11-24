@@ -21,8 +21,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
-
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
@@ -35,15 +33,7 @@ fu_plugin_altos_device_added (FuPlugin *plugin,
 {
 	const gchar *platform_id = NULL;
 	g_autofree gchar *runtime_id = NULL;
-	g_autoptr(AsProfile) profile = as_profile_new ();
-	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuAltosDevice) dev = NULL;
-
-	/* profile */
-	ptask = as_profile_start (profile, "FuPluginAltos:added{%04x:%04x}",
-				  g_usb_device_get_vid (usb_device),
-				  g_usb_device_get_pid (usb_device));
-	g_assert (ptask != NULL);
 
 	/* get kind */
 	dev = fu_altos_device_new (usb_device);
