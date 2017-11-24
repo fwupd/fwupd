@@ -189,66 +189,30 @@ fu_plugin_verify (FuPlugin *plugin,
 						   error);
 }
 
-static void
-fu_plugin_colorhug_device_added_cb (GUsbContext *ctx,
-				    GUsbDevice *usb_device,
-				    FuPlugin *plugin)
+gboolean
+fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {
 	ChDeviceMode mode;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuColorhugDevice) device = NULL;
-	g_autoptr(GError) error = NULL;
 
 	/* ignore */
 	mode = ch_device_get_mode (usb_device);
 	if (mode == CH_DEVICE_MODE_UNKNOWN)
-		return;
+		return TRUE;
 
 	/* this is using DFU now */
 	if (mode == CH_DEVICE_MODE_BOOTLOADER_PLUS ||
 	    mode == CH_DEVICE_MODE_FIRMWARE_PLUS)
-		return;
+		return TRUE;
 
 	/* open the device */
 	device = fu_colorhug_device_new (usb_device);
-	locker = fu_device_locker_new (device, &error);
-	if (locker == NULL) {
-		g_warning ("failed to open device: %s", error->message);
-		return;
-	}
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
 
 	/* insert to hash */
 	fu_plugin_device_add (plugin, FU_DEVICE (device));
-	fu_plugin_cache_add (plugin, g_usb_device_get_platform_id (usb_device), device);
-}
-
-static void
-fu_plugin_colorhug_device_removed_cb (GUsbContext *ctx,
-				      GUsbDevice *usb_device,
-				      FuPlugin *plugin)
-{
-	FuDevice *device;
-	const gchar *platform_id = NULL;
-
-	/* already in database */
-	platform_id = g_usb_device_get_platform_id (usb_device);
-	device = fu_plugin_cache_lookup (plugin, platform_id);
-	if (device == NULL)
-		return;
-
-	fu_plugin_device_remove (plugin, device);
-	fu_plugin_cache_remove (plugin, platform_id);
-}
-
-gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
-{
-	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	g_signal_connect (usb_ctx, "device-added",
-			  G_CALLBACK (fu_plugin_colorhug_device_added_cb),
-			  plugin);
-	g_signal_connect (usb_ctx, "device-removed",
-			  G_CALLBACK (fu_plugin_colorhug_device_removed_cb),
-			  plugin);
 	return TRUE;
 }

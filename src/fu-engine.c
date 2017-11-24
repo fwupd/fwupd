@@ -2817,6 +2817,43 @@ fu_engine_cleanup_state (GError **error)
 	return TRUE;
 }
 
+static void
+fu_engine_usb_device_removed_cb (GUsbContext *ctx,
+				 GUsbDevice *usb_device,
+				 FuEngine *self)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* go through each device and remove any that match */
+	devices = fu_device_list_get_all (self->device_list);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index (devices, i);
+		if (!FU_IS_USB_DEVICE (device))
+			continue;
+		if (g_strcmp0 (fu_device_get_platform_id (device),
+			       g_usb_device_get_platform_id (usb_device)) == 0) {
+			g_debug ("auto-removing FuUsbDevice");
+			fu_device_list_remove (self->device_list, device);
+		}
+	}
+}
+
+static void
+fu_engine_usb_device_added_cb (GUsbContext *ctx,
+			       GUsbDevice *usb_device,
+			       FuEngine *self)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+
+	/* call into each plugin */
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		g_autoptr(GError) error = NULL;
+		if (!fu_plugin_runner_usb_device_added (plugin_tmp, usb_device, &error))
+			g_warning ("failed to add USB device: %s", error->message);
+	}
+}
+
 /**
  * fu_engine_load:
  * @self: A #FuEngine
@@ -2893,6 +2930,14 @@ fu_engine_load (FuEngine *self, GError **error)
 	fu_engine_plugins_setup (self);
 	g_usb_context_enumerate (self->usb_ctx);
 	fu_engine_plugins_coldplug (self);
+
+	/* watch for changes */
+	g_signal_connect (self->usb_ctx, "device-added",
+			  G_CALLBACK (fu_engine_usb_device_added_cb),
+			  self);
+	g_signal_connect (self->usb_ctx, "device-removed",
+			  G_CALLBACK (fu_engine_usb_device_removed_cb),
+			  self);
 
 	/* success */
 	return TRUE;

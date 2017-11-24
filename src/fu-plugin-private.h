@@ -75,6 +75,9 @@ gboolean	 fu_plugin_runner_update_detach		(FuPlugin	*plugin,
 gboolean	 fu_plugin_runner_update_reload		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
+gboolean	 fu_plugin_runner_usb_device_added	(FuPlugin	*plugin,
+							 GUsbDevice	*usb_device,
+							 GError		**error);
 void		 fu_plugin_runner_device_register	(FuPlugin	*plugin,
 							 FuDevice	*device);
 gboolean	 fu_plugin_runner_update		(FuPlugin	*plugin,

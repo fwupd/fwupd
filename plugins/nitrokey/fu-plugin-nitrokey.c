@@ -21,77 +21,31 @@
 
 #include "config.h"
 
-#include <string.h>
-
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-nitrokey-device.h"
 #include "fu-nitrokey-common.h"
 
-static void
-fu_plugin_nitrokey_device_added_cb (GUsbContext *ctx,
-				    GUsbDevice *usb_device,
-				    FuPlugin *plugin)
+gboolean
+fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {
-	const gchar *platform_id = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuNitrokeyDevice) dev = NULL;
-	g_autoptr(GError) error = NULL;
 
 	/* not the right kind of device */
 	if (g_usb_device_get_vid (usb_device) != 0x20a0)
-		return;
+		return TRUE;
 	if (g_usb_device_get_pid (usb_device) != 0x4109)
-		return;
-
-	/* is already in database */
-	platform_id = g_usb_device_get_platform_id (usb_device);
-	dev = fu_plugin_cache_lookup (plugin, platform_id);
-	if (dev != NULL) {
-		g_debug ("ignoring duplicate %s", platform_id);
-		return;
-	}
+		return TRUE;
 
 	/* open the device */
 	dev = fu_nitrokey_device_new (usb_device);
-	locker = fu_device_locker_new (dev, &error);
-	if (locker == NULL) {
-		g_warning ("failed to open device: %s", error->message);
-		return;
-	}
+	locker = fu_device_locker_new (dev, error);
+	if (locker == NULL)
+		return FALSE;
 
+	/* success */
 	fu_plugin_device_add (plugin, FU_DEVICE (dev));
-	fu_plugin_cache_add (plugin, platform_id, dev);
-}
-
-static void
-fu_plugin_nitrokey_device_removed_cb (GUsbContext *ctx,
-				      GUsbDevice *device,
-				      FuPlugin *plugin)
-{
-	FuDevice *dev;
-	const gchar *platform_id = NULL;
-
-	/* already in database */
-	platform_id = g_usb_device_get_platform_id (device);
-	dev = fu_plugin_cache_lookup (plugin, platform_id);
-	if (dev == NULL)
-		return;
-
-	fu_plugin_device_remove (plugin, dev);
-	fu_plugin_cache_remove (plugin, platform_id);
-}
-
-gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
-{
-	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	g_signal_connect (usb_ctx, "device-added",
-			  G_CALLBACK (fu_plugin_nitrokey_device_added_cb),
-			  plugin);
-	g_signal_connect (usb_ctx, "device-removed",
-			  G_CALLBACK (fu_plugin_nitrokey_device_removed_cb),
-			  plugin);
 	return TRUE;
 }

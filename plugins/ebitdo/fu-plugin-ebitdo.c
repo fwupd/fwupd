@@ -26,10 +26,8 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
-static gboolean
-fu_plugin_ebitdo_device_added (FuPlugin *plugin,
-				 GUsbDevice *usb_device,
-				 GError **error)
+gboolean
+fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {
 	FuEbitdoDeviceKind ebitdo_kind;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -48,7 +46,6 @@ fu_plugin_ebitdo_device_added (FuPlugin *plugin,
 
 	/* insert to hash */
 	fu_plugin_device_add (plugin, FU_DEVICE (dev));
-	fu_plugin_cache_add (plugin, g_usb_device_get_platform_id (usb_device), dev);
 	return TRUE;
 }
 
@@ -129,52 +126,5 @@ fu_plugin_update_reload (FuPlugin *plugin, FuDevice *dev, GError **error)
 	}
 
 	/* success */
-	return TRUE;
-}
-
-static void
-fu_plugin_ebitdo_device_added_cb (GUsbContext *ctx,
-				    GUsbDevice *usb_device,
-				    FuPlugin *plugin)
-{
-	g_autoptr(GError) error = NULL;
-	if (!fu_plugin_ebitdo_device_added (plugin, usb_device, &error)) {
-		if (!g_error_matches (error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_warning ("Failed to add 8Bitdo device: %s",
-				   error->message);
-		}
-	}
-}
-
-static void
-fu_plugin_ebitdo_device_removed_cb (GUsbContext *ctx,
-				    GUsbDevice *usb_device,
-				    FuPlugin *plugin)
-{
-	FuDevice *dev;
-	const gchar *platform_id = NULL;
-
-	/* already in database */
-	platform_id = g_usb_device_get_platform_id (usb_device);
-	dev = fu_plugin_cache_lookup (plugin, platform_id);
-	if (dev == NULL)
-		return;
-
-	fu_plugin_device_remove (plugin, dev);
-	fu_plugin_cache_remove (plugin, platform_id);
-}
-
-gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
-{
-	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	g_signal_connect (usb_ctx, "device-added",
-			  G_CALLBACK (fu_plugin_ebitdo_device_added_cb),
-			  plugin);
-	g_signal_connect (usb_ctx, "device-removed",
-			  G_CALLBACK (fu_plugin_ebitdo_device_removed_cb),
-			  plugin);
 	return TRUE;
 }
