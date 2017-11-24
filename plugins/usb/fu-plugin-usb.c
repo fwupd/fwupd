@@ -24,41 +24,26 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
-static void
-fu_plugin_usb_device_added_cb (GUsbContext *ctx,
-				 GUsbDevice *device,
-				 FuPlugin *plugin)
+gboolean
+fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {
 	const gchar *platform_id = NULL;
 	guint8 idx = 0x00;
 	g_autofree gchar *product = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GError) error = NULL;
 
 	/* ignore hubs */
 	if (g_usb_device_get_device_class (device) == G_USB_DEVICE_CLASS_HUB)
-		return;
-
-	/* is already in database */
-	platform_id = g_usb_device_get_platform_id (device);
-	dev = fu_plugin_cache_lookup (plugin, platform_id);
-	if (dev != NULL) {
-		g_debug ("ignoring duplicate %s", platform_id);
-		return;
-	}
+		return TRUE;
 
 	/* try to get the version without claiming interface */
-	locker = fu_device_locker_new (device, &error);
-	if (locker == NULL) {
-		g_debug ("Failed to open: %s", error->message);
-		return;
-	}
-
-	/* insert to hash if valid */
-	dev = fu_usb_device_new (device);
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
 
 	/* get version number, falling back to the USB device release */
+	dev = fu_usb_device_new (device);
 	idx = g_usb_device_get_custom_index (device,
 					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
 					     'F', 'W', NULL);
@@ -81,38 +66,5 @@ fu_plugin_usb_device_added_cb (GUsbContext *ctx,
 	/* use a small delay for hotplugging so that other, better, plugins
 	 * can claim this interface and add the FuDevice */
 	fu_plugin_device_add_delay (plugin, dev);
-
-	/* insert to hash */
-	fu_plugin_cache_add (plugin, platform_id, dev);
-}
-
-static void
-fu_plugin_usb_device_removed_cb (GUsbContext *ctx,
-				   GUsbDevice *device,
-				   FuPlugin *plugin)
-{
-	FuDevice *dev;
-	const gchar *platform_id = NULL;
-
-	/* already in database */
-	platform_id = g_usb_device_get_platform_id (device);
-	dev = fu_plugin_cache_lookup (plugin, platform_id);
-	if (dev == NULL)
-		return;
-
-	fu_plugin_device_remove (plugin, dev);
-	fu_plugin_cache_remove (plugin, platform_id);
-}
-
-gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
-{
-	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	g_signal_connect (usb_ctx, "device-added",
-			  G_CALLBACK (fu_plugin_usb_device_added_cb),
-			  plugin);
-	g_signal_connect (usb_ctx, "device-removed",
-			  G_CALLBACK (fu_plugin_usb_device_removed_cb),
-			  plugin);
 	return TRUE;
 }

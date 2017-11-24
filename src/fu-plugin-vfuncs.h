@@ -70,6 +70,9 @@ gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
 gboolean	 fu_plugin_update_cleanup		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
+gboolean	 fu_plugin_usb_device_added		(FuPlugin	*plugin,
+							 GUsbDevice	*usb_device,
+							 GError		**error);
 void		 fu_plugin_device_registered		(FuPlugin	*plugin,
 							 FuDevice	*dev);
 

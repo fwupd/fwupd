@@ -98,6 +98,9 @@ typedef gboolean	 (*FuPluginUpdateFunc)		(FuPlugin	*plugin,
 							 GBytes		*blob_fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
+typedef gboolean	 (*FuPluginUsbDeviceAddedFunc)	(FuPlugin	*plugin,
+							 GUsbDevice	*usb_device,
+							 GError		**error);
 
 /**
  * fu_plugin_get_name:
@@ -996,6 +999,27 @@ fu_plugin_runner_update_reload (FuPlugin *plugin, FuDevice *device, GError **err
 {
 	return fu_plugin_runner_device_generic (plugin, device,
 						"fu_plugin_update_reload", error);
+}
+
+gboolean
+fu_plugin_runner_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginUsbDeviceAddedFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+	if (priv->module == NULL)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_usb_device_added", (gpointer *) &func);
+	if (func != NULL) {
+		g_debug ("performing usb_device_added() on %s", priv->name);
+		return func (plugin, usb_device, error);
+	}
+	return TRUE;
 }
 
 void
