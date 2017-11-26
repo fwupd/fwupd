@@ -1654,7 +1654,6 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 	GPtrArray *apps;
 	GPtrArray *remotes;
 	g_autofree gchar *guids_str = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* clear existing store */
@@ -1664,6 +1663,7 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 	remotes = fu_config_get_remotes (self->config);
 	for (guint i = 0; i < remotes->len; i++) {
 		const gchar *path = NULL;
+		g_autoptr(GError) error_local = NULL;
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
 		if (!fwupd_remote_get_enabled (remote)) {
 			g_debug ("remote %s not enabled, so skipping",
