@@ -5,7 +5,6 @@ option('enable-tests', type : 'boolean', value : true, description : 'enable tes
 option('enable-lvfs', type : 'boolean', value : true, description : 'enable LVFS remotes')
 option('enable-colorhug', type : 'boolean', value : true, description : 'enable ColorHug support')
 option('enable-altos', type : 'boolean', value : true, description : 'enable altos support')
-option('enable-usb-fallback', type : 'boolean', value : false, description : 'enable USB fallback support')
 option('enable-uefi', type : 'boolean', value : true, description : 'enable UEFI support')
 option('enable-uefi-labels', type : 'boolean', value : true, description : 'enable UEFI labels support')
 option('enable-dell', type : 'boolean', value : true, description : 'enable Dell-specific support')

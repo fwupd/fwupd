@@ -36,8 +36,3 @@ endif
 if get_option('enable-uefi')
 subdir('uefi')
 endif
-
-if get_option('enable-usb-fallback')
-subdir('usb')
-endif
-
