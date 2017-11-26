@@ -169,30 +169,25 @@ fu_colorhug_device_open (FuUsbDevice *device, GError **error)
 	case CH_DEVICE_MODE_BOOTLOADER:
 	case CH_DEVICE_MODE_FIRMWARE:
 	case CH_DEVICE_MODE_LEGACY:
-		fu_device_set_name (FU_DEVICE (device), "ColorHug");
 		fu_device_set_summary (FU_DEVICE (device),
 				       "An open source display colorimeter");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER2:
 	case CH_DEVICE_MODE_FIRMWARE2:
-		fu_device_set_name (FU_DEVICE (device), "ColorHug2");
 		fu_device_set_summary (FU_DEVICE (device),
 				       "An open source display colorimeter");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
 	case CH_DEVICE_MODE_FIRMWARE_PLUS:
-		fu_device_set_name (FU_DEVICE (device), "ColorHug+");
 		fu_device_set_summary (FU_DEVICE (device),
 				       "An open source spectrophotometer");
 		break;
 	case CH_DEVICE_MODE_BOOTLOADER_ALS:
 	case CH_DEVICE_MODE_FIRMWARE_ALS:
-		fu_device_set_name (FU_DEVICE (device), "ColorHugALS");
 		fu_device_set_summary (FU_DEVICE (device),
 				       "An open source ambient light sensor");
 		break;
 	default:
-		fu_device_set_name (FU_DEVICE (device), "ColorHug??");
 		break;
 	}
 

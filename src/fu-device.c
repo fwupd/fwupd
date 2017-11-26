@@ -309,6 +309,22 @@ void
 fu_device_set_name (FuDevice *device, const gchar *value)
 {
 	g_autoptr(GString) new = g_string_new (value);
+
+	/* overwriting? */
+	if (g_strcmp0 (value, fu_device_get_name (device)) == 0) {
+		g_warning ("device %s overwriting same name value: %s",
+			   fu_device_get_id (device), value);
+		return;
+	}
+
+	/* changing */
+	if (fu_device_get_name (device) != NULL) {
+		g_debug ("device %s overwriting name value: %s->%s",
+			 fu_device_get_id (device),
+			 fu_device_get_name (device),
+			 value);
+	}
+
 	g_strdelimit (new->str, "_", ' ');
 	as_utils_string_replace (new, "(TM)", "™");
 	fwupd_device_set_name (FWUPD_DEVICE (device), new->str);
