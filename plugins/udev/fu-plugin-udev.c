@@ -146,8 +146,6 @@ fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 	guid = g_udev_device_get_property (device, "FWUPD_GUID");
 	if (guid == NULL)
 		return;
-	if (g_strcmp0 (g_udev_device_get_subsystem (device), "usb") == 0)
-		return;
 
 	/* get data */
 	ptask = as_profile_start (profile, "FuPluginUdev:client-add{%s}", guid);
@@ -245,7 +243,7 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-	const gchar *subsystems[] = { NULL };
+	const gchar *subsystems[] = { "pci", NULL };
 
 	data->gudev_client = g_udev_client_new (subsystems);
 	g_signal_connect (data->gudev_client, "uevent",
@@ -265,7 +263,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GList *devices;
 	GUdevDevice *udev_device;
-	const gchar *devclass[] = { "usb", "pci", NULL };
+	const gchar *devclass[] = { "pci", NULL };
 	g_autoptr(AsProfile) profile = as_profile_new ();
 
 	/* get all devices of class */
