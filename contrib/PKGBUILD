@@ -16,8 +16,7 @@ makedepends=('meson' 'valgrind' 'docbook-utils' 'docbook-sgml' 'perl-sgmls'
 build() {
     cd ${pkgname}
     if [ -n "$CI" ]; then
-        export CI="-Denable-werror=true \
-                   -Denable-usb-fallback=true"
+        export CI="-Denable-werror=true"
     fi
     arch-meson -D b_lto=false $CI ../build
 
