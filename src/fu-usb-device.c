@@ -159,7 +159,7 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 
 	/* get vendor */
 	idx = g_usb_device_get_manufacturer_index (priv->usb_device);
-	if (idx != 0xff) {
+	if (idx != 0x00) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_usb_device_get_string_descriptor (priv->usb_device,
 							  idx, error);
@@ -170,7 +170,7 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 
 	/* get product */
 	idx = g_usb_device_get_product_index (priv->usb_device);
-	if (idx != 0xff) {
+	if (idx != 0x00) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_usb_device_get_string_descriptor (priv->usb_device,
 							  idx, error);
