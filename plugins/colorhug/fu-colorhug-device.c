@@ -247,7 +247,6 @@ fu_colorhug_device_open (FuUsbDevice *device, GError **error)
 			g_warning ("failed to get firmware version: %s",
 				   error_local->message);
 		}
-		got_version = TRUE;
 		version = g_strdup_printf ("%i.%i.%i", major, minor, micro);
 		g_debug ("obtained fwver using API '%s'", version);
 		fu_device_set_version (FU_DEVICE (device), version);
