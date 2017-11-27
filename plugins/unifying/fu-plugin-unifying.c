@@ -353,6 +353,14 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			  G_CALLBACK (fu_plugin_unifying_device_removed_cb),
 			  plugin);
 	lu_context_set_supported (data->ctx, fu_plugin_get_supported (plugin));
+	return TRUE;
+}
+
+
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	lu_context_coldplug (data->ctx);
 	lu_context_set_poll_interval (data->ctx, 5000);
 	return TRUE;
