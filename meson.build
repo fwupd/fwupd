@@ -123,7 +123,7 @@ add_global_link_arguments(
 )
 
 # ONLY for CI and only when using gcc, do not enable this for distro builds
-if get_option('enable-werror') and meson.get_compiler('c').get_id() == 'gcc'
+if get_option('werror') and meson.get_compiler('c').get_id() == 'gcc'
   add_project_arguments('-Werror', language : 'c')
   add_project_arguments('-Wno-error=cpp', language : 'c')
 endif

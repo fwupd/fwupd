@@ -10,7 +10,7 @@ ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 endif
 
 ifneq ($(CI),)
-	export CI=-Denable-werror=true
+	export CI=-Dwerror=true
 endif
 
 %:
