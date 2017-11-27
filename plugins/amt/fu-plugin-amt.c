@@ -471,7 +471,7 @@ fu_plugin_amt_create_device (GError **error)
 }
 
 gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	g_autoptr(FuDevice) dev = NULL;
 	dev = fu_plugin_amt_create_device (error);
