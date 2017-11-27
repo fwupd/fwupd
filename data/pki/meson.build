@@ -1,4 +1,4 @@
-if get_option('enable-gpg')
+if get_option('gpg')
   install_data([
       'GPG-KEY-Hughski-Limited',
       'GPG-KEY-Linux-Vendor-Firmware-Service',
@@ -13,7 +13,7 @@ if get_option('enable-gpg')
   )
 endif
 
-if get_option('enable-pkcs7')
+if get_option('pkcs7')
   install_data([
       'LVFS-CA.pem',
     ],

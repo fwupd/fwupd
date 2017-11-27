@@ -2,7 +2,7 @@ subdir('builder')
 subdir('pki')
 subdir('remotes.d')
 
-if get_option('enable-tests')
+if get_option('tests')
   subdir('tests')
   subdir('installed-tests')
 endif
@@ -32,7 +32,7 @@ con2.set('libexecdir', libexecdir)
 con2.set('bindir', bindir)
 con2.set('localstatedir', localstatedir)
 con2.set('datadir', datadir)
-con2.set('bootdir', get_option('with-bootdir'))
+con2.set('bootdir', get_option('bootdir'))
 con2.set('sysconfdir', default_sysconfdir)
 
 # replace @libexecdir@
@@ -46,7 +46,7 @@ configure_file(
                           'system-services'),
 )
 
-if get_option('enable-systemd')
+if get_option('systemd')
   # replace @bindir@
   configure_file(
     input : 'fwupd-offline-update.service.in',
@@ -57,7 +57,7 @@ if get_option('enable-systemd')
   )
 endif
 
-if get_option('enable-systemd')
+if get_option('systemd')
   # replace @localstatedir@, @sysconfdir@ and @bootdir@
   configure_file(
     input : 'fwupd.service.in',

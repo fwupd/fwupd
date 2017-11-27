@@ -57,7 +57,7 @@ executable(
   c_args : cargs,
 )
 
-if get_option('enable-tests')
+if get_option('tests')
   e = executable(
     'unifying-self-test',
     sources : [

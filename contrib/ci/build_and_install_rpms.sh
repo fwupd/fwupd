@@ -8,15 +8,15 @@ mkdir -p build && pushd build
 rm -rf *
 meson .. \
     -Dwerror=true \
-    -Denable-doc=true \
-    -Denable-man=true \
-    -Denable-tests=true \
-    -Denable-dummy=true \
-    -Denable-thunderbolt=true \
-    -Denable-uefi=true \
-    -Denable-dell=true \
-    -Denable-synaptics=true \
-    -Denable-colorhug=true $@
+    -Dgtkdoc=true \
+    -Dman=true \
+    -Dtests=true \
+    -Dplugin_dummy=true \
+    -Dplugin_thunderbolt=true \
+    -Dplugin_uefi=true \
+    -Dplugin_dell=true \
+    -Dplugin_synaptics=true \
+    -Dplugin_colorhug=true $@
 ninja-build dist
 popd
 VERSION=`mesonintrospect build --projectinfo | jq -r .version`

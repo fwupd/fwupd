@@ -87,7 +87,7 @@ executable(
   install_dir : bindir
 )
 
-if get_option('enable-man')
+if get_option('man')
   docbook2man = find_program('docbook2man')
   custom_target('dfu-tool-man',
     input : 'dfu-tool.sgml',
@@ -101,7 +101,7 @@ if get_option('enable-man')
   )
 endif
 
-if get_option('enable-tests')
+if get_option('tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(

@@ -1,3 +1,3 @@
-if get_option('enable-doc')
+if get_option('gtkdoc')
   subdir('libfwupd')
 endif

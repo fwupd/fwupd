@@ -44,7 +44,7 @@ executable('tbtfwucli',
 )
 
 # we use functions from 2.52 in the tests
-if get_option('enable-tests') and umockdev.found() and gio.version().version_compare('>= 2.52')
+if get_option('tests') and umockdev.found() and gio.version().version_compare('>= 2.52')
   cargs += '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"'
   cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
   e = executable(
