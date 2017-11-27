@@ -67,7 +67,7 @@ pkgg.generate(
   description : 'fwupd is a system daemon for installing device firmware',
 )
 
-if get_option('enable-introspection')
+if get_option('introspection')
   gir = gnome.generate_gir(fwupd,
     sources : [
       'fwupd-client.c',
@@ -135,7 +135,7 @@ if get_option('enable-introspection')
       )
 endif
 
-if get_option('enable-tests')
+if get_option('tests')
   testdatadir = join_paths(meson.source_root(), 'data')
   e = executable(
     'fwupd-self-test',

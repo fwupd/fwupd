@@ -87,7 +87,7 @@ lu_hidpp_msg_fcn_id_to_string (LuHidppMsg *msg)
 		if (msg->function_id == HIDPP_REGISTER_HIDPP_NOTIFICATIONS)
 			return "hidpp-notifications";
 		if (msg->function_id == HIDPP_REGISTER_ENABLE_INDIVIDUAL_FEATURES)
-			return "enable-individual-features";
+			return "individual-features";
 		if (msg->function_id == HIDPP_REGISTER_BATTERY_STATUS)
 			return "battery-status";
 		if (msg->function_id == HIDPP_REGISTER_BATTERY_MILEAGE)

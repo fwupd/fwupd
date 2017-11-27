@@ -1,4 +1,4 @@
-if get_option('enable-lvfs')
+if get_option('lvfs')
   install_data([
       'lvfs.conf',
       'lvfs-testing.conf',

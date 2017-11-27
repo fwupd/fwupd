@@ -19,7 +19,7 @@ shared_module('fu_plugin_nitrokey',
   ],
 )
 
-if get_option('enable-tests')
+if get_option('tests')
   e = executable(
     'nitrokey-self-test',
     sources : [

@@ -1,7 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginTest"']
 
 install_dummy = false
-if get_option('enable-dummy')
+if get_option('plugin_dummy')
   install_dummy = true
 endif
 

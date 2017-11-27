@@ -1,4 +1,4 @@
-if get_option('enable-tests')
+if get_option('tests')
   tar = find_program('tar')
   builder_test_firmware = custom_target('builder-test-firmware',
     input : [

@@ -22,7 +22,7 @@ shared_module('fu_plugin_raspberrypi',
   ],
 )
 
-if get_option('enable-tests')
+if get_option('tests')
   testdatadir_src = meson.current_source_dir()
   testdatadir_dst = meson.current_build_dir()
   e = executable(

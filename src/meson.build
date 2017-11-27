@@ -7,13 +7,13 @@ install_data(['org.freedesktop.fwupd.xml'],
 keyring_deps = []
 keyring_src = []
 
-if get_option('enable-gpg')
+if get_option('gpg')
   keyring_src += 'fu-keyring-gpg.c'
   keyring_deps += gpgme
   keyring_deps += gpgerror
 endif
 
-if get_option('enable-pkcs7')
+if get_option('pkcs7')
   keyring_src += 'fu-keyring-pkcs7.c'
   keyring_deps += gnutls
 endif
@@ -89,7 +89,7 @@ fwupdmgr = executable(
   install_dir : bindir
 )
 
-if get_option('enable-man')
+if get_option('man')
   help2man = find_program('help2man')
   custom_target('fwupdmgr-man',
     input : fwupdmgr,
@@ -170,7 +170,7 @@ executable(
   install_dir : join_paths(libexecdir, 'fwupd')
 )
 
-if get_option('enable-tests')
+if get_option('tests')
   testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
   testdatadir_dst = join_paths(meson.build_root(), 'data', 'tests')
   pluginbuilddir = join_paths(meson.build_root(), 'plugins', 'test')
@@ -241,7 +241,7 @@ if get_option('enable-tests')
   test('fu-self-test', e, is_parallel:false)
 endif
 
-if get_option('enable-introspection')
+if get_option('introspection')
   gir_dep = declare_dependency(sources: gir)
   gnome.generate_gir(fwupd,
     sources : [
