@@ -153,6 +153,7 @@ void
 fu_engine_profile_dump (FuEngine *self)
 {
 	g_return_if_fail (FU_IS_ENGINE (self));
+	as_profile_set_duration_min (self->profile, 1);
 	as_profile_dump (self->profile);
 }
 
@@ -2772,6 +2773,11 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 {
 	const gchar *fn;
 	g_autoptr(GDir) dir = NULL;
+	g_autoptr(AsProfileTask) ptask = NULL;
+
+	/* profile */
+	ptask = as_profile_start_literal (self->profile, "FuEngine:load-plugins");
+	g_assert (ptask != NULL);
 
 	/* search */
 	dir = g_dir_open (PLUGINDIR, 0, error);
@@ -2938,6 +2944,46 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 	}
 }
 
+
+static void
+fu_engine_load_quirks (FuEngine *self)
+{
+	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* profile */
+	ptask = as_profile_start_literal (self->profile, "FuEngine:load-quirks");
+	g_assert (ptask != NULL);
+	if (!fu_quirks_load (self->quirks, &error))
+		g_warning ("Failed to load quirks: %s", error->message);
+}
+
+static void
+fu_engine_load_smbios (FuEngine *self)
+{
+	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* profile */
+	ptask = as_profile_start_literal (self->profile, "FuEngine:load-smbios");
+	g_assert (ptask != NULL);
+	if (!fu_smbios_setup (self->smbios, &error))
+		g_warning ("Failed to load SMBIOS: %s", error->message);
+}
+
+static void
+fu_engine_load_hwids (FuEngine *self)
+{
+	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* profile */
+	ptask = as_profile_start_literal (self->profile, "FuEngine:load-hwids");
+	g_assert (ptask != NULL);
+	if (!fu_hwids_setup (self->hwids, self->smbios, &error))
+		g_warning ("Failed to load HWIDs: %s", error->message);
+}
+
 /**
  * fu_engine_load:
  * @self: A #FuEngine
@@ -2950,9 +2996,11 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 gboolean
 fu_engine_load (FuEngine *self, GError **error)
 {
-	g_autoptr(GError) error_quirks = NULL;
-	g_autoptr(GError) error_hwids = NULL;
-	g_autoptr(GError) error_smbios = NULL;
+	g_autoptr(AsProfileTask) ptask = NULL;
+
+	/* profile */
+	ptask = as_profile_start_literal (self->profile, "FuEngine:load");
+	g_assert (ptask != NULL);
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -2963,9 +3011,10 @@ fu_engine_load (FuEngine *self, GError **error)
 		return FALSE;
 	}
 
-	/* load the quirk files */
-	if (!fu_quirks_load (self->quirks, &error_quirks))
-		g_warning ("Failed to load quirks: %s", error_quirks->message);
+	/* load quirks, SMBIOS and the hwids */
+	fu_engine_load_smbios (self);
+	fu_engine_load_hwids (self);
+	fu_engine_load_quirks (self);
 
 	/* load AppStream metadata */
 	as_store_add_filter (self->store, AS_APP_KIND_FIRMWARE);
@@ -2980,12 +3029,6 @@ fu_engine_load (FuEngine *self, GError **error)
 		g_prefix_error (error, "Failed to get USB context: ");
 		return FALSE;
 	}
-
-	/* load SMBIOS and the hwids */
-	if (!fu_smbios_setup (self->smbios, &error_smbios))
-		g_warning ("Failed to load SMBIOS: %s", error_smbios->message);
-	if (!fu_hwids_setup (self->hwids, self->smbios, &error_hwids))
-		g_warning ("Failed to load HWIDs: %s", error_hwids->message);
 
 	/* delete old data files */
 	if (!fu_engine_cleanup_state (error)) {
