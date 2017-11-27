@@ -2497,7 +2497,7 @@ fu_engine_plugins_setup (FuEngine *self)
 	GPtrArray *plugins;
 	g_autoptr(AsProfileTask) ptask = NULL;
 
-	ptask = as_profile_start_literal (self->profile, "FuMain:setup");
+	ptask = as_profile_start_literal (self->profile, "FuEngine:setup");
 	g_assert (ptask != NULL);
 	plugins = fu_plugin_list_get_all (self->plugin_list);
 	for (guint i = 0; i < plugins->len; i++) {
@@ -2505,7 +2505,7 @@ fu_engine_plugins_setup (FuEngine *self)
 		g_autoptr(AsProfileTask) ptask2 = NULL;
 		FuPlugin *plugin = g_ptr_array_index (plugins, i);
 		ptask2 = as_profile_start (self->profile,
-					   "FuMain:setup{%s}",
+					   "FuEngine:setup{%s}",
 					   fu_plugin_get_name (plugin));
 		g_assert (ptask2 != NULL);
 		if (!fu_plugin_runner_startup (plugin, &error)) {
@@ -2541,14 +2541,14 @@ fu_engine_plugins_coldplug (FuEngine *self)
 	}
 
 	/* exec */
-	ptask = as_profile_start_literal (self->profile, "FuMain:coldplug");
+	ptask = as_profile_start_literal (self->profile, "FuEngine:coldplug");
 	g_assert (ptask != NULL);
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		g_autoptr(AsProfileTask) ptask2 = NULL;
 		FuPlugin *plugin = g_ptr_array_index (plugins, i);
 		ptask2 = as_profile_start (self->profile,
-					   "FuMain:coldplug{%s}",
+					   "FuEngine:coldplug{%s}",
 					   fu_plugin_get_name (plugin));
 		g_assert (ptask2 != NULL);
 		if (!fu_plugin_runner_coldplug (plugin, &error)) {
