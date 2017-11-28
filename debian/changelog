@@ -1,3 +1,10 @@
+fwupd (1.0.2-1) UNRELEASED; urgency=medium
+
+  * New upstream version
+  * Drop patch for doing libsmbios on only supported architectures, now upstream.
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 28 Nov 2017 09:36:57 -0600
+
 fwupd (1.0.1-2) unstable; urgency=medium
 
   * Only do libsmbios-dev build-depend on supported architectures
