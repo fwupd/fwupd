@@ -580,7 +580,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* store new metadata (will close the fds when done) */
 		if (!fu_engine_update_metadata (priv->engine, remote_id,
 						fd_data, fd_sig, &error)) {
-			g_prefix_error (&error, "Failed to update metadata: ");
+			g_prefix_error (&error, "Failed to update metadata for %s: ", remote_id);
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
