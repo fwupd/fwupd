@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-09 15:18+0000\n"
-"PO-Revision-Date: 2017-11-09 15:18+0000\n"
+"POT-Creation-Date: 2017-11-27 19:55+0000\n"
+"PO-Revision-Date: 2017-11-27 19:55+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Occitan (post 1500) (http://www.transifex.com/freedesktop/fwupd/language/oc/)\n"
 "MIME-Version: 1.0\n"
@@ -393,37 +393,42 @@ msgid "Installing firmware update…"
 msgstr ""
 
 #. TRANSLATORS: turn on all debugging
-#: src/fu-debug.c:130
+#: src/fu-debug.c:128
 msgid "Show debugging information for all files"
 msgstr "Mostrar las informacions de desbugatge per totes los fichièrs"
 
+#. TRANSLATORS: this is for plugin development
+#: src/fu-debug.c:131
+msgid "Show plugin verbose information"
+msgstr ""
+
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:180
+#: src/fu-debug.c:186
 msgid "Debugging Options"
 msgstr "Opcions de desbugatge"
 
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:182
+#: src/fu-debug.c:188
 msgid "Show debugging options"
 msgstr "Mostrar las opcions de desbugatge"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
-#: src/fu-main.c:960
+#: src/fu-main.c:1007
 msgid "Exit after a small delay"
 msgstr "Quitar aprèp un brèu relambi"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
-#: src/fu-main.c:963
+#: src/fu-main.c:1010
 msgid "Exit after the engine has loaded"
 msgstr "Quitar aprèp lo cargament del motor"
 
 #. TRANSLATORS: program name
-#: src/fu-main.c:977
+#: src/fu-main.c:1024
 msgid "Firmware Update Daemon"
 msgstr ""
 
 #. TRANSLATORS: program summary
-#: src/fu-main.c:982
+#: src/fu-main.c:1029
 msgid "Firmware Update D-Bus Service"
 msgstr "Servici D-Bus de mesa a jorn dels micrologicials"
 

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-09 15:18+0000\n"
-"PO-Revision-Date: 2017-11-09 15:18+0000\n"
+"POT-Creation-Date: 2017-11-27 19:55+0000\n"
+"PO-Revision-Date: 2017-11-27 19:56+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Indonesian (http://www.transifex.com/freedesktop/fwupd/language/id/)\n"
 "MIME-Version: 1.0\n"
@@ -392,37 +392,42 @@ msgid "Installing firmware update…"
 msgstr "Sedang memasang pembaruan firmware..."
 
 #. TRANSLATORS: turn on all debugging
-#: src/fu-debug.c:130
+#: src/fu-debug.c:128
 msgid "Show debugging information for all files"
 msgstr "Tampilkan informasi pengawakutuan bagi semua berkas"
 
+#. TRANSLATORS: this is for plugin development
+#: src/fu-debug.c:131
+msgid "Show plugin verbose information"
+msgstr ""
+
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:180
+#: src/fu-debug.c:186
 msgid "Debugging Options"
 msgstr "Opsi Pengawakutuan"
 
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:182
+#: src/fu-debug.c:188
 msgid "Show debugging options"
 msgstr "Tampilkan opsi pengawakutuan"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
-#: src/fu-main.c:960
+#: src/fu-main.c:1007
 msgid "Exit after a small delay"
 msgstr "Keluar setelah tundaan sejenak"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
-#: src/fu-main.c:963
+#: src/fu-main.c:1010
 msgid "Exit after the engine has loaded"
 msgstr "Keluar setelah mesin telah dimuat"
 
 #. TRANSLATORS: program name
-#: src/fu-main.c:977
+#: src/fu-main.c:1024
 msgid "Firmware Update Daemon"
 msgstr "Daemon Pemutakhiran Firmware"
 
 #. TRANSLATORS: program summary
-#: src/fu-main.c:982
+#: src/fu-main.c:1029
 msgid "Firmware Update D-Bus Service"
 msgstr "Layanan D-Bus Pemutakhiran Firmware"
 

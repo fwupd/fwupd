@@ -12,9 +12,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-09 15:18+0000\n"
-"PO-Revision-Date: 2017-11-09 15:18+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2017-11-27 19:55+0000\n"
+"PO-Revision-Date: 2017-11-28 01:11+0000\n"
+"Last-Translator: Rafael Fontenelle <rffontenelle@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/freedesktop/fwupd/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -196,7 +196,7 @@ msgstr "Status"
 
 #: plugins/dfu/dfu-tool.c:2119
 msgid "Permission denied"
-msgstr ""
+msgstr "Permissão negada"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
 #: plugins/dfu/dfu-tool.c:2141
@@ -222,7 +222,7 @@ msgstr "Tamanho da transferência"
 #. * the device can do
 #: plugins/dfu/dfu-tool.c:2171
 msgid "Attributes"
-msgstr ""
+msgstr "Atributos"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -233,7 +233,7 @@ msgstr "Gambiarra"
 #. TRANSLATORS: chip ID, e.g. "0x58200204"
 #: plugins/dfu/dfu-tool.c:2186
 msgid "Chip ID"
-msgstr ""
+msgstr "ID do chip"
 
 #. TRANSLATORS: command description
 #: plugins/dfu/dfu-tool.c:2267
@@ -288,7 +288,7 @@ msgstr "Anexa um dispositivo com capacidade de DFU em tempo real"
 #. TRANSLATORS: command description
 #: plugins/dfu/dfu-tool.c:2327
 msgid "Reset a DFU device"
-msgstr ""
+msgstr "Redefine um dispositivo DFU"
 
 #. TRANSLATORS: command description
 #: plugins/dfu/dfu-tool.c:2333
@@ -396,37 +396,42 @@ msgid "Installing firmware update…"
 msgstr "Instalando atualização de firmware…"
 
 #. TRANSLATORS: turn on all debugging
-#: src/fu-debug.c:130
+#: src/fu-debug.c:128
 msgid "Show debugging information for all files"
 msgstr "Mostrar informações de depuração para todos os arquivos"
 
+#. TRANSLATORS: this is for plugin development
+#: src/fu-debug.c:131
+msgid "Show plugin verbose information"
+msgstr "Mostra informação verbosa de plugin"
+
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:180
+#: src/fu-debug.c:186
 msgid "Debugging Options"
 msgstr "Opções de depuração"
 
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:182
+#: src/fu-debug.c:188
 msgid "Show debugging options"
 msgstr "Mostrar opções de depuração"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
-#: src/fu-main.c:960
+#: src/fu-main.c:1007
 msgid "Exit after a small delay"
 msgstr "Sair após pequeno atraso"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
-#: src/fu-main.c:963
+#: src/fu-main.c:1010
 msgid "Exit after the engine has loaded"
 msgstr "Sair após o carregamento do motor"
 
 #. TRANSLATORS: program name
-#: src/fu-main.c:977
+#: src/fu-main.c:1024
 msgid "Firmware Update Daemon"
 msgstr "Daemon de Atualização de Firmware"
 
 #. TRANSLATORS: program summary
-#: src/fu-main.c:982
+#: src/fu-main.c:1029
 msgid "Firmware Update D-Bus Service"
 msgstr "Serviço D-Bus de Atualização de Firmware"
 
@@ -488,7 +493,7 @@ msgstr "Autenticando…"
 #. TRANSLATORS: waiting for device to do something
 #: src/fu-progressbar.c:96
 msgid "Waiting…"
-msgstr ""
+msgstr "Aguardando…"
 
 #. TRANSLATORS: currect daemon status is unknown
 #: src/fu-progressbar.c:103

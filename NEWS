@@ -1,3 +1,31 @@
+Version 1.0.2
+~~~~~~~~~~~~~
+Released: 2017-11-28
+
+New Features:
+ - Add a plugin for the Nitrokey Storage device (Richard Hughes)
+ - Add support for the original AVR DFU protocol (Richard Hughes)
+ - Allow different plugins to claim the same device (Richard Hughes)
+ - Allow quirks to set common USB properties (Richard Hughes)
+ - Move a common plugin functionality out to a new shared object (Richard Hughes)
+ - Optionally delay the device removal for better replugging (Richard Hughes)
+ - Set environment variables to allow easy per-plugin debugging (Richard Hughes)
+ - Use a SHA1 hash for the internal DeviceID (Richard Hughes)
+
+Bugfixes:
+ - Add quirk for AT32UC3B1256 as used in the RubberDucky (Richard Hughes)
+ - Disable the dell plugin if libsmbios fails (Mario Limonciello)
+ - Don't register for USB UDev events to later ignore them (Richard Hughes)
+ - Fix a possible buffer overflow when debugging ebitdo devices (Richard Hughes)
+ - Fix critical warning when more than one remote fails to load (Richard Hughes)
+ - Fix DFU attaching AVR32 devices like the XMEGA (Richard Hughes)
+ - Ignore useless Thunderbolt device types (Mario Limonciello)
+ - Refactor ColorHug into a much more modern plugin (Richard Hughes)
+ - Release the Steelseries interface if getting the version failed (Richard Hughes)
+ - Remove autoconf-isms from the meson configure options (Richard Hughes)
+ - Show a nicer error message if the requirement fails (Richard Hughes)
+ - Sort the output of GetUpgrades correctly (Richard Hughes)
+
 Version 1.0.1
 ~~~~~~~~~~~~~
 Released: 2017-11-09

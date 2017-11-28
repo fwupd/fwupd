@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-09 15:18+0000\n"
-"PO-Revision-Date: 2017-11-09 15:18+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2017-11-27 19:55+0000\n"
+"PO-Revision-Date: 2017-11-27 20:22+0000\n"
+"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian (http://www.transifex.com/freedesktop/fwupd/language/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -192,7 +192,7 @@ msgstr "Стан"
 
 #: plugins/dfu/dfu-tool.c:2119
 msgid "Permission denied"
-msgstr ""
+msgstr "Доступ заборонено"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
 #: plugins/dfu/dfu-tool.c:2141
@@ -218,7 +218,7 @@ msgstr "Об’єм перенесеного"
 #. * the device can do
 #: plugins/dfu/dfu-tool.c:2171
 msgid "Attributes"
-msgstr ""
+msgstr "Атрибути"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -229,7 +229,7 @@ msgstr "Негаразди"
 #. TRANSLATORS: chip ID, e.g. "0x58200204"
 #: plugins/dfu/dfu-tool.c:2186
 msgid "Chip ID"
-msgstr ""
+msgstr "Ід. чипа"
 
 #. TRANSLATORS: command description
 #: plugins/dfu/dfu-tool.c:2267
@@ -284,7 +284,7 @@ msgstr "Повернути пристрій із можливостями DFU д
 #. TRANSLATORS: command description
 #: plugins/dfu/dfu-tool.c:2327
 msgid "Reset a DFU device"
-msgstr ""
+msgstr "Відновити початковий стан пристрою DFU"
 
 #. TRANSLATORS: command description
 #: plugins/dfu/dfu-tool.c:2333
@@ -392,37 +392,42 @@ msgid "Installing firmware update…"
 msgstr "Встановлюємо оновлення мікропрограми…"
 
 #. TRANSLATORS: turn on all debugging
-#: src/fu-debug.c:130
+#: src/fu-debug.c:128
 msgid "Show debugging information for all files"
 msgstr "Показувати діагностичні дані для всіх файлів"
 
+#. TRANSLATORS: this is for plugin development
+#: src/fu-debug.c:131
+msgid "Show plugin verbose information"
+msgstr "Показати докладні відомості щодо додатків"
+
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:180
+#: src/fu-debug.c:186
 msgid "Debugging Options"
 msgstr "Параметри діагностики"
 
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:182
+#: src/fu-debug.c:188
 msgid "Show debugging options"
 msgstr "Показувати параметри діагностики"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
-#: src/fu-main.c:960
+#: src/fu-main.c:1007
 msgid "Exit after a small delay"
 msgstr "Завершити роботу з невеличкою затримкою"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
-#: src/fu-main.c:963
+#: src/fu-main.c:1010
 msgid "Exit after the engine has loaded"
 msgstr "Завершити роботу після завантаження рушія"
 
 #. TRANSLATORS: program name
-#: src/fu-main.c:977
+#: src/fu-main.c:1024
 msgid "Firmware Update Daemon"
 msgstr "Служба оновлення мікропрограми"
 
 #. TRANSLATORS: program summary
-#: src/fu-main.c:982
+#: src/fu-main.c:1029
 msgid "Firmware Update D-Bus Service"
 msgstr "Служба D-Bus оновлення мікропрограми"
 
@@ -484,7 +489,7 @@ msgstr "Проходимо розпізнавання…"
 #. TRANSLATORS: waiting for device to do something
 #: src/fu-progressbar.c:96
 msgid "Waiting…"
-msgstr ""
+msgstr "Очікуємо…"
 
 #. TRANSLATORS: currect daemon status is unknown
 #: src/fu-progressbar.c:103
