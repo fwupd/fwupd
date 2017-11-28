@@ -788,10 +788,10 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 
 	/* send all this to fwupd */
 	return fwupd_client_update_metadata (priv->client,
-						     fwupd_remote_get_id (remote),
-						     filename,
-						     filename_asc,
-						     NULL, error);
+					     fwupd_remote_get_id (remote),
+					     filename,
+					     filename_asc,
+					     NULL, error);
 }
 
 static gboolean
