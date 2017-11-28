@@ -35,6 +35,24 @@ struct _FuDeviceClass
 	FwupdDeviceClass	 parent_class;
 };
 
+/**
+ * FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE:
+ *
+ * The default removal delay for device re-enumeration taking into account a
+ * chain of slow USB hubs. This should be used when the device is able to
+ * reset itself between bootloader->runtime->bootloader.
+ */
+#define FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE		5000
+
+/**
+ * FU_DEVICE_REMOVE_DELAY_USER_REPLUG:
+ *
+ * The default removal delay for device re-plug taking into account humans
+ * being slow and clumsy. This should be used when the user has to do something,
+ * e.g. unplug, press a magic button and then replug.
+ */
+#define FU_DEVICE_REMOVE_DELAY_USER_REPLUG		20000
+
 FuDevice	*fu_device_new				(void);
 
 /* helpful casting macros */
@@ -47,7 +65,6 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_description(d,v)		fwupd_device_set_description(FWUPD_DEVICE(d),v)
 #define fu_device_set_flags(d,v)		fwupd_device_set_flags(FWUPD_DEVICE(d),v)
 #define fu_device_has_guid(d,v)			fwupd_device_has_guid(FWUPD_DEVICE(d),v)
-#define fu_device_set_id(d,v)			fwupd_device_set_id(FWUPD_DEVICE(d),v)
 #define fu_device_set_modified(d,v)		fwupd_device_set_modified(FWUPD_DEVICE(d),v)
 #define fu_device_set_plugin(d,v)		fwupd_device_set_plugin(FWUPD_DEVICE(d),v)
 #define fu_device_set_summary(d,v)		fwupd_device_set_summary(FWUPD_DEVICE(d),v)
@@ -99,8 +116,16 @@ void		 fu_device_set_metadata_boolean		(FuDevice	*device,
 void		 fu_device_set_metadata_integer		(FuDevice	*device,
 							 const gchar	*key,
 							 guint		 value);
+void		 fu_device_set_id			(FuDevice	*device,
+							 const gchar	*id);
+const gchar	*fu_device_get_platform_id		(FuDevice	*device);
+void		 fu_device_set_platform_id		(FuDevice	*device,
+							 const gchar	*platform_id);
 void		 fu_device_set_name			(FuDevice	*device,
 							 const gchar	*value);
+guint		 fu_device_get_remove_delay		(FuDevice	*device);
+void		 fu_device_set_remove_delay		(FuDevice	*device,
+							 guint		 remove_delay);
 
 G_END_DECLS
 

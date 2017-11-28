@@ -64,6 +64,7 @@ typedef enum {
  * @DFU_DEVICE_QUIRK_ACTION_REQUIRED:		User has to do something manually, e.g. press a button
  * @DFU_DEVICE_QUIRK_IGNORE_UPLOAD:		Uploading from the device is broken
  * @DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET:	Device needs resetting twice for attach
+ * @DFU_DEVICE_QUIRK_LEGACY_PROTOCOL:		Use a legacy protocol version
  *
  * The workarounds for different devices.
  **/
@@ -81,6 +82,7 @@ typedef enum {
 	DFU_DEVICE_QUIRK_ACTION_REQUIRED	= (1 << 9),
 	DFU_DEVICE_QUIRK_IGNORE_UPLOAD		= (1 << 10),
 	DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET	= (1 << 11),
+	DFU_DEVICE_QUIRK_LEGACY_PROTOCOL	= (1 << 12),
 	/*< private >*/
 	DFU_DEVICE_QUIRK_LAST
 } DfuDeviceQuirks;
@@ -145,6 +147,9 @@ void		 dfu_device_set_chip_id			(DfuDevice	*device,
 guint16		 dfu_device_get_runtime_vid		(DfuDevice	*device);
 guint16		 dfu_device_get_runtime_pid		(DfuDevice	*device);
 guint16		 dfu_device_get_runtime_release		(DfuDevice	*device);
+guint16		 dfu_device_get_vid			(DfuDevice	*device);
+guint16		 dfu_device_get_pid			(DfuDevice	*device);
+guint16		 dfu_device_get_release			(DfuDevice	*device);
 gboolean	 dfu_device_reset			(DfuDevice	*device,
 							 GError		**error);
 gboolean	 dfu_device_attach			(DfuDevice	*device,

@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-09 15:18+0000\n"
-"PO-Revision-Date: 2017-11-09 15:18+0000\n"
+"POT-Creation-Date: 2017-11-27 19:55+0000\n"
+"PO-Revision-Date: 2017-11-27 19:56+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/freedesktop/fwupd/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
@@ -196,7 +196,7 @@ msgstr "状况"
 
 #: plugins/dfu/dfu-tool.c:2119
 msgid "Permission denied"
-msgstr ""
+msgstr "拒绝授权"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
 #: plugins/dfu/dfu-tool.c:2141
@@ -233,7 +233,7 @@ msgstr "特异情况"
 #. TRANSLATORS: chip ID, e.g. "0x58200204"
 #: plugins/dfu/dfu-tool.c:2186
 msgid "Chip ID"
-msgstr ""
+msgstr "芯片 ID"
 
 #. TRANSLATORS: command description
 #: plugins/dfu/dfu-tool.c:2267
@@ -396,37 +396,42 @@ msgid "Installing firmware update…"
 msgstr "正在安装固件更新..."
 
 #. TRANSLATORS: turn on all debugging
-#: src/fu-debug.c:130
+#: src/fu-debug.c:128
 msgid "Show debugging information for all files"
 msgstr "显示所有文件的调试信息"
 
+#. TRANSLATORS: this is for plugin development
+#: src/fu-debug.c:131
+msgid "Show plugin verbose information"
+msgstr ""
+
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:180
+#: src/fu-debug.c:186
 msgid "Debugging Options"
 msgstr "调试选项"
 
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:182
+#: src/fu-debug.c:188
 msgid "Show debugging options"
 msgstr "显示调试选项"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
-#: src/fu-main.c:960
+#: src/fu-main.c:1007
 msgid "Exit after a small delay"
 msgstr "在短暂的延迟后退出"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
-#: src/fu-main.c:963
+#: src/fu-main.c:1010
 msgid "Exit after the engine has loaded"
 msgstr "在引擎加载后退出"
 
 #. TRANSLATORS: program name
-#: src/fu-main.c:977
+#: src/fu-main.c:1024
 msgid "Firmware Update Daemon"
 msgstr "固件更新守护程序"
 
 #. TRANSLATORS: program summary
-#: src/fu-main.c:982
+#: src/fu-main.c:1029
 msgid "Firmware Update D-Bus Service"
 msgstr "固件更新 D-Bus 服务"
 
@@ -488,7 +493,7 @@ msgstr "正在认证…"
 #. TRANSLATORS: waiting for device to do something
 #: src/fu-progressbar.c:96
 msgid "Waiting…"
-msgstr ""
+msgstr "等待中..."
 
 #. TRANSLATORS: currect daemon status is unknown
 #: src/fu-progressbar.c:103

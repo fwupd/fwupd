@@ -44,33 +44,17 @@ _bcd_version_from_uint16 (guint16 val)
 #endif
 }
 
-static gboolean
-fu_plugin_dfu_device_update (FuPlugin *plugin,
-			     FuDevice *dev,
-			     DfuDevice *device,
-			     GError **error)
+static void
+fu_plugin_dfu_update_device_from_dfu_device (FuDevice *dev, DfuDevice *device)
 {
-	const gchar *platform_id;
 	guint16 release;
 	g_autofree gchar *version = NULL;
-	g_autofree gchar *devid1 = NULL;
-	g_autofree gchar *devid2 = NULL;
-	g_autofree gchar *vendor_id = NULL;
-
-	/* check mode */
-	platform_id = dfu_device_get_platform_id (device);
-	if (dfu_device_get_runtime_vid (device) == 0xffff) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "device not in runtime: %s",
-			     platform_id);
-		return FALSE;
-	}
 
 	/* check capabilities */
-	if (dfu_device_can_download (device))
+	if (dfu_device_can_download (device)) {
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_set_remove_delay (dev, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	}
 
 	/* needs a manual action */
 	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_ACTION_REQUIRED)) {
@@ -87,22 +71,38 @@ fu_plugin_dfu_device_update (FuPlugin *plugin,
 	}
 
 	/* set vendor ID */
-	vendor_id = g_strdup_printf ("USB:0x%04X", dfu_device_get_runtime_vid (device));
-	fu_device_set_vendor_id (dev, vendor_id);
+	if (dfu_device_get_runtime_vid (device) != 0xffff) {
+		g_autofree gchar *vendor_id = NULL;
+		vendor_id = g_strdup_printf ("USB:0x%04X",
+					     dfu_device_get_runtime_vid (device));
+		fu_device_set_vendor_id (dev, vendor_id);
+	}
 
 	/* add USB\VID_0000&PID_0000 */
-	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
-				  dfu_device_get_runtime_vid (device),
-				  dfu_device_get_runtime_pid (device));
-	fu_device_add_guid (dev, devid1);
+	if (dfu_device_get_vid (device) != 0xffff &&
+	    dfu_device_get_pid (device) != 0xffff) {
+		g_autofree gchar *devid = NULL;
+		devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+					 dfu_device_get_vid (device),
+					 dfu_device_get_pid (device));
+		fu_device_add_guid (dev, devid);
+	}
 
-	/* add more specific USB\VID_0000&PID_0000&REV_0000 */
-	devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X",
-				  dfu_device_get_runtime_vid (device),
-				  dfu_device_get_runtime_pid (device),
-				  dfu_device_get_runtime_release (device));
-	fu_device_add_guid (dev, devid2);
-	return TRUE;
+	/* add USB\VID_0000&PID_0000 */
+	if (dfu_device_get_runtime_vid (device) != 0xffff &&
+	    dfu_device_get_runtime_pid (device) != 0xffff) {
+		g_autofree gchar *devid1 = NULL;
+		g_autofree gchar *devid2 = NULL;
+		devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+					  dfu_device_get_runtime_vid (device),
+					  dfu_device_get_runtime_pid (device));
+		fu_device_add_guid (dev, devid1);
+		devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X",
+					  dfu_device_get_runtime_vid (device),
+					  dfu_device_get_runtime_pid (device),
+					  dfu_device_get_runtime_release (device));
+		fu_device_add_guid (dev, devid2);
+	}
 }
 
 static void
@@ -121,10 +121,7 @@ fu_plugin_dfu_device_changed_cb (DfuContext *ctx,
 		g_warning ("cannot find device %s", platform_id);
 		return;
 	}
-	if (!fu_plugin_dfu_device_update (plugin, dev, device, &error)) {
-		g_warning ("ignoring device: %s", error->message);
-		return;
-	}
+	fu_plugin_dfu_update_device_from_dfu_device (dev, device);
 }
 
 static gboolean
@@ -132,6 +129,39 @@ dfu_device_open_no_refresh (DfuDevice *device, GError **error)
 {
 	return dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH,
 				     NULL, error);
+}
+
+static void
+fu_plugin_dfu_action_changed_cb (DfuDevice *device,
+				 FwupdStatus action,
+				 FuPlugin *plugin)
+{
+	fu_plugin_set_status (plugin, action);
+}
+
+static void
+fu_plugin_dfu_state_changed_cb (DfuDevice *device,
+				  DfuState state,
+				  FuPlugin *plugin)
+{
+	switch (state) {
+	case DFU_STATE_DFU_UPLOAD_IDLE:
+		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
+		break;
+	case DFU_STATE_DFU_DNLOAD_IDLE:
+		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
+		break;
+	default:
+		break;
+	}
+}
+
+static void
+fu_plugin_dfu_percentage_changed_cb (DfuDevice *device,
+				       guint percentage,
+				       FuPlugin *plugin)
+{
+	fu_plugin_set_percentage (plugin, percentage);
 }
 
 static void
@@ -163,11 +193,8 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 
 	/* create new device */
 	dev = fu_device_new ();
-	fu_device_set_id (dev, platform_id);
-	if (!fu_plugin_dfu_device_update (plugin, dev, device, &error)) {
-		g_debug ("ignoring device: %s", error->message);
-		return;
-	}
+	fu_device_set_platform_id (dev, platform_id);
+	fu_plugin_dfu_update_device_from_dfu_device (dev, device);
 
 	/* open device to get display name */
 	locker = fu_device_locker_new_full (device,
@@ -181,6 +208,14 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 	display_name = dfu_device_get_display_name (device);
 	if (display_name != NULL)
 		fu_device_set_name (dev, display_name);
+
+	/* watch all signals */
+	g_signal_connect (device, "action-changed",
+			  G_CALLBACK (fu_plugin_dfu_action_changed_cb), plugin);
+	g_signal_connect (device, "state-changed",
+			  G_CALLBACK (fu_plugin_dfu_state_changed_cb), plugin);
+	g_signal_connect (device, "percentage-changed",
+			  G_CALLBACK (fu_plugin_dfu_percentage_changed_cb), plugin);
 
 	/* this is a guess and can be overridden in the metainfo file */
 	fu_device_add_icon (dev, "drive-harddisk-usb");
@@ -209,58 +244,21 @@ fu_plugin_dfu_device_removed_cb (DfuContext *ctx,
 	fu_plugin_device_remove (plugin, dev);
 }
 
-static void
-fu_plugin_dfu_state_changed_cb (DfuDevice *device,
-				  DfuState state,
-				  FuPlugin *plugin)
-{
-	switch (state) {
-	case DFU_STATE_DFU_UPLOAD_IDLE:
-		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
-		break;
-	case DFU_STATE_DFU_DNLOAD_IDLE:
-		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
-		break;
-	default:
-		break;
-	}
-}
-
-static void
-fu_plugin_dfu_percentage_changed_cb (DfuDevice *device,
-				       guint percentage,
-				       FuPlugin *plugin)
-{
-	fu_plugin_set_percentage (plugin, percentage);
-}
-
 gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *dev,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
+fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	DfuDevice *device;
-	const gchar *platform_id;
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get device */
-	platform_id = fu_device_get_id (dev);
 	device = dfu_context_get_device_by_platform_id (data->context,
-							platform_id,
-							&error_local);
-	if (device == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "cannot find device %s: %s",
-			     platform_id, error_local->message);
+							fu_device_get_platform_id (dev),
+							error);
+	if (device == NULL)
 		return FALSE;
-	}
 
 	/* open it */
 	locker = fu_device_locker_new_full (device,
@@ -272,13 +270,107 @@ fu_plugin_update (FuPlugin *plugin,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "failed to open DFU device %s: %s",
-			     platform_id, error_local->message);
+			     fu_device_get_id (dev),
+			     error_local->message);
 		return FALSE;
 	}
-	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_plugin_dfu_state_changed_cb), plugin);
-	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_plugin_dfu_percentage_changed_cb), plugin);
+
+	/* already in DFU mode */
+	if (dfu_device_get_mode (device) == DFU_MODE_DFU)
+		return TRUE;
+
+	/* detach and USB reset */
+	if (!dfu_device_detach (device, NULL, error))
+		return FALSE;
+	if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	DfuDevice *device;
+	g_autoptr(DfuFirmware) dfu_firmware = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* get device */
+	device = dfu_context_get_device_by_platform_id (data->context,
+							fu_device_get_platform_id (dev),
+							error);
+	if (device == NULL)
+		return FALSE;
+
+	/* open it */
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    &error_local);
+	if (locker == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to open DFU device %s: %s",
+			     fu_device_get_id (dev),
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* already in runtime mode */
+	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME)
+		return TRUE;
+
+	/* attach it */
+	if (!dfu_device_attach (device, error))
+		return FALSE;
+
+	/* boot to runtime */
+	g_debug ("booting to runtime");
+	if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *dev,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	DfuDevice *device;
+	g_autoptr(DfuFirmware) dfu_firmware = NULL;
+	g_autoptr(FuDeviceLocker) locker  = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* get device */
+	device = dfu_context_get_device_by_platform_id (data->context,
+							fu_device_get_platform_id (dev),
+							error);
+	if (device == NULL)
+		return FALSE;
+
+	/* open it */
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) dfu_device_open,
+					    (FuDeviceLockerFunc) dfu_device_close,
+					    &error_local);
+	if (locker == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to open DFU device %s: %s",
+			     fu_device_get_id (dev),
+			     error_local->message);
+		return FALSE;
+	}
 
 	/* hit hardware */
 	dfu_firmware = dfu_firmware_new ();
@@ -286,11 +378,10 @@ fu_plugin_update (FuPlugin *plugin,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
 	if (!dfu_device_download (device, dfu_firmware,
-				  DFU_TARGET_TRANSFER_FLAG_DETACH |
 				  DFU_TARGET_TRANSFER_FLAG_VERIFY |
-				  DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME,
-				  NULL,
-				  error))
+				  DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID |
+				  DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID,
+				  NULL, error))
 		return FALSE;
 
 	/* we're done */
@@ -307,7 +398,6 @@ fu_plugin_verify (FuPlugin *plugin,
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GBytes *blob_fw;
 	DfuDevice *device;
-	const gchar *platform_id;
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -317,18 +407,11 @@ fu_plugin_verify (FuPlugin *plugin,
 		0 };
 
 	/* get device */
-	platform_id = fu_device_get_id (dev);
 	device = dfu_context_get_device_by_platform_id (data->context,
-							platform_id,
-							&error_local);
-	if (device == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "cannot find device %s: %s",
-			     platform_id, error_local->message);
+							fu_device_get_platform_id (dev),
+							error);
+	if (device == NULL)
 		return FALSE;
-	}
 
 	/* open it */
 	locker = fu_device_locker_new_full (device,
@@ -340,13 +423,10 @@ fu_plugin_verify (FuPlugin *plugin,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "failed to open DFU device %s: %s",
-			     platform_id, error_local->message);
+			     fu_device_get_id (dev),
+			     error_local->message);
 		return FALSE;
 	}
-	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_plugin_dfu_state_changed_cb), plugin);
-	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_plugin_dfu_percentage_changed_cb), plugin);
 
 	/* get data from hardware */
 	g_debug ("uploading from device->host");

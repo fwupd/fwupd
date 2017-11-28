@@ -103,8 +103,9 @@ GPtrArray	*fu_engine_get_details			(FuEngine	*self,
 
 /* for the self tests */
 void		 fu_engine_add_device			(FuEngine	*self,
-							 FuPlugin	*plugin,
 							 FuDevice	*device);
+void		 fu_engine_add_plugin			(FuEngine	*self,
+							 FuPlugin	*plugin);
 
 G_END_DECLS
 

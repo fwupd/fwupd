@@ -9,14 +9,14 @@ cp contrib/ci/s390x_cross.txt build/
 cd build
 meson .. \
 	--cross-file s390x_cross.txt \
-	-Denable-werror=true \
-	-Denable-uefi=false \
-	-Denable-uefi-labels=false \
-	-Denable-dell=false \
-	-Denable-synaptics=false \
-	-Denable-introspection=false \
-	-Denable-doc=false \
-	-Denable-man=false
+	-Dwerror=true \
+	-Dplugin_uefi=false \
+	-Dplugin_uefi_labels=false \
+	-Dplugin_dell=false \
+	-Dplugin_synaptics=false \
+	-Dintrospection=false \
+	-Dgtkdoc=false \
+	-Dman=false
 ninja -v
 ninja test -v
 cd ..

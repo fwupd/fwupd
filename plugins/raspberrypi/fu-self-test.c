@@ -87,7 +87,8 @@ fu_plugin_raspberrypi_func (void)
 	/* check we did the right thing */
 	g_assert_cmpint (cnt, ==, 0);
 	g_assert (device != NULL);
-	g_assert_cmpstr (fu_device_get_id (device), ==, "raspberry-pi");
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "94f01ac16574856944fb7e7583db423360430f97");
 	g_assert_cmpstr (fu_device_get_guid_default (device), ==,
 			 "91dd7368-8640-5d72-a217-a505c034dd0b");
 	g_assert_cmpstr (fu_device_get_version (device), ==,

@@ -155,6 +155,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	const gchar *vendor;
 	const gchar *version;
 	const gchar *devpath;
+	const gchar *devtype;
 	gboolean is_host;
 	gboolean is_safemode = FALSE;
 	guint16 did;
@@ -172,6 +173,12 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	}
 
 	devpath = g_udev_device_get_sysfs_path (device);
+
+	devtype = g_udev_device_get_devtype (device);
+	if (g_strcmp0 (devtype, "thunderbolt_device") != 0) {
+		g_debug ("ignoring %s device at %s", devtype, devpath);
+		return;
+	}
 
 	g_debug ("adding udev device: %s at %s", uuid, devpath);
 
@@ -219,7 +226,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
 
-	fu_device_set_id (dev, uuid);
+	fu_device_set_platform_id (dev, uuid);
 
 	fu_device_set_metadata (dev, "sysfs-path", devpath);
 	name = g_udev_device_get_sysfs_attr (device, "device_name");
@@ -589,7 +596,7 @@ on_wait_for_device_removed (FuPlugin    *plugin,
 		return;
 
 	fu_plugin_cache_remove (plugin, id);
-	uuid = fu_device_get_id (dev);
+	uuid = fu_device_get_platform_id (dev);
 	g_hash_table_insert (up_data->changes,
 			     (gpointer) uuid,
 			     g_object_ref (dev));
@@ -647,7 +654,7 @@ fu_plugin_thunderbolt_wait_for_device (FuPlugin  *plugin,
 	g_autoptr(GHashTable) changes = NULL;
 
 	up_data.mainloop = mainloop = g_main_loop_new (NULL, FALSE);
-	up_data.target_uuid = fu_device_get_id (dev);
+	up_data.target_uuid = fu_device_get_platform_id (dev);
 
 	/* this will limit the maximum amount of time we wait for
 	 * the device (i.e. 'dev') to re-appear. */

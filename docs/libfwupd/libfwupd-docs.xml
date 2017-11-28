@@ -43,6 +43,7 @@
     </partintro>
     <xi:include href="xml/fu-plugin.xml"/>
     <xi:include href="xml/fu-device.xml"/>
+    <xi:include href="xml/fu-usb-device.xml"/>
     <xi:include href="xml/fu-device-locker.xml"/>
     <xi:include href="xml/fu-common.xml"/>
     <xi:include href="xml/fu-quirks.xml"/>
@@ -328,12 +329,89 @@ fu_plugin_update_cleanup (FuPlugin *plugin, FuDevice *device, GError **error)
       </section>
 
       <section>
+        <title>Detaching to bootloader mode</title>
+        <para>
+          Some hardware can only be updated in a special bootloader mode, which
+          for most devices can be switched to automaticaly.
+          In some cases the user to do something manually, for instance
+          re-inserting the hardware with a secret button pressed.
+        </para>
+        <para>
+          Before the device update is performed the fwupd daemon runs an optional
+          <code>update_detach()</code> vfunc which switches the device to
+          bootloader mode.
+          After the update (or if the update fails) an the daemon runs an
+          optional <code>update_attach()</code> vfunc which should switch the
+          hardware back to runtime mode.
+          Finally an optional <code>update_reload()</code> vfunc is run to
+          get the new firmware version from the hardware.
+        </para>
+        <para>
+          The optional vfuncs are <emphasis role="strong">only</emphasis> run
+          on the plugin currently registered to handle the device ID, although
+          the registered plugin can change during the attach and detach phases.
+        </para>
+
+        <example>
+          <title>Running before a device update</title>
+          <programlisting>
+gboolean
+fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+  if (hardware_in_bootloader)
+    return TRUE;
+  return _device_detach(device, error);
+}
+          </programlisting>
+        </example>
+        <example>
+          <title>Running after a device update</title>
+          <programlisting>
+gboolean
+fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+  if (!hardware_in_bootloader)
+    return TRUE;
+  return _device_attach(device, error);
+}
+          </programlisting>
+        </example>
+        <example>
+          <title>Running after a device update on success</title>
+          <programlisting>
+gboolean
+fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+  g_autofree gchar *version = _get_version(plugin, device, error);
+  if (version == NULL)
+    return FALSE;
+  fu_device_set_version(device, version);
+  return TRUE;
+}
+          </programlisting>
+        </example>
+      </section>
+
+      <section>
         <title>The Plugin Object Cache</title>
         <para>
           The fwupd daemon provides a per-plugin cache which allows objects
           to be added, removed and queried using a specified key.
           Objects added to the cache must be <code>GObject</code>s to enable the
           cache objects to be properly refcounted.
+        </para>
+      </section>
+
+      <section>
+        <title>Debugging a Plugin</title>
+        <para>
+          If the fwupd daemon is started with <code>--plugin-verbose=$plugin</code>
+          then the environment variable <code>FWUPD_$PLUGIN_VERBOSE</code> is
+          set process-wide.
+          This allows plugins to detect when they should output detailed debugging
+          information that would normally be too verbose to keep in the journal.
+          For example, using <code>--plugin-verbose=unifying</code> would set
+          <code>FWUPD_UNIFYING_VERBOSE=1</code>.
         </para>
       </section>
 

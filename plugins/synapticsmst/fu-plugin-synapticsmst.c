@@ -33,8 +33,8 @@
 #define HWID_DELL_INC	"85d38fda-fc0e-5c6f-808f-076984ae7978"
 
 struct FuPluginData {
-	const gchar	*dock_type;
-	const gchar	*system_type;
+	gchar		*dock_type;
+	gchar		*system_type;
 };
 
 static gboolean

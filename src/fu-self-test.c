@@ -30,12 +30,14 @@
 #include <string.h>
 
 #include "fu-config.h"
+#include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-quirks.h"
 #include "fu-keyring.h"
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
+#include "fu-plugin-list.h"
 #include "fu-progressbar.h"
 #include "fu-hwids.h"
 #include "fu-smbios.h"
@@ -49,9 +51,67 @@
 #endif
 
 static void
+fu_engine_partial_hash_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_none = NULL;
+	g_autoptr(GError) error_both = NULL;
+
+	/* set up dummy plugin */
+	fu_plugin_set_name (plugin, "test");
+	fu_engine_add_plugin (engine, plugin);
+
+	/* add two dummy devices */
+	fu_device_set_id (device1, "device1");
+	fu_device_set_plugin (device1, "test");
+	fu_device_add_guid (device1, "12345678-1234-1234-1234-123456789012");
+	fu_engine_add_device (engine, device1);
+	fu_device_set_id (device2, "device21");
+	fu_device_set_plugin (device2, "test");
+	fu_device_set_equivalent_id (device2, "b92f5b7560b84ca005a79f5a15de3c003ce494cf");
+	fu_device_add_guid (device2, "12345678-1234-1234-1234-123456789012");
+	fu_engine_add_device (engine, device2);
+
+	/* match nothing */
+	ret = fu_engine_unlock (engine, "deadbeef", &error_none);
+	g_assert_error (error_none, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert (!ret);
+
+	/* match both */
+	ret = fu_engine_unlock (engine, "9", &error_both);
+	g_assert_error (error_both, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert (!ret);
+
+	/* match one exactly */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_LOCKED);
+	ret = fu_engine_unlock (engine, "934b4162a6daa0b033d649c8d464529cec41d3de", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* match one partially */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_LOCKED);
+	ret = fu_engine_unlock (engine, "934b", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* match equivalent ID */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_LOCKED);
+	ret = fu_engine_unlock (engine, "b92f", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+}
+
+static void
 fu_engine_require_hwid_func (void)
 {
-	const gchar *device_id = "test_device";
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(AsStore) store = NULL;
@@ -63,6 +123,12 @@ fu_engine_require_hwid_func (void)
 
 #if !AS_CHECK_VERSION(0,7,4)
 	g_test_skip ("HWID requirements only supported with appstream-glib 0.7.4");
+	return;
+#endif
+
+#if !defined(HAVE_GCAB_0_8) && defined(__s390x__)
+	/* See https://github.com/hughsie/fwupd/issues/318 for more information */
+	g_test_skip ("Skipping HWID test on s390x due to known problem with gcab");
 	return;
 #endif
 
@@ -80,10 +146,11 @@ fu_engine_require_hwid_func (void)
 	fu_device_set_id (device, "test_device");
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_engine_add_device (engine, plugin, device);
+	fu_engine_add_device (engine, device);
 
 	/* install it */
-	ret = fu_engine_install (engine, device_id, store, blob_cab, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_install (engine, fu_device_get_id (device),
+				 store, blob_cab, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert (error != NULL);
 	g_assert_cmpstr (error->message, ==,
@@ -154,6 +221,13 @@ fu_engine_func (void)
 				   "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
 				   "    </provides>"
 				   "    <releases>"
+				   "      <release version=\"1.2.5\" date=\"2017-09-16\">"
+				   "        <size type=\"installed\">123</size>"
+				   "        <size type=\"download\">456</size>"
+				   "        <location>https://test.org/foo.cab</location>"
+				   "        <checksum filename=\"foo.cab\" target=\"container\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "        <checksum filename=\"firmware.bin\" target=\"content\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "      </release>"
 				   "      <release version=\"1.2.4\" date=\"2017-09-15\">"
 				   "        <size type=\"installed\">123</size>"
 				   "        <size type=\"download\">456</size>"
@@ -198,7 +272,7 @@ fu_engine_func (void)
 	fu_device_set_name (device, "Test Device");
 	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_engine_add_device (engine, plugin, device);
+	fu_engine_add_device (engine, device);
 	devices = fu_engine_get_devices (engine, &error);
 	g_assert_no_error (error);
 	g_assert (devices != NULL);
@@ -210,14 +284,18 @@ fu_engine_func (void)
 	releases = fu_engine_get_releases (engine, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
 	g_assert (releases != NULL);
-	g_assert_cmpint (releases->len, ==, 3);
+	g_assert_cmpint (releases->len, ==, 4);
 
 	/* upgrades */
 	releases_up = fu_engine_get_upgrades (engine, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
 	g_assert (releases_up != NULL);
-	g_assert_cmpint (releases_up->len, ==, 1);
+	g_assert_cmpint (releases_up->len, ==, 2);
+
+	/* ensure the list is sorted */
 	rel = FWUPD_RELEASE (g_ptr_array_index (releases_up, 0));
+	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.5");
+	rel = FWUPD_RELEASE (g_ptr_array_index (releases_up, 1));
 	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.4");
 
 	/* downgrades */
@@ -228,6 +306,204 @@ fu_engine_func (void)
 	rel = FWUPD_RELEASE (g_ptr_array_index (releases_dg, 0));
 	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.2");
 }
+
+static void
+_device_list_count_cb (FuDeviceList *device_list, FuDevice *device, gpointer user_data)
+{
+	guint *cnt = (guint *) user_data;
+	(*cnt)++;
+}
+
+static void
+fu_device_list_delay_func (void)
+{
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	guint added_cnt = 0;
+	guint changed_cnt = 0;
+	guint removed_cnt = 0;
+
+	g_signal_connect (device_list, "added",
+			  G_CALLBACK (_device_list_count_cb),
+			  &added_cnt);
+	g_signal_connect (device_list, "removed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &removed_cnt);
+	g_signal_connect (device_list, "changed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &changed_cnt);
+
+	/* add one device */
+	fu_device_set_id (device1, "device1");
+	fu_device_add_guid (device1, "foobar");
+	fu_device_set_remove_delay (device1, 100);
+	fu_device_list_add (device_list, device1);
+	g_assert_cmpint (added_cnt, ==, 1);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
+
+	/* spin a bit */
+	fu_test_loop_run_with_timeout (10);
+	fu_test_loop_quit ();
+
+	/* verify only a changed event was generated */
+	added_cnt = removed_cnt = changed_cnt = 0;
+	fu_device_list_remove (device_list, device1);
+	fu_device_list_add (device_list, device1);
+	g_assert_cmpint (added_cnt, ==, 0);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 1);
+}
+
+static void
+fu_device_list_compatible_func (void)
+{
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	g_autoptr(GPtrArray) devices_all = NULL;
+	g_autoptr(GPtrArray) devices_active = NULL;
+	FuDevice *device;
+	guint added_cnt = 0;
+	guint changed_cnt = 0;
+	guint removed_cnt = 0;
+
+	g_signal_connect (device_list, "added",
+			  G_CALLBACK (_device_list_count_cb),
+			  &added_cnt);
+	g_signal_connect (device_list, "removed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &removed_cnt);
+	g_signal_connect (device_list, "changed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &changed_cnt);
+
+	/* add one device in runtime mode */
+	fu_device_set_id (device1, "device1");
+	fu_device_set_plugin (device1, "plugin-for-runtime");
+	fu_device_set_vendor_id (device1, "USB:0x20A0");
+	fu_device_set_version (device1, "1.2.3");
+	fu_device_add_guid (device1, "foobar");
+	fu_device_add_guid (device1, "bootloader");
+	fu_device_set_remove_delay (device1, 100);
+	fu_device_list_add (device_list, device1);
+	g_assert_cmpint (added_cnt, ==, 1);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
+
+	/* add another device in bootloader mode */
+	fu_device_set_id (device2, "device2");
+	fu_device_set_plugin (device2, "plugin-for-bootloader");
+	fu_device_add_guid (device2, "bootloader");
+
+	/* verify only a changed event was generated */
+	added_cnt = removed_cnt = changed_cnt = 0;
+	fu_device_list_remove (device_list, device1);
+	fu_device_list_add (device_list, device2);
+	g_assert_cmpint (added_cnt, ==, 0);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 1);
+
+	/* device2 should inherit the vendor ID and version from device1 */
+	g_assert_cmpstr (fu_device_get_vendor_id (device2), ==, "USB:0x20A0");
+	g_assert_cmpstr (fu_device_get_version (device2), ==, "1.2.3");
+
+	/* one device is active */
+	devices_active = fu_device_list_get_active (device_list);
+	g_assert_cmpint (devices_active->len, ==, 1);
+	device = g_ptr_array_index (devices_active, 0);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+
+	/* the list knows about both devices, list in order of active->old */
+	devices_all = fu_device_list_get_all (device_list);
+	g_assert_cmpint (devices_all->len, ==, 2);
+	device = g_ptr_array_index (devices_all, 0);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+	device = g_ptr_array_index (devices_all, 1);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
+}
+
+static void
+fu_device_list_func (void)
+{
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices2 = NULL;
+	g_autoptr(GError) error = NULL;
+	FuDevice *device;
+	guint added_cnt = 0;
+	guint changed_cnt = 0;
+	guint removed_cnt = 0;
+
+	g_signal_connect (device_list, "added",
+			  G_CALLBACK (_device_list_count_cb),
+			  &added_cnt);
+	g_signal_connect (device_list, "removed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &removed_cnt);
+	g_signal_connect (device_list, "changed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &changed_cnt);
+
+	/* add both */
+	fu_device_set_id (device1, "device1");
+	fu_device_add_guid (device1, "foobar");
+	fu_device_list_add (device_list, device1);
+	fu_device_set_id (device2, "device2");
+	fu_device_add_guid (device2, "baz");
+	fu_device_list_add (device_list, device2);
+	g_assert_cmpint (added_cnt, ==, 2);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
+
+	/* get all */
+	devices = fu_device_list_get_all (device_list);
+	g_assert_cmpint (devices->len, ==, 2);
+	device = g_ptr_array_index (devices, 0);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
+
+	/* find by ID */
+	device = fu_device_list_find_by_id (device_list,
+					    "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a",
+					    &error);
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+					   "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
+
+	/* find by GUID */
+	device = fu_device_list_find_by_guid (device_list,
+					      "579a3b1c-d1db-5bdc-b6b9-e2c1b28d5b8a",
+					      &error);
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+
+	/* find by missing GUID */
+	device = fu_device_list_find_by_guid (device_list, "notfound", &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert (device == NULL);
+
+	/* remove device */
+	added_cnt = removed_cnt = changed_cnt = 0;
+	fu_device_list_remove (device_list, device1);
+	g_assert_cmpint (added_cnt, ==, 0);
+	g_assert_cmpint (removed_cnt, ==, 1);
+	g_assert_cmpint (changed_cnt, ==, 0);
+	devices2 = fu_device_list_get_all (device_list);
+	g_assert_cmpint (devices2->len, ==, 1);
+	device = g_ptr_array_index (devices2, 0);
+	g_assert_cmpstr (fu_device_get_id (device), ==,
+			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+}
+
 
 static void
 fu_device_metadata_func (void)
@@ -424,13 +700,13 @@ fu_plugin_delay_func (void)
 	fu_device_set_id (device, "testdev");
 	fu_plugin_device_add (plugin, device);
 	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
 	g_clear_object (&device_tmp);
 
 	/* remove device */
 	fu_plugin_device_remove (plugin, device);
 	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
 	g_clear_object (&device_tmp);
 
 	/* add it with a small delay */
@@ -438,7 +714,7 @@ fu_plugin_delay_func (void)
 	g_assert (device_tmp == NULL);
 	fu_test_loop_run_with_timeout (1000);
 	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
 	g_clear_object (&device_tmp);
 
 	/* add it again, twice quickly */
@@ -447,7 +723,7 @@ fu_plugin_delay_func (void)
 	g_assert (device_tmp == NULL);
 	fu_test_loop_run_with_timeout (1000);
 	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "testdev");
+	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
 	g_clear_object (&device_tmp);
 }
 
@@ -539,7 +815,7 @@ fu_plugin_module_func (void)
 	/* check we did the right thing */
 	g_assert_cmpint (cnt, ==, 0);
 	g_assert (device != NULL);
-	g_assert_cmpstr (fu_device_get_id (device), ==, "FakeDevice");
+	g_assert_cmpstr (fu_device_get_id (device), ==, "08d460be0f1f9f128413f816022a6439e0078018");
 	g_assert_cmpstr (fu_device_get_version_lowest (device), ==, "1.2.0");
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
 	g_assert_cmpstr (fu_device_get_version_bootloader (device), ==, "0.1.2");
@@ -619,6 +895,80 @@ fu_plugin_module_func (void)
 }
 
 static void
+fu_plugin_list_func (void)
+{
+	GPtrArray *plugins;
+	FuPlugin *plugin;
+	g_autoptr(FuPluginList) plugin_list = fu_plugin_list_new ();
+	g_autoptr(FuPlugin) plugin1 = fu_plugin_new ();
+	g_autoptr(FuPlugin) plugin2 = fu_plugin_new ();
+	g_autoptr(GError) error = NULL;
+
+	fu_plugin_set_name (plugin1, "plugin1");
+	fu_plugin_set_name (plugin2, "plugin2");
+
+	/* get all the plugins */
+	fu_plugin_list_add (plugin_list, plugin1);
+	fu_plugin_list_add (plugin_list, plugin2);
+	plugins = fu_plugin_list_get_all (plugin_list);
+	g_assert_cmpint (plugins->len, ==, 2);
+
+	/* get a single plugin */
+	plugin = fu_plugin_list_find_by_name (plugin_list, "plugin1", &error);
+	g_assert_no_error (error);
+	g_assert (plugin != NULL);
+	g_assert_cmpstr (fu_plugin_get_name (plugin), ==, "plugin1");
+
+	/* does not exist */
+	plugin = fu_plugin_list_find_by_name (plugin_list, "nope", &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert (plugin == NULL);
+}
+
+static void
+fu_plugin_list_depsolve_func (void)
+{
+	GPtrArray *plugins;
+	FuPlugin *plugin;
+	gboolean ret;
+	g_autoptr(FuPluginList) plugin_list = fu_plugin_list_new ();
+	g_autoptr(FuPlugin) plugin1 = fu_plugin_new ();
+	g_autoptr(FuPlugin) plugin2 = fu_plugin_new ();
+	g_autoptr(GError) error = NULL;
+
+	fu_plugin_set_name (plugin1, "plugin1");
+	fu_plugin_set_name (plugin2, "plugin2");
+
+	/* add rule then depsolve */
+	fu_plugin_list_add (plugin_list, plugin1);
+	fu_plugin_list_add (plugin_list, plugin2);
+	fu_plugin_add_rule (plugin1, FU_PLUGIN_RULE_RUN_AFTER, "plugin2");
+	ret = fu_plugin_list_depsolve (plugin_list, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	plugins = fu_plugin_list_get_all (plugin_list);
+	g_assert_cmpint (plugins->len, ==, 2);
+	plugin = g_ptr_array_index (plugins, 0);
+	g_assert_cmpstr (fu_plugin_get_name (plugin), ==, "plugin2");
+	g_assert_cmpint (fu_plugin_get_order (plugin), ==, 0);
+	g_assert (fu_plugin_get_enabled (plugin));
+
+	/* add another rule, then re-depsolve */
+	fu_plugin_add_rule (plugin1, FU_PLUGIN_RULE_CONFLICTS, "plugin2");
+	ret = fu_plugin_list_depsolve (plugin_list, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	plugin = fu_plugin_list_find_by_name (plugin_list, "plugin1", &error);
+	g_assert_no_error (error);
+	g_assert (plugin != NULL);
+	g_assert (fu_plugin_get_enabled (plugin));
+	plugin = fu_plugin_list_find_by_name (plugin_list, "plugin2", &error);
+	g_assert_no_error (error);
+	g_assert (plugin != NULL);
+	g_assert (!fu_plugin_get_enabled (plugin));
+}
+
+static void
 fu_pending_func (void)
 {
 	GError *error = NULL;
@@ -656,6 +1006,7 @@ fu_pending_func (void)
 
 	/* add some extra data */
 	device = fu_device_new ();
+	/* the SHA1SUM of this is 2ba16d10df45823dd4494ff10a0bfccfef512c9d */
 	fu_device_set_id (device, "self-test");
 	ret = fu_pending_set_state (pending, device, FWUPD_UPDATE_STATE_PENDING, &error);
 	g_assert_no_error (error);
@@ -666,10 +1017,10 @@ fu_pending_func (void)
 	g_object_unref (device);
 
 	/* get device */
-	device = fu_pending_get_device (pending, "self-test", &error);
+	device = fu_pending_get_device (pending, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
 	g_assert_no_error (error);
 	g_assert (device != NULL);
-	g_assert_cmpstr (fu_device_get_id (device), ==, "self-test");
+	g_assert_cmpstr (fu_device_get_id (device), ==, "2ba16d10df45823dd4494ff10a0bfccfef512c9d");
 	g_assert_cmpstr (fu_device_get_name (device), ==, "ColorHug");
 	g_assert_cmpstr (fu_device_get_version (device), ==, "3.0.1");
 	g_assert_cmpint (fu_device_get_update_state (device), ==, FWUPD_UPDATE_STATE_PENDING);
@@ -693,7 +1044,7 @@ fu_pending_func (void)
 	g_object_unref (device);
 
 	/* get device that does not exist */
-	device = fu_pending_get_device (pending, "self-test", &error);
+	device = fu_pending_get_device (pending, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (device == NULL);
 	g_clear_error (&error);
@@ -1004,12 +1355,18 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
+	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
+	g_test_add_func ("/fwupd/device-list{delay}", fu_device_list_delay_func);
+	g_test_add_func ("/fwupd/device-list{compatible}", fu_device_list_compatible_func);
 	g_test_add_func ("/fwupd/engine", fu_engine_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
+	g_test_add_func ("/fwupd/engine{partial-hash}", fu_engine_partial_hash_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
 	g_test_add_func ("/fwupd/pending", fu_pending_func);
+	g_test_add_func ("/fwupd/plugin-list", fu_plugin_list_func);
+	g_test_add_func ("/fwupd/plugin-list{depsolve}", fu_plugin_list_depsolve_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);

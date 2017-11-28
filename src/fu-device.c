@@ -45,6 +45,7 @@ typedef struct {
 	gchar				*filename_pending;
 	FuDevice			*alternate;
 	GHashTable			*metadata;
+	guint				 remove_delay;	/* ms */
 } FuDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuDevice, fu_device, FWUPD_TYPE_DEVICE)
@@ -308,9 +309,91 @@ void
 fu_device_set_name (FuDevice *device, const gchar *value)
 {
 	g_autoptr(GString) new = g_string_new (value);
+
+	/* overwriting? */
+	if (g_strcmp0 (value, fu_device_get_name (device)) == 0) {
+		g_warning ("device %s overwriting same name value: %s",
+			   fu_device_get_id (device), value);
+		return;
+	}
+
+	/* changing */
+	if (fu_device_get_name (device) != NULL) {
+		g_debug ("device %s overwriting name value: %s->%s",
+			 fu_device_get_id (device),
+			 fu_device_get_name (device),
+			 value);
+	}
+
 	g_strdelimit (new->str, "_", ' ');
 	as_utils_string_replace (new, "(TM)", "™");
 	fwupd_device_set_name (FWUPD_DEVICE (device), new->str);
+}
+
+/**
+ * fu_device_set_id:
+ * @device: A #FuDevice
+ * @id: a string, e.g. `tbt-port1`
+ *
+ * Sets the ID on the device. The ID should represent the *connection* of the
+ * device, so that any similar device plugged into a different slot will
+ * have a different @id string.
+ *
+ * The @id will be converted to a SHA1 hash before the device is added to the
+ * daemon, and plugins should not assume that the ID that is set here is the
+ * same as what is returned by fu_device_get_id().
+ *
+ * Since: 0.7.1
+ **/
+void
+fu_device_set_id (FuDevice *device, const gchar *id)
+{
+	g_autofree gchar *id_hash = NULL;
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_return_if_fail (id != NULL);
+	id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
+	g_debug ("using %s for %s", id_hash, id);
+	fwupd_device_set_id (FWUPD_DEVICE (device), id_hash);
+}
+
+/**
+ * fu_device_set_platform_id:
+ * @device: A #FuDevice
+ * @platform_id: a platform string, e.g. `/sys/devices/usb1/1-1/1-1.2`
+ *
+ * Sets the Platform ID on the device. If unset, the ID will automatically
+ * be set using a hash of the @platform_id value.
+ *
+ * Since: 1.0.2
+ **/
+void
+fu_device_set_platform_id (FuDevice *device, const gchar *platform_id)
+{
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_return_if_fail (platform_id != NULL);
+
+	/* automatically use this */
+	if (fu_device_get_id (device) == NULL)
+		fu_device_set_id (device, platform_id);
+	fu_device_set_metadata (device, "platform-id", platform_id);
+}
+
+/**
+ * fu_device_get_platform_id:
+ * @device: A #FuDevice
+ *
+ * Gets the Platform ID set for the device, which represents the connection
+ * string used to compare devices.
+ *
+ * Returns: a string value, or %NULL if never set.
+ *
+ * Since: 1.0.2
+ **/
+const gchar *
+fu_device_get_platform_id (FuDevice *device)
+{
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return fu_device_get_metadata (device, "platform-id");
 }
 
 static void
@@ -323,6 +406,47 @@ fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
 	for (gsize i = strlen (key); i < 20; i++)
 		g_string_append (str, " ");
 	g_string_append_printf (str, "%s\n", value);
+}
+
+/**
+ * fu_device_get_remove_delay:
+ * @device: A #FuDevice
+ *
+ * Returns the maximum delay expected when replugging the device going into
+ * bootloader mode.
+ *
+ * Returns: time in milliseconds
+ *
+ * Since: 1.0.2
+ **/
+guint
+fu_device_get_remove_delay (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), 0);
+	return priv->remove_delay;
+}
+
+/**
+ * fu_device_set_remove_delay:
+ * @device: A #FuDevice
+ * @remove_delay: the remove_delay value
+ *
+ * Sets the amount of time a device is allowed to return in bootloader mode.
+ *
+ * NOTE: this should be less than 3000ms for devices that just have to reset
+ * and automatically re-enumerate, but significantly longer if it involves a
+ * user removing a cable, pressing several buttons and removing a cable.
+ * A suggested value for this would be 10,000ms.
+ *
+ * Since: 1.0.2
+ **/
+void
+fu_device_set_remove_delay (FuDevice *device, guint remove_delay)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	priv->remove_delay = remove_delay;
 }
 
 /**

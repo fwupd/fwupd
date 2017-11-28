@@ -420,17 +420,18 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 			priv->version = dfu_utils_buffer_parse_uint16 (quirk_str);
 		if (priv->version == DFU_VERSION_DFU_1_0 ||
 		    priv->version == DFU_VERSION_DFU_1_1) {
-			g_debug ("basic DFU 1.1");
+			g_debug ("DFU v1.1");
 		} else if (priv->version == DFU_VERSION_ATMEL_AVR) {
 			g_debug ("AVR-DFU support");
 			priv->version = DFU_VERSION_ATMEL_AVR;
 		} else if (priv->version == DFU_VERSION_DFUSE) {
 			g_debug ("STM-DFU support");
 		} else if (priv->version == 0x0101) {
-			g_debug ("basic DFU 1.1 assumed");
+			g_debug ("DFU v1.1 assumed");
 			priv->version = DFU_VERSION_DFU_1_1;
 		} else {
-			g_warning ("DFU version is invalid: 0x%04x", priv->version);
+			g_warning ("DFU version 0x%04x invalid, v1.1 assumed", priv->version);
+			priv->version = DFU_VERSION_DFU_1_1;
 		}
 
 		/* fix up the transfer size */
@@ -472,6 +473,7 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 		const gchar *quirk_str;
 		if (priv->targets->len == 0) {
 			g_debug ("no DFU runtime, so faking device");
+			priv->mode = DFU_MODE_RUNTIME;
 			priv->iface_number = 0xff;
 			priv->runtime_vid = g_usb_device_get_vid (priv->dev);
 			priv->runtime_pid = g_usb_device_get_pid (priv->dev);
@@ -739,6 +741,10 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 			priv->quirks |= DFU_DEVICE_QUIRK_USE_ANY_INTERFACE;
 			continue;
 		}
+		if (g_strcmp0 (split[i], "legacy-protocol") == 0) {
+			priv->quirks |= DFU_DEVICE_QUIRK_LEGACY_PROTOCOL;
+			continue;
+		}
 	}
 }
 
@@ -936,6 +942,54 @@ dfu_device_get_runtime_release (DfuDevice *device)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
 	return priv->runtime_release;
+}
+
+/**
+ * dfu_device_get_vid:
+ * @device: a #DfuDevice
+ *
+ * Gets the present vendor ID.
+ *
+ * Return value: vendor ID, or 0xffff for unknown
+ **/
+guint16
+dfu_device_get_vid (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
+	return g_usb_device_get_vid (priv->dev);
+}
+
+/**
+ * dfu_device_get_pid:
+ * @device: a #DfuDevice
+ *
+ * Gets the present product ID.
+ *
+ * Return value: product ID, or 0xffff for unknown
+ **/
+guint16
+dfu_device_get_pid (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
+	return g_usb_device_get_pid (priv->dev);
+}
+
+/**
+ * dfu_device_get_release:
+ * @device: a #DfuDevice
+ *
+ * Gets the present release number in BCD format.
+ *
+ * Return value: release number, or 0xffff for unknown
+ **/
+guint16
+dfu_device_get_release (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
+	return g_usb_device_get_release (priv->dev);
 }
 
 /**
@@ -1195,7 +1249,8 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Already in DFU mode");
+			     "Already in DFU mode; state is %s",
+			     dfu_state_to_string (priv->state));
 		return FALSE;
 	}
 
@@ -1316,14 +1371,21 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 					    priv->timeout_ms,
 					    cancellable,
 					    &error_local)) {
-		/* refresh the error code */
-		dfu_device_error_fixup (device, cancellable, &error_local);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "cannot detach device: %s",
-			     error_local->message);
-		return FALSE;
+		/* some devices just reboot and stall the endpoint :/ */
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_NOT_SUPPORTED)) {
+			g_debug ("ignoring while detaching: %s", error_local->message);
+		} else {
+			/* refresh the error code */
+			dfu_device_error_fixup (device, cancellable, &error_local);
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "cannot detach device: %s",
+				     error_local->message);
+			return FALSE;
+		}
 	}
 
 	/* do a host reset */
@@ -1657,6 +1719,9 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 		g_clear_object (&priv->dev);
 		g_ptr_array_set_size (priv->targets, 0);
 		priv->claimed_interface = FALSE;
+		priv->mode = DFU_MODE_UNKNOWN;
+		priv->state = DFU_STATE_LAST;
+		priv->status = DFU_STATUS_LAST;
 		return TRUE;
 	}
 
@@ -1980,7 +2045,8 @@ dfu_device_upload (DfuDevice *device,
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "device is not in DFU mode");
+				     "device is not in DFU mode, got %s",
+				     dfu_mode_to_string (priv->mode));
 			return NULL;
 		}
 		g_debug ("detaching");
@@ -2178,7 +2244,8 @@ dfu_device_download (DfuDevice *device,
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "device is not in DFU mode");
+				     "device is not in DFU mode, got %s",
+				     dfu_mode_to_string (priv->mode));
 			return FALSE;
 		}
 
@@ -2385,6 +2452,8 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "attach-extra-reset|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_USE_ANY_INTERFACE)
 		g_string_append_printf (str, "use-any-interface|");
+	if (priv->quirks & DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)
+		g_string_append_printf (str, "legacy-protocol|");
 
 	/* a well behaved device */
 	if (str->len == 0) {

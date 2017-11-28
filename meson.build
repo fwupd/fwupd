@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.0.1',
+  version : '1.0.2',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -123,7 +123,7 @@ add_global_link_arguments(
 )
 
 # ONLY for CI and only when using gcc, do not enable this for distro builds
-if get_option('enable-werror') and meson.get_compiler('c').get_id() == 'gcc'
+if get_option('werror') and meson.get_compiler('c').get_id() == 'gcc'
   add_project_arguments('-Werror', language : 'c')
   add_project_arguments('-Wno-error=cpp', language : 'c')
 endif
@@ -155,11 +155,11 @@ else
   valgrind = dependency('valgrindXXX', required: false)
 endif
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
-if get_option('enable-pkcs7')
+if get_option('pkcs7')
   gnutls = dependency('gnutls')
   conf.set('ENABLE_PKCS7', '1')
 endif
-if get_option('enable-gpg')
+if get_option('gpg')
   gpgme = cc.find_library('gpgme')
   gpgerror = cc.find_library('gpg-error')
   conf.set('ENABLE_GPG', '1')
@@ -167,8 +167,12 @@ endif
 libm = cc.find_library('m', required: false)
 udev = dependency('udev')
 uuid = dependency('uuid')
+gcab = dependency('libgcab-1.0')
+if gcab.version().version_compare('>= 0.8')
+  conf.set('HAVE_GCAB_0_8', '1')
+endif
 
-if get_option('enable-uefi-labels')
+if get_option('plugin_uefi_labels')
   cairo = dependency('cairo')
   fontconfig = cc.find_library('fontconfig')
   freetype = cc.find_library('freetype')
@@ -182,53 +186,64 @@ if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
 
-if get_option('enable-colorhug')
+if get_option('plugin_colorhug')
   colorhug = dependency('colorhug', version : '>= 1.2.12')
   conf.set('HAVE_COLORHUG', '1')
 endif
 
-if get_option('enable-altos')
+if get_option('plugin_altos')
   libelf = dependency('libelf')
 endif
 
-if get_option('enable-uefi')
+if get_option('plugin_uefi')
   fwup = dependency('fwup', version : '>= 5')
   if fwup.version().version_compare('>= 10')
     conf.set('HAVE_FWUP_GET_BGRT_INFO', '1')
   endif
 endif
 
-if get_option('enable-dell')
+if get_option('plugin_dell')
   libsmbios_c = dependency('libsmbios_c', version : '>= 2.3.0')
   efivar = dependency('efivar')
   fwup = dependency('fwup', version : '>= 5')
   conf.set('HAVE_DELL', '1')
 endif
 
-if get_option('enable-synaptics')
+if get_option('plugin_synaptics')
     conf.set('HAVE_SYNAPTICS', '1')
 endif
 
-if get_option('enable-thunderbolt')
+if get_option('plugin_thunderbolt')
   umockdev = dependency('umockdev-1.0', required: false)
   conf.set('HAVE_THUNDERBOLT', '1')
 endif
 
-if get_option('enable-systemd')
+if get_option('systemd')
   systemd = dependency('systemd', version : '>= 231')
   conf.set('HAVE_SYSTEMD' , '1')
 endif
 
-if get_option('enable-consolekit')
+if get_option('consolekit')
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
 
-systemdunitdir = get_option('with-systemdunitdir')
-if systemdunitdir == '' and get_option('enable-systemd')
+prefix = get_option('prefix')
+
+bindir = join_paths(prefix, get_option('bindir'))
+libdir = join_paths(prefix, get_option('libdir'))
+datadir = join_paths(prefix, get_option('datadir'))
+libexecdir = join_paths(prefix, get_option('libexecdir'))
+sysconfdir = join_paths(prefix, get_option('sysconfdir'))
+localstatedir = join_paths(prefix, get_option('localstatedir'))
+mandir = join_paths(prefix, get_option('mandir'))
+localedir = join_paths(prefix, get_option('localedir'))
+
+systemdunitdir = get_option('systemdunitdir')
+if systemdunitdir == '' and get_option('systemd')
   systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
 endif
 
-udevdir = get_option('with-udevdir')
+udevdir = get_option('udevdir')
 if udevdir == ''
   udevdir = udev.get_pkgconfig_variable('udevdir')
 endif
@@ -236,21 +251,15 @@ endif
 gnome = import('gnome')
 i18n = import('i18n')
 
-plugin_dir = join_paths(get_option('prefix'),
-                        get_option('libdir'),
-                        'fwupd-plugins-3')
+plugin_dir = join_paths(libdir, 'fwupd-plugins-3')
 
-conf.set_quoted('BINDIR',
-                join_paths(get_option('prefix'),
-                           get_option('bindir')))
-conf.set_quoted('LIBEXECDIR',
-                join_paths(get_option('prefix'),
-                           get_option('libexecdir')))
+conf.set_quoted('BINDIR', bindir)
+conf.set_quoted('LIBEXECDIR', libexecdir)
 
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set_quoted('VERSION', meson.project_version())
-conf.set_quoted('LOCALEDIR', get_option('localedir'))
+conf.set_quoted('LOCALEDIR', localedir)
 configure_file(
   output : 'config.h',
   configuration : conf
@@ -261,9 +270,6 @@ if default_sysconfdir == 'etc'
   message('sysconfdir of etc makes no sense, using /etc')
   default_sysconfdir = '/etc'
 endif
-
-localstatedir = join_paths(get_option('prefix'),
-                           get_option('localstatedir'))
 
 plugin_deps = []
 plugin_deps += appstream_glib
@@ -301,6 +307,6 @@ if meson.version().version_compare('<0.41.0')
   endif
 endif
 
-if get_option('enable-systemd')
+if get_option('systemd')
   meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)
 endif

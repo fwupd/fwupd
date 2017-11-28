@@ -4,7 +4,7 @@ shared_module('fu_plugin_ebitdo',
   sources : [
     'fu-plugin-ebitdo.c',
     'fu-ebitdo-common.c',
-    'fu-device-ebitdo.c',
+    'fu-ebitdo-device.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -24,7 +24,7 @@ executable(
   sources : [
     'fu-ebitdo-tool.c',
     'fu-ebitdo-common.c',
-    'fu-device-ebitdo.c',
+    'fu-ebitdo-device.c',
   ],
   include_directories : [
     include_directories('../..'),

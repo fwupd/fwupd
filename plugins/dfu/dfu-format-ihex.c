@@ -53,6 +53,8 @@ dfu_firmware_detect_ihex (GBytes *bytes)
 
 #define	DFU_INHX32_RECORD_TYPE_DATA		0x00
 #define	DFU_INHX32_RECORD_TYPE_EOF		0x01
+#define	DFU_INHX32_RECORD_TYPE_EXTENDED_SEGMENT	0x02
+#define	DFU_INHX32_RECORD_TYPE_START_SEGMENT	0x03
 #define	DFU_INHX32_RECORD_TYPE_EXTENDED		0x04
 #define	DFU_INHX32_RECORD_TYPE_ADDR32		0x05
 #define	DFU_INHX32_RECORD_TYPE_SIGNATURE	0xfd
@@ -221,6 +223,14 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			addr32 = ((guint32) addr_high << 16) + addr_low;
 			break;
 		case DFU_INHX32_RECORD_TYPE_ADDR32:
+			addr32 = dfu_utils_buffer_parse_uint32 (in_buffer + offset + 9);
+			break;
+		case DFU_INHX32_RECORD_TYPE_EXTENDED_SEGMENT:
+			/* segment base address, so ~1Mb addressable */
+			addr32 = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 9) * 16;
+			break;
+		case DFU_INHX32_RECORD_TYPE_START_SEGMENT:
+			/* initial content of the CS:IP registers */
 			addr32 = dfu_utils_buffer_parse_uint32 (in_buffer + offset + 9);
 			break;
 		case DFU_INHX32_RECORD_TYPE_SIGNATURE:

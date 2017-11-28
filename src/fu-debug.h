@@ -24,9 +24,6 @@
 
 #include <glib.h>
 
-gboolean	 fu_debug_is_verbose		(void);
 GOptionGroup	*fu_debug_get_option_group	(void);
-void		 fu_debug_setup			(gboolean	 enabled);
-void		 fu_debug_destroy		(void);
 
 #endif /* __FU_DEBUG_H__ */

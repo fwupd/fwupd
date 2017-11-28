@@ -1,7 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfu"']
 
 install_data(['dfu.quirk'],
-  install_dir: join_paths(get_option('datadir'), 'fwupd', 'quirks.d')
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
 dfu = static_library(
@@ -84,10 +84,10 @@ executable(
   ],
   c_args : cargs,
   install : true,
-  install_dir : get_option('bindir')
+  install_dir : bindir
 )
 
-if get_option('enable-man')
+if get_option('man')
   docbook2man = find_program('docbook2man')
   custom_target('dfu-tool-man',
     input : 'dfu-tool.sgml',
@@ -97,11 +97,11 @@ if get_option('enable-man')
       '--output', meson.current_build_dir(),
     ],
     install : true,
-    install_dir : join_paths(get_option('mandir'), 'man1'),
+    install_dir : join_paths(mandir, 'man1'),
   )
 endif
 
-if get_option('enable-tests')
+if get_option('tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(

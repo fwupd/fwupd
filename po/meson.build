@@ -5,6 +5,6 @@ i18n.gettext(meson.project_name(),
   ]
 )
 
-if get_option('enable-uefi-labels')
+if get_option('plugin_uefi_labels')
 meson.add_install_script('make-images.sh')
 endif

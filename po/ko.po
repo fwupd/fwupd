@@ -1,0 +1,855 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+# 
+# Translators:
+# Seong-ho Cho <darkcircle.0426@gmail.com>, 2017
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-11-27 19:55+0000\n"
+"PO-Revision-Date: 2017-11-27 19:56+0000\n"
+"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"Language-Team: Korean (http://www.transifex.com/freedesktop/fwupd/language/ko/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: data/org.freedesktop.fwupd.metainfo.xml:7
+msgid "fwupd"
+msgstr "fwupd"
+
+#: data/org.freedesktop.fwupd.metainfo.xml:8
+msgid "Update device firmware on Linux"
+msgstr "리눅스에서 장치 펌웨어를 업데이트합니다"
+
+#: data/org.freedesktop.fwupd.metainfo.xml:10
+msgid ""
+"This project aims to make updating firmware on Linux automatic, safe and "
+"reliable. You can either use a GUI software manager like GNOME Software to "
+"view and apply updates, the command-line tool or the D-Bus interface "
+"directly."
+msgstr "이 프로젝트에서는 리눅스에서 자동으로 안전하고 믿을 수 있게 펌웨어를 업데이트할 수 있게 하려고 합니다. 업데이트를 보고 적용할 때 그놈 소프트웨어, 명령행 도구를 쓰거나 D-Bus 인터페이스를 바로 쓸 수 있습니다."
+
+#: data/org.freedesktop.fwupd.metainfo.xml:16
+msgid ""
+"The fwupd process is a simple daemon to allow session software to update "
+"device firmware on your local machine. It is designed for desktops, but this"
+" project is also usable on phones, tablets and on headless servers."
+msgstr "fwupd 프로세스는 로컬 머신의 장치 펌웨어를 세션 프로그램에서 업데이트할 수 있게 하는 간단한 데몬입니다. 데스크톱용으로 설계했지만, 전화기, 태블릭, 헤드리스 서버에서도 사용할 수 있습니다."
+
+#: policy/org.freedesktop.fwupd.policy.in:17
+msgid "Install signed system firmware"
+msgstr "서명한 시스템 펌웨어 설치"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:19
+#: policy/org.freedesktop.fwupd.policy.in:30
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "이 머신의 펌웨어를 업데이트하려면 인증이 필요합니다"
+
+#: policy/org.freedesktop.fwupd.policy.in:28
+msgid "Install unsigned system firmware"
+msgstr "서명하지 않은 시스템 펌웨어 설치"
+
+#: policy/org.freedesktop.fwupd.policy.in:39
+msgid "Install old version of system firmware"
+msgstr "시스템 펌웨어 이전 버전 설치"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:41
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr "이 머신에 이전 버전의 펌웨어를 설치하려면 인증이 필요합니다"
+
+#: policy/org.freedesktop.fwupd.policy.in:50
+msgid "Install signed device firmware"
+msgstr "서명한 장치 펌웨어 설치"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:52
+#: policy/org.freedesktop.fwupd.policy.in:63
+msgid ""
+"Authentication is required to update the firmware on a removable device"
+msgstr "이동식 장치의 펌웨어를 업데이트하려면 인증이 필요합니다"
+
+#: policy/org.freedesktop.fwupd.policy.in:61
+#: policy/org.freedesktop.fwupd.policy.in:72
+msgid "Install unsigned device firmware"
+msgstr "서명하지 않은 장치 펌웨어 설치"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:74
+msgid ""
+"Authentication is required to downgrade the firmware on a removable device"
+msgstr "이동식 장치의 펌웨어를 이전 버전으로 되돌리려면 인증이 필요합니다"
+
+#: policy/org.freedesktop.fwupd.policy.in:83
+msgid "Unlock the device to allow access"
+msgstr "접근을 허용하려면 장치 잠금을 해제하십시오"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:85
+msgid "Authentication is required to unlock a device"
+msgstr "장치 잠금을 해제하려면 인증이 필요합니다"
+
+#: policy/org.freedesktop.fwupd.policy.in:94
+msgid "Update the stored device verification information"
+msgstr "보관된 장치 검증 정보 업데이트"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:96
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr "장치 보관 검사합을 업데이트하려면 인증이 필요합니다 "
+
+#: policy/org.freedesktop.fwupd.policy.in:105
+msgid "Modify a configured remote"
+msgstr "원격 설정 수정"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:107
+msgid ""
+"Authentication is required to modify a configured remote used for firmware "
+"updates"
+msgstr "펌웨어 업데이트에 사용할 원격 설정을 수정하려면 인증이 필요합니다"
+
+#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
+#: plugins/dfu/dfu-tool.c:123 plugins/synapticsmst/synapticsmst-tool.c:105
+#: src/fu-util.c:112
+#, c-format
+msgid "Alias to %s"
+msgstr "%s(으)로 별칭 부여"
+
+#. TRANSLATORS: error message
+#: plugins/dfu/dfu-tool.c:191 plugins/synapticsmst/synapticsmst-tool.c:347
+#: src/fu-util.c:176
+msgid "Command not found"
+msgstr "명령을 찾을 수 없습니다"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: plugins/dfu/dfu-tool.c:1493
+msgid "Added"
+msgstr "추가함"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: plugins/dfu/dfu-tool.c:1504
+msgid "Removed"
+msgstr "제거함"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#. TRANSLATORS: this is when the daemon state changes
+#: plugins/dfu/dfu-tool.c:1513 src/fu-util.c:1259
+msgid "Changed"
+msgstr "바뀜"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+#: plugins/dfu/dfu-tool.c:1521 src/fu-util.c:1221
+msgid "Cancelled"
+msgstr "취소함"
+
+#. TRANSLATORS: Appstream ID for the hardware type
+#: plugins/dfu/dfu-tool.c:2019 src/fu-util.c:1057
+msgid "ID"
+msgstr "ID"
+
+#. TRANSLATORS: interface name, e.g. "Flash"
+#. TRANSLATORS: device name, e.g. 'ColorHug2'
+#: plugins/dfu/dfu-tool.c:2025 plugins/dfu/dfu-tool.c:2031
+#: plugins/dfu/dfu-tool.c:2135
+msgid "Name"
+msgstr "이름"
+
+#. TRANSLATORS: this is the encryption method used when writing
+#: plugins/dfu/dfu-tool.c:2038
+msgid "Cipher"
+msgstr "암호화 방식"
+
+#. TRANSLATORS: these are areas of memory on the chip
+#: plugins/dfu/dfu-tool.c:2052
+msgid "Region"
+msgstr "메모리 영역"
+
+#. TRANSLATORS: detected a DFU device
+#: plugins/dfu/dfu-tool.c:2098
+msgid "Found"
+msgstr "감지 장치"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+#: plugins/dfu/dfu-tool.c:2106
+msgid "Protocol"
+msgstr "프로토콜"
+
+#. TRANSLATORS: probably not run as root...
+#. TRANSLATORS: device has failed to report status
+#. TRANSLATORS: device status, e.g. "OK"
+#: plugins/dfu/dfu-tool.c:2119 plugins/dfu/dfu-tool.c:2128
+#: plugins/dfu/dfu-tool.c:2151
+msgid "Status"
+msgstr "장치 상태"
+
+#: plugins/dfu/dfu-tool.c:2119
+msgid "Permission denied"
+msgstr "권한 거부"
+
+#. TRANSLATORS: serial number, e.g. '00012345'
+#: plugins/dfu/dfu-tool.c:2141
+msgid "Serial"
+msgstr "시리얼"
+
+#. TRANSLATORS: device mode, e.g. runtime or DFU
+#: plugins/dfu/dfu-tool.c:2147
+msgid "Mode"
+msgstr "모드"
+
+#. TRANSLATORS: device state, i.e. appIDLE
+#: plugins/dfu/dfu-tool.c:2155
+msgid "State"
+msgstr "상태"
+
+#. TRANSLATORS: transfer size in bytes
+#: plugins/dfu/dfu-tool.c:2163
+msgid "Transfer Size"
+msgstr "전송 용량"
+
+#. TRANSLATORS: device attributes, i.e. things that
+#. * the device can do
+#: plugins/dfu/dfu-tool.c:2171
+msgid "Attributes"
+msgstr "속성"
+
+#. TRANSLATORS: device quirks, i.e. things that
+#. * it does that we have to work around
+#: plugins/dfu/dfu-tool.c:2179
+msgid "Quirks"
+msgstr "특이사항"
+
+#. TRANSLATORS: chip ID, e.g. "0x58200204"
+#: plugins/dfu/dfu-tool.c:2186
+msgid "Chip ID"
+msgstr "칩 ID"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2267
+msgid "Convert firmware to DFU format"
+msgstr "펌웨어를 DFU 형식으로 변환"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2273
+msgid "Merge multiple firmware files into one"
+msgstr "다중 펌웨어 파일을 하나로 병합"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2279
+msgid "Set vendor ID on firmware file"
+msgstr "펌웨어 파일의 제조자 ID 설정"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2285
+msgid "Set product ID on firmware file"
+msgstr "펌웨어 파일의 제품 ID 설정"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2291
+msgid "Set element address on firmware file"
+msgstr "펌웨어 파일의 구성요소 주소 설정"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2297
+msgid "Set the firmware size for the target"
+msgstr "대상 펌웨어 크기 설정"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2303
+msgid "Set release version on firmware file"
+msgstr "펌웨어 파일의 출시 버전 설정"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2309
+msgid "Set alternative number on firmware file"
+msgstr "펌웨어 파일의 대체 번호 설정"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2315
+msgid "Set alternative name on firmware file"
+msgstr "펌웨어 파일의 대체 명칭 설정"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2321
+msgid "Attach DFU capable device back to runtime"
+msgstr "DFU 기능 장치를 런타임에 연결"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2327
+msgid "Reset a DFU device"
+msgstr "DFU 장치 초기화"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2333
+msgid "Read firmware from device into a file"
+msgstr "장치 펌웨어를 읽어 파일에 기록"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2339
+msgid "Read firmware from one partition into a file"
+msgstr "파티션의 펌웨어를 읽어 파일에 기록"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2345
+msgid "Write firmware from file into device"
+msgstr "파일의 펌웨어를 장치에 기록"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2351
+msgid "Write firmware from file into one partition"
+msgstr "파일의 펌웨어를 파티션 하나에 기록"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2357
+msgid "List currently attached DFU capable devices"
+msgstr "현재 연결한 DFU 기능 장치 목록 보기"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2363
+msgid "Detach currently attached DFU capable device"
+msgstr "현재 연결한 DFU 기능 장치 분리"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2369
+msgid "Dump details about a firmware file"
+msgstr "펌웨어 파일 세부 정보 덤프"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2375
+msgid "Watch DFU devices being hotplugged"
+msgstr "DFU 핫 플러그 장치 보기"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2381
+msgid "Encrypt firmware data"
+msgstr "펌웨어 데이터 암호화"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2387
+msgid "Decrypt firmware data"
+msgstr "펌웨어 데이터 복호화"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2393
+msgid "Sets metadata on a firmware file"
+msgstr "펌웨어 파일의 메타데이터 설정"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2399
+msgid "Replace data in an existing firmware file"
+msgstr "기존 펌웨어 파일의 데이터 교체"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2405
+msgid "Create a binary patch using two files"
+msgstr "파일 두 개를 활용하여 바이너리 패치 만들기"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2411
+msgid "Apply a binary patch"
+msgstr "바이너리 패치 적용"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2417
+msgid "Dump information about a binary patch to the screen"
+msgstr "바이너리 패치 정보 덤프 스크린에 출력"
+
+#. TRANSLATORS: DFU stands for device firmware update
+#: plugins/dfu/dfu-tool.c:2443
+msgid "DFU Utility"
+msgstr "DFU 유틸리티"
+
+#. TRANSLATORS: the user didn't read the man page
+#: plugins/dfu/dfu-tool.c:2448 plugins/synapticsmst/synapticsmst-tool.c:424
+#: src/fu-util.c:1782
+msgid "Failed to parse arguments"
+msgstr "인자 해석에 실패했습니다"
+
+#. TRANSLATORS: command description
+#: plugins/synapticsmst/synapticsmst-tool.c:393
+msgid "Enumerate all Synaptics MST devices"
+msgstr "모든 시냅틱스 MST 장치에 열거 번호를 부여합니다"
+
+#. TRANSLATORS: command description
+#: plugins/synapticsmst/synapticsmst-tool.c:399
+msgid "Flash firmware file to MST device"
+msgstr "MST 장치에 펌웨어 파일을 기록합니다"
+
+#: plugins/synapticsmst/synapticsmst-tool.c:419
+msgid "Synaptics Multistream Transport Utility"
+msgstr "시냅틱스 멀티스트림 전송 유틸리티"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+#: plugins/uefi/fu-plugin-uefi.c:395
+msgid "Installing firmware update…"
+msgstr "펌웨어 업데이트 설치 중…"
+
+#. TRANSLATORS: turn on all debugging
+#: src/fu-debug.c:128
+msgid "Show debugging information for all files"
+msgstr "모든 파일의 디버깅 정보 표시"
+
+#. TRANSLATORS: this is for plugin development
+#: src/fu-debug.c:131
+msgid "Show plugin verbose information"
+msgstr ""
+
+#. TRANSLATORS: for the --verbose arg
+#: src/fu-debug.c:186
+msgid "Debugging Options"
+msgstr "디버깅 옵션"
+
+#. TRANSLATORS: for the --verbose arg
+#: src/fu-debug.c:188
+msgid "Show debugging options"
+msgstr "디버깅 옵션을 표시합니다"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+#: src/fu-main.c:1007
+msgid "Exit after a small delay"
+msgstr "짧은 대기 시간 경과 후 나가기"
+
+#. TRANSLATORS: exit straight away, used for automatic profiling
+#: src/fu-main.c:1010
+msgid "Exit after the engine has loaded"
+msgstr "엔진을 불러온 후 나가기"
+
+#. TRANSLATORS: program name
+#: src/fu-main.c:1024
+msgid "Firmware Update Daemon"
+msgstr "펌웨어 업데이트 데몬"
+
+#. TRANSLATORS: program summary
+#: src/fu-main.c:1029
+msgid "Firmware Update D-Bus Service"
+msgstr "펌웨어 업데이트 D-Bus 서비스"
+
+#. TRANSLATORS: daemon is inactive
+#: src/fu-progressbar.c:52
+msgid "Idle…"
+msgstr "대기 중…"
+
+#. TRANSLATORS: decompressing the firmware file
+#: src/fu-progressbar.c:56
+msgid "Decompressing…"
+msgstr "압축 해제 중…"
+
+#. TRANSLATORS: parsing the firmware information
+#: src/fu-progressbar.c:60
+msgid "Loading…"
+msgstr "불러오는 중…"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+#: src/fu-progressbar.c:64
+msgid "Restarting device…"
+msgstr "장치 다시 시작하는 중…"
+
+#. TRANSLATORS: reading from the flash chips
+#: src/fu-progressbar.c:68
+msgid "Reading…"
+msgstr "읽는 중…"
+
+#. TRANSLATORS: writing to the flash chips
+#: src/fu-progressbar.c:72
+msgid "Writing…"
+msgstr "쓰는 중…"
+
+#. TRANSLATORS: erasing contents of the flash chips
+#: src/fu-progressbar.c:76
+msgid "Erasing…"
+msgstr "지우는 중…"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+#: src/fu-progressbar.c:80
+msgid "Verifying…"
+msgstr "검증 중…"
+
+#. TRANSLATORS: scheduing an update to be done on the next boot
+#: src/fu-progressbar.c:84
+msgid "Scheduling…"
+msgstr "작업 계획 중…"
+
+#. TRANSLATORS: downloading from a remote server
+#: src/fu-progressbar.c:88
+msgid "Downloading…"
+msgstr "내려받는 중…"
+
+#. TRANSLATORS: waiting for user to authenticate
+#: src/fu-progressbar.c:92
+msgid "Authenticating…"
+msgstr "인증 중…"
+
+#. TRANSLATORS: waiting for device to do something
+#: src/fu-progressbar.c:96
+msgid "Waiting…"
+msgstr "기다리는 중…"
+
+#. TRANSLATORS: currect daemon status is unknown
+#: src/fu-progressbar.c:103
+msgid "Unknown"
+msgstr "알 수 없음"
+
+#. TRANSLATORS: the user isn't reading the question
+#: src/fu-util.c:234
+#, c-format
+msgid "Please enter a number from 1 to %u: "
+msgstr "1부터 %u까지의 숫자 값 중 하나를 입력하십시오:"
+
+#. TRANSLATORS: get interactive prompt
+#: src/fu-util.c:277
+msgid "Choose a device:"
+msgstr "장치를 선택하십시오:"
+
+#. TRANSLATORS: nothing attached that can be upgraded
+#: src/fu-util.c:303
+msgid "No hardware detected with firmware update capability"
+msgstr "펌웨어 업데이트가 가능한 하드웨어가 없습니다"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second is a version number
+#. * e.g. "1.2.3"
+#: src/fu-util.c:474
+#, c-format
+msgid "Reinstalling %s with %s... "
+msgstr "%2$s(으)로 %1$s 다시 설치하는 중... "
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#: src/fu-util.c:481
+#, c-format
+msgid "Downgrading %s from %s to %s... "
+msgstr "%2$s에서 %3$s(으)로 %1$s 다운그레이드 중... "
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#: src/fu-util.c:489
+#, c-format
+msgid "Updating %s from %s to %s... "
+msgstr "%2$s에서 %3$s(으)로 %1$s 업데이트 중... "
+
+#: src/fu-util.c:516
+msgid "Done!"
+msgstr "완료!"
+
+#: src/fu-util.c:565 src/fu-util.c:978
+msgid "OK"
+msgstr "확인"
+
+#. TRANSLATORS: downloading new signing file
+#: src/fu-util.c:699
+msgid "Fetching signature"
+msgstr "서명 가져오는 중"
+
+#. TRANSLATORS: downloading new metadata file
+#: src/fu-util.c:702
+msgid "Fetching metadata"
+msgstr "메타데이터 가져오는 중"
+
+#. TRANSLATORS: downloading new firmware file
+#: src/fu-util.c:705
+msgid "Fetching firmware"
+msgstr "펌웨어 가져오는 중"
+
+#. TRANSLATORS: downloading unknown file
+#: src/fu-util.c:708
+msgid "Fetching file"
+msgstr "파일 가져오는 중"
+
+#. TRANSLATORS: section header for release version number
+#: src/fu-util.c:888
+msgid "Version"
+msgstr "버전"
+
+#. TRANSLATORS: section header for the remote the file is coming from
+#: src/fu-util.c:891
+msgid "Remote"
+msgstr "원격"
+
+#. TRANSLATORS: section header for firmware URI
+#: src/fu-util.c:894
+msgid "URI"
+msgstr "URI"
+
+#. TRANSLATORS: section header for firmware description
+#: src/fu-util.c:900
+msgid "Description"
+msgstr "설명"
+
+#. TRANSLATORS: section header for firmware checksum
+#. TRANSLATORS: remote checksum
+#: src/fu-util.c:908 src/fu-util.c:1136
+msgid "Checksum"
+msgstr "검사합"
+
+#. TRANSLATORS: get interactive prompt
+#: src/fu-util.c:940
+msgid "Choose a release:"
+msgstr "출시 버전을 선택하십시오:"
+
+#. TRANSLATORS: first replacement is device name
+#: src/fu-util.c:1041
+#, c-format
+msgid "%s has firmware updates:"
+msgstr "%s의 최신 펌웨어가 있습니다:"
+
+#: src/fu-util.c:1048
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: section header for firmware version
+#: src/fu-util.c:1060
+msgid "Update Version"
+msgstr "업데이트 버전"
+
+#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
+#: src/fu-util.c:1064
+msgid "Update Remote ID"
+msgstr "업데이트 원격 ID"
+
+#. TRANSLATORS: section header for firmware checksum
+#: src/fu-util.c:1073
+msgid "Update Checksum"
+msgstr "업데이트 검사합"
+
+#. TRANSLATORS: section header for firmware remote http://
+#: src/fu-util.c:1077
+msgid "Update Location"
+msgstr "업데이트 위치"
+
+#. TRANSLATORS: section header for long firmware desc
+#: src/fu-util.c:1088
+msgid "Update Description"
+msgstr "업데이트 설명"
+
+#. TRANSLATORS: remote identifier, e.g. lvfs-testing
+#: src/fu-util.c:1114
+msgid "Remote ID"
+msgstr "원격 ID"
+
+#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
+#: src/fu-util.c:1118
+msgid "Title"
+msgstr "제목"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+#: src/fu-util.c:1122
+msgid "Type"
+msgstr "형식"
+
+#: src/fu-util.c:1127
+msgid "Keyring"
+msgstr "키 모음"
+
+#. TRANSLATORS: if the remote is enabled
+#: src/fu-util.c:1132
+msgid "Enabled"
+msgstr "활성화 여부"
+
+#. TRANSLATORS: the age of the metadata
+#: src/fu-util.c:1163
+msgid "Age"
+msgstr "경과기간"
+
+#. TRANSLATORS: the numeric priority
+#: src/fu-util.c:1170
+msgid "Priority"
+msgstr "우선순위"
+
+#. TRANSLATORS: remote filename base
+#: src/fu-util.c:1175
+msgid "Username"
+msgstr "사용자 이름"
+
+#. TRANSLATORS: remote filename base
+#: src/fu-util.c:1180
+msgid "Password"
+msgstr "암호"
+
+#. TRANSLATORS: filename of the local file
+#: src/fu-util.c:1185
+msgid "Filename"
+msgstr "파일 이름"
+
+#. TRANSLATORS: filename of the local file
+#: src/fu-util.c:1190
+msgid "Filename Signature"
+msgstr "파일이름 서명"
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1195
+msgid "Metadata URI"
+msgstr "메타데이터 URI"
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1200
+msgid "Metadata URI Signature"
+msgstr "메타데이터 URI  서명"
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1205
+msgid "Firmware Base URI"
+msgstr "펌웨어 기본 URI"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: src/fu-util.c:1232
+msgid "Device added:"
+msgstr "장치 추가함:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: src/fu-util.c:1242
+msgid "Device removed:"
+msgstr "장치 제거함:"
+
+#. TRANSLATORS: this is when a device has been updated
+#: src/fu-util.c:1252
+msgid "Device changed:"
+msgstr "장치 상태 바꿈:"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:1595
+msgid "Show extra debugging information"
+msgstr "추가 디버깅 정보 표시"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:1598
+msgid "Show client and daemon versions"
+msgstr "클라이언트와 데몬 버전 표시"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:1601
+msgid "Schedule installation for next reboot when possible"
+msgstr "가능하다면 다음 재부팅시 설치 예약"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:1604
+msgid "Allow re-installing existing firmware versions"
+msgstr "기존 펌웨어 버전 재설치를 허용합니다"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:1607
+msgid "Allow downgrading firmware versions"
+msgstr "펌웨어를 이전 버전으로 되돌릴 수 있게 합니다"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:1610
+msgid "Override plugin warning"
+msgstr "플러그인 경고 무시"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1634
+msgid "Get all devices that support firmware updates"
+msgstr "펌웨어 업데이트를 지원하는 모든 장치 정보를 가져옵니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1640
+msgid "Return all the hardware IDs for the machine"
+msgstr "머신의 모든 하드웨어 ID를 반환합니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1646
+msgid "Install prepared updates now"
+msgstr "현재 준비한 업데이트를 설치합니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1652
+msgid "Install a firmware file on this hardware"
+msgstr "이 하드웨어에 펌웨어 파일을 설치합니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1658
+msgid "Gets details about a firmware file"
+msgstr "펌웨어 파일 세부 정보를 가져옵니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1664
+msgid "Gets the list of updates for connected hardware"
+msgstr "연결한 하드웨어의 업데이트 목록을 가져옵니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1670
+msgid "Updates all firmware to latest versions available"
+msgstr "모든 펌웨어를 가용 최신 버전으로 업데이트합니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1676
+msgid "Gets the cryptographic hash of the dumped firmware"
+msgstr "덤프 펌웨어의 암호화 해시 정보를 가져옵니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1682
+msgid "Unlocks the device for firmware access"
+msgstr "펌웨어 접근시 장치 잠금을 해제합니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1688
+msgid "Clears the results from the last update"
+msgstr "최근 업데이트 결과를 지웁니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1694
+msgid "Clears any updates scheduled to be updated offline"
+msgstr "오프라인으로 업데이트할 업데이트를 지웁니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1700
+msgid "Gets the results from the last update"
+msgstr "최근 업데이트 결과를 가져옵니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1706
+msgid "Gets the releases for a device"
+msgstr "장치에 대한 출시 펌웨어를 가져옵니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1712
+msgid "Gets the configured remotes"
+msgstr "원격 설정 정보를 가져옵니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1718
+msgid "Downgrades the firmware on a device"
+msgstr "장치 펌웨어 버전을 이전으로 되돌립니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1724
+msgid "Refresh metadata from remote server"
+msgstr "원격 서버의 메타데이터를 새로 고칩니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1730
+msgid "Update the stored metadata with current ROM contents"
+msgstr "현재 ROM에 저장한 메타데이터를 업데이트합니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1736
+msgid "Monitor the daemon for events"
+msgstr "데몬 이벤트를 감시합니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1742
+msgid "Build firmware using a sandbox"
+msgstr "샌드박스에서 펌웨어를 빌드합니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1748
+msgid "Dump SMBIOS data from a file"
+msgstr "파일의 SMBIOS 데이터 덤프를 출력합니다"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:1754
+msgid "Modifies a given remote"
+msgstr "주어진 원격 정보를 수정합니다"
+
+#. TRANSLATORS: program name
+#: src/fu-util.c:1777
+msgid "Firmware Utility"
+msgstr "펌웨어 유틸리티"

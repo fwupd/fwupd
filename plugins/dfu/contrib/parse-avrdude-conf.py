@@ -162,7 +162,7 @@ def _write_quirks(parts, fn_destination):
 
     for chip_id in results:
         result = results[chip_id]
-        outp.append('# ' + result['desc'] + ' size:0x%x' % result['size'] + '\n')
+        outp.append('# ' + result['desc'] + '	[USER]		USER=0x%x' % result['size'] + '\n')
         outp.append(chip_id + '=' + result['mem_layout'] + '\n\n')
 
     # write file

@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -45,6 +45,8 @@ void		 fu_plugin_set_smbios			(FuPlugin	*plugin,
 guint		 fu_plugin_get_order			(FuPlugin	*plugin);
 void		 fu_plugin_set_order			(FuPlugin	*plugin,
 							 guint		 order);
+void		 fu_plugin_set_name			(FuPlugin	*plugin,
+							 const gchar 	*name);
 GPtrArray	*fu_plugin_get_rules			(FuPlugin	*plugin,
 							 FuPluginRule	 rule);
 gboolean	 fu_plugin_open				(FuPlugin	*plugin,
@@ -63,6 +65,18 @@ gboolean	 fu_plugin_runner_update_prepare	(FuPlugin	*plugin,
 							 GError		**error);
 gboolean	 fu_plugin_runner_update_cleanup	(FuPlugin	*plugin,
 							 FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_plugin_runner_update_attach		(FuPlugin	*plugin,
+							 FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_plugin_runner_update_detach		(FuPlugin	*plugin,
+							 FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_plugin_runner_update_reload		(FuPlugin	*plugin,
+							 FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_plugin_runner_usb_device_added	(FuPlugin	*plugin,
+							 GUsbDevice	*usb_device,
 							 GError		**error);
 void		 fu_plugin_runner_device_register	(FuPlugin	*plugin,
 							 FuDevice	*device);

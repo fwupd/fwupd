@@ -21,51 +21,31 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
-
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
-#include "fu-device-altos.h"
+#include "fu-altos-device.h"
 
-static gboolean
-fu_plugin_altos_device_added (FuPlugin *plugin,
-			      GUsbDevice *usb_device,
-			      GError **error)
+gboolean
+fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {
 	const gchar *platform_id = NULL;
 	g_autofree gchar *runtime_id = NULL;
-	g_autoptr(AsProfile) profile = as_profile_new ();
-	g_autoptr(AsProfileTask) ptask = NULL;
-	g_autoptr(FuDeviceAltos) dev = NULL;
-
-	/* profile */
-	ptask = as_profile_start (profile, "FuPluginAltos:added{%04x:%04x}",
-				  g_usb_device_get_vid (usb_device),
-				  g_usb_device_get_pid (usb_device));
-	g_assert (ptask != NULL);
+	g_autoptr(FuAltosDevice) dev = NULL;
 
 	/* get kind */
-	dev = fu_device_altos_new (usb_device);
-	if (dev == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not a ChaosKey device");
-		return FALSE;
-	}
-
-	/* create the device */
-	platform_id = g_usb_device_get_platform_id (usb_device);
-	fu_device_set_id (FU_DEVICE (dev), platform_id);
+	dev = fu_altos_device_new (usb_device);
+	if (dev == NULL)
+		return TRUE;
 
 	/* get device properties */
-	if (!fu_device_altos_probe (dev, error))
+	if (!fu_altos_device_probe (dev, error))
 		return FALSE;
 
 	/* only the bootloader can do the update */
+	platform_id = g_usb_device_get_platform_id (usb_device);
 	runtime_id = g_strdup_printf ("%s-runtime", platform_id);
-	if (fu_device_altos_get_kind (dev) == FU_DEVICE_ALTOS_KIND_BOOTLOADER) {
+	if (fu_altos_device_get_kind (dev) == FU_ALTOS_DEVICE_KIND_BOOTLOADER) {
 		FuDevice *dev_runtime;
 		dev_runtime = fu_plugin_cache_lookup (plugin, runtime_id);
 		if (dev_runtime != NULL) {
@@ -79,9 +59,8 @@ fu_plugin_altos_device_added (FuPlugin *plugin,
 		fu_plugin_cache_add (plugin, runtime_id, dev);
 	}
 
-	/* insert to hash */
+	/* success */
 	fu_plugin_device_add (plugin, FU_DEVICE (dev));
-	fu_plugin_cache_add (plugin, platform_id, dev);
 	return TRUE;
 }
 
@@ -111,7 +90,7 @@ fu_plugin_verify (FuPlugin *plugin,
 
 	/* get data */
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
-	blob_fw = fu_device_altos_read_firmware (FU_DEVICE_ALTOS (dev),
+	blob_fw = fu_altos_device_read_firmware (FU_ALTOS_DEVICE (dev),
 						 fu_plugin_altos_progress_cb,
 						 plugin,
 						 error);
@@ -134,61 +113,14 @@ fu_plugin_update (FuPlugin *plugin,
 		  GError **error)
 {
 	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_device_altos_write_firmware (FU_DEVICE_ALTOS (dev),
+	if (!fu_altos_device_write_firmware (FU_ALTOS_DEVICE (dev),
 					     blob_fw,
-					     FU_DEVICE_ALTOS_WRITE_FIRMWARE_FLAG_REBOOT,
+					     FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_REBOOT,
 					     fu_plugin_altos_progress_cb,
 					     plugin,
 					     error)) {
 		return FALSE;
 	}
 	fu_plugin_set_status (plugin, FWUPD_STATUS_IDLE);
-	return TRUE;
-}
-
-static void
-fu_plugin_altos_device_added_cb (GUsbContext *ctx,
-				    GUsbDevice *usb_device,
-				    FuPlugin *plugin)
-{
-	g_autoptr(GError) error = NULL;
-	if (!fu_plugin_altos_device_added (plugin, usb_device, &error)) {
-		if (!g_error_matches (error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_warning ("Failed to add altos device: %s",
-				   error->message);
-		}
-	}
-}
-
-static void
-fu_plugin_altos_device_removed_cb (GUsbContext *ctx,
-				      GUsbDevice *usb_device,
-				      FuPlugin *plugin)
-{
-	FuDevice *dev;
-	const gchar *platform_id = NULL;
-
-	/* already in database */
-	platform_id = g_usb_device_get_platform_id (usb_device);
-	dev = fu_plugin_cache_lookup (plugin, platform_id);
-	if (dev == NULL)
-		return;
-
-	fu_plugin_device_remove (plugin, dev);
-	fu_plugin_cache_remove (plugin, platform_id);
-}
-
-gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
-{
-	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	g_signal_connect (usb_ctx, "device-added",
-			  G_CALLBACK (fu_plugin_altos_device_added_cb),
-			  plugin);
-	g_signal_connect (usb_ctx, "device-removed",
-			  G_CALLBACK (fu_plugin_altos_device_removed_cb),
-			  plugin);
 	return TRUE;
 }

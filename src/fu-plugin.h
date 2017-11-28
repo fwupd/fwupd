@@ -32,6 +32,7 @@
 #include "fu-device-locker.h"
 #include "fu-quirks.h"
 #include "fu-hwids.h"
+#include "fu-usb-device.h"
 
 G_BEGIN_DECLS
 

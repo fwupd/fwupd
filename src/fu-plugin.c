@@ -98,6 +98,9 @@ typedef gboolean	 (*FuPluginUpdateFunc)		(FuPlugin	*plugin,
 							 GBytes		*blob_fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
+typedef gboolean	 (*FuPluginUsbDeviceAddedFunc)	(FuPlugin	*plugin,
+							 GUsbDevice	*usb_device,
+							 GError		**error);
 
 /**
  * fu_plugin_get_name:
@@ -115,6 +118,16 @@ fu_plugin_get_name (FuPlugin *plugin)
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
 	return priv->name;
+}
+
+void
+fu_plugin_set_name (FuPlugin *plugin, const gchar *name)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (name != NULL);
+	g_free (priv->name);
+	priv->name = g_strdup (name);
 }
 
 /**
@@ -330,8 +343,37 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 void
 fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 {
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+
 	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_return_if_fail (FU_IS_DEVICE (device));
+
+	/* merge any quirks */
+	if (FU_IS_USB_DEVICE (device)) {
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+		const gchar *tmp;
+
+		/* name */
+		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
+						      FU_QUIRKS_USB_NAME,
+						      usb_device);
+		if (tmp != NULL)
+			fu_device_set_name (device, tmp);
+
+		/* summary */
+		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
+						      FU_QUIRKS_USB_SUMMARY,
+						      usb_device);
+		if (tmp != NULL)
+			fu_device_set_summary (device, tmp);
+
+		/* icon */
+		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
+						      FU_QUIRKS_USB_ICON,
+						      usb_device);
+		if (tmp != NULL)
+			fu_device_add_icon (device, tmp);
+	}
 
 	g_debug ("emit added from %s: %s",
 		 fu_plugin_get_name (plugin),
@@ -857,6 +899,36 @@ fu_plugin_runner_offline_setup (GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_runner_device_generic (FuPlugin *plugin, FuDevice *device,
+				 const gchar *symbol_name, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginDeviceFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, symbol_name, (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
+	if (!func (plugin, device, error)) {
+		g_prefix_error (error, "failed to run %s(%s) on %s: ",
+				symbol_name + 10,
+				fu_device_get_id (device),
+				priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 gboolean
 fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -926,43 +998,55 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *plugin, GError **error)
 gboolean
 fu_plugin_runner_update_prepare (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginDeviceFunc func = NULL;
-
-	/* not enabled */
-	if (!priv->enabled)
-		return TRUE;
-
-	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_update_prepare", (gpointer *) &func);
-	if (func == NULL)
-		return TRUE;
-	g_debug ("performing update_prepare() on %s", priv->name);
-	if (!func (plugin, device, error)) {
-		g_prefix_error (error, "failed to prepare for update %s: ", priv->name);
-		return FALSE;
-	}
-	return TRUE;
+	return fu_plugin_runner_device_generic (plugin, device,
+						"fu_plugin_update_prepare", error);
 }
 
 gboolean
 fu_plugin_runner_update_cleanup (FuPlugin *plugin, FuDevice *device, GError **error)
 {
+	return fu_plugin_runner_device_generic (plugin, device,
+						"fu_plugin_update_cleanup", error);
+}
+
+gboolean
+fu_plugin_runner_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	return fu_plugin_runner_device_generic (plugin, device,
+						"fu_plugin_update_attach", error);
+}
+
+gboolean
+fu_plugin_runner_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	return fu_plugin_runner_device_generic (plugin, device,
+						"fu_plugin_update_detach", error);
+}
+
+gboolean
+fu_plugin_runner_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	return fu_plugin_runner_device_generic (plugin, device,
+						"fu_plugin_update_reload", error);
+}
+
+gboolean
+fu_plugin_runner_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+{
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginDeviceFunc func = NULL;
+	FuPluginUsbDeviceAddedFunc func = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
 		return TRUE;
+	if (priv->module == NULL)
+		return TRUE;
 
 	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_update_cleanup", (gpointer *) &func);
-	if (func == NULL)
-		return TRUE;
-	g_debug ("performing update_cleanup() on %s", priv->name);
-	if (!func (plugin, device, error)) {
-		g_prefix_error (error, "failed to cleanup update %s: ", priv->name);
-		return FALSE;
+	g_module_symbol (priv->module, "fu_plugin_usb_device_added", (gpointer *) &func);
+	if (func != NULL) {
+		g_debug ("performing usb_device_added() on %s", priv->name);
+		return func (plugin, usb_device, error);
 	}
 	return TRUE;
 }
@@ -975,6 +1059,8 @@ fu_plugin_runner_device_register (FuPlugin *plugin, FuDevice *device)
 
 	/* not enabled */
 	if (!priv->enabled)
+		return;
+	if (priv->module == NULL)
 		return;
 
 	/* optional */
@@ -1078,12 +1164,6 @@ gboolean
 fu_plugin_runner_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	guint64 flags;
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	FuPluginDeviceFunc func = NULL;
-
-	/* not enabled */
-	if (!priv->enabled)
-		return TRUE;
 
 	/* final check */
 	flags = fu_device_get_flags (device);
@@ -1096,15 +1176,10 @@ fu_plugin_runner_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_unlock", (gpointer *) &func);
-	if (func != NULL) {
-		g_debug ("performing unlock() on %s", priv->name);
-		if (!func (plugin, device, error)) {
-			g_prefix_error (error, "failed to unlock %s: ", priv->name);
-			return FALSE;
-		}
-	}
+	/* run vfunc */
+	if (!fu_plugin_runner_device_generic (plugin, device,
+					      "fu_plugin_unlock", error))
+		return FALSE;
 
 	/* update with correct flags */
 	flags = fu_device_get_flags (device);

@@ -66,6 +66,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  * * `use-any-interface`:	Use any interface for DFU
  * * `use-atmel-avr`:		Device uses the ATMEL bootloader
  * * `use-protocol-zero`:	Fix up the protocol number
+ * * `legacy-protocol`:		Use a legacy protocol version
  *
  * Default value: `none`
  *
@@ -156,6 +157,39 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  * Since: 1.0.1
  */
 #define	FU_QUIRKS_DFU_FORCE_VERSION		"fwupd-dfu-force-version"
+
+/**
+ * FU_QUIRKS_USB_SUMMARY:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the USB device summary, e.g. `An open source display colorimeter`
+ *
+ * Sets a name for a specific hardware device.
+ *
+ * Since: 1.0.2
+ */
+#define	FU_QUIRKS_USB_SUMMARY			"fwupd-usb-summary"
+
+/**
+ * FU_QUIRKS_USB_ICON:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the USB device icon name, e.g. `media-removable`
+ *
+ * Adds an icon name for a specific hardware device.
+ *
+ * Since: 1.0.2
+ */
+#define	FU_QUIRKS_USB_ICON			"fwupd-usb-icon"
+
+/**
+ * FU_QUIRKS_USB_NAME:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the USB device name, e.g. `ColorHug`
+ *
+ * Sets a name for a specific hardware device.
+ *
+ * Since: 1.0.2
+ */
+#define	FU_QUIRKS_USB_NAME			"fwupd-usb-name"
 
 G_END_DECLS
 
