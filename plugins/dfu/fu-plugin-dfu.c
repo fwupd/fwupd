@@ -427,8 +427,7 @@ fu_plugin_verify (FuPlugin *plugin,
 	/* get data from hardware */
 	g_debug ("uploading from device->host");
 	dfu_firmware = dfu_device_upload (device,
-					  DFU_TARGET_TRANSFER_FLAG_DETACH |
-					  DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME,
+					  DFU_TARGET_TRANSFER_FLAG_NONE,
 					  error);
 	if (dfu_firmware == NULL)
 		return FALSE;

@@ -2034,27 +2034,6 @@ dfu_device_upload (DfuDevice *device,
 	dfu_firmware_set_pid (firmware, priv->runtime_pid);
 	dfu_firmware_set_release (firmware, 0xffff);
 
-	/* APP -> DFU */
-	if (priv->mode == DFU_MODE_RUNTIME) {
-		if ((flags & DFU_TARGET_TRANSFER_FLAG_DETACH) == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "device is not in DFU mode, got %s",
-				     dfu_mode_to_string (priv->mode));
-			return NULL;
-		}
-		g_debug ("detaching");
-
-		/* detach and USB reset */
-		if (!dfu_device_detach (device, error))
-			return NULL;
-		if (!dfu_device_wait_for_replug (device,
-						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 error))
-			return NULL;
-	}
-
 	/* upload from each target */
 	for (guint i = 0; i < priv->targets->len; i++) {
 		DfuTarget *target;
@@ -2096,22 +2075,6 @@ dfu_device_upload (DfuDevice *device,
 		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
 	} else {
 		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU);
-	}
-
-	/* do host reset */
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||
-	    (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) > 0) {
-		if (!dfu_device_attach (device, error))
-			return NULL;
-	}
-
-	/* boot to runtime */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) {
-		g_debug ("booting to runtime");
-		if (!dfu_device_wait_for_replug (device,
-						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 error))
-			return NULL;
 	}
 
 	/* success */
@@ -2229,27 +2192,6 @@ dfu_device_download (DfuDevice *device,
 		}
 	}
 
-	/* APP -> DFU */
-	if (priv->mode == DFU_MODE_RUNTIME) {
-		if ((flags & DFU_TARGET_TRANSFER_FLAG_DETACH) == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "device is not in DFU mode, got %s",
-				     dfu_mode_to_string (priv->mode));
-			return FALSE;
-		}
-
-		/* detach and USB reset */
-		g_debug ("detaching");
-		if (!dfu_device_detach (device, error))
-			return FALSE;
-		if (!dfu_device_wait_for_replug (device,
-						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 error))
-			return FALSE;
-	}
-
 	/* download each target */
 	images = dfu_firmware_get_images (firmware);
 	if (images->len == 0) {
@@ -2337,22 +2279,6 @@ dfu_device_download (DfuDevice *device,
 
 	/* do not do the dummy upload for quirked devices */
 	priv->done_upload_or_download = TRUE;
-
-	/* attempt to switch back to runtime */
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||
-	    (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) > 0) {
-		if (!dfu_device_attach (device, error))
-			return FALSE;
-	}
-
-	/* boot to runtime */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) {
-		g_debug ("booting to runtime to set auto-boot");
-		if (!dfu_device_wait_for_replug (device,
-						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 error))
-			return FALSE;
-	}
 
 	/* success */
 	dfu_device_set_action (device, FWUPD_STATUS_IDLE);

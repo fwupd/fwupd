@@ -41,9 +41,6 @@ G_DECLARE_DERIVABLE_TYPE (DfuTarget, dfu_target, DFU, TARGET, GUsbDevice)
  * DfuTargetTransferFlags:
  * @DFU_TARGET_TRANSFER_FLAG_NONE:		No flags set
  * @DFU_TARGET_TRANSFER_FLAG_VERIFY:		Verify the download once complete
- * @DFU_TARGET_TRANSFER_FLAG_DETACH:		If required, detach from runtime mode
- * @DFU_TARGET_TRANSFER_FLAG_ATTACH:		Attach the device back to runtime after completion
- * @DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME:	Wait for runtime to load after completion
  * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID:	Allow downloading images with wildcard VIDs
  * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID:	Allow downloading images with wildcard PIDs
  * @DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER:	Allow any cipher kinds to be downloaded
@@ -54,9 +51,6 @@ G_DECLARE_DERIVABLE_TYPE (DfuTarget, dfu_target, DFU, TARGET, GUsbDevice)
 typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_NONE		= 0,
 	DFU_TARGET_TRANSFER_FLAG_VERIFY		= (1 << 0),
-	DFU_TARGET_TRANSFER_FLAG_DETACH		= (1 << 1),
-	DFU_TARGET_TRANSFER_FLAG_ATTACH		= (1 << 2),
-	DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME	= (1 << 3),
 	DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID	= (1 << 4),
 	DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID	= (1 << 5),
 	DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER	= (1 << 6),

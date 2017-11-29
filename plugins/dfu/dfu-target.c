@@ -1076,22 +1076,6 @@ dfu_target_upload (DfuTarget *target,
 		dfu_image_add_element (image, element);
 	}
 
-	/* do host reset */
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||
-	    (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) > 0) {
-		if (!dfu_device_attach (priv->device, error))
-			return NULL;
-	}
-
-	/* boot to runtime */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) {
-		g_debug ("booting to runtime");
-		if (!dfu_device_wait_for_replug (priv->device,
-						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 error))
-			return NULL;
-	}
-
 	/* success */
 	return g_object_ref (image);
 }
@@ -1308,22 +1292,6 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 						   flags,
 						   error);
 		if (!ret)
-			return FALSE;
-	}
-
-	/* attempt to switch back to runtime */
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||
-	    (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) > 0) {
-		if (!dfu_device_attach (priv->device, error))
-			return FALSE;
-	}
-
-	/* boot to runtime */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) {
-		g_debug ("booting to runtime to set auto-boot");
-		if (!dfu_device_wait_for_replug (priv->device,
-						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 error))
 			return FALSE;
 	}
 
