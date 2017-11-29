@@ -1242,10 +1242,6 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 						 DFU_DEVICE_REPLUG_TIMEOUT,
 						 error))
 			return FALSE;
-
-		/* put back in same state */
-		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
 	}
 
 	/* transfer */
@@ -1273,6 +1269,12 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* do transfer */
 	image = dfu_target_upload (target, flags, error);
 	if (image == NULL)
+		return FALSE;
+
+	/* do host reset */
+	if (!dfu_device_attach (device, error))
+		return FALSE;
+	if (!dfu_device_wait_for_replug (device, DFU_DEVICE_REPLUG_TIMEOUT, error))
 		return FALSE;
 
 	/* create new firmware object */
@@ -1361,11 +1363,15 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (locker == NULL)
 		return FALSE;
 
-	/* optional reset */
+	/* APP -> DFU */
 	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
-		flags |= DFU_TARGET_TRANSFER_FLAG_DETACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
+		if (!dfu_device_detach (device, error))
+			return FALSE;
+		if (!dfu_device_wait_for_replug (device,
+						 DFU_DEVICE_REPLUG_TIMEOUT,
+						 error)) {
+			return FALSE;
+		}
 	}
 
 	/* transfer */
@@ -1375,6 +1381,12 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
 	firmware = dfu_device_upload (device, flags, error);
 	if (firmware == NULL)
+		return FALSE;
+
+	/* do host reset */
+	if (!dfu_device_attach (device, error))
+		return FALSE;
+	if (!dfu_device_wait_for_replug (device, DFU_DEVICE_REPLUG_TIMEOUT, error))
 		return FALSE;
 
 	/* save file */
@@ -1779,10 +1791,6 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device, 5000, error))
 			return FALSE;
-
-		/* put back in same state */
-		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
 	}
 
 	/* print the new object */
@@ -1853,10 +1861,13 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	if (!dfu_target_download (target,
-				  image,
-				  flags,
-				  error))
+	if (!dfu_target_download (target, image, flags, error))
+		return FALSE;
+
+	/* do host reset */
+	if (!dfu_device_attach (device, error))
+		return FALSE;
+	if (!dfu_device_wait_for_replug (device, DFU_DEVICE_REPLUG_TIMEOUT, error))
 		return FALSE;
 
 	/* success */
@@ -1907,11 +1918,15 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	str_debug = dfu_firmware_to_string (firmware);
 	g_debug ("DFU: %s", str_debug);
 
-	/* put in correct mode */
+	/* APP -> DFU */
 	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
-		flags |= DFU_TARGET_TRANSFER_FLAG_DETACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
+		if (!dfu_device_detach (device, error))
+			return FALSE;
+		if (!dfu_device_wait_for_replug (device,
+						 DFU_DEVICE_REPLUG_TIMEOUT,
+						 error)) {
+			return FALSE;
+		}
 	}
 
 	/* allow wildcards */
@@ -1927,6 +1942,12 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_signal_connect (device, "percentage-changed",
 			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
 	if (!dfu_device_download (device, firmware, flags, error))
+		return FALSE;
+
+	/* do host reset */
+	if (!dfu_device_attach (device, error))
+		return FALSE;
+	if (!dfu_device_wait_for_replug (device, DFU_DEVICE_REPLUG_TIMEOUT, error))
 		return FALSE;
 
 	/* success */
