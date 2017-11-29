@@ -1081,9 +1081,7 @@ dfu_device_set_status (DfuDevice *device, DfuStatus status)
 }
 
 gboolean
-dfu_device_ensure_interface (DfuDevice *device,
-			     GCancellable *cancellable,
-			     GError **error)
+dfu_device_ensure_interface (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(GError) error_local = NULL;
@@ -1117,7 +1115,6 @@ dfu_device_ensure_interface (DfuDevice *device,
 /**
  * dfu_device_refresh:
  * @device: a #DfuDevice
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Refreshes the cached properties on the DFU device.
@@ -1125,7 +1122,7 @@ dfu_device_ensure_interface (DfuDevice *device,
  * Return value: %TRUE for success
  **/
 gboolean
-dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error)
+dfu_device_refresh (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	gsize actual_length = 0;
@@ -1155,7 +1152,7 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, cancellable, error))
+	if (!dfu_device_ensure_interface (device, error))
 		return FALSE;
 
 	if (!g_usb_device_control_transfer (priv->dev,
@@ -1167,7 +1164,7 @@ dfu_device_refresh (DfuDevice *device, GCancellable *cancellable, GError **error
 					    priv->iface_number,
 					    buf, sizeof(buf), &actual_length,
 					    priv->timeout_ms,
-					    cancellable,
+					    NULL, /* cancellable */
 					    &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -1222,7 +1219,6 @@ _g_usb_device_get_interface_for_class (GUsbDevice *dev,
 /**
  * dfu_device_detach:
  * @device: a #DfuDevice
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Detaches the device putting it into DFU-mode.
@@ -1230,7 +1226,7 @@ _g_usb_device_get_interface_for_class (GUsbDevice *dev,
  * Return value: %TRUE for success
  **/
 gboolean
-dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
+dfu_device_detach (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	const guint16 timeout_reset_ms = 1000;
@@ -1327,7 +1323,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 						    0x0003,
 						    buf, 33, NULL,
 						    5000,
-						    cancellable,
+						    NULL, /* cancellable */
 						    &error_jabra)) {
 			g_debug ("whilst sending magic: %s, ignoring",
 				 error_jabra->message);
@@ -1335,7 +1331,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 
 		/* wait for device to re-appear */
 		dfu_device_set_action (device, FWUPD_STATUS_DEVICE_RESTART);
-		if (!dfu_device_wait_for_replug (device, 5000, cancellable, error))
+		if (!dfu_device_wait_for_replug (device, 5000, error))
 			return FALSE;
 
 		/* wait 10 seconds for DFU mode to settle */
@@ -1354,7 +1350,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, cancellable, error))
+	if (!dfu_device_ensure_interface (device, error))
 		return FALSE;
 
 	/* inform UI there's going to be a detach:attach */
@@ -1369,7 +1365,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 					    priv->iface_number,
 					    NULL, 0, NULL,
 					    priv->timeout_ms,
-					    cancellable,
+					    NULL, /* cancellable */
 					    &error_local)) {
 		/* some devices just reboot and stall the endpoint :/ */
 		if (g_error_matches (error_local,
@@ -1378,7 +1374,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 			g_debug ("ignoring while detaching: %s", error_local->message);
 		} else {
 			/* refresh the error code */
-			dfu_device_error_fixup (device, cancellable, &error_local);
+			dfu_device_error_fixup (device, &error_local);
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1403,7 +1399,6 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
 /**
  * dfu_device_abort:
  * @device: a #DfuDevice
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Aborts any upload or download in progress.
@@ -1411,7 +1406,7 @@ dfu_device_detach (DfuDevice *device, GCancellable *cancellable, GError **error)
  * Return value: %TRUE for success
  **/
 gboolean
-dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
+dfu_device_abort (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(GError) error_local = NULL;
@@ -1439,7 +1434,7 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, cancellable, error))
+	if (!dfu_device_ensure_interface (device, error))
 		return FALSE;
 
 	if (!g_usb_device_control_transfer (priv->dev,
@@ -1451,10 +1446,10 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
 					    priv->iface_number,
 					    NULL, 0, NULL,
 					    priv->timeout_ms,
-					    cancellable,
+					    NULL, /* cancellable */
 					    &error_local)) {
 		/* refresh the error code */
-		dfu_device_error_fixup (device, cancellable, &error_local);
+		dfu_device_error_fixup (device, &error_local);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1469,7 +1464,6 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
 /**
  * dfu_device_clear_status:
  * @device: a #DfuDevice
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Clears any error status on the DFU device.
@@ -1477,7 +1471,7 @@ dfu_device_abort (DfuDevice *device, GCancellable *cancellable, GError **error)
  * Return value: %TRUE for success
  **/
 gboolean
-dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **error)
+dfu_device_clear_status (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(GError) error_local = NULL;
@@ -1505,7 +1499,7 @@ dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, cancellable, error))
+	if (!dfu_device_ensure_interface (device, error))
 		return FALSE;
 
 	if (!g_usb_device_control_transfer (priv->dev,
@@ -1517,10 +1511,10 @@ dfu_device_clear_status (DfuDevice *device, GCancellable *cancellable, GError **
 					    priv->iface_number,
 					    NULL, 0, NULL,
 					    priv->timeout_ms,
-					    cancellable,
+					    NULL, /* cancellable */
 					    &error_local)) {
 		/* refresh the error code */
-		dfu_device_error_fixup (device, cancellable, &error_local);
+		dfu_device_error_fixup (device, &error_local);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1549,7 +1543,6 @@ dfu_device_get_interface (DfuDevice *device)
  * dfu_device_open_full:
  * @device: a #DfuDevice
  * @flags: #DfuDeviceOpenFlags, e.g. %DFU_DEVICE_OPEN_FLAG_NONE
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Opens a DFU-capable device.
@@ -1557,8 +1550,7 @@ dfu_device_get_interface (DfuDevice *device)
  * Return value: %TRUE for success
  **/
 gboolean
-dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags,
-		      GCancellable *cancellable, GError **error)
+dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	GPtrArray *targets = dfu_device_get_targets (device);
@@ -1627,19 +1619,19 @@ dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags,
 
 	/* automatically abort any uploads or downloads */
 	if ((flags & DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH) == 0) {
-		if (!dfu_device_refresh (device, cancellable, error))
+		if (!dfu_device_refresh (device, error))
 			return FALSE;
 		switch (priv->state) {
 		case DFU_STATE_DFU_UPLOAD_IDLE:
 		case DFU_STATE_DFU_DNLOAD_IDLE:
 		case DFU_STATE_DFU_DNLOAD_SYNC:
 			g_debug ("aborting transfer %s", dfu_status_to_string (priv->status));
-			if (!dfu_device_abort (device, cancellable, error))
+			if (!dfu_device_abort (device, error))
 				return FALSE;
 			break;
 		case DFU_STATE_DFU_ERROR:
 			g_debug ("clearing error %s", dfu_status_to_string (priv->status));
-			if (!dfu_device_clear_status (device, cancellable, error))
+			if (!dfu_device_clear_status (device, error))
 				return FALSE;
 			break;
 		default:
@@ -1650,7 +1642,7 @@ dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags,
 	/* set up target ready for use */
 	for (guint j = 0; j < targets->len; j++) {
 		DfuTarget *target = g_ptr_array_index (targets, j);
-		if (!dfu_target_setup (target, cancellable, error))
+		if (!dfu_target_setup (target, error))
 			return FALSE;
 	}
 
@@ -1672,7 +1664,7 @@ dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags,
 gboolean
 dfu_device_open (DfuDevice *device, GError **error)
 {
-	return dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NONE, NULL, error);
+	return dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NONE, error);
 }
 
 /**
@@ -1701,8 +1693,7 @@ dfu_device_close (DfuDevice *device, GError **error)
 }
 
 gboolean
-dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
-			    GCancellable *cancellable, GError **error)
+dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 
@@ -1760,8 +1751,7 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev,
 	/* reclaim */
 	if (priv->open_new_dev) {
 		g_debug ("automatically reopening device");
-		if (!dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NONE,
-					   cancellable, error))
+		if (!dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NONE, error))
 			return FALSE;
 	}
 	return TRUE;
@@ -1833,7 +1823,6 @@ dfu_device_replug_helper_cb (gpointer user_data)
  * dfu_device_wait_for_replug:
  * @device: a #DfuDevice
  * @timeout: the maximum amount of time to wait
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Waits for a DFU device to disconnect and reconnect.
@@ -1842,8 +1831,7 @@ dfu_device_replug_helper_cb (gpointer user_data)
  * Return value: %TRUE for success
  **/
 gboolean
-dfu_device_wait_for_replug (DfuDevice *device, guint timeout,
-			    GCancellable *cancellable, GError **error)
+dfu_device_wait_for_replug (DfuDevice *device, guint timeout, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	DfuDeviceReplugHelper *helper;
@@ -1956,7 +1944,7 @@ dfu_device_attach (DfuDevice *device, GError **error)
 		target_zero = dfu_device_get_target_by_alt_setting (device, 0, error);
 		if (target_zero == NULL)
 			return FALSE;
-		chunk = dfu_target_upload_chunk (target_zero, 0, 0, NULL, error);
+		chunk = dfu_target_upload_chunk (target_zero, 0, 0, error);
 		if (chunk == NULL)
 			return FALSE;
 	}
@@ -1967,14 +1955,13 @@ dfu_device_attach (DfuDevice *device, GError **error)
 		return FALSE;
 
 	/* normal DFU mode just needs a bus reset */
-	if (!dfu_target_attach (target, NULL, error))
+	if (!dfu_target_attach (target, error))
 		return FALSE;
 
 	/* some devices need yet another reset */
 	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET)) {
 		if (!dfu_device_wait_for_replug (device,
 						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 NULL,
 						 error))
 			return FALSE;
 		if (!dfu_device_reset (device, error))
@@ -2003,7 +1990,6 @@ dfu_device_action_cb (DfuTarget *target, FwupdStatus action, DfuDevice *device)
  * dfu_device_upload:
  * @device: a #DfuDevice
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Uploads firmware from the target to the host.
@@ -2013,7 +1999,6 @@ dfu_device_action_cb (DfuTarget *target, FwupdStatus action, DfuDevice *device)
 DfuFirmware *
 dfu_device_upload (DfuDevice *device,
 		   DfuTargetTransferFlags flags,
-		   GCancellable *cancellable,
 		   GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
@@ -2030,7 +2015,7 @@ dfu_device_upload (DfuDevice *device,
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, cancellable, error))
+	if (!dfu_device_ensure_interface (device, error))
 		return NULL;
 
 	/* create ahead of time */
@@ -2052,11 +2037,10 @@ dfu_device_upload (DfuDevice *device,
 		g_debug ("detaching");
 
 		/* detach and USB reset */
-		if (!dfu_device_detach (device, NULL, error))
+		if (!dfu_device_detach (device, error))
 			return NULL;
 		if (!dfu_device_wait_for_replug (device,
 						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 cancellable,
 						 error))
 			return NULL;
 	}
@@ -2085,7 +2069,6 @@ dfu_device_upload (DfuDevice *device,
 					G_CALLBACK (dfu_device_action_cb), device);
 		image = dfu_target_upload (target,
 					   DFU_TARGET_TRANSFER_FLAG_NONE,
-					   cancellable,
 					   error);
 		g_signal_handler_disconnect (target, id1);
 		g_signal_handler_disconnect (target, id2);
@@ -2117,7 +2100,6 @@ dfu_device_upload (DfuDevice *device,
 		g_debug ("booting to runtime");
 		if (!dfu_device_wait_for_replug (device,
 						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 cancellable,
 						 error))
 			return NULL;
 	}
@@ -2151,7 +2133,6 @@ dfu_device_id_compatible (guint16 id_file, guint16 id_runtime, guint16 id_dev)
  * @device: a #DfuDevice
  * @firmware: a #DfuFirmware
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Downloads firmware from the host to the target, optionally verifying
@@ -2163,7 +2144,6 @@ gboolean
 dfu_device_download (DfuDevice *device,
 		     DfuFirmware *firmware,
 		     DfuTargetTransferFlags flags,
-		     GCancellable *cancellable,
 		     GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
@@ -2181,7 +2161,7 @@ dfu_device_download (DfuDevice *device,
 	}
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, cancellable, error))
+	if (!dfu_device_ensure_interface (device, error))
 		return FALSE;
 
 	/* do we allow wildcard VID:PID matches */
@@ -2251,11 +2231,10 @@ dfu_device_download (DfuDevice *device,
 
 		/* detach and USB reset */
 		g_debug ("detaching");
-		if (!dfu_device_detach (device, NULL, error))
+		if (!dfu_device_detach (device, error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device,
 						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 NULL,
 						 error))
 			return FALSE;
 	}
@@ -2338,7 +2317,6 @@ dfu_device_download (DfuDevice *device,
 		ret = dfu_target_download (target_tmp,
 					   image,
 					   flags_local,
-					   cancellable,
 					   error);
 		g_signal_handler_disconnect (target_tmp, id1);
 		g_signal_handler_disconnect (target_tmp, id2);
@@ -2361,7 +2339,6 @@ dfu_device_download (DfuDevice *device,
 		g_debug ("booting to runtime to set auto-boot");
 		if (!dfu_device_wait_for_replug (device,
 						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 cancellable,
 						 error))
 			return FALSE;
 	}
@@ -2372,9 +2349,7 @@ dfu_device_download (DfuDevice *device,
 }
 
 void
-dfu_device_error_fixup (DfuDevice *device,
-			GCancellable *cancellable,
-			GError **error)
+dfu_device_error_fixup (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 
@@ -2389,7 +2364,7 @@ dfu_device_error_fixup (DfuDevice *device,
 		return;
 
 	/* get the status */
-	if (!dfu_device_refresh (device, cancellable, NULL))
+	if (!dfu_device_refresh (device, NULL))
 		return;
 
 	/* not in an error state */

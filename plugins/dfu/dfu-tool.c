@@ -275,9 +275,7 @@ dfu_tool_set_vendor (DfuToolPrivate *priv, gchar **values, GError **error)
 	file = g_file_new_for_path (values[0]);
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
-				      error)) {
+				      DFU_FIRMWARE_PARSE_FLAG_NONE, error)) {
 		return FALSE;
 	}
 
@@ -294,10 +292,7 @@ dfu_tool_set_vendor (DfuToolPrivate *priv, gchar **values, GError **error)
 	dfu_firmware_set_vid (firmware, (guint16) tmp);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -322,7 +317,6 @@ dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -339,10 +333,7 @@ dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 	dfu_firmware_set_pid (firmware, (guint16) tmp);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static guint16
@@ -406,7 +397,6 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -421,10 +411,7 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 	dfu_firmware_set_release (firmware, (guint16) tmp);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static GBytes *
@@ -641,7 +628,6 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -685,10 +671,7 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -717,7 +700,6 @@ dfu_tool_set_target_size (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -765,10 +747,7 @@ dfu_tool_set_target_size (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -797,7 +776,6 @@ dfu_tool_set_address (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -833,10 +811,7 @@ dfu_tool_set_address (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -860,7 +835,6 @@ dfu_tool_set_metadata (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -878,10 +852,7 @@ dfu_tool_set_metadata (DfuToolPrivate *priv, gchar **values, GError **error)
 	dfu_firmware_set_metadata (firmware, values[1], values[2]);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -907,7 +878,6 @@ dfu_tool_set_alt_setting (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -942,10 +912,7 @@ dfu_tool_set_alt_setting (DfuToolPrivate *priv, gchar **values, GError **error)
 	dfu_image_set_alt_setting (image, (guint8) tmp);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -970,7 +937,6 @@ dfu_tool_set_alt_setting_name (DfuToolPrivate *priv, gchar **values, GError **er
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -996,10 +962,7 @@ dfu_tool_set_alt_setting_name (DfuToolPrivate *priv, gchar **values, GError **er
 	dfu_image_set_name (image, values[1]);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -1036,7 +999,6 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 		firmware_tmp = dfu_firmware_new ();
 		if (!dfu_firmware_parse_file (firmware_tmp, file_tmp,
 					      DFU_FIRMWARE_PARSE_FLAG_NONE,
-					      priv->cancellable,
 					      error)) {
 			return FALSE;
 		}
@@ -1118,10 +1080,7 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* write out new file */
 	file = g_file_new_for_path (values[0]);
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -1151,7 +1110,6 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file_in,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -1179,10 +1137,7 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_debug ("DFU: %s", str_debug);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file_out,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file_out, error);
 }
 
 static gboolean
@@ -1281,11 +1236,10 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* APP -> DFU */
 	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
 		g_debug ("detaching");
-		if (!dfu_device_detach (device, priv->cancellable, error))
+		if (!dfu_device_detach (device, error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device,
 						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 priv->cancellable,
 						 error))
 			return FALSE;
 
@@ -1317,7 +1271,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* do transfer */
-	image = dfu_target_upload (target, flags, priv->cancellable, error);
+	image = dfu_target_upload (target, flags, error);
 	if (image == NULL)
 		return FALSE;
 
@@ -1330,10 +1284,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* save file */
 	file = g_file_new_for_path (values[0]);
-	if (!dfu_firmware_write_file (firmware,
-				      file,
-				      priv->cancellable,
-				      error))
+	if (!dfu_firmware_write_file (firmware, file, error))
 		return FALSE;
 
 	/* print the new object */
@@ -1422,20 +1373,14 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 	g_signal_connect (device, "percentage-changed",
 			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
-	firmware = dfu_device_upload (device,
-				      flags,
-				      priv->cancellable,
-				      error);
+	firmware = dfu_device_upload (device, flags, error);
 	if (firmware == NULL)
 		return FALSE;
 
 	/* save file */
 	file = g_file_new_for_path (values[0]);
 	dfu_firmware_set_format (firmware, format);
-	if (!dfu_firmware_write_file (firmware,
-				      file,
-				      priv->cancellable,
-				      error))
+	if (!dfu_firmware_write_file (firmware, file, error))
 		return FALSE;
 
 	/* print the new object */
@@ -1601,7 +1546,6 @@ dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file_in,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -1630,10 +1574,7 @@ dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* write out new file */
 	file_out = g_file_new_for_path (values[1]);
 	g_debug ("wrote %s", values[1]);
-	return dfu_firmware_write_file (firmware,
-					file_out,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file_out, error);
 }
 
 static gboolean
@@ -1679,7 +1620,6 @@ dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file_in,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -1707,10 +1647,7 @@ dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* write out new file */
 	file_out = g_file_new_for_path (values[1]);
 	g_debug ("wrote %s", values[1]);
-	return dfu_firmware_write_file (firmware,
-					file_out,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file_out, error);
 }
 
 static gboolean
@@ -1775,9 +1712,7 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 		g_print ("Loading %s:\n", values[i]);
 		firmware = dfu_firmware_new ();
 		file = g_file_new_for_path (values[i]);
-		if (!dfu_firmware_parse_file (firmware, file, flags,
-					      priv->cancellable,
-					      &error_local)) {
+		if (!dfu_firmware_parse_file (firmware, file, flags, &error_local)) {
 			g_print ("Failed to load firmware: %s\n",
 				 error_local->message);
 			continue;
@@ -1815,7 +1750,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	file = g_file_new_for_path (values[0]);
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable, error))
+				      error))
 		return FALSE;
 
 	/* open correct device */
@@ -1840,9 +1775,9 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* APP -> DFU */
 	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
 		g_debug ("detaching");
-		if (!dfu_device_detach (device, priv->cancellable, error))
+		if (!dfu_device_detach (device, error))
 			return FALSE;
-		if (!dfu_device_wait_for_replug (device, 5000, priv->cancellable, error))
+		if (!dfu_device_wait_for_replug (device, 5000, error))
 			return FALSE;
 
 		/* put back in same state */
@@ -1921,7 +1856,6 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (!dfu_target_download (target,
 				  image,
 				  flags,
-				  priv->cancellable,
 				  error))
 		return FALSE;
 
@@ -1955,7 +1889,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	file = g_file_new_for_path (values[0]);
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable, error))
+				      error))
 		return FALSE;
 
 	/* open correct device */
@@ -1992,11 +1926,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 	g_signal_connect (device, "percentage-changed",
 			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
-	if (!dfu_device_download (device,
-				  firmware,
-				  flags,
-				  priv->cancellable,
-				  error))
+	if (!dfu_device_download (device, firmware, flags, error))
 		return FALSE;
 
 	/* success */
@@ -2216,7 +2146,7 @@ dfu_tool_detach (DfuToolPrivate *priv, gchar **values, GError **error)
 					    error);
 	if (locker == NULL)
 		return FALSE;
-	return dfu_device_detach (device, priv->cancellable, error);
+	return dfu_device_detach (device, error);
 }
 
 static gboolean

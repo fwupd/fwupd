@@ -126,8 +126,7 @@ fu_plugin_dfu_device_changed_cb (DfuContext *ctx,
 static gboolean
 dfu_device_open_no_refresh (DfuDevice *device, GError **error)
 {
-	return dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH,
-				     NULL, error);
+	return dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH, error);
 }
 
 static void
@@ -278,9 +277,9 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 		return TRUE;
 
 	/* detach and USB reset */
-	if (!dfu_device_detach (device, NULL, error))
+	if (!dfu_device_detach (device, error))
 		return FALSE;
-	if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
+	if (!dfu_device_wait_for_replug (device, 5000, error))
 		return FALSE;
 
 	/* success */
@@ -327,7 +326,7 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
 
 	/* boot to runtime */
 	g_debug ("booting to runtime");
-	if (!dfu_device_wait_for_replug (device, 5000, NULL, error))
+	if (!dfu_device_wait_for_replug (device, 5000, error))
 		return FALSE;
 
 	/* success */
@@ -378,7 +377,7 @@ fu_plugin_update (FuPlugin *plugin,
 				  DFU_TARGET_TRANSFER_FLAG_VERIFY |
 				  DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID |
 				  DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID,
-				  NULL, error))
+				  error))
 		return FALSE;
 
 	/* we're done */
@@ -430,7 +429,6 @@ fu_plugin_verify (FuPlugin *plugin,
 	dfu_firmware = dfu_device_upload (device,
 					  DFU_TARGET_TRANSFER_FLAG_DETACH |
 					  DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME,
-					  NULL,
 					  error);
 	if (dfu_firmware == NULL)
 		return FALSE;

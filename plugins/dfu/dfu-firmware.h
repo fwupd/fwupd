@@ -114,14 +114,12 @@ gboolean	 dfu_firmware_parse_data	(DfuFirmware	*firmware,
 gboolean	 dfu_firmware_parse_file	(DfuFirmware	*firmware,
 						 GFile		*file,
 						 DfuFirmwareParseFlags flags,
-						 GCancellable	*cancellable,
 						 GError		**error);
 
 GBytes		*dfu_firmware_write_data	(DfuFirmware	*firmware,
 						 GError		**error);
 gboolean	 dfu_firmware_write_file	(DfuFirmware	*firmware,
 						 GFile		*file,
-						 GCancellable	*cancellable,
 						 GError		**error);
 gchar		*dfu_firmware_to_string		(DfuFirmware	*firmware);
 

@@ -73,27 +73,21 @@ struct _DfuTargetClass
 	void			 (*action_changed)	(DfuTarget	*target,
 							 FwupdStatus	 action);
 	gboolean		 (*setup)		(DfuTarget	*target,
-							 GCancellable	*cancellable,
 							 GError		**error);
 	gboolean		 (*attach)		(DfuTarget	*target,
-							 GCancellable	*cancellable,
 							 GError		**error);
 	gboolean		 (*detach)		(DfuTarget	*target,
-							 GCancellable	*cancellable,
 							 GError		**error);
 	gboolean		 (*mass_erase)		(DfuTarget	*target,
-							 GCancellable	*cancellable,
 							 GError		**error);
 	DfuElement		*(*upload_element)	(DfuTarget	*target,
 							 guint32	 address,
 							 gsize		 expected_size,
 							 gsize		 maximum_size,
-							 GCancellable	*cancellable,
 							 GError		**error);
 	gboolean		 (*download_element)	(DfuTarget	*target,
 							 DfuElement	*element,
 							 DfuTargetTransferFlags flags,
-							 GCancellable	*cancellable,
 							 GError		**error);
 };
 
@@ -106,18 +100,14 @@ const gchar	*dfu_target_get_alt_name_for_display	(DfuTarget	*target,
 							 GError		**error);
 DfuImage	*dfu_target_upload			(DfuTarget	*target,
 							 DfuTargetTransferFlags flags,
-							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_target_setup			(DfuTarget	*target,
-							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_target_download			(DfuTarget	*target,
 							 DfuImage	*image,
 							 DfuTargetTransferFlags flags,
-							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_target_mass_erase			(DfuTarget	*target,
-							 GCancellable	*cancellable,
 							 GError		**error);
 DfuCipherKind	 dfu_target_get_cipher_kind		(DfuTarget	*target);
 

@@ -127,7 +127,6 @@ gboolean	 dfu_device_open			(DfuDevice	*device,
 							 GError		**error);
 gboolean	 dfu_device_open_full			(DfuDevice	*device,
 							 DfuDeviceOpenFlags flags,
-							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_device_close			(DfuDevice	*device,
 							 GError		**error);
@@ -156,28 +155,21 @@ gboolean	 dfu_device_attach			(DfuDevice	*device,
 							 GError		**error);
 gboolean	 dfu_device_wait_for_replug		(DfuDevice	*device,
 							 guint		 timeout,
-							 GCancellable	*cancellable,
 							 GError		**error);
 DfuFirmware	*dfu_device_upload			(DfuDevice	*device,
 							 DfuTargetTransferFlags flags,
-							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_device_download			(DfuDevice	*device,
 							 DfuFirmware	*firmware,
 							 DfuTargetTransferFlags flags,
-							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_device_refresh			(DfuDevice	*device,
-							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_device_detach			(DfuDevice	*device,
-							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_device_abort			(DfuDevice	*device,
-							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_device_clear_status		(DfuDevice	*device,
-							 GCancellable	*cancellable,
 							 GError		**error);
 
 guint8		 dfu_device_get_interface		(DfuDevice	*device);
