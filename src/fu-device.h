@@ -86,6 +86,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_plugin(d)			fwupd_device_get_plugin(FWUPD_DEVICE(d))
 #define fu_device_get_update_error(d)		fwupd_device_get_update_error(FWUPD_DEVICE(d))
 #define fu_device_get_update_state(d)		fwupd_device_get_update_state(FWUPD_DEVICE(d))
+#define fu_device_get_vendor(d)			fwupd_device_get_vendor(FWUPD_DEVICE(d))
 #define fu_device_get_version(d)		fwupd_device_get_version(FWUPD_DEVICE(d))
 #define fu_device_get_version_lowest(d)		fwupd_device_get_version_lowest(FWUPD_DEVICE(d))
 #define fu_device_get_version_bootloader(d)	fwupd_device_get_version_bootloader(FWUPD_DEVICE(d))
