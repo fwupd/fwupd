@@ -110,11 +110,7 @@ struct _DfuDeviceClass
 							 FwupdStatus	 action);
 };
 
-DfuDevice	*dfu_device_new				(void);
-gboolean	 dfu_device_open			(DfuDevice	*device,
-							 GError		**error);
-gboolean	 dfu_device_close			(DfuDevice	*device,
-							 GError		**error);
+DfuDevice	*dfu_device_new				(GUsbDevice	*usb_device);
 const gchar	*dfu_device_get_platform_id		(DfuDevice	*device);
 GPtrArray	*dfu_device_get_targets			(DfuDevice	*device);
 DfuTarget	*dfu_device_get_target_by_alt_setting	(DfuDevice	*device,
@@ -123,8 +119,6 @@ DfuTarget	*dfu_device_get_target_by_alt_setting	(DfuDevice	*device,
 DfuTarget	*dfu_device_get_target_by_alt_name	(DfuDevice	*device,
 							 const gchar	*alt_name,
 							 GError		**error);
-const gchar	*dfu_device_get_display_name		(DfuDevice	*device);
-const gchar	*dfu_device_get_serial_number		(DfuDevice	*device);
 const gchar	*dfu_device_get_chip_id			(DfuDevice	*device);
 void		 dfu_device_set_chip_id			(DfuDevice	*device,
 							 const gchar	*chip_id);
@@ -168,7 +162,6 @@ guint16		 dfu_device_get_version			(DfuDevice	*device);
 guint		 dfu_device_get_timeout			(DfuDevice	*device);
 gboolean	 dfu_device_can_upload			(DfuDevice	*device);
 gboolean	 dfu_device_can_download		(DfuDevice	*device);
-gboolean	 dfu_device_is_open			(DfuDevice	*device);
 
 gboolean	 dfu_device_has_attribute		(DfuDevice	*device,
 							 DfuDeviceAttributes attribute);
@@ -181,6 +174,12 @@ void		 dfu_device_set_transfer_size		(DfuDevice	*device,
 							 guint16	 transfer_size);
 void		 dfu_device_set_timeout			(DfuDevice	*device,
 							 guint		 timeout_ms);
+void		 dfu_device_set_system_quirks		(DfuDevice	*device,
+							 FuQuirks	*quirks);
+FuQuirks	*dfu_device_get_system_quirks		(DfuDevice	*device);
+void		 dfu_device_set_usb_context		(DfuDevice	*device,
+							 GUsbContext	*quirks);
+GUsbContext	*dfu_device_get_usb_context		(DfuDevice	*device);
 
 G_END_DECLS
 

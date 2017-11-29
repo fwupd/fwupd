@@ -547,7 +547,7 @@ static gboolean
 dfu_target_use_alt_setting (DfuTarget *target, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	GUsbDevice *dev;
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (priv->device));
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
@@ -558,9 +558,8 @@ dfu_target_use_alt_setting (DfuTarget *target, GError **error)
 		return FALSE;
 
 	/* use the correct setting */
-	dev = dfu_device_get_usb_dev (priv->device);
 	if (dfu_device_get_mode (priv->device) == DFU_MODE_DFU) {
-		if (!g_usb_device_set_interface_alt (dev,
+		if (!g_usb_device_set_interface_alt (usb_device,
 						     (gint) dfu_device_get_interface (priv->device),
 						     (gint) priv->alt_setting,
 						     &error_local)) {
@@ -627,9 +626,9 @@ dfu_target_setup (DfuTarget *target, GError **error)
 
 	/* get string */
 	if (priv->alt_idx != 0x00 && priv->alt_name == NULL) {
-		GUsbDevice *dev = dfu_device_get_usb_dev (priv->device);
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (priv->device));
 		priv->alt_name =
-			g_usb_device_get_string_descriptor (dev,
+			g_usb_device_get_string_descriptor (usb_device,
 							    priv->alt_idx,
 							    NULL);
 	}
@@ -689,6 +688,7 @@ gboolean
 dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (priv->device));
 	g_autoptr(GError) error_local = NULL;
 	gsize actual_length;
 
@@ -700,7 +700,7 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes, GErr
 			g_print ("Message: m[%" G_GSIZE_FORMAT "] = 0x%02x\n", i, (guint) data[i]);
 	}
 
-	if (!g_usb_device_control_transfer (dfu_device_get_usb_dev (priv->device),
+	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
@@ -753,6 +753,7 @@ GBytes *
 dfu_target_upload_chunk (DfuTarget *target, guint16 index, gsize buf_sz, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (priv->device));
 	g_autoptr(GError) error_local = NULL;
 	guint8 *buf;
 	gsize actual_length;
@@ -762,7 +763,7 @@ dfu_target_upload_chunk (DfuTarget *target, guint16 index, gsize buf_sz, GError 
 		buf_sz = (gsize) dfu_device_get_transfer_size (priv->device);
 
 	buf = g_new0 (guint8, buf_sz);
-	if (!g_usb_device_control_transfer (dfu_device_get_usb_dev (priv->device),
+	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
