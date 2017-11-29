@@ -26,6 +26,8 @@
 #include <gio/gio.h>
 #include <gusb.h>
 
+#include "fu-usb-device.h"
+
 #include "dfu-common.h"
 #include "dfu-target.h"
 #include "dfu-firmware.h"
@@ -33,7 +35,7 @@
 G_BEGIN_DECLS
 
 #define DFU_TYPE_DEVICE (dfu_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (DfuDevice, dfu_device, DFU, DEVICE, GObject)
+G_DECLARE_DERIVABLE_TYPE (DfuDevice, dfu_device, DFU, DEVICE, FuUsbDevice)
 
 /**
  * DfuDeviceOpenFlags:
@@ -111,7 +113,7 @@ typedef enum {
 
 struct _DfuDeviceClass
 {
-	GObjectClass		 parent_class;
+	FuUsbDeviceClass	 parent_class;
 	void			(*status_changed)	(DfuDevice	*device,
 							 DfuStatus	 status);
 	void			(*state_changed)	(DfuDevice	*device,
