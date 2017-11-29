@@ -239,6 +239,10 @@ fu_usb_device_close (FuUsbDevice *device, GError **error)
 	g_return_val_if_fail (FU_IS_USB_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* already open */
+	if (priv->usb_device_locker == NULL)
+		return TRUE;
+
 	/* subclassed */
 	if (klass->close != NULL) {
 		if (!klass->close (device, error))
