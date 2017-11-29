@@ -278,7 +278,7 @@ void
 fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
-	guint16 release = g_usb_device_get_release (usb_device);
+	guint16 release;
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *devid2 = NULL;
 	g_autofree gchar *vendor_id = NULL;
@@ -297,6 +297,7 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 				  g_usb_device_get_vid (usb_device),
 				  g_usb_device_get_pid (usb_device));
 	fu_device_add_guid (FU_DEVICE (device), devid1);
+	release = g_usb_device_get_release (usb_device);
 	devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X",
 				  g_usb_device_get_vid (usb_device),
 				  g_usb_device_get_pid (usb_device),
