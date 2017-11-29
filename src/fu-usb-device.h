@@ -54,6 +54,7 @@ gboolean	 fu_usb_device_close			(FuUsbDevice	*device,
 							 GError		**error);
 gboolean	 fu_usb_device_probe			(FuUsbDevice	*device,
 							 GError		**error);
+gboolean	 fu_usb_device_is_open			(FuUsbDevice	*device);
 
 G_END_DECLS
 
