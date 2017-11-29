@@ -3055,16 +3055,16 @@ fu_engine_load (FuEngine *self, GError **error)
 
 	/* add devices */
 	fu_engine_plugins_setup (self);
-	g_usb_context_enumerate (self->usb_ctx);
 	fu_engine_plugins_coldplug (self);
 
-	/* watch for changes */
+	/* coldplug USB devices */
 	g_signal_connect (self->usb_ctx, "device-added",
 			  G_CALLBACK (fu_engine_usb_device_added_cb),
 			  self);
 	g_signal_connect (self->usb_ctx, "device-removed",
 			  G_CALLBACK (fu_engine_usb_device_removed_cb),
 			  self);
+	g_usb_context_enumerate (self->usb_ctx);
 
 	/* success */
 	return TRUE;
