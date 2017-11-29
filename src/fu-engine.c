@@ -2620,7 +2620,6 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 void
 fu_engine_add_device (FuEngine *self, FuDevice *device)
 {
-	FuDevice *device_tmp;
 	GPtrArray *blacklisted_devices;
 	GPtrArray *device_guids;
 
@@ -2630,16 +2629,6 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 		g_warning ("no GUIDs for device %s [%s]",
 			   fu_device_get_id (device),
 			   fu_device_get_name (device));
-		return;
-	}
-
-	/* does this device already exist? */
-	device_tmp = fu_device_list_find_by_id (self->device_list,
-						fu_device_get_id (device), NULL);
-	if (device_tmp != NULL) {
-		g_warning ("already added %s by %s",
-			   fu_device_get_id (device_tmp),
-			   fu_device_get_plugin (device_tmp));
 		return;
 	}
 
@@ -2669,7 +2658,6 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 
 	/* create new device */
 	fu_device_list_add (self->device_list, device);
-	fu_engine_emit_changed (self);
 }
 
 static void
