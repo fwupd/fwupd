@@ -1155,6 +1155,8 @@ dfu_tool_attach (DfuToolPrivate *priv, gchar **values, GError **error)
 					    error);
 	if (locker == NULL)
 		return FALSE;
+	if (!dfu_device_refresh (device, error))
+		return FALSE;
 	return dfu_device_attach (device, error);
 }
 
@@ -1172,6 +1174,8 @@ dfu_tool_reset (DfuToolPrivate *priv, gchar **values, GError **error)
 					    (FuDeviceLockerFunc) dfu_device_close,
 					    error);
 	if (locker == NULL)
+		return FALSE;
+	if (!dfu_device_refresh (device, error))
 		return FALSE;
 	return dfu_device_reset (device, error);
 }
@@ -1225,6 +1229,8 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 					    (FuDeviceLockerFunc) dfu_device_close,
 					    error);
 	if (locker == NULL)
+		return FALSE;
+	if (!dfu_device_refresh (device, error))
 		return FALSE;
 
 	/* set up progress */
@@ -1362,6 +1368,8 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 					    error);
 	if (locker == NULL)
 		return FALSE;
+	if (!dfu_device_refresh (device, error))
+		return FALSE;
 
 	/* APP -> DFU */
 	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
@@ -1431,6 +1439,8 @@ dfu_tool_get_device_string (DfuToolPrivate *priv, DfuDevice *device)
 						g_usb_device_get_pid (dev),
 						error->message);
 		}
+		if (!dfu_device_refresh (device, &error))
+			return FALSE;
 	}
 	return g_strdup_printf ("%04x:%04x [%s:%s]",
 				g_usb_device_get_vid (dev),
@@ -1777,6 +1787,8 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 					    error);
 	if (locker == NULL)
 		return FALSE;
+	if (!dfu_device_refresh (device, error))
+		return FALSE;
 
 	/* set up progress */
 	g_signal_connect (device, "action-changed",
@@ -1912,6 +1924,8 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 					    (FuDeviceLockerFunc) dfu_device_close,
 					    error);
 	if (locker == NULL)
+		return FALSE;
+	if (!dfu_device_refresh (device, error))
 		return FALSE;
 
 	/* print the new object */
@@ -2079,6 +2093,11 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 				dfu_tool_print_indent (_("Status"), error_local->message, 1);
 			}
 		}
+		if (!dfu_device_refresh (device, &error_local)) {
+			/* TRANSLATORS: device has failed to report status */
+			dfu_tool_print_indent (_("Status"), error_local->message, 1);
+			continue;
+		}
 
 		tmp = dfu_device_get_display_name (device);
 		if (tmp != NULL) {
@@ -2166,6 +2185,8 @@ dfu_tool_detach (DfuToolPrivate *priv, gchar **values, GError **error)
 					    (FuDeviceLockerFunc) dfu_device_close,
 					    error);
 	if (locker == NULL)
+		return FALSE;
+	if (!dfu_device_refresh (device, error))
 		return FALSE;
 	return dfu_device_detach (device, error);
 }

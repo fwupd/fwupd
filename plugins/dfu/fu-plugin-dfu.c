@@ -123,12 +123,6 @@ fu_plugin_dfu_device_changed_cb (DfuContext *ctx,
 	fu_plugin_dfu_update_device_from_dfu_device (dev, device);
 }
 
-static gboolean
-dfu_device_open_no_refresh (DfuDevice *device, GError **error)
-{
-	return dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH, error);
-}
-
 static void
 fu_plugin_dfu_action_changed_cb (DfuDevice *device,
 				 FwupdStatus action,
@@ -196,7 +190,7 @@ fu_plugin_dfu_device_added_cb (DfuContext *ctx,
 
 	/* open device to get display name */
 	locker = fu_device_locker_new_full (device,
-					    (FuDeviceLockerFunc) dfu_device_open_no_refresh,
+					    (FuDeviceLockerFunc) dfu_device_open,
 					    (FuDeviceLockerFunc) dfu_device_close,
 					    &error);
 	if (locker == NULL) {
@@ -271,6 +265,8 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 			     error_local->message);
 		return FALSE;
 	}
+	if (!dfu_device_refresh_and_clear (device, error))
+		return FALSE;
 
 	/* already in DFU mode */
 	if (dfu_device_get_mode (device) == DFU_MODE_DFU)
@@ -315,6 +311,8 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
 			     error_local->message);
 		return FALSE;
 	}
+	if (!dfu_device_refresh_and_clear (device, error))
+		return FALSE;
 
 	/* already in runtime mode */
 	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME)
@@ -367,6 +365,8 @@ fu_plugin_update (FuPlugin *plugin,
 			     error_local->message);
 		return FALSE;
 	}
+	if (!dfu_device_refresh_and_clear (device, error))
+		return FALSE;
 
 	/* hit hardware */
 	dfu_firmware = dfu_firmware_new ();
@@ -423,6 +423,8 @@ fu_plugin_verify (FuPlugin *plugin,
 			     error_local->message);
 		return FALSE;
 	}
+	if (!dfu_device_refresh_and_clear (device, error))
+		return FALSE;
 
 	/* get data from hardware */
 	g_debug ("uploading from device->host");

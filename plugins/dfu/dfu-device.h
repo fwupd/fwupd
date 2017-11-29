@@ -38,20 +38,6 @@ G_BEGIN_DECLS
 G_DECLARE_DERIVABLE_TYPE (DfuDevice, dfu_device, DFU, DEVICE, FuUsbDevice)
 
 /**
- * DfuDeviceOpenFlags:
- * @DFU_DEVICE_OPEN_FLAG_NONE:			No flags set
- * @DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH:	Do not do the initial GET_STATUS
- *
- * The optional flags used for opening the target.
- **/
-typedef enum {
-	DFU_DEVICE_OPEN_FLAG_NONE		= 0,
-	DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH	= (1 << 0),
-	/*< private >*/
-	DFU_DEVICE_OPEN_FLAG_LAST
-} DfuDeviceOpenFlags;
-
-/**
  * DfuDeviceQuirks:
  * @DFU_DEVICE_QUIRK_NONE:			No device quirks
  * @DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT:	Ignore the device download timeout
@@ -127,9 +113,6 @@ struct _DfuDeviceClass
 DfuDevice	*dfu_device_new				(void);
 gboolean	 dfu_device_open			(DfuDevice	*device,
 							 GError		**error);
-gboolean	 dfu_device_open_full			(DfuDevice	*device,
-							 DfuDeviceOpenFlags flags,
-							 GError		**error);
 gboolean	 dfu_device_close			(DfuDevice	*device,
 							 GError		**error);
 const gchar	*dfu_device_get_platform_id		(DfuDevice	*device);
@@ -166,6 +149,8 @@ gboolean	 dfu_device_download			(DfuDevice	*device,
 							 DfuTargetTransferFlags flags,
 							 GError		**error);
 gboolean	 dfu_device_refresh			(DfuDevice	*device,
+							 GError		**error);
+gboolean	 dfu_device_refresh_and_clear		(DfuDevice	*device,
 							 GError		**error);
 gboolean	 dfu_device_detach			(DfuDevice	*device,
 							 GError		**error);
