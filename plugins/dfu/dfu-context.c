@@ -224,7 +224,7 @@ dfu_context_device_added_cb (GUsbContext *usb_context,
 		/* try and be helpful; we may be a daemon like fwupd watching a
 		 * DFU device after dfu-tool or dfu-util has detached the
 		 * device on th command line */
-		if (!dfu_device_set_new_usb_dev (item->device, usb_device, NULL, &error))
+		if (!dfu_device_set_new_usb_dev (item->device, usb_device, &error))
 			g_warning ("Failed to set new device: %s", error->message);
 
 		/* inform the UI */
@@ -236,7 +236,7 @@ dfu_context_device_added_cb (GUsbContext *usb_context,
 	/* is this a DFU-capable device */
 	device = dfu_device_new ();
 	dfu_device_set_system_quirks (device, priv->quirks);
-	if (!dfu_device_set_new_usb_dev (device, usb_device, NULL, &error)) {
+	if (!dfu_device_set_new_usb_dev (device, usb_device, &error)) {
 		g_debug ("failed to use USB device: %s", error->message);
 		return;
 	}
@@ -270,7 +270,7 @@ dfu_context_device_removed_cb (GUsbContext *usb_context,
 		return;
 
 	/* mark the backing USB device as invalid */
-	dfu_device_set_new_usb_dev (item->device, NULL, NULL, NULL);
+	dfu_device_set_new_usb_dev (item->device, NULL, NULL);
 
 	/* this item has just detached */
 	if (item->timeout_id > 0)

@@ -155,7 +155,7 @@ dfu_firmware_xdfu_func (void)
 	file = g_file_new_for_path (fn);
 	ret = dfu_firmware_parse_file (firmware, file,
 				       DFU_FIRMWARE_PARSE_FLAG_NONE,
-				       NULL, &error);
+				       &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_XTEA);
@@ -281,7 +281,7 @@ dfu_firmware_dfu_func (void)
 	g_ptr_array_set_size (dfu_firmware_get_images (firmware), 0);
 	ret = dfu_firmware_parse_file (firmware, file,
 				       DFU_FIRMWARE_PARSE_FLAG_NONE,
-				       NULL, &error);
+				       &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (dfu_firmware_get_vid (firmware), ==, 0x1c11);
@@ -320,7 +320,7 @@ dfu_firmware_dfuse_func (void)
 	firmware = dfu_firmware_new ();
 	ret = dfu_firmware_parse_file (firmware, file,
 				       DFU_FIRMWARE_PARSE_FLAG_NONE,
-				       NULL, &error);
+				       &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (dfu_firmware_get_vid (firmware), ==, 0x0483);
@@ -366,7 +366,7 @@ dfu_firmware_metadata_func (void)
 	firmware = dfu_firmware_new ();
 	ret = dfu_firmware_parse_file (firmware, file,
 				       DFU_FIRMWARE_PARSE_FLAG_NONE,
-				       NULL, &error);
+				       &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 6);
@@ -459,7 +459,7 @@ dfu_firmware_intel_hex_func (void)
 	firmware = dfu_firmware_new ();
 	ret = dfu_firmware_parse_file (firmware, file_hex,
 				       DFU_FIRMWARE_PARSE_FLAG_NONE,
-				       NULL, &error);
+				       &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 136);
@@ -526,7 +526,7 @@ dfu_firmware_intel_hex_signed_func (void)
 	firmware = dfu_firmware_new ();
 	ret = dfu_firmware_parse_file (firmware, file_hex,
 				       DFU_FIRMWARE_PARSE_FLAG_NONE,
-				       NULL, &error);
+				       &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 144);

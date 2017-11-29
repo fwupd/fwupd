@@ -414,7 +414,6 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
  * @firmware: a #DfuFirmware
  * @file: a #GFile to load and parse
  * @flags: optional flags, e.g. %DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Parses a DFU firmware, which may contain an optional footer.
@@ -424,7 +423,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 gboolean
 dfu_firmware_parse_file (DfuFirmware *firmware, GFile *file,
 			 DfuFirmwareParseFlags flags,
-			 GCancellable *cancellable, GError **error)
+			 GError **error)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 	gchar *contents = NULL;
@@ -441,8 +440,7 @@ dfu_firmware_parse_file (DfuFirmware *firmware, GFile *file,
 	if (g_str_has_suffix (basename, ".xdfu"))
 		priv->cipher_kind = DFU_CIPHER_KIND_XTEA;
 
-	if (!g_file_load_contents (file, cancellable, &contents,
-				   &length, NULL, error))
+	if (!g_file_load_contents (file, NULL, &contents, &length, NULL, error))
 		return FALSE;
 	bytes = g_bytes_new_take (contents, length);
 	return dfu_firmware_parse_data (firmware, bytes, flags, error);
@@ -594,7 +592,6 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
  * dfu_firmware_write_file:
  * @firmware: a #DfuFirmware
  * @file: a #GFile
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Writes a DFU firmware with the optional footer.
@@ -602,8 +599,7 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
  * Return value: %TRUE for success
  **/
 gboolean
-dfu_firmware_write_file (DfuFirmware *firmware, GFile *file,
-			 GCancellable *cancellable, GError **error)
+dfu_firmware_write_file (DfuFirmware *firmware, GFile *file, GError **error)
 {
 	const guint8 *data;
 	gsize length = 0;
@@ -627,7 +623,7 @@ dfu_firmware_write_file (DfuFirmware *firmware, GFile *file,
 					FALSE,
 					G_FILE_CREATE_NONE,
 					NULL,
-					cancellable,
+					NULL, /* cancellable */
 					error);
 }
 
