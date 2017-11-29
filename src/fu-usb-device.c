@@ -205,6 +205,19 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 		}
 	}
 
+	/* get serial number */
+	if (fu_device_get_serial (FU_DEVICE (device)) == NULL) {
+		guint idx = g_usb_device_get_serial_number_index (priv->usb_device);
+		if (idx != 0x00) {
+			g_autofree gchar *tmp = NULL;
+			tmp = g_usb_device_get_string_descriptor (priv->usb_device,
+								  idx, error);
+			if (tmp == NULL)
+				return FALSE;
+			fu_device_set_serial (FU_DEVICE (device), tmp);
+		}
+	}
+
 	/* get version number, falling back to the USB device release */
 	if (fu_device_get_version (FU_DEVICE (device)) == NULL) {
 		guint idx;
