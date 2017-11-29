@@ -29,7 +29,6 @@
 #include "dfu-chunked.h"
 #include "dfu-cipher-xtea.h"
 #include "dfu-common.h"
-#include "dfu-context.h"
 #include "dfu-device-private.h"
 #include "dfu-firmware.h"
 #include "dfu-patch.h"

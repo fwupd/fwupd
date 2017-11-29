@@ -32,21 +32,11 @@
 
 G_BEGIN_DECLS
 
-#define DFU_DEVICE_REPLUG_TIMEOUT	5000	/* ms */
-
-GUsbDevice	*dfu_device_get_usb_dev			(DfuDevice	*device);
-
 void		 dfu_device_error_fixup			(DfuDevice	*device,
 							 GError		**error);
 guint		 dfu_device_get_download_timeout	(DfuDevice	*device);
 gchar		*dfu_device_get_quirks_as_string	(DfuDevice	*device);
 gchar		*dfu_device_get_attributes_as_string	(DfuDevice	*device);
-gboolean	 dfu_device_set_new_usb_dev		(DfuDevice	*device,
-							 GUsbDevice	*dev,
-							 GError		**error);
-void		 dfu_device_set_system_quirks		(DfuDevice	*device,
-							 FuQuirks	*quirks);
-FuQuirks	*dfu_device_get_system_quirks		(DfuDevice	*device);
 gboolean	 dfu_device_ensure_interface		(DfuDevice	*device,
 							 GError		**error);
 
