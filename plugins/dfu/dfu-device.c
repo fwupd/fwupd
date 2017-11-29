@@ -1114,6 +1114,42 @@ dfu_device_ensure_interface (DfuDevice *device, GError **error)
 }
 
 /**
+ * dfu_device_refresh_and_clear:
+ * @device: a #DfuDevice
+ * @error: a #GError, or %NULL
+ *
+ * Refreshes the cached properties on the DFU device. If there are any transers
+ * in progress thay are cancelled, and if there are any pending errors they are
+ * cancelled.
+ *
+ * Return value: %TRUE for success
+ **/
+gboolean
+dfu_device_refresh_and_clear (DfuDevice *device, GError **error)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	if (!dfu_device_refresh (device, error))
+		return FALSE;
+	switch (priv->state) {
+	case DFU_STATE_DFU_UPLOAD_IDLE:
+	case DFU_STATE_DFU_DNLOAD_IDLE:
+	case DFU_STATE_DFU_DNLOAD_SYNC:
+		g_debug ("aborting transfer %s", dfu_status_to_string (priv->status));
+		if (!dfu_device_abort (device, error))
+			return FALSE;
+		break;
+	case DFU_STATE_DFU_ERROR:
+		g_debug ("clearing error %s", dfu_status_to_string (priv->status));
+		if (!dfu_device_clear_status (device, error))
+			return FALSE;
+		break;
+	default:
+		break;
+	}
+	return TRUE;
+}
+
+/**
  * dfu_device_refresh:
  * @device: a #DfuDevice
  * @error: a #GError, or %NULL
@@ -1545,9 +1581,8 @@ dfu_device_get_interface (DfuDevice *device)
 }
 
 /**
- * dfu_device_open_full:
+ * dfu_device_open:
  * @device: a #DfuDevice
- * @flags: #DfuDeviceOpenFlags, e.g. %DFU_DEVICE_OPEN_FLAG_NONE
  * @error: a #GError, or %NULL
  *
  * Opens a DFU-capable device.
@@ -1555,7 +1590,7 @@ dfu_device_get_interface (DfuDevice *device)
  * Return value: %TRUE for success
  **/
 gboolean
-dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags, GError **error)
+dfu_device_open (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	GPtrArray *targets = dfu_device_get_targets (device);
@@ -1617,33 +1652,10 @@ dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags, GError **erro
 		priv->state = DFU_STATE_APP_IDLE;
 		priv->status = DFU_STATUS_OK;
 		priv->mode = DFU_MODE_RUNTIME;
-		flags |= DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH;
 	}
 
 	/* device locker is now valid */
 	priv->dev_locker = g_steal_pointer (&locker);
-
-	/* automatically abort any uploads or downloads */
-	if ((flags & DFU_DEVICE_OPEN_FLAG_NO_AUTO_REFRESH) == 0) {
-		if (!dfu_device_refresh (device, error))
-			return FALSE;
-		switch (priv->state) {
-		case DFU_STATE_DFU_UPLOAD_IDLE:
-		case DFU_STATE_DFU_DNLOAD_IDLE:
-		case DFU_STATE_DFU_DNLOAD_SYNC:
-			g_debug ("aborting transfer %s", dfu_status_to_string (priv->status));
-			if (!dfu_device_abort (device, error))
-				return FALSE;
-			break;
-		case DFU_STATE_DFU_ERROR:
-			g_debug ("clearing error %s", dfu_status_to_string (priv->status));
-			if (!dfu_device_clear_status (device, error))
-				return FALSE;
-			break;
-		default:
-			break;
-		}
-	}
 
 	/* set up target ready for use */
 	for (guint j = 0; j < targets->len; j++) {
@@ -1655,22 +1667,6 @@ dfu_device_open_full (DfuDevice *device, DfuDeviceOpenFlags flags, GError **erro
 	/* success */
 	priv->open_new_dev = TRUE;
 	return TRUE;
-}
-
-/**
- * dfu_device_open:
- * @device: a #DfuDevice
- * @flags: #DfuDeviceOpenFlags, e.g. %DFU_DEVICE_OPEN_FLAG_NONE
- * @error: a #GError, or %NULL
- *
- * Opens a DFU-capable device.
- *
- * Return value: %TRUE for success
- **/
-gboolean
-dfu_device_open (DfuDevice *device, GError **error)
-{
-	return dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NONE, error);
 }
 
 /**
@@ -1759,7 +1755,9 @@ dfu_device_set_new_usb_dev (DfuDevice *device, GUsbDevice *dev, GError **error)
 	/* reclaim */
 	if (priv->open_new_dev) {
 		g_debug ("automatically reopening device");
-		if (!dfu_device_open_full (device, DFU_DEVICE_OPEN_FLAG_NONE, error))
+		if (!dfu_device_open (device, error))
+			return FALSE;
+		if (!dfu_device_refresh_and_clear (device, error))
 			return FALSE;
 	}
 	return TRUE;
