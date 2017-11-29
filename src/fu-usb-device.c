@@ -287,8 +287,10 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 
 	/* allow replacement */
 	g_set_object (&priv->usb_device, usb_device);
-	if (usb_device == NULL)
+	if (usb_device == NULL) {
+		g_clear_object (&priv->usb_device_locker);
 		return;
+	}
 
 	/* add both device IDs */
 	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
