@@ -119,6 +119,24 @@ fu_usb_device_class_init (FuUsbDeviceClass *klass)
 }
 
 /**
+ * fu_usb_device_is_open:
+ * @device: A #FuUsbDevice
+ *
+ * Finds out if a USB device is currently open.
+ *
+ * Returns: %TRUE if the device is open.
+ *
+ * Since: 1.0.3
+ **/
+gboolean
+fu_usb_device_is_open (FuUsbDevice *device)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_USB_DEVICE (device), FALSE);
+	return priv->usb_device_locker != NULL;
+}
+
+/**
  * fu_usb_device_open:
  * @device: A #FuUsbDevice
  * @error: A #GError, or %NULL
