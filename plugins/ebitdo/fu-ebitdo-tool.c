@@ -66,10 +66,9 @@ main (int argc, char **argv)
 	devices = g_usb_context_get_devices (usb_ctx);
 	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_device = g_ptr_array_index (devices, i);
-		FuEbitdoDeviceKind ebitdo_kind;
-		ebitdo_kind = fu_ebitdo_device_kind_from_dev (usb_device);
-		if (ebitdo_kind != FU_EBITDO_DEVICE_KIND_UNKNOWN) {
-			dev = fu_ebitdo_device_new (ebitdo_kind, usb_device);
+		g_autoptr(FuEbitdoDevice) dev_tmp = fu_ebitdo_device_new (usb_device);
+		if (fu_usb_device_probe (FU_USB_DEVICE (dev_tmp), NULL)) {
+			dev = g_steal_pointer (&dev_tmp);
 			break;
 		}
 	}
