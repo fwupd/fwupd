@@ -356,6 +356,9 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 
 	g_return_if_fail (FU_IS_USB_DEVICE (device));
 
+	/* need to re-probe hardware */
+	priv->done_probe = FALSE;
+
 	/* allow replacement */
 	g_set_object (&priv->usb_device, usb_device);
 	if (usb_device == NULL) {
