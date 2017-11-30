@@ -16,7 +16,7 @@ makedepends=('meson' 'valgrind' 'docbook-utils' 'docbook-sgml' 'perl-sgmls'
 build() {
     cd ${pkgname}
     if [ -n "$CI" ]; then
-        export CI="-Dwerror=true"
+        export CI="--werror"
     fi
     arch-meson -D b_lto=false $CI ../build
 

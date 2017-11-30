@@ -76,6 +76,7 @@ test_args = [
   '-Wmissing-parameter-type',
   '-Wmissing-prototypes',
   '-Wnested-externs',
+  '-Wno-error=cpp',
   '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
   '-Wno-strict-aliasing',
@@ -122,12 +123,6 @@ add_global_link_arguments(
   global_link_args,
   language: 'c'
 )
-
-# ONLY for CI and only when using gcc, do not enable this for distro builds
-if get_option('werror') and meson.get_compiler('c').get_id() == 'gcc'
-  add_project_arguments('-Werror', language : 'c')
-  add_project_arguments('-Wno-error=cpp', language : 'c')
-endif
 
 # Needed for realpath(), syscall(), cfmakeraw(), etc.
 add_project_arguments('-D_DEFAULT_SOURCE', language : 'c')

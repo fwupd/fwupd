@@ -9,7 +9,7 @@ cp contrib/ci/s390x_cross.txt build/
 cd build
 meson .. \
 	--cross-file s390x_cross.txt \
-	-Dwerror=true \
+	--werror \
 	-Dplugin_uefi=false \
 	-Dplugin_uefi_labels=false \
 	-Dplugin_dell=false \

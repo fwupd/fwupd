@@ -16,7 +16,7 @@ popd
 chown nobody . -R
 
 # build the package and install it
-sudo -u nobody makepkg -e --noconfirm
+sudo -E -u nobody makepkg -e --noconfirm
 pacman -U --noconfirm *.pkg.tar.xz
 
 # move the package to working dir

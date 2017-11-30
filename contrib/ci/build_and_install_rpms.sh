@@ -7,7 +7,6 @@ git config tar.tar.xz.command "xz -c"
 mkdir -p build && pushd build
 rm -rf *
 meson .. \
-    -Dwerror=true \
     -Dgtkdoc=true \
     -Dman=true \
     -Dtests=true \
@@ -31,6 +30,10 @@ sed "s,#VERSION#,$VERSION,;
      s,enable_dummy 0,enable_dummy 1,;
      s,Source0.*,Source0:\tfwupd-$VERSION.tar.xz," \
 	contrib/fwupd.spec.in > build/fwupd.spec
+
+if [ -n "$CI" ]; then
+	sed -i "s,enable_ci 0,enable_ci 1,;" build/fwupd.spec
+fi
 
 #build RPM packages
 rpmbuild -ba build/fwupd.spec
