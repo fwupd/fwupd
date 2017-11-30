@@ -192,19 +192,8 @@ fu_plugin_verify (FuPlugin *plugin,
 gboolean
 fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {
-	ChDeviceMode mode;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuColorhugDevice) device = NULL;
-
-	/* ignore */
-	mode = ch_device_get_mode (usb_device);
-	if (mode == CH_DEVICE_MODE_UNKNOWN)
-		return TRUE;
-
-	/* this is using DFU now */
-	if (mode == CH_DEVICE_MODE_BOOTLOADER_PLUS ||
-	    mode == CH_DEVICE_MODE_FIRMWARE_PLUS)
-		return TRUE;
 
 	/* open the device */
 	device = fu_colorhug_device_new (usb_device);
