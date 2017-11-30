@@ -29,13 +29,6 @@
 #include "fu-plugin-private.h"
 
 static void
-_plugin_status_changed_cb (FuPlugin *plugin, FwupdStatus status, gpointer user_data)
-{
-	guint *cnt = (guint *) user_data;
-	(*cnt)++;
-}
-
-static void
 _plugin_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	GPtrArray **devices = (GPtrArray **) user_data;
@@ -46,7 +39,6 @@ static void
 fu_plugin_synapticsmst_func (void)
 {
 	gboolean ret;
-	gint cnt = 0;
 	guint device_count;
 	GPtrArray *devices = NULL;
 	g_autoptr(GError) error = NULL;
@@ -60,9 +52,6 @@ fu_plugin_synapticsmst_func (void)
 	g_signal_connect (plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &devices);
-	g_signal_connect (plugin, "status-changed",
-			  G_CALLBACK (_plugin_status_changed_cb),
-			  &cnt);
 	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_synapticsmst.so", &error);
 	g_assert_no_error (error);
 	g_assert (ret);

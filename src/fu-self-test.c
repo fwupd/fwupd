@@ -834,7 +834,7 @@ fu_plugin_module_func (void)
 				       FWUPD_INSTALL_FLAG_OFFLINE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (cnt, ==, 0);
+	g_assert_cmpint (cnt, ==, 1);
 
 	/* lets check the pending */
 	pending = fu_pending_new ();
@@ -853,7 +853,7 @@ fu_plugin_module_func (void)
 				       FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (cnt, ==, 3);
+	g_assert_cmpint (cnt, ==, 4);
 
 	/* check the new version */
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.4");

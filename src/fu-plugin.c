@@ -68,8 +68,6 @@ enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_REGISTER,
-	SIGNAL_STATUS_CHANGED,
-	SIGNAL_PERCENTAGE_CHANGED,
 	SIGNAL_RECOLDPLUG,
 	SIGNAL_SET_COLDPLUG_DELAY,
 	SIGNAL_LAST
@@ -520,41 +518,6 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 		 fu_plugin_get_name (plugin),
 		 fu_device_get_id (device));
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_REMOVED], 0, device);
-}
-
-/**
- * fu_plugin_set_status:
- * @plugin: A #FuPlugin
- * @status: A #FwupdStatus, e.g. #FWUPD_STATUS_DECOMPRESSING
- *
- * Sets the global state of the daemon according to the current plugin action.
- *
- * Since: 0.8.0
- **/
-void
-fu_plugin_set_status (FuPlugin *plugin, FwupdStatus status)
-{
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
-	g_signal_emit (plugin, signals[SIGNAL_STATUS_CHANGED], 0, status);
-}
-
-/**
- * fu_plugin_set_percentage:
- * @plugin: A #FuPlugin
- * @percentage: the percentage complete
- *
- * Sets the global completion of the daemon according to the current plugin
- * action.
- *
- * Since: 0.8.0
- **/
-void
-fu_plugin_set_percentage (FuPlugin *plugin, guint percentage)
-{
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
-	g_return_if_fail (percentage <= 100);
-	g_signal_emit (plugin, signals[SIGNAL_PERCENTAGE_CHANGED], 0,
-		       percentage);
 }
 
 /**
@@ -1110,7 +1073,7 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	filename = g_build_filename (dirname, tmpname, NULL);
 
 	/* just copy to the temp file */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_SCHEDULING);
+	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
 	if (!g_file_set_contents (filename,
 				  g_bytes_get_data (blob_cab, NULL),
 				  (gssize) g_bytes_get_size (blob_cab),
@@ -1473,18 +1436,6 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, device_register),
 			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
 			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
-	signals[SIGNAL_STATUS_CHANGED] =
-		g_signal_new ("status-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (FuPluginClass, status_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
-	signals[SIGNAL_PERCENTAGE_CHANGED] =
-		g_signal_new ("percentage-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (FuPluginClass, percentage_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
 	signals[SIGNAL_RECOLDPLUG] =
 		g_signal_new ("recoldplug",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
