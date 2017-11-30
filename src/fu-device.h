@@ -130,6 +130,12 @@ void		 fu_device_set_name			(FuDevice	*device,
 guint		 fu_device_get_remove_delay		(FuDevice	*device);
 void		 fu_device_set_remove_delay		(FuDevice	*device,
 							 guint		 remove_delay);
+FwupdStatus	 fu_device_get_status			(FuDevice	*device);
+void		 fu_device_set_status			(FuDevice	*device,
+							 FwupdStatus	 status);
+guint		 fu_device_get_progress			(FuDevice	*device);
+void		 fu_device_set_progress			(FuDevice	*device,
+							 guint		 progress);
 
 G_END_DECLS
 

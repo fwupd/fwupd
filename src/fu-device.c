@@ -46,10 +46,56 @@ typedef struct {
 	FuDevice			*alternate;
 	GHashTable			*metadata;
 	guint				 remove_delay;	/* ms */
+	FwupdStatus			 status;
+	guint				 progress;
 } FuDevicePrivate;
+
+enum {
+	PROP_0,
+	PROP_STATUS,
+	PROP_PROGRESS,
+	PROP_LAST
+};
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuDevice, fu_device, FWUPD_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_device_get_instance_private (o))
+
+static void
+fu_device_get_property (GObject *object, guint prop_id,
+			GValue *value, GParamSpec *pspec)
+{
+	FuDevice *device = FU_DEVICE (object);
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	switch (prop_id) {
+	case PROP_STATUS:
+		g_value_set_uint (value, priv->status);
+		break;
+	case PROP_PROGRESS:
+		g_value_set_uint (value, priv->progress);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_device_set_property (GObject *object, guint prop_id,
+			const GValue *value, GParamSpec *pspec)
+{
+	FuDevice *device = FU_DEVICE (object);
+	switch (prop_id) {
+	case PROP_STATUS:
+		fu_device_set_status (device, g_value_get_uint (value));
+		break;
+	case PROP_PROGRESS:
+		fu_device_set_progress (device, g_value_get_uint (value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
 
 const gchar *
 fu_device_get_equivalent_id (FuDevice *device)
@@ -484,6 +530,82 @@ fu_device_set_remove_delay (FuDevice *device, guint remove_delay)
 }
 
 /**
+ * fu_device_get_status:
+ * @device: A #FuDevice
+ *
+ * Returns what the device is currently doing.
+ *
+ * Returns: the status value, e.g. %FWUPD_STATUS_DEVICE_WRITE
+ *
+ * Since: 1.0.3
+ **/
+FwupdStatus
+fu_device_get_status (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), 0);
+	return priv->status;
+}
+
+/**
+ * fu_device_set_status:
+ * @device: A #FuDevice
+ * @status: the status value, e.g. %FWUPD_STATUS_DEVICE_WRITE
+ *
+ * Sets what the device is currently doing.
+ *
+ * Since: 1.0.3
+ **/
+void
+fu_device_set_status (FuDevice *device, FwupdStatus status)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	if (priv->status == status)
+		return;
+	priv->status = status;
+	g_object_notify (G_OBJECT (device), "status");
+}
+
+/**
+ * fu_device_get_progress:
+ * @device: A #FuDevice
+ *
+ * Returns the progress completion.
+ *
+ * Returns: value in percent
+ *
+ * Since: 1.0.3
+ **/
+guint
+fu_device_get_progress (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), 0);
+	return priv->progress;
+}
+
+/**
+ * fu_device_set_progress:
+ * @device: A #FuDevice
+ * @progress: the progress percentage value
+ *
+ * Sets the progress completion.
+ *
+ * Since: 1.0.3
+ **/
+void
+fu_device_set_progress (FuDevice *device, guint progress)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	if (priv->progress == progress)
+		return;
+	priv->progress = progress;
+	g_object_notify (G_OBJECT (device), "progress");
+}
+
+/**
  * fu_device_to_string:
  * @device: A #FuDevice
  *
@@ -526,13 +648,31 @@ static void
 fu_device_class_init (FuDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GParamSpec *pspec;
 	object_class->finalize = fu_device_finalize;
+	object_class->get_property = fu_device_get_property;
+	object_class->set_property = fu_device_set_property;
+
+	pspec = g_param_spec_uint ("status", NULL, NULL,
+				   FWUPD_STATUS_UNKNOWN,
+				   FWUPD_STATUS_LAST,
+				   FWUPD_STATUS_UNKNOWN,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_STATUS, pspec);
+
+	pspec = g_param_spec_uint ("progress", NULL, NULL,
+				   0, 100, 0,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PROGRESS, pspec);
 }
 
 static void
 fu_device_init (FuDevice *device)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (device);
+	priv->status = FWUPD_STATUS_IDLE;
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
 						g_free, g_free);
 }

@@ -663,9 +663,12 @@ fu_hwids_func (void)
 }
 
 static void
-_plugin_status_changed_cb (FuPlugin *plugin, FwupdStatus status, gpointer user_data)
+_plugin_status_changed_cb (FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
 	guint *cnt = (guint *) user_data;
+	g_debug ("device %s now %s",
+		 fu_device_get_id (device),
+		 fwupd_status_to_string (fu_device_get_status (device)));
 	(*cnt)++;
 	fu_test_loop_quit ();
 }
@@ -803,15 +806,11 @@ fu_plugin_module_func (void)
 	g_signal_connect (plugin, "device-register",
 			  G_CALLBACK (_plugin_device_register_cb),
 			  &device);
-	g_signal_connect (plugin, "status-changed",
-			  G_CALLBACK (_plugin_status_changed_cb),
-			  &cnt);
 	ret = fu_plugin_runner_coldplug (plugin, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* check we did the right thing */
-	g_assert_cmpint (cnt, ==, 0);
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==, "08d460be0f1f9f128413f816022a6439e0078018");
 	g_assert_cmpstr (fu_device_get_version_lowest (device), ==, "1.2.0");
@@ -823,6 +822,9 @@ fu_plugin_module_func (void)
 			 "Integrated Webcam™");
 
 	/* schedule an offline update */
+	g_signal_connect (device, "notify::status",
+			  G_CALLBACK (_plugin_status_changed_cb),
+			  &cnt);
 	mapped_file_fn = fu_test_get_filename (TESTDATADIR, "colorhug/firmware.bin");
 	mapped_file = g_mapped_file_new (mapped_file_fn, FALSE, &error);
 	g_assert_no_error (error);
@@ -832,7 +834,7 @@ fu_plugin_module_func (void)
 				       FWUPD_INSTALL_FLAG_OFFLINE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (cnt, ==, 1);
+	g_assert_cmpint (cnt, ==, 0);
 
 	/* lets check the pending */
 	pending = fu_pending_new ();
@@ -851,7 +853,7 @@ fu_plugin_module_func (void)
 				       FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (cnt, ==, 4);
+	g_assert_cmpint (cnt, ==, 3);
 
 	/* check the new version */
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.4");

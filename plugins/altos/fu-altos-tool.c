@@ -24,13 +24,9 @@
 #include "fu-altos-device.h"
 
 static void
-fu_altos_tool_write_progress_cb (goffset current, goffset total, gpointer user_data)
+fu_altos_tool_progress_cb (FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
-	gdouble percentage = -1.f;
-	if (total > 0)
-		percentage = (100.f * (gdouble) current) / (gdouble) total;
-	g_print ("Written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT " bytes [%.1f%%]\n",
-		 current, total, percentage);
+	g_print ("Written %u%%\n", fu_device_get_progress (device));
 }
 
 int
@@ -94,9 +90,10 @@ main (int argc, char **argv)
 
 	/* update with data blob */
 	fw = g_bytes_new (data, len);
+	g_signal_connect (dev, "notify::progress",
+			  G_CALLBACK (fu_altos_tool_progress_cb), NULL);
 	if (!fu_altos_device_write_firmware (dev, fw,
 					     FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_NONE,
-					     fu_altos_tool_write_progress_cb, NULL,
 					     &error)) {
 		g_print ("Failed to write firmware: %s\n", error->message);
 		return 1;

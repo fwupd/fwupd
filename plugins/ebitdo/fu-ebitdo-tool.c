@@ -26,14 +26,11 @@
 #include "fu-ebitdo-common.h"
 #include "fu-ebitdo-device.h"
 
+
 static void
-fu_ebitdo_write_progress_cb (goffset current, goffset total, gpointer user_data)
+fu_ebitdo_tool_progress_cb (FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
-	gdouble percentage = -1.f;
-	if (total > 0)
-		percentage = (100.f * (gdouble) current) / (gdouble) total;
-	g_print ("Written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT " bytes [%.1f%%]\n",
-		 current, total, percentage);
+	g_print ("Written %u%%\n", fu_device_get_progress (device));
 }
 
 int
@@ -127,9 +124,9 @@ main (int argc, char **argv)
 
 	/* update with data blob */
 	fw = g_bytes_new (data, len);
-	if (!fu_ebitdo_device_write_firmware (dev, fw,
-					      fu_ebitdo_write_progress_cb, NULL,
-					      &error)) {
+	g_signal_connect (dev, "notify::progress",
+			  G_CALLBACK (fu_ebitdo_tool_progress_cb), NULL);
+	if (!fu_ebitdo_device_write_firmware (dev, fw, &error)) {
 		g_print ("Failed to write firmware: %s\n", error->message);
 		return 1;
 	}

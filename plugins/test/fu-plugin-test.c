@@ -106,20 +106,20 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DECOMPRESSING);
+	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	for (guint i = 1; i <= 100; i++) {
 		g_usleep (1000);
-		fu_plugin_set_percentage (plugin, i);
+		fu_device_set_progress (device, i);
 	}
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 1; i <= 100; i++) {
 		g_usleep (1000);
-		fu_plugin_set_percentage (plugin, i);
+		fu_device_set_progress (device, i);
 	}
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
 	for (guint i = 1; i <= 100; i++) {
 		g_usleep (1000);
-		fu_plugin_set_percentage (plugin, i);
+		fu_device_set_progress (device, i);
 	}
 
 	/* upgrade, or downgrade */

@@ -108,13 +108,13 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 static void
 lu_write_progress_cb (goffset current, goffset total, gpointer user_data)
 {
-	FuPlugin *plugin = FU_PLUGIN (user_data);
+	FuDevice *device = FU_DEVICE (user_data);
 	gdouble percentage = -1.f;
 	if (total > 0)
 		percentage = (100.f * (gdouble) current) / (gdouble) total;
 	g_debug ("written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT " bytes [%.1f%%]",
 		 current, total, percentage);
-	fu_plugin_set_percentage (plugin, (guint) percentage);
+	fu_device_set_progress (device, (guint) percentage);
 }
 
 static LuDevice *
@@ -179,7 +179,7 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 		return TRUE;
 
 	/* wait for device to come back */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);
 	if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
 		g_debug ("doing detach in idle");
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
@@ -217,7 +217,7 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
 		return TRUE;
 
 	/* wait for device to come back */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);
 	if (lu_device_has_flag (device, LU_DEVICE_FLAG_ATTACH_WILL_REPLUG)) {
 		g_debug ("doing attach in idle");
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
@@ -272,9 +272,9 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* write the firmware */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
 	if (!lu_device_write_firmware (device, blob_fw,
-				       lu_write_progress_cb, plugin,
+				       lu_write_progress_cb, dev,
 				       error))
 		return FALSE;
 

@@ -152,12 +152,12 @@ fu_plugin_update (FuPlugin *plugin,
 	g_autofree gchar *fwfn = NULL;
 
 	/* decompress anything matching either glob */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_common_extract_archive (blob_fw, data->fw_dir, error))
 		return FALSE;
 
 	/* get the new VC build info */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
 	fwfn = g_build_filename (data->fw_dir,
 				 FU_PLUGIN_RPI_FIRMWARE_FILENAME,
 				 NULL);
