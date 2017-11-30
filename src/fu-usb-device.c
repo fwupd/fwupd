@@ -38,6 +38,7 @@ typedef struct
 {
 	GUsbDevice		*usb_device;
 	FuDeviceLocker		*usb_device_locker;
+	gboolean		 done_probe;
 } FuUsbDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuUsbDevice, fu_usb_device, FU_TYPE_DEVICE)
@@ -151,6 +152,10 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 				  g_usb_device_get_pid (priv->usb_device));
 	g_assert (ptask != NULL);
 
+	/* probe */
+	if (!fu_usb_device_probe (device, error))
+		return FALSE;
+
 	/* open */
 	locker = fu_device_locker_new (priv->usb_device, error);
 	if (locker == NULL)
@@ -250,6 +255,41 @@ fu_usb_device_close (FuUsbDevice *device, GError **error)
 	}
 
 	g_clear_object (&priv->usb_device_locker);
+	return TRUE;
+}
+
+/**
+ * fu_usb_device_probe:
+ * @device: A #FuUsbDevice
+ * @error: A #GError, or %NULL
+ *
+ * Probes a USB device, setting parameters on the object that does not need
+ * the device open or the interface claimed.
+ * If the device is not compatible then an error should be returned.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.0.2
+ **/
+gboolean
+fu_usb_device_probe (FuUsbDevice *device, GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
+	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_USB_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* already done */
+	if (priv->done_probe)
+		return TRUE;
+
+	/* subclassed */
+	if (klass->probe != NULL) {
+		if (!klass->probe (device, error))
+			return FALSE;
+	}
+	priv->done_probe = TRUE;
 	return TRUE;
 }
 

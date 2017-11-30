@@ -2927,8 +2927,13 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		g_autoptr(GError) error = NULL;
-		if (!fu_plugin_runner_usb_device_added (plugin_tmp, usb_device, &error))
+		if (!fu_plugin_runner_usb_device_added (plugin_tmp, usb_device, &error)) {
+			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug ("ignoring: %s", error->message);
+				continue;
+			}
 			g_warning ("failed to add USB device: %s", error->message);
+		}
 	}
 }
 
