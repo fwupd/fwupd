@@ -2718,24 +2718,6 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 	fu_engine_emit_changed (self);
 }
 
-static void
-fu_engine_plugin_status_changed_cb (FuPlugin *plugin,
-				    FwupdStatus status,
-				    gpointer user_data)
-{
-	FuEngine *self = (FuEngine *) user_data;
-	fu_engine_set_status (self, status);
-}
-
-static void
-fu_engine_plugin_percentage_changed_cb (FuPlugin *plugin,
-					guint percentage,
-					gpointer user_data)
-{
-	FuEngine *self = (FuEngine *) user_data;
-	fu_engine_set_percentage (self, percentage);
-}
-
 static gboolean
 fu_engine_recoldplug_delay_cb (gpointer user_data)
 {
@@ -2838,12 +2820,6 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 		g_signal_connect (plugin, "device-register",
 				  G_CALLBACK (fu_engine_plugin_device_register_cb),
-				  self);
-		g_signal_connect (plugin, "status-changed",
-				  G_CALLBACK (fu_engine_plugin_status_changed_cb),
-				  self);
-		g_signal_connect (plugin, "percentage-changed",
-				  G_CALLBACK (fu_engine_plugin_percentage_changed_cb),
 				  self);
 		g_signal_connect (plugin, "recoldplug",
 				  G_CALLBACK (fu_engine_plugin_recoldplug_cb),
