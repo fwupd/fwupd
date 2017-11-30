@@ -29,12 +29,12 @@
 gboolean
 fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {
-	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuSteelseriesDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	dev = fu_usb_device_new (usb_device);
-	locker = fu_device_locker_new (dev, error);
+	device = fu_steelseries_device_new (usb_device);
+	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	fu_plugin_device_add (plugin, dev);
+	fu_plugin_device_add (plugin, FU_DEVICE (device));
 	return TRUE;
 }
