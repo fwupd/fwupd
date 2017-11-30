@@ -199,7 +199,7 @@ static void
 fu_plugin_udev_remove (FuPlugin *plugin, GUdevDevice *device)
 {
 	FuDevice *dev;
-	g_autofree gchar *id = NULL;
+	const gchar *id;
 
 	/* interesting device? */
 	if (g_udev_device_get_property (device, "FWUPD_GUID") == NULL)
