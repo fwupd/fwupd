@@ -7,6 +7,7 @@
 
 %define alphatag                #ALPHATAG#
 
+%global enable_ci 0
 %global enable_tests 1
 %global enable_dummy 1
 
@@ -123,6 +124,9 @@ Data files for installed tests.
 %build
 
 %meson \
+%if 0%{?enable_ci}
+    --werror \
+%endif
     -Dgtkdoc=true \
     -Dman=true \
 %if 0%{?enable_tests}
