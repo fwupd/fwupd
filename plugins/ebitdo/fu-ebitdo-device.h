@@ -51,12 +51,10 @@ typedef enum {
 	FU_EBITDO_DEVICE_KIND_LAST
 } FuEbitdoDeviceKind;
 
-FuEbitdoDevice	*fu_ebitdo_device_new			(FuEbitdoDeviceKind kind,
-							 GUsbDevice	*usb_device);
+FuEbitdoDevice	*fu_ebitdo_device_new			(GUsbDevice	*usb_device);
 
 /* helpers */
 FuEbitdoDeviceKind fu_ebitdo_device_kind_from_string	(const gchar	*kind);
-FuEbitdoDeviceKind fu_ebitdo_device_kind_from_dev	(GUsbDevice	*usb_device);
 const gchar	*fu_ebitdo_device_kind_to_string	(FuEbitdoDeviceKind kind);
 
 /* getters */

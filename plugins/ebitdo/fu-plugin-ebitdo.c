@@ -29,23 +29,17 @@
 gboolean
 fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {
-	FuEbitdoDeviceKind ebitdo_kind;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuEbitdoDevice) dev = NULL;
-
-	/* ignore wrong hardware */
-	ebitdo_kind = fu_ebitdo_device_kind_from_dev (usb_device);
-	if (ebitdo_kind == FU_EBITDO_DEVICE_KIND_UNKNOWN)
-		return TRUE;
+	g_autoptr(FuEbitdoDevice) device = NULL;
 
 	/* open the device */
-	dev = fu_ebitdo_device_new (ebitdo_kind, usb_device);
-	locker = fu_device_locker_new (dev, error);
+	device = fu_ebitdo_device_new (usb_device);
+	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
 
-	/* insert to hash */
-	fu_plugin_device_add (plugin, FU_DEVICE (dev));
+	/* success */
+	fu_plugin_device_add (plugin, FU_DEVICE (device));
 	return TRUE;
 }
 

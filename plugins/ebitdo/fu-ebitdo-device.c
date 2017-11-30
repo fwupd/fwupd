@@ -600,45 +600,14 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw,
 	return TRUE;
 }
 
-/* now with kind and usb_device set */
-static void
-fu_ebitdo_device_init_real (FuEbitdoDevice *device)
-{
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
-	g_autofree gchar *name = NULL;
-
-	/* allowed, but requires manual bootloader step */
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
-
-	/* set name and vendor */
-	name = g_strdup_printf ("%s Gamepad",
-				fu_ebitdo_device_kind_to_string (priv->kind));
-	fu_device_set_name (FU_DEVICE (device), name);
-	fu_device_set_summary (FU_DEVICE (device),
-			       "A redesigned classic game controller");
-	fu_device_set_vendor (FU_DEVICE (device), "8Bitdo");
-
-	/* add a hardcoded icon name */
-	fu_device_add_icon (FU_DEVICE (device), "input-gaming");
-
-	/* only the bootloader can do the update */
-	if (priv->kind != FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
-		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_0483&PID_5750");
-		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
-		fu_device_add_flag (FU_DEVICE (device),
-				    FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
-	}
-}
-
 typedef struct {
 	guint16			 vid;
 	guint16			 pid;
 	FuEbitdoDeviceKind	 kind;
 } FuEbitdoVidPid;
 
-FuEbitdoDeviceKind
-fu_ebitdo_device_kind_from_dev (GUsbDevice *usb_device)
+static FuEbitdoDeviceKind
+fu_ebitdo_device_detect_kind (GUsbDevice *usb_device)
 {
 	const FuEbitdoVidPid vidpids[] = {
 		/* legacy VIDs */
@@ -665,10 +634,56 @@ fu_ebitdo_device_kind_from_dev (GUsbDevice *usb_device)
 	/* find correct kind */
 	for (guint j = 0; vidpids[j].vid != 0x0000; j++) {
 		if (g_usb_device_get_vid (usb_device) == vidpids[j].vid &&
-		    g_usb_device_get_pid (usb_device) == vidpids[j].pid)
+		    g_usb_device_get_pid (usb_device) == vidpids[j].pid) {
 			return vidpids[j].kind;
+		}
 	}
 	return FU_EBITDO_DEVICE_KIND_UNKNOWN;
+}
+
+static gboolean
+fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
+{
+	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (self);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	g_autofree gchar *name = NULL;
+
+	/* not supported */
+	priv->kind = fu_ebitdo_device_detect_kind (usb_device);
+	if (priv->kind == FU_EBITDO_DEVICE_KIND_UNKNOWN) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported with this device");
+		return FALSE;
+	}
+
+	/* allowed, but requires manual bootloader step */
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+
+	/* set name and vendor */
+	name = g_strdup_printf ("%s Gamepad",
+				fu_ebitdo_device_kind_to_string (priv->kind));
+	fu_device_set_name (FU_DEVICE (device), name);
+	fu_device_set_summary (FU_DEVICE (device),
+			       "A redesigned classic game controller");
+	fu_device_set_vendor (FU_DEVICE (device), "8Bitdo");
+
+	/* add a hardcoded icon name */
+	fu_device_add_icon (FU_DEVICE (device), "input-gaming");
+
+	/* only the bootloader can do the update */
+	if (priv->kind != FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
+		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_0483&PID_5750");
+		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
+		fu_device_add_flag (FU_DEVICE (device),
+				    FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static void
@@ -681,6 +696,7 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 {
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_usb_device->open = fu_ebitdo_device_open;
+	klass_usb_device->probe = fu_ebitdo_device_probe;
 }
 
 /**
@@ -693,15 +709,11 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
  * Since: 0.1.0
  **/
 FuEbitdoDevice *
-fu_ebitdo_device_new (FuEbitdoDeviceKind kind, GUsbDevice *usb_device)
+fu_ebitdo_device_new (GUsbDevice *usb_device)
 {
 	FuEbitdoDevice *device;
-	FuEbitdoDevicePrivate *priv;
 	device = g_object_new (FU_TYPE_EBITDO_DEVICE,
 			       "usb-device", usb_device,
 			       NULL);
-	priv = GET_PRIVATE (device);
-	priv->kind = kind;
-	fu_ebitdo_device_init_real (device);
 	return FU_EBITDO_DEVICE (device);
 }
