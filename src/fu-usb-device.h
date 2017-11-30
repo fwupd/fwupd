@@ -39,7 +39,9 @@ struct _FuUsbDeviceClass
 						 GError			**error);
 	gboolean	 (*close)		(FuUsbDevice		*device,
 						 GError			**error);
-	gpointer	__reserved[29];
+	gboolean	 (*probe)		(FuUsbDevice		*device,
+						 GError			**error);
+	gpointer	__reserved[28];
 };
 
 FuDevice	*fu_usb_device_new			(GUsbDevice	*usb_device);
@@ -49,6 +51,8 @@ void		 fu_usb_device_set_dev			(FuUsbDevice	*device,
 gboolean	 fu_usb_device_open			(FuUsbDevice	*device,
 							 GError		**error);
 gboolean	 fu_usb_device_close			(FuUsbDevice	*device,
+							 GError		**error);
+gboolean	 fu_usb_device_probe			(FuUsbDevice	*device,
 							 GError		**error);
 
 G_END_DECLS
