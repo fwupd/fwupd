@@ -523,7 +523,6 @@ dfu_target_avr_download_element (DfuTarget *target,
 	guint16 page_last = G_MAXUINT16;
 	guint32 address;
 	guint32 address_offset = 0x0;
-	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GPtrArray) packets = NULL;
 	const guint8 footer[] = { 0x00, 0x00, 0x00, 0x00,	/* CRC */
 				  16,				/* len */

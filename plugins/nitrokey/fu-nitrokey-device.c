@@ -229,9 +229,7 @@ fu_nitrokey_device_open (FuUsbDevice *device, GError **error)
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	NitrokeyGetDeviceStatusPayload payload;
 	guint8 buf_reply[NITROKEY_REPLY_DATA_LENGTH];
-	g_autofree gchar *platform_id_fixed = NULL;
 	g_autofree gchar *version = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	/* claim interface */
 	if (!g_usb_device_claim_interface (usb_device, 0x02, /* idx */

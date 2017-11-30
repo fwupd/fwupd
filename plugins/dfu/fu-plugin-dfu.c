@@ -112,7 +112,6 @@ fu_plugin_dfu_device_changed_cb (DfuContext *ctx,
 {
 	FuDevice *dev;
 	const gchar *platform_id;
-	g_autoptr(GError) error = NULL;
 
 	/* convert DfuDevice to FuDevice */
 	platform_id = dfu_device_get_platform_id (device);
@@ -249,7 +248,6 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	DfuDevice *device;
-	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -294,7 +292,6 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	DfuDevice *device;
-	g_autoptr(DfuFirmware) dfu_firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GError) error_local = NULL;
 
