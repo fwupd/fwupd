@@ -429,12 +429,23 @@ fu_altos_device_write_page (FuAltosDevice *device,
 	return TRUE;
 }
 
+static void
+fu_altos_device_set_progress (FuAltosDevice *device, guint current, guint total)
+{
+	gdouble percentage = -1.f;
+	if (total > 0)
+		percentage = (100.f * (gdouble) current) / (gdouble) total;
+	if (g_getenv ("FWUPD_ALTOS_VERBOSE") != NULL) {
+		g_debug ("written %u/%u bytes [%.1f%%]",
+			 current, total, percentage);
+	}
+	fu_device_set_progress (FU_DEVICE (device), (guint) percentage);
+}
+
 gboolean
 fu_altos_device_write_firmware (FuAltosDevice *device,
 				GBytes *fw,
 				FuAltosDeviceWriteFirmwareFlag flags,
-				GFileProgressCallback progress_cb,
-				gpointer progress_data,
 				GError **error)
 {
 	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
@@ -556,11 +567,7 @@ fu_altos_device_write_firmware (FuAltosDevice *device,
 		}
 
 		/* progress */
-		if (progress_cb != NULL) {
-			progress_cb ((goffset) i,
-				     (goffset) flash_len,
-				     progress_data);
-		}
+		fu_altos_device_set_progress (device, i, flash_len);
 		g_string_append_len (buf, str->str, str->len);
 	}
 
@@ -571,21 +578,14 @@ fu_altos_device_write_firmware (FuAltosDevice *device,
 	}
 
 	/* progress complete */
-	if (progress_cb != NULL) {
-		progress_cb ((goffset) flash_len,
-			     (goffset) flash_len,
-			     progress_data);
-	}
+	fu_altos_device_set_progress (device, flash_len, flash_len);
 
 	/* success */
 	return TRUE;
 }
 
 GBytes *
-fu_altos_device_read_firmware (FuAltosDevice *device,
-			       GFileProgressCallback progress_cb,
-			       gpointer progress_data,
-			       GError **error)
+fu_altos_device_read_firmware (FuAltosDevice *device, GError **error)
 {
 	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
 	guint flash_len;
@@ -636,11 +636,9 @@ fu_altos_device_read_firmware (FuAltosDevice *device,
 			return NULL;
 
 		/* progress */
-		if (progress_cb != NULL) {
-			progress_cb ((goffset) (i - priv->addr_base),
-				     (goffset) (priv->addr_bound - priv->addr_base),
-				     progress_data);
-		}
+		fu_altos_device_set_progress (device,
+					      i - priv->addr_base,
+					      priv->addr_bound - priv->addr_base);
 		g_string_append_len (buf, str->str, str->len);
 	}
 

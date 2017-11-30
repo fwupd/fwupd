@@ -49,12 +49,8 @@ gboolean	 fu_colorhug_device_set_flash_success	(FuColorhugDevice	*device,
 							 GError			**error);
 gboolean	 fu_colorhug_device_write_firmware	(FuColorhugDevice	*device,
 							 GBytes			*fw,
-							 GFileProgressCallback	 progress_cb,
-							 gpointer		 progress_data,
 							 GError			**error);
 gboolean	 fu_colorhug_device_verify_firmware	(FuColorhugDevice	*device,
-							 GFileProgressCallback	 progress_cb,
-							 gpointer		 progress_data,
 							 GError			**error);
 
 G_END_DECLS

@@ -31,9 +31,12 @@
 #include "fu-test.h"
 
 static void
-_plugin_status_changed_cb (FuPlugin *plugin, FwupdStatus status, gpointer user_data)
+_plugin_status_changed_cb (FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
 	guint *cnt = (guint *) user_data;
+	g_debug ("device %s now %s",
+		 fu_device_get_id (device),
+		 fwupd_status_to_string (fu_device_get_status (device)));
 	(*cnt)++;
 }
 
@@ -74,9 +77,6 @@ fu_plugin_raspberrypi_func (void)
 	g_signal_connect (plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &device);
-	g_signal_connect (plugin, "status-changed",
-			  G_CALLBACK (_plugin_status_changed_cb),
-			  &cnt);
 	ret = fu_plugin_runner_startup (plugin, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -105,6 +105,9 @@ fu_plugin_raspberrypi_func (void)
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
 	blob_fw = g_mapped_file_get_bytes (mapped_file);
+	g_signal_connect (device, "notify::status",
+			  G_CALLBACK (_plugin_status_changed_cb),
+			  &cnt);
 	ret = fu_plugin_runner_update (plugin, device, NULL, blob_fw,
 				       FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);

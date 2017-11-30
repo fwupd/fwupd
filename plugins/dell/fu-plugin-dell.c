@@ -900,7 +900,7 @@ fu_plugin_update (FuPlugin *plugin,
 	 * This won't actually cause any bad behavior because the real
 	 * payload GUID is extracted later on.
 	 */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_SCHEDULING);
+	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
 	rc = fwup_set_up_update_with_buf (re, 0,
 					  g_bytes_get_data (blob_fw, NULL),
 					  g_bytes_get_size (blob_fw));

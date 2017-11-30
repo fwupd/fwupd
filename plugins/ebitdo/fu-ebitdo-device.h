@@ -64,8 +64,6 @@ const guint32	*fu_ebitdo_device_get_serial		(FuEbitdoDevice	*device);
 /* object methods */
 gboolean	 fu_ebitdo_device_write_firmware	(FuEbitdoDevice	*device,
 							 GBytes		*fw,
-							 GFileProgressCallback progress_cb,
-							 gpointer	 progress_data,
 							 GError		**error);
 
 G_END_DECLS

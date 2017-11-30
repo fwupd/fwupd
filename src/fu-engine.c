@@ -110,24 +110,6 @@ fu_engine_emit_device_changed (FuEngine *self, FuDevice *device)
 	g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
 }
 
-static void
-fu_engine_device_added_cb (FuDeviceList *device_list, FuDevice *device, FuEngine *self)
-{
-	g_signal_emit (self, signals[SIGNAL_DEVICE_ADDED], 0, device);
-}
-
-static void
-fu_engine_device_removed_cb (FuDeviceList *device_list, FuDevice *device, FuEngine *self)
-{
-	g_signal_emit (self, signals[SIGNAL_DEVICE_REMOVED], 0, device);
-}
-
-static void
-fu_engine_device_changed_cb (FuDeviceList *device_list, FuDevice *device, FuEngine *self)
-{
-	fu_engine_emit_device_changed (self, device);
-}
-
 /**
  * fu_engine_get_status:
  * @self: A #FuEngine
@@ -179,6 +161,41 @@ fu_engine_set_percentage (FuEngine *self, guint percentage)
 
 	/* emit changed */
 	g_signal_emit (self, signals[SIGNAL_PERCENTAGE_CHANGED], 0, percentage);
+}
+
+static void
+fu_engine_progress_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
+{
+	fu_engine_set_percentage (self, fu_device_get_progress (device));
+}
+
+static void
+fu_engine_status_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
+{
+	fu_engine_set_status (self, fu_device_get_status (device));
+}
+
+static void
+fu_engine_device_added_cb (FuDeviceList *device_list, FuDevice *device, FuEngine *self)
+{
+	g_signal_connect (device, "notify::progress",
+			  G_CALLBACK (fu_engine_progress_notify_cb), self);
+	g_signal_connect (device, "notify::status",
+			  G_CALLBACK (fu_engine_status_notify_cb), self);
+	g_signal_emit (self, signals[SIGNAL_DEVICE_ADDED], 0, device);
+}
+
+static void
+fu_engine_device_removed_cb (FuDeviceList *device_list, FuDevice *device, FuEngine *self)
+{
+	g_signal_handlers_disconnect_by_data (device, self);
+	g_signal_emit (self, signals[SIGNAL_DEVICE_REMOVED], 0, device);
+}
+
+static void
+fu_engine_device_changed_cb (FuDeviceList *device_list, FuDevice *device, FuEngine *self)
+{
+	fu_engine_emit_device_changed (self, device);
 }
 
 static void
@@ -1333,6 +1350,7 @@ fu_engine_install (FuEngine *self,
 					   error_local->message);
 			}
 		}
+		fu_device_set_status (device, FWUPD_STATUS_IDLE);
 		return FALSE;
 	}
 	device = fu_device_list_find_by_id (self->device_list, device_id_orig, error);
@@ -1359,7 +1377,7 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* make the UI update */
-	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	fu_engine_emit_device_changed (self, device);
 	fu_engine_emit_changed (self);
