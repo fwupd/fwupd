@@ -1237,7 +1237,7 @@ static gboolean
 _open_cb (GObject *device, GError **error)
 {
 	g_assert_cmpstr (g_object_get_data (device, "state"), ==, "closed");
-	g_object_set_data (device, "state", "opened");
+	g_object_set_data (device, "state", (gpointer) "opened");
 	return TRUE;
 }
 
@@ -1245,7 +1245,7 @@ static gboolean
 _close_cb (GObject *device, GError **error)
 {
 	g_assert_cmpstr (g_object_get_data (device, "state"), ==, "opened");
-	g_object_set_data (device, "state", "closed-on-unref");
+	g_object_set_data (device, "state", (gpointer) "closed-on-unref");
 	return TRUE;
 }
 
@@ -1256,7 +1256,7 @@ fu_device_locker_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GObject) device = g_object_new (G_TYPE_OBJECT, NULL);
 
-	g_object_set_data (device, "state", "closed");
+	g_object_set_data (device, "state", (gpointer) "closed");
 	locker = fu_device_locker_new_full (device, _open_cb, _close_cb, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (locker);
