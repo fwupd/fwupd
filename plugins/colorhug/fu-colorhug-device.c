@@ -149,12 +149,24 @@ fu_colorhug_device_set_flash_success (FuColorhugDevice *device, GError **error)
 }
 
 static gboolean
-fu_colorhug_device_open (FuUsbDevice *device, GError **error)
+fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	FuColorhugDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	ChDeviceMode mode;
+
+	/* ignore */
+	mode = ch_device_get_mode (usb_device);
+	if (mode == CH_DEVICE_MODE_UNKNOWN ||
+	    mode == CH_DEVICE_MODE_BOOTLOADER_PLUS ||
+	    mode == CH_DEVICE_MODE_FIRMWARE_PLUS) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported with this device");
+		return FALSE;
+	}
 
 	/* add hardcoded bits */
 	fu_device_add_guid (FU_DEVICE (device), ch_device_get_guid (usb_device));
@@ -162,7 +174,6 @@ fu_colorhug_device_open (FuUsbDevice *device, GError **error)
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* set the display name */
-	mode = ch_device_get_mode (usb_device);
 	switch (mode) {
 	case CH_DEVICE_MODE_BOOTLOADER:
 	case CH_DEVICE_MODE_FIRMWARE:
@@ -201,6 +212,17 @@ fu_colorhug_device_open (FuUsbDevice *device, GError **error)
 		priv->is_bootloader = FALSE;
 		break;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_colorhug_device_open (FuUsbDevice *device, GError **error)
+{
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
+	FuColorhugDevicePrivate *priv = GET_PRIVATE (self);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 
 	/* set up progress callback */
 	priv->progress_cb = NULL;
@@ -351,6 +373,7 @@ fu_colorhug_device_class_init (FuColorhugDeviceClass *klass)
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	object_class->finalize = fu_colorhug_device_finalize;
 	klass_usb_device->open = fu_colorhug_device_open;
+	klass_usb_device->probe = fu_colorhug_device_probe;
 }
 
 /**
