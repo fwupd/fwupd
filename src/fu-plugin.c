@@ -371,6 +371,13 @@ fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 						      usb_device);
 		if (tmp != NULL)
 			fu_device_add_icon (device, tmp);
+
+		/* GUID */
+		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
+						      FU_QUIRKS_USB_GUID,
+						      usb_device);
+		if (tmp != NULL)
+			fu_device_add_guid (device, tmp);
 	}
 
 	g_debug ("emit added from %s: %s",

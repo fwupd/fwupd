@@ -418,7 +418,6 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
-		const gchar *quirk_str;
 		if (priv->targets->len == 0) {
 			g_debug ("no DFU runtime, so faking device");
 			priv->state = DFU_STATE_APP_IDLE;
@@ -428,17 +427,6 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 			priv->runtime_release = g_usb_device_get_release (usb_device);
 			priv->attributes = DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD |
 					   DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD;
-		}
-
-		/* inverse, but it's the best we can do */
-		quirk_str = fu_quirks_lookup_by_usb_device (priv->system_quirks,
-							    FU_QUIRKS_DFU_ALTERNATE_VIDPID,
-							    usb_device);
-		if (quirk_str != NULL && strlen (quirk_str) == 8) {
-			priv->runtime_vid = dfu_utils_buffer_parse_uint16 (quirk_str + 0);
-			priv->runtime_pid = dfu_utils_buffer_parse_uint16 (quirk_str + 4);
-			g_debug ("using VID_%04X&PID_%04X as the runtime",
-				 priv->runtime_vid, priv->runtime_pid);
 		}
 		return TRUE;
 	}

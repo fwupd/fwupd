@@ -228,7 +228,7 @@ fu_quirks_add_quirks_from_filename (FuQuirks *self, const gchar *filename, GErro
 			return FALSE;
 		for (guint j = 0; keys[j] != NULL; j++) {
 			g_autofree gchar *tmp = NULL;
-			tmp = g_key_file_get_string (kf, groups[i], keys[j], error);
+			tmp = g_key_file_get_value (kf, groups[i], keys[j], error);
 			if (tmp == NULL)
 				return FALSE;
 			g_hash_table_insert (self->hash,

@@ -117,19 +117,6 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 #define	FU_QUIRKS_DFU_JABRA_DETACH		"fwupd-dfu-jabra-detach"
 
 /**
- * FU_QUIRKS_DFU_ALTERNATE_VIDPID:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
- * @value: the uint16_t VID and uint16_t PID values, encoded in base 16, e.g. `0B0E0411`
- *
- * Assigns the USB vendor ID and product ID when the device is in the alternate
- * mode. For instance this can be used to set the application VID/PID when in DFU
- * mode or the bootloader VID/PID when in application mode.
- *
- * Since: 1.0.1
- */
-#define	FU_QUIRKS_DFU_ALTERNATE_VIDPID		"fwupd-dfu-alternate-vidpid"
-
-/**
  * FU_QUIRKS_DFU_AVR_CHIP_ID:
  * @key: the AVR chip ID, e.g. `0x58200204`
  * @value: the UM0424 sector description, e.g. `@Flash/0x2000/1*248Kg`
@@ -190,6 +177,18 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  * Since: 1.0.2
  */
 #define	FU_QUIRKS_USB_NAME			"fwupd-usb-name"
+
+/**
+ * FU_QUIRKS_USB_GUID:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`
+ *
+ * Adds an extra GUID for a specific hardware device. If the value provided is
+ * not already a suitable GUID, it will be converted to one.
+ *
+ * Since: 1.0.3
+ */
+#define	FU_QUIRKS_USB_GUID			"fwupd-usb-guid"
 
 G_END_DECLS
 
