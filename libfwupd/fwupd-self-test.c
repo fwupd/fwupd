@@ -146,6 +146,35 @@ fwupd_remote_baseuri_func (void)
 	g_assert_cmpstr (firmware_uri, ==, "https://my.fancy.cdn/firmware.cab");
 }
 
+/* verify we used the metadata path for firmware */
+static void
+fwupd_remote_nopath_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *firmware_uri = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(GError) error = NULL;
+
+	remote = fwupd_remote_new ();
+	fn = g_build_filename (TESTDATADIR, "tests", "firmware-nopath.conf", NULL);
+	ret = fwupd_remote_load_from_filename (remote, fn, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (fwupd_remote_get_kind (remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
+	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_GPG);
+	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
+	g_assert (fwupd_remote_get_enabled (remote));
+	g_assert_cmpstr (fwupd_remote_get_checksum (remote), ==, NULL);
+	g_assert_cmpstr (fwupd_remote_get_metadata_uri (remote), ==,
+			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz");
+	g_assert_cmpstr (fwupd_remote_get_metadata_uri_sig (remote), ==,
+			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz.asc");
+	firmware_uri = fwupd_remote_build_firmware_uri (remote, "firmware.cab", &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (firmware_uri, ==, "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.cab");
+}
+
 static void
 fwupd_remote_local_func (void)
 {
@@ -339,6 +368,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device", fwupd_device_func);
 	g_test_add_func ("/fwupd/remote{download}", fwupd_remote_download_func);
 	g_test_add_func ("/fwupd/remote{base-uri}", fwupd_remote_baseuri_func);
+	g_test_add_func ("/fwupd/remote{no-path}", fwupd_remote_nopath_func);
 	g_test_add_func ("/fwupd/remote{local}", fwupd_remote_local_func);
 	if (fwupd_has_system_bus ()) {
 		g_test_add_func ("/fwupd/client{remotes}", fwupd_client_remotes_func);
