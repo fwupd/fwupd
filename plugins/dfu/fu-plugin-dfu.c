@@ -60,7 +60,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **e
 		return FALSE;
 
 	/* ignore defective runtimes */
-	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME &&
+	if (dfu_device_is_runtime (device) &&
 	    dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_IGNORE_RUNTIME)) {
 		g_debug ("ignoring %s runtime", dfu_device_get_platform_id (device));
 		return TRUE;
@@ -93,7 +93,7 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 		return FALSE;
 
 	/* already in DFU mode */
-	if (dfu_device_get_mode (device) == DFU_MODE_DFU)
+	if (!dfu_device_is_runtime (device))
 		return TRUE;
 
 	/* detach and USB reset */
@@ -121,7 +121,7 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
 		return FALSE;
 
 	/* already in runtime mode */
-	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME)
+	if (dfu_device_is_runtime (device))
 		return TRUE;
 
 	/* attach it */

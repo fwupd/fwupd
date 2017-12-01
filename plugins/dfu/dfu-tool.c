@@ -1245,7 +1245,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 
 	/* APP -> DFU */
-	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
+	if (dfu_device_is_runtime (device)) {
 		g_debug ("detaching");
 		if (!dfu_device_detach (device, error))
 			return FALSE;
@@ -1374,7 +1374,7 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* APP -> DFU */
-	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
+	if (dfu_device_is_runtime (device)) {
 		if (!dfu_device_detach (device, error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device,
@@ -1794,7 +1794,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 
 	/* APP -> DFU */
-	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
+	if (dfu_device_is_runtime (device)) {
 		g_debug ("detaching");
 		if (!dfu_device_detach (device, error))
 			return FALSE;
@@ -1927,7 +1927,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_debug ("DFU: %s", str_debug);
 
 	/* APP -> DFU */
-	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
+	if (dfu_device_is_runtime (device)) {
 		if (!dfu_device_detach (device, error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device,
@@ -2042,6 +2042,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		GUsbDevice *usb_device;
 		GPtrArray *dfu_targets;
 		const gchar *tmp;
+		gboolean is_runtime;
 		guint16 transfer_size;
 		g_autofree gchar *attrs = NULL;
 		g_autofree gchar *quirks = NULL;
@@ -2109,11 +2110,10 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 			dfu_tool_print_indent (_("Serial"), tmp, 1);
 		}
 
-		tmp = dfu_mode_to_string (dfu_device_get_mode (device));
-		if (tmp != NULL) {
-			/* TRANSLATORS: device mode, e.g. runtime or DFU */
-			dfu_tool_print_indent (_("Mode"), tmp, 1);
-		}
+		/* TRANSLATORS: device mode, e.g. application runtime or DFU */
+		is_runtime = dfu_device_is_runtime (device);
+		dfu_tool_print_indent (_("Mode"), is_runtime ? _("Runtime") : _("DFU"), 1);
+
 		tmp = dfu_status_to_string (dfu_device_get_status (device));
 		/* TRANSLATORS: device status, e.g. "OK" */
 		dfu_tool_print_indent (_("Status"), tmp, 1);

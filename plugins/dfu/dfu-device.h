@@ -43,7 +43,6 @@ G_DECLARE_DERIVABLE_TYPE (DfuDevice, dfu_device, DFU, DEVICE, FuUsbDevice)
  * @DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT:	Ignore the device download timeout
  * @DFU_DEVICE_QUIRK_FORCE_DFU_MODE:		Force DFU mode
  * @DFU_DEVICE_QUIRK_USE_ANY_INTERFACE:		Use any interface for DFU
- * @DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO:		Fix up the protocol number
  * @DFU_DEVICE_QUIRK_NO_PID_CHANGE:		Accept the same VID:PID when changing modes
  * @DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD:	Do not do GetStatus when uploading
  * @DFU_DEVICE_QUIRK_NO_DFU_RUNTIME:		No DFU runtime interface is provided
@@ -61,7 +60,6 @@ typedef enum {
 	DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT	= (1 << 0),
 	DFU_DEVICE_QUIRK_FORCE_DFU_MODE		= (1 << 1),
 	DFU_DEVICE_QUIRK_USE_ANY_INTERFACE	= (1 << 2),
-	DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO	= (1 << 3),
 	DFU_DEVICE_QUIRK_NO_PID_CHANGE		= (1 << 4),
 	DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD	= (1 << 5),
 	DFU_DEVICE_QUIRK_NO_DFU_RUNTIME		= (1 << 6),
@@ -154,7 +152,7 @@ gboolean	 dfu_device_clear_status		(DfuDevice	*device,
 							 GError		**error);
 
 guint8		 dfu_device_get_interface		(DfuDevice	*device);
-DfuMode		 dfu_device_get_mode			(DfuDevice	*device);
+gboolean	 dfu_device_is_runtime			(DfuDevice	*device);
 DfuState	 dfu_device_get_state			(DfuDevice	*device);
 DfuStatus	 dfu_device_get_status			(DfuDevice	*device);
 guint16		 dfu_device_get_transfer_size		(DfuDevice	*device);

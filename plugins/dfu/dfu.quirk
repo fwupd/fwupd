@@ -40,27 +40,27 @@ USB\VID_0B0E&PID_2475=no-dfu-runtime
 USB\VID_0B0E&PID_2456=no-dfu-runtime
 
 # Jabra 410, 510, 710 and 810 (DFU mode)
-USB\VID_0B0E&PID_0411=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
-USB\VID_0B0E&PID_0421=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
-USB\VID_0B0E&PID_0982=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
-USB\VID_0B0E&PID_0971=no-pid-change|use-protocol-zero|ignore-upload|attach-extra-reset
+USB\VID_0B0E&PID_0411=no-pid-change|force-dfu-mode|ignore-upload|attach-extra-reset
+USB\VID_0B0E&PID_0421=no-pid-change|force-dfu-mode|ignore-upload|attach-extra-reset
+USB\VID_0B0E&PID_0982=no-pid-change|force-dfu-mode|ignore-upload|attach-extra-reset
+USB\VID_0B0E&PID_0971=no-pid-change|force-dfu-mode|ignore-upload|attach-extra-reset
 
 # Atmel AT90USB Bootloader
-USB\VID_03EB&PID_2FF7=use-any-interface|legacy-protocol
-USB\VID_03EB&PID_2FF9=use-any-interface|legacy-protocol
-USB\VID_03EB&PID_2FFA=use-any-interface|legacy-protocol
-USB\VID_03EB&PID_2FFB=use-any-interface|legacy-protocol
+USB\VID_03EB&PID_2FF7=use-any-interface|legacy-protocol|force-dfu-mode
+USB\VID_03EB&PID_2FF9=use-any-interface|legacy-protocol|force-dfu-mode
+USB\VID_03EB&PID_2FFA=use-any-interface|legacy-protocol|force-dfu-mode
+USB\VID_03EB&PID_2FFB=use-any-interface|legacy-protocol|force-dfu-mode
 
 # Atmel ATMEGA Bootloader
-USB\VID_03EB&PID_2FEE=use-any-interface|legacy-protocol
-USB\VID_03EB&PID_2FEF=use-any-interface|legacy-protocol
-USB\VID_03EB&PID_2FF0=use-any-interface|legacy-protocol
-USB\VID_03EB&PID_2FF2=use-any-interface|legacy-protocol
-USB\VID_03EB&PID_2FF3=use-any-interface|legacy-protocol
-USB\VID_03EB&PID_2FF4=use-any-interface|legacy-protocol
+USB\VID_03EB&PID_2FEE=use-any-interface|legacy-protocol|force-dfu-mode
+USB\VID_03EB&PID_2FEF=use-any-interface|legacy-protocol|force-dfu-mode
+USB\VID_03EB&PID_2FF0=use-any-interface|legacy-protocol|force-dfu-mode
+USB\VID_03EB&PID_2FF2=use-any-interface|legacy-protocol|force-dfu-mode
+USB\VID_03EB&PID_2FF3=use-any-interface|legacy-protocol|force-dfu-mode
+USB\VID_03EB&PID_2FF4=use-any-interface|legacy-protocol|force-dfu-mode
 
 # Atmel XMEGA Bootloader
-USB\VID_03EB&PID_2FE2=use-any-interface
+USB\VID_03EB&PID_2FE2=use-any-interface|force-dfu-mode
 
 [fwupd-dfu-force-version]
 

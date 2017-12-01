@@ -126,22 +126,6 @@ typedef enum {
 } DfuState;
 
 /**
- * DfuMode:
- * @DFU_MODE_UNKNOWN:				Unknown mode
- * @DFU_MODE_RUNTIME:				Runtime mode
- * @DFU_MODE_DFU:				Bootloader mode
- *
- * The mode enumerated kind.
- **/
-typedef enum {
-	DFU_MODE_UNKNOWN,
-	DFU_MODE_RUNTIME,
-	DFU_MODE_DFU,
-	/*< private >*/
-	DFU_MODE_LAST
-} DfuMode;
-
-/**
  * DfuCipherKind:
  * @DFU_CIPHER_KIND_NONE:			No cipher detected
  * @DFU_CIPHER_KIND_XTEA:			XTEA cipher detected
@@ -183,7 +167,6 @@ typedef enum {
 
 const gchar	*dfu_state_to_string			(DfuState	 state);
 const gchar	*dfu_status_to_string			(DfuStatus	 status);
-const gchar	*dfu_mode_to_string			(DfuMode	 mode);
 const gchar	*dfu_cipher_kind_to_string		(DfuCipherKind	 cipher_kind);
 const gchar	*dfu_version_to_string			(DfuVersion	 version);
 
