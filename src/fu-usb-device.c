@@ -152,6 +152,7 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
 	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
+	guint idx;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -181,7 +182,7 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 
 	/* get vendor */
 	if (fu_device_get_vendor (FU_DEVICE (device)) == NULL) {
-		guint idx = g_usb_device_get_manufacturer_index (priv->usb_device);
+		idx = g_usb_device_get_manufacturer_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
 			tmp = g_usb_device_get_string_descriptor (priv->usb_device,
@@ -194,7 +195,7 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 
 	/* get product */
 	if (fu_device_get_name (FU_DEVICE (device)) == NULL) {
-		guint idx = g_usb_device_get_product_index (priv->usb_device);
+		idx = g_usb_device_get_product_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
 			tmp = g_usb_device_get_string_descriptor (priv->usb_device,
@@ -207,7 +208,7 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 
 	/* get serial number */
 	if (fu_device_get_serial (FU_DEVICE (device)) == NULL) {
-		guint idx = g_usb_device_get_serial_number_index (priv->usb_device);
+		idx = g_usb_device_get_serial_number_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
 			tmp = g_usb_device_get_string_descriptor (priv->usb_device,
@@ -219,29 +220,23 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 	}
 
 	/* get version number, falling back to the USB device release */
-	if (fu_device_get_version (FU_DEVICE (device)) == NULL) {
-		guint idx;
-		idx = g_usb_device_get_custom_index (priv->usb_device,
-						     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-						     'F', 'W', NULL);
-		if (idx != 0x00) {
-			g_autofree gchar *tmp = NULL;
-			tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-			fu_device_set_version (FU_DEVICE (device), tmp);
-		}
+	idx = g_usb_device_get_custom_index (priv->usb_device,
+					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
+					     'F', 'W', NULL);
+	if (idx != 0x00) {
+		g_autofree gchar *tmp = NULL;
+		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
+		fu_device_set_version (FU_DEVICE (device), tmp);
 	}
 
 	/* get GUID from the descriptor if set */
-	if (fu_device_get_guid_default (FU_DEVICE (device)) == NULL) {
-		guint idx;
-		idx = g_usb_device_get_custom_index (priv->usb_device,
-						     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-						     'G', 'U', NULL);
-		if (idx != 0x00) {
-			g_autofree gchar *tmp = NULL;
-			tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-			fu_device_add_guid (FU_DEVICE (device), tmp);
-		}
+	idx = g_usb_device_get_custom_index (priv->usb_device,
+					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
+					     'G', 'U', NULL);
+	if (idx != 0x00) {
+		g_autofree gchar *tmp = NULL;
+		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
+		fu_device_add_guid (FU_DEVICE (device), tmp);
 	}
 
 	/* subclassed */
