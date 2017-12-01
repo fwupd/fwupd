@@ -54,7 +54,6 @@ static void dfu_device_finalize			 (GObject *object);
 typedef struct {
 	DfuDeviceAttributes	 attributes;
 	DfuDeviceQuirks		 quirks;
-	DfuMode			 mode;
 	DfuState		 state;
 	DfuStatus		 status;
 	GPtrArray		*targets;
@@ -286,49 +285,31 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data, GError **err
 	return TRUE;
 }
 
-static gboolean
-dfu_device_update_from_iface (DfuDevice *device, GUsbInterface *iface)
+static void
+dfu_device_guess_state_from_iface (DfuDevice *device, GUsbInterface *iface)
 {
-	DfuMode target_mode = DFU_MODE_UNKNOWN;
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 
-	/* runtime */
-	if (g_usb_interface_get_protocol (iface) == 0x01)
-		target_mode = DFU_MODE_RUNTIME;
-
-	/* DFU */
-	if (g_usb_interface_get_protocol (iface) == 0x02)
-		target_mode = DFU_MODE_DFU;
-
-	/* the DSO Nano has uses 0 instead of 2 when in DFU target_mode */
-	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO) &&
-	    g_usb_interface_get_protocol (iface) == 0x00)
-		target_mode = DFU_MODE_DFU;
-
-	/* nothing found */
-	if (target_mode == DFU_MODE_UNKNOWN)
-		return FALSE;
-
-	/* in DFU mode, the interface is supposed to be 0 */
-	if (target_mode == DFU_MODE_DFU && g_usb_interface_get_number (iface) != 0)
-		g_warning ("iface has to be 0 in DFU mode, got 0x%02i",
-			   g_usb_interface_get_number (iface));
-
-	/* some devices set the wrong mode */
-	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_FORCE_DFU_MODE))
-		target_mode = DFU_MODE_DFU;
-
-	/* save for reset */
-	if (target_mode == DFU_MODE_RUNTIME ||
-	    (priv->quirks & DFU_DEVICE_QUIRK_NO_PID_CHANGE)) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-		priv->runtime_vid = g_usb_device_get_vid (usb_device);
-		priv->runtime_pid = g_usb_device_get_pid (usb_device);
-		priv->runtime_release = g_usb_device_get_release (usb_device);
+	/* some devices use the wrong interface */
+	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_FORCE_DFU_MODE)) {
+		g_debug ("quirking device into DFU mode");
+		priv->state = DFU_STATE_DFU_IDLE;
+		return;
 	}
 
-	priv->mode = target_mode;
-	return TRUE;
+	/* runtime */
+	if (g_usb_interface_get_protocol (iface) == 0x01) {
+		priv->state = DFU_STATE_APP_IDLE;
+		return;
+	}
+
+	/* DFU */
+	if (g_usb_interface_get_protocol (iface) == 0x02) {
+		priv->state = DFU_STATE_DFU_IDLE;
+		return;
+	}
+	g_warning ("unable to guess initial device state from interface %u",
+		   g_usb_interface_get_protocol (iface));
 }
 
 static gboolean
@@ -424,7 +405,15 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 		/* add target */
 		priv->iface_number = g_usb_interface_get_number (iface);
 		g_ptr_array_add (priv->targets, target);
-		dfu_device_update_from_iface (device, iface);
+		dfu_device_guess_state_from_iface (device, iface);
+	}
+
+	/* save for reset */
+	if (priv->state == DFU_STATE_APP_IDLE ||
+	    (priv->quirks & DFU_DEVICE_QUIRK_NO_PID_CHANGE)) {
+		priv->runtime_vid = g_usb_device_get_vid (usb_device);
+		priv->runtime_pid = g_usb_device_get_pid (usb_device);
+		priv->runtime_release = g_usb_device_get_release (usb_device);
 	}
 
 	/* the device has no DFU runtime, so cheat */
@@ -432,7 +421,7 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 		const gchar *quirk_str;
 		if (priv->targets->len == 0) {
 			g_debug ("no DFU runtime, so faking device");
-			priv->mode = DFU_MODE_RUNTIME;
+			priv->state = DFU_STATE_APP_IDLE;
 			priv->iface_number = 0xff;
 			priv->runtime_vid = g_usb_device_get_vid (usb_device);
 			priv->runtime_pid = g_usb_device_get_pid (usb_device);
@@ -535,19 +524,22 @@ dfu_device_set_timeout (DfuDevice *device, guint timeout_ms)
 }
 
 /**
- * dfu_device_get_mode:
+ * dfu_device_is_runtime:
  * @device: a #GUsbDevice
  *
  * Gets the device mode.
  *
- * Return value: enumerated mode, e.g. %DFU_MODE_RUNTIME
+ * Return value: %TRUE if the device is in a runtime state
  **/
-DfuMode
-dfu_device_get_mode (DfuDevice *device)
+gboolean
+dfu_device_is_runtime (DfuDevice *device)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (DFU_IS_DEVICE (device), DFU_MODE_UNKNOWN);
-	return priv->mode;
+	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
+	if (priv->state == DFU_STATE_APP_IDLE ||
+	    priv->state == DFU_STATE_APP_DETACH)
+		return TRUE;
+	return FALSE;
 }
 
 /**
@@ -642,10 +634,6 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 		}
 		if (g_strcmp0 (split[i], "force-dfu-mode") == 0) {
 			priv->quirks |= DFU_DEVICE_QUIRK_FORCE_DFU_MODE;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "use-protocol-zero") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO;
 			continue;
 		}
 		if (g_strcmp0 (split[i], "no-pid-change") == 0) {
@@ -1188,11 +1176,7 @@ dfu_device_detach (DfuDevice *device, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* already in DFU mode */
-	switch (priv->state) {
-	case DFU_STATE_APP_IDLE:
-	case DFU_STATE_APP_DETACH:
-		break;
-	default:
+	if (!dfu_device_is_runtime (device)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1513,7 +1497,6 @@ dfu_device_open (FuUsbDevice *device, GError **error)
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		priv->state = DFU_STATE_APP_IDLE;
 		priv->status = DFU_STATUS_OK;
-		priv->mode = DFU_MODE_RUNTIME;
 	}
 
 	/* set up target ready for use */
@@ -1692,16 +1675,12 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* already in runtime mode */
-	switch (priv->state) {
-	case DFU_STATE_APP_IDLE:
-	case DFU_STATE_APP_DETACH:
+	if (dfu_device_is_runtime (device)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Already in application runtime mode");
 		return FALSE;
-	default:
-		break;
 	}
 
 	/* inform UI there's going to be a re-attach */
@@ -2106,8 +2085,6 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "ignore-polltimeout|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_FORCE_DFU_MODE)
 		g_string_append_printf (str, "force-dfu-mode|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_USE_PROTOCOL_ZERO)
-		g_string_append_printf (str, "use-protocol-zero|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_PID_CHANGE)
 		g_string_append_printf (str, "no-pid-change|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD)

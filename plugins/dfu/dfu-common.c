@@ -115,24 +115,6 @@ dfu_status_to_string (DfuStatus status)
 }
 
 /**
- * dfu_mode_to_string:
- * @mode: a #DfuMode, e.g. %DFU_MODE_RUNTIME
- *
- * Converts an enumerated value to a string.
- *
- * Return value: a string
- **/
-const gchar *
-dfu_mode_to_string (DfuMode mode)
-{
-	if (mode == DFU_MODE_RUNTIME)
-		return "runtime";
-	if (mode == DFU_MODE_DFU)
-		return "DFU";
-	return NULL;
-}
-
-/**
  * dfu_cipher_kind_to_string:
  * @cipher_kind: a #DfuCipherKind, e.g. %DFU_CIPHER_KIND_XTEA
  *

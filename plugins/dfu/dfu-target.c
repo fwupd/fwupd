@@ -558,7 +558,7 @@ dfu_target_use_alt_setting (DfuTarget *target, GError **error)
 		return FALSE;
 
 	/* use the correct setting */
-	if (dfu_device_get_mode (priv->device) == DFU_MODE_DFU) {
+	if (!dfu_device_is_runtime (priv->device)) {
 		if (!g_usb_device_set_interface_alt (usb_device,
 						     (gint) dfu_device_get_interface (priv->device),
 						     (gint) priv->alt_setting,
