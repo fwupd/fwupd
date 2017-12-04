@@ -393,6 +393,78 @@ g_usb_context_replug_helper_free (GUsbContextReplugHelper *replug_helper)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUsbContextReplugHelper, g_usb_context_replug_helper_free);
 
 gboolean
+lu_context_wait_for_peripheral_replug (LuContext *ctx,
+				       LuDevice *device,
+				       guint timeout_ms,
+				       GError **error)
+{
+	const guint max_tries = 10;
+	g_autoptr(LuHidppMsg) msg = lu_hidpp_msg_new();
+
+	g_return_val_if_fail (LU_IS_CONTEXT (ctx), FALSE);
+	g_return_val_if_fail (LU_IS_DEVICE_PERIPHERAL (device), FALSE);
+
+	/* signal we are waiting for a replug */
+	lu_context_waiting_for_peripheral_replug (ctx, device);
+
+	for (guint i = 0; i < max_tries; i++) {
+		if (!lu_device_hidpp_receive (device, msg, timeout_ms, error)) {
+			if (g_error_matches (*error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_TIMED_OUT)) {
+				g_clear_error (error);
+				continue;
+			}
+			return FALSE;
+		}
+
+		/* wait for a device connnection notification from the receiver */
+		if (msg->device_id == lu_device_get_hidpp_id (device) &&
+		    msg->sub_id == HIDPP_SUBID_DEVICE_CONNECTION &&
+		    (msg->data[0] & (1 << 6))) {
+			lu_context_peripheral_replugged (ctx, device);
+			return TRUE;
+		}
+	}
+
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_TIMED_OUT,
+		     "timed out while waiting for device to be replugged");
+
+	return FALSE;
+}
+
+gboolean
+lu_context_waiting_for_peripheral_replug (LuContext *ctx,
+					  LuDevice *device)
+{
+	gchar *platform_id;
+
+	g_return_val_if_fail (LU_IS_CONTEXT (ctx), FALSE);
+	g_return_val_if_fail (LU_IS_DEVICE_PERIPHERAL (device), FALSE);
+
+	platform_id = lu_device_get_platform_id (device);
+
+	g_hash_table_insert (ctx->hash_replug, g_strdup (platform_id), device);
+
+	return TRUE;
+}
+
+gboolean
+lu_context_peripheral_replugged (LuContext *ctx,
+				 LuDevice *device)
+{
+	g_return_val_if_fail (LU_IS_CONTEXT (ctx), FALSE);
+	g_return_val_if_fail (LU_IS_DEVICE_PERIPHERAL (device), FALSE);
+
+
+	g_hash_table_remove (ctx->hash_replug, lu_device_get_platform_id (device));
+
+	return TRUE;
+}
+
+gboolean
 lu_context_wait_for_replug (LuContext *ctx,
 			    LuDevice *device,
 			    guint timeout_ms,

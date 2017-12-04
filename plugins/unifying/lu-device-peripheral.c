@@ -655,6 +655,7 @@ lu_device_peripheral_write_firmware (LuDevice *device,
 				     gpointer progress_data,
 				     GError **error)
 {
+	LuDevicePeripheral *self = LU_DEVICE_PERIPHERAL (device);
 	gsize sz = 0;
 	const guint8 *data;
 	guint8 cmd = 0x04;
@@ -672,6 +673,10 @@ lu_device_peripheral_write_firmware (LuDevice *device,
 
 	/* flash hardware */
 	data = g_bytes_get_data (fw, &sz);
+
+	/* the fw_entity we are updating is the first arg of the dfuStart command */
+	self->cached_fw_entity = data[0];
+
 	for (gsize i = 0; i < sz / 16; i++) {
 
 		/* send packet and wait for reply */
@@ -724,10 +729,15 @@ lu_device_peripheral_attach (LuDevice *device, GError **error)
 	msg->flags = LU_HIDPP_MSG_FLAG_IGNORE_SUB_ID |
 		     LU_HIDPP_MSG_FLAG_IGNORE_SWID | // inferred?
 		     LU_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
-	if (!lu_device_hidpp_transfer (device, msg, error)) {
+
+	/* some devices don't answer when asked to reboot */
+	if (!lu_device_hidpp_send (device, msg, LU_DEVICE_TIMEOUT_MS, error)) {
 		g_prefix_error (error, "failed to restart device: ");
 		return FALSE;
 	}
+
+	g_debug ("waiting for device to restart");
+	g_usleep (G_USEC_PER_SEC);
 
 	/* reprobe */
 	if (!lu_device_probe (device, error))

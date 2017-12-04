@@ -181,21 +181,53 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 	/* wait for device to come back */
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);
 	if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
-		g_debug ("doing detach in idle");
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
-				 fu_plugin_unifying_detach_cb,
-				 g_object_ref (device),
-				 (GDestroyNotify) g_object_unref);
-		if (!lu_context_wait_for_replug (data->ctx,
-						 device,
-						 FU_DEVICE_TIMEOUT_REPLUG,
-						 error))
-			return FALSE;
+		if (LU_IS_DEVICE_PERIPHERAL (device)) {
+			if (!lu_device_detach (device, error))
+				return FALSE;
+
+			if (!lu_context_wait_for_peripheral_replug (data->ctx,
+								    device,
+								    FU_DEVICE_TIMEOUT_REPLUG,
+								    error))
+				return FALSE;
+		} else {
+			g_debug ("doing detach in idle");
+			g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+					 fu_plugin_unifying_detach_cb,
+					 g_object_ref (device),
+					 (GDestroyNotify) g_object_unref);
+			if (!lu_context_wait_for_replug (data->ctx,
+							 device,
+							 FU_DEVICE_TIMEOUT_REPLUG,
+							 error))
+				return FALSE;
+		}
 	} else {
 		g_debug ("doing detach in main thread");
 		if (!lu_device_detach (device, error))
 			return FALSE;
 	}
+
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_RESET)) {
+		/* device needs to be re-opened once it comes back online */
+		if (!lu_device_close (device, error)) {
+			return FALSE;
+		}
+
+		/* this signals we are waiting for this device to replug */
+		lu_context_waiting_for_peripheral_replug (data->ctx, device);
+
+		/* device comes back in DFU mode  */
+		lu_device_remove_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH);
+
+		/* FIXME: better way to signal to user? */
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_PENDING,
+			     "please turn your device off and then on and try again");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -215,6 +247,11 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
 	/* wait for it to appear back in runtime mode if required */
 	if (!lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_ATTACH))
 		return TRUE;
+
+	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_RESET)) {
+		/* we were waiting for a replug and it happened */
+		lu_context_peripheral_replugged (data->ctx, device);
+	}
 
 	/* wait for device to come back */
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);

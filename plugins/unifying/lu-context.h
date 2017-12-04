@@ -46,6 +46,17 @@ gboolean	 lu_context_wait_for_replug		(LuContext	*ctx,
 							 guint		 timeout_ms,
 							 GError		**error);
 
+gboolean	 lu_context_wait_for_peripheral_replug	(LuContext	*ctx,
+							 LuDevice	*device,
+							 guint		 timeout_ms,
+							 GError		**error);
+
+gboolean	 lu_context_waiting_for_peripheral_replug(LuContext	*ctx,
+							  LuDevice	*device);
+
+gboolean	 lu_context_peripheral_replugged	(LuContext	*ctx,
+							 LuDevice	*device);
+
 LuContext	*lu_context_new				(GError		**error);
 LuContext	*lu_context_new_full			(GUsbContext	*usb_ctx);
 
