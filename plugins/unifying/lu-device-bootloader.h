@@ -34,6 +34,8 @@ G_DECLARE_DERIVABLE_TYPE (LuDeviceBootloader, lu_device_bootloader, LU, DEVICE_B
 struct _LuDeviceBootloaderClass
 {
 	LuDeviceClass	parent_class;
+	gboolean	 (*probe)			(LuDevice		*device,
+							 GError			**error);
 };
 
 typedef enum {

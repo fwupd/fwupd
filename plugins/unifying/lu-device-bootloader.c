@@ -224,6 +224,46 @@ lu_device_bootloader_open (LuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gchar *
+lu_device_bootloader_get_bl_version (LuDevice *device, GError **error)
+{
+	guint16 build;
+
+	g_autoptr(LuDeviceBootloaderRequest) req = lu_device_bootloader_request_new ();
+	req->cmd = LU_DEVICE_BOOTLOADER_CMD_GET_BL_VERSION;
+	if (!lu_device_bootloader_request (device, req, error)) {
+		g_prefix_error (error, "failed to get firmware version: ");
+		return NULL;
+	}
+
+	/* BOTxx.yy_Bzzzz
+	 * 012345678901234 */
+	build = (guint16) lu_buffer_read_uint8 ((const gchar *) req->data + 10) << 8;
+	build += lu_buffer_read_uint8 ((const gchar *) req->data + 12);
+	return lu_format_version ("BOT",
+				  lu_buffer_read_uint8 ((const gchar *) req->data + 3),
+				  lu_buffer_read_uint8 ((const gchar *) req->data + 6),
+				  build);
+}
+
+static gboolean
+lu_device_bootloader_probe (LuDevice *device, GError **error)
+{
+	LuDeviceBootloaderClass *klass = LU_DEVICE_BOOTLOADER_GET_CLASS (device);
+	g_autofree gchar *version_bl = NULL;
+
+	/* get bootloader version */
+	version_bl = lu_device_bootloader_get_bl_version (device, error);
+	if (version_bl == NULL)
+		return FALSE;
+	lu_device_set_version_bl (device, version_bl);
+
+	/* subclassed further */
+	if (klass->probe != NULL)
+		return klass->probe (device, error);
+	return TRUE;
+}
+
 static gboolean
 lu_device_bootloader_close (LuDevice *device, GError **error)
 {
@@ -362,4 +402,5 @@ lu_device_bootloader_class_init (LuDeviceBootloaderClass *klass)
 	klass_device->attach = lu_device_bootloader_attach;
 	klass_device->open = lu_device_bootloader_open;
 	klass_device->close = lu_device_bootloader_close;
+	klass_device->probe = lu_device_bootloader_probe;
 }
