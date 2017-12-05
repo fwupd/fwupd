@@ -749,12 +749,40 @@ lu_device_get_guids (LuDevice *device)
 	return priv->guids;
 }
 
+static guint8
+lu_device_get_version_bl_minor (LuDevice *device)
+{
+	const gchar* version_bl = lu_device_get_version_bl (device);
+	guint major, minor, build;
+
+	if (version_bl == NULL)
+		return 0;
+
+	if (sscanf (version_bl, "BOT%u.%u_B%u", &major, &minor, &build) != 3)
+		/* bootloader version is malformed */
+		return 0;
+
+	return minor;
+}
+
 void
 lu_device_add_guid (LuDevice *device, const gchar *guid)
 {
 	LuDevicePrivate *priv = GET_PRIVATE (device);
 	if (!as_utils_guid_is_valid (guid)) {
-		g_ptr_array_add (priv->guids, as_utils_guid_from_string (guid));
+		guint8 bl_version = lu_device_get_version_bl_minor (device);
+		const g_autofree gchar* new_guid = NULL;
+
+		/* Reading the bl version is done here to avoid duplicating code
+		   between runtime and bootloader devices */
+		if (bl_version != 0) {
+			new_guid = g_strdup_printf ("%s:%02d", guid, bl_version);
+		} else {
+			new_guid = g_strdup (guid);
+		}
+
+		g_ptr_array_add (priv->guids, as_utils_guid_from_string (new_guid));
+		g_debug ("generated guid from %s", new_guid);
 		return;
 	}
 	g_ptr_array_add (priv->guids, g_strdup (guid));
@@ -825,6 +853,7 @@ lu_device_open (LuDevice *device, GError **error)
 	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (device);
 	LuDevicePrivate *priv = GET_PRIVATE (device);
 	g_autofree gchar *device_str = NULL;
+	g_autofree gchar *devid = NULL;
 
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -839,7 +868,6 @@ lu_device_open (LuDevice *device, GError **error)
 	/* USB */
 	if (priv->usb_device != NULL) {
 		guint8 num_interfaces = 0x01;
-		g_autofree gchar *devid = NULL;
 
 		/* open device */
 		if (priv->usb_device_locker == NULL) {
@@ -866,7 +894,6 @@ lu_device_open (LuDevice *device, GError **error)
 		devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 					 g_usb_device_get_vid (priv->usb_device),
 					 g_usb_device_get_pid (priv->usb_device));
-		lu_device_add_guid (device, devid);
 
 	/* HID */
 	} else if (priv->udev_device != NULL) {
@@ -891,6 +918,10 @@ lu_device_open (LuDevice *device, GError **error)
 		lu_device_close (device, NULL);
 		return FALSE;
 	}
+
+	/* the guid generation is delayed until the bootloader string is read during probe */
+	if (devid != NULL)
+		lu_device_add_guid (device, devid);
 
 	/* add known root for HID++2.0 */
 	if (lu_device_get_hidpp_version (device) >= 2.f) {

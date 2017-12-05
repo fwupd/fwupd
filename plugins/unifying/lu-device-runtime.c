@@ -63,6 +63,7 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version_fw = NULL;
+	g_autofree gchar *devid2 = NULL;
 
 	/* add a generic GUID */
 	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
@@ -85,7 +86,6 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 		}
 	}
 	if (release != 0xffff) {
-		g_autofree gchar *devid2 = NULL;
 		switch (release &= 0xff00) {
 		case 0x1200:
 			/* Nordic */
@@ -152,6 +152,8 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 		    (version_bl_major == 0x03 && config[8] >= 0x02)) {
 			lu_device_add_flag (device, LU_DEVICE_FLAG_REQUIRES_SIGNED_FIRMWARE);
 		}
+
+		lu_device_add_guid (device, devid2);
 	}
 
 	/* enable HID++ notifications */
