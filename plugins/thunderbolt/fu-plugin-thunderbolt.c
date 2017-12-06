@@ -444,20 +444,6 @@ fu_plugin_thunderbolt_trigger_update (GUdevDevice  *udevice,
 	return TRUE;
 }
 
-static void
-fu_plugin_thunderbolt_report_progress (FuDevice *device,
-				       gsize     nwritten,
-				       gsize     total)
-{
-	gdouble percentage;
-	percentage = (100.0 * (gdouble) nwritten) / (gdouble) total;
-
-	g_debug ("written %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes [%.1f%%]",
-		 nwritten, total, percentage);
-
-	fu_device_set_progress (device, (guint) percentage);
-}
-
 static gboolean
 fu_plugin_thunderbolt_write_firmware (FuDevice     *device,
 				      GUdevDevice  *udevice,
@@ -484,7 +470,7 @@ fu_plugin_thunderbolt_write_firmware (FuDevice     *device,
 
 	nwritten = 0;
 	fw_size = g_bytes_get_size (blob_fw);
-	fu_plugin_thunderbolt_report_progress (device, nwritten, fw_size);
+	fu_device_set_progress_full (device, nwritten, fw_size);
 
 	do {
 		g_autoptr(GBytes) fw_data = NULL;
@@ -501,7 +487,7 @@ fu_plugin_thunderbolt_write_firmware (FuDevice     *device,
 			return FALSE;
 
 		nwritten += n;
-		fu_plugin_thunderbolt_report_progress (device, nwritten, fw_size);
+		fu_device_set_progress_full (device, nwritten, fw_size);
 
 	} while (nwritten < fw_size);
 

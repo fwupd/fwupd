@@ -429,19 +429,6 @@ fu_altos_device_write_page (FuAltosDevice *device,
 	return TRUE;
 }
 
-static void
-fu_altos_device_set_progress (FuAltosDevice *device, guint current, guint total)
-{
-	gdouble percentage = -1.f;
-	if (total > 0)
-		percentage = (100.f * (gdouble) current) / (gdouble) total;
-	if (g_getenv ("FWUPD_ALTOS_VERBOSE") != NULL) {
-		g_debug ("written %u/%u bytes [%.1f%%]",
-			 current, total, percentage);
-	}
-	fu_device_set_progress (FU_DEVICE (device), (guint) percentage);
-}
-
 gboolean
 fu_altos_device_write_firmware (FuAltosDevice *device,
 				GBytes *fw,
@@ -567,7 +554,7 @@ fu_altos_device_write_firmware (FuAltosDevice *device,
 		}
 
 		/* progress */
-		fu_altos_device_set_progress (device, i, flash_len);
+		fu_device_set_progress_full (FU_DEVICE (device), i, flash_len);
 		g_string_append_len (buf, str->str, str->len);
 	}
 
@@ -578,7 +565,7 @@ fu_altos_device_write_firmware (FuAltosDevice *device,
 	}
 
 	/* progress complete */
-	fu_altos_device_set_progress (device, flash_len, flash_len);
+	fu_device_set_progress_full (FU_DEVICE (device), flash_len, flash_len);
 
 	/* success */
 	return TRUE;
@@ -636,9 +623,9 @@ fu_altos_device_read_firmware (FuAltosDevice *device, GError **error)
 			return NULL;
 
 		/* progress */
-		fu_altos_device_set_progress (device,
-					      i - priv->addr_base,
-					      priv->addr_bound - priv->addr_base);
+		fu_device_set_progress_full (FU_DEVICE (device),
+					     i - priv->addr_base,
+					     priv->addr_bound - priv->addr_base);
 		g_string_append_len (buf, str->str, str->len);
 	}
 

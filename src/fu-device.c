@@ -613,6 +613,25 @@ fu_device_set_progress (FuDevice *device, guint progress)
 }
 
 /**
+ * fu_device_set_progress_full:
+ * @device: A #FuDevice
+ * @progress_done: the bytes already done
+ * @progress_total: the total number of bytes
+ *
+ * Sets the progress completion using the raw progress values.
+ *
+ * Since: 1.0.3
+ **/
+void
+fu_device_set_progress_full (FuDevice *device, gsize progress_done, gsize progress_total)
+{
+	gdouble percentage = 0.f;
+	if (progress_total > 0)
+		percentage = (100.f * (gdouble) progress_done) / (gdouble) progress_total;
+	fu_device_set_progress (device, (guint) percentage);
+}
+
+/**
  * fu_device_to_string:
  * @device: A #FuDevice
  *

@@ -139,6 +139,9 @@ void		 fu_device_set_status			(FuDevice	*device,
 guint		 fu_device_get_progress			(FuDevice	*device);
 void		 fu_device_set_progress			(FuDevice	*device,
 							 guint		 progress);
+void		 fu_device_set_progress_full		(FuDevice	*device,
+							 gsize		 progress_done,
+							 gsize		 progress_total);
 
 G_END_DECLS
 
