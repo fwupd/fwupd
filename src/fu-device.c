@@ -54,6 +54,7 @@ enum {
 	PROP_0,
 	PROP_STATUS,
 	PROP_PROGRESS,
+	PROP_PLATFORM_ID,
 	PROP_LAST
 };
 
@@ -73,6 +74,9 @@ fu_device_get_property (GObject *object, guint prop_id,
 	case PROP_PROGRESS:
 		g_value_set_uint (value, priv->progress);
 		break;
+	case PROP_PLATFORM_ID:
+		g_value_set_string (value, fu_device_get_platform_id (device));
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -90,6 +94,9 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROGRESS:
 		fu_device_set_progress (device, g_value_get_uint (value));
+		break;
+	case PROP_PLATFORM_ID:
+		fu_device_set_platform_id (device, g_value_get_string (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -666,6 +673,11 @@ fu_device_class_init (FuDeviceClass *klass)
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PROGRESS, pspec);
+
+	pspec = g_param_spec_string ("platform-id", NULL, NULL, NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PLATFORM_ID, pspec);
 }
 
 static void
