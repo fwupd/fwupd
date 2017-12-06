@@ -85,9 +85,9 @@ lu_device_bootloader_nordic_probe (LuDevice *device, GError **error)
 	if (version_fw == NULL) {
 		g_warning ("failed to get firmware version: %s",
 			   error_local->message);
-		lu_device_set_version_fw (device, "RQR12.xx_Bxxxx");
+		fu_device_set_version (FU_DEVICE (device), "RQR12.xx_Bxxxx");
 	} else {
-		lu_device_set_version_fw (device, version_fw);
+		fu_device_set_version (FU_DEVICE (device), version_fw);
 	}
 
 	return TRUE;
@@ -189,11 +189,7 @@ lu_device_bootloader_nordic_erase (LuDevice *device, guint16 addr, GError **erro
 }
 
 static gboolean
-lu_device_bootloader_nordic_write_firmware (LuDevice *device,
-					    GBytes *fw,
-					    GFileProgressCallback progress_cb,
-					    gpointer progress_data,
-					    GError **error)
+lu_device_bootloader_nordic_write_firmware (LuDevice *device, GBytes *fw, GError **error)
 {
 	const LuDeviceBootloaderRequest *payload;
 	guint16 addr;
@@ -220,11 +216,7 @@ lu_device_bootloader_nordic_write_firmware (LuDevice *device,
 							payload->data,
 							error))
 			return FALSE;
-		if (progress_cb != NULL) {
-			progress_cb ((goffset) i * 32,
-				     (goffset) reqs->len * 32,
-				     progress_data);
-		}
+		fu_device_set_progress_full (FU_DEVICE (device), i * 32, reqs->len * 32);
 	}
 
 	/* send the first managed packet last, excluding the reset vector */
@@ -245,11 +237,7 @@ lu_device_bootloader_nordic_write_firmware (LuDevice *device,
 		return FALSE;
 
 	/* mark as complete */
-	if (progress_cb != NULL) {
-		progress_cb ((goffset) reqs->len * 32,
-			     (goffset) reqs->len * 32,
-			     progress_data);
-	}
+	fu_device_set_progress_full (FU_DEVICE (device), reqs->len * 32, reqs->len * 32);
 
 	/* success! */
 	return TRUE;

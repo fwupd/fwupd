@@ -32,11 +32,11 @@
 G_BEGIN_DECLS
 
 #define LU_TYPE_DEVICE (lu_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (LuDevice, lu_device, LU, DEVICE, GObject)
+G_DECLARE_DERIVABLE_TYPE (LuDevice, lu_device, LU, DEVICE, FuDevice)
 
 struct _LuDeviceClass
 {
-	GObjectClass	parent_class;
+	FuDeviceClass	parent_class;
 	gboolean	 (*open)		(LuDevice		*device,
 						 GError			**error);
 	gboolean	 (*close)		(LuDevice		*device,
@@ -51,8 +51,6 @@ struct _LuDeviceClass
 						 GError			**error);
 	gboolean	 (*write_firmware)	(LuDevice		*device,
 						 GBytes			*fw,
-						 GFileProgressCallback	 progress_cb,
-						 gpointer		 progress_data,
 						 GError			**error);
 };
 
@@ -99,7 +97,6 @@ typedef enum {
 LuDeviceKind	 lu_device_kind_from_string	(const gchar	*kind);
 const gchar	*lu_device_kind_to_string	(LuDeviceKind	 kind);
 
-gchar		*lu_device_to_string		(LuDevice		*device);
 LuDeviceKind	 lu_device_get_kind		(LuDevice		*device);
 guint8		 lu_device_get_hidpp_id		(LuDevice		*device);
 void		 lu_device_set_hidpp_id		(LuDevice		*device,
@@ -110,9 +107,6 @@ void		 lu_device_set_battery_level	(LuDevice		*device,
 gdouble		 lu_device_get_hidpp_version	(LuDevice		*device);
 void		 lu_device_set_hidpp_version	(LuDevice		*device,
 						 gdouble		 hidpp_version);
-const gchar	*lu_device_get_platform_id	(LuDevice		*device);
-void		 lu_device_set_platform_id	(LuDevice		*device,
-						 const gchar		*platform_id);
 gboolean	 lu_device_has_flag		(LuDevice		*device,
 						 LuDeviceFlags		 flag);
 void		 lu_device_add_flag		(LuDevice		*device,
@@ -120,25 +114,9 @@ void		 lu_device_add_flag		(LuDevice		*device,
 void		 lu_device_remove_flag		(LuDevice		*device,
 						 LuDeviceFlags		 flag);
 LuDeviceFlags	 lu_device_get_flags		(LuDevice		*device);
-const gchar	*lu_device_get_product		(LuDevice		*device);
-void		 lu_device_set_product		(LuDevice		*device,
-						 const gchar		*product);
-const gchar	*lu_device_get_vendor		(LuDevice		*device);
-void		 lu_device_set_vendor		(LuDevice		*device,
-						 const gchar		*vendor);
-const gchar	*lu_device_get_version_bl	(LuDevice		*device);
-void		 lu_device_set_version_bl	(LuDevice		*device,
-						 const gchar		*version_bl);
-const gchar	*lu_device_get_version_fw	(LuDevice		*device);
-void		 lu_device_set_version_fw	(LuDevice		*device,
-						 const gchar		*version_fw);
 const gchar	*lu_device_get_version_hw	(LuDevice		*device);
 void		 lu_device_set_version_hw	(LuDevice		*device,
 						 const gchar		*version_hw);
-const gchar	*lu_device_get_guid_default	(LuDevice		*device);
-GPtrArray	*lu_device_get_guids		(LuDevice		*device);
-void		 lu_device_add_guid		(LuDevice		*device,
-						 const gchar		*guid);
 GUdevDevice	*lu_device_get_udev_device	(LuDevice		*device);
 GUsbDevice	*lu_device_get_usb_device	(LuDevice		*device);
 
@@ -157,8 +135,6 @@ gboolean	 lu_device_poll			(LuDevice		*device,
 						 GError			**error);
 gboolean	 lu_device_write_firmware	(LuDevice		*device,
 						 GBytes			*fw,
-						 GFileProgressCallback	 progress_cb,
-						 gpointer		 progress_data,
 						 GError			**error);
 gboolean	 lu_device_hidpp_send		(LuDevice		*device,
 						 LuHidppMsg		*msg,

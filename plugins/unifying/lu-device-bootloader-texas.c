@@ -123,11 +123,7 @@ lu_device_bootloader_texas_clear_ram_buffer (LuDevice *device, guint16 addr, GEr
 }
 
 static gboolean
-lu_device_bootloader_texas_write_firmware (LuDevice *device,
-					   GBytes *fw,
-					   GFileProgressCallback progress_cb,
-					   gpointer progress_data,
-					   GError **error)
+lu_device_bootloader_texas_write_firmware (LuDevice *device, GBytes *fw, GError **error)
 {
 	const LuDeviceBootloaderRequest *payload;
 	g_autoptr(GPtrArray) reqs = NULL;
@@ -204,11 +200,7 @@ lu_device_bootloader_texas_write_firmware (LuDevice *device,
 		}
 
 		/* update progress */
-		if (progress_cb != NULL) {
-			progress_cb ((goffset) i * 32,
-				     (goffset) reqs->len * 32,
-				     progress_data);
-		}
+		fu_device_set_progress_full (FU_DEVICE (device), i * 32, reqs->len * 32);
 	}
 
 	/* check CRC */
@@ -216,11 +208,7 @@ lu_device_bootloader_texas_write_firmware (LuDevice *device,
 		return FALSE;
 
 	/* mark as complete */
-	if (progress_cb != NULL) {
-		progress_cb ((goffset) reqs->len * 32,
-			     (goffset) reqs->len * 32,
-			     progress_data);
-	}
+	fu_device_set_progress_full (FU_DEVICE (device), reqs->len * 32, reqs->len * 32);
 
 	/* success! */
 	return TRUE;
@@ -236,5 +224,5 @@ lu_device_bootloader_texas_class_init (LuDeviceBootloaderTexasClass *klass)
 static void
 lu_device_bootloader_texas_init (LuDeviceBootloaderTexas *device)
 {
-	lu_device_set_version_fw (LU_DEVICE (device), "RQR24.xx_Bxxxx");
+	fu_device_set_version (FU_DEVICE (device), "RQR24.xx_Bxxxx");
 }
