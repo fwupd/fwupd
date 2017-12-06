@@ -33,6 +33,8 @@ G_DECLARE_DERIVABLE_TYPE (FuDevice, fu_device, FU, DEVICE, FwupdDevice)
 struct _FuDeviceClass
 {
 	FwupdDeviceClass	 parent_class;
+	void			 (*to_string)		(FuDevice	*device,
+							 GString	*str);
 };
 
 /**
@@ -94,6 +96,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
 
 /* accessors */
+gchar		*fu_device_to_string			(FuDevice	*device);
 const gchar	*fu_device_get_equivalent_id		(FuDevice	*device);
 void		 fu_device_set_equivalent_id		(FuDevice	*device,
 							 const gchar	*equivalent_id);
