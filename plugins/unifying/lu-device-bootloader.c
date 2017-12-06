@@ -197,7 +197,7 @@ lu_device_bootloader_open (LuDevice *device, GError **error)
 	/* generate name */
 	name = g_strdup_printf ("Unifying [%s]",
 				lu_device_kind_to_string (lu_device_get_kind (device)));
-	lu_device_set_product (device, name);
+	fu_device_set_name (FU_DEVICE (device), name);
 
 	/* we can flash this */
 	lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);
@@ -256,7 +256,7 @@ lu_device_bootloader_probe (LuDevice *device, GError **error)
 	version_bl = lu_device_bootloader_get_bl_version (device, error);
 	if (version_bl == NULL)
 		return FALSE;
-	lu_device_set_version_bl (device, version_bl);
+	fu_device_set_version_bootloader (FU_DEVICE (device), version_bl);
 
 	/* subclassed further */
 	if (klass->probe != NULL)
@@ -393,6 +393,9 @@ lu_device_bootloader_request (LuDevice *device,
 static void
 lu_device_bootloader_init (LuDeviceBootloader *device)
 {
+	/* FIXME: we need something better */
+	fu_device_add_icon (FU_DEVICE (device), "preferences-desktop-keyboard");
+	fu_device_set_summary (FU_DEVICE (device), "A miniaturised USB wireless receiver (bootloader)");
 }
 
 static void

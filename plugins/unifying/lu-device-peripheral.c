@@ -31,57 +31,62 @@ struct _LuDevicePeripheral
 {
 	LuDevice		 parent_instance;
 	guint8			 cached_fw_entity;
-	LuDevicePeripheralKind	 kind;
 };
 
 G_DEFINE_TYPE (LuDevicePeripheral, lu_device_peripheral, LU_TYPE_DEVICE)
 
-LuDevicePeripheralKind
-lu_device_peripheral_get_kind (LuDevicePeripheral *self)
-{
-	return self->kind;
-}
+typedef enum {
+	LU_DEVICE_PERIPHERAL_KIND_KEYBOARD,
+	LU_DEVICE_PERIPHERAL_KIND_REMOTE_CONTROL,
+	LU_DEVICE_PERIPHERAL_KIND_NUMPAD,
+	LU_DEVICE_PERIPHERAL_KIND_MOUSE,
+	LU_DEVICE_PERIPHERAL_KIND_TOUCHPAD,
+	LU_DEVICE_PERIPHERAL_KIND_TRACKBALL,
+	LU_DEVICE_PERIPHERAL_KIND_PRESENTER,
+	LU_DEVICE_PERIPHERAL_KIND_RECEIVER,
+	LU_DEVICE_PERIPHERAL_KIND_LAST
+} LuDevicePeripheralKind;
 
-const gchar *
-lu_device_peripheral_get_icon (LuDevicePeripheral *self)
+static const gchar *
+lu_device_peripheral_get_icon (LuDevicePeripheralKind kind)
 {
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_KEYBOARD)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_KEYBOARD)
 		return "input-keyboard";
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_REMOTE_CONTROL)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_REMOTE_CONTROL)
 		return "pda"; // ish
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_NUMPAD)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_NUMPAD)
 		return "input-dialpad";
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_MOUSE)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_MOUSE)
 		return "input-mouse";
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_TOUCHPAD)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_TOUCHPAD)
 		return "input-touchpad";
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_TRACKBALL)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_TRACKBALL)
 		return "input-mouse"; // ish
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_PRESENTER)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_PRESENTER)
 		return "pda"; // ish
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_RECEIVER)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_RECEIVER)
 		return "preferences-desktop-keyboard";
 	return NULL;
 }
 
-const gchar *
-lu_device_peripheral_get_summary (LuDevicePeripheral *self)
+static const gchar *
+lu_device_peripheral_get_summary (LuDevicePeripheralKind kind)
 {
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_KEYBOARD)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_KEYBOARD)
 		return "Unifying Keyboard";
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_REMOTE_CONTROL)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_REMOTE_CONTROL)
 		return "Unifying Remote Control";
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_NUMPAD)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_NUMPAD)
 		return "Unifying Number Pad";
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_MOUSE)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_MOUSE)
 		return "Unifying Mouse";
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_TOUCHPAD)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_TOUCHPAD)
 		return "Unifying Touchpad";
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_TRACKBALL)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_TRACKBALL)
 		return "Unifying Trackball";
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_PRESENTER)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_PRESENTER)
 		return "Unifying Presenter";
-	if (self->kind == LU_DEVICE_PERIPHERAL_KIND_RECEIVER)
+	if (kind == LU_DEVICE_PERIPHERAL_KIND_RECEIVER)
 		return "Unifying Receiver";
 	return NULL;
 }
@@ -148,10 +153,10 @@ lu_device_peripheral_fetch_firmware_info (LuDevice *device, GError **error)
 					     build);
 		g_debug ("firmware entity 0x%02x version is %s", i, version);
 		if (msg->data[0] == 0) {
-			lu_device_set_version_fw (device, version);
+			fu_device_set_version (device, version);
 			self->cached_fw_entity = i;
 		} else if (msg->data[0] == 1) {
-			lu_device_set_version_bl (device, version);
+			fu_device_set_version_bootloader (FU_DEVICE (device), version);
 		} else if (msg->data[0] == 2) {
 			lu_device_set_version_hw (device, version);
 		}
@@ -255,7 +260,7 @@ lu_device_peripheral_ping (LuDevice *device, GError **error)
 				     G_IO_ERROR,
 				     G_IO_ERROR_HOST_UNREACHABLE,
 				     "device %s is unreachable: %s",
-				     lu_device_get_product (device),
+				     fu_device_get_name (device),
 				     error_local->message);
 			lu_device_remove_flag (device, LU_DEVICE_FLAG_ACTIVE);
 			return FALSE;
@@ -264,7 +269,7 @@ lu_device_peripheral_ping (LuDevice *device, GError **error)
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "failed to ping %s: %s",
-			     lu_device_get_product (device),
+			     fu_device_get_name (FU_DEVICE (device)),
 			     error_local->message);
 		return FALSE;
 	}
@@ -280,7 +285,6 @@ lu_device_peripheral_ping (LuDevice *device, GError **error)
 static gboolean
 lu_device_peripheral_probe (LuDevice *device, GError **error)
 {
-	LuDevicePeripheral *self = LU_DEVICE_PERIPHERAL (device);
 	guint8 idx;
 	const guint16 map_features[] = {
 		HIDPP_FEATURE_GET_DEVICE_NAME_TYPE,
@@ -322,7 +326,7 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 	/* try using HID++2.0 */
 	idx = lu_device_hidpp_feature_get_idx (device, HIDPP_FEATURE_GET_DEVICE_NAME_TYPE);
 	if (idx != 0x00) {
-		/* check the feature is available */
+		const gchar *tmp;
 		g_autoptr(LuHidppMsg) msg = lu_hidpp_msg_new ();
 		msg->report_id = HIDPP_REPORT_ID_SHORT;
 		msg->device_id = lu_device_get_hidpp_id (device);
@@ -332,7 +336,14 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 			g_prefix_error (error, "failed to get device type: ");
 			return FALSE;
 		}
-		self->kind = msg->data[0];
+
+		/* add nice-to-have data */
+		tmp = lu_device_peripheral_get_summary (msg->data[0]);
+		if (tmp != NULL)
+			fu_device_set_summary (FU_DEVICE (device), tmp);
+		tmp = lu_device_peripheral_get_icon (msg->data[0]);
+		if (tmp != NULL)
+			fu_device_add_icon (FU_DEVICE (device), tmp);
 	}
 	idx = lu_device_hidpp_feature_get_idx (device, HIDPP_FEATURE_DFU_CONTROL);
 	if (idx != 0x00) {
@@ -363,9 +374,9 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 	if (idx != 0x00) {
 		lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);
 		lu_device_add_flag (device, LU_DEVICE_FLAG_REQUIRES_ATTACH);
-		if (lu_device_get_version_fw (device) == NULL) {
+		if (fu_device_get_version (device) == NULL) {
 			g_debug ("repairing device in bootloader mode");
-			lu_device_set_version_fw (device, "MPKxx.xx_Bxxxx");
+			fu_device_set_version (FU_DEVICE (device), "MPKxx.xx_Bxxxx");
 		}
 	}
 
@@ -649,11 +660,7 @@ lu_device_peripheral_write_firmware_pkt (LuDevice *device,
 }
 
 static gboolean
-lu_device_peripheral_write_firmware (LuDevice *device,
-				     GBytes *fw,
-				     GFileProgressCallback progress_cb,
-				     gpointer progress_data,
-				     GError **error)
+lu_device_peripheral_write_firmware (LuDevice *device, GBytes *fw, GError **error)
 {
 	gsize sz = 0;
 	const guint8 *data;
@@ -691,8 +698,7 @@ lu_device_peripheral_write_firmware (LuDevice *device,
 		cmd = (cmd + 1) % 4;
 
 		/* update progress-bar */
-		if (progress_cb != NULL)
-			progress_cb ((goffset) i * 16, (goffset) sz, progress_data);
+		fu_device_set_progress_full (FU_DEVICE (device), i * 16, sz);
 	}
 
 	return TRUE;
