@@ -26,7 +26,6 @@
 
 G_BEGIN_DECLS
 
-gchar		*fu_device_to_string			(FuDevice	*device);
 const gchar	*fu_device_get_version_new		(FuDevice	*device);
 void		 fu_device_set_version_new		(FuDevice	*device,
 							 const gchar	*version_new);

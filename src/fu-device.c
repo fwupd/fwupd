@@ -626,6 +626,7 @@ fu_device_set_progress (FuDevice *device, guint progress)
 gchar *
 fu_device_to_string (FuDevice *device)
 {
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
 	FuDevicePrivate *priv = GET_PRIVATE (device);
 	GString *str = g_string_new ("");
 	g_autofree gchar *tmp = NULL;
@@ -648,6 +649,11 @@ fu_device_to_string (FuDevice *device)
 		const gchar *value = g_hash_table_lookup (priv->metadata, key);
 		fwupd_pad_kv_str (str, key, value);
 	}
+
+	/* subclassed */
+	if (klass->to_string != NULL)
+		klass->to_string (device, str);
+
 	return g_string_free (str, FALSE);
 }
 
