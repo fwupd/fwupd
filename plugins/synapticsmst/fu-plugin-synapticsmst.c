@@ -286,12 +286,7 @@ static void
 fu_synapticsmst_write_progress_cb (goffset current, goffset total, gpointer user_data)
 {
 	FuDevice *device = FU_DEVICE (user_data);
-	gdouble percentage = -1.f;
-	if (total > 0)
-		percentage = (100.f * (gdouble) current) / (gdouble) total;
-	g_debug ("written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT "[%.1f%%]",
-		 current, total, percentage);
-	fu_device_set_progress (device, (guint) percentage);
+	fu_device_set_progress_full (device, current, total);
 }
 
 gboolean

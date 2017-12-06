@@ -435,19 +435,6 @@ fu_ebitdo_device_get_serial (FuEbitdoDevice *device)
 	return priv->serial;
 }
 
-static void
-fu_ebitdo_device_set_progress (FuEbitdoDevice *device, guint32 current, guint32 total)
-{
-	gdouble percentage = -1.f;
-	if (total > 0)
-		percentage = (100.f * (gdouble) current) / (gdouble) total;
-	if (g_getenv ("FWUPD_EBITDO_VERBOSE") != NULL) {
-		g_debug ("written %" G_GUINT32_FORMAT "/%" G_GUINT32_FORMAT " bytes [%.1f%%]",
-			 current, total, percentage);
-	}
-	fu_device_set_progress (FU_DEVICE (device), (guint) percentage);
-}
-
 gboolean
 fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **error)
 {
@@ -533,7 +520,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 			g_debug ("writing %u bytes to 0x%04x of 0x%04x",
 				 chunk_sz, offset, payload_len);
 		}
-		fu_ebitdo_device_set_progress (device, offset, payload_len);
+		fu_device_set_progress_full (FU_DEVICE (device), offset, payload_len);
 		if (!fu_ebitdo_device_send (device,
 					 FU_EBITDO_PKT_TYPE_USER_CMD,
 					 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
@@ -558,7 +545,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 	}
 
 	/* mark as complete */
-	fu_ebitdo_device_set_progress (device, payload_len, payload_len);
+	fu_device_set_progress_full (FU_DEVICE (device), payload_len, payload_len);
 
 	/* set the "encode id" which is likely a checksum, bluetooth pairing
 	 * or maybe just security-through-obscurity -- also note:
