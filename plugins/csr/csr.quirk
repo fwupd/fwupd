@@ -1,0 +1,19 @@
+[FuCsrDevice]
+
+# AIAIAI H05 bluetooth headphones
+USB\VID_0A12&PID_1337=none
+
+[FuUsbDevice:name]
+USB\VID_0A12&PID_1337=H05
+
+[FuUsbDevice:summary]
+USB\VID_0A12&PID_1337=Bluetooth headphones
+
+[FuUsbDevice:icon]
+USB\VID_0A12&PID_1337=audio-headphones
+
+[FuUsbDevice:vendor]
+USB\VID_0A12&PID_1337=AIAIAI
+
+[FuUsbDevice:version]
+USB\VID_0A12&PID_1337&REV_2520=1.2
