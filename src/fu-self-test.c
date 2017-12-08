@@ -1338,6 +1338,22 @@ fu_progressbar_func (void)
 	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
 }
 
+static void
+fu_common_endian_func (void)
+{
+	guint8 buf[2];
+
+	fu_common_write_uint16 (buf, 0x1234, G_LITTLE_ENDIAN);
+	g_assert_cmpint (buf[0], ==, 0x34);
+	g_assert_cmpint (buf[1], ==, 0x12);
+	g_assert_cmpint (fu_common_read_uint16 (buf, G_LITTLE_ENDIAN), ==, 0x1234);
+
+	fu_common_write_uint16 (buf, 0x1234, G_BIG_ENDIAN);
+	g_assert_cmpint (buf[0], ==, 0x12);
+	g_assert_cmpint (buf[1], ==, 0x34);
+	g_assert_cmpint (fu_common_read_uint16 (buf, G_BIG_ENDIAN), ==, 0x1234);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -1372,6 +1388,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
+	g_test_add_func ("/fwupd/common{endian}", fu_common_endian_func);
 	g_test_add_func ("/fwupd/common{spawn)", fu_common_spawn_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	return g_test_run ();

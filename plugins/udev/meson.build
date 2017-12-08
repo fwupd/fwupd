@@ -36,6 +36,7 @@ executable(
   ],
   link_with : [
     fwupd,
+    libfwupdprivate,
   ],
   c_args : cargs,
 )

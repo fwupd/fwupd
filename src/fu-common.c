@@ -27,6 +27,7 @@
 #include <archive_entry.h>
 #include <archive.h>
 #include <errno.h>
+#include <string.h>
 
 #include "fwupd-error.h"
 
@@ -537,4 +538,108 @@ fu_common_spawn_sync (const gchar * const * argv,
 	fu_common_spawn_create_pollable_source (helper);
 	g_main_loop_run (helper->loop);
 	return g_subprocess_wait_check (subprocess, cancellable, error);
+}
+
+/**
+ * fu_common_write_uint16:
+ * @buf: A writable buffer
+ * @val_native: a value in host byte-order
+ * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ *
+ * Writes a value to a buffer using a specified endian.
+ **/
+void
+fu_common_write_uint16 (guint8 *buf, guint16 val_native, FuEndianType endian)
+{
+	guint16 val_hw;
+	switch (endian) {
+	case G_BIG_ENDIAN:
+		val_hw = GUINT16_TO_BE(val_native);
+		break;
+	case G_LITTLE_ENDIAN:
+		val_hw = GUINT16_TO_LE(val_native);
+		break;
+	default:
+		g_assert_not_reached ();
+	}
+	memcpy (buf, &val_hw, sizeof(val_hw));
+}
+
+/**
+ * fu_common_write_uint32:
+ * @buf: A writable buffer
+ * @val_native: a value in host byte-order
+ * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ *
+ * Writes a value to a buffer using a specified endian.
+ **/
+void
+fu_common_write_uint32 (guint8 *buf, guint32 val_native, FuEndianType endian)
+{
+	guint32 val_hw;
+	switch (endian) {
+	case G_BIG_ENDIAN:
+		val_hw = GUINT32_TO_BE(val_native);
+		break;
+	case G_LITTLE_ENDIAN:
+		val_hw = GUINT32_TO_LE(val_native);
+		break;
+	default:
+		g_assert_not_reached ();
+	}
+	memcpy (buf, &val_hw, sizeof(val_hw));
+}
+
+/**
+ * fu_common_read_uint16:
+ * @buf: A readable buffer
+ * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ *
+ * Read a value from a buffer using a specified endian.
+ *
+ * Returns: a value in host byte-order
+ **/
+guint16
+fu_common_read_uint16 (const guint8 *buf, FuEndianType endian)
+{
+	guint16 val_hw, val_native;
+	memcpy (&val_hw, buf, sizeof(val_hw));
+	switch (endian) {
+	case G_BIG_ENDIAN:
+		val_native = GUINT16_FROM_BE(val_hw);
+		break;
+	case G_LITTLE_ENDIAN:
+		val_native = GUINT16_FROM_LE(val_hw);
+		break;
+	default:
+		g_assert_not_reached ();
+	}
+	return val_native;
+}
+
+/**
+ * fu_common_read_uint32:
+ * @buf: A readable buffer
+ * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ *
+ * Read a value from a buffer using a specified endian.
+ *
+ * Returns: a value in host byte-order
+ **/
+guint32
+fu_common_read_uint32 (const guint8 *buf, FuEndianType endian)
+{
+	guint32 val_hw, val_native;
+	memcpy (&val_hw, buf, sizeof(val_hw));
+	switch (endian) {
+	case G_BIG_ENDIAN:
+		val_native = GUINT32_FROM_BE(val_hw);
+		break;
+	case G_LITTLE_ENDIAN:
+		val_native = GUINT32_FROM_LE(val_hw);
+		break;
+	default:
+		g_assert_not_reached ();
+	}
+	return val_native;
 }

@@ -240,14 +240,13 @@ dfu_target_avr32_select_memory_page (DfuTarget *target,
 				     GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
-	guint16 memory_page_le = GUINT16_TO_BE (memory_page);
 	guint8 buf[5];
 
 	/* format buffer */
 	buf[0] = DFU_AVR32_GROUP_SELECT;
 	buf[1] = DFU_AVR32_CMD_SELECT_MEMORY;
 	buf[2] = DFU_AVR32_MEMORY_PAGE;
-	memcpy (&buf[3], &memory_page_le, 2);
+	fu_common_write_uint16 (&buf[3], memory_page, G_BIG_ENDIAN);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
 	g_debug ("selecting memory page 0x%02x", (guint) memory_page);
 	if (!dfu_target_download_chunk (target, 0, data_in, error)) {
@@ -275,15 +274,13 @@ dfu_target_avr_read_memory (DfuTarget *target,
 			    GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
-	guint16 addr_start_le = GUINT16_TO_BE (addr_start);
-	guint16 addr_end_le = GUINT16_TO_BE (addr_end);
 	guint8 buf[6];
 
 	/* format buffer */
 	buf[0] = DFU_AVR32_GROUP_UPLOAD;
 	buf[1] = DFU_AVR32_CMD_READ_MEMORY;
-	memcpy (&buf[2], &addr_start_le, 2);
-	memcpy (&buf[4], &addr_end_le, 2);
+	fu_common_write_uint16 (&buf[2], addr_start, G_BIG_ENDIAN);
+	fu_common_write_uint16 (&buf[4], addr_end, G_BIG_ENDIAN);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
 	g_debug ("reading memory from 0x%04x to 0x%04x",
 		 (guint) addr_start, (guint) addr_end);
@@ -564,8 +561,6 @@ dfu_target_avr_download_element (DfuTarget *target,
 	/* process each chunk */
 	for (guint i = 0; i < packets->len; i++) {
 		const DfuChunkedPacket *packet = g_ptr_array_index (packets, i);
-		guint16 addr_start_le;
-		guint16 addr_end_le;
 		g_autofree guint8 *buf = NULL;
 		g_autoptr(GBytes) chunk_tmp = NULL;
 
@@ -587,13 +582,11 @@ dfu_target_avr_download_element (DfuTarget *target,
 		}
 
 		/* create packet with header and footer */
-		addr_start_le = GUINT16_TO_BE (packet->address);
-		addr_end_le = GUINT16_TO_BE (packet->address + packet->data_sz - 1);
 		buf = g_malloc0 (packet->data_sz + header_sz + sizeof(footer));
 		buf[0] = DFU_AVR32_GROUP_DOWNLOAD;
 		buf[1] = DFU_AVR32_CMD_PROGRAM_START;
-		memcpy (&buf[2], &addr_start_le, 2);
-		memcpy (&buf[4], &addr_end_le, 2);
+		fu_common_write_uint16 (&buf[2], packet->address, G_BIG_ENDIAN);
+		fu_common_write_uint16 (&buf[4], packet->address + packet->data_sz - 1, G_BIG_ENDIAN);
 		memcpy (&buf[header_sz], packet->data, packet->data_sz);
 		memcpy (&buf[header_sz + packet->data_sz], footer, sizeof(footer));
 

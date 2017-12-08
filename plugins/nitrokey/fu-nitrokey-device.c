@@ -99,7 +99,6 @@ nitrokey_execute_cmd (GUsbDevice *usb_device, guint8 command,
 	gboolean ret;
 	gsize actual_len = 0;
 	guint32 crc_tmp;
-	guint32 crc_le;
 	guint8 buf[64];
 
 	g_return_val_if_fail (buf_in_sz <= NITROKEY_REQUEST_DATA_LENGTH, FALSE);
@@ -111,8 +110,7 @@ nitrokey_execute_cmd (GUsbDevice *usb_device, guint8 command,
 	if (buf_in != NULL)
 		memcpy (&buf[1], buf_in, buf_in_sz);
 	crc_tmp = fu_nitrokey_perform_crc32 (buf, sizeof(buf) - 4);
-	crc_le = GUINT32_TO_LE (crc_tmp);
-	memcpy (&buf[NITROKEY_REQUEST_DATA_LENGTH + 1], &crc_le, sizeof(guint32));
+	fu_common_write_uint32 (&buf[NITROKEY_REQUEST_DATA_LENGTH + 1], crc_tmp, G_LITTLE_ENDIAN);
 
 	/* send request */
 	_dump_to_console ("request", buf, sizeof(buf));

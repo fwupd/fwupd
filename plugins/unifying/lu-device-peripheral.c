@@ -600,7 +600,7 @@ lu_device_peripheral_write_firmware_pkt (LuDevice *device,
 					 const guint8 *data,
 					 GError **error)
 {
-	guint32 packet_cnt_be;
+	guint32 packet_cnt;
 	g_autoptr(LuHidppMsg) msg = lu_hidpp_msg_new ();
 	g_autoptr(GError) error_local = NULL;
 
@@ -616,8 +616,8 @@ lu_device_peripheral_write_firmware_pkt (LuDevice *device,
 	}
 
 	/* check error */
-	memcpy (&packet_cnt_be, msg->data, 4);
-	g_debug ("packet_cnt=0x%04x", GUINT32_FROM_BE (packet_cnt_be));
+	packet_cnt = fu_common_read_uint32 (msg->data, G_BIG_ENDIAN);
+	g_debug ("packet_cnt=0x%04x", packet_cnt);
 	if (lu_device_peripheral_check_status (msg->data[4], &error_local))
 		return TRUE;
 

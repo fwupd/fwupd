@@ -23,6 +23,8 @@
 
 #include <string.h>
 
+#include "fu-common.h"
+
 #include "dfu-element.h"
 #include "dfu-firmware.h"
 #include "dfu-format-ihex.h"
@@ -331,10 +333,11 @@ dfu_firmware_to_ihex_bytes (GString *str, guint8 record_type,
 
 		/* need to offset */
 		if (address_offset != address_offset_last) {
-			guint16 tmp = GUINT16_TO_BE (address_offset);
+			guint8 buf[2];
+			fu_common_write_uint16 (buf, address_offset, G_BIG_ENDIAN);
 			dfu_firmware_ihex_emit_chunk (str, 0x0,
 						      DFU_INHX32_RECORD_TYPE_EXTENDED,
-						      (guint8 *) &tmp, 2);
+						      buf, 2);
 			address_offset_last = address_offset;
 		}
 		address_tmp &= 0xffff;
