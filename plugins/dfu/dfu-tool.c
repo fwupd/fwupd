@@ -252,7 +252,7 @@ dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 			return NULL;
 		}
 		device = dfu_device_new (usb_device);
-		dfu_device_set_system_quirks (device, priv->quirks);
+		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
 		dfu_device_set_usb_context (device, usb_context);
 		return device;
 	}
@@ -262,7 +262,7 @@ dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_device = g_ptr_array_index (devices, i);
 		g_autoptr(DfuDevice) device = dfu_device_new (usb_device);
-		dfu_device_set_system_quirks (device, priv->quirks);
+		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
 		dfu_device_set_usb_context (device, usb_context);
 		if (fu_usb_device_probe (FU_USB_DEVICE (device), NULL))
 			return g_steal_pointer (&device);
@@ -2054,7 +2054,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		/* device specific */
 		usb_device = g_ptr_array_index (devices, i);
 		device = dfu_device_new (usb_device);
-		dfu_device_set_system_quirks (device, priv->quirks);
+		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
 		dfu_device_set_usb_context (device, usb_context);
 		if (!fu_usb_device_probe (FU_USB_DEVICE (device), NULL))
 			continue;

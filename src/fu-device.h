@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <fwupd.h>
 
+#include "fu-quirks.h"
+
 G_BEGIN_DECLS
 
 #define FU_TYPE_DEVICE (fu_device_get_type ())
@@ -142,6 +144,9 @@ void		 fu_device_set_progress			(FuDevice	*device,
 void		 fu_device_set_progress_full		(FuDevice	*device,
 							 gsize		 progress_done,
 							 gsize		 progress_total);
+void		 fu_device_set_quirks			(FuDevice	*device,
+							 FuQuirks	*quirks);
+FuQuirks	*fu_device_get_quirks			(FuDevice	*device);
 
 G_END_DECLS
 

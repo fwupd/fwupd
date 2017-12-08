@@ -172,9 +172,6 @@ void		 dfu_device_set_transfer_size		(DfuDevice	*device,
 							 guint16	 transfer_size);
 void		 dfu_device_set_timeout			(DfuDevice	*device,
 							 guint		 timeout_ms);
-void		 dfu_device_set_system_quirks		(DfuDevice	*device,
-							 FuQuirks	*quirks);
-FuQuirks	*dfu_device_get_system_quirks		(DfuDevice	*device);
 void		 dfu_device_set_usb_context		(DfuDevice	*device,
 							 GUsbContext	*quirks);
 GUsbContext	*dfu_device_get_usb_context		(DfuDevice	*device);

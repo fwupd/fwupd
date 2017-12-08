@@ -53,7 +53,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **e
 
 	/* open the device */
 	device = dfu_device_new (usb_device);
-	dfu_device_set_system_quirks (device, fu_plugin_get_quirks (plugin));
+	fu_device_set_quirks (FU_DEVICE (device), fu_plugin_get_quirks (plugin));
 	dfu_device_set_usb_context (device, fu_plugin_get_usb_context (plugin));
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
