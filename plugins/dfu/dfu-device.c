@@ -57,7 +57,6 @@ typedef struct {
 	DfuState		 state;
 	DfuStatus		 status;
 	GPtrArray		*targets;
-	FuQuirks		*system_quirks;
 	GUsbContext		*usb_context;
 	gboolean		 done_upload_or_download;
 	gboolean		 claimed_interface;
@@ -213,8 +212,6 @@ dfu_device_finalize (GObject *object)
 
 	if (priv->usb_context != NULL)
 		g_object_unref (priv->usb_context);
-	if (priv->system_quirks != NULL)
-		g_object_unref (priv->system_quirks);
 	g_free (priv->chip_id);
 	g_ptr_array_unref (priv->targets);
 
@@ -317,6 +314,7 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
 	g_autoptr(GPtrArray) ifaces = NULL;
 
 	/* add all DFU-capable targets */
@@ -353,7 +351,7 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 		}
 
 		/* fix up the version */
-		quirk_str = fu_quirks_lookup_by_usb_device (priv->system_quirks,
+		quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
 							    FU_QUIRKS_DFU_FORCE_VERSION,
 							    usb_device);
 		if (quirk_str != NULL && strlen (quirk_str) == 4)
@@ -670,11 +668,11 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 static void
 dfu_device_apply_quirks (DfuDevice *device)
 {
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	if (priv->system_quirks != NULL && usb_device != NULL) {
+	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
+	if (system_quirks != NULL && usb_device != NULL) {
 		const gchar *quirk_str;
-		quirk_str = fu_quirks_lookup_by_usb_device (priv->system_quirks,
+		quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
 							    FU_QUIRKS_DFU,
 							    usb_device);
 		if (quirk_str != NULL)
@@ -696,20 +694,6 @@ dfu_device_get_usb_context (DfuDevice *device)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	return priv->usb_context;
-}
-
-void
-dfu_device_set_system_quirks (DfuDevice *device, FuQuirks *quirks)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_set_object (&priv->system_quirks, quirks);
-}
-
-FuQuirks *
-dfu_device_get_system_quirks (DfuDevice *device)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->system_quirks;
 }
 
 /**
@@ -1155,6 +1139,7 @@ gboolean
 dfu_device_detach (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	const guint16 timeout_reset_ms = 1000;
 	const gchar *quirk_str;
@@ -1184,7 +1169,7 @@ dfu_device_detach (DfuDevice *device, GError **error)
 	}
 
 	/* handle Jabra devices that need a magic HID packet */
-	quirk_str = fu_quirks_lookup_by_usb_device (priv->system_quirks,
+	quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
 						    FU_QUIRKS_DFU_JABRA_DETACH,
 						    usb_device);
 	if (quirk_str != NULL) {

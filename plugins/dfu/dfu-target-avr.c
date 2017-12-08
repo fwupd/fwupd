@@ -463,7 +463,7 @@ dfu_target_avr_setup (DfuTarget *target, GError **error)
 	/* set the alt-name using the device ID */
 	dfu_device_set_chip_id (dfu_target_get_device (target), chip_id);
 	device = dfu_target_get_device (target);
-	quirk_str = fu_quirks_lookup_by_id (dfu_device_get_system_quirks (device),
+	quirk_str = fu_quirks_lookup_by_id (fu_device_get_quirks (FU_DEVICE (device)),
 					    FU_QUIRKS_DFU_AVR_CHIP_ID,
 					    chip_id);
 	if (quirk_str == NULL) {

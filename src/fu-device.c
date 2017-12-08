@@ -44,6 +44,7 @@ typedef struct {
 	gchar				*version_new;
 	gchar				*filename_pending;
 	FuDevice			*alternate;
+	FuQuirks			*quirks;
 	GHashTable			*metadata;
 	guint				 remove_delay;	/* ms */
 	FwupdStatus			 status;
@@ -55,6 +56,7 @@ enum {
 	PROP_STATUS,
 	PROP_PROGRESS,
 	PROP_PLATFORM_ID,
+	PROP_QUIRKS,
 	PROP_LAST
 };
 
@@ -77,6 +79,9 @@ fu_device_get_property (GObject *object, guint prop_id,
 	case PROP_PLATFORM_ID:
 		g_value_set_string (value, fu_device_get_platform_id (device));
 		break;
+	case PROP_QUIRKS:
+		g_value_set_object (value, priv->quirks);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -97,6 +102,9 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PLATFORM_ID:
 		fu_device_set_platform_id (device, g_value_get_string (value));
+		break;
+	case PROP_QUIRKS:
+		fu_device_set_quirks (device, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -676,6 +684,44 @@ fu_device_to_string (FuDevice *device)
 	return g_string_free (str, FALSE);
 }
 
+/**
+ * fu_device_set_quirks:
+ * @device: A #FuDevice
+ * @quirks: A #FuQuirks, or %NULL
+ *
+ * Sets the optional quirk information which may be useful to this device.
+ * This is typically set after the #FuDevice has been created, but before
+ * the device has been opened or probed.
+ *
+ * Since: 1.0.3
+ **/
+void
+fu_device_set_quirks (FuDevice *device, FuQuirks *quirks)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_set_object (&priv->quirks, quirks);
+	g_object_notify (G_OBJECT (device), "quirks");
+}
+
+/**
+ * fu_device_get_quirks:
+ * @device: A #FuDevice
+ *
+ * Gets the quirk information which may be useful to this device.
+ *
+ * Returns: (transfer none): the #FuQuirks object, or %NULL
+ *
+ * Since: 1.0.3
+ **/
+FuQuirks *
+fu_device_get_quirks (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->quirks;
+}
+
 static void
 fu_device_class_init (FuDeviceClass *klass)
 {
@@ -703,6 +749,12 @@ fu_device_class_init (FuDeviceClass *klass)
 				     G_PARAM_READWRITE |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PLATFORM_ID, pspec);
+
+	pspec = g_param_spec_object ("quirks", NULL, NULL,
+				     FU_TYPE_QUIRKS,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_QUIRKS, pspec);
 }
 
 static void
@@ -722,6 +774,8 @@ fu_device_finalize (GObject *object)
 
 	if (priv->alternate != NULL)
 		g_object_unref (priv->alternate);
+	if (priv->quirks != NULL)
+		g_object_unref (priv->quirks);
 	g_hash_table_unref (priv->metadata);
 	g_free (priv->equivalent_id);
 	g_free (priv->version_new);
