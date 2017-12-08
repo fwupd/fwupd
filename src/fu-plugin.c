@@ -365,6 +365,13 @@ fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 		if (tmp != NULL)
 			fu_device_set_summary (device, tmp);
 
+		/* vendor */
+		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
+						      FU_QUIRKS_USB_VENDOR,
+						      usb_device);
+		if (tmp != NULL)
+			fu_device_set_vendor (device, tmp);
+
 		/* icon */
 		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
 						      FU_QUIRKS_USB_ICON,

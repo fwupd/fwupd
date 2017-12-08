@@ -190,6 +190,17 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  */
 #define	FU_QUIRKS_USB_GUID			"fwupd-usb-guid"
 
+/**
+ * FU_QUIRKS_USB_VENDOR:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the vendor, e.g. `Hughski Limited`
+ *
+ * Sets a vendor name for a specific hardware device.
+ *
+ * Since: 1.0.3
+ */
+#define	FU_QUIRKS_USB_VENDOR			"fwupd-usb-vendor"
+
 G_END_DECLS
 
 #endif /* __FU_QUIRKS_H */
