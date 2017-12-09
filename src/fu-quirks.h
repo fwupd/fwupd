@@ -154,7 +154,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.2
  */
-#define	FU_QUIRKS_USB_SUMMARY			"fwupd-usb-summary"
+#define	FU_QUIRKS_USB_SUMMARY			"FuUsbDevice:summary"
 
 /**
  * FU_QUIRKS_USB_ICON:
@@ -165,7 +165,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.2
  */
-#define	FU_QUIRKS_USB_ICON			"fwupd-usb-icon"
+#define	FU_QUIRKS_USB_ICON			"FuUsbDevice:icon"
 
 /**
  * FU_QUIRKS_USB_NAME:
@@ -176,7 +176,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.2
  */
-#define	FU_QUIRKS_USB_NAME			"fwupd-usb-name"
+#define	FU_QUIRKS_USB_NAME			"FuUsbDevice:name"
 
 /**
  * FU_QUIRKS_USB_GUID:
@@ -188,7 +188,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.3
  */
-#define	FU_QUIRKS_USB_GUID			"fwupd-usb-guid"
+#define	FU_QUIRKS_USB_GUID			"FuUsbDevice:guid"
 
 /**
  * FU_QUIRKS_USB_VENDOR:
@@ -199,7 +199,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.3
  */
-#define	FU_QUIRKS_USB_VENDOR			"fwupd-usb-vendor"
+#define	FU_QUIRKS_USB_VENDOR			"FuUsbDevice:vendor"
 
 G_END_DECLS
 

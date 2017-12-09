@@ -341,51 +341,8 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 void
 fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-
 	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_return_if_fail (FU_IS_DEVICE (device));
-
-	/* merge any quirks */
-	if (FU_IS_USB_DEVICE (device)) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-		const gchar *tmp;
-
-		/* name */
-		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
-						      FU_QUIRKS_USB_NAME,
-						      usb_device);
-		if (tmp != NULL)
-			fu_device_set_name (device, tmp);
-
-		/* summary */
-		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
-						      FU_QUIRKS_USB_SUMMARY,
-						      usb_device);
-		if (tmp != NULL)
-			fu_device_set_summary (device, tmp);
-
-		/* vendor */
-		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
-						      FU_QUIRKS_USB_VENDOR,
-						      usb_device);
-		if (tmp != NULL)
-			fu_device_set_vendor (device, tmp);
-
-		/* icon */
-		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
-						      FU_QUIRKS_USB_ICON,
-						      usb_device);
-		if (tmp != NULL)
-			fu_device_add_icon (device, tmp);
-
-		/* GUID */
-		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
-						      FU_QUIRKS_USB_GUID,
-						      usb_device);
-		if (tmp != NULL)
-			fu_device_add_guid (device, tmp);
-	}
 
 	g_debug ("emit added from %s: %s",
 		 fu_plugin_get_name (plugin),

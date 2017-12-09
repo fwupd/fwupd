@@ -51,6 +51,48 @@ enum {
 #define GET_PRIVATE(o) (fu_usb_device_get_instance_private (o))
 
 static void
+fu_usb_device_notify_quirks_cb (FuUsbDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	FuQuirks *quirks = fu_device_get_quirks (FU_DEVICE (device));
+	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	const gchar *tmp;
+
+	/* not set */
+	if (quirks == NULL) {
+		g_warning ("no FuQuirks set for device %s",
+			   fu_device_get_id (FU_DEVICE (device)));
+		return;
+	}
+
+	/* name */
+	g_debug ("looking for USB quirks for %s",
+		 fu_device_get_platform_id (FU_DEVICE (device)));
+	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_NAME, usb_device);
+	if (tmp != NULL)
+		fu_device_set_name (FU_DEVICE (device), tmp);
+
+	/* summary */
+	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_SUMMARY, usb_device);
+	if (tmp != NULL)
+		fu_device_set_summary (FU_DEVICE (device), tmp);
+
+	/* vendor */
+	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_VENDOR, usb_device);
+	if (tmp != NULL)
+		fu_device_set_vendor (FU_DEVICE (device), tmp);
+
+	/* icon */
+	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_ICON, usb_device);
+	if (tmp != NULL)
+		fu_device_add_icon (FU_DEVICE (device), tmp);
+
+	/* GUID */
+	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_GUID, usb_device);
+	if (tmp != NULL)
+		fu_device_add_guid (FU_DEVICE (device), tmp);
+}
+
+static void
 fu_usb_device_get_property (GObject *object, guint prop_id,
 			    GValue *value, GParamSpec *pspec)
 {
@@ -98,6 +140,8 @@ fu_usb_device_finalize (GObject *object)
 static void
 fu_usb_device_init (FuUsbDevice *device)
 {
+	g_signal_connect (device, "notify::quirks",
+			  G_CALLBACK (fu_usb_device_notify_quirks_cb), NULL);
 }
 
 static void
