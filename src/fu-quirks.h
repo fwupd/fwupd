@@ -191,6 +191,17 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 #define	FU_QUIRKS_USB_GUID			"FuUsbDevice:guid"
 
 /**
+ * FU_QUIRKS_USB_VERSION:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806&REV_0001`
+ * @value: the version number, e.g. `1.2`
+ *
+ * Sets a version for a specific hardware device.
+ *
+ * Since: 1.0.3
+ */
+#define	FU_QUIRKS_USB_VERSION			"FuUsbDevice:version"
+
+/**
  * FU_QUIRKS_USB_VENDOR:
  * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
  * @value: the vendor, e.g. `Hughski Limited`

@@ -81,6 +81,11 @@ fu_usb_device_notify_quirks_cb (FuUsbDevice *device, GParamSpec *pspec, gpointer
 	if (tmp != NULL)
 		fu_device_set_vendor (FU_DEVICE (device), tmp);
 
+	/* version */
+	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_VERSION, usb_device);
+	if (tmp != NULL)
+		fu_device_set_version (FU_DEVICE (device), tmp);
+
 	/* icon */
 	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_ICON, usb_device);
 	if (tmp != NULL)
