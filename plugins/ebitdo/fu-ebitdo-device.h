@@ -37,28 +37,10 @@ struct _FuEbitdoDeviceClass
 	FuUsbDeviceClass	parent_class;
 };
 
-typedef enum {
-	FU_EBITDO_DEVICE_KIND_UNKNOWN,
-	FU_EBITDO_DEVICE_KIND_BOOTLOADER,
-	FU_EBITDO_DEVICE_KIND_FC30,
-	FU_EBITDO_DEVICE_KIND_NES30,
-	FU_EBITDO_DEVICE_KIND_SFC30,
-	FU_EBITDO_DEVICE_KIND_SNES30,
-	FU_EBITDO_DEVICE_KIND_FC30PRO,
-	FU_EBITDO_DEVICE_KIND_NES30PRO,
-	FU_EBITDO_DEVICE_KIND_FC30_ARCADE,
-	/*< private >*/
-	FU_EBITDO_DEVICE_KIND_LAST
-} FuEbitdoDeviceKind;
-
 FuEbitdoDevice	*fu_ebitdo_device_new			(GUsbDevice	*usb_device);
 
-/* helpers */
-FuEbitdoDeviceKind fu_ebitdo_device_kind_from_string	(const gchar	*kind);
-const gchar	*fu_ebitdo_device_kind_to_string	(FuEbitdoDeviceKind kind);
-
 /* getters */
-FuEbitdoDeviceKind fu_ebitdo_device_get_kind		(FuEbitdoDevice	*device);
+gboolean	 fu_ebitdo_device_is_bootloader		(FuEbitdoDevice	*device);
 const guint32	*fu_ebitdo_device_get_serial		(FuEbitdoDevice	*device);
 
 /* object methods */

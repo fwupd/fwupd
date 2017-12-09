@@ -227,6 +227,21 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  */
 #define	FU_QUIRKS_CSR_DEVICE			"FuCsrDevice"
 
+/**
+ * FU_QUIRKS_EBITDO:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the quirk, e.g. `bootloader`
+ *
+ * Assigns optional quirks to use for a 8Bitdo device. The list of supported
+ * quirks is thus:
+ *
+ * * `none`:			No device quirks
+ * * `bootloader`:		Device is in bootloader mode
+ *
+ * Since: 1.0.3
+ */
+#define	FU_QUIRKS_EBITDO_DEVICE			"FuEditdoDevice"
+
 G_END_DECLS
 
 #endif /* __FU_QUIRKS_H */

@@ -40,6 +40,7 @@ main (int argc, char **argv)
 	g_autofree guint8 *data = NULL;
 	g_autoptr(FuEbitdoDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuQuirks) quirks = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -50,6 +51,13 @@ main (int argc, char **argv)
 	/* require filename */
 	if (argc != 2) {
 		g_print ("USAGE: %s <filename>\n", argv[0]);
+		return 1;
+	}
+
+	/* use quirks */
+	quirks = fu_quirks_new ();
+	if (!fu_quirks_load (quirks, &error)) {
+		g_print ("Failed to load quirks: %s\n", error->message);
 		return 1;
 	}
 
@@ -64,6 +72,7 @@ main (int argc, char **argv)
 	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_device = g_ptr_array_index (devices, i);
 		g_autoptr(FuEbitdoDevice) dev_tmp = fu_ebitdo_device_new (usb_device);
+		fu_device_set_quirks (FU_DEVICE (dev_tmp), quirks);
 		if (fu_usb_device_probe (FU_USB_DEVICE (dev_tmp), NULL)) {
 			dev = g_steal_pointer (&dev_tmp);
 			break;
@@ -90,21 +99,22 @@ main (int argc, char **argv)
 
 	/* not in bootloader mode, so print what to do */
 	if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (dev));
 		g_print ("1. Disconnect the controller\n");
-		switch (fu_ebitdo_device_get_kind (dev)) {
-		case FU_EBITDO_DEVICE_KIND_FC30:
-		case FU_EBITDO_DEVICE_KIND_NES30:
-		case FU_EBITDO_DEVICE_KIND_SFC30:
-		case FU_EBITDO_DEVICE_KIND_SNES30:
+		switch (g_usb_device_get_pid (usb_device)) {
+		case 0xab11: /* FC30 */
+		case 0xab12: /* NES30 */
+		case 0xab21: /* SFC30 */
+		case 0xab20: /* SNES30 */
 			g_print ("2. Hold down L+R+START for 3 seconds until "
 				 "both LED lights flashing.\n");
 			break;
-		case FU_EBITDO_DEVICE_KIND_FC30PRO:
-		case FU_EBITDO_DEVICE_KIND_NES30PRO:
+		case 0x9000: /* FC30PRO */
+		case 0x9001: /* NES30PRO */
 			g_print ("2. Hold down RETURN+POWER for 3 seconds until "
 				 "both LED lights flashing.\n");
 			break;
-		case FU_EBITDO_DEVICE_KIND_FC30_ARCADE:
+		case 0x1002: /* FC30-ARCADE */
 			g_print ("2. Hold down L1+R1+HOME for 3 seconds until "
 				 "both blue LED and green LED blink.\n");
 			break;

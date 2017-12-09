@@ -34,6 +34,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **e
 
 	/* open the device */
 	device = fu_ebitdo_device_new (usb_device);
+	fu_device_set_quirks (FU_DEVICE (device), fu_plugin_get_quirks (plugin));
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
@@ -56,7 +57,7 @@ fu_plugin_update (FuPlugin *plugin,
 	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
 	/* get version */
-	if (fu_ebitdo_device_get_kind (ebitdo_dev) != FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
+	if (!fu_ebitdo_device_is_bootloader (ebitdo_dev)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -68,7 +69,6 @@ fu_plugin_update (FuPlugin *plugin,
 	locker = fu_device_locker_new (ebitdo_dev, error);
 	if (locker == NULL)
 		return FALSE;
-	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_ebitdo_device_write_firmware (ebitdo_dev, blob_fw, error))
 		return FALSE;
 
