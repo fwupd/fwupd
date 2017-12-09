@@ -700,8 +700,8 @@ fu_device_set_quirks (FuDevice *device, FuQuirks *quirks)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FU_IS_DEVICE (device));
-	g_set_object (&priv->quirks, quirks);
-	g_object_notify (G_OBJECT (device), "quirks");
+	if (g_set_object (&priv->quirks, quirks))
+		g_object_notify (G_OBJECT (device), "quirks");
 }
 
 /**
