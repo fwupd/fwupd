@@ -150,23 +150,23 @@ lu_device_to_string (FuDevice *device, GString *str)
 	LuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *flags_str = NULL;
 
-	g_string_append_printf (str, "type:\t\t\t%s\n", lu_device_kind_to_string (priv->kind));
+	g_string_append_printf (str, "  Type:\t\t\t%s\n", lu_device_kind_to_string (priv->kind));
 	flags_str = lu_device_flags_to_string (priv->flags);
-	g_string_append_printf (str, "flags:\t\t\t%s\n", flags_str);
-	g_string_append_printf (str, "hidpp-version:\t\t%.2f\n", priv->hidpp_version);
+	g_string_append_printf (str, "  Flags:\t\t%s\n", flags_str);
+	g_string_append_printf (str, "  HidppVersion:\t\t%.2f\n", priv->hidpp_version);
 	if (priv->hidpp_id != HIDPP_DEVICE_ID_UNSET)
-		g_string_append_printf (str, "hidpp-id:\t\t0x%02x\n", (guint) priv->hidpp_id);
+		g_string_append_printf (str, "  HidppId:\t\t0x%02x\n", (guint) priv->hidpp_id);
 	if (priv->udev_device_fd > 0)
-		g_string_append_printf (str, "udev-device:\t\t%i\n", priv->udev_device_fd);
+		g_string_append_printf (str, "  UdevDevice:\t\t%i\n", priv->udev_device_fd);
 	if (priv->usb_device != NULL)
-		g_string_append_printf (str, "usb-device:\t\t%p\n", priv->usb_device);
+		g_string_append_printf (str, "  UsbDevice:\t\t%p\n", priv->usb_device);
 	if (priv->version_hw != NULL)
-		g_string_append_printf (str, "version-hardware:\t%s\n", priv->version_hw);
+		g_string_append_printf (str, "  VersionHardware:\t%s\n", priv->version_hw);
 	if (priv->battery_level != 0)
-		g_string_append_printf (str, "battery-level:\t\t%u\n", priv->battery_level);
+		g_string_append_printf (str, "  Battery-level:\t\t%u\n", priv->battery_level);
 	for (guint i = 0; i < priv->feature_index->len; i++) {
 		LuDeviceHidppMap *map = g_ptr_array_index (priv->feature_index, i);
-		g_string_append_printf (str, "feature%02x:\t\t%s [0x%04x]\n",
+		g_string_append_printf (str, "  Feature%02x:\t\t%s [0x%04x]\n",
 					map->idx,
 					lu_hidpp_feature_to_string (map->feature),
 					map->feature);
@@ -174,11 +174,11 @@ lu_device_to_string (FuDevice *device, GString *str)
 
 	/* fixme: superclass? */
 	if (LU_IS_DEVICE_BOOTLOADER (device)) {
-		g_string_append_printf (str, "flash-addr-high:\t0x%04x\n",
+		g_string_append_printf (str, "  FlashAddrHigh:\t0x%04x\n",
 					lu_device_bootloader_get_addr_hi (self));
-		g_string_append_printf (str, "flash-addr-low:\t0x%04x\n",
+		g_string_append_printf (str, "  FlashAddrLow:\t0x%04x\n",
 					lu_device_bootloader_get_addr_lo (self));
-		g_string_append_printf (str, "flash-block-size:\t0x%04x\n",
+		g_string_append_printf (str, "  FlashBlockSize:\t0x%04x\n",
 					lu_device_bootloader_get_blocksize (self));
 	}
 }
