@@ -452,6 +452,41 @@ fu_device_get_serial (FuDevice *device)
 }
 
 /**
+ * fu_device_set_plugin_hints:
+ * @device: A #FuDevice
+ * @plugin_hints: a string
+ *
+ * Sets the hint the the plugin from the quirk system that can be used to
+ * do affect device matching. The actual string format is defined by the plugin.
+ *
+ * Since: 1.0.3
+ **/
+void
+fu_device_set_plugin_hints (FuDevice *device, const gchar *plugin_hints)
+{
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_return_if_fail (plugin_hints != NULL);
+	fu_device_set_metadata (device, "PluginHints", plugin_hints);
+}
+
+/**
+ * fu_device_get_plugin_hints:
+ * @device: A #FuDevice
+ *
+ * Gets the plugin hint for the device from the quirk system.
+ *
+ * Returns: a string value, or %NULL if never set.
+ *
+ * Since: 1.0.3
+ **/
+const gchar *
+fu_device_get_plugin_hints (FuDevice *device)
+{
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return fu_device_get_metadata (device, "PluginHints");
+}
+
+/**
  * fu_device_set_platform_id:
  * @device: A #FuDevice
  * @platform_id: a platform string, e.g. `/sys/devices/usb1/1-1/1-1.2`

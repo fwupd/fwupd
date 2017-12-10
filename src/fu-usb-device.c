@@ -55,6 +55,7 @@ fu_usb_device_notify_quirks_cb (FuUsbDevice *device, GParamSpec *pspec, gpointer
 {
 	FuQuirks *quirks = fu_device_get_quirks (FU_DEVICE (device));
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	const gchar *type_name = G_OBJECT_TYPE_NAME (device);
 	const gchar *tmp;
 
 	/* not set */
@@ -64,8 +65,14 @@ fu_usb_device_notify_quirks_cb (FuUsbDevice *device, GParamSpec *pspec, gpointer
 		return;
 	}
 
+	/* type */
+	g_debug ("looking for USB quirks for %s type", type_name);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, type_name, usb_device);
+	if (tmp != NULL)
+		fu_device_set_name (FU_DEVICE (device), tmp);
+
 	/* name */
-	g_debug ("looking for USB quirks for %s",
+	g_debug ("looking for USB quirks for %s device",
 		 fu_device_get_platform_id (FU_DEVICE (device)));
 	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_NAME, usb_device);
 	if (tmp != NULL)
