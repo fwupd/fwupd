@@ -164,16 +164,15 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 	if (priv->usb_device_locker != NULL)
 		return TRUE;
 
-	/* profile */
-	ptask = as_profile_start (profile, "%s:added{%04x:%04x}",
-				  fu_device_get_plugin (FU_DEVICE (device)),
-				  g_usb_device_get_vid (priv->usb_device),
-				  g_usb_device_get_pid (priv->usb_device));
-	g_assert (ptask != NULL);
-
 	/* probe */
 	if (!fu_usb_device_probe (device, error))
 		return FALSE;
+
+	/* profile */
+	ptask = as_profile_start (profile, "added{%04x:%04x}",
+				  g_usb_device_get_vid (priv->usb_device),
+				  g_usb_device_get_pid (priv->usb_device));
+	g_assert (ptask != NULL);
 
 	/* open */
 	locker = fu_device_locker_new (priv->usb_device, error);
