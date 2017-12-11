@@ -422,6 +422,10 @@ fu_device_list_compatible_func (void)
 	device = g_ptr_array_index (devices_all, 1);
 	g_assert_cmpstr (fu_device_get_id (device), ==,
 			 "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
+
+	/* verify we can get the old device from the new device */
+	device = fu_device_list_get_old (device_list, device2);
+	g_assert (device == device1);
 }
 
 static void

@@ -161,6 +161,26 @@ fu_device_list_find_by_device (FuDeviceList *self, FuDevice *device)
 	return NULL;
 }
 
+/**
+ * fu_device_list_get_old:
+ * @self: A #FuDeviceList
+ * @device: A #FuDevice
+ *
+ * Returns the old device associated with the currently active device.
+ *
+ * Returns: (transfer none): the device, or %NULL if not found
+ *
+ * Since: 1.0.3
+ **/
+FuDevice *
+fu_device_list_get_old (FuDeviceList *self, FuDevice *device)
+{
+	FuDeviceItem *item = fu_device_list_find_by_device (self, device);
+	if (item == NULL)
+		return NULL;
+	return item->device_old;
+}
+
 static FuDeviceItem *
 fu_device_list_find_by_guids (FuDeviceList *self, GPtrArray *guids)
 {
