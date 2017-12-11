@@ -69,7 +69,7 @@ fu_usb_device_notify_quirks_cb (FuUsbDevice *device, GParamSpec *pspec, gpointer
 	g_debug ("looking for USB quirks for %s type", type_name);
 	tmp = fu_quirks_lookup_by_usb_device (quirks, type_name, usb_device);
 	if (tmp != NULL)
-		fu_device_set_name (FU_DEVICE (device), tmp);
+		fu_device_set_plugin_hints (FU_DEVICE (device), tmp);
 
 	/* name */
 	g_debug ("looking for USB quirks for %s device",
