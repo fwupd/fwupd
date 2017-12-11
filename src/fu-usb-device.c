@@ -51,7 +51,7 @@ enum {
 #define GET_PRIVATE(o) (fu_usb_device_get_instance_private (o))
 
 static void
-fu_usb_device_notify_quirks_cb (FuUsbDevice *device, GParamSpec *pspec, gpointer user_data)
+fu_usb_device_apply_quirks (FuUsbDevice *device)
 {
 	FuQuirks *quirks = fu_device_get_quirks (FU_DEVICE (device));
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
@@ -59,17 +59,16 @@ fu_usb_device_notify_quirks_cb (FuUsbDevice *device, GParamSpec *pspec, gpointer
 	const gchar *tmp;
 
 	/* not set */
-	if (quirks == NULL) {
-		g_warning ("no FuQuirks set for device %s",
-			   fu_device_get_id (FU_DEVICE (device)));
+	if (quirks == NULL)
 		return;
-	}
 
 	/* type */
 	g_debug ("looking for USB quirks for %s type", type_name);
 	tmp = fu_quirks_lookup_by_usb_device (quirks, type_name, usb_device);
-	if (tmp != NULL)
+	if (tmp != NULL) {
+		g_debug ("default plugin hints set to: %s", tmp);
 		fu_device_set_plugin_hints (FU_DEVICE (device), tmp);
+	}
 
 	/* name */
 	g_debug ("looking for USB quirks for %s device",
@@ -102,6 +101,12 @@ fu_usb_device_notify_quirks_cb (FuUsbDevice *device, GParamSpec *pspec, gpointer
 	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_GUID, usb_device);
 	if (tmp != NULL)
 		fu_device_add_guid (FU_DEVICE (device), tmp);
+}
+
+static void
+fu_usb_device_notify_quirks_cb (FuUsbDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	fu_usb_device_apply_quirks (device);
 }
 
 static void
@@ -441,6 +446,9 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 	/* set USB platform ID automatically */
 	fu_device_set_platform_id (FU_DEVICE (device),
 				   g_usb_device_get_platform_id (usb_device));
+
+	/* set the quirks again */
+	fu_usb_device_apply_quirks (device);
 }
 
 /**
