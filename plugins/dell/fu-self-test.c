@@ -127,8 +127,8 @@ fu_plugin_dell_tpm_func (void)
 	g_assert (device != NULL);
 	g_assert (device_alt != NULL);
 
-	/* make sure allowed to flash 1.2 */
-	g_assert_true (fu_device_has_flag (device_alt, FWUPD_DEVICE_FLAG_UPDATABLE));
+	/* make sure not allowed to flash 1.2 */
+	g_assert_false (fu_device_has_flag (device_alt, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* try to unlock 2.0 */
 	ret = fu_plugin_runner_unlock (plugin, device, &error);
