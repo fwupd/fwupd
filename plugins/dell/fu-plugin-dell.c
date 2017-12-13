@@ -603,10 +603,13 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_set_version (dev, version_str);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	if (out->flashes_left > 0) {
+	if ((out->status & TPM_OWN_MASK) == 0 && out->flashes_left > 0) {
 		if (fu_plugin_dell_capsule_supported (plugin))
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ALLOW_OFFLINE);
 		fu_device_set_flashes_left (dev, out->flashes_left);
+	} else {
+		g_debug ("%s updating disabled due to TPM ownership",
+			pretty_tpm_name);
 	}
 	fu_plugin_device_add (plugin, dev);
 
@@ -626,8 +629,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		 * Mode switching is turned on by setting flashes left on alternate
 		 * device.
 		 */
-		if (!((out->status) & TPM_OWN_MASK) &&
-		    out->flashes_left > 0) {
+		if ((out->status & TPM_OWN_MASK) == 0 && out->flashes_left > 0) {
 			fu_device_set_flashes_left (dev_alt, out->flashes_left);
 		} else {
 			g_debug ("%s mode switch disabled due to TPM ownership",
