@@ -18,7 +18,7 @@ meson .. \
     -Dplugin_colorhug=true $@
 ninja-build dist
 popd
-VERSION=`mesonintrospect build --projectinfo | jq -r .version`
+VERSION=`meson introspect build --projectinfo | jq -r .version`
 mkdir -p $HOME/rpmbuild/SOURCES/
 mv build/meson-dist/fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
 
