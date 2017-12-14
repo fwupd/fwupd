@@ -785,6 +785,30 @@ _as_app_get_screenshot_default (AsApp *app)
 #endif
 }
 
+static GPtrArray *
+_as_store_get_apps_by_provide (AsStore *store, AsProvideKind kind, const gchar *value)
+{
+#if AS_CHECK_VERSION(0,7,5)
+	return as_store_get_apps_by_provide (store, kind, value);
+#else
+	GPtrArray *apps = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	GPtrArray *array = as_store_get_apps (store);
+	for (guint i = 0; i < array->len; i++) {
+		AsApp *app = g_ptr_array_index (array, i);
+		GPtrArray *provides = as_app_get_provides (app);
+		for (guint j = 0; j < provides->len; j++) {
+			AsProvide *tmp = g_ptr_array_index (provides, j);
+			if (kind != as_provide_get_kind (tmp))
+				continue;
+			if (g_strcmp0 (as_provide_get_value (tmp), value) != 0)
+				continue;
+			g_ptr_array_add (apps, g_object_ref (app));
+		}
+	}
+	return apps;
+#endif
+}
+
 static gboolean
 fu_engine_check_version_requirement (AsApp *app,
 				   AsRequireKind kind,
@@ -2172,6 +2196,33 @@ fu_engine_sort_releases_cb (gconstpointer a, gconstpointer b)
 				fwupd_release_get_version (rel_a));
 }
 
+static AsApp *
+fu_engine_filter_apps_by_requirements (FuEngine *self, GPtrArray *apps,
+				       FuDevice *device, GError **error)
+{
+	g_autoptr(GError) error_all = NULL;
+
+	/* find the first component that passes all the requirements */
+	for (guint i = 0; i < apps->len; i++) {
+		g_autoptr(GError) error_local = NULL;
+		AsApp *app_tmp = AS_APP (g_ptr_array_index (apps, i));
+		if (!fu_engine_check_requirements (self, app_tmp, device, &error_local)) {
+			if (error_all != NULL) {
+				error_all = g_steal_pointer (&error_local);
+				continue;
+			}
+			/* assume the domain and code is the same */
+			g_prefix_error (&error_all, "%s, ", error_local->message);
+			continue;
+		}
+		return g_object_ref (app_tmp);
+	}
+
+	/* return the compound error */
+	g_propagate_error (error, g_steal_pointer (&error_all));
+	return NULL;
+}
+
 static GPtrArray *
 fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **error)
 {
@@ -2204,16 +2255,23 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 	device_guids = fu_device_get_guids (device);
 	for (guint i = 0; i < device_guids->len; i++) {
 		GPtrArray *releases_tmp;
+		g_autoptr(AsApp) app = NULL;
+		g_autoptr(GPtrArray) apps = NULL;
 		const gchar *guid = g_ptr_array_index (device_guids, i);
-		AsApp *app = as_store_get_app_by_provide (self->store,
-							  AS_PROVIDE_KIND_FIRMWARE_FLASHED,
-							  guid);
-		if (app == NULL)
+
+		/* get all the components that provide this GUID */
+		apps = _as_store_get_apps_by_provide (self->store,
+						      AS_PROVIDE_KIND_FIRMWARE_FLASHED,
+						      guid);
+		if (apps->len == 0)
 			continue;
 
-		/* check we can install it */
-		if (!fu_engine_check_requirements (self, app, device, error))
+		/* filter by requirements */
+		app = fu_engine_filter_apps_by_requirements (self, apps, device, error);
+		if (app == NULL)
 			return NULL;
+
+		/* get all releases */
 		releases_tmp = as_app_get_releases (app);
 		for (guint j = 0; j < releases_tmp->len; j++) {
 			AsRelease *release = g_ptr_array_index (releases_tmp, j);
