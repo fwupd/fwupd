@@ -164,7 +164,7 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 	lu_device_set_hidpp_version (device, 1.f);
 
 	/* we can flash this */
-	lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* only the bootloader can do the update */
 	fu_device_set_name (FU_DEVICE (device), "Unifying Receiver");

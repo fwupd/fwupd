@@ -53,10 +53,6 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 	if (!lu_device_open (device, error))
 		return FALSE;
 
-	/* create new FuDevice */
-	if (lu_device_has_flag (device, LU_DEVICE_FLAG_CAN_FLASH))
-		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
-
 	/* insert to hash */
 	fu_plugin_device_add (plugin, FU_DEVICE (device));
 	return TRUE;

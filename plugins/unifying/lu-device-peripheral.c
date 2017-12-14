@@ -347,7 +347,7 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 	}
 	idx = lu_device_hidpp_feature_get_idx (device, HIDPP_FEATURE_DFU_CONTROL);
 	if (idx != 0x00) {
-		lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);
+		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 		lu_device_add_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH);
 	}
 	idx = lu_device_hidpp_feature_get_idx (device, HIDPP_FEATURE_DFU_CONTROL_SIGNED);
@@ -365,14 +365,14 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 		if ((msg->data[2] & 0x01) > 0) {
 			g_warning ("DFU mode not available");
 		} else {
-			lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);
+			fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 			lu_device_add_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH);
 			lu_device_add_flag (device, LU_DEVICE_FLAG_REQUIRES_SIGNED_FIRMWARE);
 		}
 	}
 	idx = lu_device_hidpp_feature_get_idx (device, HIDPP_FEATURE_DFU);
 	if (idx != 0x00) {
-		lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);
+		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 		lu_device_add_flag (device, LU_DEVICE_FLAG_REQUIRES_ATTACH);
 		if (fu_device_get_version (device) == NULL) {
 			g_debug ("repairing device in bootloader mode");

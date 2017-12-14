@@ -121,8 +121,6 @@ lu_device_flags_to_string (LuDeviceFlags flags)
 	GString *str = g_string_new (NULL);
 	if (flags & LU_DEVICE_FLAG_REQUIRES_SIGNED_FIRMWARE)
 		g_string_append (str, "signed-firmware,");
-	if (flags & LU_DEVICE_FLAG_CAN_FLASH)
-		g_string_append (str, "can-flash,");
 	if (flags & LU_DEVICE_FLAG_REQUIRES_RESET)
 		g_string_append (str, "requires-reset,");
 	if (flags & LU_DEVICE_FLAG_ACTIVE)

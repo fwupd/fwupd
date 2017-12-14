@@ -200,7 +200,7 @@ lu_device_bootloader_open (LuDevice *device, GError **error)
 	fu_device_set_name (FU_DEVICE (device), name);
 
 	/* we can flash this */
-	lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* get memory map */
 	req->cmd = LU_DEVICE_BOOTLOADER_CMD_GET_MEMINFO;
