@@ -118,7 +118,7 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 				 (GDestroyNotify) g_object_unref);
 		if (!lu_context_wait_for_replug (data->ctx,
 						 device,
-						 FU_DEVICE_TIMEOUT_REPLUG,
+						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
 						 error))
 			return FALSE;
 	} else {
@@ -153,7 +153,7 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
 				 (GDestroyNotify) g_object_unref);
 		if (!lu_context_wait_for_replug (data->ctx,
 						 device,
-						 FU_DEVICE_TIMEOUT_REPLUG,
+						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
 						 error))
 			return FALSE;
 	} else {
