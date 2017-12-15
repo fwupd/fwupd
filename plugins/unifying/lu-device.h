@@ -64,7 +64,8 @@ struct _LuDeviceClass
 
 #define LU_DEVICE_EP1				0x81
 #define LU_DEVICE_EP3				0x83
-#define LU_DEVICE_TIMEOUT_MS			2500
+/* Signed firmware are very long to verify on the device */
+#define LU_DEVICE_TIMEOUT_MS			20000
 
 /* some USB hubs take a looong time to re-connect the device */
 #define FU_DEVICE_TIMEOUT_REPLUG		10000 /* ms */

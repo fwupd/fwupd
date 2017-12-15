@@ -94,6 +94,31 @@ lu_device_bootloader_nordic_probe (LuDevice *device, GError **error)
 }
 
 static gboolean
+lu_device_bootloader_nordic_write_signature (LuDevice *device,
+					     guint16 addr, guint8 len, const guint8 *data,
+					     GError **error)
+{
+	g_autoptr(LuDeviceBootloaderRequest) req = lu_device_bootloader_request_new();
+	req->cmd = 0xC0;
+	req->addr = addr;
+	req->len = len;
+	memcpy (req->data, data, req->len);
+	if (!lu_device_bootloader_request (device, req, error)) {
+		g_prefix_error (error, "failed to write sig @0x%02x: ", addr);
+		return FALSE;
+	}
+	if (req->cmd == LU_DEVICE_BOOTLOADER_CMD_WRITE_RAM_BUFFER_INVALID_ADDR) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "failed to write @%04x: signature is too big",
+			     addr);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 lu_device_bootloader_nordic_write (LuDevice *device,
 				   guint16 addr, guint8 len, const guint8 *data,
 				   GError **error)
@@ -132,18 +157,12 @@ lu_device_bootloader_nordic_write (LuDevice *device,
 		return FALSE;
 	}
 	if (req->cmd == LU_DEVICE_BOOTLOADER_CMD_WRITE_NONZERO_START) {
-		if (addr == 0x0000) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "failed to write @%04x: only 1 byte write supported",
-				     addr);
-			return FALSE;
-		}
+		g_debug ("wrote %d bytes at address %04x, value %02x", req->len,
+			 req->addr, req->data[0]);
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
-			     "failed to write @%04x: byte 0x00 is not 0xff",
+			     "failed to write @%04x: only 1 byte write of 0xff supported",
 			     addr);
 		return FALSE;
 	}
@@ -209,12 +228,24 @@ lu_device_bootloader_nordic_write_firmware (LuDevice *device, GBytes *fw, GError
 		return FALSE;
 
 	for (guint i = 1; i < reqs->len; i++) {
+		gboolean res;
 		payload = g_ptr_array_index (reqs, i);
-		if (!lu_device_bootloader_nordic_write (device,
-							payload->addr,
-							payload->len,
-							payload->data,
-							error))
+
+		if (payload->cmd == LU_DEVICE_BOOTLOADER_CMD_WRITE_SIGNATURE) {
+			res = lu_device_bootloader_nordic_write_signature(device,
+									  payload->addr,
+									  payload->len,
+									  payload->data,
+									  error);
+		} else {
+			res = lu_device_bootloader_nordic_write (device,
+								 payload->addr,
+								 payload->len,
+								 payload->data,
+								 error);
+		}
+
+		if (!res)
 			return FALSE;
 		fu_device_set_progress_full (FU_DEVICE (device), i * 32, reqs->len * 32);
 	}
@@ -228,7 +259,6 @@ lu_device_bootloader_nordic_write_firmware (LuDevice *device, GBytes *fw, GError
 						error))
 		return FALSE;
 
-	/* set the reset vector */
 	if (!lu_device_bootloader_nordic_write (device,
 						0x0000,
 						0x01,

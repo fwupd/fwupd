@@ -58,6 +58,7 @@ lu_device_bootloader_parse_requests (LuDevice *device, GBytes *fw, GError **erro
 	lines = g_strsplit_set (tmp, "\n\r", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
 		g_autoptr(LuDeviceBootloaderRequest) payload = NULL;
+		guint8 rec_type = 0x00;
 
 		/* skip empty lines */
 		tmp = lines[i];
@@ -77,6 +78,15 @@ lu_device_bootloader_parse_requests (LuDevice *device, GBytes *fw, GError **erro
 		payload->addr = ((guint16) lu_buffer_read_uint8 (tmp + 0x03)) << 8;
 		payload->addr |= lu_buffer_read_uint8 (tmp + 0x05);
 
+		rec_type = lu_buffer_read_uint8 (tmp + 0x07);
+
+		/* record type of 0xFD indicates signature data */
+		if (rec_type == 0xFD) {
+			payload->cmd = LU_DEVICE_BOOTLOADER_CMD_WRITE_SIGNATURE;
+		} else {
+			payload->cmd = LU_DEVICE_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
+		}
+
 		/* read the data, but skip the checksum byte */
 		for (guint j = 0; j < payload->len; j++) {
 			const gchar *ptr = tmp + 0x09 + (j * 2);
@@ -89,6 +99,12 @@ lu_device_bootloader_parse_requests (LuDevice *device, GBytes *fw, GError **erro
 				return NULL;
 			}
 			payload->data[j] = lu_buffer_read_uint8 (ptr);
+		}
+
+		/* no need to bound check signature addresses */
+		if (payload->cmd == LU_DEVICE_BOOTLOADER_CMD_WRITE_SIGNATURE) {
+			g_ptr_array_add (reqs, g_steal_pointer (&payload));
+			continue;
 		}
 
 		/* skip the bootloader */
