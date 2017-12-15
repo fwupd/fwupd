@@ -34,6 +34,7 @@
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 
+#include "fu-common-cab.h"
 #include "fu-common.h"
 #include "fu-config.h"
 #include "fu-debug.h"
@@ -1973,27 +1974,19 @@ fu_engine_get_store_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 {
 	g_autofree gchar *checksum = NULL;
 	g_autoptr(AsStore) store = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
 	g_return_val_if_fail (blob_cab != NULL, NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* load file */
-	store = as_store_new ();
 	fu_engine_set_status (self, FWUPD_STATUS_DECOMPRESSING);
-	if (!as_store_from_bytes (store, blob_cab, NULL, &error_local)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     error_local->message);
+	store = fu_common_store_from_cab_bytes (blob_cab, error);
+	if (store == NULL)
 		return NULL;
-	}
 
 	/* get a checksum of the file and use it as the origin */
-	checksum = g_compute_checksum_for_data (G_CHECKSUM_SHA256,
-						g_bytes_get_data (blob_cab, NULL),
-						g_bytes_get_size (blob_cab));
+	checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA256, blob_cab);
 	as_store_set_origin (store, checksum);
 
 	fu_engine_set_status (self, FWUPD_STATUS_IDLE);

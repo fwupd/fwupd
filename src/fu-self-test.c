@@ -26,9 +26,11 @@
 #include <glib-object.h>
 #include <glib/gstdio.h>
 #include <gio/gfiledescriptorbased.h>
+#include <libgcab.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "fu-common-cab.h"
 #include "fu-config.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
@@ -1358,6 +1360,317 @@ fu_common_endian_func (void)
 	g_assert_cmpint (fu_common_read_uint16 (buf, G_BIG_ENDIAN), ==, 0x1234);
 }
 
+static GBytes *
+_build_cab (GCabCompression compression, ...)
+{
+#ifdef HAVE_GCAB_1_0
+	gboolean ret;
+	va_list args;
+	g_autoptr(GCabCabinet) cabinet = NULL;
+	g_autoptr(GCabFolder) cabfolder = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GOutputStream) op = NULL;
+
+	/* create a new archive */
+	cabinet = gcab_cabinet_new ();
+	cabfolder = gcab_folder_new (compression);
+	ret = gcab_cabinet_add_folder (cabinet, cabfolder, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* add each file */
+	va_start (args, compression);
+	do {
+		const gchar *fn;
+		const gchar *text;
+		g_autoptr(GCabFile) cabfile = NULL;
+		g_autoptr(GBytes) blob = NULL;
+
+		/* get filename */
+		fn = va_arg (args, const gchar *);
+		if (fn == NULL)
+			break;
+
+		/* get contents */
+		text = va_arg (args, const gchar *);
+		if (text == NULL)
+			break;
+		g_debug ("creating %s with %s", fn, text);
+
+		/* add a GCabFile to the cabinet */
+		blob = g_bytes_new_static (text, strlen (text));
+		cabfile = gcab_file_new_with_bytes (fn, blob);
+		ret = gcab_folder_add_file (cabfolder, cabfile, FALSE, NULL, &error);
+		g_assert_no_error (error);
+		g_assert (ret);
+	} while (TRUE);
+	va_end (args);
+
+	/* write the archive to a blob */
+	op = g_memory_output_stream_new_resizable ();
+	ret = gcab_cabinet_write_simple  (cabinet, op, NULL, NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	ret = g_output_stream_close (op, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	return g_memory_output_stream_steal_as_bytes (G_MEMORY_OUTPUT_STREAM (op));
+#else
+	return NULL;
+#endif
+}
+
+static void
+fu_common_store_cab_func (void)
+{
+	AsApp *app;
+	AsChecksum *csum;
+	AsRelease *rel;
+	AsRequire *req;
+	GBytes *blob_tmp;
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* create store */
+	blob = _build_cab (GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware</id>\n"
+	"  <name>ACME Firmware</name>\n"
+	"  <provides>\n"
+	"    <firmware type=\"flashed\">ae56e3fb-6528-5bc4-8b03-012f124075d7</firmware>\n"
+	"  </provides>\n"
+	"  <releases>\n"
+	"    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+	"      <checksum filename=\"firmware.dfu\" target=\"content\"/>\n"
+	"      <size type=\"installed\">5</size>\n"
+	"      <checksum filename=\"firmware.bin\" target=\"content\" type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbf43</checksum>\n"
+	"      <description><p>We fixed things</p></description>\n"
+	"    </release>\n"
+	"  </releases>\n"
+	"  <requires>\n"
+	"    <id compare=\"ge\" version=\"1.0.1\">org.freedesktop.fwupd</id>\n"
+	"  </requires>\n"
+	"</component>",
+			   "firmware.dfu", "world",
+			   "firmware.dfu.asc", "signature",
+			   NULL);
+	if (blob == NULL) {
+		g_test_skip ("libgcab too old");
+		return;
+	}
+	store = fu_common_store_from_cab_bytes (blob, &error);
+	g_assert_no_error (error);
+	g_assert (store != NULL);
+
+	/* verify */
+	app = as_store_get_app_by_id (store, "com.acme.example.firmware");
+	g_assert_nonnull (app);
+	rel = as_app_get_release_default (app);
+	g_assert_nonnull (rel);
+	g_assert_cmpstr (as_release_get_version (rel), ==, "1.2.3");
+	csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTENT);
+	g_assert_cmpstr (as_checksum_get_value (csum), ==, "7c211433f02071597741e6ff5a8ea34789abbf43");
+	blob_tmp = as_release_get_blob (rel, "firmware.dfu");
+	g_assert_nonnull (blob_tmp);
+	blob_tmp = as_release_get_blob (rel, "firmware.dfu.asc");
+	g_assert_nonnull (blob_tmp);
+	req = as_app_get_require_by_value (app, AS_REQUIRE_KIND_ID, "org.freedesktop.fwupd");
+	g_assert_nonnull (req);
+}
+
+static void
+fu_common_store_cab_unsigned_func (void)
+{
+	AsApp *app;
+	AsChecksum *csum;
+	AsRelease *rel;
+	GBytes *blob_tmp;
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* create store */
+	blob = _build_cab (GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware</id>\n"
+	"  <releases>\n"
+	"    <release version=\"1.2.3\"/>\n"
+	"  </releases>\n"
+	"</component>",
+			   "firmware.bin", "world",
+			   NULL);
+	if (blob == NULL) {
+		g_test_skip ("libgcab too old");
+		return;
+	}
+	store = fu_common_store_from_cab_bytes (blob, &error);
+	g_assert_no_error (error);
+	g_assert (store != NULL);
+
+	/* verify */
+	app = as_store_get_app_by_id (store, "com.acme.example.firmware");
+	g_assert_nonnull (app);
+	rel = as_app_get_release_default (app);
+	g_assert_nonnull (rel);
+	g_assert_cmpstr (as_release_get_version (rel), ==, "1.2.3");
+	csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTENT);
+	g_assert_cmpstr (as_checksum_get_value (csum), ==, "7c211433f02071597741e6ff5a8ea34789abbf43");
+	blob_tmp = as_release_get_blob (rel, "firmware.bin");
+	g_assert_nonnull (blob_tmp);
+	blob_tmp = as_release_get_blob (rel, "firmware.bin.asc");
+	g_assert_null (blob_tmp);
+}
+
+static void
+fu_common_store_cab_folder_func (void)
+{
+	AsApp *app;
+	AsChecksum *csum;
+	AsRelease *rel;
+	GBytes *blob_tmp;
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* create store */
+	blob = _build_cab (GCAB_COMPRESSION_NONE,
+			   "lvfs\\acme.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware</id>\n"
+	"  <releases>\n"
+	"    <release version=\"1.2.3\"/>\n"
+	"  </releases>\n"
+	"</component>",
+			   "lvfs\\firmware.bin", "world",
+			   NULL);
+	if (blob == NULL) {
+		g_test_skip ("libgcab too old");
+		return;
+	}
+	store = fu_common_store_from_cab_bytes (blob, &error);
+	g_assert_no_error (error);
+	g_assert (store != NULL);
+
+	/* verify */
+	app = as_store_get_app_by_id (store, "com.acme.example.firmware");
+	g_assert_nonnull (app);
+	rel = as_app_get_release_default (app);
+	g_assert_nonnull (rel);
+	g_assert_cmpstr (as_release_get_version (rel), ==, "1.2.3");
+	csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTENT);
+	g_assert_cmpstr (as_checksum_get_value (csum), ==, "7c211433f02071597741e6ff5a8ea34789abbf43");
+	blob_tmp = as_release_get_blob (rel, "firmware.bin");
+	g_assert_nonnull (blob_tmp);
+}
+
+static void
+fu_common_store_cab_error_no_metadata_func (void)
+{
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	blob = _build_cab (GCAB_COMPRESSION_NONE,
+			   "foo.txt", "hello",
+			   "bar.txt", "world",
+			   NULL);
+	if (blob == NULL) {
+		g_test_skip ("libgcab too old");
+		return;
+	}
+	store = fu_common_store_from_cab_bytes (blob, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert (store == NULL);
+}
+
+static void
+fu_common_store_cab_error_wrong_size_func (void)
+{
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	blob = _build_cab (GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware</id>\n"
+	"  <releases>\n"
+	"    <release version=\"1.2.3\">\n"
+	"      <size type=\"installed\">7004701</size>\n"
+	"      <checksum filename=\"firmware.bin\" target=\"content\" type=\"sha1\">deadbeef</checksum>\n"
+	"    </release>\n"
+	"  </releases>\n"
+	"</component>",
+			   "firmware.bin", "world",
+			   NULL);
+	if (blob == NULL) {
+		g_test_skip ("libgcab too old");
+		return;
+	}
+	store = fu_common_store_from_cab_bytes (blob, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert (store == NULL);
+}
+
+static void
+fu_common_store_cab_error_missing_file_func (void)
+{
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	blob = _build_cab (GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware</id>\n"
+	"  <releases>\n"
+	"    <release version=\"1.2.3\">\n"
+	"      <checksum filename=\"firmware.dfu\" target=\"content\"/>\n"
+	"    </release>\n"
+	"  </releases>\n"
+	"</component>",
+			   "firmware.bin", "world",
+			   NULL);
+	if (blob == NULL) {
+		g_test_skip ("libgcab too old");
+		return;
+	}
+	store = fu_common_store_from_cab_bytes (blob, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert (store == NULL);
+}
+
+static void
+fu_common_store_cab_error_wrong_checksum_func (void)
+{
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	blob = _build_cab (GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware</id>\n"
+	"  <releases>\n"
+	"    <release version=\"1.2.3\">\n"
+	"      <checksum filename=\"firmware.bin\" target=\"content\" type=\"sha1\">deadbeef</checksum>\n"
+	"    </release>\n"
+	"  </releases>\n"
+	"</component>",
+			   "firmware.bin", "world",
+			   NULL);
+	if (blob == NULL) {
+		g_test_skip ("libgcab too old");
+		return;
+	}
+	store = fu_common_store_from_cab_bytes (blob, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert (store == NULL);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -1393,6 +1706,13 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
 	g_test_add_func ("/fwupd/common{endian}", fu_common_endian_func);
+	g_test_add_func ("/fwupd/common{cab-success}", fu_common_store_cab_func);
+	g_test_add_func ("/fwupd/common{cab-success-unsigned}", fu_common_store_cab_unsigned_func);
+	g_test_add_func ("/fwupd/common{cab-success-folder}", fu_common_store_cab_folder_func);
+	g_test_add_func ("/fwupd/common{cab-error-no-metadata}", fu_common_store_cab_error_no_metadata_func);
+	g_test_add_func ("/fwupd/common{cab-error-wrong-size}", fu_common_store_cab_error_wrong_size_func);
+	g_test_add_func ("/fwupd/common{cab-error-wrong-checksum}", fu_common_store_cab_error_wrong_checksum_func);
+	g_test_add_func ("/fwupd/common{cab-error-missing-file}", fu_common_store_cab_error_missing_file_func);
 	g_test_add_func ("/fwupd/common{spawn)", fu_common_spawn_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	return g_test_run ();
