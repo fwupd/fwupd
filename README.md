@@ -5,7 +5,7 @@ fwupd
 
 This project aims to make updating firmware on Linux automatic, safe and reliable.
 
-Additional information is available at the website: http://www.fwupd.org
+Additional information is available at the website: https://fwupd.org
 
 ## Compiling
 
@@ -20,7 +20,7 @@ This service is available to all OEMs and firmware creators who would like to ma
 their firmware available to Linux users.
 
 You can find more information about the technical details of creating a firmware
-capsule in the hardware vendors section of the [fwupd website](http://www.fwupd.org).
+capsule in the hardware vendors section of the [fwupd website](https://fwupd.org).
 
 Basic usage flow (command line)
 ------------------------------
@@ -48,7 +48,7 @@ This will download and apply all updates for your system.
 * Updates that require a reboot *(Offline updates)* will be staged for the next reboot.
 
 You can find more information about the update workflow in the end
-users section of the [fwupd website](https://www.fwupd.org).
+users section of the [fwupd website](https://fwupd.org).
 
 Other frontends
 -------------------
