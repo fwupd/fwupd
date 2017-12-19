@@ -652,7 +652,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 	}
 
 	/* create the soup session */
-	user_agent = g_strdup_printf ("%s/%s", PACKAGE_NAME, PACKAGE_VERSION);
+	user_agent = fwupd_build_user_agent (PACKAGE_NAME, PACKAGE_VERSION);
 	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, user_agent,
 						 SOUP_SESSION_TIMEOUT, 60,
 						 NULL);
