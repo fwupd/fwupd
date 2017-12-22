@@ -300,6 +300,7 @@ static gboolean
 fu_csr_tool_attach (FuCsrToolPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuCsrDevice) device = NULL;
+	device = fu_csr_get_default_device (priv, error);
 	if (device == NULL)
 		return FALSE;
 	if (!fu_usb_device_open (FU_USB_DEVICE (device), error))
