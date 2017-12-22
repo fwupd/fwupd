@@ -169,11 +169,6 @@ fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 		fu_device_set_summary (FU_DEVICE (device),
 				       "An open source display colorimeter");
 		break;
-	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
-	case CH_DEVICE_MODE_FIRMWARE_PLUS:
-		fu_device_set_summary (FU_DEVICE (device),
-				       "An open source spectrophotometer");
-		break;
 	case CH_DEVICE_MODE_BOOTLOADER_ALS:
 	case CH_DEVICE_MODE_FIRMWARE_ALS:
 		fu_device_set_summary (FU_DEVICE (device),
@@ -187,7 +182,6 @@ fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 	switch (mode) {
 	case CH_DEVICE_MODE_BOOTLOADER:
 	case CH_DEVICE_MODE_BOOTLOADER2:
-	case CH_DEVICE_MODE_BOOTLOADER_PLUS:
 	case CH_DEVICE_MODE_BOOTLOADER_ALS:
 		priv->is_bootloader = TRUE;
 		break;
