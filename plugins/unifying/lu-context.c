@@ -566,8 +566,8 @@ lu_context_find_by_platform_id (LuContext *ctx, const gchar *platform_id, GError
 		lu_context_coldplug (ctx);
 
 	for (guint i = 0; i < ctx->devices->len; i++) {
-		FuDevice *device = g_ptr_array_index (ctx->devices, i);
-		if (g_strcmp0 (fu_device_get_platform_id (device), platform_id) == 0)
+		LuDevice *device = g_ptr_array_index (ctx->devices, i);
+		if (g_strcmp0 (fu_device_get_platform_id (FU_DEVICE (device)), platform_id) == 0)
 			return g_object_ref (device);
 	}
 	g_set_error (error,
