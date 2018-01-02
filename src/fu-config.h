@@ -35,6 +35,7 @@ FuConfig	*fu_config_new				(void);
 gboolean	 fu_config_load				(FuConfig	*self,
 							 GError		**error);
 
+guint64		 fu_config_get_archive_size_max		(FuConfig	*self);
 GPtrArray	*fu_config_get_blacklist_devices	(FuConfig	*self);
 GPtrArray	*fu_config_get_blacklist_plugins	(FuConfig	*self);
 GPtrArray	*fu_config_get_remotes			(FuConfig	*self);

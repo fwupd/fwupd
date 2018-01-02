@@ -700,6 +700,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		gchar *prop_key;
 		gint32 fd_handle = 0;
 		gint fd;
+		guint64 archive_size_max;
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		g_autoptr(PolkitSubject) subject = NULL;
@@ -758,7 +759,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* parse the cab file before authenticating so we can work out
 		 * what action ID to use, for instance, if this is trusted --
 		 * this will also close the fd when done */
-		helper->blob_cab = fu_common_get_contents_fd (fd, FU_ENGINE_FIRMWARE_SIZE_MAX, &error);
+		archive_size_max = fu_engine_get_archive_size_max (priv->engine);
+		helper->blob_cab = fu_common_get_contents_fd (fd, archive_size_max, &error);
 		if (helper->blob_cab == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
