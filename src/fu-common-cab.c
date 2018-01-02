@@ -227,11 +227,48 @@ fu_common_store_from_cab_folder (AsStore *store, GCabFolder *cabfolder, GError *
 	return TRUE;
 }
 
+typedef struct {
+	guint64		 size_total;
+	guint64		 size_max;
+	GError		*error;
+} FuCommonCabHelper;
+
 static gboolean
 as_cab_store_file_cb (GCabFile *file, gpointer user_data)
 {
+	FuCommonCabHelper *helper = (FuCommonCabHelper *) user_data;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *name = NULL;
+
+	/* already failed */
+	if (helper->error != NULL)
+		return FALSE;
+
+	/* check the size of the compressed file */
+	if (gcab_file_get_size (file) > helper->size_max) {
+		g_autofree gchar *sz_val = g_format_size (gcab_file_get_size (file));
+		g_autofree gchar *sz_max = g_format_size (helper->size_max);
+		g_set_error (&helper->error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "file %s was too large (%s, limit %s)",
+			     gcab_file_get_name (file),
+			     sz_val, sz_max);
+		return FALSE;
+	}
+
+	/* check the total size of all the compressed files */
+	helper->size_total += gcab_file_get_size (file);
+	if (helper->size_total > helper->size_max) {
+		g_autofree gchar *sz_val = g_format_size (helper->size_total);
+		g_autofree gchar *sz_max = g_format_size (helper->size_max);
+		g_set_error (&helper->error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "uncompressed data too large (%s, limit %s)",
+			     sz_val, sz_max);
+		return FALSE;
+	}
 
 	/* convert to UNIX paths */
 	name = g_strdup (gcab_file_get_name (file));
@@ -246,6 +283,7 @@ as_cab_store_file_cb (GCabFile *file, gpointer user_data)
 /**
  * fu_common_store_from_cab_bytes:
  * @blob: A readable blob
+ * @size_max: The maximum size of the archive
  * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  *
  * Create an AppStream store from a cabinet archive.
@@ -253,25 +291,47 @@ as_cab_store_file_cb (GCabFile *file, gpointer user_data)
  * Returns: a store, or %NULL on error
  **/
 AsStore *
-fu_common_store_from_cab_bytes (GBytes *blob, GError **error)
+fu_common_store_from_cab_bytes (GBytes *blob, guint64 size_max, GError **error)
 {
+	FuCommonCabHelper helper = { 0 };
 	GPtrArray *folders;
 	g_autoptr(AsStore) store = as_store_new ();
 	g_autoptr(GCabCabinet) cabinet = gcab_cabinet_new ();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) ip = NULL;
 
-	/* decompress the file to memory */
+	/* load from a seekable stream */
 	ip = g_memory_input_stream_new_from_bytes (blob);
 	if (!gcab_cabinet_load (cabinet, ip, NULL, error))
-		return FALSE;
+		return NULL;
+
+	/* check the size is sane */
+	if (gcab_cabinet_get_size (cabinet) > size_max) {
+		g_autofree gchar *sz_val = g_format_size (gcab_cabinet_get_size (cabinet));
+		g_autofree gchar *sz_max = g_format_size (size_max);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "archive too large (%s, limit %s)",
+			     sz_val, sz_max);
+		return NULL;
+	}
+
+	/* decompress the file to memory */
+	helper.size_max = size_max;
 	if (!gcab_cabinet_extract_simple (cabinet, NULL,
-					  as_cab_store_file_cb, NULL,
+					  as_cab_store_file_cb, &helper,
 					  NULL, &error_local)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     error_local->message);
+		return NULL;
+	}
+
+	/* the file callback set an error */
+	if (helper.error != NULL) {
+		g_propagate_error (error, helper.error);
 		return NULL;
 	}
 
@@ -290,7 +350,7 @@ fu_common_store_from_cab_bytes (GBytes *blob, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "archive contained no valid metadata");
-		return FALSE;
+		return NULL;
 	}
 
 	/* success */
@@ -300,7 +360,7 @@ fu_common_store_from_cab_bytes (GBytes *blob, GError **error)
 #else
 
 AsStore *
-fu_common_store_from_cab_bytes (GBytes *blob, GError **error)
+fu_common_store_from_cab_bytes (GBytes *blob, guint64 size_max, GError **error)
 {
 	g_autoptr(AsStore) store = as_store_new ();
 	g_autoptr(GError) error_local = NULL;
