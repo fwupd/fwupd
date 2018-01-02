@@ -35,8 +35,6 @@ G_BEGIN_DECLS
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 
-#define		FU_ENGINE_FIRMWARE_SIZE_MAX		(512 * 0x100000) /* bytes * Mb */
-
 FuEngine	*fu_engine_new				(void);
 gboolean	 fu_engine_load				(FuEngine	*self,
 							 GError		**error);
@@ -52,7 +50,7 @@ const gchar	*fu_engine_get_action_id_for_device	(FuEngine	*self,
 							 AsStore	*store,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-
+guint64		 fu_engine_get_archive_size_max		(FuEngine	*self);
 GPtrArray	*fu_engine_get_devices			(FuEngine	*self,
 							 GError		**error);
 GPtrArray	*fu_engine_get_remotes			(FuEngine	*self,

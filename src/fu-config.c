@@ -39,6 +39,7 @@ struct _FuConfig
 	GPtrArray		*monitors;
 	GPtrArray		*blacklist_devices;
 	GPtrArray		*blacklist_plugins;
+	guint64			 archive_size_max;
 };
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
@@ -333,6 +334,13 @@ fu_config_load (FuConfig *self, GError **error)
 		}
 	}
 
+	/* get maximum archive size, defaulting to something sane */
+	self->archive_size_max = g_key_file_get_uint64 (self->keyfile,
+							"fwupd",
+							"ArchiveSizeMax",
+							NULL);
+	self->archive_size_max *= 0x100000;
+
 	/* load remotes */
 	if (!fu_config_load_remotes (self, error))
 		return FALSE;
@@ -362,6 +370,13 @@ fu_config_get_blacklist_devices (FuConfig *self)
 	return self->blacklist_devices;
 }
 
+guint64
+fu_config_get_archive_size_max (FuConfig *self)
+{
+	g_return_val_if_fail (FU_IS_CONFIG (self), 0);
+	return self->archive_size_max;
+}
+
 GPtrArray *
 fu_config_get_blacklist_plugins (FuConfig *self)
 {
@@ -379,6 +394,7 @@ fu_config_class_init (FuConfigClass *klass)
 static void
 fu_config_init (FuConfig *self)
 {
+	self->archive_size_max = 512 * 0x100000;
 	self->keyfile = g_key_file_new ();
 	self->blacklist_devices = g_ptr_array_new_with_free_func (g_free);
 	self->blacklist_plugins = g_ptr_array_new_with_free_func (g_free);

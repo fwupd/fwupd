@@ -1982,7 +1982,7 @@ fu_engine_get_store_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 	/* load file */
 	fu_engine_set_status (self, FWUPD_STATUS_DECOMPRESSING);
 	store = fu_common_store_from_cab_bytes (blob_cab,
-						FU_ENGINE_FIRMWARE_SIZE_MAX,
+						fu_engine_get_archive_size_max (self),
 						error);
 	if (store == NULL)
 		return NULL;
@@ -2092,7 +2092,9 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* get all apps */
-	blob = fu_common_get_contents_fd (fd, FU_ENGINE_FIRMWARE_SIZE_MAX, error);
+	blob = fu_common_get_contents_fd (fd,
+					  fu_engine_get_archive_size_max (self),
+					  error);
 	if (blob == NULL)
 		return NULL;
 	store = fu_engine_get_store_from_blob (self, blob, error);
@@ -2956,6 +2958,12 @@ fu_engine_cleanup_state (GError **error)
 		}
 	}
 	return TRUE;
+}
+
+guint64
+fu_engine_get_archive_size_max (FuEngine *self)
+{
+	return fu_config_get_archive_size_max (self->config);
 }
 
 static void
