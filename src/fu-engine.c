@@ -2574,7 +2574,7 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 	if (!fu_plugin_runner_get_results (plugin, device, error))
 		return NULL;
 
-	return g_object_ref (device);
+	return g_object_ref (FWUPD_DEVICE (device));
 }
 
 static void
