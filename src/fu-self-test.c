@@ -1460,7 +1460,7 @@ fu_common_store_cab_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, &error);
+	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
 	g_assert_no_error (error);
 	g_assert (store != NULL);
 
@@ -1506,7 +1506,7 @@ fu_common_store_cab_unsigned_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, &error);
+	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
 	g_assert_no_error (error);
 	g_assert (store != NULL);
 
@@ -1550,7 +1550,7 @@ fu_common_store_cab_folder_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, &error);
+	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
 	g_assert_no_error (error);
 	g_assert (store != NULL);
 
@@ -1581,7 +1581,7 @@ fu_common_store_cab_error_no_metadata_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, &error);
+	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert (store == NULL);
 }
@@ -1610,7 +1610,7 @@ fu_common_store_cab_error_wrong_size_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, &error);
+	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert (store == NULL);
 }
@@ -1638,7 +1638,33 @@ fu_common_store_cab_error_missing_file_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, &error);
+	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert (store == NULL);
+}
+
+static void
+fu_common_store_cab_error_size_func (void)
+{
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	blob = _build_cab (GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware</id>\n"
+	"  <releases>\n"
+	"    <release version=\"1.2.3\"/>\n"
+	"  </releases>\n"
+	"</component>",
+			   "firmware.bin", "world",
+			   NULL);
+	if (blob == NULL) {
+		g_test_skip ("libgcab too old");
+		return;
+	}
+	store = fu_common_store_from_cab_bytes (blob, 123, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert (store == NULL);
 }
@@ -1666,7 +1692,7 @@ fu_common_store_cab_error_wrong_checksum_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, &error);
+	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert (store == NULL);
 }
@@ -1713,6 +1739,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{cab-error-wrong-size}", fu_common_store_cab_error_wrong_size_func);
 	g_test_add_func ("/fwupd/common{cab-error-wrong-checksum}", fu_common_store_cab_error_wrong_checksum_func);
 	g_test_add_func ("/fwupd/common{cab-error-missing-file}", fu_common_store_cab_error_missing_file_func);
+	g_test_add_func ("/fwupd/common{cab-error-size}", fu_common_store_cab_error_size_func);
 	g_test_add_func ("/fwupd/common{spawn)", fu_common_spawn_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	return g_test_run ();

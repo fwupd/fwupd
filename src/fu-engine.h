@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 
-#define		FU_ENGINE_FIRMWARE_SIZE_MAX		(32 * 1024 * 1024) /* bytes */
+#define		FU_ENGINE_FIRMWARE_SIZE_MAX		(512 * 0x100000) /* bytes * Mb */
 
 FuEngine	*fu_engine_new				(void);
 gboolean	 fu_engine_load				(FuEngine	*self,

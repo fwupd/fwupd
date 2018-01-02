@@ -25,6 +25,7 @@
 #include <appstream-glib.h>
 
 AsStore		*fu_common_store_from_cab_bytes		(GBytes		*blob,
+							 guint64	 size_max,
 							 GError		**error);
 
 #endif /* __FU_COMMON_CAB_H */

@@ -1981,7 +1981,9 @@ fu_engine_get_store_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 
 	/* load file */
 	fu_engine_set_status (self, FWUPD_STATUS_DECOMPRESSING);
-	store = fu_common_store_from_cab_bytes (blob_cab, error);
+	store = fu_common_store_from_cab_bytes (blob_cab,
+						FU_ENGINE_FIRMWARE_SIZE_MAX,
+						error);
 	if (store == NULL)
 		return NULL;
 
