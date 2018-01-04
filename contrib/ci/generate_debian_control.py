@@ -32,10 +32,14 @@ def parse_control_dependencies(requested_type):
         sys.exit(1)
     OS = TARGET
     SUBOS = ''
-    split = TARGET.split('-')
-    if len(split) >= 2:
-        OS = split[0]
-        SUBOS = split[1]
+    if TARGET:
+        split = TARGET.split('-')
+        if len(split) >= 2:
+            OS = split[0]
+            SUBOS = split[1]
+    else:
+        import lsb_release
+        OS = lsb_release.get_distro_information()['ID'].lower()
 
     tree = etree.parse(os.path.join(directory, "dependencies.xml"))
     root = tree.getroot()
