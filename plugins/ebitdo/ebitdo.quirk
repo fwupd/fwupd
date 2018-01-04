@@ -31,3 +31,15 @@ USB\VID_2DC8&PID_9001=none
 # FC30_ARCADE
 USB\VID_8000&PID_1002=none
 USB\VID_2DC8&PID_1002=none
+
+# SF30 PRO/SN30 PRO
+## Nintendo Switch mode (Start + Y)
+USB\VID_057E&PID_2009=none
+## Dinput mode (Start + B)
+USB\VID_2DC8&PID_6000=none
+USB\VID_2DC8&PID_6001=none
+## Xinput mode (Start + X)
+USB\VID_045E&PID_028E=none
+# macOS mode (Start + A)
+USB\VID_054C&PID_05C4=none
+
