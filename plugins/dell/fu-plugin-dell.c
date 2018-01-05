@@ -826,7 +826,10 @@ fu_plugin_update_prepare (FuPlugin *plugin,
                           FuDevice *device,
                           GError **error)
 {
-	return fu_dell_toggle_flash (device, error, TRUE);
+	if (!fu_dell_toggle_flash (device, error, TRUE))
+		return FALSE;
+	g_usleep (DELL_FLASH_MODE_DELAY * G_USEC_PER_SEC);
+	return TRUE;
 }
 
 gboolean
