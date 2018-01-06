@@ -133,6 +133,11 @@ fu_engine_require_hwid_func (void)
 	return;
 #endif
 
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load (engine, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
 	/* get generated file as a blob */
 	filename = fu_test_get_filename (TESTDATADIR, "missing-hwid/hwid-1.2.3.cab");
 	g_assert (filename != NULL);
@@ -160,7 +165,7 @@ fu_engine_require_hwid_func (void)
 }
 
 static void
-fu_engine_func (void)
+fu_engine_downgrade_func (void)
 {
 	FwupdRelease *rel;
 	gboolean ret;
@@ -1706,6 +1711,7 @@ main (int argc, char **argv)
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
 
+	fu_common_rmtree ("/tmp/fwupd-self-test", NULL);
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
@@ -1717,9 +1723,9 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
 	g_test_add_func ("/fwupd/device-list{delay}", fu_device_list_delay_func);
 	g_test_add_func ("/fwupd/device-list{compatible}", fu_device_list_compatible_func);
-	g_test_add_func ("/fwupd/engine", fu_engine_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
 	g_test_add_func ("/fwupd/engine{partial-hash}", fu_engine_partial_hash_func);
+	g_test_add_func ("/fwupd/engine{downgrade}", fu_engine_downgrade_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
