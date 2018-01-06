@@ -130,6 +130,7 @@ typedef enum {
  * @FWUPD_UPDATE_STATE_PENDING:			Update is pending
  * @FWUPD_UPDATE_STATE_SUCCESS:			Update was successfull
  * @FWUPD_UPDATE_STATE_FAILED:			Update failed
+ * @FWUPD_UPDATE_STATE_NEEDS_REBOOT:		Waiting for a reboot to apply
  *
  * The update state.
  **/
@@ -138,6 +139,7 @@ typedef enum {
 	FWUPD_UPDATE_STATE_PENDING,			/* Since: 0.7.0 */
 	FWUPD_UPDATE_STATE_SUCCESS,			/* Since: 0.7.0 */
 	FWUPD_UPDATE_STATE_FAILED,			/* Since: 0.7.0 */
+	FWUPD_UPDATE_STATE_NEEDS_REBOOT,		/* Since: 1.0.4 */
 	/*< private >*/
 	FWUPD_UPDATE_STATE_LAST
 } FwupdUpdateState;

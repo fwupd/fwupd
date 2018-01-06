@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FU_PENDING_H
-#define __FU_PENDING_H
+#ifndef __FU_HISTORY_H
+#define __FU_HISTORY_H
 
 #include <glib-object.h>
 
@@ -28,42 +28,42 @@
 
 G_BEGIN_DECLS
 
-#define FU_TYPE_PENDING (fu_pending_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuPending, fu_pending, FU, PENDING, GObject)
+#define FU_TYPE_PENDING (fu_history_get_type ())
+G_DECLARE_FINAL_TYPE (FuHistory, fu_history, FU, HISTORY, GObject)
 
-struct _FuPendingClass
-{
-	GObjectClass		 parent_class;
-};
+FuHistory	*fu_history_new				(void);
 
-FuPending	*fu_pending_new				(void);
-
-gboolean	 fu_pending_add_device			(FuPending	*pending,
+gboolean	 fu_history_add_device			(FuHistory	*self,
 							 FuDevice	*device,
+							 FwupdRelease	*release,
 							 GError		**error);
-gboolean	 fu_pending_set_update_state		(FuPending	*pending,
+gboolean	 fu_history_set_update_state		(FuHistory	*self,
 							 FuDevice	*device,
 							 FwupdUpdateState update_state,
 							 GError		**error);
-gboolean	 fu_pending_set_error_msg		(FuPending	*pending,
+gboolean	 fu_history_set_device_flags		(FuHistory	*self,
+							 FuDevice	*device,
+							 FwupdDeviceFlags device_flags,
+							 GError		**error);
+gboolean	 fu_history_set_error_msg		(FuHistory	*self,
 							 FuDevice	*device,
 							 const gchar	*error_msg,
 							 GError		**error);
-gboolean	 fu_pending_remove_device		(FuPending	*pending,
+gboolean	 fu_history_remove_device		(FuHistory	*self,
 							 FuDevice	*device,
 							 GError		**error);
-gboolean	 fu_pending_remove_all			(FuPending	*pending,
+gboolean	 fu_history_remove_all			(FuHistory	*self,
 							 GError		**error);
-gboolean	 fu_pending_remove_all_with_state	(FuPending	*pending,
+gboolean	 fu_history_remove_all_with_state	(FuHistory	*self,
 							 FwupdUpdateState update_state,
 							 GError		**error);
-FuDevice	*fu_pending_get_device			(FuPending	*pending,
+FuDevice	*fu_history_get_device			(FuHistory	*self,
 							 const gchar	*device_id,
 							 GError		**error);
-GPtrArray	*fu_pending_get_devices			(FuPending	*pending,
+GPtrArray	*fu_history_get_devices			(FuHistory	*self,
 							 GError		**error);
 
 G_END_DECLS
 
-#endif /* __FU_PENDING_H */
+#endif /* __FU_HISTORY_H */
 

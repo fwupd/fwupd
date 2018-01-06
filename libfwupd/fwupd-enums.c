@@ -214,6 +214,8 @@ fwupd_update_state_to_string (FwupdUpdateState update_state)
 		return "success";
 	if (update_state == FWUPD_UPDATE_STATE_FAILED)
 		return "failed";
+	if (update_state == FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		return "needs-reboot";
 	return NULL;
 }
 
@@ -238,6 +240,8 @@ fwupd_update_state_from_string (const gchar *update_state)
 		return FWUPD_UPDATE_STATE_SUCCESS;
 	if (g_strcmp0 (update_state, "failed") == 0)
 		return FWUPD_UPDATE_STATE_FAILED;
+	if (g_strcmp0 (update_state, "needs-reboot") == 0)
+		return FWUPD_UPDATE_STATE_NEEDS_REBOOT;
 	return FWUPD_UPDATE_STATE_UNKNOWN;
 }
 

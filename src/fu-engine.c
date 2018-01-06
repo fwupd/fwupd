@@ -43,7 +43,7 @@
 #include "fu-engine.h"
 #include "fu-hwids.h"
 #include "fu-keyring.h"
-#include "fu-pending.h"
+#include "fu-history.h"
 #include "fu-plugin.h"
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
@@ -67,7 +67,7 @@ struct _FuEngine
 	FuDeviceList		*device_list;
 	FwupdStatus		 status;
 	guint			 percentage;
-	FuPending		*pending;
+	FuHistory		*history;
 	AsProfile		*profile;
 	AsStore			*store;
 	gboolean		 coldplug_running;
@@ -1161,8 +1161,11 @@ fu_engine_install (FuEngine *self,
 	const gchar *version;
 	gboolean is_downgrade;
 	gint vercmp;
+	g_autofree gchar *checksum = NULL;
 	g_autofree gchar *device_id_orig = NULL;
+	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
 	g_autoptr(GBytes) blob_fw2 = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -1201,7 +1204,6 @@ fu_engine_install (FuEngine *self,
 			     fu_device_get_id (device));
 		return FALSE;
 	}
-
 
 	/* called with online update, test if device is supposed to allow this */
 	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) == 0 &&
@@ -1313,7 +1315,6 @@ fu_engine_install (FuEngine *self,
 	}
 
 	version = as_release_get_version (rel);
-	fu_device_set_version_new (device, version);
 
 	/* compare to the lowest supported version, if it exists */
 	tmp = fu_device_get_version_lowest (device);
@@ -1373,6 +1374,19 @@ fu_engine_install (FuEngine *self,
 	/* save the chosen device ID in case the device goes away */
 	device_id_orig = g_strdup (fu_device_get_id (device));
 
+	/* mark this as modified even if we actually fail to do the update */
+	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
+
+	/* add device to database */
+	checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_cab);
+	fwupd_release_set_version (release_history, version);
+	fwupd_release_add_checksum (release_history, checksum);
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+	if (!fu_history_remove_device (self->history, device, error))
+		return FALSE;
+	if (!fu_history_add_device (self->history, device, release_history, error))
+		return FALSE;
+
 	/* do the update */
 	if (!fu_plugin_runner_update_detach (plugin, device, error))
 		return FALSE;
@@ -1384,8 +1398,15 @@ fu_engine_install (FuEngine *self,
 				      blob_cab,
 				      blob_fw2,
 				      flags,
-				      error)) {
+				      &error_local)) {
 		g_autoptr(GError) error_attach = NULL;
+
+		/* save to database */
+		fu_history_set_update_state (self->history, device, FWUPD_UPDATE_STATE_FAILED, NULL);
+		fu_history_set_error_msg (self->history, device, error_local->message, NULL);
+		g_propagate_error (error, g_steal_pointer (&error_local));
+
+		/* attack back into runtime */
 		if (!fu_plugin_runner_update_attach (plugin,
 						     device,
 						     &error_attach)) {
@@ -1431,14 +1452,28 @@ fu_engine_install (FuEngine *self,
 
 	/* make the UI update */
 	fu_device_set_status (device, FWUPD_STATUS_IDLE);
-	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	fu_engine_emit_device_changed (self, device);
 	fu_engine_emit_changed (self);
+
+	/* update database */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
+		if (!fu_history_set_update_state (self->history, device,
+						  FWUPD_UPDATE_STATE_NEEDS_REBOOT,
+						  error))
+			return FALSE;
+	} else {
+		if (!fu_history_set_update_state (self->history, device,
+						  FWUPD_UPDATE_STATE_SUCCESS,
+						  error))
+			return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
 static FuDevice *
-fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GError **error)
+fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GError **error)
 {
 	FuDevice *dev;
 	FuPlugin *plugin;
@@ -1452,7 +1487,7 @@ fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GErr
 		return fu_device_list_find_by_id (self->device_list, id, error);
 
 	/* allow '*' for any */
-	devices = fu_pending_get_devices (self->pending, error);
+	devices = fu_history_get_devices (self->history, error);
 	if (devices == NULL)
 		return NULL;
 	for (guint i = 0; i < devices->len; i++) {
@@ -2532,7 +2567,7 @@ fu_engine_clear_results (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* find the device */
-	device = fu_engine_get_item_by_id_fallback_pending (self, device_id, error);
+	device = fu_engine_get_item_by_id_fallback_history (self, device_id, error);
 	if (device == NULL)
 		return FALSE;
 
@@ -2568,7 +2603,7 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find the device */
-	device = fu_engine_get_item_by_id_fallback_pending (self, device_id, error);
+	device = fu_engine_get_item_by_id_fallback_history (self, device_id, error);
 	if (device == NULL)
 		return NULL;
 
@@ -3187,7 +3222,7 @@ fu_engine_init (FuEngine *self)
 	self->smbios = fu_smbios_new ();
 	self->hwids = fu_hwids_new ();
 	self->quirks = fu_quirks_new ();
-	self->pending = fu_pending_new ();
+	self->history = fu_history_new ();
 	self->plugin_list = fu_plugin_list_new ();
 	self->profile = as_profile_new ();
 	self->store = as_store_new ();
@@ -3208,7 +3243,7 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->smbios);
 	g_object_unref (self->quirks);
 	g_object_unref (self->hwids);
-	g_object_unref (self->pending);
+	g_object_unref (self->history);
 	g_object_unref (self->plugin_list);
 	g_object_unref (self->profile);
 	g_object_unref (self->store);

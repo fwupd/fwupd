@@ -37,7 +37,7 @@
 #include <unistd.h>
 
 #include "fu-hwids.h"
-#include "fu-pending.h"
+#include "fu-history.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
 #include "fwupd-common-private.h"
@@ -461,7 +461,7 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	guint cnt = 0;
 	g_autofree gchar *link = NULL;
 	g_autoptr(GPtrArray) results = NULL;
-	g_autoptr(FuPending) pending = NULL;
+	g_autoptr(FuHistory) history = NULL;
 
 	/* verify this is pointing to our cache */
 	link = g_file_read_link (FU_OFFLINE_TRIGGER_FILENAME, NULL);
@@ -495,8 +495,8 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* get prepared updates */
-	pending = fu_pending_new ();
-	results = fu_pending_get_devices (pending, error);
+	history = fu_history_new ();
+	results = fu_history_get_devices (history, error);
 	if (results == NULL)
 		return FALSE;
 
@@ -578,8 +578,8 @@ fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_clear_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(FuPending) pending = fu_pending_new ();
-	return fu_pending_remove_all_with_state (pending, FWUPD_UPDATE_STATE_PENDING, error);
+	g_autoptr(FuHistory) history = fu_history_new ();
+	return fu_history_remove_all_with_state (history, FWUPD_UPDATE_STATE_PENDING, error);
 }
 
 static gboolean

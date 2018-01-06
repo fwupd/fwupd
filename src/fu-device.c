@@ -41,8 +41,6 @@ static void fu_device_finalize			 (GObject *object);
 
 typedef struct {
 	gchar				*equivalent_id;
-	gchar				*version_new;
-	gchar				*filename_pending;
 	FuDevice			*alternate;
 	FuQuirks			*quirks;
 	GHashTable			*metadata;
@@ -127,40 +125,6 @@ fu_device_set_equivalent_id (FuDevice *device, const gchar *equivalent_id)
 	g_return_if_fail (FU_IS_DEVICE (device));
 	g_free (priv->equivalent_id);
 	priv->equivalent_id = g_strdup (equivalent_id);
-}
-
-const gchar *
-fu_device_get_version_new (FuDevice *device)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
-	return priv->version_new;
-}
-
-void
-fu_device_set_version_new (FuDevice *device, const gchar *version_new)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FU_IS_DEVICE (device));
-	g_free (priv->version_new);
-	priv->version_new = g_strdup (version_new);
-}
-
-const gchar *
-fu_device_get_filename_pending (FuDevice *device)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
-	return priv->filename_pending;
-}
-
-void
-fu_device_set_filename_pending (FuDevice *device, const gchar *filename_pending)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FU_IS_DEVICE (device));
-	g_free (priv->filename_pending);
-	priv->filename_pending = g_strdup (filename_pending);
 }
 
 /**
@@ -701,10 +665,6 @@ fu_device_to_string (FuDevice *device)
 		g_string_append (str, tmp);
 	if (priv->equivalent_id != NULL)
 		fwupd_pad_kv_str (str, "EquivalentId", priv->equivalent_id);
-	if (priv->filename_pending != NULL)
-		fwupd_pad_kv_str (str, "FilenamePending", priv->filename_pending);
-	if (priv->version_new != NULL)
-		fwupd_pad_kv_str (str, "VersionNew", priv->version_new);
 	keys = g_hash_table_get_keys (priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
@@ -813,8 +773,6 @@ fu_device_finalize (GObject *object)
 		g_object_unref (priv->quirks);
 	g_hash_table_unref (priv->metadata);
 	g_free (priv->equivalent_id);
-	g_free (priv->version_new);
-	g_free (priv->filename_pending);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }
