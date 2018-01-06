@@ -579,7 +579,7 @@ static gboolean
 fu_util_clear_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuPending) pending = fu_pending_new ();
-	return fu_pending_remove_all (pending, error);
+	return fu_pending_remove_all_with_state (pending, FWUPD_UPDATE_STATE_PENDING, error);
 }
 
 static gboolean

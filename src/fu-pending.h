@@ -41,9 +41,9 @@ FuPending	*fu_pending_new				(void);
 gboolean	 fu_pending_add_device			(FuPending	*pending,
 							 FuDevice	*device,
 							 GError		**error);
-gboolean	 fu_pending_set_state			(FuPending	*pending,
+gboolean	 fu_pending_set_update_state		(FuPending	*pending,
 							 FuDevice	*device,
-							 FwupdUpdateState state,
+							 FwupdUpdateState update_state,
 							 GError		**error);
 gboolean	 fu_pending_set_error_msg		(FuPending	*pending,
 							 FuDevice	*device,
@@ -53,6 +53,9 @@ gboolean	 fu_pending_remove_device		(FuPending	*pending,
 							 FuDevice	*device,
 							 GError		**error);
 gboolean	 fu_pending_remove_all			(FuPending	*pending,
+							 GError		**error);
+gboolean	 fu_pending_remove_all_with_state	(FuPending	*pending,
+							 FwupdUpdateState update_state,
 							 GError		**error);
 FuDevice	*fu_pending_get_device			(FuPending	*pending,
 							 const gchar	*device_id,

@@ -1019,7 +1019,7 @@ fu_pending_func (void)
 	device = fu_device_new ();
 	/* the SHA1SUM of this is 2ba16d10df45823dd4494ff10a0bfccfef512c9d */
 	fu_device_set_id (device, "self-test");
-	ret = fu_pending_set_state (pending, device, FWUPD_UPDATE_STATE_PENDING, &error);
+	ret = fu_pending_set_update_state (pending, device, FWUPD_UPDATE_STATE_PENDING, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_pending_set_error_msg (pending, device, "word", &error);

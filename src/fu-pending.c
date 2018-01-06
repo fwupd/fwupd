@@ -185,6 +185,41 @@ out:
 }
 
 gboolean
+fu_pending_remove_all_with_state (FuPending *pending,
+				  FwupdUpdateState update_state,
+				  GError **error)
+{
+	FuPendingPrivate *priv = GET_PRIVATE (pending);
+	char *error_msg = NULL;
+	g_autofree gchar *statement = NULL;
+	gint rc;
+
+	g_return_val_if_fail (FU_IS_PENDING (pending), FALSE);
+
+	/* lazy load */
+	if (priv->db == NULL) {
+		if (!fu_pending_load (pending, error))
+			return FALSE;
+	}
+
+	/* remove entries */
+	g_debug ("FuPending: removing all devices with state %s",
+		 fwupd_update_state_to_string (update_state));
+	statement = g_strdup_printf ("DELETE FROM pending WHERE state = '%u')",
+				     update_state);
+	rc = sqlite3_exec (priv->db, statement, NULL, NULL, &error_msg);
+	if (rc != SQLITE_OK) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "SQL error: %s", error_msg);
+		sqlite3_free (error_msg);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
 fu_pending_remove_all (FuPending *pending, GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
@@ -409,10 +444,10 @@ out:
 }
 
 gboolean
-fu_pending_set_state (FuPending *pending,
-		      FuDevice *device,
-		      FwupdUpdateState state,
-		      GError **error)
+fu_pending_set_update_state (FuPending *pending,
+			     FuDevice *device,
+			     FwupdUpdateState update_state,
+			     GError **error)
 {
 	FuPendingPrivate *priv = GET_PRIVATE (pending);
 	char *error_msg = NULL;
@@ -428,12 +463,12 @@ fu_pending_set_state (FuPending *pending,
 			return FALSE;
 	}
 
-	g_debug ("FuPending: set state of %s to %s",
+	g_debug ("FuPending: set update-state of %s to %s",
 		 fu_device_get_id (device),
-		 fwupd_update_state_to_string (state));
+		 fwupd_update_state_to_string (update_state));
 	statement = sqlite3_mprintf ("UPDATE pending SET state = %i WHERE "
 				     "device_id = %Q;",
-				     state, fu_device_get_id (device));
+				     update_state, fu_device_get_id (device));
 
 	/* remove entry */
 	rc = sqlite3_exec (priv->db, statement, NULL, NULL, &error_msg);

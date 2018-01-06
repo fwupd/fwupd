@@ -1211,8 +1211,8 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		const gchar *tmp;
 
 		/* update pending database */
-		fu_pending_set_state (pending, device,
-				      FWUPD_UPDATE_STATE_SUCCESS, NULL);
+		fu_pending_set_update_state (pending, device,
+					     FWUPD_UPDATE_STATE_SUCCESS, NULL);
 
 		/* delete cab file */
 		tmp = fu_device_get_filename_pending (device_pending);
