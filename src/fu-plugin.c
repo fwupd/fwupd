@@ -1075,6 +1075,7 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	fu_device_set_filename_pending (device, filename);
 
 	/* add to database */
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_PENDING);
 	if (!fu_pending_add_device (pending, device, error))
 		return FALSE;
 

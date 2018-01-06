@@ -1007,6 +1007,7 @@ fu_pending_func (void)
 	fu_device_set_name (device, "ColorHug"),
 	fu_device_set_version (device, "3.0.1"),
 	fu_device_set_version_new (device, "3.0.2");
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_PENDING);
 	ret = fu_pending_add_device (pending, device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);

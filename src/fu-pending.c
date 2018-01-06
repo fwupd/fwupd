@@ -160,7 +160,7 @@ fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 							  "version_new) "
 				     "VALUES (%Q,%i,%Q,%Q,%Q,%Q,%Q)",
 				     fu_device_get_id (device),
-				     FWUPD_UPDATE_STATE_PENDING,
+				     fu_device_get_update_state (device),
 				     fu_device_get_filename_pending (device),
 				     fu_device_get_name (device),
 				     fu_device_get_plugin (device),
