@@ -777,6 +777,10 @@ fu_plugin_runner_startup (FuPlugin *plugin, GError **error)
 	if (!priv->enabled)
 		return TRUE;
 
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_startup", (gpointer *) &func);
 	if (func == NULL)
@@ -873,6 +877,10 @@ fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 	if (!priv->enabled)
 		return TRUE;
 
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_coldplug", (gpointer *) &func);
 	if (func == NULL)
@@ -895,6 +903,10 @@ fu_plugin_runner_coldplug_prepare (FuPlugin *plugin, GError **error)
 	if (!priv->enabled)
 		return TRUE;
 
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_coldplug_prepare", (gpointer *) &func);
 	if (func == NULL)
@@ -915,6 +927,10 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *plugin, GError **error)
 
 	/* not enabled */
 	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
 		return TRUE;
 
 	/* optional */
@@ -973,6 +989,8 @@ fu_plugin_runner_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GEr
 	/* not enabled */
 	if (!priv->enabled)
 		return TRUE;
+
+	/* no object loaded */
 	if (priv->module == NULL)
 		return TRUE;
 
@@ -1078,6 +1096,10 @@ fu_plugin_runner_verify (FuPlugin *plugin,
 	if (!priv->enabled)
 		return TRUE;
 
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
 	/* clear any existing verification checksums */
 	checksums = fu_device_get_checksums (device);
 	g_ptr_array_set_size (checksums, 0);
@@ -1139,6 +1161,10 @@ fu_plugin_runner_update (FuPlugin *plugin,
 
 	/* not enabled */
 	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
 		return TRUE;
 
 	/* optional */
@@ -1220,6 +1246,10 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 	if (!priv->enabled)
 		return TRUE;
 
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
 	/* use the plugin if the vfunc is provided */
 	g_module_symbol (priv->module, "fu_plugin_clear_result", (gpointer *) &func);
 	if (func != NULL) {
@@ -1263,6 +1293,10 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 
 	/* not enabled */
 	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
 		return TRUE;
 
 	/* use the plugin if the vfunc is provided */
