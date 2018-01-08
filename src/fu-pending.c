@@ -158,7 +158,7 @@ fu_pending_add_device (FuPending *pending, FuDevice *device, GError **error)
 							  "provider,"
 							  "version_old,"
 							  "version_new) "
-				     "VALUES ('%q','%i','%q','%q','%q','%q','%q')",
+				     "VALUES (%Q,%i,%Q,%Q,%Q,%Q,%Q)",
 				     fu_device_get_id (device),
 				     FWUPD_UPDATE_STATE_PENDING,
 				     fu_device_get_filename_pending (device),
@@ -232,7 +232,7 @@ fu_pending_remove_device (FuPending *pending, FuDevice *device, GError **error)
 
 	g_debug ("FuPending: remove device %s", fu_device_get_id (device));
 	statement = sqlite3_mprintf ("DELETE FROM pending WHERE "
-				     "device_id = '%q';",
+				     "device_id = %Q;",
 				     fu_device_get_id (device));
 
 	/* remove entry */
@@ -334,7 +334,7 @@ fu_pending_get_device (FuPending *pending, const gchar *device_id, GError **erro
 	/* get all the devices */
 	g_debug ("FuPending: get device");
 	statement = sqlite3_mprintf ("SELECT * FROM pending WHERE "
-				     "device_id = '%q';",
+				     "device_id = %Q;",
 				     device_id);
 	array_tmp = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	rc = sqlite3_exec (priv->db,
@@ -431,8 +431,8 @@ fu_pending_set_state (FuPending *pending,
 	g_debug ("FuPending: set state of %s to %s",
 		 fu_device_get_id (device),
 		 fwupd_update_state_to_string (state));
-	statement = sqlite3_mprintf ("UPDATE pending SET state='%i' WHERE "
-				     "device_id = '%q';",
+	statement = sqlite3_mprintf ("UPDATE pending SET state = %i WHERE "
+				     "device_id = %Q;",
 				     state, fu_device_get_id (device));
 
 	/* remove entry */
@@ -474,8 +474,8 @@ fu_pending_set_error_msg (FuPending *pending,
 
 	g_debug ("FuPending: add comment to %s: %s",
 		 fu_device_get_id (device), error_msg2);
-	statement = sqlite3_mprintf ("UPDATE pending SET error='%q' WHERE "
-				     "device_id = '%q';",
+	statement = sqlite3_mprintf ("UPDATE pending SET error = %Q WHERE "
+				     "device_id = %Q;",
 				     error_msg2,
 				     fu_device_get_id (device));
 
