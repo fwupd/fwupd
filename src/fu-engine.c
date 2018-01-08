@@ -1090,8 +1090,10 @@ fu_engine_get_guids_from_store (AsStore *store)
 			g_string_append_printf (str, "%s,", as_provide_get_value (prov));
 		}
 	}
-	if (str->len == 0)
+	if (str->len == 0) {
+		g_string_free (str, TRUE);
 		return NULL;
+	}
 	g_string_truncate (str, str->len - 1);
 	return g_string_free (str, FALSE);
 }
