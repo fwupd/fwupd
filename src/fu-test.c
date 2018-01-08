@@ -25,6 +25,7 @@
 
 #include <limits.h>
 #include <stdlib.h>
+#include <fnmatch.h>
 
 #include "fu-test.h"
 
@@ -77,4 +78,31 @@ fu_test_get_filename (const gchar *testdatadirs, const gchar *filename)
 			return g_strdup (full_tmp);
 	}
 	return NULL;
+}
+
+gboolean
+fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
+{
+	g_autofree gchar *output = NULL;
+
+	/* exactly the same */
+	if (g_strcmp0 (txt1, txt2) == 0)
+		return TRUE;
+
+	/* matches a pattern */
+	if (fnmatch (txt2, txt1, FNM_NOESCAPE) == 0)
+		return TRUE;
+
+	/* save temp files and diff them */
+	if (!g_file_set_contents ("/tmp/a", txt1, -1, error))
+		return FALSE;
+	if (!g_file_set_contents ("/tmp/b", txt2, -1, error))
+		return FALSE;
+	if (!g_spawn_command_line_sync ("diff -urNp /tmp/b /tmp/a",
+					&output, NULL, NULL, error))
+		return FALSE;
+
+	/* just output the diff */
+	g_set_error_literal (error, 1, 0, output);
+	return FALSE;
 }
