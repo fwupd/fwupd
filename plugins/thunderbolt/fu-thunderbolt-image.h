@@ -34,4 +34,8 @@ FuPluginValidation	fu_plugin_thunderbolt_validate_image	(GBytes  *controller_fw,
 								 GBytes  *blob_fw,
 								 GError **error);
 
+gboolean	fu_plugin_thunderbolt_controller_is_native	(GBytes    *controller_fw,
+								 gboolean  *is_native,
+								 GError   **error);
+
 #endif /* __FU_THUNDERBOLT_IMAGE_H__ */
