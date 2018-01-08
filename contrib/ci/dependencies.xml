@@ -5,8 +5,17 @@
       <package />
     </distro>
   </dependency>
+  <dependency type="runtime" id="bubblewrap">
+    <distro id="fedora">
+      <control />
+      <package>bubblewrap</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="adobe-source-han-sans-cn-fonts">
     <distro id="fedora">
+      <control>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package />
     </distro>
     <distro id="arch">
@@ -42,6 +51,9 @@
   </dependency>
   <dependency type="build" id="libcairo-dev">
     <distro id="fedora">
+      <control>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package>cairo-devel</package>
     </distro>
     <distro id="debian">
@@ -57,6 +69,9 @@
   </dependency>
   <dependency type="build" id="libcairo-gobject2">
     <distro id="fedora">
+      <control>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package>cairo-gobject-devel</package>
     </distro>
     <distro id="debian">
@@ -75,6 +90,7 @@
       <package>colord</package>
     </distro>
     <distro id="fedora">
+      <control>>= 1.2.12</control>
       <package>colord-devel</package>
     </distro>
     <distro id="debian">
@@ -97,6 +113,9 @@
       <package>ttf-dejavu</package>
     </distro>
     <distro id="fedora">
+      <control>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package>dejavu-sans-fonts</package>
     </distro>
     <distro id="debian">
@@ -163,6 +182,7 @@
   </dependency>
   <dependency type="build" id="docbook-utils">
     <distro id="arch">
+      <control />
       <package />
     </distro>
     <distro id="fedora">
@@ -185,6 +205,7 @@
   </dependency>
   <dependency type="build" id="libelf-dev">
     <distro id="fedora">
+      <control />
       <package>elfutils-libelf-devel</package>
     </distro>
     <distro id="debian">
@@ -209,6 +230,9 @@
   </dependency>
   <dependency type="build" id="libfreetype6-dev">
     <distro id="fedora">
+      <control>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package>freetype</package>
     </distro>
     <distro id="debian">
@@ -224,6 +248,9 @@
   </dependency>
   <dependency type="build" id="fontconfig">
     <distro id="fedora">
+      <control>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package />
     </distro>
     <distro id="debian">
@@ -241,6 +268,10 @@
       <package>fwupdate</package>
     </distro>
     <distro id="fedora">
+      <control>
+        <version>>= 7</version>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package>fwupdate-devel</package>
     </distro>
     <distro id="debian">
@@ -265,6 +296,7 @@
   </dependency>
   <dependency type="build" id="gcab">
     <distro id="fedora">
+      <control />
       <package />
     </distro>
     <distro id="debian">
@@ -280,6 +312,7 @@
   </dependency>
   <dependency type="build" id="gettext">
     <distro id="fedora">
+      <control />
       <package />
     </distro>
     <distro id="debian">
@@ -329,6 +362,9 @@
   </dependency>
   <dependency type="build" id="libglib2.0-dev">
     <distro id="fedora">
+      <control>
+        <version>>= 2.45.8</version>
+      </control>
       <package>glib2-devel</package>
     </distro>
     <distro id="debian">
@@ -346,11 +382,18 @@
       <package variant="clang" />
     </distro>
   </dependency>
+  <dependency type="runtime" id="libglib2.0-dev">
+    <distro id="fedora">
+      <control />
+      <package>glib2</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="gobject-introspection">
     <distro id="arch">
       <package />
     </distro>
     <distro id="fedora">
+      <control />
       <package>gobject-introspection-devel</package>
     </distro>
     <distro id="debian">
@@ -365,6 +408,7 @@
   </dependency>
   <dependency type="build" id="libgpgme11-dev">
     <distro id="fedora">
+      <control />
       <package>gpgme-devel</package>
     </distro>
     <distro id="debian">
@@ -392,6 +436,7 @@
   </dependency>
   <dependency type="build" id="gnutls-dev">
     <distro id="fedora">
+      <control />
       <package>gnutls-devel</package>
     </distro>
     <distro id="debian">
@@ -407,6 +452,7 @@
   </dependency>
   <dependency type="build" id="gnutls-bin">
     <distro id="fedora">
+      <control />
       <package>gnutls-utils</package>
     </distro>
     <distro id="debian">
@@ -425,6 +471,7 @@
       <package>gtk-doc</package>
     </distro>
     <distro id="fedora">
+      <control />
       <package>gtk-doc</package>
     </distro>
     <distro id="debian">
@@ -442,6 +489,7 @@
       <package />
     </distro>
     <distro id="fedora">
+      <control />
       <package />
     </distro>
     <distro id="debian">
@@ -465,6 +513,9 @@
       <package>appstream-glib</package>
     </distro>
     <distro id="fedora">
+      <control>
+        <version>>= 0.6.13</version>
+      </control>
       <package>libappstream-glib-devel</package>
     </distro>
     <distro id="debian">
@@ -482,8 +533,15 @@
       <package variant="clang" />
     </distro>
   </dependency>
+  <dependency type="runtime" id="libappstream-glib-dev">
+    <distro id="fedora">
+      <control />
+      <package>libappstream-glib</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="libarchive-dev">
     <distro id="fedora">
+      <control />
       <package>libarchive-devel</package>
     </distro>
     <distro id="debian">
@@ -510,6 +568,12 @@
     </distro>
   </dependency>
   <dependency type="build" id="libefivar-dev">
+    <distro id="fedora">
+        <control>
+        <inclusive>have_dell</inclusive>
+      </control>
+      <package>efivar-devel</package>
+    </distro>
     <distro id="debian">
       <control>
         <inclusive>amd64</inclusive>
@@ -558,6 +622,7 @@
   </dependency>
   <dependency type="build" id="libgudev-1.0-dev">
     <distro id="fedora">
+      <control />
       <package>libgudev1-devel</package>
     </distro>
     <distro id="debian">
@@ -573,6 +638,9 @@
   </dependency>
   <dependency type="build" id="libgusb-dev">
     <distro id="fedora">
+      <control>
+        <version>>= 0.2.11</version>
+      </control>
       <package>libgusb-devel</package>
     </distro>
     <distro id="debian">
@@ -596,6 +664,12 @@
       <package variant="i386" />
     </distro>
   </dependency>
+    <dependency type="runtime" id="libgusb-dev">
+    <distro id="fedora">
+      <control />
+      <package>libgusb</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="libidn2-0-dev">
     <distro id="debian">
       <package variant="s390x">libidn2-0-dev:s390x</package>
@@ -604,6 +678,9 @@
   </dependency>
   <dependency type="build" id="libsmbios-dev">
     <distro id="fedora">
+      <control>
+        <inclusive>have_dell</inclusive>
+      </control>
       <package>libsmbios-devel</package>
     </distro>
     <distro id="debian">
@@ -621,6 +698,9 @@
   </dependency>
   <dependency type="build" id="libsoup2.4-dev">
     <distro id="fedora">
+      <control>
+        <version>>= 2.51.92</version>
+      </control>
       <package>libsoup-devel</package>
     </distro>
     <distro id="debian">
@@ -632,6 +712,12 @@
     <distro id="ubuntu">
       <control />
       <package variant="clang" />
+    </distro>
+  </dependency>
+  <dependency type="runtime" id="libsoup2.4-dev">
+    <distro id="fedora">
+      <control />
+      <package>libsoup</package>
     </distro>
   </dependency>
   <dependency type="build" id="libtool-bin">
@@ -685,6 +771,7 @@
       <package />
     </distro>
     <distro id="fedora">
+      <control />
       <package />
     </distro>
     <distro id="debian">
@@ -700,6 +787,9 @@
   </dependency>
   <dependency type="build" id="gir1.2-pango-1.0">
     <distro id="fedora">
+      <control>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package>pango-devel</package>
     </distro>
     <distro id="debian">
@@ -749,6 +839,9 @@
   </dependency>
   <dependency type="build" id="libpolkit-gobject-1-dev">
     <distro id="fedora">
+      <control>
+        <version>>= 0.103</version>
+      </control>
       <package>polkit-devel</package>
     </distro>
     <distro id="debian">
@@ -764,6 +857,9 @@
   </dependency>
   <dependency type="build" id="python3">
     <distro id="fedora">
+      <control>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package />
     </distro>
   </dependency>
@@ -772,6 +868,9 @@
       <package>python-cairo</package>
     </distro>
     <distro id="fedora">
+      <control>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package>python3-cairo</package>
     </distro>
     <distro id="debian">
@@ -790,6 +889,9 @@
       <package>python-gobject</package>
     </distro>
     <distro id="fedora">
+      <control>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package />
     </distro>
   </dependency>
@@ -798,6 +900,9 @@
       <package>python-pillow</package>
     </distro>
     <distro id="fedora">
+      <control>
+        <inclusive>have_uefi</inclusive>
+      </control>
       <package>python3-pillow</package>
     </distro>
     <distro id="debian">
@@ -842,6 +947,7 @@
   </dependency>
   <dependency type="build" id="libsqlite3-dev">
     <distro id="fedora">
+      <control />
       <package>sqlite-devel</package>
     </distro>
     <distro id="debian">
@@ -857,6 +963,9 @@
   </dependency>
   <dependency type="build" id="systemd">
     <distro id="fedora">
+      <control>
+        <version>>= 231</version>
+      </control>
       <package />
     </distro>
     <distro id="debian">
@@ -917,6 +1026,7 @@
       <package />
     </distro>
     <distro id="fedora">
+      <control />
       <package>valgrind-devel</package>
     </distro>
     <distro id="debian">

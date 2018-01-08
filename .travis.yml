@@ -17,7 +17,7 @@ install:
   - ./contrib/ci/generate_dockerfile.py; docker build -t fwupd-$OS -f contrib/ci/Dockerfile .
 
 script:
-  - if [[ "$OS" == "fedora" ]]; then docker run -e CI=true -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_rpms.sh; fi
+  - if [[ "$OS" == "fedora" ]]; then docker run -e OS=$OS -e CI=true -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_rpms.sh; fi
   - if [[ "$OS" == "debian-x86_64" ]]; then docker run -e OS=$OS -e CI=true -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_debs.sh; fi
   - if [[ "$OS" == "ubuntu-clang" ]]; then docker run -e OS=$OS -e CC=clang -e CI=true -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_debs.sh; fi
   - if [[ "$OS" == "arch" ]];   then docker run -e CI=true -t -v `pwd`:/build fwupd-$OS ./contrib/ci/build_and_install_pkgs.sh; fi

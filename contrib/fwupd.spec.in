@@ -1,9 +1,3 @@
-%global glib2_version 2.45.8
-%global libappstream_version 0.6.13
-%global libgusb_version 0.2.11
-%global libsoup_version 2.51.92
-%global colord_version 1.2.12
-%global systemd_version 231
 
 %define alphatag                #ALPHATAG#
 
@@ -29,60 +23,14 @@ License:   GPLv2+
 URL:       https://github.com/hughsie/fwupd
 Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.tar.xz
 
-BuildRequires: docbook-utils
-BuildRequires: gettext
-BuildRequires: glib2-devel >= %{glib2_version}
-BuildRequires: libappstream-glib-devel >= %{libappstream_version}
-BuildRequires: libgudev1-devel
-BuildRequires: libgusb-devel >= %{libgusb_version}
-BuildRequires: libsoup-devel >= %{libsoup_version}
-BuildRequires: colord-devel >= %{colord_version}
-BuildRequires: polkit-devel >= 0.103
-BuildRequires: sqlite-devel
-BuildRequires: gpgme-devel
-BuildRequires: systemd >= %{systemd_version}
-BuildRequires: libarchive-devel
-BuildRequires: gobject-introspection-devel
-BuildRequires: gcab
-BuildRequires: valgrind
-BuildRequires: valgrind-devel
-BuildRequires: elfutils-libelf-devel
-BuildRequires: gtk-doc
-BuildRequires: libuuid-devel
-BuildRequires: gnutls-devel
-BuildRequires: gnutls-utils
-BuildRequires: meson
-BuildRequires: help2man
-
-%if 0%{?have_uefi}
-BuildRequires: python3 python3-cairo python3-gobject python3-pillow
-BuildRequires: pango-devel
-BuildRequires: cairo-devel cairo-gobject-devel
-BuildRequires: freetype
-BuildRequires: fontconfig
-BuildRequires: dejavu-sans-fonts
-BuildRequires: adobe-source-han-sans-cn-fonts
-%endif
-
-%if 0%{?have_dell}
-BuildRequires: efivar-devel
-BuildRequires: libsmbios-devel >= 2.3.0
-%endif
-
-%if 0%{?have_uefi}
-BuildRequires: fwupdate-devel >= 7
-%endif
+BuildRequires: %%%DYNAMIC%%%
 
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
 
-Requires: glib2%{?_isa} >= %{glib2_version}
-Requires: libappstream-glib%{?_isa} >= %{libappstream_version}
-Requires: libgusb%{?_isa} >= %{libgusb_version}
-Requires: libsoup%{?_isa} >= %{libsoup_version}
+Requires: %%%DYNAMIC%%%
 Requires: fwupd-labels = %{version}-%{release}
-Requires: bubblewrap
 
 Recommends: python3
 
