@@ -36,5 +36,7 @@ const gchar	*fwupd_checksum_get_by_kind		(GPtrArray	*checksums,
 GChecksumType	 fwupd_checksum_guess_kind		(const gchar	*checksum);
 gchar		*fwupd_build_user_agent			(const gchar	*package_name,
 							 const gchar	*package_version);
+gchar		*fwupd_build_machine_id			(const gchar 	*salt,
+							 GError		**error);
 
 #endif /* __FWUPD_COMMON_H */

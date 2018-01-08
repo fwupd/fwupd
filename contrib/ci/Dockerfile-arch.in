@@ -1,7 +1,9 @@
 FROM archlinux/base
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
+RUN echo fubar > /etc/machine-id
 RUN rm /usr/share/libalpm/hooks/package-cleanup.hook
+RUN echo fubar > /etc/machine-id
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
 RUN mkdir /build
 WORKDIR /build

@@ -26,6 +26,7 @@
 #include <appstream-glib.h>
 
 #include "fwupd-client.h"
+#include "fwupd-common.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
@@ -354,6 +355,21 @@ fwupd_has_system_bus (void)
 	return FALSE;
 }
 
+static void
+fwupd_common_machine_hash_func (void)
+{
+	g_autofree gchar *mhash1 = NULL;
+	g_autofree gchar *mhash2 = NULL;
+	g_autoptr(GError) error = NULL;
+	mhash1 = fwupd_build_machine_id ("salt1", &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (mhash1, !=, NULL);
+	mhash2 = fwupd_build_machine_id ("salt2", &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (mhash2, !=, NULL);
+	g_assert_cmpstr (mhash2, !=, mhash1);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -365,6 +381,7 @@ main (int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
+	g_test_add_func ("/fwupd/common{machine-hash}", fwupd_common_machine_hash_func);
 	g_test_add_func ("/fwupd/device", fwupd_device_func);
 	g_test_add_func ("/fwupd/remote{download}", fwupd_remote_download_func);
 	g_test_add_func ("/fwupd/remote{base-uri}", fwupd_remote_baseuri_func);

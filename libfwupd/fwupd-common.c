@@ -22,6 +22,7 @@
 #include "config.h"
 
 #include "fwupd-common-private.h"
+#include "fwupd-error.h"
 
 #include <locale.h>
 #include <string.h>
@@ -246,4 +247,41 @@ fwupd_build_user_agent (const gchar *package_name, const gchar *package_version)
 
 	/* success */
 	return g_string_free (str, FALSE);
+}
+
+/**
+ * fwupd_build_machine_id:
+ * @salt: The salt, or %NULL for none
+ * @error: A #GError or %NULL
+ *
+ * Gets a salted hash of the /etc/machine-id contents. This can be used to
+ * identify a specific machine. It is not possible to recover the original
+ * machine-id from the machine-hash.
+ *
+ * Returns: the SHA256 machine hash, or %NULL if the ID is not present
+ *
+ * Since: 1.0.4
+ **/
+gchar *
+fwupd_build_machine_id (const gchar *salt, GError **error)
+{
+	g_autofree gchar *buf = NULL;
+	g_autoptr(GChecksum) csum = NULL;
+	gsize sz = 0;
+
+	/* this has to exist */
+	if (!g_file_get_contents ("/etc/machine-id", &buf, &sz, error))
+		return NULL;
+	if (sz == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
+				     "The machine-id is present but unset");
+		return NULL;
+	}
+	csum = g_checksum_new (G_CHECKSUM_SHA256);
+	if (salt != NULL)
+		g_checksum_update (csum, (const guchar *) salt, (gssize) strlen (salt));
+	g_checksum_update (csum, (const guchar *) buf, (gssize) sz);
+	return g_strdup (g_checksum_get_string (csum));
 }

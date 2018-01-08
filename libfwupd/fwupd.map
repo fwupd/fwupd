@@ -221,3 +221,9 @@ LIBFWUPD_1.0.3 {
     fwupd_build_user_agent;
   local: *;
 } LIBFWUPD_1.0.0;
+
+LIBFWUPD_1.0.4 {
+  global:
+    fwupd_build_machine_id;
+  local: *;
+} LIBFWUPD_1.0.3;
