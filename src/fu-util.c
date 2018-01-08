@@ -1309,21 +1309,18 @@ fu_util_firmware_builder (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(FwupdClient) client = NULL;
-
-	/* get all the DFU devices */
-	client = fwupd_client_new ();
-	if (!fwupd_client_connect (client, priv->cancellable, error))
+	/* get all the devices */
+	if (!fwupd_client_connect (priv->client, priv->cancellable, error))
 		return FALSE;
 
 	/* watch for any hotplugged device */
-	g_signal_connect (client, "changed",
+	g_signal_connect (priv->client, "changed",
 			  G_CALLBACK (fu_util_changed_cb), priv);
-	g_signal_connect (client, "device-added",
+	g_signal_connect (priv->client, "device-added",
 			  G_CALLBACK (fu_util_device_added_cb), priv);
-	g_signal_connect (client, "device-removed",
+	g_signal_connect (priv->client, "device-removed",
 			  G_CALLBACK (fu_util_device_removed_cb), priv);
-	g_signal_connect (client, "device-changed",
+	g_signal_connect (priv->client, "device-changed",
 			  G_CALLBACK (fu_util_device_changed_cb), priv);
 	g_signal_connect (priv->cancellable, "cancelled",
 			  G_CALLBACK (fu_util_cancelled_cb), priv);
