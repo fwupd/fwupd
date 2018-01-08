@@ -53,6 +53,7 @@ typedef struct {
 	GMainLoop		*loop;
 	GOptionContext		*context;
 	GPtrArray		*cmd_array;
+	SoupSession		*soup_session;
 	FwupdInstallFlags	 flags;
 	FwupdClient		*client;
 	FuProgressbar		*progressbar;
@@ -285,6 +286,48 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	idx = fu_util_prompt_for_number (devices_filtered->len);
 	dev = g_ptr_array_index (devices_filtered, idx - 1);
 	return g_object_ref (dev);
+}
+
+static gboolean
+fu_util_setup_networking (FuUtilPrivate *priv, GError **error)
+{
+	const gchar *http_proxy;
+	g_autofree gchar *user_agent = NULL;
+
+	/* already done */
+	if (priv->soup_session != NULL)
+		return TRUE;
+
+	/* create the soup session */
+	user_agent = fwupd_build_user_agent (PACKAGE_NAME, PACKAGE_VERSION);
+	priv->soup_session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, user_agent,
+							    SOUP_SESSION_TIMEOUT, 60,
+							    NULL);
+	if (priv->soup_session == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "failed to setup networking");
+		return FALSE;
+	}
+
+	/* set the proxy */
+	http_proxy = g_getenv ("http_proxy");
+	if (http_proxy != NULL) {
+		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
+		if (proxy_uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid proxy URI: %s", http_proxy);
+			return FALSE;
+		}
+		g_object_set (priv->soup_session, SOUP_SESSION_PROXY_URI, proxy_uri, NULL);
+	}
+
+	/* this disables the double-compression of the firmware.xml.gz file */
+	soup_session_remove_feature_by_type (priv->soup_session, SOUP_TYPE_CONTENT_DECODER);
+	return TRUE;
 }
 
 static gboolean
@@ -635,14 +678,11 @@ fu_util_download_file (FuUtilPrivate *priv,
 		       GError **error)
 {
 	GChecksumType checksum_type;
-	const gchar *http_proxy;
 	guint status_code;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *checksum_actual = NULL;
-	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *uri_str = NULL;
 	g_autoptr(SoupMessage) msg = NULL;
-	g_autoptr(SoupSession) session = NULL;
 
 	/* check if the file already exists with the right checksum */
 	checksum_type = fwupd_checksum_guess_kind (checksum_expected);
@@ -651,35 +691,9 @@ fu_util_download_file (FuUtilPrivate *priv,
 		return TRUE;
 	}
 
-	/* create the soup session */
-	user_agent = fwupd_build_user_agent (PACKAGE_NAME, PACKAGE_VERSION);
-	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, user_agent,
-						 SOUP_SESSION_TIMEOUT, 60,
-						 NULL);
-	if (session == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "failed to setup networking");
+	/* set up networking */
+	if (!fu_util_setup_networking (priv, error))
 		return FALSE;
-	}
-
-	/* set the proxy */
-	http_proxy = g_getenv ("http_proxy");
-	if (http_proxy != NULL) {
-		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
-		if (proxy_uri == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "invalid proxy URI: %s", http_proxy);
-			return FALSE;
-		}
-		g_object_set (session, SOUP_SESSION_PROXY_URI, proxy_uri, NULL);
-	}
-
-	/* this disables the double-compression of the firmware.xml.gz file */
-	soup_session_remove_feature_by_type (session, SOUP_TYPE_CONTENT_DECODER);
 
 	/* download data */
 	uri_str = soup_uri_to_string (uri, FALSE);
@@ -709,7 +723,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 	}
 	g_signal_connect (msg, "got-chunk",
 			  G_CALLBACK (fu_util_download_chunk_cb), priv);
-	status_code = soup_session_send_message (session, msg);
+	status_code = soup_session_send_message (priv->soup_session, msg);
 	g_print ("\n");
 	if (status_code != SOUP_STATUS_OK) {
 		g_set_error (error,
@@ -1564,6 +1578,8 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_ptr_array_unref (priv->cmd_array);
 	if (priv->client != NULL)
 		g_object_unref (priv->client);
+	if (priv->soup_session != NULL)
+		g_object_unref (priv->soup_session);
 	g_main_loop_unref (priv->loop);
 	g_object_unref (priv->cancellable);
 	g_object_unref (priv->progressbar);
