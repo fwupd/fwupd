@@ -1384,13 +1384,13 @@ fu_engine_install (FuEngine *self,
 		}
 		for (guint j = 0; j < plugins->len; j++) {
 			FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-			g_autoptr(GError) error_local = NULL;
+			g_autoptr(GError) error_cleanup = NULL;
 			if (!fu_plugin_runner_update_cleanup (plugin_tmp,
 							      device,
-							      &error_local)) {
+							      &error_cleanup)) {
 				g_warning ("failed to update-cleanup "
 					   "after failed update: %s",
-					   error_local->message);
+					   error_cleanup->message);
 			}
 		}
 		fu_device_set_status (device, FWUPD_STATUS_IDLE);
@@ -1412,10 +1412,10 @@ fu_engine_install (FuEngine *self,
 	/* signal to all the plugins the update has happened */
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_plugin_runner_update_cleanup (plugin_tmp, device, &error_local)) {
+		g_autoptr(GError) error_cleanup = NULL;
+		if (!fu_plugin_runner_update_cleanup (plugin_tmp, device, &error_cleanup)) {
 			g_warning ("failed to update-cleanup: %s",
-				   error_local->message);
+				   error_cleanup->message);
 		}
 	}
 
