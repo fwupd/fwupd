@@ -1,3 +1,21 @@
+Version 1.0.3
+~~~~~~~~~~~~~
+Released: 2017-01-09
+
+New Features:
+ - Add a new plugin to add support for CSR "Driverless DFU" (Richard Hughes)
+ - Add initial SF30/SN30 Pro support (Mario Limonciello)
+ - Support AppStream metadata with relative <location> URLs (Richard Hughes)
+
+Bugfixes:
+ - Add more metadata to the user-agent string (Richard Hughes)
+ - Block owned Dell TPM updates (Mario Limonciello)
+ - Choose the correct component from provides matches using requirements (Richard Hughes)
+ - Do not try to parse huge compressed archive files (Richard Hughes)
+ - Fix a double-free bug in the Udev code (Philip Withnall)
+ - Handle Thunderbolt "native" mode (Yehezkel Bernat)
+ - Use the new functionality in libgcab >= 1.0 to avoid writing temp files (Richard Hughes)
+
 Version 1.0.2
 ~~~~~~~~~~~~~
 Released: 2017-11-28
