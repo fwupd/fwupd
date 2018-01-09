@@ -215,3 +215,9 @@ LIBFWUPD_1.0.0 {
     fwupd_remote_to_variant;
   local: *;
 } LIBFWUPD_0.9.8;
+
+LIBFWUPD_1.0.3 {
+  global:
+    fwupd_build_user_agent;
+  local: *;
+} LIBFWUPD_1.0.0;

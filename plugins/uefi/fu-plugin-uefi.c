@@ -397,7 +397,7 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
-	fu_plugin_set_status (plugin, FWUPD_STATUS_SCHEDULING);
+	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
 	if (!fu_plugin_uefi_update_splash (&error_splash)) {
 		g_warning ("failed to upload BGRT splash text: %s",
 			   error_splash->message);

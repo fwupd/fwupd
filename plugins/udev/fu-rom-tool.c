@@ -27,6 +27,7 @@
 #include "fwupd-common-private.h"
 
 #include "fu-rom.h"
+#include "fu-common.h"
 
 static gboolean
 fu_fuzzer_rom_parse (const gchar *fn, GError **error)
@@ -88,7 +89,6 @@ static gboolean
 fu_fuzzer_rom_create (GError **error)
 {
 	GString *str;
-	guint16 sz;
 	guint8 *buffer;
 	g_autofree guint8 *blob_header = NULL;
 	g_autofree guint8 *blob_ifr = NULL;
@@ -147,8 +147,7 @@ fu_fuzzer_rom_create (GError **error)
 	blob_ifr = g_malloc0 (0x80);
 	buffer = blob_ifr;
 	memcpy (buffer, "NVGI", 4);
-	sz = GUINT16_TO_BE (0x80);
-	memcpy (&buffer[0x15], &sz, 2);
+	fu_common_write_uint16 (&buffer[0x15], 0x80, G_BIG_ENDIAN);
 	g_hash_table_insert (hash, (gpointer) "naked-ifr.rom",
 			     g_string_new_len ((const gchar *) blob_ifr, 0x80));
 	str = g_string_new_len ((gchar *) blob_ifr, 0x80);

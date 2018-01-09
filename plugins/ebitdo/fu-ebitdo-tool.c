@@ -26,14 +26,11 @@
 #include "fu-ebitdo-common.h"
 #include "fu-ebitdo-device.h"
 
+
 static void
-fu_ebitdo_write_progress_cb (goffset current, goffset total, gpointer user_data)
+fu_ebitdo_tool_progress_cb (FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
-	gdouble percentage = -1.f;
-	if (total > 0)
-		percentage = (100.f * (gdouble) current) / (gdouble) total;
-	g_print ("Written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT " bytes [%.1f%%]\n",
-		 current, total, percentage);
+	g_print ("Written %u%%\n", fu_device_get_progress (device));
 }
 
 int
@@ -43,6 +40,7 @@ main (int argc, char **argv)
 	g_autofree guint8 *data = NULL;
 	g_autoptr(FuEbitdoDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuQuirks) quirks = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -56,6 +54,13 @@ main (int argc, char **argv)
 		return 1;
 	}
 
+	/* use quirks */
+	quirks = fu_quirks_new ();
+	if (!fu_quirks_load (quirks, &error)) {
+		g_print ("Failed to load quirks: %s\n", error->message);
+		return 1;
+	}
+
 	/* get the device */
 	usb_ctx = g_usb_context_new (&error);
 	if (usb_ctx == NULL) {
@@ -66,10 +71,10 @@ main (int argc, char **argv)
 	devices = g_usb_context_get_devices (usb_ctx);
 	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_device = g_ptr_array_index (devices, i);
-		FuEbitdoDeviceKind ebitdo_kind;
-		ebitdo_kind = fu_ebitdo_device_kind_from_dev (usb_device);
-		if (ebitdo_kind != FU_EBITDO_DEVICE_KIND_UNKNOWN) {
-			dev = fu_ebitdo_device_new (ebitdo_kind, usb_device);
+		g_autoptr(FuEbitdoDevice) dev_tmp = fu_ebitdo_device_new (usb_device);
+		fu_device_set_quirks (FU_DEVICE (dev_tmp), quirks);
+		if (fu_usb_device_probe (FU_USB_DEVICE (dev_tmp), NULL)) {
+			dev = g_steal_pointer (&dev_tmp);
 			break;
 		}
 	}
@@ -94,23 +99,32 @@ main (int argc, char **argv)
 
 	/* not in bootloader mode, so print what to do */
 	if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (dev));
 		g_print ("1. Disconnect the controller\n");
-		switch (fu_ebitdo_device_get_kind (dev)) {
-		case FU_EBITDO_DEVICE_KIND_FC30:
-		case FU_EBITDO_DEVICE_KIND_NES30:
-		case FU_EBITDO_DEVICE_KIND_SFC30:
-		case FU_EBITDO_DEVICE_KIND_SNES30:
+		switch (g_usb_device_get_pid (usb_device)) {
+		case 0xab11: /* FC30 */
+		case 0xab12: /* NES30 */
+		case 0xab21: /* SFC30 */
+		case 0xab20: /* SNES30 */
 			g_print ("2. Hold down L+R+START for 3 seconds until "
 				 "both LED lights flashing.\n");
 			break;
-		case FU_EBITDO_DEVICE_KIND_FC30PRO:
-		case FU_EBITDO_DEVICE_KIND_NES30PRO:
+		case 0x9000: /* FC30PRO */
+		case 0x9001: /* NES30PRO */
 			g_print ("2. Hold down RETURN+POWER for 3 seconds until "
 				 "both LED lights flashing.\n");
 			break;
-		case FU_EBITDO_DEVICE_KIND_FC30_ARCADE:
+		case 0x1002: /* FC30-ARCADE */
 			g_print ("2. Hold down L1+R1+HOME for 3 seconds until "
 				 "both blue LED and green LED blink.\n");
+			break;
+		case 0x2009: /* SF30/SN30 pro: switch mode */
+		case 0x6000: /* SF30 pro: Dinput mode */
+		case 0x6001: /* SN30 pro: Dinput mode */
+		case 0x028e: /* SF30/SN30 pro: Xinput mode */
+		case 0x05c4: /* SF30/SN30 pro: macOS  mode */
+			g_print ("2. Press and hold L1+R1+START for 3 seconds "
+				 "until the LED on top blinks red.\n");
 			break;
 		default:
 			g_print ("2. Do what it says in the manual.\n");
@@ -128,9 +142,9 @@ main (int argc, char **argv)
 
 	/* update with data blob */
 	fw = g_bytes_new (data, len);
-	if (!fu_ebitdo_device_write_firmware (dev, fw,
-					      fu_ebitdo_write_progress_cb, NULL,
-					      &error)) {
+	g_signal_connect (dev, "notify::progress",
+			  G_CALLBACK (fu_ebitdo_tool_progress_cb), NULL);
+	if (!fu_ebitdo_device_write_firmware (dev, fw, &error)) {
 		g_print ("Failed to write firmware: %s\n", error->message);
 		return 1;
 	}

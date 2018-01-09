@@ -23,6 +23,8 @@
 
 #include <string.h>
 
+#include "fu-common.h"
+
 #include "dfu-cipher-xtea.h"
 
 #include "fwupd-error.h"
@@ -33,21 +35,15 @@
 static void
 dfu_cipher_buf_to_uint32 (const guint8 *buf, guint buflen, guint32 *array)
 {
-	guint32 tmp_le;
-	for (guint i = 0; i < buflen / 4; i++) {
-		memcpy (&tmp_le, &buf[i * 4], 4);
-		array[i] = GUINT32_FROM_LE (tmp_le);
-	}
+	for (guint i = 0; i < buflen / 4; i++)
+		array[i] = fu_common_read_uint32 (&buf[i * 4], G_LITTLE_ENDIAN);
 }
 
 static void
 dfu_cipher_uint32_to_buf (guint8 *buf, guint buflen, const guint32 *array)
 {
-	guint32 tmp_le;
-	for (guint i = 0; i < buflen / 4; i++) {
-		tmp_le = GUINT32_TO_LE (array[i]);
-		memcpy (&buf[i * 4], &tmp_le, 4);
-	}
+	for (guint i = 0; i < buflen / 4; i++)
+		fu_common_write_uint32 (&buf[i * 4], array[i], G_LITTLE_ENDIAN);
 }
 
 static gboolean

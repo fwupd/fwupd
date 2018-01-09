@@ -285,13 +285,8 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 static void
 fu_synapticsmst_write_progress_cb (goffset current, goffset total, gpointer user_data)
 {
-	FuPlugin *plugin = FU_PLUGIN (user_data);
-	gdouble percentage = -1.f;
-	if (total > 0)
-		percentage = (100.f * (gdouble) current) / (gdouble) total;
-	g_debug ("written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT "[%.1f%%]",
-		 current, total, percentage);
-	fu_plugin_set_percentage (plugin, (guint) percentage);
+	FuDevice *device = FU_DEVICE (user_data);
+	fu_device_set_progress_full (device, current, total);
 }
 
 gboolean
@@ -322,7 +317,7 @@ fu_plugin_update (FuPlugin *plugin,
 	/* sleep to allow device wakeup to complete */
 	g_debug ("waiting %d seconds for MST hub wakeup",
 		 SYNAPTICS_FLASH_MODE_DELAY);
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_BUSY);
+	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_BUSY);
 	g_usleep (SYNAPTICS_FLASH_MODE_DELAY * 1000000);
 
 	device = synapticsmst_device_new (kind, aux_node, layer, rad);
@@ -331,10 +326,10 @@ fu_plugin_update (FuPlugin *plugin,
 						   data->system_type, error))
 		return FALSE;
 	if (synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device)) != NULL) {
-		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
+		fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
 		if (!synapticsmst_device_write_firmware (device, blob_fw,
 							 fu_synapticsmst_write_progress_cb,
-							 plugin,
+							 device,
 							 error)) {
 			g_prefix_error (error, "failed to flash firmware: ");
 			return FALSE;
@@ -348,7 +343,7 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 
 	/* Re-run device enumeration to find the new device version */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);
 	if (!synapticsmst_device_enumerate_device (device, data->dock_type,
 						   data->system_type, error)) {
 		return FALSE;

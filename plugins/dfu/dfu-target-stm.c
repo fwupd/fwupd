@@ -43,20 +43,14 @@ G_DEFINE_TYPE (DfuTargetStm, dfu_target_stm, DFU_TYPE_TARGET)
 #define DFU_STM_CMD_READ_UNPROTECT		0x92
 
 static gboolean
-dfu_target_stm_attach (DfuTarget *target, GCancellable *cancellable, GError **error)
+dfu_target_stm_attach (DfuTarget *target, GError **error)
 {
 	g_autoptr(GBytes) bytes_tmp = g_bytes_new (NULL, 0);
-	return dfu_target_download_chunk (target,
-					  0 + 2,
-					  bytes_tmp,
-					  cancellable,
-					  error);
+	return dfu_target_download_chunk (target, 2, bytes_tmp, error);
 }
 
 static gboolean
-dfu_target_stm_mass_erase (DfuTarget *target,
-			   GCancellable *cancellable,
-			   GError **error)
+dfu_target_stm_mass_erase (DfuTarget *target, GError **error)
 {
 	GBytes *data_in;
 	guint8 buf[1];
@@ -64,20 +58,19 @@ dfu_target_stm_mass_erase (DfuTarget *target,
 	/* format buffer */
 	buf[0] = DFU_STM_CMD_ERASE;
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+	if (!dfu_target_download_chunk (target, 0, data_in, error)) {
 		g_prefix_error (error, "cannot mass-erase: ");
 		return FALSE;
 	}
 
 	/* 2nd check required to get error code */
-	return dfu_target_check_status (target, cancellable, error);
+	return dfu_target_check_status (target, error);
 }
 
 /**
  * dfu_target_stm_set_address:
  * @target: a #DfuTarget
  * @address: memory address
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Sets the address used for the next download or upload request.
@@ -85,10 +78,7 @@ dfu_target_stm_mass_erase (DfuTarget *target,
  * Return value: %TRUE for success
  **/
 static gboolean
-dfu_target_stm_set_address (DfuTarget *target,
-			    guint32 address,
-			    GCancellable *cancellable,
-			    GError **error)
+dfu_target_stm_set_address (DfuTarget *target, guint32 address, GError **error)
 {
 	GBytes *data_in;
 	guint8 buf[5];
@@ -97,14 +87,14 @@ dfu_target_stm_set_address (DfuTarget *target,
 	buf[0] = DFU_STM_CMD_SET_ADDRESS_POINTER;
 	memcpy (buf + 1, &address, 4);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+	if (!dfu_target_download_chunk (target, 0, data_in, error)) {
 		g_prefix_error (error, "cannot set address 0x%x: ", address);
 		return FALSE;
 	}
 
 	/* 2nd check required to get error code */
 	g_debug ("doing actual check status");
-	return dfu_target_check_status (target, cancellable, error);
+	return dfu_target_check_status (target, error);
 }
 
 static DfuElement *
@@ -112,7 +102,6 @@ dfu_target_stm_upload_element (DfuTarget *target,
 			       guint32 address,
 			       gsize expected_size,
 			       gsize maximum_size,
-			       GCancellable *cancellable,
 			       GError **error)
 {
 	DfuDevice *device = dfu_target_get_device (target);
@@ -154,14 +143,11 @@ dfu_target_stm_upload_element (DfuTarget *target,
 
 	/* manually set the sector address */
 	g_debug ("setting DfuSe address to 0x%04x", (guint) offset);
-	if (!dfu_target_stm_set_address (target,
-				     offset,
-				     cancellable,
-				     error))
+	if (!dfu_target_stm_set_address (target, offset, error))
 		return NULL;
 
 	/* abort back to IDLE */
-	if (!dfu_device_abort (device, cancellable, error))
+	if (!dfu_device_abort (device, error))
 		return NULL;
 
 	/* get all the chunks from the hardware */
@@ -174,7 +160,6 @@ dfu_target_stm_upload_element (DfuTarget *target,
 		chunk_tmp = dfu_target_upload_chunk (target,
 						     idx + 2,
 						     0, /* device transfer size */
-						     cancellable,
 						     error);
 		if (chunk_tmp == NULL)
 			return NULL;
@@ -201,7 +186,7 @@ dfu_target_stm_upload_element (DfuTarget *target,
 	}
 
 	/* abort back to IDLE */
-	if (!dfu_device_abort (device, cancellable, error))
+	if (!dfu_device_abort (device, error))
 		return NULL;
 
 	/* check final size */
@@ -237,7 +222,6 @@ dfu_target_stm_upload_element (DfuTarget *target,
  * dfu_target_stm_erase_address:
  * @target: a #DfuTarget
  * @address: memory address
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Erases a memory sector at a given address.
@@ -245,10 +229,7 @@ dfu_target_stm_upload_element (DfuTarget *target,
  * Return value: %TRUE for success
  **/
 static gboolean
-dfu_target_stm_erase_address (DfuTarget *target,
-			      guint32 address,
-			      GCancellable *cancellable,
-			      GError **error)
+dfu_target_stm_erase_address (DfuTarget *target, guint32 address, GError **error)
 {
 	GBytes *data_in;
 	guint8 buf[5];
@@ -257,21 +238,20 @@ dfu_target_stm_erase_address (DfuTarget *target,
 	buf[0] = DFU_STM_CMD_ERASE;
 	memcpy (buf + 1, &address, 4);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+	if (!dfu_target_download_chunk (target, 0, data_in, error)) {
 		g_prefix_error (error, "cannot erase address 0x%x: ", address);
 		return FALSE;
 	}
 
 	/* 2nd check required to get error code */
 	g_debug ("doing actual check status");
-	return dfu_target_check_status (target, cancellable, error);
+	return dfu_target_check_status (target, error);
 }
 
 static gboolean
 dfu_target_stm_download_element (DfuTarget *target,
 				 DfuElement *element,
 				 DfuTargetTransferFlags flags,
-				 GCancellable *cancellable,
 				 GError **error)
 {
 	DfuDevice *device = dfu_target_get_device (target);
@@ -342,9 +322,8 @@ dfu_target_stm_download_element (DfuTarget *target,
 		g_debug ("erasing sector at 0x%04x",
 			 dfu_sector_get_address (sector));
 		if (!dfu_target_stm_erase_address (target,
-						     dfu_sector_get_address (sector),
-						     cancellable,
-						     error))
+						   dfu_sector_get_address (sector),
+						   error))
 			return FALSE;
 		dfu_target_set_percentage (target, i + 1, sectors_array->len);
 	}
@@ -372,9 +351,8 @@ dfu_target_stm_download_element (DfuTarget *target,
 			g_debug ("setting address to 0x%04x",
 				 (guint) offset_dev);
 			if (!dfu_target_stm_set_address (target,
-							   (guint32) offset_dev,
-							   cancellable,
-							   error))
+							 (guint32) offset_dev,
+							 error))
 				return FALSE;
 			zone_last = dfu_sector_get_zone (sector);
 		}
@@ -391,12 +369,11 @@ dfu_target_stm_download_element (DfuTarget *target,
 		if (!dfu_target_download_chunk (target,
 						(guint8) (i + 2),
 						bytes_tmp,
-						cancellable,
 						error))
 			return FALSE;
 
 		/* getting the status moves the state machine to DNLOAD-IDLE */
-		if (!dfu_target_check_status (target, cancellable, error))
+		if (!dfu_target_check_status (target, error))
 			return FALSE;
 
 		/* update UI */

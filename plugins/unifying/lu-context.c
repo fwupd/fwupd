@@ -203,7 +203,7 @@ lu_context_add_device (LuContext *ctx, LuDevice *device)
 	g_return_if_fail (LU_IS_CONTEXT (ctx));
 	g_return_if_fail (LU_IS_DEVICE (device));
 
-	g_debug ("device %s added", lu_device_get_platform_id (device));
+	g_debug ("device %s added", fu_device_get_platform_id (FU_DEVICE (device)));
 
 	/* HID++1.0 devices have to sleep to allow Solaar to talk to the device
 	 * first -- we can't use the SwID as this is a HID++2.0 feature */
@@ -236,10 +236,10 @@ lu_context_add_device (LuContext *ctx, LuDevice *device)
 
 	/* if we're waiting for replug, quit the loop */
 	replug_helper = g_hash_table_lookup (ctx->hash_replug,
-					     lu_device_get_platform_id (device));
+					     fu_device_get_platform_id (FU_DEVICE (device)));
 	if (replug_helper != NULL) {
 		g_debug ("%s is in replug, quitting loop",
-			 lu_device_get_platform_id (device));
+			 fu_device_get_platform_id (FU_DEVICE (device)));
 		g_main_loop_quit (replug_helper->loop);
 	}
 
@@ -251,7 +251,7 @@ lu_context_remove_device (LuContext *ctx, LuDevice *device)
 	g_return_if_fail (LU_IS_CONTEXT (ctx));
 	g_return_if_fail (LU_IS_DEVICE (device));
 
-	g_debug ("device %s removed", lu_device_get_platform_id (device));
+	g_debug ("device %s removed", fu_device_get_platform_id (FU_DEVICE (device)));
 
 	/* no longer valid */
 	g_object_set (device,
@@ -329,7 +329,7 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 				       "hidpp-id", HIDPP_DEVICE_ID_RECEIVER,
 				       NULL);
 		g_hash_table_insert (ctx->hash_devices,
-				     g_strdup (lu_device_get_platform_id (device)),
+				     g_strdup (fu_device_get_platform_id (FU_DEVICE (device))),
 				     g_object_ref (device));
 		lu_context_add_device (ctx, device);
 		return;
@@ -355,18 +355,18 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 	if (val != NULL) {
 		if (g_str_has_prefix (val, "Logitech "))
 			val += 9;
-		lu_device_set_product (device, val);
+		fu_device_set_name (FU_DEVICE (device), val);
 	}
 
 	/* generate GUID */
 	devid = g_strdup_printf ("UFY\\VID_%04X&PID_%04X", vid, pid);
-	lu_device_add_guid (device, devid);
-	if (!lu_context_check_supported (ctx, lu_device_get_guid_default (device))) {
+	fu_device_add_guid (FU_DEVICE (device), devid);
+	if (!lu_context_check_supported (ctx, fu_device_get_guid_default (FU_DEVICE (device)))) {
 		g_debug ("%s not supported, so ignoring device", devid);
 		return;
 	}
 	g_hash_table_insert (ctx->hash_devices,
-			     g_strdup (lu_device_get_platform_id (device)),
+			     g_strdup (fu_device_get_platform_id (FU_DEVICE (device))),
 			     g_object_ref (device));
 	lu_context_add_device (ctx, device);
 }
@@ -413,7 +413,7 @@ lu_context_wait_for_replug (LuContext *ctx,
 						   replug_helper);
 
 	/* register */
-	platform_id = lu_device_get_platform_id (device);
+	platform_id = fu_device_get_platform_id (FU_DEVICE (device));
 	g_hash_table_insert (ctx->hash_replug,
 			     g_strdup (platform_id), replug_helper);
 
@@ -467,13 +467,13 @@ lu_context_poll_cb (gpointer user_data)
 		g_autoptr(GError) error = NULL;
 		if (!lu_device_open (device, &error)) {
 			g_debug ("failed to open %s: %s",
-				 lu_device_get_platform_id (device),
+				 fu_device_get_platform_id (FU_DEVICE (device)),
 				 error->message);
 			continue;
 		}
 		if (!lu_device_poll (device, &error)) {
 			g_debug ("failed to probe %s: %s",
-				 lu_device_get_platform_id (device),
+				 fu_device_get_platform_id (FU_DEVICE (device)),
 				 error->message);
 			continue;
 		}
@@ -567,7 +567,7 @@ lu_context_find_by_platform_id (LuContext *ctx, const gchar *platform_id, GError
 
 	for (guint i = 0; i < ctx->devices->len; i++) {
 		LuDevice *device = g_ptr_array_index (ctx->devices, i);
-		if (g_strcmp0 (lu_device_get_platform_id (device), platform_id) == 0)
+		if (g_strcmp0 (fu_device_get_platform_id (FU_DEVICE (device)), platform_id) == 0)
 			return g_object_ref (device);
 	}
 	g_set_error (error,

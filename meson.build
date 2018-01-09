@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.0.2',
+  version : '1.0.3',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -66,6 +66,7 @@ test_args = [
   '-Wformat-signedness',
   '-Wignored-qualifiers',
   '-Wimplicit-function-declaration',
+  '-Wincompatible-pointer-types-discards-qualifiers',
   '-Winit-self',
   '-Wlogical-op',
   '-Wmissing-declarations',
@@ -75,6 +76,7 @@ test_args = [
   '-Wmissing-parameter-type',
   '-Wmissing-prototypes',
   '-Wnested-externs',
+  '-Wno-error=cpp',
   '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
   '-Wno-strict-aliasing',
@@ -122,12 +124,6 @@ add_global_link_arguments(
   language: 'c'
 )
 
-# ONLY for CI and only when using gcc, do not enable this for distro builds
-if get_option('werror') and meson.get_compiler('c').get_id() == 'gcc'
-  add_project_arguments('-Werror', language : 'c')
-  add_project_arguments('-Wno-error=cpp', language : 'c')
-endif
-
 # Needed for realpath(), syscall(), cfmakeraw(), etc.
 add_project_arguments('-D_DEFAULT_SOURCE', language : 'c')
 
@@ -167,9 +163,12 @@ endif
 libm = cc.find_library('m', required: false)
 udev = dependency('udev')
 uuid = dependency('uuid')
-gcab = dependency('libgcab-1.0')
-if gcab.version().version_compare('>= 0.8')
+libgcab = dependency('libgcab-1.0')
+if libgcab.version().version_compare('>= 0.8')
   conf.set('HAVE_GCAB_0_8', '1')
+endif
+if libgcab.version().version_compare('>= 1.0')
+  conf.set('HAVE_GCAB_1_0', '1')
 endif
 
 if get_option('plugin_uefi_labels')

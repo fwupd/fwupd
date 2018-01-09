@@ -161,6 +161,26 @@ fu_device_list_find_by_device (FuDeviceList *self, FuDevice *device)
 	return NULL;
 }
 
+/**
+ * fu_device_list_get_old:
+ * @self: A #FuDeviceList
+ * @device: A #FuDevice
+ *
+ * Returns the old device associated with the currently active device.
+ *
+ * Returns: (transfer none): the device, or %NULL if not found
+ *
+ * Since: 1.0.3
+ **/
+FuDevice *
+fu_device_list_get_old (FuDeviceList *self, FuDevice *device)
+{
+	FuDeviceItem *item = fu_device_list_find_by_device (self, device);
+	if (item == NULL)
+		return NULL;
+	return item->device_old;
+}
+
 static FuDeviceItem *
 fu_device_list_find_by_guids (FuDeviceList *self, GPtrArray *guids)
 {
@@ -318,16 +338,16 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 
 	/* verify a compatible device does not already exist */
 	item = fu_device_list_find_by_guids (self, fu_device_get_guids (device));
-	if (item != NULL) {
-		g_debug ("found compatible device %s, reusing item "
-			 "from plugin %s for plugin %s",
+	if (item != NULL && item->remove_id != 0) {
+		g_debug ("found compatible device %s recently removed, reusing "
+			 "item from plugin %s for plugin %s",
 			 fu_device_get_id (item->device),
 			 fu_device_get_plugin (item->device),
 			 fu_device_get_plugin (device));
-		if (item->remove_id != 0) {
-			g_source_remove (item->remove_id);
-			item->remove_id = 0;
-		}
+
+		/* do not remove this device */
+		g_source_remove (item->remove_id);
+		item->remove_id = 0;
 
 		/* copy over any GUIDs that used to exist */
 		fu_device_list_add_missing_guids (device, item->device);

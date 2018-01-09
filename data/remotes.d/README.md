@@ -38,3 +38,29 @@ Ideally, the metadata and firmware should be signed by either GPG or a PKCS7
 certificate. If this is the case also change `Keyring=gpg` or `Keyring=pkcs7`
 in `/etc/fwupd/remotes.d/vendor.conf` and ensure the correct public key or
 signing certificate is installed in the `/etc/pki/fwupd` location.
+
+Mirroring a Repository
+======================
+
+The LVFS currently outputs XML with absolute URI locations, e.g.
+`<location>http://foo/bar.cab</location>` rather than `<location>bar.cab</location>`
+
+This makes mirroring the master LVFS (or other slave instance) somewhat tricky.
+To work around this issue client remotes can specify `FirmwareBaseURI` to
+replace the URI of the firmware before it is downloaded.
+
+For mirroring the LVFS content to a new CDN, you could use:
+
+    [fwupd Remote]
+    Enabled=true
+    Type=download
+    Keyring=gpg
+    MetadataURI=https://my.new.cdn/mirror/firmware.xml.gz
+    FirmwareBaseURI=https://my.new.cdn/mirror
+
+New instances of the LVFS can actually output a relative URL for firmware files,
+e.g. `<location>bar.cab</location>` and when downloading the `MetadataURI` name
+and path prefix is used in this case.
+This is not enabled for the "upstream" LVFS instance as versions of fwupd older
+than 1.0.3 are unable to automatically use the `MetadataURI` value for firmware
+downloads.

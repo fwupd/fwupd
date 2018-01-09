@@ -99,7 +99,6 @@ nitrokey_execute_cmd (GUsbDevice *usb_device, guint8 command,
 	gboolean ret;
 	gsize actual_len = 0;
 	guint32 crc_tmp;
-	guint32 crc_le;
 	guint8 buf[64];
 
 	g_return_val_if_fail (buf_in_sz <= NITROKEY_REQUEST_DATA_LENGTH, FALSE);
@@ -111,8 +110,7 @@ nitrokey_execute_cmd (GUsbDevice *usb_device, guint8 command,
 	if (buf_in != NULL)
 		memcpy (&buf[1], buf_in, buf_in_sz);
 	crc_tmp = fu_nitrokey_perform_crc32 (buf, sizeof(buf) - 4);
-	crc_le = GUINT32_TO_LE (crc_tmp);
-	memcpy (&buf[NITROKEY_REQUEST_DATA_LENGTH + 1], &crc_le, sizeof(guint32));
+	fu_common_write_uint32 (&buf[NITROKEY_REQUEST_DATA_LENGTH + 1], crc_tmp, G_LITTLE_ENDIAN);
 
 	/* send request */
 	_dump_to_console ("request", buf, sizeof(buf));
@@ -224,14 +222,45 @@ nitrokey_execute_cmd_full (GUsbDevice *usb_device, guint8 command,
 }
 
 static gboolean
+fu_nitrokey_device_probe (FuUsbDevice *device, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+
+	/* not the right kind of device */
+	if (g_usb_device_get_vid (usb_device) != 0x20a0 ||
+	    g_usb_device_get_pid (usb_device) != 0x4109) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported with this device");
+		return FALSE;
+	}
+
+	/* harcoded */
+	fu_device_set_name (FU_DEVICE (device), "Nitrokey Storage");
+	fu_device_set_vendor (FU_DEVICE (device), "Nitrokey");
+	fu_device_set_summary (FU_DEVICE (device), "A secure memory stick");
+	fu_device_add_icon (FU_DEVICE (device), "media-removable");
+
+	/* also add the USB VID:PID hash of the bootloader */
+	fu_device_add_guid (FU_DEVICE (device), "USB\\VID_03EB&PID_2FF1");
+	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+
+	/* allowed, but requires manual bootloader step */
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_nitrokey_device_open (FuUsbDevice *device, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	NitrokeyGetDeviceStatusPayload payload;
 	guint8 buf_reply[NITROKEY_REPLY_DATA_LENGTH];
-	g_autofree gchar *platform_id_fixed = NULL;
 	g_autofree gchar *version = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	/* claim interface */
 	if (!g_usb_device_claim_interface (usb_device, 0x02, /* idx */
@@ -252,21 +281,8 @@ fu_nitrokey_device_open (FuUsbDevice *device, GError **error)
 	}
 	_dump_to_console ("payload", buf_reply, sizeof(buf_reply));
 	memcpy (&payload, buf_reply, sizeof(buf_reply));
-
-	fu_device_set_name (FU_DEVICE (device), "Nitrokey Storage");
-	fu_device_set_vendor (FU_DEVICE (device), "Nitrokey");
-	fu_device_set_summary (FU_DEVICE (device), "A secure memory stick");
-	fu_device_add_icon (FU_DEVICE (device), "media-removable");
 	version = g_strdup_printf ("%u.%u", payload.VersionMinor, payload.VersionMajor);
 	fu_device_set_version (FU_DEVICE (device), version);
-
-	/* also add the USB VID:PID hash of the bootloader */
-	fu_device_add_guid (FU_DEVICE (device), "USB\\VID_03EB&PID_2FF1");
-	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-
-	/* allowed, but requires manual bootloader step */
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 
 	/* success */
 	return TRUE;
@@ -298,6 +314,7 @@ fu_nitrokey_device_class_init (FuNitrokeyDeviceClass *klass)
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_usb_device->open = fu_nitrokey_device_open;
 	klass_usb_device->close = fu_nitrokey_device_close;
+	klass_usb_device->probe = fu_nitrokey_device_probe;
 }
 
 FuNitrokeyDevice *

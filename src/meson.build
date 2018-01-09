@@ -120,6 +120,7 @@ executable(
   sources : [
     keyring_src,
     'fu-common.c',
+    'fu-common-cab.c',
     'fu-config.c',
     'fu-keyring.c',
     'fu-keyring-result.c',
@@ -145,6 +146,7 @@ executable(
   dependencies : [
     keyring_deps,
     appstream_glib,
+    libgcab,
     giounix,
     gmodule,
     gudev,
@@ -185,6 +187,7 @@ if get_option('tests')
       keyring_src,
       'fu-self-test.c',
       'fu-common.c',
+      'fu-common-cab.c',
       'fu-config.c',
       'fu-engine.c',
       'fu-keyring.c',
@@ -210,6 +213,7 @@ if get_option('tests')
     dependencies : [
       keyring_deps,
       appstream_glib,
+      libgcab,
       giounix,
       gmodule,
       gudev,

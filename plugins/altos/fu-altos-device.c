@@ -433,8 +433,6 @@ gboolean
 fu_altos_device_write_firmware (FuAltosDevice *device,
 				GBytes *fw,
 				FuAltosDeviceWriteFirmwareFlag flags,
-				GFileProgressCallback progress_cb,
-				gpointer progress_data,
 				GError **error)
 {
 	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
@@ -556,11 +554,7 @@ fu_altos_device_write_firmware (FuAltosDevice *device,
 		}
 
 		/* progress */
-		if (progress_cb != NULL) {
-			progress_cb ((goffset) i,
-				     (goffset) flash_len,
-				     progress_data);
-		}
+		fu_device_set_progress_full (FU_DEVICE (device), i, flash_len);
 		g_string_append_len (buf, str->str, str->len);
 	}
 
@@ -571,21 +565,14 @@ fu_altos_device_write_firmware (FuAltosDevice *device,
 	}
 
 	/* progress complete */
-	if (progress_cb != NULL) {
-		progress_cb ((goffset) flash_len,
-			     (goffset) flash_len,
-			     progress_data);
-	}
+	fu_device_set_progress_full (FU_DEVICE (device), flash_len, flash_len);
 
 	/* success */
 	return TRUE;
 }
 
 GBytes *
-fu_altos_device_read_firmware (FuAltosDevice *device,
-			       GFileProgressCallback progress_cb,
-			       gpointer progress_data,
-			       GError **error)
+fu_altos_device_read_firmware (FuAltosDevice *device, GError **error)
 {
 	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
 	guint flash_len;
@@ -636,11 +623,9 @@ fu_altos_device_read_firmware (FuAltosDevice *device,
 			return NULL;
 
 		/* progress */
-		if (progress_cb != NULL) {
-			progress_cb ((goffset) (i - priv->addr_base),
-				     (goffset) (priv->addr_bound - priv->addr_base),
-				     progress_data);
-		}
+		fu_device_set_progress_full (FU_DEVICE (device),
+					     i - priv->addr_base,
+					     priv->addr_bound - priv->addr_base);
 		g_string_append_len (buf, str->str, str->len);
 	}
 

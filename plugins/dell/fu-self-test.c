@@ -30,13 +30,6 @@
 #include "fu-plugin-dell.h"
 
 static void
-_plugin_status_changed_cb (FuPlugin *plugin, FwupdStatus status, gpointer user_data)
-{
-	guint *cnt = (guint *) user_data;
-	(*cnt)++;
-}
-
-static void
 _plugin_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	FuDevice **dev = (FuDevice **) user_data;
@@ -47,7 +40,6 @@ static void
 fu_plugin_dell_tpm_func (void)
 {
 	gboolean ret;
-	guint cnt = 0;
 	struct tpm_status tpm_out;
 	FuDevice *device_alt = NULL;
 	g_autoptr(GError) error = NULL;
@@ -68,9 +60,6 @@ fu_plugin_dell_tpm_func (void)
 	g_signal_connect (plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &device);
-	g_signal_connect (plugin, "status-changed",
-			  G_CALLBACK (_plugin_status_changed_cb),
-			  &cnt);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -138,8 +127,8 @@ fu_plugin_dell_tpm_func (void)
 	g_assert (device != NULL);
 	g_assert (device_alt != NULL);
 
-	/* make sure allowed to flash 1.2 */
-	g_assert_true (fu_device_has_flag (device_alt, FWUPD_DEVICE_FLAG_UPDATABLE));
+	/* make sure not allowed to flash 1.2 */
+	g_assert_false (fu_device_has_flag (device_alt, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* try to unlock 2.0 */
 	ret = fu_plugin_runner_unlock (plugin, device, &error);
@@ -233,7 +222,6 @@ static void
 fu_plugin_dell_dock_func (void)
 {
 	gboolean ret;
-	guint cnt = 0;
 	guint32 out[4] = { 0x0, 0x0, 0x0, 0x0 };
 	DOCK_UNION buf;
 	DOCK_INFO *dock_info;
@@ -252,9 +240,6 @@ fu_plugin_dell_dock_func (void)
 	g_signal_connect (plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &device);
-	g_signal_connect (plugin, "status-changed",
-			  G_CALLBACK (_plugin_status_changed_cb),
-			  &cnt);
 	ret = fu_plugin_runner_coldplug (plugin, &error);
 	g_assert_no_error (error);
 	g_assert (ret);

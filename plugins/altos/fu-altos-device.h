@@ -61,12 +61,8 @@ gboolean	 fu_altos_device_probe			(FuAltosDevice	*device,
 gboolean	 fu_altos_device_write_firmware		(FuAltosDevice	*device,
 							 GBytes		*fw,
 							 FuAltosDeviceWriteFirmwareFlag flags,
-							 GFileProgressCallback progress_cb,
-							 gpointer	 progress_data,
 							 GError		**error);
 GBytes		*fu_altos_device_read_firmware		(FuAltosDevice	*device,
-							 GFileProgressCallback progress_cb,
-							 gpointer	 progress_data,
 							 GError		**error);
 
 G_END_DECLS

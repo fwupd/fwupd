@@ -49,7 +49,6 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 	}
 
 	/* reset */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_colorhug_device_detach (colorhug_dev, error))
 		return FALSE;
 
@@ -90,7 +89,6 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 	}
 
 	/* reset */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_colorhug_device_attach (colorhug_dev, error))
 		return FALSE;
 
@@ -126,13 +124,6 @@ fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static void
-fu_plugin_colorhug_progress_cb (goffset current, goffset total, gpointer user_data)
-{
-	FuPlugin *plugin = FU_PLUGIN (user_data);
-	fu_plugin_set_percentage (plugin, (guint) current);
-}
-
 gboolean
 fu_plugin_update (FuPlugin *plugin,
 		  FuDevice *device,
@@ -162,11 +153,7 @@ fu_plugin_update (FuPlugin *plugin,
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
-	return fu_colorhug_device_write_firmware (colorhug_dev, blob_fw,
-						  fu_plugin_colorhug_progress_cb,
-						  plugin,
-						  error);
+	return fu_colorhug_device_write_firmware (colorhug_dev, blob_fw, error);
 }
 
 gboolean
@@ -182,29 +169,14 @@ fu_plugin_verify (FuPlugin *plugin,
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
-	return fu_colorhug_device_verify_firmware (colorhug_dev,
-						   fu_plugin_colorhug_progress_cb,
-						   plugin,
-						   error);
+	return fu_colorhug_device_verify_firmware (colorhug_dev, error);
 }
 
 gboolean
 fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {
-	ChDeviceMode mode;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuColorhugDevice) device = NULL;
-
-	/* ignore */
-	mode = ch_device_get_mode (usb_device);
-	if (mode == CH_DEVICE_MODE_UNKNOWN)
-		return TRUE;
-
-	/* this is using DFU now */
-	if (mode == CH_DEVICE_MODE_BOOTLOADER_PLUS ||
-	    mode == CH_DEVICE_MODE_FIRMWARE_PLUS)
-		return TRUE;
 
 	/* open the device */
 	device = fu_colorhug_device_new (usb_device);

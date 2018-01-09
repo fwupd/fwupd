@@ -82,9 +82,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (DfuTargetAvr, dfu_target_avr, DFU_TYPE_TARGET)
 #define ATMEL_MANUFACTURER_CODE2		0x1e
 
 static gboolean
-dfu_target_avr_mass_erase (DfuTarget *target,
-			   GCancellable *cancellable,
-			   GError **error)
+dfu_target_avr_mass_erase (DfuTarget *target, GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
 	guint8 buf[3];
@@ -99,7 +97,7 @@ dfu_target_avr_mass_erase (DfuTarget *target,
 	data_in = g_bytes_new_static (buf, sizeof(buf));
 	g_debug ("mass erasing");
 	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_ERASE);
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+	if (!dfu_target_download_chunk (target, 0, data_in, error)) {
 		g_prefix_error (error, "cannot mass-erase: ");
 		return FALSE;
 	}
@@ -108,7 +106,7 @@ dfu_target_avr_mass_erase (DfuTarget *target,
 }
 
 static gboolean
-dfu_target_avr_attach (DfuTarget *target, GCancellable *cancellable, GError **error)
+dfu_target_avr_attach (DfuTarget *target, GError **error)
 {
 	guint8 buf[3];
 	g_autoptr(GBytes) data_empty = NULL;
@@ -120,7 +118,7 @@ dfu_target_avr_attach (DfuTarget *target, GCancellable *cancellable, GError **er
 	buf[1] = DFU_AVR32_CMD_START_APPLI;
 	buf[2] = DFU_AVR32_START_APPLI_RESET;
 	data_in = g_bytes_new_static (buf, sizeof(buf));
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, &error_local)) {
+	if (!dfu_target_download_chunk (target, 0, data_in, &error_local)) {
 		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug ("ignoring as device rebooting: %s", error_local->message);
 			return TRUE;
@@ -131,7 +129,7 @@ dfu_target_avr_attach (DfuTarget *target, GCancellable *cancellable, GError **er
 
 	/* do zero-sized download to initiate the reset */
 	data_empty = g_bytes_new (NULL, 0);
-	if (!dfu_target_download_chunk (target, 0, data_empty, cancellable, &error_local)) {
+	if (!dfu_target_download_chunk (target, 0, data_empty, &error_local)) {
 		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug ("ignoring as device rebooting: %s", error_local->message);
 			return TRUE;
@@ -148,7 +146,6 @@ dfu_target_avr_attach (DfuTarget *target, GCancellable *cancellable, GError **er
  * dfu_target_avr_select_memory_unit:
  * @target: a #DfuTarget
  * @memory_unit: a unit, e.g. %DFU_AVR32_MEMORY_UNIT_FLASH
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Selects the memory unit for the device.
@@ -158,7 +155,6 @@ dfu_target_avr_attach (DfuTarget *target, GCancellable *cancellable, GError **er
 static gboolean
 dfu_target_avr_select_memory_unit (DfuTarget *target,
 				   guint8 memory_unit,
-				   GCancellable *cancellable,
 				   GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
@@ -178,7 +174,7 @@ dfu_target_avr_select_memory_unit (DfuTarget *target,
 	buf[3] = memory_unit;
 	data_in = g_bytes_new_static (buf, sizeof(buf));
 	g_debug ("selecting memory unit 0x%02x", (guint) memory_unit);
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+	if (!dfu_target_download_chunk (target, 0, data_in, error)) {
 		g_prefix_error (error, "cannot select memory unit: ");
 		return FALSE;
 	}
@@ -189,7 +185,6 @@ dfu_target_avr_select_memory_unit (DfuTarget *target,
  * dfu_target_avr_select_memory_page:
  * @target: a #DfuTarget
  * @memory_page: an address
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Selects the memory page for the AVR device.
@@ -199,7 +194,6 @@ dfu_target_avr_select_memory_unit (DfuTarget *target,
 static gboolean
 dfu_target_avr_select_memory_page (DfuTarget *target,
 				   guint16 memory_page,
-				   GCancellable *cancellable,
 				   GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
@@ -223,7 +217,7 @@ dfu_target_avr_select_memory_page (DfuTarget *target,
 	buf[3] = memory_page & 0xff;
 	data_in = g_bytes_new_static (buf, sizeof(buf));
 	g_debug ("selecting memory page 0x%01x", (guint) memory_page);
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+	if (!dfu_target_download_chunk (target, 0, data_in, error)) {
 		g_prefix_error (error, "cannot select memory page: ");
 		return FALSE;
 	}
@@ -234,7 +228,6 @@ dfu_target_avr_select_memory_page (DfuTarget *target,
  * dfu_target_avr32_select_memory_page:
  * @target: a #DfuTarget
  * @memory_page: an address
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Selects the memory page for the AVR32 device.
@@ -244,21 +237,19 @@ dfu_target_avr_select_memory_page (DfuTarget *target,
 static gboolean
 dfu_target_avr32_select_memory_page (DfuTarget *target,
 				     guint16 memory_page,
-				     GCancellable *cancellable,
 				     GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
-	guint16 memory_page_le = GUINT16_TO_BE (memory_page);
 	guint8 buf[5];
 
 	/* format buffer */
 	buf[0] = DFU_AVR32_GROUP_SELECT;
 	buf[1] = DFU_AVR32_CMD_SELECT_MEMORY;
 	buf[2] = DFU_AVR32_MEMORY_PAGE;
-	memcpy (&buf[3], &memory_page_le, 2);
+	fu_common_write_uint16 (&buf[3], memory_page, G_BIG_ENDIAN);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
 	g_debug ("selecting memory page 0x%02x", (guint) memory_page);
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+	if (!dfu_target_download_chunk (target, 0, data_in, error)) {
 		g_prefix_error (error, "cannot select memory page: ");
 		return FALSE;
 	}
@@ -270,7 +261,6 @@ dfu_target_avr32_select_memory_page (DfuTarget *target,
  * @target: a #DfuTarget
  * @addr_start: an address
  * @addr_end: an address
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Reads flash data from the device.
@@ -281,23 +271,20 @@ static gboolean
 dfu_target_avr_read_memory (DfuTarget *target,
 			    guint16 addr_start,
 			    guint16 addr_end,
-			    GCancellable *cancellable,
 			    GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
-	guint16 addr_start_le = GUINT16_TO_BE (addr_start);
-	guint16 addr_end_le = GUINT16_TO_BE (addr_end);
 	guint8 buf[6];
 
 	/* format buffer */
 	buf[0] = DFU_AVR32_GROUP_UPLOAD;
 	buf[1] = DFU_AVR32_CMD_READ_MEMORY;
-	memcpy (&buf[2], &addr_start_le, 2);
-	memcpy (&buf[4], &addr_end_le, 2);
+	fu_common_write_uint16 (&buf[2], addr_start, G_BIG_ENDIAN);
+	fu_common_write_uint16 (&buf[4], addr_end, G_BIG_ENDIAN);
 	data_in = g_bytes_new_static (buf, sizeof(buf));
 	g_debug ("reading memory from 0x%04x to 0x%04x",
 		 (guint) addr_start, (guint) addr_end);
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+	if (!dfu_target_download_chunk (target, 0, data_in, error)) {
 		g_prefix_error (error, "cannot read memory 0x%04x to 0x%04x: ",
 				(guint) addr_start, (guint) addr_end);
 		return FALSE;
@@ -309,7 +296,6 @@ dfu_target_avr_read_memory (DfuTarget *target,
  * dfu_target_avr_read_command:
  * @target: a #DfuTarget
  * @memory_unit: a unit, e.g. %DFU_AVR32_MEMORY_UNIT_FLASH
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Performs a read operation on the device.
@@ -317,8 +303,7 @@ dfu_target_avr_read_memory (DfuTarget *target,
  * Return value: %TRUE for success
  **/
 static gboolean
-dfu_target_avr_read_command (DfuTarget *target, guint8 page, guint8 addr,
-			     GCancellable *cancellable, GError **error)
+dfu_target_avr_read_command (DfuTarget *target, guint8 page, guint8 addr, GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
 	guint8 buf[3];
@@ -329,7 +314,7 @@ dfu_target_avr_read_command (DfuTarget *target, guint8 page, guint8 addr,
 	buf[2] = addr;
 	data_in = g_bytes_new_static (buf, sizeof(buf));
 	g_debug ("read command page:0x%02x addr:0x%02x", (guint) page, (guint) addr);
-	if (!dfu_target_download_chunk (target, 0, data_in, cancellable, error)) {
+	if (!dfu_target_download_chunk (target, 0, data_in, error)) {
 		g_prefix_error (error, "cannot read command page: ");
 		return FALSE;
 	}
@@ -339,7 +324,6 @@ dfu_target_avr_read_command (DfuTarget *target, guint8 page, guint8 addr,
 /**
  * dfu_target_avr32_get_chip_signature:
  * @target: a #DfuTarget
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Gets the chip signature for the AVR32 device.
@@ -347,28 +331,25 @@ dfu_target_avr_read_command (DfuTarget *target, guint8 page, guint8 addr,
  * Return value: a 4-byte %GBytes object for success, else %NULL
  **/
 static GBytes *
-dfu_target_avr32_get_chip_signature (DfuTarget *target,
-				     GCancellable *cancellable,
-				     GError **error)
+dfu_target_avr32_get_chip_signature (DfuTarget *target, GError **error)
 {
 	/* select unit, and request 4 bytes */
 	if (!dfu_target_avr_select_memory_unit (target,
 						DFU_AVR32_MEMORY_UNIT_SIGNATURE,
-						cancellable, error))
+						error))
 		return NULL;
-	if (!dfu_target_avr32_select_memory_page (target, 0x00, cancellable, error))
+	if (!dfu_target_avr32_select_memory_page (target, 0x00, error))
 		return NULL;
-	if (!dfu_target_avr_read_memory (target, 0x00, 0x03, cancellable, error))
+	if (!dfu_target_avr_read_memory (target, 0x00, 0x03, error))
 		return NULL;
 
 	/* get data back */
-	return dfu_target_upload_chunk (target, 0x00, 0, cancellable, error);
+	return dfu_target_upload_chunk (target, 0x00, 0, error);
 }
 
 /**
  * dfu_target_avr_get_chip_signature:
  * @target: a #DfuTarget
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Gets the chip signature for the AVR device.
@@ -376,9 +357,7 @@ dfu_target_avr32_get_chip_signature (DfuTarget *target,
  * Return value: a 4-byte %GBytes object for success, else %NULL
  **/
 static GBytes *
-dfu_target_avr_get_chip_signature (DfuTarget *target,
-				   GCancellable *cancellable,
-				   GError **error)
+dfu_target_avr_get_chip_signature (DfuTarget *target, GError **error)
 {
 	struct {
 		guint8 page;
@@ -401,12 +380,11 @@ dfu_target_avr_get_chip_signature (DfuTarget *target,
 		if (!dfu_target_avr_read_command (target,
 						  signature_locations[i].page,
 						  signature_locations[i].addr,
-						  cancellable, error))
+						  error))
 			return NULL;
 
 		/* get data back */
-		chunk_byte = dfu_target_upload_chunk (target, 0x00, 0x01,
-						      cancellable, error);
+		chunk_byte = dfu_target_upload_chunk (target, 0x00, 0x01, error);
 		if (chunk_byte == NULL)
 			return NULL;
 		if (g_bytes_get_size (chunk_byte) != 1) {
@@ -426,7 +404,7 @@ dfu_target_avr_get_chip_signature (DfuTarget *target,
 }
 
 static gboolean
-dfu_target_avr_setup (DfuTarget *target, GCancellable *cancellable, GError **error)
+dfu_target_avr_setup (DfuTarget *target, GError **error)
 {
 	DfuDevice *device;
 	DfuTargetAvr *target_avr = DFU_TARGET_AVR (target);
@@ -445,15 +423,11 @@ dfu_target_avr_setup (DfuTarget *target, GCancellable *cancellable, GError **err
 	/* different methods for AVR vs. AVR32 */
 	if (dfu_device_has_quirk (dfu_target_get_device (target),
 				  DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)) {
-		chunk_sig = dfu_target_avr_get_chip_signature (target,
-							       cancellable,
-							       error);
+		chunk_sig = dfu_target_avr_get_chip_signature (target, error);
 		if (chunk_sig == NULL)
 			return FALSE;
 	} else {
-		chunk_sig = dfu_target_avr32_get_chip_signature (target,
-								 cancellable,
-								 error);
+		chunk_sig = dfu_target_avr32_get_chip_signature (target, error);
 		if (chunk_sig == NULL)
 			return FALSE;
 	}
@@ -489,7 +463,7 @@ dfu_target_avr_setup (DfuTarget *target, GCancellable *cancellable, GError **err
 	/* set the alt-name using the device ID */
 	dfu_device_set_chip_id (dfu_target_get_device (target), chip_id);
 	device = dfu_target_get_device (target);
-	quirk_str = fu_quirks_lookup_by_id (dfu_device_get_system_quirks (device),
+	quirk_str = fu_quirks_lookup_by_id (fu_device_get_quirks (FU_DEVICE (device)),
 					    FU_QUIRKS_DFU_AVR_CHIP_ID,
 					    chip_id);
 	if (quirk_str == NULL) {
@@ -513,7 +487,6 @@ static gboolean
 dfu_target_avr_download_element (DfuTarget *target,
 				 DfuElement *element,
 				 DfuTargetTransferFlags flags,
-				 GCancellable *cancellable,
 				 GError **error)
 {
 	DfuSector *sector;
@@ -523,7 +496,6 @@ dfu_target_avr_download_element (DfuTarget *target,
 	guint16 page_last = G_MAXUINT16;
 	guint32 address;
 	guint32 address_offset = 0x0;
-	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GPtrArray) packets = NULL;
 	const guint8 footer[] = { 0x00, 0x00, 0x00, 0x00,	/* CRC */
 				  16,				/* len */
@@ -535,11 +507,10 @@ dfu_target_avr_download_element (DfuTarget *target,
 
 	/* select a memory and erase everything */
 	if (!dfu_target_avr_select_memory_unit (target,
-						  dfu_target_get_alt_setting (target),
-						  cancellable,
-						  error))
+						dfu_target_get_alt_setting (target),
+						error))
 		return FALSE;
-	if (!dfu_target_avr_mass_erase (target, cancellable, error))
+	if (!dfu_target_avr_mass_erase (target, error))
 		return FALSE;
 
 	/* verify the element isn't larger than the target size */
@@ -590,8 +561,6 @@ dfu_target_avr_download_element (DfuTarget *target,
 	/* process each chunk */
 	for (guint i = 0; i < packets->len; i++) {
 		const DfuChunkedPacket *packet = g_ptr_array_index (packets, i);
-		guint16 addr_start_le;
-		guint16 addr_end_le;
 		g_autofree guint8 *buf = NULL;
 		g_autoptr(GBytes) chunk_tmp = NULL;
 
@@ -601,13 +570,11 @@ dfu_target_avr_download_element (DfuTarget *target,
 						  DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)) {
 				if (!dfu_target_avr_select_memory_page (target,
 									packet->page,
-									cancellable,
 									error))
 					return FALSE;
 			} else {
 				if (!dfu_target_avr32_select_memory_page (target,
 									  packet->page,
-									  cancellable,
 									  error))
 					return FALSE;
 			}
@@ -615,13 +582,11 @@ dfu_target_avr_download_element (DfuTarget *target,
 		}
 
 		/* create packet with header and footer */
-		addr_start_le = GUINT16_TO_BE (packet->address);
-		addr_end_le = GUINT16_TO_BE (packet->address + packet->data_sz - 1);
 		buf = g_malloc0 (packet->data_sz + header_sz + sizeof(footer));
 		buf[0] = DFU_AVR32_GROUP_DOWNLOAD;
 		buf[1] = DFU_AVR32_CMD_PROGRAM_START;
-		memcpy (&buf[2], &addr_start_le, 2);
-		memcpy (&buf[4], &addr_end_le, 2);
+		fu_common_write_uint16 (&buf[2], packet->address, G_BIG_ENDIAN);
+		fu_common_write_uint16 (&buf[4], packet->address + packet->data_sz - 1, G_BIG_ENDIAN);
 		memcpy (&buf[header_sz], packet->data, packet->data_sz);
 		memcpy (&buf[header_sz + packet->data_sz], footer, sizeof(footer));
 
@@ -629,7 +594,7 @@ dfu_target_avr_download_element (DfuTarget *target,
 		chunk_tmp = g_bytes_new_static (buf, packet->data_sz + header_sz + sizeof(footer));
 		g_debug ("sending %" G_GSIZE_FORMAT " bytes to the hardware",
 			 g_bytes_get_size (chunk_tmp));
-		if (!dfu_target_download_chunk (target, i, chunk_tmp, cancellable, error))
+		if (!dfu_target_download_chunk (target, i, chunk_tmp, error))
 			return FALSE;
 
 		/* update UI */
@@ -647,7 +612,6 @@ dfu_target_avr_upload_element (DfuTarget *target,
 			       guint32 address,
 			       gsize expected_size,
 			       gsize maximum_size,
-			       GCancellable *cancellable,
 			       GError **error)
 {
 	guint16 page_last = G_MAXUINT16;
@@ -662,7 +626,6 @@ dfu_target_avr_upload_element (DfuTarget *target,
 	/* select unit */
 	if (!dfu_target_avr_select_memory_unit (target,
 						dfu_target_get_alt_setting (target),
-						cancellable,
 						error))
 		return NULL;
 
@@ -705,13 +668,11 @@ dfu_target_avr_upload_element (DfuTarget *target,
 						  DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)) {
 				if (!dfu_target_avr_select_memory_page (target,
 									packet->page,
-									cancellable,
 									error))
 					return NULL;
 			} else {
 				if (!dfu_target_avr32_select_memory_page (target,
 									  packet->page,
-									  cancellable,
 									  error))
 					return NULL;
 			}
@@ -722,7 +683,6 @@ dfu_target_avr_upload_element (DfuTarget *target,
 		if (!dfu_target_avr_read_memory (target,
 						 packet->address,
 						 packet->address + packet->data_sz - 1,
-						 cancellable,
 						 error))
 			return NULL;
 
@@ -731,7 +691,7 @@ dfu_target_avr_upload_element (DfuTarget *target,
 			 ATMEL_MAX_TRANSFER_SIZE);
 		chunk_tmp = dfu_target_upload_chunk (target, i,
 						     ATMEL_MAX_TRANSFER_SIZE,
-						     cancellable, error);
+						     error);
 		if (chunk_tmp == NULL)
 			return NULL;
 		g_ptr_array_add (chunks, chunk_tmp);

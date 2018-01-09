@@ -34,10 +34,7 @@ G_DECLARE_DERIVABLE_TYPE (LuDeviceBootloader, lu_device_bootloader, LU, DEVICE_B
 struct _LuDeviceBootloaderClass
 {
 	LuDeviceClass	parent_class;
-	gboolean	 (*write_firmware)		(LuDevice		*device,
-							 GBytes			*fw,
-							 GFileProgressCallback	 progress_cb,
-							 gpointer		 progress_data,
+	gboolean	 (*probe)			(LuDevice		*device,
 							 GError			**error);
 };
 

@@ -64,18 +64,6 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **e
 	return TRUE;
 }
 
-static void
-fu_plugin_altos_progress_cb (goffset current, goffset total, gpointer user_data)
-{
-	FuPlugin *plugin = FU_PLUGIN (user_data);
-	gdouble percentage = -1.f;
-	if (total > 0)
-		percentage = (100.f * (gdouble) current) / (gdouble) total;
-	g_debug ("written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT " bytes [%.1f%%]",
-		 current, total, percentage);
-	fu_plugin_set_percentage (plugin, (guint) percentage);
-}
-
 gboolean
 fu_plugin_verify (FuPlugin *plugin,
 		  FuDevice *dev,
@@ -89,10 +77,8 @@ fu_plugin_verify (FuPlugin *plugin,
 		0 };
 
 	/* get data */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
+	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_VERIFY);
 	blob_fw = fu_altos_device_read_firmware (FU_ALTOS_DEVICE (dev),
-						 fu_plugin_altos_progress_cb,
-						 plugin,
 						 error);
 	if (blob_fw == NULL)
 		return FALSE;
@@ -101,7 +87,6 @@ fu_plugin_verify (FuPlugin *plugin,
 		hash = g_compute_checksum_for_bytes (checksum_types[i], blob_fw);
 		fu_device_add_checksum (dev, hash);
 	}
-	fu_plugin_set_status (plugin, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -112,15 +97,12 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_altos_device_write_firmware (FU_ALTOS_DEVICE (dev),
 					     blob_fw,
 					     FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_REBOOT,
-					     fu_plugin_altos_progress_cb,
-					     plugin,
 					     error)) {
 		return FALSE;
 	}
-	fu_plugin_set_status (plugin, FWUPD_STATUS_IDLE);
 	return TRUE;
 }

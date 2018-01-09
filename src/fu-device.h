@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <fwupd.h>
 
+#include "fu-quirks.h"
+
 G_BEGIN_DECLS
 
 #define FU_TYPE_DEVICE (fu_device_get_type ())
@@ -33,6 +35,8 @@ G_DECLARE_DERIVABLE_TYPE (FuDevice, fu_device, FU, DEVICE, FwupdDevice)
 struct _FuDeviceClass
 {
 	FwupdDeviceClass	 parent_class;
+	void			 (*to_string)		(FuDevice	*device,
+							 GString	*str);
 };
 
 /**
@@ -86,6 +90,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_plugin(d)			fwupd_device_get_plugin(FWUPD_DEVICE(d))
 #define fu_device_get_update_error(d)		fwupd_device_get_update_error(FWUPD_DEVICE(d))
 #define fu_device_get_update_state(d)		fwupd_device_get_update_state(FWUPD_DEVICE(d))
+#define fu_device_get_vendor(d)			fwupd_device_get_vendor(FWUPD_DEVICE(d))
 #define fu_device_get_version(d)		fwupd_device_get_version(FWUPD_DEVICE(d))
 #define fu_device_get_version_lowest(d)		fwupd_device_get_version_lowest(FWUPD_DEVICE(d))
 #define fu_device_get_version_bootloader(d)	fwupd_device_get_version_bootloader(FWUPD_DEVICE(d))
@@ -93,6 +98,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
 
 /* accessors */
+gchar		*fu_device_to_string			(FuDevice	*device);
 const gchar	*fu_device_get_equivalent_id		(FuDevice	*device);
 void		 fu_device_set_equivalent_id		(FuDevice	*device,
 							 const gchar	*equivalent_id);
@@ -121,11 +127,29 @@ void		 fu_device_set_id			(FuDevice	*device,
 const gchar	*fu_device_get_platform_id		(FuDevice	*device);
 void		 fu_device_set_platform_id		(FuDevice	*device,
 							 const gchar	*platform_id);
+const gchar	*fu_device_get_serial			(FuDevice	*device);
+void		 fu_device_set_serial			(FuDevice	*device,
+							 const gchar	*serial);
+const gchar	*fu_device_get_plugin_hints		(FuDevice	*device);
+void		 fu_device_set_plugin_hints		(FuDevice	*device,
+							 const gchar	*plugin_hints);
 void		 fu_device_set_name			(FuDevice	*device,
 							 const gchar	*value);
 guint		 fu_device_get_remove_delay		(FuDevice	*device);
 void		 fu_device_set_remove_delay		(FuDevice	*device,
 							 guint		 remove_delay);
+FwupdStatus	 fu_device_get_status			(FuDevice	*device);
+void		 fu_device_set_status			(FuDevice	*device,
+							 FwupdStatus	 status);
+guint		 fu_device_get_progress			(FuDevice	*device);
+void		 fu_device_set_progress			(FuDevice	*device,
+							 guint		 progress);
+void		 fu_device_set_progress_full		(FuDevice	*device,
+							 gsize		 progress_done,
+							 gsize		 progress_total);
+void		 fu_device_set_quirks			(FuDevice	*device,
+							 FuQuirks	*quirks);
+FuQuirks	*fu_device_get_quirks			(FuDevice	*device);
 
 G_END_DECLS
 

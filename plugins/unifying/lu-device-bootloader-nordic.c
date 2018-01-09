@@ -67,33 +67,10 @@ lu_device_bootloader_nordic_get_fw_version (LuDevice *device, GError **error)
 				  micro);
 }
 
-static gchar *
-lu_device_bootloader_nordic_get_bl_version (LuDevice *device, GError **error)
-{
-	guint16 build;
-
-	g_autoptr(LuDeviceBootloaderRequest) req = lu_device_bootloader_request_new ();
-	req->cmd = LU_DEVICE_BOOTLOADER_CMD_GET_BL_VERSION;
-	if (!lu_device_bootloader_request (device, req, error)) {
-		g_prefix_error (error, "failed to get firmware version: ");
-		return NULL;
-	}
-
-	/* BOTxx.yy_Bzzzz
-	 * 012345678901234 */
-	build = (guint16) lu_buffer_read_uint8 ((const gchar *) req->data + 10) << 8;
-	build += lu_buffer_read_uint8 ((const gchar *) req->data + 12);
-	return lu_format_version ("BOT",
-				  lu_buffer_read_uint8 ((const gchar *) req->data + 3),
-				  lu_buffer_read_uint8 ((const gchar *) req->data + 6),
-				  build);
-}
-
 static gboolean
 lu_device_bootloader_nordic_probe (LuDevice *device, GError **error)
 {
 	g_autofree gchar *hw_platform_id = NULL;
-	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version_fw = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -108,16 +85,11 @@ lu_device_bootloader_nordic_probe (LuDevice *device, GError **error)
 	if (version_fw == NULL) {
 		g_warning ("failed to get firmware version: %s",
 			   error_local->message);
-		lu_device_set_version_fw (device, "RQR12.xx_Bxxxx");
+		fu_device_set_version (FU_DEVICE (device), "RQR12.xx_Bxxxx");
 	} else {
-		lu_device_set_version_fw (device, version_fw);
+		fu_device_set_version (FU_DEVICE (device), version_fw);
 	}
 
-	/* get bootloader version */
-	version_bl = lu_device_bootloader_nordic_get_bl_version (device, error);
-	if (version_bl == NULL)
-		return FALSE;
-	lu_device_set_version_bl (device, version_bl);
 	return TRUE;
 }
 
@@ -217,11 +189,7 @@ lu_device_bootloader_nordic_erase (LuDevice *device, guint16 addr, GError **erro
 }
 
 static gboolean
-lu_device_bootloader_nordic_write_firmware (LuDevice *device,
-					    GBytes *fw,
-					    GFileProgressCallback progress_cb,
-					    gpointer progress_data,
-					    GError **error)
+lu_device_bootloader_nordic_write_firmware (LuDevice *device, GBytes *fw, GError **error)
 {
 	const LuDeviceBootloaderRequest *payload;
 	guint16 addr;
@@ -248,11 +216,7 @@ lu_device_bootloader_nordic_write_firmware (LuDevice *device,
 							payload->data,
 							error))
 			return FALSE;
-		if (progress_cb != NULL) {
-			progress_cb ((goffset) i * 32,
-				     (goffset) reqs->len * 32,
-				     progress_data);
-		}
+		fu_device_set_progress_full (FU_DEVICE (device), i * 32, reqs->len * 32);
 	}
 
 	/* send the first managed packet last, excluding the reset vector */
@@ -273,11 +237,7 @@ lu_device_bootloader_nordic_write_firmware (LuDevice *device,
 		return FALSE;
 
 	/* mark as complete */
-	if (progress_cb != NULL) {
-		progress_cb ((goffset) reqs->len * 32,
-			     (goffset) reqs->len * 32,
-			     progress_data);
-	}
+	fu_device_set_progress_full (FU_DEVICE (device), reqs->len * 32, reqs->len * 32);
 
 	/* success! */
 	return TRUE;
@@ -287,8 +247,9 @@ static void
 lu_device_bootloader_nordic_class_init (LuDeviceBootloaderNordicClass *klass)
 {
 	LuDeviceClass *klass_device = LU_DEVICE_CLASS (klass);
+	LuDeviceBootloaderClass *klass_device_bootloader = LU_DEVICE_BOOTLOADER_CLASS (klass);
 	klass_device->write_firmware = lu_device_bootloader_nordic_write_firmware;
-	klass_device->probe = lu_device_bootloader_nordic_probe;
+	klass_device_bootloader->probe = lu_device_bootloader_nordic_probe;
 }
 
 static void

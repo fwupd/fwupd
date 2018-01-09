@@ -29,36 +29,19 @@
 gboolean
 fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {
-	FuEbitdoDeviceKind ebitdo_kind;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuEbitdoDevice) dev = NULL;
-
-	/* ignore wrong hardware */
-	ebitdo_kind = fu_ebitdo_device_kind_from_dev (usb_device);
-	if (ebitdo_kind == FU_EBITDO_DEVICE_KIND_UNKNOWN)
-		return TRUE;
+	g_autoptr(FuEbitdoDevice) device = NULL;
 
 	/* open the device */
-	dev = fu_ebitdo_device_new (ebitdo_kind, usb_device);
-	locker = fu_device_locker_new (dev, error);
+	device = fu_ebitdo_device_new (usb_device);
+	fu_device_set_quirks (FU_DEVICE (device), fu_plugin_get_quirks (plugin));
+	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
 
-	/* insert to hash */
-	fu_plugin_device_add (plugin, FU_DEVICE (dev));
+	/* success */
+	fu_plugin_device_add (plugin, FU_DEVICE (device));
 	return TRUE;
-}
-
-static void
-ebitdo_write_progress_cb (goffset current, goffset total, gpointer user_data)
-{
-	FuPlugin *plugin = FU_PLUGIN (user_data);
-	gdouble percentage = -1.f;
-	if (total > 0)
-		percentage = (100.f * (gdouble) current) / (gdouble) total;
-	g_debug ("written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT " bytes [%.1f%%]",
-		 current, total, percentage);
-	fu_plugin_set_percentage (plugin, (guint) percentage);
 }
 
 gboolean
@@ -74,7 +57,7 @@ fu_plugin_update (FuPlugin *plugin,
 	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
 	/* get version */
-	if (fu_ebitdo_device_get_kind (ebitdo_dev) != FU_EBITDO_DEVICE_KIND_BOOTLOADER) {
+	if (!fu_ebitdo_device_is_bootloader (ebitdo_dev)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -86,15 +69,12 @@ fu_plugin_update (FuPlugin *plugin,
 	locker = fu_device_locker_new (ebitdo_dev, error);
 	if (locker == NULL)
 		return FALSE;
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_ebitdo_device_write_firmware (ebitdo_dev, blob_fw,
-					      ebitdo_write_progress_cb, plugin,
-					      error))
+	if (!fu_ebitdo_device_write_firmware (ebitdo_dev, blob_fw, error))
 		return FALSE;
 
 	/* when doing a soft-reboot the device does not re-enumerate properly
 	 * so manually reboot the GUsbDevice */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);
 	if (!g_usb_device_reset (usb_device, error)) {
 		g_prefix_error (error, "failed to force-reset device: ");
 		return FALSE;

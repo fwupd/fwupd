@@ -484,15 +484,13 @@ dfu_target_status_to_error_msg (DfuStatus status)
 }
 
 gboolean
-dfu_target_check_status (DfuTarget *target,
-			 GCancellable *cancellable,
-			 GError **error)
+dfu_target_check_status (DfuTarget *target, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	DfuStatus status;
 
 	/* get the status */
-	if (!dfu_device_refresh (priv->device, cancellable, error))
+	if (!dfu_device_refresh (priv->device, error))
 		return FALSE;
 
 	/* wait for dfuDNBUSY to not be set */
@@ -500,7 +498,7 @@ dfu_target_check_status (DfuTarget *target,
 		while (dfu_device_get_state (priv->device) == DFU_STATE_DFU_DNBUSY) {
 			g_debug ("waiting for DFU_STATE_DFU_DNBUSY to clear");
 			g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
-			if (!dfu_device_refresh (priv->device, cancellable, error))
+			if (!dfu_device_refresh (priv->device, error))
 				return FALSE;
 		}
 	}
@@ -549,20 +547,19 @@ static gboolean
 dfu_target_use_alt_setting (DfuTarget *target, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	GUsbDevice *dev;
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (priv->device));
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (priv->device, NULL, error))
+	if (!dfu_device_ensure_interface (priv->device, error))
 		return FALSE;
 
 	/* use the correct setting */
-	dev = dfu_device_get_usb_dev (priv->device);
-	if (dfu_device_get_mode (priv->device) == DFU_MODE_DFU) {
-		if (!g_usb_device_set_interface_alt (dev,
+	if (!dfu_device_is_runtime (priv->device)) {
+		if (!g_usb_device_set_interface_alt (usb_device,
 						     (gint) dfu_device_get_interface (priv->device),
 						     (gint) priv->alt_setting,
 						     &error_local)) {
@@ -602,7 +599,6 @@ dfu_target_set_device (DfuTarget *target, DfuDevice *device)
 /**
  * dfu_target_setup:
  * @target: a #DfuTarget
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Opens a DFU-capable target.
@@ -610,7 +606,7 @@ dfu_target_set_device (DfuTarget *target, DfuDevice *device)
  * Return value: %TRUE for success
  **/
 gboolean
-dfu_target_setup (DfuTarget *target, GCancellable *cancellable, GError **error)
+dfu_target_setup (DfuTarget *target, GError **error)
 {
 	DfuTargetClass *klass = DFU_TARGET_GET_CLASS (target);
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -624,15 +620,15 @@ dfu_target_setup (DfuTarget *target, GCancellable *cancellable, GError **error)
 
 	/* superclassed */
 	if (klass->setup != NULL) {
-		if (!klass->setup (target, cancellable, error))
+		if (!klass->setup (target, error))
 			return FALSE;
 	}
 
 	/* get string */
 	if (priv->alt_idx != 0x00 && priv->alt_name == NULL) {
-		GUsbDevice *dev = dfu_device_get_usb_dev (priv->device);
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (priv->device));
 		priv->alt_name =
-			g_usb_device_get_string_descriptor (dev,
+			g_usb_device_get_string_descriptor (usb_device,
 							    priv->alt_idx,
 							    NULL);
 	}
@@ -664,7 +660,6 @@ dfu_target_setup (DfuTarget *target, GCancellable *cancellable, GError **error)
 /**
  * dfu_target_mass_erase:
  * @target: a #DfuTarget
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Mass erases the device clearing all SRAM and EEPROM memory.
@@ -674,12 +669,10 @@ dfu_target_setup (DfuTarget *target, GCancellable *cancellable, GError **error)
  * Return value: %TRUE for success
  **/
 gboolean
-dfu_target_mass_erase (DfuTarget *target,
-		       GCancellable *cancellable,
-		       GError **error)
+dfu_target_mass_erase (DfuTarget *target, GError **error)
 {
 	DfuTargetClass *klass = DFU_TARGET_GET_CLASS (target);
-	if (!dfu_target_setup (target, cancellable, error))
+	if (!dfu_target_setup (target, error))
 		return FALSE;
 	if (klass->mass_erase == NULL) {
 		g_set_error_literal (error,
@@ -688,14 +681,14 @@ dfu_target_mass_erase (DfuTarget *target,
 				     "mass erase not supported");
 		return FALSE;
 	}
-	return klass->mass_erase (target, cancellable, error);
+	return klass->mass_erase (target, error);
 }
 
 gboolean
-dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
-			   GCancellable *cancellable, GError **error)
+dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (priv->device));
 	g_autoptr(GError) error_local = NULL;
 	gsize actual_length;
 
@@ -707,7 +700,7 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 			g_print ("Message: m[%" G_GSIZE_FORMAT "] = 0x%02x\n", i, (guint) data[i]);
 	}
 
-	if (!g_usb_device_control_transfer (dfu_device_get_usb_dev (priv->device),
+	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
@@ -718,10 +711,10 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 					    g_bytes_get_size (bytes),
 					    &actual_length,
 					    dfu_device_get_timeout (priv->device),
-					    cancellable,
+					    NULL,
 					    &error_local)) {
 		/* refresh the error code */
-		dfu_device_error_fixup (priv->device, cancellable, &error_local);
+		dfu_device_error_fixup (priv->device, &error_local);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -732,7 +725,7 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 
 	/* for STM32 devices, the action only occurs when we do GetStatus */
 	if (dfu_device_get_version (priv->device) == DFU_VERSION_DFUSE) {
-		if (!dfu_device_refresh (priv->device, cancellable, error))
+		if (!dfu_device_refresh (priv->device, error))
 			return FALSE;
 	}
 
@@ -749,7 +742,7 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 	}
 
 	/* find out if the write was successful */
-	if (!dfu_device_refresh (priv->device, cancellable, error))
+	if (!dfu_device_refresh (priv->device, error))
 		return FALSE;
 
 	g_assert (actual_length == g_bytes_get_size (bytes));
@@ -757,10 +750,10 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes,
 }
 
 GBytes *
-dfu_target_upload_chunk (DfuTarget *target, guint16 index, gsize buf_sz,
-			 GCancellable *cancellable, GError **error)
+dfu_target_upload_chunk (DfuTarget *target, guint16 index, gsize buf_sz, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (priv->device));
 	g_autoptr(GError) error_local = NULL;
 	guint8 *buf;
 	gsize actual_length;
@@ -770,7 +763,7 @@ dfu_target_upload_chunk (DfuTarget *target, guint16 index, gsize buf_sz,
 		buf_sz = (gsize) dfu_device_get_transfer_size (priv->device);
 
 	buf = g_new0 (guint8, buf_sz);
-	if (!g_usb_device_control_transfer (dfu_device_get_usb_dev (priv->device),
+	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
@@ -780,10 +773,10 @@ dfu_target_upload_chunk (DfuTarget *target, guint16 index, gsize buf_sz,
 					    buf, buf_sz,
 					    &actual_length,
 					    dfu_device_get_timeout (priv->device),
-					    cancellable,
+					    NULL,
 					    &error_local)) {
 		/* refresh the error code */
-		dfu_device_error_fixup (priv->device, cancellable, &error_local);
+		dfu_device_error_fixup (priv->device, &error_local);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -870,18 +863,18 @@ dfu_target_set_percentage (DfuTarget *target, guint value, guint total)
 }
 
 gboolean
-dfu_target_attach (DfuTarget *target, GCancellable *cancellable, GError **error)
+dfu_target_attach (DfuTarget *target, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	DfuTargetClass *klass = DFU_TARGET_GET_CLASS (target);
 
 	/* ensure populated */
-	if (!dfu_target_setup (target, cancellable, error))
+	if (!dfu_target_setup (target, error))
 		return FALSE;
 
 	/* implemented as part of a superclass */
 	if (klass->attach != NULL)
-		return klass->attach (target, cancellable, error);
+		return klass->attach (target, error);
 
 	/* normal DFU mode just needs a bus reset */
 	return dfu_device_reset (priv->device, error);
@@ -892,7 +885,6 @@ dfu_target_upload_element_dfu (DfuTarget *target,
 			       guint32 address,
 			       gsize expected_size,
 			       gsize maximum_size,
-			       GCancellable *cancellable,
 			       GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -917,7 +909,6 @@ dfu_target_upload_element_dfu (DfuTarget *target,
 		chunk_tmp = dfu_target_upload_chunk (target,
 						     idx,
 						     0, /* device transfer size */
-						     cancellable,
 						     error);
 		if (chunk_tmp == NULL)
 			return NULL;
@@ -970,7 +961,6 @@ dfu_target_upload_element (DfuTarget *target,
 			   guint32 address,
 			   gsize expected_size,
 			   gsize maximum_size,
-			   GCancellable *cancellable,
 			   GError **error)
 {
 	DfuTargetClass *klass = DFU_TARGET_GET_CLASS (target);
@@ -978,13 +968,12 @@ dfu_target_upload_element (DfuTarget *target,
 	/* implemented as part of a superclass */
 	if (klass->upload_element != NULL) {
 		return klass->upload_element (target, address, expected_size,
-					      maximum_size, cancellable, error);
+					      maximum_size, error);
 	}
 	return dfu_target_upload_element_dfu (target,
 					      address,
 					      expected_size,
 					      maximum_size,
-					      cancellable,
 					      error);
 }
 
@@ -1006,7 +995,6 @@ dfu_target_get_size_of_zone (DfuTarget *target, guint16 zone)
  * dfu_target_upload:
  * @target: a #DfuTarget
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Uploads firmware from the target to the host.
@@ -1016,7 +1004,6 @@ dfu_target_get_size_of_zone (DfuTarget *target, guint16 zone)
 DfuImage *
 dfu_target_upload (DfuTarget *target,
 		   DfuTargetTransferFlags flags,
-		   GCancellable *cancellable,
 		   GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -1030,7 +1017,7 @@ dfu_target_upload (DfuTarget *target,
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* ensure populated */
-	if (!dfu_target_setup (target, cancellable, error))
+	if (!dfu_target_setup (target, error))
 		return NULL;
 
 	/* can the target do this? */
@@ -1082,30 +1069,12 @@ dfu_target_upload (DfuTarget *target,
 						     dfu_sector_get_address (sector),
 						     0,		/* expected */
 						     zone_size,	/* maximum */
-						     cancellable,
 						     error);
 		if (element == NULL)
 			return NULL;
 
 		/* this element was uploaded okay */
 		dfu_image_add_element (image, element);
-	}
-
-	/* do host reset */
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||
-	    (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) > 0) {
-		if (!dfu_device_attach (priv->device, error))
-			return NULL;
-	}
-
-	/* boot to runtime */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) {
-		g_debug ("booting to runtime");
-		if (!dfu_device_wait_for_replug (priv->device,
-						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 cancellable,
-						 error))
-			return NULL;
 	}
 
 	/* success */
@@ -1144,7 +1113,6 @@ static gboolean
 dfu_target_download_element_dfu (DfuTarget *target,
 				 DfuElement *element,
 				 DfuTargetTransferFlags flags,
-				 GCancellable *cancellable,
 				 GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -1183,7 +1151,7 @@ dfu_target_download_element_dfu (DfuTarget *target,
 		}
 		g_debug ("writing #%04x chunk of size %" G_GSIZE_FORMAT,
 			 i, g_bytes_get_size (bytes_tmp));
-		if (!dfu_target_download_chunk (target, i, bytes_tmp, cancellable, error))
+		if (!dfu_target_download_chunk (target, i, bytes_tmp, error))
 			return FALSE;
 
 		/* update UI */
@@ -1202,7 +1170,6 @@ static gboolean
 dfu_target_download_element (DfuTarget *target,
 			     DfuElement *element,
 			     DfuTargetTransferFlags flags,
-			     GCancellable *cancellable,
 			     GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
@@ -1210,13 +1177,12 @@ dfu_target_download_element (DfuTarget *target,
 
 	/* implemented as part of a superclass */
 	if (klass->download_element != NULL) {
-		if (!klass->download_element (target, element, flags, cancellable, error))
+		if (!klass->download_element (target, element, flags, error))
 			return FALSE;
 	} else {
 		if (!dfu_target_download_element_dfu (target,
 						      element,
 						      flags,
-						      cancellable,
 						      error))
 			return FALSE;
 	}
@@ -1233,7 +1199,6 @@ dfu_target_download_element (DfuTarget *target,
 							 dfu_element_get_address (element),
 							 g_bytes_get_size (bytes),
 							 g_bytes_get_size (bytes),
-							 cancellable,
 							 error);
 		if (element_tmp == NULL)
 			return FALSE;
@@ -1259,7 +1224,6 @@ dfu_target_download_element (DfuTarget *target,
  * @target: a #DfuTarget
  * @image: a #DfuImage
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Downloads firmware from the host to the target, optionally verifying
@@ -1269,9 +1233,7 @@ dfu_target_download_element (DfuTarget *target,
  **/
 gboolean
 dfu_target_download (DfuTarget *target, DfuImage *image,
-		     DfuTargetTransferFlags flags,
-		     GCancellable *cancellable,
-		     GError **error)
+		     DfuTargetTransferFlags flags, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	GPtrArray *elements;
@@ -1282,7 +1244,7 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* ensure populated */
-	if (!dfu_target_setup (target, cancellable, error))
+	if (!dfu_target_setup (target, error))
 		return FALSE;
 
 	/* can the target do this? */
@@ -1329,26 +1291,8 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		ret = dfu_target_download_element (target,
 						   element,
 						   flags,
-						   cancellable,
 						   error);
 		if (!ret)
-			return FALSE;
-	}
-
-	/* attempt to switch back to runtime */
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_ATTACH) > 0 ||
-	    (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) > 0) {
-		if (!dfu_device_attach (priv->device, error))
-			return FALSE;
-	}
-
-	/* boot to runtime */
-	if (flags & DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME) {
-		g_debug ("booting to runtime to set auto-boot");
-		if (!dfu_device_wait_for_replug (priv->device,
-						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 cancellable,
-						 error))
 			return FALSE;
 	}
 
@@ -1388,7 +1332,7 @@ dfu_target_get_alt_name (DfuTarget *target, GError **error)
 	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
 
 	/* ensure populated */
-	if (!dfu_target_setup (target, NULL, error))
+	if (!dfu_target_setup (target, error))
 		return NULL;
 
 	/* nothing */
@@ -1420,7 +1364,7 @@ dfu_target_get_alt_name_for_display (DfuTarget *target, GError **error)
 	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
 
 	/* ensure populated */
-	if (!dfu_target_setup (target, NULL, error))
+	if (!dfu_target_setup (target, error))
 		return NULL;
 
 	/* nothing */

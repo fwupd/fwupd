@@ -385,6 +385,7 @@ get_host_locations (guint16 id)
 		{ .offset = 0x129, .len = 1, .description = "Snk1" },
 		{ .offset = 0x136, .len = 1, .description = "Src0", .mask = 0xF0 },
 		{ .offset = 0xB6,  .len = 1, .description = "PA/PB (USB2)", .mask = 0xC0 },
+		{ .offset = 0x7B,  .len = 1, .description = "Native", .mask = 0x20 },
 		{ 0 },
 
 		{ .offset = 0x13, .len = 1, .description = "PB", .mask = 0xCC, .section = DRAM_UCODE_SECTION },
@@ -397,6 +398,7 @@ get_host_locations (guint16 id)
 		{ .offset = 0x13,  .len = 1, .description = "PB", .mask = 0x44, .section = DRAM_UCODE_SECTION },
 		{ .offset = 0x121, .len = 1, .description = "Snk0" },
 		{ .offset = 0xB6,  .len = 1, .description = "PA/PB (USB2)", .mask = 0xC0 },
+		{ .offset = 0x7B,  .len = 1, .description = "Native", .mask = 0x20 },
 		{ 0 }
 	};
 
@@ -582,4 +584,19 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 	}
 
 	return hw_info->id != 0 ? VALIDATION_PASSED : UNKNOWN_DEVICE;
+}
+
+gboolean
+fu_plugin_thunderbolt_controller_is_native (GBytes    *controller_fw,
+					    gboolean  *is_native,
+					    GError   **error)
+{
+	guint32 controller_sections[SECTION_COUNT] = { [DIGITAL_SECTION] = 0 };
+	gsize fw_size;
+	const guint8 *fw_data = g_bytes_get_data (controller_fw, &fw_size);
+	const FuThunderboltFwObject controller = { fw_data, fw_size, controller_sections };
+
+	const FuThunderboltFwLocation location = { .offset = 0x7B, .len = 1, .description = "Native", .mask = 0x20 };
+
+	return read_bool (&location, &controller, is_native, error);
 }

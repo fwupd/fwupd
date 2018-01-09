@@ -477,7 +477,7 @@
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.6.9)</version>
+        <version>(>= 0.7.4)</version>
       </control>
       <package variant="clang" />
     </distro>

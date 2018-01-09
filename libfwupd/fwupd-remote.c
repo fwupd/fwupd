@@ -180,6 +180,24 @@ fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 				     "Failed to parse URI '%s'", url2);
 			return NULL;
 		}
+
+	/* use the base URI of the metadata to build the full path */
+	} else if (g_strstr_len (url, -1, "/") == NULL) {
+		g_autofree gchar *basename = NULL;
+		g_autofree gchar *path = NULL;
+		uri = soup_uri_new (priv->metadata_uri);
+		if (uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to parse metadata URI '%s'", url);
+			return NULL;
+		}
+		basename = g_path_get_dirname (soup_uri_get_path (uri));
+		path = g_build_filename (basename, url, NULL);
+		soup_uri_set_path (uri, path);
+
+	/* a normal URI */
 	} else {
 		uri = soup_uri_new (url);
 		if (uri == NULL) {

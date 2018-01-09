@@ -53,4 +53,17 @@ GBytes		*fu_common_firmware_builder	(GBytes		*bytes,
 						 const gchar	*output_fn,
 						 GError		**error);
 
+typedef guint FuEndianType;
+
+void		 fu_common_write_uint16		(guint8		*buf,
+						 guint16	 val_native,
+						 FuEndianType	 endian);
+void		 fu_common_write_uint32		(guint8		*buf,
+						 guint32	 val_native,
+						 FuEndianType	 endian);
+guint16		 fu_common_read_uint16		(const guint8	*buf,
+						 FuEndianType	 endian);
+guint32		 fu_common_read_uint32		(const guint8	*buf,
+						 FuEndianType	 endian);
+
 #endif /* __FU_COMMON_H__ */

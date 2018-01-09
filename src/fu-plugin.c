@@ -68,8 +68,6 @@ enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_REGISTER,
-	SIGNAL_STATUS_CHANGED,
-	SIGNAL_PERCENTAGE_CHANGED,
 	SIGNAL_RECOLDPLUG,
 	SIGNAL_SET_COLDPLUG_DELAY,
 	SIGNAL_LAST
@@ -343,37 +341,8 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 void
 fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-
 	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_return_if_fail (FU_IS_DEVICE (device));
-
-	/* merge any quirks */
-	if (FU_IS_USB_DEVICE (device)) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-		const gchar *tmp;
-
-		/* name */
-		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
-						      FU_QUIRKS_USB_NAME,
-						      usb_device);
-		if (tmp != NULL)
-			fu_device_set_name (device, tmp);
-
-		/* summary */
-		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
-						      FU_QUIRKS_USB_SUMMARY,
-						      usb_device);
-		if (tmp != NULL)
-			fu_device_set_summary (device, tmp);
-
-		/* icon */
-		tmp = fu_quirks_lookup_by_usb_device (priv->quirks,
-						      FU_QUIRKS_USB_ICON,
-						      usb_device);
-		if (tmp != NULL)
-			fu_device_add_icon (device, tmp);
-	}
 
 	g_debug ("emit added from %s: %s",
 		 fu_plugin_get_name (plugin),
@@ -520,41 +489,6 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 		 fu_plugin_get_name (plugin),
 		 fu_device_get_id (device));
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_REMOVED], 0, device);
-}
-
-/**
- * fu_plugin_set_status:
- * @plugin: A #FuPlugin
- * @status: A #FwupdStatus, e.g. #FWUPD_STATUS_DECOMPRESSING
- *
- * Sets the global state of the daemon according to the current plugin action.
- *
- * Since: 0.8.0
- **/
-void
-fu_plugin_set_status (FuPlugin *plugin, FwupdStatus status)
-{
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
-	g_signal_emit (plugin, signals[SIGNAL_STATUS_CHANGED], 0, status);
-}
-
-/**
- * fu_plugin_set_percentage:
- * @plugin: A #FuPlugin
- * @percentage: the percentage complete
- *
- * Sets the global completion of the daemon according to the current plugin
- * action.
- *
- * Since: 0.8.0
- **/
-void
-fu_plugin_set_percentage (FuPlugin *plugin, guint percentage)
-{
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
-	g_return_if_fail (percentage <= 100);
-	g_signal_emit (plugin, signals[SIGNAL_PERCENTAGE_CHANGED], 0,
-		       percentage);
 }
 
 /**
@@ -843,6 +777,10 @@ fu_plugin_runner_startup (FuPlugin *plugin, GError **error)
 	if (!priv->enabled)
 		return TRUE;
 
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_startup", (gpointer *) &func);
 	if (func == NULL)
@@ -939,6 +877,10 @@ fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 	if (!priv->enabled)
 		return TRUE;
 
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_coldplug", (gpointer *) &func);
 	if (func == NULL)
@@ -961,6 +903,10 @@ fu_plugin_runner_coldplug_prepare (FuPlugin *plugin, GError **error)
 	if (!priv->enabled)
 		return TRUE;
 
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_coldplug_prepare", (gpointer *) &func);
 	if (func == NULL)
@@ -981,6 +927,10 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *plugin, GError **error)
 
 	/* not enabled */
 	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
 		return TRUE;
 
 	/* optional */
@@ -1039,6 +989,8 @@ fu_plugin_runner_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GEr
 	/* not enabled */
 	if (!priv->enabled)
 		return TRUE;
+
+	/* no object loaded */
 	if (priv->module == NULL)
 		return TRUE;
 
@@ -1110,7 +1062,7 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	filename = g_build_filename (dirname, tmpname, NULL);
 
 	/* just copy to the temp file */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_SCHEDULING);
+	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
 	if (!g_file_set_contents (filename,
 				  g_bytes_get_data (blob_cab, NULL),
 				  (gssize) g_bytes_get_size (blob_cab),
@@ -1142,6 +1094,10 @@ fu_plugin_runner_verify (FuPlugin *plugin,
 
 	/* not enabled */
 	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
 		return TRUE;
 
 	/* clear any existing verification checksums */
@@ -1205,6 +1161,10 @@ fu_plugin_runner_update (FuPlugin *plugin,
 
 	/* not enabled */
 	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
 		return TRUE;
 
 	/* optional */
@@ -1286,6 +1246,10 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 	if (!priv->enabled)
 		return TRUE;
 
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
 	/* use the plugin if the vfunc is provided */
 	g_module_symbol (priv->module, "fu_plugin_clear_result", (gpointer *) &func);
 	if (func != NULL) {
@@ -1329,6 +1293,10 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 
 	/* not enabled */
 	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
 		return TRUE;
 
 	/* use the plugin if the vfunc is provided */
@@ -1473,18 +1441,6 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, device_register),
 			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
 			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
-	signals[SIGNAL_STATUS_CHANGED] =
-		g_signal_new ("status-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (FuPluginClass, status_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
-	signals[SIGNAL_PERCENTAGE_CHANGED] =
-		g_signal_new ("percentage-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (FuPluginClass, percentage_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
 	signals[SIGNAL_RECOLDPLUG] =
 		g_signal_new ("recoldplug",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,

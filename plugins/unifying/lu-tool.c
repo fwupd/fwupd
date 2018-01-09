@@ -195,7 +195,7 @@ lu_get_default_device (FuLuToolPrivate *priv, GError **error)
 static gboolean
 lu_tool_info_device (LuDevice *device)
 {
-	g_autofree gchar *str = lu_device_to_string (device);
+	g_autofree gchar *str = fu_device_to_string (FU_DEVICE (device));
 	g_print ("%s", str);
 	return TRUE;
 }
@@ -230,16 +230,9 @@ lu_tool_info (FuLuToolPrivate *priv, gchar **values, GError **error)
 }
 
 static void
-lu_write_progress_cb (goffset current, goffset total, gpointer user_data)
+lu_write_progress_cb (FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
-	FuLuToolPrivate *priv = (FuLuToolPrivate *) user_data;
-	gdouble percentage = -1.f;
-	if (priv->emulation_kind != LU_DEVICE_KIND_UNKNOWN)
-		return;
-	if (total > 0)
-		percentage = (100.f * (gdouble) current) / (gdouble) total;
-	g_print ("Written %" G_GOFFSET_FORMAT "/%" G_GOFFSET_FORMAT " bytes [%.1f%%]\n",
-		 current, total, percentage);
+	g_print ("Written %u%%\n", fu_device_get_progress (device));
 }
 
 static gboolean
@@ -322,7 +315,7 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 		if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
 			if (!lu_context_wait_for_replug (priv->ctx,
 							 device,
-							 FU_DEVICE_TIMEOUT_REPLUG,
+							 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
 							 error))
 				return FALSE;
 			g_usleep (G_USEC_PER_SEC);
@@ -353,9 +346,9 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 
 	/* update with data blob */
 	fw = g_bytes_new (data, len);
-	if (!lu_device_write_firmware (device, fw,
-				       lu_write_progress_cb, priv,
-				       error))
+	g_signal_connect (device, "notify::progress",
+			  G_CALLBACK (lu_write_progress_cb), NULL);
+	if (!lu_device_write_firmware (device, fw, error))
 		return FALSE;
 
 	/* detach back into runtime */
@@ -404,7 +397,7 @@ lu_tool_device_added_cb (LuContext* ctx, LuDevice *device, FuLuToolPrivate *priv
 {
 	g_print ("ADDED\tLogitech Unifying device %s {%p} [%s]\n",
 		 lu_device_kind_to_string (lu_device_get_kind (device)),
-		 device, lu_device_get_platform_id (device));
+		 device, fu_device_get_platform_id (FU_DEVICE (device)));
 	lu_tool_info_device (device);
 }
 
@@ -413,7 +406,7 @@ lu_tool_device_removed_cb (LuContext* ctx, LuDevice *device, FuLuToolPrivate *pr
 {
 	g_print ("REMOVED\tLogitech Unifying device %s {%p} [%s]\n",
 		 lu_device_kind_to_string (lu_device_get_kind (device)),
-		 device, lu_device_get_platform_id (device));
+		 device, fu_device_get_platform_id (FU_DEVICE (device)));
 }
 
 static gboolean

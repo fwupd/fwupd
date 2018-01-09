@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-27 19:55+0000\n"
-"PO-Revision-Date: 2017-11-27 19:55+0000\n"
+"POT-Creation-Date: 2018-01-09 15:47+0000\n"
+"PO-Revision-Date: 2018-01-09 15:47+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Hindi (http://www.transifex.com/freedesktop/fwupd/language/hi/)\n"
 "MIME-Version: 1.0\n"
@@ -117,258 +117,270 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
-#: plugins/dfu/dfu-tool.c:123 plugins/synapticsmst/synapticsmst-tool.c:105
-#: src/fu-util.c:112
+#: plugins/dfu/dfu-tool.c:124 plugins/synapticsmst/synapticsmst-tool.c:105
+#: src/fu-util.c:113
 #, c-format
 msgid "Alias to %s"
 msgstr "%s का उपनाम "
 
 #. TRANSLATORS: error message
-#: plugins/dfu/dfu-tool.c:191 plugins/synapticsmst/synapticsmst-tool.c:347
-#: src/fu-util.c:176
+#: plugins/dfu/dfu-tool.c:192 plugins/synapticsmst/synapticsmst-tool.c:347
+#: src/fu-util.c:177
 msgid "Command not found"
 msgstr ""
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: plugins/dfu/dfu-tool.c:1493
+#: plugins/dfu/dfu-tool.c:1458
 msgid "Added"
 msgstr ""
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: plugins/dfu/dfu-tool.c:1504
+#: plugins/dfu/dfu-tool.c:1469
 msgid "Removed"
 msgstr ""
 
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
-#: plugins/dfu/dfu-tool.c:1513 src/fu-util.c:1259
+#: plugins/dfu/dfu-tool.c:1478 src/fu-util.c:1273
 msgid "Changed"
 msgstr ""
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
-#: plugins/dfu/dfu-tool.c:1521 src/fu-util.c:1221
+#: plugins/dfu/dfu-tool.c:1486 src/fu-util.c:1235
 msgid "Cancelled"
 msgstr ""
 
 #. TRANSLATORS: Appstream ID for the hardware type
-#: plugins/dfu/dfu-tool.c:2019 src/fu-util.c:1057
+#: plugins/dfu/dfu-tool.c:1978 src/fu-util.c:1071
 msgid "ID"
 msgstr ""
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#: plugins/dfu/dfu-tool.c:2025 plugins/dfu/dfu-tool.c:2031
-#: plugins/dfu/dfu-tool.c:2135
+#: plugins/dfu/dfu-tool.c:1984 plugins/dfu/dfu-tool.c:1990
+#: plugins/dfu/dfu-tool.c:2104
 msgid "Name"
 msgstr ""
 
 #. TRANSLATORS: this is the encryption method used when writing
-#: plugins/dfu/dfu-tool.c:2038
+#: plugins/dfu/dfu-tool.c:1997
 msgid "Cipher"
 msgstr ""
 
 #. TRANSLATORS: these are areas of memory on the chip
-#: plugins/dfu/dfu-tool.c:2052
+#: plugins/dfu/dfu-tool.c:2011
 msgid "Region"
 msgstr ""
 
 #. TRANSLATORS: detected a DFU device
-#: plugins/dfu/dfu-tool.c:2098
+#: plugins/dfu/dfu-tool.c:2064
 msgid "Found"
 msgstr ""
 
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
-#: plugins/dfu/dfu-tool.c:2106
+#: plugins/dfu/dfu-tool.c:2072
 msgid "Protocol"
 msgstr ""
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
 #. TRANSLATORS: device status, e.g. "OK"
-#: plugins/dfu/dfu-tool.c:2119 plugins/dfu/dfu-tool.c:2128
-#: plugins/dfu/dfu-tool.c:2151
+#: plugins/dfu/dfu-tool.c:2082 plugins/dfu/dfu-tool.c:2091
+#: plugins/dfu/dfu-tool.c:2097 plugins/dfu/dfu-tool.c:2119
 msgid "Status"
 msgstr ""
 
-#: plugins/dfu/dfu-tool.c:2119
+#: plugins/dfu/dfu-tool.c:2082
 msgid "Permission denied"
 msgstr ""
 
 #. TRANSLATORS: serial number, e.g. '00012345'
-#: plugins/dfu/dfu-tool.c:2141
+#: plugins/dfu/dfu-tool.c:2110
 msgid "Serial"
 msgstr ""
 
-#. TRANSLATORS: device mode, e.g. runtime or DFU
-#: plugins/dfu/dfu-tool.c:2147
+#: plugins/dfu/dfu-tool.c:2115
 msgid "Mode"
 msgstr ""
 
+#: plugins/dfu/dfu-tool.c:2115
+msgid "Runtime"
+msgstr ""
+
+#: plugins/dfu/dfu-tool.c:2115
+msgid "DFU"
+msgstr ""
+
 #. TRANSLATORS: device state, i.e. appIDLE
-#: plugins/dfu/dfu-tool.c:2155
+#: plugins/dfu/dfu-tool.c:2123
 msgid "State"
 msgstr ""
 
 #. TRANSLATORS: transfer size in bytes
-#: plugins/dfu/dfu-tool.c:2163
+#: plugins/dfu/dfu-tool.c:2131
 msgid "Transfer Size"
 msgstr ""
 
 #. TRANSLATORS: device attributes, i.e. things that
 #. * the device can do
-#: plugins/dfu/dfu-tool.c:2171
+#: plugins/dfu/dfu-tool.c:2139
 msgid "Attributes"
 msgstr ""
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
-#: plugins/dfu/dfu-tool.c:2179
+#: plugins/dfu/dfu-tool.c:2147
 msgid "Quirks"
 msgstr ""
 
 #. TRANSLATORS: chip ID, e.g. "0x58200204"
-#: plugins/dfu/dfu-tool.c:2186
+#: plugins/dfu/dfu-tool.c:2154
 msgid "Chip ID"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2267
+#: plugins/dfu/dfu-tool.c:2234
 msgid "Convert firmware to DFU format"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2273
+#: plugins/dfu/dfu-tool.c:2240
 msgid "Merge multiple firmware files into one"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2279
+#: plugins/dfu/dfu-tool.c:2246
 msgid "Set vendor ID on firmware file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2285
+#: plugins/dfu/dfu-tool.c:2252
 msgid "Set product ID on firmware file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2291
+#: plugins/dfu/dfu-tool.c:2258
 msgid "Set element address on firmware file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2297
+#: plugins/dfu/dfu-tool.c:2264
 msgid "Set the firmware size for the target"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2303
+#: plugins/dfu/dfu-tool.c:2270
 msgid "Set release version on firmware file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2309
+#: plugins/dfu/dfu-tool.c:2276
 msgid "Set alternative number on firmware file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2315
+#: plugins/dfu/dfu-tool.c:2282
 msgid "Set alternative name on firmware file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2321
+#: plugins/dfu/dfu-tool.c:2288
 msgid "Attach DFU capable device back to runtime"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2327
+#: plugins/dfu/dfu-tool.c:2294
 msgid "Reset a DFU device"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2333
+#: plugins/dfu/dfu-tool.c:2300
 msgid "Read firmware from device into a file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2339
+#: plugins/dfu/dfu-tool.c:2306
 msgid "Read firmware from one partition into a file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2345
+#: plugins/dfu/dfu-tool.c:2312
 msgid "Write firmware from file into device"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2351
+#: plugins/dfu/dfu-tool.c:2318
 msgid "Write firmware from file into one partition"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2357
+#: plugins/dfu/dfu-tool.c:2324
 msgid "List currently attached DFU capable devices"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2363
+#: plugins/dfu/dfu-tool.c:2330
 msgid "Detach currently attached DFU capable device"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2369
+#: plugins/dfu/dfu-tool.c:2336
 msgid "Dump details about a firmware file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2375
+#: plugins/dfu/dfu-tool.c:2342
 msgid "Watch DFU devices being hotplugged"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2381
+#: plugins/dfu/dfu-tool.c:2348
 msgid "Encrypt firmware data"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2387
+#: plugins/dfu/dfu-tool.c:2354
 msgid "Decrypt firmware data"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2393
+#: plugins/dfu/dfu-tool.c:2360
 msgid "Sets metadata on a firmware file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2399
+#: plugins/dfu/dfu-tool.c:2366
 msgid "Replace data in an existing firmware file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2405
+#: plugins/dfu/dfu-tool.c:2372
 msgid "Create a binary patch using two files"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2411
+#: plugins/dfu/dfu-tool.c:2378
 msgid "Apply a binary patch"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2417
+#: plugins/dfu/dfu-tool.c:2384
 msgid "Dump information about a binary patch to the screen"
 msgstr ""
 
+#. TRANSLATORS: quirks are device-specific workarounds
+#: plugins/dfu/dfu-tool.c:2396
+msgid "Failed to load quirks"
+msgstr ""
+
 #. TRANSLATORS: DFU stands for device firmware update
-#: plugins/dfu/dfu-tool.c:2443
+#: plugins/dfu/dfu-tool.c:2418
 msgid "DFU Utility"
 msgstr ""
 
 #. TRANSLATORS: the user didn't read the man page
-#: plugins/dfu/dfu-tool.c:2448 plugins/synapticsmst/synapticsmst-tool.c:424
-#: src/fu-util.c:1782
+#: plugins/dfu/dfu-tool.c:2423 plugins/synapticsmst/synapticsmst-tool.c:424
+#: src/fu-util.c:1795
 msgid "Failed to parse arguments"
 msgstr "आर्गुमेंट पार्स करने में असफल "
 
@@ -412,22 +424,22 @@ msgid "Show debugging options"
 msgstr "डिबगिंग के विकल्प दिखाए "
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
-#: src/fu-main.c:1007
+#: src/fu-main.c:1009
 msgid "Exit after a small delay"
 msgstr "थोड़ी देरी के बाद बहार जाएँ "
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
-#: src/fu-main.c:1010
+#: src/fu-main.c:1012
 msgid "Exit after the engine has loaded"
 msgstr "इंजन के लोड हो जाने पर बहार जाएँ "
 
 #. TRANSLATORS: program name
-#: src/fu-main.c:1024
+#: src/fu-main.c:1026
 msgid "Firmware Update Daemon"
 msgstr ""
 
 #. TRANSLATORS: program summary
-#: src/fu-main.c:1029
+#: src/fu-main.c:1031
 msgid "Firmware Update D-Bus Service"
 msgstr "फर्मवेयर अपडेट डी-बस सेवा "
 
@@ -497,25 +509,25 @@ msgid "Unknown"
 msgstr ""
 
 #. TRANSLATORS: the user isn't reading the question
-#: src/fu-util.c:234
+#: src/fu-util.c:235
 #, c-format
 msgid "Please enter a number from 1 to %u: "
 msgstr ""
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:277
+#: src/fu-util.c:278
 msgid "Choose a device:"
 msgstr ""
 
 #. TRANSLATORS: nothing attached that can be upgraded
-#: src/fu-util.c:303
+#: src/fu-util.c:346
 msgid "No hardware detected with firmware update capability"
 msgstr "अपडेट की क्षमता वाला हार्डवेयर उपलब्ध नहीं "
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
-#: src/fu-util.c:474
+#: src/fu-util.c:517
 #, c-format
 msgid "Reinstalling %s with %s... "
 msgstr "%s को %s से दोबारा स्थापित करा जा रहा है "
@@ -523,7 +535,7 @@ msgstr "%s को %s से दोबारा स्थापित करा �
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:481
+#: src/fu-util.c:524
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "%s की %s से %s तक अधोगति हो रही है   "
@@ -531,325 +543,325 @@ msgstr "%s की %s से %s तक अधोगति हो रही है
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:489
+#: src/fu-util.c:532
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "%s को %s से %s तक अपडेट करा जा रहा है  "
 
-#: src/fu-util.c:516
+#: src/fu-util.c:559
 msgid "Done!"
 msgstr "हो गया !"
 
-#: src/fu-util.c:565 src/fu-util.c:978
+#: src/fu-util.c:608 src/fu-util.c:992
 msgid "OK"
 msgstr ""
 
 #. TRANSLATORS: downloading new signing file
-#: src/fu-util.c:699
+#: src/fu-util.c:713
 msgid "Fetching signature"
 msgstr ""
 
 #. TRANSLATORS: downloading new metadata file
-#: src/fu-util.c:702
+#: src/fu-util.c:716
 msgid "Fetching metadata"
 msgstr ""
 
 #. TRANSLATORS: downloading new firmware file
-#: src/fu-util.c:705
+#: src/fu-util.c:719
 msgid "Fetching firmware"
 msgstr ""
 
 #. TRANSLATORS: downloading unknown file
-#: src/fu-util.c:708
+#: src/fu-util.c:722
 msgid "Fetching file"
 msgstr ""
 
 #. TRANSLATORS: section header for release version number
-#: src/fu-util.c:888
+#: src/fu-util.c:902
 msgid "Version"
 msgstr ""
 
 #. TRANSLATORS: section header for the remote the file is coming from
-#: src/fu-util.c:891
+#: src/fu-util.c:905
 msgid "Remote"
 msgstr ""
 
 #. TRANSLATORS: section header for firmware URI
-#: src/fu-util.c:894
+#: src/fu-util.c:908
 msgid "URI"
 msgstr ""
 
 #. TRANSLATORS: section header for firmware description
-#: src/fu-util.c:900
+#: src/fu-util.c:914
 msgid "Description"
 msgstr ""
 
 #. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
-#: src/fu-util.c:908 src/fu-util.c:1136
+#: src/fu-util.c:922 src/fu-util.c:1150
 msgid "Checksum"
 msgstr ""
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:940
+#: src/fu-util.c:954
 msgid "Choose a release:"
 msgstr ""
 
 #. TRANSLATORS: first replacement is device name
-#: src/fu-util.c:1041
+#: src/fu-util.c:1055
 #, c-format
 msgid "%s has firmware updates:"
 msgstr ""
 
-#: src/fu-util.c:1048
+#: src/fu-util.c:1062
 msgid "GUID"
 msgstr ""
 
 #. TRANSLATORS: section header for firmware version
-#: src/fu-util.c:1060
+#: src/fu-util.c:1074
 msgid "Update Version"
 msgstr ""
 
 #. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-#: src/fu-util.c:1064
+#: src/fu-util.c:1078
 msgid "Update Remote ID"
 msgstr ""
 
 #. TRANSLATORS: section header for firmware checksum
-#: src/fu-util.c:1073
+#: src/fu-util.c:1087
 msgid "Update Checksum"
 msgstr ""
 
 #. TRANSLATORS: section header for firmware remote http://
-#: src/fu-util.c:1077
+#: src/fu-util.c:1091
 msgid "Update Location"
 msgstr ""
 
 #. TRANSLATORS: section header for long firmware desc
-#: src/fu-util.c:1088
+#: src/fu-util.c:1102
 msgid "Update Description"
 msgstr ""
 
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
-#: src/fu-util.c:1114
+#: src/fu-util.c:1128
 msgid "Remote ID"
 msgstr ""
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-#: src/fu-util.c:1118
+#: src/fu-util.c:1132
 msgid "Title"
 msgstr ""
 
 #. TRANSLATORS: remote type, e.g. remote or local
-#: src/fu-util.c:1122
+#: src/fu-util.c:1136
 msgid "Type"
 msgstr ""
 
-#: src/fu-util.c:1127
+#: src/fu-util.c:1141
 msgid "Keyring"
 msgstr ""
 
 #. TRANSLATORS: if the remote is enabled
-#: src/fu-util.c:1132
+#: src/fu-util.c:1146
 msgid "Enabled"
 msgstr ""
 
 #. TRANSLATORS: the age of the metadata
-#: src/fu-util.c:1163
+#: src/fu-util.c:1177
 msgid "Age"
 msgstr ""
 
 #. TRANSLATORS: the numeric priority
-#: src/fu-util.c:1170
+#: src/fu-util.c:1184
 msgid "Priority"
 msgstr ""
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1175
+#: src/fu-util.c:1189
 msgid "Username"
 msgstr ""
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1180
+#: src/fu-util.c:1194
 msgid "Password"
 msgstr ""
 
 #. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1185
+#: src/fu-util.c:1199
 msgid "Filename"
 msgstr ""
 
 #. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1190
+#: src/fu-util.c:1204
 msgid "Filename Signature"
 msgstr ""
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1195
+#: src/fu-util.c:1209
 msgid "Metadata URI"
 msgstr ""
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1200
+#: src/fu-util.c:1214
 msgid "Metadata URI Signature"
 msgstr ""
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1205
+#: src/fu-util.c:1219
 msgid "Firmware Base URI"
 msgstr ""
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1232
+#: src/fu-util.c:1246
 msgid "Device added:"
 msgstr ""
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1242
+#: src/fu-util.c:1256
 msgid "Device removed:"
 msgstr ""
 
 #. TRANSLATORS: this is when a device has been updated
-#: src/fu-util.c:1252
+#: src/fu-util.c:1266
 msgid "Device changed:"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1595
+#: src/fu-util.c:1608
 msgid "Show extra debugging information"
 msgstr "डिबगिंग की अतिरिक्त जानकारी दिखाएँ "
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1598
+#: src/fu-util.c:1611
 msgid "Show client and daemon versions"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1601
+#: src/fu-util.c:1614
 msgid "Schedule installation for next reboot when possible"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1604
+#: src/fu-util.c:1617
 msgid "Allow re-installing existing firmware versions"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1607
+#: src/fu-util.c:1620
 msgid "Allow downgrading firmware versions"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1610
+#: src/fu-util.c:1623
 msgid "Override plugin warning"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1634
+#: src/fu-util.c:1647
 msgid "Get all devices that support firmware updates"
 msgstr "फर्मवेयर अपडेट का समर्थन करने वाली सभी युक्तियाँ प्राप्त करें "
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1640
+#: src/fu-util.c:1653
 msgid "Return all the hardware IDs for the machine"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1646
+#: src/fu-util.c:1659
 msgid "Install prepared updates now"
 msgstr "तैयार अपडेट अभी स्थापित करें "
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1652
+#: src/fu-util.c:1665
 msgid "Install a firmware file on this hardware"
 msgstr "फर्मवेयर फाइल को इस हार्डवेयर पर स्थापित करें "
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1658
+#: src/fu-util.c:1671
 msgid "Gets details about a firmware file"
 msgstr "फर्मवेयर फाइल की अधिक जानकारी प्राप्त करें "
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1664
+#: src/fu-util.c:1677
 msgid "Gets the list of updates for connected hardware"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1670
+#: src/fu-util.c:1683
 msgid "Updates all firmware to latest versions available"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1676
+#: src/fu-util.c:1689
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1682
+#: src/fu-util.c:1695
 msgid "Unlocks the device for firmware access"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1688
+#: src/fu-util.c:1701
 msgid "Clears the results from the last update"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1694
+#: src/fu-util.c:1707
 msgid "Clears any updates scheduled to be updated offline"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1700
+#: src/fu-util.c:1713
 msgid "Gets the results from the last update"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1706
+#: src/fu-util.c:1719
 msgid "Gets the releases for a device"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1712
+#: src/fu-util.c:1725
 msgid "Gets the configured remotes"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1718
+#: src/fu-util.c:1731
 msgid "Downgrades the firmware on a device"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1724
+#: src/fu-util.c:1737
 msgid "Refresh metadata from remote server"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1730
+#: src/fu-util.c:1743
 msgid "Update the stored metadata with current ROM contents"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1736
+#: src/fu-util.c:1749
 msgid "Monitor the daemon for events"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1742
+#: src/fu-util.c:1755
 msgid "Build firmware using a sandbox"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1748
+#: src/fu-util.c:1761
 msgid "Dump SMBIOS data from a file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1754
+#: src/fu-util.c:1767
 msgid "Modifies a given remote"
 msgstr ""
 
 #. TRANSLATORS: program name
-#: src/fu-util.c:1777
+#: src/fu-util.c:1790
 msgid "Firmware Utility"
 msgstr ""

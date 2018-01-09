@@ -197,10 +197,10 @@ lu_device_bootloader_open (LuDevice *device, GError **error)
 	/* generate name */
 	name = g_strdup_printf ("Unifying [%s]",
 				lu_device_kind_to_string (lu_device_get_kind (device)));
-	lu_device_set_product (device, name);
+	fu_device_set_name (FU_DEVICE (device), name);
 
 	/* we can flash this */
-	lu_device_add_flag (device, LU_DEVICE_FLAG_CAN_FLASH);
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* get memory map */
 	req->cmd = LU_DEVICE_BOOTLOADER_CMD_GET_MEMINFO;
@@ -221,6 +221,46 @@ lu_device_bootloader_open (LuDevice *device, GError **error)
 	priv->flash_addr_lo = cd_buffer_read_uint16_be (req->data + 0);
 	priv->flash_addr_hi = cd_buffer_read_uint16_be (req->data + 2);
 	priv->flash_blocksize = cd_buffer_read_uint16_be (req->data + 4);
+	return TRUE;
+}
+
+static gchar *
+lu_device_bootloader_get_bl_version (LuDevice *device, GError **error)
+{
+	guint16 build;
+
+	g_autoptr(LuDeviceBootloaderRequest) req = lu_device_bootloader_request_new ();
+	req->cmd = LU_DEVICE_BOOTLOADER_CMD_GET_BL_VERSION;
+	if (!lu_device_bootloader_request (device, req, error)) {
+		g_prefix_error (error, "failed to get firmware version: ");
+		return NULL;
+	}
+
+	/* BOTxx.yy_Bzzzz
+	 * 012345678901234 */
+	build = (guint16) lu_buffer_read_uint8 ((const gchar *) req->data + 10) << 8;
+	build += lu_buffer_read_uint8 ((const gchar *) req->data + 12);
+	return lu_format_version ("BOT",
+				  lu_buffer_read_uint8 ((const gchar *) req->data + 3),
+				  lu_buffer_read_uint8 ((const gchar *) req->data + 6),
+				  build);
+}
+
+static gboolean
+lu_device_bootloader_probe (LuDevice *device, GError **error)
+{
+	LuDeviceBootloaderClass *klass = LU_DEVICE_BOOTLOADER_GET_CLASS (device);
+	g_autofree gchar *version_bl = NULL;
+
+	/* get bootloader version */
+	version_bl = lu_device_bootloader_get_bl_version (device, error);
+	if (version_bl == NULL)
+		return FALSE;
+	fu_device_set_version_bootloader (FU_DEVICE (device), version_bl);
+
+	/* subclassed further */
+	if (klass->probe != NULL)
+		return klass->probe (device, error);
 	return TRUE;
 }
 
@@ -353,6 +393,9 @@ lu_device_bootloader_request (LuDevice *device,
 static void
 lu_device_bootloader_init (LuDeviceBootloader *device)
 {
+	/* FIXME: we need something better */
+	fu_device_add_icon (FU_DEVICE (device), "preferences-desktop-keyboard");
+	fu_device_set_summary (FU_DEVICE (device), "A miniaturised USB wireless receiver (bootloader)");
 }
 
 static void
@@ -362,4 +405,5 @@ lu_device_bootloader_class_init (LuDeviceBootloaderClass *klass)
 	klass_device->attach = lu_device_bootloader_attach;
 	klass_device->open = lu_device_bootloader_open;
 	klass_device->close = lu_device_bootloader_close;
+	klass_device->probe = lu_device_bootloader_probe;
 }

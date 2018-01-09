@@ -1,0 +1,16 @@
+[FuCsrDevice]
+
+# AIAIAI H60 bluetooth headphones
+USB\VID_0A12&PID_4004=none
+
+[FuUsbDevice:name]
+USB\VID_0A12&PID_4004=H60
+
+[FuUsbDevice:summary]
+USB\VID_0A12&PID_4004=Bluetooth headphones
+
+[FuUsbDevice:icon]
+USB\VID_0A12&PID_4004=audio-headphones
+
+[FuUsbDevice:vendor]
+USB\VID_0A12&PID_4004=AIAIAI

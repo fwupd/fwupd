@@ -35,15 +35,12 @@ DfuTarget	*dfu_target_new				(void);
 GBytes		*dfu_target_upload_chunk		(DfuTarget	*target,
 							 guint16	 index,
 							 gsize		 buf_sz,
-							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_target_download_chunk		(DfuTarget	*target,
 							 guint16	 index,
 							 GBytes		*bytes,
-							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 dfu_target_attach			(DfuTarget	*target,
-							 GCancellable	*cancellable,
 							 GError		**error);
 void		 dfu_target_set_alt_idx			(DfuTarget	*target,
 							 guint8		 alt_idx);
@@ -64,7 +61,6 @@ void		 dfu_target_set_device			(DfuTarget	*target,
 							 DfuDevice	*device);
 DfuDevice	*dfu_target_get_device			(DfuTarget	*target);
 gboolean	 dfu_target_check_status		(DfuTarget	*target,
-							 GCancellable	*cancellable,
 							 GError		**error);
 DfuSector	*dfu_target_get_sector_for_addr		(DfuTarget	*target,
 							 guint32	 addr);

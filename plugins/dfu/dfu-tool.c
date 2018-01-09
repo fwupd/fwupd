@@ -29,7 +29,6 @@
 #include <appstream-glib.h>
 
 #include "dfu-cipher-xtea.h"
-#include "dfu-context.h"
 #include "dfu-device-private.h"
 #include "dfu-patch.h"
 #include "dfu-sector.h"
@@ -46,6 +45,7 @@ typedef struct {
 	gchar			*device_vid_pid;
 	guint16			 transfer_size;
 	FuProgressbar		*progressbar;
+	FuQuirks		*quirks;
 } DfuToolPrivate;
 
 static void
@@ -66,6 +66,7 @@ dfu_tool_private_free (DfuToolPrivate *priv)
 		return;
 	g_free (priv->device_vid_pid);
 	g_object_unref (priv->cancellable);
+	g_object_unref (priv->quirks);
 	if (priv->cmd_array != NULL)
 		g_ptr_array_unref (priv->cmd_array);
 	g_free (priv);
@@ -193,20 +194,24 @@ dfu_tool_run (DfuToolPrivate *priv,
 }
 
 static DfuDevice *
-dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
+dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 {
-	DfuDevice *device;
-	g_autoptr(DfuContext) dfu_context = NULL;
+	g_autoptr(GUsbContext) usb_context = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get all the DFU devices */
-	dfu_context = dfu_context_new ();
-	dfu_context_enumerate (dfu_context, NULL);
+	usb_context = g_usb_context_new (error);
+	if (usb_context == NULL)
+		return NULL;
+	g_usb_context_enumerate (usb_context);
 
 	/* we specified it manually */
 	if (priv->device_vid_pid != NULL) {
 		gchar *tmp;
 		guint64 pid;
 		guint64 vid;
+		g_autoptr(DfuDevice) device = NULL;
+		g_autoptr(GUsbDevice) usb_device = NULL;
 
 		/* parse */
 		vid = g_ascii_strtoull (priv->device_vid_pid, &tmp, 16);
@@ -234,24 +239,41 @@ dfu_tool_get_defalt_device (DfuToolPrivate *priv, GError **error)
 		}
 
 		/* find device */
-		device = dfu_context_get_device_by_vid_pid (dfu_context,
+		usb_device = g_usb_context_find_by_vid_pid (usb_context,
 							    (guint16) vid,
 							    (guint16) pid,
 							    error);
-		if (device == NULL)
+		if (usb_device == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "no device matches for %04x:%04x",
+				     (guint) vid, (guint) pid);
 			return NULL;
-	} else {
-		/* auto-detect first device */
-		device = dfu_context_get_device_default (dfu_context, error);
-		if (device == NULL)
-			return NULL;
+		}
+		device = dfu_device_new (usb_device);
+		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
+		dfu_device_set_usb_context (device, usb_context);
+		return device;
 	}
 
-	/* this has to be added to the device so we can deal with detach */
-	g_object_set_data_full (G_OBJECT (device), "DfuContext",
-				g_object_ref (dfu_context),
-				(GDestroyNotify) g_object_unref);
-	return device;
+	/* auto-detect first device */
+	devices = g_usb_context_get_devices (usb_context);
+	for (guint i = 0; i < devices->len; i++) {
+		GUsbDevice *usb_device = g_ptr_array_index (devices, i);
+		g_autoptr(DfuDevice) device = dfu_device_new (usb_device);
+		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
+		dfu_device_set_usb_context (device, usb_context);
+		if (fu_usb_device_probe (FU_USB_DEVICE (device), NULL))
+			return g_steal_pointer (&device);
+	}
+
+	/* failed */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "no DFU devices found");
+	return NULL;
 }
 
 static gboolean
@@ -275,9 +297,7 @@ dfu_tool_set_vendor (DfuToolPrivate *priv, gchar **values, GError **error)
 	file = g_file_new_for_path (values[0]);
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
-				      error)) {
+				      DFU_FIRMWARE_PARSE_FLAG_NONE, error)) {
 		return FALSE;
 	}
 
@@ -294,10 +314,7 @@ dfu_tool_set_vendor (DfuToolPrivate *priv, gchar **values, GError **error)
 	dfu_firmware_set_vid (firmware, (guint16) tmp);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -322,7 +339,6 @@ dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -339,10 +355,7 @@ dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 	dfu_firmware_set_pid (firmware, (guint16) tmp);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static guint16
@@ -406,7 +419,6 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -421,10 +433,7 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 	dfu_firmware_set_release (firmware, (guint16) tmp);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static GBytes *
@@ -641,7 +650,6 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -685,10 +693,7 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -717,7 +722,6 @@ dfu_tool_set_target_size (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -765,10 +769,7 @@ dfu_tool_set_target_size (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -797,7 +798,6 @@ dfu_tool_set_address (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -833,10 +833,7 @@ dfu_tool_set_address (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -860,7 +857,6 @@ dfu_tool_set_metadata (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -878,10 +874,7 @@ dfu_tool_set_metadata (DfuToolPrivate *priv, gchar **values, GError **error)
 	dfu_firmware_set_metadata (firmware, values[1], values[2]);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -907,7 +900,6 @@ dfu_tool_set_alt_setting (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -942,10 +934,7 @@ dfu_tool_set_alt_setting (DfuToolPrivate *priv, gchar **values, GError **error)
 	dfu_image_set_alt_setting (image, (guint8) tmp);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -970,7 +959,6 @@ dfu_tool_set_alt_setting_name (DfuToolPrivate *priv, gchar **values, GError **er
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -996,10 +984,7 @@ dfu_tool_set_alt_setting_name (DfuToolPrivate *priv, gchar **values, GError **er
 	dfu_image_set_name (image, values[1]);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -1036,7 +1021,6 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 		firmware_tmp = dfu_firmware_new ();
 		if (!dfu_firmware_parse_file (firmware_tmp, file_tmp,
 					      DFU_FIRMWARE_PARSE_FLAG_NONE,
-					      priv->cancellable,
 					      error)) {
 			return FALSE;
 		}
@@ -1118,10 +1102,7 @@ dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* write out new file */
 	file = g_file_new_for_path (values[0]);
-	return dfu_firmware_write_file (firmware,
-					file,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file, error);
 }
 
 static gboolean
@@ -1151,7 +1132,6 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file_in,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -1179,10 +1159,7 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_debug ("DFU: %s", str_debug);
 
 	/* write out new file */
-	return dfu_firmware_write_file (firmware,
-					file_out,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file_out, error);
 }
 
 static gboolean
@@ -1191,14 +1168,13 @@ dfu_tool_attach (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 
-	device = dfu_tool_get_defalt_device (priv, error);
+	device = dfu_tool_get_default_device (priv, error);
 	if (device == NULL)
 		return FALSE;
-	locker = fu_device_locker_new_full (device,
-					    (FuDeviceLockerFunc) dfu_device_open,
-					    (FuDeviceLockerFunc) dfu_device_close,
-					    error);
+	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
+		return FALSE;
+	if (!dfu_device_refresh_and_clear (device, error))
 		return FALSE;
 	return dfu_device_attach (device, error);
 }
@@ -1209,32 +1185,23 @@ dfu_tool_reset (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 
-	device = dfu_tool_get_defalt_device (priv, error);
+	device = dfu_tool_get_default_device (priv, error);
 	if (device == NULL)
 		return FALSE;
-	locker = fu_device_locker_new_full (device,
-					    (FuDeviceLockerFunc) dfu_device_open,
-					    (FuDeviceLockerFunc) dfu_device_close,
-					    error);
+	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
+		return FALSE;
+	if (!dfu_device_refresh (device, error))
 		return FALSE;
 	return dfu_device_reset (device, error);
 }
 
 static void
-fu_tool_percentage_changed_cb (DfuDevice *device,
-			       guint percentage,
-			       DfuToolPrivate *priv)
+fu_tool_action_changed_cb (FuDevice *device, GParamSpec *pspec, DfuToolPrivate *priv)
 {
-	fu_progressbar_update (priv->progressbar, FWUPD_STATUS_UNKNOWN, percentage);
-}
-
-static void
-fu_tool_action_changed_cb (DfuDevice *device,
-			   FwupdStatus action,
-			   DfuToolPrivate *priv)
-{
-	fu_progressbar_update (priv->progressbar, action, 0);
+	fu_progressbar_update (priv->progressbar,
+			       fu_device_get_status (device),
+			       fu_device_get_progress (device));
 }
 
 static gboolean
@@ -1260,38 +1227,32 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open correct device */
-	device = dfu_tool_get_defalt_device (priv, error);
+	device = dfu_tool_get_default_device (priv, error);
 	if (device == NULL)
 		return FALSE;
 	if (priv->transfer_size > 0)
 		dfu_device_set_transfer_size (device, priv->transfer_size);
-	locker = fu_device_locker_new_full (device,
-					    (FuDeviceLockerFunc) dfu_device_open,
-					    (FuDeviceLockerFunc) dfu_device_close,
-					    error);
+	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
+		return FALSE;
+	if (!dfu_device_refresh (device, error))
 		return FALSE;
 
 	/* set up progress */
-	g_signal_connect (device, "action-changed",
+	g_signal_connect (device, "notify::status",
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
-	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
+	g_signal_connect (device, "notify::progress",
+			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 
 	/* APP -> DFU */
-	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
+	if (dfu_device_is_runtime (device)) {
 		g_debug ("detaching");
-		if (!dfu_device_detach (device, priv->cancellable, error))
+		if (!dfu_device_detach (device, error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device,
-						 DFU_DEVICE_REPLUG_TIMEOUT,
-						 priv->cancellable,
+						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
 						 error))
 			return FALSE;
-
-		/* put back in same state */
-		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
 	}
 
 	/* transfer */
@@ -1317,8 +1278,14 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* do transfer */
-	image = dfu_target_upload (target, flags, priv->cancellable, error);
+	image = dfu_target_upload (target, flags, error);
 	if (image == NULL)
+		return FALSE;
+
+	/* do host reset */
+	if (!dfu_device_attach (device, error))
+		return FALSE;
+	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
 
 	/* create new firmware object */
@@ -1330,10 +1297,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* save file */
 	file = g_file_new_for_path (values[0]);
-	if (!dfu_firmware_write_file (firmware,
-				      file,
-				      priv->cancellable,
-				      error))
+	if (!dfu_firmware_write_file (firmware, file, error))
 		return FALSE;
 
 	/* print the new object */
@@ -1400,42 +1364,45 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open correct device */
-	device = dfu_tool_get_defalt_device (priv, error);
+	device = dfu_tool_get_default_device (priv, error);
 	if (device == NULL)
 		return FALSE;
-	locker = fu_device_locker_new_full (device,
-					    (FuDeviceLockerFunc) dfu_device_open,
-					    (FuDeviceLockerFunc) dfu_device_close,
-					    error);
+	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
+	if (!dfu_device_refresh (device, error))
+		return FALSE;
 
-	/* optional reset */
-	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
-		flags |= DFU_TARGET_TRANSFER_FLAG_DETACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
+	/* APP -> DFU */
+	if (dfu_device_is_runtime (device)) {
+		if (!dfu_device_detach (device, error))
+			return FALSE;
+		if (!dfu_device_wait_for_replug (device,
+						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
+						 error)) {
+			return FALSE;
+		}
 	}
 
 	/* transfer */
-	g_signal_connect (device, "action-changed",
+	g_signal_connect (device, "notify::status",
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
-	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
-	firmware = dfu_device_upload (device,
-				      flags,
-				      priv->cancellable,
-				      error);
+	g_signal_connect (device, "notify::progress",
+			  G_CALLBACK (fu_tool_action_changed_cb), priv);
+	firmware = dfu_device_upload (device, flags, error);
 	if (firmware == NULL)
+		return FALSE;
+
+	/* do host reset */
+	if (!dfu_device_attach (device, error))
+		return FALSE;
+	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
 
 	/* save file */
 	file = g_file_new_for_path (values[0]);
 	dfu_firmware_set_format (firmware, format);
-	if (!dfu_firmware_write_file (firmware,
-				      file,
-				      priv->cancellable,
-				      error))
+	if (!dfu_firmware_write_file (firmware, file, error))
 		return FALSE;
 
 	/* print the new object */
@@ -1451,39 +1418,37 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 static gchar *
 dfu_tool_get_device_string (DfuToolPrivate *priv, DfuDevice *device)
 {
-	GUsbDevice *dev;
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 
 	/* open if required, and get status */
-	dev = dfu_device_get_usb_dev (device);
-	if (dev == NULL) {
+	if (usb_device == NULL) {
 		return g_strdup_printf ("%04x:%04x [%s]",
 					dfu_device_get_runtime_vid (device),
 					dfu_device_get_runtime_pid (device),
 					"removed");
 	}
-	if (!dfu_device_is_open (device)) {
+	if (!fu_usb_device_is_open (FU_USB_DEVICE (device))) {
 		g_autoptr(GError) error = NULL;
-		locker = fu_device_locker_new_full (device,
-						    (FuDeviceLockerFunc) dfu_device_open,
-						    (FuDeviceLockerFunc) dfu_device_close,
-						    &error);
+		locker = fu_device_locker_new (device, &error);
 		if (locker == NULL) {
 			return g_strdup_printf ("%04x:%04x [%s]",
-						g_usb_device_get_vid (dev),
-						g_usb_device_get_pid (dev),
+						dfu_device_get_vid (device),
+						dfu_device_get_pid (device),
 						error->message);
 		}
+		if (!dfu_device_refresh (device, &error))
+			return FALSE;
 	}
 	return g_strdup_printf ("%04x:%04x [%s:%s]",
-				g_usb_device_get_vid (dev),
-				g_usb_device_get_pid (dev),
+				dfu_device_get_vid (device),
+				dfu_device_get_pid (device),
 				dfu_state_to_string (dfu_device_get_state (device)),
 				dfu_status_to_string (dfu_device_get_status (device)));
 }
 
 static void
-dfu_tool_device_added_cb (DfuContext *context,
+dfu_tool_device_added_cb (GUsbContext *context,
 			  DfuDevice *device,
 			  gpointer user_data)
 {
@@ -1494,7 +1459,7 @@ dfu_tool_device_added_cb (DfuContext *context,
 }
 
 static void
-dfu_tool_device_removed_cb (DfuContext *context,
+dfu_tool_device_removed_cb (GUsbContext *context,
 			    DfuDevice *device,
 			    gpointer user_data)
 {
@@ -1505,7 +1470,7 @@ dfu_tool_device_removed_cb (DfuContext *context,
 }
 
 static void
-dfu_tool_device_changed_cb (DfuContext *context, DfuDevice *device, gpointer user_data)
+dfu_tool_device_changed_cb (GUsbContext *context, DfuDevice *device, gpointer user_data)
 {
 	DfuToolPrivate *priv = (DfuToolPrivate *) user_data;
 	g_autofree gchar *tmp = dfu_tool_get_device_string (priv, device);
@@ -1601,7 +1566,6 @@ dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file_in,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -1630,10 +1594,7 @@ dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* write out new file */
 	file_out = g_file_new_for_path (values[1]);
 	g_debug ("wrote %s", values[1]);
-	return dfu_firmware_write_file (firmware,
-					file_out,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file_out, error);
 }
 
 static gboolean
@@ -1679,7 +1640,6 @@ dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file_in,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable,
 				      error)) {
 		return FALSE;
 	}
@@ -1707,37 +1667,36 @@ dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* write out new file */
 	file_out = g_file_new_for_path (values[1]);
 	g_debug ("wrote %s", values[1]);
-	return dfu_firmware_write_file (firmware,
-					file_out,
-					priv->cancellable,
-					error);
+	return dfu_firmware_write_file (firmware, file_out, error);
 }
 
 static gboolean
 dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(DfuContext) dfu_context = NULL;
+	g_autoptr(GUsbContext) usb_context = NULL;
 	g_autoptr(GMainLoop) loop = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get all the DFU devices */
-	dfu_context = dfu_context_new ();
-	dfu_context_enumerate (dfu_context, NULL);
+	usb_context = g_usb_context_new (error);
+	if (usb_context == NULL)
+		return FALSE;
+	g_usb_context_enumerate (usb_context);
 
 	/* print what's already attached */
-	devices = dfu_context_get_devices (dfu_context);
+	devices = g_usb_context_get_devices (usb_context);
 	for (guint i = 0; i < devices->len; i++) {
 		DfuDevice *device = g_ptr_array_index (devices, i);
-		dfu_tool_device_added_cb (dfu_context, device, priv);
+		dfu_tool_device_added_cb (usb_context, device, priv);
 	}
 
 	/* watch for any hotplugged device */
 	loop = g_main_loop_new (NULL, FALSE);
-	g_signal_connect (dfu_context, "device-added",
+	g_signal_connect (usb_context, "device-added",
 			  G_CALLBACK (dfu_tool_device_added_cb), priv);
-	g_signal_connect (dfu_context, "device-removed",
+	g_signal_connect (usb_context, "device-removed",
 			  G_CALLBACK (dfu_tool_device_removed_cb), priv);
-	g_signal_connect (dfu_context, "device-changed",
+	g_signal_connect (usb_context, "device-changed",
 			  G_CALLBACK (dfu_tool_device_changed_cb), priv);
 	g_signal_connect (priv->cancellable, "cancelled",
 			  G_CALLBACK (dfu_tool_watch_cancelled_cb), loop);
@@ -1775,9 +1734,7 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 		g_print ("Loading %s:\n", values[i]);
 		firmware = dfu_firmware_new ();
 		file = g_file_new_for_path (values[i]);
-		if (!dfu_firmware_parse_file (firmware, file, flags,
-					      priv->cancellable,
-					      &error_local)) {
+		if (!dfu_firmware_parse_file (firmware, file, flags, &error_local)) {
 			g_print ("Failed to load firmware: %s\n",
 				 error_local->message);
 			continue;
@@ -1815,39 +1772,34 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	file = g_file_new_for_path (values[0]);
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable, error))
+				      error))
 		return FALSE;
 
 	/* open correct device */
-	device = dfu_tool_get_defalt_device (priv, error);
+	device = dfu_tool_get_default_device (priv, error);
 	if (device == NULL)
 		return FALSE;
 	if (priv->transfer_size > 0)
 		dfu_device_set_transfer_size (device, priv->transfer_size);
-	locker = fu_device_locker_new_full (device,
-					    (FuDeviceLockerFunc) dfu_device_open,
-					    (FuDeviceLockerFunc) dfu_device_close,
-					    error);
+	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
+		return FALSE;
+	if (!dfu_device_refresh (device, error))
 		return FALSE;
 
 	/* set up progress */
-	g_signal_connect (device, "action-changed",
+	g_signal_connect (device, "notify::status",
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
-	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
+	g_signal_connect (device, "notify::progress",
+			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 
 	/* APP -> DFU */
-	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
+	if (dfu_device_is_runtime (device)) {
 		g_debug ("detaching");
-		if (!dfu_device_detach (device, priv->cancellable, error))
+		if (!dfu_device_detach (device, error))
 			return FALSE;
-		if (!dfu_device_wait_for_replug (device, 5000, priv->cancellable, error))
+		if (!dfu_device_wait_for_replug (device, 5000, error))
 			return FALSE;
-
-		/* put back in same state */
-		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
 	}
 
 	/* print the new object */
@@ -1918,11 +1870,13 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	if (!dfu_target_download (target,
-				  image,
-				  flags,
-				  priv->cancellable,
-				  error))
+	if (!dfu_target_download (target, image, flags, error))
+		return FALSE;
+
+	/* do host reset */
+	if (!dfu_device_attach (device, error))
+		return FALSE;
+	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
 
 	/* success */
@@ -1955,29 +1909,32 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	file = g_file_new_for_path (values[0]);
 	if (!dfu_firmware_parse_file (firmware, file,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      priv->cancellable, error))
+				      error))
 		return FALSE;
 
 	/* open correct device */
-	device = dfu_tool_get_defalt_device (priv, error);
+	device = dfu_tool_get_default_device (priv, error);
 	if (device == NULL)
 		return FALSE;
-	locker = fu_device_locker_new_full (device,
-					    (FuDeviceLockerFunc) dfu_device_open,
-					    (FuDeviceLockerFunc) dfu_device_close,
-					    error);
+	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
+		return FALSE;
+	if (!dfu_device_refresh (device, error))
 		return FALSE;
 
 	/* print the new object */
 	str_debug = dfu_firmware_to_string (firmware);
 	g_debug ("DFU: %s", str_debug);
 
-	/* put in correct mode */
-	if (dfu_device_get_mode (device) == DFU_MODE_RUNTIME) {
-		flags |= DFU_TARGET_TRANSFER_FLAG_DETACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_ATTACH;
-		flags |= DFU_TARGET_TRANSFER_FLAG_WAIT_RUNTIME;
+	/* APP -> DFU */
+	if (dfu_device_is_runtime (device)) {
+		if (!dfu_device_detach (device, error))
+			return FALSE;
+		if (!dfu_device_wait_for_replug (device,
+						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
+						 error)) {
+			return FALSE;
+		}
 	}
 
 	/* allow wildcards */
@@ -1988,15 +1945,17 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	g_signal_connect (device, "action-changed",
+	g_signal_connect (device, "notify::status",
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
-	g_signal_connect (device, "percentage-changed",
-			  G_CALLBACK (fu_tool_percentage_changed_cb), priv);
-	if (!dfu_device_download (device,
-				  firmware,
-				  flags,
-				  priv->cancellable,
-				  error))
+	g_signal_connect (device, "notify::progress",
+			  G_CALLBACK (fu_tool_action_changed_cb), priv);
+	if (!dfu_device_download (device, firmware, flags, error))
+		return FALSE;
+
+	/* do host reset */
+	if (!dfu_device_attach (device, error))
+		return FALSE;
+	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
 
 	/* success */
@@ -2069,35 +2028,42 @@ _bcd_version_from_uint16 (guint16 val)
 static gboolean
 dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(DfuContext) dfu_context = NULL;
+	g_autoptr(GUsbContext) usb_context = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get all the connected USB devices */
-	dfu_context = dfu_context_new ();
-	dfu_context_enumerate (dfu_context, NULL);
-	devices = dfu_context_get_devices (dfu_context);
+	usb_context = g_usb_context_new (error);
+	if (usb_context == NULL)
+		return FALSE;
+	g_usb_context_enumerate (usb_context);
+	devices = g_usb_context_get_devices (usb_context);
 	for (guint i = 0; i < devices->len; i++) {
-		DfuDevice *device = NULL;
 		DfuTarget *target;
-		GUsbDevice *dev;
+		GUsbDevice *usb_device;
 		GPtrArray *dfu_targets;
 		const gchar *tmp;
+		gboolean is_runtime;
 		guint16 transfer_size;
 		g_autofree gchar *attrs = NULL;
 		g_autofree gchar *quirks = NULL;
 		g_autofree gchar *version = NULL;
+		g_autoptr(DfuDevice) device  = NULL;
 		g_autoptr(FuDeviceLocker) locker  = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* device specific */
-		device = g_ptr_array_index (devices, i);
-		dev = dfu_device_get_usb_dev (device);
-		version = _bcd_version_from_uint16 (g_usb_device_get_release (dev));
+		usb_device = g_ptr_array_index (devices, i);
+		device = dfu_device_new (usb_device);
+		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
+		dfu_device_set_usb_context (device, usb_context);
+		if (!fu_usb_device_probe (FU_USB_DEVICE (device), NULL))
+			continue;
+		version = _bcd_version_from_uint16 (g_usb_device_get_release (usb_device));
 		g_print ("%s %04x:%04x [v%s]:\n",
 			 /* TRANSLATORS: detected a DFU device */
 			 _("Found"),
-			 g_usb_device_get_vid (dev),
-			 g_usb_device_get_pid (dev),
+			 g_usb_device_get_vid (usb_device),
+			 g_usb_device_get_pid (usb_device),
 			 version);
 
 		tmp = dfu_version_to_string (dfu_device_get_version (device));
@@ -2107,10 +2073,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		}
 
 		/* open */
-		locker = fu_device_locker_new_full (device,
-						    (FuDeviceLockerFunc) dfu_device_open,
-						    (FuDeviceLockerFunc) dfu_device_close,
-						    &error_local);
+		locker = fu_device_locker_new (device, &error_local);
 		if (locker == NULL) {
 			if (g_error_matches (error_local,
 					     FWUPD_ERROR,
@@ -2127,25 +2090,30 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 				/* TRANSLATORS: device has failed to report status */
 				dfu_tool_print_indent (_("Status"), error_local->message, 1);
 			}
+			continue;
+		}
+		if (!dfu_device_refresh_and_clear (device, &error_local)) {
+			/* TRANSLATORS: device has failed to report status */
+			dfu_tool_print_indent (_("Status"), error_local->message, 1);
+			continue;
 		}
 
-		tmp = dfu_device_get_display_name (device);
+		tmp = fu_device_get_name (FU_DEVICE (device));
 		if (tmp != NULL) {
 			/* TRANSLATORS: device name, e.g. 'ColorHug2' */
 			dfu_tool_print_indent (_("Name"), tmp, 1);
 		}
 
-		tmp = dfu_device_get_serial_number (device);
+		tmp = fu_device_get_serial (FU_DEVICE (device));
 		if (tmp != NULL) {
 			/* TRANSLATORS: serial number, e.g. '00012345' */
 			dfu_tool_print_indent (_("Serial"), tmp, 1);
 		}
 
-		tmp = dfu_mode_to_string (dfu_device_get_mode (device));
-		if (tmp != NULL) {
-			/* TRANSLATORS: device mode, e.g. runtime or DFU */
-			dfu_tool_print_indent (_("Mode"), tmp, 1);
-		}
+		/* TRANSLATORS: device mode, e.g. application runtime or DFU */
+		is_runtime = dfu_device_is_runtime (device);
+		dfu_tool_print_indent (_("Mode"), is_runtime ? _("Runtime") : _("DFU"), 1);
+
 		tmp = dfu_status_to_string (dfu_device_get_status (device));
 		/* TRANSLATORS: device status, e.g. "OK" */
 		dfu_tool_print_indent (_("Status"), tmp, 1);
@@ -2203,20 +2171,19 @@ dfu_tool_detach (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 
 	/* open correct device */
-	device = dfu_tool_get_defalt_device (priv, error);
+	device = dfu_tool_get_default_device (priv, error);
 	if (device == NULL)
 		return FALSE;
 	if (priv->transfer_size > 0)
 		dfu_device_set_transfer_size (device, priv->transfer_size);
 
 	/* detatch */
-	locker = fu_device_locker_new_full (device,
-					    (FuDeviceLockerFunc) dfu_device_open,
-					    (FuDeviceLockerFunc) dfu_device_close,
-					    error);
+	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	return dfu_device_detach (device, priv->cancellable, error);
+	if (!dfu_device_refresh_and_clear (device, error))
+		return FALSE;
+	return dfu_device_detach (device, error);
 }
 
 static gboolean
@@ -2421,6 +2388,14 @@ main (int argc, char *argv[])
 	priv->progressbar = fu_progressbar_new ();
 	fu_progressbar_set_length_percentage (priv->progressbar, 50);
 	fu_progressbar_set_length_status (priv->progressbar, 20);
+
+	/* use quirks */
+	priv->quirks = fu_quirks_new ();
+	if (!fu_quirks_load (priv->quirks, &error)) {
+		/* TRANSLATORS: quirks are device-specific workarounds */
+		g_print ("%s: %s\n", _("Failed to load quirks"), error->message);
+		return EXIT_FAILURE;
+	}
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

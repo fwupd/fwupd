@@ -8,6 +8,9 @@ subdir('udev')
 subdir('unifying')
 subdir('upower')
 
+# depends on dfu
+subdir('csr')
+
 if get_option('plugin_altos')
 subdir('altos')
 endif

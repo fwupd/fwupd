@@ -117,19 +117,6 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 #define	FU_QUIRKS_DFU_JABRA_DETACH		"fwupd-dfu-jabra-detach"
 
 /**
- * FU_QUIRKS_DFU_ALTERNATE_VIDPID:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
- * @value: the uint16_t VID and uint16_t PID values, encoded in base 16, e.g. `0B0E0411`
- *
- * Assigns the USB vendor ID and product ID when the device is in the alternate
- * mode. For instance this can be used to set the application VID/PID when in DFU
- * mode or the bootloader VID/PID when in application mode.
- *
- * Since: 1.0.1
- */
-#define	FU_QUIRKS_DFU_ALTERNATE_VIDPID		"fwupd-dfu-alternate-vidpid"
-
-/**
  * FU_QUIRKS_DFU_AVR_CHIP_ID:
  * @key: the AVR chip ID, e.g. `0x58200204`
  * @value: the UM0424 sector description, e.g. `@Flash/0x2000/1*248Kg`
@@ -167,7 +154,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.2
  */
-#define	FU_QUIRKS_USB_SUMMARY			"fwupd-usb-summary"
+#define	FU_QUIRKS_USB_SUMMARY			"FuUsbDevice:summary"
 
 /**
  * FU_QUIRKS_USB_ICON:
@@ -178,7 +165,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.2
  */
-#define	FU_QUIRKS_USB_ICON			"fwupd-usb-icon"
+#define	FU_QUIRKS_USB_ICON			"FuUsbDevice:icon"
 
 /**
  * FU_QUIRKS_USB_NAME:
@@ -189,7 +176,71 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.2
  */
-#define	FU_QUIRKS_USB_NAME			"fwupd-usb-name"
+#define	FU_QUIRKS_USB_NAME			"FuUsbDevice:name"
+
+/**
+ * FU_QUIRKS_USB_GUID:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`
+ *
+ * Adds an extra GUID for a specific hardware device. If the value provided is
+ * not already a suitable GUID, it will be converted to one.
+ *
+ * Since: 1.0.3
+ */
+#define	FU_QUIRKS_USB_GUID			"FuUsbDevice:guid"
+
+/**
+ * FU_QUIRKS_USB_VERSION:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806&REV_0001`
+ * @value: the version number, e.g. `1.2`
+ *
+ * Sets a version for a specific hardware device.
+ *
+ * Since: 1.0.3
+ */
+#define	FU_QUIRKS_USB_VERSION			"FuUsbDevice:version"
+
+/**
+ * FU_QUIRKS_USB_VENDOR:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the vendor, e.g. `Hughski Limited`
+ *
+ * Sets a vendor name for a specific hardware device.
+ *
+ * Since: 1.0.3
+ */
+#define	FU_QUIRKS_USB_VENDOR			"FuUsbDevice:vendor"
+
+/**
+ * FU_QUIRKS_CSR:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the quirk, e.g. `require-delay`
+ *
+ * Assigns optional quirks to use for a CSR device which does not follow the
+ * CSR specification. The list of supported quirks is thus:
+ *
+ * * `none`:			No device quirks
+ * * `require-delay`:		Respect the write timeout value
+ *
+ * Since: 1.0.3
+ */
+#define	FU_QUIRKS_CSR_DEVICE			"FuCsrDevice"
+
+/**
+ * FU_QUIRKS_EBITDO:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the quirk, e.g. `bootloader`
+ *
+ * Assigns optional quirks to use for a 8Bitdo device. The list of supported
+ * quirks is thus:
+ *
+ * * `none`:			No device quirks
+ * * `bootloader`:		Device is in bootloader mode
+ *
+ * Since: 1.0.3
+ */
+#define	FU_QUIRKS_EBITDO_DEVICE			"FuEditdoDevice"
 
 G_END_DECLS
 

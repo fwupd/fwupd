@@ -21,6 +21,10 @@ shared_module('fu_plugin_synapticsmst',
     plugin_deps,
     efivar,
   ],
+  # https://github.com/hughsie/fwupd/issues/207
+  override_options : [
+    'werror=false',
+  ]
 )
 
 executable(
@@ -39,6 +43,10 @@ executable(
     plugin_deps,
   ],
   c_args : cargs,
+  # https://github.com/hughsie/fwupd/issues/207
+  override_options : [
+    'werror=false',
+  ]
 )
 
 if get_option('tests')
