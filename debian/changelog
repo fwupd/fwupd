@@ -1,3 +1,10 @@
+fwupd (1.0.3-1) unstable; urgency=medium
+
+  * New upstream version.
+  * Drop patch for appstream glib 0.7.4 dependency
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 09 Jan 2018 10:49:51 -0600
+
 fwupd (1.0.2-1) unstable; urgency=medium
 
   * New upstream version
