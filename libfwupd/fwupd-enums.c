@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -150,6 +150,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "registered";
 	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_REBOOT)
 		return "needs-reboot";
+	if (device_flag == FWUPD_DEVICE_FLAG_REPORTED)
+		return "reported";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -190,6 +192,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_REGISTERED;
 	if (g_strcmp0 (device_flag, "needs-reboot") == 0)
 		return FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+	if (g_strcmp0 (device_flag, "reported") == 0)
+		return FWUPD_DEVICE_FLAG_REPORTED;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
