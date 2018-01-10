@@ -901,6 +901,12 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 		/* TRANSLATORS: section header for release version number */
 		fu_util_print_data (_("Version"), fwupd_release_get_version (rel));
 
+		/* TRANSLATORS: section header for the release name */
+		fu_util_print_data (_("Name"), fwupd_release_get_name (rel));
+
+		/* TRANSLATORS: section header for the release one line summary */
+		fu_util_print_data (_("Summary"), fwupd_release_get_summary (rel));
+
 		/* TRANSLATORS: section header for the remote the file is coming from */
 		fu_util_print_data (_("Remote"), fwupd_release_get_remote_id (rel));
 
@@ -1073,6 +1079,12 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 			/* TRANSLATORS: section header for firmware version */
 			fu_util_print_data (_("Update Version"),
 					    fwupd_release_get_version (rel));
+
+			/* TRANSLATORS: section header for the release name */
+			fu_util_print_data (_("Update Name"), fwupd_release_get_name (rel));
+
+			/* TRANSLATORS: section header for the release one line summary */
+			fu_util_print_data (_("Update Summary"), fwupd_release_get_summary (rel));
 
 			/* TRANSLATORS: section header for remote ID, e.g. lvfs-testing */
 			fu_util_print_data (_("Update Remote ID"),

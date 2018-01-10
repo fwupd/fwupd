@@ -218,12 +218,22 @@ fu_engine_device_changed_cb (FuDeviceList *device_list, FuDevice *device, FuEngi
 static void
 fu_engine_set_release_from_appstream (FuEngine *self,
 				      FwupdRelease *rel,
+				      AsApp *app,
 				      AsRelease *release)
 {
 	AsChecksum *csum;
 	FwupdRemote *remote = NULL;
 	const gchar *tmp;
 	GBytes *remote_blob;
+
+	/* set from the AsApp */
+	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
+	fwupd_release_set_homepage (rel, as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE));
+	fwupd_release_set_license (rel, as_app_get_project_license (app));
+	fwupd_release_set_name (rel, as_app_get_name (app, NULL));
+	fwupd_release_set_summary (rel, as_app_get_comment (app, NULL));
+	fwupd_release_set_vendor (rel, as_app_get_developer_name (app, NULL));
+	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
 
 	/* find the remote */
 	remote_blob = as_release_get_blob (release, "fwupd::RemoteId");
@@ -2058,13 +2068,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	fwupd_device_set_description (dev, as_app_get_description (app, NULL));
 	rel = fwupd_release_new ();
 	fwupd_release_set_trust_flags (rel, trust_flags);
-	fwupd_release_set_homepage (rel, as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE));
-	fwupd_release_set_license (rel, as_app_get_project_license (app));
-	fwupd_release_set_name (rel, as_app_get_name (app, NULL));
-	fwupd_release_set_summary (rel, as_app_get_comment (app, NULL));
-	fwupd_release_set_vendor (rel, as_app_get_developer_name (app, NULL));
-	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
-	fu_engine_set_release_from_appstream (self, rel, release);
+	fu_engine_set_release_from_appstream (self, rel, app, release);
 	fwupd_device_add_release (dev, rel);
 	return g_steal_pointer (&dev);
 }
@@ -2278,8 +2282,7 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 			g_autoptr(FwupdRelease) rel = fwupd_release_new ();
 
 			/* create new FwupdRelease for the AsRelease */
-			fwupd_release_set_appstream_id (rel, as_app_get_id (app));
-			fu_engine_set_release_from_appstream (self, rel, release);
+			fu_engine_set_release_from_appstream (self, rel, app, release);
 
 			/* invalid */
 			if (fwupd_release_get_uri (rel) == NULL)
