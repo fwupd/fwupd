@@ -563,6 +563,13 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_clear_history (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuHistory) history = fu_history_new ();
+	return fu_history_remove_all (history, error);
+}
+
+static gboolean
 fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	if (g_strv_length (values) != 1) {
@@ -1672,6 +1679,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Install prepared updates now"),
 		     fu_util_install_prepared);
+	fu_util_add (priv->cmd_array,
+		     "clear-history",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Erase all firmware update history"),
+		     fu_util_clear_history);
 	fu_util_add (priv->cmd_array,
 		     "install",
 		     "FILE [ID]",
