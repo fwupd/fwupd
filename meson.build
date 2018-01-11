@@ -200,6 +200,7 @@ if get_option('plugin_uefi')
   if fwup.version().version_compare('>= 10')
     conf.set('HAVE_FWUP_GET_BGRT_INFO', '1')
   endif
+  efivar = dependency('efivar')
 endif
 
 if get_option('plugin_dell')
