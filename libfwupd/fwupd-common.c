@@ -22,11 +22,14 @@
 #include "config.h"
 
 #include "fwupd-common-private.h"
+#include "fwupd-device.h"
 #include "fwupd-error.h"
+#include "fwupd-release.h"
 
 #include <locale.h>
 #include <string.h>
 #include <sys/utsname.h>
+#include <json-glib/json-glib.h>
 
 /**
  * fwupd_checksum_guess_kind:
@@ -333,4 +336,136 @@ fwupd_build_machine_id (const gchar *salt, GError **error)
 		g_checksum_update (csum, (const guchar *) salt, (gssize) strlen (salt));
 	g_checksum_update (csum, (const guchar *) buf, (gssize) sz);
 	return g_strdup (g_checksum_get_string (csum));
+}
+
+/**
+ * fwupd_build_history_report_json:
+ * @devices: (element-type FwupdDevice): devices
+ * @error: A #GError or %NULL
+ *
+ * Builds a JSON report for the list of devices. No filtering is done on the
+ * @devices array, and it is expected that the caller will filter to something
+ * sane, e.g. %FWUPD_DEVICE_FLAG_REPORTED at the bare minimum.
+ *
+ * Returns: a string, or %NULL if the ID is not present
+ *
+ * Since: 1.0.4
+ **/
+gchar *
+fwupd_build_history_report_json (GPtrArray *devices, GError **error)
+{
+	const gchar *tmp;
+	gchar *data;
+	g_autofree gchar *machine_id = NULL;
+	g_autoptr(GHashTable) hash = NULL;
+	g_autoptr(JsonBuilder) builder = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+	struct {
+		const gchar *key;
+		const gchar *val;
+	} distro_kv[] = {
+		{ "ID",			"DistroId" },
+		{ "VERSION_ID",		"DistroVersion" },
+		{ "VARIANT_ID",		"DistroVariant" },
+		{ NULL, NULL }
+	};
+
+	/* get a hash that represents the machine */
+	machine_id = fwupd_build_machine_id ("fwupd", error);
+	if (machine_id == NULL)
+		return FALSE;
+
+	/* create header */
+	builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	json_builder_set_member_name (builder, "ReportVersion");
+	json_builder_add_int_value (builder, 1);
+	json_builder_set_member_name (builder, "MachineId");
+	json_builder_add_string_value (builder, machine_id);
+
+	/* get all required os-release keys */
+	hash = fwupd_build_distro_hash (error);
+	if (hash == NULL)
+		return NULL;
+	for (guint i = 0; distro_kv[i].key != NULL; i++) {
+		tmp = g_hash_table_lookup (hash, distro_kv[i].key);
+		if (tmp != NULL) {
+			json_builder_set_member_name (builder, distro_kv[i].val);
+			json_builder_add_string_value (builder, tmp);
+		}
+	}
+
+	/* add each device */
+	json_builder_set_member_name (builder, "Reports");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		FwupdRelease *rel = fwupd_device_get_release_default (dev);
+		GPtrArray *checksums;
+
+		json_builder_begin_object (builder);
+
+		/* identify different devices */
+		json_builder_set_member_name (builder, "DeviceId");
+		json_builder_add_string_value (builder, fwupd_device_get_id (dev));
+
+		/* identify the firmware used */
+		json_builder_set_member_name (builder, "Checksum");
+		checksums = fwupd_release_get_checksums (rel);
+		json_builder_add_string_value (builder, fwupd_checksum_get_by_kind (checksums, G_CHECKSUM_SHA1));
+
+		/* set the error state of the report */
+		json_builder_set_member_name (builder, "UpdateState");
+		json_builder_add_int_value (builder, fwupd_device_get_update_state (dev));
+		if (fwupd_device_get_update_error (dev) != NULL) {
+			json_builder_set_member_name (builder, "UpdateError");
+			json_builder_add_string_value (builder, fwupd_device_get_update_error (dev));
+		}
+
+		/* map back to the dev type on the LVFS */
+		json_builder_set_member_name (builder, "Guid");
+		json_builder_add_string_value (builder, fwupd_device_get_guid_default (dev));
+
+		/* to know what plugin tried to handle the dev */
+		json_builder_set_member_name (builder, "FwupdVersion");
+		json_builder_add_string_value (builder, fwupd_release_get_vendor (rel));
+		json_builder_set_member_name (builder, "Plugin");
+		json_builder_add_string_value (builder, fwupd_device_get_plugin (dev));
+
+		/* report what we're trying to update *from* and *to* */
+		json_builder_set_member_name (builder, "Version");
+		json_builder_add_string_value (builder, fwupd_device_get_version (dev));
+		json_builder_set_member_name (builder, "VersionNew");
+		json_builder_add_string_value (builder, fwupd_release_get_version (rel));
+
+		/* to know the state of the dev we're trying to update */
+		json_builder_set_member_name (builder, "Flags");
+		json_builder_add_int_value (builder, fwupd_device_get_flags (dev));
+
+		/* to know when the update tried to happen, and how soon after boot */
+		json_builder_set_member_name (builder, "Created");
+		json_builder_add_int_value (builder, fwupd_device_get_created (dev));
+		json_builder_set_member_name (builder, "Modified");
+		json_builder_add_int_value (builder, fwupd_device_get_modified (dev));
+
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	json_builder_end_object (builder);
+
+	/* export as a string */
+	json_root = json_builder_get_root (builder);
+	json_generator = json_generator_new ();
+	json_generator_set_pretty (json_generator, TRUE);
+	json_generator_set_root (json_generator, json_root);
+	data = json_generator_to_data (json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Failed to convert to JSON string");
+		return NULL;
+	}
+	return data;
 }
