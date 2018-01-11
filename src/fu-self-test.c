@@ -381,6 +381,7 @@ fu_engine_history_func (void)
 	g_assert_cmpint (fu_device_get_update_state (device2), ==, FWUPD_UPDATE_STATE_SUCCESS);
 	g_assert_cmpstr (fu_device_get_update_error (device2), ==, NULL);
 	fu_device_set_modified (device2, 1514338000);
+	g_hash_table_remove_all (fwupd_release_get_metadata (fu_device_get_release_default (device2)));
 	device_str = fu_device_to_string (device2);
 	checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_cab);
 	device_str_expected = g_strdup_printf (
@@ -397,9 +398,8 @@ fu_engine_history_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  Vendor:               %s\n"
 		"  TrustFlags:           none\n",
-		checksum, VERSION);
+		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -481,6 +481,7 @@ fu_engine_history_error_func (void)
 	g_assert_cmpstr (fu_device_get_update_error (device2), ==, error->message);
 	g_clear_error (&error);
 	fu_device_set_modified (device2, 1514338000);
+	g_hash_table_remove_all (fwupd_release_get_metadata (fu_device_get_release_default (device2)));
 	device_str = fu_device_to_string (device2);
 	checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_cab);
 	device_str_expected = g_strdup_printf (
@@ -498,9 +499,8 @@ fu_engine_history_error_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  Vendor:               %s\n"
 		"  TrustFlags:           none\n",
-		checksum, VERSION);
+		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1214,6 +1214,7 @@ fu_history_func (void)
 	fwupd_release_set_filename (release, "/var/lib/dave.cap"),
 	fwupd_release_add_checksum (release, "abcdef");
 	fwupd_release_set_version (release, "3.0.2");
+	fwupd_release_add_metadata_item (release, "FwupdVersion", VERSION);
 	ret = fu_history_add_device (history, device, release, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1252,7 +1253,7 @@ fu_history_func (void)
 	g_assert (release != NULL);
 	g_assert_cmpstr (fwupd_release_get_version (release), ==, "3.0.2");
 	g_assert_cmpstr (fwupd_release_get_filename (release), ==, "/var/lib/dave.cap");
-	g_assert_cmpstr (fwupd_release_get_vendor (release), ==, VERSION);
+	g_assert_cmpstr (fwupd_release_get_metadata_item (release, "FwupdVersion"), ==, VERSION);
 	checksums = fwupd_release_get_checksums (release);
 	g_assert (checksums != NULL);
 	g_assert_cmpint (checksums->len, ==, 1);
