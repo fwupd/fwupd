@@ -353,9 +353,79 @@ fu_util_setup_networking (FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
+fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
+{
+	guint unreported_failed = 0;
+	guint unreported_success = 0;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* get all devices from the history database */
+	devices = fwupd_client_get_history (priv->client, NULL, &error_local);
+	if (devices == NULL) {
+		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+			return TRUE;
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
+
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REPORTED))
+			continue;
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+		switch (fwupd_device_get_update_state (dev)) {
+		case FWUPD_UPDATE_STATE_FAILED:
+			unreported_failed++;
+			break;
+		case FWUPD_UPDATE_STATE_SUCCESS:
+			unreported_success++;
+			break;
+		default:
+			break;
+		}
+	}
+
+	/* nothing to do */
+	if (unreported_failed == 0 && unreported_success == 0)
+		return TRUE;
+
+	/* nag the user to do something that requires opt-in */
+	g_printerr ("\n******************\n\n");
+	if (unreported_failed > 0) {
+		g_printerr ("%s: %s\n",
+			    /* TRANSLATORS: we failed to apply a firmware update */
+			    _("WARNING"),
+			    /* TRANSLATORS: explain why we want to upload */
+			    ngettext ("A firmware update failed to be applied",
+				      "Firmware updates failed to be applied",
+				      unreported_failed));
+	} else if (unreported_success > 0) {
+		g_printerr ("%s: %s\n",
+			    /* TRANSLATORS: we did a firmware update well */
+			    _("INFO"),
+			    /* TRANSLATORS: explain why we want to upload */
+			    ngettext ("A firmware update was applied successfully",
+				      "Firmware updates were applied successfully",
+				      unreported_success));
+	}
+	g_printerr ("%s\n > fwupdmgr report-history\n",
+		    /* TRANSLATORS: what the user has to do, command follows */
+		    _("To share useful information with the developers and "
+		      "clear this message use the following command:"));
+	g_printerr ("\n******************\n");
+	return TRUE;
+}
+
+static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devs = NULL;
+
+	/* nag? */
+	if (!fu_util_perhaps_show_unreported (priv, error))
+		return FALSE;
 
 	/* get results from daemon */
 	devs = fwupd_client_get_devices (priv->client, NULL, error);
@@ -1235,6 +1305,10 @@ static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+
+	/* nag? */
+	if (!fu_util_perhaps_show_unreported (priv, error))
+		return FALSE;
 
 	/* get devices from daemon */
 	devices = fwupd_client_get_devices (priv->client, NULL, error);
