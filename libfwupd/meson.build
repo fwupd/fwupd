@@ -45,6 +45,7 @@ fwupd = shared_library(
   dependencies : [
     giounix,
     soup,
+    libjsonglib,
   ],
   c_args : [
       cargs,

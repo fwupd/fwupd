@@ -237,6 +237,26 @@ fu_util_prompt_for_number (guint maxnum)
 	return answer;
 }
 
+static gboolean
+fu_util_prompt_for_boolean (gboolean def)
+{
+	do {
+		char buffer[4];
+		if (!fgets (buffer, sizeof (buffer), stdin))
+			continue;
+		if (strlen (buffer) == sizeof (buffer) - 1)
+			continue;
+		if (g_strcmp0 (buffer, "\n") == 0)
+			return def;
+		buffer[0] = g_ascii_toupper (buffer[0]);
+		if (g_strcmp0 (buffer, "Y\n") == 0)
+			return TRUE;
+		if (g_strcmp0 (buffer, "N\n") == 0)
+			return FALSE;
+	} while (TRUE);
+	return FALSE;
+}
+
 static FwupdDevice *
 fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 {
@@ -333,9 +353,79 @@ fu_util_setup_networking (FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
+fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
+{
+	guint unreported_failed = 0;
+	guint unreported_success = 0;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* get all devices from the history database */
+	devices = fwupd_client_get_history (priv->client, NULL, &error_local);
+	if (devices == NULL) {
+		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+			return TRUE;
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
+
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REPORTED))
+			continue;
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+		switch (fwupd_device_get_update_state (dev)) {
+		case FWUPD_UPDATE_STATE_FAILED:
+			unreported_failed++;
+			break;
+		case FWUPD_UPDATE_STATE_SUCCESS:
+			unreported_success++;
+			break;
+		default:
+			break;
+		}
+	}
+
+	/* nothing to do */
+	if (unreported_failed == 0 && unreported_success == 0)
+		return TRUE;
+
+	/* nag the user to do something that requires opt-in */
+	g_printerr ("\n******************\n\n");
+	if (unreported_failed > 0) {
+		g_printerr ("%s: %s\n",
+			    /* TRANSLATORS: we failed to apply a firmware update */
+			    _("WARNING"),
+			    /* TRANSLATORS: explain why we want to upload */
+			    ngettext ("A firmware update failed to be applied",
+				      "Firmware updates failed to be applied",
+				      unreported_failed));
+	} else if (unreported_success > 0) {
+		g_printerr ("%s: %s\n",
+			    /* TRANSLATORS: we did a firmware update well */
+			    _("INFO"),
+			    /* TRANSLATORS: explain why we want to upload */
+			    ngettext ("A firmware update was applied successfully",
+				      "Firmware updates were applied successfully",
+				      unreported_success));
+	}
+	g_printerr ("%s\n > fwupdmgr report-history\n",
+		    /* TRANSLATORS: what the user has to do, command follows */
+		    _("To share useful information with the developers and "
+		      "clear this message use the following command:"));
+	g_printerr ("\n******************\n");
+	return TRUE;
+}
+
+static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devs = NULL;
+
+	/* nag? */
+	if (!fu_util_perhaps_show_unreported (priv, error))
+		return FALSE;
 
 	/* get results from daemon */
 	devs = fwupd_client_get_devices (priv->client, NULL, error);
@@ -567,6 +657,160 @@ fu_util_clear_history (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuHistory) history = fu_history_new ();
 	return fu_history_remove_all (history, error);
+}
+
+static gboolean
+fu_util_report_history_for_uri (FuUtilPrivate *priv, const gchar *report_uri, GPtrArray *devices, GError **error)
+{
+	guint status_code;
+	g_autofree gchar *data = NULL;
+	g_autoptr(SoupMessage) msg = NULL;
+
+	/* convert to JSON */
+	data = fwupd_build_history_report_json (devices, error);
+	if (data == NULL)
+		return FALSE;
+
+	/* ask for permission */
+	fu_util_print_data (_("Target"), report_uri);
+	fu_util_print_data (_("Payload"), data);
+	g_print ("%s [Y|n]: ", _("Proceed with upload?"));
+	if (!fu_util_prompt_for_boolean (TRUE)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_PERMISSION_DENIED,
+				     "User declined action");
+		return FALSE;
+	}
+
+	/* POST request */
+	msg = soup_message_new (SOUP_METHOD_POST, report_uri);
+	soup_message_set_request (msg, "application/json; charset=utf-8",
+				  SOUP_MEMORY_COPY, data, strlen (data));
+	status_code = soup_session_send_message (priv->soup_session, msg);
+	g_debug ("server returned: %s", msg->response_body->data);
+	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to upload to %s: %s",
+			     report_uri, soup_status_get_phrase (status_code));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GHashTable) remote_id_uri_map = NULL;
+	g_autoptr(GHashTable) report_map = NULL;
+	g_autoptr(GList) uris = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	/* set up networking */
+	if (!fu_util_setup_networking (priv, error))
+		return FALSE;
+
+	/* create a map of RemoteID to RemoteURI */
+	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
+	if (remotes == NULL)
+		return FALSE;
+	remote_id_uri_map = g_hash_table_new (g_str_hash, g_str_equal);
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (fwupd_remote_get_id (remote) == NULL)
+			continue;
+		if (fwupd_remote_get_report_uri (remote) == NULL)
+			continue;
+		g_debug ("adding %s for %s",
+			 fwupd_remote_get_report_uri (remote),
+			 fwupd_remote_get_id (remote));
+		g_hash_table_insert (remote_id_uri_map,
+				     (gpointer) fwupd_remote_get_id (remote),
+				     (gpointer) fwupd_remote_get_report_uri (remote));
+	}
+
+	/* get all devices from the history database, then filter them,
+	 * adding to a hash map of report-ids */
+	devices = fwupd_client_get_history (priv->client, NULL, error);
+	if (devices == NULL)
+		return FALSE;
+	report_map = g_hash_table_new_full (g_str_hash, g_str_equal,
+					    g_free, (GDestroyNotify) g_ptr_array_unref);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		FwupdRelease *rel = fwupd_device_get_release_default (dev);
+		const gchar *remote_id;
+		const gchar *remote_uri;
+		GPtrArray *devices_tmp;
+
+		/* filter, if not forcing */
+		if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+			if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REPORTED))
+				continue;
+			if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+				continue;
+		}
+
+		/* find the RemoteURI to use for the device */
+		remote_id = fwupd_release_get_remote_id (rel);
+		if (remote_id == NULL) {
+			g_debug ("%s has no RemoteID", fwupd_device_get_id (dev));
+			continue;
+		}
+		remote_uri = g_hash_table_lookup (remote_id_uri_map, remote_id);
+		if (remote_uri == NULL) {
+			g_debug ("%s has no RemoteURI", remote_id);
+			continue;
+		}
+
+		/* add this to the hash map */
+		devices_tmp = g_hash_table_lookup (report_map, remote_uri);
+		if (devices_tmp == NULL) {
+			devices_tmp = g_ptr_array_new ();
+			g_hash_table_insert (report_map, g_strdup (remote_uri), devices_tmp);
+		}
+		g_debug ("using %s for %s", remote_uri, fwupd_device_get_id (dev));
+		g_ptr_array_add (devices_tmp, dev);
+	}
+
+	/* nothing to report */
+	if (g_hash_table_size (report_map) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "No reports require uploading");
+		return FALSE;
+	}
+
+	/* process each uri */
+	uris = g_hash_table_get_keys (report_map);
+	for (GList *l = uris; l != NULL; l = l->next) {
+		const gchar *uri = l->data;
+		GPtrArray *devices_tmp = g_hash_table_lookup (report_map, uri);
+		if (!fu_util_report_history_for_uri (priv, uri, devices_tmp, error))
+			return FALSE;
+	}
+
+	/* mark each device as reported */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REPORTED))
+			continue;
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+		g_debug ("setting flag on %s", fwupd_device_get_id (dev));
+		if (!fwupd_client_modify_device (priv->client,
+						 fwupd_device_get_id (dev),
+						 "Flags", "reported",
+						 NULL, error))
+			return FALSE;
+	}
+
+	return TRUE;
 }
 
 static gboolean
@@ -1061,6 +1305,10 @@ static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+
+	/* nag? */
+	if (!fu_util_perhaps_show_unreported (priv, error))
+		return FALSE;
 
 	/* get devices from daemon */
 	devices = fwupd_client_get_devices (priv->client, NULL, error);
@@ -1716,6 +1964,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Erase all firmware update history"),
 		     fu_util_clear_history);
+	fu_util_add (priv->cmd_array,
+		     "report-history",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Share firmware history with the developers"),
+		     fu_util_report_history);
 	fu_util_add (priv->cmd_array,
 		     "install",
 		     "FILE [ID]",

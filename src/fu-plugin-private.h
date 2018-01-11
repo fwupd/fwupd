@@ -49,6 +49,7 @@ void		 fu_plugin_set_name			(FuPlugin	*plugin,
 							 const gchar 	*name);
 GPtrArray	*fu_plugin_get_rules			(FuPlugin	*plugin,
 							 FuPluginRule	 rule);
+GHashTable	*fu_plugin_get_report_metadata		(FuPlugin	*plugin);
 gboolean	 fu_plugin_open				(FuPlugin	*plugin,
 							 const gchar	*filename,
 							 GError		**error);

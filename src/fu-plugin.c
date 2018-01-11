@@ -61,6 +61,7 @@ typedef struct {
 	FuSmbios		*smbios;
 	GHashTable		*devices;	/* platform_id:GObject */
 	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
+	GHashTable		*report_metadata;	/* key:value */
 	FuPluginData		*data;
 } FuPluginPrivate;
 
@@ -1426,6 +1427,40 @@ fu_plugin_get_rules (FuPlugin *plugin, FuPluginRule rule)
 	return priv->rules[rule];
 }
 
+/**
+ * fu_plugin_add_report_metadata:
+ * @plugin: a #FuPlugin
+ * @key: a string, e.g. `FwupdateVersion`
+ * @value: a string, e.g. `10`
+ *
+ * Sets any additional metadata to be included in the firmware report to aid
+ * debugging problems.
+ *
+ * Any data included here will be sent to the metadata server after user
+ * confirmation.
+ **/
+void
+fu_plugin_add_report_metadata (FuPlugin *plugin, const gchar *key, const gchar *value)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	g_hash_table_insert (priv->report_metadata, g_strdup (key), g_strdup (value));
+}
+
+/**
+ * fu_plugin_get_report_metadata:
+ * @plugin: a #FuPlugin
+ *
+ * Returns the list of additional metadata to be added when filing a report.
+ *
+ * Returns: (transfer none): the map of report metadata
+ **/
+GHashTable *
+fu_plugin_get_report_metadata (FuPlugin *plugin)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	return priv->report_metadata;
+}
+
 static void
 fu_plugin_class_init (FuPluginClass *klass)
 {
@@ -1471,6 +1506,7 @@ fu_plugin_init (FuPlugin *plugin)
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
 	priv->devices_delay = g_hash_table_new (g_direct_hash, g_direct_equal);
+	priv->report_metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++)
 		priv->rules[i] = g_ptr_array_new_with_free_func (g_free);
 }
@@ -1510,6 +1546,7 @@ fu_plugin_finalize (GObject *object)
 #endif
 	g_hash_table_unref (priv->devices);
 	g_hash_table_unref (priv->devices_delay);
+	g_hash_table_unref (priv->report_metadata);
 	g_free (priv->name);
 	g_free (priv->data);
 

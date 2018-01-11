@@ -29,6 +29,16 @@
 
 #include "fu-colorhug-device.h"
 
+void
+fu_plugin_init (FuPlugin *plugin)
+{
+	g_autofree gchar *tmp = g_strdup_printf ("%i.%i.%i",
+						 CH_MAJOR_VERSION,
+						 CH_MINOR_VERSION,
+						 CH_MICRO_VERSION);
+	fu_plugin_add_report_metadata (plugin, "ColorhugVersion", tmp);
+}
+
 gboolean
 fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
