@@ -35,6 +35,7 @@
 #define FWUPD_RESULT_KEY_ICON			"Icon"		/* as */
 #define FWUPD_RESULT_KEY_LICENSE		"License"	/* s */
 #define FWUPD_RESULT_KEY_MODIFIED		"Modified"	/* t */
+#define FWUPD_RESULT_KEY_METADATA		"Metadata"	/* a{ss} */
 #define FWUPD_RESULT_KEY_NAME			"Name"		/* s */
 #define FWUPD_RESULT_KEY_PLUGIN			"Plugin"	/* s */
 #define FWUPD_RESULT_KEY_RELEASE		"Release"	/* a{sv} */

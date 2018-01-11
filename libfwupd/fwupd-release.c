@@ -45,6 +45,7 @@ static void fwupd_release_finalize	 (GObject *object);
 
 typedef struct {
 	GPtrArray			*checksums;
+	GHashTable			*metadata;
 	gchar				*description;
 	gchar				*filename;
 	gchar				*homepage;
@@ -210,6 +211,91 @@ fwupd_release_add_checksum (FwupdRelease *release, const gchar *checksum)
 			return;
 	}
 	g_ptr_array_add (priv->checksums, g_strdup (checksum));
+}
+
+/**
+ * fwupd_release_get_metadata:
+ * @release: A #FwupdRelease
+ *
+ * Gets the release metadata.
+ *
+ * Returns: (transfer none): the metadata, which may be empty
+ *
+ * Since: 1.0.4
+ **/
+GHashTable *
+fwupd_release_get_metadata (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->metadata;
+}
+
+/**
+ * fwupd_release_add_metadata_item:
+ * @release: A #FwupdRelease
+ * @key: the key
+ * @value: the value
+ *
+ * Sets a release metadata item.
+ *
+ * Since: 1.0.4
+ **/
+void
+fwupd_release_add_metadata_item (FwupdRelease *release, const gchar *key, const gchar *value)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_return_if_fail (key != NULL);
+	g_return_if_fail (value != NULL);
+	g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
+}
+
+/**
+ * fwupd_release_add_metadata:
+ * @release: A #FwupdRelease
+ * @hash: the key-values
+ *
+ * Sets multiple release metadata items.
+ *
+ * Since: 1.0.4
+ **/
+void
+fwupd_release_add_metadata (FwupdRelease *release, GHashTable *hash)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_autoptr(GList) keys = NULL;
+
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_return_if_fail (hash != NULL);
+
+	/* deep copy the whole map */
+	keys = g_hash_table_get_keys (hash);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (hash, key);
+		g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
+	}
+}
+
+/**
+ * fwupd_release_get_metadata_item:
+ * @release: A #FwupdRelease
+ * @key: the key
+ *
+ * Gets a release metadata item.
+ *
+ * Returns: the value, or %NULL if unset
+ *
+ * Since: 1.0.4
+ **/
+const gchar *
+fwupd_release_get_metadata_item (FwupdRelease *release, const gchar *key)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	g_return_val_if_fail (key != NULL, NULL);
+	return g_hash_table_lookup (priv->metadata, key);
 }
 
 /**
@@ -570,6 +656,33 @@ fwupd_release_set_trust_flags (FwupdRelease *release, FwupdTrustFlags trust_flag
 	priv->trust_flags = trust_flags;
 }
 
+static GVariant *
+_hash_kv_to_variant (GHashTable *hash)
+{
+	GVariantBuilder builder;
+	g_autoptr(GList) keys = g_hash_table_get_keys (hash);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (hash, key);
+		g_variant_builder_add (&builder, "{ss}", key, value);
+	}
+	return g_variant_builder_end (&builder);
+}
+
+static GHashTable *
+_variant_to_hash_kv (GVariant *dict)
+{
+	GHashTable *hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	GVariantIter iter;
+	const gchar *key;
+	const gchar *value;
+	g_variant_iter_init (&iter, dict);
+	while (g_variant_iter_loop (&iter, "{ss}", &key, &value))
+		g_hash_table_insert (hash, g_strdup (key), g_strdup (value));
+	return hash;
+}
+
 /**
  * fwupd_release_to_variant:
  * @release: A #FwupdRelease
@@ -667,12 +780,18 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_TRUST_FLAGS,
 				       g_variant_new_uint64 (priv->trust_flags));
 	}
+	if (g_hash_table_size (priv->metadata) > 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_METADATA,
+				       _hash_kv_to_variant (priv->metadata));
+	}
 	return g_variant_new ("a{sv}", &builder);
 }
 
 static void
 fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant *value)
 {
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_REMOTE_ID) == 0) {
 		fwupd_release_set_remote_id (release, g_variant_get_string (value, NULL));
 		return;
@@ -730,6 +849,11 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_TRUST_FLAGS) == 0) {
 		fwupd_release_set_trust_flags (release, g_variant_get_uint64 (value));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_METADATA) == 0) {
+		g_hash_table_unref (priv->metadata);
+		priv->metadata = _variant_to_hash_kv (value);
 		return;
 	}
 }
@@ -791,6 +915,7 @@ fwupd_release_to_string (FwupdRelease *release)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	GString *str;
+	g_autoptr(GList) keys = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
 
@@ -813,6 +938,14 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_TRUST_FLAGS, priv->trust_flags);
 
+	/* metadata */
+	keys = g_hash_table_get_keys (priv->metadata);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (priv->metadata, key);
+		fwupd_pad_kv_str (str, key, value);
+	}
+
 	return g_string_free (str, FALSE);
 }
 
@@ -828,6 +961,7 @@ fwupd_release_init (FwupdRelease *release)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	priv->checksums = g_ptr_array_new_with_free_func (g_free);
+	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 }
 
 static void
@@ -848,6 +982,7 @@ fwupd_release_finalize (GObject *object)
 	g_free (priv->version);
 	g_free (priv->remote_id);
 	g_ptr_array_unref (priv->checksums);
+	g_hash_table_unref (priv->metadata);
 
 	G_OBJECT_CLASS (fwupd_release_parent_class)->finalize (object);
 }
