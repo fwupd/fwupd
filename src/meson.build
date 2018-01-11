@@ -83,6 +83,7 @@ fwupdmgr = executable(
   c_args : [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
+    '-DSYSCONFDIR="' + default_sysconfdir + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,

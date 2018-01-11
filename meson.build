@@ -145,6 +145,7 @@ appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
+libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 if meson.version().version_compare('>0.41.0')
   valgrind = dependency('valgrind', required: false)
 else

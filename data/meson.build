@@ -7,7 +7,7 @@ if get_option('tests')
   subdir('installed-tests')
 endif
 
-install_data(['daemon.conf'],
+install_data(['daemon.conf', 'client.conf'],
   install_dir : join_paths(sysconfdir, 'fwupd')
 )
 
