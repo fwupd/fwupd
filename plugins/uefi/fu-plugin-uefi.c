@@ -29,8 +29,9 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
-#ifndef UX_CAPSULE_GUID
-#define UX_CAPSULE_GUID EFI_GUID(0x3b8c8162,0x188c,0x46a4,0xaec9,0xbe,0x43,0xf1,0xd6,0x56,0x97)
+/* drop when upgrading minimum required version of efivar to 33 */
+#if !defined (efi_guid_ux_capsule)
+#define efi_guid_ux_capsule EFI_GUID(0x3b8c8162,0x188c,0x46a4,0xaec9,0xbe,0x43,0xf1,0xd6,0x56,0x97)
 #endif
 
 void
@@ -298,6 +299,7 @@ fu_plugin_uefi_update_splash (GError **error)
 	guint32 screen_width = 1024;
 	g_autoptr(fwup_resource_iter) iter = NULL;
 	g_autoptr(GBytes) image_bmp = NULL;
+
 	struct {
 		guint32	 width;
 		guint32	 height;
@@ -315,7 +317,7 @@ fu_plugin_uefi_update_splash (GError **error)
 
 	/* is this supported? */
 	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find_raw (iter, &UX_CAPSULE_GUID);
+	re = fu_plugin_uefi_find_raw (iter, &efi_guid_ux_capsule);
 	if (re == NULL)
 		return TRUE;
 
@@ -518,7 +520,7 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 
 	/* detect the fake GUID used for uploading the image */
 	fwup_get_guid (re, &guid_raw);
-	if (efi_guid_cmp (guid_raw, &UX_CAPSULE_GUID) == 0) {
+	if (efi_guid_cmp (guid_raw, &efi_guid_ux_capsule) == 0) {
 		g_debug ("skipping entry, detected fake BGRT");
 		return;
 	}
