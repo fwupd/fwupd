@@ -3209,7 +3209,7 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 
 	/* the system is running with the new firmware version */
 	if (g_strcmp0 (fu_device_get_version (dev),
-		       fwupd_release_get_version (rel_history)) != 0) {
+		       fwupd_release_get_version (rel_history)) == 0) {
 		g_debug ("installed version %s matching history %s",
 			 fu_device_get_version (dev),
 			 fwupd_release_get_version (rel_history));
