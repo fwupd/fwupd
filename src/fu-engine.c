@@ -3118,6 +3118,91 @@ fu_engine_load_hwids (FuEngine *self)
 		g_warning ("Failed to load HWIDs: %s", error->message);
 }
 
+static gboolean
+fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError **error)
+{
+	FuDevice *dev;
+	FuPlugin *plugin;
+	FwupdRelease *rel_history;
+
+	/* is in the device list */
+	dev = fu_device_list_find_by_id (self->device_list,
+					 fu_device_get_id (dev_history),
+					 error);
+	if (dev == NULL)
+		return FALSE;
+
+	/* does the installed version match what we tried to install
+	 * before fwupd was restarted */
+	rel_history = fu_device_get_release_default (dev_history);
+	if (rel_history == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "no release for history FuDevice");
+		return FALSE;
+	}
+
+	/* the system is running with the new firmware version */
+	if (g_strcmp0 (fu_device_get_version (dev),
+		       fwupd_release_get_version (rel_history)) != 0) {
+		g_debug ("installed version %s matching history %s",
+			 fu_device_get_version (dev),
+			 fwupd_release_get_version (rel_history));
+		if (!fu_history_set_update_state (self->history, dev_history,
+						  FWUPD_UPDATE_STATE_SUCCESS,
+						  error))
+			return FALSE;
+		return TRUE;
+	}
+
+	/* find the plugin that started the update */
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (dev),
+					      error);
+	if (plugin == NULL)
+		return FALSE;
+
+	/* the plugin knows the update state */
+	if (!fu_plugin_runner_get_results (plugin, dev, error))
+		return FALSE;
+	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+		if (!fu_history_set_update_state (self->history, dev,
+						  fu_device_get_update_state (dev),
+						  error))
+			return FALSE;
+		if (!fu_history_set_error_msg (self->history, dev,
+					       fu_device_get_update_error (dev),
+					       error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_engine_update_history_database (FuEngine *self, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* get any devices */
+	devices = fu_history_get_devices (self->history, error);
+	if (devices == NULL)
+		return FALSE;
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index (devices, i);
+		g_autoptr(GError) error_local = NULL;
+
+		/* not in the required state */
+		if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+			continue;
+
+		/* try to save the new update-state, but ignoring any error */
+		if (!fu_engine_update_history_device (self, dev, &error_local))
+			g_warning ("%s", error_local->message);
+	}
+	return TRUE;
+}
+
 /**
  * fu_engine_load:
  * @self: A #FuEngine
@@ -3199,6 +3284,10 @@ fu_engine_load (FuEngine *self, GError **error)
 			  G_CALLBACK (fu_engine_usb_device_removed_cb),
 			  self);
 	g_usb_context_enumerate (self->usb_ctx);
+
+	/* update the db for devices that were updated during the reboot */
+	if (!fu_engine_update_history_database (self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
