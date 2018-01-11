@@ -124,6 +124,12 @@ gboolean	 fwupd_client_modify_remote		(FwupdClient	*client,
 							 const gchar	*value,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fwupd_client_modify_device		(FwupdClient	*client,
+							 const gchar	*device_id,
+							 const gchar	*key,
+							 const gchar	*value,
+							 GCancellable	*cancellable,
+							 GError		**error);
 FwupdStatus	 fwupd_client_get_status		(FwupdClient	*client);
 guint		 fwupd_client_get_percentage		(FwupdClient	*client);
 const gchar	*fwupd_client_get_daemon_version	(FwupdClient	*client);

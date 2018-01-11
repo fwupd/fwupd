@@ -564,6 +564,70 @@ fu_engine_modify_remote (FuEngine *self,
 }
 
 /**
+ * fu_engine_modify_device:
+ * @self: A #FuEngine
+ * @device_id: A device ID
+ * @key: the key, e.g. `Flags`
+ * @value: the key, e.g. `reported`
+ * @error: A #GError, or %NULL
+ *
+ * Sets the reported flag for a specific device. This ensures that other
+ * front-end clients for fwupd do not report the same event.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_modify_device (FuEngine *self,
+			 const gchar *device_id,
+			 const gchar *key,
+			 const gchar *value,
+			 GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+
+	/* find the correct device */
+	device = fu_history_get_device (self->history, device_id, error);
+	if (device == NULL)
+		return FALSE;
+
+	/* support adding a subset of the device flags */
+	if (g_strcmp0 (key, "Flags") == 0) {
+		FwupdDeviceFlags flag = fwupd_device_flag_from_string (value);
+		if (flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "key %s not a valid flag", key);
+			return FALSE;
+		}
+		if (fu_device_has_flag (device, flag)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "device already has that flag");
+			return FALSE;
+		}
+		if (flag != FWUPD_DEVICE_FLAG_REPORTED) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "flag %s cannot be set from client", key);
+			return FALSE;
+		}
+		return fu_history_set_device_flags (self->history, device,
+						    fu_device_get_flags (device) | flag,
+						    error);
+	}
+
+	/* others invalid */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "key %s not supported", key);
+	return FALSE;
+}
+
+/**
  * fu_engine_verify_update:
  * @self: A #FuEngine
  * @device_id: A device ID

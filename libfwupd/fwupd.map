@@ -226,5 +226,6 @@ LIBFWUPD_1.0.4 {
   global:
     fwupd_build_machine_id;
     fwupd_client_get_history;
+    fwupd_client_modify_device;
   local: *;
 } LIBFWUPD_1.0.3;

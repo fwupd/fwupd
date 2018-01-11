@@ -91,6 +91,11 @@ gboolean	 fu_engine_modify_remote		(FuEngine	*self,
 							 const gchar	*key,
 							 const gchar	*value,
 							 GError		**error);
+gboolean	 fu_engine_modify_device		(FuEngine	*self,
+							 const gchar	*device_id,
+							 const gchar	*key,
+							 const gchar	*value,
+							 GError		**error);
 gboolean	 fu_engine_install			(FuEngine	*self,
 							 const gchar	*device_id,
 							 AsStore	*store,

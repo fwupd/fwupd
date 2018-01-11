@@ -538,6 +538,21 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_dbus_method_invocation_return_value (invocation, NULL);
 		return;
 	}
+	if (g_strcmp0 (method_name, "ModifyDevice") == 0) {
+		const gchar *device_id;
+		const gchar *key = NULL;
+		const gchar *value = NULL;
+
+		/* check the id exists */
+		g_variant_get (parameters, "(&s&s&s)", &device_id, &key, &value);
+		g_debug ("Called %s(%s,%s=%s)", method_name, device_id, key, value);
+		if (!fu_engine_modify_device (priv->engine, device_id, key, value, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		g_dbus_method_invocation_return_value (invocation, NULL);
+		return;
+	}
 	if (g_strcmp0 (method_name, "GetResults") == 0) {
 		const gchar *device_id = NULL;
 		g_autoptr(FwupdDevice) result = NULL;
