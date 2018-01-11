@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -137,34 +137,83 @@ fwupd_checksum_get_best (GPtrArray *checksums)
 	return NULL;
 }
 
+/**
+ * fwupd_build_distro_hash:
+ * @error: A #GError or %NULL
+ *
+ * Loads information from the system os-release file.
+ **/
+static GHashTable *
+fwupd_build_distro_hash (GError **error)
+{
+	GHashTable *hash;
+	const gchar *filename = NULL;
+	const gchar *paths[] = { "/etc/os-release", "/usr/lib/os-release", NULL };
+	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) lines = NULL;
+
+	/* find the correct file */
+	for (guint i = 0; paths[i] != NULL; i++) {
+		g_debug ("looking for os-release at %s", paths[i]);
+		if (g_file_test (paths[i], G_FILE_TEST_EXISTS)) {
+			filename = paths[i];
+			break;
+		}
+	}
+	if (filename == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
+				     "No os-release found");
+		return NULL;
+	}
+
+	/* load each line */
+	if (!g_file_get_contents (filename, &buf, NULL, error))
+		return NULL;
+	hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	lines = g_strsplit (buf, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		gsize len, off = 0;
+		g_auto(GStrv) split = NULL;
+
+		/* split up into sections */
+		split = g_strsplit (lines[i], "=", 2);
+		if (g_strv_length (split) < 2)
+			continue;
+
+		/* remove double quotes if set both ends */
+		len = strlen (split[1]);
+		if (len == 0)
+			continue;
+		if (split[1][0] == '\"' && split[1][len-1] == '\"') {
+			off++;
+			len -= 2;
+		}
+		g_hash_table_insert (hash,
+				     g_strdup (split[0]),
+				     g_strndup (split[1] + off, len));
+	}
+	return hash;
+}
+
 static gchar *
 fwupd_build_user_agent_os_release (void)
 {
-	const gchar *keys[] = { "NAME=", "VERSION_ID=", "VARIANT=", NULL };
-	const gchar *values[] = { NULL, NULL, NULL, NULL };
-	g_autofree gchar *os_release = NULL;
-	g_auto(GStrv) lines = NULL;
+	const gchar *keys[] = { "NAME", "VERSION_ID", "VARIANT", NULL };
+	g_autoptr(GHashTable) hash = NULL;
 	g_autoptr(GPtrArray) ids_os = g_ptr_array_new ();
 
-	/* get raw data then parse each line */
-	if (!g_file_get_contents ("/etc/os-release", &os_release, NULL, NULL)) {
-		if (!g_file_get_contents ("/usr/lib/os-release", &os_release, NULL, NULL))
-			return NULL;
-	}
-	lines = g_strsplit (os_release, "\n", -1);
-	for (guint i = 0; lines[i] != NULL; i++) {
-		for (guint j = 0; keys[j] != NULL; j++) {
-			if (g_str_has_prefix (lines[i], keys[j])) {
-				values[j] = lines[i] + strlen (keys[j]);
-				break;
-			}
-		}
-	}
+	/* get all keys */
+	hash = fwupd_build_distro_hash (NULL);
+	if (hash == NULL)
+		return NULL;
 
 	/* create an array of the keys that exist */
-	for (guint j = 0; values[j] != NULL; j++) {
-		if (values[j] != NULL)
-			g_ptr_array_add (ids_os, (gpointer) values[j]);
+	for (guint i = 0; keys[i] != NULL; i++) {
+		const gchar *value = g_hash_table_lookup (hash, keys[i]);
+		if (value != NULL)
+			g_ptr_array_add (ids_os, (gpointer) value);
 	}
 	if (ids_os->len == 0)
 		return NULL;
