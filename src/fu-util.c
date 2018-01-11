@@ -57,6 +57,7 @@ typedef struct {
 	FwupdInstallFlags	 flags;
 	FwupdClient		*client;
 	FuProgressbar		*progressbar;
+	GKeyFile		*kf_client;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -237,6 +238,26 @@ fu_util_prompt_for_number (guint maxnum)
 	return answer;
 }
 
+static gboolean
+fu_util_prompt_for_boolean (gboolean def)
+{
+	do {
+		char buffer[4];
+		if (!fgets (buffer, sizeof (buffer), stdin))
+			continue;
+		if (strlen (buffer) == sizeof (buffer) - 1)
+			continue;
+		if (g_strcmp0 (buffer, "\n") == 0)
+			return def;
+		buffer[0] = g_ascii_toupper (buffer[0]);
+		if (g_strcmp0 (buffer, "Y\n") == 0)
+			return TRUE;
+		if (g_strcmp0 (buffer, "N\n") == 0)
+			return FALSE;
+	} while (TRUE);
+	return FALSE;
+}
+
 static FwupdDevice *
 fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 {
@@ -289,6 +310,26 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
+fu_util_setup_client_config (FuUtilPrivate *priv, GError **error)
+{
+	g_autofree gchar *config_fn = NULL;
+
+	/* already done */
+	if (priv->kf_client != NULL)
+		return TRUE;
+
+	/* get the location of the reports */
+	config_fn = g_build_filename (SYSCONFDIR, "fwupd", "client.conf", NULL);
+	g_debug ("reading client config from %s", config_fn);
+	priv->kf_client = g_key_file_new ();
+	if (!g_key_file_load_from_file (priv->kf_client, config_fn, G_KEY_FILE_NONE, error)) {
+		g_prefix_error (error, "Failed to load %s: ", config_fn);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_util_setup_networking (FuUtilPrivate *priv, GError **error)
 {
 	const gchar *http_proxy;
@@ -333,9 +374,85 @@ fu_util_setup_networking (FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
+fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
+{
+	guint unreported_failed = 0;
+	guint unreported_success = 0;
+	g_autofree gchar *report_uri = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* user disabled this */
+	if (!fu_util_setup_client_config (priv, error))
+		return FALSE;
+	report_uri = g_key_file_get_string (priv->kf_client, "fwupd", "ReportURI", NULL);
+	if (report_uri == NULL || report_uri[0] == '\0')
+		return TRUE;
+
+	/* get all devices from the history database */
+	devices = fwupd_client_get_history (priv->client, NULL, &error_local);
+	if (devices == NULL) {
+		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+			return TRUE;
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
+
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REPORTED))
+			continue;
+		switch (fwupd_device_get_update_state (dev)) {
+		case FWUPD_UPDATE_STATE_FAILED:
+			unreported_failed++;
+			break;
+		case FWUPD_UPDATE_STATE_SUCCESS:
+			unreported_success++;
+			break;
+		default:
+			break;
+		}
+	}
+
+	/* nothing to do */
+	if (unreported_failed == 0 && unreported_success == 0)
+		return TRUE;
+
+	/* nag the user to do something that requires opt-in */
+	g_printerr ("\n******************\n\n");
+	if (unreported_failed > 0) {
+		g_printerr ("%s: %s\n",
+			    /* TRANSLATORS: we failed to apply a firmware update */
+			    _("WARNING"),
+			    /* TRANSLATORS: explain why we want to upload */
+			    ngettext ("A firmware update failed to be applied",
+				      "Firmware updates failed to be applied",
+				      unreported_failed));
+	} else if (unreported_success > 0) {
+		g_printerr ("%s: %s\n",
+			    /* TRANSLATORS: we did a firmware update well */
+			    _("INFO"),
+			    /* TRANSLATORS: explain why we want to upload */
+			    ngettext ("A firmware update was applied successfully",
+				      "Firmware updates were applied successfully",
+				      unreported_success));
+	}
+	g_printerr ("%s\n > fwupdmgr report-history\n",
+		    /* TRANSLATORS: what the user has to do, command follows */
+		    _("To share useful information with the developers and "
+		      "clear this message use the following command:"));
+	g_printerr ("\n******************\n");
+	return TRUE;
+}
+
+static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devs = NULL;
+
+	/* nag? */
+	if (!fu_util_perhaps_show_unreported (priv, error))
+		return FALSE;
 
 	/* get results from daemon */
 	devs = fwupd_client_get_devices (priv->client, NULL, error);
@@ -567,6 +684,105 @@ fu_util_clear_history (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuHistory) history = fu_history_new ();
 	return fu_history_remove_all (history, error);
+}
+
+static gboolean
+fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	guint status_code;
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *report_uri = NULL;
+	g_autoptr(GPtrArray) devices_filtered = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(SoupMessage) msg = NULL;
+
+	/* set up networking */
+	if (!fu_util_setup_networking (priv, error))
+		return FALSE;
+	if (!fu_util_setup_client_config (priv, error))
+		return FALSE;
+
+	/* get report URI */
+	report_uri = g_key_file_get_string (priv->kf_client, "fwupd", "ReportURI", NULL);
+	if (report_uri == NULL || report_uri[0] == '\0') {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "ReportURI unset in client config file");
+		return FALSE;
+	}
+
+	/* get all devices from the history database */
+	devices = fwupd_client_get_history (priv->client, NULL, error);
+	if (devices == NULL)
+		return FALSE;
+
+	/* filter them */
+	if (priv->flags & FWUPD_INSTALL_FLAG_FORCE) {
+		devices_filtered = g_ptr_array_ref (devices);
+	} else {
+		devices_filtered = g_ptr_array_new ();
+		for (guint i = 0; i < devices->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index (devices, i);
+			if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REPORTED))
+				continue;
+			g_ptr_array_add (devices_filtered, dev);
+		}
+	}
+	if (devices_filtered->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "No reports require uploading");
+		return FALSE;
+	}
+
+	/* convert to JSON */
+	data = fwupd_build_history_report_json (devices_filtered, error);
+	if (data == NULL)
+		return FALSE;
+
+	/* ask for permission */
+	fu_util_print_data (_("Target"), report_uri);
+	fu_util_print_data (_("Payload"), data);
+	g_print ("%s [Y|n]: ", _("Proceed with upload?"));
+	if (!fu_util_prompt_for_boolean (TRUE)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_PERMISSION_DENIED,
+				     "User declined action");
+		return FALSE;
+	}
+
+	/* POST request */
+	msg = soup_message_new (SOUP_METHOD_POST, report_uri);
+	soup_message_set_request (msg, "application/json; charset=utf-8",
+				  SOUP_MEMORY_COPY, data, strlen (data));
+	status_code = soup_session_send_message (priv->soup_session, msg);
+	g_debug ("server returned: %s", msg->response_body->data);
+	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to upload to %s: %s",
+			     report_uri, soup_status_get_phrase (status_code));
+		return FALSE;
+	}
+
+	/* mark each device as reported */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REPORTED))
+			continue;
+		g_debug ("setting flag on %s", fwupd_device_get_id (dev));
+		if (!fwupd_client_modify_device (priv->client,
+						 fwupd_device_get_id (dev),
+						 "Flags", "reported",
+						 NULL, error))
+			return FALSE;
+	}
+
+	return TRUE;
 }
 
 static gboolean
@@ -1061,6 +1277,10 @@ static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+
+	/* nag? */
+	if (!fu_util_perhaps_show_unreported (priv, error))
+		return FALSE;
 
 	/* get devices from daemon */
 	devices = fwupd_client_get_devices (priv->client, NULL, error);
@@ -1621,6 +1841,8 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->client);
 	if (priv->soup_session != NULL)
 		g_object_unref (priv->soup_session);
+	if (priv->kf_client != NULL)
+		g_key_file_unref (priv->kf_client);
 	g_main_loop_unref (priv->loop);
 	g_object_unref (priv->cancellable);
 	g_object_unref (priv->progressbar);
@@ -1711,6 +1933,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Erase all firmware update history"),
 		     fu_util_clear_history);
+	fu_util_add (priv->cmd_array,
+		     "report-history",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Share firmware history with the developers"),
+		     fu_util_report_history);
 	fu_util_add (priv->cmd_array,
 		     "install",
 		     "FILE [ID]",
