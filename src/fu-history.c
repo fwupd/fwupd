@@ -88,7 +88,7 @@ fu_history_device_from_stmt (sqlite3_stmt *stmt)
 	/* flags */
 	fu_device_set_flags (device, sqlite3_column_int64 (stmt, 7));
 
-	/* fwupd_version */
+	/* metadata */
 	tmp = (const gchar *) sqlite3_column_text (stmt, 8);
 	if (tmp != NULL)
 		fwupd_release_set_vendor (release, tmp);
@@ -195,7 +195,7 @@ fu_history_load (FuHistory *self, GError **error)
 					 "device_modified INTEGER DEFAULT 0,"
 					 "checksum TEXT DEFAULT NULL,"
 					 "flags INTEGER DEFAULT 0,"
-					 "fwupd_version TEXT DEFAULT NULL,"
+					 "metadata TEXT DEFAULT NULL,"
 					 "guid_default TEXT DEFAULT NULL,"
 					 "version_old TEXT,"
 					 "version_new TEXT);", -1, &stmt, NULL);
@@ -256,7 +256,7 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 						      "display_name,"
 						      "plugin,"
 						      "guid_default,"
-						      "fwupd_version,"
+						      "metadata,"
 						      "device_created,"
 						      "device_modified,"
 						      "version_old,"
@@ -278,7 +278,7 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	sqlite3_bind_text (stmt, 7, fu_device_get_name (device), -1, SQLITE_STATIC);
 	sqlite3_bind_text (stmt, 8, fu_device_get_plugin (device), -1, SQLITE_STATIC);
 	sqlite3_bind_text (stmt, 9, fu_device_get_guid_default (device), -1, SQLITE_STATIC);
-	sqlite3_bind_text (stmt, 10, VERSION, -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 10, fwupd_release_get_vendor (release), -1, SQLITE_STATIC);
 	sqlite3_bind_int64 (stmt, 11, fu_device_get_created (device));
 	sqlite3_bind_int64 (stmt, 12, fu_device_get_modified (device));
 	sqlite3_bind_text (stmt, 13, fu_device_get_version (device), -1, SQLITE_STATIC);
@@ -390,7 +390,7 @@ fu_history_get_device (FuHistory *self, const gchar *device_id, GError **error)
 					"display_name, "
 					"filename, "
 					"flags, "
-					"fwupd_version, "
+					"metadata, "
 					"guid_default, "
 					"update_state, "
 					"update_error, "
@@ -444,7 +444,7 @@ fu_history_get_devices (FuHistory *self, GError **error)
 					"display_name, "
 					"filename, "
 					"flags, "
-					"fwupd_version, "
+					"metadata, "
 					"guid_default, "
 					"update_state, "
 					"update_error, "

@@ -26,6 +26,7 @@
 #include <gio/gunixinputstream.h>
 #include <glib-object.h>
 #include <string.h>
+#include <sys/utsname.h>
 
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
@@ -1199,6 +1200,56 @@ fu_engine_get_item_by_wildcard (FuEngine *self, AsStore *store, GError **error)
 	return NULL;
 }
 
+static void
+fu_engine_append_string_key_values (GString *str, GHashTable *metadata)
+{
+	g_autoptr(GList) keys = g_hash_table_get_keys (metadata);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (metadata, key);
+		if (str->len > 0)
+			g_string_append (str, ";");
+		g_string_append_printf (str, "%s=%s", key, value);
+	}
+}
+
+static GHashTable *
+fu_engine_get_report_metadata (FuEngine *self)
+{
+	GHashTable *hash;
+	struct utsname name_tmp = { 0 };
+
+	/* used by pretty much every plugin and are hard deps of fwupd */
+	hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	g_hash_table_insert (hash,
+			     g_strdup ("FwupdVersion"),
+			     g_strdup (VERSION));
+	g_hash_table_insert (hash,
+			     g_strdup ("AppstreamGlibVersion"),
+			     g_strdup_printf ("%i.%i.%i",
+					      AS_MAJOR_VERSION,
+					      AS_MINOR_VERSION,
+					      AS_MICRO_VERSION));
+	g_hash_table_insert (hash,
+			     g_strdup ("GUsbVersion"),
+			     g_strdup_printf ("%i.%i.%i",
+					      G_USB_MAJOR_VERSION,
+					      G_USB_MINOR_VERSION,
+					      G_USB_MICRO_VERSION));
+
+	/* kernel version is often important for debugging failures */
+	if (uname (&name_tmp) >= 0) {
+		g_hash_table_insert (hash,
+				     g_strdup ("CpuArchitecture"),
+				     g_strdup (name_tmp.machine));
+		g_hash_table_insert (hash,
+				     g_strdup ("KernelVersion"),
+				     g_strdup (name_tmp.release));
+	}
+
+	return hash;
+}
+
 /**
  * fu_engine_install:
  * @self: A #FuEngine
@@ -1236,6 +1287,8 @@ fu_engine_install (FuEngine *self,
 	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
 	g_autoptr(GBytes) blob_fw2 = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GHashTable) metadata_hash = NULL;
+	g_autoptr(GString) metadata_str = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -1446,6 +1499,13 @@ fu_engine_install (FuEngine *self,
 
 	/* mark this as modified even if we actually fail to do the update */
 	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
+
+	/* build the version metadata */
+	metadata_str = g_string_new (NULL);
+	metadata_hash = fu_engine_get_report_metadata (self);
+	fu_engine_append_string_key_values (metadata_str, metadata_hash);
+	fu_engine_append_string_key_values (metadata_str, fu_plugin_get_report_metadata (plugin));
+	fwupd_release_set_vendor (release_history, metadata_str->str);
 
 	/* add device to database */
 	checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_cab);
