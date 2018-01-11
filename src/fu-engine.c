@@ -1489,6 +1489,8 @@ fu_engine_install (FuEngine *self,
 	/* build the version metadata */
 	metadata_hash = fu_engine_get_report_metadata (self);
 	fwupd_release_add_metadata (release_history, metadata_hash);
+	fwupd_release_add_metadata (release_history,
+				    fu_plugin_get_report_metadata (plugin));
 
 	/* add device to database */
 	checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_cab);
