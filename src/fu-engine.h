@@ -53,6 +53,8 @@ const gchar	*fu_engine_get_action_id_for_device	(FuEngine	*self,
 guint64		 fu_engine_get_archive_size_max		(FuEngine	*self);
 GPtrArray	*fu_engine_get_devices			(FuEngine	*self,
 							 GError		**error);
+GPtrArray	*fu_engine_get_history			(FuEngine	*self,
+							 GError		**error);
 GPtrArray	*fu_engine_get_remotes			(FuEngine	*self,
 							 GError		**error);
 GPtrArray	*fu_engine_get_releases			(FuEngine	*self,

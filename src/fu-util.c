@@ -570,6 +570,26 @@ fu_util_clear_history (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* get all devices from the history database */
+	devices = fwupd_client_get_history (priv->client, NULL, error);
+	if (devices == NULL)
+		return FALSE;
+
+	/* show each device */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		g_autofree gchar *str = fwupd_device_to_string (dev);
+		g_print ("%s\n", str);
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	if (g_strv_length (values) != 1) {
@@ -1679,6 +1699,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Install prepared updates now"),
 		     fu_util_install_prepared);
+	fu_util_add (priv->cmd_array,
+		     "get-history",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Show history of firmware updates"),
+		     fu_util_get_history);
 	fu_util_add (priv->cmd_array,
 		     "clear-history",
 		     NULL,

@@ -225,5 +225,6 @@ LIBFWUPD_1.0.3 {
 LIBFWUPD_1.0.4 {
   global:
     fwupd_build_machine_id;
+    fwupd_client_get_history;
   local: *;
 } LIBFWUPD_1.0.3;

@@ -2198,6 +2198,36 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 }
 
 /**
+ * fu_engine_get_history:
+ * @self: A #FuEngine
+ * @error: A #GError, or %NULL
+ *
+ * Gets the list of history.
+ *
+ * Returns: (transfer container) (element-type FwupdDevice): results
+ **/
+GPtrArray *
+fu_engine_get_history (FuEngine *self, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	devices = fu_history_get_devices (self->history, error);
+	if (devices == NULL)
+		return NULL;
+	if (devices->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No history");
+		return NULL;
+	}
+	return g_steal_pointer (&devices);
+}
+
+/**
  * fu_engine_get_remotes:
  * @self: A #FuEngine
  * @error: A #GError, or %NULL

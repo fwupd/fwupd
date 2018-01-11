@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -370,6 +370,48 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
 	/* call into daemon */
 	val = g_dbus_proxy_call_sync (priv->proxy,
 				      "GetDevices",
+				      NULL,
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return NULL;
+	}
+	return fwupd_client_parse_devices_from_variant (val);
+}
+
+/**
+ * fwupd_client_get_history:
+ * @client: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets all the history.
+ *
+ * Returns: (element-type FwupdDevice) (transfer container): results
+ *
+ * Since: 1.0.4
+ **/
+GPtrArray *
+fwupd_client_get_history (FwupdClient *client, GCancellable *cancellable, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "GetHistory",
 				      NULL,
 				      G_DBUS_CALL_FLAGS_NONE,
 				      -1,
