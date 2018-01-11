@@ -32,7 +32,7 @@
 #include "fwupd-remote-private.h"
 
 static gboolean
-as_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
+fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 {
 	g_autofree gchar *output = NULL;
 
@@ -240,7 +240,7 @@ fwupd_device_func (void)
 	g_assert (fwupd_device_has_guid (dev, "00000000-0000-0000-0000-000000000000"));
 	g_assert (!fwupd_device_has_guid (dev, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"));
 
-	ret = as_test_compare_lines (str,
+	ret = fu_test_compare_lines (str,
 		"ColorHug2\n"
 		"  DeviceId:             USB:foo\n"
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
