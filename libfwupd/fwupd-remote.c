@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -45,6 +45,7 @@ typedef struct {
 	FwupdKeyringKind	 keyring_kind;
 	gchar			*id;
 	gchar			*firmware_base_uri;
+	gchar			*report_uri;
 	gchar			*metadata_uri;
 	gchar			*metadata_uri_sig;
 	gchar			*username;
@@ -247,6 +248,13 @@ fwupd_remote_set_firmware_base_uri (FwupdRemote *self, const gchar *firmware_bas
 	priv->firmware_base_uri = g_strdup (firmware_base_uri);
 }
 
+static void
+fwupd_remote_set_report_uri (FwupdRemote *self, const gchar *report_uri)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	priv->report_uri = g_strdup (report_uri);
+}
+
 /**
  * fwupd_remote_kind_from_string:
  * @kind: a string, e.g. `download`
@@ -335,6 +343,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	g_autofree gchar *metadata_uri = NULL;
 	g_autofree gchar *order_after = NULL;
 	g_autofree gchar *order_before = NULL;
+	g_autofree gchar *report_uri = NULL;
 	g_autoptr(GKeyFile) kf = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
@@ -388,6 +397,11 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	/* extract data */
 	priv->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
 	priv->title = g_key_file_get_string (kf, group, "Title", NULL);
+
+	/* reporting is optional */
+	report_uri = g_key_file_get_string (kf, group, "ReportURI", NULL);
+	if (report_uri != NULL && report_uri[0] != '\0')
+		fwupd_remote_set_report_uri (self, report_uri);
 
 	/* DOWNLOAD-type remotes */
 	if (priv->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
@@ -764,6 +778,24 @@ fwupd_remote_build_firmware_uri (FwupdRemote *self, const gchar *url, GError **e
 }
 
 /**
+ * fwupd_remote_get_report_uri:
+ * @self: A #FwupdRemote
+ *
+ * Gets the URI for the remote reporting.
+ *
+ * Returns: (transfer none): a URI, or %NULL for invalid.
+ *
+ * Since: 1.0.4
+ **/
+const gchar *
+fwupd_remote_get_report_uri (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return priv->report_uri;
+}
+
+/**
  * fwupd_remote_get_metadata_uri:
  * @self: A #FwupdRemote
  *
@@ -878,6 +910,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_filename_cache (self, g_variant_get_string (value, NULL));
 		if (g_strcmp0 (key, "FilenameSource") == 0)
 			fwupd_remote_set_filename_source (self, g_variant_get_string (value, NULL));
+		if (g_strcmp0 (key, "ReportUri") == 0)
+			fwupd_remote_set_report_uri (self, g_variant_get_string (value, NULL));
 	}
 	while (g_variant_iter_loop (iter3, "{sv}", &key, &value)) {
 		if (g_strcmp0 (key, "Username") == 0) {
@@ -943,6 +977,10 @@ fwupd_remote_to_variant (FwupdRemote *self)
 	if (priv->metadata_uri != NULL) {
 		g_variant_builder_add (&builder, "{sv}", FWUPD_RESULT_KEY_URI,
 				       g_variant_new_string (priv->metadata_uri));
+	}
+	if (priv->report_uri != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "ReportUri",
+				       g_variant_new_string (priv->report_uri));
 	}
 	if (priv->firmware_base_uri != NULL) {
 		g_variant_builder_add (&builder, "{sv}", "FirmwareBaseUri",
@@ -1064,6 +1102,7 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (priv->metadata_uri);
 	g_free (priv->metadata_uri_sig);
 	g_free (priv->firmware_base_uri);
+	g_free (priv->report_uri);
 	g_free (priv->username);
 	g_free (priv->password);
 	g_free (priv->title);

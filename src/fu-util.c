@@ -1259,6 +1259,11 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 			/* TRANSLATORS: remote URI */
 			fu_util_print_data (_("Firmware Base URI"), tmp);
 		}
+		tmp = fwupd_remote_get_report_uri (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: URI to send success/failure reports */
+			fu_util_print_data (_("Report URI"), tmp);
+		}
 
 		/* newline */
 		if (i != remotes->len - 1)
