@@ -215,6 +215,15 @@ fu_engine_device_changed_cb (FuDeviceList *device_list, FuDevice *device, FuEngi
 	fu_engine_emit_device_changed (self, device);
 }
 
+static const gchar *
+_as_release_get_metadata_item (AsRelease *release, const gchar *key)
+{
+	GBytes *blob = as_release_get_blob (release, key);
+	if (blob == NULL)
+		return NULL;
+	return (const gchar *) g_bytes_get_data (blob, NULL);
+}
+
 static void
 fu_engine_set_release_from_appstream (FuEngine *self,
 				      FwupdRelease *rel,
@@ -224,7 +233,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	AsChecksum *csum;
 	FwupdRemote *remote = NULL;
 	const gchar *tmp;
-	GBytes *remote_blob;
+	const gchar *remote_id;
 
 	/* set from the AsApp */
 	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
@@ -236,16 +245,13 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
 
 	/* find the remote */
-	remote_blob = as_release_get_blob (release, "fwupd::RemoteId");
-	if (remote_blob != NULL) {
-		const gchar *remote_id = g_bytes_get_data (remote_blob, NULL);
-		if (remote_id != NULL) {
-			fwupd_release_set_remote_id (rel, remote_id);
-			remote = fu_config_get_remote_by_id (self->config, remote_id);
-			if (remote == NULL) {
-				g_warning ("no remote found for release %s",
-					   as_release_get_version (release));
-			}
+	remote_id = _as_release_get_metadata_item (release, "fwupd::RemoteId");
+	if (remote_id != NULL) {
+		fwupd_release_set_remote_id (rel, remote_id);
+		remote = fu_config_get_remote_by_id (self->config, remote_id);
+		if (remote == NULL) {
+			g_warning ("no remote found for release %s",
+				   as_release_get_version (release));
 		}
 	}
 
@@ -2261,6 +2267,29 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 	return g_steal_pointer (&devices);
 }
 
+/* finds the remote-id for the first firmware in the store that matches this
+ * container checksum */
+static const gchar *
+fu_engine_get_remote_id_for_checksum (FuEngine *self, const gchar *csum)
+{
+	GPtrArray *array = as_store_get_apps (self->store);
+	for (guint i = 0; i < array->len; i++) {
+		AsApp *app = g_ptr_array_index (array, i);
+		GPtrArray *releases = as_app_get_releases (app);
+		for (guint j = 0; j < releases->len; j++) {
+			AsRelease *release = g_ptr_array_index (releases, j);
+			AsChecksum *checksum;
+			checksum = as_release_get_checksum_by_target (release,
+								      AS_CHECKSUM_TARGET_CONTAINER);
+			if (checksum == NULL)
+				continue;
+			if (g_strcmp0 (csum, as_checksum_get_value (checksum)) == 0)
+				return _as_release_get_metadata_item (release, "fwupd::RemoteId");
+		}
+	}
+	return NULL;
+}
+
 /**
  * fu_engine_get_history:
  * @self: A #FuEngine
@@ -2288,6 +2317,31 @@ fu_engine_get_history (FuEngine *self, GError **error)
 				     "No history");
 		return NULL;
 	}
+
+	/* try to set the remote ID for each device */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index (devices, i);
+		FwupdRelease *rel;
+		GPtrArray *csums;
+
+		/* get the checksums */
+		rel = fu_device_get_release_default (dev);
+		if (rel == NULL)
+			continue;
+
+		/* find the checksum that matches */
+		csums = fwupd_release_get_checksums (rel);
+		for (guint j = 0; j < csums->len; j++) {
+			const gchar *csum = g_ptr_array_index (csums, j);
+			const gchar *remote_id = fu_engine_get_remote_id_for_checksum (self, csum);
+			if (remote_id != NULL) {
+				fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
+				fwupd_release_set_remote_id (rel, remote_id);
+				break;
+			}
+		}
+	}
+
 	return g_steal_pointer (&devices);
 }
 
