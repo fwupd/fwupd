@@ -517,6 +517,7 @@ static void
 fu_device_list_delay_func (void)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
 	guint added_cnt = 0;
 	guint changed_cnt = 0;
@@ -537,6 +538,19 @@ fu_device_list_delay_func (void)
 	fu_device_add_guid (device1, "foobar");
 	fu_device_set_remove_delay (device1, 100);
 	fu_device_list_add (device_list, device1);
+	g_assert_cmpint (added_cnt, ==, 1);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
+
+	/* add the same device again */
+	fu_device_list_add (device_list, device1);
+	g_assert_cmpint (added_cnt, ==, 1);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
+
+	/* add a device with the same ID */
+	fu_device_set_id (device2, "device1");
+	fu_device_list_add (device_list, device2);
 	g_assert_cmpint (added_cnt, ==, 1);
 	g_assert_cmpint (removed_cnt, ==, 0);
 	g_assert_cmpint (changed_cnt, ==, 0);
