@@ -1871,6 +1871,24 @@ fu_engine_load_metadata_from_file (FuEngine *self,
 }
 
 static gboolean
+fu_engine_is_device_supported (FuEngine *self, FuDevice *device)
+{
+	AsApp *app;
+
+	/* no device version */
+	if (fu_device_get_version (device) == NULL)
+		return FALSE;
+
+	/* match the GUIDs in the XML */
+	app = fu_engine_store_get_app_by_guids (self->store, device);
+	if (app == NULL)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_load_metadata_store (FuEngine *self, GError **error)
 {
 	GPtrArray *apps;
@@ -1947,12 +1965,23 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 		}
 	}
 
-	/* are any devices now supported? */
+	/* did any devices SUPPORTED state change? */
 	devices = fu_device_list_get_all (self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED))
-			fu_engine_emit_device_changed (self, device);
+		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED)) {
+			if (!fu_engine_is_device_supported (self, device)) {
+				/* was supported, now unsupported */
+				fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
+				fu_engine_emit_device_changed (self, device);
+			}
+		} else {
+			/* was unsupported, now supported */
+			if (fu_engine_is_device_supported (self, device)) {
+				fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
+				fu_engine_emit_device_changed (self, device);
+			}
+		}
 	}
 
 	return TRUE;
@@ -2101,24 +2130,6 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 			return FALSE;
 	}
 	return fu_engine_load_metadata_store (self, error);
-}
-
-static gboolean
-fu_engine_is_device_supported (FuEngine *self, FuDevice *device)
-{
-	AsApp *app;
-
-	/* no device version */
-	if (fu_device_get_version (device) == NULL)
-		return FALSE;
-
-	/* match the GUIDs in the XML */
-	app = fu_engine_store_get_app_by_guids (self->store, device);
-	if (app == NULL)
-		return FALSE;
-
-	/* success */
-	return TRUE;
 }
 
 /**
