@@ -203,6 +203,22 @@ fu_device_list_find_by_id (FuDeviceList *self,
 			}
 		}
 	}
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
+		const gchar *ids[] = {
+			fu_device_get_id (item_tmp->device),
+			fu_device_get_equivalent_id (item_tmp->device),
+			NULL };
+		if (item_tmp->device_old == NULL)
+			continue;
+		for (guint j = 0; ids[j] != NULL; j++) {
+			if (strncmp (ids[j], device_id, device_id_len) == 0) {
+				if (item != NULL && multiple_matches != NULL)
+					*multiple_matches = TRUE;
+				item = item_tmp;
+			}
+		}
+	}
 	return item;
 }
 
