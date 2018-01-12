@@ -3308,6 +3308,7 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 	FuDevice *dev;
 	FuPlugin *plugin;
 	FwupdRelease *rel_history;
+	g_autofree gchar *btime = NULL;
 
 	/* is in the device list */
 	dev = fu_device_list_find_by_id (self->device_list,
@@ -3325,6 +3326,15 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 				     FWUPD_ERROR_INTERNAL,
 				     "no release for history FuDevice");
 		return FALSE;
+	}
+
+	/* is this the same boot time as when we scheduled the update,
+	 * i.e. has fwupd been restarted before we rebooted */
+	btime = fu_engine_get_boot_time ();
+	if (g_strcmp0 (fwupd_release_get_metadata_item (rel_history, "BootTime"),
+		       btime) == 0) {
+		g_debug ("service restarted, but no reboot has taken place");
+		return TRUE;
 	}
 
 	/* the system is running with the new firmware version */
