@@ -1199,7 +1199,7 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		/* save the error to the database */
 		if (device_pending != NULL) {
 			fu_history_set_device_error (history,
-						     device,
+						     fu_device_get_id (device),
 						     error_update->message, NULL);
 		}
 		g_propagate_error (error, error_update);
@@ -1217,7 +1217,7 @@ fu_plugin_runner_update (FuPlugin *plugin,
 
 		/* update history database */
 		if (!fu_history_set_device_state (history,
-						  device,
+						  fu_device_get_id (device),
 						  FWUPD_UPDATE_STATE_SUCCESS,
 						  error))
 			return FALSE;
@@ -1286,7 +1286,7 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 	}
 
 	/* remove from history database */
-	return fu_history_remove_device (history, device, error);
+	return fu_history_remove_device (history, fu_device_get_id (device), error);
 }
 
 gboolean

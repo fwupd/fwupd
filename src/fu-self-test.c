@@ -1219,23 +1219,19 @@ fu_history_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_object_unref (release);
-	g_object_unref (device);
 
 	/* ensure database was created */
 	g_assert (g_file_test (filename, G_FILE_TEST_EXISTS));
 
 	/* add some extra data */
-	device = fu_device_new ();
-	/* the SHA1SUM of this is 2ba16d10df45823dd4494ff10a0bfccfef512c9d */
-	fu_device_set_id (device, "self-test");
 	ret = fu_history_set_device_state (history,
-					   device,
+					   "2ba16d10df45823dd4494ff10a0bfccfef512c9d",
 					   FWUPD_UPDATE_STATE_PENDING,
 					   &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_history_set_device_error (history,
-					   device,
+					   "2ba16d10df45823dd4494ff10a0bfccfef512c9d",
 					   "word",
 					   &error);
 	g_assert_no_error (error);
@@ -1273,12 +1269,9 @@ fu_history_func (void)
 	g_clear_error (&error);
 
 	/* remove device */
-	device = fu_device_new ();
-	fu_device_set_id (device, "self-test");
-	ret = fu_history_remove_device (history, device, &error);
+	ret = fu_history_remove_device (history, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_object_unref (device);
 
 	/* get device that does not exist */
 	device = fu_history_get_device_by_id (history, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);

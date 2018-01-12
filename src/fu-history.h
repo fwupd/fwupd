@@ -38,19 +38,19 @@ gboolean	 fu_history_add_device			(FuHistory	*self,
 							 FwupdRelease	*release,
 							 GError		**error);
 gboolean	 fu_history_set_device_state		(FuHistory	*self,
-							 FuDevice	*device,
+							 const gchar	*device_id,
 							 FwupdUpdateState update_state,
 							 GError		**error);
 gboolean	 fu_history_set_device_flags		(FuHistory	*self,
-							 FuDevice	*device,
+							 const gchar	*device_id,
 							 FwupdDeviceFlags device_flags,
 							 GError		**error);
 gboolean	 fu_history_set_device_error		(FuHistory	*self,
-							 FuDevice	*device,
+							 const gchar	*device_id,
 							 const gchar	*error_msg,
 							 GError		**error);
 gboolean	 fu_history_remove_device		(FuHistory	*self,
-							 FuDevice	*device,
+							 const gchar	*device_id,
 							 GError		**error);
 gboolean	 fu_history_remove_all			(FuHistory	*self,
 							 GError		**error);

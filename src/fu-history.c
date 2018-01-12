@@ -367,19 +367,20 @@ fu_history_remove_all (FuHistory *self, GError **error)
 }
 
 gboolean
-fu_history_remove_device (FuHistory *self, FuDevice *device, GError **error)
+fu_history_remove_device (FuHistory *self, const gchar *device_id, GError **error)
 {
 	const gchar *statement;
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
 
 	/* lazy load */
 	if (!fu_history_load (self, error))
 		return FALSE;
 
-	g_debug ("FuHistory: remove device %s", fu_device_get_id (device));
+	g_debug ("FuHistory: remove device %s", device_id);
 	statement = "DELETE FROM history WHERE device_id = ?1;";
 	rc = sqlite3_prepare_v2 (self->db, statement, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
@@ -388,7 +389,7 @@ fu_history_remove_device (FuHistory *self, FuDevice *device, GError **error)
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
-	sqlite3_bind_text (stmt, 1, fu_device_get_id (device), -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 1, device_id, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
@@ -400,6 +401,7 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), NULL);
+	g_return_val_if_fail (device_id != NULL, FALSE);
 
 	/* lazy load */
 	if (!fu_history_load (self, error))
@@ -492,7 +494,7 @@ fu_history_get_devices (FuHistory *self, GError **error)
 
 gboolean
 fu_history_set_device_flags (FuHistory *self,
-			     FuDevice *device,
+			     const gchar *device_id,
 			     FwupdDeviceFlags device_flags,
 			     GError **error)
 {
@@ -500,6 +502,7 @@ fu_history_set_device_flags (FuHistory *self,
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
 
 	/* lazy load */
 	if (!fu_history_load (self, error))
@@ -507,7 +510,7 @@ fu_history_set_device_flags (FuHistory *self,
 
 	/* overwrite entry if it exists */
 	g_debug ("FuHistory: set device-flags of %s to %" G_GUINT64_FORMAT,
-		 fu_device_get_id (device), device_flags);
+		 device_id, device_flags);
 	rc = sqlite3_prepare_v2 (self->db,
 				 "UPDATE history SET flags = ?1 WHERE "
 				 "device_id = ?2;", -1, &stmt, NULL);
@@ -518,28 +521,28 @@ fu_history_set_device_flags (FuHistory *self,
 		return FALSE;
 	}
 	sqlite3_bind_int64 (stmt, 1, device_flags);
-	sqlite3_bind_text (stmt, 2, fu_device_get_id (device), -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 2, device_id, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
 gboolean
 fu_history_set_device_state (FuHistory *self,
-			     FuDevice *device,
-			     FwupdUpdateState update_state,
-			     GError **error)
+				    const gchar *device_id,
+				    FwupdUpdateState update_state,
+				    GError **error)
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
 
 	/* lazy load */
 	if (!fu_history_load (self, error))
 		return FALSE;
 
 	g_debug ("FuHistory: set update-state of %s to %s",
-		 fu_device_get_id (device),
-		 fwupd_update_state_to_string (update_state));
+		 device_id, fwupd_update_state_to_string (update_state));
 	rc = sqlite3_prepare_v2 (self->db,
 				 "UPDATE history SET update_state = ?1 WHERE "
 				 "device_id = ?2;", -1, &stmt, NULL);
@@ -550,27 +553,27 @@ fu_history_set_device_state (FuHistory *self,
 		return FALSE;
 	}
 	sqlite3_bind_int (stmt, 1, update_state);
-	sqlite3_bind_text (stmt, 2, fu_device_get_id (device), -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 2, device_id, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
 gboolean
 fu_history_set_device_error (FuHistory *self,
-			  FuDevice *device,
-			  const gchar *error_msg2,
-			  GError **error)
+			     const gchar *device_id,
+			     const gchar *error_msg,
+			     GError **error)
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
 
 	/* lazy load */
 	if (!fu_history_load (self, error))
 		return FALSE;
 
-	g_debug ("FuHistory: set error to %s: %s",
-		 fu_device_get_id (device), error_msg2);
+	g_debug ("FuHistory: set error to %s: %s", device_id, error_msg);
 	rc = sqlite3_prepare_v2 (self->db,
 				 "UPDATE history SET update_error = ?1 WHERE "
 				 "device_id = ?2;", -1, &stmt, NULL);
@@ -580,8 +583,8 @@ fu_history_set_device_error (FuHistory *self,
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
-	sqlite3_bind_text (stmt, 1, error_msg2, -1, SQLITE_STATIC);
-	sqlite3_bind_text (stmt, 2, fu_device_get_id (device), -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 1, error_msg, -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 2, device_id, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 

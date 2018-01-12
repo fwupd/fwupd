@@ -622,7 +622,7 @@ fu_engine_modify_device (FuEngine *self,
 			return FALSE;
 		}
 		return fu_history_set_device_flags (self->history,
-						    device,
+						    fu_device_get_id (device),
 						    fu_device_get_flags (device) | flag,
 						    error);
 	}
@@ -1519,7 +1519,7 @@ fu_engine_install (FuEngine *self,
 	fwupd_release_set_version (release_history, version);
 	fwupd_release_add_checksum (release_history, checksum);
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-	if (!fu_history_remove_device (self->history, device, error))
+	if (!fu_history_remove_device (self->history, fu_device_get_id (device), error))
 		return FALSE;
 	if (!fu_history_add_device (self->history, device, release_history, error))
 		return FALSE;
@@ -1540,12 +1540,12 @@ fu_engine_install (FuEngine *self,
 
 		/* save to database */
 		if (!fu_history_set_device_state (self->history,
-						  device,
+						  fu_device_get_id (device),
 						  FWUPD_UPDATE_STATE_FAILED,
 						  error))
 			return FALSE;
 		if (!fu_history_set_device_error (self->history,
-						  device,
+						  fu_device_get_id (device),
 						  error_local->message,
 						  error))
 			return FALSE;
@@ -1603,13 +1603,13 @@ fu_engine_install (FuEngine *self,
 	/* update database */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
 		if (!fu_history_set_device_state (self->history,
-						  device,
+						  fu_device_get_id (device),
 						  FWUPD_UPDATE_STATE_NEEDS_REBOOT,
 						  error))
 			return FALSE;
 	} else {
 		if (!fu_history_set_device_state (self->history,
-						  device,
+						  fu_device_get_id (device),
 						  FWUPD_UPDATE_STATE_SUCCESS,
 						  error))
 			return FALSE;
@@ -3366,7 +3366,7 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 			 fu_device_get_version (dev),
 			 fwupd_release_get_version (rel_history));
 		if (!fu_history_set_device_state (self->history,
-						  dev_history,
+						  fu_device_get_id (dev_history),
 						  FWUPD_UPDATE_STATE_SUCCESS,
 						  error))
 			return FALSE;
@@ -3385,12 +3385,12 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 		return FALSE;
 	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
 		if (!fu_history_set_device_state (self->history,
-						  dev,
+						  fu_device_get_id (dev),
 						  fu_device_get_update_state (dev),
 						  error))
 			return FALSE;
 		if (!fu_history_set_device_error (self->history,
-						  dev,
+						  fu_device_get_id (dev),
 						  fu_device_get_update_error (dev),
 						  error))
 			return FALSE;
