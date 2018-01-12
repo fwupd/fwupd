@@ -1539,11 +1539,6 @@ fu_engine_install (FuEngine *self,
 		g_autoptr(GError) error_attach = NULL;
 
 		/* save to database */
-		if (!fu_history_set_device_state (self->history,
-						  fu_device_get_id (device),
-						  FWUPD_UPDATE_STATE_FAILED,
-						  error))
-			return FALSE;
 		if (!fu_history_set_device_error (self->history,
 						  fu_device_get_id (device),
 						  error_local->message,
@@ -3384,11 +3379,6 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 	if (!fu_plugin_runner_get_results (plugin, dev, error))
 		return FALSE;
 	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
-		if (!fu_history_set_device_state (self->history,
-						  fu_device_get_id (dev),
-						  fu_device_get_update_state (dev),
-						  error))
-			return FALSE;
 		if (!fu_history_set_device_error (self->history,
 						  fu_device_get_id (dev),
 						  fu_device_get_update_error (dev),

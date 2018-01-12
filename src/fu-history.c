@@ -541,8 +541,14 @@ fu_history_set_device_state (FuHistory *self,
 	if (!fu_history_load (self, error))
 		return FALSE;
 
+	/* clear the error too */
 	g_debug ("FuHistory: set update-state of %s to %s",
 		 device_id, fwupd_update_state_to_string (update_state));
+	if (update_state != FWUPD_UPDATE_STATE_FAILED) {
+		g_debug ("FuHistory: ensuring error-msg is NULL");
+		if (!fu_history_set_device_error (self, device_id, NULL, error))
+			return FALSE;
+	}
 	rc = sqlite3_prepare_v2 (self->db,
 				 "UPDATE history SET update_state = ?1 WHERE "
 				 "device_id = ?2;", -1, &stmt, NULL);
@@ -573,7 +579,15 @@ fu_history_set_device_error (FuHistory *self,
 	if (!fu_history_load (self, error))
 		return FALSE;
 
+	/* automatically set the state */
 	g_debug ("FuHistory: set error to %s: %s", device_id, error_msg);
+	if (error_msg != NULL) {
+		g_debug ("FuHistory: ensuring update-state is failed");
+		if (!fu_history_set_device_state (self, device_id,
+							 FWUPD_UPDATE_STATE_FAILED,
+							 error))
+			return FALSE;
+	}
 	rc = sqlite3_prepare_v2 (self->db,
 				 "UPDATE history SET update_error = ?1 WHERE "
 				 "device_id = ?2;", -1, &stmt, NULL);

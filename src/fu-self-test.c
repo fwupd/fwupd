@@ -1224,12 +1224,6 @@ fu_history_func (void)
 	g_assert (g_file_test (filename, G_FILE_TEST_EXISTS));
 
 	/* add some extra data */
-	ret = fu_history_set_device_state (history,
-					   "2ba16d10df45823dd4494ff10a0bfccfef512c9d",
-					   FWUPD_UPDATE_STATE_PENDING,
-					   &error);
-	g_assert_no_error (error);
-	g_assert (ret);
 	ret = fu_history_set_device_error (history,
 					   "2ba16d10df45823dd4494ff10a0bfccfef512c9d",
 					   "word",
@@ -1245,7 +1239,7 @@ fu_history_func (void)
 	g_assert_cmpstr (fu_device_get_id (device), ==, "2ba16d10df45823dd4494ff10a0bfccfef512c9d");
 	g_assert_cmpstr (fu_device_get_name (device), ==, "ColorHug");
 	g_assert_cmpstr (fu_device_get_version (device), ==, "3.0.1");
-	g_assert_cmpint (fu_device_get_update_state (device), ==, FWUPD_UPDATE_STATE_PENDING);
+	g_assert_cmpint (fu_device_get_update_state (device), ==, FWUPD_UPDATE_STATE_FAILED);
 	g_assert_cmpstr (fu_device_get_update_error (device), ==, "word");
 	g_assert_cmpstr (fu_device_get_guid_default (device), ==, "827edddd-9bb6-5632-889f-2c01255503da");
 	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_INTERNAL);
