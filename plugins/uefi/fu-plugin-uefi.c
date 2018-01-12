@@ -578,6 +578,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fwup_resource *re;
 	gint supported;
 	g_autoptr(fwup_resource_iter) iter = NULL;
+	g_autofree gchar *name = NULL;
 
 	/* supported = 0 : ESRT unspported
 	   supported = 1 : unlocked, ESRT supported
@@ -596,6 +597,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	if (supported == 2) {
 		g_autoptr(FuDevice) dev = fu_device_new ();
+		name = fu_plugin_uefi_get_name_for_type (plugin,
+							 FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE);
+		if (name != NULL)
+			fu_device_set_name (dev, name);
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
 		fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 		fu_device_set_version (dev, "0");
