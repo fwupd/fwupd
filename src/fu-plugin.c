@@ -1034,13 +1034,13 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) res_tmp = NULL;
-	g_autoptr(FuHistory) pending = NULL;
+	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FwupdRelease) release = fwupd_release_new ();
 	g_autoptr(GFile) file = NULL;
 
 	/* id already exists */
-	pending = fu_history_new ();
-	res_tmp = fu_history_get_device (pending, fu_device_get_id (device), NULL);
+	history = fu_history_new ();
+	res_tmp = fu_history_get_device (history, fu_device_get_id (device), NULL);
 	if (res_tmp != NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -1078,7 +1078,7 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 
 	/* add to database */
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_PENDING);
-	if (!fu_history_add_device (pending, device, release, error))
+	if (!fu_history_add_device (history, device, release, error))
 		return FALSE;
 
 	/* next boot we run offline */
@@ -1157,7 +1157,7 @@ fu_plugin_runner_update (FuPlugin *plugin,
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginUpdateFunc update_func;
-	g_autoptr(FuHistory) pending = NULL;
+	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuDevice) device_pending = NULL;
 	GError *error_update = NULL;
 	GPtrArray *checksums;
@@ -1193,12 +1193,12 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* online */
-	pending = fu_history_new ();
-	device_pending = fu_history_get_device (pending, fu_device_get_id (device), NULL);
+	history = fu_history_new ();
+	device_pending = fu_history_get_device (history, fu_device_get_id (device), NULL);
 	if (!update_func (plugin, device, blob_fw, flags, &error_update)) {
 		/* save the error to the database */
 		if (device_pending != NULL) {
-			fu_history_set_error_msg (pending, device,
+			fu_history_set_error_msg (history, device,
 						  error_update->message, NULL);
 		}
 		g_propagate_error (error, error_update);
@@ -1214,8 +1214,8 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		const gchar *tmp;
 		FwupdRelease *release;
 
-		/* update pending database */
-		fu_history_set_update_state (pending, device,
+		/* update history database */
+		fu_history_set_update_state (history, device,
 					     FWUPD_UPDATE_STATE_SUCCESS, NULL);
 
 		/* delete cab file */
@@ -1245,7 +1245,7 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 	FuPluginDeviceFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDevice) device_pending = NULL;
-	g_autoptr(FuHistory) pending = NULL;
+	g_autoptr(FuHistory) history = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1267,22 +1267,22 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 	}
 
 	/* handled using the database */
-	pending = fu_history_new ();
-	device_pending = fu_history_get_device (pending,
+	history = fu_history_new ();
+	device_pending = fu_history_get_device (history,
 					     fu_device_get_id (device),
 					     &error_local);
 	if (device_pending == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to find %s in pending database: %s",
+			     "Failed to find %s in history database: %s",
 			     fu_device_get_id (device),
 			     error_local->message);
 		return FALSE;
 	}
 
-	/* remove from pending database */
-	return fu_history_remove_device (pending, device, error);
+	/* remove from history database */
+	return fu_history_remove_device (history, device, error);
 }
 
 gboolean
@@ -1294,7 +1294,7 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	const gchar *tmp;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDevice) device_pending = NULL;
-	g_autoptr(FuHistory) pending = NULL;
+	g_autoptr(FuHistory) history = NULL;
 	FwupdRelease *release;
 	FwupdRelease *release_pending;
 
@@ -1318,21 +1318,21 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	}
 
 	/* handled using the database */
-	pending = fu_history_new ();
-	device_pending = fu_history_get_device (pending,
+	history = fu_history_new ();
+	device_pending = fu_history_get_device (history,
 					     fu_device_get_id (device),
 					     &error_local);
 	if (device_pending == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "Failed to find %s in pending database: %s",
+			     "Failed to find %s in history database: %s",
 			     fu_device_get_id (device),
 			     error_local->message);
 		return FALSE;
 	}
 
-	/* copy the important parts from the pending device to the real one */
+	/* copy the important parts from the history device to the real one */
 	update_state = fu_device_get_update_state (device_pending);
 	if (update_state == FWUPD_UPDATE_STATE_UNKNOWN ||
 	    update_state == FWUPD_UPDATE_STATE_PENDING) {
