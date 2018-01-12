@@ -437,7 +437,7 @@ fu_engine_unlock (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* check the device exists */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return FALSE;
 
@@ -661,7 +661,7 @@ fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* check the devices still exists */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return FALSE;
 
@@ -754,7 +754,7 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* check the id exists */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return FALSE;
 
@@ -1311,7 +1311,7 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 	} else {
 		/* find the specific device */
-		device = fu_device_list_find_by_id (self->device_list, device_id, error);
+		device = fu_device_list_get_by_id (self->device_list, device_id, error);
 		if (device == NULL)
 			return FALSE;
 	}
@@ -1527,7 +1527,7 @@ fu_engine_install (FuEngine *self,
 	/* do the update */
 	if (!fu_plugin_runner_update_detach (plugin, device, error))
 		return FALSE;
-	device = fu_device_list_find_by_id (self->device_list, device_id_orig, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL)
 		return FALSE;
 	if (!fu_plugin_runner_update (plugin,
@@ -1567,14 +1567,14 @@ fu_engine_install (FuEngine *self,
 		fu_device_set_status (device, FWUPD_STATUS_IDLE);
 		return FALSE;
 	}
-	device = fu_device_list_find_by_id (self->device_list, device_id_orig, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL)
 		return FALSE;
 	if (!fu_plugin_runner_update_attach (plugin, device, error))
 		return FALSE;
 
 	/* get the new version number */
-	device = fu_device_list_find_by_id (self->device_list, device_id_orig, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL)
 		return FALSE;
 	if (!fu_plugin_runner_update_reload (plugin, device, error))
@@ -1626,7 +1626,7 @@ fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GErr
 
 	/* not a wildcard */
 	if (g_strcmp0 (id, FWUPD_DEVICE_ID_ANY) != 0)
-		return fu_device_list_find_by_id (self->device_list, id, error);
+		return fu_device_list_get_by_id (self->device_list, id, error);
 
 	/* allow '*' for any */
 	devices = fu_history_get_devices (self->history, error);
@@ -1641,7 +1641,7 @@ fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GErr
 			continue;
 
 		/* if the device is not still connected, fake a FuDevice */
-		device = fu_device_list_find_by_id (self->device_list, fu_device_get_id (dev), NULL);
+		device = fu_device_list_get_by_id (self->device_list, fu_device_get_id (dev), NULL);
 		if (device == NULL) {
 			tmp = fu_device_get_plugin (dev);
 			plugin = fu_plugin_list_find_by_name (self->plugin_list, tmp, error);
@@ -1706,7 +1706,7 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 			return NULL;
 	} else {
 		/* find the specific device */
-		device = fu_device_list_find_by_id (self->device_list, device_id, error);
+		device = fu_device_list_get_by_id (self->device_list, device_id, error);
 		if (device == NULL)
 			return NULL;
 	}
@@ -2219,7 +2219,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 		guid = as_provide_get_value (prov);
 		if (guid == NULL)
 			continue;
-		device = fu_device_list_find_by_guid (self->device_list, guid, NULL);
+		device = fu_device_list_get_by_guid (self->device_list, guid, NULL);
 		if (device != NULL) {
 			fwupd_device_set_name (dev, fu_device_get_name (device));
 			fwupd_device_set_flags (dev, fu_device_get_flags (device));
@@ -2585,7 +2585,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find the device */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return NULL;
 
@@ -2627,7 +2627,7 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find the device */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return NULL;
 
@@ -2720,7 +2720,7 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find the device */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return NULL;
 
@@ -3030,9 +3030,9 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 	FuPlugin *plugin_old;
 	g_autoptr(GError) error = NULL;
 
-	device_tmp = fu_device_list_find_by_id (self->device_list,
-						fu_device_get_id (device),
-						&error);
+	device_tmp = fu_device_list_get_by_id (self->device_list,
+					       fu_device_get_id (device),
+					       &error);
 	if (device_tmp == NULL) {
 		g_debug ("%s", error->message);
 		return;
@@ -3328,9 +3328,9 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 	g_autofree gchar *btime = NULL;
 
 	/* is in the device list */
-	dev = fu_device_list_find_by_id (self->device_list,
-					 fu_device_get_id (dev_history),
-					 error);
+	dev = fu_device_list_get_by_id (self->device_list,
+					fu_device_get_id (dev_history),
+					error);
 	if (dev == NULL)
 		return FALSE;
 

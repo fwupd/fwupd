@@ -672,25 +672,25 @@ fu_device_list_func (void)
 			 "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
 
 	/* find by ID */
-	device = fu_device_list_find_by_id (device_list,
-					    "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a",
-					    &error);
+	device = fu_device_list_get_by_id (device_list,
+					   "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a",
+					   &error);
 	g_assert_no_error (error);
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==,
 					   "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
 
 	/* find by GUID */
-	device = fu_device_list_find_by_guid (device_list,
-					      "579a3b1c-d1db-5bdc-b6b9-e2c1b28d5b8a",
-					      &error);
+	device = fu_device_list_get_by_guid (device_list,
+					     "579a3b1c-d1db-5bdc-b6b9-e2c1b28d5b8a",
+					     &error);
 	g_assert_no_error (error);
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==,
 			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
 
 	/* find by missing GUID */
-	device = fu_device_list_find_by_guid (device_list, "notfound", &error);
+	device = fu_device_list_get_by_guid (device_list, "notfound", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (device == NULL);
 

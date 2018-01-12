@@ -161,6 +161,51 @@ fu_device_list_find_by_device (FuDeviceList *self, FuDevice *device)
 	return NULL;
 }
 
+static FuDeviceItem *
+fu_device_list_find_by_guid (FuDeviceList *self, const gchar *guid)
+{
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (fu_device_has_guid (item->device, guid))
+			return item;
+	}
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (item->device_old == NULL)
+			continue;
+		if (fu_device_has_guid (item->device_old, guid))
+			return item;
+	}
+	return NULL;
+}
+
+static FuDeviceItem *
+fu_device_list_find_by_id (FuDeviceList *self,
+			   const gchar *device_id,
+			   gboolean *multiple_matches)
+{
+	FuDeviceItem *item = NULL;
+	gsize device_id_len;
+
+	/* support abbreviated hashes */
+	device_id_len = strlen (device_id);
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
+		const gchar *ids[] = {
+			fu_device_get_id (item_tmp->device),
+			fu_device_get_equivalent_id (item_tmp->device),
+			NULL };
+		for (guint j = 0; ids[j] != NULL; j++) {
+			if (strncmp (ids[j], device_id, device_id_len) == 0) {
+				if (item != NULL && multiple_matches != NULL)
+					*multiple_matches = TRUE;
+				item = item_tmp;
+			}
+		}
+	}
+	return item;
+}
+
 /**
  * fu_device_list_get_old:
  * @self: A #FuDeviceList
@@ -182,7 +227,7 @@ fu_device_list_get_old (FuDeviceList *self, FuDevice *device)
 }
 
 static FuDeviceItem *
-fu_device_list_find_by_guids (FuDeviceList *self, GPtrArray *guids)
+fu_device_list_get_by_guids (FuDeviceList *self, GPtrArray *guids)
 {
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
@@ -337,7 +382,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	}
 
 	/* verify a compatible device does not already exist */
-	item = fu_device_list_find_by_guids (self, fu_device_get_guids (device));
+	item = fu_device_list_get_by_guids (self, fu_device_get_guids (device));
 	if (item != NULL && item->remove_id != 0) {
 		g_debug ("found compatible device %s recently removed, reusing "
 			 "item from plugin %s for plugin %s",
@@ -384,7 +429,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 }
 
 /**
- * fu_device_list_find_by_guid:
+ * fu_device_list_get_by_guid:
  * @self: A #FuDeviceList
  * @guid: A device GUID
  * @error: A #GError, or %NULL
@@ -396,23 +441,15 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
  * Since: 1.0.2
  **/
 FuDevice *
-fu_device_list_find_by_guid (FuDeviceList *self, const gchar *guid, GError **error)
+fu_device_list_get_by_guid (FuDeviceList *self, const gchar *guid, GError **error)
 {
+	FuDeviceItem *item;
 	g_return_val_if_fail (FU_IS_DEVICE_LIST (self), NULL);
 	g_return_val_if_fail (guid != NULL, NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-	for (guint i = 0; i < self->devices->len; i++) {
-		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
-		if (fu_device_has_guid (item->device, guid))
-			return item->device;
-	}
-	for (guint i = 0; i < self->devices->len; i++) {
-		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
-		if (item->device_old == NULL)
-			continue;
-		if (fu_device_has_guid (item->device_old, guid))
-			return item->device;
-	}
+	item = fu_device_list_find_by_guid (self, guid);
+	if (item != NULL)
+		return item->device;
 	g_set_error (error,
 		     FWUPD_ERROR,
 		     FWUPD_ERROR_NOT_FOUND,
@@ -422,7 +459,7 @@ fu_device_list_find_by_guid (FuDeviceList *self, const gchar *guid, GError **err
 }
 
 /**
- * fu_device_list_find_by_id:
+ * fu_device_list_get_by_id:
  * @self: A #FuDeviceList
  * @device_id: A device ID, typically a SHA1 hash
  * @error: A #GError, or %NULL
@@ -435,31 +472,24 @@ fu_device_list_find_by_guid (FuDeviceList *self, const gchar *guid, GError **err
  * Since: 1.0.2
  **/
 FuDevice *
-fu_device_list_find_by_id (FuDeviceList *self, const gchar *device_id, GError **error)
+fu_device_list_get_by_id (FuDeviceList *self, const gchar *device_id, GError **error)
 {
-	FuDeviceItem *item = NULL;
+	FuDeviceItem *item;
 	gboolean multiple_matches = FALSE;
-	gsize device_id_len;
 
 	g_return_val_if_fail (FU_IS_DEVICE_LIST (self), NULL);
 	g_return_val_if_fail (device_id != NULL, NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	/* support abbreviated hashes */
-	device_id_len = strlen (device_id);
-	for (gsize i = 0; i < self->devices->len; i++) {
-		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
-		const gchar *ids[] = {
-			fu_device_get_id (item_tmp->device),
-			fu_device_get_equivalent_id (item_tmp->device),
-			NULL };
-		for (guint j = 0; ids[j] != NULL; j++) {
-			if (strncmp (ids[j], device_id, device_id_len) == 0) {
-				if (item != NULL)
-					multiple_matches = TRUE;
-				item = item_tmp;
-			}
-		}
+	/* multiple things matched */
+	item = fu_device_list_find_by_id (self, device_id, &multiple_matches);
+	if (multiple_matches) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "device ID %s was not unique",
+			     device_id);
+		return NULL;
 	}
 
 	/* nothing at all matched */
@@ -468,16 +498,6 @@ fu_device_list_find_by_id (FuDeviceList *self, const gchar *device_id, GError **
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
 			     "device ID %s was not found",
-			     device_id);
-		return NULL;
-	}
-
-	/* multiple things matched */
-	if (multiple_matches) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "device ID %s was not unique",
 			     device_id);
 		return NULL;
 	}
