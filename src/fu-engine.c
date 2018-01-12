@@ -3368,23 +3368,28 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 		return TRUE;
 	}
 
-	/* find the plugin that started the update */
+	/* does the plugin know the update failure */
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (dev),
 					      error);
 	if (plugin == NULL)
 		return FALSE;
-
-	/* the plugin knows the update state */
 	if (!fu_plugin_runner_get_results (plugin, dev, error))
 		return FALSE;
-	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
-		if (!fu_history_set_device_error (self->history,
-						  fu_device_get_id (dev),
-						  fu_device_get_update_error (dev),
-						  error))
-			return FALSE;
+
+	/* the plugin either can't tell us the error, or doesn't know itself */
+	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED) {
+		g_debug ("falling back to generic failure");
+		fu_device_set_update_error (dev, "failed to run update on reboot");
 	}
+
+	/* update the state in the database */
+	if (!fu_history_set_device_error (self->history, fu_device_get_id (dev),
+				          fu_device_get_update_error (dev),
+				          error))
+		return FALSE;
+
+	/* success */
 	return TRUE;
 }
 
