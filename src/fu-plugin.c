@@ -1040,7 +1040,7 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 
 	/* id already exists */
 	history = fu_history_new ();
-	res_tmp = fu_history_get_device (history, fu_device_get_id (device), NULL);
+	res_tmp = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
 	if (res_tmp != NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -1194,12 +1194,13 @@ fu_plugin_runner_update (FuPlugin *plugin,
 
 	/* online */
 	history = fu_history_new ();
-	device_pending = fu_history_get_device (history, fu_device_get_id (device), NULL);
+	device_pending = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
 	if (!update_func (plugin, device, blob_fw, flags, &error_update)) {
 		/* save the error to the database */
 		if (device_pending != NULL) {
-			fu_history_set_error_msg (history, device,
-						  error_update->message, NULL);
+			fu_history_set_device_error (history,
+						     device,
+						     error_update->message, NULL);
 		}
 		g_propagate_error (error, error_update);
 		return FALSE;
@@ -1215,8 +1216,11 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		FwupdRelease *release;
 
 		/* update history database */
-		fu_history_set_update_state (history, device,
-					     FWUPD_UPDATE_STATE_SUCCESS, NULL);
+		if (!fu_history_set_device_state (history,
+						  device,
+						  FWUPD_UPDATE_STATE_SUCCESS,
+						  error))
+			return FALSE;
 
 		/* delete cab file */
 		release = fu_device_get_release_default (device_pending);
@@ -1268,9 +1272,9 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 
 	/* handled using the database */
 	history = fu_history_new ();
-	device_pending = fu_history_get_device (history,
-					     fu_device_get_id (device),
-					     &error_local);
+	device_pending = fu_history_get_device_by_id (history,
+						      fu_device_get_id (device),
+						      &error_local);
 	if (device_pending == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -1319,9 +1323,9 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 
 	/* handled using the database */
 	history = fu_history_new ();
-	device_pending = fu_history_get_device (history,
-					     fu_device_get_id (device),
-					     &error_local);
+	device_pending = fu_history_get_device_by_id (history,
+						      fu_device_get_id (device),
+						      &error_local);
 	if (device_pending == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,

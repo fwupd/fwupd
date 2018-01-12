@@ -37,7 +37,7 @@ gboolean	 fu_history_add_device			(FuHistory	*self,
 							 FuDevice	*device,
 							 FwupdRelease	*release,
 							 GError		**error);
-gboolean	 fu_history_set_update_state		(FuHistory	*self,
+gboolean	 fu_history_set_device_state		(FuHistory	*self,
 							 FuDevice	*device,
 							 FwupdUpdateState update_state,
 							 GError		**error);
@@ -45,7 +45,7 @@ gboolean	 fu_history_set_device_flags		(FuHistory	*self,
 							 FuDevice	*device,
 							 FwupdDeviceFlags device_flags,
 							 GError		**error);
-gboolean	 fu_history_set_error_msg		(FuHistory	*self,
+gboolean	 fu_history_set_device_error		(FuHistory	*self,
 							 FuDevice	*device,
 							 const gchar	*error_msg,
 							 GError		**error);
@@ -57,7 +57,7 @@ gboolean	 fu_history_remove_all			(FuHistory	*self,
 gboolean	 fu_history_remove_all_with_state	(FuHistory	*self,
 							 FwupdUpdateState update_state,
 							 GError		**error);
-FuDevice	*fu_history_get_device			(FuHistory	*self,
+FuDevice	*fu_history_get_device_by_id		(FuHistory	*self,
 							 const gchar	*device_id,
 							 GError		**error);
 GPtrArray	*fu_history_get_devices			(FuHistory	*self,

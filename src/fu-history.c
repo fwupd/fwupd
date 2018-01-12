@@ -393,7 +393,7 @@ fu_history_remove_device (FuHistory *self, FuDevice *device, GError **error)
 }
 
 FuDevice *
-fu_history_get_device (FuHistory *self, const gchar *device_id, GError **error)
+fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **error)
 {
 	gint rc;
 	g_autoptr(GPtrArray) array_tmp = NULL;
@@ -523,7 +523,7 @@ fu_history_set_device_flags (FuHistory *self,
 }
 
 gboolean
-fu_history_set_update_state (FuHistory *self,
+fu_history_set_device_state (FuHistory *self,
 			     FuDevice *device,
 			     FwupdUpdateState update_state,
 			     GError **error)
@@ -555,7 +555,7 @@ fu_history_set_update_state (FuHistory *self,
 }
 
 gboolean
-fu_history_set_error_msg (FuHistory *self,
+fu_history_set_device_error (FuHistory *self,
 			  FuDevice *device,
 			  const gchar *error_msg2,
 			  GError **error)

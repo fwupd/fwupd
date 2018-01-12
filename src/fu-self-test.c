@@ -375,7 +375,7 @@ fu_engine_history_func (void)
 
 	/* check the history database */
 	history = fu_history_new ();
-	device2 = fu_history_get_device (history, fu_device_get_id (device), &error);
+	device2 = fu_history_get_device_by_id (history, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
 	g_assert (device2 != NULL);
 	g_assert_cmpint (fu_device_get_update_state (device2), ==, FWUPD_UPDATE_STATE_SUCCESS);
@@ -474,7 +474,7 @@ fu_engine_history_error_func (void)
 
 	/* check the history database */
 	history = fu_history_new ();
-	device2 = fu_history_get_device (history, fu_device_get_id (device), &error2);
+	device2 = fu_history_get_device_by_id (history, fu_device_get_id (device), &error2);
 	g_assert_no_error (error2);
 	g_assert (device2 != NULL);
 	g_assert_cmpint (fu_device_get_update_state (device2), ==, FWUPD_UPDATE_STATE_FAILED);
@@ -1045,7 +1045,7 @@ fu_plugin_module_func (void)
 
 	/* lets check the history */
 	history = fu_history_new ();
-	device2 = fu_history_get_device (history, fu_device_get_id (device), &error);
+	device2 = fu_history_get_device_by_id (history, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
 	g_assert (device2 != NULL);
 	g_assert_cmpint (fu_device_get_update_state (device2), ==, FWUPD_UPDATE_STATE_PENDING);
@@ -1069,7 +1069,7 @@ fu_plugin_module_func (void)
 	g_assert_cmpstr (fu_device_get_version_bootloader (device), ==, "0.1.2");
 
 	/* lets check the history */
-	device3 = fu_history_get_device (history, fu_device_get_id (device), &error);
+	device3 = fu_history_get_device_by_id (history, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
 	g_assert (device3 != NULL);
 	g_assert_cmpint (fu_device_get_update_state (device3), ==, FWUPD_UPDATE_STATE_SUCCESS);
@@ -1228,16 +1228,22 @@ fu_history_func (void)
 	device = fu_device_new ();
 	/* the SHA1SUM of this is 2ba16d10df45823dd4494ff10a0bfccfef512c9d */
 	fu_device_set_id (device, "self-test");
-	ret = fu_history_set_update_state (history, device, FWUPD_UPDATE_STATE_PENDING, &error);
+	ret = fu_history_set_device_state (history,
+					   device,
+					   FWUPD_UPDATE_STATE_PENDING,
+					   &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	ret = fu_history_set_error_msg (history, device, "word", &error);
+	ret = fu_history_set_device_error (history,
+					   device,
+					   "word",
+					   &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_object_unref (device);
 
 	/* get device */
-	device = fu_history_get_device (history, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
+	device = fu_history_get_device_by_id (history, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
 	g_assert_no_error (error);
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==, "2ba16d10df45823dd4494ff10a0bfccfef512c9d");
@@ -1261,7 +1267,7 @@ fu_history_func (void)
 	g_object_unref (device);
 
 	/* get device that does not exist */
-	device = fu_history_get_device (history, "XXXXXXXXXXXXX", &error);
+	device = fu_history_get_device_by_id (history, "XXXXXXXXXXXXX", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (device == NULL);
 	g_clear_error (&error);
@@ -1275,7 +1281,7 @@ fu_history_func (void)
 	g_object_unref (device);
 
 	/* get device that does not exist */
-	device = fu_history_get_device (history, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
+	device = fu_history_get_device_by_id (history, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (device == NULL);
 	g_clear_error (&error);
