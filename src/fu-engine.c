@@ -1200,10 +1200,26 @@ fu_engine_get_item_by_wildcard (FuEngine *self, AsStore *store, GError **error)
 	return NULL;
 }
 
+static gchar *
+fu_engine_get_boot_time (void)
+{
+	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) lines = NULL;
+	if (!g_file_get_contents ("/proc/stat", &buf, NULL, NULL))
+		return NULL;
+	lines = g_strsplit (buf, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (g_str_has_prefix (lines[i], "btime "))
+			return g_strdup (lines[i] + 6);
+	}
+	return NULL;
+}
+
 static GHashTable *
 fu_engine_get_report_metadata (FuEngine *self)
 {
 	GHashTable *hash;
+	gchar *btime;
 	struct utsname name_tmp = { 0 };
 
 	/* used by pretty much every plugin and are hard deps of fwupd */
@@ -1233,6 +1249,11 @@ fu_engine_get_report_metadata (FuEngine *self)
 				     g_strdup ("KernelVersion"),
 				     g_strdup (name_tmp.release));
 	}
+
+	/* add the kernel boot time so we can detect a reboot */
+	btime = fu_engine_get_boot_time ();
+	if (btime != NULL)
+		g_hash_table_insert (hash, g_strdup ("BootTime"), btime);
 
 	return hash;
 }
@@ -3298,6 +3319,7 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 	FuDevice *dev;
 	FuPlugin *plugin;
 	FwupdRelease *rel_history;
+	g_autofree gchar *btime = NULL;
 
 	/* is in the device list */
 	dev = fu_device_list_find_by_id (self->device_list,
@@ -3317,6 +3339,15 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 		return FALSE;
 	}
 
+	/* is this the same boot time as when we scheduled the update,
+	 * i.e. has fwupd been restarted before we rebooted */
+	btime = fu_engine_get_boot_time ();
+	if (g_strcmp0 (fwupd_release_get_metadata_item (rel_history, "BootTime"),
+		       btime) == 0) {
+		g_debug ("service restarted, but no reboot has taken place");
+		return TRUE;
+	}
+
 	/* the system is running with the new firmware version */
 	if (g_strcmp0 (fu_device_get_version (dev),
 		       fwupd_release_get_version (rel_history)) == 0) {
@@ -3330,26 +3361,33 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 		return TRUE;
 	}
 
-	/* find the plugin that started the update */
+	/* does the plugin knows the update failure */
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (dev),
 					      error);
 	if (plugin == NULL)
 		return FALSE;
-
-	/* the plugin knows the update state */
 	if (!fu_plugin_runner_get_results (plugin, dev, error))
 		return FALSE;
-	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
-		if (!fu_history_set_update_state (self->history, dev,
-						  fu_device_get_update_state (dev),
-						  error))
-			return FALSE;
-		if (!fu_history_set_error_msg (self->history, dev,
-					       fu_device_get_update_error (dev),
-					       error))
-			return FALSE;
+
+	/* the plugin either can't tell us the error, or doesn't know itself */
+	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED) {
+		g_debug ("falling back to generic failure");
+		fu_device_set_update_state (dev, FWUPD_UPDATE_STATE_FAILED);
+		fu_device_set_update_error (dev, "failed to run update on reboot");
 	}
+
+	/* update the state in the database */
+	if (!fu_history_set_update_state (self->history, dev,
+					  fu_device_get_update_state (dev),
+					  error))
+		return FALSE;
+	if (!fu_history_set_error_msg (self->history, dev,
+				       fu_device_get_update_error (dev),
+				       error))
+		return FALSE;
+
+	/* success */
 	return TRUE;
 }
 
