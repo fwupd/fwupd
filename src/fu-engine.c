@@ -1200,10 +1200,26 @@ fu_engine_get_item_by_wildcard (FuEngine *self, AsStore *store, GError **error)
 	return NULL;
 }
 
+static gchar *
+fu_engine_get_boot_time (void)
+{
+	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) lines = NULL;
+	if (!g_file_get_contents ("/proc/stat", &buf, NULL, NULL))
+		return NULL;
+	lines = g_strsplit (buf, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (g_str_has_prefix (lines[i], "btime "))
+			return g_strdup (lines[i] + 6);
+	}
+	return NULL;
+}
+
 static GHashTable *
 fu_engine_get_report_metadata (FuEngine *self)
 {
 	GHashTable *hash;
+	gchar *btime;
 	struct utsname name_tmp = { 0 };
 
 	/* used by pretty much every plugin and are hard deps of fwupd */
@@ -1233,6 +1249,11 @@ fu_engine_get_report_metadata (FuEngine *self)
 				     g_strdup ("KernelVersion"),
 				     g_strdup (name_tmp.release));
 	}
+
+	/* add the kernel boot time so we can detect a reboot */
+	btime = fu_engine_get_boot_time ();
+	if (btime != NULL)
+		g_hash_table_insert (hash, g_strdup ("BootTime"), btime);
 
 	return hash;
 }
