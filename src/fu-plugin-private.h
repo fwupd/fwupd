@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -60,6 +60,8 @@ gboolean	 fu_plugin_runner_coldplug		(FuPlugin	*plugin,
 gboolean	 fu_plugin_runner_coldplug_prepare	(FuPlugin	*plugin,
 							 GError		**error);
 gboolean	 fu_plugin_runner_coldplug_cleanup	(FuPlugin	*plugin,
+							 GError		**error);
+gboolean	 fu_plugin_runner_recoldplug		(FuPlugin	*plugin,
 							 GError		**error);
 gboolean	 fu_plugin_runner_update_prepare	(FuPlugin	*plugin,
 							 FuDevice	*device,

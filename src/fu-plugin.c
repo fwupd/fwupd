@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -493,7 +493,7 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 }
 
 /**
- * fu_plugin_recoldplug:
+ * fu_plugin_request_recoldplug:
  * @plugin: A #FuPlugin
  *
  * Ask all the plugins to coldplug all devices, which will include the prepare()
@@ -502,7 +502,7 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
  * Since: 0.8.0
  **/
 void
-fu_plugin_recoldplug (FuPlugin *plugin)
+fu_plugin_request_recoldplug (FuPlugin *plugin)
 {
 	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_signal_emit (plugin, signals[SIGNAL_RECOLDPLUG], 0);
@@ -889,6 +889,32 @@ fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 	g_debug ("performing coldplug() on %s", priv->name);
 	if (!func (plugin, error)) {
 		g_prefix_error (error, "failed to coldplug %s: ", priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_plugin_runner_recoldplug (FuPlugin *plugin, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginStartupFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_recoldplug", (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing recoldplug() on %s", priv->name);
+	if (!func (plugin, error)) {
+		g_prefix_error (error, "failed to recoldplug %s: ", priv->name);
 		return FALSE;
 	}
 	return TRUE;

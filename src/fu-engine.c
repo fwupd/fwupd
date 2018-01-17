@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -2877,7 +2877,7 @@ fu_engine_plugins_setup (FuEngine *self)
 }
 
 static void
-fu_engine_plugins_coldplug (FuEngine *self)
+fu_engine_plugins_coldplug (FuEngine *self, gboolean is_recoldplug)
 {
 	GPtrArray *plugins;
 	g_autoptr(AsProfileTask) ptask = NULL;
@@ -2912,9 +2912,15 @@ fu_engine_plugins_coldplug (FuEngine *self)
 					   "FuEngine:coldplug{%s}",
 					   fu_plugin_get_name (plugin));
 		g_assert (ptask2 != NULL);
-		if (!fu_plugin_runner_coldplug (plugin, &error)) {
-			fu_plugin_set_enabled (plugin, FALSE);
-			g_message ("disabling plugin because: %s", error->message);
+		if (is_recoldplug) {
+			if (!fu_plugin_runner_recoldplug (plugin, &error))
+				g_message ("failed recoldplug: %s", error->message);
+		} else {
+			if (!fu_plugin_runner_coldplug (plugin, &error)) {
+				fu_plugin_set_enabled (plugin, FALSE);
+				g_message ("disabling plugin because: %s",
+					   error->message);
+			}
 		}
 	}
 
@@ -3065,7 +3071,7 @@ fu_engine_recoldplug_delay_cb (gpointer user_data)
 {
 	FuEngine *self = (FuEngine *) user_data;
 	g_debug ("performing a recoldplug");
-	fu_engine_plugins_coldplug (self);
+	fu_engine_plugins_coldplug (self, TRUE);
 	self->coldplug_id = 0;
 	return FALSE;
 }
@@ -3488,7 +3494,7 @@ fu_engine_load (FuEngine *self, GError **error)
 
 	/* add devices */
 	fu_engine_plugins_setup (self);
-	fu_engine_plugins_coldplug (self);
+	fu_engine_plugins_coldplug (self, FALSE);
 
 	/* coldplug USB devices */
 	g_signal_connect (self->usb_ctx, "device-added",

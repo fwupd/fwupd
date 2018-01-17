@@ -159,7 +159,7 @@ udev_uevent_cb (GUdevClient *udev,
 		fu_plugin_thunderbolt_power_get_path (plugin);
 		if (fu_plugin_thunderbolt_power_supported (plugin)) {
 			fu_plugin_set_enabled (plugin, TRUE);
-			fu_plugin_recoldplug (plugin);
+			fu_plugin_request_recoldplug (plugin);
 		} else {
 			fu_plugin_set_enabled (plugin, FALSE);
 		}
@@ -264,8 +264,8 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_thunderbolt_power_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
@@ -293,4 +293,16 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 
 	return TRUE;
+}
+
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+	return fu_plugin_thunderbolt_power_coldplug (plugin, error);
+}
+
+gboolean
+fu_plugin_recoldplug (FuPlugin *plugin, GError **error)
+{
+	return fu_plugin_thunderbolt_power_coldplug (plugin, error);
 }

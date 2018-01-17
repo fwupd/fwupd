@@ -373,8 +373,8 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-gboolean
-fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_synapticsmst_coldplug (FuPlugin *plugin, GError **error)
 {
 	/* verify that this is a supported system */
 	if (!synapticsmst_common_check_supported_system (plugin, error))
@@ -384,6 +384,18 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	if (!fu_plugin_synapticsmst_enumerate (plugin, error))
 		g_debug ("error enumerating");
 	return TRUE;
+}
+
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+	return fu_plugin_synapticsmst_coldplug (plugin, error);
+}
+
+gboolean
+fu_plugin_recoldplug (FuPlugin *plugin, GError **error)
+{
+	return fu_plugin_synapticsmst_coldplug (plugin, error);
 }
 
 void

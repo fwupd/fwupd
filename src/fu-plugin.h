@@ -113,7 +113,7 @@ void		 fu_plugin_set_status			(FuPlugin	*plugin,
 							 FwupdStatus	 status);
 void		 fu_plugin_set_percentage		(FuPlugin	*plugin,
 							 guint		 percentage);
-void		 fu_plugin_recoldplug			(FuPlugin	*plugin);
+void		 fu_plugin_request_recoldplug		(FuPlugin	*plugin);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*plugin,
 							 guint		 duration);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*plugin,

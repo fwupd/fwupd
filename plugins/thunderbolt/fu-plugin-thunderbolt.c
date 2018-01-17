@@ -742,8 +742,8 @@ fu_plugin_destroy (FuPlugin *plugin)
 	g_object_unref (data->udev);
 }
 
-gboolean
-fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_thunderbolt_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GList *devices;
@@ -760,6 +760,17 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+	return fu_plugin_thunderbolt_coldplug (plugin, error);
+}
+
+gboolean
+fu_plugin_recoldplug (FuPlugin *plugin, GError **error)
+{
+	return fu_plugin_thunderbolt_coldplug (plugin, error);
+}
 
 gboolean
 fu_plugin_update (FuPlugin *plugin,
