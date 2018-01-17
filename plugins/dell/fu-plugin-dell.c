@@ -496,7 +496,7 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	}
 
 #if defined (HAVE_SYNAPTICS)
-	fu_plugin_recoldplug (plugin);
+	fu_plugin_request_recoldplug (plugin);
 #endif
 }
 
@@ -544,7 +544,7 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 		}
 	}
 #if defined (HAVE_SYNAPTICS)
-	fu_plugin_recoldplug (plugin);
+	fu_plugin_request_recoldplug (plugin);
 #endif
 }
 
@@ -1114,11 +1114,23 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_dell_coldplug (FuPlugin *plugin, GError **error)
 {
 	/* look for switchable TPM */
 	if (!fu_plugin_dell_detect_tpm (plugin, error))
 		g_debug ("No switchable TPM detected");
 	return TRUE;
+}
+
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+	return fu_plugin_dell_coldplug (plugin, error);
+}
+
+gboolean
+fu_plugin_recoldplug (FuPlugin *plugin, GError **error)
+{
+	return fu_plugin_dell_coldplug (plugin, error);
 }

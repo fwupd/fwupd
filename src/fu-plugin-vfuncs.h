@@ -37,6 +37,8 @@ gboolean	 fu_plugin_coldplug_prepare		(FuPlugin	*plugin,
 							 GError		**error);
 gboolean	 fu_plugin_coldplug_cleanup		(FuPlugin	*plugin,
 							 GError		**error);
+gboolean	 fu_plugin_recoldplug			(FuPlugin	*plugin,
+							 GError		**error);
 gboolean	 fu_plugin_update			(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GBytes		*blob_fw,
