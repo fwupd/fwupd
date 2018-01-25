@@ -35,6 +35,7 @@ Build-Depends:
 	libgpgme11-dev,
 	libgudev-1.0-dev,
 	libgusb-dev (>= 0.2.9),
+	libjson-glib-dev (>= 1.1.1),
 	libpolkit-gobject-1-dev,
 	libsmbios-dev [i386 amd64],
 	libsoup2.4-dev,

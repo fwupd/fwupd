@@ -1,3 +1,11 @@
+fwupd (1.0.4-1) unstable; urgency=medium
+
+  * New upstream version.
+  * New build dependency: libjson-glib-dev (>= 1.1.1)
+  * Update symbols
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 25 Jan 2018 07:53:03 -0600
+
 fwupd (1.0.3-1) unstable; urgency=medium
 
   * New upstream version.
