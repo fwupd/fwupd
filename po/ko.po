@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-09 15:47+0000\n"
-"PO-Revision-Date: 2018-01-09 15:47+0000\n"
+"POT-Creation-Date: 2018-01-25 12:36+0000\n"
+"PO-Revision-Date: 2018-01-25 12:36+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Korean (http://www.transifex.com/freedesktop/fwupd/language/ko/)\n"
 "MIME-Version: 1.0\n"
@@ -119,14 +119,14 @@ msgstr "펌웨어 업데이트에 사용할 원격 설정을 수정하려면 인
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #: plugins/dfu/dfu-tool.c:124 plugins/synapticsmst/synapticsmst-tool.c:105
-#: src/fu-util.c:113
+#: src/fu-util.c:118
 #, c-format
 msgid "Alias to %s"
 msgstr "%s(으)로 별칭 부여"
 
 #. TRANSLATORS: error message
 #: plugins/dfu/dfu-tool.c:192 plugins/synapticsmst/synapticsmst-tool.c:347
-#: src/fu-util.c:177
+#: src/fu-util.c:182
 msgid "Command not found"
 msgstr "명령을 찾을 수 없습니다"
 
@@ -142,24 +142,25 @@ msgstr "제거함"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
-#: plugins/dfu/dfu-tool.c:1478 src/fu-util.c:1273
+#: plugins/dfu/dfu-tool.c:1478 src/fu-util.c:1662
 msgid "Changed"
 msgstr "바뀜"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
-#: plugins/dfu/dfu-tool.c:1486 src/fu-util.c:1235
+#: plugins/dfu/dfu-tool.c:1486 src/fu-util.c:1624
 msgid "Cancelled"
 msgstr "취소함"
 
 #. TRANSLATORS: Appstream ID for the hardware type
-#: plugins/dfu/dfu-tool.c:1978 src/fu-util.c:1071
+#: plugins/dfu/dfu-tool.c:1978 src/fu-util.c:1443
 msgid "ID"
 msgstr "ID"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
+#. TRANSLATORS: section header for the release name
 #: plugins/dfu/dfu-tool.c:1984 plugins/dfu/dfu-tool.c:1990
-#: plugins/dfu/dfu-tool.c:2104
+#: plugins/dfu/dfu-tool.c:2104 src/fu-util.c:1217
 msgid "Name"
 msgstr "이름"
 
@@ -381,7 +382,7 @@ msgstr "DFU 유틸리티"
 
 #. TRANSLATORS: the user didn't read the man page
 #: plugins/dfu/dfu-tool.c:2423 plugins/synapticsmst/synapticsmst-tool.c:424
-#: src/fu-util.c:1795
+#: src/fu-util.c:2216
 msgid "Failed to parse arguments"
 msgstr "인자 해석에 실패했습니다"
 
@@ -400,7 +401,7 @@ msgid "Synaptics Multistream Transport Utility"
 msgstr "시냅틱스 멀티스트림 전송 유틸리티"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
-#: plugins/uefi/fu-plugin-uefi.c:395
+#: plugins/uefi/fu-plugin-uefi.c:398
 msgid "Installing firmware update…"
 msgstr "펌웨어 업데이트 설치 중…"
 
@@ -425,22 +426,22 @@ msgid "Show debugging options"
 msgstr "디버깅 옵션을 표시합니다"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
-#: src/fu-main.c:1009
+#: src/fu-main.c:1036
 msgid "Exit after a small delay"
 msgstr "짧은 대기 시간 경과 후 나가기"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
-#: src/fu-main.c:1012
+#: src/fu-main.c:1039
 msgid "Exit after the engine has loaded"
 msgstr "엔진을 불러온 후 나가기"
 
 #. TRANSLATORS: program name
-#: src/fu-main.c:1026
+#: src/fu-main.c:1053
 msgid "Firmware Update Daemon"
 msgstr "펌웨어 업데이트 데몬"
 
 #. TRANSLATORS: program summary
-#: src/fu-main.c:1031
+#: src/fu-main.c:1058
 msgid "Firmware Update D-Bus Service"
 msgstr "펌웨어 업데이트 D-Bus 서비스"
 
@@ -510,25 +511,45 @@ msgid "Unknown"
 msgstr "알 수 없음"
 
 #. TRANSLATORS: the user isn't reading the question
-#: src/fu-util.c:235
+#: src/fu-util.c:240
 #, c-format
 msgid "Please enter a number from 1 to %u: "
 msgstr "1부터 %u까지의 숫자 값 중 하나를 입력하십시오:"
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:278
+#: src/fu-util.c:303
 msgid "Choose a device:"
 msgstr "장치를 선택하십시오:"
 
+#. TRANSLATORS: a list of failed updates
+#: src/fu-util.c:416
+msgid "Devices that were not updated correctly:"
+msgstr ""
+
+#. TRANSLATORS: a list of successful updates
+#: src/fu-util.c:430
+msgid "Devices that have been updated successfully:"
+msgstr ""
+
+#. TRANSLATORS: explain why we want to upload
+#: src/fu-util.c:444
+msgid "Upload report now?"
+msgstr ""
+
+#. TRANSLATORS: metadata is downloaded from the Internet
+#: src/fu-util.c:446 src/fu-util.c:1384
+msgid "Requires internet connection"
+msgstr ""
+
 #. TRANSLATORS: nothing attached that can be upgraded
-#: src/fu-util.c:346
+#: src/fu-util.c:468
 msgid "No hardware detected with firmware update capability"
 msgstr "펌웨어 업데이트가 가능한 하드웨어가 없습니다"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
-#: src/fu-util.c:517
+#: src/fu-util.c:643
 #, c-format
 msgid "Reinstalling %s with %s... "
 msgstr "%2$s(으)로 %1$s 다시 설치하는 중... "
@@ -536,7 +557,7 @@ msgstr "%2$s(으)로 %1$s 다시 설치하는 중... "
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:524
+#: src/fu-util.c:650
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "%2$s에서 %3$s(으)로 %1$s 다운그레이드 중... "
@@ -544,325 +565,400 @@ msgstr "%2$s에서 %3$s(으)로 %1$s 다운그레이드 중... "
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:532
+#: src/fu-util.c:658
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "%2$s에서 %3$s(으)로 %1$s 업데이트 중... "
 
-#: src/fu-util.c:559
+#: src/fu-util.c:685
 msgid "Done!"
 msgstr "완료!"
 
-#: src/fu-util.c:608 src/fu-util.c:992
+#: src/fu-util.c:713
+msgid "Target"
+msgstr ""
+
+#: src/fu-util.c:714
+msgid "Payload"
+msgstr ""
+
+#: src/fu-util.c:715
+msgid "Proceed with upload?"
+msgstr ""
+
+#: src/fu-util.c:920 src/fu-util.c:1310
 msgid "OK"
 msgstr "확인"
 
 #. TRANSLATORS: downloading new signing file
-#: src/fu-util.c:713
+#: src/fu-util.c:1025
 msgid "Fetching signature"
 msgstr "서명 가져오는 중"
 
 #. TRANSLATORS: downloading new metadata file
-#: src/fu-util.c:716
+#: src/fu-util.c:1028
 msgid "Fetching metadata"
 msgstr "메타데이터 가져오는 중"
 
 #. TRANSLATORS: downloading new firmware file
-#: src/fu-util.c:719
+#: src/fu-util.c:1031
 msgid "Fetching firmware"
 msgstr "펌웨어 가져오는 중"
 
 #. TRANSLATORS: downloading unknown file
-#: src/fu-util.c:722
+#: src/fu-util.c:1034
 msgid "Fetching file"
 msgstr "파일 가져오는 중"
 
 #. TRANSLATORS: section header for release version number
-#: src/fu-util.c:902
+#: src/fu-util.c:1214
 msgid "Version"
 msgstr "버전"
 
+#. TRANSLATORS: section header for the release one line summary
+#: src/fu-util.c:1220
+msgid "Summary"
+msgstr ""
+
 #. TRANSLATORS: section header for the remote the file is coming from
-#: src/fu-util.c:905
+#: src/fu-util.c:1223
 msgid "Remote"
 msgstr "원격"
 
 #. TRANSLATORS: section header for firmware URI
-#: src/fu-util.c:908
+#: src/fu-util.c:1226
 msgid "URI"
 msgstr "URI"
 
 #. TRANSLATORS: section header for firmware description
-#: src/fu-util.c:914
+#: src/fu-util.c:1232
 msgid "Description"
 msgstr "설명"
 
 #. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
-#: src/fu-util.c:922 src/fu-util.c:1150
+#: src/fu-util.c:1240 src/fu-util.c:1534
 msgid "Checksum"
 msgstr "검사합"
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:954
+#: src/fu-util.c:1272
 msgid "Choose a release:"
 msgstr "출시 버전을 선택하십시오:"
 
+#. TRANSLATORS: the metadata is very out of date; %i is a number > 1
+#: src/fu-util.c:1377
+#, c-format
+msgid ""
+"Firmware metadata has not been updated for %u days and may not be up to "
+"date."
+msgstr ""
+
+#. TRANSLATORS: ask the user if we can update the metadata
+#: src/fu-util.c:1382
+msgid "Update now?"
+msgstr ""
+
 #. TRANSLATORS: first replacement is device name
-#: src/fu-util.c:1055
+#: src/fu-util.c:1427
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s의 최신 펌웨어가 있습니다:"
 
-#: src/fu-util.c:1062
+#: src/fu-util.c:1434
 msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
-#: src/fu-util.c:1074
+#: src/fu-util.c:1446
 msgid "Update Version"
 msgstr "업데이트 버전"
 
+#. TRANSLATORS: section header for the release name
+#: src/fu-util.c:1450
+msgid "Update Name"
+msgstr ""
+
+#. TRANSLATORS: section header for the release one line summary
+#: src/fu-util.c:1453
+msgid "Update Summary"
+msgstr ""
+
 #. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-#: src/fu-util.c:1078
+#: src/fu-util.c:1456
 msgid "Update Remote ID"
 msgstr "업데이트 원격 ID"
 
 #. TRANSLATORS: section header for firmware checksum
-#: src/fu-util.c:1087
+#: src/fu-util.c:1465
 msgid "Update Checksum"
 msgstr "업데이트 검사합"
 
 #. TRANSLATORS: section header for firmware remote http://
-#: src/fu-util.c:1091
+#: src/fu-util.c:1469
 msgid "Update Location"
 msgstr "업데이트 위치"
 
 #. TRANSLATORS: section header for long firmware desc
-#: src/fu-util.c:1102
+#: src/fu-util.c:1480
 msgid "Update Description"
 msgstr "업데이트 설명"
 
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
-#: src/fu-util.c:1128
+#: src/fu-util.c:1512
 msgid "Remote ID"
 msgstr "원격 ID"
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-#: src/fu-util.c:1132
+#: src/fu-util.c:1516
 msgid "Title"
 msgstr "제목"
 
 #. TRANSLATORS: remote type, e.g. remote or local
-#: src/fu-util.c:1136
+#: src/fu-util.c:1520
 msgid "Type"
 msgstr "형식"
 
-#: src/fu-util.c:1141
+#: src/fu-util.c:1525
 msgid "Keyring"
 msgstr "키 모음"
 
 #. TRANSLATORS: if the remote is enabled
-#: src/fu-util.c:1146
+#: src/fu-util.c:1530
 msgid "Enabled"
 msgstr "활성화 여부"
 
 #. TRANSLATORS: the age of the metadata
-#: src/fu-util.c:1177
+#: src/fu-util.c:1561
 msgid "Age"
 msgstr "경과기간"
 
 #. TRANSLATORS: the numeric priority
-#: src/fu-util.c:1184
+#: src/fu-util.c:1568
 msgid "Priority"
 msgstr "우선순위"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1189
+#: src/fu-util.c:1573
 msgid "Username"
 msgstr "사용자 이름"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1194
+#: src/fu-util.c:1578
 msgid "Password"
 msgstr "암호"
 
 #. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1199
+#: src/fu-util.c:1583
 msgid "Filename"
 msgstr "파일 이름"
 
 #. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1204
+#: src/fu-util.c:1588
 msgid "Filename Signature"
 msgstr "파일이름 서명"
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1209
+#: src/fu-util.c:1593
 msgid "Metadata URI"
 msgstr "메타데이터 URI"
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1214
+#: src/fu-util.c:1598
 msgid "Metadata URI Signature"
 msgstr "메타데이터 URI  서명"
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1219
+#: src/fu-util.c:1603
 msgid "Firmware Base URI"
 msgstr "펌웨어 기본 URI"
 
+#. TRANSLATORS: URI to send success/failure reports
+#: src/fu-util.c:1608
+msgid "Report URI"
+msgstr ""
+
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1246
+#: src/fu-util.c:1635
 msgid "Device added:"
 msgstr "장치 추가함:"
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1256
+#: src/fu-util.c:1645
 msgid "Device removed:"
 msgstr "장치 제거함:"
 
 #. TRANSLATORS: this is when a device has been updated
-#: src/fu-util.c:1266
+#: src/fu-util.c:1655
 msgid "Device changed:"
 msgstr "장치 상태 바꿈:"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1608
+#: src/fu-util.c:1997
 msgid "Show extra debugging information"
 msgstr "추가 디버깅 정보 표시"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1611
+#: src/fu-util.c:2000
 msgid "Show client and daemon versions"
 msgstr "클라이언트와 데몬 버전 표시"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1614
+#: src/fu-util.c:2003
 msgid "Schedule installation for next reboot when possible"
 msgstr "가능하다면 다음 재부팅시 설치 예약"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1617
+#: src/fu-util.c:2006
 msgid "Allow re-installing existing firmware versions"
 msgstr "기존 펌웨어 버전 재설치를 허용합니다"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1620
+#: src/fu-util.c:2009
 msgid "Allow downgrading firmware versions"
 msgstr "펌웨어를 이전 버전으로 되돌릴 수 있게 합니다"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1623
+#: src/fu-util.c:2012
 msgid "Override plugin warning"
 msgstr "플러그인 경고 무시"
 
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2015
+msgid "Answer yes to all questions"
+msgstr ""
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2018
+msgid "Do not check for unreported history"
+msgstr ""
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2021
+msgid "Do not check for old metadata"
+msgstr ""
+
 #. TRANSLATORS: command description
-#: src/fu-util.c:1647
+#: src/fu-util.c:2044
 msgid "Get all devices that support firmware updates"
 msgstr "펌웨어 업데이트를 지원하는 모든 장치 정보를 가져옵니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1653
+#: src/fu-util.c:2050
 msgid "Return all the hardware IDs for the machine"
 msgstr "머신의 모든 하드웨어 ID를 반환합니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1659
+#: src/fu-util.c:2056
 msgid "Install prepared updates now"
 msgstr "현재 준비한 업데이트를 설치합니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1665
+#: src/fu-util.c:2062
+msgid "Show history of firmware updates"
+msgstr ""
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2068
+msgid "Erase all firmware update history"
+msgstr ""
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2074
+msgid "Share firmware history with the developers"
+msgstr ""
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2080
 msgid "Install a firmware file on this hardware"
 msgstr "이 하드웨어에 펌웨어 파일을 설치합니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1671
+#: src/fu-util.c:2086
 msgid "Gets details about a firmware file"
 msgstr "펌웨어 파일 세부 정보를 가져옵니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1677
+#: src/fu-util.c:2092
 msgid "Gets the list of updates for connected hardware"
 msgstr "연결한 하드웨어의 업데이트 목록을 가져옵니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1683
+#: src/fu-util.c:2098
 msgid "Updates all firmware to latest versions available"
 msgstr "모든 펌웨어를 가용 최신 버전으로 업데이트합니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1689
+#: src/fu-util.c:2104
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "덤프 펌웨어의 암호화 해시 정보를 가져옵니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1695
+#: src/fu-util.c:2110
 msgid "Unlocks the device for firmware access"
 msgstr "펌웨어 접근시 장치 잠금을 해제합니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1701
+#: src/fu-util.c:2116
 msgid "Clears the results from the last update"
 msgstr "최근 업데이트 결과를 지웁니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1707
+#: src/fu-util.c:2122
 msgid "Clears any updates scheduled to be updated offline"
 msgstr "오프라인으로 업데이트할 업데이트를 지웁니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1713
+#: src/fu-util.c:2128
 msgid "Gets the results from the last update"
 msgstr "최근 업데이트 결과를 가져옵니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1719
+#: src/fu-util.c:2134
 msgid "Gets the releases for a device"
 msgstr "장치에 대한 출시 펌웨어를 가져옵니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1725
+#: src/fu-util.c:2140
 msgid "Gets the configured remotes"
 msgstr "원격 설정 정보를 가져옵니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1731
+#: src/fu-util.c:2146
 msgid "Downgrades the firmware on a device"
 msgstr "장치 펌웨어 버전을 이전으로 되돌립니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1737
+#: src/fu-util.c:2152
 msgid "Refresh metadata from remote server"
 msgstr "원격 서버의 메타데이터를 새로 고칩니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1743
+#: src/fu-util.c:2158
 msgid "Update the stored metadata with current ROM contents"
 msgstr "현재 ROM에 저장한 메타데이터를 업데이트합니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1749
+#: src/fu-util.c:2164
 msgid "Monitor the daemon for events"
 msgstr "데몬 이벤트를 감시합니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1755
+#: src/fu-util.c:2170
 msgid "Build firmware using a sandbox"
 msgstr "샌드박스에서 펌웨어를 빌드합니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1761
+#: src/fu-util.c:2176
 msgid "Dump SMBIOS data from a file"
 msgstr "파일의 SMBIOS 데이터 덤프를 출력합니다"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1767
+#: src/fu-util.c:2182
 msgid "Modifies a given remote"
 msgstr "주어진 원격 정보를 수정합니다"
 
 #. TRANSLATORS: program name
-#: src/fu-util.c:1790
+#: src/fu-util.c:2211
 msgid "Firmware Utility"
 msgstr "펌웨어 유틸리티"

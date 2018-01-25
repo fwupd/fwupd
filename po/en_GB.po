@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the fwupd package.
 # 
 # Translators:
-# Richard Hughes <richard@hughsie.com>, 2015,2017
+# Richard Hughes <richard@hughsie.com>, 2015,2017-2018
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-09 15:47+0000\n"
-"PO-Revision-Date: 2018-01-09 15:47+0000\n"
+"POT-Creation-Date: 2018-01-25 12:36+0000\n"
+"PO-Revision-Date: 2018-01-25 13:41+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/freedesktop/fwupd/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
@@ -118,14 +118,14 @@ msgstr "Authentication is required to modify a configured remote used for firmwa
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #: plugins/dfu/dfu-tool.c:124 plugins/synapticsmst/synapticsmst-tool.c:105
-#: src/fu-util.c:113
+#: src/fu-util.c:118
 #, c-format
 msgid "Alias to %s"
 msgstr "Alias to %s"
 
 #. TRANSLATORS: error message
 #: plugins/dfu/dfu-tool.c:192 plugins/synapticsmst/synapticsmst-tool.c:347
-#: src/fu-util.c:177
+#: src/fu-util.c:182
 msgid "Command not found"
 msgstr "Command not found"
 
@@ -141,24 +141,25 @@ msgstr "Removed"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
-#: plugins/dfu/dfu-tool.c:1478 src/fu-util.c:1273
+#: plugins/dfu/dfu-tool.c:1478 src/fu-util.c:1662
 msgid "Changed"
 msgstr "Changed"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
-#: plugins/dfu/dfu-tool.c:1486 src/fu-util.c:1235
+#: plugins/dfu/dfu-tool.c:1486 src/fu-util.c:1624
 msgid "Cancelled"
 msgstr "Cancelled"
 
 #. TRANSLATORS: Appstream ID for the hardware type
-#: plugins/dfu/dfu-tool.c:1978 src/fu-util.c:1071
+#: plugins/dfu/dfu-tool.c:1978 src/fu-util.c:1443
 msgid "ID"
 msgstr "ID"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
+#. TRANSLATORS: section header for the release name
 #: plugins/dfu/dfu-tool.c:1984 plugins/dfu/dfu-tool.c:1990
-#: plugins/dfu/dfu-tool.c:2104
+#: plugins/dfu/dfu-tool.c:2104 src/fu-util.c:1217
 msgid "Name"
 msgstr "Name"
 
@@ -205,11 +206,11 @@ msgstr "Mode"
 
 #: plugins/dfu/dfu-tool.c:2115
 msgid "Runtime"
-msgstr ""
+msgstr "Runtime"
 
 #: plugins/dfu/dfu-tool.c:2115
 msgid "DFU"
-msgstr ""
+msgstr "DFU"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 #: plugins/dfu/dfu-tool.c:2123
@@ -371,7 +372,7 @@ msgstr "Dump information about a binary patch to the screen"
 #. TRANSLATORS: quirks are device-specific workarounds
 #: plugins/dfu/dfu-tool.c:2396
 msgid "Failed to load quirks"
-msgstr ""
+msgstr "Failed to load quirks"
 
 #. TRANSLATORS: DFU stands for device firmware update
 #: plugins/dfu/dfu-tool.c:2418
@@ -380,7 +381,7 @@ msgstr "DFU Utility"
 
 #. TRANSLATORS: the user didn't read the man page
 #: plugins/dfu/dfu-tool.c:2423 plugins/synapticsmst/synapticsmst-tool.c:424
-#: src/fu-util.c:1795
+#: src/fu-util.c:2216
 msgid "Failed to parse arguments"
 msgstr "Failed to parse arguments"
 
@@ -399,7 +400,7 @@ msgid "Synaptics Multistream Transport Utility"
 msgstr "Synaptics Multistream Transport Utility"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
-#: plugins/uefi/fu-plugin-uefi.c:395
+#: plugins/uefi/fu-plugin-uefi.c:398
 msgid "Installing firmware update…"
 msgstr "Installing firmware update…"
 
@@ -424,22 +425,22 @@ msgid "Show debugging options"
 msgstr "Show debugging options"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
-#: src/fu-main.c:1009
+#: src/fu-main.c:1036
 msgid "Exit after a small delay"
 msgstr "Exit after a small delay"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
-#: src/fu-main.c:1012
+#: src/fu-main.c:1039
 msgid "Exit after the engine has loaded"
 msgstr "Exit after the engine has loaded"
 
 #. TRANSLATORS: program name
-#: src/fu-main.c:1026
+#: src/fu-main.c:1053
 msgid "Firmware Update Daemon"
 msgstr "Firmware Update Daemon"
 
 #. TRANSLATORS: program summary
-#: src/fu-main.c:1031
+#: src/fu-main.c:1058
 msgid "Firmware Update D-Bus Service"
 msgstr "Firmware Update D-Bus Service"
 
@@ -509,25 +510,45 @@ msgid "Unknown"
 msgstr "Unknown"
 
 #. TRANSLATORS: the user isn't reading the question
-#: src/fu-util.c:235
+#: src/fu-util.c:240
 #, c-format
 msgid "Please enter a number from 1 to %u: "
 msgstr "Please enter a number from 1 to %u: "
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:278
+#: src/fu-util.c:303
 msgid "Choose a device:"
 msgstr "Choose a device:"
 
+#. TRANSLATORS: a list of failed updates
+#: src/fu-util.c:416
+msgid "Devices that were not updated correctly:"
+msgstr "Devices that were not updated correctly:"
+
+#. TRANSLATORS: a list of successful updates
+#: src/fu-util.c:430
+msgid "Devices that have been updated successfully:"
+msgstr "Devices that have been updated successfully:"
+
+#. TRANSLATORS: explain why we want to upload
+#: src/fu-util.c:444
+msgid "Upload report now?"
+msgstr "Upload report now?"
+
+#. TRANSLATORS: metadata is downloaded from the Internet
+#: src/fu-util.c:446 src/fu-util.c:1384
+msgid "Requires internet connection"
+msgstr "Requires internet connection"
+
 #. TRANSLATORS: nothing attached that can be upgraded
-#: src/fu-util.c:346
+#: src/fu-util.c:468
 msgid "No hardware detected with firmware update capability"
 msgstr "No hardware detected with firmware update capability"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
-#: src/fu-util.c:517
+#: src/fu-util.c:643
 #, c-format
 msgid "Reinstalling %s with %s... "
 msgstr "Reinstalling %s with %s... "
@@ -535,7 +556,7 @@ msgstr "Reinstalling %s with %s... "
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:524
+#: src/fu-util.c:650
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "Downgrading %s from %s to %s... "
@@ -543,325 +564,400 @@ msgstr "Downgrading %s from %s to %s... "
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:532
+#: src/fu-util.c:658
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Updating %s from %s to %s... "
 
-#: src/fu-util.c:559
+#: src/fu-util.c:685
 msgid "Done!"
 msgstr "Done!"
 
-#: src/fu-util.c:608 src/fu-util.c:992
+#: src/fu-util.c:713
+msgid "Target"
+msgstr "Target"
+
+#: src/fu-util.c:714
+msgid "Payload"
+msgstr "Payload"
+
+#: src/fu-util.c:715
+msgid "Proceed with upload?"
+msgstr "Proceed with upload?"
+
+#: src/fu-util.c:920 src/fu-util.c:1310
 msgid "OK"
 msgstr "OK"
 
 #. TRANSLATORS: downloading new signing file
-#: src/fu-util.c:713
+#: src/fu-util.c:1025
 msgid "Fetching signature"
 msgstr "Fetching signature"
 
 #. TRANSLATORS: downloading new metadata file
-#: src/fu-util.c:716
+#: src/fu-util.c:1028
 msgid "Fetching metadata"
 msgstr "Fetching metadata"
 
 #. TRANSLATORS: downloading new firmware file
-#: src/fu-util.c:719
+#: src/fu-util.c:1031
 msgid "Fetching firmware"
 msgstr "Fetching firmware"
 
 #. TRANSLATORS: downloading unknown file
-#: src/fu-util.c:722
+#: src/fu-util.c:1034
 msgid "Fetching file"
 msgstr "Fetching file"
 
 #. TRANSLATORS: section header for release version number
-#: src/fu-util.c:902
+#: src/fu-util.c:1214
 msgid "Version"
 msgstr "Version"
 
+#. TRANSLATORS: section header for the release one line summary
+#: src/fu-util.c:1220
+msgid "Summary"
+msgstr "Summary"
+
 #. TRANSLATORS: section header for the remote the file is coming from
-#: src/fu-util.c:905
+#: src/fu-util.c:1223
 msgid "Remote"
 msgstr "Remote"
 
 #. TRANSLATORS: section header for firmware URI
-#: src/fu-util.c:908
+#: src/fu-util.c:1226
 msgid "URI"
 msgstr "URI"
 
 #. TRANSLATORS: section header for firmware description
-#: src/fu-util.c:914
+#: src/fu-util.c:1232
 msgid "Description"
 msgstr "Description"
 
 #. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
-#: src/fu-util.c:922 src/fu-util.c:1150
+#: src/fu-util.c:1240 src/fu-util.c:1534
 msgid "Checksum"
 msgstr "Checksum"
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:954
+#: src/fu-util.c:1272
 msgid "Choose a release:"
 msgstr "Choose a release:"
 
+#. TRANSLATORS: the metadata is very out of date; %i is a number > 1
+#: src/fu-util.c:1377
+#, c-format
+msgid ""
+"Firmware metadata has not been updated for %u days and may not be up to "
+"date."
+msgstr "Firmware metadata has not been updated for %u days and may not be up to date."
+
+#. TRANSLATORS: ask the user if we can update the metadata
+#: src/fu-util.c:1382
+msgid "Update now?"
+msgstr "Update now?"
+
 #. TRANSLATORS: first replacement is device name
-#: src/fu-util.c:1055
+#: src/fu-util.c:1427
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s has firmware updates:"
 
-#: src/fu-util.c:1062
+#: src/fu-util.c:1434
 msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
-#: src/fu-util.c:1074
+#: src/fu-util.c:1446
 msgid "Update Version"
 msgstr "Update Version"
 
+#. TRANSLATORS: section header for the release name
+#: src/fu-util.c:1450
+msgid "Update Name"
+msgstr "Update Name"
+
+#. TRANSLATORS: section header for the release one line summary
+#: src/fu-util.c:1453
+msgid "Update Summary"
+msgstr "Update Summary"
+
 #. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-#: src/fu-util.c:1078
+#: src/fu-util.c:1456
 msgid "Update Remote ID"
 msgstr "Update Remote ID"
 
 #. TRANSLATORS: section header for firmware checksum
-#: src/fu-util.c:1087
+#: src/fu-util.c:1465
 msgid "Update Checksum"
 msgstr "Update Checksum"
 
 #. TRANSLATORS: section header for firmware remote http://
-#: src/fu-util.c:1091
+#: src/fu-util.c:1469
 msgid "Update Location"
 msgstr "Update Location"
 
 #. TRANSLATORS: section header for long firmware desc
-#: src/fu-util.c:1102
+#: src/fu-util.c:1480
 msgid "Update Description"
 msgstr "Update Description"
 
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
-#: src/fu-util.c:1128
+#: src/fu-util.c:1512
 msgid "Remote ID"
 msgstr "Remote ID"
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-#: src/fu-util.c:1132
+#: src/fu-util.c:1516
 msgid "Title"
 msgstr "Title"
 
 #. TRANSLATORS: remote type, e.g. remote or local
-#: src/fu-util.c:1136
+#: src/fu-util.c:1520
 msgid "Type"
 msgstr "Type"
 
-#: src/fu-util.c:1141
+#: src/fu-util.c:1525
 msgid "Keyring"
 msgstr "Keyring"
 
 #. TRANSLATORS: if the remote is enabled
-#: src/fu-util.c:1146
+#: src/fu-util.c:1530
 msgid "Enabled"
 msgstr "Enabled"
 
 #. TRANSLATORS: the age of the metadata
-#: src/fu-util.c:1177
+#: src/fu-util.c:1561
 msgid "Age"
 msgstr "Age"
 
 #. TRANSLATORS: the numeric priority
-#: src/fu-util.c:1184
+#: src/fu-util.c:1568
 msgid "Priority"
 msgstr "Priority"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1189
+#: src/fu-util.c:1573
 msgid "Username"
 msgstr "Username"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1194
+#: src/fu-util.c:1578
 msgid "Password"
 msgstr "Password"
 
 #. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1199
+#: src/fu-util.c:1583
 msgid "Filename"
 msgstr "Filename"
 
 #. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1204
+#: src/fu-util.c:1588
 msgid "Filename Signature"
 msgstr "Filename Signature"
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1209
+#: src/fu-util.c:1593
 msgid "Metadata URI"
 msgstr "Metadata URI"
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1214
+#: src/fu-util.c:1598
 msgid "Metadata URI Signature"
 msgstr "Metadata URI Signature"
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1219
+#: src/fu-util.c:1603
 msgid "Firmware Base URI"
 msgstr "Firmware Base URI"
 
+#. TRANSLATORS: URI to send success/failure reports
+#: src/fu-util.c:1608
+msgid "Report URI"
+msgstr "Report URI"
+
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1246
+#: src/fu-util.c:1635
 msgid "Device added:"
 msgstr "Device added:"
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1256
+#: src/fu-util.c:1645
 msgid "Device removed:"
 msgstr "Device removed:"
 
 #. TRANSLATORS: this is when a device has been updated
-#: src/fu-util.c:1266
+#: src/fu-util.c:1655
 msgid "Device changed:"
 msgstr "Device changed:"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1608
+#: src/fu-util.c:1997
 msgid "Show extra debugging information"
 msgstr "Show extra debugging information"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1611
+#: src/fu-util.c:2000
 msgid "Show client and daemon versions"
 msgstr "Show client and daemon versions"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1614
+#: src/fu-util.c:2003
 msgid "Schedule installation for next reboot when possible"
 msgstr "Schedule installation for next reboot when possible"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1617
+#: src/fu-util.c:2006
 msgid "Allow re-installing existing firmware versions"
 msgstr "Allow re-installing existing firmware versions"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1620
+#: src/fu-util.c:2009
 msgid "Allow downgrading firmware versions"
 msgstr "Allow downgrading firmware versions"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1623
+#: src/fu-util.c:2012
 msgid "Override plugin warning"
 msgstr "Override plugin warning"
 
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2015
+msgid "Answer yes to all questions"
+msgstr "Answer yes to all questions"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2018
+msgid "Do not check for unreported history"
+msgstr "Do not check for unreported history"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2021
+msgid "Do not check for old metadata"
+msgstr "Do not check for old metadata"
+
 #. TRANSLATORS: command description
-#: src/fu-util.c:1647
+#: src/fu-util.c:2044
 msgid "Get all devices that support firmware updates"
 msgstr "Get all devices that support firmware updates"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1653
+#: src/fu-util.c:2050
 msgid "Return all the hardware IDs for the machine"
 msgstr "Return all the hardware IDs for the machine"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1659
+#: src/fu-util.c:2056
 msgid "Install prepared updates now"
 msgstr "Install prepared updates now"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1665
+#: src/fu-util.c:2062
+msgid "Show history of firmware updates"
+msgstr "Show history of firmware updates"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2068
+msgid "Erase all firmware update history"
+msgstr "Erase all firmware update history"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2074
+msgid "Share firmware history with the developers"
+msgstr "Share firmware history with the developers"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2080
 msgid "Install a firmware file on this hardware"
 msgstr "Install a firmware file on this hardware"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1671
+#: src/fu-util.c:2086
 msgid "Gets details about a firmware file"
 msgstr "Gets details about a firmware file"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1677
+#: src/fu-util.c:2092
 msgid "Gets the list of updates for connected hardware"
 msgstr "Gets the list of updates for connected hardware"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1683
+#: src/fu-util.c:2098
 msgid "Updates all firmware to latest versions available"
 msgstr "Updates all firmware to latest versions available"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1689
+#: src/fu-util.c:2104
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "Gets the cryptographic hash of the dumped firmware"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1695
+#: src/fu-util.c:2110
 msgid "Unlocks the device for firmware access"
 msgstr "Unlocks the device for firmware access"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1701
+#: src/fu-util.c:2116
 msgid "Clears the results from the last update"
 msgstr "Clears the results from the last update"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1707
+#: src/fu-util.c:2122
 msgid "Clears any updates scheduled to be updated offline"
 msgstr "Clears any updates scheduled to be updated offline"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1713
+#: src/fu-util.c:2128
 msgid "Gets the results from the last update"
 msgstr "Gets the results from the last update"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1719
+#: src/fu-util.c:2134
 msgid "Gets the releases for a device"
 msgstr "Gets the releases for a device"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1725
+#: src/fu-util.c:2140
 msgid "Gets the configured remotes"
 msgstr "Gets the configured remotes"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1731
+#: src/fu-util.c:2146
 msgid "Downgrades the firmware on a device"
 msgstr "Downgrades the firmware on a device"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1737
+#: src/fu-util.c:2152
 msgid "Refresh metadata from remote server"
 msgstr "Refresh metadata from remote server"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1743
+#: src/fu-util.c:2158
 msgid "Update the stored metadata with current ROM contents"
 msgstr "Update the stored metadata with current ROM contents"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1749
+#: src/fu-util.c:2164
 msgid "Monitor the daemon for events"
 msgstr "Monitor the daemon for events"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1755
+#: src/fu-util.c:2170
 msgid "Build firmware using a sandbox"
 msgstr "Build firmware using a sandbox"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1761
+#: src/fu-util.c:2176
 msgid "Dump SMBIOS data from a file"
 msgstr "Dump SMBIOS data from a file"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1767
+#: src/fu-util.c:2182
 msgid "Modifies a given remote"
 msgstr "Modifies a given remote"
 
 #. TRANSLATORS: program name
-#: src/fu-util.c:1790
+#: src/fu-util.c:2211
 msgid "Firmware Utility"
 msgstr "Firmware Utility"
