@@ -113,7 +113,7 @@ void		 fu_plugin_set_status			(FuPlugin	*plugin,
 							 FwupdStatus	 status);
 void		 fu_plugin_set_percentage		(FuPlugin	*plugin,
 							 guint		 percentage);
-void		 fu_plugin_recoldplug			(FuPlugin	*plugin);
+void		 fu_plugin_request_recoldplug		(FuPlugin	*plugin);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*plugin,
 							 guint		 duration);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*plugin,
@@ -144,6 +144,9 @@ const gchar	*fu_plugin_lookup_quirk_by_id		(FuPlugin	*plugin,
 const gchar	*fu_plugin_lookup_quirk_by_usb_device	(FuPlugin	*plugin,
 							 const gchar	*prefix,
 							 GUsbDevice	*dev);
+void		 fu_plugin_add_report_metadata		(FuPlugin	*plugin,
+							 const gchar	*key,
+							 const gchar	*value);
 
 G_END_DECLS
 

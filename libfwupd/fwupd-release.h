@@ -57,6 +57,15 @@ GPtrArray	*fwupd_release_get_checksums		(FwupdRelease	*release);
 void		 fwupd_release_add_checksum		(FwupdRelease	*release,
 							 const gchar	*checksum);
 
+GHashTable	*fwupd_release_get_metadata		(FwupdRelease	*release);
+void		 fwupd_release_add_metadata		(FwupdRelease	*release,
+							 GHashTable	*hash);
+void		 fwupd_release_add_metadata_item	(FwupdRelease	*release,
+							 const gchar	*key,
+							 const gchar	*value);
+const gchar	*fwupd_release_get_metadata_item	(FwupdRelease	*release,
+							 const gchar	*key);
+
 const gchar	*fwupd_release_get_filename		(FwupdRelease	*release);
 void		 fwupd_release_set_filename		(FwupdRelease	*release,
 							 const gchar	*filename);

@@ -29,7 +29,7 @@ rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
 echo "Getting updates (should be one)..."
-fwupdmgr get-updates
+fwupdmgr --no-unreported-check --no-metadata-check get-updates
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
@@ -39,7 +39,7 @@ rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
 echo "Getting updates (should be none)..."
-fwupdmgr get-updates
+fwupdmgr --no-unreported-check --no-metadata-check get-updates
 rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
 
 # ---
@@ -59,12 +59,12 @@ rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
 
 # ---
 echo "Updating all devices to latest release (requires network access)"
-fwupdmgr update
+fwupdmgr --no-unreported-check --no-metadata-check update
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
 echo "Getting updates (should be none)..."
-fwupdmgr get-updates
+fwupdmgr --no-unreported-check --no-metadata-check get-updates
 rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
 
 # ---

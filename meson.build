@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.0.3',
+  version : '1.0.4',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -145,6 +145,7 @@ appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
+libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 if meson.version().version_compare('>0.41.0')
   valgrind = dependency('valgrind', required: false)
 else
@@ -199,6 +200,7 @@ if get_option('plugin_uefi')
   if fwup.version().version_compare('>= 10')
     conf.set('HAVE_FWUP_GET_BGRT_INFO', '1')
   endif
+  efivar = dependency('efivar')
 endif
 
 if get_option('plugin_dell')

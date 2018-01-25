@@ -58,13 +58,15 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_set_version_bootloader (device, "0.1.2");
 	fu_device_set_version (device, "1.2.3");
 	fu_device_set_version_lowest (device, "1.2.0");
-	fu_plugin_device_register (plugin, device);
-	if (fu_device_get_metadata (device, "BestDevice") == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "Device not set by another plugin");
-		return FALSE;
+	if (g_strcmp0 (g_getenv ("FWUPD_PLUGIN_TEST"), "registration") == 0) {
+		fu_plugin_device_register (plugin, device);
+		if (fu_device_get_metadata (device, "BestDevice") == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "Device not set by another plugin");
+			return FALSE;
+		}
 	}
 	fu_plugin_device_add (plugin, device);
 	return TRUE;
@@ -106,6 +108,13 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
+	if (g_strcmp0 (g_getenv ("FWUPD_PLUGIN_TEST"), "fail") == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "device was not in supported mode");
+		return FALSE;
+	}
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	for (guint i = 1; i <= 100; i++) {
 		g_usleep (1000);

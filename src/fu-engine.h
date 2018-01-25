@@ -53,6 +53,8 @@ const gchar	*fu_engine_get_action_id_for_device	(FuEngine	*self,
 guint64		 fu_engine_get_archive_size_max		(FuEngine	*self);
 GPtrArray	*fu_engine_get_devices			(FuEngine	*self,
 							 GError		**error);
+GPtrArray	*fu_engine_get_history			(FuEngine	*self,
+							 GError		**error);
 GPtrArray	*fu_engine_get_remotes			(FuEngine	*self,
 							 GError		**error);
 GPtrArray	*fu_engine_get_releases			(FuEngine	*self,
@@ -86,6 +88,11 @@ gboolean	 fu_engine_verify_update		(FuEngine	*self,
 							 GError		**error);
 gboolean	 fu_engine_modify_remote		(FuEngine	*self,
 							 const gchar	*remote_id,
+							 const gchar	*key,
+							 const gchar	*value,
+							 GError		**error);
+gboolean	 fu_engine_modify_device		(FuEngine	*self,
+							 const gchar	*device_id,
 							 const gchar	*key,
 							 const gchar	*value,
 							 GError		**error);

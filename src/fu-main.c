@@ -515,11 +515,38 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
+	if (g_strcmp0 (method_name, "GetHistory") == 0) {
+		g_autoptr(GPtrArray) devices = NULL;
+		g_debug ("Called %s()", method_name);
+		devices = fu_engine_get_history (priv->engine, &error);
+		if (devices == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		val = fu_main_device_array_to_variant (devices);
+		g_dbus_method_invocation_return_value (invocation, val);
+		return;
+	}
 	if (g_strcmp0 (method_name, "ClearResults") == 0) {
 		const gchar *device_id;
 		g_variant_get (parameters, "(&s)", &device_id);
 		g_debug ("Called %s(%s)", method_name, device_id);
 		if (!fu_engine_clear_results (priv->engine, device_id, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		g_dbus_method_invocation_return_value (invocation, NULL);
+		return;
+	}
+	if (g_strcmp0 (method_name, "ModifyDevice") == 0) {
+		const gchar *device_id;
+		const gchar *key = NULL;
+		const gchar *value = NULL;
+
+		/* check the id exists */
+		g_variant_get (parameters, "(&s&s&s)", &device_id, &key, &value);
+		g_debug ("Called %s(%s,%s=%s)", method_name, device_id, key, value);
+		if (!fu_engine_modify_device (priv->engine, device_id, key, value, &error)) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}

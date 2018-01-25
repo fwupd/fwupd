@@ -24,7 +24,6 @@
 #include <glib-object.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fnmatch.h>
 
 #include "dfu-chunked.h"
 #include "dfu-cipher-xtea.h"
@@ -34,6 +33,8 @@
 #include "dfu-patch.h"
 #include "dfu-sector-private.h"
 #include "dfu-target-private.h"
+
+#include "fu-test.h"
 
 #include "fwupd-error.h"
 
@@ -48,33 +49,6 @@ dfu_test_get_filename (const gchar *filename)
 	if (tmp == NULL)
 		return NULL;
 	return g_strdup (full_tmp);
-}
-
-static gboolean
-dfu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
-{
-	g_autofree gchar *output = NULL;
-
-	/* exactly the same */
-	if (g_strcmp0 (txt1, txt2) == 0)
-		return TRUE;
-
-	/* matches a pattern */
-	if (fnmatch (txt2, txt1, FNM_NOESCAPE) == 0)
-		return TRUE;
-
-	/* save temp files and diff them */
-	if (!g_file_set_contents ("/tmp/a", txt1, -1, error))
-		return FALSE;
-	if (!g_file_set_contents ("/tmp/b", txt2, -1, error))
-		return FALSE;
-	if (!g_spawn_command_line_sync ("diff -urNp /tmp/b /tmp/a",
-					&output, NULL, NULL, error))
-		return FALSE;
-
-	/* just output the diff */
-	g_set_error_literal (error, 1, 0, output);
-	return FALSE;
 }
 
 static gchar *
@@ -589,7 +563,7 @@ dfu_target_dfuse_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	tmp = dfu_target_sectors_to_string (target);
-	ret = dfu_test_compare_lines (tmp,
+	ret = fu_test_compare_lines (tmp,
 				      "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1 [R]\n"
 				      "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1 [R]",
 				      &error);
@@ -602,7 +576,7 @@ dfu_target_dfuse_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	tmp = dfu_target_sectors_to_string (target);
-	ret = dfu_test_compare_lines (tmp,
+	ret = fu_test_compare_lines (tmp,
 				      "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1 [R]\n"
 				      "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1 [R]\n"
 				      "Zone:0, Sec#:1, Addr:0x08000800, Size:0x0400, Caps:0x7 [REW]\n"
@@ -619,7 +593,7 @@ dfu_target_dfuse_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	tmp = dfu_target_sectors_to_string (target);
-	ret = dfu_test_compare_lines (tmp,
+	ret = fu_test_compare_lines (tmp,
 				      "Zone:0, Sec#:0, Addr:0x0000f000, Size:0x0064, Caps:0x1 [R]\n"
 				      "Zone:0, Sec#:0, Addr:0x0000f064, Size:0x0064, Caps:0x1 [R]\n"
 				      "Zone:0, Sec#:0, Addr:0x0000f0c8, Size:0x0064, Caps:0x1 [R]\n"

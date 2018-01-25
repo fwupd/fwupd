@@ -28,7 +28,7 @@
 #include <stdlib.h>
 
 #include "fu-keyring.h"
-#include "fu-pending.h"
+#include "fu-history.h"
 #include "fu-plugin-private.h"
 #include "fu-rom.h"
 #include "fu-test.h"

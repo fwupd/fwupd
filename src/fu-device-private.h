@@ -26,13 +26,6 @@
 
 G_BEGIN_DECLS
 
-const gchar	*fu_device_get_version_new		(FuDevice	*device);
-void		 fu_device_set_version_new		(FuDevice	*device,
-							 const gchar	*version_new);
-const gchar	*fu_device_get_filename_pending		(FuDevice	*device);
-void		 fu_device_set_filename_pending		(FuDevice	*device,
-							 const gchar	*filename_pending);
-
 G_END_DECLS
 
 #endif /* __FU_DEVICE_PRIVATE_H */

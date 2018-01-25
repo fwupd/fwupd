@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -26,6 +26,7 @@
 #include <gio/gunixinputstream.h>
 #include <glib-object.h>
 #include <string.h>
+#include <sys/utsname.h>
 
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
@@ -43,7 +44,7 @@
 #include "fu-engine.h"
 #include "fu-hwids.h"
 #include "fu-keyring.h"
-#include "fu-pending.h"
+#include "fu-history.h"
 #include "fu-plugin.h"
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
@@ -67,7 +68,7 @@ struct _FuEngine
 	FuDeviceList		*device_list;
 	FwupdStatus		 status;
 	guint			 percentage;
-	FuPending		*pending;
+	FuHistory		*history;
 	AsProfile		*profile;
 	AsStore			*store;
 	gboolean		 coldplug_running;
@@ -215,27 +216,43 @@ fu_engine_device_changed_cb (FuDeviceList *device_list, FuDevice *device, FuEngi
 	fu_engine_emit_device_changed (self, device);
 }
 
+static const gchar *
+_as_release_get_metadata_item (AsRelease *release, const gchar *key)
+{
+	GBytes *blob = as_release_get_blob (release, key);
+	if (blob == NULL)
+		return NULL;
+	return (const gchar *) g_bytes_get_data (blob, NULL);
+}
+
 static void
 fu_engine_set_release_from_appstream (FuEngine *self,
 				      FwupdRelease *rel,
+				      AsApp *app,
 				      AsRelease *release)
 {
 	AsChecksum *csum;
 	FwupdRemote *remote = NULL;
 	const gchar *tmp;
-	GBytes *remote_blob;
+	const gchar *remote_id;
+
+	/* set from the AsApp */
+	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
+	fwupd_release_set_homepage (rel, as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE));
+	fwupd_release_set_license (rel, as_app_get_project_license (app));
+	fwupd_release_set_name (rel, as_app_get_name (app, NULL));
+	fwupd_release_set_summary (rel, as_app_get_comment (app, NULL));
+	fwupd_release_set_vendor (rel, as_app_get_developer_name (app, NULL));
+	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
 
 	/* find the remote */
-	remote_blob = as_release_get_blob (release, "fwupd::RemoteId");
-	if (remote_blob != NULL) {
-		const gchar *remote_id = g_bytes_get_data (remote_blob, NULL);
-		if (remote_id != NULL) {
-			fwupd_release_set_remote_id (rel, remote_id);
-			remote = fu_config_get_remote_by_id (self->config, remote_id);
-			if (remote == NULL) {
-				g_warning ("no remote found for release %s",
-					   as_release_get_version (release));
-			}
+	remote_id = _as_release_get_metadata_item (release, "fwupd::RemoteId");
+	if (remote_id != NULL) {
+		fwupd_release_set_remote_id (rel, remote_id);
+		remote = fu_config_get_remote_by_id (self->config, remote_id);
+		if (remote == NULL) {
+			g_warning ("no remote found for release %s",
+				   as_release_get_version (release));
 		}
 	}
 
@@ -420,7 +437,7 @@ fu_engine_unlock (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* check the device exists */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return FALSE;
 
@@ -554,6 +571,71 @@ fu_engine_modify_remote (FuEngine *self,
 }
 
 /**
+ * fu_engine_modify_device:
+ * @self: A #FuEngine
+ * @device_id: A device ID
+ * @key: the key, e.g. `Flags`
+ * @value: the key, e.g. `reported`
+ * @error: A #GError, or %NULL
+ *
+ * Sets the reported flag for a specific device. This ensures that other
+ * front-end clients for fwupd do not report the same event.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_modify_device (FuEngine *self,
+			 const gchar *device_id,
+			 const gchar *key,
+			 const gchar *value,
+			 GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+
+	/* find the correct device */
+	device = fu_history_get_device_by_id (self->history, device_id, error);
+	if (device == NULL)
+		return FALSE;
+
+	/* support adding a subset of the device flags */
+	if (g_strcmp0 (key, "Flags") == 0) {
+		FwupdDeviceFlags flag = fwupd_device_flag_from_string (value);
+		if (flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "key %s not a valid flag", key);
+			return FALSE;
+		}
+		if (fu_device_has_flag (device, flag)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "device already has that flag");
+			return FALSE;
+		}
+		if (flag != FWUPD_DEVICE_FLAG_REPORTED) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "flag %s cannot be set from client", key);
+			return FALSE;
+		}
+		return fu_history_set_device_flags (self->history,
+						    fu_device_get_id (device),
+						    fu_device_get_flags (device) | flag,
+						    error);
+	}
+
+	/* others invalid */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "key %s not supported", key);
+	return FALSE;
+}
+
+/**
  * fu_engine_verify_update:
  * @self: A #FuEngine
  * @device_id: A device ID
@@ -579,7 +661,7 @@ fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* check the devices still exists */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return FALSE;
 
@@ -672,7 +754,7 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* check the id exists */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return FALSE;
 
@@ -1119,6 +1201,64 @@ fu_engine_get_item_by_wildcard (FuEngine *self, AsStore *store, GError **error)
 	return NULL;
 }
 
+static gchar *
+fu_engine_get_boot_time (void)
+{
+	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) lines = NULL;
+	if (!g_file_get_contents ("/proc/stat", &buf, NULL, NULL))
+		return NULL;
+	lines = g_strsplit (buf, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (g_str_has_prefix (lines[i], "btime "))
+			return g_strdup (lines[i] + 6);
+	}
+	return NULL;
+}
+
+static GHashTable *
+fu_engine_get_report_metadata (FuEngine *self)
+{
+	GHashTable *hash;
+	gchar *btime;
+	struct utsname name_tmp = { 0 };
+
+	/* used by pretty much every plugin and are hard deps of fwupd */
+	hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	g_hash_table_insert (hash,
+			     g_strdup ("FwupdVersion"),
+			     g_strdup (VERSION));
+	g_hash_table_insert (hash,
+			     g_strdup ("AppstreamGlibVersion"),
+			     g_strdup_printf ("%i.%i.%i",
+					      AS_MAJOR_VERSION,
+					      AS_MINOR_VERSION,
+					      AS_MICRO_VERSION));
+	g_hash_table_insert (hash,
+			     g_strdup ("GUsbVersion"),
+			     g_strdup_printf ("%i.%i.%i",
+					      G_USB_MAJOR_VERSION,
+					      G_USB_MINOR_VERSION,
+					      G_USB_MICRO_VERSION));
+
+	/* kernel version is often important for debugging failures */
+	if (uname (&name_tmp) >= 0) {
+		g_hash_table_insert (hash,
+				     g_strdup ("CpuArchitecture"),
+				     g_strdup (name_tmp.machine));
+		g_hash_table_insert (hash,
+				     g_strdup ("KernelVersion"),
+				     g_strdup (name_tmp.release));
+	}
+
+	/* add the kernel boot time so we can detect a reboot */
+	btime = fu_engine_get_boot_time ();
+	if (btime != NULL)
+		g_hash_table_insert (hash, g_strdup ("BootTime"), btime);
+
+	return hash;
+}
+
 /**
  * fu_engine_install:
  * @self: A #FuEngine
@@ -1151,8 +1291,12 @@ fu_engine_install (FuEngine *self,
 	const gchar *version;
 	gboolean is_downgrade;
 	gint vercmp;
+	g_autofree gchar *checksum = NULL;
 	g_autofree gchar *device_id_orig = NULL;
+	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
 	g_autoptr(GBytes) blob_fw2 = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GHashTable) metadata_hash = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -1167,7 +1311,7 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 	} else {
 		/* find the specific device */
-		device = fu_device_list_find_by_id (self->device_list, device_id, error);
+		device = fu_device_list_get_by_id (self->device_list, device_id, error);
 		if (device == NULL)
 			return FALSE;
 	}
@@ -1191,7 +1335,6 @@ fu_engine_install (FuEngine *self,
 			     fu_device_get_id (device));
 		return FALSE;
 	}
-
 
 	/* called with online update, test if device is supposed to allow this */
 	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) == 0 &&
@@ -1303,7 +1446,6 @@ fu_engine_install (FuEngine *self,
 	}
 
 	version = as_release_get_version (rel);
-	fu_device_set_version_new (device, version);
 
 	/* compare to the lowest supported version, if it exists */
 	tmp = fu_device_get_version_lowest (device);
@@ -1363,10 +1505,29 @@ fu_engine_install (FuEngine *self,
 	/* save the chosen device ID in case the device goes away */
 	device_id_orig = g_strdup (fu_device_get_id (device));
 
+	/* mark this as modified even if we actually fail to do the update */
+	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
+
+	/* build the version metadata */
+	metadata_hash = fu_engine_get_report_metadata (self);
+	fwupd_release_add_metadata (release_history, metadata_hash);
+	fwupd_release_add_metadata (release_history,
+				    fu_plugin_get_report_metadata (plugin));
+
+	/* add device to database */
+	checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_cab);
+	fwupd_release_set_version (release_history, version);
+	fwupd_release_add_checksum (release_history, checksum);
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+	if (!fu_history_remove_device (self->history, fu_device_get_id (device), error))
+		return FALSE;
+	if (!fu_history_add_device (self->history, device, release_history, error))
+		return FALSE;
+
 	/* do the update */
 	if (!fu_plugin_runner_update_detach (plugin, device, error))
 		return FALSE;
-	device = fu_device_list_find_by_id (self->device_list, device_id_orig, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL)
 		return FALSE;
 	if (!fu_plugin_runner_update (plugin,
@@ -1374,8 +1535,18 @@ fu_engine_install (FuEngine *self,
 				      blob_cab,
 				      blob_fw2,
 				      flags,
-				      error)) {
+				      &error_local)) {
 		g_autoptr(GError) error_attach = NULL;
+
+		/* save to database */
+		if (!fu_history_set_device_error (self->history,
+						  fu_device_get_id (device),
+						  error_local->message,
+						  error))
+			return FALSE;
+		g_propagate_error (error, g_steal_pointer (&error_local));
+
+		/* attack back into runtime */
 		if (!fu_plugin_runner_update_attach (plugin,
 						     device,
 						     &error_attach)) {
@@ -1396,14 +1567,14 @@ fu_engine_install (FuEngine *self,
 		fu_device_set_status (device, FWUPD_STATUS_IDLE);
 		return FALSE;
 	}
-	device = fu_device_list_find_by_id (self->device_list, device_id_orig, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL)
 		return FALSE;
 	if (!fu_plugin_runner_update_attach (plugin, device, error))
 		return FALSE;
 
 	/* get the new version number */
-	device = fu_device_list_find_by_id (self->device_list, device_id_orig, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL)
 		return FALSE;
 	if (!fu_plugin_runner_update_reload (plugin, device, error))
@@ -1421,14 +1592,30 @@ fu_engine_install (FuEngine *self,
 
 	/* make the UI update */
 	fu_device_set_status (device, FWUPD_STATUS_IDLE);
-	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	fu_engine_emit_device_changed (self, device);
 	fu_engine_emit_changed (self);
+
+	/* update database */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
+		if (!fu_history_set_device_state (self->history,
+						  fu_device_get_id (device),
+						  FWUPD_UPDATE_STATE_NEEDS_REBOOT,
+						  error))
+			return FALSE;
+	} else {
+		if (!fu_history_set_device_state (self->history,
+						  fu_device_get_id (device),
+						  FWUPD_UPDATE_STATE_SUCCESS,
+						  error))
+			return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
 static FuDevice *
-fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GError **error)
+fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GError **error)
 {
 	FuDevice *dev;
 	FuPlugin *plugin;
@@ -1439,10 +1626,10 @@ fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GErr
 
 	/* not a wildcard */
 	if (g_strcmp0 (id, FWUPD_DEVICE_ID_ANY) != 0)
-		return fu_device_list_find_by_id (self->device_list, id, error);
+		return fu_device_list_get_by_id (self->device_list, id, error);
 
 	/* allow '*' for any */
-	devices = fu_pending_get_devices (self->pending, error);
+	devices = fu_history_get_devices (self->history, error);
 	if (devices == NULL)
 		return NULL;
 	for (guint i = 0; i < devices->len; i++) {
@@ -1454,7 +1641,7 @@ fu_engine_get_item_by_id_fallback_pending (FuEngine *self, const gchar *id, GErr
 			continue;
 
 		/* if the device is not still connected, fake a FuDevice */
-		device = fu_device_list_find_by_id (self->device_list, fu_device_get_id (dev), NULL);
+		device = fu_device_list_get_by_id (self->device_list, fu_device_get_id (dev), NULL);
 		if (device == NULL) {
 			tmp = fu_device_get_plugin (dev);
 			plugin = fu_plugin_list_find_by_name (self->plugin_list, tmp, error);
@@ -1519,7 +1706,7 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 			return NULL;
 	} else {
 		/* find the specific device */
-		device = fu_device_list_find_by_id (self->device_list, device_id, error);
+		device = fu_device_list_get_by_id (self->device_list, device_id, error);
 		if (device == NULL)
 			return NULL;
 	}
@@ -1711,6 +1898,24 @@ fu_engine_load_metadata_from_file (FuEngine *self,
 }
 
 static gboolean
+fu_engine_is_device_supported (FuEngine *self, FuDevice *device)
+{
+	AsApp *app;
+
+	/* no device version */
+	if (fu_device_get_version (device) == NULL)
+		return FALSE;
+
+	/* match the GUIDs in the XML */
+	app = fu_engine_store_get_app_by_guids (self->store, device);
+	if (app == NULL)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_load_metadata_store (FuEngine *self, GError **error)
 {
 	GPtrArray *apps;
@@ -1787,12 +1992,23 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 		}
 	}
 
-	/* are any devices now supported? */
+	/* did any devices SUPPORTED state change? */
 	devices = fu_device_list_get_all (self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED))
-			fu_engine_emit_device_changed (self, device);
+		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED)) {
+			if (!fu_engine_is_device_supported (self, device)) {
+				/* was supported, now unsupported */
+				fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
+				fu_engine_emit_device_changed (self, device);
+			}
+		} else {
+			/* was unsupported, now supported */
+			if (fu_engine_is_device_supported (self, device)) {
+				fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
+				fu_engine_emit_device_changed (self, device);
+			}
+		}
 	}
 
 	return TRUE;
@@ -1943,24 +2159,6 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 	return fu_engine_load_metadata_store (self, error);
 }
 
-static gboolean
-fu_engine_is_device_supported (FuEngine *self, FuDevice *device)
-{
-	AsApp *app;
-
-	/* no device version */
-	if (fu_device_get_version (device) == NULL)
-		return FALSE;
-
-	/* match the GUIDs in the XML */
-	app = fu_engine_store_get_app_by_guids (self->store, device);
-	if (app == NULL)
-		return FALSE;
-
-	/* success */
-	return TRUE;
-}
-
 /**
  * fu_engine_get_store_from_blob:
  * @self: A #FuEngine
@@ -2021,7 +2219,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 		guid = as_provide_get_value (prov);
 		if (guid == NULL)
 			continue;
-		device = fu_device_list_find_by_guid (self->device_list, guid, NULL);
+		device = fu_device_list_get_by_guid (self->device_list, guid, NULL);
 		if (device != NULL) {
 			fwupd_device_set_name (dev, fu_device_get_name (device));
 			fwupd_device_set_flags (dev, fu_device_get_flags (device));
@@ -2058,13 +2256,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	fwupd_device_set_description (dev, as_app_get_description (app, NULL));
 	rel = fwupd_release_new ();
 	fwupd_release_set_trust_flags (rel, trust_flags);
-	fwupd_release_set_homepage (rel, as_app_get_url_item (app, AS_URL_KIND_HOMEPAGE));
-	fwupd_release_set_license (rel, as_app_get_project_license (app));
-	fwupd_release_set_name (rel, as_app_get_name (app, NULL));
-	fwupd_release_set_summary (rel, as_app_get_comment (app, NULL));
-	fwupd_release_set_vendor (rel, as_app_get_developer_name (app, NULL));
-	fwupd_release_set_appstream_id (rel, as_app_get_id (app));
-	fu_engine_set_release_from_appstream (self, rel, release);
+	fu_engine_set_release_from_appstream (self, rel, app, release);
 	fwupd_device_add_release (dev, rel);
 	return g_steal_pointer (&dev);
 }
@@ -2155,6 +2347,84 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 				     "No detected devices");
 		return NULL;
 	}
+	return g_steal_pointer (&devices);
+}
+
+/* finds the remote-id for the first firmware in the store that matches this
+ * container checksum */
+static const gchar *
+fu_engine_get_remote_id_for_checksum (FuEngine *self, const gchar *csum)
+{
+	GPtrArray *array = as_store_get_apps (self->store);
+	for (guint i = 0; i < array->len; i++) {
+		AsApp *app = g_ptr_array_index (array, i);
+		GPtrArray *releases = as_app_get_releases (app);
+		for (guint j = 0; j < releases->len; j++) {
+			AsRelease *release = g_ptr_array_index (releases, j);
+			AsChecksum *checksum;
+			checksum = as_release_get_checksum_by_target (release,
+								      AS_CHECKSUM_TARGET_CONTAINER);
+			if (checksum == NULL)
+				continue;
+			if (g_strcmp0 (csum, as_checksum_get_value (checksum)) == 0)
+				return _as_release_get_metadata_item (release, "fwupd::RemoteId");
+		}
+	}
+	return NULL;
+}
+
+/**
+ * fu_engine_get_history:
+ * @self: A #FuEngine
+ * @error: A #GError, or %NULL
+ *
+ * Gets the list of history.
+ *
+ * Returns: (transfer container) (element-type FwupdDevice): results
+ **/
+GPtrArray *
+fu_engine_get_history (FuEngine *self, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	devices = fu_history_get_devices (self->history, error);
+	if (devices == NULL)
+		return NULL;
+	if (devices->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No history");
+		return NULL;
+	}
+
+	/* try to set the remote ID for each device */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index (devices, i);
+		FwupdRelease *rel;
+		GPtrArray *csums;
+
+		/* get the checksums */
+		rel = fu_device_get_release_default (dev);
+		if (rel == NULL)
+			continue;
+
+		/* find the checksum that matches */
+		csums = fwupd_release_get_checksums (rel);
+		for (guint j = 0; j < csums->len; j++) {
+			const gchar *csum = g_ptr_array_index (csums, j);
+			const gchar *remote_id = fu_engine_get_remote_id_for_checksum (self, csum);
+			if (remote_id != NULL) {
+				fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
+				fwupd_release_set_remote_id (rel, remote_id);
+				break;
+			}
+		}
+	}
+
 	return g_steal_pointer (&devices);
 }
 
@@ -2278,8 +2548,7 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 			g_autoptr(FwupdRelease) rel = fwupd_release_new ();
 
 			/* create new FwupdRelease for the AsRelease */
-			fwupd_release_set_appstream_id (rel, as_app_get_id (app));
-			fu_engine_set_release_from_appstream (self, rel, release);
+			fu_engine_set_release_from_appstream (self, rel, app, release);
 
 			/* invalid */
 			if (fwupd_release_get_uri (rel) == NULL)
@@ -2316,7 +2585,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find the device */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return NULL;
 
@@ -2358,7 +2627,7 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find the device */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return NULL;
 
@@ -2451,7 +2720,7 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find the device */
-	device = fu_device_list_find_by_id (self->device_list, device_id, error);
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return NULL;
 
@@ -2529,7 +2798,7 @@ fu_engine_clear_results (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* find the device */
-	device = fu_engine_get_item_by_id_fallback_pending (self, device_id, error);
+	device = fu_engine_get_item_by_id_fallback_history (self, device_id, error);
 	if (device == NULL)
 		return FALSE;
 
@@ -2565,7 +2834,7 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find the device */
-	device = fu_engine_get_item_by_id_fallback_pending (self, device_id, error);
+	device = fu_engine_get_item_by_id_fallback_history (self, device_id, error);
 	if (device == NULL)
 		return NULL;
 
@@ -2608,7 +2877,7 @@ fu_engine_plugins_setup (FuEngine *self)
 }
 
 static void
-fu_engine_plugins_coldplug (FuEngine *self)
+fu_engine_plugins_coldplug (FuEngine *self, gboolean is_recoldplug)
 {
 	GPtrArray *plugins;
 	g_autoptr(AsProfileTask) ptask = NULL;
@@ -2643,9 +2912,15 @@ fu_engine_plugins_coldplug (FuEngine *self)
 					   "FuEngine:coldplug{%s}",
 					   fu_plugin_get_name (plugin));
 		g_assert (ptask2 != NULL);
-		if (!fu_plugin_runner_coldplug (plugin, &error)) {
-			fu_plugin_set_enabled (plugin, FALSE);
-			g_message ("disabling plugin because: %s", error->message);
+		if (is_recoldplug) {
+			if (!fu_plugin_runner_recoldplug (plugin, &error))
+				g_message ("failed recoldplug: %s", error->message);
+		} else {
+			if (!fu_plugin_runner_coldplug (plugin, &error)) {
+				fu_plugin_set_enabled (plugin, FALSE);
+				g_message ("disabling plugin because: %s",
+					   error->message);
+			}
 		}
 	}
 
@@ -2761,9 +3036,9 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 	FuPlugin *plugin_old;
 	g_autoptr(GError) error = NULL;
 
-	device_tmp = fu_device_list_find_by_id (self->device_list,
-						fu_device_get_id (device),
-						&error);
+	device_tmp = fu_device_list_get_by_id (self->device_list,
+					       fu_device_get_id (device),
+					       &error);
 	if (device_tmp == NULL) {
 		g_debug ("%s", error->message);
 		return;
@@ -2796,7 +3071,7 @@ fu_engine_recoldplug_delay_cb (gpointer user_data)
 {
 	FuEngine *self = (FuEngine *) user_data;
 	g_debug ("performing a recoldplug");
-	fu_engine_plugins_coldplug (self);
+	fu_engine_plugins_coldplug (self, TRUE);
 	self->coldplug_id = 0;
 	return FALSE;
 }
@@ -3050,6 +3325,104 @@ fu_engine_load_hwids (FuEngine *self)
 		g_warning ("Failed to load HWIDs: %s", error->message);
 }
 
+static gboolean
+fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError **error)
+{
+	FuDevice *dev;
+	FuPlugin *plugin;
+	FwupdRelease *rel_history;
+	g_autofree gchar *btime = NULL;
+
+	/* is in the device list */
+	dev = fu_device_list_get_by_id (self->device_list,
+					fu_device_get_id (dev_history),
+					error);
+	if (dev == NULL)
+		return FALSE;
+
+	/* does the installed version match what we tried to install
+	 * before fwupd was restarted */
+	rel_history = fu_device_get_release_default (dev_history);
+	if (rel_history == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "no release for history FuDevice");
+		return FALSE;
+	}
+
+	/* is this the same boot time as when we scheduled the update,
+	 * i.e. has fwupd been restarted before we rebooted */
+	btime = fu_engine_get_boot_time ();
+	if (g_strcmp0 (fwupd_release_get_metadata_item (rel_history, "BootTime"),
+		       btime) == 0) {
+		g_debug ("service restarted, but no reboot has taken place");
+		return TRUE;
+	}
+
+	/* the system is running with the new firmware version */
+	if (g_strcmp0 (fu_device_get_version (dev),
+		       fwupd_release_get_version (rel_history)) == 0) {
+		g_debug ("installed version %s matching history %s",
+			 fu_device_get_version (dev),
+			 fwupd_release_get_version (rel_history));
+		if (!fu_history_set_device_state (self->history,
+						  fu_device_get_id (dev_history),
+						  FWUPD_UPDATE_STATE_SUCCESS,
+						  error))
+			return FALSE;
+		return TRUE;
+	}
+
+	/* does the plugin know the update failure */
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (dev),
+					      error);
+	if (plugin == NULL)
+		return FALSE;
+	if (!fu_plugin_runner_get_results (plugin, dev, error))
+		return FALSE;
+
+	/* the plugin either can't tell us the error, or doesn't know itself */
+	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED) {
+		g_debug ("falling back to generic failure");
+		fu_device_set_update_error (dev, "failed to run update on reboot");
+	}
+
+	/* update the state in the database */
+	if (!fu_history_set_device_error (self->history, fu_device_get_id (dev),
+				          fu_device_get_update_error (dev),
+				          error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_engine_update_history_database (FuEngine *self, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* get any devices */
+	devices = fu_history_get_devices (self->history, error);
+	if (devices == NULL)
+		return FALSE;
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index (devices, i);
+		g_autoptr(GError) error_local = NULL;
+
+		/* not in the required state */
+		if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+			continue;
+
+		/* try to save the new update-state, but ignoring any error */
+		if (!fu_engine_update_history_device (self, dev, &error_local))
+			g_warning ("%s", error_local->message);
+	}
+	return TRUE;
+}
+
 /**
  * fu_engine_load:
  * @self: A #FuEngine
@@ -3121,7 +3494,7 @@ fu_engine_load (FuEngine *self, GError **error)
 
 	/* add devices */
 	fu_engine_plugins_setup (self);
-	fu_engine_plugins_coldplug (self);
+	fu_engine_plugins_coldplug (self, FALSE);
 
 	/* coldplug USB devices */
 	g_signal_connect (self->usb_ctx, "device-added",
@@ -3131,6 +3504,10 @@ fu_engine_load (FuEngine *self, GError **error)
 			  G_CALLBACK (fu_engine_usb_device_removed_cb),
 			  self);
 	g_usb_context_enumerate (self->usb_ctx);
+
+	/* update the db for devices that were updated during the reboot */
+	if (!fu_engine_update_history_database (self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -3184,7 +3561,7 @@ fu_engine_init (FuEngine *self)
 	self->smbios = fu_smbios_new ();
 	self->hwids = fu_hwids_new ();
 	self->quirks = fu_quirks_new ();
-	self->pending = fu_pending_new ();
+	self->history = fu_history_new ();
 	self->plugin_list = fu_plugin_list_new ();
 	self->profile = as_profile_new ();
 	self->store = as_store_new ();
@@ -3205,7 +3582,7 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->smbios);
 	g_object_unref (self->quirks);
 	g_object_unref (self->hwids);
-	g_object_unref (self->pending);
+	g_object_unref (self->history);
 	g_object_unref (self->plugin_list);
 	g_object_unref (self->profile);
 	g_object_unref (self->store);

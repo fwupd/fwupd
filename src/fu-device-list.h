@@ -40,10 +40,10 @@ GPtrArray	*fu_device_list_get_all			(FuDeviceList	*self);
 GPtrArray	*fu_device_list_get_active		(FuDeviceList	*self);
 FuDevice	*fu_device_list_get_old			(FuDeviceList	*self,
 							 FuDevice	*device);
-FuDevice	*fu_device_list_find_by_id		(FuDeviceList	*self,
+FuDevice	*fu_device_list_get_by_id		(FuDeviceList	*self,
 							 const gchar	*device_id,
 							 GError		**error);
-FuDevice	*fu_device_list_find_by_guid		(FuDeviceList	*self,
+FuDevice	*fu_device_list_get_by_guid		(FuDeviceList	*self,
 							 const gchar	*guid,
 							 GError		**error);
 

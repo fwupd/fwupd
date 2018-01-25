@@ -1,6 +1,24 @@
+Version 1.0.4
+~~~~~~~~~~~~~
+Released: 2018-01-25
+
+New Features:
+ - Add D-Bus methods to get and modify the history information (Richard Hughes)
+ - Allow the user to share firmware update success or failure (Richard Hughes)
+ - Ask the user to refresh metadata when it is very old (Richard Hughes)
+ - Store firmware update success and failure to a local database (Richard Hughes)
+
+Bugfixes:
+ - Add a device name for locked UEFI devices (Mario Limonciello)
+ - Allow each plugin to opt-in to the recoldplug action (Richard Hughes)
+ - Fix firmware downloading using gnome-software (Richard Hughes)
+ - Fix UX capsule reference to the one specified in efivar (Mario Limonciello)
+ - Never add two devices to the daemon with the same ID (Richard Hughes)
+ - Rescan supported flags when refreshing metadata (Richard Hughes)
+
 Version 1.0.3
 ~~~~~~~~~~~~~
-Released: 2017-01-09
+Released: 2018-01-09
 
 New Features:
  - Add a new plugin to add support for CSR "Driverless DFU" (Richard Hughes)

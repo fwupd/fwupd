@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -36,5 +36,9 @@ const gchar	*fwupd_checksum_get_by_kind		(GPtrArray	*checksums,
 GChecksumType	 fwupd_checksum_guess_kind		(const gchar	*checksum);
 gchar		*fwupd_build_user_agent			(const gchar	*package_name,
 							 const gchar	*package_version);
+gchar		*fwupd_build_machine_id			(const gchar 	*salt,
+							 GError		**error);
+gchar		*fwupd_build_history_report_json	(GPtrArray	*devices,
+							 GError		**error);
 
 #endif /* __FWUPD_COMMON_H */

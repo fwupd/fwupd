@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-09 15:47+0000\n"
-"PO-Revision-Date: 2018-01-09 15:47+0000\n"
+"POT-Creation-Date: 2018-01-25 12:36+0000\n"
+"PO-Revision-Date: 2018-01-25 12:36+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Chinese (Taiwan) (http://www.transifex.com/freedesktop/fwupd/language/zh_TW/)\n"
 "MIME-Version: 1.0\n"
@@ -118,14 +118,14 @@ msgstr ""
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #: plugins/dfu/dfu-tool.c:124 plugins/synapticsmst/synapticsmst-tool.c:105
-#: src/fu-util.c:113
+#: src/fu-util.c:118
 #, c-format
 msgid "Alias to %s"
 msgstr "%s 的別名"
 
 #. TRANSLATORS: error message
 #: plugins/dfu/dfu-tool.c:192 plugins/synapticsmst/synapticsmst-tool.c:347
-#: src/fu-util.c:177
+#: src/fu-util.c:182
 msgid "Command not found"
 msgstr "找不到指令"
 
@@ -141,24 +141,25 @@ msgstr "已移除"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
-#: plugins/dfu/dfu-tool.c:1478 src/fu-util.c:1273
+#: plugins/dfu/dfu-tool.c:1478 src/fu-util.c:1662
 msgid "Changed"
 msgstr "已變更"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
-#: plugins/dfu/dfu-tool.c:1486 src/fu-util.c:1235
+#: plugins/dfu/dfu-tool.c:1486 src/fu-util.c:1624
 msgid "Cancelled"
 msgstr "已取消"
 
 #. TRANSLATORS: Appstream ID for the hardware type
-#: plugins/dfu/dfu-tool.c:1978 src/fu-util.c:1071
+#: plugins/dfu/dfu-tool.c:1978 src/fu-util.c:1443
 msgid "ID"
 msgstr "ID"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
+#. TRANSLATORS: section header for the release name
 #: plugins/dfu/dfu-tool.c:1984 plugins/dfu/dfu-tool.c:1990
-#: plugins/dfu/dfu-tool.c:2104
+#: plugins/dfu/dfu-tool.c:2104 src/fu-util.c:1217
 msgid "Name"
 msgstr "名稱"
 
@@ -380,7 +381,7 @@ msgstr "DFU 公用程式"
 
 #. TRANSLATORS: the user didn't read the man page
 #: plugins/dfu/dfu-tool.c:2423 plugins/synapticsmst/synapticsmst-tool.c:424
-#: src/fu-util.c:1795
+#: src/fu-util.c:2216
 msgid "Failed to parse arguments"
 msgstr "無法解析引數"
 
@@ -399,7 +400,7 @@ msgid "Synaptics Multistream Transport Utility"
 msgstr "Synaptics 多串流傳輸公用程式"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
-#: plugins/uefi/fu-plugin-uefi.c:395
+#: plugins/uefi/fu-plugin-uefi.c:398
 msgid "Installing firmware update…"
 msgstr "安裝韌體更新中…"
 
@@ -424,22 +425,22 @@ msgid "Show debugging options"
 msgstr "顯示除錯選項"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
-#: src/fu-main.c:1009
+#: src/fu-main.c:1036
 msgid "Exit after a small delay"
 msgstr "經過一段短暫延遲後便離開"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
-#: src/fu-main.c:1012
+#: src/fu-main.c:1039
 msgid "Exit after the engine has loaded"
 msgstr "引擎載入後離開"
 
 #. TRANSLATORS: program name
-#: src/fu-main.c:1026
+#: src/fu-main.c:1053
 msgid "Firmware Update Daemon"
 msgstr "韌體更新幕後程式"
 
 #. TRANSLATORS: program summary
-#: src/fu-main.c:1031
+#: src/fu-main.c:1058
 msgid "Firmware Update D-Bus Service"
 msgstr "韌體更新 D-Bus 服務"
 
@@ -509,25 +510,45 @@ msgid "Unknown"
 msgstr "未知"
 
 #. TRANSLATORS: the user isn't reading the question
-#: src/fu-util.c:235
+#: src/fu-util.c:240
 #, c-format
 msgid "Please enter a number from 1 to %u: "
 msgstr "請輸入 1 到 %u 之間的數字："
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:278
+#: src/fu-util.c:303
 msgid "Choose a device:"
 msgstr "選擇裝置："
 
+#. TRANSLATORS: a list of failed updates
+#: src/fu-util.c:416
+msgid "Devices that were not updated correctly:"
+msgstr ""
+
+#. TRANSLATORS: a list of successful updates
+#: src/fu-util.c:430
+msgid "Devices that have been updated successfully:"
+msgstr ""
+
+#. TRANSLATORS: explain why we want to upload
+#: src/fu-util.c:444
+msgid "Upload report now?"
+msgstr ""
+
+#. TRANSLATORS: metadata is downloaded from the Internet
+#: src/fu-util.c:446 src/fu-util.c:1384
+msgid "Requires internet connection"
+msgstr ""
+
 #. TRANSLATORS: nothing attached that can be upgraded
-#: src/fu-util.c:346
+#: src/fu-util.c:468
 msgid "No hardware detected with firmware update capability"
 msgstr "未偵測到具備韌體更新能力的硬體"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
-#: src/fu-util.c:517
+#: src/fu-util.c:643
 #, c-format
 msgid "Reinstalling %s with %s... "
 msgstr "正重新安裝 %s %s 版…"
@@ -535,7 +556,7 @@ msgstr "正重新安裝 %s %s 版…"
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:524
+#: src/fu-util.c:650
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "正降級 %s 從 %s 版至 %s 版…"
@@ -543,325 +564,400 @@ msgstr "正降級 %s 從 %s 版至 %s 版…"
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:532
+#: src/fu-util.c:658
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "正更新 %s 從 %s 版至 %s 版…"
 
-#: src/fu-util.c:559
+#: src/fu-util.c:685
 msgid "Done!"
 msgstr "完成！"
 
-#: src/fu-util.c:608 src/fu-util.c:992
+#: src/fu-util.c:713
+msgid "Target"
+msgstr ""
+
+#: src/fu-util.c:714
+msgid "Payload"
+msgstr ""
+
+#: src/fu-util.c:715
+msgid "Proceed with upload?"
+msgstr ""
+
+#: src/fu-util.c:920 src/fu-util.c:1310
 msgid "OK"
 msgstr "確定"
 
 #. TRANSLATORS: downloading new signing file
-#: src/fu-util.c:713
+#: src/fu-util.c:1025
 msgid "Fetching signature"
 msgstr "擷取簽章中"
 
 #. TRANSLATORS: downloading new metadata file
-#: src/fu-util.c:716
+#: src/fu-util.c:1028
 msgid "Fetching metadata"
 msgstr "擷取中介資料中"
 
 #. TRANSLATORS: downloading new firmware file
-#: src/fu-util.c:719
+#: src/fu-util.c:1031
 msgid "Fetching firmware"
 msgstr "擷取韌體中"
 
 #. TRANSLATORS: downloading unknown file
-#: src/fu-util.c:722
+#: src/fu-util.c:1034
 msgid "Fetching file"
 msgstr "擷取檔案中"
 
 #. TRANSLATORS: section header for release version number
-#: src/fu-util.c:902
+#: src/fu-util.c:1214
 msgid "Version"
 msgstr "版本"
 
+#. TRANSLATORS: section header for the release one line summary
+#: src/fu-util.c:1220
+msgid "Summary"
+msgstr ""
+
 #. TRANSLATORS: section header for the remote the file is coming from
-#: src/fu-util.c:905
+#: src/fu-util.c:1223
 msgid "Remote"
 msgstr ""
 
 #. TRANSLATORS: section header for firmware URI
-#: src/fu-util.c:908
+#: src/fu-util.c:1226
 msgid "URI"
 msgstr "URI"
 
 #. TRANSLATORS: section header for firmware description
-#: src/fu-util.c:914
+#: src/fu-util.c:1232
 msgid "Description"
 msgstr "描述說明"
 
 #. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
-#: src/fu-util.c:922 src/fu-util.c:1150
+#: src/fu-util.c:1240 src/fu-util.c:1534
 msgid "Checksum"
 msgstr "校驗計算碼"
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:954
+#: src/fu-util.c:1272
 msgid "Choose a release:"
 msgstr "選擇發行版："
 
+#. TRANSLATORS: the metadata is very out of date; %i is a number > 1
+#: src/fu-util.c:1377
+#, c-format
+msgid ""
+"Firmware metadata has not been updated for %u days and may not be up to "
+"date."
+msgstr ""
+
+#. TRANSLATORS: ask the user if we can update the metadata
+#: src/fu-util.c:1382
+msgid "Update now?"
+msgstr ""
+
 #. TRANSLATORS: first replacement is device name
-#: src/fu-util.c:1055
+#: src/fu-util.c:1427
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s 有韌體更新："
 
-#: src/fu-util.c:1062
+#: src/fu-util.c:1434
 msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
-#: src/fu-util.c:1074
+#: src/fu-util.c:1446
 msgid "Update Version"
 msgstr "更新版本"
 
+#. TRANSLATORS: section header for the release name
+#: src/fu-util.c:1450
+msgid "Update Name"
+msgstr ""
+
+#. TRANSLATORS: section header for the release one line summary
+#: src/fu-util.c:1453
+msgid "Update Summary"
+msgstr ""
+
 #. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-#: src/fu-util.c:1078
+#: src/fu-util.c:1456
 msgid "Update Remote ID"
 msgstr "更新遠端 ID"
 
 #. TRANSLATORS: section header for firmware checksum
-#: src/fu-util.c:1087
+#: src/fu-util.c:1465
 msgid "Update Checksum"
 msgstr "更新校驗計算碼"
 
 #. TRANSLATORS: section header for firmware remote http://
-#: src/fu-util.c:1091
+#: src/fu-util.c:1469
 msgid "Update Location"
 msgstr "更新位置"
 
 #. TRANSLATORS: section header for long firmware desc
-#: src/fu-util.c:1102
+#: src/fu-util.c:1480
 msgid "Update Description"
 msgstr "更新描述說明"
 
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
-#: src/fu-util.c:1128
+#: src/fu-util.c:1512
 msgid "Remote ID"
 msgstr "遠端 ID"
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-#: src/fu-util.c:1132
+#: src/fu-util.c:1516
 msgid "Title"
 msgstr ""
 
 #. TRANSLATORS: remote type, e.g. remote or local
-#: src/fu-util.c:1136
+#: src/fu-util.c:1520
 msgid "Type"
 msgstr "類型"
 
-#: src/fu-util.c:1141
+#: src/fu-util.c:1525
 msgid "Keyring"
 msgstr ""
 
 #. TRANSLATORS: if the remote is enabled
-#: src/fu-util.c:1146
+#: src/fu-util.c:1530
 msgid "Enabled"
 msgstr "啟用"
 
 #. TRANSLATORS: the age of the metadata
-#: src/fu-util.c:1177
+#: src/fu-util.c:1561
 msgid "Age"
 msgstr "年紀"
 
 #. TRANSLATORS: the numeric priority
-#: src/fu-util.c:1184
+#: src/fu-util.c:1568
 msgid "Priority"
 msgstr "優先等級"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1189
+#: src/fu-util.c:1573
 msgid "Username"
 msgstr "使用者名稱"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1194
+#: src/fu-util.c:1578
 msgid "Password"
 msgstr "密碼"
 
 #. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1199
+#: src/fu-util.c:1583
 msgid "Filename"
 msgstr "檔名"
 
 #. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1204
+#: src/fu-util.c:1588
 msgid "Filename Signature"
 msgstr "檔名簽章"
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1209
+#: src/fu-util.c:1593
 msgid "Metadata URI"
 msgstr ""
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1214
+#: src/fu-util.c:1598
 msgid "Metadata URI Signature"
 msgstr ""
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1219
+#: src/fu-util.c:1603
 msgid "Firmware Base URI"
 msgstr ""
 
+#. TRANSLATORS: URI to send success/failure reports
+#: src/fu-util.c:1608
+msgid "Report URI"
+msgstr ""
+
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1246
+#: src/fu-util.c:1635
 msgid "Device added:"
 msgstr "裝置已加入："
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1256
+#: src/fu-util.c:1645
 msgid "Device removed:"
 msgstr "裝置已移除："
 
 #. TRANSLATORS: this is when a device has been updated
-#: src/fu-util.c:1266
+#: src/fu-util.c:1655
 msgid "Device changed:"
 msgstr "裝置已變更："
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1608
+#: src/fu-util.c:1997
 msgid "Show extra debugging information"
 msgstr "顯示額外除錯資訊"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1611
+#: src/fu-util.c:2000
 msgid "Show client and daemon versions"
 msgstr "顯示客戶端與幕後程式版本"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1614
+#: src/fu-util.c:2003
 msgid "Schedule installation for next reboot when possible"
 msgstr "安排下次重新開機時若可行便安裝"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1617
+#: src/fu-util.c:2006
 msgid "Allow re-installing existing firmware versions"
 msgstr "允許重新安裝既有的韌體版本"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1620
+#: src/fu-util.c:2009
 msgid "Allow downgrading firmware versions"
 msgstr "允許降級韌體版本"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1623
+#: src/fu-util.c:2012
 msgid "Override plugin warning"
 msgstr "凌駕插件警告"
 
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2015
+msgid "Answer yes to all questions"
+msgstr ""
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2018
+msgid "Do not check for unreported history"
+msgstr ""
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2021
+msgid "Do not check for old metadata"
+msgstr ""
+
 #. TRANSLATORS: command description
-#: src/fu-util.c:1647
+#: src/fu-util.c:2044
 msgid "Get all devices that support firmware updates"
 msgstr "取得所有支援韌體更新的裝置"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1653
+#: src/fu-util.c:2050
 msgid "Return all the hardware IDs for the machine"
 msgstr "回傳所有機器的硬體 ID"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1659
+#: src/fu-util.c:2056
 msgid "Install prepared updates now"
 msgstr "立刻安裝準備的更新"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1665
+#: src/fu-util.c:2062
+msgid "Show history of firmware updates"
+msgstr ""
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2068
+msgid "Erase all firmware update history"
+msgstr ""
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2074
+msgid "Share firmware history with the developers"
+msgstr ""
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2080
 msgid "Install a firmware file on this hardware"
 msgstr "在此硬體安裝韌體檔案"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1671
+#: src/fu-util.c:2086
 msgid "Gets details about a firmware file"
 msgstr "取得韌體檔案的相關細節"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1677
+#: src/fu-util.c:2092
 msgid "Gets the list of updates for connected hardware"
 msgstr "取得連接硬體的更新清單"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1683
+#: src/fu-util.c:2098
 msgid "Updates all firmware to latest versions available"
 msgstr "將所有韌體更新至可用的最新版本"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1689
+#: src/fu-util.c:2104
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "取得傾印韌體檔案的加密雜湊"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1695
+#: src/fu-util.c:2110
 msgid "Unlocks the device for firmware access"
 msgstr "解鎖裝置以供韌體存取"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1701
+#: src/fu-util.c:2116
 msgid "Clears the results from the last update"
 msgstr "清除上次更新的結果"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1707
+#: src/fu-util.c:2122
 msgid "Clears any updates scheduled to be updated offline"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1713
+#: src/fu-util.c:2128
 msgid "Gets the results from the last update"
 msgstr "取得上次更新的結果"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1719
+#: src/fu-util.c:2134
 msgid "Gets the releases for a device"
 msgstr "取得裝置的發行版本"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1725
+#: src/fu-util.c:2140
 msgid "Gets the configured remotes"
 msgstr "取得設定的遠端"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1731
+#: src/fu-util.c:2146
 msgid "Downgrades the firmware on a device"
 msgstr "降級裝置的韌體"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1737
+#: src/fu-util.c:2152
 msgid "Refresh metadata from remote server"
 msgstr "重整遠端伺服器的中介資料"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1743
+#: src/fu-util.c:2158
 msgid "Update the stored metadata with current ROM contents"
 msgstr "以目前 ROM 內容更新儲存的中介資料"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1749
+#: src/fu-util.c:2164
 msgid "Monitor the daemon for events"
 msgstr "監控幕後程式是否有活動"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1755
+#: src/fu-util.c:2170
 msgid "Build firmware using a sandbox"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1761
+#: src/fu-util.c:2176
 msgid "Dump SMBIOS data from a file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:1767
+#: src/fu-util.c:2182
 msgid "Modifies a given remote"
 msgstr ""
 
 #. TRANSLATORS: program name
-#: src/fu-util.c:1790
+#: src/fu-util.c:2211
 msgid "Firmware Utility"
 msgstr "韌體公用程式"

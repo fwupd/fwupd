@@ -26,12 +26,14 @@
 #include <appstream-glib.h>
 
 #include "fwupd-client.h"
+#include "fwupd-common.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
+#include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 
 static gboolean
-as_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
+fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 {
 	g_autofree gchar *output = NULL;
 
@@ -111,6 +113,7 @@ fwupd_remote_download_func (void)
 	g_assert (fwupd_remote_get_metadata_uri (remote) != NULL);
 	g_assert (fwupd_remote_get_metadata_uri_sig (remote) != NULL);
 	g_assert_cmpstr (fwupd_remote_get_title (remote), ==, "Linux Vendor Firmware Service");
+	g_assert_cmpstr (fwupd_remote_get_report_uri (remote), ==, "https://fwupd.org/lvfs/firmware/report");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==,
 			 LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==,
@@ -193,10 +196,27 @@ fwupd_remote_local_func (void)
 	g_assert (fwupd_remote_get_enabled (remote));
 	g_assert (fwupd_remote_get_metadata_uri (remote) == NULL);
 	g_assert (fwupd_remote_get_metadata_uri_sig (remote) == NULL);
+	g_assert (fwupd_remote_get_report_uri (remote) == NULL);
 	g_assert_cmpstr (fwupd_remote_get_title (remote), ==, "Core");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==, "@datadir@/fwupd/remotes.d/fwupd/metadata.xml");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==, NULL);
 	g_assert_cmpstr (fwupd_remote_get_checksum (remote), ==, NULL);
+}
+
+static void
+fwupd_release_func (void)
+{
+	g_autoptr(FwupdRelease) release1 = NULL;
+	g_autoptr(FwupdRelease) release2 = NULL;
+	g_autoptr(GVariant) data = NULL;
+
+	release1 = fwupd_release_new ();
+	fwupd_release_add_metadata_item (release1, "foo", "bar");
+	fwupd_release_add_metadata_item (release1, "baz", "bam");
+	data = fwupd_release_to_variant (release1);
+	release2 = fwupd_release_from_variant (data);
+	g_assert_cmpstr (fwupd_release_get_metadata_item (release2, "foo"), ==, "bar");
+	g_assert_cmpstr (fwupd_release_get_metadata_item (release2, "baz"), ==, "bam");
 }
 
 static void
@@ -239,7 +259,7 @@ fwupd_device_func (void)
 	g_assert (fwupd_device_has_guid (dev, "00000000-0000-0000-0000-000000000000"));
 	g_assert (!fwupd_device_has_guid (dev, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"));
 
-	ret = as_test_compare_lines (str,
+	ret = fu_test_compare_lines (str,
 		"ColorHug2\n"
 		"  DeviceId:             USB:foo\n"
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
@@ -354,6 +374,21 @@ fwupd_has_system_bus (void)
 	return FALSE;
 }
 
+static void
+fwupd_common_machine_hash_func (void)
+{
+	g_autofree gchar *mhash1 = NULL;
+	g_autofree gchar *mhash2 = NULL;
+	g_autoptr(GError) error = NULL;
+	mhash1 = fwupd_build_machine_id ("salt1", &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (mhash1, !=, NULL);
+	mhash2 = fwupd_build_machine_id ("salt2", &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (mhash2, !=, NULL);
+	g_assert_cmpstr (mhash2, !=, mhash1);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -365,6 +400,8 @@ main (int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
+	g_test_add_func ("/fwupd/common{machine-hash}", fwupd_common_machine_hash_func);
+	g_test_add_func ("/fwupd/release", fwupd_release_func);
 	g_test_add_func ("/fwupd/device", fwupd_device_func);
 	g_test_add_func ("/fwupd/remote{download}", fwupd_remote_download_func);
 	g_test_add_func ("/fwupd/remote{base-uri}", fwupd_remote_baseuri_func);

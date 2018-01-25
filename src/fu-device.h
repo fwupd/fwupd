@@ -82,6 +82,8 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_flashes_left(d,v)		fwupd_device_set_flashes_left(FWUPD_DEVICE(d),v)
 #define fu_device_get_checksums(d)		fwupd_device_get_checksums(FWUPD_DEVICE(d))
 #define fu_device_get_flags(d)			fwupd_device_get_flags(FWUPD_DEVICE(d))
+#define fu_device_get_created(d)		fwupd_device_get_created(FWUPD_DEVICE(d))
+#define fu_device_get_modified(d)		fwupd_device_get_modified(FWUPD_DEVICE(d))
 #define fu_device_get_guids(d)			fwupd_device_get_guids(FWUPD_DEVICE(d))
 #define fu_device_get_guid_default(d)		fwupd_device_get_guid_default(FWUPD_DEVICE(d))
 #define fu_device_get_icons(d)			fwupd_device_get_icons(FWUPD_DEVICE(d))
@@ -96,6 +98,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_version_bootloader(d)	fwupd_device_get_version_bootloader(FWUPD_DEVICE(d))
 #define fu_device_get_vendor_id(d)		fwupd_device_get_vendor_id(FWUPD_DEVICE(d))
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
+#define fu_device_get_release_default(d)	fwupd_device_get_release_default(FWUPD_DEVICE(d))
 
 /* accessors */
 gchar		*fu_device_to_string			(FuDevice	*device);

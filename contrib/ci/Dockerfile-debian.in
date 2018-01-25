@@ -1,4 +1,5 @@
 FROM %%%ARCH_PREFIX%%%debian:testing
+RUN echo fubar > /etc/machine-id
 %%%ARCH_SPECIFIC_COMMAND%%%
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
 RUN mkdir /build

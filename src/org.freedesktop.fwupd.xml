@@ -181,6 +181,24 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetHistory'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets a list of all the past firmware updates.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='aa{sv}' name='devices' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>An array of devices, with any properties set on each.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='Install'>
       <doc:doc>
         <doc:description>
@@ -338,6 +356,44 @@
             <doc:para>
               An ID, typically a GUID of the hardware that was updated, or the
               string <doc:tt>*</doc:tt> to match any hardware.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='ModifyDevice'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Modifies a remote in some way.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='device_id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              A device ID, or the string <doc:tt>*</doc:tt> to match any hardware.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='s' name='key' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The key, e.g. 'Flags'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='s' name='value' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The value of the correct type, e.g. a URL.
+            </doc:para>
           </doc:summary>
         </doc:doc>
       </arg>

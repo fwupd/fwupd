@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -33,7 +33,7 @@
 
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
-#include "fu-pending.h"
+#include "fu-history.h"
 
 /**
  * SECTION:fu-plugin
@@ -61,6 +61,7 @@ typedef struct {
 	FuSmbios		*smbios;
 	GHashTable		*devices;	/* platform_id:GObject */
 	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
+	GHashTable		*report_metadata;	/* key:value */
 	FuPluginData		*data;
 } FuPluginPrivate;
 
@@ -492,7 +493,7 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 }
 
 /**
- * fu_plugin_recoldplug:
+ * fu_plugin_request_recoldplug:
  * @plugin: A #FuPlugin
  *
  * Ask all the plugins to coldplug all devices, which will include the prepare()
@@ -501,7 +502,7 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
  * Since: 0.8.0
  **/
 void
-fu_plugin_recoldplug (FuPlugin *plugin)
+fu_plugin_request_recoldplug (FuPlugin *plugin)
 {
 	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_signal_emit (plugin, signals[SIGNAL_RECOLDPLUG], 0);
@@ -894,6 +895,32 @@ fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 }
 
 gboolean
+fu_plugin_runner_recoldplug (FuPlugin *plugin, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginStartupFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_recoldplug", (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing recoldplug() on %s", priv->name);
+	if (!func (plugin, error)) {
+		g_prefix_error (error, "failed to recoldplug %s: ", priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
 fu_plugin_runner_coldplug_prepare (FuPlugin *plugin, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
@@ -1033,12 +1060,13 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) res_tmp = NULL;
-	g_autoptr(FuPending) pending = NULL;
+	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(FwupdRelease) release = fwupd_release_new ();
 	g_autoptr(GFile) file = NULL;
 
 	/* id already exists */
-	pending = fu_pending_new ();
-	res_tmp = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
+	history = fu_history_new ();
+	res_tmp = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
 	if (res_tmp != NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -1072,10 +1100,11 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	/* schedule for next boot */
 	g_debug ("schedule %s to be installed to %s on next boot",
 		 filename, fu_device_get_id (device));
-	fu_device_set_filename_pending (device, filename);
+	fwupd_release_set_filename (release, filename);
 
 	/* add to database */
-	if (!fu_pending_add_device (pending, device, error))
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_PENDING);
+	if (!fu_history_add_device (history, device, release, error))
 		return FALSE;
 
 	/* next boot we run offline */
@@ -1154,7 +1183,7 @@ fu_plugin_runner_update (FuPlugin *plugin,
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginUpdateFunc update_func;
-	g_autoptr(FuPending) pending = NULL;
+	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuDevice) device_pending = NULL;
 	GError *error_update = NULL;
 	GPtrArray *checksums;
@@ -1190,13 +1219,14 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* online */
-	pending = fu_pending_new ();
-	device_pending = fu_pending_get_device (pending, fu_device_get_id (device), NULL);
+	history = fu_history_new ();
+	device_pending = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
 	if (!update_func (plugin, device, blob_fw, flags, &error_update)) {
 		/* save the error to the database */
 		if (device_pending != NULL) {
-			fu_pending_set_error_msg (pending, device,
-						  error_update->message, NULL);
+			fu_history_set_device_error (history,
+						     fu_device_get_id (device),
+						     error_update->message, NULL);
 		}
 		g_propagate_error (error, error_update);
 		return FALSE;
@@ -1209,13 +1239,18 @@ fu_plugin_runner_update (FuPlugin *plugin,
 	/* cleanup */
 	if (device_pending != NULL) {
 		const gchar *tmp;
+		FwupdRelease *release;
 
-		/* update pending database */
-		fu_pending_set_state (pending, device,
-				      FWUPD_UPDATE_STATE_SUCCESS, NULL);
+		/* update history database */
+		if (!fu_history_set_device_state (history,
+						  fu_device_get_id (device),
+						  FWUPD_UPDATE_STATE_SUCCESS,
+						  error))
+			return FALSE;
 
 		/* delete cab file */
-		tmp = fu_device_get_filename_pending (device_pending);
+		release = fu_device_get_release_default (device_pending);
+		tmp = fwupd_release_get_filename (release);
 		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
 			g_autoptr(GError) error_local = NULL;
 			g_autoptr(GFile) file = NULL;
@@ -1240,7 +1275,7 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 	FuPluginDeviceFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDevice) device_pending = NULL;
-	g_autoptr(FuPending) pending = NULL;
+	g_autoptr(FuHistory) history = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1262,22 +1297,22 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 	}
 
 	/* handled using the database */
-	pending = fu_pending_new ();
-	device_pending = fu_pending_get_device (pending,
-					     fu_device_get_id (device),
-					     &error_local);
+	history = fu_history_new ();
+	device_pending = fu_history_get_device_by_id (history,
+						      fu_device_get_id (device),
+						      &error_local);
 	if (device_pending == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to find %s in pending database: %s",
+			     "Failed to find %s in history database: %s",
 			     fu_device_get_id (device),
 			     error_local->message);
 		return FALSE;
 	}
 
-	/* remove from pending database */
-	return fu_pending_remove_device (pending, device, error);
+	/* remove from history database */
+	return fu_history_remove_device (history, fu_device_get_id (device), error);
 }
 
 gboolean
@@ -1289,7 +1324,9 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	const gchar *tmp;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDevice) device_pending = NULL;
-	g_autoptr(FuPending) pending = NULL;
+	g_autoptr(FuHistory) history = NULL;
+	FwupdRelease *release;
+	FwupdRelease *release_pending;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1311,21 +1348,21 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	}
 
 	/* handled using the database */
-	pending = fu_pending_new ();
-	device_pending = fu_pending_get_device (pending,
-					     fu_device_get_id (device),
-					     &error_local);
+	history = fu_history_new ();
+	device_pending = fu_history_get_device_by_id (history,
+						      fu_device_get_id (device),
+						      &error_local);
 	if (device_pending == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "Failed to find %s in pending database: %s",
+			     "Failed to find %s in history database: %s",
 			     fu_device_get_id (device),
 			     error_local->message);
 		return FALSE;
 	}
 
-	/* copy the important parts from the pending device to the real one */
+	/* copy the important parts from the history device to the real one */
 	update_state = fu_device_get_update_state (device_pending);
 	if (update_state == FWUPD_UPDATE_STATE_UNKNOWN ||
 	    update_state == FWUPD_UPDATE_STATE_PENDING) {
@@ -1345,9 +1382,11 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	tmp = fu_device_get_version (device_pending);
 	if (tmp != NULL)
 		fu_device_set_version (device, tmp);
-	tmp = fu_device_get_version_new (device_pending);
+	release_pending = fu_device_get_release_default (device_pending);
+	release = fu_device_get_release_default (device);
+	tmp = fwupd_release_get_version (release_pending);
 	if (tmp != NULL)
-		fu_device_set_version_new (device, tmp);
+		fwupd_release_set_version (release, tmp);
 	return TRUE;
 }
 
@@ -1418,6 +1457,40 @@ fu_plugin_get_rules (FuPlugin *plugin, FuPluginRule rule)
 	return priv->rules[rule];
 }
 
+/**
+ * fu_plugin_add_report_metadata:
+ * @plugin: a #FuPlugin
+ * @key: a string, e.g. `FwupdateVersion`
+ * @value: a string, e.g. `10`
+ *
+ * Sets any additional metadata to be included in the firmware report to aid
+ * debugging problems.
+ *
+ * Any data included here will be sent to the metadata server after user
+ * confirmation.
+ **/
+void
+fu_plugin_add_report_metadata (FuPlugin *plugin, const gchar *key, const gchar *value)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	g_hash_table_insert (priv->report_metadata, g_strdup (key), g_strdup (value));
+}
+
+/**
+ * fu_plugin_get_report_metadata:
+ * @plugin: a #FuPlugin
+ *
+ * Returns the list of additional metadata to be added when filing a report.
+ *
+ * Returns: (transfer none): the map of report metadata
+ **/
+GHashTable *
+fu_plugin_get_report_metadata (FuPlugin *plugin)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	return priv->report_metadata;
+}
+
 static void
 fu_plugin_class_init (FuPluginClass *klass)
 {
@@ -1463,6 +1536,7 @@ fu_plugin_init (FuPlugin *plugin)
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
 	priv->devices_delay = g_hash_table_new (g_direct_hash, g_direct_equal);
+	priv->report_metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++)
 		priv->rules[i] = g_ptr_array_new_with_free_func (g_free);
 }
@@ -1502,6 +1576,7 @@ fu_plugin_finalize (GObject *object)
 #endif
 	g_hash_table_unref (priv->devices);
 	g_hash_table_unref (priv->devices_delay);
+	g_hash_table_unref (priv->report_metadata);
 	g_free (priv->name);
 	g_free (priv->data);
 

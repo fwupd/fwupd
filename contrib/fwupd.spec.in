@@ -4,6 +4,7 @@
 %global libsoup_version 2.51.92
 %global colord_version 1.2.12
 %global systemd_version 231
+%global json_glib_version 1.1.1
 
 %define alphatag                #ALPHATAG#
 
@@ -53,6 +54,7 @@ BuildRequires: gnutls-devel
 BuildRequires: gnutls-utils
 BuildRequires: meson
 BuildRequires: help2man
+BuildRequires: json-glib-devel >= %{json_glib_version}
 
 %if 0%{?have_uefi}
 BuildRequires: python3 python3-cairo python3-gobject python3-pillow
@@ -191,11 +193,11 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_bindir}/fwupdmgr
 %dir %{_sysconfdir}/fwupd
 %dir %{_sysconfdir}/fwupd/remotes.d
-%{_sysconfdir}/fwupd/remotes.d/fwupd.conf
-%{_sysconfdir}/fwupd/remotes.d/lvfs.conf
-%{_sysconfdir}/fwupd/remotes.d/lvfs-testing.conf
-%{_sysconfdir}/fwupd/remotes.d/vendor.conf
-%{_sysconfdir}/pki/fwupd
+%config(noreplace)%{_sysconfdir}/fwupd/remotes.d/fwupd.conf
+%config(noreplace)%{_sysconfdir}/fwupd/remotes.d/lvfs.conf
+%config(noreplace)%{_sysconfdir}/fwupd/remotes.d/lvfs-testing.conf
+%config(noreplace)%{_sysconfdir}/fwupd/remotes.d/vendor.conf
+%config(noreplace)%{_sysconfdir}/pki/fwupd
 %{_sysconfdir}/pki/fwupd-metadata
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/fwupd/remotes.d/fwupd/metadata.xml
