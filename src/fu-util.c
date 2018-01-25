@@ -1374,8 +1374,8 @@ fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 	/* ask for permission */
 	if (!priv->assume_yes) {
 		/* TRANSLATORS: the metadata is very out of date; %i is a number > 1 */
-		g_print (_("Firmware metadata has not been updated for %" G_GUINT64_FORMAT
-			   " days and may not be up to date."), age_limit_days);
+		g_print (_("Firmware metadata has not been updated for %u"
+			   " days and may not be up to date."), (guint) age_limit_days);
 		g_print ("\n\n");
 		g_print ("%s (%s) [y|N]: ",
 			 /* TRANSLATORS: ask the user if we can update the metadata */
