@@ -1377,8 +1377,8 @@ fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 		g_print (ngettext("Firmware metadata has not been updated for %u"
 				  " day and may not be up to date.",
 				  "Firmware metadata has not been updated for %u"
-				  " days and may not be up to date."),
-				  (guint) age_limit_days, (guint) age_limit_days);
+				  " days and may not be up to date.",
+				  (gint) age_limit_days), (guint) age_limit_days);
 		g_print ("\n\n");
 		g_print ("%s (%s) [y|N]: ",
 			 /* TRANSLATORS: ask the user if we can update the metadata */
