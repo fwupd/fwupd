@@ -64,7 +64,7 @@ rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
 echo "Getting updates (should be none)..."
-fwupdmgr --no-unreported-check --no-metadata-check get-updates
+fwupdmgr --no-unreported-check --no-metadata-check get-updates 2>&1
 rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
 
 # ---
