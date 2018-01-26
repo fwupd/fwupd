@@ -361,10 +361,6 @@ fwupd_build_history_report_json_device (JsonBuilder *builder, FwupdDevice *dev)
 	FwupdRelease *rel = fwupd_device_get_release_default (dev);
 	GPtrArray *checksums;
 
-	/* identify different devices */
-	json_builder_set_member_name (builder, "DeviceId");
-	json_builder_add_string_value (builder, fwupd_device_get_id (dev));
-
 	/* identify the firmware used */
 	json_builder_set_member_name (builder, "Checksum");
 	checksums = fwupd_release_get_checksums (rel);
