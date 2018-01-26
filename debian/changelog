@@ -1,4 +1,4 @@
-fwupd (1.0.4-2) UNRELEASED; urgency=medium
+fwupd (1.0.4-2) unstable; urgency=medium
 
   * Backport a patch that should fix autopkgtest failures.
 
