@@ -319,6 +319,29 @@ fu_engine_get_keyring_for_kind (FwupdKeyringKind kind, GError **error)
 	return NULL;
 }
 
+/* finds the remote-id for the first firmware in the store that matches this
+ * container checksum */
+static const gchar *
+fu_engine_get_remote_id_for_checksum (FuEngine *self, const gchar *csum)
+{
+	GPtrArray *array = as_store_get_apps (self->store);
+	for (guint i = 0; i < array->len; i++) {
+		AsApp *app = g_ptr_array_index (array, i);
+		GPtrArray *releases = as_app_get_releases (app);
+		for (guint j = 0; j < releases->len; j++) {
+			AsRelease *release = g_ptr_array_index (releases, j);
+			AsChecksum *checksum;
+			checksum = as_release_get_checksum_by_target (release,
+								      AS_CHECKSUM_TARGET_CONTAINER);
+			if (checksum == NULL)
+				continue;
+			if (g_strcmp0 (csum, as_checksum_get_value (checksum)) == 0)
+				return _as_release_get_metadata_item (release, "fwupd::RemoteId");
+		}
+	}
+	return NULL;
+}
+
 static gboolean
 fu_engine_get_release_trust_flags (AsRelease *release,
 				 FwupdTrustFlags *trust_flags,
@@ -2277,6 +2300,8 @@ GPtrArray *
 fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 {
 	GPtrArray *apps;
+	const gchar *remote_id;
+	g_autofree gchar *csum = NULL;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) details = NULL;
@@ -2303,21 +2328,30 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 		return NULL;
 	}
 
+	/* does this exist in any enabled remote */
+	csum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob);
+	remote_id = fu_engine_get_remote_id_for_checksum (self, csum);
+
 	/* create results with all the metadata in */
 	details = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < apps->len; i++) {
 		AsApp *app = g_ptr_array_index (apps, i);
-		FwupdDevice *res = NULL;
+		FwupdDevice *dev;
 
 		/* check we can install it */
 		if (!fu_engine_check_requirements (self, app, NULL, error))
 			return NULL;
 
 		as_app_set_origin (app, as_store_get_origin (store));
-		res = fu_engine_get_result_from_app (self, app, error);
-		if (res == NULL)
+		dev = fu_engine_get_result_from_app (self, app, error);
+		if (dev == NULL)
 			return NULL;
-		g_ptr_array_add (details, res);
+		if (remote_id != NULL) {
+			FwupdRelease *rel = fwupd_device_get_release_default (dev);
+			fwupd_release_set_remote_id (rel, remote_id);
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
+		}
+		g_ptr_array_add (details, dev);
 	}
 	return g_steal_pointer (&details);
 }
@@ -2348,29 +2382,6 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 		return NULL;
 	}
 	return g_steal_pointer (&devices);
-}
-
-/* finds the remote-id for the first firmware in the store that matches this
- * container checksum */
-static const gchar *
-fu_engine_get_remote_id_for_checksum (FuEngine *self, const gchar *csum)
-{
-	GPtrArray *array = as_store_get_apps (self->store);
-	for (guint i = 0; i < array->len; i++) {
-		AsApp *app = g_ptr_array_index (array, i);
-		GPtrArray *releases = as_app_get_releases (app);
-		for (guint j = 0; j < releases->len; j++) {
-			AsRelease *release = g_ptr_array_index (releases, j);
-			AsChecksum *checksum;
-			checksum = as_release_get_checksum_by_target (release,
-								      AS_CHECKSUM_TARGET_CONTAINER);
-			if (checksum == NULL)
-				continue;
-			if (g_strcmp0 (csum, as_checksum_get_value (checksum)) == 0)
-				return _as_release_get_metadata_item (release, "fwupd::RemoteId");
-		}
-	}
-	return NULL;
 }
 
 /**
