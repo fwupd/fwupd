@@ -24,8 +24,8 @@ build() {
 }
 
 check() {
-    # disabled for now due to https://github.com/hughsie/fwupd/issues/370
-    #ninja -C build test
+    echo "Test suite disabled for now due to https://github.com/hughsie/fwupd/issues/370"
+    # ninja -C build test
 }
 
 package() {
