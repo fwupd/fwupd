@@ -1385,8 +1385,10 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	release_pending = fu_device_get_release_default (device_pending);
 	release = fu_device_get_release_default (device);
 	tmp = fwupd_release_get_version (release_pending);
-	if (tmp != NULL)
+	if (tmp != NULL) {
+		release = fu_device_get_release_default (device);
 		fwupd_release_set_version (release, tmp);
+	}
 	return TRUE;
 }
 

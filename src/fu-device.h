@@ -98,7 +98,6 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_version_bootloader(d)	fwupd_device_get_version_bootloader(FWUPD_DEVICE(d))
 #define fu_device_get_vendor_id(d)		fwupd_device_get_vendor_id(FWUPD_DEVICE(d))
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
-#define fu_device_get_release_default(d)	fwupd_device_get_release_default(FWUPD_DEVICE(d))
 
 /* accessors */
 gchar		*fu_device_to_string			(FuDevice	*device);
@@ -153,6 +152,7 @@ void		 fu_device_set_progress_full		(FuDevice	*device,
 void		 fu_device_set_quirks			(FuDevice	*device,
 							 FuQuirks	*quirks);
 FuQuirks	*fu_device_get_quirks			(FuDevice	*device);
+FwupdRelease	*fu_device_get_release_default		(FuDevice	*device);
 
 G_END_DECLS
 

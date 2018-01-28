@@ -47,11 +47,11 @@ fu_history_device_from_stmt (sqlite3_stmt *stmt)
 {
 	const gchar *tmp;
 	FuDevice *device;
-	g_autoptr(FwupdRelease) release = fwupd_release_new ();
+	FwupdRelease *release;
 
 	/* create new result */
 	device = fu_device_new ();
-	fwupd_device_add_release (FWUPD_DEVICE (device), release);
+	release = fu_device_get_release_default (device);
 
 	/* device_id */
 	tmp = (const gchar *) sqlite3_column_text (stmt, 0);

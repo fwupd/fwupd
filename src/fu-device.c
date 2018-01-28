@@ -717,6 +717,27 @@ fu_device_get_quirks (FuDevice *device)
 	return priv->quirks;
 }
 
+/**
+ * fu_device_get_release_default:
+ * @device: A #FuDevice
+ *
+ * Gets the default release for the device, creating one if not found.
+ *
+ * Returns: (transfer none): the #FwupdRelease object
+ *
+ * Since: 1.0.5
+ **/
+FwupdRelease *
+fu_device_get_release_default (FuDevice *device)
+{
+	g_autoptr(FwupdRelease) rel = NULL;
+	if (fwupd_device_get_release_default (FWUPD_DEVICE (device)) != NULL)
+		return fwupd_device_get_release_default (FWUPD_DEVICE (device));
+	rel = fwupd_release_new ();
+	fwupd_device_add_release (FWUPD_DEVICE (device), rel);
+	return rel;
+}
+
 static void
 fu_device_class_init (FuDeviceClass *klass)
 {
