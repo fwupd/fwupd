@@ -322,7 +322,7 @@ fu_device_altos_tty_read (FuDeviceAltos *device,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
-			     "no data recieved from device in %ums",
+			     "no data received from device in %ums",
 			     timeout_ms);
 		return NULL;
 	}

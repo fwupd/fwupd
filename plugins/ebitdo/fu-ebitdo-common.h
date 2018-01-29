@@ -75,7 +75,7 @@ typedef enum {
 	FU_EBITDO_PKT_CMD_GET_VERIFICATION_ID	= 0x1a, /* verification id (only BT) */
 	FU_EBITDO_PKT_CMD_VERIFY_ERROR		= 0x1b, /* verification error */
 	FU_EBITDO_PKT_CMD_VERIFY_OK		= 0x1c, /* verification successful */
-	FU_EBITDO_PKT_CMD_TRANSFER_TIMEOUT	= 0x1d, /* send or recieve data timeout */
+	FU_EBITDO_PKT_CMD_TRANSFER_TIMEOUT	= 0x1d, /* send or receive data timeout */
 	FU_EBITDO_PKT_CMD_GET_VERSION		= 0x21, /* get fw ver, joystick mode */
 	FU_EBITDO_PKT_CMD_GET_VERSION_RESPONSE	= 0x22, /* get fw version response */
 	FU_EBITDO_PKT_CMD_FW_LAST
