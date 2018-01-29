@@ -1,4 +1,4 @@
-fwupd (1.0.4-3) UNRELEASED; urgency=medium
+fwupd (1.0.4-3) unstable; urgency=medium
 
   * Revert previous patch (still didn't help with autopkgtest).
   * Introduce a different patch for helping autopkgtest failures.
