@@ -1,3 +1,10 @@
+fwupd (1.0.4-3) UNRELEASED; urgency=medium
+
+  * Revert previous patch (still didn't help with autopkgtest).
+  * Introduce a different patch for helping autopkgtest failures.
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 29 Jan 2018 14:36:56 -0600
+
 fwupd (1.0.4-2) unstable; urgency=medium
 
   * Backport a patch that should fix autopkgtest failures.
