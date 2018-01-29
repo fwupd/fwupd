@@ -39,7 +39,7 @@
 #include "fu-pending.h"
 #include "fu-plugin-private.h"
 
-#ifndef GUdevClient_autoptr
+#ifndef HAVE_GUDEV_232
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
 #endif
 

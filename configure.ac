@@ -170,6 +170,14 @@ AS_IF([test "$have_polkit_0_114" = "yes"], [
 	          [Define as 1 if you have polkit >= 0.114])
 ])
 
+# 232 introduced autocleanup functions for its types
+PKG_CHECK_MODULES([GUDEV_232], [gudev-1.0 >= 232],
+                  [have_gudev_232=yes], [have_gudev_232=no])
+AS_IF([test "$have_gudev_232" = "yes"], [
+	AC_DEFINE([HAVE_GUDEV_232],[1],
+	          [Define as 1 if you have gudev >= 0.232])
+])
+
 # ColorHug support
 AC_ARG_ENABLE(colorhug,
 	      AS_HELP_STRING([--enable-colorhug],

@@ -51,7 +51,9 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuDeviceAltos, fu_device_altos, FU_TYPE_DEVICE)
 
 #define GET_PRIVATE(o) (fu_device_altos_get_instance_private (o))
 
+#ifndef HAVE_GUDEV_232
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
+#endif
 
 /**
  * fu_device_altos_kind_from_string:
