@@ -1,3 +1,22 @@
+Version 0.8.3
+~~~~~~~~~~~~~
+Released: 2018-01-29
+
+New Features:
+ - Add --version option to fwupdmgr (Richard Hughes)
+
+Bugfixes:
+ - Add a delay when calling update_prepare (Mario Limonciello)
+ - Block owned Dell TPM updates (#339) (Mario Limonciello)
+ - Catch invalid Dell dock component requests (Mario Limonciello)
+ - Disable the dell plugin if libsmbios fails (Mario Limonciello)
+ - Do not re-download firmware that exists in the cache (Richard Hughes)
+ - Ensure the 8bitdo version is set in non-bootloader mode (Richard Hughes)
+ - Fix a logic error with testing for a dell system (Mario Limonciello)
+ - Fix compile with newer versions of GUdev (Richard Hughes)
+ - Fix crash with dock connected but UEFI capsule off (Mario Limonciello)
+ - Use new VID for 8bitdo (Richard Hughes)
+
 Version 0.8.2
 ~~~~~~~~~~~~~
 Released: 2017-04-20
