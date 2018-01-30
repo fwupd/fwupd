@@ -1,3 +1,9 @@
+fwupd (1.0.4-4) UNRELEASED; urgency=medium
+
+  * Move git repo from alioth to salsa.d.o
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 29 Jan 2018 14:36:56 -0600
+
 fwupd (1.0.4-3) unstable; urgency=medium
 
   * Revert previous patch (still didn't help with autopkgtest).
