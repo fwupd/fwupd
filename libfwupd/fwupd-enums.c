@@ -152,6 +152,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "needs-reboot";
 	if (device_flag == FWUPD_DEVICE_FLAG_REPORTED)
 		return "reported";
+	if (device_flag == FWUPD_DEVICE_FLAG_NOTIFIED)
+		return "notified";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -194,6 +196,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 	if (g_strcmp0 (device_flag, "reported") == 0)
 		return FWUPD_DEVICE_FLAG_REPORTED;
+	if (g_strcmp0 (device_flag, "notified") == 0)
+		return FWUPD_DEVICE_FLAG_NOTIFIED;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

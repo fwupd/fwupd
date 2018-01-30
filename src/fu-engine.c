@@ -637,7 +637,8 @@ fu_engine_modify_device (FuEngine *self,
 					     "device already has that flag");
 			return FALSE;
 		}
-		if (flag != FWUPD_DEVICE_FLAG_REPORTED) {
+		if (flag != FWUPD_DEVICE_FLAG_REPORTED &&
+		    flag != FWUPD_DEVICE_FLAG_NOTIFIED) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
