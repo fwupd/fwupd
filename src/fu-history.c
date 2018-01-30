@@ -481,7 +481,8 @@ fu_history_get_devices (FuHistory *self, GError **error)
 					"update_state, "
 					"update_error, "
 					"version_new, "
-					"version_old FROM history;",
+					"version_old FROM history "
+					"ORDER BY device_modified ASC;",
 					-1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,

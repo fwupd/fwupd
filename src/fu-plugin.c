@@ -1279,9 +1279,6 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginDeviceFunc func = NULL;
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuDevice) device_pending = NULL;
-	g_autoptr(FuHistory) history = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1291,34 +1288,16 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 	if (priv->module == NULL)
 		return TRUE;
 
-	/* use the plugin if the vfunc is provided */
-	g_module_symbol (priv->module, "fu_plugin_clear_result", (gpointer *) &func);
-	if (func != NULL) {
-		g_debug ("performing clear_result() on %s", priv->name);
-		if (!func (plugin, device, error)) {
-			g_prefix_error (error, "failed to clear_result %s: ", priv->name);
-			return FALSE;
-		}
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_get_results", (gpointer *) &func);
+	if (func == NULL)
 		return TRUE;
-	}
-
-	/* handled using the database */
-	history = fu_history_new ();
-	device_pending = fu_history_get_device_by_id (history,
-						      fu_device_get_id (device),
-						      &error_local);
-	if (device_pending == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to find %s in history database: %s",
-			     fu_device_get_id (device),
-			     error_local->message);
+	g_debug ("performing clear_result() on %s", priv->name);
+	if (!func (plugin, device, error)) {
+		g_prefix_error (error, "failed to clear_result %s: ", priv->name);
 		return FALSE;
 	}
-
-	/* remove from history database */
-	return fu_history_remove_device (history, fu_device_get_id (device), error);
+	return TRUE;
 }
 
 gboolean
@@ -1326,13 +1305,6 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginDeviceFunc func = NULL;
-	FwupdUpdateState update_state;
-	const gchar *tmp;
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuDevice) device_pending = NULL;
-	g_autoptr(FuHistory) history = NULL;
-	FwupdRelease *release;
-	FwupdRelease *release_pending;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1342,58 +1314,14 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	if (priv->module == NULL)
 		return TRUE;
 
-	/* use the plugin if the vfunc is provided */
+	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_get_results", (gpointer *) &func);
-	if (func != NULL) {
-		g_debug ("performing get_results() on %s", priv->name);
-		if (!func (plugin, device, error)) {
-			g_prefix_error (error, "failed to get_results %s: ", priv->name);
-			return FALSE;
-		}
+	if (func == NULL)
 		return TRUE;
-	}
-
-	/* handled using the database */
-	history = fu_history_new ();
-	device_pending = fu_history_get_device_by_id (history,
-						      fu_device_get_id (device),
-						      &error_local);
-	if (device_pending == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "Failed to find %s in history database: %s",
-			     fu_device_get_id (device),
-			     error_local->message);
+	g_debug ("performing get_results() on %s", priv->name);
+	if (!func (plugin, device, error)) {
+		g_prefix_error (error, "failed to get_results %s: ", priv->name);
 		return FALSE;
-	}
-
-	/* copy the important parts from the history device to the real one */
-	update_state = fu_device_get_update_state (device_pending);
-	if (update_state == FWUPD_UPDATE_STATE_UNKNOWN ||
-	    update_state == FWUPD_UPDATE_STATE_PENDING) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "Device %s has not been updated offline yet",
-			     fu_device_get_id (device));
-		return FALSE;
-	}
-
-	/* copy */
-	fu_device_set_update_state (device, update_state);
-	tmp = fu_device_get_update_error (device_pending);
-	if (tmp != NULL)
-		fu_device_set_update_error (device, tmp);
-	tmp = fu_device_get_version (device_pending);
-	if (tmp != NULL)
-		fu_device_set_version (device, tmp);
-	release_pending = fu_device_get_release_default (device_pending);
-	release = fu_device_get_release_default (device);
-	tmp = fwupd_release_get_version (release_pending);
-	if (tmp != NULL) {
-		release = fu_device_get_release_default (device);
-		fwupd_release_set_version (release, tmp);
 	}
 	return TRUE;
 }

@@ -1636,52 +1636,54 @@ fu_engine_install (FuEngine *self,
 static FuDevice *
 fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GError **error)
 {
-	FuDevice *dev;
-	FuPlugin *plugin;
-	FuDevice *device = NULL;
-	FwupdUpdateState update_state;
-	const gchar *tmp;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* not a wildcard */
-	if (g_strcmp0 (id, FWUPD_DEVICE_ID_ANY) != 0)
-		return fu_device_list_get_by_id (self->device_list, id, error);
+	if (g_strcmp0 (id, FWUPD_DEVICE_ID_ANY) != 0) {
+		g_autoptr(FuDevice) dev = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* get this one device */
+		dev = fu_history_get_device_by_id (self->history, id, &error_local);
+		if (dev == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "Failed to find %s in history database: %s",
+				     id, error_local->message);
+			return NULL;
+		}
+
+		/* only useful */
+		if (fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_SUCCESS ||
+		    fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_FAILED) {
+			return g_steal_pointer (&dev);
+		}
+
+		/* nothing in database */
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
+			     "Device %s has no results to report",
+			     fu_device_get_id (dev));
+		return NULL;
+	}
 
 	/* allow '*' for any */
 	devices = fu_history_get_devices (self->history, error);
 	if (devices == NULL)
 		return NULL;
 	for (guint i = 0; i < devices->len; i++) {
-		dev = g_ptr_array_index (devices, i);
-		update_state = fu_device_get_update_state (dev);
-		if (update_state == FWUPD_UPDATE_STATE_UNKNOWN)
-			continue;
-		if (update_state == FWUPD_UPDATE_STATE_PENDING)
-			continue;
-
-		/* if the device is not still connected, fake a FuDevice */
-		device = fu_device_list_get_by_id (self->device_list, fu_device_get_id (dev), NULL);
-		if (device == NULL) {
-			tmp = fu_device_get_plugin (dev);
-			plugin = fu_plugin_list_find_by_name (self->plugin_list, tmp, error);
-			if (plugin == NULL)
-				return NULL;
-			fu_device_list_add (self->device_list, dev);
-
-			/* FIXME: just a boolean on FuDevice? */
-			fu_device_set_metadata (dev, "FakeDevice", "TRUE");
-		}
-		break;
+		FuDevice *dev = g_ptr_array_index (devices, i);
+		if (fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_SUCCESS ||
+		    fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_FAILED)
+			return g_object_ref (dev);
 	}
-
-	/* no device found */
-	if (device == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "no suitable devices found");
-	}
-	return device;
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
+			     "Failed to find any useful results to report");
+	return NULL;
 }
 
 /**
@@ -2797,7 +2799,7 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 gboolean
 fu_engine_clear_results (FuEngine *self, const gchar *device_id, GError **error)
 {
-	FuDevice *device;
+	g_autoptr(FuDevice) device = NULL;
 	FuPlugin *plugin;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
@@ -2809,15 +2811,29 @@ fu_engine_clear_results (FuEngine *self, const gchar *device_id, GError **error)
 	if (device == NULL)
 		return FALSE;
 
-	/* get the plugin */
+	/* already set on the database */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NOTIFIED)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "device already has notified flag");
+		return FALSE;
+	}
+
+	/* call into the plugin if it still exists */
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
-	if (plugin == NULL)
-		return FALSE;
+	if (plugin != NULL) {
+		if (!fu_plugin_runner_clear_results (plugin, device, error))
+			return FALSE;
+	}
 
-	/* call into the plugin */
-	return fu_plugin_runner_clear_results (plugin, device, error);
+	/* override */
+	return fu_history_set_device_flags (self->history,
+					    fu_device_get_id (device),
+					    fu_device_get_flags (device) | FWUPD_DEVICE_FLAG_NOTIFIED,
+					    error);
 }
 
 /**
@@ -2833,8 +2849,7 @@ fu_engine_clear_results (FuEngine *self, const gchar *device_id, GError **error)
 FwupdDevice *
 fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 {
-	FuDevice *device;
-	FuPlugin *plugin;
+	g_autoptr(FuDevice) device = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
 	g_return_val_if_fail (device_id != NULL, NULL);
@@ -2843,19 +2858,19 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 	/* find the device */
 	device = fu_engine_get_item_by_id_fallback_history (self, device_id, error);
 	if (device == NULL)
-		return NULL;
-
-	/* get the plugin */
-	plugin = fu_plugin_list_find_by_name (self->plugin_list,
-					      fu_device_get_plugin (device),
-					      error);
-	if (plugin == NULL)
 		return FALSE;
 
-	/* call into the plugin */
-	if (!fu_plugin_runner_get_results (plugin, device, error))
+	/* the notification has already been shown to the user */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NOTIFIED)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
+			     "User has already been notified about %s",
+			     fu_device_get_id (device));
 		return NULL;
+	}
 
+	/* success */
 	return g_object_ref (FWUPD_DEVICE (device));
 }
 
