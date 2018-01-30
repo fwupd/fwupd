@@ -323,6 +323,8 @@ fu_engine_history_func (void)
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
+	g_autoptr(FwupdDevice) device3 = NULL;
+	g_autoptr(FwupdDevice) device4 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new ();
 	g_autoptr(FuHistory) history = NULL;
@@ -405,6 +407,24 @@ fu_engine_history_func (void)
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
+
+	/* GetResults() */
+	device3 = fu_engine_get_results (engine, FWUPD_DEVICE_ID_ANY, &error);
+	g_assert (device3 != NULL);
+	g_assert_cmpstr (fu_device_get_id (device3), ==,
+			 "894e8c17a29428b09d10cd90d1db74ea76fbcfe8");
+	g_assert_cmpint (fu_device_get_update_state (device3), ==, FWUPD_UPDATE_STATE_SUCCESS);
+	g_assert_cmpstr (fu_device_get_update_error (device3), ==, NULL);
+
+	/* ClearResults() */
+	ret = fu_engine_clear_results (engine, FWUPD_DEVICE_ID_ANY, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* GetResults() */
+	device4 = fu_engine_get_results (engine, FWUPD_DEVICE_ID_ANY, &error);
+	g_assert (device4 == NULL);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
 }
 
 static void
@@ -1106,11 +1126,6 @@ fu_plugin_module_func (void)
 	ret = fu_plugin_runner_clear_results (plugin, device_tmp, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-
-	/* re-get the status */
-	ret = fu_plugin_runner_get_results (plugin, device_tmp, &error);
-	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
-	g_assert (!ret);
 
 	g_object_unref (device_tmp);
 	g_clear_error (&error);

@@ -139,3 +139,11 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 	return TRUE;
 }
+
+gboolean
+fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
+	fu_device_set_update_error (device, NULL);
+	return TRUE;
+}
