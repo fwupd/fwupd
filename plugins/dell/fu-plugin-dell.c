@@ -125,6 +125,7 @@ static guint8 enclosure_whitelist [] = { 0x03, /* desktop */
   * System blacklist on older libsmbios
   */
 static guint16 system_blacklist [] =	{ 0x071E, /* latitude 5414 */
+					  0x07A8, /* latitude 5580 */
 					  0x077A, /* xps 9365 */ };
 
 /**
