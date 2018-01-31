@@ -1211,6 +1211,37 @@ fu_plugin_list_depsolve_func (void)
 }
 
 static void
+fu_history_migrate_func (void)
+{
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_dst = NULL;
+	g_autoptr(GFile) file_src = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuHistory) history = NULL;
+	g_autofree gchar *filename = NULL;
+
+	/* load old version */
+	filename = fu_test_get_filename (TESTDATADIR, "history_v1.db");
+	file_src = g_file_new_for_path (filename);
+	file_dst = g_file_new_for_path ("/tmp/fwupd-self-test/var/lib/fwupd/pending.db");
+	ret = g_file_copy (file_src, file_dst, G_FILE_COPY_OVERWRITE, NULL,
+			   NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* create, migrating as required */
+	history = fu_history_new ();
+	g_assert (history != NULL);
+
+	/* get device */
+	device = fu_history_get_device_by_id (history, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
+	g_assert_no_error (error);
+	g_assert (device != NULL);
+	g_assert_cmpstr (fu_device_get_id (device), ==, "2ba16d10df45823dd4494ff10a0bfccfef512c9d");
+}
+
+static void
 fu_history_func (void)
 {
 	GError *error = NULL;
@@ -1218,6 +1249,7 @@ fu_history_func (void)
 	gboolean ret;
 	FuDevice *device;
 	FwupdRelease *release;
+	g_autoptr(FuDevice) device_found = NULL;
 	g_autoptr(FuHistory) history = NULL;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
@@ -1238,7 +1270,8 @@ fu_history_func (void)
 	fu_device_set_id (device, "self-test");
 	fu_device_set_name (device, "ColorHug"),
 	fu_device_set_version (device, "3.0.1"),
-	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_PENDING);
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+	fu_device_set_update_error (device, "word");
 	fu_device_add_guid (device, "827edddd-9bb6-5632-889f-2c01255503da");
 	fu_device_set_flags (device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_created (device, 123);
@@ -1256,13 +1289,6 @@ fu_history_func (void)
 	/* ensure database was created */
 	g_assert (g_file_test (filename, G_FILE_TEST_EXISTS));
 
-	/* add some extra data */
-	ret = fu_history_set_device_error (history,
-					   "2ba16d10df45823dd4494ff10a0bfccfef512c9d",
-					   "word",
-					   &error);
-	g_assert_no_error (error);
-	g_assert (ret);
 	g_object_unref (device);
 
 	/* get device */
@@ -1287,23 +1313,32 @@ fu_history_func (void)
 	g_assert (checksums != NULL);
 	g_assert_cmpint (checksums->len, ==, 1);
 	g_assert_cmpstr (fwupd_checksum_get_by_kind (checksums, G_CHECKSUM_SHA1), ==, "abcdef");
-	g_object_unref (device);
-
-	/* get device that does not exist */
-	device = fu_history_get_device_by_id (history, "XXXXXXXXXXXXX", &error);
-	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert (device == NULL);
-	g_clear_error (&error);
-
-	/* remove device */
-	ret = fu_history_remove_device (history, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
+	ret = fu_history_add_device (history, device, release, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* get device that does not exist */
-	device = fu_history_get_device_by_id (history, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
+	device_found = fu_history_get_device_by_id (history, "XXXXXXXXXXXXX", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert (device == NULL);
+	g_assert (device_found == NULL);
+	g_clear_error (&error);
+
+	/* get device that does exist */
+	device_found = fu_history_get_device_by_id (history, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
+	g_assert_no_error (error);
+	g_assert (device_found != NULL);
+	g_object_unref (device_found);
+
+	/* remove device */
+	ret = fu_history_remove_device (history, device, release, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_object_unref (device);
+
+	/* get device that does not exist */
+	device_found = fu_history_get_device_by_id (history, "2ba16d10df45823dd4494ff10a0bfccfef512c9d", &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert (device_found == NULL);
 	g_clear_error (&error);
 }
 
@@ -1978,6 +2013,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
 	g_test_add_func ("/fwupd/history", fu_history_func);
+	g_test_add_func ("/fwupd/history{migrate}", fu_history_migrate_func);
 	g_test_add_func ("/fwupd/plugin-list", fu_plugin_list_func);
 	g_test_add_func ("/fwupd/plugin-list{depsolve}", fu_plugin_list_depsolve_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);

@@ -31,26 +31,26 @@ G_BEGIN_DECLS
 #define FU_TYPE_PENDING (fu_history_get_type ())
 G_DECLARE_FINAL_TYPE (FuHistory, fu_history, FU, HISTORY, GObject)
 
+typedef enum {
+	FU_HISTORY_FLAGS_NONE			= 0,
+	FU_HISTORY_FLAGS_MATCH_OLD_VERSION	= 1 << 0,
+	FU_HISTORY_FLAGS_MATCH_NEW_VERSION	= 1 << 1,
+	FU_HISTORY_FLAGS_LAST
+} FuHistoryFlags;
+
 FuHistory	*fu_history_new				(void);
 
 gboolean	 fu_history_add_device			(FuHistory	*self,
 							 FuDevice	*device,
 							 FwupdRelease	*release,
 							 GError		**error);
-gboolean	 fu_history_set_device_state		(FuHistory	*self,
-							 const gchar	*device_id,
-							 FwupdUpdateState update_state,
-							 GError		**error);
-gboolean	 fu_history_set_device_flags		(FuHistory	*self,
-							 const gchar	*device_id,
-							 FwupdDeviceFlags device_flags,
-							 GError		**error);
-gboolean	 fu_history_set_device_error		(FuHistory	*self,
-							 const gchar	*device_id,
-							 const gchar	*error_msg,
+gboolean	 fu_history_modify_device		(FuHistory	*self,
+							 FuDevice	*device,
+							 FuHistoryFlags	 flags,
 							 GError		**error);
 gboolean	 fu_history_remove_device		(FuHistory	*self,
-							 const gchar	*device_id,
+							 FuDevice	*device,
+							 FwupdRelease	*release,
 							 GError		**error);
 gboolean	 fu_history_remove_all			(FuHistory	*self,
 							 GError		**error);

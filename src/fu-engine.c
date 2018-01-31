@@ -640,10 +640,11 @@ fu_engine_modify_device (FuEngine *self,
 				     "flag %s cannot be set from client", key);
 			return FALSE;
 		}
-		return fu_history_set_device_flags (self->history,
-						    fu_device_get_id (device),
-						    fu_device_get_flags (device) | flag,
-						    error);
+		fu_device_add_flag (device, flag);
+		return fu_history_modify_device (self->history, device,
+						 FU_HISTORY_FLAGS_MATCH_OLD_VERSION |
+						 FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
+						 error);
 	}
 
 	/* others invalid */
@@ -1312,6 +1313,7 @@ fu_engine_install (FuEngine *self,
 	gint vercmp;
 	g_autofree gchar *checksum = NULL;
 	g_autofree gchar *device_id_orig = NULL;
+	g_autofree gchar *version_orig = NULL;
 	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
 	g_autoptr(GBytes) blob_fw2 = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -1485,8 +1487,8 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 
 	/* compare the versions of what we have installed */
-	tmp = fu_device_get_version (device);
-	if (tmp == NULL) {
+	version_orig = g_strdup (fu_device_get_version (device));
+	if (version_orig == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -1494,13 +1496,13 @@ fu_engine_install (FuEngine *self,
 			     device_id);
 		return FALSE;
 	}
-	vercmp = as_utils_vercmp (tmp, version);
+	vercmp = as_utils_vercmp (version_orig, version);
 	if (vercmp == 0 && (flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_SAME,
 			     "Specified firmware is already installed '%s'",
-			     tmp);
+			     version_orig);
 		return FALSE;
 	}
 	is_downgrade = vercmp > 0;
@@ -1509,7 +1511,7 @@ fu_engine_install (FuEngine *self,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_NEWER,
 			     "Specified firmware is older than installed '%s < %s'",
-			     tmp, version);
+			     version_orig, version);
 		return FALSE;
 	}
 
@@ -1538,14 +1540,20 @@ fu_engine_install (FuEngine *self,
 	fwupd_release_set_version (release_history, version);
 	fwupd_release_add_checksum (release_history, checksum);
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-	if (!fu_history_remove_device (self->history, fu_device_get_id (device), error))
-		return FALSE;
 	if (!fu_history_add_device (self->history, device, release_history, error))
 		return FALSE;
 
 	/* do the update */
-	if (!fu_plugin_runner_update_detach (plugin, device, error))
+	if (!fu_plugin_runner_update_detach (plugin, device, &error_local)) {
+		fu_device_set_update_error (device, error_local->message);
+		if (!fu_history_modify_device (self->history, device,
+					       FU_HISTORY_FLAGS_MATCH_OLD_VERSION,
+					       error)) {
+			return FALSE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
+	}
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL)
 		return FALSE;
@@ -1558,11 +1566,12 @@ fu_engine_install (FuEngine *self,
 		g_autoptr(GError) error_attach = NULL;
 
 		/* save to database */
-		if (!fu_history_set_device_error (self->history,
-						  fu_device_get_id (device),
-						  error_local->message,
-						  error))
+		fu_device_set_update_error (device, error_local->message);
+		if (!fu_history_modify_device (self->history, device,
+					       FU_HISTORY_FLAGS_MATCH_OLD_VERSION,
+					       error)) {
 			return FALSE;
+		}
 		g_propagate_error (error, g_steal_pointer (&error_local));
 
 		/* attack back into runtime */
@@ -1589,8 +1598,17 @@ fu_engine_install (FuEngine *self,
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_update_attach (plugin, device, error))
+	if (!fu_plugin_runner_update_attach (plugin, device, &error_local)) {
+		fu_device_set_update_error (device, error_local->message);
+		if (!fu_history_modify_device (self->history, device,
+					       FU_HISTORY_FLAGS_MATCH_OLD_VERSION |
+					       FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
+					       error)) {
+			return FALSE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
+	}
 
 	/* get the new version number */
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
@@ -1616,21 +1634,26 @@ fu_engine_install (FuEngine *self,
 
 	/* update database */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
-		if (!fu_history_set_device_state (self->history,
-						  fu_device_get_id (device),
-						  FWUPD_UPDATE_STATE_NEEDS_REBOOT,
-						  error))
-			return FALSE;
-	} else {
-		if (!fu_history_set_device_state (self->history,
-						  fu_device_get_id (device),
-						  FWUPD_UPDATE_STATE_SUCCESS,
-						  error))
-			return FALSE;
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
+		return fu_history_modify_device (self->history, device,
+						 FU_HISTORY_FLAGS_MATCH_OLD_VERSION,
+						 error);
+	}
+
+	/* for online updates, verify the version changed if not a re-install */
+	if (g_strcmp0 (version_orig, version) != 0 &&
+	    g_strcmp0 (version_orig, fu_device_get_version (device)) == 0) {
+		fu_device_set_update_error (device, "device version not updated on success");
+		return fu_history_modify_device (self->history, device,
+						 FU_HISTORY_FLAGS_MATCH_OLD_VERSION,
+						 error);
 	}
 
 	/* success */
-	return TRUE;
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
+	return fu_history_modify_device (self->history, device,
+					 FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
+					 error);
 }
 
 static FuDevice *
@@ -2830,10 +2853,11 @@ fu_engine_clear_results (FuEngine *self, const gchar *device_id, GError **error)
 	}
 
 	/* override */
-	return fu_history_set_device_flags (self->history,
-					    fu_device_get_id (device),
-					    fu_device_get_flags (device) | FWUPD_DEVICE_FLAG_NOTIFIED,
-					    error);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NOTIFIED);
+	return fu_history_modify_device (self->history, device,
+					 FU_HISTORY_FLAGS_MATCH_OLD_VERSION |
+					 FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
+					 error);
 }
 
 /**
@@ -3388,12 +3412,10 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 		g_debug ("installed version %s matching history %s",
 			 fu_device_get_version (dev),
 			 fwupd_release_get_version (rel_history));
-		if (!fu_history_set_device_state (self->history,
-						  fu_device_get_id (dev_history),
-						  FWUPD_UPDATE_STATE_SUCCESS,
-						  error))
-			return FALSE;
-		return TRUE;
+		fu_device_set_update_state (dev_history, FWUPD_UPDATE_STATE_SUCCESS);
+		return fu_history_modify_device (self->history, dev_history,
+						 FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
+						 error);
 	}
 
 	/* does the plugin know the update failure */
@@ -3408,17 +3430,14 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 	/* the plugin either can't tell us the error, or doesn't know itself */
 	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED) {
 		g_debug ("falling back to generic failure");
-		fu_device_set_update_error (dev, "failed to run update on reboot");
+		fu_device_set_update_error (dev_history, "failed to run update on reboot");
 	}
 
 	/* update the state in the database */
-	if (!fu_history_set_device_error (self->history, fu_device_get_id (dev),
-				          fu_device_get_update_error (dev),
-				          error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
+	fu_device_set_update_error (dev_history, fu_device_get_update_error (dev));
+	return fu_history_modify_device (self->history, dev_history,
+					 FU_HISTORY_FLAGS_MATCH_OLD_VERSION,
+					 error);
 }
 
 static gboolean
