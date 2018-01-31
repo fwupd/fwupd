@@ -859,9 +859,8 @@ fu_plugin_runner_device_generic (FuPlugin *plugin, FuDevice *device,
 		return TRUE;
 	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
 	if (!func (plugin, device, error)) {
-		g_prefix_error (error, "failed to run %s(%s) on %s: ",
+		g_prefix_error (error, "failed to run %s() on %s: ",
 				symbol_name + 10,
-				fu_device_get_id (device),
 				priv->name);
 		return FALSE;
 	}
