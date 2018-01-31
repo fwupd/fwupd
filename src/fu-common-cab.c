@@ -88,7 +88,7 @@ fu_common_store_from_cab_release (AsRelease *release, GCabFolder *cabfolder, GEr
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "contents size invalid, expected "
-			     "%" G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
+			     "%" G_GSIZE_FORMAT ", got %" G_GUINT64_FORMAT,
 			     g_bytes_get_size (blob), size);
 		return FALSE;
 	}
