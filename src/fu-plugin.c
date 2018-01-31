@@ -1228,12 +1228,7 @@ fu_plugin_runner_update (FuPlugin *plugin,
 	history = fu_history_new ();
 	device_pending = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
 	if (!update_func (plugin, device, blob_fw, flags, &error_update)) {
-		/* save the error to the database */
-		if (device_pending != NULL) {
-			fu_history_set_device_error (history,
-						     fu_device_get_id (device),
-						     error_update->message, NULL);
-		}
+		fu_device_set_update_error (device, error_update->message);
 		g_propagate_error (error, error_update);
 		return FALSE;
 	}
@@ -1248,10 +1243,10 @@ fu_plugin_runner_update (FuPlugin *plugin,
 		FwupdRelease *release;
 
 		/* update history database */
-		if (!fu_history_set_device_state (history,
-						  fu_device_get_id (device),
-						  FWUPD_UPDATE_STATE_SUCCESS,
-						  error))
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
+		if (!fu_history_modify_device (history, device,
+					       FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
+					       error))
 			return FALSE;
 
 		/* delete cab file */
