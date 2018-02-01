@@ -1188,12 +1188,16 @@ fu_plugin_runner_update (FuPlugin *plugin,
 	GPtrArray *checksums;
 
 	/* not enabled */
-	if (!priv->enabled)
+	if (!priv->enabled) {
+		g_debug ("plugin not enabled, skipping");
 		return TRUE;
+	}
 
 	/* no object loaded */
-	if (priv->module == NULL)
+	if (priv->module == NULL) {
+		g_debug ("module not enabled, skipping");
 		return TRUE;
+	}
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_update", (gpointer *) &update_func);
