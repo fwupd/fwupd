@@ -239,10 +239,20 @@ _convert_hash_to_string (GHashTable *hash)
 	return g_string_free (str, FALSE);
 }
 
+/* unset some flags we don't want to store */
+static FwupdDeviceFlags
+fu_history_get_device_flags_filtered (FuDevice *device)
+{
+	FwupdDeviceFlags flags = fu_device_get_flags (device);
+	flags &= ~FWUPD_DEVICE_FLAG_REPORTED;
+	flags &= ~FWUPD_DEVICE_FLAG_REGISTERED;
+	flags &= ~FWUPD_DEVICE_FLAG_SUPPORTED;
+	return flags;
+}
+
 gboolean
 fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release, GError **error)
 {
-	FwupdDeviceFlags flags;
 	const gchar *checksum = NULL;
 	gint rc;
 	g_autofree gchar *metadata = NULL;
@@ -261,12 +271,6 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 		GPtrArray *checksums = fwupd_release_get_checksums (release);
 		checksum = fwupd_checksum_get_by_kind (checksums, G_CHECKSUM_SHA1);
 	}
-
-	/* unset some flags we don't want to store */
-	flags = fu_device_get_flags (device);
-	flags &= ~FWUPD_DEVICE_FLAG_REPORTED;
-	flags &= ~FWUPD_DEVICE_FLAG_REGISTERED;
-	flags &= ~FWUPD_DEVICE_FLAG_SUPPORTED;
 
 	/* metadata is stored as a simple string */
 	metadata = _convert_hash_to_string (fwupd_release_get_metadata (release));
@@ -298,7 +302,7 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	sqlite3_bind_text (stmt, 1, fu_device_get_id (device), -1, SQLITE_STATIC);
 	sqlite3_bind_int (stmt, 2, fu_device_get_update_state (device));
 	sqlite3_bind_text (stmt, 3, fu_device_get_update_error (device), -1, SQLITE_STATIC);
-	sqlite3_bind_int64 (stmt, 4, flags);
+	sqlite3_bind_int64 (stmt, 4, fu_history_get_device_flags_filtered (device));
 	sqlite3_bind_text (stmt, 5, fwupd_release_get_filename (release), -1, SQLITE_STATIC);
 	sqlite3_bind_text (stmt, 6, checksum, -1, SQLITE_STATIC);
 	sqlite3_bind_text (stmt, 7, fu_device_get_name (device), -1, SQLITE_STATIC);
