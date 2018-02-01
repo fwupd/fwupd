@@ -56,7 +56,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_set_vendor (device, "ACME Corp.");
 	fu_device_set_vendor_id (device, "USB:0x046D");
 	fu_device_set_version_bootloader (device, "0.1.2");
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.2");
 	fu_device_set_version_lowest (device, "1.2.0");
 	if (g_strcmp0 (g_getenv ("FWUPD_PLUGIN_TEST"), "registration") == 0) {
 		fu_plugin_device_register (plugin, device);
@@ -132,8 +132,8 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 
 	/* upgrade, or downgrade */
-	if ((flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0) {
-		fu_device_set_version (device, "1.2.4");
+	if (flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
+		fu_device_set_version (device, "1.2.2");
 	} else {
 		fu_device_set_version (device, "1.2.3");
 	}

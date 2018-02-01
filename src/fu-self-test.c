@@ -332,7 +332,9 @@ fu_engine_history_func (void)
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* set up dummy plugin */
-	fu_plugin_set_name (plugin, "test");
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	fu_engine_add_plugin (engine, plugin);
 
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
@@ -1035,7 +1037,7 @@ fu_plugin_module_func (void)
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==, "08d460be0f1f9f128413f816022a6439e0078018");
 	g_assert_cmpstr (fu_device_get_version_lowest (device), ==, "1.2.0");
-	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.2");
 	g_assert_cmpstr (fu_device_get_version_bootloader (device), ==, "0.1.2");
 	g_assert_cmpstr (fu_device_get_guid_default (device), ==,
 			 "b585990a-003e-5270-89d5-3705a17f9a43");
@@ -1051,6 +1053,7 @@ fu_plugin_module_func (void)
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
+	fwupd_release_set_version (fu_device_get_release_default (device), "1.2.3");
 	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
 				       FWUPD_INSTALL_FLAG_OFFLINE, &error);
 	g_assert_no_error (error);
@@ -1067,6 +1070,7 @@ fu_plugin_module_func (void)
 	release = fu_device_get_release_default (device2);
 	g_assert (release != NULL);
 	g_assert_cmpstr (fwupd_release_get_filename (release), !=, NULL);
+	g_assert_cmpstr (fwupd_release_get_version (release), ==, "1.2.3");
 
 	/* save this; we'll need to delete it later */
 	pending_cap = g_strdup (fwupd_release_get_filename (release));
@@ -1079,7 +1083,7 @@ fu_plugin_module_func (void)
 	g_assert_cmpint (cnt, ==, 4);
 
 	/* check the new version */
-	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.4");
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
 	g_assert_cmpstr (fu_device_get_version_bootloader (device), ==, "0.1.2");
 
 	/* lets check the history */
