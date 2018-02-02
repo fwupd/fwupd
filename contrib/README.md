@@ -3,7 +3,7 @@ Distribution packages
 The relevant packaging necessary to generate *RPM*, *DEB* and *PKG* distribution packages is contained here.
 It is used regularly for continuous integration using [Travis CI](http://travis-ci.org). The generated packages can be used on a distribution such as Fedora, Debian, Ubuntu or Arch Linux.
 
-The build can be performed using Linux containers with [Docker](www.docker.com).
+The build can be performed using Linux containers with [Docker](https://www.docker.com).
 
 ## RPM packages
 A Dockerfile for Fedora can be generated in `contrib`.
