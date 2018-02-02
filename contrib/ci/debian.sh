@@ -2,6 +2,12 @@
 set -e
 set -x
 
+#although it's debian, we don't build packages
+if [ "$OS" = "debian-s390x" ]; then
+	./contrib/ci/debian_s390x.sh
+	exit 0
+fi
+
 #prepare
 export DEBFULLNAME="CI Builder"
 export DEBEMAIL="ci@travis-ci.org"

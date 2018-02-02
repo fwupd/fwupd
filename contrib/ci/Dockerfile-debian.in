@@ -4,3 +4,4 @@ RUN echo fubar > /etc/machine-id
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
 RUN mkdir /build
 WORKDIR /build
+CMD ["./contrib/ci/debian.sh"]
