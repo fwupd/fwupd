@@ -58,6 +58,7 @@ typedef struct {
 	FwupdClient		*client;
 	FuProgressbar		*progressbar;
 	gboolean		 no_metadata_check;
+	gboolean		 no_reboot_check;
 	gboolean		 no_unreported_check;
 	gboolean		 assume_yes;
 } FuUtilPrivate;
@@ -530,16 +531,15 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-static void
-fu_util_offline_update_reboot (void)
+static gboolean
+fu_util_update_reboot (GError **error)
 {
-	g_autoptr(GError) error = NULL;
 	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GVariant) val = NULL;
 
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL)
-		return;
+		return FALSE;
 
 #ifdef HAVE_SYSTEMD
 	/* reboot using systemd */
@@ -553,7 +553,7 @@ fu_util_offline_update_reboot (void)
 					   G_DBUS_CALL_FLAGS_NONE,
 					   -1,
 					   NULL,
-					   &error);
+					   error);
 #elif HAVE_CONSOLEKIT
 	/* reboot using ConsoleKit */
 	val = g_dbus_connection_call_sync (connection,
@@ -566,16 +566,14 @@ fu_util_offline_update_reboot (void)
 					   G_DBUS_CALL_FLAGS_NONE,
 					   -1,
 					   NULL,
-					   &error);
+					   error);
 #else
-	g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "No supported backend compiled in to perform the operation.");
+	g_set_error_literal (&error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_ARGS,
+			     "No supported backend compiled in to perform the operation.");
 #endif
-
-	if (val == NULL)
-		g_print ("Failed to reboot: %s\n", error->message);
+	return val != NULL;
 }
 
 static gboolean
@@ -680,7 +678,8 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* reboot */
-	fu_util_offline_update_reboot ();
+	if (!fu_util_update_reboot (error))
+		return FALSE;
 
 	g_print ("%s\n", _("Done!"));
 	return TRUE;
@@ -1804,6 +1803,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 static gboolean
 fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	gboolean requires_reboot = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get devices from daemon */
@@ -1831,6 +1831,26 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		rel = g_ptr_array_index (rels, 0);
 		if (!fu_util_update_device_with_release (priv, dev, rel, error))
 			return FALSE;
+		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+			requires_reboot = TRUE;
+	}
+
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
+	/* at least one of the updates needed a reboot */
+	if (requires_reboot) {
+		g_print ("\n%s %s [Y|n]: ",
+			 /* TRANSLATORS: explain why we want to upload */
+			 _("An update requires a reboot to complete."),
+			 /* TRANSLATORS: reboot to apply the update */
+			 _("Restart now?"));
+		if (!fu_util_prompt_for_boolean (TRUE))
+			return TRUE;
+		return fu_util_update_reboot (error);
 	}
 	return TRUE;
 }
@@ -2022,6 +2042,9 @@ main (int argc, char *argv[])
 		{ "no-metadata-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_metadata_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for old metadata"), NULL },
+		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
+			/* TRANSLATORS: command line option */
+			_("Do not check for reboot after update"), NULL },
 		{ NULL}
 	};
 
@@ -2199,6 +2222,7 @@ main (int argc, char *argv[])
 	if (isatty (fileno (stdout)) == 0) {
 		priv->no_unreported_check = TRUE;
 		priv->no_metadata_check = TRUE;
+		priv->no_reboot_check = TRUE;
 	}
 
 	/* get a list of the commands */
