@@ -49,11 +49,15 @@ A Dockerfile for Arch can be generated in `contrib`.
 
 To prepare the Docker container run this command:
 
-```OS=arch ./generate_docker.py
+```
+OS=arch ./generate_docker.py
+```
 
 To build the PKGs run this command (from the root of your git checkout):
 
-```docker run -t -v `pwd`:/build fwupd-arch```
+```
+docker run -t -v `pwd`:/build fwupd-arch
+```
 
 PKGs will be made available in your working directory when complete.
 
