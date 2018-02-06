@@ -201,6 +201,7 @@ if get_option('plugin_uefi')
     conf.set('HAVE_FWUP_GET_BGRT_INFO', '1')
   endif
   efivar = dependency('efivar')
+  conf.set_quoted('LIBFWUP_LIBRARY_VERSION', fwup.version())
 endif
 
 if get_option('plugin_dell')
