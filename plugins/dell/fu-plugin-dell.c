@@ -1043,11 +1043,15 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	g_autofree gchar *tmp = NULL;
 
 	data->libsmbios_major = smbios_get_library_version_major();
 	data->libsmbios_minor = smbios_get_library_version_minor();
 	g_debug ("Using libsmbios %u.%u", data->libsmbios_major,
 		 data->libsmbios_minor);
+	tmp = g_strdup_printf ("%u.%u", data->libsmbios_major,
+					data->libsmbios_minor);
+	fu_plugin_add_report_metadata (plugin, "LibsmbiosVersion", tmp);
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
 	if (g_getenv ("FWUPD_DELL_VERBOSE") != NULL)
