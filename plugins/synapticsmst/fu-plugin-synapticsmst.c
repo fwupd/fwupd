@@ -333,7 +333,7 @@ fu_plugin_update (FuPlugin *plugin,
 		fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
 		if (!synapticsmst_device_write_firmware (device, blob_fw,
 							 fu_synapticsmst_write_progress_cb,
-							 device,
+							 dev,
 							 error)) {
 			g_prefix_error (error, "failed to flash firmware: ");
 			return FALSE;
