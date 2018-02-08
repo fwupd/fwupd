@@ -278,6 +278,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 			device_id = g_strdup ("TBT-safemode");
 			fu_device_set_metadata_boolean (dev, FU_DEVICE_METADATA_TBT_IS_SAFE_MODE, TRUE);
 		}
+		fu_plugin_add_report_metadata (plugin, "ThunderboltSafeMode",
+					       is_safemode ? "True" : "False");
 	}
 	if (!is_safemode) {
 		if (is_host) {
@@ -285,6 +287,9 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 				g_warning ("failed to get native mode status: %s", error->message);
 				return;
 			}
+			fu_plugin_add_report_metadata (plugin,
+						       "ThunderboltNative",
+						       is_native ? "True" : "False");
 		}
 		vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
 		device_id = g_strdup_printf ("TBT-%04x%04x%s",
