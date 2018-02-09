@@ -30,9 +30,22 @@
 
 #ifdef HAVE_GCAB_1_0
 
+static GCabFile *
+_gcab_cabinet_get_file_by_name (GCabCabinet *cabinet, const gchar *basename)
+{
+	GPtrArray *folders = gcab_cabinet_get_folders (cabinet);
+	for (guint i = 0; i < folders->len; i++) {
+		GCabFolder *cabfolder = GCAB_FOLDER (g_ptr_array_index (folders, i));
+		GCabFile *cabfile = gcab_folder_get_file_by_name (cabfolder, basename);
+		if (cabfile != NULL)
+			return cabfile;
+	}
+	return NULL;
+}
+
 /* sets the firmware and signature blobs on AsRelease */
 static gboolean
-fu_common_store_from_cab_release (AsRelease *release, GCabFolder *cabfolder, GError **error)
+fu_common_store_from_cab_release (AsRelease *release, GCabCabinet *cabinet, GError **error)
 {
 	AsChecksum *csum_tmp;
 	GCabFile *cabfile;
@@ -57,7 +70,7 @@ fu_common_store_from_cab_release (AsRelease *release, GCabFolder *cabfolder, GEr
 
 	/* get the main firmware file */
 	basename = g_path_get_basename (as_checksum_get_filename (csum_tmp));
-	cabfile = gcab_folder_get_file_by_name (cabfolder, basename);
+	cabfile = _gcab_cabinet_get_file_by_name (cabinet, basename);
 	if (cabfile == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -111,7 +124,7 @@ fu_common_store_from_cab_release (AsRelease *release, GCabFolder *cabfolder, GEr
 	for (guint i = 0; suffixes[i] != NULL; i++) {
 		g_autofree gchar *basename_sig = NULL;
 		basename_sig = g_strdup_printf ("%s.%s", basename, suffixes[i]);
-		cabfile = gcab_folder_get_file_by_name (cabfolder, basename_sig);
+		cabfile = _gcab_cabinet_get_file_by_name (cabinet, basename_sig);
 		if (cabfile != NULL) {
 			blob = gcab_file_get_bytes (cabfile);
 			if (blob == NULL) {
@@ -132,7 +145,7 @@ fu_common_store_from_cab_release (AsRelease *release, GCabFolder *cabfolder, GEr
 
 /* adds each GCabFile to the store */
 static gboolean
-fu_common_store_from_cab_file (AsStore *store, GCabFolder *cabfolder,
+fu_common_store_from_cab_file (AsStore *store, GCabCabinet *cabinet,
 			       GCabFile *cabfile, GError **error)
 {
 	GBytes *blob;
@@ -198,7 +211,7 @@ fu_common_store_from_cab_file (AsStore *store, GCabFolder *cabfolder,
 	for (guint i = 0; i < releases->len; i++) {
 		AsRelease *release = g_ptr_array_index (releases, i);
 		g_debug ("processing release: %s", as_release_get_version (release));
-		if (!fu_common_store_from_cab_release (release, cabfolder, error))
+		if (!fu_common_store_from_cab_release (release, cabinet, error))
 			return FALSE;
 	}
 
@@ -209,7 +222,8 @@ fu_common_store_from_cab_file (AsStore *store, GCabFolder *cabfolder,
 
 /* adds each GCabFolder to the store */
 static gboolean
-fu_common_store_from_cab_folder (AsStore *store, GCabFolder *cabfolder, GError **error)
+fu_common_store_from_cab_folder (AsStore *store, GCabCabinet *cabinet,
+				 GCabFolder *cabfolder, GError **error)
 {
 	g_autoptr(GSList) cabfiles = gcab_folder_get_files (cabfolder);
 	for (GSList *l = cabfiles; l != NULL; l = l->next) {
@@ -217,7 +231,7 @@ fu_common_store_from_cab_folder (AsStore *store, GCabFolder *cabfolder, GError *
 		const gchar *fn = gcab_file_get_extract_name (cabfile);
 		g_debug ("processing file: %s", fn);
 		if (as_format_guess_kind (fn) == AS_FORMAT_KIND_METAINFO) {
-			if (!fu_common_store_from_cab_file (store, cabfolder, cabfile, error)) {
+			if (!fu_common_store_from_cab_file (store, cabinet, cabfile, error)) {
 				g_prefix_error (error, "%s could not be loaded: ",
 						gcab_file_get_extract_name (cabfile));
 				return FALSE;
@@ -340,7 +354,7 @@ fu_common_store_from_cab_bytes (GBytes *blob, guint64 size_max, GError **error)
 	for (guint i = 0; i < folders->len; i++) {
 		GCabFolder *cabfolder = GCAB_FOLDER (g_ptr_array_index (folders, i));
 		g_debug ("processing folder: %u/%u", i + 1, folders->len);
-		if (!fu_common_store_from_cab_folder (store, cabfolder, error))
+		if (!fu_common_store_from_cab_folder (store, cabinet, cabfolder, error))
 			return NULL;
 	}
 
