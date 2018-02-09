@@ -317,7 +317,6 @@ static FwupdDeviceFlags
 fu_history_get_device_flags_filtered (FuDevice *device)
 {
 	FwupdDeviceFlags flags = fu_device_get_flags (device);
-	flags &= ~FWUPD_DEVICE_FLAG_REPORTED;
 	flags &= ~FWUPD_DEVICE_FLAG_REGISTERED;
 	flags &= ~FWUPD_DEVICE_FLAG_SUPPORTED;
 	return flags;
