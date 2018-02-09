@@ -2229,55 +2229,55 @@ main (int argc, char *argv[])
 	priv->cmd_array = g_ptr_array_new_with_free_func ((GDestroyNotify) dfu_tool_item_free);
 	dfu_tool_add (priv->cmd_array,
 		     "convert",
-		     NULL,
+		     "FORMAT FILE-IN FILE OUT [SIZE]",
 		     /* TRANSLATORS: command description */
 		     _("Convert firmware to DFU format"),
 		     dfu_tool_convert);
 	dfu_tool_add (priv->cmd_array,
 		     "merge",
-		     NULL,
+		     "FILE-OUT FILE1 FILE2 [FILE3...]",
 		     /* TRANSLATORS: command description */
 		     _("Merge multiple firmware files into one"),
 		     dfu_tool_merge);
 	dfu_tool_add (priv->cmd_array,
 		     "set-vendor",
-		     NULL,
+		     "FILE VID",
 		     /* TRANSLATORS: command description */
 		     _("Set vendor ID on firmware file"),
 		     dfu_tool_set_vendor);
 	dfu_tool_add (priv->cmd_array,
 		     "set-product",
-		     NULL,
+		     "FILE PID",
 		     /* TRANSLATORS: command description */
 		     _("Set product ID on firmware file"),
 		     dfu_tool_set_product);
 	dfu_tool_add (priv->cmd_array,
 		     "set-address",
-		     NULL,
+		     "FILE ADDRESS",
 		     /* TRANSLATORS: command description */
 		     _("Set element address on firmware file"),
 		     dfu_tool_set_address);
 	dfu_tool_add (priv->cmd_array,
 		     "set-target-size",
-		     NULL,
+		     "FILE SIZE",
 		     /* TRANSLATORS: command description */
 		     _("Set the firmware size for the target"),
 		     dfu_tool_set_target_size);
 	dfu_tool_add (priv->cmd_array,
 		     "set-release",
-		     NULL,
+		     "FILE RELEASE",
 		     /* TRANSLATORS: command description */
 		     _("Set release version on firmware file"),
 		     dfu_tool_set_release);
 	dfu_tool_add (priv->cmd_array,
 		     "set-alt-setting",
-		     NULL,
+		     "FILE ALT-ID",
 		     /* TRANSLATORS: command description */
 		     _("Set alternative number on firmware file"),
 		     dfu_tool_set_alt_setting);
 	dfu_tool_add (priv->cmd_array,
 		     "set-alt-setting-name",
-		     NULL,
+		     "FILE VALUE",
 		     /* TRANSLATORS: command description */
 		     _("Set alternative name on firmware file"),
 		     dfu_tool_set_alt_setting_name);
@@ -2295,13 +2295,13 @@ main (int argc, char *argv[])
 		     dfu_tool_reset);
 	dfu_tool_add (priv->cmd_array,
 		     "read",
-		     NULL,
+		     "FILENAME",
 		     /* TRANSLATORS: command description */
 		     _("Read firmware from device into a file"),
 		     dfu_tool_read);
 	dfu_tool_add (priv->cmd_array,
 		     "read-alt",
-		     NULL,
+		     "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID",
 		     /* TRANSLATORS: command description */
 		     _("Read firmware from one partition into a file"),
 		     dfu_tool_read_alt);
@@ -2313,7 +2313,7 @@ main (int argc, char *argv[])
 		     dfu_tool_write);
 	dfu_tool_add (priv->cmd_array,
 		     "write-alt",
-		     NULL,
+		     "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Write firmware from file into one partition"),
 		     dfu_tool_write_alt);
@@ -2331,7 +2331,7 @@ main (int argc, char *argv[])
 		     dfu_tool_detach);
 	dfu_tool_add (priv->cmd_array,
 		     "dump",
-		     NULL,
+		     "FILENAME",
 		     /* TRANSLATORS: command description */
 		     _("Dump details about a firmware file"),
 		     dfu_tool_dump);
@@ -2343,19 +2343,19 @@ main (int argc, char *argv[])
 		     dfu_tool_watch);
 	dfu_tool_add (priv->cmd_array,
 		     "encrypt",
-		     NULL,
+		     "FILENAME-IN FILENAME-OUT TYPE KEY",
 		     /* TRANSLATORS: command description */
 		     _("Encrypt firmware data"),
 		     dfu_tool_encrypt);
 	dfu_tool_add (priv->cmd_array,
 		     "decrypt",
-		     NULL,
+		     "FILENAME-IN FILENAME-OUT TYPE KEY",
 		     /* TRANSLATORS: command description */
 		     _("Decrypt firmware data"),
 		     dfu_tool_decrypt);
 	dfu_tool_add (priv->cmd_array,
 		     "set-metadata",
-		     NULL,
+		     "FILE KEY VALUE",
 		     /* TRANSLATORS: command description */
 		     _("Sets metadata on a firmware file"),
 		     dfu_tool_set_metadata);
