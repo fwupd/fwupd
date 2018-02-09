@@ -1649,6 +1649,13 @@ fu_engine_install (FuEngine *self,
 						 error);
 	}
 
+	/* ensure the new version matched what we expected */
+	if (g_strcmp0 (fu_device_get_version (device), version) != 0) {
+		g_warning ("new device version '%s' was is not '%s', fixing up",
+			   fu_device_get_version (device), version);
+		fu_device_set_version (device, version);
+	}
+
 	/* success */
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	return fu_history_modify_device (self->history, device,
