@@ -30,6 +30,7 @@
 #include <glib/gi18n.h>
 #include <glib-unix.h>
 #include <gudev/gudev.h>
+#include <json-glib/json-glib.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -698,8 +699,12 @@ fu_util_report_history_for_uri (FuUtilPrivate *priv,
 				GPtrArray *devices,
 				GError **error)
 {
+	JsonNode *json_root;
+	JsonObject *json_object;
+	const gchar *server_msg = NULL;
 	guint status_code;
 	g_autofree gchar *data = NULL;
+	g_autoptr(JsonParser) json_parser = NULL;
 	g_autoptr(SoupMessage) msg = NULL;
 
 	/* convert to JSON */
@@ -727,6 +732,68 @@ fu_util_report_history_for_uri (FuUtilPrivate *priv,
 				  SOUP_MEMORY_COPY, data, strlen (data));
 	status_code = soup_session_send_message (priv->soup_session, msg);
 	g_debug ("server returned: %s", msg->response_body->data);
+
+	/* parse JSON reply */
+	json_parser = json_parser_new ();
+	if (!json_parser_load_from_data (json_parser,
+					 msg->response_body->data,
+					 msg->response_body->length,
+					 error)) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		g_prefix_error (error, "Failed to parse JSON response from '%s': ", str);
+		return FALSE;
+	}
+	json_root = json_parser_get_root (json_parser);
+	if (json_root == NULL) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "JSON response was malformed: '%s'", str);
+		return FALSE;
+	}
+	json_object = json_node_get_object (json_root);
+	if (json_object == NULL) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "JSON response object was malformed: '%s'", str);
+		return FALSE;
+	}
+
+	/* get any optional server message */
+	if (json_object_has_member (json_object, "msg"))
+		server_msg = json_object_get_string_member (json_object, "msg");
+
+	/* server reported failed */
+	if (!json_object_get_boolean_member (json_object, "success")) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "Server rejected report: %s",
+			     server_msg != NULL ? server_msg : "unspecified");
+		return FALSE;
+	}
+
+	/* server wanted us to see the message */
+	if (server_msg != NULL) {
+		if (g_strcmp0 (server_msg, "known issue") == 0 &&
+		    json_object_has_member (json_object, "uri")) {
+			g_print ("%s %s\n",
+				 /* TRANSLATORS: the server sent the user a small message */
+				 _("Update failure is a known issue, visit this URL for more information:"),
+				 json_object_get_string_member (json_object, "uri"));
+		} else {
+			/* TRANSLATORS: the server sent the user a small message */
+			g_print ("%s %s\n", _("Upload message:"), server_msg);
+		}
+	}
+
+	/* fall back to HTTP status codes in case the server is offline */
 	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
