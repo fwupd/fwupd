@@ -9,9 +9,8 @@ arch=('i686' 'x86_64')
 url='https://github.com/hughsie/fwupd'
 license=('GPL2')
 depends=('appstream-glib' 'fwupdate' 'colord')
-makedepends=('meson' 'valgrind' 'perl-sgmls'
-             'gobject-introspection' 'gtk-doc' 'python-pillow' 'python-cairo'
-             'ttf-dejavu' 'adobe-source-han-sans-cn-fonts' 'python-gobject' 'git')
+makedepends=('meson' 'valgrind' 'gobject-introspection' 'gtk-doc' 'python-pillow' 'git'
+             'python-cairo' 'ttf-dejavu' 'adobe-source-han-sans-cn-fonts' 'python-gobject')
 
 build() {
     cd ${pkgname}
