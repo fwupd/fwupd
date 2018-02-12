@@ -2800,14 +2800,16 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No upgrades for device, current is %s: %s",
+				     "No upgrades for %s, current is %s: %s",
+				     fu_device_get_name (device),
 				     fu_device_get_version (device),
 				     error_str->str);
 		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No upgrades for device, current is %s",
+				     "No upgrades for %s, current is %s",
+				     fu_device_get_name (device),
 				     fu_device_get_version (device));
 		}
 		return NULL;
