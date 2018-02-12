@@ -204,6 +204,20 @@ fu_plugin_thunderbolt_is_native (GUdevDevice *udevice, gboolean *is_native, GErr
 							   error);
 }
 
+static gchar *
+fu_plugin_thunderbolt_parse_version (const gchar *version_raw)
+{
+	g_auto(GStrv) split = NULL;
+	if (version_raw == NULL)
+		return NULL;
+	split = g_strsplit (version_raw, ".", -1);
+	if (g_strv_length (split) != 2)
+		return NULL;
+	return g_strdup_printf ("%02x.%02x",
+				(guint) g_ascii_strtoull (split[0], NULL, 16),
+				(guint) g_ascii_strtoull (split[1], NULL, 16));
+}
+
 static void
 fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 {
@@ -211,7 +225,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	const gchar *name;
 	const gchar *uuid;
 	const gchar *vendor;
-	const gchar *version;
+	const gchar *version_raw;
 	const gchar *devpath;
 	const gchar *devtype;
 	gboolean is_host;
@@ -220,6 +234,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	guint16 did;
 	guint16 vid;
 	g_autofree gchar *id = NULL;
+	g_autofree gchar *version = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *device_id = NULL;
 	g_autoptr(FuDevice) dev = NULL;
@@ -261,7 +276,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 
 	/* test for safe mode */
 	is_host = fu_plugin_thunderbolt_is_host (device);
-	version = g_udev_device_get_sysfs_attr (device, "nvm_version");
+	version_raw = g_udev_device_get_sysfs_attr (device, "nvm_version");
+	version = fu_plugin_thunderbolt_parse_version (version_raw);
 	if (is_host && version == NULL) {
 		g_autofree gchar *test_safe = NULL;
 		g_autofree gchar *safe_path = NULL;
@@ -273,7 +289,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 			g_warning ("%s is in safe mode --  VID/DID will "
 				   "need to be set by another plugin",
 				   devpath);
-			version = "0.0";
+			version = g_strdup ("00.00");
 			is_safemode = TRUE;
 			device_id = g_strdup ("TBT-safemode");
 			fu_device_set_metadata_boolean (dev, FU_DEVICE_METADATA_TBT_IS_SAFE_MODE, TRUE);
