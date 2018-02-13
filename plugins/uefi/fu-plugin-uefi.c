@@ -39,6 +39,7 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
 	fu_plugin_add_report_metadata (plugin, "FwupdateVersion", LIBFWUP_LIBRARY_VERSION);
+	fu_plugin_add_report_metadata (plugin, "EfivarVersion", EFIVAR_LIBRARY_VERSION);
 }
 
 static gchar *
