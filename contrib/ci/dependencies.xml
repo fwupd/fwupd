@@ -712,11 +712,6 @@
       <package variant="clang" />
     </distro>
   </dependency>
-  <dependency type="build" id="perl-sgmls">
-    <distro id="arch">
-      <package />
-    </distro>
-  </dependency>
   <dependency type="build" id="pkg-config">
     <distro id="debian">
       <control />
