@@ -2366,6 +2366,10 @@ main (int argc, char *argv[])
 		g_print ("\tfwupdate:\t%s\n",
 			LIBFWUP_LIBRARY_VERSION);
 #endif
+#ifdef EFIVAR_LIBRARY_VERSION
+		g_print ("\tefivar:\t%s\n",
+			EFIVAR_LIBRARY_VERSION);
+#endif
 		return EXIT_SUCCESS;
 	}
 
