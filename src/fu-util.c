@@ -781,7 +781,7 @@ fu_util_report_history_for_uri (FuUtilPrivate *priv,
 
 	/* server wanted us to see the message */
 	if (server_msg != NULL) {
-		if (g_strcmp0 (server_msg, "known issue") == 0 &&
+		if (g_strstr_len (server_msg, -1, "known issue") != NULL &&
 		    json_object_has_member (json_object, "uri")) {
 			g_print ("%s %s\n",
 				 /* TRANSLATORS: the server sent the user a small message */
