@@ -279,6 +279,7 @@ gboolean
 fu_config_load (FuConfig *self, GError **error)
 {
 	GFileMonitor *monitor;
+	guint64 archive_size_max;
 	g_autofree gchar *config_file = NULL;
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
@@ -335,11 +336,12 @@ fu_config_load (FuConfig *self, GError **error)
 	}
 
 	/* get maximum archive size, defaulting to something sane */
-	self->archive_size_max = g_key_file_get_uint64 (self->keyfile,
-							"fwupd",
-							"ArchiveSizeMax",
-							NULL);
-	self->archive_size_max *= 0x100000;
+	archive_size_max = g_key_file_get_uint64 (self->keyfile,
+						  "fwupd",
+						  "ArchiveSizeMax",
+						  NULL);
+	if (archive_size_max > 0)
+		self->archive_size_max = archive_size_max *= 0x100000;
 
 	/* load remotes */
 	if (!fu_config_load_remotes (self, error))
