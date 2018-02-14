@@ -177,8 +177,16 @@ fu_common_get_contents_fd (gint fd, gsize count, GError **error)
 	g_autoptr(GInputStream) stream = NULL;
 
 	g_return_val_if_fail (fd > 0, NULL);
-	g_return_val_if_fail (count > 0, NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* this is invalid */
+	if (count == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "A maximum read size must be specified");
+		return NULL;
+	}
 
 	/* read the entire fd to a data blob */
 	stream = g_unix_input_stream_new (fd, TRUE);
