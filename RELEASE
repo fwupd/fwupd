@@ -2,9 +2,9 @@ fwupd Release Notes
 
 1. Write NEWS entries for fwupd in the same format as usual.
 
-git shortlog 1.0.4.. | grep -i -v trivial | grep -v Merge > NEWS.new
+git shortlog 1.0.5.. | grep -i -v trivial | grep -v Merge > NEWS.new
 
-Version 1.0.5
+Version 1.0.6
 ~~~~~~~~~~~~~
 Released: 2018-xx-xx
 
@@ -21,7 +21,7 @@ git add ../po/*.po
 2. Commit changes to git:
 
 # MAKE SURE THESE ARE CORRECT
-export release_ver="1.0.5"
+export release_ver="1.0.6"
 
 git commit -a -m "Release fwupd ${release_ver}"
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
