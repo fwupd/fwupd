@@ -245,6 +245,7 @@
     </distro>
     <distro id="debian">
       <control>
+        <version>(>= 10-3)</version>
         <inclusive>amd64</inclusive>
         <inclusive>arm64</inclusive>
         <inclusive>armhf</inclusive>
