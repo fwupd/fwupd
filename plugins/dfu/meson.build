@@ -59,7 +59,7 @@ shared_module('fu_plugin_dfu',
   ],
 )
 
-executable(
+dfu_tool = executable(
   'dfu-tool',
   sources : [
     'dfu-tool.c',
@@ -87,13 +87,19 @@ executable(
 )
 
 if get_option('man')
-  docbook2man = find_program('docbook2man')
+  help2man = find_program('help2man')
+  extra = join_paths(meson.current_source_dir(), 'dfu-tool.h2m')
   custom_target('dfu-tool-man',
-    input : 'dfu-tool.sgml',
+    input : dfu_tool,
     output : 'dfu-tool.1',
     command : [
-      docbook2man, '@INPUT@',
-      '--output', meson.current_build_dir(),
+      help2man, '@INPUT@',
+      '--no-info',
+      '--output', '@OUTPUT@',
+      '--name', 'dfu-tool',
+      '--manual', 'User Commands',
+      '--version-string', fwupd_version,
+      '--include', extra,
     ],
     install : true,
     install_dir : join_paths(mandir, 'man1'),

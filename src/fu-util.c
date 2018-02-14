@@ -30,6 +30,7 @@
 #include <glib/gi18n.h>
 #include <glib-unix.h>
 #include <gudev/gudev.h>
+#include <json-glib/json-glib.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,6 +59,7 @@ typedef struct {
 	FwupdClient		*client;
 	FuProgressbar		*progressbar;
 	gboolean		 no_metadata_check;
+	gboolean		 no_reboot_check;
 	gboolean		 no_unreported_check;
 	gboolean		 assume_yes;
 } FuUtilPrivate;
@@ -530,16 +532,15 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-static void
-fu_util_offline_update_reboot (void)
+static gboolean
+fu_util_update_reboot (GError **error)
 {
-	g_autoptr(GError) error = NULL;
 	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GVariant) val = NULL;
 
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL)
-		return;
+		return FALSE;
 
 #ifdef HAVE_SYSTEMD
 	/* reboot using systemd */
@@ -553,7 +554,7 @@ fu_util_offline_update_reboot (void)
 					   G_DBUS_CALL_FLAGS_NONE,
 					   -1,
 					   NULL,
-					   &error);
+					   error);
 #elif HAVE_CONSOLEKIT
 	/* reboot using ConsoleKit */
 	val = g_dbus_connection_call_sync (connection,
@@ -566,16 +567,14 @@ fu_util_offline_update_reboot (void)
 					   G_DBUS_CALL_FLAGS_NONE,
 					   -1,
 					   NULL,
-					   &error);
+					   error);
 #else
-	g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "No supported backend compiled in to perform the operation.");
+	g_set_error_literal (&error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_ARGS,
+			     "No supported backend compiled in to perform the operation.");
 #endif
-
-	if (val == NULL)
-		g_print ("Failed to reboot: %s\n", error->message);
+	return val != NULL;
 }
 
 static gboolean
@@ -680,7 +679,8 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* reboot */
-	fu_util_offline_update_reboot ();
+	if (!fu_util_update_reboot (error))
+		return FALSE;
 
 	g_print ("%s\n", _("Done!"));
 	return TRUE;
@@ -699,8 +699,12 @@ fu_util_report_history_for_uri (FuUtilPrivate *priv,
 				GPtrArray *devices,
 				GError **error)
 {
+	JsonNode *json_root;
+	JsonObject *json_object;
+	const gchar *server_msg = NULL;
 	guint status_code;
 	g_autofree gchar *data = NULL;
+	g_autoptr(JsonParser) json_parser = NULL;
 	g_autoptr(SoupMessage) msg = NULL;
 
 	/* convert to JSON */
@@ -728,6 +732,78 @@ fu_util_report_history_for_uri (FuUtilPrivate *priv,
 				  SOUP_MEMORY_COPY, data, strlen (data));
 	status_code = soup_session_send_message (priv->soup_session, msg);
 	g_debug ("server returned: %s", msg->response_body->data);
+
+	/* server returned nothing, and probably exploded in a ball of flames */
+	if (msg->response_body->length == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to upload to %s: %s",
+			     report_uri, soup_status_get_phrase (status_code));
+		return FALSE;
+	}
+
+	/* parse JSON reply */
+	json_parser = json_parser_new ();
+	if (!json_parser_load_from_data (json_parser,
+					 msg->response_body->data,
+					 msg->response_body->length,
+					 error)) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		g_prefix_error (error, "Failed to parse JSON response from '%s': ", str);
+		return FALSE;
+	}
+	json_root = json_parser_get_root (json_parser);
+	if (json_root == NULL) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "JSON response was malformed: '%s'", str);
+		return FALSE;
+	}
+	json_object = json_node_get_object (json_root);
+	if (json_object == NULL) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "JSON response object was malformed: '%s'", str);
+		return FALSE;
+	}
+
+	/* get any optional server message */
+	if (json_object_has_member (json_object, "msg"))
+		server_msg = json_object_get_string_member (json_object, "msg");
+
+	/* server reported failed */
+	if (!json_object_get_boolean_member (json_object, "success")) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "Server rejected report: %s",
+			     server_msg != NULL ? server_msg : "unspecified");
+		return FALSE;
+	}
+
+	/* server wanted us to see the message */
+	if (server_msg != NULL) {
+		if (g_strstr_len (server_msg, -1, "known issue") != NULL &&
+		    json_object_has_member (json_object, "uri")) {
+			g_print ("%s %s\n",
+				 /* TRANSLATORS: the server sent the user a small message */
+				 _("Update failure is a known issue, visit this URL for more information:"),
+				 json_object_get_string_member (json_object, "uri"));
+		} else {
+			/* TRANSLATORS: the server sent the user a small message */
+			g_print ("%s %s\n", _("Upload message:"), server_msg);
+		}
+	}
+
+	/* fall back to HTTP status codes in case the server is offline */
 	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -1373,9 +1449,12 @@ fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 
 	/* ask for permission */
 	if (!priv->assume_yes) {
-		/* TRANSLATORS: the metadata is very out of date; %i is a number > 1 */
-		g_print (_("Firmware metadata has not been updated for %u"
-			   " days and may not be up to date."), (guint) age_limit_days);
+		/* TRANSLATORS: the metadata is very out of date; %u is a number > 1 */
+		g_print (ngettext("Firmware metadata has not been updated for %u"
+				  " day and may not be up to date.",
+				  "Firmware metadata has not been updated for %u"
+				  " days and may not be up to date.",
+				  (gint) age_limit_days), (guint) age_limit_days);
 		g_print ("\n\n");
 		g_print ("%s (%s) [y|N]: ",
 			 /* TRANSLATORS: ask the user if we can update the metadata */
@@ -1801,6 +1880,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 static gboolean
 fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	gboolean requires_reboot = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get devices from daemon */
@@ -1828,6 +1908,26 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		rel = g_ptr_array_index (rels, 0);
 		if (!fu_util_update_device_with_release (priv, dev, rel, error))
 			return FALSE;
+		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+			requires_reboot = TRUE;
+	}
+
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
+	/* at least one of the updates needed a reboot */
+	if (requires_reboot) {
+		g_print ("\n%s %s [Y|n]: ",
+			 /* TRANSLATORS: explain why we want to upload */
+			 _("An update requires a reboot to complete."),
+			 /* TRANSLATORS: reboot to apply the update */
+			 _("Restart now?"));
+		if (!fu_util_prompt_for_boolean (TRUE))
+			return TRUE;
+		return fu_util_update_reboot (error);
 	}
 	return TRUE;
 }
@@ -2019,6 +2119,9 @@ main (int argc, char *argv[])
 		{ "no-metadata-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_metadata_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for old metadata"), NULL },
+		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
+			/* TRANSLATORS: command line option */
+			_("Do not check for reboot after update"), NULL },
 		{ NULL}
 	};
 
@@ -2196,6 +2299,7 @@ main (int argc, char *argv[])
 	if (isatty (fileno (stdout)) == 0) {
 		priv->no_unreported_check = TRUE;
 		priv->no_metadata_check = TRUE;
+		priv->no_reboot_check = TRUE;
 	}
 
 	/* get a list of the commands */
@@ -2268,6 +2372,14 @@ main (int argc, char *argv[])
 			G_USB_MAJOR_VERSION,
 			G_USB_MINOR_VERSION,
 			G_USB_MICRO_VERSION);
+#ifdef LIBFWUP_LIBRARY_VERSION
+		g_print ("\tfwupdate:\t%s\n",
+			LIBFWUP_LIBRARY_VERSION);
+#endif
+#ifdef EFIVAR_LIBRARY_VERSION
+		g_print ("\tefivar:\t%s\n",
+			EFIVAR_LIBRARY_VERSION);
+#endif
 		return EXIT_SUCCESS;
 	}
 

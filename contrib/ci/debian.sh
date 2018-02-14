@@ -2,6 +2,12 @@
 set -e
 set -x
 
+#although it's debian, we don't build packages
+if [ "$OS" = "debian-s390x" ]; then
+	./contrib/ci/debian_s390x.sh
+	exit 0
+fi
+
 #prepare
 export DEBFULLNAME="CI Builder"
 export DEBEMAIL="ci@travis-ci.org"
@@ -10,7 +16,7 @@ VERSION=`git describe | sed 's/-/+r/;s/-/+/'`
 rm -rf build/
 mkdir -p build
 shopt -s extglob
-cp -lR !(build) build/
+cp -lR !(build|dist) build/
 pushd build
 mv contrib/debian .
 sed s/quilt/native/ debian/source/format -i
@@ -41,7 +47,8 @@ if [ ! -f /.dockerenv ]; then
 fi
 
 #test the packages install
-dpkg -i `ls ../*.deb | grep -v 'fwupd-tests\|dbgsym'`
+PACKAGES=$(ls ../*.deb | grep -v 'fwupd-tests\|dbgsym')
+dpkg -i $PACKAGES
 
 # run the installed tests
 if [ "$CI" = "true" ]; then
@@ -56,3 +63,7 @@ apt purge -y fwupd \
 	     fwupd-doc \
 	     libfwupd2 \
 	     libfwupd-dev
+
+#place built packages in dist outside docker
+mkdir -p ../dist
+cp $PACKAGES ../dist

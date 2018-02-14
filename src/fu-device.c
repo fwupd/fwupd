@@ -467,8 +467,12 @@ fu_device_set_platform_id (FuDevice *device, const gchar *platform_id)
 	g_return_if_fail (platform_id != NULL);
 
 	/* automatically use this */
-	if (fu_device_get_id (device) == NULL)
-		fu_device_set_id (device, platform_id);
+	if (fu_device_get_id (device) == NULL) {
+		g_autofree gchar *id_guid = NULL;
+		id_guid = g_strdup_printf ("%s:%s", platform_id,
+					   fu_device_get_guid_default (device));
+		fu_device_set_id (device, id_guid);
+	}
 	fu_device_set_metadata (device, "platform-id", platform_id);
 }
 
@@ -715,6 +719,27 @@ fu_device_get_quirks (FuDevice *device)
 	FuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
 	return priv->quirks;
+}
+
+/**
+ * fu_device_get_release_default:
+ * @device: A #FuDevice
+ *
+ * Gets the default release for the device, creating one if not found.
+ *
+ * Returns: (transfer none): the #FwupdRelease object
+ *
+ * Since: 1.0.5
+ **/
+FwupdRelease *
+fu_device_get_release_default (FuDevice *device)
+{
+	g_autoptr(FwupdRelease) rel = NULL;
+	if (fwupd_device_get_release_default (FWUPD_DEVICE (device)) != NULL)
+		return fwupd_device_get_release_default (FWUPD_DEVICE (device));
+	rel = fwupd_release_new ();
+	fwupd_device_add_release (FWUPD_DEVICE (device), rel);
+	return rel;
 }
 
 static void

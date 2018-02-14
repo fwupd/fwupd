@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.0.4',
+  version : '1.0.5',
   license : 'LGPL-2.1+',
   meson_version : '>=0.37.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -201,6 +201,8 @@ if get_option('plugin_uefi')
     conf.set('HAVE_FWUP_GET_BGRT_INFO', '1')
   endif
   efivar = dependency('efivar')
+  conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
+  conf.set_quoted('LIBFWUP_LIBRARY_VERSION', fwup.version())
 endif
 
 if get_option('plugin_dell')

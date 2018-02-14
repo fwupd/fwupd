@@ -183,28 +183,6 @@
       <package variant="clang" />
     </distro>
   </dependency>
-  <dependency type="build" id="docbook-utils">
-    <distro id="arch">
-      <package />
-    </distro>
-    <distro id="fedora">
-      <package />
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="clang" />
-    </distro>
-  </dependency>
-  <dependency type="build" id="docbook-sgml">
-    <distro id="arch">
-      <package />
-    </distro>
-  </dependency>
   <dependency type="build" id="libelf-dev">
     <distro id="fedora">
       <package>elfutils-libelf-devel</package>
@@ -732,11 +710,6 @@
     <distro id="ubuntu">
       <control />
       <package variant="clang" />
-    </distro>
-  </dependency>
-  <dependency type="build" id="perl-sgmls">
-    <distro id="arch">
-      <package />
     </distro>
   </dependency>
   <dependency type="build" id="pkg-config">

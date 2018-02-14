@@ -20,6 +20,6 @@ sudo -E -u nobody makepkg -e --noconfirm
 pacman -U --noconfirm *.pkg.tar.xz
 
 # move the package to working dir
-mv *.pkg.tar.xz ../
+mv *.pkg.tar.xz ../dist
 
 # no testing here because gnome-desktop-testing isn’t available in Arch

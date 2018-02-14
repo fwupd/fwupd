@@ -1,0 +1,43 @@
+[DESCRIPTION]
+.PP
+This manual page documents briefly the \fBdfu-tool\fR command.
+.PP
+\fBdfu-tool\fR allows a user to write various kinds of
+firmware onto devices supporting the USB Device Firmware Upgrade protocol.
+This tool can be used to switch the device from the normal runtime mode
+to `DFU mode' which allows the user to read and write firmware.
+Either the whole device can be written in one operation, or individual
+`targets' can be specified with the alternative name or number.
+.PP
+\fBdfu-tool\fR uses the libdfu shared
+library to perform actions.
+All synchronous actions can be safely cancelled and on failure will return
+errors with both a type and a full textual description.
+libdfu supports DFU 1.0, DFU 1.1 and the ST DfuSe vendor extension, and
+handles many device `quirks' necessary for the real-world implementations
+of DFU\&.
+.PP
+Additionally \fBdfu-tool\fR can be used to convert firmware
+from various different formats, or to modify details about the elements,
+images and metadata contained inside the firmware file.
+For example, you can easily convert DFU 1.1 firmware into the
+vendor-specific DfuSe format, convert a Intel HEX file into a raw file
+padded to a specific size, or add new copyright and licensing information
+to an existing file.
+Fields such as the vendor and product IDs can be changed, and the firmware
+elements can be encrypted and decrypted using various different methods.
+Merging two DfuSe files together is also possible, although specifying
+different alt-setting numbers before merging is a good idea to avoid
+confusion.
+.PP
+Although \fBdfu-tool\fR tries to provide a large number of
+easy-to-use commands, it may only be possible to do certain operations
+using the libdfu library directly.
+This is easier than it sounds, as the library is built with GObject
+Introspection support making it usable in many languages such as C,
+Javascript and Python.
+Furthermore, using the library is a good idea if you want to perform
+multiple operations on large firmware files, for instance,
+converting from an Intel HEX file, padding to a certain size, setting
+vendor and adding licensing information and then saving to a remote
+location.

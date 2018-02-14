@@ -1276,7 +1276,10 @@ dfu_device_detach (DfuDevice *device, GError **error)
 		/* some devices just reboot and stall the endpoint :/ */
 		if (g_error_matches (error_local,
 				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NOT_SUPPORTED)) {
+				     G_USB_DEVICE_ERROR_NOT_SUPPORTED) ||
+		    g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_FAILED)) {
 			g_debug ("ignoring while detaching: %s", error_local->message);
 		} else {
 			/* refresh the error code */

@@ -380,6 +380,12 @@ fwupd_common_machine_hash_func (void)
 	g_autofree gchar *mhash1 = NULL;
 	g_autofree gchar *mhash2 = NULL;
 	g_autoptr(GError) error = NULL;
+
+	if (!g_file_test ("/etc/machine-id", G_FILE_TEST_EXISTS)) {
+		g_test_skip ("Missing /etc/machine-id");
+		return;
+	}
+
 	mhash1 = fwupd_build_machine_id ("salt1", &error);
 	g_assert_no_error (error);
 	g_assert_cmpstr (mhash1, !=, NULL);

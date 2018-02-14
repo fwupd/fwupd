@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2017 Dell Inc.
+# Copyright (C) 2017-2018 Dell Inc.
 #
 # Licensed under the GNU General Public License Version 2
 #
@@ -19,8 +19,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 import os
+import subprocess
 import sys
 import xml.etree.ElementTree as etree
+import tempfile
 
 def parse_dependencies(OS, SUBOS, requested_type):
     deps = []
@@ -53,7 +55,7 @@ def parse_dependencies(OS, SUBOS, requested_type):
 directory = os.path.dirname(sys.argv[0])
 TARGET=os.getenv('OS')
 
-if TARGET == '':
+if TARGET is None:
     print("Missing OS environment variable")
     sys.exit(1)
 OS = TARGET
@@ -73,9 +75,8 @@ if not os.path.exists(input):
 with open(input, 'r') as rfd:
     lines = rfd.readlines()
 
-out = os.path.join(directory, "Dockerfile")
-
-with open(out, 'w') as wfd:
+out = tempfile.NamedTemporaryFile(dir='.', delete=True)
+with open(out.name, 'w') as wfd:
     for line in lines:
         if line.startswith("FROM %%%ARCH_PREFIX%%%"):
             if OS == "debian" and SUBOS == "i386":
@@ -104,3 +105,5 @@ with open(out, 'w') as wfd:
                 wfd.write('RUN dpkg --add-architecture %s\n' % SUBOS)
         else:
             wfd.write(line)
+    wfd.flush()
+    subprocess.check_call(["docker", "build", "-t", "fwupd-%s" % TARGET, "-f", "./%s" % os.path.basename(out.name), "."])

@@ -122,7 +122,6 @@ main (int argc, char **argv)
 		case 0x6000: /* SF30 pro: Dinput mode */
 		case 0x6001: /* SN30 pro: Dinput mode */
 		case 0x028e: /* SF30/SN30 pro: Xinput mode */
-		case 0x05c4: /* SF30/SN30 pro: macOS  mode */
 			g_print ("2. Press and hold L1+R1+START for 3 seconds "
 				 "until the LED on top blinks red.\n");
 			break;

@@ -75,6 +75,7 @@ fwupdmgr = executable(
     soup,
     sqlite,
     libarchive,
+    libjsonglib,
   ],
   link_with : [
     fwupd,

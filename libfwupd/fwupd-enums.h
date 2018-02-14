@@ -89,6 +89,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_REGISTERED:		Has been registered with other plugins
  * @FWUPD_DEVICE_FLAG_NEEDS_REBOOT:		Requires a reboot to apply firmware or to reload hardware
  * @FWUPD_DEVICE_FLAG_REPORTED:			Has been reported to a metadata server
+ * @FWUPD_DEVICE_FLAG_NOTIFIED:			User has been notified
  *
  * The device flags.
  **/
@@ -103,6 +104,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_REGISTERED		(1u << 7)	/* Since: 0.9.7 */
 #define FWUPD_DEVICE_FLAG_NEEDS_REBOOT		(1u << 8)	/* Since: 0.9.7 */
 #define FWUPD_DEVICE_FLAG_REPORTED		(1u << 9)	/* Since: 1.0.4 */
+#define FWUPD_DEVICE_FLAG_NOTIFIED		(1u << 10)	/* Since: 1.0.5 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 

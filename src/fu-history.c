@@ -47,11 +47,11 @@ fu_history_device_from_stmt (sqlite3_stmt *stmt)
 {
 	const gchar *tmp;
 	FuDevice *device;
-	g_autoptr(FwupdRelease) release = fwupd_release_new ();
+	FwupdRelease *release;
 
 	/* create new result */
 	device = fu_device_new ();
-	fwupd_device_add_release (FWUPD_DEVICE (device), release);
+	release = fu_device_get_release_default (device);
 
 	/* device_id */
 	tmp = (const gchar *) sqlite3_column_text (stmt, 0);
@@ -147,13 +147,100 @@ fu_history_stmt_exec (FuHistory *self, sqlite3_stmt *stmt,
 }
 
 static gboolean
+fu_history_create_database (FuHistory *self, GError **error)
+{
+	gint rc;
+	rc = sqlite3_exec (self->db,
+			 "BEGIN TRANSACTION;"
+			 "CREATE TABLE schema ("
+			 "created timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+			 "version INTEGER DEFAULT 0);"
+			 "INSERT INTO schema (version) VALUES (2);"
+			 "CREATE TABLE history ("
+			 "device_id TEXT,"
+			 "update_state INTEGER DEFAULT 0,"
+			 "update_error TEXT,"
+			 "filename TEXT,"
+			 "display_name TEXT,"
+			 "plugin TEXT,"
+			 "device_created INTEGER DEFAULT 0,"
+			 "device_modified INTEGER DEFAULT 0,"
+			 "checksum TEXT DEFAULT NULL,"
+			 "flags INTEGER DEFAULT 0,"
+			 "metadata TEXT DEFAULT NULL,"
+			 "guid_default TEXT DEFAULT NULL,"
+			 "version_old TEXT,"
+			 "version_new TEXT);"
+			 "COMMIT;", NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to create database: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_history_migrate_database_v1 (FuHistory *self, GError **error)
+{
+	gint rc;
+
+	/* rename the table to something out the way */
+	rc = sqlite3_exec (self->db,
+			   "ALTER TABLE history RENAME TO history_old;",
+			   NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		g_debug ("FuHistory: cannot rename v0 table: %s", sqlite3_errmsg (self->db));
+		return TRUE;
+	}
+
+	/* create new table */
+	if (!fu_history_create_database (self, error))
+		return FALSE;
+
+	/* migrate the old entries to the new table */
+	rc = sqlite3_exec (self->db,
+			   "INSERT INTO history SELECT * FROM history_old;"
+			   "DROP TABLE history_old;",
+			   NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		g_debug ("FuHistory: no history to migrate: %s", sqlite3_errmsg (self->db));
+		return TRUE;
+	}
+	return TRUE;
+}
+
+/* returns 0 if database is not initialised */
+static guint
+fu_history_get_schema_version (FuHistory *self)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	rc = sqlite3_prepare_v2 (self->db,
+				 "SELECT version FROM schema LIMIT 1;", -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_debug ("no schema version: %s", sqlite3_errmsg (self->db));
+		return 0;
+	}
+	rc = sqlite3_step (stmt);
+	if (rc != SQLITE_ROW) {
+		g_warning ("failed to execute prepared statement: %s",
+			   sqlite3_errmsg (self->db));
+		return 0;
+	}
+	return sqlite3_column_int (stmt, 0);
+}
+
+static gboolean
 fu_history_load (FuHistory *self, GError **error)
 {
 	gint rc;
+	guint schema_ver;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GFile) file = NULL;
-	g_autoptr(sqlite3_stmt) stmt2 = NULL;
 
 	/* already done */
 	if (self->db != NULL)
@@ -184,41 +271,27 @@ fu_history_load (FuHistory *self, GError **error)
 		return FALSE;
 	}
 
-	/* check devices */
-	rc = sqlite3_prepare_v2 (self->db,
-				 "SELECT * FROM history LIMIT 0;", -1, &stmt2, NULL);
-	if (rc != SQLITE_OK) {
+	/* check database */
+	schema_ver = fu_history_get_schema_version (self);
+	if (schema_ver == 0) {
 		g_autoptr(sqlite3_stmt) stmt = NULL;
-		g_debug ("FuHistory: creating table to repair: %s", sqlite3_errmsg (self->db));
 		rc = sqlite3_prepare_v2 (self->db,
-					 "CREATE TABLE history ("
-					 "device_id TEXT PRIMARY KEY,"
-					 "update_state INTEGER DEFAULT 0,"
-					 "update_error TEXT,"
-					 "filename TEXT,"
-					 "display_name TEXT,"
-					 "plugin TEXT,"
-					 "device_created INTEGER DEFAULT 0,"
-					 "device_modified INTEGER DEFAULT 0,"
-					 "checksum TEXT DEFAULT NULL,"
-					 "flags INTEGER DEFAULT 0,"
-					 "metadata TEXT DEFAULT NULL,"
-					 "guid_default TEXT DEFAULT NULL,"
-					 "version_old TEXT,"
-					 "version_new TEXT);", -1, &stmt, NULL);
-		if (rc != SQLITE_OK) {
-			g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-				     "Failed to prepare SQL: %s",
-				     sqlite3_errmsg (self->db));
+					 "SELECT * FROM history LIMIT 0;",
+					 -1, &stmt, NULL);
+		if (rc == SQLITE_OK)
+			schema_ver = 1;
+	}
+	g_debug ("FuHistory: got schema version of %u", schema_ver);
+
+	/* migrate schema */
+	if (schema_ver == 0) {
+		g_debug ("FuHistory: building initial database");
+		if (!fu_history_create_database (self, error))
 			return FALSE;
-		}
-		rc = sqlite3_step (stmt);
-		if (rc != SQLITE_DONE) {
-			g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_WRITE,
-				     "cannot create database: %s",
-				     sqlite3_errmsg (self->db));
+	} else if (schema_ver == 1) {
+		g_debug ("FuHistory: migrating v%u database", schema_ver);
+		if (!fu_history_migrate_database_v1 (self, error))
 			return FALSE;
-		}
 	}
 
 	return TRUE;
@@ -239,10 +312,83 @@ _convert_hash_to_string (GHashTable *hash)
 	return g_string_free (str, FALSE);
 }
 
+/* unset some flags we don't want to store */
+static FwupdDeviceFlags
+fu_history_get_device_flags_filtered (FuDevice *device)
+{
+	FwupdDeviceFlags flags = fu_device_get_flags (device);
+	flags &= ~FWUPD_DEVICE_FLAG_REGISTERED;
+	flags &= ~FWUPD_DEVICE_FLAG_SUPPORTED;
+	return flags;
+}
+
+gboolean
+fu_history_modify_device (FuHistory *self, FuDevice *device,
+			  FuHistoryFlags flags,
+			  GError **error)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+
+	/* lazy load */
+	if (!fu_history_load (self, error))
+		return FALSE;
+
+	/* overwrite entry if it exists */
+	if ((flags & FU_HISTORY_FLAGS_MATCH_OLD_VERSION) &&
+	    (flags & FU_HISTORY_FLAGS_MATCH_NEW_VERSION)) {
+		g_debug ("FuHistory: modifying device %s, version not important",
+			 fu_device_get_id (device));
+		rc = sqlite3_prepare_v2 (self->db,
+					 "UPDATE history SET "
+					 "update_state = ?1, "
+					 "update_error = ?2, "
+					 "flags = ?3 "
+					 "WHERE device_id = ?4;",
+					 -1, &stmt, NULL);
+	} else if (flags & FU_HISTORY_FLAGS_MATCH_OLD_VERSION) {
+		g_debug ("FuHistory: modifying device %s, only version old %s",
+			 fu_device_get_id (device), fu_device_get_version (device));
+		rc = sqlite3_prepare_v2 (self->db,
+					 "UPDATE history SET "
+					 "update_state = ?1, "
+					 "update_error = ?2, "
+					 "flags = ?3 "
+					 "WHERE device_id = ?4 AND version_old = ?5;",
+					 -1, &stmt, NULL);
+	} else if (flags & FU_HISTORY_FLAGS_MATCH_NEW_VERSION) {
+		g_debug ("FuHistory: modifying device %s, only version new %s",
+			 fu_device_get_id (device), fu_device_get_version (device));
+		rc = sqlite3_prepare_v2 (self->db,
+					 "UPDATE history SET "
+					 "update_state = ?1, "
+					 "update_error = ?2, "
+					 "flags = ?3 "
+					 "WHERE device_id = ?4 AND version_new = ?5;",
+					 -1, &stmt, NULL);
+	} else {
+		g_assert_not_reached ();
+	}
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	sqlite3_bind_int (stmt, 1, fu_device_get_update_state (device));
+	sqlite3_bind_text (stmt, 2, fu_device_get_update_error (device), -1, SQLITE_STATIC);
+	sqlite3_bind_int64 (stmt, 3, fu_history_get_device_flags_filtered (device));
+	sqlite3_bind_text (stmt, 4, fu_device_get_id (device), -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 5, fu_device_get_version (device), -1, SQLITE_STATIC);
+	return fu_history_stmt_exec (self, stmt, NULL, error);
+}
+
 gboolean
 fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release, GError **error)
 {
-	FwupdDeviceFlags flags;
 	const gchar *checksum = NULL;
 	gint rc;
 	g_autofree gchar *metadata = NULL;
@@ -256,17 +402,15 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	if (!fu_history_load (self, error))
 		return FALSE;
 
+	/* ensure device with this old-version -> new-version does not exist */
+	if (!fu_history_remove_device (self, device, release, error))
+		return FALSE;
+
 	g_debug ("FuHistory: add device %s", fu_device_get_id (device));
 	if (release != NULL) {
 		GPtrArray *checksums = fwupd_release_get_checksums (release);
 		checksum = fwupd_checksum_get_by_kind (checksums, G_CHECKSUM_SHA1);
 	}
-
-	/* unset some flags we don't want to store */
-	flags = fu_device_get_flags (device);
-	flags &= ~FWUPD_DEVICE_FLAG_REPORTED;
-	flags &= ~FWUPD_DEVICE_FLAG_REGISTERED;
-	flags &= ~FWUPD_DEVICE_FLAG_SUPPORTED;
 
 	/* metadata is stored as a simple string */
 	metadata = _convert_hash_to_string (fwupd_release_get_metadata (release));
@@ -298,7 +442,7 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	sqlite3_bind_text (stmt, 1, fu_device_get_id (device), -1, SQLITE_STATIC);
 	sqlite3_bind_int (stmt, 2, fu_device_get_update_state (device));
 	sqlite3_bind_text (stmt, 3, fu_device_get_update_error (device), -1, SQLITE_STATIC);
-	sqlite3_bind_int64 (stmt, 4, flags);
+	sqlite3_bind_int64 (stmt, 4, fu_history_get_device_flags_filtered (device));
 	sqlite3_bind_text (stmt, 5, fwupd_release_get_filename (release), -1, SQLITE_STATIC);
 	sqlite3_bind_text (stmt, 6, checksum, -1, SQLITE_STATIC);
 	sqlite3_bind_text (stmt, 7, fu_device_get_name (device), -1, SQLITE_STATIC);
@@ -367,29 +511,35 @@ fu_history_remove_all (FuHistory *self, GError **error)
 }
 
 gboolean
-fu_history_remove_device (FuHistory *self, const gchar *device_id, GError **error)
+fu_history_remove_device (FuHistory *self,  FuDevice *device,
+			  FwupdRelease *release, GError **error)
 {
-	const gchar *statement;
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), FALSE);
 
 	/* lazy load */
 	if (!fu_history_load (self, error))
 		return FALSE;
 
-	g_debug ("FuHistory: remove device %s", device_id);
-	statement = "DELETE FROM history WHERE device_id = ?1;";
-	rc = sqlite3_prepare_v2 (self->db, statement, -1, &stmt, NULL);
+	g_debug ("FuHistory: remove device %s", fu_device_get_id (device));
+	rc = sqlite3_prepare_v2 (self->db,
+				 "DELETE FROM history WHERE device_id = ?1 "
+				 "AND version_old = ?2 "
+				 "AND version_new = ?3;",
+				 -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 			     "Failed to prepare SQL: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
-	sqlite3_bind_text (stmt, 1, device_id, -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 1, fu_device_get_id (device), -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 2, fu_device_get_version (device), -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 3, fwupd_release_get_version (release), -1, SQLITE_STATIC);
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
@@ -477,7 +627,8 @@ fu_history_get_devices (FuHistory *self, GError **error)
 					"update_state, "
 					"update_error, "
 					"version_new, "
-					"version_old FROM history;",
+					"version_old FROM history "
+					"ORDER BY device_modified ASC;",
 					-1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
@@ -490,116 +641,6 @@ fu_history_get_devices (FuHistory *self, GError **error)
 		return FALSE;
 	array = g_ptr_array_ref (array_tmp);
 	return array;
-}
-
-gboolean
-fu_history_set_device_flags (FuHistory *self,
-			     const gchar *device_id,
-			     FwupdDeviceFlags device_flags,
-			     GError **error)
-{
-	gint rc;
-	g_autoptr(sqlite3_stmt) stmt = NULL;
-
-	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
-
-	/* lazy load */
-	if (!fu_history_load (self, error))
-		return FALSE;
-
-	/* overwrite entry if it exists */
-	g_debug ("FuHistory: set device-flags of %s to %" G_GUINT64_FORMAT,
-		 device_id, device_flags);
-	rc = sqlite3_prepare_v2 (self->db,
-				 "UPDATE history SET flags = ?1 WHERE "
-				 "device_id = ?2;", -1, &stmt, NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
-			     sqlite3_errmsg (self->db));
-		return FALSE;
-	}
-	sqlite3_bind_int64 (stmt, 1, device_flags);
-	sqlite3_bind_text (stmt, 2, device_id, -1, SQLITE_STATIC);
-	return fu_history_stmt_exec (self, stmt, NULL, error);
-}
-
-gboolean
-fu_history_set_device_state (FuHistory *self,
-				    const gchar *device_id,
-				    FwupdUpdateState update_state,
-				    GError **error)
-{
-	gint rc;
-	g_autoptr(sqlite3_stmt) stmt = NULL;
-
-	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
-
-	/* lazy load */
-	if (!fu_history_load (self, error))
-		return FALSE;
-
-	/* clear the error too */
-	g_debug ("FuHistory: set update-state of %s to %s",
-		 device_id, fwupd_update_state_to_string (update_state));
-	if (update_state != FWUPD_UPDATE_STATE_FAILED) {
-		g_debug ("FuHistory: ensuring error-msg is NULL");
-		if (!fu_history_set_device_error (self, device_id, NULL, error))
-			return FALSE;
-	}
-	rc = sqlite3_prepare_v2 (self->db,
-				 "UPDATE history SET update_state = ?1 WHERE "
-				 "device_id = ?2;", -1, &stmt, NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
-			     sqlite3_errmsg (self->db));
-		return FALSE;
-	}
-	sqlite3_bind_int (stmt, 1, update_state);
-	sqlite3_bind_text (stmt, 2, device_id, -1, SQLITE_STATIC);
-	return fu_history_stmt_exec (self, stmt, NULL, error);
-}
-
-gboolean
-fu_history_set_device_error (FuHistory *self,
-			     const gchar *device_id,
-			     const gchar *error_msg,
-			     GError **error)
-{
-	gint rc;
-	g_autoptr(sqlite3_stmt) stmt = NULL;
-
-	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
-
-	/* lazy load */
-	if (!fu_history_load (self, error))
-		return FALSE;
-
-	/* automatically set the state */
-	g_debug ("FuHistory: set error to %s: %s", device_id, error_msg);
-	if (error_msg != NULL) {
-		g_debug ("FuHistory: ensuring update-state is failed");
-		if (!fu_history_set_device_state (self, device_id,
-							 FWUPD_UPDATE_STATE_FAILED,
-							 error))
-			return FALSE;
-	}
-	rc = sqlite3_prepare_v2 (self->db,
-				 "UPDATE history SET update_error = ?1 WHERE "
-				 "device_id = ?2;", -1, &stmt, NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
-			     sqlite3_errmsg (self->db));
-		return FALSE;
-	}
-	sqlite3_bind_text (stmt, 1, error_msg, -1, SQLITE_STATIC);
-	sqlite3_bind_text (stmt, 2, device_id, -1, SQLITE_STATIC);
-	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
 static void

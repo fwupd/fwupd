@@ -38,7 +38,8 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
-	//fu_plugin_add_report_metadata (plugin, "FwupdateVersion", LIBFWUP_VERSION);
+	fu_plugin_add_report_metadata (plugin, "FwupdateVersion", LIBFWUP_LIBRARY_VERSION);
+	fu_plugin_add_report_metadata (plugin, "EfivarVersion", EFIVAR_LIBRARY_VERSION);
 }
 
 static gchar *
@@ -572,6 +573,26 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 	fu_plugin_device_add (plugin, dev);
 }
 
+static void
+fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
+{
+	const efi_guid_t guid = EFI_GLOBAL_GUID;
+	const gchar *result_str = "Disabled";
+	g_autofree guint8 *data = NULL;
+	gsize data_size = 0;
+	guint32 attributes = 0;
+	gint rc;
+
+	rc = efi_get_variable (guid, "SecureBoot", &data, &data_size, &attributes);
+	if (rc < 0)
+		return;
+	if (data_size >= 1 && data[0] & 1)
+		result_str = "Enabled";
+
+	g_debug ("SecureBoot is: %s", result_str);
+	fu_plugin_add_report_metadata (plugin, "SecureBoot", result_str);
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -621,5 +642,9 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 	while (fwup_resource_iter_next (iter, &re) > 0)
 		fu_plugin_uefi_coldplug_resource (plugin, re);
+
+	/* for debugging problems later */
+	fu_plugin_uefi_test_secure_boot (plugin);
+
 	return TRUE;
 }

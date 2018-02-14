@@ -3,14 +3,14 @@
 # This file is distributed under the same license as the fwupd package.
 # 
 # Translators:
-# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017
+# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2018
 # Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-25 12:36+0000\n"
-"PO-Revision-Date: 2018-01-25 12:36+0000\n"
+"POT-Creation-Date: 2018-02-13 21:34+0000\n"
+"PO-Revision-Date: 2018-02-13 21:34+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Catalan (http://www.transifex.com/freedesktop/fwupd/language/ca/)\n"
 "MIME-Version: 1.0\n"
@@ -119,14 +119,14 @@ msgstr "Es necessita l'autenticació per a modificar un remot configurat emprat 
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #: plugins/dfu/dfu-tool.c:124 plugins/synapticsmst/synapticsmst-tool.c:105
-#: src/fu-util.c:118
+#: src/fu-util.c:120
 #, c-format
 msgid "Alias to %s"
 msgstr "Àlies per a %s"
 
 #. TRANSLATORS: error message
 #: plugins/dfu/dfu-tool.c:192 plugins/synapticsmst/synapticsmst-tool.c:347
-#: src/fu-util.c:182
+#: src/fu-util.c:184
 msgid "Command not found"
 msgstr "No s'ha trobat cap ordre"
 
@@ -142,17 +142,17 @@ msgstr "S'ha eliminat"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
-#: plugins/dfu/dfu-tool.c:1478 src/fu-util.c:1662
+#: plugins/dfu/dfu-tool.c:1478 src/fu-util.c:1731
 msgid "Changed"
 msgstr "S'ha canviat"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
-#: plugins/dfu/dfu-tool.c:1486 src/fu-util.c:1624
+#: plugins/dfu/dfu-tool.c:1486 src/fu-util.c:1693
 msgid "Cancelled"
 msgstr "S'ha cancel·lat"
 
 #. TRANSLATORS: Appstream ID for the hardware type
-#: plugins/dfu/dfu-tool.c:1978 src/fu-util.c:1443
+#: plugins/dfu/dfu-tool.c:1978 src/fu-util.c:1512
 msgid "ID"
 msgstr "ID"
 
@@ -160,7 +160,7 @@ msgstr "ID"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
 #. TRANSLATORS: section header for the release name
 #: plugins/dfu/dfu-tool.c:1984 plugins/dfu/dfu-tool.c:1990
-#: plugins/dfu/dfu-tool.c:2104 src/fu-util.c:1217
+#: plugins/dfu/dfu-tool.c:2104 src/fu-util.c:1283
 msgid "Name"
 msgstr "Nom"
 
@@ -207,11 +207,11 @@ msgstr "Mode"
 
 #: plugins/dfu/dfu-tool.c:2115
 msgid "Runtime"
-msgstr ""
+msgstr "Temps d'execució"
 
 #: plugins/dfu/dfu-tool.c:2115
 msgid "DFU"
-msgstr ""
+msgstr "DFU"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 #: plugins/dfu/dfu-tool.c:2123
@@ -373,7 +373,7 @@ msgstr "Bolca la informació sobre un pedaç binari a la pantalla"
 #. TRANSLATORS: quirks are device-specific workarounds
 #: plugins/dfu/dfu-tool.c:2396
 msgid "Failed to load quirks"
-msgstr ""
+msgstr "No s'han pogut carregar les peculiaritats"
 
 #. TRANSLATORS: DFU stands for device firmware update
 #: plugins/dfu/dfu-tool.c:2418
@@ -382,7 +382,7 @@ msgstr "Utilitat DFU"
 
 #. TRANSLATORS: the user didn't read the man page
 #: plugins/dfu/dfu-tool.c:2423 plugins/synapticsmst/synapticsmst-tool.c:424
-#: src/fu-util.c:2216
+#: src/fu-util.c:2310
 msgid "Failed to parse arguments"
 msgstr "Ha fallat en analitzar els arguments"
 
@@ -401,7 +401,7 @@ msgid "Synaptics Multistream Transport Utility"
 msgstr "Utilitat «Synaptics Multistream Transport»"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
-#: plugins/uefi/fu-plugin-uefi.c:398
+#: plugins/uefi/fu-plugin-uefi.c:399
 msgid "Installing firmware update…"
 msgstr "S'està instal·lant l'actualització de microprogramari..."
 
@@ -511,45 +511,45 @@ msgid "Unknown"
 msgstr "Desconegut"
 
 #. TRANSLATORS: the user isn't reading the question
-#: src/fu-util.c:240
+#: src/fu-util.c:242
 #, c-format
 msgid "Please enter a number from 1 to %u: "
 msgstr "Si us plau, introduïu un número de l'1 al %u: "
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:303
+#: src/fu-util.c:305
 msgid "Choose a device:"
 msgstr "Trieu un dispositiu:"
 
 #. TRANSLATORS: a list of failed updates
-#: src/fu-util.c:416
+#: src/fu-util.c:418
 msgid "Devices that were not updated correctly:"
-msgstr ""
+msgstr "Els dispositius que no s'han actualitzat correctament:"
 
 #. TRANSLATORS: a list of successful updates
-#: src/fu-util.c:430
+#: src/fu-util.c:432
 msgid "Devices that have been updated successfully:"
-msgstr ""
+msgstr "Els dispositius que s'han actualitzat correctament:"
 
 #. TRANSLATORS: explain why we want to upload
-#: src/fu-util.c:444
+#: src/fu-util.c:446
 msgid "Upload report now?"
-msgstr ""
+msgstr "Pujo l'informe ara?"
 
 #. TRANSLATORS: metadata is downloaded from the Internet
-#: src/fu-util.c:446 src/fu-util.c:1384
+#: src/fu-util.c:448 src/fu-util.c:1453
 msgid "Requires internet connection"
-msgstr ""
+msgstr "Requereix connexió a Internet"
 
 #. TRANSLATORS: nothing attached that can be upgraded
-#: src/fu-util.c:468
+#: src/fu-util.c:470
 msgid "No hardware detected with firmware update capability"
 msgstr "No s'ha detectat cap maquinari amb capacitat per a l'actualització del microprogramari"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
-#: src/fu-util.c:643
+#: src/fu-util.c:642
 #, c-format
 msgid "Reinstalling %s with %s... "
 msgstr "S'està reinstal·lant %s amb %s... "
@@ -557,7 +557,7 @@ msgstr "S'està reinstal·lant %s amb %s... "
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:650
+#: src/fu-util.c:649
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "S'està desactualitzant %s des de %s a %s... "
@@ -565,7 +565,7 @@ msgstr "S'està desactualitzant %s des de %s a %s... "
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:658
+#: src/fu-util.c:657
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "S'està actualitzant %s des de %s a %s... "
@@ -574,391 +574,419 @@ msgstr "S'està actualitzant %s des de %s a %s... "
 msgid "Done!"
 msgstr "Fet!"
 
-#: src/fu-util.c:713
+#: src/fu-util.c:717
 msgid "Target"
-msgstr ""
+msgstr "Objectiu"
 
-#: src/fu-util.c:714
+#: src/fu-util.c:718
 msgid "Payload"
-msgstr ""
+msgstr "Carrega útil"
 
-#: src/fu-util.c:715
+#: src/fu-util.c:719
 msgid "Proceed with upload?"
+msgstr "Continuo amb la pujada?"
+
+#. TRANSLATORS: the server sent the user a small message
+#: src/fu-util.c:788
+msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr ""
 
-#: src/fu-util.c:920 src/fu-util.c:1310
+#. TRANSLATORS: the server sent the user a small message
+#: src/fu-util.c:792
+msgid "Upload message:"
+msgstr ""
+
+#: src/fu-util.c:986 src/fu-util.c:1376
 msgid "OK"
 msgstr "D'acord"
 
 #. TRANSLATORS: downloading new signing file
-#: src/fu-util.c:1025
+#: src/fu-util.c:1091
 msgid "Fetching signature"
 msgstr "S'està obtenint la signatura"
 
 #. TRANSLATORS: downloading new metadata file
-#: src/fu-util.c:1028
+#: src/fu-util.c:1094
 msgid "Fetching metadata"
 msgstr "S'estan obtenint les metadades"
 
 #. TRANSLATORS: downloading new firmware file
-#: src/fu-util.c:1031
+#: src/fu-util.c:1097
 msgid "Fetching firmware"
 msgstr "S'està obtenint el microprogramari"
 
 #. TRANSLATORS: downloading unknown file
-#: src/fu-util.c:1034
+#: src/fu-util.c:1100
 msgid "Fetching file"
 msgstr "S'està obtenint el fitxer"
 
 #. TRANSLATORS: section header for release version number
-#: src/fu-util.c:1214
+#: src/fu-util.c:1280
 msgid "Version"
 msgstr "Versió:"
 
 #. TRANSLATORS: section header for the release one line summary
-#: src/fu-util.c:1220
+#: src/fu-util.c:1286
 msgid "Summary"
-msgstr ""
+msgstr "Resum"
 
 #. TRANSLATORS: section header for the remote the file is coming from
-#: src/fu-util.c:1223
+#: src/fu-util.c:1289
 msgid "Remote"
 msgstr "Remot"
 
 #. TRANSLATORS: section header for firmware URI
-#: src/fu-util.c:1226
+#: src/fu-util.c:1292
 msgid "URI"
 msgstr "URI"
 
 #. TRANSLATORS: section header for firmware description
-#: src/fu-util.c:1232
+#: src/fu-util.c:1298
 msgid "Description"
 msgstr "Descripció"
 
 #. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
-#: src/fu-util.c:1240 src/fu-util.c:1534
+#: src/fu-util.c:1306 src/fu-util.c:1603
 msgid "Checksum"
 msgstr "Suma de comprovació"
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:1272
+#: src/fu-util.c:1338
 msgid "Choose a release:"
 msgstr "Trieu un alliberament:"
 
-#. TRANSLATORS: the metadata is very out of date; %i is a number > 1
-#: src/fu-util.c:1377
+#. TRANSLATORS: the metadata is very out of date; %u is a number > 1
+#: src/fu-util.c:1443
 #, c-format
 msgid ""
+"Firmware metadata has not been updated for %u day and may not be up to date."
+msgid_plural ""
 "Firmware metadata has not been updated for %u days and may not be up to "
 "date."
-msgstr ""
+msgstr[0] "Les metadades del microprogramari no s'han actualitzat durant %u dia i podria ser que no estiguin actualitzades."
+msgstr[1] "Les metadades del microprogramari no s'han actualitzat durant %u dies i podria ser que no estiguin actualitzades."
 
 #. TRANSLATORS: ask the user if we can update the metadata
-#: src/fu-util.c:1382
+#: src/fu-util.c:1451
 msgid "Update now?"
-msgstr ""
+msgstr "Actualitzo ara?"
 
 #. TRANSLATORS: first replacement is device name
-#: src/fu-util.c:1427
+#: src/fu-util.c:1496
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s té actualitzacions de microprogramari:"
 
-#: src/fu-util.c:1434
+#: src/fu-util.c:1503
 msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: section header for firmware version
-#: src/fu-util.c:1446
+#: src/fu-util.c:1515
 msgid "Update Version"
 msgstr "Versió de l'actualització"
 
 #. TRANSLATORS: section header for the release name
-#: src/fu-util.c:1450
+#: src/fu-util.c:1519
 msgid "Update Name"
-msgstr ""
+msgstr "Actualitza el nom"
 
 #. TRANSLATORS: section header for the release one line summary
-#: src/fu-util.c:1453
+#: src/fu-util.c:1522
 msgid "Update Summary"
-msgstr ""
+msgstr "Actualitza el resum"
 
 #. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-#: src/fu-util.c:1456
+#: src/fu-util.c:1525
 msgid "Update Remote ID"
 msgstr "Actualitza l'ID remot:"
 
 #. TRANSLATORS: section header for firmware checksum
-#: src/fu-util.c:1465
+#: src/fu-util.c:1534
 msgid "Update Checksum"
 msgstr "Suma de verificació de l'actualització"
 
 #. TRANSLATORS: section header for firmware remote http://
-#: src/fu-util.c:1469
+#: src/fu-util.c:1538
 msgid "Update Location"
 msgstr "Ubicació de l'actualització"
 
 #. TRANSLATORS: section header for long firmware desc
-#: src/fu-util.c:1480
+#: src/fu-util.c:1549
 msgid "Update Description"
 msgstr "Descripció de l'actualització"
 
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
-#: src/fu-util.c:1512
+#: src/fu-util.c:1581
 msgid "Remote ID"
 msgstr "ID remot"
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-#: src/fu-util.c:1516
+#: src/fu-util.c:1585
 msgid "Title"
 msgstr "Títol"
 
 #. TRANSLATORS: remote type, e.g. remote or local
-#: src/fu-util.c:1520
+#: src/fu-util.c:1589
 msgid "Type"
 msgstr "Tipus"
 
-#: src/fu-util.c:1525
+#: src/fu-util.c:1594
 msgid "Keyring"
 msgstr " Anell de claus"
 
 #. TRANSLATORS: if the remote is enabled
-#: src/fu-util.c:1530
+#: src/fu-util.c:1599
 msgid "Enabled"
 msgstr "Habilitat"
 
 #. TRANSLATORS: the age of the metadata
-#: src/fu-util.c:1561
+#: src/fu-util.c:1630
 msgid "Age"
 msgstr "Antiguitat"
 
 #. TRANSLATORS: the numeric priority
-#: src/fu-util.c:1568
+#: src/fu-util.c:1637
 msgid "Priority"
 msgstr "Prioritat"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1573
+#: src/fu-util.c:1642
 msgid "Username"
 msgstr "Nom d'usuari"
 
 #. TRANSLATORS: remote filename base
-#: src/fu-util.c:1578
+#: src/fu-util.c:1647
 msgid "Password"
 msgstr "Contrasenya"
 
 #. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1583
+#: src/fu-util.c:1652
 msgid "Filename"
 msgstr "Nom del fitxer"
 
 #. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1588
+#: src/fu-util.c:1657
 msgid "Filename Signature"
 msgstr "Signatura del nom del fitxer"
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1593
+#: src/fu-util.c:1662
 msgid "Metadata URI"
 msgstr "URI de les metadades"
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1598
+#: src/fu-util.c:1667
 msgid "Metadata URI Signature"
 msgstr "Signatura de l'URI de les metadades"
 
 #. TRANSLATORS: remote URI
-#: src/fu-util.c:1603
+#: src/fu-util.c:1672
 msgid "Firmware Base URI"
 msgstr "URI base del microprogramari"
 
 #. TRANSLATORS: URI to send success/failure reports
-#: src/fu-util.c:1608
+#: src/fu-util.c:1677
 msgid "Report URI"
-msgstr ""
+msgstr "URI de l'informe"
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1635
+#: src/fu-util.c:1704
 msgid "Device added:"
 msgstr "S'ha afegit el dispositiu:"
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1645
+#: src/fu-util.c:1714
 msgid "Device removed:"
 msgstr "S'ha eliminat el dispositiu:"
 
 #. TRANSLATORS: this is when a device has been updated
-#: src/fu-util.c:1655
+#: src/fu-util.c:1724
 msgid "Device changed:"
 msgstr "S'ha canviat el dispositiu:"
 
+#. TRANSLATORS: explain why we want to upload
+#: src/fu-util.c:1915
+msgid "An update requires a reboot to complete."
+msgstr ""
+
+#. TRANSLATORS: reboot to apply the update
+#: src/fu-util.c:1917
+msgid "Restart now?"
+msgstr ""
+
 #. TRANSLATORS: command line option
-#: src/fu-util.c:1997
+#: src/fu-util.c:2087
 msgid "Show extra debugging information"
 msgstr "Mostra la informació de depuració addicional"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:2000
+#: src/fu-util.c:2090
 msgid "Show client and daemon versions"
 msgstr "Mostra les versions del client i el dimoni"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:2003
+#: src/fu-util.c:2093
 msgid "Schedule installation for next reboot when possible"
 msgstr "Planifica la instal·lació per al següent reinici quan sigui posible"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:2006
+#: src/fu-util.c:2096
 msgid "Allow re-installing existing firmware versions"
 msgstr "Permet tornar a instal·lar les versions de microprogramari existents"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:2009
+#: src/fu-util.c:2099
 msgid "Allow downgrading firmware versions"
 msgstr "Permet tornar a la versió anterior del microprogramari"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:2012
+#: src/fu-util.c:2102
 msgid "Override plugin warning"
 msgstr "Passa per alt els avisos del connector"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:2015
+#: src/fu-util.c:2105
 msgid "Answer yes to all questions"
-msgstr ""
+msgstr "Respon sí a totes les preguntes"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:2018
+#: src/fu-util.c:2108
 msgid "Do not check for unreported history"
-msgstr ""
+msgstr "No comprovar si hi ha un historial sense informar"
 
 #. TRANSLATORS: command line option
-#: src/fu-util.c:2021
+#: src/fu-util.c:2111
 msgid "Do not check for old metadata"
+msgstr "No comprovar si hi ha metadades antigues"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2114
+msgid "Do not check for reboot after update"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2044
+#: src/fu-util.c:2137
 msgid "Get all devices that support firmware updates"
 msgstr "Obté tots els dispositius que admeten actualitzacions de microprogramari"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2050
+#: src/fu-util.c:2143
 msgid "Return all the hardware IDs for the machine"
 msgstr "Retorna tots els ID del maquinari de la màquina"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2056
+#: src/fu-util.c:2149
 msgid "Install prepared updates now"
 msgstr "Instal·la ara les actualitzacions preparades"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2062
+#: src/fu-util.c:2155
 msgid "Show history of firmware updates"
-msgstr ""
+msgstr "Mostra l'historial de les actualitzacions de microprogramari"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2068
+#: src/fu-util.c:2161
 msgid "Erase all firmware update history"
-msgstr ""
+msgstr "Esborra tot l'historial de les actualitzacions de microprogramari"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2074
+#: src/fu-util.c:2167
 msgid "Share firmware history with the developers"
-msgstr ""
+msgstr "Comparteix l'historial de microprogramari amb els desenvolupadors"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2080
+#: src/fu-util.c:2173
 msgid "Install a firmware file on this hardware"
 msgstr "Instal·la un fitxer de microprogramari en aquest maquinari"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2086
+#: src/fu-util.c:2179
 msgid "Gets details about a firmware file"
 msgstr "Obté la informació sobre un fitxer de microprogramari"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2092
+#: src/fu-util.c:2185
 msgid "Gets the list of updates for connected hardware"
 msgstr "Obté la llista d'actualitzacions per al maquinari connectat"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2098
+#: src/fu-util.c:2191
 msgid "Updates all firmware to latest versions available"
 msgstr "Actualitza tot el microprogramari a les versions més recents"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2104
+#: src/fu-util.c:2197
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "Obté el resultat d'aplicar la funció criptogràfica de resum sobre el microprogramari bolcat"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2110
+#: src/fu-util.c:2203
 msgid "Unlocks the device for firmware access"
 msgstr "Desbloqueja el dispositiu per accedir al microprogramari"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2116
+#: src/fu-util.c:2209
 msgid "Clears the results from the last update"
 msgstr "Esborra els resultats de l'última actualització"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2122
+#: src/fu-util.c:2215
 msgid "Clears any updates scheduled to be updated offline"
 msgstr "Neteja qualsevol actualització programyada per a ser actualitzada sense connexió"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2128
+#: src/fu-util.c:2221
 msgid "Gets the results from the last update"
 msgstr "Obté els resultats de l'última actualització"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2134
+#: src/fu-util.c:2227
 msgid "Gets the releases for a device"
 msgstr "Obté els alliberaments per a un dispositiu"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2140
+#: src/fu-util.c:2233
 msgid "Gets the configured remotes"
 msgstr "Obtén els remots configurats"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2146
+#: src/fu-util.c:2239
 msgid "Downgrades the firmware on a device"
 msgstr "Desactualitza el microprogramari en un dispositiu"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2152
+#: src/fu-util.c:2245
 msgid "Refresh metadata from remote server"
 msgstr "Refresca les metadades des del servidor remot"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2158
+#: src/fu-util.c:2251
 msgid "Update the stored metadata with current ROM contents"
 msgstr "Actualitza les metadades emmagatzemades amb el contingut de la ROM actual"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2164
+#: src/fu-util.c:2257
 msgid "Monitor the daemon for events"
 msgstr "Monitora el dimoni pels esdeveniments"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2170
+#: src/fu-util.c:2263
 msgid "Build firmware using a sandbox"
 msgstr "Construeix el microprogramari usant un entorn de proves"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2176
+#: src/fu-util.c:2269
 msgid "Dump SMBIOS data from a file"
 msgstr "Bolca les dades al SMBIOS des d'un fitxer"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2182
+#: src/fu-util.c:2275
 msgid "Modifies a given remote"
 msgstr "Modifica un remot indicat"
 
 #. TRANSLATORS: program name
-#: src/fu-util.c:2211
+#: src/fu-util.c:2305
 msgid "Firmware Utility"
 msgstr "Utilitat per al microprogramari"

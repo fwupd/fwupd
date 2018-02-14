@@ -79,6 +79,8 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	const gchar *guid_str = NULL;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *dev_id_str = NULL;
+	g_autofree gchar *layer_str = NULL;
+	g_autofree gchar *rad_str = NULL;
 	const gchar *aux_node;
 	guint8 layer;
 	guint16 rad;
@@ -111,6 +113,8 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	kind_str = synapticsmst_device_kind_to_string (synapticsmst_device_get_kind (device));
 	dev_id_str = g_strdup_printf ("MST-%s-%s-%u-%u",
 				      kind_str, aux_node, layer, rad);
+	layer_str = g_strdup_printf ("%u", layer);
+	rad_str = g_strdup_printf ("%u", rad);
 
 	if (board_str == NULL) {
 		g_debug ("invalid board ID (%x)", synapticsmst_device_get_board_id (device));
@@ -124,6 +128,10 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	/* create the device */
 	dev = fu_device_new ();
 	fu_device_set_id (dev, dev_id_str);
+	fu_device_set_metadata (dev, "SynapticsMSTKind", kind_str);
+	fu_device_set_metadata (dev, "SynapticsMSTAuxNode", aux_node);
+	fu_device_set_metadata (dev, "SynapticsMSTLayer", layer_str);
+	fu_device_set_metadata (dev, "SynapticsMSTRad", rad_str);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_name (dev, name);
 	fu_device_set_vendor (dev, "Synaptics");
@@ -298,20 +306,16 @@ fu_plugin_update (FuPlugin *plugin,
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(SynapticsMSTDevice) device = NULL;
-	const gchar *device_id;
 	SynapticsMSTDeviceKind kind;
 	const gchar *aux_node;
 	guint8 layer;
 	guint8 rad;
-	g_auto (GStrv) split = NULL;
 
 	/* extract details to build a new device */
-	device_id = fu_device_get_id (dev);
-	split = g_strsplit (device_id, "-", -1);
-	kind = synapticsmst_device_kind_from_string(split[1]);
-	aux_node = split[2];
-	layer = g_ascii_strtoull (split[3], NULL, 0);
-	rad = g_ascii_strtoull (split[4], NULL, 0);
+	kind = synapticsmst_device_kind_from_string (fu_device_get_metadata (dev, "SynapticsMSTKind"));
+	aux_node = fu_device_get_metadata (dev, "SynapticsMSTAuxNode");
+	layer = g_ascii_strtoull (fu_device_get_metadata (dev, "SynapticsMSTLayer"), NULL, 0);
+	rad = g_ascii_strtoull (fu_device_get_metadata (dev, "SynapticsMSTRad"), NULL, 0);
 
 
 	/* sleep to allow device wakeup to complete */
@@ -329,7 +333,7 @@ fu_plugin_update (FuPlugin *plugin,
 		fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
 		if (!synapticsmst_device_write_firmware (device, blob_fw,
 							 fu_synapticsmst_write_progress_cb,
-							 device,
+							 dev,
 							 error)) {
 			g_prefix_error (error, "failed to flash firmware: ");
 			return FALSE;
