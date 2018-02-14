@@ -8,4 +8,5 @@ RUN pacman -Syu --noconfirm archlinux-keyring
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
 RUN mkdir /build
 WORKDIR /build
+COPY . .
 CMD ["./contrib/ci/arch.sh"]

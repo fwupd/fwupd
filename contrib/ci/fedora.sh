@@ -47,7 +47,7 @@ fi
 #install RPM packages
 dnf install -y $HOME/rpmbuild/RPMS/*/*.rpm
 
-cp $HOME/rpmbuild/RPMS/*/*.rpm .
+cp $HOME/rpmbuild/RPMS/*/*.rpm dist
 
 # run the installed tests
 if [ "$CI" = "true" ]; then

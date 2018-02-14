@@ -17,4 +17,4 @@ install:
   - ./contrib/ci/generate_docker.py
 
 script:
-  - docker run -e OS=$OS -e CI=true -t -v `pwd`:/build fwupd-$OS
+  - docker run -e OS=$OS -e CI=true -t -v `pwd`/dist:/build/dist fwupd-$OS
