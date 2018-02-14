@@ -1,0 +1,26 @@
+From 93a1f1cf173847c1d74c8e53a5dad951298f0917 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Wed, 14 Feb 2018 15:28:26 -0600
+Subject: [PATCH] contrib/ci: explicitly require at least fwupdate 10-3 to
+ build
+
+efivar 34-1 is needed to fix the ux_capsule_guid symbol
+---
+ contrib/ci/dependencies.xml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/contrib/ci/dependencies.xml b/contrib/ci/dependencies.xml
+index 84925dc..1d8d787 100644
+--- a/contrib/ci/dependencies.xml
++++ b/contrib/ci/dependencies.xml
+@@ -245,6 +245,7 @@
+     </distro>
+     <distro id="debian">
+       <control>
++        <version>(>= 10-3)</version>
+         <inclusive>amd64</inclusive>
+         <inclusive>arm64</inclusive>
+         <inclusive>armhf</inclusive>
+-- 
+2.7.4
+

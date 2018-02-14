@@ -8,7 +8,6 @@ Uploaders: Steve McIntyre <93sam@debian.org>,
 Build-Depends:
 	debhelper (>= 10.3),
 	dh-strip-nondeterminism,
-	docbook-utils,
 	fontconfig,
 	fonts-dejavu,
 	gcab,
@@ -28,7 +27,7 @@ Build-Depends:
 	libefivar-dev [amd64 arm64 armhf armel i386],
 	libelf-dev,
 	libfreetype6-dev,
-	libfwup-dev [amd64 arm64 armhf i386],
+	libfwup-dev (>= 10-3) [amd64 arm64 armhf i386],
 	libgcab-dev,
 	libgirepository1.0-dev,
 	libglib2.0-dev (>= 2.45.8),
@@ -52,7 +51,7 @@ Build-Depends:
 	udev,
 	umockdev,
 	valgrind [!mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha !mips64el !armhf !armel !mipsel !m68k],
-Standards-Version: 4.1.1
+Standards-Version: 4.1.3
 Section: admin
 Homepage: https://github.com/hughsie/fwupd
 Vcs-Git: https://anonscm.debian.org/git/uefi/fwupd.git

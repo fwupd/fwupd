@@ -1,6 +1,7 @@
 fwupd (1.0.5-1) UNRELEASED; urgency=medium
 
   * New upstream version.
+  * Build depend on fwupdate 10-3 for efivar 34 transition.
   * Drop previous patch, now upstream.
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Wed, 14 Feb 2018 14:12:12 -0600
