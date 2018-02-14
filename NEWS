@@ -1,3 +1,28 @@
+Version 1.0.5
+~~~~~~~~~~~~~
+Released: 2018-02-14
+
+New Features:
+ - Offer to reboot when processing an offline update (Richard Hughes)
+ - Report the efivar, libsmbios and fwupdate library versions (Mario Limonciello)
+ - Report Thunderbolt safe mode and SecureBoot status (Mario Limonciello)
+ - Show the user a URL when they report a known problem (Richard Hughes)
+ - Support split cabinet archives as produced by Windows Update (Richard Hughes)
+
+Bugfixes:
+ - Be more careful deleting and modifying device history (Richard Hughes)
+ - Clarify which devices don't have upgrades (Mario Limonciello)
+ - Ensure the Thunderbolt version is xx.yy (Richard Hughes)
+ - Fix a daemon warning when using fwupdmgr get-results (Richard Hughes)
+ - Fix crasher with MST flashing (Mario Limonciello)
+ - Fix DFU detach with newer releases of libusb (Richard Hughes)
+ - Include the device VID and PID when generating the device-id (Richard Hughes)
+ - Set the RemoteId when using GetDetails (Richard Hughes)
+ - Stop matching 8bitdo DS4 controller VID/PID (Mario Limonciello)
+ - Use help2man for dfu-tool and drop docbook dependencies (Mario Limonciello)
+ - Use ngettext for any strings with plurals (Piotr Drąg)
+ - Use the default value if ArchiveSizeMax is unspecified (Richard Hughes)
+
 Version 1.0.4
 ~~~~~~~~~~~~~
 Released: 2018-01-25
