@@ -733,6 +733,16 @@ fu_util_report_history_for_uri (FuUtilPrivate *priv,
 	status_code = soup_session_send_message (priv->soup_session, msg);
 	g_debug ("server returned: %s", msg->response_body->data);
 
+	/* server returned nothing, and probably exploded in a ball of flames */
+	if (msg->response_body->length == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to upload to %s: %s",
+			     report_uri, soup_status_get_phrase (status_code));
+		return FALSE;
+	}
+
 	/* parse JSON reply */
 	json_parser = json_parser_new ();
 	if (!json_parser_load_from_data (json_parser,
