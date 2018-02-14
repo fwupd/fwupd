@@ -630,8 +630,6 @@ fu_engine_modify_device (FuEngine *self,
 				     "key %s not a valid flag", key);
 			return FALSE;
 		}
-		if (fu_device_has_flag (device, flag))
-			return TRUE;
 		if (flag != FWUPD_DEVICE_FLAG_REPORTED &&
 		    flag != FWUPD_DEVICE_FLAG_NOTIFIED) {
 			g_set_error (error,
