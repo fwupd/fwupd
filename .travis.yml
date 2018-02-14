@@ -7,11 +7,11 @@ services:
 
 env:
   - OS=fedora
-  - OS=debian-x86_64
+#  - OS=debian-x86_64
   - OS=arch
-  - OS=debian-s390x
+#  - OS=debian-s390x
   - OS=debian-i386
-  - OS=ubuntu-clang
+#  - OS=ubuntu-clang
 
 install:
   - ./contrib/ci/generate_docker.py
