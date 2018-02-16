@@ -249,6 +249,7 @@ fu_nitrokey_device_probe (FuUsbDevice *device, GError **error)
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
 
 	/* success */
 	return TRUE;

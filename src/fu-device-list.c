@@ -436,6 +436,14 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 			fu_device_set_version (device, version);
 		}
 
+		/* always use the runtime version */
+		if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION) &&
+		    fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+			const gchar *version = fu_device_get_version (item->device);
+			g_debug ("forcing runtime version %s to new device", version);
+			fu_device_set_version (device, version);
+		}
+
 		/* assign the new device */
 		g_set_object (&item->device_old, item->device);
 		g_set_object (&item->device, device);
