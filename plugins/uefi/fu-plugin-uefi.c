@@ -29,6 +29,10 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
+struct FuPluginData {
+	gboolean	ux_capsule;
+};
+
 /* drop when upgrading minimum required version of efivar to 33 */
 #if !defined (efi_guid_ux_capsule)
 #define efi_guid_ux_capsule EFI_GUID(0x3b8c8162,0x188c,0x46a4,0xaec9,0xbe,0x43,0xf1,0xd6,0x56,0x97)
@@ -37,6 +41,8 @@
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	data->ux_capsule = FALSE;
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
 	fu_plugin_add_report_metadata (plugin, "FwupdateVersion", LIBFWUP_LIBRARY_VERSION);
 	fu_plugin_add_report_metadata (plugin, "EfivarVersion", EFIVAR_LIBRARY_VERSION);
@@ -86,22 +92,6 @@ fu_plugin_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError **e
 			     guid_str);
 	}
 
-	return re_matched;
-}
-
-static fwup_resource *
-fu_plugin_uefi_find_raw (fwup_resource_iter *iter, efi_guid_t *guid)
-{
-	fwup_resource *re_matched = NULL;
-	fwup_resource *re = NULL;
-	while (fwup_resource_iter_next (iter, &re) > 0) {
-		efi_guid_t *guid_tmp;
-		fwup_get_guid (re, &guid_tmp);
-		if (efi_guid_cmp (guid_tmp, guid) == 0) {
-			re_matched = re;
-			break;
-		}
-	}
 	return re_matched;
 }
 
@@ -317,12 +307,6 @@ fu_plugin_uefi_update_splash (GError **error)
 		{ 0, 0 }
 	};
 
-	/* is this supported? */
-	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find_raw (iter, &efi_guid_ux_capsule);
-	if (re == NULL)
-		return TRUE;
-
 	/* get the boot graphics resource table data */
 #ifdef HAVE_FWUP_GET_BGRT_INFO
 	rc = fwup_get_ux_capsule_info (&screen_width, &screen_height);
@@ -381,6 +365,7 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	fwup_resource *re = NULL;
 	guint64 hardware_instance = 0;	/* FIXME */
 	g_autoptr(fwup_resource_iter) iter = NULL;
@@ -402,9 +387,12 @@ fu_plugin_update (FuPlugin *plugin,
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
 	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
-	if (!fu_plugin_uefi_update_splash (&error_splash)) {
-		g_warning ("failed to upload BGRT splash text: %s",
-			   error_splash->message);
+
+	if (data->ux_capsule) {
+		if (!fu_plugin_uefi_update_splash (&error_splash)) {
+			g_warning ("failed to upload UEFI UX capsule text: %s",
+				   error_splash->message);
+		}
 	}
 	if (!fu_plugin_uefi_update_resource (re, hardware_instance, blob_fw, error))
 		return FALSE;
@@ -508,6 +496,7 @@ fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, guint32 uefi_type)
 static void
 fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	AsVersionParseFlag parse_flags;
 	efi_guid_t *guid_raw;
 	guint32 uefi_type;
@@ -523,7 +512,7 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 	/* detect the fake GUID used for uploading the image */
 	fwup_get_guid (re, &guid_raw);
 	if (efi_guid_cmp (guid_raw, &efi_guid_ux_capsule) == 0) {
-		g_debug ("skipping entry, detected fake BGRT");
+		data->ux_capsule = TRUE;
 		return;
 	}
 
@@ -596,10 +585,12 @@ fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	fwup_resource *re;
 	gint supported;
 	g_autoptr(fwup_resource_iter) iter = NULL;
 	g_autofree gchar *name = NULL;
+	const gchar *ux_capsule_str = "Disabled";
 
 	/* supported = 0 : ESRT unspported
 	   supported = 1 : unlocked, ESRT supported
@@ -645,6 +636,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* for debugging problems later */
 	fu_plugin_uefi_test_secure_boot (plugin);
+	if (data->ux_capsule)
+		ux_capsule_str = "Enabled";
+	g_debug ("UX Capsule support : %s", ux_capsule_str);
+	fu_plugin_add_report_metadata (plugin, "UEFIUXCapsule", ux_capsule_str);
 
 	return TRUE;
 }
