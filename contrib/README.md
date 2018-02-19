@@ -30,7 +30,7 @@ To prepare the Docker container run one of these commands:
 ```
 OS=debian-x86_64 ./generate_docker.py
 OS=debian-i386 ./generate_docker.py
-OS=ubuntu ./generate_docker.py
+OS=ubuntu-x86_64 ./generate_docker.py
 ```
 
 
@@ -39,7 +39,7 @@ To build the DEBs run one of these commands (from the root of your git checkout)
 ```
 docker run -t -v `pwd`:/build fwupd-debian-x86_64
 docker run -t -v `pwd`:/build fwupd-debian-i386
-docker run -t -v `pwd`:/build fwupd-ubuntu
+docker run -t -v `pwd`:/build fwupd-ubuntu-x86_64
 ```
 
 DEBs will be made available in your working directory when complete.
