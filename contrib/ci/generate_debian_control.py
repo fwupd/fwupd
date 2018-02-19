@@ -40,6 +40,8 @@ def parse_control_dependencies(requested_type):
     else:
         import lsb_release
         OS = lsb_release.get_distro_information()['ID'].lower()
+        import platform
+        SUBOS = platform.machine()
 
     tree = etree.parse(os.path.join(directory, "dependencies.xml"))
     root = tree.getroot()
