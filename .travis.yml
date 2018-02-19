@@ -11,7 +11,7 @@ env:
   - OS=arch
   - OS=debian-s390x
 #  - OS=debian-i386
-#  - OS=ubuntu-clang
+  - OS=ubuntu-clang
 
 install:
   - ./contrib/ci/generate_docker.py
