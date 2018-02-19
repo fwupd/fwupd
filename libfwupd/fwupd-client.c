@@ -334,6 +334,11 @@ fwupd_client_fixup_dbus_error (GError *error)
 				    G_DBUS_ERROR_SERVICE_UNKNOWN)) {
 		error->domain = FWUPD_ERROR;
 		error->code = FWUPD_ERROR_NOT_SUPPORTED;
+	} else if (g_error_matches (error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_DBUS_ERROR)) {
+		error->domain = FWUPD_ERROR;
+		error->code = FWUPD_ERROR_NOT_SUPPORTED;
 	} else {
 		error->domain = FWUPD_ERROR;
 		error->code = FWUPD_ERROR_INTERNAL;
