@@ -18,3 +18,15 @@ install:
 
 script:
   - docker run -e OS=$OS -e CI=true -t -v `pwd`/dist:/build/dist fwupd-$OS
+
+deploy:
+  provider: releases
+  api_key:
+    secure: fill_me_in
+  file_glob: true
+  file: dist/*
+  skip_cleanup:  true
+  on:
+    tags: true
+    repo: hughsie/fwupd
+
