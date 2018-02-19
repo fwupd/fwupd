@@ -7,10 +7,10 @@ services:
 
 env:
   - OS=fedora
-#  - OS=debian-x86_64
+  - OS=debian-x86_64
   - OS=arch
   - OS=debian-s390x
-#  - OS=debian-i386
+  - OS=debian-i386
   - OS=ubuntu-x86_64
 
 install:
