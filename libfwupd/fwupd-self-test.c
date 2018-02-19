@@ -298,6 +298,10 @@ fwupd_client_devices_func (void)
 	ret = fwupd_client_connect (client, NULL, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
+	if (fwupd_client_get_daemon_version (client) == NULL) {
+		g_test_skip ("no enabled fwupd daemon");
+		return;
+	}
 	if (as_utils_vercmp (fwupd_client_get_daemon_version (client), "1.0.0") < 0) {
 		g_test_skip ("running fwupd is too old");
 		return;
@@ -305,11 +309,15 @@ fwupd_client_devices_func (void)
 
 	array = fwupd_client_get_devices (client, NULL, &error);
 	if (array == NULL &&
-	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+		g_test_skip ("no available fwupd devices");
 		return;
+	}
 	if (array == NULL &&
-	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip ("no available fwupd daemon");
 		return;
+	}
 	g_assert_no_error (error);
 	g_assert (array != NULL);
 	g_assert_cmpint (array->len, >, 0);
@@ -339,12 +347,26 @@ fwupd_client_remotes_func (void)
 	ret = fwupd_client_connect (client, NULL, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
+	if (fwupd_client_get_daemon_version (client) == NULL) {
+		g_test_skip ("no enabled fwupd daemon");
+		return;
+	}
 	if (as_utils_vercmp (fwupd_client_get_daemon_version (client), "1.0.0") < 0) {
 		g_test_skip ("running fwupd is too old");
 		return;
 	}
 
 	array = fwupd_client_get_remotes (client, NULL, &error);
+	if (array == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+		g_test_skip ("no available fwupd remotes");
+		return;
+	}
+	if (array == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip ("no available fwupd daemon");
+		return;
+	}
 	g_assert_no_error (error);
 	g_assert (array != NULL);
 	g_assert_cmpint (array->len, >, 0);
