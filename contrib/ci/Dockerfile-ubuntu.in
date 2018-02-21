@@ -1,4 +1,5 @@
 FROM ubuntu:devel
+%%%OS%%%
 RUN echo fubar > /etc/machine-id
 %%%ARCH_SPECIFIC_COMMAND%%%
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
