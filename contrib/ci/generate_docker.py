@@ -103,6 +103,8 @@ with open(out.name, 'w') as wfd:
                 wfd.write('RUN cat /etc/apt/sources.list | sed "s/deb/deb-src/" >> /etc/apt/sources.list\n')
                 #add new architecture
                 wfd.write('RUN dpkg --add-architecture %s\n' % SUBOS)
+        elif line == "%%%OS%%%\n":
+            wfd.write("ENV OS %s\n" % TARGET)
         else:
             wfd.write(line)
     wfd.flush()
