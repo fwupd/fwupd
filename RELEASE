@@ -2,10 +2,10 @@ fwupd Release Notes
 
 1. Write NEWS entries for fwupd in the same format as usual.
 
-git shortlog 0.9.8.. | grep -i -v trivial | grep -v Merge > NEWS.new
+git shortlog 0.9.9.. | grep -i -v trivial | grep -v Merge > NEWS.new
 
-Version 0.9.9
-~~~~~~~~~~~~~
+Version 0.9.10
+~~~~~~~~~~~~~~
 Released: 2018-xx-xx
 
 New Features:
