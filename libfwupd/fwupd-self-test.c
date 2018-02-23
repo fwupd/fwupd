@@ -242,6 +242,10 @@ fwupd_client_devices_func (void)
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GError) error = NULL;
 
+	/* everyone is running 1.0.x now */
+	g_test_skip ("not doing daemon checks for obsolete branch");
+	return;
+
 	client = fwupd_client_new ();
 	array = fwupd_client_get_devices_simple (client, NULL, &error);
 	if (array == NULL &&
@@ -269,6 +273,10 @@ fwupd_client_remotes_func (void)
 	g_autoptr(FwupdRemote) remote3 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) array = NULL;
+
+	/* everyone is running 1.0.x now */
+	g_test_skip ("not doing daemon checks for obsolete branch");
+	return;
 
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", FU_SELF_TEST_REMOTES_DIR, TRUE);
 
@@ -300,6 +308,10 @@ fwupd_client_updates_func (void)
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GError) error = NULL;
+
+	/* everyone is running 1.0.x now */
+	g_test_skip ("not doing daemon checks for obsolete branch");
+	return;
 
 	client = fwupd_client_new ();
 	array = fwupd_client_get_updates (client, NULL, &error);
