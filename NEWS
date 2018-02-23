@@ -1,3 +1,18 @@
+Version 0.9.9
+~~~~~~~~~~~~~
+Released: 2018-02-23
+
+Bugfixes:
+ - Block owned TPM updates on Dell hardware (Mario Limonciello)
+ - Catch invalid Dell dock component requests (Mario Limonciello)
+ - Disable the dell plugin if libsmbios fails (Mario Limonciello)
+ - Enforce the thunderbolt controller version is xx.yy (Richard Hughes)
+ - Fix crash when enumerating with dock connected but UEFI capsule off (Mario Limonciello)
+ - Handle "native" thunderbolt mode (Yehezkel Bernat)
+ - Ignore useless thunderbolt device types (Mario Limonciello)
+ - Never include release checksums for older firmware versions (Richard Hughes)
+ - Use a CNAME to redirect to the correct CDN for metadata (Richard Hughes)
+
 Version 0.9.8
 ~~~~~~~~~~~~~
 Released: 2017-10-23
