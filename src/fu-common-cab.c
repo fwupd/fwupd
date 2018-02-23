@@ -171,7 +171,7 @@ fu_common_store_from_cab_file (AsStore *store, GCabCabinet *cabinet,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
-			     "counld not parse MetaInfo XML: %s",
+			     "could not parse MetaInfo XML: %s",
 			     error_local->message);
 		return FALSE;
 	}
@@ -185,7 +185,7 @@ fu_common_store_from_cab_file (AsStore *store, GCabCabinet *cabinet,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
-			     "counld not save temporary MetaInfo XML to %s: %s",
+			     "could not save temporary MetaInfo XML to %s: %s",
 			     cache_fn, error_local->message);
 		return FALSE;
 	}
@@ -193,7 +193,7 @@ fu_common_store_from_cab_file (AsStore *store, GCabCabinet *cabinet,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
-			     "counld not parse MetaInfo XML: %s",
+			     "could not parse MetaInfo XML: %s",
 			     error_local->message);
 		return FALSE;
 	}
