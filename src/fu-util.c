@@ -870,6 +870,15 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 				continue;
 		}
 
+		/* only send success and failure */
+		if (fwupd_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED &&
+		    fwupd_device_get_update_state (dev) != FWUPD_UPDATE_STATE_SUCCESS) {
+			g_debug ("ignoring %s with UpdateState %s",
+				 fwupd_device_get_id (dev),
+				 fwupd_update_state_to_string (fwupd_device_get_update_state (dev)));
+			continue;
+		}
+
 		/* find the RemoteURI to use for the device */
 		remote_id = fwupd_release_get_remote_id (rel);
 		if (remote_id == NULL) {
