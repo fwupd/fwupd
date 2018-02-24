@@ -108,6 +108,12 @@ if get_option('introspection')
     install : true
   )
 
+  gnome.generate_vapi('libfwupd-2.0',
+    sources: gir[0],
+    packages : ['gio-2.0', 'libsoup-2.4'],
+    install : true,
+  )
+
   # Verify the map file is correct -- note we can't actually use the generated
   # file for two reasons:
   #
