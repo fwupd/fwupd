@@ -54,6 +54,7 @@ BuildRequires: gnutls-utils
 BuildRequires: meson
 BuildRequires: help2man
 BuildRequires: json-glib-devel >= %{json_glib_version}
+BuildRequires: vala
 
 %if 0%{?have_uefi}
 BuildRequires: python3 python3-cairo python3-gobject python3-pillow
@@ -251,6 +252,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %files devel
 %{_datadir}/gir-1.0/Fwupd-2.0.gir
 %{_datadir}/gtk-doc/html/libfwupd
+%{_datadir}/vala/vapi
 %{_includedir}/fwupd-1
 %{_libdir}/libfwupd*.so
 %{_libdir}/pkgconfig/fwupd.pc
