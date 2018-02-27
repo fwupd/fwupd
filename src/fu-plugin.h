@@ -147,7 +147,8 @@ const gchar	*fu_plugin_lookup_quirk_by_usb_device	(FuPlugin	*plugin,
 void		 fu_plugin_add_report_metadata		(FuPlugin	*plugin,
 							 const gchar	*key,
 							 const gchar	*value);
-
+gchar		*fu_plugin_get_config_value		(FuPlugin	*plugin,
+							 const gchar	*key);
 G_END_DECLS
 
 #endif /* __FU_PLUGIN_H */
