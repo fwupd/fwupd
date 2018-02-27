@@ -30,3 +30,16 @@ and compiling it with libsmbios support.
 
 When fwupd and fwupdate have been compiled with this support you will
 be able to enable UEFI support on the device by using the `unlock` command.
+
+Custom EFI System Partition location
+---------------------
+`fwupdate` 10 and later allow using an EFI system partition location
+at runtime that is different than the location compiled into the library.
+
+fwupd 1.0.6 and later can take advantage of this feature by allowing
+users to modify `/etc/fwupd/uefi.conf`.
+
+An option titled *OverrideESPMountPoint* is available that can be
+uncommented and set to any valid directory on the system.
+
+Setting an invalid directory will disable the fwupd plugin.

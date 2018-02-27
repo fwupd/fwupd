@@ -31,6 +31,7 @@
 
 struct FuPluginData {
 	gboolean	ux_capsule;
+	gchar		*esp_path;
 };
 
 /* drop when upgrading minimum required version of efivar to 33 */
@@ -43,9 +44,17 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	data->ux_capsule = FALSE;
+	data->esp_path = NULL;
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
 	fu_plugin_add_report_metadata (plugin, "FwupdateVersion", LIBFWUP_LIBRARY_VERSION);
 	fu_plugin_add_report_metadata (plugin, "EfivarVersion", EFIVAR_LIBRARY_VERSION);
+}
+
+void
+fu_plugin_destroy (FuPlugin *plugin)
+{
+        FuPluginData *data = fu_plugin_get_data (plugin);
+        g_free (data->esp_path);
 }
 
 static gchar *
@@ -388,6 +397,10 @@ fu_plugin_update (FuPlugin *plugin,
 	g_debug ("Performing UEFI capsule update");
 	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
 
+#ifdef HAVE_FWUP_CUSTOM_ESP
+	if (data->esp_path != NULL)
+		fwup_set_esp_mountpoint (data->esp_path);
+#endif
 	if (data->ux_capsule) {
 		if (!fu_plugin_uefi_update_splash (&error_splash)) {
 			g_warning ("failed to upload UEFI UX capsule text: %s",
@@ -582,6 +595,31 @@ fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
 	fu_plugin_add_report_metadata (plugin, "SecureBoot", result_str);
 }
 
+static gboolean load_custom_esp (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *key = "OverrideESPMountPoint";
+
+	data->esp_path = fu_plugin_get_config_value (plugin, key);
+	if (data->esp_path != NULL) {
+		if (!g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Invalid %s specified in %s config: %s",
+				     fu_plugin_get_name (plugin), key,
+				     data->esp_path);
+
+			return FALSE;
+		}
+		g_debug ("%s set to %s", key, data->esp_path);
+		fu_plugin_add_report_metadata (plugin, key,
+					       data->esp_path);
+	}
+
+	return TRUE;
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -633,6 +671,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 	while (fwup_resource_iter_next (iter, &re) > 0)
 		fu_plugin_uefi_coldplug_resource (plugin, re);
+
+	/* load any overriden options */
+	if (!load_custom_esp (plugin, error))
+		return FALSE;
 
 	/* for debugging problems later */
 	fu_plugin_uefi_test_secure_boot (plugin);

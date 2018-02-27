@@ -1422,6 +1422,35 @@ fu_plugin_get_report_metadata (FuPlugin *plugin)
 	return priv->report_metadata;
 }
 
+/**
+ * fu_plugin_get_config_value:
+ * @plugin: a #FuPlugin
+ * @key: A settings key
+ *
+ * Return the value of a key if it's been configured
+ *
+ * Since: 1.0.6
+ **/
+gchar *
+fu_plugin_get_config_value (FuPlugin *plugin, const gchar *key)
+{
+	g_autofree gchar *conf_file = NULL;
+	g_autofree gchar *conf_path = NULL;
+	g_autoptr(GKeyFile) keyfile = NULL;
+	const gchar *plugin_name;
+
+	plugin_name = fu_plugin_get_name (plugin);
+	conf_file = g_strdup_printf ("%s.conf", plugin_name);
+	conf_path = g_build_filename (FWUPDCONFIGDIR, conf_file,  NULL);
+	if (!g_file_test (conf_path, G_FILE_TEST_IS_REGULAR))
+		return NULL;
+	keyfile = g_key_file_new ();
+	if (!g_key_file_load_from_file (keyfile, conf_path,
+					G_KEY_FILE_NONE, NULL))
+		return NULL;
+	return g_key_file_get_string (keyfile, plugin_name, key, NULL);
+}
+
 static void
 fu_plugin_class_init (FuPluginClass *klass)
 {
