@@ -1,6 +1,7 @@
 subdir('builder')
 subdir('pki')
 subdir('remotes.d')
+subdir('bash-completion')
 
 if get_option('tests')
   subdir('tests')
