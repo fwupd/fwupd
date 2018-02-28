@@ -435,16 +435,16 @@ fu_plugin_amt_create_device (GError **error)
 		return NULL;
 	switch (state) {
 	case 0:
-		fu_device_set_name (dev, "Intel AMT (unprovisioned)");
+		fu_device_set_name (dev, "Intel AMT [unprovisioned]");
 		break;
 	case 1:
-		fu_device_set_name (dev, "Intel AMT (being provisioned)");
+		fu_device_set_name (dev, "Intel AMT [being provisioned]");
 		break;
 	case 2:
-		fu_device_set_name (dev, "Intel AMT (provisioned)");
+		fu_device_set_name (dev, "Intel AMT [provisioned]");
 		break;
 	default:
-		fu_device_set_name (dev, "Intel AMT (unknown)");
+		fu_device_set_name (dev, "Intel AMT [unknown]");
 		break;
 	}
 	fu_device_set_summary (dev, "Hardware and firmware technology for remote "
