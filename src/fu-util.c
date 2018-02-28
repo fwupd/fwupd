@@ -1965,7 +1965,7 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* get device to use */
 	if (g_strv_length (values) == 1) {
-		dev = fwupd_client_get_device_by_id (priv->client, values[1],
+		dev = fwupd_client_get_device_by_id (priv->client, values[0],
 						     NULL, error);
 		if (dev == NULL)
 			return FALSE;
