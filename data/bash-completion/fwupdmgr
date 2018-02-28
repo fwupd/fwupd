@@ -45,13 +45,12 @@ _show_modifiers()
 
 _show_device_ids()
 {
-	local devices
-	devices="$(command fwupdmgr get-devices | command awk '/DeviceId/ { print $2}')"
-	COMPREPLY+=( $(compgen -W "${devices}" -- "$cur") )
-#it would be nice to show device description but fwupd really doesn't like extraneous data
-#	local description
-#	description="$(command fwupdmgr get-devices | command awk '!/DeviceId/ { line = $0 }; /DeviceId/ { print $2 "  " line}')"
-#	COMPREPLY+=( $(compgen -W "${description}" -- "$cur") )
+	local description
+	OLDIFS=$IFS
+	IFS=$'\n'
+	description="$(command fwupdmgr get-devices | command awk '!/DeviceId/ { line = $0 }; /DeviceId/ { print $2 " {" line "}"}')"
+	COMPREPLY+=( $(compgen -W "${description}" -- "$cur") )
+	IFS=$OLDIFS
 }
 
 _show_remotes()
