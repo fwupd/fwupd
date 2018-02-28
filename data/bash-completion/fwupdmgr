@@ -1,0 +1,158 @@
+_fwupdmgr_cmd_list=(
+	'build-firmware'
+	'clear-history'
+	'clear-offline'
+	'clear-results'
+	'downgrade'
+	'get-details'
+	'get-devices'
+	'get-history'
+	'get-releases'
+	'get-remotes'
+	'get-results'
+	'get-updates'
+	'hwids'
+	'install'
+	'install-prepared'
+	'modify-remote'
+	'monitor'
+	'refresh'
+	'report-history'
+	'smbios-dump'
+	'unlock'
+	'update'
+	'verify'
+	'verify-update'
+	'--version'
+)
+
+_fwupdmgr_opts=(
+	'--verbose'
+	'--offline'
+	'--allow-reinstall'
+	'--allow-older'
+	'--force'
+	'--assume-yes'
+	'--no-unreported-check'
+	'--no-metadata-check'
+	'--no-reboot-check'
+)
+
+_show_modifiers()
+{
+	COMPREPLY+=( $(compgen -W '${_fwupdmgr_opts[@]}' -- "$cur") )
+}
+
+_show_device_ids()
+{
+	local devices
+	devices="$(command fwupdmgr get-devices | command awk '/DeviceId/ { print $2}')"
+	COMPREPLY+=( $(compgen -W "${devices}" -- "$cur") )
+#it would be nice to show device description but fwupd really doesn't like extraneous data
+#	local description
+#	description="$(command fwupdmgr get-devices | command awk '!/DeviceId/ { line = $0 }; /DeviceId/ { print $2 "  " line}')"
+#	COMPREPLY+=( $(compgen -W "${description}" -- "$cur") )
+}
+
+_show_remotes()
+{
+	local remotes
+	remotes="$(command fwupdmgr get-remotes | command awk '/Remote ID/ { print $3 }')"
+	COMPREPLY+=( $(compgen -W "${remotes}" -- "$cur") )
+}
+
+_fwupdmgr()
+{
+	local cur prev command
+	COMPREPLY=()
+	cur=`_get_cword`
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+	command=${COMP_WORDS[1]}
+
+	case $command in
+	clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update)
+		if [[ "$prev" = "$command" ]]; then
+			_show_device_ids
+		else
+			_show_modifiers
+		fi
+		;;
+	get-details|smbios-dump)
+		#browse for file
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	install)
+		#find files
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#device ID or modifiers
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_show_device_ids
+			_show_modifiers
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	modify-remote)
+		#find remotes
+		if [[ "$prev" = "$command" ]]; then
+			_show_remotes
+		#add key
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			local keys
+			keys="$(command fwupdmgr get-remotes | command awk -v pattern="Remote ID:.*${prev}$" '$0~pattern{show=1; next}/Remote/{show=0}{gsub(/:.*/,"")}show')"
+			COMPREPLY+=( $(compgen -W "${keys}" -- "$cur") )
+		fi
+		;;
+	refresh)
+		#find first file
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#find second file
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_filedir
+		#find remote ID
+		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
+			_show_remotes
+		else
+			_show_modifiers
+		fi
+		;;
+	build-firmware)
+		#file in
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#file out
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_filedir
+		#script
+		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
+			_filedir
+		#output
+		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
+			_filedir
+		else
+			_show_modifiers
+		fi
+		;;
+	*)
+		#find first command
+		if [[ ${COMP_CWORD} = 1 ]]; then
+			COMPREPLY=( $(compgen -W '${_fwupdmgr_cmd_list[@]}' -- "$cur") )
+		#modifiers for all commands
+		else
+			_show_modifiers
+		fi
+		;;
+	esac
+
+	return 0
+}
+
+complete -F _fwupdmgr fwupdmgr
