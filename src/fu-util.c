@@ -311,6 +311,13 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 			 fwupd_device_get_name (dev));
 	}
 	idx = fu_util_prompt_for_number (devices_filtered->len);
+	if (idx == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "Request canceled");
+		return NULL;
+	}
 	dev = g_ptr_array_index (devices_filtered, idx - 1);
 	return g_object_ref (dev);
 }
