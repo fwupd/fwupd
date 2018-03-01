@@ -1,6 +1,5 @@
 subdir('dfu')
 subdir('ebitdo')
-subdir('raspberrypi')
 subdir('steelseries')
 subdir('nitrokey')
 subdir('test')
