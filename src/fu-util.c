@@ -235,11 +235,11 @@ fu_util_prompt_for_number (guint maxnum)
 		retval = sscanf (buffer, "%u", &answer);
 
 		/* positive */
-		if (retval == 1 && answer > 0 && answer <= maxnum)
+		if (retval == 1 && answer <= maxnum)
 			break;
 
 		/* TRANSLATORS: the user isn't reading the question */
-		g_print (_("Please enter a number from 1 to %u: "), maxnum);
+		g_print (_("Please enter a number from 0 to %u: "), maxnum);
 	} while (TRUE);
 	return answer;
 }
@@ -303,6 +303,8 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 
 	/* TRANSLATORS: get interactive prompt */
 	g_print ("%s\n", _("Choose a device:"));
+	/* TRANSLATORS: this is to abort the interactive prompt */
+	g_print ("0.\t%s\n", _("Cancel"));
 	for (guint i = 0; i < devices_filtered->len; i++) {
 		dev = g_ptr_array_index (devices_filtered, i);
 		g_print ("%u.\t%s (%s)\n",
