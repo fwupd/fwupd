@@ -53,8 +53,8 @@ fu_plugin_init (FuPlugin *plugin)
 void
 fu_plugin_destroy (FuPlugin *plugin)
 {
-        FuPluginData *data = fu_plugin_get_data (plugin);
-        g_free (data->esp_path);
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_free (data->esp_path);
 }
 
 static gchar *
@@ -595,7 +595,8 @@ fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
 	fu_plugin_add_report_metadata (plugin, "SecureBoot", result_str);
 }
 
-static gboolean load_custom_esp (FuPlugin *plugin, GError **error)
+static gboolean
+load_custom_esp (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *key = "OverrideESPMountPoint";
