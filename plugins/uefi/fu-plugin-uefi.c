@@ -597,6 +597,8 @@ fu_plugin_uefi_set_custom_mountpoint (FuPlugin *plugin, GError **error)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *key = "OverrideESPMountPoint";
 
+	/* load from file and keep @key ref'd for the lifetime of the plugin as
+	 * libfwupdate does not strdup the value in fwup_set_esp_mountpoint() */
 	data->esp_path = fu_plugin_get_config_value (plugin, key);
 	if (data->esp_path != NULL) {
 		if (!g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
@@ -611,8 +613,6 @@ fu_plugin_uefi_set_custom_mountpoint (FuPlugin *plugin, GError **error)
 		}
 #ifdef HAVE_FWUP_CUSTOM_ESP
 		fwup_set_esp_mountpoint (data->esp_path);
-		g_debug ("%s set to %s", key, data->esp_path);
-		fu_plugin_add_report_metadata (plugin, key, data->esp_path);
 #endif
 	}
 
@@ -622,9 +622,25 @@ fu_plugin_uefi_set_custom_mountpoint (FuPlugin *plugin, GError **error)
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
+
 	/* load any overriden options */
 	if (!fu_plugin_uefi_set_custom_mountpoint (plugin, error))
 		return FALSE;
+
+	/* get the default compiled-in value for the ESP mountpoint */
+#ifdef HAVE_FWUP_GET_ESP_MOUNTPOINT
+	if (data->esp_path == NULL)
+		data->esp_path = g_strdup (fwup_get_esp_mountpoint ());
+#endif
+
+	/* fall back to a sane default */
+	if (data->esp_path == NULL)
+		data->esp_path = g_strdup ("/boot/efi");
+
+	/* save in report metadata */
+	g_debug ("ESP mountpoint set as %s", data->esp_path);
+	fu_plugin_add_report_metadata (plugin, "ESPMountPoint", data->esp_path);
 	return TRUE;
 }
 
