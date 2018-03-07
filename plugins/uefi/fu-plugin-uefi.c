@@ -596,7 +596,7 @@ fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
 }
 
 static gboolean
-load_custom_esp (FuPlugin *plugin, GError **error)
+fu_plugin_uefi_set_custom_mountpoint (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *key = "OverrideESPMountPoint";
@@ -618,6 +618,15 @@ load_custom_esp (FuPlugin *plugin, GError **error)
 					       data->esp_path);
 	}
 
+	return TRUE;
+}
+
+gboolean
+fu_plugin_startup (FuPlugin *plugin, GError **error)
+{
+	/* load any overriden options */
+	if (!fu_plugin_uefi_set_custom_mountpoint (plugin, error))
+		return FALSE;
 	return TRUE;
 }
 
@@ -672,10 +681,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 	while (fwup_resource_iter_next (iter, &re) > 0)
 		fu_plugin_uefi_coldplug_resource (plugin, re);
-
-	/* load any overriden options */
-	if (!load_custom_esp (plugin, error))
-		return FALSE;
 
 	/* for debugging problems later */
 	fu_plugin_uefi_test_secure_boot (plugin);
