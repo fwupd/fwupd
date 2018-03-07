@@ -397,10 +397,6 @@ fu_plugin_update (FuPlugin *plugin,
 	g_debug ("Performing UEFI capsule update");
 	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
 
-#ifdef HAVE_FWUP_CUSTOM_ESP
-	if (data->esp_path != NULL)
-		fwup_set_esp_mountpoint (data->esp_path);
-#endif
 	if (data->ux_capsule) {
 		if (!fu_plugin_uefi_update_splash (&error_splash)) {
 			g_warning ("failed to upload UEFI UX capsule text: %s",
@@ -613,9 +609,11 @@ fu_plugin_uefi_set_custom_mountpoint (FuPlugin *plugin, GError **error)
 
 			return FALSE;
 		}
+#ifdef HAVE_FWUP_CUSTOM_ESP
+		fwup_set_esp_mountpoint (data->esp_path);
 		g_debug ("%s set to %s", key, data->esp_path);
-		fu_plugin_add_report_metadata (plugin, key,
-					       data->esp_path);
+		fu_plugin_add_report_metadata (plugin, key, data->esp_path);
+#endif
 	}
 
 	return TRUE;
