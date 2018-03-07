@@ -29,9 +29,17 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
+#ifndef HAVE_FWUP_GET_ESP_MOUNTPOINT
+#define FWUP_SUPPORTED_STATUS_UNSUPPORTED			0
+#define FWUP_SUPPORTED_STATUS_UNLOCKED				1
+#define FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK			2
+#define FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK_NEXT_BOOT	3
+#endif
+
 struct FuPluginData {
-	gboolean	ux_capsule;
-	gchar		*esp_path;
+	gboolean		 ux_capsule;
+	gchar			*esp_path;
+	gint			 esrt_status;
 };
 
 /* drop when upgrading minimum required version of efivar to 33 */
@@ -624,6 +632,16 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
+	/* get the supported status */
+	data->esrt_status = fwup_supported ();
+	if (data->esrt_status == FWUP_SUPPORTED_STATUS_UNSUPPORTED) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "UEFI firmware updating not supported");
+		return FALSE;
+	}
+
 	/* load any overriden options */
 	if (!fu_plugin_uefi_set_custom_mountpoint (plugin, error))
 		return FALSE;
@@ -649,27 +667,12 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	fwup_resource *re;
-	gint supported;
 	g_autoptr(fwup_resource_iter) iter = NULL;
 	g_autofree gchar *name = NULL;
 	const gchar *ux_capsule_str = "Disabled";
 
-	/* supported = 0 : ESRT unspported
-	   supported = 1 : unlocked, ESRT supported
-	   supported = 2 : it is locked but can be unlocked to support ESRT
-	   supported = 3 : it is locked, has been marked to be unlocked on next boot
-			   calling unlock again is OK.
-	 */
-	supported = fwup_supported ();
-	if (supported == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "UEFI firmware updating not supported");
-		return FALSE;
-	}
-
-	if (supported == 2) {
+	/* create a dummy device so we can unlock the feature */
+	if (data->esrt_status == FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK) {
 		g_autoptr(FuDevice) dev = fu_device_new ();
 		name = fu_plugin_uefi_get_name_for_type (plugin,
 							 FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE);
