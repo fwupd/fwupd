@@ -96,6 +96,7 @@ if get_option('introspection')
     symbol_prefix : 'fwupd',
     identifier_prefix : 'Fwupd',
     export_packages : 'fwupd',
+    extra_args : '--c-include=fwupd.h', # This can be replaced with header : 'fwupd.h' once can depend on Meson 0.43.0
     dependencies : [
       giounix,
       soup,
@@ -108,8 +109,8 @@ if get_option('introspection')
     install : true
   )
 
-  gnome.generate_vapi('libfwupd-2.0',
-    sources: gir[0],
+  gnome.generate_vapi('fwupd',
+    sources : gir[0],
     packages : ['gio-2.0', 'libsoup-2.4'],
     install : true,
   )
