@@ -24,6 +24,7 @@
 #include <appstream-glib.h>
 #include <fwup.h>
 #include <fcntl.h>
+#include <fnmatch.h>
 #include <glib/gi18n.h>
 
 #include "fu-plugin.h"
@@ -34,6 +35,7 @@
 #define FWUP_SUPPORTED_STATUS_UNLOCKED				1
 #define FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK			2
 #define FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK_NEXT_BOOT	3
+#define FWUPDATE_GUID EFI_GUID(0x0abba7dc,0xe516,0x4167,0xbbf5,0x4d,0x9d,0x1c,0x73,0x94,0x16)
 #endif
 
 struct FuPluginData {
@@ -623,8 +625,73 @@ fu_plugin_uefi_set_custom_mountpoint (FuPlugin *plugin, GError **error)
 		fwup_set_esp_mountpoint (data->esp_path);
 #endif
 	}
-
 	return TRUE;
+}
+
+static gboolean
+fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autofree gchar *pattern = NULL;
+	g_autoptr(GPtrArray) files = NULL;
+
+	/* delete any files matching the glob in the ESP */
+	files = fu_common_get_files_recursive (data->esp_path, error);
+	if (files == NULL)
+		return FALSE;
+	pattern = g_build_filename (data->esp_path, "EFI/*/fw/fwupdate-*.cap", NULL);
+	for (guint i = 0; i < files->len; i++) {
+		const gchar *fn = g_ptr_array_index (files, i);
+		if (fnmatch (pattern, fn, 0) == 0) {
+			g_autoptr(GFile) file = g_file_new_for_path (fn);
+			g_debug ("deleting %s", fn);
+			if (!g_file_delete (file, NULL, error))
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_plugin_uefi_delete_old_efivars (FuPlugin *plugin, GError **error)
+{
+	char *name = NULL;
+	efi_guid_t fwupdate_guid = FWUPDATE_GUID;
+	efi_guid_t *guid = NULL;
+	int rc;
+	while ((rc = efi_get_next_variable_name (&guid, &name)) > 0) {
+		if (efi_guid_cmp (guid, &fwupdate_guid) != 0)
+			continue;
+		if (g_str_has_prefix (name, "fwupdate-")) {
+			g_debug ("deleting %s", name);
+			rc = efi_del_variable (fwupdate_guid, name);
+			if (rc < 0) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "failed to delete efi var %s: %s",
+					     name, strerror (errno));
+				return FALSE;
+			}
+		}
+	}
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "error listing variables: %s",
+			     strerror (errno));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/* remove when https://github.com/rhboot/efivar/pull/100 merged */
+static int
+_efi_get_variable_exists (efi_guid_t guid, const char *name)
+{
+	uint32_t unused_attrs = 0;
+	return efi_get_variable_attributes (guid, name, &unused_attrs);
 }
 
 gboolean
@@ -655,6 +722,18 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	/* fall back to a sane default */
 	if (data->esp_path == NULL)
 		data->esp_path = g_strdup ("/boot/efi");
+
+	/* delete any existing .cap files to avoid the small ESP partition
+	 * from running out of space when we've done lots of firmware updates
+	 * -- also if the distro has changed the ESP may be different anyway */
+	if (_efi_get_variable_exists (EFI_GLOBAL_GUID, "BootNext") == 0) {
+		g_debug ("detected BootNext, not cleaning up");
+	} else {
+		if (!fu_plugin_uefi_delete_old_capsules (plugin, error))
+			return FALSE;
+		if (!fu_plugin_uefi_delete_old_efivars (plugin, error))
+			return FALSE;
+	}
 
 	/* save in report metadata */
 	g_debug ("ESP mountpoint set as %s", data->esp_path);
