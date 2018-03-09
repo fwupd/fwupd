@@ -456,7 +456,6 @@ get_device_locations (guint16 id)
 	case 0x15D3:
 	case 0x15DA:
 	case 0x15C0:
-	case 0:
 		return locations;
 	default:
 		return NULL;
@@ -586,6 +585,15 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 			return VALIDATION_FAILED;
 	}
 
+	/*
+	 * 0 is for the unknown device case, for being future-compatible with
+	 * new devices; so we can't know which locations to check besides the
+	 * vendor and model IDs that were validated already, but those should be
+	 * good enough validation.
+	 */
+	if (hw_info->id == 0)
+		return UNKNOWN_DEVICE;
+
 	locations = is_host ?
 			    get_host_locations (hw_info->id) :
 			    get_device_locations (hw_info->id);
@@ -605,7 +613,7 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 			return VALIDATION_FAILED;
 	}
 
-	return hw_info->id != 0 ? VALIDATION_PASSED : UNKNOWN_DEVICE;
+	return VALIDATION_PASSED;
 }
 
 gboolean
