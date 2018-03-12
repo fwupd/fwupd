@@ -50,6 +50,7 @@ Build-Depends:
 	systemd (>= 231),
 	udev,
 	umockdev,
+	valac,
 	valgrind [!mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha !mips64el !armhf !armel !mipsel !m68k],
 Standards-Version: 4.1.3
 Section: admin

@@ -1,6 +1,9 @@
-fwupd (1.0.5-2) UNRELEASED; urgency=medium
+fwupd (1.0.6-1) unstable; urgency=medium
 
+  [ Mario Limonciello ]
+  * New upstream version (1.0.6)
   * Move git repo from alioth to salsa.d.o
+  * contrib/ci: Detect machine type when generating debian/control
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 29 Jan 2018 14:36:56 -0600
 
