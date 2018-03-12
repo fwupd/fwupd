@@ -53,6 +53,7 @@ libfwupdprivate = static_library(
     '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
     '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
+    '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )

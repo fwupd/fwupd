@@ -235,11 +235,11 @@ fu_util_prompt_for_number (guint maxnum)
 		retval = sscanf (buffer, "%u", &answer);
 
 		/* positive */
-		if (retval == 1 && answer > 0 && answer <= maxnum)
+		if (retval == 1 && answer <= maxnum)
 			break;
 
 		/* TRANSLATORS: the user isn't reading the question */
-		g_print (_("Please enter a number from 1 to %u: "), maxnum);
+		g_print (_("Please enter a number from 0 to %u: "), maxnum);
 	} while (TRUE);
 	return answer;
 }
@@ -303,6 +303,8 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 
 	/* TRANSLATORS: get interactive prompt */
 	g_print ("%s\n", _("Choose a device:"));
+	/* TRANSLATORS: this is to abort the interactive prompt */
+	g_print ("0.\t%s\n", _("Cancel"));
 	for (guint i = 0; i < devices_filtered->len; i++) {
 		dev = g_ptr_array_index (devices_filtered, i);
 		g_print ("%u.\t%s (%s)\n",
@@ -311,6 +313,13 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 			 fwupd_device_get_name (dev));
 	}
 	idx = fu_util_prompt_for_number (devices_filtered->len);
+	if (idx == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "Request canceled");
+		return NULL;
+	}
 	dev = g_ptr_array_index (devices_filtered, idx - 1);
 	return g_object_ref (dev);
 }
@@ -870,6 +879,15 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 				continue;
 		}
 
+		/* only send success and failure */
+		if (fwupd_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED &&
+		    fwupd_device_get_update_state (dev) != FWUPD_UPDATE_STATE_SUCCESS) {
+			g_debug ("ignoring %s with UpdateState %s",
+				 fwupd_device_get_id (dev),
+				 fwupd_update_state_to_string (fwupd_device_get_update_state (dev)));
+			continue;
+		}
+
 		/* find the RemoteURI to use for the device */
 		remote_id = fwupd_release_get_remote_id (rel);
 		if (remote_id == NULL) {
@@ -948,17 +966,37 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static FwupdDevice*
+fu_util_get_device_or_prompt (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FwupdDevice *dev = NULL;
+
+	/* get device to use */
+	if (g_strv_length (values) >= 1) {
+		g_autoptr(GError) error_local = NULL;
+		if (g_strv_length (values) > 1) {
+			for (guint i = 1; i < g_strv_length (values); i++)
+				g_debug ("Ignoring extra input %s", values[i]);
+		}
+		dev = fwupd_client_get_device_by_id (priv->client, values[0],
+						     NULL, &error_local);
+		if (dev != NULL)
+			return dev;
+		g_print ("%s\n",  error_local->message);
+	}
+	return fu_util_prompt_for_device (priv, error);
+}
+
 static gboolean
 fu_util_clear_results (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	if (g_strv_length (values) != 1) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
+	g_autoptr(FwupdDevice) dev = NULL;
+
+	dev = fu_util_get_device_or_prompt (priv, values, error);
+	if (dev == NULL)
 		return FALSE;
-	}
-	return fwupd_client_clear_results (priv->client, values[0], NULL, error);
+
+	return fwupd_client_clear_results (priv->client, fwupd_device_get_id (dev), NULL, error);
 }
 
 static gboolean
@@ -1001,16 +1039,16 @@ fu_util_verify_update_all (FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	g_autoptr(FwupdDevice) dev = NULL;
+
 	if (g_strv_length (values) == 0)
 		return fu_util_verify_update_all (priv, error);
-	if (g_strv_length (values) != 1) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
+
+	dev = fu_util_get_device_or_prompt (priv, values, error);
+	if (dev == NULL)
 		return FALSE;
-	}
-	return fwupd_client_verify_update (priv->client, values[0], NULL, error);
+
+	return fwupd_client_verify_update (priv->client, fwupd_device_get_id (dev), NULL, error);
 }
 
 static gboolean
@@ -1242,18 +1280,16 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(FwupdDevice) rel = NULL;
 
-	if (g_strv_length (values) != 1) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
-		return FALSE;
-	}
-	dev = fwupd_client_get_results (priv->client, values[0], NULL, error);
+	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
-	tmp = fwupd_device_to_string (dev);
+
+	rel = fwupd_client_get_results (priv->client, fwupd_device_get_id (dev), NULL, error);
+	if (rel == NULL)
+		return FALSE;
+	tmp = fwupd_device_to_string (rel);
 	g_print ("%s", tmp);
 	return TRUE;
 }
@@ -1264,17 +1300,9 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 
-	/* get device to use */
-	if (g_strv_length (values) == 1) {
-		dev = fwupd_client_get_device_by_id (priv->client, values[0],
-						     NULL, error);
-		if (dev == NULL)
-			return FALSE;
-	} else {
-		dev = fu_util_prompt_for_device (priv, error);
-		if (dev == NULL)
-			return FALSE;
-	}
+	dev = fu_util_get_device_or_prompt (priv, values, error);
+	if (dev == NULL)
+		return FALSE;
 
 	/* get the releases for this device */
 	rels = fwupd_client_get_releases (priv->client, fwupd_device_get_id (dev), NULL, error);
@@ -1391,29 +1419,28 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_verify (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	g_autoptr(FwupdDevice) dev = NULL;
+
 	if (g_strv_length (values) == 0)
 		return fu_util_verify_all (priv, error);
-	if (g_strv_length (values) != 1) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
+
+	dev = fu_util_get_device_or_prompt (priv, values, error);
+	if (dev == NULL)
 		return FALSE;
-	}
-	return fwupd_client_verify (priv->client, values[0], NULL, error);
+
+	return fwupd_client_verify (priv->client, fwupd_device_get_id (dev), NULL, error);
 }
 
 static gboolean
 fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	if (g_strv_length (values) != 1) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
+	g_autoptr(FwupdDevice) dev = NULL;
+
+	dev = fu_util_get_device_or_prompt (priv, values, error);
+	if (dev == NULL)
 		return FALSE;
-	}
-	return fwupd_client_unlock (priv->client, values[0], NULL, error);
+
+	return fwupd_client_unlock (priv->client, fwupd_device_get_id (dev), NULL, error);
 }
 
 static gboolean
@@ -1954,17 +1981,9 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 
-	/* get device to use */
-	if (g_strv_length (values) == 1) {
-		dev = fwupd_client_get_device_by_id (priv->client, values[1],
-						     NULL, error);
-		if (dev == NULL)
-			return FALSE;
-	} else {
-		dev = fu_util_prompt_for_device (priv, error);
-		if (dev == NULL)
-			return FALSE;
-	}
+	dev = fu_util_get_device_or_prompt (priv, values, error);
+	if (dev == NULL)
+		return FALSE;
 
 	/* get the releases for this device and filter for validity */
 	rels = fwupd_client_get_downgrades (priv->client,

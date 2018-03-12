@@ -90,8 +90,9 @@ def main(args):
     with tempfile.TemporaryDirectory() as dir:
         print('Using temp directory {}'.format(dir))
 
-        print('Extracting firmware exe')
-        extract_exe(args.exe, dir)
+        if args.exe:
+            print('Extracting firmware exe')
+            extract_exe(args.exe, dir)
 
         print('Locating firmware bin')
         get_firmware_bin(dir, args.bin, dir)
@@ -116,7 +117,7 @@ parser.add_argument('--contact-info', help='Email address of the firmware develo
 parser.add_argument('--developer-name', help='Name of the firmware developer')
 parser.add_argument('--release-version', help='Version number of the firmware package', required=True)
 parser.add_argument('--release-description', help='Description of the firmware release')
-parser.add_argument('--exe', help='Executable file to extract firmware from', required=True)
+parser.add_argument('--exe', help='Executable file to extract firmware from')
 parser.add_argument('--bin', help='Path to the .bin file inside the executable to use as the firmware image', required=True)
 parser.add_argument('--out', help='Output cab file path', required=True)
 args = parser.parse_args()

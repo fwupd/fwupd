@@ -1,3 +1,28 @@
+Version 1.0.6
+~~~~~~~~~~~~~
+Released: 2018-03-12
+
+New Features:
+ - Add bash completion for fwupdmgr (Mario Limonciello)
+ - Add support for newest Thunderbolt chips (Andrei Emeltchenko)
+ - Allow all functions that take device arguments to be prompted (Mario Limonciello)
+ - Allow devices to use the runtime version when in bootloader mode (Richard Hughes)
+ - Allow overriding ESP mount point via conf file (Mario Limonciello)
+ - Delete any old fwupdate capsules and efivars when launching fwupd (Richard Hughes)
+ - Generate Vala bindings (Robert Ancell)
+
+Bugfixes:
+ - Allow ctrl-d out of the prompt for devices (Mario Limonciello)
+ - Allow to create package out of provided binary (Andrei Emeltchenko)
+ - Correct handling of unknown Thunderbolt devices (Yehezkel Bernat)
+ - Correctly detect new remotes that are manually copied (Richard Hughes)
+ - Fix a crash related to when passing device to downgrade in CLI (Mario Limonciello)
+ - Fix running the self tests when no fwupd is installed (Richard Hughes)
+ - Fix Unifying signature writing and parsing for Texas bootloader (Ogier Bouvier)
+ - Only send success and failure reports to the server (Richard Hughes)
+ - Use a CNAME to redirect to the correct CDN for metadata (Richard Hughes)
+ - Use a longer timeout when powering back the Thunderbolt device (Richard Hughes)
+
 Version 1.0.5
 ~~~~~~~~~~~~~
 Released: 2018-02-14

@@ -11,10 +11,10 @@ env:
   - OS=arch
   - OS=debian-s390x
   - OS=debian-i386
-  - OS=ubuntu-clang
+  - OS=ubuntu-x86_64
 
 install:
   - ./contrib/ci/generate_docker.py
 
 script:
-  - docker run -e OS=$OS -e CI=true -t -v `pwd`/dist:/build/dist fwupd-$OS
+  - docker run -e CI=true -t -v `pwd`/dist:/build/dist fwupd-$OS

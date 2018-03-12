@@ -157,8 +157,14 @@ lu_device_bootloader_texas_write_firmware (LuDevice *device, GBytes *fw, GError 
 		}
 
 		/* build packet */
-		req->cmd = LU_DEVICE_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
-		req->addr = payload->addr % 0x80;
+		req->cmd = payload->cmd;
+
+		/* signature addresses do not need to fit inside 128 bytes */
+		if (req->cmd == LU_DEVICE_BOOTLOADER_CMD_WRITE_SIGNATURE)
+			req->addr = payload->addr;
+		else
+			req->addr =  payload->addr % 0x80;
+
 		req->len = payload->len;
 		memcpy (req->data, payload->data, payload->len);
 		if (!lu_device_bootloader_request (device, req, error)) {
@@ -185,7 +191,8 @@ lu_device_bootloader_texas_write_firmware (LuDevice *device, GBytes *fw, GError 
 		}
 
 		/* flush RAM buffer to EEPROM */
-		if ((payload->addr + 0x10) % 0x80 == 0) {
+		if ((payload->addr + 0x10) % 0x80 == 0 &&
+		    req->cmd != LU_DEVICE_BOOTLOADER_CMD_WRITE_SIGNATURE) {
 			guint16 addr_start = payload->addr - (7 * 0x10);
 			g_debug ("addr flush @ 0x%04x for 0x%04x",
 				 payload->addr, addr_start);

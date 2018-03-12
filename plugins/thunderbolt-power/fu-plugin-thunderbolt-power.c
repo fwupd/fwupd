@@ -240,11 +240,23 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 		return FALSE;
 
 	data->needs_forcepower = TRUE;
+
 	/* wait for the device to come back onto the bus */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	g_usleep (TBT_NEW_DEVICE_TIMEOUT * G_USEC_PER_SEC);
+	for (guint i = 0; i < 5; i++) {
+		g_autoptr(GUdevDevice) udevice_tmp = NULL;
+		g_usleep (TBT_NEW_DEVICE_TIMEOUT * G_USEC_PER_SEC);
+		udevice_tmp = g_udev_client_query_by_sysfs_path (data->udev, devpath);
+		if (udevice_tmp != NULL)
+			return TRUE;
+	}
 
-	return TRUE;
+	/* device did not wake up */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "device did not wake up when required");
+	return FALSE;
 }
 
 gboolean

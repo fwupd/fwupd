@@ -27,12 +27,12 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="clang">
     <distro id="ubuntu">
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="gcc-multilib-s390x-linux-gnu">
@@ -52,7 +52,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libcairo-gobject2">
@@ -67,7 +67,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libjson-glib-dev">
@@ -89,7 +89,7 @@
       <control>
         <version>(>= 1.1.1)</version>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libcolord-dev">
@@ -111,7 +111,7 @@
       <control>
         <version>(>= 1.0.0)</version>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="fonts-dejavu">
@@ -128,7 +128,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="devscripts">
@@ -137,7 +137,7 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="debhelper">
@@ -152,7 +152,7 @@
       <control>
         <version>(>= 10.3)</version>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="dbus-x11">
@@ -164,7 +164,7 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="dconf">
@@ -180,7 +180,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libelf-dev">
@@ -195,7 +195,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="fakeroot">
@@ -204,7 +204,7 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libfreetype6-dev">
@@ -219,7 +219,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="fontconfig">
@@ -233,7 +233,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libfwup-dev">
@@ -261,7 +261,7 @@
         <inclusive>armhf</inclusive>
         <inclusive>i386</inclusive>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="gcab">
@@ -276,7 +276,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="gettext">
@@ -295,7 +295,7 @@
       <control>
         <version>(>= 0.19.8.1)</version>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="gnupg2">
@@ -309,7 +309,7 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="git">
@@ -325,7 +325,7 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libglib2.0-dev">
@@ -344,7 +344,7 @@
       <control>
         <version>(>= 2.45.8)</version>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="gobject-introspection">
@@ -361,7 +361,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libgpgme11-dev">
@@ -376,7 +376,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="gnome-desktop-testing">
@@ -388,7 +388,7 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="gnutls-dev">
@@ -403,7 +403,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="gnutls-bin">
@@ -418,7 +418,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="gtk-doc-tools">
@@ -435,7 +435,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="help2man">
@@ -453,7 +453,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="jq">
@@ -480,7 +480,7 @@
       <control>
         <version>(>= 0.6.9)</version>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libarchive-dev">
@@ -495,7 +495,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libcolorhug-dev">
@@ -507,7 +507,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libefivar-dev">
@@ -530,7 +530,7 @@
         <inclusive>armel</inclusive>
         <inclusive>i386</inclusive>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libgcab-dev">
@@ -542,7 +542,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libgirepository1.0-dev">
@@ -554,7 +554,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libgudev-1.0-dev">
@@ -569,7 +569,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libgusb-dev">
@@ -588,7 +588,7 @@
       <control>
         <version>(>= 0.2.9)</version>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libicu-dev">
@@ -617,7 +617,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libsoup2.4-dev">
@@ -632,7 +632,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libtool-bin">
@@ -643,7 +643,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libumockdev-dev">
@@ -652,7 +652,7 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libxml2-dev:s390x">
@@ -666,7 +666,7 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="locales">
@@ -678,7 +678,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="meson">
@@ -696,7 +696,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="gir1.2-pango-1.0">
@@ -710,7 +710,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="pkg-config">
@@ -721,7 +721,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="policykit-1">
@@ -740,7 +740,7 @@
       <control>
         <version>(>> 0.105-14)</version>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libpolkit-gobject-1-dev">
@@ -755,7 +755,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="python3">
@@ -778,7 +778,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-gobject">
@@ -804,7 +804,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-requests">
@@ -818,7 +818,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-requests">
@@ -848,7 +848,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="systemd">
@@ -867,7 +867,7 @@
       <control>
         <version>(>= 231)</version>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="texlive-fonts-recommended">
@@ -876,7 +876,7 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="udev">
@@ -888,7 +888,7 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="umockdev">
@@ -905,7 +905,25 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="clang" />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="valac">
+    <distro id="arch">
+      <package>vala</package>
+    </distro>
+    <distro id="fedora">
+      <package>vala</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="valgrind">
@@ -948,7 +966,7 @@
         <exclusive>mipsel</exclusive>
         <exclusive>m68k</exclusive>
       </control>
-      <package variant="clang" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="xz">

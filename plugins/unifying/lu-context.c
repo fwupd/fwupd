@@ -137,6 +137,8 @@ lu_context_finalize (GObject *object)
 
 	if (ctx->poll_id != 0)
 		g_source_remove (ctx->poll_id);
+	if (ctx->supported_guids != NULL)
+		g_ptr_array_unref (ctx->supported_guids);
 
 	g_ptr_array_unref (ctx->devices);
 	g_hash_table_unref (ctx->devices_active);

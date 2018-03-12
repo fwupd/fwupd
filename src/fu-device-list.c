@@ -323,7 +323,7 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 	if (fu_device_get_remove_delay (item->device) > 0) {
 
 		/* we can't do anything with an unconnected device */
-		fu_device_set_flags (item->device, FWUPD_DEVICE_FLAG_NONE);
+		fu_device_remove_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 		/* give the hardware time to re-enumerate or the user time to
 		 * re-insert the device with a magic button pressed */
@@ -433,6 +433,14 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 		    fu_device_get_version (device) == NULL) {
 			const gchar *version = fu_device_get_version (item->device);
 			g_debug ("copying old version %s to new device", version);
+			fu_device_set_version (device, version);
+		}
+
+		/* always use the runtime version */
+		if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION) &&
+		    fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+			const gchar *version = fu_device_get_version (item->device);
+			g_debug ("forcing runtime version %s to new device", version);
 			fu_device_set_version (device, version);
 		}
 

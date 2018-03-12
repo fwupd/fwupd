@@ -90,6 +90,50 @@ fu_common_rmtree (const gchar *directory, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_common_get_file_list_internal (GPtrArray *files, const gchar *directory, GError **error)
+{
+	const gchar *filename;
+	g_autoptr(GDir) dir = NULL;
+
+	/* try to open */
+	dir = g_dir_open (directory, 0, error);
+	if (dir == NULL)
+		return FALSE;
+
+	/* find each */
+	while ((filename = g_dir_read_name (dir))) {
+		g_autofree gchar *src = g_build_filename (directory, filename, NULL);
+		if (g_file_test (src, G_FILE_TEST_IS_DIR)) {
+			if (!fu_common_get_file_list_internal (files, src, error))
+				return FALSE;
+		} else {
+			g_ptr_array_add (files, g_steal_pointer (&src));
+		}
+	}
+	return TRUE;
+
+}
+
+/**
+ * fu_common_get_files_recursive:
+ * @directory: a directory name
+ * @error: A #GError or %NULL
+ *
+ * Returns every file found under @directory, and any subdirectory.
+ * If any path under @directory cannot be accessed due to permissions an error
+ * will be returned.
+ *
+ * Returns: (element-type: utf8) (transfer container): array of files, or %NULL for error
+ **/
+GPtrArray *
+fu_common_get_files_recursive (const gchar *path, GError **error)
+{
+	g_autoptr(GPtrArray) files = g_ptr_array_new_with_free_func (g_free);
+	if (!fu_common_get_file_list_internal (files, path, error))
+		return NULL;
+	return g_steal_pointer (&files);
+}
 /**
  * fu_common_mkdir_parent:
  * @filename: A full pathname

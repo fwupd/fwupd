@@ -68,6 +68,10 @@ get_hw_info (guint16 id)
 		{ 0x15D3, 3, 2 }, /* AR-C 4C */
 		{ 0x15DA, 3, 1 }, /* AR-C 2C */
 
+		{ 0x15E7, 3, 1 }, /* TR 2C */
+		{ 0x15EA, 3, 2 }, /* TR 4C */
+		{ 0x15EF, 3, 2 }, /* TR 4C device */
+
 		{ 0 }
 	};
 
@@ -402,6 +406,21 @@ get_host_locations (guint16 id)
 		{ 0 }
 	};
 
+	static const FuThunderboltFwLocation TR[] = {
+		{ .offset = 0x10,  .len = 4, .description = "PCIe Settings" },
+		{ .offset = 0x12,  .len = 1, .description = "PA", .mask = 0xCC, .section = DRAM_UCODE_SECTION },
+		{ .offset = 0x121, .len = 1, .description = "Snk0" },
+		{ .offset = 0x129, .len = 1, .description = "Snk1" },
+		{ .offset = 0x136, .len = 1, .description = "Src0", .mask = 0xF0 },
+		{ .offset = 0xB6,  .len = 1, .description = "PA/PB (USB2)", .mask = 0xC0 },
+		{ .offset = 0x5E,  .len = 1, .description = "Aux", .mask = 0x0F },
+		{ 0 },
+
+		{ .offset = 0x13,  .len = 1, .description = "PB", .mask = 0xCC, .section = DRAM_UCODE_SECTION },
+		{ .offset = 0x5E,  .len = 1, .description = "Aux (PB)", .mask = 0x10 },
+		{ 0 }
+	};
+
 	switch (id) {
 	case 0x156D:
 	case 0x156B:
@@ -415,6 +434,9 @@ get_host_locations (guint16 id)
 		return AR;
 	case 0x15C0:
 		return AR_LP;
+	case 0x15E7:
+	case 0x15EA:
+		return TR;
 	default:
 		return NULL;
 	}
@@ -434,7 +456,6 @@ get_device_locations (guint16 id)
 	case 0x15D3:
 	case 0x15DA:
 	case 0x15C0:
-	case 0:
 		return locations;
 	default:
 		return NULL;
@@ -564,6 +585,15 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 			return VALIDATION_FAILED;
 	}
 
+	/*
+	 * 0 is for the unknown device case, for being future-compatible with
+	 * new devices; so we can't know which locations to check besides the
+	 * vendor and model IDs that were validated already, but those should be
+	 * good enough validation.
+	 */
+	if (hw_info->id == 0)
+		return UNKNOWN_DEVICE;
+
 	locations = is_host ?
 			    get_host_locations (hw_info->id) :
 			    get_device_locations (hw_info->id);
@@ -583,7 +613,7 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 			return VALIDATION_FAILED;
 	}
 
-	return hw_info->id != 0 ? VALIDATION_PASSED : UNKNOWN_DEVICE;
+	return VALIDATION_PASSED;
 }
 
 gboolean

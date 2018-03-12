@@ -2513,7 +2513,7 @@ fu_engine_filter_apps_by_requirements (FuEngine *self, GPtrArray *apps,
 		g_autoptr(GError) error_local = NULL;
 		AsApp *app_tmp = AS_APP (g_ptr_array_index (apps, i));
 		if (!fu_engine_check_requirements (self, app_tmp, device, &error_local)) {
-			if (error_all != NULL) {
+			if (error_all == NULL) {
 				error_all = g_steal_pointer (&error_local);
 				continue;
 			}

@@ -130,6 +130,8 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 	path_remotes = g_build_filename (path, "remotes.d", NULL);
 	if (!g_file_test (path_remotes, G_FILE_TEST_EXISTS))
 		return TRUE;
+	if (!fu_config_add_inotify (self, path_remotes, error))
+		return FALSE;
 	dir = g_dir_open (path_remotes, 0, error);
 	if (dir == NULL)
 		return FALSE;
