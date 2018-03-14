@@ -5,7 +5,7 @@ An extensible architecture allows for providing new plugin types (for reading
 and writing different firmware) as well as ways quirk their behavior.
 
 You can find more information about the architecture in the developers section
-of the [fwupd website](http://www.fwupd.org).
+of the [fwupd website](https://fwupd.org).
 
 If you have a firmware specification and would like to see support
 in this project, please file an issue and share the spec.  Patches are also
