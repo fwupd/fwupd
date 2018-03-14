@@ -377,6 +377,30 @@ fu_plugin_uefi_update_splash (GError **error)
 	return fu_plugin_uefi_update_resource (re, 0, image_bmp, error);
 }
 
+static gboolean
+fu_plugin_uefi_esp_mounted (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autofree gchar *contents = NULL;
+	g_auto(GStrv) lines = NULL;
+	gsize length;
+
+	if (!g_file_get_contents ("/proc/mounts", &contents, &length, error))
+		return FALSE;
+	lines = g_strsplit (contents, "\n", 0);
+
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (lines[i] != NULL && g_strrstr (lines[i], data->esp_path))
+			return TRUE;
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "EFI System partition %s is not mounted",
+		     data->esp_path);
+	return FALSE;
+}
+
 gboolean
 fu_plugin_update (FuPlugin *plugin,
 		  FuDevice *device,
@@ -402,6 +426,10 @@ fu_plugin_update (FuPlugin *plugin,
 	/* TRANSLATORS: this is shown when updating the firmware after the reboot */
 	str = _("Installing firmware update…");
 	g_assert (str != NULL);
+
+	/* make sure that the ESP is mounted */
+	if (!fu_plugin_uefi_esp_mounted (plugin, error))
+		return FALSE;
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
