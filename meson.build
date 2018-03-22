@@ -76,6 +76,7 @@ test_args = [
   '-Wmissing-parameter-type',
   '-Wmissing-prototypes',
   '-Wnested-externs',
+  '-Wno-cast-function-type',
   '-Wno-error=cpp',
   '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
