@@ -474,7 +474,7 @@ fu_history_remove_all_with_state (FuHistory *self,
 	g_debug ("FuHistory: removing all devices with update_state %s",
 		 fwupd_update_state_to_string (update_state));
 	rc = sqlite3_prepare_v2 (self->db,
-				 "DELETE FROM history WHERE update_state = ?1)",
+				 "DELETE FROM history WHERE update_state = ?1",
 				 -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
