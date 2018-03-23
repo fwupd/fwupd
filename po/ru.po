@@ -514,7 +514,7 @@ msgstr "Неизвестно"
 #: src/fu-util.c:242
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr ""
+msgstr "Пожалуйста введите число от 0 до %u: "
 
 #. TRANSLATORS: get interactive prompt
 #: src/fu-util.c:305
@@ -524,12 +524,12 @@ msgstr "Выберите устройство:"
 #. TRANSLATORS: this is to abort the interactive prompt
 #: src/fu-util.c:307
 msgid "Cancel"
-msgstr ""
+msgstr "Отменить"
 
 #. TRANSLATORS: a list of failed updates
 #: src/fu-util.c:427
 msgid "Devices that were not updated correctly:"
-msgstr ""
+msgstr "Устройства, которые не были успешно обновлены:"
 
 #. TRANSLATORS: a list of successful updates
 #: src/fu-util.c:441
@@ -581,7 +581,7 @@ msgstr "Готово!"
 
 #: src/fu-util.c:726
 msgid "Target"
-msgstr ""
+msgstr "Цель"
 
 #: src/fu-util.c:727
 msgid "Payload"
@@ -856,22 +856,22 @@ msgstr "Переопределить предупреждение приложе
 #. TRANSLATORS: command line option
 #: src/fu-util.c:2134
 msgid "Answer yes to all questions"
-msgstr ""
+msgstr "Ответить да на все вопросы"
 
 #. TRANSLATORS: command line option
 #: src/fu-util.c:2137
 msgid "Do not check for unreported history"
-msgstr ""
+msgstr "Не проверять неотправленную разработчикам историю"
 
 #. TRANSLATORS: command line option
 #: src/fu-util.c:2140
 msgid "Do not check for old metadata"
-msgstr ""
+msgstr "Не проверять старые метаданные"
 
 #. TRANSLATORS: command line option
 #: src/fu-util.c:2143
 msgid "Do not check for reboot after update"
-msgstr ""
+msgstr "Не проверять перезагрузку после обновления"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:2166
@@ -891,17 +891,17 @@ msgstr "Установить подготовленные обновления �
 #. TRANSLATORS: command description
 #: src/fu-util.c:2184
 msgid "Show history of firmware updates"
-msgstr ""
+msgstr "Показать историю обновлений прошивок"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:2190
 msgid "Erase all firmware update history"
-msgstr ""
+msgstr "Стереть всю историю обновлений прошивок"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:2196
 msgid "Share firmware history with the developers"
-msgstr ""
+msgstr "Поделиться историей о прошивках с разработчиками"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:2202
@@ -961,7 +961,7 @@ msgstr "Получает настроенные дистанционные ус�
 #. TRANSLATORS: command description
 #: src/fu-util.c:2268
 msgid "Downgrades the firmware on a device"
-msgstr "Скачивает микропрограмму на устройство"
+msgstr "Даунгрейдит микропрограмму на устройстве"
 
 #. TRANSLATORS: command description
 #: src/fu-util.c:2274
