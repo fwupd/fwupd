@@ -191,6 +191,7 @@ if __name__ == '__main__':
     if len(sys.argv) != 4:
         usage(1)
 
-    r = Rasterizer(label=sys.argv[1], modir=sys.argv[2],
+    label = os.fsencode(sys.argv[1]).decode('utf-8')
+    r = Rasterizer(label=label, modir=sys.argv[2],
                    linguas=sys.argv[3])
     r.render()
