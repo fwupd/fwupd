@@ -141,13 +141,17 @@ fwupd_checksum_get_best (GPtrArray *checksums)
 }
 
 /**
- * fwupd_build_distro_hash:
+ * fwupd_get_os_release:
  * @error: A #GError or %NULL
  *
  * Loads information from the system os-release file.
+ *
+ * Returns: (transfer container) (element-type utf8 utf8): keys from os-release
+ *
+ * Since: 1.0.7
  **/
-static GHashTable *
-fwupd_build_distro_hash (GError **error)
+GHashTable *
+fwupd_get_os_release (GError **error)
 {
 	GHashTable *hash;
 	const gchar *filename = NULL;
@@ -208,7 +212,7 @@ fwupd_build_user_agent_os_release (void)
 	g_autoptr(GPtrArray) ids_os = g_ptr_array_new ();
 
 	/* get all keys */
-	hash = fwupd_build_distro_hash (NULL);
+	hash = fwupd_get_os_release (NULL);
 	if (hash == NULL)
 		return NULL;
 
@@ -419,7 +423,7 @@ fwupd_build_history_report_json_metadata (JsonBuilder *builder, GError **error)
 	};
 
 	/* get all required os-release keys */
-	hash = fwupd_build_distro_hash (error);
+	hash = fwupd_get_os_release (error);
 	if (hash == NULL)
 		return FALSE;
 	for (guint i = 0; distro_kv[i].key != NULL; i++) {

@@ -46,6 +46,7 @@ typedef struct {
 	gchar			*id;
 	gchar			*firmware_base_uri;
 	gchar			*report_uri;
+	gchar			*metainfo_uri;
 	gchar			*metadata_uri;
 	gchar			*metadata_uri_sig;
 	gchar			*username;
@@ -255,6 +256,13 @@ fwupd_remote_set_report_uri (FwupdRemote *self, const gchar *report_uri)
 	priv->report_uri = g_strdup (report_uri);
 }
 
+static void
+fwupd_remote_set_metainfo_uri (FwupdRemote *self, const gchar *metainfo_uri)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	priv->metainfo_uri = g_strdup (metainfo_uri);
+}
+
 /**
  * fwupd_remote_kind_from_string:
  * @kind: a string, e.g. `download`
@@ -344,6 +352,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	g_autofree gchar *order_after = NULL;
 	g_autofree gchar *order_before = NULL;
 	g_autofree gchar *report_uri = NULL;
+	g_autofree gchar *metainfo_uri = NULL;
 	g_autoptr(GKeyFile) kf = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
@@ -402,6 +411,11 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	report_uri = g_key_file_get_string (kf, group, "ReportURI", NULL);
 	if (report_uri != NULL && report_uri[0] != '\0')
 		fwupd_remote_set_report_uri (self, report_uri);
+
+	/* AppStream is optional */
+	metainfo_uri = g_key_file_get_string (kf, group, "MetainfoURI", NULL);
+	if (metainfo_uri != NULL && metainfo_uri[0] != '\0')
+		fwupd_remote_set_metainfo_uri (self, metainfo_uri);
 
 	/* DOWNLOAD-type remotes */
 	if (priv->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
@@ -796,6 +810,24 @@ fwupd_remote_get_report_uri (FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_get_metainfo_uri:
+ * @self: A #FwupdRemote
+ *
+ * Gets the URI for the AppStream file.
+ *
+ * Returns: (transfer none): a URI, or %NULL for invalid.
+ *
+ * Since: 1.0.7
+ **/
+const gchar *
+fwupd_remote_get_metainfo_uri (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return priv->metainfo_uri;
+}
+
+/**
  * fwupd_remote_get_metadata_uri:
  * @self: A #FwupdRemote
  *
@@ -912,6 +944,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_filename_source (self, g_variant_get_string (value, NULL));
 		if (g_strcmp0 (key, "ReportUri") == 0)
 			fwupd_remote_set_report_uri (self, g_variant_get_string (value, NULL));
+		if (g_strcmp0 (key, "MetainfoURI") == 0)
+			fwupd_remote_set_metainfo_uri (self, g_variant_get_string (value, NULL));
 	}
 	while (g_variant_iter_loop (iter3, "{sv}", &key, &value)) {
 		if (g_strcmp0 (key, "Username") == 0) {
@@ -981,6 +1015,10 @@ fwupd_remote_to_variant (FwupdRemote *self)
 	if (priv->report_uri != NULL) {
 		g_variant_builder_add (&builder, "{sv}", "ReportUri",
 				       g_variant_new_string (priv->report_uri));
+	}
+	if (priv->metainfo_uri != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "MetainfoURI",
+				       g_variant_new_string (priv->metainfo_uri));
 	}
 	if (priv->firmware_base_uri != NULL) {
 		g_variant_builder_add (&builder, "{sv}", "FirmwareBaseUri",
@@ -1103,6 +1141,7 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (priv->metadata_uri_sig);
 	g_free (priv->firmware_base_uri);
 	g_free (priv->report_uri);
+	g_free (priv->metainfo_uri);
 	g_free (priv->username);
 	g_free (priv->password);
 	g_free (priv->title);

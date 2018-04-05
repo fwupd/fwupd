@@ -107,6 +107,9 @@ _fwupdmgr()
 			local keys
 			keys="$(command fwupdmgr get-remotes | command awk -v pattern="Remote ID:.*${prev}$" '$0~pattern{show=1; next}/Remote/{show=0}{gsub(/:.*/,"")}show')"
 			COMPREPLY+=( $(compgen -W "${keys}" -- "$cur") )
+		#modifiers
+		else
+			_show_modifiers
 		fi
 		;;
 	refresh)
