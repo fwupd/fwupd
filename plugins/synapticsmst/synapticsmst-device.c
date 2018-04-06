@@ -374,13 +374,13 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
 				     "Failed to read dpcd from device");
-		return FALSE;
+		goto error_disable_remote;
 	}
 	priv->version = g_strdup_printf ("%1d.%02d.%03d", byte[0], byte[1], byte[2]);
 
 	/* read board ID */
 	if (!synapticsmst_device_read_board_id (device, connection, byte, error))
-		return FALSE;
+		goto error_disable_remote;
 	priv->board_id = (byte[0] << 8) | (byte[1]);
 
 	/* read board chip_id */
@@ -392,7 +392,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
 				     "Failed to read dpcd from device");
-		return FALSE;
+		goto error_disable_remote;
 	}
 	priv->chip_id = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
 
@@ -435,6 +435,10 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		return FALSE;
 
 	return TRUE;
+
+error_disable_remote:
+	synapticsmst_device_disable_remote_control (device, NULL);
+	return FALSE;
 }
 
 const gchar *
