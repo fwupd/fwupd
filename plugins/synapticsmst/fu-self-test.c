@@ -60,29 +60,32 @@ fu_plugin_synapticsmst_func (void)
 	g_assert (ret);
 
 	/* Test with no Synaptics MST devices */
-	test_directory = "./tests/no_devices";
-	if (g_file_test (test_directory, G_FILE_TEST_IS_DIR)) {
-		g_setenv ("FWUPD_SYNAPTICSMST_FW_DIR", test_directory, TRUE);
-		ret = fu_plugin_runner_coldplug (plugin, &error);
-		g_assert_no_error (error);
-		g_assert (ret);
-	}
+	test_directory = SOURCEDIR "/tests/no_devices";
+	g_assert(g_file_test (test_directory, G_FILE_TEST_IS_DIR));
+
+	g_setenv ("FWUPD_SYNAPTICSMST_FW_DIR", test_directory, TRUE);
+	ret = fu_plugin_runner_coldplug (plugin, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 
 	/* Emulate adding/removing a Dell TB16 dock */
-	test_directory = "./tests/tb16_dock";
-	if (g_file_test (test_directory, G_FILE_TEST_IS_DIR)) {
-		g_setenv ("FWUPD_SYNAPTICSMST_FW_DIR", test_directory, TRUE);
-		ret = fu_plugin_runner_coldplug (plugin, &error);
-		g_assert_no_error (error);
-		g_assert (ret);
+	test_directory = SOURCEDIR "/tests/tb16_dock";
 
-		device_count = devices->len;
-		for (guint i = 0; i < device_count; i++) {
-			device = g_ptr_array_index (devices, i);
-			g_assert_cmpstr (fu_device_get_version (device), ==, "3.10.002");
-			g_ptr_array_remove (devices, device);
-			fu_plugin_device_remove (plugin, device);
-		}
+	g_assert (g_file_test (test_directory, G_FILE_TEST_IS_DIR));
+
+	g_setenv ("FWUPD_SYNAPTICSMST_FW_DIR", test_directory, TRUE);
+	ret = fu_plugin_runner_coldplug (plugin, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	device_count = devices->len;
+	g_assert_cmpuint (device_count, ==, 2);
+
+	for (guint i = 0; i < device_count; i++) {
+		device = g_ptr_array_index (devices, i);
+		g_assert_cmpstr (fu_device_get_version (device), ==, "3.10.002");
+		g_ptr_array_remove (devices, device);
+		fu_plugin_device_remove (plugin, device);
 	}
 	g_ptr_array_unref (devices);
 }
