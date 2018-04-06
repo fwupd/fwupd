@@ -403,6 +403,13 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		if (priv->test_mode)
 			system = g_strdup_printf ("test-%s", priv->chip_id);
 		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE) {
+			if (dock_type == NULL) {
+				g_set_error_literal (error,
+						     G_IO_ERROR,
+						     G_IO_ERROR_INVALID_DATA,
+						     "Unknown Dell dock type");
+				goto error_disable_remote;
+			}
 			system = g_strdup_printf ("%s-%s", dock_type, priv->chip_id);
 			system = g_ascii_strdown (system, -1);
 		}
