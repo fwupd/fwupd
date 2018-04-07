@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+SIGNATURE_DIR := debian/signatures/fwupdate
+BINARY 	      := $(shell find /usr/lib/fwupdate/ -name '*.efi')
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	mkdir -p debian/${PACKAGE_NAME}/usr/lib/fwupdate
+	cp $(BINARY) debian/${PACKAGE_NAME}/$(BINARY)
+	sbattach --attach $(SIGNATURE_DIR)/$(BINARY).sig debian/${PACKAGE_NAME}/$(BINARY)
+	mv debian/${PACKAGE_NAME}/$(BINARY) debian/${PACKAGE_NAME}/$(BINARY).signed
