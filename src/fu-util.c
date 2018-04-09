@@ -552,13 +552,13 @@ fu_util_update_reboot (GError **error)
 		return FALSE;
 
 #ifdef HAVE_SYSTEMD
-	/* reboot using systemd */
+	/* reboot using logind */
 	val = g_dbus_connection_call_sync (connection,
-					   "org.freedesktop.systemd1",
-					   "/org/freedesktop/systemd1",
-					   "org.freedesktop.systemd1.Manager",
+					   "org.freedesktop.login1",
+					   "/org/freedesktop/login1",
+					   "org.freedesktop.login1.Manager",
 					   "Reboot",
-					   NULL,
+					   g_variant_new ("(b)", TRUE),
 					   NULL,
 					   G_DBUS_CALL_FLAGS_NONE,
 					   -1,
