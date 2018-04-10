@@ -193,8 +193,10 @@ void
 fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	if (data->timeout_id != 0)
+	if (data->timeout_id != 0) {
 		g_source_remove (data->timeout_id);
+		data->timeout_id = 0;
+	}
 	g_object_unref (data->udev);
 	g_free (data->force_path);
 }
