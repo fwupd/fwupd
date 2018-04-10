@@ -1235,22 +1235,62 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 }
 
 static gboolean
+fu_util_modify_remote (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) < 3) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+	return fwupd_client_modify_remote (priv->client,
+					   values[0], values[1], values[2],
+					   NULL, error);
+}
+
+static gboolean
 fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GPtrArray) remotes = NULL;
+	gboolean web_remote_enabled = FALSE;
+	FwupdRemote *remote = NULL;
+	gchar *enable_lvfs[] ={"lvfs", "Enabled", "true"};
+
 	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
 	if (remotes == NULL)
 		return FALSE;
 	for (guint i = 0; i < remotes->len; i++) {
-		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		remote = g_ptr_array_index (remotes, i);
 		if (!fwupd_remote_get_enabled (remote))
 			continue;
 		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
+		web_remote_enabled = TRUE;
 		if (!fu_util_download_metadata_for_remote (priv, remote, error))
 			return FALSE;
 	}
-	return TRUE;
+	if (web_remote_enabled)
+		return TRUE;
+
+	/* No web remote is declared, try to enable LVFS */
+	remote = fwupd_client_get_remote_by_id (priv->client, enable_lvfs[0],
+						NULL, error);
+	if (remote == NULL)
+		return TRUE;
+	g_print ("%s\n%s [Y|n]: ",
+		/* TRANSLATORS: explain why no metadata available */
+		_("No remotes are currently enabled so no metadata"
+		  " is available locally.\nMetadata can be obtained"
+		  " through the Linux Vendor Firmware Service (LVFS)."),
+		/* TRANSLATORS: Turn on the remote */
+		_("Enable this remote?"));
+	if (!fu_util_prompt_for_boolean (TRUE))
+		return TRUE;
+	if (!fu_util_modify_remote (priv, enable_lvfs, error))
+		return FALSE;
+	/* try again */
+	return fu_util_download_metadata (priv, error);
 }
 
 static gboolean
@@ -1957,21 +1997,6 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		return fu_util_update_reboot (error);
 	}
 	return TRUE;
-}
-
-static gboolean
-fu_util_modify_remote (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	if (g_strv_length (values) < 3) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
-		return FALSE;
-	}
-	return fwupd_client_modify_remote (priv->client,
-					   values[0], values[1], values[2],
-					   NULL, error);
 }
 
 static gboolean
