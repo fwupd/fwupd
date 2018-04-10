@@ -1235,9 +1235,37 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 }
 
 static gboolean
+fu_util_download_metadata_enable_lvfs (FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(FwupdRemote) remote = NULL;
+
+	/* is the LVFS available but disabled? */
+	remote = fwupd_client_get_remote_by_id (priv->client, "lvfs", NULL, error);
+	if (remote == NULL)
+		return TRUE;
+	g_print ("%s\n%s\n%s [Y|n]: ",
+		/* TRANSLATORS: explain why no metadata available */
+		_("No remotes are currently enabled so no metadata is available."),
+		/* TRANSLATORS: explain why no metadata available */
+		_("Metadata can be obtained from the Linux Vendor Firmware Service."),
+		/* TRANSLATORS: Turn on the remote */
+		_("Enable this remote?"));
+	if (!fu_util_prompt_for_boolean (TRUE))
+		return TRUE;
+	if (!fwupd_client_modify_remote (priv->client, "lvfs", "Enabled", "true",
+					 NULL, error))
+		return FALSE;
+
+	/* refresh the newly-enabled remote */
+	return fu_util_download_metadata_for_remote (priv, remote, error);
+}
+
+static gboolean
 fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 {
+	gboolean download_remote_enabled = FALSE;
 	g_autoptr(GPtrArray) remotes = NULL;
+
 	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
 	if (remotes == NULL)
 		return FALSE;
@@ -1247,7 +1275,14 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 			continue;
 		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
+		download_remote_enabled = TRUE;
 		if (!fu_util_download_metadata_for_remote (priv, remote, error))
+			return FALSE;
+	}
+
+	/* no web remote is declared; try to enable LVFS */
+	if (!download_remote_enabled) {
+		if (!fu_util_download_metadata_enable_lvfs (priv, error))
 			return FALSE;
 	}
 	return TRUE;
