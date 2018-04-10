@@ -229,6 +229,12 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") != 0)
 		return TRUE;
 
+	/* reset any timers that might still be running from coldplug */
+	if (data->timeout_id != 0) {
+		g_source_remove (data->timeout_id);
+		data->timeout_id = 0;
+	}
+
 	devpath = fu_device_get_metadata (device, "sysfs-path");
 
 	udevice = g_udev_client_query_by_sysfs_path (data->udev, devpath);
