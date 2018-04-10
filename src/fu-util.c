@@ -450,8 +450,12 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 		}
 
 		/* ask for permission */
-		g_print ("\n%s (%s) [Y|n]: ",
+		g_print ("\n%s\n%s (%s) [Y|n]: ",
 			 /* TRANSLATORS: explain why we want to upload */
+			 _("Uploading firmware reports helps hardware vendors"
+			   " to quickly identify failing and successful updates"
+			   " on real devices."),
+			 /* TRANSLATORS: ask the user to upload */
 			 _("Upload report now?"),
 			 /* TRANSLATORS: metadata is downloaded from the Internet */
 			 _("Requires internet connection"));
