@@ -1137,7 +1137,8 @@ fu_util_download_file (FuUtilPrivate *priv,
 	    g_str_has_suffix (uri_str, ".p7c")) {
 		/* TRANSLATORS: downloading new signing file */
 		g_print ("%s %s\n", _("Fetching signature"), uri_str);
-	} else if (g_str_has_suffix (uri_str, ".gz")) {
+	} else if (g_str_has_suffix (uri_str, ".gz") ||
+		   g_str_has_suffix (uri_str, ".metainfo.xml")) {
 		/* TRANSLATORS: downloading new metadata file */
 		g_print ("%s %s\n", _("Fetching metadata"), uri_str);
 	} else if (g_str_has_suffix (uri_str, ".cab")) {
@@ -1748,6 +1749,11 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 			/* TRANSLATORS: URI to send success/failure reports */
 			fu_util_print_data (_("Report URI"), tmp);
 		}
+		tmp = fwupd_remote_get_metainfo_uri (remote);
+		if (tmp != NULL) {
+			/* TRANSLATORS: URI with additional metadata about the remote */
+			fu_util_print_data (_("AppStream URI"), tmp);
+		}
 
 		/* newline */
 		if (i != remotes->len - 1)
@@ -1994,15 +2000,148 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_util_remote_warning_format (FuUtilPrivate *priv, const gchar *filename, GError **error)
+{
+#if AS_CHECK_VERSION(0,7,8)
+	AsAgreement *agreement;
+	AsAgreementSection *section;
+	const gchar *tmp;
+	g_autoptr(AsApp) app = NULL;
+
+	/* parse entire MetaInfo file */
+	app = as_app_new ();
+	if (!as_app_parse_file (app, filename, AS_APP_PARSE_FLAG_NONE, error))
+		return NULL;
+
+	/* get the default agreement section */
+	agreement = as_app_get_agreement_default (app);
+	if (agreement == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No agreement found in Metainfo file");
+		return NULL;
+	}
+	section = as_agreement_get_section_default (agreement);
+	if (section == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No default section found in Metainfo file");
+		return NULL;
+	}
+	tmp = as_agreement_section_get_description (section, NULL);
+	if (tmp == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No description found in agreement section");
+		return NULL;
+	}
+
+	/* convert to console text */
+	return as_markup_convert_simple (tmp, error);
+#else
+	GNode *n;
+	g_autoptr(AsNode) root = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GString) str = NULL;
+
+	/* parse the XML file */
+	file = g_file_new_for_path (filename);
+	root = as_node_from_file (file, AS_NODE_FROM_XML_FLAG_NONE, NULL, error);
+	if (root == NULL)
+		return NULL;
+
+	/* manually find the first agreement section */
+	n = as_node_find (root, "component/agreement/agreement_section/description");
+	if (n == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No agreement description found in Metainfo file");
+		return NULL;
+	}
+	str = as_node_to_xml (n->children, AS_NODE_TO_XML_FLAG_INCLUDE_SIBLINGS);
+	return as_markup_convert_simple (str->str, error);
+#endif
+}
+
+static gboolean
+fu_util_remote_warning_show (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
+{
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *desc_plain = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GHashTable) os_release = NULL;
+	g_autoptr(GString) desc_plain_str = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+
+	/* nothing specified */
+	if (fwupd_remote_get_metainfo_uri (remote) == NULL)
+		return TRUE;
+
+	/* download file to usercache */
+	basename = g_path_get_basename (fwupd_remote_get_metainfo_uri (remote));
+	fn = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", basename, NULL);
+	uri = soup_uri_new (fwupd_remote_get_metainfo_uri (remote));
+	if (!fu_util_download_file (priv, uri, fn, NULL, error))
+		return FALSE;
+
+	/* parse file and get default agreement section */
+	desc_plain = fu_util_remote_warning_format (priv, fn, error);
+	if (desc_plain == NULL)
+		return FALSE;
+
+	/* replace any dynamic values from os-release */
+	desc_plain_str = g_string_new (desc_plain);
+	os_release = fwupd_get_os_release (error);
+	as_utils_string_replace (desc_plain_str, "$OS_RELEASE:NAME$",
+				 g_hash_table_lookup (os_release, "NAME"));
+	as_utils_string_replace (desc_plain_str, "$OS_RELEASE:BUG_REPORT_URL$",
+				 g_hash_table_lookup (os_release, "BUG_REPORT_URL"));
+
+	/* show and ask user to confirm */
+	g_print ("%s\n", desc_plain_str->str);
+	if (!priv->assume_yes) {
+		/* ask for permission */
+		g_print ("\n%s [Y|n]: ",
+			 /* TRANSLATORS: should the remote still be enabled */
+			 _("Agree and enable the remote?"));
+		if (!fu_util_prompt_for_boolean (TRUE)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "Declined agreement");
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_util_modify_remote (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	g_autoptr(FwupdRemote) remote = NULL;
+
 	if (g_strv_length (values) < 3) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_ARGS,
 				     "Invalid arguments");
 		return FALSE;
+	}
+
+	/* ensure the remote exists */
+	remote = fwupd_client_get_remote_by_id (priv->client, values[0], NULL, error);
+	if (remote == NULL)
+		return FALSE;
+	if (!fwupd_remote_get_enabled (remote)) {
+		if (!fu_util_remote_warning_show (priv, remote, error))
+			return FALSE;
 	}
 	return fwupd_client_modify_remote (priv->client,
 					   values[0], values[1], values[2],

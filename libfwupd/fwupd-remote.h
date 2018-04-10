@@ -64,6 +64,7 @@ const gchar	*fwupd_remote_get_filename_cache_sig	(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_filename_source	(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_firmware_base_uri	(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_report_uri		(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_metainfo_uri		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_metadata_uri		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_metadata_uri_sig	(FwupdRemote	*self);
 gboolean	 fwupd_remote_get_enabled		(FwupdRemote	*self);
