@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2018 Richard Hughes <richard@hughsie.com> -->
+
+<component type="source">
+  <id>org.freedesktop.fwupd.remotes.lvfs-testing</id>
+  <name>Linux Vendor Firmware Service (testing firmware)</name>
+  <metadata_license>CC0</metadata_license>
+  <agreement version_id="1.0">
+    <agreement_section>
+      <description>
+        <!-- TRANSLATORS: do not translate the variables marked using $ -->
+        <p>
+          The LVFS is a free service that operates as an independent legal
+          entity and has no connection with $OS_RELEASE:NAME$.
+          Your distributor may not have verified any of the firmware updates for
+          compatibility with your system or connected devices.
+          All firmware is provided only by the original equipment manufacturer.
+        </p>
+        <p>
+          This remote contains firmware which is not embargoed, but is still being
+          tested by the hardware vendor.
+          You should ensure you have a way to manually downgrade the firmware if
+          the firmware update fails.
+        </p>
+        <p>
+          Enabling this functionality is done at your own risk, which means you
+          have to contact your original equipment manufacturer regarding any
+          problems caused by these updates.
+          Only problems with the update process itself should be filed at
+          $OS_RELEASE:BUG_REPORT_URL$.
+        </p>
+      </description>
+    </agreement_section>
+  </agreement>
+</component>
