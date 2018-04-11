@@ -463,6 +463,52 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 	return fu_util_report_history (priv, NULL, error);
 }
 
+static GString *
+fu_util_get_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
+{
+	GString *str = g_string_new (NULL);
+
+	/* this is designed as a fallback; the actual warning should ideally
+	 * come from the LVFS instance that is serving the remote */
+	g_string_append_printf (str, "%s\n",
+				/* TRANSLATORS: show the user a warning */
+				"Your distributor may not have verified any of "
+				"the firmware updates for compatibility with your "
+				"system or connected devices.");
+	g_string_append_printf (str, "%s\n",
+				/* TRANSLATORS: show the user a warning */
+				"Enabling this remote is done at your own risk.");
+	return str;
+}
+
+static gboolean
+fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
+{
+	g_autoptr(GString) desc_plain_str = NULL;
+
+	/* get a generic warning */
+	desc_plain_str = fu_util_get_remote_warning (priv, remote, error);
+	if (desc_plain_str == NULL)
+		return FALSE;
+
+	/* show and ask user to confirm */
+	g_print ("%s", desc_plain_str->str);
+	if (!priv->assume_yes) {
+		/* ask for permission */
+		g_print ("\n%s [Y|n]: ",
+			 /* TRANSLATORS: should the remote still be enabled */
+			 _("Agree and enable the remote?"));
+		if (!fu_util_prompt_for_boolean (TRUE)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "Declined agreement");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 static gboolean
 fu_util_modify_remote (FuUtilPrivate *priv,
 		       const gchar *remote_id,
@@ -477,6 +523,12 @@ fu_util_modify_remote (FuUtilPrivate *priv,
 	if (remote == NULL)
 		return FALSE;
 
+	/* show some kind of warning when enabling download-type remotes */
+	if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DOWNLOAD &&
+	    g_strcmp0 (key, "Enabled") == 0 && g_strcmp0 (value, "true") == 0) {
+		if (!fu_util_modify_remote_warning (priv, remote, error))
+			return FALSE;
+	}
 	return fwupd_client_modify_remote (priv->client,
 					   remote_id, key, value,
 					   NULL, error);
