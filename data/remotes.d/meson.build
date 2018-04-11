@@ -5,6 +5,24 @@ if get_option('lvfs')
     ],
     install_dir : join_paths(sysconfdir, 'fwupd', 'remotes.d')
   )
+  i18n.merge_file(
+    input: 'lvfs.metainfo.xml',
+    output: 'org.freedesktop.fwupd.remotes.lvfs.metainfo.xml',
+    type: 'xml',
+    po_dir: join_paths(meson.source_root(), 'po'),
+    data_dirs: join_paths(meson.source_root(), 'po'),
+    install: true,
+    install_dir: join_paths(get_option('datadir'), 'metainfo')
+  )
+  i18n.merge_file(
+    input: 'lvfs-testing.metainfo.xml',
+    output: 'org.freedesktop.fwupd.remotes.lvfs-testing.metainfo.xml',
+    type: 'xml',
+    po_dir: join_paths(meson.source_root(), 'po'),
+    data_dirs: join_paths(meson.source_root(), 'po'),
+    install: true,
+    install_dir: join_paths(get_option('datadir'), 'metainfo')
+  )
 endif
 
 install_data('README.md',
