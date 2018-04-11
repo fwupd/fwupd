@@ -3,7 +3,9 @@ _fwupdmgr_cmd_list=(
 	'clear-history'
 	'clear-offline'
 	'clear-results'
+	'disable-remote'
 	'downgrade'
+	'enable-remote'
 	'get-details'
 	'get-devices'
 	'get-history'
@@ -107,6 +109,18 @@ _fwupdmgr()
 			local keys
 			keys="$(command fwupdmgr get-remotes | command awk -v pattern="Remote ID:.*${prev}$" '$0~pattern{show=1; next}/Remote/{show=0}{gsub(/:.*/,"")}show')"
 			COMPREPLY+=( $(compgen -W "${keys}" -- "$cur") )
+		fi
+		;;
+	enable-remote)
+		#find remotes
+		if [[ "$prev" = "$command" ]]; then
+			_show_remotes
+		fi
+		;;
+	disable-remote)
+		#find remotes
+		if [[ "$prev" = "$command" ]]; then
+			_show_remotes
 		fi
 		;;
 	refresh)
