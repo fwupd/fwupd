@@ -38,6 +38,7 @@ gchar		*fwupd_build_user_agent			(const gchar	*package_name,
 							 const gchar	*package_version);
 gchar		*fwupd_build_machine_id			(const gchar 	*salt,
 							 GError		**error);
+GHashTable	*fwupd_get_os_release			(GError		**error);
 gchar		*fwupd_build_history_report_json	(GPtrArray	*devices,
 							 GError		**error);
 

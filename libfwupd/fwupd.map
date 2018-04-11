@@ -235,3 +235,9 @@ LIBFWUPD_1.0.4 {
     fwupd_remote_get_report_uri;
   local: *;
 } LIBFWUPD_1.0.3;
+
+LIBFWUPD_1.0.7 {
+  global:
+    fwupd_get_os_release;
+  local: *;
+} LIBFWUPD_1.0.4;
