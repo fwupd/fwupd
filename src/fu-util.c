@@ -1835,7 +1835,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* TRANSLATORS: if the remote is enabled */
 		fu_util_print_data (_("Enabled"),
-				    fwupd_remote_get_enabled (remote) ? "True" : "False");
+				    fwupd_remote_get_enabled (remote) ? "true" : "false");
 
 		/* TRANSLATORS: remote checksum */
 		fu_util_print_data (_("Checksum"),
