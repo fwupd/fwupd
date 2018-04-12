@@ -1119,13 +1119,16 @@ fu_engine_check_runtime_requirement (FuEngine *self, AsRequire *req, GError **er
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "Not compatible with version %s, requires >= %s",
-				     version, as_require_get_version (req));
+				     "Not compatible with %s version %s, requires >= %s",
+				     as_require_get_value (req),
+				     version,
+				     as_require_get_version (req));
 		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "Not compatible with version: %s",
+				     "Not compatible with %s version: %s",
+				     as_require_get_value (req),
 				     error_local->message);
 		}
 		return FALSE;
