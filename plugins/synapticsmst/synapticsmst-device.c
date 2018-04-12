@@ -23,6 +23,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <errno.h>
 #include <glib-object.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -174,9 +175,9 @@ synapticsmst_device_enable_remote_control (SynapticsMSTDevice *device, GError **
 		if (priv->fd == -1) {
 			g_set_error (error,
 				     G_IO_ERROR,
-				     G_IO_ERROR_PERMISSION_DENIED,
-				     "cannot open device %s",
-				     filename);
+				     g_io_error_from_errno (errno),
+				     "cannot open device %s: %s",
+				     filename, g_strerror (errno));
 			return FALSE;
 		}
 		return TRUE;
@@ -786,9 +787,9 @@ synapticsmst_device_open (SynapticsMSTDevice *device, GError **error)
 	if (priv->fd == -1) {
 		g_set_error (error,
 			     G_IO_ERROR,
-			     G_IO_ERROR_PERMISSION_DENIED,
-			     "cannot open device %s",
-			     filename);
+			     g_io_error_from_errno (errno),
+			     "cannot open device %s: %s",
+			     filename, g_strerror (errno));
 		return FALSE;
 	}
 

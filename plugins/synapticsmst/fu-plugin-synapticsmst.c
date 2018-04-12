@@ -259,7 +259,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 
 		/* If we open succesfully a device exists here */
 		device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, aux_node, 0, 0);
-		if (!synapticsmst_device_open (device, NULL)) {
+		if (!synapticsmst_device_open (device, &error_local)) {
 			/* No device exists here, but was there - remove from DB */
 			if (fu_dev != NULL) {
 				g_debug ("Removing devices on %s", aux_node);
@@ -269,7 +269,8 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 									aux_node);
 			} else {
 				/* Nothing to see here - move on*/
-				g_debug ("No device found on %s", aux_node);
+				g_debug ("No device found on %s: %s", aux_node, error_local->message);
+				g_clear_error (&error_local);
 			}
 			continue;
 		}
