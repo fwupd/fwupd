@@ -98,7 +98,6 @@ G_DEFINE_TYPE (FuEngine, fu_engine, G_TYPE_OBJECT)
 #define FU_ENGINE_REQUIREMENT_FIRMWARE_RUNTIME		NULL /* yes, NULL */
 #define FU_ENGINE_REQUIREMENT_FIRMWARE_BOOTLOADER	"bootloader"
 #define FU_ENGINE_REQUIREMENT_FIRMWARE_VENDOR		"vendor-id"
-#define FU_ENGINE_REQUIREMENT_ID_FWUPD			"org.freedesktop.fwupd"
 
 static void
 fu_engine_emit_changed (FuEngine *self)
@@ -956,24 +955,6 @@ fu_engine_check_version_requirement (AsApp *app,
 			return FALSE;
 		}
 
-		/* fwupd */
-		if (g_strcmp0 (id, FU_ENGINE_REQUIREMENT_ID_FWUPD) == 0) {
-			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Not compatible with fwupd version %s, requires >= %s",
-					     version, as_require_get_version (req));
-			} else {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Not compatible with fwupd version: %s",
-					     error_local->message);
-			}
-			return FALSE;
-		}
-
 		/* bootloader */
 		if (g_strcmp0 (id, FU_ENGINE_REQUIREMENT_FIRMWARE_BOOTLOADER) == 0) {
 			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
@@ -1010,12 +991,21 @@ fu_engine_check_version_requirement (AsApp *app,
 			return FALSE;
 		}
 
+
 		/* anything else */
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Not compatible with %s: %s",
-			     id, error_local->message);
+		if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Not compatible with %s version %s, requires >= %s",
+				     id, version, as_require_get_version (req));
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Not compatible with %s version: %s",
+				     id, error_local->message);
+		}
 		return FALSE;
 	}
 
@@ -1054,17 +1044,83 @@ fu_engine_check_hardware_requirement (FuEngine *self, AsApp *app, GError **error
 }
 #endif
 
+static GHashTable *fu_engine_get_report_metadata (FuEngine *self);
+
+static gchar *
+fu_engine_requirement_convert_key (const gchar *name)
+{
+	struct {
+		const gchar *old;
+		const gchar *new;
+	} project_names[] = {
+		{ "FwupdVersion",		"org.freedesktop.fwupd" },
+		{ "FwupdateVersion",		"com.redhat.fwupdate" }, //FIXME?
+		{ "EfivarVersion",		"com.redhat.efivar" }, //FIXME?
+		{ "AppstreamGlibVersion",	"org.freedesktop.appstream-glib" },
+		{ "GUsbVersion",		"org.freedesktop.gusb" },
+		{ "KernelVersion",		"org.kernel.linux" },
+		{ NULL, NULL }
+	};
+	for (guint i = 0; project_names[i].old != NULL; i++) {
+		if (g_strcmp0 (project_names[i].old, name) == 0)
+			return g_strdup (project_names[i].new);
+	}
+	g_debug ("no project name version mapping for %s", name);
+	return NULL;
+}
+
+static void
+fu_engine_requirement_add_runtime_ids (GHashTable *reqs, GHashTable *report_metadata)
+{
+	g_autoptr(GList) keys = g_hash_table_get_keys (report_metadata);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (report_metadata, key);
+		g_autofree gchar *id = NULL;
+		if (value == NULL)
+			continue;
+		id = fu_engine_requirement_convert_key (key);
+		if (id == NULL)
+			continue;
+		g_hash_table_insert (reqs, g_steal_pointer (&id), g_strdup (value));
+	}
+}
+
 static gboolean
 fu_engine_check_requirements (FuEngine *self, AsApp *app, FuDevice *device, GError **error)
 {
-	/* make sure requirements are satisfied */
-	if (!fu_engine_check_version_requirement (app,
-						  AS_REQUIRE_KIND_ID,
-						  FU_ENGINE_REQUIREMENT_ID_FWUPD,
-						  VERSION,
-						  error)) {
-		return FALSE;
+	FuPlugin *plugin;
+	g_autoptr(GHashTable) report_metadata = NULL;
+	g_autoptr(GHashTable) runtime_ids = NULL;
+	g_autoptr(GList) runtime_ids_keys = NULL;
+
+	/* add daemon shared versions */
+	runtime_ids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	report_metadata = fu_engine_get_report_metadata (self);
+	fu_engine_requirement_add_runtime_ids (runtime_ids, report_metadata);
+
+	/* add plugin-specific versions */
+	if (fu_device_get_plugin (device) != NULL) {
+		plugin = fu_plugin_list_find_by_name (self->plugin_list,
+						      fu_device_get_plugin (device),
+						      error);
+		if (plugin == NULL)
+			return FALSE;
+		fu_engine_requirement_add_runtime_ids (runtime_ids,
+						       fu_plugin_get_report_metadata (plugin));
 	}
+
+	/* make sure requirements are satisfied */
+	runtime_ids_keys = g_hash_table_get_keys (runtime_ids);
+	for (GList *l = runtime_ids_keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (runtime_ids, key);
+		if (!fu_engine_check_version_requirement (app, AS_REQUIRE_KIND_ID,
+							  key, value, error)) {
+			return FALSE;
+		}
+	}
+
 #if AS_CHECK_VERSION(0,7,4)
 	if (!fu_engine_check_hardware_requirement (self, app, error))
 		return FALSE;
