@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 set -x
+shopt -s extglob
 
 VERSION=`git describe | sed 's/-/.r/;s/-/./'`
 [ -z $VERSION ] && VERSION=`head meson.build | grep ' version :' | cut -d \' -f2`
@@ -11,7 +12,7 @@ mkdir build && pushd build
 cp ../contrib/PKGBUILD .
 sed -i "s,#VERSION#,$VERSION," PKGBUILD
 mkdir -p src/fwupd && pushd src/fwupd
-ln -s ../../../* .
+cp -R ../../../!(build|dist) .
 popd
 chown nobody . -R
 
