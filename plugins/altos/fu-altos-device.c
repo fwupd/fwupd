@@ -50,7 +50,10 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuAltosDevice, fu_altos_device, FU_TYPE_USB_DEVICE)
 #define GET_PRIVATE(o) (fu_altos_device_get_instance_private (o))
 
 #ifndef HAVE_GUDEV_232
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
+#pragma clang diagnostic pop
 #endif
 
 /**

@@ -120,7 +120,10 @@ _fwup_resource_iter_free (fwup_resource_iter *iter)
 	fwup_resource_iter_destroy (&iter);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
+#pragma clang diagnostic pop
 
 gboolean
 fu_plugin_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)

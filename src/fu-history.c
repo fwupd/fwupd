@@ -40,7 +40,10 @@ struct _FuHistory
 
 G_DEFINE_TYPE (FuHistory, fu_history, G_TYPE_OBJECT)
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(sqlite3_stmt, sqlite3_finalize);
+#pragma clang diagnostic pop
 
 static FuDevice *
 fu_history_device_from_stmt (sqlite3_stmt *stmt)

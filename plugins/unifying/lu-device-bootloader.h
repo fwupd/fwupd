@@ -79,7 +79,10 @@ typedef struct __attribute__((packed)) {
 
 LuDeviceBootloaderRequest	*lu_device_bootloader_request_new	(void);
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(LuDeviceBootloaderRequest, g_free);
+#pragma clang diagnostic pop
 
 GPtrArray	*lu_device_bootloader_parse_requests	(LuDevice	*device,
 							 GBytes		*fw,

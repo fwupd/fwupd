@@ -152,7 +152,10 @@ _fwup_resource_iter_free (fwup_resource_iter *iter)
 	fwup_resource_iter_destroy (&iter);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (fwup_resource_iter, _fwup_resource_iter_free);
+#pragma clang diagnostic pop
 
 static guint16
 fu_dell_get_system_id (FuPlugin *plugin)

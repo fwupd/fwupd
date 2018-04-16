@@ -110,7 +110,10 @@ fwupd_client_helper_new (void)
 	return helper;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdClientHelper, fwupd_client_helper_free)
+#pragma clang diagnostic pop
 
 static void
 fwupd_client_set_daemon_version (FwupdClient *client, const gchar *daemon_version)

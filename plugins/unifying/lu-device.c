@@ -935,8 +935,11 @@ lu_device_write_firmware (LuDevice *device, GBytes *fw, GError **error)
 }
 
 #ifndef HAVE_GUDEV_232
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
+#pragma clang diagnostic pop
 #endif
 
 static GUdevDevice *

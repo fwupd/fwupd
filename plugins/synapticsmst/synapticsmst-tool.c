@@ -51,7 +51,10 @@ synapticsmst_tool_private_free (SynapticsMSTToolPrivate *priv)
 	g_free (priv);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(SynapticsMSTToolPrivate, synapticsmst_tool_private_free)
+#pragma clang diagnostic pop
 
 typedef gboolean (*FuUtilPrivateCb)     (SynapticsMSTToolPrivate *util,
 					 gchar			**values,

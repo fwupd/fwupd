@@ -267,7 +267,10 @@ lu_context_remove_device (LuContext *ctx, LuDevice *device)
 }
 
 #ifndef HAVE_GUDEV_232
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
+#pragma clang diagnostic pop
 #endif
 
 static const gchar *
@@ -392,7 +395,10 @@ g_usb_context_replug_helper_free (GUsbContextReplugHelper *replug_helper)
 	g_free (replug_helper);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUsbContextReplugHelper, g_usb_context_replug_helper_free);
+#pragma clang diagnostic pop
 
 gboolean
 lu_context_wait_for_replug (LuContext *ctx,
