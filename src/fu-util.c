@@ -466,7 +466,7 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 {
-	g_autofree gchar *warning_markup = NULL;
+	const gchar *warning_markup = NULL;
 	g_autofree gchar *warning_plain = NULL;
 
 	/* get formatted text */
