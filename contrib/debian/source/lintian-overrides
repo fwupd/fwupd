@@ -1,2 +1,2 @@
 #github doesn't have these
-fwupd source: debian-watch-may-check-gpg-signature
+fwupd source: debian-watch-does-not-check-gpg-signature
