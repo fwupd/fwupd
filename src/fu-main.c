@@ -615,8 +615,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		return;
 	}
 	if (g_strcmp0 (method_name, "Unlock") == 0) {
-		FuMainAuthHelper *helper;
 		const gchar *device_id = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
 		g_autoptr(PolkitSubject) subject = NULL;
 
 		g_variant_get (parameters, "(&s)", &device_id);
@@ -639,14 +639,14 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_unlock_cb,
-						      helper);
+						      g_steal_pointer (&helper));
 		return;
 	}
 	if (g_strcmp0 (method_name, "ModifyRemote") == 0) {
-		FuMainAuthHelper *helper;
 		const gchar *remote_id = NULL;
 		const gchar *key = NULL;
 		const gchar *value = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
 		g_autoptr(PolkitSubject) subject = NULL;
 
 		/* check the id exists */
@@ -670,12 +670,12 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_modify_remote_cb,
-						      helper);
+						      g_steal_pointer (&helper));
 		return;
 	}
 	if (g_strcmp0 (method_name, "VerifyUpdate") == 0) {
-		FuMainAuthHelper *helper;
 		const gchar *device_id = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
 		g_autoptr(PolkitSubject) subject = NULL;
 
 		/* check the id exists */
@@ -701,7 +701,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_verify_update_cb,
-						      helper);
+						      g_steal_pointer (&helper));
 		return;
 	}
 	if (g_strcmp0 (method_name, "Verify") == 0) {
@@ -720,7 +720,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		return;
 	}
 	if (g_strcmp0 (method_name, "Install") == 0) {
-		FuMainAuthHelper *helper;
 		GVariant *prop_value;
 		const gchar *action_id;
 		const gchar *device_id = NULL;
@@ -730,6 +729,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		guint64 archive_size_max;
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
 		g_autoptr(PolkitSubject) subject = NULL;
 		g_autoptr(GVariantIter) iter = NULL;
 
@@ -817,7 +817,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_install_cb,
-						      helper);
+						      g_steal_pointer (&helper));
 		return;
 	}
 	if (g_strcmp0 (method_name, "GetDetails") == 0) {
