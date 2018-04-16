@@ -670,7 +670,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* authenticate */
 		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		subject = polkit_system_bus_name_new (sender);
-		polkit_authority_check_authorization (helper->priv->authority, subject,
+		polkit_authority_check_authorization (priv->authority, subject,
 						      "org.freedesktop.fwupd.modify-remote",
 						      NULL,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
@@ -701,7 +701,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* authenticate */
 		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		subject = polkit_system_bus_name_new (sender);
-		polkit_authority_check_authorization (helper->priv->authority, subject,
+		polkit_authority_check_authorization (priv->authority, subject,
 						      "org.freedesktop.fwupd.verify-update",
 						      NULL,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
