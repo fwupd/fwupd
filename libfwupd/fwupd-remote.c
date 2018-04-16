@@ -51,6 +51,7 @@ typedef struct {
 	gchar			*username;
 	gchar			*password;
 	gchar			*title;
+	gchar			*agreement;
 	gchar			*checksum;
 	gchar			*filename_cache;
 	gchar			*filename_cache_sig;
@@ -87,6 +88,23 @@ fwupd_remote_set_title (FwupdRemote *self, const gchar *title)
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_free (priv->title);
 	priv->title = g_strdup (title);
+}
+
+/**
+ * fwupd_remote_set_agreement:
+ * @self: A #FwupdRemote
+ * @agreement: Agreement markup
+ *
+ * Sets the remote agreement in AppStream markup format
+ *
+ * Since: 1.0.7
+ **/
+void
+fwupd_remote_set_agreement (FwupdRemote *self, const gchar *agreement)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_free (priv->agreement);
+	priv->agreement = g_strdup (agreement);
 }
 
 static void
@@ -738,6 +756,24 @@ fwupd_remote_get_title (FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_get_agreement:
+ * @self: A #FwupdRemote
+ *
+ * Gets the remote agreement in AppStream markup format
+ *
+ * Returns: a string, or %NULL if unset
+ *
+ * Since: 1.0.7
+ **/
+const gchar *
+fwupd_remote_get_agreement (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return priv->agreement;
+}
+
+/**
  * fwupd_remote_get_checksum:
  * @self: A #FwupdRemote
  *
@@ -920,6 +956,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_password (self, g_variant_get_string (value, NULL));
 		} else if (g_strcmp0 (key, "Title") == 0) {
 			fwupd_remote_set_title (self, g_variant_get_string (value, NULL));
+		} else if (g_strcmp0 (key, "Agreement") == 0) {
+			fwupd_remote_set_agreement (self, g_variant_get_string (value, NULL));
 		} else if (g_strcmp0 (key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
 			fwupd_remote_set_checksum (self, g_variant_get_string (value, NULL));
 		} else if (g_strcmp0 (key, "Enabled") == 0) {
@@ -969,6 +1007,10 @@ fwupd_remote_to_variant (FwupdRemote *self)
 	if (priv->title != NULL) {
 		g_variant_builder_add (&builder, "{sv}", "Title",
 				       g_variant_new_string (priv->title));
+	}
+	if (priv->agreement != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "Agreement",
+				       g_variant_new_string (priv->agreement));
 	}
 	if (priv->checksum != NULL) {
 		g_variant_builder_add (&builder, "{sv}", FWUPD_RESULT_KEY_CHECKSUM,
@@ -1106,6 +1148,7 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (priv->username);
 	g_free (priv->password);
 	g_free (priv->title);
+	g_free (priv->agreement);
 	g_free (priv->checksum);
 	g_free (priv->filename_cache);
 	g_free (priv->filename_cache_sig);

@@ -463,132 +463,22 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 	return fu_util_report_history (priv, NULL, error);
 }
 
-static GString *
-fu_util_get_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
-{
-	GString *str = g_string_new (NULL);
-
-	/* this is designed as a fallback; the actual warning should ideally
-	 * come from the LVFS instance that is serving the remote */
-	g_string_append_printf (str, "%s\n",
-				/* TRANSLATORS: show the user a warning */
-				"Your distributor may not have verified any of "
-				"the firmware updates for compatibility with your "
-				"system or connected devices.");
-	g_string_append_printf (str, "%s\n",
-				/* TRANSLATORS: show the user a warning */
-				"Enabling this remote is done at your own risk.");
-	return str;
-}
-
-static GString *
-fu_util_get_component_agreement (FuUtilPrivate *priv, AsApp *app, GError **error)
-{
-	g_autofree gchar *tmp = NULL;
-#if AS_CHECK_VERSION(0,7,8)
-	AsAgreement *agreement;
-	AsAgreementSection *section;
-
-	/* get the default agreement section */
-	agreement = as_app_get_agreement_default (app);
-	if (agreement == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No agreement found");
-		return NULL;
-	}
-	section = as_agreement_get_section_default (agreement);
-	if (section == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No default section for agreement found");
-		return NULL;
-	}
-	tmp = as_agreement_section_get_description (section, NULL);
-	if (tmp == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No description found in agreement section");
-		return NULL;
-	}
-
-	/* convert to console text */
-	tmp = as_markup_convert_simple (tmp, error);
-#else
-	AsFormat *format;
-	GNode *n;
-	g_autoptr(AsNode) root = NULL;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GString) str = NULL;
-
-	/* parse the XML file */
-	format = as_app_get_format_default (app);
-	if (format == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No format for Metainfo file");
-		return NULL;
-	}
-	file = g_file_new_for_path (as_format_get_filename (format));
-	root = as_node_from_file (file, AS_NODE_FROM_XML_FLAG_NONE, NULL, error);
-	if (root == NULL)
-		return NULL;
-
-	/* manually find the first agreement section */
-	n = as_node_find (root, "component/agreement/agreement_section/description");
-	if (n == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No agreement description found");
-		return NULL;
-	}
-	str = as_node_to_xml (n->children, AS_NODE_TO_XML_FLAG_INCLUDE_SIBLINGS);
-	tmp = as_markup_convert_simple (str->str, error);
-#endif
-	return g_string_new (tmp);
-}
-
 static gboolean
 fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 {
-	AsApp *app;
-	g_autofree gchar *component_id = NULL;
-	g_autoptr(AsStore) store = NULL;
-	g_autoptr(GHashTable) os_release = NULL;
-	g_autoptr(GString) desc_plain_str = NULL;
+	g_autofree gchar *warning_markup = NULL;
+	g_autofree gchar *warning_plain = NULL;
 
-	/* try to find a custom agreement, falling back to a generic warning */
-	store = as_store_new ();
-	as_store_add_filter (store, AS_APP_KIND_SOURCE);
-	if (!as_store_load (store, AS_STORE_LOAD_FLAG_APPDATA, NULL, error))
+	/* get formatted text */
+	warning_markup = fwupd_remote_get_agreement (remote);
+	if (warning_markup == NULL)
+		return TRUE;
+	warning_plain = as_markup_convert_simple (warning_markup, error);
+	if (warning_plain == NULL)
 		return FALSE;
-	component_id = g_strdup_printf ("org.freedesktop.fwupd.remotes.%s",
-					fwupd_remote_get_id (remote));
-	app = as_store_get_app_by_id (store, component_id);
-	if (app != NULL) {
-		desc_plain_str = fu_util_get_component_agreement (priv, app, error);
-		if (desc_plain_str == NULL)
-			return FALSE;
-	} else {
-		desc_plain_str = fu_util_get_remote_warning (priv, remote, error);
-		if (desc_plain_str == NULL)
-			return FALSE;
-	}
-
-	/* replace any dynamic values from os-release */
-	os_release = fwupd_get_os_release (error);
-	as_utils_string_replace (desc_plain_str, "$OS_RELEASE:NAME$",
-				 g_hash_table_lookup (os_release, "NAME"));
-	as_utils_string_replace (desc_plain_str, "$OS_RELEASE:BUG_REPORT_URL$",
-				 g_hash_table_lookup (os_release, "BUG_REPORT_URL"));
 
 	/* show and ask user to confirm */
-	g_print ("%s", desc_plain_str->str);
+	g_print ("%s", warning_plain);
 	if (!priv->assume_yes) {
 		/* ask for permission */
 		g_print ("\n%s [Y|n]: ",
@@ -620,8 +510,7 @@ fu_util_modify_remote (FuUtilPrivate *priv,
 		return FALSE;
 
 	/* show some kind of warning when enabling download-type remotes */
-	if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DOWNLOAD &&
-	    g_strcmp0 (key, "Enabled") == 0 && g_strcmp0 (value, "true") == 0) {
+	if (g_strcmp0 (key, "Enabled") == 0 && g_strcmp0 (value, "true") == 0) {
 		if (!fu_util_modify_remote_warning (priv, remote, error))
 			return FALSE;
 	}

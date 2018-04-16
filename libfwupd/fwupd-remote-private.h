@@ -34,6 +34,8 @@ gboolean	 fwupd_remote_load_from_filename	(FwupdRemote	*self,
 							 GError		**error);
 void		 fwupd_remote_set_priority		(FwupdRemote	*self,
 							 gint		 priority);
+void		 fwupd_remote_set_agreement		(FwupdRemote	*self,
+							 const gchar	*agreement);
 void		 fwupd_remote_set_mtime			(FwupdRemote	*self,
 							 guint64	 mtime);
 gchar		**fwupd_remote_get_order_after		(FwupdRemote	*self);

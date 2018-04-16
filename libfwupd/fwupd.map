@@ -239,5 +239,7 @@ LIBFWUPD_1.0.4 {
 LIBFWUPD_1.0.7 {
   global:
     fwupd_get_os_release;
+    fwupd_remote_get_agreement;
+    fwupd_remote_set_agreement;
   local: *;
 } LIBFWUPD_1.0.4;
