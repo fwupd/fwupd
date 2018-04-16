@@ -47,7 +47,10 @@ fu_csr_tool_private_free (FuCsrToolPrivate *priv)
 		g_ptr_array_unref (priv->cmd_array);
 	g_free (priv);
 }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCsrToolPrivate, fu_csr_tool_private_free)
+#pragma clang diagnostic pop
 
 typedef gboolean (*FuCsrToolPrivateCb)	(FuCsrToolPrivate	*util,
 					 gchar			**values,

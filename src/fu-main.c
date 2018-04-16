@@ -40,8 +40,11 @@
 #include "fu-engine.h"
 
 #ifndef HAVE_POLKIT_0_114
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitAuthorizationResult, g_object_unref)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitSubject, g_object_unref)
+#pragma clang diagnostic pop
 #endif
 
 typedef struct {
@@ -268,7 +271,10 @@ fu_main_auth_helper_free (FuMainAuthHelper *helper)
 	g_free (helper);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMainAuthHelper, fu_main_auth_helper_free)
+#pragma clang diagnostic pop
 
 /* error may or may not already have been set */
 static gboolean
@@ -1023,7 +1029,10 @@ fu_main_private_free (FuMainPrivate *priv)
 	g_free (priv);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMainPrivate, fu_main_private_free)
+#pragma clang diagnostic pop
 
 int
 main (int argc, char *argv[])

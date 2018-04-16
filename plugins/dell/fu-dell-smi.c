@@ -53,7 +53,10 @@ _dell_smi_obj_free (FuDellSmiObj *obj)
 	g_free(obj);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuDellSmiObj, _dell_smi_obj_free);
+#pragma clang diagnostic pop
 
 /* don't actually clear if we're testing */
 gboolean

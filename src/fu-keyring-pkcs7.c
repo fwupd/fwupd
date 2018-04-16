@@ -35,9 +35,12 @@ struct _FuKeyringPkcs7
 
 G_DEFINE_TYPE (FuKeyringPkcs7, fu_keyring_pkcs7, FU_TYPE_KEYRING)
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_pkcs7_t, gnutls_pkcs7_deinit, NULL)
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_crt_t, gnutls_x509_crt_deinit, NULL)
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_dn_t, gnutls_x509_dn_deinit, NULL)
+#pragma clang diagnostic pop
 
 static gboolean
 fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
@@ -164,7 +167,10 @@ _gnutls_datum_deinit (gnutls_datum_t *d)
 	gnutls_free (d);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(gnutls_datum_t, _gnutls_datum_deinit)
+#pragma clang diagnostic pop
 
 static gchar *
 fu_keyring_pkcs7_datum_to_dn_str (const gnutls_datum_t *raw)

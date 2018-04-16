@@ -71,7 +71,10 @@ dfu_tool_private_free (DfuToolPrivate *priv)
 		g_ptr_array_unref (priv->cmd_array);
 	g_free (priv);
 }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(DfuToolPrivate, dfu_tool_private_free)
+#pragma clang diagnostic pop
 
 typedef gboolean (*FuUtilPrivateCb)	(DfuToolPrivate	*util,
 					 gchar		**values,

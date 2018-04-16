@@ -118,6 +118,9 @@ guint8		 synapticsmst_common_enable_remote_control	(SynapticsMSTConnection *conn
 
 guint8		 synapticsmst_common_disable_remote_control	(SynapticsMSTConnection *connection);
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(SynapticsMSTConnection, synapticsmst_common_free)
+#pragma clang diagnostic pop
 
 #endif /* __SYNAPTICSMST_COMMON_H */

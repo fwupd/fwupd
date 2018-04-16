@@ -78,6 +78,7 @@ test_args = [
   '-Wnested-externs',
   '-Wno-cast-function-type',
   '-Wno-error=cpp',
+  '-Wno-unknown-pragmas',
   '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
   '-Wno-strict-aliasing',

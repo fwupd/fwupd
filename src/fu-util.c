@@ -2209,7 +2209,10 @@ fu_util_private_free (FuUtilPrivate *priv)
 	g_free (priv);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
+#pragma clang diagnostic pop
 
 int
 main (int argc, char *argv[])

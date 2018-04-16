@@ -38,7 +38,10 @@
 #include "fu-thunderbolt-image.h"
 
 #ifndef HAVE_GUDEV_232
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
+#pragma clang diagnostic pop
 #endif
 
 typedef void (*UEventNotify) (FuPlugin	  *plugin,

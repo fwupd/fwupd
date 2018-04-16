@@ -36,7 +36,10 @@ struct _FuAltosFirmware {
 
 G_DEFINE_TYPE (FuAltosFirmware, fu_altos_firmware, G_TYPE_OBJECT)
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(Elf, elf_end);
+#pragma clang diagnostic pop
 
 GBytes *
 fu_altos_firmware_get_data (FuAltosFirmware *self)
