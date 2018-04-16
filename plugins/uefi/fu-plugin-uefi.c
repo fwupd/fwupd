@@ -308,7 +308,6 @@ fu_plugin_uefi_update_splash (GError **error)
 #endif
 	guint32 screen_height = 768;
 	guint32 screen_width = 1024;
-	g_autoptr(fwup_resource_iter) iter = NULL;
 	g_autoptr(GBytes) image_bmp = NULL;
 
 	struct {
