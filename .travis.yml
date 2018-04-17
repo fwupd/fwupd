@@ -12,6 +12,7 @@ env:
   - OS=arch
   - OS=debian-i386
   - OS=ubuntu-x86_64
+  - OS=centos
 
 install:
   - ./contrib/ci/generate_docker.py

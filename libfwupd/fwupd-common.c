@@ -231,12 +231,13 @@ fwupd_build_user_agent_os_release (void)
 static gchar *
 fwupd_build_user_agent_system (void)
 {
-	struct utsname name_tmp = { 0 };
+	struct utsname name_tmp;
 	g_autofree gchar *locale = NULL;
 	g_autofree gchar *os_release = NULL;
 	g_autoptr(GPtrArray) ids = g_ptr_array_new_with_free_func (g_free);
 
 	/* system, architecture and kernel, e.g. "Linux i686 4.14.5" */
+	memset (&name_tmp, 0, sizeof(struct utsname));
 	if (uname (&name_tmp) >= 0) {
 		g_ptr_array_add (ids, g_strdup_printf ("%s %s %s",
 						       name_tmp.sysname,
