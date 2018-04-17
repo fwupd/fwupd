@@ -154,7 +154,7 @@ else
 endif
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 if get_option('pkcs7')
-  gnutls = dependency('gnutls')
+  gnutls = dependency('gnutls', version : '>= 3.4.4.1')
   conf.set('ENABLE_PKCS7', '1')
 endif
 if get_option('gpg')
