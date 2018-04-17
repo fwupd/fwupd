@@ -6,6 +6,7 @@ install_data(['org.freedesktop.fwupd.xml'],
 
 keyring_deps = []
 keyring_src = []
+test_deps = []
 
 if get_option('gpg')
   keyring_src += 'fu-keyring-gpg.c'
@@ -16,6 +17,7 @@ endif
 if get_option('pkcs7')
   keyring_src += 'fu-keyring-pkcs7.c'
   keyring_deps += gnutls
+  test_deps += colorhug_pkcs7_signature
 endif
 
 libfwupdprivate = static_library(
@@ -182,10 +184,10 @@ if get_option('tests')
     'fu-self-test',
     resources_src,
     colorhug_test_firmware,
-    colorhug_pkcs7_signature,
     builder_test_firmware,
     hwid_test_firmware,
     noreqs_test_firmware,
+    test_deps,
     sources : [
       keyring_src,
       'fu-self-test.c',
