@@ -21,7 +21,6 @@
 
 #include "config.h"
 
-#define _GNU_SOURCE 1
 #include <errno.h>
 #include <fwupd.h>
 #include <glib.h>

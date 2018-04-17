@@ -87,6 +87,8 @@ with open(out.name, 'w') as wfd:
         elif line == "%%%INSTALL_DEPENDENCIES_COMMAND%%%\n":
             if OS == "fedora":
                 wfd.write("RUN dnf --enablerepo=updates-testing -y install \\\n")
+            elif OS == "centos":
+                wfd.write("RUN yum -y install \\\n")
             elif OS == "debian" or OS == "ubuntu":
                 wfd.write("RUN apt update -qq && \\\n")
                 wfd.write("\tapt install -yq --no-install-recommends\\\n")

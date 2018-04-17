@@ -1239,7 +1239,7 @@ fu_engine_get_report_metadata (FuEngine *self)
 {
 	GHashTable *hash;
 	gchar *btime;
-	struct utsname name_tmp = { 0 };
+	struct utsname name_tmp;
 
 	/* used by pretty much every plugin and are hard deps of fwupd */
 	hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
@@ -1260,6 +1260,7 @@ fu_engine_get_report_metadata (FuEngine *self)
 					      G_USB_MICRO_VERSION));
 
 	/* kernel version is often important for debugging failures */
+	memset (&name_tmp, 0, sizeof (struct utsname));
 	if (uname (&name_tmp) >= 0) {
 		g_hash_table_insert (hash,
 				     g_strdup ("CpuArchitecture"),
