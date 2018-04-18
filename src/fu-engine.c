@@ -1054,6 +1054,110 @@ fu_engine_check_hardware_requirement (FuEngine *self, AsApp *app, GError **error
 }
 #endif
 
+#if AS_CHECK_VERSION(0,7,8)
+static gchar *
+fu_engine_get_pkgconfig_version_fn (const gchar *pkgconfig_fn, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_auto(GStrv) lines = NULL;
+
+	/* load file */
+	if (!g_file_get_contents (pkgconfig_fn, &data, NULL, error))
+		return NULL;
+
+	/* look for version */
+	lines = g_strsplit (data, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (g_str_has_prefix (lines[i], "Version: "))
+			return g_strdup (lines[i] + 9);
+	}
+
+	/* nothing suitable found! */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_INVALID_FILE,
+		     "Invalid pkg-config file found: %s",
+		     pkgconfig_fn);
+	return FALSE;
+}
+
+static gchar *
+fu_engine_get_pkgconfig_version (const gchar *pkgconfig_name, GError **error)
+{
+	g_autofree gchar *fn = g_strdup_printf ("%s.pc", pkgconfig_name);
+	const gchar *paths[] = { LIBDIR, DATADIR, "/usr/share", "/usr/lib64", NULL };
+	for (guint i = 0; paths[i] != NULL; i++) {
+		g_autofree gchar *path = NULL;
+		path = g_build_filename (paths[i], "pkgconfig", fn, NULL);
+		if (g_file_test (path, G_FILE_TEST_EXISTS))
+			return fu_engine_get_pkgconfig_version_fn (path, error);
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_INVALID_FILE,
+		     "Could not find pkg-config file for %s",
+		     pkgconfig_name);
+	return FALSE;
+}
+
+static gboolean
+fu_engine_check_runtime_requirement (FuEngine *self, AsRequire *req, GError **error)
+{
+	g_autofree gchar *version = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* get the installed runtime version */
+	version = fu_engine_get_pkgconfig_version (as_require_get_value (req), error);
+	if (version == NULL) {
+		g_prefix_error (error, "Not compatible with system: ");
+		return FALSE;
+	}
+
+	/* check is valid */
+	if (!as_require_version_compare (req, version, &error_local)) {
+		if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Not compatible with %s version %s, requires >= %s",
+				     as_require_get_value (req),
+				     version,
+				     as_require_get_version (req));
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Not compatible with %s version: %s",
+				     as_require_get_value (req),
+				     error_local->message);
+		}
+		return FALSE;
+	}
+
+	/* success */
+	g_debug ("runtime provided %s=%s", as_require_get_value (req), version);
+	return TRUE;
+}
+
+static gboolean
+fu_engine_check_runtime_requirements (FuEngine *self, AsApp *app, GError **error)
+{
+	GPtrArray *requires = as_app_get_requires (app);
+
+	/* check each HWID requirement */
+	for (guint i = 0; i < requires->len; i++) {
+		AsRequire *req = g_ptr_array_index (requires, i);
+		if (as_require_get_kind (req) != AS_REQUIRE_KIND_PKGCONFIG)
+			continue;
+		if (!fu_engine_check_runtime_requirement (self, req, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+#endif
+
 static gboolean
 fu_engine_check_requirements (FuEngine *self, AsApp *app, FuDevice *device, GError **error)
 {
@@ -1067,6 +1171,10 @@ fu_engine_check_requirements (FuEngine *self, AsApp *app, FuDevice *device, GErr
 	}
 #if AS_CHECK_VERSION(0,7,4)
 	if (!fu_engine_check_hardware_requirement (self, app, error))
+		return FALSE;
+#endif
+#if AS_CHECK_VERSION(0,7,8)
+	if (!fu_engine_check_runtime_requirements (self, app, error))
 		return FALSE;
 #endif
 
