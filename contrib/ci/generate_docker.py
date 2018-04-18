@@ -108,4 +108,10 @@ with open(out.name, 'w') as wfd:
         else:
             wfd.write(line)
     wfd.flush()
-    subprocess.check_call(["docker", "build", "-t", "fwupd-%s" % TARGET, "-f", "./%s" % os.path.basename(out.name), "."])
+    args = ["docker", "build", "-t", "fwupd-%s" % TARGET]
+    if 'http_proxy' in os.environ:
+        args += ['--build-arg=http_proxy=%s' % os.environ['http_proxy']]
+    if 'https_proxy' in os.environ:
+        args += ['--build-arg=https_proxy=%s' % os.environ['https_proxy']]
+    args += [ "-f", "./%s" % os.path.basename(out.name), "."]
+    subprocess.check_call(args)
