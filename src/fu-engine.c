@@ -873,19 +873,6 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 	return TRUE;
 }
 
-static AsScreenshot *
-_as_app_get_screenshot_default (AsApp *app)
-{
-#if AS_CHECK_VERSION(0,7,3)
-	return as_app_get_screenshot_default (app);
-#else
-	GPtrArray *array = as_app_get_screenshots (app);
-	if (array->len == 0)
-		return NULL;
-	return g_ptr_array_index (array, 0);
-#endif
-}
-
 static GPtrArray *
 _as_store_get_apps_by_provide (AsStore *store, AsProvideKind kind, const gchar *value)
 {
@@ -1027,7 +1014,6 @@ fu_engine_check_version_requirement (AsApp *app,
 	return TRUE;
 }
 
-#if AS_CHECK_VERSION(0,7,4)
 static gboolean
 fu_engine_check_hardware_requirement (FuEngine *self, AsApp *app, GError **error)
 {
@@ -1052,7 +1038,6 @@ fu_engine_check_hardware_requirement (FuEngine *self, AsApp *app, GError **error
 	/* success */
 	return TRUE;
 }
-#endif
 
 static gboolean
 fu_engine_check_requirements (FuEngine *self, AsApp *app, FuDevice *device, GError **error)
@@ -1065,10 +1050,8 @@ fu_engine_check_requirements (FuEngine *self, AsApp *app, FuDevice *device, GErr
 						  error)) {
 		return FALSE;
 	}
-#if AS_CHECK_VERSION(0,7,4)
 	if (!fu_engine_check_hardware_requirement (self, app, error))
 		return FALSE;
-#endif
 
 	if (device != NULL) {
 		if (!fu_engine_check_version_requirement (app,
@@ -1383,7 +1366,7 @@ fu_engine_install (FuEngine *self,
 	/* not in bootloader mode */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
 		const gchar *caption = NULL;
-		AsScreenshot *ss = _as_app_get_screenshot_default (app);
+		AsScreenshot *ss = as_app_get_screenshot_default (app);
 		if (ss != NULL)
 			caption = as_screenshot_get_caption (ss, NULL);
 		if (caption != NULL) {
@@ -1853,22 +1836,6 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 	return "org.freedesktop.fwupd.update-internal";
 }
 
-static AsRelease *
-_as_app_get_release_by_version (AsApp *app, const gchar *version)
-{
-#if AS_CHECK_VERSION(0,7,3)
-	return as_app_get_release_by_version (app, version);
-#else
-	GPtrArray *releases = as_app_get_releases (app);
-	for (guint i = 0; i < releases->len; i++) {
-		AsRelease *release = g_ptr_array_index (releases, i);
-		if (g_strcmp0 (version, as_release_get_version (release)) == 0)
-			return release;
-	}
-	return NULL;
-#endif
-}
-
 static void
 fu_engine_add_component_to_store (FuEngine *self, AsApp *app)
 {
@@ -1892,7 +1859,7 @@ fu_engine_add_component_to_store (FuEngine *self, AsApp *app)
 		AsRelease *release = g_ptr_array_index (releases, j);
 		AsRelease *release_old;
 		const gchar *version = as_release_get_version (release);
-		release_old = _as_app_get_release_by_version (app_old, version);
+		release_old = as_app_get_release_by_version (app_old, version);
 		if (release_old != NULL) {
 			g_debug ("skipping release %s that already exists for %s",
 				 version, as_app_get_id (app_old));

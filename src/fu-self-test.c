@@ -122,11 +122,6 @@ fu_engine_require_hwid_func (void)
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
 
-#if !AS_CHECK_VERSION(0,7,4)
-	g_test_skip ("HWID requirements only supported with appstream-glib 0.7.4");
-	return;
-#endif
-
 #if !defined(HAVE_GCAB_0_8) && defined(__s390x__)
 	/* See https://github.com/hughsie/fwupd/issues/318 for more information */
 	g_test_skip ("Skipping HWID test on s390x due to known problem with gcab");
