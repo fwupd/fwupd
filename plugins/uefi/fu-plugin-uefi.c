@@ -306,9 +306,7 @@ fu_plugin_uefi_update_splash (GError **error)
 	fwup_resource *re = NULL;
 	guint best_idx = G_MAXUINT;
 	guint32 lowest_border_pixels = G_MAXUINT;
-#ifdef HAVE_FWUP_GET_BGRT_INFO
 	int rc;
-#endif
 	guint32 screen_height = 768;
 	guint32 screen_width = 1024;
 	g_autoptr(GBytes) image_bmp = NULL;
@@ -329,7 +327,6 @@ fu_plugin_uefi_update_splash (GError **error)
 	};
 
 	/* get the boot graphics resource table data */
-#ifdef HAVE_FWUP_GET_BGRT_INFO
 	rc = fwup_get_ux_capsule_info (&screen_width, &screen_height);
 	if (rc < 0) {
 		g_set_error_literal (error,
@@ -340,7 +337,6 @@ fu_plugin_uefi_update_splash (GError **error)
 	}
 	g_debug ("BGRT screen size %" G_GUINT32_FORMAT " x%" G_GUINT32_FORMAT,
 		 screen_width, screen_height);
-#endif
 
 	/* find the 'best sized' pre-generated image */
 	for (guint i = 0; sizes[i].width != 0; i++) {
@@ -651,9 +647,7 @@ fu_plugin_uefi_set_custom_mountpoint (FuPlugin *plugin, GError **error)
 
 			return FALSE;
 		}
-#ifdef HAVE_FWUP_CUSTOM_ESP
 		fwup_set_esp_mountpoint (data->esp_path);
-#endif
 	}
 	return TRUE;
 }
