@@ -200,6 +200,9 @@ if get_option('plugin_uefi')
   if fwup.version().version_compare('>= 11')
     conf.set('HAVE_FWUP_GET_ESP_MOUNTPOINT', '1')
   endif
+  if fwup.version().version_compare('>= 12')
+    conf.set('HAVE_FWUP_VERSION', '1')
+  endif
   efivar = dependency('efivar')
   conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
   conf.set_quoted('LIBFWUP_LIBRARY_VERSION', fwup.version())

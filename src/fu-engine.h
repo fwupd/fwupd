@@ -111,6 +111,13 @@ void		 fu_engine_add_device			(FuEngine	*self,
 							 FuDevice	*device);
 void		 fu_engine_add_plugin			(FuEngine	*self,
 							 FuPlugin	*plugin);
+void		 fu_engine_add_runtime_version		(FuEngine	*self,
+							 const gchar	*component_id,
+							 const gchar	*version);
+gboolean	 fu_engine_check_requirements		(FuEngine	*self,
+							 AsApp		*app,
+							 FuDevice	*device,
+							 GError		**error);
 
 G_END_DECLS
 

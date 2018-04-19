@@ -40,6 +40,8 @@ void		 fu_plugin_set_supported		(FuPlugin	*plugin,
 							 GPtrArray	*supported_guids);
 void		 fu_plugin_set_quirks			(FuPlugin	*plugin,
 							 FuQuirks	*quirks);
+void		 fu_plugin_set_runtime_versions		(FuPlugin	*plugin,
+							 GHashTable	*runtime_versions);
 void		 fu_plugin_set_smbios			(FuPlugin	*plugin,
 							 FuSmbios	*smbios);
 guint		 fu_plugin_get_order			(FuPlugin	*plugin);

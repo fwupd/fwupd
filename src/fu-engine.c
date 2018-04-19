@@ -79,6 +79,7 @@ struct _FuEngine
 	FuSmbios		*smbios;
 	FuHwids			*hwids;
 	FuQuirks		*quirks;
+	GHashTable		*runtime_versions;
 };
 
 enum {
@@ -94,11 +95,6 @@ enum {
 static guint signals[SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE (FuEngine, fu_engine, G_TYPE_OBJECT)
-
-#define FU_ENGINE_REQUIREMENT_FIRMWARE_RUNTIME		NULL /* yes, NULL */
-#define FU_ENGINE_REQUIREMENT_FIRMWARE_BOOTLOADER	"bootloader"
-#define FU_ENGINE_REQUIREMENT_FIRMWARE_VENDOR		"vendor-id"
-#define FU_ENGINE_REQUIREMENT_ID_FWUPD			"org.freedesktop.fwupd"
 
 static void
 fu_engine_emit_changed (FuEngine *self)
@@ -898,35 +894,15 @@ _as_store_get_apps_by_provide (AsStore *store, AsProvideKind kind, const gchar *
 }
 
 static gboolean
-fu_engine_check_version_requirement (AsApp *app,
-				   AsRequireKind kind,
-				   const gchar *id,
-				   const gchar *version,
-				   GError **error)
+fu_engine_check_requirement_firmware (FuEngine *self, AsRequire *req,
+				      FuDevice *device, GError **error)
 {
-	AsRequire *req;
 	g_autoptr(GError) error_local = NULL;
 
-	/* check args */
-	if (version == NULL) {
-		g_debug ("no parameter given for %s{%s}",
-			 as_require_kind_to_string (kind), id);
-		return TRUE;
-	}
-
-	/* does requirement exist */
-	req = as_app_get_require_by_value (app, kind, id);
-	if (req == NULL) {
-		g_debug ("no requirement on %s{%s}",
-			 as_require_kind_to_string (kind), id);
-		return TRUE;
-	}
-
-	/* check version */
-	if (!as_require_version_compare (req, version, &error_local)) {
-
-		/* firmware */
-		if (g_strcmp0 (id, FU_ENGINE_REQUIREMENT_FIRMWARE_RUNTIME) == 0) {
+	/* old firmware version */
+	if (as_require_get_value (req) == NULL) {
+		const gchar *version = fu_device_get_version (device);
+		if (!as_require_version_compare (req, version, &error_local)) {
 			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -942,27 +918,13 @@ fu_engine_check_version_requirement (AsApp *app,
 			}
 			return FALSE;
 		}
+		return TRUE;
+	}
 
-		/* fwupd */
-		if (g_strcmp0 (id, FU_ENGINE_REQUIREMENT_ID_FWUPD) == 0) {
-			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Not compatible with fwupd version %s, requires >= %s",
-					     version, as_require_get_version (req));
-			} else {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Not compatible with fwupd version: %s",
-					     error_local->message);
-			}
-			return FALSE;
-		}
-
-		/* bootloader */
-		if (g_strcmp0 (id, FU_ENGINE_REQUIREMENT_FIRMWARE_BOOTLOADER) == 0) {
+	/* bootloader version */
+	if (g_strcmp0 (as_require_get_value (req), "bootloader") == 0) {
+		const gchar *version = fu_device_get_version_bootloader (device);
+		if (!as_require_version_compare (req, version, &error_local)) {
 			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -978,9 +940,13 @@ fu_engine_check_version_requirement (AsApp *app,
 			}
 			return FALSE;
 		}
+		return TRUE;
+	}
 
-		/* vendor */
-		if (g_strcmp0 (id, FU_ENGINE_REQUIREMENT_FIRMWARE_VENDOR) == 0) {
+	/* vendor ID */
+	if (g_strcmp0 (as_require_get_value (req), "vendor-id") == 0) {
+		const gchar *version = fu_device_get_vendor_id (device);
+		if (!as_require_version_compare (req, version, &error_local)) {
 			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -996,88 +962,105 @@ fu_engine_check_version_requirement (AsApp *app,
 			}
 			return FALSE;
 		}
-
-		/* anything else */
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Not compatible with %s: %s",
-			     id, error_local->message);
-		return FALSE;
+		return TRUE;
 	}
 
-	/* success */
-	g_debug ("requirement %s %s %s on %s passed",
-		 as_require_get_version (req),
-		 as_require_compare_to_string (as_require_get_compare (req)),
-		 version, id);
-	return TRUE;
+	/* not supported */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "cannot handle firmware requirement %s",
+		     as_require_get_value (req));
+	return FALSE;
 }
 
 static gboolean
-fu_engine_check_hardware_requirement (FuEngine *self, AsApp *app, GError **error)
+fu_engine_check_requirement_id (FuEngine *self, AsRequire *req, GError **error)
 {
-	GPtrArray *requires = as_app_get_requires (app);
-
-	/* check each HWID requirement */
-	for (guint i = 0; i < requires->len; i++) {
-		AsRequire *req = g_ptr_array_index (requires, i);
-		if (as_require_get_kind (req) != AS_REQUIRE_KIND_HARDWARE)
-			continue;
-		if (!fu_hwids_has_guid (self->hwids, as_require_get_value (req))) {
+	g_autoptr(GError) error_local = NULL;
+	const gchar *version = g_hash_table_lookup (self->runtime_versions,
+						    as_require_get_value (req));
+	if (version == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "no version available for %s",
+			     as_require_get_value (req));
+		return FALSE;
+	}
+	if (!as_require_version_compare (req, version, &error_local)) {
+		if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "no HWIDs matched %s",
-				     as_require_get_value (req));
-			return FALSE;
+				     "Not compatible with %s version %s, requires >= %s",
+				     as_require_get_value (req), version,
+				     as_require_get_version (req));
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Not compatible with %s version: %s",
+				     as_require_get_value (req), error_local->message);
 		}
-		g_debug ("HWID provided %s", as_require_get_value (req));
+		return FALSE;
 	}
 
-	/* success */
+	g_debug ("requirement %s %s %s on %s passed",
+		 as_require_get_version (req),
+		 as_require_compare_to_string (as_require_get_compare (req)),
+		 version, as_require_get_value (req));
 	return TRUE;
 }
 
 static gboolean
+fu_engine_check_requirement_hardware (FuEngine *self, AsRequire *req, GError **error)
+{
+	if (!fu_hwids_has_guid (self->hwids, as_require_get_value (req))) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "no HWIDs matched %s",
+			     as_require_get_value (req));
+		return FALSE;
+	}
+	g_debug ("HWID provided %s", as_require_get_value (req));
+	return TRUE;
+}
+
+static gboolean
+fu_engine_check_requirement (FuEngine *self, AsRequire *req, FuDevice *device, GError **error)
+{
+	/* ensure component requirement */
+	if (as_require_get_kind (req) == AS_REQUIRE_KIND_ID)
+		return fu_engine_check_requirement_id (self, req, error);
+
+	/* ensure firmware requirement */
+	if (device != NULL && as_require_get_kind (req) == AS_REQUIRE_KIND_FIRMWARE)
+		return fu_engine_check_requirement_firmware (self, req, device, error);
+
+	/* ensure hardware requirement */
+	if (as_require_get_kind (req) == AS_REQUIRE_KIND_HARDWARE)
+		return fu_engine_check_requirement_hardware (self, req, error);
+
+	/* not supported */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "cannot handle requirement type %s",
+		     as_require_kind_to_string (as_require_get_kind (req)));
+	return FALSE;
+}
+
+gboolean
 fu_engine_check_requirements (FuEngine *self, AsApp *app, FuDevice *device, GError **error)
 {
-	/* make sure requirements are satisfied */
-	if (!fu_engine_check_version_requirement (app,
-						  AS_REQUIRE_KIND_ID,
-						  FU_ENGINE_REQUIREMENT_ID_FWUPD,
-						  VERSION,
-						  error)) {
-		return FALSE;
+	GPtrArray *reqs = as_app_get_requires (app);
+	for (guint i = 0; i < reqs->len; i++) {
+		AsRequire *req = g_ptr_array_index (reqs, i);
+		if (!fu_engine_check_requirement (self, req, device, error))
+			return FALSE;
 	}
-	if (!fu_engine_check_hardware_requirement (self, app, error))
-		return FALSE;
-
-	if (device != NULL) {
-		if (!fu_engine_check_version_requirement (app,
-							  AS_REQUIRE_KIND_FIRMWARE,
-							  FU_ENGINE_REQUIREMENT_FIRMWARE_RUNTIME,
-							  fu_device_get_version (device),
-							  error)) {
-			return FALSE;
-		}
-		if (!fu_engine_check_version_requirement (app,
-							  AS_REQUIRE_KIND_FIRMWARE,
-							  FU_ENGINE_REQUIREMENT_FIRMWARE_BOOTLOADER,
-							  fu_device_get_version_bootloader (device),
-							  error)) {
-			return FALSE;
-		}
-		if (!fu_engine_check_version_requirement (app,
-							  AS_REQUIRE_KIND_FIRMWARE,
-							  FU_ENGINE_REQUIREMENT_FIRMWARE_VENDOR,
-							  fu_device_get_vendor_id (device),
-							  error)) {
-			return FALSE;
-		}
-	}
-
-	/* success */
 	return TRUE;
 }
 
@@ -3158,6 +3141,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		fu_plugin_set_smbios (plugin, self->smbios);
 		fu_plugin_set_supported (plugin, self->supported_guids);
 		fu_plugin_set_quirks (plugin, self->quirks);
+		fu_plugin_set_runtime_versions (plugin, self->runtime_versions);
 		g_debug ("adding plugin %s", filename);
 		if (!fu_plugin_open (plugin, filename, &error_local)) {
 			g_warning ("failed to open plugin %s: %s",
@@ -3570,6 +3554,16 @@ fu_engine_class_init (FuEngineClass *klass)
 			      G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
+void
+fu_engine_add_runtime_version (FuEngine *self,
+			       const gchar *component_id,
+			       const gchar *version)
+{
+	g_hash_table_insert (self->runtime_versions,
+			     g_strdup (component_id),
+			     g_strdup (version));
+}
+
 static void
 fu_engine_init (FuEngine *self)
 {
@@ -3585,6 +3579,16 @@ fu_engine_init (FuEngine *self)
 	self->profile = as_profile_new ();
 	self->store = as_store_new ();
 	self->supported_guids = g_ptr_array_new_with_free_func (g_free);
+	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+
+	/* add some runtime versions of things the daemon depends on */
+	fu_engine_add_runtime_version (self, "org.freedesktop.fwupd", VERSION);
+#if AS_CHECK_VERSION(0,7,8)
+	fu_engine_add_runtime_version (self, "org.freedesktop.appstream-glib", as_version_string ());
+#endif
+#if G_USB_CHECK_VERSION(0,3,1)
+	fu_engine_add_runtime_version (self, "org.freedesktop.gusb", g_usb_version_string ());
+#endif
 }
 
 static void
@@ -3607,6 +3611,7 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->store);
 	g_object_unref (self->device_list);
 	g_ptr_array_unref (self->supported_guids);
+	g_hash_table_unref (self->runtime_versions);
 
 	G_OBJECT_CLASS (fu_engine_parent_class)->finalize (obj);
 }
