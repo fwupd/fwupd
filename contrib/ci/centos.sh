@@ -7,8 +7,8 @@ mkdir -p build
 cd build
 meson .. \
 	--werror \
-	-Dplugin_uefi=true \
-	-Dplugin_uefi_labels=true \
+	-Dplugin_uefi=false \
+	-Dplugin_uefi_labels=false \
 	-Dplugin_dell=true \
 	-Dplugin_synaptics=true \
 	-Dintrospection=true \
