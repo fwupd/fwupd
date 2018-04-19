@@ -3334,7 +3334,10 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 				g_debug ("ignoring: %s", error->message);
 				continue;
 			}
-			g_warning ("failed to add USB device: %s", error->message);
+			g_warning ("failed to add USB device %04x:%04x: %s",
+				   g_usb_device_get_vid (usb_device),
+				   g_usb_device_get_pid (usb_device),
+				   error->message);
 		}
 	}
 }
