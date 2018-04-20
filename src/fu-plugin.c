@@ -684,6 +684,8 @@ fu_plugin_add_runtime_version (FuPlugin *plugin,
 			       const gchar *version)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->runtime_versions == NULL)
+		return;
 	g_hash_table_insert (priv->runtime_versions,
 			     g_strdup (component_id),
 			     g_strdup (version));
