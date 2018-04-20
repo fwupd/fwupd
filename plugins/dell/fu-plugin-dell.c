@@ -1055,7 +1055,7 @@ fu_plugin_init (FuPlugin *plugin)
 		 data->libsmbios_minor);
 	tmp = g_strdup_printf ("%u.%u", data->libsmbios_major,
 					data->libsmbios_minor);
-	fu_plugin_add_report_metadata (plugin, "LibsmbiosVersion", tmp);
+	fu_plugin_add_runtime_version (plugin, "com.dell.libsmbios", tmp);
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
 	if (g_getenv ("FWUPD_DELL_VERBOSE") != NULL)
