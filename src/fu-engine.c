@@ -80,6 +80,7 @@ struct _FuEngine
 	FuHwids			*hwids;
 	FuQuirks		*quirks;
 	GHashTable		*runtime_versions;
+	GHashTable		*compile_versions;
 };
 
 enum {
@@ -1206,24 +1207,25 @@ fu_engine_get_report_metadata (FuEngine *self)
 	GHashTable *hash;
 	gchar *btime;
 	struct utsname name_tmp;
+	g_autoptr(GList) compile_keys = g_hash_table_get_keys (self->compile_versions);
+	g_autoptr(GList) runtime_keys = g_hash_table_get_keys (self->runtime_versions);
 
-	/* used by pretty much every plugin and are hard deps of fwupd */
+	/* convert all the runtime and compile-time versions */
 	hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-	g_hash_table_insert (hash,
-			     g_strdup ("FwupdVersion"),
-			     g_strdup (VERSION));
-	g_hash_table_insert (hash,
-			     g_strdup ("AppstreamGlibVersion"),
-			     g_strdup_printf ("%i.%i.%i",
-					      AS_MAJOR_VERSION,
-					      AS_MINOR_VERSION,
-					      AS_MICRO_VERSION));
-	g_hash_table_insert (hash,
-			     g_strdup ("GUsbVersion"),
-			     g_strdup_printf ("%i.%i.%i",
-					      G_USB_MAJOR_VERSION,
-					      G_USB_MINOR_VERSION,
-					      G_USB_MICRO_VERSION));
+	for (GList *l = compile_keys; l != NULL; l = l->next) {
+		const gchar *id = l->data;
+		const gchar *version = g_hash_table_lookup (self->compile_versions, id);
+		g_hash_table_insert (hash,
+				     g_strdup_printf ("CompileVersion(%s)", id),
+				     g_strdup (version));
+	}
+	for (GList *l = runtime_keys; l != NULL; l = l->next) {
+		const gchar *id = l->data;
+		const gchar *version = g_hash_table_lookup (self->runtime_versions, id);
+		g_hash_table_insert (hash,
+				     g_strdup_printf ("RuntimeVersion(%s)", id),
+				     g_strdup (version));
+	}
 
 	/* kernel version is often important for debugging failures */
 	memset (&name_tmp, 0, sizeof (struct utsname));
@@ -3142,6 +3144,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		fu_plugin_set_supported (plugin, self->supported_guids);
 		fu_plugin_set_quirks (plugin, self->quirks);
 		fu_plugin_set_runtime_versions (plugin, self->runtime_versions);
+		fu_plugin_set_compile_versions (plugin, self->compile_versions);
 		g_debug ("adding plugin %s", filename);
 		if (!fu_plugin_open (plugin, filename, &error_local)) {
 			g_warning ("failed to open plugin %s: %s",
@@ -3580,6 +3583,7 @@ fu_engine_init (FuEngine *self)
 	self->store = as_store_new ();
 	self->supported_guids = g_ptr_array_new_with_free_func (g_free);
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version (self, "org.freedesktop.fwupd", VERSION);
@@ -3589,6 +3593,23 @@ fu_engine_init (FuEngine *self)
 #if G_USB_CHECK_VERSION(0,3,1)
 	fu_engine_add_runtime_version (self, "org.freedesktop.gusb", g_usb_version_string ());
 #endif
+
+	g_hash_table_insert (self->compile_versions,
+			     g_strdup ("org.freedesktop.fwupd"),
+			     g_strdup (VERSION));
+	g_hash_table_insert (self->compile_versions,
+			     g_strdup ("org.freedesktop.appstream-glib"),
+			     g_strdup_printf ("%i.%i.%i",
+					      AS_MAJOR_VERSION,
+					      AS_MINOR_VERSION,
+					      AS_MICRO_VERSION));
+	g_hash_table_insert (self->compile_versions,
+			     g_strdup ("org.freedesktop.gusb"),
+			     g_strdup_printf ("%i.%i.%i",
+					      G_USB_MAJOR_VERSION,
+					      G_USB_MINOR_VERSION,
+					      G_USB_MICRO_VERSION));
+
 }
 
 static void
@@ -3612,6 +3633,7 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->device_list);
 	g_ptr_array_unref (self->supported_guids);
 	g_hash_table_unref (self->runtime_versions);
+	g_hash_table_unref (self->compile_versions);
 
 	G_OBJECT_CLASS (fu_engine_parent_class)->finalize (obj);
 }
