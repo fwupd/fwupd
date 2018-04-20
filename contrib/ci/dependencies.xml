@@ -1074,6 +1074,9 @@
     </distro>
     <distro id="debian">
       <control>
+        <exclusive>ia64</exclusive>
+        <exclusive>riscv64</exclusive>
+        <exclusive>x32</exclusive>
         <exclusive>mips</exclusive>
         <exclusive>sparc64</exclusive>
         <exclusive>sh4</exclusive>
@@ -1092,6 +1095,9 @@
     </distro>
     <distro id="ubuntu">
       <control>
+        <exclusive>ia64</exclusive>
+        <exclusive>riscv64</exclusive>
+        <exclusive>x32</exclusive>
         <exclusive>mips</exclusive>
         <exclusive>sparc64</exclusive>
         <exclusive>sh4</exclusive>
