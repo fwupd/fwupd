@@ -1559,6 +1559,8 @@ fu_plugin_finalize (GObject *object)
 		g_ptr_array_unref (priv->supported_guids);
 	if (priv->smbios != NULL)
 		g_object_unref (priv->smbios);
+	if (priv->runtime_versions != NULL)
+		g_hash_table_unref (priv->runtime_versions);
 #ifndef RUNNING_ON_VALGRIND
 	if (priv->module != NULL)
 		g_module_close (priv->module);
