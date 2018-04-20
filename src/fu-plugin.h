@@ -152,6 +152,9 @@ gchar		*fu_plugin_get_config_value		(FuPlugin	*plugin,
 void		 fu_plugin_add_runtime_version		(FuPlugin	*plugin,
 							 const gchar	*component_id,
 							 const gchar	*version);
+void		 fu_plugin_add_compile_version		(FuPlugin	*plugin,
+							 const gchar	*component_id,
+							 const gchar	*version);
 
 G_END_DECLS
 

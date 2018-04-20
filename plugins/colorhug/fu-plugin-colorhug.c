@@ -36,7 +36,7 @@ fu_plugin_init (FuPlugin *plugin)
 						 CH_MAJOR_VERSION,
 						 CH_MINOR_VERSION,
 						 CH_MICRO_VERSION);
-	fu_plugin_add_report_metadata (plugin, "ColorhugVersion", tmp);
+	fu_plugin_add_compile_version (plugin, "com.hughski.colorhug", tmp);
 }
 
 gboolean

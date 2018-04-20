@@ -59,8 +59,8 @@ fu_plugin_init (FuPlugin *plugin)
 	data->ux_capsule = FALSE;
 	data->esp_path = NULL;
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
-	fu_plugin_add_report_metadata (plugin, "FwupdateVersion", LIBFWUP_LIBRARY_VERSION);
-	fu_plugin_add_report_metadata (plugin, "EfivarVersion", EFIVAR_LIBRARY_VERSION);
+	fu_plugin_add_compile_version (plugin, "com.redhat.fwupdate", LIBFWUP_LIBRARY_VERSION);
+	fu_plugin_add_compile_version (plugin, "com.redhat.efivar", EFIVAR_LIBRARY_VERSION);
 #ifdef HAVE_FWUP_VERSION
 	version_str = g_strdup_printf ("%i", fwup_version ());
 	fu_plugin_add_runtime_version (plugin, "com.redhat.fwupdate", version_str);
