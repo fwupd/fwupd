@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/mei.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <uuid.h>
 
