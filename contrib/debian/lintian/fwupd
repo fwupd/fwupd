@@ -2,3 +2,5 @@
 fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/fwupd-offline-update.service
 fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/fwupd.service
 fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/system-update.target.wants/fwupd-offline-update.service
+#see debian bug 896012
+fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_upower.so

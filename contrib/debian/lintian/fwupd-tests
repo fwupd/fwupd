@@ -1,0 +1,2 @@
+#see debian bug 896012
+fwupd-tests: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_test.so
