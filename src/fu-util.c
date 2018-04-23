@@ -1211,6 +1211,23 @@ fu_util_download_file (FuUtilPrivate *priv,
 			  G_CALLBACK (fu_util_download_chunk_cb), priv);
 	status_code = soup_session_send_message (priv->soup_session, msg);
 	g_print ("\n");
+	if (status_code == 429) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		if (g_strcmp0 (str, "Too Many Requests") == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     /* TRANSLATORS: the server is rate-limiting downloads */
+				     "%s", _("Failed to download due to server limit"));
+			return FALSE;
+		}
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to download due to server limit: %s", str);
+		return FALSE;
+	}
 	if (status_code != SOUP_STATUS_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
