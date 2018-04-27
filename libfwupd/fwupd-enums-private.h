@@ -27,6 +27,7 @@
 #define FWUPD_RESULT_KEY_CREATED		"Created"	/* t */
 #define FWUPD_RESULT_KEY_DESCRIPTION		"Description"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_ID		"DeviceId"	/* s */
+#define FWUPD_RESULT_KEY_PARENT_DEVICE_ID	"ParentDeviceId"/* s */
 #define FWUPD_RESULT_KEY_FILENAME		"Filename"	/* s */
 #define FWUPD_RESULT_KEY_FLAGS			"Flags"		/* t */
 #define FWUPD_RESULT_KEY_FLASHES_LEFT		"FlashesLeft"	/* u */

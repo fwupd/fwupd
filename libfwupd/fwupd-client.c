@@ -281,8 +281,10 @@ fwupd_client_parse_devices_from_variant (GVariant *val)
 	GPtrArray *array = NULL;
 	gsize sz;
 	g_autoptr(GVariant) untuple = NULL;
+	g_autoptr(GHashTable) devices_by_id = NULL;
 
 	array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	devices_by_id = g_hash_table_new (g_str_hash, g_str_equal);
 	untuple = g_variant_get_child_value (val, 0);
 	sz = g_variant_n_children (untuple);
 	for (guint i = 0; i < sz; i++) {
@@ -293,7 +295,22 @@ fwupd_client_parse_devices_from_variant (GVariant *val)
 		if (dev == NULL)
 			continue;
 		g_ptr_array_add (array, dev);
+		g_hash_table_insert (devices_by_id,
+				     (gpointer) fwupd_device_get_id (dev),
+				     (gpointer) dev);
 	}
+
+	/* set the parent on each child */
+	for (guint i = 0; i < array->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (array, i);
+		const gchar *parent_id = fwupd_device_get_parent_id (dev);
+		if (parent_id != NULL) {
+			FwupdDevice *dev_tmp;
+			dev_tmp = g_hash_table_lookup (devices_by_id, parent_id);
+			fwupd_device_set_parent (dev, dev_tmp);
+		}
+	}
+
 	return array;
 }
 

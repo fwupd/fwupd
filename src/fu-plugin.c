@@ -344,6 +344,8 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 void
 fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 {
+	GPtrArray *children;
+
 	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_return_if_fail (FU_IS_DEVICE (device));
 
@@ -353,6 +355,13 @@ fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 	fu_device_set_created (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	fu_device_set_plugin (device, fu_plugin_get_name (plugin));
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_ADDED], 0, device);
+
+	/* add children */
+	children = fu_device_get_children (device);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index (children, i);
+		fu_plugin_device_add (plugin, child);
+	}
 }
 
 /**

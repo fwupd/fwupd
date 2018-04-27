@@ -51,6 +51,12 @@ gchar		*fwupd_device_to_string			(FwupdDevice	*device);
 const gchar	*fwupd_device_get_id			(FwupdDevice	*device);
 void		 fwupd_device_set_id			(FwupdDevice	*device,
 							 const gchar	*id);
+const gchar	*fwupd_device_get_parent_id		(FwupdDevice	*device);
+void		 fwupd_device_set_parent_id		(FwupdDevice	*device,
+							 const gchar	*parent_id);
+FwupdDevice	*fwupd_device_get_parent		(FwupdDevice	*device);
+void		 fwupd_device_set_parent		(FwupdDevice	*device,
+							 FwupdDevice	*parent);
 const gchar	*fwupd_device_get_name			(FwupdDevice	*device);
 void		 fwupd_device_set_name			(FwupdDevice	*device,
 							 const gchar	*name);

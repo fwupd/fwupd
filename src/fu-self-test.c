@@ -167,6 +167,38 @@ fu_engine_requirements_device_func (void)
 }
 
 static void
+fu_engine_device_parent_func (void)
+{
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device3 = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new ();
+
+	/* add child */
+	fu_device_set_id (device1, "child");
+	fu_device_add_guid (device1, "child-GUID-1");
+	fu_device_add_parent_guid (device1, "parent-GUID");
+	fu_engine_add_device (engine, device1);
+
+	/* parent */
+	fu_device_set_id (device2, "parent");
+	fu_device_add_guid (device2, "parent-GUID");
+
+	/* add another child */
+	fu_device_set_id (device3, "child2");
+	fu_device_add_guid (device3, "child-GUID-2");
+	fu_device_add_parent_guid (device3, "parent-GUID");
+	fu_device_add_child (device2, device3);
+
+	/* add two together */
+	fu_engine_add_device (engine, device2);
+
+	/* verify both children were adopted */
+	g_assert (fu_device_get_parent (device3) == device2);
+	g_assert (fu_device_get_parent (device1) == device2);
+}
+
+static void
 fu_engine_partial_hash_func (void)
 {
 	gboolean ret;
@@ -2122,6 +2154,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/engine{requirements-missing}", fu_engine_requirements_missing_func);
 	g_test_add_func ("/fwupd/engine{requirements-unsupported}", fu_engine_requirements_unsupported_func);
 	g_test_add_func ("/fwupd/engine{requirements-device}", fu_engine_requirements_device_func);
+	g_test_add_func ("/fwupd/engine{device-auto-parent}", fu_engine_device_parent_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
