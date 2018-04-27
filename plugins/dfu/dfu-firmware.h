@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -63,6 +63,7 @@ typedef enum {
  * @DFU_FIRMWARE_FORMAT_DFU:				DFU footer
  * @DFU_FIRMWARE_FORMAT_DFUSE:				DfuSe header
  * @DFU_FIRMWARE_FORMAT_INTEL_HEX:			Intel HEX
+ * @DFU_FIRMWARE_FORMAT_SREC:			Motorola S-record
  *
  * The known versions of the DFU standard in BCD format.
  **/
@@ -72,6 +73,7 @@ typedef enum {
 	DFU_FIRMWARE_FORMAT_DFU,
 	DFU_FIRMWARE_FORMAT_DFUSE,
 	DFU_FIRMWARE_FORMAT_INTEL_HEX,
+	DFU_FIRMWARE_FORMAT_SREC,
 	/*< private >*/
 	DFU_FIRMWARE_FORMAT_LAST
 } DfuFirmwareFormat;
