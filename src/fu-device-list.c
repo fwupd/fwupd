@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "fu-device-list.h"
+#include "fu-device-private.h"
 
 #include "fwupd-error.h"
 

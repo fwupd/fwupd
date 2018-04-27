@@ -26,6 +26,10 @@
 
 G_BEGIN_DECLS
 
+GPtrArray	*fu_device_get_parent_guids		(FuDevice	*device);
+gboolean	 fu_device_has_parent_guid		(FuDevice	*device,
+							 const gchar	*guid);
+
 G_END_DECLS
 
 #endif /* __FU_DEVICE_PRIVATE_H */

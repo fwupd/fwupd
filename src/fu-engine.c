@@ -2997,6 +2997,48 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 	fu_engine_add_device (self, device);
 }
 
+static void
+fu_engine_adopt_children (FuEngine *self, FuDevice *device)
+{
+	GPtrArray *guids;
+	g_autoptr(GPtrArray) devices = fu_device_list_get_active (self->device_list);
+
+	/* find the parent GUID in any existing device */
+	guids = fu_device_get_parent_guids (device);
+	for (guint j = 0; j < guids->len; j++) {
+		const gchar *guid = g_ptr_array_index (guids, j);
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *device_tmp = g_ptr_array_index (devices, i);
+			if (fu_device_get_parent (device) != NULL)
+				continue;
+			if (fu_device_has_guid (device_tmp, guid)) {
+				g_debug ("setting parent of %s to be %s",
+					 fu_device_get_id (device),
+					 fu_device_get_id (device_tmp));
+				fu_device_add_child (device_tmp, device);
+				break;
+			}
+		}
+	}
+
+	/* the new device is the parent to an existing child */
+	guids = fu_device_get_guids (device);
+	for (guint j = 0; j < guids->len; j++) {
+		const gchar *guid = g_ptr_array_index (guids, j);
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *device_tmp = g_ptr_array_index (devices, i);
+			if (fu_device_get_parent (device_tmp) != NULL)
+				continue;
+			if (fu_device_has_parent_guid (device_tmp, guid)) {
+				g_debug ("setting parent of %s to be %s",
+					 fu_device_get_id (device_tmp),
+					 fu_device_get_id (device));
+				fu_device_add_child (device, device_tmp);
+			}
+		}
+	}
+}
+
 void
 fu_engine_add_device (FuEngine *self, FuDevice *device)
 {
@@ -3026,6 +3068,9 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 			}
 		}
 	}
+
+	/* adopt any required children, which may or may not already exist */
+	fu_engine_adopt_children (self, device);
 
 	/* notify all plugins about this new device */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))

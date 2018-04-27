@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -42,8 +42,11 @@ static void fu_device_finalize			 (GObject *object);
 typedef struct {
 	gchar				*equivalent_id;
 	FuDevice			*alternate;
+	FuDevice			*parent;	/* noref */
 	FuQuirks			*quirks;
 	GHashTable			*metadata;
+	GPtrArray			*parent_guids;
+	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
 	FwupdStatus			 status;
 	guint				 progress;
@@ -162,6 +165,171 @@ fu_device_set_alternate (FuDevice *device, FuDevice *alternate)
 	FuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FU_IS_DEVICE (device));
 	g_set_object (&priv->alternate, alternate);
+}
+
+/**
+ * fu_device_get_parent:
+ * @device: A #FuDevice
+ *
+ * Gets any parent device. An parent device is logically "above" the current
+ * device and this may be reflected in client tools.
+ *
+ * This information also allows the plugin to optionally verify the parent
+ * device, for instance checking the parent device firmware version.
+ *
+ * The parent object is not refcounted and if destroyed this function will then
+ * return %NULL.
+ *
+ * Returns: (transfer none): a #FuDevice or %NULL
+ *
+ * Since: 1.0.8
+ **/
+FuDevice *
+fu_device_get_parent (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->parent;
+}
+
+static void
+fu_device_set_parent (FuDevice *device, FuDevice *parent)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+
+	g_object_add_weak_pointer (G_OBJECT (parent), (gpointer *) &priv->parent);
+	priv->parent = parent;
+
+	/* this is what goes over D-Bus */
+	fwupd_device_set_parent_id (FWUPD_DEVICE (device),
+				    device != NULL ? fu_device_get_id (parent) : NULL);
+}
+
+/**
+ * fu_device_get_children:
+ * @device: A #FuDevice
+ *
+ * Gets any child devices. A child device is logically "below" the current
+ * device and this may be reflected in client tools.
+ *
+ * Returns: (transfer none) (element-type FuDevice): child devices
+ *
+ * Since: 1.0.8
+ **/
+GPtrArray *
+fu_device_get_children (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->children;
+}
+
+/**
+ * fu_device_add_child:
+ * @device: A #FuDevice
+ * @child: Another #FuDevice
+ *
+ * Sets any child device. An child device is logically linked to the primary
+ * device in some way.
+ *
+ * Since: 1.0.8
+ **/
+void
+fu_device_add_child (FuDevice *device, FuDevice *child)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_return_if_fail (FU_IS_DEVICE (child));
+
+	/* add if the child does not already exist */
+	for (guint i = 0; i < priv->children->len; i++) {
+		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
+		if (devtmp == child)
+			return;
+	}
+	g_ptr_array_add (priv->children, g_object_ref (child));
+
+	/* ensure the parent is also set on the child */
+	fu_device_set_parent (child, device);
+}
+
+/**
+ * fu_device_get_parent_guids:
+ * @device: A #FuDevice
+ *
+ * Gets any parent device GUIDs. If a device is added to the daemon that matches
+ * any GUIDs added from fu_device_add_parent_guid() then this device is marked the parent of @device.
+ *
+ * Returns: (transfer none) (element-type utf8): a list of GUIDs
+ *
+ * Since: 1.0.8
+ **/
+GPtrArray *
+fu_device_get_parent_guids (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->parent_guids;
+}
+
+/**
+ * fu_device_has_parent_guid:
+ * @device: A #FuDevice
+ * @guid: a GUID
+ *
+ * Searches the list of parent GUIDs for a string match.
+ *
+ * Returns: %TRUE if the parent GUID exists
+ *
+ * Since: 1.0.8
+ **/
+gboolean
+fu_device_has_parent_guid (FuDevice *device, const gchar *guid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	for (guint i = 0; i < priv->parent_guids->len; i++) {
+		const gchar *guid_tmp = g_ptr_array_index (priv->parent_guids, i);
+		if (g_strcmp0 (guid_tmp, guid) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fu_device_add_parent_guid:
+ * @device: A #FuDevice
+ * @guid: a GUID
+ *
+ * Sets any parent device using a GUID. An parent device is logically linked to
+ * the primary device in some way and can be added before or after @device.
+ *
+ * The GUIDs are searched in order, and so the order of adding GUIDs may be
+ * important if more than one parent device might match.
+ *
+ * Since: 1.0.8
+ **/
+void
+fu_device_add_parent_guid (FuDevice *device, const gchar *guid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_return_if_fail (guid != NULL);
+
+	/* make valid */
+	if (!as_utils_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+		if (fu_device_has_parent_guid (device, tmp))
+			return;
+		g_debug ("using %s for %s", tmp, guid);
+		g_ptr_array_add (priv->parent_guids, g_steal_pointer (&tmp));
+		return;
+	}
+
+	/* already valid */
+	if (fu_device_has_parent_guid (device, guid))
+		return;
+	g_ptr_array_add (priv->parent_guids, g_strdup (guid));
 }
 
 /**
@@ -782,6 +950,8 @@ fu_device_init (FuDevice *device)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (device);
 	priv->status = FWUPD_STATUS_IDLE;
+	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
 						g_free, g_free);
 }
@@ -794,9 +964,13 @@ fu_device_finalize (GObject *object)
 
 	if (priv->alternate != NULL)
 		g_object_unref (priv->alternate);
+	if (priv->parent != NULL)
+		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
 	if (priv->quirks != NULL)
 		g_object_unref (priv->quirks);
 	g_hash_table_unref (priv->metadata);
+	g_ptr_array_unref (priv->children);
+	g_ptr_array_unref (priv->parent_guids);
 	g_free (priv->equivalent_id);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);

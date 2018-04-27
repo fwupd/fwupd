@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -109,6 +109,12 @@ void		 fu_device_add_guid			(FuDevice	*device,
 FuDevice	*fu_device_get_alternate		(FuDevice	*device);
 void		 fu_device_set_alternate		(FuDevice	*device,
 							 FuDevice	*alternate);
+FuDevice	*fu_device_get_parent			(FuDevice	*device);
+GPtrArray	*fu_device_get_children			(FuDevice	*device);
+void		 fu_device_add_child			(FuDevice	*device,
+							 FuDevice	*child);
+void		 fu_device_add_parent_guid		(FuDevice	*device,
+							 const gchar	*guid);
 const gchar	*fu_device_get_metadata			(FuDevice	*device,
 							 const gchar	*key);
 gboolean	 fu_device_get_metadata_boolean		(FuDevice	*device,
