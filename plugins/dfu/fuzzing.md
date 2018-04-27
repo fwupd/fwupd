@@ -17,3 +17,7 @@ Generating
     echo -n helloworldhelloworldhelloworldhelloworld > grow-two-chunks.old
     echo -n XelloXorldhelloworldhelloworldhelloworlXXX > grow-two-chunks.new
     ./plugins/dfu/dfu-tool patch-create grow-two-chunks.old grow-two-chunks.new fuzzing-patch-dump/grow-two-chunks.bdiff
+
+    echo "1" -n > test.bin
+    srec_cat test.bin -binary -o fuzzing/test2.srec -address-length=4 -header=a
+    srec_cat test.bin -binary -o fuzzing/test1.srec -header=b
