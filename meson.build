@@ -1,7 +1,7 @@
 project('fwupd', 'c',
   version : '1.1.0',
   license : 'LGPL-2.1+',
-  meson_version : '>=0.43.0',
+  meson_version : '>=0.46.0',
   default_options : ['warning_level=2', 'c_std=c99'],
 )
 
@@ -113,7 +113,7 @@ test_link_args = [
   '-Wl,-z,now',
 ]
 foreach arg: test_link_args
-  if cc.has_argument(arg)
+  if cc.has_link_argument(arg)
     global_link_args += arg
   endif
 endforeach
