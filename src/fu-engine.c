@@ -1017,16 +1017,24 @@ fu_engine_check_requirement_id (FuEngine *self, AsRequire *req, GError **error)
 static gboolean
 fu_engine_check_requirement_hardware (FuEngine *self, AsRequire *req, GError **error)
 {
-	if (!fu_hwids_has_guid (self->hwids, as_require_get_value (req))) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "no HWIDs matched %s",
-			     as_require_get_value (req));
-		return FALSE;
+	g_auto(GStrv) hwid_split = NULL;
+
+	/* split and treat as OR */
+	hwid_split = g_strsplit (as_require_get_value (req), "|", -1);
+	for (guint i = 0; hwid_split[i] != NULL; i++) {
+		if (fu_hwids_has_guid (self->hwids, hwid_split[i])) {
+			g_debug ("HWID provided %s", hwid_split[i]);
+			return TRUE;
+		}
 	}
-	g_debug ("HWID provided %s", as_require_get_value (req));
-	return TRUE;
+
+	/* nothing matched */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_INVALID_FILE,
+		     "no HWIDs matched %s",
+		     as_require_get_value (req));
+	return FALSE;
 }
 
 static gboolean
