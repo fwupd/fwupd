@@ -14,6 +14,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  LIBFWUPD_1.0.0@LIBFWUPD_1.0.0 1.0.0
  LIBFWUPD_1.0.3@LIBFWUPD_1.0.3 1.0.3
  LIBFWUPD_1.0.4@LIBFWUPD_1.0.4 1.0.4
+ LIBFWUPD_1.0.7@LIBFWUPD_1.0.7 1.0.7
  fwupd_build_history_report_json@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_machine_id@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_user_agent@LIBFWUPD_1.0.3 1.0.3
@@ -101,6 +102,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_error_from_string@LIBFWUPD_0.7.0 1.0.0
  fwupd_error_quark@LIBFWUPD_0.1.1 1.0.0
  fwupd_error_to_string@LIBFWUPD_0.7.0 1.0.0
+ fwupd_get_os_release@LIBFWUPD_1.0.7 1.0.7
  fwupd_keyring_kind_from_string@LIBFWUPD_0.9.7 1.0.0
  fwupd_keyring_kind_to_string@LIBFWUPD_0.9.7 1.0.0
  fwupd_release_add_checksum@LIBFWUPD_0.9.3 1.0.0
@@ -143,6 +145,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_remote_build_firmware_uri@LIBFWUPD_0.9.7 1.0.0
  fwupd_remote_from_variant@LIBFWUPD_1.0.0 1.0.0
  fwupd_remote_get_age@LIBFWUPD_0.9.5 1.0.0
+ fwupd_remote_get_agreement@LIBFWUPD_1.0.7 1.0.7
  fwupd_remote_get_checksum@LIBFWUPD_1.0.0 1.0.0
  fwupd_remote_get_enabled@LIBFWUPD_0.9.3 1.0.0
  fwupd_remote_get_filename_cache@LIBFWUPD_0.9.6 1.0.0
@@ -166,6 +169,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_remote_kind_to_string@LIBFWUPD_0.9.6 1.0.0
  fwupd_remote_load_from_filename@LIBFWUPD_0.9.3 1.0.0
  fwupd_remote_new@LIBFWUPD_0.9.3 1.0.0
+ fwupd_remote_set_agreement@LIBFWUPD_1.0.7 1.0.7
  fwupd_remote_set_mtime@LIBFWUPD_0.9.5 1.0.0
  fwupd_remote_set_priority@LIBFWUPD_0.9.5 1.0.0
  fwupd_remote_to_variant@LIBFWUPD_1.0.0 1.0.0
