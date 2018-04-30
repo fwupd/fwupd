@@ -1729,6 +1729,7 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* open files */
 	for (guint i = 0; values[i] != NULL; i++) {
+		g_autofree gchar *tmp = NULL;
 		g_autoptr(DfuFirmware) firmware = NULL;
 		g_autoptr(GFile) file = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -1742,7 +1743,8 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 				 error_local->message);
 			continue;
 		}
-		g_print ("%s\n", dfu_firmware_to_string (firmware));
+		tmp = dfu_firmware_to_string (firmware);
+		g_print ("%s\n", tmp);
 	}
 	return TRUE;
 }
