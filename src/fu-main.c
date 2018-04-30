@@ -404,12 +404,12 @@ fu_main_authorize_install_cb (GObject *source, GAsyncResult *res, gpointer user_
 	}
 
 	/* authenticated */
-	if (!fu_engine_install (helper->priv->engine,
-				helper->device_id,
-				helper->store,
-				helper->blob_cab,
-				helper->flags,
-				&error)) {
+	if (!fu_engine_install_store (helper->priv->engine,
+				      helper->device_id,
+				      helper->store,
+				      helper->blob_cab,
+				      helper->flags,
+				      &error)) {
 		g_dbus_method_invocation_return_gerror (helper->invocation, error);
 		return;
 	}
@@ -807,11 +807,11 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* authenticate */
-		action_id = fu_engine_get_action_id_for_device (priv->engine,
-								helper->device_id,
-								helper->store,
-								helper->flags,
-								&error);
+		action_id = fu_engine_get_action_id_for_store (priv->engine,
+							       helper->device_id,
+							       helper->store,
+							       helper->flags,
+							       &error);
 		if (action_id == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
