@@ -1,5 +1,5 @@
 %global glib2_version 2.45.8
-%global libappstream_version 0.6.13
+%global libappstream_version 0.7.4
 %global libgusb_version 0.2.11
 %global libsoup_version 2.51.92
 %global colord_version 1.2.12
@@ -187,7 +187,9 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %doc README.md AUTHORS NEWS
 %license COPYING
 %config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
+%if 0%{?have_uefi}
 %config(noreplace)%{_sysconfdir}/fwupd/uefi.conf
+%endif
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %{_bindir}/dfu-tool
