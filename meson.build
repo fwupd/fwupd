@@ -1,7 +1,7 @@
 project('fwupd', 'c',
-  version : '1.0.6',
+  version : '1.0.7',
   license : 'LGPL-2.1+',
-  meson_version : '>=0.37.0',
+  meson_version : '>=0.41.0',
   default_options : ['warning_level=2', 'c_std=c99'],
 )
 
@@ -76,7 +76,9 @@ test_args = [
   '-Wmissing-parameter-type',
   '-Wmissing-prototypes',
   '-Wnested-externs',
+  '-Wno-cast-function-type',
   '-Wno-error=cpp',
+  '-Wno-unknown-pragmas',
   '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
   '-Wno-strict-aliasing',
@@ -130,6 +132,9 @@ add_project_arguments('-D_DEFAULT_SOURCE', language : 'c')
 # do not use deprecated symbols or defines internally
 add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
 
+# needed for some things on CentOS
+add_project_arguments('-D_GNU_SOURCE', language : 'c')
+
 gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
@@ -141,19 +146,15 @@ gudev = dependency('gudev-1.0')
 if gudev.version().version_compare('>= 232')
   conf.set('HAVE_GUDEV_232', '1')
 endif
-appstream_glib = dependency('appstream-glib', version : '>= 0.6.13')
+appstream_glib = dependency('appstream-glib', version : '>= 0.7.4')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
-if meson.version().version_compare('>0.41.0')
-  valgrind = dependency('valgrind', required: false)
-else
-  valgrind = dependency('valgrindXXX', required: false)
-endif
+valgrind = dependency('valgrind', required: false)
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 if get_option('pkcs7')
-  gnutls = dependency('gnutls')
+  gnutls = dependency('gnutls', version : '>= 3.4.4.1')
   conf.set('ENABLE_PKCS7', '1')
 endif
 if get_option('gpg')
@@ -196,13 +197,12 @@ if get_option('plugin_altos')
 endif
 
 if get_option('plugin_uefi')
-  fwup = dependency('fwup', version : '>= 5')
+  fwup = dependency('fwup', version : '>= 10')
   if fwup.version().version_compare('>= 11')
     conf.set('HAVE_FWUP_GET_ESP_MOUNTPOINT', '1')
   endif
-  if fwup.version().version_compare('>= 10')
-    conf.set('HAVE_FWUP_GET_BGRT_INFO', '1')
-    conf.set('HAVE_FWUP_CUSTOM_ESP', '1')
+  if fwup.version().version_compare('>= 12')
+    conf.set('HAVE_FWUP_VERSION', '1')
   endif
   efivar = dependency('efivar')
   conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
@@ -295,24 +295,6 @@ subdir('policy')
 subdir('src')
 subdir('plugins')
 subdir('contrib')
-
-if meson.version().version_compare('<0.41.0')
-  if archiver.found()
-    run_target('dist',
-      # git config tar.tar.xz.command "xz -c"
-      command: [
-        'git', 'archive',
-        '--prefix=' + meson.project_name() + '-' + meson.project_version() + '/',
-        'HEAD',
-        '--format=tar.xz',
-        '--output',
-        meson.project_name() + '-' + meson.project_version() + '.tar.xz'
-      ]
-    )
-  else
-    message('git not found, you will not be able to run `ninja dist`')
-  endif
-endif
 
 if get_option('systemd')
   meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)

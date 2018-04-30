@@ -53,6 +53,120 @@
 #endif
 
 static void
+fu_engine_requirements_missing_func (void)
+{
+	gboolean ret;
+	g_autoptr(AsApp) app = as_app_new ();
+	g_autoptr(AsRequire) req = as_require_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* set up a dummy version */
+	fu_engine_add_runtime_version (engine, "org.test.dummy", "1.2.3");
+
+	/* make the component require one thing */
+	as_require_set_kind (req, AS_REQUIRE_KIND_ID);
+	as_require_set_compare (req, AS_REQUIRE_COMPARE_GE);
+	as_require_set_version (req, "1.2.3");
+	as_require_set_value (req, "not.going.to.exist");
+	as_app_add_require (app, req);
+
+	/* check this fails */
+	ret = fu_engine_check_requirements (engine, app, NULL, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert (!ret);
+}
+
+static void
+fu_engine_requirements_unsupported_func (void)
+{
+	gboolean ret;
+	g_autoptr(AsApp) app = as_app_new ();
+	g_autoptr(AsRequire) req = as_require_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* set up a dummy version */
+	fu_engine_add_runtime_version (engine, "org.test.dummy", "1.2.3");
+
+	/* make the component require one thing that we don't support */
+	as_require_set_kind (req, AS_REQUIRE_KIND_LAST);
+	as_require_set_compare (req, AS_REQUIRE_COMPARE_GE);
+	as_require_set_version (req, "2.6.0");
+	as_app_add_require (app, req);
+
+	/* check this fails */
+	ret = fu_engine_check_requirements (engine, app, NULL, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert (!ret);
+}
+
+static void
+fu_engine_requirements_func (void)
+{
+	gboolean ret;
+	g_autoptr(AsApp) app = as_app_new ();
+	g_autoptr(AsRequire) req = as_require_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* set up some dummy versions */
+	fu_engine_add_runtime_version (engine, "org.test.dummy", "1.2.3");
+	fu_engine_add_runtime_version (engine, "com.hughski.colorhug", "7.8.9");
+
+	/* make the component require one thing */
+	as_require_set_kind (req, AS_REQUIRE_KIND_ID);
+	as_require_set_compare (req, AS_REQUIRE_COMPARE_GE);
+	as_require_set_version (req, "1.2.3");
+	as_require_set_value (req, "org.test.dummy");
+	as_app_add_require (app, req);
+
+	/* check this passes */
+	ret = fu_engine_check_requirements (engine, app, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+}
+
+static void
+fu_engine_requirements_device_func (void)
+{
+	gboolean ret;
+	g_autoptr(AsApp) app = as_app_new ();
+	g_autoptr(AsRequire) req1 = as_require_new ();
+	g_autoptr(AsRequire) req2 = as_require_new ();
+	g_autoptr(AsRequire) req3 = as_require_new ();
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* set up a dummy device */
+	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version_bootloader (device, "4.5.6");
+	fu_device_set_vendor_id (device, "FFFF");
+
+	/* make the component require three things */
+	as_require_set_kind (req1, AS_REQUIRE_KIND_FIRMWARE);
+	as_require_set_compare (req1, AS_REQUIRE_COMPARE_GE);
+	as_require_set_version (req1, "1.2.3");
+	as_app_add_require (app, req1);
+	as_require_set_kind (req2, AS_REQUIRE_KIND_FIRMWARE);
+	as_require_set_compare (req2, AS_REQUIRE_COMPARE_EQ);
+	as_require_set_version (req2, "4.5.6");
+	as_require_set_value (req2, "bootloader");
+	as_app_add_require (app, req3);
+	as_require_set_kind (req3, AS_REQUIRE_KIND_FIRMWARE);
+	as_require_set_compare (req3, AS_REQUIRE_COMPARE_EQ);
+	as_require_set_version (req3, "FFFF");
+	as_require_set_value (req3, "vendor-id");
+	as_app_add_require (app, req3);
+
+	/* check this passes */
+	ret = fu_engine_check_requirements (engine, app, device, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+}
+
+static void
 fu_engine_partial_hash_func (void)
 {
 	gboolean ret;
@@ -121,11 +235,6 @@ fu_engine_require_hwid_func (void)
 	g_autoptr(FuEngine) engine = fu_engine_new ();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
-
-#if !AS_CHECK_VERSION(0,7,4)
-	g_test_skip ("HWID requirements only supported with appstream-glib 0.7.4");
-	return;
-#endif
 
 #if !defined(HAVE_GCAB_0_8) && defined(__s390x__)
 	/* See https://github.com/hughsie/fwupd/issues/318 for more information */
@@ -2009,6 +2118,10 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
 	g_test_add_func ("/fwupd/engine{partial-hash}", fu_engine_partial_hash_func);
 	g_test_add_func ("/fwupd/engine{downgrade}", fu_engine_downgrade_func);
+	g_test_add_func ("/fwupd/engine{requirements-success}", fu_engine_requirements_func);
+	g_test_add_func ("/fwupd/engine{requirements-missing}", fu_engine_requirements_missing_func);
+	g_test_add_func ("/fwupd/engine{requirements-unsupported}", fu_engine_requirements_unsupported_func);
+	g_test_add_func ("/fwupd/engine{requirements-device}", fu_engine_requirements_device_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);

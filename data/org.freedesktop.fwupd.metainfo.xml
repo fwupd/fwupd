@@ -23,7 +23,7 @@
   <url type="bugtracker">https://github.com/hughsie/fwupd/issues</url>
   <url type="donation"/>
   <url type="help"/>
-  <url type="homepage">http://www.fwupd.org/</url>
+  <url type="homepage">https://fwupd.org/</url>
   <url type="translate">https://www.transifex.com/freedesktop/fwupd/</url>
   <update_contact>richard_at_hughsie.com</update_contact>
   <translation type="gettext">fwupd</translation>

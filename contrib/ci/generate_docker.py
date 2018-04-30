@@ -87,6 +87,8 @@ with open(out.name, 'w') as wfd:
         elif line == "%%%INSTALL_DEPENDENCIES_COMMAND%%%\n":
             if OS == "fedora":
                 wfd.write("RUN dnf --enablerepo=updates-testing -y install \\\n")
+            elif OS == "centos":
+                wfd.write("RUN yum -y install \\\n")
             elif OS == "debian" or OS == "ubuntu":
                 wfd.write("RUN apt update -qq && \\\n")
                 wfd.write("\tapt install -yq --no-install-recommends\\\n")
@@ -108,4 +110,10 @@ with open(out.name, 'w') as wfd:
         else:
             wfd.write(line)
     wfd.flush()
-    subprocess.check_call(["docker", "build", "-t", "fwupd-%s" % TARGET, "-f", "./%s" % os.path.basename(out.name), "."])
+    args = ["docker", "build", "-t", "fwupd-%s" % TARGET]
+    if 'http_proxy' in os.environ:
+        args += ['--build-arg=http_proxy=%s' % os.environ['http_proxy']]
+    if 'https_proxy' in os.environ:
+        args += ['--build-arg=https_proxy=%s' % os.environ['https_proxy']]
+    args += [ "-f", "./%s" % os.path.basename(out.name), "."]
+    subprocess.check_call(args)

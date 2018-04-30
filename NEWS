@@ -1,3 +1,26 @@
+Version 1.0.7
+~~~~~~~~~~~~~
+Released: 2018-04-30
+
+New Features:
+ - Add enable-remote and disable-remote commands to fwupdmgr (Richard Hughes)
+ - Add fu_plugin_add_compile_version() for libraries to use (Richard Hughes)
+ - Allow requiring specific versions of libraries for firmware updates (Richard Hughes)
+ - If no remotes are enabled try to enable the LVFS (Mario Limonciello)
+ - Show a warning with interactive prompt when enabling a remote (Richard Hughes)
+
+Bugfixes:
+ - Check that EFI system partition is mounted before update (Mario Limonciello)
+ - Disable synapticsmst remote control on failure (Sjoerd Simons)
+ - Don't recoldplug thunderbolt to fix a flashing failure (Mario Limonciello)
+ - Fix SQL error when running 'fwupdmgr clear-offline' (Richard Hughes)
+ - Improve the update report message (Mario Limonciello)
+ - Only enumerate Dell Docks if the type is known (Sjoerd Simons)
+ - Only run certtool if a new enough gnutls is present (Mario Limonciello)
+ - Prevent a client crash if the daemon somehow sends invalid data (Richard Hughes)
+ - Reboot after scheduling using logind not systemd (Richard Hughes)
+ - Use the right encoding for the label in make-images (Niels Ole Salscheider)
+
 Version 1.0.6
 ~~~~~~~~~~~~~
 Released: 2018-03-12

@@ -23,6 +23,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <errno.h>
 #include <glib-object.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -174,9 +175,9 @@ synapticsmst_device_enable_remote_control (SynapticsMSTDevice *device, GError **
 		if (priv->fd == -1) {
 			g_set_error (error,
 				     G_IO_ERROR,
-				     G_IO_ERROR_PERMISSION_DENIED,
-				     "cannot open device %s",
-				     filename);
+				     g_io_error_from_errno (errno),
+				     "cannot open device %s: %s",
+				     filename, g_strerror (errno));
 			return FALSE;
 		}
 		return TRUE;
@@ -374,13 +375,13 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
 				     "Failed to read dpcd from device");
-		return FALSE;
+		goto error_disable_remote;
 	}
 	priv->version = g_strdup_printf ("%1d.%02d.%03d", byte[0], byte[1], byte[2]);
 
 	/* read board ID */
 	if (!synapticsmst_device_read_board_id (device, connection, byte, error))
-		return FALSE;
+		goto error_disable_remote;
 	priv->board_id = (byte[0] << 8) | (byte[1]);
 
 	/* read board chip_id */
@@ -392,7 +393,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
 				     "Failed to read dpcd from device");
-		return FALSE;
+		goto error_disable_remote;
 	}
 	priv->chip_id = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
 
@@ -403,6 +404,13 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		if (priv->test_mode)
 			system = g_strdup_printf ("test-%s", priv->chip_id);
 		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE) {
+			if (dock_type == NULL) {
+				g_set_error_literal (error,
+						     G_IO_ERROR,
+						     G_IO_ERROR_INVALID_DATA,
+						     "Unknown Dell dock type");
+				goto error_disable_remote;
+			}
 			system = g_strdup_printf ("%s-%s", dock_type, priv->chip_id);
 			system = g_ascii_strdown (system, -1);
 		}
@@ -435,6 +443,10 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		return FALSE;
 
 	return TRUE;
+
+error_disable_remote:
+	synapticsmst_device_disable_remote_control (device, NULL);
+	return FALSE;
 }
 
 const gchar *
@@ -775,9 +787,9 @@ synapticsmst_device_open (SynapticsMSTDevice *device, GError **error)
 	if (priv->fd == -1) {
 		g_set_error (error,
 			     G_IO_ERROR,
-			     G_IO_ERROR_PERMISSION_DENIED,
-			     "cannot open device %s",
-			     filename);
+			     g_io_error_from_errno (errno),
+			     "cannot open device %s: %s",
+			     filename, g_strerror (errno));
 		return FALSE;
 	}
 

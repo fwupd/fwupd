@@ -21,11 +21,14 @@
 
 #include "config.h"
 
+#include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
+#include <glib/gi18n.h>
 
 #include "fu-config.h"
 
+#include "fwupd-common.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 
@@ -40,6 +43,8 @@ struct _FuConfig
 	GPtrArray		*blacklist_devices;
 	GPtrArray		*blacklist_plugins;
 	guint64			 archive_size_max;
+	AsStore			*store_remotes;
+	GHashTable		*os_release;
 };
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
@@ -120,6 +125,98 @@ fu_config_add_inotify (FuConfig *self, const gchar *filename, GError **error)
 	return TRUE;
 }
 
+static GString *
+fu_config_get_remote_agreement_default (FwupdRemote *self, GError **error)
+{
+	GString *str = g_string_new (NULL);
+
+	/* this is designed as a fallback; the actual warning should ideally
+	 * come from the LVFS instance that is serving the remote */
+	g_string_append_printf (str, "%s\n",
+				/* TRANSLATORS: show the user a warning */
+				_("Your distributor may not have verified any of "
+				  "the firmware updates for compatibility with your "
+				  "system or connected devices."));
+	g_string_append_printf (str, "%s\n",
+				/* TRANSLATORS: show the user a warning */
+				_("Enabling this remote is done at your own risk."));
+	return str;
+}
+
+static GString *
+fu_config_get_remote_agreement_for_app (FwupdRemote *self, AsApp *app, GError **error)
+{
+#if AS_CHECK_VERSION(0,7,8)
+	const gchar *tmp = NULL;
+	AsAgreement *agreement;
+	AsAgreementSection *section;
+
+	/* get the default agreement section */
+	agreement = as_app_get_agreement_default (app);
+	if (agreement == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No agreement found");
+		return NULL;
+	}
+	section = as_agreement_get_section_default (agreement);
+	if (section == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No default section for agreement found");
+		return NULL;
+	}
+	tmp = as_agreement_section_get_description (section, NULL);
+	if (tmp == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No description found in agreement section");
+		return NULL;
+	}
+	return g_string_new (tmp);
+#else
+	AsFormat *format;
+	GNode *n;
+	g_autoptr(AsNode) root = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* parse the XML file */
+	format = as_app_get_format_default (app);
+	if (format == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No format for Metainfo file");
+		return NULL;
+	}
+	file = g_file_new_for_path (as_format_get_filename (format));
+	root = as_node_from_file (file, AS_NODE_FROM_XML_FLAG_NONE, NULL, error);
+	if (root == NULL)
+		return NULL;
+
+	/* manually find the first agreement section */
+	n = as_node_find (root, "component/agreement/agreement_section/description");
+	if (n == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No agreement description found");
+		return NULL;
+	}
+	return as_node_to_xml (n->children, AS_NODE_TO_XML_FLAG_INCLUDE_SIBLINGS);
+#endif
+}
+
+static gchar *
+fu_config_build_remote_component_id (FwupdRemote *remote)
+{
+	return g_strdup_printf ("org.freedesktop.fwupd.remotes.%s",
+				fwupd_remote_get_id (remote));
+}
+
 static gboolean
 fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **error)
 {
@@ -158,6 +255,27 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 			return FALSE;
 		if (!fu_config_add_inotify (self, fwupd_remote_get_filename_cache (remote), error))
 			return FALSE;
+
+		/* try to find a custom agreement, falling back to a generic warning */
+		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
+			g_autoptr(GString) agreement_markup = NULL;
+			g_autofree gchar *component_id = fu_config_build_remote_component_id (remote);
+			AsApp *app = as_store_get_app_by_id (self->store_remotes, component_id);
+			if (app != NULL) {
+				agreement_markup = fu_config_get_remote_agreement_for_app (remote, app, error);
+			} else {
+				agreement_markup = fu_config_get_remote_agreement_default (remote, error);
+			}
+			if (agreement_markup == NULL)
+				return FALSE;
+
+			/* replace any dynamic values from os-release */
+			as_utils_string_replace (agreement_markup, "$OS_RELEASE:NAME$",
+						 g_hash_table_lookup (self->os_release, "NAME"));
+			as_utils_string_replace (agreement_markup, "$OS_RELEASE:BUG_REPORT_URL$",
+						 g_hash_table_lookup (self->os_release, "BUG_REPORT_URL"));
+			fwupd_remote_set_agreement (remote, agreement_markup->str);
+		}
 
 		/* set mtime */
 		fwupd_remote_set_mtime (remote, fu_config_get_remote_mtime (self, remote));
@@ -345,6 +463,14 @@ fu_config_load (FuConfig *self, GError **error)
 	if (archive_size_max > 0)
 		self->archive_size_max = archive_size_max *= 0x100000;
 
+	/* load AppStream about the remotes */
+	self->os_release = fwupd_get_os_release (error);
+	if (self->os_release == NULL)
+		return FALSE;
+	as_store_add_filter (self->store_remotes, AS_APP_KIND_SOURCE);
+	if (!as_store_load (self->store_remotes, AS_STORE_LOAD_FLAG_APPDATA, NULL, error))
+		return FALSE;
+
 	/* load remotes */
 	if (!fu_config_load_remotes (self, error))
 		return FALSE;
@@ -404,6 +530,7 @@ fu_config_init (FuConfig *self)
 	self->blacklist_plugins = g_ptr_array_new_with_free_func (g_free);
 	self->remotes = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	self->monitors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	self->store_remotes = as_store_new ();
 }
 
 static void
@@ -411,11 +538,14 @@ fu_config_finalize (GObject *obj)
 {
 	FuConfig *self = FU_CONFIG (obj);
 
+	if (self->os_release != NULL)
+		g_hash_table_unref (self->os_release);
 	g_key_file_unref (self->keyfile);
 	g_ptr_array_unref (self->blacklist_devices);
 	g_ptr_array_unref (self->blacklist_plugins);
 	g_ptr_array_unref (self->remotes);
 	g_ptr_array_unref (self->monitors);
+	g_object_unref (self->store_remotes);
 
 	G_OBJECT_CLASS (fu_config_parent_class)->finalize (obj);
 }

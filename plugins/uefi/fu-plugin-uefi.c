@@ -53,11 +53,18 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+#ifdef HAVE_FWUP_VERSION
+	g_autofree gchar *version_str = NULL;
+#endif
 	data->ux_capsule = FALSE;
 	data->esp_path = NULL;
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
-	fu_plugin_add_report_metadata (plugin, "FwupdateVersion", LIBFWUP_LIBRARY_VERSION);
-	fu_plugin_add_report_metadata (plugin, "EfivarVersion", EFIVAR_LIBRARY_VERSION);
+	fu_plugin_add_compile_version (plugin, "com.redhat.fwupdate", LIBFWUP_LIBRARY_VERSION);
+	fu_plugin_add_compile_version (plugin, "com.redhat.efivar", EFIVAR_LIBRARY_VERSION);
+#ifdef HAVE_FWUP_VERSION
+	version_str = g_strdup_printf ("%i", fwup_version ());
+	fu_plugin_add_runtime_version (plugin, "com.redhat.fwupdate", version_str);
+#endif
 }
 
 void
@@ -120,7 +127,10 @@ _fwup_resource_iter_free (fwup_resource_iter *iter)
 	fwup_resource_iter_destroy (&iter);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
+#pragma clang diagnostic pop
 
 gboolean
 fu_plugin_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
@@ -303,12 +313,9 @@ fu_plugin_uefi_update_splash (GError **error)
 	fwup_resource *re = NULL;
 	guint best_idx = G_MAXUINT;
 	guint32 lowest_border_pixels = G_MAXUINT;
-#ifdef HAVE_FWUP_GET_BGRT_INFO
 	int rc;
-#endif
 	guint32 screen_height = 768;
 	guint32 screen_width = 1024;
-	g_autoptr(fwup_resource_iter) iter = NULL;
 	g_autoptr(GBytes) image_bmp = NULL;
 
 	struct {
@@ -327,7 +334,6 @@ fu_plugin_uefi_update_splash (GError **error)
 	};
 
 	/* get the boot graphics resource table data */
-#ifdef HAVE_FWUP_GET_BGRT_INFO
 	rc = fwup_get_ux_capsule_info (&screen_width, &screen_height);
 	if (rc < 0) {
 		g_set_error_literal (error,
@@ -338,7 +344,6 @@ fu_plugin_uefi_update_splash (GError **error)
 	}
 	g_debug ("BGRT screen size %" G_GUINT32_FORMAT " x%" G_GUINT32_FORMAT,
 		 screen_width, screen_height);
-#endif
 
 	/* find the 'best sized' pre-generated image */
 	for (guint i = 0; sizes[i].width != 0; i++) {
@@ -377,6 +382,30 @@ fu_plugin_uefi_update_splash (GError **error)
 	return fu_plugin_uefi_update_resource (re, 0, image_bmp, error);
 }
 
+static gboolean
+fu_plugin_uefi_esp_mounted (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autofree gchar *contents = NULL;
+	g_auto(GStrv) lines = NULL;
+	gsize length;
+
+	if (!g_file_get_contents ("/proc/mounts", &contents, &length, error))
+		return FALSE;
+	lines = g_strsplit (contents, "\n", 0);
+
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (lines[i] != NULL && g_strrstr (lines[i], data->esp_path))
+			return TRUE;
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "EFI System partition %s is not mounted",
+		     data->esp_path);
+	return FALSE;
+}
+
 gboolean
 fu_plugin_update (FuPlugin *plugin,
 		  FuDevice *device,
@@ -402,6 +431,10 @@ fu_plugin_update (FuPlugin *plugin,
 	/* TRANSLATORS: this is shown when updating the firmware after the reboot */
 	str = _("Installing firmware update…");
 	g_assert (str != NULL);
+
+	/* make sure that the ESP is mounted */
+	if (!fu_plugin_uefi_esp_mounted (plugin, error))
+		return FALSE;
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
@@ -621,9 +654,7 @@ fu_plugin_uefi_set_custom_mountpoint (FuPlugin *plugin, GError **error)
 
 			return FALSE;
 		}
-#ifdef HAVE_FWUP_CUSTOM_ESP
 		fwup_set_esp_mountpoint (data->esp_path);
-#endif
 	}
 	return TRUE;
 }

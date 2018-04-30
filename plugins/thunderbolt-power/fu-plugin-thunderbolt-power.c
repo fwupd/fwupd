@@ -32,7 +32,10 @@
 #include "fu-device-metadata.h"
 
 #ifndef HAVE_GUDEV_232
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
+#pragma clang diagnostic pop
 #endif
 
 /* empirically measured amount of time for the TBT device to come and go */
@@ -193,8 +196,10 @@ void
 fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	if (data->timeout_id != 0)
+	if (data->timeout_id != 0) {
 		g_source_remove (data->timeout_id);
+		data->timeout_id = 0;
+	}
 	g_object_unref (data->udev);
 	g_free (data->force_path);
 }
@@ -228,6 +233,12 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 	/* only run for thunderbolt plugin */
 	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") != 0)
 		return TRUE;
+
+	/* reset any timers that might still be running from coldplug */
+	if (data->timeout_id != 0) {
+		g_source_remove (data->timeout_id);
+		data->timeout_id = 0;
+	}
 
 	devpath = fu_device_get_metadata (device, "sysfs-path");
 
@@ -309,12 +320,6 @@ fu_plugin_thunderbolt_power_coldplug (FuPlugin *plugin, GError **error)
 
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
-{
-	return fu_plugin_thunderbolt_power_coldplug (plugin, error);
-}
-
-gboolean
-fu_plugin_recoldplug (FuPlugin *plugin, GError **error)
 {
 	return fu_plugin_thunderbolt_power_coldplug (plugin, error);
 }

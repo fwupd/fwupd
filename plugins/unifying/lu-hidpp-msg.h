@@ -49,7 +49,10 @@ typedef struct __attribute__((packed)) {
 /* this is specific to fwupd */
 #define LU_HIDPP_MSG_SW_ID		0x07
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(LuHidppMsg, g_free);
+#pragma clang diagnostic pop
 
 LuHidppMsg	*lu_hidpp_msg_new			(void);
 void		 lu_hidpp_msg_copy			(LuHidppMsg	*msg_dst,

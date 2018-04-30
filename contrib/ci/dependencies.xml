@@ -6,6 +6,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="adobe-source-han-sans-cn-fonts">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -19,6 +22,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="ca-certificates">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -41,6 +47,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libcairo-dev">
+    <distro id="centos">
+      <package>cairo-devel</package>
+    </distro>
     <distro id="fedora">
       <package>cairo-devel</package>
     </distro>
@@ -56,6 +65,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libcairo-gobject2">
+    <distro id="centos">
+      <package>cairo-gobject-devel</package>
+    </distro>
     <distro id="fedora">
       <package>cairo-gobject-devel</package>
     </distro>
@@ -73,6 +85,9 @@
   <dependency type="build" id="libjson-glib-dev">
     <distro id="arch">
       <package>json-glib</package>
+    </distro>
+    <distro id="centos">
+      <package>json-glib-devel</package>
     </distro>
     <distro id="fedora">
       <package>json-glib-devel</package>
@@ -96,6 +111,9 @@
     <distro id="arch">
       <package>colord</package>
     </distro>
+    <distro id="centos">
+      <package>colord-devel</package>
+    </distro>
     <distro id="fedora">
       <package>colord-devel</package>
     </distro>
@@ -117,6 +135,9 @@
   <dependency type="build" id="fonts-dejavu">
     <distro id="arch">
       <package>ttf-dejavu</package>
+    </distro>
+    <distro id="centos">
+      <package>dejavu-sans-fonts</package>
     </distro>
     <distro id="fedora">
       <package>dejavu-sans-fonts</package>
@@ -156,6 +177,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="dbus-x11">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -168,6 +192,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="dconf">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -184,6 +211,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libelf-dev">
+    <distro id="centos">
+      <package>elfutils-libelf-devel</package>
+    </distro>
     <distro id="fedora">
       <package>elfutils-libelf-devel</package>
     </distro>
@@ -208,6 +238,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libfreetype6-dev">
+    <distro id="centos">
+      <package>freetype</package>
+    </distro>
     <distro id="fedora">
       <package>freetype</package>
     </distro>
@@ -223,6 +256,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="fontconfig">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -239,6 +275,9 @@
   <dependency type="build" id="libfwup-dev">
     <distro id="arch">
       <package>fwupdate</package>
+    </distro>
+    <distro id="centos">
+      <package>fwupdate-devel</package>
     </distro>
     <distro id="fedora">
       <package>fwupdate-devel</package>
@@ -265,6 +304,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="gcab">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -280,6 +322,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="gettext">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -299,6 +344,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="gnupg2">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -316,6 +364,9 @@
     <distro id="arch">
       <package />
     </distro>
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -329,6 +380,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libglib2.0-dev">
+    <distro id="centos">
+      <package>glib2-devel</package>
+    </distro>
     <distro id="fedora">
       <package>glib2-devel</package>
     </distro>
@@ -351,6 +405,9 @@
     <distro id="arch">
       <package />
     </distro>
+    <distro id="centos">
+      <package>gobject-introspection-devel</package>
+    </distro>
     <distro id="fedora">
       <package>gobject-introspection-devel</package>
     </distro>
@@ -365,6 +422,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libgpgme11-dev">
+    <distro id="centos">
+      <package>gpgme-devel</package>
+    </distro>
     <distro id="fedora">
       <package>gpgme-devel</package>
     </distro>
@@ -392,6 +452,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="gnutls-dev">
+    <distro id="centos">
+      <package>gnutls-devel</package>
+    </distro>
     <distro id="fedora">
       <package>gnutls-devel</package>
     </distro>
@@ -407,6 +470,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="gnutls-bin">
+    <distro id="centos">
+      <package>gnutls-utils</package>
+    </distro>
     <distro id="fedora">
       <package>gnutls-utils</package>
     </distro>
@@ -423,6 +489,9 @@
   </dependency>
   <dependency type="build" id="gtk-doc-tools">
     <distro id="arch">
+      <package>gtk-doc</package>
+    </distro>
+    <distro id="centos">
       <package>gtk-doc</package>
     </distro>
     <distro id="fedora">
@@ -442,6 +511,9 @@
     <distro id="arch">
       <package />
     </distro>
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -457,6 +529,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="jq">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -464,6 +539,9 @@
   <dependency type="build" id="libappstream-glib-dev">
     <distro id="arch">
       <package>appstream-glib</package>
+    </distro>
+    <distro id="centos">
+      <package>libappstream-glib-devel</package>
     </distro>
     <distro id="fedora">
       <package>libappstream-glib-devel</package>
@@ -484,6 +562,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libarchive-dev">
+    <distro id="centos">
+      <package>libarchive-devel</package>
+    </distro>
     <distro id="fedora">
       <package>libarchive-devel</package>
     </distro>
@@ -558,6 +639,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libgudev-1.0-dev">
+    <distro id="centos">
+      <package>libgudev1-devel</package>
+    </distro>
     <distro id="fedora">
       <package>libgudev1-devel</package>
     </distro>
@@ -573,6 +657,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libgusb-dev">
+    <distro id="centos">
+      <package>libgusb-devel</package>
+    </distro>
     <distro id="fedora">
       <package>libgusb-devel</package>
     </distro>
@@ -604,6 +691,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libsmbios-dev">
+    <distro id="centos">
+      <package>libsmbios-devel</package>
+    </distro>
     <distro id="fedora">
       <package>libsmbios-devel</package>
     </distro>
@@ -621,6 +711,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libsoup2.4-dev">
+    <distro id="centos">
+      <package>libsoup-devel</package>
+    </distro>
     <distro id="fedora">
       <package>libsoup-devel</package>
     </distro>
@@ -644,6 +737,11 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libstemmer-0">
+    <distro id="centos">
+      <package />
     </distro>
   </dependency>
   <dependency type="build" id="libumockdev-dev">
@@ -685,6 +783,9 @@
     <distro id="arch">
       <package />
     </distro>
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -700,6 +801,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="gir1.2-pango-1.0">
+    <distro id="centos">
+      <package>pango-devel</package>
+    </distro>
     <distro id="fedora">
       <package>pango-devel</package>
     </distro>
@@ -725,6 +829,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="policykit-1">
+    <distro id="centos">
+      <package>polkit</package>
+    </distro>
     <distro id="fedora">
       <package>polkit</package>
     </distro>
@@ -744,6 +851,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libpolkit-gobject-1-dev">
+    <distro id="centos">
+      <package>polkit-devel</package>
+    </distro>
     <distro id="fedora">
       <package>polkit-devel</package>
     </distro>
@@ -758,7 +868,15 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="python34-pip">
+    <distro id="centos">
+      <package />
+    </distro>
+  </dependency>
   <dependency type="build" id="python3">
+    <distro id="centos">
+      <package>python34-devel</package>
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -827,16 +945,25 @@
     </distro>
   </dependency>
   <dependency type="build" id="rpm-build">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
   </dependency>
   <dependency type="build" id="redhat-rpm-config">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
   </dependency>
   <dependency type="build" id="libsqlite3-dev">
+    <distro id="centos">
+      <package>sqlite-devel</package>
+    </distro>
     <distro id="fedora">
       <package>sqlite-devel</package>
     </distro>
@@ -852,6 +979,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="systemd">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -895,6 +1025,9 @@
     <distro id="arch">
       <package />
     </distro>
+    <distro id="centos">
+      <package>umockdev-devel</package>
+    </distro>
     <distro id="fedora">
       <package>umockdev-devel</package>
     </distro>
@@ -910,6 +1043,9 @@
   </dependency>
   <dependency type="build" id="valac">
     <distro id="arch">
+      <package>vala</package>
+    </distro>
+    <distro id="centos">
       <package>vala</package>
     </distro>
     <distro id="fedora">
@@ -930,11 +1066,17 @@
     <distro id="arch">
       <package />
     </distro>
+    <distro id="centos">
+      <package>valgrind-devel</package>
+    </distro>
     <distro id="fedora">
       <package>valgrind-devel</package>
     </distro>
     <distro id="debian">
       <control>
+        <exclusive>ia64</exclusive>
+        <exclusive>riscv64</exclusive>
+        <exclusive>x32</exclusive>
         <exclusive>mips</exclusive>
         <exclusive>sparc64</exclusive>
         <exclusive>sh4</exclusive>
@@ -953,6 +1095,9 @@
     </distro>
     <distro id="ubuntu">
       <control>
+        <exclusive>ia64</exclusive>
+        <exclusive>riscv64</exclusive>
+        <exclusive>x32</exclusive>
         <exclusive>mips</exclusive>
         <exclusive>sparc64</exclusive>
         <exclusive>sh4</exclusive>
@@ -969,7 +1114,15 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="wget">
+    <distro id="centos">
+      <package />
+    </distro>
+  </dependency>
   <dependency type="build" id="xz">
+    <distro id="centos">
+      <package />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>

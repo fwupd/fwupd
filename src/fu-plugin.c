@@ -57,6 +57,8 @@ typedef struct {
 	gchar			*name;
 	FuHwids			*hwids;
 	FuQuirks		*quirks;
+	GHashTable		*runtime_versions;
+	GHashTable		*compile_versions;
 	GPtrArray		*supported_guids;
 	FuSmbios		*smbios;
 	GHashTable		*devices;	/* platform_id:GObject */
@@ -658,6 +660,66 @@ fu_plugin_get_quirks (FuPlugin *plugin)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	return priv->quirks;
+}
+
+void
+fu_plugin_set_runtime_versions (FuPlugin *plugin, GHashTable *runtime_versions)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	priv->runtime_versions = g_hash_table_ref (runtime_versions);
+}
+
+/**
+ * fu_plugin_add_runtime_version:
+ * @plugin: A #FuPlugin
+ * @component_id: An AppStream component id, e.g. "org.gnome.Software"
+ * @version: A version string, e.g. "1.2.3"
+ *
+ * Sets a runtime version of a specific dependancy.
+ *
+ * Since: 1.0.7
+ **/
+void
+fu_plugin_add_runtime_version (FuPlugin *plugin,
+			       const gchar *component_id,
+			       const gchar *version)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->runtime_versions == NULL)
+		return;
+	g_hash_table_insert (priv->runtime_versions,
+			     g_strdup (component_id),
+			     g_strdup (version));
+}
+
+void
+fu_plugin_set_compile_versions (FuPlugin *plugin, GHashTable *compile_versions)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	priv->compile_versions = g_hash_table_ref (compile_versions);
+}
+
+/**
+ * fu_plugin_add_compile_version:
+ * @plugin: A #FuPlugin
+ * @component_id: An AppStream component id, e.g. "org.gnome.Software"
+ * @version: A version string, e.g. "1.2.3"
+ *
+ * Sets a compile-time version of a specific dependancy.
+ *
+ * Since: 1.0.7
+ **/
+void
+fu_plugin_add_compile_version (FuPlugin *plugin,
+			       const gchar *component_id,
+			       const gchar *version)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->compile_versions == NULL)
+		return;
+	g_hash_table_insert (priv->compile_versions,
+			     g_strdup (component_id),
+			     g_strdup (version));
 }
 
 /**
@@ -1530,6 +1592,10 @@ fu_plugin_finalize (GObject *object)
 		g_ptr_array_unref (priv->supported_guids);
 	if (priv->smbios != NULL)
 		g_object_unref (priv->smbios);
+	if (priv->runtime_versions != NULL)
+		g_hash_table_unref (priv->runtime_versions);
+	if (priv->compile_versions != NULL)
+		g_hash_table_unref (priv->compile_versions);
 #ifndef RUNNING_ON_VALGRIND
 	if (priv->module != NULL)
 		g_module_close (priv->module);

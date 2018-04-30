@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/mei.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <uuid.h>
 
@@ -378,7 +379,10 @@ amt_get_provisioning_state (mei_context *mei_cl, guint8 *state, GError **error)
 	return TRUE;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(mei_context, mei_context_free)
+#pragma clang diagnostic pop
 
 static FuDevice *
 fu_plugin_amt_create_device (GError **error)

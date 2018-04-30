@@ -152,7 +152,10 @@ _fwup_resource_iter_free (fwup_resource_iter *iter)
 	fwup_resource_iter_destroy (&iter);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (fwup_resource_iter, _fwup_resource_iter_free);
+#pragma clang diagnostic pop
 
 static guint16
 fu_dell_get_system_id (FuPlugin *plugin)
@@ -358,6 +361,7 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	fu_device_set_id (dev, dock_id);
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, dock_name);
+	fu_device_set_metadata (dev, FU_DEVICE_METADATA_DELL_DOCK_TYPE, dock_type);
 	if (type == DOCK_TYPE_TB16) {
 		fu_device_set_summary (dev, "A Thunderbolt™ 3 docking station");
 	} else if (type == DOCK_TYPE_WD15) {
@@ -1051,7 +1055,7 @@ fu_plugin_init (FuPlugin *plugin)
 		 data->libsmbios_minor);
 	tmp = g_strdup_printf ("%u.%u", data->libsmbios_major,
 					data->libsmbios_minor);
-	fu_plugin_add_report_metadata (plugin, "LibsmbiosVersion", tmp);
+	fu_plugin_add_runtime_version (plugin, "com.dell.libsmbios", tmp);
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
 	if (g_getenv ("FWUPD_DELL_VERBOSE") != NULL)

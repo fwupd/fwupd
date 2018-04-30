@@ -40,7 +40,10 @@ struct _FuHistory
 
 G_DEFINE_TYPE (FuHistory, fu_history, G_TYPE_OBJECT)
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(sqlite3_stmt, sqlite3_finalize);
+#pragma clang diagnostic pop
 
 static FuDevice *
 fu_history_device_from_stmt (sqlite3_stmt *stmt)
@@ -474,7 +477,7 @@ fu_history_remove_all_with_state (FuHistory *self,
 	g_debug ("FuHistory: removing all devices with update_state %s",
 		 fwupd_update_state_to_string (update_state));
 	rc = sqlite3_prepare_v2 (self->db,
-				 "DELETE FROM history WHERE update_state = ?1)",
+				 "DELETE FROM history WHERE update_state = ?1",
 				 -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,

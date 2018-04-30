@@ -21,7 +21,6 @@
 
 #include "config.h"
 
-#define _GNU_SOURCE 1
 #include <errno.h>
 #include <fwupd.h>
 #include <glib.h>
@@ -188,8 +187,10 @@ mock_tree_free (MockTree *tree)
 	g_slice_free (MockTree, tree);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (MockTree, mock_tree_free);
-
+#pragma clang diagnostic pop
 
 static GPtrArray *
 mock_tree_init_children (MockTree *node, int *id)
@@ -695,7 +696,10 @@ update_context_free (UpdateContext *ctx)
 	g_free (ctx);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (UpdateContext, update_context_free);
+#pragma clang diagnostic pop
 
 static gboolean
 reattach_tree (gpointer user_data)

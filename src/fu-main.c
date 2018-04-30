@@ -40,8 +40,11 @@
 #include "fu-engine.h"
 
 #ifndef HAVE_POLKIT_0_114
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitAuthorizationResult, g_object_unref)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitSubject, g_object_unref)
+#pragma clang diagnostic pop
 #endif
 
 typedef struct {
@@ -268,7 +271,10 @@ fu_main_auth_helper_free (FuMainAuthHelper *helper)
 	g_free (helper);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMainAuthHelper, fu_main_auth_helper_free)
+#pragma clang diagnostic pop
 
 /* error may or may not already have been set */
 static gboolean
@@ -615,8 +621,8 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		return;
 	}
 	if (g_strcmp0 (method_name, "Unlock") == 0) {
-		FuMainAuthHelper *helper;
 		const gchar *device_id = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
 		g_autoptr(PolkitSubject) subject = NULL;
 
 		g_variant_get (parameters, "(&s)", &device_id);
@@ -639,14 +645,14 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_unlock_cb,
-						      helper);
+						      g_steal_pointer (&helper));
 		return;
 	}
 	if (g_strcmp0 (method_name, "ModifyRemote") == 0) {
-		FuMainAuthHelper *helper;
 		const gchar *remote_id = NULL;
 		const gchar *key = NULL;
 		const gchar *value = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
 		g_autoptr(PolkitSubject) subject = NULL;
 
 		/* check the id exists */
@@ -664,18 +670,18 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* authenticate */
 		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		subject = polkit_system_bus_name_new (sender);
-		polkit_authority_check_authorization (helper->priv->authority, subject,
+		polkit_authority_check_authorization (priv->authority, subject,
 						      "org.freedesktop.fwupd.modify-remote",
 						      NULL,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_modify_remote_cb,
-						      helper);
+						      g_steal_pointer (&helper));
 		return;
 	}
 	if (g_strcmp0 (method_name, "VerifyUpdate") == 0) {
-		FuMainAuthHelper *helper;
 		const gchar *device_id = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
 		g_autoptr(PolkitSubject) subject = NULL;
 
 		/* check the id exists */
@@ -695,13 +701,13 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		/* authenticate */
 		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		subject = polkit_system_bus_name_new (sender);
-		polkit_authority_check_authorization (helper->priv->authority, subject,
+		polkit_authority_check_authorization (priv->authority, subject,
 						      "org.freedesktop.fwupd.verify-update",
 						      NULL,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_verify_update_cb,
-						      helper);
+						      g_steal_pointer (&helper));
 		return;
 	}
 	if (g_strcmp0 (method_name, "Verify") == 0) {
@@ -720,7 +726,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		return;
 	}
 	if (g_strcmp0 (method_name, "Install") == 0) {
-		FuMainAuthHelper *helper;
 		GVariant *prop_value;
 		const gchar *action_id;
 		const gchar *device_id = NULL;
@@ -730,6 +735,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		guint64 archive_size_max;
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
 		g_autoptr(PolkitSubject) subject = NULL;
 		g_autoptr(GVariantIter) iter = NULL;
 
@@ -817,7 +823,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_install_cb,
-						      helper);
+						      g_steal_pointer (&helper));
 		return;
 	}
 	if (g_strcmp0 (method_name, "GetDetails") == 0) {
@@ -1023,7 +1029,10 @@ fu_main_private_free (FuMainPrivate *priv)
 	g_free (priv);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMainPrivate, fu_main_private_free)
+#pragma clang diagnostic pop
 
 int
 main (int argc, char *argv[])

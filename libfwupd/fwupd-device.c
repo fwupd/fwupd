@@ -976,13 +976,13 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_GUID) == 0) {
 		g_autofree const gchar **guids = g_variant_get_strv (value, NULL);
-		for (guint i = 0; guids[i] != NULL; i++)
+		for (guint i = 0; guids != NULL && guids[i] != NULL; i++)
 			fwupd_device_add_guid (device, guids[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_ICON) == 0) {
 		g_autofree const gchar **icons = g_variant_get_strv (value, NULL);
-		for (guint i = 0; icons[i] != NULL; i++)
+		for (guint i = 0; icons != NULL && icons[i] != NULL; i++)
 			fwupd_device_add_icon (device, icons[i]);
 		return;
 	}
@@ -1008,9 +1008,11 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
 		const gchar *checksums = g_variant_get_string (value, NULL);
-		g_auto(GStrv) split = g_strsplit (checksums, ",", -1);
-		for (guint i = 0; split[i] != NULL; i++)
-			fwupd_device_add_checksum (device, split[i]);
+		if (checksums != NULL) {
+			g_auto(GStrv) split = g_strsplit (checksums, ",", -1);
+			for (guint i = 0; split[i] != NULL; i++)
+				fwupd_device_add_checksum (device, split[i]);
+		}
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_PLUGIN) == 0) {

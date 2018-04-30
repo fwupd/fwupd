@@ -1,8 +1,11 @@
 data/org.freedesktop.fwupd.metainfo.xml
+data/remotes.d/lvfs.metainfo.xml
+data/remotes.d/lvfs-testing.metainfo.xml
 policy/org.freedesktop.fwupd.policy.in
 plugins/dfu/dfu-tool.c
 plugins/synapticsmst/synapticsmst-tool.c
 plugins/uefi/fu-plugin-uefi.c
+src/fu-config.c
 src/fu-debug.c
 src/fu-main.c
 src/fu-progressbar.c

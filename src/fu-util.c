@@ -450,8 +450,12 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 		}
 
 		/* ask for permission */
-		g_print ("\n%s (%s) [Y|n]: ",
+		g_print ("\n%s\n%s (%s) [Y|n]: ",
 			 /* TRANSLATORS: explain why we want to upload */
+			 _("Uploading firmware reports helps hardware vendors"
+			   " to quickly identify failing and successful updates"
+			   " on real devices."),
+			 /* TRANSLATORS: ask the user to upload */
 			 _("Upload report now?"),
 			 /* TRANSLATORS: metadata is downloaded from the Internet */
 			 _("Requires internet connection"));
@@ -461,6 +465,62 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 
 	/* success */
 	return fu_util_report_history (priv, NULL, error);
+}
+
+static gboolean
+fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
+{
+	const gchar *warning_markup = NULL;
+	g_autofree gchar *warning_plain = NULL;
+
+	/* get formatted text */
+	warning_markup = fwupd_remote_get_agreement (remote);
+	if (warning_markup == NULL)
+		return TRUE;
+	warning_plain = as_markup_convert_simple (warning_markup, error);
+	if (warning_plain == NULL)
+		return FALSE;
+
+	/* show and ask user to confirm */
+	g_print ("%s", warning_plain);
+	if (!priv->assume_yes) {
+		/* ask for permission */
+		g_print ("\n%s [Y|n]: ",
+			 /* TRANSLATORS: should the remote still be enabled */
+			 _("Agree and enable the remote?"));
+		if (!fu_util_prompt_for_boolean (TRUE)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "Declined agreement");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_util_modify_remote (FuUtilPrivate *priv,
+		       const gchar *remote_id,
+		       const gchar *key,
+		       const gchar *value,
+		       GError **error)
+{
+	g_autoptr(FwupdRemote) remote = NULL;
+
+	/* ensure the remote exists */
+	remote = fwupd_client_get_remote_by_id (priv->client, remote_id, NULL, error);
+	if (remote == NULL)
+		return FALSE;
+
+	/* show some kind of warning when enabling download-type remotes */
+	if (g_strcmp0 (key, "Enabled") == 0 && g_strcmp0 (value, "true") == 0) {
+		if (!fu_util_modify_remote_warning (priv, remote, error))
+			return FALSE;
+	}
+	return fwupd_client_modify_remote (priv->client,
+					   remote_id, key, value,
+					   NULL, error);
 }
 
 static gboolean
@@ -552,13 +612,13 @@ fu_util_update_reboot (GError **error)
 		return FALSE;
 
 #ifdef HAVE_SYSTEMD
-	/* reboot using systemd */
+	/* reboot using logind */
 	val = g_dbus_connection_call_sync (connection,
-					   "org.freedesktop.systemd1",
-					   "/org/freedesktop/systemd1",
-					   "org.freedesktop.systemd1.Manager",
+					   "org.freedesktop.login1",
+					   "/org/freedesktop/login1",
+					   "org.freedesktop.login1.Manager",
 					   "Reboot",
-					   NULL,
+					   g_variant_new ("(b)", TRUE),
 					   NULL,
 					   G_DBUS_CALL_FLAGS_NONE,
 					   -1,
@@ -1235,9 +1295,36 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 }
 
 static gboolean
+fu_util_download_metadata_enable_lvfs (FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(FwupdRemote) remote = NULL;
+
+	/* is the LVFS available but disabled? */
+	remote = fwupd_client_get_remote_by_id (priv->client, "lvfs", NULL, error);
+	if (remote == NULL)
+		return TRUE;
+	g_print ("%s\n%s\n%s [Y|n]: ",
+		/* TRANSLATORS: explain why no metadata available */
+		_("No remotes are currently enabled so no metadata is available."),
+		/* TRANSLATORS: explain why no metadata available */
+		_("Metadata can be obtained from the Linux Vendor Firmware Service."),
+		/* TRANSLATORS: Turn on the remote */
+		_("Enable this remote?"));
+	if (!fu_util_prompt_for_boolean (TRUE))
+		return TRUE;
+	if (!fu_util_modify_remote (priv, "lvfs", "Enabled", "true", error))
+		return FALSE;
+
+	/* refresh the newly-enabled remote */
+	return fu_util_download_metadata_for_remote (priv, remote, error);
+}
+
+static gboolean
 fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 {
+	gboolean download_remote_enabled = FALSE;
 	g_autoptr(GPtrArray) remotes = NULL;
+
 	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
 	if (remotes == NULL)
 		return FALSE;
@@ -1247,7 +1334,14 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 			continue;
 		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
+		download_remote_enabled = TRUE;
 		if (!fu_util_download_metadata_for_remote (priv, remote, error))
+			return FALSE;
+	}
+
+	/* no web remote is declared; try to enable LVFS */
+	if (!download_remote_enabled) {
+		if (!fu_util_download_metadata_enable_lvfs (priv, error))
 			return FALSE;
 	}
 	return TRUE;
@@ -1634,7 +1728,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* TRANSLATORS: if the remote is enabled */
 		fu_util_print_data (_("Enabled"),
-				    fwupd_remote_get_enabled (remote) ? "True" : "False");
+				    fwupd_remote_get_enabled (remote) ? "true" : "false");
 
 		/* TRANSLATORS: remote checksum */
 		fu_util_print_data (_("Checksum"),
@@ -1960,7 +2054,7 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_modify_remote (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_remote_modify (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	if (g_strv_length (values) < 3) {
 		g_set_error_literal (error,
@@ -1969,9 +2063,33 @@ fu_util_modify_remote (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments");
 		return FALSE;
 	}
-	return fwupd_client_modify_remote (priv->client,
-					   values[0], values[1], values[2],
-					   NULL, error);
+	return fu_util_modify_remote (priv, values[0], values[1], values[2], error);
+}
+
+static gboolean
+fu_util_remote_enable (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+	return fu_util_modify_remote (priv, values[0], "Enabled", "true", error);
+}
+
+static gboolean
+fu_util_remote_disable (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+	return fu_util_modify_remote (priv, values[0], "Enabled", "false", error);
 }
 
 static gboolean
@@ -2095,7 +2213,10 @@ fu_util_private_free (FuUtilPrivate *priv)
 	g_free (priv);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
+#pragma clang diagnostic pop
 
 int
 main (int argc, char *argv[])
@@ -2302,7 +2423,19 @@ main (int argc, char *argv[])
 		     "REMOTE-ID KEY VALUE",
 		     /* TRANSLATORS: command description */
 		     _("Modifies a given remote"),
-		     fu_util_modify_remote);
+		     fu_util_remote_modify);
+	fu_util_add (priv->cmd_array,
+		     "enable-remote",
+		     "REMOTE-ID",
+		     /* TRANSLATORS: command description */
+		     _("Enables a given remote"),
+		     fu_util_remote_enable);
+	fu_util_add (priv->cmd_array,
+		     "disable-remote",
+		     "REMOTE-ID",
+		     /* TRANSLATORS: command description */
+		     _("Disables a given remote"),
+		     fu_util_remote_disable);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

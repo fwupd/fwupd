@@ -141,13 +141,17 @@ fwupd_checksum_get_best (GPtrArray *checksums)
 }
 
 /**
- * fwupd_build_distro_hash:
+ * fwupd_get_os_release:
  * @error: A #GError or %NULL
  *
  * Loads information from the system os-release file.
+ *
+ * Returns: (transfer container) (element-type utf8 utf8): keys from os-release
+ *
+ * Since: 1.0.7
  **/
-static GHashTable *
-fwupd_build_distro_hash (GError **error)
+GHashTable *
+fwupd_get_os_release (GError **error)
 {
 	GHashTable *hash;
 	const gchar *filename = NULL;
@@ -208,7 +212,7 @@ fwupd_build_user_agent_os_release (void)
 	g_autoptr(GPtrArray) ids_os = g_ptr_array_new ();
 
 	/* get all keys */
-	hash = fwupd_build_distro_hash (NULL);
+	hash = fwupd_get_os_release (NULL);
 	if (hash == NULL)
 		return NULL;
 
@@ -227,12 +231,13 @@ fwupd_build_user_agent_os_release (void)
 static gchar *
 fwupd_build_user_agent_system (void)
 {
-	struct utsname name_tmp = { 0 };
+	struct utsname name_tmp;
 	g_autofree gchar *locale = NULL;
 	g_autofree gchar *os_release = NULL;
 	g_autoptr(GPtrArray) ids = g_ptr_array_new_with_free_func (g_free);
 
 	/* system, architecture and kernel, e.g. "Linux i686 4.14.5" */
+	memset (&name_tmp, 0, sizeof(struct utsname));
 	if (uname (&name_tmp) >= 0) {
 		g_ptr_array_add (ids, g_strdup_printf ("%s %s %s",
 						       name_tmp.sysname,
@@ -419,7 +424,7 @@ fwupd_build_history_report_json_metadata (JsonBuilder *builder, GError **error)
 	};
 
 	/* get all required os-release keys */
-	hash = fwupd_build_distro_hash (error);
+	hash = fwupd_get_os_release (error);
 	if (hash == NULL)
 		return FALSE;
 	for (guint i = 0; distro_kv[i].key != NULL; i++) {

@@ -6,12 +6,13 @@ services:
   - docker
 
 env:
+  - OS=debian-s390x
   - OS=fedora
   - OS=debian-x86_64
   - OS=arch
-  - OS=debian-s390x
   - OS=debian-i386
   - OS=ubuntu-x86_64
+  - OS=centos
 
 install:
   - ./contrib/ci/generate_docker.py

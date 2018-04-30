@@ -1,6 +1,6 @@
 [Unit]
 Description=Firmware update daemon
-Documentation=http://www.fwupd.org/
+Documentation=https://fwupd.org/
 After=dbus.service
 Before=gdm.service
 

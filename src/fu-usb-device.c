@@ -379,18 +379,6 @@ fu_usb_device_probe (FuUsbDevice *device, GError **error)
 	return TRUE;
 }
 
-static gchar *
-_bcd_version_from_uint16 (guint16 val)
-{
-#if AS_CHECK_VERSION(0,7,3)
-	return as_utils_version_from_uint16 (val, AS_VERSION_PARSE_FLAG_USE_BCD);
-#else
-	guint maj = ((val >> 12) & 0x0f) * 10 + ((val >> 8) & 0x0f);
-	guint min = ((val >> 4) & 0x0f) * 10 + (val & 0x0f);
-	return g_strdup_printf ("%u.%u", maj, min);
-#endif
-}
-
 /**
  * fu_usb_device_set_dev:
  * @device: A #FuUsbDevice
@@ -439,7 +427,8 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 
 	/* set the version if the release has been set */
 	if (release != 0x0) {
-		g_autofree gchar *version = _bcd_version_from_uint16 (release);
+		g_autofree gchar *version = as_utils_version_from_uint16 (release,
+									  AS_VERSION_PARSE_FLAG_USE_BCD);
 		fu_device_set_version (FU_DEVICE (device), version);
 	}
 
