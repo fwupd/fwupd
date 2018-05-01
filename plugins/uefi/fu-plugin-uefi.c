@@ -589,6 +589,7 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 	} else {
 		/* this is probably system firmware */
 		fu_device_add_icon (dev, "computer");
+		fu_device_add_guid (dev, "main-system-firmware");
 	}
 	fu_device_set_id (dev, id);
 	fu_device_add_guid (dev, guid);
