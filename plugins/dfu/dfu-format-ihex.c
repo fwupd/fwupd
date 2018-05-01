@@ -194,6 +194,14 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			for (guint i = offset + 9; i < end; i += 2) {
 				/* any holes in the hex record */
 				guint32 len_hole = addr32 - addr32_last;
+				if (addr32_last > 0 && len_hole > 0x100000) {
+					g_set_error (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
+						     "hole of 0x%x bytes too large to fill",
+						     (guint) len_hole);
+					return FALSE;
+				}
 				if (addr32_last > 0x0 && len_hole > 1) {
 					for (guint j = 1; j < len_hole; j++) {
 						g_debug ("filling address 0x%08x",
