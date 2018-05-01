@@ -36,6 +36,7 @@
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
 #include "fu-thunderbolt-image.h"
+#include "fu-thunderbolt-known-devices.h"
 
 #ifndef HAVE_GUDEV_232
 #pragma clang diagnostic push
@@ -222,6 +223,23 @@ fu_plugin_thunderbolt_parse_version (const gchar *version_raw)
 }
 
 static void
+fu_plugin_thunderbolt_add_known_parents (FuDevice *device, guint16 vid, guint16 did)
+{
+	const gchar *parent = NULL;
+
+	if (vid == THUNDERBOLT_VENDOR_DELL) {
+		if (did == THUNDERBOLT_DEVICE_DELL_TB16_CABLE ||
+		    did == THUNDERBOLT_DEVICE_DELL_TB16_DOCK)
+			parent = PARENT_GUID_DELL_TB16;
+	}
+
+	if (parent != NULL ) {
+		fu_device_add_parent_guid (device, parent);
+		g_debug ("Add known parent %s to %u:%u", parent, vid, did);
+	}
+}
+
+static void
 fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 {
 	FuDevice *dev_tmp;
@@ -316,6 +334,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 					     (guint) did,
 					     is_native ? "-native" : "");
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_plugin_thunderbolt_add_known_parents (dev, vid, did);
 	}
 
 	fu_device_set_platform_id (dev, uuid);
