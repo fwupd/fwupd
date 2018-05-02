@@ -117,7 +117,7 @@ fu_common_get_file_list_internal (GPtrArray *files, const gchar *directory, GErr
 
 /**
  * fu_common_get_files_recursive:
- * @directory: a directory name
+ * @path: a directory name
  * @error: A #GError or %NULL
  *
  * Returns every file found under @directory, and any subdirectory.
@@ -599,7 +599,7 @@ fu_common_spawn_sync (const gchar * const * argv,
  * fu_common_write_uint16:
  * @buf: A writable buffer
  * @val_native: a value in host byte-order
- * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
  **/
@@ -624,7 +624,7 @@ fu_common_write_uint16 (guint8 *buf, guint16 val_native, FuEndianType endian)
  * fu_common_write_uint32:
  * @buf: A writable buffer
  * @val_native: a value in host byte-order
- * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
  **/
@@ -648,7 +648,7 @@ fu_common_write_uint32 (guint8 *buf, guint32 val_native, FuEndianType endian)
 /**
  * fu_common_read_uint16:
  * @buf: A readable buffer
- * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  *
  * Read a value from a buffer using a specified endian.
  *
@@ -675,7 +675,7 @@ fu_common_read_uint16 (const guint8 *buf, FuEndianType endian)
 /**
  * fu_common_read_uint32:
  * @buf: A readable buffer
- * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  *
  * Read a value from a buffer using a specified endian.
  *

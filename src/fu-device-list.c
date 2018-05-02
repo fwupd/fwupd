@@ -357,7 +357,6 @@ fu_device_list_add_missing_guids (FuDevice *device_new, FuDevice *device_old)
  * fu_device_list_add:
  * @self: A #FuDeviceList
  * @device: A #FuDevice
- * @error: A #GError, or %NULL
  *
  * Adds a specific device to the device list if not already present.
  *

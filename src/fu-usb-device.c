@@ -460,6 +460,7 @@ fu_usb_device_get_dev (FuUsbDevice *device)
 
 /**
  * fu_usb_device_new:
+ * @usb_device: A #GUsbDevice
  *
  * Creates a new #FuUsbDevice.
  *
