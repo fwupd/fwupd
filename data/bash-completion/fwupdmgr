@@ -12,6 +12,7 @@ _fwupdmgr_cmd_list=(
 	'get-releases'
 	'get-remotes'
 	'get-results'
+	'get-topology'
 	'get-updates'
 	'hwids'
 	'install'
