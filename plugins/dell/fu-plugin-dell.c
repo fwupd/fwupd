@@ -763,6 +763,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_LOCKED);
 		fu_device_add_icon (dev_alt, "computer");
 		fu_device_set_alternate (dev_alt, dev);
+		fu_device_add_parent_guid (dev_alt, tpm_guid);
 
 		/* If TPM is not owned and at least 1 flash left allow mode switching
 		 *
