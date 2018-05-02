@@ -31,6 +31,7 @@
 #define SYNAPTICS_FLASH_MODE_DELAY 3
 
 #define HWID_DELL_INC	"85d38fda-fc0e-5c6f-808f-076984ae7978"
+#define DELL_DOCK_FLASH_GUID	"e7ca1f36-bf73-4574-afe6-a4ccacabf479"
 
 struct FuPluginData {
 	gchar		*dock_type;
@@ -139,6 +140,10 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	fu_device_add_icon (dev, "computer");
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
 	fu_device_add_guid (dev, guid_str);
+
+	/* Currently recognizes TB16/WD15 */
+	if (data->dock_type != NULL)
+		fu_device_add_parent_guid (dev, DELL_DOCK_FLASH_GUID);
 
 	fu_plugin_device_add (plugin, dev);
 	fu_plugin_cache_add (plugin, dev_id_str, dev);
