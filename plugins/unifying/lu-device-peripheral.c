@@ -795,4 +795,5 @@ lu_device_peripheral_class_init (LuDevicePeripheralClass *klass)
 static void
 lu_device_peripheral_init (LuDevicePeripheral *self)
 {
+	fu_device_add_parent_guid (FU_DEVICE (self), "USB\\VID_046D&PID_C52B");
 }
