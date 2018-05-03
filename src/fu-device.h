@@ -37,6 +37,8 @@ struct _FuDeviceClass
 	FwupdDeviceClass	 parent_class;
 	void			 (*to_string)		(FuDevice	*device,
 							 GString	*str);
+	/*< private >*/
+	gpointer	padding[30];
 };
 
 /**
