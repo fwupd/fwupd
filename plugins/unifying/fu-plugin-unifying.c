@@ -186,7 +186,7 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* write the firmware */
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
-	if (!lu_device_write_firmware (device, blob_fw, error))
+	if (!fu_device_write_firmware (dev, blob_fw, error))
 		return FALSE;
 
 	/* success */

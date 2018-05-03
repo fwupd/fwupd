@@ -271,15 +271,16 @@ fu_colorhug_device_verify_firmware (FuColorhugDevice *device, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_colorhug_device_write_firmware (FuColorhugDevice *device, GBytes *fw, GError **error)
+static gboolean
+fu_colorhug_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (device);
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
+	FuColorhugDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(GError) error_local = NULL;
 
 	/* write firmware */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	ch_device_queue_set_flash_success (priv->device_queue,
 					   usb_device,
 					   0x00);
@@ -298,7 +299,7 @@ fu_colorhug_device_write_firmware (FuColorhugDevice *device, GBytes *fw, GError 
 	}
 
 	/* verify firmware */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
 	ch_device_queue_verify_firmware (priv->device_queue, usb_device,
 					 g_bytes_get_data (fw, NULL),
 					 g_bytes_get_size (fw));
@@ -330,7 +331,9 @@ static void
 fu_colorhug_device_class_init (FuColorhugDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	klass_device->write_firmware = fu_colorhug_device_write_firmware;
 	object_class->finalize = fu_colorhug_device_finalize;
 	klass_usb_device->open = fu_colorhug_device_open;
 	klass_usb_device->probe = fu_colorhug_device_probe;

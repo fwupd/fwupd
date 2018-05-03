@@ -142,7 +142,7 @@ main (int argc, char **argv)
 	fw = g_bytes_new (data, len);
 	g_signal_connect (dev, "notify::progress",
 			  G_CALLBACK (fu_ebitdo_tool_progress_cb), NULL);
-	if (!fu_ebitdo_device_write_firmware (dev, fw, &error)) {
+	if (!fu_device_write_firmware (FU_DEVICE (dev), fw, &error)) {
 		g_print ("Failed to write firmware: %s\n", error->message);
 		return 1;
 	}

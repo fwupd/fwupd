@@ -37,8 +37,11 @@ struct _FuDeviceClass
 	FwupdDeviceClass	 parent_class;
 	void			 (*to_string)		(FuDevice	*device,
 							 GString	*str);
+	gboolean		 (*write_firmware)	(FuDevice	*device,
+							 GBytes		*fw,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[30];
+	gpointer	padding[29];
 };
 
 /**
@@ -161,6 +164,9 @@ void		 fu_device_set_quirks			(FuDevice	*device,
 							 FuQuirks	*quirks);
 FuQuirks	*fu_device_get_quirks			(FuDevice	*device);
 FwupdRelease	*fu_device_get_release_default		(FuDevice	*device);
+gboolean	 fu_device_write_firmware		(FuDevice	*device,
+							 GBytes		*fw,
+							 GError		**error);
 
 G_END_DECLS
 

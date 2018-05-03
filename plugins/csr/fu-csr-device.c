@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -449,9 +449,10 @@ _dfu_firmware_get_default_element_data (DfuFirmware *firmware)
 	return dfu_element_get_contents (element);
 }
 
-gboolean
-fu_csr_device_download (FuCsrDevice *self, GBytes *blob, GError **error)
+static gboolean
+fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 {
+	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	GBytes *blob_noftr;
 	const guint8 *data;
 	gsize sz = 0;
@@ -461,7 +462,7 @@ fu_csr_device_download (FuCsrDevice *self, GBytes *blob, GError **error)
 	g_autoptr(GPtrArray) packets = NULL;
 
 	/* notify UI */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 
 	/* parse the file */
 	if (!dfu_firmware_parse_data (dfu_firmware, blob,
@@ -505,7 +506,7 @@ fu_csr_device_download (FuCsrDevice *self, GBytes *blob, GError **error)
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full (FU_DEVICE (self),
+		fu_device_set_progress_full (device,
 					     (gsize) idx, (gsize) packets->len);
 	}
 
@@ -515,7 +516,7 @@ fu_csr_device_download (FuCsrDevice *self, GBytes *blob, GError **error)
 		return FALSE;
 
 	/* notify UI */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_IDLE);
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 
 	return TRUE;
 }
@@ -594,6 +595,7 @@ fu_csr_device_class_init (FuCsrDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_csr_device_to_string;
+	klass_device->write_firmware = fu_csr_device_download;
 	klass_usb_device->open = fu_csr_device_open;
 	klass_usb_device->close = fu_csr_device_close;
 	klass_usb_device->probe = fu_csr_device_probe;

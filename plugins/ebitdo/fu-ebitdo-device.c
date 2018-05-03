@@ -367,10 +367,11 @@ fu_ebitdo_device_get_serial (FuEbitdoDevice *device)
 	return priv->serial;
 }
 
-gboolean
-fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **error)
+static gboolean
+fu_ebitdo_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
+	FuEbitdoDevicePrivate *priv = GET_PRIVATE (self);
 	FuEbitdoFirmwareHeader *hdr;
 	const guint8 *payload_data;
 	const guint chunk_sz = 32;
@@ -422,8 +423,8 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 	}
 
 	/* set up the firmware header */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_ebitdo_device_send (device,
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	if (!fu_ebitdo_device_send (self,
 				 FU_EBITDO_PKT_TYPE_USER_CMD,
 				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 FU_EBITDO_PKT_CMD_FW_UPDATE_HEADER,
@@ -436,7 +437,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 			     error_local->message);
 		return FALSE;
 	}
-	if (!fu_ebitdo_device_receive (device, NULL, 0, &error_local)) {
+	if (!fu_ebitdo_device_receive (self, NULL, 0, &error_local)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
@@ -453,8 +454,8 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 			g_debug ("writing %u bytes to 0x%04x of 0x%04x",
 				 chunk_sz, offset, payload_len);
 		}
-		fu_device_set_progress_full (FU_DEVICE (device), offset, payload_len);
-		if (!fu_ebitdo_device_send (device,
+		fu_device_set_progress_full (device, offset, payload_len);
+		if (!fu_ebitdo_device_send (self,
 					 FU_EBITDO_PKT_TYPE_USER_CMD,
 					 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 					 FU_EBITDO_PKT_CMD_FW_UPDATE_DATA,
@@ -467,7 +468,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 				     offset, error_local->message);
 			return FALSE;
 		}
-		if (!fu_ebitdo_device_receive (device, NULL, 0, &error_local)) {
+		if (!fu_ebitdo_device_receive (self, NULL, 0, &error_local)) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
@@ -478,7 +479,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 	}
 
 	/* mark as complete */
-	fu_device_set_progress_full (FU_DEVICE (device), payload_len, payload_len);
+	fu_device_set_progress_full (device, payload_len, payload_len);
 
 	/* set the "encode id" which is likely a checksum, bluetooth pairing
 	 * or maybe just security-through-obscurity -- also note:
@@ -486,7 +487,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 	serial_new[0] = priv->serial[0] ^ app_key_index[priv->serial[0] & 0x0f];
 	serial_new[1] = priv->serial[1] ^ app_key_index[priv->serial[1] & 0x0f];
 	serial_new[2] = priv->serial[2] ^ app_key_index[priv->serial[2] & 0x0f];
-	if (!fu_ebitdo_device_send (device,
+	if (!fu_ebitdo_device_send (self,
 				 FU_EBITDO_PKT_TYPE_USER_CMD,
 				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 FU_EBITDO_PKT_CMD_FW_SET_ENCODE_ID,
@@ -502,7 +503,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 	}
 
 	/* mark flash as successful */
-	if (!fu_ebitdo_device_send (device,
+	if (!fu_ebitdo_device_send (self,
 				 FU_EBITDO_PKT_TYPE_USER_CMD,
 				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 FU_EBITDO_PKT_CMD_FW_UPDATE_OK,
@@ -515,7 +516,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 			     error_local->message);
 		return FALSE;
 	}
-	if (!fu_ebitdo_device_receive (device, NULL, 0, &error_local)) {
+	if (!fu_ebitdo_device_receive (self, NULL, 0, &error_local)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
@@ -525,7 +526,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 	}
 
 	/* success! */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -582,7 +583,9 @@ fu_ebitdo_device_init (FuEbitdoDevice *device)
 static void
 fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 {
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	klass_device->write_firmware = fu_ebitdo_device_write_firmware;
 	klass_usb_device->open = fu_ebitdo_device_open;
 	klass_usb_device->probe = fu_ebitdo_device_probe;
 }

@@ -903,10 +903,11 @@ lu_device_attach (LuDevice *device, GError **error)
 	return TRUE;
 }
 
-gboolean
-lu_device_write_firmware (LuDevice *device, GBytes *fw, GError **error)
+static gboolean
+lu_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
-	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (device);
+	LuDevice *self = LU_DEVICE (device);
+	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (self);
 
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -926,12 +927,12 @@ lu_device_write_firmware (LuDevice *device, GBytes *fw, GError **error)
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "not supported in %s",
-			     lu_device_kind_to_string (lu_device_get_kind (device)));
+			     lu_device_kind_to_string (lu_device_get_kind (self)));
 		return FALSE;
 	}
 
 	/* call either nordic or texas vfunc */
-	return klass->write_firmware (device, fw, error);
+	return klass->write_firmware (self, fw, error);
 }
 
 #ifndef HAVE_GUDEV_232
@@ -1076,6 +1077,7 @@ lu_device_class_init (LuDeviceClass *klass)
 	object_class->get_property = lu_device_get_property;
 	object_class->set_property = lu_device_set_property;
 	klass_device->to_string = lu_device_to_string;
+	klass_device->write_firmware = lu_device_write_firmware;
 
 	pspec = g_param_spec_uint ("kind", NULL, NULL,
 				   LU_DEVICE_KIND_UNKNOWN,

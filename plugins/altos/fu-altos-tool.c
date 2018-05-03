@@ -92,9 +92,7 @@ main (int argc, char **argv)
 	fw = g_bytes_new (data, len);
 	g_signal_connect (dev, "notify::progress",
 			  G_CALLBACK (fu_altos_tool_progress_cb), NULL);
-	if (!fu_altos_device_write_firmware (dev, fw,
-					     FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_NONE,
-					     &error)) {
+	if (!fu_device_write_firmware (FU_DEVICE (dev), fw, &error)) {
 		g_print ("Failed to write firmware: %s\n", error->message);
 		return 1;
 	}

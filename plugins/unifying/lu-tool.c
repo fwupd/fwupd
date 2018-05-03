@@ -351,7 +351,7 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 	fw = g_bytes_new (data, len);
 	g_signal_connect (device, "notify::progress",
 			  G_CALLBACK (lu_write_progress_cb), NULL);
-	if (!lu_device_write_firmware (device, fw, error))
+	if (!fu_device_write_firmware (FU_DEVICE (device), fw, error))
 		return FALSE;
 
 	/* detach back into runtime */
