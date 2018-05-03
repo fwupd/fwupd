@@ -142,8 +142,10 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	fu_device_add_guid (dev, guid_str);
 
 	/* Currently recognizes TB16/WD15 */
-	if (data->dock_type != NULL)
+	if (g_strcmp0 (data->dock_type, "TB16") == 0 ||
+	    g_strcmp0 (data->dock_type, "WD15") == 0) {
 		fu_device_add_parent_guid (dev, DELL_DOCK_FLASH_GUID);
+	}
 
 	fu_plugin_device_add (plugin, dev);
 	fu_plugin_cache_add (plugin, dev_id_str, dev);
