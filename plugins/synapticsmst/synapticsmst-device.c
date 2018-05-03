@@ -85,6 +85,8 @@ synapticsmst_device_board_id_to_string (SynapticsMSTDeviceBoardID board_id)
 		return "Dell WLD15 Wireless Dock";
 	if (board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_X7_RUGGED)
 		return "Dell Rugged Platform";
+	if ((board_id >> 8) == CUSTOMERID_DELL)
+		return "Dell Generic SynapticsMST Device";
 	if ((board_id & 0xFF00) == SYNAPTICSMST_DEVICE_BOARDID_EVB)
 		return "SYNA evb board";
 	return "Unknown Platform";
@@ -403,7 +405,8 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		/* If this is a dock, use dock ID*/
 		if (priv->test_mode)
 			system = g_strdup_printf ("test-%s", priv->chip_id);
-		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE) {
+		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE ||
+			 priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_FUTURE) {
 			if (dock_type == NULL) {
 				g_set_error_literal (error,
 						     G_IO_ERROR,
