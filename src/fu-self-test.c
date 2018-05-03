@@ -183,6 +183,7 @@ fu_engine_device_parent_func (void)
 	/* parent */
 	fu_device_set_id (device2, "parent");
 	fu_device_add_guid (device2, "parent-GUID");
+	fu_device_set_vendor (device2, "oem");
 
 	/* add another child */
 	fu_device_set_id (device3, "child2");
@@ -196,6 +197,8 @@ fu_engine_device_parent_func (void)
 	/* verify both children were adopted */
 	g_assert (fu_device_get_parent (device3) == device2);
 	g_assert (fu_device_get_parent (device1) == device2);
+	g_assert_cmpstr (fu_device_get_vendor (device3), ==, "oem");
+	g_assert_cmpstr (fu_device_get_vendor (device1), ==, "oem");
 }
 
 static void

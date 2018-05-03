@@ -249,6 +249,12 @@ fu_device_add_child (FuDevice *device, FuDevice *child)
 	}
 	g_ptr_array_add (priv->children, g_object_ref (child));
 
+	/* copy from main device if unset */
+	if (fu_device_get_vendor (child) == NULL)
+		fu_device_set_vendor (child, fu_device_get_vendor (device));
+	if (fu_device_get_vendor_id (child) == NULL)
+		fu_device_set_vendor_id (child, fu_device_get_vendor_id (device));
+
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent (child, device);
 }
