@@ -206,16 +206,19 @@ dfu_firmware_from_srec (DfuFirmware *firmware,
 			rec_class = DFU_SREC_RECORD_CLASS_TERMINATION;
 			rec_datalen -= 2;
 			rec_addr32 = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 4);
+			got_eof = TRUE;
 			break;
 		case '8':
 			rec_class = DFU_SREC_RECORD_CLASS_TERMINATION;
 			rec_datalen -= 3;
 			rec_addr32 = dfu_utils_buffer_parse_uint24 (in_buffer + offset + 4);
+			got_eof = TRUE;
 			break;
 		case '7':
 			rec_class = DFU_SREC_RECORD_CLASS_TERMINATION;
 			rec_datalen -= 4;
 			rec_addr32 = dfu_utils_buffer_parse_uint32 (in_buffer + offset + 4);
+			got_eof = TRUE;
 			break;
 		case '5':
 			rec_class = DFU_SREC_RECORD_CLASS_COUNT;
