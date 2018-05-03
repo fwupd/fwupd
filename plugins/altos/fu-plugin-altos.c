@@ -98,11 +98,5 @@ fu_plugin_update (FuPlugin *plugin,
 		  GError **error)
 {
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_altos_device_write_firmware (FU_ALTOS_DEVICE (dev),
-					     blob_fw,
-					     FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_REBOOT,
-					     error)) {
-		return FALSE;
-	}
-	return TRUE;
+	return fu_device_write_firmware (dev, blob_fw, error);
 }

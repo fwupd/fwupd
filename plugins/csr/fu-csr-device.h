@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -40,9 +40,6 @@ typedef enum {
 
 FuCsrDevice	*fu_csr_device_new		(GUsbDevice		*usb_device);
 gboolean	 fu_csr_device_attach		(FuCsrDevice		*self,
-						 GError			**error);
-gboolean	 fu_csr_device_download		(FuCsrDevice		*self,
-						 GBytes			*blob,
 						 GError			**error);
 GBytes		*fu_csr_device_upload		(FuCsrDevice		*self,
 						 GError			**error);

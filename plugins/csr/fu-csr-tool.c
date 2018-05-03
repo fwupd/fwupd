@@ -296,7 +296,7 @@ fu_csr_tool_write (FuCsrToolPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_csr_tool_progress_cb), priv);
 	g_signal_connect (device, "notify::progress",
 			  G_CALLBACK (fu_csr_tool_progress_cb), priv);
-	return fu_csr_device_download (device, blob, error);
+	return fu_device_write_firmware (FU_DEVICE (device), blob, error);
 }
 
 static gboolean

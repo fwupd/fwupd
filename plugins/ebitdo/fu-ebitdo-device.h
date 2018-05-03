@@ -43,11 +43,6 @@ FuEbitdoDevice	*fu_ebitdo_device_new			(GUsbDevice	*usb_device);
 gboolean	 fu_ebitdo_device_is_bootloader		(FuEbitdoDevice	*device);
 const guint32	*fu_ebitdo_device_get_serial		(FuEbitdoDevice	*device);
 
-/* object methods */
-gboolean	 fu_ebitdo_device_write_firmware	(FuEbitdoDevice	*device,
-							 GBytes		*fw,
-							 GError		**error);
-
 G_END_DECLS
 
 #endif /* __FU_EBITDO_DEVICE_H */

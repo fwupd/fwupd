@@ -109,18 +109,6 @@ fu_altos_device_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_altos_device_parent_class)->finalize (object);
 }
 
-static void
-fu_altos_device_init (FuAltosDevice *device)
-{
-}
-
-static void
-fu_altos_device_class_init (FuAltosDeviceClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	object_class->finalize = fu_altos_device_finalize;
-}
-
 FuAltosDeviceKind
 fu_altos_device_get_kind (FuAltosDevice *device)
 {
@@ -432,13 +420,11 @@ fu_altos_device_write_page (FuAltosDevice *device,
 	return TRUE;
 }
 
-gboolean
-fu_altos_device_write_firmware (FuAltosDevice *device,
-				GBytes *fw,
-				FuAltosDeviceWriteFirmwareFlag flags,
-				GError **error)
+static gboolean
+fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
+	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
+	FuAltosDevicePrivate *priv = GET_PRIVATE (self);
 	GBytes *fw_blob;
 	const gchar *data;
 	const gsize data_len;
@@ -525,7 +511,7 @@ fu_altos_device_write_firmware (FuAltosDevice *device,
 		}
 
 		/* verify data from device */
-		if (!fu_altos_device_write_page (device,
+		if (!fu_altos_device_write_page (self,
 						 priv->addr_base + i,
 						 buf_tmp,
 						 0x100,
@@ -533,7 +519,7 @@ fu_altos_device_write_firmware (FuAltosDevice *device,
 			return FALSE;
 
 		/* verify data written on device */
-		str = fu_altos_device_read_page (device,
+		str = fu_altos_device_read_page (self,
 						 priv->addr_base + i,
 						 error);
 		if (str == NULL)
@@ -557,18 +543,16 @@ fu_altos_device_write_firmware (FuAltosDevice *device,
 		}
 
 		/* progress */
-		fu_device_set_progress_full (FU_DEVICE (device), i, flash_len);
+		fu_device_set_progress_full (device, i, flash_len);
 		g_string_append_len (buf, str->str, str->len);
 	}
 
 	/* go to application mode */
-	if (flags & FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_REBOOT) {
-		if (!fu_altos_device_tty_write (device, "a\n", -1, error))
-			return FALSE;
-	}
+	if (!fu_altos_device_tty_write (self, "a\n", -1, error))
+		return FALSE;
 
 	/* progress complete */
-	fu_device_set_progress_full (FU_DEVICE (device), flash_len, flash_len);
+	fu_device_set_progress_full (device, flash_len, flash_len);
 
 	/* success */
 	return TRUE;
@@ -782,6 +766,20 @@ fu_altos_device_init_real (FuAltosDevice *device)
 		fu_device_add_flag (FU_DEVICE (device),
 				    FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	}
+}
+
+static void
+fu_altos_device_init (FuAltosDevice *device)
+{
+}
+
+static void
+fu_altos_device_class_init (FuAltosDeviceClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	klass_device->write_firmware = fu_altos_device_write_firmware;
+	object_class->finalize = fu_altos_device_finalize;
 }
 
 typedef struct {

@@ -130,9 +130,6 @@ gboolean	 lu_device_probe		(LuDevice		*device,
 						 GError			**error);
 gboolean	 lu_device_poll			(LuDevice		*device,
 						 GError			**error);
-gboolean	 lu_device_write_firmware	(LuDevice		*device,
-						 GBytes			*fw,
-						 GError			**error);
 gboolean	 lu_device_hidpp_send		(LuDevice		*device,
 						 LuHidppMsg		*msg,
 						 guint			 timeout,
