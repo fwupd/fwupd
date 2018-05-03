@@ -7,6 +7,7 @@ subdir('test')
 subdir('udev')
 subdir('unifying')
 subdir('upower')
+subdir('wacomhid')
 
 # depends on dfu
 subdir('csr')

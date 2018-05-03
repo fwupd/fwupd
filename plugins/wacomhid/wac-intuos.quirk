@@ -1,0 +1,4 @@
+[FuWacDevice]
+
+# Intuos Pro
+USB\VID_056A&PID_0378=use-runtime-version
