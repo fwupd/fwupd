@@ -33,8 +33,6 @@ USB\VID_8000&PID_1002=none
 USB\VID_2DC8&PID_1002=none
 
 # SF30 PRO/SN30 PRO
-## Nintendo Switch mode (Start + Y)
-USB\VID_057E&PID_2009=none
 ## Dinput mode (Start + B)
 USB\VID_2DC8&PID_6000=none
 USB\VID_2DC8&PID_6001=none
