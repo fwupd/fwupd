@@ -290,13 +290,17 @@ fwupd_client_parse_devices_from_variant (GVariant *val)
 	for (guint i = 0; i < sz; i++) {
 		FwupdDevice *dev;
 		g_autoptr(GVariant) data = NULL;
+		const gchar *dev_id;
 		data = g_variant_get_child_value (untuple, i);
 		dev = fwupd_device_from_variant (data);
 		if (dev == NULL)
 			continue;
 		g_ptr_array_add (array, dev);
+		dev_id = fwupd_device_get_id (dev);
+		if (dev_id == NULL)
+			continue;
 		g_hash_table_insert (devices_by_id,
-				     (gpointer) fwupd_device_get_id (dev),
+				     (gpointer) dev_id,
 				     (gpointer) dev);
 	}
 
