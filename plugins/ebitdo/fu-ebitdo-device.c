@@ -262,13 +262,6 @@ fu_ebitdo_device_validate (FuEbitdoDevice *device, GError **error)
 	if (g_usb_device_get_vid (usb_device) == 0x2dc8)
 		return TRUE;
 
-	/* SF30/SN30 Pro when started with "START + Y"
-	 * Emulates a "Nintendo Switch Pro Controller"
-	 * "Real" Nintendo Switch controllers don't work over USB */
-	if (g_usb_device_get_vid (usb_device) == 0x057e &&
-	    g_usb_device_get_pid (usb_device) == 0x2009)
-		return TRUE;
-
 	/* verify the vendor prefix against a whitelist */
 	idx = g_usb_device_get_manufacturer_index (usb_device);
 	ven = g_usb_device_get_string_descriptor (usb_device, idx, error);
