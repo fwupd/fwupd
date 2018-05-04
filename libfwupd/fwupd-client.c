@@ -295,9 +295,11 @@ fwupd_client_parse_devices_from_variant (GVariant *val)
 		if (dev == NULL)
 			continue;
 		g_ptr_array_add (array, dev);
-		g_hash_table_insert (devices_by_id,
-				     (gpointer) fwupd_device_get_id (dev),
-				     (gpointer) dev);
+		if (fwupd_device_get_id (dev) != NULL) {
+			g_hash_table_insert (devices_by_id,
+					     (gpointer) fwupd_device_get_id (dev),
+					     (gpointer) dev);
+		}
 	}
 
 	/* set the parent on each child */
