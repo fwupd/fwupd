@@ -1173,27 +1173,6 @@ fu_engine_get_guids_from_store (AsStore *store)
 	return g_string_free (str, FALSE);
 }
 
-static FuDevice *
-fu_engine_get_item_by_wildcard (FuEngine *self, AsStore *store, GError **error)
-{
-	g_autofree gchar *guids = NULL;
-	g_autoptr(GPtrArray) devices = NULL;
-
-	devices = fu_device_list_get_all (self->device_list);
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *device_tmp = g_ptr_array_index (devices, i);
-		if (fu_engine_store_get_app_by_guids (store, device_tmp) != NULL)
-			return device_tmp;
-	}
-	guids = fu_engine_get_guids_from_store (store);
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_INVALID_FILE,
-		     "Firmware is not for any attached hardware: got %s",
-		     guids);
-	return NULL;
-}
-
 static gchar *
 fu_engine_get_boot_time (void)
 {
@@ -1257,7 +1236,7 @@ fu_engine_get_report_metadata (FuEngine *self)
 /**
  * fu_engine_install:
  * @self: A #FuEngine
- * @device_id: A device ID
+ * @device: A FuDevice
  * @store: The #AsStore with the firmware metadata
  * @blob_cab: The #GBytes of the .cab file
  * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
@@ -1267,9 +1246,9 @@ fu_engine_get_report_metadata (FuEngine *self)
  *
  * Returns: %TRUE for success
  **/
-gboolean
+static gboolean
 fu_engine_install (FuEngine *self,
-		   const gchar *device_id,
+		   FuDevice *device,
 		   AsStore *store,
 		   GBytes *blob_cab,
 		   FwupdInstallFlags flags,
@@ -1278,14 +1257,11 @@ fu_engine_install (FuEngine *self,
 	AsApp *app;
 	AsChecksum *csum_tmp;
 	AsRelease *rel;
-	FuDevice *device;
 	FuPlugin *plugin;
 	GBytes *blob_fw;
 	GPtrArray *plugins;
 	const gchar *tmp;
 	const gchar *version;
-	gboolean is_downgrade;
-	gint vercmp;
 	g_autofree gchar *checksum = NULL;
 	g_autofree gchar *device_id_orig = NULL;
 	g_autofree gchar *version_orig = NULL;
@@ -1295,53 +1271,10 @@ fu_engine_install (FuEngine *self,
 	g_autoptr(GHashTable) metadata_hash = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (device != NULL, FALSE);
 	g_return_val_if_fail (AS_IS_STORE (store), FALSE);
 	g_return_val_if_fail (blob_cab != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* wildcard */
-	if (g_strcmp0 (device_id, FWUPD_DEVICE_ID_ANY) == 0) {
-		device = fu_engine_get_item_by_wildcard (self, store, error);
-		if (device == NULL)
-			return FALSE;
-	} else {
-		/* find the specific device */
-		device = fu_device_list_get_by_id (self->device_list, device_id, error);
-		if (device == NULL)
-			return FALSE;
-	}
-
-	/* check the device is not locked */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_LOCKED)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Device %s is locked",
-			     device_id);
-		return FALSE;
-	}
-
-	/* no update abilities */
-	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Device %s does not currently allow updates",
-			     fu_device_get_id (device));
-		return FALSE;
-	}
-
-	/* called with online update, test if device is supposed to allow this */
-	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) == 0 &&
-	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device %s only allows offline updates",
-			    device_id);
-		return FALSE;
-	}
 
 	/* find from guid */
 	app = fu_engine_store_get_app_by_guids (store, device);
@@ -1366,14 +1299,17 @@ fu_engine_install (FuEngine *self,
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "Device %s needs to manually be put in update mode: %s",
-				     fu_device_get_name (device), caption);
+				     "Device %s [%s] needs to manually be put in update mode: %s",
+				     fu_device_get_name (device),
+				     fu_device_get_id (device), caption);
 		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "Device %s needs to manually be put in update mode",
-				     fu_device_get_name (device));
+				     "Device %s [%s] needs to manually be put in update mode",
+				     fu_device_get_name (device),
+				     fu_device_get_id (device));
+
 		}
 		return FALSE;
 	}
@@ -1383,10 +1319,6 @@ fu_engine_install (FuEngine *self,
 
 	/* possibly convert the flashed provide to a GUID */
 	fu_engine_vendor_fixup_provide_value (app);
-
-	/* check we can install it */
-	if (!fu_engine_check_requirements (self, app, device, error))
-		return FALSE;
 
 	/* parse the DriverVer */
 	rel = as_app_get_release_default (app);
@@ -1441,54 +1373,12 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 	}
 
-	version = as_release_get_version (rel);
-
-	/* compare to the lowest supported version, if it exists */
-	tmp = fu_device_get_version_lowest (device);
-	if (tmp != NULL && as_utils_vercmp (tmp, version) > 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_VERSION_NEWER,
-			     "Specified firmware is older than the minimum "
-			     "required version '%s < %s'", tmp, version);
-		return FALSE;
-	}
-
 	/* get the plugin */
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
 	if (plugin == NULL)
 		return FALSE;
-
-	/* compare the versions of what we have installed */
-	version_orig = g_strdup (fu_device_get_version (device));
-	if (version_orig == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Device %s does not yet have a current version",
-			     device_id);
-		return FALSE;
-	}
-	vercmp = as_utils_vercmp (version_orig, version);
-	if (vercmp == 0 && (flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_VERSION_SAME,
-			     "Specified firmware is already installed '%s'",
-			     version_orig);
-		return FALSE;
-	}
-	is_downgrade = vercmp > 0;
-	if (is_downgrade && (flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_VERSION_NEWER,
-			     "Specified firmware is older than installed '%s < %s'",
-			     version_orig, version);
-		return FALSE;
-	}
 
 	/* signal to all the plugins the update is about to happen */
 	plugins = fu_plugin_list_get_all (self->plugin_list);
@@ -1512,6 +1402,7 @@ fu_engine_install (FuEngine *self,
 
 	/* add device to database */
 	checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_cab);
+	version = as_release_get_version (rel);
 	fwupd_release_set_version (release_history, version);
 	fwupd_release_add_checksum (release_history, checksum);
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
@@ -1616,6 +1507,7 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* for online updates, verify the version changed if not a re-install */
+	version_orig = g_strdup (fu_device_get_version (device));
 	if (g_strcmp0 (version_orig, version) != 0 &&
 	    g_strcmp0 (version_orig, fu_device_get_version (device)) == 0) {
 		fu_device_set_update_error (device, "device version not updated on success");
@@ -1636,6 +1528,211 @@ fu_engine_install (FuEngine *self,
 	return fu_history_modify_device (self->history, device,
 					 FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
 					 error);
+}
+
+/**
+ * fu_engine_can_install:
+ * @self: A #FuEngine
+ * @device: A FuDevice
+ * @store: The #AsStore with the firmware metadata
+ * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
+ * @error: A #GError, or %NULL
+ *
+ * Tests if a specific firmware can be installed
+ *
+ * Returns: %TRUE for success
+ **/
+static gboolean
+fu_engine_can_install (FuEngine *self,
+		       FuDevice *device,
+		       AsStore *store,
+		       FwupdInstallFlags flags,
+		       GError **error)
+{
+	AsApp *app;
+	AsRelease *rel;
+	gboolean is_downgrade;
+	const gchar *version_new;
+	const gchar *version_orig;
+	gint vercmp;
+
+	app = fu_engine_store_get_app_by_guids (store, device);
+	if (app == NULL) {
+		g_autofree gchar *guid = NULL;
+		guid = fu_engine_get_guids_from_store (store);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Firmware is not for this hw: required %s got %s",
+			     fu_device_get_guid_default (device), guid);
+		return FALSE;
+	}
+
+	/* called with online update, test if device is supposed to allow this */
+	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) == 0 &&
+	fu_device_has_flag (device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE)) {
+	    g_set_error(error,
+			FWUPD_ERROR,
+			FWUPD_ERROR_NOT_SUPPORTED,
+			"Device %s [%s] only allows offline updates",
+			fu_device_get_name (device),
+			fu_device_get_id (device));
+	    return FALSE;
+	}
+
+	/* check the device is not locked */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_LOCKED)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Device %s [%s] is locked",
+			     fu_device_get_name (device),
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* no update abilities */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Device %s [%s] does not currently allow updates",
+			     fu_device_get_name (device),
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* parse the DriverVer */
+	rel = as_app_get_release_default (app);
+	if (rel == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "No releases in the firmware component");
+		return FALSE;
+	}
+
+	/* check we can install it */
+	if (!fu_engine_check_requirements (self, app, device, error))
+		return FALSE;
+
+	/* possibly convert the version from 0x to dotted */
+	fu_engine_vendor_quirk_release_version (self, app);
+	version_new = as_release_get_version (rel);
+
+	/* compare to the lowest supported version, if it exists */
+	version_orig = fu_device_get_version_lowest (device);
+	if (version_orig != NULL && as_utils_vercmp (version_orig, version_new) > 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_VERSION_NEWER,
+			     "Specified firmware is older than the minimum "
+			     "required version '%s < %s'",
+			     version_orig,
+			     version_new);
+		return FALSE;
+	}
+
+	/* compare the versions of what we have installed */
+	version_orig = fu_device_get_version (device);
+	if (version_orig == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Device %s [%s] does not yet have a current version",
+			     fu_device_get_name (device),
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+	vercmp = as_utils_vercmp (version_orig, version_new);
+	if (vercmp == 0 && (flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_VERSION_SAME,
+			     "Specified firmware is already installed '%s'",
+			     version_orig);
+		return FALSE;
+	}
+	is_downgrade = vercmp > 0;
+	if (is_downgrade && (flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_VERSION_NEWER,
+			     "Specified firmware is older than installed '%s < %s'",
+			     version_orig, version_new);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+/**
+ * fu_engine_install_store:
+ * @self: A #FuEngine
+ * @device_id: A device ID
+ * @store: The #AsStore with the firmware metadata
+ * @blob_cab: The #GBytes of the .cab file
+ * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
+ * @error: A #GError, or %NULL
+ *
+ * Installs a specific firmware on any device that matches in the store
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_install_store (FuEngine *self,
+			 const gchar *device_id,
+			 AsStore *store,
+			 GBytes *blob_cab,
+			 FwupdInstallFlags flags,
+			 GError **error)
+{
+	FuDevice *device = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GString) str = g_string_new (NULL);
+
+	/* specific device was provided */
+	if (g_strcmp0 (device_id, FWUPD_DEVICE_ID_ANY) != 0) {
+		device = fu_device_list_get_by_id (self->device_list, device_id, error);
+		if (device == NULL)
+			return FALSE;
+		/* These are critical failures when installing for a specific ID */
+		if (!fu_engine_can_install (self, device, store, flags, error))
+			return FALSE;
+		return fu_engine_install (self, device, store, blob_cab, flags, error);
+	}
+
+	devices = fu_device_list_get_active (self->device_list);
+	for (guint i = 0; i < devices->len; i++) {
+		g_autoptr(GError) error_local = NULL;
+
+		device = g_ptr_array_index (devices, i);
+		if (fu_engine_store_get_app_by_guids (store, device) == NULL)
+			continue;
+
+		/* These are failures that should be skipped when parsing a CAB */
+		if (!fu_engine_can_install (self, device, store, flags, &error_local)) {
+			/* with only one update this should be critical failure */
+			if (as_store_get_size (store) == 1) {
+				g_propagate_error (error, g_steal_pointer (&error_local));
+				return FALSE;
+			}
+			g_string_append_printf (str, "%s (%s): %s\t",
+				fu_device_get_name (device),
+				fu_device_get_id (device),
+				error_local->message);
+			continue;
+		}
+		if (!fu_engine_install (self, device, store, blob_cab, flags, error))
+			return FALSE;
+	}
+
+	if (str->len > 1) {
+		g_string_truncate (str, str->len - 1);
+		g_message ("The following updates were skipped: %s", str->str);
+	}
+
+	return TRUE;
 }
 
 static FuDevice *
@@ -1694,7 +1791,7 @@ fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GErr
 /**
  * fu_engine_get_action_id_for_device:
  * @self: A #FuEngine
- * @device_id: A device ID
+ * @device: A FuDevice
  * @store: The #AsStore with the firmware metadata
  * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
  * @error: A #GError, or %NULL
@@ -1703,16 +1800,15 @@ fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GErr
  *
  * Returns: string, e.g. `org.freedesktop.fwupd.update-internal-trusted`
  **/
-const gchar *
+static const gchar *
 fu_engine_get_action_id_for_device (FuEngine *self,
-				    const gchar *device_id,
+				    FuDevice *device,
 				    AsStore *store,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
 	AsApp *app;
 	AsRelease *release;
-	FuDevice *device;
 	FwupdTrustFlags trust_flags = FWUPD_TRUST_FLAG_NONE;
 	const gchar *version;
 	const gchar *version_release;
@@ -1722,20 +1818,8 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
 	g_return_val_if_fail (AS_IS_STORE (store), NULL);
-	g_return_val_if_fail (device_id != NULL, NULL);
+	g_return_val_if_fail (device != NULL, NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* wildcard */
-	if (g_strcmp0 (device_id, FWUPD_DEVICE_ID_ANY) == 0) {
-		device = fu_engine_get_item_by_wildcard (self, store, error);
-		if (device == NULL)
-			return NULL;
-	} else {
-		/* find the specific device */
-		device = fu_device_list_get_by_id (self->device_list, device_id, error);
-		if (device == NULL)
-			return NULL;
-	}
 
 	/* get device */
 	version = fu_device_get_version (device);
@@ -1743,8 +1827,9 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "Device with ID %s has no firmware version",
-			     device_id);
+			     "Device %s [%s] has no firmware version",
+			     fu_device_get_name (device),
+			     fu_device_get_id (device));
 		return NULL;
 	}
 
@@ -1827,6 +1912,106 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 	if (is_trusted)
 		return "org.freedesktop.fwupd.update-internal-trusted";
 	return "org.freedesktop.fwupd.update-internal";
+}
+
+/**
+ * fu_engine_get_action_id_for_store:
+ * @self: A #FuEngine
+ * @device_id: A device ID
+ * @store: The #AsStore with the firmware metadata
+ * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
+ * @error: A #GError, or %NULL
+ *
+ * Gets the PolicyKit action ID to use for the install operation.
+ *
+ * Returns: string, e.g. `org.freedesktop.fwupd.update-internal-trusted`
+ **/
+const gchar *
+fu_engine_get_action_id_for_store (FuEngine *self,
+				    const gchar *device_id,
+				    AsStore *store,
+				    FwupdInstallFlags flags,
+				    GError **error)
+{
+	FuDevice *device;
+	g_autoptr(GPtrArray) devices = NULL;
+	const gchar *action = NULL, *action_old = NULL;
+	g_autoptr(GString) str = g_string_new (NULL);
+	gboolean matched = FALSE;
+
+	/* Got a specific device */
+	if (g_strcmp0 (device_id, FWUPD_DEVICE_ID_ANY) != 0) {
+		device = fu_device_list_get_by_id (self->device_list, device_id, error);
+		if (device == NULL)
+			return NULL;
+		return fu_engine_get_action_id_for_device (self, device,
+							   store, flags, error);
+	}
+
+	/* Got a wild card */
+	devices = fu_device_list_get_all (self->device_list);
+	for (guint i = 0; i < devices->len; i++) {
+		g_autoptr(GError) error_local = NULL;
+		device = g_ptr_array_index (devices, i);
+		g_debug ("looking at %s", fu_device_get_name (device));
+		if (fu_engine_store_get_app_by_guids (store, device) == NULL)
+			continue;
+		matched = TRUE;
+		action = fu_engine_get_action_id_for_device (self,
+								device,
+								store,
+								flags,
+								&error_local);
+		if (action == NULL) {
+			g_string_append_printf (str, "%s (%s): %s\t",
+							fu_device_get_name (device),
+							fu_device_get_id (device),
+							error_local->message);
+		}
+		/* first action */
+		if (action_old == NULL && action != NULL) {
+			action_old = action;
+			continue;
+		}
+		/* same action */
+		if (g_strcmp0 (action_old, action) == 0)
+			continue;
+		/* different actions */
+		if (action_old != NULL && action != NULL &&
+		    g_strcmp0 (action_old, action) != 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Conflicting actions %s and %s were found",
+				     action_old, action);
+			return NULL;
+		}
+	}
+
+	if (str->len > 1)
+		g_string_truncate (str, str->len - 1);
+
+	if (action_old == NULL) {
+		if (matched) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "There are no updates to install : %s",
+				     str->str);
+		} else {
+			g_autofree gchar *guids = NULL;
+
+			guids = fu_engine_get_guids_from_store (store);
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "No attached hardware matched this firmware, got: %s.",
+				     guids);
+		}
+	}
+	else
+		g_debug ("Skipping updates: %s", str->str);
+	return action_old;
 }
 
 static void
