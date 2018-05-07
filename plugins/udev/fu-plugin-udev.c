@@ -160,6 +160,8 @@ fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 		}
 		version = g_strdup (split[2]);
 	}
+	if (version == NULL)
+		return;
 
 	/* did we get enough data */
 	dev = fu_device_new ();
@@ -177,8 +179,7 @@ fu_plugin_udev_add (FuPlugin *plugin, GUdevDevice *device)
 		vendor = g_udev_device_get_property (device, "ID_VENDOR_FROM_DATABASE");
 	if (vendor != NULL)
 		fu_device_set_vendor (dev, vendor);
-	if (version != NULL)
-		fu_device_set_version (dev, version);
+	fu_device_set_version (dev, version);
 
 	/* set vendor ID */
 	vendor_id = fu_plugin_udev_generate_vendor_id (device);
