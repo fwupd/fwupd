@@ -62,6 +62,7 @@ typedef struct {
 	gboolean		 no_reboot_check;
 	gboolean		 no_unreported_check;
 	gboolean		 assume_yes;
+	gboolean		 show_all_devices;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -524,13 +525,15 @@ fu_util_modify_remote (FuUtilPrivate *priv,
 }
 
 static void
-fu_util_build_device_tree (GNode *root, GPtrArray *devs, FwupdDevice *dev)
+fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, FwupdDevice *dev)
 {
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev_tmp = g_ptr_array_index (devs, i);
+		if (!(fwupd_device_has_flag (dev_tmp, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
+			continue;
 		if (fwupd_device_get_parent (dev_tmp) == dev) {
 			GNode *child = g_node_append_data (root, dev_tmp);
-			fu_util_build_device_tree (child, devs, dev_tmp);
+			fu_util_build_device_tree (priv, child, devs, dev_tmp);
 		}
 	}
 }
@@ -590,7 +593,7 @@ fu_util_get_topology (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
-	fu_util_build_device_tree (root, devs, NULL);
+	fu_util_build_device_tree (priv, root, devs, NULL);
 	g_node_traverse (root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
 			 fu_util_print_device_tree, priv);
 
@@ -617,6 +620,8 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < devs->len; i++) {
 		g_autofree gchar *tmp = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		if (!(fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
+			continue;
 		tmp = fwupd_device_to_string (dev);
 		g_print ("%s\n", tmp);
 	}
@@ -2353,6 +2358,9 @@ main (int argc, char *argv[])
 		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for reboot after update"), NULL },
+		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
+			/* TRANSLATORS: command line option */
+			_("Show devices that are not updatable"), NULL },
 		{ NULL}
 	};
 
