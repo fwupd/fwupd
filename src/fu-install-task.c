@@ -155,7 +155,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Device %s is locked",
+			     "Device %s [%s] is locked",
+			     fu_device_get_name (self->device),
 			     fu_device_get_id (self->device));
 		return FALSE;
 	}
@@ -165,7 +166,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Device %s does not currently allow updates",
+			     "Device %s [%s] does not currently allow updates",
+			     fu_device_get_name (self->device),
 			     fu_device_get_id (self->device));
 		return FALSE;
 	}
@@ -176,7 +178,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Device %s only allows offline updates",
+			     "Device %s [%s] only allows offline updates",
+			     fu_device_get_name (self->device),
 			     fu_device_get_id (self->device));
 		return FALSE;
 	}
@@ -187,7 +190,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "Device with ID %s has no firmware version",
+			     "Device %s [%s] has no firmware version",
+			     fu_device_get_name (self->device),
 			     fu_device_get_id (self->device));
 		return FALSE;
 	}
@@ -199,8 +203,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "%s [%s] has no firmware update metadata",
-			     fu_device_get_id (self->device),
-			     fu_device_get_name (self->device));
+			     fu_device_get_name (self->device),
+			     fu_device_get_id (self->device));
 		return FALSE;
 	}
 

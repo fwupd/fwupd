@@ -343,7 +343,8 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 	/* overwrite entry if it exists */
 	if ((flags & FU_HISTORY_FLAGS_MATCH_OLD_VERSION) &&
 	    (flags & FU_HISTORY_FLAGS_MATCH_NEW_VERSION)) {
-		g_debug ("FuHistory: modifying device %s, version not important",
+		g_debug ("FuHistory: modifying device %s [%s], version not important",
+			 fu_device_get_name (device),
 			 fu_device_get_id (device));
 		rc = sqlite3_prepare_v2 (self->db,
 					 "UPDATE history SET "
@@ -353,8 +354,10 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "WHERE device_id = ?4;",
 					 -1, &stmt, NULL);
 	} else if (flags & FU_HISTORY_FLAGS_MATCH_OLD_VERSION) {
-		g_debug ("FuHistory: modifying device %s, only version old %s",
-			 fu_device_get_id (device), fu_device_get_version (device));
+		g_debug ("FuHistory: modifying device %s [%s], only version old %s",
+			 fu_device_get_name (device),
+			 fu_device_get_id (device),
+			 fu_device_get_version (device));
 		rc = sqlite3_prepare_v2 (self->db,
 					 "UPDATE history SET "
 					 "update_state = ?1, "
@@ -363,8 +366,10 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "WHERE device_id = ?4 AND version_old = ?5;",
 					 -1, &stmt, NULL);
 	} else if (flags & FU_HISTORY_FLAGS_MATCH_NEW_VERSION) {
-		g_debug ("FuHistory: modifying device %s, only version new %s",
-			 fu_device_get_id (device), fu_device_get_version (device));
+		g_debug ("FuHistory: modifying device %s [%s], only version new %s",
+			 fu_device_get_name (device),
+			 fu_device_get_id (device),
+			 fu_device_get_version (device));
 		rc = sqlite3_prepare_v2 (self->db,
 					 "UPDATE history SET "
 					 "update_state = ?1, "
@@ -409,7 +414,9 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	if (!fu_history_remove_device (self, device, release, error))
 		return FALSE;
 
-	g_debug ("FuHistory: add device %s", fu_device_get_id (device));
+	g_debug ("FuHistory: add device %s [%s]",
+		 fu_device_get_name (device),
+		 fu_device_get_id (device));
 	if (release != NULL) {
 		GPtrArray *checksums = fwupd_release_get_checksums (release);
 		checksum = fwupd_checksum_get_by_kind (checksums, G_CHECKSUM_SHA1);
@@ -528,7 +535,9 @@ fu_history_remove_device (FuHistory *self,  FuDevice *device,
 	if (!fu_history_load (self, error))
 		return FALSE;
 
-	g_debug ("FuHistory: remove device %s", fu_device_get_id (device));
+	g_debug ("FuHistory: remove device %s [%s]",
+		 fu_device_get_name (device),
+		 fu_device_get_id (device));
 	rc = sqlite3_prepare_v2 (self->db,
 				 "DELETE FROM history WHERE device_id = ?1 "
 				 "AND version_old = ?2 "
