@@ -38,6 +38,7 @@
 #include "fu-debug.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
+#include "fu-install-task.h"
 
 #ifndef HAVE_POLKIT_0_114
 #pragma clang diagnostic push
@@ -246,7 +247,9 @@ fu_main_result_array_to_variant (GPtrArray *results)
 
 typedef struct {
 	GDBusMethodInvocation	*invocation;
-	AsStore			*store;
+	PolkitSubject		*subject;
+	GPtrArray		*install_tasks;
+	GPtrArray		*action_ids;
 	FwupdInstallFlags	 flags;
 	GBytes			*blob_cab;
 	FuMainPrivate		*priv;
@@ -261,8 +264,12 @@ fu_main_auth_helper_free (FuMainAuthHelper *helper)
 {
 	if (helper->blob_cab != NULL)
 		g_bytes_unref (helper->blob_cab);
-	if (helper->store != NULL)
-		g_object_unref (helper->store);
+	if (helper->subject != NULL)
+		g_object_unref (helper->subject);
+	if (helper->install_tasks != NULL)
+		g_ptr_array_unref (helper->install_tasks);
+	if (helper->action_ids != NULL)
+		g_ptr_array_unref (helper->action_ids);
 	g_free (helper->device_id);
 	g_free (helper->remote_id);
 	g_free (helper->key);
@@ -387,6 +394,8 @@ fu_main_authorize_modify_remote_cb (GObject *source, GAsyncResult *res, gpointer
 	g_dbus_method_invocation_return_value (helper->invocation, NULL);
 }
 
+static void fu_main_authorize_install_queue (FuMainAuthHelper *helper);
+
 static void
 fu_main_authorize_install_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
@@ -403,19 +412,245 @@ fu_main_authorize_install_cb (GObject *source, GAsyncResult *res, gpointer user_
 		return;
 	}
 
-	/* authenticated */
-	if (!fu_engine_install (helper->priv->engine,
-				helper->device_id,
-				helper->store,
-				helper->blob_cab,
-				helper->flags,
-				&error)) {
-		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+	/* do the next authentication action ID */
+	fu_main_authorize_install_queue (g_steal_pointer (&helper));
+}
+
+static void
+fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
+{
+	FuMainPrivate *priv = helper_ref->priv;
+	g_autoptr(FuMainAuthHelper) helper = helper_ref;
+	g_autoptr(GError) error = NULL;
+
+	/* still more things to to authenticate */
+	if (helper->action_ids->len > 0) {
+		g_autofree gchar *action_id = g_strdup (g_ptr_array_index (helper->action_ids, 0));
+		g_autoptr(PolkitSubject) subject = g_object_ref (helper->subject);
+		g_ptr_array_remove_index (helper->action_ids, 0);
+		polkit_authority_check_authorization (priv->authority, subject,
+						      action_id, NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_authorize_install_cb,
+						      g_steal_pointer (&helper));
 		return;
+	}
+
+	/* all authenticated, so install all the things */
+	for (guint i = 0; i < helper->install_tasks->len; i++) {
+		FuInstallTask *task = g_ptr_array_index (helper->install_tasks, i);
+		if (!fu_engine_install (helper->priv->engine,
+					fu_install_task_get_device (task),
+					fu_install_task_get_app (task),
+					helper->blob_cab,
+					helper->flags,
+					&error)) {
+			g_dbus_method_invocation_return_gerror (helper->invocation, error);
+			return;
+		}
 	}
 
 	/* success */
 	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+}
+
+static const GError *
+fu_main_error_array_find (GPtrArray *errors, FwupdError error_code)
+{
+	for (guint j = 0; j < errors->len; j++) {
+		const GError *error = g_ptr_array_index (errors, j);
+		if (g_error_matches (error, FWUPD_ERROR, error_code))
+			return error;
+	}
+	return NULL;
+}
+
+static guint
+fu_main_error_array_count (GPtrArray *errors, FwupdError error_code)
+{
+	guint cnt = 0;
+	for (guint j = 0; j < errors->len; j++) {
+		const GError *error = g_ptr_array_index (errors, j);
+		if (g_error_matches (error, FWUPD_ERROR, error_code))
+			cnt++;
+	}
+	return cnt;
+}
+
+static gboolean
+fu_main_error_array_matches_any (GPtrArray *errors, FwupdError *error_codes)
+{
+	for (guint j = 0; j < errors->len; j++) {
+		const GError *error = g_ptr_array_index (errors, j);
+		gboolean matches_any = FALSE;
+		for (guint i = 0; error_codes[i] != FWUPD_ERROR_LAST; i++) {
+			if (g_error_matches (error, FWUPD_ERROR, error_codes[i])) {
+				matches_any = TRUE;
+				break;
+			}
+		}
+		if (!matches_any)
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static GError *
+fu_main_error_array_build_composite (GPtrArray *errors)
+{
+	FwupdError err_prio[] =		{ FWUPD_ERROR_INVALID_FILE,
+					  FWUPD_ERROR_VERSION_SAME,
+					  FWUPD_ERROR_VERSION_NEWER,
+					  FWUPD_ERROR_NOT_SUPPORTED,
+					  FWUPD_ERROR_INTERNAL,
+					  FWUPD_ERROR_NOT_FOUND,
+					  FWUPD_ERROR_LAST };
+	FwupdError err_all_uptodate[] =	{ FWUPD_ERROR_VERSION_SAME,
+					  FWUPD_ERROR_NOT_FOUND,
+					  FWUPD_ERROR_NOT_SUPPORTED,
+					  FWUPD_ERROR_LAST };
+	FwupdError err_all_newer[] =	{ FWUPD_ERROR_VERSION_NEWER,
+					  FWUPD_ERROR_VERSION_SAME,
+					  FWUPD_ERROR_NOT_FOUND,
+					  FWUPD_ERROR_NOT_SUPPORTED,
+					  FWUPD_ERROR_LAST };
+
+	/* are all the errors either GUID-not-matched or version-same? */
+	if (fu_main_error_array_count (errors, FWUPD_ERROR_VERSION_SAME) > 1 &&
+	    fu_main_error_array_matches_any (errors, err_all_uptodate)) {
+		return g_error_new (FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "All updatable firmware is already installed");
+	}
+
+	/* are all the errors either GUID-not-matched or version same or newer? */
+	if (fu_main_error_array_count (errors, FWUPD_ERROR_VERSION_NEWER) > 1 &&
+	    fu_main_error_array_matches_any (errors, err_all_newer)) {
+		return g_error_new (FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "All updatable devices already have newer versions");
+	}
+
+	/* get the most important single error */
+	for (guint i = 0; err_prio[i] != FWUPD_ERROR_LAST; i++) {
+		const GError *error_tmp = fu_main_error_array_find (errors, err_prio[i]);
+		if (error_tmp != NULL)
+			return g_error_copy (error_tmp);
+	}
+
+	/* fall back to something */
+	return g_error_new (FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "No supported devices found");
+}
+
+#if !GLIB_CHECK_VERSION(2,54,0)
+static gboolean
+g_ptr_array_find (GPtrArray *haystack, gconstpointer needle, guint *index_)
+{
+	for (guint i = 0; i < haystack->len; i++) {
+		gconstpointer *tmp = g_ptr_array_index (haystack, i);
+		if (tmp == needle) {
+			if (index_ != NULL) {
+				*index_ = i;
+				return TRUE;
+			}
+		}
+	}
+	return FALSE;
+}
+#endif
+
+static gboolean
+fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
+{
+	FuMainPrivate *priv = helper_ref->priv;
+	GPtrArray *apps;
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(FuMainAuthHelper) helper = helper_ref;
+	g_autoptr(GPtrArray) devices_possible = NULL;
+	g_autoptr(GPtrArray) errors = NULL;
+
+	/* get a list of devices that match the device_id */
+	if (g_strcmp0 (helper->device_id, FWUPD_DEVICE_ID_ANY) == 0) {
+		devices_possible = fu_engine_get_devices (priv->engine, error);
+		if (devices_possible == NULL) {
+			g_prefix_error (error, "failed to get all devices: ");
+			return FALSE;
+		}
+	} else {
+		FuDevice *device = fu_engine_get_device (priv->engine,
+							 helper->device_id,
+							 error);
+		if (device == NULL)
+			return FALSE;
+		devices_possible = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+		g_ptr_array_add (devices_possible, device);
+	}
+
+	/* parse store */
+	store = fu_engine_get_store_from_blob (priv->engine,
+					       helper->blob_cab,
+					       error);
+	if (store == NULL)
+		return FALSE;
+
+	/* for each component in the store */
+	apps = as_store_get_apps (store);
+	helper->action_ids = g_ptr_array_new_with_free_func (g_free);
+	helper->install_tasks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	errors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_error_free);
+	for (guint i = 0; i < apps->len; i++) {
+		AsApp *app = g_ptr_array_index (apps, i);
+
+		/* do any devices pass the requirements */
+		for (guint j = 0; j < devices_possible->len; j++) {
+			FuDevice *device = g_ptr_array_index (devices_possible, j);
+			const gchar *action_id;
+			g_autoptr(FuInstallTask) task = NULL;
+			g_autoptr(GError) error_local = NULL;
+
+			/* is this component valid for the device */
+			task = fu_install_task_new (device, app);
+			if (!fu_install_task_check_requirements (task, helper->flags, &error_local)) {
+				g_debug ("requirement on %s:%s failed: %s",
+					 fu_device_get_id (device),
+					 as_app_get_id (app),
+					 error_local->message);
+				g_ptr_array_add (errors, g_steal_pointer (&error_local));
+				continue;
+			}
+			if (!fu_engine_check_requirements (priv->engine,
+							   app, device,
+							   &error_local)) {
+				g_debug ("requirement on %s:%s failed: %s",
+					 fu_device_get_id (device),
+					 as_app_get_id (app),
+					 error_local->message);
+				g_ptr_array_add (errors, g_steal_pointer (&error_local));
+				continue;
+			}
+
+			/* get the action IDs for the valid device */
+			action_id = fu_install_task_get_action_id (task);
+			if (!g_ptr_array_find (helper->action_ids, action_id, NULL))
+				g_ptr_array_add (helper->action_ids, g_strdup (action_id));
+			g_ptr_array_add (helper->install_tasks, g_steal_pointer (&task));
+		}
+	}
+
+	/* nothing suitable */
+	if (helper->install_tasks->len == 0) {
+		GError *error_tmp = fu_main_error_array_build_composite (errors);
+		g_propagate_error (error, error_tmp);
+		return FALSE;
+	}
+
+	/* authenticate all things in the action_ids */
+	fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_main_authorize_install_queue (g_steal_pointer (&helper));
+	return TRUE;
 }
 
 static gboolean
@@ -727,7 +962,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	}
 	if (g_strcmp0 (method_name, "Install") == 0) {
 		GVariant *prop_value;
-		const gchar *action_id;
 		const gchar *device_id = NULL;
 		gchar *prop_key;
 		gint32 fd_handle = 0;
@@ -736,7 +970,6 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		g_autoptr(FuMainAuthHelper) helper = NULL;
-		g_autoptr(PolkitSubject) subject = NULL;
 		g_autoptr(GVariantIter) iter = NULL;
 
 		/* check the id exists */
@@ -798,32 +1031,15 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		helper->store = fu_engine_get_store_from_blob (priv->engine,
-							       helper->blob_cab,
-							       &error);
-		if (helper->store == NULL) {
+
+		/* install all the things in the store */
+		helper->subject = polkit_system_bus_name_new (sender);
+		if (!fu_main_install_with_helper (g_steal_pointer (&helper), &error)) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
 
-		/* authenticate */
-		action_id = fu_engine_get_action_id_for_device (priv->engine,
-								helper->device_id,
-								helper->store,
-								helper->flags,
-								&error);
-		if (action_id == NULL) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
-			return;
-		}
-		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
-		subject = polkit_system_bus_name_new (sender);
-		polkit_authority_check_authorization (priv->authority, subject,
-						      action_id, NULL,
-						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
-						      NULL,
-						      fu_main_authorize_install_cb,
-						      g_steal_pointer (&helper));
+		/* async return */
 		return;
 	}
 	if (g_strcmp0 (method_name, "GetDetails") == 0) {
