@@ -2126,8 +2126,8 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "ignoring %s [%s] as not updatable",
-			     fu_device_get_id (device),
-			     fu_device_get_name (device));
+			     fu_device_get_name (device),
+			     fu_device_get_id (device));
 		return NULL;
 	}
 
@@ -2470,7 +2470,8 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "User has already been notified about %s",
+			     "User has already been notified about %s [%s]",
+			     fu_device_get_name (device),
 			     fu_device_get_id (device));
 		return NULL;
 	}
@@ -2625,8 +2626,10 @@ fu_engine_adopt_children (FuEngine *self, FuDevice *device)
 			if (fu_device_get_parent (device) != NULL)
 				continue;
 			if (fu_device_has_guid (device_tmp, guid)) {
-				g_debug ("setting parent of %s to be %s",
+				g_debug ("setting parent of %s [%s] to be %s [%s]",
+					 fu_device_get_name (device),
 					 fu_device_get_id (device),
+					 fu_device_get_name (device_tmp),
 					 fu_device_get_id (device_tmp));
 				fu_device_add_child (device_tmp, device);
 				break;
@@ -2643,8 +2646,10 @@ fu_engine_adopt_children (FuEngine *self, FuDevice *device)
 			if (fu_device_get_parent (device_tmp) != NULL)
 				continue;
 			if (fu_device_has_parent_guid (device_tmp, guid)) {
-				g_debug ("setting parent of %s to be %s",
+				g_debug ("setting parent of %s [%s] to be %s [%s]",
+					 fu_device_get_name (device_tmp),
 					 fu_device_get_id (device_tmp),
+					 fu_device_get_name (device),
 					 fu_device_get_id (device));
 				fu_device_add_child (device, device_tmp);
 			}
@@ -2662,8 +2667,8 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 	device_guids = fu_device_get_guids (device);
 	if (device_guids->len == 0) {
 		g_warning ("no GUIDs for device %s [%s]",
-			   fu_device_get_id (device),
-			   fu_device_get_name (device));
+			   fu_device_get_name (device),
+			   fu_device_get_id (device));
 		return;
 	}
 
@@ -2674,8 +2679,10 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 		for (guint j = 0; j < device_guids->len; j++) {
 			const gchar *device_guid = g_ptr_array_index (device_guids, j);
 			if (g_strcmp0 (blacklisted_guid, device_guid) == 0) {
-				g_debug ("%s is blacklisted [%s], ignoring from %s",
-					 fu_device_get_id (device), device_guid,
+				g_debug ("%s [%s] is blacklisted [%s], ignoring from %s",
+					 fu_device_get_name (device),
+					 fu_device_get_id (device),
+					 device_guid,
 					 fu_device_get_plugin (device));
 				return;
 			}
