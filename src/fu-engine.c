@@ -1241,12 +1241,6 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 	}
 
-	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (self, app);
-
-	/* possibly convert the flashed provide to a GUID */
-	fu_engine_vendor_fixup_provide_value (app);
-
 	/* check we can install it */
 	if (!fu_engine_check_requirements (self, app, device, error))
 		return FALSE;
@@ -1623,12 +1617,6 @@ fu_engine_get_action_id_for_device (FuEngine *self,
 			     fu_device_get_guid_default (device), guid);
 		return NULL;
 	}
-
-	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (self, app);
-
-	/* possibly convert the flashed provide to a GUID */
-	fu_engine_vendor_fixup_provide_value (app);
 
 	/* get latest release */
 	release = as_app_get_release_default (app);
@@ -2045,6 +2033,7 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 AsStore *
 fu_engine_get_store_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 {
+	GPtrArray *apps;
 	g_autofree gchar *checksum = NULL;
 	g_autoptr(AsStore) store = NULL;
 
@@ -2059,6 +2048,18 @@ fu_engine_get_store_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 						error);
 	if (store == NULL)
 		return NULL;
+
+	/* fix all the apps */
+	apps = as_store_get_apps (store);
+	for (guint i = 0; i < apps->len; i++) {
+		AsApp *app = g_ptr_array_index (apps, i);
+
+		/* possibly convert the version from 0x to dotted */
+		fu_engine_vendor_quirk_release_version (self, app);
+
+		/* possibly convert the flashed provide to a GUID */
+		fu_engine_vendor_fixup_provide_value (app);
+	}
 
 	/* get a checksum of the file and use it as the origin */
 	checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA256, blob_cab);
@@ -2118,12 +2119,6 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	release = as_app_get_release_default (app);
 	if (!fu_keyring_get_release_trust_flags (release, &trust_flags, error))
 		return NULL;
-
-	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (self, app);
-
-	/* possibly convert the flashed provide to a GUID */
-	fu_engine_vendor_fixup_provide_value (app);
 
 	/* create a result with all the metadata in */
 	fwupd_device_set_description (dev, as_app_get_description (app, NULL));
