@@ -45,13 +45,11 @@ gboolean	 fu_engine_check_plugins_pending	(FuEngine	*self,
 AsStore		*fu_engine_get_store_from_blob		(FuEngine	*self,
 							 GBytes		*blob_cab,
 							 GError		**error);
-const gchar	*fu_engine_get_action_id_for_device	(FuEngine	*self,
-							 const gchar	*device_id,
-							 AsStore	*store,
-							 FwupdInstallFlags flags,
-							 GError		**error);
 guint64		 fu_engine_get_archive_size_max		(FuEngine	*self);
 GPtrArray	*fu_engine_get_devices			(FuEngine	*self,
+							 GError		**error);
+FuDevice	*fu_engine_get_device			(FuEngine	*self,
+							 const gchar	*device_id,
 							 GError		**error);
 GPtrArray	*fu_engine_get_history			(FuEngine	*self,
 							 GError		**error);
@@ -97,8 +95,8 @@ gboolean	 fu_engine_modify_device		(FuEngine	*self,
 							 const gchar	*value,
 							 GError		**error);
 gboolean	 fu_engine_install			(FuEngine	*self,
-							 const gchar	*device_id,
-							 AsStore	*store,
+							 FuDevice	*device,
+							 AsApp		*app,
 							 GBytes		*blob_cab,
 							 FwupdInstallFlags flags,
 							 GError		**error);
