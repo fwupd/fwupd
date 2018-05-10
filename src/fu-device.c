@@ -50,6 +50,7 @@ typedef struct {
 	guint				 remove_delay;	/* ms */
 	FwupdStatus			 status;
 	guint				 progress;
+	guint				 order;
 } FuDevicePrivate;
 
 enum {
@@ -111,6 +112,41 @@ fu_device_set_property (GObject *object, guint prop_id,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
+}
+
+/**
+ * fu_device_get_order:
+ * @device: a #FuPlugin
+ *
+ * Gets the device order, where higher numbers are installed after lower
+ * numbers.
+ *
+ * Returns: the integer value
+ *
+ * Since: 1.0.8
+ **/
+guint
+fu_device_get_order (FuDevice *device)
+{
+	FuDevicePrivate *priv = fu_device_get_instance_private (device);
+	return priv->order;
+}
+
+/**
+ * fu_device_set_order:
+ * @device: a #FuDevice
+ * @order: a integer value
+ *
+ * Sets the device order, where higher numbers are installed after lower
+ * numbers.
+ *
+ * Since: 1.0.8
+ **/
+void
+fu_device_set_order (FuDevice *device, guint order)
+{
+	FuDevicePrivate *priv = fu_device_get_instance_private (device);
+	priv->order = order;
 }
 
 const gchar *
@@ -257,6 +293,15 @@ fu_device_add_child (FuDevice *device, FuDevice *child)
 
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent (child, device);
+
+	/* order devices so they are updated in the correct sequence */
+	if (fu_device_has_flag (child, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST)) {
+		if (priv->order <= fu_device_get_order (child))
+			priv->order = fu_device_get_order (child) + 1;
+	} else {
+		if (priv->order >= fu_device_get_order (child))
+			fu_device_set_order (child, priv->order + 1);
+	}
 }
 
 /**
