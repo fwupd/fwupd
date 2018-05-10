@@ -91,6 +91,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_REPORTED:			Has been reported to a metadata server
  * @FWUPD_DEVICE_FLAG_NOTIFIED:			User has been notified
  * @FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION:	Always use the runtime version rather than the bootloader
+ * @FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST:	Install composite firmware on the parent before the child
  *
  * The device flags.
  **/
@@ -107,6 +108,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_REPORTED		(1u << 9)	/* Since: 1.0.4 */
 #define FWUPD_DEVICE_FLAG_NOTIFIED		(1u << 10)	/* Since: 1.0.5 */
 #define FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION	(1u << 11)	/* Since: 1.0.6 */
+#define FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST	(1u << 12)	/* Since: 1.0.8 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 

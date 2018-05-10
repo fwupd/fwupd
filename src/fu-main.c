@@ -562,6 +562,20 @@ g_ptr_array_find (GPtrArray *haystack, gconstpointer needle, guint *index_)
 }
 #endif
 
+static gint
+fu_main_install_task_sort_cb (gconstpointer a, gconstpointer b)
+{
+	FuInstallTask *task_a = *((FuInstallTask **) a);
+	FuInstallTask *task_b = *((FuInstallTask **) b);
+	FuDevice *device_a = fu_install_task_get_device (task_a);
+	FuDevice *device_b = fu_install_task_get_device (task_b);
+	if (fu_device_get_order (device_a) < fu_device_get_order (device_b))
+		return -1;
+	if (fu_device_get_order (device_a) > fu_device_get_order (device_b))
+		return 1;
+	return 0;
+}
+
 static gboolean
 fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 {
@@ -639,6 +653,9 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 			g_ptr_array_add (helper->install_tasks, g_steal_pointer (&task));
 		}
 	}
+
+	/* order the install tasks by the device priority */
+	g_ptr_array_sort (helper->install_tasks, fu_main_install_task_sort_cb);
 
 	/* nothing suitable */
 	if (helper->install_tasks->len == 0) {
