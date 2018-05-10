@@ -2784,6 +2784,18 @@ fu_engine_add_plugin (FuEngine *self, FuPlugin *plugin)
 }
 
 static gboolean
+fu_engine_is_plugin_name_blacklisted (FuEngine *self, const gchar *name)
+{
+	GPtrArray *blacklist = fu_config_get_blacklist_plugins (self->config);
+	for (guint i = 0; i < blacklist->len; i++) {
+		const gchar *name_tmp = g_ptr_array_index (blacklist, i);
+		if (g_strcmp0 (name_tmp, name) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {
 	const gchar *fn;
@@ -2799,8 +2811,8 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 	if (dir == NULL)
 		return FALSE;
 	while ((fn = g_dir_read_name (dir)) != NULL) {
-		GPtrArray *blacklist;
 		g_autofree gchar *filename = NULL;
+		g_autofree gchar *name = NULL;
 		g_autoptr(FuPlugin) plugin = NULL;
 		g_autoptr(GError) error_local = NULL;
 
@@ -2808,9 +2820,19 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		if (!g_str_has_suffix (fn, ".so"))
 			continue;
 
+		/* is blacklisted */
+		name = fu_plugin_guess_name_from_fn (fn);
+		if (name == NULL)
+			continue;
+		if (fu_engine_is_plugin_name_blacklisted (self, name)) {
+			g_debug ("%s is blacklisted", name);
+			continue;
+		}
+
 		/* open module */
 		filename = g_build_filename (PLUGINDIR, fn, NULL);
 		plugin = fu_plugin_new ();
+		fu_plugin_set_name (plugin, name);
 		fu_plugin_set_usb_context (plugin, self->usb_ctx);
 		fu_plugin_set_hwids (plugin, self->hwids);
 		fu_plugin_set_smbios (plugin, self->smbios);
@@ -2825,17 +2847,9 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 			continue;
 		}
 
-		/* is blacklisted */
-		blacklist = fu_config_get_blacklist_plugins (self->config);
-		for (guint i = 0; i < blacklist->len; i++) {
-			const gchar *name = g_ptr_array_index (blacklist, i);
-			if (g_strcmp0 (name, fu_plugin_get_name (plugin)) == 0) {
-				fu_plugin_set_enabled (plugin, FALSE);
-				break;
-			}
-		}
+		/* self disabled */
 		if (!fu_plugin_get_enabled (plugin)) {
-			g_debug ("%s blacklisted by config",
+			g_debug ("%s self disabled",
 				 fu_plugin_get_name (plugin));
 			continue;
 		}
