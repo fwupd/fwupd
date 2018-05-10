@@ -292,12 +292,24 @@ fu_plugin_set_enabled (FuPlugin *plugin, gboolean enabled)
 	priv->enabled = enabled;
 }
 
+gchar *
+fu_plugin_guess_name_from_fn (const gchar *filename)
+{
+	const gchar *prefix = "libfu_plugin_";
+	gchar *name;
+	gchar *str = g_strstr_len (filename, -1, prefix);
+	if (str == NULL)
+		return NULL;
+	name = g_strdup (str + strlen (prefix));
+	g_strdelimit (name, ".", '\0');
+	return name;
+}
+
 gboolean
 fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginInitFunc func = NULL;
-	gchar *str;
 
 	priv->module = g_module_open (filename, 0);
 	if (priv->module == NULL) {
@@ -310,11 +322,8 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 	}
 
 	/* set automatically */
-	str = g_strstr_len (filename, -1, "libfu_plugin_");
-	if (str != NULL) {
-		priv->name = g_strdup (str + 13);
-		g_strdelimit (priv->name, ".", '\0');
-	}
+	if (priv->name == NULL)
+		priv->name = fu_plugin_guess_name_from_fn (filename);
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_init", (gpointer *) &func);

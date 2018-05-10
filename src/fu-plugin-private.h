@@ -107,6 +107,9 @@ gboolean	 fu_plugin_runner_get_results		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
 
+/* utils */
+gchar		*fu_plugin_guess_name_from_fn           (const gchar	*filename);
+
 G_END_DECLS
 
 #endif /* __FU_PLUGIN_PRIVATE_H */
