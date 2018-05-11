@@ -35,7 +35,7 @@ executable('tbtfwucli',
   link_with : [
     fu_plugin_thunderbolt,
     fwupd,
-    libfwupdprivate,
+    fwupdprivate,
   ],
   dependencies : [
     plugin_deps,
@@ -66,7 +66,7 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
     ],
     link_with : [
       fwupd,
-      libfwupdprivate,
+      fwupdprivate,
     ],
     c_args : cargs
   )

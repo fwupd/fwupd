@@ -20,7 +20,7 @@ if get_option('pkcs7')
   test_deps += colorhug_pkcs7_signature
 endif
 
-libfwupdprivate = static_library(
+fwupdprivate = static_library(
   'fwupdprivate',
   sources : [
     'fu-common.c',
@@ -84,7 +84,7 @@ fwupdmgr = executable(
   ],
   link_with : [
     fwupd,
-    libfwupdprivate,
+    fwupdprivate,
   ],
   c_args : [
     cargs,
@@ -149,7 +149,7 @@ fwupdmgr_noinst = executable(
     libarchive,
   ],
   link_with : [
-    fwupd,
+    fwupdprivate,
     libfwupdprivate,
   ],
   c_args : [
@@ -360,7 +360,7 @@ if get_option('introspection')
       sqlite,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupdprivate,
     ],
     includes : [
       'Gio-2.0',
