@@ -57,6 +57,34 @@ fwupd = shared_library(
   install : true
 )
 
+libfwupdprivate = static_library(
+  'libfwupdprivate',
+  sources : [
+    'fwupd-client.c',
+    'fwupd-common.c',
+    'fwupd-device.c',
+    'fwupd-enums.c',
+    'fwupd-error.c',
+    'fwupd-release.c',
+    'fwupd-remote.c',
+  ],
+  soversion : lt_current,
+  version : lt_version,
+  dependencies : [
+    giounix,
+    soup,
+    libjsonglib,
+  ],
+  c_args : [
+      cargs,
+      '-DLOCALSTATEDIR="' + localstatedir + '"',
+    ],
+  include_directories : include_directories('..'),
+  link_args : vflag,
+  link_depends : mapfile,
+  install : false
+)
+
 pkgg = import('pkgconfig')
 pkgg.generate(
   libraries : fwupd,
