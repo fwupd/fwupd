@@ -64,6 +64,7 @@ fwupdmgr = executable(
   'fwupdmgr',
   sources : [
     'fu-util.c',
+    'fu-util-common.c',
   ],
   include_directories : [
     include_directories('..'),
@@ -93,6 +94,75 @@ fwupdmgr = executable(
   install_dir : bindir
 )
 
+resources_src = gnome.compile_resources(
+  'fwupd-resources',
+  'fwupd.gresource.xml',
+  source_dir : '.',
+  c_name : 'fu'
+)
+
+fwupdmgr_noinst = executable(
+  'fwupdmgr-noinst',
+  resources_src,
+  sources : [
+    'fu-noinst.c',
+    keyring_src,
+    'fu-common.c',
+    'fu-common-cab.c',
+    'fu-config.c',
+    'fu-keyring.c',
+    'fu-keyring-result.c',
+    'fu-engine.c',
+    'fu-hwids.c',
+    'fu-debug.c',
+    'fu-device.c',
+    'fu-device-list.c',
+    'fu-device-locker.c',
+    'fu-install-task.c',
+    'fu-keyring.c',
+    'fu-keyring-utils.c',
+    'fu-history.c',
+    'fu-plugin.c',
+    'fu-plugin-list.c',
+    'fu-quirks.c',
+    'fu-smbios.c',
+    'fu-usb-device.c',
+    'fu-util-common.c',
+  ],
+  include_directories : [
+    include_directories('..'),
+    include_directories('../libfwupd'),
+  ],
+  dependencies : [
+    keyring_deps,
+    appstream_glib,
+    libgcab,
+    giounix,
+    gmodule,
+    gudev,
+    gusb,
+    polkit,
+    soup,
+    sqlite,
+    valgrind,
+    libarchive,
+  ],
+  link_with : [
+    fwupd,
+    libfwupdprivate,
+  ],
+  c_args : [
+    cargs,
+    '-DLOCALSTATEDIR="' + localstatedir + '"',
+    '-DPLUGINDIR="' + plugin_dir + '"',
+    '-DSYSFSFIRMWAREDIR="/sys/firmware"',
+    '-DSYSCONFDIR="' + default_sysconfdir + '"',
+    '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
+    '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
+    '-DFU_OFFLINE_DESTDIR=""',
+  ],
+)
+
 if get_option('man')
   help2man = find_program('help2man')
   custom_target('fwupdmgr-man',
@@ -110,13 +180,6 @@ if get_option('man')
     install_dir : join_paths(mandir, 'man1'),
   )
 endif
-
-resources_src = gnome.compile_resources(
-  'fwupd-resources',
-  'fwupd.gresource.xml',
-  source_dir : '.',
-  c_name : 'fu'
-)
 
 executable(
   'fwupd',

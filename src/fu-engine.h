@@ -100,6 +100,13 @@ gboolean	 fu_engine_install			(FuEngine	*self,
 							 GBytes		*blob_cab,
 							 FwupdInstallFlags flags,
 							 GError		**error);
+gboolean	 fu_engine_install_blob			(FuEngine	*self,
+							 FuDevice	*device,
+							 GBytes		*blob_cab,
+							 GBytes		*blob_fw,
+							 const gchar	*version,
+							 FwupdInstallFlags flags,
+							 GError		**error);
 GPtrArray	*fu_engine_get_details			(FuEngine	*self,
 							 gint		 fd,
 							 GError		**error);
