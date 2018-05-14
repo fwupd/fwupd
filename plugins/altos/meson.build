@@ -20,27 +20,3 @@ shared_module('fu_plugin_altos',
     plugin_deps,
   ],
 )
-
-executable(
-  'fu-altos-tool',
-  sources : [
-    'fu-altos-device.c',
-    'fu-altos-firmware.c',
-    'fu-altos-tool.c',
-  ],
-  include_directories : [
-    include_directories('../..'),
-    include_directories('../../libfwupd'),
-    include_directories('../../src'),
-  ],
-  dependencies : [
-    gudev,
-    libelf,
-    plugin_deps,
-  ],
-  link_with : [
-    fwupd,
-    libfwupdprivate,
-  ],
-  c_args : cargs,
-)
