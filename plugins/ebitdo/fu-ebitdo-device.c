@@ -385,6 +385,47 @@ fu_ebitdo_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 		0xb91901c9, 0x3917edfe, 0xbcd6344f, 0xcf9e23b5
 	};
 
+	/* not in bootloader mode, so print what to do */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+		g_autoptr(GString) msg = g_string_new ("Not in bootloader mode: ");
+		g_string_append (msg, "Disconnect the controller, ");
+		g_print ("1. \n");
+		switch (g_usb_device_get_pid (usb_device)) {
+		case 0xab11: /* FC30 */
+		case 0xab12: /* NES30 */
+		case 0xab21: /* SFC30 */
+		case 0xab20: /* SNES30 */
+			g_string_append (msg, "hold down L+R+START for 3 seconds until "
+					      "both LED lights flashing, ");
+			break;
+		case 0x9000: /* FC30PRO */
+		case 0x9001: /* NES30PRO */
+			g_string_append (msg, "hold down RETURN+POWER for 3 seconds until "
+					      "both LED lights flashing, ");
+			break;
+		case 0x1002: /* FC30-ARCADE */
+			g_string_append (msg, "hold down L1+R1+HOME for 3 seconds until "
+					      "both blue LED and green LED blink, ");
+			break;
+		case 0x6000: /* SF30 pro: Dinput mode */
+		case 0x6001: /* SN30 pro: Dinput mode */
+		case 0x028e: /* SF30/SN30 pro: Xinput mode */
+			g_string_append (msg, "press and hold L1+R1+START for 3 seconds "
+					      "until the LED on top blinks red, ");
+			break;
+		default:
+			g_string_append (msg, "do what it says in the manual, ");
+			break;
+		}
+		g_string_append (msg, "then re-connect controller");
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     msg->str);
+		return FALSE;
+	}
+
 	/* corrupt */
 	if (g_bytes_get_size (fw) < sizeof (FuEbitdoFirmwareHeader)) {
 		g_set_error_literal (error,

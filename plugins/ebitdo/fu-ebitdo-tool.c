@@ -97,41 +97,6 @@ main (int argc, char **argv)
 	for (guint i = 0; i < 9; i++)
 		g_print ("\t%u = 0x%08x\n", i, fu_ebitdo_device_get_serial(dev)[i]);
 
-	/* not in bootloader mode, so print what to do */
-	if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (dev));
-		g_print ("1. Disconnect the controller\n");
-		switch (g_usb_device_get_pid (usb_device)) {
-		case 0xab11: /* FC30 */
-		case 0xab12: /* NES30 */
-		case 0xab21: /* SFC30 */
-		case 0xab20: /* SNES30 */
-			g_print ("2. Hold down L+R+START for 3 seconds until "
-				 "both LED lights flashing.\n");
-			break;
-		case 0x9000: /* FC30PRO */
-		case 0x9001: /* NES30PRO */
-			g_print ("2. Hold down RETURN+POWER for 3 seconds until "
-				 "both LED lights flashing.\n");
-			break;
-		case 0x1002: /* FC30-ARCADE */
-			g_print ("2. Hold down L1+R1+HOME for 3 seconds until "
-				 "both blue LED and green LED blink.\n");
-			break;
-		case 0x6000: /* SF30 pro: Dinput mode */
-		case 0x6001: /* SN30 pro: Dinput mode */
-		case 0x028e: /* SF30/SN30 pro: Xinput mode */
-			g_print ("2. Press and hold L1+R1+START for 3 seconds "
-				 "until the LED on top blinks red.\n");
-			break;
-		default:
-			g_print ("2. Do what it says in the manual.\n");
-			break;
-		}
-		g_print ("3. Connect controller\n");
-		return 1;
-	}
-
 	/* load firmware file */
 	if (!g_file_get_contents (argv[1], (gchar **) &data, &len, &error)) {
 		g_print ("Failed to load file: %s\n", error->message);
