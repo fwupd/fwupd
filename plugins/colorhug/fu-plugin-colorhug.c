@@ -42,7 +42,7 @@ fu_plugin_init (FuPlugin *plugin)
 gboolean
 fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuColorhugDevice *colorhug_dev = FU_COLORHUG_DEVICE (device);
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GUsbDevice) usb_device2 = NULL;
@@ -53,13 +53,13 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 		return FALSE;
 
 	/* switch to bootloader mode is not required */
-	if (fu_colorhug_device_get_is_bootloader (colorhug_dev)) {
+	if (fu_colorhug_device_get_is_bootloader (self)) {
 		g_debug ("already in bootloader mode, skipping");
 		return TRUE;
 	}
 
 	/* reset */
-	if (!fu_colorhug_device_detach (colorhug_dev, error))
+	if (!fu_device_detach (FU_DEVICE (device), error))
 		return FALSE;
 
 	/* wait for replug */
@@ -73,7 +73,7 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 	}
 
 	/* set the new device until we can use a new FuDevice */
-	fu_usb_device_set_dev (FU_USB_DEVICE (colorhug_dev), usb_device2);
+	fu_usb_device_set_dev (FU_USB_DEVICE (self), usb_device2);
 
 	/* success */
 	return TRUE;
@@ -82,7 +82,7 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 gboolean
 fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuColorhugDevice *colorhug_dev = FU_COLORHUG_DEVICE (device);
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GUsbDevice) usb_device2 = NULL;
@@ -93,13 +93,13 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 		return FALSE;
 
 	/* switch to runtime mode is not required */
-	if (!fu_colorhug_device_get_is_bootloader (colorhug_dev)) {
+	if (!fu_colorhug_device_get_is_bootloader (self)) {
 		g_debug ("already in runtime mode, skipping");
 		return TRUE;
 	}
 
 	/* reset */
-	if (!fu_colorhug_device_attach (colorhug_dev, error))
+	if (!fu_device_attach (device, error))
 		return FALSE;
 
 	/* wait for replug */
@@ -113,7 +113,7 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 	}
 
 	/* set the new device until we can use a new FuDevice */
-	fu_usb_device_set_dev (FU_USB_DEVICE (colorhug_dev), usb_device2);
+	fu_usb_device_set_dev (FU_USB_DEVICE (self), usb_device2);
 
 	/* success */
 	return TRUE;
@@ -122,14 +122,14 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 gboolean
 fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuColorhugDevice *colorhug_dev = FU_COLORHUG_DEVICE (device);
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* also set flash success */
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_colorhug_device_set_flash_success (colorhug_dev, error))
+	if (!fu_colorhug_device_set_flash_success (self, error))
 		return FALSE;
 	return TRUE;
 }
@@ -141,7 +141,6 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	FuColorhugDevice *colorhug_dev = FU_COLORHUG_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -163,7 +162,7 @@ fu_plugin_update (FuPlugin *plugin,
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_write_firmware (FU_DEVICE (colorhug_dev), blob_fw, error);
+	return fu_device_write_firmware (device, blob_fw, error);
 }
 
 gboolean
@@ -172,14 +171,14 @@ fu_plugin_verify (FuPlugin *plugin,
 		  FuPluginVerifyFlags flags,
 		  GError **error)
 {
-	FuColorhugDevice *colorhug_dev = FU_COLORHUG_DEVICE (device);
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* write firmware */
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_colorhug_device_verify_firmware (colorhug_dev, error);
+	return fu_colorhug_device_verify_firmware (self, error);
 }
 
 gboolean

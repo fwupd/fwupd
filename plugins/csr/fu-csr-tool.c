@@ -308,7 +308,7 @@ fu_csr_tool_attach (FuCsrToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	if (!fu_usb_device_open (FU_USB_DEVICE (device), error))
 		return FALSE;
-	return fu_csr_device_attach (device, error);
+	return fu_device_attach (FU_DEVICE (device), error);
 }
 
 int
