@@ -119,6 +119,7 @@ typedef guint64 FwupdDeviceFlags;
  * @FWUPD_INSTALL_FLAG_ALLOW_REINSTALL:		Allow reinstalling the same version
  * @FWUPD_INSTALL_FLAG_ALLOW_OLDER:		Allow downgrading firmware
  * @FWUPD_INSTALL_FLAG_FORCE:			Force the update even if not a good idea
+ * @FWUPD_INSTALL_FLAG_NO_HISTORY:		Do not write to the history database
  *
  * Flags to set when performing the firwmare update or install.
  **/
@@ -128,6 +129,7 @@ typedef enum {
 	FWUPD_INSTALL_FLAG_ALLOW_REINSTALL	= 1 << 1,	/* Since: 0.7.0 */
 	FWUPD_INSTALL_FLAG_ALLOW_OLDER		= 1 << 2,	/* Since: 0.7.0 */
 	FWUPD_INSTALL_FLAG_FORCE		= 1 << 3,	/* Since: 0.7.1 */
+	FWUPD_INSTALL_FLAG_NO_HISTORY		= 1 << 4,	/* Since: 1.0.8 */
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_LAST
 } FwupdInstallFlags;
