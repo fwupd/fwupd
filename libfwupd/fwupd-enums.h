@@ -123,11 +123,11 @@ typedef guint64 FwupdDeviceFlags;
  * Flags to set when performing the firwmare update or install.
  **/
 typedef enum {
-	FWUPD_INSTALL_FLAG_NONE			= 0,	/* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_OFFLINE		= 1,	/* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_ALLOW_REINSTALL	= 2,	/* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_ALLOW_OLDER		= 4,	/* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_FORCE		= 8,	/* Since: 0.7.1 */
+	FWUPD_INSTALL_FLAG_NONE			= 0,		/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_OFFLINE		= 1 << 0,	/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_ALLOW_REINSTALL	= 1 << 1,	/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_ALLOW_OLDER		= 1 << 2,	/* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_FORCE		= 1 << 3,	/* Since: 0.7.1 */
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_LAST
 } FwupdInstallFlags;
