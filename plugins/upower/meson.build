@@ -16,3 +16,20 @@ shared_module('fu_plugin_upower',
     plugin_deps,
   ],
 )
+
+upower_static = static_library('upower_static',
+  sources : [
+    'fu-plugin-upower.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : true,
+  install_dir: plugin_dir,
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+  ],
+)

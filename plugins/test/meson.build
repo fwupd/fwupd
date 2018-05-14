@@ -21,3 +21,20 @@ shared_module('fu_plugin_test',
     plugin_deps,
   ],
 )
+
+test_static = static_library('test_static',
+  sources : [
+    'fu-plugin-test.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : install_dummy,
+  install_dir: plugin_dir,
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+  ],
+)

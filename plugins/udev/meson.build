@@ -19,6 +19,24 @@ shared_module('fu_plugin_udev',
   ],
 )
 
+udev_static = static_library('udev_static',
+  sources : [
+    'fu-plugin-udev.c',
+    'fu-rom.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : true,
+  install_dir: plugin_dir,
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+    gudev,
+  ],
+)
 executable(
   'fu-rom-tool',
   sources : [

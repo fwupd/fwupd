@@ -17,3 +17,21 @@ shared_module('fu_plugin_amt',
     uuid,
   ],
 )
+
+amt_static = static_library('amt_static',
+  sources : [
+    'fu-plugin-amt.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : true,
+  install_dir: plugin_dir,
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+    uuid,
+  ],
+)
