@@ -22,25 +22,3 @@ shared_module('fu_plugin_ebitdo',
     plugin_deps,
   ],
 )
-
-executable(
-  'fu-ebitdo-tool',
-  sources : [
-    'fu-ebitdo-tool.c',
-    'fu-ebitdo-common.c',
-    'fu-ebitdo-device.c',
-  ],
-  include_directories : [
-    include_directories('../..'),
-    include_directories('../../libfwupd'),
-    include_directories('../../src'),
-  ],
-  dependencies : [
-    plugin_deps,
-  ],
-  link_with : [
-    fwupd,
-    libfwupdprivate,
-  ],
-  c_args : cargs,
-)
