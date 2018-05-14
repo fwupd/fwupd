@@ -58,8 +58,6 @@ const gchar	*fu_altos_device_kind_to_string		(FuAltosDeviceKind kind);
 FuAltosDeviceKind fu_altos_device_get_kind		(FuAltosDevice	*device);
 gboolean	 fu_altos_device_probe			(FuAltosDevice	*device,
 							 GError		**error);
-GBytes		*fu_altos_device_read_firmware		(FuAltosDevice	*device,
-							 GError		**error);
 
 G_END_DECLS
 

@@ -78,8 +78,7 @@ fu_plugin_verify (FuPlugin *plugin,
 
 	/* get data */
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_VERIFY);
-	blob_fw = fu_altos_device_read_firmware (FU_ALTOS_DEVICE (dev),
-						 error);
+	blob_fw = fu_device_read_firmware (dev, error);
 	if (blob_fw == NULL)
 		return FALSE;
 	for (guint i = 0; checksum_types[i] != 0; i++) {

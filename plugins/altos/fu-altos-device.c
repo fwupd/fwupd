@@ -558,10 +558,11 @@ fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	return TRUE;
 }
 
-GBytes *
-fu_altos_device_read_firmware (FuAltosDevice *device, GError **error)
+static GBytes *
+fu_altos_device_read_firmware (FuDevice *device, GError **error)
 {
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
+	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
+	FuAltosDevicePrivate *priv = GET_PRIVATE (self);
 	guint flash_len;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GString) buf = g_string_new (NULL);
@@ -605,12 +606,12 @@ fu_altos_device_read_firmware (FuAltosDevice *device, GError **error)
 		g_autoptr(GString) str = NULL;
 
 		/* request data from device */
-		str = fu_altos_device_read_page (device, i, error);
+		str = fu_altos_device_read_page (self, i, error);
 		if (str == NULL)
 			return NULL;
 
 		/* progress */
-		fu_device_set_progress_full (FU_DEVICE (device),
+		fu_device_set_progress_full (device,
 					     i - priv->addr_base,
 					     priv->addr_bound - priv->addr_base);
 		g_string_append_len (buf, str->str, str->len);
@@ -779,6 +780,7 @@ fu_altos_device_class_init (FuAltosDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_altos_device_write_firmware;
+	klass_device->read_firmware = fu_altos_device_read_firmware;
 	object_class->finalize = fu_altos_device_finalize;
 }
 

@@ -280,15 +280,16 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 			    sz - FU_CSR_COMMAND_HEADER_SIZE);
 }
 
-GBytes *
-fu_csr_device_upload (FuCsrDevice *self, GError **error)
+static GBytes *
+fu_csr_device_upload (FuDevice *device, GError **error)
 {
+	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	g_autoptr(GPtrArray) chunks = NULL;
 	guint32 total_sz = 0;
 	gsize done_sz = 0;
 
 	/* notify UI */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_READ);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
 
 	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 	for (guint32 i = 0; i < 0x3ffffff; i++) {
@@ -335,7 +336,7 @@ fu_csr_device_upload (FuCsrDevice *self, GError **error)
 		/* add to chunk array */
 		done_sz += chunk_sz;
 		g_ptr_array_add (chunks, g_steal_pointer (&chunk));
-		fu_device_set_progress_full (FU_DEVICE (self), done_sz, (gsize) total_sz);
+		fu_device_set_progress_full (device, done_sz, (gsize) total_sz);
 
 		/* we're done */
 		if (chunk_sz < 64 - FU_CSR_COMMAND_HEADER_SIZE)
@@ -343,7 +344,7 @@ fu_csr_device_upload (FuCsrDevice *self, GError **error)
 	}
 
 	/* notify UI */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_IDLE);
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	return dfu_utils_bytes_join_array (chunks);
 }
 
@@ -596,6 +597,7 @@ fu_csr_device_class_init (FuCsrDeviceClass *klass)
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_csr_device_to_string;
 	klass_device->write_firmware = fu_csr_device_download;
+	klass_device->read_firmware = fu_csr_device_upload;
 	klass_usb_device->open = fu_csr_device_open;
 	klass_usb_device->close = fu_csr_device_close;
 	klass_usb_device->probe = fu_csr_device_probe;

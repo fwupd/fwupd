@@ -40,8 +40,10 @@ struct _FuDeviceClass
 	gboolean		 (*write_firmware)	(FuDevice	*device,
 							 GBytes		*fw,
 							 GError		**error);
+	GBytes			*(*read_firmware)	(FuDevice	*device,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[29];
+	gpointer	padding[28];
 };
 
 /**
@@ -166,6 +168,8 @@ FuQuirks	*fu_device_get_quirks			(FuDevice	*device);
 FwupdRelease	*fu_device_get_release_default		(FuDevice	*device);
 gboolean	 fu_device_write_firmware		(FuDevice	*device,
 							 GBytes		*fw,
+							 GError		**error);
+GBytes		*fu_device_read_firmware		(FuDevice	*device,
 							 GError		**error);
 
 G_END_DECLS
