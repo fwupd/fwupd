@@ -63,14 +63,15 @@ fu_colorhug_device_get_is_bootloader (FuColorhugDevice *device)
 	return priv->is_bootloader;
 }
 
-gboolean
-fu_colorhug_device_detach (FuColorhugDevice *device, GError **error)
+static gboolean
+fu_colorhug_device_detach (FuDevice *device, GError **error)
 {
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (device);
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
+	FuColorhugDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(GError) error_local = NULL;
 
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	ch_device_queue_reset (priv->device_queue, usb_device);
 	if (!ch_device_queue_process (priv->device_queue,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
@@ -85,14 +86,15 @@ fu_colorhug_device_detach (FuColorhugDevice *device, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_colorhug_device_attach (FuColorhugDevice *device, GError **error)
+static gboolean
+fu_colorhug_device_attach (FuDevice *device, GError **error)
 {
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (device);
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
+	FuColorhugDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(GError) error_local = NULL;
 
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	ch_device_queue_boot_flash (priv->device_queue, usb_device);
 	if (!ch_device_queue_process (priv->device_queue,
 				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
@@ -334,6 +336,8 @@ fu_colorhug_device_class_init (FuColorhugDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_colorhug_device_write_firmware;
+	klass_device->attach = fu_colorhug_device_attach;
+	klass_device->detach = fu_colorhug_device_detach;
 	object_class->finalize = fu_colorhug_device_finalize;
 	klass_usb_device->open = fu_colorhug_device_open;
 	klass_usb_device->probe = fu_colorhug_device_probe;

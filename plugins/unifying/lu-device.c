@@ -858,9 +858,10 @@ lu_device_close (LuDevice *device, GError **error)
 	lu_device_remove_flag (device, LU_DEVICE_FLAG_IS_OPEN);
 	return TRUE;
 }
-gboolean
-lu_device_detach (LuDevice *device, GError **error)
+static gboolean
+lu_device_detach (FuDevice *device, GError **error)
 {
+	LuDevice *self = LU_DEVICE (device);
 	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (device);
 
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
@@ -869,7 +870,7 @@ lu_device_detach (LuDevice *device, GError **error)
 	/* subclassed */
 	g_debug ("detaching device");
 	if (klass->detach != NULL)
-		return klass->detach (device, error);
+		return klass->detach (self, error);
 
 	/* nothing to do */
 	g_set_error_literal (error,
@@ -879,16 +880,17 @@ lu_device_detach (LuDevice *device, GError **error)
 	return FALSE;
 }
 
-gboolean
-lu_device_attach (LuDevice *device, GError **error)
+static gboolean
+lu_device_attach (FuDevice *device, GError **error)
 {
+	LuDevice *self = LU_DEVICE (device);
 	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (device);
 
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* check kind */
-	if (lu_device_get_kind (device) == LU_DEVICE_KIND_RUNTIME) {
+	if (lu_device_get_kind (self) == LU_DEVICE_KIND_RUNTIME) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
@@ -898,7 +900,7 @@ lu_device_attach (LuDevice *device, GError **error)
 
 	/* subclassed */
 	if (klass->attach != NULL)
-		return klass->attach (device, error);
+		return klass->attach (self, error);
 
 	return TRUE;
 }
@@ -1078,6 +1080,8 @@ lu_device_class_init (LuDeviceClass *klass)
 	object_class->set_property = lu_device_set_property;
 	klass_device->to_string = lu_device_to_string;
 	klass_device->write_firmware = lu_device_write_firmware;
+	klass_device->attach = lu_device_attach;
+	klass_device->detach = lu_device_detach;
 
 	pspec = g_param_spec_uint ("kind", NULL, NULL,
 				   LU_DEVICE_KIND_UNKNOWN,

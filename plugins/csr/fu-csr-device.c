@@ -92,9 +92,10 @@ fu_csr_device_set_quirks (FuCsrDevice *self, FuCsrDeviceQuirks quirks)
 	self->quirks = quirks;
 }
 
-gboolean
-fu_csr_device_attach (FuCsrDevice *self, GError **error)
+static gboolean
+fu_csr_device_attach (FuDevice *device, GError **error)
 {
+	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	gsize sz = 0;
 	guint8 buf[] = { FU_CSR_REPORT_ID_CONTROL, FU_CSR_CONTROL_RESET };
@@ -598,6 +599,7 @@ fu_csr_device_class_init (FuCsrDeviceClass *klass)
 	klass_device->to_string = fu_csr_device_to_string;
 	klass_device->write_firmware = fu_csr_device_download;
 	klass_device->read_firmware = fu_csr_device_upload;
+	klass_device->attach = fu_csr_device_attach;
 	klass_usb_device->open = fu_csr_device_open;
 	klass_usb_device->close = fu_csr_device_close;
 	klass_usb_device->probe = fu_csr_device_probe;

@@ -313,7 +313,7 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 
 	/* do we need to go into bootloader mode */
 	if (lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH)) {
-		if (!lu_device_detach (device, error))
+		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
 		if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
 			if (!lu_context_wait_for_replug (priv->ctx,
@@ -355,7 +355,7 @@ lu_tool_write (FuLuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* detach back into runtime */
-	if (!lu_device_attach (device, error))
+	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
 
 	return TRUE;
@@ -390,7 +390,7 @@ lu_tool_attach (FuLuToolPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		}
 	}
-	if (!lu_device_attach (device, error))
+	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
 	return TRUE;
 }
@@ -437,7 +437,7 @@ lu_tool_detach (FuLuToolPrivate *priv, gchar **values, GError **error)
 	}
 	if (device == NULL)
 		return FALSE;
-	if (!lu_device_detach (device, error))
+	if (!fu_device_detach (FU_DEVICE (device), error))
 		return FALSE;
 	return TRUE;
 }

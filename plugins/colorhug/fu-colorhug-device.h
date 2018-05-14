@@ -41,10 +41,6 @@ FuColorhugDevice *fu_colorhug_device_new		(GUsbDevice		*usb_device);
 gboolean	 fu_colorhug_device_get_is_bootloader	(FuColorhugDevice	*device);
 
 /* object methods */
-gboolean	 fu_colorhug_device_detach		(FuColorhugDevice	*device,
-							 GError			**error);
-gboolean	 fu_colorhug_device_attach		(FuColorhugDevice	*device,
-							 GError			**error);
 gboolean	 fu_colorhug_device_set_flash_success	(FuColorhugDevice	*device,
 							 GError			**error);
 gboolean	 fu_colorhug_device_verify_firmware	(FuColorhugDevice	*device,

@@ -388,6 +388,64 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 				       error);
 }
 
+static gboolean
+fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+
+	/* invalid args */
+	if (g_strv_length (values) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* get device */
+	if (g_strv_length (values) >= 1) {
+		device = fu_engine_get_device (priv->engine, values[0], error);
+		if (device == NULL)
+			return FALSE;
+	} else {
+		device = fu_util_prompt_for_device (priv, error);
+		if (device == NULL)
+			return FALSE;
+	}
+
+	/* run vfunc */
+	return fu_device_detach (device, error);
+}
+
+static gboolean
+fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+
+	/* invalid args */
+	if (g_strv_length (values) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* get device */
+	if (g_strv_length (values) >= 1) {
+		device = fu_engine_get_device (priv->engine, values[0], error);
+		if (device == NULL)
+			return FALSE;
+	} else {
+		device = fu_util_prompt_for_device (priv, error);
+		if (device == NULL)
+			return FALSE;
+	}
+
+	/* run vfunc */
+	return fu_device_attach (device, error);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -451,6 +509,18 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware blob on a device"),
 		     fu_util_install_blob);
+	fu_util_add (priv->cmd_array,
+		     "attach",
+		     "DEVICE-ID",
+		     /* TRANSLATORS: command description */
+		     _("Attach to firmware mode"),
+		     fu_util_attach);
+	fu_util_add (priv->cmd_array,
+		     "detach",
+		     "DEVICE-ID",
+		     /* TRANSLATORS: command description */
+		     _("Detach to bootloader mode"),
+		     fu_util_detach);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
