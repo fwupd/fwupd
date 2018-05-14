@@ -41,8 +41,6 @@ typedef enum {
 FuCsrDevice	*fu_csr_device_new		(GUsbDevice		*usb_device);
 gboolean	 fu_csr_device_attach		(FuCsrDevice		*self,
 						 GError			**error);
-GBytes		*fu_csr_device_upload		(FuCsrDevice		*self,
-						 GError			**error);
 void		 fu_csr_device_set_quirks	(FuCsrDevice		*self,
 						 FuCsrDeviceQuirks	 quirks);
 

@@ -245,7 +245,7 @@ fu_csr_tool_dump (FuCsrToolPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_csr_tool_progress_cb), priv);
 	g_signal_connect (device, "notify::progress",
 			  G_CALLBACK (fu_csr_tool_progress_cb), priv);
-	blob = fu_csr_device_upload (device, error);
+	blob = fu_device_read_firmware (FU_DEVICE (device), error);
 	if (blob == NULL)
 		return FALSE;
 

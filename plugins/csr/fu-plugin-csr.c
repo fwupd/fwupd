@@ -55,7 +55,7 @@ fu_plugin_verify (FuPlugin *plugin, FuDevice *device,
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	blob_fw = fu_csr_device_upload (FU_CSR_DEVICE (device), error);
+	blob_fw = fu_device_read_firmware (device, error);
 	if (blob_fw == NULL)
 		return FALSE;
 	for (guint i = 0; checksum_types[i] != 0; i++) {

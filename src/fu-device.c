@@ -994,6 +994,38 @@ fu_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	return klass->write_firmware (device, fw, error);
 }
 
+/**
+ * fu_device_read_firmware:
+ * @device: A #FuDevice
+ * @error: A #GError
+ *
+ * Reads firmware from the device by calling a plugin-specific vfunc.
+ *
+ * Returns: (transfer full): A #GBytes, or %NULL for error
+ *
+ * Since: 1.0.8
+ **/
+GBytes *
+fu_device_read_firmware (FuDevice *device, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* no plugin-specific method */
+	if (klass->read_firmware == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return NULL;
+	}
+
+	/* call vfunc */
+	return klass->read_firmware (device, error);
+}
+
 static void
 fu_device_class_init (FuDeviceClass *klass)
 {
