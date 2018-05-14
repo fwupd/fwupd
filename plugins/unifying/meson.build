@@ -27,36 +27,6 @@ shared_module('fu_plugin_unifying',
   ],
 )
 
-executable(
-  'fu-unifying-util',
-  sources : [
-    'lu-tool.c',
-    'lu-common.c',
-    'lu-context.c',
-    'lu-device-bootloader.c',
-    'lu-device-bootloader-nordic.c',
-    'lu-device-bootloader-texas.c',
-    'lu-device.c',
-    'lu-device-peripheral.c',
-    'lu-device-runtime.c',
-    'lu-hidpp-msg.c',
-  ],
-  include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
-  ],
-  dependencies : [
-    plugin_deps,
-    gudev,
-  ],
-  link_with : [
-    fwupd,
-    libfwupdprivate,
-  ],
-  c_args : cargs,
-)
-
 if get_option('tests')
   e = executable(
     'unifying-self-test',
