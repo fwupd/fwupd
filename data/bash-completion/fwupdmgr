@@ -36,6 +36,7 @@ _fwupdmgr_opts=(
 	'--allow-older'
 	'--force'
 	'--assume-yes'
+	'--no-history'
 	'--no-unreported-check'
 	'--no-metadata-check'
 	'--no-reboot-check'

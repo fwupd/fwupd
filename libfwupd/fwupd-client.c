@@ -967,6 +967,10 @@ fwupd_client_install (FwupdClient *client,
 		g_variant_builder_add (&builder, "{sv}",
 				       "force", g_variant_new_boolean (TRUE));
 	}
+	if (install_flags & FWUPD_INSTALL_FLAG_NO_HISTORY) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "no-history", g_variant_new_boolean (TRUE));
+	}
 
 	/* open file */
 	fd = open (filename, O_RDONLY);

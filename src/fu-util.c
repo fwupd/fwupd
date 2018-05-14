@@ -2320,6 +2320,7 @@ main (int argc, char *argv[])
 	gboolean force = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
+	gboolean no_history = FALSE;
 	gboolean offline = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
@@ -2358,6 +2359,9 @@ main (int argc, char *argv[])
 		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for reboot after update"), NULL },
+		{ "no-history", '\0', 0, G_OPTION_ARG_NONE, &no_history,
+			/* TRANSLATORS: command line option */
+			_("Do not write to the history database"), NULL },
 		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
@@ -2596,6 +2600,8 @@ main (int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (force)
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
+	if (no_history)
+		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 
 	/* connect to the daemon */
 	priv->client = fwupd_client_new ();
