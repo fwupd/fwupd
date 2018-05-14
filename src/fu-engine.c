@@ -1978,10 +1978,24 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 	return g_steal_pointer (&devices);
 }
 
+/**
+ * fu_engine_get_device:
+ * @self: A #FuEngine
+ * @device_id: A device ID
+ * @error: A #GError, or %NULL
+ *
+ * Gets a specific device.
+ *
+ * Returns: (transfer full): a device, or %NULL if not found
+ **/
 FuDevice *
 fu_engine_get_device (FuEngine *self, const gchar *device_id, GError **error)
 {
-	return fu_history_get_device_by_id (self->history, device_id, error);
+	FuDevice *device;
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
+	if (device == NULL)
+		return NULL;
+	return g_object_ref (device);
 }
 
 /**
