@@ -60,4 +60,6 @@ foreach p : static_plugins
   plugin_objects += p.extract_all_objects ()
 endforeach
 plugins_static = static_library ('plugins_static',
-                                 objects : plugin_objects)
+                                 objects : plugin_objects,
+                                 install : false
+)

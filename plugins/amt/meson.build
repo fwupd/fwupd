@@ -27,11 +27,11 @@ amt_static = static_library('amt_static',
     include_directories('../../src'),
     include_directories('../../libfwupd'),
   ],
-  install : true,
-  install_dir: plugin_dir,
+  install : false,
   c_args : cargs,
   dependencies : [
     plugin_deps,
     uuid,
   ],
+  install : false
 )

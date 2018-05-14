@@ -32,8 +32,6 @@ altos_static = static_library('altos_static',
     include_directories('../../src'),
     include_directories('../../libfwupd'),
   ],
-  install : true,
-  install_dir: plugin_dir,
   c_args : cargs,
   dependencies : [
     gudev,
