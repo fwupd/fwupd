@@ -278,6 +278,8 @@ fu_main_engine_percentage_changed_cb (FuEngine *engine,
 static gboolean
 fu_util_watch (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
 	g_main_loop_run (priv->loop);
 	return TRUE;
 }
@@ -286,6 +288,10 @@ static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devs = NULL;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
 
 	/* print */
 	devs = fu_engine_get_devices (priv->engine, error);
@@ -366,6 +372,10 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (blob_fw == NULL)
 		return FALSE;
 
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
+
 	/* get device */
 	if (g_strv_length (values) >= 2) {
 		device = fu_engine_get_device (priv->engine, values[1], error);
@@ -392,6 +402,10 @@ static gboolean
 fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
 
 	/* invalid args */
 	if (g_strv_length (values) == 0) {
@@ -421,6 +435,10 @@ static gboolean
 fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
 
 	/* invalid args */
 	if (g_strv_length (values) == 0) {
@@ -578,11 +596,6 @@ main (int argc, char *argv[])
 	g_signal_connect (priv->engine, "percentage-changed",
 			  G_CALLBACK (fu_main_engine_percentage_changed_cb),
 			  priv);
-	//FIXME: do we need to tell the engine the runtime AND build-time PLUGINDIR location?
-	if (!fu_engine_load (priv->engine, &error)) {
-		g_printerr ("Failed to load engine: %s\n", error->message);
-		return EXIT_FAILURE;
-	}
 
 	/* run the specified command */
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);
