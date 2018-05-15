@@ -401,6 +401,7 @@ fu_config_load (FuConfig *self, GError **error)
 	GFileMonitor *monitor;
 	guint64 archive_size_max;
 	g_autofree gchar *config_file = NULL;
+	g_autofree gchar *metainfo_path = NULL;
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -468,8 +469,14 @@ fu_config_load (FuConfig *self, GError **error)
 	if (self->os_release == NULL)
 		return FALSE;
 	as_store_add_filter (self->store_remotes, AS_APP_KIND_SOURCE);
-	if (!as_store_load (self->store_remotes, AS_STORE_LOAD_FLAG_APPDATA, NULL, error))
-		return FALSE;
+	metainfo_path = g_build_filename (FWUPDDATADIR, "metainfo", NULL);
+	if (g_file_test (metainfo_path, G_FILE_TEST_EXISTS)) {
+		if (!as_store_load_path (self->store_remotes,
+					 metainfo_path,
+					 NULL, /* cancellable */
+					 error))
+			return FALSE;
+	}
 
 	/* load remotes */
 	if (!fu_config_load_remotes (self, error))

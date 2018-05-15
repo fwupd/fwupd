@@ -12,7 +12,7 @@ if get_option('lvfs')
     po_dir: join_paths(meson.source_root(), 'po'),
     data_dirs: join_paths(meson.source_root(), 'po'),
     install: true,
-    install_dir: join_paths(get_option('datadir'), 'metainfo')
+    install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
   )
   i18n.merge_file(
     input: 'lvfs-testing.metainfo.xml',
@@ -21,7 +21,7 @@ if get_option('lvfs')
     po_dir: join_paths(meson.source_root(), 'po'),
     data_dirs: join_paths(meson.source_root(), 'po'),
     install: true,
-    install_dir: join_paths(get_option('datadir'), 'metainfo')
+    install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
   )
 endif
 
