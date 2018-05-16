@@ -2857,19 +2857,31 @@ fu_engine_is_plugin_name_blacklisted (FuEngine *self, const gchar *name)
 	return FALSE;
 }
 
-static gboolean
-fu_engine_load_plugins (FuEngine *self, GError **error)
+static GPtrArray *
+fu_engine_get_plugin_paths (FuEngine *self)
 {
-	const gchar *fn;
-	g_autoptr(GDir) dir = NULL;
-	g_autoptr(AsProfileTask) ptask = NULL;
+	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
 
-	/* profile */
-	ptask = as_profile_start_literal (self->profile, "FuEngine:load-plugins");
-	g_assert (ptask != NULL);
+	if (self->mode == FU_ENGINE_MODE_DIRECT) {
+		/* look in pwd */
+		g_ptr_array_add (paths, g_get_current_dir ());
+		/* if running in build tree, look there */
+		if (g_file_test (PLUGINBUILDDIR, G_FILE_TEST_EXISTS))
+			g_ptr_array_add (paths, g_strdup (PLUGINBUILDDIR));
+	}
+	g_ptr_array_add (paths, g_strdup (PLUGINDIR));
+
+	return paths;
+}
+
+static gboolean
+fu_engine_load_plugins_for_path (FuEngine *self, const gchar *path, GError **error)
+{
+	g_autoptr(GDir) dir = NULL;
+	const gchar *fn;
 
 	/* search */
-	dir = g_dir_open (PLUGINDIR, 0, error);
+	dir = g_dir_open (path, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	while ((fn = g_dir_read_name (dir)) != NULL) {
@@ -2877,6 +2889,18 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		g_autofree gchar *name = NULL;
 		g_autoptr(FuPlugin) plugin = NULL;
 		g_autoptr(GError) error_local = NULL;
+
+		filename = g_build_filename (path, fn, NULL);
+
+		/* recurse if we encounter a directory */
+		if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
+			/* skip going up */
+			if (g_strcmp0 (g_path_get_basename (filename), "..") == 0)
+				continue;
+			if (!fu_engine_load_plugins_for_path (self, filename, error))
+				return FALSE;
+			continue;
+		}
 
 		/* ignore non-plugins */
 		if (!g_str_has_suffix (fn, ".so"))
@@ -2892,7 +2916,6 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		}
 
 		/* open module */
-		filename = g_build_filename (PLUGINDIR, fn, NULL);
 		plugin = fu_plugin_new ();
 		fu_plugin_set_name (plugin, name);
 		fu_plugin_set_usb_context (plugin, self->usb_ctx);
@@ -2935,6 +2958,45 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 
 		/* add */
 		fu_plugin_list_add (self->plugin_list, plugin);
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_engine_load_plugins (FuEngine *self, GError **error)
+{
+	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(GPtrArray) paths = NULL;
+	GPtrArray *plugins;
+
+	/* profile */
+	ptask = as_profile_start_literal (self->profile, "FuEngine:load-plugins");
+	g_assert (ptask != NULL);
+
+	/* get a list of all plugin paths */
+	paths = fu_engine_get_plugin_paths (self);
+	if (paths->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No plugin search paths found");
+		return FALSE;
+	}
+
+	/* look for all plugins */
+	for (guint i = 0; i < paths->len; i++) {
+		const gchar *path = g_ptr_array_index (paths, i);
+		if (!g_file_test (path, G_FILE_TEST_IS_DIR))
+			continue;
+		g_debug ("using plugin path of %s", path);
+		if (!fu_engine_load_plugins_for_path (self, path, error))
+			return FALSE;
+		/* we found some plugins */
+		plugins = fu_plugin_list_get_all (self->plugin_list);
+		if (plugins->len > 0)
+			break;
+
 	}
 
 	/* depsolve into the correct order */

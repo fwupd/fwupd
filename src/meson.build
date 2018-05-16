@@ -159,6 +159,7 @@ fwupdmgr_noinst = executable(
     '-DSYSCONFDIR="' + default_sysconfdir + '"',
     '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
     '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
+    '-DPLUGINBUILDDIR="' + join_paths(meson.build_root(), 'plugins') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
@@ -235,6 +236,7 @@ executable(
     '-DSYSCONFDIR="' + default_sysconfdir + '"',
     '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
     '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
+    '-DPLUGINBUILDDIR="' + join_paths(meson.build_root(), 'plugins') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
