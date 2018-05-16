@@ -35,7 +35,13 @@ G_BEGIN_DECLS
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 
-FuEngine	*fu_engine_new				(void);
+typedef enum {
+	FU_ENGINE_MODE_DAEMON,
+	FU_ENGINE_MODE_DIRECT,
+	FU_ENGINE_MODE_LAST
+} FuEngineMode;
+
+FuEngine	*fu_engine_new				(FuEngineMode	 mode);
 gboolean	 fu_engine_load				(FuEngine	*self,
 							 GError		**error);
 FwupdStatus	 fu_engine_get_status			(FuEngine	*self);
