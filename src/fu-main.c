@@ -1311,7 +1311,7 @@ main (int argc, char *argv[])
 	priv->loop = g_main_loop_new (NULL, FALSE);
 
 	/* load engine */
-	priv->engine = fu_engine_new ();
+	priv->engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_signal_connect (priv->engine, "changed",
 			  G_CALLBACK (fu_main_engine_changed_cb),
 			  priv);

@@ -24,6 +24,12 @@
 
 #include <gio/gio.h>
 
+typedef enum {
+	FU_APP_FLAGS_NONE		= 0,
+	FU_APP_FLAGS_NO_IDLE_SOURCES	= 1 << 0,
+	FU_APP_FLAGS_LAST
+} FuAppFlags;
+
 typedef void	(*FuOutputHandler)		(const gchar	*line,
 						 gpointer	 user_data);
 
