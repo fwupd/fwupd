@@ -36,7 +36,7 @@ if get_option('tests')
       valgrind,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupdprivate,
     ],
   )
   test('nitrokey-self-test', e)

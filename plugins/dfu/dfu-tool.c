@@ -2384,7 +2384,7 @@ main (int argc, char *argv[])
 	fu_progressbar_set_length_status (priv->progressbar, 20);
 
 	/* use quirks */
-	priv->quirks = fu_quirks_new ();
+	priv->quirks = fu_quirks_new (TRUE);
 	if (!fu_quirks_load (priv->quirks, &error)) {
 		/* TRANSLATORS: quirks are device-specific workarounds */
 		g_print ("%s: %s\n", _("Failed to load quirks"), error->message);

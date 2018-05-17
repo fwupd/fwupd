@@ -80,7 +80,7 @@ dfu_tool = executable(
   link_with : [
     dfu,
     fwupd,
-    libfwupdprivate,
+    fwupdprivate,
   ],
   c_args : cargs,
   install : true,
@@ -130,7 +130,7 @@ if get_option('tests')
     link_with : [
       dfu,
       fwupd,
-      libfwupdprivate,
+      fwupdprivate,
     ],
     c_args : cargs
   )

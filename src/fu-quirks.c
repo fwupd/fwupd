@@ -63,6 +63,7 @@ struct _FuQuirks
 	GObject			 parent_instance;
 	GPtrArray		*monitors;
 	GHashTable		*hash;	/* of prefix/id:string */
+	gboolean		probe_local;
 };
 
 G_DEFINE_TYPE (FuQuirks, fu_quirks, G_TYPE_OBJECT)
@@ -252,25 +253,31 @@ static gboolean
 fu_quirks_add_quirks_for_path (FuQuirks *self, const gchar *path, GError **error)
 {
 	const gchar *tmp;
-	g_autofree gchar *path_hw = NULL;
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GPtrArray) filenames = g_ptr_array_new_with_free_func (g_free);
 
 	/* add valid files to the array */
-	path_hw = g_build_filename (path, "quirks.d", NULL);
-	if (!g_file_test (path_hw, G_FILE_TEST_EXISTS)) {
-		g_debug ("no %s, skipping", path_hw);
+	if (!g_file_test (path, G_FILE_TEST_EXISTS)) {
+		g_debug ("no %s, skipping", path);
 		return TRUE;
 	}
-	dir = g_dir_open (path_hw, 0, error);
+	dir = g_dir_open (path, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	while ((tmp = g_dir_read_name (dir)) != NULL) {
+		g_autofree gchar *filename = g_build_filename (path, tmp, NULL);
+
+		/* recurse the build tree or local dir */
+		if (self->probe_local && g_file_test (filename, G_FILE_TEST_IS_DIR)) {
+			if (!fu_quirks_add_quirks_for_path (self, filename, error))
+				return FALSE;
+		}
+
 		if (!g_str_has_suffix (tmp, ".quirk")) {
-			g_debug ("skipping invalid file %s", tmp);
+			g_debug ("skipping invalid file %s", filename);
 			continue;
 		}
-		g_ptr_array_add (filenames, g_build_filename (path_hw, tmp, NULL));
+		g_ptr_array_add (filenames, g_steal_pointer (&filename));
 	}
 
 	/* sort */
@@ -311,14 +318,30 @@ gboolean
 fu_quirks_load (FuQuirks *self, GError **error)
 {
 	g_autofree gchar *localstate_fwupd = NULL;
+	g_autofree gchar *datadir_fwupd = NULL;
 	g_return_val_if_fail (FU_IS_QUIRKS (self), FALSE);
 
 	/* ensure empty in case we're called from a monitor change */
 	g_ptr_array_set_size (self->monitors, 0);
 	g_hash_table_remove_all (self->hash);
 
+	/* if running noinst load that path first */
+	if (self->probe_local) {
+		g_autofree gchar *local_path = g_build_filename (g_get_current_dir (), "quirks.d", NULL);
+
+		if (g_file_test (local_path, G_FILE_TEST_EXISTS)) {
+			if (!fu_quirks_add_quirks_for_path (self, local_path, error))
+				return FALSE;
+		}
+		/* build directory */
+		else
+			if (!fu_quirks_add_quirks_for_path (self, QUIRKBUILDDIR, error))
+				return FALSE;
+	}
+
 	/* system datadir */
-	if (!fu_quirks_add_quirks_for_path (self, FWUPDDATADIR, error))
+	datadir_fwupd = g_build_filename (FWUPDDATADIR, "quirks.d", NULL);
+	if (!fu_quirks_add_quirks_for_path (self, datadir_fwupd, error))
 		return FALSE;
 
 	/* something we can write when using Ostree */
@@ -361,9 +384,10 @@ fu_quirks_finalize (GObject *obj)
  * Return value: a new #FuQuirks
  **/
 FuQuirks *
-fu_quirks_new (void)
+fu_quirks_new (gboolean probe_local)
 {
 	FuQuirks *self;
 	self = g_object_new (FU_TYPE_QUIRKS, NULL);
+	self->probe_local = probe_local;
 	return FU_QUIRKS (self);
 }

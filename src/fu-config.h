@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 #define FU_TYPE_CONFIG (fu_config_get_type ())
 G_DECLARE_FINAL_TYPE (FuConfig, fu_config, FU, CONFIG, GObject)
 
-FuConfig	*fu_config_new				(void);
+FuConfig	*fu_config_new				(gboolean probe_local);
 gboolean	 fu_config_load				(FuConfig	*self,
 							 GError		**error);
 

@@ -48,7 +48,7 @@ if get_option('tests')
     ],
     link_with : [
       fwupd,
-      libfwupdprivate,
+      fwupdprivate,
     ],
     c_args : [
       cargs,

@@ -45,12 +45,13 @@ struct _FuConfig
 	guint64			 archive_size_max;
 	AsStore			*store_remotes;
 	GHashTable		*os_release;
+	gboolean		probe_local;
 };
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
 
 static GPtrArray *
-fu_config_get_config_paths (void)
+fu_config_get_config_paths (FuConfig *self)
 {
 	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
 	const gchar *remotes_dir;
@@ -62,6 +63,12 @@ fu_config_get_config_paths (void)
 	if (remotes_dir != NULL) {
 		g_ptr_array_add (paths, g_strdup (remotes_dir));
 		return paths;
+	}
+
+	/* running noinst tool */
+	if (self->probe_local) {
+		g_ptr_array_add (paths, g_build_filename (g_get_current_dir (), "fwupd", NULL));
+		g_ptr_array_add (paths, g_build_filename (CONFIGBUILDDIR, NULL));
 	}
 
 	/* use sysconfig, and then fall back to /etc */
@@ -355,7 +362,7 @@ fu_config_load_remotes (FuConfig *self, GError **error)
 	g_autoptr(GPtrArray) paths = NULL;
 
 	/* get a list of all config paths */
-	paths = fu_config_get_config_paths ();
+	paths = fu_config_get_config_paths (self);
 	if (paths->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -413,8 +420,24 @@ fu_config_load (FuConfig *self, GError **error)
 	g_ptr_array_set_size (self->monitors, 0);
 	g_ptr_array_set_size (self->remotes, 0);
 
+
+	/* if running noinst load that path first */
+	if (self->probe_local) {
+		g_autofree gchar *local_path = g_build_filename (g_get_current_dir (), "fwupd", "daemon.conf", NULL);
+
+		if (g_file_test (local_path, G_FILE_TEST_EXISTS))
+			config_file = g_steal_pointer (&local_path);
+		else {
+			g_autofree gchar *build_path = g_build_filename (CONFIGBUILDDIR, "daemon.conf", NULL);
+
+			if (g_file_test (build_path, G_FILE_TEST_EXISTS))
+				config_file = g_steal_pointer (&build_path);
+		}
+	}
+	if (config_file == NULL)
+		config_file = g_build_filename (FWUPDCONFIGDIR, "daemon.conf", NULL);
+
 	/* load the main daemon config file */
-	config_file = g_build_filename (FWUPDCONFIGDIR, "daemon.conf", NULL);
 	g_debug ("loading config values from %s", config_file);
 	if (!g_key_file_load_from_file (self->keyfile, config_file,
 					G_KEY_FILE_NONE, error))
@@ -551,9 +574,10 @@ fu_config_finalize (GObject *obj)
 }
 
 FuConfig *
-fu_config_new (void)
+fu_config_new (gboolean probe_local)
 {
 	FuConfig *self;
 	self = g_object_new (FU_TYPE_CONFIG, NULL);
+	self->probe_local = probe_local;
 	return FU_CONFIG (self);
 }
