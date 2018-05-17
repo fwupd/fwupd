@@ -28,10 +28,12 @@ G_BEGIN_DECLS
 #include <glib-object.h>
 #include <gusb.h>
 
+#include "fu-common.h"
+
 #define FU_TYPE_QUIRKS (fu_quirks_get_type ())
 G_DECLARE_FINAL_TYPE (FuQuirks, fu_quirks, FU, QUIRKS, GObject)
 
-FuQuirks	*fu_quirks_new				(void);
+FuQuirks	*fu_quirks_new				(FuAppFlags	 app_flags);
 gboolean	 fu_quirks_load				(FuQuirks	*self,
 							 GError		**error);
 const gchar	*fu_quirks_lookup_by_id			(FuQuirks	*self,

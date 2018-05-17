@@ -1142,7 +1142,7 @@ fu_plugin_quirks_func (void)
 {
 	const gchar *tmp;
 	gboolean ret;
-	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
+	g_autoptr(FuQuirks) quirks = fu_quirks_new (FALSE);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
 
