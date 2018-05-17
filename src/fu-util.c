@@ -32,7 +32,6 @@
 #include <gudev/gudev.h>
 #include <json-glib/json-glib.h>
 #include <locale.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <libsoup/soup.h>
 #include <unistd.h>
@@ -41,6 +40,7 @@
 #include "fu-history.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
+#include "fu-util-common.h"
 #include "fwupd-common-private.h"
 
 /* this is only valid in this file */
@@ -194,75 +194,6 @@ fu_util_client_notify_cb (GObject *object,
 	fu_progressbar_update (priv->progressbar,
 			       fwupd_client_get_status (priv->client),
 			       fwupd_client_get_percentage (priv->client));
-}
-
-static void
-fu_util_print_data (const gchar *title, const gchar *msg)
-{
-	gsize title_len;
-	g_auto(GStrv) lines = NULL;
-
-	if (msg == NULL)
-		return;
-	g_print ("%s:", title);
-
-	/* pad */
-	title_len = strlen (title) + 1;
-	lines = g_strsplit (msg, "\n", -1);
-	for (guint j = 0; lines[j] != NULL; j++) {
-		for (gsize i = title_len; i < 25; i++)
-			g_print (" ");
-		g_print ("%s\n", lines[j]);
-		title_len = 0;
-	}
-}
-
-static guint
-fu_util_prompt_for_number (guint maxnum)
-{
-	gint retval;
-	guint answer = 0;
-
-	do {
-		char buffer[64];
-
-		/* swallow the \n at end of line too */
-		if (!fgets (buffer, sizeof (buffer), stdin))
-			break;
-		if (strlen (buffer) == sizeof (buffer) - 1)
-			continue;
-
-		/* get a number */
-		retval = sscanf (buffer, "%u", &answer);
-
-		/* positive */
-		if (retval == 1 && answer <= maxnum)
-			break;
-
-		/* TRANSLATORS: the user isn't reading the question */
-		g_print (_("Please enter a number from 0 to %u: "), maxnum);
-	} while (TRUE);
-	return answer;
-}
-
-static gboolean
-fu_util_prompt_for_boolean (gboolean def)
-{
-	do {
-		char buffer[4];
-		if (!fgets (buffer, sizeof (buffer), stdin))
-			continue;
-		if (strlen (buffer) == sizeof (buffer) - 1)
-			continue;
-		if (g_strcmp0 (buffer, "\n") == 0)
-			return def;
-		buffer[0] = g_ascii_toupper (buffer[0]);
-		if (g_strcmp0 (buffer, "Y\n") == 0)
-			return TRUE;
-		if (g_strcmp0 (buffer, "N\n") == 0)
-			return FALSE;
-	} while (TRUE);
-	return FALSE;
 }
 
 static FwupdDevice *
@@ -1959,26 +1890,6 @@ fu_util_changed_cb (FwupdClient *client, gpointer user_data)
 }
 
 static gboolean
-fu_util_smbios_dump (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	g_autofree gchar *tmp = NULL;
-	g_autoptr(FuSmbios) smbios = NULL;
-	if (g_strv_length (values) < 1) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
-		return FALSE;
-	}
-	smbios = fu_smbios_new ();
-	if (!fu_smbios_setup_from_file (smbios, values[0], error))
-		return FALSE;
-	tmp = fu_smbios_to_string (smbios);
-	g_print ("%s\n", tmp);
-	return TRUE;
-}
-
-static gboolean
 fu_util_firmware_builder (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *script_fn = "startup.sh";
@@ -2521,12 +2432,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Build firmware using a sandbox"),
 		     fu_util_firmware_builder);
-	fu_util_add (priv->cmd_array,
-		     "smbios-dump",
-		     "FILE",
-		     /* TRANSLATORS: command description */
-		     _("Dump SMBIOS data from a file"),
-		     fu_util_smbios_dump);
 	fu_util_add (priv->cmd_array,
 		     "modify-remote",
 		     "REMOTE-ID KEY VALUE",

@@ -61,12 +61,12 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 static gboolean
 fu_plugin_unifying_detach_cb (gpointer user_data)
 {
-	LuDevice *device = LU_DEVICE (user_data);
+	FuDevice *device = FU_DEVICE (user_data);
 	g_autoptr(GError) error = NULL;
 
 	/* ditch this device */
 	g_debug ("detaching");
-	if (!lu_device_detach (device, &error)) {
+	if (!fu_device_detach (device, &error)) {
 		g_warning ("failed to detach: %s", error->message);
 		return FALSE;
 	}
@@ -77,12 +77,12 @@ fu_plugin_unifying_detach_cb (gpointer user_data)
 static gboolean
 fu_plugin_unifying_attach_cb (gpointer user_data)
 {
-	LuDevice *device = LU_DEVICE (user_data);
+	FuDevice *device = FU_DEVICE (user_data);
 	g_autoptr(GError) error = NULL;
 
 	/* ditch this device */
 	g_debug ("attaching");
-	if (!lu_device_attach (device, &error)) {
+	if (!fu_device_attach (device, &error)) {
 		g_warning ("failed to detach: %s", error->message);
 		return FALSE;
 	}
@@ -110,7 +110,7 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 		g_debug ("doing detach in idle");
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
 				 fu_plugin_unifying_detach_cb,
-				 g_object_ref (device),
+				 g_object_ref (dev),
 				 (GDestroyNotify) g_object_unref);
 		if (!lu_context_wait_for_replug (data->ctx,
 						 device,
@@ -119,7 +119,7 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 			return FALSE;
 	} else {
 		g_debug ("doing detach in main thread");
-		if (!lu_device_detach (device, error))
+		if (!fu_device_detach (dev, error))
 			return FALSE;
 	}
 	return TRUE;
@@ -154,7 +154,7 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
 			return FALSE;
 	} else {
 		g_debug ("doing attach in main thread");
-		if (!lu_device_attach (device, error))
+		if (!fu_device_attach (dev, error))
 			return FALSE;
 	}
 	return TRUE;

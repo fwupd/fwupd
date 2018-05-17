@@ -56,6 +56,7 @@ static void fu_engine_finalize	 (GObject *obj);
 struct _FuEngine
 {
 	GObject			 parent_instance;
+	FuAppFlags		 app_flags;
 	GUsbContext		*usb_ctx;
 	FuConfig		*config;
 	FuDeviceList		*device_list;
@@ -1123,17 +1124,10 @@ fu_engine_install (FuEngine *self,
 {
 	AsChecksum *csum_tmp;
 	AsRelease *rel;
-	FuPlugin *plugin;
 	GBytes *blob_fw;
-	GPtrArray *plugins;
 	const gchar *tmp;
 	const gchar *version;
-	g_autofree gchar *device_id_orig = NULL;
-	g_autofree gchar *version_orig = NULL;
-	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
 	g_autoptr(GBytes) blob_fw2 = NULL;
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GHashTable) metadata_hash = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
@@ -1207,12 +1201,44 @@ fu_engine_install (FuEngine *self,
 		blob_fw2 = g_bytes_ref (blob_fw);
 	}
 
+	/* install firmware blob */
+	version = as_release_get_version (rel);
+	return fu_engine_install_blob (self, device, blob_cab, blob_fw2,
+				       version, flags, error);
+}
+
+gboolean
+fu_engine_install_blob (FuEngine *self,
+			FuDevice *device,
+			GBytes *blob_cab,
+			GBytes *blob_fw2,
+			const gchar *version,
+			FwupdInstallFlags flags,
+			GError **error)
+{
+	FuPlugin *plugin;
+	GPtrArray *plugins;
+	g_autofree gchar *device_id_orig = NULL;
+	g_autofree gchar *version_orig = NULL;
+	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GHashTable) metadata_hash = NULL;
+
 	/* test the firmware is not an empty blob */
 	if (g_bytes_get_size (blob_fw2) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "Firmware is invalid as has zero size");
+		return FALSE;
+	}
+
+	/* we can only write history if we're providing a version number */
+	if (version == NULL && (flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Version required if writing history");
 		return FALSE;
 	}
 
@@ -1224,7 +1250,6 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 
 	/* compare the versions of what we have installed */
-	version = as_release_get_version (rel);
 	version_orig = g_strdup (fu_device_get_version (device));
 
 	/* signal to all the plugins the update is about to happen */
@@ -2794,6 +2819,11 @@ fu_engine_plugin_recoldplug_cb (FuPlugin *plugin, FuEngine *self)
 		g_warning ("coldplug already running, cannot recoldplug");
 		return;
 	}
+	if (self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) {
+		g_debug ("doing direct recoldplug");
+		fu_engine_plugins_coldplug (self, TRUE);
+		return;
+	}
 	g_debug ("scheduling a recoldplug");
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
@@ -2827,19 +2857,37 @@ fu_engine_is_plugin_name_blacklisted (FuEngine *self, const gchar *name)
 	return FALSE;
 }
 
-static gboolean
-fu_engine_load_plugins (FuEngine *self, GError **error)
+static GPtrArray *
+fu_engine_get_plugin_paths (FuEngine *self, GError **error)
 {
-	const gchar *fn;
-	g_autoptr(GDir) dir = NULL;
-	g_autoptr(AsProfileTask) ptask = NULL;
+	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
 
-	/* profile */
-	ptask = as_profile_start_literal (self->profile, "FuEngine:load-plugins");
-	g_assert (ptask != NULL);
+	/* prefer running dir and then the build tree when running direct */
+	if (self->app_flags & FU_APP_FLAGS_SEARCH_RUNDIR) {
+		g_autofree gchar *local_path = g_file_read_link ("/proc/self/exe", error);
+		if (local_path == NULL)
+			return NULL;
+		g_ptr_array_add (paths, g_path_get_dirname (local_path));
+	}
+
+	if (self->app_flags & FU_APP_FLAGS_SEARCH_BUILDDIR &&
+	    g_file_test (PLUGINBUILDDIR, G_FILE_TEST_EXISTS))
+		g_ptr_array_add (paths, g_strdup (PLUGINBUILDDIR));
+
+	/* always use the configured plugindir */
+	g_ptr_array_add (paths, g_strdup (PLUGINDIR));
+
+	return paths;
+}
+
+static gboolean
+fu_engine_load_plugins_for_path (FuEngine *self, const gchar *path, GError **error)
+{
+	g_autoptr(GDir) dir = NULL;
+	const gchar *fn;
 
 	/* search */
-	dir = g_dir_open (PLUGINDIR, 0, error);
+	dir = g_dir_open (path, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	while ((fn = g_dir_read_name (dir)) != NULL) {
@@ -2847,6 +2895,14 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		g_autofree gchar *name = NULL;
 		g_autoptr(FuPlugin) plugin = NULL;
 		g_autoptr(GError) error_local = NULL;
+
+		/* recurse if we encounter a directory */
+		filename = g_build_filename (path, fn, NULL);
+		if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
+			if (!fu_engine_load_plugins_for_path (self, filename, error))
+				return FALSE;
+			continue;
+		}
 
 		/* ignore non-plugins */
 		if (!g_str_has_suffix (fn, ".so"))
@@ -2861,8 +2917,13 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 			continue;
 		}
 
+		/* already added in higher-priority seach path */
+		if (fu_plugin_list_find_by_name (self->plugin_list, name, NULL) != NULL) {
+			g_debug ("ignoring %s as already added", name);
+			continue;
+		}
+
 		/* open module */
-		filename = g_build_filename (PLUGINDIR, fn, NULL);
 		plugin = fu_plugin_new ();
 		fu_plugin_set_name (plugin, name);
 		fu_plugin_set_usb_context (plugin, self->usb_ctx);
@@ -2905,6 +2966,39 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 
 		/* add */
 		fu_plugin_list_add (self->plugin_list, plugin);
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_engine_load_plugins (FuEngine *self, GError **error)
+{
+	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autoptr(GPtrArray) paths = NULL;
+
+	/* profile */
+	ptask = as_profile_start_literal (self->profile, "FuEngine:load-plugins");
+	g_assert (ptask != NULL);
+
+	/* get a list of all plugin paths */
+	paths = fu_engine_get_plugin_paths (self, error);
+	if (paths == NULL)
+		return FALSE;
+	if (paths->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No plugin search paths found");
+		return FALSE;
+	}
+
+	/* try each path in priority order */
+	for (guint i = 0; i < paths->len; i++) {
+		const gchar *path = g_ptr_array_index (paths, i);
+		g_debug ("searching plugin path of %s", path);
+		if (!fu_engine_load_plugins_for_path (self, path, error))
+			return FALSE;
 	}
 
 	/* depsolve into the correct order */
@@ -3291,11 +3385,9 @@ fu_engine_init (FuEngine *self)
 {
 	self->percentage = 0;
 	self->status = FWUPD_STATUS_IDLE;
-	self->config = fu_config_new ();
 	self->device_list = fu_device_list_new ();
 	self->smbios = fu_smbios_new ();
 	self->hwids = fu_hwids_new ();
-	self->quirks = fu_quirks_new ();
 	self->history = fu_history_new ();
 	self->plugin_list = fu_plugin_list_new ();
 	self->profile = as_profile_new ();
@@ -3358,9 +3450,12 @@ fu_engine_finalize (GObject *obj)
 }
 
 FuEngine *
-fu_engine_new (void)
+fu_engine_new (FuAppFlags app_flags)
 {
 	FuEngine *self;
 	self = g_object_new (FU_TYPE_ENGINE, NULL);
+	self->app_flags = app_flags;
+	self->config = fu_config_new (app_flags);
+	self->quirks = fu_quirks_new (app_flags);
 	return FU_ENGINE (self);
 }

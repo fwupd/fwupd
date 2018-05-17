@@ -30,12 +30,13 @@ G_BEGIN_DECLS
 #include "fwupd-device.h"
 #include "fwupd-enums.h"
 
+#include "fu-common.h"
 #include "fu-plugin.h"
 
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 
-FuEngine	*fu_engine_new				(void);
+FuEngine	*fu_engine_new				(FuAppFlags	 app_flags);
 gboolean	 fu_engine_load				(FuEngine	*self,
 							 GError		**error);
 FwupdStatus	 fu_engine_get_status			(FuEngine	*self);
@@ -98,6 +99,13 @@ gboolean	 fu_engine_install			(FuEngine	*self,
 							 FuDevice	*device,
 							 AsApp		*app,
 							 GBytes		*blob_cab,
+							 FwupdInstallFlags flags,
+							 GError		**error);
+gboolean	 fu_engine_install_blob			(FuEngine	*self,
+							 FuDevice	*device,
+							 GBytes		*blob_cab,
+							 GBytes		*blob_fw,
+							 const gchar	*version,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 GPtrArray	*fu_engine_get_details			(FuEngine	*self,

@@ -28,26 +28,3 @@ shared_module('fu_plugin_csr',
     dfu,
   ],
 )
-
-executable(
-  'fu-csr-tool',
-  sources : [
-    'fu-csr-device.c',
-    'fu-csr-tool.c',
-  ],
-  include_directories : [
-    include_directories('../..'),
-    include_directories('../dfu'),
-    include_directories('../../libfwupd'),
-    include_directories('../../src'),
-  ],
-  dependencies : [
-    plugin_deps,
-  ],
-  link_with : [
-    dfu,
-    fwupd,
-    libfwupdprivate,
-  ],
-  c_args : cargs,
-)

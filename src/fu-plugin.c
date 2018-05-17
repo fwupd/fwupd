@@ -1294,6 +1294,13 @@ fu_plugin_runner_update (FuPlugin *plugin,
 
 	/* just schedule this for the next reboot  */
 	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
+		if (blob_cab == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "No cabinet archive to schedule");
+			return FALSE;
+		}
 		return fu_plugin_runner_schedule_update (plugin,
 							 device,
 							 blob_cab,

@@ -45,12 +45,34 @@ struct _FuConfig
 	guint64			 archive_size_max;
 	AsStore			*store_remotes;
 	GHashTable		*os_release;
+	FuAppFlags		 app_flags;
 };
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
 
 static GPtrArray *
-fu_config_get_config_paths (void)
+fu_config_get_config_paths (FuConfig *self, GError **error)
+{
+	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
+
+	/* running standalone tool */
+	if (self->app_flags & FU_APP_FLAGS_SEARCH_RUNDIR) {
+		g_autofree gchar *local_path = g_file_read_link ("/proc/self/exe", error);
+		if (local_path == NULL)
+			return NULL;
+		g_ptr_array_add (paths, g_path_get_dirname (local_path));
+	}
+	if (self->app_flags & FU_APP_FLAGS_SEARCH_BUILDDIR)
+		g_ptr_array_add (paths, g_strdup (CONFIGBUILDDIR));
+
+	/* installed */
+	g_ptr_array_add (paths, g_strdup (FWUPDCONFIGDIR));
+
+	return paths;
+}
+
+static GPtrArray *
+fu_config_get_remote_paths (FuConfig *self)
 {
 	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
 	const gchar *remotes_dir;
@@ -63,6 +85,12 @@ fu_config_get_config_paths (void)
 		g_ptr_array_add (paths, g_strdup (remotes_dir));
 		return paths;
 	}
+
+	/* running noinst tool */
+	if (self->app_flags & FU_APP_FLAGS_SEARCH_RUNDIR)
+		g_ptr_array_add (paths, g_get_current_dir ());
+	if (self->app_flags & FU_APP_FLAGS_SEARCH_BUILDDIR)
+		g_ptr_array_add (paths, g_strdup (CONFIGBUILDDIR));
 
 	/* use sysconfig, and then fall back to /etc */
 	sysconfdir = g_build_filename (FWUPDCONFIGDIR, NULL);
@@ -354,8 +382,8 @@ fu_config_load_remotes (FuConfig *self, GError **error)
 	guint depsolve_check;
 	g_autoptr(GPtrArray) paths = NULL;
 
-	/* get a list of all config paths */
-	paths = fu_config_get_config_paths ();
+	/* get a list of all remote paths */
+	paths = fu_config_get_remote_paths (self);
 	if (paths->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -405,6 +433,7 @@ fu_config_load (FuConfig *self, GError **error)
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(GPtrArray) config_paths = NULL;
 
 	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
 
@@ -414,8 +443,28 @@ fu_config_load (FuConfig *self, GError **error)
 	g_ptr_array_set_size (self->monitors, 0);
 	g_ptr_array_set_size (self->remotes, 0);
 
+	/* load config in priority order */
+	config_paths = fu_config_get_config_paths (self, error);
+	if (config_paths == NULL)
+		return FALSE;
+	for (guint i = 0; i < config_paths->len; i++) {
+		const gchar *config_path = g_ptr_array_index (config_paths, i);
+		g_autofree gchar *test_config = g_build_filename (config_path, "daemon.conf", NULL);
+
+		if (g_file_test (test_config, G_FILE_TEST_EXISTS)) {
+			config_file = g_steal_pointer (&test_config);
+			break;
+		}
+	}
+	if (config_file == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No config file found");
+		return FALSE;
+	}
+
 	/* load the main daemon config file */
-	config_file = g_build_filename (FWUPDCONFIGDIR, "daemon.conf", NULL);
 	g_debug ("loading config values from %s", config_file);
 	if (!g_key_file_load_from_file (self->keyfile, config_file,
 					G_KEY_FILE_NONE, error))
@@ -558,9 +607,10 @@ fu_config_finalize (GObject *obj)
 }
 
 FuConfig *
-fu_config_new (void)
+fu_config_new (FuAppFlags app_flags)
 {
 	FuConfig *self;
 	self = g_object_new (FU_TYPE_CONFIG, NULL);
+	self->app_flags = app_flags;
 	return FU_CONFIG (self);
 }

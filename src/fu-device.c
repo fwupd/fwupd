@@ -1026,6 +1026,70 @@ fu_device_read_firmware (FuDevice *device, GError **error)
 	return klass->read_firmware (device, error);
 }
 
+/**
+ * fu_device_detach:
+ * @device: A #FuDevice
+ * @error: A #GError
+ *
+ * Detaches a device from the application into bootloader mode.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.0.8
+ **/
+gboolean
+fu_device_detach (FuDevice *device, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->detach == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return FALSE;
+	}
+
+	/* call vfunc */
+	return klass->detach (device, error);
+}
+
+/**
+ * fu_device_attach:
+ * @device: A #FuDevice
+ * @error: A #GError
+ *
+ * Attaches a device from the bootloader into application mode.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.0.8
+ **/
+gboolean
+fu_device_attach (FuDevice *device, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->attach == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return FALSE;
+	}
+
+	/* call vfunc */
+	return klass->attach (device, error);
+}
+
 static void
 fu_device_class_init (FuDeviceClass *klass)
 {

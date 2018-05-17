@@ -122,10 +122,6 @@ gboolean	 lu_device_open			(LuDevice		*device,
 						 GError			**error);
 gboolean	 lu_device_close		(LuDevice		*device,
 						 GError			**error);
-gboolean	 lu_device_detach		(LuDevice		*device,
-						 GError			**error);
-gboolean	 lu_device_attach		(LuDevice		*device,
-						 GError			**error);
 gboolean	 lu_device_probe		(LuDevice		*device,
 						 GError			**error);
 gboolean	 lu_device_poll			(LuDevice		*device,

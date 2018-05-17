@@ -58,7 +58,7 @@ fu_engine_requirements_missing_func (void)
 	gboolean ret;
 	g_autoptr(AsApp) app = as_app_new ();
 	g_autoptr(AsRequire) req = as_require_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
 
 	/* set up a dummy version */
@@ -83,7 +83,7 @@ fu_engine_requirements_unsupported_func (void)
 	gboolean ret;
 	g_autoptr(AsApp) app = as_app_new ();
 	g_autoptr(AsRequire) req = as_require_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
 
 	/* set up a dummy version */
@@ -107,7 +107,7 @@ fu_engine_requirements_func (void)
 	gboolean ret;
 	g_autoptr(AsApp) app = as_app_new ();
 	g_autoptr(AsRequire) req = as_require_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
 
 	/* set up some dummy versions */
@@ -136,7 +136,7 @@ fu_engine_requirements_device_func (void)
 	g_autoptr(AsRequire) req2 = as_require_new ();
 	g_autoptr(AsRequire) req3 = as_require_new ();
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
 
 	/* set up a dummy device */
@@ -172,7 +172,7 @@ fu_engine_device_parent_func (void)
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
 	g_autoptr(FuDevice) device3 = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 
 	/* add child */
 	fu_device_set_id (device1, "child");
@@ -212,7 +212,7 @@ fu_engine_partial_hash_func (void)
 	gboolean ret;
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GError) error_none = NULL;
@@ -273,7 +273,7 @@ fu_engine_require_hwid_func (void)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -324,7 +324,7 @@ fu_engine_downgrade_func (void)
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_pre = NULL;
@@ -480,7 +480,7 @@ fu_engine_history_func (void)
 	g_autoptr(FwupdDevice) device3 = NULL;
 	g_autoptr(FwupdDevice) device4 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GBytes) blob_cab = NULL;
@@ -598,7 +598,7 @@ fu_engine_history_error_func (void)
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GBytes) blob_cab = NULL;
@@ -1142,7 +1142,7 @@ fu_plugin_quirks_func (void)
 {
 	const gchar *tmp;
 	gboolean ret;
-	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
+	g_autoptr(FuQuirks) quirks = fu_quirks_new (FALSE);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
 

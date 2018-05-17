@@ -56,6 +56,7 @@ libfwupdprivate = static_library(
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
     '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
     '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
+    '-DQUIRKBUILDDIR="' + join_paths(meson.source_root(), 'plugins') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
@@ -64,6 +65,7 @@ fwupdmgr = executable(
   'fwupdmgr',
   sources : [
     'fu-util.c',
+    'fu-util-common.c',
   ],
   include_directories : [
     include_directories('..'),
@@ -93,6 +95,80 @@ fwupdmgr = executable(
   install_dir : bindir
 )
 
+resources_src = gnome.compile_resources(
+  'fwupd-resources',
+  'fwupd.gresource.xml',
+  source_dir : '.',
+  c_name : 'fu'
+)
+
+fwupdtool = executable(
+  'fwupdtool',
+  resources_src,
+  sources : [
+    'fu-tool.c',
+    keyring_src,
+    'fu-common.c',
+    'fu-common-cab.c',
+    'fu-config.c',
+    'fu-keyring.c',
+    'fu-keyring-result.c',
+    'fu-engine.c',
+    'fu-hwids.c',
+    'fu-debug.c',
+    'fu-device.c',
+    'fu-device-list.c',
+    'fu-device-locker.c',
+    'fu-install-task.c',
+    'fu-keyring.c',
+    'fu-keyring-utils.c',
+    'fu-history.c',
+    'fu-plugin.c',
+    'fu-plugin-list.c',
+    'fu-quirks.c',
+    'fu-smbios.c',
+    'fu-usb-device.c',
+    'fu-util-common.c',
+  ],
+  include_directories : [
+    include_directories('..'),
+    include_directories('../libfwupd'),
+  ],
+  dependencies : [
+    keyring_deps,
+    appstream_glib,
+    libgcab,
+    giounix,
+    gmodule,
+    gudev,
+    gusb,
+    polkit,
+    soup,
+    sqlite,
+    valgrind,
+    libarchive,
+  ],
+  link_with : [
+    fwupd,
+    libfwupdprivate,
+  ],
+  c_args : [
+    cargs,
+    '-DLOCALSTATEDIR="' + localstatedir + '"',
+    '-DPLUGINDIR="' + plugin_dir + '"',
+    '-DSYSFSFIRMWAREDIR="/sys/firmware"',
+    '-DSYSCONFDIR="' + default_sysconfdir + '"',
+    '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
+    '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
+    '-DCONFIGBUILDDIR="' + join_paths(meson.source_root(), 'data') + '"',
+    '-DPLUGINBUILDDIR="' + join_paths(meson.build_root(), 'plugins') + '"',
+    '-DQUIRKBUILDDIR="' + join_paths(meson.source_root(), 'plugins') + '"',
+    '-DFU_OFFLINE_DESTDIR=""',
+  ],
+  install : true,
+  install_dir : join_paths(libexecdir, 'fwupd')
+)
+
 if get_option('man')
   help2man = find_program('help2man')
   custom_target('fwupdmgr-man',
@@ -110,13 +186,6 @@ if get_option('man')
     install_dir : join_paths(mandir, 'man1'),
   )
 endif
-
-resources_src = gnome.compile_resources(
-  'fwupd-resources',
-  'fwupd.gresource.xml',
-  source_dir : '.',
-  c_name : 'fu'
-)
 
 executable(
   'fwupd',
@@ -172,6 +241,9 @@ executable(
     '-DSYSCONFDIR="' + default_sysconfdir + '"',
     '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
     '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
+    '-DCONFIGBUILDDIR="' + join_paths(meson.source_root(), 'data') + '"',
+    '-DPLUGINBUILDDIR="' + join_paths(meson.build_root(), 'plugins') + '"',
+    '-DQUIRKBUILDDIR="' + join_paths(meson.source_root(), 'plugins') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -249,6 +321,8 @@ if get_option('tests')
       '-DFWUPDDATADIR="' + testdatadir_src + '"',
       '-DSYSCONFDIR="' + testdatadir_src + '"',
       '-DFWUPDCONFIGDIR="' + testdatadir_src + '"',
+      '-DCONFIGBUILDDIR="' + join_paths(meson.source_root(), 'data') + '"',
+      '-DQUIRKBUILDDIR="' + join_paths(meson.source_root(), 'plugins') + '"',
     ],
   )
   test('fu-self-test', e, is_parallel:false)

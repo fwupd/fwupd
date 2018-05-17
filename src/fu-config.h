@@ -28,10 +28,12 @@ G_BEGIN_DECLS
 
 #include "fwupd-remote.h"
 
+#include "fu-common.h"
+
 #define FU_TYPE_CONFIG (fu_config_get_type ())
 G_DECLARE_FINAL_TYPE (FuConfig, fu_config, FU, CONFIG, GObject)
 
-FuConfig	*fu_config_new				(void);
+FuConfig	*fu_config_new				(FuAppFlags	 app_flags);
 gboolean	 fu_config_load				(FuConfig	*self,
 							 GError		**error);
 

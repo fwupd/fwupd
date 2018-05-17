@@ -42,6 +42,10 @@ struct _FuDeviceClass
 							 GError		**error);
 	GBytes			*(*read_firmware)	(FuDevice	*device,
 							 GError		**error);
+	gboolean		 (*detach)		(FuDevice	*device,
+							 GError		**error);
+	gboolean		 (*attach)		(FuDevice	*device,
+							 GError		**error);
 	/*< private >*/
 	gpointer	padding[28];
 };
@@ -170,6 +174,10 @@ gboolean	 fu_device_write_firmware		(FuDevice	*device,
 							 GBytes		*fw,
 							 GError		**error);
 GBytes		*fu_device_read_firmware		(FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_device_attach			(FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_device_detach			(FuDevice	*device,
 							 GError		**error);
 
 G_END_DECLS
