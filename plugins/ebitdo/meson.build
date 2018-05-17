@@ -23,6 +23,25 @@ shared_module('fu_plugin_ebitdo',
   ],
 )
 
+ebitdo_static = static_library('ebitdo_static',
+  sources : [
+    'fu-plugin-ebitdo.c',
+    'fu-ebitdo-common.c',
+    'fu-ebitdo-device.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : false,
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+  ],
+)
+
+
 executable(
   'fu-ebitdo-tool',
   sources : [
@@ -40,7 +59,7 @@ executable(
   ],
   link_with : [
     fwupd,
-    libfwupdprivate,
+    fwupdprivate,
   ],
   c_args : cargs,
 )

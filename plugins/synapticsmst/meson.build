@@ -27,6 +27,32 @@ shared_module('fu_plugin_synapticsmst',
   ]
 )
 
+synapticsmst_static = static_library('synapticsmst_static',
+  sources : [
+    'fu-plugin-synapticsmst.c',
+    'synapticsmst-common.c',
+    'synapticsmst-device.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : false,
+  c_args : [
+      cargs,
+      '-DLOCALSTATEDIR="' + localstatedir + '"',
+    ],
+  dependencies : [
+    plugin_deps,
+    efivar,
+  ],
+  # https://github.com/hughsie/fwupd/issues/207
+  override_options : [
+    'werror=false',
+  ]
+)
+
 executable(
   'synapticsmst-tool',
   sources : [
@@ -70,7 +96,7 @@ if get_option('tests')
     ],
     link_with : [
       fwupd,
-      libfwupdprivate,
+      fwupdprivate,
     ],
     c_args : [
       cargs,

@@ -19,6 +19,24 @@ fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
   ],
 )
 
+thunderbolt_static = static_library('thunderbolt_static',
+  sources : [
+    'fu-plugin-thunderbolt.c',
+    'fu-thunderbolt-image.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : false,
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+    gudev,
+  ],
+)
+
 testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
 testdatadir_dst = join_paths(meson.build_root(), 'data', 'tests')
 cargs += '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"'
@@ -35,7 +53,7 @@ executable('tbtfwucli',
   link_with : [
     fu_plugin_thunderbolt,
     fwupd,
-    libfwupdprivate,
+    fwupdprivate,
   ],
   dependencies : [
     plugin_deps,
@@ -66,7 +84,7 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
     ],
     link_with : [
       fwupd,
-      libfwupdprivate,
+      fwupdprivate,
     ],
     c_args : cargs
   )

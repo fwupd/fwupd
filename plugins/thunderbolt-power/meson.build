@@ -17,3 +17,20 @@ fu_plugin_thunderbolt_power = shared_module('fu_plugin_thunderbolt_power',
     gudev,
   ],
 )
+
+thunderbolt_power_static = static_library('thunderbolt_power_static',
+  sources : [
+    'fu-plugin-thunderbolt-power.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : false,
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+    gudev,
+  ],
+)

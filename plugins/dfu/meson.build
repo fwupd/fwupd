@@ -60,6 +60,26 @@ shared_module('fu_plugin_dfu',
   ],
 )
 
+dfu_static = static_library('dfu_static',
+  sources : [
+    'fu-plugin-dfu.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : false,
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+  ],
+  link_with : [
+    dfu,
+  ],
+)
+
+
 dfu_tool = executable(
   'dfu-tool',
   sources : [
@@ -80,7 +100,7 @@ dfu_tool = executable(
   link_with : [
     dfu,
     fwupd,
-    libfwupdprivate,
+    fwupdprivate,
   ],
   c_args : cargs,
   install : true,
@@ -130,7 +150,7 @@ if get_option('tests')
     link_with : [
       dfu,
       fwupd,
-      libfwupdprivate,
+      fwupdprivate,
     ],
     c_args : cargs
   )

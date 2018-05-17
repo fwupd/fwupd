@@ -18,6 +18,22 @@ shared_module('fu_plugin_uefi',
   ],
 )
 
+uefi_static = static_library('uefi_static',
+  sources : [
+    'fu-plugin-uefi.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : false,
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+    fwup,
+  ],
+)
 con2 = configuration_data()
 con2.set('bootdir', get_option('bootdir'))
 

@@ -29,6 +29,27 @@ shared_module('fu_plugin_csr',
   ],
 )
 
+csr_static = static_library('csr_static',
+  sources : [
+    'fu-csr-device.c',
+    'fu-plugin-csr.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../dfu'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : false,
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+  ],
+  link_with : [
+    dfu,
+  ],
+)
+
 executable(
   'fu-csr-tool',
   sources : [
@@ -47,7 +68,7 @@ executable(
   link_with : [
     dfu,
     fwupd,
-    libfwupdprivate,
+    fwupdprivate,
   ],
   c_args : cargs,
 )

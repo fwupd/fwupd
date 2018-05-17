@@ -28,6 +28,30 @@ shared_module('fu_plugin_dell',
   ],
 )
 
+dell_static = static_library('dell_static',
+  sources : [
+    'fu-plugin-dell.c',
+    'fu-dell-smi.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : false,
+  c_args : [
+      cargs,
+      '-DLOCALSTATEDIR="' + localstatedir + '"',
+    ],
+  dependencies : [
+    plugin_deps,
+    efivar,
+    libsmbios_c,
+    fwup,
+  ],
+)
+
+
 if get_option('tests')
   cargs += '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"'
   cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
@@ -54,7 +78,7 @@ if get_option('tests')
     ],
     link_with : [
       fwupd,
-      libfwupdprivate,
+      fwupdprivate,
     ],
     c_args : [
       cargs,

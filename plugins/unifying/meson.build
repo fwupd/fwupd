@@ -27,6 +27,32 @@ shared_module('fu_plugin_unifying',
   ],
 )
 
+unifying_static = static_library('unifying_static',
+  sources : [
+    'fu-plugin-unifying.c',
+    'lu-common.c',
+    'lu-context.c',
+    'lu-device-bootloader.c',
+    'lu-device-bootloader-nordic.c',
+    'lu-device-bootloader-texas.c',
+    'lu-device.c',
+    'lu-device-peripheral.c',
+    'lu-device-runtime.c',
+    'lu-hidpp-msg.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  install : false,
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+    gudev,
+  ],
+)
+
 executable(
   'fu-unifying-util',
   sources : [
@@ -52,7 +78,7 @@ executable(
   ],
   link_with : [
     fwupd,
-    libfwupdprivate,
+    fwupdprivate,
   ],
   c_args : cargs,
 )

@@ -21,6 +21,25 @@ shared_module('fu_plugin_altos',
   ],
 )
 
+altos_static = static_library('altos_static',
+  sources : [
+    'fu-altos-device.c',
+    'fu-altos-firmware.c',
+    'fu-plugin-altos.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  c_args : cargs,
+  dependencies : [
+    gudev,
+    libelf,
+    plugin_deps,
+  ],
+)
+
 executable(
   'fu-altos-tool',
   sources : [
@@ -40,7 +59,7 @@ executable(
   ],
   link_with : [
     fwupd,
-    libfwupdprivate,
+    fwupdprivate,
   ],
   c_args : cargs,
 )
