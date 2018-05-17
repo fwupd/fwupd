@@ -580,7 +580,7 @@ main (int argc, char *argv[])
 	}
 
 	/* load engine */
-	priv->engine = fu_engine_new (FU_APP_FLAGS_SEARCH_PWD |
+	priv->engine = fu_engine_new (FU_APP_FLAGS_SEARCH_RUNDIR |
 				      FU_APP_FLAGS_SEARCH_BUILDDIR |
 				      FU_APP_FLAGS_NO_IDLE_SOURCES);
 	g_signal_connect (priv->engine, "device-added",

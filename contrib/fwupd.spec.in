@@ -192,6 +192,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %endif
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
+%{_libexecdir}/fwupd/fwupdtool
 %{_bindir}/dfu-tool
 %{_bindir}/fwupdmgr
 %dir %{_sysconfdir}/fwupd

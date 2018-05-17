@@ -2385,7 +2385,7 @@ main (int argc, char *argv[])
 	fu_progressbar_set_length_status (priv->progressbar, 20);
 
 	/* use quirks */
-	priv->quirks = fu_quirks_new (FU_APP_FLAGS_SEARCH_PWD |
+	priv->quirks = fu_quirks_new (FU_APP_FLAGS_SEARCH_RUNDIR |
 				      FU_APP_FLAGS_SEARCH_BUILDDIR);
 	if (!fu_quirks_load (priv->quirks, &error)) {
 		/* TRANSLATORS: quirks are device-specific workarounds */

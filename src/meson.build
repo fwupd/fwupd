@@ -102,11 +102,11 @@ resources_src = gnome.compile_resources(
   c_name : 'fu'
 )
 
-fwupdmgr_noinst = executable(
-  'fwupdmgr-noinst',
+fwupdtool = executable(
+  'fwupdtool',
   resources_src,
   sources : [
-    'fu-noinst.c',
+    'fu-tool.c',
     keyring_src,
     'fu-common.c',
     'fu-common-cab.c',
@@ -165,6 +165,8 @@ fwupdmgr_noinst = executable(
     '-DQUIRKBUILDDIR="' + join_paths(meson.source_root(), 'plugins') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
+  install : true,
+  install_dir : join_paths(libexecdir, 'fwupd')
 )
 
 if get_option('man')

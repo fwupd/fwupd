@@ -2858,13 +2858,18 @@ fu_engine_is_plugin_name_blacklisted (FuEngine *self, const gchar *name)
 }
 
 static GPtrArray *
-fu_engine_get_plugin_paths (FuEngine *self)
+fu_engine_get_plugin_paths (FuEngine *self, GError **error)
 {
 	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
 
-	/* prefer pwd and then the build tree when running direct */
-	if (self->app_flags & FU_APP_FLAGS_SEARCH_PWD)
-		g_ptr_array_add (paths, g_get_current_dir ());
+	/* prefer running dir and then the build tree when running direct */
+	if (self->app_flags & FU_APP_FLAGS_SEARCH_RUNDIR) {
+		g_autofree gchar *local_path = g_file_read_link ("/proc/self/exe", error);
+		if (local_path == NULL)
+			return NULL;
+		g_ptr_array_add (paths, g_path_get_dirname (local_path));
+	}
+
 	if (self->app_flags & FU_APP_FLAGS_SEARCH_BUILDDIR &&
 	    g_file_test (PLUGINBUILDDIR, G_FILE_TEST_EXISTS))
 		g_ptr_array_add (paths, g_strdup (PLUGINBUILDDIR));
@@ -2977,7 +2982,9 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 	g_assert (ptask != NULL);
 
 	/* get a list of all plugin paths */
-	paths = fu_engine_get_plugin_paths (self);
+	paths = fu_engine_get_plugin_paths (self, error);
+	if (paths == NULL)
+		return FALSE;
 	if (paths->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,

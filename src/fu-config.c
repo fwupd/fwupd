@@ -51,13 +51,17 @@ struct _FuConfig
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
 
 static GPtrArray *
-fu_config_get_config_paths (FuConfig *self)
+fu_config_get_config_paths (FuConfig *self, GError **error)
 {
 	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
 
-	/* running noinst tool */
-	if (self->app_flags & FU_APP_FLAGS_SEARCH_PWD)
-		g_ptr_array_add (paths, g_get_current_dir ());
+	/* running standalone tool */
+	if (self->app_flags & FU_APP_FLAGS_SEARCH_RUNDIR) {
+		g_autofree gchar *local_path = g_file_read_link ("/proc/self/exe", error);
+		if (local_path == NULL)
+			return NULL;
+		g_ptr_array_add (paths, g_path_get_dirname (local_path));
+	}
 	if (self->app_flags & FU_APP_FLAGS_SEARCH_BUILDDIR)
 		g_ptr_array_add (paths, g_strdup (CONFIGBUILDDIR));
 
@@ -83,7 +87,7 @@ fu_config_get_remote_paths (FuConfig *self)
 	}
 
 	/* running noinst tool */
-	if (self->app_flags & FU_APP_FLAGS_SEARCH_PWD)
+	if (self->app_flags & FU_APP_FLAGS_SEARCH_RUNDIR)
 		g_ptr_array_add (paths, g_get_current_dir ());
 	if (self->app_flags & FU_APP_FLAGS_SEARCH_BUILDDIR)
 		g_ptr_array_add (paths, g_strdup (CONFIGBUILDDIR));
@@ -440,11 +444,15 @@ fu_config_load (FuConfig *self, GError **error)
 	g_ptr_array_set_size (self->remotes, 0);
 
 	/* load config in priority order */
-	config_paths = fu_config_get_config_paths (self);
+	config_paths = fu_config_get_config_paths (self, error);
+	if (config_paths == NULL)
+		return FALSE;
 	for (guint i = 0; i < config_paths->len; i++) {
 		const gchar *config_path = g_ptr_array_index (config_paths, i);
-		if (g_file_test (config_path, G_FILE_TEST_EXISTS)) {
-			config_file = g_build_filename (config_path, "daemon.conf", NULL);
+		g_autofree gchar *test_config = g_build_filename (config_path, "daemon.conf", NULL);
+
+		if (g_file_test (test_config, G_FILE_TEST_EXISTS)) {
+			config_file = g_steal_pointer (&test_config);
 			break;
 		}
 	}

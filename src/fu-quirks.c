@@ -325,7 +325,7 @@ fu_quirks_load (FuQuirks *self, GError **error)
 	g_ptr_array_set_size (self->monitors, 0);
 	g_hash_table_remove_all (self->hash);
 
-	/* if running noinst load that path first */
+	/* if running standalone load that path first */
 	if (self->app_flags) {
 		g_autofree gchar *local_path = g_build_filename (g_get_current_dir (), "quirks.d", NULL);
 
