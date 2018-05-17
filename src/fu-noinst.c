@@ -358,10 +358,6 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GBytes) blob_fw = NULL;
 
-	/* load engine */
-	if (!fu_engine_load (priv->engine, error))
-		return FALSE;
-
 	/* invalid args */
 	if (g_strv_length (values) == 0) {
 		g_set_error_literal (error,
@@ -374,6 +370,10 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* parse blob */
 	blob_fw = fu_common_get_contents_bytes (values[0], error);
 	if (blob_fw == NULL)
+		return FALSE;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
 		return FALSE;
 
 	/* get device */
