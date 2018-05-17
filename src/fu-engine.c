@@ -3383,11 +3383,9 @@ fu_engine_init (FuEngine *self)
 {
 	self->percentage = 0;
 	self->status = FWUPD_STATUS_IDLE;
-	self->config = fu_config_new ();
 	self->device_list = fu_device_list_new ();
 	self->smbios = fu_smbios_new ();
 	self->hwids = fu_hwids_new ();
-	self->quirks = fu_quirks_new ();
 	self->history = fu_history_new ();
 	self->plugin_list = fu_plugin_list_new ();
 	self->profile = as_profile_new ();
@@ -3455,5 +3453,7 @@ fu_engine_new (FuEngineMode mode)
 	FuEngine *self;
 	self = g_object_new (FU_TYPE_ENGINE, NULL);
 	self->mode = mode;
+	self->config = fu_config_new (mode == FU_ENGINE_MODE_DIRECT);
+	self->quirks = fu_quirks_new (mode == FU_ENGINE_MODE_DIRECT);
 	return FU_ENGINE (self);
 }

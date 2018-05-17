@@ -56,6 +56,7 @@ libfwupdprivate = static_library(
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
     '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
     '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
+    '-DQUIRKBUILDDIR="' + join_paths(meson.source_root(), 'plugins') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
@@ -159,7 +160,9 @@ fwupdmgr_noinst = executable(
     '-DSYSCONFDIR="' + default_sysconfdir + '"',
     '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
     '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
+    '-DCONFIGBUILDDIR="' + join_paths(meson.source_root(), 'data') + '"',
     '-DPLUGINBUILDDIR="' + join_paths(meson.build_root(), 'plugins') + '"',
+    '-DQUIRKBUILDDIR="' + join_paths(meson.source_root(), 'plugins') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
@@ -236,7 +239,9 @@ executable(
     '-DSYSCONFDIR="' + default_sysconfdir + '"',
     '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
     '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
+    '-DCONFIGBUILDDIR="' + join_paths(meson.source_root(), 'data') + '"',
     '-DPLUGINBUILDDIR="' + join_paths(meson.build_root(), 'plugins') + '"',
+    '-DQUIRKBUILDDIR="' + join_paths(meson.source_root(), 'plugins') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -314,6 +319,8 @@ if get_option('tests')
       '-DFWUPDDATADIR="' + testdatadir_src + '"',
       '-DSYSCONFDIR="' + testdatadir_src + '"',
       '-DFWUPDCONFIGDIR="' + testdatadir_src + '"',
+      '-DCONFIGBUILDDIR="' + join_paths(meson.source_root(), 'data') + '"',
+      '-DQUIRKBUILDDIR="' + join_paths(meson.source_root(), 'plugins') + '"',
     ],
   )
   test('fu-self-test', e, is_parallel:false)

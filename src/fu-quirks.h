@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 #define FU_TYPE_QUIRKS (fu_quirks_get_type ())
 G_DECLARE_FINAL_TYPE (FuQuirks, fu_quirks, FU, QUIRKS, GObject)
 
-FuQuirks	*fu_quirks_new				(void);
+FuQuirks	*fu_quirks_new				(gboolean probe_local);
 gboolean	 fu_quirks_load				(FuQuirks	*self,
 							 GError		**error);
 const gchar	*fu_quirks_lookup_by_id			(FuQuirks	*self,
