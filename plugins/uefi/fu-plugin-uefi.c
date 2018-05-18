@@ -583,14 +583,6 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 			      guid, hardware_instance);
 
 	dev = fu_device_new ();
-	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
-		/* nothing better in the icon naming spec */
-		fu_device_add_icon (dev, "audio-card");
-	} else {
-		/* this is probably system firmware */
-		fu_device_add_icon (dev, "computer");
-		fu_device_add_guid (dev, "main-system-firmware");
-	}
 	fu_device_set_id (dev, id);
 	fu_device_add_guid (dev, guid);
 	fu_device_set_version (dev, version);
@@ -612,6 +604,14 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 		g_warning ("Kernel support for EFI variables missing");
 	}
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
+		/* nothing better in the icon naming spec */
+		fu_device_add_icon (dev, "audio-card");
+	} else {
+		/* this is probably system firmware */
+		fu_device_add_icon (dev, "computer");
+		fu_device_add_guid (dev, "main-system-firmware");
+	}
 	fu_plugin_device_add (plugin, dev);
 }
 
