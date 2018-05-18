@@ -1890,26 +1890,6 @@ fu_util_changed_cb (FwupdClient *client, gpointer user_data)
 }
 
 static gboolean
-fu_util_smbios_dump (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	g_autofree gchar *tmp = NULL;
-	g_autoptr(FuSmbios) smbios = NULL;
-	if (g_strv_length (values) < 1) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
-		return FALSE;
-	}
-	smbios = fu_smbios_new ();
-	if (!fu_smbios_setup_from_file (smbios, values[0], error))
-		return FALSE;
-	tmp = fu_smbios_to_string (smbios);
-	g_print ("%s\n", tmp);
-	return TRUE;
-}
-
-static gboolean
 fu_util_firmware_builder (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *script_fn = "startup.sh";
@@ -2452,12 +2432,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Build firmware using a sandbox"),
 		     fu_util_firmware_builder);
-	fu_util_add (priv->cmd_array,
-		     "smbios-dump",
-		     "FILE",
-		     /* TRANSLATORS: command description */
-		     _("Dump SMBIOS data from a file"),
-		     fu_util_smbios_dump);
 	fu_util_add (priv->cmd_array,
 		     "modify-remote",
 		     "REMOTE-ID KEY VALUE",

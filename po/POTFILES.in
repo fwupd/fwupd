@@ -8,6 +8,7 @@ plugins/uefi/fu-plugin-uefi.c
 src/fu-config.c
 src/fu-debug.c
 src/fu-main.c
+src/fu-tool.c
 src/fu-progressbar.c
 src/fu-util.c
 src/fu-util-common.c
