@@ -1232,6 +1232,15 @@ fu_engine_install_blob (FuEngine *self,
 		return FALSE;
 	}
 
+	/* we can only write history if we're providing a version number */
+	if (version == NULL && (flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Version required if writing history");
+		return FALSE;
+	}
+
 	/* get the plugin */
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
