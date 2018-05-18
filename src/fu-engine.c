@@ -1123,17 +1123,10 @@ fu_engine_install (FuEngine *self,
 {
 	AsChecksum *csum_tmp;
 	AsRelease *rel;
-	FuPlugin *plugin;
 	GBytes *blob_fw;
-	GPtrArray *plugins;
 	const gchar *tmp;
 	const gchar *version;
-	g_autofree gchar *device_id_orig = NULL;
-	g_autofree gchar *version_orig = NULL;
-	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
 	g_autoptr(GBytes) blob_fw2 = NULL;
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GHashTable) metadata_hash = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
@@ -1207,6 +1200,29 @@ fu_engine_install (FuEngine *self,
 		blob_fw2 = g_bytes_ref (blob_fw);
 	}
 
+	/* install firmware blob */
+	version = as_release_get_version (rel);
+	return fu_engine_install_blob (self, device, blob_cab, blob_fw2,
+				       version, flags, error);
+}
+
+gboolean
+fu_engine_install_blob (FuEngine *self,
+			FuDevice *device,
+			GBytes *blob_cab,
+			GBytes *blob_fw2,
+			const gchar *version,
+			FwupdInstallFlags flags,
+			GError **error)
+{
+	FuPlugin *plugin;
+	GPtrArray *plugins;
+	g_autofree gchar *device_id_orig = NULL;
+	g_autofree gchar *version_orig = NULL;
+	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GHashTable) metadata_hash = NULL;
+
 	/* test the firmware is not an empty blob */
 	if (g_bytes_get_size (blob_fw2) == 0) {
 		g_set_error (error,
@@ -1224,7 +1240,6 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 
 	/* compare the versions of what we have installed */
-	version = as_release_get_version (rel);
 	version_orig = g_strdup (fu_device_get_version (device));
 
 	/* signal to all the plugins the update is about to happen */
