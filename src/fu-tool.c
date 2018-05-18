@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "fu-engine.h"
 #include "fu-progressbar.h"
 #include "fu-smbios.h"
 #include "fu-util-common.h"
@@ -43,6 +44,7 @@ typedef struct {
 	GMainLoop		*loop;
 	GOptionContext		*context;
 	GPtrArray		*cmd_array;
+	FuEngine		*engine;
 	FuProgressbar		*progressbar;
 } FuUtilPrivate;
 
@@ -211,6 +213,8 @@ fu_util_private_free (FuUtilPrivate *priv)
 {
 	if (priv->cmd_array != NULL)
 		g_ptr_array_unref (priv->cmd_array);
+	if (priv->engine != NULL)
+		g_object_unref (priv->engine);
 	if (priv->loop != NULL)
 		g_main_loop_unref (priv->loop);
 	if (priv->cancellable != NULL)
@@ -226,6 +230,239 @@ fu_util_private_free (FuUtilPrivate *priv)
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
 #pragma clang diagnostic pop
+
+
+static void
+fu_main_engine_device_added_cb (FuEngine *engine,
+				FuDevice *device,
+				FuUtilPrivate *priv)
+{
+	g_autofree gchar *tmp = fu_device_to_string (device);
+	g_debug ("ADDED:\n%s", tmp);
+}
+
+static void
+fu_main_engine_device_removed_cb (FuEngine *engine,
+				  FuDevice *device,
+				  FuUtilPrivate *priv)
+{
+	g_autofree gchar *tmp = fu_device_to_string (device);
+	g_debug ("REMOVED:\n%s", tmp);
+}
+
+static void
+fu_main_engine_device_changed_cb (FuEngine *engine,
+				  FuDevice *device,
+				  FuUtilPrivate *priv)
+{
+	g_autofree gchar *tmp = fu_device_to_string (device);
+	g_debug ("CHANGED:\n%s", tmp);
+}
+
+static void
+fu_main_engine_status_changed_cb (FuEngine *engine,
+				  FwupdStatus status,
+				  FuUtilPrivate *priv)
+{
+	fu_progressbar_update (priv->progressbar, status, 0);
+}
+
+static void
+fu_main_engine_percentage_changed_cb (FuEngine *engine,
+				      guint percentage,
+				      FuUtilPrivate *priv)
+{
+	fu_progressbar_update (priv->progressbar, FWUPD_STATUS_UNKNOWN, percentage);
+}
+
+static gboolean
+fu_util_watch (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
+	g_main_loop_run (priv->loop);
+	return TRUE;
+}
+
+static gboolean
+fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) devs = NULL;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
+
+	/* print */
+	devs = fu_engine_get_devices (priv->engine, error);
+	if (devs == NULL)
+		return FALSE;
+	if (devs->len == 0) {
+		/* TRANSLATORS: nothing attached */
+		g_print ("%s\n", _("No hardware detected"));
+		return TRUE;
+	}
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		g_autofree gchar *tmp = fwupd_device_to_string (dev);
+		g_print ("%s\n", tmp);
+	}
+
+	return TRUE;
+}
+
+static FuDevice *
+fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
+{
+	FuDevice *dev;
+	guint idx;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* get devices from daemon */
+	devices = fu_engine_get_devices (priv->engine, error);
+	if (devices == NULL)
+		return NULL;
+
+	/* exactly one */
+	if (devices->len == 1) {
+		dev = g_ptr_array_index (devices, 0);
+		return g_object_ref (dev);
+	}
+
+	/* TRANSLATORS: get interactive prompt */
+	g_print ("%s\n", _("Choose a device:"));
+	/* TRANSLATORS: this is to abort the interactive prompt */
+	g_print ("0.\t%s\n", _("Cancel"));
+	for (guint i = 0; i < devices->len; i++) {
+		dev = g_ptr_array_index (devices, i);
+		g_print ("%u.\t%s (%s)\n",
+			 i + 1,
+			 fu_device_get_id (dev),
+			 fu_device_get_name (dev));
+	}
+	idx = fu_util_prompt_for_number (devices->len);
+	if (idx == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "Request canceled");
+		return NULL;
+	}
+	dev = g_ptr_array_index (devices, idx - 1);
+	return g_object_ref (dev);
+}
+
+static gboolean
+fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GBytes) blob_fw = NULL;
+
+	/* invalid args */
+	if (g_strv_length (values) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* parse blob */
+	blob_fw = fu_common_get_contents_bytes (values[0], error);
+	if (blob_fw == NULL)
+		return FALSE;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
+
+	/* get device */
+	if (g_strv_length (values) >= 2) {
+		device = fu_engine_get_device (priv->engine, values[1], error);
+		if (device == NULL)
+			return FALSE;
+	} else {
+		device = fu_util_prompt_for_device (priv, error);
+		if (device == NULL)
+			return FALSE;
+	}
+
+	/* write bare firmware */
+	return fu_engine_install_blob (priv->engine, device,
+				       NULL, /* blob_cab */
+				       blob_fw,
+				       NULL, /* version */
+				       FWUPD_INSTALL_FLAG_ALLOW_OLDER |
+				       FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
+				       FWUPD_INSTALL_FLAG_NO_HISTORY,
+				       error);
+}
+
+static gboolean
+fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
+
+	/* invalid args */
+	if (g_strv_length (values) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* get device */
+	if (g_strv_length (values) >= 1) {
+		device = fu_engine_get_device (priv->engine, values[0], error);
+		if (device == NULL)
+			return FALSE;
+	} else {
+		device = fu_util_prompt_for_device (priv, error);
+		if (device == NULL)
+			return FALSE;
+	}
+
+	/* run vfunc */
+	return fu_device_detach (device, error);
+}
+
+static gboolean
+fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
+
+	/* invalid args */
+	if (g_strv_length (values) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* get device */
+	if (g_strv_length (values) >= 1) {
+		device = fu_engine_get_device (priv->engine, values[0], error);
+		if (device == NULL)
+			return FALSE;
+	} else {
+		device = fu_util_prompt_for_device (priv, error);
+		if (device == NULL)
+			return FALSE;
+	}
+
+	/* run vfunc */
+	return fu_device_attach (device, error);
+}
 
 int
 main (int argc, char *argv[])
@@ -271,6 +508,36 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Dump SMBIOS data from a file"),
 		     fu_util_smbios_dump);
+	fu_util_add (priv->cmd_array,
+		     "get-devices",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Get all devices that support firmware updates"),
+		     fu_util_get_devices);
+	fu_util_add (priv->cmd_array,
+		     "watch",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Watch for hardare changes"),
+		     fu_util_watch);
+	fu_util_add (priv->cmd_array,
+		     "install-blob",
+		     "FILENAME DEVICE-ID",
+		     /* TRANSLATORS: command description */
+		     _("Install a firmware blob on a device"),
+		     fu_util_install_blob);
+	fu_util_add (priv->cmd_array,
+		     "attach",
+		     "DEVICE-ID",
+		     /* TRANSLATORS: command description */
+		     _("Attach to firmware mode"),
+		     fu_util_attach);
+	fu_util_add (priv->cmd_array,
+		     "detach",
+		     "DEVICE-ID",
+		     /* TRANSLATORS: command description */
+		     _("Detach to bootloader mode"),
+		     fu_util_detach);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
@@ -310,6 +577,24 @@ main (int argc, char *argv[])
 		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
 				   fu_util_ignore_cb, NULL);
 	}
+
+	/* load engine */
+	priv->engine = fu_engine_new (FU_APP_FLAGS_NO_IDLE_SOURCES);
+	g_signal_connect (priv->engine, "device-added",
+			  G_CALLBACK (fu_main_engine_device_added_cb),
+			  priv);
+	g_signal_connect (priv->engine, "device-removed",
+			  G_CALLBACK (fu_main_engine_device_removed_cb),
+			  priv);
+	g_signal_connect (priv->engine, "device-changed",
+			  G_CALLBACK (fu_main_engine_device_changed_cb),
+			  priv);
+	g_signal_connect (priv->engine, "status-changed",
+			  G_CALLBACK (fu_main_engine_status_changed_cb),
+			  priv);
+	g_signal_connect (priv->engine, "percentage-changed",
+			  G_CALLBACK (fu_main_engine_percentage_changed_cb),
+			  priv);
 
 	/* run the specified command */
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);
