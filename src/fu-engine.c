@@ -56,6 +56,7 @@ static void fu_engine_finalize	 (GObject *obj);
 struct _FuEngine
 {
 	GObject			 parent_instance;
+	FuAppFlags		 app_flags;
 	GUsbContext		*usb_ctx;
 	FuConfig		*config;
 	FuDeviceList		*device_list;
@@ -2818,6 +2819,11 @@ fu_engine_plugin_recoldplug_cb (FuPlugin *plugin, FuEngine *self)
 		g_warning ("coldplug already running, cannot recoldplug");
 		return;
 	}
+	if (self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) {
+		g_debug ("doing direct recoldplug");
+		fu_engine_plugins_coldplug (self, TRUE);
+		return;
+	}
 	g_debug ("scheduling a recoldplug");
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
@@ -3382,9 +3388,10 @@ fu_engine_finalize (GObject *obj)
 }
 
 FuEngine *
-fu_engine_new (void)
+fu_engine_new (FuAppFlags app_flags)
 {
 	FuEngine *self;
 	self = g_object_new (FU_TYPE_ENGINE, NULL);
+	self->app_flags = app_flags;
 	return FU_ENGINE (self);
 }
