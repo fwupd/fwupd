@@ -64,6 +64,7 @@ fwupdmgr = executable(
   'fwupdmgr',
   sources : [
     'fu-util.c',
+    'fu-util-common.c',
   ],
   include_directories : [
     include_directories('..'),

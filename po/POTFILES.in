@@ -10,3 +10,4 @@ src/fu-debug.c
 src/fu-main.c
 src/fu-progressbar.c
 src/fu-util.c
+src/fu-util-common.c
