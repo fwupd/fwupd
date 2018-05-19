@@ -38,6 +38,7 @@
 #include "fu-quirks.h"
 #include "fu-keyring.h"
 #include "fu-history.h"
+#include "fu-install-task.h"
 #include "fu-plugin-private.h"
 #include "fu-plugin-list.h"
 #include "fu-progressbar.h"
@@ -59,6 +60,7 @@ fu_engine_requirements_missing_func (void)
 	g_autoptr(AsApp) app = as_app_new ();
 	g_autoptr(AsRequire) req = as_require_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* set up a dummy version */
@@ -72,7 +74,10 @@ fu_engine_requirements_missing_func (void)
 	as_app_add_require (app, req);
 
 	/* check this fails */
-	ret = fu_engine_check_requirements (engine, app, NULL, &error);
+	task = fu_install_task_new (NULL, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (!ret);
 }
@@ -84,6 +89,7 @@ fu_engine_requirements_unsupported_func (void)
 	g_autoptr(AsApp) app = as_app_new ();
 	g_autoptr(AsRequire) req = as_require_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* set up a dummy version */
@@ -96,7 +102,10 @@ fu_engine_requirements_unsupported_func (void)
 	as_app_add_require (app, req);
 
 	/* check this fails */
-	ret = fu_engine_check_requirements (engine, app, NULL, &error);
+	task = fu_install_task_new (NULL, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert (!ret);
 }
@@ -108,6 +117,7 @@ fu_engine_requirements_func (void)
 	g_autoptr(AsApp) app = as_app_new ();
 	g_autoptr(AsRequire) req = as_require_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* set up some dummy versions */
@@ -122,7 +132,10 @@ fu_engine_requirements_func (void)
 	as_app_add_require (app, req);
 
 	/* check this passes */
-	ret = fu_engine_check_requirements (engine, app, NULL, &error);
+	task = fu_install_task_new (NULL, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 }
@@ -132,17 +145,23 @@ fu_engine_requirements_device_func (void)
 {
 	gboolean ret;
 	g_autoptr(AsApp) app = as_app_new ();
+	g_autoptr(AsChecksum) csum = as_checksum_new ();
 	g_autoptr(AsRequire) req1 = as_require_new ();
 	g_autoptr(AsRequire) req2 = as_require_new ();
 	g_autoptr(AsRequire) req3 = as_require_new ();
+	g_autoptr(AsProvide) prov = as_provide_new ();
+	g_autoptr(AsRelease) rel = as_release_new ();
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* set up a dummy device */
 	fu_device_set_version (device, "1.2.3");
 	fu_device_set_version_bootloader (device, "4.5.6");
 	fu_device_set_vendor_id (device, "FFFF");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 
 	/* make the component require three things */
 	as_require_set_kind (req1, AS_REQUIRE_KIND_FIRMWARE);
@@ -160,8 +179,23 @@ fu_engine_requirements_device_func (void)
 	as_require_set_value (req3, "vendor-id");
 	as_app_add_require (app, req3);
 
+	/* add release */
+	as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
+	as_checksum_set_filename (csum, "bios.bin");
+	as_release_set_version (rel, "1.2.4");
+	as_release_add_checksum (rel, csum);
+	as_app_add_release (app, rel);
+
+	/* add GUID to match */
+	as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
+	as_provide_set_value (prov, "12345678-1234-1234-1234-123456789012");
+	as_app_add_provide (app, prov);
+
 	/* check this passes */
-	ret = fu_engine_check_requirements (engine, app, device, &error);
+	task = fu_install_task_new (device, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 }
@@ -274,6 +308,7 @@ fu_engine_require_hwid_func (void)
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -300,6 +335,7 @@ fu_engine_require_hwid_func (void)
 
 	/* add a dummy device */
 	fu_device_set_id (device, "test_device");
+	fu_device_set_version (device, "1.2.2");
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_engine_add_device (engine, device);
@@ -309,7 +345,10 @@ fu_engine_require_hwid_func (void)
 	g_assert_nonnull (app);
 
 	/* check requirements */
-	ret = fu_engine_check_requirements (engine, app, device, &error);
+	task = fu_install_task_new (device, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert (error != NULL);
 	g_assert_cmpstr (error->message, ==,
@@ -482,6 +521,7 @@ fu_engine_history_func (void)
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
@@ -530,7 +570,8 @@ fu_engine_history_func (void)
 	g_assert_nonnull (app);
 
 	/* install it */
-	ret = fu_engine_install (engine, device, app, blob_cab,
+	task = fu_install_task_new (device, app);
+	ret = fu_engine_install (engine, task, blob_cab,
 				 FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -600,6 +641,7 @@ fu_engine_history_error_func (void)
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error2 = NULL;
@@ -647,7 +689,8 @@ fu_engine_history_error_func (void)
 	g_assert (store != NULL);
 	app = as_store_get_app_by_id (store, "com.hughski.test.firmware");
 	g_assert_nonnull (app);
-	ret = fu_engine_install (engine, device, app, blob_cab,
+	task = fu_install_task_new (device, app);
+	ret = fu_engine_install (engine, task, blob_cab,
 				 FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert (error != NULL);

@@ -926,9 +926,19 @@ fu_engine_check_requirement (FuEngine *self, AsRequire *req, FuDevice *device, G
 }
 
 gboolean
-fu_engine_check_requirements (FuEngine *self, AsApp *app, FuDevice *device, GError **error)
+fu_engine_check_requirements (FuEngine *self, FuInstallTask *task,
+			      FwupdInstallFlags flags, GError **error)
 {
-	GPtrArray *reqs = as_app_get_requires (app);
+	GPtrArray *reqs = as_app_get_requires (fu_install_task_get_app (task));
+	FuDevice *device = fu_install_task_get_device (task);
+
+	/* all install task checks require a device */
+	if (device != NULL) {
+		if (!fu_install_task_check_requirements (task, flags, error))
+			return FALSE;
+	}
+
+	/* do engine checks */
 	for (guint i = 0; i < reqs->len; i++) {
 		AsRequire *req = g_ptr_array_index (reqs, i);
 		if (!fu_engine_check_requirement (self, req, device, error))
@@ -1116,14 +1126,15 @@ fu_engine_get_report_metadata (FuEngine *self)
  **/
 gboolean
 fu_engine_install (FuEngine *self,
-		   FuDevice *device,
-		   AsApp *app,
+		   FuInstallTask *task,
 		   GBytes *blob_cab,
 		   FwupdInstallFlags flags,
 		   GError **error)
 {
+	AsApp *app = fu_install_task_get_app (task);
 	AsChecksum *csum_tmp;
 	AsRelease *rel;
+	FuDevice *device = fu_install_task_get_device (task);
 	GBytes *blob_fw;
 	const gchar *tmp;
 	const gchar *version;
@@ -1867,6 +1878,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	FwupdTrustFlags trust_flags = FWUPD_TRUST_FLAG_NONE;
 	AsRelease *release;
 	GPtrArray *provides;
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 
@@ -1904,7 +1916,10 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	}
 
 	/* check we can install it */
-	if (!fu_engine_check_requirements (self, app, NULL, error))
+	task = fu_install_task_new (NULL, app);
+	if (!fu_engine_check_requirements (self, task,
+					   FWUPD_INSTALL_FLAG_NONE,
+					   error))
 		return NULL;
 
 	/* verify trust */
@@ -1974,9 +1989,13 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	for (guint i = 0; i < apps->len; i++) {
 		AsApp *app = g_ptr_array_index (apps, i);
 		FwupdDevice *dev;
+		g_autoptr(FuInstallTask) task = NULL;
 
 		/* check we can install it */
-		if (!fu_engine_check_requirements (self, app, NULL, error))
+		task = fu_install_task_new (NULL, app);
+		if (!fu_engine_check_requirements (self, task,
+						   FWUPD_INSTALL_FLAG_NONE,
+						   error))
 			return NULL;
 
 		as_app_set_origin (app, as_store_get_origin (store));
@@ -2141,9 +2160,12 @@ fu_engine_filter_apps_by_requirements (FuEngine *self, GPtrArray *apps,
 
 	/* find the first component that passes all the requirements */
 	for (guint i = 0; i < apps->len; i++) {
-		g_autoptr(GError) error_local = NULL;
 		AsApp *app_tmp = AS_APP (g_ptr_array_index (apps, i));
-		if (!fu_engine_check_requirements (self, app_tmp, device, &error_local)) {
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FuInstallTask) task = fu_install_task_new (device, app_tmp);
+		if (!fu_engine_check_requirements (self, task,
+						   FWUPD_INSTALL_FLAG_NONE,
+						   &error_local)) {
 			if (error_all == NULL) {
 				error_all = g_steal_pointer (&error_local);
 				continue;

@@ -31,6 +31,7 @@ G_BEGIN_DECLS
 #include "fwupd-enums.h"
 
 #include "fu-common.h"
+#include "fu-install-task.h"
 #include "fu-plugin.h"
 
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
@@ -96,8 +97,7 @@ gboolean	 fu_engine_modify_device		(FuEngine	*self,
 							 const gchar	*value,
 							 GError		**error);
 gboolean	 fu_engine_install			(FuEngine	*self,
-							 FuDevice	*device,
-							 AsApp		*app,
+							 FuInstallTask	*task,
 							 GBytes		*blob_cab,
 							 FwupdInstallFlags flags,
 							 GError		**error);
@@ -121,8 +121,8 @@ void		 fu_engine_add_runtime_version		(FuEngine	*self,
 							 const gchar	*component_id,
 							 const gchar	*version);
 gboolean	 fu_engine_check_requirements		(FuEngine	*self,
-							 AsApp		*app,
-							 FuDevice	*device,
+							 FuInstallTask	*task,
+							 FwupdInstallFlags flags,
 							 GError		**error);
 
 G_END_DECLS
