@@ -409,6 +409,27 @@ fu_device_add_guid (FuDevice *device, const gchar *guid)
 }
 
 /**
+ * fu_device_get_guids_as_str:
+ * @device: A #FuDevice
+ *
+ * Gets the device GUIDs as a joined string, which may be useful for error
+ * messages.
+ *
+ * Returns: a string, which may be empty length but not %NULL
+ *
+ * Since: 1.0.8
+ **/
+gchar *
+fu_device_get_guids_as_str (FuDevice *device)
+{
+	GPtrArray *guids = fu_device_get_guids (device);
+	g_autofree gchar **tmp = g_new0 (gchar *, guids->len + 1);
+	for (guint i = 0; i < guids->len; i++)
+		tmp[i] = g_ptr_array_index (guids, i);
+	return g_strjoinv (",", tmp);
+}
+
+/**
  * fu_device_get_metadata:
  * @device: A #FuDevice
  * @key: the key
