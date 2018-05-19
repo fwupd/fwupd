@@ -113,6 +113,13 @@ fu_keyring_get_release_trust_flags (AsRelease *release,
 
 	/* no filename? */
 	csum_tmp = as_release_get_checksum_by_target (release, AS_CHECKSUM_TARGET_CONTENT);
+	if (csum_tmp == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no content checksum for release");
+		return FALSE;
+	}
 	fn = as_checksum_get_filename (csum_tmp);
 	if (fn == NULL) {
 		g_set_error_literal (error,
