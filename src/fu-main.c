@@ -441,8 +441,7 @@ fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
 	for (guint i = 0; i < helper->install_tasks->len; i++) {
 		FuInstallTask *task = g_ptr_array_index (helper->install_tasks, i);
 		if (!fu_engine_install (helper->priv->engine,
-					fu_install_task_get_device (task),
-					fu_install_task_get_app (task),
+					task,
 					helper->blob_cab,
 					helper->flags,
 					&error)) {
@@ -627,16 +626,9 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 
 			/* is this component valid for the device */
 			task = fu_install_task_new (device, app);
-			if (!fu_install_task_check_requirements (task, helper->flags, &error_local)) {
-				g_debug ("requirement on %s:%s failed: %s",
-					 fu_device_get_id (device),
-					 as_app_get_id (app),
-					 error_local->message);
-				g_ptr_array_add (errors, g_steal_pointer (&error_local));
-				continue;
-			}
 			if (!fu_engine_check_requirements (priv->engine,
-							   app, device,
+							   task,
+							   helper->flags,
 							   &error_local)) {
 				g_debug ("requirement on %s:%s failed: %s",
 					 fu_device_get_id (device),

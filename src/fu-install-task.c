@@ -292,8 +292,9 @@ fu_install_task_finalize (GObject *object)
 {
 	FuInstallTask *self = FU_INSTALL_TASK (object);
 
-	g_object_unref (self->device);
 	g_object_unref (self->app);
+	if (self->device != NULL)
+		g_object_unref (self->device);
 
 	G_OBJECT_CLASS (fu_install_task_parent_class)->finalize (object);
 }
@@ -319,7 +320,8 @@ fu_install_task_new (FuDevice *device, AsApp *app)
 {
 	FuInstallTask *self;
 	self = g_object_new (FU_TYPE_TASK, NULL);
-	self->device = g_object_ref (device);
 	self->app = g_object_ref (app);
+	if (device != NULL)
+		self->device = g_object_ref (device);
 	return FU_INSTALL_TASK (self);
 }
