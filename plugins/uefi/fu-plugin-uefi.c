@@ -84,11 +84,12 @@ fu_plugin_uefi_guid_to_string (efi_guid_t *guid_raw)
 }
 
 static fwup_resource *
-fu_plugin_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError **error)
+fu_plugin_uefi_find_resource (fwup_resource_iter *iter, FuDevice *device, GError **error)
 {
 	efi_guid_t *guid_raw;
 	fwup_resource *re_matched = NULL;
 	fwup_resource *re = NULL;
+	g_autofree gchar *guids_str = NULL;
 
 	/* get the hardware we're referencing */
 	while (fwup_resource_iter_next (iter, &re) > 0) {
@@ -103,22 +104,18 @@ fu_plugin_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError **e
 		}
 
 		/* FIXME: also match hardware_instance too */
-		if (g_strcmp0 (guid_str, guid_tmp) == 0) {
-			re_matched = re;
-			break;
-		}
+		if (fu_device_has_guid (device, guid_tmp))
+			return re_matched;
 	}
 
 	/* paradoxically, no hardware matched */
-	if (re_matched == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "No UEFI firmware matched %s",
-			     guid_str);
-	}
-
-	return re_matched;
+	guids_str = fu_device_get_guids_as_str (device);
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "No UEFI firmware matched '%s'",
+		     guids_str);
+	return NULL;
 }
 
 static void
@@ -140,7 +137,7 @@ fu_plugin_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find (iter, fu_device_get_guid_default (device), error);
+	re = fu_plugin_uefi_find_resource (iter, device, error);
 	if (re == NULL)
 		return FALSE;
 	if (fwup_clear_status (re) < 0) {
@@ -166,7 +163,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find (iter, fu_device_get_guid_default (device), error);
+	re = fu_plugin_uefi_find_resource (iter, device, error);
 	if (re == NULL)
 		return FALSE;
 	if (fwup_get_last_attempt_info (re, &version, &status, &when) < 0) {
@@ -424,7 +421,7 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find (iter, fu_device_get_guid_default (device), error);
+	re = fu_plugin_uefi_find_resource (iter, device, error);
 	if (re == NULL)
 		return FALSE;
 
