@@ -454,96 +454,6 @@ fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
 	g_dbus_method_invocation_return_value (helper->invocation, NULL);
 }
 
-static const GError *
-fu_main_error_array_find (GPtrArray *errors, FwupdError error_code)
-{
-	for (guint j = 0; j < errors->len; j++) {
-		const GError *error = g_ptr_array_index (errors, j);
-		if (g_error_matches (error, FWUPD_ERROR, error_code))
-			return error;
-	}
-	return NULL;
-}
-
-static guint
-fu_main_error_array_count (GPtrArray *errors, FwupdError error_code)
-{
-	guint cnt = 0;
-	for (guint j = 0; j < errors->len; j++) {
-		const GError *error = g_ptr_array_index (errors, j);
-		if (g_error_matches (error, FWUPD_ERROR, error_code))
-			cnt++;
-	}
-	return cnt;
-}
-
-static gboolean
-fu_main_error_array_matches_any (GPtrArray *errors, FwupdError *error_codes)
-{
-	for (guint j = 0; j < errors->len; j++) {
-		const GError *error = g_ptr_array_index (errors, j);
-		gboolean matches_any = FALSE;
-		for (guint i = 0; error_codes[i] != FWUPD_ERROR_LAST; i++) {
-			if (g_error_matches (error, FWUPD_ERROR, error_codes[i])) {
-				matches_any = TRUE;
-				break;
-			}
-		}
-		if (!matches_any)
-			return FALSE;
-	}
-	return TRUE;
-}
-
-static GError *
-fu_main_error_array_build_composite (GPtrArray *errors)
-{
-	FwupdError err_prio[] =		{ FWUPD_ERROR_INVALID_FILE,
-					  FWUPD_ERROR_VERSION_SAME,
-					  FWUPD_ERROR_VERSION_NEWER,
-					  FWUPD_ERROR_NOT_SUPPORTED,
-					  FWUPD_ERROR_INTERNAL,
-					  FWUPD_ERROR_NOT_FOUND,
-					  FWUPD_ERROR_LAST };
-	FwupdError err_all_uptodate[] =	{ FWUPD_ERROR_VERSION_SAME,
-					  FWUPD_ERROR_NOT_FOUND,
-					  FWUPD_ERROR_NOT_SUPPORTED,
-					  FWUPD_ERROR_LAST };
-	FwupdError err_all_newer[] =	{ FWUPD_ERROR_VERSION_NEWER,
-					  FWUPD_ERROR_VERSION_SAME,
-					  FWUPD_ERROR_NOT_FOUND,
-					  FWUPD_ERROR_NOT_SUPPORTED,
-					  FWUPD_ERROR_LAST };
-
-	/* are all the errors either GUID-not-matched or version-same? */
-	if (fu_main_error_array_count (errors, FWUPD_ERROR_VERSION_SAME) > 1 &&
-	    fu_main_error_array_matches_any (errors, err_all_uptodate)) {
-		return g_error_new (FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "All updatable firmware is already installed");
-	}
-
-	/* are all the errors either GUID-not-matched or version same or newer? */
-	if (fu_main_error_array_count (errors, FWUPD_ERROR_VERSION_NEWER) > 1 &&
-	    fu_main_error_array_matches_any (errors, err_all_newer)) {
-		return g_error_new (FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "All updatable devices already have newer versions");
-	}
-
-	/* get the most important single error */
-	for (guint i = 0; err_prio[i] != FWUPD_ERROR_LAST; i++) {
-		const GError *error_tmp = fu_main_error_array_find (errors, err_prio[i]);
-		if (error_tmp != NULL)
-			return g_error_copy (error_tmp);
-	}
-
-	/* fall back to something */
-	return g_error_new (FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "No supported devices found");
-}
-
 #if !GLIB_CHECK_VERSION(2,54,0)
 static gboolean
 g_ptr_array_find (GPtrArray *haystack, gconstpointer needle, guint *index_)
@@ -645,7 +555,7 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 
 	/* nothing suitable */
 	if (helper->install_tasks->len == 0) {
-		GError *error_tmp = fu_main_error_array_build_composite (errors);
+		GError *error_tmp = fu_common_error_array_get_best (errors);
 		g_propagate_error (error, error_tmp);
 		return FALSE;
 	}
