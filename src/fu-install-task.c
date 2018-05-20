@@ -23,6 +23,7 @@
 
 #include <fwupd.h>
 
+#include "fu-device-private.h"
 #include "fu-install-task.h"
 #include "fu-keyring-utils.h"
 
@@ -304,6 +305,27 @@ fu_install_task_class_init (FuInstallTaskClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = fu_install_task_finalize;
+}
+
+/**
+ * fu_install_task_compare:
+ * @task1: first #FuInstallTask to compare.
+ * @task2: second #FuInstallTask to compare.
+ *
+ * Compares two install tasks.
+ *
+ * Returns: 1, 0 or -1 if @task1 is greater, equal, or less than @task2, respectively.
+ **/
+gint
+fu_install_task_compare (FuInstallTask *task1, FuInstallTask *task2)
+{
+	FuDevice *device1 = fu_install_task_get_device (task1);
+	FuDevice *device2 = fu_install_task_get_device (task2);
+	if (fu_device_get_order (device1) < fu_device_get_order (device2))
+		return -1;
+	if (fu_device_get_order (device1) > fu_device_get_order (device2))
+		return 1;
+	return 0;
 }
 
 /**

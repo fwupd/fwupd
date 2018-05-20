@@ -42,6 +42,8 @@ gboolean	 fu_install_task_check_requirements	(FuInstallTask	*self,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 const gchar	*fu_install_task_get_action_id		(FuInstallTask	*self);
+gint		 fu_install_task_compare		(FuInstallTask	*task1,
+							 FuInstallTask	*task2);
 
 G_END_DECLS
 
