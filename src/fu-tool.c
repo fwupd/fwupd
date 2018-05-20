@@ -398,6 +398,108 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 				       error);
 }
 
+static gint
+fu_util_install_task_sort_cb (gconstpointer a, gconstpointer b)
+{
+	FuInstallTask *task1 = *((FuInstallTask **) a);
+	FuInstallTask *task2 = *((FuInstallTask **) b);
+	return fu_install_task_compare (task1, task2);
+}
+
+static gboolean
+fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	GPtrArray *apps;
+	g_autoptr(AsStore) store = NULL;
+	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GPtrArray) devices_possible = NULL;
+	g_autoptr(GPtrArray) errors = NULL;
+	g_autoptr(GPtrArray) install_tasks = NULL;
+	FwupdInstallFlags flags = FWUPD_INSTALL_FLAG_ALLOW_OLDER |
+				  FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
+				  FWUPD_INSTALL_FLAG_NO_HISTORY;
+
+	/* handle both forms */
+	if (g_strv_length (values) == 1) {
+		devices_possible = fu_engine_get_devices (priv->engine, error);
+		if (devices_possible == NULL)
+			return FALSE;
+	} else if (g_strv_length (values) == 2) {
+		FuDevice *device = fu_engine_get_device (priv->engine,
+							 values[1],
+							 error);
+		if (device == NULL)
+			return FALSE;
+		devices_possible = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+		g_ptr_array_add (devices_possible, device);
+	} else {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* parse store */
+	blob_cab = fu_common_get_contents_bytes (values[0], error);
+	if (blob_cab == NULL)
+		return FALSE;
+	store = fu_engine_get_store_from_blob (priv->engine, blob_cab, error);
+	if (store == NULL)
+		return FALSE;
+	apps = as_store_get_apps (store);
+
+	/* for each component in the store */
+	errors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_error_free);
+	install_tasks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < apps->len; i++) {
+		AsApp *app = g_ptr_array_index (apps, i);
+
+		/* do any devices pass the requirements */
+		for (guint j = 0; j < devices_possible->len; j++) {
+			FuDevice *device = g_ptr_array_index (devices_possible, j);
+			g_autoptr(FuInstallTask) task = NULL;
+			g_autoptr(GError) error_local = NULL;
+
+			/* is this component valid for the device */
+			task = fu_install_task_new (device, app);
+			if (!fu_engine_check_requirements (priv->engine,
+							   task, flags,
+							   &error_local)) {
+				g_debug ("requirement on %s:%s failed: %s",
+					 fu_device_get_id (device),
+					 as_app_get_id (app),
+					 error_local->message);
+				g_ptr_array_add (errors, g_steal_pointer (&error_local));
+				continue;
+			}
+
+			/* success */
+			g_ptr_array_add (install_tasks, g_steal_pointer (&task));
+		}
+	}
+
+	/* order the install tasks by the device priority */
+	g_ptr_array_sort (install_tasks, fu_util_install_task_sort_cb);
+
+	/* nothing suitable */
+	if (install_tasks->len == 0) {
+		GError *error_tmp = fu_common_error_array_get_best (errors);
+		g_propagate_error (error, error_tmp);
+		return FALSE;
+	}
+
+	/* install all the tasks */
+	for (guint i = 0; i < install_tasks->len; i++) {
+		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
+		if (!fu_engine_install (priv->engine, task, blob_cab, flags, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -526,6 +628,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware blob on a device"),
 		     fu_util_install_blob);
+	fu_util_add (priv->cmd_array,
+		     "install",
+		     "FILE [ID]",
+		     /* TRANSLATORS: command description */
+		     _("Install a firmware file on this hardware"),
+		     fu_util_install);
 	fu_util_add (priv->cmd_array,
 		     "attach",
 		     "DEVICE-ID",
