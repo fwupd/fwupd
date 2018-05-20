@@ -60,6 +60,7 @@ GBytes		*fu_common_firmware_builder	(GBytes		*bytes,
 						 const gchar	*script_fn,
 						 const gchar	*output_fn,
 						 GError		**error);
+GError		*fu_common_error_array_get_best	(GPtrArray	*errors);
 
 typedef guint FuEndianType;
 
