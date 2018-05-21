@@ -46,6 +46,7 @@ typedef struct {
 	GPtrArray		*cmd_array;
 	FuEngine		*engine;
 	FuProgressbar		*progressbar;
+	FwupdInstallFlags	 flags;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -392,9 +393,7 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 				       NULL, /* blob_cab */
 				       blob_fw,
 				       NULL, /* version */
-				       FWUPD_INSTALL_FLAG_ALLOW_OLDER |
-				       FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
-				       FWUPD_INSTALL_FLAG_NO_HISTORY,
+				       priv->flags,
 				       error);
 }
 
@@ -415,9 +414,6 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices_possible = NULL;
 	g_autoptr(GPtrArray) errors = NULL;
 	g_autoptr(GPtrArray) install_tasks = NULL;
-	FwupdInstallFlags flags = FWUPD_INSTALL_FLAG_ALLOW_OLDER |
-				  FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
-				  FWUPD_INSTALL_FLAG_NO_HISTORY;
 
 	/* handle both forms */
 	if (g_strv_length (values) == 1) {
@@ -464,7 +460,7 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 			/* is this component valid for the device */
 			task = fu_install_task_new (device, app);
 			if (!fu_engine_check_requirements (priv->engine,
-							   task, flags,
+							   task, priv->flags,
 							   &error_local)) {
 				g_debug ("requirement on %s:%s failed: %s",
 					 fu_device_get_id (device),
@@ -492,7 +488,7 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* install all the tasks */
 	for (guint i = 0; i < install_tasks->len; i++) {
 		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
-		if (!fu_engine_install (priv->engine, task, blob_cab, flags, error))
+		if (!fu_engine_install (priv->engine, task, blob_cab, priv->flags, error))
 			return FALSE;
 	}
 
@@ -569,6 +565,8 @@ fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 int
 main (int argc, char *argv[])
 {
+	gboolean allow_older = FALSE;
+	gboolean allow_reinstall = FALSE;
 	gboolean force = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
@@ -579,6 +577,12 @@ main (int argc, char *argv[])
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			/* TRANSLATORS: command line option */
 			_("Show extra debugging information"), NULL },
+		{ "allow-reinstall", '\0', 0, G_OPTION_ARG_NONE, &allow_reinstall,
+			/* TRANSLATORS: command line option */
+			_("Allow re-installing existing firmware versions"), NULL },
+		{ "allow-older", '\0', 0, G_OPTION_ARG_NONE, &allow_older,
+			/* TRANSLATORS: command line option */
+			_("Allow downgrading firmware versions"), NULL },
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
 			/* TRANSLATORS: command line option */
 			_("Override plugin warning"), NULL },
@@ -685,6 +689,15 @@ main (int argc, char *argv[])
 		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
 				   fu_util_ignore_cb, NULL);
 	}
+
+	/* set flags */
+	priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
+	if (allow_reinstall)
+		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+	if (allow_older)
+		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+	if (force)
+		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
 
 	/* load engine */
 	priv->engine = fu_engine_new (FU_APP_FLAGS_NO_IDLE_SOURCES);
