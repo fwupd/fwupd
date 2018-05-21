@@ -44,7 +44,6 @@ libfwupdprivate = static_library(
     giounix,
     gudev,
     gusb,
-    polkit,
     soup,
     sqlite,
     libarchive,
@@ -60,6 +59,7 @@ libfwupdprivate = static_library(
   ],
 )
 
+if get_option('daemon')
 fwupdmgr = executable(
   'fwupdmgr',
   sources : [
@@ -75,7 +75,6 @@ fwupdmgr = executable(
     giounix,
     gudev,
     gusb,
-    polkit,
     soup,
     sqlite,
     libarchive,
@@ -93,6 +92,7 @@ fwupdmgr = executable(
   install : true,
   install_dir : bindir
 )
+endif
 
 resources_src = gnome.compile_resources(
   'fwupd-resources',
@@ -141,7 +141,6 @@ fwupdtool = executable(
     gmodule,
     gudev,
     gusb,
-    polkit,
     soup,
     sqlite,
     valgrind,
@@ -165,7 +164,7 @@ fwupdtool = executable(
   install_dir : join_paths(libexecdir, 'fwupd')
 )
 
-if get_option('man')
+if get_option('daemon') and get_option('man')
   help2man = find_program('help2man')
   custom_target('fwupdmgr-man',
     input : fwupdmgr,
@@ -183,6 +182,7 @@ if get_option('man')
   )
 endif
 
+if get_option('daemon')
 executable(
   'fwupd',
   resources_src,
@@ -242,6 +242,7 @@ executable(
   install : true,
   install_dir : join_paths(libexecdir, 'fwupd')
 )
+endif
 
 if get_option('tests')
   testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
@@ -292,7 +293,6 @@ if get_option('tests')
       gmodule,
       gudev,
       gusb,
-      polkit,
       soup,
       sqlite,
       valgrind,

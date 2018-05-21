@@ -134,10 +134,6 @@ add_project_arguments('-D_GNU_SOURCE', language : 'c')
 gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
-polkit = dependency('polkit-gobject-1', version : '>= 0.103')
-if polkit.version().version_compare('>= 0.114')
-  conf.set('HAVE_POLKIT_0_114', '1')
-endif
 gudev = dependency('gudev-1.0')
 if gudev.version().version_compare('>= 232')
   conf.set('HAVE_GUDEV_232', '1')
@@ -149,6 +145,17 @@ libarchive = dependency('libarchive')
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
+if get_option('daemon')
+  polkit = dependency('polkit-gobject-1', version : '>= 0.103')
+  if polkit.version().version_compare('>= 0.114')
+    conf.set('HAVE_POLKIT_0_114', '1')
+  endif
+  udevdir = get_option('udevdir')
+  if udevdir == ''
+    udev = dependency('udev')
+    udevdir = udev.get_pkgconfig_variable('udevdir')
+  endif
+endif
 if get_option('pkcs7')
   gnutls = dependency('gnutls', version : '>= 3.4.4.1')
   conf.set('ENABLE_PKCS7', '1')
@@ -159,7 +166,6 @@ if get_option('gpg')
   conf.set('ENABLE_GPG', '1')
 endif
 libm = cc.find_library('m', required: false)
-udev = dependency('udev')
 uuid = dependency('uuid')
 libgcab = dependency('libgcab-1.0')
 if libgcab.version().version_compare('>= 0.8')
@@ -247,11 +253,6 @@ if systemdunitdir == '' and get_option('systemd')
   systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
 endif
 
-udevdir = get_option('udevdir')
-if udevdir == ''
-  udevdir = udev.get_pkgconfig_variable('udevdir')
-endif
-
 gnome = import('gnome')
 i18n = import('i18n')
 
@@ -288,11 +289,13 @@ subdir('data')
 subdir('docs')
 subdir('libfwupd')
 subdir('po')
-subdir('policy')
+if get_option('daemon')
+  subdir('policy')
+endif
 subdir('src')
 subdir('plugins')
 subdir('contrib')
 
-if get_option('systemd')
+if get_option('systemd') and get_option('daemon')
   meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)
 endif
