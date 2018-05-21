@@ -155,6 +155,8 @@ if get_option('daemon')
     udev = dependency('udev')
     udevdir = udev.get_pkgconfig_variable('udevdir')
   endif
+else
+  conf.set('SNAP_SUPPORT', '1')
 endif
 if get_option('pkcs7')
   gnutls = dependency('gnutls', version : '>= 3.4.4.1')

@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "fu-quirks.h"
+#include "fu-common.h"
 
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
@@ -297,18 +298,35 @@ gboolean
 fu_quirks_load (FuQuirks *self, GError **error)
 {
 	g_autofree gchar *localstate_fwupd = NULL;
+	g_autofree gchar *localstatedir = NULL;
+#ifdef SNAP_SUPPORT
+	const gchar* runtime_prefix;
+#endif /* SNAP_SUPPORT */
 	g_return_val_if_fail (FU_IS_QUIRKS (self), FALSE);
 
 	/* ensure empty in case we're called from a monitor change */
 	g_ptr_array_set_size (self->monitors, 0);
 	g_hash_table_remove_all (self->hash);
 
+#ifdef SNAP_SUPPORT
+	/* Add something with a runtime prefix */
+	runtime_prefix = g_getenv ("SNAP");
+	if (runtime_prefix != NULL) {
+		g_autofree gchar *runtimedir = NULL;
+		runtimedir = g_build_filename (runtime_prefix, FWUPDDATADIR, NULL);
+		if (g_file_test (runtimedir, G_FILE_TEST_IS_DIR)) {
+			if (!fu_quirks_add_quirks_for_path (self, runtimedir, error))
+				return FALSE;
+		}
+	}
+#endif
 	/* system datadir */
 	if (!fu_quirks_add_quirks_for_path (self, FWUPDDATADIR, error))
 		return FALSE;
 
 	/* something we can write when using Ostree */
-	localstate_fwupd = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
+	localstatedir = fu_common_get_localstatedir ();
+	localstate_fwupd = g_build_filename (localstatedir, "lib", "fwupd", NULL);
 	if (!fu_quirks_add_quirks_for_path (self, localstate_fwupd, error))
 		return FALSE;
 

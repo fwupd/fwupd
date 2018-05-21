@@ -61,4 +61,5 @@ guint16		 fu_common_read_uint16		(const guint8	*buf,
 guint32		 fu_common_read_uint32		(const guint8	*buf,
 						 FuEndianType	 endian);
 
+gchar		*fu_common_get_localstatedir 	(void);
 #endif /* __FU_COMMON_H__ */
