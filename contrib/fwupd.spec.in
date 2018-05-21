@@ -205,6 +205,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_sysconfdir}/pki/fwupd-metadata
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
+%{_datadir}/bash-completion/completions/fwupdtool
 %{_datadir}/fwupd/metainfo/org.freedesktop.fwupd*.metainfo.xml
 %{_datadir}/fwupd/remotes.d/fwupd/metadata.xml
 %{_datadir}/fwupd/remotes.d/vendor/firmware/README.md

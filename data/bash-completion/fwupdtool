@@ -1,0 +1,65 @@
+_fwupdmgr_cmd_list=(
+	'get-devices'
+	'get-topology'
+	'install'
+	'install-blob'
+	'smbios-dump'
+	'attach'
+	'detach'
+	'watch'
+)
+
+_fwupdmgr_opts=(
+	'--verbose'
+	'--allow-reinstall'
+	'--allow-older'
+	'--force'
+	'--show-all-devices'
+)
+
+_show_modifiers()
+{
+	COMPREPLY+=( $(compgen -W '${_fwupdmgr_opts[@]}' -- "$cur") )
+}
+
+_fwupdtool()
+{
+	local cur prev command
+	COMPREPLY=()
+	cur=`_get_cword`
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+	command=${COMP_WORDS[1]}
+
+	case $command in
+	install|install-blob)
+		#find files
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	attach|detach)
+		if [[ "$prev" = "$command" ]]; then
+			_show_device_ids
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	*)
+		#find first command
+		if [[ ${COMP_CWORD} = 1 ]]; then
+			COMPREPLY=( $(compgen -W '${_fwupdmgr_cmd_list[@]}' -- "$cur") )
+		#modifiers for all commands
+		else
+			_show_modifiers
+		fi
+		;;
+	esac
+
+	return 0
+}
+
+complete -F _fwupdtool fwupdtool
