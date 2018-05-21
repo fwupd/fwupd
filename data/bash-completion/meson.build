@@ -3,7 +3,7 @@ if bashcomp.found()
                                          define_variable: [ 'prefix', prefix ],
   )
 
-  install_data(['fwupdmgr'],
+  install_data(['fwupdmgr', 'fwupdtool'],
     install_dir : tgt,
   )
 endif
