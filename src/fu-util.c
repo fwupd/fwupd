@@ -634,7 +634,7 @@ fu_util_update_reboot (GError **error)
 					   -1,
 					   NULL,
 					   error);
-#elif HAVE_CONSOLEKIT
+#elif defined(HAVE_CONSOLEKIT)
 	/* reboot using ConsoleKit */
 	val = g_dbus_connection_call_sync (connection,
 					   "org.freedesktop.ConsoleKit",
