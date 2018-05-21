@@ -24,9 +24,11 @@ install_data(['metadata.xml'],
   install_dir : join_paths(datadir, 'fwupd', 'remotes.d', 'fwupd')
 )
 
-install_data(['90-fwupd-devices.rules'],
-  install_dir : join_paths(udevdir, 'rules.d')
-)
+if get_option('daemon')
+  install_data(['90-fwupd-devices.rules'],
+    install_dir : join_paths(udevdir, 'rules.d')
+  )
+endif
 
 con2 = configuration_data()
 con2.set('libexecdir', libexecdir)
