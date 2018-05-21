@@ -24,6 +24,7 @@
 #include <glib/gi18n.h>
 
 #include "fu-util-common.h"
+#include "fu-device.h"
 
 void
 fu_util_print_data (const gchar *title, const gchar *msg)
@@ -91,5 +92,43 @@ fu_util_prompt_for_boolean (gboolean def)
 		if (g_strcmp0 (buffer, "N\n") == 0)
 			return FALSE;
 	} while (TRUE);
+	return FALSE;
+}
+
+gboolean
+fu_util_print_device_tree (GNode *n, gpointer data)
+{
+	FwupdDevice *dev = FWUPD_DEVICE (n->data);
+	const gchar *name;
+	g_autoptr(GString) str = g_string_new (NULL);
+
+	/* root node */
+	if (dev == NULL) {
+		g_print ("○\n");
+		return FALSE;
+	}
+
+	/* add previous branches */
+	for (GNode *c = n->parent; c->parent != NULL; c = c->parent) {
+		if (g_node_next_sibling (c) == NULL)
+			g_string_prepend (str, "  ");
+		else
+			g_string_prepend (str, "│ ");
+	}
+
+	/* add this branch */
+	if (g_node_last_sibling (n) == n)
+		g_string_append (str, "└─ ");
+	else
+		g_string_append (str, "├─ ");
+
+	/* dump to the console */
+	name = fwupd_device_get_name (dev);
+	if (name == NULL)
+		name = "Unknown device";
+	g_string_append (str, name);
+	for (guint i = strlen (name) + 2 * g_node_depth (n); i < 45; i++)
+		g_string_append_c (str, ' ');
+	g_print ("%s %s\n", str->str, fu_device_get_id (dev));
 	return FALSE;
 }

@@ -47,6 +47,7 @@ typedef struct {
 	FuEngine		*engine;
 	FuProgressbar		*progressbar;
 	FwupdInstallFlags	 flags;
+	gboolean		 show_all_devices;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -300,17 +301,63 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	if (devs->len == 0) {
 		/* TRANSLATORS: nothing attached */
-		g_print ("%s\n", _("No hardware detected"));
+		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
 	for (guint i = 0; i < devs->len; i++) {
+		g_autofree gchar *tmp = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
-		g_autofree gchar *tmp = fwupd_device_to_string (dev);
+		if (!(fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
+			continue;
+		tmp = fwupd_device_to_string (dev);
 		g_print ("%s\n", tmp);
 	}
 
 	return TRUE;
 }
+
+static void
+fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, FwupdDevice *dev)
+{
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev_tmp = g_ptr_array_index (devs, i);
+		if (!(fwupd_device_has_flag (dev_tmp, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
+			continue;
+		if (fwupd_device_get_parent (dev_tmp) == dev) {
+			GNode *child = g_node_append_data (root, dev_tmp);
+			fu_util_build_device_tree (priv, child, devs, dev_tmp);
+		}
+	}
+}
+
+static gboolean
+fu_util_get_topology (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autoptr(GPtrArray) devs = NULL;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
+
+	/* print */
+	devs = fu_engine_get_devices (priv->engine, error);
+	if (devs == NULL)
+		return FALSE;
+
+	/* print */
+	if (devs->len == 0) {
+		/* TRANSLATORS: nothing attached that can be upgraded */
+		g_print ("%s\n", _("No hardware detected with firmware update capability"));
+		return TRUE;
+	}
+	fu_util_build_device_tree (priv, root, devs, NULL);
+	g_node_traverse (root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
+			 fu_util_print_device_tree, priv);
+
+	return TRUE;
+}
+
 
 static FuDevice *
 fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
@@ -586,6 +633,9 @@ main (int argc, char *argv[])
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
 			/* TRANSLATORS: command line option */
 			_("Override plugin warning"), NULL },
+		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
+			/* TRANSLATORS: command line option */
+			_("Show devices that are not updatable"), NULL },
 		{ NULL}
 	};
 
@@ -620,6 +670,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Get all devices that support firmware updates"),
 		     fu_util_get_devices);
+	fu_util_add (priv->cmd_array,
+		     "get-topology",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Get all devices according to the system topology"),
+		     fu_util_get_topology);
 	fu_util_add (priv->cmd_array,
 		     "watch",
 		     NULL,
