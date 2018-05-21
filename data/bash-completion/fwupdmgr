@@ -21,7 +21,6 @@ _fwupdmgr_cmd_list=(
 	'monitor'
 	'refresh'
 	'report-history'
-	'smbios-dump'
 	'unlock'
 	'update'
 	'verify'
@@ -81,7 +80,7 @@ _fwupdmgr()
 			_show_modifiers
 		fi
 		;;
-	get-details|smbios-dump)
+	get-details)
 		#browse for file
 		if [[ "$prev" = "$command" ]]; then
 			_filedir
