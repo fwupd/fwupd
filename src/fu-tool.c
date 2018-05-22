@@ -653,6 +653,7 @@ main (int argc, char *argv[])
 	gboolean force = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
+	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *cmd_descriptions = NULL;
@@ -672,6 +673,9 @@ main (int argc, char *argv[])
 		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
+		{ "plugin-whitelist", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
+			/* TRANSLATORS: command line option */
+			_("Manually whitelist specific plugins"), NULL },
 		{ NULL}
 	};
 
@@ -814,6 +818,10 @@ main (int argc, char *argv[])
 	g_signal_connect (priv->engine, "percentage-changed",
 			  G_CALLBACK (fu_main_engine_percentage_changed_cb),
 			  priv);
+
+	/* any plugin whitelist specified */
+	for (guint i = 0; plugin_glob != NULL && plugin_glob[i] != NULL; i++)
+		fu_engine_add_plugin_filter (priv->engine, plugin_glob[i]);
 
 	/* run the specified command */
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);
