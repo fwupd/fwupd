@@ -38,6 +38,8 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 
 FuEngine	*fu_engine_new				(FuAppFlags	 app_flags);
+void		 fu_engine_add_plugin_filter		(FuEngine	*self,
+							 const gchar	*plugin_glob);
 gboolean	 fu_engine_load				(FuEngine	*self,
 							 GError		**error);
 gboolean	 fu_engine_load_plugins			(FuEngine	*self,

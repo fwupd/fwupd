@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 #include <gio/gunixinputstream.h>
 #include <glib-object.h>
+#include <fnmatch.h>
 #include <string.h>
 #include <sys/utsname.h>
 
@@ -69,6 +70,7 @@ struct _FuEngine
 	guint			 coldplug_id;
 	guint			 coldplug_delay;
 	FuPluginList		*plugin_list;
+	GPtrArray		*plugin_filter;
 	GPtrArray		*supported_guids;
 	FuSmbios		*smbios;
 	FuHwids			*hwids;
@@ -2896,6 +2898,27 @@ fu_engine_is_plugin_name_blacklisted (FuEngine *self, const gchar *name)
 	return FALSE;
 }
 
+static gboolean
+fu_engine_is_plugin_name_whitelisted (FuEngine *self, const gchar *name)
+{
+	if (self->plugin_filter->len == 0)
+		return TRUE;
+	for (guint i = 0; i < self->plugin_filter->len; i++) {
+		const gchar *name_tmp = g_ptr_array_index (self->plugin_filter, i);
+		if (fnmatch (name_tmp, name, 0) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+void
+fu_engine_add_plugin_filter (FuEngine *self, const gchar *plugin_glob)
+{
+	g_return_if_fail (FU_IS_ENGINE (self));
+	g_return_if_fail (plugin_glob != NULL);
+	g_ptr_array_add (self->plugin_filter, g_strdup (plugin_glob));
+}
+
 gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {
@@ -2926,7 +2949,11 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		if (name == NULL)
 			continue;
 		if (fu_engine_is_plugin_name_blacklisted (self, name)) {
-			g_debug ("%s is blacklisted", name);
+			g_debug ("plugin %s is blacklisted", name);
+			continue;
+		}
+		if (!fu_engine_is_plugin_name_whitelisted (self, name)) {
+			g_debug ("plugin %s is not whitelisted", name);
 			continue;
 		}
 
@@ -3373,6 +3400,7 @@ fu_engine_init (FuEngine *self)
 	self->plugin_list = fu_plugin_list_new ();
 	self->profile = as_profile_new ();
 	self->store = as_store_new ();
+	self->plugin_filter = g_ptr_array_new_with_free_func (g_free);
 	self->supported_guids = g_ptr_array_new_with_free_func (g_free);
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
@@ -3424,6 +3452,7 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->store);
 	g_object_unref (self->device_list);
 	g_ptr_array_unref (self->supported_guids);
+	g_ptr_array_unref (self->plugin_filter);
 	g_hash_table_unref (self->runtime_versions);
 	g_hash_table_unref (self->compile_versions);
 

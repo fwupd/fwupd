@@ -15,6 +15,7 @@ _fwupdmgr_opts=(
 	'--allow-older'
 	'--force'
 	'--show-all-devices'
+	'--plugin-whitelist'
 )
 
 _show_modifiers()
