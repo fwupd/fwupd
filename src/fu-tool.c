@@ -686,11 +686,9 @@ main (int argc, char *argv[])
 	textdomain (GETTEXT_PACKAGE);
 
 	/* ensure root user */
-	if (getuid () != 0 || geteuid () != 0) {
+	if (getuid () != 0 || geteuid () != 0)
 		/* TRANSLATORS: we're poking around as a power user */
-		g_print ("%s\n", _("This program can only be used when root"));
-		return EXIT_FAILURE;
-	}
+		g_printerr ("%s\n", _("This program may only work correctly as root"));
 
 	/* create helper object */
 	priv->loop = g_main_loop_new (NULL, FALSE);
