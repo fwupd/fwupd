@@ -395,18 +395,15 @@ fu_config_load_remotes (FuConfig *self, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_config_load (FuConfig *self, GError **error)
+static gboolean
+fu_config_load_from_file (FuConfig *self, const gchar *config_file,
+			  GError **error)
 {
 	GFileMonitor *monitor;
 	guint64 archive_size_max;
-	g_autofree gchar *config_file = NULL;
-	g_autofree gchar *metainfo_path = NULL;
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autoptr(GFile) file = NULL;
-
-	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
 
 	/* ensure empty in case we're called from a monitor change */
 	g_ptr_array_set_size (self->blacklist_devices, 0);
@@ -414,8 +411,6 @@ fu_config_load (FuConfig *self, GError **error)
 	g_ptr_array_set_size (self->monitors, 0);
 	g_ptr_array_set_size (self->remotes, 0);
 
-	/* load the main daemon config file */
-	config_file = g_build_filename (FWUPDCONFIGDIR, "daemon.conf", NULL);
 	g_debug ("loading config values from %s", config_file);
 	if (!g_key_file_load_from_file (self->keyfile, config_file,
 					G_KEY_FILE_NONE, error))
@@ -463,6 +458,25 @@ fu_config_load (FuConfig *self, GError **error)
 						  NULL);
 	if (archive_size_max > 0)
 		self->archive_size_max = archive_size_max *= 0x100000;
+	return TRUE;
+}
+
+gboolean
+fu_config_load (FuConfig *self, GError **error)
+{
+	g_autofree gchar *metainfo_path = NULL;
+	g_autofree gchar *config_file = NULL;
+
+	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
+
+	/* load the main daemon config file */
+	config_file = g_build_filename (FWUPDCONFIGDIR, "daemon.conf", NULL);
+	if (g_file_test (config_file, G_FILE_TEST_EXISTS)) {
+		if (!fu_config_load_from_file (self, config_file, error))
+			return FALSE;
+	} else {
+		g_warning ("Daemon configuration %s not found", config_file);
+	}
 
 	/* load AppStream about the remotes */
 	self->os_release = fwupd_get_os_release (error);
