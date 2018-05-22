@@ -1218,6 +1218,23 @@ fu_engine_install (FuEngine *self,
 				       version, flags, error);
 }
 
+/**
+ * fu_engine_get_plugins:
+ * @self: A #FuPluginList
+ *
+ * Gets all the plugins that have been added.
+ *
+ * Returns: (transfer none) (element-type FuPlugin): the plugins
+ *
+ * Since: 1.0.8
+ **/
+GPtrArray *
+fu_engine_get_plugins (FuEngine *self)
+{
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	return fu_plugin_list_get_all (self->plugin_list);
+}
+
 gboolean
 fu_engine_install_blob (FuEngine *self,
 			FuDevice *device,
@@ -2879,7 +2896,7 @@ fu_engine_is_plugin_name_blacklisted (FuEngine *self, const gchar *name)
 	return FALSE;
 }
 
-static gboolean
+gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {
 	const gchar *fn;
@@ -2925,10 +2942,14 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		fu_plugin_set_runtime_versions (plugin, self->runtime_versions);
 		fu_plugin_set_compile_versions (plugin, self->compile_versions);
 		g_debug ("adding plugin %s", filename);
-		if (!fu_plugin_open (plugin, filename, &error_local)) {
-			g_warning ("failed to open plugin %s: %s",
-				   filename, error_local->message);
-			continue;
+
+		/* if loaded from fu_engine_load() open the plugin */
+		if (self->usb_ctx != NULL) {
+			if (!fu_plugin_open (plugin, filename, &error_local)) {
+				g_warning ("failed to open plugin %s: %s",
+					   filename, error_local->message);
+				continue;
+			}
 		}
 
 		/* self disabled */

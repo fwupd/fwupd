@@ -29,6 +29,7 @@
 #include <unistd.h>
 
 #include "fu-engine.h"
+#include "fu-plugin-private.h"
 #include "fu-progressbar.h"
 #include "fu-smbios.h"
 #include "fu-util-common.h"
@@ -283,6 +284,41 @@ fu_util_watch (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_engine_load (priv->engine, error))
 		return FALSE;
 	g_main_loop_run (priv->loop);
+	return TRUE;
+}
+
+static gint
+fu_util_plugin_name_sort_cb (FuPlugin **item1, FuPlugin **item2)
+{
+	return fu_plugin_name_compare (*item1, *item2);
+}
+
+static gboolean
+fu_util_get_plugins (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	GPtrArray *plugins;
+	guint cnt = 0;
+
+	/* load engine */
+	if (!fu_engine_load_plugins (priv->engine, error))
+		return FALSE;
+
+	/* print */
+	plugins = fu_engine_get_plugins (priv->engine);
+	g_ptr_array_sort (plugins, (GCompareFunc) fu_util_plugin_name_sort_cb);
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (plugins, i);
+		if (!fu_plugin_get_enabled (plugin))
+			continue;
+		g_print ("%s\n", fu_plugin_get_name (plugin));
+		cnt++;
+	}
+	if (cnt == 0) {
+		/* TRANSLATORS: nothing found */
+		g_print ("%s\n", _("No plugins found"));
+		return TRUE;
+	}
+
 	return TRUE;
 }
 
@@ -664,6 +700,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Dump SMBIOS data from a file"),
 		     fu_util_smbios_dump);
+	fu_util_add (priv->cmd_array,
+		     "get-plugins",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Get all enabled plugins registered with the system"),
+		     fu_util_get_plugins);
 	fu_util_add (priv->cmd_array,
 		     "get-devices",
 		     NULL,

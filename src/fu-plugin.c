@@ -1538,6 +1538,44 @@ fu_plugin_get_config_value (FuPlugin *plugin, const gchar *key)
 	return g_key_file_get_string (keyfile, plugin_name, key, NULL);
 }
 
+/**
+ * fu_plugin_name_compare:
+ * @plugin1: first #FuPlugin to compare.
+ * @plugin2: second #FuPlugin to compare.
+ *
+ * Compares two plugins by their names.
+ *
+ * Returns: 1, 0 or -1 if @plugin1 is greater, equal, or less than @plugin2.
+ **/
+gint
+fu_plugin_name_compare (FuPlugin *plugin1, FuPlugin *plugin2)
+{
+	FuPluginPrivate *priv1 = fu_plugin_get_instance_private (plugin1);
+	FuPluginPrivate *priv2 = fu_plugin_get_instance_private (plugin2);
+	return g_strcmp0 (priv1->name, priv2->name);
+}
+
+/**
+ * fu_plugin_order_compare:
+ * @plugin1: first #FuPlugin to compare.
+ * @plugin2: second #FuPlugin to compare.
+ *
+ * Compares two plugins by their depsolved order.
+ *
+ * Returns: 1, 0 or -1 if @plugin1 is greater, equal, or less than @plugin2.
+ **/
+gint
+fu_plugin_order_compare (FuPlugin *plugin1, FuPlugin *plugin2)
+{
+	FuPluginPrivate *priv1 = fu_plugin_get_instance_private (plugin1);
+	FuPluginPrivate *priv2 = fu_plugin_get_instance_private (plugin2);
+	if (priv1->order < priv2->order)
+		return -1;
+	if (priv1->order > priv2->order)
+		return 1;
+	return 0;
+}
+
 static void
 fu_plugin_class_init (FuPluginClass *klass)
 {
