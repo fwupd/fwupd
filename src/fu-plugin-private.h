@@ -106,6 +106,10 @@ gboolean	 fu_plugin_runner_clear_results		(FuPlugin	*plugin,
 gboolean	 fu_plugin_runner_get_results		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
+gint		 fu_plugin_name_compare			(FuPlugin	*plugin1,
+							 FuPlugin	*plugin2);
+gint		 fu_plugin_order_compare		(FuPlugin	*plugin1,
+							 FuPlugin	*plugin2);
 
 /* utils */
 gchar		*fu_plugin_guess_name_from_fn           (const gchar	*filename);

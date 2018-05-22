@@ -124,11 +124,7 @@ fu_plugin_list_sort_cb (gconstpointer a, gconstpointer b)
 {
 	FuPlugin **pa = (FuPlugin **) a;
 	FuPlugin **pb = (FuPlugin **) b;
-	if (fu_plugin_get_order (*pa) < fu_plugin_get_order (*pb))
-		return -1;
-	if (fu_plugin_get_order (*pa) > fu_plugin_get_order (*pb))
-		return 1;
-	return 0;
+	return fu_plugin_order_compare (*pa, *pb);
 }
 
 /**

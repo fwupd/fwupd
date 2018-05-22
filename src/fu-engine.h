@@ -40,6 +40,8 @@ G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 FuEngine	*fu_engine_new				(FuAppFlags	 app_flags);
 gboolean	 fu_engine_load				(FuEngine	*self,
 							 GError		**error);
+gboolean	 fu_engine_load_plugins			(FuEngine	*self,
+							 GError		**error);
 FwupdStatus	 fu_engine_get_status			(FuEngine	*self);
 void		 fu_engine_profile_dump			(FuEngine	*self);
 gboolean	 fu_engine_check_plugins_pending	(FuEngine	*self,
@@ -48,6 +50,7 @@ AsStore		*fu_engine_get_store_from_blob		(FuEngine	*self,
 							 GBytes		*blob_cab,
 							 GError		**error);
 guint64		 fu_engine_get_archive_size_max		(FuEngine	*self);
+GPtrArray	*fu_engine_get_plugins			(FuEngine	*self);
 GPtrArray	*fu_engine_get_devices			(FuEngine	*self,
 							 GError		**error);
 FuDevice	*fu_engine_get_device			(FuEngine	*self,
