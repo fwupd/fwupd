@@ -3,7 +3,19 @@ if bashcomp.found()
                                          define_variable: [ 'prefix', prefix ],
   )
 
-  install_data(['fwupdmgr', 'fwupdtool'],
+  install_data(['fwupdmgr'],
     install_dir : tgt,
   )
+
+# replace @libexecdir@
+fwupdtool_path = join_paths(libexecdir, 'fwupd')
+con2 = configuration_data()
+con2.set('libexecdir', fwupdtool_path)
+configure_file(
+  input : 'fwupdtool.in',
+  output : 'fwupdtool',
+  configuration : con2,
+  install: true,
+  install_dir: tgt)
+
 endif
