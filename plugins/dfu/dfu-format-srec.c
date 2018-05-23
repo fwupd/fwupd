@@ -74,10 +74,11 @@ typedef enum {
  * Returns: %TRUE for success
  **/
 gboolean
-dfu_firmware_from_srec (DfuFirmware *firmware,
-			GBytes *bytes,
-			DfuFirmwareParseFlags flags,
-			GError **error)
+dfu_image_from_srec (DfuImage *image,
+		     GBytes *bytes,
+		     guint32 start_addr,
+		     DfuFirmwareParseFlags flags,
+		     GError **error)
 {
 	const gchar *in_buffer;
 	gboolean got_eof = FALSE;
@@ -87,7 +88,6 @@ dfu_firmware_from_srec (DfuFirmware *firmware,
 	guint32 element_address = 0;
 	guint offset = 0;
 	g_autoptr(DfuElement) element = NULL;
-	g_autoptr(DfuImage) image = NULL;
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GString) modname = g_string_new (NULL);
 	g_autoptr(GString) outbuf = NULL;
@@ -95,7 +95,6 @@ dfu_firmware_from_srec (DfuFirmware *firmware,
 	g_return_val_if_fail (bytes != NULL, FALSE);
 
 	/* create element */
-	image = dfu_image_new ();
 	element = dfu_element_new ();
 
 	/* parse records */
@@ -259,12 +258,17 @@ dfu_firmware_from_srec (DfuFirmware *firmware,
 					     (guint) addr32_last);
 				return FALSE;
 			}
-			for (guint i = 0; i < rec_datalen; i++) {
-				guint8 tmp = dfu_utils_buffer_parse_uint8 (in_buffer + offset + 8 + (i * 2));
-				g_string_append_c (outbuf, tmp);
+			if (rec_addr32 < start_addr) {
+				g_debug ("ignoring data at 0x%x as before start address 0x%x",
+					 (guint) rec_addr32, (guint) start_addr);
+			} else {
+				for (guint i = 0; i < rec_datalen; i++) {
+					guint8 tmp = dfu_utils_buffer_parse_uint8 (in_buffer + offset + 8 + (i * 2));
+					g_string_append_c (outbuf, tmp);
+				}
+				if (element_address == 0x0)
+					element_address = rec_addr32;
 			}
-			if (element_address == 0x0)
-				element_address = rec_addr32;
 			addr32_last = rec_addr32++;
 			class_data_cnt++;
 		}
@@ -292,6 +296,34 @@ dfu_firmware_from_srec (DfuFirmware *firmware,
 	dfu_element_set_contents (element, contents);
 	dfu_element_set_address (element, element_address);
 	dfu_image_add_element (image, element);
+	return TRUE;
+}
+
+/**
+ * dfu_firmware_from_srec: (skip)
+ * @firmware: a #DfuFirmware
+ * @bytes: data to parse
+ * @flags: some #DfuFirmwareParseFlags
+ * @error: a #GError, or %NULL
+ *
+ * Unpacks into a firmware object from raw data.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+dfu_firmware_from_srec (DfuFirmware *firmware,
+			GBytes *bytes,
+			DfuFirmwareParseFlags flags,
+			GError **error)
+{
+	g_autoptr(DfuImage) image = NULL;
+
+	g_return_val_if_fail (bytes != NULL, FALSE);
+
+	/* add single image */
+	image = dfu_image_new ();
+	if (!dfu_image_from_srec (image, bytes, 0x0, flags, error))
+		return FALSE;
 	dfu_firmware_add_image (firmware, image);
 	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_SREC);
 	return TRUE;
