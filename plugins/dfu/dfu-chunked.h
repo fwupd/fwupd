@@ -48,6 +48,10 @@ GPtrArray	*dfu_chunked_new			(const guint8	*data,
 							 guint32	 addr_start,
 							 guint32	 page_sz,
 							 guint32	 packet_sz);
+GPtrArray	*dfu_chunked_new_from_bytes		(GBytes		*blob,
+							 guint32	 addr_start,
+							 guint32	 page_sz,
+							 guint32	 packet_sz);
 
 G_END_DECLS
 

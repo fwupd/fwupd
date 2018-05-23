@@ -183,3 +183,27 @@ dfu_chunked_new (const guint8 *data,
 	}
 	return segments;
 }
+
+/**
+ * dfu_chunked_new_from_bytes:
+ * @blob: a #GBytes
+ * @addr_start: the hardware address offset, or 0
+ * @page_sz: the hardware page size, or 0
+ * @packet_sz: the transfer size, or 0
+ *
+ * Chunks a linear blob of memory into packets, ensuring each packet does not
+ * cross a package boundary and is less that a specific transfer size.
+ *
+ * Return value: (element-type DfuChunkedPacket): array of packets
+ **/
+GPtrArray *
+dfu_chunked_new_from_bytes (GBytes *blob,
+			    guint32 addr_start,
+			    guint32 page_sz,
+			    guint32 packet_sz)
+{
+	gsize sz;
+	const guint8 *data = g_bytes_get_data (blob, &sz);
+	return dfu_chunked_new (data, (guint32) sz,
+				addr_start, page_sz, packet_sz);
+}
