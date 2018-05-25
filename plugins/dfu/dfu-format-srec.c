@@ -82,6 +82,7 @@ dfu_image_from_srec (DfuImage *image,
 {
 	const gchar *in_buffer;
 	gboolean got_eof = FALSE;
+	gboolean got_hdr = FALSE;
 	gsize len_in;
 	guint16 class_data_cnt = 0;
 	guint32 addr32_last = 0;
@@ -168,6 +169,13 @@ dfu_image_from_srec (DfuImage *image,
 			rec_class = DFU_SREC_RECORD_CLASS_HEADER;
 			rec_dataoffset += 2;
 			rec_addr32 = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 4);
+			if (got_hdr) {
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
+						     "duplicate header record");
+				return FALSE;
+			}
 			if (rec_addr32 != 0x0) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -185,6 +193,7 @@ dfu_image_from_srec (DfuImage *image,
 			}
 			if (modname->len != 0)
 				dfu_image_set_name (image, modname->str);
+			got_hdr = TRUE;
 			break;
 		case '1':
 			rec_class = DFU_SREC_RECORD_CLASS_DATA;
@@ -244,6 +253,14 @@ dfu_image_from_srec (DfuImage *image,
 
 		/* read data */
 		if (rec_class == DFU_SREC_RECORD_CLASS_DATA) {
+			/* probably invalid data */
+			if (!got_hdr) {
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
+						     "missing header record");
+				return FALSE;
+			}
 			/* does not make sense */
 			if (rec_addr32 < addr32_last) {
 				g_set_error (error,
