@@ -103,8 +103,8 @@ dfu_image_from_srec (DfuImage *image,
 	while (offset < len_in) {
 		DfuSrecClassType rec_class = DFU_SREC_RECORD_CLASS_UNKNOWN;
 		guint32 rec_addr32;
-		guint8 rec_count;
-		guint8 rec_datalen;
+		guint8 rec_count;		/* bytes */
+		guint8 rec_dataoffset;		/* bytes */
 		guint8 rec_kind;
 
 		/* check starting token */
@@ -141,9 +141,6 @@ dfu_image_from_srec (DfuImage *image,
 			return FALSE;
 		}
 
-		/* remove the length of the checksum */
-		rec_datalen = rec_count - 1;
-
 		/* checksum check */
 		if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST) == 0) {
 			guint8 rec_csum = 0;
@@ -162,11 +159,14 @@ dfu_image_from_srec (DfuImage *image,
 			}
 		}
 
+		/* record kind + record count (in bytes, not chars) */
+		rec_dataoffset = 2;
+
 		/* parse record */
 		switch (rec_kind) {
 		case '0':
 			rec_class = DFU_SREC_RECORD_CLASS_HEADER;
-			rec_datalen -= 2;
+			rec_dataoffset += 2;
 			rec_addr32 = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 4);
 			if (rec_addr32 != 0x0) {
 				g_set_error (error,
@@ -177,8 +177,8 @@ dfu_image_from_srec (DfuImage *image,
 				return FALSE;
 			}
 			/* could be anything, lets assume text */
-			for (guint i = 0; i < rec_datalen; i++) {
-				guint8 tmp = dfu_utils_buffer_parse_uint8 (in_buffer + offset + 8 + (i * 2));
+			for (guint8 i = rec_dataoffset; i <= rec_count; i++) {
+				guint8 tmp = dfu_utils_buffer_parse_uint8 (in_buffer + offset + (i * 2));
 				if (!g_ascii_isgraph (tmp))
 					break;
 				g_string_append_c (modname, tmp);
@@ -188,40 +188,36 @@ dfu_image_from_srec (DfuImage *image,
 			break;
 		case '1':
 			rec_class = DFU_SREC_RECORD_CLASS_DATA;
-			rec_datalen -= 2;
+			rec_dataoffset += 2;
 			rec_addr32 = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 4);
 			break;
 		case '2':
 			rec_class = DFU_SREC_RECORD_CLASS_DATA;
-			rec_datalen -= 3;
+			rec_dataoffset += 3;
 			rec_addr32 = dfu_utils_buffer_parse_uint24 (in_buffer + offset + 4);
 			break;
 		case '3':
 			rec_class = DFU_SREC_RECORD_CLASS_DATA;
-			rec_datalen -= 4;
+			rec_dataoffset += 4;
 			rec_addr32 = dfu_utils_buffer_parse_uint32 (in_buffer + offset + 4);
 			break;
 		case '9':
 			rec_class = DFU_SREC_RECORD_CLASS_TERMINATION;
-			rec_datalen -= 2;
 			rec_addr32 = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 4);
 			got_eof = TRUE;
 			break;
 		case '8':
 			rec_class = DFU_SREC_RECORD_CLASS_TERMINATION;
-			rec_datalen -= 3;
 			rec_addr32 = dfu_utils_buffer_parse_uint24 (in_buffer + offset + 4);
 			got_eof = TRUE;
 			break;
 		case '7':
 			rec_class = DFU_SREC_RECORD_CLASS_TERMINATION;
-			rec_datalen -= 4;
 			rec_addr32 = dfu_utils_buffer_parse_uint32 (in_buffer + offset + 4);
 			got_eof = TRUE;
 			break;
 		case '5':
 			rec_class = DFU_SREC_RECORD_CLASS_COUNT;
-			rec_datalen -= 2;
 			rec_addr32 = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 4);
 			if (rec_addr32 != class_data_cnt) {
 				g_set_error (error,
@@ -262,8 +258,8 @@ dfu_image_from_srec (DfuImage *image,
 				g_debug ("ignoring data at 0x%x as before start address 0x%x",
 					 (guint) rec_addr32, (guint) start_addr);
 			} else {
-				for (guint i = 0; i < rec_datalen; i++) {
-					guint8 tmp = dfu_utils_buffer_parse_uint8 (in_buffer + offset + 8 + (i * 2));
+				for (guint8 i = rec_dataoffset; i <= rec_count; i++) {
+					guint8 tmp = dfu_utils_buffer_parse_uint8 (in_buffer + offset + (i * 2));
 					g_string_append_c (outbuf, tmp);
 				}
 				if (element_address == 0x0)
