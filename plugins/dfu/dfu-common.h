@@ -173,6 +173,8 @@ const gchar	*dfu_version_to_string			(DfuVersion	 version);
 /* helpers */
 GBytes		*dfu_utils_bytes_join_array		(GPtrArray	*chunks);
 gboolean	 dfu_utils_bytes_is_empty		(GBytes		*bytes);
+GBytes		*dfu_utils_bytes_pad			(GBytes		*bytes,
+							 gsize		 sz);
 guint8		 dfu_utils_buffer_parse_uint4		(const gchar	*data);
 guint8		 dfu_utils_buffer_parse_uint8		(const gchar	*data);
 guint16		 dfu_utils_buffer_parse_uint16		(const gchar	*data);

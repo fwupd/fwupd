@@ -213,6 +213,36 @@ dfu_utils_bytes_is_empty (GBytes *bytes)
 }
 
 /**
+ * dfu_utils_bytes_pad:
+ * @bytes: a #GBytes
+ * @sz: the desired size in bytes
+ *
+ * Pads a GBytes to a given @sz with `0xff`.
+ *
+ * Return value: (transfer full): a #GBytes
+ **/
+GBytes *
+dfu_utils_bytes_pad (GBytes *bytes, gsize sz)
+{
+	gsize bytes_sz;
+
+	g_return_val_if_fail (g_bytes_get_size (bytes) <= sz, NULL);
+
+	/* pad */
+	bytes_sz = g_bytes_get_size (bytes);
+	if (bytes_sz < sz) {
+		const guint8 *data = g_bytes_get_data (bytes, NULL);
+		guint8 *data_new = g_malloc (sz);
+		memcpy (data_new, data, bytes_sz);
+		memset (data_new + bytes_sz, 0xff, sz - bytes_sz);
+		return g_bytes_new_take (data_new, sz);
+	}
+
+	/* exactly right */
+	return g_bytes_ref (bytes);
+}
+
+/**
  * dfu_utils_buffer_parse_uint4:
  * @data: a string
  *
