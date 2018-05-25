@@ -498,6 +498,10 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) errors = NULL;
 	g_autoptr(GPtrArray) install_tasks = NULL;
 
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
+
 	/* handle both forms */
 	if (g_strv_length (values) == 1) {
 		devices_possible = fu_engine_get_devices (priv->engine, error);
