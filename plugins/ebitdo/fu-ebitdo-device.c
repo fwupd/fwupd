@@ -13,25 +13,22 @@
 #include "fu-ebitdo-common.h"
 #include "fu-ebitdo-device.h"
 
-typedef struct
-{
+struct _FuEbitdoDevice {
+	FuUsbDevice		 parent_instance;
 	gboolean		 is_bootloader;
 	guint32			 serial[9];
-} FuEbitdoDevicePrivate;
+};
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuEbitdoDevice, fu_ebitdo_device, FU_TYPE_USB_DEVICE)
-
-#define GET_PRIVATE(o) (fu_ebitdo_device_get_instance_private (o))
+G_DEFINE_TYPE (FuEbitdoDevice, fu_ebitdo_device, FU_TYPE_USB_DEVICE)
 
 gboolean
 fu_ebitdo_device_is_bootloader (FuEbitdoDevice *self)
 {
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (self);
-	return priv->is_bootloader;
+	return self->is_bootloader;
 }
 
 static gboolean
-fu_ebitdo_device_send (FuEbitdoDevice *device,
+fu_ebitdo_device_send (FuEbitdoDevice *self,
 		       FuEbitdoPktType type,
 		       FuEbitdoPktCmd subtype,
 		       FuEbitdoPktCmd cmd,
@@ -39,8 +36,7 @@ fu_ebitdo_device_send (FuEbitdoDevice *device,
 		       gsize in_len,
 		       GError **error)
 {
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	guint8 packet[FU_EBITDO_USB_EP_SIZE] = {0};
 	gsize actual_length;
 	guint8 ep_out = FU_EBITDO_USB_RUNTIME_EP_OUT;
@@ -48,7 +44,7 @@ fu_ebitdo_device_send (FuEbitdoDevice *device,
 	FuEbitdoPkt *hdr = (FuEbitdoPkt *) packet;
 
 	/* different */
-	if (priv->is_bootloader)
+	if (self->is_bootloader)
 		ep_out = FU_EBITDO_USB_BOOTLOADER_EP_OUT;
 
 	/* check size */
@@ -104,13 +100,12 @@ fu_ebitdo_device_send (FuEbitdoDevice *device,
 }
 
 static gboolean
-fu_ebitdo_device_receive (FuEbitdoDevice *device,
+fu_ebitdo_device_receive (FuEbitdoDevice *self,
 		       guint8 *out,
 		       gsize out_len,
 		       GError **error)
 {
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	guint8 packet[FU_EBITDO_USB_EP_SIZE] = {0};
 	gsize actual_length;
 	guint8 ep_in = FU_EBITDO_USB_RUNTIME_EP_IN;
@@ -118,7 +113,7 @@ fu_ebitdo_device_receive (FuEbitdoDevice *device,
 	FuEbitdoPkt *hdr = (FuEbitdoPkt *) packet;
 
 	/* different */
-	if (priv->is_bootloader)
+	if (self->is_bootloader)
 		ep_in = FU_EBITDO_USB_BOOTLOADER_EP_IN;
 
 	/* get data from device */
@@ -226,17 +221,17 @@ fu_ebitdo_device_receive (FuEbitdoDevice *device,
 }
 
 static void
-fu_ebitdo_device_set_version (FuEbitdoDevice *device, guint32 version)
+fu_ebitdo_device_set_version (FuEbitdoDevice *self, guint32 version)
 {
 	g_autofree gchar *tmp = NULL;
 	tmp = g_strdup_printf ("%.2f", version / 100.f);
-	fu_device_set_version (FU_DEVICE (device), tmp);
+	fu_device_set_version (FU_DEVICE (self), tmp);
 }
 
 static gboolean
-fu_ebitdo_device_validate (FuEbitdoDevice *device, GError **error)
+fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	guint8 idx;
 	g_autofree gchar *ven = NULL;
 	const gchar *whitelist[] = {
@@ -271,7 +266,6 @@ static gboolean
 fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	gdouble tmp;
 	guint32 version_tmp = 0;
@@ -287,7 +281,7 @@ fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
 	}
 
 	/* in firmware mode */
-	if (!priv->is_bootloader) {
+	if (!self->is_bootloader) {
 		if (!fu_ebitdo_device_send (self,
 					 FU_EBITDO_PKT_TYPE_USER_CMD,
 					 FU_EBITDO_PKT_CMD_GET_VERSION,
@@ -340,24 +334,22 @@ fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
 		return FALSE;
 	}
 	for (guint i = 0; i < 9; i++)
-		priv->serial[i] = GUINT32_FROM_LE (serial_tmp[i]);
+		self->serial[i] = GUINT32_FROM_LE (serial_tmp[i]);
 
 	/* success */
 	return TRUE;
 }
 
 const guint32 *
-fu_ebitdo_device_get_serial (FuEbitdoDevice *device)
+fu_ebitdo_device_get_serial (FuEbitdoDevice *self)
 {
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->serial;
+	return self->serial;
 }
 
 static gboolean
 fu_ebitdo_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (self);
 	FuEbitdoFirmwareHeader *hdr;
 	const guint8 *payload_data;
 	const guint chunk_sz = 32;
@@ -511,9 +503,9 @@ fu_ebitdo_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	/* set the "encode id" which is likely a checksum, bluetooth pairing
 	 * or maybe just security-through-obscurity -- also note:
 	 * SET_ENCODE_ID enforces no read for success?! */
-	serial_new[0] = priv->serial[0] ^ app_key_index[priv->serial[0] & 0x0f];
-	serial_new[1] = priv->serial[1] ^ app_key_index[priv->serial[1] & 0x0f];
-	serial_new[2] = priv->serial[2] ^ app_key_index[priv->serial[2] & 0x0f];
+	serial_new[0] = self->serial[0] ^ app_key_index[self->serial[0] & 0x0f];
+	serial_new[1] = self->serial[1] ^ app_key_index[self->serial[1] & 0x0f];
+	serial_new[2] = self->serial[2] ^ app_key_index[self->serial[2] & 0x0f];
 	if (!fu_ebitdo_device_send (self,
 				 FU_EBITDO_PKT_TYPE_USER_CMD,
 				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
@@ -561,7 +553,6 @@ static gboolean
 fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (self);
 	const gchar *quirk_str;
 
 	/* devices have to be whitelisted */
@@ -573,7 +564,7 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 				     "not supported with this device");
 		return FALSE;
 	}
-	priv->is_bootloader = g_strcmp0 (quirk_str, "bootloader") == 0;
+	self->is_bootloader = g_strcmp0 (quirk_str, "bootloader") == 0;
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -588,7 +579,7 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 	fu_device_add_icon (FU_DEVICE (device), "input-gaming");
 
 	/* only the bootloader can do the update */
-	if (!priv->is_bootloader) {
+	if (!self->is_bootloader) {
 		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_0483&PID_5750");
 		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
 		fu_device_add_flag (FU_DEVICE (device),
@@ -603,7 +594,7 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 }
 
 static void
-fu_ebitdo_device_init (FuEbitdoDevice *device)
+fu_ebitdo_device_init (FuEbitdoDevice *self)
 {
 }
 
@@ -629,9 +620,9 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 FuEbitdoDevice *
 fu_ebitdo_device_new (GUsbDevice *usb_device)
 {
-	FuEbitdoDevice *device;
-	device = g_object_new (FU_TYPE_EBITDO_DEVICE,
-			       "usb-device", usb_device,
-			       NULL);
-	return FU_EBITDO_DEVICE (device);
+	FuEbitdoDevice *self;
+	self = g_object_new (FU_TYPE_EBITDO_DEVICE,
+			     "usb-device", usb_device,
+			     NULL);
+	return FU_EBITDO_DEVICE (self);
 }

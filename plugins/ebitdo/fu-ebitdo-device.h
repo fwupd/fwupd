@@ -16,12 +16,7 @@
 G_BEGIN_DECLS
 
 #define FU_TYPE_EBITDO_DEVICE (fu_ebitdo_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuEbitdoDevice, fu_ebitdo_device, FU, EBITDO_DEVICE, FuUsbDevice)
-
-struct _FuEbitdoDeviceClass
-{
-	FuUsbDeviceClass	parent_class;
-};
+G_DECLARE_FINAL_TYPE (FuEbitdoDevice, fu_ebitdo_device, FU, EBITDO_DEVICE, FuUsbDevice)
 
 FuEbitdoDevice	*fu_ebitdo_device_new			(GUsbDevice	*usb_device);
 
