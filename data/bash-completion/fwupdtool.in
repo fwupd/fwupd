@@ -1,4 +1,5 @@
 _fwupdtool_cmd_list=(
+	'get-details'
 	'get-devices'
 	'get-plugins'
 	'get-topology'
@@ -47,7 +48,7 @@ _fwupdtool()
 	esac
 
 	case $command in
-	install|install-blob)
+	get-details|install|install-blob)
 		#find files
 		if [[ "$prev" = "$command" ]]; then
 			_filedir
