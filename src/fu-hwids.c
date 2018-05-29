@@ -274,7 +274,7 @@ fu_hwids_convert_integer_cb (gboolean hex,
 				     "offset bigger than data");
 		return NULL;
 	}
-	return g_strdup_printf (hex ? "%x" : "%u", data_raw[offset]);
+	return g_strdup_printf (hex ? "%x" : "%02u", data_raw[offset]);
 }
 
 static gchar *
@@ -359,7 +359,8 @@ fu_hwids_setup (FuHwids *self, FuSmbios *smbios, GError **error)
 
 		/* weirdly, remove leading zeros */
 		contents_hdr = contents;
-		while (contents_hdr[0] == '0')
+		while (contents_hdr[0] == '0' &&
+		       map[i].func != fu_hwids_convert_base10_integer_cb)
 			contents_hdr++;
 		g_hash_table_insert (self->hash_dmi_hw,
 				     g_strdup (map[i].key),
