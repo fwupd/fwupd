@@ -16,12 +16,7 @@
 G_BEGIN_DECLS
 
 #define FU_TYPE_COLORHUG_DEVICE (fu_colorhug_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuColorhugDevice, fu_colorhug_device, FU, COLORHUG_DEVICE, FuUsbDevice)
-
-struct _FuColorhugDeviceClass
-{
-	FuUsbDeviceClass	parent_class;
-};
+G_DECLARE_FINAL_TYPE (FuColorhugDevice, fu_colorhug_device, FU, COLORHUG_DEVICE, FuUsbDevice)
 
 FuColorhugDevice *fu_colorhug_device_new		(GUsbDevice		*usb_device);
 gboolean	 fu_colorhug_device_get_is_bootloader	(FuColorhugDevice	*device);
