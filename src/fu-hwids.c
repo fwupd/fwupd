@@ -255,9 +255,10 @@ fu_hwids_convert_string_table_cb (FuSmbios *smbios,
 }
 
 static gchar *
-fu_hwids_convert_base10_integer_cb (FuSmbios *smbios,
-				    guint8 type, guint8 offset,
-				    GError **error)
+fu_hwids_convert_integer_cb (gboolean hex,
+			     FuSmbios *smbios,
+			     guint8 type, guint8 offset,
+			     GError **error)
 {
 	GBytes *data;
 	const guint8 *data_raw;
@@ -273,7 +274,25 @@ fu_hwids_convert_base10_integer_cb (FuSmbios *smbios,
 				     "offset bigger than data");
 		return NULL;
 	}
-	return g_strdup_printf ("%u", data_raw[offset]);
+	return g_strdup_printf (hex ? "%x" : "%u", data_raw[offset]);
+}
+
+static gchar *
+fu_hwids_convert_base10_integer_cb (FuSmbios *smbios,
+				    guint8 type, guint8 offset,
+				    GError **error)
+{
+	return fu_hwids_convert_integer_cb(0, smbios,
+					   type, offset, error);
+}
+
+static gchar *
+fu_hwids_convert_base16_integer_cb (FuSmbios *smbios,
+				    guint8 type, guint8 offset,
+				    GError **error)
+{
+	return fu_hwids_convert_integer_cb(1, smbios,
+					   type, offset, error);
 }
 
 /**
@@ -298,7 +317,7 @@ fu_hwids_setup (FuHwids *self, FuSmbios *smbios, GError **error)
 		{ FU_HWIDS_KEY_MANUFACTURER,		FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x04,
 							fu_hwids_convert_string_table_cb },
 		{ FU_HWIDS_KEY_ENCLOSURE_KIND,		FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05,
-							fu_hwids_convert_base10_integer_cb },
+							fu_hwids_convert_base16_integer_cb },
 		{ FU_HWIDS_KEY_FAMILY,			FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x1a,
 							fu_hwids_convert_string_table_cb },
 		{ FU_HWIDS_KEY_PRODUCT_NAME,		FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x05,

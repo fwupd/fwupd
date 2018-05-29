@@ -1056,7 +1056,7 @@ fu_hwids_func (void)
 		{ "Manufacturer",	"6de5d951-d755-576b-bd09-c5cf66b27234" },
 		{ "HardwareID-14",	"6de5d951-d755-576b-bd09-c5cf66b27234" },
 		{ "HardwareID-13",	"f8e1de5f-b68c-5f52-9d1a-f1ba52f1f773" },
-		{ "HardwareID-12",	"5e820764-888e-529d-a6f9-dfd12bacb160" },
+		{ "HardwareID-12",	"e093d715-70f7-51f4-b6c8-b4a7e31def85" },
 		{ "HardwareID-11",	"db73af4c-4612-50f7-b8a7-787cf4871847" },
 		{ "HardwareID-10",	"f4275c1f-6130-5191-845c-3426247eb6a1" },
 		{ "HardwareID-9",	"0cf8618d-9eff-537c-9f35-46861406eb9c" },
@@ -1085,7 +1085,7 @@ fu_hwids_func (void)
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_MANUFACTURER), ==,
 			 "LENOVO");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_ENCLOSURE_KIND), ==,
-			 "10");
+			 "a");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_FAMILY), ==,
 			 "ThinkPad T440s");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_NAME), ==,
