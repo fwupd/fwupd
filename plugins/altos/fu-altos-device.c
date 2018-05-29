@@ -18,8 +18,8 @@
 #include "fu-altos-device.h"
 #include "fu-altos-firmware.h"
 
-typedef struct
-{
+struct _FuAltosDevice {
+	FuUsbDevice		 parent_instance;
 	FuAltosDeviceKind	 kind;
 	guint32			 serial[9];
 	gchar			*guid;
@@ -29,11 +29,9 @@ typedef struct
 	guint64			 addr_bound;
 	struct termios		 tty_termios;
 	gint			 tty_fd;
-} FuAltosDevicePrivate;
+};
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuAltosDevice, fu_altos_device, FU_TYPE_USB_DEVICE)
-
-#define GET_PRIVATE(o) (fu_altos_device_get_instance_private (o))
+G_DEFINE_TYPE (FuAltosDevice, fu_altos_device, FU_TYPE_USB_DEVICE)
 
 #ifndef HAVE_GUDEV_232
 #pragma clang diagnostic push
@@ -85,28 +83,25 @@ fu_altos_device_kind_to_string (FuAltosDeviceKind kind)
 static void
 fu_altos_device_finalize (GObject *object)
 {
-	FuAltosDevice *device = FU_ALTOS_DEVICE (object);
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
+	FuAltosDevice *self = FU_ALTOS_DEVICE (object);
 
-	g_free (priv->guid);
-	g_free (priv->tty);
-	g_free (priv->version);
+	g_free (self->guid);
+	g_free (self->tty);
+	g_free (self->version);
 
 	G_OBJECT_CLASS (fu_altos_device_parent_class)->finalize (object);
 }
 
 FuAltosDeviceKind
-fu_altos_device_get_kind (FuAltosDevice *device)
+fu_altos_device_get_kind (FuAltosDevice *self)
 {
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->kind;
+	return self->kind;
 }
 
 static gboolean
-fu_altos_device_find_tty (FuAltosDevice *device, GError **error)
+fu_altos_device_find_tty (FuAltosDevice *self, GError **error)
 {
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	g_autoptr(GList) devices = NULL;
 	g_autoptr(GUdevClient) gudev_client = g_udev_client_new (NULL);
 
@@ -137,7 +132,7 @@ fu_altos_device_find_tty (FuAltosDevice *device, GError **error)
 			continue;
 
 		/* success */
-		priv->tty = g_strdup (dev_file);
+		self->tty = g_strdup (dev_file);
 		return TRUE;
 	}
 
@@ -152,12 +147,11 @@ fu_altos_device_find_tty (FuAltosDevice *device, GError **error)
 }
 
 static gboolean
-fu_altos_device_tty_write (FuAltosDevice *device,
+fu_altos_device_tty_write (FuAltosDevice *self,
 			   const gchar *data,
 			   gssize data_len,
 			   GError **error)
 {
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
 	gint rc;
 	gssize idx = 0;
 	guint timeout_ms = 500;
@@ -167,7 +161,7 @@ fu_altos_device_tty_write (FuAltosDevice *device,
 	if (data_len < 0)
 		data_len = strlen (data);
 
-	fds.fd = priv->tty_fd;
+	fds.fd = self->tty_fd;
 	fds.events = POLLOUT;
 
 	g_debug ("write, with timeout %ums", timeout_ms);
@@ -182,7 +176,7 @@ fu_altos_device_tty_write (FuAltosDevice *device,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_READ,
 				     "failed to poll %i",
-				     priv->tty_fd);
+				     self->tty_fd);
 			return FALSE;
 		}
 
@@ -190,7 +184,7 @@ fu_altos_device_tty_write (FuAltosDevice *device,
 		if (fds.revents & POLLOUT) {
 			gssize len;
 			g_debug ("writing %" G_GSSIZE_FORMAT " bytes: %s", data_len, data);
-			len = write (priv->tty_fd, data + idx, data_len - idx);
+			len = write (self->tty_fd, data + idx, data_len - idx);
 			if (len < 0) {
 				if (errno == EAGAIN) {
 					g_debug ("got EAGAIN, trying harder");
@@ -202,7 +196,7 @@ fu_altos_device_tty_write (FuAltosDevice *device,
 					     "failed to write %" G_GSSIZE_FORMAT
 					     " bytes to %i: %s" ,
 					     data_len,
-					     priv->tty_fd,
+					     self->tty_fd,
 					     strerror (errno));
 				return FALSE;
 			}
@@ -215,17 +209,16 @@ fu_altos_device_tty_write (FuAltosDevice *device,
 }
 
 static GString *
-fu_altos_device_tty_read (FuAltosDevice *device,
+fu_altos_device_tty_read (FuAltosDevice *self,
 			  guint timeout_ms,
 			  gssize max_size,
 			  GError **error)
 {
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
 	gint rc;
 	struct pollfd fds;
 	g_autoptr(GString) str = g_string_new (NULL);
 
-	fds.fd = priv->tty_fd;
+	fds.fd = self->tty_fd;
 	fds.events = POLLIN;
 
 	g_debug ("read, with timeout %ums", timeout_ms);
@@ -239,14 +232,14 @@ fu_altos_device_tty_read (FuAltosDevice *device,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_READ,
 				     "failed to poll %i",
-				     priv->tty_fd);
+				     self->tty_fd);
 			return NULL;
 		}
 
 		/* we have data to read */
 		if (fds.revents & POLLIN) {
 			guint8 buf[1024];
-			gssize len = read (priv->tty_fd, buf, sizeof (buf));
+			gssize len = read (self->tty_fd, buf, sizeof (buf));
 			if (len < 0) {
 				if (errno == EAGAIN) {
 					g_debug ("got EAGAIN, trying harder");
@@ -256,7 +249,7 @@ fu_altos_device_tty_read (FuAltosDevice *device,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_READ,
 					     "failed to read %i: %s",
-					     priv->tty_fd,
+					     self->tty_fd,
 					     strerror (errno));
 				return NULL;
 			}
@@ -308,32 +301,31 @@ fu_altos_device_tty_read (FuAltosDevice *device,
 }
 
 static gboolean
-fu_altos_device_tty_open (FuAltosDevice *device, GError **error)
+fu_altos_device_tty_open (FuAltosDevice *self, GError **error)
 {
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
 	struct termios termios;
 	g_autoptr(GString) str = NULL;
 
 	/* open device */
-	priv->tty_fd = open (priv->tty, O_RDWR | O_NONBLOCK);
-	if (priv->tty_fd < 0) {
+	self->tty_fd = open (self->tty, O_RDWR | O_NONBLOCK);
+	if (self->tty_fd < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "failed to open %s",
-			     priv->tty);
+			     self->tty);
 		return FALSE;
 	}
 
 	/* get the old termios settings so we can restore later */
-	if (tcgetattr (priv->tty_fd, &termios) < 0) {
+	if (tcgetattr (self->tty_fd, &termios) < 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "failed to get attributes from fd");
 		return FALSE;
 	}
-	priv->tty_termios = termios;
+	self->tty_termios = termios;
 	cfmakeraw (&termios);
 
 	/* set speed */
@@ -351,7 +343,7 @@ fu_altos_device_tty_open (FuAltosDevice *device, GError **error)
 	termios.c_cc[VTIME] = 0;
 
 	/* set all new data */
-	if (tcsetattr (priv->tty_fd, TCSAFLUSH, &termios) < 0) {
+	if (tcsetattr (self->tty_fd, TCSAFLUSH, &termios) < 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
@@ -360,7 +352,7 @@ fu_altos_device_tty_open (FuAltosDevice *device, GError **error)
 	}
 
 	/* dump any pending input */
-	str = fu_altos_device_tty_read (device, 50, -1, NULL);
+	str = fu_altos_device_tty_read (self, 50, -1, NULL);
 	if (str != NULL)
 		g_debug ("dumping pending buffer: %s", str->str);
 
@@ -368,40 +360,39 @@ fu_altos_device_tty_open (FuAltosDevice *device, GError **error)
 }
 
 static gboolean
-fu_altos_device_tty_close (FuAltosDevice *device, GError **error)
+fu_altos_device_tty_close (FuAltosDevice *self, GError **error)
 {
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
 
-	tcsetattr (priv->tty_fd, TCSAFLUSH, &priv->tty_termios);
-	close (priv->tty_fd);
+	tcsetattr (self->tty_fd, TCSAFLUSH, &self->tty_termios);
+	close (self->tty_fd);
 
 	return TRUE;
 }
 
 static GString *
-fu_altos_device_read_page (FuAltosDevice *device, guint address, GError **error)
+fu_altos_device_read_page (FuAltosDevice *self, guint address, GError **error)
 {
 	g_autoptr(GString) str = NULL;
 	g_autofree gchar *cmd = g_strdup_printf ("R %x\n", address);
-	if (!fu_altos_device_tty_write (device, cmd, -1, error))
+	if (!fu_altos_device_tty_write (self, cmd, -1, error))
 		return NULL;
-	str = fu_altos_device_tty_read (device, 1500, 256, error);
+	str = fu_altos_device_tty_read (self, 1500, 256, error);
 	if (str == NULL)
 		return NULL;
 	return g_steal_pointer (&str);
 }
 
 static gboolean
-fu_altos_device_write_page (FuAltosDevice *device,
+fu_altos_device_write_page (FuAltosDevice *self,
 			    guint address,
 			    const guint8 *data,
 			    guint data_len,
 			    GError **error)
 {
 	g_autofree gchar *cmd = g_strdup_printf ("W %x\n", address);
-	if (!fu_altos_device_tty_write (device, cmd, -1, error))
+	if (!fu_altos_device_tty_write (self, cmd, -1, error))
 		return FALSE;
-	if (!fu_altos_device_tty_write (device, (const gchar *) data, data_len, error))
+	if (!fu_altos_device_tty_write (self, (const gchar *) data, data_len, error))
 		return FALSE;
 	return TRUE;
 }
@@ -410,7 +401,6 @@ static gboolean
 fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
-	FuAltosDevicePrivate *priv = GET_PRIVATE (self);
 	GBytes *fw_blob;
 	const gchar *data;
 	const gsize data_len;
@@ -420,7 +410,7 @@ fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	g_autoptr(GString) buf = g_string_new (NULL);
 
 	/* check kind */
-	if (priv->kind != FU_ALTOS_DEVICE_KIND_BOOTLOADER) {
+	if (self->kind != FU_ALTOS_DEVICE_KIND_BOOTLOADER) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -429,7 +419,7 @@ fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	}
 
 	/* check sizes */
-	if (priv->addr_base == 0x0 || priv->addr_bound == 0x0) {
+	if (self->addr_base == 0x0 || self->addr_bound == 0x0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -438,7 +428,7 @@ fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	}
 
 	/* read in blocks of 256 bytes */
-	flash_len = priv->addr_bound - priv->addr_base;
+	flash_len = self->addr_bound - self->addr_base;
 	if (flash_len == 0x0 || flash_len > 0x100000) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -453,14 +443,14 @@ fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 		return FALSE;
 
 	/* check the start address */
-	if (fu_altos_firmware_get_address (altos_firmware) != priv->addr_base) {
+	if (fu_altos_firmware_get_address (altos_firmware) != self->addr_base) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "start address not correct %" G_GUINT64_FORMAT ":"
 			     "%" G_GUINT64_FORMAT,
 			     fu_altos_firmware_get_address (altos_firmware),
-			     priv->addr_base);
+			     self->addr_base);
 		return FALSE;
 	}
 
@@ -498,7 +488,7 @@ fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 
 		/* verify data from device */
 		if (!fu_altos_device_write_page (self,
-						 priv->addr_base + i,
+						 self->addr_base + i,
 						 buf_tmp,
 						 0x100,
 						 error))
@@ -506,7 +496,7 @@ fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 
 		/* verify data written on device */
 		str = fu_altos_device_read_page (self,
-						 priv->addr_base + i,
+						 self->addr_base + i,
 						 error);
 		if (str == NULL)
 			return FALSE;
@@ -516,7 +506,7 @@ fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 					     FWUPD_ERROR_WRITE,
 					     "failed to verify @%x, "
 					     "not enough data returned",
-					     (guint) (priv->addr_base + i));
+					     (guint) (self->addr_base + i));
 			return FALSE;
 		}
 		if (memcmp (str->str, buf_tmp, 0x100) != 0) {
@@ -524,7 +514,7 @@ fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_WRITE,
 					     "failed to verify @%x",
-					     (guint) (priv->addr_base + i));
+					     (guint) (self->addr_base + i));
 			return FALSE;
 		}
 
@@ -548,13 +538,12 @@ static GBytes *
 fu_altos_device_read_firmware (FuDevice *device, GError **error)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
-	FuAltosDevicePrivate *priv = GET_PRIVATE (self);
 	guint flash_len;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GString) buf = g_string_new (NULL);
 
 	/* check kind */
-	if (priv->kind != FU_ALTOS_DEVICE_KIND_BOOTLOADER) {
+	if (self->kind != FU_ALTOS_DEVICE_KIND_BOOTLOADER) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -563,7 +552,7 @@ fu_altos_device_read_firmware (FuDevice *device, GError **error)
 	}
 
 	/* check sizes */
-	if (priv->addr_base == 0x0 || priv->addr_bound == 0x0) {
+	if (self->addr_base == 0x0 || self->addr_bound == 0x0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -572,7 +561,7 @@ fu_altos_device_read_firmware (FuDevice *device, GError **error)
 	}
 
 	/* read in blocks of 256 bytes */
-	flash_len = priv->addr_bound - priv->addr_base;
+	flash_len = self->addr_bound - self->addr_base;
 	if (flash_len == 0x0 || flash_len > 0x100000) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -588,7 +577,7 @@ fu_altos_device_read_firmware (FuDevice *device, GError **error)
 					    error);
 	if (locker == NULL)
 		return NULL;
-	for (guint i = priv->addr_base; i < priv->addr_bound; i+= 0x100) {
+	for (guint i = self->addr_base; i < self->addr_bound; i+= 0x100) {
 		g_autoptr(GString) str = NULL;
 
 		/* request data from device */
@@ -598,8 +587,8 @@ fu_altos_device_read_firmware (FuDevice *device, GError **error)
 
 		/* progress */
 		fu_device_set_progress_full (device,
-					     i - priv->addr_base,
-					     priv->addr_bound - priv->addr_base);
+					     i - self->addr_base,
+					     self->addr_bound - self->addr_base);
 		g_string_append_len (buf, str->str, str->len);
 	}
 
@@ -608,17 +597,16 @@ fu_altos_device_read_firmware (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_altos_device_probe_bootloader (FuAltosDevice *device, GError **error)
+fu_altos_device_probe_bootloader (FuAltosDevice *self, GError **error)
 {
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_auto(GStrv) lines = NULL;
 	g_autoptr(GString) str = NULL;
 
 	/* get tty for upload */
-	if (!fu_altos_device_find_tty (device, error))
+	if (!fu_altos_device_find_tty (self, error))
 		return FALSE;
-	locker = fu_device_locker_new_full (device,
+	locker = fu_device_locker_new_full (self,
 					    (FuDeviceLockerFunc) fu_altos_device_tty_open,
 					    (FuDeviceLockerFunc) fu_altos_device_tty_close,
 					    error);
@@ -626,9 +614,9 @@ fu_altos_device_probe_bootloader (FuAltosDevice *device, GError **error)
 		return FALSE;
 
 	/* get the version information */
-	if (!fu_altos_device_tty_write (device, "v\n", -1, error))
+	if (!fu_altos_device_tty_write (self, "v\n", -1, error))
 		return FALSE;
-	str = fu_altos_device_tty_read (device, 100, -1, error);
+	str = fu_altos_device_tty_read (self, 100, -1, error);
 	if (str == NULL)
 		return FALSE;
 
@@ -646,25 +634,25 @@ fu_altos_device_probe_bootloader (FuAltosDevice *device, GError **error)
 
 		/* we can flash firmware */
 		if (g_strcmp0 (lines[i], "altos-loader") == 0) {
-			fu_device_remove_flag (FU_DEVICE (device),
+			fu_device_remove_flag (FU_DEVICE (self),
 					       FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 			continue;
 		}
 
 		/* version number */
 		if (g_str_has_prefix (lines[i], "software-version ")) {
-			fu_device_set_version (FU_DEVICE (device), lines[i] + 17);
+			fu_device_set_version (FU_DEVICE (self), lines[i] + 17);
 			continue;
 		}
 
 		/* address base and bound */
 		if (g_str_has_prefix (lines[i], "flash-range      ")) {
 			g_auto(GStrv) addrs = g_strsplit (lines[i] + 17, " ", -1);
-			priv->addr_base = g_ascii_strtoull (addrs[0], NULL, 16);
-			priv->addr_bound = g_ascii_strtoull (addrs[1], NULL, 16);
+			self->addr_base = g_ascii_strtoull (addrs[0], NULL, 16);
+			self->addr_bound = g_ascii_strtoull (addrs[1], NULL, 16);
 			g_debug ("base: %x, bound: %x",
-				 (guint) priv->addr_base,
-				 (guint) priv->addr_bound);
+				 (guint) self->addr_base,
+				 (guint) self->addr_bound);
 			continue;
 		}
 
@@ -676,17 +664,16 @@ fu_altos_device_probe_bootloader (FuAltosDevice *device, GError **error)
 }
 
 gboolean
-fu_altos_device_probe (FuAltosDevice *device, GError **error)
+fu_altos_device_probe (FuAltosDevice *self, GError **error)
 {
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 
 	/* bootloader uses tty */
-	if (priv->kind == FU_ALTOS_DEVICE_KIND_BOOTLOADER)
-		return fu_altos_device_probe_bootloader (device, error);
+	if (self->kind == FU_ALTOS_DEVICE_KIND_BOOTLOADER)
+		return fu_altos_device_probe_bootloader (self, error);
 
 	/* get version */
-	if (priv->kind == FU_ALTOS_DEVICE_KIND_CHAOSKEY) {
+	if (self->kind == FU_ALTOS_DEVICE_KIND_CHAOSKEY) {
 		const gchar *version_prefix = "ChaosKey-hw-1.0-sw-";
 		guint8 version_idx;
 		g_autofree gchar *version = NULL;
@@ -712,7 +699,7 @@ fu_altos_device_probe (FuAltosDevice *device, GError **error)
 				     version);
 			return FALSE;
 		}
-		fu_device_set_version (FU_DEVICE (device), version + 19);
+		fu_device_set_version (FU_DEVICE (self), version + 19);
 	}
 
 	/* success */
@@ -721,23 +708,21 @@ fu_altos_device_probe (FuAltosDevice *device, GError **error)
 
 /* now with kind and usb_device set */
 static void
-fu_altos_device_init_real (FuAltosDevice *device)
+fu_altos_device_init_real (FuAltosDevice *self)
 {
-	FuAltosDevicePrivate *priv = GET_PRIVATE (device);
-
 	/* allowed, but requires manual bootloader step */
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* set default vendor */
-	fu_device_set_vendor (FU_DEVICE (device), "altusmetrum.org");
+	fu_device_set_vendor (FU_DEVICE (self), "altusmetrum.org");
 
 	/* set name */
-	switch (priv->kind) {
+	switch (self->kind) {
 	case FU_ALTOS_DEVICE_KIND_BOOTLOADER:
-		fu_device_set_name (FU_DEVICE (device), "Altos [bootloader]");
+		fu_device_set_name (FU_DEVICE (self), "Altos [bootloader]");
 		break;
 	case FU_ALTOS_DEVICE_KIND_CHAOSKEY:
-		fu_device_set_name (FU_DEVICE (device), "Altos ChaosKey");
+		fu_device_set_name (FU_DEVICE (self), "Altos ChaosKey");
 		break;
 	default:
 		g_assert_not_reached ();
@@ -745,18 +730,18 @@ fu_altos_device_init_real (FuAltosDevice *device)
 	}
 
 	/* set one line summary */
-	fu_device_set_summary (FU_DEVICE (device),
+	fu_device_set_summary (FU_DEVICE (self),
 			       "A USB hardware random number generator");
 
 	/* only the bootloader can do the update */
-	if (priv->kind != FU_ALTOS_DEVICE_KIND_BOOTLOADER) {
-		fu_device_add_flag (FU_DEVICE (device),
+	if (self->kind != FU_ALTOS_DEVICE_KIND_BOOTLOADER) {
+		fu_device_add_flag (FU_DEVICE (self),
 				    FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	}
 }
 
 static void
-fu_altos_device_init (FuAltosDevice *device)
+fu_altos_device_init (FuAltosDevice *self)
 {
 }
 
@@ -789,15 +774,13 @@ fu_altos_device_new (GUsbDevice *usb_device)
 	for (guint j = 0; vidpids[j].vid != 0x0000; j++) {
 		if (g_usb_device_get_vid (usb_device) == vidpids[j].vid &&
 		    g_usb_device_get_pid (usb_device) == vidpids[j].pid) {
-			FuAltosDevice *device;
-			FuAltosDevicePrivate *priv;
-			device = g_object_new (FU_TYPE_ALTOS_DEVICE,
-					       "usb-device", usb_device,
-					       NULL);
-			priv = GET_PRIVATE (device);
-			priv->kind = vidpids[j].kind;
-			fu_altos_device_init_real (device);
-			return device;
+			FuAltosDevice *self;
+			self = g_object_new (FU_TYPE_ALTOS_DEVICE,
+					     "usb-device", usb_device,
+					     NULL);
+			self->kind = vidpids[j].kind;
+			fu_altos_device_init_real (self);
+			return self;
 		}
 	}
 	return NULL;
