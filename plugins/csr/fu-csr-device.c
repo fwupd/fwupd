@@ -25,15 +25,6 @@ struct _FuCsrDevice
 
 G_DEFINE_TYPE (FuCsrDevice, fu_csr_device, FU_TYPE_USB_DEVICE)
 
-#define HID_REPORT_GET				0x01
-#define HID_REPORT_SET				0x09
-
-#define HID_REPORT_TYPE_INPUT			0x01
-#define HID_REPORT_TYPE_OUTPUT			0x02
-#define HID_REPORT_TYPE_FEATURE			0x03
-
-#define HID_FEATURE				0x0300
-
 #define FU_CSR_REPORT_ID_COMMAND		0x01
 #define FU_CSR_REPORT_ID_STATUS			0x02
 #define FU_CSR_REPORT_ID_CONTROL		0x03
