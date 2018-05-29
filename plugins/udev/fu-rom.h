@@ -14,12 +14,7 @@
 G_BEGIN_DECLS
 
 #define FU_TYPE_ROM (fu_rom_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuRom, fu_rom, FU, ROM, GObject)
-
-struct _FuRomClass
-{
-	GObjectClass		 parent_class;
-};
+G_DECLARE_FINAL_TYPE (FuRom, fu_rom, FU, ROM, GObject)
 
 typedef enum {
 	FU_ROM_KIND_UNKNOWN,
@@ -38,26 +33,26 @@ typedef enum {
 
 FuRom		*fu_rom_new				(void);
 
-gboolean	 fu_rom_load_file			(FuRom		*rom,
+gboolean	 fu_rom_load_file			(FuRom		*self,
 							 GFile		*file,
 							 FuRomLoadFlags	 flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fu_rom_load_data			(FuRom		*rom,
+gboolean	 fu_rom_load_data			(FuRom		*self,
 							 guint8		*buffer,
 							 gsize		 buffer_sz,
 							 FuRomLoadFlags	 flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fu_rom_extract_all			(FuRom		*rom,
+gboolean	 fu_rom_extract_all			(FuRom		*self,
 							 const gchar	*path,
 							 GError		**error);
-FuRomKind	 fu_rom_get_kind			(FuRom		*rom);
-const gchar	*fu_rom_get_version			(FuRom		*rom);
-GPtrArray	*fu_rom_get_checksums			(FuRom		*rom);
-const gchar	*fu_rom_get_guid			(FuRom		*rom);
-guint16		 fu_rom_get_vendor			(FuRom		*rom);
-guint16		 fu_rom_get_model			(FuRom		*rom);
+FuRomKind	 fu_rom_get_kind			(FuRom		*self);
+const gchar	*fu_rom_get_version			(FuRom		*self);
+GPtrArray	*fu_rom_get_checksums			(FuRom		*self);
+const gchar	*fu_rom_get_guid			(FuRom		*self);
+guint16		 fu_rom_get_vendor			(FuRom		*self);
+guint16		 fu_rom_get_model			(FuRom		*self);
 const gchar	*fu_rom_kind_to_string			(FuRomKind	 kind);
 
 G_END_DECLS
