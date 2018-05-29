@@ -309,6 +309,49 @@ fu_util_get_plugins (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) array = NULL;
+	gint fd;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
+
+	/* check args */
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* open file */
+	fd = open (values[0], O_RDONLY);
+	if (fd < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to open %s",
+			     values[0]);
+		return FALSE;
+	}
+	array = fu_engine_get_details (priv->engine, fd, error);
+	close (fd);
+
+	if (array == NULL)
+		return FALSE;
+	for (guint i = 0; i < array->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (array, i);
+		g_autofree gchar *tmp = NULL;
+		tmp = fwupd_device_to_string (dev);
+		g_print ("%s", tmp);
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devs = NULL;
@@ -698,6 +741,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Get all enabled plugins registered with the system"),
 		     fu_util_get_plugins);
+	fu_util_add (priv->cmd_array,
+		     "get-details",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets details about a firmware file"),
+		     fu_util_get_details);
 	fu_util_add (priv->cmd_array,
 		     "get-devices",
 		     NULL,
