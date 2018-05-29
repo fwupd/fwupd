@@ -549,7 +549,7 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), NULL);
-	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (device_id != NULL, NULL);
 
 	/* lazy load */
 	if (!fu_history_load (self, error))
@@ -577,12 +577,12 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 			     "Failed to prepare SQL: %s",
 			     sqlite3_errmsg (self->db));
-		return FALSE;
+		return NULL;
 	}
 	sqlite3_bind_text (stmt, 1, device_id, -1, SQLITE_STATIC);
 	array_tmp = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	if (!fu_history_stmt_exec (self, stmt, array_tmp, error))
-		return FALSE;
+		return NULL;
 	if (array_tmp->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -632,11 +632,11 @@ fu_history_get_devices (FuHistory *self, GError **error)
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 			     "Failed to prepare SQL: %s",
 			     sqlite3_errmsg (self->db));
-		return FALSE;
+		return NULL;
 	}
 	array_tmp = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	if (!fu_history_stmt_exec (self, stmt, array_tmp, error))
-		return FALSE;
+		return NULL;
 	array = g_ptr_array_ref (array_tmp);
 	return array;
 }

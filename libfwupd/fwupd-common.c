@@ -448,7 +448,7 @@ fwupd_build_history_report_json (GPtrArray *devices, GError **error)
 	/* get a hash that represents the machine */
 	machine_id = fwupd_build_machine_id ("fwupd", error);
 	if (machine_id == NULL)
-		return FALSE;
+		return NULL;
 
 	/* create header */
 	builder = json_builder_new ();
@@ -462,7 +462,7 @@ fwupd_build_history_report_json (GPtrArray *devices, GError **error)
 	json_builder_set_member_name (builder, "Metadata");
 	json_builder_begin_object (builder);
 	if (!fwupd_build_history_report_json_metadata (builder, error))
-		return FALSE;
+		return NULL;
 	json_builder_end_object (builder);
 
 	/* add each device */

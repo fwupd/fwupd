@@ -286,7 +286,7 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 		/* hit hardware */
 		chunk = fu_csr_device_upload_chunk (self, error);
 		if (chunk == NULL)
-			return FALSE;
+			return NULL;
 		chunk_sz = g_bytes_get_size (chunk);
 
 		/* get the total size using the CSR header */

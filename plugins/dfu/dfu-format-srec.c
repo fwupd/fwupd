@@ -344,5 +344,5 @@ dfu_firmware_to_srec (DfuFirmware *firmware, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Motorola S-record export functionality missing");
-	return FALSE;
+	return NULL;
 }

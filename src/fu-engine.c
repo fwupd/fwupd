@@ -2547,7 +2547,7 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 	/* find the device */
 	device = fu_engine_get_item_by_id_fallback_history (self, device_id, error);
 	if (device == NULL)
-		return FALSE;
+		return NULL;
 
 	/* the notification has already been shown to the user */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NOTIFIED)) {

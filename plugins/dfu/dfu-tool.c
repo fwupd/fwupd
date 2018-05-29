@@ -1427,7 +1427,7 @@ dfu_tool_get_device_string (DfuToolPrivate *priv, DfuDevice *device)
 						error->message);
 		}
 		if (!dfu_device_refresh (device, &error))
-			return FALSE;
+			return NULL;
 	}
 	return g_strdup_printf ("%04x:%04x [%s:%s]",
 				dfu_device_get_vid (device),

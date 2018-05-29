@@ -380,7 +380,7 @@ fu_common_store_from_cab_bytes (GBytes *blob, guint64 size_max, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "archive contained no valid metadata");
-		return FALSE;
+		return NULL;
 	}
 	return g_steal_pointer (&store);
 }
