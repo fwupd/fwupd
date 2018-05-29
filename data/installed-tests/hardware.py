@@ -2,7 +2,8 @@
 # pylint: disable=wrong-import-position,too-many-locals,unused-argument,wrong-import-order
 #
 # Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
-# Licensed under the GNU General Public License Version 2
+#
+# SPDX-License-Identifier: LGPL-2.1+
 
 import gi
 import os
