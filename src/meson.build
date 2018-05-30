@@ -53,10 +53,7 @@ libfwupdprivate = static_library(
   ],
   c_args : [
     cargs,
-    '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
-    '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
-    '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
@@ -88,7 +85,6 @@ fwupdmgr = executable(
   ],
   c_args : [
     cargs,
-    '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -154,12 +150,7 @@ fwupdtool = executable(
   ],
   c_args : [
     cargs,
-    '-DLOCALSTATEDIR="' + localstatedir + '"',
-    '-DPLUGINDIR="' + plugin_dir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
-    '-DSYSCONFDIR="' + default_sysconfdir + '"',
-    '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
-    '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -233,12 +224,7 @@ executable(
   link_with : fwupd,
   c_args : [
     cargs,
-    '-DLOCALSTATEDIR="' + localstatedir + '"',
-    '-DPLUGINDIR="' + plugin_dir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
-    '-DSYSCONFDIR="' + default_sysconfdir + '"',
-    '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
-    '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -308,17 +294,16 @@ if get_option('tests')
       '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
       '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
-      '-DLOCALSTATEDIR="/tmp/fwupd-self-test/var"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
-      '-DPLUGINDIR="' + testdatadir_src + '"',
       '-DSYSFSFIRMWAREDIR="' + testdatadir_src + '"',
-      '-DFWUPDDATADIR="' + testdatadir_src + '"',
-      '-DSYSCONFDIR="' + testdatadir_src + '"',
-      '-DFWUPDCONFIGDIR="' + testdatadir_src + '"',
     ],
   )
-  test('fu-self-test', e, is_parallel:false)
+  test('fu-self-test', e, is_parallel:false,
+       env: ['FWUPD_DATADIR=' + testdatadir_src,
+             'FWUPD_SYSCONFDIR=' + testdatadir_src,
+             'FWUPD_PLUGINDIR=' + testdatadir_src,
+             'FWUPD_LOCALSTATEDIR=/tmp/fwupd-self-test/var'])
 endif
 
 if get_option('introspection')

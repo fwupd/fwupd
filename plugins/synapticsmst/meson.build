@@ -15,7 +15,6 @@ shared_module('fu_plugin_synapticsmst',
   install_dir: plugin_dir,
   c_args : [
       cargs,
-      '-DLOCALSTATEDIR="' + localstatedir + '"',
     ],
   dependencies : [
     plugin_deps,
@@ -52,8 +51,8 @@ if get_option('tests')
     ],
     c_args : [
       cargs,
-      '-DLOCALSTATEDIR="/tmp/fwupd-self-test/var"',
     ],
   )
-  test('synapticsmst-self-test', e)
+  test('synapticsmst-self-test', e,
+    env: ['FWUPD_LOCALSTATEDIR=/tmp/fwupd-self-test/var'])
 endif

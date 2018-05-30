@@ -11,6 +11,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-common.h"
 #include "fu-keyring-gpg.h"
 
 struct _FuKeyringGpg
@@ -83,6 +84,7 @@ fu_keyring_gpg_setup (FuKeyring *keyring, GError **error)
 	FuKeyringGpg *self = FU_KEYRING_GPG (keyring);
 	gpgme_error_t rc;
 	g_autofree gchar *gpg_home = NULL;
+	g_autofree gchar *localstatedir = NULL;
 
 	if (self->ctx != NULL)
 		return TRUE;
@@ -121,11 +123,8 @@ fu_keyring_gpg_setup (FuKeyring *keyring, GError **error)
 	}
 
 	/* set a custom home directory */
-	gpg_home = g_build_filename (LOCALSTATEDIR,
-				     "lib",
-				     PACKAGE_NAME,
-				     "gnupg",
-				     NULL);
+	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	gpg_home = g_build_filename (localstatedir, "gnupg", NULL);
 	if (g_mkdir_with_parents (gpg_home, 0700) < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,

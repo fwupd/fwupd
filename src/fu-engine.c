@@ -2911,13 +2911,15 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 	const gchar *fn;
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autofree gchar *plugin_path = NULL;
 
 	/* profile */
 	ptask = as_profile_start_literal (self->profile, "FuEngine:load-plugins");
 	g_assert (ptask != NULL);
 
 	/* search */
-	dir = g_dir_open (PLUGINDIR, 0, error);
+	plugin_path = fu_common_get_path (FU_PATH_KIND_PLUGINDIR_PKG);
+	dir = g_dir_open (plugin_path, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	while ((fn = g_dir_read_name (dir)) != NULL) {
@@ -2944,7 +2946,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		}
 
 		/* open module */
-		filename = g_build_filename (PLUGINDIR, fn, NULL);
+		filename = g_build_filename (plugin_path, fn, NULL);
 		plugin = fu_plugin_new ();
 		fu_plugin_set_name (plugin, name);
 		fu_plugin_set_usb_context (plugin, self->usb_ctx);

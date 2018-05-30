@@ -12,6 +12,7 @@
 #include <fnmatch.h>
 #include <string.h>
 
+#include "fu-common.h"
 #include "fu-quirks.h"
 
 #include "fwupd-error.h"
@@ -296,7 +297,8 @@ fu_quirks_add_quirks_for_path (FuQuirks *self, const gchar *path, GError **error
 gboolean
 fu_quirks_load (FuQuirks *self, GError **error)
 {
-	g_autofree gchar *localstate_fwupd = NULL;
+	g_autofree gchar *datadir = NULL;
+	g_autofree gchar *localstatedir = NULL;
 	g_return_val_if_fail (FU_IS_QUIRKS (self), FALSE);
 
 	/* ensure empty in case we're called from a monitor change */
@@ -304,12 +306,13 @@ fu_quirks_load (FuQuirks *self, GError **error)
 	g_hash_table_remove_all (self->hash);
 
 	/* system datadir */
-	if (!fu_quirks_add_quirks_for_path (self, FWUPDDATADIR, error))
+	datadir = fu_common_get_path (FU_PATH_KIND_DATADIR_PKG);
+	if (!fu_quirks_add_quirks_for_path (self, datadir, error))
 		return FALSE;
 
 	/* something we can write when using Ostree */
-	localstate_fwupd = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
-	if (!fu_quirks_add_quirks_for_path (self, localstate_fwupd, error))
+	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	if (!fu_quirks_add_quirks_for_path (self, localstatedir, error))
 		return FALSE;
 
 	/* success */
