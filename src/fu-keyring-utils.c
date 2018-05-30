@@ -9,6 +9,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-common.h"
 #include "fu-keyring-utils.h"
 
 #ifdef ENABLE_GPG
@@ -84,6 +85,7 @@ fu_keyring_get_release_trust_flags (AsRelease *release,
 	GBytes *blob_signature;
 	const gchar *fn;
 	g_autofree gchar *pki_dir = NULL;
+	g_autofree gchar *sysconfdir = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuKeyring) kr = NULL;
 	g_autoptr(FuKeyringResult) kr_result = NULL;
@@ -140,7 +142,8 @@ fu_keyring_get_release_trust_flags (AsRelease *release,
 	}
 
 	/* check we were installed correctly */
-	pki_dir = g_build_filename (SYSCONFDIR, "pki", "fwupd", NULL);
+	sysconfdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR);
+	pki_dir = g_build_filename (sysconfdir, "pki", PACKAGE_NAME, NULL);
 	if (!g_file_test (pki_dir, G_FILE_TEST_EXISTS)) {
 		g_set_error (error,
 			     FWUPD_ERROR,

@@ -1143,7 +1143,7 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	}
 
 	/* create directory */
-	dirname = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
+	dirname = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	file = g_file_new_for_path (dirname);
 	if (!g_file_query_exists (file, NULL)) {
 		if (!g_file_make_directory_with_parents (file, NULL, error))
@@ -1507,14 +1507,16 @@ fu_plugin_get_report_metadata (FuPlugin *plugin)
 gchar *
 fu_plugin_get_config_value (FuPlugin *plugin, const gchar *key)
 {
+	g_autofree gchar *conf_dir = NULL;
 	g_autofree gchar *conf_file = NULL;
 	g_autofree gchar *conf_path = NULL;
 	g_autoptr(GKeyFile) keyfile = NULL;
 	const gchar *plugin_name;
 
+	conf_dir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR_PKG);
 	plugin_name = fu_plugin_get_name (plugin);
 	conf_file = g_strdup_printf ("%s.conf", plugin_name);
-	conf_path = g_build_filename (FWUPDCONFIGDIR, conf_file,  NULL);
+	conf_path = g_build_filename (conf_dir, conf_file,  NULL);
 	if (!g_file_test (conf_path, G_FILE_TEST_IS_REGULAR))
 		return NULL;
 	keyfile = g_key_file_new ();
