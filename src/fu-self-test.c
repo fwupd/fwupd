@@ -1052,9 +1052,9 @@ fu_hwids_func (void)
 		{ "HardwareID-5",	"8dc9b7c5-f5d5-5850-9ab3-bd6f0549d814" },
 		{ "HardwareID-4",	"660ccba8-1b78-5a33-80e6-9fb8354ee873" },
 		{ "HardwareID-3",	"3faec92a-3ae3-5744-be88-495e90a7d541" },
-		{ "HardwareID-2",	"187b6b26-efdf-56f8-9cdf-e8ac07eeeeff" },
-		{ "HardwareID-1",	"93bb295e-8fd6-5349-9dd2-eb0d9d6576cb" },
-		{ "HardwareID-0",	"852e40d3-0b89-581a-b4a0-786b00666625" },
+		{ "HardwareID-2",	"f5ff077f-3eeb-5bae-be1c-e98ffe8ce5f8" },
+		{ "HardwareID-1",	"b7cceb67-774c-537e-bf8b-22c6107e9a74" },
+		{ "HardwareID-0",	"147efce9-f201-5fc8-ab0c-c859751c3440" },
 		{ NULL, NULL }
 	};
 
@@ -1081,7 +1081,7 @@ fu_hwids_func (void)
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VERSION), ==,
 			 "GJET75WW (2.25 )");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE), ==, "02");
-	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "25");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "19");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_SKU), ==,
 			 "LENOVO_MT_20AR_BU_Think_FM_ThinkPad T440s");
 	for (guint i = 0; guids[i].key != NULL; i++) {
