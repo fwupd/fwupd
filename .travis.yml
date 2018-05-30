@@ -13,9 +13,10 @@ env:
   - OS=debian-i386
   - OS=ubuntu-x86_64
   - OS=centos
+  - OS=flatpak
 
 install:
   - ./contrib/ci/generate_docker.py
 
 script:
-  - docker run -e CI=true -t -v `pwd`/dist:/build/dist fwupd-$OS
+  - docker run --privileged -e CI=true -t -v `pwd`/dist:/build/dist fwupd-$OS
