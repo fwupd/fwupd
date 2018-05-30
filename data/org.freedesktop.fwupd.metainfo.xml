@@ -27,4 +27,7 @@
   <url type="translate">https://www.transifex.com/freedesktop/fwupd/</url>
   <update_contact>richard_at_hughsie.com</update_contact>
   <translation type="gettext">fwupd</translation>
+  <content_rating type="oars-1.0">
+    <content_attribute id="social-info">moderate</content_attribute>
+  </content_rating>
 </component>
