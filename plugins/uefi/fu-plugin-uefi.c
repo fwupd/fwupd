@@ -73,7 +73,6 @@ static fwup_resource *
 fu_plugin_uefi_find_resource (fwup_resource_iter *iter, FuDevice *device, GError **error)
 {
 	efi_guid_t *guid_raw;
-	fwup_resource *re_matched = NULL;
 	fwup_resource *re = NULL;
 	g_autofree gchar *guids_str = NULL;
 
@@ -91,7 +90,7 @@ fu_plugin_uefi_find_resource (fwup_resource_iter *iter, FuDevice *device, GError
 
 		/* FIXME: also match hardware_instance too */
 		if (fu_device_has_guid (device, guid_tmp))
-			return re_matched;
+			return re;
 	}
 
 	/* paradoxically, no hardware matched */
