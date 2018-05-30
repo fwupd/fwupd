@@ -18,7 +18,7 @@ if get_option('plugin_amt')
 subdir('amt')
 endif
 
-if get_option('plugin_thunderbolt') and udev.found()
+if get_option('plugin_thunderbolt')
 subdir('thunderbolt')
 subdir('thunderbolt-power')
 endif
