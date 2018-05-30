@@ -2908,16 +2908,26 @@ fu_engine_add_plugin_filter (FuEngine *self, const gchar *plugin_glob)
 gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {
+	const gchar *runtime_prefix = NULL;
 	const gchar *fn;
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(AsProfileTask) ptask = NULL;
+	g_autofree gchar *plugin_directory = NULL;
 
 	/* profile */
 	ptask = as_profile_start_literal (self->profile, "FuEngine:load-plugins");
 	g_assert (ptask != NULL);
 
-	/* search */
-	dir = g_dir_open (PLUGINDIR, 0, error);
+#ifdef SNAP_SUPPORT
+	runtime_prefix = g_getenv ("SNAP");
+	if (runtime_prefix != NULL) {
+		plugin_directory = g_build_filename (runtime_prefix, PLUGINDIR, NULL);
+		dir = g_dir_open (plugin_directory, 0, error);
+	}
+#endif /* SNAP_SUPPORT */
+	if (runtime_prefix == NULL)
+		plugin_directory = g_strdup (PLUGINDIR);
+	dir = g_dir_open (plugin_directory, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	while ((fn = g_dir_read_name (dir)) != NULL) {
@@ -2944,7 +2954,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		}
 
 		/* open module */
-		filename = g_build_filename (PLUGINDIR, fn, NULL);
+		filename = g_build_filename (plugin_directory, fn, NULL);
 		plugin = fu_plugin_new ();
 		fu_plugin_set_name (plugin, name);
 		fu_plugin_set_usb_context (plugin, self->usb_ctx);

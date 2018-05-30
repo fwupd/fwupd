@@ -351,6 +351,28 @@ fu_common_add_argv (GPtrArray *argv, const gchar *fmt, ...)
 }
 
 /**
+ * fu_common_get_localstatedir:
+ *
+ * Gets the configured local state directory (which may be dynamic)
+ */
+gchar *
+fu_common_get_localstatedir (void)
+{
+#ifdef SNAP_SUPPORT
+	const gchar *runtime_prefix = NULL;
+	g_autofree gchar *runtimedir = NULL;
+	/* Add something with a runtime prefix */
+	runtime_prefix = g_getenv ("SNAP_USER_DATA");
+	if (runtime_prefix != NULL) {
+		runtimedir = g_build_filename (runtime_prefix, LOCALSTATEDIR, NULL);
+		if (g_file_test (runtimedir, G_FILE_TEST_IS_DIR))
+			return g_steal_pointer (&runtimedir);
+	}
+#endif /* SNAP_SUPPORT */
+	return g_strdup (LOCALSTATEDIR);
+}
+
+/**
  * fu_common_firmware_builder:
  * @bytes: The data to use
  * @script_fn: Name of the script to run in the tarball, e.g. `startup.sh`
@@ -377,6 +399,7 @@ fu_common_firmware_builder (GBytes *bytes,
 	gint rc = 0;
 	g_autofree gchar *argv_str = NULL;
 	g_autofree gchar *localstatedir = NULL;
+	g_autofree gchar *builderdir = NULL;
 	g_autofree gchar *output2_fn = NULL;
 	g_autofree gchar *standard_error = NULL;
 	g_autofree gchar *standard_output = NULL;
@@ -397,7 +420,8 @@ fu_common_firmware_builder (GBytes *bytes,
 		return NULL;
 
 	/* this is shared with the plugins */
-	localstatedir = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", "builder", NULL);
+	localstatedir = fu_common_get_localstatedir ();
+	builderdir = g_build_filename (localstatedir, "lib", "fwupd", "builder", NULL);
 
 	/* launch bubblewrap and generate firmware */
 	g_ptr_array_add (argv, g_strdup ("bwrap"));
@@ -406,8 +430,8 @@ fu_common_firmware_builder (GBytes *bytes,
 	fu_common_add_argv (argv, "--dir /tmp");
 	fu_common_add_argv (argv, "--dir /var");
 	fu_common_add_argv (argv, "--bind %s /tmp", tmpdir);
-	if (g_file_test (localstatedir, G_FILE_TEST_EXISTS))
-		fu_common_add_argv (argv, "--ro-bind %s /boot", localstatedir);
+	if (g_file_test (builderdir, G_FILE_TEST_EXISTS))
+		fu_common_add_argv (argv, "--ro-bind %s /boot", builderdir);
 	fu_common_add_argv (argv, "--dev /dev");
 	fu_common_add_argv (argv, "--symlink usr/lib /lib");
 	fu_common_add_argv (argv, "--symlink usr/lib64 /lib64");

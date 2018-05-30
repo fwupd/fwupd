@@ -41,6 +41,9 @@ fu_config_get_config_paths (void)
 	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
 	const gchar *remotes_dir;
 	const gchar *system_prefixlibdir = "/usr/lib/fwupd";
+#ifdef SNAP_SUPPORT
+	const gchar *runtime_prefix;
+#endif /* SNAP_SUPPORT */
 	g_autofree gchar *sysconfdir = NULL;
 
 	/* only set by the self test program */
@@ -49,6 +52,18 @@ fu_config_get_config_paths (void)
 		g_ptr_array_add (paths, g_strdup (remotes_dir));
 		return paths;
 	}
+
+#ifdef SNAP_SUPPORT
+	/* Add something with a runtime prefix */
+	runtime_prefix = g_getenv ("SNAP_USER_DATA");
+	if (runtime_prefix != NULL) {
+		g_autofree gchar *runtimedir = NULL;
+		runtimedir = g_build_filename (runtime_prefix, FWUPDCONFIGDIR, NULL);
+		if (g_file_test (runtimedir, G_FILE_TEST_IS_DIR))
+			g_ptr_array_add (paths, g_steal_pointer (&runtimedir));
+
+	}
+#endif /* SNAP_SUPPORT */
 
 	/* use sysconfig, and then fall back to /etc */
 	sysconfdir = g_build_filename (FWUPDCONFIGDIR, NULL);
@@ -346,13 +361,8 @@ fu_config_load_remotes (FuConfig *self, GError **error)
 
 	/* get a list of all config paths */
 	paths = fu_config_get_config_paths ();
-	if (paths->len == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No search paths found");
-		return FALSE;
-	}
+	if (paths->len == 0)
+		return TRUE;
 
 	/* look for all remotes */
 	for (guint i = 0; i < paths->len; i++) {
@@ -454,18 +464,26 @@ fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 gboolean
 fu_config_load (FuConfig *self, GError **error)
 {
+	g_autoptr(GPtrArray) config_paths = NULL;
 	g_autofree gchar *metainfo_path = NULL;
 	g_autofree gchar *config_file = NULL;
 
 	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
 
-	/* load the main daemon config file */
-	config_file = g_build_filename (FWUPDCONFIGDIR, "daemon.conf", NULL);
-	if (g_file_test (config_file, G_FILE_TEST_EXISTS)) {
+	/* load config in priority order */
+	config_paths = fu_config_get_config_paths ();
+	for (guint i = 0; i < config_paths->len; i++) {
+		const gchar *config_path = g_ptr_array_index (config_paths, i);
+		if (g_file_test (config_path, G_FILE_TEST_EXISTS)) {
+			config_file = g_build_filename (config_path, "daemon.conf", NULL);
+			break;
+		}
+	}
+	if (config_file != NULL) {
 		if (!fu_config_load_from_file (self, config_file, error))
 			return FALSE;
 	} else {
-		g_warning ("Daemon configuration %s not found", config_file);
+		g_warning ("Daemon configuration not found");
 	}
 
 	/* load AppStream about the remotes */

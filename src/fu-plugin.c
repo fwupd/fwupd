@@ -1125,6 +1125,7 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	gchar tmpname[] = {"XXXXXX.cap"};
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
+	g_autofree gchar *localstatedir = NULL;
 	g_autoptr(FuDevice) res_tmp = NULL;
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FwupdRelease) release_tmp = fwupd_release_new ();
@@ -1143,7 +1144,8 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	}
 
 	/* create directory */
-	dirname = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
+	localstatedir = fu_common_get_localstatedir ();
+	dirname = g_build_filename (localstatedir, "lib", "fwupd", NULL);
 	file = g_file_new_for_path (dirname);
 	if (!g_file_query_exists (file, NULL)) {
 		if (!g_file_make_directory_with_parents (file, NULL, error))
@@ -1511,10 +1513,17 @@ fu_plugin_get_config_value (FuPlugin *plugin, const gchar *key)
 	g_autofree gchar *conf_path = NULL;
 	g_autoptr(GKeyFile) keyfile = NULL;
 	const gchar *plugin_name;
+	const gchar *runtime_prefix;
 
 	plugin_name = fu_plugin_get_name (plugin);
 	conf_file = g_strdup_printf ("%s.conf", plugin_name);
-	conf_path = g_build_filename (FWUPDCONFIGDIR, conf_file,  NULL);
+#ifdef SNAP_SUPPORT
+	runtime_prefix = g_getenv ("SNAP_USER_DATA");
+	if (runtime_prefix != NULL)
+		conf_path = g_build_filename (runtime_prefix, FWUPDCONFIGDIR, conf_file, NULL);
+#endif
+	if (conf_path == NULL)
+		conf_path = g_build_filename (FWUPDCONFIGDIR, conf_file,  NULL);
 	if (!g_file_test (conf_path, G_FILE_TEST_IS_REGULAR))
 		return NULL;
 	keyfile = g_key_file_new ();
