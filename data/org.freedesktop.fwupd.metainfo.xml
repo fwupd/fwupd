@@ -3,7 +3,7 @@
 <component type="generic">
   <id>org.freedesktop.fwupd</id>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>GPL-2.0+</project_license>
+  <project_license>LGPL-2.0+</project_license>
   <name>fwupd</name>
   <summary>Update device firmware on Linux</summary>
   <description>
