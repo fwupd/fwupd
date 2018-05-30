@@ -1139,4 +1139,14 @@
       <package />
     </distro>
   </dependency>
+  <dependency type="build" id="flatpak-builder">
+    <distro id="flatpak">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="tree">
+    <distro id="flatpak">
+      <package />
+    </distro>
+  </dependency>
 </dependencies>

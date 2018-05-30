@@ -71,7 +71,7 @@ with open(out.name, 'w') as wfd:
                 replace = ''
             wfd.write(line.replace("%%%ARCH_PREFIX%%%", replace))
         elif line == "%%%INSTALL_DEPENDENCIES_COMMAND%%%\n":
-            if OS == "fedora":
+            if OS == "fedora" or OS == 'flatpak':
                 wfd.write("RUN dnf --enablerepo=updates-testing -y install \\\n")
             elif OS == "centos":
                 wfd.write("RUN yum -y install \\\n")

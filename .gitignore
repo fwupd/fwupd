@@ -1,3 +1,7 @@
 /build
 /dist
 /.vscode
+/build-dir
+/.flatpak-builder
+/repo
+*.flatpak
