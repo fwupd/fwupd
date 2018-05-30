@@ -3,9 +3,12 @@ if bashcomp.found()
                                          define_variable: [ 'prefix', prefix ],
   )
 
-  install_data(['fwupdmgr'],
-    install_dir : tgt,
-  )
+
+if get_option('daemon')
+    install_data(['fwupdmgr'],
+      install_dir : tgt,
+    )
+endif
 
 # replace @libexecdir@
 fwupdtool_path = join_paths(libexecdir, 'fwupd')
