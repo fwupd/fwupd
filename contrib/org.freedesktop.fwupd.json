@@ -167,7 +167,7 @@
                 {
                     "type": "git",
                     "url": "https://github.com/hughsie/fwupd.git",
-                    "branch": "master"
+                    "branch": "$FWUPD_BRANCH"
                 }
             ]
         }
