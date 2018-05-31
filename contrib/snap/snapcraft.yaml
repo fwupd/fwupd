@@ -45,7 +45,6 @@ parts:
     source: https://github.com/dell/libsmbios
     source-type: git
     build-packages:
-      - python3
       - libxml2-dev
       - pkg-config
       - autoconf
@@ -168,7 +167,6 @@ parts:
       - bash-completion
       - gcab
       - gettext
-      - gir1.2-pango-1.0
       - libarchive-dev
       - libelf-dev
       - libgcab-dev
@@ -181,7 +179,6 @@ parts:
       - libsqlite3-dev
       - locales
       - pkg-config
-      - valac
     stage-packages:
       - libassuan0
       - liblcms2-2
