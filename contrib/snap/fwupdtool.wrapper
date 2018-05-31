@@ -1,0 +1,8 @@
+#!/bin/sh
+
+[ ! -d "$SNAP_USER_DATA/etc" ] && cp -R "$SNAP/etc" "$SNAP_USER_DATA"
+[ ! -d "$SNAP_USER_DATA/var" ] && cp -R "$SNAP/var" "$SNAP_USER_DATA"
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
+export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+exec "$SNAP/usr/lib/fwupd/fwupdtool" "$@"

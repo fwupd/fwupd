@@ -5,3 +5,8 @@
 /.flatpak-builder
 /repo
 *.flatpak
+*.snap
+/fwupdtool_source.tar.bz2
+/parts
+/prime
+/stage
