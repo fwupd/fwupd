@@ -21,7 +21,6 @@ G_DECLARE_FINAL_TYPE (FuEbitdoDevice, fu_ebitdo_device, FU, EBITDO_DEVICE, FuUsb
 FuEbitdoDevice	*fu_ebitdo_device_new			(GUsbDevice	*usb_device);
 
 /* getters */
-gboolean	 fu_ebitdo_device_is_bootloader		(FuEbitdoDevice	*device);
 const guint32	*fu_ebitdo_device_get_serial		(FuEbitdoDevice	*device);
 
 G_END_DECLS
