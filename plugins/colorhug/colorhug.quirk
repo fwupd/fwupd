@@ -1,0 +1,41 @@
+### ColorHug1 ##################################################################
+[FuColorhugDevice]
+USB\VID_273F&PID_1000=bootloader
+USB\VID_273F&PID_1001=none
+
+[FuUsbDevice:summary]
+USB\VID_273F&PID_1001=An open source display colorimeter
+
+[FuUsbDevice:icon]
+USB\VID_273F&PID_1001=colorimeter-colorhug
+
+[FuUsbDevice:guid]
+USB\VID_273F&PID_1000=40338ceb-b966-4eae-adae-9c32edfcc484
+USB\VID_273F&PID_1001=40338ceb-b966-4eae-adae-9c32edfcc484
+
+### ColorHug2 ##################################################################
+[FuColorhugDevice]
+USB\VID_273F&PID_1004=none
+USB\VID_273F&PID_1005=bootloader
+
+[FuUsbDevice:summary]
+USB\VID_273F&PID_1004=An open source display colorimeter
+
+[FuUsbDevice:icon]
+USB\VID_273F&PID_1004=colorimeter-colorhug
+
+[FuUsbDevice:guid]
+USB\VID_273F&PID_1004=2082b5e0-7a64-478a-b1b2-e3404fab6dad
+USB\VID_273F&PID_1005=2082b5e0-7a64-478a-b1b2-e3404fab6dad
+
+### ColorHugALS ################################################################
+[FuColorhugDevice]
+USB\VID_273F&PID_1006=halfsize,bootloader
+USB\VID_273F&PID_1007=halfsize,none
+
+[FuUsbDevice:summary]
+USB\VID_273F&PID_1007=An open source ambient light sensor
+
+[FuUsbDevice:guid]
+USB\VID_273F&PID_1006=84f40464-9272-4ef7-9399-cd95f12da696
+USB\VID_273F&PID_1007=84f40464-9272-4ef7-9399-cd95f12da696

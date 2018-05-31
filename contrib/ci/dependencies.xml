@@ -119,31 +119,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="libcolord-dev">
-    <distro id="arch">
-      <package>colord</package>
-    </distro>
-    <distro id="centos">
-      <package>colord-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package>colord-devel</package>
-    </distro>
-    <distro id="debian">
-      <control>
-        <version>(>= 1.0.0)</version>
-      </control>
-      <package variant="x86_64" />
-      <package variant="s390x">libcolord-dev:s390x</package>
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control>
-        <version>(>= 1.0.0)</version>
-      </control>
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="fonts-dejavu">
     <distro id="arch">
       <package>ttf-dejavu</package>
@@ -584,18 +559,6 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libarchive-dev:s390x</package>
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
-  <dependency type="build" id="libcolorhug-dev">
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libcolorhug-dev:s390x</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">

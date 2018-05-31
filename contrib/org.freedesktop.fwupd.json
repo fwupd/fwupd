@@ -153,7 +153,6 @@
                             "-Dintrospection=false",
                             "-Dman=false",
                             "-Dpkcs7=false",
-                            "-Dplugin_colorhug=false",
                             "-Dplugin_uefi_labels=false",
                             "-Dsystemd=false",
                             "-Dtests=false",

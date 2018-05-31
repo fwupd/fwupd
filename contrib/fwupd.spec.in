@@ -2,7 +2,6 @@
 %global libappstream_version 0.7.4
 %global libgusb_version 0.2.11
 %global libsoup_version 2.51.92
-%global colord_version 1.2.12
 %global systemd_version 231
 %global json_glib_version 1.1.1
 
@@ -36,7 +35,6 @@ BuildRequires: libappstream-glib-devel >= %{libappstream_version}
 BuildRequires: libgudev1-devel
 BuildRequires: libgusb-devel >= %{libgusb_version}
 BuildRequires: libsoup-devel >= %{libsoup_version}
-BuildRequires: colord-devel >= %{colord_version}
 BuildRequires: polkit-devel >= 0.103
 BuildRequires: sqlite-devel
 BuildRequires: gpgme-devel
@@ -130,7 +128,6 @@ Data files for installed tests.
     --werror \
 %endif
     -Dgtkdoc=true \
-    -Dman=true \
 %if 0%{?enable_tests}
     -Dtests=true \
 %else
@@ -156,7 +153,7 @@ Data files for installed tests.
     -Dplugin_dell=false \
     -Dplugin_synaptics=false \
 %endif
-    -Dplugin_colorhug=true
+    -Dman=true
 
 %meson_build
 
