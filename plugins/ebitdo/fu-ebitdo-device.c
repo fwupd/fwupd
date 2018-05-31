@@ -15,17 +15,10 @@
 
 struct _FuEbitdoDevice {
 	FuUsbDevice		 parent_instance;
-	gboolean		 is_bootloader;
 	guint32			 serial[9];
 };
 
 G_DEFINE_TYPE (FuEbitdoDevice, fu_ebitdo_device, FU_TYPE_USB_DEVICE)
-
-gboolean
-fu_ebitdo_device_is_bootloader (FuEbitdoDevice *self)
-{
-	return self->is_bootloader;
-}
 
 static gboolean
 fu_ebitdo_device_send (FuEbitdoDevice *self,
@@ -44,7 +37,7 @@ fu_ebitdo_device_send (FuEbitdoDevice *self,
 	FuEbitdoPkt *hdr = (FuEbitdoPkt *) packet;
 
 	/* different */
-	if (self->is_bootloader)
+	if (fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		ep_out = FU_EBITDO_USB_BOOTLOADER_EP_OUT;
 
 	/* check size */
@@ -113,7 +106,7 @@ fu_ebitdo_device_receive (FuEbitdoDevice *self,
 	FuEbitdoPkt *hdr = (FuEbitdoPkt *) packet;
 
 	/* different */
-	if (self->is_bootloader)
+	if (fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		ep_in = FU_EBITDO_USB_BOOTLOADER_EP_IN;
 
 	/* get data from device */
@@ -281,7 +274,7 @@ fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
 	}
 
 	/* in firmware mode */
-	if (!self->is_bootloader) {
+	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_ebitdo_device_send (self,
 					 FU_EBITDO_PKT_TYPE_USER_CMD,
 					 FU_EBITDO_PKT_CMD_GET_VERSION,
@@ -564,7 +557,8 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 				     "not supported with this device");
 		return FALSE;
 	}
-	self->is_bootloader = g_strcmp0 (quirk_str, "bootloader") == 0;
+	if (g_strcmp0 (quirk_str, "bootloader") == 0)
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -579,7 +573,7 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 	fu_device_add_icon (FU_DEVICE (device), "input-gaming");
 
 	/* only the bootloader can do the update */
-	if (!self->is_bootloader) {
+	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_0483&PID_5750");
 		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
 		fu_device_add_flag (FU_DEVICE (device),

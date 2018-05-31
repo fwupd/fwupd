@@ -43,7 +43,7 @@ fu_plugin_update (FuPlugin *plugin,
 	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
 	/* get version */
-	if (!fu_ebitdo_device_is_bootloader (ebitdo_dev)) {
+	if (!fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
