@@ -7,23 +7,10 @@
 
 #include "config.h"
 
-#include <colord.h>
-#include <colorhug.h>
-
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-colorhug-device.h"
-
-void
-fu_plugin_init (FuPlugin *plugin)
-{
-	g_autofree gchar *tmp = g_strdup_printf ("%i.%i.%i",
-						 CH_MAJOR_VERSION,
-						 CH_MINOR_VERSION,
-						 CH_MICRO_VERSION);
-	fu_plugin_add_compile_version (plugin, "com.hughski.colorhug", tmp);
-}
 
 gboolean
 fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
@@ -39,7 +26,7 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 		return FALSE;
 
 	/* switch to bootloader mode is not required */
-	if (fu_colorhug_device_get_is_bootloader (self)) {
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug ("already in bootloader mode, skipping");
 		return TRUE;
 	}
@@ -79,7 +66,7 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 		return FALSE;
 
 	/* switch to runtime mode is not required */
-	if (!fu_colorhug_device_get_is_bootloader (self)) {
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug ("already in runtime mode, skipping");
 		return TRUE;
 	}
@@ -115,7 +102,7 @@ fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_colorhug_device_set_flash_success (self, error))
+	if (!fu_colorhug_device_set_flash_success (self, TRUE, error))
 		return FALSE;
 	return TRUE;
 }
@@ -127,44 +114,13 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	/* check this firmware is actually for this device */
-	if (!ch_device_check_firmware (usb_device,
-				       g_bytes_get_data (blob_fw, NULL),
-				       g_bytes_get_size (blob_fw),
-				       &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "firmware is not suitable: %s",
-			     error_local->message);
-		return FALSE;
-	}
 
 	/* write firmware */
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_write_firmware (device, blob_fw, error);
-}
-
-gboolean
-fu_plugin_verify (FuPlugin *plugin,
-		  FuDevice *device,
-		  FuPluginVerifyFlags flags,
-		  GError **error)
-{
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* write firmware */
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_colorhug_device_verify_firmware (self, error);
 }
 
 gboolean
@@ -175,6 +131,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **e
 
 	/* open the device */
 	device = fu_colorhug_device_new (usb_device);
+	fu_device_set_quirks (FU_DEVICE (device), fu_plugin_get_quirks (plugin));
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;

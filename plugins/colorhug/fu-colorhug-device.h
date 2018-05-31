@@ -19,12 +19,10 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (FuColorhugDevice, fu_colorhug_device, FU, COLORHUG_DEVICE, FuUsbDevice)
 
 FuColorhugDevice *fu_colorhug_device_new		(GUsbDevice		*usb_device);
-gboolean	 fu_colorhug_device_get_is_bootloader	(FuColorhugDevice	*device);
 
 /* object methods */
 gboolean	 fu_colorhug_device_set_flash_success	(FuColorhugDevice	*device,
-							 GError			**error);
-gboolean	 fu_colorhug_device_verify_firmware	(FuColorhugDevice	*device,
+							 gboolean		 val,
 							 GError			**error);
 
 G_END_DECLS

@@ -68,7 +68,7 @@ Arch Linux (x86_64)
 
 Flatpak
 ----------
-* A flatpak bundle with all but colorhug plugins enabled
+* A flatpak bundle with all plugins enabled
 * Compiled under gcc with the org.gnome.Sdk/x86_64/3.28 runtime
 * Builds without the daemon, so only fwupdtool is available
 * No GPG, PKCS-7, GObjectIntrospection, systemd or ConsoleKit support

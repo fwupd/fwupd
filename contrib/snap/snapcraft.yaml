@@ -167,7 +167,6 @@ parts:
                        -Dtests=false,
                        -Ddaemon=false,
                        -Dgtkdoc=false,
-                       -Dplugin_colorhug=false,
                        -Dplugin_uefi_labels=false,
                        -Dintrospection=false,
                        -Dsystemd=false,

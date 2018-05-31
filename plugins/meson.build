@@ -1,4 +1,5 @@
 subdir('dfu')
+subdir('colorhug')
 subdir('ebitdo')
 subdir('steelseries')
 subdir('nitrokey')
@@ -21,10 +22,6 @@ endif
 if get_option('plugin_thunderbolt')
 subdir('thunderbolt')
 subdir('thunderbolt-power')
-endif
-
-if get_option('plugin_colorhug')
-subdir('colorhug')
 endif
 
 if get_option('plugin_dell')

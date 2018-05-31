@@ -14,8 +14,7 @@ meson .. \
     -Dplugin_thunderbolt=true \
     -Dplugin_uefi=true \
     -Dplugin_dell=true \
-    -Dplugin_synaptics=true \
-    -Dplugin_colorhug=true $@
+    -Dplugin_synaptics=true $@
 ninja-build dist
 popd
 VERSION=`meson introspect build --projectinfo | jq -r .version`

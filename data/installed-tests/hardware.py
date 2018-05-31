@@ -116,12 +116,6 @@ if __name__ == '__main__':
     test.add_file('0a29848de74d26348bc5a6e24fc9f03778eddf0e-hughski-colorhug2-2.0.7.cab', '2.0.7')
     tests.append(test)
 
-    # Hughski ColorHugALS using 'colorhug'
-    test = Test('ColorHugALS', '84f40464-9272-4ef7-9399-cd95f12da696')
-    test.add_file('73ac1aa98130e532c727308cc6560783b10ca3a9-hughski-colorhug-als-4.0.2.cab', '4.0.2')
-    test.add_file('8dbdd54c712b33f72d866ce3b23b3ceed3ad494d-hughski-colorhug-als-4.0.3.cab', '4.0.3')
-    tests.append(test)
-
     # Logitech Unifying Receiver (RQR12) using 'unifying'
     test = Test('UnifyingRQR12', '9d131a0c-a606-580f-8eda-80587250b8d6')
     test.add_file('6e5ab5961ec4c577bff198ebb465106e979cf686-Logitech-Unifying-RQR12.05_B0028.cab', 'RQR12.05_B0028')
