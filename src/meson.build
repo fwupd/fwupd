@@ -1,8 +1,10 @@
 cargs = ['-DG_LOG_DOMAIN="Fu"']
 
-install_data(['org.freedesktop.fwupd.xml'],
-  install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
-)
+if get_option('daemon')
+  install_data(['org.freedesktop.fwupd.xml'],
+    install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
+  )
+endif
 
 keyring_deps = []
 keyring_src = []
