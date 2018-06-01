@@ -166,7 +166,7 @@
             "sources": [
                 {
                     "type": "git",
-                    "url": "https://github.com/hughsie/fwupd.git",
+                    "url": "$FWUPD_ROOT",
                     "branch": "$FWUPD_BRANCH"
                 }
             ]

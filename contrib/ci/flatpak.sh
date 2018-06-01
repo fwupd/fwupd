@@ -20,6 +20,9 @@ fi
 if [ -z "$FWUPD_BRANCH" ]; then
     exit 0
 fi
+if [ -z "$FWUPD_ROOT" ]; then
+	export FWUPD_ROOT="file://$(pwd)"
+fi
 
 # install the runtimes
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
@@ -44,7 +47,7 @@ flatpak build-bundle repo fwupd.flatpak org.freedesktop.fwupd
 cp fwupd.flatpak dist
 
 # to run from the builddir:
-# sudo flatpak-builder --run build-dir org.freedesktop.fwupd.json /app/libexec/fwupd/fwupdtool get-devices
+# sudo flatpak-builder --run build-dir contrib/org.freedesktop.fwupd.json /app/libexec/fwupd/fwupdtool get-devices
 
 # install the single file bundle
 # flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
