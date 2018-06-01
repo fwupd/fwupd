@@ -144,6 +144,23 @@ parts:
       - -usr/share/lintian
       - -usr/share/man
     after: [meson]
+  gudev:
+    plugin: autotools
+    source: https://gitlab.gnome.org/GNOME/libgudev.git
+    source-type: git
+    configflags:
+      - --disable-umockdev
+    build-packages:
+      - libglib2.0-dev
+      - pkg-config
+      - libudev-dev
+      - gtk-doc-tools
+      - gnome-common
+    prime:
+      - -include
+      - -lib/girepository-1.0
+      - -lib/pkgconfig
+      - -share/
   fwupd:
     plugin: meson
     meson-parameters: [--prefix=/usr,
@@ -174,7 +191,6 @@ parts:
       - libgcab-dev
       - libglib2.0-dev
       - libgpgme11-dev
-      - libgudev-1.0-dev
       - libgusb-dev
       - libjson-glib-dev
       - libsoup2.4-dev
@@ -189,7 +205,6 @@ parts:
       - libgpgme11
       - libjson-glib-1.0-0
       - libgusb2
-      - libgudev-1.0-0
     prime:
       - -usr/bin
       - -usr/sbin
@@ -228,7 +243,7 @@ parts:
       - -usr/share/upstart
       - -usr/lib/*/glib-2.0
       - -usr/lib/*/pkgconfig
-    after: [appstream-glib-dev, libfwup-dev]
+    after: [appstream-glib-dev, libfwup-dev, gudev]
   fwupdtool-wrapper:
     plugin: dump
     source: contrib/snap
