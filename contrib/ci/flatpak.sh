@@ -20,6 +20,9 @@ fi
 if [ -z "$FWUPD_BRANCH" ]; then
     exit 0
 fi
+if [ -z "$FWUPD_ROOT" ]; then
+	export FWUPD_ROOT="file://$(pwd)"
+fi
 
 # install the runtimes
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
