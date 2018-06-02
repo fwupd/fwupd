@@ -2,37 +2,13 @@
 set -e
 set -x
 
-# get the correct branch to use
-if [ -z "$FWUPD_BRANCH" ]; then
-    if [ -n $TRAVIS_BRANCH ]; then
-        export FWUPD_BRANCH=$TRAVIS_BRANCH
-    fi
-    if [ -n $TRAVIS_PULL_REQUEST_BRANCH ]; then
-        export FWUPD_BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
-    fi
-fi
-if [ -z "$FWUPD_BRANCH" ]; then
-    GIT_BRANCH=`git rev-parse --abbrev-ref HEAD`
-    if [ $GIT_BRANCH != "HEAD" ]; then
-        export FWUPD_BRANCH=$GIT_BRANCH
-    fi
-fi
-if [ -z "$FWUPD_BRANCH" ]; then
-    exit 0
-fi
-
 # install the runtimes
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 flatpak install flathub runtime/org.gnome.Sdk/x86_64/3.28
 flatpak install flathub runtime/org.gnome.Platform/x86_64/3.28
 
-# copy in the branch
-rm -rf build
-mkdir build
-envsubst < contrib/org.freedesktop.fwupd.json > build/org.freedesktop.fwupd.json
-
 # build the repo
-flatpak-builder --repo=repo --force-clean --disable-rofiles-fuse build-dir build/org.freedesktop.fwupd.json
+flatpak-builder --repo=repo --force-clean --disable-rofiles-fuse build-dir contrib/org.freedesktop.fwupd.json
 
 # show the files that were included
 tree build-dir
