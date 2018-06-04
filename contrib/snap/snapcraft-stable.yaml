@@ -60,7 +60,9 @@ parts:
       - -lib/*.a
   libfwup-dev:
     plugin: make
-    source: https://github.com/rhboot/fwupdate/releases/download/11/fwupdate-11.tar.bz2
+    #fwupdate 11 FTBFS: see https://github.com/rhboot/fwupdate/pull/113
+    source: https://github.com/rhboot/fwupdate.git
+    source-type: git
     make-parameters:
       - EFIDIR=ubuntu
       - GNUEFIDIR=/usr/lib
