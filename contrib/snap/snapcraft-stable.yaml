@@ -155,6 +155,28 @@ parts:
       - -lib/girepository-1.0
       - -lib/pkgconfig
       - -share/
+  libusb:
+    plugin: autotools
+    source: https://github.com/libusb/libusb/releases/download/v1.0.22/libusb-1.0.22.tar.bz2
+    configflags:
+     - --disable-static
+    prime:
+      - -include/
+      - -lib/pkgconfig
+  gusb:
+    plugin: meson
+    source: https://github.com/hughsie/libgusb/archive/0.3.0.tar.gz
+    meson-parameters: [--prefix=/usr,
+                       -Dtests=false,
+                       -Dvapi=false,
+                       -Ddocs=false]
+    prime:
+    - -usr/bin/
+    - -usr/include
+    - -usr/share
+    - -usr/lib/*/pkgconfig
+    - -usr/lib/*/girepository-1.0
+    after: [libusb]
   fwupd:
     plugin: meson
     meson-parameters: [--prefix=/usr,
@@ -183,7 +205,6 @@ parts:
       - libgcab-dev
       - libglib2.0-dev
       - libgpgme11-dev
-      - libgusb-dev
       - libjson-glib-dev
       - libsoup2.4-dev
       - libsqlite3-dev
@@ -195,7 +216,6 @@ parts:
       - libelf1
       - libgpgme11
       - libjson-glib-1.0-0
-      - libgusb2
     prime:
       - -usr/bin
       - -usr/sbin
@@ -234,7 +254,7 @@ parts:
       - -usr/share/upstart
       - -usr/lib/*/glib-2.0
       - -usr/lib/*/pkgconfig
-    after: [appstream-glib-dev, libfwup-dev, gudev]
+    after: [appstream-glib-dev, libfwup-dev, gudev, gusb]
   fwupdtool-wrapper:
     plugin: dump
     source: contrib/snap
