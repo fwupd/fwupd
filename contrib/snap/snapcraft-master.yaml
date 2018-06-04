@@ -1,4 +1,4 @@
-name: fwupdtool
+name: fwupd
 version-script: cat $SNAPCRAFT_STAGE/version
 version: 'daily'
 summary: A standalone version of fwupd to install newer firmware updates
