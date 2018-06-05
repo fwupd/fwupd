@@ -18,7 +18,6 @@ shared_module('fu_plugin_synapticsmst',
     ],
   dependencies : [
     plugin_deps,
-    efivar,
   ],
   # https://github.com/hughsie/fwupd/issues/207
   override_options : [
