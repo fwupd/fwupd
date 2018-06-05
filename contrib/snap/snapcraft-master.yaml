@@ -117,7 +117,6 @@ parts:
       - libyaml-dev
       - libstemmer-dev
       - uuid-dev
-      - xmlto
     stage-packages:
       - libarchive13
       - libgcab-1.0-0
