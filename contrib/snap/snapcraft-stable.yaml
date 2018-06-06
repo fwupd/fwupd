@@ -41,8 +41,7 @@ parts:
     after: [libefivar-dev]
   libsmbios:
     plugin: autotools
-    source: https://github.com/dell/libsmbios
-    source-type: git
+    source: https://github.com/dell/libsmbios/archive/v2.4.2.tar.gz
     build-packages:
       - libxml2-dev
       - pkg-config
