@@ -763,7 +763,7 @@ main (int argc, char *argv[])
 		     "watch",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Watch for hardare changes"),
+		     _("Watch for hardware changes"),
 		     fu_util_watch);
 	fu_util_add (priv->cmd_array,
 		     "install-blob",
