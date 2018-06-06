@@ -1647,15 +1647,17 @@ fu_plugin_finalize (GObject *object)
 		g_hash_table_unref (priv->runtime_versions);
 	if (priv->compile_versions != NULL)
 		g_hash_table_unref (priv->compile_versions);
-#ifndef RUNNING_ON_VALGRIND
-	if (priv->module != NULL)
-		g_module_close (priv->module);
-#endif
 	g_hash_table_unref (priv->devices);
 	g_hash_table_unref (priv->devices_delay);
 	g_hash_table_unref (priv->report_metadata);
 	g_free (priv->name);
 	g_free (priv->data);
+	/* Must happen as the last step to avoid prematurely
+	 * freeing memory held by the plugin */
+#ifndef RUNNING_ON_VALGRIND
+	if (priv->module != NULL)
+		g_module_close (priv->module);
+#endif
 
 	G_OBJECT_CLASS (fu_plugin_parent_class)->finalize (object);
 }

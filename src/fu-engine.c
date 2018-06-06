@@ -3435,7 +3435,6 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->quirks);
 	g_object_unref (self->hwids);
 	g_object_unref (self->history);
-	g_object_unref (self->plugin_list);
 	g_object_unref (self->profile);
 	g_object_unref (self->store);
 	g_object_unref (self->device_list);
@@ -3443,6 +3442,7 @@ fu_engine_finalize (GObject *obj)
 	g_ptr_array_unref (self->plugin_filter);
 	g_hash_table_unref (self->runtime_versions);
 	g_hash_table_unref (self->compile_versions);
+	g_object_unref (self->plugin_list);
 
 	G_OBJECT_CLASS (fu_engine_parent_class)->finalize (obj);
 }
