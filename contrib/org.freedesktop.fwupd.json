@@ -137,9 +137,9 @@
             ],
             "sources": [
                 {
-                    "type": "git",
-                    "url": "https://github.com/dell/libsmbios.git",
-                    "branch": "master" /* FIXME: needed for the flatpak fixes... */
+                    "type": "archive",
+                    "url": "https://github.com/dell/libsmbios/archive/v2.4.2.tar.gz",
+                    "sha256": "ebfe18415e24bbec06d0a9ea1066c8dcd82982555373712713d7e194138650de"
                 }
             ]
         },
