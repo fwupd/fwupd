@@ -18,6 +18,10 @@ apps:
     completer:
       usr/share/bash-completion/completions/fwupdtool
 
+plugs:
+  fwupdtool:
+    interface: fwupd
+
 parts:
   libefivar-dev:
     plugin: make
@@ -220,7 +224,6 @@ parts:
       - -usr/bin
       - -usr/sbin
       - -usr/lib/gnupg
-      - -usr/share/mime
       - -usr/share/man
       - -usr/share/GConf
       - -etc/X11
@@ -255,6 +258,18 @@ parts:
       - -usr/lib/*/glib-2.0
       - -usr/lib/*/pkgconfig
     after: [appstream-glib-dev, libfwup-dev, gudev, gusb]
+  update-mime:
+    plugin: make
+    source: contrib/snap/update-mime
+    stage-packages:
+      - shared-mime-info
+      - gsettings-desktop-schemas
+      - libxml2
+    prime:
+      - -usr/share/doc
+      - -usr/share/lintian
+      - -usr/share/pkgconfig
+    after: [fwupd]
   fwupdtool-wrapper:
     plugin: dump
     source: contrib/snap
