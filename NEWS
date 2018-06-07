@@ -20,6 +20,7 @@ Bugfixes:
  - Do not require libcolorhug to build (Richard Hughes)
  - Fix a crash in libfwupd where no device ID is set (Richard Hughes)
  - Fix a potential DoS in libdfu by limiting holes to 1MiB (Richard Hughes)
+ - Fix a segfault that sometimes occurs during cleanup of USB plugins (Mario Limonciello)
  - Fix Hardware-ID{0,1,2,12} compatibility with Microsoft (Gergely Risko)
  - Hide devices that aren't updatable by default in fwupdmgr (Mario Limonciello)
  - Search all UEFI GUIDs when matching hardware (Richard Hughes, Mario Limonciello)
