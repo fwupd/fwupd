@@ -15,6 +15,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  LIBFWUPD_1.0.3@LIBFWUPD_1.0.3 1.0.3
  LIBFWUPD_1.0.4@LIBFWUPD_1.0.4 1.0.4
  LIBFWUPD_1.0.7@LIBFWUPD_1.0.7 1.0.7
+ LIBFWUPD_1.0.8@LIBFWUPD_1.0.8 1.0.8
  fwupd_build_history_report_json@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_machine_id@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_user_agent@LIBFWUPD_1.0.3 1.0.3
@@ -65,6 +66,8 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_device_get_id@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_modified@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_name@LIBFWUPD_0.9.3 1.0.0
+ fwupd_device_get_parent@LIBFWUPD_1.0.8 1.0.8
+ fwupd_device_get_parent_id@LIBFWUPD_1.0.8 1.0.8
  fwupd_device_get_plugin@LIBFWUPD_1.0.0 1.0.0
  fwupd_device_get_release_default@LIBFWUPD_0.9.8 1.0.0
  fwupd_device_get_releases@LIBFWUPD_0.9.8 1.0.0
@@ -88,6 +91,8 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_device_set_id@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_set_modified@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_set_name@LIBFWUPD_0.9.3 1.0.0
+ fwupd_device_set_parent@LIBFWUPD_1.0.8 1.0.8
+ fwupd_device_set_parent_id@LIBFWUPD_1.0.8 1.0.8
  fwupd_device_set_plugin@LIBFWUPD_1.0.0 1.0.0
  fwupd_device_set_summary@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_set_update_error@LIBFWUPD_0.9.8 1.0.0
