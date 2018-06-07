@@ -6,6 +6,7 @@ Uploaders: Steve McIntyre <93sam@debian.org>,
            Matthias Klumpp <mak@debian.org>,
            Mario Limonciello <mario.limonciello@dell.com>
 Build-Depends:
+	bash-completion,
 	debhelper (>= 10.3),
 	dh-strip-nondeterminism,
 	fontconfig,
@@ -22,8 +23,6 @@ Build-Depends:
 	libarchive-dev,
 	libcairo-dev,
 	libcairo-gobject2,
-	libcolord-dev (>= 1.0.0),
-	libcolorhug-dev,
 	libefivar-dev [amd64 arm64 armhf armel i386],
 	libelf-dev,
 	libfreetype6-dev,

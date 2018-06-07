@@ -1,3 +1,13 @@
+fwupd (1.0.8-1) unstable; urgency=medium
+
+  * New upstream version (1.0.8)
+    - Adds new fwupdtool
+    - License is now LGPL 2.1
+    - Drops colorhug dependency (built in now)
+    - refresh symbols
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 07 Jun 2018 08:16:22 -0500
+
 fwupd (1.0.7-1) unstable; urgency=medium
 
   * New upstream version (1.0.7)
