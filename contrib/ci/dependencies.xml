@@ -2,6 +2,7 @@
 <dependencies>
   <dependency type="build" id="bash-completion">
     <distro id="debian">
+      <control />
       <package variant="x86_64" />
       <package variant="i386" />
     </distro>
