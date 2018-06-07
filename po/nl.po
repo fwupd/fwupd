@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Dutch (http://www.transifex.com/freedesktop/fwupd/language/nl/)\n"
 "MIME-Version: 1.0\n"
@@ -143,10 +143,6 @@ msgstr "Details over een firmware-bestand wegschrijven"
 msgid "Encrypt firmware data"
 msgstr "Firmware-gegevens versleutelen"
 
-#. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "Lijst weergeven van alle Synaptics MST-apparaten"
-
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
 msgstr "Afsluiten na een korte vertraging"
@@ -170,10 +166,6 @@ msgstr "Firmware Update Daemon"
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Firmware-hulpmiddel"
-
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "Firmwarebestand flashen naar MST-apparaat"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -258,6 +250,7 @@ msgstr "De achtergrondservice controleren op gebeurtenissen"
 msgid "Name"
 msgstr "Naam"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Geen hardware aangetroffen die in staat is firmware bij te werken"
@@ -378,9 +371,6 @@ msgstr "Status"
 #. TRANSLATORS: device status, e.g. "OK"
 msgid "Status"
 msgstr "Status"
-
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Synaptics Multistream Transport Utility"
 
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"

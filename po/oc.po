@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Occitan (post 1500) (http://www.transifex.com/freedesktop/fwupd/language/oc/)\n"
 "MIME-Version: 1.0\n"
@@ -120,6 +120,7 @@ msgstr "Mòde"
 msgid "Name"
 msgstr "Nom"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Cap de material amb de capacitats de mesa a jorn del micrologicial es pas estat detectat"

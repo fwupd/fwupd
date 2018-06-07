@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Indonesian (http://www.transifex.com/freedesktop/fwupd/language/id/)\n"
 "MIME-Version: 1.0\n"
@@ -249,10 +249,6 @@ msgid "Encrypt firmware data"
 msgstr "Enkripsikan data firmware"
 
 #. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "Enumerasikan semua perangkat MST Synaptics"
-
-#. TRANSLATORS: command description
 msgid "Erase all firmware update history"
 msgstr "Hapus semua riwayat pembaruan firmware"
 
@@ -321,10 +317,6 @@ msgstr "Utilitas Firmware"
 msgid "Firmware metadata has not been updated for %u day and may not be up to date."
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "Metadata firmware belum diperbarui selama %uhari dan mungkin tidak mutakhir."
-
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "Flash-kan berkas firmware ke perangkat MST"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -439,6 +431,7 @@ msgstr "Pantau daemon untuk kejadian"
 msgid "Name"
 msgstr "Nama"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Tidak terdeteksi perangkat keras dengan kapabilitas pemutakhiran firmware"
@@ -632,9 +625,6 @@ msgstr "Status"
 msgid "Summary"
 msgstr "Ringkasan"
 
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Utilitas Transport Multistream Synaptics"
-
 msgid "Target"
 msgstr "Target"
 
@@ -732,7 +722,7 @@ msgstr "Memutakhirkan %s dari %s ke %s..."
 msgid "Upload message:"
 msgstr "Pesan unggah:"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Unggah laporan sekarang?"
 

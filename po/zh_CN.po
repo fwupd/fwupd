@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/freedesktop/fwupd/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
@@ -34,6 +34,10 @@ msgstr "已添加"
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "已发布时间"
+
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "同意并启用此远程功能吗？"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -104,6 +108,10 @@ msgstr "需要认证：为设备更新存储的校验和"
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "使用沙箱生成固件"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "取消"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
@@ -202,6 +210,10 @@ msgstr "成功更新的设备："
 msgid "Devices that were not updated correctly:"
 msgstr "未正确更新的设备："
 
+#. TRANSLATORS: command description
+msgid "Disables a given remote"
+msgstr "禁用指定远程功能"
+
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
 msgstr "不要查找老的元数据"
@@ -244,17 +256,25 @@ msgstr "转储有关某固件文件的详细信息"
 msgid "Dump information about a binary patch to the screen"
 msgstr "将二进制补丁信息输出到屏幕"
 
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "要启用此远程功能吗？"
+
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "已启用"
 
 #. TRANSLATORS: command description
-msgid "Encrypt firmware data"
-msgstr "加密固件数据"
+msgid "Enables a given remote"
+msgstr "启用指定远程功能"
+
+#. TRANSLATORS: show the user a warning
+msgid "Enabling this remote is done at your own risk."
+msgstr "启用此远程功能后果自负。"
 
 #. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "枚举所有 Synaptics MST 设备"
+msgid "Encrypt firmware data"
+msgstr "加密固件数据"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -325,10 +345,6 @@ msgstr "固件实用程序"
 msgid "Firmware metadata has not been updated for %u day and may not be up to date."
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "固件元数据已有 %u 天未更新，数据可能不是最新的。"
-
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "刷写固件文件到 MST 设备"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -403,6 +419,12 @@ msgstr "正在安装固件更新..."
 msgid "Keyring"
 msgstr "密钥环"
 
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "Linux 供应商固件服务（稳定固件）"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "Linux 供应商固件服务（测试固件）"
+
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
 msgstr "列出当前连接的可固件升级的设备"
@@ -422,6 +444,10 @@ msgstr "元数据 URI"
 #. TRANSLATORS: remote URI
 msgid "Metadata URI Signature"
 msgstr "元数据 URI 签名"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr "可从 Linux 供应商固件服务获取元数据。"
 
 msgid "Mode"
 msgstr "模式"
@@ -443,9 +469,14 @@ msgstr "监视守护程序里的事件"
 msgid "Name"
 msgstr "名称"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "没有检测到支持更新固件的硬件"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "No remotes are currently enabled so no metadata is available."
+msgstr "当前尚未启用任何远程功能，因此无可用元数据。"
 
 msgid "OK"
 msgstr "确定"
@@ -463,6 +494,11 @@ msgstr "载荷"
 
 msgid "Permission denied"
 msgstr "拒绝授权"
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "请输入一个 0 到 %u 之间的数字："
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -636,9 +672,6 @@ msgstr "状况"
 msgid "Summary"
 msgstr "概览"
 
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Synaptics 多流传输工具"
-
 msgid "Target"
 msgstr "目标"
 
@@ -736,9 +769,13 @@ msgstr "正在更新 %s，从 %s 到 %s…"
 msgid "Upload message:"
 msgstr "上传消息："
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "要上传报告吗？"
+
+#. TRANSLATORS: explain why we want to upload
+msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
+msgstr "上传固件报告可帮助硬件供应商尽快确定真实设备上更新的成功及失败案例。"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -771,6 +808,10 @@ msgstr "将来自文件的固件写入分区"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "正在写入…"
+
+#. TRANSLATORS: show the user a warning
+msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
+msgstr "您的发行商可能尚未认证任何固件的系统及设备兼容性。"
 
 msgid "fwupd"
 msgstr "fwupd"

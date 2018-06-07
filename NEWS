@@ -1,3 +1,30 @@
+Version 1.0.8
+~~~~~~~~~~~~~
+Released: 2018-06-07
+
+New Features:
+ - Add an plugin to update some future Wacom tablets (Richard Hughes)
+ - Add 'fwupdmgr get-topology' to show logical device tree (Richard Hughes, Mario Limonciello)
+ - Add support for creating a flatpak (Richard Hughes)
+ - Add support for creating a snap (Mario Limonciello, Richard Hughes)
+ - Add support for Motorola S-record files (Richard Hughes)
+ - Add the Linux Foundation public GPG keys for firmware and metadata (Richard Hughes)
+ - Show a translated warning when the server is limiting downloads (Richard Hughes)
+
+Bugfixes:
+ - Add a firmware diagnostic tool called fwupdtool (Richard Hughes, Mario Limonciello)
+ - Adjust all licensing to LGPL 2.1+ (Mario Limonciello)
+ - Allow installing more than one firmware using 'fwupdmgr install' (Richard Hughes)
+ - Allow specifying hwids with OR relationships (Richard Hughes)
+ - Do not call fu_plugin_init() on blacklisted plugins (Richard Hughes)
+ - Do not require libcolorhug to build (Richard Hughes)
+ - Fix a crash in libfwupd where no device ID is set (Richard Hughes)
+ - Fix a potential DoS in libdfu by limiting holes to 1MiB (Richard Hughes)
+ - Fix Hardware-ID{0,1,2,12} compatibility with Microsoft (Gergely Risko)
+ - Hide devices that aren't updatable by default in fwupdmgr (Mario Limonciello)
+ - Search all UEFI GUIDs when matching hardware (Richard Hughes, Mario Limonciello)
+ - Stop matching Nintendo Switch Pro in the 8bitdo plugin (Mario Limonciello)
+
 Version 1.0.7
 ~~~~~~~~~~~~~
 Released: 2018-04-30

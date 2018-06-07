@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Hungarian (http://www.transifex.com/freedesktop/fwupd/language/hu/)\n"
 "MIME-Version: 1.0\n"
@@ -103,6 +103,10 @@ msgstr "Hitelesítés szükséges az eszköz tárolt ellenőrzőösszegeinek fri
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Firmware összeállítása egy homokozóban"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "Mégse"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
@@ -252,10 +256,6 @@ msgid "Encrypt firmware data"
 msgstr "Firmware adatok titkosítása"
 
 #. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "Az összes Synaptics MST eszköz felsorolása"
-
-#. TRANSLATORS: command description
 msgid "Erase all firmware update history"
 msgstr "Firmware frissítési előzmények törlése"
 
@@ -325,10 +325,6 @@ msgid "Firmware metadata has not been updated for %u day and may not be up to da
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "A firmware metaadatok %u napja nem lettek frissítve, és lehet hogy elavultak."
 msgstr[1] "A firmware metaadatok %u napja nem lettek frissítve, és lehet hogy elavultak."
-
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "Firmware fájl beírása az MST eszközbe"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -443,6 +439,7 @@ msgstr "A démon eseményeinek figyelése"
 msgid "Name"
 msgstr "Név"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nem észlelhető firmware frissítési képességgel rendelkező hardver"
@@ -463,6 +460,11 @@ msgstr "Tartalom"
 
 msgid "Permission denied"
 msgstr "Hozzáférés megtagadva"
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "Adjon meg egy számot 0 és %u között:"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -636,9 +638,6 @@ msgstr "Állapot"
 msgid "Summary"
 msgstr "Összegzés"
 
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Synaptics több adatfolyamos átviteli segédprogram"
-
 msgid "Target"
 msgstr "Cél"
 
@@ -736,7 +735,7 @@ msgstr "%s frissítése: %s -> %s…"
 msgid "Upload message:"
 msgstr "Feltöltési üzenet:"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Feltölti most a jelentést?"
 

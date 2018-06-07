@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Russian (http://www.transifex.com/freedesktop/fwupd/language/ru/)\n"
 "MIME-Version: 1.0\n"
@@ -218,10 +218,6 @@ msgstr "Включено"
 msgid "Encrypt firmware data"
 msgstr "Зашифровать данные микропрограммы"
 
-#. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "Перечислить все устройства Synaptics MST"
-
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
 msgstr "Стирание…"
@@ -277,10 +273,6 @@ msgstr "Служба обновления микропрограммы"
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Средство работы с микропрограммами"
-
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "Записать файл микропрограммы на устройство MST"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -395,6 +387,7 @@ msgstr "Следить за событиями в фоновой службе"
 msgid "Name"
 msgstr "Наименование"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Не обнаружено оборудования с возможностью обновления микропрограммы"
@@ -554,9 +547,6 @@ msgstr "Состояние"
 #. TRANSLATORS: device status, e.g. "OK"
 msgid "Status"
 msgstr "Статус"
-
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Средство многопоточной передачи Synaptics"
 
 msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
 msgstr "Процесс fwupd является простой фоновой службой, позволяющей сеансовому программному обеспечению обновлять микропрограммы устройств на вашем компьютере. Он разработан для настольных компьютеров, но этот проект также годен для использования на телефонах, планшетах и безмониторных серверах."

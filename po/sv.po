@@ -5,14 +5,15 @@
 # Translators:
 # Anders Jonsson <transifex@norsjovallen.se>, 2017
 # Andreas Henriksson <andreas@fatal.se>, 2017
-# Josef Andersson <josef.andersson@fripost.org>, 2015,2017
+# Josef Andersson <josef.andersson@fripost.org>, 2015,2017-2018
 # Josef Andersson <l10nl18nsweja@gmail.com>, 2015,2017
+# sebras <sebras@gmail.com>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Swedish (http://www.transifex.com/freedesktop/fwupd/language/sv/)\n"
 "MIME-Version: 1.0\n"
@@ -34,6 +35,10 @@ msgstr "Tillagd"
 msgid "Age"
 msgstr "Ålder"
 
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "Samtyck och aktivera fjärren?"
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -46,6 +51,14 @@ msgstr "Tillåt att nedgradera versioner av fast programvara"
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
 msgstr "Tillåt att installera om befintliga versioner av fast programvara"
+
+#. TRANSLATORS: explain why we want to upload
+msgid "An update requires a reboot to complete."
+msgstr "En uppdatering kräver en omstart för att färdigställas."
+
+#. TRANSLATORS: command line option
+msgid "Answer yes to all questions"
+msgstr "Svara ja på alla frågor"
 
 #. TRANSLATORS: command description
 msgid "Apply a binary patch"
@@ -95,6 +108,10 @@ msgstr "Autentisering krävs för att uppdatera den lagrade kontrollsumman för 
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Bygg fast programvara med en sandlåda"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "Avbryt"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
@@ -146,6 +163,9 @@ msgstr "Konvertera fast programvara till DFU-format"
 msgid "Create a binary patch using two files"
 msgstr "Skapa en binär lagning från två filer"
 
+msgid "DFU"
+msgstr "DFU"
+
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "DFU-verktyg"
@@ -182,6 +202,30 @@ msgstr "Enhet ändrad:"
 msgid "Device removed:"
 msgstr "Enhet borttagen:"
 
+#. TRANSLATORS: a list of successful updates
+msgid "Devices that have been updated successfully:"
+msgstr "Enheter som har uppdaterats:"
+
+#. TRANSLATORS: a list of failed updates
+msgid "Devices that were not updated correctly:"
+msgstr "Enheter som inte uppdaterades korrekt:"
+
+#. TRANSLATORS: command description
+msgid "Disables a given remote"
+msgstr "Inaktiverar en given fjärr."
+
+#. TRANSLATORS: command line option
+msgid "Do not check for old metadata"
+msgstr "Kontrollera inte gammal metadata"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for reboot after update"
+msgstr "Kontrollera inte om det krävs omstart efter uppdatering"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for unreported history"
+msgstr "Kontrollera inte ej rapporterad historik"
+
 msgid "Done!"
 msgstr "Klar!"
 
@@ -212,17 +256,29 @@ msgstr "Skriv ut detaljer om fast programvarufil"
 msgid "Dump information about a binary patch to the screen"
 msgstr "Dumpa informationen om en binär lagning till skärmen"
 
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "Aktivera denna fjärr?"
+
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Aktiverad"
+
+#. TRANSLATORS: command description
+msgid "Enables a given remote"
+msgstr "Aktiverar en given fjärr."
+
+#. TRANSLATORS: show the user a warning
+msgid "Enabling this remote is done at your own risk."
+msgstr "Att aktivera denna fjärr görs på egen risk."
 
 #. TRANSLATORS: command description
 msgid "Encrypt firmware data"
 msgstr "Kryptera fast programvarudata"
 
 #. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "Räkna upp alla Synaptic MST-enheter"
+msgid "Erase all firmware update history"
+msgstr "Ta bort alla historik för fast programvara"
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
@@ -235,6 +291,10 @@ msgstr "Avsluta efter en kort fördröjning"
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
 msgstr "Avsluta efter att motorn har lästs in"
+
+#. TRANSLATORS: quirks are device-specific workarounds
+msgid "Failed to load quirks"
+msgstr "Misslyckades med att läsa in speciallösning"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -280,9 +340,12 @@ msgstr "Uppgraderingsdemon för fast programvara"
 msgid "Firmware Utility"
 msgstr "Fast programvaruverktyg"
 
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "Skriv fast programvarufil till MST-enhet"
+#. TRANSLATORS: the metadata is very out of date; %u is a number > 1
+#, c-format
+msgid "Firmware metadata has not been updated for %u day and may not be up to date."
+msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
+msgstr[0] "Metadata för fast programvara har inte uppdaterats på %udag och kan vara utdaterad."
+msgstr[1] "Metadata för fast programvara har inte uppdaterats på %udagar och kan vara utdaterad."
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -357,6 +420,12 @@ msgstr "Installerar uppdatering för fast programvara…"
 msgid "Keyring"
 msgstr "Nyckelring"
 
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "Linux Vendor Firmware Service (stabil fastprogramvara)"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "Linux Vendor Firmware Service (fastprogramvara för testning)"
+
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
 msgstr "Lista aktuella anslutna DFU-kapabla enheter"
@@ -376,6 +445,10 @@ msgstr "Metadata URI"
 #. TRANSLATORS: remote URI
 msgid "Metadata URI Signature"
 msgstr "Metadata URI Signatur"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr "Metadata kan hämtas från Linux Vendor Firmware Service."
 
 msgid "Mode"
 msgstr "Läge"
@@ -397,9 +470,14 @@ msgstr "Övervaka demonen för händelser"
 msgid "Name"
 msgstr "Namn"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Ingen uppdateringsbar hårdvara upptäcktes"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "No remotes are currently enabled so no metadata is available."
+msgstr "Inga fjärrar är aktiverade för närvarande, så ingen metadata är tillgänglig."
 
 msgid "OK"
 msgstr "OK"
@@ -412,12 +490,23 @@ msgstr "Åsidosätt tilläggsvarning"
 msgid "Password"
 msgstr "Lösenord"
 
+msgid "Payload"
+msgstr "Nyttolast"
+
 msgid "Permission denied"
 msgstr "Åtkomst nekad"
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "Ange en siffra mellan 0 och %u: "
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
 msgstr "Prioritet"
+
+msgid "Proceed with upload?"
+msgstr "Fortsätt med att skicka upp?"
 
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
 msgid "Protocol"
@@ -471,9 +560,21 @@ msgstr "Borttagen"
 msgid "Replace data in an existing firmware file"
 msgstr "Ersätt data i en befintlig fast programvarufil"
 
+#. TRANSLATORS: URI to send success/failure reports
+msgid "Report URI"
+msgstr "Rapport-uri"
+
+#. TRANSLATORS: metadata is downloaded from the Internet
+msgid "Requires internet connection"
+msgstr "Kräver internetanslutning"
+
 #. TRANSLATORS: command description
 msgid "Reset a DFU device"
 msgstr "Omstart av en DFU-enhet"
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "Starta om nu?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
@@ -482,6 +583,9 @@ msgstr "Startar om enhet…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Returnera alla hårdvaru-id för maskinen"
+
+msgid "Runtime"
+msgstr "Exekvering"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -527,6 +631,10 @@ msgstr "Ange tillverkar-ID för den fasta programvarufilen"
 msgid "Sets metadata on a firmware file"
 msgstr "Ange metadata på fast programvarufil"
 
+#. TRANSLATORS: command description
+msgid "Share firmware history with the developers"
+msgstr "Dela fast programvaruhistorik med utvecklarna"
+
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
 msgstr "Visa klient- och demon-version"
@@ -543,6 +651,10 @@ msgstr "Visa felsökningsalternativ"
 msgid "Show extra debugging information"
 msgstr "Visa extra felsökningsinformation"
 
+#. TRANSLATORS: command description
+msgid "Show history of firmware updates"
+msgstr "Visa historik över fasta programvaruupdateringar"
+
 #. TRANSLATORS: this is for plugin development
 msgid "Show plugin verbose information"
 msgstr "Visa utförlig information om insticksmodul"
@@ -557,8 +669,12 @@ msgstr "Tillstånd"
 msgid "Status"
 msgstr "Status"
 
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Synaptics Multistream Transport-verktyg"
+#. TRANSLATORS: section header for the release one line summary
+msgid "Summary"
+msgstr "Sammanfattning"
+
+msgid "Target"
+msgstr "Mål"
 
 msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
 msgstr "Fwupd-processen är en enkel demon som tillåter sessions-programvara att uppdatera enheters fasta programvara på din lokala maskin. Det är utformat för skrivbordsmiljöer, men detta projekt är också användbart på telefoner, surfplattor och skärmlösa servrar."
@@ -605,9 +721,17 @@ msgstr "Uppdateringsbeskrivning"
 msgid "Update Location"
 msgstr "Uppdateringsplats"
 
+#. TRANSLATORS: section header for the release name
+msgid "Update Name"
+msgstr "Uppdatera namn"
+
 #. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
 msgid "Update Remote ID"
 msgstr "Uppdatera fjärrkällans id"
+
+#. TRANSLATORS: section header for the release one line summary
+msgid "Update Summary"
+msgstr "Uppdateringssammanfattning"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
@@ -615,6 +739,14 @@ msgstr "Uppdateringsversion"
 
 msgid "Update device firmware on Linux"
 msgstr "Uppdatera enhetens fasta programvara på Linux"
+
+#. TRANSLATORS: the server sent the user a small message
+msgid "Update failure is a known issue, visit this URL for more information:"
+msgstr "Misslyckad uppdatering är ett känt fel, besök denna url för mer information:"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Update now?"
+msgstr "Uppdatera nu?"
 
 msgid "Update the stored device verification information"
 msgstr "Uppdatera den lagrade enhetens verifikationsinformation"
@@ -633,6 +765,18 @@ msgstr "Uppdaterar all fast programvara till de senast tillgängliga versionerna
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Uppdaterar %s från %s till %s... "
+
+#. TRANSLATORS: the server sent the user a small message
+msgid "Upload message:"
+msgstr "Uppladdningsmeddelande:"
+
+#. TRANSLATORS: ask the user to upload
+msgid "Upload report now?"
+msgstr "Skicka upp rapport nu?"
+
+#. TRANSLATORS: explain why we want to upload
+msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
+msgstr "Att skicka upp rapporter för fastprogramvara hjälper hårdvaruförsäljare att snabbt identifiera trasiga och fungerande uppdateringar på riktiga enheter."
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -665,6 +809,10 @@ msgstr "Skriv fast programvara från fil till partition"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Skriver…"
+
+#. TRANSLATORS: show the user a warning
+msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
+msgstr "Din distributör kanske inte har verifierat någon av uppdateringarna av fastprogramvara för kompatibilitet med ditt system eller anslutna enheter."
 
 msgid "fwupd"
 msgstr "fwupd"

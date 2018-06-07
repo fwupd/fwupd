@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Catalan (http://www.transifex.com/freedesktop/fwupd/language/ca/)\n"
 "MIME-Version: 1.0\n"
@@ -31,6 +31,10 @@ msgstr "S'ha afegit"
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Antiguitat"
+
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "Accepteu i habiliteu el remot?"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -101,6 +105,10 @@ msgstr "Es requereix autenticació per actualitzar les sumes de verificació emm
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Construeix el microprogramari usant un entorn de proves"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "Cancel·la"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
@@ -199,6 +207,10 @@ msgstr "Els dispositius que s'han actualitzat correctament:"
 msgid "Devices that were not updated correctly:"
 msgstr "Els dispositius que no s'han actualitzat correctament:"
 
+#. TRANSLATORS: command description
+msgid "Disables a given remote"
+msgstr "Inhabilita un remot indicat"
+
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
 msgstr "No comprovar si hi ha metadades antigues"
@@ -241,17 +253,25 @@ msgstr "Bolca els detalls sobre un fitxer de microprogramari"
 msgid "Dump information about a binary patch to the screen"
 msgstr "Bolca la informació sobre un pedaç binari a la pantalla"
 
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "Habilito aquest remot?"
+
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Habilitat"
 
 #. TRANSLATORS: command description
-msgid "Encrypt firmware data"
-msgstr "Encripta les dades del microprogramari"
+msgid "Enables a given remote"
+msgstr "Habilita un remot indicat"
+
+#. TRANSLATORS: show the user a warning
+msgid "Enabling this remote is done at your own risk."
+msgstr "Si habiliteu aquest remot, ho fareu sota el vostre propi risc."
 
 #. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "Enumera tots els dispositius de «Synaptics MST»"
+msgid "Encrypt firmware data"
+msgstr "Encripta les dades del microprogramari"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -323,10 +343,6 @@ msgid "Firmware metadata has not been updated for %u day and may not be up to da
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "Les metadades del microprogramari no s'han actualitzat durant %u dia i podria ser que no estiguin actualitzades."
 msgstr[1] "Les metadades del microprogramari no s'han actualitzat durant %u dies i podria ser que no estiguin actualitzades."
-
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "Instal·la un fitxer de microprogramari en un dispositiu MST"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -401,6 +417,12 @@ msgstr "S'està instal·lant l'actualització de microprogramari..."
 msgid "Keyring"
 msgstr " Anell de claus"
 
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "Servei de microprogramari del proveïdor Linux (microprogramari estable)"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "Servei de microprogramari del proveïdor Linux (microprogramari en proves)"
+
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
 msgstr "Llista els dispositius amb capacitat DFU actualment connectats"
@@ -420,6 +442,10 @@ msgstr "URI de les metadades"
 #. TRANSLATORS: remote URI
 msgid "Metadata URI Signature"
 msgstr "Signatura de l'URI de les metadades"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr "Les metadades es poden obtenir des del servei de microprogramari del proveïdor Linux."
 
 msgid "Mode"
 msgstr "Mode"
@@ -441,9 +467,14 @@ msgstr "Monitora el dimoni pels esdeveniments"
 msgid "Name"
 msgstr "Nom"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "No s'ha detectat cap maquinari amb capacitat per a l'actualització del microprogramari"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "No remotes are currently enabled so no metadata is available."
+msgstr "Actualment, no hi ha cap remot habilitat, de manera que no hi ha metadades disponibles."
 
 msgid "OK"
 msgstr "D'acord"
@@ -461,6 +492,11 @@ msgstr "Carrega útil"
 
 msgid "Permission denied"
 msgstr "Permís denegat"
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "Introduïu un número del 0 al %u: "
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -634,9 +670,6 @@ msgstr "Estat"
 msgid "Summary"
 msgstr "Resum"
 
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Utilitat «Synaptics Multistream Transport»"
-
 msgid "Target"
 msgstr "Objectiu"
 
@@ -734,9 +767,13 @@ msgstr "S'està actualitzant %s des de %s a %s... "
 msgid "Upload message:"
 msgstr "Missatge de la pujada:"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Pujo l'informe ara?"
+
+#. TRANSLATORS: explain why we want to upload
+msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
+msgstr "L'enviament dels informes de microprogramari ajudarà als proveïdors de maquinari a identificar amb rapidesa les actualitzacions fallides i satisfactòries sobre els dispositius reals."
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -769,6 +806,10 @@ msgstr "Escriu el microprogramari des d'un fitxer a dins d'una partició"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "S'està escrivint..."
+
+#. TRANSLATORS: show the user a warning
+msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
+msgstr "És possible que el vostre distribuïdor no hagi verificat cap de les actualitzacions del microprogramari per a la compatibilitat amb el vostre sistema o els dispositius connectats."
 
 msgid "fwupd"
 msgstr "fwupd"

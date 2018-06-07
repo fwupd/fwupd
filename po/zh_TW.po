@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Cheng-Chia Tseng <pswo10680@gmail.com>, 2017
+# Cheng-Chia Tseng <pswo10680@gmail.com>, 2017-2018
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Chinese (Taiwan) (http://www.transifex.com/freedesktop/fwupd/language/zh_TW/)\n"
 "MIME-Version: 1.0\n"
@@ -100,6 +100,10 @@ msgstr "必須先通過身份核對才能更新裝置的儲存校驗計算碼"
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "使用沙箱建置韌體"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "取消"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
@@ -249,10 +253,6 @@ msgid "Encrypt firmware data"
 msgstr "加密韌體資料"
 
 #. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "枚舉所有 Synaptics MST 裝置"
-
-#. TRANSLATORS: command description
 msgid "Erase all firmware update history"
 msgstr "抹除所有韌體更新歷史"
 
@@ -321,10 +321,6 @@ msgstr "韌體公用程式"
 msgid "Firmware metadata has not been updated for %u day and may not be up to date."
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "韌體中介資料已有 %u 天未更新，可能不是最新狀態。"
-
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "刷寫韌體檔案至 MST 裝置"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -439,6 +435,7 @@ msgstr "監控幕後程式是否有活動"
 msgid "Name"
 msgstr "名稱"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "未偵測到具備韌體更新能力的硬體"
@@ -459,6 +456,11 @@ msgstr "酬載"
 
 msgid "Permission denied"
 msgstr "請求許可遭拒"
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "請輸入 0 到 %u 之間的數字："
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -632,9 +634,6 @@ msgstr "狀態"
 msgid "Summary"
 msgstr "摘要"
 
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Synaptics 多串流傳輸公用程式"
-
 msgid "Target"
 msgstr "目標"
 
@@ -732,7 +731,7 @@ msgstr "正更新 %s 從 %s 版至 %s 版…"
 msgid "Upload message:"
 msgstr "上傳訊息："
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "是否立刻上傳報告？"
 

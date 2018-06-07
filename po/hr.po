@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Croatian (http://www.transifex.com/freedesktop/fwupd/language/hr/)\n"
 "MIME-Version: 1.0\n"
@@ -102,6 +102,10 @@ msgstr "Potrebna je ovjera za nadopunu spremljenog kontrolnog zbroja uređaja"
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Izgradi frimver u osiguranom okruženju"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "Odustani"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
@@ -251,10 +255,6 @@ msgid "Encrypt firmware data"
 msgstr "Šifriraj podatke frimvera"
 
 #. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "Pobroji sve Synaptics MST uređaje"
-
-#. TRANSLATORS: command description
 msgid "Erase all firmware update history"
 msgstr "Obriši svu povijest nadopune frimvera"
 
@@ -325,10 +325,6 @@ msgid_plural "Firmware metadata has not been updated for %u days and may not be 
 msgstr[0] "Metapodaci firmvera nisu nadopunjeni %u dan i možda nisu najnoviji."
 msgstr[1] "Metapodaci firmvera nisu nadopunjeni %u dana i možda nisu najnoviji."
 msgstr[2] "Metapodaci firmvera nisu nadopunjeni %u dana i možda nisu najnoviji."
-
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "Zapiši datoteku frimvera u MST uređaj"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -443,6 +439,7 @@ msgstr "Nadgledaj događaje pozadinskim programom"
 msgid "Name"
 msgstr "Naziv"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nema otkrivenog hardvera s mogućnosti nadopune frimvera"
@@ -460,6 +457,11 @@ msgstr "Lozinka"
 
 msgid "Permission denied"
 msgstr "Dozvola odbijena"
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "Odaberite broj od 0 do %u: "
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -633,9 +635,6 @@ msgstr "Stanje"
 msgid "Summary"
 msgstr "Sažetak"
 
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Synaptics Multistream Transport pomagalo"
-
 msgid "Target"
 msgstr "Odredište"
 
@@ -733,7 +732,7 @@ msgstr "Nadopuna %s s inačice %s na inačicu %s... "
 msgid "Upload message:"
 msgstr "Pošalji poruku:"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Pošalji izvještaj odmah?"
 

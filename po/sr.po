@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Serbian (http://www.transifex.com/freedesktop/fwupd/language/sr/)\n"
 "MIME-Version: 1.0\n"
@@ -251,10 +251,6 @@ msgid "Encrypt firmware data"
 msgstr "Шифруј податке у фирмверу"
 
 #. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "Набраја све МСТ уређаје Синаптика"
-
-#. TRANSLATORS: command description
 msgid "Erase all firmware update history"
 msgstr "Обриши сав историјат ажурирања фирмвера"
 
@@ -325,10 +321,6 @@ msgid_plural "Firmware metadata has not been updated for %u days and may not be 
 msgstr[0] "Метаподаци фирмвера нису ажурирани %u дан и можда су застарели."
 msgstr[1] "Метаподаци фирмвера нису ажурирани %u дана и можда су застарели."
 msgstr[2] "Метаподаци фирмвера нису ажурирани %u дана и можда су застарели."
-
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "Флешује датотеку фирмвера на МСТ уређај"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -443,6 +435,7 @@ msgstr "Прати демона за догађајима"
 msgid "Name"
 msgstr "Назив"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Нема хардвера којем се може ажурирати фирмвер"
@@ -636,9 +629,6 @@ msgstr "Статус"
 msgid "Summary"
 msgstr "Сажетак"
 
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Синаптикова вишетоковна алатка преноса"
-
 msgid "Target"
 msgstr "Мета"
 
@@ -736,7 +726,7 @@ msgstr "Ажурирам %s са %s на %s..."
 msgid "Upload message:"
 msgstr "Отпремна порука:"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Отпремити извештај сада?"
 

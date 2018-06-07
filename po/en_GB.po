@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/freedesktop/fwupd/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
@@ -241,10 +241,6 @@ msgid "Encrypt firmware data"
 msgstr "Encrypt firmware data"
 
 #. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "Enumerate all Synaptics MST devices"
-
-#. TRANSLATORS: command description
 msgid "Erase all firmware update history"
 msgstr "Erase all firmware update history"
 
@@ -307,10 +303,6 @@ msgstr "Firmware Update Daemon"
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Firmware Utility"
-
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "Flash firmware file to MST device"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -425,6 +417,7 @@ msgstr "Monitor the daemon for events"
 msgid "Name"
 msgstr "Name"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "No hardware detected with firmware update capability"
@@ -614,9 +607,6 @@ msgstr "Status"
 msgid "Summary"
 msgstr "Summary"
 
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Synaptics Multistream Transport Utility"
-
 msgid "Target"
 msgstr "Target"
 
@@ -706,7 +696,7 @@ msgstr "Updates all firmware to latest versions available"
 msgid "Updating %s from %s to %s... "
 msgstr "Updating %s from %s to %s... "
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Upload report now?"
 

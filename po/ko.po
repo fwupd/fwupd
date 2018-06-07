@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 14:00+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Korean (http://www.transifex.com/freedesktop/fwupd/language/ko/)\n"
 "MIME-Version: 1.0\n"
@@ -218,10 +218,6 @@ msgstr "활성화 여부"
 msgid "Encrypt firmware data"
 msgstr "펌웨어 데이터 암호화"
 
-#. TRANSLATORS: command description
-msgid "Enumerate all Synaptics MST devices"
-msgstr "모든 시냅틱스 MST 장치에 열거 번호를 부여합니다"
-
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
 msgstr "지우는 중…"
@@ -277,10 +273,6 @@ msgstr "펌웨어 업데이트 데몬"
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "펌웨어 유틸리티"
-
-#. TRANSLATORS: command description
-msgid "Flash firmware file to MST device"
-msgstr "MST 장치에 펌웨어 파일을 기록합니다"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -395,6 +387,7 @@ msgstr "데몬 이벤트를 감시합니다"
 msgid "Name"
 msgstr "이름"
 
+#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "펌웨어 업데이트가 가능한 하드웨어가 없습니다"
@@ -554,9 +547,6 @@ msgstr "상태"
 #. TRANSLATORS: device status, e.g. "OK"
 msgid "Status"
 msgstr "장치 상태"
-
-msgid "Synaptics Multistream Transport Utility"
-msgstr "시냅틱스 멀티스트림 전송 유틸리티"
 
 msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
 msgstr "fwupd 프로세스는 로컬 머신의 장치 펌웨어를 세션 프로그램에서 업데이트할 수 있게 하는 간단한 데몬입니다. 데스크톱용으로 설계했지만, 전화기, 태블릭, 헤드리스 서버에서도 사용할 수 있습니다."
