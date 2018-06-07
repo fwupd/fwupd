@@ -4,10 +4,6 @@ Source: https://github.com/hughsie/fwupd
 
 Files: *
 Copyright: 2015 Richard Hughes <richard@hughsie.com>
-License: GPL-2.0+
-
-Files: libfwupd/*
-Copyright: 2015 Richard Hughes <richard@hughsie.com>
 License: LGPL-2.1+
 
 Files: data/tests/colorhug/firmware.metainfo.xml
@@ -17,24 +13,7 @@ License: CC0-1.0
 Files: debian/*
 Copyright: 2015 Daniel Jared Dominguez <Jared_Dominguez@Dell.com>
            2015 Mario Limonciello <mario_limonciello@dell.com>
-License: GPL-2.0+
-
-License: GPL-2.0+
- This package is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
- .
- This package is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- .
- You should have received a copy of the GNU General Public License
- along with this program. If not, see <http://www.gnu.org/licenses/>
- .
- On Debian systems, the complete text of the GNU General
- Public License version 2 can be found in "/usr/share/common-licenses/GPL-2".
+License: LGPL-2.1+
 
 License: LGPL-2.1+
  This package is free software; you can redistribute it and/or modify
