@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -154,6 +140,7 @@ fu_common_store_from_cab_file (AsStore *store, GCabCabinet *cabinet,
 	g_autoptr(GError) error_local = NULL;
 #if !AS_CHECK_VERSION(0,7,5)
 	g_autofree gchar *cache_fn = NULL;
+	g_autofree gchar *cachedir = NULL;
 #endif
 
 	/* parse file */
@@ -176,8 +163,8 @@ fu_common_store_from_cab_file (AsStore *store, GCabCabinet *cabinet,
 		return FALSE;
 	}
 #else
-	cache_fn = g_build_filename (LOCALSTATEDIR, "cache", "fwupd",
-				     gcab_file_get_extract_name (cabfile), NULL);
+	cachedir = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
+	cache_fn = g_build_filename (cachedir, gcab_file_get_extract_name (cabfile), NULL);
 	if (!fu_common_mkdir_parent (cache_fn, error))
 		return FALSE;
 	if (!g_file_set_contents (cache_fn, g_bytes_get_data (blob, NULL),
@@ -394,7 +381,7 @@ fu_common_store_from_cab_bytes (GBytes *blob, guint64 size_max, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "archive contained no valid metadata");
-		return FALSE;
+		return NULL;
 	}
 	return g_steal_pointer (&store);
 }

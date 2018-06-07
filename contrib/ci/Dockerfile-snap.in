@@ -1,0 +1,5 @@
+FROM snapcore/snapcraft
+RUN mkdir /build
+WORKDIR /build
+COPY . .
+CMD ["./contrib/ci/snap.sh"]

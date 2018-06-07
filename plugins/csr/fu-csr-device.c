@@ -1,22 +1,8 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -38,15 +24,6 @@ struct _FuCsrDevice
 };
 
 G_DEFINE_TYPE (FuCsrDevice, fu_csr_device, FU_TYPE_USB_DEVICE)
-
-#define HID_REPORT_GET				0x01
-#define HID_REPORT_SET				0x09
-
-#define HID_REPORT_TYPE_INPUT			0x01
-#define HID_REPORT_TYPE_OUTPUT			0x02
-#define HID_REPORT_TYPE_FEATURE			0x03
-
-#define HID_FEATURE				0x0300
 
 #define FU_CSR_REPORT_ID_COMMAND		0x01
 #define FU_CSR_REPORT_ID_STATUS			0x02
@@ -92,9 +69,10 @@ fu_csr_device_set_quirks (FuCsrDevice *self, FuCsrDeviceQuirks quirks)
 	self->quirks = quirks;
 }
 
-gboolean
-fu_csr_device_attach (FuCsrDevice *self, GError **error)
+static gboolean
+fu_csr_device_attach (FuDevice *device, GError **error)
 {
+	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	gsize sz = 0;
 	guint8 buf[] = { FU_CSR_REPORT_ID_CONTROL, FU_CSR_CONTROL_RESET };
@@ -280,15 +258,16 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 			    sz - FU_CSR_COMMAND_HEADER_SIZE);
 }
 
-GBytes *
-fu_csr_device_upload (FuCsrDevice *self, GError **error)
+static GBytes *
+fu_csr_device_upload (FuDevice *device, GError **error)
 {
+	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	g_autoptr(GPtrArray) chunks = NULL;
 	guint32 total_sz = 0;
 	gsize done_sz = 0;
 
 	/* notify UI */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_READ);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
 
 	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 	for (guint32 i = 0; i < 0x3ffffff; i++) {
@@ -298,7 +277,7 @@ fu_csr_device_upload (FuCsrDevice *self, GError **error)
 		/* hit hardware */
 		chunk = fu_csr_device_upload_chunk (self, error);
 		if (chunk == NULL)
-			return FALSE;
+			return NULL;
 		chunk_sz = g_bytes_get_size (chunk);
 
 		/* get the total size using the CSR header */
@@ -335,7 +314,7 @@ fu_csr_device_upload (FuCsrDevice *self, GError **error)
 		/* add to chunk array */
 		done_sz += chunk_sz;
 		g_ptr_array_add (chunks, g_steal_pointer (&chunk));
-		fu_device_set_progress_full (FU_DEVICE (self), done_sz, (gsize) total_sz);
+		fu_device_set_progress_full (device, done_sz, (gsize) total_sz);
 
 		/* we're done */
 		if (chunk_sz < 64 - FU_CSR_COMMAND_HEADER_SIZE)
@@ -343,7 +322,7 @@ fu_csr_device_upload (FuCsrDevice *self, GError **error)
 	}
 
 	/* notify UI */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_IDLE);
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	return dfu_utils_bytes_join_array (chunks);
 }
 
@@ -449,9 +428,10 @@ _dfu_firmware_get_default_element_data (DfuFirmware *firmware)
 	return dfu_element_get_contents (element);
 }
 
-gboolean
-fu_csr_device_download (FuCsrDevice *self, GBytes *blob, GError **error)
+static gboolean
+fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 {
+	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	GBytes *blob_noftr;
 	const guint8 *data;
 	gsize sz = 0;
@@ -461,7 +441,7 @@ fu_csr_device_download (FuCsrDevice *self, GBytes *blob, GError **error)
 	g_autoptr(GPtrArray) packets = NULL;
 
 	/* notify UI */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 
 	/* parse the file */
 	if (!dfu_firmware_parse_data (dfu_firmware, blob,
@@ -505,7 +485,7 @@ fu_csr_device_download (FuCsrDevice *self, GBytes *blob, GError **error)
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full (FU_DEVICE (self),
+		fu_device_set_progress_full (device,
 					     (gsize) idx, (gsize) packets->len);
 	}
 
@@ -515,7 +495,7 @@ fu_csr_device_download (FuCsrDevice *self, GBytes *blob, GError **error)
 		return FALSE;
 
 	/* notify UI */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_IDLE);
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 
 	return TRUE;
 }
@@ -594,6 +574,9 @@ fu_csr_device_class_init (FuCsrDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_csr_device_to_string;
+	klass_device->write_firmware = fu_csr_device_download;
+	klass_device->read_firmware = fu_csr_device_upload;
+	klass_device->attach = fu_csr_device_attach;
 	klass_usb_device->open = fu_csr_device_open;
 	klass_usb_device->close = fu_csr_device_close;
 	klass_usb_device->probe = fu_csr_device_probe;

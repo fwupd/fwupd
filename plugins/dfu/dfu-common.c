@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 /**
@@ -213,6 +199,56 @@ dfu_utils_bytes_is_empty (GBytes *bytes)
 }
 
 /**
+ * dfu_utils_bytes_pad:
+ * @bytes: a #GBytes
+ * @sz: the desired size in bytes
+ *
+ * Pads a GBytes to a given @sz with `0xff`.
+ *
+ * Return value: (transfer full): a #GBytes
+ **/
+GBytes *
+dfu_utils_bytes_pad (GBytes *bytes, gsize sz)
+{
+	gsize bytes_sz;
+
+	g_return_val_if_fail (g_bytes_get_size (bytes) <= sz, NULL);
+
+	/* pad */
+	bytes_sz = g_bytes_get_size (bytes);
+	if (bytes_sz < sz) {
+		const guint8 *data = g_bytes_get_data (bytes, NULL);
+		guint8 *data_new = g_malloc (sz);
+		memcpy (data_new, data, bytes_sz);
+		memset (data_new + bytes_sz, 0xff, sz - bytes_sz);
+		return g_bytes_new_take (data_new, sz);
+	}
+
+	/* exactly right */
+	return g_bytes_ref (bytes);
+}
+
+/**
+ * dfu_utils_buffer_parse_uint4:
+ * @data: a string
+ *
+ * Parses a base 16 number from a string.
+ *
+ * The string MUST be at least 1 byte long as this function cannot check the
+ * length of @data. Checking the size must be done in the caller.
+ *
+ * Return value: A parsed value, or 0 for error
+ **/
+guint8
+dfu_utils_buffer_parse_uint4 (const gchar *data)
+{
+	gchar buffer[2];
+	memcpy (buffer, data, 1);
+	buffer[1] = '\0';
+	return (guint8) g_ascii_strtoull (buffer, NULL, 16);
+}
+
+/**
  * dfu_utils_buffer_parse_uint8:
  * @data: a string
  *
@@ -250,6 +286,26 @@ dfu_utils_buffer_parse_uint16 (const gchar *data)
 	memcpy (buffer, data, 4);
 	buffer[4] = '\0';
 	return (guint16) g_ascii_strtoull (buffer, NULL, 16);
+}
+
+/**
+ * dfu_utils_buffer_parse_uint24:
+ * @data: a string
+ *
+ * Parses a base 16 number from a string.
+ *
+ * The string MUST be at least 6 bytes long as this function cannot check the
+ * length of @data. Checking the size must be done in the caller.
+ *
+ * Return value: A parsed value, or 0 for error
+ **/
+guint32
+dfu_utils_buffer_parse_uint24 (const gchar *data)
+{
+	gchar buffer[7];
+	memcpy (buffer, data, 6);
+	buffer[6] = '\0';
+	return (guint32) g_ascii_strtoull (buffer, NULL, 16);
 }
 
 /**

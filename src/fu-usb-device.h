@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #ifndef __FU_USB_DEVICE_H
@@ -31,6 +17,16 @@ G_BEGIN_DECLS
 
 #define FU_TYPE_USB_DEVICE (fu_usb_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)
+
+/* HID */
+#define HID_REPORT_GET					0x01
+#define HID_REPORT_SET					0x09
+
+#define HID_REPORT_TYPE_INPUT				0x01
+#define HID_REPORT_TYPE_OUTPUT				0x02
+#define HID_REPORT_TYPE_FEATURE				0x03
+
+#define HID_FEATURE					0x0300
 
 struct _FuUsbDeviceClass
 {

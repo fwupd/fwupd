@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -44,6 +30,7 @@ static void fwupd_device_finalize	 (GObject *object);
 
 typedef struct {
 	gchar				*id;
+	gchar				*parent_id;
 	guint64				 created;
 	guint64				 modified;
 	guint64				 flags;
@@ -65,6 +52,7 @@ typedef struct {
 	FwupdUpdateState		 update_state;
 	gchar				*update_error;
 	GPtrArray			*releases;
+	FwupdDevice			*parent;
 } FwupdDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdDevice, fwupd_device, G_TYPE_OBJECT)
@@ -181,6 +169,77 @@ fwupd_device_set_id (FwupdDevice *device, const gchar *id)
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	g_free (priv->id);
 	priv->id = g_strdup (id);
+}
+
+/**
+ * fwupd_device_get_parent_id:
+ * @device: A #FwupdDevice
+ *
+ * Gets the ID.
+ *
+ * Returns: the parent ID, or %NULL if unset
+ *
+ * Since: 1.0.8
+ **/
+const gchar *
+fwupd_device_get_parent_id (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->parent_id;
+}
+
+/**
+ * fwupd_device_set_parent_id:
+ * @device: A #FwupdDevice
+ * @parent_id: the device ID, e.g. `USB:foo`
+ *
+ * Sets the parent ID.
+ *
+ * Since: 1.0.8
+ **/
+void
+fwupd_device_set_parent_id (FwupdDevice *device, const gchar *parent_id)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_free (priv->parent_id);
+	priv->parent_id = g_strdup (parent_id);
+}
+
+/**
+ * fwupd_device_get_parent:
+ * @device: A #FwupdDevice
+ *
+ * Gets the parent.
+ *
+ * Returns: (transfer none): the parent device, or %NULL if unset
+ *
+ * Since: 1.0.8
+ **/
+FwupdDevice *
+fwupd_device_get_parent (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->parent;
+}
+
+/**
+ * fwupd_device_set_parent:
+ * @device: A #FwupdDevice
+ * @parent: another #FwupdDevice, or %NULL
+ *
+ * Sets the parent. Only used internally.
+ *
+ * Since: 1.0.8
+ **/
+void
+fwupd_device_set_parent (FwupdDevice *device, FwupdDevice *parent)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_set_object (&priv->parent, parent);
 }
 
 /**
@@ -825,6 +884,11 @@ fwupd_device_to_variant (FwupdDevice *device)
 				       FWUPD_RESULT_KEY_DEVICE_ID,
 				       g_variant_new_string (priv->id));
 	}
+	if (priv->parent_id != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_PARENT_DEVICE_ID,
+				       g_variant_new_string (priv->parent_id));
+	}
 	if (priv->guids->len > 0) {
 		const gchar * const *tmp = (const gchar * const *) priv->guids->pdata;
 		g_variant_builder_add (&builder, "{sv}",
@@ -960,6 +1024,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_ID) == 0) {
 		fwupd_device_set_id (device, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_PARENT_DEVICE_ID) == 0) {
+		fwupd_device_set_parent_id (device, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_FLAGS) == 0) {
@@ -1260,6 +1328,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	else
 		str = g_string_append (str, "Unknown Device\n");
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
 	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid = g_ptr_array_index (priv->guids, i);
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
@@ -1327,8 +1396,11 @@ fwupd_device_finalize (GObject *object)
 	FwupdDevice *device = FWUPD_DEVICE (object);
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 
+	if (priv->parent != NULL)
+		g_object_unref (priv->parent);
 	g_free (priv->description);
 	g_free (priv->id);
+	g_free (priv->parent_id);
 	g_free (priv->name);
 	g_free (priv->summary);
 	g_free (priv->vendor);

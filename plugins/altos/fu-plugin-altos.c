@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -78,8 +64,7 @@ fu_plugin_verify (FuPlugin *plugin,
 
 	/* get data */
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_VERIFY);
-	blob_fw = fu_altos_device_read_firmware (FU_ALTOS_DEVICE (dev),
-						 error);
+	blob_fw = fu_device_read_firmware (dev, error);
 	if (blob_fw == NULL)
 		return FALSE;
 	for (guint i = 0; checksum_types[i] != 0; i++) {
@@ -98,11 +83,5 @@ fu_plugin_update (FuPlugin *plugin,
 		  GError **error)
 {
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_altos_device_write_firmware (FU_ALTOS_DEVICE (dev),
-					     blob_fw,
-					     FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_REBOOT,
-					     error)) {
-		return FALSE;
-	}
-	return TRUE;
+	return fu_device_write_firmware (dev, blob_fw, error);
 }

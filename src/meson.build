@@ -1,8 +1,10 @@
 cargs = ['-DG_LOG_DOMAIN="Fu"']
 
-install_data(['org.freedesktop.fwupd.xml'],
-  install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
-)
+if get_option('daemon')
+  install_data(['org.freedesktop.fwupd.xml'],
+    install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
+  )
+endif
 
 keyring_deps = []
 keyring_src = []
@@ -44,7 +46,6 @@ libfwupdprivate = static_library(
     giounix,
     gudev,
     gusb,
-    polkit,
     soup,
     sqlite,
     libarchive,
@@ -52,18 +53,17 @@ libfwupdprivate = static_library(
   ],
   c_args : [
     cargs,
-    '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
-    '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
-    '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
 
+if get_option('daemon')
 fwupdmgr = executable(
   'fwupdmgr',
   sources : [
     'fu-util.c',
+    'fu-util-common.c',
   ],
   include_directories : [
     include_directories('..'),
@@ -74,7 +74,6 @@ fwupdmgr = executable(
     giounix,
     gudev,
     gusb,
-    polkit,
     soup,
     sqlite,
     libarchive,
@@ -86,14 +85,79 @@ fwupdmgr = executable(
   ],
   c_args : [
     cargs,
-    '-DLOCALSTATEDIR="' + localstatedir + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
   install_dir : bindir
 )
+endif
 
-if get_option('man')
+resources_src = gnome.compile_resources(
+  'fwupd-resources',
+  'fwupd.gresource.xml',
+  source_dir : '.',
+  c_name : 'fu'
+)
+
+fwupdtool = executable(
+  'fwupdtool',
+  resources_src,
+  sources : [
+    'fu-tool.c',
+    keyring_src,
+    'fu-common.c',
+    'fu-common-cab.c',
+    'fu-config.c',
+    'fu-keyring.c',
+    'fu-keyring-result.c',
+    'fu-engine.c',
+    'fu-hwids.c',
+    'fu-debug.c',
+    'fu-device.c',
+    'fu-device-list.c',
+    'fu-device-locker.c',
+    'fu-install-task.c',
+    'fu-keyring.c',
+    'fu-keyring-utils.c',
+    'fu-history.c',
+    'fu-plugin.c',
+    'fu-plugin-list.c',
+    'fu-quirks.c',
+    'fu-smbios.c',
+    'fu-usb-device.c',
+    'fu-util-common.c',
+  ],
+  include_directories : [
+    include_directories('..'),
+    include_directories('../libfwupd'),
+  ],
+  dependencies : [
+    keyring_deps,
+    appstream_glib,
+    libgcab,
+    giounix,
+    gmodule,
+    gudev,
+    gusb,
+    soup,
+    sqlite,
+    valgrind,
+    libarchive,
+  ],
+  link_with : [
+    fwupd,
+    libfwupdprivate,
+  ],
+  c_args : [
+    cargs,
+    '-DSYSFSFIRMWAREDIR="/sys/firmware"',
+    '-DFU_OFFLINE_DESTDIR=""',
+  ],
+  install : true,
+  install_dir : join_paths(libexecdir, 'fwupd')
+)
+
+if get_option('daemon') and get_option('man')
   help2man = find_program('help2man')
   custom_target('fwupdmgr-man',
     input : fwupdmgr,
@@ -111,13 +175,7 @@ if get_option('man')
   )
 endif
 
-resources_src = gnome.compile_resources(
-  'fwupd-resources',
-  'fwupd.gresource.xml',
-  source_dir : '.',
-  c_name : 'fu'
-)
-
+if get_option('daemon')
 executable(
   'fwupd',
   resources_src,
@@ -135,7 +193,9 @@ executable(
     'fu-device.c',
     'fu-device-list.c',
     'fu-device-locker.c',
+    'fu-install-task.c',
     'fu-keyring.c',
+    'fu-keyring-utils.c',
     'fu-history.c',
     'fu-plugin.c',
     'fu-plugin-list.c',
@@ -164,17 +224,13 @@ executable(
   link_with : fwupd,
   c_args : [
     cargs,
-    '-DLOCALSTATEDIR="' + localstatedir + '"',
-    '-DPLUGINDIR="' + plugin_dir + '"',
     '-DSYSFSFIRMWAREDIR="/sys/firmware"',
-    '-DSYSCONFDIR="' + default_sysconfdir + '"',
-    '-DFWUPDDATADIR="' + join_paths(datadir, 'fwupd') + '"',
-    '-DFWUPDCONFIGDIR="' + join_paths(default_sysconfdir, 'fwupd') + '"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
   install_dir : join_paths(libexecdir, 'fwupd')
 )
+endif
 
 if get_option('tests')
   testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
@@ -196,11 +252,13 @@ if get_option('tests')
       'fu-config.c',
       'fu-engine.c',
       'fu-keyring.c',
+      'fu-keyring-utils.c',
       'fu-hwids.c',
       'fu-device.c',
       'fu-device-list.c',
       'fu-device-locker.c',
       'fu-history.c',
+      'fu-install-task.c',
       'fu-keyring.c',
       'fu-keyring-result.c',
       'fu-plugin.c',
@@ -223,7 +281,6 @@ if get_option('tests')
       gmodule,
       gudev,
       gusb,
-      polkit,
       soup,
       sqlite,
       valgrind,
@@ -237,17 +294,16 @@ if get_option('tests')
       '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
       '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
-      '-DLOCALSTATEDIR="/tmp/fwupd-self-test/var"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
-      '-DPLUGINDIR="' + testdatadir_src + '"',
       '-DSYSFSFIRMWAREDIR="' + testdatadir_src + '"',
-      '-DFWUPDDATADIR="' + testdatadir_src + '"',
-      '-DSYSCONFDIR="' + testdatadir_src + '"',
-      '-DFWUPDCONFIGDIR="' + testdatadir_src + '"',
     ],
   )
-  test('fu-self-test', e, is_parallel:false)
+  test('fu-self-test', e, is_parallel:false,
+       env: ['FWUPD_DATADIR=' + testdatadir_src,
+             'FWUPD_SYSCONFDIR=' + testdatadir_src,
+             'FWUPD_PLUGINDIR=' + testdatadir_src,
+             'FWUPD_LOCALSTATEDIR=/tmp/fwupd-self-test/var'])
 endif
 
 if get_option('introspection')

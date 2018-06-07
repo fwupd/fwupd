@@ -2,21 +2,7 @@
  *
  * Copyright (C) 20157 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -182,4 +168,28 @@ dfu_chunked_new (const guint8 *data,
 							 data_sz - last_flush));
 	}
 	return segments;
+}
+
+/**
+ * dfu_chunked_new_from_bytes:
+ * @blob: a #GBytes
+ * @addr_start: the hardware address offset, or 0
+ * @page_sz: the hardware page size, or 0
+ * @packet_sz: the transfer size, or 0
+ *
+ * Chunks a linear blob of memory into packets, ensuring each packet does not
+ * cross a package boundary and is less that a specific transfer size.
+ *
+ * Return value: (element-type DfuChunkedPacket): array of packets
+ **/
+GPtrArray *
+dfu_chunked_new_from_bytes (GBytes *blob,
+			    guint32 addr_start,
+			    guint32 page_sz,
+			    guint32 packet_sz)
+{
+	gsize sz;
+	const guint8 *data = g_bytes_get_data (blob, &sz);
+	return dfu_chunked_new (data, (guint32) sz,
+				addr_start, page_sz, packet_sz);
 }

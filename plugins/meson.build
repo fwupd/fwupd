@@ -1,4 +1,5 @@
 subdir('dfu')
+subdir('colorhug')
 subdir('ebitdo')
 subdir('steelseries')
 subdir('nitrokey')
@@ -6,6 +7,7 @@ subdir('test')
 subdir('udev')
 subdir('unifying')
 subdir('upower')
+subdir('wacomhid')
 
 # depends on dfu
 subdir('csr')
@@ -18,13 +20,9 @@ if get_option('plugin_amt')
 subdir('amt')
 endif
 
-if get_option('plugin_thunderbolt') and udev.found()
+if get_option('plugin_thunderbolt')
 subdir('thunderbolt')
 subdir('thunderbolt-power')
-endif
-
-if get_option('plugin_colorhug')
-subdir('colorhug')
 endif
 
 if get_option('plugin_dell')

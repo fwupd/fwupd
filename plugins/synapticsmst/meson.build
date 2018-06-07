@@ -15,34 +15,10 @@ shared_module('fu_plugin_synapticsmst',
   install_dir: plugin_dir,
   c_args : [
       cargs,
-      '-DLOCALSTATEDIR="' + localstatedir + '"',
     ],
   dependencies : [
     plugin_deps,
-    efivar,
   ],
-  # https://github.com/hughsie/fwupd/issues/207
-  override_options : [
-    'werror=false',
-  ]
-)
-
-executable(
-  'synapticsmst-tool',
-  sources : [
-    'synapticsmst-tool.c',
-    'synapticsmst-device.c',
-    'synapticsmst-common.c',
-  ],
-  include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
-  ],
-  dependencies : [
-    plugin_deps,
-  ],
-  c_args : cargs,
   # https://github.com/hughsie/fwupd/issues/207
   override_options : [
     'werror=false',
@@ -74,8 +50,8 @@ if get_option('tests')
     ],
     c_args : [
       cargs,
-      '-DLOCALSTATEDIR="/tmp/fwupd-self-test/var"',
     ],
   )
-  test('synapticsmst-self-test', e)
+  test('synapticsmst-self-test', e,
+    env: ['FWUPD_LOCALSTATEDIR=/tmp/fwupd-self-test/var'])
 endif

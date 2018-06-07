@@ -1,16 +1,16 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the fwupd package.
-# 
+#
 # Translators:
 # Piotr Drąg <piotrdrag@gmail.com>, 2015-2018
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-12 10:37+0000\n"
-"PO-Revision-Date: 2018-03-12 10:37+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2018-06-06 14:54+0100\n"
+"PO-Revision-Date: 2018-06-06 15:55+0000\n"
+"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish (http://www.transifex.com/freedesktop/fwupd/language/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -18,981 +18,847 @@ msgstr ""
 "Language: pl\n"
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
 
-#: data/org.freedesktop.fwupd.metainfo.xml:7
-msgid "fwupd"
-msgstr "fwupd"
+#. TRANSLATORS: first replacement is device name
+#, c-format
+msgid "%s has firmware updates:"
+msgstr "Dostępne są aktualizacje oprogramowania sprzętowego dla urządzenia %s:"
 
-#: data/org.freedesktop.fwupd.metainfo.xml:8
-msgid "Update device firmware on Linux"
-msgstr "Aktualizowanie oprogramowania sprzętowego w systemie Linux"
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Added"
+msgstr "Dodano"
 
-#: data/org.freedesktop.fwupd.metainfo.xml:10
-msgid ""
-"This project aims to make updating firmware on Linux automatic, safe and "
-"reliable. You can either use a GUI software manager like GNOME Software to "
-"view and apply updates, the command-line tool or the D-Bus interface "
-"directly."
-msgstr "Celem projektu jest automatyczne, bezpieczne i pewne aktualizowanie oprogramowania sprzętowego w systemie Linux. Można używać graficznego menedżera oprogramowania, takiego jak Menedżer oprogramowania GNOME do wyświetlania i zastosowywania aktualizacji, narzędzia wiersza poleceń lub bezpośrednio interfejsu D-Bus."
+#. TRANSLATORS: the age of the metadata
+msgid "Age"
+msgstr "Wiek"
 
-#: data/org.freedesktop.fwupd.metainfo.xml:16
-msgid ""
-"The fwupd process is a simple daemon to allow session software to update "
-"device firmware on your local machine. It is designed for desktops, but this"
-" project is also usable on phones, tablets and on headless servers."
-msgstr "Proces fwupd to prosta usługa umożliwiająca aktualizowanie oprogramowania sprzętowego komputera w sesji użytkownika. Jest zaprojektowana dla komputerów osobistych, ale można jej używać także na telefonach, tabletach i serwerach bez monitorów."
-
-#: policy/org.freedesktop.fwupd.policy.in:17
-msgid "Install signed system firmware"
-msgstr "Instalacja podpisanego oprogramowania sprzętowego komputera"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-#: policy/org.freedesktop.fwupd.policy.in:19
-#: policy/org.freedesktop.fwupd.policy.in:30
-msgid "Authentication is required to update the firmware on this machine"
-msgstr "Wymagane jest uwierzytelnienie, aby zaktualizować oprogramowanie sprzętowe tego komputera"
-
-#: policy/org.freedesktop.fwupd.policy.in:28
-msgid "Install unsigned system firmware"
-msgstr "Instalacja niepodpisanego oprogramowania sprzętowego komputera"
-
-#: policy/org.freedesktop.fwupd.policy.in:39
-msgid "Install old version of system firmware"
-msgstr "Instalacja poprzedniej wersji oprogramowania sprzętowego komputera"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-#: policy/org.freedesktop.fwupd.policy.in:41
-msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "Wymagane jest uwierzytelnienie, aby zainstalować poprzednią wersję oprogramowania sprzętowego tego komputera"
-
-#: policy/org.freedesktop.fwupd.policy.in:50
-msgid "Install signed device firmware"
-msgstr "Instalacja podpisanego oprogramowania sprzętowego urządzenia"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-#: policy/org.freedesktop.fwupd.policy.in:52
-#: policy/org.freedesktop.fwupd.policy.in:63
-msgid ""
-"Authentication is required to update the firmware on a removable device"
-msgstr "Wymagane jest uwierzytelnienie, aby zaktualizować oprogramowanie sprzętowe wymiennego urządzenia"
-
-#: policy/org.freedesktop.fwupd.policy.in:61
-#: policy/org.freedesktop.fwupd.policy.in:72
-msgid "Install unsigned device firmware"
-msgstr "Instalacja niepodpisanego oprogramowania sprzętowego urządzenia"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-#: policy/org.freedesktop.fwupd.policy.in:74
-msgid ""
-"Authentication is required to downgrade the firmware on a removable device"
-msgstr "Wymagane jest uwierzytelnienie, aby zainstalować poprzednią wersję oprogramowania sprzętowego urządzenia wymiennego"
-
-#: policy/org.freedesktop.fwupd.policy.in:83
-msgid "Unlock the device to allow access"
-msgstr "Odblokowanie urządzenia"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-#: policy/org.freedesktop.fwupd.policy.in:85
-msgid "Authentication is required to unlock a device"
-msgstr "Wymagane jest uwierzytelnienie, aby odblokować urządzenie"
-
-#: policy/org.freedesktop.fwupd.policy.in:94
-msgid "Update the stored device verification information"
-msgstr "Aktualizacja przechowywanych informacji o poprawności urządzenia"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-#: policy/org.freedesktop.fwupd.policy.in:96
-msgid ""
-"Authentication is required to update the stored checksums for the device"
-msgstr "Wymagane jest uwierzytelnienie, aby zaktualizować przechowywane sumy kontrolne dla urządzenia"
-
-#: policy/org.freedesktop.fwupd.policy.in:105
-msgid "Modify a configured remote"
-msgstr "Modyfikacja skonfigurowanego repozytorium"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-#: policy/org.freedesktop.fwupd.policy.in:107
-msgid ""
-"Authentication is required to modify a configured remote used for firmware "
-"updates"
-msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować skonfigurowane repozytorium używane do aktualizacji oprogramowania sprzętowego"
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "Wyrazić zgodę i włączyć repozytorium?"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
-#: plugins/dfu/dfu-tool.c:124 plugins/synapticsmst/synapticsmst-tool.c:105
-#: src/fu-util.c:120
 #, c-format
 msgid "Alias to %s"
 msgstr "Alias do „%s”"
 
-#. TRANSLATORS: error message
-#: plugins/dfu/dfu-tool.c:192 plugins/synapticsmst/synapticsmst-tool.c:347
-#: src/fu-util.c:184
-msgid "Command not found"
-msgstr "Nie odnaleziono polecenia"
+#. TRANSLATORS: command line option
+msgid "Allow downgrading firmware versions"
+msgstr "Umożliwia instalowanie poprzednich wersji oprogramowania sprzętowego"
 
-#. TRANSLATORS: this is when a device is hotplugged
-#: plugins/dfu/dfu-tool.c:1458
-msgid "Added"
-msgstr "Dodano"
+#. TRANSLATORS: command line option
+msgid "Allow re-installing existing firmware versions"
+msgstr "Umożliwia ponowne instalowanie istniejących wersji oprogramowania sprzętowego"
 
-#. TRANSLATORS: this is when a device is hotplugged
-#: plugins/dfu/dfu-tool.c:1469
-msgid "Removed"
-msgstr "Usunięto"
+#. TRANSLATORS: explain why we want to upload
+msgid "An update requires a reboot to complete."
+msgstr "Ukończenie aktualizacji wymaga ponownego uruchomienia."
 
-#. TRANSLATORS: this is when a device is hotplugged
-#. TRANSLATORS: this is when the daemon state changes
-#: plugins/dfu/dfu-tool.c:1478 src/fu-util.c:1768
-msgid "Changed"
-msgstr "Zmieniono"
-
-#. TRANSLATORS: this is when a device ctrl+c's a watch
-#: plugins/dfu/dfu-tool.c:1486 src/fu-util.c:1730
-msgid "Cancelled"
-msgstr "Anulowano"
-
-#. TRANSLATORS: Appstream ID for the hardware type
-#: plugins/dfu/dfu-tool.c:1978 src/fu-util.c:1549
-msgid "ID"
-msgstr "Identyfikator"
-
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
-#: plugins/dfu/dfu-tool.c:1984 plugins/dfu/dfu-tool.c:1990
-#: plugins/dfu/dfu-tool.c:2104 src/fu-util.c:1321
-msgid "Name"
-msgstr "Nazwa"
-
-#. TRANSLATORS: this is the encryption method used when writing
-#: plugins/dfu/dfu-tool.c:1997
-msgid "Cipher"
-msgstr "Szyfr"
-
-#. TRANSLATORS: these are areas of memory on the chip
-#: plugins/dfu/dfu-tool.c:2011
-msgid "Region"
-msgstr "Region"
-
-#. TRANSLATORS: detected a DFU device
-#: plugins/dfu/dfu-tool.c:2064
-msgid "Found"
-msgstr "Odnaleziono"
-
-#. TRANSLATORS: DFU protocol version, e.g. 1.1
-#: plugins/dfu/dfu-tool.c:2072
-msgid "Protocol"
-msgstr "Protokół"
-
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-#: plugins/dfu/dfu-tool.c:2082 plugins/dfu/dfu-tool.c:2091
-#: plugins/dfu/dfu-tool.c:2097 plugins/dfu/dfu-tool.c:2119
-msgid "Status"
-msgstr "Stan"
-
-#: plugins/dfu/dfu-tool.c:2082
-msgid "Permission denied"
-msgstr "Brak uprawnień"
-
-#. TRANSLATORS: serial number, e.g. '00012345'
-#: plugins/dfu/dfu-tool.c:2110
-msgid "Serial"
-msgstr "Numer seryjny"
-
-#: plugins/dfu/dfu-tool.c:2115
-msgid "Mode"
-msgstr "Tryb"
-
-#: plugins/dfu/dfu-tool.c:2115
-msgid "Runtime"
-msgstr "Uruchamianie systemu"
-
-#: plugins/dfu/dfu-tool.c:2115
-msgid "DFU"
-msgstr "DFU"
-
-#. TRANSLATORS: device state, i.e. appIDLE
-#: plugins/dfu/dfu-tool.c:2123
-msgid "State"
-msgstr "Stan"
-
-#. TRANSLATORS: transfer size in bytes
-#: plugins/dfu/dfu-tool.c:2131
-msgid "Transfer Size"
-msgstr "Rozmiar przesyłania"
-
-#. TRANSLATORS: device attributes, i.e. things that
-#. * the device can do
-#: plugins/dfu/dfu-tool.c:2139
-msgid "Attributes"
-msgstr "Atrybuty"
-
-#. TRANSLATORS: device quirks, i.e. things that
-#. * it does that we have to work around
-#: plugins/dfu/dfu-tool.c:2147
-msgid "Quirks"
-msgstr "Poprawki"
-
-#. TRANSLATORS: chip ID, e.g. "0x58200204"
-#: plugins/dfu/dfu-tool.c:2154
-msgid "Chip ID"
-msgstr "Identyfikator układu"
+#. TRANSLATORS: command line option
+msgid "Answer yes to all questions"
+msgstr "Odpowiada tak na wszystkie pytania"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2234
-msgid "Convert firmware to DFU format"
-msgstr "Konwertuje oprogramowanie sprzętowe do formatu DFU"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2240
-msgid "Merge multiple firmware files into one"
-msgstr "Łączy wiele plików oprogramowania sprzętowego w jeden plik"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2246
-msgid "Set vendor ID on firmware file"
-msgstr "Ustawia identyfikator producenta pliku oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2252
-msgid "Set product ID on firmware file"
-msgstr "Ustawia identyfikator produktu pliku oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2258
-msgid "Set element address on firmware file"
-msgstr "Ustawia adres elementu pliku oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2264
-msgid "Set the firmware size for the target"
-msgstr "Ustawia rozmiar oprogramowania sprzętowego dla celu"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2270
-msgid "Set release version on firmware file"
-msgstr "Ustawia wersję wydania pliku oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2276
-msgid "Set alternative number on firmware file"
-msgstr "Ustawia alternatywny numer pliku oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2282
-msgid "Set alternative name on firmware file"
-msgstr "Ustawia alternatywną nazwę pliku oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2288
-msgid "Attach DFU capable device back to runtime"
-msgstr "Podłącza urządzenie DFU z powrotem do uruchamiania systemu"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2294
-msgid "Reset a DFU device"
-msgstr "Przywraca urządzenie DFU"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2300
-msgid "Read firmware from device into a file"
-msgstr "Odczytuje oprogramowanie sprzętowe z urządzenia do pliku"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2306
-msgid "Read firmware from one partition into a file"
-msgstr "Odczytuje oprogramowanie sprzętowe z jednej partycji do pliku"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2312
-msgid "Write firmware from file into device"
-msgstr "Zapisuje oprogramowanie sprzętowe z pliku na urządzenie"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2318
-msgid "Write firmware from file into one partition"
-msgstr "Zapisuje oprogramowanie sprzętowe z pliku na jedną partycję"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2324
-msgid "List currently attached DFU capable devices"
-msgstr "Wyświetla listę obecnie podłączonych urządzeń DFU"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2330
-msgid "Detach currently attached DFU capable device"
-msgstr "Odłącza obecnie podłączone urządzenie DFU"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2336
-msgid "Dump details about a firmware file"
-msgstr "Zrzuca informacje o pliku oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2342
-msgid "Watch DFU devices being hotplugged"
-msgstr "Obserwuje podłączanie urządzeń DFU w czasie działania"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2348
-msgid "Encrypt firmware data"
-msgstr "Szyfruje dane oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2354
-msgid "Decrypt firmware data"
-msgstr "Odszyfrowuje dane oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2360
-msgid "Sets metadata on a firmware file"
-msgstr "Ustawia metadane pliku oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2366
-msgid "Replace data in an existing firmware file"
-msgstr "Zastępuje dane w istniejącym pliku oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2372
-msgid "Create a binary patch using two files"
-msgstr "Tworzy binarną łatę z dwóch plików"
-
-#. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2378
 msgid "Apply a binary patch"
 msgstr "Zastosowuje binarną łatę"
 
 #. TRANSLATORS: command description
-#: plugins/dfu/dfu-tool.c:2384
-msgid "Dump information about a binary patch to the screen"
-msgstr "Zrzuca informacje o binarnej łacie na ekran"
-
-#. TRANSLATORS: quirks are device-specific workarounds
-#: plugins/dfu/dfu-tool.c:2396
-msgid "Failed to load quirks"
-msgstr "Wczytanie poprawek się nie powiodło"
-
-#. TRANSLATORS: DFU stands for device firmware update
-#: plugins/dfu/dfu-tool.c:2418
-msgid "DFU Utility"
-msgstr "Narzędzie DFU"
-
-#. TRANSLATORS: the user didn't read the man page
-#: plugins/dfu/dfu-tool.c:2423 plugins/synapticsmst/synapticsmst-tool.c:424
-#: src/fu-util.c:2339
-msgid "Failed to parse arguments"
-msgstr "Przetworzenie parametrów się nie powiodło"
+msgid "Attach DFU capable device back to runtime"
+msgstr "Podłącza urządzenie DFU z powrotem do uruchamiania systemu"
 
 #. TRANSLATORS: command description
-#: plugins/synapticsmst/synapticsmst-tool.c:393
-msgid "Enumerate all Synaptics MST devices"
-msgstr "Wylicza wszystkie urządzenia MST firmy Synaptics"
+msgid "Attach to firmware mode"
+msgstr "Podłącza do trybu oprogramowania sprzętowego"
 
-#. TRANSLATORS: command description
-#: plugins/synapticsmst/synapticsmst-tool.c:399
-msgid "Flash firmware file to MST device"
-msgstr "Zapisuje oprogramowanie sprzętowe w urządzeniu MST"
-
-#: plugins/synapticsmst/synapticsmst-tool.c:419
-msgid "Synaptics Multistream Transport Utility"
-msgstr "Narzędzie wielostrumieniowego przesyłania Synaptics"
-
-#. TRANSLATORS: this is shown when updating the firmware after the reboot
-#: plugins/uefi/fu-plugin-uefi.c:403
-msgid "Installing firmware update…"
-msgstr "Instalowanie aktualizacji oprogramowania sprzętowego…"
-
-#. TRANSLATORS: turn on all debugging
-#: src/fu-debug.c:128
-msgid "Show debugging information for all files"
-msgstr "Wyświetla informacje o debugowaniu dla wszystkich plików"
-
-#. TRANSLATORS: this is for plugin development
-#: src/fu-debug.c:131
-msgid "Show plugin verbose information"
-msgstr "Wyświetla więcej informacji o wtyczkach"
-
-#. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:186
-msgid "Debugging Options"
-msgstr "Opcje debugowania"
-
-#. TRANSLATORS: for the --verbose arg
-#: src/fu-debug.c:188
-msgid "Show debugging options"
-msgstr "Wyświetla opcje debugowania"
-
-#. TRANSLATORS: exit after we've started up, used for user profiling
-#: src/fu-main.c:1036
-msgid "Exit after a small delay"
-msgstr "Kończy działanie po małym opóźnieniu"
-
-#. TRANSLATORS: exit straight away, used for automatic profiling
-#: src/fu-main.c:1039
-msgid "Exit after the engine has loaded"
-msgstr "Kończy działanie po wczytaniu mechanizmu"
-
-#. TRANSLATORS: program name
-#: src/fu-main.c:1053
-msgid "Firmware Update Daemon"
-msgstr "Usługa aktualizacji oprogramowania sprzętowego"
-
-#. TRANSLATORS: program summary
-#: src/fu-main.c:1058
-msgid "Firmware Update D-Bus Service"
-msgstr "Usługa D-Bus aktualizacji oprogramowania sprzętowego"
-
-#. TRANSLATORS: daemon is inactive
-#: src/fu-progressbar.c:52
-msgid "Idle…"
-msgstr "Bezczynne…"
-
-#. TRANSLATORS: decompressing the firmware file
-#: src/fu-progressbar.c:56
-msgid "Decompressing…"
-msgstr "Dekompresowanie…"
-
-#. TRANSLATORS: parsing the firmware information
-#: src/fu-progressbar.c:60
-msgid "Loading…"
-msgstr "Wczytywanie…"
-
-#. TRANSLATORS: restarting the device to pick up new F/W
-#: src/fu-progressbar.c:64
-msgid "Restarting device…"
-msgstr "Ponowne uruchamianie urządzenia…"
-
-#. TRANSLATORS: reading from the flash chips
-#: src/fu-progressbar.c:68
-msgid "Reading…"
-msgstr "Odczytywanie…"
-
-#. TRANSLATORS: writing to the flash chips
-#: src/fu-progressbar.c:72
-msgid "Writing…"
-msgstr "Zapisywanie…"
-
-#. TRANSLATORS: erasing contents of the flash chips
-#: src/fu-progressbar.c:76
-msgid "Erasing…"
-msgstr "Usuwanie zawartości…"
-
-#. TRANSLATORS: verifying we wrote the firmware correctly
-#: src/fu-progressbar.c:80
-msgid "Verifying…"
-msgstr "Sprawdzanie poprawności…"
-
-#. TRANSLATORS: scheduing an update to be done on the next boot
-#: src/fu-progressbar.c:84
-msgid "Scheduling…"
-msgstr "Planowanie…"
-
-#. TRANSLATORS: downloading from a remote server
-#: src/fu-progressbar.c:88
-msgid "Downloading…"
-msgstr "Pobieranie…"
+#. TRANSLATORS: device attributes, i.e. things that
+#. * the device can do
+msgid "Attributes"
+msgstr "Atrybuty"
 
 #. TRANSLATORS: waiting for user to authenticate
-#: src/fu-progressbar.c:92
 msgid "Authenticating…"
 msgstr "Uwierzytelnianie…"
 
-#. TRANSLATORS: waiting for device to do something
-#: src/fu-progressbar.c:96
-msgid "Waiting…"
-msgstr "Oczekiwanie…"
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on a removable device"
+msgstr "Wymagane jest uwierzytelnienie, aby zainstalować poprzednią wersję oprogramowania sprzętowego urządzenia wymiennego"
 
-#. TRANSLATORS: currect daemon status is unknown
-#: src/fu-progressbar.c:103
-msgid "Unknown"
-msgstr "Nieznane"
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr "Wymagane jest uwierzytelnienie, aby zainstalować poprzednią wersję oprogramowania sprzętowego tego komputera"
 
-#. TRANSLATORS: the user isn't reading the question
-#: src/fu-util.c:242
-#, c-format
-msgid "Please enter a number from 0 to %u: "
-msgstr ""
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a configured remote used for firmware updates"
+msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować skonfigurowane repozytorium używane do aktualizacji oprogramowania sprzętowego"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr "Wymagane jest uwierzytelnienie, aby odblokować urządzenie"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr "Wymagane jest uwierzytelnienie, aby zaktualizować oprogramowanie sprzętowe wymiennego urządzenia"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "Wymagane jest uwierzytelnienie, aby zaktualizować oprogramowanie sprzętowe tego komputera"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the stored checksums for the device"
+msgstr "Wymagane jest uwierzytelnienie, aby zaktualizować przechowywane sumy kontrolne dla urządzenia"
+
+#. TRANSLATORS: command description
+msgid "Build firmware using a sandbox"
+msgstr "Buduje oprogramowanie sprzętowe za pomocą piaskownicy"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "Anuluj"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+msgid "Cancelled"
+msgstr "Anulowano"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "Zmieniono"
+
+#. TRANSLATORS: section header for firmware checksum
+#. TRANSLATORS: remote checksum
+msgid "Checksum"
+msgstr "Suma kontrolna"
+
+#. TRANSLATORS: chip ID, e.g. "0x58200204"
+msgid "Chip ID"
+msgstr "Identyfikator układu"
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:305
 msgid "Choose a device:"
 msgstr "Wybór urządzenia:"
 
-#. TRANSLATORS: this is to abort the interactive prompt
-#: src/fu-util.c:307
-msgid "Cancel"
-msgstr ""
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a release:"
+msgstr "Wybór wydania:"
 
-#. TRANSLATORS: a list of failed updates
-#: src/fu-util.c:427
-msgid "Devices that were not updated correctly:"
-msgstr "Urządzenia, które nie zostały poprawnie zaktualizowane:"
+#. TRANSLATORS: this is the encryption method used when writing
+msgid "Cipher"
+msgstr "Szyfr"
+
+#. TRANSLATORS: command description
+msgid "Clears any updates scheduled to be updated offline"
+msgstr "Usuwa wszystkie zaplanowane aktualizacje w trybie offline"
+
+#. TRANSLATORS: command description
+msgid "Clears the results from the last update"
+msgstr "Usuwa wyniki z ostatniej aktualizacji"
+
+#. TRANSLATORS: error message
+msgid "Command not found"
+msgstr "Nie odnaleziono polecenia"
+
+#. TRANSLATORS: command description
+msgid "Convert firmware to DFU format"
+msgstr "Konwertuje oprogramowanie sprzętowe do formatu DFU"
+
+#. TRANSLATORS: command description
+msgid "Create a binary patch using two files"
+msgstr "Tworzy binarną łatę z dwóch plików"
+
+msgid "DFU"
+msgstr "DFU"
+
+#. TRANSLATORS: DFU stands for device firmware update
+msgid "DFU Utility"
+msgstr "Narzędzie DFU"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Debugging Options"
+msgstr "Opcje debugowania"
+
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing…"
+msgstr "Dekompresowanie…"
+
+#. TRANSLATORS: command description
+msgid "Decrypt firmware data"
+msgstr "Odszyfrowuje dane oprogramowania sprzętowego"
+
+#. TRANSLATORS: section header for firmware description
+msgid "Description"
+msgstr "Opis"
+
+#. TRANSLATORS: command description
+msgid "Detach currently attached DFU capable device"
+msgstr "Odłącza obecnie podłączone urządzenie DFU"
+
+#. TRANSLATORS: command description
+msgid "Detach to bootloader mode"
+msgstr "Odłącza do trybu programu startowego"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "Dodano urządzenie:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "Zmieniono urządzenie:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "Usunięto urządzenie:"
 
 #. TRANSLATORS: a list of successful updates
-#: src/fu-util.c:441
 msgid "Devices that have been updated successfully:"
 msgstr "Pomyślnie zaktualizowane urządzenia:"
 
-#. TRANSLATORS: explain why we want to upload
-#: src/fu-util.c:455
-msgid "Upload report now?"
-msgstr "Wysłać zgłoszenie?"
+#. TRANSLATORS: a list of failed updates
+msgid "Devices that were not updated correctly:"
+msgstr "Urządzenia, które nie zostały poprawnie zaktualizowane:"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
-#: src/fu-util.c:457 src/fu-util.c:1490
-msgid "Requires internet connection"
-msgstr "Wymaga połączenia z Internetem"
+#. TRANSLATORS: command description
+msgid "Disables a given remote"
+msgstr "Wyłącza podane repozytorium"
 
-#. TRANSLATORS: nothing attached that can be upgraded
-#: src/fu-util.c:479
-msgid "No hardware detected with firmware update capability"
-msgstr "Nie wykryto sprzętu z możliwością aktualizacji jego oprogramowania"
+#. TRANSLATORS: command line option
+msgid "Do not check for old metadata"
+msgstr "Bez sprawdzania przestarzałych metadanych"
 
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#: src/fu-util.c:651
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "Ponowne instalowanie %s za pomocą %s… "
+#. TRANSLATORS: command line option
+msgid "Do not check for reboot after update"
+msgstr "Bez sprawdzania potrzeby ponownego uruchomienia po aktualizacji"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for unreported history"
+msgstr "Bez sprawdzania niezgłoszonej historii"
+
+#. TRANSLATORS: command line option
+msgid "Do not write to the history database"
+msgstr "Bez zapisywania do bazy danych historii"
+
+msgid "Done!"
+msgstr "Gotowe."
+
+#. TRANSLATORS: command description
+msgid "Downgrades the firmware on a device"
+msgstr "Instaluje poprzednią wersję oprogramowania sprzętowego urządzenia"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:658
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "Instalowanie poprzedniej wersji %s z %s do %s… "
 
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#: src/fu-util.c:666
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "Aktualizowanie %s z wersji %s do %s… "
+#. TRANSLATORS: downloading from a remote server
+msgid "Downloading…"
+msgstr "Pobieranie…"
 
-#: src/fu-util.c:694
-msgid "Done!"
-msgstr "Gotowe."
+#. TRANSLATORS: command description
+msgid "Dump SMBIOS data from a file"
+msgstr "Zrzuca dane SMBIOS z pliku"
 
-#: src/fu-util.c:726
-msgid "Target"
-msgstr "Cel"
+#. TRANSLATORS: command description
+msgid "Dump details about a firmware file"
+msgstr "Zrzuca informacje o pliku oprogramowania sprzętowego"
 
-#: src/fu-util.c:727
-msgid "Payload"
-msgstr "Dane"
+#. TRANSLATORS: command description
+msgid "Dump information about a binary patch to the screen"
+msgstr "Zrzuca informacje o binarnej łacie na ekran"
 
-#: src/fu-util.c:728
-msgid "Proceed with upload?"
-msgstr "Kontynuować wysyłanie?"
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "Włączyć to repozytorium?"
 
-#. TRANSLATORS: the server sent the user a small message
-#: src/fu-util.c:807
-msgid "Update failure is a known issue, visit this URL for more information:"
-msgstr "Niepowodzenie aktualizacji to znany problem, pod tym adresem dostępnych jest więcej informacji:"
+#. TRANSLATORS: if the remote is enabled
+msgid "Enabled"
+msgstr "Włączone"
 
-#. TRANSLATORS: the server sent the user a small message
-#: src/fu-util.c:811
-msgid "Upload message:"
-msgstr "Komunikat wysyłania:"
+#. TRANSLATORS: command description
+msgid "Enables a given remote"
+msgstr "Włącza podane repozytorium"
 
-#: src/fu-util.c:1034 src/fu-util.c:1414
-msgid "OK"
-msgstr "OK"
+#. TRANSLATORS: show the user a warning
+msgid "Enabling this remote is done at your own risk."
+msgstr "Włączenie tego repozytorium wykonywane jest na własne ryzyko."
 
-#. TRANSLATORS: downloading new signing file
-#: src/fu-util.c:1139
-msgid "Fetching signature"
-msgstr "Pobieranie podpisu"
+#. TRANSLATORS: command description
+msgid "Encrypt firmware data"
+msgstr "Szyfruje dane oprogramowania sprzętowego"
 
-#. TRANSLATORS: downloading new metadata file
-#: src/fu-util.c:1142
-msgid "Fetching metadata"
-msgstr "Pobieranie metadanych"
+#. TRANSLATORS: command description
+msgid "Erase all firmware update history"
+msgstr "Usuwa całą historię aktualizacji oprogramowania sprzętowego"
 
-#. TRANSLATORS: downloading new firmware file
-#: src/fu-util.c:1145
-msgid "Fetching firmware"
-msgstr "Pobieranie oprogramowania sprzętowego"
+#. TRANSLATORS: erasing contents of the flash chips
+msgid "Erasing…"
+msgstr "Usuwanie zawartości…"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+msgid "Exit after a small delay"
+msgstr "Kończy działanie po małym opóźnieniu"
+
+#. TRANSLATORS: exit straight away, used for automatic profiling
+msgid "Exit after the engine has loaded"
+msgstr "Kończy działanie po wczytaniu mechanizmu"
+
+#. TRANSLATORS: the server is rate-limiting downloads
+msgid "Failed to download due to server limit"
+msgstr "Pobranie się nie powiodło z powodu ograniczenia serwera"
+
+#. TRANSLATORS: quirks are device-specific workarounds
+msgid "Failed to load quirks"
+msgstr "Wczytanie poprawek się nie powiodło"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "Przetworzenie parametrów się nie powiodło"
 
 #. TRANSLATORS: downloading unknown file
-#: src/fu-util.c:1148
 msgid "Fetching file"
 msgstr "Pobieranie pliku"
 
-#. TRANSLATORS: section header for release version number
-#: src/fu-util.c:1318
-msgid "Version"
-msgstr "Wersja"
+#. TRANSLATORS: downloading new firmware file
+msgid "Fetching firmware"
+msgstr "Pobieranie oprogramowania sprzętowego"
 
-#. TRANSLATORS: section header for the release one line summary
-#: src/fu-util.c:1324
-msgid "Summary"
-msgstr "Podsumowanie"
+#. TRANSLATORS: downloading new metadata file
+msgid "Fetching metadata"
+msgstr "Pobieranie metadanych"
 
-#. TRANSLATORS: section header for the remote the file is coming from
-#: src/fu-util.c:1327
-msgid "Remote"
-msgstr "Repozytorium"
+#. TRANSLATORS: downloading new signing file
+msgid "Fetching signature"
+msgstr "Pobieranie podpisu"
 
-#. TRANSLATORS: section header for firmware URI
-#: src/fu-util.c:1330
-msgid "URI"
-msgstr "Adres URI"
+#. TRANSLATORS: filename of the local file
+msgid "Filename"
+msgstr "Nazwa pliku"
 
-#. TRANSLATORS: section header for firmware description
-#: src/fu-util.c:1336
-msgid "Description"
-msgstr "Opis"
+#. TRANSLATORS: filename of the local file
+msgid "Filename Signature"
+msgstr "Podpis nazwy pliku"
 
-#. TRANSLATORS: section header for firmware checksum
-#. TRANSLATORS: remote checksum
-#: src/fu-util.c:1344 src/fu-util.c:1640
-msgid "Checksum"
-msgstr "Suma kontrolna"
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Podstawowy adres URI oprogramowania sprzętowego"
 
-#. TRANSLATORS: get interactive prompt
-#: src/fu-util.c:1376
-msgid "Choose a release:"
-msgstr "Wybór wydania:"
+#. TRANSLATORS: program summary
+msgid "Firmware Update D-Bus Service"
+msgstr "Usługa D-Bus aktualizacji oprogramowania sprzętowego"
+
+#. TRANSLATORS: program name
+msgid "Firmware Update Daemon"
+msgstr "Usługa aktualizacji oprogramowania sprzętowego"
+
+#. TRANSLATORS: program name
+msgid "Firmware Utility"
+msgstr "Narzędzie oprogramowania sprzętowego"
 
 #. TRANSLATORS: the metadata is very out of date; %u is a number > 1
-#: src/fu-util.c:1480
 #, c-format
-msgid ""
-"Firmware metadata has not been updated for %u day and may not be up to date."
-msgid_plural ""
-"Firmware metadata has not been updated for %u days and may not be up to "
-"date."
+msgid "Firmware metadata has not been updated for %u day and may not be up to date."
+msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane przez %u dzień i mogą nie być aktualne."
 msgstr[1] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane przez %u dni i mogą nie być aktualne."
 msgstr[2] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane przez %u dni i mogą nie być aktualne."
 msgstr[3] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane przez %u dni i mogą nie być aktualne."
 
-#. TRANSLATORS: ask the user if we can update the metadata
-#: src/fu-util.c:1488
-msgid "Update now?"
-msgstr "Zaktualizować teraz?"
+#. TRANSLATORS: detected a DFU device
+msgid "Found"
+msgstr "Odnaleziono"
 
-#. TRANSLATORS: first replacement is device name
-#: src/fu-util.c:1533
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "Dostępne są aktualizacje oprogramowania sprzętowego dla urządzenia %s:"
-
-#: src/fu-util.c:1540
 msgid "GUID"
 msgstr "GUID"
 
-#. TRANSLATORS: section header for firmware version
-#: src/fu-util.c:1552
-msgid "Update Version"
-msgstr "Wersja aktualizacji"
-
-#. TRANSLATORS: section header for the release name
-#: src/fu-util.c:1556
-msgid "Update Name"
-msgstr "Nazwa aktualizacji"
-
-#. TRANSLATORS: section header for the release one line summary
-#: src/fu-util.c:1559
-msgid "Update Summary"
-msgstr "Podsumowanie aktualizacji"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-#: src/fu-util.c:1562
-msgid "Update Remote ID"
-msgstr "Identyfikator repozytorium aktualizacji"
-
-#. TRANSLATORS: section header for firmware checksum
-#: src/fu-util.c:1571
-msgid "Update Checksum"
-msgstr "Suma kontrolna aktualizacji"
-
-#. TRANSLATORS: section header for firmware remote http://
-#: src/fu-util.c:1575
-msgid "Update Location"
-msgstr "Położenie aktualizacji"
-
-#. TRANSLATORS: section header for long firmware desc
-#: src/fu-util.c:1586
-msgid "Update Description"
-msgstr "Opis aktualizacji"
-
-#. TRANSLATORS: remote identifier, e.g. lvfs-testing
-#: src/fu-util.c:1618
-msgid "Remote ID"
-msgstr "Identyfikator repozytorium"
-
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-#: src/fu-util.c:1622
-msgid "Title"
-msgstr "Tytuł"
-
-#. TRANSLATORS: remote type, e.g. remote or local
-#: src/fu-util.c:1626
-msgid "Type"
-msgstr "Typ"
-
-#: src/fu-util.c:1631
-msgid "Keyring"
-msgstr "Baza kluczy"
-
-#. TRANSLATORS: if the remote is enabled
-#: src/fu-util.c:1636
-msgid "Enabled"
-msgstr "Włączone"
-
-#. TRANSLATORS: the age of the metadata
-#: src/fu-util.c:1667
-msgid "Age"
-msgstr "Wiek"
-
-#. TRANSLATORS: the numeric priority
-#: src/fu-util.c:1674
-msgid "Priority"
-msgstr "Priorytet"
-
-#. TRANSLATORS: remote filename base
-#: src/fu-util.c:1679
-msgid "Username"
-msgstr "Nazwa użytkownika"
-
-#. TRANSLATORS: remote filename base
-#: src/fu-util.c:1684
-msgid "Password"
-msgstr "Hasło"
-
-#. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1689
-msgid "Filename"
-msgstr "Nazwa pliku"
-
-#. TRANSLATORS: filename of the local file
-#: src/fu-util.c:1694
-msgid "Filename Signature"
-msgstr "Podpis nazwy pliku"
-
-#. TRANSLATORS: remote URI
-#: src/fu-util.c:1699
-msgid "Metadata URI"
-msgstr "Adres URI metadanych"
-
-#. TRANSLATORS: remote URI
-#: src/fu-util.c:1704
-msgid "Metadata URI Signature"
-msgstr "Podpis adresu URI metadanych"
-
-#. TRANSLATORS: remote URI
-#: src/fu-util.c:1709
-msgid "Firmware Base URI"
-msgstr "Podstawowy adres URI oprogramowania sprzętowego"
-
-#. TRANSLATORS: URI to send success/failure reports
-#: src/fu-util.c:1714
-msgid "Report URI"
-msgstr "Adres URI zgłoszenia"
-
-#. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1741
-msgid "Device added:"
-msgstr "Dodano urządzenie:"
-
-#. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-util.c:1751
-msgid "Device removed:"
-msgstr "Usunięto urządzenie:"
-
-#. TRANSLATORS: this is when a device has been updated
-#: src/fu-util.c:1761
-msgid "Device changed:"
-msgstr "Zmieniono urządzenie:"
-
-#. TRANSLATORS: explain why we want to upload
-#: src/fu-util.c:1952
-msgid "An update requires a reboot to complete."
-msgstr "Ukończenie aktualizacji wymaga ponownego uruchomienia."
-
-#. TRANSLATORS: reboot to apply the update
-#: src/fu-util.c:1954
-msgid "Restart now?"
-msgstr "Uruchomić ponownie?"
-
-#. TRANSLATORS: command line option
-#: src/fu-util.c:2116
-msgid "Show extra debugging information"
-msgstr "Wyświetla dodatkowe informacje o debugowaniu"
-
-#. TRANSLATORS: command line option
-#: src/fu-util.c:2119
-msgid "Show client and daemon versions"
-msgstr "Wyświetla wersje klienta i usługi"
-
-#. TRANSLATORS: command line option
-#: src/fu-util.c:2122
-msgid "Schedule installation for next reboot when possible"
-msgstr "Planuje instalację podczas następnego ponownego uruchomienia"
-
-#. TRANSLATORS: command line option
-#: src/fu-util.c:2125
-msgid "Allow re-installing existing firmware versions"
-msgstr "Umożliwia ponowne instalowanie istniejących wersji oprogramowania sprzętowego"
-
-#. TRANSLATORS: command line option
-#: src/fu-util.c:2128
-msgid "Allow downgrading firmware versions"
-msgstr "Umożliwia instalowanie poprzednich wersji oprogramowania sprzętowego"
-
-#. TRANSLATORS: command line option
-#: src/fu-util.c:2131
-msgid "Override plugin warning"
-msgstr "Zastępuje ostrzeżenie wtyczki"
-
-#. TRANSLATORS: command line option
-#: src/fu-util.c:2134
-msgid "Answer yes to all questions"
-msgstr "Odpowiada tak na wszystkie pytania"
-
-#. TRANSLATORS: command line option
-#: src/fu-util.c:2137
-msgid "Do not check for unreported history"
-msgstr "Bez sprawdzania niezgłoszonej historii"
-
-#. TRANSLATORS: command line option
-#: src/fu-util.c:2140
-msgid "Do not check for old metadata"
-msgstr "Bez sprawdzania przestarzałych metadanych"
-
-#. TRANSLATORS: command line option
-#: src/fu-util.c:2143
-msgid "Do not check for reboot after update"
-msgstr "Bez sprawdzania potrzeby ponownego uruchomienia po aktualizacji"
+#. TRANSLATORS: command description
+msgid "Get all devices according to the system topology"
+msgstr "Uzyskuje wszystkie urządzenia zgodnie z topologią komputera"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2166
 msgid "Get all devices that support firmware updates"
 msgstr "Uzyskuje wszystkie urządzenia obsługujące aktualizacje oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2172
-msgid "Return all the hardware IDs for the machine"
-msgstr "Zwraca wszystkie identyfikatory sprzętu dla komputera"
+msgid "Get all enabled plugins registered with the system"
+msgstr "Uzyskuje wszystkie włączone wtyczki zarejestrowane na komputerze"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2178
-msgid "Install prepared updates now"
-msgstr "Instaluje przygotowaną aktualizację teraz"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2184
-msgid "Show history of firmware updates"
-msgstr "Wyświetla historię aktualizacji oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2190
-msgid "Erase all firmware update history"
-msgstr "Usuwa całą historię aktualizacji oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2196
-msgid "Share firmware history with the developers"
-msgstr "Udostępnia historię oprogramowania sprzętowego programistom"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2202
-msgid "Install a firmware file on this hardware"
-msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2208
 msgid "Gets details about a firmware file"
 msgstr "Uzyskuje informacje o pliku oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2214
-msgid "Gets the list of updates for connected hardware"
-msgstr "Uzyskuje listę aktualizacji dla podłączonego sprzętu"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2220
-msgid "Updates all firmware to latest versions available"
-msgstr "Aktualizuje całe oprogramowanie sprzętowe do najnowszych dostępnych wersji"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2226
-msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "Uzyskuje kryptograficzną sumę kontrolną zrzuconego oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2232
-msgid "Unlocks the device for firmware access"
-msgstr "Odblokowuje urządzenie"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2238
-msgid "Clears the results from the last update"
-msgstr "Usuwa wyniki z ostatniej aktualizacji"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2244
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Usuwa wszystkie zaplanowane aktualizacje w trybie offline"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2250
-msgid "Gets the results from the last update"
-msgstr "Uzyskuje wyniki z ostatniej aktualizacji"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2256
-msgid "Gets the releases for a device"
-msgstr "Uzyskuje wydania dla urządzenia"
-
-#. TRANSLATORS: command description
-#: src/fu-util.c:2262
 msgid "Gets the configured remotes"
 msgstr "Uzyskuje skonfigurowane repozytoria"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2268
-msgid "Downgrades the firmware on a device"
-msgstr "Instaluje poprzednią wersję oprogramowania sprzętowego urządzenia"
+msgid "Gets the cryptographic hash of the dumped firmware"
+msgstr "Uzyskuje kryptograficzną sumę kontrolną zrzuconego oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2274
+msgid "Gets the list of updates for connected hardware"
+msgstr "Uzyskuje listę aktualizacji dla podłączonego sprzętu"
+
+#. TRANSLATORS: command description
+msgid "Gets the releases for a device"
+msgstr "Uzyskuje wydania dla urządzenia"
+
+#. TRANSLATORS: command description
+msgid "Gets the results from the last update"
+msgstr "Uzyskuje wyniki z ostatniej aktualizacji"
+
+#. TRANSLATORS: Appstream ID for the hardware type
+msgid "ID"
+msgstr "Identyfikator"
+
+#. TRANSLATORS: daemon is inactive
+msgid "Idle…"
+msgstr "Bezczynne…"
+
+#. TRANSLATORS: command description
+msgid "Install a firmware blob on a device"
+msgstr "Instaluje zamknięte oprogramowanie sprzętowe na urządzeniu"
+
+#. TRANSLATORS: command description
+msgid "Install a firmware file on this hardware"
+msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
+
+msgid "Install old version of system firmware"
+msgstr "Instalacja poprzedniej wersji oprogramowania sprzętowego komputera"
+
+#. TRANSLATORS: command description
+msgid "Install prepared updates now"
+msgstr "Instaluje przygotowaną aktualizację teraz"
+
+msgid "Install signed device firmware"
+msgstr "Instalacja podpisanego oprogramowania sprzętowego urządzenia"
+
+msgid "Install signed system firmware"
+msgstr "Instalacja podpisanego oprogramowania sprzętowego komputera"
+
+msgid "Install unsigned device firmware"
+msgstr "Instalacja niepodpisanego oprogramowania sprzętowego urządzenia"
+
+msgid "Install unsigned system firmware"
+msgstr "Instalacja niepodpisanego oprogramowania sprzętowego komputera"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "Instalowanie aktualizacji oprogramowania sprzętowego…"
+
+msgid "Keyring"
+msgstr "Baza kluczy"
+
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "Linux Vendor Firmware Service (stabilne oprogramowanie sprzętowe)"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "Linux Vendor Firmware Service (testowe oprogramowanie sprzętowe)"
+
+#. TRANSLATORS: command description
+msgid "List currently attached DFU capable devices"
+msgstr "Wyświetla listę obecnie podłączonych urządzeń DFU"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading…"
+msgstr "Wczytywanie…"
+
+#. TRANSLATORS: command line option
+msgid "Manually whitelist specific plugins"
+msgstr "Ręcznie wstawia podane wtyczki na białą listę"
+
+#. TRANSLATORS: command description
+msgid "Merge multiple firmware files into one"
+msgstr "Łączy wiele plików oprogramowania sprzętowego w jeden plik"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata URI"
+msgstr "Adres URI metadanych"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata URI Signature"
+msgstr "Podpis adresu URI metadanych"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr "Metadane można uzyskać z serwisu Linux Vendor Firmware Service."
+
+msgid "Mode"
+msgstr "Tryb"
+
+#. TRANSLATORS: command description
+msgid "Modifies a given remote"
+msgstr "Modyfikuje podane repozytorium"
+
+msgid "Modify a configured remote"
+msgstr "Modyfikacja skonfigurowanego repozytorium"
+
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "Monitoruje zdarzenia usługi"
+
+#. TRANSLATORS: interface name, e.g. "Flash"
+#. TRANSLATORS: device name, e.g. 'ColorHug2'
+#. TRANSLATORS: section header for the release name
+msgid "Name"
+msgstr "Nazwa"
+
+#. TRANSLATORS: nothing attached
+#. TRANSLATORS: nothing attached that can be upgraded
+msgid "No hardware detected with firmware update capability"
+msgstr "Nie wykryto sprzętu z możliwością aktualizacji jego oprogramowania"
+
+#. TRANSLATORS: nothing found
+msgid "No plugins found"
+msgstr "Nie odnaleziono wtyczek"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "No remotes are currently enabled so no metadata is available."
+msgstr "Żadne repozytoria nie są obecnie włączone, więc żadne metadane nie są dostępne."
+
+msgid "OK"
+msgstr "OK"
+
+#. TRANSLATORS: command line option
+msgid "Override plugin warning"
+msgstr "Zastępuje ostrzeżenie wtyczki"
+
+#. TRANSLATORS: remote filename base
+msgid "Password"
+msgstr "Hasło"
+
+msgid "Payload"
+msgstr "Dane"
+
+msgid "Permission denied"
+msgstr "Brak uprawnień"
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "Proszę podać liczbę od 0 do %u:"
+
+#. TRANSLATORS: the numeric priority
+msgid "Priority"
+msgstr "Priorytet"
+
+msgid "Proceed with upload?"
+msgstr "Kontynuować wysyłanie?"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+msgid "Protocol"
+msgstr "Protokół"
+
+#. TRANSLATORS: device quirks, i.e. things that
+#. * it does that we have to work around
+msgid "Quirks"
+msgstr "Poprawki"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from device into a file"
+msgstr "Odczytuje oprogramowanie sprzętowe z urządzenia do pliku"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from one partition into a file"
+msgstr "Odczytuje oprogramowanie sprzętowe z jednej partycji do pliku"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "Odczytywanie…"
+
+#. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Odświeża metadane ze zdalnego serwera"
 
+#. TRANSLATORS: these are areas of memory on the chip
+msgid "Region"
+msgstr "Region"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second is a version number
+#. * e.g. "1.2.3"
+#, c-format
+msgid "Reinstalling %s with %s... "
+msgstr "Ponowne instalowanie %s za pomocą %s… "
+
+#. TRANSLATORS: section header for the remote the file is coming from
+msgid "Remote"
+msgstr "Repozytorium"
+
+#. TRANSLATORS: remote identifier, e.g. lvfs-testing
+msgid "Remote ID"
+msgstr "Identyfikator repozytorium"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Removed"
+msgstr "Usunięto"
+
 #. TRANSLATORS: command description
-#: src/fu-util.c:2280
+msgid "Replace data in an existing firmware file"
+msgstr "Zastępuje dane w istniejącym pliku oprogramowania sprzętowego"
+
+#. TRANSLATORS: URI to send success/failure reports
+msgid "Report URI"
+msgstr "Adres URI zgłoszenia"
+
+#. TRANSLATORS: metadata is downloaded from the Internet
+msgid "Requires internet connection"
+msgstr "Wymaga połączenia z Internetem"
+
+#. TRANSLATORS: command description
+msgid "Reset a DFU device"
+msgstr "Przywraca urządzenie DFU"
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "Uruchomić ponownie?"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device…"
+msgstr "Ponowne uruchamianie urządzenia…"
+
+#. TRANSLATORS: command description
+msgid "Return all the hardware IDs for the machine"
+msgstr "Zwraca wszystkie identyfikatory sprzętu dla komputera"
+
+msgid "Runtime"
+msgstr "Uruchamianie systemu"
+
+#. TRANSLATORS: command line option
+msgid "Schedule installation for next reboot when possible"
+msgstr "Planuje instalację podczas następnego ponownego uruchomienia"
+
+#. TRANSLATORS: scheduing an update to be done on the next boot
+msgid "Scheduling…"
+msgstr "Planowanie…"
+
+#. TRANSLATORS: serial number, e.g. '00012345'
+msgid "Serial"
+msgstr "Numer seryjny"
+
+#. TRANSLATORS: command description
+msgid "Set alternative name on firmware file"
+msgstr "Ustawia alternatywną nazwę pliku oprogramowania sprzętowego"
+
+#. TRANSLATORS: command description
+msgid "Set alternative number on firmware file"
+msgstr "Ustawia alternatywny numer pliku oprogramowania sprzętowego"
+
+#. TRANSLATORS: command description
+msgid "Set element address on firmware file"
+msgstr "Ustawia adres elementu pliku oprogramowania sprzętowego"
+
+#. TRANSLATORS: command description
+msgid "Set product ID on firmware file"
+msgstr "Ustawia identyfikator produktu pliku oprogramowania sprzętowego"
+
+#. TRANSLATORS: command description
+msgid "Set release version on firmware file"
+msgstr "Ustawia wersję wydania pliku oprogramowania sprzętowego"
+
+#. TRANSLATORS: command description
+msgid "Set the firmware size for the target"
+msgstr "Ustawia rozmiar oprogramowania sprzętowego dla celu"
+
+#. TRANSLATORS: command description
+msgid "Set vendor ID on firmware file"
+msgstr "Ustawia identyfikator producenta pliku oprogramowania sprzętowego"
+
+#. TRANSLATORS: command description
+msgid "Sets metadata on a firmware file"
+msgstr "Ustawia metadane pliku oprogramowania sprzętowego"
+
+#. TRANSLATORS: command description
+msgid "Share firmware history with the developers"
+msgstr "Udostępnia historię oprogramowania sprzętowego programistom"
+
+#. TRANSLATORS: command line option
+msgid "Show client and daemon versions"
+msgstr "Wyświetla wersje klienta i usługi"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all files"
+msgstr "Wyświetla informacje o debugowaniu dla wszystkich plików"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Show debugging options"
+msgstr "Wyświetla opcje debugowania"
+
+#. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "Wyświetla urządzenia, których nie można aktualizować"
+
+#. TRANSLATORS: command line option
+msgid "Show extra debugging information"
+msgstr "Wyświetla dodatkowe informacje o debugowaniu"
+
+#. TRANSLATORS: command description
+msgid "Show history of firmware updates"
+msgstr "Wyświetla historię aktualizacji oprogramowania sprzętowego"
+
+#. TRANSLATORS: this is for plugin development
+msgid "Show plugin verbose information"
+msgstr "Wyświetla więcej informacji o wtyczkach"
+
+#. TRANSLATORS: device state, i.e. appIDLE
+msgid "State"
+msgstr "Stan"
+
+#. TRANSLATORS: probably not run as root...
+#. TRANSLATORS: device has failed to report status
+#. TRANSLATORS: device status, e.g. "OK"
+msgid "Status"
+msgstr "Stan"
+
+#. TRANSLATORS: section header for the release one line summary
+msgid "Summary"
+msgstr "Podsumowanie"
+
+msgid "Target"
+msgstr "Cel"
+
+msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
+msgstr "Proces fwupd to prosta usługa umożliwiająca aktualizowanie oprogramowania sprzętowego komputera w sesji użytkownika. Jest zaprojektowana dla komputerów osobistych, ale można jej używać także na telefonach, tabletach i serwerach bez monitorów."
+
+#. TRANSLATORS: we're poking around as a power user
+msgid "This program may only work correctly as root"
+msgstr "Ten program może działać poprawnie tylko jako root"
+
+msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
+msgstr "Celem projektu jest automatyczne, bezpieczne i pewne aktualizowanie oprogramowania sprzętowego w systemie Linux. Można używać graficznego menedżera oprogramowania, takiego jak Menedżer oprogramowania GNOME do wyświetlania i zastosowywania aktualizacji, narzędzia wiersza poleceń lub bezpośrednio interfejsu D-Bus."
+
+#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
+msgid "Title"
+msgstr "Tytuł"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr "Rozmiar przesyłania"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+msgid "Type"
+msgstr "Typ"
+
+#. TRANSLATORS: section header for firmware URI
+msgid "URI"
+msgstr "Adres URI"
+
+#. TRANSLATORS: currect daemon status is unknown
+msgid "Unknown"
+msgstr "Nieznane"
+
+msgid "Unlock the device to allow access"
+msgstr "Odblokowanie urządzenia"
+
+#. TRANSLATORS: command description
+msgid "Unlocks the device for firmware access"
+msgstr "Odblokowuje urządzenie"
+
+#. TRANSLATORS: section header for firmware checksum
+msgid "Update Checksum"
+msgstr "Suma kontrolna aktualizacji"
+
+#. TRANSLATORS: section header for long firmware desc
+msgid "Update Description"
+msgstr "Opis aktualizacji"
+
+#. TRANSLATORS: section header for firmware remote http://
+msgid "Update Location"
+msgstr "Położenie aktualizacji"
+
+#. TRANSLATORS: section header for the release name
+msgid "Update Name"
+msgstr "Nazwa aktualizacji"
+
+#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
+msgid "Update Remote ID"
+msgstr "Identyfikator repozytorium aktualizacji"
+
+#. TRANSLATORS: section header for the release one line summary
+msgid "Update Summary"
+msgstr "Podsumowanie aktualizacji"
+
+#. TRANSLATORS: section header for firmware version
+msgid "Update Version"
+msgstr "Wersja aktualizacji"
+
+msgid "Update device firmware on Linux"
+msgstr "Aktualizowanie oprogramowania sprzętowego w systemie Linux"
+
+#. TRANSLATORS: the server sent the user a small message
+msgid "Update failure is a known issue, visit this URL for more information:"
+msgstr "Niepowodzenie aktualizacji to znany problem, pod tym adresem dostępnych jest więcej informacji:"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Update now?"
+msgstr "Zaktualizować teraz?"
+
+msgid "Update the stored device verification information"
+msgstr "Aktualizacja przechowywanych informacji o poprawności urządzenia"
+
+#. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
 msgstr "Aktualizuje przechowywane metadane bieżącą zawartością pamięci ROM"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2286
-msgid "Monitor the daemon for events"
-msgstr "Monitoruje zdarzenia usługi"
+msgid "Updates all firmware to latest versions available"
+msgstr "Aktualizuje całe oprogramowanie sprzętowe do najnowszych dostępnych wersji"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#, c-format
+msgid "Updating %s from %s to %s... "
+msgstr "Aktualizowanie %s z wersji %s do %s… "
+
+#. TRANSLATORS: the server sent the user a small message
+msgid "Upload message:"
+msgstr "Komunikat wysyłania:"
+
+#. TRANSLATORS: ask the user to upload
+msgid "Upload report now?"
+msgstr "Wysłać zgłoszenie?"
+
+#. TRANSLATORS: explain why we want to upload
+msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
+msgstr "Wysyłanie zgłoszeń o oprogramowaniu sprzętowym pomaga dostawcom sprzętu szybko identyfikować nieudane i udane aktualizacje na prawdziwych urządzeniach."
+
+#. TRANSLATORS: remote filename base
+msgid "Username"
+msgstr "Nazwa użytkownika"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying…"
+msgstr "Sprawdzanie poprawności…"
+
+#. TRANSLATORS: section header for release version number
+msgid "Version"
+msgstr "Wersja"
+
+#. TRANSLATORS: waiting for device to do something
+msgid "Waiting…"
+msgstr "Oczekiwanie…"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2292
-msgid "Build firmware using a sandbox"
-msgstr "Buduje oprogramowanie sprzętowe za pomocą piaskownicy"
+msgid "Watch DFU devices being hotplugged"
+msgstr "Obserwuje podłączanie urządzeń DFU w czasie działania"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2298
-msgid "Dump SMBIOS data from a file"
-msgstr "Zrzuca dane SMBIOS z pliku"
+msgid "Watch for hardware changes"
+msgstr "Obserwuje zmiany sprzętu"
 
 #. TRANSLATORS: command description
-#: src/fu-util.c:2304
-msgid "Modifies a given remote"
-msgstr "Modyfikuje podane repozytorium"
+msgid "Write firmware from file into device"
+msgstr "Zapisuje oprogramowanie sprzętowe z pliku na urządzenie"
 
-#. TRANSLATORS: program name
-#: src/fu-util.c:2334
-msgid "Firmware Utility"
-msgstr "Narzędzie oprogramowania sprzętowego"
+#. TRANSLATORS: command description
+msgid "Write firmware from file into one partition"
+msgstr "Zapisuje oprogramowanie sprzętowe z pliku na jedną partycję"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "Zapisywanie…"
+
+#. TRANSLATORS: show the user a warning
+msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
+msgstr "Używana dystrybucja mogła nie sprawdzić zgodności aktualizacji oprogramowania sprzętowego z komputerem i podłączonymi urządzeniami."
+
+msgid "fwupd"
+msgstr "fwupd"

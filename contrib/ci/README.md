@@ -66,6 +66,14 @@ Arch Linux (x86_64)
 * Tests with the built in local test suite for all plugins.
 * All packages are installed
 
+Flatpak
+----------
+* A flatpak bundle with all plugins enabled
+* Compiled under gcc with the org.gnome.Sdk/x86_64/3.28 runtime
+* Builds without the daemon, so only fwupdtool is available
+* No GPG, PKCS-7, GObjectIntrospection, systemd or ConsoleKit support
+* No tests
+
 Adding a new target
 ===================
 Dockerfiles are generated dynamically by the python script ```generate_dockerfile.py```.

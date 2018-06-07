@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -55,7 +41,7 @@ fu_plugin_verify (FuPlugin *plugin, FuDevice *device,
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	blob_fw = fu_csr_device_upload (FU_CSR_DEVICE (device), error);
+	blob_fw = fu_device_read_firmware (device, error);
 	if (blob_fw == NULL)
 		return FALSE;
 	for (guint i = 0; checksum_types[i] != 0; i++) {
@@ -74,7 +60,7 @@ fu_plugin_update (FuPlugin *plugin, FuDevice *device, GBytes *blob_fw,
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_csr_device_download (FU_CSR_DEVICE (device), blob_fw, error))
+	if (!fu_device_write_firmware (device, blob_fw, error))
 		return FALSE;
-	return fu_csr_device_attach (FU_CSR_DEVICE (device), error);
+	return fu_device_attach (device, error);
 }

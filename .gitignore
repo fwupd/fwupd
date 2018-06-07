@@ -1,3 +1,13 @@
 /build
 /dist
 /.vscode
+/build-dir
+/.flatpak-builder
+/repo
+*.flatpak
+*.snap
+/fwupd_source.tar.bz2
+/parts
+/prime
+/stage
+/snap/.snapcraft

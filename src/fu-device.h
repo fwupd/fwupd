@@ -1,22 +1,8 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #ifndef __FU_DEVICE_H
@@ -37,6 +23,17 @@ struct _FuDeviceClass
 	FwupdDeviceClass	 parent_class;
 	void			 (*to_string)		(FuDevice	*device,
 							 GString	*str);
+	gboolean		 (*write_firmware)	(FuDevice	*device,
+							 GBytes		*fw,
+							 GError		**error);
+	GBytes			*(*read_firmware)	(FuDevice	*device,
+							 GError		**error);
+	gboolean		 (*detach)		(FuDevice	*device,
+							 GError		**error);
+	gboolean		 (*attach)		(FuDevice	*device,
+							 GError		**error);
+	/*< private >*/
+	gpointer	padding[28];
 };
 
 /**
@@ -106,9 +103,16 @@ void		 fu_device_set_equivalent_id		(FuDevice	*device,
 							 const gchar	*equivalent_id);
 void		 fu_device_add_guid			(FuDevice	*device,
 							 const gchar	*guid);
+gchar		*fu_device_get_guids_as_str		(FuDevice	*device);
 FuDevice	*fu_device_get_alternate		(FuDevice	*device);
 void		 fu_device_set_alternate		(FuDevice	*device,
 							 FuDevice	*alternate);
+FuDevice	*fu_device_get_parent			(FuDevice	*device);
+GPtrArray	*fu_device_get_children			(FuDevice	*device);
+void		 fu_device_add_child			(FuDevice	*device,
+							 FuDevice	*child);
+void		 fu_device_add_parent_guid		(FuDevice	*device,
+							 const gchar	*guid);
 const gchar	*fu_device_get_metadata			(FuDevice	*device,
 							 const gchar	*key);
 gboolean	 fu_device_get_metadata_boolean		(FuDevice	*device,
@@ -153,6 +157,15 @@ void		 fu_device_set_quirks			(FuDevice	*device,
 							 FuQuirks	*quirks);
 FuQuirks	*fu_device_get_quirks			(FuDevice	*device);
 FwupdRelease	*fu_device_get_release_default		(FuDevice	*device);
+gboolean	 fu_device_write_firmware		(FuDevice	*device,
+							 GBytes		*fw,
+							 GError		**error);
+GBytes		*fu_device_read_firmware		(FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_device_attach			(FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_device_detach			(FuDevice	*device,
+							 GError		**error);
 
 G_END_DECLS
 

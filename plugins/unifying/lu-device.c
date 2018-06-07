@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -858,9 +844,10 @@ lu_device_close (LuDevice *device, GError **error)
 	lu_device_remove_flag (device, LU_DEVICE_FLAG_IS_OPEN);
 	return TRUE;
 }
-gboolean
-lu_device_detach (LuDevice *device, GError **error)
+static gboolean
+lu_device_detach (FuDevice *device, GError **error)
 {
+	LuDevice *self = LU_DEVICE (device);
 	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (device);
 
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
@@ -869,7 +856,7 @@ lu_device_detach (LuDevice *device, GError **error)
 	/* subclassed */
 	g_debug ("detaching device");
 	if (klass->detach != NULL)
-		return klass->detach (device, error);
+		return klass->detach (self, error);
 
 	/* nothing to do */
 	g_set_error_literal (error,
@@ -879,16 +866,17 @@ lu_device_detach (LuDevice *device, GError **error)
 	return FALSE;
 }
 
-gboolean
-lu_device_attach (LuDevice *device, GError **error)
+static gboolean
+lu_device_attach (FuDevice *device, GError **error)
 {
+	LuDevice *self = LU_DEVICE (device);
 	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (device);
 
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* check kind */
-	if (lu_device_get_kind (device) == LU_DEVICE_KIND_RUNTIME) {
+	if (lu_device_get_kind (self) == LU_DEVICE_KIND_RUNTIME) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
@@ -898,15 +886,16 @@ lu_device_attach (LuDevice *device, GError **error)
 
 	/* subclassed */
 	if (klass->attach != NULL)
-		return klass->attach (device, error);
+		return klass->attach (self, error);
 
 	return TRUE;
 }
 
-gboolean
-lu_device_write_firmware (LuDevice *device, GBytes *fw, GError **error)
+static gboolean
+lu_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
-	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (device);
+	LuDevice *self = LU_DEVICE (device);
+	LuDeviceClass *klass = LU_DEVICE_GET_CLASS (self);
 
 	g_return_val_if_fail (LU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -926,12 +915,12 @@ lu_device_write_firmware (LuDevice *device, GBytes *fw, GError **error)
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "not supported in %s",
-			     lu_device_kind_to_string (lu_device_get_kind (device)));
+			     lu_device_kind_to_string (lu_device_get_kind (self)));
 		return FALSE;
 	}
 
 	/* call either nordic or texas vfunc */
-	return klass->write_firmware (device, fw, error);
+	return klass->write_firmware (self, fw, error);
 }
 
 #ifndef HAVE_GUDEV_232
@@ -1076,6 +1065,9 @@ lu_device_class_init (LuDeviceClass *klass)
 	object_class->get_property = lu_device_get_property;
 	object_class->set_property = lu_device_set_property;
 	klass_device->to_string = lu_device_to_string;
+	klass_device->write_firmware = lu_device_write_firmware;
+	klass_device->attach = lu_device_attach;
+	klass_device->detach = lu_device_detach;
 
 	pspec = g_param_spec_uint ("kind", NULL, NULL,
 				   LU_DEVICE_KIND_UNKNOWN,

@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -32,7 +18,6 @@
 #include <gudev/gudev.h>
 #include <json-glib/json-glib.h>
 #include <locale.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <libsoup/soup.h>
 #include <unistd.h>
@@ -41,6 +26,7 @@
 #include "fu-history.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
+#include "fu-util-common.h"
 #include "fwupd-common-private.h"
 
 /* this is only valid in this file */
@@ -62,6 +48,7 @@ typedef struct {
 	gboolean		 no_reboot_check;
 	gboolean		 no_unreported_check;
 	gboolean		 assume_yes;
+	gboolean		 show_all_devices;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -193,75 +180,6 @@ fu_util_client_notify_cb (GObject *object,
 	fu_progressbar_update (priv->progressbar,
 			       fwupd_client_get_status (priv->client),
 			       fwupd_client_get_percentage (priv->client));
-}
-
-static void
-fu_util_print_data (const gchar *title, const gchar *msg)
-{
-	gsize title_len;
-	g_auto(GStrv) lines = NULL;
-
-	if (msg == NULL)
-		return;
-	g_print ("%s:", title);
-
-	/* pad */
-	title_len = strlen (title) + 1;
-	lines = g_strsplit (msg, "\n", -1);
-	for (guint j = 0; lines[j] != NULL; j++) {
-		for (gsize i = title_len; i < 25; i++)
-			g_print (" ");
-		g_print ("%s\n", lines[j]);
-		title_len = 0;
-	}
-}
-
-static guint
-fu_util_prompt_for_number (guint maxnum)
-{
-	gint retval;
-	guint answer = 0;
-
-	do {
-		char buffer[64];
-
-		/* swallow the \n at end of line too */
-		if (!fgets (buffer, sizeof (buffer), stdin))
-			break;
-		if (strlen (buffer) == sizeof (buffer) - 1)
-			continue;
-
-		/* get a number */
-		retval = sscanf (buffer, "%u", &answer);
-
-		/* positive */
-		if (retval == 1 && answer <= maxnum)
-			break;
-
-		/* TRANSLATORS: the user isn't reading the question */
-		g_print (_("Please enter a number from 0 to %u: "), maxnum);
-	} while (TRUE);
-	return answer;
-}
-
-static gboolean
-fu_util_prompt_for_boolean (gboolean def)
-{
-	do {
-		char buffer[4];
-		if (!fgets (buffer, sizeof (buffer), stdin))
-			continue;
-		if (strlen (buffer) == sizeof (buffer) - 1)
-			continue;
-		if (g_strcmp0 (buffer, "\n") == 0)
-			return def;
-		buffer[0] = g_ascii_toupper (buffer[0]);
-		if (g_strcmp0 (buffer, "Y\n") == 0)
-			return TRUE;
-		if (g_strcmp0 (buffer, "N\n") == 0)
-			return FALSE;
-	} while (TRUE);
-	return FALSE;
 }
 
 static FwupdDevice *
@@ -523,6 +441,44 @@ fu_util_modify_remote (FuUtilPrivate *priv,
 					   NULL, error);
 }
 
+static void
+fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, FwupdDevice *dev)
+{
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev_tmp = g_ptr_array_index (devs, i);
+		if (!(fwupd_device_has_flag (dev_tmp, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
+			continue;
+		if (fwupd_device_get_parent (dev_tmp) == dev) {
+			GNode *child = g_node_append_data (root, dev_tmp);
+			fu_util_build_device_tree (priv, child, devs, dev_tmp);
+		}
+	}
+}
+
+static gboolean
+fu_util_get_topology (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autoptr(GPtrArray) devs = NULL;
+
+	/* get results from daemon */
+	devs = fwupd_client_get_devices (priv->client, NULL, error);
+	if (devs == NULL)
+		return FALSE;
+
+	/* print */
+	if (devs->len == 0) {
+		/* TRANSLATORS: nothing attached that can be upgraded */
+		g_print ("%s\n", _("No hardware detected with firmware update capability"));
+		return TRUE;
+	}
+	fu_util_build_device_tree (priv, root, devs, NULL);
+	g_node_traverse (root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
+			 fu_util_print_device_tree, priv);
+
+	return TRUE;
+}
+
 static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -543,6 +499,8 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < devs->len; i++) {
 		g_autofree gchar *tmp = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		if (!(fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
+			continue;
 		tmp = fwupd_device_to_string (dev);
 		g_print ("%s\n", tmp);
 	}
@@ -624,7 +582,7 @@ fu_util_update_reboot (GError **error)
 					   -1,
 					   NULL,
 					   error);
-#elif HAVE_CONSOLEKIT
+#elif defined(HAVE_CONSOLEKIT)
 	/* reboot using ConsoleKit */
 	val = g_dbus_connection_call_sync (connection,
 					   "org.freedesktop.ConsoleKit",
@@ -638,7 +596,7 @@ fu_util_update_reboot (GError **error)
 					   NULL,
 					   error);
 #else
-	g_set_error_literal (&error,
+	g_set_error_literal (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_ARGS,
 			     "No supported backend compiled in to perform the operation.");
@@ -1211,6 +1169,23 @@ fu_util_download_file (FuUtilPrivate *priv,
 			  G_CALLBACK (fu_util_download_chunk_cb), priv);
 	status_code = soup_session_send_message (priv->soup_session, msg);
 	g_print ("\n");
+	if (status_code == 429) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		if (g_strcmp0 (str, "Too Many Requests") == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     /* TRANSLATORS: the server is rate-limiting downloads */
+				     "%s", _("Failed to download due to server limit"));
+			return FALSE;
+		}
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to download due to server limit: %s", str);
+		return FALSE;
+	}
 	if (status_code != SOUP_STATUS_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -1863,26 +1838,6 @@ fu_util_changed_cb (FwupdClient *client, gpointer user_data)
 }
 
 static gboolean
-fu_util_smbios_dump (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	g_autofree gchar *tmp = NULL;
-	g_autoptr(FuSmbios) smbios = NULL;
-	if (g_strv_length (values) < 1) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
-		return FALSE;
-	}
-	smbios = fu_smbios_new ();
-	if (!fu_smbios_setup_from_file (smbios, values[0], error))
-		return FALSE;
-	tmp = fu_smbios_to_string (smbios);
-	g_print ("%s\n", tmp);
-	return TRUE;
-}
-
-static gboolean
 fu_util_firmware_builder (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *script_fn = "startup.sh";
@@ -2224,6 +2179,7 @@ main (int argc, char *argv[])
 	gboolean force = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
+	gboolean no_history = FALSE;
 	gboolean offline = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
@@ -2262,6 +2218,12 @@ main (int argc, char *argv[])
 		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for reboot after update"), NULL },
+		{ "no-history", '\0', 0, G_OPTION_ARG_NONE, &no_history,
+			/* TRANSLATORS: command line option */
+			_("Do not write to the history database"), NULL },
+		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
+			/* TRANSLATORS: command line option */
+			_("Show devices that are not updatable"), NULL },
 		{ NULL}
 	};
 
@@ -2286,6 +2248,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Get all devices that support firmware updates"),
 		     fu_util_get_devices);
+	fu_util_add (priv->cmd_array,
+		     "get-topology",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Get all devices according to the system topology"),
+		     fu_util_get_topology);
 	fu_util_add (priv->cmd_array,
 		     "hwids",
 		     NULL,
@@ -2413,12 +2381,6 @@ main (int argc, char *argv[])
 		     _("Build firmware using a sandbox"),
 		     fu_util_firmware_builder);
 	fu_util_add (priv->cmd_array,
-		     "smbios-dump",
-		     "FILE",
-		     /* TRANSLATORS: command description */
-		     _("Dump SMBIOS data from a file"),
-		     fu_util_smbios_dump);
-	fu_util_add (priv->cmd_array,
 		     "modify-remote",
 		     "REMOTE-ID KEY VALUE",
 		     /* TRANSLATORS: command description */
@@ -2491,6 +2453,8 @@ main (int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (force)
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
+	if (no_history)
+		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 
 	/* connect to the daemon */
 	priv->client = fwupd_client_new ();

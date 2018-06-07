@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #ifndef __FU_ROM_H
@@ -28,12 +14,7 @@
 G_BEGIN_DECLS
 
 #define FU_TYPE_ROM (fu_rom_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuRom, fu_rom, FU, ROM, GObject)
-
-struct _FuRomClass
-{
-	GObjectClass		 parent_class;
-};
+G_DECLARE_FINAL_TYPE (FuRom, fu_rom, FU, ROM, GObject)
 
 typedef enum {
 	FU_ROM_KIND_UNKNOWN,
@@ -52,26 +33,26 @@ typedef enum {
 
 FuRom		*fu_rom_new				(void);
 
-gboolean	 fu_rom_load_file			(FuRom		*rom,
+gboolean	 fu_rom_load_file			(FuRom		*self,
 							 GFile		*file,
 							 FuRomLoadFlags	 flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fu_rom_load_data			(FuRom		*rom,
+gboolean	 fu_rom_load_data			(FuRom		*self,
 							 guint8		*buffer,
 							 gsize		 buffer_sz,
 							 FuRomLoadFlags	 flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fu_rom_extract_all			(FuRom		*rom,
+gboolean	 fu_rom_extract_all			(FuRom		*self,
 							 const gchar	*path,
 							 GError		**error);
-FuRomKind	 fu_rom_get_kind			(FuRom		*rom);
-const gchar	*fu_rom_get_version			(FuRom		*rom);
-GPtrArray	*fu_rom_get_checksums			(FuRom		*rom);
-const gchar	*fu_rom_get_guid			(FuRom		*rom);
-guint16		 fu_rom_get_vendor			(FuRom		*rom);
-guint16		 fu_rom_get_model			(FuRom		*rom);
+FuRomKind	 fu_rom_get_kind			(FuRom		*self);
+const gchar	*fu_rom_get_version			(FuRom		*self);
+GPtrArray	*fu_rom_get_checksums			(FuRom		*self);
+const gchar	*fu_rom_get_guid			(FuRom		*self);
+guint16		 fu_rom_get_vendor			(FuRom		*self);
+guint16		 fu_rom_get_model			(FuRom		*self);
 const gchar	*fu_rom_kind_to_string			(FuRomKind	 kind);
 
 G_END_DECLS

@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -38,6 +24,7 @@
 #include "fu-quirks.h"
 #include "fu-keyring.h"
 #include "fu-history.h"
+#include "fu-install-task.h"
 #include "fu-plugin-private.h"
 #include "fu-plugin-list.h"
 #include "fu-progressbar.h"
@@ -58,7 +45,8 @@ fu_engine_requirements_missing_func (void)
 	gboolean ret;
 	g_autoptr(AsApp) app = as_app_new ();
 	g_autoptr(AsRequire) req = as_require_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* set up a dummy version */
@@ -72,7 +60,10 @@ fu_engine_requirements_missing_func (void)
 	as_app_add_require (app, req);
 
 	/* check this fails */
-	ret = fu_engine_check_requirements (engine, app, NULL, &error);
+	task = fu_install_task_new (NULL, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (!ret);
 }
@@ -83,7 +74,8 @@ fu_engine_requirements_unsupported_func (void)
 	gboolean ret;
 	g_autoptr(AsApp) app = as_app_new ();
 	g_autoptr(AsRequire) req = as_require_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* set up a dummy version */
@@ -96,7 +88,10 @@ fu_engine_requirements_unsupported_func (void)
 	as_app_add_require (app, req);
 
 	/* check this fails */
-	ret = fu_engine_check_requirements (engine, app, NULL, &error);
+	task = fu_install_task_new (NULL, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert (!ret);
 }
@@ -107,7 +102,8 @@ fu_engine_requirements_func (void)
 	gboolean ret;
 	g_autoptr(AsApp) app = as_app_new ();
 	g_autoptr(AsRequire) req = as_require_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* set up some dummy versions */
@@ -122,7 +118,10 @@ fu_engine_requirements_func (void)
 	as_app_add_require (app, req);
 
 	/* check this passes */
-	ret = fu_engine_check_requirements (engine, app, NULL, &error);
+	task = fu_install_task_new (NULL, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 }
@@ -132,17 +131,23 @@ fu_engine_requirements_device_func (void)
 {
 	gboolean ret;
 	g_autoptr(AsApp) app = as_app_new ();
+	g_autoptr(AsChecksum) csum = as_checksum_new ();
 	g_autoptr(AsRequire) req1 = as_require_new ();
 	g_autoptr(AsRequire) req2 = as_require_new ();
 	g_autoptr(AsRequire) req3 = as_require_new ();
+	g_autoptr(AsProvide) prov = as_provide_new ();
+	g_autoptr(AsRelease) rel = as_release_new ();
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* set up a dummy device */
 	fu_device_set_version (device, "1.2.3");
 	fu_device_set_version_bootloader (device, "4.5.6");
 	fu_device_set_vendor_id (device, "FFFF");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 
 	/* make the component require three things */
 	as_require_set_kind (req1, AS_REQUIRE_KIND_FIRMWARE);
@@ -160,10 +165,65 @@ fu_engine_requirements_device_func (void)
 	as_require_set_value (req3, "vendor-id");
 	as_app_add_require (app, req3);
 
+	/* add release */
+	as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
+	as_checksum_set_filename (csum, "bios.bin");
+	as_release_set_version (rel, "1.2.4");
+	as_release_add_checksum (rel, csum);
+	as_app_add_release (app, rel);
+
+	/* add GUID to match */
+	as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
+	as_provide_set_value (prov, "12345678-1234-1234-1234-123456789012");
+	as_app_add_provide (app, prov);
+
 	/* check this passes */
-	ret = fu_engine_check_requirements (engine, app, device, &error);
+	task = fu_install_task_new (device, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
 	g_assert_no_error (error);
 	g_assert (ret);
+}
+
+static void
+fu_engine_device_parent_func (void)
+{
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device3 = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+
+	/* add child */
+	fu_device_set_id (device1, "child");
+	fu_device_add_guid (device1, "child-GUID-1");
+	fu_device_add_parent_guid (device1, "parent-GUID");
+	fu_engine_add_device (engine, device1);
+
+	/* parent */
+	fu_device_set_id (device2, "parent");
+	fu_device_add_guid (device2, "parent-GUID");
+	fu_device_set_vendor (device2, "oem");
+
+	/* add another child */
+	fu_device_set_id (device3, "child2");
+	fu_device_add_guid (device3, "child-GUID-2");
+	fu_device_add_parent_guid (device3, "parent-GUID");
+	fu_device_add_child (device2, device3);
+
+	/* add two together */
+	fu_engine_add_device (engine, device2);
+
+	/* verify both children were adopted */
+	g_assert (fu_device_get_parent (device3) == device2);
+	g_assert (fu_device_get_parent (device1) == device2);
+	g_assert_cmpstr (fu_device_get_vendor (device3), ==, "oem");
+	g_assert_cmpstr (fu_device_get_vendor (device1), ==, "oem");
+
+	/* verify order */
+	g_assert_cmpint (fu_device_get_order (device1), ==, 1);
+	g_assert_cmpint (fu_device_get_order (device2), ==, 0);
+	g_assert_cmpint (fu_device_get_order (device3), ==, 1);
 }
 
 static void
@@ -172,7 +232,7 @@ fu_engine_partial_hash_func (void)
 	gboolean ret;
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GError) error_none = NULL;
@@ -228,11 +288,13 @@ fu_engine_partial_hash_func (void)
 static void
 fu_engine_require_hwid_func (void)
 {
+	AsApp *app;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -259,13 +321,20 @@ fu_engine_require_hwid_func (void)
 
 	/* add a dummy device */
 	fu_device_set_id (device, "test_device");
+	fu_device_set_version (device, "1.2.2");
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_engine_add_device (engine, device);
 
-	/* install it */
-	ret = fu_engine_install (engine, fu_device_get_id (device),
-				 store, blob_cab, FWUPD_INSTALL_FLAG_NONE, &error);
+	/* get app */
+	app = as_store_get_app_by_id (store, "com.hughski.test.firmware");
+	g_assert_nonnull (app);
+
+	/* check requirements */
+	task = fu_install_task_new (device, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert (error != NULL);
 	g_assert_cmpstr (error->message, ==,
@@ -280,7 +349,7 @@ fu_engine_downgrade_func (void)
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_pre = NULL;
@@ -424,6 +493,7 @@ fu_engine_downgrade_func (void)
 static void
 fu_engine_history_func (void)
 {
+	AsApp *app;
 	gboolean ret;
 	g_autofree gchar *device_str_expected = NULL;
 	g_autofree gchar *device_str = NULL;
@@ -435,8 +505,9 @@ fu_engine_history_func (void)
 	g_autoptr(FwupdDevice) device3 = NULL;
 	g_autoptr(FwupdDevice) device4 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
@@ -480,9 +551,14 @@ fu_engine_history_func (void)
 	g_assert_no_error (error);
 	g_assert (store != NULL);
 
+	/* get app */
+	app = as_store_get_app_by_id (store, "com.hughski.test.firmware");
+	g_assert_nonnull (app);
+
 	/* install it */
-	ret = fu_engine_install (engine, fu_device_get_id (device),
-				 store, blob_cab, FWUPD_INSTALL_FLAG_NONE, &error);
+	task = fu_install_task_new (device, app);
+	ret = fu_engine_install (engine, task, blob_cab,
+				 FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -539,6 +615,7 @@ fu_engine_history_func (void)
 static void
 fu_engine_history_error_func (void)
 {
+	AsApp *app;
 	gboolean ret;
 	g_autofree gchar *device_str_expected = NULL;
 	g_autofree gchar *device_str = NULL;
@@ -548,8 +625,9 @@ fu_engine_history_error_func (void)
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuEngine) engine = fu_engine_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error2 = NULL;
@@ -595,8 +673,11 @@ fu_engine_history_error_func (void)
 	store = fu_engine_get_store_from_blob (engine, blob_cab, &error);
 	g_assert_no_error (error);
 	g_assert (store != NULL);
-	ret = fu_engine_install (engine, fu_device_get_id (device),
-				 store, blob_cab, FWUPD_INSTALL_FLAG_NONE, &error);
+	app = as_store_get_app_by_id (store, "com.hughski.test.firmware");
+	g_assert_nonnull (app);
+	task = fu_install_task_new (device, app);
+	ret = fu_engine_install (engine, task, blob_cab,
+				 FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert (error != NULL);
 	g_assert_cmpstr (error->message, ==,
@@ -961,7 +1042,7 @@ fu_hwids_func (void)
 		{ "Manufacturer",	"6de5d951-d755-576b-bd09-c5cf66b27234" },
 		{ "HardwareID-14",	"6de5d951-d755-576b-bd09-c5cf66b27234" },
 		{ "HardwareID-13",	"f8e1de5f-b68c-5f52-9d1a-f1ba52f1f773" },
-		{ "HardwareID-12",	"5e820764-888e-529d-a6f9-dfd12bacb160" },
+		{ "HardwareID-12",	"e093d715-70f7-51f4-b6c8-b4a7e31def85" },
 		{ "HardwareID-11",	"db73af4c-4612-50f7-b8a7-787cf4871847" },
 		{ "HardwareID-10",	"f4275c1f-6130-5191-845c-3426247eb6a1" },
 		{ "HardwareID-9",	"0cf8618d-9eff-537c-9f35-46861406eb9c" },
@@ -971,9 +1052,9 @@ fu_hwids_func (void)
 		{ "HardwareID-5",	"8dc9b7c5-f5d5-5850-9ab3-bd6f0549d814" },
 		{ "HardwareID-4",	"660ccba8-1b78-5a33-80e6-9fb8354ee873" },
 		{ "HardwareID-3",	"3faec92a-3ae3-5744-be88-495e90a7d541" },
-		{ "HardwareID-2",	"705f45c6-fbca-5245-b9dd-6d4fab25e262" },
-		{ "HardwareID-1",	"309d9985-e453-587e-8486-ff7c835a9ef2" },
-		{ "HardwareID-0",	"d37363b8-5ec4-5725-b618-b75368a1ad28" },
+		{ "HardwareID-2",	"f5ff077f-3eeb-5bae-be1c-e98ffe8ce5f8" },
+		{ "HardwareID-1",	"b7cceb67-774c-537e-bf8b-22c6107e9a74" },
+		{ "HardwareID-0",	"147efce9-f201-5fc8-ab0c-c859751c3440" },
 		{ NULL, NULL }
 	};
 
@@ -990,7 +1071,7 @@ fu_hwids_func (void)
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_MANUFACTURER), ==,
 			 "LENOVO");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_ENCLOSURE_KIND), ==,
-			 "10");
+			 "a");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_FAMILY), ==,
 			 "ThinkPad T440s");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_NAME), ==,
@@ -999,8 +1080,8 @@ fu_hwids_func (void)
 			 "LENOVO");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_VERSION), ==,
 			 "GJET75WW (2.25 )");
-	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE), ==, "2");
-	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "25");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE), ==, "02");
+	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "19");
 	g_assert_cmpstr (fu_hwids_get_value (hwids, FU_HWIDS_KEY_PRODUCT_SKU), ==,
 			 "LENOVO_MT_20AR_BU_Think_FM_ThinkPad T440s");
 	for (guint i = 0; guids[i].key != NULL; i++) {
@@ -1132,6 +1213,7 @@ fu_plugin_module_func (void)
 	FwupdRelease *release;
 	gboolean ret;
 	guint cnt = 0;
+	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *mapped_file_fn = NULL;
 	g_autofree gchar *pending_cap = NULL;
 	g_autofree gchar *history_db = NULL;
@@ -1240,7 +1322,8 @@ fu_plugin_module_func (void)
 	g_clear_error (&error);
 
 	/* delete files */
-	history_db = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", "pending.db", NULL);
+	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	history_db = g_build_filename (localstatedir, "pending.db", NULL);
 	g_unlink (history_db);
 	g_unlink (pending_cap);
 }
@@ -1368,7 +1451,7 @@ fu_history_func (void)
 	g_assert (history != NULL);
 
 	/* delete the database */
-	dirname = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
+	dirname = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	if (!g_file_test (dirname, G_FILE_TEST_IS_DIR))
 		return;
 	filename = g_build_filename (dirname, "pending.db", NULL);
@@ -2122,6 +2205,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/engine{requirements-missing}", fu_engine_requirements_missing_func);
 	g_test_add_func ("/fwupd/engine{requirements-unsupported}", fu_engine_requirements_unsupported_func);
 	g_test_add_func ("/fwupd/engine{requirements-device}", fu_engine_requirements_device_func);
+	g_test_add_func ("/fwupd/engine{device-auto-parent}", fu_engine_device_parent_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);

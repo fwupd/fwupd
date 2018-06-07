@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -27,25 +13,15 @@
 #include "fu-ebitdo-common.h"
 #include "fu-ebitdo-device.h"
 
-typedef struct
-{
-	gboolean		 is_bootloader;
+struct _FuEbitdoDevice {
+	FuUsbDevice		 parent_instance;
 	guint32			 serial[9];
-} FuEbitdoDevicePrivate;
+};
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuEbitdoDevice, fu_ebitdo_device, FU_TYPE_USB_DEVICE)
-
-#define GET_PRIVATE(o) (fu_ebitdo_device_get_instance_private (o))
-
-gboolean
-fu_ebitdo_device_is_bootloader (FuEbitdoDevice *self)
-{
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (self);
-	return priv->is_bootloader;
-}
+G_DEFINE_TYPE (FuEbitdoDevice, fu_ebitdo_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
-fu_ebitdo_device_send (FuEbitdoDevice *device,
+fu_ebitdo_device_send (FuEbitdoDevice *self,
 		       FuEbitdoPktType type,
 		       FuEbitdoPktCmd subtype,
 		       FuEbitdoPktCmd cmd,
@@ -53,8 +29,7 @@ fu_ebitdo_device_send (FuEbitdoDevice *device,
 		       gsize in_len,
 		       GError **error)
 {
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	guint8 packet[FU_EBITDO_USB_EP_SIZE] = {0};
 	gsize actual_length;
 	guint8 ep_out = FU_EBITDO_USB_RUNTIME_EP_OUT;
@@ -62,7 +37,7 @@ fu_ebitdo_device_send (FuEbitdoDevice *device,
 	FuEbitdoPkt *hdr = (FuEbitdoPkt *) packet;
 
 	/* different */
-	if (priv->is_bootloader)
+	if (fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		ep_out = FU_EBITDO_USB_BOOTLOADER_EP_OUT;
 
 	/* check size */
@@ -118,13 +93,12 @@ fu_ebitdo_device_send (FuEbitdoDevice *device,
 }
 
 static gboolean
-fu_ebitdo_device_receive (FuEbitdoDevice *device,
+fu_ebitdo_device_receive (FuEbitdoDevice *self,
 		       guint8 *out,
 		       gsize out_len,
 		       GError **error)
 {
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	guint8 packet[FU_EBITDO_USB_EP_SIZE] = {0};
 	gsize actual_length;
 	guint8 ep_in = FU_EBITDO_USB_RUNTIME_EP_IN;
@@ -132,7 +106,7 @@ fu_ebitdo_device_receive (FuEbitdoDevice *device,
 	FuEbitdoPkt *hdr = (FuEbitdoPkt *) packet;
 
 	/* different */
-	if (priv->is_bootloader)
+	if (fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		ep_in = FU_EBITDO_USB_BOOTLOADER_EP_IN;
 
 	/* get data from device */
@@ -240,17 +214,17 @@ fu_ebitdo_device_receive (FuEbitdoDevice *device,
 }
 
 static void
-fu_ebitdo_device_set_version (FuEbitdoDevice *device, guint32 version)
+fu_ebitdo_device_set_version (FuEbitdoDevice *self, guint32 version)
 {
 	g_autofree gchar *tmp = NULL;
 	tmp = g_strdup_printf ("%.2f", version / 100.f);
-	fu_device_set_version (FU_DEVICE (device), tmp);
+	fu_device_set_version (FU_DEVICE (self), tmp);
 }
 
 static gboolean
-fu_ebitdo_device_validate (FuEbitdoDevice *device, GError **error)
+fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	guint8 idx;
 	g_autofree gchar *ven = NULL;
 	const gchar *whitelist[] = {
@@ -260,13 +234,6 @@ fu_ebitdo_device_validate (FuEbitdoDevice *device, GError **error)
 
 	/* this is a new, always valid, VID */
 	if (g_usb_device_get_vid (usb_device) == 0x2dc8)
-		return TRUE;
-
-	/* SF30/SN30 Pro when started with "START + Y"
-	 * Emulates a "Nintendo Switch Pro Controller"
-	 * "Real" Nintendo Switch controllers don't work over USB */
-	if (g_usb_device_get_vid (usb_device) == 0x057e &&
-	    g_usb_device_get_pid (usb_device) == 0x2009)
 		return TRUE;
 
 	/* verify the vendor prefix against a whitelist */
@@ -292,7 +259,6 @@ static gboolean
 fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	gdouble tmp;
 	guint32 version_tmp = 0;
@@ -308,7 +274,7 @@ fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
 	}
 
 	/* in firmware mode */
-	if (!priv->is_bootloader) {
+	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_ebitdo_device_send (self,
 					 FU_EBITDO_PKT_TYPE_USER_CMD,
 					 FU_EBITDO_PKT_CMD_GET_VERSION,
@@ -361,23 +327,22 @@ fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
 		return FALSE;
 	}
 	for (guint i = 0; i < 9; i++)
-		priv->serial[i] = GUINT32_FROM_LE (serial_tmp[i]);
+		self->serial[i] = GUINT32_FROM_LE (serial_tmp[i]);
 
 	/* success */
 	return TRUE;
 }
 
 const guint32 *
-fu_ebitdo_device_get_serial (FuEbitdoDevice *device)
+fu_ebitdo_device_get_serial (FuEbitdoDevice *self)
 {
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->serial;
+	return self->serial;
 }
 
-gboolean
-fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **error)
+static gboolean
+fu_ebitdo_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (device);
+	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
 	FuEbitdoFirmwareHeader *hdr;
 	const guint8 *payload_data;
 	const guint chunk_sz = 32;
@@ -390,6 +355,47 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 		0x92bd03f0, 0x5573c6ed, 0x57d8845b, 0x827197ac,
 		0xb91901c9, 0x3917edfe, 0xbcd6344f, 0xcf9e23b5
 	};
+
+	/* not in bootloader mode, so print what to do */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+		g_autoptr(GString) msg = g_string_new ("Not in bootloader mode: ");
+		g_string_append (msg, "Disconnect the controller, ");
+		g_print ("1. \n");
+		switch (g_usb_device_get_pid (usb_device)) {
+		case 0xab11: /* FC30 */
+		case 0xab12: /* NES30 */
+		case 0xab21: /* SFC30 */
+		case 0xab20: /* SNES30 */
+			g_string_append (msg, "hold down L+R+START for 3 seconds until "
+					      "both LED lights flashing, ");
+			break;
+		case 0x9000: /* FC30PRO */
+		case 0x9001: /* NES30PRO */
+			g_string_append (msg, "hold down RETURN+POWER for 3 seconds until "
+					      "both LED lights flashing, ");
+			break;
+		case 0x1002: /* FC30-ARCADE */
+			g_string_append (msg, "hold down L1+R1+HOME for 3 seconds until "
+					      "both blue LED and green LED blink, ");
+			break;
+		case 0x6000: /* SF30 pro: Dinput mode */
+		case 0x6001: /* SN30 pro: Dinput mode */
+		case 0x028e: /* SF30/SN30 pro: Xinput mode */
+			g_string_append (msg, "press and hold L1+R1+START for 3 seconds "
+					      "until the LED on top blinks red, ");
+			break;
+		default:
+			g_string_append (msg, "do what it says in the manual, ");
+			break;
+		}
+		g_string_append (msg, "then re-connect controller");
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     msg->str);
+		return FALSE;
+	}
 
 	/* corrupt */
 	if (g_bytes_get_size (fw) < sizeof (FuEbitdoFirmwareHeader)) {
@@ -429,8 +435,8 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 	}
 
 	/* set up the firmware header */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_ebitdo_device_send (device,
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	if (!fu_ebitdo_device_send (self,
 				 FU_EBITDO_PKT_TYPE_USER_CMD,
 				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 FU_EBITDO_PKT_CMD_FW_UPDATE_HEADER,
@@ -443,7 +449,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 			     error_local->message);
 		return FALSE;
 	}
-	if (!fu_ebitdo_device_receive (device, NULL, 0, &error_local)) {
+	if (!fu_ebitdo_device_receive (self, NULL, 0, &error_local)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
@@ -460,8 +466,8 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 			g_debug ("writing %u bytes to 0x%04x of 0x%04x",
 				 chunk_sz, offset, payload_len);
 		}
-		fu_device_set_progress_full (FU_DEVICE (device), offset, payload_len);
-		if (!fu_ebitdo_device_send (device,
+		fu_device_set_progress_full (device, offset, payload_len);
+		if (!fu_ebitdo_device_send (self,
 					 FU_EBITDO_PKT_TYPE_USER_CMD,
 					 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 					 FU_EBITDO_PKT_CMD_FW_UPDATE_DATA,
@@ -474,7 +480,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 				     offset, error_local->message);
 			return FALSE;
 		}
-		if (!fu_ebitdo_device_receive (device, NULL, 0, &error_local)) {
+		if (!fu_ebitdo_device_receive (self, NULL, 0, &error_local)) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
@@ -485,15 +491,15 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 	}
 
 	/* mark as complete */
-	fu_device_set_progress_full (FU_DEVICE (device), payload_len, payload_len);
+	fu_device_set_progress_full (device, payload_len, payload_len);
 
 	/* set the "encode id" which is likely a checksum, bluetooth pairing
 	 * or maybe just security-through-obscurity -- also note:
 	 * SET_ENCODE_ID enforces no read for success?! */
-	serial_new[0] = priv->serial[0] ^ app_key_index[priv->serial[0] & 0x0f];
-	serial_new[1] = priv->serial[1] ^ app_key_index[priv->serial[1] & 0x0f];
-	serial_new[2] = priv->serial[2] ^ app_key_index[priv->serial[2] & 0x0f];
-	if (!fu_ebitdo_device_send (device,
+	serial_new[0] = self->serial[0] ^ app_key_index[self->serial[0] & 0x0f];
+	serial_new[1] = self->serial[1] ^ app_key_index[self->serial[1] & 0x0f];
+	serial_new[2] = self->serial[2] ^ app_key_index[self->serial[2] & 0x0f];
+	if (!fu_ebitdo_device_send (self,
 				 FU_EBITDO_PKT_TYPE_USER_CMD,
 				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 FU_EBITDO_PKT_CMD_FW_SET_ENCODE_ID,
@@ -509,7 +515,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 	}
 
 	/* mark flash as successful */
-	if (!fu_ebitdo_device_send (device,
+	if (!fu_ebitdo_device_send (self,
 				 FU_EBITDO_PKT_TYPE_USER_CMD,
 				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 FU_EBITDO_PKT_CMD_FW_UPDATE_OK,
@@ -522,7 +528,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 			     error_local->message);
 		return FALSE;
 	}
-	if (!fu_ebitdo_device_receive (device, NULL, 0, &error_local)) {
+	if (!fu_ebitdo_device_receive (self, NULL, 0, &error_local)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
@@ -532,7 +538,7 @@ fu_ebitdo_device_write_firmware (FuEbitdoDevice *device, GBytes *fw, GError **er
 	}
 
 	/* success! */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -540,7 +546,6 @@ static gboolean
 fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
-	FuEbitdoDevicePrivate *priv = GET_PRIVATE (self);
 	const gchar *quirk_str;
 
 	/* devices have to be whitelisted */
@@ -552,7 +557,8 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 				     "not supported with this device");
 		return FALSE;
 	}
-	priv->is_bootloader = g_strcmp0 (quirk_str, "bootloader") == 0;
+	if (g_strcmp0 (quirk_str, "bootloader") == 0)
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -567,7 +573,7 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 	fu_device_add_icon (FU_DEVICE (device), "input-gaming");
 
 	/* only the bootloader can do the update */
-	if (!priv->is_bootloader) {
+	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_0483&PID_5750");
 		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
 		fu_device_add_flag (FU_DEVICE (device),
@@ -582,14 +588,16 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 }
 
 static void
-fu_ebitdo_device_init (FuEbitdoDevice *device)
+fu_ebitdo_device_init (FuEbitdoDevice *self)
 {
 }
 
 static void
 fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 {
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	klass_device->write_firmware = fu_ebitdo_device_write_firmware;
 	klass_usb_device->open = fu_ebitdo_device_open;
 	klass_usb_device->probe = fu_ebitdo_device_probe;
 }
@@ -606,9 +614,9 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 FuEbitdoDevice *
 fu_ebitdo_device_new (GUsbDevice *usb_device)
 {
-	FuEbitdoDevice *device;
-	device = g_object_new (FU_TYPE_EBITDO_DEVICE,
-			       "usb-device", usb_device,
-			       NULL);
-	return FU_EBITDO_DEVICE (device);
+	FuEbitdoDevice *self;
+	self = g_object_new (FU_TYPE_EBITDO_DEVICE,
+			     "usb-device", usb_device,
+			     NULL);
+	return FU_EBITDO_DEVICE (self);
 }

@@ -1,0 +1,281 @@
+name: fwupd
+version-script: cat $SNAPCRAFT_STAGE/version
+version: 'daily'
+summary: A standalone version of fwupd to install newer firmware updates
+description: |
+  This is a tool that can be used to install firmware updates on devices
+  not yet supported by the version of fwupd distributed with the OS.
+
+grade: devel
+confinement: devmode
+
+architectures:
+  - amd64
+
+apps:
+  fwupdtool:
+    command: fwupdtool.wrapper
+    completer:
+      usr/share/bash-completion/completions/fwupdtool
+
+plugs:
+  fwupdtool:
+    interface: fwupd
+
+parts:
+  libefivar-dev:
+    plugin: make
+    source: https://github.com/rhboot/efivar.git
+    source-type: git
+    build-packages:
+      - libpopt-dev
+    organize:
+      usr/lib64: usr/lib/x86_64-linux-gnu
+      usr/lib: usr/lib/i386-linux-gnu
+    prime:
+     - -usr/include
+     - -usr/bin
+     - -usr/share/man
+     - -usr/lib/*/pkgconfig
+  #adjust the paths from libefivar
+  libefivar-fixpkgconfig:
+    plugin: make
+    source: contrib/snap/libefivar-fixpkgconfig
+    make-parameters:
+      - SNAPCRAFT_STAGE=$SNAPCRAFT_STAGE
+    after: [libefivar-dev]
+  libsmbios:
+    plugin: autotools
+    source: https://github.com/dell/libsmbios
+    source-type: git
+    build-packages:
+      - libxml2-dev
+      - pkg-config
+      - autoconf
+      - automake
+      - libtool
+      - autopoint
+    prime:
+      - -include/
+      - -lib/pkgconfig
+      - -lib/python3.5
+      - -sbin/
+      - -share/
+      - -etc/
+      - -lib/*.a
+  libfwup-dev:
+    plugin: make
+    source: https://github.com/rhboot/fwupdate.git
+    source-type: git
+    make-parameters:
+      - EFIDIR=ubuntu
+      - GNUEFIDIR=/usr/lib
+      - LIBDIR=$SNAPCRAFT_STAGE/usr/lib/x86_64-linux-gnu
+      - libdir=/usr/lib/x86_64-linux-gnu
+      - PKG_CONFIG_PATH=$SNAPCRAFT_STAGE/usr/lib/x86_64-linux-gnu/pkgconfig
+      - --eval=export PKG_CONFIG_PATH
+    build-packages:
+      - elfutils
+      - gnu-efi
+      - libasm1
+      - libdw1
+    prime:
+      - -usr/lib/debug
+      - -usr/lib/systemd
+      - -usr/src
+      - -usr/share
+      - -usr/lib/*/pkgconfig
+      - -usr/include
+      - -usr/bin
+    after: [libsmbios, libefivar-fixpkgconfig]
+  meson:
+    plugin: python
+    source: https://github.com/mesonbuild/meson.git
+    source-tag: 0.46.1
+    build-packages:
+      - ninja-build
+    prime:
+      - -bin
+      - -etc
+      - -lib
+      - -share
+      - -usr
+  appstream-glib-dev:
+    plugin: meson
+    meson-parameters: [--prefix=/usr, -Dgtk-doc=false, -Dintrospection=false, -Dman=false, -Drpm=false]
+    source: https://github.com/hughsie/appstream-glib
+    source-type: git
+    build-packages:
+      - python3-pip
+      - gperf
+      - intltool
+      - libarchive-dev
+      - libgcab-dev
+      - libgdk-pixbuf2.0-dev
+      - libgirepository1.0-dev
+      - libglib2.0-dev
+      - libgtk-3-dev
+      - libjson-glib-dev
+      - libsoup2.4-dev
+      - libsqlite3-dev
+      - libyaml-dev
+      - libstemmer-dev
+      - uuid-dev
+    stage-packages:
+      - libarchive13
+      - libgcab-1.0-0
+      - libsoup2.4-1
+      - libstemmer0d
+      - libgdk-pixbuf2.0-0
+    prime:
+      - -usr/bin
+      - -usr/include
+      - -usr/share/doc
+      - -usr/lib/*/asb-plugins-5
+      - -usr/share/bash-completion
+      - -usr/share/aclocal
+      - -usr/lib/*/pkgconfig
+      - -usr/share/installed-tests
+      - -usr/lib/systemd
+      - -usr/lib/glib-networking
+      - -usr/lib/dconf
+      - -usr/share/X11
+      - -usr/share/GConf
+      - -usr/share/dbus-1
+      - -usr/share/glib-2.0/schemas
+      - -usr/share/lintian
+      - -usr/share/man
+    after: [meson]
+  gudev:
+    plugin: autotools
+    source: https://gitlab.gnome.org/GNOME/libgudev.git
+    source-type: git
+    configflags:
+      - --disable-umockdev
+    build-packages:
+      - libglib2.0-dev
+      - pkg-config
+      - libudev-dev
+      - gtk-doc-tools
+      - gnome-common
+    prime:
+      - -include
+      - -lib/girepository-1.0
+      - -lib/pkgconfig
+      - -share/
+  libusb:
+    plugin: autotools
+    source: https://github.com/libusb/libusb/releases/download/v1.0.22/libusb-1.0.22.tar.bz2
+    configflags:
+     - --disable-static
+    prime:
+      - -include/
+      - -lib/pkgconfig
+  gusb:
+    plugin: meson
+    source: https://github.com/hughsie/libgusb/archive/0.3.0.tar.gz
+    meson-parameters: [--prefix=/usr,
+                       -Dtests=false,
+                       -Dvapi=false,
+                       -Ddocs=false]
+    prime:
+    - -usr/bin/
+    - -usr/include
+    - -usr/share
+    - -usr/lib/*/pkgconfig
+    - -usr/lib/*/girepository-1.0
+    after: [libusb]
+  fwupd:
+    plugin: meson
+    meson-parameters: [--prefix=/usr,
+                       --libexecdir=/usr/lib,
+                       -Dtests=false,
+                       -Ddaemon=false,
+                       -Dgtkdoc=false,
+                       -Dplugin_uefi_labels=false,
+                       -Dintrospection=false,
+                       -Dsystemd=false,
+                       -Dman=false,
+                       -Dconsolekit=false,
+                       -Dpkcs7=false,
+                       -Dgpg=false]
+    source: .
+    source-type: git
+    override-build: |
+      snapcraftctl build
+      echo $(git describe HEAD) > $SNAPCRAFT_STAGE/version
+    build-packages:
+      - bash-completion
+      - gcab
+      - gettext
+      - libarchive-dev
+      - libelf-dev
+      - libgcab-dev
+      - libglib2.0-dev
+      - libgpgme11-dev
+      - libjson-glib-dev
+      - libsoup2.4-dev
+      - libsqlite3-dev
+      - locales
+      - pkg-config
+    stage-packages:
+      - libassuan0
+      - liblcms2-2
+      - libelf1
+      - libgpgme11
+      - libjson-glib-1.0-0
+    prime:
+      - -usr/bin
+      - -usr/sbin
+      - -usr/lib/gnupg
+      - -usr/share/man
+      - -usr/share/GConf
+      - -etc/X11
+      - -etc/ldap
+      - -etc/logcheck
+      - -usr/lib/dconf
+      - -usr/lib/gcc
+      - -usr/lib/glib-networking
+      - -usr/lib/gnupg2
+      - -usr/lib/sasl2
+      - -usr/lib/systemd
+      - -usr/lib/*/audit
+      - -usr/share/glib-2.0/schemas
+      - -usr/share/X11
+      - -usr/include
+      - -etc/dbus-1
+      - -lib/systemd
+      - -lib/udev
+      - -usr/lib/fwupd/fwupd
+      - -usr/share/dbus-1
+      - -usr/share/gnupg
+      - -usr/share/lintian
+      - -usr/share/pkgconfig
+      - -usr/share/installed-tests
+      - -usr/share/polkit-1
+      - -usr/share/vala
+      - -usr/share/doc
+      - -usr/share/gnupg2
+      - -usr/share/info
+      - -usr/share/gir-1.0
+      - -usr/share/upstart
+      - -usr/lib/*/glib-2.0
+      - -usr/lib/*/pkgconfig
+    after: [appstream-glib-dev, libfwup-dev, gudev, gusb]
+  update-mime:
+    plugin: make
+    source: contrib/snap/update-mime
+    stage-packages:
+      - shared-mime-info
+      - gsettings-desktop-schemas
+      - libxml2
+    prime:
+      - -usr/share/doc
+      - -usr/share/lintian
+      - -usr/share/pkgconfig
+    after: [fwupd]
+  fwupdtool-wrapper:
+    plugin: dump
+    source: contrib/snap
+    stage:
+    - fwupdtool.wrapper

@@ -3,21 +3,7 @@
  * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2016 Mario Limonciello <mario_limonciello@dell.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -56,7 +42,7 @@
 
 typedef struct _DOCK_DESCRIPTION
 {
-	const efi_guid_t	guid;
+	const gchar *		guid;
 	const gchar *		query;
 	const gchar *		desc;
 } DOCK_DESCRIPTION;
@@ -72,15 +58,15 @@ typedef struct _DOCK_DESCRIPTION
 #define TBT_CBL_STR		"2 2 2 3 0"
 
 /* supported dock related GUIDs */
-#define DOCK_FLASH_GUID		EFI_GUID (0xE7CA1F36, 0xBF73, 0x4574, 0xAFE6, 0xA4, 0xCC, 0xAC, 0xAB, 0xF4, 0x79)
-#define WD15_EC_GUID		EFI_GUID (0xE8445370, 0x0211, 0x449D, 0x9FAA, 0x10, 0x79, 0x06, 0xAB, 0x18, 0x9F)
-#define TB16_EC_GUID		EFI_GUID (0x33CC8870, 0xB1FC, 0x4EC7, 0x948A, 0xC0, 0x74, 0x96, 0x87, 0x4F, 0xAF)
-#define TB16_PC2_GUID		EFI_GUID (0x1B52C630, 0x86F6, 0x4AEE, 0x9F0C, 0x47, 0x4D, 0xC6, 0xBE, 0x49, 0xB6)
-#define TB16_PC1_GUID		EFI_GUID (0x8FE183DA, 0xC94E, 0x4804, 0xB319, 0x0F, 0x1B, 0xA5, 0x45, 0x7A, 0x69)
-#define WD15_PC1_GUID		EFI_GUID (0x8BA2B709, 0x6F97, 0x47FC, 0xB7E7, 0x6A, 0x87, 0xB5, 0x78, 0xFE, 0x25)
-#define LEGACY_CBL_GUID		EFI_GUID (0xFECE1537, 0xD683, 0x4EA8, 0xB968, 0x15, 0x45, 0x30, 0xBB, 0x6F, 0x73)
-#define UNIV_CBL_GUID		EFI_GUID (0xE2BF3AAD, 0x61A3, 0x44BF, 0x91EF, 0x34, 0x9B, 0x39, 0x51, 0x5D, 0x29)
-#define TBT_CBL_GUID		EFI_GUID (0x6DC832FC, 0x5BB0, 0x4E63, 0xA2FF, 0x02, 0xAA, 0xBA, 0x5B, 0xC1, 0xDC)
+#define DOCK_FLASH_GUID		"e7ca1f36-bf73-4574-afe6-a4ccacabf479"
+#define WD15_EC_GUID		"e8445370-0211-449d-9faa-107906ab189f"
+#define TB16_EC_GUID		"33cc8870-b1fc-4ec7-948a-c07496874faf"
+#define TB16_PC2_GUID		"1b52c630-86f6-4aee-9f0c-474dc6be49b6"
+#define TB16_PC1_GUID		"8fe183da-c94e-4804-b319-0f1ba5457a69"
+#define WD15_PC1_GUID		"8ba2b709-6f97-47fc-b7e7-6a87b578fe25"
+#define LEGACY_CBL_GUID		"fece1537-d683-4ea8-b968-154530bb6f73"
+#define UNIV_CBL_GUID		"e2bf3aad-61a3-44bf-91ef-349b39515d29"
+#define TBT_CBL_GUID		"6dc832fc-5bb0-4e63-a2ff-02aaba5bc1dc"
 
 #define EC_DESC			"EC"
 #define PC1_DESC		"Port Controller 1"
@@ -238,7 +224,7 @@ fu_dell_supported (FuPlugin *plugin)
 
 static gboolean
 fu_plugin_dell_match_dock_component (const gchar *query_str,
-				     efi_guid_t *guid_out,
+				     const gchar **guid_out,
 				     const gchar **name_out)
 {
 	const DOCK_DESCRIPTION list[] = {
@@ -255,7 +241,7 @@ fu_plugin_dell_match_dock_component (const gchar *query_str,
 	for (guint i = 0; i < G_N_ELEMENTS (list); i++) {
 		if (g_strcmp0 (query_str,
 			       list[i].query) == 0) {
-			memcpy (guid_out, &list[i].guid, sizeof (efi_guid_t));
+			*guid_out = list[i].guid;
 			*name_out = list[i].desc;
 			return TRUE;
 		}
@@ -325,12 +311,11 @@ fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 
 static gboolean
 fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
-		     guint8 type, const efi_guid_t *guid_raw,
+		     guint8 type, const gchar *component_guid,
 		     const gchar *component_desc, const gchar *version)
 {
 	const gchar *dock_type;
 	g_autofree gchar *dock_id = NULL;
-	g_autofree gchar *guid_str = NULL;
 	g_autofree gchar *dock_key = NULL;
 	g_autofree gchar *dock_name = NULL;
 	g_autoptr(FuDevice) dev = NULL;
@@ -341,23 +326,21 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 		return FALSE;
 	}
 
-	guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
-	if (efi_guid_to_str (guid_raw, &guid_str) < 0) {
-		g_debug ("Failed to convert GUID.");
-		return FALSE;
-	}
-
-	dock_key = fu_plugin_get_dock_key (plugin, device,
-						  guid_str);
+	dock_key = fu_plugin_get_dock_key (plugin, device, component_guid);
 	if (fu_plugin_cache_lookup (plugin, dock_key) != NULL) {
 		g_debug ("%s is already registered.", dock_key);
 		return FALSE;
 	}
 
 	dev = fu_device_new ();
-	dock_id = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, guid_str);
-	dock_name = g_strdup_printf ("Dell %s %s", dock_type,
-				     component_desc);
+	dock_id = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, component_guid);
+	if (component_desc != NULL) {
+		dock_name = g_strdup_printf ("Dell %s %s", dock_type,
+					     component_desc);
+		fu_device_add_parent_guid (dev, DOCK_FLASH_GUID);
+	} else {
+		dock_name = g_strdup_printf ("Dell %s", dock_type);
+	}
 	fu_device_set_id (dev, dock_id);
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, dock_name);
@@ -368,7 +351,7 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 		fu_device_set_summary (dev, "A USB type-C docking station");
 	}
 	fu_device_add_icon (dev, "computer");
-	fu_device_add_guid (dev, guid_str);
+	fu_device_add_guid (dev, component_guid);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
 		fu_device_set_version (dev, version);
@@ -394,12 +377,12 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	guint16 pid;
 	guint16 vid;
 	const gchar *query_str;
+	const gchar *component_guid = NULL;
 	const gchar *component_name = NULL;
 	DOCK_UNION buf;
 	DOCK_INFO *dock_info;
-	efi_guid_t guid_raw;
-	efi_guid_t tmpguid;
 	gboolean old_ec = FALSE;
+	g_autofree gchar *flash_ver_str = NULL;
 
 	/* don't look up immediately if a dock is connected as that would
 	   mean a SMI on every USB device that showed up on the system */
@@ -454,7 +437,7 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 			return;
 		}
 		if (!fu_plugin_dell_match_dock_component (query_str + 6,
-							  &guid_raw,
+							  &component_guid,
 							  &component_name)) {
 			g_debug ("Unable to match dock component %s",
 				query_str);
@@ -479,7 +462,7 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 		if (!fu_plugin_dock_node (plugin,
 						 device,
 						 buf.record->dock_info_header.dock_type,
-						 &guid_raw,
+						 component_guid,
 						 component_name,
 						 fw_str)) {
 			g_debug ("Failed to create %s", component_name);
@@ -488,20 +471,17 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	}
 
 	/* if an old EC or invalid EC version found, create updatable parent */
-	if (old_ec) {
-		g_autofree gchar *fw_str = NULL;
-		tmpguid = DOCK_FLASH_GUID;
-		fw_str = as_utils_version_from_uint32 (dock_info->flash_pkg_version,
-						       parse_flags);
-		if (!fu_plugin_dock_node (plugin,
-						 device,
-						 buf.record->dock_info_header.dock_type,
-						 &tmpguid,
-						 "",
-						 fw_str)) {
-			g_debug ("Failed to create top dock node");
-			return;
-		}
+	if (old_ec)
+		flash_ver_str = as_utils_version_from_uint32 (dock_info->flash_pkg_version,
+							      parse_flags);
+	if (!fu_plugin_dock_node (plugin,
+				  device,
+				  buf.record->dock_info_header.dock_type,
+				  DOCK_FLASH_GUID,
+				  NULL,
+				  flash_ver_str)) {
+		g_debug ("Failed to create top dock node");
+		return;
 	}
 
 #if defined (HAVE_SYNAPTICS)
@@ -515,11 +495,10 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 				  FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	const efi_guid_t guids[] = { WD15_EC_GUID, TB16_EC_GUID, TB16_PC2_GUID,
-				     TB16_PC1_GUID, WD15_PC1_GUID,
-				     LEGACY_CBL_GUID, UNIV_CBL_GUID,
-				     TBT_CBL_GUID, DOCK_FLASH_GUID};
-	const efi_guid_t *guid_raw;
+	const gchar *guids[] = { WD15_EC_GUID, TB16_EC_GUID, TB16_PC2_GUID,
+				 TB16_PC1_GUID, WD15_PC1_GUID,
+				 LEGACY_CBL_GUID, UNIV_CBL_GUID,
+				 TBT_CBL_GUID, DOCK_FLASH_GUID};
 	guint16 pid;
 	guint16 vid;
 	FuDevice *dev = NULL;
@@ -539,12 +518,8 @@ fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
 	/* remove any components already in database? */
 	for (guint i = 0; i < G_N_ELEMENTS (guids); i++) {
 		g_autofree gchar *dock_key = NULL;
-		g_autofree gchar *guid_str = NULL;
-		guid_raw = &guids[i];
-		guid_str = g_strdup ("00000000-0000-0000-0000-000000000000");
-		efi_guid_to_str (guid_raw, &guid_str);
 		dock_key = fu_plugin_get_dock_key (plugin, device,
-							  guid_str);
+							  guids[i]);
 		dev = fu_plugin_cache_lookup (plugin, dock_key);
 		if (dev != NULL) {
 			fu_plugin_device_remove (plugin,
@@ -763,6 +738,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_LOCKED);
 		fu_device_add_icon (dev_alt, "computer");
 		fu_device_set_alternate (dev_alt, dev);
+		fu_device_add_parent_guid (dev_alt, tpm_guid);
 
 		/* If TPM is not owned and at least 1 flash left allow mode switching
 		 *

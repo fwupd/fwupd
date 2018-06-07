@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -84,11 +70,11 @@ fu_plugin_uefi_guid_to_string (efi_guid_t *guid_raw)
 }
 
 static fwup_resource *
-fu_plugin_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError **error)
+fu_plugin_uefi_find_resource (fwup_resource_iter *iter, FuDevice *device, GError **error)
 {
 	efi_guid_t *guid_raw;
-	fwup_resource *re_matched = NULL;
 	fwup_resource *re = NULL;
+	g_autofree gchar *guids_str = NULL;
 
 	/* get the hardware we're referencing */
 	while (fwup_resource_iter_next (iter, &re) > 0) {
@@ -103,22 +89,18 @@ fu_plugin_uefi_find (fwup_resource_iter *iter, const gchar *guid_str, GError **e
 		}
 
 		/* FIXME: also match hardware_instance too */
-		if (g_strcmp0 (guid_str, guid_tmp) == 0) {
-			re_matched = re;
-			break;
-		}
+		if (fu_device_has_guid (device, guid_tmp))
+			return re;
 	}
 
 	/* paradoxically, no hardware matched */
-	if (re_matched == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "No UEFI firmware matched %s",
-			     guid_str);
-	}
-
-	return re_matched;
+	guids_str = fu_device_get_guids_as_str (device);
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "No UEFI firmware matched '%s'",
+		     guids_str);
+	return NULL;
 }
 
 static void
@@ -140,7 +122,7 @@ fu_plugin_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find (iter, fu_device_get_guid_default (device), error);
+	re = fu_plugin_uefi_find_resource (iter, device, error);
 	if (re == NULL)
 		return FALSE;
 	if (fwup_clear_status (re) < 0) {
@@ -166,7 +148,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find (iter, fu_device_get_guid_default (device), error);
+	re = fu_plugin_uefi_find_resource (iter, device, error);
 	if (re == NULL)
 		return FALSE;
 	if (fwup_get_last_attempt_info (re, &version, &status, &when) < 0) {
@@ -424,7 +406,7 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* get the hardware we're referencing */
 	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find (iter, fu_device_get_guid_default (device), error);
+	re = fu_plugin_uefi_find_resource (iter, device, error);
 	if (re == NULL)
 		return FALSE;
 
@@ -583,13 +565,6 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 			      guid, hardware_instance);
 
 	dev = fu_device_new ();
-	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
-		/* nothing better in the icon naming spec */
-		fu_device_add_icon (dev, "audio-card");
-	} else {
-		/* this is probably system firmware */
-		fu_device_add_icon (dev, "computer");
-	}
 	fu_device_set_id (dev, id);
 	fu_device_add_guid (dev, guid);
 	fu_device_set_version (dev, version);
@@ -611,6 +586,14 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 		g_warning ("Kernel support for EFI variables missing");
 	}
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
+		/* nothing better in the icon naming spec */
+		fu_device_add_icon (dev, "audio-card");
+	} else {
+		/* this is probably system firmware */
+		fu_device_add_icon (dev, "computer");
+		fu_device_add_guid (dev, "main-system-firmware");
+	}
 	fu_plugin_device_add (plugin, dev);
 }
 

@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 /**
@@ -38,6 +24,8 @@
 
 #include "dfu-common.h"
 #include "dfu-element.h"
+
+#include "fwupd-error.h"
 
 static void dfu_element_finalize			 (GObject *object);
 
@@ -251,4 +239,61 @@ dfu_element_set_target_size (DfuElement *element, guint32 target_size)
 	/* replace */
 	g_bytes_unref (priv->contents);
 	priv->contents = g_bytes_new_take (buf, target_size);
+}
+
+/**
+ * dfu_element_get_contents_chunk:
+ * @element: a #DfuElement
+ * @address: an address greater than dfu_element_get_address()
+ * @chunk_sz_max: the size of the new chunk
+ * @error: a #GError, or %NULL
+ *
+ * Gets a block of data from the @element. If the contents of the element is
+ * smaller than the requested chunk size then the #GBytes will be smaller
+ * than @chunk_sz_max. Use dfu_utils_bytes_pad() if padding is required.
+ *
+ * If the @address is larger than the size of the @element then an error is returned.
+ *
+ * Return value: (transfer full): a #GBytes, or %NULL
+ **/
+GBytes *
+dfu_element_get_contents_chunk (DfuElement *element,
+				guint32 address,
+				guint32 chunk_sz_max,
+				GError **error)
+{
+	GBytes *blob;
+	gsize chunk_left;
+	guint32 offset;
+
+	/* check address requested is larger than base address */
+	if (address < dfu_element_get_address (element)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "requested address 0x%x less than base address 0x%x",
+			     (guint) address, (guint) dfu_element_get_address (element));
+		return NULL;
+	}
+
+	/* offset into data */
+	offset = address - dfu_element_get_address (element);
+	blob = dfu_element_get_contents (element);
+	if (offset > g_bytes_get_size (blob)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "offset 0x%x larger than data size 0x%x",
+			     (guint) offset,
+			     (guint) g_bytes_get_size (blob));
+		return NULL;
+	}
+
+	/* if we have less data than requested */
+	chunk_left = g_bytes_get_size (blob) - offset;
+	if (chunk_sz_max > chunk_left)
+		return g_bytes_new_from_bytes (blob, offset, chunk_left);
+
+	/* check chunk */
+	return g_bytes_new_from_bytes (blob, offset, chunk_sz_max);
 }

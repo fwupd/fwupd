@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -57,7 +43,7 @@ fu_plugin_update (FuPlugin *plugin,
 	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
 	/* get version */
-	if (!fu_ebitdo_device_is_bootloader (ebitdo_dev)) {
+	if (!fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -69,7 +55,7 @@ fu_plugin_update (FuPlugin *plugin,
 	locker = fu_device_locker_new (ebitdo_dev, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_ebitdo_device_write_firmware (ebitdo_dev, blob_fw, error))
+	if (!fu_device_write_firmware (FU_DEVICE (ebitdo_dev), blob_fw, error))
 		return FALSE;
 
 	/* when doing a soft-reboot the device does not re-enumerate properly

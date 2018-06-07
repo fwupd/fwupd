@@ -2,27 +2,30 @@
  *
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #ifndef __FU_COMMON_H__
 #define __FU_COMMON_H__
 
 #include <gio/gio.h>
+
+typedef enum {
+	FU_APP_FLAGS_NONE		= 0,
+	FU_APP_FLAGS_NO_IDLE_SOURCES	= 1 << 0,
+	FU_APP_FLAGS_LAST
+} FuAppFlags;
+
+typedef enum {
+	FU_PATH_KIND_CACHEDIR_PKG,
+	FU_PATH_KIND_DATADIR_PKG,
+	FU_PATH_KIND_LOCALSTATEDIR,
+	FU_PATH_KIND_LOCALSTATEDIR_PKG,
+	FU_PATH_KIND_PLUGINDIR_PKG,
+	FU_PATH_KIND_SYSCONFDIR,
+	FU_PATH_KIND_SYSCONFDIR_PKG,
+	FU_PATH_KIND_LAST
+} FuPathKind;
 
 typedef void	(*FuOutputHandler)		(const gchar	*line,
 						 gpointer	 user_data);
@@ -33,6 +36,7 @@ gboolean	 fu_common_spawn_sync		(const gchar * const *argv,
 						 GCancellable	*cancellable,
 						 GError		**error);
 
+gchar		*fu_common_get_path		(FuPathKind	 path_kind);
 gboolean	 fu_common_rmtree		(const gchar	*directory,
 						 GError		**error);
 GPtrArray	*fu_common_get_files_recursive	(const gchar	*path,
@@ -54,6 +58,7 @@ GBytes		*fu_common_firmware_builder	(GBytes		*bytes,
 						 const gchar	*script_fn,
 						 const gchar	*output_fn,
 						 GError		**error);
+GError		*fu_common_error_array_get_best	(GPtrArray	*errors);
 
 typedef guint FuEndianType;
 

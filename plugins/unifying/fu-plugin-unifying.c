@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -61,12 +47,12 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 static gboolean
 fu_plugin_unifying_detach_cb (gpointer user_data)
 {
-	LuDevice *device = LU_DEVICE (user_data);
+	FuDevice *device = FU_DEVICE (user_data);
 	g_autoptr(GError) error = NULL;
 
 	/* ditch this device */
 	g_debug ("detaching");
-	if (!lu_device_detach (device, &error)) {
+	if (!fu_device_detach (device, &error)) {
 		g_warning ("failed to detach: %s", error->message);
 		return FALSE;
 	}
@@ -77,12 +63,12 @@ fu_plugin_unifying_detach_cb (gpointer user_data)
 static gboolean
 fu_plugin_unifying_attach_cb (gpointer user_data)
 {
-	LuDevice *device = LU_DEVICE (user_data);
+	FuDevice *device = FU_DEVICE (user_data);
 	g_autoptr(GError) error = NULL;
 
 	/* ditch this device */
 	g_debug ("attaching");
-	if (!lu_device_attach (device, &error)) {
+	if (!fu_device_attach (device, &error)) {
 		g_warning ("failed to detach: %s", error->message);
 		return FALSE;
 	}
@@ -110,7 +96,7 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 		g_debug ("doing detach in idle");
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
 				 fu_plugin_unifying_detach_cb,
-				 g_object_ref (device),
+				 g_object_ref (dev),
 				 (GDestroyNotify) g_object_unref);
 		if (!lu_context_wait_for_replug (data->ctx,
 						 device,
@@ -119,7 +105,7 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 			return FALSE;
 	} else {
 		g_debug ("doing detach in main thread");
-		if (!lu_device_detach (device, error))
+		if (!fu_device_detach (dev, error))
 			return FALSE;
 	}
 	return TRUE;
@@ -154,7 +140,7 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
 			return FALSE;
 	} else {
 		g_debug ("doing attach in main thread");
-		if (!lu_device_attach (device, error))
+		if (!fu_device_attach (dev, error))
 			return FALSE;
 	}
 	return TRUE;
@@ -186,7 +172,7 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* write the firmware */
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
-	if (!lu_device_write_firmware (device, blob_fw, error))
+	if (!fu_device_write_firmware (dev, blob_fw, error))
 		return FALSE;
 
 	/* success */

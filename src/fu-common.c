@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include <config.h>
@@ -117,7 +103,7 @@ fu_common_get_file_list_internal (GPtrArray *files, const gchar *directory, GErr
 
 /**
  * fu_common_get_files_recursive:
- * @directory: a directory name
+ * @path: a directory name
  * @error: A #GError or %NULL
  *
  * Returns every file found under @directory, and any subdirectory.
@@ -390,6 +376,7 @@ fu_common_firmware_builder (GBytes *bytes,
 {
 	gint rc = 0;
 	g_autofree gchar *argv_str = NULL;
+	g_autofree gchar *localstatebuilderdir = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *output2_fn = NULL;
 	g_autofree gchar *standard_error = NULL;
@@ -411,7 +398,8 @@ fu_common_firmware_builder (GBytes *bytes,
 		return NULL;
 
 	/* this is shared with the plugins */
-	localstatedir = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", "builder", NULL);
+	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	localstatebuilderdir = g_build_filename (localstatedir, "builder", NULL);
 
 	/* launch bubblewrap and generate firmware */
 	g_ptr_array_add (argv, g_strdup ("bwrap"));
@@ -420,8 +408,8 @@ fu_common_firmware_builder (GBytes *bytes,
 	fu_common_add_argv (argv, "--dir /tmp");
 	fu_common_add_argv (argv, "--dir /var");
 	fu_common_add_argv (argv, "--bind %s /tmp", tmpdir);
-	if (g_file_test (localstatedir, G_FILE_TEST_EXISTS))
-		fu_common_add_argv (argv, "--ro-bind %s /boot", localstatedir);
+	if (g_file_test (localstatebuilderdir, G_FILE_TEST_EXISTS))
+		fu_common_add_argv (argv, "--ro-bind %s /boot", localstatebuilderdir);
 	fu_common_add_argv (argv, "--dev /dev");
 	fu_common_add_argv (argv, "--symlink usr/lib /lib");
 	fu_common_add_argv (argv, "--symlink usr/lib64 /lib64");
@@ -599,7 +587,7 @@ fu_common_spawn_sync (const gchar * const * argv,
  * fu_common_write_uint16:
  * @buf: A writable buffer
  * @val_native: a value in host byte-order
- * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
  **/
@@ -624,7 +612,7 @@ fu_common_write_uint16 (guint8 *buf, guint16 val_native, FuEndianType endian)
  * fu_common_write_uint32:
  * @buf: A writable buffer
  * @val_native: a value in host byte-order
- * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
  **/
@@ -648,7 +636,7 @@ fu_common_write_uint32 (guint8 *buf, guint32 val_native, FuEndianType endian)
 /**
  * fu_common_read_uint16:
  * @buf: A readable buffer
- * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  *
  * Read a value from a buffer using a specified endian.
  *
@@ -675,7 +663,7 @@ fu_common_read_uint16 (const guint8 *buf, FuEndianType endian)
 /**
  * fu_common_read_uint32:
  * @buf: A readable buffer
- * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  *
  * Read a value from a buffer using a specified endian.
  *
@@ -697,4 +685,175 @@ fu_common_read_uint32 (const guint8 *buf, FuEndianType endian)
 		g_assert_not_reached ();
 	}
 	return val_native;
+}
+
+static const GError *
+fu_common_error_array_find (GPtrArray *errors, FwupdError error_code)
+{
+	for (guint j = 0; j < errors->len; j++) {
+		const GError *error = g_ptr_array_index (errors, j);
+		if (g_error_matches (error, FWUPD_ERROR, error_code))
+			return error;
+	}
+	return NULL;
+}
+
+static guint
+fu_common_error_array_count (GPtrArray *errors, FwupdError error_code)
+{
+	guint cnt = 0;
+	for (guint j = 0; j < errors->len; j++) {
+		const GError *error = g_ptr_array_index (errors, j);
+		if (g_error_matches (error, FWUPD_ERROR, error_code))
+			cnt++;
+	}
+	return cnt;
+}
+
+static gboolean
+fu_common_error_array_matches_any (GPtrArray *errors, FwupdError *error_codes)
+{
+	for (guint j = 0; j < errors->len; j++) {
+		const GError *error = g_ptr_array_index (errors, j);
+		gboolean matches_any = FALSE;
+		for (guint i = 0; error_codes[i] != FWUPD_ERROR_LAST; i++) {
+			if (g_error_matches (error, FWUPD_ERROR, error_codes[i])) {
+				matches_any = TRUE;
+				break;
+			}
+		}
+		if (!matches_any)
+			return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_common_error_array_get_best:
+ * @errors: (element-type GError): array of errors
+ *
+ * Finds the 'best' error to show the user from a array of errors, creating a
+ * completely bespoke error where required.
+ *
+ * Returns: (transfer full): a #GError, never %NULL
+ **/
+GError *
+fu_common_error_array_get_best (GPtrArray *errors)
+{
+	FwupdError err_prio[] =		{ FWUPD_ERROR_INVALID_FILE,
+					  FWUPD_ERROR_VERSION_SAME,
+					  FWUPD_ERROR_VERSION_NEWER,
+					  FWUPD_ERROR_NOT_SUPPORTED,
+					  FWUPD_ERROR_INTERNAL,
+					  FWUPD_ERROR_NOT_FOUND,
+					  FWUPD_ERROR_LAST };
+	FwupdError err_all_uptodate[] =	{ FWUPD_ERROR_VERSION_SAME,
+					  FWUPD_ERROR_NOT_FOUND,
+					  FWUPD_ERROR_NOT_SUPPORTED,
+					  FWUPD_ERROR_LAST };
+	FwupdError err_all_newer[] =	{ FWUPD_ERROR_VERSION_NEWER,
+					  FWUPD_ERROR_VERSION_SAME,
+					  FWUPD_ERROR_NOT_FOUND,
+					  FWUPD_ERROR_NOT_SUPPORTED,
+					  FWUPD_ERROR_LAST };
+
+	/* are all the errors either GUID-not-matched or version-same? */
+	if (fu_common_error_array_count (errors, FWUPD_ERROR_VERSION_SAME) > 1 &&
+	    fu_common_error_array_matches_any (errors, err_all_uptodate)) {
+		return g_error_new (FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "All updatable firmware is already installed");
+	}
+
+	/* are all the errors either GUID-not-matched or version same or newer? */
+	if (fu_common_error_array_count (errors, FWUPD_ERROR_VERSION_NEWER) > 1 &&
+	    fu_common_error_array_matches_any (errors, err_all_newer)) {
+		return g_error_new (FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "All updatable devices already have newer versions");
+	}
+
+	/* get the most important single error */
+	for (guint i = 0; err_prio[i] != FWUPD_ERROR_LAST; i++) {
+		const GError *error_tmp = fu_common_error_array_find (errors, err_prio[i]);
+		if (error_tmp != NULL)
+			return g_error_copy (error_tmp);
+	}
+
+	/* fall back to something */
+	return g_error_new (FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "No supported devices found");
+}
+
+/**
+ * fu_common_get_path:
+ * @path_kind: A #FuPathKind e.g. %FU_PATH_KIND_DATADIR_PKG
+ *
+ * Gets a fwupd-specific system path. These can be overridden with various
+ * environment variables, for instance %FWUPD_DATADIR.
+ *
+ * Returns: a system path, or %NULL if invalid
+ **/
+gchar *
+fu_common_get_path (FuPathKind path_kind)
+{
+	const gchar *tmp;
+	g_autofree gchar *basedir = NULL;
+
+	switch (path_kind) {
+	/* /var */
+	case FU_PATH_KIND_LOCALSTATEDIR:
+		tmp = g_getenv ("FWUPD_LOCALSTATEDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		tmp = g_getenv ("SNAP_USER_DATA");
+		if (tmp != NULL)
+			return g_build_filename (tmp, LOCALSTATEDIR, NULL);
+		return g_build_filename (LOCALSTATEDIR, NULL);
+	/* /etc */
+	case FU_PATH_KIND_SYSCONFDIR:
+		tmp = g_getenv ("FWUPD_SYSCONFDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		tmp = g_getenv ("SNAP_USER_DATA");
+		if (tmp != NULL)
+			return g_build_filename (tmp, SYSCONFDIR, NULL);
+		return g_strdup (SYSCONFDIR);
+	/* /usr/lib/<triplet>/fwupd-plugins-3 */
+	case FU_PATH_KIND_PLUGINDIR_PKG:
+		tmp = g_getenv ("FWUPD_PLUGINDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		tmp = g_getenv ("SNAP");
+		if (tmp != NULL)
+			return g_build_filename (tmp, PLUGINDIR, NULL);
+		return g_build_filename (PLUGINDIR, NULL);
+	/* /usr/share/fwupd */
+	case FU_PATH_KIND_DATADIR_PKG:
+		tmp = g_getenv ("FWUPD_DATADIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		tmp = g_getenv ("SNAP");
+		if (tmp != NULL)
+			return g_build_filename (tmp, DATADIR, PACKAGE_NAME, NULL);
+		return g_build_filename (DATADIR, PACKAGE_NAME, NULL);
+	/* /etc/fwupd */
+	case FU_PATH_KIND_SYSCONFDIR_PKG:
+		basedir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR);
+		return g_build_filename (basedir, PACKAGE_NAME, NULL);
+	/* /var/lib/fwupd */
+	case FU_PATH_KIND_LOCALSTATEDIR_PKG:
+		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
+		return g_build_filename (basedir, "lib", PACKAGE_NAME, NULL);
+	/* /var/cache/fwupd */
+	case FU_PATH_KIND_CACHEDIR_PKG:
+		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
+		return g_build_filename (basedir, "cache", PACKAGE_NAME, NULL);
+	/* this shouldn't happen */
+	default:
+		g_assert_not_reached ();
+	}
+
+	return NULL;
 }

@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -462,7 +448,7 @@ fwupd_build_history_report_json (GPtrArray *devices, GError **error)
 	/* get a hash that represents the machine */
 	machine_id = fwupd_build_machine_id ("fwupd", error);
 	if (machine_id == NULL)
-		return FALSE;
+		return NULL;
 
 	/* create header */
 	builder = json_builder_new ();
@@ -476,7 +462,7 @@ fwupd_build_history_report_json (GPtrArray *devices, GError **error)
 	json_builder_set_member_name (builder, "Metadata");
 	json_builder_begin_object (builder);
 	if (!fwupd_build_history_report_json_metadata (builder, error))
-		return FALSE;
+		return NULL;
 	json_builder_end_object (builder);
 
 	/* add each device */

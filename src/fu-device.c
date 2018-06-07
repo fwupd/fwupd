@@ -1,22 +1,8 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -42,11 +28,15 @@ static void fu_device_finalize			 (GObject *object);
 typedef struct {
 	gchar				*equivalent_id;
 	FuDevice			*alternate;
+	FuDevice			*parent;	/* noref */
 	FuQuirks			*quirks;
 	GHashTable			*metadata;
+	GPtrArray			*parent_guids;
+	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
 	FwupdStatus			 status;
 	guint				 progress;
+	guint				 order;
 } FuDevicePrivate;
 
 enum {
@@ -110,6 +100,41 @@ fu_device_set_property (GObject *object, guint prop_id,
 	}
 }
 
+/**
+ * fu_device_get_order:
+ * @device: a #FuPlugin
+ *
+ * Gets the device order, where higher numbers are installed after lower
+ * numbers.
+ *
+ * Returns: the integer value
+ *
+ * Since: 1.0.8
+ **/
+guint
+fu_device_get_order (FuDevice *device)
+{
+	FuDevicePrivate *priv = fu_device_get_instance_private (device);
+	return priv->order;
+}
+
+/**
+ * fu_device_set_order:
+ * @device: a #FuDevice
+ * @order: a integer value
+ *
+ * Sets the device order, where higher numbers are installed after lower
+ * numbers.
+ *
+ * Since: 1.0.8
+ **/
+void
+fu_device_set_order (FuDevice *device, guint order)
+{
+	FuDevicePrivate *priv = fu_device_get_instance_private (device);
+	priv->order = order;
+}
+
 const gchar *
 fu_device_get_equivalent_id (FuDevice *device)
 {
@@ -165,6 +190,186 @@ fu_device_set_alternate (FuDevice *device, FuDevice *alternate)
 }
 
 /**
+ * fu_device_get_parent:
+ * @device: A #FuDevice
+ *
+ * Gets any parent device. An parent device is logically "above" the current
+ * device and this may be reflected in client tools.
+ *
+ * This information also allows the plugin to optionally verify the parent
+ * device, for instance checking the parent device firmware version.
+ *
+ * The parent object is not refcounted and if destroyed this function will then
+ * return %NULL.
+ *
+ * Returns: (transfer none): a #FuDevice or %NULL
+ *
+ * Since: 1.0.8
+ **/
+FuDevice *
+fu_device_get_parent (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->parent;
+}
+
+static void
+fu_device_set_parent (FuDevice *device, FuDevice *parent)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+
+	g_object_add_weak_pointer (G_OBJECT (parent), (gpointer *) &priv->parent);
+	priv->parent = parent;
+
+	/* this is what goes over D-Bus */
+	fwupd_device_set_parent_id (FWUPD_DEVICE (device),
+				    device != NULL ? fu_device_get_id (parent) : NULL);
+}
+
+/**
+ * fu_device_get_children:
+ * @device: A #FuDevice
+ *
+ * Gets any child devices. A child device is logically "below" the current
+ * device and this may be reflected in client tools.
+ *
+ * Returns: (transfer none) (element-type FuDevice): child devices
+ *
+ * Since: 1.0.8
+ **/
+GPtrArray *
+fu_device_get_children (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->children;
+}
+
+/**
+ * fu_device_add_child:
+ * @device: A #FuDevice
+ * @child: Another #FuDevice
+ *
+ * Sets any child device. An child device is logically linked to the primary
+ * device in some way.
+ *
+ * Since: 1.0.8
+ **/
+void
+fu_device_add_child (FuDevice *device, FuDevice *child)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_return_if_fail (FU_IS_DEVICE (child));
+
+	/* add if the child does not already exist */
+	for (guint i = 0; i < priv->children->len; i++) {
+		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
+		if (devtmp == child)
+			return;
+	}
+	g_ptr_array_add (priv->children, g_object_ref (child));
+
+	/* copy from main device if unset */
+	if (fu_device_get_vendor (child) == NULL)
+		fu_device_set_vendor (child, fu_device_get_vendor (device));
+	if (fu_device_get_vendor_id (child) == NULL)
+		fu_device_set_vendor_id (child, fu_device_get_vendor_id (device));
+
+	/* ensure the parent is also set on the child */
+	fu_device_set_parent (child, device);
+
+	/* order devices so they are updated in the correct sequence */
+	if (fu_device_has_flag (child, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST)) {
+		if (priv->order <= fu_device_get_order (child))
+			priv->order = fu_device_get_order (child) + 1;
+	} else {
+		if (priv->order >= fu_device_get_order (child))
+			fu_device_set_order (child, priv->order + 1);
+	}
+}
+
+/**
+ * fu_device_get_parent_guids:
+ * @device: A #FuDevice
+ *
+ * Gets any parent device GUIDs. If a device is added to the daemon that matches
+ * any GUIDs added from fu_device_add_parent_guid() then this device is marked the parent of @device.
+ *
+ * Returns: (transfer none) (element-type utf8): a list of GUIDs
+ *
+ * Since: 1.0.8
+ **/
+GPtrArray *
+fu_device_get_parent_guids (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->parent_guids;
+}
+
+/**
+ * fu_device_has_parent_guid:
+ * @device: A #FuDevice
+ * @guid: a GUID
+ *
+ * Searches the list of parent GUIDs for a string match.
+ *
+ * Returns: %TRUE if the parent GUID exists
+ *
+ * Since: 1.0.8
+ **/
+gboolean
+fu_device_has_parent_guid (FuDevice *device, const gchar *guid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	for (guint i = 0; i < priv->parent_guids->len; i++) {
+		const gchar *guid_tmp = g_ptr_array_index (priv->parent_guids, i);
+		if (g_strcmp0 (guid_tmp, guid) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fu_device_add_parent_guid:
+ * @device: A #FuDevice
+ * @guid: a GUID
+ *
+ * Sets any parent device using a GUID. An parent device is logically linked to
+ * the primary device in some way and can be added before or after @device.
+ *
+ * The GUIDs are searched in order, and so the order of adding GUIDs may be
+ * important if more than one parent device might match.
+ *
+ * Since: 1.0.8
+ **/
+void
+fu_device_add_parent_guid (FuDevice *device, const gchar *guid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_return_if_fail (guid != NULL);
+
+	/* make valid */
+	if (!as_utils_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+		if (fu_device_has_parent_guid (device, tmp))
+			return;
+		g_debug ("using %s for %s", tmp, guid);
+		g_ptr_array_add (priv->parent_guids, g_steal_pointer (&tmp));
+		return;
+	}
+
+	/* already valid */
+	if (fu_device_has_parent_guid (device, guid))
+		return;
+	g_ptr_array_add (priv->parent_guids, g_strdup (guid));
+}
+
+/**
  * fu_device_add_guid:
  * @device: A #FuDevice
  * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
@@ -187,6 +392,27 @@ fu_device_add_guid (FuDevice *device, const gchar *guid)
 
 	/* already valid */
 	fwupd_device_add_guid (FWUPD_DEVICE (device), guid);
+}
+
+/**
+ * fu_device_get_guids_as_str:
+ * @device: A #FuDevice
+ *
+ * Gets the device GUIDs as a joined string, which may be useful for error
+ * messages.
+ *
+ * Returns: a string, which may be empty length but not %NULL
+ *
+ * Since: 1.0.8
+ **/
+gchar *
+fu_device_get_guids_as_str (FuDevice *device)
+{
+	GPtrArray *guids = fu_device_get_guids (device);
+	g_autofree gchar **tmp = g_new0 (gchar *, guids->len + 1);
+	for (guint i = 0; i < guids->len; i++)
+		tmp[i] = g_ptr_array_index (guids, i);
+	return g_strjoinv (",", tmp);
 }
 
 /**
@@ -742,6 +968,135 @@ fu_device_get_release_default (FuDevice *device)
 	return rel;
 }
 
+/**
+ * fu_device_write_firmware:
+ * @device: A #FuDevice
+ * @fw: A #GBytes
+ * @error: A #GError
+ *
+ * Writes firmware to the device by calling a plugin-specific vfunc.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.0.8
+ **/
+gboolean
+fu_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->write_firmware == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return FALSE;
+	}
+
+	/* call vfunc */
+	return klass->write_firmware (device, fw, error);
+}
+
+/**
+ * fu_device_read_firmware:
+ * @device: A #FuDevice
+ * @error: A #GError
+ *
+ * Reads firmware from the device by calling a plugin-specific vfunc.
+ *
+ * Returns: (transfer full): A #GBytes, or %NULL for error
+ *
+ * Since: 1.0.8
+ **/
+GBytes *
+fu_device_read_firmware (FuDevice *device, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* no plugin-specific method */
+	if (klass->read_firmware == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return NULL;
+	}
+
+	/* call vfunc */
+	return klass->read_firmware (device, error);
+}
+
+/**
+ * fu_device_detach:
+ * @device: A #FuDevice
+ * @error: A #GError
+ *
+ * Detaches a device from the application into bootloader mode.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.0.8
+ **/
+gboolean
+fu_device_detach (FuDevice *device, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->detach == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return FALSE;
+	}
+
+	/* call vfunc */
+	return klass->detach (device, error);
+}
+
+/**
+ * fu_device_attach:
+ * @device: A #FuDevice
+ * @error: A #GError
+ *
+ * Attaches a device from the bootloader into application mode.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.0.8
+ **/
+gboolean
+fu_device_attach (FuDevice *device, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->attach == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return FALSE;
+	}
+
+	/* call vfunc */
+	return klass->attach (device, error);
+}
+
 static void
 fu_device_class_init (FuDeviceClass *klass)
 {
@@ -782,6 +1137,8 @@ fu_device_init (FuDevice *device)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (device);
 	priv->status = FWUPD_STATUS_IDLE;
+	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
 						g_free, g_free);
 }
@@ -794,9 +1151,13 @@ fu_device_finalize (GObject *object)
 
 	if (priv->alternate != NULL)
 		g_object_unref (priv->alternate);
+	if (priv->parent != NULL)
+		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
 	if (priv->quirks != NULL)
 		g_object_unref (priv->quirks);
 	g_hash_table_unref (priv->metadata);
+	g_ptr_array_unref (priv->children);
+	g_ptr_array_unref (priv->parent_guids);
 	g_free (priv->equivalent_id);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);

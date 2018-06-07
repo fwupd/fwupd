@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2017 Christian J. Kellner <christian@kellner.me>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -36,6 +22,7 @@
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
 #include "fu-thunderbolt-image.h"
+#include "fu-thunderbolt-known-devices.h"
 
 #ifndef HAVE_GUDEV_232
 #pragma clang diagnostic push
@@ -222,6 +209,23 @@ fu_plugin_thunderbolt_parse_version (const gchar *version_raw)
 }
 
 static void
+fu_plugin_thunderbolt_add_known_parents (FuDevice *device, guint16 vid, guint16 did)
+{
+	const gchar *parent = NULL;
+
+	if (vid == THUNDERBOLT_VENDOR_DELL) {
+		if (did == THUNDERBOLT_DEVICE_DELL_TB16_CABLE ||
+		    did == THUNDERBOLT_DEVICE_DELL_TB16_DOCK)
+			parent = PARENT_GUID_DELL_TB16;
+	}
+
+	if (parent != NULL ) {
+		fu_device_add_parent_guid (device, parent);
+		g_debug ("Add known parent %s to %u:%u", parent, vid, did);
+	}
+}
+
+static void
 fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 {
 	FuDevice *dev_tmp;
@@ -316,6 +320,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 					     (guint) did,
 					     is_native ? "-native" : "");
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_plugin_thunderbolt_add_known_parents (dev, vid, did);
 	}
 
 	fu_device_set_platform_id (dev, uuid);

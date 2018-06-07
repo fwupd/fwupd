@@ -2,7 +2,8 @@
 # pylint: disable=wrong-import-position,too-many-locals,unused-argument,wrong-import-order
 #
 # Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
-# Licensed under the GNU General Public License Version 2
+#
+# SPDX-License-Identifier: LGPL-2.1+
 
 import gi
 import os
@@ -113,12 +114,6 @@ if __name__ == '__main__':
     test = Test('ColorHug2', '2082b5e0-7a64-478a-b1b2-e3404fab6dad')
     test.add_file('170f2c19f17b7819644d3fcc7617621cc3350a04-hughski-colorhug2-2.0.6.cab', '2.0.6')
     test.add_file('0a29848de74d26348bc5a6e24fc9f03778eddf0e-hughski-colorhug2-2.0.7.cab', '2.0.7')
-    tests.append(test)
-
-    # Hughski ColorHugALS using 'colorhug'
-    test = Test('ColorHugALS', '84f40464-9272-4ef7-9399-cd95f12da696')
-    test.add_file('73ac1aa98130e532c727308cc6560783b10ca3a9-hughski-colorhug-als-4.0.2.cab', '4.0.2')
-    test.add_file('8dbdd54c712b33f72d866ce3b23b3ceed3ad494d-hughski-colorhug-als-4.0.3.cab', '4.0.3')
     tests.append(test)
 
     # Logitech Unifying Receiver (RQR12) using 'unifying'

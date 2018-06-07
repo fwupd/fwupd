@@ -1,22 +1,8 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 /**
@@ -43,6 +29,7 @@
 #include "dfu-format-dfu.h"
 #include "dfu-format-ihex.h"
 #include "dfu-format-raw.h"
+#include "dfu-format-srec.h"
 #include "dfu-image.h"
 
 #include "fwupd-error.h"
@@ -385,6 +372,8 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
 		priv->format = dfu_firmware_detect_ihex (bytes);
 	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
+		priv->format = dfu_firmware_detect_srec (bytes);
+	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
 		priv->format = dfu_firmware_detect_dfu (bytes);
 	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
 		priv->format = dfu_firmware_detect_raw (bytes);
@@ -393,6 +382,10 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	switch (priv->format) {
 	case DFU_FIRMWARE_FORMAT_INTEL_HEX:
 		if (!dfu_firmware_from_ihex (firmware, bytes, flags, error))
+			return FALSE;
+		break;
+	case DFU_FIRMWARE_FORMAT_SREC:
+		if (!dfu_firmware_from_srec (firmware, bytes, flags, error))
 			return FALSE;
 		break;
 	case DFU_FIRMWARE_FORMAT_DFU:
@@ -579,6 +572,10 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 	if (priv->format == DFU_FIRMWARE_FORMAT_INTEL_HEX)
 		return dfu_firmware_to_ihex (firmware, error);
 
+	/* Motorola S-record */
+	if (priv->format == DFU_FIRMWARE_FORMAT_SREC)
+		return dfu_firmware_to_srec (firmware, error);
+
 	/* invalid */
 	g_set_error (error,
 		     FWUPD_ERROR,
@@ -700,6 +697,8 @@ dfu_firmware_format_to_string (DfuFirmwareFormat format)
 		return "dfuse";
 	if (format == DFU_FIRMWARE_FORMAT_INTEL_HEX)
 		return "ihex";
+	if (format == DFU_FIRMWARE_FORMAT_SREC)
+		return "srec";
 	return NULL;
 }
 
@@ -722,6 +721,8 @@ dfu_firmware_format_from_string (const gchar *format)
 		return DFU_FIRMWARE_FORMAT_DFUSE;
 	if (g_strcmp0 (format, "ihex") == 0)
 		return DFU_FIRMWARE_FORMAT_INTEL_HEX;
+	if (g_strcmp0 (format, "srec") == 0)
+		return DFU_FIRMWARE_FORMAT_SREC;
 	return DFU_FIRMWARE_FORMAT_UNKNOWN;
 }
 

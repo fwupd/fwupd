@@ -1,0 +1,174 @@
+{
+    "app-id": "org.freedesktop.fwupd",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "3.28",
+    "branch": "master",
+    "sdk": "org.gnome.Sdk",
+    "command": "/app/libexec/fwupd/fwupdtool",
+    "tags": [],
+    "finish-args": [
+        "--device=all",
+        "--filesystem=/boot",
+        "--filesystem=/sys",
+        "--share=network",
+        "--system-talk-name=org.freedesktop.fwupd",
+        "--system-talk-name=org.freedesktop.UPower"
+    ],
+    "build-options" : {
+        "cflags": "-O2 -g",
+        "cxxflags": "-O2 -g"
+    },
+    "cleanup": [
+        "*.a",
+        "*.la",
+        "/include",
+        "/lib/girepository-1.0",
+        "/lib/pkgconfig",
+        "/share/bash-completion",
+        "/share/dbus-1/system-services",
+        "/share/gir-1.0",
+        "/share/gtk-doc",
+        "/share/info",
+        "/share/man",
+        "/share/pkgconfig" ],
+    "modules": [
+        {
+          /* not using shared-modules as we need gudev */
+          "name": "udev",
+          "rm-configure": true,
+          "config-opts": [
+            "--disable-hwdb",
+            "--disable-logging",
+            "--disable-introspection",
+            "--disable-keymap",
+            "--disable-mtd_probe"
+          ],
+          "cleanup": [
+            "/etc/udev",
+            "/libexec/*",
+            "/share/gtk-doc/html/libudev/",
+            "/sbin/udevadm"
+          ],
+          "sources": [
+            {
+                "type": "archive",
+                "url": "http://kernel.org/pub/linux/utils/kernel/hotplug/udev-175.tar.bz2",
+                "sha256": "4c7937fe5a1521316ea571188745b9a00a9fdf314228cffc53a7ba9e5968b7ab"
+            },
+            {
+                "type": "script",
+                "dest-filename": "autogen.sh",
+                "commands": [
+                    "autoreconf -vfi"
+                ]
+            }
+          ]
+        },
+        {
+            "name": "libusb",
+            "config-opts": [
+                "--disable-static"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/libusb/libusb/releases/download/v1.0.22/libusb-1.0.22.tar.bz2",
+                    "sha256": "75aeb9d59a4fdb800d329a545c2e6799f732362193b465ea198f2aa275518157"
+                }
+            ]
+        },
+        {
+            "name": "gusb",
+            "buildsystem": "meson",
+            "config-opts": ["-Ddocs=false",
+                            "-Dvapi=false",
+                            "-Dtests=false"],
+            "cleanup": [
+                "/bin/gusbcmd"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://people.freedesktop.org/~hughsient/releases/libgusb-0.3.0.tar.xz",
+                    "sha256": "d8e7950f99b6ae4c3e9b8c65f3692b9635289e6cff8de40c4af41b2e9b348edc"
+                }
+            ]
+        },
+        {
+            "name": "efivar",
+            "buildsystem": "simple",
+            "build-commands": ["make prefix=/app libdir=/app/lib", "make install prefix=/app libdir=/app/lib"],
+            "cleanup": [
+                "/bin/efivar"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/rhboot/efivar/releases/download/35/efivar-35.tar.bz2",
+                    "sha256": "1e033dc5d099a44fd473b0887dbcc4b105613efab0fb3c5df9f111ea5d147394"
+                }
+            ]
+        },
+        {
+            "name": "fwupdate",
+            "buildsystem": "simple",
+            "build-commands": ["make -C linux prefix=/app libdir=/app/lib", "EFIDIR=/boot/efi make -C linux install prefix=/app libdir=/app/lib"],
+            "cleanup": [
+                "/bin/fwupdate",
+                "/lib/systemd/system/fwupdate-cleanup.service",
+                "/libexec/fwupdate/cleanup"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/rhboot/fwupdate/releases/download/11/fwupdate-11.tar.bz2",
+                    "sha256": "d350eae66215c90fdc70f46ea734dedbfe6006ec21b7e764114b7d9e283e4abe"
+                }
+            ]
+        },
+        {
+            "name": "libsmbios_c",
+            "config-opts": ["--disable-doxygen",
+                            "--disable-graphviz",
+                            "--disable-python"],
+            "cleanup": [
+                "/sbin/smbios*",
+                "/share/locale/*/LC_MESSAGES/libsmbios.mo"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/dell/libsmbios/archive/v2.4.2.tar.gz",
+                    "sha256": "ebfe18415e24bbec06d0a9ea1066c8dcd82982555373712713d7e194138650de"
+                }
+            ]
+        },
+        {
+            "name": "fwupd",
+            "buildsystem": "meson",
+            "config-opts": ["-Dconsolekit=false",
+                            "-Ddaemon=false",
+                            "-Dgpg=false",
+                            "-Dgtkdoc=false",
+                            "-Dintrospection=false",
+                            "-Dman=false",
+                            "-Dpkcs7=false",
+                            "-Dplugin_uefi_labels=false",
+                            "-Dsystemd=false",
+                            "-Dtests=false",
+                            "--sysconfdir=/app/etc",
+                            "--localstatedir=/var/data"],
+            "cleanup": [
+                "/etc/dbus-1/system.d/org.freedesktop.fwupd.conf",
+                "/share/fwupd/remotes.d/vendor"
+            ],
+            "sources": [
+                {
+                    "type": "dir",
+                    "skip": [".git"],
+                    "path": ".."
+                }
+            ]
+        }
+    ]
+}

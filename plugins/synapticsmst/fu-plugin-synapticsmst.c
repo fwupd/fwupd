@@ -4,21 +4,7 @@
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -31,6 +17,7 @@
 #define SYNAPTICS_FLASH_MODE_DELAY 3
 
 #define HWID_DELL_INC	"85d38fda-fc0e-5c6f-808f-076984ae7978"
+#define DELL_DOCK_FLASH_GUID	"e7ca1f36-bf73-4574-afe6-a4ccacabf479"
 
 struct FuPluginData {
 	gchar		*dock_type;
@@ -139,6 +126,12 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	fu_device_add_icon (dev, "computer");
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
 	fu_device_add_guid (dev, guid_str);
+
+	/* Currently recognizes TB16/WD15 */
+	if (g_strcmp0 (data->dock_type, "TB16") == 0 ||
+	    g_strcmp0 (data->dock_type, "WD15") == 0) {
+		fu_device_add_parent_guid (dev, DELL_DOCK_FLASH_GUID);
+	}
 
 	fu_plugin_device_add (plugin, dev);
 	fu_plugin_cache_add (plugin, dev_id_str, dev);

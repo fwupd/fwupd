@@ -2,79 +2,163 @@
  *
  * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
 
 #include <string.h>
-#include <colorhug.h>
 #include <appstream-glib.h>
 
+#include "dfu-chunked.h"
+
+#include "fu-colorhug-common.h"
 #include "fu-colorhug-device.h"
 
-typedef struct
+struct _FuColorhugDevice {
+	FuUsbDevice		 parent_instance;
+	guint16			 start_addr;
+};
+
+G_DEFINE_TYPE (FuColorhugDevice, fu_colorhug_device, FU_TYPE_USB_DEVICE)
+
+#define CH_CMD_GET_FIRMWARE_VERSION		0x07
+#define CH_CMD_RESET				0x24
+#define CH_CMD_READ_FLASH			0x25
+#define CH_CMD_WRITE_FLASH			0x26
+#define CH_CMD_BOOT_FLASH			0x27
+#define CH_CMD_SET_FLASH_SUCCESS		0x28
+#define CH_CMD_ERASE_FLASH			0x29
+
+#define CH_USB_HID_EP				0x0001
+#define CH_USB_HID_EP_IN			(CH_USB_HID_EP | 0x80)
+#define CH_USB_HID_EP_OUT			(CH_USB_HID_EP | 0x00)
+#define CH_USB_HID_EP_SIZE			64
+#define CH_USB_CONFIG				0x0001
+#define CH_USB_INTERFACE			0x0000
+#define CH_EEPROM_ADDR_RUNCODE			0x4000
+#define CH_EEPROM_ADDR_RUNCODE_ALS		0x2000
+
+#define CH_DEVICE_USB_TIMEOUT			5000 /* ms */
+#define CH_FLASH_TRANSFER_BLOCK_SIZE		0x020	/* 32 */
+
+static gboolean
+fu_colorhug_device_msg (FuColorhugDevice *self, guint8 cmd,
+			guint8 *ibuf, gsize ibufsz,
+			guint8 *obuf, gsize obufsz,
+			GError **error)
 {
-	ChDeviceQueue		*device_queue;
-	gboolean		 is_bootloader;
-} FuColorhugDevicePrivate;
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint8 buf[] = { [0] = cmd, [1 ... CH_USB_HID_EP_SIZE - 1] = 0x00 };
+	gsize actual_length = 0;
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuColorhugDevice, fu_colorhug_device, FU_TYPE_USB_DEVICE)
+	/* check size */
+	if (ibufsz > sizeof(buf) - 1) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "cannot process chunk of size %" G_GSIZE_FORMAT,
+			     ibufsz);
+		return FALSE;
+	}
+	if (obufsz > sizeof(buf) - 2) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "cannot process chunk of size %" G_GSIZE_FORMAT,
+			     ibufsz);
+		return FALSE;
+	}
 
-#define GET_PRIVATE(o) (fu_colorhug_device_get_instance_private (o))
+	/* optionally copy in data */
+	if (ibuf != NULL)
+		memcpy (buf + 1, ibuf, ibufsz);
 
-static void
-fu_colorhug_device_finalize (GObject *object)
-{
-	FuColorhugDevice *device = FU_COLORHUG_DEVICE (object);
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (device);
+	/* request */
+	ch_buffer_dump ("REQ", buf, ibufsz + 1);
+	if (!g_usb_device_interrupt_transfer (usb_device,
+					      CH_USB_HID_EP_OUT,
+					      buf,
+					      sizeof(buf),
+					      &actual_length,
+					      CH_DEVICE_USB_TIMEOUT,
+					      NULL, /* cancellable */
+					      error)) {
+		g_prefix_error (error, "failed to send request: ");
+		return FALSE;
+	}
+	if (actual_length != CH_USB_HID_EP_SIZE) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "request not all sent, got %" G_GSIZE_FORMAT,
+			     actual_length);
+		return FALSE;
+	}
 
-	g_object_unref (priv->device_queue);
+	/* read reply */
+	if (!g_usb_device_interrupt_transfer (usb_device,
+					      CH_USB_HID_EP_IN,
+					      buf,
+					      sizeof(buf),
+					      &actual_length,
+					      CH_DEVICE_USB_TIMEOUT,
+					      NULL, /* cancellable */
+					      error)) {
+		g_prefix_error (error, "failed to get reply: ");
+		return FALSE;
+	}
+	ch_buffer_dump ("RES", buf, actual_length);
 
-	G_OBJECT_CLASS (fu_colorhug_device_parent_class)->finalize (object);
+	/* old bootloaders do not return the full block */
+	if (actual_length != CH_USB_HID_EP_SIZE &&
+	    actual_length != 2 &&
+	    actual_length != obufsz + 2) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "request not all recieved, got %" G_GSIZE_FORMAT,
+			     actual_length);
+		return FALSE;
+	}
+
+	/* check error code */
+	if (buf[0] != CH_ERROR_NONE) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     ch_strerror (buf[0]));
+		return FALSE;
+	}
+
+	/* check cmd matches */
+	if (buf[1] != cmd) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "cmd incorrect, expected %u, got %u",
+			     cmd, buf[1]);
+		return FALSE;
+	}
+
+	/* copy back optional buf */
+	if (obuf != NULL)
+		memcpy (obuf, buf + 2, obufsz);
+
+	return TRUE;
 }
 
-static void
-fu_colorhug_device_progress_cb (ChDeviceQueue *device_queue,
-				guint percentage,
-				FuColorhugDevice *device)
+static gboolean
+fu_colorhug_device_detach (FuDevice *device, GError **error)
 {
-	fu_device_set_progress (FU_DEVICE (device), percentage);
-}
-
-gboolean
-fu_colorhug_device_get_is_bootloader (FuColorhugDevice *device)
-{
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->is_bootloader;
-}
-
-gboolean
-fu_colorhug_device_detach (FuColorhugDevice *device, GError **error)
-{
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
 
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_RESTART);
-	ch_device_queue_reset (priv->device_queue, usb_device);
-	if (!ch_device_queue_process (priv->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	if (!fu_colorhug_device_msg (self, CH_CMD_RESET,
+				     NULL, 0, /* in */
+				     NULL, 0, /* out */
+				     &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
@@ -85,18 +169,17 @@ fu_colorhug_device_detach (FuColorhugDevice *device, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_colorhug_device_attach (FuColorhugDevice *device, GError **error)
+static gboolean
+fu_colorhug_device_attach (FuDevice *device, GError **error)
 {
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
 
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_RESTART);
-	ch_device_queue_boot_flash (priv->device_queue, usb_device);
-	if (!ch_device_queue_process (priv->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	if (!fu_colorhug_device_msg (self, CH_CMD_BOOT_FLASH,
+				     NULL, 0, /* in */
+				     NULL, 0, /* out */
+				     &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
@@ -108,19 +191,18 @@ fu_colorhug_device_attach (FuColorhugDevice *device, GError **error)
 }
 
 gboolean
-fu_colorhug_device_set_flash_success (FuColorhugDevice *device, GError **error)
+fu_colorhug_device_set_flash_success (FuColorhugDevice *self,
+				      gboolean val,
+				      GError **error)
 {
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	guint8 buf[] = { [0] = val ? 0x01 : 0x00 };
 	g_autoptr(GError) error_local = NULL;
 
 	g_debug ("setting flash success");
-	ch_device_queue_set_flash_success (priv->device_queue,
-					   usb_device,
-					   0x01);
-	if (!ch_device_queue_process (priv->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
+	if (!fu_colorhug_device_msg (self, CH_CMD_SET_FLASH_SUCCESS,
+				     buf, sizeof(buf), /* in */
+				     NULL, 0, /* out */
+				     &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
@@ -132,63 +214,75 @@ fu_colorhug_device_set_flash_success (FuColorhugDevice *device, GError **error)
 }
 
 static gboolean
+fu_colorhug_device_erase (FuColorhugDevice *self, guint16 addr, gsize sz, GError **error)
+{
+	guint8 buf[4];
+	g_autoptr(GError) error_local = NULL;
+
+	fu_common_write_uint16 (buf + 0, addr, G_LITTLE_ENDIAN);
+	fu_common_write_uint16 (buf + 2, sz, G_LITTLE_ENDIAN);
+	if (!fu_colorhug_device_msg (self, CH_CMD_ERASE_FLASH,
+				     buf, sizeof(buf), /* in */
+				     NULL, 0, /* out */
+				     &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "failed to erase device: %s",
+			     error_local->message);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gchar *
+fu_colorhug_device_get_version (FuColorhugDevice *self, GError **error)
+{
+	guint8 buf[6];
+	if (!fu_colorhug_device_msg (self, CH_CMD_GET_FIRMWARE_VERSION,
+				     NULL, 0, /* in */
+				     buf, sizeof(buf), /* out */
+				     error)) {
+		return NULL;
+	}
+	return g_strdup_printf ("%i.%i.%i",
+				fu_common_read_uint16 (buf + 0, G_LITTLE_ENDIAN),
+				fu_common_read_uint16 (buf + 2, G_LITTLE_ENDIAN),
+				fu_common_read_uint16 (buf + 4, G_LITTLE_ENDIAN));
+}
+
+static gboolean
 fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-	ChDeviceMode mode;
+	const gchar *quirk_str;
+	g_auto(GStrv) quirks = NULL;
 
-	/* ignore */
-	mode = ch_device_get_mode (usb_device);
-	if (mode == CH_DEVICE_MODE_UNKNOWN ||
-	    mode == CH_DEVICE_MODE_BOOTLOADER_PLUS ||
-	    mode == CH_DEVICE_MODE_FIRMWARE_PLUS) {
+	/* devices have to be whitelisted */
+	quirk_str = fu_device_get_plugin_hints (FU_DEVICE (device));
+	if (quirk_str == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "not supported with this device");
 		return FALSE;
 	}
+	fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	quirks = g_strsplit (quirk_str, ",", -1);
+	for (guint i = 0; quirks[i] != NULL; i++) {
+		if (g_strcmp0 (quirks[i], "bootloader") == 0) {
+			fu_device_add_flag (FU_DEVICE (self),
+					    FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+			continue;
+		}
+		if (g_strcmp0 (quirks[i], "halfsize") == 0) {
+			self->start_addr = CH_EEPROM_ADDR_RUNCODE_ALS;
+			continue;
+		}
+	}
 
 	/* add hardcoded bits */
-	fu_device_add_guid (FU_DEVICE (device), ch_device_get_guid (usb_device));
-	fu_device_add_icon (FU_DEVICE (device), "colorimeter-colorhug");
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
-
-	/* set the display name */
-	switch (mode) {
-	case CH_DEVICE_MODE_BOOTLOADER:
-	case CH_DEVICE_MODE_FIRMWARE:
-	case CH_DEVICE_MODE_LEGACY:
-		fu_device_set_summary (FU_DEVICE (device),
-				       "An open source display colorimeter");
-		break;
-	case CH_DEVICE_MODE_BOOTLOADER2:
-	case CH_DEVICE_MODE_FIRMWARE2:
-		fu_device_set_summary (FU_DEVICE (device),
-				       "An open source display colorimeter");
-		break;
-	case CH_DEVICE_MODE_BOOTLOADER_ALS:
-	case CH_DEVICE_MODE_FIRMWARE_ALS:
-		fu_device_set_summary (FU_DEVICE (device),
-				       "An open source ambient light sensor");
-		break;
-	default:
-		break;
-	}
-
-	/* is the device in bootloader mode */
-	switch (mode) {
-	case CH_DEVICE_MODE_BOOTLOADER:
-	case CH_DEVICE_MODE_BOOTLOADER2:
-	case CH_DEVICE_MODE_BOOTLOADER_ALS:
-		priv->is_bootloader = TRUE;
-		break;
-	default:
-		priv->is_bootloader = FALSE;
-		break;
-	}
 
 	/* success */
 	return TRUE;
@@ -198,7 +292,6 @@ static gboolean
 fu_colorhug_device_open (FuUsbDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 
 	/* got the version using the HID API */
@@ -210,107 +303,117 @@ fu_colorhug_device_open (FuUsbDevice *device, GError **error)
 		return FALSE;
 	}
 	if (fu_device_get_version (FU_DEVICE (device)) == NULL) {
-		guint16 major;
-		guint16 micro;
-		guint16 minor;
 		g_autofree gchar *version = NULL;
 		g_autoptr(GError) error_local = NULL;
-		ch_device_queue_get_firmware_ver (priv->device_queue, usb_device,
-						  &major, &minor, &micro);
-		if (!ch_device_queue_process (priv->device_queue,
-					      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-					      NULL, &error_local)) {
+		version = fu_colorhug_device_get_version (self, &error_local);
+		if (version != NULL) {
+			g_debug ("obtained fwver using API '%s'", version);
+			fu_device_set_version (FU_DEVICE (device), version);
+		} else {
 			g_warning ("failed to get firmware version: %s",
 				   error_local->message);
 		}
-		version = g_strdup_printf ("%i.%i.%i", major, minor, micro);
-		g_debug ("obtained fwver using API '%s'", version);
-		fu_device_set_version (FU_DEVICE (device), version);
 	}
 
 	/* success */
 	return TRUE;
 }
 
-gboolean
-fu_colorhug_device_verify_firmware (FuColorhugDevice *device, GError **error)
+static guint8
+ch_colorhug_device_calculate_checksum (const guint8 *data, guint32 len)
 {
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	gsize len;
-	g_autoptr(GError) error_local = NULL;
-	g_autofree guint8 *data2 = NULL;
-	GChecksumType checksum_types[] = {
-		G_CHECKSUM_SHA1,
-		G_CHECKSUM_SHA256,
-		0 };
-
-	/* get the firmware from the device */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
-	ch_device_queue_read_firmware (priv->device_queue, usb_device,
-				       &data2, &len);
-	if (!ch_device_queue_process (priv->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to dump firmware: %s",
-			     error_local->message);
-		return FALSE;
-	}
-
-	/* get the checksum */
-	for (guint i = 0; checksum_types[i] != 0; i++) {
-		g_autofree gchar *hash = NULL;
-		hash = g_compute_checksum_for_data (checksum_types[i],
-						    (guchar *) data2, len);
-		fu_device_add_checksum (device, hash);
-	}
-
-	return TRUE;
+	guint8 checksum = 0xff;
+	for (guint32 i = 0; i < len; i++)
+		checksum ^= data[i];
+	return checksum;
 }
 
-gboolean
-fu_colorhug_device_write_firmware (FuColorhugDevice *device, GBytes *fw, GError **error)
+static gboolean
+fu_colorhug_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	g_autoptr(GError) error_local = NULL;
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
+	g_autoptr(GPtrArray) chunks = NULL;
 
-	/* write firmware */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_WRITE);
-	ch_device_queue_set_flash_success (priv->device_queue,
-					   usb_device,
-					   0x00);
-	ch_device_queue_write_firmware (priv->device_queue, usb_device,
-					g_bytes_get_data (fw, NULL),
-					g_bytes_get_size (fw));
-	if (!ch_device_queue_process (priv->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to write firmware: %s",
-			     error_local->message);
+	/* build packets */
+	chunks = dfu_chunked_new_from_bytes (fw,
+					     self->start_addr,
+					     0x00,	/* page_sz */
+					     CH_FLASH_TRANSFER_BLOCK_SIZE);
+
+	/* don't auto-boot firmware */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	if (!fu_colorhug_device_set_flash_success (self, FALSE, error))
 		return FALSE;
+
+	/* erase flash */
+	if (!fu_colorhug_device_erase (self, self->start_addr, g_bytes_get_size (fw), error))
+		return FALSE;
+
+	/* write each block */
+	for (guint i = 0; i < chunks->len; i++) {
+		DfuChunkedPacket *pkt = g_ptr_array_index (chunks, i);
+		guint8 buf[CH_FLASH_TRANSFER_BLOCK_SIZE+4];
+		g_autoptr(GError) error_local = NULL;
+
+		/* set address, length, checksum, data */
+		fu_common_write_uint16 (buf + 0, pkt->address, G_LITTLE_ENDIAN);
+		buf[2] = pkt->data_sz;
+		buf[3] = ch_colorhug_device_calculate_checksum (pkt->data, pkt->data_sz);
+		memcpy (buf + 4, pkt->data, pkt->data_sz);
+		if (!fu_colorhug_device_msg (self, CH_CMD_WRITE_FLASH,
+					     buf, sizeof(buf), /* in */
+					     NULL, 0, /* out */
+					     &error_local)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_WRITE,
+				     "failed to write: %s",
+				     error_local->message);
+			return FALSE;
+		}
+
+		/* update progress */
+		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len * 2);
 	}
 
-	/* verify firmware */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
-	ch_device_queue_verify_firmware (priv->device_queue, usb_device,
-					 g_bytes_get_data (fw, NULL),
-					 g_bytes_get_size (fw));
-	if (!ch_device_queue_process (priv->device_queue,
-				      CH_DEVICE_QUEUE_PROCESS_FLAGS_NONE,
-				      NULL, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to verify firmware: %s",
-			     error_local->message);
-		return FALSE;
+	/* verify each block */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
+	for (guint i = 0; i < chunks->len; i++) {
+		DfuChunkedPacket *pkt = g_ptr_array_index (chunks, i);
+		guint8 buf[3];
+		guint8 buf_out[CH_FLASH_TRANSFER_BLOCK_SIZE+1];
+		g_autoptr(GError) error_local = NULL;
+
+		/* set address */
+		fu_common_write_uint16 (buf + 0, pkt->address, G_LITTLE_ENDIAN);
+		buf[2] = pkt->data_sz;
+		if (!fu_colorhug_device_msg (self, CH_CMD_READ_FLASH,
+					     buf, sizeof(buf), /* in */
+					     buf_out, sizeof(buf_out), /* out */
+					     &error_local)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
+				     "failed to read: %s",
+				     error_local->message);
+			return FALSE;
+		}
+
+		/* verify */
+		if (memcmp (buf_out + 1, pkt->data, pkt->data_sz) != 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_WRITE,
+				     "failed to verify firmware for chunk %u, "
+				     "address 0x%0x, length 0x%0x",
+				     i, (guint) pkt->address, pkt->data_sz);
+			return FALSE;
+		}
+
+		/* update progress */
+		fu_device_set_progress_full (device,
+					     (gsize) chunks->len + i,
+					     (gsize) chunks->len * 2);
 	}
 
 	/* success! */
@@ -318,39 +421,30 @@ fu_colorhug_device_write_firmware (FuColorhugDevice *device, GBytes *fw, GError 
 }
 
 static void
-fu_colorhug_device_init (FuColorhugDevice *device)
+fu_colorhug_device_init (FuColorhugDevice *self)
 {
-	FuColorhugDevicePrivate *priv = GET_PRIVATE (device);
-	priv->device_queue = ch_device_queue_new ();
-	g_signal_connect (priv->device_queue, "progress_changed",
-			  G_CALLBACK (fu_colorhug_device_progress_cb), device);
+	/* this is the application code */
+	self->start_addr = CH_EEPROM_ADDR_RUNCODE;
 }
 
 static void
 fu_colorhug_device_class_init (FuColorhugDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
-	object_class->finalize = fu_colorhug_device_finalize;
+	klass_device->write_firmware = fu_colorhug_device_write_firmware;
+	klass_device->attach = fu_colorhug_device_attach;
+	klass_device->detach = fu_colorhug_device_detach;
 	klass_usb_device->open = fu_colorhug_device_open;
 	klass_usb_device->probe = fu_colorhug_device_probe;
 }
 
-/**
- * fu_colorhug_device_new:
- *
- * Creates a new #FuColorhugDevice.
- *
- * Returns: (transfer full): a #FuColorhugDevice, or %NULL if not a game pad
- *
- * Since: 0.1.0
- **/
 FuColorhugDevice *
 fu_colorhug_device_new (GUsbDevice *usb_device)
 {
-	FuColorhugDevice *device = NULL;
-	device = g_object_new (FU_TYPE_COLORHUG_DEVICE,
-			       "usb-device", usb_device,
-			       NULL);
-	return device;
+	FuColorhugDevice *self = NULL;
+	self = g_object_new (FU_TYPE_COLORHUG_DEVICE,
+			     "usb-device", usb_device,
+			     NULL);
+	return self;
 }

@@ -1,7 +1,7 @@
 project('fwupd', 'c',
-  version : '1.0.7',
+  version : '1.0.8',
   license : 'LGPL-2.1+',
-  meson_version : '>=0.41.0',
+  meson_version : '>=0.43.0',
   default_options : ['warning_level=2', 'c_std=c99'],
 )
 
@@ -49,7 +49,7 @@ lt_age = '0'
 lt_version = '@0@.@1@.@2@'.format(lt_current, lt_age, lt_revision)
 
 # get suported warning flags
-test_args = [
+warning_flags = [
   '-fstack-protector-strong',
   '-Waggregate-return',
   '-Wunused',
@@ -103,11 +103,7 @@ test_args = [
   '-Wwrite-strings'
 ]
 cc = meson.get_compiler('c')
-foreach arg: test_args
-  if cc.has_argument(arg)
-    add_project_arguments(arg, language : 'c')
-  endif
-endforeach
+add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
 
 # enable full RELRO where possible
 # FIXME: until https://github.com/mesonbuild/meson/issues/1140 is fixed
@@ -138,10 +134,6 @@ add_project_arguments('-D_GNU_SOURCE', language : 'c')
 gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
-polkit = dependency('polkit-gobject-1', version : '>= 0.103')
-if polkit.version().version_compare('>= 0.114')
-  conf.set('HAVE_POLKIT_0_114', '1')
-endif
 gudev = dependency('gudev-1.0')
 if gudev.version().version_compare('>= 232')
   conf.set('HAVE_GUDEV_232', '1')
@@ -153,6 +145,17 @@ libarchive = dependency('libarchive')
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
+if get_option('daemon')
+  polkit = dependency('polkit-gobject-1', version : '>= 0.103')
+  if polkit.version().version_compare('>= 0.114')
+    conf.set('HAVE_POLKIT_0_114', '1')
+  endif
+  udevdir = get_option('udevdir')
+  if udevdir == ''
+    udev = dependency('udev')
+    udevdir = udev.get_pkgconfig_variable('udevdir')
+  endif
+endif
 if get_option('pkcs7')
   gnutls = dependency('gnutls', version : '>= 3.4.4.1')
   conf.set('ENABLE_PKCS7', '1')
@@ -163,7 +166,6 @@ if get_option('gpg')
   conf.set('ENABLE_GPG', '1')
 endif
 libm = cc.find_library('m', required: false)
-udev = dependency('udev')
 uuid = dependency('uuid')
 libgcab = dependency('libgcab-1.0')
 if libgcab.version().version_compare('>= 0.8')
@@ -172,6 +174,7 @@ endif
 if libgcab.version().version_compare('>= 1.0')
   conf.set('HAVE_GCAB_1_0', '1')
 endif
+bashcomp = dependency('bash-completion', required: false)
 
 if get_option('plugin_uefi_labels')
   cairo = dependency('cairo')
@@ -185,11 +188,6 @@ endif
 
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
-endif
-
-if get_option('plugin_colorhug')
-  colorhug = dependency('colorhug', version : '>= 1.2.12')
-  conf.set('HAVE_COLORHUG', '1')
 endif
 
 if get_option('plugin_altos')
@@ -250,11 +248,6 @@ if systemdunitdir == '' and get_option('systemd')
   systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
 endif
 
-udevdir = get_option('udevdir')
-if udevdir == ''
-  udevdir = udev.get_pkgconfig_variable('udevdir')
-endif
-
 gnome = import('gnome')
 i18n = import('i18n')
 
@@ -262,6 +255,10 @@ plugin_dir = join_paths(libdir, 'fwupd-plugins-3')
 
 conf.set_quoted('BINDIR', bindir)
 conf.set_quoted('LIBEXECDIR', libexecdir)
+conf.set_quoted('DATADIR', datadir)
+conf.set_quoted('LOCALSTATEDIR', localstatedir)
+conf.set_quoted('SYSCONFDIR', sysconfdir)
+conf.set_quoted('PLUGINDIR', plugin_dir)
 
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
@@ -291,11 +288,13 @@ subdir('data')
 subdir('docs')
 subdir('libfwupd')
 subdir('po')
-subdir('policy')
+if get_option('daemon')
+  subdir('policy')
+endif
 subdir('src')
 subdir('plugins')
 subdir('contrib')
 
-if get_option('systemd')
+if get_option('systemd') and get_option('daemon')
   meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)
 endif

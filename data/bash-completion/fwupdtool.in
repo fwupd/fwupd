@@ -1,0 +1,82 @@
+_fwupdtool_cmd_list=(
+	'get-details'
+	'get-devices'
+	'get-plugins'
+	'get-topology'
+	'install'
+	'install-blob'
+	'smbios-dump'
+	'attach'
+	'detach'
+	'watch'
+)
+
+_fwupdtool_opts=(
+	'--verbose'
+	'--allow-reinstall'
+	'--allow-older'
+	'--force'
+	'--show-all-devices'
+	'--plugin-whitelist'
+)
+
+_show_plugins()
+{
+	local plugins
+	plugins="$(command @libexecdir@/fwupdtool get-plugins 2>/dev/null)"
+	COMPREPLY+=( $(compgen -W "${plugins}" -- "$cur") )
+}
+
+_show_modifiers()
+{
+	COMPREPLY+=( $(compgen -W '${_fwupdtool_opts[@]}' -- "$cur") )
+}
+
+_fwupdtool()
+{
+	local cur prev command
+	COMPREPLY=()
+	cur=`_get_cword`
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+	command=${COMP_WORDS[1]}
+
+	case $prev in
+	--plugin-whitelist)
+		_show_plugins
+		return 0
+		;;
+	esac
+
+	case $command in
+	get-details|install|install-blob)
+		#find files
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	attach|detach)
+		if [[ "$prev" = "$command" ]]; then
+			_show_device_ids
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	*)
+		#find first command
+		if [[ ${COMP_CWORD} = 1 ]]; then
+			COMPREPLY=( $(compgen -W '${_fwupdtool_cmd_list[@]}' -- "$cur") )
+		#modifiers for all commands
+		else
+			_show_modifiers
+		fi
+		;;
+	esac
+
+	return 0
+}
+
+complete -F _fwupdtool fwupdtool

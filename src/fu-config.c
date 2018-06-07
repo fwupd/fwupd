@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -26,6 +12,7 @@
 #include <gio/gio.h>
 #include <glib/gi18n.h>
 
+#include "fu-common.h"
 #include "fu-config.h"
 
 #include "fwupd-common.h"
@@ -55,7 +42,7 @@ fu_config_get_config_paths (void)
 	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
 	const gchar *remotes_dir;
 	const gchar *system_prefixlibdir = "/usr/lib/fwupd";
-	g_autofree gchar *sysconfdir = NULL;
+	g_autofree gchar *configdir = NULL;
 
 	/* only set by the self test program */
 	remotes_dir = g_getenv ("FU_SELF_TEST_REMOTES_DIR");
@@ -65,9 +52,9 @@ fu_config_get_config_paths (void)
 	}
 
 	/* use sysconfig, and then fall back to /etc */
-	sysconfdir = g_build_filename (FWUPDCONFIGDIR, NULL);
-	if (g_file_test (sysconfdir, G_FILE_TEST_EXISTS))
-		g_ptr_array_add (paths, g_steal_pointer (&sysconfdir));
+	configdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR_PKG);
+	if (g_file_test (configdir, G_FILE_TEST_EXISTS))
+		g_ptr_array_add (paths, g_steal_pointer (&configdir));
 
 	/* add in system-wide locations */
 	if (g_file_test (system_prefixlibdir, G_FILE_TEST_EXISTS))
@@ -270,10 +257,14 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 				return FALSE;
 
 			/* replace any dynamic values from os-release */
-			as_utils_string_replace (agreement_markup, "$OS_RELEASE:NAME$",
-						 g_hash_table_lookup (self->os_release, "NAME"));
-			as_utils_string_replace (agreement_markup, "$OS_RELEASE:BUG_REPORT_URL$",
-						 g_hash_table_lookup (self->os_release, "BUG_REPORT_URL"));
+			tmp = g_hash_table_lookup (self->os_release, "NAME");
+			if (tmp == NULL)
+				tmp = "this distribution";
+			as_utils_string_replace (agreement_markup, "$OS_RELEASE:NAME$", tmp);
+			tmp = g_hash_table_lookup (self->os_release, "BUG_REPORT_URL");
+			if (tmp == NULL)
+				tmp = "https://github.com/hughsie/fwupd/issues";
+			as_utils_string_replace (agreement_markup, "$OS_RELEASE:BUG_REPORT_URL$", tmp);
 			fwupd_remote_set_agreement (remote, agreement_markup->str);
 		}
 
@@ -395,17 +386,15 @@ fu_config_load_remotes (FuConfig *self, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_config_load (FuConfig *self, GError **error)
+static gboolean
+fu_config_load_from_file (FuConfig *self, const gchar *config_file,
+			  GError **error)
 {
 	GFileMonitor *monitor;
 	guint64 archive_size_max;
-	g_autofree gchar *config_file = NULL;
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autoptr(GFile) file = NULL;
-
-	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
 
 	/* ensure empty in case we're called from a monitor change */
 	g_ptr_array_set_size (self->blacklist_devices, 0);
@@ -413,8 +402,6 @@ fu_config_load (FuConfig *self, GError **error)
 	g_ptr_array_set_size (self->monitors, 0);
 	g_ptr_array_set_size (self->remotes, 0);
 
-	/* load the main daemon config file */
-	config_file = g_build_filename (FWUPDCONFIGDIR, "daemon.conf", NULL);
 	g_debug ("loading config values from %s", config_file);
 	if (!g_key_file_load_from_file (self->keyfile, config_file,
 					G_KEY_FILE_NONE, error))
@@ -462,14 +449,43 @@ fu_config_load (FuConfig *self, GError **error)
 						  NULL);
 	if (archive_size_max > 0)
 		self->archive_size_max = archive_size_max *= 0x100000;
+	return TRUE;
+}
+
+gboolean
+fu_config_load (FuConfig *self, GError **error)
+{
+	g_autofree gchar *datadir = NULL;
+	g_autofree gchar *configdir = NULL;
+	g_autofree gchar *metainfo_path = NULL;
+	g_autofree gchar *config_file = NULL;
+
+	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
+
+	/* load the main daemon config file */
+	configdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR_PKG);
+	config_file = g_build_filename (configdir, "daemon.conf", NULL);
+	if (g_file_test (config_file, G_FILE_TEST_EXISTS)) {
+		if (!fu_config_load_from_file (self, config_file, error))
+			return FALSE;
+	} else {
+		g_warning ("Daemon configuration %s not found", config_file);
+	}
 
 	/* load AppStream about the remotes */
 	self->os_release = fwupd_get_os_release (error);
 	if (self->os_release == NULL)
 		return FALSE;
 	as_store_add_filter (self->store_remotes, AS_APP_KIND_SOURCE);
-	if (!as_store_load (self->store_remotes, AS_STORE_LOAD_FLAG_APPDATA, NULL, error))
-		return FALSE;
+	datadir = fu_common_get_path (FU_PATH_KIND_DATADIR_PKG);
+	metainfo_path = g_build_filename (datadir, "metainfo", NULL);
+	if (g_file_test (metainfo_path, G_FILE_TEST_EXISTS)) {
+		if (!as_store_load_path (self->store_remotes,
+					 metainfo_path,
+					 NULL, /* cancellable */
+					 error))
+			return FALSE;
+	}
 
 	/* load remotes */
 	if (!fu_config_load_remotes (self, error))

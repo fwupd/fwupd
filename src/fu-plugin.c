@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -292,12 +278,24 @@ fu_plugin_set_enabled (FuPlugin *plugin, gboolean enabled)
 	priv->enabled = enabled;
 }
 
+gchar *
+fu_plugin_guess_name_from_fn (const gchar *filename)
+{
+	const gchar *prefix = "libfu_plugin_";
+	gchar *name;
+	gchar *str = g_strstr_len (filename, -1, prefix);
+	if (str == NULL)
+		return NULL;
+	name = g_strdup (str + strlen (prefix));
+	g_strdelimit (name, ".", '\0');
+	return name;
+}
+
 gboolean
 fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginInitFunc func = NULL;
-	gchar *str;
 
 	priv->module = g_module_open (filename, 0);
 	if (priv->module == NULL) {
@@ -310,11 +308,8 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 	}
 
 	/* set automatically */
-	str = g_strstr_len (filename, -1, "libfu_plugin_");
-	if (str != NULL) {
-		priv->name = g_strdup (str + 13);
-		g_strdelimit (priv->name, ".", '\0');
-	}
+	if (priv->name == NULL)
+		priv->name = fu_plugin_guess_name_from_fn (filename);
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_init", (gpointer *) &func);
@@ -344,6 +339,8 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 void
 fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 {
+	GPtrArray *children;
+
 	g_return_if_fail (FU_IS_PLUGIN (plugin));
 	g_return_if_fail (FU_IS_DEVICE (device));
 
@@ -353,6 +350,13 @@ fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 	fu_device_set_created (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	fu_device_set_plugin (device, fu_plugin_get_name (plugin));
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_ADDED], 0, device);
+
+	/* add children */
+	children = fu_device_get_children (device);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index (children, i);
+		fu_plugin_device_add (plugin, child);
+	}
 }
 
 /**
@@ -1139,7 +1143,7 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 	}
 
 	/* create directory */
-	dirname = g_build_filename (LOCALSTATEDIR, "lib", "fwupd", NULL);
+	dirname = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	file = g_file_new_for_path (dirname);
 	if (!g_file_query_exists (file, NULL)) {
 		if (!g_file_make_directory_with_parents (file, NULL, error))
@@ -1276,6 +1280,13 @@ fu_plugin_runner_update (FuPlugin *plugin,
 
 	/* just schedule this for the next reboot  */
 	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
+		if (blob_cab == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "No cabinet archive to schedule");
+			return FALSE;
+		}
 		return fu_plugin_runner_schedule_update (plugin,
 							 device,
 							 blob_cab,
@@ -1496,14 +1507,16 @@ fu_plugin_get_report_metadata (FuPlugin *plugin)
 gchar *
 fu_plugin_get_config_value (FuPlugin *plugin, const gchar *key)
 {
+	g_autofree gchar *conf_dir = NULL;
 	g_autofree gchar *conf_file = NULL;
 	g_autofree gchar *conf_path = NULL;
 	g_autoptr(GKeyFile) keyfile = NULL;
 	const gchar *plugin_name;
 
+	conf_dir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR_PKG);
 	plugin_name = fu_plugin_get_name (plugin);
 	conf_file = g_strdup_printf ("%s.conf", plugin_name);
-	conf_path = g_build_filename (FWUPDCONFIGDIR, conf_file,  NULL);
+	conf_path = g_build_filename (conf_dir, conf_file,  NULL);
 	if (!g_file_test (conf_path, G_FILE_TEST_IS_REGULAR))
 		return NULL;
 	keyfile = g_key_file_new ();
@@ -1511,6 +1524,44 @@ fu_plugin_get_config_value (FuPlugin *plugin, const gchar *key)
 					G_KEY_FILE_NONE, NULL))
 		return NULL;
 	return g_key_file_get_string (keyfile, plugin_name, key, NULL);
+}
+
+/**
+ * fu_plugin_name_compare:
+ * @plugin1: first #FuPlugin to compare.
+ * @plugin2: second #FuPlugin to compare.
+ *
+ * Compares two plugins by their names.
+ *
+ * Returns: 1, 0 or -1 if @plugin1 is greater, equal, or less than @plugin2.
+ **/
+gint
+fu_plugin_name_compare (FuPlugin *plugin1, FuPlugin *plugin2)
+{
+	FuPluginPrivate *priv1 = fu_plugin_get_instance_private (plugin1);
+	FuPluginPrivate *priv2 = fu_plugin_get_instance_private (plugin2);
+	return g_strcmp0 (priv1->name, priv2->name);
+}
+
+/**
+ * fu_plugin_order_compare:
+ * @plugin1: first #FuPlugin to compare.
+ * @plugin2: second #FuPlugin to compare.
+ *
+ * Compares two plugins by their depsolved order.
+ *
+ * Returns: 1, 0 or -1 if @plugin1 is greater, equal, or less than @plugin2.
+ **/
+gint
+fu_plugin_order_compare (FuPlugin *plugin1, FuPlugin *plugin2)
+{
+	FuPluginPrivate *priv1 = fu_plugin_get_instance_private (plugin1);
+	FuPluginPrivate *priv2 = fu_plugin_get_instance_private (plugin2);
+	if (priv1->order < priv2->order)
+		return -1;
+	if (priv1->order > priv2->order)
+		return 1;
+	return 0;
 }
 
 static void
@@ -1596,15 +1647,17 @@ fu_plugin_finalize (GObject *object)
 		g_hash_table_unref (priv->runtime_versions);
 	if (priv->compile_versions != NULL)
 		g_hash_table_unref (priv->compile_versions);
-#ifndef RUNNING_ON_VALGRIND
-	if (priv->module != NULL)
-		g_module_close (priv->module);
-#endif
 	g_hash_table_unref (priv->devices);
 	g_hash_table_unref (priv->devices_delay);
 	g_hash_table_unref (priv->report_metadata);
 	g_free (priv->name);
 	g_free (priv->data);
+	/* Must happen as the last step to avoid prematurely
+	 * freeing memory held by the plugin */
+#ifndef RUNNING_ON_VALGRIND
+	if (priv->module != NULL)
+		g_module_close (priv->module);
+#endif
 
 	G_OBJECT_CLASS (fu_plugin_parent_class)->finalize (object);
 }

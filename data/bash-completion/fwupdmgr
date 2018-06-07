@@ -12,6 +12,7 @@ _fwupdmgr_cmd_list=(
 	'get-releases'
 	'get-remotes'
 	'get-results'
+	'get-topology'
 	'get-updates'
 	'hwids'
 	'install'
@@ -20,7 +21,6 @@ _fwupdmgr_cmd_list=(
 	'monitor'
 	'refresh'
 	'report-history'
-	'smbios-dump'
 	'unlock'
 	'update'
 	'verify'
@@ -35,9 +35,11 @@ _fwupdmgr_opts=(
 	'--allow-older'
 	'--force'
 	'--assume-yes'
+	'--no-history'
 	'--no-unreported-check'
 	'--no-metadata-check'
 	'--no-reboot-check'
+	'--show-all-devices'
 )
 
 _show_modifiers()
@@ -78,7 +80,7 @@ _fwupdmgr()
 			_show_modifiers
 		fi
 		;;
-	get-details|smbios-dump)
+	get-details)
 		#browse for file
 		if [[ "$prev" = "$command" ]]; then
 			_filedir

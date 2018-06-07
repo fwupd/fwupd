@@ -2,21 +2,7 @@
  *
  * Copyright (C) 2015-2016 Richard Hughes <richard@hughsie.com>
  *
- * Licensed under the GNU Lesser General Public License Version 2.1
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
@@ -194,6 +180,14 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			for (guint i = offset + 9; i < end; i += 2) {
 				/* any holes in the hex record */
 				guint32 len_hole = addr32 - addr32_last;
+				if (addr32_last > 0 && len_hole > 0x100000) {
+					g_set_error (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
+						     "hole of 0x%x bytes too large to fill",
+						     (guint) len_hole);
+					return FALSE;
+				}
 				if (addr32_last > 0x0 && len_hole > 1) {
 					for (guint j = 1; j < len_hole; j++) {
 						g_debug ("filling address 0x%08x",

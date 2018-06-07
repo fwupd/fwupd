@@ -3,7 +3,7 @@
 <component type="generic">
   <id>org.freedesktop.fwupd</id>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>GPL-2.0+</project_license>
+  <project_license>LGPL-2.0+</project_license>
   <name>fwupd</name>
   <summary>Update device firmware on Linux</summary>
   <description>
@@ -27,4 +27,7 @@
   <url type="translate">https://www.transifex.com/freedesktop/fwupd/</url>
   <update_contact>richard_at_hughsie.com</update_contact>
   <translation type="gettext">fwupd</translation>
+  <content_rating type="oars-1.0">
+    <content_attribute id="social-info">moderate</content_attribute>
+  </content_rating>
 </component>
