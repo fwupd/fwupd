@@ -1,0 +1,24 @@
+From 146626a3365de3d613c0780958dab66f4e349fa0 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Thu, 7 Jun 2018 09:00:15 -0500
+Subject: [PATCH] Add bash-completion to debian/control
+
+---
+ contrib/ci/dependencies.xml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/contrib/ci/dependencies.xml b/contrib/ci/dependencies.xml
+index 1115053..5fa3a15 100644
+--- a/contrib/ci/dependencies.xml
++++ b/contrib/ci/dependencies.xml
+@@ -2,6 +2,7 @@
+ <dependencies>
+   <dependency type="build" id="bash-completion">
+     <distro id="debian">
++      <control />
+       <package variant="x86_64" />
+       <package variant="i386" />
+     </distro>
+-- 
+2.7.4
+
