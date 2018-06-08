@@ -10,6 +10,7 @@
         "--device=all",
         "--filesystem=/boot",
         "--filesystem=/sys",
+        "--filesystem=xdg-download",
         "--share=network",
         "--system-talk-name=org.freedesktop.fwupd",
         "--system-talk-name=org.freedesktop.UPower"
