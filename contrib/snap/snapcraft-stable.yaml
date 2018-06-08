@@ -21,6 +21,7 @@ apps:
 plugs:
   fwupdtool:
     interface: fwupd
+    interface: home
 
 parts:
   libefivar-dev:
