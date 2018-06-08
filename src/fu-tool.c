@@ -64,6 +64,17 @@ fu_sort_command_name_cb (FuUtilItem **item1, FuUtilItem **item2)
 }
 
 static void
+fu_util_maybe_prefix_sandbox_error (const gchar *value, GError **error)
+{
+	g_autofree gchar *path = g_path_get_dirname (value);
+	if (!g_file_test (path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
+		g_prefix_error (error,
+				"Unable to access %s. You may need to copy %s to %s: ",
+				path, value, g_getenv ("HOME"));
+	}
+}
+
+static void
 fu_util_add (GPtrArray *array,
 	     const gchar *name,
 	     const gchar *arguments,
@@ -330,6 +341,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* open file */
 	fd = open (values[0], O_RDONLY);
 	if (fd < 0) {
+		fu_util_maybe_prefix_sandbox_error (values[0], error);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
@@ -482,8 +494,10 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* parse blob */
 	blob_fw = fu_common_get_contents_bytes (values[0], error);
-	if (blob_fw == NULL)
+	if (blob_fw == NULL) {
+		fu_util_maybe_prefix_sandbox_error (values[0], error);
 		return FALSE;
+	}
 
 	/* load engine */
 	if (!fu_engine_load (priv->engine, error))
@@ -554,8 +568,10 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* parse store */
 	blob_cab = fu_common_get_contents_bytes (values[0], error);
-	if (blob_cab == NULL)
+	if (blob_cab == NULL) {
+		fu_util_maybe_prefix_sandbox_error (values[0], error);
 		return FALSE;
+	}
 	store = fu_engine_get_store_from_blob (priv->engine, blob_cab, error);
 	if (store == NULL)
 		return FALSE;
