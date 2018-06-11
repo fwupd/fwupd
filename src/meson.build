@@ -19,7 +19,9 @@ endif
 if get_option('pkcs7')
   keyring_src += 'fu-keyring-pkcs7.c'
   keyring_deps += gnutls
-  test_deps += colorhug_pkcs7_signature
+  if get_option('tests')
+    test_deps += colorhug_pkcs7_signature
+  endif
 endif
 
 libfwupdprivate = static_library(
