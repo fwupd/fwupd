@@ -2,4 +2,5 @@ FROM snapcore/snapcraft
 RUN mkdir /build
 WORKDIR /build
 COPY . .
+RUN apt update
 CMD ["./contrib/ci/snap.sh"]
