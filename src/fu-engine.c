@@ -1724,6 +1724,8 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 	g_autoptr(GBytes) bytes_sig = NULL;
 	g_autoptr(GInputStream) stream_fd = NULL;
 	g_autoptr(GInputStream) stream_sig = NULL;
+	g_autofree gchar *pki_dir = NULL;
+	g_autofree gchar *sysconfdir = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
@@ -1774,7 +1776,9 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 			return FALSE;
 		if (!fu_keyring_setup (kr, error))
 			return FALSE;
-		if (!fu_keyring_add_public_keys (kr, "/etc/pki/fwupd-metadata", error))
+		sysconfdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR);
+		pki_dir = g_build_filename (sysconfdir, "pki", "fwupd-metadata", NULL);
+		if (!fu_keyring_add_public_keys (kr, pki_dir, error))
 			return FALSE;
 		kr_result = fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error);
 		if (kr_result == NULL)
