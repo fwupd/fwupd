@@ -17,10 +17,38 @@ apps:
     command: fwupdtool.wrapper
     completer:
       usr/share/bash-completion/completions/fwupdtool
+  fwupd:
+    command: fwupd.wrapper
+    daemon: simple
+    slots: [fwupd, daemon]
+  fwupdmgr:
+    command: fwupdmgr.wrapper
+    completer:
+      usr/share/bash-completion/completions/fwupdmgr
+    plugs: [network, fwupdmgr, client]
 
 plugs:
+  client:
+    interface: dbus
+    bus: system
+    name: org.freedesktop.fwupd
   fwupdtool:
     interface: home
+  fwupdmgr:
+    interface: home
+
+slots:
+  daemon:
+    interface: dbus
+    bus: system
+    name: org.freedesktop.fwupd
+  fwupd:
+    interface: fwupd
+  fwupd-data:
+    content: fwupd-data
+    interface: content
+    write:
+      - $SNAP_DATA
 
 parts:
   libefivar-dev:
@@ -188,6 +216,35 @@ parts:
       - -usr
       - -lib
       - -var
+  #0.19.8.1 adds support for GETTEXTDATADIRS which is needed by meson's msgfmthelper
+  gettext:
+    source: https://ftp.gnu.org/pub/gnu/gettext/gettext-0.19.8.1.tar.xz
+    plugin: autotools
+    build-packages:
+    - bison
+    - libunistring-dev
+    - libxml2-dev
+    configflags:
+    - --prefix=/usr
+    - --disable-static
+    - --disable-curses
+    - --disable-java
+    - --enable-relocatable
+    - --without-emacs
+    - --without-included-glib
+    - --without-included-libunistring
+    - --without-included-libxml
+    stage-packages:
+    - libunistring0
+    - libxml2
+    - libgomp1
+    prime:
+    - -**/*.a
+    - -**/*.la
+    - -usr/bin
+    - -usr/include
+    - -usr/lib/gettext
+    - -usr/share
   fwupd:
     plugin: meson
     meson-parameters: [--prefix=/usr,
@@ -196,29 +253,28 @@ parts:
                        -Defi-ldsdir=$SNAPCRAFT_STAGE/usr/lib,
                        -Defi-libdir=$SNAPCRAFT_STAGE/usr/lib,
                        -Dtests=false,
-                       -Ddaemon=false,
+                       -Ddaemon=true,
                        -Dgtkdoc=false,
                        -Dintrospection=false,
-                       -Dsystemd=false,
                        -Dman=false,
-                       -Dconsolekit=false,
-                       -Dpkcs7=false,
-                       -Dgpg=false]
+                       -Dudevdir=$SNAPCRAFT_STAGE/lib/udev,
+                       -Dpkcs7=false]
     source: .
     source-type: git
     override-build: |
       snapcraftctl build
-      echo $(git describe HEAD) > $SNAPCRAFT_STAGE/version
+      echo $(git describe HEAD --always) > $SNAPCRAFT_STAGE/version
     build-packages:
       - bash-completion
       - gcab
-      - gettext
+      - gnutls-dev
       - libarchive-dev
       - libelf-dev
       - libgcab-dev
       - libglib2.0-dev
       - libgpgme11-dev
       - libjson-glib-dev
+      - libpolkit-gobject-1-dev
       - libsoup2.4-dev
       - libsqlite3-dev
       - locales
@@ -229,8 +285,9 @@ parts:
       - libelf1
       - libgpgme11
       - libjson-glib-1.0-0
+      - libpolkit-gobject-1-0
+      - gnupg
     prime:
-      - -usr/bin
       - -usr/sbin
       - -usr/lib/gnupg
       - -usr/share/man
@@ -248,11 +305,8 @@ parts:
       - -usr/share/glib-2.0/schemas
       - -usr/share/X11
       - -usr/include
-      - -etc/dbus-1
       - -lib/systemd
       - -lib/udev
-      - -usr/lib/fwupd/fwupd
-      - -usr/share/dbus-1
       - -usr/share/gnupg
       - -usr/share/lintian
       - -usr/share/pkgconfig
@@ -266,7 +320,7 @@ parts:
       - -usr/share/upstart
       - -usr/lib/*/glib-2.0
       - -usr/lib/*/pkgconfig
-    after: [appstream-glib-dev, gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection]
+    after: [appstream-glib-dev, gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion
@@ -287,8 +341,11 @@ parts:
       - -usr/share/pkgconfig
       - -usr/share/GConf
     after: [fwupd]
-  fwupdtool-wrapper:
+  fwupd-wrappers:
     plugin: dump
     source: contrib/snap
     stage:
+    - fwupd-command
     - fwupdtool.wrapper
+    - fwupd.wrapper
+    - fwupdmgr.wrapper
