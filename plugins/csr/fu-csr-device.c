@@ -503,11 +503,8 @@ fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 static gboolean
 fu_csr_device_probe (FuUsbDevice *device, GError **error)
 {
-	const gchar *quirk_str;
-
 	/* devices have to be whitelisted */
-	quirk_str = fu_device_get_plugin_hints (FU_DEVICE (device));
-	if (g_strcmp0 (quirk_str, "require-delay") == 0) {
+	if (fu_device_has_plugin_hint (FU_DEVICE (device), "require-delay")) {
 		fu_csr_device_set_quirks (FU_CSR_DEVICE (device),
 					  FU_CSR_DEVICE_QUIRK_REQUIRE_DELAY);
 	}

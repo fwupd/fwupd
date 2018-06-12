@@ -756,6 +756,37 @@ fu_device_get_plugin_hints (FuDevice *device)
 }
 
 /**
+ * fu_device_has_plugin_hint:
+ * @device: A #FuDevice
+ * @hint: A string, e.g. "bootloader"
+ *
+ * Checks if the plugin hint exists for the device from the quirk system.
+ *
+ * It may be more efficient to call fu_device_get_plugin_hints() and split the
+ * string locally if checking for lots of plugin hints.
+ *
+ * Returns: %TRUE if the hint exists
+ *
+ * Since: 1.0.8
+ **/
+gboolean
+fu_device_has_plugin_hint (FuDevice *device, const gchar *hint)
+{
+	const gchar *hint_str;
+	g_auto(GStrv) hints = NULL;
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (hint != NULL, FALSE);
+
+	/* no hint is perfectly valid */
+	hint_str = fu_device_get_plugin_hints (device);
+	if (hint_str == NULL)
+		return FALSE;
+	hints = g_strsplit (hint_str, ",", -1);
+	return g_strv_contains ((const gchar * const *) hints, hint);
+}
+
+/**
  * fu_device_set_platform_id:
  * @device: A #FuDevice
  * @platform_id: a platform string, e.g. `/sys/devices/usb1/1-1/1-1.2`

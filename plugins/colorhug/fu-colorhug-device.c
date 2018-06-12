@@ -255,18 +255,10 @@ static gboolean
 fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
-	const gchar *quirk_str;
-	g_auto(GStrv) quirks = NULL;
 
-	/* devices have to be whitelisted */
-	quirk_str = fu_device_get_plugin_hints (FU_DEVICE (device));
-	quirks = g_strsplit (quirk_str, ",", -1);
-	for (guint i = 0; quirks[i] != NULL; i++) {
-		if (g_strcmp0 (quirks[i], "halfsize") == 0) {
-			self->start_addr = CH_EEPROM_ADDR_RUNCODE_ALS;
-			continue;
-		}
-	}
+	/* compact memory layout */
+	if (fu_device_has_plugin_hint (FU_DEVICE (device), "halfsize"))
+		self->start_addr = CH_EEPROM_ADDR_RUNCODE_ALS;
 
 	/* add hardcoded bits */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
