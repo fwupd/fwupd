@@ -1,9 +1,4 @@
-[FuNitrokeyDevice]
-
 # Nitrokey Storage
-USB\VID_20A0&PID_4109=needs-bootloader,use-runtime-version
-
-[FuUsbDevice:guid]
-
-# Nitrokey Storage
-USB\VID_20A0&PID_4109=USB\VID_03EB&PID_2FF1
+[DeviceInstanceId=USB\VID_20A0&PID_4109]
+Flags = needs-bootloader,use-runtime-version
+Guid = USB\VID_03EB&PID_2FF1

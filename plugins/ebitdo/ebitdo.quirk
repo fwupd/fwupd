@@ -1,41 +1,58 @@
-[FuEbitdoDevice]
-
 # bootloader
-USB\VID_0483&PID_5750=is-bootloader
-USB\VID_2DC8&PID_5750=is-bootloader
+[DeviceInstanceId=USB\VID_0483&PID_5750]
+Flags = is-bootloader
+[DeviceInstanceId=USB\VID_2DC8&PID_5750]
+Flags = is-bootloader
 
 # FC30
-USB\VID_1235&PID_AB11=none
-USB\VID_2DC8&PID_AB11=none
+[DeviceInstanceId=USB\VID_1235&PID_AB11]
+Flags = none
+[DeviceInstanceId=USB\VID_2DC8&PID_AB11]
+Flags = none
 
 # NES30
-USB\VID_1235&PID_AB12=none
-USB\VID_2DC8&PID_AB12=none
+[DeviceInstanceId=USB\VID_1235&PID_AB12]
+Flags = none
+[DeviceInstanceId=USB\VID_2DC8&PID_AB12]
+Flags = none
 
 # SFC30
-USB\VID_1235&PID_AB21=none
-USB\VID_2DC8&PID_AB21=none
+[DeviceInstanceId=USB\VID_1235&PID_AB21]
+Flags = none
+[DeviceInstanceId=USB\VID_2DC8&PID_AB21]
+Flags = none
 
 # SNES30
-USB\VID_1235&PID_AB20=none
-USB\VID_2DC8&PID_AB20=none
+[DeviceInstanceId=USB\VID_1235&PID_AB20]
+Flags = none
+[DeviceInstanceId=USB\VID_2DC8&PID_AB20]
+Flags = none
 
 # FC30PRO
-USB\VID_1002&PID_9000=none
-USB\VID_2DC8&PID_9000=none
+[DeviceInstanceId=USB\VID_1002&PID_9000]
+Flags = none
+[DeviceInstanceId=USB\VID_2DC8&PID_9000]
+Flags = none
 
 # NES30PRO
-USB\VID_2002&PID_9000=none
-USB\VID_2DC8&PID_9001=none
+[DeviceInstanceId=USB\VID_2002&PID_9000]
+Flags = none
+[DeviceInstanceId=USB\VID_2DC8&PID_9001]
+Flags = none
 
 # FC30_ARCADE
-USB\VID_8000&PID_1002=none
-USB\VID_2DC8&PID_1002=none
+[DeviceInstanceId=USB\VID_8000&PID_1002]
+Flags = none
+[DeviceInstanceId=USB\VID_2DC8&PID_1002]
+Flags = none
 
 # SF30 PRO/SN30 PRO
 ## Dinput mode (Start + B)
-USB\VID_2DC8&PID_6000=none
-USB\VID_2DC8&PID_6001=none
+[DeviceInstanceId=USB\VID_2DC8&PID_6000]
+Flags = none
+[DeviceInstanceId=USB\VID_2DC8&PID_6001]
+Flags = none
 ## Xinput mode (Start + X)
-USB\VID_045E&PID_028E=none
+[DeviceInstanceId=USB\VID_045E&PID_028E]
+Flags = none
 

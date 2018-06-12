@@ -52,7 +52,7 @@ fu_usb_device_apply_quirks (FuUsbDevice *device)
 
 	/* type */
 	g_debug ("looking for USB quirks for %s type", type_name);
-	tmp = fu_quirks_lookup_by_usb_device (quirks, type_name, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, type_name);
 	if (tmp != NULL) {
 		g_debug ("default plugin hints set to: %s", tmp);
 		fu_device_set_plugin_hints (FU_DEVICE (device), tmp);
@@ -61,32 +61,32 @@ fu_usb_device_apply_quirks (FuUsbDevice *device)
 	/* name */
 	g_debug ("looking for USB quirks for %s device",
 		 fu_device_get_platform_id (FU_DEVICE (device)));
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_NAME, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_NAME);
 	if (tmp != NULL)
 		fu_device_set_name (FU_DEVICE (device), tmp);
 
 	/* summary */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_SUMMARY, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_SUMMARY);
 	if (tmp != NULL)
 		fu_device_set_summary (FU_DEVICE (device), tmp);
 
 	/* vendor */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_VENDOR, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_VENDOR);
 	if (tmp != NULL)
 		fu_device_set_vendor (FU_DEVICE (device), tmp);
 
 	/* version */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_VERSION, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_VERSION);
 	if (tmp != NULL)
 		fu_device_set_version (FU_DEVICE (device), tmp);
 
 	/* icon */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_ICON, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_ICON);
 	if (tmp != NULL)
 		fu_device_add_icon (FU_DEVICE (device), tmp);
 
 	/* GUID */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_GUID, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_GUID);
 	if (tmp != NULL)
 		fu_device_add_guid (FU_DEVICE (device), tmp);
 }

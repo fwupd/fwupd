@@ -340,8 +340,8 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 
 		/* fix up the version */
 		quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-							    FU_QUIRKS_DFU_FORCE_VERSION,
-							    usb_device);
+							    usb_device,
+							    FU_QUIRKS_DFU_FORCE_VERSION);
 		if (quirk_str != NULL && strlen (quirk_str) == 4)
 			priv->version = dfu_utils_buffer_parse_uint16 (quirk_str);
 		if (priv->version == DFU_VERSION_DFU_1_0 ||
@@ -600,7 +600,7 @@ static void
 dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_auto(GStrv) split = g_strsplit (str, "|", -1);
+	g_auto(GStrv) split = g_strsplit (str, ",", -1);
 	for (guint i = 0; split[i] != NULL; i++) {
 		if (g_strcmp0 (split[i], "ignore-polltimeout") == 0) {
 			priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT;
@@ -661,8 +661,8 @@ dfu_device_apply_quirks (DfuDevice *device)
 	if (system_quirks != NULL && usb_device != NULL) {
 		const gchar *quirk_str;
 		quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-							    FU_QUIRKS_DFU,
-							    usb_device);
+							    usb_device,
+							    FU_QUIRKS_DFU_FLAGS);
 		if (quirk_str != NULL)
 			dfu_device_set_quirks_from_string (device, quirk_str);
 	} else {
@@ -1158,8 +1158,8 @@ dfu_device_detach (DfuDevice *device, GError **error)
 
 	/* handle Jabra devices that need a magic HID packet */
 	quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-						    FU_QUIRKS_DFU_JABRA_DETACH,
-						    usb_device);
+						    usb_device,
+						    FU_QUIRKS_DFU_JABRA_DETACH);
 	if (quirk_str != NULL) {
 		guint8 adr = 0x00;
 		guint8 rep = 0x00;

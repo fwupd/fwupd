@@ -1,4 +1,3 @@
-[FuSteelseriesDevice]
-
 # Rival 100
-USB\VID_1038&PID_1702=none
+[DeviceInstanceId=USB\VID_1038&PID_1702]
+Flags = none

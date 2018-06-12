@@ -732,8 +732,8 @@ fu_plugin_add_compile_version (FuPlugin *plugin,
 /**
  * fu_plugin_lookup_quirk_by_id:
  * @plugin: A #FuPlugin
- * @prefix: A string prefix that matches the quirks file basename, e.g. "dfu-quirks"
- * @id: An ID to match the entry, e.g. "012345"
+ * @group: A string, e.g. "DfuFlags"
+ * @key: An ID to match the entry, e.g. "Summary"
  *
  * Looks up an entry in the hardware database using a string value.
  *
@@ -742,24 +742,20 @@ fu_plugin_add_compile_version (FuPlugin *plugin,
  * Since: 1.0.1
  **/
 const gchar *
-fu_plugin_lookup_quirk_by_id (FuPlugin *plugin, const gchar *prefix, const gchar *id)
+fu_plugin_lookup_quirk_by_id (FuPlugin *plugin, const gchar *group, const gchar *key)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
 
-	/* wildcard */
-	if (g_strstr_len (id, -1, "*") != NULL)
-		return fu_quirks_lookup_by_glob (priv->quirks, prefix, id);
-
 	/* exact ID */
-	return fu_quirks_lookup_by_id (priv->quirks, prefix, id);
+	return fu_quirks_lookup_by_id (priv->quirks, group, key);
 }
 
 /**
  * fu_plugin_lookup_quirk_by_usb_device:
  * @plugin: A #FuPlugin
  * @prefix: A string prefix that matches the quirks file basename, e.g. "dfu-quirks"
- * @dev: A #GUsbDevice
+ * @usb_device: A #GUsbDevice
  *
  * Looks up an entry in the hardware database using various keys generated
  * from @dev.
@@ -769,11 +765,13 @@ fu_plugin_lookup_quirk_by_id (FuPlugin *plugin, const gchar *prefix, const gchar
  * Since: 1.0.1
  **/
 const gchar *
-fu_plugin_lookup_quirk_by_usb_device (FuPlugin *plugin, const gchar *prefix, GUsbDevice *dev)
+fu_plugin_lookup_quirk_by_usb_device (FuPlugin *plugin,
+				      GUsbDevice *usb_device,
+				      const gchar *prefix)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
-	return fu_quirks_lookup_by_usb_device (priv->quirks, prefix, dev);
+	return fu_quirks_lookup_by_usb_device (priv->quirks, usb_device, prefix);
 }
 
 /**

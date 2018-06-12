@@ -1181,27 +1181,19 @@ fu_plugin_quirks_func (void)
 	fu_plugin_set_quirks (plugin, quirks);
 
 	/* exact */
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "USB\\VID_0A5C&PID_6412");
-	g_assert_cmpstr (tmp, ==, "ignore-runtime");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "ACME Inc.");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "USB\\VID_0A5C&PID_6412", "Flags");
+	g_assert_cmpstr (tmp, ==, "MERGE_ME,ignore-runtime");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "ACME Inc.=True", "Test");
 	g_assert_cmpstr (tmp, ==, "awesome");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "CORP*");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "CORP*", "Test");
 	g_assert_cmpstr (tmp, ==, "town");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "USB\\VID_FFFF&PID_FFFF");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "USB\\VID_FFFF&PID_FFFF", "Flags");
 	g_assert_cmpstr (tmp, ==, "");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-Unfound", "baz");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "baz", "Unfound");
 	g_assert_cmpstr (tmp, ==, NULL);
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-tests", "unfound");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "unfound", "tests");
 	g_assert_cmpstr (tmp, ==, NULL);
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-unfound", "unfound");
-	g_assert_cmpstr (tmp, ==, NULL);
-
-	/* glob */
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "ACME*");
-	g_assert_cmpstr (tmp, ==, "awesome");
-	tmp = fu_quirks_lookup_by_glob (quirks, "fwupd-plugin-test", "CORPORATION");
-	g_assert_cmpstr (tmp, ==, "town");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "unfound*");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "unfound", "unfound");
 	g_assert_cmpstr (tmp, ==, NULL);
 }
 
