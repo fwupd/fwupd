@@ -550,13 +550,6 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 
 	/* devices have to be whitelisted */
 	quirk_str = fu_device_get_plugin_hints (FU_DEVICE (device));
-	if (quirk_str == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported with this device");
-		return FALSE;
-	}
 	if (g_strcmp0 (quirk_str, "is-bootloader") == 0)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
@@ -617,6 +610,7 @@ fu_ebitdo_device_new (GUsbDevice *usb_device)
 	FuEbitdoDevice *self;
 	self = g_object_new (FU_TYPE_EBITDO_DEVICE,
 			     "usb-device", usb_device,
+			     "require-plugin-hints", TRUE,
 			     NULL);
 	return FU_EBITDO_DEVICE (self);
 }

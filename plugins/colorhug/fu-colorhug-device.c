@@ -260,13 +260,6 @@ fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 
 	/* devices have to be whitelisted */
 	quirk_str = fu_device_get_plugin_hints (FU_DEVICE (device));
-	if (quirk_str == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported with this device");
-		return FALSE;
-	}
 	fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	quirks = g_strsplit (quirk_str, ",", -1);
 	for (guint i = 0; quirks[i] != NULL; i++) {
@@ -445,6 +438,7 @@ fu_colorhug_device_new (GUsbDevice *usb_device)
 	FuColorhugDevice *self = NULL;
 	self = g_object_new (FU_TYPE_COLORHUG_DEVICE,
 			     "usb-device", usb_device,
+			     "require-plugin-hints", TRUE,
 			     NULL);
 	return self;
 }

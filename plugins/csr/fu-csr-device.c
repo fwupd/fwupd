@@ -507,13 +507,6 @@ fu_csr_device_probe (FuUsbDevice *device, GError **error)
 
 	/* devices have to be whitelisted */
 	quirk_str = fu_device_get_plugin_hints (FU_DEVICE (device));
-	if (quirk_str == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported with this device");
-		return FALSE;
-	}
 	if (g_strcmp0 (quirk_str, "require-delay") == 0) {
 		fu_csr_device_set_quirks (FU_CSR_DEVICE (device),
 					  FU_CSR_DEVICE_QUIRK_REQUIRE_DELAY);
@@ -588,6 +581,7 @@ fu_csr_device_new (GUsbDevice *usb_device)
 	FuCsrDevice *device = NULL;
 	device = g_object_new (FU_TYPE_CSR_DEVICE,
 			       "usb-device", usb_device,
+			       "require-plugin-hints", TRUE,
 			       NULL);
 	return device;
 }
