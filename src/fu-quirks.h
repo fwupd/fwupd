@@ -21,13 +21,13 @@ FuQuirks	*fu_quirks_new				(void);
 gboolean	 fu_quirks_load				(FuQuirks	*self,
 							 GError		**error);
 const gchar	*fu_quirks_lookup_by_id			(FuQuirks	*self,
-							 const gchar	*prefix,
+							 const gchar	*group,
 							 const gchar	*id);
 const gchar	*fu_quirks_lookup_by_glob		(FuQuirks	*self,
-							 const gchar	*prefix,
+							 const gchar	*group,
 							 const gchar	*glob);
 const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
-							 const gchar	*prefix,
+							 const gchar	*group,
 							 GUsbDevice	*dev);
 
 /**

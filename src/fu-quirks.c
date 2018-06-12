@@ -49,7 +49,7 @@ struct _FuQuirks
 {
 	GObject			 parent_instance;
 	GPtrArray		*monitors;
-	GHashTable		*hash;	/* of prefix/id:string */
+	GHashTable		*hash;	/* of group/id:string */
 };
 
 G_DEFINE_TYPE (FuQuirks, fu_quirks, G_TYPE_OBJECT)
@@ -88,7 +88,7 @@ fu_quirks_add_inotify (FuQuirks *self, const gchar *filename, GError **error)
 /**
  * fu_quirks_lookup_by_id:
  * @self: A #FuPlugin
- * @prefix: A string prefix that matches the quirks file basename, e.g. "dfu-quirks"
+ * @group: A string group that matches the quirks file basename, e.g. "dfu-quirks"
  * @id: An ID to match the entry, e.g. "012345"
  *
  * Looks up an entry in the hardware database using a string value.
@@ -98,22 +98,22 @@ fu_quirks_add_inotify (FuQuirks *self, const gchar *filename, GError **error)
  * Since: 1.0.1
  **/
 const gchar *
-fu_quirks_lookup_by_id (FuQuirks *self, const gchar *prefix, const gchar *id)
+fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *id)
 {
 	g_autofree gchar *key = NULL;
 
 	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
-	g_return_val_if_fail (prefix != NULL, NULL);
+	g_return_val_if_fail (group != NULL, NULL);
 	g_return_val_if_fail (id != NULL, NULL);
 
-	key = g_strdup_printf ("%s/%s", prefix, id);
+	key = g_strdup_printf ("%s/%s", group, id);
 	return g_hash_table_lookup (self->hash, key);
 }
 
 /**
  * fu_quirks_lookup_by_glob:
  * @self: A #FuPlugin
- * @prefix: A string prefix that matches the quirks file basename, e.g. "dfu-quirks"
+ * @group: A string group that matches the quirks file basename, e.g. "dfu-quirks"
  * @glob: An glob to match the entry, e.g. "foo*bar?baz"
  *
  * Looks up an entry in the hardware database using a key glob.
@@ -125,26 +125,26 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *prefix, const gchar *id)
  * Since: 1.0.1
  **/
 const gchar *
-fu_quirks_lookup_by_glob (FuQuirks *self, const gchar *prefix, const gchar *glob)
+fu_quirks_lookup_by_glob (FuQuirks *self, const gchar *group, const gchar *glob)
 {
 	g_autoptr(GList) keys = NULL;
 	gsize prefix_len;
 
 	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
-	g_return_val_if_fail (prefix != NULL, NULL);
+	g_return_val_if_fail (group != NULL, NULL);
 	g_return_val_if_fail (glob != NULL, NULL);
 
-	prefix_len = strlen (prefix);
+	prefix_len = strlen (group);
 	keys = g_hash_table_get_keys (self->hash);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *id = l->data;
-		if (strncmp (id, prefix, prefix_len) != 0)
+		if (strncmp (id, group, prefix_len) != 0)
 			continue;
 		id += prefix_len + 1;
 		if (fnmatch (glob, id, 0) == 0)
-			return fu_quirks_lookup_by_id (self, prefix, id);
+			return fu_quirks_lookup_by_id (self, group, id);
 		if (fnmatch (id, glob, 0) == 0)
-			return fu_quirks_lookup_by_id (self, prefix, id);
+			return fu_quirks_lookup_by_id (self, group, id);
 	}
 	return NULL;
 }
@@ -152,7 +152,7 @@ fu_quirks_lookup_by_glob (FuQuirks *self, const gchar *prefix, const gchar *glob
 /**
  * fu_quirks_lookup_by_usb_device:
  * @self: A #FuPlugin
- * @prefix: A string prefix that matches the quirks file basename, e.g. "dfu-quirks"
+ * @group: A string group that matches the quirks file basename, e.g. "dfu-quirks"
  * @dev: A #GUsbDevice
  *
  * Looks up an entry in the hardware database using various keys generated
@@ -163,7 +163,7 @@ fu_quirks_lookup_by_glob (FuQuirks *self, const gchar *prefix, const gchar *glob
  * Since: 1.0.1
  **/
 const gchar *
-fu_quirks_lookup_by_usb_device (FuQuirks *self, const gchar *prefix, GUsbDevice *dev)
+fu_quirks_lookup_by_usb_device (FuQuirks *self, const gchar *group, GUsbDevice *dev)
 {
 	const gchar *tmp;
 	g_autofree gchar *key1 = NULL;
@@ -171,7 +171,7 @@ fu_quirks_lookup_by_usb_device (FuQuirks *self, const gchar *prefix, GUsbDevice 
 	g_autofree gchar *key3 = NULL;
 
 	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
-	g_return_val_if_fail (prefix != NULL, NULL);
+	g_return_val_if_fail (group != NULL, NULL);
 	g_return_val_if_fail (G_USB_IS_DEVICE (dev), NULL);
 
 	/* prefer an exact match, VID:PID:REV */
@@ -179,7 +179,7 @@ fu_quirks_lookup_by_usb_device (FuQuirks *self, const gchar *prefix, GUsbDevice 
 				g_usb_device_get_vid (dev),
 				g_usb_device_get_pid (dev),
 				g_usb_device_get_release (dev));
-	tmp = fu_quirks_lookup_by_id (self, prefix, key1);
+	tmp = fu_quirks_lookup_by_id (self, group, key1);
 	if (tmp != NULL)
 		return tmp;
 
@@ -187,13 +187,13 @@ fu_quirks_lookup_by_usb_device (FuQuirks *self, const gchar *prefix, GUsbDevice 
 	key2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 				g_usb_device_get_vid (dev),
 				g_usb_device_get_pid (dev));
-	tmp = fu_quirks_lookup_by_id (self, prefix, key2);
+	tmp = fu_quirks_lookup_by_id (self, group, key2);
 	if (tmp != NULL)
 		return tmp;
 
 	/* VID */
 	key3 = g_strdup_printf ("USB\\VID_%04X", g_usb_device_get_vid (dev));
-	return fu_quirks_lookup_by_id (self, prefix, key3);
+	return fu_quirks_lookup_by_id (self, group, key3);
 }
 
 static gboolean
