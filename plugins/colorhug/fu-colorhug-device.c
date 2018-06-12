@@ -260,14 +260,8 @@ fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 
 	/* devices have to be whitelisted */
 	quirk_str = fu_device_get_plugin_hints (FU_DEVICE (device));
-	fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	quirks = g_strsplit (quirk_str, ",", -1);
 	for (guint i = 0; quirks[i] != NULL; i++) {
-		if (g_strcmp0 (quirks[i], "is-bootloader") == 0) {
-			fu_device_add_flag (FU_DEVICE (self),
-					    FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-			continue;
-		}
 		if (g_strcmp0 (quirks[i], "halfsize") == 0) {
 			self->start_addr = CH_EEPROM_ADDR_RUNCODE_ALS;
 			continue;

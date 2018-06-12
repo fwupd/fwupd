@@ -546,12 +546,6 @@ static gboolean
 fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
-	const gchar *quirk_str;
-
-	/* devices have to be whitelisted */
-	quirk_str = fu_device_get_plugin_hints (FU_DEVICE (device));
-	if (g_strcmp0 (quirk_str, "is-bootloader") == 0)
-		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -571,9 +565,6 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
 		fu_device_add_flag (FU_DEVICE (device),
 				    FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
-	} else {
-		fu_device_remove_flag (FU_DEVICE (device),
-				       FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	}
 
 	/* success */

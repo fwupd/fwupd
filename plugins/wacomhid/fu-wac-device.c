@@ -678,15 +678,6 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 static gboolean
 fu_wac_device_probe (FuUsbDevice *device, GError **error)
 {
-	const gchar *plugin_hints;
-
-	/* hardware cannot respond to GetReport(DeviceFirmwareDescriptor) */
-	plugin_hints = fu_device_get_plugin_hints (FU_DEVICE (device));
-	if (g_strcmp0 (plugin_hints, "use-runtime-version") == 0) {
-		fu_device_add_flag (FU_DEVICE (device),
-				    FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
-	}
-
 	/* hardcoded */
 	fu_device_add_icon (FU_DEVICE (device), "input-tablet");
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
