@@ -1,6 +1,6 @@
 ### ColorHug1 ##################################################################
 [FuColorhugDevice]
-USB\VID_273F&PID_1000=bootloader
+USB\VID_273F&PID_1000=is-bootloader
 USB\VID_273F&PID_1001=none
 
 [FuUsbDevice:summary]
@@ -16,7 +16,7 @@ USB\VID_273F&PID_1001=40338ceb-b966-4eae-adae-9c32edfcc484
 ### ColorHug2 ##################################################################
 [FuColorhugDevice]
 USB\VID_273F&PID_1004=none
-USB\VID_273F&PID_1005=bootloader
+USB\VID_273F&PID_1005=is-bootloader
 
 [FuUsbDevice:summary]
 USB\VID_273F&PID_1004=An open source display colorimeter
@@ -30,7 +30,7 @@ USB\VID_273F&PID_1005=2082b5e0-7a64-478a-b1b2-e3404fab6dad
 
 ### ColorHugALS ################################################################
 [FuColorhugDevice]
-USB\VID_273F&PID_1006=halfsize,bootloader
+USB\VID_273F&PID_1006=halfsize,is-bootloader
 USB\VID_273F&PID_1007=halfsize,none
 
 [FuUsbDevice:summary]

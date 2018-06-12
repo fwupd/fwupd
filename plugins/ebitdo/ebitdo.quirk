@@ -1,8 +1,8 @@
 [FuEbitdoDevice]
 
 # bootloader
-USB\VID_0483&PID_5750=bootloader
-USB\VID_2DC8&PID_5750=bootloader
+USB\VID_0483&PID_5750=is-bootloader
+USB\VID_2DC8&PID_5750=is-bootloader
 
 # FC30
 USB\VID_1235&PID_AB11=none

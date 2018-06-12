@@ -270,7 +270,7 @@ fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 	fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	quirks = g_strsplit (quirk_str, ",", -1);
 	for (guint i = 0; quirks[i] != NULL; i++) {
-		if (g_strcmp0 (quirks[i], "bootloader") == 0) {
+		if (g_strcmp0 (quirks[i], "is-bootloader") == 0) {
 			fu_device_add_flag (FU_DEVICE (self),
 					    FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 			continue;

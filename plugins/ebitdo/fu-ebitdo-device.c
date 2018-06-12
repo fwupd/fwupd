@@ -557,7 +557,7 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 				     "not supported with this device");
 		return FALSE;
 	}
-	if (g_strcmp0 (quirk_str, "bootloader") == 0)
+	if (g_strcmp0 (quirk_str, "is-bootloader") == 0)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
 	/* allowed, but requires manual bootloader step */
