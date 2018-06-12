@@ -20,7 +20,6 @@ apps:
 
 plugs:
   fwupdtool:
-    interface: fwupd
     interface: home
 
 parts:
@@ -146,6 +145,8 @@ parts:
       - -usr/share/glib-2.0/schemas
       - -usr/share/lintian
       - -usr/share/man
+      - -usr/lib/*/gdk-pixbuf-2.0
+      - -usr/share/gettext
     after: [meson]
   gudev:
     plugin: autotools
@@ -263,6 +264,10 @@ parts:
       - -usr/lib/*/glib-2.0
       - -usr/lib/*/pkgconfig
     after: [appstream-glib-dev, libfwup-dev, gudev, gusb]
+  fix-bash-completion:
+    plugin: make
+    source: contrib/snap/fix-bash-completion
+    after: [fwupd]
   update-mime:
     plugin: make
     source: contrib/snap/update-mime
@@ -271,9 +276,13 @@ parts:
       - gsettings-desktop-schemas
       - libxml2
     prime:
+      - -usr/bin
       - -usr/share/doc
+      - -usr/share/doc-base
+      - -usr/share/man
       - -usr/share/lintian
       - -usr/share/pkgconfig
+      - -usr/share/GConf
     after: [fwupd]
   fwupdtool-wrapper:
     plugin: dump
