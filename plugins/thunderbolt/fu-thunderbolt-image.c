@@ -406,6 +406,7 @@ get_host_locations (guint16 id)
 		{ .offset = 0x136, .len = 1, .description = "Src0", .mask = 0xF0 },
 		{ .offset = 0xB6,  .len = 1, .description = "PA/PB (USB2)", .mask = 0xC0 },
 		{ .offset = 0x5E,  .len = 1, .description = "Aux", .mask = 0x0F },
+		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
 		{ 0 },
 
 		{ .offset = 0x13,  .len = 1, .description = "PB", .mask = 0xCC, .section = DRAM_UCODE_SECTION },
