@@ -55,7 +55,9 @@ get_hw_info (guint16 id)
 		{ 0x15DA, 3, 1 }, /* AR-C 2C */
 
 		{ 0x15E7, 3, 1 }, /* TR 2C */
+		{ 0x15E8, 3, 1 }, /* TR 2C */
 		{ 0x15EA, 3, 2 }, /* TR 4C */
+		{ 0x15EB, 3, 2 }, /* TR 4C */
 		{ 0x15EF, 3, 2 }, /* TR 4C device */
 
 		{ 0 }
@@ -425,7 +427,9 @@ get_host_locations (guint16 id)
 	case 0x15C0:
 		return AR_LP;
 	case 0x15E7:
+	case 0x15E8:
 	case 0x15EA:
+	case 0x15EB:
 		return TR;
 	default:
 		return NULL;
