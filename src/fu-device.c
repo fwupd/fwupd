@@ -282,11 +282,11 @@ fu_device_add_child (FuDevice *device, FuDevice *child)
 
 	/* order devices so they are updated in the correct sequence */
 	if (fu_device_has_flag (child, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST)) {
-		if (priv->order <= fu_device_get_order (child))
-			priv->order = fu_device_get_order (child) + 1;
-	} else {
 		if (priv->order >= fu_device_get_order (child))
 			fu_device_set_order (child, priv->order + 1);
+	} else {
+		if (priv->order <= fu_device_get_order (child))
+			priv->order = fu_device_get_order (child) + 1;
 	}
 }
 
