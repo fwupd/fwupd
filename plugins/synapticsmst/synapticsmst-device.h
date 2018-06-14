@@ -78,8 +78,17 @@ const gchar 	*synapticsmst_device_get_chip_id 		(SynapticsMSTDevice *device);
 const gchar 	*synapticsmst_device_get_aux_node		(SynapticsMSTDevice *device);
 guint16 	 synapticsmst_device_get_rad 			(SynapticsMSTDevice *device);
 guint8 		 synapticsmst_device_get_layer 			(SynapticsMSTDevice *device);
-gboolean
-synapticsmst_device_get_cascade					(SynapticsMSTDevice *device);
+gboolean synapticsmst_device_get_cascade					(SynapticsMSTDevice *device);
+//Add for Panamera
+guint16
+synapticsmst_device_get_crc(guint16 crc, guint8 type, guint32 length, guint8	*payload_data);
+guint8 	synapticsmst_device_disable_flash_write_protect(SynapticsMSTDevice *device, guint8 mode);
+guint8 
+synapticsmst_device_set_flash_sector_erase(SynapticsMSTDevice *device, guint16 rc_cmd, guint16 offset);
+guint8
+synapticsmst_device_update_ESM(SynapticsMSTDevice *device, guint8	*payload_data, GError **error);
+guint8
+synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32 payload_len, guint8	*payload_data, GError **error);
 
 /* object methods */
 gboolean	 synapticsmst_device_enumerate_device 		(SynapticsMSTDevice *devices,
