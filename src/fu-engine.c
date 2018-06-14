@@ -965,6 +965,7 @@ fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 	AsVersionParseFlag flags = AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 	GPtrArray *releases;
 	const gchar *quirk;
+	const gchar *version_format;
 
 	/* no quirk required */
 	if (as_app_get_kind (app) != AS_APP_KIND_FIRMWARE)
@@ -975,6 +976,11 @@ fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 					  FU_QUIRKS_DAEMON_VERSION_FORMAT,
 					  as_app_get_id (app));
 	if (g_strcmp0 (quirk, "none") == 0)
+		flags = AS_VERSION_PARSE_FLAG_NONE;
+
+	/* specified in metadata */
+	version_format = as_app_get_metadata_item (app, "LVFS::VersionFormat");
+	if (g_strcmp0 (version_format, "quad") == 0)
 		flags = AS_VERSION_PARSE_FLAG_NONE;
 
 	/* fix each release */
