@@ -18,7 +18,7 @@ apps:
   fwupdtool:
     command: fwupdtool.wrapper
     completer:
-      usr/share/bash-completion/completions/fwupdtool
+      share/bash-completion/completions/fwupdtool
   fwupd:
     command: fwupd.wrapper
     daemon: simple
@@ -27,7 +27,7 @@ apps:
   fwupdmgr:
     command: fwupdmgr.wrapper
     completer:
-      usr/share/bash-completion/completions/fwupdmgr
+      share/bash-completion/completions/fwupdmgr
     plugs: [network, fwupdmgr, client]
 
 plugs:
@@ -174,16 +174,16 @@ parts:
   gusb:
     plugin: meson
     source: https://github.com/hughsie/libgusb/archive/0.3.0.tar.gz
-    meson-parameters: [--prefix=/usr,
+    meson-parameters: [--prefix=/,
                        -Dtests=false,
                        -Dvapi=false,
                        -Ddocs=false]
     prime:
-    - -usr/bin/
-    - -usr/include
-    - -usr/share
-    - -usr/lib/*/pkgconfig
-    - -usr/lib/*/girepository-1.0
+    - -bin/
+    - -include
+    - -share
+    - -lib/*/pkgconfig
+    - -lib/*/girepository-1.0
     after: [libusb]
   gnu-efi:
     plugin: make
@@ -242,8 +242,7 @@ parts:
     - -usr/share
   fwupd:
     plugin: meson
-    meson-parameters: [--prefix=/usr,
-                       --libexecdir=/usr/lib,
+    meson-parameters: [--prefix=/,
                        -Defi-includedir=$SNAPCRAFT_STAGE/usr/include/efi,
                        -Defi-ldsdir=$SNAPCRAFT_STAGE/usr/lib,
                        -Defi-libdir=$SNAPCRAFT_STAGE/usr/lib,
@@ -286,10 +285,7 @@ parts:
       # this will cause gpgme to error finding it
       # but that also avoids trying to use non-existent
       # /usr/bin/gpg2
-      - -usr/bin/gpg*
-      - -usr/bin/watchgnupg
-      - -usr/bin/kbxutil
-      - -usr/bin/pinentry*
+      - -usr/bin
       - -usr/sbin
       - -usr/share/man
       - -usr/share/GConf
@@ -305,9 +301,10 @@ parts:
       - -usr/lib/*/audit
       - -usr/share/glib-2.0/schemas
       - -usr/share/X11
-      - -usr/include
+      - -include
       - -lib/systemd
       - -lib/udev
+      - -lib/*/pkgconfig
       - -usr/share/lintian
       - -usr/share/pkgconfig
       - -usr/share/installed-tests
