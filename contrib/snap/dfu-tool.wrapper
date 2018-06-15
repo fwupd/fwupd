@@ -1,2 +1,2 @@
 #!/bin/sh
-exec "$SNAP/fwupd-command" $SNAP/usr/bin/dfu-tool $@
+exec "$SNAP/fwupd-command" $SNAP/bin/dfu-tool $@
