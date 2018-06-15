@@ -424,16 +424,13 @@ fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
 	}
 
 	/* all authenticated, so install all the things */
-	for (guint i = 0; i < helper->install_tasks->len; i++) {
-		FuInstallTask *task = g_ptr_array_index (helper->install_tasks, i);
-		if (!fu_engine_install (helper->priv->engine,
-					task,
-					helper->blob_cab,
-					helper->flags,
-					&error)) {
-			g_dbus_method_invocation_return_gerror (helper->invocation, error);
-			return;
-		}
+	if (!fu_engine_install_tasks (helper->priv->engine,
+				      helper->install_tasks,
+				      helper->blob_cab,
+				      helper->flags,
+				      &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
 	}
 
 	/* success */

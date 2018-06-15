@@ -76,6 +76,9 @@ typedef void		 (*FuPluginDeviceRegisterFunc)	(FuPlugin	*plugin,
 typedef gboolean	 (*FuPluginDeviceFunc)		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
+typedef gboolean	 (*FuPluginDeviceArrayFunc)	(FuPlugin	*plugin,
+							 GPtrArray	*devices,
+							 GError		**error);
 typedef gboolean	 (*FuPluginVerifyFunc)		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 FuPluginVerifyFlags flags,
@@ -933,6 +936,35 @@ fu_plugin_runner_device_generic (FuPlugin *plugin, FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_runner_device_array_generic (FuPlugin *plugin, GPtrArray *devices,
+				       const gchar *symbol_name, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginDeviceArrayFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, symbol_name, (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
+	if (!func (plugin, devices, error)) {
+		g_prefix_error (error, "failed to run %s() on %s: ",
+				symbol_name + 10,
+				priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 gboolean
 fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -1035,6 +1067,22 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 	return TRUE;
+}
+
+gboolean
+fu_plugin_runner_composite_prepare (FuPlugin *plugin, GPtrArray *devices, GError **error)
+{
+	return fu_plugin_runner_device_array_generic (plugin, devices,
+						      "fu_plugin_composite_prepare",
+						      error);
+}
+
+gboolean
+fu_plugin_runner_composite_cleanup (FuPlugin *plugin, GPtrArray *devices, GError **error)
+{
+	return fu_plugin_runner_device_array_generic (plugin, devices,
+						      "fu_plugin_composite_cleanup",
+						      error);
 }
 
 gboolean
