@@ -547,6 +547,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 		return FALSE;
 
 	/* clear all checksums of pages */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	for (guint16 i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index (self->flash_descriptors, i);
 		if (fu_wav_device_flash_descriptor_is_wp (fd))
@@ -579,6 +580,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 	blocks_total = g_hash_table_size (fd_blobs) + 2;
 
 	/* write the data into the flash page */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	csum_local = g_new0 (guint32, self->flash_descriptors->len);
 	for (guint16 i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index (self->flash_descriptors, i);
@@ -617,9 +619,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 			return FALSE;
 
 		/* update device progress */
-		fu_device_set_progress_full (FU_DEVICE (self),
-					     blocks_done++,
-					     blocks_total);
+		fu_device_set_progress_full (device, blocks_done++, blocks_total);
 	}
 
 	/* calculate CRC inside device */
@@ -629,7 +629,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 	}
 
 	/* update device progress */
-	fu_device_set_progress_full (FU_DEVICE (self), blocks_done++, blocks_total);
+	fu_device_set_progress_full (device, blocks_done++, blocks_total);
 
 	/* read all CRC of all pages and verify with local CRC */
 	if (!fu_wac_device_ensure_checksums (self, error))
@@ -661,16 +661,17 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 	}
 
 	/* update device progress */
-	fu_device_set_progress_full (FU_DEVICE (self), blocks_done++, blocks_total);
+	fu_device_set_progress_full (device, blocks_done++, blocks_total);
 
 	/* store host CRC into flash */
 	if (!fu_wac_device_write_checksum_table (self, error))
 		return FALSE;
 
 	/* update progress */
-	fu_device_set_progress_full (FU_DEVICE (self), blocks_total, blocks_total);
+	fu_device_set_progress_full (device, blocks_total, blocks_total);
 
 	/* reboot, which switches the boot index of the firmware */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	return fu_wac_device_update_reset (self, error);
 }
 

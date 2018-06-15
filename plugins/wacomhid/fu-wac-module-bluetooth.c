@@ -125,6 +125,7 @@ fu_wac_module_bluetooth_write_firmware (FuDevice *device, GBytes *blob, GError *
 	blocks_total = blocks->len + 2;
 
 	/* start, which will erase the module */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_START, blob_start, error))
 		return FALSE;
 
@@ -132,6 +133,7 @@ fu_wac_module_bluetooth_write_firmware (FuDevice *device, GBytes *blob, GError *
 	fu_device_set_progress_full (device, 1, blocks_total);
 
 	/* data */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < blocks->len; i++) {
 		FuWacModuleBluetoothBlockData *bd = g_ptr_array_index (blocks, i);
 		guint8 buf[256+11];
@@ -160,7 +162,7 @@ fu_wac_module_bluetooth_write_firmware (FuDevice *device, GBytes *blob, GError *
 	fu_device_set_progress_full (device, blocks_total, blocks_total);
 
 	/* reboot */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	return fu_wac_device_update_reset (parent, error);
 }
 
