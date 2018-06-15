@@ -591,7 +591,7 @@ synapticsmst_device_get_crc(guint16 crc, guint8 type, guint32 length, guint8	*pa
 			remainder = CRC8_table[val];
 		}
 	}
-	else {//16bit
+	else {
 		for ( byte = 0; byte < length; ++byte)	{
 			val = (guint8)(message[byte] ^ ( remainder>>8));
 			remainder = CRC16_table[val] ^ (remainder << 8);
@@ -599,7 +599,7 @@ synapticsmst_device_get_crc(guint16 crc, guint8 type, guint32 length, guint8	*pa
 	}  
     return (remainder);
 }
-
+/*
 guint8 	synapticsmst_device_disable_flash_write_protect(SynapticsMSTDevice *device, guint8 mode)
 {
 	guint32 tmp[5];
@@ -628,16 +628,17 @@ guint8 	synapticsmst_device_disable_flash_write_protect(SynapticsMSTDevice *devi
 	}
 	return TRUE;
 }
-
-guint8 synapticsmst_device_set_flash_sector_erase(SynapticsMSTDevice *device, guint16 rc_cmd, guint16 offset)
+*/
+guint8 
+synapticsmst_device_set_flash_sector_erase(SynapticsMSTDevice *device, guint16 rc_cmd, guint16 offset)
 {
-	guint8 rc = 0;
+	guint16 usData;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
-	//Need to add Wp control?
+	/* Need to add Wp control ? */
 	//rc = synapticsmst_device_disable_flash_write_protect(device, TRUE);	 
-	guint16	usData = rc_cmd + offset;
+	usData = rc_cmd + offset;
 	return synapticsmst_common_rc_set_command (connection,
 						UPDC_FLASH_ERASE,
 						2, 0, (guint8 *)&usData);
@@ -693,9 +694,9 @@ synapticsmst_device_update_ESM(SynapticsMSTDevice *device, guint8	*payload_data,
 			retryCount = 0;
 			unitSize = BLOCK_UNIT;//64
 			writeIndex = 0;	
-			#if 1//why 384 byte each time
+			#if 1
 			write_loops = (esmSize / unitSize / 6);
-			g_debug("WriteEachTime 384byte?");
+			//g_debug("WriteEachTime 384byte?");
 			#else		
 			write_loops = (esmSize / unitSize);
 			#endif
@@ -739,23 +740,20 @@ synapticsmst_device_update_ESM(SynapticsMSTDevice *device, guint8	*payload_data,
 				g_set_error_literal (error,	G_IO_ERROR,	G_IO_ERROR_INVALID_DATA,
 									"ESM update fail");
 			}
-			if(isESMupdted == TRUE){
-				//ESM update done
-				return 1;				
+			if(isESMupdted == TRUE){				
+				return 1;/* ESM update done */	
 			}
-			else{
-				//ESM update fail
-				return 0;
+			else{				
+				return 0;/* ESM update fail */
 			}
 		}
-		else{
-			//ESM checksum same
-			return 2;
+		else{			
+			return 2;/* ESM checksum same */
 		}
 	}
 	else {
-		//Get chcksum fail
-		return 0;
+		return 0;/* Get chcksum fail */
+
 	}
 
 }
@@ -778,6 +776,8 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 	guint32 writeOffset, writeIndex, eraseOffset;
 	guint32 write_loops = 0;
 	guint32 retryCount, unitSize;
+	time_t timeptr;
+	struct tm *pTM;
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
@@ -831,8 +831,9 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 		if(eraseFail)
 			break;
 		/* update */
-		// check if ESm update
-		//g_debug("skip check ESM update");
+		#if MSTDBG
+		g_debug("skip check ESM update");
+		#endif
 		writeIndex = 0;	
 		writeOffset = EEPROM_BANK_OFFSET * BankToUpdate;		
 		
@@ -892,8 +893,6 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 	}
 
 	/* set tag vaild*/	
-	time_t timeptr;
-	struct tm *pTM;
 	time(&timeptr);
 	pTM = localtime(&timeptr);
 	memset(tagData, 0, sizeof(tagData));
@@ -957,12 +956,12 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 			
 		do
 		{
-			if (tagData[0] != 0xFF)	{  // TODO : double check
-			// CRC8 is not 0xFF, erase last 4k of bank#
-				guint32 eraseOffset = (EEPROM_BANK_OFFSET * BankInUse + EEPROM_BANK_OFFSET - 0x1000) / 0x1000; // offset for last 4k of bank#
+			if (tagData[0] != 0xFF)	{  
+			/* CRC8 is not 0xFF, erase last 4k of bank# */
+				eraseOffset = (EEPROM_BANK_OFFSET * BankInUse + EEPROM_BANK_OFFSET - 0x1000) / 0x1000; // offset for last 4k of bank#
 				rc = synapticsmst_device_set_flash_sector_erase(device, FLASH_SECTOR_ERASE_4K, eraseOffset);				
 			}
-			else{  // CRC8 is 0xFF, set it to 0x00
+			else{  /* CRC8 is 0xFF, set it to 0x00 */
 				tagData[1] = 0x00;
 				rc = synapticsmst_common_rc_set_command (connection,
 								 UPDC_WRITE_TO_EEPROM,
@@ -1016,10 +1015,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 	guint16 erase_code = 0xFFFF;	
 	guint8 percentage = 0;
 	guint8 rc = 0;
-	guint8 byteData[16];
 	gboolean isChipPanamera = FALSE;
-	//guint8 BankInUse = BANKTAG_0;
-	//guint8 BankToUpdate = BANKTAG_1;
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
@@ -1139,8 +1135,8 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 						"firmware checksum error");
 			return FALSE;
 		}
-		guint32 offset = EEPROM_ESM_OFFSET;
 		checksum = 0;
+		offset = EEPROM_ESM_OFFSET;
 		for (i = 0; i < (payload_len - EEPROM_ESM_OFFSET); i++)
 		{
 			checksum += *(payload_data + offset + i);
@@ -1168,7 +1164,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 	if(isChipPanamera == TRUE){
 		g_debug("bypass check CusID %x %x",tmp, synapticsmst_device_get_board_id (device));	
 	}
-	else {// not Panamera
+	else {
 		if (tmp != synapticsmst_device_get_board_id (device)) {
 			g_set_error_literal (error,	G_IO_ERROR,	G_IO_ERROR_INVALID_DATA,
 						"board ID mismatch");
@@ -1189,29 +1185,27 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 	/* detect SPI quad mode & disable HDCP 2.2 */
 	if(isChipPanamera == TRUE)
 	{
-		//Need to detect flash mode and ESM first?
+		/* Need to detect flash mode and ESM first ? */
 		/* disable flash Quad mode and ESM/HDCP2.2*/
 		for(guint8 i=0; i<16; i++){
 			dwData[i] = 0;	
 		}
 		rc = 0;
 		connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);		
-		// disable ESM first
+		/* disable ESM first */
 		dwData[0] = 0x21;
 		rc = synapticsmst_common_rc_set_command (connection, UPDC_WRITE_TO_MEMORY,
 								4, (gint)0x2000fc, (guint8*)dwData);
 		g_usleep(200);// waiting for ESM exit
-		// disable QUAD mode 
+		/* disable QUAD mode */ 
 		rc = synapticsmst_common_rc_get_command (connection, UPDC_READ_FROM_MEMORY,
 								((sizeof(dwData)/sizeof(dwData[0]))*4), (gint)0x200fc0, (guint8*)dwData);		
-		//g_debug("Quad %04x %04x %4x %4x", dwData[0], dwData[1], dwData[2], dwData[3]);
 		dwData[0] = 0x00;
 		rc = synapticsmst_common_rc_set_command (connection, UPDC_WRITE_TO_MEMORY,
 								4, (gint)0x200fc0, (guint8*)dwData);	
-		//disable HDCP2.2
+		/* disable HDCP2.2 */
 		rc = synapticsmst_common_rc_get_command (connection, UPDC_READ_FROM_MEMORY,
 								4, (gint)0x200f90, (guint8*)dwData);		
-		//g_debug("HDCP22 %04x %04x %4x %4x", dwData[0], dwData[1], dwData[2], dwData[3]);
 		dwData[ 0 ] = dwData[0] & (~BIT(2));
 		rc = synapticsmst_common_rc_set_command (connection, UPDC_WRITE_TO_MEMORY,
 								4, (gint)0x200f90, (guint8*)dwData);		
@@ -1258,7 +1252,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		rc = 0;
 	}
 	else
-	{ //not Panamera
+	{ 
 		write_loops = (payload_len / BLOCK_UNIT);
 		data_to_write = payload_len;
 		rc = 0;
