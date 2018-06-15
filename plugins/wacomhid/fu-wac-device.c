@@ -706,6 +706,7 @@ static gboolean
 fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuWacModule) module = NULL;
 	guint8 buf[] = { [0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH,
@@ -720,9 +721,12 @@ fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 	}
 
 	/* success */
+	name = g_strdup_printf ("%s [Legacy Bluetooth Module]",
+				fu_device_get_name (FU_DEVICE (self)));
 	version = g_strdup_printf ("%x.%x", (guint) buf[2], (guint) buf[1]);
 	module = fu_wac_module_bluetooth_new (usb_device);
 	fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
+	fu_device_set_name (FU_DEVICE (module), name);
 	fu_device_set_version (FU_DEVICE (module), version);
 	return TRUE;
 }
@@ -779,6 +783,7 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 	/* get versions of each submodule */
 	for (guint8 i = 0; i < buf[3]; i++) {
 		guint8 fw_type = buf[(i * 4) + 4] & ~0x80;
+		g_autofree gchar *name = NULL;
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuWacModule) module = NULL;
 
@@ -788,12 +793,18 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 		switch (fw_type) {
 		case FU_WAC_MODULE_FW_TYPE_TOUCH:
 			module = fu_wac_module_touch_new (usb_device);
+			name = g_strdup_printf ("%s [Touch Module]",
+						fu_device_get_name (FU_DEVICE (self)));
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
+			fu_device_set_name (FU_DEVICE (module), name);
 			fu_device_set_version (FU_DEVICE (module), version);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
 			module = fu_wac_module_bluetooth_new (usb_device);
+			name = g_strdup_printf ("%s [Bluetooth Module]",
+						fu_device_get_name (FU_DEVICE (self)));
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
+			fu_device_set_name (FU_DEVICE (module), name);
 			fu_device_set_version (FU_DEVICE (module), version);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_MAIN:
