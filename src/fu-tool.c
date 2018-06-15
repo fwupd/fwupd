@@ -618,11 +618,8 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* install all the tasks */
-	for (guint i = 0; i < install_tasks->len; i++) {
-		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
-		if (!fu_engine_install (priv->engine, task, blob_cab, priv->flags, error))
-			return FALSE;
-	}
+	if (!fu_engine_install_tasks (priv->engine, install_tasks, blob_cab, priv->flags, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;

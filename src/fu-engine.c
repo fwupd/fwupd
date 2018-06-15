@@ -1102,6 +1102,111 @@ fu_engine_get_report_metadata (FuEngine *self)
 }
 
 /**
+ * fu_engine_composite_prepare:
+ * @self: A #FuEngine
+ * @devices: (element-type #FuDevice): devices that will be updated
+ * @error: A #GError, or %NULL
+ *
+ * Calls into the plugin loader, informing each plugin of the pending upgrade(s).
+ *
+ * Any failure in any plugin will abort all of the actions before they are started.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_composite_prepare (FuEngine *self, GPtrArray *devices, GError **error)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		if (!fu_plugin_runner_composite_prepare (plugin_tmp, devices, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_engine_composite_cleanup:
+ * @self: A #FuEngine
+ * @devices: (element-type #FuDevice): devices that will be updated
+ * @error: A #GError, or %NULL
+ *
+ * Calls into the plugin loader, informing each plugin of the pending upgrade(s).
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_composite_cleanup (FuEngine *self, GPtrArray *devices, GError **error)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		if (!fu_plugin_runner_composite_cleanup (plugin_tmp, devices, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_engine_install_tasks:
+ * @self: A #FuEngine
+ * @install_tasks: (element-type FuInstallTask): A #FuDevice
+ * @blob_cab: The #GBytes of the .cab file
+ * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
+ * @error: A #GError, or %NULL
+ *
+ * Installs a specific firmware file on one or more install tasks.
+ *
+ * By this point all the requirements and tests should have been done in
+ * fu_engine_check_requirements() so this should not fail before running
+ * the plugin loader.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_install_tasks (FuEngine *self,
+			 GPtrArray *install_tasks,
+			 GBytes *blob_cab,
+			 FwupdInstallFlags flags,
+			 GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* notify the plugins about the composite action */
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < install_tasks->len; i++) {
+		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
+		g_ptr_array_add (devices, g_object_ref (fu_install_task_get_device (task)));
+	}
+	if (!fu_engine_composite_prepare (self, devices, error)) {
+		g_prefix_error (error, "failed to prepare composite action: ");
+		return FALSE;
+	}
+
+	/* all authenticated, so install all the things */
+	for (guint i = 0; i < install_tasks->len; i++) {
+		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
+		if (!fu_engine_install (self, task, blob_cab, flags, error)) {
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_engine_composite_cleanup (self, devices, &error_local)) {
+				g_warning ("failed to cleanup failed composite action: %s",
+					   error_local->message);
+			}
+			return FALSE;
+		}
+	}
+
+	/* notify the plugins about the composite action */
+	if (!fu_engine_composite_cleanup (self, devices, error)) {
+		g_prefix_error (error, "failed to cleanup composite action: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
  * fu_engine_install:
  * @self: A #FuEngine
  * @device: A #FuDevice
