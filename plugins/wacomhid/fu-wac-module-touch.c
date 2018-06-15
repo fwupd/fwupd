@@ -92,7 +92,6 @@ static void
 fu_wac_module_touch_init (FuWacModuleTouch *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_name (FU_DEVICE (self), "Touch Module");
 }
 
 static void

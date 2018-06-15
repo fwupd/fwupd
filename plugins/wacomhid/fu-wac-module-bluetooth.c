@@ -170,7 +170,6 @@ static void
 fu_wac_module_bluetooth_init (FuWacModuleBluetooth *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_name (FU_DEVICE (self), "Bluetooth Module");
 }
 
 static void
