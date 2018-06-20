@@ -13,6 +13,7 @@
 #include <gio/gio.h>
 
 #include "fu-device-private.h"
+#include "fwupd-device-private.h"
 
 /**
  * SECTION:fu-device
@@ -1142,6 +1143,33 @@ fu_device_attach (FuDevice *device, GError **error)
 
 	/* call vfunc */
 	return klass->attach (device, error);
+}
+
+void
+fu_device_subsume (FuDevice *self, FuDevice *donor)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	FuDevicePrivate *priv_donor = GET_PRIVATE (donor);
+	g_autoptr(GList) metadata_keys = NULL;
+
+	/* copy from donor FuDevice if has not already been set */
+	if (priv->alternate_id == NULL)
+		fu_device_set_alternate_id (self, fu_device_get_alternate_id (donor));
+	if (priv->equivalent_id == NULL)
+		fu_device_set_equivalent_id (self, fu_device_get_equivalent_id (donor));
+	if (priv->quirks == NULL)
+		fu_device_set_quirks (self, fu_device_get_quirks (donor));
+	metadata_keys = g_hash_table_get_keys (priv_donor->metadata);
+	for (GList *l = metadata_keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		if (g_hash_table_lookup (priv->metadata, key) == NULL) {
+			const gchar *value = g_hash_table_lookup (priv_donor->metadata, key);
+			fu_device_set_metadata (self, key, value);
+		}
+	}
+
+	/* now the base class, where all the interesting bits are */
+	fwupd_device_subsume (FWUPD_DEVICE (self), FWUPD_DEVICE (donor));
 }
 
 static void

@@ -111,23 +111,6 @@
             ]
         },
         {
-            "name": "fwupdate",
-            "buildsystem": "simple",
-            "build-commands": ["make -C linux prefix=/app libdir=/app/lib", "EFIDIR=/boot/efi make -C linux install prefix=/app libdir=/app/lib"],
-            "cleanup": [
-                "/bin/fwupdate",
-                "/lib/systemd/system/fwupdate-cleanup.service",
-                "/libexec/fwupdate/cleanup"
-            ],
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://github.com/rhboot/fwupdate/releases/download/11/fwupdate-11.tar.bz2",
-                    "sha256": "d350eae66215c90fdc70f46ea734dedbfe6006ec21b7e764114b7d9e283e4abe"
-                }
-            ]
-        },
-        {
             "name": "libsmbios_c",
             "config-opts": ["--disable-doxygen",
                             "--disable-graphviz",
@@ -145,6 +128,21 @@
             ]
         },
         {
+            "name": "gnu-efi",
+            "buildsystem": "simple",
+            "build-commands": ["make", "make PREFIX=/app install"],
+            "cleanup": [
+                "/bin/efivar"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "http://superb-dca2.dl.sourceforge.net/project/gnu-efi/gnu-efi-3.0.5.tar.bz2",
+                    "sha256": "bd8fcd5914f18fc0e4ba948ab03b00013e528504f529c60739b748f6ef130b22"
+                }
+            ]
+        },
+        {
             "name": "fwupd",
             "buildsystem": "meson",
             "config-opts": ["-Dconsolekit=false",
@@ -157,6 +155,9 @@
                             "-Dplugin_uefi_labels=false",
                             "-Dsystemd=false",
                             "-Dtests=false",
+                            "-Defi-includedir=/app/include/efi",
+                            "-Defi-ldsdir=/app/lib",
+                            "-Defi-libdir=/app/lib",
                             "--sysconfdir=/app/etc",
                             "--localstatedir=/var/data"],
             "cleanup": [

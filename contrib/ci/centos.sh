@@ -9,7 +9,7 @@ meson .. \
 	--werror \
 	-Dplugin_uefi=false \
 	-Dplugin_uefi_labels=false \
-	-Dplugin_dell=true \
+	-Dplugin_dell=false \
 	-Dplugin_synaptics=true \
 	-Dintrospection=true \
 	-Dgtkdoc=true \

@@ -1,5 +1,4 @@
 [uefi]
 
-# For fwupdate 10+ allow overriding
-# the compiled EFI system partition path
-#OverrideESPMountPoint=@bootdir@
+# the EFI system partition path
+#ESPMountPoint=@bootdir@

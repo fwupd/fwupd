@@ -131,6 +131,17 @@ add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
 # needed for some things on CentOS
 add_project_arguments('-D_GNU_SOURCE', language : 'c')
 
+prefix = get_option('prefix')
+
+bindir = join_paths(prefix, get_option('bindir'))
+libdir = join_paths(prefix, get_option('libdir'))
+datadir = join_paths(prefix, get_option('datadir'))
+libexecdir = join_paths(prefix, get_option('libexecdir'))
+sysconfdir = join_paths(prefix, get_option('sysconfdir'))
+localstatedir = join_paths(prefix, get_option('localstatedir'))
+mandir = join_paths(prefix, get_option('mandir'))
+localedir = join_paths(prefix, get_option('localedir'))
+
 gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
@@ -195,23 +206,46 @@ if get_option('plugin_altos')
 endif
 
 if get_option('plugin_uefi')
-  fwup = dependency('fwup', version : '>= 10')
-  if fwup.version().version_compare('>= 11')
-    conf.set('HAVE_FWUP_GET_ESP_MOUNTPOINT', '1')
-  endif
-  if fwup.version().version_compare('>= 12')
-    conf.set('HAVE_FWUP_VERSION', '1')
-  endif
-  efivar = dependency('efivar')
+  efivar = dependency('efivar', version : '>= 33')
+  efiboot = dependency('efiboot')
+  popt = dependency('popt')
   conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
-  conf.set_quoted('LIBFWUP_LIBRARY_VERSION', fwup.version())
+  objcopy = find_program ('objcopy')
+  readelf = find_program ('readelf')
+
+  efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
+  conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
+
+  efi_arch = host_machine.cpu_family()
+
+  if efi_arch == 'x86'
+          EFI_MACHINE_TYPE_NAME = 'ia32'
+          gnu_efi_arch = 'ia32'
+  elif efi_arch == 'x86_64'
+          EFI_MACHINE_TYPE_NAME = 'x64'
+          gnu_efi_arch = 'x86_64'
+  elif efi_arch == 'arm'
+          EFI_MACHINE_TYPE_NAME = 'arm'
+          gnu_efi_arch = 'arm'
+  elif efi_arch == 'aarch64'
+          EFI_MACHINE_TYPE_NAME = 'aa64'
+          gnu_efi_arch = 'aarch64'
+  else
+          EFI_MACHINE_TYPE_NAME = ''
+          gnu_efi_arch = ''
+  endif
+
+  conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
+
 endif
 
 if get_option('plugin_dell')
-  libsmbios_c = dependency('libsmbios_c', version : '>= 2.3.0')
+  libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0')
   efivar = dependency('efivar')
-  fwup = dependency('fwup', version : '>= 5')
   conf.set('HAVE_DELL', '1')
+  if not get_option('plugin_uefi')
+    error('plugin_dell also needs plugin_uefi to work')
+  endif
 endif
 
 if get_option('plugin_synaptics')
@@ -231,17 +265,6 @@ endif
 if get_option('consolekit')
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
-
-prefix = get_option('prefix')
-
-bindir = join_paths(prefix, get_option('bindir'))
-libdir = join_paths(prefix, get_option('libdir'))
-datadir = join_paths(prefix, get_option('datadir'))
-libexecdir = join_paths(prefix, get_option('libexecdir'))
-sysconfdir = join_paths(prefix, get_option('sysconfdir'))
-localstatedir = join_paths(prefix, get_option('localstatedir'))
-mandir = join_paths(prefix, get_option('mandir'))
-localedir = join_paths(prefix, get_option('localedir'))
 
 systemdunitdir = get_option('systemdunitdir')
 if systemdunitdir == '' and get_option('systemd')
@@ -263,6 +286,7 @@ conf.set_quoted('PLUGINDIR', plugin_dir)
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set_quoted('VERSION', meson.project_version())
+conf.set_quoted('EFIBOOTDIR', get_option('bootdir'))
 conf.set_quoted('LOCALEDIR', localedir)
 configure_file(
   output : 'config.h',

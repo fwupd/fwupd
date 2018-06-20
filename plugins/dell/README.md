@@ -23,7 +23,7 @@ If you don't want or need this functionality you can use the
 The Dell plugin creates device nodes for PC's that have switchable TPMs as
 well as the Type-C docks (WD15/TB16).
 
-These device nodes can be flashed using UEFI capsule (and fwupdate) but don't
+These device nodes can be flashed using UEFI capsule but don't
 use the ESRT table to communicate device status or version information.
 
 This is intentional behavior because more complicated decisions need to be made

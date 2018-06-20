@@ -11,12 +11,12 @@
 %global enable_tests 1
 %global enable_dummy 1
 
-# fwupdate is only available on these arches
+# fwup.efi is only available on these arches
 %ifarch x86_64 aarch64
 %global have_uefi 1
 %endif
 
-# libsmbios is only available on x86, and fwupdate is available on just x86_64
+# libsmbios is only available on x86
 %ifarch x86_64
 %global have_dell 1
 %endif
@@ -67,10 +67,6 @@ BuildRequires: adobe-source-han-sans-cn-fonts
 %if 0%{?have_dell}
 BuildRequires: efivar-devel
 BuildRequires: libsmbios-devel >= 2.3.0
-%endif
-
-%if 0%{?have_uefi}
-BuildRequires: fwupdate-devel >= 7
 %endif
 
 Requires(post): systemd
@@ -190,6 +186,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %{_libexecdir}/fwupd/fwupdtool
+%{_libexecdir}/fwupd/efi/*.efi
 %{_bindir}/dfu-tool
 %{_bindir}/fwupdmgr
 %dir %{_sysconfdir}/fwupd
@@ -231,6 +228,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_csr.so
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dell.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_dell_esrt.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
