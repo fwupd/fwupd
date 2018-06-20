@@ -16,22 +16,23 @@
 #include "synapticsmst-device.h"
 #include "synapticsmst-common.h"
 
-#define MSTDBG 	0 
-#define BIT( n )	( 1 << (n) )
-#define	FLASH_SECTOR_ERASE_4K    	0x1000
-#define	FLASH_SECTOR_ERASE_32K		0x2000
-#define	FLASH_SECTOR_ERASE_64K		0x3000
-#define EEPROM_TAG_OFFSET   0x1FFF0//0x1FF0
-#define EEPROM_BANK_OFFSET	0x20000//0x2000
-#define EEPROM_ESM_OFFSET   0x40000 //0x4000
-#define ESM_CODE_SIZE       0x40000 //0x4000
-#define PAYLOAD_SIZE_512K 	0x80000 //Panamera
-#define PAYLOAD_SIZE_64K	0x10000 //Leaf & Tesla
-#define UPDATE_UNIT_SIZE	64
-#define MAX_RETRY_COUNTS	10
-#define BLOCK_UNIT			64
-#define BANKTAG_0 	0
-#define BANKTAG_1 	1
+#define BIT( n ) ( 1 << (n) )
+#define	FLASH_SECTOR_ERASE_4K       0x1000
+#define	FLASH_SECTOR_ERASE_32K      0x2000
+#define	FLASH_SECTOR_ERASE_64K      0x3000
+#define EEPROM_TAG_OFFSET   0x1FFF0
+#define EEPROM_BANK_OFFSET  0x20000
+#define EEPROM_ESM_OFFSET   0x40000
+#define ESM_CODE_SIZE       0x40000
+#define PAYLOAD_SIZE_512K   0x80000
+#define PAYLOAD_SIZE_64K    0x10000
+#define UPDATE_UNIT_SIZE    64
+#define MAX_RETRY_COUNTS    10
+#define BLOCK_UNIT  64
+#define BANKTAG_0   0
+#define BANKTAG_1   1
+#define CRC_8    8
+#define CRC_16   16
 
 typedef struct
 {
@@ -76,9 +77,6 @@ synapticsmst_device_kind_to_string (SynapticsMSTDeviceKind kind)
 const gchar *
 synapticsmst_device_board_id_to_string (SynapticsMSTDeviceBoardID board_id)
 {
-	#if MSTDBG
-	g_debug("->boardID2Str %x",board_id);
-	#endif
 	if (board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_X6)
 		return "Dell X6 Platform";
 	if (board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_X7)
@@ -91,7 +89,6 @@ synapticsmst_device_board_id_to_string (SynapticsMSTDeviceBoardID board_id)
 		return "Dell Rugged Platform";
 	if ((board_id >> 8) == CUSTOMERID_DELL)
 		return "Dell Generic SynapticsMST Device";
-	//if ((board_id & 0xFF00) == SYNAPTICSMST_DEVICE_BOARDID_EVB)
 	if ((board_id & 0x3300) || (board_id & 0x5300))	
 		return "SYNA EVB board";
 	return "Unknown Platform";
@@ -385,17 +382,12 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		goto error_disable_remote;
 	}
 	priv->version = g_strdup_printf ("%1d.%02d.%03d", byte[0], byte[1], byte[2]);
-	#if MSTDBG
-	g_debug("Ver %1d.%02d.%03d", byte[0], byte[1], byte[2]);	
-	#endif
 
 	/* read board ID */
 	if (!synapticsmst_device_read_board_id (device, connection, byte, error))
 		goto error_disable_remote;
 	priv->board_id = (byte[0] << 8) | (byte[1]);
-	#if MSTDBG
-	g_debug("BoardID data %x",priv->board_id);	
-	#endif
+	g_debug("BoardID %x",priv->board_id);	
 
 	/* read board chip_id */
 	rc = synapticsmst_common_read_dpcd (connection,
@@ -408,9 +400,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 				     "Failed to read dpcd from device");
 		goto error_disable_remote;
 	}
-	#if MSTDBG	
-	g_debug("ChipID data %x %x",byte[0], byte[1]);	
-	#endif
+	g_debug("ChipID %x %x",byte[0], byte[1]);	
 	
 	priv->chip_id = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
 
@@ -458,9 +448,6 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		break;
 	/* unknown */
 	default:
-		#if MSTDBG
-		g_warning ("Unknown board_id %x", priv->board_id);
-		#endif
 		priv->board_id = 0xFF;
 	}
 
@@ -585,7 +572,7 @@ synapticsmst_device_get_crc(guint16 crc, guint8 type, guint32 length, guint8	*pa
 	guint32 byte;
 	guint8  *message = (guint16  *)payload_data;
 
-	if( type == 8 ) {
+	if(type == CRC_8) {
 		for ( byte = 0; byte < length; ++byte)	{
 			val = (guint8)(message[byte] ^ remainder);
 			remainder = CRC8_table[val];
@@ -599,36 +586,7 @@ synapticsmst_device_get_crc(guint16 crc, guint8 type, guint32 length, guint8	*pa
 	}  
     return (remainder);
 }
-/*
-guint8 	synapticsmst_device_disable_flash_write_protect(SynapticsMSTDevice *device, guint8 mode)
-{
-	guint32 tmp[5];
-	guint8 rc;
 
-	g_autoptr(SynapticsMSTConnection) connection = NULL;
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
-
-	rc = synapticsmst_common_rc_get_command (connection, UPDC_READ_FROM_MEMORY,
-							 (gint)((sizeof(tmp)/sizeof(tmp[0]))*4), (gint)0x2000c8, (guint8*)tmp);
-	if (rc) {
-		return FALSE;
-	}
-	if(mode == TRUE)
-		tmp[ 0 ] |= BIT( 18 );		// GPIO_TX
-	else
-		tmp[ 0 ] &= ~BIT( 18 );		// GPIO_TX
-	tmp[ 1 ] &= ~BIT( 18 );		// GPIO_OEN
-	tmp[ 3 ] &= ~BIT( 18 );		// GPIO_TX_SEL
-	tmp[ 4 ] &= ~BIT( 18 );		// GPIO_MCU_SEL
-	rc = synapticsmst_common_rc_set_command (connection, UPDC_WRITE_TO_MEMORY,
-							 (sizeof(tmp)/sizeof(tmp[0]))*4, 0x2000c8, tmp);
-	if (rc) {
-		return FALSE;
-	}
-	return TRUE;
-}
-*/
 guint8 
 synapticsmst_device_set_flash_sector_erase(SynapticsMSTDevice *device, guint16 rc_cmd, guint16 offset)
 {
@@ -637,7 +595,6 @@ synapticsmst_device_set_flash_sector_erase(SynapticsMSTDevice *device, guint16 r
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
 	/* Need to add Wp control ? */
-	//rc = synapticsmst_device_disable_flash_write_protect(device, TRUE);	 
 	usData = rc_cmd + offset;
 	return synapticsmst_common_rc_set_command (connection,
 						UPDC_FLASH_ERASE,
@@ -670,8 +627,9 @@ synapticsmst_device_update_ESM(SynapticsMSTDevice *device, guint8	*payload_data,
 	}
 	flash_checksum = 0;
 	if (synapticsmst_device_get_flash_checksum (device,
-				  esmSize, EEPROM_ESM_OFFSET, &flash_checksum, error)) 
-	{
+				esmSize, 
+				EEPROM_ESM_OFFSET, 
+				&flash_checksum, error)) {
 		if (checksum != flash_checksum) 
 		{
 			/* erase ESM firmware */	
@@ -680,7 +638,9 @@ synapticsmst_device_update_ESM(SynapticsMSTDevice *device, guint8	*payload_data,
 				rc = synapticsmst_device_set_flash_sector_erase(device, FLASH_SECTOR_ERASE_64K, i + 4);
 				if (rc)
 				{
-					g_set_error_literal (error,	G_IO_ERROR,	G_IO_ERROR_INVALID_DATA,
+					g_set_error_literal (error,	
+								G_IO_ERROR,	
+								G_IO_ERROR_INVALID_DATA,
 								"can't sector erase flash");
 					eraseFail = TRUE;
 					break;
@@ -692,14 +652,9 @@ synapticsmst_device_update_ESM(SynapticsMSTDevice *device, guint8	*payload_data,
 			/* update ESM firmware */
 			rc = 0;
 			retryCount = 0;
-			unitSize = BLOCK_UNIT;//64
+			unitSize = BLOCK_UNIT;
 			writeIndex = 0;	
-			#if 1
 			write_loops = (esmSize / unitSize / 6);
-			//g_debug("WriteEachTime 384byte?");
-			#else		
-			write_loops = (esmSize / unitSize);
-			#endif
 			if (esmSize % unitSize)
 				write_loops++;
 			writeOffset = EEPROM_ESM_OFFSET;
@@ -716,7 +671,9 @@ synapticsmst_device_update_ESM(SynapticsMSTDevice *device, guint8	*payload_data,
 								 UPDC_WRITE_TO_EEPROM, unitSize, writeOffset, ptrESMcode + writeIndex);
 					}
 					if (rc)	{
-						g_set_error_literal (error,	G_IO_ERROR,	G_IO_ERROR_INVALID_DATA,
+						g_set_error_literal (error,	
+									G_IO_ERROR,	
+									G_IO_ERROR_INVALID_DATA,
 									"ESM write fail");
 						break;
 					}
@@ -729,7 +686,10 @@ synapticsmst_device_update_ESM(SynapticsMSTDevice *device, guint8	*payload_data,
 					checksum += *(payload_data + EEPROM_ESM_OFFSET +i);
 				}
 				rc = synapticsmst_device_get_flash_checksum (device,
-					esmSize, EEPROM_ESM_OFFSET, &flash_checksum, error);
+							esmSize, 
+							EEPROM_ESM_OFFSET, 
+							&flash_checksum, 
+							error);
 				if(checksum == flash_checksum){
 					isESMupdted = TRUE;
 					break;
@@ -737,8 +697,10 @@ synapticsmst_device_update_ESM(SynapticsMSTDevice *device, guint8	*payload_data,
 			}while(retryCount++ < MAX_RETRY_COUNTS);
 
 			if(rc && retryCount== MAX_RETRY_COUNTS){
-				g_set_error_literal (error,	G_IO_ERROR,	G_IO_ERROR_INVALID_DATA,
-									"ESM update fail");
+				g_set_error_literal (error,	
+							G_IO_ERROR,	
+							G_IO_ERROR_INVALID_DATA,
+							"ESM update fail");
 			}
 			if(isESMupdted == TRUE){				
 				return 1;/* ESM update done */	
@@ -793,18 +755,16 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 		BankInUse = BANKTAG_1;
 		BankToUpdate = BANKTAG_0;
 	}
-	#if MSTDBG
 	g_debug("Used %x ToUpd %x",BankInUse, BankToUpdate);
-	#endif
 	/* get firmware size */
 	fw_size =  0x410 + (*(payload_data + 0x400) << 24) + (*(payload_data + 0x401) << 16) + (*(payload_data + 0x402) << 8) + (*(payload_data + 0x403));
 	if( fw_size < payload_len ){
-		fw_size = 104*1024;		// Current firmware size is 104K
+		fw_size = 104*1024;/* Current firmware size is 104K */
 	}
 
 	rc = 0;
 	retryCount = 0;	
-	unitSize = BLOCK_UNIT;//64
+	unitSize = BLOCK_UNIT;
 	write_loops = fw_size / unitSize;//(fw_size / unitSize / 6);//Here write 256 byte?
 	if (fw_size % unitSize)
 		write_loops++;
@@ -815,7 +775,9 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 		rc = synapticsmst_device_set_flash_sector_erase(device, FLASH_SECTOR_ERASE_64K, eraseOffset++);
 		if (rc)
 		{
-			g_set_error_literal (error,	G_IO_ERROR,	G_IO_ERROR_INVALID_DATA,
+			g_set_error_literal (error,	
+						G_IO_ERROR,	
+						G_IO_ERROR_INVALID_DATA,
 						"can't sector erase flash");
 			eraseFail = TRUE;
 			break;
@@ -823,7 +785,9 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 		rc = synapticsmst_device_set_flash_sector_erase(device, FLASH_SECTOR_ERASE_64K, eraseOffset);
 		if (rc)
 		{
-			g_set_error_literal (error,	G_IO_ERROR,	G_IO_ERROR_INVALID_DATA,
+			g_set_error_literal (error,	
+						G_IO_ERROR,	
+						G_IO_ERROR_INVALID_DATA,
 						"can't sector erase flash");
 			eraseFail = TRUE;
 			break;
@@ -831,9 +795,7 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 		if(eraseFail)
 			break;
 		/* update */
-		#if MSTDBG
-		g_debug("skip check ESM update");
-		#endif
+		//g_debug("skip check ESM update");
 		writeIndex = 0;	
 		writeOffset = EEPROM_BANK_OFFSET * BankToUpdate;		
 		
@@ -847,7 +809,9 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 						 UPDC_WRITE_TO_EEPROM, unitSize, writeOffset, payload_data+ writeIndex);
 			}
 			if (rc)	{
-				g_set_error_literal (error,	G_IO_ERROR,	G_IO_ERROR_INVALID_DATA,
+				g_set_error_literal (error,	
+							G_IO_ERROR,	
+							G_IO_ERROR_INVALID_DATA,
 							"FW write fail");
 				break;
 			}
@@ -865,13 +829,12 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 			if (synapticsmst_common_rc_special_get_command (connection,
 						UPDC_CAL_EEPROM_CHECK_CRC16,
 						fw_size, (EEPROM_BANK_OFFSET * BankToUpdate), NULL, 4, (guint8 *)(&flash_checksum))) {
-				g_set_error_literal (error,	G_IO_ERROR,	G_IO_ERROR_INVALID_DATA,
+				g_set_error_literal (error,	
+							G_IO_ERROR,	
+							G_IO_ERROR_INVALID_DATA,
 							"Failed to get flash checksum");
 			}
 			if(checksum != flash_checksum){
-				#if MSTDBG
-				g_debug("ck %2x fck %2x", checksum, flash_checksum);
-				#endif
 				rc = 0xFF;
 			}
 			else{
@@ -887,8 +850,10 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 	}while(retryCount++ < MAX_RETRY_COUNTS);
 
 	if(retryCount== MAX_RETRY_COUNTS){
-				g_set_error_literal (error,	G_IO_ERROR,	G_IO_ERROR_INVALID_DATA,
-									"firmware update fail");
+				g_set_error_literal (error,	
+							G_IO_ERROR,	
+							G_IO_ERROR_INVALID_DATA,
+							"firmware update fail");
 		return FALSE;
 	}
 
@@ -906,31 +871,30 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 	tagData[4] = (tmpCRC >> 8) & 0xFF;
 	tagData[5] = tmpCRC & 0xFF;
 	tagData[15] = (guint8)synapticsmst_device_get_crc(0, 8, 15, tagData);
-	#if MSTDBG
 	g_debug("tag date %x %x %x",tagData[1],tagData[2], tagData[3]);
 	g_debug("tag crc %x %x %x %x",tagData[0],tagData[4], tagData[5], tagData[15]);
-	#endif
 	do{
 		rc = 0;
 		rc = synapticsmst_common_rc_set_command (connection,
 								 UPDC_WRITE_TO_EEPROM, 16, (EEPROM_BANK_OFFSET * BankToUpdate + EEPROM_TAG_OFFSET), tagData);
 		if (rc) {
-			g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+			g_set_error_literal (error, 
+						G_IO_ERROR, 
+						G_IO_ERROR_INVALID_DATA,
 						"Failed to write TAG");
 		}
 		g_usleep(200);
 		rc = synapticsmst_common_rc_get_command (connection,
 								UPDC_READ_FROM_EEPROM, 16, (EEPROM_BANK_OFFSET * BankToUpdate + EEPROM_TAG_OFFSET), readBuf);
 		if (rc) {
-			g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+			g_set_error_literal (error, 
+						G_IO_ERROR, 
+						G_IO_ERROR_INVALID_DATA,
 						"Failed to read Tag");
 		}
 		else{
 			gboolean match = TRUE;
 			for (i=0; i<16; i++){
-				#if MSTDBG
-				g_debug("[%x]set tag vaild read %x tag %x", retryCount,readBuf[i], tagData[i]);
-				#endif
 				if (readBuf[i] != tagData[i]){
 					match = FALSE;
 				}
@@ -941,8 +905,10 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 		}
 	}while(retryCount++ < MAX_RETRY_COUNTS );
 	if( rc && retryCount== MAX_RETRY_COUNTS){
-				g_set_error_literal (error,	G_IO_ERROR,	G_IO_ERROR_INVALID_DATA,
-									"set tag fail");
+				g_set_error_literal (error,	
+							G_IO_ERROR,	
+							G_IO_ERROR_INVALID_DATA,
+							"set tag fail");
 	}
 	/* set tag invaild*/
 	if(rc == 0){
@@ -950,15 +916,17 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 							 UPDC_READ_FROM_EEPROM,
 							 1, (EEPROM_BANK_OFFSET * BankInUse + EEPROM_TAG_OFFSET + 15), tagData);
 		if (rc) {
-			g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-					     "Failed to read from EEPROM of device");
+			g_set_error_literal (error, 
+						G_IO_ERROR, 
+						G_IO_ERROR_INVALID_DATA,
+					    "Failed to read from EEPROM of device");
 		}
 			
 		do
 		{
 			if (tagData[0] != 0xFF)	{  
 			/* CRC8 is not 0xFF, erase last 4k of bank# */
-				eraseOffset = (EEPROM_BANK_OFFSET * BankInUse + EEPROM_BANK_OFFSET - 0x1000) / 0x1000; // offset for last 4k of bank#
+				eraseOffset = (EEPROM_BANK_OFFSET * BankInUse + EEPROM_BANK_OFFSET - 0x1000) / 0x1000; /* offset for last 4k of bank# */
 				rc = synapticsmst_device_set_flash_sector_erase(device, FLASH_SECTOR_ERASE_4K, eraseOffset);				
 			}
 			else{  /* CRC8 is 0xFF, set it to 0x00 */
@@ -972,7 +940,9 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 								UPDC_READ_FROM_EEPROM,
 								1, (EEPROM_BANK_OFFSET * BankInUse + EEPROM_TAG_OFFSET + 15), readBuf);
 			if (rc) {
-				g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+				g_set_error_literal (error, 
+							G_IO_ERROR, 
+							G_IO_ERROR_INVALID_DATA,
 							"Failed to read from EEPROM of device");
 			}
 			else{
@@ -982,9 +952,7 @@ synapticsmst_device_update_Panamera_firmware(SynapticsMSTDevice *device, guint32
 			}
 		}while( retryCount++ < MAX_RETRY_COUNTS );
 
-		#if MSTDBG
 		g_debug("Panamera update done");		
-		#endif
 		return TRUE;
 	}
 	else{
@@ -1022,16 +990,10 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 	if(synapticsmst_device_get_board_id (device)> 0x5000){
 		isChipPanamera = TRUE;
 		payload_len_max = PAYLOAD_SIZE_512K;
-		#if MSTDBG
-		g_debug("is Panamera");
-		#endif
 	}
 	else{
 		isChipPanamera = FALSE;
 		payload_len_max = PAYLOAD_SIZE_64K;		
-		#if MSTDBG
-		g_debug("is Leaf/Tesla");		
-		#endif
 	}
 	/* get firmware data and check size */
 	payload_data = g_bytes_get_data (fw, NULL);
@@ -1196,7 +1158,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		dwData[0] = 0x21;
 		rc = synapticsmst_common_rc_set_command (connection, UPDC_WRITE_TO_MEMORY,
 								4, (gint)0x2000fc, (guint8*)dwData);
-		g_usleep(200);// waiting for ESM exit
+		g_usleep(200);/* waiting for ESM exit */
 		/* disable QUAD mode */ 
 		rc = synapticsmst_common_rc_get_command (connection, UPDC_READ_FROM_MEMORY,
 								((sizeof(dwData)/sizeof(dwData[0]))*4), (gint)0x200fc0, (guint8*)dwData);		
@@ -1215,9 +1177,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 	}
 
 	if(isChipPanamera == TRUE){
-		//WP control
 		rc = 0;
-		//rc = synapticsmst_device_disable_flash_write_protect(device, TRUE);
 	}
 	else{
 		connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
