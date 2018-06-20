@@ -43,7 +43,7 @@ struct _FuDeviceClass
  * chain of slow USB hubs. This should be used when the device is able to
  * reset itself between bootloader->runtime->bootloader.
  */
-#define FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE		5000
+#define FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE		10000
 
 /**
  * FU_DEVICE_REMOVE_DELAY_USER_REPLUG:
