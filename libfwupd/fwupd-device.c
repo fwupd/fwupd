@@ -34,7 +34,6 @@ typedef struct {
 	guint64				 created;
 	guint64				 modified;
 	guint64				 flags;
-	gchar				*appstream_id;
 	GPtrArray			*guids;
 	GPtrArray			*icons;
 	gchar				*name;
