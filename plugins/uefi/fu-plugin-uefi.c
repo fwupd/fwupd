@@ -161,13 +161,13 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 			     fu_device_get_guid_default (device));
 		return FALSE;
 	}
-	if (status == FWUP_LAST_ATTEMPT_STATUS_SUCCESS) {
+	if (status == FU_UEFI_DEVICE_STATUS_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	} else {
 		g_autofree gchar *err_msg = NULL;
 		g_autofree gchar *version_str = g_strdup_printf ("%u", version);
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		tmp = fwup_last_attempt_status_to_string (status);
+		tmp = fu_uefi_device_status_to_string (status);
 		if (tmp == NULL) {
 			err_msg = g_strdup_printf ("failed to update to %s",
 						   version_str);
