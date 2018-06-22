@@ -91,9 +91,13 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	gboolean capsule_disable = FALSE;
 	gboolean password_present = FALSE;
+	g_autofree gchar *sysfsfwdir = NULL;
+	g_autofree gchar *esrtdir = NULL;
 
 	/* already exists */
-	if (g_file_test ("/sys/firmware/efi/esrt/entries", G_FILE_TEST_EXISTS)) {
+	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	esrtdir = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
+	if (g_file_test (esrtdir, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,

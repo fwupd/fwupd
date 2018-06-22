@@ -946,6 +946,8 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
+	g_autofree gchar *sysfsfwdir = NULL;
+	g_autofree gchar *esrtdir = NULL;
 
 	if (data->smi_obj->fake_smbios) {
 		g_debug ("Called with fake SMBIOS implementation. "
@@ -975,7 +977,9 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	 *
 	 * Once unlocked, that will enable flashing capsules here too.
 	 */
-	if (g_file_test ("/sys/firmware/efi/esrt/entries", G_FILE_TEST_EXISTS)) {
+	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	esrtdir = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
+	if (g_file_test (esrtdir, G_FILE_TEST_EXISTS)) {
 		data->capsule_supported = TRUE;
 	} else {
 		g_debug ("UEFI capsule firmware updating not supported");
