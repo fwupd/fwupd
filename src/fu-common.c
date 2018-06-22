@@ -811,6 +811,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_build_filename (tmp, LOCALSTATEDIR, NULL);
 		return g_build_filename (LOCALSTATEDIR, NULL);
+	/* /sys/firmware */
+	case FU_PATH_KIND_SYSFSDIR_FW:
+		tmp = g_getenv ("FWUPD_SYSFSFWDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/firmware");
 	/* /etc */
 	case FU_PATH_KIND_SYSCONFDIR:
 		tmp = g_getenv ("FWUPD_SYSCONFDIR");
