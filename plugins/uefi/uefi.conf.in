@@ -1,4 +1,4 @@
 [uefi]
 
 # the EFI system partition path
-#ESPMountPoint=@bootdir@
+#OverrideESPMountPoint=@bootdir@

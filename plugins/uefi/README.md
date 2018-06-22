@@ -26,7 +26,8 @@ Custom EFI System Partition
 
 fwupd 1.0.6 and later can use a custom EFI system partition location by allowing
 users to modify `/etc/fwupd/uefi.conf`.
-An option titled *ESPMountPoint* is available that can be set to any valid
-directory on the system.
+
+An option titled *OverrideESPMountPoint* is available that can be
+uncommented and set to any valid directory on the system.
 
 Setting an invalid directory will disable the fwupd plugin.

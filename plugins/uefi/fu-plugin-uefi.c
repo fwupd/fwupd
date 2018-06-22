@@ -672,13 +672,13 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *key = "ESPMountPoint";
+	const gchar *key = "OverrideESPMountPoint";
 	g_autofree gchar *sysfsfwdir = NULL;
 
 	/* load from file */
 	data->esp_path = fu_plugin_get_config_value (plugin, key);
 	if (data->esp_path != NULL) {
-		//FIXME: remove ESPMountPoint runtime config?
+		//FIXME: remove OverrideESPMountPoint runtime config?
 		if (!g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -714,7 +714,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 
 	/* save in report metadata */
 	g_debug ("ESP mountpoint set as %s", data->esp_path);
-	fu_plugin_add_report_metadata (plugin, "ESPMountPoint", data->esp_path);
+	fu_plugin_add_report_metadata (plugin, "OverrideESPMountPoint", data->esp_path);
 	return TRUE;
 }
 
