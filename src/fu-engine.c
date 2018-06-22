@@ -2891,6 +2891,16 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 	/* adopt any required children, which may or may not already exist */
 	fu_engine_adopt_children (self, device);
 
+	/* set any alternate objects on the device from the ID */
+	if (fu_device_get_alternate_id (device) != NULL) {
+		FuDevice *device_alt;
+		device_alt = fu_device_list_get_by_id (self->device_list,
+						       fu_device_get_alternate_id (device),
+						       NULL);
+		if (device_alt != NULL)
+			fu_device_set_alternate (device, device_alt);
+	}
+
 	/* notify all plugins about this new device */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register (self, device);
