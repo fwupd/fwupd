@@ -472,6 +472,38 @@ fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind
 }
 
 static gboolean
+fu_plugin_uefi_can_update (void)
+{
+	g_autofree gchar *sysfsfwdir = NULL;
+	g_autofree gchar *efivardir = NULL;
+	g_autofree gchar *varsdir = NULL;
+	g_autofree gchar *bootloader = NULL;
+
+	/* running in test suite */
+	if (g_getenv ("FWUPD_UEFI_IN_TESTS") != NULL)
+		return TRUE;
+
+	/* test if we have kernel EFI support */
+	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	efivardir = g_build_filename (sysfsfwdir, "efi", "efivars", NULL);
+	varsdir = g_build_filename (sysfsfwdir, "efi", "vars", NULL);
+	if (!g_file_test (efivardir, G_FILE_TEST_IS_DIR) &&
+	    !g_file_test (varsdir, G_FILE_TEST_IS_DIR)) {
+		g_warning ("Kernel support for EFI variables missing");
+		return FALSE;
+	}
+
+	/* if we have secure boot enabled, make sure we have the right assets */
+	bootloader = fu_uefi_bootmgr_get_source_path ();
+	if (!g_file_test (bootloader, G_FILE_TEST_EXISTS)) {
+		g_warning ("Missing %s, disabling updates", bootloader);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **error)
 {
 	FuUefiDeviceKind device_kind;
@@ -497,15 +529,10 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 		fu_device_set_version_lowest (FU_DEVICE (dev), version_lowest);
 	}
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-	if (g_file_test ("/sys/firmware/efi/efivars", G_FILE_TEST_IS_DIR) ||
-	    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR) ||
-	    g_getenv ("FWUPD_UEFI_IN_TESTS") != NULL) {
+	if (fu_plugin_uefi_can_update ()) {
 		fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	} else {
-		g_warning ("Kernel support for EFI variables missing");
 	}
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
 		/* nothing better in the icon naming spec */
 		fu_device_add_icon (FU_DEVICE (dev), "audio-card");

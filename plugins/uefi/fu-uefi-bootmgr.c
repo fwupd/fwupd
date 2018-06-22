@@ -19,62 +19,6 @@
 /* XXX PJFIX: this should be in efiboot-loadopt.h in efivar */
 #define LOAD_OPTION_ACTIVE      0x00000001
 
-static const gchar *
-fu_uefi_bootmgr_get_suffix (void)
-{
-	guint64 firmware_bits;
-	struct {
-		guint64 bits;
-		const gchar *arch;
-	} suffixes[] = {
-#if defined(__x86_64__)
-		{ 64, "x64" },
-#elif defined(__aarch64__)
-		{ 64, "aa64" },
-#endif
-#if defined(__x86_64__) || defined(__i386__) || defined(__i686__)
-		{ 32, "ia32" },
-#endif
-		{ 0, NULL }
-	};
-
-	firmware_bits = fu_uefi_read_file_as_uint64 ("/sys/firmware/efi/",
-						     "fw_platform_size");
-	if (firmware_bits == 0)
-		return NULL;
-	for (guint i = 0; suffixes[i].arch != NULL; i++) {
-		if (firmware_bits != suffixes[i].bits)
-			continue;
-		return suffixes[i].arch;
-	}
-
-	return NULL;
-}
-
-static gchar *
-fu_uefi_bootmgr_get_esp_app_path (const gchar *esp_mountpoint, const gchar *cmd)
-{
-	g_autofree gchar *base = fu_uefi_get_full_esp_path (esp_mountpoint);
-
-	return g_strdup_printf ("%s/%s%s.efi",
-				base,
-				cmd, fu_uefi_bootmgr_get_suffix ());
-}
-
-static gchar *
-fu_uefi_bootmgr_get_source_path (void)
-{
-	const gchar *extension = "";
-
-	if (fu_uefi_secure_boot_enabled ())
-		extension = ".signed";
-
-	return g_strdup_printf ("%s/fwup%s.efi%s",
-				EFI_APP_LOCATION,
-				fu_uefi_bootmgr_get_suffix (),
-				extension);
-}
-
 static gboolean
 fu_uefi_bootmgr_add_to_boot_order (guint16 boot_entry, GError **error)
 {
