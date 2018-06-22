@@ -403,6 +403,7 @@ fu_plugin_update (FuPlugin *plugin,
 	guint64 hardware_instance = 0;	/* FIXME */
 	g_autoptr(fwup_resource_iter) iter = NULL;
 	const gchar *str;
+	guint32 flashes_left;
 	g_autofree gchar *efibootmgr_path = NULL;
 	g_autofree gchar *boot_variables = NULL;
 	g_autoptr(GError) error_splash = NULL;
@@ -412,6 +413,23 @@ fu_plugin_update (FuPlugin *plugin,
 	re = fu_plugin_uefi_find_resource (iter, device, error);
 	if (re == NULL)
 		return FALSE;
+
+	/* test the flash counter */
+	flashes_left = fu_device_get_flashes_left (device);
+	if (flashes_left > 0) {
+		g_debug ("%s has %" G_GUINT32_FORMAT " flashes left",
+			 fu_device_get_name (device),
+			 flashes_left);
+		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 && flashes_left <= 2) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "%s only has %" G_GUINT32_FORMAT " flashes left -- "
+				     "see https://github.com/hughsie/fwupd/wiki/Dell-TPM:-flashes-left for more information.",
+				     fu_device_get_name (device), flashes_left);
+			return FALSE;
+		}
+	}
 
 	/* TRANSLATORS: this is shown when updating the firmware after the reboot */
 	str = _("Installing firmware update…");
