@@ -13,6 +13,7 @@
 
 G_BEGIN_DECLS
 
+gboolean	 fu_uefi_secure_boot_enabled	(void);
 GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 						 GError		**error);
 guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,
