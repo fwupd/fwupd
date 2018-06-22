@@ -50,6 +50,7 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
+      fwup,
     ],
     link_with : [
       fwupd,

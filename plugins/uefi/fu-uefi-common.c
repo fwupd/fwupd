@@ -7,7 +7,25 @@
 
 #include "config.h"
 
+#include <efivar.h>
+
 #include "fu-uefi-common.h"
+
+gboolean
+fu_uefi_secure_boot_enabled (void)
+{
+	gint rc;
+	gsize data_size = 0;
+	guint32 attributes = 0;
+	g_autofree guint8 *data = NULL;
+
+	rc = efi_get_variable (efi_guid_global, "SecureBoot", &data, &data_size, &attributes);
+	if (rc < 0)
+		return FALSE;
+	if (data_size >= 1 && data[0] & 1)
+		return TRUE;
+	return FALSE;
+}
 
 static gint
 fu_uefi_strcmp_sort_cb (gconstpointer a, gconstpointer b)

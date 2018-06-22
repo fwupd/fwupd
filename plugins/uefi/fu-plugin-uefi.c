@@ -16,6 +16,7 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
+#include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 
 #ifndef HAVE_FWUP_GET_ESP_MOUNTPOINT
@@ -603,19 +604,9 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 static void
 fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
 {
-	const efi_guid_t guid = EFI_GLOBAL_GUID;
 	const gchar *result_str = "Disabled";
-	g_autofree guint8 *data = NULL;
-	gsize data_size = 0;
-	guint32 attributes = 0;
-	gint rc;
-
-	rc = efi_get_variable (guid, "SecureBoot", &data, &data_size, &attributes);
-	if (rc < 0)
-		return;
-	if (data_size >= 1 && data[0] & 1)
+	if (fu_uefi_secure_boot_enabled ())
 		result_str = "Enabled";
-
 	g_debug ("SecureBoot is: %s", result_str);
 	fu_plugin_add_report_metadata (plugin, "SecureBoot", result_str);
 }
