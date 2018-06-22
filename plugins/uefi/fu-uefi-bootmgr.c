@@ -187,54 +187,34 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 
 		rc = efi_get_variable (*guid, name, &var_data_tmp, &var_data_size, &attr);
 		if (rc < 0) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "efi_get_variable(%s) failed",
-				     name);
+			g_debug ("efi_get_variable(%s) failed", name);
 			continue;
 		}
 
 		loadopt = (efi_load_option *)var_data_tmp;
 		if (!efi_loadopt_is_valid(loadopt, var_data_size)) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "load option was invalid");
+			g_debug ("load option was invalid");
 			continue;
 		}
 
 		sz = efi_loadopt_pathlen(loadopt, var_data_size);
 		if (sz != efidp_size((efidp)dp_buf)) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "device path doesn't match");
+			g_debug ("pathlen device path doesn't match");
 			continue;
 		}
 
 		found_dp = efi_loadopt_path (loadopt, var_data_size);
 		if (memcmp (found_dp, dp_buf, sz)) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "device path doesn't match");
-			continue;
+			g_debug ("found_dp/dp_buf device path doesn't match");
 		}
 
 		if ((gssize)var_data_size != opt_size) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "variable data doesn't match");
+			g_debug ("variable data doesn't match");
 			continue;
 		}
 
 		if (memcmp (loadopt, opt, opt_size)) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "load option doesn't match");
+			g_debug ("load option doesn't match");
 			continue;
 		}
 
@@ -279,10 +259,11 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
-				     "no free boot variables!");
+				     "no free boot variables (tried %x)",
+				     boot_next);
 			return FALSE;
 		}
-		boot_next_name = g_strdup_printf ("Boot%04" G_GUINT32_FORMAT "X", boot_next & 0xffff);
+		boot_next_name = g_strdup_printf ("Boot%04" G_GUINT32_FORMAT, boot_next & 0xffff);
 		rc = efi_set_variable (efi_guid_global, boot_next_name, opt, opt_size,
 				       EFI_VARIABLE_NON_VOLATILE |
 				       EFI_VARIABLE_BOOTSERVICE_ACCESS |
@@ -292,7 +273,8 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
-				     "could not set boot variable");
+				     "could not set boot variable %s: %d",
+				     boot_next_name, rc);
 			return FALSE;
 		}
 	}
