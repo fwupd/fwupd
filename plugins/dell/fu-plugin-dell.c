@@ -772,9 +772,14 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	g_debug ("Unlocking upgrades for: %s (%s)", fu_device_get_name (device),
 		 fu_device_get_id (device));
 	device_alt = fu_device_get_alternate (device);
-
-	if (!device_alt)
+	if (device_alt == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "No alternate device for %s",
+			     fu_device_get_name (device));
 		return FALSE;
+	}
 	g_debug ("Preventing upgrades for: %s (%s)", fu_device_get_name (device_alt),
 		 fu_device_get_id (device_alt));
 
