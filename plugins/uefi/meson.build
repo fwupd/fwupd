@@ -30,3 +30,27 @@ configure_file(
   install_dir : join_paths(sysconfdir, 'fwupd')
 )
 
+if get_option('tests')
+  e = executable(
+    'uefi-self-test',
+    sources : [
+      'fu-self-test.c',
+      'fu-ucs2.c',
+    ],
+    include_directories : [
+      include_directories('../..'),
+      include_directories('../../src'),
+      include_directories('../../libfwupd'),
+    ],
+    dependencies : [
+      plugin_deps,
+    ],
+    link_with : [
+      fwupd,
+      libfwupdprivate,
+    ],
+    c_args : cargs
+  )
+  test('uefi-self-test', e)
+endif
+
