@@ -255,6 +255,6 @@ LIBFWUPD_1.0.8 {
 
 LIBFWUPD_1.0.9 {
   global:
-    fwupd_device_subsume;
+    fwupd_device_incorporate;
   local: *;
 } LIBFWUPD_1.0.8;

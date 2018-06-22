@@ -38,8 +38,8 @@ configure_file(
 
 if get_option('tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')
-  cargs += '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"'
-  cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
+#  cargs += '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"'
+#  cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'uefi-self-test',

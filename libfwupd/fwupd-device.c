@@ -859,7 +859,7 @@ fwupd_device_set_modified (FwupdDevice *device, guint64 modified)
 }
 
 /**
- * fwupd_device_subsume:
+ * fwupd_device_incorporate:
  * @self: A #FwupdDevice
  * @donor: Another #FwupdDevice
  *
@@ -868,7 +868,7 @@ fwupd_device_set_modified (FwupdDevice *device, guint64 modified)
  * Since: 1.0.9
  **/
 void
-fwupd_device_subsume (FwupdDevice *self, FwupdDevice *donor)
+fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 	FwupdDevicePrivate *priv_donor = GET_PRIVATE (donor);

@@ -10,6 +10,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "fu-common.h"
 #include "fu-smbios.h"
 #include "fwupd-error.h"
 
@@ -311,8 +312,10 @@ gboolean
 fu_smbios_setup (FuSmbios *self, GError **error)
 {
 	g_autofree gchar *path = NULL;
+	g_autofree gchar *sysfsfwdir = NULL;
 	g_return_val_if_fail (FU_IS_SMBIOS (self), FALSE);
-	path = g_build_filename (SYSFSFIRMWAREDIR, "dmi", "tables", NULL);
+	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	path = g_build_filename (sysfsfwdir, "dmi", "tables", NULL);
 	return fu_smbios_setup_from_path (self, path, error);
 }
 

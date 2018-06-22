@@ -15,10 +15,11 @@
 #include <efivar.h>
 
 #include "fu-plugin.h"
+#include "fu-plugin-vfuncs.h"
+
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-device-info.h"
-#include "fu-plugin-vfuncs.h"
 
 struct FuPluginData {
 	gchar			*esp_path;
@@ -202,16 +203,16 @@ fu_uefi_get_bmp_size (const guint8 *buf, gsize buf_size, guint32 *height, guint3
 	if (memcmp (buf, "BM", 2) != 0)
 		return FALSE;
 
-	memcpy (&ui32, buf+10, 4);
+	memcpy (&ui32, buf + 10, 4);
 	if (ui32 < 26)
 		return FALSE;
 
-	memcpy (&ui32, buf+14, 4);
+	memcpy (&ui32, buf + 14, 4);
 	if (ui32 < 26 - 14)
 		return FALSE;
 
-	memcpy (width, buf+18, 4);
-	memcpy (height, buf+22, 4);
+	memcpy (width, buf + 18, 4);
+	memcpy (height, buf + 22, 4);
 	return TRUE;
 }
 
@@ -483,7 +484,7 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 }
 
 static AsVersionParseFlag
-fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, guint32 device_kind)
+fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind)
 {
 	const gchar *content;
 	const gchar *quirk;
@@ -508,7 +509,7 @@ fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, guint32 device_kin
 }
 
 static const gchar *
-fu_plugin_uefi_uefi_type_to_string (guint32 device_kind)
+fu_plugin_uefi_uefi_type_to_string (FuUefiDeviceKind device_kind)
 {
 	if (device_kind == FU_UEFI_DEVICE_KIND_UNKNOWN)
 		return "Unknown Firmware";
@@ -595,7 +596,6 @@ static void
 fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
 {
 	const gchar *result_str = "Disabled";
-
 	if (fu_uefi_secure_boot_enabled ())
 		result_str = "Enabled";
 	g_debug ("SecureBoot is: %s", result_str);
@@ -629,10 +629,10 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 static gboolean
 fu_plugin_uefi_delete_old_efivars (FuPlugin *plugin, GError **error)
 {
-	gchar *name = NULL;
+	char *name = NULL;
 	efi_guid_t fwupdate_guid = FWUPDATE_GUID;
 	efi_guid_t *guid = NULL;
-	gint rc;
+	int rc;
 	while ((rc = efi_get_next_variable_name (&guid, &name)) > 0) {
 		if (efi_guid_cmp (guid, &fwupdate_guid) != 0)
 			continue;
@@ -661,10 +661,10 @@ fu_plugin_uefi_delete_old_efivars (FuPlugin *plugin, GError **error)
 }
 
 /* remove when https://github.com/rhboot/efivar/pull/100 merged */
-static gint
-_efi_get_variable_exists (efi_guid_t guid, const gchar *name)
+static int
+_efi_get_variable_exists (efi_guid_t guid, const char *name)
 {
-	guint32 unused_attrs = 0;
+	uint32_t unused_attrs = 0;
 	return efi_get_variable_attributes (guid, name, &unused_attrs);
 }
 

@@ -1146,7 +1146,7 @@ fu_device_attach (FuDevice *device, GError **error)
 }
 
 void
-fu_device_subsume (FuDevice *self, FuDevice *donor)
+fu_device_incorporate (FuDevice *self, FuDevice *donor)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	FuDevicePrivate *priv_donor = GET_PRIVATE (donor);
@@ -1169,7 +1169,7 @@ fu_device_subsume (FuDevice *self, FuDevice *donor)
 	}
 
 	/* now the base class, where all the interesting bits are */
-	fwupd_device_subsume (FWUPD_DEVICE (self), FWUPD_DEVICE (donor));
+	fwupd_device_incorporate (FWUPD_DEVICE (self), FWUPD_DEVICE (donor));
 }
 
 static void

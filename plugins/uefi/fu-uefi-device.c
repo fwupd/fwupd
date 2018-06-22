@@ -9,12 +9,12 @@
 #include "config.h"
 
 #include <string.h>
-#include <efivar.h>
-#include <efivar/efiboot.h>
+//#include <efivar.h>
+//#include <efivar/efiboot.h>
 
 #include "fu-device-metadata.h"
 
-#include "fu-ucs2.h"
+//#include "fu-ucs2.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-device-info.h"
@@ -300,7 +300,7 @@ fu_uefi_device_new_from_dev (FuDevice *dev)
 
 	/* create virtual object not backed by an ESRT entry */
 	self = g_object_new (FU_TYPE_UEFI_DEVICE, NULL);
-	fu_device_subsume (FU_DEVICE (self), dev);
+	fu_device_incorporate (FU_DEVICE (self), dev);
 	self->fw_class = g_strdup (fu_device_get_guid_default (dev));
 	tmp = fu_device_get_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND);
 	self->kind = fu_uefi_device_kind_from_string (tmp);

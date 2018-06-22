@@ -45,10 +45,9 @@ typedef struct {
 } efi_capsule_header_t;
 
 gboolean	 fu_uefi_secure_boot_enabled	(void);
-gchar *		 fu_uefi_get_full_esp_path	(const gchar *esp_mount);
+gchar *		 fu_uefi_get_full_esp_path	(const gchar	*esp_mount);
 GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 						 GError		**error);
-
 guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,
 						 const gchar	*attr_name);
 gboolean	 fu_uefi_prefix_efi_errors	(GError		**error);

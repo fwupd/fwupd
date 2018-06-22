@@ -15,10 +15,10 @@
 gboolean
 fu_uefi_secure_boot_enabled (void)
 {
-	guint8 *data = NULL;
+	gint rc;
 	gsize data_size = 0;
 	guint32 attributes = 0;
-	gint rc;
+	g_autofree guint8 *data = NULL;
 
 	rc = efi_get_variable (efi_guid_global, "SecureBoot", &data, &data_size, &attributes);
 	if (rc < 0)
