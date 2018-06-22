@@ -376,7 +376,6 @@ find_updates(UINTN *n_updates_out, update_table ***updates_out)
 	UINTN n_updates = 0;
 	UINTN n_updates_allocated = 128;
 	EFI_STATUS ret = EFI_OUT_OF_RESOURCES;
-	unsigned int i;
 
 #define GNVN_BUF_SIZE 1024
 	UINTN variable_name_allocation = GNVN_BUF_SIZE;
@@ -547,7 +546,7 @@ mult_err:
 err:
 	FreePool(variable_name);
 
-	for (i = 0; i < n_updates; i++) {
+	for (unsigned int i = 0; i < n_updates; i++) {
 		FreePool(updates[i]->name);
 		FreePool(updates[i]->info);
 		FreePool(updates[i]);
@@ -1171,9 +1170,7 @@ EFI_STATUS
 set_statuses(UINTN n_updates, update_table **updates)
 {
 	EFI_STATUS rc;
-	UINTN i;
-
-	for (i = 0; i < n_updates; i++) {
+	for (UINTN i = 0; i < n_updates; i++) {
 		rc = uefi_call_wrapper(RT->SetVariable, 5, updates[i]->name,
 				       &fwupdate_guid, updates[i]->attributes,
 				       updates[i]->size, updates[i]->info);
