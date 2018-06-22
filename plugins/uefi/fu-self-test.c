@@ -44,6 +44,20 @@ fu_uefi_bgrt_func (void)
 }
 
 static void
+fu_uefi_framebuffer_func (void)
+{
+	gboolean ret;
+	guint32 height = 0;
+	guint32 width = 0;
+	g_autoptr(GError) error = NULL;
+	ret = fu_uefi_get_framebuffer_size (&width, &height, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_cmpint (width, ==, 456);
+	g_assert_cmpint (height, ==, 789);
+}
+
+static void
 fu_uefi_bitmap_func (void)
 {
 	gboolean ret;
@@ -142,6 +156,7 @@ main (int argc, char **argv)
 {
 	g_test_init (&argc, &argv, NULL);
 	g_setenv ("FWUPD_SYSFSFWDIR", TESTDATADIR, TRUE);
+	g_setenv ("FWUPD_SYSFSDRIVERDIR", TESTDATADIR, TRUE);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
@@ -149,6 +164,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	g_test_add_func ("/uefi/ucs2", fu_uefi_ucs2_func);
 	g_test_add_func ("/uefi/bgrt", fu_uefi_bgrt_func);
+	g_test_add_func ("/uefi/framebuffer", fu_uefi_framebuffer_func);
 	g_test_add_func ("/uefi/bitmap", fu_uefi_bitmap_func);
 	g_test_add_func ("/uefi/device", fu_uefi_device_func);
 	g_test_add_func ("/uefi/plugin", fu_uefi_plugin_func);

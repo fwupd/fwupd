@@ -1,6 +1,7 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Peter Jones <pjones@redhat.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -14,6 +15,41 @@
 #include "fu-uefi-common.h"
 
 #include "fwupd-common.h"
+
+gboolean
+fu_uefi_get_framebuffer_size (guint32 *width, guint32 *height, GError **error)
+{
+	guint32 height_tmp;
+	guint32 width_tmp;
+	g_autofree gchar *sysfsdriverdir = NULL;
+	g_autofree gchar *fbdir = NULL;
+
+	sysfsdriverdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_DRIVERS);
+	fbdir = g_build_filename (sysfsdriverdir, "efi-framebuffer", "efi-framebuffer.0", NULL);
+	if (!g_file_test (fbdir, G_FILE_TEST_EXISTS)) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "EFI framebuffer not found");
+		return FALSE;
+	}
+	height_tmp = fu_uefi_read_file_as_uint64 (fbdir, "height");
+	width_tmp = fu_uefi_read_file_as_uint64 (fbdir, "width");
+	if (width_tmp == 0 || height_tmp == 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "EFI framebuffer has invalid size "
+			     "%"G_GUINT32_FORMAT"x%"G_GUINT32_FORMAT,
+			     width_tmp, height_tmp);
+		return FALSE;
+	}
+	if (width != NULL)
+		*width = width_tmp;
+	if (height != NULL)
+		*height = height_tmp;
+	return TRUE;
+}
 
 gboolean
 fu_uefi_get_bitmap_size (const guint8 *buf,
