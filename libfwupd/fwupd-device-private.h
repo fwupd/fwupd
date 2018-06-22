@@ -16,7 +16,7 @@ G_BEGIN_DECLS
 
 FwupdDevice	*fwupd_device_from_variant		(GVariant	*data);
 GVariant	*fwupd_device_to_variant		(FwupdDevice	*device);
-void		 fwupd_device_incorporate			(FwupdDevice	*self,
+void		 fwupd_device_incorporate		(FwupdDevice	*self,
 							 FwupdDevice	*donor);
 
 G_END_DECLS

@@ -17,6 +17,7 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
+#include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-device-info.h"
@@ -24,6 +25,7 @@
 struct FuPluginData {
 	gchar			*esp_path;
 	gchar			*esrt_path;
+	FuUefiBgrt		*bgrt;
 };
 
 /* drop when upgrading minimum required version of efivar to 33 */
@@ -34,7 +36,8 @@ struct FuPluginData {
 void
 fu_plugin_init (FuPlugin *plugin)
 {
-	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	data->bgrt = fu_uefi_bgrt_new ();
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
 	fu_plugin_add_compile_version (plugin, "com.redhat.efivar", EFIVAR_LIBRARY_VERSION);
 }
@@ -156,76 +159,13 @@ fu_plugin_uefi_get_splash_data (guint width, guint height, GError **error)
 }
 
 static gboolean
-fu_uefi_check_bgrt_supported (GError **error)
-{
-	guint64 version;
-	guint64 type;
-	guint64 status;
-
-	status = fu_uefi_read_file_as_uint64 ("/sys/firmware/acpi/bgrt", "status");
-	if (status != 1) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_SUPPORTED,
-			     "status was %" G_GUINT64_FORMAT, status);
-		return FALSE;
-	}
-	type = fu_uefi_read_file_as_uint64 ("/sys/firmware/acpi/bgrt", "type");
-	if (type != 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_SUPPORTED,
-			     "type was %" G_GUINT64_FORMAT, type);
-		return FALSE;
-	}
-	version = fu_uefi_read_file_as_uint64 ("/sys/firmware/acpi/bgrt", "version");
-	if (version != 1) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_SUPPORTED,
-			     "version was %" G_GUINT64_FORMAT, version);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-#define FU_UEFI_FRAMEBUFFER_PATH "/sys/bus/platform/drivers/efi-framebuffer/efi-framebuffer.0"
-
-static gboolean
-fu_uefi_get_bmp_size (const guint8 *buf, gsize buf_size, guint32 *height, guint32 *width)
-{
-	guint32 ui32;
-
-	if (buf_size < 26) {
-		return FALSE;
-	}
-
-	if (memcmp (buf, "BM", 2) != 0)
-		return FALSE;
-
-	memcpy (&ui32, buf + 10, 4);
-	if (ui32 < 26)
-		return FALSE;
-
-	memcpy (&ui32, buf + 14, 4);
-	if (ui32 < 26 - 14)
-		return FALSE;
-
-	memcpy (width, buf + 18, 4);
-	memcpy (height, buf + 22, 4);
-	return TRUE;
-}
-
-static gboolean
 fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	gint screen_x, screen_y;
+	guint32 screen_x, screen_y;
 	gsize buf_size = 0;
 	gssize size;
-	guint32 bgrt_height, bgrt_width;
 	guint32 height, width;
-	guint64 bgrt_y;
 	ux_capsule_header_t header;
 	efi_capsule_header_t capsule_header = {
 		.flags = CAPSULE_FLAGS_PERSIST_ACROSS_RESET,
@@ -242,24 +182,12 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 	g_autoptr(GFile) ofile = NULL;
 	g_autoptr(GOutputStream) ostream = NULL;
 
-	bgrt_y = fu_uefi_read_file_as_uint64 ("/sys/firmware/acpi/bgrt", "yoffset");
-	if (!g_file_get_contents ("/sys/firmware/acpi/bgrt/image", (gchar **) &buf, &buf_size, error))
-		return FALSE;
-
-	if (!fu_uefi_get_bmp_size (buf, buf_size, &bgrt_height, &bgrt_width)) {
-		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "BGRT not BMP data");
-		return FALSE;
-	}
-
 	/* get screen dimensions */
-	screen_x = fu_uefi_read_file_as_uint64 (FU_UEFI_FRAMEBUFFER_PATH, "height");
-	screen_y = fu_uefi_read_file_as_uint64 (FU_UEFI_FRAMEBUFFER_PATH, "width");
-	if (screen_x == 0 || screen_y == 0) {
-		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "no EFI framebuffer");
+	if (!fu_uefi_get_framebuffer_size (&screen_x, &screen_y, error))
 		return FALSE;
-	}
-	if (!fu_uefi_get_bmp_size ((const guint8 *) g_bytes_get_data (blob, NULL), buf_size, &height, &width)) {
-		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "splash not BMP data");
+	if (!fu_uefi_get_bitmap_size ((const guint8 *) g_bytes_get_data (blob, NULL),
+				      buf_size, &width, &height, error)) {
+		g_prefix_error (error, "splash invalid: ");
 		return FALSE;
 	}
 
@@ -280,7 +208,8 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 	header.image_type = 0;
 	header.reserved = 0;
 	header.x_offset = (screen_x / 2) - (width / 2);
-	header.y_offset = bgrt_y + bgrt_height;
+	header.y_offset = fu_uefi_bgrt_get_yoffset (data->bgrt) +
+				fu_uefi_bgrt_get_height (data->bgrt);
 
 	/* write capsule file */
 	size = g_output_stream_write (ostream, &capsule_header, capsule_header.header_size, NULL, error);
@@ -300,10 +229,11 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 static gboolean
 fu_plugin_uefi_update_splash (FuPlugin *plugin, GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	guint best_idx = G_MAXUINT;
 	guint32 lowest_border_pixels = G_MAXUINT;
-	guint64 screen_height = 768;
-	guint64 screen_width = 1024;
+	guint32 screen_height = 768;
+	guint32 screen_width = 1024;
 	g_autoptr(GBytes) image_bmp = NULL;
 
 	struct {
@@ -322,20 +252,16 @@ fu_plugin_uefi_update_splash (FuPlugin *plugin, GError **error)
 	};
 
 	/* get the boot graphics resource table data */
-	if (!fu_uefi_check_bgrt_supported (error)) {
-		g_prefix_error (error, "BGRT is not supported: ");
-		return FALSE;
-	}
-	screen_height = fu_uefi_read_file_as_uint64 (FU_UEFI_FRAMEBUFFER_PATH, "height");
-	screen_width = fu_uefi_read_file_as_uint64 (FU_UEFI_FRAMEBUFFER_PATH, "width");
-	if (screen_width == 0 || screen_height == 0) {
+	if (!fu_uefi_bgrt_get_supported (data->bgrt)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "failed to get BGRT screen size");
+				     "BGRT is not supported");
 		return FALSE;
 	}
-	g_debug ("BGRT screen size %" G_GUINT64_FORMAT " x%" G_GUINT64_FORMAT,
+	if (!fu_uefi_get_framebuffer_size (&screen_width, &screen_height, error))
+		return FALSE;
+	g_debug ("framebuffer size %" G_GUINT32_FORMAT " x%" G_GUINT32_FORMAT,
 		 screen_width, screen_height);
 
 	/* find the 'best sized' pre-generated image */
@@ -697,7 +623,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 
 	/* fall back to a sane default */
 	if (data->esp_path == NULL)
-		data->esp_path = fu_common_get_path (FU_PATH_KIND_ESPBOOTDIR);
+		data->esp_path = fu_common_get_path (FU_PATH_KIND_ESPDIR);
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
@@ -726,7 +652,8 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *ux_capsule_str = "Disabled";
+	const gchar *str;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) entries = NULL;
 
 	/* add each device */
@@ -744,10 +671,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* for debugging problems later */
 	fu_plugin_uefi_test_secure_boot (plugin);
-	if (fu_uefi_check_bgrt_supported (NULL))
-		ux_capsule_str = "Enabled";
-	g_debug ("UX Capsule support : %s", ux_capsule_str);
-	fu_plugin_add_report_metadata (plugin, "UEFIUXCapsule", ux_capsule_str);
-
+	if (!fu_uefi_bgrt_setup (data->bgrt, &error_local))
+		g_debug ("BGRT setup failed: %s", error_local->message);
+	str = fu_uefi_bgrt_get_supported (data->bgrt) ? "Enabled" : "Disabled";
+	g_debug ("UX Capsule support : %s", str);
+	fu_plugin_add_report_metadata (plugin, "UEFIUXCapsule", str);
 	return TRUE;
 }
