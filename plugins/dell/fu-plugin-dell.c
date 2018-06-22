@@ -983,7 +983,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		data->capsule_supported = TRUE;
 	} else {
 		g_debug ("UEFI capsule firmware updating not supported");
-		//FIXME? do we want to return FALSE and disable this plugin?
 	}
 
 	if (usb_ctx != NULL) {
