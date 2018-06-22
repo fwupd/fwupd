@@ -859,6 +859,73 @@ fwupd_device_set_modified (FwupdDevice *device, guint64 modified)
 }
 
 /**
+ * fwupd_device_incorporate:
+ * @self: A #FwupdDevice
+ * @donor: Another #FwupdDevice
+ *
+ * Copy all properties from the donor object if they have not already been set.
+ *
+ * Since: 1.1.0
+ **/
+void
+fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	FwupdDevicePrivate *priv_donor = GET_PRIVATE (donor);
+
+	if (priv->flags == 0)
+		fwupd_device_add_flag (self, priv_donor->flags);
+	if (priv->created == 0)
+		fwupd_device_set_created (self, priv_donor->created);
+	if (priv->modified == 0)
+		fwupd_device_set_modified (self, priv_donor->modified);
+	if (priv->flashes_left == 0)
+		fwupd_device_set_flashes_left (self, priv_donor->flashes_left);
+	if (priv->update_state == 0)
+		fwupd_device_set_update_state (self, priv_donor->update_state);
+	if (priv->description == NULL)
+		fwupd_device_set_description (self, priv_donor->description);
+	if (priv->id == NULL)
+		fwupd_device_set_id (self, priv_donor->id);
+	if (priv->parent_id == NULL)
+		fwupd_device_set_parent_id (self, priv_donor->parent_id);
+	if (priv->name == NULL)
+		fwupd_device_set_name (self, priv_donor->name);
+	if (priv->summary == NULL)
+		fwupd_device_set_summary (self, priv_donor->summary);
+	if (priv->vendor == NULL)
+		fwupd_device_set_vendor (self, priv_donor->vendor);
+	if (priv->vendor_id == NULL)
+		fwupd_device_set_vendor_id (self, priv_donor->vendor_id);
+	if (priv->plugin == NULL)
+		fwupd_device_set_plugin (self, priv_donor->plugin);
+	if (priv->update_error == NULL)
+		fwupd_device_set_update_error (self, priv_donor->update_error);
+	if (priv->version == NULL)
+		fwupd_device_set_version (self, priv_donor->version);
+	if (priv->version_lowest == NULL)
+		fwupd_device_set_version_lowest (self, priv_donor->version_lowest);
+	if (priv->version_bootloader == NULL)
+		fwupd_device_set_version_bootloader (self, priv_donor->version_bootloader);
+	for (guint i = 0; i < priv_donor->guids->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv_donor->guids, i);
+		fwupd_device_add_guid (self, tmp);
+	}
+	for (guint i = 0; i < priv_donor->icons->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv_donor->icons, i);
+		fwupd_device_add_icon (self, tmp);
+	}
+	for (guint i = 0; i < priv_donor->checksums->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv_donor->checksums, i);
+		fwupd_device_add_checksum (self, tmp);
+	}
+	for (guint i = 0; i < priv_donor->releases->len; i++) {
+		FwupdRelease *tmp = g_ptr_array_index (priv_donor->releases, i);
+		fwupd_device_add_release (self, tmp);
+	}
+}
+
+/**
  * fwupd_device_to_variant:
  * @device: A #FwupdDevice
  *
