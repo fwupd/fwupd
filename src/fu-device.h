@@ -98,6 +98,9 @@ FuDevice	*fu_device_new				(void);
 
 /* accessors */
 gchar		*fu_device_to_string			(FuDevice	*device);
+const gchar	*fu_device_get_alternate_id		(FuDevice	*device);
+void		 fu_device_set_alternate_id		(FuDevice	*device,
+							 const gchar	*alternate_id);
 const gchar	*fu_device_get_equivalent_id		(FuDevice	*device);
 void		 fu_device_set_equivalent_id		(FuDevice	*device,
 							 const gchar	*equivalent_id);
@@ -105,8 +108,6 @@ void		 fu_device_add_guid			(FuDevice	*device,
 							 const gchar	*guid);
 gchar		*fu_device_get_guids_as_str		(FuDevice	*device);
 FuDevice	*fu_device_get_alternate		(FuDevice	*device);
-void		 fu_device_set_alternate		(FuDevice	*device,
-							 FuDevice	*alternate);
 FuDevice	*fu_device_get_parent			(FuDevice	*device);
 GPtrArray	*fu_device_get_children			(FuDevice	*device);
 void		 fu_device_add_child			(FuDevice	*device,

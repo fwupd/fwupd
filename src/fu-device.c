@@ -26,6 +26,7 @@
 static void fu_device_finalize			 (GObject *object);
 
 typedef struct {
+	gchar				*alternate_id;
 	gchar				*equivalent_id;
 	FuDevice			*alternate;
 	FuDevice			*parent;	/* noref */
@@ -156,8 +157,50 @@ fu_device_set_equivalent_id (FuDevice *device, const gchar *equivalent_id)
  * fu_device_get_alternate:
  * @device: A #FuDevice
  *
+ * Gets any alternate device ID. An alternate device may be linked to the primary
+ * device in some way.
+ *
+ * Returns: (transfer none): a #FuDevice or %NULL
+ *
+ * Since: 1.0.9
+ **/
+const gchar *
+fu_device_get_alternate_id (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->alternate_id;
+}
+
+/**
+ * fu_device_set_alternate:
+ * @device: A #FuDevice
+ * @alternate: Another #FuDevice
+ *
+ * Sets any alternate device ID. An alternate device may be linked to the primary
+ * device in some way.
+ *
+ * Since: 1.0.9
+ **/
+void
+fu_device_set_alternate_id (FuDevice *device, const gchar *alternate_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_free (priv->alternate_id);
+	priv->alternate_id = g_strdup (alternate_id);
+}
+
+/**
+ * fu_device_get_alternate:
+ * @device: A #FuDevice
+ *
  * Gets any alternate device. An alternate device may be linked to the primary
  * device in some way.
+ *
+ * The alternate object will be matched from the ID set in fu_device_set_alternate_id()
+ * and will be assigned by the daemon. This means if the ID is not found as an
+ * added device, then this function will return %NULL.
  *
  * Returns: (transfer none): a #FuDevice or %NULL
  *
@@ -178,6 +221,8 @@ fu_device_get_alternate (FuDevice *device)
  *
  * Sets any alternate device. An alternate device may be linked to the primary
  * device in some way.
+ *
+ * This function is only usable by the daemon, not directly from plugins.
  *
  * Since: 0.7.2
  **/
@@ -893,6 +938,8 @@ fu_device_to_string (FuDevice *device)
 	tmp = fwupd_device_to_string (FWUPD_DEVICE (device));
 	if (tmp != NULL && tmp[0] != '\0')
 		g_string_append (str, tmp);
+	if (priv->alternate_id != NULL)
+		fwupd_pad_kv_str (str, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
 		fwupd_pad_kv_str (str, "EquivalentId", priv->equivalent_id);
 	keys = g_hash_table_get_keys (priv->metadata);
@@ -1158,6 +1205,7 @@ fu_device_finalize (GObject *object)
 	g_hash_table_unref (priv->metadata);
 	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->parent_guids);
+	g_free (priv->alternate_id);
 	g_free (priv->equivalent_id);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);

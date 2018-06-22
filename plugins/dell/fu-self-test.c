@@ -42,6 +42,11 @@ static void
 _plugin_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	GPtrArray *devices = (GPtrArray *) user_data;
+	if (fu_device_get_alternate_id (device) != NULL) {
+		FuDevice *device_alt = _find_device_by_id (devices, fu_device_get_alternate_id (device));
+		if (device_alt != NULL)
+			fu_device_set_alternate (device, device_alt);
+	}
 	g_ptr_array_add (devices, g_object_ref (device));
 }
 
