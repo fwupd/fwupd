@@ -13,6 +13,8 @@
 
 G_BEGIN_DECLS
 
+GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
+						 GError		**error);
 guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,
 						 const gchar	*attr_name);
 
