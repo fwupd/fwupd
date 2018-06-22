@@ -3,6 +3,8 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginUefi"']
 shared_module('fu_plugin_uefi',
   sources : [
     'fu-plugin-uefi.c',
+    'fu-uefi-common.c',
+    'fu-uefi-device.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -31,10 +33,14 @@ configure_file(
 )
 
 if get_option('tests')
+  testdatadir = join_paths(meson.current_source_dir(), 'tests')
+  cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'uefi-self-test',
     sources : [
       'fu-self-test.c',
+      'fu-uefi-common.c',
+      'fu-uefi-device.c',
       'fu-ucs2.c',
     ],
     include_directories : [
