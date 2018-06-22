@@ -399,10 +399,6 @@ fu_plugin_uefi_register_proxy_device (FuPlugin *plugin, FuDevice *device)
 void
 fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 {
-	/* ignore our own registrations */
-	if (g_strcmp0 (fu_device_get_plugin (device), "uefi") == 0)
-		return;
-
 	if (fu_device_get_metadata (device, "UefiDeviceKind") != NULL) {
 		if (fu_device_get_guid_default (device) == NULL) {
 			g_autofree gchar *dbg = fu_device_to_string (device);
