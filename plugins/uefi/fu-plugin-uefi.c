@@ -16,6 +16,8 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
+#include "fu-uefi-device.h"
+
 #ifndef HAVE_FWUP_GET_ESP_MOUNTPOINT
 #define FWUP_SUPPORTED_STATUS_UNSUPPORTED			0
 #define FWUP_SUPPORTED_STATUS_UNLOCKED				1
@@ -444,14 +446,14 @@ fu_plugin_update (FuPlugin *plugin,
 }
 
 static AsVersionParseFlag
-fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, guint32 uefi_type)
+fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind)
 {
 	const gchar *content;
 	const gchar *quirk;
 	g_autofree gchar *group = NULL;
 
 	/* we have no information for devices */
-	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE)
+	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
 		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
@@ -493,29 +495,29 @@ fu_plugin_unlock (FuPlugin *plugin,
 }
 
 static const gchar *
-fu_plugin_uefi_uefi_type_to_string (guint32 uefi_type)
+fu_plugin_uefi_uefi_type_to_string (FuUefiDeviceKind device_kind)
 {
-	if (uefi_type == FWUP_RESOURCE_TYPE_UNKNOWN)
+	if (device_kind == FU_UEFI_DEVICE_KIND_UNKNOWN)
 		return "Unknown Firmware";
-	if (uefi_type == FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE)
+	if (device_kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE)
 		return "System Firmware";
-	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE)
+	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
 		return "Device Firmware";
-	if (uefi_type == FWUP_RESOURCE_TYPE_UEFI_DRIVER)
+	if (device_kind == FU_UEFI_DEVICE_KIND_UEFI_DRIVER)
 		return "UEFI Driver";
-	if (uefi_type == FWUP_RESOURCE_TYPE_FMP)
+	if (device_kind == FU_UEFI_DEVICE_KIND_FMP)
 		return "Firmware Management Protocol";
 	return NULL;
 }
 
 static gchar *
-fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, guint32 uefi_type)
+fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind)
 {
 	GString *display_name;
 
 	/* set Display Name prefix for capsules that are not PCI cards */
-	display_name = g_string_new (fu_plugin_uefi_uefi_type_to_string (uefi_type));
-	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
+	display_name = g_string_new (fu_plugin_uefi_uefi_type_to_string (device_kind));
+	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
 		g_string_prepend (display_name, "UEFI ");
 	} else {
 		const gchar *tmp;
@@ -587,7 +589,7 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 		g_warning ("Kernel support for EFI variables missing");
 	}
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
+	if (uefi_type == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
 		/* nothing better in the icon naming spec */
 		fu_device_add_icon (dev, "audio-card");
 	} else {
@@ -769,7 +771,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	if (data->esrt_status == FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK) {
 		g_autoptr(FuDevice) dev = fu_device_new ();
 		name = fu_plugin_uefi_get_name_for_type (plugin,
-							 FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE);
+							 FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
 		if (name != NULL)
 			fu_device_set_name (dev, name);
 		fu_device_set_id (dev, "UEFI-dummy-dev0");
