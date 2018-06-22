@@ -49,6 +49,7 @@ guint32		 fu_uefi_device_get_version		(FuUefiDevice	*self);
 guint32		 fu_uefi_device_get_version_lowest	(FuUefiDevice	*self);
 guint32		 fu_uefi_device_get_version_error	(FuUefiDevice	*self);
 guint32		 fu_uefi_device_get_capsule_flags	(FuUefiDevice	*self);
+guint64		 fu_uefi_device_get_hardware_instance	(FuUefiDevice	*self);
 FuUefiDeviceStatus fu_uefi_device_get_status		(FuUefiDevice	*self);
 const gchar	*fu_uefi_device_status_to_string	(FuUefiDeviceStatus status);
 

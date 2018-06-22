@@ -94,6 +94,7 @@ fu_uefi_device_func (void)
 
 	g_assert_cmpint (fu_uefi_device_get_kind (dev), ==, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
 	g_assert_cmpstr (fu_uefi_device_get_guid (dev), ==, "ddc0ee61-e7f0-4e7d-acc5-c070a398838e");
+	g_assert_cmpint (fu_uefi_device_get_hardware_instance (dev), ==, 0x0);
 	g_assert_cmpint (fu_uefi_device_get_version (dev), ==, 65586);
 	g_assert_cmpint (fu_uefi_device_get_version_lowest (dev), ==, 65582);
 	g_assert_cmpint (fu_uefi_device_get_version_error (dev), ==, 18472960);

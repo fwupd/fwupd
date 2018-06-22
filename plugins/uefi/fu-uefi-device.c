@@ -9,12 +9,9 @@
 #include "config.h"
 
 #include <string.h>
-//#include <efivar.h>
-//#include <efivar/efiboot.h>
 
 #include "fu-device-metadata.h"
 
-//#include "fu-ucs2.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
@@ -30,6 +27,7 @@ struct _FuUefiDevice {
 	guint32			 fw_version_lowest;
 	FuUefiDeviceStatus	 last_attempt_status;
 	guint32			 last_attempt_version;
+	guint64			 fmp_hardware_instance;
 	FuUefiDeviceInfo	*info;
 };
 
@@ -133,6 +131,13 @@ fu_uefi_device_get_version_error (FuUefiDevice *self)
 {
 	g_return_val_if_fail (FU_IS_UEFI_DEVICE (self), 0x0);
 	return self->last_attempt_version;
+}
+
+guint64
+fu_uefi_device_get_hardware_instance (FuUefiDevice *self)
+{
+	g_return_val_if_fail (FU_IS_UEFI_DEVICE (self), 0x0);
+	return self->fmp_hardware_instance;
 }
 
 FuUefiDeviceStatus
@@ -260,7 +265,6 @@ FuUefiDevice *
 fu_uefi_device_new_from_entry (const gchar *entry_path)
 {
 	FuUefiDevice *self;
-	guint64 hardware_instance = 0;	/* FIXME */
 	g_autofree gchar *fw_class_fn = NULL;
 	g_autofree gchar *id = NULL;
 
@@ -283,9 +287,14 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 	self->fw_version_lowest = fu_uefi_read_file_as_uint64 (entry_path, "lowest_supported_fw_version");
 	g_assert (self->fw_class != NULL);
 
+	/* the hardware instance is not in the ESRT table and we should really
+	 * write the EFI stub to query with FMP -- but we still have not ever
+	 * seen a PCIe device with FMP support... */
+	self->fmp_hardware_instance = 0x0;
+
 	/* set ID */
 	id = g_strdup_printf ("UEFI-%s-dev%" G_GUINT64_FORMAT,
-			      self->fw_class, hardware_instance);
+			      self->fw_class, self->fmp_hardware_instance);
 	fu_device_set_id (FU_DEVICE (self), id);
 
 	return self;

@@ -48,6 +48,7 @@ fu_plugin_destroy (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_free (data->esp_path);
 	g_free (data->esrt_path);
+	g_object_unref (data->bgrt);
 }
 
 gboolean
