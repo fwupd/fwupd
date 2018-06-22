@@ -131,6 +131,17 @@ add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
 # needed for some things on CentOS
 add_project_arguments('-D_GNU_SOURCE', language : 'c')
 
+prefix = get_option('prefix')
+
+bindir = join_paths(prefix, get_option('bindir'))
+libdir = join_paths(prefix, get_option('libdir'))
+datadir = join_paths(prefix, get_option('datadir'))
+libexecdir = join_paths(prefix, get_option('libexecdir'))
+sysconfdir = join_paths(prefix, get_option('sysconfdir'))
+localstatedir = join_paths(prefix, get_option('localstatedir'))
+mandir = join_paths(prefix, get_option('mandir'))
+localedir = join_paths(prefix, get_option('localedir'))
+
 gio = dependency('gio-2.0', version : '>= 2.45.8')
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
@@ -231,17 +242,6 @@ endif
 if get_option('consolekit')
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
-
-prefix = get_option('prefix')
-
-bindir = join_paths(prefix, get_option('bindir'))
-libdir = join_paths(prefix, get_option('libdir'))
-datadir = join_paths(prefix, get_option('datadir'))
-libexecdir = join_paths(prefix, get_option('libexecdir'))
-sysconfdir = join_paths(prefix, get_option('sysconfdir'))
-localstatedir = join_paths(prefix, get_option('localstatedir'))
-mandir = join_paths(prefix, get_option('mandir'))
-localedir = join_paths(prefix, get_option('localedir'))
 
 systemdunitdir = get_option('systemdunitdir')
 if systemdunitdir == '' and get_option('systemd')
