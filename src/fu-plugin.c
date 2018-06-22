@@ -1155,6 +1155,10 @@ fu_plugin_runner_device_register (FuPlugin *plugin, FuDevice *device)
 	if (priv->module == NULL)
 		return;
 
+	/* don't notify plugins on their own devices */
+	if (g_strcmp0 (fu_device_get_plugin (device), fu_plugin_get_name (plugin)) == 0)
+		return;
+
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_device_registered", (gpointer *) &func);
 	if (func != NULL) {
