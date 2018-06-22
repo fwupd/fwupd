@@ -198,6 +198,10 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
 	g_autofree gchar *fn = NULL;
 
+	/* in the self tests */
+	if (fu_device_get_metadata (device, "UEFI::FakeESP") != NULL)
+		return TRUE;
+
 	/* ensure we have the existing state */
 	if (!fu_uefi_device_ensure_info (self, error))
 		return FALSE;

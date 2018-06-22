@@ -69,8 +69,8 @@ fu_plugin_dell_esrt_admin_password_present (gboolean *password_present, GError *
 {
 	guint32 args[4] = { 0, }, out[4] = { 0, };
 
-	if (dell_simple_ci_smi(CLASS_ADMIN_PROP,
-			       SELECT_ADMIN_PROP, args, out)) {
+	if (dell_simple_ci_smi (CLASS_ADMIN_PROP,
+			        SELECT_ADMIN_PROP, args, out)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
