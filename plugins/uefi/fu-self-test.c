@@ -27,6 +27,30 @@ fu_uefi_ucs2_func (void)
 }
 
 static void
+fu_uefi_bitmap_func (void)
+{
+	gboolean ret;
+	gsize sz = 0;
+	guint32 height = 0;
+	guint32 width = 0;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *buf = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fn = fu_test_get_filename (TESTDATADIR, "test.bmp");
+	g_assert (fn != NULL);
+	ret = g_file_get_contents (fn, &buf, &sz, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_nonnull (buf);
+	ret = fu_uefi_get_bitmap_size ((guint8 *)buf, sz, &width, &height, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_cmpint (width, ==, 54);
+	g_assert_cmpint (height, ==, 24);
+}
+
+static void
 fu_uefi_device_func (void)
 {
 	g_autofree gchar *fn = NULL;
@@ -107,6 +131,7 @@ main (int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func ("/uefi/ucs2", fu_uefi_ucs2_func);
+	g_test_add_func ("/uefi/bitmap", fu_uefi_bitmap_func);
 	g_test_add_func ("/uefi/device", fu_uefi_device_func);
 	g_test_add_func ("/uefi/plugin", fu_uefi_plugin_func);
 	return g_test_run ();

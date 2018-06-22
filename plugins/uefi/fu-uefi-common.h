@@ -13,6 +13,11 @@
 
 G_BEGIN_DECLS
 
+gboolean	 fu_uefi_get_bitmap_size	(const guint8	*buf,
+						 gsize		 bufsz,
+						 guint32	*width,
+						 guint32	*height,
+						 GError		**error);
 gboolean	 fu_uefi_secure_boot_enabled	(void);
 GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 						 GError		**error);
