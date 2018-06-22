@@ -629,7 +629,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	struct tpm_status *out = NULL;
 	g_autoptr (FuDevice) dev_alt = NULL;
 	g_autoptr (FuDevice) dev = NULL;
-	const gchar *product_name = NULL;
+	const gchar *product_name = "Unknown";
 
 	fu_dell_clear_smi (data->smi_obj);
 	out = (struct tpm_status *) data->smi_obj->output;
