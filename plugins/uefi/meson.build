@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginUefi"']
 shared_module('fu_plugin_uefi',
   sources : [
     'fu-plugin-uefi.c',
+    'fu-uefi-bgrt.c',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
   ],
@@ -39,6 +40,7 @@ if get_option('tests')
     'uefi-self-test',
     sources : [
       'fu-self-test.c',
+      'fu-uefi-bgrt.c',
       'fu-uefi-common.c',
       'fu-uefi-device.c',
       'fu-ucs2.c',
