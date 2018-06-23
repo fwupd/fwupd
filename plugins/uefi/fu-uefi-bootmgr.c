@@ -311,15 +311,10 @@ fu_uefi_setup_bootnext (const gchar *esp_mountpoint, GError **error)
 	g_autofree gchar *target_app = NULL;
 
 	/* if secure boot was turned on this might need to be installed separately */
-	source_app = fu_uefi_bootmgr_get_source_path ();
-	if (!g_file_test (source_app, G_FILE_TEST_EXISTS)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "%s does not exist",
-			     source_app);
+	source_app = fu_uefi_bootmgr_get_source_path (error);
+	if (source_app == NULL)
 		return FALSE;
-	}
+
 	/* test to make sure shim is there if we need it */
 	shim_app = fu_uefi_bootmgr_get_esp_app_path (esp_mountpoint, "shim");
 	if (!g_file_test (shim_app, G_FILE_TEST_EXISTS)) {

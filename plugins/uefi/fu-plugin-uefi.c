@@ -24,7 +24,6 @@
 
 struct FuPluginData {
 	gchar			*esp_path;
-	gchar			*esrt_path;
 	FuUefiBgrt		*bgrt;
 };
 
@@ -47,7 +46,6 @@ fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_free (data->esp_path);
-	g_free (data->esrt_path);
 	g_object_unref (data->bgrt);
 }
 
@@ -471,38 +469,6 @@ fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind
 }
 
 static gboolean
-fu_plugin_uefi_can_update (void)
-{
-	g_autofree gchar *sysfsfwdir = NULL;
-	g_autofree gchar *efivardir = NULL;
-	g_autofree gchar *varsdir = NULL;
-	g_autofree gchar *bootloader = NULL;
-
-	/* running in test suite */
-	if (g_getenv ("FWUPD_UEFI_IN_TESTS") != NULL)
-		return TRUE;
-
-	/* test if we have kernel EFI support */
-	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	efivardir = g_build_filename (sysfsfwdir, "efi", "efivars", NULL);
-	varsdir = g_build_filename (sysfsfwdir, "efi", "vars", NULL);
-	if (!g_file_test (efivardir, G_FILE_TEST_IS_DIR) &&
-	    !g_file_test (varsdir, G_FILE_TEST_IS_DIR)) {
-		g_warning ("Kernel support for EFI variables missing");
-		return FALSE;
-	}
-
-	/* if we have secure boot enabled, make sure we have the right assets */
-	bootloader = fu_uefi_bootmgr_get_source_path ();
-	if (!g_file_test (bootloader, G_FILE_TEST_EXISTS)) {
-		g_warning ("Missing %s, disabling updates", bootloader);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
 fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **error)
 {
 	FuUefiDeviceKind device_kind;
@@ -527,11 +493,9 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 							       parse_flags);
 		fu_device_set_version_lowest (FU_DEVICE (dev), version_lowest);
 	}
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-	if (fu_plugin_uefi_can_update ()) {
-		fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	}
+	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
 		/* nothing better in the icon naming spec */
 		fu_device_add_icon (FU_DEVICE (dev), "audio-card");
@@ -621,12 +585,51 @@ _efi_get_variable_exists (efi_guid_t guid, const char *name)
 	return efi_get_variable_attributes (guid, name, &unused_attrs);
 }
 
+static gboolean
+fu_plugin_uefi_check_efivars (GError **error)
+{
+	g_autofree gchar *sysfsfwdir = NULL;
+	g_autofree gchar *efivardir = NULL;
+	g_autofree gchar *varsdir = NULL;
+
+	/* running in test suite */
+	if (g_getenv ("FWUPD_UEFI_IN_TESTS") != NULL)
+		return TRUE;
+
+	/* test if we have kernel EFI support */
+	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	efivardir = g_build_filename (sysfsfwdir, "efi", "efivars", NULL);
+	varsdir = g_build_filename (sysfsfwdir, "efi", "vars", NULL);
+	if (!g_file_test (efivardir, G_FILE_TEST_IS_DIR) &&
+	    !g_file_test (varsdir, G_FILE_TEST_IS_DIR)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "kernel support for EFI variables missing");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *key = "OverrideESPMountPoint";
 	g_autofree gchar *sysfsfwdir = NULL;
+
+	/* are the EFI dirs set up so we can update each device */
+	if (!fu_plugin_uefi_check_efivars (error))
+		return FALSE;
+
+	/* if secure boot is enabled ensure we have a signed fwup.efi */
+	if (g_getenv ("FWUPD_UEFI_IN_TESTS") == NULL) {
+		g_autofree gchar *bootloader = NULL;
+		bootloader = fu_uefi_bootmgr_get_source_path (error);
+		if (bootloader == NULL)
+			return FALSE;
+	}
 
 	/* load from file */
 	data->esp_path = fu_plugin_get_config_value (plugin, key);
@@ -648,10 +651,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	if (data->esp_path == NULL)
 		data->esp_path = fu_common_get_path (FU_PATH_KIND_ESPDIR);
 
-	/* get the directory of ESRT entries */
-	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	data->esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-
 	/* delete any existing .cap files to avoid the small ESP partition
 	 * from running out of space when we've done lots of firmware updates
 	 * -- also if the distro has changed the ESP may be different anyway */
@@ -667,7 +666,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 
 	/* save in report metadata */
 	g_debug ("ESP mountpoint set as %s", data->esp_path);
-	fu_plugin_add_report_metadata (plugin, "OverrideESPMountPoint", data->esp_path);
+	fu_plugin_add_report_metadata (plugin, "ESPMountPoint", data->esp_path);
 	return TRUE;
 }
 
@@ -678,11 +677,17 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	const gchar *str;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) entries = NULL;
+	g_autofree gchar *esrt_path = NULL;
+	g_autofree gchar *sysfsfwdir = NULL;
 
-	/* add each device */
-	entries = fu_uefi_get_esrt_entry_paths (data->esrt_path, error);
+	/* get the directory of ESRT entries */
+	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
+	entries = fu_uefi_get_esrt_entry_paths (esrt_path, error);
 	if (entries == NULL)
 		return FALSE;
+
+	/* add each device */
 	for (guint i = 0; i < entries->len; i++) {
 		const gchar *path = g_ptr_array_index (entries, i);
 		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path);

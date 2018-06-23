@@ -57,15 +57,25 @@ fu_uefi_bootmgr_get_esp_app_path (const gchar *esp_mountpoint, const gchar *cmd)
 }
 
 gchar *
-fu_uefi_bootmgr_get_source_path (void)
+fu_uefi_bootmgr_get_source_path (GError **error)
 {
 	const gchar *extension = "";
+	g_autofree gchar *source_path = NULL;
 	if (fu_uefi_secure_boot_enabled ())
 		extension = ".signed";
-	return g_strdup_printf ("%s/fwup%s.efi%s",
-				EFI_APP_LOCATION,
-				fu_uefi_bootmgr_get_suffix (),
-				extension);
+	source_path = g_strdup_printf ("%s/fwup%s.efi%s",
+				       EFI_APP_LOCATION,
+				       fu_uefi_bootmgr_get_suffix (),
+				       extension);
+	if (!g_file_test (source_path, G_FILE_TEST_EXISTS)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "%s cannot be found",
+			     source_path);
+		return FALSE;
+	}
+	return g_steal_pointer (&source_path);
 }
 
 gboolean
