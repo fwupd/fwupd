@@ -63,3 +63,4 @@ if get_option('tests')
   test('uefi-self-test', e)
 endif
 
+subdir('efi')

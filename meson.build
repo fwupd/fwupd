@@ -214,9 +214,34 @@ if get_option('plugin_uefi')
   if fwup.version().version_compare('>= 12')
     conf.set('HAVE_FWUP_VERSION', '1')
   endif
+  conf.set_quoted('LIBFWUP_LIBRARY_VERSION', fwup.version())
+
   efivar = dependency('efivar')
   conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
-  conf.set_quoted('LIBFWUP_LIBRARY_VERSION', fwup.version())
+  objcopy = find_program ('objcopy')
+  readelf = find_program ('readelf')
+
+  efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
+  conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
+
+  efi_arch = host_machine.cpu_family()
+  if efi_arch == 'x86'
+          EFI_MACHINE_TYPE_NAME = 'ia32'
+          gnu_efi_arch = 'ia32'
+  elif efi_arch == 'x86_64'
+          EFI_MACHINE_TYPE_NAME = 'x64'
+          gnu_efi_arch = 'x86_64'
+  elif efi_arch == 'arm'
+          EFI_MACHINE_TYPE_NAME = 'arm'
+          gnu_efi_arch = 'arm'
+  elif efi_arch == 'aarch64'
+          EFI_MACHINE_TYPE_NAME = 'aa64'
+          gnu_efi_arch = 'aarch64'
+  else
+          EFI_MACHINE_TYPE_NAME = ''
+          gnu_efi_arch = ''
+  endif
+  conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
 endif
 
 if get_option('plugin_dell')
