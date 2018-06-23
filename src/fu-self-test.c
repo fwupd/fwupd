@@ -2175,6 +2175,41 @@ fu_common_store_cab_error_wrong_checksum_func (void)
 	g_assert (store == NULL);
 }
 
+static void
+fu_device_incorporate_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) donor = fu_device_new ();
+
+	/* set up donor device */
+	fu_device_set_alternate_id (donor, "alt-id");
+	fu_device_set_equivalent_id (donor, "equiv-id");
+	fu_device_set_metadata (donor, "test", "me");
+	fu_device_set_metadata (donor, "test2", "me");
+
+	/* base properties */
+	fu_device_add_flag (donor, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_set_created (donor, 123);
+	fu_device_set_modified (donor, 456);
+	fu_device_add_icon (donor, "computer");
+
+	/* existing properties */
+	fu_device_set_equivalent_id (device, "DO_NOT_OVERWRITE");
+	fu_device_set_metadata (device, "test2", "DO_NOT_OVERWRITE");
+	fu_device_set_modified (device, 789);
+
+	/* incorporate properties from donor to device */
+	fu_device_incorporate (device, donor);
+	g_assert_cmpstr (fu_device_get_alternate_id (device), ==, "alt-id");
+	g_assert_cmpstr (fu_device_get_equivalent_id (device), ==, "DO_NOT_OVERWRITE");
+	g_assert_cmpstr (fu_device_get_metadata (device, "test"), ==, "me");
+	g_assert_cmpstr (fu_device_get_metadata (device, "test2"), ==, "DO_NOT_OVERWRITE");
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC));
+	g_assert_cmpint (fu_device_get_created (device), ==, 123);
+	g_assert_cmpint (fu_device_get_modified (device), ==, 789);
+	g_assert_cmpint (fu_device_get_icons(device)->len, ==, 1);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -2191,6 +2226,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	if (g_test_slow ())
 		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
+	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);

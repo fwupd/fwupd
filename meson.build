@@ -217,7 +217,6 @@ if get_option('plugin_uefi')
   conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
 
   efi_arch = host_machine.cpu_family()
-
   if efi_arch == 'x86'
           EFI_MACHINE_TYPE_NAME = 'ia32'
           gnu_efi_arch = 'ia32'
@@ -234,9 +233,7 @@ if get_option('plugin_uefi')
           EFI_MACHINE_TYPE_NAME = ''
           gnu_efi_arch = ''
   endif
-
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
-
 endif
 
 if get_option('plugin_dell')

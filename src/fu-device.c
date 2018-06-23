@@ -1145,6 +1145,15 @@ fu_device_attach (FuDevice *device, GError **error)
 	return klass->attach (device, error);
 }
 
+/**
+ * fu_device_incorporate:
+ * @device: A #FuDevice
+ * @donor: Another #FuDevice
+ *
+ * Copy all properties from the donor object if they have not already been set.
+ *
+ * Since: 1.0.9
+ **/
 void
 fu_device_incorporate (FuDevice *self, FuDevice *donor)
 {

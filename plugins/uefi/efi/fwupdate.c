@@ -1,11 +1,7 @@
 /*
- * fwupdate.c - apply firmware updates
+ * Copyright (C) 2014-2018 Red Hat, Inc.
  *
- * Copyright 2014 Red Hat, Inc.
- *
- * See "COPYING" for license terms.
- *
- * Author: Peter Jones <pjones@redhat.com>
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include <efi.h>

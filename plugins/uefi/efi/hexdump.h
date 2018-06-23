@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2015-2016 Peter Jones <pjones@redhat.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
 #ifndef STATIC_HEXDUMP_H
 #define STATIC_HEXDUMP_H
 

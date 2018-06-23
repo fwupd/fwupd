@@ -1,12 +1,9 @@
 /*
- * fwup-efi.h: shared structures between the linux frontend and the efi backend.
+ * Copyright (C) 2015-2017 Peter Jones <pjones@redhat.com>
  *
- * Copyright 2015 Red Hat, Inc.
- *
- * See "COPYING" for license terms.
- *
- * Author: Peter Jones <pjones@redhat.com>
+ * SPDX-License-Identifier: LGPL-2.1+
  */
+
 #ifndef _FWUP_EFI_H
 #define _FWUP_EFI_H
 
