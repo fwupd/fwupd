@@ -179,7 +179,6 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 		.guid = efi_guid_ux_capsule,
 	};
 	g_autofree gchar *fn = NULL;
-	g_autofree guint8 *buf = NULL;
 	g_autoptr(GFile) ofile = NULL;
 	g_autoptr(GOutputStream) ostream = NULL;
 
