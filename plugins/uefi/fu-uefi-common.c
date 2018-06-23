@@ -52,26 +52,21 @@ gchar *
 fu_uefi_bootmgr_get_esp_app_path (const gchar *esp_mountpoint, const gchar *cmd)
 {
 	g_autofree gchar *base = fu_uefi_get_full_esp_path (esp_mountpoint);
-
 	return g_strdup_printf ("%s/%s%s.efi",
-				base,
-				cmd, fu_uefi_bootmgr_get_suffix ());
+				base, cmd, fu_uefi_bootmgr_get_suffix ());
 }
 
 gchar *
 fu_uefi_bootmgr_get_source_path (void)
 {
 	const gchar *extension = "";
-
 	if (fu_uefi_secure_boot_enabled ())
 		extension = ".signed";
-
 	return g_strdup_printf ("%s/fwup%s.efi%s",
 				EFI_APP_LOCATION,
 				fu_uefi_bootmgr_get_suffix (),
 				extension);
 }
-
 
 gboolean
 fu_uefi_get_framebuffer_size (guint32 *width, guint32 *height, GError **error)
