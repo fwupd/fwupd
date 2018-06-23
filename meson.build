@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.0.9',
+  version : '1.1.0',
   license : 'LGPL-2.1+',
   meson_version : '>=0.43.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -207,9 +207,9 @@ endif
 
 if get_option('plugin_uefi')
   efivar = dependency('efivar', version : '>= 33')
+  conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
   efiboot = dependency('efiboot')
   popt = dependency('popt')
-  conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
   objcopy = find_program ('objcopy')
   readelf = find_program ('readelf')
 
