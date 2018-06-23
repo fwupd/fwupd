@@ -303,7 +303,6 @@ fu_plugin_uefi_update_splash (FuPlugin *plugin, GError **error)
 	fwup_resource *re = NULL;
 	guint best_idx = G_MAXUINT;
 	guint32 lowest_border_pixels = G_MAXUINT;
-	int rc;
 	guint32 screen_height = 768;
 	guint32 screen_width = 1024;
 	g_autoptr(GBytes) image_bmp = NULL;
@@ -331,14 +330,8 @@ fu_plugin_uefi_update_splash (FuPlugin *plugin, GError **error)
 				     "BGRT is not supported");
 		return FALSE;
 	}
-	rc = fwup_get_ux_capsule_info (&screen_width, &screen_height);
-	if (rc < 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "failed to get BGRT screen size");
+	if (!fu_uefi_get_framebuffer_size (&screen_width, &screen_height, error))
 		return FALSE;
-	}
 	g_debug ("framebuffer size %" G_GUINT32_FORMAT " x%" G_GUINT32_FORMAT,
 		 screen_width, screen_height);
 
