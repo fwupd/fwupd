@@ -667,6 +667,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libsmbios-dev">
+    <distro id="arch">
+      <package>libsmbios</package>
+    </distro>
     <distro id="centos">
       <package>libsmbios-devel</package>
     </distro>
