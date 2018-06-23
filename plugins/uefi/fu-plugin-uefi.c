@@ -16,6 +16,7 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
+#include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 
@@ -31,6 +32,7 @@ struct FuPluginData {
 	gboolean		 ux_capsule;
 	gchar			*esp_path;
 	gint			 esrt_status;
+	FuUefiBgrt		*bgrt;
 };
 
 /* drop when upgrading minimum required version of efivar to 33 */
@@ -47,6 +49,7 @@ fu_plugin_init (FuPlugin *plugin)
 #endif
 	data->ux_capsule = FALSE;
 	data->esp_path = NULL;
+	data->bgrt = fu_uefi_bgrt_new ();
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
 	fu_plugin_add_compile_version (plugin, "com.redhat.fwupdate", LIBFWUP_LIBRARY_VERSION);
 	fu_plugin_add_compile_version (plugin, "com.redhat.efivar", EFIVAR_LIBRARY_VERSION);
@@ -61,6 +64,7 @@ fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_free (data->esp_path);
+	g_object_unref (data->bgrt);
 }
 
 static gchar *
@@ -293,8 +297,9 @@ fu_plugin_uefi_get_splash_data (guint width, guint height, GError **error)
 }
 
 static gboolean
-fu_plugin_uefi_update_splash (GError **error)
+fu_plugin_uefi_update_splash (FuPlugin *plugin, GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	fwup_resource *re = NULL;
 	guint best_idx = G_MAXUINT;
 	guint32 lowest_border_pixels = G_MAXUINT;
@@ -319,6 +324,13 @@ fu_plugin_uefi_update_splash (GError **error)
 	};
 
 	/* get the boot graphics resource table data */
+	if (!fu_uefi_bgrt_get_supported (data->bgrt)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "BGRT is not supported");
+		return FALSE;
+	}
 	rc = fwup_get_ux_capsule_info (&screen_width, &screen_height);
 	if (rc < 0) {
 		g_set_error_literal (error,
@@ -327,7 +339,7 @@ fu_plugin_uefi_update_splash (GError **error)
 				     "failed to get BGRT screen size");
 		return FALSE;
 	}
-	g_debug ("BGRT screen size %" G_GUINT32_FORMAT " x%" G_GUINT32_FORMAT,
+	g_debug ("framebuffer size %" G_GUINT32_FORMAT " x%" G_GUINT32_FORMAT,
 		 screen_width, screen_height);
 
 	/* find the 'best sized' pre-generated image */
@@ -444,7 +456,7 @@ fu_plugin_update (FuPlugin *plugin,
 	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
 
 	if (data->ux_capsule) {
-		if (!fu_plugin_uefi_update_splash (&error_splash)) {
+		if (!fu_plugin_uefi_update_splash (plugin, &error_splash)) {
 			g_warning ("failed to upload UEFI UX capsule text: %s",
 				   error_splash->message);
 		}
@@ -772,9 +784,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	fwup_resource *re;
+	const gchar *str;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(fwup_resource_iter) iter = NULL;
 	g_autofree gchar *name = NULL;
-	const gchar *ux_capsule_str = "Disabled";
 
 	/* create a dummy device so we can unlock the feature */
 	if (data->esrt_status == FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK) {
@@ -806,10 +819,11 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* for debugging problems later */
 	fu_plugin_uefi_test_secure_boot (plugin);
-	if (data->ux_capsule)
-		ux_capsule_str = "Enabled";
-	g_debug ("UX Capsule support : %s", ux_capsule_str);
-	fu_plugin_add_report_metadata (plugin, "UEFIUXCapsule", ux_capsule_str);
+	if (!fu_uefi_bgrt_setup (data->bgrt, &error_local))
+		g_debug ("BGRT setup failed: %s", error_local->message);
+	str = fu_uefi_bgrt_get_supported (data->bgrt) ? "Enabled" : "Disabled";
+	g_debug ("UX Capsule support : %s", str);
+	fu_plugin_add_report_metadata (plugin, "UEFIUXCapsule", str);
 
 	return TRUE;
 }
