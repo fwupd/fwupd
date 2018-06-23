@@ -339,6 +339,24 @@
       <package />
     </distro>
   </dependency>
+  <dependency type="build" id="gnu-efi-devel">
+    <distro id="arch">
+      <package>gnu-efi-libs</package>
+    </distro>
+    <distro id="centos">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64">gnu-efi</package>
+      <package variant="i386">gnu-efi</package>
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64">gnu-efi</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="gir1.2-appstreamglib-1.0">
     <distro id="debian">
       <package variant="x86_64" />

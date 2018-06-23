@@ -63,6 +63,7 @@ BuildRequires: freetype
 BuildRequires: fontconfig
 BuildRequires: dejavu-sans-fonts
 BuildRequires: adobe-source-han-sans-cn-fonts
+BuildRequires: gnu-efi-devel
 %endif
 
 %if 0%{?have_dell}
@@ -191,6 +192,9 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %{_libexecdir}/fwupd/fwupdtool
+%if 0%{?have_uefi}
+%{_libexecdir}/fwupd/efi/*.efi
+%endif
 %{_bindir}/dfu-tool
 %{_bindir}/fwupdmgr
 %dir %{_sysconfdir}/fwupd
