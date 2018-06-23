@@ -39,19 +39,17 @@ configure_file(
 
 if get_option('tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')
-#  cargs += '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"'
-#  cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'uefi-self-test',
     sources : [
       'fu-self-test.c',
-      'fu-ucs2.c',
       'fu-uefi-bgrt.c',
       'fu-uefi-bootmgr.c',
       'fu-uefi-common.c',
       'fu-uefi-device.c',
       'fu-uefi-device-info.c',
+      'fu-ucs2.c',
     ],
     include_directories : [
       include_directories('../..'),
