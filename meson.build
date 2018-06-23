@@ -220,7 +220,7 @@ if get_option('plugin_uefi')
 endif
 
 if get_option('plugin_dell')
-  libsmbios_c = dependency('libsmbios_c', version : '>= 2.3.0')
+  libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0')
   efivar = dependency('efivar')
   fwup = dependency('fwup', version : '>= 5')
   conf.set('HAVE_DELL', '1')
