@@ -605,13 +605,8 @@ fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
 		fu_device_set_version_lowest (dev, version_lowest);
 	}
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-	if (g_file_test ("/sys/firmware/efi/efivars", G_FILE_TEST_IS_DIR) ||
-	    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR)) {
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	} else {
-		g_warning ("Kernel support for EFI variables missing");
-	}
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (uefi_type == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
 		/* nothing better in the icon naming spec */
@@ -725,6 +720,29 @@ _efi_get_variable_exists (efi_guid_t guid, const char *name)
 	return efi_get_variable_attributes (guid, name, &unused_attrs);
 }
 
+static gboolean
+fu_plugin_uefi_check_efivars (GError **error)
+{
+	g_autofree gchar *sysfsfwdir = NULL;
+	g_autofree gchar *efivardir = NULL;
+	g_autofree gchar *varsdir = NULL;
+
+	/* test if we have kernel EFI support */
+	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	efivardir = g_build_filename (sysfsfwdir, "efi", "efivars", NULL);
+	varsdir = g_build_filename (sysfsfwdir, "efi", "vars", NULL);
+	if (!g_file_test (efivardir, G_FILE_TEST_IS_DIR) &&
+	    !g_file_test (varsdir, G_FILE_TEST_IS_DIR)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "kernel support for EFI variables missing");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
@@ -739,6 +757,10 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 				     "UEFI firmware updating not supported");
 		return FALSE;
 	}
+
+	/* are the EFI dirs set up so we can update each device */
+	if (!fu_plugin_uefi_check_efivars (error))
+		return FALSE;
 
 	/* load any overriden options */
 	if (!fu_plugin_uefi_set_custom_mountpoint (plugin, error))
