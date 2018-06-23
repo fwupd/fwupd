@@ -207,7 +207,8 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 				     boot_next);
 			return FALSE;
 		}
-		boot_next_name = g_strdup_printf ("Boot%04" G_GUINT32_FORMAT, boot_next & 0xffff);
+		boot_next_name = g_strdup_printf ("Boot%04" G_GUINT32_FORMAT "X",
+						  boot_next & 0xffff);
 		rc = efi_set_variable (efi_guid_global, boot_next_name, opt, opt_size,
 				       EFI_VARIABLE_NON_VOLATILE |
 				       EFI_VARIABLE_BOOTSERVICE_ACCESS |
