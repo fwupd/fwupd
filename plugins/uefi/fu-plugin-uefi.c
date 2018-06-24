@@ -700,7 +700,7 @@ fu_plugin_uefi_delete_old_efivars (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-/* remove when https://github.com/rhboot/efivar/pull/100 merged */
+/* remove when bumping minimum efivar to 35 */
 static int
 _efi_get_variable_exists (efi_guid_t guid, const char *name)
 {
