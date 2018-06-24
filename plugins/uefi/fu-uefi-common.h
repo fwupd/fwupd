@@ -44,12 +44,10 @@ typedef struct {
        guint32 capsule_image_size;
 } efi_capsule_header_t;
 
-gchar		*fu_uefi_bootmgr_get_esp_app_path (const gchar	*esp_mountpoint,
+gchar		*fu_uefi_get_esp_app_path	(const gchar	*esp_mountpoint,
 						 const gchar	*cmd,
 						 GError		**error);
-
-gchar		*fu_uefi_bootmgr_get_source_path(GError		**error);
-
+gchar		*fu_uefi_get_built_app_path	(GError		**error);
 gboolean	 fu_uefi_get_bitmap_size	(const guint8	*buf,
 						 gsize		 bufsz,
 						 guint32	*width,

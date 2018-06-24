@@ -61,7 +61,7 @@ fu_uefi_bootmgr_get_suffix (GError **error)
 }
 
 gchar *
-fu_uefi_bootmgr_get_esp_app_path (const gchar *esp_mountpoint, const gchar *cmd, GError **error)
+fu_uefi_get_esp_app_path (const gchar *esp_mountpoint, const gchar *cmd, GError **error)
 {
 	const gchar *suffix = fu_uefi_bootmgr_get_suffix (error);
 	g_autofree gchar *base = NULL;
@@ -72,7 +72,7 @@ fu_uefi_bootmgr_get_esp_app_path (const gchar *esp_mountpoint, const gchar *cmd,
 }
 
 gchar *
-fu_uefi_bootmgr_get_source_path (GError **error)
+fu_uefi_get_built_app_path (GError **error)
 {
 	const gchar *extension = "";
 	const gchar *suffix;
