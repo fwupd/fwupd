@@ -73,7 +73,7 @@ fu_uefi_bootmgr_get_source_path (GError **error)
 			     G_IO_ERROR_NOT_FOUND,
 			     "%s cannot be found",
 			     source_path);
-		return FALSE;
+		return NULL;
 	}
 	return g_steal_pointer (&source_path);
 }
