@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -20,6 +20,7 @@
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
+#include "fu-uefi-vars.h"
 
 #ifndef HAVE_FWUP_GET_ESP_MOUNTPOINT
 #define FWUP_SUPPORTED_STATUS_UNSUPPORTED			0
@@ -663,71 +664,6 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_uefi_delete_old_efivars (FuPlugin *plugin, GError **error)
-{
-	char *name = NULL;
-	efi_guid_t fwupdate_guid = FWUPDATE_GUID;
-	efi_guid_t *guid = NULL;
-	int rc;
-	while ((rc = efi_get_next_variable_name (&guid, &name)) > 0) {
-		if (efi_guid_cmp (guid, &fwupdate_guid) != 0)
-			continue;
-		if (g_str_has_prefix (name, "fwupdate-")) {
-			g_debug ("deleting %s", name);
-			rc = efi_del_variable (fwupdate_guid, name);
-			if (rc < 0) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "failed to delete efi var %s: %s",
-					     name, strerror (errno));
-				return FALSE;
-			}
-		}
-	}
-	if (rc < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "error listing variables: %s",
-			     strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
-}
-
-/* remove when bumping minimum efivar to 35 */
-static int
-_efi_get_variable_exists (efi_guid_t guid, const char *name)
-{
-	uint32_t unused_attrs = 0;
-	return efi_get_variable_attributes (guid, name, &unused_attrs);
-}
-
-static gboolean
-fu_plugin_uefi_check_efivars (GError **error)
-{
-	g_autofree gchar *sysfsfwdir = NULL;
-	g_autofree gchar *efivardir = NULL;
-	g_autofree gchar *varsdir = NULL;
-
-	/* test if we have kernel EFI support */
-	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	efivardir = g_build_filename (sysfsfwdir, "efi", "efivars", NULL);
-	varsdir = g_build_filename (sysfsfwdir, "efi", "vars", NULL);
-	if (!g_file_test (efivardir, G_FILE_TEST_IS_DIR) &&
-	    !g_file_test (varsdir, G_FILE_TEST_IS_DIR)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "kernel support for EFI variables missing");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
 static gchar *
 fu_plugin_uefi_guess_esp (void)
 {
@@ -769,7 +705,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	}
 
 	/* are the EFI dirs set up so we can update each device */
-	if (!fu_plugin_uefi_check_efivars (error))
+	if (!fu_uefi_vars_supported (error))
 		return FALSE;
 
 	/* load any overriden options */
@@ -799,12 +735,12 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	/* delete any existing .cap files to avoid the small ESP partition
 	 * from running out of space when we've done lots of firmware updates
 	 * -- also if the distro has changed the ESP may be different anyway */
-	if (_efi_get_variable_exists (EFI_GLOBAL_GUID, "BootNext") == 0) {
+	if (fu_uefi_vars_exists (FU_UEFI_VARS_GUID_EFI_GLOBAL, "BootNext")) {
 		g_debug ("detected BootNext, not cleaning up");
 	} else {
 		if (!fu_plugin_uefi_delete_old_capsules (plugin, error))
 			return FALSE;
-		if (!fu_plugin_uefi_delete_old_efivars (plugin, error))
+		if (!fu_uefi_vars_delete_with_glob (FU_UEFI_VARS_GUID_FWUPDATE, "fwupdate-*", error))
 			return FALSE;
 	}
 
