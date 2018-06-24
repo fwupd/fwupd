@@ -11,6 +11,7 @@
 #include <fwup.h>
 #include <fcntl.h>
 #include <fnmatch.h>
+#include <gio/gunixmounts.h>
 #include <glib/gi18n.h>
 
 #include "fu-plugin.h"
@@ -34,6 +35,13 @@ struct FuPluginData {
 	gint			 esrt_status;
 	FuUefiBgrt		*bgrt;
 };
+
+#ifndef HAVE_GIO_2_55_0
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
+#pragma clang diagnostic pop
+#endif
 
 /* drop when upgrading minimum required version of efivar to 33 */
 #if !defined (efi_guid_ux_capsule)
@@ -720,6 +728,31 @@ fu_plugin_uefi_check_efivars (GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_plugin_uefi_guess_esp (void)
+{
+	const gchar *paths[] = {"/boot/efi", "/boot", "/efi", NULL};
+	const gchar *path_tmp;
+
+	/* for the test suite use local directory for ESP */
+	path_tmp = g_getenv ("FWUPD_UEFI_ESP_PATH");
+	if (path_tmp != NULL)
+		return g_strdup (path_tmp);
+
+	for (guint i = 0; paths[i] != NULL; i++) {
+		g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (paths[i], NULL);
+		if (mount == NULL)
+			continue;
+		if (g_unix_mount_is_readonly (mount)) {
+			g_debug ("%s is read only", paths[i]);
+			continue;
+		}
+		return g_strdup (paths[i]);
+	}
+
+	return NULL;
+}
+
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
@@ -749,9 +782,19 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		data->esp_path = g_strdup (fwup_get_esp_mountpoint ());
 #endif
 
-	/* fall back to a sane default */
-	if (data->esp_path == NULL)
-		data->esp_path = g_strdup ("/boot/efi");
+	/* try to guess from heuristics */
+	if (data->esp_path == NULL) {
+		data->esp_path = fu_plugin_uefi_guess_esp ();
+		if (data->esp_path == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Unable to determine EFI system partition "
+				     "location, override in %s.conf",
+				     fu_plugin_get_name (plugin));
+			return FALSE;
+		}
+	}
 
 	/* delete any existing .cap files to avoid the small ESP partition
 	 * from running out of space when we've done lots of firmware updates
