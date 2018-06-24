@@ -618,6 +618,12 @@ fu_plugin_uefi_guess_esp (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *paths[] = {"/boot/efi", "/boot", "/efi", NULL};
+
+	if (g_getenv ("FWUPD_UEFI_IN_TESTS") != NULL) {
+		data->esp_path = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+		return TRUE;
+	}
+
 	for (guint i = 0; paths[i] != NULL; i++) {
 		g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (paths[i], NULL);
 		if (mount == NULL)
