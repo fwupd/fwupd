@@ -578,7 +578,7 @@ fu_plugin_uefi_delete_old_efivars (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-/* remove when https://github.com/rhboot/efivar/pull/100 merged */
+/* remove when bumping minimum efivar to 35 */
 static int
 _efi_get_variable_exists (efi_guid_t guid, const char *name)
 {
@@ -619,6 +619,7 @@ fu_plugin_uefi_guess_esp (FuPlugin *plugin, GError **error)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *paths[] = {"/boot/efi", "/boot", "/efi", NULL};
 
+	/* for the test suite use local directory for ESP */
 	if (g_getenv ("FWUPD_UEFI_IN_TESTS") != NULL) {
 		data->esp_path = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 		return TRUE;
