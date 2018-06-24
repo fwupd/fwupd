@@ -22,6 +22,7 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-device-info.h"
+#include "fu-uefi-vars.h"
 
 struct FuPluginData {
 	gchar			*esp_path;
@@ -578,41 +579,6 @@ fu_plugin_uefi_delete_old_efivars (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-/* remove when bumping minimum efivar to 35 */
-static int
-_efi_get_variable_exists (efi_guid_t guid, const char *name)
-{
-	uint32_t unused_attrs = 0;
-	return efi_get_variable_attributes (guid, name, &unused_attrs);
-}
-
-static gboolean
-fu_plugin_uefi_check_efivars (GError **error)
-{
-	g_autofree gchar *sysfsfwdir = NULL;
-	g_autofree gchar *efivardir = NULL;
-	g_autofree gchar *varsdir = NULL;
-
-	/* running in test suite */
-	if (g_getenv ("FWUPD_UEFI_IN_TESTS") != NULL)
-		return TRUE;
-
-	/* test if we have kernel EFI support */
-	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	efivardir = g_build_filename (sysfsfwdir, "efi", "efivars", NULL);
-	varsdir = g_build_filename (sysfsfwdir, "efi", "vars", NULL);
-	if (!g_file_test (efivardir, G_FILE_TEST_IS_DIR) &&
-	    !g_file_test (varsdir, G_FILE_TEST_IS_DIR)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "kernel support for EFI variables missing");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
 static gboolean
 fu_plugin_uefi_guess_esp (FuPlugin *plugin, GError **error)
 {
@@ -647,7 +613,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	const gchar *key = "OverrideESPMountPoint";
 
 	/* are the EFI dirs set up so we can update each device */
-	if (!fu_plugin_uefi_check_efivars (error))
+	if (!fu_uefi_vars_supported (error))
 		return FALSE;
 
 	/* if secure boot is enabled ensure we have a signed fwup.efi */
@@ -689,7 +655,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	 * from running out of space when we've done lots of firmware updates
 	 * -- also if the distro has changed the ESP may be different anyway */
 	if (g_getenv ("FWUPD_UEFI_IN_TESTS") != NULL ||
-	    _efi_get_variable_exists (EFI_GLOBAL_GUID, "BootNext") == 0) {
+	    fu_uefi_vars_exists (FU_UEFI_EFI_GLOBAL_GUID, "BootNext")) {
 		g_debug ("detected BootNext, not cleaning up");
 	} else {
 		if (!fu_plugin_uefi_delete_old_capsules (plugin, error))

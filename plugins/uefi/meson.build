@@ -9,6 +9,7 @@ shared_module('fu_plugin_uefi',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
     'fu-uefi-device-info.c',
+    'fu-uefi-vars.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -41,6 +42,7 @@ if get_option('tests')
       'fu-uefi-common.c',
       'fu-uefi-device.c',
       'fu-uefi-device-info.c',
+      'fu-uefi-vars.c',
       'fu-ucs2.c',
     ],
     include_directories : [
