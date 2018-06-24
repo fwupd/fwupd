@@ -17,7 +17,7 @@
 #include "fwupd-common.h"
 
 static const gchar *
-fu_uefi_bootmgr_get_suffix (void)
+fu_uefi_bootmgr_get_suffix (GError **error)
 {
 	guint64 firmware_bits;
 	struct {
@@ -34,17 +34,29 @@ fu_uefi_bootmgr_get_suffix (void)
 #endif
 		{ 0, NULL }
 	};
-
-	firmware_bits = fu_uefi_read_file_as_uint64 ("/sys/firmware/efi/",
-						     "fw_platform_size");
-	if (firmware_bits == 0)
+	g_autofree gchar *sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	g_autofree gchar *sysfsefidir = g_build_filename (sysfsfwdir, "efi", NULL);
+	firmware_bits = fu_uefi_read_file_as_uint64 (sysfsefidir, "fw_platform_size");
+	if (firmware_bits == 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "%s/fw_platform_size cannot be found",
+			     sysfsefidir);
 		return NULL;
+	}
 	for (guint i = 0; suffixes[i].arch != NULL; i++) {
 		if (firmware_bits != suffixes[i].bits)
 			continue;
 		return suffixes[i].arch;
 	}
 
+	/* this should exist */
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_NOT_FOUND,
+		     "%s/fw_platform_size has unknown value %" G_GUINT64_FORMAT,
+		     sysfsefidir, firmware_bits);
 	return NULL;
 }
 
@@ -53,19 +65,23 @@ fu_uefi_bootmgr_get_esp_app_path (const gchar *esp_mountpoint, const gchar *cmd)
 {
 	g_autofree gchar *base = fu_uefi_get_full_esp_path (esp_mountpoint);
 	return g_strdup_printf ("%s/%s%s.efi",
-				base, cmd, fu_uefi_bootmgr_get_suffix ());
+				base, cmd, fu_uefi_bootmgr_get_suffix (NULL));
 }
 
 gchar *
 fu_uefi_bootmgr_get_source_path (GError **error)
 {
 	const gchar *extension = "";
+	const gchar *suffix;
 	g_autofree gchar *source_path = NULL;
 	if (fu_uefi_secure_boot_enabled ())
 		extension = ".signed";
+	suffix = fu_uefi_bootmgr_get_suffix (error);
+	if (suffix == NULL)
+		return NULL;
 	source_path = g_strdup_printf ("%s/fwup%s.efi%s",
 				       EFI_APP_LOCATION,
-				       fu_uefi_bootmgr_get_suffix (),
+				       suffix,
 				       extension);
 	if (!g_file_test (source_path, G_FILE_TEST_EXISTS)) {
 		g_set_error (error,

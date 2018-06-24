@@ -474,7 +474,6 @@ main (int argc, char **argv)
 	g_autofree gchar *sysfsdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 	g_test_init (&argc, &argv, NULL);
 	g_setenv ("FWUPD_SYSFSFWDIR", TESTDATADIR, TRUE);
-	g_setenv ("FWUPD_ESPBOOTDIR", TESTDATADIR, TRUE);
 	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
 	g_setenv ("FWUPD_UEFI_ESP_PATH", sysfsdir, TRUE);
 
