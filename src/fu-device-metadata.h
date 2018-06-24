@@ -43,4 +43,13 @@
  */
 #define FU_DEVICE_METADATA_DELL_DOCK_TYPE	"Dell::DockType"
 
+/**
+ * FU_DEVICE_METADATA_UEFI_DEVICE_KIND:
+ *
+ * The type of UEFI device, e.g. "system-firmware" or "device-firmware"
+ * Consumed by the uefi plugin when other devices register fake devices that
+ * need to be handled as a capsule update.
+ */
+#define FU_DEVICE_METADATA_UEFI_DEVICE_KIND	"UefiDeviceKind"
+
 #endif /* __FU_DEVICE_METADATA_H__ */

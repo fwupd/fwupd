@@ -61,32 +61,6 @@ parts:
       - -share/
       - -etc/
       - -lib/*.a
-  libfwup-dev:
-    plugin: make
-    #fwupdate 11 FTBFS: see https://github.com/rhboot/fwupdate/pull/113
-    source: https://github.com/rhboot/fwupdate.git
-    source-type: git
-    make-parameters:
-      - EFIDIR=ubuntu
-      - GNUEFIDIR=/usr/lib
-      - LIBDIR=$SNAPCRAFT_STAGE/usr/lib/x86_64-linux-gnu
-      - libdir=/usr/lib/x86_64-linux-gnu
-      - PKG_CONFIG_PATH=$SNAPCRAFT_STAGE/usr/lib/x86_64-linux-gnu/pkgconfig
-      - --eval=export PKG_CONFIG_PATH
-    build-packages:
-      - elfutils
-      - gnu-efi
-      - libasm1
-      - libdw1
-    prime:
-      - -usr/lib/debug
-      - -usr/lib/systemd
-      - -usr/src
-      - -usr/share
-      - -usr/lib/*/pkgconfig
-      - -usr/include
-      - -usr/bin
-    after: [libsmbios, libefivar-fixpkgconfig]
   meson:
     plugin: python
     source: https://github.com/mesonbuild/meson/releases/download/0.46.1/meson-0.46.1.tar.gz
@@ -259,7 +233,7 @@ parts:
       - -usr/share/upstart
       - -usr/lib/*/glib-2.0
       - -usr/lib/*/pkgconfig
-    after: [appstream-glib-dev, libfwup-dev, gudev, gusb]
+    after: [appstream-glib-dev, gudev, gusb]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion

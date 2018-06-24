@@ -811,6 +811,18 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_build_filename (tmp, LOCALSTATEDIR, NULL);
 		return g_build_filename (LOCALSTATEDIR, NULL);
+	/* /sys/firmware */
+	case FU_PATH_KIND_SYSFSDIR_FW:
+		tmp = g_getenv ("FWUPD_SYSFSFWDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/firmware");
+	/* /sys/bus/platform/drivers */
+	case FU_PATH_KIND_SYSFSDIR_DRIVERS:
+		tmp = g_getenv ("FWUPD_SYSFSDRIVERDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/bus/platform/drivers");
 	/* /etc */
 	case FU_PATH_KIND_SYSCONFDIR:
 		tmp = g_getenv ("FWUPD_SYSCONFDIR");

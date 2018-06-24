@@ -167,6 +167,8 @@ gboolean	 fu_device_attach			(FuDevice	*device,
 							 GError		**error);
 gboolean	 fu_device_detach			(FuDevice	*device,
 							 GError		**error);
+void		 fu_device_incorporate			(FuDevice	*self,
+							 FuDevice	*donor);
 
 G_END_DECLS
 
