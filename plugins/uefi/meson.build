@@ -1,4 +1,7 @@
+subdir('efi')
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefi"']
+cargs += '-DEFI_APP_LOCATION_BUILD="' + app.full_path() + '"'
 
 shared_module('fu_plugin_uefi',
   sources : [
@@ -63,5 +66,3 @@ if get_option('tests')
   )
   test('uefi-self-test', e)
 endif
-
-subdir('efi')
