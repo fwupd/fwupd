@@ -644,7 +644,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *key = "OverrideESPMountPoint";
-	g_autofree gchar *sysfsfwdir = NULL;
 
 	/* are the EFI dirs set up so we can update each device */
 	if (!fu_plugin_uefi_check_efivars (error))
