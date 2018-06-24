@@ -579,17 +579,16 @@ fu_plugin_uefi_delete_old_efivars (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_uefi_guess_esp (FuPlugin *plugin, GError **error)
+static gchar *
+fu_plugin_uefi_guess_esp (void)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *paths[] = {"/boot/efi", "/boot", "/efi", NULL};
+	const gchar *path_tmp;
 
 	/* for the test suite use local directory for ESP */
-	if (g_getenv ("FWUPD_UEFI_IN_TESTS") != NULL) {
-		data->esp_path = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-		return TRUE;
-	}
+	path_tmp = g_getenv ("FWUPD_UEFI_ESP_PATH");
+	if (path_tmp != NULL)
+		return g_strdup (path_tmp);
 
 	for (guint i = 0; paths[i] != NULL; i++) {
 		g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (paths[i], NULL);
@@ -599,11 +598,10 @@ fu_plugin_uefi_guess_esp (FuPlugin *plugin, GError **error)
 			g_debug ("%s is read only", paths[i]);
 			continue;
 		}
-		data->esp_path = g_strdup (paths[i]);
-		return TRUE;
+		return g_strdup (paths[i]);
 	}
 
-	return FALSE;
+	return NULL;
 }
 
 gboolean
@@ -639,11 +637,13 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 
 	/* try to guess from heuristics */
 	if (data->esp_path == NULL) {
-		if (!fu_plugin_uefi_guess_esp (plugin, error)) {
+		data->esp_path = fu_plugin_uefi_guess_esp ();
+		if (data->esp_path == NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "Unable to determine EFI system partition location, override using %s in %s.conf",
+				     "Unable to determine EFI system partition "
+				     "location, override using %s in %s.conf",
 				     key, fu_plugin_get_name (plugin));
 			return FALSE;
 		}

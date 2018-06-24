@@ -77,9 +77,6 @@ fu_plugin_dell_tpm_func (void)
 
 	memset (&tpm_out, 0x0, sizeof(tpm_out));
 
-	g_setenv ("FWUPD_UEFI_IN_TESTS", "1", TRUE);
-	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
-
 	plugin_uefi = fu_plugin_new ();
 	ret = fu_plugin_open (plugin_uefi, PLUGINBUILDDIR "/../uefi/libfu_plugin_uefi.so", &error);
 	g_assert_no_error (error);
@@ -266,8 +263,6 @@ fu_plugin_dell_dock_func (void)
 	g_autoptr(FuPlugin) plugin_uefi = fu_plugin_new ();
 	g_autoptr(FuPlugin) plugin_dell = fu_plugin_new ();
 
-	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
-	g_setenv ("FWUPD_UEFI_IN_TESTS", "1", TRUE);
 	ret = fu_plugin_open (plugin_uefi, PLUGINBUILDDIR "/../uefi/libfu_plugin_uefi.so", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -476,9 +471,12 @@ fu_plugin_dell_dock_func (void)
 int
 main (int argc, char **argv)
 {
+	g_autofree gchar *sysfsdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 	g_test_init (&argc, &argv, NULL);
 	g_setenv ("FWUPD_SYSFSFWDIR", TESTDATADIR, TRUE);
 	g_setenv ("FWUPD_ESPBOOTDIR", TESTDATADIR, TRUE);
+	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
+	g_setenv ("FWUPD_UEFI_ESP_PATH", sysfsdir, TRUE);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
