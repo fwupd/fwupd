@@ -316,7 +316,9 @@ fu_uefi_setup_bootnext (const gchar *esp_mountpoint, GError **error)
 		return FALSE;
 
 	/* test to make sure shim is there if we need it */
-	shim_app = fu_uefi_bootmgr_get_esp_app_path (esp_mountpoint, "shim");
+	shim_app = fu_uefi_bootmgr_get_esp_app_path (esp_mountpoint, "shim", error);
+	if (shim_app == NULL)
+		return FALSE;
 	if (!g_file_test (shim_app, G_FILE_TEST_EXISTS)) {
 		if (fu_uefi_secure_boot_enabled ()) {
 			g_set_error_literal (error,
@@ -329,7 +331,9 @@ fu_uefi_setup_bootnext (const gchar *esp_mountpoint, GError **error)
 	}
 
 	/* test if correct asset in place */
-	target_app = fu_uefi_bootmgr_get_esp_app_path (esp_mountpoint, "fwup");
+	target_app = fu_uefi_bootmgr_get_esp_app_path (esp_mountpoint, "fwup", error);
+	if (target_app == NULL)
+		return FALSE;
 	if (!fu_uefi_cmp_asset (source_app, target_app)) {
 		if (!fu_uefi_copy_asset (source_app, target_app, error))
 			return FALSE;
