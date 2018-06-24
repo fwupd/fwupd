@@ -611,18 +611,16 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *key = "OverrideESPMountPoint";
+	g_autofree gchar *bootloader = NULL;
 
 	/* are the EFI dirs set up so we can update each device */
 	if (!fu_uefi_vars_supported (error))
 		return FALSE;
 
 	/* if secure boot is enabled ensure we have a signed fwup.efi */
-	if (g_getenv ("FWUPD_UEFI_IN_TESTS") == NULL) {
-		g_autofree gchar *bootloader = NULL;
-		bootloader = fu_uefi_bootmgr_get_source_path (error);
-		if (bootloader == NULL)
-			return FALSE;
-	}
+	bootloader = fu_uefi_bootmgr_get_source_path (error);
+	if (bootloader == NULL)
+		return FALSE;
 
 	/* load from file */
 	data->esp_path = fu_plugin_get_config_value (plugin, key);
@@ -654,8 +652,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	/* delete any existing .cap files to avoid the small ESP partition
 	 * from running out of space when we've done lots of firmware updates
 	 * -- also if the distro has changed the ESP may be different anyway */
-	if (g_getenv ("FWUPD_UEFI_IN_TESTS") != NULL ||
-	    fu_uefi_vars_exists (FU_UEFI_EFI_GLOBAL_GUID, "BootNext")) {
+	if (fu_uefi_vars_exists (FU_UEFI_EFI_GLOBAL_GUID, "BootNext")) {
 		g_debug ("detected BootNext, not cleaning up");
 	} else {
 		if (!fu_plugin_uefi_delete_old_capsules (plugin, error))
