@@ -11,6 +11,7 @@
 #include <appstream-glib.h>
 #include <fcntl.h>
 #include <fnmatch.h>
+#include <gio/gunixmounts.h>
 #include <glib/gi18n.h>
 #include <efivar.h>
 
@@ -612,6 +613,26 @@ fu_plugin_uefi_check_efivars (GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_uefi_guess_esp (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *paths[] = {"/boot/efi", "/boot", "/efi", NULL};
+	for (guint i = 0; paths[i] != NULL; i++) {
+		g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (paths[i], NULL);
+		if (mount == NULL)
+			continue;
+		if (g_unix_mount_is_readonly (mount)) {
+			g_debug ("%s is read only", paths[i]);
+			continue;
+		}
+		data->esp_path = g_strdup (paths[i]);
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
@@ -634,7 +655,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	/* load from file */
 	data->esp_path = fu_plugin_get_config_value (plugin, key);
 	if (data->esp_path != NULL) {
-		//FIXME: remove OverrideESPMountPoint runtime config?
 		if (!g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -647,9 +667,17 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		}
 	}
 
-	/* fall back to a sane default */
-	if (data->esp_path == NULL)
-		data->esp_path = fu_common_get_path (FU_PATH_KIND_ESPDIR);
+	/* try to guess from heuristics */
+	if (data->esp_path == NULL) {
+		if (!fu_plugin_uefi_guess_esp (plugin, error)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Unable to determine EFI system partition location, override using %s in %s.conf",
+				     key, fu_plugin_get_name (plugin));
+			return FALSE;
+		}
+	}
 
 	/* delete any existing .cap files to avoid the small ESP partition
 	 * from running out of space when we've done lots of firmware updates

@@ -283,7 +283,6 @@ conf.set_quoted('PLUGINDIR', plugin_dir)
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set_quoted('VERSION', meson.project_version())
-conf.set_quoted('EFIDIR', get_option('bootdir'))
 conf.set_quoted('LOCALEDIR', localedir)
 configure_file(
   output : 'config.h',

@@ -25,16 +25,8 @@ shared_module('fu_plugin_uefi',
   ],
 )
 
-con2 = configuration_data()
-con2.set('bootdir', get_option('bootdir'))
-
-# replace @bootdir@
-configure_file(
-  input : 'uefi.conf.in',
-  output : 'uefi.conf',
-  configuration : con2,
-  install: true,
-  install_dir : join_paths(sysconfdir, 'fwupd')
+install_data(['uefi.conf'],
+  install_dir:  join_paths(sysconfdir, 'fwupd')
 )
 
 if get_option('tests')
