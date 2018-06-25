@@ -14,7 +14,11 @@
 
 G_BEGIN_DECLS
 
-typedef struct  __attribute__((__packed__)) {
+#define EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET	0x00010000
+#define EFI_CAPSULE_HEADER_FLAGS_POPULATE_SYSTEM_TABLE	0x00020000
+#define EFI_CAPSULE_HEADER_FLAGS_INITIATE_RESET		0x00040000
+
+typedef struct __attribute__((__packed__)) {
 	guint16		 year;
 	guint8		 month;
 	guint8		 day;
@@ -28,7 +32,24 @@ typedef struct  __attribute__((__packed__)) {
 	guint8		 pad2;
 } efi_time_t;
 
-typedef struct  __attribute__((__packed__)) {
+typedef struct __attribute__((__packed__)) {
+	efi_guid_t	 guid;
+	guint32		 header_size;
+	guint32		 flags;
+	guint32		 capsule_image_size;
+} efi_capsule_header_t;
+
+typedef struct __attribute__((__packed__)) {
+	guint8		 version;
+	guint8		 checksum;
+	guint8		 image_type;
+	guint8		 reserved;
+	guint32		 mode;
+	guint32		 x_offset;
+	guint32		 y_offset;
+} efi_ux_capsule_header_t;
+
+typedef struct __attribute__((__packed__)) {
 	guint32		 update_info_version;
 	efi_guid_t	 guid;
 	guint32		 capsule_flags;
@@ -46,6 +67,7 @@ gboolean	 fu_uefi_get_framebuffer_size	(guint32	*width,
 						 guint32	*height,
 						 GError		**error);
 gboolean	 fu_uefi_secure_boot_enabled	(void);
+gchar		*fu_uefi_get_esp_path_for_os	(const gchar	*esp_path);
 GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 						 GError		**error);
 guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,

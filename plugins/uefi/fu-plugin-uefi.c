@@ -1,6 +1,7 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
  * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Peter Jones <pjones@redhat.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -31,7 +32,6 @@
 #endif
 
 struct FuPluginData {
-	gboolean		 ux_capsule;
 	gchar			*esp_path;
 	gint			 esrt_status;
 	FuUefiBgrt		*bgrt;
@@ -44,11 +44,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
 #pragma clang diagnostic pop
 #endif
 
-/* drop when upgrading minimum required version of efivar to 33 */
-#if !defined (efi_guid_ux_capsule)
-#define efi_guid_ux_capsule EFI_GUID(0x3b8c8162,0x188c,0x46a4,0xaec9,0xbe,0x43,0xf1,0xd6,0x56,0x97)
-#endif
-
 void
 fu_plugin_init (FuPlugin *plugin)
 {
@@ -56,7 +51,6 @@ fu_plugin_init (FuPlugin *plugin)
 #ifdef HAVE_FWUP_VERSION
 	g_autofree gchar *version_str = NULL;
 #endif
-	data->ux_capsule = FALSE;
 	data->esp_path = NULL;
 	data->bgrt = fu_uefi_bgrt_new ();
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
@@ -291,10 +285,80 @@ fu_plugin_uefi_get_splash_data (guint width, guint height, GError **error)
 }
 
 static gboolean
+fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	guint32 screen_x, screen_y;
+	gsize buf_size = g_bytes_get_size (blob);
+	gssize size;
+	guint32 height, width;
+	efi_ux_capsule_header_t header;
+	efi_capsule_header_t capsule_header = {
+		.flags = EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET,
+		.guid = efi_guid_ux_capsule,
+		.header_size = sizeof(efi_capsule_header_t),
+		.capsule_image_size = 0
+	};
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *directory = NULL;
+	g_autofree gchar *basename = NULL;
+	g_autoptr(GFile) ofile = NULL;
+	g_autoptr(GOutputStream) ostream = NULL;
+
+	/* get screen dimensions */
+	if (!fu_uefi_get_framebuffer_size (&screen_x, &screen_y, error))
+		return FALSE;
+	if (!fu_uefi_get_bitmap_size ((const guint8 *) g_bytes_get_data (blob, NULL),
+				      buf_size, &width, &height, error)) {
+		g_prefix_error (error, "splash invalid: ");
+		return FALSE;
+	}
+
+	/* save to a predicatable filename */
+	directory = fu_uefi_get_esp_path_for_os (data->esp_path);
+	basename = g_strdup_printf ("fwupdate-%s.cap", FU_UEFI_VARS_GUID_UX_CAPSULE);
+	fn = g_build_filename (directory, "fw", basename, NULL);
+	if (!fu_common_mkdir_parent (fn, error))
+		return FALSE;
+	ofile = g_file_new_for_path (fn);
+	ostream = G_OUTPUT_STREAM (g_file_replace (ofile, NULL, FALSE,
+				   G_FILE_CREATE_NONE, NULL, error));
+	if (ostream == NULL)
+		return FALSE;
+
+	capsule_header.capsule_image_size =
+		g_bytes_get_size (blob) +
+		sizeof(efi_capsule_header_t) +
+		sizeof(header);
+
+	memset (&header, '\0', sizeof(header));
+	header.version = 1;
+	header.image_type = 0;
+	header.reserved = 0;
+	header.x_offset = (screen_x / 2) - (width / 2);
+	header.y_offset = fu_uefi_bgrt_get_yoffset (data->bgrt) +
+				fu_uefi_bgrt_get_height (data->bgrt);
+
+	/* write capsule file */
+	size = g_output_stream_write (ostream, &capsule_header,
+				      capsule_header.header_size, NULL, error);
+	if (size < 0)
+		return FALSE;
+	size = g_output_stream_write (ostream, &header, sizeof(header), NULL, error);
+	if (size < 0)
+		return FALSE;
+	size = g_output_stream_write_bytes (ostream, blob, NULL, error);
+	if (size < 0)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_plugin_uefi_update_splash (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	fwup_resource *re = NULL;
 	guint best_idx = G_MAXUINT;
 	guint32 lowest_border_pixels = G_MAXUINT;
 	guint32 screen_height = 768;
@@ -363,7 +427,7 @@ fu_plugin_uefi_update_splash (FuPlugin *plugin, GError **error)
 		return FALSE;
 
 	/* perform the upload */
-	return fu_plugin_uefi_update_resource (re, 0, image_bmp, error);
+	return fu_plugin_uefi_write_splash_data (plugin, image_bmp, error);
 }
 
 static gboolean
@@ -397,7 +461,6 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
 	fwup_resource *re = NULL;
 	guint64 hardware_instance = 0;	/* FIXME */
 	g_autoptr(fwup_resource_iter) iter = NULL;
@@ -441,12 +504,9 @@ fu_plugin_update (FuPlugin *plugin,
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
 	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
-
-	if (data->ux_capsule) {
-		if (!fu_plugin_uefi_update_splash (plugin, &error_splash)) {
-			g_warning ("failed to upload UEFI UX capsule text: %s",
-				   error_splash->message);
-		}
+	if (!fu_plugin_uefi_update_splash (plugin, &error_splash)) {
+		g_debug ("failed to upload UEFI UX capsule text: %s",
+			 error_splash->message);
 	}
 	if (!fu_plugin_uefi_update_resource (re, hardware_instance, blob_fw, error))
 		return FALSE;
