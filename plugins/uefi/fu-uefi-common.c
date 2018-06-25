@@ -151,6 +151,22 @@ fu_uefi_get_esrt_entry_paths (const gchar *esrt_path, GError **error)
 	return entries;
 }
 
+gchar *
+fu_uefi_get_esp_path_for_os (const gchar *esp_path)
+{
+	const gchar *os_release_id = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GHashTable) os_release = fwupd_get_os_release (&error_local);
+	if (os_release != NULL) {
+		os_release_id = g_hash_table_lookup (os_release, "ID");
+	} else {
+		g_debug ("failed to get ID: %s", error_local->message);
+	}
+	if (os_release_id == NULL)
+		os_release_id = "unknown";
+	return g_build_filename (esp_path, "EFI", os_release_id, NULL);
+}
+
 guint64
 fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 {
