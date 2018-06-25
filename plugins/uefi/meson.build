@@ -25,7 +25,6 @@ shared_module('fu_plugin_uefi',
     plugin_deps,
     efivar,
     efiboot,
-    fwup,
   ],
 )
 
@@ -56,7 +55,6 @@ if get_option('tests')
       plugin_deps,
       efivar,
       efiboot,
-      fwup,
     ],
     link_with : [
       fwupd,
