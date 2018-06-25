@@ -29,6 +29,13 @@ struct FuPluginData {
 	FuUefiBgrt		*bgrt;
 };
 
+#ifndef HAVE_GIO_2_55_0
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
+#pragma clang diagnostic pop
+#endif
+
 /* drop when upgrading minimum required version of efivar to 33 */
 #if !defined (efi_guid_ux_capsule)
 #define efi_guid_ux_capsule EFI_GUID(0x3b8c8162,0x188c,0x46a4,0xaec9,0xbe,0x43,0xf1,0xd6,0x56,0x97)
