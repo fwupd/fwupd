@@ -23,14 +23,6 @@
 #include "fu-uefi-device.h"
 #include "fu-uefi-vars.h"
 
-#ifndef HAVE_FWUP_GET_ESP_MOUNTPOINT
-#define FWUP_SUPPORTED_STATUS_UNSUPPORTED			0
-#define FWUP_SUPPORTED_STATUS_UNLOCKED				1
-#define FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK			2
-#define FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK_NEXT_BOOT	3
-#define FWUPDATE_GUID EFI_GUID(0x0abba7dc,0xe516,0x4167,0xbbf5,0x4d,0x9d,0x1c,0x73,0x94,0x16)
-#endif
-
 struct FuPluginData {
 	gchar			*esp_path;
 	gint			 esrt_status;
@@ -549,29 +541,6 @@ fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind d
 	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 }
 
-gboolean
-fu_plugin_unlock (FuPlugin *plugin,
-			 FuDevice *device,
-			 GError **error)
-{
-	gint rc;
-	g_debug ("unlocking UEFI device %s", fu_device_get_id (device));
-	rc = fwup_enable_esrt();
-	if (rc <= 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "failed to unlock UEFI device");
-		return FALSE;
-	} else if (rc == 1)
-		g_debug ("UEFI device is already unlocked");
-	else if (rc == 2)
-		g_debug ("Successfully unlocked UEFI device");
-	else if (rc == 3)
-		g_debug ("UEFI device will be unlocked on next reboot");
-	return TRUE;
-}
-
 static const gchar *
 fu_plugin_uefi_uefi_type_to_string (FuUefiDeviceKind device_kind)
 {
@@ -783,25 +752,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) entries = NULL;
 	g_autofree gchar *esrt_path = NULL;
-	g_autofree gchar *name = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
-
-	/* create a dummy device so we can unlock the feature */
-	if (data->esrt_status == FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK) {
-		g_autoptr(FuDevice) dev = fu_device_new ();
-		name = fu_plugin_uefi_get_name_for_type (plugin,
-							 FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
-		if (name != NULL)
-			fu_device_set_name (dev, name);
-		fu_device_set_id (dev, "UEFI-dummy-dev0");
-		fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
-		fu_device_set_version (dev, "0");
-		fu_device_add_icon (dev, "computer");
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
-		fu_plugin_device_add (plugin, dev);
-		return TRUE;
-	}
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
