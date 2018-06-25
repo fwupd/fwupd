@@ -28,6 +28,38 @@ shared_module('fu_plugin_uefi',
   ],
 )
 
+executable(
+  'fwupdate',
+  resources_src,
+  sources : [
+    'fu-uefi-tool.c',
+    'fu-uefi-bgrt.c',
+    'fu-ucs2.c',
+    'fu-uefi-bootmgr.c',
+    'fu-uefi-common.c',
+    'fu-uefi-device.c',
+    'fu-uefi-vars.c',
+  ],
+  include_directories : [
+    include_directories('../..'),
+    include_directories('../../src'),
+    include_directories('../../libfwupd'),
+  ],
+  dependencies : [
+    giounix,
+    gusb,
+    efivar,
+    efiboot,
+  ],
+  link_with : [
+    fwupd,
+    libfwupdprivate,
+  ],
+  install : true,
+  install_dir : join_paths(libexecdir, 'fwupd'),
+  c_args : cargs,
+)
+
 install_data(['uefi.conf'],
   install_dir:  join_paths(sysconfdir, 'fwupd')
 )

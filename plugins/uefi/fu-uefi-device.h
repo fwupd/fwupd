@@ -40,6 +40,7 @@ typedef enum {
 	FU_UEFI_DEVICE_STATUS_LAST
 } FuUefiDeviceStatus;
 
+FuUefiDevice	*fu_uefi_device_new_from_guid		(const gchar	*guid);
 FuUefiDevice	*fu_uefi_device_new_from_entry		(const gchar	*entry_path);
 FuUefiDevice	*fu_uefi_device_new_from_dev		(FuDevice	*dev);
 gboolean	 fu_uefi_device_clear_status		(FuUefiDevice	*self,
