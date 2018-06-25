@@ -166,6 +166,11 @@ parts:
     prime:
       - -usr/include/
       - -usr/lib
+  #fetch the latest version of the signed bootloader
+  #this might not match our fwupx64.efi, but it's better than nothing
+  fwup-efi-signed:
+    plugin: make
+    source: contrib/snap/fwup-efi-signed
   fwupd:
     plugin: meson
     meson-parameters: [--prefix=/usr,
