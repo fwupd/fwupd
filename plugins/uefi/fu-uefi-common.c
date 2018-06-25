@@ -18,6 +18,89 @@
 #include "fwupd-common.h"
 #include "fwupd-error.h"
 
+static const gchar *
+fu_uefi_bootmgr_get_suffix (GError **error)
+{
+	guint64 firmware_bits;
+	struct {
+		guint64 bits;
+		const gchar *arch;
+	} suffixes[] = {
+#if defined(__x86_64__)
+		{ 64, "x64" },
+#elif defined(__aarch64__)
+		{ 64, "aa64" },
+#endif
+#if defined(__x86_64__) || defined(__i386__) || defined(__i686__)
+		{ 32, "ia32" },
+#endif
+		{ 0, NULL }
+	};
+	g_autofree gchar *sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	g_autofree gchar *sysfsefidir = g_build_filename (sysfsfwdir, "efi", NULL);
+	firmware_bits = fu_uefi_read_file_as_uint64 (sysfsefidir, "fw_platform_size");
+	if (firmware_bits == 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "%s/fw_platform_size cannot be found",
+			     sysfsefidir);
+		return NULL;
+	}
+	for (guint i = 0; suffixes[i].arch != NULL; i++) {
+		if (firmware_bits != suffixes[i].bits)
+			continue;
+		return suffixes[i].arch;
+	}
+
+	/* this should exist */
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_NOT_FOUND,
+		     "%s/fw_platform_size has unknown value %" G_GUINT64_FORMAT,
+		     sysfsefidir, firmware_bits);
+	return NULL;
+}
+
+gchar *
+fu_uefi_get_esp_app_path (const gchar *esp_path, const gchar *cmd, GError **error)
+{
+	const gchar *suffix = fu_uefi_bootmgr_get_suffix (error);
+	g_autofree gchar *base = NULL;
+	if (suffix == NULL)
+		return NULL;
+	base = fu_uefi_get_esp_path_for_os (esp_path);
+	return g_strdup_printf ("%s/%s%s.efi", base, cmd, suffix);
+}
+
+gchar *
+fu_uefi_get_built_app_path (GError **error)
+{
+	const gchar *extension = "";
+	const gchar *suffix;
+	g_autofree gchar *source_path = NULL;
+	if (fu_uefi_secure_boot_enabled ())
+		extension = ".signed";
+	if (g_file_test (EFI_APP_LOCATION_BUILD, G_FILE_TEST_EXISTS))
+		return g_strdup_printf ("%s%s", EFI_APP_LOCATION_BUILD, extension);
+	suffix = fu_uefi_bootmgr_get_suffix (error);
+	if (suffix == NULL)
+		return NULL;
+	source_path = g_strdup_printf ("%s/fwup%s.efi%s",
+				       EFI_APP_LOCATION,
+				       suffix,
+				       extension);
+	if (!g_file_test (source_path, G_FILE_TEST_EXISTS)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "%s cannot be found",
+			     source_path);
+		return NULL;
+	}
+	return g_steal_pointer (&source_path);
+}
+
 gboolean
 fu_uefi_get_framebuffer_size (guint32 *width, guint32 *height, GError **error)
 {
@@ -179,3 +262,28 @@ fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 	return g_ascii_strtoull (data, NULL, 10);
 }
 
+gboolean
+fu_uefi_prefix_efi_errors (GError **error)
+{
+	g_autoptr(GString) str = g_string_new (NULL);
+	gint rc = 1;
+	for (gint i = 0; rc > 0; i++) {
+		gchar *filename = NULL;
+		gchar *function = NULL;
+		gchar *message = NULL;
+		gint line = 0;
+		gint err = 0;
+
+		rc = efi_error_get (i, &filename, &function, &line,
+				    &message, &err);
+		if (rc <= 0)
+			break;
+		g_string_append_printf (str, "{error #%d} %s:%d %s(): %s: %s\t",
+					i, filename, line, function,
+					message, strerror (err));
+	}
+	if (str->len > 1)
+		g_string_truncate (str, str->len - 1);
+	g_prefix_error (error, "%s: ", str->str);
+	return FALSE;
+}

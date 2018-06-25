@@ -221,6 +221,7 @@ if get_option('plugin_uefi')
 
   efivar = dependency('efivar')
   conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
+  efiboot = dependency('efiboot')
   objcopy = find_program ('objcopy')
   readelf = find_program ('readelf')
 

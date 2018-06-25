@@ -62,60 +62,6 @@ fu_plugin_destroy (FuPlugin *plugin)
 	g_object_unref (data->bgrt);
 }
 
-static gchar *
-fu_plugin_uefi_guid_to_string (efi_guid_t *guid_raw)
-{
-	g_autofree gchar *guid = g_strdup ("00000000-0000-0000-0000-000000000000");
-	if (efi_guid_to_str (guid_raw, &guid) < 0)
-		return NULL;
-	return g_steal_pointer (&guid);
-}
-
-static fwup_resource *
-fu_plugin_uefi_find_resource (fwup_resource_iter *iter, FuDevice *device, GError **error)
-{
-	efi_guid_t *guid_raw;
-	fwup_resource *re = NULL;
-	g_autofree gchar *guids_str = NULL;
-
-	/* get the hardware we're referencing */
-	while (fwup_resource_iter_next (iter, &re) > 0) {
-		g_autofree gchar *guid_tmp = NULL;
-
-		/* convert to strings */
-		fwup_get_guid (re, &guid_raw);
-		guid_tmp = fu_plugin_uefi_guid_to_string (guid_raw);
-		if (guid_tmp == NULL) {
-			g_warning ("failed to convert guid to string");
-			continue;
-		}
-
-		/* FIXME: also match hardware_instance too */
-		if (fu_device_has_guid (device, guid_tmp))
-			return re;
-	}
-
-	/* paradoxically, no hardware matched */
-	guids_str = fu_device_get_guids_as_str (device);
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_NOT_SUPPORTED,
-		     "No UEFI firmware matched '%s'",
-		     guids_str);
-	return NULL;
-}
-
-static void
-_fwup_resource_iter_free (fwup_resource_iter *iter)
-{
-	fwup_resource_iter_destroy (&iter);
-}
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
-#pragma clang diagnostic pop
-
 gboolean
 fu_plugin_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
@@ -150,46 +96,6 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 					   version_str, tmp);
 	}
 	fu_device_set_update_error (device, err_msg);
-	return TRUE;
-}
-
-static gboolean
-fu_plugin_uefi_update_resource (fwup_resource *re,
-				guint64 hardware_instance,
-				GBytes *blob,
-				GError **error)
-{
-	int rc;
-	rc = fwup_set_up_update_with_buf (re, hardware_instance,
-					  g_bytes_get_data (blob, NULL),
-					  g_bytes_get_size (blob));
-	if (rc < 0) {
-		g_autoptr(GString) str = g_string_new (NULL);
-		rc = 1;
-		for (int i = 0; rc > 0; i++) {
-			char *filename = NULL;
-			char *function = NULL;
-			char *message = NULL;
-			int line = 0;
-			int err = 0;
-
-			rc = efi_error_get (i, &filename, &function, &line,
-					    &message, &err);
-			if (rc <= 0)
-				break;
-			g_string_append_printf (str, "{error #%d} %s:%d %s(): %s: %s\t",
-						i, filename, line, function,
-						message, strerror (err));
-		}
-		if (str->len > 1)
-			g_string_truncate (str, str->len - 1);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "UEFI firmware update failed: %s",
-			     str->str);
-		return FALSE;
-	}
 	return TRUE;
 }
 
@@ -441,20 +347,11 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	fwup_resource *re = NULL;
-	guint64 hardware_instance = 0;	/* FIXME */
-	g_autoptr(fwup_resource_iter) iter = NULL;
 	const gchar *str;
 	guint32 flashes_left;
 	g_autofree gchar *efibootmgr_path = NULL;
 	g_autofree gchar *boot_variables = NULL;
 	g_autoptr(GError) error_splash = NULL;
-
-	/* get the hardware we're referencing */
-	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find_resource (iter, device, error);
-	if (re == NULL)
-		return FALSE;
 
 	/* test the flash counter */
 	flashes_left = fu_device_get_flashes_left (device);
@@ -481,6 +378,7 @@ fu_plugin_update (FuPlugin *plugin,
 	if (!fu_plugin_uefi_esp_mounted (plugin, error))
 		return FALSE;
 
+
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
 	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
@@ -488,7 +386,7 @@ fu_plugin_update (FuPlugin *plugin,
 		g_debug ("failed to upload UEFI UX capsule text: %s",
 			 error_splash->message);
 	}
-	if (!fu_plugin_uefi_update_resource (re, hardware_instance, blob_fw, error))
+	if (!fu_device_write_firmware (device, blob_fw, error))
 		return FALSE;
 
 	/* record boot information to system log for future debugging */
