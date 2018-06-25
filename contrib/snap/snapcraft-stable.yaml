@@ -171,6 +171,18 @@ parts:
   fwup-efi-signed:
     plugin: make
     source: contrib/snap/fwup-efi-signed
+  #needed for UEFI plugin to build UX labels
+  build-introspection:
+    plugin: nil
+    stage-packages:
+      - python3-gi
+      - python3-gi-cairo
+      - python3-pil
+    prime:
+      - -etc
+      - -usr
+      - -lib
+      - -var
   fwupd:
     plugin: meson
     meson-parameters: [--prefix=/usr,
@@ -181,7 +193,6 @@ parts:
                        -Dtests=false,
                        -Ddaemon=false,
                        -Dgtkdoc=false,
-                       -Dplugin_uefi_labels=false,
                        -Dintrospection=false,
                        -Dsystemd=false,
                        -Dman=false,
@@ -250,7 +261,7 @@ parts:
       - -usr/share/upstart
       - -usr/lib/*/glib-2.0
       - -usr/lib/*/pkgconfig
-    after: [appstream-glib-dev, gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios]
+    after: [appstream-glib-dev, gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion

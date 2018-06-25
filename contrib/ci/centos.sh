@@ -8,7 +8,6 @@ cd build
 meson .. \
 	--werror \
 	-Dplugin_uefi=false \
-	-Dplugin_uefi_labels=false \
 	-Dplugin_dell=false \
 	-Dplugin_synaptics=true \
 	-Dintrospection=true \
