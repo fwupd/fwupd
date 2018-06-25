@@ -162,10 +162,22 @@ parts:
     - -usr/lib/*/pkgconfig
     - -usr/lib/*/girepository-1.0
     after: [libusb]
+  gnu-efi:
+    plugin: make
+    source: http://superb-dca2.dl.sourceforge.net/project/gnu-efi/gnu-efi-3.0.5.tar.bz2
+    make-parameters:
+      - PREFIX=/usr
+    make-install-var: INSTALLROOT
+    prime:
+      - -usr/include/
+      - -usr/lib
   fwupd:
     plugin: meson
     meson-parameters: [--prefix=/usr,
                        --libexecdir=/usr/lib,
+                       -Defi-includedir=$SNAPCRAFT_STAGE/usr/include/efi,
+                       -Defi-ldsdir=$SNAPCRAFT_STAGE/usr/lib,
+                       -Defi-libdir=$SNAPCRAFT_STAGE/usr/lib,
                        -Dtests=false,
                        -Ddaemon=false,
                        -Dgtkdoc=false,
@@ -238,7 +250,7 @@ parts:
       - -usr/share/upstart
       - -usr/lib/*/glib-2.0
       - -usr/lib/*/pkgconfig
-    after: [appstream-glib-dev, gudev, gusb]
+    after: [appstream-glib-dev, gudev, gusb, gnu-efi, libsmbios, libefivar-fixpkgconfig]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion
