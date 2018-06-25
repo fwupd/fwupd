@@ -661,31 +661,6 @@ fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_uefi_set_custom_mountpoint (FuPlugin *plugin, GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *key = "OverrideESPMountPoint";
-
-	/* load from file and keep @key ref'd for the lifetime of the plugin as
-	 * libfwupdate does not strdup the value in fwup_set_esp_mountpoint() */
-	data->esp_path = fu_plugin_get_config_value (plugin, key);
-	if (data->esp_path != NULL) {
-		if (!g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Invalid %s specified in %s config: %s",
-				     fu_plugin_get_name (plugin), key,
-				     data->esp_path);
-
-			return FALSE;
-		}
-		fwup_set_esp_mountpoint (data->esp_path);
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
@@ -738,6 +713,7 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *key = "OverrideESPMountPoint";
 
 	/* get the supported status */
 	data->esrt_status = fwup_supported ();
@@ -753,15 +729,19 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	if (!fu_uefi_vars_supported (error))
 		return FALSE;
 
-	/* load any overriden options */
-	if (!fu_plugin_uefi_set_custom_mountpoint (plugin, error))
-		return FALSE;
-
-	/* get the default compiled-in value for the ESP mountpoint */
-#ifdef HAVE_FWUP_GET_ESP_MOUNTPOINT
-	if (data->esp_path == NULL)
-		data->esp_path = g_strdup (fwup_get_esp_mountpoint ());
-#endif
+	/* load from file */
+	data->esp_path = fu_plugin_get_config_value (plugin, key);
+	if (data->esp_path != NULL) {
+		if (!g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Invalid %s specified in %s config: %s",
+				     fu_plugin_get_name (plugin), key,
+				     data->esp_path);
+			return FALSE;
+		}
+	}
 
 	/* try to guess from heuristics */
 	if (data->esp_path == NULL) {
@@ -771,8 +751,8 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "Unable to determine EFI system partition "
-				     "location, override in %s.conf",
-				     fu_plugin_get_name (plugin));
+				     "location, override using %s in %s.conf",
+				     key, fu_plugin_get_name (plugin));
 			return FALSE;
 		}
 	}
