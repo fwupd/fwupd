@@ -10,6 +10,7 @@
 
 #include <efivar.h>
 #include <gio/gio.h>
+#include <gio/gunixmounts.h>
 
 #include "fu-common.h"
 #include "fu-uefi-common.h"
@@ -17,6 +18,13 @@
 
 #include "fwupd-common.h"
 #include "fwupd-error.h"
+
+#ifndef HAVE_GIO_2_55_0
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
+#pragma clang diagnostic pop
+#endif
 
 static const gchar *
 fu_uefi_bootmgr_get_suffix (GError **error)
@@ -260,6 +268,31 @@ fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 	if (g_str_has_prefix (data, "0x"))
 		return g_ascii_strtoull (data + 2, NULL, 16);
 	return g_ascii_strtoull (data, NULL, 10);
+}
+
+gchar *
+fu_uefi_guess_esp_path (void)
+{
+	const gchar *paths[] = {"/boot/efi", "/boot", "/efi", NULL};
+	const gchar *path_tmp;
+
+	/* for the test suite use local directory for ESP */
+	path_tmp = g_getenv ("FWUPD_UEFI_ESP_PATH");
+	if (path_tmp != NULL)
+		return g_strdup (path_tmp);
+
+	for (guint i = 0; paths[i] != NULL; i++) {
+		g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (paths[i], NULL);
+		if (mount == NULL)
+			continue;
+		if (g_unix_mount_is_readonly (mount)) {
+			g_debug ("%s is read only", paths[i]);
+			continue;
+		}
+		return g_strdup (paths[i]);
+	}
+
+	return NULL;
 }
 
 gboolean
