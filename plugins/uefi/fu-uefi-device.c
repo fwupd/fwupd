@@ -452,3 +452,12 @@ fu_uefi_device_new_from_dev (FuDevice *dev)
 	g_assert (self->fw_class != NULL);
 	return self;
 }
+
+FuUefiDevice *
+fu_uefi_device_new_from_guid (const gchar *guid)
+{
+	FuUefiDevice *self;
+	self = g_object_new (FU_TYPE_UEFI_DEVICE, NULL);
+	self->fw_class = g_strdup (guid);
+	return self;
+}

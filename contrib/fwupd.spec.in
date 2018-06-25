@@ -189,6 +189,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libexecdir}/fwupd/fwupdtool
 %if 0%{?have_uefi}
 %{_libexecdir}/fwupd/efi/*.efi
+%{_libexecdir}/fwupd/fwupdate
 %endif
 %{_bindir}/dfu-tool
 %{_bindir}/fwupdmgr
