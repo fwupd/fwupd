@@ -126,42 +126,30 @@ fu_plugin_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
 gboolean
 fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
+	FuUefiDevice *device_uefi = FU_UEFI_DEVICE (device);
+	FuUefiDeviceStatus status = fu_uefi_device_get_status (device_uefi);
 	const gchar *tmp;
-	fwup_resource *re = NULL;
-	guint32 status = 0;
-	guint32 version = 0;
-	time_t when = 0;
-	g_autoptr(fwup_resource_iter) iter = NULL;
+	g_autofree gchar *err_msg = NULL;
+	g_autofree gchar *version_str = NULL;
 
-	/* get the hardware we're referencing */
-	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find_resource (iter, device, error);
-	if (re == NULL)
-		return FALSE;
-	if (fwup_get_last_attempt_info (re, &version, &status, &when) < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Cannot get UEFI status for %s",
-			     fu_device_get_guid_default (device));
-		return FALSE;
-	}
+	/* trivial case */
 	if (status == FU_UEFI_DEVICE_STATUS_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
-	} else {
-		g_autofree gchar *err_msg = NULL;
-		g_autofree gchar *version_str = g_strdup_printf ("%u", version);
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		tmp = fu_uefi_device_status_to_string (status);
-		if (tmp == NULL) {
-			err_msg = g_strdup_printf ("failed to update to %s",
-						   version_str);
-		} else {
-			err_msg = g_strdup_printf ("failed to update to %s: %s",
-						   version_str, tmp);
-		}
-		fu_device_set_update_error (device, err_msg);
+		return TRUE;
 	}
+
+	/* something went wrong */
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+	version_str = g_strdup_printf ("%u", fu_uefi_device_get_version_error (device_uefi));
+	tmp = fu_uefi_device_status_to_string (status);
+	if (tmp == NULL) {
+		err_msg = g_strdup_printf ("failed to update to %s",
+					   version_str);
+	} else {
+		err_msg = g_strdup_printf ("failed to update to %s: %s",
+					   version_str, tmp);
+	}
+	fu_device_set_update_error (device, err_msg);
 	return TRUE;
 }
 
