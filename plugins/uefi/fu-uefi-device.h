@@ -12,6 +12,7 @@
 #include <glib-object.h>
 
 #include "fu-plugin.h"
+#include "fu-uefi-device.h"
 
 G_BEGIN_DECLS
 
@@ -40,6 +41,8 @@ typedef enum {
 } FuUefiDeviceStatus;
 
 FuUefiDevice	*fu_uefi_device_new_from_entry		(const gchar	*entry_path);
+gboolean	 fu_uefi_device_clear_status		(FuUefiDevice	*self,
+							 GError		**error);
 FuUefiDeviceKind fu_uefi_device_get_kind		(FuUefiDevice	*self);
 const gchar	*fu_uefi_device_get_guid		(FuUefiDevice	*self);
 guint32		 fu_uefi_device_get_version		(FuUefiDevice	*self);
@@ -50,6 +53,9 @@ guint64		 fu_uefi_device_get_hardware_instance	(FuUefiDevice	*self);
 FuUefiDeviceStatus fu_uefi_device_get_status		(FuUefiDevice	*self);
 const gchar	*fu_uefi_device_kind_to_string		(FuUefiDeviceKind kind);
 const gchar	*fu_uefi_device_status_to_string	(FuUefiDeviceStatus status);
+gboolean	 fu_uefi_device_get_update_info		(FuUefiDevice	*self,
+							 efi_update_info_t *info,
+							 GError		**error);
 
 G_END_DECLS
 

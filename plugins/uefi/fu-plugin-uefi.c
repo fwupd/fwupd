@@ -133,23 +133,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
 gboolean
 fu_plugin_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	fwup_resource *re = NULL;
-	g_autoptr(fwup_resource_iter) iter = NULL;
-
-	/* get the hardware we're referencing */
-	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find_resource (iter, device, error);
-	if (re == NULL)
-		return FALSE;
-	if (fwup_clear_status (re) < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Cannot create clear UEFI status for %s",
-			     fu_device_get_guid_default (device));
-		return FALSE;
-	}
-	return TRUE;
+	FuUefiDevice *device_uefi = FU_UEFI_DEVICE (device);
+	return fu_uefi_device_clear_status (device_uefi, error);
 }
 
 gboolean
