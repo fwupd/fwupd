@@ -111,23 +111,6 @@
             ]
         },
         {
-            "name": "fwupdate",
-            "buildsystem": "simple",
-            "build-commands": ["make -C linux prefix=/app libdir=/app/lib", "EFIDIR=/boot/efi make -C linux install prefix=/app libdir=/app/lib"],
-            "cleanup": [
-                "/bin/fwupdate",
-                "/lib/systemd/system/fwupdate-cleanup.service",
-                "/libexec/fwupdate/cleanup"
-            ],
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://github.com/rhboot/fwupdate/releases/download/11/fwupdate-11.tar.bz2",
-                    "sha256": "d350eae66215c90fdc70f46ea734dedbfe6006ec21b7e764114b7d9e283e4abe"
-                }
-            ]
-        },
-        {
             "name": "libsmbios_c",
             "config-opts": ["--disable-doxygen",
                             "--disable-graphviz",

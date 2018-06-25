@@ -2491,10 +2491,6 @@ main (int argc, char *argv[])
 			G_USB_MAJOR_VERSION,
 			G_USB_MINOR_VERSION,
 			G_USB_MICRO_VERSION);
-#ifdef LIBFWUP_LIBRARY_VERSION
-		g_print ("\tfwupdate:\t%s\n",
-			LIBFWUP_LIBRARY_VERSION);
-#endif
 #ifdef EFIVAR_LIBRARY_VERSION
 		g_print ("\tefivar:\t%s\n",
 			EFIVAR_LIBRARY_VERSION);

@@ -32,8 +32,7 @@ Package: fwupd
 Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
-Recommends: fwupdate,
-            python3
+Recommends: python3
 Breaks: gir1.2-dfu-1.0 (<< 0.9.7-1),
 	libdfu1 (<< 0.9.7-1),
 	libdfu-dev (<< 0.9.7-1)

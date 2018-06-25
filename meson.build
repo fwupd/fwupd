@@ -209,16 +209,7 @@ if get_option('plugin_altos')
 endif
 
 if get_option('plugin_uefi')
-  fwup = dependency('fwup', version : '>= 10')
-  if fwup.version().version_compare('>= 11')
-    conf.set('HAVE_FWUP_GET_ESP_MOUNTPOINT', '1')
-  endif
-  if fwup.version().version_compare('>= 12')
-    conf.set('HAVE_FWUP_VERSION', '1')
-  endif
-  conf.set_quoted('LIBFWUP_LIBRARY_VERSION', fwup.version())
-
-  efivar = dependency('efivar')
+  efivar = dependency('efivar', version : '>= 33')
   conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
   efiboot = dependency('efiboot')
   objcopy = find_program ('objcopy')
@@ -250,7 +241,6 @@ endif
 if get_option('plugin_dell')
   libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0')
   efivar = dependency('efivar')
-  fwup = dependency('fwup', version : '>= 5')
   conf.set('HAVE_DELL', '1')
   if not get_option('plugin_uefi')
     error('plugin_dell also needs plugin_uefi to work')
