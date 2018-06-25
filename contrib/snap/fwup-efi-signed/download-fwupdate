@@ -1,0 +1,34 @@
+#! /usr/bin/python3
+
+import re
+import shutil
+from urllib.parse import urlparse, urlunparse
+from urllib.request import urlopen
+
+import apt
+import apt_pkg
+
+ARCH_TO_EFI_NAME = {
+    'amd64': 'x64',
+    'i386': 'ia32',
+    'arm64': 'aa64',
+    'armhf': 'arm',
+}
+arch = apt_pkg.config['Apt::Architecture']
+efi_name = ARCH_TO_EFI_NAME[arch]
+cache = apt.Cache()
+fwupdate_efi = cache["fwupdate"].candidate
+pool_parsed = urlparse(fwupdate_efi.uri)
+dists_dir = "/dists/devel/main/uefi/fwupdate-%s/current/" % (
+    fwupdate_efi.architecture)
+
+for base in (
+        "fwup%s.efi.signed" %efi_name,
+        "version",
+        ):
+    dists_parsed = list(pool_parsed)
+    dists_parsed[2] = re.sub(r"/pool/.*", dists_dir + base, dists_parsed[2])
+    dists_uri = urlunparse(dists_parsed)
+    print("Downloading %s ..." % dists_uri)
+    with urlopen(dists_uri) as dists, open(base, "wb") as out:
+        shutil.copyfileobj(dists, out)
