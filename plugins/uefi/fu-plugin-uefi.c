@@ -9,7 +9,6 @@
 #include "config.h"
 
 #include <appstream-glib.h>
-#include <fwup.h>
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <gio/gunixmounts.h>
@@ -25,7 +24,6 @@
 
 struct FuPluginData {
 	gchar			*esp_path;
-	gint			 esrt_status;
 	FuUefiBgrt		*bgrt;
 };
 
@@ -40,18 +38,9 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-#ifdef HAVE_FWUP_VERSION
-	g_autofree gchar *version_str = NULL;
-#endif
-	data->esp_path = NULL;
 	data->bgrt = fu_uefi_bgrt_new ();
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
-	fu_plugin_add_compile_version (plugin, "com.redhat.fwupdate", LIBFWUP_LIBRARY_VERSION);
 	fu_plugin_add_compile_version (plugin, "com.redhat.efivar", EFIVAR_LIBRARY_VERSION);
-#ifdef HAVE_FWUP_VERSION
-	version_str = g_strdup_printf ("%i", fwup_version ());
-	fu_plugin_add_runtime_version (plugin, "com.redhat.fwupdate", version_str);
-#endif
 }
 
 void
@@ -569,19 +558,15 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *key = "OverrideESPMountPoint";
-
-	/* get the supported status */
-	data->esrt_status = fwup_supported ();
-	if (data->esrt_status == FWUP_SUPPORTED_STATUS_UNSUPPORTED) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "UEFI firmware updating not supported");
-		return FALSE;
-	}
+	g_autofree gchar *bootloader = NULL;
 
 	/* are the EFI dirs set up so we can update each device */
 	if (!fu_uefi_vars_supported (error))
+		return FALSE;
+
+	/* if secure boot is enabled ensure we have a signed fwup.efi */
+	bootloader = fu_uefi_get_built_app_path (error);
+	if (bootloader == NULL)
 		return FALSE;
 
 	/* load from file */
