@@ -1,9 +1,14 @@
+subdir('efi')
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefi"']
+cargs += '-DEFI_APP_LOCATION_BUILD="' + app.full_path() + '"'
 
 shared_module('fu_plugin_uefi',
   sources : [
     'fu-plugin-uefi.c',
     'fu-uefi-bgrt.c',
+    'fu-ucs2.c',
+    'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
     'fu-uefi-vars.c',
@@ -18,6 +23,8 @@ shared_module('fu_plugin_uefi',
   c_args : cargs,
   dependencies : [
     plugin_deps,
+    efivar,
+    efiboot,
     fwup,
   ],
 )
@@ -34,6 +41,7 @@ if get_option('tests')
     sources : [
       'fu-self-test.c',
       'fu-uefi-bgrt.c',
+      'fu-uefi-bootmgr.c',
       'fu-uefi-common.c',
       'fu-uefi-device.c',
       'fu-uefi-vars.c',
@@ -46,6 +54,8 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
+      efivar,
+      efiboot,
       fwup,
     ],
     link_with : [
@@ -56,5 +66,3 @@ if get_option('tests')
   )
   test('uefi-self-test', e)
 endif
-
-subdir('efi')

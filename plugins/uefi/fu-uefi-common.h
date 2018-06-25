@@ -18,6 +18,9 @@ G_BEGIN_DECLS
 #define EFI_CAPSULE_HEADER_FLAGS_POPULATE_SYSTEM_TABLE	0x00020000
 #define EFI_CAPSULE_HEADER_FLAGS_INITIATE_RESET		0x00040000
 
+#define EFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE		0x00000001
+#define EFI_UPDATE_INFO_STATUS_ATTEMPTED		0x00000002
+
 typedef struct __attribute__((__packed__)) {
 	guint16		 year;
 	guint8		 month;
@@ -58,6 +61,10 @@ typedef struct __attribute__((__packed__)) {
 	guint32		 status;
 } efi_update_info_t;
 
+gchar		*fu_uefi_get_esp_app_path	(const gchar	*esp_path,
+						 const gchar	*cmd,
+						 GError		**error);
+gchar		*fu_uefi_get_built_app_path	(GError		**error);
 gboolean	 fu_uefi_get_bitmap_size	(const guint8	*buf,
 						 gsize		 bufsz,
 						 guint32	*width,
@@ -72,6 +79,7 @@ GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 						 GError		**error);
 guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,
 						 const gchar	*attr_name);
+gboolean	 fu_uefi_prefix_efi_errors	(GError		**error);
 
 G_END_DECLS
 

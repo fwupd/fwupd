@@ -9,9 +9,12 @@
 #include "config.h"
 
 #include <string.h>
+#include <efivar.h>
+#include <efivar/efiboot.h>
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
+#include "fu-uefi-bootmgr.h"
 #include "fu-uefi-vars.h"
 
 struct _FuUefiDevice {
@@ -225,6 +228,131 @@ fu_uefi_device_clear_status (FuUefiDevice *self, GError **error)
 	return fu_uefi_device_set_efivar (self, data, datasz, error);
 }
 
+static guint8 *
+fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
+{
+	gssize req;
+	gssize sz;
+	g_autofree guint8 *dp_buf = NULL;
+
+	/* get the size of the path first */
+	req = efi_generate_file_device_path (NULL, 0, path,
+					     EFIBOOT_OPTIONS_IGNORE_FS_ERROR |
+					     EFIBOOT_ABBREV_HD);
+	if (req < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "failed to efi_generate_file_device_path(%s)",
+			     path);
+		return FALSE;
+	}
+
+	/* if we just have an end device path, it's not going to work */
+	if (req <= 4) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "failed to get valid device_path for (%s)",
+			     path);
+		return FALSE;
+	}
+
+	/* actually get the path this time */
+	dp_buf = g_malloc0 (req);
+	sz = efi_generate_file_device_path (dp_buf, req, path,
+					    EFIBOOT_OPTIONS_IGNORE_FS_ERROR |
+					    EFIBOOT_ABBREV_HD);
+	if (sz < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "failed to efi_generate_file_device_path(%s)",
+			     path);
+		return FALSE;
+	}
+
+	/* success */
+	if (bufsz != NULL)
+		*bufsz = sz;
+	return g_steal_pointer (&dp_buf);
+}
+
+static gboolean
+fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+{
+	FuUefiDevice *self = FU_UEFI_DEVICE (device);
+	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
+	efi_guid_t guid;
+	efi_update_info_t info;
+	gsize datasz = 0;
+	gsize dp_bufsz = 0;
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *directory = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autofree guint8 *data = NULL;
+	g_autofree guint8 *dp_buf = NULL;
+
+	/* ensure we have the existing state */
+	if (self->fw_class == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "cannot update device info with no GUID");
+		return FALSE;
+	}
+
+	/* save the blob to the ESP */
+	directory = fu_uefi_get_esp_path_for_os (esp_path);
+	basename = g_strdup_printf ("fwupdate-%s.cap", self->fw_class);
+	fn = g_build_filename (directory, "fw", basename, NULL);
+	if (!fu_common_mkdir_parent (fn, error))
+		return FALSE;
+	if (!fu_common_set_contents_bytes (fn, fw, error))
+		return FALSE;
+
+	/* set the blob header shared with fwup.efi */
+	memset (&info, 0x0, sizeof(info));
+	info.status = EFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE;
+	info.capsule_flags = self->capsule_flags;
+	info.update_info_version = 0x7;
+	info.hw_inst = self->fmp_hardware_instance;
+	memcpy (&guid, &info.guid, sizeof(efi_guid_t));
+	if (efi_str_to_guid (self->fw_class, &guid) < 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "failed to get convert GUID");
+		return FALSE;
+	}
+
+	/* set the body as the device path */
+	if (g_getenv ("FWUPD_UEFI_ESP_PATH") == NULL) {
+		dp_buf = fu_uefi_device_build_dp_buf (fn, &dp_bufsz, error);
+		if (dp_buf == NULL) {
+			fu_uefi_prefix_efi_errors (error);
+			return FALSE;
+		}
+	}
+
+	/* save this header and body to the hardware */
+	datasz = sizeof(info) + dp_bufsz;
+	data = g_malloc0 (datasz);
+	memcpy (data, &info, sizeof(info));
+	memcpy (data + sizeof(info), dp_buf, dp_bufsz);
+	if (!fu_uefi_device_set_efivar (self, data, datasz, error)) {
+		fu_uefi_prefix_efi_errors (error);
+		return FALSE;
+	}
+
+	/* update the firmware before the bootloader runs */
+	if (!fu_uefi_bootmgr_bootnext (esp_path, error))
+		return FALSE;
+
+	/* success! */
+	return TRUE;
+}
+
 static void
 fu_uefi_device_init (FuUefiDevice *self)
 {
@@ -247,6 +375,7 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	object_class->finalize = fu_uefi_device_finalize;
 	klass_device->to_string = fu_uefi_device_to_string;
+	klass_device->write_firmware = fu_uefi_device_write_firmware;
 }
 
 FuUefiDevice *
