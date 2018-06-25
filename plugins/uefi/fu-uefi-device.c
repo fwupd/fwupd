@@ -12,6 +12,7 @@
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
+#include "fu-uefi-vars.h"
 
 struct _FuUefiDevice {
 	FuDevice		 parent_instance;
@@ -139,6 +140,89 @@ fu_uefi_device_get_guid (FuUefiDevice *self)
 {
 	g_return_val_if_fail (FU_IS_UEFI_DEVICE (self), NULL);
 	return self->fw_class;
+}
+
+static gchar *
+fu_uefi_device_build_varname (FuUefiDevice *self)
+{
+	return g_strdup_printf ("fwupdate-%s-%"G_GUINT64_FORMAT,
+				self->fw_class,
+				self->fmp_hardware_instance);
+}
+
+static gboolean
+fu_uefi_device_set_efivar (FuUefiDevice *self,
+			   const guint8 *data,
+			   gsize datasz,
+			   GError **error)
+{
+	g_autofree gchar *varname = fu_uefi_device_build_varname (self);
+	return fu_uefi_vars_set_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
+				      data, datasz,
+				      FU_UEFI_VARS_ATTR_NON_VOLATILE |
+				      FU_UEFI_VARS_ATTR_BOOTSERVICE_ACCESS |
+				      FU_UEFI_VARS_ATTR_RUNTIME_ACCESS,
+				      error);
+}
+
+static gboolean
+fu_uefi_device_info_from_databuf (efi_update_info_t *info,
+				  const guint8 *data,
+				  gsize sz,
+				  GError **error)
+{
+	if (sz < sizeof(efi_update_info_t)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "EFI variable is corrupt");
+		return FALSE;
+	}
+	memcpy (info, data, sizeof(efi_update_info_t));
+	return TRUE;
+}
+
+gboolean
+fu_uefi_device_get_update_info (FuUefiDevice *self,
+				efi_update_info_t *info,
+				GError **error)
+{
+	gsize datasz = 0;
+	g_autofree gchar *varname = fu_uefi_device_build_varname (self);
+	g_autofree guint8 *data = NULL;
+
+	g_return_val_if_fail (FU_IS_UEFI_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* get the existing status */
+	if (!fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
+				    &data, &datasz, NULL, error))
+		return FALSE;
+	return fu_uefi_device_info_from_databuf (info, data, datasz, error);
+}
+
+gboolean
+fu_uefi_device_clear_status (FuUefiDevice *self, GError **error)
+{
+	efi_update_info_t info;
+	gsize datasz = 0;
+	g_autofree gchar *varname = fu_uefi_device_build_varname (self);
+	g_autofree guint8 *data = NULL;
+
+	g_return_val_if_fail (FU_IS_UEFI_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* get the existing status */
+	if (!fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
+				    &data, &datasz, NULL, error))
+		return FALSE;
+	if (!fu_uefi_device_info_from_databuf (&info, data, datasz, error))
+		return FALSE;
+
+	/* save it back */
+	info.status = FU_UEFI_DEVICE_STATUS_SUCCESS;
+	memcpy (data, &info, sizeof(info));
+	return fu_uefi_device_set_efivar (self, data, datasz, error);
 }
 
 static void

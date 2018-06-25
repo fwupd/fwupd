@@ -10,8 +10,32 @@
 #define __FU_UEFI_COMMON_H
 
 #include <glib.h>
+#include <efivar.h>
 
 G_BEGIN_DECLS
+
+typedef struct  __attribute__((__packed__)) {
+	guint16		 year;
+	guint8		 month;
+	guint8		 day;
+	guint8		 hour;
+	guint8		 minute;
+	guint8		 second;
+	guint8		 pad1;
+	guint32		 nanosecond;
+	guint16		 timezone;
+	guint8		 daylight;
+	guint8		 pad2;
+} efi_time_t;
+
+typedef struct  __attribute__((__packed__)) {
+	guint32		 update_info_version;
+	efi_guid_t	 guid;
+	guint32		 capsule_flags;
+	guint64		 hw_inst;
+	efi_time_t	 time_attempted;
+	guint32		 status;
+} efi_update_info_t;
 
 gboolean	 fu_uefi_get_bitmap_size	(const guint8	*buf,
 						 gsize		 bufsz,
