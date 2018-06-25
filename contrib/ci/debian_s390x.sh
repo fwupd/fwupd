@@ -11,7 +11,6 @@ meson .. \
 	--cross-file s390x_cross.txt \
 	--werror \
 	-Dplugin_uefi=false \
-	-Dplugin_uefi_labels=false \
 	-Dplugin_dell=false \
 	-Dplugin_synaptics=false \
 	-Dintrospection=false \

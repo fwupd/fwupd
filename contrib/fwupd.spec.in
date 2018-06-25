@@ -140,10 +140,8 @@ Data files for installed tests.
     -Dplugin_thunderbolt=true \
 %if 0%{?have_uefi}
     -Dplugin_uefi=true \
-    -Dplugin_uefi_labels=true \
 %else
     -Dplugin_uefi=false \
-    -Dplugin_uefi_labels=false \
 %endif
 %if 0%{?have_dell}
     -Dplugin_dell=true \

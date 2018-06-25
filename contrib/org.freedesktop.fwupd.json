@@ -188,7 +188,6 @@
                             "-Dintrospection=false",
                             "-Dman=false",
                             "-Dpkcs7=false",
-                            "-Dplugin_uefi_labels=false",
                             "-Dsystemd=false",
                             "-Dtests=false",
                             "-Defi-includedir=/app/include/efi",
