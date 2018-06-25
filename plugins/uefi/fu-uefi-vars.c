@@ -8,12 +8,12 @@
 
 #include "config.h"
 
+#include <fnmatch.h>
 #include <gio/gio.h>
 
 #include "fu-common.h"
 #include "fu-uefi-vars.h"
 
-//#include "fwupd-common.h"
 #include "fwupd-error.h"
 
 static gchar *
@@ -41,6 +41,35 @@ fu_uefi_vars_supported (GError **error)
 			     "kernel efivars support missing: %s",
 			     efivardir);
 		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_uefi_vars_delete (const gchar *guid, const gchar *name, GError **error)
+{
+	g_autofree gchar *fn = fu_uefi_vars_get_filename (guid, name);
+	g_autoptr(GFile) file = g_file_new_for_path (fn);
+	return g_file_delete (file, NULL, error);
+}
+
+gboolean
+fu_uefi_vars_delete_with_glob (const gchar *guid, const gchar *name_glob, GError **error)
+{
+	const gchar *fn;
+	g_autofree gchar *nameguid_glob = NULL;
+	g_autofree gchar *efivardir = fu_uefi_vars_get_path ();
+	g_autoptr(GDir) dir = g_dir_open (efivardir, 0, error);
+	if (dir == NULL)
+		return FALSE;
+	nameguid_glob = g_strdup_printf ("%s-%s", name_glob, guid);
+	while ((fn = g_dir_read_name (dir)) != NULL) {
+		if (fnmatch (nameguid_glob, fn, 0) == 0) {
+			g_autofree gchar *keyfn = g_build_filename (efivardir, fn, NULL);
+			g_autoptr(GFile) file = g_file_new_for_path (keyfn);
+			if (!g_file_delete (file, NULL, error))
+				return FALSE;
+		}
 	}
 	return TRUE;
 }

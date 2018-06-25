@@ -14,6 +14,7 @@
 G_BEGIN_DECLS
 
 #define FU_UEFI_EFI_GLOBAL_GUID			"8be4df61-93ca-11d2-aa0d-00e098032b8c"
+#define FU_UEFI_FWUPDATE_GUID			"0abba7dc-e516-4167-bbf5-4d9d1c739416"
 
 gboolean	 fu_uefi_vars_supported		(GError		**error);
 gboolean	 fu_uefi_vars_exists		(const gchar	*guid,
@@ -27,6 +28,12 @@ gboolean	 fu_uefi_vars_set_data		(const gchar	*guid,
 						 const gchar	*name,
 						 const guint8	*data,
 						 gsize		 sz,
+						 GError		**error);
+gboolean	 fu_uefi_vars_delete		(const gchar	*guid,
+						 const gchar	*name,
+						 GError		**error);
+gboolean	 fu_uefi_vars_delete_with_glob	(const gchar	*guid,
+						 const gchar	*name_glob,
 						 GError		**error);
 
 G_END_DECLS

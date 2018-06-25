@@ -9,7 +9,6 @@
 
 #include <fwupd.h>
 #include <glib-object.h>
-#include <glib/gstdio.h>
 
 #include "fu-test.h"
 #include "fu-ucs2.h"
@@ -113,8 +112,6 @@ fu_uefi_vars_func (void)
 {
 	gboolean ret;
 	gsize sz = 0;
-	g_autofree gchar *sysfsfwdir = NULL;
-	g_autofree gchar *testkeyfn = NULL;
 	g_autofree guint8 *data = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -137,16 +134,29 @@ fu_uefi_vars_func (void)
 	g_assert_cmpint (sz, ==, 1);
 	g_assert_cmpint (data[0], ==, '1');
 
+	/* delete single key */
+	ret = fu_uefi_vars_delete (FU_UEFI_EFI_GLOBAL_GUID, "Test", &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_false (fu_uefi_vars_exists (FU_UEFI_EFI_GLOBAL_GUID, "Test"));
+
+	/* delete multiple keys */
+	ret = fu_uefi_vars_set_data (FU_UEFI_EFI_GLOBAL_GUID, "Test1", (guint8 *)"1", 1, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_uefi_vars_set_data (FU_UEFI_EFI_GLOBAL_GUID, "Test2", (guint8 *)"1", 1, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_uefi_vars_delete_with_glob (FU_UEFI_EFI_GLOBAL_GUID, "Test*", &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_false (fu_uefi_vars_exists (FU_UEFI_EFI_GLOBAL_GUID, "Test1"));
+	g_assert_false (fu_uefi_vars_exists (FU_UEFI_EFI_GLOBAL_GUID, "Test2"));
+
 	/* read a key that doesn't exist */
 	ret = fu_uefi_vars_get_data (FU_UEFI_EFI_GLOBAL_GUID, "NotGoingToExist", NULL, NULL, &error);
 	g_assert_error (error, G_FILE_ERROR, G_FILE_ERROR_NOENT);
 	g_assert_false (ret);
-
-	/* ensure clean */
-	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	testkeyfn = g_strdup_printf ("%s/efi/efivars/Test-%s",
-				     sysfsfwdir, FU_UEFI_EFI_GLOBAL_GUID);
-	g_unlink (testkeyfn);
 }
 
 static void

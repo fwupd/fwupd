@@ -552,40 +552,6 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_uefi_delete_old_efivars (FuPlugin *plugin, GError **error)
-{
-	char *name = NULL;
-	efi_guid_t fwupdate_guid = FWUPDATE_GUID;
-	efi_guid_t *guid = NULL;
-	int rc;
-	while ((rc = efi_get_next_variable_name (&guid, &name)) > 0) {
-		if (efi_guid_cmp (guid, &fwupdate_guid) != 0)
-			continue;
-		if (g_str_has_prefix (name, "fwupdate-")) {
-			g_debug ("deleting %s", name);
-			rc = efi_del_variable (fwupdate_guid, name);
-			if (rc < 0) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "failed to delete efi var %s: %s",
-					     name, strerror (errno));
-				return FALSE;
-			}
-		}
-	}
-	if (rc < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "error listing variables: %s",
-			     strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
-}
-
 static gchar *
 fu_plugin_uefi_guess_esp (void)
 {
@@ -664,7 +630,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	} else {
 		if (!fu_plugin_uefi_delete_old_capsules (plugin, error))
 			return FALSE;
-		if (!fu_plugin_uefi_delete_old_efivars (plugin, error))
+		if (!fu_uefi_vars_delete_with_glob (FU_UEFI_FWUPDATE_GUID, "fwupdate-*", error))
 			return FALSE;
 	}
 

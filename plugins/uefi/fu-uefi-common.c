@@ -192,13 +192,11 @@ fu_uefi_get_bitmap_size (const guint8 *buf,
 gboolean
 fu_uefi_secure_boot_enabled (void)
 {
-	gint rc;
 	gsize data_size = 0;
-	guint32 attributes = 0;
 	g_autofree guint8 *data = NULL;
 
-	rc = efi_get_variable (efi_guid_global, "SecureBoot", &data, &data_size, &attributes);
-	if (rc < 0)
+	if (!fu_uefi_vars_get_data (FU_UEFI_EFI_GLOBAL_GUID, "SecureBoot",
+				    &data, &data_size, NULL))
 		return FALSE;
 	if (data_size >= 1 && data[0] & 1)
 		return TRUE;
