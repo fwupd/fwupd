@@ -253,6 +253,9 @@ if get_option('plugin_dell')
   efivar = dependency('efivar')
   fwup = dependency('fwup', version : '>= 5')
   conf.set('HAVE_DELL', '1')
+  if not get_option('plugin_uefi')
+    error('plugin_dell also needs plugin_uefi to work')
+  endif
 endif
 
 if get_option('plugin_synaptics')

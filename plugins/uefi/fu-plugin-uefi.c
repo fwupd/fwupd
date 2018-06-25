@@ -364,9 +364,10 @@ fu_plugin_update (FuPlugin *plugin,
 	g_assert (str != NULL);
 
 	/* make sure that the ESP is mounted */
-	if (!fu_plugin_uefi_esp_mounted (plugin, error))
-		return FALSE;
-
+	if (g_getenv ("FWUPD_UEFI_ESP_PATH") == NULL) {
+		if (!fu_plugin_uefi_esp_mounted (plugin, error))
+			return FALSE;
+	}
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
@@ -388,6 +389,28 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 
 	return TRUE;
+}
+
+static void
+fu_plugin_uefi_register_proxy_device (FuPlugin *plugin, FuDevice *device)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_dev (device);
+	fu_device_set_metadata (FU_DEVICE (dev), "EspPath", data->esp_path);
+	fu_plugin_device_add (plugin, FU_DEVICE (dev));
+}
+
+void
+fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
+{
+	if (fu_device_get_metadata (device, "UefiDeviceKind") != NULL) {
+		if (fu_device_get_guid_default (device) == NULL) {
+			g_autofree gchar *dbg = fu_device_to_string (device);
+			g_warning ("cannot create proxy device as no GUID: %s", dbg);
+			return;
+		}
+		fu_plugin_uefi_register_proxy_device (plugin, device);
+	}
 }
 
 static AsVersionParseFlag

@@ -8,7 +8,6 @@
 
 #include "config.h"
 
-#include <fwup.h>
 #include <appstream-glib.h>
 #include <glib/gstdio.h>
 #include <smbios_c/system_info.h>
@@ -131,17 +130,6 @@ static guint16 systems_host_mst [] =	{ 0x062d, /* Latitude E7250 */
 					  0x071d, /* Latitude Rugged 7214 */
 					  0x071e, /* Latitude Rugged 5414 */
 					  0x071c, /* Latitude Rugged 7414 */};
-
-static void
-_fwup_resource_iter_free (fwup_resource_iter *iter)
-{
-	fwup_resource_iter_destroy (&iter);
-}
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (fwup_resource_iter, _fwup_resource_iter_free);
-#pragma clang diagnostic pop
 
 static guint16
 fu_dell_get_system_id (FuPlugin *plugin)
@@ -346,6 +334,7 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, dock_name);
 	fu_device_set_metadata (dev, FU_DEVICE_METADATA_DELL_DOCK_TYPE, dock_type);
+	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "device-firmware");
 	if (type == DOCK_TYPE_TB16) {
 		fu_device_set_summary (dev, "A Thunderbolt™ 3 docking station");
 	} else if (type == DOCK_TYPE_WD15) {
@@ -362,7 +351,7 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 		}
 	}
 
-	fu_plugin_device_add (plugin, dev);
+	fu_plugin_device_register (plugin, dev);
 	fu_plugin_cache_add (plugin, dock_key, dev);
 	return TRUE;
 }
@@ -714,6 +703,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_icon (dev, "computer");
+	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "system-firmware");
 	if ((out->status & TPM_OWN_MASK) == 0 && out->flashes_left > 0) {
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -724,7 +714,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		g_debug ("%s updating disabled due to TPM ownership",
 			pretty_tpm_name);
 	}
-	fu_plugin_device_add (plugin, dev);
+	fu_plugin_device_register (plugin, dev);
 
 	/* build alternate device node */
 	if (can_switch_modes) {
@@ -739,6 +729,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_LOCKED);
 		fu_device_add_icon (dev_alt, "computer");
 		fu_device_set_alternate_id (dev_alt, fu_device_get_id (dev));
+		fu_device_set_metadata (dev_alt, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "system-firmware");
 		fu_device_add_parent_guid (dev_alt, tpm_guid);
 
 		/* If TPM is not owned and at least 1 flash left allow mode switching
@@ -752,7 +743,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 			g_debug ("%s mode switch disabled due to TPM ownership",
 				 pretty_tpm_name);
 		}
-		fu_plugin_device_add (plugin, dev_alt);
+		fu_plugin_device_register (plugin, dev_alt);
 	}
 	else
 		g_debug ("System %04x does not offer TPM modeswitching",
@@ -815,113 +806,6 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	/* make sure that this unlocked device can be updated */
 	fu_device_set_version (device, "0.0.0.0");
 
-	return TRUE;
-}
-
-gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_autoptr (fwup_resource_iter) iter = NULL;
-	fwup_resource *re = NULL;
-	const gchar *name = NULL;
-	gint rc;
-	guint flashes_left;
-	const gchar *guidstr = NULL;
-	efi_guid_t guid;
-
-	/* test the flash counter
-	 * - devices with 0 left at setup aren't allowed offline updates
-	 * - devices greater than 0 should show a warning when near 0
-	 */
-	flashes_left = fu_device_get_flashes_left (device);
-	if (flashes_left > 0) {
-		name = fu_device_get_name (device);
-		g_debug ("%s has %u flashes left", name, flashes_left);
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
-			   flashes_left <= 2) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "WARNING: %s only has %u flashes left. "
-				     "See https://github.com/hughsie/fwupd/wiki/Dell-TPM:-flashes-left for more information.",
-				     name, flashes_left);
-			return FALSE;
-		}
-	}
-
-	if (data->smi_obj->fake_smbios)
-		return TRUE;
-
-	/* perform the update */
-	g_debug ("Performing capsule update");
-
-	/* Stuff the payload into a different GUID
-	 * - with fwup 0.5 this uses the ESRT GUID
-	 * - with fwup 0.6 this uses the payload's GUID
-	 * it's preferable to use payload GUID to avoid
-	 * a corner case scenario of UEFI BIOS and non-ESRT
-	 * update happening at same time
-	 */
-	fwup_resource_iter_create (&iter);
-	fwup_resource_iter_next (iter, &re);
-	guidstr = fu_device_get_guid_default (device);
-	rc = efi_str_to_guid (guidstr, &guid);
-	if (rc < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Failed to convert guid to string");
-		return FALSE;
-	}
-	rc = fwup_set_guid (iter, &re, &guid);
-	if (rc < 0 || re == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Failed to update GUID %s",
-			     strerror (rc));
-		return FALSE;
-	}
-
-	/* NOTE: if there are problems with this working, adjust the
-	 * GUID in the capsule header to match something in ESRT.
-	 * This won't actually cause any bad behavior because the real
-	 * payload GUID is extracted later on.
-	 */
-	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
-	rc = fwup_set_up_update_with_buf (re, 0,
-					  g_bytes_get_data (blob_fw, NULL),
-					  g_bytes_get_size (blob_fw));
-	if (rc < 0) {
-		g_autoptr(GString) err_string = g_string_new ("Dell firmware update failed:\n");
-
-		rc = 1;
-		for (int i = 0; rc > 0; i++) {
-			char *filename = NULL;
-			char *function = NULL;
-			char *message = NULL;
-			int line = 0;
-			int err = 0;
-
-			rc = efi_error_get (i, &filename, &function, &line, &message, &err);
-			if (rc <= 0)
-				break;
-			g_string_append_printf (err_string,
-						"{error #%d} %s:%d %s(): %s: %s \n",
-						i, filename, line, function, message, strerror(err));
-		}
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "%s",
-			     err_string->str);
-		return FALSE;
-	}
 	return TRUE;
 }
 
@@ -1063,7 +947,8 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	gint uefi_supported;
+	g_autofree gchar *sysfsfwdir = NULL;
+	g_autofree gchar *esrtdir = NULL;
 
 	if (data->smi_obj->fake_smbios) {
 		g_debug ("Called with fake SMBIOS implementation. "
@@ -1089,17 +974,16 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	}
 
 	/* If ESRT is not turned on, fwupd will have already created an
-	 * unlock device (if compiled with support).
+	 * unlock device.
 	 *
 	 * Once unlocked, that will enable flashing capsules here too.
-	 *
-	 * that means we should only look for supported = 1
 	 */
-	uefi_supported = fwup_supported ();
-	data->capsule_supported = (uefi_supported == 1);
-	if (!data->capsule_supported) {
-		g_debug ("UEFI capsule firmware updating not supported (%x)",
-			 (guint) uefi_supported);
+	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	esrtdir = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
+	if (g_file_test (esrtdir, G_FILE_TEST_EXISTS)) {
+		data->capsule_supported = TRUE;
+	} else {
+		g_debug ("UEFI capsule firmware updating not supported");
 	}
 
 	if (usb_ctx != NULL) {
