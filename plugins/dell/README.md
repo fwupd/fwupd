@@ -9,21 +9,19 @@ This allows installing Dell capsules that are not part of the ESRT table.
 Build Requirements
 ------------------
 
-For Dell support you will need libsmbios_c version 2.3.0 or later and
-efivar.
-* source:		http://linux.dell.com/cgi-bin/cgit.cgi/libsmbios.git/
-* rpms:		https://apps.fedoraproject.org/packages/libsmbios
-* debs (Debian):	http://tracker.debian.org/pkg/libsmbios
-* debs (Ubuntu):	http://launchpad.net/ubuntu/+source/libsmbios
+For Dell support you will need libsmbios_c version 2.4.0 or later.
+
+* source: https://github.com/dell/libsmbios
+* binaries: https://github.com/dell/libsmbios/releases
 
 If you don't want or need this functionality you can use the
-`--disable-dell` option.
+`-Dplugin_dell=false` option.
 
 # Devices powered by the Dell Plugin
 The Dell plugin creates device nodes for PC's that have switchable TPMs as
 well as the Type-C docks (WD15/TB16).
 
-These device nodes can be flashed using UEFI capsule (and fwupdate) but don't
+These device nodes can be flashed using UEFI capsule but don't
 use the ESRT table to communicate device status or version information.
 
 This is intentional behavior because more complicated decisions need to be made

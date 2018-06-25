@@ -12,6 +12,8 @@
 #include <efivar.h>
 #include <efivar/efiboot.h>
 
+#include "fu-device-metadata.h"
+
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-bootmgr.h"
@@ -45,6 +47,20 @@ fu_uefi_device_kind_to_string (FuUefiDeviceKind kind)
 	if (kind == FU_UEFI_DEVICE_KIND_FMP)
 		return "fmp";
 	return NULL;
+}
+
+static FuUefiDeviceKind
+fu_uefi_device_kind_from_string (const gchar *kind)
+{
+	if (g_strcmp0 (kind, "system-firmware") == 0)
+		return FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE;
+	if (g_strcmp0 (kind, "device-firmware") == 0)
+		return FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE;
+	if (g_strcmp0 (kind, "uefi-driver") == 0)
+		return FU_UEFI_DEVICE_KIND_UEFI_DRIVER;
+	if (g_strcmp0 (kind, "fmp") == 0)
+		return FU_UEFI_DEVICE_KIND_FMP;
+	return FU_UEFI_DEVICE_KIND_UNKNOWN;
 }
 
 const gchar *
@@ -417,3 +433,22 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 	return self;
 }
 
+FuUefiDevice *
+fu_uefi_device_new_from_dev (FuDevice *dev)
+{
+	const gchar *tmp;
+	FuUefiDevice *self;
+
+	g_return_val_if_fail (fu_device_get_guid_default (dev) != NULL, NULL);
+
+	/* create virtual object not backed by an ESRT entry */
+	self = g_object_new (FU_TYPE_UEFI_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), dev);
+	self->fw_class = g_strdup (fu_device_get_guid_default (dev));
+	tmp = fu_device_get_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND);
+	self->kind = fu_uefi_device_kind_from_string (tmp);
+	self->capsule_flags = 0; /* FIXME? */
+	self->fw_version = 0; /* FIXME? */
+	g_assert (self->fw_class != NULL);
+	return self;
+}

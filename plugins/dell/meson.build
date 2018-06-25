@@ -23,11 +23,12 @@ shared_module('fu_plugin_dell',
     plugin_deps,
     efivar,
     libsmbios_c,
-    fwup,
   ],
 )
 
 if get_option('tests')
+  testdatadir = join_paths(meson.current_source_dir(), 'tests')
+  cargs += '-DTESTDATADIR="' + testdatadir + '"'
   cargs += '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"'
   cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
   e = executable(
@@ -45,7 +46,6 @@ if get_option('tests')
     dependencies : [
       plugin_deps,
       efivar,
-      fwup,
       sqlite,
       gudev,
       libsmbios_c,
