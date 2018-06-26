@@ -559,6 +559,8 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 	}
 	if (g_strcmp0 (quirk_str, "bootloader") == 0)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	else
+		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
