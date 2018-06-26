@@ -192,12 +192,11 @@ fu_device_list_find_by_id (FuDeviceList *self,
 	}
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
-		const gchar *ids[] = {
-			fu_device_get_id (item_tmp->device),
-			fu_device_get_equivalent_id (item_tmp->device),
-			NULL };
+		const gchar *ids[3] = { NULL };
 		if (item_tmp->device_old == NULL)
 			continue;
+		ids[0] = fu_device_get_id (item_tmp->device_old);
+		ids[1] = fu_device_get_equivalent_id (item_tmp->device_old);
 		for (guint j = 0; ids[j] != NULL; j++) {
 			if (strncmp (ids[j], device_id, device_id_len) == 0) {
 				if (item != NULL && multiple_matches != NULL)
