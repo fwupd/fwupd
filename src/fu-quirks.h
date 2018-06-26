@@ -21,17 +21,14 @@ FuQuirks	*fu_quirks_new				(void);
 gboolean	 fu_quirks_load				(FuQuirks	*self,
 							 GError		**error);
 const gchar	*fu_quirks_lookup_by_id			(FuQuirks	*self,
-							 const gchar	*prefix,
-							 const gchar	*id);
-const gchar	*fu_quirks_lookup_by_glob		(FuQuirks	*self,
-							 const gchar	*prefix,
-							 const gchar	*glob);
+							 const gchar	*group,
+							 const gchar	*key);
 const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
-							 const gchar	*prefix,
-							 GUsbDevice	*dev);
+							 GUsbDevice	*usb_device,
+							 const gchar	*key);
 
 /**
- * FU_QUIRKS_DFU:
+ * FU_QUIRKS_DFU_FLAGS:
  * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
  * @value: a string, separated using `|`, e.g. `ignore-polltimeout|no-pid-change`
  *
@@ -58,7 +55,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.1
  */
-#define	FU_QUIRKS_DFU				"fwupd-dfu"
+#define	FU_QUIRKS_DFU_FLAGS			"DfuFlags"
 
 /**
  * FU_QUIRKS_UEFI_VERSION_FORMAT:
@@ -73,7 +70,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.1
  */
-#define	FU_QUIRKS_UEFI_VERSION_FORMAT		"fwupd-uefi-version-format"
+#define	FU_QUIRKS_UEFI_VERSION_FORMAT		"UefiVersionFormat"
 
 /**
  * FU_QUIRKS_DAEMON_VERSION_FORMAT:
@@ -88,7 +85,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.1
  */
-#define	FU_QUIRKS_DAEMON_VERSION_FORMAT		"fwupd-daemon-version-format"
+#define	FU_QUIRKS_DAEMON_VERSION_FORMAT		"ComponentIDs"
 
 /**
  * FU_QUIRKS_DFU_JABRA_DETACH:
@@ -100,10 +97,10 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.1
  */
-#define	FU_QUIRKS_DFU_JABRA_DETACH		"fwupd-dfu-jabra-detach"
+#define	FU_QUIRKS_DFU_JABRA_DETACH		"DfuJabraDetach"
 
 /**
- * FU_QUIRKS_DFU_AVR_CHIP_ID:
+ * FU_QUIRKS_DFU_AVR_ALT_NAME:
  * @key: the AVR chip ID, e.g. `0x58200204`
  * @value: the UM0424 sector description, e.g. `@Flash/0x2000/1*248Kg`
  *
@@ -116,7 +113,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.1
  */
-#define	FU_QUIRKS_DFU_AVR_CHIP_ID		"fwupd-dfu-avr-chip-id"
+#define	FU_QUIRKS_DFU_AVR_ALT_NAME		"DfuAltName"
 
 /**
  * FU_QUIRKS_DFU_FORCE_VERSION:
@@ -129,10 +126,10 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.1
  */
-#define	FU_QUIRKS_DFU_FORCE_VERSION		"fwupd-dfu-force-version"
+#define	FU_QUIRKS_DFU_FORCE_VERSION		"DfuForceVersion"
 
 /**
- * FU_QUIRKS_USB_SUMMARY:
+ * FU_QUIRKS_SUMMARY:
  * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
  * @value: the USB device summary, e.g. `An open source display colorimeter`
  *
@@ -140,10 +137,10 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.2
  */
-#define	FU_QUIRKS_USB_SUMMARY			"FuUsbDevice:summary"
+#define	FU_QUIRKS_SUMMARY			"Summary"
 
 /**
- * FU_QUIRKS_USB_ICON:
+ * FU_QUIRKS_ICON:
  * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
  * @value: the USB device icon name, e.g. `media-removable`
  *
@@ -151,10 +148,10 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.2
  */
-#define	FU_QUIRKS_USB_ICON			"FuUsbDevice:icon"
+#define	FU_QUIRKS_ICON				"Icon"
 
 /**
- * FU_QUIRKS_USB_NAME:
+ * FU_QUIRKS_NAME:
  * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
  * @value: the USB device name, e.g. `ColorHug`
  *
@@ -162,10 +159,10 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.2
  */
-#define	FU_QUIRKS_USB_NAME			"FuUsbDevice:name"
+#define	FU_QUIRKS_NAME				"Name"
 
 /**
- * FU_QUIRKS_USB_GUID:
+ * FU_QUIRKS_GUID:
  * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
  * @value: the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`
  *
@@ -174,10 +171,10 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.3
  */
-#define	FU_QUIRKS_USB_GUID			"FuUsbDevice:guid"
+#define	FU_QUIRKS_GUID				"Guid"
 
 /**
- * FU_QUIRKS_USB_VERSION:
+ * FU_QUIRKS_VERSION:
  * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806&REV_0001`
  * @value: the version number, e.g. `1.2`
  *
@@ -185,10 +182,10 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.3
  */
-#define	FU_QUIRKS_USB_VERSION			"FuUsbDevice:version"
+#define	FU_QUIRKS_VERSION			"Version"
 
 /**
- * FU_QUIRKS_USB_VENDOR:
+ * FU_QUIRKS_VENDOR:
  * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
  * @value: the vendor, e.g. `Hughski Limited`
  *
@@ -196,7 +193,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.3
  */
-#define	FU_QUIRKS_USB_VENDOR			"FuUsbDevice:vendor"
+#define	FU_QUIRKS_VENDOR			"Vendor"
 
 /**
  * FU_QUIRKS_CSR:
@@ -211,7 +208,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  *
  * Since: 1.0.3
  */
-#define	FU_QUIRKS_CSR_DEVICE			"FuCsrDevice"
+#define	FU_QUIRKS_CSR_DEVICE			"Flags"
 
 /**
  * FU_QUIRKS_EBITDO:
@@ -222,11 +219,11 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  * quirks is thus:
  *
  * * `none`:			No device quirks
- * * `bootloader`:		Device is in bootloader mode
+ * * `is-bootloader`:		Device is in bootloader mode
  *
  * Since: 1.0.3
  */
-#define	FU_QUIRKS_EBITDO_DEVICE			"FuEditdoDevice"
+#define	FU_QUIRKS_EBITDO_DEVICE			"Flags"
 
 G_END_DECLS
 

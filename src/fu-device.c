@@ -686,6 +686,31 @@ fu_device_get_serial (FuDevice *device)
 	return fu_device_get_metadata (device, "serial");
 }
 
+static void
+fu_device_set_plugin_hint (FuDevice *device, const gchar *hint)
+{
+	FwupdDeviceFlags flag;
+
+	/* is this a known device flag */
+	flag = fwupd_device_flag_from_string (hint);
+	if (flag == FWUPD_DEVICE_FLAG_UNKNOWN)
+		return;
+
+	/* being both a bootloader and requiring a bootloader is invalid */
+	if (flag == FWUPD_DEVICE_FLAG_NONE ||
+	    flag == FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER) {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	}
+	if (flag == FWUPD_DEVICE_FLAG_NONE ||
+	    flag == FWUPD_DEVICE_FLAG_IS_BOOTLOADER) {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	}
+
+	/* none is not used as an "exported" flag */
+	if (flag != FWUPD_DEVICE_FLAG_NONE)
+		fu_device_add_flag (device, flag);
+}
+
 /**
  * fu_device_set_plugin_hints:
  * @device: A #FuDevice
@@ -701,7 +726,16 @@ fu_device_set_plugin_hints (FuDevice *device, const gchar *plugin_hints)
 {
 	g_return_if_fail (FU_IS_DEVICE (device));
 	g_return_if_fail (plugin_hints != NULL);
+
+	/* display what was set when converting to a string */
 	fu_device_set_metadata (device, "PluginHints", plugin_hints);
+
+	/* look for any standard FwupdDeviceFlags */
+	if (plugin_hints != NULL) {
+		g_auto(GStrv) hints = g_strsplit (plugin_hints, ",", -1);
+		for (guint i = 0; hints[i] != NULL; i++)
+			fu_device_set_plugin_hint (device, hints[i]);
+	}
 }
 
 /**
@@ -719,6 +753,37 @@ fu_device_get_plugin_hints (FuDevice *device)
 {
 	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
 	return fu_device_get_metadata (device, "PluginHints");
+}
+
+/**
+ * fu_device_has_plugin_hint:
+ * @device: A #FuDevice
+ * @hint: A string, e.g. "bootloader"
+ *
+ * Checks if the plugin hint exists for the device from the quirk system.
+ *
+ * It may be more efficient to call fu_device_get_plugin_hints() and split the
+ * string locally if checking for lots of plugin hints.
+ *
+ * Returns: %TRUE if the hint exists
+ *
+ * Since: 1.0.8
+ **/
+gboolean
+fu_device_has_plugin_hint (FuDevice *device, const gchar *hint)
+{
+	const gchar *hint_str;
+	g_auto(GStrv) hints = NULL;
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (hint != NULL, FALSE);
+
+	/* no hint is perfectly valid */
+	hint_str = fu_device_get_plugin_hints (device);
+	if (hint_str == NULL)
+		return FALSE;
+	hints = g_strsplit (hint_str, ",", -1);
+	return g_strv_contains ((const gchar * const *) hints, hint);
 }
 
 /**

@@ -448,6 +448,7 @@ fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, guint32 uefi_type)
 {
 	const gchar *content;
 	const gchar *quirk;
+	g_autofree gchar *group = NULL;
 
 	/* we have no information for devices */
 	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE)
@@ -458,10 +459,10 @@ fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, guint32 uefi_type)
 		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 
 	/* any quirks match */
-	quirk = fu_plugin_lookup_quirk_by_id (plugin,
-					      FU_QUIRKS_UEFI_VERSION_FORMAT,
-					      content);
-	if (g_strcmp0 (quirk, "none") == 0)
+	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
+	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
+					      FU_QUIRKS_UEFI_VERSION_FORMAT);
+	if (g_strcmp0 (quirk, "quad") == 0)
 		return AS_VERSION_PARSE_FLAG_NONE;
 
 	/* fall back */

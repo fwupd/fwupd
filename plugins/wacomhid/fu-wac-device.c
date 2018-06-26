@@ -678,24 +678,6 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 static gboolean
 fu_wac_device_probe (FuUsbDevice *device, GError **error)
 {
-	const gchar *plugin_hints;
-
-	/* devices have to be whitelisted */
-	plugin_hints = fu_device_get_plugin_hints (FU_DEVICE (device));
-	if (plugin_hints == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported with this device");
-		return FALSE;
-	}
-
-	/* hardware cannot respond to GetReport(DeviceFirmwareDescriptor) */
-	if (g_strcmp0 (plugin_hints, "use-runtime-version") == 0) {
-		fu_device_add_flag (FU_DEVICE (device),
-				    FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
-	}
-
 	/* hardcoded */
 	fu_device_add_icon (FU_DEVICE (device), "input-tablet");
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -916,6 +898,7 @@ fu_wac_device_new (GUsbDevice *usb_device)
 	FuWacDevice *device = NULL;
 	device = g_object_new (FU_TYPE_WAC_DEVICE,
 			       "usb-device", usb_device,
+			       "require-plugin-hints", TRUE,
 			       NULL);
 	return device;
 }

@@ -25,12 +25,14 @@ typedef struct
 	GUsbDevice		*usb_device;
 	FuDeviceLocker		*usb_device_locker;
 	gboolean		 done_probe;
+	gboolean		 require_plugin_hints;
 } FuUsbDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuUsbDevice, fu_usb_device, FU_TYPE_DEVICE)
 enum {
 	PROP_0,
 	PROP_USB_DEVICE,
+	PROP_REQUIRE_PLUGIN_HINTS,
 	PROP_LAST
 };
 
@@ -50,7 +52,7 @@ fu_usb_device_apply_quirks (FuUsbDevice *device)
 
 	/* type */
 	g_debug ("looking for USB quirks for %s type", type_name);
-	tmp = fu_quirks_lookup_by_usb_device (quirks, type_name, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, type_name);
 	if (tmp != NULL) {
 		g_debug ("default plugin hints set to: %s", tmp);
 		fu_device_set_plugin_hints (FU_DEVICE (device), tmp);
@@ -59,32 +61,32 @@ fu_usb_device_apply_quirks (FuUsbDevice *device)
 	/* name */
 	g_debug ("looking for USB quirks for %s device",
 		 fu_device_get_platform_id (FU_DEVICE (device)));
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_NAME, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_NAME);
 	if (tmp != NULL)
 		fu_device_set_name (FU_DEVICE (device), tmp);
 
 	/* summary */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_SUMMARY, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_SUMMARY);
 	if (tmp != NULL)
 		fu_device_set_summary (FU_DEVICE (device), tmp);
 
 	/* vendor */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_VENDOR, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_VENDOR);
 	if (tmp != NULL)
 		fu_device_set_vendor (FU_DEVICE (device), tmp);
 
 	/* version */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_VERSION, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_VERSION);
 	if (tmp != NULL)
 		fu_device_set_version (FU_DEVICE (device), tmp);
 
 	/* icon */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_ICON, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_ICON);
 	if (tmp != NULL)
 		fu_device_add_icon (FU_DEVICE (device), tmp);
 
 	/* GUID */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_GUID, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_GUID);
 	if (tmp != NULL)
 		fu_device_add_guid (FU_DEVICE (device), tmp);
 }
@@ -105,6 +107,9 @@ fu_usb_device_get_property (GObject *object, guint prop_id,
 	case PROP_USB_DEVICE:
 		g_value_set_object (value, priv->usb_device);
 		break;
+	case PROP_REQUIRE_PLUGIN_HINTS:
+		g_value_set_boolean (value, priv->require_plugin_hints);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -116,9 +121,13 @@ fu_usb_device_set_property (GObject *object, guint prop_id,
 			    const GValue *value, GParamSpec *pspec)
 {
 	FuUsbDevice *device = FU_USB_DEVICE (object);
+	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
 	switch (prop_id) {
 	case PROP_USB_DEVICE:
 		fu_usb_device_set_dev (device, g_value_get_object (value));
+		break;
+	case PROP_REQUIRE_PLUGIN_HINTS:
+		priv->require_plugin_hints = g_value_get_boolean (value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -163,6 +172,13 @@ fu_usb_device_class_init (FuUsbDeviceClass *klass)
 				     G_PARAM_CONSTRUCT |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_USB_DEVICE, pspec);
+
+	pspec = g_param_spec_boolean  ("require-plugin-hints", NULL, NULL,
+				       FALSE,
+				       G_PARAM_READWRITE |
+				       G_PARAM_CONSTRUCT |
+				       G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_REQUIRE_PLUGIN_HINTS, pspec);
 }
 
 /**
@@ -355,6 +371,16 @@ fu_usb_device_probe (FuUsbDevice *device, GError **error)
 	/* already done */
 	if (priv->done_probe)
 		return TRUE;
+
+	/* not supported */
+	if (priv->require_plugin_hints &&
+	    fu_device_get_plugin_hints (FU_DEVICE (device)) == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported with this device");
+		return FALSE;
+	}
 
 	/* subclassed */
 	if (klass->probe != NULL) {

@@ -971,12 +971,19 @@ fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 	if (as_app_get_kind (app) != AS_APP_KIND_FIRMWARE)
 		return;
 
-	/* any quirks match */
-	quirk = fu_quirks_lookup_by_glob (self->quirks,
-					  FU_QUIRKS_DAEMON_VERSION_FORMAT,
-					  as_app_get_id (app));
-	if (g_strcmp0 (quirk, "none") == 0)
-		flags = AS_VERSION_PARSE_FLAG_NONE;
+	/* fall back to the quirk database until all files have metadata */
+	quirk = fu_quirks_lookup_by_id (self->quirks,
+					"DaemonVersionFormat=Quad",
+					FU_QUIRKS_DAEMON_VERSION_FORMAT);
+	if (quirk != NULL) {
+		g_auto(GStrv) globs = g_strsplit (quirk, ",", -1);
+		for (guint i = 0; globs[i] != NULL; i++) {
+			if (fnmatch (globs[i], as_app_get_id (app), 0) == 0) {
+				flags = AS_VERSION_PARSE_FLAG_NONE;
+				break;
+			}
+		}
+	}
 
 	/* specified in metadata */
 	version_format = as_app_get_metadata_item (app, "LVFS::VersionFormat");

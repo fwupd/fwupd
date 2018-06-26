@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginNitrokey"']
 
+install_data(['nitrokey.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_nitrokey',
   sources : [
     'fu-nitrokey-device.c',

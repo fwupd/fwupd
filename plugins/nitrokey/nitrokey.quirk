@@ -1,0 +1,4 @@
+# Nitrokey Storage
+[DeviceInstanceId=USB\VID_20A0&PID_4109]
+Flags = needs-bootloader,use-runtime-version
+Guid = USB\VID_03EB&PID_2FF1
