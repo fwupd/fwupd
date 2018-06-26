@@ -13,6 +13,7 @@
 
 #include "fu-plugin.h"
 #include "fu-uefi-device.h"
+#include "fu-uefi-update-info.h"
 
 G_BEGIN_DECLS
 
@@ -55,8 +56,7 @@ guint64		 fu_uefi_device_get_hardware_instance	(FuUefiDevice	*self);
 FuUefiDeviceStatus fu_uefi_device_get_status		(FuUefiDevice	*self);
 const gchar	*fu_uefi_device_kind_to_string		(FuUefiDeviceKind kind);
 const gchar	*fu_uefi_device_status_to_string	(FuUefiDeviceStatus status);
-gboolean	 fu_uefi_device_get_update_info		(FuUefiDevice	*self,
-							 efi_update_info_t *info,
+FuUefiUpdateInfo *fu_uefi_device_load_update_info	(FuUefiDevice	*self,
 							 GError		**error);
 
 G_END_DECLS

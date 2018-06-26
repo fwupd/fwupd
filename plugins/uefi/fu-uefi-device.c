@@ -184,31 +184,13 @@ fu_uefi_device_set_efivar (FuUefiDevice *self,
 				      error);
 }
 
-static gboolean
-fu_uefi_device_info_from_databuf (efi_update_info_t *info,
-				  const guint8 *data,
-				  gsize sz,
-				  GError **error)
-{
-	if (sz < sizeof(efi_update_info_t)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "EFI variable is corrupt");
-		return FALSE;
-	}
-	memcpy (info, data, sizeof(efi_update_info_t));
-	return TRUE;
-}
-
-gboolean
-fu_uefi_device_get_update_info (FuUefiDevice *self,
-				efi_update_info_t *info,
-				GError **error)
+FuUefiUpdateInfo *
+fu_uefi_device_load_update_info (FuUefiDevice *self, GError **error)
 {
 	gsize datasz = 0;
 	g_autofree gchar *varname = fu_uefi_device_build_varname (self);
 	g_autofree guint8 *data = NULL;
+	g_autoptr(FuUefiUpdateInfo) info = fu_uefi_update_info_new ();
 
 	g_return_val_if_fail (FU_IS_UEFI_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -217,7 +199,9 @@ fu_uefi_device_get_update_info (FuUefiDevice *self,
 	if (!fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
 				    &data, &datasz, NULL, error))
 		return FALSE;
-	return fu_uefi_device_info_from_databuf (info, data, datasz, error);
+	if (!fu_uefi_update_info_parse (info, data, datasz, error))
+		return FALSE;
+	return g_steal_pointer (&info);
 }
 
 gboolean
@@ -235,10 +219,16 @@ fu_uefi_device_clear_status (FuUefiDevice *self, GError **error)
 	if (!fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
 				    &data, &datasz, NULL, error))
 		return FALSE;
-	if (!fu_uefi_device_info_from_databuf (&info, data, datasz, error))
+	if (datasz < sizeof(efi_update_info_t)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "EFI variable is corrupt");
 		return FALSE;
+	}
 
-	/* save it back */
+	/* just copy the efi_update_info_t, ignore devpath then save it back */
+	memcpy (&info, data, sizeof(info));
 	info.status = FU_UEFI_DEVICE_STATUS_SUCCESS;
 	memcpy (data, &info, sizeof(info));
 	return fu_uefi_device_set_efivar (self, data, datasz, error);
@@ -329,7 +319,7 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 
 	/* set the blob header shared with fwup.efi */
 	memset (&info, 0x0, sizeof(info));
-	info.status = EFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE;
+	info.status = FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE;
 	info.capsule_flags = self->capsule_flags;
 	info.update_info_version = 0x7;
 	info.hw_inst = self->fmp_hardware_instance;

@@ -17,6 +17,7 @@
 #include "fu-ucs2.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
+#include "fu-uefi-update-info.h"
 #include "fu-uefi-vars.h"
 
 /* custom return code */
@@ -46,16 +47,6 @@ fu_util_private_free (FuUtilPrivate *priv)
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
 #pragma clang diagnostic pop
-
-static const gchar *
-fu_uefi_update_info_status_to_string (guint32 update_info_status)
-{
-	if (update_info_status == EFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE)
-		return "attempt-update";
-	if (update_info_status == EFI_UPDATE_INFO_STATUS_ATTEMPTED)
-		return "attempted";
-	return "unknown";
-}
 
 int
 main (int argc, char *argv[])
@@ -241,29 +232,30 @@ main (int argc, char *argv[])
 
 	/* show the information of firmware update status */
 	if (action_info) {
-		efi_update_info_t info;
-		g_autofree gchar *guid = NULL;
 		for (guint i = 0; i < devices->len; i++) {
 			FuUefiDevice *dev = g_ptr_array_index (devices, i);
-			efi_guid_t guid_tmp;
+			g_autoptr(FuUefiUpdateInfo) info = NULL;
 			g_autoptr(GError) error_local = NULL;
-			if (!fu_uefi_device_get_update_info (dev, &info, &error_local)) {
+
+			/* load any existing update info */
+			info = fu_uefi_device_load_update_info (dev, &error_local);
+			if (info == NULL) {
 				g_printerr ("failed: %s\n", error_local->message);
 				continue;
 			}
-			memcpy (&guid_tmp, &info.guid, sizeof(efi_guid_t));
-			if (efi_guid_to_str (&guid_tmp, &guid) < 0) {
-				g_printerr ("failed to convert GUID: %s\n",
-					    error_local->message);
-				continue;
-			}
 			g_print ("Information for the update status entry %u:\n", i);
-			g_print ("  Information Version: %" G_GUINT32_FORMAT "\n", info.update_info_version);
-			g_print ("  Firmware GUID: {%s}\n", guid);
-			g_print ("  Capsule Flags: 0x%08" G_GUINT32_FORMAT "x\n", info.capsule_flags);
-			g_print ("  Hardware Instance: %" G_GUINT64_FORMAT "\n", info.hw_inst);
-			g_print ("  Update Status: %s\n", fu_uefi_update_info_status_to_string (info.status));
-			//g_print ("  Capsule File Path: %s\n\n", info.capsule_fn);
+			g_print ("  Information Version: %" G_GUINT32_FORMAT "\n",
+				 fu_uefi_update_info_get_version (info));
+			g_print ("  Firmware GUID: {%s}\n",
+				 fu_uefi_update_info_get_guid (info));
+			g_print ("  Capsule Flags: 0x%08" G_GUINT32_FORMAT "x\n",
+				 fu_uefi_update_info_get_capsule_flags (info));
+			g_print ("  Hardware Instance: %" G_GUINT64_FORMAT "\n",
+				 fu_uefi_update_info_get_hw_inst (info));
+			g_print ("  Update Status: %s\n",
+				 fu_uefi_update_info_status_to_string (fu_uefi_update_info_get_status (info)));
+			g_print ("  Capsule File Path: %s\n\n",
+				 fu_uefi_update_info_get_capsule_fn (info));
 		}
 	}
 
