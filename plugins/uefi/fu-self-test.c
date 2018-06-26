@@ -212,6 +212,32 @@ fu_uefi_plugin_func (void)
 	g_assert_cmpint (fu_uefi_device_get_status (dev), ==, FU_UEFI_DEVICE_STATUS_SUCCESS);
 }
 
+static void
+fu_uefi_update_info_func (void)
+{
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuUefiDevice) dev = NULL;
+	g_autoptr(FuUefiUpdateInfo) info = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fn = fu_test_get_filename (TESTDATADIR, "efi/esrt/entries/entry0");
+	g_assert (fn != NULL);
+	dev = fu_uefi_device_new_from_entry (fn);
+	g_assert_nonnull (dev);
+	g_assert_cmpint (fu_uefi_device_get_kind (dev), ==, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
+	g_assert_cmpstr (fu_uefi_device_get_guid (dev), ==, "ddc0ee61-e7f0-4e7d-acc5-c070a398838e");
+	info = fu_uefi_device_load_update_info (dev, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (info);
+	g_assert_cmpint (fu_uefi_update_info_get_version (info), ==, 0x7);
+	g_assert_cmpstr (fu_uefi_update_info_get_guid (info), ==, "697bd920-12cf-4da9-8385-996909bc6559");
+	g_assert_cmpint (fu_uefi_update_info_get_capsule_flags (info), ==, 0x50000);
+	g_assert_cmpint (fu_uefi_update_info_get_hw_inst (info), ==, 0x0);
+	g_assert_cmpint (fu_uefi_update_info_get_status (info), ==, FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE);
+	g_assert_cmpstr (fu_uefi_update_info_get_capsule_fn (info), ==,
+			 "/EFI/fedora/fw/fwupdate-697bd920-12cf-4da9-8385-996909bc6559.cap");
+}
+
 int
 main (int argc, char **argv)
 {
@@ -229,6 +255,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/uefi/framebuffer", fu_uefi_framebuffer_func);
 	g_test_add_func ("/uefi/bitmap", fu_uefi_bitmap_func);
 	g_test_add_func ("/uefi/device", fu_uefi_device_func);
+	g_test_add_func ("/uefi/update-info", fu_uefi_update_info_func);
 	g_test_add_func ("/uefi/plugin", fu_uefi_plugin_func);
 	return g_test_run ();
 }

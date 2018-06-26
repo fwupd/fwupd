@@ -11,6 +11,7 @@ shared_module('fu_plugin_uefi',
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
+    'fu-uefi-update-info.c',
     'fu-uefi-vars.c',
   ],
   include_directories : [
@@ -38,6 +39,7 @@ executable(
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
+    'fu-uefi-update-info.c',
     'fu-uefi-vars.c',
   ],
   include_directories : [
@@ -75,6 +77,7 @@ if get_option('tests')
       'fu-uefi-bootmgr.c',
       'fu-uefi-common.c',
       'fu-uefi-device.c',
+      'fu-uefi-update-info.c',
       'fu-uefi-vars.c',
       'fu-ucs2.c',
     ],
