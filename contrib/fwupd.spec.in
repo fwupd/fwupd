@@ -53,6 +53,7 @@ BuildRequires: meson
 BuildRequires: help2man
 BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
+BuildRequires: bash-completion
 
 %if 0%{?have_uefi}
 BuildRequires: python3 python3-cairo python3-gobject python3-pillow
