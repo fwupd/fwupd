@@ -143,6 +143,42 @@
             ]
         },
         {
+            "name": "python-pillow",
+            "no-autogen": true,
+            "ensure-writable": ["/lib/python*/site-packages/easy-install.pth"],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://pypi.python.org/packages/93/73/66854f63b1941aad9af18a1de59f9cf95ad1a87c801540222e332f6688d7/Pillow-4.1.1.tar.gz",
+                    "sha256": "00b6a5f28d00f720235a937ebc2f50f4292a5c7e2d6ab9a8b26153b625c4f431"
+                },
+                {
+                    "type": "file",
+                    "path": "flatpak/pip-Makefile",
+                    "dest-filename": "Makefile"
+                }
+            ],
+            "modules": [
+                {
+                    "name": "python-olefile",
+                    "no-autogen": true,
+                    "ensure-writable": ["/lib/python*/site-packages/easy-install.pth"],
+                    "sources": [
+                        {
+                            "type": "archive",
+                            "url": "https://pypi.python.org/packages/35/17/c15d41d5a8f8b98cc3df25eb00c5cee76193114c78e5674df6ef4ac92647/olefile-0.44.zip",
+                            "sha256": "61f2ca0cd0aa77279eb943c07f607438edf374096b66332fae1ee64a6f0f73ad"
+                        },
+                        {
+                            "type": "file",
+                            "path": "flatpak/pip-Makefile",
+                            "dest-filename": "Makefile"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "name": "fwupd",
             "buildsystem": "meson",
             "config-opts": ["-Dconsolekit=false",
