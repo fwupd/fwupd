@@ -297,11 +297,7 @@ if get_option('tests')
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
     ],
   )
-  test('fu-self-test', e, is_parallel:false,
-       env: ['FWUPD_DATADIR=' + testdatadir_src,
-             'FWUPD_SYSCONFDIR=' + testdatadir_src,
-             'FWUPD_PLUGINDIR=' + testdatadir_src,
-             'FWUPD_LOCALSTATEDIR=/tmp/fwupd-self-test/var'])
+  test('fu-self-test', e, is_parallel:false)
 endif
 
 if get_option('introspection')

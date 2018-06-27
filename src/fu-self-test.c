@@ -2210,7 +2210,10 @@ main (int argc, char **argv)
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
+	g_setenv ("FWUPD_DATADIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("FWUPD_PLUGINDIR", TESTDATADIR_SRC, TRUE);
 	g_setenv ("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
 	fu_common_rmtree ("/tmp/fwupd-self-test", NULL);
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
