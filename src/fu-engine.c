@@ -2284,7 +2284,8 @@ fu_engine_filter_apps_by_requirements (FuEngine *self, GPtrArray *apps,
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuInstallTask) task = fu_install_task_new (device, app_tmp);
 		if (!fu_engine_check_requirements (self, task,
-						   FWUPD_INSTALL_FLAG_NONE,
+						   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
+						   FWUPD_INSTALL_FLAG_ALLOW_OLDER,
 						   &error_local)) {
 			if (error_all == NULL) {
 				error_all = g_steal_pointer (&error_local);
