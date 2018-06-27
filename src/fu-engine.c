@@ -1641,7 +1641,7 @@ fu_engine_add_component_to_store (FuEngine *self, AsApp *app)
 	}
 }
 
-static gboolean
+gboolean
 fu_engine_load_metadata_from_file (FuEngine *self,
 				 const gchar *path,
 				 const gchar *remote_id,
@@ -2892,6 +2892,19 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 					 device_guid,
 					 fu_device_get_plugin (device));
 				return;
+			}
+		}
+	}
+
+	/* if this device is locked get some metadata from AppStream */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_LOCKED)) {
+		AsApp *app = fu_engine_store_get_app_by_guids (self->store, device);
+		if (app != NULL) {
+			AsRelease *release = as_app_get_release_default (app);
+			if (release != NULL) {
+				g_autoptr(FwupdRelease) rel = fwupd_release_new ();
+				fu_engine_set_release_from_appstream (self, rel, app, release);
+				fu_device_add_release (device, rel);
 			}
 		}
 	}

@@ -126,6 +126,10 @@ gboolean	 fu_engine_check_requirements		(FuEngine	*self,
 							 FuInstallTask	*task,
 							 FwupdInstallFlags flags,
 							 GError		**error);
+gboolean	 fu_engine_load_metadata_from_file	(FuEngine	*self,
+							 const gchar	*path,
+							 const gchar	*remote_id,
+							 GError		**error);
 
 G_END_DECLS
 
