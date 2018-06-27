@@ -20,32 +20,29 @@ install_data([
   install_dir : 'share/installed-tests/fwupd',
 )
 
-gcab = find_program('gcab', required : false)
-if gcab.found()
-  custom_target('installed-cab123',
-    input : [
-      'fakedevice123.bin',
-      'fakedevice123.bin.asc',
-      'fakedevice123.metainfo.xml',
-    ],
-    output : 'fakedevice123.cab',
-    command : [
-      gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
-    ],
-    install: true,
-    install_dir: join_paths('share', 'installed-tests', 'fwupd'),
-  )
-  custom_target('installed-cab124',
-    input : [
-      'fakedevice124.bin',
-      'fakedevice124.bin.asc',
-      'fakedevice124.metainfo.xml',
-    ],
-    output : 'fakedevice124.cab',
-    command : [
-      gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
-    ],
-    install: true,
-    install_dir: join_paths('share', 'installed-tests', 'fwupd'),
-  )
-endif
+custom_target('installed-cab123',
+  input : [
+    'fakedevice123.bin',
+    'fakedevice123.bin.asc',
+    'fakedevice123.metainfo.xml',
+  ],
+  output : 'fakedevice123.cab',
+  command : [
+    gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
+  ],
+  install: true,
+  install_dir: join_paths('share', 'installed-tests', 'fwupd'),
+)
+custom_target('installed-cab124',
+  input : [
+    'fakedevice124.bin',
+    'fakedevice124.bin.asc',
+    'fakedevice124.metainfo.xml',
+  ],
+  output : 'fakedevice124.cab',
+  command : [
+    gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
+  ],
+  install: true,
+  install_dir: join_paths('share', 'installed-tests', 'fwupd'),
+)
