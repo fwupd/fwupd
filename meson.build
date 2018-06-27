@@ -286,7 +286,10 @@ plugin_deps += soup
 plugin_deps += libarchive
 
 subdir('data')
-subdir('docs')
+if get_option('gtkdoc')
+  gtkdocscan = find_program('gtkdoc-scan', required : true)
+  subdir('docs')
+endif
 subdir('libfwupd')
 subdir('po')
 if get_option('daemon')
