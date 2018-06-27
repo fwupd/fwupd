@@ -185,6 +185,7 @@ endif
 if libgcab.version().version_compare('>= 1.0')
   conf.set('HAVE_GCAB_1_0', '1')
 endif
+gcab = find_program('gcab', required : true)
 bashcomp = dependency('bash-completion', required: false)
 
 if get_option('plugin_uefi_labels')
