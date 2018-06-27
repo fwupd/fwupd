@@ -286,6 +286,37 @@ fu_engine_partial_hash_func (void)
 }
 
 static void
+fu_engine_device_unlock_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(GError) error = NULL;
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load (engine, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* add the hardcoded 'fwupd' metadata */
+	filename = fu_test_get_filename (TESTDATADIR, "metadata.xml");
+	g_assert (filename != NULL);
+	ret = fu_engine_load_metadata_from_file (engine, filename, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* add a dummy device */
+	fu_device_set_id (device, "UEFI-dummy-dev0");
+	fu_device_add_guid (device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_engine_add_device (engine, device);
+
+	/* ensure the metainfo was matched */
+	g_assert_nonnull (fwupd_device_get_release_default (FWUPD_DEVICE (device)));
+}
+
+static void
 fu_engine_require_hwid_func (void)
 {
 	AsApp *app;
@@ -2212,6 +2243,7 @@ main (int argc, char **argv)
 	g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
 	g_setenv ("FWUPD_DATADIR", TESTDATADIR_SRC, TRUE);
 	g_setenv ("FWUPD_PLUGINDIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("FWUPD_SYSCONFDIR", TESTDATADIR_SRC, TRUE);
 	g_setenv ("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
 	g_setenv ("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
@@ -2228,6 +2260,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
 	g_test_add_func ("/fwupd/device-list{delay}", fu_device_list_delay_func);
 	g_test_add_func ("/fwupd/device-list{compatible}", fu_device_list_compatible_func);
+	g_test_add_func ("/fwupd/engine{device-unlock}", fu_engine_device_unlock_func);
 	g_test_add_func ("/fwupd/engine{history-success}", fu_engine_history_func);
 	g_test_add_func ("/fwupd/engine{history-error}", fu_engine_history_error_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
