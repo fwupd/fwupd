@@ -275,7 +275,7 @@ fu_plugin_dell_dock_func (void)
 	ret = fu_plugin_open (plugin_dell, PLUGINBUILDDIR "/libfu_plugin_dell.so", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	ret = fu_plugin_runner_startup (plugin_uefi, &error);
+	ret = fu_plugin_runner_startup (plugin_dell, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_signal_connect (plugin_dell, "device-register",
