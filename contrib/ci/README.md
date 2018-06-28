@@ -9,7 +9,7 @@ Fedora (x86_64)
 ------
 
 * A fully packaged RPM build with all plugins enabled
-* Compiled under gcc
+* Compiled under gcc with AddressSanitizer
 * Tests with -Werror enabled
 * Tests with the built in local test suite for all plugins.
 * All packages are installed

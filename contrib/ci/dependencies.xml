@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 <dependencies>
+  <dependency type="build" id="libasan">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
   <dependency type="build" id="bash-completion">
     <distro id="debian">
       <control />
