@@ -107,11 +107,11 @@ synapticsmst_device_init (SynapticsMSTDevice *device)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	const gchar *tmp;
-
-	priv->test_mode = FALSE;
-	priv->fw_dir = g_strdup ("/dev");
 	tmp = g_getenv ("FWUPD_SYNAPTICSMST_FW_DIR");
-	if (tmp != NULL) {
+	if (tmp == NULL) {
+		priv->test_mode = FALSE;
+		priv->fw_dir = g_strdup ("/dev");
+	} else {
 		priv->test_mode = TRUE;
 		priv->fw_dir = g_strdup (tmp);
 	}
