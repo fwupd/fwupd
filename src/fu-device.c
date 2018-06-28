@@ -162,7 +162,7 @@ fu_device_set_equivalent_id (FuDevice *device, const gchar *equivalent_id)
  *
  * Returns: (transfer none): a #FuDevice or %NULL
  *
- * Since: 1.0.9
+ * Since: 1.1.0
  **/
 const gchar *
 fu_device_get_alternate_id (FuDevice *device)
@@ -180,7 +180,7 @@ fu_device_get_alternate_id (FuDevice *device)
  * Sets any alternate device ID. An alternate device may be linked to the primary
  * device in some way.
  *
- * Since: 1.0.9
+ * Since: 1.1.0
  **/
 void
 fu_device_set_alternate_id (FuDevice *device, const gchar *alternate_id)
