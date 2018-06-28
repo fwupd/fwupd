@@ -161,6 +161,11 @@ if __name__ == '__main__':
     test.add_file('3d3a65ee2e8581647fb09d752fa7e21ee1566481-8Bitdo-SF30_Pro-SN30_Pro-1.26.cab', '1.26')
     tests.append(test)
 
+    # AIAIAI H05
+    test = Test('AIAIAI-H05', '7e8318e1-27ae-55e4-a7a7-a35eff60e9bf')
+    test.add_file('84279d6bab52262080531acac701523604f3e649-AIAIAI-H05-1.6.cab', '1.6')
+    tests.append(test)
+
     # run each test
     rc = 0
     for test in tests:
