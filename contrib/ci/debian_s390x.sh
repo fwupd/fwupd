@@ -19,3 +19,7 @@ meson .. \
 ninja -v
 ninja test -v
 cd ..
+
+
+#test for missing translation files
+./contrib/ci/check_missing_translations.sh
