@@ -3211,8 +3211,34 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 			       FuEngine *self)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	const gchar *plugin_name;
+
+	/* does the quirk specify the plugin to use */
+	plugin_name = fu_quirks_lookup_by_usb_device (self->quirks,
+						      FU_QUIRKS_PLUGIN,
+						      usb_device);
+	if (plugin_name != NULL) {
+		g_autoptr(GError) error = NULL;
+		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,
+								plugin_name, &error);
+		if (plugin == NULL) {
+			g_warning ("failed to find specified plugin %s: %s",
+				   plugin_name, error->message);
+			return;
+		}
+		if (!fu_plugin_runner_usb_device_added (plugin, usb_device, &error)) {
+			g_warning ("failed to add USB device %04x:%04x: %s",
+				   g_usb_device_get_vid (usb_device),
+				   g_usb_device_get_pid (usb_device),
+				   error->message);
+		}
+		return;
+	}
 
 	/* call into each plugin */
+	g_debug ("no plugin specified for USB device %04x:%04x",
+		 g_usb_device_get_vid (usb_device),
+		 g_usb_device_get_pid (usb_device));
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		g_autoptr(GError) error = NULL;

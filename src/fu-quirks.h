@@ -31,6 +31,17 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 							 GUsbDevice	*dev);
 
 /**
+ * FU_QUIRKS_PLUGIN:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the plugin name, e.g. `csr`
+ *
+ * Sets the plugin to use for a specific hardware device.
+ *
+ * Since: 1.1.0
+ */
+#define	FU_QUIRKS_PLUGIN			"Plugin"
+
+/**
  * FU_QUIRKS_DFU:
  * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
  * @value: a string, separated using `|`, e.g. `ignore-polltimeout|no-pid-change`
