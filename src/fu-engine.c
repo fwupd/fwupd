@@ -971,12 +971,19 @@ fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 	if (as_app_get_kind (app) != AS_APP_KIND_FIRMWARE)
 		return;
 
-	/* any quirks match */
-	quirk = fu_quirks_lookup_by_glob (self->quirks,
-					  FU_QUIRKS_DAEMON_VERSION_FORMAT,
-					  as_app_get_id (app));
-	if (g_strcmp0 (quirk, "none") == 0)
-		flags = AS_VERSION_PARSE_FLAG_NONE;
+	/* fall back to the quirk database until all files have metadata */
+	quirk = fu_quirks_lookup_by_id (self->quirks,
+					"DaemonVersionFormat=quad",
+					FU_QUIRKS_DAEMON_VERSION_FORMAT);
+	if (quirk != NULL) {
+		g_auto(GStrv) globs = g_strsplit (quirk, ",", -1);
+		for (guint i = 0; globs[i] != NULL; i++) {
+			if (fnmatch (globs[i], as_app_get_id (app), 0) == 0) {
+				flags = AS_VERSION_PARSE_FLAG_NONE;
+				break;
+			}
+		}
+	}
 
 	/* specified in metadata */
 	version_format = as_app_get_metadata_item (app, "LVFS::VersionFormat");
@@ -3215,8 +3222,8 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 
 	/* does the quirk specify the plugin to use */
 	plugin_name = fu_quirks_lookup_by_usb_device (self->quirks,
-						      FU_QUIRKS_PLUGIN,
-						      usb_device);
+						      usb_device,
+						      FU_QUIRKS_PLUGIN);
 	if (plugin_name != NULL) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,

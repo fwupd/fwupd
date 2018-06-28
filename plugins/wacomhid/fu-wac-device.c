@@ -676,33 +676,6 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 }
 
 static gboolean
-fu_wac_device_probe (FuUsbDevice *device, GError **error)
-{
-	const gchar *custom_flags;
-
-	/* devices have to be whitelisted */
-	custom_flags = fu_device_get_custom_flags (FU_DEVICE (device));
-	if (custom_flags == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported with this device");
-		return FALSE;
-	}
-
-	/* hardware cannot respond to GetReport(DeviceFirmwareDescriptor) */
-	if (g_strcmp0 (custom_flags, "use-runtime-version") == 0) {
-		fu_device_add_flag (FU_DEVICE (device),
-				    FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
-	}
-
-	/* hardcoded */
-	fu_device_add_icon (FU_DEVICE (device), "input-tablet");
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
-	return TRUE;
-}
-
-static gboolean
 fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
@@ -883,6 +856,8 @@ fu_wac_device_init (FuWacDevice *self)
 	self->checksums = g_array_new (FALSE, FALSE, sizeof(guint32));
 	self->configuration = 0xffff;
 	self->firmware_index = 0xffff;
+	fu_device_add_icon (FU_DEVICE (self), "input-tablet");
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 }
 
 static void
@@ -907,7 +882,6 @@ fu_wac_device_class_init (FuWacDeviceClass *klass)
 	klass_device->to_string = fu_wac_device_to_string;
 	klass_usb_device->open = fu_wac_device_open;
 	klass_usb_device->close = fu_wac_device_close;
-	klass_usb_device->probe = fu_wac_device_probe;
 }
 
 FuWacDevice *

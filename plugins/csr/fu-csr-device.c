@@ -15,6 +15,22 @@
 #include "dfu-chunked.h"
 #include "dfu-firmware.h"
 
+/**
+ * FU_CSR_DEVICE_QUIRK_FLAG_REQUIRE_DELAY:
+ *
+ * Respect the write timeout value when performing actions. This is sometimes
+ * set to a huge amount of time, and so is not used by default.
+ *
+ * Since: 1.0.3
+ */
+#define FU_CSR_DEVICE_FLAG_REQUIRE_DELAY	"require-delay"
+
+typedef enum {
+	FU_CSR_DEVICE_QUIRK_NONE		= 0,
+	FU_CSR_DEVICE_QUIRK_REQUIRE_DELAY	= (1 << 0),
+	FU_CSR_DEVICE_QUIRK_LAST
+} FuCsrDeviceQuirks;
+
 struct _FuCsrDevice
 {
 	FuUsbDevice		 parent_instance;
@@ -61,12 +77,6 @@ fu_csr_device_dump (const gchar *title, const guint8 *buf, gsize sz)
 	for (gsize i = 0; i < sz; i++)
 		g_print ("%02x ", buf[i]);
 	g_print ("\n");
-}
-
-void
-fu_csr_device_set_quirks (FuCsrDevice *self, FuCsrDeviceQuirks quirks)
-{
-	self->quirks = quirks;
 }
 
 static gboolean
@@ -503,21 +513,12 @@ fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 static gboolean
 fu_csr_device_probe (FuUsbDevice *device, GError **error)
 {
-	const gchar *quirk_str;
+	FuCsrDevice *self = FU_CSR_DEVICE (device);
 
 	/* devices have to be whitelisted */
-	quirk_str = fu_device_get_custom_flags (FU_DEVICE (device));
-	if (quirk_str == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported with this device");
-		return FALSE;
-	}
-	if (g_strcmp0 (quirk_str, "require-delay") == 0) {
-		fu_csr_device_set_quirks (FU_CSR_DEVICE (device),
-					  FU_CSR_DEVICE_QUIRK_REQUIRE_DELAY);
-	}
+	if (fu_device_has_custom_flag (FU_DEVICE (device),
+				       FU_CSR_DEVICE_FLAG_REQUIRE_DELAY))
+		self->quirks = FU_CSR_DEVICE_QUIRK_REQUIRE_DELAY;
 
 	/* hardcoded */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);

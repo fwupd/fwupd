@@ -13,6 +13,12 @@
 #include "fu-nitrokey-device.h"
 #include "fu-nitrokey-common.h"
 
+void
+fu_plugin_init (FuPlugin *plugin)
+{
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_REQUIRES_QUIRK, FU_QUIRKS_PLUGIN);
+}
+
 gboolean
 fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {

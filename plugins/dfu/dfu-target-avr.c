@@ -19,6 +19,22 @@
 
 #include "fwupd-error.h"
 
+/**
+ * FU_QUIRKS_DFU_AVR_ALT_NAME:
+ * @key: the AVR chip ID, e.g. `0x58200204`
+ * @value: the UM0424 sector description, e.g. `@Flash/0x2000/1*248Kg`
+ *
+ * Assigns a sector description for the chip ID. This is required so fwupd can
+ * program the user firmware avoiding the bootloader and for checking the total
+ * element size.
+ *
+ * The chip ID can be found from a datasheet or using `dfu-tool list` when the
+ * hardware is connected and in bootloader mode.
+ *
+ * Since: 1.0.1
+ */
+#define	FU_QUIRKS_DFU_AVR_ALT_NAME		"DfuAltName"
+
 typedef struct {
 	guint32			 device_id;
 } DfuTargetAvrPrivate;
@@ -400,6 +416,7 @@ dfu_target_avr_setup (DfuTarget *target, GError **error)
 	gsize sz;
 	guint32 device_id_be;
 	g_autofree gchar *chip_id = NULL;
+	g_autofree gchar *chip_id_prefixed = NULL;
 	g_autoptr(GBytes) chunk_sig = NULL;
 
 	/* already done */
@@ -449,9 +466,10 @@ dfu_target_avr_setup (DfuTarget *target, GError **error)
 	/* set the alt-name using the device ID */
 	dfu_device_set_chip_id (dfu_target_get_device (target), chip_id);
 	device = dfu_target_get_device (target);
+	chip_id_prefixed = g_strdup_printf ("AvrChipId=%s", chip_id);
 	quirk_str = fu_quirks_lookup_by_id (fu_device_get_quirks (FU_DEVICE (device)),
-					    FU_QUIRKS_DFU_AVR_CHIP_ID,
-					    chip_id);
+					    chip_id_prefixed,
+					    FU_QUIRKS_DFU_AVR_ALT_NAME);
 	if (quirk_str == NULL) {
 		dfu_device_remove_attribute (dfu_target_get_device (target),
 					     DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD);

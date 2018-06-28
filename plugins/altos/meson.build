@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginAltos"']
 
+install_data(['altos.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_altos',
   sources : [
     'fu-altos-device.c',

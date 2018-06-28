@@ -21,6 +21,61 @@
  * See also: #DfuTarget, #DfuFirmware
  */
 
+/**
+ * FU_QUIRKS_DFU_FLAGS:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: a string, separated using `|`, e.g. `ignore-polltimeout|no-pid-change`
+ *
+ * Assigns optional quirks to use for a DFU device which does not follow the
+ * DFU 1.0 or 1.1 specification. The list of supported quirks is thus:
+ *
+ * * `none`:			No device quirks
+ * * `action-required`:		User has to do something manually, e.g. press a button
+ * * `attach-extra-reset`:	Device needs resetting twice for attach
+ * * `attach-upload-download`:	An upload or download is required for attach
+ * * `force-dfu-mode`:		Force DFU mode
+ * * `ignore-polltimeout`:	Ignore the device download timeout
+ * * `ignore-runtime`:		Device has broken DFU runtime support
+ * * `ignore-upload`:		Uploading from the device is broken
+ * * `no-dfu-runtime`:		No DFU runtime interface is provided
+ * * `no-get-status-upload`:	Do not do GetStatus when uploading
+ * * `no-pid-change`:		Accept the same VID:PID when changing modes
+ * * `use-any-interface`:	Use any interface for DFU
+ * * `use-atmel-avr`:		Device uses the ATMEL bootloader
+ * * `use-protocol-zero`:	Fix up the protocol number
+ * * `legacy-protocol`:		Use a legacy protocol version
+ *
+ * Default value: `none`
+ *
+ * Since: 1.0.1
+ */
+#define	FU_QUIRKS_DFU_FLAGS			"DfuFlags"
+
+/**
+ * FU_QUIRKS_DFU_FORCE_VERSION:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the uint16_t DFU version, encoded in base 16, e.g. `0110`
+ *
+ * Forces a specific DFU version for the hardware device. This is required
+ * if the device does not set, or sets incorrectly, items in the DFU functional
+ * descriptor.
+ *
+ * Since: 1.0.1
+ */
+#define	FU_QUIRKS_DFU_FORCE_VERSION		"DfuForceVersion"
+
+/**
+ * FU_QUIRKS_DFU_JABRA_DETACH:
+ * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @value: the two uint8_t unlock values, encoded in base 16, e.g. `0201`
+ *
+ * Assigns the two magic bytes sent to the Jabra hardware when the device is
+ * in runtime mode to make it switch into DFU mode.
+ *
+ * Since: 1.0.1
+ */
+#define	FU_QUIRKS_DFU_JABRA_DETACH		"DfuJabraDetach"
+
 #include "config.h"
 
 #include <string.h>
@@ -340,8 +395,8 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 
 		/* fix up the version */
 		quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-							    FU_QUIRKS_DFU_FORCE_VERSION,
-							    usb_device);
+							    usb_device,
+							    FU_QUIRKS_DFU_FORCE_VERSION);
 		if (quirk_str != NULL && strlen (quirk_str) == 4)
 			priv->version = dfu_utils_buffer_parse_uint16 (quirk_str);
 		if (priv->version == DFU_VERSION_DFU_1_0 ||
@@ -600,7 +655,7 @@ static void
 dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_auto(GStrv) split = g_strsplit (str, "|", -1);
+	g_auto(GStrv) split = g_strsplit (str, ",", -1);
 	for (guint i = 0; split[i] != NULL; i++) {
 		if (g_strcmp0 (split[i], "ignore-polltimeout") == 0) {
 			priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT;
@@ -661,8 +716,8 @@ dfu_device_apply_quirks (DfuDevice *device)
 	if (system_quirks != NULL && usb_device != NULL) {
 		const gchar *quirk_str;
 		quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-							    FU_QUIRKS_DFU,
-							    usb_device);
+							    usb_device,
+							    FU_QUIRKS_DFU_FLAGS);
 		if (quirk_str != NULL)
 			dfu_device_set_quirks_from_string (device, quirk_str);
 	} else {
@@ -1158,8 +1213,8 @@ dfu_device_detach (DfuDevice *device, GError **error)
 
 	/* handle Jabra devices that need a magic HID packet */
 	quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-						    FU_QUIRKS_DFU_JABRA_DETACH,
-						    usb_device);
+						    usb_device,
+						    FU_QUIRKS_DFU_JABRA_DETACH);
 	if (quirk_str != NULL) {
 		guint8 adr = 0x00;
 		guint8 rep = 0x00;

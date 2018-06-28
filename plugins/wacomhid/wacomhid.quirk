@@ -1,61 +1,99 @@
-[FuWacDevice]
-
 # MobileStudio Pro 13 (touch) [DTH-W1320]
-USB\VID_056A&PID_034A=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_034A]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # MobileStudio Pro 16 (touch) [DTH-W1620]
-USB\VID_056A&PID_034B=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_034B]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # MobileStudio Pro 13 (pen/pad) [DTH-W1320]
-USB\VID_056A&PID_034D=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_034D]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # MobileStudio Pro 16 (pen/pad) [DTH-W1620]
-USB\VID_056A&PID_034E=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_034E]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Intuos Pro medium (2nd-gen BT) [PTH-660]
-USB\VID_056A&PID_0360=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0360]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Intuos Pro large (2nd-gen BT) [PTH-860]
-USB\VID_056A&PID_0361=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0361]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Intuos BT S (3rd-gen BT) [CTL-4100WL]
-USB\VID_056A&PID_0377=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0377]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Intuos BT M (3rd-gen BT) [CTL-6100WL]
-USB\VID_056A&PID_0379=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0379]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Cintiq Pro 13 (pen/pad) [DTH-1320]
-USB\VID_056A&PID_034F=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_034F]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Cintiq Pro 16 (pen/pad) [DTH-1620]
-USB\VID_056A&PID_0350=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0350]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Cintiq Pro 13 (touch) [DTH-1320]
-USB\VID_056A&PID_0353=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0353]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Cintiq Pro 16 (touch) [DTH-1620]
-USB\VID_056A&PID_0354=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0354]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Intuos Pro medium (2nd-gen USB) [PTH-660]
-USB\VID_056A&PID_0357=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0357]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Intuos Pro large (2nd-gen USB) [PTH-860]
-USB\VID_056A&PID_0358=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0358]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Pen [DTH-1152]
-USB\VID_056A&PID_035A=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_035A]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Touch [DTH-1152]
-USB\VID_056A&PID_0368=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0368]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Intuos S 3rd-gen (USB) [CTL-4100]
-USB\VID_056A&PID_0374=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0374]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Intuos M 3rd-gen (USB) [NA]
-USB\VID_056A&PID_0375=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0375]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Intuos BT S 3rd-gen (USB) [CTL-4100WL]
-USB\VID_056A&PID_0376=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0376]
+Plugin = wacomhid
+Flags = use-runtime-version
 
 # Intuos BT M 3rd-gen (USB) [CTL-6100WL]
-USB\VID_056A&PID_0378=use-runtime-version
+[DeviceInstanceId=USB\VID_056A&PID_0378]
+Plugin = wacomhid
+Flags = use-runtime-version

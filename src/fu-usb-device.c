@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -41,50 +41,44 @@ fu_usb_device_apply_quirks (FuUsbDevice *device)
 {
 	FuQuirks *quirks = fu_device_get_quirks (FU_DEVICE (device));
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-	const gchar *type_name = G_OBJECT_TYPE_NAME (device);
 	const gchar *tmp;
 
 	/* not set */
 	if (quirks == NULL)
 		return;
 
-	/* type */
-	g_debug ("looking for USB quirks for %s type", type_name);
-	tmp = fu_quirks_lookup_by_usb_device (quirks, type_name, usb_device);
-	if (tmp != NULL) {
-		g_debug ("default plugin hints set to: %s", tmp);
+	/* flags */
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_FLAGS);
+	if (tmp != NULL)
 		fu_device_set_custom_flags (FU_DEVICE (device), tmp);
-	}
 
 	/* name */
-	g_debug ("looking for USB quirks for %s device",
-		 fu_device_get_platform_id (FU_DEVICE (device)));
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_NAME, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_NAME);
 	if (tmp != NULL)
 		fu_device_set_name (FU_DEVICE (device), tmp);
 
 	/* summary */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_SUMMARY, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_SUMMARY);
 	if (tmp != NULL)
 		fu_device_set_summary (FU_DEVICE (device), tmp);
 
 	/* vendor */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_VENDOR, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_VENDOR);
 	if (tmp != NULL)
 		fu_device_set_vendor (FU_DEVICE (device), tmp);
 
 	/* version */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_VERSION, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_VERSION);
 	if (tmp != NULL)
 		fu_device_set_version (FU_DEVICE (device), tmp);
 
 	/* icon */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_ICON, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_ICON);
 	if (tmp != NULL)
 		fu_device_add_icon (FU_DEVICE (device), tmp);
 
 	/* GUID */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, FU_QUIRKS_USB_GUID, usb_device);
+	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_GUID);
 	if (tmp != NULL)
 		fu_device_add_guid (FU_DEVICE (device), tmp);
 }

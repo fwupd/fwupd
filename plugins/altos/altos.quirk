@@ -1,0 +1,7 @@
+# ChaosKey
+[DeviceInstanceId=USB\VID_1D50&PID_60C6]
+Plugin = altos
+Flags = none
+[DeviceInstanceId=USB\VID_FFFE&PID_000A]
+Plugin = altos
+Flags = is-bootloader

@@ -15,6 +15,16 @@
 #include "fu-colorhug-common.h"
 #include "fu-colorhug-device.h"
 
+/**
+ * FU_COLORHUG_DEVICE_FLAG_HALFSIZE:
+ *
+ * Some devices have a compact memory layout and the application code starts
+ * earlier.
+ *
+ * Since: 1.0.3
+ */
+#define FU_COLORHUG_DEVICE_FLAG_HALFSIZE	"halfsize"
+
 struct _FuColorhugDevice {
 	FuUsbDevice		 parent_instance;
 	guint16			 start_addr;
@@ -255,31 +265,11 @@ static gboolean
 fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
-	const gchar *quirk_str;
-	g_auto(GStrv) quirks = NULL;
 
-	/* devices have to be whitelisted */
-	quirk_str = fu_device_get_custom_flags (FU_DEVICE (device));
-	if (quirk_str == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported with this device");
-		return FALSE;
-	}
-	fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	quirks = g_strsplit (quirk_str, ",", -1);
-	for (guint i = 0; quirks[i] != NULL; i++) {
-		if (g_strcmp0 (quirks[i], "bootloader") == 0) {
-			fu_device_add_flag (FU_DEVICE (self),
-					    FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-			continue;
-		}
-		if (g_strcmp0 (quirks[i], "halfsize") == 0) {
-			self->start_addr = CH_EEPROM_ADDR_RUNCODE_ALS;
-			continue;
-		}
-	}
+	/* compact memory layout */
+	if (fu_device_has_custom_flag (FU_DEVICE (device),
+				       FU_COLORHUG_DEVICE_FLAG_HALFSIZE))
+		self->start_addr = CH_EEPROM_ADDR_RUNCODE_ALS;
 
 	/* add hardcoded bits */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);

@@ -130,8 +130,8 @@ const gchar	*fu_plugin_lookup_quirk_by_id		(FuPlugin	*plugin,
 							 const gchar	*prefix,
 							 const gchar	*id);
 const gchar	*fu_plugin_lookup_quirk_by_usb_device	(FuPlugin	*plugin,
-							 const gchar	*prefix,
-							 GUsbDevice	*dev);
+							 GUsbDevice	*usb_device,
+							 const gchar	*prefix);
 void		 fu_plugin_add_report_metadata		(FuPlugin	*plugin,
 							 const gchar	*key,
 							 const gchar	*value);
