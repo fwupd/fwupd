@@ -686,6 +686,31 @@ fu_device_get_serial (FuDevice *device)
 	return fu_device_get_metadata (device, "serial");
 }
 
+static void
+fu_device_set_custom_flag (FuDevice *device, const gchar *hint)
+{
+	FwupdDeviceFlags flag;
+
+	/* is this a known device flag */
+	flag = fwupd_device_flag_from_string (hint);
+	if (flag == FWUPD_DEVICE_FLAG_UNKNOWN)
+		return;
+
+	/* being both a bootloader and requiring a bootloader is invalid */
+	if (flag == FWUPD_DEVICE_FLAG_NONE ||
+	    flag == FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER) {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	}
+	if (flag == FWUPD_DEVICE_FLAG_NONE ||
+	    flag == FWUPD_DEVICE_FLAG_IS_BOOTLOADER) {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	}
+
+	/* none is not used as an "exported" flag */
+	if (flag != FWUPD_DEVICE_FLAG_NONE)
+		fu_device_add_flag (device, flag);
+}
+
 /**
  * fu_device_set_custom_flags:
  * @device: A #FuDevice
@@ -701,7 +726,16 @@ fu_device_set_custom_flags (FuDevice *device, const gchar *custom_flags)
 {
 	g_return_if_fail (FU_IS_DEVICE (device));
 	g_return_if_fail (custom_flags != NULL);
+
+	/* display what was set when converting to a string */
 	fu_device_set_metadata (device, "CustomFlags", custom_flags);
+
+	/* look for any standard FwupdDeviceFlags */
+	if (custom_flags != NULL) {
+		g_auto(GStrv) hints = g_strsplit (custom_flags, ",", -1);
+		for (guint i = 0; hints[i] != NULL; i++)
+			fu_device_set_custom_flag (device, hints[i]);
+	}
 }
 
 /**
