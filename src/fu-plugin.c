@@ -1514,6 +1514,28 @@ fu_plugin_get_rules (FuPlugin *plugin, FuPluginRule rule)
 }
 
 /**
+ * fu_plugin_has_rule:
+ * @plugin: a #FuPlugin
+ * @rule: a #FuPluginRule, e.g. %FU_PLUGIN_RULE_CONFLICTS
+ * @name: a plugin name, e.g. `upower`
+ *
+ * Check if a specific name exists for a given rule type.
+ *
+ * Returns: %TRUE if the name exists for the specific rule
+ **/
+gboolean
+fu_plugin_has_rule (FuPlugin *plugin, FuPluginRule rule, const gchar *name)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	for (guint i = 0; i < priv->rules[rule]->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv->rules[rule], i);
+		if (g_strcmp0 (tmp, name) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
  * fu_plugin_add_report_metadata:
  * @plugin: a #FuPlugin
  * @key: a string, e.g. `FwupdateVersion`

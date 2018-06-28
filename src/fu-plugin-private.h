@@ -39,6 +39,9 @@ void		 fu_plugin_set_name			(FuPlugin	*plugin,
 							 const gchar 	*name);
 GPtrArray	*fu_plugin_get_rules			(FuPlugin	*plugin,
 							 FuPluginRule	 rule);
+gboolean	 fu_plugin_has_rule			(FuPlugin	*plugin,
+							 FuPluginRule	 rule,
+							 const gchar	*name);
 GHashTable	*fu_plugin_get_report_metadata		(FuPlugin	*plugin);
 gboolean	 fu_plugin_open				(FuPlugin	*plugin,
 							 const gchar	*filename,
