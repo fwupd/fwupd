@@ -1,6 +1,6 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginWac"']
 
-install_data(['wac-intuos.quirk'],
+install_data(['wacomhid.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
