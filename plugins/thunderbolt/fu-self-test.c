@@ -548,7 +548,7 @@ mock_tree_plugin_device_added (FuPlugin *plugin, FuDevice *device, gpointer user
 		return;
 	}
 
-	target->fu_device = g_object_ref (device);
+	g_set_object (&target->fu_device, device);
 
 	if (mock_tree_all (tree, mock_tree_node_have_fu_device, NULL)) {
 		ctx->complete = TRUE;
@@ -868,12 +868,14 @@ test_set_up (ThunderboltTest *tt, gconstpointer params)
 {
 	TestFlags flags = GPOINTER_TO_UINT(params);
 	gboolean ret;
+	g_autofree gchar *sysfs = NULL;
 	g_autoptr(GError) error = NULL;
 
 	tt->bed = umockdev_testbed_new ();
 	g_assert_nonnull (tt->bed);
 
-	g_debug ("mock sysfs at %s", umockdev_testbed_get_sys_dir (tt->bed));
+	sysfs = umockdev_testbed_get_sys_dir (tt->bed);
+	g_debug ("mock sysfs at %s", sysfs);
 
 	tt->plugin = fu_plugin_new ();
 	g_assert_nonnull (tt->plugin);
