@@ -203,6 +203,11 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="intltool">
+    <distro id="debian">
+      <package variant="s390x" />
+    </distro>
+  </dependency>
   <dependency type="build" id="libelf-dev">
     <distro id="centos">
       <package>elfutils-libelf-devel</package>
