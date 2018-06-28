@@ -71,6 +71,10 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
     c_args : cargs
   )
   test_env = environment()
-  test_env.prepend('LD_PRELOAD', 'libumockdev-preload.so.0')
+  if get_option('b_sanitize') == 'address'
+    test_env.prepend('LD_PRELOAD', 'libasan.so.5', 'libumockdev-preload.so.0', separator : ' ')
+  else
+    test_env.prepend('LD_PRELOAD', 'libumockdev-preload.so.0')
+  endif
   test('thunderbolt-self-test', e, env: test_env, timeout : 120)
 endif
