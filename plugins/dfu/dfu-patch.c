@@ -507,7 +507,7 @@ dfu_patch_apply (DfuPatch *self, GBytes *blob, DfuPatchApplyFlags flags, GError 
 	}
 
 	data_new = g_malloc0 (sz_max);
-	memcpy (data_new, data_old, sz_max);
+	memcpy (data_new, data_old, MIN (sz, sz_max));
 	for (guint i = 0; i < priv->chunks->len; i++) {
 		DfuPatchChunk *chunk = g_ptr_array_index (priv->chunks, i);
 		const guint8 *chunk_data;
