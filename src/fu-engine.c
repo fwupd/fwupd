@@ -3242,12 +3242,24 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		g_autoptr(GError) error = NULL;
+
+		/* skipping plugin as requires quirk */
+		if (fu_plugin_has_rule (plugin_tmp,
+					FU_PLUGIN_RULE_REQUIRES_QUIRK,
+					FU_QUIRKS_PLUGIN)) {
+			continue;
+		}
+
+		/* create a device, then probe */
 		if (!fu_plugin_runner_usb_device_added (plugin_tmp, usb_device, &error)) {
 			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_debug ("ignoring: %s", error->message);
+				g_debug ("%s ignoring: %s",
+					 fu_plugin_get_name (plugin_tmp),
+					 error->message);
 				continue;
 			}
-			g_warning ("failed to add USB device %04x:%04x: %s",
+			g_warning ("%s failed to add USB device %04x:%04x: %s",
+				   fu_plugin_get_name (plugin_tmp),
 				   g_usb_device_get_vid (usb_device),
 				   g_usb_device_get_pid (usb_device),
 				   error->message);
