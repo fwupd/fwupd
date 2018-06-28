@@ -156,6 +156,11 @@ if __name__ == '__main__':
     test.add_file('1cb9a0277f536ecd81ca1cea6fd80d60cdbbdcd8-8Bitdo-SFC30PRO_NES30PRO-4.01.cab', '4.01')
     tests.append(test)
 
+    # 8Bitdo SF30 Pro Gamepad
+    test = Test('8BitdoSF30Pro', '269b3121-097b-50d8-b9ba-d1f64f9cd241')
+    test.add_file('3d3a65ee2e8581647fb09d752fa7e21ee1566481-8Bitdo-SF30_Pro-SN30_Pro-1.26.cab', '1.26')
+    tests.append(test)
+
     # run each test
     rc = 0
     for test in tests:
