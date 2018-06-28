@@ -687,38 +687,38 @@ fu_device_get_serial (FuDevice *device)
 }
 
 /**
- * fu_device_set_plugin_hints:
+ * fu_device_set_custom_flags:
  * @device: A #FuDevice
- * @plugin_hints: a string
+ * @custom_flags: a string
  *
- * Sets the hint the the plugin from the quirk system that can be used to
- * do affect device matching. The actual string format is defined by the plugin.
+ * Sets the custom flags from the quirk system that can be used to
+ * affect device matching. The actual string format is defined by the plugin.
  *
- * Since: 1.0.3
+ * Since: 1.1.0
  **/
 void
-fu_device_set_plugin_hints (FuDevice *device, const gchar *plugin_hints)
+fu_device_set_custom_flags (FuDevice *device, const gchar *custom_flags)
 {
 	g_return_if_fail (FU_IS_DEVICE (device));
-	g_return_if_fail (plugin_hints != NULL);
-	fu_device_set_metadata (device, "PluginHints", plugin_hints);
+	g_return_if_fail (custom_flags != NULL);
+	fu_device_set_metadata (device, "CustomFlags", custom_flags);
 }
 
 /**
- * fu_device_get_plugin_hints:
+ * fu_device_get_custom_flags:
  * @device: A #FuDevice
  *
- * Gets the plugin hint for the device from the quirk system.
+ * Gets the custom flags for the device from the quirk system.
  *
  * Returns: a string value, or %NULL if never set.
  *
- * Since: 1.0.3
+ * Since: 1.1.0
  **/
 const gchar *
-fu_device_get_plugin_hints (FuDevice *device)
+fu_device_get_custom_flags (FuDevice *device)
 {
 	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
-	return fu_device_get_metadata (device, "PluginHints");
+	return fu_device_get_metadata (device, "CustomFlags");
 }
 
 /**

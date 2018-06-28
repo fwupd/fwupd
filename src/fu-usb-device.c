@@ -53,7 +53,7 @@ fu_usb_device_apply_quirks (FuUsbDevice *device)
 	tmp = fu_quirks_lookup_by_usb_device (quirks, type_name, usb_device);
 	if (tmp != NULL) {
 		g_debug ("default plugin hints set to: %s", tmp);
-		fu_device_set_plugin_hints (FU_DEVICE (device), tmp);
+		fu_device_set_custom_flags (FU_DEVICE (device), tmp);
 	}
 
 	/* name */

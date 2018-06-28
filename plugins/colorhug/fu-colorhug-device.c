@@ -259,7 +259,7 @@ fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 	g_auto(GStrv) quirks = NULL;
 
 	/* devices have to be whitelisted */
-	quirk_str = fu_device_get_plugin_hints (FU_DEVICE (device));
+	quirk_str = fu_device_get_custom_flags (FU_DEVICE (device));
 	if (quirk_str == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,

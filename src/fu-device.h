@@ -137,9 +137,9 @@ void		 fu_device_set_platform_id		(FuDevice	*device,
 const gchar	*fu_device_get_serial			(FuDevice	*device);
 void		 fu_device_set_serial			(FuDevice	*device,
 							 const gchar	*serial);
-const gchar	*fu_device_get_plugin_hints		(FuDevice	*device);
-void		 fu_device_set_plugin_hints		(FuDevice	*device,
-							 const gchar	*plugin_hints);
+const gchar	*fu_device_get_custom_flags		(FuDevice	*device);
+void		 fu_device_set_custom_flags		(FuDevice	*device,
+							 const gchar	*custom_flags);
 void		 fu_device_set_name			(FuDevice	*device,
 							 const gchar	*value);
 guint		 fu_device_get_remove_delay		(FuDevice	*device);

@@ -678,11 +678,11 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 static gboolean
 fu_wac_device_probe (FuUsbDevice *device, GError **error)
 {
-	const gchar *plugin_hints;
+	const gchar *custom_flags;
 
 	/* devices have to be whitelisted */
-	plugin_hints = fu_device_get_plugin_hints (FU_DEVICE (device));
-	if (plugin_hints == NULL) {
+	custom_flags = fu_device_get_custom_flags (FU_DEVICE (device));
+	if (custom_flags == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -691,7 +691,7 @@ fu_wac_device_probe (FuUsbDevice *device, GError **error)
 	}
 
 	/* hardware cannot respond to GetReport(DeviceFirmwareDescriptor) */
-	if (g_strcmp0 (plugin_hints, "use-runtime-version") == 0) {
+	if (g_strcmp0 (custom_flags, "use-runtime-version") == 0) {
 		fu_device_add_flag (FU_DEVICE (device),
 				    FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
 	}
