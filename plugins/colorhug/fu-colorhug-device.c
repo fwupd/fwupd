@@ -127,7 +127,7 @@ fu_colorhug_device_msg (FuColorhugDevice *self, guint8 cmd,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "request not all recieved, got %" G_GSIZE_FORMAT,
+			     "request not all received, got %" G_GSIZE_FORMAT,
 			     actual_length);
 		return FALSE;
 	}
