@@ -172,9 +172,7 @@ Data files for installed tests.
 %global efiarch aa64
 %endif
 %global fwup_efi_fn $RPM_BUILD_ROOT%{_libexecdir}/fwupd/efi/fwup%{efiarch}.efi
-mv %{fwup_efi_fn} %{fwup_efi_fn}.old
-%pesign -s -i %{fwup_efi_fn}.old -o %{fwup_efi_fn}
-rm %{fwup_efi_fn}.old
+%pesign -s -i %{fwup_efi_fn} -o %{fwup_efi_fn}.signed
 %endif
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
@@ -205,6 +203,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libexecdir}/fwupd/fwupdtool
 %if 0%{?have_uefi}
 %{_libexecdir}/fwupd/efi/*.efi
+%{_libexecdir}/fwupd/efi/*.efi.signed
 %{_libexecdir}/fwupd/fwupdate
 %endif
 %{_bindir}/dfu-tool
