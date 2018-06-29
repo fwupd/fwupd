@@ -65,6 +65,7 @@ BuildRequires: fontconfig
 BuildRequires: dejavu-sans-fonts
 BuildRequires: adobe-source-han-sans-cn-fonts
 BuildRequires: gnu-efi-devel
+BuildRequires: pesign
 %endif
 
 %if 0%{?have_dell}
@@ -162,6 +163,20 @@ Data files for installed tests.
 %install
 %meson_install
 
+# sign fwup.efi loader
+%if 0%{?have_uefi}
+%ifarch x86_64
+%global efiarch x64
+%endif
+%ifarch aarch64
+%global efiarch aa64
+%endif
+%global fwup_efi_fn $RPM_BUILD_ROOT%{_libexecdir}/fwupd/efi/fwup%{efiarch}.efi
+mv %{fwup_efi_fn} %{fwup_efi_fn}.old
+%pesign -s -i %{fwup_efi_fn}.old -o %{fwup_efi_fn}
+rm %{fwup_efi_fn}.old
+%endif
+
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
 %find_lang %{name}
@@ -176,6 +191,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %postun
 /sbin/ldconfig
 %systemd_postun_with_restart fwupd.service
+%systemd_postun_with_restart pesign.service
 
 %files -f %{name}.lang
 %doc README.md AUTHORS NEWS
