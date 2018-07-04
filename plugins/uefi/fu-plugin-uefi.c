@@ -554,7 +554,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	if (!fu_uefi_vars_supported (error))
 		return FALSE;
 
-	/* if secure boot is enabled ensure we have a signed fwup.efi */
+	/* if secure boot is enabled ensure we have a signed fwupd.efi */
 	bootloader = fu_uefi_get_built_app_path (error);
 	if (bootloader == NULL)
 		return FALSE;

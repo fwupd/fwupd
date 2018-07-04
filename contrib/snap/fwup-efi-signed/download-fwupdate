@@ -22,13 +22,15 @@ pool_parsed = urlparse(fwupdate_efi.uri)
 dists_dir = "/dists/devel/main/uefi/fwupdate-%s/current/" % (
     fwupdate_efi.architecture)
 
-for base in (
-        "fwup%s.efi.signed" %efi_name,
-        "version",
-        ):
+DOWNLOAD_LIST = {
+        "fwup%s.efi.signed" %efi_name: "fwupd%s.efi.signed" % efi_name,
+        "version": "fwupd%s.efi.signed.version" % efi_name
+}
+for base in DOWNLOAD_LIST:
     dists_parsed = list(pool_parsed)
     dists_parsed[2] = re.sub(r"/pool/.*", dists_dir + base, dists_parsed[2])
     dists_uri = urlunparse(dists_parsed)
-    print("Downloading %s ..." % dists_uri)
-    with urlopen(dists_uri) as dists, open(base, "wb") as out:
+    target = DOWNLOAD_LIST[base]
+    print("Downloading %s to %s..." % (dists_uri, target))
+    with urlopen(dists_uri) as dists, open(target, "wb") as out:
         shutil.copyfileobj(dists, out)

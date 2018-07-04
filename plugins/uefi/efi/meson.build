@@ -102,7 +102,7 @@ else
 endif
 
 libgcc_file_name = run_command(efi_cc, '-print-libgcc-file-name').stdout().strip()
-efi_name = 'fwup@0@.efi'.format(EFI_MACHINE_TYPE_NAME)
+efi_name = 'fwupd@0@.efi'.format(EFI_MACHINE_TYPE_NAME)
 
 o_file = custom_target('fwupdate.o',
                         input : 'fwupdate.c',
