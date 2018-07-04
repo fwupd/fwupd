@@ -171,7 +171,7 @@ Data files for installed tests.
 %ifarch aarch64
 %global efiarch aa64
 %endif
-%global fwup_efi_fn $RPM_BUILD_ROOT%{_libexecdir}/fwupd/efi/fwup%{efiarch}.efi
+%global fwup_efi_fn $RPM_BUILD_ROOT%{_libexecdir}/fwupd/efi/fwupd%{efiarch}.efi
 %pesign -s -i %{fwup_efi_fn} -o %{fwup_efi_fn}.signed
 %endif
 

@@ -18,13 +18,12 @@ EFI_NAME := arm
 endif
 
 SIGNED := \
-	fwup$(EFI_NAME).efi.signed
+	fwupd$(EFI_NAME).efi.signed
 
 all: $(SIGNED)
 
 $(SIGNED):
 	./download-fwupdate
-	mv version $(SIGNED).version
 
 install: $(SIGNED)
 	install -d $(DESTDIR)/usr/lib/fwupd/efi

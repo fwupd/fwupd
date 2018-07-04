@@ -335,7 +335,7 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path, GError **error)
 	}
 
 	/* test if correct asset in place */
-	target_app = fu_uefi_get_esp_app_path (esp_path, "fwup", error);
+	target_app = fu_uefi_get_esp_app_path (esp_path, "fwupd", error);
 	if (target_app == NULL)
 		return FALSE;
 	if (!fu_uefi_cmp_asset (source_app, target_app)) {

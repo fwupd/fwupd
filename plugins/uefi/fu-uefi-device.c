@@ -317,7 +317,7 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	if (!fu_common_set_contents_bytes (fn, fw, error))
 		return FALSE;
 
-	/* set the blob header shared with fwup.efi */
+	/* set the blob header shared with fwupd.efi */
 	memset (&info, 0x0, sizeof(info));
 	info.status = FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE;
 	info.capsule_flags = self->capsule_flags;

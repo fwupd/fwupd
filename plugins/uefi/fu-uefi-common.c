@@ -94,7 +94,7 @@ fu_uefi_get_built_app_path (GError **error)
 	suffix = fu_uefi_bootmgr_get_suffix (error);
 	if (suffix == NULL)
 		return NULL;
-	source_path = g_strdup_printf ("%s/fwup%s.efi%s",
+	source_path = g_strdup_printf ("%s/fwupd%s.efi%s",
 				       EFI_APP_LOCATION,
 				       suffix,
 				       extension);
