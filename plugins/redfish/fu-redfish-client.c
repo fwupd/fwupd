@@ -398,6 +398,7 @@ fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **e
 	JsonObject *obj_root = NULL;
 	JsonObject *obj_update_service = NULL;
 	const gchar *data_id;
+	const gchar *version = NULL;
 	g_autofree gchar *user_agent = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new ();
@@ -485,8 +486,14 @@ fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **e
 				     "no root object");
 		return FALSE;
 	}
-	g_debug ("Version:  %s",
-		 json_object_get_string_member (obj_root, "ServiceVersion"));
+	if (json_object_has_member (obj_root, "ServiceVersion")) {
+		version = json_object_get_string_member (obj_root,
+							 "ServiceVersion");
+	} else if (json_object_has_member (obj_root, "RedfishVersion")) {
+		version = json_object_get_string_member (obj_root,
+							 "RedfishVersion");
+	}
+	g_debug ("Version:  %s", version);
 	g_debug ("UUID:     %s",
 		 json_object_get_string_member (obj_root, "UUID"));
 
