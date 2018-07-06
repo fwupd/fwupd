@@ -235,7 +235,7 @@ fu_uefi_update_info_func (void)
 	g_assert_cmpint (fu_uefi_update_info_get_hw_inst (info), ==, 0x0);
 	g_assert_cmpint (fu_uefi_update_info_get_status (info), ==, FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE);
 	g_assert_cmpstr (fu_uefi_update_info_get_capsule_fn (info), ==,
-			 "/EFI/fedora/fw/fwupdate-697bd920-12cf-4da9-8385-996909bc6559.cap");
+			 "/EFI/fedora/fw/fwupd-697bd920-12cf-4da9-8385-996909bc6559.cap");
 }
 
 int

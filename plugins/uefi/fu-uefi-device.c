@@ -164,7 +164,7 @@ fu_uefi_device_get_guid (FuUefiDevice *self)
 static gchar *
 fu_uefi_device_build_varname (FuUefiDevice *self)
 {
-	return g_strdup_printf ("fwupdate-%s-%"G_GUINT64_FORMAT,
+	return g_strdup_printf ("fwupd-%s-%"G_GUINT64_FORMAT,
 				self->fw_class,
 				self->fmp_hardware_instance);
 }
@@ -310,7 +310,7 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 
 	/* save the blob to the ESP */
 	directory = fu_uefi_get_esp_path_for_os (esp_path);
-	basename = g_strdup_printf ("fwupdate-%s.cap", self->fw_class);
+	basename = g_strdup_printf ("fwupd-%s.cap", self->fw_class);
 	fn = g_build_filename (directory, "fw", basename, NULL);
 	if (!fu_common_mkdir_parent (fn, error))
 		return FALSE;
