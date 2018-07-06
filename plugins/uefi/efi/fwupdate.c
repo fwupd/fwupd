@@ -850,7 +850,7 @@ delete_boot_entry(void)
 			UINT32 attributes = 0;
 			void *info_ptr = NULL;
 			CHAR16 *load_op_description = NULL;
-			CHAR16 target[] = L"Linux-Firmware-Updater";
+			CHAR16 target[] = L"Linux Firmware Updater";
 
 			rc = read_variable(variable_name, vendor_guid,
 					   &info_ptr, &info_size, &attributes);
@@ -874,7 +874,7 @@ delete_boot_entry(void)
 				rc = delete_boot_order(variable_name,
 						       vendor_guid);
 				if (EFI_ERROR(rc)) {
-					print(L"Failed to delete the Linux-Firmware-Updater boot entry from BootOrder.\n");
+					print(L"Failed to delete the Linux Firmware Updater boot entry from BootOrder.\n");
 					FreePool(info_ptr);
 					ret = rc;
 					goto err;
@@ -883,7 +883,7 @@ delete_boot_entry(void)
 				rc = delete_variable(variable_name,
 						     vendor_guid, attributes);
 				if (EFI_ERROR(rc)) {
-					print(L"Failed to delete the Linux-Firmware-Updater boot entry.\n");
+					print(L"Failed to delete the Linux Firmware Updater boot entry.\n");
 					FreePool(info_ptr);
 					ret = rc;
 					goto err;
