@@ -100,9 +100,57 @@ fu_redfish_client_coldplug_inventory (FuRedfishClient *self,
 				      GError **error)
 {
 	JsonArray *members;
+	JsonNode *node_root;
+	JsonObject *member;
+
 	members = json_object_get_array_member (inventory, "Members");
 	for (guint i = 0; i < json_array_get_length (members); i++) {
-		JsonObject *member = json_array_get_object_element (members, i);
+		g_autoptr(JsonParser) parser = json_parser_new ();
+		g_autoptr(GBytes) blob = NULL;
+		JsonObject *member_id;
+		const gchar *member_uri;
+
+		member_id = json_array_get_object_element (members, i);
+		member_uri = json_object_get_string_member (member_id, "@odata.id");
+		if (member_uri == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_FOUND,
+					     "no @odata.id string");
+			return FALSE;
+		}
+
+		/* try to connect */
+		blob = fu_redfish_client_fetch_data (self, member_uri, error);
+		if (blob == NULL)
+			return FALSE;
+
+		/* get the member object */
+		if (!json_parser_load_from_data (parser,
+						 g_bytes_get_data (blob, NULL),
+						 (gssize) g_bytes_get_size (blob),
+						 error)) {
+			g_prefix_error (error, "failed to parse node: ");
+			return FALSE;
+		}
+		node_root = json_parser_get_root (parser);
+		if (node_root == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "no root node");
+			return FALSE;
+		}
+		member = json_node_get_object (node_root);
+		if (member == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "no member object");
+			return FALSE;
+		}
+
+		/* Create the device for the member */
 		if (!fu_redfish_client_coldplug_member (self, member, error))
 			return FALSE;
 	}
