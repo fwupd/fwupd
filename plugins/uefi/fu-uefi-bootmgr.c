@@ -382,7 +382,7 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path, GError **error)
 		return FALSE;
 	}
 
-	label = g_strdup_printf ("Linux-Firmware-Updater %s", fwup_esp_path);
+	label = g_strdup ("Linux Firmware Updater");
 	sz = efi_loadopt_create (opt, opt_size, attributes,
 				 (efidp)dp_buf, dp_size,
 				 (guint8 *)label,
