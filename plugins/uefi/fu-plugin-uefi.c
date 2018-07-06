@@ -183,7 +183,7 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 
 	/* save to a predicatable filename */
 	directory = fu_uefi_get_esp_path_for_os (data->esp_path);
-	basename = g_strdup_printf ("fwupdate-%s.cap", FU_UEFI_VARS_GUID_UX_CAPSULE);
+	basename = g_strdup_printf ("fwupd-%s.cap", FU_UEFI_VARS_GUID_UX_CAPSULE);
 	fn = g_build_filename (directory, "fw", basename, NULL);
 	if (!fu_common_mkdir_parent (fn, error))
 		return FALSE;
@@ -530,7 +530,7 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 	files = fu_common_get_files_recursive (data->esp_path, error);
 	if (files == NULL)
 		return FALSE;
-	pattern = g_build_filename (data->esp_path, "EFI/*/fw/fwupdate-*.cap", NULL);
+	pattern = g_build_filename (data->esp_path, "EFI/*/fw/fwupd-*.cap", NULL);
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index (files, i);
 		if (fnmatch (pattern, fn, 0) == 0) {
@@ -595,7 +595,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	} else {
 		if (!fu_plugin_uefi_delete_old_capsules (plugin, error))
 			return FALSE;
-		if (!fu_uefi_vars_delete_with_glob (FU_UEFI_VARS_GUID_FWUPDATE, "fwupdate-*", error))
+		if (!fu_uefi_vars_delete_with_glob (FU_UEFI_VARS_GUID_FWUPDATE, "fwupd-*", error))
 			return FALSE;
 	}
 
