@@ -266,7 +266,7 @@ if get_option('plugin_thunderbolt')
 endif
 
 if get_option('systemd')
-  systemd = dependency('systemd', version : '>= 231')
+  systemd = dependency('systemd', version : '>= 211')
   conf.set('HAVE_SYSTEMD' , '1')
 endif
 
