@@ -87,6 +87,7 @@ fu_uefi_get_built_app_path (GError **error)
 	const gchar *extension = "";
 	const gchar *suffix;
 	g_autofree gchar *source_path = NULL;
+	g_autofree gchar *prefix = NULL;
 	if (fu_uefi_secure_boot_enabled ())
 		extension = ".signed";
 	if (g_file_test (EFI_APP_LOCATION_BUILD, G_FILE_TEST_EXISTS))
@@ -94,8 +95,9 @@ fu_uefi_get_built_app_path (GError **error)
 	suffix = fu_uefi_bootmgr_get_suffix (error);
 	if (suffix == NULL)
 		return NULL;
+	prefix = fu_common_get_path (FU_PATH_KIND_EFIAPPDIR);
 	source_path = g_strdup_printf ("%s/fwupd%s.efi%s",
-				       EFI_APP_LOCATION,
+				       prefix,
 				       suffix,
 				       extension);
 	if (!g_file_test (source_path, G_FILE_TEST_EXISTS)) {
