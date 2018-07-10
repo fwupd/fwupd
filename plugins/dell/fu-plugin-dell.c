@@ -6,7 +6,10 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include "config.h"
+#include "fu-plugin-dell.h"
+
+#include "fu-device-metadata.h"
+#include "fu-plugin-vfuncs.h"
 
 #include <appstream-glib.h>
 #include <glib/gstdio.h>
@@ -14,10 +17,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-
-#include "fu-plugin-dell.h"
-#include "fu-plugin-vfuncs.h"
-#include "fu-device-metadata.h"
 
 /* These are used to indicate the status of a previous DELL flash */
 #define DELL_SUCCESS			0x0000

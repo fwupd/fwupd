@@ -5,8 +5,6 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include "config.h"
-
 #include <fwupd.h>
 #include <glib-object.h>
 #include <glib/gstdio.h>

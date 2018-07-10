@@ -9,6 +9,7 @@
 #define __FU_DELL_COMMON_H
 
 #include "fu-device.h"
+
 #include <smbios_c/smi.h>
 #include <smbios_c/obj/smi.h>
 #include <efivar.h>
