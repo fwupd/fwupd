@@ -5,10 +5,9 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include "config.h"
+#include "fu-dell-smi.h"
 
 #include <appstream-glib.h>
-#include "fu-dell-smi.h"
 
 /* These are for dock query capabilities */
 struct dock_count_in {
