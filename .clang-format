@@ -30,4 +30,8 @@ SpacesInSquareBrackets: 'false'
 TabWidth: '8'
 UseTab: Always
 
+PenaltyBreakAssignment: '3'
+PenaltyBreakString: '10'
+PenaltyExcessCharacter: '1'
+PenaltyBreakBeforeFirstCallParameter: '15'
 ...
