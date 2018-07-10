@@ -4,12 +4,13 @@ AlignConsecutiveAssignments: 'false'
 AlignConsecutiveDeclarations: 'false'
 AlignOperands: 'true'
 AlignTrailingComments: 'true'
-AllowAllParametersOfDeclarationOnNextLine: 'true'
+AllowAllParametersOfDeclarationOnNextLine: 'false'
 AllowShortBlocksOnASingleLine: 'false'
 AllowShortCaseLabelsOnASingleLine: 'false'
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: 'false'
 AlwaysBreakAfterReturnType: All
+BinPackParameters: 'false'
 BinPackArguments: 'true'
 BreakBeforeBraces: Linux
 DerivePointerAlignment: 'false'
