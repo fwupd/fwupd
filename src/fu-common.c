@@ -850,6 +850,19 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_build_filename (tmp, DATADIR, PACKAGE_NAME, NULL);
 		return g_build_filename (DATADIR, PACKAGE_NAME, NULL);
+	/* /usr/libexec/fwupd/efi */
+	case FU_PATH_KIND_EFIAPPDIR:
+		tmp = g_getenv ("FWUPD_EFIAPPDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+#ifdef EFI_APP_LOCATION
+		tmp = g_getenv ("SNAP");
+		if (tmp != NULL)
+			return g_build_filename (tmp, EFI_APP_LOCATION, NULL);
+		return g_strdup (EFI_APP_LOCATION);
+#else
+		return NULL;
+#endif
 	/* /etc/fwupd */
 	case FU_PATH_KIND_SYSCONFDIR_PKG:
 		basedir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR);
