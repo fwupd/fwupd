@@ -7,6 +7,7 @@
 
 import argparse
 import os
+import re
 import sys
 import subprocess
 
@@ -35,6 +36,33 @@ def select_clang_version ():
                         continue
         return None
 
+# workaround until https://reviews.llvm.org/D27651 is in a version of clang
+def fix_pointer (string):
+        result = ''
+        move = None
+        hints = 0
+        if 'const' in string:
+                hints += 1
+        if '=' in string:
+                hints += 1
+        if 'uint' in string:
+                hints += 1
+        if 'struct' in string:
+                hints += 1
+        parts = re.split(r'(\S+)', string)
+        #simple case of whitespace type whitespace * whitespace definition
+        if len(parts) < 8:
+                hints += 1
+        for part in parts:
+                if hints > 0 and part is '*':
+                        move = part
+                else:
+                        if move and part.strip():
+                                result += move
+                                move = None
+                        result += part
+        return result
+
 def reformat_file (formatter, f):
         print ("Reformatting %s using %s" % (f, formatter))
         ret = subprocess.check_call ([formatter, '-i', '-style=file', f])
@@ -42,10 +70,17 @@ def reformat_file (formatter, f):
         with open (f, 'r') as rfd:
                 lines = rfd.readlines()
         with open (f, 'w') as wfd:
+                comment = False
                 for line in lines:
                         for fixup in FIXUPS:
                                 if fixup in line:
                                         line = line.replace(fixup, FIXUPS[fixup])
+                        if '/*' in line:
+                                comment = True
+                        if '*/' in line:
+                                comment = False
+                        if not comment and (' * ' in line or (' *	') in line):
+                                line = fix_pointer (line)
                         wfd.write (line)
 
 ## Entry Point ##
