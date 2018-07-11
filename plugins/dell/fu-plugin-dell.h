@@ -8,37 +8,36 @@
 #ifndef __FU_PLUGIN_DELL_H
 #define __FU_PLUGIN_DELL_H
 
-#include <gusb.h>
-#include "fu-plugin.h"
 #include "fu-dell-smi.h"
+#include "fu-plugin.h"
+#include <gusb.h>
 
 struct FuPluginData {
-	FuDellSmiObj		*smi_obj;
-	guint16			fake_vid;
-	guint16			fake_pid;
-	gboolean		can_switch_modes;
-	gboolean		capsule_supported;
-	guint			libsmbios_major;
-	guint			libsmbios_minor;
+	FuDellSmiObj *smi_obj;
+	guint16       fake_vid;
+	guint16       fake_pid;
+	gboolean      can_switch_modes;
+	gboolean      capsule_supported;
+	guint	 libsmbios_major;
+	guint	 libsmbios_minor;
 };
 
 void
 fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
-				 guint32 *output, guint16 vid, guint16 pid,
-				 guint8 *buf, gboolean can_switch_modes);
+				 guint32  *output,
+				 guint16   vid,
+				 guint16   pid,
+				 guint8   *buf,
+				 gboolean  can_switch_modes);
 
 gboolean
 fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error);
 
 void
-fu_plugin_dell_device_added_cb (GUsbContext *ctx,
-				GUsbDevice *device,
-				FuPlugin *plugin);
+fu_plugin_dell_device_added_cb (GUsbContext *ctx, GUsbDevice *device, FuPlugin *plugin);
 
 void
-fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
-				  GUsbDevice *device,
-				  FuPlugin *plugin);
+fu_plugin_dell_device_removed_cb (GUsbContext *ctx, GUsbDevice *device, FuPlugin *plugin);
 
 /* These are nodes that will indicate information about
  * the TPM status
@@ -49,10 +48,10 @@ struct tpm_status {
 	guint32 status;
 	guint32 flashes_left;
 };
-#define TPM_EN_MASK	0x0001
-#define TPM_OWN_MASK	0x0004
-#define TPM_TYPE_MASK	0x0F00
-#define TPM_1_2_MODE	0x0001
-#define TPM_2_0_MODE	0x0002
+#define TPM_EN_MASK 0x0001
+#define TPM_OWN_MASK 0x0004
+#define TPM_TYPE_MASK 0x0F00
+#define TPM_1_2_MODE 0x0001
+#define TPM_2_0_MODE 0x0002
 
 #endif /* __FU_PLUGIN_DELL_H */
