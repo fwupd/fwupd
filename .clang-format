@@ -34,4 +34,10 @@ PenaltyBreakAssignment: '3'
 PenaltyBreakString: '10'
 PenaltyExcessCharacter: '1'
 PenaltyBreakBeforeFirstCallParameter: '15'
+
+IncludeCategories:
+  - Regex:           'config.h'
+    Priority:        0
+  - Regex:           '.*'
+    Priority:        1
 ...
