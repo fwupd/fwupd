@@ -19,6 +19,7 @@
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
 
+/* clang-format off */
 /* These are used to indicate the status of a previous DELL flash */
 #define DELL_SUCCESS			0x0000
 #define DELL_CONSISTENCY_FAIL		0x0001
@@ -38,6 +39,7 @@
 
 /* Delay for settling */
 #define DELL_FLASH_MODE_DELAY		2
+/* clang-format on */
 
 typedef struct _DOCK_DESCRIPTION
 {
@@ -46,6 +48,7 @@ typedef struct _DOCK_DESCRIPTION
 	const gchar *		desc;
 } DOCK_DESCRIPTION;
 
+/* clang-format off */
 /* These are for matching the components */
 #define WD15_EC_STR		"2 0 2 2 0"
 #define TB16_EC_STR		"2 0 2 1 0"
@@ -76,6 +79,7 @@ typedef struct _DOCK_DESCRIPTION
 
 /* supported host related GUIDs */
 #define MST_GPIO_GUID		EFI_GUID (0xF24F9bE4, 0x2a13, 0x4344, 0xBC05, 0x01, 0xCE, 0xF7, 0xDA, 0xEF, 0x92)
+/* clang-format on */
 
 /**
  * Devices that should allow modeswitching

@@ -100,6 +100,7 @@ fu_dell_toggle_dock_mode (FuDellSmiObj *smi_obj, guint32 new_mode,
 gboolean
 fu_dell_toggle_host_mode (FuDellSmiObj *smi_obj, const efi_guid_t guid, int mode);
 
+/* clang-format off */
 /* SMI return values used */
 #define SMI_SUCCESS			0
 #define SMI_INVALID_BUFFER		-6
@@ -127,5 +128,6 @@ fu_dell_toggle_host_mode (FuDellSmiObj *smi_obj, const efi_guid_t guid, int mode
 /* VID/PID of ethernet controller on dock */
 #define DOCK_NIC_VID		0x0bda
 #define DOCK_NIC_PID		0x8153
+/* clang-format on */
 
 #endif /* __FU_DELL_COMMON_H */
