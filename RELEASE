@@ -15,7 +15,7 @@ Update translations:
 
 ninja-build fwupd-pot
 tx push --source
-tx pull --all --minimum-perc=5
+tx pull --all --force --minimum-perc=5
 for f in ../po/*.po; do
 msgattrib --no-location --translated --no-wrap --sort-output $f --output-file=$f
 done

@@ -61,6 +61,10 @@ msgstr "Risponde affermativamente a tutte le domande"
 msgid "Apply a binary patch"
 msgstr "Applica una patch binaria"
 
+#. TRANSLATORS: command line option
+msgid "Apply firmware updates"
+msgstr "Applica aggiornamenti firmware"
+
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
 msgstr "Collega dispositivo DFU al runtime"
@@ -215,9 +219,16 @@ msgstr "Dispositivi aggiornati con successo:"
 msgid "Devices that were not updated correctly:"
 msgstr "Dispositivi non aggiornati correttamente:"
 
+msgid "Disabled fwupdate debugging"
+msgstr "Debug fwupdate disabilitato"
+
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
 msgstr "Disabilita un remoto dato"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "Visualizza la versione"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -265,6 +276,10 @@ msgstr "Scarta informazioni su un file di firmware"
 msgid "Dump information about a binary patch to the screen"
 msgstr "Stampa le informazioni riguardo a una patch binaria su schermo"
 
+#. TRANSLATORS: command line option
+msgid "Enable firmware update support on supported systems"
+msgstr "Abilita il supporto all'aggiornamento firmware sui sistemi compatibili"
+
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
 msgstr "Abilitare questo remoto?"
@@ -273,9 +288,15 @@ msgstr "Abilitare questo remoto?"
 msgid "Enabled"
 msgstr "Abilitato"
 
+msgid "Enabled fwupdate debugging"
+msgstr "Debug fwupdate abilitato"
+
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Abilita un remoto dato"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "Abilitare questa funzionalità a proprio rischio: in caso di problemi con gli aggiornamenti sarà necessario contattare l'OEM. Solamente i problemi legati al processo di aggiornamento possono essere inviati a $OS_RELEASE:BUG_REPORT_URL$."
 
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
@@ -359,6 +380,12 @@ msgid "Firmware metadata has not been updated for %u day and may not be up to da
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "I metadati del firmware non sono stati controllati per %u giorno e potrebbero non essere aggiornati."
 msgstr[1] "I metadati del firmware non sono stati controllati per %u giorni e potrebbero non essere aggiornati."
+
+msgid "Firmware updates are not supported on this machine."
+msgstr "Gli aggiornamenti firmware non sono supportati su questo dispositivo."
+
+msgid "Firmware updates are supported on this machine."
+msgstr "Gli aggiornamenti firmware sono supportati su questo dispositivo."
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -455,6 +482,10 @@ msgstr "Linux Vendor Firmware Service (firmware in prova)"
 msgid "List currently attached DFU capable devices"
 msgstr "Elenca gli attuali dispositivi collegati con supporto DFU"
 
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "Elenca gli aggiornamenti firmware supportati"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Caricamento…"
@@ -499,6 +530,9 @@ msgstr "Controlla il demone per gli eventi"
 msgid "Name"
 msgstr "Nome"
 
+msgid "No action specified!"
+msgstr "Nessuna azione specificata."
+
 #. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -518,6 +552,10 @@ msgstr "Fatto"
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
 msgstr "Scavalca l'avviso sul plugin"
+
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "Sovrascrive il percorso ESP predefinito"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -544,6 +582,10 @@ msgstr "Procedere con il caricamento?"
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
 msgid "Protocol"
 msgstr "Protocollo"
+
+#. TRANSLATORS: command line option
+msgid "Query for firmware update support"
+msgstr "Interroga il supporto per gli aggiornamenti firmware"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -652,6 +694,10 @@ msgstr "Imposta l'identificativo del prodotto sul file del firmware"
 msgid "Set release version on firmware file"
 msgstr "Imposta la versione di rilascio sul file del firmware"
 
+#. TRANSLATORS: command line option
+msgid "Set the debugging flag during update"
+msgstr "Imposta il flag di debug durante l'aggiornamento"
+
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
 msgstr "Imposta la dimensione del firmware per la destinazione"
@@ -696,6 +742,14 @@ msgstr "Mostra la cronologia degli aggiornamenti firmware"
 msgid "Show plugin verbose information"
 msgstr "Mostra informazioni dettagliate del plugin"
 
+#. TRANSLATORS: command line option
+msgid "Show the debug log from the last attempted update"
+msgstr "Mostra debug dell'ultimo tentativo di aggiornamento"
+
+#. TRANSLATORS: command line option
+msgid "Show the information of firmware update status"
+msgstr "Mostra informazioni sullo stato degli aggiornamenti firmware"
+
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Stato"
@@ -713,6 +767,10 @@ msgstr "Riepilogo"
 msgid "Target"
 msgstr "Obiettivo"
 
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "LVFS è un servizio gratuito che opera come entità legale indipendente e non ha alcun legame con $OS_RELEASE:NAME$. Il distributore potrebbe non aver verificato la compatibilità degli aggiornamenti firmware col proprio sistema o con i propri dispositivi collegati. Il firmware viene fornito solamente dall'OEM."
+
 msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
 msgstr "Il processo fwupd è un demone che consente di aggiornare il firmware di un dispositivo sul proprio computer. È progettato per un ambiente desktop, ma è possibile utilizzarlo anche su telefonini, tablet e server."
 
@@ -722,6 +780,9 @@ msgstr "Questo programma può funzionare correttamente solo come utente root"
 
 msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
 msgstr "Questo progetto vuole rendere l'aggiornamento di firmware su Linux un processo automatico, sicuro e affidabile. È possibile usare uno strumento grafico come GNOME Software per visualizzare e applicare gli aggiornamenti, oppure lo strumento a riga di comando o l'interfaccia D-Bus."
+
+msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
+msgstr "Questo remoto contiene firmware che non è bloccato, ma è ancora in fase di verifica dal produttore hardware. Assicurarsi di poter ripristinare, manualmente o con altre procedure, il vecchio firmware nel caso in cui l'aggiornamento non riuscisse."
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
@@ -734,6 +795,10 @@ msgstr "Dimensione trasferimento"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Tipo"
+
+#. TRANSLATORS: program name
+msgid "UEFI Firmware Utility"
+msgstr "Strumento firmware UEFI"
 
 #. TRANSLATORS: section header for firmware URI
 msgid "URI"
@@ -749,6 +814,10 @@ msgstr "Sblocco del dispositivo per consentire l'accesso"
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
 msgstr "Sblocca il dispositivo per accedere al firmware"
+
+#. TRANSLATORS: command line option
+msgid "Unset the debugging flag during update"
+msgstr "Ripristina il flag di debug durante l'aggiornamento"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"
