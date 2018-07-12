@@ -334,10 +334,12 @@
       <package />
     </distro>
     <distro id="debian">
+      <control />
       <package variant="x86_64">gnu-efi</package>
       <package variant="i386">gnu-efi</package>
     </distro>
     <distro id="ubuntu">
+      <control />
       <package variant="x86_64">gnu-efi</package>
     </distro>
   </dependency>
