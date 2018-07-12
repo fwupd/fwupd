@@ -10,7 +10,7 @@ RUN echo fubar > /etc/machine-id
 RUN yum install -y https://kojipkgs.fedoraproject.org//packages/libstemmer/0/10.585svn.fc29/x86_64/libstemmer-0-10.585svn.fc29.x86_64.rpm https://kojipkgs.fedoraproject.org//packages/libappstream-glib/0.7.7/3.fc29/x86_64/libappstream-glib-0.7.7-3.fc29.x86_64.rpm https://kojipkgs.fedoraproject.org//packages/libappstream-glib/0.7.7/3.fc29/x86_64/libappstream-glib-devel-0.7.7-3.fc29.x86_64.rpm
 RUN pip3 install pillow pygobject
 RUN wget https://copr.fedorainfracloud.org/coprs/jsynacek/systemd-backports-for-centos-7/repo/epel-7/jsynacek-systemd-backports-for-centos-7-epel-7.repo -O /etc/yum.repos.d/jsynacek-systemd-centos-7.repo
-RUN yum update systemd -y
+RUN yum --enablerepo=epel-testing -y update
 RUN mkdir /build
 WORKDIR /build
 COPY . .

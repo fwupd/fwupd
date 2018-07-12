@@ -499,8 +499,11 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < devs->len; i++) {
 		g_autofree gchar *tmp = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
-		if (!(fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
-			continue;
+		if (!priv->show_all_devices) {
+			if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+			    !fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+				continue;
+		}
 		tmp = fwupd_device_to_string (dev);
 		g_print ("%s\n", tmp);
 	}
@@ -2488,10 +2491,6 @@ main (int argc, char *argv[])
 			G_USB_MAJOR_VERSION,
 			G_USB_MINOR_VERSION,
 			G_USB_MICRO_VERSION);
-#ifdef LIBFWUP_LIBRARY_VERSION
-		g_print ("\tfwupdate:\t%s\n",
-			LIBFWUP_LIBRARY_VERSION);
-#endif
 #ifdef EFIVAR_LIBRARY_VERSION
 		g_print ("\tefivar:\t%s\n",
 			EFIVAR_LIBRARY_VERSION);

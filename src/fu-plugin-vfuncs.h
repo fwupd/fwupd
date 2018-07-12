@@ -58,6 +58,12 @@ gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
 gboolean	 fu_plugin_update_cleanup		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
+gboolean	 fu_plugin_composite_prepare		(FuPlugin	*plugin,
+							 GPtrArray	*devices,
+							 GError		**error);
+gboolean	 fu_plugin_composite_cleanup		(FuPlugin	*plugin,
+							 GPtrArray	*devices,
+							 GError		**error);
 gboolean	 fu_plugin_usb_device_added		(FuPlugin	*plugin,
 							 GUsbDevice	*usb_device,
 							 GError		**error);

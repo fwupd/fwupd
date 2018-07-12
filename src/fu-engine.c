@@ -965,16 +965,29 @@ fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 	AsVersionParseFlag flags = AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 	GPtrArray *releases;
 	const gchar *quirk;
+	const gchar *version_format;
 
 	/* no quirk required */
 	if (as_app_get_kind (app) != AS_APP_KIND_FIRMWARE)
 		return;
 
-	/* any quirks match */
-	quirk = fu_quirks_lookup_by_glob (self->quirks,
-					  FU_QUIRKS_DAEMON_VERSION_FORMAT,
-					  as_app_get_id (app));
-	if (g_strcmp0 (quirk, "none") == 0)
+	/* fall back to the quirk database until all files have metadata */
+	quirk = fu_quirks_lookup_by_id (self->quirks,
+					"DaemonVersionFormat=quad",
+					FU_QUIRKS_DAEMON_VERSION_FORMAT);
+	if (quirk != NULL) {
+		g_auto(GStrv) globs = g_strsplit (quirk, ",", -1);
+		for (guint i = 0; globs[i] != NULL; i++) {
+			if (fnmatch (globs[i], as_app_get_id (app), 0) == 0) {
+				flags = AS_VERSION_PARSE_FLAG_NONE;
+				break;
+			}
+		}
+	}
+
+	/* specified in metadata */
+	version_format = as_app_get_metadata_item (app, "LVFS::VersionFormat");
+	if (g_strcmp0 (version_format, "quad") == 0)
 		flags = AS_VERSION_PARSE_FLAG_NONE;
 
 	/* fix each release */
@@ -1093,6 +1106,111 @@ fu_engine_get_report_metadata (FuEngine *self)
 		g_hash_table_insert (hash, g_strdup ("BootTime"), btime);
 
 	return hash;
+}
+
+/**
+ * fu_engine_composite_prepare:
+ * @self: A #FuEngine
+ * @devices: (element-type #FuDevice): devices that will be updated
+ * @error: A #GError, or %NULL
+ *
+ * Calls into the plugin loader, informing each plugin of the pending upgrade(s).
+ *
+ * Any failure in any plugin will abort all of the actions before they are started.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_composite_prepare (FuEngine *self, GPtrArray *devices, GError **error)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		if (!fu_plugin_runner_composite_prepare (plugin_tmp, devices, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_engine_composite_cleanup:
+ * @self: A #FuEngine
+ * @devices: (element-type #FuDevice): devices that will be updated
+ * @error: A #GError, or %NULL
+ *
+ * Calls into the plugin loader, informing each plugin of the pending upgrade(s).
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_composite_cleanup (FuEngine *self, GPtrArray *devices, GError **error)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		if (!fu_plugin_runner_composite_cleanup (plugin_tmp, devices, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_engine_install_tasks:
+ * @self: A #FuEngine
+ * @install_tasks: (element-type FuInstallTask): A #FuDevice
+ * @blob_cab: The #GBytes of the .cab file
+ * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
+ * @error: A #GError, or %NULL
+ *
+ * Installs a specific firmware file on one or more install tasks.
+ *
+ * By this point all the requirements and tests should have been done in
+ * fu_engine_check_requirements() so this should not fail before running
+ * the plugin loader.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_install_tasks (FuEngine *self,
+			 GPtrArray *install_tasks,
+			 GBytes *blob_cab,
+			 FwupdInstallFlags flags,
+			 GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* notify the plugins about the composite action */
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < install_tasks->len; i++) {
+		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
+		g_ptr_array_add (devices, g_object_ref (fu_install_task_get_device (task)));
+	}
+	if (!fu_engine_composite_prepare (self, devices, error)) {
+		g_prefix_error (error, "failed to prepare composite action: ");
+		return FALSE;
+	}
+
+	/* all authenticated, so install all the things */
+	for (guint i = 0; i < install_tasks->len; i++) {
+		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
+		if (!fu_engine_install (self, task, blob_cab, flags, error)) {
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_engine_composite_cleanup (self, devices, &error_local)) {
+				g_warning ("failed to cleanup failed composite action: %s",
+					   error_local->message);
+			}
+			return FALSE;
+		}
+	}
+
+	/* notify the plugins about the composite action */
+	if (!fu_engine_composite_cleanup (self, devices, error)) {
+		g_prefix_error (error, "failed to cleanup composite action: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -1523,7 +1641,7 @@ fu_engine_add_component_to_store (FuEngine *self, AsApp *app)
 	}
 }
 
-static gboolean
+gboolean
 fu_engine_load_metadata_from_file (FuEngine *self,
 				 const gchar *path,
 				 const gchar *remote_id,
@@ -1724,6 +1842,8 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 	g_autoptr(GBytes) bytes_sig = NULL;
 	g_autoptr(GInputStream) stream_fd = NULL;
 	g_autoptr(GInputStream) stream_sig = NULL;
+	g_autofree gchar *pki_dir = NULL;
+	g_autofree gchar *sysconfdir = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
@@ -1774,7 +1894,9 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 			return FALSE;
 		if (!fu_keyring_setup (kr, error))
 			return FALSE;
-		if (!fu_keyring_add_public_keys (kr, "/etc/pki/fwupd-metadata", error))
+		sysconfdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR);
+		pki_dir = g_build_filename (sysconfdir, "pki", "fwupd-metadata", NULL);
+		if (!fu_keyring_add_public_keys (kr, pki_dir, error))
 			return FALSE;
 		kr_result = fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error);
 		if (kr_result == NULL)
@@ -2169,7 +2291,8 @@ fu_engine_filter_apps_by_requirements (FuEngine *self, GPtrArray *apps,
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuInstallTask) task = fu_install_task_new (device, app_tmp);
 		if (!fu_engine_check_requirements (self, task,
-						   FWUPD_INSTALL_FLAG_NONE,
+						   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
+						   FWUPD_INSTALL_FLAG_ALLOW_OLDER,
 						   &error_local)) {
 			if (error_all == NULL) {
 				error_all = g_steal_pointer (&error_local);
@@ -2773,8 +2896,31 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 		}
 	}
 
+	/* if this device is locked get some metadata from AppStream */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_LOCKED)) {
+		AsApp *app = fu_engine_store_get_app_by_guids (self->store, device);
+		if (app != NULL) {
+			AsRelease *release = as_app_get_release_default (app);
+			if (release != NULL) {
+				g_autoptr(FwupdRelease) rel = fwupd_release_new ();
+				fu_engine_set_release_from_appstream (self, rel, app, release);
+				fu_device_add_release (device, rel);
+			}
+		}
+	}
+
 	/* adopt any required children, which may or may not already exist */
 	fu_engine_adopt_children (self, device);
+
+	/* set any alternate objects on the device from the ID */
+	if (fu_device_get_alternate_id (device) != NULL) {
+		FuDevice *device_alt;
+		device_alt = fu_device_list_get_by_id (self->device_list,
+						       fu_device_get_alternate_id (device),
+						       NULL);
+		if (device_alt != NULL)
+			fu_device_set_alternate (device, device_alt);
+	}
 
 	/* notify all plugins about this new device */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
@@ -3085,17 +3231,55 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 			       FuEngine *self)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	const gchar *plugin_name;
+
+	/* does the quirk specify the plugin to use */
+	plugin_name = fu_quirks_lookup_by_usb_device (self->quirks,
+						      usb_device,
+						      FU_QUIRKS_PLUGIN);
+	if (plugin_name != NULL) {
+		g_autoptr(GError) error = NULL;
+		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,
+								plugin_name, &error);
+		if (plugin == NULL) {
+			g_warning ("failed to find specified plugin %s: %s",
+				   plugin_name, error->message);
+			return;
+		}
+		if (!fu_plugin_runner_usb_device_added (plugin, usb_device, &error)) {
+			g_warning ("failed to add USB device %04x:%04x: %s",
+				   g_usb_device_get_vid (usb_device),
+				   g_usb_device_get_pid (usb_device),
+				   error->message);
+		}
+		return;
+	}
 
 	/* call into each plugin */
+	g_debug ("no plugin specified for USB device %04x:%04x",
+		 g_usb_device_get_vid (usb_device),
+		 g_usb_device_get_pid (usb_device));
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		g_autoptr(GError) error = NULL;
+
+		/* skipping plugin as requires quirk */
+		if (fu_plugin_has_rule (plugin_tmp,
+					FU_PLUGIN_RULE_REQUIRES_QUIRK,
+					FU_QUIRKS_PLUGIN)) {
+			continue;
+		}
+
+		/* create a device, then probe */
 		if (!fu_plugin_runner_usb_device_added (plugin_tmp, usb_device, &error)) {
 			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_debug ("ignoring: %s", error->message);
+				g_debug ("%s ignoring: %s",
+					 fu_plugin_get_name (plugin_tmp),
+					 error->message);
 				continue;
 			}
-			g_warning ("failed to add USB device %04x:%04x: %s",
+			g_warning ("%s failed to add USB device %04x:%04x: %s",
+				   fu_plugin_get_name (plugin_tmp),
 				   g_usb_device_get_vid (usb_device),
 				   g_usb_device_get_pid (usb_device),
 				   error->message);

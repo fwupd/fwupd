@@ -1,0 +1,15 @@
+[DeviceInstanceId=USB\VID_0A12&PID_1337]
+Plugin = csr
+Name = H05
+Summary = Bluetooth Headphones
+Icon = audio-headphones
+Vendor = AIAIAI
+[DeviceInstanceId=USB\VID_0A12&PID_1337&REV_2520]
+Version = 1.2
+
+[DeviceInstanceId=USB\VID_0A12&PID_4004]
+Plugin = csr
+Name = H60
+Summary = Bluetooth Headphones
+Icon = audio-headphones
+Vendor = AIAIAI

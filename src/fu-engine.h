@@ -87,6 +87,12 @@ gboolean	 fu_engine_modify_device		(FuEngine	*self,
 							 const gchar	*key,
 							 const gchar	*value,
 							 GError		**error);
+gboolean	 fu_engine_composite_prepare		(FuEngine	*self,
+							 GPtrArray	*devices,
+							 GError		**error);
+gboolean	 fu_engine_composite_cleanup		(FuEngine	*self,
+							 GPtrArray	*devices,
+							 GError		**error);
 gboolean	 fu_engine_install			(FuEngine	*self,
 							 FuInstallTask	*task,
 							 GBytes		*blob_cab,
@@ -97,6 +103,11 @@ gboolean	 fu_engine_install_blob			(FuEngine	*self,
 							 GBytes		*blob_cab,
 							 GBytes		*blob_fw,
 							 const gchar	*version,
+							 FwupdInstallFlags flags,
+							 GError		**error);
+gboolean	 fu_engine_install_tasks		(FuEngine	*self,
+							 GPtrArray	*install_tasks,
+							 GBytes		*blob_cab,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 GPtrArray	*fu_engine_get_details			(FuEngine	*self,
@@ -114,6 +125,10 @@ void		 fu_engine_add_runtime_version		(FuEngine	*self,
 gboolean	 fu_engine_check_requirements		(FuEngine	*self,
 							 FuInstallTask	*task,
 							 FwupdInstallFlags flags,
+							 GError		**error);
+gboolean	 fu_engine_load_metadata_from_file	(FuEngine	*self,
+							 const gchar	*path,
+							 const gchar	*remote_id,
 							 GError		**error);
 
 G_END_DECLS

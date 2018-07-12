@@ -8,13 +8,9 @@ Before=gdm.service
 Type=dbus
 BusName=org.freedesktop.fwupd
 ExecStart=@libexecdir@/fwupd/fwupd
-MemoryDenyWriteExecute=yes
 PrivateTmp=yes
-ProtectControlGroups=yes
 ProtectHome=yes
-ProtectKernelModules=yes
 ProtectSystem=full
 RestrictAddressFamilies=AF_NETLINK AF_UNIX
-RestrictRealtime=yes
-ReadWritePaths=@localstatedir@/lib/fwupd @sysconfdir@/fwupd/remotes.d -@bootdir@
 SystemCallFilter=~@mount
+@dynamic_options@

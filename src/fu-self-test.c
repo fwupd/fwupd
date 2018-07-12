@@ -221,9 +221,9 @@ fu_engine_device_parent_func (void)
 	g_assert_cmpstr (fu_device_get_vendor (device1), ==, "oem");
 
 	/* verify order */
-	g_assert_cmpint (fu_device_get_order (device1), ==, 1);
-	g_assert_cmpint (fu_device_get_order (device2), ==, 0);
-	g_assert_cmpint (fu_device_get_order (device3), ==, 1);
+	g_assert_cmpint (fu_device_get_order (device1), ==, 0);
+	g_assert_cmpint (fu_device_get_order (device2), ==, 1);
+	g_assert_cmpint (fu_device_get_order (device3), ==, 0);
 }
 
 static void
@@ -283,6 +283,37 @@ fu_engine_partial_hash_func (void)
 	ret = fu_engine_unlock (engine, "b92f", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
+}
+
+static void
+fu_engine_device_unlock_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(GError) error = NULL;
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load (engine, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* add the hardcoded 'fwupd' metadata */
+	filename = fu_test_get_filename (TESTDATADIR, "metadata.xml");
+	g_assert (filename != NULL);
+	ret = fu_engine_load_metadata_from_file (engine, filename, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* add a dummy device */
+	fu_device_set_id (device, "UEFI-dummy-dev0");
+	fu_device_add_guid (device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_engine_add_device (engine, device);
+
+	/* ensure the metainfo was matched */
+	g_assert_nonnull (fwupd_device_get_release_default (FWUPD_DEVICE (device)));
 }
 
 static void
@@ -1181,27 +1212,19 @@ fu_plugin_quirks_func (void)
 	fu_plugin_set_quirks (plugin, quirks);
 
 	/* exact */
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "USB\\VID_0A5C&PID_6412");
-	g_assert_cmpstr (tmp, ==, "ignore-runtime");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "ACME Inc.");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "USB\\VID_0A5C&PID_6412", "Flags");
+	g_assert_cmpstr (tmp, ==, "MERGE_ME,ignore-runtime");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "ACME Inc.=True", "Test");
 	g_assert_cmpstr (tmp, ==, "awesome");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "CORP*");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "CORP*", "Test");
 	g_assert_cmpstr (tmp, ==, "town");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "USB\\VID_FFFF&PID_FFFF");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "USB\\VID_FFFF&PID_FFFF", "Flags");
 	g_assert_cmpstr (tmp, ==, "");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-Unfound", "baz");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "baz", "Unfound");
 	g_assert_cmpstr (tmp, ==, NULL);
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-tests", "unfound");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "unfound", "tests");
 	g_assert_cmpstr (tmp, ==, NULL);
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-unfound", "unfound");
-	g_assert_cmpstr (tmp, ==, NULL);
-
-	/* glob */
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "ACME*");
-	g_assert_cmpstr (tmp, ==, "awesome");
-	tmp = fu_quirks_lookup_by_glob (quirks, "fwupd-plugin-test", "CORPORATION");
-	g_assert_cmpstr (tmp, ==, "town");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "fwupd-plugin-test", "unfound*");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "unfound", "unfound");
 	g_assert_cmpstr (tmp, ==, NULL);
 }
 
@@ -2175,6 +2198,41 @@ fu_common_store_cab_error_wrong_checksum_func (void)
 	g_assert (store == NULL);
 }
 
+static void
+fu_device_incorporate_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) donor = fu_device_new ();
+
+	/* set up donor device */
+	fu_device_set_alternate_id (donor, "alt-id");
+	fu_device_set_equivalent_id (donor, "equiv-id");
+	fu_device_set_metadata (donor, "test", "me");
+	fu_device_set_metadata (donor, "test2", "me");
+
+	/* base properties */
+	fu_device_add_flag (donor, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_set_created (donor, 123);
+	fu_device_set_modified (donor, 456);
+	fu_device_add_icon (donor, "computer");
+
+	/* existing properties */
+	fu_device_set_equivalent_id (device, "DO_NOT_OVERWRITE");
+	fu_device_set_metadata (device, "test2", "DO_NOT_OVERWRITE");
+	fu_device_set_modified (device, 789);
+
+	/* incorporate properties from donor to device */
+	fu_device_incorporate (device, donor);
+	g_assert_cmpstr (fu_device_get_alternate_id (device), ==, "alt-id");
+	g_assert_cmpstr (fu_device_get_equivalent_id (device), ==, "DO_NOT_OVERWRITE");
+	g_assert_cmpstr (fu_device_get_metadata (device, "test"), ==, "me");
+	g_assert_cmpstr (fu_device_get_metadata (device, "test2"), ==, "DO_NOT_OVERWRITE");
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC));
+	g_assert_cmpint (fu_device_get_created (device), ==, 123);
+	g_assert_cmpint (fu_device_get_modified (device), ==, 789);
+	g_assert_cmpint (fu_device_get_icons(device)->len, ==, 1);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -2183,6 +2241,11 @@ main (int argc, char **argv)
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
+	g_setenv ("FWUPD_DATADIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("FWUPD_PLUGINDIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("FWUPD_SYSCONFDIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
 	fu_common_rmtree ("/tmp/fwupd-self-test", NULL);
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
@@ -2190,12 +2253,14 @@ main (int argc, char **argv)
 	/* tests go here */
 	if (g_test_slow ())
 		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
+	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
 	g_test_add_func ("/fwupd/device-list{delay}", fu_device_list_delay_func);
 	g_test_add_func ("/fwupd/device-list{compatible}", fu_device_list_compatible_func);
+	g_test_add_func ("/fwupd/engine{device-unlock}", fu_engine_device_unlock_func);
 	g_test_add_func ("/fwupd/engine{history-success}", fu_engine_history_func);
 	g_test_add_func ("/fwupd/engine{history-error}", fu_engine_history_error_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);

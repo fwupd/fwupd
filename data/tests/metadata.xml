@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components version="0.9" origin="fwupd">
+  <component type="firmware">
+    <id>org.fwupd.8330a096d9f1af8567c7374cb8403e1ce9cf3163.device</id>
+    <provides>
+      <firmware type="flashed">2d47f29b-83a2-4f31-a2e8-63474f4d4c2e</firmware>
+    </provides>
+    <releases>
+      <release version="1" timestamp="1456743843">
+        <description><p>Applying will enable UEFI firmware reporting</p></description>
+      </release>
+    </releases>
+  </component>
+</components>

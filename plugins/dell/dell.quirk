@@ -1,8 +1,12 @@
-[fwupd-uefi-version-format]
+[SmbiosManufacturer=Dell Inc.]
+UefiVersionFormat = quad
 
-# Dell & Alienware use AA.BB.CC.DD rather than AA.BB.CCDD
-Dell Inc.=none
-Alienware=none
+[SmbiosManufacturer=Alienware]
+UefiVersionFormat = quad
 
-[fwupd-daemon-version-format]
-com.dell.uefi*.firmware=none
+# DEPRECATED: put this in the AppStream metadata itself using
+# <custom>
+#   <value key="LVFS::VersionFormat">quad</value>
+# </custom>
+[DaemonVersionFormat=quad]
+ComponentIDs = com.dell.uefi*.firmware

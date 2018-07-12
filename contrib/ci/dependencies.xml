@@ -1,5 +1,15 @@
 <?xml version="1.0"?>
 <dependencies>
+  <dependency type="build" id="libasan">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="pesign">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
   <dependency type="build" id="bash-completion">
     <distro id="debian">
       <control />
@@ -198,6 +208,11 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="intltool">
+    <distro id="debian">
+      <package variant="s390x" />
+    </distro>
+  </dependency>
   <dependency type="build" id="libelf-dev">
     <distro id="centos">
       <package>elfutils-libelf-devel</package>
@@ -260,37 +275,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="libfwup-dev">
-    <distro id="arch">
-      <package>fwupdate</package>
-    </distro>
-    <distro id="centos">
-      <package>fwupdate-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package>fwupdate-devel</package>
-    </distro>
-    <distro id="debian">
-      <control>
-        <version>(>= 10-3)</version>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
-      </control>
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
-      </control>
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="gcab">
     <distro id="centos">
       <package />
@@ -337,6 +321,24 @@
     </distro>
     <distro id="fedora">
       <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gnu-efi-devel">
+    <distro id="arch">
+      <package>gnu-efi-libs</package>
+    </distro>
+    <distro id="centos">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64">gnu-efi</package>
+      <package variant="i386">gnu-efi</package>
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64">gnu-efi</package>
     </distro>
   </dependency>
   <dependency type="build" id="gir1.2-appstreamglib-1.0">
@@ -568,6 +570,38 @@
     </distro>
   </dependency>
   <dependency type="build" id="libefivar-dev">
+    <distro id="arch">
+      <package>efivar</package>
+    </distro>
+    <distro id="centos">
+      <package>efivar-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package>efivar-devel</package>
+    </distro>
+    <distro id="debian">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>armel</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>armel</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libefiboot-dev">
     <distro id="debian">
       <control>
         <inclusive>amd64</inclusive>
@@ -667,6 +701,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libsmbios-dev">
+    <distro id="arch">
+      <package>libsmbios</package>
+    </distro>
     <distro id="centos">
       <package>libsmbios-devel</package>
     </distro>

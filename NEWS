@@ -1,3 +1,32 @@
+Version 1.1.0
+~~~~~~~~~~~~~
+Released: 2018-07-11
+
+New Features:
+ - Add a initial Redfish support (Richard Hughes)
+ - Add a tool to mimic the original fwupdate CLI interface (Richard Hughes)
+ - Allow devices to assign a plugin from the quirk subsystem (Richard Hughes)
+ - Change the quirk file structure to be more efficient (Richard Hughes)
+ - Merge fwupdate functionality into fwupd (Richard Hughes, Mario Limonciello)
+ - Run a plugin vfunc before and after all the composite devices are updated (Richard Hughes)
+ - Support more Wacom tablets (Richard Hughes)
+
+Bugfixes:
+ - Add release information for locked devices (Richard Hughes)
+ - Allow building with older meson (Mario Limonciello)
+ - Detect the EFI system partition location at runtime (Mario Limonciello)
+ - Do not use 8bitdo bootloader commands after a successful flash (Richard Hughes)
+ - Enable accesing downloaded files in flatpak and snap (Mario Limonciello)
+ - Fix a potential buffer overflow when applying a DFU patch (Richard Hughes)
+ - Fix downgrading older releases to devices (Richard Hughes)
+ - Fix flashing devices that require a manual replug (Richard Hughes)
+ - Fix several small memory leaks in various places (Richard Hughes)
+ - Fix the retrieval of Redfish version (Gary Lin)
+ - Fix unifying failure to detach when using a slow host controller (Richard Hughes)
+ - Set the Wacom device status when erasing and writing firmware (Richard Hughes)
+ - Show errors in the CLI if unable to access directory (Mario Limonciello)
+ - Use the parent device name for Wacom sub-modules (Richard Hughes)
+
 Version 1.0.8
 ~~~~~~~~~~~~~
 Released: 2018-06-07
@@ -20,6 +49,7 @@ Bugfixes:
  - Do not require libcolorhug to build (Richard Hughes)
  - Fix a crash in libfwupd where no device ID is set (Richard Hughes)
  - Fix a potential DoS in libdfu by limiting holes to 1MiB (Richard Hughes)
+ - Fix a segfault that sometimes occurs during cleanup of USB plugins (Mario Limonciello)
  - Fix Hardware-ID{0,1,2,12} compatibility with Microsoft (Gergely Risko)
  - Hide devices that aren't updatable by default in fwupdmgr (Mario Limonciello)
  - Search all UEFI GUIDs when matching hardware (Richard Hughes, Mario Limonciello)

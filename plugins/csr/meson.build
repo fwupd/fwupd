@@ -1,9 +1,6 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginCsr"']
 
-install_data([
-  'csr-aiaiai-h05.quirk',
-  'csr-aiaiai-h60.quirk',
-  ],
+install_data(['csr-aiaiai.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 

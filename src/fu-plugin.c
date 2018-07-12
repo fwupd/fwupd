@@ -76,6 +76,9 @@ typedef void		 (*FuPluginDeviceRegisterFunc)	(FuPlugin	*plugin,
 typedef gboolean	 (*FuPluginDeviceFunc)		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
+typedef gboolean	 (*FuPluginDeviceArrayFunc)	(FuPlugin	*plugin,
+							 GPtrArray	*devices,
+							 GError		**error);
 typedef gboolean	 (*FuPluginVerifyFunc)		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 FuPluginVerifyFlags flags,
@@ -729,8 +732,8 @@ fu_plugin_add_compile_version (FuPlugin *plugin,
 /**
  * fu_plugin_lookup_quirk_by_id:
  * @plugin: A #FuPlugin
- * @prefix: A string prefix that matches the quirks file basename, e.g. "dfu-quirks"
- * @id: An ID to match the entry, e.g. "012345"
+ * @group: A string, e.g. "DfuFlags"
+ * @key: An ID to match the entry, e.g. "Summary"
  *
  * Looks up an entry in the hardware database using a string value.
  *
@@ -739,24 +742,20 @@ fu_plugin_add_compile_version (FuPlugin *plugin,
  * Since: 1.0.1
  **/
 const gchar *
-fu_plugin_lookup_quirk_by_id (FuPlugin *plugin, const gchar *prefix, const gchar *id)
+fu_plugin_lookup_quirk_by_id (FuPlugin *plugin, const gchar *group, const gchar *key)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
 
-	/* wildcard */
-	if (g_strstr_len (id, -1, "*") != NULL)
-		return fu_quirks_lookup_by_glob (priv->quirks, prefix, id);
-
 	/* exact ID */
-	return fu_quirks_lookup_by_id (priv->quirks, prefix, id);
+	return fu_quirks_lookup_by_id (priv->quirks, group, key);
 }
 
 /**
  * fu_plugin_lookup_quirk_by_usb_device:
  * @plugin: A #FuPlugin
  * @prefix: A string prefix that matches the quirks file basename, e.g. "dfu-quirks"
- * @dev: A #GUsbDevice
+ * @usb_device: A #GUsbDevice
  *
  * Looks up an entry in the hardware database using various keys generated
  * from @dev.
@@ -766,11 +765,13 @@ fu_plugin_lookup_quirk_by_id (FuPlugin *plugin, const gchar *prefix, const gchar
  * Since: 1.0.1
  **/
 const gchar *
-fu_plugin_lookup_quirk_by_usb_device (FuPlugin *plugin, const gchar *prefix, GUsbDevice *dev)
+fu_plugin_lookup_quirk_by_usb_device (FuPlugin *plugin,
+				      GUsbDevice *usb_device,
+				      const gchar *prefix)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
-	return fu_quirks_lookup_by_usb_device (priv->quirks, prefix, dev);
+	return fu_quirks_lookup_by_usb_device (priv->quirks, usb_device, prefix);
 }
 
 /**
@@ -933,6 +934,35 @@ fu_plugin_runner_device_generic (FuPlugin *plugin, FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_runner_device_array_generic (FuPlugin *plugin, GPtrArray *devices,
+				       const gchar *symbol_name, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginDeviceArrayFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, symbol_name, (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
+	if (!func (plugin, devices, error)) {
+		g_prefix_error (error, "failed to run %s() on %s: ",
+				symbol_name + 10,
+				priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 gboolean
 fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -1038,6 +1068,22 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *plugin, GError **error)
 }
 
 gboolean
+fu_plugin_runner_composite_prepare (FuPlugin *plugin, GPtrArray *devices, GError **error)
+{
+	return fu_plugin_runner_device_array_generic (plugin, devices,
+						      "fu_plugin_composite_prepare",
+						      error);
+}
+
+gboolean
+fu_plugin_runner_composite_cleanup (FuPlugin *plugin, GPtrArray *devices, GError **error)
+{
+	return fu_plugin_runner_device_array_generic (plugin, devices,
+						      "fu_plugin_composite_cleanup",
+						      error);
+}
+
+gboolean
 fu_plugin_runner_update_prepare (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	return fu_plugin_runner_device_generic (plugin, device,
@@ -1105,6 +1151,10 @@ fu_plugin_runner_device_register (FuPlugin *plugin, FuDevice *device)
 	if (!priv->enabled)
 		return;
 	if (priv->module == NULL)
+		return;
+
+	/* don't notify plugins on their own devices */
+	if (g_strcmp0 (fu_device_get_plugin (device), fu_plugin_get_name (plugin)) == 0)
 		return;
 
 	/* optional */
@@ -1459,6 +1509,28 @@ fu_plugin_get_rules (FuPlugin *plugin, FuPluginRule rule)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
 	return priv->rules[rule];
+}
+
+/**
+ * fu_plugin_has_rule:
+ * @plugin: a #FuPlugin
+ * @rule: a #FuPluginRule, e.g. %FU_PLUGIN_RULE_CONFLICTS
+ * @name: a plugin name, e.g. `upower`
+ *
+ * Gets the plugin IDs that should be run after this plugin.
+ *
+ * Returns: %TRUE if the name exists for the specific rule
+ **/
+gboolean
+fu_plugin_has_rule (FuPlugin *plugin, FuPluginRule rule, const gchar *name)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	for (guint i = 0; i < priv->rules[rule]->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv->rules[rule], i);
+		if (g_strcmp0 (tmp, name) == 0)
+			return TRUE;
+	}
+	return FALSE;
 }
 
 /**

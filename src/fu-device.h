@@ -43,7 +43,7 @@ struct _FuDeviceClass
  * chain of slow USB hubs. This should be used when the device is able to
  * reset itself between bootloader->runtime->bootloader.
  */
-#define FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE		5000
+#define FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE		10000
 
 /**
  * FU_DEVICE_REMOVE_DELAY_USER_REPLUG:
@@ -61,6 +61,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_remove_flag(d,v)		fwupd_device_remove_flag(FWUPD_DEVICE(d),v)
 #define fu_device_has_flag(d,v)			fwupd_device_has_flag(FWUPD_DEVICE(d),v)
 #define fu_device_add_checksum(d,v)		fwupd_device_add_checksum(FWUPD_DEVICE(d),v)
+#define fu_device_add_release(d,v)		fwupd_device_add_release(FWUPD_DEVICE(d),v)
 #define fu_device_add_icon(d,v)			fwupd_device_add_icon(FWUPD_DEVICE(d),v)
 #define fu_device_set_created(d,v)		fwupd_device_set_created(FWUPD_DEVICE(d),v)
 #define fu_device_set_description(d,v)		fwupd_device_set_description(FWUPD_DEVICE(d),v)
@@ -85,6 +86,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_guid_default(d)		fwupd_device_get_guid_default(FWUPD_DEVICE(d))
 #define fu_device_get_icons(d)			fwupd_device_get_icons(FWUPD_DEVICE(d))
 #define fu_device_get_name(d)			fwupd_device_get_name(FWUPD_DEVICE(d))
+#define fu_device_get_summary(d)		fwupd_device_get_summary(FWUPD_DEVICE(d))
 #define fu_device_get_id(d)			fwupd_device_get_id(FWUPD_DEVICE(d))
 #define fu_device_get_plugin(d)			fwupd_device_get_plugin(FWUPD_DEVICE(d))
 #define fu_device_get_update_error(d)		fwupd_device_get_update_error(FWUPD_DEVICE(d))
@@ -98,6 +100,9 @@ FuDevice	*fu_device_new				(void);
 
 /* accessors */
 gchar		*fu_device_to_string			(FuDevice	*device);
+const gchar	*fu_device_get_alternate_id		(FuDevice	*device);
+void		 fu_device_set_alternate_id		(FuDevice	*device,
+							 const gchar	*alternate_id);
 const gchar	*fu_device_get_equivalent_id		(FuDevice	*device);
 void		 fu_device_set_equivalent_id		(FuDevice	*device,
 							 const gchar	*equivalent_id);
@@ -105,8 +110,6 @@ void		 fu_device_add_guid			(FuDevice	*device,
 							 const gchar	*guid);
 gchar		*fu_device_get_guids_as_str		(FuDevice	*device);
 FuDevice	*fu_device_get_alternate		(FuDevice	*device);
-void		 fu_device_set_alternate		(FuDevice	*device,
-							 FuDevice	*alternate);
 FuDevice	*fu_device_get_parent			(FuDevice	*device);
 GPtrArray	*fu_device_get_children			(FuDevice	*device);
 void		 fu_device_add_child			(FuDevice	*device,
@@ -136,9 +139,11 @@ void		 fu_device_set_platform_id		(FuDevice	*device,
 const gchar	*fu_device_get_serial			(FuDevice	*device);
 void		 fu_device_set_serial			(FuDevice	*device,
 							 const gchar	*serial);
-const gchar	*fu_device_get_plugin_hints		(FuDevice	*device);
-void		 fu_device_set_plugin_hints		(FuDevice	*device,
-							 const gchar	*plugin_hints);
+const gchar	*fu_device_get_custom_flags		(FuDevice	*device);
+gboolean	 fu_device_has_custom_flag		(FuDevice	*device,
+							 const gchar	*hint);
+void		 fu_device_set_custom_flags		(FuDevice	*device,
+							 const gchar	*custom_flags);
 void		 fu_device_set_name			(FuDevice	*device,
 							 const gchar	*value);
 guint		 fu_device_get_remove_delay		(FuDevice	*device);
@@ -166,6 +171,8 @@ gboolean	 fu_device_attach			(FuDevice	*device,
 							 GError		**error);
 gboolean	 fu_device_detach			(FuDevice	*device,
 							 GError		**error);
+void		 fu_device_incorporate			(FuDevice	*self,
+							 FuDevice	*donor);
 
 G_END_DECLS
 

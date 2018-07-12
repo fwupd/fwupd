@@ -16,6 +16,12 @@ endif
 regenerate_control:
 	OS=debian-x86_64 ./contrib/ci/generate_debian_control.py debian/control.in debian/control
 
+export UEFI=-Dplugin_uefi=false
+DEB_TARGET_ARCH ?= $(shell dpkg-architecture -qDEB_TARGET_ARCH)
+ifeq ($(DEB_TARGET_ARCH),$(filter $(DEB_TARGET_ARCH),amd64 i386 armhf arm64))
+	export UEFI=-Dplugin_uefi=true
+endif
+
 %:
 	[ -f debian/control ] || debian/rules regenerate_control
 	dh $@ --with gir,systemd
@@ -24,11 +30,6 @@ override_dh_auto_clean: regenerate_control
 	rm -fr debian/build
 
 override_dh_auto_configure:
-	if pkg-config --exists fwup; then \
-		export UEFI="-Dplugin_uefi=true"; \
-	else \
-		export UEFI="-Dplugin_uefi=false"; \
-	fi; \
 	if pkg-config --exists libsmbios_c; then \
 		export DELL="-Dplugin_dell=true -Dplugin_synaptics=true"; \
 	else \

@@ -11,8 +11,8 @@ meson .. \
 	--cross-file s390x_cross.txt \
 	--werror \
 	-Dplugin_uefi=false \
-	-Dplugin_uefi_labels=false \
 	-Dplugin_dell=false \
+	-Dplugin_redfish=false \
 	-Dplugin_synaptics=false \
 	-Dintrospection=false \
 	-Dgtkdoc=false \
@@ -20,3 +20,7 @@ meson .. \
 ninja -v
 ninja test -v
 cd ..
+
+
+#test for missing translation files
+./contrib/ci/check_missing_translations.sh

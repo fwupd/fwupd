@@ -547,6 +547,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 		return FALSE;
 
 	/* clear all checksums of pages */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	for (guint16 i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index (self->flash_descriptors, i);
 		if (fu_wav_device_flash_descriptor_is_wp (fd))
@@ -579,6 +580,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 	blocks_total = g_hash_table_size (fd_blobs) + 2;
 
 	/* write the data into the flash page */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	csum_local = g_new0 (guint32, self->flash_descriptors->len);
 	for (guint16 i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index (self->flash_descriptors, i);
@@ -617,9 +619,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 			return FALSE;
 
 		/* update device progress */
-		fu_device_set_progress_full (FU_DEVICE (self),
-					     blocks_done++,
-					     blocks_total);
+		fu_device_set_progress_full (device, blocks_done++, blocks_total);
 	}
 
 	/* calculate CRC inside device */
@@ -629,7 +629,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 	}
 
 	/* update device progress */
-	fu_device_set_progress_full (FU_DEVICE (self), blocks_done++, blocks_total);
+	fu_device_set_progress_full (device, blocks_done++, blocks_total);
 
 	/* read all CRC of all pages and verify with local CRC */
 	if (!fu_wac_device_ensure_checksums (self, error))
@@ -661,50 +661,25 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 	}
 
 	/* update device progress */
-	fu_device_set_progress_full (FU_DEVICE (self), blocks_done++, blocks_total);
+	fu_device_set_progress_full (device, blocks_done++, blocks_total);
 
 	/* store host CRC into flash */
 	if (!fu_wac_device_write_checksum_table (self, error))
 		return FALSE;
 
 	/* update progress */
-	fu_device_set_progress_full (FU_DEVICE (self), blocks_total, blocks_total);
+	fu_device_set_progress_full (device, blocks_total, blocks_total);
 
 	/* reboot, which switches the boot index of the firmware */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	return fu_wac_device_update_reset (self, error);
-}
-
-static gboolean
-fu_wac_device_probe (FuUsbDevice *device, GError **error)
-{
-	const gchar *plugin_hints;
-
-	/* devices have to be whitelisted */
-	plugin_hints = fu_device_get_plugin_hints (FU_DEVICE (device));
-	if (plugin_hints == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported with this device");
-		return FALSE;
-	}
-
-	/* hardware cannot respond to GetReport(DeviceFirmwareDescriptor) */
-	if (g_strcmp0 (plugin_hints, "use-runtime-version") == 0) {
-		fu_device_add_flag (FU_DEVICE (device),
-				    FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
-	}
-
-	/* hardcoded */
-	fu_device_add_icon (FU_DEVICE (device), "input-tablet");
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
-	return TRUE;
 }
 
 static gboolean
 fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuWacModule) module = NULL;
 	guint8 buf[] = { [0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH,
@@ -719,9 +694,12 @@ fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 	}
 
 	/* success */
+	name = g_strdup_printf ("%s [Legacy Bluetooth Module]",
+				fu_device_get_name (FU_DEVICE (self)));
 	version = g_strdup_printf ("%x.%x", (guint) buf[2], (guint) buf[1]);
 	module = fu_wac_module_bluetooth_new (usb_device);
 	fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
+	fu_device_set_name (FU_DEVICE (module), name);
 	fu_device_set_version (FU_DEVICE (module), version);
 	return TRUE;
 }
@@ -778,6 +756,7 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 	/* get versions of each submodule */
 	for (guint8 i = 0; i < buf[3]; i++) {
 		guint8 fw_type = buf[(i * 4) + 4] & ~0x80;
+		g_autofree gchar *name = NULL;
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuWacModule) module = NULL;
 
@@ -787,12 +766,18 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 		switch (fw_type) {
 		case FU_WAC_MODULE_FW_TYPE_TOUCH:
 			module = fu_wac_module_touch_new (usb_device);
+			name = g_strdup_printf ("%s [Touch Module]",
+						fu_device_get_name (FU_DEVICE (self)));
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
+			fu_device_set_name (FU_DEVICE (module), name);
 			fu_device_set_version (FU_DEVICE (module), version);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
 			module = fu_wac_module_bluetooth_new (usb_device);
+			name = g_strdup_printf ("%s [Bluetooth Module]",
+						fu_device_get_name (FU_DEVICE (self)));
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
+			fu_device_set_name (FU_DEVICE (module), name);
 			fu_device_set_version (FU_DEVICE (module), version);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_MAIN:
@@ -871,6 +856,8 @@ fu_wac_device_init (FuWacDevice *self)
 	self->checksums = g_array_new (FALSE, FALSE, sizeof(guint32));
 	self->configuration = 0xffff;
 	self->firmware_index = 0xffff;
+	fu_device_add_icon (FU_DEVICE (self), "input-tablet");
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 }
 
 static void
@@ -895,7 +882,6 @@ fu_wac_device_class_init (FuWacDeviceClass *klass)
 	klass_device->to_string = fu_wac_device_to_string;
 	klass_usb_device->open = fu_wac_device_open;
 	klass_usb_device->close = fu_wac_device_close;
-	klass_usb_device->probe = fu_wac_device_probe;
 }
 
 FuWacDevice *

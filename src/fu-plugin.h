@@ -63,6 +63,7 @@ typedef enum {
  * @FU_PLUGIN_RULE_CONFLICTS:		The plugin conflicts with another
  * @FU_PLUGIN_RULE_RUN_AFTER:		Order the plugin after another
  * @FU_PLUGIN_RULE_RUN_BEFORE:		Order the plugin before another
+ * @FU_PLUGIN_RULE_REQUIRES_QUIRK:	Requires a specific quirk
  *
  * The rules used for ordering plugins.
  * Plugins are expected to add rules in fu_plugin_initialize().
@@ -71,6 +72,7 @@ typedef enum {
 	FU_PLUGIN_RULE_CONFLICTS,
 	FU_PLUGIN_RULE_RUN_AFTER,
 	FU_PLUGIN_RULE_RUN_BEFORE,
+	FU_PLUGIN_RULE_REQUIRES_QUIRK,
 	/*< private >*/
 	FU_PLUGIN_RULE_LAST
 } FuPluginRule;
@@ -128,8 +130,8 @@ const gchar	*fu_plugin_lookup_quirk_by_id		(FuPlugin	*plugin,
 							 const gchar	*prefix,
 							 const gchar	*id);
 const gchar	*fu_plugin_lookup_quirk_by_usb_device	(FuPlugin	*plugin,
-							 const gchar	*prefix,
-							 GUsbDevice	*dev);
+							 GUsbDevice	*usb_device,
+							 const gchar	*prefix);
 void		 fu_plugin_add_report_metadata		(FuPlugin	*plugin,
 							 const gchar	*key,
 							 const gchar	*value);

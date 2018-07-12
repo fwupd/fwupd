@@ -20,7 +20,7 @@ apps:
 
 plugs:
   fwupdtool:
-    interface: fwupd
+    interface: home
 
 parts:
   libefivar-dev:
@@ -61,32 +61,6 @@ parts:
       - -share/
       - -etc/
       - -lib/*.a
-  libfwup-dev:
-    plugin: make
-    #fwupdate 11 FTBFS: see https://github.com/rhboot/fwupdate/pull/113
-    source: https://github.com/rhboot/fwupdate.git
-    source-type: git
-    make-parameters:
-      - EFIDIR=ubuntu
-      - GNUEFIDIR=/usr/lib
-      - LIBDIR=$SNAPCRAFT_STAGE/usr/lib/x86_64-linux-gnu
-      - libdir=/usr/lib/x86_64-linux-gnu
-      - PKG_CONFIG_PATH=$SNAPCRAFT_STAGE/usr/lib/x86_64-linux-gnu/pkgconfig
-      - --eval=export PKG_CONFIG_PATH
-    build-packages:
-      - elfutils
-      - gnu-efi
-      - libasm1
-      - libdw1
-    prime:
-      - -usr/lib/debug
-      - -usr/lib/systemd
-      - -usr/src
-      - -usr/share
-      - -usr/lib/*/pkgconfig
-      - -usr/include
-      - -usr/bin
-    after: [libsmbios, libefivar-fixpkgconfig]
   meson:
     plugin: python
     source: https://github.com/mesonbuild/meson/releases/download/0.46.1/meson-0.46.1.tar.gz
@@ -142,6 +116,8 @@ parts:
       - -usr/share/glib-2.0/schemas
       - -usr/share/lintian
       - -usr/share/man
+      - -usr/lib/*/gdk-pixbuf-2.0
+      - -usr/share/gettext
     after: [meson]
   gudev:
     plugin: autotools
@@ -181,14 +157,42 @@ parts:
     - -usr/lib/*/pkgconfig
     - -usr/lib/*/girepository-1.0
     after: [libusb]
+  gnu-efi:
+    plugin: make
+    source: http://superb-dca2.dl.sourceforge.net/project/gnu-efi/gnu-efi-3.0.5.tar.bz2
+    make-parameters:
+      - PREFIX=/usr
+    make-install-var: INSTALLROOT
+    prime:
+      - -usr/include/
+      - -usr/lib
+  #fetch the latest version of the signed bootloader
+  #this might not match our fwupdx64.efi, but it's better than nothing
+  fwup-efi-signed:
+    plugin: make
+    source: contrib/snap/fwup-efi-signed
+  #needed for UEFI plugin to build UX labels
+  build-introspection:
+    plugin: nil
+    stage-packages:
+      - python3-gi
+      - python3-gi-cairo
+      - python3-pil
+    prime:
+      - -etc
+      - -usr
+      - -lib
+      - -var
   fwupd:
     plugin: meson
     meson-parameters: [--prefix=/usr,
                        --libexecdir=/usr/lib,
+                       -Defi-includedir=$SNAPCRAFT_STAGE/usr/include/efi,
+                       -Defi-ldsdir=$SNAPCRAFT_STAGE/usr/lib,
+                       -Defi-libdir=$SNAPCRAFT_STAGE/usr/lib,
                        -Dtests=false,
                        -Ddaemon=false,
                        -Dgtkdoc=false,
-                       -Dplugin_uefi_labels=false,
                        -Dintrospection=false,
                        -Dsystemd=false,
                        -Dman=false,
@@ -257,7 +261,11 @@ parts:
       - -usr/share/upstart
       - -usr/lib/*/glib-2.0
       - -usr/lib/*/pkgconfig
-    after: [appstream-glib-dev, libfwup-dev, gudev, gusb]
+    after: [appstream-glib-dev, gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection]
+  fix-bash-completion:
+    plugin: make
+    source: contrib/snap/fix-bash-completion
+    after: [fwupd]
   update-mime:
     plugin: make
     source: contrib/snap/update-mime
@@ -266,9 +274,13 @@ parts:
       - gsettings-desktop-schemas
       - libxml2
     prime:
+      - -usr/bin
       - -usr/share/doc
+      - -usr/share/doc-base
+      - -usr/share/man
       - -usr/share/lintian
       - -usr/share/pkgconfig
+      - -usr/share/GConf
     after: [fwupd]
   fwupdtool-wrapper:
     plugin: dump

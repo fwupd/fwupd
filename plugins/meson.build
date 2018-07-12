@@ -25,8 +25,13 @@ subdir('thunderbolt')
 subdir('thunderbolt-power')
 endif
 
+if get_option('plugin_redfish')
+subdir('redfish')
+endif
+
 if get_option('plugin_dell')
 subdir('dell')
+subdir('dell-esrt')
 endif
 
 if get_option('plugin_synaptics')

@@ -13,6 +13,7 @@
 #include <gio/gio.h>
 
 #include "fu-device-private.h"
+#include "fwupd-device-private.h"
 
 /**
  * SECTION:fu-device
@@ -26,6 +27,7 @@
 static void fu_device_finalize			 (GObject *object);
 
 typedef struct {
+	gchar				*alternate_id;
 	gchar				*equivalent_id;
 	FuDevice			*alternate;
 	FuDevice			*parent;	/* noref */
@@ -156,8 +158,50 @@ fu_device_set_equivalent_id (FuDevice *device, const gchar *equivalent_id)
  * fu_device_get_alternate:
  * @device: A #FuDevice
  *
+ * Gets any alternate device ID. An alternate device may be linked to the primary
+ * device in some way.
+ *
+ * Returns: (transfer none): a #FuDevice or %NULL
+ *
+ * Since: 1.1.0
+ **/
+const gchar *
+fu_device_get_alternate_id (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
+	return priv->alternate_id;
+}
+
+/**
+ * fu_device_set_alternate:
+ * @device: A #FuDevice
+ * @alternate: Another #FuDevice
+ *
+ * Sets any alternate device ID. An alternate device may be linked to the primary
+ * device in some way.
+ *
+ * Since: 1.1.0
+ **/
+void
+fu_device_set_alternate_id (FuDevice *device, const gchar *alternate_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_free (priv->alternate_id);
+	priv->alternate_id = g_strdup (alternate_id);
+}
+
+/**
+ * fu_device_get_alternate:
+ * @device: A #FuDevice
+ *
  * Gets any alternate device. An alternate device may be linked to the primary
  * device in some way.
+ *
+ * The alternate object will be matched from the ID set in fu_device_set_alternate_id()
+ * and will be assigned by the daemon. This means if the ID is not found as an
+ * added device, then this function will return %NULL.
  *
  * Returns: (transfer none): a #FuDevice or %NULL
  *
@@ -178,6 +222,8 @@ fu_device_get_alternate (FuDevice *device)
  *
  * Sets any alternate device. An alternate device may be linked to the primary
  * device in some way.
+ *
+ * This function is only usable by the daemon, not directly from plugins.
  *
  * Since: 0.7.2
  **/
@@ -282,11 +328,11 @@ fu_device_add_child (FuDevice *device, FuDevice *child)
 
 	/* order devices so they are updated in the correct sequence */
 	if (fu_device_has_flag (child, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST)) {
-		if (priv->order <= fu_device_get_order (child))
-			priv->order = fu_device_get_order (child) + 1;
-	} else {
 		if (priv->order >= fu_device_get_order (child))
 			fu_device_set_order (child, priv->order + 1);
+	} else {
+		if (priv->order <= fu_device_get_order (child))
+			priv->order = fu_device_get_order (child) + 1;
 	}
 }
 
@@ -641,39 +687,104 @@ fu_device_get_serial (FuDevice *device)
 	return fu_device_get_metadata (device, "serial");
 }
 
-/**
- * fu_device_set_plugin_hints:
- * @device: A #FuDevice
- * @plugin_hints: a string
- *
- * Sets the hint the the plugin from the quirk system that can be used to
- * do affect device matching. The actual string format is defined by the plugin.
- *
- * Since: 1.0.3
- **/
-void
-fu_device_set_plugin_hints (FuDevice *device, const gchar *plugin_hints)
+static void
+fu_device_set_custom_flag (FuDevice *device, const gchar *hint)
 {
-	g_return_if_fail (FU_IS_DEVICE (device));
-	g_return_if_fail (plugin_hints != NULL);
-	fu_device_set_metadata (device, "PluginHints", plugin_hints);
+	FwupdDeviceFlags flag;
+
+	/* is this a known device flag */
+	flag = fwupd_device_flag_from_string (hint);
+	if (flag == FWUPD_DEVICE_FLAG_UNKNOWN)
+		return;
+
+	/* being both a bootloader and requiring a bootloader is invalid */
+	if (flag == FWUPD_DEVICE_FLAG_NONE ||
+	    flag == FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER) {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	}
+	if (flag == FWUPD_DEVICE_FLAG_NONE ||
+	    flag == FWUPD_DEVICE_FLAG_IS_BOOTLOADER) {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	}
+
+	/* none is not used as an "exported" flag */
+	if (flag != FWUPD_DEVICE_FLAG_NONE)
+		fu_device_add_flag (device, flag);
 }
 
 /**
- * fu_device_get_plugin_hints:
+ * fu_device_set_custom_flags:
+ * @device: A #FuDevice
+ * @custom_flags: a string
+ *
+ * Sets the custom flags from the quirk system that can be used to
+ * affect device matching. The actual string format is defined by the plugin.
+ *
+ * Since: 1.1.0
+ **/
+void
+fu_device_set_custom_flags (FuDevice *device, const gchar *custom_flags)
+{
+	g_return_if_fail (FU_IS_DEVICE (device));
+	g_return_if_fail (custom_flags != NULL);
+
+	/* display what was set when converting to a string */
+	fu_device_set_metadata (device, "CustomFlags", custom_flags);
+
+	/* look for any standard FwupdDeviceFlags */
+	if (custom_flags != NULL) {
+		g_auto(GStrv) hints = g_strsplit (custom_flags, ",", -1);
+		for (guint i = 0; hints[i] != NULL; i++)
+			fu_device_set_custom_flag (device, hints[i]);
+	}
+}
+
+/**
+ * fu_device_get_custom_flags:
  * @device: A #FuDevice
  *
- * Gets the plugin hint for the device from the quirk system.
+ * Gets the custom flags for the device from the quirk system.
  *
  * Returns: a string value, or %NULL if never set.
  *
- * Since: 1.0.3
+ * Since: 1.1.0
  **/
 const gchar *
-fu_device_get_plugin_hints (FuDevice *device)
+fu_device_get_custom_flags (FuDevice *device)
 {
 	g_return_val_if_fail (FU_IS_DEVICE (device), NULL);
-	return fu_device_get_metadata (device, "PluginHints");
+	return fu_device_get_metadata (device, "CustomFlags");
+}
+
+/**
+ * fu_device_has_custom_flag:
+ * @device: A #FuDevice
+ * @hint: A string, e.g. "bootloader"
+ *
+ * Checks if the custom flag exists for the device from the quirk system.
+ *
+ * It may be more efficient to call fu_device_get_custom_flags() and split the
+ * string locally if checking for lots of different flags.
+ *
+ * Returns: %TRUE if the hint exists
+ *
+ * Since: 1.1.0
+ **/
+gboolean
+fu_device_has_custom_flag (FuDevice *device, const gchar *hint)
+{
+	const gchar *hint_str;
+	g_auto(GStrv) hints = NULL;
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (hint != NULL, FALSE);
+
+	/* no hint is perfectly valid */
+	hint_str = fu_device_get_custom_flags (device);
+	if (hint_str == NULL)
+		return FALSE;
+	hints = g_strsplit (hint_str, ",", -1);
+	return g_strv_contains ((const gchar * const *) hints, hint);
 }
 
 /**
@@ -893,6 +1004,8 @@ fu_device_to_string (FuDevice *device)
 	tmp = fwupd_device_to_string (FWUPD_DEVICE (device));
 	if (tmp != NULL && tmp[0] != '\0')
 		g_string_append (str, tmp);
+	if (priv->alternate_id != NULL)
+		fwupd_pad_kv_str (str, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
 		fwupd_pad_kv_str (str, "EquivalentId", priv->equivalent_id);
 	keys = g_hash_table_get_keys (priv->metadata);
@@ -1097,6 +1210,42 @@ fu_device_attach (FuDevice *device, GError **error)
 	return klass->attach (device, error);
 }
 
+/**
+ * fu_device_incorporate:
+ * @device: A #FuDevice
+ * @donor: Another #FuDevice
+ *
+ * Copy all properties from the donor object if they have not already been set.
+ *
+ * Since: 1.1.0
+ **/
+void
+fu_device_incorporate (FuDevice *self, FuDevice *donor)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	FuDevicePrivate *priv_donor = GET_PRIVATE (donor);
+	g_autoptr(GList) metadata_keys = NULL;
+
+	/* copy from donor FuDevice if has not already been set */
+	if (priv->alternate_id == NULL)
+		fu_device_set_alternate_id (self, fu_device_get_alternate_id (donor));
+	if (priv->equivalent_id == NULL)
+		fu_device_set_equivalent_id (self, fu_device_get_equivalent_id (donor));
+	if (priv->quirks == NULL)
+		fu_device_set_quirks (self, fu_device_get_quirks (donor));
+	metadata_keys = g_hash_table_get_keys (priv_donor->metadata);
+	for (GList *l = metadata_keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		if (g_hash_table_lookup (priv->metadata, key) == NULL) {
+			const gchar *value = g_hash_table_lookup (priv_donor->metadata, key);
+			fu_device_set_metadata (self, key, value);
+		}
+	}
+
+	/* now the base class, where all the interesting bits are */
+	fwupd_device_incorporate (FWUPD_DEVICE (self), FWUPD_DEVICE (donor));
+}
+
 static void
 fu_device_class_init (FuDeviceClass *klass)
 {
@@ -1158,6 +1307,7 @@ fu_device_finalize (GObject *object)
 	g_hash_table_unref (priv->metadata);
 	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->parent_guids);
+	g_free (priv->alternate_id);
 	g_free (priv->equivalent_id);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);

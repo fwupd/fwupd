@@ -4,6 +4,7 @@ data/remotes.d/lvfs-testing.metainfo.xml
 policy/org.freedesktop.fwupd.policy.in
 plugins/dfu/dfu-tool.c
 plugins/uefi/fu-plugin-uefi.c
+plugins/uefi/fu-uefi-tool.c
 src/fu-config.c
 src/fu-debug.c
 src/fu-main.c

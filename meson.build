@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.0.8',
+  version : '1.1.0',
   license : 'LGPL-2.1+',
   meson_version : '>=0.43.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -113,8 +113,14 @@ test_link_args = [
   '-Wl,-z,now',
 ]
 foreach arg: test_link_args
-  if cc.has_argument(arg)
-    global_link_args += arg
+  if meson.version().version_compare('>=0.46.0')
+    if cc.has_link_argument(arg)
+      global_link_args += arg
+    endif
+  else
+    if cc.has_argument(arg)
+      global_link_args += arg
+    endif
   endif
 endforeach
 add_global_link_arguments(
@@ -131,7 +137,21 @@ add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
 # needed for some things on CentOS
 add_project_arguments('-D_GNU_SOURCE', language : 'c')
 
+prefix = get_option('prefix')
+
+bindir = join_paths(prefix, get_option('bindir'))
+libdir = join_paths(prefix, get_option('libdir'))
+datadir = join_paths(prefix, get_option('datadir'))
+libexecdir = join_paths(prefix, get_option('libexecdir'))
+sysconfdir = join_paths(prefix, get_option('sysconfdir'))
+localstatedir = join_paths(prefix, get_option('localstatedir'))
+mandir = join_paths(prefix, get_option('mandir'))
+localedir = join_paths(prefix, get_option('localedir'))
+
 gio = dependency('gio-2.0', version : '>= 2.45.8')
+if gio.version().version_compare ('>= 2.55.0')
+  conf.set('HAVE_GIO_2_55_0', '1')
+endif
 gmodule = dependency('gmodule-2.0')
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
 gudev = dependency('gudev-1.0')
@@ -174,20 +194,16 @@ endif
 if libgcab.version().version_compare('>= 1.0')
   conf.set('HAVE_GCAB_1_0', '1')
 endif
+gcab = find_program('gcab', required : true)
 bashcomp = dependency('bash-completion', required: false)
-
-if get_option('plugin_uefi_labels')
-  cairo = dependency('cairo')
-  fontconfig = cc.find_library('fontconfig')
-  freetype = cc.find_library('freetype')
-  r = run_command('po/test-deps')
-  if r.returncode() != 0
-    error(r.stdout())
-  endif
-endif
 
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
+endif
+
+if get_option('plugin_redfish')
+  json_glib = dependency('json-glib-1.0')
+  efivar = dependency('efivar')
 endif
 
 if get_option('plugin_altos')
@@ -195,23 +211,49 @@ if get_option('plugin_altos')
 endif
 
 if get_option('plugin_uefi')
-  fwup = dependency('fwup', version : '>= 10')
-  if fwup.version().version_compare('>= 11')
-    conf.set('HAVE_FWUP_GET_ESP_MOUNTPOINT', '1')
-  endif
-  if fwup.version().version_compare('>= 12')
-    conf.set('HAVE_FWUP_VERSION', '1')
-  endif
-  efivar = dependency('efivar')
+  cairo = dependency('cairo')
+  fontconfig = cc.find_library('fontconfig')
+  freetype = cc.find_library('freetype')
+  efivar = dependency('efivar', version : '>= 33')
   conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
-  conf.set_quoted('LIBFWUP_LIBRARY_VERSION', fwup.version())
+  efiboot = dependency('efiboot')
+  objcopy = find_program ('objcopy')
+  readelf = find_program ('readelf')
+
+  efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
+  conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
+
+  efi_arch = host_machine.cpu_family()
+  if efi_arch == 'x86'
+          EFI_MACHINE_TYPE_NAME = 'ia32'
+          gnu_efi_arch = 'ia32'
+  elif efi_arch == 'x86_64'
+          EFI_MACHINE_TYPE_NAME = 'x64'
+          gnu_efi_arch = 'x86_64'
+  elif efi_arch == 'arm'
+          EFI_MACHINE_TYPE_NAME = 'arm'
+          gnu_efi_arch = 'arm'
+  elif efi_arch == 'aarch64'
+          EFI_MACHINE_TYPE_NAME = 'aa64'
+          gnu_efi_arch = 'aarch64'
+  else
+          EFI_MACHINE_TYPE_NAME = ''
+          gnu_efi_arch = ''
+  endif
+  conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
+  r = run_command('po/test-deps')
+  if r.returncode() != 0
+    error(r.stdout())
+  endif
 endif
 
 if get_option('plugin_dell')
-  libsmbios_c = dependency('libsmbios_c', version : '>= 2.3.0')
+  libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0')
   efivar = dependency('efivar')
-  fwup = dependency('fwup', version : '>= 5')
   conf.set('HAVE_DELL', '1')
+  if not get_option('plugin_uefi')
+    error('plugin_dell also needs plugin_uefi to work')
+  endif
 endif
 
 if get_option('plugin_synaptics')
@@ -224,24 +266,13 @@ if get_option('plugin_thunderbolt')
 endif
 
 if get_option('systemd')
-  systemd = dependency('systemd', version : '>= 231')
+  systemd = dependency('systemd', version : '>= 211')
   conf.set('HAVE_SYSTEMD' , '1')
 endif
 
 if get_option('consolekit')
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
-
-prefix = get_option('prefix')
-
-bindir = join_paths(prefix, get_option('bindir'))
-libdir = join_paths(prefix, get_option('libdir'))
-datadir = join_paths(prefix, get_option('datadir'))
-libexecdir = join_paths(prefix, get_option('libexecdir'))
-sysconfdir = join_paths(prefix, get_option('sysconfdir'))
-localstatedir = join_paths(prefix, get_option('localstatedir'))
-mandir = join_paths(prefix, get_option('mandir'))
-localedir = join_paths(prefix, get_option('localedir'))
 
 systemdunitdir = get_option('systemdunitdir')
 if systemdunitdir == '' and get_option('systemd')
@@ -285,7 +316,10 @@ plugin_deps += soup
 plugin_deps += libarchive
 
 subdir('data')
-subdir('docs')
+if get_option('gtkdoc')
+  gtkdocscan = find_program('gtkdoc-scan', required : true)
+  subdir('docs')
+endif
 subdir('libfwupd')
 subdir('po')
 if get_option('daemon')

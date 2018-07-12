@@ -16,31 +16,6 @@
 G_DEFINE_TYPE (FuSteelseriesDevice, fu_steelseries_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
-fu_steelseries_device_probe (FuUsbDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-
-	/* not the right kind of device */
-	if (g_usb_device_get_vid (usb_device) != 0x1038 ||
-	    g_usb_device_get_pid (usb_device) != 0x1702) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported with this device");
-		return FALSE;
-	}
-
-	/* hardcoded */
-	fu_device_set_name (FU_DEVICE (device), "SteelSeries Rival 100");
-	fu_device_set_vendor (FU_DEVICE (device), "SteelSeries");
-	fu_device_set_summary (FU_DEVICE (device), "An optical gaming mouse");
-	fu_device_add_icon (FU_DEVICE (device), "input-mouse");
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_steelseries_device_open (FuUsbDevice *device, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
@@ -138,7 +113,6 @@ fu_steelseries_device_class_init (FuSteelseriesDeviceClass *klass)
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_usb_device->open = fu_steelseries_device_open;
 	klass_usb_device->close = fu_steelseries_device_close;
-	klass_usb_device->probe = fu_steelseries_device_probe;
 }
 
 FuSteelseriesDevice *

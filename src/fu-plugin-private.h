@@ -39,6 +39,9 @@ void		 fu_plugin_set_name			(FuPlugin	*plugin,
 							 const gchar 	*name);
 GPtrArray	*fu_plugin_get_rules			(FuPlugin	*plugin,
 							 FuPluginRule	 rule);
+gboolean	 fu_plugin_has_rule			(FuPlugin	*plugin,
+							 FuPluginRule	 rule,
+							 const gchar	*name);
 GHashTable	*fu_plugin_get_report_metadata		(FuPlugin	*plugin);
 gboolean	 fu_plugin_open				(FuPlugin	*plugin,
 							 const gchar	*filename,
@@ -58,6 +61,12 @@ gboolean	 fu_plugin_runner_update_prepare	(FuPlugin	*plugin,
 							 GError		**error);
 gboolean	 fu_plugin_runner_update_cleanup	(FuPlugin	*plugin,
 							 FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_plugin_runner_composite_prepare	(FuPlugin	*plugin,
+							 GPtrArray	*devices,
+							 GError		**error);
+gboolean	 fu_plugin_runner_composite_cleanup	(FuPlugin	*plugin,
+							 GPtrArray	*devices,
 							 GError		**error);
 gboolean	 fu_plugin_runner_update_attach		(FuPlugin	*plugin,
 							 FuDevice	*device,

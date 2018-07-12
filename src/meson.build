@@ -19,7 +19,9 @@ endif
 if get_option('pkcs7')
   keyring_src += 'fu-keyring-pkcs7.c'
   keyring_deps += gnutls
-  test_deps += colorhug_pkcs7_signature
+  if get_option('tests')
+    test_deps += colorhug_pkcs7_signature
+  endif
 endif
 
 libfwupdprivate = static_library(
@@ -53,7 +55,6 @@ libfwupdprivate = static_library(
   ],
   c_args : [
     cargs,
-    '-DSYSFSFIRMWAREDIR="/sys/firmware"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
@@ -150,7 +151,6 @@ fwupdtool = executable(
   ],
   c_args : [
     cargs,
-    '-DSYSFSFIRMWAREDIR="/sys/firmware"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -224,7 +224,6 @@ executable(
   link_with : fwupd,
   c_args : [
     cargs,
-    '-DSYSFSFIRMWAREDIR="/sys/firmware"',
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -296,14 +295,9 @@ if get_option('tests')
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
-      '-DSYSFSFIRMWAREDIR="' + testdatadir_src + '"',
     ],
   )
-  test('fu-self-test', e, is_parallel:false,
-       env: ['FWUPD_DATADIR=' + testdatadir_src,
-             'FWUPD_SYSCONFDIR=' + testdatadir_src,
-             'FWUPD_PLUGINDIR=' + testdatadir_src,
-             'FWUPD_LOCALSTATEDIR=/tmp/fwupd-self-test/var'])
+  test('fu-self-test', e, is_parallel:false)
 endif
 
 if get_option('introspection')

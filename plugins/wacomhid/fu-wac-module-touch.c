@@ -47,6 +47,7 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 	blocks_total = chunks->len + 2;
 
 	/* start, which will erase the module */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_START, NULL, error))
 		return FALSE;
 
@@ -54,6 +55,7 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 	fu_device_set_progress_full (device, 1, blocks_total);
 
 	/* data */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
 		DfuChunkedPacket *pkt = g_ptr_array_index (chunks, i);
 		guint8 buf[128+7];
@@ -82,7 +84,7 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 	fu_device_set_progress_full (device, blocks_total, blocks_total);
 
 	/* reboot */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	return fu_wac_device_update_reset (parent, error);
 }
 
@@ -90,7 +92,6 @@ static void
 fu_wac_module_touch_init (FuWacModuleTouch *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_name (FU_DEVICE (self), "Touch Module");
 }
 
 static void

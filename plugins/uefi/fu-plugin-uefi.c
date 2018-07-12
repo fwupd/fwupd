@@ -1,6 +1,7 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2017 Peter Jones <pjones@redhat.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -8,7 +9,6 @@
 #include "config.h"
 
 #include <appstream-glib.h>
-#include <fwup.h>
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <glib/gi18n.h>
@@ -16,41 +16,23 @@
 #include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
-#ifndef HAVE_FWUP_GET_ESP_MOUNTPOINT
-#define FWUP_SUPPORTED_STATUS_UNSUPPORTED			0
-#define FWUP_SUPPORTED_STATUS_UNLOCKED				1
-#define FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK			2
-#define FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK_NEXT_BOOT	3
-#define FWUPDATE_GUID EFI_GUID(0x0abba7dc,0xe516,0x4167,0xbbf5,0x4d,0x9d,0x1c,0x73,0x94,0x16)
-#endif
+#include "fu-uefi-bgrt.h"
+#include "fu-uefi-common.h"
+#include "fu-uefi-device.h"
+#include "fu-uefi-vars.h"
 
 struct FuPluginData {
-	gboolean		 ux_capsule;
 	gchar			*esp_path;
-	gint			 esrt_status;
+	FuUefiBgrt		*bgrt;
 };
-
-/* drop when upgrading minimum required version of efivar to 33 */
-#if !defined (efi_guid_ux_capsule)
-#define efi_guid_ux_capsule EFI_GUID(0x3b8c8162,0x188c,0x46a4,0xaec9,0xbe,0x43,0xf1,0xd6,0x56,0x97)
-#endif
 
 void
 fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-#ifdef HAVE_FWUP_VERSION
-	g_autofree gchar *version_str = NULL;
-#endif
-	data->ux_capsule = FALSE;
-	data->esp_path = NULL;
+	data->bgrt = fu_uefi_bgrt_new ();
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
-	fu_plugin_add_compile_version (plugin, "com.redhat.fwupdate", LIBFWUP_LIBRARY_VERSION);
 	fu_plugin_add_compile_version (plugin, "com.redhat.efivar", EFIVAR_LIBRARY_VERSION);
-#ifdef HAVE_FWUP_VERSION
-	version_str = g_strdup_printf ("%i", fwup_version ());
-	fu_plugin_add_runtime_version (plugin, "com.redhat.fwupdate", version_str);
-#endif
 }
 
 void
@@ -58,163 +40,43 @@ fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_free (data->esp_path);
+	g_object_unref (data->bgrt);
 }
-
-static gchar *
-fu_plugin_uefi_guid_to_string (efi_guid_t *guid_raw)
-{
-	g_autofree gchar *guid = g_strdup ("00000000-0000-0000-0000-000000000000");
-	if (efi_guid_to_str (guid_raw, &guid) < 0)
-		return NULL;
-	return g_steal_pointer (&guid);
-}
-
-static fwup_resource *
-fu_plugin_uefi_find_resource (fwup_resource_iter *iter, FuDevice *device, GError **error)
-{
-	efi_guid_t *guid_raw;
-	fwup_resource *re = NULL;
-	g_autofree gchar *guids_str = NULL;
-
-	/* get the hardware we're referencing */
-	while (fwup_resource_iter_next (iter, &re) > 0) {
-		g_autofree gchar *guid_tmp = NULL;
-
-		/* convert to strings */
-		fwup_get_guid (re, &guid_raw);
-		guid_tmp = fu_plugin_uefi_guid_to_string (guid_raw);
-		if (guid_tmp == NULL) {
-			g_warning ("failed to convert guid to string");
-			continue;
-		}
-
-		/* FIXME: also match hardware_instance too */
-		if (fu_device_has_guid (device, guid_tmp))
-			return re;
-	}
-
-	/* paradoxically, no hardware matched */
-	guids_str = fu_device_get_guids_as_str (device);
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_NOT_SUPPORTED,
-		     "No UEFI firmware matched '%s'",
-		     guids_str);
-	return NULL;
-}
-
-static void
-_fwup_resource_iter_free (fwup_resource_iter *iter)
-{
-	fwup_resource_iter_destroy (&iter);
-}
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(fwup_resource_iter, _fwup_resource_iter_free);
-#pragma clang diagnostic pop
 
 gboolean
 fu_plugin_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	fwup_resource *re = NULL;
-	g_autoptr(fwup_resource_iter) iter = NULL;
-
-	/* get the hardware we're referencing */
-	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find_resource (iter, device, error);
-	if (re == NULL)
-		return FALSE;
-	if (fwup_clear_status (re) < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Cannot create clear UEFI status for %s",
-			     fu_device_get_guid_default (device));
-		return FALSE;
-	}
-	return TRUE;
+	FuUefiDevice *device_uefi = FU_UEFI_DEVICE (device);
+	return fu_uefi_device_clear_status (device_uefi, error);
 }
 
 gboolean
 fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
+	FuUefiDevice *device_uefi = FU_UEFI_DEVICE (device);
+	FuUefiDeviceStatus status = fu_uefi_device_get_status (device_uefi);
 	const gchar *tmp;
-	fwup_resource *re = NULL;
-	guint32 status = 0;
-	guint32 version = 0;
-	time_t when = 0;
-	g_autoptr(fwup_resource_iter) iter = NULL;
+	g_autofree gchar *err_msg = NULL;
+	g_autofree gchar *version_str = NULL;
 
-	/* get the hardware we're referencing */
-	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find_resource (iter, device, error);
-	if (re == NULL)
-		return FALSE;
-	if (fwup_get_last_attempt_info (re, &version, &status, &when) < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Cannot get UEFI status for %s",
-			     fu_device_get_guid_default (device));
-		return FALSE;
-	}
-	if (status == FWUP_LAST_ATTEMPT_STATUS_SUCCESS) {
+	/* trivial case */
+	if (status == FU_UEFI_DEVICE_STATUS_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
+		return TRUE;
+	}
+
+	/* something went wrong */
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+	version_str = g_strdup_printf ("%u", fu_uefi_device_get_version_error (device_uefi));
+	tmp = fu_uefi_device_status_to_string (status);
+	if (tmp == NULL) {
+		err_msg = g_strdup_printf ("failed to update to %s",
+					   version_str);
 	} else {
-		g_autofree gchar *err_msg = NULL;
-		g_autofree gchar *version_str = g_strdup_printf ("%u", version);
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		tmp = fwup_last_attempt_status_to_string (status);
-		if (tmp == NULL) {
-			err_msg = g_strdup_printf ("failed to update to %s",
-						   version_str);
-		} else {
-			err_msg = g_strdup_printf ("failed to update to %s: %s",
-						   version_str, tmp);
-		}
-		fu_device_set_update_error (device, err_msg);
+		err_msg = g_strdup_printf ("failed to update to %s: %s",
+					   version_str, tmp);
 	}
-	return TRUE;
-}
-
-static gboolean
-fu_plugin_uefi_update_resource (fwup_resource *re,
-				guint64 hardware_instance,
-				GBytes *blob,
-				GError **error)
-{
-	int rc;
-	rc = fwup_set_up_update_with_buf (re, hardware_instance,
-					  g_bytes_get_data (blob, NULL),
-					  g_bytes_get_size (blob));
-	if (rc < 0) {
-		g_autoptr(GString) str = g_string_new (NULL);
-		rc = 1;
-		for (int i = 0; rc > 0; i++) {
-			char *filename = NULL;
-			char *function = NULL;
-			char *message = NULL;
-			int line = 0;
-			int err = 0;
-
-			rc = efi_error_get (i, &filename, &function, &line,
-					    &message, &err);
-			if (rc <= 0)
-				break;
-			g_string_append_printf (str, "{error #%d} %s:%d %s(): %s: %s\t",
-						i, filename, line, function,
-						message, strerror (err));
-		}
-		if (str->len > 1)
-			g_string_truncate (str, str->len - 1);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "UEFI firmware update failed: %s",
-			     str->str);
-		return FALSE;
-	}
+	fu_device_set_update_error (device, err_msg);
 	return TRUE;
 }
 
@@ -290,12 +152,82 @@ fu_plugin_uefi_get_splash_data (guint width, guint height, GError **error)
 }
 
 static gboolean
-fu_plugin_uefi_update_splash (GError **error)
+fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error)
 {
-	fwup_resource *re = NULL;
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	guint32 screen_x, screen_y;
+	gsize buf_size = g_bytes_get_size (blob);
+	gssize size;
+	guint32 height, width;
+	efi_ux_capsule_header_t header;
+	efi_capsule_header_t capsule_header = {
+		.flags = EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET,
+		.guid = efi_guid_ux_capsule,
+		.header_size = sizeof(efi_capsule_header_t),
+		.capsule_image_size = 0
+	};
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *directory = NULL;
+	g_autofree gchar *basename = NULL;
+	g_autoptr(GFile) ofile = NULL;
+	g_autoptr(GOutputStream) ostream = NULL;
+
+	/* get screen dimensions */
+	if (!fu_uefi_get_framebuffer_size (&screen_x, &screen_y, error))
+		return FALSE;
+	if (!fu_uefi_get_bitmap_size ((const guint8 *) g_bytes_get_data (blob, NULL),
+				      buf_size, &width, &height, error)) {
+		g_prefix_error (error, "splash invalid: ");
+		return FALSE;
+	}
+
+	/* save to a predicatable filename */
+	directory = fu_uefi_get_esp_path_for_os (data->esp_path);
+	basename = g_strdup_printf ("fwupd-%s.cap", FU_UEFI_VARS_GUID_UX_CAPSULE);
+	fn = g_build_filename (directory, "fw", basename, NULL);
+	if (!fu_common_mkdir_parent (fn, error))
+		return FALSE;
+	ofile = g_file_new_for_path (fn);
+	ostream = G_OUTPUT_STREAM (g_file_replace (ofile, NULL, FALSE,
+				   G_FILE_CREATE_NONE, NULL, error));
+	if (ostream == NULL)
+		return FALSE;
+
+	capsule_header.capsule_image_size =
+		g_bytes_get_size (blob) +
+		sizeof(efi_capsule_header_t) +
+		sizeof(header);
+
+	memset (&header, '\0', sizeof(header));
+	header.version = 1;
+	header.image_type = 0;
+	header.reserved = 0;
+	header.x_offset = (screen_x / 2) - (width / 2);
+	header.y_offset = fu_uefi_bgrt_get_yoffset (data->bgrt) +
+				fu_uefi_bgrt_get_height (data->bgrt);
+
+	/* write capsule file */
+	size = g_output_stream_write (ostream, &capsule_header,
+				      capsule_header.header_size, NULL, error);
+	if (size < 0)
+		return FALSE;
+	size = g_output_stream_write (ostream, &header, sizeof(header), NULL, error);
+	if (size < 0)
+		return FALSE;
+	size = g_output_stream_write_bytes (ostream, blob, NULL, error);
+	if (size < 0)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_plugin_uefi_update_splash (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	guint best_idx = G_MAXUINT;
 	guint32 lowest_border_pixels = G_MAXUINT;
-	int rc;
 	guint32 screen_height = 768;
 	guint32 screen_width = 1024;
 	g_autoptr(GBytes) image_bmp = NULL;
@@ -316,15 +248,16 @@ fu_plugin_uefi_update_splash (GError **error)
 	};
 
 	/* get the boot graphics resource table data */
-	rc = fwup_get_ux_capsule_info (&screen_width, &screen_height);
-	if (rc < 0) {
+	if (!fu_uefi_bgrt_get_supported (data->bgrt)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "failed to get BGRT screen size");
+				     "BGRT is not supported");
 		return FALSE;
 	}
-	g_debug ("BGRT screen size %" G_GUINT32_FORMAT " x%" G_GUINT32_FORMAT,
+	if (!fu_uefi_get_framebuffer_size (&screen_width, &screen_height, error))
+		return FALSE;
+	g_debug ("framebuffer size %" G_GUINT32_FORMAT " x%" G_GUINT32_FORMAT,
 		 screen_width, screen_height);
 
 	/* find the 'best sized' pre-generated image */
@@ -361,7 +294,7 @@ fu_plugin_uefi_update_splash (GError **error)
 		return FALSE;
 
 	/* perform the upload */
-	return fu_plugin_uefi_update_resource (re, 0, image_bmp, error);
+	return fu_plugin_uefi_write_splash_data (plugin, image_bmp, error);
 }
 
 static gboolean
@@ -395,40 +328,47 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	fwup_resource *re = NULL;
-	guint64 hardware_instance = 0;	/* FIXME */
-	g_autoptr(fwup_resource_iter) iter = NULL;
 	const gchar *str;
+	guint32 flashes_left;
 	g_autofree gchar *efibootmgr_path = NULL;
 	g_autofree gchar *boot_variables = NULL;
 	g_autoptr(GError) error_splash = NULL;
 
-	/* get the hardware we're referencing */
-	fwup_resource_iter_create (&iter);
-	re = fu_plugin_uefi_find_resource (iter, device, error);
-	if (re == NULL)
-		return FALSE;
+	/* test the flash counter */
+	flashes_left = fu_device_get_flashes_left (device);
+	if (flashes_left > 0) {
+		g_debug ("%s has %" G_GUINT32_FORMAT " flashes left",
+			 fu_device_get_name (device),
+			 flashes_left);
+		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 && flashes_left <= 2) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "%s only has %" G_GUINT32_FORMAT " flashes left -- "
+				     "see https://github.com/hughsie/fwupd/wiki/Dell-TPM:-flashes-left for more information.",
+				     fu_device_get_name (device), flashes_left);
+			return FALSE;
+		}
+	}
 
 	/* TRANSLATORS: this is shown when updating the firmware after the reboot */
 	str = _("Installing firmware update…");
 	g_assert (str != NULL);
 
 	/* make sure that the ESP is mounted */
-	if (!fu_plugin_uefi_esp_mounted (plugin, error))
-		return FALSE;
+	if (g_getenv ("FWUPD_UEFI_ESP_PATH") == NULL) {
+		if (!fu_plugin_uefi_esp_mounted (plugin, error))
+			return FALSE;
+	}
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
 	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
-
-	if (data->ux_capsule) {
-		if (!fu_plugin_uefi_update_splash (&error_splash)) {
-			g_warning ("failed to upload UEFI UX capsule text: %s",
-				   error_splash->message);
-		}
+	if (!fu_plugin_uefi_update_splash (plugin, &error_splash)) {
+		g_debug ("failed to upload UEFI UX capsule text: %s",
+			 error_splash->message);
 	}
-	if (!fu_plugin_uefi_update_resource (re, hardware_instance, blob_fw, error))
+	if (!fu_device_write_firmware (device, blob_fw, error))
 		return FALSE;
 
 	/* record boot information to system log for future debugging */
@@ -443,14 +383,37 @@ fu_plugin_update (FuPlugin *plugin,
 	return TRUE;
 }
 
+static void
+fu_plugin_uefi_register_proxy_device (FuPlugin *plugin, FuDevice *device)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_dev (device);
+	fu_device_set_metadata (FU_DEVICE (dev), "EspPath", data->esp_path);
+	fu_plugin_device_add (plugin, FU_DEVICE (dev));
+}
+
+void
+fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
+{
+	if (fu_device_get_metadata (device, "UefiDeviceKind") != NULL) {
+		if (fu_device_get_guid_default (device) == NULL) {
+			g_autofree gchar *dbg = fu_device_to_string (device);
+			g_warning ("cannot create proxy device as no GUID: %s", dbg);
+			return;
+		}
+		fu_plugin_uefi_register_proxy_device (plugin, device);
+	}
+}
+
 static AsVersionParseFlag
-fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, guint32 uefi_type)
+fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind)
 {
 	const gchar *content;
 	const gchar *quirk;
+	g_autofree gchar *group = NULL;
 
 	/* we have no information for devices */
-	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE)
+	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
 		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
@@ -458,63 +421,40 @@ fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, guint32 uefi_type)
 		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 
 	/* any quirks match */
-	quirk = fu_plugin_lookup_quirk_by_id (plugin,
-					      FU_QUIRKS_UEFI_VERSION_FORMAT,
-					      content);
-	if (g_strcmp0 (quirk, "none") == 0)
+	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
+	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
+					      FU_QUIRKS_UEFI_VERSION_FORMAT);
+	if (g_strcmp0 (quirk, "quad") == 0)
 		return AS_VERSION_PARSE_FLAG_NONE;
 
 	/* fall back */
 	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 }
 
-gboolean
-fu_plugin_unlock (FuPlugin *plugin,
-			 FuDevice *device,
-			 GError **error)
-{
-	gint rc;
-	g_debug ("unlocking UEFI device %s", fu_device_get_id (device));
-	rc = fwup_enable_esrt();
-	if (rc <= 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "failed to unlock UEFI device");
-		return FALSE;
-	} else if (rc == 1)
-		g_debug ("UEFI device is already unlocked");
-	else if (rc == 2)
-		g_debug ("Successfully unlocked UEFI device");
-	else if (rc == 3)
-		g_debug ("UEFI device will be unlocked on next reboot");
-	return TRUE;
-}
-
 static const gchar *
-fu_plugin_uefi_uefi_type_to_string (guint32 uefi_type)
+fu_plugin_uefi_uefi_type_to_string (FuUefiDeviceKind device_kind)
 {
-	if (uefi_type == FWUP_RESOURCE_TYPE_UNKNOWN)
+	if (device_kind == FU_UEFI_DEVICE_KIND_UNKNOWN)
 		return "Unknown Firmware";
-	if (uefi_type == FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE)
+	if (device_kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE)
 		return "System Firmware";
-	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE)
+	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
 		return "Device Firmware";
-	if (uefi_type == FWUP_RESOURCE_TYPE_UEFI_DRIVER)
+	if (device_kind == FU_UEFI_DEVICE_KIND_UEFI_DRIVER)
 		return "UEFI Driver";
-	if (uefi_type == FWUP_RESOURCE_TYPE_FMP)
+	if (device_kind == FU_UEFI_DEVICE_KIND_FMP)
 		return "Firmware Management Protocol";
 	return NULL;
 }
 
 static gchar *
-fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, guint32 uefi_type)
+fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind)
 {
 	GString *display_name;
 
 	/* set Display Name prefix for capsules that are not PCI cards */
-	display_name = g_string_new (fu_plugin_uefi_uefi_type_to_string (uefi_type));
-	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
+	display_name = g_string_new (fu_plugin_uefi_uefi_type_to_string (device_kind));
+	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
 		g_string_prepend (display_name, "UEFI ");
 	} else {
 		const gchar *tmp;
@@ -527,119 +467,56 @@ fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, guint32 uefi_type)
 	return g_string_free (display_name, FALSE);
 }
 
-static void
-fu_plugin_uefi_coldplug_resource (FuPlugin *plugin, fwup_resource *re)
+static gboolean
+fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
+	FuUefiDeviceKind device_kind;
 	AsVersionParseFlag parse_flags;
-	efi_guid_t *guid_raw;
-	guint32 uefi_type;
 	guint32 version_raw;
-	guint64 hardware_instance = 0;	/* FIXME */
-	g_autofree gchar *guid = NULL;
-	g_autofree gchar *id = NULL;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version_lowest = NULL;
 	g_autofree gchar *version = NULL;
-	g_autoptr(FuDevice) dev = NULL;
 
-	/* detect the fake GUID used for uploading the image */
-	fwup_get_guid (re, &guid_raw);
-	if (efi_guid_cmp (guid_raw, &efi_guid_ux_capsule) == 0) {
-		data->ux_capsule = TRUE;
-		return;
-	}
-
-	/* convert to strings */
-	guid = fu_plugin_uefi_guid_to_string (guid_raw);
-	if (guid == NULL) {
-		g_warning ("failed to convert guid to string");
-		return;
-	}
-
-	fwup_get_fw_type (re, &uefi_type);
-	parse_flags = fu_plugin_uefi_get_version_format_for_type (plugin, uefi_type);
-	fwup_get_fw_version (re, &version_raw);
+	/* add details to the device */
+	device_kind = fu_uefi_device_get_kind (dev);
+	parse_flags = fu_plugin_uefi_get_version_format_for_type (plugin, device_kind);
+	version_raw = fu_uefi_device_get_version (dev);
 	version = as_utils_version_from_uint32 (version_raw, parse_flags);
-	id = g_strdup_printf ("UEFI-%s-dev%" G_GUINT64_FORMAT,
-			      guid, hardware_instance);
-
-	dev = fu_device_new ();
-	fu_device_set_id (dev, id);
-	fu_device_add_guid (dev, guid);
 	fu_device_set_version (dev, version);
-	name = fu_plugin_uefi_get_name_for_type (plugin, uefi_type);
+	name = fu_plugin_uefi_get_name_for_type (plugin, fu_uefi_device_get_kind (dev));
 	if (name != NULL)
-		fu_device_set_name (dev, name);
-	fwup_get_lowest_supported_fw_version (re, &version_raw);
+		fu_device_set_name (FU_DEVICE (dev), name);
+	version_raw = fu_uefi_device_get_version_lowest (dev);
 	if (version_raw != 0) {
 		version_lowest = as_utils_version_from_uint32 (version_raw,
 							       parse_flags);
-		fu_device_set_version_lowest (dev, version_lowest);
+		fu_device_set_version_lowest (FU_DEVICE (dev), version_lowest);
 	}
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-	if (g_file_test ("/sys/firmware/efi/efivars", G_FILE_TEST_IS_DIR) ||
-	    g_file_test ("/sys/firmware/efi/vars", G_FILE_TEST_IS_DIR)) {
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	} else {
-		g_warning ("Kernel support for EFI variables missing");
-	}
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	if (uefi_type == FWUP_RESOURCE_TYPE_DEVICE_FIRMWARE) {
+	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
 		/* nothing better in the icon naming spec */
-		fu_device_add_icon (dev, "audio-card");
+		fu_device_add_icon (FU_DEVICE (dev), "audio-card");
 	} else {
 		/* this is probably system firmware */
-		fu_device_add_icon (dev, "computer");
-		fu_device_add_guid (dev, "main-system-firmware");
+		fu_device_add_icon (FU_DEVICE (dev), "computer");
+		fu_device_add_guid (FU_DEVICE (dev), "main-system-firmware");
 	}
-	fu_plugin_device_add (plugin, dev);
+
+	/* success */
+	return TRUE;
 }
 
 static void
 fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
 {
-	const efi_guid_t guid = EFI_GLOBAL_GUID;
 	const gchar *result_str = "Disabled";
-	g_autofree guint8 *data = NULL;
-	gsize data_size = 0;
-	guint32 attributes = 0;
-	gint rc;
-
-	rc = efi_get_variable (guid, "SecureBoot", &data, &data_size, &attributes);
-	if (rc < 0)
-		return;
-	if (data_size >= 1 && data[0] & 1)
+	if (fu_uefi_secure_boot_enabled ())
 		result_str = "Enabled";
-
 	g_debug ("SecureBoot is: %s", result_str);
 	fu_plugin_add_report_metadata (plugin, "SecureBoot", result_str);
-}
-
-static gboolean
-fu_plugin_uefi_set_custom_mountpoint (FuPlugin *plugin, GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *key = "OverrideESPMountPoint";
-
-	/* load from file and keep @key ref'd for the lifetime of the plugin as
-	 * libfwupdate does not strdup the value in fwup_set_esp_mountpoint() */
-	data->esp_path = fu_plugin_get_config_value (plugin, key);
-	if (data->esp_path != NULL) {
-		if (!g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Invalid %s specified in %s config: %s",
-				     fu_plugin_get_name (plugin), key,
-				     data->esp_path);
-
-			return FALSE;
-		}
-		fwup_set_esp_mountpoint (data->esp_path);
-	}
-	return TRUE;
 }
 
 static gboolean
@@ -653,7 +530,7 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 	files = fu_common_get_files_recursive (data->esp_path, error);
 	if (files == NULL)
 		return FALSE;
-	pattern = g_build_filename (data->esp_path, "EFI/*/fw/fwupdate-*.cap", NULL);
+	pattern = g_build_filename (data->esp_path, "EFI/*/fw/fwupd-*.cap", NULL);
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index (files, i);
 		if (fnmatch (pattern, fn, 0) == 0) {
@@ -666,86 +543,59 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_uefi_delete_old_efivars (FuPlugin *plugin, GError **error)
-{
-	char *name = NULL;
-	efi_guid_t fwupdate_guid = FWUPDATE_GUID;
-	efi_guid_t *guid = NULL;
-	int rc;
-	while ((rc = efi_get_next_variable_name (&guid, &name)) > 0) {
-		if (efi_guid_cmp (guid, &fwupdate_guid) != 0)
-			continue;
-		if (g_str_has_prefix (name, "fwupdate-")) {
-			g_debug ("deleting %s", name);
-			rc = efi_del_variable (fwupdate_guid, name);
-			if (rc < 0) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "failed to delete efi var %s: %s",
-					     name, strerror (errno));
-				return FALSE;
-			}
-		}
-	}
-	if (rc < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "error listing variables: %s",
-			     strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
-}
-
-/* remove when https://github.com/rhboot/efivar/pull/100 merged */
-static int
-_efi_get_variable_exists (efi_guid_t guid, const char *name)
-{
-	uint32_t unused_attrs = 0;
-	return efi_get_variable_attributes (guid, name, &unused_attrs);
-}
-
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *key = "OverrideESPMountPoint";
+	g_autofree gchar *bootloader = NULL;
 
-	/* get the supported status */
-	data->esrt_status = fwup_supported ();
-	if (data->esrt_status == FWUP_SUPPORTED_STATUS_UNSUPPORTED) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "UEFI firmware updating not supported");
+	/* are the EFI dirs set up so we can update each device */
+	if (!fu_uefi_vars_supported (error))
 		return FALSE;
+
+	/* if secure boot is enabled ensure we have a signed fwupd.efi */
+	bootloader = fu_uefi_get_built_app_path (error);
+	if (bootloader == NULL)
+		return FALSE;
+
+	/* load from file */
+	data->esp_path = fu_plugin_get_config_value (plugin, key);
+	if (data->esp_path != NULL) {
+		if (!g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Invalid %s specified in %s config: %s",
+				     fu_plugin_get_name (plugin), key,
+				     data->esp_path);
+			return FALSE;
+		}
 	}
 
-	/* load any overriden options */
-	if (!fu_plugin_uefi_set_custom_mountpoint (plugin, error))
-		return FALSE;
-
-	/* get the default compiled-in value for the ESP mountpoint */
-#ifdef HAVE_FWUP_GET_ESP_MOUNTPOINT
-	if (data->esp_path == NULL)
-		data->esp_path = g_strdup (fwup_get_esp_mountpoint ());
-#endif
-
-	/* fall back to a sane default */
-	if (data->esp_path == NULL)
-		data->esp_path = g_strdup ("/boot/efi");
+	/* try to guess from heuristics */
+	if (data->esp_path == NULL) {
+		data->esp_path = fu_uefi_guess_esp_path ();
+		if (data->esp_path == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Unable to determine EFI system partition "
+				     "location, override using %s in %s.conf",
+				     key, fu_plugin_get_name (plugin));
+			return FALSE;
+		}
+	}
 
 	/* delete any existing .cap files to avoid the small ESP partition
 	 * from running out of space when we've done lots of firmware updates
 	 * -- also if the distro has changed the ESP may be different anyway */
-	if (_efi_get_variable_exists (EFI_GLOBAL_GUID, "BootNext") == 0) {
+	if (fu_uefi_vars_exists (FU_UEFI_VARS_GUID_EFI_GLOBAL, "BootNext")) {
 		g_debug ("detected BootNext, not cleaning up");
 	} else {
 		if (!fu_plugin_uefi_delete_old_capsules (plugin, error))
 			return FALSE;
-		if (!fu_plugin_uefi_delete_old_efivars (plugin, error))
+		if (!fu_uefi_vars_delete_with_glob (FU_UEFI_VARS_GUID_FWUPDATE, "fwupd-*", error))
 			return FALSE;
 	}
 
@@ -759,45 +609,36 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	fwup_resource *re;
-	g_autoptr(fwup_resource_iter) iter = NULL;
-	g_autofree gchar *name = NULL;
-	const gchar *ux_capsule_str = "Disabled";
+	const gchar *str;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) entries = NULL;
+	g_autofree gchar *esrt_path = NULL;
+	g_autofree gchar *sysfsfwdir = NULL;
 
-	/* create a dummy device so we can unlock the feature */
-	if (data->esrt_status == FWUP_SUPPORTED_STATUS_LOCKED_CAN_UNLOCK) {
-		g_autoptr(FuDevice) dev = fu_device_new ();
-		name = fu_plugin_uefi_get_name_for_type (plugin,
-							 FWUP_RESOURCE_TYPE_SYSTEM_FIRMWARE);
-		if (name != NULL)
-			fu_device_set_name (dev, name);
-		fu_device_set_id (dev, "UEFI-dummy-dev0");
-		fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
-		fu_device_set_version (dev, "0");
-		fu_device_add_icon (dev, "computer");
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
-		fu_plugin_device_add (plugin, dev);
-		return TRUE;
-	}
+	/* get the directory of ESRT entries */
+	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
+	entries = fu_uefi_get_esrt_entry_paths (esrt_path, error);
+	if (entries == NULL)
+		return FALSE;
 
 	/* add each device */
-	if (fwup_resource_iter_create (&iter) < 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Cannot create fwup iter");
-		return FALSE;
+	for (guint i = 0; i < entries->len; i++) {
+		const gchar *path = g_ptr_array_index (entries, i);
+		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path);
+		if (!fu_plugin_uefi_coldplug_device (plugin, dev, error))
+			return FALSE;
+		fu_device_set_metadata (FU_DEVICE (dev), "EspPath", data->esp_path);
+		fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	}
-	while (fwup_resource_iter_next (iter, &re) > 0)
-		fu_plugin_uefi_coldplug_resource (plugin, re);
 
 	/* for debugging problems later */
 	fu_plugin_uefi_test_secure_boot (plugin);
-	if (data->ux_capsule)
-		ux_capsule_str = "Enabled";
-	g_debug ("UX Capsule support : %s", ux_capsule_str);
-	fu_plugin_add_report_metadata (plugin, "UEFIUXCapsule", ux_capsule_str);
+	if (!fu_uefi_bgrt_setup (data->bgrt, &error_local))
+		g_debug ("BGRT setup failed: %s", error_local->message);
+	str = fu_uefi_bgrt_get_supported (data->bgrt) ? "Enabled" : "Disabled";
+	g_debug ("UX Capsule support : %s", str);
+	fu_plugin_add_report_metadata (plugin, "UEFIUXCapsule", str);
 
 	return TRUE;
 }

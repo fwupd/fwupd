@@ -144,7 +144,6 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 				  GError **error)
 {
 	g_autoptr(SynapticsMSTDevice) cascade_device = NULL;
-	g_autofree gchar *dev_id_str = NULL;
 	FuDevice *fu_dev = NULL;
 	const gchar *aux_node;
 
@@ -159,6 +158,7 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 	for (guint8 j = 0; j < 2; j++) {
 		guint8 layer = synapticsmst_device_get_layer (device) + 1;
 		guint16 rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
+		g_autofree gchar *dev_id_str = NULL;
 		dev_id_str = g_strdup_printf ("MST-REMOTE-%s-%u-%u",
 					      aux_node, layer, rad);
 		fu_dev = fu_plugin_cache_lookup (plugin, dev_id_str);
@@ -205,11 +205,11 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 static void
 fu_plugin_synapticsmst_remove_cascaded (FuPlugin *plugin, const gchar *aux_node)
 {
-	g_autofree gchar *dev_id_str = NULL;
 	FuDevice *fu_dev = NULL;
 
-	for (guint8 i=0; i < 8; i++) {
-		for (guint16 j=0; j < 256; j++) {
+	for (guint8 i = 0; i < 8; i++) {
+		for (guint16 j = 0; j < 256; j++) {
+			g_autofree gchar *dev_id_str = NULL;
 			dev_id_str = g_strdup_printf ("MST-REMOTE-%s-%u-%u",
 						      aux_node, i, j);
 			fu_dev = fu_plugin_cache_lookup (plugin, dev_id_str);
@@ -230,7 +230,6 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 	g_autoptr(GDir) dir = NULL;
 	const gchar *dp_aux_dir;
 	const gchar *aux_node = NULL;
-	g_autofree gchar *dev_id_str = NULL;
 
 	dp_aux_dir = g_getenv ("FWUPD_SYNAPTICSMST_FW_DIR");
 	if (dp_aux_dir == NULL)
@@ -239,6 +238,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 		g_debug ("Using %s to look for MST devices", dp_aux_dir);
 	dir = g_dir_open (dp_aux_dir, 0, NULL);
 	do {
+		g_autofree gchar *dev_id_str = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(SynapticsMSTDevice) device = NULL;
 		FuDevice *fu_dev = NULL;

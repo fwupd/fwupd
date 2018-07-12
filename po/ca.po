@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-06 14:54+0100\n"
-"PO-Revision-Date: 2018-06-06 14:00+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2018-07-02 17:29+0100\n"
+"PO-Revision-Date: 2018-07-04 10:08+0000\n"
+"Last-Translator: Antoni Bella Pérez <antonibella5@yahoo.com>\n"
 "Language-Team: Catalan (http://www.transifex.com/freedesktop/fwupd/language/ca/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -61,9 +61,17 @@ msgstr "Respon sí a totes les preguntes"
 msgid "Apply a binary patch"
 msgstr "Aplica un pedaç binari"
 
+#. TRANSLATORS: command line option
+msgid "Apply firmware updates"
+msgstr "Aplica les actualizacions de microprogramari"
+
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
 msgstr "Connecta un dispositiu amb capacitat DFU en temps real"
+
+#. TRANSLATORS: command description
+msgid "Attach to firmware mode"
+msgstr "Ajunta al mode microprogramari"
 
 #. TRANSLATORS: device attributes, i.e. things that
 #. * the device can do
@@ -187,6 +195,10 @@ msgstr "Descripció"
 msgid "Detach currently attached DFU capable device"
 msgstr "Desconecta el dispositiu amb capacitat DFU actualment connectat"
 
+#. TRANSLATORS: command description
+msgid "Detach to bootloader mode"
+msgstr "Separa del mode carregador d'arrencada"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
 msgstr "S'ha afegit el dispositiu:"
@@ -207,9 +219,16 @@ msgstr "Els dispositius que s'han actualitzat correctament:"
 msgid "Devices that were not updated correctly:"
 msgstr "Els dispositius que no s'han actualitzat correctament:"
 
+msgid "Disabled fwupdate debugging"
+msgstr "La depuració del «fwupdate» està inhabilitada"
+
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
 msgstr "Inhabilita un remot indicat"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "Mostra la versió"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -222,6 +241,10 @@ msgstr "No realitzis el reinici després de l'actualització"
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "No comprovar si hi ha un historial sense informar"
+
+#. TRANSLATORS: command line option
+msgid "Do not write to the history database"
+msgstr "No escriure a la base de dades de l'historial"
 
 msgid "Done!"
 msgstr "Fet!"
@@ -253,6 +276,10 @@ msgstr "Bolca els detalls sobre un fitxer de microprogramari"
 msgid "Dump information about a binary patch to the screen"
 msgstr "Bolca la informació sobre un pedaç binari a la pantalla"
 
+#. TRANSLATORS: command line option
+msgid "Enable firmware update support on supported systems"
+msgstr "Habilita el suport per a l'actualització del microprogramari sobre sistemes compatibles"
+
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
 msgstr "Habilito aquest remot?"
@@ -261,9 +288,15 @@ msgstr "Habilito aquest remot?"
 msgid "Enabled"
 msgstr "Habilitat"
 
+msgid "Enabled fwupdate debugging"
+msgstr "La depuració del «fwupdate» està habilitada"
+
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Habilita un remot indicat"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "Si habiliteu aquesta funcionalitat, ho fareu sota el vostre propi risc, el qual significa que haureu de posar-vos en contacte amb el fabricant original de l'equip quant a qualsevol problema causat per aquestes actualitzacions. A $OS_RELEASE:BUG_REPORT_URL$, només s'han de presentar els problemes amb el procés d'actualització."
 
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
@@ -288,6 +321,10 @@ msgstr "Surt després d'un petit retard"
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
 msgstr "Sur una vegada s'hagi carregat el motor"
+
+#. TRANSLATORS: the server is rate-limiting downloads
+msgid "Failed to download due to server limit"
+msgstr "La baixada ha fallat a causa del límit del servidor"
 
 #. TRANSLATORS: quirks are device-specific workarounds
 msgid "Failed to load quirks"
@@ -344,6 +381,12 @@ msgid_plural "Firmware metadata has not been updated for %u days and may not be 
 msgstr[0] "Les metadades del microprogramari no s'han actualitzat durant %u dia i podria ser que no estiguin actualitzades."
 msgstr[1] "Les metadades del microprogramari no s'han actualitzat durant %u dies i podria ser que no estiguin actualitzades."
 
+msgid "Firmware updates are not supported on this machine."
+msgstr "Les actualitzacions de microprogramari no estan admeses en aquesta màquina."
+
+msgid "Firmware updates are supported on this machine."
+msgstr "Les actualitzacions de microprogramari estan admeses en aquesta màquina."
+
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "S'ha trobat"
@@ -352,8 +395,16 @@ msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: command description
+msgid "Get all devices according to the system topology"
+msgstr "Obtén tots els dispositius segons la topologia del sistema"
+
+#. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Obté tots els dispositius que admeten actualitzacions de microprogramari"
+
+#. TRANSLATORS: command description
+msgid "Get all enabled plugins registered with the system"
+msgstr "Obtén tots els connectors habilitats registrats amb el sistema"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
@@ -386,6 +437,10 @@ msgstr "ID"
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Està ociós..."
+
+#. TRANSLATORS: command description
+msgid "Install a firmware blob on a device"
+msgstr "Instal·la un blob de microprogramari en un dispositiu"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
@@ -427,9 +482,17 @@ msgstr "Servei de microprogramari del proveïdor Linux (microprogramari en prove
 msgid "List currently attached DFU capable devices"
 msgstr "Llista els dispositius amb capacitat DFU actualment connectats"
 
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "Llista les actualitzacions de microprogramari compatibles"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "S'està carregant..."
+
+#. TRANSLATORS: command line option
+msgid "Manually whitelist specific plugins"
+msgstr "Connectors especíificats manualment a la llista blanca"
 
 #. TRANSLATORS: command description
 msgid "Merge multiple firmware files into one"
@@ -467,10 +530,17 @@ msgstr "Monitora el dimoni pels esdeveniments"
 msgid "Name"
 msgstr "Nom"
 
+msgid "No action specified!"
+msgstr "No s'ha especificat cap acció!"
+
 #. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "No s'ha detectat cap maquinari amb capacitat per a l'actualització del microprogramari"
+
+#. TRANSLATORS: nothing found
+msgid "No plugins found"
+msgstr "No s'ha trobat cap connector"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
@@ -482,6 +552,10 @@ msgstr "D'acord"
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
 msgstr "Passa per alt els avisos del connector"
+
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "Preferència sobre el camí ESP predeterminat"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -508,6 +582,10 @@ msgstr "Continuo amb la pujada?"
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
 msgid "Protocol"
 msgstr "Protocol"
+
+#. TRANSLATORS: command line option
+msgid "Query for firmware update support"
+msgstr "Consulta el suport per a l'actualització del microprogramari"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -616,6 +694,10 @@ msgstr "Estableix l'ID del producte al fitxer del microprogramari"
 msgid "Set release version on firmware file"
 msgstr "Estableix la versió de llançament al fitxer del microprogramari"
 
+#. TRANSLATORS: command line option
+msgid "Set the debugging flag during update"
+msgstr "Estableix l'indicador de depuració durant l'actualització"
+
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
 msgstr "Estableix la mida del microprogramari per a l'objectiu"
@@ -645,6 +727,10 @@ msgid "Show debugging options"
 msgstr "Mostra les opcions per a la depuració"
 
 #. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "Mostra els dispositius que no són actualitzables"
+
+#. TRANSLATORS: command line option
 msgid "Show extra debugging information"
 msgstr "Mostra la informació de depuració addicional"
 
@@ -655,6 +741,14 @@ msgstr "Mostra l'historial de les actualitzacions de microprogramari"
 #. TRANSLATORS: this is for plugin development
 msgid "Show plugin verbose information"
 msgstr "Mostra la informació detallada del connector"
+
+#. TRANSLATORS: command line option
+msgid "Show the debug log from the last attempted update"
+msgstr "Mostra el registre de depuració del darrer intent d'actualització"
+
+#. TRANSLATORS: command line option
+msgid "Show the information of firmware update status"
+msgstr "Mostra la informació sobre l'estat de l'actualització del microprogramari"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
@@ -673,11 +767,22 @@ msgstr "Resum"
 msgid "Target"
 msgstr "Objectiu"
 
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "El LVFS és un servei gratuït que funciona com una entitat legal independent i no té cap vincle amb la $OS_RELEASE:NAME$. És possible que el vostre distribuïdor no hagi verificat cap de les actualitzacions del microprogramari per a la compatibilitat amb el vostre sistema o els dispositius connectats. Tot el microprogramari només és proporcionat pel fabricant original dels equips."
+
 msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "El procés del «fwupd» és un dimoni senzill que permet que una sessió de programari actualitzi el microprogramari del dispositiu a la màquina local. Està dissenyat per a equips d'escriptori, però aquest projecte també és usable a telèfons, tauletes i servidors sense perifèrics."
+msgstr "El procés del «fwupd» és un dimoni senzill, el qual permet que una sessió de programari actualitzi el microprogramari del dispositiu a la màquina local. Està dissenyat per a equips d'escriptori, però aquest projecte també és usable a telèfons, tauletes i servidors sense perifèrics."
+
+#. TRANSLATORS: we're poking around as a power user
+msgid "This program may only work correctly as root"
+msgstr "Aquest programa només pot funcionar correctament com a «root»"
 
 msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
 msgstr "Aquest projecte pretén fer que actualitzar automàticament el microprogramari a Linux, sigui segur i fiable. Com a IGU, podeu usar un gestor de programari com el Programari GNOME per a veure i aplicar les actualitzacions, directament l'eina de la línia d'ordres o la interfície de D-Bus."
+
+msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
+msgstr "Aquest remot conté el microprogramari que no està embargat, però encara l'ha provat el proveïdor del maquinari. Haureu d'assegurar-vos que teniu una manera de baixar manualment el microprogramari si l'actualització del microprogramari no funciona."
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
@@ -690,6 +795,10 @@ msgstr "Mida a transferir"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Tipus"
+
+#. TRANSLATORS: program name
+msgid "UEFI Firmware Utility"
+msgstr "Utilitat per al microprogramari UEFI"
 
 #. TRANSLATORS: section header for firmware URI
 msgid "URI"
@@ -705,6 +814,10 @@ msgstr "Desbloqueja el dispositiu per a permetre l'accés"
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
 msgstr "Desbloqueja el dispositiu per accedir al microprogramari"
+
+#. TRANSLATORS: command line option
+msgid "Unset the debugging flag during update"
+msgstr "No estableixis l'indicador de depuració durant l'actualització"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"
@@ -794,6 +907,10 @@ msgstr "S'està esperant…"
 #. TRANSLATORS: command description
 msgid "Watch DFU devices being hotplugged"
 msgstr "Vigila els dispositius DFU que han estat connectats en calent"
+
+#. TRANSLATORS: command description
+msgid "Watch for hardware changes"
+msgstr "Mira per a canvis al maquinari"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"

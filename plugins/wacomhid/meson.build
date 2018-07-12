@@ -1,6 +1,6 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginWac"']
 
-install_data(['wac-intuos.quirk'],
+install_data(['wacomhid.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
@@ -35,7 +35,7 @@ if get_option('tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
-    'fu-self-test-wac',
+    'wacomhid-self-test',
     sources : [
       'fu-self-test.c',
       'fu-wac-common.c',
@@ -61,5 +61,5 @@ if get_option('tests')
     ],
     c_args : cargs
   )
-  test('dfu-self-test', e)
+  test('wacomhid-self-test', e)
 endif
