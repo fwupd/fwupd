@@ -1,0 +1,29 @@
+From d604d26290fcaaf2b040e21eac7ee669900f6653 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Thu, 12 Jul 2018 08:44:49 -0500
+Subject: [PATCH] trivial: debian: add gnu-efi to debian build deps
+
+---
+ contrib/ci/dependencies.xml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/contrib/ci/dependencies.xml b/contrib/ci/dependencies.xml
+index b2d1c47..e6165b5 100644
+--- a/contrib/ci/dependencies.xml
++++ b/contrib/ci/dependencies.xml
+@@ -334,10 +334,12 @@
+       <package />
+     </distro>
+     <distro id="debian">
++      <control />
+       <package variant="x86_64">gnu-efi</package>
+       <package variant="i386">gnu-efi</package>
+     </distro>
+     <distro id="ubuntu">
++      <control />
+       <package variant="x86_64">gnu-efi</package>
+     </distro>
+   </dependency>
+-- 
+2.7.4
+
