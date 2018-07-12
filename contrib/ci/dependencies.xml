@@ -627,6 +627,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libgcab-dev">
+    <distro id="fedora">
+      <package>libgcab1-devel</package>
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
