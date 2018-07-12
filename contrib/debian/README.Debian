@@ -1,7 +1,18 @@
-fwupd for Debian
-----------------
+signed vs unsigned fwupd programs
+------------------------------------
 
-fwupd is still heavily in development. As of this date, the functionality 
-it provides is not yet available on most systems.
+fwupd 1.1.0 is configured to understand when to use a signed version
+of the EFI binary.  If the signed version isn't installed but secure
+boot is turned on, it will avoid copying to the EFI system partition.
 
- -- Daniel Jared Dominguez <Jared_Dominguez@Dell.com>  Wed, 20 May 2015 17:16:02 -0500
+This allows supporting secure boot even if not turned on at install, or
+changed later after install.
+
+In Ubuntu, both fwupd-signed and fwupd are seeded in the default
+installation. Nothing is installed to the ESP until it's needed.
+
+In Debian, the package name for the signed version is slightly
+different due to different infrastructure. fwupd-signed-$ARCH and
+fwupd should both be installed and then things will work similarly
+to what's described above.
+

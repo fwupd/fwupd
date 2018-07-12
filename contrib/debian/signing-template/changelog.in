@@ -1,4 +1,4 @@
-fwupdate-SIGNARCH-signed (1) unstable; urgency=medium
+fwupd-SIGNARCH-signed (1) unstable; urgency=medium
 
   * Add template source package for signing
 
