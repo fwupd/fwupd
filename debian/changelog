@@ -1,4 +1,4 @@
-fwupd (1.1.0-1) UNRELEASED; urgency=medium
+fwupd (1.1.0-1) unstable; urgency=medium
 
   [ Steve Mcintyre ]
   * Initial support for UEFI Secure Boot in Debian infrastructure
