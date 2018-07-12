@@ -1,10 +1,20 @@
 fwupd (1.1.0-1) UNRELEASED; urgency=medium
 
+  [ Steve Mcintyre ]
+  * Initial support for UEFI Secure Boot in Debian infrastructure
+    + When building, also generate a fwupdate-$ARCH-signed-template package
+      which contains metadata needed by the Debian signing service. This
+      will end up being turned into a new source package including a signed
+      version of the fwupdate binary.
+
+  [ Mario Limonciello ]
   * New upstream version (1.1.0)
   * Drop patches merged upstream.
   * debian/control:
     - Add a patch from upstream that will add gnu-efi to dependencies
     - No longer recommends for fwupdate as it has been merged into fwupd.
+  * Adjust infrastructure for fwupdate signed package to be used by fwupd signed
+    package
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 12 Jul 2018 08:28:32 -0500
 
@@ -80,7 +90,7 @@ fwupd (1.0.3-1) unstable; urgency=medium
 fwupd (1.0.2-1) unstable; urgency=medium
 
   * New upstream version
-  * Drop patch for doing libsmbios on only supported architectures, 
+  * Drop patch for doing libsmbios on only supported architectures,
     now upstream.
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 28 Nov 2017 09:36:57 -0600
@@ -299,7 +309,7 @@ fwupd (0.9.4-1) experimental; urgency=medium
   * Correct a cleanup rule
   * Drop intltool build dependency
   * Re-enable PIE for builds
-  * Add additional build dependencies that will be needed for generating 
+  * Add additional build dependencies that will be needed for generating
     capsule graphics
   * debian/control: sort build-dependencies
   * Drop packaging from debian/, it will be git mv'ed from contrib/ upstream
