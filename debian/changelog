@@ -1,3 +1,12 @@
+fwupd (1.1.0-1) UNRELEASED; urgency=medium
+
+  * New upstream version (1.1.0)
+  * Drop patches merged upstream.
+  * debian/control:
+    - No longer recommends for fwupdate as it has been merged into fwupd.
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 12 Jul 2018 08:28:32 -0500
+
 fwupd (1.0.8-1) unstable; urgency=medium
 
   * New upstream version (1.0.8)
