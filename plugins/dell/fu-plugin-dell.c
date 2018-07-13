@@ -107,13 +107,6 @@ static guint8 enclosure_whitelist [] = { 0x03, /* desktop */
 					 0x22, /* embedded PC */};
 
 /**
-  * System blacklist on older libsmbios
-  */
-static guint16 system_blacklist [] =	{ 0x071E, /* latitude 5414 */
-					  0x07A8, /* latitude 5580 */
-					  0x077A, /* xps 9365 */ };
-
-/**
   * Systems containing host MST device
   */
 static guint16 systems_host_mst [] =	{ 0x062d, /* Latitude E7250 */
@@ -165,10 +158,8 @@ fu_dell_host_mst_supported (FuPlugin *plugin)
 static gboolean
 fu_dell_supported (FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
 	GBytes *de_table = NULL;
 	GBytes *enclosure = NULL;
-	guint16 system_id = 0;
 	const guint8 *value;
 	gsize len;
 
@@ -181,18 +172,6 @@ fu_dell_supported (FuPlugin *plugin)
 		return FALSE;
 	if (*value != 0xDE)
 		return FALSE;
-
-	/* skip blacklisted hw on libsmbios 2.3 or less */
-	if (data->libsmbios_major <= 2 &&
-	    data->libsmbios_minor <= 3) {
-		system_id = fu_dell_get_system_id (plugin);
-		if (system_id == 0)
-			return FALSE;
-		for (guint i = 0; i < G_N_ELEMENTS (system_blacklist); i++) {
-			if (system_blacklist[i] == system_id)
-				return FALSE;
-		}
-	}
 
 	/* only run on intended Dell hw types */
 	enclosure = fu_plugin_get_smbios_data (plugin,
@@ -915,13 +894,11 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	g_autofree gchar *tmp = NULL;
 
-	data->libsmbios_major = smbios_get_library_version_major();
-	data->libsmbios_minor = smbios_get_library_version_minor();
-	g_debug ("Using libsmbios %u.%u", data->libsmbios_major,
-		 data->libsmbios_minor);
-	tmp = g_strdup_printf ("%u.%u", data->libsmbios_major,
-					data->libsmbios_minor);
+	tmp = g_strdup_printf ("%d.%d",
+			       smbios_get_library_version_major(),
+			       smbios_get_library_version_minor());
 	fu_plugin_add_runtime_version (plugin, "com.dell.libsmbios", tmp);
+	g_debug ("Using libsmbios %s", tmp);
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
 	if (g_getenv ("FWUPD_DELL_VERBOSE") != NULL)
