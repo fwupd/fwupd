@@ -18,8 +18,6 @@ struct FuPluginData {
 	guint16			fake_pid;
 	gboolean		can_switch_modes;
 	gboolean		capsule_supported;
-	guint			libsmbios_major;
-	guint			libsmbios_minor;
 };
 
 void
