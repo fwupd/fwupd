@@ -23,6 +23,19 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="bubblewrap">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="base-devel">
     <distro id="arch">
       <package />
