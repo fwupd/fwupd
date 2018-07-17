@@ -273,9 +273,9 @@ fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 }
 
 gchar *
-fu_uefi_guess_esp_path (void)
+fu_uefi_validate_esp_path (const gchar *extra_path, GError **error)
 {
-	const gchar *paths[] = {"/boot/efi", "/boot", "/efi", NULL};
+	const gchar *paths[] = {"/boot/efi", "/boot", "/efi", extra_path, NULL};
 	const gchar *path_tmp;
 
 	/* for the test suite use local directory for ESP */
@@ -285,15 +285,22 @@ fu_uefi_guess_esp_path (void)
 
 	for (guint i = 0; paths[i] != NULL; i++) {
 		g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (paths[i], NULL);
-		if (mount == NULL)
+		if (mount == NULL) {
+			g_debug ("%s is not mounted", paths[i]);
 			continue;
+		}
 		if (g_unix_mount_is_readonly (mount)) {
 			g_debug ("%s is read only", paths[i]);
 			continue;
 		}
 		return g_strdup (paths[i]);
 	}
-
+	if (extra_path != NULL)
+		g_warning ("Unable to validate user configured %s", extra_path);
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_FILENAME,
+			     "Unable to find valid EFI system partition location");
 	return NULL;
 }
 

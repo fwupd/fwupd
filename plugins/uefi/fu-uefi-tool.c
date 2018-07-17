@@ -62,6 +62,7 @@ main (int argc, char *argv[])
 	gboolean ret;
 	gboolean verbose = FALSE;
 	g_autofree gchar *apply = FALSE;
+	g_autofree gchar *arg_esp_path = NULL;
 	g_autofree gchar *esp_path = NULL;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
@@ -152,14 +153,11 @@ main (int argc, char *argv[])
 	if (action_version)
 		g_print ("fwupd version: %s\n", PACKAGE_VERSION);
 
-	/* override the default ESP path */
+	/* find valid ESP path */
+	esp_path = fu_uefi_validate_esp_path (arg_esp_path, &error);
 	if (esp_path == NULL) {
-		esp_path = fu_uefi_guess_esp_path ();
-		if (esp_path == NULL) {
-			g_printerr ("Unable to determine EFI system partition "
-				    "location, override using --esp-path\n");
-			return EXIT_FAILURE;
-		}
+		g_printerr ("%s, override using --esp-path\n", error->message);
+		return EXIT_FAILURE;
 	}
 	g_debug ("ESP mountpoint set as %s", esp_path);
 
