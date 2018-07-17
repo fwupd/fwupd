@@ -446,7 +446,8 @@ fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fw
 {
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev_tmp = g_ptr_array_index (devs, i);
-		if (!(fwupd_device_has_flag (dev_tmp, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
+		if (!priv->show_all_devices &&
+		    !fu_util_is_interesting_device (dev_tmp))
 			continue;
 		if (fwupd_device_get_parent (dev_tmp) == dev) {
 			GNode *child = g_node_append_data (root, dev_tmp);

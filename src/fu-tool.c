@@ -382,12 +382,11 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 	for (guint i = 0; i < devs->len; i++) {
-		g_autofree gchar *tmp = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
-		if (!(fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
-			continue;
-		tmp = fwupd_device_to_string (dev);
-		g_print ("%s\n", tmp);
+		if (priv->show_all_devices || fu_util_is_interesting_device (dev)) {
+			g_autofree gchar *tmp = fwupd_device_to_string (dev);
+			g_print ("%s\n", tmp);
+		}
 	}
 
 	return TRUE;
@@ -398,7 +397,8 @@ fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fu
 {
 	for (guint i = 0; i < devs->len; i++) {
 		FuDevice *dev_tmp = g_ptr_array_index (devs, i);
-		if (!(fu_device_has_flag (dev_tmp, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
+		if (!priv->show_all_devices &&
+		    !fu_util_is_interesting_device (FWUPD_DEVICE (dev_tmp)))
 			continue;
 		if (fu_device_get_parent (dev_tmp) == dev) {
 			GNode *child = g_node_append_data (root, dev_tmp);
