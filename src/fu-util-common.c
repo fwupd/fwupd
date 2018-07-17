@@ -118,3 +118,13 @@ fu_util_print_device_tree (GNode *n, gpointer data)
 	g_print ("%s %s\n", str->str, fu_device_get_id (dev));
 	return FALSE;
 }
+
+gboolean
+fu_util_is_interesting_device (FwupdDevice *dev)
+{
+	if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE))
+		return TRUE;
+	if (fwupd_device_get_update_error (dev) != NULL)
+		return TRUE;
+	return FALSE;
+}

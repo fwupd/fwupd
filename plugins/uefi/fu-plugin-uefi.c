@@ -388,7 +388,8 @@ fu_plugin_uefi_register_proxy_device (FuPlugin *plugin, FuDevice *device)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_dev (device);
-	fu_device_set_metadata (FU_DEVICE (dev), "EspPath", data->esp_path);
+	if (data->esp_path != NULL)
+		fu_device_set_metadata (FU_DEVICE (dev), "EspPath", data->esp_path);
 	fu_plugin_device_add (plugin, FU_DEVICE (dev));
 }
 
@@ -493,7 +494,6 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 		fu_device_set_version_lowest (FU_DEVICE (dev), version_lowest);
 	}
 	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
@@ -546,46 +546,99 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *key = "OverrideESPMountPoint";
-	g_autofree gchar *bootloader = NULL;
-
 	/* are the EFI dirs set up so we can update each device */
 	if (!fu_uefi_vars_supported (error))
 		return FALSE;
 
-	/* if secure boot is enabled ensure we have a signed fwupd.efi */
-	bootloader = fu_uefi_get_built_app_path (error);
-	if (bootloader == NULL)
-		return FALSE;
+	/* test for invalid ESP in coldplug, and set the update-error rather
+	 * than showing no output if the plugin had self-disabled here */
+	return TRUE;
+}
+
+static gboolean
+fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *key = "OverrideESPMountPoint";
 
 	/* load from file */
 	data->esp_path = fu_plugin_get_config_value (plugin, key);
-	if (data->esp_path != NULL) {
-		if (!g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Invalid %s specified in %s config: %s",
-				     fu_plugin_get_name (plugin), key,
-				     data->esp_path);
-			return FALSE;
-		}
+	if (data->esp_path != NULL &&
+	    !g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_FILENAME,
+			     "invalid %s specified in config: %s",
+			     key, data->esp_path);
+		return FALSE;
 	}
 
 	/* try to guess from heuristics */
-	if (data->esp_path == NULL) {
+	if (data->esp_path == NULL)
 		data->esp_path = fu_uefi_guess_esp_path ();
-		if (data->esp_path == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Unable to determine EFI system partition "
-				     "location, override using %s in %s.conf",
-				     key, fu_plugin_get_name (plugin));
-			return FALSE;
-		}
+	if (data->esp_path == NULL) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_FILENAME,
+			     "Unable to determine EFI system partition location, "
+			     "override using %s in %s.conf",
+			     key, fu_plugin_get_name (plugin));
+		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *str;
+	g_autofree gchar *bootloader = NULL;
+	g_autofree gchar *esrt_path = NULL;
+	g_autofree gchar *sysfsfwdir = NULL;
+	g_autoptr(GError) error_bootloader = NULL;
+	g_autoptr(GError) error_esp = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) entries = NULL;
+
+	/* get the directory of ESRT entries */
+	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
+	entries = fu_uefi_get_esrt_entry_paths (esrt_path, error);
+	if (entries == NULL)
+		return FALSE;
+
+	/* if secure boot is enabled ensure we have a signed fwupd.efi */
+	bootloader = fu_uefi_get_built_app_path (&error_bootloader);
+	if (bootloader == NULL)
+		g_warning ("%s", error_bootloader->message);
+
+	/* ensure the ESP is detected */
+	if (!fu_plugin_uefi_ensure_esp_path (plugin, &error_esp))
+		g_warning ("%s", error_esp->message);
+
+	/* add each device */
+	for (guint i = 0; i < entries->len; i++) {
+		const gchar *path = g_ptr_array_index (entries, i);
+		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path);
+		if (!fu_plugin_uefi_coldplug_device (plugin, dev, error))
+			return FALSE;
+		if (error_esp != NULL) {
+			fu_device_set_update_error (FU_DEVICE (dev), error_esp->message);
+		} else if (error_bootloader != NULL) {
+			fu_device_set_update_error (FU_DEVICE (dev), error_bootloader->message);
+		} else {
+			fu_device_set_metadata (FU_DEVICE (dev), "EspPath", data->esp_path);
+			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
+		}
+		fu_plugin_device_add (plugin, FU_DEVICE (dev));
+	}
+
+	/* no devices are updatable */
+	if (error_esp != NULL || error_bootloader != NULL)
+		return TRUE;
 
 	/* delete any existing .cap files to avoid the small ESP partition
 	 * from running out of space when we've done lots of firmware updates
@@ -602,35 +655,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	/* save in report metadata */
 	g_debug ("ESP mountpoint set as %s", data->esp_path);
 	fu_plugin_add_report_metadata (plugin, "ESPMountPoint", data->esp_path);
-	return TRUE;
-}
-
-gboolean
-fu_plugin_coldplug (FuPlugin *plugin, GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *str;
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) entries = NULL;
-	g_autofree gchar *esrt_path = NULL;
-	g_autofree gchar *sysfsfwdir = NULL;
-
-	/* get the directory of ESRT entries */
-	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-	entries = fu_uefi_get_esrt_entry_paths (esrt_path, error);
-	if (entries == NULL)
-		return FALSE;
-
-	/* add each device */
-	for (guint i = 0; i < entries->len; i++) {
-		const gchar *path = g_ptr_array_index (entries, i);
-		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path);
-		if (!fu_plugin_uefi_coldplug_device (plugin, dev, error))
-			return FALSE;
-		fu_device_set_metadata (FU_DEVICE (dev), "EspPath", data->esp_path);
-		fu_plugin_device_add (plugin, FU_DEVICE (dev));
-	}
 
 	/* for debugging problems later */
 	fu_plugin_uefi_test_secure_boot (plugin);
