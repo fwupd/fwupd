@@ -327,6 +327,9 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		} else {
+			fu_device_set_update_error (dev,
+						    "UEFI capsule updates turned off in BIOS setup");
 		}
 	}
 
@@ -687,6 +690,9 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		} else {
+			fu_device_set_update_error (dev,
+						    "UEFI capsule updates turned off in BIOS setup");
 		}
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	} else {
