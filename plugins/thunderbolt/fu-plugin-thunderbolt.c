@@ -321,6 +321,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 					     is_native ? "-native" : "");
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_plugin_thunderbolt_add_known_parents (dev, vid, did);
+	} else {
+		fu_device_set_update_error (dev, "Device is in safe mode");
 	}
 
 	fu_device_set_platform_id (dev, uuid);
