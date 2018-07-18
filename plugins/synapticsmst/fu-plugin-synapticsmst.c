@@ -63,7 +63,7 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	g_autoptr(FuDevice) dev = NULL;
 	const gchar *kind_str = NULL;
 	const gchar *board_str = NULL;
-	const gchar *guid_str = NULL;
+	GPtrArray *guids = NULL;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *dev_id_str = NULL;
 	g_autofree gchar *layer_str = NULL;
@@ -77,7 +77,7 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 						   data->dock_type,
 						   data->system_type,
 						   error)) {
-		g_debug ("error enumerating device at %s", aux_node);
+		g_prefix_error (error, "Error enumerating device at %s: ", aux_node);
 		return FALSE;
 	}
 
@@ -86,9 +86,9 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	board_str = synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device));
 	name = g_strdup_printf ("Synaptics %s inside %s", synapticsmst_device_get_chip_id (device),
 				board_str);
-	guid_str =  synapticsmst_device_get_guid (device);
-	if (guid_str == NULL) {
-		g_debug ("invalid GUID for board ID %x",
+	guids = synapticsmst_device_get_guids (device);
+	if (guids->len == 0) {
+		g_debug ("No GUIDs found for board ID %x",
 			 synapticsmst_device_get_board_id(device));
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -125,11 +125,12 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	fu_device_set_summary (dev, "Multi-Stream Transport Device");
 	fu_device_add_icon (dev, "computer");
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
-	fu_device_add_guid (dev, guid_str);
+	for (guint i = 0; i < guids->len; i++)
+		fu_device_add_guid (dev, g_ptr_array_index (guids, i));
 
 	/* Currently recognizes TB16/WD15 */
-	if (g_strcmp0 (data->dock_type, "TB16") == 0 ||
-	    g_strcmp0 (data->dock_type, "WD15") == 0) {
+	if (g_strcmp0 (data->dock_type, "tb16") == 0 ||
+	    g_strcmp0 (data->dock_type, "wd15") == 0) {
 		fu_device_add_parent_guid (dev, DELL_DOCK_FLASH_GUID);
 	}
 
@@ -367,7 +368,7 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 					      FU_DEVICE_METADATA_DELL_DOCK_TYPE);
 
 		if (tmp)
-			data->dock_type = g_strdup (tmp);
+			data->dock_type = g_ascii_strdown (tmp, -1);
 	}
 }
 

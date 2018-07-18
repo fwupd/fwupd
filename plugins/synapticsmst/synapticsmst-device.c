@@ -24,7 +24,7 @@ typedef struct
 	gchar			*version;
 	SynapticsMSTDeviceBoardID board_id;
 	gchar			*chip_id;
-	gchar			*guid;
+	GPtrArray		*guids;
 	gchar			*aux_node;
 	guint8			 layer;
 	guint16			 rad;
@@ -78,11 +78,11 @@ synapticsmst_device_board_id_to_string (SynapticsMSTDeviceBoardID board_id)
 	return "Unknown Platform";
 }
 
-const gchar *
-synapticsmst_device_get_guid (SynapticsMSTDevice *device)
+GPtrArray *
+synapticsmst_device_get_guids (SynapticsMSTDevice *device)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->guid;
+	return priv->guids;
 }
 
 static void
@@ -98,7 +98,7 @@ synapticsmst_device_finalize (GObject *object)
 	g_free (priv->aux_node);
 	g_free (priv->version);
 	g_free (priv->chip_id);
-	g_free (priv->guid);
+	g_ptr_array_unref (priv->guids);
 	G_OBJECT_CLASS (synapticsmst_device_parent_class)->finalize (object);
 }
 
@@ -115,6 +115,7 @@ synapticsmst_device_init (SynapticsMSTDevice *device)
 		priv->test_mode = TRUE;
 		priv->fw_dir = g_strdup (tmp);
 	}
+	priv->guids = g_ptr_array_new_with_free_func (g_free);
 }
 
 static void
@@ -330,6 +331,85 @@ synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
 	return TRUE;
 }
 
+
+/*
+ * Adds a GUID
+ * - GUID is MST-$SYSTEMID-$BOARDID
+ * - $BOARDID includes CUSTOMERID in first byte, BOARD in second byte
+ */
+static void
+synapticsmst_create_guid (SynapticsMSTDevice *device,
+			 const gchar *system)
+{
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+	g_ptr_array_add (priv->guids, g_strdup_printf ("MST-%s-%u", system, priv->board_id));
+}
+
+static void
+synapticsmst_create_dell_dock_guids (SynapticsMSTDevice *device,
+				     const gchar *dock_type)
+{
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+	const gchar *dell_docks[] = {"wd15", "tb16", "tb18", NULL};
+	g_autofree gchar *chip_id_down = g_ascii_strdown (priv->chip_id, -1);
+
+	for (guint i = 0; dell_docks[i] != NULL; i++) {
+		g_autofree gchar *tmp = NULL;
+		if (dock_type != NULL) {
+			tmp = g_strdup_printf ("%s-%s", dock_type, chip_id_down);
+			synapticsmst_create_guid (device, tmp);
+			break;
+		}
+		tmp = g_strdup_printf ("%s-%s", dell_docks[i], chip_id_down);
+		synapticsmst_create_guid (device, tmp);
+	}
+}
+
+static gboolean
+synapticsmst_create_guids (SynapticsMSTDevice *device,
+			   const gchar *dock_type,
+			   const gchar *system_type,
+			   GError **error)
+{
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+
+	if (priv->test_mode) {
+		g_autofree gchar *tmp = NULL;
+		tmp = g_strdup_printf ("test-%s", priv->chip_id);
+		synapticsmst_create_guid (device, tmp);
+		return TRUE;
+	}
+
+	switch (priv->board_id >> 8) {
+	/* only dell is supported for today */
+	case CUSTOMERID_DELL:
+		/* If we know the dock from another plugin, use it, otherwise make GUIDs for all those we know about */
+		if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE ||
+		    priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_FUTURE)
+			synapticsmst_create_dell_dock_guids (device, dock_type);
+		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WLD15_WIRELESS)
+			synapticsmst_create_dell_dock_guids (device, "wld15");
+		/* This is a host system, use system ID */
+		else
+			synapticsmst_create_guid (device, system_type);
+		break;
+	/* EVB development board */
+	case 0:
+		synapticsmst_create_guid (device, "evb");
+		break;
+	/* unknown */
+	default:
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "Unknown board_id %x",
+			     priv->board_id);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 gboolean
 synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 				      const gchar *dock_type,
@@ -338,7 +418,6 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint8 byte[16];
-	g_autofree gchar *system = NULL;
 	guint8 rc;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
@@ -384,48 +463,8 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		goto error_disable_remote;
 	}
 	priv->chip_id = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
-
-	switch (priv->board_id >> 8) {
-	/* only dell is supported for today */
-	case CUSTOMERID_DELL:
-		/* If this is a dock, use dock ID*/
-		if (priv->test_mode)
-			system = g_strdup_printf ("test-%s", priv->chip_id);
-		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE ||
-			 priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_FUTURE) {
-			if (dock_type == NULL) {
-				g_set_error_literal (error,
-						     G_IO_ERROR,
-						     G_IO_ERROR_INVALID_DATA,
-						     "Unknown Dell dock type");
-				goto error_disable_remote;
-			}
-			system = g_strdup_printf ("%s-%s", dock_type, priv->chip_id);
-			system = g_ascii_strdown (system, -1);
-		}
-		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WLD15_WIRELESS)
-			system = g_strdup ("wld15");
-
-		/* This is a host system, use system ID */
-		else
-			system = g_strdup (system_type);
-
-		/* set up GUID
-		 * GUID is MST-$SYSTEMID-$BOARDID
-		 * $BOARDID includes CUSTOMERID in first byte, BOARD in second byte */
-		if (system != NULL)
-			priv->guid = g_strdup_printf ("MST-%s-%u", system,
-						      priv->board_id);
-		break;
-	/* EVB development board */
-	case 0:
-		priv->board_id = (byte[0] << 8 | byte[1]);
-		break;
-	/* unknown */
-	default:
-		g_warning ("Unknown board_id %x", priv->board_id);
-		priv->board_id = 0xFF;
-	}
+	if (!synapticsmst_create_guids (device, dock_type, system_type, error))
+		return FALSE;
 
 	/* disable remote control */
 	if (!synapticsmst_device_disable_remote_control (device, error))

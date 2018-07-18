@@ -63,7 +63,7 @@ SynapticsMSTDevice	*synapticsmst_device_new	(SynapticsMSTDeviceKind kind,
 SynapticsMSTDeviceKind synapticsmst_device_kind_from_string	(const gchar	*kind);
 const gchar	*synapticsmst_device_kind_to_string		(SynapticsMSTDeviceKind kind);
 const gchar	*synapticsmst_device_board_id_to_string		(SynapticsMSTDeviceBoardID board_id);
-const gchar 	*synapticsmst_device_get_guid 			(SynapticsMSTDevice *device);
+GPtrArray 	*synapticsmst_device_get_guids 			(SynapticsMSTDevice *device);
 gboolean	 synapticsmst_device_scan_cascade_device 	(SynapticsMSTDevice *device,
 								 GError **error,
 								 guint8 tx_port);
