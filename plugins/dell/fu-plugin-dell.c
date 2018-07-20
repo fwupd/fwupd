@@ -344,7 +344,6 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	fu_device_set_id (dev, dock_id);
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, dock_name);
-	fu_device_set_metadata (dev, FU_DEVICE_METADATA_DELL_DOCK_TYPE, dock_type);
 	if (type == DOCK_TYPE_TB16) {
 		fu_device_set_summary (dev, "A Thunderbolt™ 3 docking station");
 	} else if (type == DOCK_TYPE_WD15) {
