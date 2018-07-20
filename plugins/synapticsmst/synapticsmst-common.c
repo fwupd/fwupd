@@ -366,8 +366,16 @@ synapticsmst_common_enable_remote_control (SynapticsMSTConnection *connection)
 		rc = synapticsmst_common_rc_set_command (connection_tmp,
 							 UPDC_ENABLE_RC,
 							 5, 0, (guint8*)sc);
-		if (rc)
-			break;
+		/* if we fail, try to disable and enable one more time */
+		if (rc) {
+			g_debug ("Failed to enable remote control, retrying");
+			synapticsmst_common_disable_remote_control (connection_tmp);
+			rc = synapticsmst_common_rc_set_command (connection_tmp,
+								 UPDC_ENABLE_RC,
+								 5, 0, (guint8*)sc);
+			if (rc)
+				break;
+		}
 	}
 	return rc;
 }
