@@ -367,7 +367,6 @@ synapticsmst_create_dell_dock_guids (SynapticsMSTDevice *device,
 
 static gboolean
 synapticsmst_create_guids (SynapticsMSTDevice *device,
-			   const gchar *dock_type,
 			   const gchar *system_type,
 			   GError **error)
 {
@@ -386,7 +385,7 @@ synapticsmst_create_guids (SynapticsMSTDevice *device,
 		/* If we know the dock from another plugin, use it, otherwise make GUIDs for all those we know about */
 		if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE ||
 		    priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_FUTURE)
-			synapticsmst_create_dell_dock_guids (device, dock_type);
+			synapticsmst_create_dell_dock_guids (device, NULL);
 		else if (priv->board_id == SYNAPTICSMST_DEVICE_BOARDID_DELL_WLD15_WIRELESS)
 			synapticsmst_create_dell_dock_guids (device, "wld15");
 		/* This is a host system, use system ID */
@@ -412,7 +411,6 @@ synapticsmst_create_guids (SynapticsMSTDevice *device,
 
 gboolean
 synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
-				      const gchar *dock_type,
 				      const gchar *system_type,
 				      GError **error)
 {
@@ -463,8 +461,8 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		goto error_disable_remote;
 	}
 	priv->chip_id = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
-	if (!synapticsmst_create_guids (device, dock_type, system_type, error))
-		return FALSE;
+	if (!synapticsmst_create_guids (device, system_type, error))
+		goto error_disable_remote;
 
 	/* disable remote control */
 	if (!synapticsmst_device_disable_remote_control (device, error))
