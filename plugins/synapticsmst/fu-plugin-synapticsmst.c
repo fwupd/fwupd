@@ -15,6 +15,7 @@
 #include "fu-device-metadata.h"
 
 #define SYNAPTICS_FLASH_MODE_DELAY 3
+#define SYNAPTICS_UPDATE_ENUMERATE_TRIES 3
 
 #define HWID_DELL_INC	"85d38fda-fc0e-5c6f-808f-076984ae7978"
 #define DELL_DOCK_FLASH_GUID	"e7ca1f36-bf73-4574-afe6-a4ccacabf479"
@@ -348,9 +349,24 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* Re-run device enumeration to find the new device version */
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);
-	if (!synapticsmst_device_enumerate_device (device,
-						   data->system_type, error)) {
-		return FALSE;
+	for (guint i = 1; i <= SYNAPTICS_UPDATE_ENUMERATE_TRIES; i++) {
+		g_autoptr(GError) error_local = NULL;
+		g_usleep (SYNAPTICS_FLASH_MODE_DELAY * 1000000);
+		if (!synapticsmst_device_enumerate_device (device,
+							   data->system_type,
+							   &error_local)) {
+			g_warning ("Unable to find device after %u seconds: %s",
+				   SYNAPTICS_FLASH_MODE_DELAY * i,
+				   error_local->message);
+			if (i == SYNAPTICS_UPDATE_ENUMERATE_TRIES) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "%s",
+					     error_local->message);
+				return FALSE;
+			}
+		}
 	}
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
 
