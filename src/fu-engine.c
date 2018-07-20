@@ -1193,13 +1193,26 @@ fu_engine_install_tasks (FuEngine *self,
 	/* all authenticated, so install all the things */
 	for (guint i = 0; i < install_tasks->len; i++) {
 		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
-		if (!fu_engine_install (self, task, blob_cab, flags, error)) {
-			g_autoptr(GError) error_local = NULL;
-			if (!fu_engine_composite_cleanup (self, devices, &error_local)) {
-				g_warning ("failed to cleanup failed composite action: %s",
-					   error_local->message);
+		g_autoptr(GError) install_error = NULL;
+		if (!fu_engine_install (self, task, blob_cab, flags, &install_error)) {
+			if (g_error_matches (install_error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				FuDevice *device = fu_install_task_get_device (task);
+				g_debug ("Ignoring %s: %s",
+					 fu_device_get_name (device),
+					 install_error->message);
+			} else {
+				g_autoptr(GError) cleanup_error = NULL;
+				g_set_error (error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "%s",
+					    install_error->message);
+				if (!fu_engine_composite_cleanup (self, devices, &cleanup_error)) {
+					g_warning ("failed to cleanup failed composite action: %s",
+						   cleanup_error->message);
+				}
+				return FALSE;
 			}
-			return FALSE;
 		}
 	}
 
@@ -1271,6 +1284,15 @@ fu_engine_install (FuEngine *self,
 				     "Device %s needs to manually be put in update mode",
 				     fu_device_get_name (device));
 		}
+		return FALSE;
+	}
+
+	/* updatable flag was removed */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "The updateable flag was removed from this device");
 		return FALSE;
 	}
 
