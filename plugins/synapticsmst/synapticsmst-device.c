@@ -541,6 +541,23 @@ synapticsmst_device_get_flash_checksum (SynapticsMSTDevice *device,
 	}
 }
 
+static gboolean
+synapticsmst_device_restart (SynapticsMSTDevice *device,
+			     GError **error)
+{
+	g_autoptr(SynapticsMSTConnection) connection = NULL;
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+	guint8 dwData[4] = {0xF5, 0, 0 ,0};
+
+	/* issue the reboot command, ignore return code (triggers before returning) */
+	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	synapticsmst_common_rc_set_command (connection,
+					    UPDC_WRITE_TO_MEMORY,
+					    4, (gint) 0x2000FC, (guint8*) &dwData);
+
+	return TRUE;
+}
+
 gboolean
 synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 				    GBytes *fw,
@@ -757,7 +774,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 	}
 
 	/* disable remote control and close aux node */
-	if (!synapticsmst_device_disable_remote_control (device, error))
+	if (!synapticsmst_device_restart (device, error))
 		return FALSE;
 
 	if (rc) {
