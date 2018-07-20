@@ -21,7 +21,6 @@
 #define DELL_DOCK_FUTURE_GUID	"41ca7da371ef437e027272d0173bdddb3423827f"
 
 struct FuPluginData {
-	gchar		*dock_type;
 	gchar		*system_type;
 };
 
@@ -75,7 +74,6 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 
 	aux_node = synapticsmst_device_get_aux_node (device);
 	if (!synapticsmst_device_enumerate_device (device,
-						   data->dock_type,
 						   data->system_type,
 						   error)) {
 		g_prefix_error (error, "Error enumerating device at %s: ", aux_node);
@@ -328,7 +326,7 @@ fu_plugin_update (FuPlugin *plugin,
 
 	device = synapticsmst_device_new (kind, aux_node, layer, rad);
 
-	if (!synapticsmst_device_enumerate_device (device, data->dock_type,
+	if (!synapticsmst_device_enumerate_device (device,
 						   data->system_type, error))
 		return FALSE;
 	if (synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device)) != NULL) {
@@ -350,33 +348,13 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* Re-run device enumeration to find the new device version */
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);
-	if (!synapticsmst_device_enumerate_device (device, data->dock_type,
+	if (!synapticsmst_device_enumerate_device (device,
 						   data->system_type, error)) {
 		return FALSE;
 	}
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
 
 	return TRUE;
-}
-
-void
-fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *tmp;
-
-	/* dell plugin */
-	if (g_strcmp0 (fu_device_get_plugin (device), "dell") == 0) {
-		/* only look at external devices from dell plugin */
-		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL))
-			return;
-
-		tmp = fu_device_get_metadata (device,
-					      FU_DEVICE_METADATA_DELL_DOCK_TYPE);
-
-		if (tmp)
-			data->dock_type = g_ascii_strdown (tmp, -1);
-	}
 }
 
 static gboolean
@@ -409,7 +387,6 @@ fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
-	g_free(data->dock_type);
 	g_free(data->system_type);
 }
 
