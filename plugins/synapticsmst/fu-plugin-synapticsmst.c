@@ -18,6 +18,7 @@
 
 #define HWID_DELL_INC	"85d38fda-fc0e-5c6f-808f-076984ae7978"
 #define DELL_DOCK_FLASH_GUID	"e7ca1f36-bf73-4574-afe6-a4ccacabf479"
+#define DELL_DOCK_FUTURE_GUID	"41ca7da371ef437e027272d0173bdddb3423827f"
 
 struct FuPluginData {
 	gchar		*dock_type;
@@ -128,10 +129,16 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	for (guint i = 0; i < guids->len; i++)
 		fu_device_add_guid (dev, g_ptr_array_index (guids, i));
 
-	/* Currently recognizes TB16/WD15 */
-	if (g_strcmp0 (data->dock_type, "tb16") == 0 ||
-	    g_strcmp0 (data->dock_type, "wd15") == 0) {
+	/* Set up parents */
+	switch (synapticsmst_device_get_board_id (device)) {
+	case SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE:
 		fu_device_add_parent_guid (dev, DELL_DOCK_FLASH_GUID);
+		break;
+	case SYNAPTICSMST_DEVICE_BOARDID_DELL_FUTURE:
+		fu_device_add_parent_guid (dev, DELL_DOCK_FUTURE_GUID);
+		break;
+	default:
+		break;
 	}
 
 	fu_plugin_device_add (plugin, dev);
