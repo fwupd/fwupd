@@ -33,6 +33,8 @@ if get_option('tests')
     'synapticsmst-self-test',
     sources : [
       'fu-self-test.c',
+      'synapticsmst-common.c',
+      'synapticsmst-device.c',
     ],
     include_directories : [
       include_directories('../..'),
@@ -51,6 +53,10 @@ if get_option('tests')
     c_args : [
       cargs,
     ],
+    # https://github.com/hughsie/fwupd/issues/207
+    override_options : [
+      'werror=false',
+    ]
   )
   test('synapticsmst-self-test', e,
     env: ['FWUPD_LOCALSTATEDIR=/tmp/fwupd-self-test/var'])
