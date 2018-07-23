@@ -50,9 +50,9 @@ typedef struct
 	guint8			 layer;
 	guint16			 rad;
 	gint			 fd;
-	gboolean		has_cascade;
+	gboolean		 has_cascade;
 	gchar			*fw_dir;
-	gboolean		test_mode;
+	gboolean		 test_mode;
 } SynapticsMSTDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (SynapticsMSTDevice, synapticsmst_device, G_TYPE_OBJECT)

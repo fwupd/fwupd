@@ -86,8 +86,7 @@ const gchar 	*synapticsmst_device_get_chip_id_str 		(SynapticsMSTDevice *device)
 const gchar 	*synapticsmst_device_get_aux_node		(SynapticsMSTDevice *device);
 guint16 	 synapticsmst_device_get_rad 			(SynapticsMSTDevice *device);
 guint8 		 synapticsmst_device_get_layer 			(SynapticsMSTDevice *device);
-gboolean
-synapticsmst_device_get_cascade					(SynapticsMSTDevice *device);
+gboolean	 synapticsmst_device_get_cascade		(SynapticsMSTDevice *device);
 
 /* object methods */
 gboolean	 synapticsmst_device_enumerate_device 		(SynapticsMSTDevice *devices,
