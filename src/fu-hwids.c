@@ -67,6 +67,14 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 	if (data == NULL)
 		return NULL;
 
+	if (items_written == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no GUIDs in data");
+		return NULL;
+	}
+
 	/* ensure the data is in little endian format */
 	for (glong i = 0; i < items_written; i++)
 		data[i] = GUINT16_TO_LE(data[i]);
