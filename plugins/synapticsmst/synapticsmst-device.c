@@ -15,15 +15,19 @@
 #include <stdlib.h>
 #include "synapticsmst-device.h"
 #include "synapticsmst-common.h"
+#include "fu-device-locker.h"
 
 #define BLOCK_UNIT		64
+#define PAYLOAD_SIZE_64K		0x10000
+#define MAX_RETRY_COUNTS		10
 
 typedef struct
 {
 	SynapticsMSTDeviceKind	 kind;
 	gchar			*version;
 	SynapticsMSTDeviceBoardID board_id;
-	gchar			*chip_id;
+	guint16			 chip_id;
+	gchar			*chip_id_str;
 	GPtrArray		*guids;
 	gchar			*aux_node;
 	guint8			 layer;
@@ -97,7 +101,7 @@ synapticsmst_device_finalize (GObject *object)
 	g_free (priv->fw_dir);
 	g_free (priv->aux_node);
 	g_free (priv->version);
-	g_free (priv->chip_id);
+	g_free (priv->chip_id_str);
 	g_ptr_array_unref (priv->guids);
 	G_OBJECT_CLASS (synapticsmst_device_parent_class)->finalize (object);
 }
@@ -351,7 +355,7 @@ synapticsmst_create_dell_dock_guids (SynapticsMSTDevice *device,
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	const gchar *dell_docks[] = {"wd15", "tb16", "tb18", NULL};
-	g_autofree gchar *chip_id_down = g_ascii_strdown (priv->chip_id, -1);
+	g_autofree gchar *chip_id_down = g_ascii_strdown (priv->chip_id_str, -1);
 
 	for (guint i = 0; dell_docks[i] != NULL; i++) {
 		g_autofree gchar *tmp = NULL;
@@ -374,7 +378,7 @@ synapticsmst_create_guids (SynapticsMSTDevice *device,
 
 	if (priv->test_mode) {
 		g_autofree gchar *tmp = NULL;
-		tmp = g_strdup_printf ("test-%s", priv->chip_id);
+		tmp = g_strdup_printf ("test-%s", priv->chip_id_str);
 		synapticsmst_create_guid (device, tmp);
 		return TRUE;
 	}
@@ -460,7 +464,8 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 				     "Failed to read dpcd from device");
 		goto error_disable_remote;
 	}
-	priv->chip_id = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
+	priv->chip_id = (byte[0] << 8) | (byte[1]);
+	priv->chip_id_str = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
 	if (!synapticsmst_create_guids (device, system_type, error))
 		goto error_disable_remote;
 
@@ -489,12 +494,20 @@ synapticsmst_device_get_version (SynapticsMSTDevice *device)
 	return priv->version;
 }
 
-const gchar *
+static guint16
 synapticsmst_device_get_chip_id (SynapticsMSTDevice *device)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	return priv->chip_id;
 }
+
+const gchar *
+synapticsmst_device_get_chip_id_str (SynapticsMSTDevice *device)
+{
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+	return priv->chip_id_str;
+}
+
 
 guint16
 synapticsmst_device_get_rad (SynapticsMSTDevice *device)
@@ -542,6 +555,252 @@ synapticsmst_device_get_flash_checksum (SynapticsMSTDevice *device,
 }
 
 static gboolean
+synapticsmst_device_set_flash_sector_erase (SynapticsMSTDevice *device,
+					    guint16 rc_cmd,
+					    guint16 offset,
+					    GError **error)
+{
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+	guint16 us_data;
+	g_autoptr(SynapticsMSTConnection) connection = NULL;
+
+	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	/* Need to add Wp control ? */
+	us_data = rc_cmd + offset;
+
+	if (synapticsmst_common_rc_set_command (connection,
+						UPDC_FLASH_ERASE,
+						2, 0, (guint8 *)&us_data)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "can't sector erase flash at offset %x", offset);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
+						guint32 payload_len,
+						guint8 *payload_data,
+						GFileProgressCallback progress_cb,
+						gpointer progress_data,
+						GError **error)
+{
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+	g_autoptr(SynapticsMSTConnection) connection = NULL;
+	guint32 data_to_write = 0;
+	guint32 offset = 0;
+	guint32 write_loops = 0;
+	guint8 rc = 0;
+
+	write_loops = (payload_len / BLOCK_UNIT);
+	data_to_write = payload_len;
+
+	if (payload_len % BLOCK_UNIT)
+		write_loops++;
+
+	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	for (guint32 retries_cnt = 0; ; retries_cnt++) {
+		guint32 checksum = 0;
+		guint32 flash_checksum = 0;
+
+		if (!synapticsmst_device_set_flash_sector_erase (device, 0xffff, 0, error))
+			return FALSE;
+		g_debug ("Waiting for flash clear to settle");
+		g_usleep (5000000);
+
+		for (guint32 i = 0; i < write_loops; i++) {
+			guint8 length = BLOCK_UNIT;
+
+			if (data_to_write < BLOCK_UNIT)
+				length = data_to_write;
+			rc = synapticsmst_common_rc_set_command (connection,
+								 UPDC_WRITE_TO_EEPROM,
+								 length, offset,
+								 payload_data + offset);
+			if (rc) {
+				/* repeat once */
+				rc = synapticsmst_common_rc_set_command (connection,
+									 UPDC_WRITE_TO_EEPROM,
+									 length, offset,
+									 payload_data + offset);
+			}
+			if (rc)
+				break;
+
+			offset += length;
+			data_to_write -= length;
+			if (progress_cb != NULL) {
+				progress_cb ((goffset) i * 100,
+					     (goffset) (write_loops -1) * 100,
+					     progress_data);
+			}
+		}
+		if (rc) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "can't write flash at offset 0x%04x",
+				     offset);
+			return FALSE;
+		}
+
+		/* check data just written */
+		for (guint32 i = 0; i < payload_len; i++)
+			checksum += *(payload_data + i);
+
+		if (!synapticsmst_device_get_flash_checksum (device,
+								payload_len,
+								0,
+								&flash_checksum,
+								error)) {
+			g_set_error_literal (error,
+						G_IO_ERROR,
+						G_IO_ERROR_INVALID_DATA,
+						"Failed to read checksum");
+			return FALSE;
+		}
+		if (checksum == flash_checksum)
+			break;
+		g_debug ("attempt %u: checksum %x didn't match %x", retries_cnt, flash_checksum, checksum);
+
+		if (retries_cnt > MAX_RETRY_COUNTS) {
+			g_set_error (error,
+					G_IO_ERROR,
+					G_IO_ERROR_INVALID_DATA,
+					"checksum %x mismatched %x",
+					flash_checksum,
+					checksum);
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+
+static gboolean
+synapticsmst_device_check_firmware_content (SynapticsMSTDevice *device,
+					    GBytes *fw,
+					    SynapticsMSTChipKind chip_type,
+					    GError **error)
+{
+	guint8 *payload_data;
+	gsize payload_len, payload_len_max;
+	gint checksum = 0;
+	guint32 offset = 0;
+	guint32 code_size = 0;
+
+	switch (chip_type) {
+	case SYNAPTICSMST_CHIP_KIND_TESLA_LEAF:
+		payload_len_max = PAYLOAD_SIZE_64K;
+		break;
+	default:
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "unknown chip type %u",
+			     chip_type);
+		return FALSE;
+
+	}
+
+	/* get firmware data and check size */
+	payload_data = g_bytes_get_data (fw, &payload_len);
+	if (payload_len > payload_len_max || payload_len == 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "invalid payload size %" G_GSIZE_FORMAT "(max %" G_GSIZE_FORMAT")",
+			     payload_len,
+			     payload_len_max);
+		return FALSE;
+	}
+
+	/* check firmware content */
+	for (guint8 i = 0; i < 128; i++)
+		checksum += *(payload_data + i);
+	if (checksum & 0xff) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "EDID checksum error: %d",
+			     checksum);
+		return FALSE;
+	}
+	/* EDID */
+	checksum = 0;
+	offset = 128;
+	for (guint8 i = 0; i < 128; i++)
+		checksum += *(payload_data + offset + i);
+
+	if (checksum & 0xff) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "EDID checksum error");
+		return FALSE;
+	}
+	/* CFG 0 */
+	checksum = 0;
+	offset = 0x100;
+	for (guint16 i = 0; i < 256; i++)
+		checksum += *(payload_data + offset + i);
+
+	if (checksum & 0xff) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "configuration checksum error");
+		return FALSE;
+	}
+	/* CFG 1 */
+	checksum = 0;
+	offset = 0x200;
+	for (guint16 i = 0; i < 256; i++)
+		checksum += *(payload_data + offset + i);
+	if (checksum & 0xff) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "configuration checksum error");
+		return FALSE;
+	}
+	/* Firmware Size */
+	checksum = 0;
+	offset = 0x400;
+	if (chip_type == SYNAPTICSMST_CHIP_KIND_TESLA_LEAF) {
+		code_size = (*(payload_data + offset) << 8) + *(payload_data + offset + 1);
+		if (code_size >= 0xffff) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_DATA,
+					     "invalid firmware size");
+			return FALSE;
+		}
+	}
+	/* Firmware Checksum */
+	if (chip_type == SYNAPTICSMST_CHIP_KIND_TESLA_LEAF) {
+		for (guint32 i = 0; i < (code_size + 17); i++)
+			checksum += *(payload_data + offset + i);
+
+		if (checksum & 0xff) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_DATA,
+					     "firmware checksum error");
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+
+static gboolean
 synapticsmst_device_restart (SynapticsMSTDevice *device,
 			     GError **error)
 {
@@ -566,99 +825,18 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 				    GError **error)
 {
 	const guint8 *payload_data;
-	guint32 payload_len;
-	guint32 code_size = 0;
-	guint32 checksum = 0;
-	guint32 flash_checksum = 0;
-	guint32 offset = 0;
-	guint32 write_loops = 0;
-	guint32 data_to_write = 0;
-	guint8 percentage = 0;
-	guint8 rc = 0;
+	gsize payload_len;
 	guint16 tmp;
-	guint16 erase_code = 0xFFFF;
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	g_autoptr(SynapticsMSTConnection) connection = NULL;
+	SynapticsMSTChipKind chip_type = SYNAPTICSMST_CHIP_KIND_UNKNOWN;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	/* get firmware data and check size */
-	payload_data = g_bytes_get_data (fw, NULL);
-	payload_len = g_bytes_get_size (fw);
-	if (payload_len > 0x10000 || payload_len == 0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "invalid file size");
-		return FALSE;
-	}
+	payload_data = g_bytes_get_data (fw, &payload_len);
 
-	/* check firmware content */
-	for (guint8 i = 0; i < 128; i++)
-		checksum += *(payload_data + i);
+	if (synapticsmst_device_get_chip_id (device) < 0x5000)
+		chip_type = SYNAPTICSMST_CHIP_KIND_TESLA_LEAF;
 
-	if (checksum & 0xFF) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "EDID checksum error");
-		return FALSE;
-	}
-
-	checksum = 0;
-	offset = 128;
-	for (guint8 i = 0; i < 128; i++)
-		checksum += *(payload_data + offset + i);
-
-	if (checksum & 0xFF) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "EDID checksum error");
-		return FALSE;
-	}
-
-	checksum = 0;
-	offset = 0x100;
-	for (guint16 i = 0; i < 256; i++)
-		checksum += *(payload_data + offset + i);
-
-	if (checksum & 0xFF) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "configuration checksum error");
-		return FALSE;
-	}
-
-	checksum = 0;
-	offset = 0x200;
-	for (guint16 i = 0; i < 256; i++)
-		checksum += *(payload_data + offset + i);
-	if (checksum & 0xFF) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "configuration checksum error");
-		return FALSE;
-	}
-
-	checksum = 0;
-	offset = 0x400;
-	code_size = (*(payload_data + offset) << 8) + *(payload_data + offset + 1);
-	if (code_size >= 0xFFFF) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "invalid firmware size");
-		return FALSE;
-	}
-	for (guint32 i = 0; i < (code_size + 17); i++)
-		checksum += *(payload_data + offset + i);
-
-	if (checksum & 0xFF) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "firmware checksum error");
+	if (!synapticsmst_device_check_firmware_content (device, fw, chip_type, error)){
+		g_prefix_error (error, "Invalid file content: ");
 		return FALSE;
 	}
 
@@ -666,14 +844,18 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 	 * issues of invalid firmware flashed*/
 	/* check firmware and board ID again */
 	tmp = (*(payload_data + ADDR_CUSTOMER_ID) << 8) + *(payload_data + ADDR_BOARD_ID);
-	if (tmp != synapticsmst_device_get_board_id (device)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "board ID mismatch");
-		return FALSE;
+	if (synapticsmst_device_get_board_id (device) >> 8 == 0) {
+		g_warning ("EVB board detected, bypassing customer ID check");
+	} else {
+		if (tmp != synapticsmst_device_get_board_id (device)) {
+			g_set_error_literal (error,
+						G_IO_ERROR,
+						G_IO_ERROR_INVALID_DATA,
+						"board ID mismatch");
+			return FALSE;
+		}
 	}
-
+	/* open device */
 	if (!synapticsmst_device_open (device, error)) {
 		g_prefix_error (error,
 				"can't open DP Aux node %s",
@@ -681,107 +863,26 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		return FALSE;
 	}
 
-	/* enable remote control */
-	if (!synapticsmst_device_enable_remote_control (device, error))
+	/* enable remote control and disable on exit */
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) synapticsmst_device_enable_remote_control,
+					    (FuDeviceLockerFunc) synapticsmst_device_restart,
+					    error);
+	if (locker == NULL)
 		return FALSE;
-
-	/* erase SPI flash */
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
-	if (synapticsmst_common_rc_set_command (connection,
-						UPDC_FLASH_ERASE,
-						2, 0, (guint8 *)&erase_code)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "can't erase flash");
-		return FALSE;
-	}
 
 	/* update firmware */
-	write_loops = (payload_len / BLOCK_UNIT);
-	data_to_write = payload_len;
-	rc = 0;
-	offset = 0;
-
-	if (payload_len % BLOCK_UNIT)
-		write_loops++;
-
-	if (progress_cb == NULL)
-		g_debug ("updating... 0%%");
-
-	for (guint32 i = 0; i < write_loops; i++) {
-		guint8 length = BLOCK_UNIT;
-		if (data_to_write < BLOCK_UNIT)
-			length = data_to_write;
-
-		rc = synapticsmst_common_rc_set_command (connection,
-							 UPDC_WRITE_TO_EEPROM,
-							 length, offset,
-							 payload_data + offset);
-		if (rc) {
-			/* repeat once */
-			rc = synapticsmst_common_rc_set_command (connection,
-								 UPDC_WRITE_TO_EEPROM,
-								 length, offset,
-								 payload_data + offset);
-		}
-
-		if (rc)
-			break;
-
-		offset += length;
-		data_to_write -= length;
-		percentage = i * 100 / (write_loops - 1);
-		if (progress_cb != NULL) {
-			progress_cb ((goffset) i * 100,
-				     (goffset) (write_loops -1) * 100,
-				     progress_data);
-		} else {
-			g_debug ("updating... %d%%\n", percentage);
-		}
-	}
-
-	if (rc) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "can't write flash at offset 0x%04x",
-			     offset);
-	} else {
-		/* check data just written */
-		checksum = 0;
-		for (guint32 i = 0; i < payload_len; i++) {
-			checksum += *(payload_data + i);
-		}
-
-		flash_checksum = 0;
-		if (synapticsmst_device_get_flash_checksum (device,
-					  payload_len,
-					  0,
-					  &flash_checksum,
-					  error)) {
-			if (checksum != flash_checksum) {
-				rc = -1;
-				g_set_error_literal (error,
-						     G_IO_ERROR,
-						     G_IO_ERROR_INVALID_DATA,
-						     "checksum mismatch");
-			}
-		} else {
-			rc = -1;
-		}
-
-	}
-
-	/* disable remote control and close aux node */
-	if (!synapticsmst_device_restart (device, error))
+	if (!synapticsmst_device_update_tesla_leaf_firmware (device,
+							     payload_len,
+							     payload_data,
+							     progress_cb,
+							     progress_data,
+							     error)) {
+		g_prefix_error (error, "Firmware update failed: ");
 		return FALSE;
-
-	if (rc) {
-		return FALSE;
-	} else {
-		return TRUE;
 	}
+
+	return TRUE;
 }
 
 SynapticsMSTDevice *

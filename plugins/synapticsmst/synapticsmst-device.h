@@ -52,6 +52,13 @@ typedef enum {
 	SYNAPTICSMST_DEVICE_BOARDID_UNKNOWN = 0xFF,
 } SynapticsMSTDeviceBoardID;
 
+typedef enum {
+	SYNAPTICSMST_CHIP_KIND_UNKNOWN,
+	SYNAPTICSMST_CHIP_KIND_TESLA_LEAF,
+	/*<private >*/
+	SYNAPTICSMST_CHIP_KIND_LAST
+} SynapticsMSTChipKind;
+
 #define CUSTOMERID_DELL 	0x1
 
 SynapticsMSTDevice	*synapticsmst_device_new	(SynapticsMSTDeviceKind kind,
@@ -74,7 +81,7 @@ gboolean	 synapticsmst_device_open 			(SynapticsMSTDevice *device,
 SynapticsMSTDeviceKind synapticsmst_device_get_kind		(SynapticsMSTDevice *device);
 SynapticsMSTDeviceBoardID synapticsmst_device_get_board_id 	(SynapticsMSTDevice *device);
 const gchar	*synapticsmst_device_get_version		(SynapticsMSTDevice *device);
-const gchar 	*synapticsmst_device_get_chip_id 		(SynapticsMSTDevice *device);
+const gchar 	*synapticsmst_device_get_chip_id_str 		(SynapticsMSTDevice *device);
 const gchar 	*synapticsmst_device_get_aux_node		(SynapticsMSTDevice *device);
 guint16 	 synapticsmst_device_get_rad 			(SynapticsMSTDevice *device);
 guint8 		 synapticsmst_device_get_layer 			(SynapticsMSTDevice *device);
