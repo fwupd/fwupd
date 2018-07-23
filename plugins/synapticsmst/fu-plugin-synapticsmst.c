@@ -84,7 +84,7 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	layer = synapticsmst_device_get_layer (device);
 	rad = synapticsmst_device_get_rad (device);
 	board_str = synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device));
-	name = g_strdup_printf ("Synaptics %s inside %s", synapticsmst_device_get_chip_id (device),
+	name = g_strdup_printf ("Synaptics %s inside %s", synapticsmst_device_get_chip_id_str (device),
 				board_str);
 	guids = synapticsmst_device_get_guids (device);
 	if (guids->len == 0) {
