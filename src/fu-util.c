@@ -1754,7 +1754,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		tmp = fwupd_remote_get_password (remote);
 		if (tmp != NULL) {
 			/* TRANSLATORS: remote filename base */
-			fu_util_print_data (_("Password"), tmp);
+			fu_util_print_data (_("Password"), "(hidden)");
 		}
 		tmp = fwupd_remote_get_filename_cache (remote);
 		if (tmp != NULL) {
