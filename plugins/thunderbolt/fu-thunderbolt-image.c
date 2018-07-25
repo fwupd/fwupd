@@ -40,6 +40,10 @@ typedef struct {
 	guint   ports;
 } FuThunderboltHwInfo;
 
+enum {
+	DROM_ENTRY_MC = 0x6,
+};
+
 static const FuThunderboltHwInfo *
 get_hw_info (guint16 id)
 {
@@ -244,6 +248,56 @@ read_ucode_section_len (guint32                       offset,
 }
 
 /*
+ * reads generic entries from DROM based on type field and fills
+ * location to point to the entry data if found
+ */
+static gboolean
+read_drom_entry_location (const FuThunderboltFwObject *fw,
+			  guint8                       type,
+			  FuThunderboltFwLocation     *location,
+			  GError                     **error)
+{
+	const FuThunderboltFwLocation drom_len_loc = { .offset = 0x0E, .len = 2, .section = DROM_SECTION, .description = "DROM length" };
+	FuThunderboltFwLocation drom_entry_loc = { .len = 2, .section = DROM_SECTION, .description = "DROM generic entry" };
+	guint16 drom_size;
+
+	if (!read_uint16 (&drom_len_loc, fw, &drom_size, error))
+		return FALSE;
+
+	drom_size &= 0x0FFF;
+	/* drom_size is size of DROM block except for identification
+	 * section and crc32 so add them here */
+	drom_size += 9 + 4;
+
+	/* DROM entries start right after the identification section */
+	drom_entry_loc.offset = 9 + 4 + 9;
+
+	do {
+		g_autoptr(GByteArray) entry = NULL;
+		guint8 entry_type;
+		guint8 entry_length;
+
+		entry = read_location (&drom_entry_loc, fw, error);
+		if (entry == NULL)
+			return FALSE;
+
+		entry_length = entry->data[0];
+		entry_type = entry->data[1] & 0x3F;
+
+		/* generic entry (port bit is not set) */
+		if ((entry->data[1] & (1 << 7)) == 0 && entry_type == type) {
+			location->len = entry_length - 2;
+			location->offset = drom_entry_loc.offset + 2;
+			return TRUE;
+		}
+
+		drom_entry_loc.offset += entry_length;
+	} while (drom_entry_loc.offset < drom_size);
+
+	return TRUE;
+}
+
+/*
  * Takes a FwObject and fills its section array up
  * Assumes sections[DIGITAL_SECTION].offset is already set
  */
@@ -439,12 +493,21 @@ get_host_locations (guint16 id)
 }
 
 static const FuThunderboltFwLocation *
-get_device_locations (guint16 id)
+get_device_locations (guint16 id, const FuThunderboltFwObject *fw, GError **error)
 {
-	static const FuThunderboltFwLocation locations[] = {
+	static const FuThunderboltFwLocation AR[] = {
 		{ .offset = 0x124, .len = 1, .section = ARC_PARAMS_SECTION, .description = "X of N" },
 		{ 0 }
 	};
+
+	static FuThunderboltFwLocation TR[] = {
+		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
+		/* offset and len are read from DROM */
+		{ .section = DROM_SECTION, .description = "Multi Controller" },
+		{ 0 }
+	};
+
+	g_autoptr(GError) error_local = NULL;
 
 	switch (id) {
 	case 0x1578:
@@ -452,7 +515,17 @@ get_device_locations (guint16 id)
 	case 0x15D3:
 	case 0x15DA:
 	case 0x15C0:
-		return locations;
+		return AR;
+	case 0x15E7:
+	case 0x15EA:
+	case 0x15EF:
+		/* if the controller has multi controller entry need to
+		 * compare it against the image. */
+		if (read_drom_entry_location (fw, DROM_ENTRY_MC, &TR[1],
+					      &error_local))
+			return TR;
+		g_debug ("failed to parse DROM entry: %s", error_local->message);
+		/* fallthrough */
 	default:
 		return NULL;
 	}
@@ -624,14 +697,20 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 	if (hw_info->id == 0)
 		return UNKNOWN_DEVICE;
 
-	locations = is_host ?
-			    get_host_locations (hw_info->id) :
-			    get_device_locations (hw_info->id);
-	if (locations == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-				     "FW locations to check not found for this controller");
-		return VALIDATION_FAILED;
+	if (is_host) {
+		locations = get_host_locations (hw_info->id);
+		if (locations == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+					     "FW locations to check not found for this controller");
+			return VALIDATION_FAILED;
+		}
+	} else {
+		locations = get_device_locations (hw_info->id, &controller, error);
+		if (locations == NULL) {
+			/* error is set already by the above */
+			return VALIDATION_FAILED;
+		}
 	}
 
 	if (!compare_locations (&locations, &controller, &image, error))
