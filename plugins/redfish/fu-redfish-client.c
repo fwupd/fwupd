@@ -89,8 +89,17 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 		if (json_object_get_boolean_member (member, "Updateable"))
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
-	if (json_object_has_member (member, "SoftwareId"))
+	if (json_object_has_member (member, "SoftwareId")) {
 		fu_device_add_guid (dev, json_object_get_string_member (member, "SoftwareId"));
+	} else if (json_object_has_member (member, "Oem")) {
+		JsonObject *oem = json_object_get_object_member (member, "Oem");
+		if (json_object_has_member (oem, "Hpe")) {
+			JsonObject *hpe = json_object_get_object_member (oem, "Hpe");
+			const gchar *dev_class = json_object_get_string_member (hpe, "DeviceClass");
+			if (dev_class != NULL)
+				fu_device_add_guid (dev, dev_class);
+		}
+	}
 
 	/* success */
 	g_ptr_array_add (self->devices, g_steal_pointer (&dev));
