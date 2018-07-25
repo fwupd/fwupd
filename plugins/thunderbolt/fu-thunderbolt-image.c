@@ -73,6 +73,12 @@ valid_farb_pointer (guint32 pointer)
 	return pointer != 0 && pointer != 0xFFFFFF;
 }
 
+static inline gboolean
+valid_pd_pointer (guint32 pointer)
+{
+	return pointer != 0 && pointer != 0xFFFFFFFF;
+}
+
 /* returns NULL on error */
 static GByteArray *
 read_location (const FuThunderboltFwLocation  *location,
@@ -250,9 +256,7 @@ read_sections (const FuThunderboltFwObject *fw, gboolean is_host, guint gen, GEr
 		if (!read_uint32 (&drom_offset, fw, &offset, error))
 			return FALSE;
 		fw->sections[DROM_SECTION] = offset + fw->sections[DIGITAL_SECTION];
-	}
 
-	if (!is_host) {
 		if (!read_uint32 (&arc_params_offset, fw, &offset, error))
 			return FALSE;
 		fw->sections[ARC_PARAMS_SECTION] = offset + fw->sections[DIGITAL_SECTION];
@@ -475,6 +479,37 @@ compare_locations (const FuThunderboltFwLocation **locations,
 	return TRUE;
 }
 
+static gboolean
+compare_pd_existence (guint16 id,
+		      const FuThunderboltFwObject *controller,
+		      const FuThunderboltFwObject *image,
+		      GError **error)
+{
+	const FuThunderboltFwLocation pd_pointer_loc = { .offset = 0x10C, .len = 4, .section = ARC_PARAMS_SECTION, .description = "PD pointer" };
+	gboolean controller_has_pd;
+	gboolean image_has_pd;
+	guint32 pd_pointer;
+
+	if (controller->sections[ARC_PARAMS_SECTION] == 0)
+		return TRUE;
+
+	if (!read_uint32 (&pd_pointer_loc, controller, &pd_pointer, error))
+		return FALSE;
+	controller_has_pd = valid_pd_pointer (pd_pointer);
+
+	if (!read_uint32 (&pd_pointer_loc, image, &pd_pointer, error))
+		return FALSE;
+	image_has_pd = valid_pd_pointer (pd_pointer);
+
+	if (controller_has_pd != image_has_pd) {
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
+				     "PD section mismatch");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 FuPluginValidation
 fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 				      GBytes  *blob_fw,
@@ -570,6 +605,9 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 		if (!compare_locations (&locations, &controller, &image, error))
 			return VALIDATION_FAILED;
 	}
+
+	if (!compare_pd_existence (hw_info->id, &controller, &image, error))
+		return VALIDATION_FAILED;
 
 	/*
 	 * 0 is for the unknown device case, for being future-compatible with
