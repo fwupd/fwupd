@@ -248,7 +248,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *device_id = NULL;
 	g_autoptr(FuDevice) dev = NULL;
-	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_vid = NULL;
+	g_autoptr(GError) error_did = NULL;
 
 	uuid = g_udev_device_get_sysfs_attr (device, "unique_id");
 	if (uuid == NULL) {
@@ -274,13 +275,13 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		return;
 	}
 
-	vid = fu_plugin_thunderbolt_udev_get_id (device, "vendor", &error);
+	vid = fu_plugin_thunderbolt_udev_get_id (device, "vendor", &error_vid);
 	if (vid == 0x0)
-		g_warning ("failed to get Vendor ID: %s", error->message);
+		g_warning ("failed to get Vendor ID: %s", error_vid->message);
 
-	did = fu_plugin_thunderbolt_udev_get_id (device, "device", &error);
+	did = fu_plugin_thunderbolt_udev_get_id (device, "device", &error_did);
 	if (did == 0x0)
-		g_warning ("failed to get Device ID: %s", error->message);
+		g_warning ("failed to get Device ID: %s", error_did->message);
 
 	dev = fu_device_new ();
 
@@ -297,13 +298,14 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	/* test for safe mode */
 	version = fu_plugin_thunderbolt_parse_version (version_raw);
 	if (is_host && version == NULL) {
+		g_autoptr(GError) error_local = NULL;
 		g_autofree gchar *test_safe = NULL;
 		g_autofree gchar *safe_path = NULL;
 		/* glib can't return a properly mapped -ENODATA but the
 		 * kernel only returns -ENODATA or -EAGAIN */
 		safe_path = g_build_path ("/", devpath, "nvm_version", NULL);
-		if (!g_file_get_contents (safe_path, &test_safe, NULL, &error) &&
-		    !g_error_matches (error, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
+		if (!g_file_get_contents (safe_path, &test_safe, NULL, &error_local) &&
+		    !g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
 			g_warning ("%s is in safe mode --  VID/DID will "
 				   "need to be set by another plugin",
 				   devpath);
@@ -317,8 +319,9 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	}
 	if (!is_safemode) {
 		if (is_host) {
-			if (!fu_plugin_thunderbolt_is_native (device, &is_native, &error)) {
-				g_warning ("failed to get native mode status: %s", error->message);
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_plugin_thunderbolt_is_native (device, &is_native, &error_local)) {
+				g_warning ("failed to get native mode status: %s", error_local->message);
 				return;
 			}
 			fu_plugin_add_report_metadata (plugin,
