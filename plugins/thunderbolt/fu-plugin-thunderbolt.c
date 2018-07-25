@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <gio/gio.h>
 #include <glib.h>
@@ -30,6 +31,8 @@
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 #pragma clang diagnostic pop
 #endif
+
+#define TBT_NVM_RETRY_TIMEOUT	20 /* ms */
 
 typedef void (*UEventNotify) (FuPlugin	  *plugin,
 			      GUdevDevice *udevice,
@@ -281,9 +284,17 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 
 	dev = fu_device_new ();
 
-	/* test for safe mode */
 	is_host = fu_plugin_thunderbolt_is_host (device);
-	version_raw = g_udev_device_get_sysfs_attr (device, "nvm_version");
+	for (guint i = 0; i < 50; i++) {
+		version_raw = g_udev_device_get_sysfs_attr (device, "nvm_version");
+		if (version_raw != NULL)
+			break;
+		g_debug ("Attempt %u: Failed to read NVM version", i);
+		if (errno != EAGAIN)
+			break;
+		g_usleep (TBT_NVM_RETRY_TIMEOUT * 1000);
+	}
+	/* test for safe mode */
 	version = fu_plugin_thunderbolt_parse_version (version_raw);
 	if (is_host && version == NULL) {
 		g_autofree gchar *test_safe = NULL;
