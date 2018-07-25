@@ -558,7 +558,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdDevice *dev = g_ptr_array_index (array, i);
 		g_autofree gchar *tmp = NULL;
 		tmp = fwupd_device_to_string (dev);
-		g_print ("%s", tmp);
+		g_print ("%s\n", tmp);
 	}
 	return TRUE;
 }
