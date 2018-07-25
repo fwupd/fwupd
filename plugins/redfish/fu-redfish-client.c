@@ -85,9 +85,12 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 		fu_device_set_version_lowest (dev, json_object_get_string_member (member, "LowestSupportedVersion"));
 	if (json_object_has_member (member, "Description"))
 		fu_device_set_description (dev, json_object_get_string_member (member, "Description"));
-	if (json_object_get_boolean_member (member, "Updateable"))
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_guid (dev, json_object_get_string_member (member, "SoftwareId"));
+	if (json_object_has_member (member, "Updateable")) {
+		if (json_object_get_boolean_member (member, "Updateable"))
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+	}
+	if (json_object_has_member (member, "SoftwareId"))
+		fu_device_add_guid (dev, json_object_get_string_member (member, "SoftwareId"));
 
 	/* success */
 	g_ptr_array_add (self->devices, g_steal_pointer (&dev));
