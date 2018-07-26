@@ -21,7 +21,7 @@ pushd build
 mv contrib/debian .
 sed s/quilt/native/ debian/source/format -i
 #generate control file
-./contrib/ci/generate_debian_control.py debian/control.in debian/control
+./contrib/ci/generate_debian.py
 #build the package
 EDITOR=/bin/true dch --create --package fwupd -v $VERSION "CI Build"
 debuild --no-lintian --preserve-envvar CI --preserve-envvar CC
