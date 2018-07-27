@@ -518,7 +518,7 @@ fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **e
 		g_debug ("Password: %s", self->password);
 
 	/* try to connect */
-	blob = fu_redfish_client_fetch_data (self, "/redfish/v1", error);
+	blob = fu_redfish_client_fetch_data (self, "/redfish/v1/", error);
 	if (blob == NULL)
 		return FALSE;
 
