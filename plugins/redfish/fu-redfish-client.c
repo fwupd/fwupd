@@ -454,7 +454,6 @@ gboolean
 fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **error)
 {
 	JsonNode *node_root;
-	JsonObject *obj_links = NULL;
 	JsonObject *obj_root = NULL;
 	JsonObject *obj_update_service = NULL;
 	const gchar *data_id;
@@ -557,18 +556,8 @@ fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **e
 	g_debug ("UUID:     %s",
 		 json_object_get_string_member (obj_root, "UUID"));
 
-	/* look for UpdateService in Links */
-	if (json_object_has_member (obj_root, "Links"))
-		obj_links = json_object_get_object_member (obj_root, "Links");
-	if (obj_links == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no Links object");
-		return FALSE;
-	}
-	if (json_object_has_member (obj_links, "UpdateService"))
-		obj_update_service = json_object_get_object_member (obj_links, "UpdateService");
+	if (json_object_has_member (obj_root, "UpdateService"))
+		obj_update_service = json_object_get_object_member (obj_root, "UpdateService");
 	if (obj_update_service == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
