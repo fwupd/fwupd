@@ -124,15 +124,15 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 }
 
 static gboolean
-fu_redfish_client_coldplug_inventory (FuRedfishClient *self,
-				      JsonObject *inventory,
-				      GError **error)
+fu_redfish_client_coldplug_collection (FuRedfishClient *self,
+				       JsonObject *collection,
+				       GError **error)
 {
 	JsonArray *members;
 	JsonNode *node_root;
 	JsonObject *member;
 
-	members = json_object_get_array_member (inventory, "Members");
+	members = json_object_get_array_member (collection, "Members");
 	for (guint i = 0; i < json_array_get_length (members); i++) {
 		g_autoptr(JsonParser) parser = json_parser_new ();
 		g_autoptr(GBytes) blob = NULL;
@@ -184,6 +184,59 @@ fu_redfish_client_coldplug_inventory (FuRedfishClient *self,
 			return FALSE;
 	}
 	return TRUE;
+}
+
+static gboolean
+fu_redfish_client_coldplug_inventory (FuRedfishClient *self,
+				      JsonObject *inventory,
+				      GError **error)
+{
+	g_autoptr(JsonParser) parser = json_parser_new ();
+	g_autoptr(GBytes) blob = NULL;
+	JsonNode *node_root;
+	JsonObject *collection;
+	const gchar *collection_uri;
+
+	collection_uri = json_object_get_string_member (inventory, "@odata.id");
+	if (collection_uri == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "no @odata.id string");
+		return FALSE;
+	}
+
+	/* try to connect */
+	blob = fu_redfish_client_fetch_data (self, collection_uri, error);
+	if (blob == NULL)
+		return FALSE;
+
+	/* get the inventory object */
+	if (!json_parser_load_from_data (parser,
+					 g_bytes_get_data (blob, NULL),
+					 (gssize) g_bytes_get_size (blob),
+					 error)) {
+		g_prefix_error (error, "failed to parse node: ");
+		return FALSE;
+	}
+	node_root = json_parser_get_root (parser);
+	if (node_root == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no root node");
+		return FALSE;
+	}
+	collection = json_node_get_object (node_root);
+	if (collection == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no collection object");
+		return FALSE;
+	}
+
+	return fu_redfish_client_coldplug_collection (self, collection, error);
 }
 
 gboolean
