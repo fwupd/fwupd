@@ -204,6 +204,9 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_uefi}
 %config(noreplace)%{_sysconfdir}/fwupd/uefi.conf
 %endif
+%if 0%{?have_redfish}
+%config(noreplace)%{_sysconfdir}/fwupd/redfish.conf
+%endif
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %{_libexecdir}/fwupd/fwupdtool

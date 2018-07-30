@@ -29,6 +29,7 @@ struct _FuRedfishClient
 	gchar			*password;
 	gchar			*update_uri_path;
 	gboolean		 auth_created;
+	gboolean		 use_https;
 	GPtrArray		*devices;
 };
 
@@ -43,8 +44,7 @@ fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GErr
 
 	/* create URI */
 	uri = soup_uri_new (NULL);
-	soup_uri_set_scheme (uri, g_strcmp0 (self->hostname, "localhost") == 0 ?
-				  "http" : "https");
+	soup_uri_set_scheme (uri, self->use_https ? "https" : "http");
 	soup_uri_set_path (uri, uri_path);
 	soup_uri_set_host (uri, self->hostname);
 	soup_uri_set_port (uri, self->port);
@@ -677,6 +677,12 @@ void
 fu_redfish_client_set_port (FuRedfishClient *self, guint port)
 {
 	self->port = port;
+}
+
+void
+fu_redfish_client_set_https (FuRedfishClient *self, gboolean use_https)
+{
+	self->use_https = use_https;
 }
 
 void
