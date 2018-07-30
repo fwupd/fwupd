@@ -129,6 +129,9 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 	if (json_object_has_member (member, "Updateable")) {
 		if (json_object_get_boolean_member (member, "Updateable"))
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+	} else {
+		/* assume the device is updatable */
+		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
 
 	/* success */
