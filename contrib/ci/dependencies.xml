@@ -347,13 +347,24 @@
       <package />
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
       <package variant="x86_64">gnu-efi</package>
       <package variant="i386">gnu-efi</package>
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
       <package variant="x86_64">gnu-efi</package>
+      <package variant="i386">gnu-efi</package>
     </distro>
   </dependency>
   <dependency type="build" id="gir1.2-appstreamglib-1.0">
@@ -599,7 +610,6 @@
         <inclusive>amd64</inclusive>
         <inclusive>arm64</inclusive>
         <inclusive>armhf</inclusive>
-        <inclusive>armel</inclusive>
         <inclusive>i386</inclusive>
       </control>
       <package variant="x86_64" />
@@ -610,7 +620,6 @@
         <inclusive>amd64</inclusive>
         <inclusive>arm64</inclusive>
         <inclusive>armhf</inclusive>
-        <inclusive>armel</inclusive>
         <inclusive>i386</inclusive>
       </control>
       <package variant="x86_64" />
@@ -622,7 +631,6 @@
         <inclusive>amd64</inclusive>
         <inclusive>arm64</inclusive>
         <inclusive>armhf</inclusive>
-        <inclusive>armel</inclusive>
         <inclusive>i386</inclusive>
       </control>
       <package variant="x86_64" />
@@ -633,7 +641,6 @@
         <inclusive>amd64</inclusive>
         <inclusive>arm64</inclusive>
         <inclusive>armhf</inclusive>
-        <inclusive>armel</inclusive>
         <inclusive>i386</inclusive>
       </control>
       <package variant="x86_64" />
