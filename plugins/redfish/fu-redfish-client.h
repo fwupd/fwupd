@@ -26,6 +26,8 @@ void		 fu_redfish_client_set_password	(FuRedfishClient	*self,
 						 const gchar		*password);
 void		 fu_redfish_client_set_port	(FuRedfishClient	*self,
 						 guint			 port);
+void		 fu_redfish_client_set_https	(FuRedfishClient	*self,
+						 gboolean		 use_https);
 gboolean	 fu_redfish_client_setup	(FuRedfishClient	*self,
 						 GBytes			*smbios_table,
 						 GError			**error);

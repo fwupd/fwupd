@@ -39,13 +39,32 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GBytes *smbios_data = fu_plugin_get_smbios_data (plugin, REDFISH_SMBIOS_TABLE_TYPE);
-	const gchar *redfish_uri;
+	g_autofree gchar *redfish_uri = NULL;
 
-	/* using the emulator */
-	redfish_uri = g_getenv ("FWUPD_REDFISH_URI");
+	/* read the conf file */
+	redfish_uri = fu_plugin_get_config_value (plugin, "Uri");
 	if (redfish_uri != NULL) {
+		g_autofree gchar *username = NULL;
+		g_autofree gchar *password = NULL;
+		const gchar *ip_str = NULL;
+		g_auto(GStrv) split = NULL;
 		guint64 port;
-		g_auto(GStrv) split = g_strsplit (redfish_uri, ":", 2);
+
+		if (g_str_has_prefix (redfish_uri, "https://")) {
+			fu_redfish_client_set_https (data->client, TRUE);
+			ip_str = redfish_uri + strlen ("https://");
+		} else if (g_str_has_prefix (redfish_uri, "http://")) {
+			fu_redfish_client_set_https (data->client, FALSE);
+			ip_str = redfish_uri + strlen ("http://");
+		} else {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "in valid scheme");
+			return FALSE;
+		}
+
+		split = g_strsplit (ip_str, ":", 2);
 		fu_redfish_client_set_hostname (data->client, split[0]);
 		port = g_ascii_strtoull (split[1], NULL, 10);
 		if (port == 0) {
@@ -56,6 +75,13 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			return FALSE;
 		}
 		fu_redfish_client_set_port (data->client, port);
+
+		username = fu_plugin_get_config_value (plugin, "Username");
+		password = fu_plugin_get_config_value (plugin, "Password");
+		if (username != NULL && password != NULL) {
+			fu_redfish_client_set_username (data->client, username);
+			fu_redfish_client_set_password (data->client, password);
+		}
 	} else {
 		if (smbios_data == NULL) {
 			g_set_error_literal (error,

@@ -21,6 +21,10 @@ shared_module('fu_plugin_redfish',
   ],
 )
 
+install_data(['redfish.conf'],
+  install_dir:  join_paths(sysconfdir, 'fwupd')
+)
+
 if get_option('tests')
   e = executable(
     'redfish-self-test',
