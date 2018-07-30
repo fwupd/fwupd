@@ -93,8 +93,32 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 				   JsonObject *member,
 				   GError **error)
 {
-	g_autoptr(FuDevice) dev = fu_device_new ();
+	g_autoptr(FuDevice) dev = NULL;
+	const gchar *guid = NULL;
+	g_autofree gchar *id = NULL;
 
+	if (json_object_has_member (member, "SoftwareId")) {
+		guid = json_object_get_string_member (member, "SoftwareId");
+	} else if (json_object_has_member (member, "Oem")) {
+		JsonObject *oem = json_object_get_object_member (member, "Oem");
+		if (json_object_has_member (oem, "Hpe")) {
+			JsonObject *hpe = json_object_get_object_member (oem, "Hpe");
+			if (json_object_has_member (hpe, "DeviceClass"))
+				guid = json_object_get_string_member (hpe, "DeviceClass");
+		}
+	}
+
+	/* skip the devices without guid */
+	if (guid == NULL)
+		return TRUE;
+
+	dev = fu_device_new ();
+
+	id = g_strdup_printf ("Redfish-Inventory-%s",
+			      json_object_get_string_member (member, "Id"));
+	fu_device_set_id (dev, id);
+
+	fu_device_add_guid (dev, guid);
 	fu_device_set_name (dev, json_object_get_string_member (member, "Name"));
 	fu_device_set_summary (dev, "Redfish device");
 	fu_device_set_version (dev, json_object_get_string_member (member, "Version"));
@@ -105,17 +129,6 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 	if (json_object_has_member (member, "Updateable")) {
 		if (json_object_get_boolean_member (member, "Updateable"))
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-	}
-	if (json_object_has_member (member, "SoftwareId")) {
-		fu_device_add_guid (dev, json_object_get_string_member (member, "SoftwareId"));
-	} else if (json_object_has_member (member, "Oem")) {
-		JsonObject *oem = json_object_get_object_member (member, "Oem");
-		if (json_object_has_member (oem, "Hpe")) {
-			JsonObject *hpe = json_object_get_object_member (oem, "Hpe");
-			const gchar *dev_class = json_object_get_string_member (hpe, "DeviceClass");
-			if (dev_class != NULL)
-				fu_device_add_guid (dev, dev_class);
-		}
 	}
 
 	/* success */
