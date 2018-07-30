@@ -18,6 +18,18 @@ struct FuPluginData {
 };
 
 gboolean
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *device,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+
+	return fu_redfish_client_update (data->client, device, blob_fw, error);
+}
+
+gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);

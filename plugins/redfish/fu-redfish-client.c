@@ -28,12 +28,35 @@ struct _FuRedfishClient
 	gchar			*username;
 	gchar			*password;
 	gchar			*update_uri_path;
+	gchar			*push_uri_path;
 	gboolean		 auth_created;
 	gboolean		 use_https;
 	GPtrArray		*devices;
 };
 
 G_DEFINE_TYPE (FuRedfishClient, fu_redfish_client, G_TYPE_OBJECT)
+
+static void
+fu_redfish_client_set_auth (FuRedfishClient *self, SoupURI *uri,
+			    SoupMessage *msg)
+{
+	if ((self->username != NULL && self->password != NULL) &&
+	    self->auth_created == FALSE) {
+		/*
+		 * Some redfish implementations miss WWW-Authenticate
+		 * header for a 401 response, and SoupAuthManager couldn't
+		 * generate SoupAuth accordingly. Since DSP0266 makes
+		 * Basic Authorization a requirement for redfish, it shall be
+		 * safe to use Basic Auth for all redfish implementations.
+		 */
+		SoupAuthManager *manager = SOUP_AUTH_MANAGER (soup_session_get_feature (self->session, SOUP_TYPE_AUTH_MANAGER));
+		g_autoptr(SoupAuth) auth = soup_auth_new (SOUP_TYPE_AUTH_BASIC,
+							  msg, "Basic");
+		soup_auth_authenticate (auth, self->username, self->password);
+		soup_auth_manager_use_auth (manager, uri, auth);
+		self->auth_created = TRUE;
+	}
+}
 
 static GBytes *
 fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GError **error)
@@ -57,24 +80,7 @@ fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GErr
 			     "failed to create message for URI %s", tmp);
 		return NULL;
 	}
-	if ((self->username != NULL && self->password != NULL) &&
-	    self->auth_created == FALSE) {
-		/*
-		 * Some redfish implementations miss WWW-Authenticate
-		 * header for a 401 response, and SoupAuthManager couldn't
-		 * generate SoupAuth accordingly. Since DSP0266 makes
-		 * Basic Authorization a requirement for redfish it shall be
-		 * safe to use Basic Auth for all redfish implementations.
-		 */
-		SoupAuthManager *manager;
-		g_autoptr(SoupAuth) auth = NULL;
-
-		manager = SOUP_AUTH_MANAGER (soup_session_get_feature (self->session, SOUP_TYPE_AUTH_MANAGER));
-		auth = soup_auth_new (SOUP_TYPE_AUTH_BASIC, msg, "Basic");
-		soup_auth_authenticate (auth, self->username, self->password);
-		soup_auth_manager_use_auth (manager, uri, auth);
-		self->auth_created = TRUE;
-	}
+	fu_redfish_client_set_auth (self, uri, msg);
 	status_code = soup_session_send_message (self->session, msg);
 	if (status_code != SOUP_STATUS_OK) {
 		g_autofree gchar *tmp = soup_uri_to_string (uri, FALSE);
@@ -308,6 +314,21 @@ fu_redfish_client_coldplug (FuRedfishClient *self, GError **error)
 				     "service is not enabled");
 		return FALSE;
 	}
+	if (!json_object_has_member (obj_root, "HttpPushUri")) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "HttpPushUri is not available");
+		return FALSE;
+	}
+	self->push_uri_path = g_strdup (json_object_get_string_member (obj_root, "HttpPushUri"));
+	if (self->push_uri_path == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "HttpPushUri is invalid");
+		return FALSE;
+	}
 	if (json_object_has_member (obj_root, "FirmwareInventory")) {
 		JsonObject *tmp = json_object_get_object_member (obj_root, "FirmwareInventory");
 		return fu_redfish_client_coldplug_inventory (self, tmp, error);
@@ -537,6 +558,70 @@ fu_redfish_client_set_smbios_interfaces (FuRedfishClient *self,
 }
 
 gboolean
+fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_fw,
+			  GError **error)
+{
+	FwupdRelease *release;
+	g_autofree gchar *filename = NULL;
+
+	guint status_code;
+	g_autoptr(SoupMessage) msg = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+	g_autoptr(SoupMultipart) multipart = NULL;
+	g_autoptr(SoupBuffer) buffer = NULL;
+	g_autofree gchar *uri_str = NULL;
+
+	/* Get the update version */
+	release = fwupd_device_get_release_default (FWUPD_DEVICE (device));
+	if (release != NULL) {
+		filename = g_strdup_printf ("%s-%s.bin",
+					    fu_device_get_name (device),
+					    fwupd_release_get_version (release));
+	} else {
+		filename = g_strdup_printf ("%s.bin",
+					    fu_device_get_name (device));
+	}
+
+	/* create URI */
+	uri = soup_uri_new (NULL);
+	soup_uri_set_scheme (uri, self->use_https ? "https" : "http");
+	soup_uri_set_path (uri, self->push_uri_path);
+	soup_uri_set_host (uri, self->hostname);
+	soup_uri_set_port (uri, self->port);
+	uri_str = soup_uri_to_string (uri, FALSE);
+
+	/* Create the multipart request */
+	multipart = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
+	buffer = soup_buffer_new (SOUP_MEMORY_COPY,
+				  g_bytes_get_data (blob_fw, NULL),
+				  g_bytes_get_size (blob_fw));
+	soup_multipart_append_form_file (multipart, filename, filename,
+					 "application/octet-stream",
+					 buffer);
+	msg = soup_form_request_new_from_multipart (uri_str, multipart);
+	if (msg == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to create message for URI %s", uri_str);
+		return FALSE;
+	}
+	fu_redfish_client_set_auth (self, uri, msg);
+	status_code = soup_session_send_message (self->session, msg);
+	if (status_code != SOUP_STATUS_OK) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to upload %s to %s: %s",
+			     filename, uri_str,
+			     soup_status_get_phrase (status_code));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+gboolean
 fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **error)
 {
 	JsonNode *node_root;
@@ -709,6 +794,7 @@ fu_redfish_client_finalize (GObject *object)
 	if (self->session != NULL)
 		g_object_unref (self->session);
 	g_free (self->update_uri_path);
+	g_free (self->push_uri_path);
 	g_free (self->hostname);
 	g_free (self->username);
 	g_free (self->password);

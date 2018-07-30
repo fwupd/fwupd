@@ -28,6 +28,10 @@ void		 fu_redfish_client_set_port	(FuRedfishClient	*self,
 						 guint			 port);
 void		 fu_redfish_client_set_https	(FuRedfishClient	*self,
 						 gboolean		 use_https);
+gboolean	 fu_redfish_client_update       (FuRedfishClient	*self,
+						 FuDevice		*device,
+						 GBytes			*blob_fw,
+						 GError			**error);
 gboolean	 fu_redfish_client_setup	(FuRedfishClient	*self,
 						 GBytes			*smbios_table,
 						 GError			**error);
