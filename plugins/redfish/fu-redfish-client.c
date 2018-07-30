@@ -28,6 +28,7 @@ struct _FuRedfishClient
 	gchar			*username;
 	gchar			*password;
 	gchar			*update_uri_path;
+	gboolean		 auth_created;
 	GPtrArray		*devices;
 };
 
@@ -46,9 +47,7 @@ fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GErr
 				  "http" : "https");
 	soup_uri_set_path (uri, uri_path);
 	soup_uri_set_host (uri, self->hostname);
-	soup_uri_set_user (uri, self->username);
 	soup_uri_set_port (uri, self->port);
-	soup_uri_set_password (uri, self->password);
 	msg = soup_message_new_from_uri (SOUP_METHOD_GET, uri);
 	if (msg == NULL) {
 		g_autofree gchar *tmp = soup_uri_to_string (uri, FALSE);
@@ -57,6 +56,24 @@ fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GErr
 			     FWUPD_ERROR_INVALID_FILE,
 			     "failed to create message for URI %s", tmp);
 		return NULL;
+	}
+	if ((self->username != NULL && self->password != NULL) &&
+	    self->auth_created == FALSE) {
+		/*
+		 * Some redfish implementations miss WWW-Authenticate
+		 * header for a 401 response, and SoupAuthManager couldn't
+		 * generate SoupAuth accordingly. Since DSP0266 makes
+		 * Basic Authorization a requirement for redfish it shall be
+		 * safe to use Basic Auth for all redfish implementations.
+		 */
+		SoupAuthManager *manager;
+		g_autoptr(SoupAuth) auth = NULL;
+
+		manager = SOUP_AUTH_MANAGER (soup_session_get_feature (self->session, SOUP_TYPE_AUTH_MANAGER));
+		auth = soup_auth_new (SOUP_TYPE_AUTH_BASIC, msg, "Basic");
+		soup_auth_authenticate (auth, self->username, self->password);
+		soup_auth_manager_use_auth (manager, uri, auth);
+		self->auth_created = TRUE;
 	}
 	status_code = soup_session_send_message (self->session, msg);
 	if (status_code != SOUP_STATUS_OK) {
