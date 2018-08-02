@@ -28,6 +28,8 @@ void		 fu_redfish_client_set_port	(FuRedfishClient	*self,
 						 guint			 port);
 void		 fu_redfish_client_set_https	(FuRedfishClient	*self,
 						 gboolean		 use_https);
+void		 fu_redfish_client_set_cacheck	(FuRedfishClient	*self,
+						 gboolean		 cacheck);
 gboolean	 fu_redfish_client_update       (FuRedfishClient	*self,
 						 FuDevice		*device,
 						 GBytes			*blob_fw,
