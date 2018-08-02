@@ -52,6 +52,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GBytes *smbios_data = fu_plugin_get_smbios_data (plugin, REDFISH_SMBIOS_TABLE_TYPE);
 	g_autofree gchar *redfish_uri = NULL;
+	g_autofree gchar *ca_check = NULL;
 
 	/* read the conf file */
 	redfish_uri = fu_plugin_get_config_value (plugin, "Uri");
@@ -103,6 +104,13 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			return FALSE;
 		}
 	}
+
+	ca_check = fu_plugin_get_config_value (plugin, "CACheck");
+	if (ca_check != NULL && g_ascii_strcasecmp (ca_check, "false") == 0)
+		fu_redfish_client_set_cacheck (data->client, FALSE);
+	else
+		fu_redfish_client_set_cacheck (data->client, TRUE);
+
 	return fu_redfish_client_setup (data->client, smbios_data, error);
 }
 

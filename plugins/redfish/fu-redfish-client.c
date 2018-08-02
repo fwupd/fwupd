@@ -31,6 +31,7 @@ struct _FuRedfishClient
 	gchar			*push_uri_path;
 	gboolean		 auth_created;
 	gboolean		 use_https;
+	gboolean		 cacheck;
 	GPtrArray		*devices;
 };
 
@@ -671,6 +672,12 @@ fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **e
 		return FALSE;
 	}
 
+	if (self->cacheck == FALSE) {
+		g_object_set (G_OBJECT (self->session),
+			      SOUP_SESSION_SSL_STRICT, FALSE,
+			      NULL);
+	}
+
 	/* this is optional */
 	if (smbios_table != NULL) {
 		g_autoptr(GError) error_smbios = NULL;
@@ -779,6 +786,12 @@ void
 fu_redfish_client_set_https (FuRedfishClient *self, gboolean use_https)
 {
 	self->use_https = use_https;
+}
+
+void
+fu_redfish_client_set_cacheck (FuRedfishClient *self, gboolean cacheck)
+{
+	self->cacheck = cacheck;
 }
 
 void
