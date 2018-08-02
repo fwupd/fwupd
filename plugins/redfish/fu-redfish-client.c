@@ -107,9 +107,9 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 		guid = json_object_get_string_member (member, "SoftwareId");
 	} else if (json_object_has_member (member, "Oem")) {
 		JsonObject *oem = json_object_get_object_member (member, "Oem");
-		if (json_object_has_member (oem, "Hpe")) {
+		if (oem != NULL && json_object_has_member (oem, "Hpe")) {
 			JsonObject *hpe = json_object_get_object_member (oem, "Hpe");
-			if (json_object_has_member (hpe, "DeviceClass"))
+			if (hpe != NULL && json_object_has_member (hpe, "DeviceClass"))
 				guid = json_object_get_string_member (hpe, "DeviceClass");
 		}
 	}
@@ -218,6 +218,14 @@ fu_redfish_client_coldplug_inventory (FuRedfishClient *self,
 	JsonNode *node_root;
 	JsonObject *collection;
 	const gchar *collection_uri;
+
+	if (inventory == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "no inventory object");
+		return FALSE;
+	}
 
 	collection_uri = json_object_get_string_member (inventory, "@odata.id");
 	if (collection_uri == NULL) {
