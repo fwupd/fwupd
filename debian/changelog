@@ -1,3 +1,10 @@
+fwupd (1.1.0-2) unstable; urgency=medium
+
+  * Fix the filename of the signed archive used for secure boot on Ubuntu
+  * Only build uefi plugin on supported architectures
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Sat, 04 Aug 2018 11:27:24 -0500
+
 fwupd (1.1.0-1) unstable; urgency=medium
 
   [ Steve Mcintyre ]
