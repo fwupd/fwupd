@@ -1,3 +1,10 @@
+fwupd (1.1.0-3) unstable; urgency=medium
+
+  * debian/rules: use pkg-config to determine when to turn on redfish and UEFI
+    - Fixes FTBFS due to redfish on other architectures.
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Sat, 04 Aug 2018 17:04:27 -0500
+
 fwupd (1.1.0-2) unstable; urgency=medium
 
   * Fix the filename of the signed archive used for secure boot on Ubuntu
