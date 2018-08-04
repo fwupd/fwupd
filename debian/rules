@@ -16,12 +16,6 @@ endif
 regenerate_control:
 	OS=debian-x86_64 ./contrib/ci/generate_debian_control.py debian/control.in debian/control
 
-export UEFI=-Dplugin_uefi=false
-DEB_TARGET_ARCH ?= $(shell dpkg-architecture -qDEB_TARGET_ARCH)
-ifeq ($(DEB_TARGET_ARCH),$(filter $(DEB_TARGET_ARCH),amd64 i386 armhf arm64))
-	export UEFI=-Dplugin_uefi=true
-endif
-
 SB_STYLE := debian
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
 	SB_STYLE := ubuntu
@@ -46,6 +40,11 @@ override_dh_auto_configure:
 		export DELL="-Dplugin_dell=true -Dplugin_synaptics=true"; \
 	else \
 		export DELL="-Dplugin_dell=false -Dplugin_synaptics=false"; \
+	fi; \
+	if pkg-config --exists efivar; then \
+		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true"; \
+	else \
+		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false"; \
 	fi; \
 	dh_auto_configure -- $$UEFI $$DELL $$CI -Dplugin_dummy=true --libexecdir=/usr/lib
 
