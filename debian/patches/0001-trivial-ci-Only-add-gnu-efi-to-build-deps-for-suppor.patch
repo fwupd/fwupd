@@ -1,0 +1,75 @@
+From 7beace3d9c43e94cea391e89ec1aace4a5e734a8 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Mon, 30 Jul 2018 16:40:01 -0500
+Subject: [PATCH] trivial: ci: Only add gnu-efi to build-deps for supported
+ architectures
+
+For Debian/Ubuntu this was causing FTBFS (dep-wait) on any architectures
+that didn't have gnu-efi.
+---
+ contrib/ci/dependencies.xml | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
+
+Index: fwupd/contrib/ci/dependencies.xml
+===================================================================
+--- fwupd.orig/contrib/ci/dependencies.xml
++++ fwupd/contrib/ci/dependencies.xml
+@@ -334,13 +334,24 @@
+       <package />
+     </distro>
+     <distro id="debian">
+-      <control />
++      <control>
++        <inclusive>amd64</inclusive>
++        <inclusive>arm64</inclusive>
++        <inclusive>armhf</inclusive>
++        <inclusive>i386</inclusive>
++      </control>
+       <package variant="x86_64">gnu-efi</package>
+       <package variant="i386">gnu-efi</package>
+     </distro>
+     <distro id="ubuntu">
+-      <control />
++      <control>
++        <inclusive>amd64</inclusive>
++        <inclusive>arm64</inclusive>
++        <inclusive>armhf</inclusive>
++        <inclusive>i386</inclusive>
++      </control>
+       <package variant="x86_64">gnu-efi</package>
++      <package variant="i386">gnu-efi</package>
+     </distro>
+   </dependency>
+   <dependency type="build" id="gir1.2-appstreamglib-1.0">
+@@ -586,7 +597,6 @@
+         <inclusive>amd64</inclusive>
+         <inclusive>arm64</inclusive>
+         <inclusive>armhf</inclusive>
+-        <inclusive>armel</inclusive>
+         <inclusive>i386</inclusive>
+       </control>
+       <package variant="x86_64" />
+@@ -597,7 +607,6 @@
+         <inclusive>amd64</inclusive>
+         <inclusive>arm64</inclusive>
+         <inclusive>armhf</inclusive>
+-        <inclusive>armel</inclusive>
+         <inclusive>i386</inclusive>
+       </control>
+       <package variant="x86_64" />
+@@ -609,7 +618,6 @@
+         <inclusive>amd64</inclusive>
+         <inclusive>arm64</inclusive>
+         <inclusive>armhf</inclusive>
+-        <inclusive>armel</inclusive>
+         <inclusive>i386</inclusive>
+       </control>
+       <package variant="x86_64" />
+@@ -620,7 +628,6 @@
+         <inclusive>amd64</inclusive>
+         <inclusive>arm64</inclusive>
+         <inclusive>armhf</inclusive>
+-        <inclusive>armel</inclusive>
+         <inclusive>i386</inclusive>
+       </control>
+       <package variant="x86_64" />
