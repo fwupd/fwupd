@@ -52,6 +52,11 @@ override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
 	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install
+	#install the EFI binaries if needed
+	if [ -d debian/tmp/usr/lib/fwupd/efi/ ]; then \
+		dh_install usr/lib/fwupd/efi ;\
+		dh_install usr/lib/fwupd/fwupdate; \
+	fi
 	dh_missing --fail-missing
 
 	#this is placed in fwupd-tests
@@ -82,10 +87,11 @@ override_dh_auto_test:
 override_dh_builddeb:
 	dh_builddeb -- -Zxz
 ifeq (ubuntu,$(SB_STYLE))
-		mkdir -p debian/fwupd-images/$(deb_version)
-		cp debian/tmp/usr/lib/fwupd/efi/fwupd*.efi debian/fwupd-images/$(deb_version)
-		echo $(deb_version) \
-			> debian/fwupd-images/$(deb_version)/version
-			cd debian/fwupd-images && tar czvf ../../../$(tar_name) .
-			dpkg-distaddfile $(tar_name) raw-uefi -
+	if [ -d debian/tmp/usr/lib/fwupd/efi/ ]; then \
+		mkdir -p debian/fwupd-images/$(deb_version) ;\
+		cp debian/tmp/usr/lib/fwupd/efi/fwupd*.efi debian/fwupd-images/$(deb_version) ;\
+		echo $(deb_version) > debian/fwupd-images/$(deb_version)/version ;\
+		tar -C debian/fwupd-images -czvf ../$(tar_name) . ;\
+		dpkg-distaddfile $(tar_name) raw-uefi - ;\
+	fi
 endif
