@@ -11,3 +11,11 @@
 /prime
 /stage
 /snap/.snapcraft
+/*.deb
+/*.ddeb
+/*.changes
+/*.buildinfo
+/fwupd*.build
+/*.dsc
+/*.xz
+/*.gz
