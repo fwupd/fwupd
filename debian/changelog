@@ -1,3 +1,9 @@
+fwupd (1.1.0-7) unstable; urgency=medium
+
+  * Correct another syntax error in SB signing template (Closes: #905482)
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Sun, 05 Aug 2018 08:34:37 -0500
+
 fwupd (1.1.0-6) unstable; urgency=medium
 
   * correct secure boot signing template name (Closes: #905471)
