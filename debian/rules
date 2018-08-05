@@ -54,8 +54,8 @@ override_dh_install:
 	dh_install
 	#install the EFI binaries if needed
 	if [ -d debian/tmp/usr/lib/fwupd/efi/ ]; then \
-		dh_install usr/lib/fwupd/efi ;\
-		dh_install usr/lib/fwupd/fwupdate; \
+		dh_install -pfwupd usr/lib/fwupd/efi ;\
+		dh_install -pfwupd usr/lib/fwupd/fwupdate; \
 	fi
 	dh_missing --fail-missing
 
