@@ -1,3 +1,10 @@
+fwupd (1.1.0-5) unstable; urgency=medium
+
+  * Fix secure boot signing template version string (Closes: #905468)
+  * Refresh debian/copyright (Closes: #904671)
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Sat, 04 Aug 2018 22:37:36 -0500
+
 fwupd (1.1.0-4) unstable; urgency=medium
 
   * debian/rules: dynamically install EFI binaries
