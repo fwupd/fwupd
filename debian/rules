@@ -17,9 +17,9 @@ regenerate_control:
 	OS=debian-x86_64 ./contrib/ci/generate_debian_control.py debian/control.in debian/control
 
 SB_STYLE := debian
+deb_version := $(shell dpkg-parsechangelog --show-field Version)
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
 	SB_STYLE := ubuntu
-	deb_version := $(shell dpkg-parsechangelog --show-field Version)
 	tar_name := fwupd_$(deb_version)_$(DEB_HOST_ARCH).tar.gz
 else
 	TMPLDIR  := debian/fwupd-$(DEB_HOST_ARCH)-signed-template/usr/share/code-signing/fwupd-$(DEB_HOST_ARCH)-signed-template
