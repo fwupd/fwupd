@@ -21,7 +21,7 @@ DATE="$(dpkg-parsechangelog | sed -ne 's/^Date: \(.*\)/\1/p')"
 VERSION="$(dpkg-parsechangelog | sed -ne 's/^Version: \(.*\)/\1/p')"
 MANGLED_VERSION="$(echo $VERSION | sed -r 's/-/\+/;s/\+(b[[:digit:]]+)$/.\1/')"
 
-printf "%s-signed-%s (%s) %s; urgency=%s\n" "${SOURCE}" "${ARCH}" "${MANGLED_VERSION}" "${DISTRIBUTION}" "${URGENCY}" > $OUT
+printf "%s-%s-signed (%s) %s; urgency=%s\n" "${SOURCE}" "${ARCH}" "${MANGLED_VERSION}" "${DISTRIBUTION}" "${URGENCY}" > $OUT
 printf "\n" >> $OUT
 printf "  * Update to %s version %s\n" "${SOURCE}" "${VERSION}" >> $OUT
 printf "\n" >> $OUT
