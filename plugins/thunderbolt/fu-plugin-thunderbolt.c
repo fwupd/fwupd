@@ -32,7 +32,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 #pragma clang diagnostic pop
 #endif
 
-#define TBT_NVM_RETRY_TIMEOUT	20 /* ms */
+#define TBT_NVM_RETRY_TIMEOUT	200 /* ms */
 
 typedef void (*UEventNotify) (FuPlugin	  *plugin,
 			      GUdevDevice *udevice,
