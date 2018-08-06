@@ -33,9 +33,9 @@ endif
 
 override_dh_auto_configure:
 	if pkg-config --exists libsmbios_c; then \
-		export DELL="-Dplugin_dell=true -Dplugin_synaptics=true"; \
+		export DELL="-Dplugin_dell=true"; \
 	else \
-		export DELL="-Dplugin_dell=false -Dplugin_synaptics=false"; \
+		export DELL="-Dplugin_dell=false"; \
 	fi; \
 	if pkg-config --exists efivar; then \
 		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true"; \
