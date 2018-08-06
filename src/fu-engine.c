@@ -1357,6 +1357,7 @@ fu_engine_install_blob (FuEngine *self,
 	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) metadata_hash = NULL;
+	g_autoptr(GTimer) timer = g_timer_new ();
 
 	/* test the firmware is not an empty blob */
 	if (g_bytes_get_size (blob_fw2) == 0) {
@@ -1508,6 +1509,8 @@ fu_engine_install_blob (FuEngine *self,
 	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	fu_engine_emit_device_changed (self, device);
 	fu_engine_emit_changed (self);
+	g_debug ("Updating %s took %f seconds", fu_device_get_name (device),
+		 g_timer_elapsed (timer, NULL));
 
 	/* update database */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
