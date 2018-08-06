@@ -174,6 +174,24 @@ fu_plugin_thunderbolt_find_nvmem (GUdevDevice  *udevice,
 	return NULL;
 }
 
+static const gchar *
+fu_plugin_thunderbolt_udev_get_version (GUdevDevice *udevice)
+{
+	const gchar *version = NULL;
+
+	for (guint i = 0; i < 50; i++) {
+		version = g_udev_device_get_sysfs_attr (udevice, "nvm_version");
+		if (version != NULL)
+			break;
+		g_debug ("Attempt %u: Failed to read NVM version", i);
+		if (errno != EAGAIN)
+			break;
+		g_usleep (TBT_NVM_RETRY_TIMEOUT * 1000);
+	}
+
+	return version;
+}
+
 static gboolean
 fu_plugin_thunderbolt_is_native (GUdevDevice *udevice, gboolean *is_native, GError **error)
 {
@@ -285,15 +303,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	dev = fu_device_new ();
 
 	is_host = fu_plugin_thunderbolt_is_host (device);
-	for (guint i = 0; i < 50; i++) {
-		version_raw = g_udev_device_get_sysfs_attr (device, "nvm_version");
-		if (version_raw != NULL)
-			break;
-		g_debug ("Attempt %u: Failed to read NVM version", i);
-		if (errno != EAGAIN)
-			break;
-		g_usleep (TBT_NVM_RETRY_TIMEOUT * 1000);
-	}
+
+	version_raw = fu_plugin_thunderbolt_udev_get_version (device);
 	/* test for safe mode */
 	version = fu_plugin_thunderbolt_parse_version (version_raw);
 	if (is_host && version == NULL) {
@@ -413,7 +424,7 @@ fu_plugin_thunderbolt_change (FuPlugin *plugin, GUdevDevice *device)
 		return;
 	}
 
-	version = g_udev_device_get_sysfs_attr (device, "nvm_version");
+	version = fu_plugin_thunderbolt_udev_get_version (device);
 	fu_device_set_version (dev, version);
 }
 
@@ -626,7 +637,7 @@ on_wait_for_device_added (FuPlugin    *plugin,
 
 	/* make sure the version is correct, might have changed
 	 * after update. */
-	version = g_udev_device_get_sysfs_attr (device, "nvm_version");
+	version = fu_plugin_thunderbolt_udev_get_version (device);
 	fu_device_set_version (dev, version);
 
 	id = fu_plugin_thunderbolt_gen_id (device);
