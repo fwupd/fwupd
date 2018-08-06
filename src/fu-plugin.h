@@ -64,6 +64,7 @@ typedef enum {
  * @FU_PLUGIN_RULE_RUN_AFTER:		Order the plugin after another
  * @FU_PLUGIN_RULE_RUN_BEFORE:		Order the plugin before another
  * @FU_PLUGIN_RULE_REQUIRES_QUIRK:	Requires a specific quirk
+ * @FU_PLUGIN_RULE_BETTER_THAN:		Is better than another plugin
  *
  * The rules used for ordering plugins.
  * Plugins are expected to add rules in fu_plugin_initialize().
@@ -73,6 +74,7 @@ typedef enum {
 	FU_PLUGIN_RULE_RUN_AFTER,
 	FU_PLUGIN_RULE_RUN_BEFORE,
 	FU_PLUGIN_RULE_REQUIRES_QUIRK,
+	FU_PLUGIN_RULE_BETTER_THAN,
 	/*< private >*/
 	FU_PLUGIN_RULE_LAST
 } FuPluginRule;

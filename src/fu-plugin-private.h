@@ -35,6 +35,9 @@ void		 fu_plugin_set_smbios			(FuPlugin	*plugin,
 guint		 fu_plugin_get_order			(FuPlugin	*plugin);
 void		 fu_plugin_set_order			(FuPlugin	*plugin,
 							 guint		 order);
+guint		 fu_plugin_get_priority			(FuPlugin	*plugin);
+void		 fu_plugin_set_priority			(FuPlugin	*plugin,
+							 guint		 priority);
 void		 fu_plugin_set_name			(FuPlugin	*plugin,
 							 const gchar 	*name);
 GPtrArray	*fu_plugin_get_rules			(FuPlugin	*plugin,

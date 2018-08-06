@@ -18,6 +18,9 @@ gboolean	 fu_device_has_parent_guid		(FuDevice	*device,
 guint		 fu_device_get_order			(FuDevice	*device);
 void		 fu_device_set_order			(FuDevice	*device,
 							 guint		 order);
+guint		 fu_device_get_priority			(FuDevice	*device);
+void		 fu_device_set_priority			(FuDevice	*device,
+							 guint		 priority);
 void		 fu_device_set_alternate		(FuDevice	*device,
 							 FuDevice	*alternate);
 
