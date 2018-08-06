@@ -39,6 +39,7 @@ typedef struct {
 	GUsbContext		*usb_ctx;
 	gboolean		 enabled;
 	guint			 order;
+	guint			 priority;
 	GPtrArray		*rules[FU_PLUGIN_RULE_LAST];
 	gchar			*name;
 	FuHwids			*hwids;
@@ -1473,6 +1474,35 @@ fu_plugin_set_order (FuPlugin *plugin, guint order)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
 	priv->order = order;
+}
+
+/**
+ * fu_plugin_get_priority:
+ * @plugin: a #FuPlugin
+ *
+ * Gets the plugin priority, where higher numbers are better.
+ *
+ * Returns: the integer value
+ **/
+guint
+fu_plugin_get_priority (FuPlugin *plugin)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	return priv->priority;
+}
+
+/**
+ * fu_plugin_set_priority:
+ * @plugin: a #FuPlugin
+ * @priority: a integer value
+ *
+ * Sets the plugin priority, where higher numbers are better.
+ **/
+void
+fu_plugin_set_priority (FuPlugin *plugin, guint priority)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	priv->priority = priority;
 }
 
 /**

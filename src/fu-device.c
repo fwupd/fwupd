@@ -39,6 +39,7 @@ typedef struct {
 	FwupdStatus			 status;
 	guint				 progress;
 	guint				 order;
+	guint				 priority;
 } FuDevicePrivate;
 
 enum {
@@ -135,6 +136,39 @@ fu_device_set_order (FuDevice *device, guint order)
 {
 	FuDevicePrivate *priv = fu_device_get_instance_private (device);
 	priv->order = order;
+}
+
+/**
+ * fu_device_get_priority:
+ * @device: a #FuPlugin
+ *
+ * Gets the device priority, where higher numbers are better.
+ *
+ * Returns: the integer value
+ *
+ * Since: 1.1.1
+ **/
+guint
+fu_device_get_priority (FuDevice *device)
+{
+	FuDevicePrivate *priv = fu_device_get_instance_private (device);
+	return priv->priority;
+}
+
+/**
+ * fu_device_set_priority:
+ * @device: a #FuDevice
+ * @priority: a integer value
+ *
+ * Sets the device priority, where higher numbers are better.
+ *
+ * Since: 1.1.1
+ **/
+void
+fu_device_set_priority (FuDevice *device, guint priority)
+{
+	FuDevicePrivate *priv = fu_device_get_instance_private (device);
+	priv->priority = priority;
 }
 
 const gchar *

@@ -2813,6 +2813,7 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 				  gpointer user_data)
 {
 	FuEngine *self = (FuEngine *) user_data;
+	fu_device_set_priority (device, fu_plugin_get_priority (plugin));
 	fu_engine_add_device (self, device);
 }
 
