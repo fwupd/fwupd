@@ -2119,14 +2119,6 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	for (guint i = 0; i < apps->len; i++) {
 		AsApp *app = g_ptr_array_index (apps, i);
 		FwupdDevice *dev;
-		g_autoptr(FuInstallTask) task = NULL;
-
-		/* check we can install it */
-		task = fu_install_task_new (NULL, app);
-		if (!fu_engine_check_requirements (self, task,
-						   FWUPD_INSTALL_FLAG_NONE,
-						   error))
-			return NULL;
 
 		as_app_set_origin (app, as_store_get_origin (store));
 		dev = fu_engine_get_result_from_app (self, app, error);
