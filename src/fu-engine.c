@@ -897,8 +897,11 @@ fu_engine_check_requirement (FuEngine *self, AsRequire *req, FuDevice *device, G
 		return fu_engine_check_requirement_id (self, req, error);
 
 	/* ensure firmware requirement */
-	if (device != NULL && as_require_get_kind (req) == AS_REQUIRE_KIND_FIRMWARE)
+	if (as_require_get_kind (req) == AS_REQUIRE_KIND_FIRMWARE) {
+		if (device == NULL)
+			return TRUE;
 		return fu_engine_check_requirement_firmware (self, req, device, error);
+	}
 
 	/* ensure hardware requirement */
 	if (as_require_get_kind (req) == AS_REQUIRE_KIND_HARDWARE)
