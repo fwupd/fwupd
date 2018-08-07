@@ -5,8 +5,11 @@
 #
 # Distributed under terms of the GPLv2 license.
 #
-install -m 0755 -d ${MESON_INSTALL_DESTDIR_PREFIX}/share/locale/
-${MESON_SOURCE_ROOT}/po/make-images "Installing firmware update…" ${MESON_INSTALL_DESTDIR_PREFIX}/share/locale/ ${MESON_SOURCE_ROOT}/po/LINGUAS
-for x in ${MESON_INSTALL_DESTDIR_PREFIX}/share/locale/*/LC_IMAGES/*.bmp ; do
+
+LOCALEDIR=${DESTDIR}$1
+
+install -m 0755 -d $LOCALEDIR
+${MESON_SOURCE_ROOT}/po/make-images "Installing firmware update…" $LOCALEDIR ${MESON_SOURCE_ROOT}/po/LINGUAS
+for x in ${LOCALEDIR}/*/LC_IMAGES/*.bmp ; do
     gzip -fn9 ${x}
 done
