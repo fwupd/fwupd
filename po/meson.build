@@ -6,5 +6,5 @@ i18n.gettext(meson.project_name(),
 )
 
 if get_option('plugin_uefi')
-meson.add_install_script('make-images.sh')
+meson.add_install_script('make-images.sh', localedir)
 endif
