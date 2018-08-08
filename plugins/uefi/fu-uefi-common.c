@@ -275,6 +275,7 @@ fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 gboolean
 fu_uefi_check_esp_path (const gchar *path, GError **error)
 {
+	const gchar *fs_types[] = { "vfat", "ntfs", "exfat", NULL };
 	g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (path, NULL);
 	if (mount == NULL) {
 		g_set_error (error,
@@ -288,6 +289,15 @@ fu_uefi_check_esp_path (const gchar *path, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "%s is read only", path);
+		return FALSE;
+	}
+	if (!g_strv_contains (fs_types, g_unix_mount_get_fs_type (mount))) {
+		g_autofree gchar *supported = g_strjoinv ("|", (gchar **) fs_types);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "%s has an invalid type, expected %s",
+			     path, supported);
 		return FALSE;
 	}
 	return TRUE;
