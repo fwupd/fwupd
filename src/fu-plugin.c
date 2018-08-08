@@ -540,6 +540,26 @@ fu_plugin_check_hwid (FuPlugin *plugin, const gchar *hwid)
 }
 
 /**
+ * fu_plugin_get_hwids:
+ * @plugin: A #FuPlugin
+ *
+ * Returns all the HWIDs defined in the system. All hardware IDs on a
+ * specific system can be shown using the `fwupdmgr hwids` command.
+ *
+ * Returns: (transfer none) (element-type utf-8): An array of GUIDs
+ *
+ * Since: 1.1.1
+ **/
+GPtrArray *
+fu_plugin_get_hwids (FuPlugin *plugin)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->hwids == NULL)
+		return NULL;
+	return fu_hwids_get_guids (priv->hwids);
+}
+
+/**
  * fu_plugin_check_supported:
  * @plugin: A #FuPlugin
  * @guid: A Hardware ID GUID, e.g. `6de5d951-d755-576b-bd09-c5cf66b27234`
