@@ -50,7 +50,6 @@ message('efi-includedir: "@0@"'.format(efi_incdir))
 debugdir = join_paths (libdir, 'debug')
 compile_args = ['-Og',
                 '-g3',
-                '-Wp,-D_FORTIFY_SOURCE=2',
                 '--param=ssp-buffer-size=4',
                 '-fexceptions',
                 '-Wall',
