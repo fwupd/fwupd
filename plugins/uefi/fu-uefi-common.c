@@ -272,6 +272,27 @@ fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 	return g_ascii_strtoull (data, NULL, 10);
 }
 
+gboolean
+fu_uefi_check_esp_path (const gchar *path, GError **error)
+{
+	g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (path, NULL);
+	if (mount == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "%s was not mounted", path);
+		return FALSE;
+	}
+	if (g_unix_mount_is_readonly (mount)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "%s is read only", path);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 gchar *
 fu_uefi_guess_esp_path (void)
 {
@@ -284,11 +305,9 @@ fu_uefi_guess_esp_path (void)
 		return g_strdup (path_tmp);
 
 	for (guint i = 0; paths[i] != NULL; i++) {
-		g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (paths[i], NULL);
-		if (mount == NULL)
-			continue;
-		if (g_unix_mount_is_readonly (mount)) {
-			g_debug ("%s is read only", paths[i]);
+		g_autoptr(GError) error = NULL;
+		if (!fu_uefi_check_esp_path (paths[i], &error)) {
+			g_debug ("ignoring ESP path: %s", error->message);
 			continue;
 		}
 		return g_strdup (paths[i]);
