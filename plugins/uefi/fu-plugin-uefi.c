@@ -559,32 +559,24 @@ static gboolean
 fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *value;
 	const gchar *key = "OverrideESPMountPoint";
 
 	/* load from file */
-	data->esp_path = fu_plugin_get_config_value (plugin, key);
-	if (data->esp_path != NULL &&
-	    !g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
+	value = fu_plugin_get_config_value (plugin, key);
+	if (value != NULL &&
+	    !g_file_test (value, G_FILE_TEST_IS_DIR)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_FILENAME,
 			     "invalid %s specified in config: %s",
-			     key, data->esp_path);
+			     key, value);
 		return FALSE;
 	}
 
-	/* try to guess from heuristics */
+	data->esp_path = fu_uefi_validate_esp_path (value, error);
 	if (data->esp_path == NULL)
-		data->esp_path = fu_uefi_guess_esp_path ();
-	if (data->esp_path == NULL) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_FILENAME,
-			     "Unable to determine EFI system partition location, "
-			     "override using %s in %s.conf",
-			     key, fu_plugin_get_name (plugin));
 		return FALSE;
-	}
 
 	/* success */
 	return TRUE;
