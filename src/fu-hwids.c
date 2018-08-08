@@ -20,6 +20,7 @@ struct _FuHwids {
 	GHashTable		*hash_dmi_hw;		/* BiosVersion->"1.2.3 " */
 	GHashTable		*hash_dmi_display;	/* BiosVersion->"1.2.3" */
 	GHashTable		*hash_guid;		/* a-c-b-d->1 */
+	GPtrArray		*array_guids;		/* a-c-b-d */
 };
 
 G_DEFINE_TYPE (FuHwids, fu_hwids, G_TYPE_OBJECT)
@@ -53,6 +54,20 @@ gboolean
 fu_hwids_has_guid (FuHwids *self, const gchar *guid)
 {
 	return g_hash_table_lookup (self->hash_guid, guid) != NULL;
+}
+
+/**
+ * fu_hwids_get_guids:
+ * @self: A #FuHwids
+ *
+ * Returns all the defined HWIDs
+ *
+ * Returns: (transfer none) (element-type utf-8): An array of GUIDs
+ **/
+GPtrArray *
+fu_hwids_get_guids (FuHwids *self)
+{
+	return self->array_guids;
 }
 
 static gchar *
@@ -389,6 +404,7 @@ fu_hwids_setup (FuHwids *self, FuSmbios *smbios, GError **error)
 		g_hash_table_insert (self->hash_guid,
 				     g_strdup (guid),
 				     GUINT_TO_POINTER (1));
+		g_ptr_array_add (self->array_guids, g_strdup (guid));
 
 		/* show what makes up the GUID */
 		values = fu_hwids_get_replace_values (self, key, NULL);
@@ -408,6 +424,8 @@ fu_hwids_finalize (GObject *object)
 	g_hash_table_unref (self->hash_dmi_hw);
 	g_hash_table_unref (self->hash_dmi_display);
 	g_hash_table_unref (self->hash_guid);
+	g_ptr_array_unref (self->array_guids);
+
 	G_OBJECT_CLASS (fu_hwids_parent_class)->finalize (object);
 }
 
@@ -424,6 +442,7 @@ fu_hwids_init (FuHwids *self)
 	self->hash_dmi_hw = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->hash_dmi_display = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->hash_guid = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+	self->array_guids = g_ptr_array_new_with_free_func (g_free);
 }
 
 FuHwids *

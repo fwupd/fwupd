@@ -115,6 +115,7 @@ void		 fu_plugin_cache_add			(FuPlugin	*plugin,
 							 gpointer	 dev);
 gboolean	 fu_plugin_check_hwid			(FuPlugin	*plugin,
 							 const gchar	*hwid);
+GPtrArray	*fu_plugin_get_hwids			(FuPlugin	*plugin);
 gboolean	 fu_plugin_check_supported		(FuPlugin	*plugin,
 							 const gchar	*guid);
 const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*plugin,
