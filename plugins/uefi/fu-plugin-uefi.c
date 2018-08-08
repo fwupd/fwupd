@@ -563,19 +563,21 @@ fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 
 	/* load from file */
 	data->esp_path = fu_plugin_get_config_value (plugin, key);
-	if (data->esp_path != NULL &&
-	    !g_file_test (data->esp_path, G_FILE_TEST_IS_DIR)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_FILENAME,
-			     "invalid %s specified in config: %s",
-			     key, data->esp_path);
-		return FALSE;
+	if (data->esp_path != NULL) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_uefi_check_esp_path (data->esp_path, &error_local)) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_FILENAME,
+				     "invalid %s=%s specified in config: %s",
+				     key, data->esp_path, error_local->message);
+			return FALSE;
+		}
+		return TRUE;
 	}
 
 	/* try to guess from heuristics */
-	if (data->esp_path == NULL)
-		data->esp_path = fu_uefi_guess_esp_path ();
+	data->esp_path = fu_uefi_guess_esp_path ();
 	if (data->esp_path == NULL) {
 		g_set_error (error,
 			     G_IO_ERROR,
