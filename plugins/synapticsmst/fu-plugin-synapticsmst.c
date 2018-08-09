@@ -16,7 +16,6 @@
 #define SYNAPTICS_FLASH_MODE_DELAY 3
 #define SYNAPTICS_UPDATE_ENUMERATE_TRIES 3
 
-#define HWID_DELL_INC	"85d38fda-fc0e-5c6f-808f-076984ae7978"
 #define DELL_DOCK_FLASH_GUID	"e7ca1f36-bf73-4574-afe6-a4ccacabf479"
 #define DELL_DOCK_FUTURE_GUID	"41ca7da371ef437e027272d0173bdddb3423827f"
 
@@ -33,16 +32,6 @@ synapticsmst_common_check_supported_system (FuPlugin *plugin, GError **error)
 		return TRUE;
 	}
 
-	/* tests for "Dell Inc." manufacturer string
-	 * this isn't strictly a complete tests due to OEM rebranded
-	 * systems being excluded, but should cover most cases */
-	if (!fu_plugin_check_hwid (plugin, HWID_DELL_INC)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "MST firmware updating not supported by OEM");
-		return FALSE;
-	}
 	if (!g_file_test (SYSFS_DRM_DP_AUX, G_FILE_TEST_IS_DIR)) {
 		g_set_error (error,
 			     G_IO_ERROR,
