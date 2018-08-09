@@ -283,7 +283,18 @@ fu_uefi_check_esp_path (const gchar *path, GError **error)
 			     "%s was not mounted", path);
 		return FALSE;
 	}
-	if (g_unix_mount_is_readonly (mount)) {
+	/* /boot is a special case because systemd sandboxing marks
+	 * it read-only, but we need to write to /boot/EFI
+	 */
+	if (g_strcmp0 (path, "/boot") == 0) {
+		if (!g_file_test ("/boot/EFI", G_FILE_TEST_IS_DIR)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "%s/EFI does not exist", path);
+			return FALSE;
+		}
+	} else if (g_unix_mount_is_readonly (mount)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
