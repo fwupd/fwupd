@@ -1,5 +1,4 @@
-/* -*- mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017 Dell, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1+
