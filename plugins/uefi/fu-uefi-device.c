@@ -191,15 +191,15 @@ fu_uefi_device_load_update_info (FuUefiDevice *self, GError **error)
 	g_autofree guint8 *data = NULL;
 	g_autoptr(FuUefiUpdateInfo) info = fu_uefi_update_info_new ();
 
-	g_return_val_if_fail (FU_IS_UEFI_DEVICE (self), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (FU_IS_UEFI_DEVICE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* get the existing status */
 	if (!fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
 				    &data, &datasz, NULL, error))
-		return FALSE;
+		return NULL;
 	if (!fu_uefi_update_info_parse (info, data, datasz, error))
-		return FALSE;
+		return NULL;
 	return g_steal_pointer (&info);
 }
 
@@ -250,7 +250,7 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "failed to efi_generate_file_device_path(%s)",
 			     path);
-		return FALSE;
+		return NULL;
 	}
 
 	/* if we just have an end device path, it's not going to work */
@@ -260,7 +260,7 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "failed to get valid device_path for (%s)",
 			     path);
-		return FALSE;
+		return NULL;
 	}
 
 	/* actually get the path this time */
@@ -274,7 +274,7 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "failed to efi_generate_file_device_path(%s)",
 			     path);
-		return FALSE;
+		return NULL;
 	}
 
 	/* success */
@@ -390,7 +390,7 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 	g_autofree gchar *fw_class_fn = NULL;
 	g_autofree gchar *id = NULL;
 
-	g_return_val_if_fail (entry_path != NULL, FALSE);
+	g_return_val_if_fail (entry_path != NULL, NULL);
 
 	/* create object */
 	self = g_object_new (FU_TYPE_UEFI_DEVICE, NULL);
