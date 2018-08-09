@@ -11,6 +11,7 @@
 #include <appstream-glib.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 #include <gio/gunixinputstream.h>
 #ifdef HAVE_VALGRIND
 #include <valgrind.h>
