@@ -12,6 +12,7 @@ Vcs-Browser: https://salsa.debian.org/efi-team/fwupd
 Package: fwupd-SIGNARCH-signed
 Section: admin
 Architecture: SIGNARCH
+Provides: fwupd-signed
 Depends: ${shlibs:Depends}, ${misc:Depends}, fwupd (= SIGNVERSION)
 Description: Tools to manage UEFI firmware updates (signed)
  fwupd provides functionality to update system firmware. It has been 

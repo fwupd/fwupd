@@ -33,7 +33,7 @@ Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
 Recommends: python3,
-	    fwupd-amd64-signed [amd64] | fwupd-i386-signed [i386] | fwupd-armhf-signed [armhf] | fwupd-arm64-signed [arm64] | fwupd-signed
+	    fwupd-signed
 Breaks: gir1.2-dfu-1.0 (<< 0.9.7-1),
 	libdfu1 (<< 0.9.7-1),
 	libdfu-dev (<< 0.9.7-1)
