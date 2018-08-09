@@ -611,7 +611,7 @@ synapticsmst_device_get_flash_checksum (SynapticsMSTDevice *device,
 }
 
 static guint16
-synapticsmst_device_get_crc (guint16 crc, guint8 type, guint32 length, guint8 *payload_data)
+synapticsmst_device_get_crc (guint16 crc, guint8 type, guint32 length, const guint8 *payload_data)
 {
 	static const guint16 CRC16_table[] = {
 		0x0000, 0x8005, 0x800f, 0x000a, 0x801b, 0x001e, 0x0014, 0x8011, 0x8033, 0x0036, 0x003c, 0x8039, 0x0028, 0x802d, 0x8027, 0x0022,
@@ -651,7 +651,7 @@ synapticsmst_device_get_crc (guint16 crc, guint8 type, guint32 length, guint8 *p
 	};
 	guint8 val;
 	guint16 remainder = (guint16) crc;
-	guint8 *message = payload_data;
+	const guint8 *message = payload_data;
 
 	if (type == CRC_8) {
 		for (guint32 byte = 0; byte < length; ++byte) {
@@ -697,7 +697,7 @@ synapticsmst_device_set_flash_sector_erase (SynapticsMSTDevice *device,
 
 static gboolean
 synapticsmst_device_update_esm (SynapticsMSTDevice *device,
-				guint8 *payload_data,
+				const guint8 *payload_data,
 				GFileProgressCallback progress_cb,
 				gpointer progress_data,
 				GError **error)
@@ -741,7 +741,7 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 	for (guint retries_cnt = 0; ; retries_cnt++) {
 		guint32 write_idx = 0;
 		guint32 write_offset = EEPROM_ESM_OFFSET;
-		guint8 *esm_code_ptr = &payload_data[EEPROM_ESM_OFFSET];
+		const guint8 *esm_code_ptr = &payload_data[EEPROM_ESM_OFFSET];
 		for (guint32 i = 0; i < write_loops; i++) {
 			guint8 rc;
 			rc = synapticsmst_common_rc_set_command (connection,
@@ -805,7 +805,7 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 static gboolean
 synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
 						guint32 payload_len,
-						guint8 *payload_data,
+						const guint8 *payload_data,
 						GFileProgressCallback progress_cb,
 						gpointer progress_data,
 						GError **error)
@@ -905,7 +905,7 @@ synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
 static gboolean
 synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 					      guint32 payload_len,
-					      guint8 *payload_data,
+					      const guint8 *payload_data,
 					      GFileProgressCallback progress_cb,
 					      gpointer progress_data,
 					      GError **error)
@@ -1161,7 +1161,7 @@ synapticsmst_device_check_firmware_content (SynapticsMSTDevice *device,
 					    SynapticsMSTChipKind chip_type,
 					    GError **error)
 {
-	guint8 *payload_data;
+	const guint8 *payload_data;
 	gsize payload_len, payload_len_max;
 	gint checksum = 0;
 	guint32 offset = 0;
