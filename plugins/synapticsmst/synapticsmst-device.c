@@ -1119,6 +1119,13 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 								 UPDC_WRITE_TO_EEPROM, 1,
 								 (EEPROM_BANK_OFFSET * bank_in_use + EEPROM_TAG_OFFSET + 15),
 								 &tagData[1]);
+			if (rc) {
+				g_set_error_literal (error,
+						     G_IO_ERROR,
+						     G_IO_ERROR_INVALID_DATA,
+						     "Failed to clear CRC");
+				return FALSE;
+			}
 		}
 
 		rc = synapticsmst_common_rc_get_command (connection,
