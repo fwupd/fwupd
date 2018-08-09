@@ -737,9 +737,7 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 	}
 
 	/* update ESM firmware */
-	write_loops = (esm_sz / unit_sz);
-	if (esm_sz % unit_sz)
-		write_loops++;
+	write_loops = esm_sz / unit_sz;
 	for (guint retries_cnt = 0; ; retries_cnt++) {
 		guint32 write_idx = 0;
 		guint32 write_offset = EEPROM_ESM_OFFSET;
