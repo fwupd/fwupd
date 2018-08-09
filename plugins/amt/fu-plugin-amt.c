@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2012 Intel Corporation.
  * Copyright (C) 2017 Google, Inc.
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
