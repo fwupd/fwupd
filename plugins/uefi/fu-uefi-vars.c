@@ -196,7 +196,7 @@ fu_uefi_vars_get_data (const gchar *guid, const gchar *name, guint8 **data,
 	info = g_file_input_stream_query_info (G_FILE_INPUT_STREAM (istr),
 					       G_FILE_ATTRIBUTE_STANDARD_SIZE,
 					       NULL, error);
-	if (istr == NULL) {
+	if (info == NULL) {
 		g_prefix_error (error, "failed to get stream info: ");
 		return FALSE;
 	}
