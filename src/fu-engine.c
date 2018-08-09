@@ -2773,7 +2773,7 @@ fu_engine_plugins_coldplug (FuEngine *self, gboolean is_recoldplug)
 	}
 	if (str->len > 2) {
 		g_string_truncate (str, str->len - 2);
-		g_message ("using plugins: %s", str->str);
+		g_debug ("using plugins: %s", str->str);
 	}
 
 	/* we can recoldplug from this point on */
