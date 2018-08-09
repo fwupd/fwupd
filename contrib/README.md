@@ -17,7 +17,7 @@ OS=fedora ./generate_docker.py
 To build the RPMs run this command (from the root of your git checkout):
 
 ```
-docker run -t -v `pwd`:/build fwupd-fedora
+docker run --privileged -t -v `pwd`:/build fwupd-fedora
 ```
 
 RPMs will be made available in your working directory when complete.
@@ -37,9 +37,9 @@ OS=ubuntu-x86_64 ./generate_docker.py
 To build the DEBs run one of these commands (from the root of your git checkout):
 
 ```
-docker run -t -v `pwd`:/build fwupd-debian-x86_64
-docker run -t -v `pwd`:/build fwupd-debian-i386
-docker run -t -v `pwd`:/build fwupd-ubuntu-x86_64
+docker run --privileged -t -v `pwd`:/build fwupd-debian-x86_64
+docker run --privileged -t -v `pwd`:/build fwupd-debian-i386
+docker run --privileged -t -v `pwd`:/build fwupd-ubuntu-x86_64
 ```
 
 DEBs will be made available in your working directory when complete.
