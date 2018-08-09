@@ -323,7 +323,6 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	info.capsule_flags = self->capsule_flags;
 	info.update_info_version = 0x7;
 	info.hw_inst = self->fmp_hardware_instance;
-	memcpy (&guid, &info.guid, sizeof(efi_guid_t));
 	if (efi_str_to_guid (self->fw_class, &guid) < 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -331,6 +330,7 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 				     "failed to get convert GUID");
 		return FALSE;
 	}
+	memcpy (&info.guid, &guid, sizeof(efi_guid_t));
 
 	/* set the body as the device path */
 	if (g_getenv ("FWUPD_UEFI_ESP_PATH") == NULL) {
