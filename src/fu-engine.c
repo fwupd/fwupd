@@ -3488,6 +3488,8 @@ fu_engine_load (FuEngine *self, GError **error)
 			  G_CALLBACK (fu_engine_device_changed_cb),
 			  self);
 
+	fu_engine_set_status (self, FWUPD_STATUS_LOADING);
+
 	/* add devices */
 	fu_engine_plugins_setup (self);
 	fu_engine_plugins_coldplug (self, FALSE);
@@ -3504,6 +3506,8 @@ fu_engine_load (FuEngine *self, GError **error)
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database (self, error))
 		return FALSE;
+
+	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
 
 	/* success */
 	return TRUE;
