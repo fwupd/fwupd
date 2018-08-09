@@ -11,6 +11,8 @@
 #include <appstream-glib.h>
 #include <fcntl.h>
 #include <fnmatch.h>
+#include <gio/gio.h>
+#include <gio/gunixmounts.h>
 #include <glib/gi18n.h>
 
 #include "fu-plugin.h"
@@ -20,6 +22,13 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-vars.h"
+
+#ifndef HAVE_GIO_2_55_0
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
+#pragma clang diagnostic pop
+#endif
 
 struct FuPluginData {
 	gchar			*esp_path;
@@ -592,6 +601,31 @@ fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_uefi_ensure_efivarfs_rw (GError **error)
+{
+	g_autofree gchar *sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+	g_autofree gchar *sysfsefivardir = g_build_filename (sysfsfwdir, "efi", "efivars", NULL);
+	g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (sysfsefivardir, NULL);
+
+	if (mount == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "%s was not mounted", sysfsefivardir);
+		return FALSE;
+	}
+	if (g_unix_mount_is_readonly (mount)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "%s is read only", sysfsefivardir);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -601,6 +635,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autofree gchar *esrt_path = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autoptr(GError) error_bootloader = NULL;
+	g_autoptr(GError) error_efivarfs = NULL;
 	g_autoptr(GError) error_esp = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) entries = NULL;
@@ -611,6 +646,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	entries = fu_uefi_get_esrt_entry_paths (esrt_path, error);
 	if (entries == NULL)
 		return FALSE;
+
+	/* make sure that efivarfs is rw */
+	if (!fu_plugin_uefi_ensure_efivarfs_rw (&error_efivarfs))
+		g_warning ("%s", error_efivarfs->message);
 
 	/* if secure boot is enabled ensure we have a signed fwupd.efi */
 	bootloader = fu_uefi_get_built_app_path (&error_bootloader);
@@ -631,6 +670,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			fu_device_set_update_error (FU_DEVICE (dev), error_esp->message);
 		} else if (error_bootloader != NULL) {
 			fu_device_set_update_error (FU_DEVICE (dev), error_bootloader->message);
+		} else if (error_efivarfs != NULL) {
+			fu_device_set_update_error (FU_DEVICE (dev), error_efivarfs->message);
 		} else {
 			fu_device_set_metadata (FU_DEVICE (dev), "EspPath", data->esp_path);
 			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
