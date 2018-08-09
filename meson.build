@@ -134,8 +134,9 @@ add_project_arguments('-D_DEFAULT_SOURCE', language : 'c')
 # do not use deprecated symbols or defines internally
 add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
 
-# needed for some things on CentOS
-add_project_arguments('-D_GNU_SOURCE', language : 'c')
+# needed for symlink() and BYTE_ORDER
+add_project_arguments('-D_BSD_SOURCE', language : 'c')
+add_project_arguments('-D_XOPEN_SOURCE=700', language : 'c')
 
 prefix = get_option('prefix')
 

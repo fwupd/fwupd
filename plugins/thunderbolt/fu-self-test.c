@@ -894,8 +894,7 @@ test_set_up (ThunderboltTest *tt, gconstpointer params)
 	}
 
 	if (!umockdev_in_mock_environment ()) {
-		g_warning ("Need to run within umockdev wrapper (umockdev-wrapper %s)!",
-			   program_invocation_short_name);
+		g_warning ("Need to run with umockdev-wrapper");
 		return;
 	}
 
