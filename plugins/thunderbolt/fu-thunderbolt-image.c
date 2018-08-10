@@ -492,8 +492,66 @@ get_host_locations (guint16 id)
 	}
 }
 
+/*
+ * Finds optional multi controller (MC) entry from controller DROM.
+ * Returns TRUE if the controller did not have MC entry or the
+ * controller and image MC entries match. In any other case FALSE is
+ * returned and error is set accordingly.
+ */
+static gboolean
+compare_device_mc (const FuThunderboltFwObject *controller,
+		   const FuThunderboltFwObject *image,
+		   GError **error)
+{
+	FuThunderboltFwLocation image_mc_loc = { .section = DROM_SECTION, .description = "Multi Controller" };
+	FuThunderboltFwLocation controller_mc_loc = image_mc_loc;
+	g_autoptr(GByteArray) controller_mc = NULL;
+	g_autoptr(GByteArray) image_mc = NULL;
+
+	if (!read_drom_entry_location (controller, DROM_ENTRY_MC,
+				       &controller_mc_loc, error))
+		return FALSE;
+
+	/* it is fine if the controller does not have MC entry */
+	if (controller_mc_loc.offset == 0)
+		return TRUE;
+
+	if (!read_drom_entry_location (image, DROM_ENTRY_MC, &image_mc_loc, error))
+		return FALSE;
+
+	if (image_mc_loc.offset == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
+				     "firmware does not have multi controller entry");
+		return FALSE;
+	}
+	if (controller_mc_loc.len != image_mc_loc.len) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
+				     "firmware multi controller entry length mismatch");
+		return FALSE;
+	}
+
+	controller_mc = read_location (&controller_mc_loc, controller, error);
+	if (controller_mc == NULL)
+		return FALSE;
+	image_mc = read_location (&image_mc_loc, image, error);
+	if (image_mc == NULL)
+		return FALSE;
+
+	if (memcmp (controller_mc->data, image_mc->data, controller_mc->len) != 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
+				     "firmware multi controller entry mismatch");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 static const FuThunderboltFwLocation *
-get_device_locations (guint16 id, const FuThunderboltFwObject *fw, GError **error)
+get_device_locations (guint16 id, const FuThunderboltFwObject *controller,
+		      const FuThunderboltFwObject *image, GError **error)
 {
 	static const FuThunderboltFwLocation AR[] = {
 		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
@@ -501,14 +559,10 @@ get_device_locations (guint16 id, const FuThunderboltFwObject *fw, GError **erro
 		{ 0 }
 	};
 
-	static FuThunderboltFwLocation TR[] = {
+	static const FuThunderboltFwLocation TR[] = {
 		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
-		/* offset and len are read from DROM */
-		{ .section = DROM_SECTION, .description = "Multi Controller" },
 		{ 0 }
 	};
-
-	g_autoptr(GError) error_local = NULL;
 
 	switch (id) {
 	case 0x1578:
@@ -521,12 +575,10 @@ get_device_locations (guint16 id, const FuThunderboltFwObject *fw, GError **erro
 	case 0x15EA:
 	case 0x15EF:
 		/* if the controller has multi controller entry need to
-		 * compare it against the image. */
-		if (read_drom_entry_location (fw, DROM_ENTRY_MC, &TR[1],
-					      &error_local))
-			return TR;
-		g_debug ("failed to parse DROM entry: %s", error_local->message);
-		/* fallthrough */
+		 * compare it against the image first. */
+		if (!compare_device_mc (controller, image, error))
+			return NULL;
+		return TR;
 	default:
 		return NULL;
 	}
@@ -707,7 +759,8 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 			return VALIDATION_FAILED;
 		}
 	} else {
-		locations = get_device_locations (hw_info->id, &controller, error);
+		locations = get_device_locations (hw_info->id, &controller,
+						  &image, error);
 		if (locations == NULL) {
 			/* error is set already by the above */
 			return VALIDATION_FAILED;
