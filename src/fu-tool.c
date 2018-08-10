@@ -34,6 +34,8 @@ typedef struct {
 	FuProgressbar		*progressbar;
 	FwupdInstallFlags	 flags;
 	gboolean		 show_all_devices;
+	/* only valid in update and downgrade */
+	FwupdDevice		*current_device;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -222,6 +224,8 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->progressbar);
 	if (priv->context != NULL)
 		g_option_context_free (priv->context);
+	if (priv->current_device != NULL)
+		g_object_unref (priv->current_device);
 	g_free (priv);
 }
 
@@ -476,6 +480,26 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	return g_object_ref (dev);
 }
 
+static void
+fu_util_install_device_changed_cb (FwupdClient *client,
+				  FwupdDevice *device,
+				  FuUtilPrivate *priv)
+{
+	g_autofree gchar *str = NULL;
+
+	/* same as last time, so ignore */
+	if (priv->current_device != NULL &&
+	    fwupd_device_compare (priv->current_device, device) == 0)
+		return;
+
+	/* show message in progressbar */
+	/* TRANSLATORS: %1 is a device name */
+	str = g_strdup_printf (_("Installing %s"),
+				fwupd_device_get_name (device));
+	fu_progressbar_set_title (priv->progressbar, str);
+	g_set_object (&priv->current_device, device);
+}
+
 static gboolean
 fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -512,6 +536,9 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (device == NULL)
 			return FALSE;
 	}
+
+	g_signal_connect (priv->engine, "device-changed",
+			  G_CALLBACK (fu_util_install_device_changed_cb), priv);
 
 	/* write bare firmware */
 	return fu_engine_install_blob (priv->engine, device,
@@ -615,6 +642,9 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_propagate_error (error, error_tmp);
 		return FALSE;
 	}
+
+	g_signal_connect (priv->engine, "device-changed",
+			  G_CALLBACK (fu_util_install_device_changed_cb), priv);
 
 	/* install all the tasks */
 	if (!fu_engine_install_tasks (priv->engine, install_tasks, blob_cab, priv->flags, error))
