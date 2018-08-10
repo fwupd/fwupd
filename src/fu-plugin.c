@@ -355,11 +355,12 @@ fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 	fu_device_set_plugin (device, fu_plugin_get_name (plugin));
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_ADDED], 0, device);
 
-	/* add children */
+	/* add children if they have not already been added */
 	children = fu_device_get_children (device);
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index (children, i);
-		fu_plugin_device_add (plugin, child);
+		if (fu_device_get_created (child) == 0)
+			fu_plugin_device_add (plugin, child);
 	}
 }
 
