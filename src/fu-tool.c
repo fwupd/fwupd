@@ -254,15 +254,6 @@ fu_main_engine_device_removed_cb (FuEngine *engine,
 }
 
 static void
-fu_main_engine_device_changed_cb (FuEngine *engine,
-				  FuDevice *device,
-				  FuUtilPrivate *priv)
-{
-	g_autofree gchar *tmp = fu_device_to_string (device);
-	g_debug ("CHANGED:\n%s", tmp);
-}
-
-static void
 fu_main_engine_status_changed_cb (FuEngine *engine,
 				  FwupdStatus status,
 				  FuUtilPrivate *priv)
@@ -887,9 +878,6 @@ main (int argc, char *argv[])
 			  priv);
 	g_signal_connect (priv->engine, "device-removed",
 			  G_CALLBACK (fu_main_engine_device_removed_cb),
-			  priv);
-	g_signal_connect (priv->engine, "device-changed",
-			  G_CALLBACK (fu_main_engine_device_changed_cb),
 			  priv);
 	g_signal_connect (priv->engine, "status-changed",
 			  G_CALLBACK (fu_main_engine_status_changed_cb),
