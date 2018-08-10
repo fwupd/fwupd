@@ -24,6 +24,8 @@ void		 fu_progressbar_set_length_status	(FuProgressbar	*self,
 							 guint		 len);
 void		 fu_progressbar_set_length_percentage	(FuProgressbar	*self,
 							 guint		 len);
+void		 fu_progressbar_set_title		(FuProgressbar	*self,
+							 const gchar	*title);
 
 G_END_DECLS
 

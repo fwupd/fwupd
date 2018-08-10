@@ -89,6 +89,14 @@ fu_progressbar_status_to_string (FwupdStatus status)
 }
 
 static void
+fu_progressbar_erase_line (FuProgressbar *self)
+{
+	for (guint i = 0; i < self->to_erase; i++)
+		g_print ("\b");
+	self->to_erase = 0;
+}
+
+static void
 fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentage)
 {
 	const gchar *title;
@@ -97,8 +105,7 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* erase previous line */
-	for (i = 0; i < self->to_erase; i++)
-		g_print ("\b");
+	fu_progressbar_erase_line (self);
 
 	/* add status */
 	if (status == FWUPD_STATUS_IDLE) {
@@ -138,6 +145,14 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 		self->to_erase = 0;
 		return;
 	}
+}
+
+void
+fu_progressbar_set_title (FuProgressbar *self, const gchar *title)
+{
+	fu_progressbar_erase_line (self);
+	g_print ("%s\n", title);
+	fu_progressbar_refresh (self, self->status, self->percentage);
 }
 
 static void
