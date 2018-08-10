@@ -150,10 +150,6 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 
 	/* we can flash this */
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
-
-	/* only the bootloader can do the update */
-	fu_device_set_name (FU_DEVICE (device), "Unifying Receiver");
-
 	return TRUE;
 }
 
@@ -238,5 +234,6 @@ lu_device_runtime_init (LuDeviceRuntime *device)
 {
 	/* FIXME: we need something better */
 	fu_device_add_icon (FU_DEVICE (device), "preferences-desktop-keyboard");
+	fu_device_set_name (FU_DEVICE (device), "Unifying Receiver");
 	fu_device_set_summary (FU_DEVICE (device), "A miniaturised USB wireless receiver");
 }

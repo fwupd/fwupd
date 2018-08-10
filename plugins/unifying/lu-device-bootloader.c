@@ -396,6 +396,7 @@ lu_device_bootloader_init (LuDeviceBootloader *device)
 {
 	/* FIXME: we need something better */
 	fu_device_add_icon (FU_DEVICE (device), "preferences-desktop-keyboard");
+	fu_device_set_name (FU_DEVICE (device), "Unifying Receiver");
 	fu_device_set_summary (FU_DEVICE (device), "A miniaturised USB wireless receiver (bootloader)");
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 }
