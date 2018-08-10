@@ -34,6 +34,13 @@
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2
 
+typedef enum {
+	FU_UTIL_OPERATION_UNKNOWN,
+	FU_UTIL_OPERATION_UPDATE,
+	FU_UTIL_OPERATION_DOWNGRADE,
+	FU_UTIL_OPERATION_LAST
+} FuUtilOperation;
+
 typedef struct {
 	GCancellable		*cancellable;
 	GMainLoop		*loop;
@@ -48,6 +55,10 @@ typedef struct {
 	gboolean		 no_unreported_check;
 	gboolean		 assume_yes;
 	gboolean		 show_all_devices;
+	/* only valid in update and downgrade */
+	FuUtilOperation		 current_operation;
+	FwupdDevice		*current_device;
+	FwupdRelease		*current_release;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -1949,12 +1960,43 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 				    fwupd_checksum_get_best (checksums),
 				    error))
 		return FALSE;
-	g_print ("Updating %s on %s...\n",
-		 fwupd_release_get_version (rel),
-		 fwupd_device_get_name (dev));
+	g_set_object (&priv->current_release, rel);
 	return fwupd_client_install (priv->client,
 				     fwupd_device_get_id (dev), fn,
 				     priv->flags, NULL, error);
+}
+
+static void
+fu_util_update_device_changed_cb (FwupdClient *client,
+				  FwupdDevice *device,
+				  FuUtilPrivate *priv)
+{
+	g_autofree gchar *str = NULL;
+
+	/* same as last time, so ignore */
+	if (priv->current_device != NULL &&
+	    fwupd_device_compare (priv->current_device, device) == 0)
+		return;
+
+	/* show message in progressbar */
+	if (priv->current_operation == FU_UTIL_OPERATION_UPDATE) {
+		/* TRANSLATORS: %1 is a device name, and %2 is a version number */
+		str = g_strdup_printf (_("Updating %s from %s to %s…"),
+				       fwupd_device_get_name (device),
+				       fwupd_device_get_version (device),
+				       fwupd_release_get_version (priv->current_release));
+		fu_progressbar_set_title (priv->progressbar, str);
+	} else if (priv->current_operation == FU_UTIL_OPERATION_DOWNGRADE) {
+		/* TRANSLATORS: %1 is a device name, and %2 is a version number */
+		str = g_strdup_printf (_("Downgrading %s from %s to %s…"),
+				       fwupd_device_get_name (device),
+				       fwupd_device_get_version (device),
+				       fwupd_release_get_version (priv->current_release));
+		fu_progressbar_set_title (priv->progressbar, str);
+	} else {
+		g_warning ("no FuUtilOperation set");
+	}
+	g_set_object (&priv->current_device, device);
 }
 
 static gboolean
@@ -1967,6 +2009,9 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	devices = fwupd_client_get_devices (priv->client, NULL, error);
 	if (devices == NULL)
 		return FALSE;
+	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
+	g_signal_connect (priv->client, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
@@ -2073,6 +2118,11 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	rel = fu_util_prompt_for_release (priv, rels, error);
 	if (rel == NULL)
 		return FALSE;
+
+	/* update the console if composite devices are also updated */
+	priv->current_operation = FU_UTIL_OPERATION_DOWNGRADE;
+	g_signal_connect (priv->client, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	return fu_util_update_device_with_release (priv, dev, rel, error);
 }
@@ -2163,6 +2213,10 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_ptr_array_unref (priv->cmd_array);
 	if (priv->client != NULL)
 		g_object_unref (priv->client);
+	if (priv->current_device != NULL)
+		g_object_unref (priv->current_device);
+	if (priv->current_release != NULL)
+		g_object_unref (priv->current_release);
 	if (priv->soup_session != NULL)
 		g_object_unref (priv->soup_session);
 	g_main_loop_unref (priv->loop);
