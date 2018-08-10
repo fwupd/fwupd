@@ -246,7 +246,9 @@ read_ucode_section_len (guint32                       offset,
 
 /*
  * reads generic entries from DROM based on type field and fills
- * location to point to the entry data if found
+ * location to point to the entry data if found. Returns TRUE if there
+ * was no error even if the entry was not found (location->offset is != 0
+ * when entry was found).
  */
 static gboolean
 read_drom_entry_location (const FuThunderboltFwObject *fw,
