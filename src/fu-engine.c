@@ -147,12 +147,14 @@ static void
 fu_engine_progress_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
 	fu_engine_set_percentage (self, fu_device_get_progress (device));
+	fu_engine_emit_device_changed (self, device);
 }
 
 static void
 fu_engine_status_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
 	fu_engine_set_status (self, fu_device_get_status (device));
+	fu_engine_emit_device_changed (self, device);
 }
 
 static void
@@ -1509,7 +1511,6 @@ fu_engine_install_blob (FuEngine *self,
 
 	/* make the UI update */
 	fu_device_set_status (device, FWUPD_STATUS_IDLE);
-	fu_engine_emit_device_changed (self, device);
 	fu_engine_emit_changed (self);
 	g_debug ("Updating %s took %f seconds", fu_device_get_name (device),
 		 g_timer_elapsed (timer, NULL));
