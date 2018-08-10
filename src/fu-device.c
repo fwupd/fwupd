@@ -474,6 +474,33 @@ fu_device_add_guid (FuDevice *device, const gchar *guid)
 }
 
 /**
+ * fu_device_add_default_guid:
+ * @device: A #FuDevice
+ * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
+ *
+ * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
+ * is converted to a GUID using as_utils_guid_from_string().
+ *
+ * This GUID is set as the default GUID for the FuDevice.
+ *
+ * Since: 1.1.0
+ **/
+void
+fu_device_add_default_guid (FuDevice *device, const gchar *guid)
+{
+	/* make valid */
+	if (!as_utils_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+		g_debug ("using %s for %s", tmp, guid);
+		fwupd_device_add_default_guid (FWUPD_DEVICE (device), tmp);
+		return;
+	}
+
+	/* already valid */
+	fwupd_device_add_default_guid (FWUPD_DEVICE (device), guid);
+}
+
+/**
  * fu_device_get_guids_as_str:
  * @device: A #FuDevice
  *

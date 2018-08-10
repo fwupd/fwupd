@@ -261,6 +261,7 @@ LIBFWUPD_1.1.0 {
 
 LIBFWUPD_1.1.1 {
   global:
+    fwupd_device_add_default_guid;
     fwupd_device_compare;
   local: *;
 } LIBFWUPD_1.1.0;
