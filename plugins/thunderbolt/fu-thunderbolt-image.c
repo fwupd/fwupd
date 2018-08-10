@@ -432,6 +432,7 @@ get_host_locations (guint16 id)
 		{ .offset = 0x129, .len = 1, .description = "Snk1" },
 		{ .offset = 0x136, .len = 1, .description = "Src0", .mask = 0xF0 },
 		{ .offset = 0xB6,  .len = 1, .description = "PA/PB (USB2)", .mask = 0xC0 },
+		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
 		{ .offset = 0x7B,  .len = 1, .description = "Native", .mask = 0x20 },
 		{ 0 },
 
@@ -445,6 +446,7 @@ get_host_locations (guint16 id)
 		{ .offset = 0x13,  .len = 1, .description = "PB", .mask = 0x44, .section = DRAM_UCODE_SECTION },
 		{ .offset = 0x121, .len = 1, .description = "Snk0" },
 		{ .offset = 0xB6,  .len = 1, .description = "PA/PB (USB2)", .mask = 0xC0 },
+		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
 		{ .offset = 0x7B,  .len = 1, .description = "Native", .mask = 0x20 },
 		{ 0 }
 	};
@@ -491,6 +493,7 @@ static const FuThunderboltFwLocation *
 get_device_locations (guint16 id, const FuThunderboltFwObject *fw, GError **error)
 {
 	static const FuThunderboltFwLocation AR[] = {
+		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
 		{ .offset = 0x124, .len = 1, .section = ARC_PARAMS_SECTION, .description = "X of N" },
 		{ 0 }
 	};
