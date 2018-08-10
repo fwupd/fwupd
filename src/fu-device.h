@@ -107,6 +107,8 @@ void		 fu_device_set_equivalent_id		(FuDevice	*device,
 							 const gchar	*equivalent_id);
 void		 fu_device_add_guid			(FuDevice	*device,
 							 const gchar	*guid);
+void		 fu_device_add_default_guid		(FuDevice	*device,
+							 const gchar	*guid);
 gchar		*fu_device_get_guids_as_str		(FuDevice	*device);
 FuDevice	*fu_device_get_alternate		(FuDevice	*device);
 FuDevice	*fu_device_get_parent			(FuDevice	*device);

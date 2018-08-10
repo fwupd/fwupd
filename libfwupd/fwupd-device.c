@@ -304,6 +304,25 @@ fwupd_device_add_guid (FwupdDevice *device, const gchar *guid)
 }
 
 /**
+ * fwupd_device_add_default_guid:
+ * @device: A #FwupdDevice
+ * @guid: the GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
+ *
+ * Adds the GUID if it does not already exist and sets it as the default.
+ *
+ * Since: 1.1.1
+ **/
+void
+fwupd_device_add_default_guid (FwupdDevice *device, const gchar *guid)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	if (fwupd_device_has_guid (device, guid))
+		return;
+	g_ptr_array_insert (priv->guids, 0, g_strdup (guid));
+}
+
+/**
  * fwupd_device_get_guid_default:
  * @device: A #FwupdDevice
  *

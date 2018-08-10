@@ -92,6 +92,8 @@ void		 fwupd_device_set_vendor_id		(FwupdDevice	*device,
 							 const gchar	*vendor_id);
 void		 fwupd_device_add_guid			(FwupdDevice	*device,
 							 const gchar	*guid);
+void		 fwupd_device_add_default_guid		(FwupdDevice	*device,
+							 const gchar	*guid);
 gboolean	 fwupd_device_has_guid			(FwupdDevice	*device,
 							 const gchar	*guid);
 GPtrArray	*fwupd_device_get_guids			(FwupdDevice	*device);
