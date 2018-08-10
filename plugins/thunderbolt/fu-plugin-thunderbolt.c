@@ -175,7 +175,21 @@ fu_plugin_thunderbolt_find_nvmem (GUdevDevice  *udevice,
 	return NULL;
 }
 
-static const gchar *
+static gchar *
+fu_plugin_thunderbolt_parse_version (const gchar *version_raw)
+{
+	g_auto(GStrv) split = NULL;
+	if (version_raw == NULL)
+		return NULL;
+	split = g_strsplit (version_raw, ".", -1);
+	if (g_strv_length (split) != 2)
+		return NULL;
+	return g_strdup_printf ("%02x.%02x",
+				(guint) g_ascii_strtoull (split[0], NULL, 16),
+				(guint) g_ascii_strtoull (split[1], NULL, 16));
+}
+
+static gchar *
 fu_plugin_thunderbolt_udev_get_version (GUdevDevice *udevice)
 {
 	const gchar *version = NULL;
@@ -190,7 +204,7 @@ fu_plugin_thunderbolt_udev_get_version (GUdevDevice *udevice)
 		g_usleep (TBT_NVM_RETRY_TIMEOUT * 1000);
 	}
 
-	return version;
+	return fu_plugin_thunderbolt_parse_version (version);
 }
 
 static gboolean
@@ -213,20 +227,6 @@ fu_plugin_thunderbolt_is_native (GUdevDevice *udevice, gboolean *is_native, GErr
 	return fu_plugin_thunderbolt_controller_is_native (controller_fw,
 							   is_native,
 							   error);
-}
-
-static gchar *
-fu_plugin_thunderbolt_parse_version (const gchar *version_raw)
-{
-	g_auto(GStrv) split = NULL;
-	if (version_raw == NULL)
-		return NULL;
-	split = g_strsplit (version_raw, ".", -1);
-	if (g_strv_length (split) != 2)
-		return NULL;
-	return g_strdup_printf ("%02x.%02x",
-				(guint) g_ascii_strtoull (split[0], NULL, 16),
-				(guint) g_ascii_strtoull (split[1], NULL, 16));
 }
 
 static void
@@ -253,7 +253,6 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	const gchar *name;
 	const gchar *uuid;
 	const gchar *vendor;
-	const gchar *version_raw;
 	const gchar *devpath;
 	const gchar *devtype;
 	gboolean is_host;
@@ -305,9 +304,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 
 	is_host = fu_plugin_thunderbolt_is_host (device);
 
-	version_raw = fu_plugin_thunderbolt_udev_get_version (device);
+	version = fu_plugin_thunderbolt_udev_get_version (device);
 	/* test for safe mode */
-	version = fu_plugin_thunderbolt_parse_version (version_raw);
 	if (is_host && version == NULL) {
 		g_autoptr(GError) error_local = NULL;
 		g_autofree gchar *test_safe = NULL;
@@ -412,7 +410,7 @@ static void
 fu_plugin_thunderbolt_change (FuPlugin *plugin, GUdevDevice *device)
 {
 	FuDevice *dev;
-	const gchar *version;
+	g_autofree gchar *version = NULL;
 	g_autofree gchar *id = NULL;
 
 	id = fu_plugin_thunderbolt_gen_id (device);
@@ -615,7 +613,7 @@ on_wait_for_device_added (FuPlugin    *plugin,
 	FuDevice  *dev;
 	const gchar *uuid;
 	const gchar *path;
-	const gchar *version;
+	g_autofree gchar *version = NULL;
 	g_autofree gchar *id = NULL;
 
 	uuid = g_udev_device_get_sysfs_attr (device, "unique_id");
