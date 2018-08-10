@@ -110,6 +110,8 @@ void		 fwupd_device_add_release		(FwupdDevice	*device,
 							 FwupdRelease	*release);
 GPtrArray	*fwupd_device_get_releases		(FwupdDevice	*device);
 FwupdRelease	*fwupd_device_get_release_default	(FwupdDevice	*device);
+gint		 fwupd_device_compare			(FwupdDevice	*device1,
+							 FwupdDevice	*device2);
 
 G_END_DECLS
 
