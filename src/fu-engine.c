@@ -2021,6 +2021,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 		AsProvide *prov = AS_PROVIDE (g_ptr_array_index (provides, i));
 		FuDevice *device;
 		const gchar *guid;
+		g_autoptr(GError) error_local = NULL;
 
 		/* not firmware */
 		if (as_provide_get_kind (prov) != AS_PROVIDE_KIND_FIRMWARE_FLASHED)
@@ -2037,6 +2038,14 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 			fwupd_device_set_id (dev, fu_device_get_id (device));
 		}
 
+		/* check we can install it */
+		task = fu_install_task_new (device, app);
+		if (!fu_engine_check_requirements (self, task,
+						   FWUPD_INSTALL_FLAG_NONE,
+						   &error_local)) {
+			fwupd_device_set_update_error (dev, error_local->message);
+		}
+
 		/* add GUID */
 		fwupd_device_add_guid (dev, guid);
 	}
@@ -2047,13 +2056,6 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 				     "component has no GUIDs");
 		return NULL;
 	}
-
-	/* check we can install it */
-	task = fu_install_task_new (NULL, app);
-	if (!fu_engine_check_requirements (self, task,
-					   FWUPD_INSTALL_FLAG_NONE,
-					   error))
-		return NULL;
 
 	/* verify trust */
 	release = as_app_get_release_default (app);
