@@ -67,39 +67,39 @@ SynapticsMSTConnection	*synapticsmst_common_new 		(gint	 fd,
 								 guint	 rad);
 
 guint8		 synapticsmst_common_aux_node_read		(SynapticsMSTConnection *connection,
-								 gint offset,
-								 gint *buf,
-								 gint length);
+								 guint32	 offset,
+								 guint8		*buf,
+								 gint	 length);
 
 guint8		 synapticsmst_common_read_dpcd 			(SynapticsMSTConnection *connection,
-								 gint	 offset,
-								 gint	*buf,
-								 gint	 length);
+								 guint32	 offset,
+								 guint8		*buf,
+								 guint32	 length);
 
 guint8		 synapticsmst_common_write_dpcd 		(SynapticsMSTConnection *connection,
-								 gint	 offset,
-								 const gint *buf,
-								 gint	 length);
+								 guint32	 offset,
+								 const guint8 	*buf,
+								 guint32	 length);
 
 guint8		 synapticsmst_common_rc_set_command 		(SynapticsMSTConnection *connection,
-								 gint	 rc_cmd,
-								 gint	 length,
-								 gint	 offset,
+								 guint32	 rc_cmd,
+								 guint32	 length,
+								 guint32	 offset,
 								 const guint8	*buf);
 
 guint8		 synapticsmst_common_rc_get_command 		(SynapticsMSTConnection *connection,
-								 gint	 rc_cmd,
-								 gint	 length,
-								 gint	 offset,
-								 guint8	*buf);
+								 guint32	 rc_cmd,
+								 guint32	 length,
+								 guint32	 offset,
+								 guint8		*buf);
 
 guint8		 synapticsmst_common_rc_special_get_command	(SynapticsMSTConnection *connection,
-								 gint	 rc_cmd,
-								 gint	 cmd_length,
-								 gint	 cmd_offset,
-								 guint8	*cmd_data,
-								 gint	 length,
-								 guint8	*buf);
+								 guint32	 rc_cmd,
+								 guint32	 cmd_length,
+								 guint32	 cmd_offset,
+								 guint8		*cmd_data,
+								 guint32	 length,
+								 guint8		*buf);
 
 guint8		 synapticsmst_common_enable_remote_control	(SynapticsMSTConnection *connection);
 

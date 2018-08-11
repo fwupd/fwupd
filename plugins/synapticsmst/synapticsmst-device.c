@@ -275,10 +275,10 @@ synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device,
 	}
 
 	connection = synapticsmst_common_new (priv->fd, layer, rad);
-	rc = synapticsmst_common_read_dpcd (connection, REG_RC_CAP, (gint *)byte, 1);
+	rc = synapticsmst_common_read_dpcd (connection, REG_RC_CAP, byte, 1);
 	if (rc == DPCD_SUCCESS ) {
 		if (byte[0] & 0x04) {
-			synapticsmst_common_read_dpcd (connection, REG_VENDOR_ID, (gint *)byte, 3);
+			synapticsmst_common_read_dpcd (connection, REG_VENDOR_ID, byte, 3);
 			if (byte[0] == 0x90 && byte[1] == 0xCC && byte[2] == 0x24)
 				priv->has_cascade = TRUE;
 		}
@@ -488,7 +488,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
 	rc = synapticsmst_common_read_dpcd (connection,
 					    REG_FIRMWARE_VERSION,
-					    (gint *)byte, 3);
+					    byte, 3);
 	if (rc) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
@@ -507,7 +507,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 	/* read board chip_id */
 	rc = synapticsmst_common_read_dpcd (connection,
 					    REG_CHIP_ID,
-					    (gint *)byte, 2);
+					    byte, 2);
 	if (rc) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
@@ -588,7 +588,7 @@ synapticsmst_device_get_cascade (SynapticsMSTDevice *device)
 
 static gboolean
 synapticsmst_device_get_flash_checksum (SynapticsMSTDevice *device,
-					gint length, gint offset,
+					guint32 length, guint32 offset,
 					guint32 *checksum, GError **error)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
@@ -1549,11 +1549,11 @@ synapticsmst_device_open (SynapticsMSTDevice *device, GError **error)
 	}
 
 	connection = synapticsmst_common_new (priv->fd, 0, 0);
-	if (synapticsmst_common_aux_node_read (connection, REG_RC_CAP, (gint *)byte, 1) == DPCD_SUCCESS) {
+	if (synapticsmst_common_aux_node_read (connection, REG_RC_CAP, byte, 1) == DPCD_SUCCESS) {
 		if (byte[0] & 0x04) {
 			synapticsmst_common_aux_node_read (connection,
 							   REG_VENDOR_ID,
-							   (gint *)byte, 3);
+							   byte, 3);
 			if (byte[0] == 0x90 && byte[1] == 0xCC && byte[2] == 0x24)
 				return TRUE;
 		}
