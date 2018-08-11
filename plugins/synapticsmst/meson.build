@@ -19,10 +19,6 @@ shared_module('fu_plugin_synapticsmst',
   dependencies : [
     plugin_deps,
   ],
-  # https://github.com/hughsie/fwupd/issues/207
-  override_options : [
-    'werror=false',
-  ]
 )
 
 if get_option('tests')
@@ -53,10 +49,6 @@ if get_option('tests')
     c_args : [
       cargs,
     ],
-    # https://github.com/hughsie/fwupd/issues/207
-    override_options : [
-      'werror=false',
-    ]
   )
   test('synapticsmst-self-test', e,
     env: ['FWUPD_LOCALSTATEDIR=/tmp/fwupd-self-test/var'])
