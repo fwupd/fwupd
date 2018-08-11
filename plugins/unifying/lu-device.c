@@ -47,6 +47,7 @@ enum {
 	PROP_FLAGS,
 	PROP_UDEV_DEVICE,
 	PROP_USB_DEVICE,
+	PROP_USB_DEVICE_LOCKER,
 	PROP_LAST
 };
 
@@ -833,7 +834,7 @@ lu_device_close (LuDevice *device, GError **error)
 	g_clear_object (&priv->usb_device);
 
 	/* HID */
-	if (priv->udev_device != NULL && priv->udev_device_fd > 0) {
+	if (priv->udev_device_fd > 0) {
 		if (!g_close (priv->udev_device_fd, error))
 			return FALSE;
 		priv->udev_device_fd = 0;
@@ -991,6 +992,9 @@ lu_device_get_property (GObject *object, guint prop_id,
 	case PROP_USB_DEVICE:
 		g_value_set_object (value, priv->usb_device);
 		break;
+	case PROP_USB_DEVICE_LOCKER:
+		g_value_set_object (value, priv->usb_device_locker);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -1019,6 +1023,9 @@ lu_device_set_property (GObject *object, guint prop_id,
 	case PROP_USB_DEVICE:
 		priv->usb_device = g_value_dup_object (value);
 		lu_device_update_platform_id (device);
+		break;
+	case PROP_USB_DEVICE_LOCKER:
+		priv->usb_device_locker = g_value_dup_object (value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1098,6 +1105,12 @@ lu_device_class_init (LuDeviceClass *klass)
 				     G_USB_TYPE_DEVICE,
 				     G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
 	g_object_class_install_property (object_class, PROP_USB_DEVICE, pspec);
+
+	pspec = g_param_spec_object ("usb-device-locker", NULL, NULL,
+				     G_USB_TYPE_DEVICE,
+				     G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+	g_object_class_install_property (object_class, PROP_USB_DEVICE_LOCKER, pspec);
+
 }
 
 LuDevice *
