@@ -13,6 +13,9 @@ ifneq ($(CI),)
 	export CI=--werror
 endif
 
+regenerate_control:
+	OS=debian-x86_64 ./contrib/ci/generate_debian.py
+
 SB_STYLE := debian
 deb_version := $(shell dpkg-parsechangelog --show-field Version)
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
@@ -23,9 +26,10 @@ else
 endif
 
 %:
+	[ -f debian/control ] || debian/rules regenerate_control
 	dh $@ --with gir,systemd
 
-override_dh_auto_clean:
+override_dh_auto_clean: regenerate_control
 	rm -fr debian/build
 ifeq (ubuntu,$(SB_STYLE))
 	rm -rf debian/fwupd-images
