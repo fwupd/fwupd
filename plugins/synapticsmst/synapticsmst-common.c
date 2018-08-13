@@ -8,16 +8,7 @@
 
 #include "config.h"
 
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <glib-object.h>
 #include "synapticsmst-common.h"
-#include "synapticsmst-device.h"
 
 #define UNIT_SIZE		32
 #define MAX_WAIT_TIME 		3  /* unit : second */
