@@ -1,3 +1,15 @@
+fwupd (1.1.1-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Adds support for more Synaptics and Intel hardware.
+    - Fixes firmware update on some UEFI implementations (Closes: #905570)
+  * debian/
+    - contrib: debian: regenerate control on clean
+    - refresh debian/{control,copyright} for upstream fixes
+    - drop all patches, upstream.
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 13 Aug 2018 08:08:53 -0500
+
 fwupd (1.1.0-7) unstable; urgency=medium
 
   * Correct another syntax error in SB signing template (Closes: #905482)
