@@ -8,14 +8,14 @@
  */
 
 #include "config.h"
-#include <string.h>
-#include <errno.h>
-#include <glib-object.h>
-#include <fcntl.h>
-#include <stdlib.h>
+
+#include "fu-device-locker.h"
 #include "synapticsmst-device.h"
 #include "synapticsmst-common.h"
-#include "fu-device-locker.h"
+
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
 
 #define BIT( n ) ( 1 << (n) )
 #define FLASH_SECTOR_ERASE_4K		0x1000
