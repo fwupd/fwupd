@@ -375,6 +375,7 @@ fu_common_firmware_builder (GBytes *bytes,
 {
 	gint rc = 0;
 	g_autofree gchar *argv_str = NULL;
+	g_autofree gchar *bwrap_fn = NULL;
 	g_autofree gchar *localstatebuilderdir = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *output2_fn = NULL;
@@ -389,6 +390,37 @@ fu_common_firmware_builder (GBytes *bytes,
 	g_return_val_if_fail (output_fn != NULL, NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
+	/* find bwrap in the path */
+	bwrap_fn = g_find_program_in_path ("bwrap");
+	if (bwrap_fn == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "missing executable bwrap in PATH");
+		return FALSE;
+	}
+
+	/* test if CONFIG_USER_NS is valid */
+	if (!g_file_test ("/proc/self/ns/user", G_FILE_TEST_IS_SYMLINK)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "missing CONFIG_USER_NS in kernel");
+		return FALSE;
+	}
+	if (g_file_test ("/proc/sys/kernel/unprivileged_userns_clone", G_FILE_TEST_EXISTS)) {
+		g_autofree gchar *clone = NULL;
+		if (!g_file_get_contents ("/proc/sys/kernel/unprivileged_userns_clone", &clone, NULL, error))
+			return FALSE;
+		if (g_ascii_strtoll (clone, NULL, 10) == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "unprivileged user namespace clones disabled by distro");
+			return FALSE;
+		}
+	}
+
 	/* untar file to temp location */
 	tmpdir = g_dir_make_tmp ("fwupd-gen-XXXXXX", error);
 	if (tmpdir == NULL)
@@ -401,7 +433,7 @@ fu_common_firmware_builder (GBytes *bytes,
 	localstatebuilderdir = g_build_filename (localstatedir, "builder", NULL);
 
 	/* launch bubblewrap and generate firmware */
-	g_ptr_array_add (argv, g_strdup ("bwrap"));
+	g_ptr_array_add (argv, g_steal_pointer (&bwrap_fn));
 	fu_common_add_argv (argv, "--die-with-parent");
 	fu_common_add_argv (argv, "--ro-bind /usr /usr");
 	fu_common_add_argv (argv, "--ro-bind /lib /lib");
@@ -435,9 +467,12 @@ fu_common_firmware_builder (GBytes *bytes,
 	if (standard_output != NULL && standard_output[0] != '\0')
 		g_debug ("console output was: %s", standard_output);
 	if (rc != 0) {
+		FwupdError code = FWUPD_ERROR_INTERNAL;
+		if (errno == ENOTTY)
+			code = FWUPD_ERROR_PERMISSION_DENIED;
 		g_set_error (error,
 			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     code,
 			     "failed to build firmware: %s",
 			     standard_error);
 		return NULL;

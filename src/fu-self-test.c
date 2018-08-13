@@ -1743,17 +1743,9 @@ fu_common_firmware_builder_func (void)
 {
 	const gchar *data;
 	g_autofree gchar *archive_fn = NULL;
-	g_autofree gchar *bwrap_fn = NULL;
 	g_autoptr(GBytes) archive_blob = NULL;
 	g_autoptr(GBytes) firmware_blob = NULL;
 	g_autoptr(GError) error = NULL;
-
-	/* we can't do this in travis: capset failed: Operation not permitted */
-	bwrap_fn = g_find_program_in_path ("bwrap");
-	if (bwrap_fn == NULL) {
-		g_test_skip ("no bwrap in path, so skipping");
-		return;
-	}
 
 	/* get test file */
 	archive_fn = fu_test_get_filename (TESTDATADIR, "builder/firmware.tar");
@@ -1767,8 +1759,17 @@ fu_common_firmware_builder_func (void)
 						    "startup.sh",
 						    "firmware.bin",
 						    &error);
-	g_assert_no_error (error);
-	g_assert (firmware_blob != NULL);
+	if (firmware_blob == NULL) {
+		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
+			g_test_skip ("Missing permissions to create namespace in container");
+			return;
+		}
+		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_test_skip ("User namespaces not supported in container");
+			return;
+		}
+		g_assert_no_error (error);
+	}
 
 	/* check it */
 	data = g_bytes_get_data (firmware_blob, NULL);
