@@ -1,3 +1,29 @@
+Version 1.1.1
+~~~~~~~~~~~~~
+Released: 2018-08-13
+
+New Features:
+ - Add support for the Synaptics Panamera hardware (Mario Limonciello)
+ - Add validation for Alpine and Titan Ridge (Andrei Emeltchenko, Mika Westerberg)
+ - Improve the Redfish plugin to actually work with real hardware (Gary Lin)
+
+Bugfixes:
+ - Allow different plugins to add the same device (Richard Hughes)
+ - Allow flashing unifying devices in recovery mode (Richard Hughes)
+ - Allow running synapticsmst on non-Dell hardware (Mario Limonciello)
+ - Check the ESP for sanity at at startup (Richard Hughes, Mario Limonciello)
+ - Do not hold hidraw devices open forever (Richard Hughes)
+ - Don't override _FORTIFY_SOURCE when building the EFI binary (Richard Hughes)
+ - Don't show passwords in fwupdmgr (Richard Hughes, Mario Limonciello)
+ - Fix a potential segfault in smbios data parsing (Mario Limonciello)
+ - Fix encoding the GUID into the capsule EFI variable (Mario Limonciello)
+ - Fix various bugs when reading the thunderbolt version number (Mika Westerberg)
+ - Reboot synapticsmst devices at the end of flash cycle (Mario Limonciello)
+ - Show status messages when the daemon is initializing (Mario Limonciello)
+ - Show the correct title when updating devices (Richard Hughes, Mario Limonciello)
+ - Show the reasons that plugins are not run on the CLI (Mario Limonciello)
+ - Use localedir in po/make-images (Jan Tojnar)
+
 Version 1.1.0
 ~~~~~~~~~~~~~
 Released: 2018-07-11
