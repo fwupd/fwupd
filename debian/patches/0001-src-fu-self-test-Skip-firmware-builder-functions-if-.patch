@@ -1,0 +1,30 @@
+From d2345e4255b833dea826fe747ec5c953329a621f Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Mon, 13 Aug 2018 08:38:01 -0500
+Subject: [PATCH] src/fu-self-test: Skip firmware builder functions if missing
+ CONFIG_USER_NS
+
+Fixes FTBFS on Debian pbuilder
+---
+ src/fu-self-test.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/fu-self-test.c b/src/fu-self-test.c
+index 6381531..d06ceef 100644
+--- a/src/fu-self-test.c
++++ b/src/fu-self-test.c
+@@ -1754,7 +1754,10 @@ fu_common_firmware_builder_func (void)
+ 		g_test_skip ("no bwrap in path, so skipping");
+ 		return;
+ 	}
+-
++	if (g_file_test ("/proc/self/ns/user", G_FILE_TEST_IS_SYMLINK)) {
++		g_test_skip ("Missing CONFIG_USER_NS in kernel");
++		return;
++	}
+ 	/* get test file */
+ 	archive_fn = fu_test_get_filename (TESTDATADIR, "builder/firmware.tar");
+ 	g_assert (archive_fn != NULL);
+-- 
+2.7.4
+
