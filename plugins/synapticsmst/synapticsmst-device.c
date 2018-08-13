@@ -1499,7 +1499,5 @@ synapticsmst_device_open (SynapticsMSTDevice *device, GError **error)
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "no device");
-	close (priv->fd);
-	priv->fd = 0;
 	return FALSE;
 }
