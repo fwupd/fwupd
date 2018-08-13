@@ -1038,6 +1038,8 @@ lu_device_finalize (GObject *object)
 		g_object_unref (priv->usb_device_locker);
 	if (priv->udev_device != NULL)
 		g_object_unref (priv->udev_device);
+	if (priv->udev_device_fd > 0)
+		g_close (priv->udev_device_fd, NULL);
 	g_ptr_array_unref (priv->feature_index);
 	g_free (priv->version_hw);
 
