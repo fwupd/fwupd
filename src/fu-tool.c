@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -35,6 +34,8 @@ typedef struct {
 	FuProgressbar		*progressbar;
 	FwupdInstallFlags	 flags;
 	gboolean		 show_all_devices;
+	/* only valid in update and downgrade */
+	FwupdDevice		*current_device;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -223,6 +224,8 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->progressbar);
 	if (priv->context != NULL)
 		g_option_context_free (priv->context);
+	if (priv->current_device != NULL)
+		g_object_unref (priv->current_device);
 	g_free (priv);
 }
 
@@ -248,15 +251,6 @@ fu_main_engine_device_removed_cb (FuEngine *engine,
 {
 	g_autofree gchar *tmp = fu_device_to_string (device);
 	g_debug ("REMOVED:\n%s", tmp);
-}
-
-static void
-fu_main_engine_device_changed_cb (FuEngine *engine,
-				  FuDevice *device,
-				  FuUtilPrivate *priv)
-{
-	g_autofree gchar *tmp = fu_device_to_string (device);
-	g_debug ("CHANGED:\n%s", tmp);
 }
 
 static void
@@ -358,7 +352,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdDevice *dev = g_ptr_array_index (array, i);
 		g_autofree gchar *tmp = NULL;
 		tmp = fwupd_device_to_string (dev);
-		g_print ("%s", tmp);
+		g_print ("%s\n", tmp);
 	}
 	return TRUE;
 }
@@ -382,12 +376,11 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 	for (guint i = 0; i < devs->len; i++) {
-		g_autofree gchar *tmp = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
-		if (!(fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
-			continue;
-		tmp = fwupd_device_to_string (dev);
-		g_print ("%s\n", tmp);
+		if (priv->show_all_devices || fu_util_is_interesting_device (dev)) {
+			g_autofree gchar *tmp = fwupd_device_to_string (dev);
+			g_print ("%s\n", tmp);
+		}
 	}
 
 	return TRUE;
@@ -398,7 +391,8 @@ fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fu
 {
 	for (guint i = 0; i < devs->len; i++) {
 		FuDevice *dev_tmp = g_ptr_array_index (devs, i);
-		if (!(fu_device_has_flag (dev_tmp, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
+		if (!priv->show_all_devices &&
+		    !fu_util_is_interesting_device (FWUPD_DEVICE (dev_tmp)))
 			continue;
 		if (fu_device_get_parent (dev_tmp) == dev) {
 			GNode *child = g_node_append_data (root, dev_tmp);
@@ -477,6 +471,26 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	return g_object_ref (dev);
 }
 
+static void
+fu_util_install_device_changed_cb (FwupdClient *client,
+				  FwupdDevice *device,
+				  FuUtilPrivate *priv)
+{
+	g_autofree gchar *str = NULL;
+
+	/* same as last time, so ignore */
+	if (priv->current_device != NULL &&
+	    fwupd_device_compare (priv->current_device, device) == 0)
+		return;
+
+	/* show message in progressbar */
+	/* TRANSLATORS: %1 is a device name */
+	str = g_strdup_printf (_("Installing %s"),
+				fwupd_device_get_name (device));
+	fu_progressbar_set_title (priv->progressbar, str);
+	g_set_object (&priv->current_device, device);
+}
+
 static gboolean
 fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -513,6 +527,9 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (device == NULL)
 			return FALSE;
 	}
+
+	g_signal_connect (priv->engine, "device-changed",
+			  G_CALLBACK (fu_util_install_device_changed_cb), priv);
 
 	/* write bare firmware */
 	return fu_engine_install_blob (priv->engine, device,
@@ -616,6 +633,9 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_propagate_error (error, error_tmp);
 		return FALSE;
 	}
+
+	g_signal_connect (priv->engine, "device-changed",
+			  G_CALLBACK (fu_util_install_device_changed_cb), priv);
 
 	/* install all the tasks */
 	if (!fu_engine_install_tasks (priv->engine, install_tasks, blob_cab, priv->flags, error))
@@ -858,9 +878,6 @@ main (int argc, char *argv[])
 			  priv);
 	g_signal_connect (priv->engine, "device-removed",
 			  G_CALLBACK (fu_main_engine_device_removed_cb),
-			  priv);
-	g_signal_connect (priv->engine, "device-changed",
-			  G_CALLBACK (fu_main_engine_device_changed_cb),
 			  priv);
 	g_signal_connect (priv->engine, "status-changed",
 			  G_CALLBACK (fu_main_engine_status_changed_cb),

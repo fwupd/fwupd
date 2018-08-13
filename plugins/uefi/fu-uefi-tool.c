@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -153,7 +152,14 @@ main (int argc, char *argv[])
 		g_print ("fwupd version: %s\n", PACKAGE_VERSION);
 
 	/* override the default ESP path */
-	if (esp_path == NULL) {
+	if (esp_path != NULL) {
+		if (!fu_uefi_check_esp_path (esp_path, &error)) {
+			/* TRANSLATORS: ESP is EFI System Partition */
+			g_print ("%s: %s\n", _("ESP specified was not valid"),
+				 error->message);
+			return EXIT_FAILURE;
+		}
+	} else {
 		esp_path = fu_uefi_guess_esp_path ();
 		if (esp_path == NULL) {
 			g_printerr ("Unable to determine EFI system partition "

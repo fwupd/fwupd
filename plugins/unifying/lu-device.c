@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -1039,6 +1038,8 @@ lu_device_finalize (GObject *object)
 		g_object_unref (priv->usb_device_locker);
 	if (priv->udev_device != NULL)
 		g_object_unref (priv->udev_device);
+	if (priv->udev_device_fd > 0)
+		g_close (priv->udev_device_fd, NULL);
 	g_ptr_array_unref (priv->feature_index);
 	g_free (priv->version_hw);
 

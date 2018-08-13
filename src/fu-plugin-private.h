@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -35,6 +34,9 @@ void		 fu_plugin_set_smbios			(FuPlugin	*plugin,
 guint		 fu_plugin_get_order			(FuPlugin	*plugin);
 void		 fu_plugin_set_order			(FuPlugin	*plugin,
 							 guint		 order);
+guint		 fu_plugin_get_priority			(FuPlugin	*plugin);
+void		 fu_plugin_set_priority			(FuPlugin	*plugin,
+							 guint		 priority);
 void		 fu_plugin_set_name			(FuPlugin	*plugin,
 							 const gchar 	*name);
 GPtrArray	*fu_plugin_get_rules			(FuPlugin	*plugin,

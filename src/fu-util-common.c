@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -116,5 +115,15 @@ fu_util_print_device_tree (GNode *n, gpointer data)
 	for (guint i = strlen (name) + 2 * g_node_depth (n); i < 45; i++)
 		g_string_append_c (str, ' ');
 	g_print ("%s %s\n", str->str, fu_device_get_id (dev));
+	return FALSE;
+}
+
+gboolean
+fu_util_is_interesting_device (FwupdDevice *dev)
+{
+	if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE))
+		return TRUE;
+	if (fwupd_device_get_update_error (dev) != NULL)
+		return TRUE;
 	return FALSE;
 }

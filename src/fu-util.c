@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -35,6 +34,14 @@
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2
 
+typedef enum {
+	FU_UTIL_OPERATION_UNKNOWN,
+	FU_UTIL_OPERATION_UPDATE,
+	FU_UTIL_OPERATION_DOWNGRADE,
+	FU_UTIL_OPERATION_INSTALL,
+	FU_UTIL_OPERATION_LAST
+} FuUtilOperation;
+
 typedef struct {
 	GCancellable		*cancellable;
 	GMainLoop		*loop;
@@ -49,6 +56,10 @@ typedef struct {
 	gboolean		 no_unreported_check;
 	gboolean		 assume_yes;
 	gboolean		 show_all_devices;
+	/* only valid in update and downgrade */
+	FuUtilOperation		 current_operation;
+	FwupdDevice		*current_device;
+	FwupdRelease		*current_release;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -180,6 +191,45 @@ fu_util_client_notify_cb (GObject *object,
 	fu_progressbar_update (priv->progressbar,
 			       fwupd_client_get_status (priv->client),
 			       fwupd_client_get_percentage (priv->client));
+}
+
+static void
+fu_util_update_device_changed_cb (FwupdClient *client,
+				  FwupdDevice *device,
+				  FuUtilPrivate *priv)
+{
+	g_autofree gchar *str = NULL;
+
+	/* same as last time, so ignore */
+	if (priv->current_device != NULL &&
+	    fwupd_device_compare (priv->current_device, device) == 0)
+		return;
+
+	/* show message in progressbar */
+	if (priv->current_operation == FU_UTIL_OPERATION_UPDATE) {
+		/* TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers */
+		str = g_strdup_printf (_("Updating %s from %s to %s…"),
+				       fwupd_device_get_name (device),
+				       fwupd_device_get_version (device),
+				       fwupd_release_get_version (priv->current_release));
+		fu_progressbar_set_title (priv->progressbar, str);
+	} else if (priv->current_operation == FU_UTIL_OPERATION_DOWNGRADE) {
+		/* TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers */
+		str = g_strdup_printf (_("Downgrading %s from %s to %s…"),
+				       fwupd_device_get_name (device),
+				       fwupd_device_get_version (device),
+				       fwupd_release_get_version (priv->current_release));
+		fu_progressbar_set_title (priv->progressbar, str);
+	} else if (priv->current_operation == FU_UTIL_OPERATION_INSTALL) {
+		/* TRANSLATORS: %1 is a version number, and %2 is a device name  */
+		str = g_strdup_printf (_("Installing %s on %s…"),
+				       fwupd_release_get_version (priv->current_release),
+				       fwupd_device_get_name (device));
+		fu_progressbar_set_title (priv->progressbar, str);
+	} else {
+		g_warning ("no FuUtilOperation set");
+	}
+	g_set_object (&priv->current_device, device);
 }
 
 static FwupdDevice *
@@ -446,7 +496,8 @@ fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fw
 {
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev_tmp = g_ptr_array_index (devs, i);
-		if (!(fwupd_device_has_flag (dev_tmp, FWUPD_DEVICE_FLAG_UPDATABLE) || priv->show_all_devices))
+		if (!priv->show_all_devices &&
+		    !fu_util_is_interesting_device (dev_tmp))
 			continue;
 		if (fwupd_device_get_parent (dev_tmp) == dev) {
 			GNode *child = g_node_append_data (root, dev_tmp);
@@ -533,6 +584,10 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
+	g_signal_connect (priv->client, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+
 	/* install with flags chosen by the user */
 	return fwupd_client_install (priv->client, id, values[0], priv->flags, NULL, error);
 }
@@ -557,7 +612,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdDevice *dev = g_ptr_array_index (array, i);
 		g_autofree gchar *tmp = NULL;
 		tmp = fwupd_device_to_string (dev);
-		g_print ("%s", tmp);
+		g_print ("%s\n", tmp);
 	}
 	return TRUE;
 }
@@ -1752,8 +1807,9 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 		tmp = fwupd_remote_get_password (remote);
 		if (tmp != NULL) {
+			g_autofree gchar *hidden = g_strnfill (strlen (tmp), '*');
 			/* TRANSLATORS: remote filename base */
-			fu_util_print_data (_("Password"), tmp);
+			fu_util_print_data (_("Password"), hidden);
 		}
 		tmp = fwupd_remote_get_filename_cache (remote);
 		if (tmp != NULL) {
@@ -1948,9 +2004,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 				    fwupd_checksum_get_best (checksums),
 				    error))
 		return FALSE;
-	g_print ("Updating %s on %s...\n",
-		 fwupd_release_get_version (rel),
-		 fwupd_device_get_name (dev));
+	g_set_object (&priv->current_release, rel);
 	return fwupd_client_install (priv->client,
 				     fwupd_device_get_id (dev), fn,
 				     priv->flags, NULL, error);
@@ -1966,6 +2020,9 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	devices = fwupd_client_get_devices (priv->client, NULL, error);
 	if (devices == NULL)
 		return FALSE;
+	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
+	g_signal_connect (priv->client, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
@@ -2072,6 +2129,11 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	rel = fu_util_prompt_for_release (priv, rels, error);
 	if (rel == NULL)
 		return FALSE;
+
+	/* update the console if composite devices are also updated */
+	priv->current_operation = FU_UTIL_OPERATION_DOWNGRADE;
+	g_signal_connect (priv->client, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	return fu_util_update_device_with_release (priv, dev, rel, error);
 }
@@ -2162,6 +2224,10 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_ptr_array_unref (priv->cmd_array);
 	if (priv->client != NULL)
 		g_object_unref (priv->client);
+	if (priv->current_device != NULL)
+		g_object_unref (priv->current_device);
+	if (priv->current_release != NULL)
+		g_object_unref (priv->current_release);
 	if (priv->soup_session != NULL)
 		g_object_unref (priv->soup_session);
 	g_main_loop_unref (priv->loop);

@@ -1,5 +1,4 @@
-/* -*- mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017 Christian J. Kellner <christian@kellner.me>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -13,6 +12,7 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <gio/gio.h>
 #include <glib.h>
@@ -30,6 +30,8 @@
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 #pragma clang diagnostic pop
 #endif
+
+#define TBT_NVM_RETRY_TIMEOUT	200 /* ms */
 
 typedef void (*UEventNotify) (FuPlugin	  *plugin,
 			      GUdevDevice *udevice,
@@ -172,6 +174,38 @@ fu_plugin_thunderbolt_find_nvmem (GUdevDevice  *udevice,
 	return NULL;
 }
 
+static gchar *
+fu_plugin_thunderbolt_parse_version (const gchar *version_raw)
+{
+	g_auto(GStrv) split = NULL;
+	if (version_raw == NULL)
+		return NULL;
+	split = g_strsplit (version_raw, ".", -1);
+	if (g_strv_length (split) != 2)
+		return NULL;
+	return g_strdup_printf ("%02x.%02x",
+				(guint) g_ascii_strtoull (split[0], NULL, 16),
+				(guint) g_ascii_strtoull (split[1], NULL, 16));
+}
+
+static gchar *
+fu_plugin_thunderbolt_udev_get_version (GUdevDevice *udevice)
+{
+	const gchar *version = NULL;
+
+	for (guint i = 0; i < 50; i++) {
+		version = g_udev_device_get_sysfs_attr (udevice, "nvm_version");
+		if (version != NULL)
+			break;
+		g_debug ("Attempt %u: Failed to read NVM version", i);
+		if (errno != EAGAIN)
+			break;
+		g_usleep (TBT_NVM_RETRY_TIMEOUT * 1000);
+	}
+
+	return fu_plugin_thunderbolt_parse_version (version);
+}
+
 static gboolean
 fu_plugin_thunderbolt_is_native (GUdevDevice *udevice, gboolean *is_native, GError **error)
 {
@@ -192,20 +226,6 @@ fu_plugin_thunderbolt_is_native (GUdevDevice *udevice, gboolean *is_native, GErr
 	return fu_plugin_thunderbolt_controller_is_native (controller_fw,
 							   is_native,
 							   error);
-}
-
-static gchar *
-fu_plugin_thunderbolt_parse_version (const gchar *version_raw)
-{
-	g_auto(GStrv) split = NULL;
-	if (version_raw == NULL)
-		return NULL;
-	split = g_strsplit (version_raw, ".", -1);
-	if (g_strv_length (split) != 2)
-		return NULL;
-	return g_strdup_printf ("%02x.%02x",
-				(guint) g_ascii_strtoull (split[0], NULL, 16),
-				(guint) g_ascii_strtoull (split[1], NULL, 16));
 }
 
 static void
@@ -232,7 +252,6 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	const gchar *name;
 	const gchar *uuid;
 	const gchar *vendor;
-	const gchar *version_raw;
 	const gchar *devpath;
 	const gchar *devtype;
 	gboolean is_host;
@@ -245,7 +264,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *device_id = NULL;
 	g_autoptr(FuDevice) dev = NULL;
-	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_vid = NULL;
+	g_autoptr(GError) error_did = NULL;
 
 	uuid = g_udev_device_get_sysfs_attr (device, "unique_id");
 	if (uuid == NULL) {
@@ -271,28 +291,29 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		return;
 	}
 
-	vid = fu_plugin_thunderbolt_udev_get_id (device, "vendor", &error);
+	vid = fu_plugin_thunderbolt_udev_get_id (device, "vendor", &error_vid);
 	if (vid == 0x0)
-		g_warning ("failed to get Vendor ID: %s", error->message);
+		g_warning ("failed to get Vendor ID: %s", error_vid->message);
 
-	did = fu_plugin_thunderbolt_udev_get_id (device, "device", &error);
+	did = fu_plugin_thunderbolt_udev_get_id (device, "device", &error_did);
 	if (did == 0x0)
-		g_warning ("failed to get Device ID: %s", error->message);
+		g_warning ("failed to get Device ID: %s", error_did->message);
 
 	dev = fu_device_new ();
 
-	/* test for safe mode */
 	is_host = fu_plugin_thunderbolt_is_host (device);
-	version_raw = g_udev_device_get_sysfs_attr (device, "nvm_version");
-	version = fu_plugin_thunderbolt_parse_version (version_raw);
+
+	version = fu_plugin_thunderbolt_udev_get_version (device);
+	/* test for safe mode */
 	if (is_host && version == NULL) {
+		g_autoptr(GError) error_local = NULL;
 		g_autofree gchar *test_safe = NULL;
 		g_autofree gchar *safe_path = NULL;
 		/* glib can't return a properly mapped -ENODATA but the
 		 * kernel only returns -ENODATA or -EAGAIN */
 		safe_path = g_build_path ("/", devpath, "nvm_version", NULL);
-		if (!g_file_get_contents (safe_path, &test_safe, NULL, &error) &&
-		    !g_error_matches (error, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
+		if (!g_file_get_contents (safe_path, &test_safe, NULL, &error_local) &&
+		    !g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
 			g_warning ("%s is in safe mode --  VID/DID will "
 				   "need to be set by another plugin",
 				   devpath);
@@ -306,8 +327,9 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	}
 	if (!is_safemode) {
 		if (is_host) {
-			if (!fu_plugin_thunderbolt_is_native (device, &is_native, &error)) {
-				g_warning ("failed to get native mode status: %s", error->message);
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_plugin_thunderbolt_is_native (device, &is_native, &error_local)) {
+				g_warning ("failed to get native mode status: %s", error_local->message);
 				return;
 			}
 			fu_plugin_add_report_metadata (plugin,
@@ -321,6 +343,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 					     is_native ? "-native" : "");
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_plugin_thunderbolt_add_known_parents (dev, vid, did);
+	} else {
+		fu_device_set_update_error (dev, "Device is in safe mode");
 	}
 
 	fu_device_set_platform_id (dev, uuid);
@@ -387,7 +411,7 @@ static void
 fu_plugin_thunderbolt_change (FuPlugin *plugin, GUdevDevice *device)
 {
 	FuDevice *dev;
-	const gchar *version;
+	g_autofree gchar *version = NULL;
 	g_autofree gchar *id = NULL;
 
 	id = fu_plugin_thunderbolt_gen_id (device);
@@ -398,7 +422,7 @@ fu_plugin_thunderbolt_change (FuPlugin *plugin, GUdevDevice *device)
 		return;
 	}
 
-	version = g_udev_device_get_sysfs_attr (device, "nvm_version");
+	version = fu_plugin_thunderbolt_udev_get_version (device);
 	fu_device_set_version (dev, version);
 }
 
@@ -590,7 +614,7 @@ on_wait_for_device_added (FuPlugin    *plugin,
 	FuDevice  *dev;
 	const gchar *uuid;
 	const gchar *path;
-	const gchar *version;
+	g_autofree gchar *version = NULL;
 	g_autofree gchar *id = NULL;
 
 	uuid = g_udev_device_get_sysfs_attr (device, "unique_id");
@@ -611,7 +635,7 @@ on_wait_for_device_added (FuPlugin    *plugin,
 
 	/* make sure the version is correct, might have changed
 	 * after update. */
-	version = g_udev_device_get_sysfs_attr (device, "nvm_version");
+	version = fu_plugin_thunderbolt_udev_get_version (device);
 	fu_device_set_version (dev, version);
 
 	id = fu_plugin_thunderbolt_gen_id (device);

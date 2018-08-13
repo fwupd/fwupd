@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -362,7 +361,7 @@ lu_device_peripheral_probe (LuDevice *device, GError **error)
 		lu_device_add_flag (device, LU_DEVICE_FLAG_REQUIRES_ATTACH);
 		if (fu_device_get_version (device) == NULL) {
 			g_debug ("repairing device in bootloader mode");
-			fu_device_set_version (FU_DEVICE (device), "MPKxx.xx_Bxxxx");
+			fu_device_set_version (FU_DEVICE (device), "MPK00.00_B0000");
 		}
 	}
 

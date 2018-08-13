@@ -60,6 +60,10 @@ msgstr "Відповідати «так» на усі питання"
 msgid "Apply a binary patch"
 msgstr "Застосувати бінарну латку"
 
+#. TRANSLATORS: command line option
+msgid "Apply firmware updates"
+msgstr "Застосувати оновлення мікропрограми"
+
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
 msgstr "Повернути пристрій із можливостями DFU до використання"
@@ -214,9 +218,16 @@ msgstr "Пристрої, для яких вдалося успішно онов
 msgid "Devices that were not updated correctly:"
 msgstr "Пристрої, для яких не вдалося оновити дані належним чином:"
 
+msgid "Disabled fwupdate debugging"
+msgstr "Вимкнено діагностику fwupdate"
+
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
 msgstr "Вимикає вказане віддалене сховище"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "Показати версію"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -264,6 +275,10 @@ msgstr "Створити дамп даних щодо файла мікропр�
 msgid "Dump information about a binary patch to the screen"
 msgstr "Вивести дамп інформації щодо бінарної латки на екран"
 
+#. TRANSLATORS: command line option
+msgid "Enable firmware update support on supported systems"
+msgstr "Увімкнути підтримку оновлення мікропрограми на підтримуваних системах"
+
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
 msgstr "Увімкнути це віддалене сховище?"
@@ -272,9 +287,15 @@ msgstr "Увімкнути це віддалене сховище?"
 msgid "Enabled"
 msgstr "Увімкнено"
 
+msgid "Enabled fwupdate debugging"
+msgstr "Увімкнено діагностику fwupdate"
+
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Вмикає вказане віддалене сховище"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "Наслідки вмикання цієї можливості покладаються на вас. Це означає, що усі проблеми, пов'язані із цими оновленнями, ви маєте вирішувати із виробником обладнання. Повідомляти розробникам дистрибутива за адресою  $OS_RELEASE:BUG_REPORT_URL$ слід лише про помилки у процесі оновлення."
 
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
@@ -360,6 +381,12 @@ msgstr[0] "Метадані мікропрограми не оновлювали
 msgstr[1] "Метадані мікропрограми не оновлювалися %u дні, можливо, вони вже не є актуальними."
 msgstr[2] "Метадані мікропрограми не оновлювалися %u днів, можливо, вони вже не є актуальними."
 msgstr[3] "Метадані мікропрограми не оновлювалися %u днів, можливо, вони вже не є актуальними."
+
+msgid "Firmware updates are not supported on this machine."
+msgstr "На цьому комп'ютері не передбачено підтримки оновлення мікропрограми."
+
+msgid "Firmware updates are supported on this machine."
+msgstr "На цьому комп'ютері передбачено підтримку оновлень мікропрограми."
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -456,6 +483,10 @@ msgstr "Служба надання мікропрограм для Linux від
 msgid "List currently attached DFU capable devices"
 msgstr "Вивести поточний список долучених пристроїв із можливостями DFU"
 
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "Показати список підтримуваних оновлень мікропрограми"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Завантаження…"
@@ -500,6 +531,9 @@ msgstr "Стежити за подіями у фоновій службі"
 msgid "Name"
 msgstr "Назва"
 
+msgid "No action specified!"
+msgstr "Не вказано дії!"
+
 #. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -519,6 +553,10 @@ msgstr "Гаразд"
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
 msgstr "Перевизначити попередження для додатка"
+
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "Перевизначити типовий шлях до ESP"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -545,6 +583,10 @@ msgstr "Продовжити вивантаження?"
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
 msgid "Protocol"
 msgstr "Протокол"
+
+#. TRANSLATORS: command line option
+msgid "Query for firmware update support"
+msgstr "Опитати щодо підтримки оновлення мікропрограми"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -653,6 +695,10 @@ msgstr "Встановити ідентифікатор продукту для 
 msgid "Set release version on firmware file"
 msgstr "Встановити версію випуску для файла мікропрограми"
 
+#. TRANSLATORS: command line option
+msgid "Set the debugging flag during update"
+msgstr "Встановити під час оновлення прапорець діагностики"
+
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
 msgstr "Встановити розмір мікропрограми для призначення"
@@ -697,6 +743,14 @@ msgstr "Показати журнал оновлень мікропрограм�
 msgid "Show plugin verbose information"
 msgstr "Показати докладні відомості щодо додатків"
 
+#. TRANSLATORS: command line option
+msgid "Show the debug log from the last attempted update"
+msgstr "Показати діагностичний журнал щодо останньої спроби оновлення"
+
+#. TRANSLATORS: command line option
+msgid "Show the information of firmware update status"
+msgstr "Показати дані щодо стану оновлення мікропрограми"
+
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Стан"
@@ -714,6 +768,10 @@ msgstr "Резюме"
 msgid "Target"
 msgstr "Ціль"
 
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "LVFS є безкоштовною службою, яка працює як незалежна юридична одиниця і не має зв'язку з $OS_RELEASE:NAME$. Розробники вашої операційної системи, можливо, не перевіряли жодні з цих оновлень на сумісність із системою або з'єднаними із комп'ютером пристроями. Усі мікропрограми надаються лише самими виробниками обладнання."
+
 msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
 msgstr "Процес fwupd є простою фоновою службою, яка надає змогу оновлювати мікропрограми пристроїв на вашому локальному комп’ютері у межах сеансу користування. Програму розроблено для робочих станцій, але нею можна скористатися на телефонах, планшетах та серверах без дисплеїв."
 
@@ -723,6 +781,9 @@ msgstr "Програма зможе працювати належними чин
 
 msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
 msgstr "Метою цього проекту є автоматизація оновлення мікропрограм обладнання у Linux, безпечно і надійно. Для перегляду і застосування оновлень ви можете скористатися або програмою для керування програмним забезпеченням, зокрема Програмними засобами GNOME, або інструментом командного рядка, або безпосередньо інтерфейсом D-Bus."
+
+msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
+msgstr "У цьому сховищі міститься мікропрограма, встановлювати яку не заборонено, але яка усе ще перебуває у процесі тестування виробником обладнання. Вам слід переконатися, що ви зможете встановити стабільну версію мікропрограми, якщо процедура оновлення зазнає невдачі."
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
@@ -735,6 +796,10 @@ msgstr "Об’єм перенесеного"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Тип"
+
+#. TRANSLATORS: program name
+msgid "UEFI Firmware Utility"
+msgstr "Засіб роботи із мікропрограмами UEFI"
 
 #. TRANSLATORS: section header for firmware URI
 msgid "URI"
@@ -750,6 +815,10 @@ msgstr "Розблокування пристрою для отримання д
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
 msgstr "Розблоковує пристрій для доступу до мікропрограми"
+
+#. TRANSLATORS: command line option
+msgid "Unset the debugging flag during update"
+msgstr "Зняти під час оновлення прапорець діагностики"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"

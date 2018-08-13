@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -434,6 +433,33 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 		g_set_object (&item->device, device);
 		fu_device_list_emit_device_changed (self, device);
 		return;
+	}
+
+	/* added the same device from a different plugin */
+	if (item != NULL && g_strcmp0 (fu_device_get_plugin (item->device),
+				       fu_device_get_plugin (device)) != 0) {
+		if (fu_device_get_priority (device) < fu_device_get_priority (item->device)) {
+			g_debug ("ignoring device %s [%s] as better device %s [%s] already exists",
+				 fu_device_get_id (device),
+				 fu_device_get_plugin (device),
+				 fu_device_get_id (item->device),
+				 fu_device_get_plugin (item->device));
+			return;
+		}
+		if (fu_device_get_priority (device) == fu_device_get_priority (item->device)) {
+			g_warning ("ignoring device %s [%s] existing device %s [%s] already exists",
+				   fu_device_get_id (device),
+				   fu_device_get_plugin (device),
+				   fu_device_get_id (item->device),
+				   fu_device_get_plugin (item->device));
+			return;
+		}
+		g_debug ("removing device %s [%s] as better device %s [%s] added",
+			 fu_device_get_id (item->device),
+			 fu_device_get_plugin (item->device),
+			 fu_device_get_id (device),
+			 fu_device_get_plugin (device));
+		fu_device_list_remove (self, item->device);
 	}
 
 	/* add helper */

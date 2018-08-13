@@ -1,7 +1,6 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2016 Mario Limonciello <mario_limonciello@dell.com>
+ * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -107,13 +106,6 @@ static guint8 enclosure_whitelist [] = { 0x03, /* desktop */
 					 0x22, /* embedded PC */};
 
 /**
-  * System blacklist on older libsmbios
-  */
-static guint16 system_blacklist [] =	{ 0x071E, /* latitude 5414 */
-					  0x07A8, /* latitude 5580 */
-					  0x077A, /* xps 9365 */ };
-
-/**
   * Systems containing host MST device
   */
 static guint16 systems_host_mst [] =	{ 0x062d, /* Latitude E7250 */
@@ -165,10 +157,8 @@ fu_dell_host_mst_supported (FuPlugin *plugin)
 static gboolean
 fu_dell_supported (FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
 	GBytes *de_table = NULL;
 	GBytes *enclosure = NULL;
-	guint16 system_id = 0;
 	const guint8 *value;
 	gsize len;
 
@@ -181,18 +171,6 @@ fu_dell_supported (FuPlugin *plugin)
 		return FALSE;
 	if (*value != 0xDE)
 		return FALSE;
-
-	/* skip blacklisted hw on libsmbios 2.3 or less */
-	if (data->libsmbios_major <= 2 &&
-	    data->libsmbios_minor <= 3) {
-		system_id = fu_dell_get_system_id (plugin);
-		if (system_id == 0)
-			return FALSE;
-		for (guint i = 0; i < G_N_ELEMENTS (system_blacklist); i++) {
-			if (system_blacklist[i] == system_id)
-				return FALSE;
-		}
-	}
 
 	/* only run on intended Dell hw types */
 	enclosure = fu_plugin_get_smbios_data (plugin,
@@ -333,7 +311,6 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	fu_device_set_id (dev, dock_id);
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, dock_name);
-	fu_device_set_metadata (dev, FU_DEVICE_METADATA_DELL_DOCK_TYPE, dock_type);
 	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "device-firmware");
 	if (type == DOCK_TYPE_TB16) {
 		fu_device_set_summary (dev, "A Thunderbolt™ 3 docking station");
@@ -348,6 +325,9 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		} else {
+			fu_device_set_update_error (dev,
+						    "UEFI capsule updates turned off in BIOS setup");
 		}
 	}
 
@@ -708,6 +688,9 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		} else {
+			fu_device_set_update_error (dev,
+						    "UEFI capsule updates turned off in BIOS setup");
 		}
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	} else {
@@ -915,13 +898,11 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	g_autofree gchar *tmp = NULL;
 
-	data->libsmbios_major = smbios_get_library_version_major();
-	data->libsmbios_minor = smbios_get_library_version_minor();
-	g_debug ("Using libsmbios %u.%u", data->libsmbios_major,
-		 data->libsmbios_minor);
-	tmp = g_strdup_printf ("%u.%u", data->libsmbios_major,
-					data->libsmbios_minor);
+	tmp = g_strdup_printf ("%d.%d",
+			       smbios_get_library_version_major(),
+			       smbios_get_library_version_minor());
 	fu_plugin_add_runtime_version (plugin, "com.dell.libsmbios", tmp);
+	g_debug ("Using libsmbios %s", tmp);
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
 	if (g_getenv ("FWUPD_DELL_VERBOSE") != NULL)

@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -193,6 +192,36 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 						 fu_plugin_get_order (dep),
 						 fu_plugin_get_order (dep) + 1);
 					fu_plugin_set_order (dep, fu_plugin_get_order (plugin) + 1);
+					changes = TRUE;
+				}
+			}
+		}
+
+		/* set priority as well */
+		for (guint i = 0; i < self->plugins->len; i++) {
+			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
+			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_BETTER_THAN);
+			for (guint j = 0; j < deps->len && !changes; j++) {
+				const gchar *plugin_name = g_ptr_array_index (deps, j);
+				dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
+				if (dep == NULL) {
+					g_debug ("cannot find plugin '%s' "
+						 "referenced by '%s'",
+						 plugin_name,
+						 fu_plugin_get_name (plugin));
+					continue;
+				}
+				if (!fu_plugin_get_enabled (dep))
+					continue;
+				if (fu_plugin_get_priority (plugin) <= fu_plugin_get_priority (dep)) {
+					g_debug ("%s [%u] better than %s [%u] "
+						 "so bumping to [%u]",
+						 fu_plugin_get_name (plugin),
+						 fu_plugin_get_priority (plugin),
+						 fu_plugin_get_name (dep),
+						 fu_plugin_get_priority (dep),
+						 fu_plugin_get_priority (dep) + 1);
+					fu_plugin_set_priority (plugin, fu_plugin_get_priority (dep) + 1);
 					changes = TRUE;
 				}
 			}

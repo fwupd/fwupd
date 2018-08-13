@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2015-2017 Peter Jones <pjones@redhat.com>
  *
@@ -72,6 +71,8 @@ gboolean	 fu_uefi_get_framebuffer_size	(guint32	*width,
 						 GError		**error);
 gboolean	 fu_uefi_secure_boot_enabled	(void);
 gchar		*fu_uefi_guess_esp_path		(void);
+gboolean	 fu_uefi_check_esp_path		(const gchar	*path,
+						 GError		**error);
 gchar		*fu_uefi_get_esp_path_for_os	(const gchar	*esp_path);
 GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 						 GError		**error);

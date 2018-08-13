@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -16,6 +15,18 @@
 struct FuPluginData {
 	FuRedfishClient		*client;
 };
+
+gboolean
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *device,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+
+	return fu_redfish_client_update (data->client, device, blob_fw, error);
+}
 
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
@@ -39,13 +50,33 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GBytes *smbios_data = fu_plugin_get_smbios_data (plugin, REDFISH_SMBIOS_TABLE_TYPE);
-	const gchar *redfish_uri;
+	g_autofree gchar *redfish_uri = NULL;
+	g_autofree gchar *ca_check = NULL;
 
-	/* using the emulator */
-	redfish_uri = g_getenv ("FWUPD_REDFISH_URI");
+	/* read the conf file */
+	redfish_uri = fu_plugin_get_config_value (plugin, "Uri");
 	if (redfish_uri != NULL) {
+		g_autofree gchar *username = NULL;
+		g_autofree gchar *password = NULL;
+		const gchar *ip_str = NULL;
+		g_auto(GStrv) split = NULL;
 		guint64 port;
-		g_auto(GStrv) split = g_strsplit (redfish_uri, ":", 2);
+
+		if (g_str_has_prefix (redfish_uri, "https://")) {
+			fu_redfish_client_set_https (data->client, TRUE);
+			ip_str = redfish_uri + strlen ("https://");
+		} else if (g_str_has_prefix (redfish_uri, "http://")) {
+			fu_redfish_client_set_https (data->client, FALSE);
+			ip_str = redfish_uri + strlen ("http://");
+		} else {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "in valid scheme");
+			return FALSE;
+		}
+
+		split = g_strsplit (ip_str, ":", 2);
 		fu_redfish_client_set_hostname (data->client, split[0]);
 		port = g_ascii_strtoull (split[1], NULL, 10);
 		if (port == 0) {
@@ -56,6 +87,13 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			return FALSE;
 		}
 		fu_redfish_client_set_port (data->client, port);
+
+		username = fu_plugin_get_config_value (plugin, "Username");
+		password = fu_plugin_get_config_value (plugin, "Password");
+		if (username != NULL && password != NULL) {
+			fu_redfish_client_set_username (data->client, username);
+			fu_redfish_client_set_password (data->client, password);
+		}
 	} else {
 		if (smbios_data == NULL) {
 			g_set_error_literal (error,
@@ -65,6 +103,13 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			return FALSE;
 		}
 	}
+
+	ca_check = fu_plugin_get_config_value (plugin, "CACheck");
+	if (ca_check != NULL && g_ascii_strcasecmp (ca_check, "false") == 0)
+		fu_redfish_client_set_cacheck (data->client, FALSE);
+	else
+		fu_redfish_client_set_cacheck (data->client, TRUE);
+
 	return fu_redfish_client_setup (data->client, smbios_data, error);
 }
 

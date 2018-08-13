@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2015-2017 Peter Jones <pjones@redhat.com>
  *
@@ -272,6 +271,48 @@ fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 	return g_ascii_strtoull (data, NULL, 10);
 }
 
+gboolean
+fu_uefi_check_esp_path (const gchar *path, GError **error)
+{
+	const gchar *fs_types[] = { "vfat", "ntfs", "exfat", NULL };
+	g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (path, NULL);
+	if (mount == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "%s was not mounted", path);
+		return FALSE;
+	}
+	/* /boot is a special case because systemd sandboxing marks
+	 * it read-only, but we need to write to /boot/EFI
+	 */
+	if (g_strcmp0 (path, "/boot") == 0) {
+		if (!g_file_test ("/boot/EFI", G_FILE_TEST_IS_DIR)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "%s/EFI does not exist", path);
+			return FALSE;
+		}
+	} else if (g_unix_mount_is_readonly (mount)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "%s is read only", path);
+		return FALSE;
+	}
+	if (!g_strv_contains (fs_types, g_unix_mount_get_fs_type (mount))) {
+		g_autofree gchar *supported = g_strjoinv ("|", (gchar **) fs_types);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "%s has an invalid type, expected %s",
+			     path, supported);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 gchar *
 fu_uefi_guess_esp_path (void)
 {
@@ -284,11 +325,9 @@ fu_uefi_guess_esp_path (void)
 		return g_strdup (path_tmp);
 
 	for (guint i = 0; paths[i] != NULL; i++) {
-		g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (paths[i], NULL);
-		if (mount == NULL)
-			continue;
-		if (g_unix_mount_is_readonly (mount)) {
-			g_debug ("%s is read only", paths[i]);
+		g_autoptr(GError) error = NULL;
+		if (!fu_uefi_check_esp_path (paths[i], &error)) {
+			g_debug ("ignoring ESP path: %s", error->message);
 			continue;
 		}
 		return g_strdup (paths[i]);

@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -217,5 +216,5 @@ lu_device_bootloader_texas_class_init (LuDeviceBootloaderTexasClass *klass)
 static void
 lu_device_bootloader_texas_init (LuDeviceBootloaderTexas *device)
 {
-	fu_device_set_version (FU_DEVICE (device), "RQR24.xx_Bxxxx");
+	fu_device_set_version (FU_DEVICE (device), "RQR24.00_B0000");
 }

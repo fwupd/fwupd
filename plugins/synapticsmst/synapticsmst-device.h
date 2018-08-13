@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
@@ -52,6 +51,14 @@ typedef enum {
 	SYNAPTICSMST_DEVICE_BOARDID_UNKNOWN = 0xFF,
 } SynapticsMSTDeviceBoardID;
 
+typedef enum {
+	SYNAPTICSMST_CHIP_KIND_UNKNOWN,
+	SYNAPTICSMST_CHIP_KIND_TESLA_LEAF,
+	SYNAPTICSMST_CHIP_KIND_PANAMERA,
+	/*<private >*/
+	SYNAPTICSMST_CHIP_KIND_LAST
+} SynapticsMSTChipKind;
+
 #define CUSTOMERID_DELL 	0x1
 
 SynapticsMSTDevice	*synapticsmst_device_new	(SynapticsMSTDeviceKind kind,
@@ -63,7 +70,7 @@ SynapticsMSTDevice	*synapticsmst_device_new	(SynapticsMSTDeviceKind kind,
 SynapticsMSTDeviceKind synapticsmst_device_kind_from_string	(const gchar	*kind);
 const gchar	*synapticsmst_device_kind_to_string		(SynapticsMSTDeviceKind kind);
 const gchar	*synapticsmst_device_board_id_to_string		(SynapticsMSTDeviceBoardID board_id);
-const gchar 	*synapticsmst_device_get_guid 			(SynapticsMSTDevice *device);
+GPtrArray 	*synapticsmst_device_get_guids 			(SynapticsMSTDevice *device);
 gboolean	 synapticsmst_device_scan_cascade_device 	(SynapticsMSTDevice *device,
 								 GError **error,
 								 guint8 tx_port);
@@ -74,16 +81,14 @@ gboolean	 synapticsmst_device_open 			(SynapticsMSTDevice *device,
 SynapticsMSTDeviceKind synapticsmst_device_get_kind		(SynapticsMSTDevice *device);
 SynapticsMSTDeviceBoardID synapticsmst_device_get_board_id 	(SynapticsMSTDevice *device);
 const gchar	*synapticsmst_device_get_version		(SynapticsMSTDevice *device);
-const gchar 	*synapticsmst_device_get_chip_id 		(SynapticsMSTDevice *device);
+const gchar 	*synapticsmst_device_get_chip_id_str 		(SynapticsMSTDevice *device);
 const gchar 	*synapticsmst_device_get_aux_node		(SynapticsMSTDevice *device);
 guint16 	 synapticsmst_device_get_rad 			(SynapticsMSTDevice *device);
 guint8 		 synapticsmst_device_get_layer 			(SynapticsMSTDevice *device);
-gboolean
-synapticsmst_device_get_cascade					(SynapticsMSTDevice *device);
+gboolean	 synapticsmst_device_get_cascade		(SynapticsMSTDevice *device);
 
 /* object methods */
 gboolean	 synapticsmst_device_enumerate_device 		(SynapticsMSTDevice *devices,
-								const gchar *dock_type,
 								const gchar *sytem_type,
 								 GError **error);
 gboolean	 synapticsmst_device_write_firmware		(SynapticsMSTDevice *device,

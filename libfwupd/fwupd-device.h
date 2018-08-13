@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -111,6 +110,8 @@ void		 fwupd_device_add_release		(FwupdDevice	*device,
 							 FwupdRelease	*release);
 GPtrArray	*fwupd_device_get_releases		(FwupdDevice	*device);
 FwupdRelease	*fwupd_device_get_release_default	(FwupdDevice	*device);
+gint		 fwupd_device_compare			(FwupdDevice	*device1,
+							 FwupdDevice	*device2);
 
 G_END_DECLS
 

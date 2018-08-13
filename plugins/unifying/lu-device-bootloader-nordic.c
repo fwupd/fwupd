@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -71,7 +70,7 @@ lu_device_bootloader_nordic_probe (LuDevice *device, GError **error)
 	if (version_fw == NULL) {
 		g_warning ("failed to get firmware version: %s",
 			   error_local->message);
-		fu_device_set_version (FU_DEVICE (device), "RQR12.xx_Bxxxx");
+		fu_device_set_version (FU_DEVICE (device), "RQR12.00_B0000");
 	} else {
 		fu_device_set_version (FU_DEVICE (device), version_fw);
 	}

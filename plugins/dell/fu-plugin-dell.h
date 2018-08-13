@@ -1,6 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
- * Copyright (C) 2016 Mario Limonciello <mario_limonciello@dell.com>
+/*
+ * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -18,8 +17,6 @@ struct FuPluginData {
 	guint16			fake_pid;
 	gboolean		can_switch_modes;
 	gboolean		capsule_supported;
-	guint			libsmbios_major;
-	guint			libsmbios_minor;
 };
 
 void

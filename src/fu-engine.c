@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -148,12 +147,14 @@ static void
 fu_engine_progress_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
 	fu_engine_set_percentage (self, fu_device_get_progress (device));
+	fu_engine_emit_device_changed (self, device);
 }
 
 static void
 fu_engine_status_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
 	fu_engine_set_status (self, fu_device_get_status (device));
+	fu_engine_emit_device_changed (self, device);
 }
 
 static void
@@ -897,8 +898,11 @@ fu_engine_check_requirement (FuEngine *self, AsRequire *req, FuDevice *device, G
 		return fu_engine_check_requirement_id (self, req, error);
 
 	/* ensure firmware requirement */
-	if (device != NULL && as_require_get_kind (req) == AS_REQUIRE_KIND_FIRMWARE)
+	if (as_require_get_kind (req) == AS_REQUIRE_KIND_FIRMWARE) {
+		if (device == NULL)
+			return TRUE;
 		return fu_engine_check_requirement_firmware (self, req, device, error);
+	}
 
 	/* ensure hardware requirement */
 	if (as_require_get_kind (req) == AS_REQUIRE_KIND_HARDWARE)
@@ -1357,6 +1361,7 @@ fu_engine_install_blob (FuEngine *self,
 	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) metadata_hash = NULL;
+	g_autoptr(GTimer) timer = g_timer_new ();
 
 	/* test the firmware is not an empty blob */
 	if (g_bytes_get_size (blob_fw2) == 0) {
@@ -1506,8 +1511,9 @@ fu_engine_install_blob (FuEngine *self,
 
 	/* make the UI update */
 	fu_device_set_status (device, FWUPD_STATUS_IDLE);
-	fu_engine_emit_device_changed (self, device);
 	fu_engine_emit_changed (self);
+	g_debug ("Updating %s took %f seconds", fu_device_get_name (device),
+		 g_timer_elapsed (timer, NULL));
 
 	/* update database */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
@@ -2116,14 +2122,6 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	for (guint i = 0; i < apps->len; i++) {
 		AsApp *app = g_ptr_array_index (apps, i);
 		FwupdDevice *dev;
-		g_autoptr(FuInstallTask) task = NULL;
-
-		/* check we can install it */
-		task = fu_install_task_new (NULL, app);
-		if (!fu_engine_check_requirements (self, task,
-						   FWUPD_INSTALL_FLAG_NONE,
-						   error))
-			return NULL;
 
 		as_app_set_origin (app, as_store_get_origin (store));
 		dev = fu_engine_get_result_from_app (self, app, error);
@@ -2776,7 +2774,7 @@ fu_engine_plugins_coldplug (FuEngine *self, gboolean is_recoldplug)
 	}
 	if (str->len > 2) {
 		g_string_truncate (str, str->len - 2);
-		g_message ("using plugins: %s", str->str);
+		g_debug ("using plugins: %s", str->str);
 	}
 
 	/* we can recoldplug from this point on */
@@ -2815,6 +2813,7 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 				  gpointer user_data)
 {
 	FuEngine *self = (FuEngine *) user_data;
+	fu_device_set_priority (device, fu_plugin_get_priority (plugin));
 	fu_engine_add_device (self, device);
 }
 
@@ -3489,6 +3488,8 @@ fu_engine_load (FuEngine *self, GError **error)
 			  G_CALLBACK (fu_engine_device_changed_cb),
 			  self);
 
+	fu_engine_set_status (self, FWUPD_STATUS_LOADING);
+
 	/* add devices */
 	fu_engine_plugins_setup (self);
 	fu_engine_plugins_coldplug (self, FALSE);
@@ -3505,6 +3506,8 @@ fu_engine_load (FuEngine *self, GError **error)
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database (self, error))
 		return FALSE;
+
+	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
 
 	/* success */
 	return TRUE;
@@ -3579,6 +3582,7 @@ fu_engine_init (FuEngine *self)
 
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version (self, "org.freedesktop.fwupd", VERSION);
+	fu_engine_add_runtime_version (self, "com.redhat.fwupdate", "12");
 #if AS_CHECK_VERSION(0,7,8)
 	fu_engine_add_runtime_version (self, "org.freedesktop.appstream-glib", as_version_string ());
 #endif
@@ -3586,6 +3590,9 @@ fu_engine_init (FuEngine *self)
 	fu_engine_add_runtime_version (self, "org.freedesktop.gusb", g_usb_version_string ());
 #endif
 
+	g_hash_table_insert (self->compile_versions,
+			     g_strdup ("com.redhat.fwupdate"),
+			     g_strdup ("12"));
 	g_hash_table_insert (self->compile_versions,
 			     g_strdup ("org.freedesktop.fwupd"),
 			     g_strdup (VERSION));

@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -64,6 +63,7 @@ typedef enum {
  * @FU_PLUGIN_RULE_RUN_AFTER:		Order the plugin after another
  * @FU_PLUGIN_RULE_RUN_BEFORE:		Order the plugin before another
  * @FU_PLUGIN_RULE_REQUIRES_QUIRK:	Requires a specific quirk
+ * @FU_PLUGIN_RULE_BETTER_THAN:		Is better than another plugin
  *
  * The rules used for ordering plugins.
  * Plugins are expected to add rules in fu_plugin_initialize().
@@ -73,6 +73,7 @@ typedef enum {
 	FU_PLUGIN_RULE_RUN_AFTER,
 	FU_PLUGIN_RULE_RUN_BEFORE,
 	FU_PLUGIN_RULE_REQUIRES_QUIRK,
+	FU_PLUGIN_RULE_BETTER_THAN,
 	/*< private >*/
 	FU_PLUGIN_RULE_LAST
 } FuPluginRule;
@@ -113,6 +114,7 @@ void		 fu_plugin_cache_add			(FuPlugin	*plugin,
 							 gpointer	 dev);
 gboolean	 fu_plugin_check_hwid			(FuPlugin	*plugin,
 							 const gchar	*hwid);
+GPtrArray	*fu_plugin_get_hwids			(FuPlugin	*plugin);
 gboolean	 fu_plugin_check_supported		(FuPlugin	*plugin,
 							 const gchar	*guid);
 const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*plugin,

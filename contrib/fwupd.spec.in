@@ -11,9 +11,14 @@
 %global enable_tests 1
 %global enable_dummy 1
 
-# fwup.efi is only available on these arches
+# fwupd.efi is only available on these arches
 %ifarch x86_64 aarch64
 %global have_uefi 1
+%endif
+
+# redfish is only available on this arch
+%ifarch x86_64
+%global have_redfish 1
 %endif
 
 # libsmbios is only available on x86
@@ -25,13 +30,14 @@ Summary:   Firmware update daemon
 Name:      fwupd
 Version:   #VERSION#
 Release:   0.#BUILD#%{?alphatag}%{?dist}
-License:   GPLv2+
+License:   LGPLv2+
 URL:       https://github.com/hughsie/fwupd
 Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.tar.xz
 
 BuildRequires: gettext
 BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: libappstream-glib-devel >= %{libappstream_version}
+BuildRequires: libgcab1-devel
 BuildRequires: libgudev1-devel
 BuildRequires: libgusb-devel >= %{libgusb_version}
 BuildRequires: libsoup-devel >= %{libsoup_version}
@@ -54,6 +60,10 @@ BuildRequires: help2man
 BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
 BuildRequires: bash-completion
+
+%if 0%{?have_redfish}
+BuildRequires: efivar-devel >= 33
+%endif
 
 %if 0%{?have_uefi}
 BuildRequires: efivar-devel >= 33
@@ -81,14 +91,14 @@ Requires: glib2%{?_isa} >= %{glib2_version}
 Requires: libappstream-glib%{?_isa} >= %{libappstream_version}
 Requires: libgusb%{?_isa} >= %{libgusb_version}
 Requires: libsoup%{?_isa} >= %{libsoup_version}
-Requires: fwupd-labels = %{version}-%{release}
 Requires: bubblewrap
 
 Recommends: python3
 
 Obsoletes: fwupd-sign < 0.1.6
 Obsoletes: libebitdo < 0.7.5-3
-Obsoletes: libdfu < 0.9.8-1
+Obsoletes: libdfu < 1.0.0
+Obsoletes: fwupd-labels < 1.1.0-1
 
 %description
 fwupd is a daemon to allow session software to update device firmware.
@@ -97,19 +107,10 @@ fwupd is a daemon to allow session software to update device firmware.
 Summary: Development package for %{name}
 Requires: %{name}%{?_isa} = %{version}-%{release}
 Obsoletes: libebitdo-devel < 0.7.5-3
-Obsoletes: libdfu-devel < 0.9.8-1
+Obsoletes: libdfu-devel < 1.0.0
 
 %description devel
 Files for development with %{name}.
-
-%package labels
-Summary: Rendered labels for display during system firmware updates.
-# BuildArch: noarch is disabled as we can get "different" .BMP files even when
-# running the build on the same architecture due to the randomness introduced
-# by the TTF files.
-
-%description labels
-Rendered labels for display during system firmware updates.
 
 %package tests
 Summary: Data files for installed tests
@@ -139,6 +140,11 @@ Data files for installed tests.
     -Dplugin_dummy=false \
 %endif
     -Dplugin_thunderbolt=true \
+%if 0%{?have_redfish}
+    -Dplugin_redfish=true \
+%else
+    -Dplugin_redfish=false \
+%endif
 %if 0%{?have_uefi}
     -Dplugin_uefi=true \
 %else
@@ -163,7 +169,7 @@ Data files for installed tests.
 %install
 %meson_install
 
-# sign fwup.efi loader
+# sign fwupd.efi loader
 %if 0%{?have_uefi}
 %ifarch x86_64
 %global efiarch x64
@@ -197,6 +203,9 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
 %if 0%{?have_uefi}
 %config(noreplace)%{_sysconfdir}/fwupd/uefi.conf
+%endif
+%if 0%{?have_redfish}
+%config(noreplace)%{_sysconfdir}/fwupd/redfish.conf
 %endif
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
@@ -252,7 +261,9 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nitrokey.so
+%if 0%{?have_redfish}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_redfish.so
+%endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_steelseries.so
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synapticsmst.so
@@ -270,6 +281,9 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_upower.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_wacomhid.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg
+%if 0%{?have_uefi}
+%{_datadir}/locale/*/LC_IMAGES/fwupd*
+%endif
 
 %files devel
 %{_datadir}/gir-1.0/Fwupd-2.0.gir
@@ -278,11 +292,6 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_includedir}/fwupd-1
 %{_libdir}/libfwupd*.so
 %{_libdir}/pkgconfig/fwupd.pc
-
-%files labels
-%if 0%{?have_uefi}
-%{_datadir}/locale/*/LC_IMAGES/fwupd*
-%endif
 
 %files tests
 %dir %{_datadir}/installed-tests/fwupd

@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -12,6 +11,7 @@
 #include <appstream-glib.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 #include <gio/gunixinputstream.h>
 #ifdef HAVE_VALGRIND
 #include <valgrind.h>
@@ -39,6 +39,7 @@ typedef struct {
 	GUsbContext		*usb_ctx;
 	gboolean		 enabled;
 	guint			 order;
+	guint			 priority;
 	GPtrArray		*rules[FU_PLUGIN_RULE_LAST];
 	gchar			*name;
 	FuHwids			*hwids;
@@ -354,11 +355,12 @@ fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
 	fu_device_set_plugin (device, fu_plugin_get_name (plugin));
 	g_signal_emit (plugin, signals[SIGNAL_DEVICE_ADDED], 0, device);
 
-	/* add children */
+	/* add children if they have not already been added */
 	children = fu_device_get_children (device);
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index (children, i);
-		fu_plugin_device_add (plugin, child);
+		if (fu_device_get_created (child) == 0)
+			fu_plugin_device_add (plugin, child);
 	}
 }
 
@@ -536,6 +538,26 @@ fu_plugin_check_hwid (FuPlugin *plugin, const gchar *hwid)
 	if (priv->hwids == NULL)
 		return FALSE;
 	return fu_hwids_has_guid (priv->hwids, hwid);
+}
+
+/**
+ * fu_plugin_get_hwids:
+ * @plugin: A #FuPlugin
+ *
+ * Returns all the HWIDs defined in the system. All hardware IDs on a
+ * specific system can be shown using the `fwupdmgr hwids` command.
+ *
+ * Returns: (transfer none) (element-type utf-8): An array of GUIDs
+ *
+ * Since: 1.1.1
+ **/
+GPtrArray *
+fu_plugin_get_hwids (FuPlugin *plugin)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->hwids == NULL)
+		return NULL;
+	return fu_hwids_get_guids (priv->hwids);
 }
 
 /**
@@ -1473,6 +1495,35 @@ fu_plugin_set_order (FuPlugin *plugin, guint order)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
 	priv->order = order;
+}
+
+/**
+ * fu_plugin_get_priority:
+ * @plugin: a #FuPlugin
+ *
+ * Gets the plugin priority, where higher numbers are better.
+ *
+ * Returns: the integer value
+ **/
+guint
+fu_plugin_get_priority (FuPlugin *plugin)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	return priv->priority;
+}
+
+/**
+ * fu_plugin_set_priority:
+ * @plugin: a #FuPlugin
+ * @priority: a integer value
+ *
+ * Sets the plugin priority, where higher numbers are better.
+ **/
+void
+fu_plugin_set_priority (FuPlugin *plugin, guint priority)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	priv->priority = priority;
 }
 
 /**

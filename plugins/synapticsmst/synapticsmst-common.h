@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
  *
@@ -42,18 +41,20 @@ typedef enum {
 } SynapticsMstUpdcRc;
 
 typedef enum {
-	UPDC_ENABLE_RC			= 1,
-	UPDC_DISABLE_RC,
-	UPDC_GET_ID,
-	UPDC_GET_VERSION,
-	UPDC_ENABLE_FLASH_CHIP_ERASE	= 8,
-	UPDC_CAL_EEPROM_CHECKSUM	= 0X11,
-	UPDC_FLASH_ERASE		= 0X14,
-	UPDC_CAL_EEPROM_CHECK_CRC8	= 0X16,
-	UPDC_CAL_EEPROM_CHECK_CRC16,
+	UPDC_ENABLE_RC			= 0x01,
+	UPDC_DISABLE_RC			= 0x02,
+	UPDC_GET_ID			= 0x03,
+	UPDC_GET_VERSION		= 0x04,
+	UPDC_ENABLE_FLASH_CHIP_ERASE	= 0x08,
+	UPDC_CAL_EEPROM_CHECKSUM	= 0x11,
+	UPDC_FLASH_ERASE		= 0x14,
+	UPDC_CAL_EEPROM_CHECK_CRC8	= 0x16,
+	UPDC_CAL_EEPROM_CHECK_CRC16	= 0x17,
 	UPDC_WRITE_TO_EEPROM		= 0X20,
+	UPDC_WRITE_TO_MEMORY		= 0x21,
 	UPDC_WRITE_TO_TX_DPCD		= 0x22,
 	UPDC_READ_FROM_EEPROM		= 0x30,
+	UPDC_READ_FROM_MEMORY		= 0x31,
 	UPDC_READ_FROM_TX_DPCD		= 0x32,
 } SynapticsMstUpdcCmd;
 
@@ -66,39 +67,39 @@ SynapticsMSTConnection	*synapticsmst_common_new 		(gint	 fd,
 								 guint	 rad);
 
 guint8		 synapticsmst_common_aux_node_read		(SynapticsMSTConnection *connection,
-								 gint offset,
-								 gint *buf,
-								 gint length);
+								 guint32	 offset,
+								 guint8		*buf,
+								 gint	 length);
 
 guint8		 synapticsmst_common_read_dpcd 			(SynapticsMSTConnection *connection,
-								 gint	 offset,
-								 gint	*buf,
-								 gint	 length);
+								 guint32	 offset,
+								 guint8		*buf,
+								 guint32	 length);
 
 guint8		 synapticsmst_common_write_dpcd 		(SynapticsMSTConnection *connection,
-								 gint	 offset,
-								 const gint *buf,
-								 gint	 length);
+								 guint32	 offset,
+								 const guint8 	*buf,
+								 guint32	 length);
 
 guint8		 synapticsmst_common_rc_set_command 		(SynapticsMSTConnection *connection,
-								 gint	 rc_cmd,
-								 gint	 length,
-								 gint	 offset,
+								 guint32	 rc_cmd,
+								 guint32	 length,
+								 guint32	 offset,
 								 const guint8	*buf);
 
 guint8		 synapticsmst_common_rc_get_command 		(SynapticsMSTConnection *connection,
-								 gint	 rc_cmd,
-								 gint	 length,
-								 gint	 offset,
-								 guint8	*buf);
+								 guint32	 rc_cmd,
+								 guint32	 length,
+								 guint32	 offset,
+								 guint8		*buf);
 
 guint8		 synapticsmst_common_rc_special_get_command	(SynapticsMSTConnection *connection,
-								 gint	 rc_cmd,
-								 gint	 cmd_length,
-								 gint	 cmd_offset,
-								 guint8	*cmd_data,
-								 gint	 length,
-								 guint8	*buf);
+								 guint32	 rc_cmd,
+								 guint32	 cmd_length,
+								 guint32	 cmd_offset,
+								 guint8		*cmd_data,
+								 guint32	 length,
+								 guint8		*buf);
 
 guint8		 synapticsmst_common_enable_remote_control	(SynapticsMSTConnection *connection);
 

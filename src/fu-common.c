@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -405,16 +404,16 @@ fu_common_firmware_builder (GBytes *bytes,
 	g_ptr_array_add (argv, g_strdup ("bwrap"));
 	fu_common_add_argv (argv, "--die-with-parent");
 	fu_common_add_argv (argv, "--ro-bind /usr /usr");
+	fu_common_add_argv (argv, "--ro-bind /lib /lib");
+	fu_common_add_argv (argv, "--ro-bind /lib64 /lib64");
+	fu_common_add_argv (argv, "--ro-bind /bin /bin");
+	fu_common_add_argv (argv, "--ro-bind /sbin /sbin");
 	fu_common_add_argv (argv, "--dir /tmp");
 	fu_common_add_argv (argv, "--dir /var");
 	fu_common_add_argv (argv, "--bind %s /tmp", tmpdir);
 	if (g_file_test (localstatebuilderdir, G_FILE_TEST_EXISTS))
 		fu_common_add_argv (argv, "--ro-bind %s /boot", localstatebuilderdir);
 	fu_common_add_argv (argv, "--dev /dev");
-	fu_common_add_argv (argv, "--symlink usr/lib /lib");
-	fu_common_add_argv (argv, "--symlink usr/lib64 /lib64");
-	fu_common_add_argv (argv, "--symlink usr/bin /bin");
-	fu_common_add_argv (argv, "--symlink usr/sbin /sbin");
 	fu_common_add_argv (argv, "--chdir /tmp");
 	fu_common_add_argv (argv, "--unshare-all");
 	fu_common_add_argv (argv, "/tmp/%s", script_fn);

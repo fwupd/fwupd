@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2015-2017 Peter Jones <pjones@redhat.com>
  *
@@ -192,15 +191,15 @@ fu_uefi_device_load_update_info (FuUefiDevice *self, GError **error)
 	g_autofree guint8 *data = NULL;
 	g_autoptr(FuUefiUpdateInfo) info = fu_uefi_update_info_new ();
 
-	g_return_val_if_fail (FU_IS_UEFI_DEVICE (self), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (FU_IS_UEFI_DEVICE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* get the existing status */
 	if (!fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
 				    &data, &datasz, NULL, error))
-		return FALSE;
+		return NULL;
 	if (!fu_uefi_update_info_parse (info, data, datasz, error))
-		return FALSE;
+		return NULL;
 	return g_steal_pointer (&info);
 }
 
@@ -251,7 +250,7 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "failed to efi_generate_file_device_path(%s)",
 			     path);
-		return FALSE;
+		return NULL;
 	}
 
 	/* if we just have an end device path, it's not going to work */
@@ -261,7 +260,7 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "failed to get valid device_path for (%s)",
 			     path);
-		return FALSE;
+		return NULL;
 	}
 
 	/* actually get the path this time */
@@ -275,7 +274,7 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "failed to efi_generate_file_device_path(%s)",
 			     path);
-		return FALSE;
+		return NULL;
 	}
 
 	/* success */
@@ -323,7 +322,6 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	info.capsule_flags = self->capsule_flags;
 	info.update_info_version = 0x7;
 	info.hw_inst = self->fmp_hardware_instance;
-	memcpy (&guid, &info.guid, sizeof(efi_guid_t));
 	if (efi_str_to_guid (self->fw_class, &guid) < 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -331,6 +329,7 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 				     "failed to get convert GUID");
 		return FALSE;
 	}
+	memcpy (&info.guid, &guid, sizeof(efi_guid_t));
 
 	/* set the body as the device path */
 	if (g_getenv ("FWUPD_UEFI_ESP_PATH") == NULL) {
@@ -391,7 +390,7 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 	g_autofree gchar *fw_class_fn = NULL;
 	g_autofree gchar *id = NULL;
 
-	g_return_val_if_fail (entry_path != NULL, FALSE);
+	g_return_val_if_fail (entry_path != NULL, NULL);
 
 	/* create object */
 	self = g_object_new (FU_TYPE_UEFI_DEVICE, NULL);
@@ -408,7 +407,6 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 	self->last_attempt_status = fu_uefi_read_file_as_uint64 (entry_path, "last_attempt_status");
 	self->last_attempt_version = fu_uefi_read_file_as_uint64 (entry_path, "last_attempt_version");
 	self->fw_version_lowest = fu_uefi_read_file_as_uint64 (entry_path, "lowest_supported_fw_version");
-	g_assert (self->fw_class != NULL);
 
 	/* the hardware instance is not in the ESRT table and we should really
 	 * write the EFI stub to query with FMP -- but we still have not ever

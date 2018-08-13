@@ -1,5 +1,4 @@
-/* -*- mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017 Intel Corporation.
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -40,6 +39,10 @@ typedef struct {
 	guint   ports;
 } FuThunderboltHwInfo;
 
+enum {
+	DROM_ENTRY_MC = 0x6,
+};
+
 static const FuThunderboltHwInfo *
 get_hw_info (guint16 id)
 {
@@ -71,6 +74,12 @@ static inline gboolean
 valid_farb_pointer (guint32 pointer)
 {
 	return pointer != 0 && pointer != 0xFFFFFF;
+}
+
+static inline gboolean
+valid_pd_pointer (guint32 pointer)
+{
+	return pointer != 0 && pointer != 0xFFFFFFFF;
 }
 
 /* returns NULL on error */
@@ -236,6 +245,58 @@ read_ucode_section_len (guint32                       offset,
 }
 
 /*
+ * reads generic entries from DROM based on type field and fills
+ * location to point to the entry data if found. Returns TRUE if there
+ * was no error even if the entry was not found (location->offset is != 0
+ * when entry was found).
+ */
+static gboolean
+read_drom_entry_location (const FuThunderboltFwObject *fw,
+			  guint8                       type,
+			  FuThunderboltFwLocation     *location,
+			  GError                     **error)
+{
+	const FuThunderboltFwLocation drom_len_loc = { .offset = 0x0E, .len = 2, .section = DROM_SECTION, .description = "DROM length" };
+	FuThunderboltFwLocation drom_entry_loc = { .len = 2, .section = DROM_SECTION, .description = "DROM generic entry" };
+	guint16 drom_size;
+
+	if (!read_uint16 (&drom_len_loc, fw, &drom_size, error))
+		return FALSE;
+
+	drom_size &= 0x0FFF;
+	/* drom_size is size of DROM block except for identification
+	 * section and crc32 so add them here */
+	drom_size += 9 + 4;
+
+	/* DROM entries start right after the identification section */
+	drom_entry_loc.offset = 9 + 4 + 9;
+
+	do {
+		g_autoptr(GByteArray) entry = NULL;
+		guint8 entry_type;
+		guint8 entry_length;
+
+		entry = read_location (&drom_entry_loc, fw, error);
+		if (entry == NULL)
+			return FALSE;
+
+		entry_length = entry->data[0];
+		entry_type = entry->data[1] & 0x3F;
+
+		/* generic entry (port bit is not set) */
+		if ((entry->data[1] & (1 << 7)) == 0 && entry_type == type) {
+			location->len = entry_length - 2;
+			location->offset = drom_entry_loc.offset + 2;
+			return TRUE;
+		}
+
+		drom_entry_loc.offset += entry_length;
+	} while (drom_entry_loc.offset < drom_size);
+
+	return TRUE;
+}
+
+/*
  * Takes a FwObject and fills its section array up
  * Assumes sections[DIGITAL_SECTION].offset is already set
  */
@@ -250,9 +311,7 @@ read_sections (const FuThunderboltFwObject *fw, gboolean is_host, guint gen, GEr
 		if (!read_uint32 (&drom_offset, fw, &offset, error))
 			return FALSE;
 		fw->sections[DROM_SECTION] = offset + fw->sections[DIGITAL_SECTION];
-	}
 
-	if (!is_host) {
 		if (!read_uint32 (&arc_params_offset, fw, &offset, error))
 			return FALSE;
 		fw->sections[ARC_PARAMS_SECTION] = offset + fw->sections[DIGITAL_SECTION];
@@ -375,6 +434,7 @@ get_host_locations (guint16 id)
 		{ .offset = 0x129, .len = 1, .description = "Snk1" },
 		{ .offset = 0x136, .len = 1, .description = "Src0", .mask = 0xF0 },
 		{ .offset = 0xB6,  .len = 1, .description = "PA/PB (USB2)", .mask = 0xC0 },
+		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
 		{ .offset = 0x7B,  .len = 1, .description = "Native", .mask = 0x20 },
 		{ 0 },
 
@@ -388,6 +448,7 @@ get_host_locations (guint16 id)
 		{ .offset = 0x13,  .len = 1, .description = "PB", .mask = 0x44, .section = DRAM_UCODE_SECTION },
 		{ .offset = 0x121, .len = 1, .description = "Snk0" },
 		{ .offset = 0xB6,  .len = 1, .description = "PA/PB (USB2)", .mask = 0xC0 },
+		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
 		{ .offset = 0x7B,  .len = 1, .description = "Native", .mask = 0x20 },
 		{ 0 }
 	};
@@ -400,6 +461,8 @@ get_host_locations (guint16 id)
 		{ .offset = 0x136, .len = 1, .description = "Src0", .mask = 0xF0 },
 		{ .offset = 0xB6,  .len = 1, .description = "PA/PB (USB2)", .mask = 0xC0 },
 		{ .offset = 0x5E,  .len = 1, .description = "Aux", .mask = 0x0F },
+		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
+		{ .offset = 0x7B,  .len = 1, .description = "Native", .mask = 0x20 },
 		{ 0 },
 
 		{ .offset = 0x13,  .len = 1, .description = "PB", .mask = 0xCC, .section = DRAM_UCODE_SECTION },
@@ -428,11 +491,75 @@ get_host_locations (guint16 id)
 	}
 }
 
-static const FuThunderboltFwLocation *
-get_device_locations (guint16 id)
+/*
+ * Finds optional multi controller (MC) entry from controller DROM.
+ * Returns TRUE if the controller did not have MC entry or the
+ * controller and image MC entries match. In any other case FALSE is
+ * returned and error is set accordingly.
+ */
+static gboolean
+compare_device_mc (const FuThunderboltFwObject *controller,
+		   const FuThunderboltFwObject *image,
+		   GError **error)
 {
-	static const FuThunderboltFwLocation locations[] = {
+	FuThunderboltFwLocation image_mc_loc = { .section = DROM_SECTION, .description = "Multi Controller" };
+	FuThunderboltFwLocation controller_mc_loc = image_mc_loc;
+	g_autoptr(GByteArray) controller_mc = NULL;
+	g_autoptr(GByteArray) image_mc = NULL;
+
+	if (!read_drom_entry_location (controller, DROM_ENTRY_MC,
+				       &controller_mc_loc, error))
+		return FALSE;
+
+	/* it is fine if the controller does not have MC entry */
+	if (controller_mc_loc.offset == 0)
+		return TRUE;
+
+	if (!read_drom_entry_location (image, DROM_ENTRY_MC, &image_mc_loc, error))
+		return FALSE;
+
+	if (image_mc_loc.offset == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
+				     "firmware does not have multi controller entry");
+		return FALSE;
+	}
+	if (controller_mc_loc.len != image_mc_loc.len) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
+				     "firmware multi controller entry length mismatch");
+		return FALSE;
+	}
+
+	controller_mc = read_location (&controller_mc_loc, controller, error);
+	if (controller_mc == NULL)
+		return FALSE;
+	image_mc = read_location (&image_mc_loc, image, error);
+	if (image_mc == NULL)
+		return FALSE;
+
+	if (memcmp (controller_mc->data, image_mc->data, controller_mc->len) != 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
+				     "firmware multi controller entry mismatch");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static const FuThunderboltFwLocation *
+get_device_locations (guint16 id, const FuThunderboltFwObject *controller,
+		      const FuThunderboltFwObject *image, GError **error)
+{
+	static const FuThunderboltFwLocation AR[] = {
+		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
 		{ .offset = 0x124, .len = 1, .section = ARC_PARAMS_SECTION, .description = "X of N" },
+		{ 0 }
+	};
+
+	static const FuThunderboltFwLocation TR[] = {
+		{ .offset = 0x45,  .len = 1, .description = "Flash Size", .mask = 0x07 },
 		{ 0 }
 	};
 
@@ -442,7 +569,15 @@ get_device_locations (guint16 id)
 	case 0x15D3:
 	case 0x15DA:
 	case 0x15C0:
-		return locations;
+		return AR;
+	case 0x15E7:
+	case 0x15EA:
+	case 0x15EF:
+		/* if the controller has multi controller entry need to
+		 * compare it against the image first. */
+		if (!compare_device_mc (controller, image, error))
+			return NULL;
+		return TR;
 	default:
 		return NULL;
 	}
@@ -472,6 +607,37 @@ compare_locations (const FuThunderboltFwLocation **locations,
 			return FALSE;
 		}
 	} while ((++(*locations))->offset != 0);
+	return TRUE;
+}
+
+static gboolean
+compare_pd_existence (guint16 id,
+		      const FuThunderboltFwObject *controller,
+		      const FuThunderboltFwObject *image,
+		      GError **error)
+{
+	const FuThunderboltFwLocation pd_pointer_loc = { .offset = 0x10C, .len = 4, .section = ARC_PARAMS_SECTION, .description = "PD pointer" };
+	gboolean controller_has_pd;
+	gboolean image_has_pd;
+	guint32 pd_pointer;
+
+	if (controller->sections[ARC_PARAMS_SECTION] == 0)
+		return TRUE;
+
+	if (!read_uint32 (&pd_pointer_loc, controller, &pd_pointer, error))
+		return FALSE;
+	controller_has_pd = valid_pd_pointer (pd_pointer);
+
+	if (!read_uint32 (&pd_pointer_loc, image, &pd_pointer, error))
+		return FALSE;
+	image_has_pd = valid_pd_pointer (pd_pointer);
+
+	if (controller_has_pd != image_has_pd) {
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
+				     "PD section mismatch");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -571,6 +737,9 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 			return VALIDATION_FAILED;
 	}
 
+	if (!compare_pd_existence (hw_info->id, &controller, &image, error))
+		return VALIDATION_FAILED;
+
 	/*
 	 * 0 is for the unknown device case, for being future-compatible with
 	 * new devices; so we can't know which locations to check besides the
@@ -580,14 +749,21 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 	if (hw_info->id == 0)
 		return UNKNOWN_DEVICE;
 
-	locations = is_host ?
-			    get_host_locations (hw_info->id) :
-			    get_device_locations (hw_info->id);
-	if (locations == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-				     "FW locations to check not found for this controller");
-		return VALIDATION_FAILED;
+	if (is_host) {
+		locations = get_host_locations (hw_info->id);
+		if (locations == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+					     "FW locations to check not found for this controller");
+			return VALIDATION_FAILED;
+		}
+	} else {
+		locations = get_device_locations (hw_info->id, &controller,
+						  &image, error);
+		if (locations == NULL) {
+			/* error is set already by the above */
+			return VALIDATION_FAILED;
+		}
 	}
 
 	if (!compare_locations (&locations, &controller, &image, error))

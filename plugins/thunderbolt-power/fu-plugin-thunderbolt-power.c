@@ -1,6 +1,5 @@
-/* -*- mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
- * Copyright (C) 2017 Dell Inc.
+/*
+ * Copyright (C) 2017 Dell, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -31,6 +30,7 @@ struct FuPluginData {
 	GUdevClient   *udev;
 	gchar         *force_path;
 	gboolean       needs_forcepower;
+	gboolean       updating;
 	guint          timeout_id;
 };
 
@@ -130,6 +130,28 @@ fu_plugin_thunderbolt_power_reset_cb (gpointer user_data)
 	return FALSE;
 }
 
+static void
+fu_plugin_thunderbolt_reset_timeout (FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+
+	if (!data->needs_forcepower || data->updating)
+		return;
+
+	g_debug ("Setting timeout to %d seconds",
+		 TBT_NEW_DEVICE_TIMEOUT * 10);
+
+	/* in case this was a re-coldplug */
+	if (data->timeout_id != 0)
+		g_source_remove (data->timeout_id);
+
+	/* reset force power to off after enough time to enumerate */
+	data->timeout_id =
+		g_timeout_add (TBT_NEW_DEVICE_TIMEOUT * 10000,
+				fu_plugin_thunderbolt_power_reset_cb,
+				plugin);
+}
+
 static gboolean
 udev_uevent_cb (GUdevClient *udev,
 		const gchar *action,
@@ -141,10 +163,17 @@ udev_uevent_cb (GUdevClient *udev,
 	if (action == NULL)
 		return TRUE;
 
-	g_debug ("uevent for %s: %s", g_udev_device_get_sysfs_path (device), action);
+	g_debug ("uevent for %s: (%s) %s",
+		 g_udev_device_get_name (device),
+		 g_udev_device_get_sysfs_path (device),
+		 action);
 
+	/* thunderbolt device was turned on */
+	if (g_str_equal (g_udev_device_get_subsystem (device), "thunderbolt") &&
+	    g_str_equal (action, "add")) {
+		fu_plugin_thunderbolt_reset_timeout (plugin);
 	/* intel-wmi-thunderbolt has been loaded/unloaded */
-	if (g_str_equal (action, "change")) {
+	} else if (g_str_equal (action, "change")) {
 		fu_plugin_thunderbolt_power_get_path (plugin);
 		if (fu_plugin_thunderbolt_power_supported (plugin)) {
 			fu_plugin_set_enabled (plugin, TRUE);
@@ -163,7 +192,7 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-	const gchar *subsystems[] = { "wmi", NULL };
+	const gchar *subsystems[] = { "thunderbolt", "wmi", NULL };
 
 	data->udev = g_udev_client_new (subsystems);
 	g_signal_connect (data->udev, "uevent",
@@ -233,6 +262,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 		data->needs_forcepower = FALSE;
 		return TRUE;
 	}
+	data->updating = TRUE;
 	if (!fu_plugin_thunderbolt_power_set (plugin, TRUE, error))
 		return FALSE;
 
@@ -267,6 +297,7 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
 	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") != 0)
 		return TRUE;
 
+	data->updating = FALSE;
 	if (data->needs_forcepower &&
 	    !fu_plugin_thunderbolt_power_set (plugin, FALSE, error))
 		return FALSE;
@@ -290,15 +321,8 @@ fu_plugin_thunderbolt_power_coldplug (FuPlugin *plugin, GError **error)
 	if (data->needs_forcepower) {
 		if (!fu_plugin_thunderbolt_power_set (plugin, TRUE, error))
 			return FALSE;
-		/* in case this was a re-coldplug */
-		if (data->timeout_id != 0)
-			g_source_remove (data->timeout_id);
 
-		/* reset force power to off after enough time to enumerate */
-		data->timeout_id =
-			g_timeout_add (TBT_NEW_DEVICE_TIMEOUT * 10000,
-				       fu_plugin_thunderbolt_power_reset_cb,
-				       plugin);
+		fu_plugin_thunderbolt_reset_timeout (plugin);
 	}
 
 	return TRUE;

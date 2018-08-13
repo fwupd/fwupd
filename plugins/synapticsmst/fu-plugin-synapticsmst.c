@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
@@ -15,12 +14,12 @@
 #include "fu-device-metadata.h"
 
 #define SYNAPTICS_FLASH_MODE_DELAY 3
+#define SYNAPTICS_UPDATE_ENUMERATE_TRIES 3
 
-#define HWID_DELL_INC	"85d38fda-fc0e-5c6f-808f-076984ae7978"
 #define DELL_DOCK_FLASH_GUID	"e7ca1f36-bf73-4574-afe6-a4ccacabf479"
+#define DELL_DOCK_FUTURE_GUID	"41ca7da371ef437e027272d0173bdddb3423827f"
 
 struct FuPluginData {
-	gchar		*dock_type;
 	gchar		*system_type;
 };
 
@@ -33,16 +32,6 @@ synapticsmst_common_check_supported_system (FuPlugin *plugin, GError **error)
 		return TRUE;
 	}
 
-	/* tests for "Dell Inc." manufacturer string
-	 * this isn't strictly a complete tests due to OEM rebranded
-	 * systems being excluded, but should cover most cases */
-	if (!fu_plugin_check_hwid (plugin, HWID_DELL_INC)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "MST firmware updating not supported by OEM");
-		return FALSE;
-	}
 	if (!g_file_test (SYSFS_DRM_DP_AUX, G_FILE_TEST_IS_DIR)) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -63,7 +52,7 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	g_autoptr(FuDevice) dev = NULL;
 	const gchar *kind_str = NULL;
 	const gchar *board_str = NULL;
-	const gchar *guid_str = NULL;
+	GPtrArray *guids = NULL;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *dev_id_str = NULL;
 	g_autofree gchar *layer_str = NULL;
@@ -74,21 +63,20 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 
 	aux_node = synapticsmst_device_get_aux_node (device);
 	if (!synapticsmst_device_enumerate_device (device,
-						   data->dock_type,
 						   data->system_type,
 						   error)) {
-		g_debug ("error enumerating device at %s", aux_node);
+		g_prefix_error (error, "Error enumerating device at %s: ", aux_node);
 		return FALSE;
 	}
 
 	layer = synapticsmst_device_get_layer (device);
 	rad = synapticsmst_device_get_rad (device);
 	board_str = synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device));
-	name = g_strdup_printf ("Synaptics %s inside %s", synapticsmst_device_get_chip_id (device),
+	name = g_strdup_printf ("Synaptics %s inside %s", synapticsmst_device_get_chip_id_str (device),
 				board_str);
-	guid_str =  synapticsmst_device_get_guid (device);
-	if (guid_str == NULL) {
-		g_debug ("invalid GUID for board ID %x",
+	guids = synapticsmst_device_get_guids (device);
+	if (guids->len == 0) {
+		g_debug ("No GUIDs found for board ID %x",
 			 synapticsmst_device_get_board_id(device));
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -125,12 +113,19 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	fu_device_set_summary (dev, "Multi-Stream Transport Device");
 	fu_device_add_icon (dev, "computer");
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
-	fu_device_add_guid (dev, guid_str);
+	for (guint i = 0; i < guids->len; i++)
+		fu_device_add_guid (dev, g_ptr_array_index (guids, i));
 
-	/* Currently recognizes TB16/WD15 */
-	if (g_strcmp0 (data->dock_type, "TB16") == 0 ||
-	    g_strcmp0 (data->dock_type, "WD15") == 0) {
+	/* Set up parents */
+	switch (synapticsmst_device_get_board_id (device)) {
+	case SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE:
 		fu_device_add_parent_guid (dev, DELL_DOCK_FLASH_GUID);
+		break;
+	case SYNAPTICSMST_DEVICE_BOARDID_DELL_FUTURE:
+		fu_device_add_parent_guid (dev, DELL_DOCK_FUTURE_GUID);
+		break;
+	default:
+		break;
 	}
 
 	fu_plugin_device_add (plugin, dev);
@@ -320,7 +315,7 @@ fu_plugin_update (FuPlugin *plugin,
 
 	device = synapticsmst_device_new (kind, aux_node, layer, rad);
 
-	if (!synapticsmst_device_enumerate_device (device, data->dock_type,
+	if (!synapticsmst_device_enumerate_device (device,
 						   data->system_type, error))
 		return FALSE;
 	if (synapticsmst_device_board_id_to_string (synapticsmst_device_get_board_id (device)) != NULL) {
@@ -342,33 +337,28 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* Re-run device enumeration to find the new device version */
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);
-	if (!synapticsmst_device_enumerate_device (device, data->dock_type,
-						   data->system_type, error)) {
-		return FALSE;
+	for (guint i = 1; i <= SYNAPTICS_UPDATE_ENUMERATE_TRIES; i++) {
+		g_autoptr(GError) error_local = NULL;
+		g_usleep (SYNAPTICS_FLASH_MODE_DELAY * 1000000);
+		if (!synapticsmst_device_enumerate_device (device,
+							   data->system_type,
+							   &error_local)) {
+			g_warning ("Unable to find device after %u seconds: %s",
+				   SYNAPTICS_FLASH_MODE_DELAY * i,
+				   error_local->message);
+			if (i == SYNAPTICS_UPDATE_ENUMERATE_TRIES) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "%s",
+					     error_local->message);
+				return FALSE;
+			}
+		}
 	}
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
 
 	return TRUE;
-}
-
-void
-fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *tmp;
-
-	/* dell plugin */
-	if (g_strcmp0 (fu_device_get_plugin (device), "dell") == 0) {
-		/* only look at external devices from dell plugin */
-		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL))
-			return;
-
-		tmp = fu_device_get_metadata (device,
-					      FU_DEVICE_METADATA_DELL_DOCK_TYPE);
-
-		if (tmp)
-			data->dock_type = g_strdup (tmp);
-	}
 }
 
 static gboolean
@@ -401,7 +391,6 @@ fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
-	g_free(data->dock_type);
 	g_free(data->system_type);
 }
 

@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
@@ -32,7 +31,7 @@ struct _SynapticsMSTConnection {
 
 guint8
 synapticsmst_common_aux_node_read (SynapticsMSTConnection *connection,
-				   gint offset, gint *buf, gint length)
+				   guint32 offset, guint8 *buf, gint length)
 {
 	if (lseek (connection->fd, offset, SEEK_SET) != offset)
 		return DPCD_SEEK_FAIL;
@@ -45,7 +44,7 @@ synapticsmst_common_aux_node_read (SynapticsMSTConnection *connection,
 
 static guint8
 synapticsmst_common_aux_node_write (SynapticsMSTConnection *connection,
-				    gint offset, const gint *buf, gint length)
+				    guint32 offset, const guint8 *buf, gint length)
 {
 	if (lseek (connection->fd, offset, SEEK_SET) != offset)
 		return DPCD_SEEK_FAIL;
@@ -75,7 +74,7 @@ synapticsmst_common_new (gint fd, guint8 layer, guint rad)
 
 guint8
 synapticsmst_common_read_dpcd (SynapticsMSTConnection *connection,
-			       gint offset, gint *buf, gint length)
+			       guint32 offset, guint8 *buf, guint32 length)
 {
 	if (connection->layer && connection->remain_layer) {
 		guint8 rc, node;
@@ -93,9 +92,9 @@ synapticsmst_common_read_dpcd (SynapticsMSTConnection *connection,
 
 guint8
 synapticsmst_common_write_dpcd (SynapticsMSTConnection *connection,
-				gint offset,
-				const gint *buf,
-				gint length)
+				guint32 offset,
+				const guint8 *buf,
+			 	guint32 length)
 {
 	if (connection->layer && connection->remain_layer) {
 		guint8 rc, node;
@@ -113,14 +112,14 @@ synapticsmst_common_write_dpcd (SynapticsMSTConnection *connection,
 
 guint8
 synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
-				    gint rc_cmd,
-				    gint length,
-				    gint offset,
+				    guint32 rc_cmd,
+				    guint32 length,
+				    guint32 offset,
 				    const guint8 *buf)
 {
 	guint8 rc = 0;
-	gint cur_offset = offset;
-	gint cur_length;
+	guint32 cur_offset = offset;
+	guint32 cur_length;
 	gint data_left = length;
 	gint cmd;
 	gint readData = 0;
@@ -136,21 +135,21 @@ synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 
 		if (cur_length) {
 			/* write data */
-			rc = synapticsmst_common_write_dpcd (connection, REG_RC_DATA, (gint *)buf, cur_length);
+			rc = synapticsmst_common_write_dpcd (connection, REG_RC_DATA, buf, cur_length);
 			if (rc)
 				break;
 
 			/* write offset */
 			rc = synapticsmst_common_write_dpcd (connection,
 							     REG_RC_OFFSET,
-							     &cur_offset, 4);
+							     (guint8 *)&cur_offset, 4);
 			if (rc)
 				break;
 
 			/* write length */
 			rc = synapticsmst_common_write_dpcd (connection,
 							     REG_RC_LEN,
-							     &cur_length, 4);
+							     (guint8 *)&cur_length, 4);
 			if (rc)
 				break;
 		}
@@ -159,7 +158,7 @@ synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 		cmd = 0x80 | rc_cmd;
 		rc = synapticsmst_common_write_dpcd (connection,
 						     REG_RC_CMD,
-						     &cmd, 1);
+						     (guint8 *)&cmd, 1);
 		if (rc)
 			break;
 
@@ -170,7 +169,7 @@ synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 		do {
 			rc = synapticsmst_common_read_dpcd (connection,
 							    REG_RC_CMD,
-							    &readData, 2);
+							    (guint8 *)&readData, 2);
 			clock_gettime (CLOCK_REALTIME, &t_spec);
 			if (t_spec.tv_sec > deadline) {
 				rc = -1;
@@ -194,17 +193,17 @@ synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 
 guint8
 synapticsmst_common_rc_get_command (SynapticsMSTConnection *connection,
-				    gint rc_cmd,
-				    gint length,
-				    gint offset,
+				    guint32 rc_cmd,
+				    guint32 length,
+				    guint32 offset,
 				    guint8 *buf)
 {
 	guint8 rc = 0;
-	gint cur_offset = offset;
-	gint cur_length;
+	guint32 cur_offset = offset;
+	guint32 cur_length;
 	gint data_need = length;
-	gint cmd;
-	gint readData = 0;
+	guint32 cmd;
+	guint32 readData = 0;
 	long deadline;
 	struct timespec t_spec;
 
@@ -219,14 +218,14 @@ synapticsmst_common_rc_get_command (SynapticsMSTConnection *connection,
 			/* write offset */
 			rc = synapticsmst_common_write_dpcd (connection,
 							     REG_RC_OFFSET,
-							     &cur_offset, 4);
+							     (guint8 *)&cur_offset, 4);
 			if (rc)
 				break;
 
 			/* write length */
 			rc = synapticsmst_common_write_dpcd (connection,
 							     REG_RC_LEN,
-							     &cur_length, 4);
+							     (guint8 *)&cur_length, 4);
 			if (rc)
 				break;
 		}
@@ -235,7 +234,7 @@ synapticsmst_common_rc_get_command (SynapticsMSTConnection *connection,
 		cmd = 0x80 | rc_cmd;
 		rc = synapticsmst_common_write_dpcd (connection,
 						     REG_RC_CMD,
-						     &cmd, 1);
+						     (guint8 *)&cmd, 1);
 		if (rc)
 			break;
 
@@ -246,7 +245,7 @@ synapticsmst_common_rc_get_command (SynapticsMSTConnection *connection,
 		do {
 			rc = synapticsmst_common_read_dpcd (connection,
 							    REG_RC_CMD,
-							    &readData, 2);
+							    (guint8 *)&readData, 2);
 			clock_gettime (CLOCK_REALTIME, &t_spec);
 			if (t_spec.tv_sec > deadline) {
 				rc = -1;
@@ -263,7 +262,7 @@ synapticsmst_common_rc_get_command (SynapticsMSTConnection *connection,
 		if (cur_length) {
 			rc = synapticsmst_common_read_dpcd (connection,
 							    REG_RC_DATA,
-							    (gint *)buf,
+							    buf,
 							    cur_length);
 			if (rc)
 				break;
@@ -279,16 +278,16 @@ synapticsmst_common_rc_get_command (SynapticsMSTConnection *connection,
 
 guint8
 synapticsmst_common_rc_special_get_command (SynapticsMSTConnection *connection,
-					    gint rc_cmd,
-					    gint cmd_length,
-					    gint cmd_offset,
+					    guint32 rc_cmd,
+					    guint32 cmd_length,
+					    guint32 cmd_offset,
 					    guint8 *cmd_data,
-					    gint length,
+					    guint32 length,
 					    guint8 *buf)
 {
 	guint8 rc = 0;
-	gint readData = 0;
-	gint cmd;
+	guint32 readData = 0;
+	guint32 cmd;
 	long deadline;
 	struct timespec t_spec;
 
@@ -297,7 +296,7 @@ synapticsmst_common_rc_special_get_command (SynapticsMSTConnection *connection,
 		if (cmd_data != NULL) {
 			rc = synapticsmst_common_write_dpcd (connection,
 							     REG_RC_DATA,
-							     (gint *)cmd_data,
+							     cmd_data,
 							     cmd_length);
 			if (rc)
 				return rc;
@@ -306,21 +305,21 @@ synapticsmst_common_rc_special_get_command (SynapticsMSTConnection *connection,
 		/* write offset */
 		rc = synapticsmst_common_write_dpcd (connection,
 						     REG_RC_OFFSET,
-						     &cmd_offset, 4);
+						     (guint8 *)&cmd_offset, 4);
 		if (rc)
 			return rc;
 
 		/* write length */
 		rc = synapticsmst_common_write_dpcd (connection,
 						     REG_RC_LEN,
-						     &cmd_length, 4);
+						     (guint8 *)&cmd_length, 4);
 		if (rc)
 			return rc;
 	}
 
 	/* send command */
 	cmd = 0x80 | rc_cmd;
-	rc = synapticsmst_common_write_dpcd (connection, REG_RC_CMD, &cmd, 1);
+	rc = synapticsmst_common_write_dpcd (connection, REG_RC_CMD, (guint8 *)&cmd, 1);
 	if (rc)
 		return rc;
 
@@ -330,7 +329,7 @@ synapticsmst_common_rc_special_get_command (SynapticsMSTConnection *connection,
 	do {
 		rc = synapticsmst_common_read_dpcd (connection,
 						    REG_RC_CMD,
-						    &readData, 2);
+						    (guint8 *)&readData, 2);
 		clock_gettime (CLOCK_REALTIME, &t_spec);
 		if (t_spec.tv_sec > deadline)
 			return -1;
@@ -346,7 +345,7 @@ synapticsmst_common_rc_special_get_command (SynapticsMSTConnection *connection,
 	if (length) {
 		rc = synapticsmst_common_read_dpcd (connection,
 						    REG_RC_DATA,
-						    (gint *)buf, length);
+						    buf, length);
 		if (rc)
 			return rc;
 	}
@@ -366,8 +365,16 @@ synapticsmst_common_enable_remote_control (SynapticsMSTConnection *connection)
 		rc = synapticsmst_common_rc_set_command (connection_tmp,
 							 UPDC_ENABLE_RC,
 							 5, 0, (guint8*)sc);
-		if (rc)
-			break;
+		/* if we fail, try to disable and enable one more time */
+		if (rc) {
+			g_debug ("Failed to enable remote control, retrying");
+			synapticsmst_common_disable_remote_control (connection_tmp);
+			rc = synapticsmst_common_rc_set_command (connection_tmp,
+								 UPDC_ENABLE_RC,
+								 5, 0, (guint8*)sc);
+			if (rc)
+				break;
+		}
 	}
 	return rc;
 }

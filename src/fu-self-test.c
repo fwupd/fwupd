@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -184,6 +183,48 @@ fu_engine_requirements_device_func (void)
 					    &error);
 	g_assert_no_error (error);
 	g_assert (ret);
+}
+
+static void
+fu_engine_device_priority_func (void)
+{
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device3 = fu_device_new ();
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(GError) error = NULL;
+
+	/* add low prio then high then low */
+	fu_device_set_id (device1, "id1");
+	fu_device_set_priority (device1, 0);
+	fu_device_set_plugin (device1, "udev");
+	fu_device_add_guid (device1, "GUID1");
+	fu_engine_add_device (engine, device1);
+	fu_device_set_id (device2, "id2");
+	fu_device_set_priority (device2, 1);
+	fu_device_set_plugin (device2, "redfish");
+	fu_device_add_guid (device2, "GUID1");
+	fu_engine_add_device (engine, device2);
+	fu_device_set_id (device3, "id3");
+	fu_device_set_priority (device3, 0);
+	fu_device_set_plugin (device3, "uefi");
+	fu_device_add_guid (device3, "GUID1");
+	fu_engine_add_device (engine, device3);
+
+	/* get the high prio device */
+	device = fu_engine_get_device (engine, "867d5f8110f8aa79dd63d7440f21724264f10430", &error);
+	g_assert_no_error (error);
+	g_assert_cmpint (fu_device_get_priority (device), ==, 1);
+
+	/* the now-removed low-prio device */
+	device = fu_engine_get_device (engine, "4e89d81a2e6fb4be2578d245fd8511c1f4ad0b58", &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_clear_error (&error);
+
+	/* the never-added 2nd low-prio device */
+	device = fu_engine_get_device (engine, "c48feddbbcfee514f530ce8f7f2dccd98b6cc150", &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 }
 
 static void
@@ -2271,6 +2312,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/engine{requirements-unsupported}", fu_engine_requirements_unsupported_func);
 	g_test_add_func ("/fwupd/engine{requirements-device}", fu_engine_requirements_device_func);
 	g_test_add_func ("/fwupd/engine{device-auto-parent}", fu_engine_device_parent_func);
+	g_test_add_func ("/fwupd/engine{device-priority}", fu_engine_device_priority_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);

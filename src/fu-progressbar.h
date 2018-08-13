@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -25,6 +24,8 @@ void		 fu_progressbar_set_length_status	(FuProgressbar	*self,
 							 guint		 len);
 void		 fu_progressbar_set_length_percentage	(FuProgressbar	*self,
 							 guint		 len);
+void		 fu_progressbar_set_title		(FuProgressbar	*self,
+							 const gchar	*title);
 
 G_END_DECLS
 

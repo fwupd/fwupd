@@ -19,10 +19,6 @@ shared_module('fu_plugin_synapticsmst',
   dependencies : [
     plugin_deps,
   ],
-  # https://github.com/hughsie/fwupd/issues/207
-  override_options : [
-    'werror=false',
-  ]
 )
 
 if get_option('tests')
@@ -33,6 +29,8 @@ if get_option('tests')
     'synapticsmst-self-test',
     sources : [
       'fu-self-test.c',
+      'synapticsmst-common.c',
+      'synapticsmst-device.c',
     ],
     include_directories : [
       include_directories('../..'),

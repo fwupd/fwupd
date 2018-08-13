@@ -1,5 +1,4 @@
-/* -*- mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017 Christian J. Kellner <christian@kellner.me>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -76,6 +75,7 @@ struct MockDevice {
 	const char *name; /* sysfs: device_name */
 	const char *id;   /* sysfs: device */
 	const char *nvm_version;
+	const char *nvm_parsed_version;
 
 	int delay_ms;
 
@@ -792,19 +792,22 @@ static MockDevice root_one = {
 
 	.name = "Laptop",
 	.id = "0x23",
-	.nvm_version = "20.0",
+	.nvm_version = "20.2",
+	.nvm_parsed_version = "20.02",
 
 	.children = (MockDevice[]) {
 		{
 			.name = "Thunderbolt Cable",
 			.id = "0x24",
 			.nvm_version = "20.0",
+			.nvm_parsed_version = "20.00",
 
 			.children = (MockDevice[]) {
 				{
 					.name = "Thunderbolt Dock",
 					.id = "0x25",
 					.nvm_version = "10.0",
+					.nvm_parsed_version = "10.00",
 				},
 				{ NULL, }
 
@@ -813,6 +816,7 @@ static MockDevice root_one = {
 			.name = "Thunderbolt Cable",
 			.id = "0x24",
 			.nvm_version = "23.0",
+			.nvm_parsed_version = "23.00",
 
 			.children = (MockDevice[]) {
 				{
@@ -820,6 +824,7 @@ static MockDevice root_one = {
 					.id = "0x26",
 
 					.nvm_version = "5.0",
+					.nvm_parsed_version = "05.00",
 				},
 				{ NULL, }
 			},
@@ -895,8 +900,7 @@ test_set_up (ThunderboltTest *tt, gconstpointer params)
 	}
 
 	if (!umockdev_in_mock_environment ()) {
-		g_warning ("Need to run within umockdev wrapper (umockdev-wrapper %s)!",
-			   program_invocation_short_name);
+		g_warning ("Need to run with umockdev-wrapper");
 		return;
 	}
 
@@ -1173,10 +1177,10 @@ test_update_fail (ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
 	g_assert_false (ret);
 
-	/* version should *not* have changed */
+	/* version should *not* have changed (but we get parsed version) */
 	version_after = fu_device_get_version (tree->fu_device);
 	g_debug ("version after update: %s", version_after);
-	g_assert_cmpstr (version_after, ==, tree->device->nvm_version);
+	g_assert_cmpstr (version_after, ==, tree->device->nvm_parsed_version);
 
 	/* we wait until the plugin has picked up all the
 	 * subtree changes, and make sure we still receive

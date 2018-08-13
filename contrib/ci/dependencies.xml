@@ -23,6 +23,19 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="bubblewrap">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="base-devel">
     <distro id="arch">
       <package />
@@ -334,11 +347,24 @@
       <package />
     </distro>
     <distro id="debian">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
       <package variant="x86_64">gnu-efi</package>
       <package variant="i386">gnu-efi</package>
     </distro>
     <distro id="ubuntu">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
       <package variant="x86_64">gnu-efi</package>
+      <package variant="i386">gnu-efi</package>
     </distro>
   </dependency>
   <dependency type="build" id="gir1.2-appstreamglib-1.0">
@@ -584,7 +610,6 @@
         <inclusive>amd64</inclusive>
         <inclusive>arm64</inclusive>
         <inclusive>armhf</inclusive>
-        <inclusive>armel</inclusive>
         <inclusive>i386</inclusive>
       </control>
       <package variant="x86_64" />
@@ -595,7 +620,6 @@
         <inclusive>amd64</inclusive>
         <inclusive>arm64</inclusive>
         <inclusive>armhf</inclusive>
-        <inclusive>armel</inclusive>
         <inclusive>i386</inclusive>
       </control>
       <package variant="x86_64" />
@@ -607,7 +631,6 @@
         <inclusive>amd64</inclusive>
         <inclusive>arm64</inclusive>
         <inclusive>armhf</inclusive>
-        <inclusive>armel</inclusive>
         <inclusive>i386</inclusive>
       </control>
       <package variant="x86_64" />
@@ -618,13 +641,15 @@
         <inclusive>amd64</inclusive>
         <inclusive>arm64</inclusive>
         <inclusive>armhf</inclusive>
-        <inclusive>armel</inclusive>
         <inclusive>i386</inclusive>
       </control>
       <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libgcab-dev">
+    <distro id="fedora">
+      <package>libgcab1-devel</package>
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />

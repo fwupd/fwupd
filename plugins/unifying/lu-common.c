@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -40,6 +39,9 @@ lu_dump_raw (const gchar *title, const guint8 *data, gsize len)
 	g_autoptr(GString) str = g_string_new (NULL);
 	if (len == 0)
 		return;
+        if (g_getenv ("FWUPD_UNIFYING_VERBOSE") == NULL)
+		return;
+
 	g_string_append_printf (str, "%s:", title);
 	for (gsize i = strlen (title); i < 16; i++)
 		g_string_append (str, " ");

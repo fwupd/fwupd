@@ -13,9 +13,6 @@ ifneq ($(CI),)
 	export CI=--werror
 endif
 
-regenerate_control:
-	OS=debian-x86_64 ./contrib/ci/generate_debian_control.py debian/control.in debian/control
-
 SB_STYLE := debian
 deb_version := $(shell dpkg-parsechangelog --show-field Version)
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
@@ -26,10 +23,9 @@ else
 endif
 
 %:
-	[ -f debian/control ] || debian/rules regenerate_control
 	dh $@ --with gir,systemd
 
-override_dh_auto_clean: regenerate_control
+override_dh_auto_clean:
 	rm -fr debian/build
 ifeq (ubuntu,$(SB_STYLE))
 	rm -rf debian/fwupd-images
@@ -37,9 +33,9 @@ endif
 
 override_dh_auto_configure:
 	if pkg-config --exists libsmbios_c; then \
-		export DELL="-Dplugin_dell=true -Dplugin_synaptics=true"; \
+		export DELL="-Dplugin_dell=true"; \
 	else \
-		export DELL="-Dplugin_dell=false -Dplugin_synaptics=false"; \
+		export DELL="-Dplugin_dell=false"; \
 	fi; \
 	if pkg-config --exists efivar; then \
 		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true"; \

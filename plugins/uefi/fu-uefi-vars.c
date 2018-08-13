@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2015-2017 Peter Jones <pjones@redhat.com>
  *
@@ -197,7 +196,7 @@ fu_uefi_vars_get_data (const gchar *guid, const gchar *name, guint8 **data,
 	info = g_file_input_stream_query_info (G_FILE_INPUT_STREAM (istr),
 					       G_FILE_ATTRIBUTE_STANDARD_SIZE,
 					       NULL, error);
-	if (istr == NULL) {
+	if (info == NULL) {
 		g_prefix_error (error, "failed to get stream info: ");
 		return FALSE;
 	}

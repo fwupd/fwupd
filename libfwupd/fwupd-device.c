@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -1526,6 +1525,27 @@ fwupd_device_from_variant (GVariant *data)
 		g_warning ("type %s not known", type_string);
 	}
 	return dev;
+}
+
+/**
+ * fwupd_device_compare:
+ * @device1: a #FwupdDevice
+ * @device2: a #FwupdDevice
+ *
+ * Comparison function for comparing two FwupdDevice objects.
+ *
+ * Returns: negative, 0 or positive
+ *
+ * Since: 1.1.1
+ **/
+gint
+fwupd_device_compare (FwupdDevice *device1, FwupdDevice *device2)
+{
+	FwupdDevicePrivate *priv1 = GET_PRIVATE (device1);
+	FwupdDevicePrivate *priv2 = GET_PRIVATE (device2);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device1), 0);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device2), 0);
+	return g_strcmp0 (priv1->id, priv2->id);
 }
 
 /**

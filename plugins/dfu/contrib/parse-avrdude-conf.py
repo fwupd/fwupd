@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """ This parses avrdude.conf and generates quirks for fwupd """
 
 # pylint: disable=wrong-import-position,pointless-string-statement

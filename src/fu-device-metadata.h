@@ -1,5 +1,4 @@
-/* -*- mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
- *
+/*
  * Copyright (C) 2017 Mario Limonciello <mario.limonciello@dell.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -33,15 +32,6 @@
  * Consumed by the thunderbolt plugin.
  */
 #define FU_DEVICE_METADATA_TBT_IS_SAFE_MODE	"Thunderbolt::IsSafeMode"
-
-/**
- * FU_DEVICE_METADATA_DELL_DOCK_TYPE:
- *
- * The type of dock plugged into the system
- * (if any)
- * Consumed by the synaptics plugin.
- */
-#define FU_DEVICE_METADATA_DELL_DOCK_TYPE	"Dell::DockType"
 
 /**
  * FU_DEVICE_METADATA_UEFI_DEVICE_KIND:
