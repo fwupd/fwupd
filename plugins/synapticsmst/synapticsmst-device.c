@@ -250,6 +250,7 @@ synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device,
 	guint8 byte[4];
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	if (priv->test_mode)
 		return TRUE;
@@ -257,17 +258,18 @@ synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device,
 	/* reset */
 	priv->has_cascade = FALSE;
 
-	if (!synapticsmst_device_enable_remote_control (device, error)) {
-		g_prefix_error (error,
-				"failed to enable remote control on tx_port %d: ",
-				tx_port);
+	/* enable remote control and disable on exit */
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) synapticsmst_device_enable_remote_control,
+					    (FuDeviceLockerFunc) synapticsmst_device_disable_remote_control,
+					    error);
+	if (locker == NULL)
 		return FALSE;
-	}
 
 	connection = synapticsmst_common_new (priv->fd, layer, rad);
 	if (!synapticsmst_common_read (connection, REG_RC_CAP, byte, 1, &error_local)) {
 		g_debug ("No cascade device found: %s", error_local->message);
-		return synapticsmst_device_disable_remote_control (device, error);
+		return TRUE;
 	}
 	if (byte[0] & 0x04) {
 		if (!synapticsmst_common_read (connection, REG_VENDOR_ID, byte, 3, error)) {
@@ -278,13 +280,6 @@ synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device,
 		}
 		if (byte[0] == 0x90 && byte[1] == 0xCC && byte[2] == 0x24)
 			priv->has_cascade = TRUE;
-	}
-
-	if (!synapticsmst_device_disable_remote_control (device, error)) {
-		g_prefix_error (error,
-				"failed to disable remote control on tx_port %d: ",
-				tx_port);
-		return FALSE;
 	}
 
 	return TRUE;
@@ -460,6 +455,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 	guint8 byte[16];
 	guint8 bank;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	//FIXME?
 	if (!synapticsmst_device_open (device, error)) {
@@ -468,21 +464,25 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		return FALSE;
 	}
 
-	/* enable remote control */
-	if (!synapticsmst_device_enable_remote_control (device, error))
+	/* enable remote control and disable on exit */
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) synapticsmst_device_enable_remote_control,
+					    (FuDeviceLockerFunc) synapticsmst_device_disable_remote_control,
+					    error);
+	if (locker == NULL)
 		return FALSE;
 
 	/* read firmware version */
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
 	if (!synapticsmst_common_read (connection, REG_FIRMWARE_VERSION,
 				       byte, 3, error))
-		goto error_disable_remote;
+		return FALSE;
 
 	priv->version = g_strdup_printf ("%1d.%02d.%03d", byte[0], byte[1], byte[2]);
 
 	/* read board ID */
 	if (!synapticsmst_device_read_board_id (device, connection, byte, error))
-		goto error_disable_remote;
+		return FALSE;
 	priv->board_id = (byte[0] << 8) | (byte[1]);
 	g_debug ("BoardID %x", priv->board_id);
 
@@ -490,27 +490,19 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 	if (!synapticsmst_common_read (connection, REG_CHIP_ID,
 				       byte, 2, error)) {
 		g_prefix_error (error, "failed to read chip id: ");
-		goto error_disable_remote;
+		return FALSE;
 	}
 	priv->chip_id = (byte[0] << 8) | (byte[1]);
 	priv->chip_id_str = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
 	if (!synapticsmst_create_guids (device, system_type, error))
-		goto error_disable_remote;
+		return FALSE;
 
 	/* if running on panamera, check the active bank (for debugging logs) */
 	if (priv->chip_id > 0x5000 &&
 	   !synapticsmst_device_get_active_bank_panamera (device, &bank, error))
-		goto error_disable_remote;
-
-	/* disable remote control */
-	if (!synapticsmst_device_disable_remote_control (device, error))
 		return FALSE;
 
 	return TRUE;
-
-error_disable_remote:
-	synapticsmst_device_disable_remote_control (device, NULL);
-	return FALSE;
 }
 
 const gchar *
