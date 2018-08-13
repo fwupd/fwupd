@@ -38,6 +38,7 @@ typedef enum {
 	FU_UTIL_OPERATION_UNKNOWN,
 	FU_UTIL_OPERATION_UPDATE,
 	FU_UTIL_OPERATION_DOWNGRADE,
+	FU_UTIL_OPERATION_INSTALL,
 	FU_UTIL_OPERATION_LAST
 } FuUtilOperation;
 
@@ -190,6 +191,45 @@ fu_util_client_notify_cb (GObject *object,
 	fu_progressbar_update (priv->progressbar,
 			       fwupd_client_get_status (priv->client),
 			       fwupd_client_get_percentage (priv->client));
+}
+
+static void
+fu_util_update_device_changed_cb (FwupdClient *client,
+				  FwupdDevice *device,
+				  FuUtilPrivate *priv)
+{
+	g_autofree gchar *str = NULL;
+
+	/* same as last time, so ignore */
+	if (priv->current_device != NULL &&
+	    fwupd_device_compare (priv->current_device, device) == 0)
+		return;
+
+	/* show message in progressbar */
+	if (priv->current_operation == FU_UTIL_OPERATION_UPDATE) {
+		/* TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers */
+		str = g_strdup_printf (_("Updating %s from %s to %s…"),
+				       fwupd_device_get_name (device),
+				       fwupd_device_get_version (device),
+				       fwupd_release_get_version (priv->current_release));
+		fu_progressbar_set_title (priv->progressbar, str);
+	} else if (priv->current_operation == FU_UTIL_OPERATION_DOWNGRADE) {
+		/* TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers */
+		str = g_strdup_printf (_("Downgrading %s from %s to %s…"),
+				       fwupd_device_get_name (device),
+				       fwupd_device_get_version (device),
+				       fwupd_release_get_version (priv->current_release));
+		fu_progressbar_set_title (priv->progressbar, str);
+	} else if (priv->current_operation == FU_UTIL_OPERATION_INSTALL) {
+		/* TRANSLATORS: %1 is a version number, and %2 is a device name  */
+		str = g_strdup_printf (_("Installing %s on %s…"),
+				       fwupd_release_get_version (priv->current_release),
+				       fwupd_device_get_name (device));
+		fu_progressbar_set_title (priv->progressbar, str);
+	} else {
+		g_warning ("no FuUtilOperation set");
+	}
+	g_set_object (&priv->current_device, device);
 }
 
 static FwupdDevice *
@@ -543,6 +583,10 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments");
 		return FALSE;
 	}
+
+	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
+	g_signal_connect (priv->client, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 
 	/* install with flags chosen by the user */
 	return fwupd_client_install (priv->client, id, values[0], priv->flags, NULL, error);
@@ -1964,39 +2008,6 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	return fwupd_client_install (priv->client,
 				     fwupd_device_get_id (dev), fn,
 				     priv->flags, NULL, error);
-}
-
-static void
-fu_util_update_device_changed_cb (FwupdClient *client,
-				  FwupdDevice *device,
-				  FuUtilPrivate *priv)
-{
-	g_autofree gchar *str = NULL;
-
-	/* same as last time, so ignore */
-	if (priv->current_device != NULL &&
-	    fwupd_device_compare (priv->current_device, device) == 0)
-		return;
-
-	/* show message in progressbar */
-	if (priv->current_operation == FU_UTIL_OPERATION_UPDATE) {
-		/* TRANSLATORS: %1 is a device name, and %2 is a version number */
-		str = g_strdup_printf (_("Updating %s from %s to %s…"),
-				       fwupd_device_get_name (device),
-				       fwupd_device_get_version (device),
-				       fwupd_release_get_version (priv->current_release));
-		fu_progressbar_set_title (priv->progressbar, str);
-	} else if (priv->current_operation == FU_UTIL_OPERATION_DOWNGRADE) {
-		/* TRANSLATORS: %1 is a device name, and %2 is a version number */
-		str = g_strdup_printf (_("Downgrading %s from %s to %s…"),
-				       fwupd_device_get_name (device),
-				       fwupd_device_get_version (device),
-				       fwupd_release_get_version (priv->current_release));
-		fu_progressbar_set_title (priv->progressbar, str);
-	} else {
-		g_warning ("no FuUtilOperation set");
-	}
-	g_set_object (&priv->current_device, device);
 }
 
 static gboolean
