@@ -364,13 +364,14 @@ fu_plugin_update (FuPlugin *plugin,
 static gboolean
 fu_plugin_synapticsmst_coldplug (FuPlugin *plugin, GError **error)
 {
+	g_autoptr(GError) error_local = NULL;
 	/* verify that this is a supported system */
 	if (!synapticsmst_common_check_supported_system (plugin, error))
 		return FALSE;
 
 	/* look for host devices or already plugged in dock devices */
-	if (!fu_plugin_synapticsmst_enumerate (plugin, error))
-		g_debug ("error enumerating");
+	if (!fu_plugin_synapticsmst_enumerate (plugin, &error_local))
+		g_debug ("error enumerating: %s", error_local->message);
 	return TRUE;
 }
 
