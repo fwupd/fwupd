@@ -407,7 +407,6 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 	self->last_attempt_status = fu_uefi_read_file_as_uint64 (entry_path, "last_attempt_status");
 	self->last_attempt_version = fu_uefi_read_file_as_uint64 (entry_path, "last_attempt_version");
 	self->fw_version_lowest = fu_uefi_read_file_as_uint64 (entry_path, "lowest_supported_fw_version");
-	g_assert (self->fw_class != NULL);
 
 	/* the hardware instance is not in the ESRT table and we should really
 	 * write the EFI stub to query with FMP -- but we still have not ever
