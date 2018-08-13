@@ -246,6 +246,16 @@ lu_context_remove_device (LuContext *ctx, LuDevice *device)
 		      "udev-device", NULL,
 		      NULL);
 
+	if (lu_device_get_kind (device) == LU_DEVICE_KIND_RUNTIME) {
+		g_autoptr(GError) error_local = NULL;
+
+		g_object_set (device,
+			      "usb-device-locker", NULL,
+			      NULL);
+		if (!lu_device_close (device, &error_local))
+			g_warning ("%s", error_local->message);
+	}
+
 	if (lu_device_has_flag (device, LU_DEVICE_FLAG_ACTIVE))
 		g_signal_emit (ctx, signals[SIGNAL_REMOVED], 0, device);
 	g_ptr_array_remove (ctx->devices, device);
