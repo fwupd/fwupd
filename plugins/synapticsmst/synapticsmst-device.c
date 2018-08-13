@@ -193,15 +193,10 @@ synapticsmst_device_enable_remote_control (SynapticsMSTDevice *device, GError **
 	}
 
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
-	if (synapticsmst_common_enable_remote_control (connection)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to enable MST remote control");
+	if (!synapticsmst_common_enable_remote_control (connection, error))
 		return FALSE;
-	} else {
-		return TRUE;
-	}
+
+	return TRUE;
 }
 
 static gboolean
@@ -238,28 +233,23 @@ synapticsmst_device_disable_remote_control (SynapticsMSTDevice *device, GError *
 	}
 
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
-	if (synapticsmst_common_disable_remote_control (connection)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to disable MST remote control");
+	if (!synapticsmst_common_disable_remote_control (connection, error))
 		return FALSE;
-	} else {
-		return TRUE;
-	}
+
+	return TRUE;
 }
 
 gboolean
 synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device,
-					 GError ** error,
+					 GError **error,
 					 guint8 tx_port)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint8 layer = priv->layer + 1;
 	guint16 rad = priv->rad | (tx_port << (2 * (priv->layer)));
 	guint8 byte[4];
-	guint8 rc;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	if (priv->test_mode)
 		return TRUE;
@@ -269,24 +259,30 @@ synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device,
 
 	if (!synapticsmst_device_enable_remote_control (device, error)) {
 		g_prefix_error (error,
-				"failed to scan cascade device on tx_port %d: ",
+				"failed to enable remote control on tx_port %d: ",
 				tx_port);
 		return FALSE;
 	}
 
 	connection = synapticsmst_common_new (priv->fd, layer, rad);
-	rc = synapticsmst_common_read_dpcd (connection, REG_RC_CAP, byte, 1);
-	if (rc == DPCD_SUCCESS ) {
-		if (byte[0] & 0x04) {
-			synapticsmst_common_read_dpcd (connection, REG_VENDOR_ID, byte, 3);
-			if (byte[0] == 0x90 && byte[1] == 0xCC && byte[2] == 0x24)
-				priv->has_cascade = TRUE;
+	if (!synapticsmst_common_read (connection, REG_RC_CAP, byte, 1, &error_local)) {
+		g_debug ("No cascade device found: %s", error_local->message);
+		return synapticsmst_device_disable_remote_control (device, error);
+	}
+	if (byte[0] & 0x04) {
+		if (!synapticsmst_common_read (connection, REG_VENDOR_ID, byte, 3, error)) {
+			g_prefix_error (error,
+					"failed to read cascade device on tx_port %d: ",
+					tx_port);
+			return FALSE;
 		}
+		if (byte[0] == 0x90 && byte[1] == 0xCC && byte[2] == 0x24)
+			priv->has_cascade = TRUE;
 	}
 
 	if (!synapticsmst_device_disable_remote_control (device, error)) {
 		g_prefix_error (error,
-				"failed to scan cascade device on tx_port %d: ",
+				"failed to disable remote control on tx_port %d: ",
 				tx_port);
 		return FALSE;
 	}
@@ -301,7 +297,6 @@ synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
 				   GError **error)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	guint8 rc;
 
 	if (priv->test_mode) {
 		g_autofree gchar *filename = NULL;
@@ -337,17 +332,15 @@ synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
 		}
 		close (fd);
 	} else {
-		rc = synapticsmst_common_rc_get_command (connection,
+		if (!synapticsmst_common_rc_get_command (connection,
 							 UPDC_READ_FROM_EEPROM,
-							 2, ADDR_CUSTOMER_ID, byte);
-		if (rc) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_DATA,
-					     "Failed to read from EEPROM of device");
+							 2, ADDR_CUSTOMER_ID, byte,
+							 error)) {
+			g_prefix_error (error, "failed ot read EEPROM: ");
 			return FALSE;
 		}
 	}
+
 	return TRUE;
 }
 
@@ -437,19 +430,15 @@ synapticsmst_device_get_active_bank_panamera (SynapticsMSTDevice *device,
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint32 dwData[16];
-	guint8 rc;
 
 	/* get used bank */
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
-	rc = synapticsmst_common_rc_get_command (connection,
+	if (!synapticsmst_common_rc_get_command (connection,
 						 UPDC_READ_FROM_MEMORY,
 						 ((sizeof(dwData)/sizeof(dwData[0]))*4),
-						 (gint) 0x20010c, (guint8*) dwData);
-	if (rc) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Get active bank failed");
+						 (gint) 0x20010c, (guint8*) dwData,
+						 error)) {
+		g_prefix_error (error, "get active bank failed: ");
 		return FALSE;
 	}
 	if ((dwData[0] & BIT(7)) || (dwData[0] & BIT(30)))
@@ -469,7 +458,6 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint8 byte[16];
-	guint8 rc;
 	guint8 bank;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
@@ -486,16 +474,10 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 
 	/* read firmware version */
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
-	rc = synapticsmst_common_read_dpcd (connection,
-					    REG_FIRMWARE_VERSION,
-					    byte, 3);
-	if (rc) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to read dpcd from device");
+	if (!synapticsmst_common_read (connection, REG_FIRMWARE_VERSION,
+				       byte, 3, error))
 		goto error_disable_remote;
-	}
+
 	priv->version = g_strdup_printf ("%1d.%02d.%03d", byte[0], byte[1], byte[2]);
 
 	/* read board ID */
@@ -505,14 +487,9 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 	g_debug ("BoardID %x", priv->board_id);
 
 	/* read board chip_id */
-	rc = synapticsmst_common_read_dpcd (connection,
-					    REG_CHIP_ID,
-					    byte, 2);
-	if (rc) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to read dpcd from device");
+	if (!synapticsmst_common_read (connection, REG_CHIP_ID,
+				       byte, 2, error)) {
+		g_prefix_error (error, "failed to read chip id: ");
 		goto error_disable_remote;
 	}
 	priv->chip_id = (byte[0] << 8) | (byte[1]);
@@ -595,15 +572,13 @@ synapticsmst_device_get_flash_checksum (SynapticsMSTDevice *device,
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
-	if (synapticsmst_common_rc_special_get_command (connection,
+	if (!synapticsmst_common_rc_special_get_command (connection,
 							UPDC_CAL_EEPROM_CHECKSUM,
 							length, offset,
 							NULL, 4,
-							(guint8 *)checksum)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to get flash checksum");
+							(guint8 *)checksum,
+							error)) {
+		g_prefix_error (error, "failed to get flash checksum: ");
 		return FALSE;
 	}
 
@@ -682,13 +657,12 @@ synapticsmst_device_set_flash_sector_erase (SynapticsMSTDevice *device,
 	/* Need to add Wp control ? */
 	us_data = rc_cmd + offset;
 
-	if (synapticsmst_common_rc_set_command (connection,
+	if (!synapticsmst_common_rc_set_command (connection,
 						UPDC_FLASH_ERASE,
-						2, 0, (guint8 *)&us_data)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "can't sector erase flash at offset %x", offset);
+						2, 0, (guint8 *)&us_data,
+						error)) {
+		g_prefix_error (error, "can't sector erase flash at offset %x",
+				offset);
 		return FALSE;
 	}
 
@@ -743,23 +717,24 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 		guint32 write_offset = EEPROM_ESM_OFFSET;
 		const guint8 *esm_code_ptr = &payload_data[EEPROM_ESM_OFFSET];
 		for (guint32 i = 0; i < write_loops; i++) {
-			guint8 rc;
-			rc = synapticsmst_common_rc_set_command (connection,
+			g_autoptr(GError) error_local = NULL;
+			if (!synapticsmst_common_rc_set_command (connection,
 								 UPDC_WRITE_TO_EEPROM,
 								 unit_sz,
 								 write_offset,
-								 esm_code_ptr + write_idx);
-			if (rc) {
+								 esm_code_ptr + write_idx,
+								 &error_local)) {
+				g_warning ("failed to write ESM: %s, retrying", error_local->message);
 				/* repeat once */
-				rc = synapticsmst_common_rc_set_command (connection,
+				if (!synapticsmst_common_rc_set_command (connection,
 									 UPDC_WRITE_TO_EEPROM,
 									 unit_sz,
 									 write_offset,
-									 esm_code_ptr + write_idx);
-			}
-			if (rc) {
-				g_debug ("attempt %u: ESM update failed", retries_cnt);
-				break;
+									 esm_code_ptr + write_idx,
+									 error)) {
+					g_prefix_error (error, "ESM update failed: ");
+					return FALSE;
+				}
 			}
 			write_offset += unit_sz;
 			write_idx += unit_sz;
@@ -815,7 +790,6 @@ synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
 	guint32 data_to_write = 0;
 	guint32 offset = 0;
 	guint32 write_loops = 0;
-	guint8 rc = 0;
 
 	write_loops = (payload_len / BLOCK_UNIT);
 	data_to_write = payload_len;
@@ -834,24 +808,29 @@ synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
 		g_usleep (5000000);
 
 		for (guint32 i = 0; i < write_loops; i++) {
+			g_autoptr(GError) error_local = NULL;
 			guint8 length = BLOCK_UNIT;
 
 			if (data_to_write < BLOCK_UNIT)
 				length = data_to_write;
-			rc = synapticsmst_common_rc_set_command (connection,
+			if (!synapticsmst_common_rc_set_command (connection,
 								 UPDC_WRITE_TO_EEPROM,
 								 length, offset,
-								 payload_data + offset);
-			if (rc) {
+								 payload_data + offset,
+								 &error_local)) {
+				g_warning ("Failed to write flash offset 0x%04x: %s, retrying",
+					   offset, error_local->message);
 				/* repeat once */
-				rc = synapticsmst_common_rc_set_command (connection,
+				if (!synapticsmst_common_rc_set_command (connection,
 									 UPDC_WRITE_TO_EEPROM,
 									 length, offset,
-									 payload_data + offset);
+									 payload_data + offset,
+									 error)) {
+					g_prefix_error (error, "can't write flash offset 0x%04x: ",
+							offset);
+					return FALSE;
+				}
 			}
-			if (rc)
-				break;
-
 			offset += length;
 			data_to_write -= length;
 			if (progress_cb != NULL) {
@@ -859,14 +838,6 @@ synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
 					     (goffset) (write_loops -1) * 100,
 					     progress_data);
 			}
-		}
-		if (rc) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "can't write flash at offset 0x%04x",
-				     offset);
-			return FALSE;
 		}
 
 		/* check data just written */
@@ -877,13 +848,8 @@ synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
 								payload_len,
 								0,
 								&flash_checksum,
-								error)) {
-			g_set_error_literal (error,
-						G_IO_ERROR,
-						G_IO_ERROR_INVALID_DATA,
-						"Failed to read checksum");
+								error))
 			return FALSE;
-		}
 		if (checksum == flash_checksum)
 			break;
 		g_debug ("attempt %u: checksum %x didn't match %x", retries_cnt, flash_checksum, checksum);
@@ -917,7 +883,6 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 	guint32 write_loops = 0;
 	guint8 bank_in_use;
 	guint8 bank_to_update = BANKTAG_1;
-	guint8 rc;
 	guint8 readBuf[256];
 	guint8 tagData[16];
 	struct tm *pTM;
@@ -971,25 +936,24 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 		write_offset = EEPROM_BANK_OFFSET * bank_to_update;
 		connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
 		for (guint32 i = 0; i < write_loops ; i++ ) {
-			rc = synapticsmst_common_rc_set_command (connection,
+			g_autoptr(GError) error_local = NULL;
+			if (!synapticsmst_common_rc_set_command (connection,
 								UPDC_WRITE_TO_EEPROM,
 								unit_sz,
 								write_offset,
-								payload_data + write_idx);
-			if (rc) {
+								payload_data + write_idx,
+								&error_local)) {
+				g_warning ("Write failed: %s, retrying", error_local->message);
 				/* repeat once */
-				rc = synapticsmst_common_rc_set_command (connection,
+				if (!synapticsmst_common_rc_set_command (connection,
 									 UPDC_WRITE_TO_EEPROM,
 									 unit_sz,
 									 write_offset,
-									 payload_data + write_idx);
-			}
-			if (rc)	{
-				g_set_error_literal (error,
-						     G_IO_ERROR,
-						     G_IO_ERROR_INVALID_DATA,
-						     "FW write fail");
-				return FALSE;
+									 payload_data + write_idx,
+									 error)) {
+					g_prefix_error (error, "firmware write failed: ");
+					return FALSE;
+				}
 			}
 
 			write_offset += unit_sz;
@@ -1005,14 +969,12 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 		checksum = synapticsmst_device_get_crc ( 0, 16, fw_size, payload_data );
 		for (guint32 i = 0; i < 4; i++) {
 			g_usleep (1000);	/* wait crc calculation */
-			if (synapticsmst_common_rc_special_get_command (connection,
+			if (!synapticsmst_common_rc_special_get_command (connection,
 									UPDC_CAL_EEPROM_CHECK_CRC16,
 									fw_size, (EEPROM_BANK_OFFSET * bank_to_update),
-									NULL, 4, (guint8 *)(&flash_checksum))) {
-				g_set_error_literal (error,
-						     G_IO_ERROR,
-						     G_IO_ERROR_INVALID_DATA,
-						     "Failed to get flash checksum");
+									NULL, 4, (guint8 *)(&flash_checksum),
+									error)) {
+				g_prefix_error (error, "Failed to get flash checksum: ");
 				return FALSE;
 			}
 		}
@@ -1046,29 +1008,23 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 
 	for (guint32 retries_cnt = 0; ; retries_cnt++) {
 		gboolean match = TRUE;
-		rc = synapticsmst_common_rc_set_command (connection,
+		if (!synapticsmst_common_rc_set_command (connection,
 							 UPDC_WRITE_TO_EEPROM,
 							 16,
 							 (EEPROM_BANK_OFFSET * bank_to_update + EEPROM_TAG_OFFSET),
-							 tagData);
-		if (rc) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_DATA,
-					     "Failed to write TAG");
+							 tagData,
+							 error)) {
+			g_prefix_error (error, "failed to write tag: ");
 			return FALSE;
 		}
 		g_usleep (200);
-		rc = synapticsmst_common_rc_get_command (connection,
+		if (!synapticsmst_common_rc_get_command (connection,
 							 UPDC_READ_FROM_EEPROM,
 							 16,
 							 (EEPROM_BANK_OFFSET * bank_to_update + EEPROM_TAG_OFFSET),
-							 readBuf);
-		if (rc) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_DATA,
-					     "Failed to read Tag");
+							 readBuf,
+							 error)) {
+			g_prefix_error (error, "failed to read tag: ");
 			return FALSE;
 		}
 		for (guint32 i = 0; i < 16; i++){
@@ -1089,15 +1045,12 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 	}
 
 	/* set tag invalid*/
-	rc = synapticsmst_common_rc_get_command (connection,
+	if (!synapticsmst_common_rc_get_command (connection,
 						 UPDC_READ_FROM_EEPROM, 1,
 						 (EEPROM_BANK_OFFSET * bank_in_use + EEPROM_TAG_OFFSET + 15),
-						 tagData);
-	if (rc) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				    "Failed to read Tag from flash");
+						 tagData,
+						 error)) {
+		g_prefix_error (error, "failed to read tag from flash: ");
 		return FALSE;
 	}
 
@@ -1115,28 +1068,21 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 		/* CRC8 is 0xff, set it to 0x00 */
 		} else {
 			tagData[1] = 0x00;
-			rc = synapticsmst_common_rc_set_command (connection,
+			if (!synapticsmst_common_rc_set_command (connection,
 								 UPDC_WRITE_TO_EEPROM, 1,
 								 (EEPROM_BANK_OFFSET * bank_in_use + EEPROM_TAG_OFFSET + 15),
-								 &tagData[1]);
-			if (rc) {
-				g_set_error_literal (error,
-						     G_IO_ERROR,
-						     G_IO_ERROR_INVALID_DATA,
-						     "Failed to clear CRC");
+								 &tagData[1],
+								 error)) {
+				g_prefix_error (error, "failed to clear CRC: ");
 				return FALSE;
 			}
 		}
-
-		rc = synapticsmst_common_rc_get_command (connection,
+		if (!synapticsmst_common_rc_get_command (connection,
 							 UPDC_READ_FROM_EEPROM, 1,
 							 (EEPROM_BANK_OFFSET * bank_in_use + EEPROM_TAG_OFFSET + 15),
-							 readBuf);
-		if (rc) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_DATA,
-					     "Failed to read CRC from flash");
+							 readBuf,
+							 error)) {
+			g_prefix_error (error, "failed to read CRC from flash: ");
 			return FALSE;
 		}
 		if ((readBuf[0] == 0xff && tagData[0] != 0xff) ||
@@ -1324,13 +1270,11 @@ synapticsmst_device_panamera_prepare_write (SynapticsMSTDevice *device, GError *
 
 	/* disable ESM first */
 	dwData[0] = 0x21;
-	if (synapticsmst_common_rc_set_command (connection,
+	if (!synapticsmst_common_rc_set_command (connection,
 						UPDC_WRITE_TO_MEMORY,
-						4, (gint)REG_ESM_DISABLE, (guint8*)dwData)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "ESM disable failed");
+						4, (gint)REG_ESM_DISABLE, (guint8*)dwData,
+						error)) {
+		g_prefix_error (error, "ESM disable failed: ");
 		return FALSE;
 	}
 
@@ -1338,47 +1282,39 @@ synapticsmst_device_panamera_prepare_write (SynapticsMSTDevice *device, GError *
 	g_usleep (200);
 
 	/* disable QUAD mode */
-	if (synapticsmst_common_rc_get_command (connection,
+	if (!synapticsmst_common_rc_get_command (connection,
 						UPDC_READ_FROM_MEMORY,
 						((sizeof(dwData)/sizeof(dwData[0]))*4),
-						(gint)REG_QUAD_DISABLE, (guint8*)dwData)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Quad query failed");
+						(gint)REG_QUAD_DISABLE, (guint8*)dwData,
+						error)) {
+		g_prefix_error (error, "quad query failed: ");
 		return FALSE;
 	}
 
 	dwData[0] = 0x00;
-	if (synapticsmst_common_rc_set_command (connection,
+	if (!synapticsmst_common_rc_set_command (connection,
 						UPDC_WRITE_TO_MEMORY,
-						4, (gint)REG_QUAD_DISABLE, (guint8*)dwData)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Quad disable failed");
+						4, (gint)REG_QUAD_DISABLE, (guint8*)dwData,
+						error)) {
+		g_prefix_error (error, "quad disable failed: ");
 		return FALSE;
 	}
 
 	/* disable HDCP2.2 */
-	if (synapticsmst_common_rc_get_command (connection,
+	if (!synapticsmst_common_rc_get_command (connection,
 						UPDC_READ_FROM_MEMORY,
-						4, (gint)REG_HDCP22_DISABLE, (guint8*)dwData)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "HDCP query failed");
+						4, (gint)REG_HDCP22_DISABLE, (guint8*)dwData,
+						error)) {
+		g_prefix_error (error, "HDCP query failed: ");
 		return FALSE;
 	}
 
 	dwData[0] = dwData[0] & (~BIT(2));
-	if (synapticsmst_common_rc_set_command (connection,
+	if (!synapticsmst_common_rc_set_command (connection,
 						UPDC_WRITE_TO_MEMORY,
-						4, (gint)REG_HDCP22_DISABLE, (guint8*)dwData)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "HDCP disable failed");
+						4, (gint)REG_HDCP22_DISABLE, (guint8*)dwData,
+						error)) {
+		g_prefix_error (error, "HDCP disable failed: ");
 		return FALSE;
 	}
 
@@ -1392,12 +1328,15 @@ synapticsmst_device_restart (SynapticsMSTDevice *device,
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint8 dwData[4] = {0xF5, 0, 0 ,0};
+	g_autoptr(GError) error_local = NULL;
 
 	/* issue the reboot command, ignore return code (triggers before returning) */
 	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
-	synapticsmst_common_rc_set_command (connection,
-					    UPDC_WRITE_TO_MEMORY,
-					    4, (gint) 0x2000FC, (guint8*) &dwData);
+	if (!synapticsmst_common_rc_set_command (connection,
+						 UPDC_WRITE_TO_MEMORY,
+						 4, (gint) 0x2000FC, (guint8*) &dwData,
+						 &error_local))
+		g_debug ("failed to restart: %s", error_local->message);
 
 	return TRUE;
 }
@@ -1549,14 +1488,18 @@ synapticsmst_device_open (SynapticsMSTDevice *device, GError **error)
 	}
 
 	connection = synapticsmst_common_new (priv->fd, 0, 0);
-	if (synapticsmst_common_aux_node_read (connection, REG_RC_CAP, byte, 1) == DPCD_SUCCESS) {
-		if (byte[0] & 0x04) {
-			synapticsmst_common_aux_node_read (connection,
-							   REG_VENDOR_ID,
-							   byte, 3);
-			if (byte[0] == 0x90 && byte[1] == 0xCC && byte[2] == 0x24)
-				return TRUE;
+	if (!synapticsmst_common_read (connection, REG_RC_CAP, byte, 1, error)) {
+		g_prefix_error (error, "failed to read device: ");
+		return FALSE;
+	}
+	if (byte[0] & 0x04) {
+		if (!synapticsmst_common_read (connection, REG_VENDOR_ID,
+					       byte, 3, error)) {
+			g_prefix_error (error, "failed to read vendor ID: ");
+			return FALSE;
 		}
+		if (byte[0] == 0x90 && byte[1] == 0xCC && byte[2] == 0x24)
+			return TRUE;
 	}
 
 	/* not a correct device */
