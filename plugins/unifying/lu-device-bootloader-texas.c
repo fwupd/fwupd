@@ -217,5 +217,5 @@ lu_device_bootloader_texas_class_init (LuDeviceBootloaderTexasClass *klass)
 static void
 lu_device_bootloader_texas_init (LuDeviceBootloaderTexas *device)
 {
-	fu_device_set_version (FU_DEVICE (device), "RQR24.xx_Bxxxx");
+	fu_device_set_version (FU_DEVICE (device), "RQR24.00_B0000");
 }
