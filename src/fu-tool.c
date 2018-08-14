@@ -214,6 +214,8 @@ fu_util_private_free (FuUtilPrivate *priv)
 {
 	if (priv->cmd_array != NULL)
 		g_ptr_array_unref (priv->cmd_array);
+	if (priv->current_device != NULL)
+		g_object_unref (priv->current_device);
 	if (priv->engine != NULL)
 		g_object_unref (priv->engine);
 	if (priv->loop != NULL)
@@ -224,8 +226,6 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->progressbar);
 	if (priv->context != NULL)
 		g_option_context_free (priv->context);
-	if (priv->current_device != NULL)
-		g_object_unref (priv->current_device);
 	g_free (priv);
 }
 
