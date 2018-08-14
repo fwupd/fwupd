@@ -1754,10 +1754,7 @@ fu_common_firmware_builder_func (void)
 		g_test_skip ("no bwrap in path, so skipping");
 		return;
 	}
-	if (g_file_test ("/proc/self/ns/user", G_FILE_TEST_IS_SYMLINK)) {
-		g_test_skip ("Missing CONFIG_USER_NS in kernel");
-		return;
-	}
+
 	/* get test file */
 	archive_fn = fu_test_get_filename (TESTDATADIR, "builder/firmware.tar");
 	g_assert (archive_fn != NULL);
