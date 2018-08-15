@@ -242,7 +242,9 @@ if get_option('plugin_uefi')
           gnu_efi_arch = ''
   endif
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
-  r = run_command('po/test-deps')
+
+  python3 = find_program('python3')
+  r = run_command([python3, 'po/test-deps'])
   if r.returncode() != 0
     error(r.stdout())
   endif
