@@ -23,7 +23,7 @@ SIGNED := \
 all: $(SIGNED)
 
 $(SIGNED):
-	./download-fwupdate
+	./download-fwupd
 
 install: $(SIGNED)
 	install -d $(DESTDIR)/usr/lib/fwupd/efi

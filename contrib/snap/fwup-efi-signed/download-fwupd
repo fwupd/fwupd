@@ -17,13 +17,13 @@ ARCH_TO_EFI_NAME = {
 arch = apt_pkg.config['Apt::Architecture']
 efi_name = ARCH_TO_EFI_NAME[arch]
 cache = apt.Cache()
-fwupdate_efi = cache["fwupdate"].candidate
-pool_parsed = urlparse(fwupdate_efi.uri)
-dists_dir = "/dists/devel/main/uefi/fwupdate-%s/current/" % (
-    fwupdate_efi.architecture)
+fwupd_efi = cache["fwupd"].candidate
+pool_parsed = urlparse(fwupd_efi.uri)
+dists_dir = "/dists/devel/main/uefi/fwupd-%s/current/" % (
+    fwupd_efi.architecture)
 
 DOWNLOAD_LIST = {
-        "fwup%s.efi.signed" %efi_name: "fwupd%s.efi.signed" % efi_name,
+        "fwupd%s.efi.signed" %efi_name: "fwupd%s.efi.signed" % efi_name,
         "version": "fwupd%s.efi.signed.version" % efi_name
 }
 for base in DOWNLOAD_LIST:
