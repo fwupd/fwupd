@@ -274,7 +274,7 @@ fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 gboolean
 fu_uefi_check_esp_path (const gchar *path, GError **error)
 {
-	const gchar *fs_types[] = { "vfat", "ntfs", "exfat", NULL };
+	const gchar *fs_types[] = { "vfat", "ntfs", "exfat", "autofs", NULL };
 	g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (path, NULL);
 	if (mount == NULL) {
 		g_set_error (error,
