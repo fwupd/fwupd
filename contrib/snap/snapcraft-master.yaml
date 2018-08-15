@@ -7,7 +7,7 @@ description: |
   not yet supported by the version of fwupd distributed with the OS.
 
 grade: devel
-confinement: devmode
+confinement: classic
 
 architectures:
   - amd64
