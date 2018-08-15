@@ -12,6 +12,10 @@ subdir('wacomhid')
 # depends on dfu
 subdir('csr')
 
+if get_option('plugin_nvme')
+subdir('nvme')
+endif
+
 if get_option('plugin_altos')
 subdir('altos')
 endif
