@@ -221,9 +221,8 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 				       fwupd_release_get_version (priv->current_release));
 		fu_progressbar_set_title (priv->progressbar, str);
 	} else if (priv->current_operation == FU_UTIL_OPERATION_INSTALL) {
-		/* TRANSLATORS: %1 is a version number, and %2 is a device name  */
-		str = g_strdup_printf (_("Installing %s on %s…"),
-				       fwupd_release_get_version (priv->current_release),
+		/* TRANSLATORS: %1 is a device name  */
+		str = g_strdup_printf (_("Installing on %s…"),
 				       fwupd_device_get_name (device));
 		fu_progressbar_set_title (priv->progressbar, str);
 	} else {
