@@ -2804,7 +2804,7 @@ main (int argc, char *argv[])
 			    NULL, &error)){
 		g_warning ("FuMain: failed to load AppStream data: %s",
 			   error->message);
-		return FALSE;
+		g_clear_error (&error);
 	}
 
 	/* read config file */
