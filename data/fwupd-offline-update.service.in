@@ -3,6 +3,9 @@ Description=Updates device firmware whilst offline
 Documentation=man:fwupdmgr
 OnFailure=reboot.target
 ConditionPathExists=/var/lib/fwupd/pending.db
+DefaultDependencies=false
+Requires=sysinit.target
+After=sysinit.target system-update-pre.target
 
 [Service]
 ExecStart=@bindir@/fwupdmgr install-prepared
