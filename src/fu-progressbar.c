@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include <glib.h>
 #include <glib/gi18n.h>
 
 #include "fu-progressbar.h"
@@ -24,6 +25,7 @@ struct _FuProgressbar
 	guint			 to_erase;		/* chars */
 	guint			 timer_id;
 	gint64			 last_animated;		/* monotonic */
+	GTimer			 *time_elapsed;
 };
 
 G_DEFINE_TYPE (FuProgressbar, fu_progressbar, G_TYPE_OBJECT)
@@ -103,6 +105,7 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 	guint i;
 	gboolean is_idle_newline = FALSE;
 	g_autoptr(GString) str = g_string_new (NULL);
+	g_autofree gchar *time_remaining = NULL;
 
 	/* erase previous line */
 	fu_progressbar_erase_line (self);
@@ -135,6 +138,16 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 	}
 	g_string_append_c (str, ']');
 
+	/* once we have some data (10%) show an estimate of time remaining */
+	if (percentage < 100 && percentage > 10) {
+		gdouble rate = percentage / g_timer_elapsed (self->time_elapsed, NULL);
+		time_remaining = g_strdup_printf ("%.2f", (100-percentage) * rate);
+		g_string_append_c (str, ' ');
+		g_string_append (str, _("Estimated time remaining:"));
+		g_string_append_c (str, ' ');
+		g_string_append (str, time_remaining);
+	}
+
 	/* dump to screen */
 	g_print ("%s", str->str);
 	self->to_erase = str->len - 2;
@@ -152,6 +165,8 @@ fu_progressbar_set_title (FuProgressbar *self, const gchar *title)
 {
 	fu_progressbar_erase_line (self);
 	g_print ("%s\n", title);
+	/* reset when we change devices */
+	g_timer_start (self->time_elapsed);
 	fu_progressbar_refresh (self, self->status, self->percentage);
 }
 
@@ -279,6 +294,7 @@ fu_progressbar_init (FuProgressbar *self)
 	self->length_percentage = 40;
 	self->length_status = 25;
 	self->spinner_count_up = TRUE;
+	self->time_elapsed = g_timer_new ();
 }
 
 static void
@@ -288,6 +304,7 @@ fu_progressbar_finalize (GObject *obj)
 
 	if (self->timer_id != 0)
 		g_source_remove (self->timer_id);
+	g_timer_destroy (self->time_elapsed);
 
 	G_OBJECT_CLASS (fu_progressbar_parent_class)->finalize (obj);
 }
