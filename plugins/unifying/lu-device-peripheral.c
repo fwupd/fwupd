@@ -120,7 +120,6 @@ lu_device_peripheral_fetch_firmware_info (LuDevice *device, GError **error)
 		    msg->data[2] == 0x00 &&
 		    msg->data[3] == 0x00 &&
 		    msg->data[4] == 0x00 &&
-		    msg->data[4] == 0x00 &&
 		    msg->data[5] == 0x00 &&
 		    msg->data[6] == 0x00 &&
 		    msg->data[7] == 0x00) {
