@@ -170,7 +170,7 @@ fu_wac_device_get_feature_report (FuWacDevice *self,
 	fu_wac_buffer_dump ("GE2", cmd, buf, sz);
 
 	/* check packet */
-	if (flags && FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC == 0 && sz != bufsz) {
+	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC) == 0 && sz != bufsz) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -219,7 +219,7 @@ fu_wac_device_set_feature_report (FuWacDevice *self,
 	}
 
 	/* check packet */
-	if (flags && FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC == 0 && sz != bufsz) {
+	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC) == 0 && sz != bufsz) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
