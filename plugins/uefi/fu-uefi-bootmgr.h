@@ -13,8 +13,15 @@
 
 G_BEGIN_DECLS
 
-gboolean	 fu_uefi_bootmgr_bootnext	(const gchar	*esp_path,
-						 GError		**error);
+typedef enum {
+	FU_UEFI_BOOTMGR_FLAG_NONE		= 0,
+	FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB	= 1 << 0,
+	FU_UEFI_BOOTMGR_FLAG_LAST
+} FuUefiBootmgrFlags;
+
+gboolean	 fu_uefi_bootmgr_bootnext	(const gchar		*esp_path,
+						 FuUefiBootmgrFlags	 flags,
+						 GError			**error);
 
 G_END_DECLS
 

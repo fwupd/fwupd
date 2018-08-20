@@ -292,7 +292,7 @@ fu_uefi_copy_asset (const gchar *source, const gchar *target, GError **error)
 }
 
 gboolean
-fu_uefi_bootmgr_bootnext (const gchar *esp_path, GError **error)
+fu_uefi_bootmgr_bootnext (const gchar *esp_path, FuUefiBootmgrFlags flags, GError **error)
 {
 	gboolean use_fwup_path = FALSE;
 	gsize loader_sz = 0;
@@ -323,7 +323,8 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path, GError **error)
 	if (shim_app == NULL)
 		return FALSE;
 	if (!g_file_test (shim_app, G_FILE_TEST_EXISTS)) {
-		if (fu_uefi_secure_boot_enabled ()) {
+		if (fu_uefi_secure_boot_enabled () &&
+		    (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB) > 0) {
 			g_set_error_literal (error,
 					     G_IO_ERROR,
 					     G_IO_ERROR_FAILED,

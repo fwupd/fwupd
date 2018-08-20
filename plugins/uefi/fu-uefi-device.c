@@ -287,6 +287,7 @@ static gboolean
 fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
+	FuUefiBootmgrFlags flags = FU_UEFI_BOOTMGR_FLAG_NONE;
 	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
 	efi_guid_t guid;
 	efi_update_info_t info;
@@ -351,7 +352,9 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	}
 
 	/* update the firmware before the bootloader runs */
-	if (!fu_uefi_bootmgr_bootnext (esp_path, error))
+	if (fu_device_get_metadata_boolean (device, "RequireShimForSecureBoot"))
+		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
+	if (!fu_uefi_bootmgr_bootnext (esp_path, flags, error))
 		return FALSE;
 
 	/* success! */
