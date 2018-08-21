@@ -59,9 +59,11 @@ gboolean	 fu_plugin_runner_coldplug_cleanup	(FuPlugin	*plugin,
 gboolean	 fu_plugin_runner_recoldplug		(FuPlugin	*plugin,
 							 GError		**error);
 gboolean	 fu_plugin_runner_update_prepare	(FuPlugin	*plugin,
+							 FwupdInstallFlags flags,
 							 FuDevice	*device,
 							 GError		**error);
 gboolean	 fu_plugin_runner_update_cleanup	(FuPlugin	*plugin,
+							 FwupdInstallFlags flags,
 							 FuDevice	*device,
 							 GError		**error);
 gboolean	 fu_plugin_runner_composite_prepare	(FuPlugin	*plugin,

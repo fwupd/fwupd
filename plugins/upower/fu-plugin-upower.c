@@ -49,6 +49,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 
 gboolean
 fu_plugin_update_prepare (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
 			  FuDevice *device,
 			  GError **error)
 {

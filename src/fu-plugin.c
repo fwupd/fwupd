@@ -77,6 +77,10 @@ typedef void		 (*FuPluginDeviceRegisterFunc)	(FuPlugin	*plugin,
 typedef gboolean	 (*FuPluginDeviceFunc)		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
+typedef gboolean	 (*FuPluginFlaggedDeviceFunc)	(FuPlugin	*plugin,
+							 FwupdInstallFlags flags,
+							 FuDevice	*device,
+							 GError		**error);
 typedef gboolean	 (*FuPluginDeviceArrayFunc)	(FuPlugin	*plugin,
 							 GPtrArray	*devices,
 							 GError		**error);
@@ -957,6 +961,37 @@ fu_plugin_runner_device_generic (FuPlugin *plugin, FuDevice *device,
 }
 
 static gboolean
+fu_plugin_runner_flagged_device_generic (FuPlugin *plugin, FwupdInstallFlags flags,
+					 FuDevice *device,
+					 const gchar *symbol_name, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginFlaggedDeviceFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, symbol_name, (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
+	if (!func (plugin, flags, device, error)) {
+		g_prefix_error (error, "failed to run %s() on %s: ",
+				symbol_name + 10,
+				priv->name);
+		return FALSE;
+	}
+	return TRUE;
+
+}
+
+static gboolean
 fu_plugin_runner_device_array_generic (FuPlugin *plugin, GPtrArray *devices,
 				       const gchar *symbol_name, GError **error)
 {
@@ -1106,17 +1141,21 @@ fu_plugin_runner_composite_cleanup (FuPlugin *plugin, GPtrArray *devices, GError
 }
 
 gboolean
-fu_plugin_runner_update_prepare (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_runner_update_prepare (FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *device,
+				 GError **error)
 {
-	return fu_plugin_runner_device_generic (plugin, device,
-						"fu_plugin_update_prepare", error);
+	return fu_plugin_runner_flagged_device_generic (plugin, flags, device,
+							"fu_plugin_update_prepare",
+							error);
 }
 
 gboolean
-fu_plugin_runner_update_cleanup (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_runner_update_cleanup (FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *device,
+				 GError **error)
 {
-	return fu_plugin_runner_device_generic (plugin, device,
-						"fu_plugin_update_cleanup", error);
+	return fu_plugin_runner_flagged_device_generic (plugin, flags, device,
+							"fu_plugin_update_cleanup",
+							error);
 }
 
 gboolean
