@@ -64,12 +64,12 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 		g_warning ("failed to get OnBattery value, assume on AC power");
 		return TRUE;
 	}
-	if (g_variant_get_boolean (value)) {
+	if (g_variant_get_boolean (value) && (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_AC_POWER_REQUIRED,
 				     "Cannot install update "
-				     "when not on AC power");
+				     "when not on AC power unless forced");
 		return FALSE;
 	}
 	return TRUE;
