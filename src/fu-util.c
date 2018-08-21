@@ -1958,7 +1958,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 }
 
 static gboolean
-fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_update_all (FuUtilPrivate *priv, GError **error)
 {
 	gboolean requires_reboot = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -2010,6 +2010,62 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		return fu_util_update_reboot (error);
 	}
 	return TRUE;
+}
+
+static gboolean
+fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **error)
+{
+	FwupdRelease *rel;
+	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(GPtrArray) rels = NULL;
+
+	/* do not allow a partial device-id */
+	dev = fwupd_client_get_device_by_id (priv->client, device_id, NULL, error);
+	if (dev == NULL)
+		return FALSE;
+
+	/* get the releases for this device and filter for validity */
+	rels = fwupd_client_get_upgrades (priv->client,
+					  fwupd_device_get_id (dev),
+					  NULL, error);
+	if (rels == NULL)
+		return FALSE;
+	rel = g_ptr_array_index (rels, 0);
+	if (!fu_util_update_device_with_release (priv, dev, rel, error))
+		return FALSE;
+
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
+	/* the update needs the user to restart the computer */
+	if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
+		g_print ("\n%s %s [Y|n]: ",
+			 /* TRANSLATORS: exactly one update needs this */
+			 _("An update requires a reboot to complete."),
+			 /* TRANSLATORS: reboot to apply the update */
+			 _("Restart now?"));
+		if (!fu_util_prompt_for_boolean (TRUE))
+			return TRUE;
+		return fu_util_update_reboot (error);
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) == 0)
+		return fu_util_update_all (priv, error);
+	if (g_strv_length (values) == 1)
+		return fu_util_update_by_id (priv, values[0], error);
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_ARGS,
+			     "Invalid arguments");
+	return FALSE;
 }
 
 static gboolean
