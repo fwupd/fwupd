@@ -52,9 +52,11 @@ gboolean	 fu_plugin_update_reload		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
 gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
+							 FwupdInstallFlags flags,
 							 FuDevice	*dev,
 							 GError		**error);
 gboolean	 fu_plugin_update_cleanup		(FuPlugin	*plugin,
+							 FwupdInstallFlags flags,
 							 FuDevice	*dev,
 							 GError		**error);
 gboolean	 fu_plugin_composite_prepare		(FuPlugin	*plugin,

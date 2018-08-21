@@ -1395,7 +1395,7 @@ fu_engine_install_blob (FuEngine *self,
 	plugins = fu_plugin_list_get_all (self->plugin_list);
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		if (!fu_plugin_runner_update_prepare (plugin_tmp, device, error))
+		if (!fu_plugin_runner_update_prepare (plugin_tmp, flags, device, error))
 			return FALSE;
 	}
 
@@ -1466,6 +1466,7 @@ fu_engine_install_blob (FuEngine *self,
 			FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 			g_autoptr(GError) error_cleanup = NULL;
 			if (!fu_plugin_runner_update_cleanup (plugin_tmp,
+							      flags,
 							      device,
 							      &error_cleanup)) {
 				g_warning ("failed to update-cleanup "
@@ -1503,7 +1504,7 @@ fu_engine_install_blob (FuEngine *self,
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		g_autoptr(GError) error_cleanup = NULL;
-		if (!fu_plugin_runner_update_cleanup (plugin_tmp, device, &error_cleanup)) {
+		if (!fu_plugin_runner_update_cleanup (plugin_tmp, flags, device, &error_cleanup)) {
 			g_warning ("failed to update-cleanup: %s",
 				   error_cleanup->message);
 		}

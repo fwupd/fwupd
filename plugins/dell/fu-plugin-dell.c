@@ -865,6 +865,7 @@ fu_dell_toggle_flash (FuPlugin *plugin, FuDevice *device,
 
 gboolean
 fu_plugin_update_prepare (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
 			  FuDevice *device,
 			  GError **error)
 {
@@ -874,6 +875,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 
 gboolean
 fu_plugin_update_cleanup (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
 			  FuDevice *device,
 			  GError **error)
 {
