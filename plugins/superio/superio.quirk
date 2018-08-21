@@ -1,0 +1,24 @@
+# Tuxedo N13xWU
+[HwId=93f7be0c-3378-55ac-b1b8-c71e2cc0d7e5]
+SuperioChipsets=IT8587
+
+[SuperIO=IT8510]
+Id=0x8510
+
+[SuperIO=IT8511]
+Id=0x8511
+
+[SuperIO=IT8512]
+Id=0x8512
+
+[SuperIO=IT8513]
+Id=0x8513
+
+[SuperIO=IT8516]
+Id=0x8516
+
+[SuperIO=IT8518]
+Id=0x8518
+
+[SuperIO=IT8587]
+Id=0x8587

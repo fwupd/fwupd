@@ -267,6 +267,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_redfish.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_steelseries.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_superio.so
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synapticsmst.so
 %endif

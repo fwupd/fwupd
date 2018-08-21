@@ -8,6 +8,7 @@ subdir('udev')
 subdir('unifying')
 subdir('upower')
 subdir('wacomhid')
+subdir('superio')
 
 # depends on dfu
 subdir('csr')
