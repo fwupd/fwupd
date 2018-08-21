@@ -25,7 +25,8 @@ struct _FuProgressbar
 	guint			 to_erase;		/* chars */
 	guint			 timer_id;
 	gint64			 last_animated;		/* monotonic */
-	GTimer			 *time_elapsed;
+	GTimer			*time_elapsed;
+	gdouble			 last_estimate;
 };
 
 G_DEFINE_TYPE (FuProgressbar, fu_progressbar, G_TYPE_OBJECT)
@@ -98,6 +99,23 @@ fu_progressbar_erase_line (FuProgressbar *self)
 	self->to_erase = 0;
 }
 
+static gboolean
+fu_progressbar_estimate_ready (FuProgressbar *self, guint percentage)
+{
+	gdouble old;
+	gdouble elapsed;
+
+	if (percentage == 0 || percentage == 100)
+		return FALSE;
+
+	old = self->last_estimate;
+	elapsed = g_timer_elapsed (self->time_elapsed, NULL);
+	self->last_estimate = elapsed / percentage * (100 - percentage);
+
+	/* estimate is ready if we have decreased */
+	return old > self->last_estimate;
+}
+
 static void
 fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentage)
 {
@@ -105,7 +123,6 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 	guint i;
 	gboolean is_idle_newline = FALSE;
 	g_autoptr(GString) str = g_string_new (NULL);
-	g_autofree gchar *time_remaining = NULL;
 
 	/* erase previous line */
 	fu_progressbar_erase_line (self);
@@ -138,14 +155,14 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 	}
 	g_string_append_c (str, ']');
 
-	/* once we have some data (10%) show an estimate of time remaining */
-	if (percentage < 100 && percentage > 10) {
-		gdouble rate = percentage / g_timer_elapsed (self->time_elapsed, NULL);
-		time_remaining = g_strdup_printf ("%.2f", (100-percentage) * rate);
+	/* once we have good data show an estimate of time remaining */
+	if (fu_progressbar_estimate_ready (self, percentage)) {
+		g_autofree gchar *remaining = g_strdup_printf ("%.2f", self->last_estimate);
 		g_string_append_c (str, ' ');
+		/* TRANSLATORS: time remaining for completing firmware flash */
 		g_string_append (str, _("Estimated time remaining:"));
 		g_string_append_c (str, ' ');
-		g_string_append (str, time_remaining);
+		g_string_append (str, remaining);
 	}
 
 	/* dump to screen */
@@ -165,8 +182,6 @@ fu_progressbar_set_title (FuProgressbar *self, const gchar *title)
 {
 	fu_progressbar_erase_line (self);
 	g_print ("%s\n", title);
-	/* reset when we change devices */
-	g_timer_start (self->time_elapsed);
 	fu_progressbar_refresh (self, self->status, self->percentage);
 }
 
@@ -210,6 +225,9 @@ fu_progressbar_spin_end (FuProgressbar *self)
 	if (self->timer_id != 0) {
 		g_source_remove (self->timer_id);
 		self->timer_id = 0;
+
+		/* reset when the spinner has been stopped */
+		g_timer_start (self->time_elapsed);
 	}
 
 	/* go back to the start when we next go into unknown percentage mode */
