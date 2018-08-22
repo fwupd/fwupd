@@ -31,8 +31,14 @@ struct _FuDeviceClass
 							 GError		**error);
 	gboolean		 (*attach)		(FuDevice	*device,
 							 GError		**error);
+	gboolean		 (*open)		(FuDevice	*device,
+							 GError		**error);
+	gboolean		 (*close)		(FuDevice	*device,
+							 GError		**error);
+	gboolean		 (*probe)		(FuDevice	*device,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[28];
+	gpointer	padding[25];
 };
 
 /**
@@ -172,6 +178,12 @@ gboolean	 fu_device_detach			(FuDevice	*device,
 							 GError		**error);
 void		 fu_device_incorporate			(FuDevice	*self,
 							 FuDevice	*donor);
+gboolean	 fu_device_open				(FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_device_close			(FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_device_probe			(FuDevice	*device,
+							 GError		**error);
 
 G_END_DECLS
 
