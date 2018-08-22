@@ -294,6 +294,17 @@ fu_uefi_check_esp_path (const gchar *path, GError **error)
 				     "%s/EFI does not exist", path);
 			return FALSE;
 		}
+	/* /efi is a special case because systemd sandboxing marks
+	 * it read-only, but we need to write to /efi/EFI
+	 */
+	} else if (g_strcmp0 (path, "/efi") == 0) {
+		if (!g_file_test ("/efi/EFI", G_FILE_TEST_IS_DIR)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "%s/EFI does not exist", path);
+			return FALSE;
+		}
 	} else if (g_unix_mount_is_readonly (mount)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
