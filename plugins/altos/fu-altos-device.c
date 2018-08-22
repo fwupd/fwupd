@@ -662,9 +662,10 @@ fu_altos_device_probe_bootloader (FuAltosDevice *self, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_altos_device_probe (FuAltosDevice *self, GError **error)
+static gboolean
+fu_altos_device_probe (FuDevice *device, GError **error)
 {
+	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 
 	/* bootloader uses tty */
@@ -749,6 +750,7 @@ fu_altos_device_class_init (FuAltosDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	klass_device->probe = fu_altos_device_probe;
 	klass_device->write_firmware = fu_altos_device_write_firmware;
 	klass_device->read_firmware = fu_altos_device_read_firmware;
 	object_class->finalize = fu_altos_device_finalize;

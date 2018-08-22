@@ -36,8 +36,6 @@ FuAltosDevice	*fu_altos_device_new			(GUsbDevice *usb_device);
 FuAltosDeviceKind fu_altos_device_kind_from_string	(const gchar	*kind);
 const gchar	*fu_altos_device_kind_to_string		(FuAltosDeviceKind kind);
 FuAltosDeviceKind fu_altos_device_get_kind		(FuAltosDevice	*device);
-gboolean	 fu_altos_device_probe			(FuAltosDevice	*device,
-							 GError		**error);
 
 G_END_DECLS
 

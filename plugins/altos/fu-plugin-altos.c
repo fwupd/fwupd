@@ -30,7 +30,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **e
 		return TRUE;
 
 	/* get device properties */
-	if (!fu_altos_device_probe (dev, error))
+	if (!fu_device_probe (FU_DEVICE (dev), error))
 		return FALSE;
 
 	/* only the bootloader can do the update */
