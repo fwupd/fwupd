@@ -1,0 +1,5 @@
+# RTS5423 Development Board
+[DeviceInstanceId=USB\VID_0BDA&PID_5423]
+Plugin = rts54hub
+FirmwareSizeMin = 0x20000
+FirmwareSizeMax = 0x40000
