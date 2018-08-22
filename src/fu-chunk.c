@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 20157 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -8,10 +8,10 @@
 
 #include <string.h>
 
-#include "dfu-chunked.h"
+#include "fu-chunk.h"
 
 /**
- * dfu_chunked_packet_new:
+ * fu_chunk_new:
  * @idx: the packet number
  * @page: the hardware memory page
  * @address: the address *within* the page
@@ -20,16 +20,16 @@
  *
  * Creates a new packet of chunked data.
  *
- * Return value: (transfer full): a #DfuChunkedPacket
+ * Return value: (transfer full): a #FuChunk
  **/
-DfuChunkedPacket *
-dfu_chunked_packet_new (guint32 idx,
-			guint32 page,
-			guint32 address,
-			const guint8 *data,
-			guint32 data_sz)
+FuChunk *
+fu_chunk_new (guint32 idx,
+	      guint32 page,
+	      guint32 address,
+	      const guint8 *data,
+	      guint32 data_sz)
 {
-	DfuChunkedPacket *item = g_new0 (DfuChunkedPacket, 1);
+	FuChunk *item = g_new0 (FuChunk, 1);
 	item->idx = idx;
 	item->page = page;
 	item->address = address;
@@ -39,15 +39,15 @@ dfu_chunked_packet_new (guint32 idx,
 }
 
 /**
- * dfu_chunked_packet_to_string:
- * @item: a #DfuChunkedPacket
+ * fu_chunk_to_string:
+ * @item: a #FuChunk
  *
  * Converts the chunked packet to a string representation.
  *
  * Return value: (transfer full): A string
  **/
 gchar *
-dfu_chunked_packet_to_string (DfuChunkedPacket *item)
+fu_chunk_to_string (FuChunk *item)
 {
 	g_autoptr(GString) str = g_string_new (NULL);
 	if (item->data != NULL) {
@@ -68,27 +68,27 @@ dfu_chunked_packet_to_string (DfuChunkedPacket *item)
 }
 
 /**
- * dfu_chunked_to_string:
- * @segments: (element-type DfuChunkedPacket): array of packets
+ * fu_chunk_array_to_string:
+ * @segments: (element-type FuChunk): array of packets
  *
  * Converts all the chunked packets in an array to a string representation.
  *
  * Return value: (transfer full): A string
  **/
 gchar *
-dfu_chunked_to_string (GPtrArray *segments)
+fu_chunk_array_to_string (GPtrArray *segments)
 {
 	GString *str = g_string_new (NULL);
 	for (guint i = 0; i < segments->len; i++) {
-		DfuChunkedPacket *item = g_ptr_array_index (segments, i);
-		g_autofree gchar *tmp = dfu_chunked_packet_to_string (item);
+		FuChunk *item = g_ptr_array_index (segments, i);
+		g_autofree gchar *tmp = fu_chunk_to_string (item);
 		g_string_append_printf (str, "%s\n", tmp);
 	}
 	return g_string_free (str, FALSE);
 }
 
 /**
- * dfu_chunked_new:
+ * fu_chunk_array_new:
  * @data: a linear blob of memory, or %NULL
  * @data_sz: size of @data_sz
  * @addr_start: the hardware address offset, or 0
@@ -98,10 +98,10 @@ dfu_chunked_to_string (GPtrArray *segments)
  * Chunks a linear blob of memory into packets, ensuring each packet does not
  * cross a package boundary and is less that a specific transfer size.
  *
- * Return value: (element-type DfuChunkedPacket): array of packets
+ * Return value: (element-type FuChunk): array of packets
  **/
 GPtrArray *
-dfu_chunked_new (const guint8 *data,
+fu_chunk_array_new (const guint8 *data,
 		 guint32 data_sz,
 		 guint32 addr_start,
 		 guint32 page_sz,
@@ -127,11 +127,11 @@ dfu_chunked_new (const guint8 *data,
 			if (page_sz > 0)
 				address_offset %= page_sz;
 			g_ptr_array_add (segments,
-					 dfu_chunked_packet_new (segments->len,
-								 page_old,
-								 address_offset,
-								 data_offset,
-								 idx - last_flush));
+					 fu_chunk_new (segments->len,
+						       page_old,
+						       address_offset,
+						       data_offset,
+						       idx - last_flush));
 			last_flush = idx;
 			page_old = page;
 			continue;
@@ -142,11 +142,11 @@ dfu_chunked_new (const guint8 *data,
 			if (page_sz > 0)
 				address_offset %= page_sz;
 			g_ptr_array_add (segments,
-					 dfu_chunked_packet_new (segments->len,
-								 page,
-								 address_offset,
-								 data_offset,
-								 idx - last_flush));
+					 fu_chunk_new (segments->len,
+						       page,
+						       address_offset,
+						       data_offset,
+						       idx - last_flush));
 			last_flush = idx;
 			continue;
 		}
@@ -160,17 +160,17 @@ dfu_chunked_new (const guint8 *data,
 			page = (addr_start + (idx - 1)) / page_sz;
 		}
 		g_ptr_array_add (segments,
-				 dfu_chunked_packet_new (segments->len,
-							 page,
-							 address_offset,
-							 data_offset,
-							 data_sz - last_flush));
+				 fu_chunk_new (segments->len,
+					       page,
+					       address_offset,
+					       data_offset,
+					       data_sz - last_flush));
 	}
 	return segments;
 }
 
 /**
- * dfu_chunked_new_from_bytes:
+ * fu_chunk_array_new_from_bytes:
  * @blob: a #GBytes
  * @addr_start: the hardware address offset, or 0
  * @page_sz: the hardware page size, or 0
@@ -179,16 +179,16 @@ dfu_chunked_new (const guint8 *data,
  * Chunks a linear blob of memory into packets, ensuring each packet does not
  * cross a package boundary and is less that a specific transfer size.
  *
- * Return value: (element-type DfuChunkedPacket): array of packets
+ * Return value: (element-type FuChunk): array of packets
  **/
 GPtrArray *
-dfu_chunked_new_from_bytes (GBytes *blob,
+fu_chunk_array_new_from_bytes (GBytes *blob,
 			    guint32 addr_start,
 			    guint32 page_sz,
 			    guint32 packet_sz)
 {
 	gsize sz;
 	const guint8 *data = g_bytes_get_data (blob, &sz);
-	return dfu_chunked_new (data, (guint32) sz,
-				addr_start, page_sz, packet_sz);
+	return fu_chunk_array_new (data, (guint32) sz,
+				   addr_start, page_sz, packet_sz);
 }

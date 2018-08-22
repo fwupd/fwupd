@@ -8,10 +8,10 @@
 
 #include <string.h>
 
+#include "fu-chunk.h"
 #include "fu-csr-device.h"
 
 #include "dfu-common.h"
-#include "dfu-chunked.h"
 #include "dfu-firmware.h"
 
 /**
@@ -447,7 +447,7 @@ fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 	guint16 idx;
 	g_autoptr(DfuFirmware) dfu_firmware = dfu_firmware_new ();
 	g_autoptr(GBytes) blob_empty = NULL;
-	g_autoptr(GPtrArray) packets = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* notify UI */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
@@ -479,15 +479,15 @@ fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 		return FALSE;
 	}
 
-	/* create packets */
+	/* create chunks */
 	data = g_bytes_get_data (blob_noftr, &sz);
-	packets = dfu_chunked_new (data, (guint32) sz, 0x0, 0x0,
-				   FU_CSR_PACKET_DATA_SIZE - FU_CSR_COMMAND_HEADER_SIZE);
+	chunks = fu_chunk_array_new (data, (guint32) sz, 0x0, 0x0,
+				     FU_CSR_PACKET_DATA_SIZE - FU_CSR_COMMAND_HEADER_SIZE);
 
 	/* send to hardware */
-	for (idx = 0; idx < packets->len; idx++) {
-		DfuChunkedPacket *pkt = g_ptr_array_index (packets, idx);
-		g_autoptr(GBytes) blob_tmp = g_bytes_new_static (pkt->data, pkt->data_sz);
+	for (idx = 0; idx < chunks->len; idx++) {
+		FuChunk *chk = g_ptr_array_index (chunks, idx);
+		g_autoptr(GBytes) blob_tmp = g_bytes_new_static (chk->data, chk->data_sz);
 
 		/* send packet */
 		if (!fu_csr_device_download_chunk (self, idx, blob_tmp, error))
@@ -495,7 +495,7 @@ fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 
 		/* update progress */
 		fu_device_set_progress_full (device,
-					     (gsize) idx, (gsize) packets->len);
+					     (gsize) idx, (gsize) chunks->len);
 	}
 
 	/* all done */

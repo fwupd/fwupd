@@ -11,7 +11,7 @@
 #include "fu-wac-device.h"
 #include "fu-wac-module-touch.h"
 
-#include "dfu-chunked.h"
+#include "fu-chunk.h"
 
 struct _FuWacModuleTouch
 {
@@ -39,10 +39,10 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 				     "firmware has to be padded to 128b");
 		return FALSE;
 	}
-	chunks = dfu_chunked_new (data, (guint32) len,
-				  0x0, /* addr_start */
-				  0x0, /* page_sz */
-				  128); /* packet_sz */
+	chunks = fu_chunk_array_new (data, (guint32) len,
+				     0x0, /* addr_start */
+				     0x0, /* page_sz */
+				     128); /* packet_sz */
 	blocks_total = chunks->len + 2;
 
 	/* start, which will erase the module */
@@ -56,16 +56,16 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 	/* data */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
-		DfuChunkedPacket *pkt = g_ptr_array_index (chunks, i);
+		FuChunk *chk = g_ptr_array_index (chunks, i);
 		guint8 buf[128+7];
 		g_autoptr(GBytes) blob_chunk = NULL;
 
 		/* build G11T data packet */
 		memset (buf, 0xff, sizeof(buf));
 		buf[0] = 0x01; /* writing */
-		fu_common_write_uint32 (&buf[1], pkt->address, G_LITTLE_ENDIAN);
-		buf[5] = pkt->idx;
-		memcpy (&buf[6], pkt->data, pkt->data_sz);
+		fu_common_write_uint32 (&buf[1], chk->address, G_LITTLE_ENDIAN);
+		buf[5] = chk->idx;
+		memcpy (&buf[6], chk->data, chk->data_sz);
 		blob_chunk = g_bytes_new (buf, sizeof(buf));
 		if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_DATA,
 						blob_chunk, error))

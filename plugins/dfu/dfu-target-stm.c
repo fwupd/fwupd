@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "dfu-chunked.h"
 #include "dfu-common.h"
 #include "dfu-sector.h"
 #include "dfu-target-stm.h"

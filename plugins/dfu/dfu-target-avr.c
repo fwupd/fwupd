@@ -9,7 +9,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "dfu-chunked.h"
+#include "fu-chunk.h"
+
 #include "dfu-common.h"
 #include "dfu-sector.h"
 #include "dfu-target-avr.h"
@@ -499,7 +500,7 @@ dfu_target_avr_download_element (DfuTarget *target,
 	guint16 page_last = G_MAXUINT16;
 	guint32 address;
 	guint32 address_offset = 0x0;
-	g_autoptr(GPtrArray) packets = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
 	const guint8 footer[] = { 0x00, 0x00, 0x00, 0x00,	/* CRC */
 				  16,				/* len */
 				  'D', 'F', 'U',		/* signature */
@@ -552,56 +553,56 @@ dfu_target_avr_download_element (DfuTarget *target,
 
 	/* chunk up the memory space into pages */
 	data = g_bytes_get_data (blob, NULL);
-	packets = dfu_chunked_new (data + address_offset,
-				   g_bytes_get_size (blob) - address_offset,
-				   dfu_sector_get_address (sector),
-				   ATMEL_64KB_PAGE,
-				   ATMEL_MAX_TRANSFER_SIZE);
+	chunks = fu_chunk_array_new (data + address_offset,
+				     g_bytes_get_size (blob) - address_offset,
+				     dfu_sector_get_address (sector),
+				     ATMEL_64KB_PAGE,
+				     ATMEL_MAX_TRANSFER_SIZE);
 
 	/* update UI */
 	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_WRITE);
 
 	/* process each chunk */
-	for (guint i = 0; i < packets->len; i++) {
-		const DfuChunkedPacket *packet = g_ptr_array_index (packets, i);
+	for (guint i = 0; i < chunks->len; i++) {
+		const FuChunk *chk = g_ptr_array_index (chunks, i);
 		g_autofree guint8 *buf = NULL;
 		g_autoptr(GBytes) chunk_tmp = NULL;
 
 		/* select page if required */
-		if (packet->page != page_last) {
+		if (chk->page != page_last) {
 			if (dfu_device_has_quirk (dfu_target_get_device (target),
 						  DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)) {
 				if (!dfu_target_avr_select_memory_page (target,
-									packet->page,
+									chk->page,
 									error))
 					return FALSE;
 			} else {
 				if (!dfu_target_avr32_select_memory_page (target,
-									  packet->page,
+									  chk->page,
 									  error))
 					return FALSE;
 			}
-			page_last = packet->page;
+			page_last = chk->page;
 		}
 
-		/* create packet with header and footer */
-		buf = g_malloc0 (packet->data_sz + header_sz + sizeof(footer));
+		/* create chk with header and footer */
+		buf = g_malloc0 (chk->data_sz + header_sz + sizeof(footer));
 		buf[0] = DFU_AVR32_GROUP_DOWNLOAD;
 		buf[1] = DFU_AVR32_CMD_PROGRAM_START;
-		fu_common_write_uint16 (&buf[2], packet->address, G_BIG_ENDIAN);
-		fu_common_write_uint16 (&buf[4], packet->address + packet->data_sz - 1, G_BIG_ENDIAN);
-		memcpy (&buf[header_sz], packet->data, packet->data_sz);
-		memcpy (&buf[header_sz + packet->data_sz], footer, sizeof(footer));
+		fu_common_write_uint16 (&buf[2], chk->address, G_BIG_ENDIAN);
+		fu_common_write_uint16 (&buf[4], chk->address + chk->data_sz - 1, G_BIG_ENDIAN);
+		memcpy (&buf[header_sz], chk->data, chk->data_sz);
+		memcpy (&buf[header_sz + chk->data_sz], footer, sizeof(footer));
 
 		/* download data */
-		chunk_tmp = g_bytes_new_static (buf, packet->data_sz + header_sz + sizeof(footer));
+		chunk_tmp = g_bytes_new_static (buf, chk->data_sz + header_sz + sizeof(footer));
 		g_debug ("sending %" G_GSIZE_FORMAT " bytes to the hardware",
 			 g_bytes_get_size (chunk_tmp));
 		if (!dfu_target_download_chunk (target, i, chunk_tmp, error))
 			return FALSE;
 
 		/* update UI */
-		dfu_target_set_percentage (target, i + 1, packets->len);
+		dfu_target_set_percentage (target, i + 1, chunks->len);
 	}
 
 	/* done */
@@ -622,7 +623,7 @@ dfu_target_avr_upload_element (DfuTarget *target,
 	g_autoptr(DfuElement) element = NULL;
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GBytes) contents_truncated = NULL;
-	g_autoptr(GPtrArray) packets = NULL;
+	g_autoptr(GPtrArray) blobs = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	DfuSector *sector;
 
@@ -653,63 +654,63 @@ dfu_target_avr_upload_element (DfuTarget *target,
 	address &= ~0x80000000;
 
 	/* chunk up the memory space into pages */
-	packets = dfu_chunked_new (NULL, maximum_size, address,
-				   ATMEL_64KB_PAGE, ATMEL_MAX_TRANSFER_SIZE);
+	chunks = fu_chunk_array_new (NULL, maximum_size, address,
+				     ATMEL_64KB_PAGE, ATMEL_MAX_TRANSFER_SIZE);
 
 	/* update UI */
 	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_READ);
 
 	/* process each chunk */
-	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
-	for (guint i = 0; i < packets->len; i++) {
-		GBytes *chunk_tmp = NULL;
-		const DfuChunkedPacket *packet = g_ptr_array_index (packets, i);
+	blobs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
+	for (guint i = 0; i < chunks->len; i++) {
+		GBytes *blob_tmp = NULL;
+		const FuChunk *chk = g_ptr_array_index (chunks, i);
 
 		/* select page if required */
-		if (packet->page != page_last) {
+		if (chk->page != page_last) {
 			if (dfu_device_has_quirk (dfu_target_get_device (target),
 						  DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)) {
 				if (!dfu_target_avr_select_memory_page (target,
-									packet->page,
+									chk->page,
 									error))
 					return NULL;
 			} else {
 				if (!dfu_target_avr32_select_memory_page (target,
-									  packet->page,
+									  chk->page,
 									  error))
 					return NULL;
 			}
-			page_last = packet->page;
+			page_last = chk->page;
 		}
 
 		/* prepare to read */
 		if (!dfu_target_avr_read_memory (target,
-						 packet->address,
-						 packet->address + packet->data_sz - 1,
+						 chk->address,
+						 chk->address + chk->data_sz - 1,
 						 error))
 			return NULL;
 
 		/* upload data */
 		g_debug ("requesting %i bytes from the hardware",
 			 ATMEL_MAX_TRANSFER_SIZE);
-		chunk_tmp = dfu_target_upload_chunk (target, i,
-						     ATMEL_MAX_TRANSFER_SIZE,
-						     error);
-		if (chunk_tmp == NULL)
+		blob_tmp = dfu_target_upload_chunk (target, i,
+						    ATMEL_MAX_TRANSFER_SIZE,
+						    error);
+		if (blob_tmp == NULL)
 			return NULL;
-		g_ptr_array_add (chunks, chunk_tmp);
+		g_ptr_array_add (blobs, blob_tmp);
 
 		/* this page has valid data */
-		if (!dfu_utils_bytes_is_empty (chunk_tmp)) {
+		if (!dfu_utils_bytes_is_empty (blob_tmp)) {
 			g_debug ("chunk %u has data (page %" G_GUINT32_FORMAT ")",
-				 i, packet->page);
+				 i, chk->page);
 			chunk_valid = i;
 		} else {
 			g_debug ("chunk %u is empty", i);
 		}
 
 		/* update UI */
-		dfu_target_set_percentage (target, i + 1, packets->len);
+		dfu_target_set_percentage (target, i + 1, chunks->len);
 	}
 
 	/* done */
@@ -718,16 +719,16 @@ dfu_target_avr_upload_element (DfuTarget *target,
 
 	/* truncate the image if any sectors are empty, i.e. all 0xff */
 	if (chunk_valid == G_MAXUINT) {
-		g_debug ("all %u chunks are empty", chunks->len);
+		g_debug ("all %u chunks are empty", blobs->len);
 		g_ptr_array_set_size (chunks, 0);
-	} else if (chunks->len != chunk_valid + 1) {
+	} else if (blobs->len != chunk_valid + 1) {
 		g_debug ("truncating chunks from %u to %u",
-			 chunks->len, chunk_valid + 1);
-		g_ptr_array_set_size (chunks, chunk_valid + 1);
+			 blobs->len, chunk_valid + 1);
+		g_ptr_array_set_size (blobs, chunk_valid + 1);
 	}
 
 	/* create element of required size */
-	contents = dfu_utils_bytes_join_array (chunks);
+	contents = dfu_utils_bytes_join_array (blobs);
 	if (expected_size > 0 && g_bytes_get_size (contents) > expected_size) {
 		contents_truncated = g_bytes_new_from_bytes (contents, 0x0, expected_size);
 	} else {
