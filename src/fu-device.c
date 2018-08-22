@@ -39,6 +39,7 @@ typedef struct {
 	guint				 progress;
 	guint				 order;
 	guint				 priority;
+	gboolean			 done_probe;
 } FuDevicePrivate;
 
 enum {
@@ -1241,6 +1242,101 @@ fu_device_attach (FuDevice *device, GError **error)
 
 	/* call vfunc */
 	return klass->attach (device, error);
+}
+
+/**
+ * fu_device_open:
+ * @device: A #FuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Opens a device, optionally running a object-specific vfunc.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.1.2
+ **/
+gboolean
+fu_device_open (FuDevice *device, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* probe */
+	if (!fu_device_probe (device, error))
+		return FALSE;
+
+	/* subclassed */
+	if (klass->open != NULL) {
+		if (!klass->open (device, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_device_open:
+ * @device: A #FuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Closes a device, optionally running a object-specific vfunc.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.1.2
+ **/
+gboolean
+fu_device_close (FuDevice *device, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* subclassed */
+	if (klass->close != NULL) {
+		if (!klass->close (device, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_device_probe:
+ * @device: A #FuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Probes a device, setting parameters on the object that does not need
+ * the device open or the interface claimed.
+ * If the device is not compatible then an error should be returned.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.1.2
+ **/
+gboolean
+fu_device_probe (FuDevice *device, GError **error)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* already done */
+	if (priv->done_probe)
+		return TRUE;
+
+	/* subclassed */
+	if (klass->probe != NULL) {
+		if (!klass->probe (device, error))
+			return FALSE;
+	}
+	priv->done_probe = TRUE;
+	return TRUE;
 }
 
 /**
