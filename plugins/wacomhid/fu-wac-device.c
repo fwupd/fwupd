@@ -8,13 +8,13 @@
 
 #include <string.h>
 
+#include "fu-chunk.h"
 #include "fu-wac-device.h"
 #include "fu-wac-common.h"
 #include "fu-wac-firmware.h"
 #include "fu-wac-module-bluetooth.h"
 #include "fu-wac-module-touch.h"
 
-#include "dfu-chunked.h"
 #include "dfu-common.h"
 #include "dfu-firmware.h"
 
@@ -600,14 +600,14 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 			return FALSE;
 
 		/* write block in chunks */
-		chunks = dfu_chunked_new_from_bytes (blob_block,
-						     fd->start_addr,
-						     0, /* page_sz */
-						     self->write_block_sz);
+		chunks = fu_chunk_array_new_from_bytes (blob_block,
+							fd->start_addr,
+							0, /* page_sz */
+							self->write_block_sz);
 		for (guint j = 0; j < chunks->len; j++) {
-			DfuChunkedPacket *pkt = g_ptr_array_index (chunks, j);
-			g_autoptr(GBytes) blob_chunk = g_bytes_new (pkt->data, pkt->data_sz);
-			if (!fu_wac_device_write_block (self, pkt->address, blob_chunk, error))
+			FuChunk *chk = g_ptr_array_index (chunks, j);
+			g_autoptr(GBytes) blob_chunk = g_bytes_new (chk->data, chk->data_sz);
+			if (!fu_wac_device_write_block (self, chk->address, blob_chunk, error))
 				return FALSE;
 		}
 

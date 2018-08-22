@@ -13,7 +13,6 @@
 #include "fu-wac-device.h"
 
 #include "dfu-common.h"
-#include "dfu-chunked.h"
 #include "dfu-firmware.h"
 
 #define FU_WAC_MODLE_STATUS_OK				0

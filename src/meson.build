@@ -28,6 +28,7 @@ libfwupdprivate = static_library(
   'fwupdprivate',
   sources : [
     'fu-common.c',
+    'fu-chunk.c',
     'fu-device.c',
     'fu-device-locker.c',
     'fu-hwids.c',
@@ -246,6 +247,7 @@ if get_option('tests')
     sources : [
       keyring_src,
       'fu-self-test.c',
+      'fu-chunk.c',
       'fu-common.c',
       'fu-common-cab.c',
       'fu-config.c',

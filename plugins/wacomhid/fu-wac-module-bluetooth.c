@@ -12,8 +12,6 @@
 #include "fu-wac-device.h"
 #include "fu-wac-module-bluetooth.h"
 
-#include "dfu-chunked.h"
-
 struct _FuWacModuleBluetooth
 {
 	FuWacModule		 parent_instance;
