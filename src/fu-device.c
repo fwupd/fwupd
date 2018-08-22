@@ -1278,7 +1278,7 @@ fu_device_open (FuDevice *device, GError **error)
 }
 
 /**
- * fu_device_open:
+ * fu_device_close:
  * @device: A #FuDevice
  * @error: A #GError, or %NULL
  *

@@ -290,7 +290,7 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 }
 
 /**
- * fu_usb_device_open:
+ * fu_usb_device_close:
  * @device: A #FuUsbDevice
  * @error: A #GError, or %NULL
  *
