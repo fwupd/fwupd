@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+install_if_missing() {
+	install -C ${SNAP}/${1} /usr/${1}
+}
+
+#install policykit rules and actions
+install_if_missing share/polkit-1/actions/org.freedesktop.fwupd.policy
+install_if_missing share/polkit-1/rules.d/org.freedesktop.fwupd.rules
