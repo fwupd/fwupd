@@ -1,14 +1,15 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-SIGNATURE_DIR := debian/signatures/fwupd
-BINARY 	      := $(shell find /usr/lib/fwupd/efi/ -name '*.efi')
+PACKAGE_NAME  := fwupd
+SIG_PKG_NAME  := fwupd-SIGNARCH-signed
+SIGNATURE_DIR := debian/signatures/$(PACKAGE_NAME)
+BINARY        := $(shell find /usr/lib/fwupd/efi -name '*.efi' | xargs basename)
 
 %:
 	dh $@
 
 override_dh_auto_build:
-	mkdir -p debian/${PACKAGE_NAME}/usr/lib/fwupd/efi
-	cp $(BINARY) debian/${PACKAGE_NAME}/$(BINARY)
-	sbattach --attach $(SIGNATURE_DIR)/$(BINARY).sig debian/${PACKAGE_NAME}/$(BINARY)
-	mv debian/${PACKAGE_NAME}/$(BINARY) debian/${PACKAGE_NAME}/$(BINARY).signed
+	cp /usr/lib/fwupd/efi/$(BINARY) .
+	sbattach --attach $(SIGNATURE_DIR)/usr/lib/fwupd/efi/$(BINARY).sig $(BINARY)
+	mv $(BINARY) $(BINARY).signed
