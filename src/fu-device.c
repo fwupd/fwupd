@@ -839,10 +839,14 @@ fu_device_set_platform_id (FuDevice *device, const gchar *platform_id)
 
 	/* automatically use this */
 	if (fu_device_get_id (device) == NULL) {
-		g_autofree gchar *id_guid = NULL;
-		id_guid = g_strdup_printf ("%s:%s", platform_id,
-					   fu_device_get_guid_default (device));
-		fu_device_set_id (device, id_guid);
+		if (fu_device_get_guid_default (device) != NULL) {
+			g_autofree gchar *id_guid = NULL;
+			id_guid = g_strdup_printf ("%s:%s", platform_id,
+						   fu_device_get_guid_default (device));
+			fu_device_set_id (device, id_guid);
+		} else {
+			fu_device_set_id (device, platform_id);
+		}
 	}
 	fu_device_set_metadata (device, "platform-id", platform_id);
 }
