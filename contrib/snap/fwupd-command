@@ -9,17 +9,6 @@ export XDG_DATA_DIRS="$SNAP/usr/share"
 [ ! -d "$SNAP_USER_DATA/etc" ] && cp -R "$SNAP/etc" "$SNAP_USER_DATA"
 [ ! -d "$SNAP_USER_DATA/var" ] && cp -R "$SNAP/var" "$SNAP_USER_DATA"
 
-#determine architecture
-if [ "$SNAP_ARCH" = "amd64" ]; then
-  ARCH="x86_64-linux-gnu"
-elif [ "$SNAP_ARCH" = "armhf" ]; then
-  ARCH="arm-linux-gnueabihf"
-elif [ "$SNAP_ARCH" = "arm64" ]; then
-  ARCH="aarch64-linux-gnu"
-else
-  ARCH="$SNAP_ARCH-linux-gnu"
-fi
-
 # re-generate gio modules in local cache
 needs_update=true
 if [ -f $SNAP_USER_DATA/.last_revision ]; then
@@ -38,7 +27,4 @@ if [ $needs_update = true ]; then
   echo "SNAP_DESKTOP_LAST_REVISION=$SNAP_REVISION" > $SNAP_USER_DATA/.last_revision
 fi
 
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
-export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH:$SNAP/usr/lib/$ARCH"
-export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 exec "$@"
