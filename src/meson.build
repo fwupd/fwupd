@@ -182,6 +182,7 @@ executable(
   resources_src,
   sources : [
     keyring_src,
+    'fu-chunk.c',
     'fu-common.c',
     'fu-common-cab.c',
     'fu-config.c',
@@ -306,6 +307,8 @@ if get_option('introspection')
   gir_dep = declare_dependency(sources: gir)
   gnome.generate_gir(fwupd,
     sources : [
+      'fu-chunk.c',
+      'fu-chunk.h',
       'fu-common.c',
       'fu-common.h',
       'fu-device.c',
