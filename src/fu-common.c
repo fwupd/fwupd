@@ -397,7 +397,7 @@ fu_common_firmware_builder (GBytes *bytes,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "missing executable bwrap in PATH");
-		return FALSE;
+		return NULL;
 	}
 
 	/* test if CONFIG_USER_NS is valid */
@@ -406,18 +406,18 @@ fu_common_firmware_builder (GBytes *bytes,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "missing CONFIG_USER_NS in kernel");
-		return FALSE;
+		return NULL;
 	}
 	if (g_file_test ("/proc/sys/kernel/unprivileged_userns_clone", G_FILE_TEST_EXISTS)) {
 		g_autofree gchar *clone = NULL;
 		if (!g_file_get_contents ("/proc/sys/kernel/unprivileged_userns_clone", &clone, NULL, error))
-			return FALSE;
+			return NULL;
 		if (g_ascii_strtoll (clone, NULL, 10) == 0) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "unprivileged user namespace clones disabled by distro");
-			return FALSE;
+			return NULL;
 		}
 	}
 
