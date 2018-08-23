@@ -38,9 +38,9 @@ override_dh_auto_configure:
 		export DELL="-Dplugin_dell=false"; \
 	fi; \
 	if pkg-config --exists efivar; then \
-		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true"; \
+		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true"; \
 	else \
-		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false"; \
+		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false"; \
 	fi; \
 	dh_auto_configure -- $$UEFI $$DELL $$CI -Dplugin_dummy=true --libexecdir=/usr/lib
 
