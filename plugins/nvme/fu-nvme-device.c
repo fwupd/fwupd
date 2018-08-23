@@ -48,6 +48,7 @@ fu_nvme_device_to_string (FuDevice *device, GString *str)
 	g_string_append_printf (str, "    pci-depth:\t\t%u\n", self->pci_depth);
 }
 
+/* @addr_start and @addr_end are *inclusive* to match the NMVe specification */
 static gchar *
 fu_nvme_device_get_string_safe (const guint8 *buf, guint16 addr_start, guint16 addr_end)
 {
