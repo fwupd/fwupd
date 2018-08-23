@@ -131,6 +131,9 @@ FuQuirks	*fu_plugin_get_quirks			(FuPlugin	*plugin);
 const gchar	*fu_plugin_lookup_quirk_by_id		(FuPlugin	*plugin,
 							 const gchar	*prefix,
 							 const gchar	*id);
+guint64		 fu_plugin_lookup_quirk_by_id_as_uint64	(FuPlugin	*plugin,
+							 const gchar	*prefix,
+							 const gchar	*id);
 const gchar	*fu_plugin_lookup_quirk_by_usb_device	(FuPlugin	*plugin,
 							 GUsbDevice	*usb_device,
 							 const gchar	*prefix);

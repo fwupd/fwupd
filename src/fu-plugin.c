@@ -778,6 +778,37 @@ fu_plugin_lookup_quirk_by_id (FuPlugin *plugin, const gchar *group, const gchar 
 }
 
 /**
+ * fu_plugin_lookup_quirk_by_id_as_uint64:
+ * @plugin: A #FuPlugin
+ * @group: A string, e.g. "DfuFlags"
+ * @key: An ID to match the entry, e.g. "Size"
+ *
+ * Looks up an entry in the hardware database using a string key, returning
+ * an integer value. Values are assumed base 10, unless prefixed with "0x"
+ * where they are parsed as base 16.
+ *
+ * Returns: (transfer none): value from the database, or 0 if not found
+ *
+ * Since: 1.1.2
+ **/
+guint64
+fu_plugin_lookup_quirk_by_id_as_uint64 (FuPlugin *plugin, const gchar *group, const gchar *key)
+{
+	const gchar *str;
+	guint base = 10;
+
+	/* exact ID */
+	str = fu_plugin_lookup_quirk_by_id (plugin, group, key);
+	if (str == NULL)
+		return 0;
+	if (g_str_has_prefix (str, "0x")) {
+		str += 2;
+		base = 16;
+	}
+	return g_ascii_strtoull (str, NULL, base);
+}
+
+/**
  * fu_plugin_lookup_quirk_by_usb_device:
  * @plugin: A #FuPlugin
  * @prefix: A string prefix that matches the quirks file basename, e.g. "dfu-quirks"
