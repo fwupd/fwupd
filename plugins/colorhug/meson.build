@@ -23,7 +23,4 @@ shared_module('fu_plugin_colorhug',
   dependencies : [
     plugin_deps,
   ],
-  link_with : [
-    libfwupdprivate,
-  ],
 )

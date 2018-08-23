@@ -56,7 +56,6 @@ shared_module('fu_plugin_dfu',
   ],
   link_with : [
     dfu,
-    libfwupdprivate,
   ],
 )
 
