@@ -12,6 +12,7 @@
 
 #include "fu-common.h"
 #include "fu-quirks.h"
+#include "fu-udev-device.h"
 
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
@@ -106,6 +107,55 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 
 	prefixed_key = g_strdup_printf ("%s/%s", group, key);
 	return g_hash_table_lookup (self->hash, prefixed_key);
+}
+
+/**
+ * fu_quirks_lookup_by_udev_device:
+ * @self: A #FuPlugin
+ * @udev_device: A #GUsbDevice
+ * @key: A string group that matches the quirks file basename, e.g. "dfu-quirks"
+ *
+ * Looks up an entry in the hardware database using various keys generated
+ * from @udev_device, e.g. `[DeviceInstanceId=PCI\VEN_273F&DEV_1000]`
+ *
+ * Returns: (transfer none): values from the database, or %NULL if not found
+ *
+ * Since: 1.1.2
+ **/
+const gchar *
+fu_quirks_lookup_by_udev_device (FuQuirks *self, GUdevDevice *udev_device, const gchar *key)
+{
+	const gchar *tmp;
+	g_autofree gchar *group1 = NULL;
+	g_autofree gchar *group2 = NULL;
+	g_autofree gchar *subsystem = NULL;
+	g_autoptr(FuDevice) dev = fu_udev_device_new (udev_device);
+
+	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
+	g_return_val_if_fail (key != NULL, NULL);
+	g_return_val_if_fail (G_UDEV_IS_DEVICE (udev_device), NULL);
+
+	/* VEN:DEV:REV */
+	subsystem = g_ascii_strup (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (dev)), -1);
+	group1 = g_strdup_printf ("DeviceInstanceId=%s\\VEN_%04X&DEV_%04X&REV_%02X",
+				  subsystem,
+				  fu_udev_device_get_vendor (FU_UDEV_DEVICE (dev)),
+				  fu_udev_device_get_model (FU_UDEV_DEVICE (dev)),
+				  fu_udev_device_get_revision (FU_UDEV_DEVICE (dev)));
+	tmp = fu_quirks_lookup_by_id (self, group1, key);
+	if (tmp != NULL)
+		return tmp;
+
+	/* VEN:DEV */
+	group2 = g_strdup_printf ("DeviceInstanceId=%s\\VEN_%04X&DEV_%04X",
+				  subsystem,
+				  fu_udev_device_get_vendor (FU_UDEV_DEVICE (dev)),
+				  fu_udev_device_get_model (FU_UDEV_DEVICE (dev)));
+	tmp = fu_quirks_lookup_by_id (self, group2, key);
+	if (tmp != NULL)
+		return tmp;
+
+	return NULL;
 }
 
 /**

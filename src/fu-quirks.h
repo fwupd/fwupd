@@ -12,6 +12,7 @@ G_BEGIN_DECLS
 
 #include <glib-object.h>
 #include <gusb.h>
+#include <gudev/gudev.h>
 
 #define FU_TYPE_QUIRKS (fu_quirks_get_type ())
 G_DECLARE_FINAL_TYPE (FuQuirks, fu_quirks, FU, QUIRKS, GObject)
@@ -24,6 +25,9 @@ const gchar	*fu_quirks_lookup_by_id			(FuQuirks	*self,
 							 const gchar	*key);
 const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 							 GUsbDevice	*usb_device,
+							 const gchar	*key);
+const gchar	*fu_quirks_lookup_by_udev_device	(FuQuirks	*self,
+							 GUdevDevice	*udev_device,
 							 const gchar	*key);
 
 /**
