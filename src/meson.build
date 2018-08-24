@@ -107,6 +107,7 @@ fwupdtool = executable(
   sources : [
     'fu-tool.c',
     keyring_src,
+    'fu-chunk.c',
     'fu-common.c',
     'fu-common-cab.c',
     'fu-config.c',
