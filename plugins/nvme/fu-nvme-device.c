@@ -79,14 +79,18 @@ static gchar *
 fu_nvme_device_get_guid_safe (const guint8 *buf, guint16 addr_start)
 {
 	efi_guid_t guid_tmp;
-	guint c_cnt = 0;
+	guint guint_sum = 0;
 	g_autofree char *guid = NULL;
 
 	/* check the GUID is plausible */
 	for (guint i = 0; i < 16; i++)
-		c_cnt += buf[addr_start + i];
-	if (c_cnt < 0xff)
+		guint_sum += buf[addr_start + i];
+	if (guint_sum == 0x00)
 		return NULL;
+	if (guint_sum < 0xff) {
+		g_warning ("implausible GUID with sum %02x", guint_sum);
+		return NULL;
+	}
 	memcpy (&guid_tmp, buf + addr_start, 16);
 	if (efi_guid_to_str (&guid_tmp, &guid) < 0)
 		return NULL;
