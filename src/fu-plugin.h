@@ -11,6 +11,7 @@
 #include <gio/gio.h>
 #include <glib-object.h>
 #include <gusb.h>
+#include <gudev/gudev.h>
 
 #include "fu-common.h"
 #include "fu-device.h"

@@ -23,7 +23,6 @@ shared_module('fu_plugin_unifying',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    gudev,
   ],
 )
 
@@ -40,7 +39,6 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
-      gudev,
     ],
     link_with : [
       fwupd,

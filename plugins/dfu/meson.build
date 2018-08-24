@@ -30,6 +30,7 @@ dfu = static_library(
     giounix,
     libm,
     gusb,
+    gudev,
   ],
   c_args : cargs,
   include_directories : [
@@ -75,6 +76,7 @@ dfu_tool = executable(
     giounix,
     libm,
     gusb,
+    gudev,
   ],
   link_with : [
     dfu,
@@ -124,6 +126,7 @@ if get_option('tests')
       appstream_glib,
       gio,
       gusb,
+      gudev,
       libm,
     ],
     link_with : [

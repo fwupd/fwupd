@@ -16,7 +16,6 @@
 
 #include <gio/gio.h>
 #include <glib.h>
-#include <gudev/gudev.h>
 
 #include "fu-plugin-thunderbolt.h"
 #include "fu-plugin-vfuncs.h"
