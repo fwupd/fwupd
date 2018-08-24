@@ -21,3 +21,6 @@ ENV{FWUPD_GUID}=="*?", ENV{ID_MODEL_FROM_DATABASE}=="", IMPORT{builtin}="hwdb --
 
 # PCI cards with ROM
 SUBSYSTEM=="pci", TEST=="/sys$devpath/rom", ENV{FWUPD_GUID}="$attr{vendor}:$attr{device}"
+
+# NVMe hardware
+SUBSYSTEM=="nvme", ENV{ID_VENDOR_FROM_DATABASE}=="", IMPORT{builtin}="hwdb --subsystem=pci"
