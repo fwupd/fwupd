@@ -115,7 +115,7 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
  * @key: A string group that matches the quirks file basename, e.g. "dfu-quirks"
  *
  * Looks up an entry in the hardware database using various keys generated
- * from @usb_device.
+ * from @usb_device, e.g. `[DeviceInstanceId=USB\VID_273F&PID_1000]`
  *
  * Returns: (transfer none): values from the database, or %NULL if not found
  *
