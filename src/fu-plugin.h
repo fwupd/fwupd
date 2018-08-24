@@ -19,6 +19,7 @@
 #include "fu-quirks.h"
 #include "fu-hwids.h"
 #include "fu-usb-device.h"
+#include "fu-udev-device.h"
 
 G_BEGIN_DECLS
 
@@ -128,6 +129,8 @@ GBytes		*fu_plugin_get_smbios_data		(FuPlugin	*plugin,
 void		 fu_plugin_add_rule			(FuPlugin	*plugin,
 							 FuPluginRule	 rule,
 							 const gchar	*name);
+void		 fu_plugin_add_udev_subsystem		(FuPlugin	*plugin,
+							 const gchar	*subsystem);
 FuQuirks	*fu_plugin_get_quirks			(FuPlugin	*plugin);
 const gchar	*fu_plugin_lookup_quirk_by_id		(FuPlugin	*plugin,
 							 const gchar	*prefix,
