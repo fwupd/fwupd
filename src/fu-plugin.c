@@ -1252,7 +1252,7 @@ fu_plugin_runner_device_register (FuPlugin *plugin, FuDevice *device)
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_device_registered", (gpointer *) &func);
 	if (func != NULL) {
-		g_debug ("performing device_added() on %s", priv->name);
+		g_debug ("performing fu_plugin_device_registered() on %s", priv->name);
 		func (plugin, device);
 	}
 }
