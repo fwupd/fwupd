@@ -184,6 +184,7 @@ gboolean	 fu_device_close			(FuDevice	*device,
 							 GError		**error);
 gboolean	 fu_device_probe			(FuDevice	*device,
 							 GError		**error);
+void		 fu_device_probe_invalidate		(FuDevice	*device);
 
 G_END_DECLS
 

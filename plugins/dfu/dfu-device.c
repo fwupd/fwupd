@@ -1610,7 +1610,7 @@ dfu_device_wait_for_replug (DfuDevice *device, guint timeout, GError **error)
 	g_autoptr(GUsbDevice) usb_device2  = NULL;
 
 	/* close */
-	fu_usb_device_close (FU_USB_DEVICE (device), NULL);
+	fu_device_close (FU_DEVICE (device), NULL);
 
 	/* watch the device disappear and re-appear */
 	usb_device2 = g_usb_context_wait_for_replug (priv->usb_context,
@@ -1623,7 +1623,7 @@ dfu_device_wait_for_replug (DfuDevice *device, guint timeout, GError **error)
 	/* re-open with new device set */
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
 	fu_usb_device_set_dev (FU_USB_DEVICE (device), usb_device2);
-	if (!fu_usb_device_open (FU_USB_DEVICE (device), error))
+	if (!fu_device_open (FU_DEVICE (device), error))
 		return FALSE;
 	if (!dfu_device_refresh_and_clear (device, error))
 		return FALSE;
