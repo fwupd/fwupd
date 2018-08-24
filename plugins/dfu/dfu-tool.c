@@ -252,7 +252,7 @@ dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 		g_autoptr(DfuDevice) device = dfu_device_new (usb_device);
 		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
 		dfu_device_set_usb_context (device, usb_context);
-		if (fu_usb_device_probe (FU_USB_DEVICE (device), NULL))
+		if (fu_device_probe (FU_DEVICE (device), NULL))
 			return g_steal_pointer (&device);
 	}
 
@@ -2034,7 +2034,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		device = dfu_device_new (usb_device);
 		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
 		dfu_device_set_usb_context (device, usb_context);
-		if (!fu_usb_device_probe (FU_USB_DEVICE (device), NULL))
+		if (!fu_device_probe (FU_DEVICE (device), NULL))
 			continue;
 		version = as_utils_version_from_uint16 (g_usb_device_get_release (usb_device),
 							AS_VERSION_PARSE_FLAG_USE_BCD);

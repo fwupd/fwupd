@@ -1344,6 +1344,29 @@ fu_device_probe (FuDevice *device, GError **error)
 }
 
 /**
+ * fu_device_probe_invalidate:
+ * @device: A #FuDevice
+ *
+ * Normally when calling fu_device_probe() multiple times it is only done once.
+ * Calling this method causes the next fu_device_probe() call to actually
+ * probe the hardware.
+ *
+ * This should be done in case the backing device has changed, for instance if
+ * a USB device has been replugged.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.1.2
+ **/
+void
+fu_device_probe_invalidate (FuDevice *device)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FU_IS_DEVICE (device));
+	priv->done_probe = FALSE;
+}
+
+/**
  * fu_device_incorporate:
  * @device: A #FuDevice
  * @donor: Another #FuDevice
