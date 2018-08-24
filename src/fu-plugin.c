@@ -47,6 +47,7 @@ typedef struct {
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
 	GPtrArray		*supported_guids;
+	GPtrArray		*udev_subsystems;
 	FuSmbios		*smbios;
 	GHashTable		*devices;	/* platform_id:GObject */
 	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
@@ -95,6 +96,9 @@ typedef gboolean	 (*FuPluginUpdateFunc)		(FuPlugin	*plugin,
 							 GError		**error);
 typedef gboolean	 (*FuPluginUsbDeviceAddedFunc)	(FuPlugin	*plugin,
 							 GUsbDevice	*usb_device,
+							 GError		**error);
+typedef gboolean	 (*FuPluginUdevDeviceAddedFunc)	(FuPlugin	*plugin,
+							 GUdevDevice	*udev_device,
 							 GError		**error);
 
 /**
@@ -671,6 +675,15 @@ fu_plugin_set_supported (FuPlugin *plugin, GPtrArray *supported_guids)
 }
 
 void
+fu_plugin_set_udev_subsystems (FuPlugin *plugin, GPtrArray *udev_subsystems)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	if (priv->udev_subsystems != NULL)
+		g_ptr_array_unref (priv->udev_subsystems);
+	priv->udev_subsystems = g_ptr_array_ref (udev_subsystems);
+}
+
+void
 fu_plugin_set_quirks (FuPlugin *plugin, FuQuirks *quirks)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
@@ -1210,6 +1223,28 @@ fu_plugin_runner_update_reload (FuPlugin *plugin, FuDevice *device, GError **err
 						"fu_plugin_update_reload", error);
 }
 
+/**
+ * fu_plugin_add_udev_subsystem:
+ * @plugin: a #FuPlugin
+ * @subsystem: a subsystem name, e.g. `pciport`
+ *
+ * Registers the udev subsystem to be watched by the daemon.
+ *
+ * Plugins can use this method only in fu_plugin_init()
+ **/
+void
+fu_plugin_add_udev_subsystem (FuPlugin *plugin, const gchar *subsystem)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	for (guint i = 0; i < priv->udev_subsystems->len; i++) {
+		const gchar *subsystem_tmp = g_ptr_array_index (priv->udev_subsystems, i);
+		if (g_strcmp0 (subsystem_tmp, subsystem) == 0)
+			return;
+	}
+	g_debug ("added udev subsystem watch of %s", subsystem);
+	g_ptr_array_add (priv->udev_subsystems, g_strdup (subsystem));
+}
+
 gboolean
 fu_plugin_runner_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
 {
@@ -1229,6 +1264,29 @@ fu_plugin_runner_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GEr
 	if (func != NULL) {
 		g_debug ("performing usb_device_added() on %s", priv->name);
 		return func (plugin, usb_device, error);
+	}
+	return TRUE;
+}
+
+gboolean
+fu_plugin_runner_udev_device_added (FuPlugin *plugin, GUdevDevice *udev_device, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginUdevDeviceAddedFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_udev_device_added", (gpointer *) &func);
+	if (func != NULL) {
+		g_debug ("performing udev_device_added() on %s", priv->name);
+		return func (plugin, udev_device, error);
 	}
 	return TRUE;
 }
@@ -1834,6 +1892,8 @@ fu_plugin_finalize (GObject *object)
 		g_object_unref (priv->quirks);
 	if (priv->supported_guids != NULL)
 		g_ptr_array_unref (priv->supported_guids);
+	if (priv->udev_subsystems != NULL)
+		g_ptr_array_unref (priv->udev_subsystems);
 	if (priv->smbios != NULL)
 		g_object_unref (priv->smbios);
 	if (priv->runtime_versions != NULL)
