@@ -52,6 +52,7 @@ if get_option('tests')
       appstream_glib,
       gio,
       gusb,
+      gudev,
       libm,
     ],
     link_with : [

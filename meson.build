@@ -316,6 +316,7 @@ plugin_deps += gmodule
 plugin_deps += gusb
 plugin_deps += soup
 plugin_deps += libarchive
+plugin_deps += gudev
 
 subdir('data')
 if get_option('gtkdoc')

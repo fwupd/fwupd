@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <appstream-glib.h>
-#include <gudev/gudev.h>
 
 #include "fu-plugin.h"
 #include "fu-rom.h"

@@ -15,7 +15,6 @@ shared_module('fu_plugin_udev',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    gudev,
   ],
 )
 
@@ -32,7 +31,6 @@ executable(
   ],
   dependencies : [
     plugin_deps,
-    gudev,
   ],
   link_with : [
     fwupd,
@@ -59,7 +57,6 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
-      gudev,
     ],
     link_with : [
       fwupd,
