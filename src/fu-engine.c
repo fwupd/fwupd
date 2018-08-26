@@ -3212,16 +3212,11 @@ fu_engine_usb_device_removed_cb (GUsbContext *ctx,
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* go through each device and remove any that match */
-	devices = fu_device_list_get_all (self->device_list);
+	devices = fu_device_list_get_by_platform_id (self->device_list,
+						     g_usb_device_get_platform_id (usb_device));
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		if (!FU_IS_USB_DEVICE (device))
-			continue;
-		if (g_strcmp0 (fu_device_get_platform_id (device),
-			       g_usb_device_get_platform_id (usb_device)) == 0) {
-			g_debug ("auto-removing FuUsbDevice");
-			fu_device_list_remove (self->device_list, device);
-		}
+		fu_device_list_remove (self->device_list, device);
 	}
 }
 
