@@ -8,7 +8,6 @@
 
 #include <appstream-glib.h>
 #include <fcntl.h>
-#include <gudev/gudev.h>
 #include <poll.h>
 #include <string.h>
 #include <termios.h>

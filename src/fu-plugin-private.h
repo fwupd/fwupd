@@ -23,6 +23,8 @@ void		 fu_plugin_set_hwids			(FuPlugin	*plugin,
 							 FuHwids	*hwids);
 void		 fu_plugin_set_supported		(FuPlugin	*plugin,
 							 GPtrArray	*supported_guids);
+void		 fu_plugin_set_udev_subsystems		(FuPlugin	*plugin,
+							 GPtrArray	*udev_subsystems);
 void		 fu_plugin_set_quirks			(FuPlugin	*plugin,
 							 FuQuirks	*quirks);
 void		 fu_plugin_set_runtime_versions		(FuPlugin	*plugin,
@@ -83,6 +85,9 @@ gboolean	 fu_plugin_runner_update_reload		(FuPlugin	*plugin,
 							 GError		**error);
 gboolean	 fu_plugin_runner_usb_device_added	(FuPlugin	*plugin,
 							 GUsbDevice	*usb_device,
+							 GError		**error);
+gboolean	 fu_plugin_runner_udev_device_added	(FuPlugin	*plugin,
+							 GUdevDevice	*udev_device,
 							 GError		**error);
 void		 fu_plugin_runner_device_register	(FuPlugin	*plugin,
 							 FuDevice	*device);

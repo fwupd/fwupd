@@ -14,6 +14,5 @@ fu_plugin_thunderbolt_power = shared_module('fu_plugin_thunderbolt_power',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    gudev,
   ],
 )

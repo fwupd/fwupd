@@ -50,6 +50,7 @@ executable(
   dependencies : [
     giounix,
     gusb,
+    gudev,
     efivar,
     efiboot,
   ],

@@ -38,6 +38,7 @@ libfwupdprivate = static_library(
     'fu-quirks.c',
     'fu-smbios.c',
     'fu-test.c',
+    'fu-udev-device.c',
     'fu-usb-device.c',
   ],
   include_directories : [
@@ -127,6 +128,7 @@ fwupdtool = executable(
     'fu-plugin-list.c',
     'fu-quirks.c',
     'fu-smbios.c',
+    'fu-udev-device.c',
     'fu-usb-device.c',
     'fu-util-common.c',
   ],
@@ -204,6 +206,7 @@ executable(
     'fu-plugin-list.c',
     'fu-quirks.c',
     'fu-smbios.c',
+    'fu-udev-device.c',
     'fu-usb-device.c',
   ],
   include_directories : [
@@ -270,6 +273,7 @@ if get_option('tests')
       'fu-quirks.c',
       'fu-smbios.c',
       'fu-test.c',
+      'fu-udev-device.c',
       'fu-usb-device.c',
     ],
     include_directories : [
@@ -320,6 +324,7 @@ if get_option('introspection')
       'fu-plugin.h',
       'fu-quirks.c',
       'fu-quirks.h',
+      'fu-udev-device.c',
       'fu-usb-device.c',
     ],
     nsversion : '1.0',

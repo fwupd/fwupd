@@ -19,7 +19,6 @@ shared_module('fu_plugin_altos',
   install_dir: plugin_dir,
   c_args : cargs,
   dependencies : [
-    gudev,
     libelf,
     plugin_deps,
   ],

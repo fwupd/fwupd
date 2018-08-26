@@ -47,7 +47,6 @@ if get_option('tests')
       plugin_deps,
       efivar,
       sqlite,
-      gudev,
       libsmbios_c,
       valgrind,
     ],
