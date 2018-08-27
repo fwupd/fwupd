@@ -437,25 +437,16 @@ _dfu_firmware_get_default_element_data (DfuFirmware *firmware)
 	return dfu_element_get_contents (element);
 }
 
-static gboolean
-fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
+static GBytes *
+fu_csr_device_prepare_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
-	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	GBytes *blob_noftr;
-	const guint8 *data;
-	gsize sz = 0;
-	guint16 idx;
 	g_autoptr(DfuFirmware) dfu_firmware = dfu_firmware_new ();
-	g_autoptr(GBytes) blob_empty = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
-
-	/* notify UI */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 
 	/* parse the file */
-	if (!dfu_firmware_parse_data (dfu_firmware, blob,
+	if (!dfu_firmware_parse_data (dfu_firmware, fw,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE, error))
-		return FALSE;
+		return NULL;
 	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL) {
 		g_autofree gchar *fw_str = NULL;
 		fw_str = dfu_firmware_to_string (dfu_firmware);
@@ -466,7 +457,7 @@ fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "expected DFU firmware");
-		return FALSE;
+		return NULL;
 	}
 
 	/* get the blob from the firmware file */
@@ -476,13 +467,27 @@ fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "firmware contained no data");
-		return FALSE;
+		return NULL;
 	}
 
+	/* success */
+	return g_bytes_ref (blob_noftr);
+}
+
+static gboolean
+fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
+{
+	FuCsrDevice *self = FU_CSR_DEVICE (device);
+	guint16 idx;
+	g_autoptr(GBytes) blob_empty = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* notify UI */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+
 	/* create chunks */
-	data = g_bytes_get_data (blob_noftr, &sz);
-	chunks = fu_chunk_array_new (data, (guint32) sz, 0x0, 0x0,
-				     FU_CSR_PACKET_DATA_SIZE - FU_CSR_COMMAND_HEADER_SIZE);
+	chunks = fu_chunk_array_new_from_bytes (blob, 0x0, 0x0,
+						FU_CSR_PACKET_DATA_SIZE - FU_CSR_COMMAND_HEADER_SIZE);
 
 	/* send to hardware */
 	for (idx = 0; idx < chunks->len; idx++) {
@@ -576,6 +581,7 @@ fu_csr_device_class_init (FuCsrDeviceClass *klass)
 	klass_device->to_string = fu_csr_device_to_string;
 	klass_device->write_firmware = fu_csr_device_download;
 	klass_device->read_firmware = fu_csr_device_upload;
+	klass_device->prepare_firmware = fu_csr_device_prepare_firmware;
 	klass_device->attach = fu_csr_device_attach;
 	klass_usb_device->open = fu_csr_device_open;
 	klass_usb_device->close = fu_csr_device_close;
