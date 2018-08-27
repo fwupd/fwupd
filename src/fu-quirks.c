@@ -215,7 +215,7 @@ fu_quirks_merge_values (const gchar *old, const gchar *new)
 	g_auto(GStrv) oldv = g_strsplit (old, ",", -1);
 
 	/* segment flags, and append if they do not already exists */
-	resv = g_new0 (gchar *, g_strv_length (oldv) + g_strv_length (newv));
+	resv = g_new0 (gchar *, g_strv_length (oldv) + g_strv_length (newv) + 1);
 	for (guint i = 0; oldv[i] != NULL; i++) {
 		if (!g_strv_contains ((const gchar * const *) resv, oldv[i]))
 			resv[cnt++] = oldv[i];
