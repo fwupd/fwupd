@@ -130,6 +130,18 @@ gchar		*fu_quirks_lookup_by_guids		(FuQuirks	*self,
 #define	FU_QUIRKS_GUID				"Guid"
 
 /**
+ * FU_QUIRKS_PARENT_GUID:
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
+ * @value: the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`
+ *
+ * Adds an extra GUID to mark as the parent device. If the value provided is
+ * not already a suitable GUID, it will be converted to one.
+ *
+ * Since: 1.1.2
+ */
+#define	FU_QUIRKS_PARENT_GUID			"ParentGuid"
+
+/**
  * FU_QUIRKS_VERSION:
  * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806&REV_0001`
  * @value: the version number, e.g. `1.2`
