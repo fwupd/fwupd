@@ -2,6 +2,10 @@
 [HwId=766de8b6-ca64-53dd-a9a2-295618daffcd]
 SuperioChipsets=IT8587
 
+# W740SU
+[HwId=f00d8c4e-dce2-51c3-89d6-6cbc5fc5cdbb]
+SuperioChipsets=IT8587
+
 [SuperIO=IT8510]
 Id=0x8510
 
