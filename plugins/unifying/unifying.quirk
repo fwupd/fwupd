@@ -1,0 +1,19 @@
+# Nordic
+[DeviceInstanceId=USB\VID_046D&PID_AAAA]
+Plugin = unifying
+FirmwareSizeMin = 0x4000
+
+# Nordic Pico
+[DeviceInstanceId=USB\VID_046D&PID_AAAE]
+Plugin = unifying
+FirmwareSizeMin = 0x4000
+
+# Nordic
+[DeviceInstanceId=USB\VID_046D&PID_AAAC]
+Plugin = unifying
+FirmwareSizeMin = 0x4000
+
+# Nordic Pico
+[DeviceInstanceId=USB\VID_046D&PID_AAAD]
+Plugin = unifying
+FirmwareSizeMin = 0x4000

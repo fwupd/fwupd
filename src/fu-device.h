@@ -37,8 +37,11 @@ struct _FuDeviceClass
 							 GError		**error);
 	gboolean		 (*probe)		(FuDevice	*device,
 							 GError		**error);
+	GBytes			*(*prepare_firmware)	(FuDevice	*device,
+							 GBytes		*fw,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[25];
+	gpointer	padding[24];
 };
 
 /**
@@ -157,6 +160,10 @@ void		 fu_device_set_remove_delay		(FuDevice	*device,
 FwupdStatus	 fu_device_get_status			(FuDevice	*device);
 void		 fu_device_set_status			(FuDevice	*device,
 							 FwupdStatus	 status);
+void		 fu_device_set_firmware_size_min	(FuDevice	*device,
+							 guint64	 size_min);
+void		 fu_device_set_firmware_size_max	(FuDevice	*device,
+							 guint64	 size_max);
 guint		 fu_device_get_progress			(FuDevice	*device);
 void		 fu_device_set_progress			(FuDevice	*device,
 							 guint		 progress);
@@ -168,6 +175,9 @@ void		 fu_device_set_quirks			(FuDevice	*device,
 FuQuirks	*fu_device_get_quirks			(FuDevice	*device);
 FwupdRelease	*fu_device_get_release_default		(FuDevice	*device);
 gboolean	 fu_device_write_firmware		(FuDevice	*device,
+							 GBytes		*fw,
+							 GError		**error);
+GBytes		*fu_device_prepare_firmware		(FuDevice	*device,
 							 GBytes		*fw,
 							 GError		**error);
 GBytes		*fu_device_read_firmware		(FuDevice	*device,

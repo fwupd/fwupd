@@ -1,5 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginUnifying"']
 
+install_data([
+  'unifying.quirk',
+  ],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_unifying',
   sources : [
     'fu-plugin-unifying.c',
