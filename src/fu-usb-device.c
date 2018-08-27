@@ -35,59 +35,6 @@ enum {
 #define GET_PRIVATE(o) (fu_usb_device_get_instance_private (o))
 
 static void
-fu_usb_device_apply_quirks (FuUsbDevice *device)
-{
-	FuQuirks *quirks = fu_device_get_quirks (FU_DEVICE (device));
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-	const gchar *tmp;
-
-	/* not set */
-	if (quirks == NULL)
-		return;
-
-	/* flags */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_FLAGS);
-	if (tmp != NULL)
-		fu_device_set_custom_flags (FU_DEVICE (device), tmp);
-
-	/* name */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_NAME);
-	if (tmp != NULL)
-		fu_device_set_name (FU_DEVICE (device), tmp);
-
-	/* summary */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_SUMMARY);
-	if (tmp != NULL)
-		fu_device_set_summary (FU_DEVICE (device), tmp);
-
-	/* vendor */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_VENDOR);
-	if (tmp != NULL)
-		fu_device_set_vendor (FU_DEVICE (device), tmp);
-
-	/* version */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_VERSION);
-	if (tmp != NULL)
-		fu_device_set_version (FU_DEVICE (device), tmp);
-
-	/* icon */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_ICON);
-	if (tmp != NULL)
-		fu_device_add_icon (FU_DEVICE (device), tmp);
-
-	/* GUID */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_GUID);
-	if (tmp != NULL)
-		fu_device_add_guid (FU_DEVICE (device), tmp);
-}
-
-static void
-fu_usb_device_notify_quirks_cb (FuUsbDevice *device, GParamSpec *pspec, gpointer user_data)
-{
-	fu_usb_device_apply_quirks (device);
-}
-
-static void
 fu_usb_device_get_property (GObject *object, guint prop_id,
 			    GValue *value, GParamSpec *pspec)
 {
@@ -135,8 +82,6 @@ fu_usb_device_finalize (GObject *object)
 static void
 fu_usb_device_init (FuUsbDevice *device)
 {
-	g_signal_connect (device, "notify::quirks",
-			  G_CALLBACK (fu_usb_device_notify_quirks_cb), NULL);
 }
 
 /**
@@ -285,15 +230,46 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE (device);
 	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	guint16 release;
+	g_autofree gchar *devid0 = NULL;
+	g_autofree gchar *devid1 = NULL;
+	g_autofree gchar *devid2 = NULL;
+	g_autofree gchar *vendor_id = NULL;
 
-	g_return_val_if_fail (FU_IS_USB_DEVICE (device), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	/* set vendor ID */
+	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
+	fu_device_set_vendor_id (device, vendor_id);
+
+	/* set the version if the release has been set */
+	release = g_usb_device_get_release (priv->usb_device);
+	if (release != 0x0) {
+		g_autofree gchar *version = as_utils_version_from_uint16 (release,
+									  AS_VERSION_PARSE_FLAG_USE_BCD);
+		fu_device_set_version (device, version);
+	}
+
+	/* add GUIDs in order of priority */
+	devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X",
+				  g_usb_device_get_vid (priv->usb_device),
+				  g_usb_device_get_pid (priv->usb_device),
+				  release);
+	fu_device_add_guid (device, devid2);
+	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+				  g_usb_device_get_vid (priv->usb_device),
+				  g_usb_device_get_pid (priv->usb_device));
+	fu_device_add_guid (device, devid1);
+	devid0 = g_strdup_printf ("USB\\VID_%04X",
+				  g_usb_device_get_vid (priv->usb_device));
+	fu_device_add_guid (device, devid0);
 
 	/* subclassed */
 	if (klass->probe != NULL) {
 		if (!klass->probe (self, error))
 			return FALSE;
 	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -310,10 +286,6 @@ void
 fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
-	guint16 release;
-	g_autofree gchar *devid1 = NULL;
-	g_autofree gchar *devid2 = NULL;
-	g_autofree gchar *vendor_id = NULL;
 
 	g_return_if_fail (FU_IS_USB_DEVICE (device));
 
@@ -327,35 +299,9 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 		return;
 	}
 
-	/* add both device IDs */
-	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
-				  g_usb_device_get_vid (usb_device),
-				  g_usb_device_get_pid (usb_device));
-	fu_device_add_guid (FU_DEVICE (device), devid1);
-	release = g_usb_device_get_release (usb_device);
-	devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X",
-				  g_usb_device_get_vid (usb_device),
-				  g_usb_device_get_pid (usb_device),
-				  release);
-	fu_device_add_guid (FU_DEVICE (device), devid2);
-
-	/* set vendor ID */
-	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (usb_device));
-	fu_device_set_vendor_id (FU_DEVICE (device), vendor_id);
-
-	/* set the version if the release has been set */
-	if (release != 0x0) {
-		g_autofree gchar *version = as_utils_version_from_uint16 (release,
-									  AS_VERSION_PARSE_FLAG_USE_BCD);
-		fu_device_set_version (FU_DEVICE (device), version);
-	}
-
 	/* set USB platform ID automatically */
 	fu_device_set_platform_id (FU_DEVICE (device),
 				   g_usb_device_get_platform_id (usb_device));
-
-	/* set the quirks again */
-	fu_usb_device_apply_quirks (device);
 }
 
 /**

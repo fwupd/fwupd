@@ -1268,6 +1268,8 @@ fu_plugin_quirks_func (void)
 	g_assert_cmpstr (tmp, ==, NULL);
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "unfound", "unfound");
 	g_assert_cmpstr (tmp, ==, NULL);
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "bb9ec3e2-77b3-53bc-a1f1-b05916715627", "Flags");
+	g_assert_cmpstr (tmp, ==, "clever");
 }
 
 static void

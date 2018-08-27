@@ -2988,12 +2988,23 @@ static void
 fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
-	const gchar *plugin_name;
+	g_autofree gchar *plugin_name = NULL;
+	g_autoptr(FuDevice) device = fu_udev_device_new (udev_device);
+	g_autoptr(GError) error_local = NULL;
+
+	/* add any extra quirks */
+	fu_device_set_quirks (device, self->quirks);
+	if (!fu_device_probe (device, &error_local)) {
+		g_warning ("failed to probe device %s: %s",
+			   g_udev_device_get_sysfs_path (udev_device),
+			   error_local->message);
+		return;
+	}
 
 	/* does the quirk specify the plugin to use */
-	plugin_name = fu_quirks_lookup_by_udev_device (self->quirks,
-						       udev_device,
-						       FU_QUIRKS_PLUGIN);
+	plugin_name = fu_quirks_lookup_by_guids (self->quirks,
+						 fu_device_get_guids (device),
+						 FU_QUIRKS_PLUGIN);
 	if (plugin_name != NULL) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,
@@ -3333,12 +3344,23 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 			       FuEngine *self)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
-	const gchar *plugin_name;
+	g_autofree gchar *plugin_name = NULL;
+	g_autoptr(FuDevice) device = fu_usb_device_new (usb_device);
+	g_autoptr(GError) error_local = NULL;
+
+	/* add any extra quirks */
+	fu_device_set_quirks (device, self->quirks);
+	if (!fu_device_probe (device, &error_local)) {
+		g_warning ("failed to probe device %s: %s",
+			   g_usb_device_get_platform_id (usb_device),
+			   error_local->message);
+		return;
+	}
 
 	/* does the quirk specify the plugin to use */
-	plugin_name = fu_quirks_lookup_by_usb_device (self->quirks,
-						      usb_device,
-						      FU_QUIRKS_PLUGIN);
+	plugin_name = fu_quirks_lookup_by_guids (self->quirks,
+						 fu_device_get_guids (device),
+						 FU_QUIRKS_PLUGIN);
 	if (plugin_name != NULL) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,
