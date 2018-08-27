@@ -451,6 +451,55 @@ fu_device_add_parent_guid (FuDevice *device, const gchar *guid)
 }
 
 static void
+fu_device_add_child_by_type_guid (FuDevice *device, GType type, const gchar *guid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	g_autoptr(FuDevice) child = NULL;
+	child = g_object_new (type,
+			      "quirks", priv->quirks,
+			      NULL);
+	if (fu_device_get_platform_id (device) != NULL)
+		fu_device_set_platform_id (child, fu_device_get_platform_id (device));
+	fu_device_add_guid (child, guid);
+	fu_device_add_child (device, child);
+}
+
+static gboolean
+fu_device_add_child_by_kv (FuDevice *device, const gchar *str, GError **error)
+{
+	g_auto(GStrv) split = g_strsplit (str, "|", -1);
+
+	/* type same as parent */
+	if (g_strv_length (split) == 1) {
+		fu_device_add_child_by_type_guid (device,
+						  G_OBJECT_TYPE (device),
+						  split[1]);
+		return TRUE;
+	}
+
+	/* type specified */
+	if (g_strv_length (split) == 2) {
+		GType devtype = g_type_from_name (split[0]);
+		if (devtype == 0) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_NOT_FOUND,
+					     "no GType registered");
+			return FALSE;
+		}
+		fu_device_add_child_by_type_guid (device, devtype, split[1]);
+		return TRUE;
+	}
+
+	/* more than one '|' */
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "unable to add parse child section");
+	return FALSE;
+}
+
+static void
 fu_device_add_guid_quirks (FuDevice *device, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (device);
@@ -499,6 +548,19 @@ fu_device_add_guid_quirks (FuDevice *device, const gchar *guid)
 	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_PARENT_GUID);
 	if (tmp != NULL)
 		fu_device_add_parent_guid (device, tmp);
+
+	/* children */
+	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_CHILDREN);
+	if (tmp != NULL) {
+		g_auto(GStrv) sections = g_strsplit (tmp, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++) {
+			g_autoptr(GError) error = NULL;
+			if (!fu_device_add_child_by_kv (device, sections[i], &error)) {
+				g_warning ("failed to add section %s: %s",
+					   sections[i], error->message);
+			}
+		}
+	}
 }
 
 static void

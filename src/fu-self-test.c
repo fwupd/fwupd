@@ -1273,6 +1273,34 @@ fu_plugin_quirks_func (void)
 }
 
 static void
+fu_plugin_quirks_device_func (void)
+{
+	FuDevice *device_tmp;
+	GPtrArray *children;
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_quirks_load (quirks, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* use quirk file to set device attributes */
+	fu_device_set_quirks (device, quirks);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_guid (device, "USB\\VID_0BDA&PID_1100");
+	g_assert_cmpstr (fu_device_get_name (device), ==, "Hub");
+
+	/* ensure children are created */
+	children = fu_device_get_children (device);
+	g_assert_cmpint (children->len, ==, 1);
+	device_tmp = g_ptr_array_index (children, 0);
+	g_assert_cmpstr (fu_device_get_name (device_tmp), ==, "HDMI");
+	g_assert (fu_device_has_flag (device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE));
+}
+
+static void
 fu_plugin_module_func (void)
 {
 	GError *error = NULL;
@@ -2371,6 +2399,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
+	g_test_add_func ("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
