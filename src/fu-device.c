@@ -494,6 +494,11 @@ fu_device_add_guid_quirks (FuDevice *device, const gchar *guid)
 	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_GUID);
 	if (tmp != NULL)
 		fu_device_add_guid (device, tmp);
+
+	/* parent GUID */
+	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_PARENT_GUID);
+	if (tmp != NULL)
+		fu_device_add_parent_guid (device, tmp);
 }
 
 static void
