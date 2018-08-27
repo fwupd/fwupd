@@ -44,59 +44,6 @@ static guint signals[SIGNAL_LAST] = { 0 };
 
 #define GET_PRIVATE(o) (fu_udev_device_get_instance_private (o))
 
-static void
-fu_udev_device_apply_quirks (FuUdevDevice *self)
-{
-	FuQuirks *quirks = fu_device_get_quirks (FU_DEVICE (self));
-	GUdevDevice *udev_device = fu_udev_device_get_dev (self);
-	const gchar *tmp;
-
-	/* not set */
-	if (quirks == NULL)
-		return;
-
-	/* flags */
-	tmp = fu_quirks_lookup_by_udev_device (quirks, udev_device, FU_QUIRKS_FLAGS);
-	if (tmp != NULL)
-		fu_device_set_custom_flags (FU_DEVICE (self), tmp);
-
-	/* name */
-	tmp = fu_quirks_lookup_by_udev_device (quirks, udev_device, FU_QUIRKS_NAME);
-	if (tmp != NULL)
-		fu_device_set_name (FU_DEVICE (self), tmp);
-
-	/* summary */
-	tmp = fu_quirks_lookup_by_udev_device (quirks, udev_device, FU_QUIRKS_SUMMARY);
-	if (tmp != NULL)
-		fu_device_set_summary (FU_DEVICE (self), tmp);
-
-	/* vendor */
-	tmp = fu_quirks_lookup_by_udev_device (quirks, udev_device, FU_QUIRKS_VENDOR);
-	if (tmp != NULL)
-		fu_device_set_vendor (FU_DEVICE (self), tmp);
-
-	/* version */
-	tmp = fu_quirks_lookup_by_udev_device (quirks, udev_device, FU_QUIRKS_VERSION);
-	if (tmp != NULL)
-		fu_device_set_version (FU_DEVICE (self), tmp);
-
-	/* icon */
-	tmp = fu_quirks_lookup_by_udev_device (quirks, udev_device, FU_QUIRKS_ICON);
-	if (tmp != NULL)
-		fu_device_add_icon (FU_DEVICE (self), tmp);
-
-	/* GUID */
-	tmp = fu_quirks_lookup_by_udev_device (quirks, udev_device, FU_QUIRKS_GUID);
-	if (tmp != NULL)
-		fu_device_add_guid (FU_DEVICE (self), tmp);
-}
-
-static void
-fu_udev_device_notify_quirks_cb (FuUdevDevice *self, GParamSpec *pspec, gpointer user_data)
-{
-	fu_udev_device_apply_quirks (self);
-}
-
 /**
  * fu_udev_device_emit_changed:
  * @self: A #FuUdevDevice
@@ -120,14 +67,75 @@ fu_udev_device_get_sysfs_attr_as_uint64 (FuUdevDevice *self, const gchar *name)
 	return fu_common_strtoull (g_udev_device_get_sysfs_attr (priv->udev_device, name));
 }
 
+static gboolean
+fu_udev_device_probe (FuDevice *device, GError **error)
+{
+	FuUdevDevice *self = FU_UDEV_DEVICE (device);
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *tmp;
+	g_autofree gchar *subsystem = NULL;
+
+	/* set ven:dev:rev */
+	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (self, "vendor");
+	priv->model = fu_udev_device_get_sysfs_attr_as_uint64 (self, "device");
+	priv->revision = fu_udev_device_get_sysfs_attr_as_uint64 (self, "revision");
+
+	/* set the version if the revision has been set */
+	if (priv->revision != 0x00) {
+		g_autofree gchar *version = g_strdup_printf ("%02x", priv->revision);
+		fu_device_set_version (device, version);
+	}
+
+	/* set model */
+	tmp = g_udev_device_get_property (priv->udev_device, "FWUPD_MODEL");
+	if (tmp == NULL)
+		tmp = g_udev_device_get_property (priv->udev_device, "ID_MODEL_FROM_DATABASE");
+	if (tmp != NULL)
+		fu_device_set_name (device, tmp);
+
+	/* set vendor */
+	tmp = g_udev_device_get_property (priv->udev_device, "FWUPD_VENDOR");
+	if (tmp == NULL)
+		tmp = g_udev_device_get_property (priv->udev_device, "ID_VENDOR_FROM_DATABASE");
+	if (tmp != NULL)
+		fu_device_set_vendor (device, tmp);
+
+	/* set vendor ID */
+	subsystem = g_ascii_strup (fu_udev_device_get_subsystem (self), -1);
+	if (subsystem != NULL) {
+		g_autofree gchar *vendor_id = NULL;
+		vendor_id = g_strdup_printf ("%s:0x%04X", subsystem, (guint) priv->vendor);
+		fu_device_set_vendor_id (device, vendor_id);
+	}
+
+	/* add GUIDs in order of priority */
+	if (priv->vendor != 0x0000 && priv->model != 0x0000 && priv->revision != 0x00) {
+		g_autofree gchar *devid = NULL;
+		devid = g_strdup_printf ("%s\\VEN_%04X&DEV_%04X&REV_%02X",
+					 subsystem, priv->vendor,
+					 priv->model, priv->revision);
+		fu_device_add_guid (device, devid);
+	}
+	if (priv->vendor != 0x0000 && priv->model != 0x0000) {
+		g_autofree gchar *devid = NULL;
+		devid = g_strdup_printf ("%s\\VEN_%04X&DEV_%04X",
+					 subsystem, priv->vendor, priv->model);
+		fu_device_add_guid (device, devid);
+	}
+	if (priv->vendor != 0x0000) {
+		g_autofree gchar *devid = NULL;
+		devid = g_strdup_printf ("%s\\VEN_%04X", subsystem, priv->vendor);
+		fu_device_add_guid (device, devid);
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
-	const gchar *tmp;
-	g_autofree gchar *devid1 = NULL;
-	g_autofree gchar *devid2 = NULL;
-	g_autofree gchar *subsystem = NULL;
 
 	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
 
@@ -136,55 +144,10 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 	if (priv->udev_device == NULL)
 		return;
 
-	/* set ven:dev:rev */
-	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (self, "vendor");
-	priv->model = fu_udev_device_get_sysfs_attr_as_uint64 (self, "device");
-	priv->revision = fu_udev_device_get_sysfs_attr_as_uint64 (self, "revision");
-
-	/* add both device IDs */
-	subsystem = g_ascii_strup (fu_udev_device_get_subsystem (self), -1);
-	devid1 = g_strdup_printf ("%s\\VEN_%04X&DEV_%04X",
-				  subsystem, priv->vendor, priv->model);
-	fu_device_add_guid (FU_DEVICE (self), devid1);
-	devid2 = g_strdup_printf ("%s\\VEN_%04X&DEV_%04X&REV_%02X",
-				  subsystem, priv->vendor, priv->model, priv->revision);
-	fu_device_add_guid (FU_DEVICE (self), devid2);
-
-	/* set the version if the revision has been set */
-	if (priv->revision != 0x00) {
-		g_autofree gchar *version = g_strdup_printf ("%02x", priv->revision);
-		fu_device_set_version (FU_DEVICE (self), version);
-	}
-
-	/* set model */
-	tmp = g_udev_device_get_property (udev_device, "FWUPD_MODEL");
-	if (tmp == NULL)
-		tmp = g_udev_device_get_property (udev_device, "ID_MODEL_FROM_DATABASE");
-	if (tmp != NULL)
-		fu_device_set_name (FU_DEVICE (self), tmp);
-
-	/* set vendor */
-	tmp = g_udev_device_get_property (udev_device, "FWUPD_VENDOR");
-	if (tmp == NULL)
-		tmp = g_udev_device_get_property (udev_device, "ID_VENDOR_FROM_DATABASE");
-	if (tmp != NULL)
-		fu_device_set_vendor (FU_DEVICE (self), tmp);
-
-	/* set vendor ID */
-	tmp = g_udev_device_get_subsystem (udev_device);
-	if (tmp != NULL) {
-		g_autofree gchar *subsys = g_ascii_strup (tmp, -1);
-		g_autofree gchar *vendor_id = NULL;
-		vendor_id = g_strdup_printf ("%s:0x%04X", subsys, (guint) priv->vendor);
-		fu_device_set_vendor_id (FU_DEVICE (self), vendor_id);
-	}
-
 	/* set udev platform ID automatically */
 	fu_device_set_platform_id (FU_DEVICE (self),
 				   g_udev_device_get_sysfs_path (udev_device));
 
-	/* set the quirks again */
-	fu_udev_device_apply_quirks (self);
 }
 
 /**
@@ -323,19 +286,19 @@ fu_udev_device_finalize (GObject *object)
 static void
 fu_udev_device_init (FuUdevDevice *self)
 {
-	g_signal_connect (self, "notify::quirks",
-			  G_CALLBACK (fu_udev_device_notify_quirks_cb), NULL);
 }
 
 static void
 fu_udev_device_class_init (FuUdevDeviceClass *klass)
 {
+	FuDeviceClass *device_class = FU_DEVICE_CLASS (klass);
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	GParamSpec *pspec;
 
 	object_class->finalize = fu_udev_device_finalize;
 	object_class->get_property = fu_udev_device_get_property;
 	object_class->set_property = fu_udev_device_set_property;
+	device_class->probe = fu_udev_device_probe;
 
 	signals[SIGNAL_CHANGED] =
 		g_signal_new ("changed",

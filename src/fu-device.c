@@ -450,6 +450,61 @@ fu_device_add_parent_guid (FuDevice *device, const gchar *guid)
 	g_ptr_array_add (priv->parent_guids, g_strdup (guid));
 }
 
+static void
+fu_device_add_guid_quirks (FuDevice *device, const gchar *guid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	const gchar *tmp;
+
+	/* not set */
+	if (priv->quirks == NULL)
+		return;
+
+	/* flags */
+	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_FLAGS);
+	if (tmp != NULL)
+		fu_device_set_custom_flags (device, tmp);
+
+	/* name */
+	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_NAME);
+	if (tmp != NULL)
+		fu_device_set_name (device, tmp);
+
+	/* summary */
+	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_SUMMARY);
+	if (tmp != NULL)
+		fu_device_set_summary (device, tmp);
+
+	/* vendor */
+	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_VENDOR);
+	if (tmp != NULL)
+		fu_device_set_vendor (device, tmp);
+
+	/* version */
+	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_VERSION);
+	if (tmp != NULL)
+		fu_device_set_version (device, tmp);
+
+	/* icon */
+	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_ICON);
+	if (tmp != NULL)
+		fu_device_add_icon (device, tmp);
+
+	/* GUID */
+	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_GUID);
+	if (tmp != NULL)
+		fu_device_add_guid (device, tmp);
+}
+
+static void
+fu_device_add_guid_safe (FuDevice *device, const gchar *guid)
+{
+	/* add the device GUID before adding additional GUIDs from quirks
+	 * to ensure the bootloader GUID is listed after the runtime GUID */
+	fwupd_device_add_guid (FWUPD_DEVICE (device), guid);
+	fu_device_add_guid_quirks (device, guid);
+}
+
 /**
  * fu_device_add_guid:
  * @device: A #FuDevice
@@ -467,12 +522,12 @@ fu_device_add_guid (FuDevice *device, const gchar *guid)
 	if (!as_utils_guid_is_valid (guid)) {
 		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
 		g_debug ("using %s for %s", tmp, guid);
-		fwupd_device_add_guid (FWUPD_DEVICE (device), tmp);
+		fu_device_add_guid_safe (device, tmp);
 		return;
 	}
 
 	/* already valid */
-	fwupd_device_add_guid (FWUPD_DEVICE (device), guid);
+	fu_device_add_guid_safe (device, guid);
 }
 
 /**

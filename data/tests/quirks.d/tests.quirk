@@ -9,3 +9,6 @@ Test = awesome
 
 [CORP*]
 Test = town
+
+[DeviceInstanceId=USB\VID_0BDA&PID_1100]
+Flags = clever

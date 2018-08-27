@@ -349,12 +349,19 @@ dfu_device_guess_state_from_iface (DfuDevice *device, GUsbInterface *iface)
 		   g_usb_interface_get_protocol (iface));
 }
 
+static gchar *
+dfu_device_lookup_quirk_by_device (DfuDevice *device, const gchar *key)
+{
+	GPtrArray *guids = fu_device_get_guids (FU_DEVICE (device));
+	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
+	return fu_quirks_lookup_by_guids (system_quirks, guids, key);
+}
+
 static gboolean
 dfu_device_add_targets (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
 	g_autoptr(GPtrArray) ifaces = NULL;
 
 	/* add all DFU-capable targets */
@@ -365,7 +372,7 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 	for (guint i = 0; i < ifaces->len; i++) {
 		GBytes *iface_data = NULL;
 		DfuTarget *target;
-		const gchar *quirk_str;
+		g_autofree gchar *quirk_str = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		GUsbInterface *iface = g_ptr_array_index (ifaces, i);
@@ -393,9 +400,8 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 		}
 
 		/* fix up the version */
-		quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-							    usb_device,
-							    FU_QUIRKS_DFU_FORCE_VERSION);
+		quirk_str = dfu_device_lookup_quirk_by_device (device,
+							       FU_QUIRKS_DFU_FORCE_VERSION);
 		if (quirk_str != NULL && strlen (quirk_str) == 4)
 			priv->version = dfu_utils_buffer_parse_uint16 (quirk_str);
 		if (priv->version == DFU_VERSION_DFU_1_0 ||
@@ -712,10 +718,9 @@ dfu_device_apply_quirks (DfuDevice *device)
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
 	if (system_quirks != NULL && usb_device != NULL) {
-		const gchar *quirk_str;
-		quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-							    usb_device,
-							    FU_QUIRKS_DFU_FLAGS);
+		g_autofree gchar *quirk_str = NULL;
+		quirk_str = dfu_device_lookup_quirk_by_device (device,
+							       FU_QUIRKS_DFU_FLAGS);
 		if (quirk_str != NULL)
 			dfu_device_set_quirks_from_string (device, quirk_str);
 	} else {
@@ -1181,10 +1186,9 @@ gboolean
 dfu_device_detach (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	const guint16 timeout_reset_ms = 1000;
-	const gchar *quirk_str;
+	g_autofree gchar *quirk_str = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
@@ -1211,9 +1215,8 @@ dfu_device_detach (DfuDevice *device, GError **error)
 	}
 
 	/* handle Jabra devices that need a magic HID packet */
-	quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-						    usb_device,
-						    FU_QUIRKS_DFU_JABRA_DETACH);
+	quirk_str = dfu_device_lookup_quirk_by_device (device,
+						       FU_QUIRKS_DFU_JABRA_DETACH);
 	if (quirk_str != NULL) {
 		guint8 adr = 0x00;
 		guint8 rep = 0x00;

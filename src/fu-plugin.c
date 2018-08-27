@@ -811,29 +811,6 @@ fu_plugin_lookup_quirk_by_id_as_uint64 (FuPlugin *plugin, const gchar *group, co
 }
 
 /**
- * fu_plugin_lookup_quirk_by_usb_device:
- * @plugin: A #FuPlugin
- * @prefix: A string prefix that matches the quirks file basename, e.g. "dfu-quirks"
- * @usb_device: A #GUsbDevice
- *
- * Looks up an entry in the hardware database using various keys generated
- * from @dev.
- *
- * Returns: (transfer none): values from the database, or %NULL if not found
- *
- * Since: 1.0.1
- **/
-const gchar *
-fu_plugin_lookup_quirk_by_usb_device (FuPlugin *plugin,
-				      GUsbDevice *usb_device,
-				      const gchar *prefix)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
-	return fu_quirks_lookup_by_usb_device (priv->quirks, usb_device, prefix);
-}
-
-/**
  * fu_plugin_get_supported:
  * @plugin: A #FuPlugin
  *
