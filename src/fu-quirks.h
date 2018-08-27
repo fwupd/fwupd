@@ -142,6 +142,24 @@ gchar		*fu_quirks_lookup_by_guids		(FuQuirks	*self,
 #define	FU_QUIRKS_PARENT_GUID			"ParentGuid"
 
 /**
+ * FU_QUIRKS_CHILDREN:
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
+ * @value: the GUID, e.g. `USB\VID_0763&PID_2806&I2C_01`
+ *
+ * Adds one or more virtual devices to a physical device, delimited by comma.
+ *
+ * To set the object type of the child device use a pipe before the object type,
+ * for instance: `FuRts54xxDevice|USB\VID_0763&PID_2806&I2C_01`
+ * If the type of device is not specified the parent device type is used.
+ *
+ * If the values provided are not already suitable GUIDs, they will be
+ * converted.
+ *
+ * Since: 1.1.2
+ */
+#define	FU_QUIRKS_CHILDREN			"Children"
+
+/**
  * FU_QUIRKS_VERSION:
  * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806&REV_0001`
  * @value: the version number, e.g. `1.2`
