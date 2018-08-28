@@ -16,9 +16,6 @@
 #define SYNAPTICS_FLASH_MODE_DELAY 3
 #define SYNAPTICS_UPDATE_ENUMERATE_TRIES 3
 
-#define DELL_DOCK_FLASH_GUID	"e7ca1f36-bf73-4574-afe6-a4ccacabf479"
-#define DELL_DOCK_FUTURE_GUID	"41ca7da371ef437e027272d0173bdddb3423827f"
-
 struct FuPluginData {
 	gchar		*system_type;
 };
@@ -113,20 +110,9 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	fu_device_set_summary (dev, "Multi-Stream Transport Device");
 	fu_device_add_icon (dev, "computer");
 	fu_device_set_version (dev, synapticsmst_device_get_version (device));
+	fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
 	for (guint i = 0; i < guids->len; i++)
 		fu_device_add_guid (dev, g_ptr_array_index (guids, i));
-
-	/* Set up parents */
-	switch (synapticsmst_device_get_board_id (device)) {
-	case SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE:
-		fu_device_add_parent_guid (dev, DELL_DOCK_FLASH_GUID);
-		break;
-	case SYNAPTICSMST_DEVICE_BOARDID_DELL_FUTURE:
-		fu_device_add_parent_guid (dev, DELL_DOCK_FUTURE_GUID);
-		break;
-	default:
-		break;
-	}
 
 	fu_plugin_device_add (plugin, dev);
 	fu_plugin_cache_add (plugin, dev_id_str, dev);

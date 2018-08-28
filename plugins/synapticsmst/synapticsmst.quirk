@@ -1,0 +1,23 @@
+# Dell WD15 dock
+[Guid=MST-wd15-vmm3320-274]
+Plugin = synapticsmst
+ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
+[Guid=MST-wd15-vmm3330-274]
+Plugin = synapticsmst
+ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
+
+# Dell TB16 dock
+[Guid=MST-tb16-vmm3320-274]
+Plugin = synapticsmst
+ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
+[Guid=MST-tb16-vmm3330-274]
+Plugin = synapticsmst
+ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
+
+#Dell TB18 dock
+[Guid=MST-tb18-vmm3320-274]
+Plugin = synapticsmst
+ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
+[Guid=MST-tb18-vmm3330-274]
+Plugin = synapticsmst
+ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
