@@ -1,25 +1,34 @@
 # on PC platforms the DW1820A firmware is loaded at runtime and can't
 # be stored on the device itself as the flash chip is unpopulated
 [DeviceInstanceId=USB\VID_0A5C&PID_6412]
+Plugin = dfu
 DfuFlags = ignore-runtime
 
 # Openmoko Freerunner / GTA02
 [DeviceInstanceId=USB\VID_1D50&PID_5119]
+Plugin = dfu
 DfuFlags = ignore-polltimeout,no-pid-change,no-dfu-runtime,action-required,no-get-status-upload
 
 # OpenPCD Reader
 [DeviceInstanceId=USB\VID_16C0&PID_076B]
+Plugin = dfu
 DfuFlags = ignore-polltimeout
 
 # SIMtrace
 [DeviceInstanceId=USB\VID_16C0&PID_0762]
+Plugin = dfu
 DfuFlags = ignore-polltimeout
 
 # OpenPICC
 [DeviceInstanceId=USB\VID_16C0&PID_076C]
+Plugin = dfu
 DfuFlags = ignore-polltimeout
 
 # Siemens AG, PXM 40 & PXM 50
+[DeviceInstanceId=USB\VID_0908&PID_02C4]
+Plugin = dfu
+[DeviceInstanceId=USB\VID_0908&PID_02C5]
+Plugin = dfu
 [DeviceInstanceId=USB\VID_0908&PID_02C4&REV_0000]
 DfuFlags = ignore-polltimeout
 [DeviceInstanceId=USB\VID_0908&PID_02C5&REV_0000]
@@ -27,10 +36,12 @@ DfuFlags = ignore-polltimeout
 
 # Midiman M-Audio Transit
 [DeviceInstanceId=USB\VID_0763&PID_2806]
+Plugin = dfu
 DfuFlags = ignore-polltimeout
 
 # LPC DFU bootloader
 [DeviceInstanceId=USB\VID_1FC9&PID_000C]
+Plugin = dfu
 DfuFlags = force-dfu-mode
 
 # m-stack DFU
@@ -41,78 +52,99 @@ DfuFlags = attach-upload-download
 
 # HydraBus
 [DeviceInstanceId=USB\VID_1D50&PID_60A7]
+Plugin = dfu
 DfuFlags = no-dfu-runtime,action-required
 
 # Jabra 410
 [DeviceInstanceId=USB\VID_0B0E&PID_0412]
+Plugin = dfu
 DfuFlags = no-dfu-runtime
 DfuJabraDetach = 0201
 Guid = USB\VID_0B0E&PID_0411
 
 # Jabra 510
 [DeviceInstanceId=USB\VID_0B0E&PID_0420]
+Plugin = dfu
 DfuFlags = no-dfu-runtime
 DfuJabraDetach = 0201
 Guid = USB\VID_0B0E&PID_0421
 
 # Jabra 710
 [DeviceInstanceId=USB\VID_0B0E&PID_2475]
+Plugin = dfu
 DfuFlags = no-dfu-runtime
 DfuJabraDetach = 0508
 Guid = USB\VID_0B0E&PID_0982
 
 # Jabra 810
 [DeviceInstanceId=USB\VID_0B0E&PID_2456]
+Plugin = dfu
 DfuFlags = no-dfu-runtime
 DfuJabraDetach = 0508
 Guid = USB\VID_0B0E&PID_0971
 
 [DeviceInstanceId=USB\VID_0B0E&PID_0411]
+Plugin = dfu
 DfuFlags = no-pid-change,force-dfu-mode,ignore-upload,attach-extra-reset
 
 [DeviceInstanceId=USB\VID_0B0E&PID_0421]
+Plugin = dfu
 DfuFlags = no-pid-change,force-dfu-mode,ignore-upload,attach-extra-reset
 
 [DeviceInstanceId=USB\VID_0B0E&PID_0982]
+Plugin = dfu
 DfuFlags = no-pid-change,force-dfu-mode,ignore-upload,attach-extra-reset
 
 [DeviceInstanceId=USB\VID_0B0E&PID_0971]
+Plugin = dfu
 DfuFlags = no-pid-change,force-dfu-mode,ignore-upload,attach-extra-reset
 
 # Atmel AT90USB Bootloader
 [DeviceInstanceId=USB\VID_03EB&PID_2FF7]
+Plugin = dfu
 DfuFlags = use-any-interface,legacy-protocol,force-dfu-mode
 [DeviceInstanceId=USB\VID_03EB&PID_2FF9]
+Plugin = dfu
 DfuFlags = use-any-interface,legacy-protocol,force-dfu-mode
 [DeviceInstanceId=USB\VID_03EB&PID_2FFA]
+Plugin = dfu
 DfuFlags = use-any-interface,legacy-protocol,force-dfu-mode
 [DeviceInstanceId=USB\VID_03EB&PID_2FFB]
+Plugin = dfu
 DfuFlags = use-any-interface,legacy-protocol,force-dfu-mode
 
 # Atmel ATMEGA Bootloader
 [DeviceInstanceId=USB\VID_03EB&PID_2FEE]
+Plugin = dfu
 DfuFlags = use-any-interface,legacy-protocol,force-dfu-mode
 [DeviceInstanceId=USB\VID_03EB&PID_2FEF]
+Plugin = dfu
 DfuFlags = use-any-interface,legacy-protocol,force-dfu-mode
 [DeviceInstanceId=USB\VID_03EB&PID_2FF0]
+Plugin = dfu
 DfuFlags = use-any-interface,legacy-protocol,force-dfu-mode
 [DeviceInstanceId=USB\VID_03EB&PID_2FF2]
+Plugin = dfu
 DfuFlags = use-any-interface,legacy-protocol,force-dfu-mode
 [DeviceInstanceId=USB\VID_03EB&PID_2FF3]
+Plugin = dfu
 DfuFlags = use-any-interface,legacy-protocol,force-dfu-mode
 [DeviceInstanceId=USB\VID_03EB&PID_2FF4]
 DfuFlags = use-any-interface,legacy-protocol,force-dfu-mode
 
 # Atmel XMEGA Bootloader
 [DeviceInstanceId=USB\VID_03EB&PID_2FE2]
+Plugin = dfu
 DfuFlags = use-any-interface,force-dfu-mode
 
 # Leaflabs Maple3
 [DeviceInstanceId=USB\VID_1EAF&PID_0003&REV_0200]
+Plugin = dfu
 DfuForceVersion = 0110
 
 # Atmel FLIP Bootloader
 [DeviceInstanceId=USB\VID_03EB]
+Plugin = dfu
 DfuForceVersion = ff01
 
 # AT32UC3B1256	[BLDR][USER]	USER@0x2000, BLDR+USER=0x40000
