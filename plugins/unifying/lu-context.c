@@ -24,6 +24,7 @@ struct _LuContext
 	GPtrArray		*devices;
 	GHashTable		*devices_active;	/* LuDevice : 1 */
 	GUsbContext		*usb_ctx;
+	FuQuirks		*system_quirks;
 	GUdevClient		*gudev_client;
 	GHashTable		*hash_replug;
 	gboolean		 done_coldplug;
@@ -36,6 +37,7 @@ G_DEFINE_TYPE (LuContext, lu_context, G_TYPE_OBJECT)
 enum {
 	PROP_0,
 	PROP_USB_CONTEXT,
+	PROP_SYSTEM_QUIRKS,
 	PROP_LAST
 };
 
@@ -94,6 +96,9 @@ lu_device_get_property (GObject *object, guint prop_id,
 	case PROP_USB_CONTEXT:
 		g_value_set_object (value, ctx->usb_ctx);
 		break;
+	case PROP_SYSTEM_QUIRKS:
+		g_value_set_object (value, ctx->system_quirks);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -108,6 +113,9 @@ lu_device_set_property (GObject *object, guint prop_id,
 	switch (prop_id) {
 	case PROP_USB_CONTEXT:
 		ctx->usb_ctx = g_value_dup_object (value);
+		break;
+	case PROP_SYSTEM_QUIRKS:
+		ctx->system_quirks = g_value_dup_object (value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -147,6 +155,10 @@ lu_context_class_init (LuContextClass *klass)
 				     G_USB_TYPE_CONTEXT,
 				     G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
 	g_object_class_install_property (object_class, PROP_USB_CONTEXT, pspec);
+	pspec = g_param_spec_object ("system-quirks", NULL, NULL,
+				     FU_TYPE_QUIRKS,
+				     G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+	g_object_class_install_property (object_class, PROP_SYSTEM_QUIRKS, pspec);
 
 	signals [SIGNAL_ADDED] =
 		g_signal_new ("added",
@@ -315,6 +327,7 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 						LU_DEVICE_FLAG_REQUIRES_DETACH |
 						LU_DEVICE_FLAG_DETACH_WILL_REPLUG,
 				       "platform-id", platform_id,
+				       "quirks", ctx->system_quirks,
 				       "udev-device", udev_device,
 				       "hidpp-id", HIDPP_DEVICE_ID_RECEIVER,
 				       NULL);
@@ -339,6 +352,7 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 	device = g_object_new (LU_TYPE_DEVICE_PERIPHERAL,
 			       "kind", LU_DEVICE_KIND_PERIPHERAL,
 			       "platform-id", platform_id,
+			       "quirks", ctx->system_quirks,
 			       "udev-device", udev_device,
 			       NULL);
 	val = g_udev_device_get_property (udev_parent, "HID_NAME");
