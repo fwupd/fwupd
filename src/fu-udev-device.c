@@ -117,17 +117,7 @@ static guint64
 fu_udev_device_get_sysfs_attr_as_uint64 (FuUdevDevice *self, const gchar *name)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
-	const gchar *str;
-	guint base = 10;
-
-	str = g_udev_device_get_sysfs_attr (priv->udev_device, name);
-	if (str == NULL)
-		return 0;
-	if (g_str_has_prefix (str, "0x")) {
-		str += 2;
-		base = 16;
-	}
-	return (guint16) g_ascii_strtoull (str, NULL, base);
+	return fu_common_strtoull (g_udev_device_get_sysfs_attr (priv->udev_device, name));
 }
 
 static void

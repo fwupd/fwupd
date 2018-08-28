@@ -807,18 +807,7 @@ fu_plugin_lookup_quirk_by_id (FuPlugin *plugin, const gchar *group, const gchar 
 guint64
 fu_plugin_lookup_quirk_by_id_as_uint64 (FuPlugin *plugin, const gchar *group, const gchar *key)
 {
-	const gchar *str;
-	guint base = 10;
-
-	/* exact ID */
-	str = fu_plugin_lookup_quirk_by_id (plugin, group, key);
-	if (str == NULL)
-		return 0;
-	if (g_str_has_prefix (str, "0x")) {
-		str += 2;
-		base = 16;
-	}
-	return g_ascii_strtoull (str, NULL, base);
+	return fu_common_strtoull (fu_plugin_lookup_quirk_by_id (plugin, group, key));
 }
 
 /**

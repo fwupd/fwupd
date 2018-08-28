@@ -11,6 +11,7 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include "fu-common.h"
 #include "fu-device-private.h"
 #include "fwupd-device-private.h"
 

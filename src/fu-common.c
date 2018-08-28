@@ -721,6 +721,28 @@ fu_common_read_uint32 (const guint8 *buf, FuEndianType endian)
 	return val_native;
 }
 
+/**
+ * fu_common_strtoull:
+ * @str: A string, e.g. "0x1234"
+ *
+ * Converts a string value to an integer. Values are assumed base 10, unless
+ * prefixed with "0x" where they are parsed as base 16.
+ *
+ * Returns: integer value, or 0x0 for error
+ **/
+guint64
+fu_common_strtoull (const gchar *str)
+{
+	guint base = 10;
+	if (str == NULL)
+		return 0x0;
+	if (g_str_has_prefix (str, "0x")) {
+		str += 2;
+		base = 16;
+	}
+	return g_ascii_strtoull (str, NULL, base);
+}
+
 static const GError *
 fu_common_error_array_find (GPtrArray *errors, FwupdError error_code)
 {

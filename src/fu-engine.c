@@ -1013,11 +1013,7 @@ fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 			continue;
 
 		/* metainfo files use hex and the LVFS uses decimal */
-		if (g_str_has_prefix (version, "0x")) {
-			ver_uint32 = g_ascii_strtoull (version + 2, NULL, 16);
-		} else {
-			ver_uint32 = g_ascii_strtoull (version, NULL, 10);
-		}
+		ver_uint32 = fu_common_strtoull (version);
 		if (ver_uint32 == 0)
 			continue;
 
