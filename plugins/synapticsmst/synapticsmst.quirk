@@ -1,3 +1,40 @@
+# GUID generation for Synaptics MST plugin
+#
+# SynapticsMSTBoardID is the 16 bit board ID which contains:
+# * Customer ID in first byte
+# * Board ID in the second byte
+#
+# DeviceKind = system
+#  * Will map to a GUID containing HwID product SKU
+#  * These GUIDs will look like MST-${PRODUCTSKU}-${BOARDID}
+# DeviceKind != system
+#  * Will map to a GUID containing each comma delimitted substring
+#  * These GUIDs will look like MST-${DEVICEKIND}-${CHIPID}-${BOARDID}
+
+[SynapticsMSTBoardID=0]
+Name = Synaptics EVB development board
+DeviceKind = evb
+
+[SynapticsMSTBoardID=272]
+Name = Dell X6 Platform
+DeviceKind = system
+
+[SynapticsMSTBoardID=273]
+Name = Dell X7 Platform
+DeviceKind = system
+
+[SynapticsMSTBoardID=274]
+Name = Dell WD15/TB16/TB18 wired Dock
+DeviceKind = wd15,tb16,tb18
+
+[SynapticsMSTBoardID=275]
+Name = Dell WLD15 Wireless Dock
+DeviceKind = wld15
+
+[SynapticsMSTBoardID=277]
+Name = Dell Rugged Platform
+DeviceKind = system
+
 # Dell WD15 dock
 [Guid=MST-wd15-vmm3320-274]
 Plugin = synapticsmst
