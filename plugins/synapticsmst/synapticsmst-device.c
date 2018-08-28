@@ -1228,6 +1228,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 				    GBytes *fw,
 				    GFileProgressCallback progress_cb,
 				    gpointer progress_data,
+				    gboolean reboot,
 				    GError **error)
 {
 	const guint8 *payload_data;
@@ -1272,10 +1273,17 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 	}
 
 	/* enable remote control and disable on exit */
-	locker = fu_device_locker_new_full (device,
-					    (FuDeviceLockerFunc) synapticsmst_device_enable_remote_control,
-					    (FuDeviceLockerFunc) synapticsmst_device_restart,
-					    error);
+	if (reboot) {
+		locker = fu_device_locker_new_full (device,
+						(FuDeviceLockerFunc) synapticsmst_device_enable_remote_control,
+						(FuDeviceLockerFunc) synapticsmst_device_restart,
+						error);
+	} else {
+		locker = fu_device_locker_new_full (device,
+						(FuDeviceLockerFunc) synapticsmst_device_enable_remote_control,
+						(FuDeviceLockerFunc) synapticsmst_device_disable_remote_control,
+						error);
+	}
 	if (locker == NULL)
 		return FALSE;
 

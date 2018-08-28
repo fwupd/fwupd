@@ -10,6 +10,10 @@
 # DeviceKind != system
 #  * Will map to a GUID containing each comma delimitted substring
 #  * These GUIDs will look like MST-${DEVICEKIND}-${CHIPID}-${BOARDID}
+#
+# By default the Synaptics MST device will restart after update
+# To override this behavior add the custom flag "skip-restart"
+#
 
 [SynapticsMSTBoardID=0]
 Name = Synaptics EVB development board

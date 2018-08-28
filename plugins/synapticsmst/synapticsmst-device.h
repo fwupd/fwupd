@@ -82,6 +82,7 @@ gboolean	 synapticsmst_device_write_firmware		(SynapticsMSTDevice *device,
 								 GBytes	*fw,
 								 GFileProgressCallback	progress_cb,
 								 gpointer user_data,
+								 gboolean reboot,
 								 GError	**error);
 
 G_END_DECLS
