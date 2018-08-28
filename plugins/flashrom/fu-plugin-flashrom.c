@@ -85,7 +85,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 }
 
 static guint
-fu_plugin_flashrom_parse_percentage (FuPlugin *plugin, const gchar *lines_verbose)
+fu_plugin_flashrom_parse_percentage (const gchar *lines_verbose)
 {
 	const guint64 addr_highest = 0x800000;
 	guint64 addr_best = 0x0;
@@ -107,19 +107,19 @@ fu_plugin_flashrom_parse_percentage (FuPlugin *plugin, const gchar *lines_verbos
 static void
 fu_plugin_flashrom_read_cb (const gchar *line, gpointer user_data)
 {
-	FuPlugin *plugin = FU_PLUGIN (user_data);
+	FuDevice *device = FU_DEVICE (user_data);
 	if (g_strcmp0 (line, "Reading flash...") == 0)
-		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_VERIFY);
-	fu_plugin_set_percentage (plugin, fu_plugin_flashrom_parse_percentage (plugin, line));
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
+	fu_device_set_progress (device, fu_plugin_flashrom_parse_percentage (line));
 }
 
 static void
 fu_plugin_flashrom_write_cb (const gchar *line, gpointer user_data)
 {
-	FuPlugin *plugin = FU_PLUGIN (user_data);
+	FuDevice *device = FU_DEVICE (user_data);
 	if (g_strcmp0 (line, "Writing flash...") == 0)
-		fu_plugin_set_status (plugin, FWUPD_STATUS_DEVICE_WRITE);
-	fu_plugin_set_percentage (plugin, fu_plugin_flashrom_parse_percentage (plugin, line));
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_progress (device, fu_plugin_flashrom_parse_percentage (line));
 }
 
 gboolean
@@ -149,12 +149,12 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 			"--read", firmware_orig,
 			"--verbose", NULL };
 		if (!fu_common_spawn_sync ((const gchar * const *) argv,
-					   fu_plugin_flashrom_read_cb, plugin,
+					   fu_plugin_flashrom_read_cb, device,
 					   NULL, error)) {
 			g_prefix_error (error, "failed to get original firmware: ");
 			return FALSE;
 		}
-		fu_plugin_set_status (plugin, FWUPD_STATUS_IDLE);
+		fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	}
 
 	return TRUE;
@@ -187,7 +187,7 @@ fu_plugin_update (FuPlugin *plugin,
 	/* use flashrom to write image */
 	argv[4] = firmware_fn;
 	if (!fu_common_spawn_sync ((const gchar * const *) argv,
-				   fu_plugin_flashrom_write_cb, plugin,
+				   fu_plugin_flashrom_write_cb, device,
 				   NULL, error)) {
 		g_prefix_error (error, "failed to write firmware: ");
 		return FALSE;
@@ -198,6 +198,6 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* success */
-	fu_plugin_set_status (plugin, FWUPD_STATUS_IDLE);
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	return TRUE;
 }

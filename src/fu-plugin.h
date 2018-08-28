@@ -100,10 +100,6 @@ void		 fu_plugin_device_remove		(FuPlugin	*plugin,
 							 FuDevice	*device);
 void		 fu_plugin_device_register		(FuPlugin	*plugin,
 							 FuDevice	*device);
-void		 fu_plugin_set_status			(FuPlugin	*plugin,
-							 FwupdStatus	 status);
-void		 fu_plugin_set_percentage		(FuPlugin	*plugin,
-							 guint		 percentage);
 void		 fu_plugin_request_recoldplug		(FuPlugin	*plugin);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*plugin,
 							 guint		 duration);
