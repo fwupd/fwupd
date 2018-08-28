@@ -21,7 +21,6 @@
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
 #include "fu-thunderbolt-image.h"
-#include "fu-thunderbolt-known-devices.h"
 
 #ifndef HAVE_GUDEV_232
 #pragma clang diagnostic push
@@ -228,23 +227,6 @@ fu_plugin_thunderbolt_is_native (GUdevDevice *udevice, gboolean *is_native, GErr
 }
 
 static void
-fu_plugin_thunderbolt_add_known_parents (FuDevice *device, guint16 vid, guint16 did)
-{
-	const gchar *parent = NULL;
-
-	if (vid == THUNDERBOLT_VENDOR_DELL) {
-		if (did == THUNDERBOLT_DEVICE_DELL_TB16_CABLE ||
-		    did == THUNDERBOLT_DEVICE_DELL_TB16_DOCK)
-			parent = PARENT_GUID_DELL_TB16;
-	}
-
-	if (parent != NULL ) {
-		fu_device_add_parent_guid (device, parent);
-		g_debug ("Add known parent %s to %u:%u", parent, vid, did);
-	}
-}
-
-static void
 fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 {
 	FuDevice *dev_tmp;
@@ -341,7 +323,6 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 					     (guint) did,
 					     is_native ? "-native" : "");
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_plugin_thunderbolt_add_known_parents (dev, vid, did);
 	} else {
 		fu_device_set_update_error (dev, "Device is in safe mode");
 	}
@@ -366,6 +347,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		fu_device_add_icon (dev, "audio-card");
 	}
 
+	fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
 	vendor = g_udev_device_get_sysfs_attr (device, "vendor_name");
 	if (vendor != NULL)
 		fu_device_set_vendor (dev, vendor);

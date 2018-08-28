@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 
+install_data(['thunderbolt.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
   sources : [
     'fu-plugin-thunderbolt.c',
