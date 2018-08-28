@@ -48,7 +48,7 @@ struct _FuQuirks
 {
 	GObject			 parent_instance;
 	GPtrArray		*monitors;
-	GHashTable		*hash;	/* of group/id:string */
+	GHashTable		*hash;	/* of group:{key:value} */
 };
 
 G_DEFINE_TYPE (FuQuirks, fu_quirks, G_TYPE_OBJECT)
@@ -85,7 +85,7 @@ fu_quirks_add_inotify (FuQuirks *self, const gchar *filename, GError **error)
 }
 
 static gchar *
-fu_quirks_build_prefixed_key (const gchar *group, const gchar *key)
+fu_quirks_build_group_key (const gchar *group)
 {
 	const gchar *guid_prefixes[] = { "DeviceInstanceId=", "Guid=", "HwId=", NULL };
 
@@ -93,17 +93,14 @@ fu_quirks_build_prefixed_key (const gchar *group, const gchar *key)
 	for (guint i = 0; guid_prefixes[i] != NULL; i++) {
 		if (g_str_has_prefix (group, guid_prefixes[i])) {
 			gsize len = strlen (guid_prefixes[i]);
-			g_autofree gchar *guid = NULL;
 			if (as_utils_guid_is_valid (group + len))
-				guid = g_strdup (group + len);
-			else
-				guid = as_utils_guid_from_string (group + len);
-			return g_strdup_printf ("%s/%s", guid, key);
+				return g_strdup (group + len);
+			return as_utils_guid_from_string (group + len);
 		}
 	}
 
 	/* fallback */
-	return g_strdup_printf ("%s/%s", group, key);
+	return g_strdup (group);
 }
 
 /**
@@ -121,14 +118,18 @@ fu_quirks_build_prefixed_key (const gchar *group, const gchar *key)
 const gchar *
 fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 {
-	g_autofree gchar *prefixed_key = NULL;
+	GHashTable *kvs;
+	g_autofree gchar *group_key = NULL;
 
 	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
 	g_return_val_if_fail (group != NULL, NULL);
 	g_return_val_if_fail (key != NULL, NULL);
 
-	prefixed_key = fu_quirks_build_prefixed_key (group, key);
-	return g_hash_table_lookup (self->hash, prefixed_key);
+	group_key = fu_quirks_build_group_key (group);
+	kvs = g_hash_table_lookup (self->hash, group_key);
+	if (kvs == NULL)
+		return NULL;
+	return g_hash_table_lookup (kvs, key);
 }
 
 /**
@@ -146,14 +147,16 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 const gchar *
 fu_quirks_lookup_by_guid (FuQuirks *self, const gchar *guid, const gchar *key)
 {
-	g_autofree gchar *prefixed_key = NULL;
+	GHashTable *kvs;
 
 	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
 	g_return_val_if_fail (guid != NULL, NULL);
 	g_return_val_if_fail (key != NULL, NULL);
 
-	prefixed_key = g_strdup_printf ("%s/%s", guid, key);
-	return g_hash_table_lookup (self->hash, prefixed_key);
+	kvs = g_hash_table_lookup (self->hash, guid);
+	if (kvs == NULL)
+		return NULL;
+	return g_hash_table_lookup (kvs, key);
 }
 
 /**
@@ -225,25 +228,34 @@ fu_quirks_merge_values (const gchar *old, const gchar *new)
 void
 fu_quirks_add_value (FuQuirks *self, const gchar *group, const gchar *key, const gchar *value)
 {
+	GHashTable *kvs;
 	const gchar *value_old;
-	g_autofree gchar *key_prefixed = NULL;
+	g_autofree gchar *group_key = NULL;
 	g_autofree gchar *value_new = NULL;
 
 	/* does the key already exists in our hash */
-	key_prefixed = fu_quirks_build_prefixed_key (group, key);
-	value_old = g_hash_table_lookup (self->hash, key_prefixed);
-	if (value_old != NULL) {
-		g_debug ("already found %s=%s, merging with %s",
-			 key_prefixed, value_old, value);
-		value_new = fu_quirks_merge_values (value_old, value);
-	} else {
+	group_key = fu_quirks_build_group_key (group);
+	kvs = g_hash_table_lookup (self->hash, group_key);
+	if (kvs == NULL) {
+		kvs = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+		g_hash_table_insert (self->hash,
+				     g_steal_pointer (&group_key),
+				     kvs);
 		value_new = g_strdup (value);
+	} else {
+		/* look up in the 2nd level hash */
+		value_old = g_hash_table_lookup (kvs, key);
+		if (value_old != NULL) {
+			g_debug ("already found %s=%s, merging with %s",
+				 group_key, value_old, value);
+			value_new = fu_quirks_merge_values (value_old, value);
+		} else {
+			value_new = g_strdup (value);
+		}
 	}
 
 	/* insert the new value */
-	g_hash_table_insert (self->hash,
-			     g_steal_pointer (&key_prefixed),
-			     g_steal_pointer (&value_new));
+	g_hash_table_insert (kvs, g_strdup (key), g_steal_pointer (&value_new));
 }
 
 static gboolean
@@ -379,7 +391,7 @@ static void
 fu_quirks_init (FuQuirks *self)
 {
 	self->monitors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	self->hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	self->hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_hash_table_unref);
 }
 
 static void
