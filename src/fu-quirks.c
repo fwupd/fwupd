@@ -98,7 +98,6 @@ fu_quirks_build_prefixed_key (const gchar *group, const gchar *key)
 				guid = g_strdup (group + len);
 			else
 				guid = as_utils_guid_from_string (group + len);
-			g_debug ("using %s for %s", guid, group + len);
 			return g_strdup_printf ("%s/%s", guid, key);
 		}
 	}
@@ -211,6 +210,42 @@ fu_quirks_merge_values (const gchar *old, const gchar *new)
 	return g_strjoinv (",", resv);
 }
 
+/**
+ * fu_quirks_add_value: (skip)
+ * @self: A #FuQuirks
+ * @group: group, e.g. `DeviceInstanceId=USB\VID_0BDA&PID_1100`
+ * @key: group, e.g. `Name`
+ * @value: group, e.g. `Unknown Device`
+ *
+ * Adds a value to the quirk database. Normally this is achieved by loading a
+ * quirk file using fu_quirks_load().
+ *
+ * Since: 1.1.2
+ **/
+void
+fu_quirks_add_value (FuQuirks *self, const gchar *group, const gchar *key, const gchar *value)
+{
+	const gchar *value_old;
+	g_autofree gchar *key_prefixed = NULL;
+	g_autofree gchar *value_new = NULL;
+
+	/* does the key already exists in our hash */
+	key_prefixed = fu_quirks_build_prefixed_key (group, key);
+	value_old = g_hash_table_lookup (self->hash, key_prefixed);
+	if (value_old != NULL) {
+		g_debug ("already found %s=%s, merging with %s",
+			 key_prefixed, value_old, value);
+		value_new = fu_quirks_merge_values (value_old, value);
+	} else {
+		value_new = g_strdup (value);
+	}
+
+	/* insert the new value */
+	g_hash_table_insert (self->hash,
+			     g_steal_pointer (&key_prefixed),
+			     g_steal_pointer (&value_new));
+}
+
 static gboolean
 fu_quirks_add_quirks_from_filename (FuQuirks *self, const gchar *filename, GError **error)
 {
@@ -229,31 +264,12 @@ fu_quirks_add_quirks_from_filename (FuQuirks *self, const gchar *filename, GErro
 		if (keys == NULL)
 			return FALSE;
 		for (guint j = 0; keys[j] != NULL; j++) {
-			const gchar *value_old;
-			g_autofree gchar *key = NULL;
 			g_autofree gchar *value = NULL;
-			g_autofree gchar *value_new = NULL;
-
 			/* get value from keyfile */
 			value = g_key_file_get_value (kf, groups[i], keys[j], error);
 			if (value == NULL)
 				return FALSE;
-			key = fu_quirks_build_prefixed_key (groups[i], keys[j]);
-
-			/* does the key already exists in our hash */
-			value_old = g_hash_table_lookup (self->hash, key);
-			if (value_old != NULL) {
-				g_debug ("already found %s=%s, merging with %s",
-					 key, value_old, value);
-				value_new = fu_quirks_merge_values (value_old, value);
-			} else {
-				value_new = g_steal_pointer (&value);
-			}
-
-			/* insert the new value */
-			g_hash_table_insert (self->hash,
-					     g_steal_pointer (&key),
-					     g_steal_pointer (&value_new));
+			fu_quirks_add_value (self, groups[i], keys[j], value);
 		}
 	}
 	g_debug ("now %u quirk entries", g_hash_table_size (self->hash));

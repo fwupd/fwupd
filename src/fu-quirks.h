@@ -27,6 +27,10 @@ const gchar	*fu_quirks_lookup_by_guid		(FuQuirks	*self,
 gchar		*fu_quirks_lookup_by_guids		(FuQuirks	*self,
 							 GPtrArray	*guids,
 							 const gchar	*key);
+void		 fu_quirks_add_value			(FuQuirks	*self,
+							 const gchar	*group,
+							 const gchar	*key,
+							 const gchar	*value);
 
 /**
  * FU_QUIRKS_PLUGIN:

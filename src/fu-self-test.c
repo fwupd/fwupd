@@ -1274,6 +1274,37 @@ fu_plugin_quirks_func (void)
 }
 
 static void
+fu_plugin_quirks_performance_func (void)
+{
+	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
+	g_autoptr(GTimer) timer = g_timer_new ();
+	const gchar *keys[] = {
+		"Name", "Icon", "Children", "Plugin", "Flags",
+		"FirmwareSizeMin", "FirmwareSizeMax", NULL };
+
+	/* insert */
+	for (guint j = 0; j < 1000; j++) {
+		g_autofree gchar *group = NULL;
+		group = g_strdup_printf ("DeviceInstanceId=USB\\VID_0BDA&PID_%04X", j);
+		for (guint i = 0; keys[i] != NULL; i++)
+			fu_quirks_add_value (quirks, group, keys[i], "Value");
+	}
+	g_print ("insert=%.3fms ", g_timer_elapsed (timer, NULL) * 1000.f);
+
+	/* lookup */
+	g_timer_reset (timer);
+	for (guint j = 0; j < 1000; j++) {
+		g_autofree gchar *group = NULL;
+		group = g_strdup_printf ("DeviceInstanceId=USB\\VID_0BDA&PID_%04X", j);
+		for (guint i = 0; keys[i] != NULL; i++) {
+			const gchar *tmp = fu_quirks_lookup_by_id (quirks, group, keys[i]);
+			g_assert_cmpstr (tmp, ==, "Value");
+		}
+	}
+	g_print ("lookup=%.3fms ", g_timer_elapsed (timer, NULL) * 1000.f);
+}
+
+static void
 fu_plugin_quirks_device_func (void)
 {
 	FuDevice *device_tmp;
@@ -2400,6 +2431,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
+	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
 	g_test_add_func ("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
