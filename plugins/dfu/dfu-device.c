@@ -457,8 +457,8 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 	}
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
-		if (priv->targets->len == 0) {
+	if (priv->targets->len == 0) {
+		if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 			g_debug ("no DFU runtime, so faking device");
 			priv->state = DFU_STATE_APP_IDLE;
 			priv->iface_number = 0xff;
