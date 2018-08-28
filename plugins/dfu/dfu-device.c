@@ -1093,7 +1093,8 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 	}
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
+	if (priv->state == DFU_STATE_APP_IDLE &&
+	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
 		return TRUE;
 
 	/* ensure interface is claimed */
@@ -1294,7 +1295,8 @@ dfu_device_detach (DfuDevice *device, GError **error)
 	}
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
+	if (priv->state == DFU_STATE_APP_IDLE &&
+	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
 		return TRUE;
 
 	/* ensure interface is claimed */
@@ -1377,7 +1379,8 @@ dfu_device_abort (DfuDevice *device, GError **error)
 	}
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+	if (priv->state == DFU_STATE_APP_IDLE &&
+	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1443,7 +1446,8 @@ dfu_device_clear_status (DfuDevice *device, GError **error)
 	}
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+	if (priv->state == DFU_STATE_APP_IDLE &&
+	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1512,7 +1516,8 @@ dfu_device_open (FuUsbDevice *device, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+	if (priv->state == DFU_STATE_APP_IDLE &&
+	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		priv->state = DFU_STATE_APP_IDLE;
 		priv->status = DFU_STATUS_OK;
 	}
