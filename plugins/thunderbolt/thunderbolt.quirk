@@ -1,0 +1,9 @@
+# Dell TB16/TB18 cable
+[Guid=TBT-00d4b051]
+Plugin = thunderbolt
+ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
+
+# Dell TB16/TB18 dock
+[Guid=TBT-00d4b054]
+Plugin = thunderbolt
+ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
