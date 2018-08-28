@@ -2014,6 +2014,7 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	dev = fwupd_device_new ();
 	provides = as_app_get_provides (app);
@@ -2057,8 +2058,19 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 
 	/* verify trust */
 	release = as_app_get_release_default (app);
-	if (!fu_keyring_get_release_trust_flags (release, &trust_flags, error))
-		return NULL;
+	if (!fu_keyring_get_release_trust_flags (release,
+						 &trust_flags,
+						 &error_local)) {
+		if (g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_warning ("Ignoring verification: %s",
+				   error_local->message);
+		} else {
+			g_propagate_error (error, g_steal_pointer (&error_local));
+			return NULL;
+		}
+	}
 
 	/* create a result with all the metadata in */
 	fwupd_device_set_description (dev, as_app_get_description (app, NULL));
