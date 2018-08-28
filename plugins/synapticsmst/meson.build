@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 
+install_data(['synapticsmst.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_synapticsmst',
   sources : [
     'fu-plugin-synapticsmst.c',
