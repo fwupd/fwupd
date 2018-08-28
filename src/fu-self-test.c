@@ -217,6 +217,7 @@ fu_engine_device_priority_func (void)
 	device = fu_engine_get_device (engine, "867d5f8110f8aa79dd63d7440f21724264f10430", &error);
 	g_assert_no_error (error);
 	g_assert_cmpint (fu_device_get_priority (device), ==, 1);
+	g_clear_object (&device);
 
 	/* the now-removed low-prio device */
 	device = fu_engine_get_device (engine, "4e89d81a2e6fb4be2578d245fd8511c1f4ad0b58", &error);
