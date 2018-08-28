@@ -33,6 +33,7 @@ Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
 Recommends: python3,
+	    bolt,
 	    fwupd-signed
 Breaks: gir1.2-dfu-1.0 (<< 0.9.7-1),
 	libdfu1 (<< 0.9.7-1),
