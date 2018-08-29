@@ -101,7 +101,9 @@ typedef struct {
 	gboolean		 done_upload_or_download;
 	gboolean		 claimed_interface;
 	gchar			*chip_id;
+	gchar			*jabra_detach;
 	guint16			 version;
+	guint16			 force_version;
 	guint16			 runtime_pid;
 	guint16			 runtime_vid;
 	guint16			 runtime_release;
@@ -276,14 +278,6 @@ dfu_device_guess_state_from_iface (DfuDevice *device, GUsbInterface *iface)
 		   g_usb_interface_get_protocol (iface));
 }
 
-static gchar *
-dfu_device_lookup_quirk_by_device (DfuDevice *device, const gchar *key)
-{
-	GPtrArray *guids = fu_device_get_guids (FU_DEVICE (device));
-	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
-	return fu_quirks_lookup_by_guids (system_quirks, guids, key);
-}
-
 static gboolean
 dfu_device_add_targets (DfuDevice *device, GError **error)
 {
@@ -299,7 +293,6 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 	for (guint i = 0; i < ifaces->len; i++) {
 		GBytes *iface_data = NULL;
 		DfuTarget *target;
-		g_autofree gchar *quirk_str = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		GUsbInterface *iface = g_ptr_array_index (ifaces, i);
@@ -327,10 +320,8 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 		}
 
 		/* fix up the version */
-		quirk_str = dfu_device_lookup_quirk_by_device (device,
-							       FU_QUIRKS_DFU_FORCE_VERSION);
-		if (quirk_str != NULL && strlen (quirk_str) == 4)
-			priv->version = dfu_utils_buffer_parse_uint16 (quirk_str);
+		if (priv->force_version > 0)
+			priv->version = priv->force_version;
 		if (priv->version == DFU_VERSION_DFU_1_0 ||
 		    priv->version == DFU_VERSION_DFU_1_1) {
 			g_debug ("DFU v1.1");
@@ -636,22 +627,6 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 			priv->quirks |= DFU_DEVICE_QUIRK_LEGACY_PROTOCOL;
 			continue;
 		}
-	}
-}
-
-static void
-dfu_device_apply_quirks (DfuDevice *device)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
-	if (system_quirks != NULL && usb_device != NULL) {
-		g_autofree gchar *quirk_str = NULL;
-		quirk_str = dfu_device_lookup_quirk_by_device (device,
-							       FU_QUIRKS_DFU_FLAGS);
-		if (quirk_str != NULL)
-			dfu_device_set_quirks_from_string (device, quirk_str);
-	} else {
-		g_warning ("no system quirk information");
 	}
 }
 
@@ -1115,7 +1090,6 @@ dfu_device_detach (DfuDevice *device, GError **error)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	const guint16 timeout_reset_ms = 1000;
-	g_autofree gchar *quirk_str = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
@@ -1142,9 +1116,7 @@ dfu_device_detach (DfuDevice *device, GError **error)
 	}
 
 	/* handle Jabra devices that need a magic HID packet */
-	quirk_str = dfu_device_lookup_quirk_by_device (device,
-						       FU_QUIRKS_DFU_JABRA_DETACH);
-	if (quirk_str != NULL) {
+	if (priv->jabra_detach != NULL) {
 		guint8 adr = 0x00;
 		guint8 rep = 0x00;
 		guint8 iface_hid;
@@ -1152,16 +1124,8 @@ dfu_device_detach (DfuDevice *device, GError **error)
 		g_autoptr(GError) error_jabra = NULL;
 
 		/* parse string and create magic packet */
-		if (strlen (quirk_str) != 4) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "unsupported jabra quirk format: '%s'",
-				     quirk_str);
-			return FALSE;
-		}
-		rep = dfu_utils_buffer_parse_uint8 (quirk_str + 0);
-		adr = dfu_utils_buffer_parse_uint8 (quirk_str + 2);
+		rep = dfu_utils_buffer_parse_uint8 (priv->jabra_detach + 0);
+		adr = dfu_utils_buffer_parse_uint8 (priv->jabra_detach + 2);
 		buf[0] = rep;
 		buf[1] = adr;
 		buf[2] = 0x00;
@@ -1478,6 +1442,9 @@ dfu_device_close (FuUsbDevice *device, GError **error)
 	DfuDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 
+	/* unset the quirks */
+	priv->quirks = DFU_DEVICE_QUIRK_NONE;
+
 	/* release interface */
 	if (priv->claimed_interface) {
 		g_usb_device_release_interface (usb_device,
@@ -1493,12 +1460,7 @@ static gboolean
 dfu_device_probe (FuUsbDevice *device, GError **error)
 {
 	DfuDevice *self = DFU_DEVICE (device);
-	DfuDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-
-	/* set the quirks for this new device */
-	priv->quirks = DFU_DEVICE_QUIRK_NONE;
-	dfu_device_apply_quirks (self);
 
 	/* add all the targets */
 	if (!dfu_device_add_targets (self, error)) {
@@ -2069,6 +2031,50 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 	return g_string_free (str, FALSE);
 }
 
+static gboolean
+dfu_device_set_quirk_kv (FuDevice *device,
+			 const gchar *key,
+			 const gchar *value,
+			 GError **error)
+{
+	DfuDevice *self = DFU_DEVICE (device);
+	DfuDevicePrivate *priv = GET_PRIVATE (self);
+
+	if (g_strcmp0 (key, FU_QUIRKS_DFU_FLAGS) == 0) {
+		dfu_device_set_quirks_from_string (self, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_DFU_JABRA_DETACH) == 0) {
+		if (value != NULL && strlen (value) == 4) {
+			priv->jabra_detach = g_strdup (value);
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "unsupported jabra quirk format");
+		return FALSE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_DFU_FORCE_VERSION) == 0) {
+		if (value != NULL && strlen (value) == 4) {
+			priv->force_version = dfu_utils_buffer_parse_uint16 (value);
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid DFU version");
+		return FALSE;
+	}
+
+	/* failed */
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "quirk key not supported");
+	return FALSE;
+}
+
 /**
  * dfu_device_get_attributes_as_string: (skip)
  * @device: a #DfuDevice
@@ -2110,6 +2116,7 @@ dfu_device_finalize (GObject *object)
 	if (priv->usb_context != NULL)
 		g_object_unref (priv->usb_context);
 	g_free (priv->chip_id);
+	g_free (priv->jabra_detach);
 	g_ptr_array_unref (priv->targets);
 
 	G_OBJECT_CLASS (dfu_device_parent_class)->finalize (object);
@@ -2119,7 +2126,9 @@ static void
 dfu_device_class_init (DfuDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	klass_device->set_quirk_kv = dfu_device_set_quirk_kv;
 	klass_usb_device->open = dfu_device_open;
 	klass_usb_device->close = dfu_device_close;
 	klass_usb_device->probe = dfu_device_probe;
