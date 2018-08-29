@@ -562,6 +562,10 @@ fu_device_set_quirk_kv (FuDevice *device,
 		return TRUE;
 	}
 
+	/* optional device-specific method */
+	if (klass->set_quirk_kv != NULL)
+		return klass->set_quirk_kv (device, key, value, error);
+
 	/* failed */
 	g_set_error_literal (error,
 			     G_IO_ERROR,

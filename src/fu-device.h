@@ -40,8 +40,12 @@ struct _FuDeviceClass
 	GBytes			*(*prepare_firmware)	(FuDevice	*device,
 							 GBytes		*fw,
 							 GError		**error);
+	gboolean		 (*set_quirk_kv)	(FuDevice	*device,
+							 const gchar	*key,
+							 const gchar	*value,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[24];
+	gpointer	padding[23];
 };
 
 /**
