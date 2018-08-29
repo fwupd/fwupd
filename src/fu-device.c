@@ -501,73 +501,94 @@ fu_device_add_child_by_kv (FuDevice *device, const gchar *str, GError **error)
 	return FALSE;
 }
 
+static gboolean
+fu_device_set_quirk_kv (FuDevice *device,
+			const gchar *key,
+			const gchar *value,
+			GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	if (g_strcmp0 (key, FU_QUIRKS_PLUGIN) == 0) {
+		// FIXME
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_FLAGS) == 0) {
+		fu_device_set_custom_flags (device, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_NAME) == 0) {
+		fu_device_set_name (device, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_SUMMARY) == 0) {
+		fu_device_set_summary (device, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_VENDOR) == 0) {
+		fu_device_set_vendor (device, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_VERSION) == 0) {
+		fu_device_set_version (device, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_ICON) == 0) {
+		fu_device_add_icon (device, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_GUID) == 0) {
+		fu_device_add_guid (device, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_PARENT_GUID) == 0) {
+		fu_device_add_parent_guid (device, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_FIRMWARE_SIZE_MIN) == 0) {
+		fu_device_set_firmware_size_min (device, fu_common_strtoull (value));
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_FIRMWARE_SIZE_MAX) == 0) {
+		fu_device_set_firmware_size_max (device, fu_common_strtoull (value));
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_CHILDREN) == 0) {
+		g_auto(GStrv) sections = g_strsplit (value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++) {
+			if (!fu_device_add_child_by_kv (device, sections[i], error))
+				return FALSE;
+		}
+		return TRUE;
+	}
+
+	/* failed */
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_device_add_guid_quirks (FuDevice *device, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (device);
-	const gchar *tmp;
+	const gchar *key;
+	const gchar *value;
+	GHashTableIter iter;
 
 	/* not set */
 	if (priv->quirks == NULL)
 		return;
-
-	/* flags */
-	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_FLAGS);
-	if (tmp != NULL)
-		fu_device_set_custom_flags (device, tmp);
-
-	/* name */
-	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_NAME);
-	if (tmp != NULL)
-		fu_device_set_name (device, tmp);
-
-	/* summary */
-	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_SUMMARY);
-	if (tmp != NULL)
-		fu_device_set_summary (device, tmp);
-
-	/* vendor */
-	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_VENDOR);
-	if (tmp != NULL)
-		fu_device_set_vendor (device, tmp);
-
-	/* version */
-	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_VERSION);
-	if (tmp != NULL)
-		fu_device_set_version (device, tmp);
-
-	/* icon */
-	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_ICON);
-	if (tmp != NULL)
-		fu_device_add_icon (device, tmp);
-
-	/* GUID */
-	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_GUID);
-	if (tmp != NULL)
-		fu_device_add_guid (device, tmp);
-
-	/* parent GUID */
-	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_PARENT_GUID);
-	if (tmp != NULL)
-		fu_device_add_parent_guid (device, tmp);
-
-	/* firmware size */
-	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_FIRMWARE_SIZE_MIN);
-	if (tmp != NULL)
-		fu_device_set_firmware_size_min (device, fu_common_strtoull (tmp));
-	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_FIRMWARE_SIZE_MAX);
-	if (tmp != NULL)
-		fu_device_set_firmware_size_max (device, fu_common_strtoull (tmp));
-
-	/* children */
-	tmp = fu_quirks_lookup_by_guid (priv->quirks, guid, FU_QUIRKS_CHILDREN);
-	if (tmp != NULL) {
-		g_auto(GStrv) sections = g_strsplit (tmp, ",", -1);
-		for (guint i = 0; sections[i] != NULL; i++) {
-			g_autoptr(GError) error = NULL;
-			if (!fu_device_add_child_by_kv (device, sections[i], &error)) {
-				g_warning ("failed to add section %s: %s",
-					   sections[i], error->message);
+	if (!fu_quirks_get_kvs_for_guid (priv->quirks, guid, &iter))
+		return;
+	while (g_hash_table_iter_next (&iter, (gpointer *) &key, (gpointer *) &value)) {
+		g_autoptr(GError) error = NULL;
+		if (!fu_device_set_quirk_kv (device, key, value, &error)) {
+			if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+				g_warning ("failed to set quirk key %s=%s: %s",
+					   key, value, error->message);
 			}
 		}
 	}
