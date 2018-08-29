@@ -133,33 +133,6 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 }
 
 /**
- * fu_quirks_lookup_by_guid:
- * @self: A #FuPlugin
- * @guid: a GUID
- * @key: An ID to match the entry, e.g. "Name"
- *
- * Looks up an entry in the hardware database using a GUID value.
- *
- * Returns: (transfer none): values from the database, or %NULL if not found
- *
- * Since: 1.1.2
- **/
-const gchar *
-fu_quirks_lookup_by_guid (FuQuirks *self, const gchar *guid, const gchar *key)
-{
-	GHashTable *kvs;
-
-	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
-	g_return_val_if_fail (guid != NULL, NULL);
-	g_return_val_if_fail (key != NULL, NULL);
-
-	kvs = g_hash_table_lookup (self->hash, guid);
-	if (kvs == NULL)
-		return NULL;
-	return g_hash_table_lookup (kvs, key);
-}
-
-/**
  * fu_quirks_get_kvs_for_guid:
  * @self: A #FuPlugin
  * @guid: a GUID
@@ -180,39 +153,6 @@ fu_quirks_get_kvs_for_guid (FuQuirks *self, const gchar *guid, GHashTableIter *i
 		return FALSE;
 	g_hash_table_iter_init (iter, kvs);
 	return TRUE;
-}
-
-/**
- * fu_quirks_lookup_by_guids:
- * @self: A #FuPlugin
- * @guid: GUID array
- * @key: An ID to match the entry, e.g. "Name"
- *
- * Looks up an entry in the hardware database using a GUID value. If multiple
- * values match then they are joined using the ',' character.
- *
- * Returns: (transfer full): values from the database, or %NULL if not found
- *
- * Since: 1.1.2
- **/
-gchar *
-fu_quirks_lookup_by_guids (FuQuirks *self, GPtrArray *guids, const gchar *key)
-{
-	g_autoptr(GString) str = g_string_new (NULL);
-	for (guint i = 0; i < guids->len; i++) {
-		const gchar *guid = g_ptr_array_index (guids, i);
-		const gchar *tmp = fu_quirks_lookup_by_guid (self, guid, key);
-		if (tmp != NULL) {
-			if (g_strcmp0 (tmp, str->str) == 0)
-				continue;
-			if (str->len > 0)
-				g_string_append_c (str, ',');
-			g_string_append (str, tmp);
-		}
-	}
-	if (str->len == 0)
-		return NULL;
-	return g_string_free (g_steal_pointer (&str), FALSE);
 }
 
 static gchar *

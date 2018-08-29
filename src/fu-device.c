@@ -510,7 +510,7 @@ fu_device_set_quirk_kv (FuDevice *device,
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
 
 	if (g_strcmp0 (key, FU_QUIRKS_PLUGIN) == 0) {
-		// FIXME
+		fu_device_set_plugin (device, value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_FLAGS) == 0) {
