@@ -21,12 +21,6 @@ gboolean	 fu_quirks_load				(FuQuirks	*self,
 const gchar	*fu_quirks_lookup_by_id			(FuQuirks	*self,
 							 const gchar	*group,
 							 const gchar	*key);
-const gchar	*fu_quirks_lookup_by_guid		(FuQuirks	*self,
-							 const gchar	*guid,
-							 const gchar	*key);
-gchar		*fu_quirks_lookup_by_guids		(FuQuirks	*self,
-							 GPtrArray	*guids,
-							 const gchar	*key);
 void		 fu_quirks_add_value			(FuQuirks	*self,
 							 const gchar	*group,
 							 const gchar	*key,

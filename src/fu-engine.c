@@ -3000,7 +3000,7 @@ static void
 fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
-	g_autofree gchar *plugin_name = NULL;
+	const gchar *plugin_name;
 	g_autoptr(FuDevice) device = fu_udev_device_new (udev_device);
 	g_autoptr(GError) error_local = NULL;
 
@@ -3013,10 +3013,8 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 		return;
 	}
 
-	/* does the quirk specify the plugin to use */
-	plugin_name = fu_quirks_lookup_by_guids (self->quirks,
-						 fu_device_get_guids (device),
-						 FU_QUIRKS_PLUGIN);
+	/* can be specified using a quirk */
+	plugin_name = fu_device_get_plugin (device);
 	if (plugin_name != NULL) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,
@@ -3356,7 +3354,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 			       FuEngine *self)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
-	g_autofree gchar *plugin_name = NULL;
+	const gchar *plugin_name;
 	g_autoptr(FuDevice) device = fu_usb_device_new (usb_device);
 	g_autoptr(GError) error_local = NULL;
 
@@ -3369,10 +3367,8 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 		return;
 	}
 
-	/* does the quirk specify the plugin to use */
-	plugin_name = fu_quirks_lookup_by_guids (self->quirks,
-						 fu_device_get_guids (device),
-						 FU_QUIRKS_PLUGIN);
+	/* can be specified using a quirk */
+	plugin_name = fu_device_get_plugin (device);
 	if (plugin_name != NULL) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,
