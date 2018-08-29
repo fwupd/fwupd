@@ -122,65 +122,6 @@ static guint signals [SIGNAL_LAST] = { 0 };
 G_DEFINE_TYPE_WITH_PRIVATE (DfuDevice, dfu_device, FU_TYPE_USB_DEVICE)
 #define GET_PRIVATE(o) (dfu_device_get_instance_private (o))
 
-static gboolean	dfu_device_open (FuUsbDevice *device, GError **error);
-static gboolean	dfu_device_close (FuUsbDevice *device, GError **error);
-static gboolean	dfu_device_probe (FuUsbDevice *device, GError **error);
-
-static void
-dfu_device_class_init (DfuDeviceClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
-	klass_usb_device->open = dfu_device_open;
-	klass_usb_device->close = dfu_device_close;
-	klass_usb_device->probe = dfu_device_probe;
-
-	/**
-	 * DfuDevice::status-changed:
-	 * @device: the #DfuDevice instance that emitted the signal
-	 * @status: the new #DfuStatus
-	 *
-	 * The ::status-changed signal is emitted when the status changes.
-	 **/
-	signals [SIGNAL_STATUS_CHANGED] =
-		g_signal_new ("status-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (DfuDeviceClass, status_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
-
-	/**
-	 * DfuDevice::state-changed:
-	 * @device: the #DfuDevice instance that emitted the signal
-	 * @state: the new #DfuState
-	 *
-	 * The ::state-changed signal is emitted when the state changes.
-	 **/
-	signals [SIGNAL_STATE_CHANGED] =
-		g_signal_new ("state-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (DfuDeviceClass, state_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
-
-	object_class->finalize = dfu_device_finalize;
-}
-
-static void
-dfu_device_init (DfuDevice *device)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	priv->iface_number = 0xff;
-	priv->runtime_pid = 0xffff;
-	priv->runtime_vid = 0xffff;
-	priv->runtime_release = 0xffff;
-	priv->state = DFU_STATE_APP_IDLE;
-	priv->status = DFU_STATUS_OK;
-	priv->targets = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	priv->timeout_ms = 1500;
-	priv->transfer_size = 64;
-}
-
 /**
  * dfu_device_get_transfer_size:
  * @device: a #GUsbDevice
@@ -242,20 +183,6 @@ dfu_device_set_transfer_size (DfuDevice *device, guint16 transfer_size)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (DFU_IS_DEVICE (device));
 	priv->transfer_size = transfer_size;
-}
-
-static void
-dfu_device_finalize (GObject *object)
-{
-	DfuDevice *device = DFU_DEVICE (object);
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-
-	if (priv->usb_context != NULL)
-		g_object_unref (priv->usb_context);
-	g_free (priv->chip_id);
-	g_ptr_array_unref (priv->targets);
-
-	G_OBJECT_CLASS (dfu_device_parent_class)->finalize (object);
 }
 
 typedef struct __attribute__((packed)) {
@@ -2172,4 +2099,73 @@ dfu_device_get_attributes_as_string (DfuDevice *device)
 	/* remove trailing pipe */
 	g_string_truncate (str, str->len - 1);
 	return g_string_free (str, FALSE);
+}
+
+static void
+dfu_device_finalize (GObject *object)
+{
+	DfuDevice *device = DFU_DEVICE (object);
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+
+	if (priv->usb_context != NULL)
+		g_object_unref (priv->usb_context);
+	g_free (priv->chip_id);
+	g_ptr_array_unref (priv->targets);
+
+	G_OBJECT_CLASS (dfu_device_parent_class)->finalize (object);
+}
+
+static void
+dfu_device_class_init (DfuDeviceClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	klass_usb_device->open = dfu_device_open;
+	klass_usb_device->close = dfu_device_close;
+	klass_usb_device->probe = dfu_device_probe;
+
+	/**
+	 * DfuDevice::status-changed:
+	 * @device: the #DfuDevice instance that emitted the signal
+	 * @status: the new #DfuStatus
+	 *
+	 * The ::status-changed signal is emitted when the status changes.
+	 **/
+	signals [SIGNAL_STATUS_CHANGED] =
+		g_signal_new ("status-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (DfuDeviceClass, status_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
+	/**
+	 * DfuDevice::state-changed:
+	 * @device: the #DfuDevice instance that emitted the signal
+	 * @state: the new #DfuState
+	 *
+	 * The ::state-changed signal is emitted when the state changes.
+	 **/
+	signals [SIGNAL_STATE_CHANGED] =
+		g_signal_new ("state-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (DfuDeviceClass, state_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
+	object_class->finalize = dfu_device_finalize;
+}
+
+static void
+dfu_device_init (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	priv->iface_number = 0xff;
+	priv->runtime_pid = 0xffff;
+	priv->runtime_vid = 0xffff;
+	priv->runtime_release = 0xffff;
+	priv->state = DFU_STATE_APP_IDLE;
+	priv->status = DFU_STATUS_OK;
+	priv->targets = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	priv->timeout_ms = 1500;
+	priv->transfer_size = 64;
 }
