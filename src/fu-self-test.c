@@ -1007,6 +1007,28 @@ fu_device_list_func (void)
 			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
 }
 
+static void
+fu_device_open_refcount_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(GError) error = NULL;
+	ret = fu_device_open (device, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_device_open (device, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_device_close (device, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_device_close (device, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_device_close (device, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false (ret);
+}
 
 static void
 fu_device_metadata_func (void)
@@ -2406,6 +2428,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
+	g_test_add_func ("/fwupd/device{open-refcount}", fu_device_open_refcount_func);
 	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
 	g_test_add_func ("/fwupd/device-list{delay}", fu_device_list_delay_func);
 	g_test_add_func ("/fwupd/device-list{compatible}", fu_device_list_compatible_func);
