@@ -160,6 +160,29 @@ fu_quirks_lookup_by_guid (FuQuirks *self, const gchar *guid, const gchar *key)
 }
 
 /**
+ * fu_quirks_get_kvs_for_guid:
+ * @self: A #FuPlugin
+ * @guid: a GUID
+ * @iter: A #GHashTableIter, typically allocated on the stack by the caller
+ *
+ * Looks up all entries in the hardware database using a GUID value.
+ *
+ * Returns: %TRUE if the GUID was found, and @iter was set
+ *
+ * Since: 1.1.2
+ **/
+gboolean
+fu_quirks_get_kvs_for_guid (FuQuirks *self, const gchar *guid, GHashTableIter *iter)
+{
+	GHashTable *kvs;
+	kvs = g_hash_table_lookup (self->hash, guid);
+	if (kvs == NULL)
+		return FALSE;
+	g_hash_table_iter_init (iter, kvs);
+	return TRUE;
+}
+
+/**
  * fu_quirks_lookup_by_guids:
  * @self: A #FuPlugin
  * @guid: GUID array

@@ -31,6 +31,9 @@ void		 fu_quirks_add_value			(FuQuirks	*self,
 							 const gchar	*group,
 							 const gchar	*key,
 							 const gchar	*value);
+gboolean	 fu_quirks_get_kvs_for_guid		(FuQuirks	*self,
+							 const gchar	*guid,
+							 GHashTableIter *iter);
 
 /**
  * FU_QUIRKS_PLUGIN:
