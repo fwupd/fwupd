@@ -43,6 +43,7 @@ typedef struct {
 	gboolean			 done_probe;
 	guint64				 size_min;
 	guint64				 size_max;
+	gint				 open_refcount;	/* atomic */
 } FuDevicePrivate;
 
 enum {
@@ -1526,6 +1527,12 @@ fu_device_attach (FuDevice *device, GError **error)
  *
  * Opens a device, optionally running a object-specific vfunc.
  *
+ * Plugins can call fu_device_open() multiple times without calling
+ * fu_device_close(), but only the first call will actually invoke the vfunc.
+ *
+ * It is expected that plugins issue the same number of fu_device_open() and
+ * fu_device_close() methods when using a specific @device.
+ *
  * Returns: %TRUE for success
  *
  * Since: 1.1.2
@@ -1534,9 +1541,15 @@ gboolean
 fu_device_open (FuDevice *device, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+	FuDevicePrivate *priv = GET_PRIVATE (device);
 
 	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* already open */
+	g_atomic_int_inc (&priv->open_refcount);
+	if (priv->open_refcount > 1)
+		return TRUE;
 
 	/* probe */
 	if (!fu_device_probe (device, error))
@@ -1559,6 +1572,15 @@ fu_device_open (FuDevice *device, GError **error)
  *
  * Closes a device, optionally running a object-specific vfunc.
  *
+ * Plugins can call fu_device_close() multiple times without calling
+ * fu_device_open(), but only the last call will actually invoke the vfunc.
+ *
+ * It is expected that plugins issue the same number of fu_device_open() and
+ * fu_device_close() methods when using a specific @device.
+ *
+ * An error is returned if this method is called without having used the
+ * fu_device_open() method beforehand.
+ *
  * Returns: %TRUE for success
  *
  * Since: 1.1.2
@@ -1567,9 +1589,21 @@ gboolean
 fu_device_close (FuDevice *device, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+	FuDevicePrivate *priv = GET_PRIVATE (device);
 
 	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not yet open */
+	if (priv->open_refcount == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "cannot close device, refcount already zero");
+		return FALSE;
+	}
+	if (!g_atomic_int_dec_and_test (&priv->open_refcount))
+		return TRUE;
 
 	/* subclassed */
 	if (klass->close != NULL) {
