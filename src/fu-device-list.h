@@ -33,6 +33,9 @@ FuDevice	*fu_device_list_get_by_id		(FuDeviceList	*self,
 FuDevice	*fu_device_list_get_by_guid		(FuDeviceList	*self,
 							 const gchar	*guid,
 							 GError		**error);
+gboolean	 fu_device_list_wait_for_replug		(FuDeviceList	*self,
+							 FuDevice	*device,
+							 GError		**error);
 
 G_END_DECLS
 

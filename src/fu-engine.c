@@ -1436,6 +1436,11 @@ fu_engine_install_blob (FuEngine *self,
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL)
 		return FALSE;
+	if (!fu_device_list_wait_for_replug (self->device_list, device, error))
+		return FALSE;
+	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
+	if (device == NULL)
+		return FALSE;
 	if (!fu_plugin_runner_update (plugin,
 				      device,
 				      blob_cab,
@@ -1479,6 +1484,11 @@ fu_engine_install_blob (FuEngine *self,
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL)
 		return FALSE;
+	if (!fu_device_list_wait_for_replug (self->device_list, device, error))
+		return FALSE;
+	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
+	if (device == NULL)
+		return FALSE;
 	if (!fu_plugin_runner_update_attach (plugin, device, &error_local)) {
 		fu_device_set_update_error (device, error_local->message);
 		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
@@ -1491,6 +1501,11 @@ fu_engine_install_blob (FuEngine *self,
 		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
 	}
+	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
+	if (device == NULL)
+		return FALSE;
+	if (!fu_device_list_wait_for_replug (self->device_list, device, error))
+		return FALSE;
 
 	/* get the new version number */
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
