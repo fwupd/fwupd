@@ -1643,6 +1643,9 @@ fu_device_close (FuDevice *device, GError **error)
 		if (!klass->close (device, error))
 			return FALSE;
 	}
+
+	/* probe if we re-open */
+	priv->done_probe = FALSE;
 	return TRUE;
 }
 
