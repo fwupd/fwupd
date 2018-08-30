@@ -60,28 +60,28 @@ DfuFlags = no-dfu-runtime,action-required
 Plugin = dfu
 DfuFlags = no-dfu-runtime
 DfuJabraDetach = 0201
-Guid = USB\VID_0B0E&PID_0411
+CounterpartGuid = USB\VID_0B0E&PID_0411
 
 # Jabra 510
 [DeviceInstanceId=USB\VID_0B0E&PID_0420]
 Plugin = dfu
 DfuFlags = no-dfu-runtime
 DfuJabraDetach = 0201
-Guid = USB\VID_0B0E&PID_0421
+CounterpartGuid = USB\VID_0B0E&PID_0421
 
 # Jabra 710
 [DeviceInstanceId=USB\VID_0B0E&PID_2475]
 Plugin = dfu
 DfuFlags = no-dfu-runtime
 DfuJabraDetach = 0508
-Guid = USB\VID_0B0E&PID_0982
+CounterpartGuid = USB\VID_0B0E&PID_0982
 
 # Jabra 810
 [DeviceInstanceId=USB\VID_0B0E&PID_2456]
 Plugin = dfu
 DfuFlags = no-dfu-runtime
 DfuJabraDetach = 0508
-Guid = USB\VID_0B0E&PID_0971
+CounterpartGuid = USB\VID_0B0E&PID_0971
 
 [DeviceInstanceId=USB\VID_0B0E&PID_0411]
 Plugin = dfu

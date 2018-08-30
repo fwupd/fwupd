@@ -359,7 +359,7 @@ fu_device_list_add_missing_guids (FuDevice *device_new, FuDevice *device_old)
 		const gchar *guid_tmp = g_ptr_array_index (guids_old, i);
 		if (!fu_device_has_guid (device_new, guid_tmp)) {
 			g_debug ("adding GUID %s to device", guid_tmp);
-			fu_device_add_guid (device_new, guid_tmp);
+			fu_device_add_counterpart_guid (device_new, guid_tmp);
 		}
 	}
 }

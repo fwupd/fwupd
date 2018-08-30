@@ -131,6 +131,22 @@ gboolean	 fu_quirks_get_kvs_for_guid		(FuQuirks	*self,
 #define	FU_QUIRKS_GUID				"Guid"
 
 /**
+ * FU_QUIRKS_COUNTERPART_GUID:
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
+ * @value: the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`
+ *
+ * Adds an counterpart GUID for a specific hardware device. If the value
+ * provided is not already a suitable GUID, it will be converted to one.
+ *
+ * A counterpart GUID is typically the GUID of the same device in bootloader
+ * or runtime mode, if they have a different device PCI or USB ID. Adding this
+ * type of GUID does not cause a "cascade" by matching using the quirk database.
+ *
+ * Since: 1.1.2
+ */
+#define	FU_QUIRKS_COUNTERPART_GUID		"CounterpartGuid"
+
+/**
  * FU_QUIRKS_PARENT_GUID:
  * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
  * @value: the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`

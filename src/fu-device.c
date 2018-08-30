@@ -542,6 +542,10 @@ fu_device_set_quirk_kv (FuDevice *device,
 		fu_device_add_guid (device, value);
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_COUNTERPART_GUID) == 0) {
+		fu_device_add_counterpart_guid (device, value);
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_PARENT_GUID) == 0) {
 		fu_device_add_parent_guid (device, value);
 		return TRUE;
@@ -665,6 +669,35 @@ fu_device_add_guid (FuDevice *device, const gchar *guid)
 
 	/* already valid */
 	fu_device_add_guid_safe (device, guid);
+}
+
+/**
+ * fu_device_add_counterpart_guid:
+ * @device: A #FuDevice
+ * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
+ *
+ * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
+ * is converted to a GUID using as_utils_guid_from_string().
+ *
+ * A counterpart GUID is typically the GUID of the same device in bootloader
+ * or runtime mode, if they have a different device PCI or USB ID. Adding this
+ * type of GUID does not cause a "cascade" by matching using the quirk database.
+ *
+ * Since: 1.1.2
+ **/
+void
+fu_device_add_counterpart_guid (FuDevice *device, const gchar *guid)
+{
+	/* make valid */
+	if (!as_utils_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+		g_debug ("using %s for counterpart %s", tmp, guid);
+		fwupd_device_add_guid (FWUPD_DEVICE (device), tmp);
+		return;
+	}
+
+	/* already valid */
+	fwupd_device_add_guid (FWUPD_DEVICE (device), guid);
 }
 
 /**

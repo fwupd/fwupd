@@ -128,6 +128,8 @@ void		 fu_device_add_child			(FuDevice	*device,
 							 FuDevice	*child);
 void		 fu_device_add_parent_guid		(FuDevice	*device,
 							 const gchar	*guid);
+void		 fu_device_add_counterpart_guid		(FuDevice	*device,
+							 const gchar	*guid);
 const gchar	*fu_device_get_metadata			(FuDevice	*device,
 							 const gchar	*key);
 gboolean	 fu_device_get_metadata_boolean		(FuDevice	*device,

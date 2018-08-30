@@ -560,8 +560,8 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 
 	/* only the bootloader can do the update */
 	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_0483&PID_5750");
-		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
+		fu_device_add_counterpart_guid (FU_DEVICE (device), "USB\\VID_0483&PID_5750");
+		fu_device_add_counterpart_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
 		fu_device_add_flag (FU_DEVICE (device),
 				    FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	}
