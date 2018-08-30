@@ -364,6 +364,48 @@ fu_device_list_add_missing_guids (FuDevice *device_new, FuDevice *device_old)
 	}
 }
 
+static void
+fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
+{
+	/* clear timeout if scheduled */
+	if (item->remove_id != 0) {
+		g_source_remove (item->remove_id);
+		item->remove_id = 0;
+	}
+
+	/* copy over any GUIDs that used to exist */
+	fu_device_list_add_missing_guids (device, item->device);
+
+	/* enforce the vendor ID if specified */
+	if (fu_device_get_vendor_id (item->device) != NULL &&
+	    fu_device_get_vendor_id (device) == NULL) {
+		const gchar *vendor_id = fu_device_get_vendor_id (item->device);
+		g_debug ("copying old vendor ID %s to new device", vendor_id);
+		fu_device_set_vendor_id (device, vendor_id);
+	}
+
+	/* copy over the version strings if not set */
+	if (fu_device_get_version (item->device) != NULL &&
+	    fu_device_get_version (device) == NULL) {
+		const gchar *version = fu_device_get_version (item->device);
+		g_debug ("copying old version %s to new device", version);
+		fu_device_set_version (device, version);
+	}
+
+	/* always use the runtime version */
+	if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION) &&
+	    fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+		const gchar *version = fu_device_get_version (item->device);
+		g_debug ("forcing runtime version %s to new device", version);
+		fu_device_set_version (device, version);
+	}
+
+	/* assign the new device */
+	g_set_object (&item->device_old, item->device);
+	g_set_object (&item->device, device);
+	fu_device_list_emit_device_changed (self, device);
+}
+
 /**
  * fu_device_list_add:
  * @self: A #FuDeviceList
@@ -422,42 +464,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 			 fu_device_get_id (item->device),
 			 fu_device_get_plugin (item->device),
 			 fu_device_get_plugin (device));
-
-		/* do not remove this device */
-		g_source_remove (item->remove_id);
-		item->remove_id = 0;
-
-		/* copy over any GUIDs that used to exist */
-		fu_device_list_add_missing_guids (device, item->device);
-
-		/* enforce the vendor ID if specified */
-		if (fu_device_get_vendor_id (item->device) != NULL &&
-		    fu_device_get_vendor_id (device) == NULL) {
-			const gchar *vendor_id = fu_device_get_vendor_id (item->device);
-			g_debug ("copying old vendor ID %s to new device", vendor_id);
-			fu_device_set_vendor_id (device, vendor_id);
-		}
-
-		/* copy over the version strings if not set */
-		if (fu_device_get_version (item->device) != NULL &&
-		    fu_device_get_version (device) == NULL) {
-			const gchar *version = fu_device_get_version (item->device);
-			g_debug ("copying old version %s to new device", version);
-			fu_device_set_version (device, version);
-		}
-
-		/* always use the runtime version */
-		if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION) &&
-		    fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
-			const gchar *version = fu_device_get_version (item->device);
-			g_debug ("forcing runtime version %s to new device", version);
-			fu_device_set_version (device, version);
-		}
-
-		/* assign the new device */
-		g_set_object (&item->device_old, item->device);
-		g_set_object (&item->device, device);
-		fu_device_list_emit_device_changed (self, device);
+		fu_device_list_replace (self, item, device);
 		return;
 	}
 
