@@ -12,6 +12,7 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <libsoup/soup.h>
 
 #include "fu-engine.h"
 #include "fu-plugin-private.h"
@@ -549,9 +550,51 @@ fu_util_install_task_sort_cb (gconstpointer a, gconstpointer b)
 }
 
 static gboolean
+fu_util_download_out_of_process (const gchar *uri, const gchar *fn, GError **error)
+{
+	const gchar *argv[][5] = { { "wget", uri, "-o", fn, NULL },
+				   { "curl", uri, "--output", fn, NULL },
+				   { NULL } };
+	for (guint i = 0; argv[i][0] != NULL; i++) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_common_find_program_in_path (argv[i][0], &error_local)) {
+			g_debug ("%s", error_local->message);
+			continue;
+		}
+		return fu_common_spawn_sync (argv[i], NULL, NULL, NULL, error);
+	}
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "no supported out-of-process downloaders found");
+	return FALSE;
+}
+
+static gchar *
+fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GError **error)
+{
+	g_autofree gchar *filename = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+
+	/* a local file */
+	uri = soup_uri_new (perhapsfn);
+	if (uri == NULL)
+		return g_strdup (perhapsfn);
+
+	/* download the firmware to a cachedir */
+	filename = fu_util_get_user_cache_path (perhapsfn);
+	if (!fu_common_mkdir_parent (filename, error))
+		return NULL;
+	if (!fu_util_download_out_of_process (perhapsfn, filename, error))
+		return NULL;
+	return g_steal_pointer (&filename);
+}
+
+static gboolean
 fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *apps;
+	g_autofree gchar *filename = NULL;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
@@ -583,10 +626,15 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	/* download if required */
+	filename = fu_util_download_if_required (priv, values[0], error);
+	if (filename == NULL)
+		return FALSE;
+
 	/* parse store */
-	blob_cab = fu_common_get_contents_bytes (values[0], error);
+	blob_cab = fu_common_get_contents_bytes (filename, error);
 	if (blob_cab == NULL) {
-		fu_util_maybe_prefix_sandbox_error (values[0], error);
+		fu_util_maybe_prefix_sandbox_error (filename, error);
 		return FALSE;
 	}
 	store = fu_engine_get_store_from_blob (priv->engine, blob_cab, error);

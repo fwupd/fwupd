@@ -67,6 +67,11 @@ typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
 					 GError		**error);
 
 static gboolean	fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error);
+static gboolean	fu_util_download_file	(FuUtilPrivate	*priv,
+					 SoupURI	*uri,
+					 const gchar	*fn,
+					 const gchar	*checksum_expected,
+					 GError		**error);
 
 typedef struct {
 	gchar		*name;
@@ -565,10 +570,31 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GError **error)
+{
+	g_autofree gchar *filename = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+
+	/* a local file */
+	uri = soup_uri_new (perhapsfn);
+	if (uri == NULL)
+		return g_strdup (perhapsfn);
+
+	/* download the firmware to a cachedir */
+	filename = fu_util_get_user_cache_path (perhapsfn);
+	if (!fu_common_mkdir_parent (filename, error))
+		return NULL;
+	if (!fu_util_download_file (priv, uri, filename, NULL, error))
+		return NULL;
+	return g_steal_pointer (&filename);
+}
+
 static gboolean
 fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *id;
+	g_autofree gchar *filename = NULL;
 
 	/* handle both forms */
 	if (g_strv_length (values) == 1) {
@@ -588,7 +614,10 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 
 	/* install with flags chosen by the user */
-	return fwupd_client_install (priv->client, id, values[0], priv->flags, NULL, error);
+	filename = fu_util_download_if_required (priv, values[0], error);
+	if (filename == NULL)
+		return FALSE;
+	return fwupd_client_install (priv->client, id, filename, priv->flags, NULL, error);
 }
 
 static gboolean
