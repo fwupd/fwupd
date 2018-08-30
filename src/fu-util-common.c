@@ -127,3 +127,18 @@ fu_util_is_interesting_device (FwupdDevice *dev)
 		return TRUE;
 	return FALSE;
 }
+
+gchar *
+fu_util_get_user_cache_path (const gchar *fn)
+{
+	g_autofree gchar *basename = g_path_get_basename (fn);
+	g_autofree gchar *cachedir_legacy = NULL;
+
+	/* return the legacy path if it exists rather than renaming it to
+	 * prevent problems when using old and new versions of fwupd */
+	cachedir_legacy = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
+	if (g_file_test (cachedir_legacy, G_FILE_TEST_IS_DIR))
+		return g_build_filename (cachedir_legacy, basename, NULL);
+
+	return g_build_filename (g_get_user_cache_dir (), "fwupd", basename, NULL);
+}

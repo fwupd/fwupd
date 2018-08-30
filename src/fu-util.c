@@ -1291,7 +1291,6 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	g_autofree gchar *basename_id_asc = NULL;
 	g_autofree gchar *basename_id = NULL;
 	g_autofree gchar *basename = NULL;
-	g_autofree gchar *cache_dir = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *filename_asc = NULL;
 	g_autoptr(SoupURI) uri = NULL;
@@ -1302,8 +1301,7 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	basename_id = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename);
 
 	/* download the metadata */
-	cache_dir = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", NULL);
-	filename = g_build_filename (cache_dir, basename_id, NULL);
+	filename = fu_util_get_user_cache_path (basename_id);
 	if (!fu_common_mkdir_parent (filename, error))
 		return FALSE;
 	uri = soup_uri_new (fwupd_remote_get_metadata_uri (remote));
@@ -1313,7 +1311,7 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	/* download the signature */
 	basename_asc = g_path_get_basename (fwupd_remote_get_filename_cache_sig (remote));
 	basename_id_asc = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename_asc);
-	filename_asc = g_build_filename (cache_dir, basename_id_asc, NULL);
+	filename_asc = fu_util_get_user_cache_path (basename_id_asc);
 	uri_sig = soup_uri_new (fwupd_remote_get_metadata_uri_sig (remote));
 	if (!fu_util_download_file (priv, uri_sig, filename_asc, NULL, error))
 		return FALSE;
@@ -1953,7 +1951,6 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	GPtrArray *checksums;
 	const gchar *remote_id;
 	const gchar *uri_tmp;
-	g_autofree gchar *basename = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *uri_str = NULL;
 	g_autoptr(SoupURI) uri = NULL;
@@ -1993,8 +1990,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	g_print ("Downloading %s for %s...\n",
 		 fwupd_release_get_version (rel),
 		 fwupd_device_get_name (dev));
-	basename = g_path_get_basename (uri_str);
-	fn = g_build_filename (g_get_user_cache_dir (), "fwupdmgr", basename, NULL);
+	fn = fu_util_get_user_cache_path (uri_str);
 	if (!fu_common_mkdir_parent (fn, error))
 		return FALSE;
 	checksums = fwupd_release_get_checksums (rel);
