@@ -2,6 +2,6 @@
 [DeviceInstanceId=USB\VID_20A0&PID_4109]
 Plugin = nitrokey
 Flags = needs-bootloader,use-runtime-version
-Guid = USB\VID_03EB&PID_2FF1
+CounterpartGuid = USB\VID_03EB&PID_2FF1
 Summary = A secure memory stick
 Icon = media-removable

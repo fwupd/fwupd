@@ -77,7 +77,7 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 			devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 						  (guint) LU_DEVICE_VID,
 						  (guint) LU_DEVICE_PID_BOOTLOADER_NORDIC);
-			fu_device_add_guid (FU_DEVICE (device), devid2);
+			fu_device_add_counterpart_guid (FU_DEVICE (device), devid2);
 			version_bl_major = 0x01;
 			break;
 		case 0x2400:
@@ -85,7 +85,7 @@ lu_device_runtime_open (LuDevice *device, GError **error)
 			devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 						  (guint) LU_DEVICE_VID,
 						  (guint) LU_DEVICE_PID_BOOTLOADER_TEXAS);
-			fu_device_add_guid (FU_DEVICE (device), devid2);
+			fu_device_add_counterpart_guid (FU_DEVICE (device), devid2);
 			version_bl_major = 0x03;
 			break;
 		default:
