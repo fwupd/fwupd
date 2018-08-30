@@ -45,7 +45,6 @@ fu_plugin_update (FuPlugin *plugin,
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (dev));
 	FuEbitdoDevice *ebitdo_dev = FU_EBITDO_DEVICE (dev);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
 	/* get version */
 	if (!fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -70,16 +69,9 @@ fu_plugin_update (FuPlugin *plugin,
 		g_prefix_error (error, "failed to force-reset device: ");
 		return FALSE;
 	}
-	g_clear_object (&locker);
-	usb_device2 = g_usb_context_wait_for_replug (fu_plugin_get_usb_context (plugin),
-						     usb_device, 10000, error);
-	if (usb_device2 == NULL) {
-		g_prefix_error (error, "device did not come back: ");
-		return FALSE;
-	}
-	fu_usb_device_set_dev (FU_USB_DEVICE (ebitdo_dev), usb_device2);
 
-	/* success */
+	/* wait for replug */
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 

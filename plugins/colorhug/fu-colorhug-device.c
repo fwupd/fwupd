@@ -413,6 +413,8 @@ fu_colorhug_device_init (FuColorhugDevice *self)
 {
 	/* this is the application code */
 	self->start_addr = CH_EEPROM_ADDR_RUNCODE;
+	fu_device_set_remove_delay (FU_DEVICE (self),
+				    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
 
 static void
