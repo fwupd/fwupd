@@ -349,6 +349,47 @@ fu_common_add_argv (GPtrArray *argv, const gchar *fmt, ...)
 		g_ptr_array_add (argv, g_strdup (split[i]));
 }
 
+gchar *
+fu_common_find_program_in_path (const gchar *basename, GError **error)
+{
+	gchar *fn = g_find_program_in_path (basename);
+	if (fn == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "missing executable %s in PATH",
+			     basename);
+		return NULL;
+	}
+	return fn;
+}
+
+static gboolean
+fu_common_test_namespace_support (GError **error)
+{
+	/* test if CONFIG_USER_NS is valid */
+	if (!g_file_test ("/proc/self/ns/user", G_FILE_TEST_IS_SYMLINK)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "missing CONFIG_USER_NS in kernel");
+		return FALSE;
+	}
+	if (g_file_test ("/proc/sys/kernel/unprivileged_userns_clone", G_FILE_TEST_EXISTS)) {
+		g_autofree gchar *clone = NULL;
+		if (!g_file_get_contents ("/proc/sys/kernel/unprivileged_userns_clone", &clone, NULL, error))
+			return FALSE;
+		if (g_ascii_strtoll (clone, NULL, 10) == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "unprivileged user namespace clones disabled by distro");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 /**
  * fu_common_firmware_builder:
  * @bytes: The data to use
@@ -391,35 +432,13 @@ fu_common_firmware_builder (GBytes *bytes,
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find bwrap in the path */
-	bwrap_fn = g_find_program_in_path ("bwrap");
-	if (bwrap_fn == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "missing executable bwrap in PATH");
+	bwrap_fn = fu_common_find_program_in_path ("bwrap", error);
+	if (bwrap_fn == NULL)
 		return NULL;
-	}
 
 	/* test if CONFIG_USER_NS is valid */
-	if (!g_file_test ("/proc/self/ns/user", G_FILE_TEST_IS_SYMLINK)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "missing CONFIG_USER_NS in kernel");
+	if (!fu_common_test_namespace_support (error))
 		return NULL;
-	}
-	if (g_file_test ("/proc/sys/kernel/unprivileged_userns_clone", G_FILE_TEST_EXISTS)) {
-		g_autofree gchar *clone = NULL;
-		if (!g_file_get_contents ("/proc/sys/kernel/unprivileged_userns_clone", &clone, NULL, error))
-			return NULL;
-		if (g_ascii_strtoll (clone, NULL, 10) == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "unprivileged user namespace clones disabled by distro");
-			return NULL;
-		}
-	}
 
 	/* untar file to temp location */
 	tmpdir = g_dir_make_tmp ("fwupd-gen-XXXXXX", error);

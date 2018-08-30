@@ -48,9 +48,10 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GPtrArray *hwids;
+	g_autoptr(GError) error_local = NULL;
 
 	/* we need flashrom from the host system */
-	data->flashrom_fn = g_find_program_in_path ("flashrom");
+	data->flashrom_fn = fu_common_find_program_in_path ("flashrom", &error_local);
 
 	/* search for devices */
 	hwids = fu_plugin_get_hwids (plugin);
@@ -70,7 +71,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			if (data->flashrom_fn != NULL) {
 				fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			} else {
-				fu_device_set_update_error (dev, "flashrom binary not found");
+				fu_device_set_update_error (dev, error_local->message);
 			}
 			fu_device_add_guid (dev, guid);
 			fu_device_set_name (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));

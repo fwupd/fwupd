@@ -381,7 +381,7 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* record boot information to system log for future debugging */
-	efibootmgr_path = g_find_program_in_path ("efibootmgr");
+	efibootmgr_path = fu_common_find_program_in_path ("efibootmgr", NULL);
 	if (efibootmgr_path != NULL) {
 		if (!g_spawn_command_line_sync ("efibootmgr -v",
 						&boot_variables, NULL, NULL, error))
