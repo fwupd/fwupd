@@ -1,25 +1,24 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
 
-#include <gio/gio.h>
 #include <string.h>
 
-#include "lu-hidpp.h"
-#include "lu-hidpp-msg.h"
+#include "fu-unifying-hidpp.h"
+#include "fu-unifying-hidpp-msg.h"
 
-LuHidppMsg *
-lu_hidpp_msg_new (void)
+FuUnifyingHidppMsg *
+fu_unifying_hidpp_msg_new (void)
 {
-	return g_new0 (LuHidppMsg, 1);
+	return g_new0 (FuUnifyingHidppMsg, 1);
 }
 
 const gchar *
-lu_hidpp_msg_dev_id_to_string (LuHidppMsg *msg)
+fu_unifying_hidpp_msg_dev_id_to_string (FuUnifyingHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, NULL);
 	if (msg->device_id == HIDPP_DEVICE_ID_WIRED)
@@ -32,7 +31,7 @@ lu_hidpp_msg_dev_id_to_string (LuHidppMsg *msg)
 }
 
 const gchar *
-lu_hidpp_msg_rpt_id_to_string (LuHidppMsg *msg)
+fu_unifying_hidpp_msg_rpt_id_to_string (FuUnifyingHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, NULL);
 	if (msg->report_id == HIDPP_REPORT_ID_SHORT)
@@ -45,7 +44,7 @@ lu_hidpp_msg_rpt_id_to_string (LuHidppMsg *msg)
 }
 
 gsize
-lu_hidpp_msg_get_payload_length (LuHidppMsg *msg)
+fu_unifying_hidpp_msg_get_payload_length (FuUnifyingHidppMsg *msg)
 {
 	if (msg->report_id == HIDPP_REPORT_ID_SHORT)
 		return 0x07;
@@ -59,7 +58,7 @@ lu_hidpp_msg_get_payload_length (LuHidppMsg *msg)
 }
 
 const gchar *
-lu_hidpp_msg_fcn_id_to_string (LuHidppMsg *msg)
+fu_unifying_hidpp_msg_fcn_id_to_string (FuUnifyingHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, NULL);
 	switch (msg->sub_id) {
@@ -114,7 +113,7 @@ lu_hidpp_msg_fcn_id_to_string (LuHidppMsg *msg)
 }
 
 const gchar *
-lu_hidpp_msg_sub_id_to_string (LuHidppMsg *msg)
+fu_unifying_hidpp_msg_sub_id_to_string (FuUnifyingHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, NULL);
 	if (msg->sub_id == HIDPP_SUBID_VENDOR_SPECIFIC_KEYS)
@@ -197,7 +196,7 @@ lu_hidpp_msg_sub_id_to_string (LuHidppMsg *msg)
 }
 
 gboolean
-lu_hidpp_msg_is_reply (LuHidppMsg *msg1, LuHidppMsg *msg2)
+fu_unifying_hidpp_msg_is_reply (FuUnifyingHidppMsg *msg1, FuUnifyingHidppMsg *msg2)
 {
 	g_return_val_if_fail (msg1 != NULL, FALSE);
 	g_return_val_if_fail (msg2 != NULL, FALSE);
@@ -205,13 +204,13 @@ lu_hidpp_msg_is_reply (LuHidppMsg *msg1, LuHidppMsg *msg2)
 	    msg1->device_id != HIDPP_DEVICE_ID_UNSET &&
 	    msg2->device_id != HIDPP_DEVICE_ID_UNSET)
 		return FALSE;
-	if (msg1->flags & LU_HIDPP_MSG_FLAG_IGNORE_SUB_ID ||
-	    msg2->flags & LU_HIDPP_MSG_FLAG_IGNORE_SUB_ID)
+	if (msg1->flags & FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SUB_ID ||
+	    msg2->flags & FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SUB_ID)
 		return TRUE;
 	if (msg1->sub_id != msg2->sub_id)
 		return FALSE;
-	if (msg1->flags & LU_HIDPP_MSG_FLAG_IGNORE_FNCT_ID ||
-	    msg2->flags & LU_HIDPP_MSG_FLAG_IGNORE_FNCT_ID)
+	if (msg1->flags & FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_FNCT_ID ||
+	    msg2->flags & FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_FNCT_ID)
 		return TRUE;
 	if (msg1->function_id != msg2->function_id)
 		return FALSE;
@@ -220,7 +219,7 @@ lu_hidpp_msg_is_reply (LuHidppMsg *msg1, LuHidppMsg *msg2)
 
 /* HID++ error */
 gboolean
-lu_hidpp_msg_is_error (LuHidppMsg *msg, GError **error)
+fu_unifying_hidpp_msg_is_error (FuUnifyingHidppMsg *msg, GError **error)
 {
 	g_return_val_if_fail (msg != NULL, FALSE);
 	if (msg->sub_id == HIDPP_SUBID_ERROR_MSG) {
@@ -363,7 +362,7 @@ lu_hidpp_msg_is_error (LuHidppMsg *msg, GError **error)
 }
 
 void
-lu_hidpp_msg_copy (LuHidppMsg *msg_dst, LuHidppMsg *msg_src)
+fu_unifying_hidpp_msg_copy (FuUnifyingHidppMsg *msg_dst, const FuUnifyingHidppMsg *msg_src)
 {
 	g_return_if_fail (msg_dst != NULL);
 	g_return_if_fail (msg_src != NULL);
@@ -376,7 +375,7 @@ lu_hidpp_msg_copy (LuHidppMsg *msg_dst, LuHidppMsg *msg_src)
 
 /* filter HID++1.0 messages */
 gboolean
-lu_hidpp_msg_is_hidpp10_compat (LuHidppMsg *msg)
+fu_unifying_hidpp_msg_is_hidpp10_compat (FuUnifyingHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, FALSE);
 	if (msg->sub_id == 0x40 ||
@@ -390,10 +389,10 @@ lu_hidpp_msg_is_hidpp10_compat (LuHidppMsg *msg)
 }
 
 gboolean
-lu_hidpp_msg_verify_swid (LuHidppMsg *msg)
+fu_unifying_hidpp_msg_verify_swid (FuUnifyingHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, FALSE);
-	if ((msg->function_id & 0x0f) != LU_HIDPP_MSG_SW_ID)
+	if ((msg->function_id & 0x0f) != FU_UNIFYING_HIDPP_MSG_SW_ID)
 		return FALSE;
 	return TRUE;
 }

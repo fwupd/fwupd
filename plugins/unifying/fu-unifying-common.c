@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -11,10 +11,10 @@
 #include <errno.h>
 #include <gio/gio.h>
 
-#include "lu-common.h"
+#include "fu-unifying-common.h"
 
 guint8
-lu_buffer_read_uint8 (const gchar *str)
+fu_unifying_buffer_read_uint8 (const gchar *str)
 {
 	guint64 tmp;
 	gchar buf[3] = { 0x0, 0x0, 0x0 };
@@ -24,7 +24,7 @@ lu_buffer_read_uint8 (const gchar *str)
 }
 
 guint16
-lu_buffer_read_uint16 (const gchar *str)
+fu_unifying_buffer_read_uint16 (const gchar *str)
 {
 	guint64 tmp;
 	gchar buf[5] = { 0x0, 0x0, 0x0, 0x0, 0x0 };
@@ -34,7 +34,7 @@ lu_buffer_read_uint16 (const gchar *str)
 }
 
 void
-lu_dump_raw (const gchar *title, const guint8 *data, gsize len)
+fu_unifying_dump_raw (const gchar *title, const guint8 *data, gsize len)
 {
 	g_autoptr(GString) str = g_string_new (NULL);
 	if (len == 0)
@@ -54,7 +54,7 @@ lu_dump_raw (const gchar *title, const guint8 *data, gsize len)
 }
 
 gchar *
-lu_format_version (const gchar *name, guint8 major, guint8 minor, guint16 build)
+fu_unifying_format_version (const gchar *name, guint8 major, guint8 minor, guint16 build)
 {
 	GString *str = g_string_new (NULL);
 	for (guint i = 0; i < 3; i++) {
@@ -67,7 +67,7 @@ lu_format_version (const gchar *name, guint8 major, guint8 minor, guint16 build)
 }
 
 static gboolean
-lu_nonblock_flush (gint fd, GError **error)
+fu_unifying_nonblock_flush (gint fd, GError **error)
 {
 	GPollFD poll[] = {
 		{
@@ -85,10 +85,10 @@ lu_nonblock_flush (gint fd, GError **error)
 }
 
 gboolean
-lu_nonblock_write (gint fd,
-		   const guint8 *data,
-		   gsize data_sz,
-		   GError **error)
+fu_unifying_nonblock_write (gint fd,
+			    const guint8 *data,
+			    gsize data_sz,
+			    GError **error)
 {
 	gssize wrote;
 
@@ -102,7 +102,7 @@ lu_nonblock_write (gint fd,
 	}
 
 	/* flush pending reads */
-	if (!lu_nonblock_flush (fd, error))
+	if (!fu_unifying_nonblock_flush (fd, error))
 		return FALSE;
 
 	/* write */
@@ -120,12 +120,12 @@ lu_nonblock_write (gint fd,
 }
 
 gboolean
-lu_nonblock_read (gint fd,
-		  guint8 *data,
-		  gsize data_sz,
-		  gsize *data_len,
-		  guint timeout,
-		  GError **error)
+fu_unifying_nonblock_read (gint fd,
+			   guint8 *data,
+			   gsize data_sz,
+			   gsize *data_len,
+			   guint timeout,
+			   GError **error)
 {
 	gssize len = 0;
 	gint64 ts_start;
@@ -201,7 +201,7 @@ lu_nonblock_read (gint fd,
 }
 
 gint
-lu_nonblock_open (const gchar *filename, GError **error)
+fu_unifying_nonblock_open (const gchar *filename, GError **error)
 {
 	gint fd;
 	fd = open (filename, O_RDWR | O_NONBLOCK);

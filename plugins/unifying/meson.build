@@ -6,18 +6,18 @@ install_data([
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
+
 shared_module('fu_plugin_unifying',
   sources : [
     'fu-plugin-unifying.c',
-    'lu-common.c',
-    'lu-context.c',
-    'lu-device-bootloader.c',
-    'lu-device-bootloader-nordic.c',
-    'lu-device-bootloader-texas.c',
-    'lu-device.c',
-    'lu-device-peripheral.c',
-    'lu-device-runtime.c',
-    'lu-hidpp-msg.c',
+    'fu-unifying-bootloader.c',
+    'fu-unifying-bootloader-nordic.c',
+    'fu-unifying-bootloader-texas.c',
+    'fu-unifying-common.c',
+    'fu-unifying-hidpp.c',
+    'fu-unifying-hidpp-msg.c',
+    'fu-unifying-peripheral.c',
+    'fu-unifying-runtime.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -36,8 +36,8 @@ if get_option('tests')
   e = executable(
     'unifying-self-test',
     sources : [
-      'lu-self-test.c',
-      'lu-common.c',
+      'fu-unifying-self-test.c',
+      'fu-unifying-common.c',
     ],
     include_directories : [
       include_directories('../..'),

@@ -1,15 +1,15 @@
 /*
- * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __LU__HIDPP_H
-#define __LU__HIDPP_H
+#ifndef __FU_UNIFYING_HIDPP_H
+#define __FU_UNIFYING_HIDPP_H
+
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
-
-#define LU_REQUEST_SET_REPORT		0x09
 
 /*
  * Based on the HID++ documentation provided by Nestor Lopez Casado at:
@@ -134,6 +134,20 @@ G_BEGIN_DECLS
 #define HIDPP_FEATURE_ONBOARD_PROFILES				0x8100
 #define HIDPP_FEATURE_MOUSE_BUTTON_SPY				0x8110
 
+#include "fu-unifying-hidpp-msg.h"
+
+gboolean	 fu_unifying_hidpp_send		(gint			 fd,
+						 FuUnifyingHidppMsg	*msg,
+						 guint			 timeout,
+						 GError			**error);
+gboolean	 fu_unifying_hidpp_receive	(gint			 fd,
+						 FuUnifyingHidppMsg	*msg,
+						 guint			 timeout,
+						 GError			**error);
+gboolean	 fu_unifying_hidpp_transfer	(gint			 fd,
+						 FuUnifyingHidppMsg	*msg,
+						 GError			**error);
+
 G_END_DECLS
 
-#endif /* __LU__HIDPP_H */
+#endif /* __FU_UNIFYING_HIDPP_H */
