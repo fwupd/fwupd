@@ -2243,8 +2243,19 @@ fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
 		NULL };
 
 	/* read DMI data */
-	if (!fu_smbios_setup (smbios, error))
+	if (g_strv_length (values) == 0) {
+		if (!fu_smbios_setup (smbios, error))
+			return FALSE;
+	} else if (g_strv_length (values) == 1) {
+		if (!fu_smbios_setup_from_file (smbios, values[0], error))
+			return FALSE;
+	} else {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
 		return FALSE;
+	}
 	if (!fu_hwids_setup (hwids, smbios, error))
 		return FALSE;
 
@@ -2416,7 +2427,7 @@ main (int argc, char *argv[])
 		     fu_util_get_topology);
 	fu_util_add (priv->cmd_array,
 		     "hwids",
-		     NULL,
+		     "[FILE]",
 		     /* TRANSLATORS: command description */
 		     _("Return all the hardware IDs for the machine"),
 		     fu_util_hwids);
