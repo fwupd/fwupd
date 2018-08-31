@@ -1,3 +1,7 @@
+# Runtime
+[DeviceInstanceId=USB\VID_046D&PID_C52B]
+Plugin = unifying
+
 # Nordic
 [DeviceInstanceId=USB\VID_046D&PID_AAAA]
 Plugin = unifying
