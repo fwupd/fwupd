@@ -116,6 +116,26 @@ fu_progressbar_estimate_ready (FuProgressbar *self, guint percentage)
 	return old > self->last_estimate;
 }
 
+static gchar *
+fu_progressbar_time_remaining_str (FuProgressbar *self)
+{
+	/* less than 5 seconds remaining */
+	if (self->last_estimate < 5)
+		return NULL;
+
+	/* less than 60 seconds remaining */
+	if (self->last_estimate < 60) {
+		/* TRANSLATORS: time remaining for completing firmware flash */
+		return g_strdup (_("Less than one minute remaining"));
+	}
+
+	/* more than a minute */
+	return g_strdup_printf (ngettext ("%.0f minute remaining",
+					  "%.0f minutes remaining",
+					  self->last_estimate / 60),
+				self->last_estimate / 60);
+}
+
 static void
 fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentage)
 {
@@ -157,12 +177,9 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 
 	/* once we have good data show an estimate of time remaining */
 	if (fu_progressbar_estimate_ready (self, percentage)) {
-		g_autofree gchar *remaining = g_strdup_printf ("%.2f", self->last_estimate);
-		g_string_append_c (str, ' ');
-		/* TRANSLATORS: time remaining for completing firmware flash */
-		g_string_append (str, _("Estimated time remaining:"));
-		g_string_append_c (str, ' ');
-		g_string_append (str, remaining);
+		g_autofree gchar *remaining = fu_progressbar_time_remaining_str (self);
+		if (remaining != NULL)
+			g_string_append_printf (str, " %s", remaining);
 	}
 
 	/* dump to screen */
