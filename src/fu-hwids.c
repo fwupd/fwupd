@@ -11,6 +11,7 @@
 #include <string.h>
 #include <appstream-glib.h>
 
+#include "fu-common.h"
 #include "fu-hwids.h"
 #include "fwupd-error.h"
 
@@ -259,7 +260,8 @@ fu_hwids_convert_string_table_cb (FuSmbios *smbios,
 	tmp = fu_smbios_get_string (smbios, type, offset, error);
 	if (tmp == NULL)
 		return NULL;
-	return g_strdup (tmp);
+	/* ComputerHardwareIds.exe seems to strip spaces */
+	return fu_common_strstrip (tmp);
 }
 
 static gchar *
