@@ -762,6 +762,40 @@ fu_common_strtoull (const gchar *str)
 	return g_ascii_strtoull (str, NULL, base);
 }
 
+/**
+ * fu_common_strstrip:
+ * @str: A string, e.g. " test "
+ *
+ * Removes leading and trailing whitespace from a constant string.
+ *
+ * Returns: newly allocated string
+ **/
+gchar *
+fu_common_strstrip (const gchar *str)
+{
+	guint head = G_MAXUINT;
+	guint tail = 0;
+
+	g_return_val_if_fail (str != NULL, NULL);
+
+	/* find first non-space char */
+	for (guint i = 0; str[i] != '\0'; i++) {
+		if (str[i] != ' ') {
+			head = i;
+			break;
+		}
+	}
+	if (head == G_MAXUINT)
+		return g_strdup ("");
+
+	/* find last non-space char */
+	for (guint i = head; str[i] != '\0'; i++) {
+		if (str[i] != ' ')
+			tail = i;
+	}
+	return g_strndup (str + head, tail - head + 1);
+}
+
 static const GError *
 fu_common_error_array_find (GPtrArray *errors, FwupdError error_code)
 {

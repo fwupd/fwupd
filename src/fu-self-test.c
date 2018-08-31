@@ -2404,6 +2404,27 @@ fu_chunk_func (void)
 					   "#05: page:02 addr:0004 len:02 ZZ\n");
 }
 
+static void
+fu_common_strstrip_func (void)
+{
+
+	struct {
+		const gchar *old;
+		const gchar *new;
+	} map[] = {
+		{ "same", "same" },
+		{ " leading", "leading" },
+		{ "tailing ", "tailing" },
+		{ "  b  ", "b" },
+		{ "  ", "" },
+		{ NULL, NULL }
+	};
+	for (guint i = 0; map[i].old != NULL; i++) {
+		g_autofree gchar *tmp = fu_common_strstrip (map[i].old);
+		g_assert_cmpstr (tmp, ==, map[i].new);
+	}
+}
+
 int
 main (int argc, char **argv)
 {
@@ -2459,6 +2480,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
+	g_test_add_func ("/fwupd/common{strstrip}", fu_common_strstrip_func);
 	g_test_add_func ("/fwupd/common{endian}", fu_common_endian_func);
 	g_test_add_func ("/fwupd/common{cab-success}", fu_common_store_cab_func);
 	g_test_add_func ("/fwupd/common{cab-success-unsigned}", fu_common_store_cab_unsigned_func);
