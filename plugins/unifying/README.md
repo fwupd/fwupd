@@ -25,17 +25,5 @@ corrupt the uploading firmware. For application firmware we use hidraw which
 means the hardware keeps working while probing, and also allows us to detect
 paired devices.
 
-Verification
-------------
-
-If you do not have Unifying hardware you can emulate writing firmware using:
-
-    unifying-tool write file.hex -v --emulate=bootloader-nordic
-
-This can also be used to produce protocol data to the command line to compare
-against USB dumps. This plugin should interact with the hardware exactly like
-the Logitech-provided flashing tool, although only a few devices have been
-tested.
-
 [1] https://www.mousejack.com/
 [2] https://pwr.github.io/Solaar/

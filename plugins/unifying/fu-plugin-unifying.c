@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -10,205 +10,163 @@
 
 #include "fu-plugin-vfuncs.h"
 
-#include "lu-context.h"
-#include "lu-device.h"
-#include "lu-device-peripheral.h"
-
-struct FuPluginData {
-	LuContext		*ctx;
-};
-
-static gboolean
-fu_plugin_unifying_device_added (FuPlugin *plugin,
-				 LuDevice *device,
-				 GError **error)
-{
-	g_autoptr(AsProfile) profile = as_profile_new ();
-	g_autoptr(AsProfileTask) ptask = NULL;
-
-	/* profile */
-	ptask = as_profile_start (profile, "FuPluginLu:added{%s}",
-				  fu_device_get_physical_id (FU_DEVICE (device)));
-	g_assert (ptask != NULL);
-
-	/* open the device */
-	if (!lu_device_open (device, error))
-		return FALSE;
-
-	/* insert to hash */
-	fu_plugin_device_add (plugin, FU_DEVICE (device));
-	return TRUE;
-}
-
-static gboolean
-fu_plugin_unifying_detach_cb (gpointer user_data)
-{
-	FuDevice *device = FU_DEVICE (user_data);
-	g_autoptr(GError) error = NULL;
-
-	/* ditch this device */
-	g_debug ("detaching");
-	if (!fu_device_detach (device, &error)) {
-		g_warning ("failed to detach: %s", error->message);
-		return FALSE;
-	}
-
-	return FALSE;
-}
-
-static gboolean
-fu_plugin_unifying_attach_cb (gpointer user_data)
-{
-	FuDevice *device = FU_DEVICE (user_data);
-	g_autoptr(GError) error = NULL;
-
-	/* ditch this device */
-	g_debug ("attaching");
-	if (!fu_device_attach (device, &error)) {
-		g_warning ("failed to detach: %s", error->message);
-		return FALSE;
-	}
-
-	return FALSE;
-}
+#include "fu-unifying-bootloader-nordic.h"
+#include "fu-unifying-bootloader-texas.h"
+#include "fu-unifying-common.h"
+#include "fu-unifying-peripheral.h"
+#include "fu-unifying-runtime.h"
 
 gboolean
-fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
+fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	LuDevice *device = LU_DEVICE (dev);
-
-	/* get device */
-	if (!lu_device_open (device, error))
-		return FALSE;
-
-	/* switch to bootloader if required */
-	if (!lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_DETACH))
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
-
-	/* wait for device to come back */
-	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);
-	if (lu_device_has_flag (device, LU_DEVICE_FLAG_DETACH_WILL_REPLUG)) {
-		g_debug ("doing detach in idle");
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
-				 fu_plugin_unifying_detach_cb,
-				 g_object_ref (dev),
-				 (GDestroyNotify) g_object_unref);
-		if (!lu_context_wait_for_replug (data->ctx,
-						 device,
-						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
-						 error))
-			return FALSE;
-	} else {
-		g_debug ("doing detach in main thread");
-		if (!fu_device_detach (dev, error))
-			return FALSE;
-	}
-	return TRUE;
-}
-
-gboolean
-fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	LuDevice *device = LU_DEVICE (dev);
-
-	/* get device */
-	if (!lu_device_open (device, error))
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
 		return FALSE;
-
-	/* wait for it to appear back in runtime mode if required */
-	if (!lu_device_has_flag (device, LU_DEVICE_FLAG_REQUIRES_ATTACH))
-		return TRUE;
-
-	/* wait for device to come back */
-	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);
-	if (lu_device_has_flag (device, LU_DEVICE_FLAG_ATTACH_WILL_REPLUG)) {
-		g_debug ("doing attach in idle");
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
-				 fu_plugin_unifying_attach_cb,
-				 g_object_ref (device),
-				 (GDestroyNotify) g_object_unref);
-		if (!lu_context_wait_for_replug (data->ctx,
-						 device,
-						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
-						 error))
-			return FALSE;
-	} else {
-		g_debug ("doing attach in main thread");
-		if (!fu_device_attach (dev, error))
-			return FALSE;
-	}
-	return TRUE;
+	return fu_device_detach (device, error);
 }
 
 gboolean
-fu_plugin_update_reload (FuPlugin *plugin, FuDevice *dev, GError **error)
+fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	LuDevice *device = LU_DEVICE (dev);
+	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_attach (device, error);
+}
 
-	/* get device */
-	if (!lu_device_open (device, error))
+gboolean
+fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
 		return FALSE;
 	return TRUE;
 }
 
 gboolean
 fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *dev,
+		  FuDevice *device,
 		  GBytes *blob_fw,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	LuDevice *device = LU_DEVICE (dev);
-
-	/* get version */
-	if (!lu_device_open (device, error))
+	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
 		return FALSE;
+	return fu_device_write_firmware (device, blob_fw, error);
+}
 
-	/* write the firmware */
-	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_device_write_firmware (dev, blob_fw, error))
+static gboolean
+fu_plugin_unifying_check_supported_device (FuPlugin *plugin, FuDevice *device)
+{
+	GPtrArray *guids = fu_device_get_guids (device);
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *guid = g_ptr_array_index (guids, i);
+		if (fu_plugin_check_supported (plugin, guid))
+			return TRUE;
+	}
+	return FALSE;
+}
+
+gboolean
+fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
+{
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* interesting device? */
+	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "hidraw") != 0)
+		return TRUE;
+
+	/* logitech */
+	if (fu_udev_device_get_vendor (device) != FU_UNIFYING_DEVICE_VID)
+		return TRUE;
+
+	/* runtime */
+	if (fu_device_has_custom_flag (FU_DEVICE (device), "is-receiver")) {
+		dev = g_object_new (FU_TYPE_UNIFYING_RUNTIME, NULL);
+		fu_device_incorporate (dev, FU_DEVICE (device));
+	} else {
+
+		/* create device so we can run ->probe() and add UFY GUIDs */
+		dev = g_object_new (FU_TYPE_UNIFYING_PERIPHERAL, NULL);
+		fu_device_incorporate (dev, FU_DEVICE (device));
+		if (!fu_device_probe (dev, error))
+			return FALSE;
+
+		/* there are a lot of unifying peripherals, but not all respond
+		 * well to opening -- so limit to ones with issued updates */
+		if (!fu_plugin_unifying_check_supported_device (plugin, dev)) {
+			g_autofree gchar *guids = fu_device_get_guids_as_str (FU_DEVICE (device));
+			g_debug ("%s has no updates, so ignoring device", guids);
+			return TRUE;
+		}
+	}
+
+	/* not supported */
+	if (dev == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "device not supported");
 		return FALSE;
+	}
 
-	/* success */
+	/* open to get the version */
+	locker = fu_device_locker_new (dev, error);
+	if (locker == NULL)
+		return FALSE;
+	fu_plugin_device_add (plugin, dev);
 	return TRUE;
 }
 
-static void
-fu_plugin_unifying_device_added_cb (LuContext *ctx,
-				    LuDevice *device,
-				    FuPlugin *plugin)
+gboolean
+fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
 {
-	g_autoptr(GError) error = NULL;
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	/* add */
-	if (!fu_plugin_unifying_device_added (plugin, device, &error)) {
-		if (g_error_matches (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_debug ("Failed to add Logitech device: %s",
-				  error->message);
-		} else {
-			g_warning ("Failed to add Logitech device: %s",
-				   error->message);
-		}
+	/* logitech */
+	if (fu_usb_device_get_vid (device) != FU_UNIFYING_DEVICE_VID)
+		return TRUE;
+
+	/* check is bootloader */
+	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("not in bootloader mode, ignoring");
+		return TRUE;
 	}
-}
+	if (fu_device_has_custom_flag (FU_DEVICE (device), "is-nordic")) {
+		dev = g_object_new (FU_TYPE_UNIFYING_BOOTLOADER_NORDIC, NULL);
+		fu_device_incorporate (dev, FU_DEVICE (device));
+	} else if (fu_device_has_custom_flag (FU_DEVICE (device), "is-texas")) {
+		dev = g_object_new (FU_TYPE_UNIFYING_BOOTLOADER_TEXAS, NULL);
+		fu_device_incorporate (dev, FU_DEVICE (device));
+	}
 
-static void
-fu_plugin_unifying_device_removed_cb (LuContext *ctx,
-				      LuDevice *device,
-				      FuPlugin *plugin)
-{
-	fu_plugin_device_remove (plugin, FU_DEVICE (device));
+	/* not supported */
+	if (dev == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "bootloader device not supported");
+		return FALSE;
+	}
+
+	/* open to get the version */
+	locker = fu_device_locker_new (dev, error);
+	if (locker == NULL)
+		return FALSE;
+	fu_plugin_device_add (plugin, dev);
+	return TRUE;
 }
 
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
-
 	/* check the kernel has CONFIG_HIDRAW */
 	if (!g_file_test ("/sys/class/hidraw", G_FILE_TEST_IS_DIR)) {
 		g_set_error_literal (error,
@@ -217,42 +175,11 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 				     "no kernel support for CONFIG_HIDRAW");
 		return FALSE;
 	}
-
-	/* coldplug */
-	g_signal_connect (data->ctx, "added",
-			  G_CALLBACK (fu_plugin_unifying_device_added_cb),
-			  plugin);
-	g_signal_connect (data->ctx, "removed",
-			  G_CALLBACK (fu_plugin_unifying_device_removed_cb),
-			  plugin);
-	lu_context_set_supported (data->ctx, fu_plugin_get_supported (plugin));
-	return TRUE;
-}
-
-
-gboolean
-fu_plugin_coldplug (FuPlugin *plugin, GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	lu_context_coldplug (data->ctx);
-	lu_context_set_poll_interval (data->ctx, 5000);
 	return TRUE;
 }
 
 void
 fu_plugin_init (FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
-	data->ctx = lu_context_new_full (usb_ctx);
-	g_object_set (data->ctx,
-		      "system-quirks", fu_plugin_get_quirks (plugin),
-		      NULL);
-}
-
-void
-fu_plugin_destroy (FuPlugin *plugin)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_object_unref (data->ctx);
+	fu_plugin_add_udev_subsystem (plugin, "hidraw");
 }
