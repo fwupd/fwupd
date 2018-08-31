@@ -21,7 +21,6 @@
 #include <libsoup/soup.h>
 #include <unistd.h>
 
-#include "fu-hwids.h"
 #include "fu-history.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
@@ -2223,87 +2222,6 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_util_update_device_with_release (priv, dev, rel, error);
 }
 
-static gboolean
-fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	g_autoptr(FuSmbios) smbios = fu_smbios_new ();
-	g_autoptr(FuHwids) hwids = fu_hwids_new ();
-	const gchar *hwid_keys[] = {
-		FU_HWIDS_KEY_BIOS_VENDOR,
-		FU_HWIDS_KEY_BIOS_VERSION,
-		FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,
-		FU_HWIDS_KEY_BIOS_MINOR_RELEASE,
-		FU_HWIDS_KEY_MANUFACTURER,
-		FU_HWIDS_KEY_FAMILY,
-		FU_HWIDS_KEY_PRODUCT_NAME,
-		FU_HWIDS_KEY_PRODUCT_SKU,
-		FU_HWIDS_KEY_ENCLOSURE_KIND,
-		FU_HWIDS_KEY_BASEBOARD_MANUFACTURER,
-		FU_HWIDS_KEY_BASEBOARD_PRODUCT,
-		NULL };
-
-	/* read DMI data */
-	if (g_strv_length (values) == 0) {
-		if (!fu_smbios_setup (smbios, error))
-			return FALSE;
-	} else if (g_strv_length (values) == 1) {
-		if (!fu_smbios_setup_from_file (smbios, values[0], error))
-			return FALSE;
-	} else {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
-		return FALSE;
-	}
-	if (!fu_hwids_setup (hwids, smbios, error))
-		return FALSE;
-
-	/* show debug output */
-	g_print ("Computer Information\n");
-	g_print ("--------------------\n");
-	for (guint i = 0; hwid_keys[i] != NULL; i++) {
-		const gchar *tmp = fu_hwids_get_value (hwids, hwid_keys[i]);
-		if (tmp == NULL)
-			continue;
-		if (g_strcmp0 (hwid_keys[i], FU_HWIDS_KEY_BIOS_MAJOR_RELEASE) == 0 ||
-		    g_strcmp0 (hwid_keys[i], FU_HWIDS_KEY_BIOS_MINOR_RELEASE) == 0) {
-			guint64 val = g_ascii_strtoull (tmp, NULL, 16);
-			g_print ("%s: %" G_GUINT64_FORMAT "\n", hwid_keys[i], val);
-		} else {
-			g_print ("%s: %s\n", hwid_keys[i], tmp);
-		}
-	}
-
-	/* show GUIDs */
-	g_print ("\nHardware IDs\n");
-	g_print ("------------\n");
-	for (guint i = 0; i < 15; i++) {
-		const gchar *keys = NULL;
-		g_autofree gchar *guid = NULL;
-		g_autofree gchar *key = NULL;
-		g_autofree gchar *keys_str = NULL;
-		g_auto(GStrv) keysv = NULL;
-		g_autoptr(GError) error_local = NULL;
-
-		/* get the GUID */
-		key = g_strdup_printf ("HardwareID-%u", i);
-		keys = fu_hwids_get_replace_keys (hwids, key);
-		guid = fu_hwids_get_guid (hwids, key, &error_local);
-		if (guid == NULL) {
-			g_print ("%s\n", error_local->message);
-			continue;
-		}
-
-		/* show what makes up the GUID */
-		keysv = g_strsplit (keys, "&", -1);
-		keys_str = g_strjoinv (" + ", keysv);
-		g_print ("{%s}   <- %s\n", guid, keys_str);
-	}
-
-	return TRUE;
-}
-
 static void
 fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 		   const gchar *message, gpointer user_data)
@@ -2425,12 +2343,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Get all devices according to the system topology"),
 		     fu_util_get_topology);
-	fu_util_add (priv->cmd_array,
-		     "hwids",
-		     "[FILE]",
-		     /* TRANSLATORS: command description */
-		     _("Return all the hardware IDs for the machine"),
-		     fu_util_hwids);
 	fu_util_add (priv->cmd_array,
 		     "install-prepared",
 		     NULL,
