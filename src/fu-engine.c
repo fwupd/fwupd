@@ -3643,7 +3643,7 @@ fu_engine_load (FuEngine *self, GError **error)
 
 	/* udev watches can only be set up in _init() so set up client now */
 	if (self->udev_subsystems->len > 0) {
-		g_auto(GStrv) udev_subsystems = g_new0 (gchar *, self->udev_subsystems->len);
+		g_auto(GStrv) udev_subsystems = g_new0 (gchar *, self->udev_subsystems->len + 1);
 		for (guint i = 0; i < self->udev_subsystems->len; i++) {
 			const gchar *subsystem = g_ptr_array_index (self->udev_subsystems, i);
 			udev_subsystems[i] = g_strdup (subsystem);
