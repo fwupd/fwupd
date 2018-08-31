@@ -2255,7 +2255,13 @@ fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
 		const gchar *tmp = fu_hwids_get_value (hwids, hwid_keys[i]);
 		if (tmp == NULL)
 			continue;
-		g_print ("%s: %s\n", hwid_keys[i], tmp);
+		if (g_strcmp0 (hwid_keys[i], FU_HWIDS_KEY_BIOS_MAJOR_RELEASE) == 0 ||
+		    g_strcmp0 (hwid_keys[i], FU_HWIDS_KEY_BIOS_MINOR_RELEASE) == 0) {
+			guint64 val = g_ascii_strtoull (tmp, NULL, 16);
+			g_print ("%s: %" G_GUINT64_FORMAT "\n", hwid_keys[i], val);
+		} else {
+			g_print ("%s: %s\n", hwid_keys[i], tmp);
+		}
 	}
 
 	/* show GUIDs */
