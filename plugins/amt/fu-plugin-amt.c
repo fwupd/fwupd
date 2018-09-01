@@ -416,7 +416,7 @@ fu_plugin_amt_create_device (GError **error)
 	memcpy (&ver, response->data, sizeof(struct amt_code_versions));
 
 	dev = fu_device_new ();
-	fu_device_set_id (dev, "/dev/mei");
+	fu_device_set_platform_id (dev, "/dev/mei0");
 	fu_device_set_vendor (dev, "Intel Corporation");
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon (dev, "computer");
