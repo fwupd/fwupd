@@ -341,6 +341,7 @@ void
 fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 {
 	FuDeviceItem *item;
+	GPtrArray *children;
 
 	g_return_if_fail (FU_IS_DEVICE_LIST (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
@@ -372,6 +373,21 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 						 fu_device_list_device_delayed_remove_cb,
 						 item);
 		return;
+	}
+
+	/* remove any children associated with device */
+	children = fu_device_get_children (device);
+	for (guint j = 0; j < children->len; j++) {
+		FuDevice *child = g_ptr_array_index (children, j);
+		FuDeviceItem *child_item = fu_device_list_find_by_id (self,
+								      fu_device_get_id (child),
+								      NULL);
+		if (item == NULL) {
+			g_debug ("device %s not found", fu_device_get_id (child));
+			continue;
+		}
+		fu_device_list_emit_device_removed (self, child);
+		g_ptr_array_remove (self->devices, child_item);
 	}
 
 	/* remove right now */
