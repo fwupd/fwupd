@@ -89,6 +89,8 @@ gboolean	 fu_plugin_runner_usb_device_added	(FuPlugin	*plugin,
 gboolean	 fu_plugin_runner_udev_device_added	(FuPlugin	*plugin,
 							 GUdevDevice	*udev_device,
 							 GError		**error);
+void		 fu_plugin_runner_device_removed	(FuPlugin	*plugin,
+							 FuDevice	*device);
 void		 fu_plugin_runner_device_register	(FuPlugin	*plugin,
 							 FuDevice	*device);
 gboolean	 fu_plugin_runner_update		(FuPlugin	*plugin,

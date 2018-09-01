@@ -186,8 +186,19 @@ fu_engine_device_added_cb (FuDeviceList *device_list, FuDevice *device, FuEngine
 }
 
 static void
+fu_engine_device_runner_device_removed (FuEngine *self, FuDevice *device)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		fu_plugin_runner_device_removed (plugin_tmp, device);
+	}
+}
+
+static void
 fu_engine_device_removed_cb (FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
+	fu_engine_device_runner_device_removed (self, device);
 	g_signal_handlers_disconnect_by_data (device, self);
 	g_signal_emit (self, signals[SIGNAL_DEVICE_REMOVED], 0, device);
 }
