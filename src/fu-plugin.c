@@ -1258,6 +1258,17 @@ fu_plugin_runner_udev_device_added (FuPlugin *plugin, GUdevDevice *udev_device, 
 }
 
 void
+fu_plugin_runner_device_removed (FuPlugin *plugin, FuDevice *device)
+{
+	g_autoptr(GError) error_local= NULL;
+
+	if (!fu_plugin_runner_device_generic (plugin, device,
+					      "fu_plugin_device_removed",
+					      &error_local))
+		g_warning ("%s", error_local->message);
+}
+
+void
 fu_plugin_runner_device_register (FuPlugin *plugin, FuDevice *device)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
