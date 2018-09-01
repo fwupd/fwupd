@@ -1050,6 +1050,51 @@ fu_device_list_compatible_func (void)
 }
 
 static void
+fu_device_list_remove_chain_func (void)
+{
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	g_autoptr(FuDevice) device_child = fu_device_new ();
+	g_autoptr(FuDevice) device_parent = fu_device_new ();
+
+	guint added_cnt = 0;
+	guint changed_cnt = 0;
+	guint removed_cnt = 0;
+
+	g_signal_connect (device_list, "added",
+			  G_CALLBACK (_device_list_count_cb),
+			  &added_cnt);
+	g_signal_connect (device_list, "removed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &removed_cnt);
+	g_signal_connect (device_list, "changed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &changed_cnt);
+
+	/* add child */
+	fu_device_set_id (device_child, "child");
+	fu_device_add_guid (device_child, "child-GUID-1");
+	fu_device_list_add (device_list, device_child);
+	g_assert_cmpint (added_cnt, ==, 1);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
+
+	/* add parent */
+	fu_device_set_id (device_parent, "parent");
+	fu_device_add_guid (device_parent, "parent-GUID-1");
+	fu_device_add_child (device_parent, device_child);
+	fu_device_list_add (device_list, device_parent);
+	g_assert_cmpint (added_cnt, ==, 2);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
+
+	/* make sure that removing the parent causes both to go; but the child to go first */
+	fu_device_list_remove (device_list, device_parent);
+	g_assert_cmpint (added_cnt, ==, 2);
+	g_assert_cmpint (removed_cnt, ==, 2);
+	g_assert_cmpint (changed_cnt, ==, 0);
+}
+
+static void
 fu_device_list_func (void)
 {
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
@@ -2573,6 +2618,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
 	g_test_add_func ("/fwupd/device-list{delay}", fu_device_list_delay_func);
 	g_test_add_func ("/fwupd/device-list{compatible}", fu_device_list_compatible_func);
+	g_test_add_func ("/fwupd/device-list{remove-chain}", fu_device_list_remove_chain_func);
 	g_test_add_func ("/fwupd/engine{device-unlock}", fu_engine_device_unlock_func);
 	g_test_add_func ("/fwupd/engine{history-success}", fu_engine_history_func);
 	g_test_add_func ("/fwupd/engine{history-error}", fu_engine_history_error_func);

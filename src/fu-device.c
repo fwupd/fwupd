@@ -429,6 +429,9 @@ fu_device_has_parent_guid (FuDevice *device, const gchar *guid)
  * The GUIDs are searched in order, and so the order of adding GUIDs may be
  * important if more than one parent device might match.
  *
+ * If the parent device is removed, any children logically linked to it will
+ * also be removed.
+ *
  * Since: 1.0.8
  **/
 void
