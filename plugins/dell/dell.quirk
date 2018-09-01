@@ -1,3 +1,7 @@
+# Realtek NIC in Dell docks
+[DeviceInstanceId=USB\VID_0BDA&PID_8153]
+Plugin = dell
+
 [SmbiosManufacturer=Dell Inc.]
 UefiVersionFormat = quad
 
