@@ -869,8 +869,8 @@ fu_device_set_name (FuDevice *device, const gchar *value)
 
 	/* overwriting? */
 	if (g_strcmp0 (value, fu_device_get_name (device)) == 0) {
-		g_warning ("device %s overwriting same name value: %s",
-			   fu_device_get_id (device), value);
+		g_debug ("device %s overwriting same name value: %s",
+			 fu_device_get_id (device), value);
 		return;
 	}
 
