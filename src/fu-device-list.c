@@ -196,6 +196,8 @@ fu_device_list_find_by_guid (FuDeviceList *self, const gchar *guid)
 static FuDeviceItem *
 fu_device_list_find_by_platform_id (FuDeviceList *self, const gchar *platform_id)
 {
+	if (platform_id == NULL)
+		return NULL;
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		FuDevice *device = item_tmp->device;
