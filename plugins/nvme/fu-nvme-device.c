@@ -265,13 +265,11 @@ fu_nvme_device_dump (const gchar *title, const guint8 *buf, gsize sz)
 	g_print ("\n");
 }
 
-
 static gboolean
 fu_nvme_device_open (FuDevice *device, GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
 	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (device));
-	guint8 buf[FU_NVME_ID_CTRL_SIZE];
 
 	/* open device */
 	self->fd = g_open (g_udev_device_get_device_file (udev_device), O_RDONLY);
@@ -284,6 +282,16 @@ fu_nvme_device_open (FuDevice *device, GError **error)
 			     strerror (errno));
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_nvme_device_setup (FuDevice *device, GError **error)
+{
+	FuNvmeDevice *self = FU_NVME_DEVICE (device);
+	guint8 buf[FU_NVME_ID_CTRL_SIZE];
 
 	/* look at the PCI depth to work out if in an external enclosure */
 	self->pci_depth = fu_nvme_device_pci_slot_depth (self);
@@ -379,6 +387,7 @@ fu_nvme_device_class_init (FuNvmeDeviceClass *klass)
 	object_class->finalize = fu_nvme_device_finalize;
 	klass_device->to_string = fu_nvme_device_to_string;
 	klass_device->open = fu_nvme_device_open;
+	klass_device->setup = fu_nvme_device_setup;
 	klass_device->close = fu_nvme_device_close;
 	klass_device->write_firmware = fu_nvme_device_write_firmware;
 }

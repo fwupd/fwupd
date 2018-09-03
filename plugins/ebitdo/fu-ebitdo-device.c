@@ -257,11 +257,8 @@ fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 static gboolean
 fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
 {
-	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-	gdouble tmp;
-	guint32 version_tmp = 0;
-	guint32 serial_tmp[9] = {0};
+	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
 
 	/* open, then ensure this is actually 8Bitdo hardware */
 	if (!fu_ebitdo_device_validate (self, error))
@@ -271,6 +268,18 @@ fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
 					   error)) {
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_ebitdo_device_setup (FuDevice *device, GError **error)
+{
+	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
+	gdouble tmp;
+	guint32 version_tmp = 0;
+	guint32 serial_tmp[9] = {0};
 
 	/* in firmware mode */
 	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -581,6 +590,7 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_ebitdo_device_write_firmware;
+	klass_device->setup = fu_ebitdo_device_setup;
 	klass_usb_device->open = fu_ebitdo_device_open;
 	klass_usb_device->probe = fu_ebitdo_device_probe;
 }

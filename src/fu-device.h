@@ -44,8 +44,10 @@ struct _FuDeviceClass
 							 const gchar	*key,
 							 const gchar	*value,
 							 GError		**error);
+	gboolean		 (*setup)		(FuDevice	*device,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[23];
+	gpointer	padding[22];
 };
 
 /**
@@ -199,6 +201,8 @@ gboolean	 fu_device_open				(FuDevice	*device,
 gboolean	 fu_device_close			(FuDevice	*device,
 							 GError		**error);
 gboolean	 fu_device_probe			(FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_device_setup			(FuDevice	*device,
 							 GError		**error);
 void		 fu_device_probe_invalidate		(FuDevice	*device);
 

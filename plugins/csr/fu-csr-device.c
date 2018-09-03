@@ -534,7 +534,6 @@ fu_csr_device_probe (FuUsbDevice *device, GError **error)
 static gboolean
 fu_csr_device_open (FuUsbDevice *device, GError **error)
 {
-	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 
 	/* open device and clear status */
@@ -544,6 +543,16 @@ fu_csr_device_open (FuUsbDevice *device, GError **error)
 		g_prefix_error (error, "failed to claim HID interface: ");
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_csr_device_setup (FuDevice *device, GError **error)
+{
+	FuCsrDevice *self = FU_CSR_DEVICE (device);
+
 	if (!fu_csr_device_clear_status (self, error))
 		return FALSE;
 
@@ -583,6 +592,7 @@ fu_csr_device_class_init (FuCsrDeviceClass *klass)
 	klass_device->read_firmware = fu_csr_device_upload;
 	klass_device->prepare_firmware = fu_csr_device_prepare_firmware;
 	klass_device->attach = fu_csr_device_attach;
+	klass_device->setup = fu_csr_device_setup;
 	klass_usb_device->open = fu_csr_device_open;
 	klass_usb_device->close = fu_csr_device_close;
 	klass_usb_device->probe = fu_csr_device_probe;

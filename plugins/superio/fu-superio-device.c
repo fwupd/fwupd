@@ -219,10 +219,6 @@ static gboolean
 fu_superio_device_open (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
-	guint8 size_tmp = 0;
-	g_autofree gchar *guid = NULL;
-	g_autofree gchar *name = NULL;
-	g_autofree gchar *version = NULL;
 
 	/* open device */
 	self->fd = g_open (self->devport, O_RDWR);
@@ -235,6 +231,19 @@ fu_superio_device_open (FuDevice *device, GError **error)
 			     strerror (errno));
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_superio_device_setup (FuDevice *device, GError **error)
+{
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	guint8 size_tmp = 0;
+	g_autofree gchar *guid = NULL;
+	g_autofree gchar *name = NULL;
+	g_autofree gchar *version = NULL;
 
 	/* check ID is correct */
 	if (!fu_superio_device_check_id (self, error)) {
@@ -303,6 +312,7 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 	object_class->finalize = fu_superio_device_finalize;
 	klass_device->to_string = fu_superio_device_to_string;
 	klass_device->open = fu_superio_device_open;
+	klass_device->setup = fu_superio_device_setup;
 	klass_device->close = fu_superio_device_close;
 }
 
