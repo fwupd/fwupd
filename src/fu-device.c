@@ -1724,6 +1724,7 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	FuDevicePrivate *priv_donor = GET_PRIVATE (donor);
+	GPtrArray *parent_guids = fu_device_get_parent_guids (donor);
 	g_autoptr(GList) metadata_keys = NULL;
 
 	/* copy from donor FuDevice if has not already been set */
@@ -1733,6 +1734,8 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_equivalent_id (self, fu_device_get_equivalent_id (donor));
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
+	for (guint i = 0; i < parent_guids->len; i++)
+		fu_device_add_parent_guid (self, g_ptr_array_index (parent_guids, i));
 	metadata_keys = g_hash_table_get_keys (priv_donor->metadata);
 	for (GList *l = metadata_keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
