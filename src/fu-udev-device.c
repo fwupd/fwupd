@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include <appstream-glib.h>
+#include <string.h>
 
 #include "fu-udev-device.h"
 
@@ -28,6 +29,13 @@ typedef struct
 } FuUdevDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuUdevDevice, fu_udev_device, FU_TYPE_DEVICE)
+
+#ifndef HAVE_GUDEV_232
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
+#pragma clang diagnostic pop
+#endif
 
 enum {
 	PROP_0,
@@ -67,6 +75,14 @@ fu_udev_device_get_sysfs_attr_as_uint64 (FuUdevDevice *self, const gchar *name)
 	return fu_common_strtoull (g_udev_device_get_sysfs_attr (priv->udev_device, name));
 }
 
+static guint16
+fu_udev_device_read_uint16 (const gchar *str)
+{
+	gchar buf[5] = { 0x0, 0x0, 0x0, 0x0, 0x0 };
+	memcpy (buf, str, 4);
+	return (guint16) g_ascii_strtoull (buf, NULL, 16);
+}
+
 static gboolean
 fu_udev_device_probe (FuDevice *device, GError **error)
 {
@@ -79,6 +95,25 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (self, "vendor");
 	priv->model = fu_udev_device_get_sysfs_attr_as_uint64 (self, "device");
 	priv->revision = fu_udev_device_get_sysfs_attr_as_uint64 (self, "revision");
+
+	/* hidraw helpfully encodes the information in a different place */
+	if (priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0 &&
+	    g_strcmp0 (g_udev_device_get_subsystem (priv->udev_device), "hidraw") == 0) {
+		g_autoptr(GUdevDevice) udev_parent = g_udev_device_get_parent (priv->udev_device);
+		tmp = g_udev_device_get_property (udev_parent, "HID_ID");
+		if (tmp != NULL && strlen (tmp) == 22) {
+			priv->vendor = fu_udev_device_read_uint16 (tmp + 10);
+			priv->model = fu_udev_device_read_uint16 (tmp + 18);
+		}
+		tmp = g_udev_device_get_property (udev_parent, "HID_NAME");
+		if (tmp != NULL) {
+			g_auto(GStrv) vm = g_strsplit (tmp, " ", 2);
+			if (g_strv_length (vm) == 2) {
+				fu_device_set_vendor (device, vm[0]);
+				fu_device_set_name (device, vm[1]);
+			}
+		}
+	}
 
 	/* set the version if the revision has been set */
 	if (priv->revision != 0x00) {
