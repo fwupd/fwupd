@@ -86,6 +86,7 @@ fu_udev_device_read_uint16 (const gchar *str)
 static gboolean
 fu_udev_device_probe (FuDevice *device, GError **error)
 {
+	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (device);
 	FuUdevDevice *self = FU_UDEV_DEVICE (device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	const gchar *tmp;
@@ -161,6 +162,12 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		g_autofree gchar *devid = NULL;
 		devid = g_strdup_printf ("%s\\VEN_%04X", subsystem, priv->vendor);
 		fu_device_add_guid (device, devid);
+	}
+
+	/* subclassed */
+	if (klass->probe != NULL) {
+		if (!klass->probe (self, error))
+			return FALSE;
 	}
 
 	/* success */
