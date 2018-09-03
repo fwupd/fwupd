@@ -199,6 +199,17 @@ gboolean	 fu_quirks_get_kvs_for_guid		(FuQuirks	*self,
 #define	FU_QUIRKS_VENDOR			"Vendor"
 
 /**
+ * FU_QUIRKS_VENDOR_ID:
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
+ * @value: the vendor, e.g. `USB:0x123A`
+ *
+ * Sets a vendor ID for a specific hardware device.
+ *
+ * Since: 1.1.2
+ */
+#define	FU_QUIRKS_VENDOR_ID			"VendorId"
+
+/**
  * FU_QUIRKS_FIRMWARE_SIZE_MIN:
  * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
  * @value: the vendor, e.g. `0x10000`
