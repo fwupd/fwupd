@@ -793,9 +793,7 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 static gboolean
 fu_wac_device_open (FuUsbDevice *device, GError **error)
 {
-	FuWacDevice *self = FU_WAC_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* open device */
 	if (!g_usb_device_claim_interface (usb_device, 0x00, /* HID */
@@ -804,6 +802,15 @@ fu_wac_device_open (FuUsbDevice *device, GError **error)
 		g_prefix_error (error, "failed to claim HID interface: ");
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_wac_device_setup (FuDevice *device, GError **error)
+{
+	FuWacDevice *self = FU_WAC_DEVICE (device);
 
 	/* get current status */
 	if (!fu_wac_device_ensure_status (self, error))
@@ -819,8 +826,6 @@ fu_wac_device_open (FuUsbDevice *device, GError **error)
 	}
 
 	/* success */
-	fu_wac_device_to_string (FU_DEVICE (self), str);
-	g_debug ("opened: %s", str->str);
 	return TRUE;
 }
 
@@ -879,6 +884,7 @@ fu_wac_device_class_init (FuWacDeviceClass *klass)
 	object_class->finalize = fu_wac_device_finalize;
 	klass_device->write_firmware = fu_wac_device_write_firmware;
 	klass_device->to_string = fu_wac_device_to_string;
+	klass_device->setup = fu_wac_device_setup;
 	klass_usb_device->open = fu_wac_device_open;
 	klass_usb_device->close = fu_wac_device_close;
 }

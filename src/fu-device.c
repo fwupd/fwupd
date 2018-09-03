@@ -41,6 +41,7 @@ typedef struct {
 	guint				 order;
 	guint				 priority;
 	gboolean			 done_probe;
+	gboolean			 done_setup;
 	guint64				 size_min;
 	guint64				 size_max;
 	gint				 open_refcount;	/* atomic */
@@ -1598,6 +1599,10 @@ fu_device_open (FuDevice *device, GError **error)
 			return FALSE;
 	}
 
+	/* setup */
+	if (!fu_device_setup (device, error))
+		return FALSE;
+
 	/* success */
 	return TRUE;
 }
@@ -1688,12 +1693,47 @@ fu_device_probe (FuDevice *device, GError **error)
 }
 
 /**
+ * fu_device_setup:
+ * @device: A #FuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Sets up a device, setting parameters on the object that requires
+ * the device to be open and have the interface claimed.
+ * If the device is not compatible then an error should be returned.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.1.2
+ **/
+gboolean
+fu_device_setup (FuDevice *device, GError **error)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (device);
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* already done */
+	if (priv->done_setup)
+		return TRUE;
+
+	/* subclassed */
+	if (klass->setup != NULL) {
+		if (!klass->setup (device, error))
+			return FALSE;
+	}
+	priv->done_setup = TRUE;
+	return TRUE;
+}
+
+/**
  * fu_device_probe_invalidate:
  * @device: A #FuDevice
  *
  * Normally when calling fu_device_probe() multiple times it is only done once.
- * Calling this method causes the next fu_device_probe() call to actually
- * probe the hardware.
+ * Calling this method causes the next requests to fu_device_probe() and
+ * fu_device_setup() actually probe the hardware.
  *
  * This should be done in case the backing device has changed, for instance if
  * a USB device has been replugged.
@@ -1708,6 +1748,7 @@ fu_device_probe_invalidate (FuDevice *device)
 	FuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FU_IS_DEVICE (device));
 	priv->done_probe = FALSE;
+	priv->done_setup = FALSE;
 }
 
 /**

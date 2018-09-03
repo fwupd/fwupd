@@ -279,7 +279,6 @@ fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 static gboolean
 fu_colorhug_device_open (FuUsbDevice *device, GError **error)
 {
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 
 	/* got the version using the HID API */
@@ -290,6 +289,16 @@ fu_colorhug_device_open (FuUsbDevice *device, GError **error)
 					   error)) {
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_colorhug_device_setup (FuDevice *device, GError **error)
+{
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
+
 	if (fu_device_get_version (FU_DEVICE (device)) == NULL) {
 		g_autofree gchar *version = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -425,6 +434,7 @@ fu_colorhug_device_class_init (FuColorhugDeviceClass *klass)
 	klass_device->write_firmware = fu_colorhug_device_write_firmware;
 	klass_device->attach = fu_colorhug_device_attach;
 	klass_device->detach = fu_colorhug_device_detach;
+	klass_device->setup = fu_colorhug_device_setup;
 	klass_usb_device->open = fu_colorhug_device_open;
 	klass_usb_device->probe = fu_colorhug_device_probe;
 }
