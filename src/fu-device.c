@@ -530,6 +530,10 @@ fu_device_set_quirk_kv (FuDevice *device,
 		fu_device_set_vendor (device, value);
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_VENDOR_ID) == 0) {
+		fu_device_set_vendor_id (device, value);
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION) == 0) {
 		fu_device_set_version (device, value);
 		return TRUE;
