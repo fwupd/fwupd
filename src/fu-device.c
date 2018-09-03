@@ -1648,8 +1648,7 @@ fu_device_close (FuDevice *device, GError **error)
 			return FALSE;
 	}
 
-	/* probe if we re-open */
-	priv->done_probe = FALSE;
+	/* success */
 	return TRUE;
 }
 
