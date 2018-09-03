@@ -400,6 +400,38 @@ fu_plugin_update (FuPlugin *plugin,
 	return TRUE;
 }
 
+gboolean
+fu_plugin_device_removed (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	const gchar *aux_node;
+	const gchar *kind_str;
+	const gchar *layer_str;
+	const gchar *rad_str;
+	g_autofree gchar *dev_id_str = NULL;
+
+	aux_node = fu_device_get_metadata (device, "SynapticsMSTAuxNode");
+	if (aux_node == NULL)
+		return TRUE;
+	kind_str = fu_device_get_metadata (device, "SynapticsMSTKind");
+	if (kind_str == NULL)
+		return TRUE;
+	layer_str = fu_device_get_metadata (device, "SynapticsMSTLayer");
+	if (layer_str == NULL)
+		return TRUE;
+	rad_str = fu_device_get_metadata (device, "SynapticsMSTRad");
+	if (rad_str == NULL)
+		return TRUE;
+	dev_id_str = g_strdup_printf ("MST-%s-%s-%s-%s",
+					kind_str, aux_node, layer_str, rad_str);
+	if (fu_plugin_cache_lookup (plugin, dev_id_str) != NULL) {
+		g_debug ("Removing %s from cache", dev_id_str);
+		fu_plugin_cache_remove (plugin, dev_id_str);
+	} else {
+		g_debug ("%s constructed but not found in cache", dev_id_str);
+	}
+	return TRUE;
+}
+
 static gboolean
 fu_plugin_synapticsmst_coldplug (FuPlugin *plugin, GError **error)
 {
