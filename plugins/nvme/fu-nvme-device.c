@@ -216,9 +216,7 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 	fawr = (buf[260] & 0x10) >> 4;
 	nfws = (buf[260] & 0x0e) >> 1;
 	s1ro = buf[260] & 0x01;
-	g_debug ("nr fw slots: %u, slot1 r/o: %u", nfws, s1ro);
-	if (!fawr)
-		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	g_debug ("fawr: %u, nr fw slots: %u, slot1 r/o: %u", fawr, nfws, s1ro);
 
 	/* Dell helpfully provide an EFI GUID we can use in the vendor offset,
 	 * but don't have a header or any magic we can use -- so check if the
@@ -369,6 +367,7 @@ fu_nvme_device_init (FuNvmeDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_summary (FU_DEVICE (self), "NVM Express Solid State Drive");
 	fu_device_add_icon (FU_DEVICE (self), "drive-harddisk");
 }
