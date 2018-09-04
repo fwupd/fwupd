@@ -27,7 +27,7 @@ FuChunk		*fu_chunk_new				(guint32	 idx,
 							 guint32	 data_sz);
 gchar		*fu_chunk_to_string			(FuChunk	*item);
 
-gchar		*fu_chunk_array_to_string		(GPtrArray	*chunked);
+gchar		*fu_chunk_array_to_string		(GPtrArray	*chunks);
 GPtrArray	*fu_chunk_array_new			(const guint8	*data,
 							 guint32	 data_sz,
 							 guint32	 addr_start,

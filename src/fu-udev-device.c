@@ -221,7 +221,7 @@ fu_udev_device_get_dev (FuUdevDevice *self)
 
 /**
  * fu_udev_device_get_subsystem:
- * @udev_device: A #GUdevDevice
+ * @self: A #GUdevDevice
  *
  * Gets the device subsystem, e.g. "pci".
  *
@@ -239,7 +239,7 @@ fu_udev_device_get_subsystem (FuUdevDevice *self)
 
 /**
  * fu_udev_device_get_vendor:
- * @udev_device: A #GUdevDevice
+ * @self: A #GUdevDevice
  *
  * Gets the device vendor code.
  *
@@ -257,7 +257,7 @@ fu_udev_device_get_vendor (FuUdevDevice *self)
 
 /**
  * fu_udev_device_get_model:
- * @udev_device: A #GUdevDevice
+ * @self: A #GUdevDevice
  *
  * Gets the device device code.
  *
@@ -275,7 +275,7 @@ fu_udev_device_get_model (FuUdevDevice *self)
 
 /**
  * fu_udev_device_get_revision:
- * @udev_device: A #GUdevDevice
+ * @self: A #GUdevDevice
  *
  * Gets the device revision.
  *

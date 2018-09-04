@@ -128,11 +128,11 @@ void		 fu_plugin_add_udev_subsystem		(FuPlugin	*plugin,
 							 const gchar	*subsystem);
 FuQuirks	*fu_plugin_get_quirks			(FuPlugin	*plugin);
 const gchar	*fu_plugin_lookup_quirk_by_id		(FuPlugin	*plugin,
-							 const gchar	*prefix,
-							 const gchar	*id);
+							 const gchar	*group,
+							 const gchar	*key);
 guint64		 fu_plugin_lookup_quirk_by_id_as_uint64	(FuPlugin	*plugin,
-							 const gchar	*prefix,
-							 const gchar	*id);
+							 const gchar	*group,
+							 const gchar	*key);
 void		 fu_plugin_add_report_metadata		(FuPlugin	*plugin,
 							 const gchar	*key,
 							 const gchar	*value);

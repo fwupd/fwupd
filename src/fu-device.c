@@ -631,7 +631,7 @@ fu_device_set_firmware_size_min (FuDevice *device, guint64 size_min)
 /**
  * fu_device_set_firmware_size_max:
  * @device: A #FuDevice
- * @size_min: Size in bytes
+ * @size_max: Size in bytes
  *
  * Sets the maximum allowed size of the firmware blob.
  *
@@ -1414,7 +1414,7 @@ fu_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
  * set using fu_device_set_firmware_size_min(), fu_device_set_firmware_size_max()
  * or using a quirk entry.
  *
- * Returns: (return full): A new #GBytes, or %NULL for error
+ * Returns: (transfer full): A new #GBytes, or %NULL for error
  *
  * Since: 1.1.2
  **/
@@ -1756,7 +1756,7 @@ fu_device_probe_invalidate (FuDevice *device)
 
 /**
  * fu_device_incorporate:
- * @device: A #FuDevice
+ * @self: A #FuDevice
  * @donor: Another #FuDevice
  *
  * Copy all properties from the donor object if they have not already been set.
