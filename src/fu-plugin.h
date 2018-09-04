@@ -7,6 +7,7 @@
 #ifndef __FU_PLUGIN_H
 #define __FU_PLUGIN_H
 
+#include <appstream-glib.h>
 #include <gio/gio.h>
 #include <gusb.h>
 #include <gudev/gudev.h>

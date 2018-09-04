@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
-
 #include "fu-plugin.h"
 #include "fu-rom.h"
 #include "fu-plugin-vfuncs.h"

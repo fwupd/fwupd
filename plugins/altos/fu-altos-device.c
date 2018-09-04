@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <fcntl.h>
 #include <poll.h>
 #include <string.h>

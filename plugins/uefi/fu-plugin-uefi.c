@@ -7,7 +7,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <gio/gunixmounts.h>
