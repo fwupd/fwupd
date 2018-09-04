@@ -127,11 +127,9 @@ fu_steelseries_device_class_init (FuSteelseriesDeviceClass *klass)
 }
 
 FuSteelseriesDevice *
-fu_steelseries_device_new (GUsbDevice *usb_device)
+fu_steelseries_device_new (FuUsbDevice *device)
 {
-	FuSteelseriesDevice *device = NULL;
-	device = g_object_new (FU_TYPE_STEELSERIES_DEVICE,
-			       "usb-device", usb_device,
-			       NULL);
-	return device;
+	FuSteelseriesDevice *self = g_object_new (FU_TYPE_STEELSERIES_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
+	return self;
 }

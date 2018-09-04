@@ -393,12 +393,10 @@ fu_nvme_device_class_init (FuNvmeDeviceClass *klass)
 }
 
 FuNvmeDevice *
-fu_nvme_device_new (GUdevDevice *udev_device)
+fu_nvme_device_new (FuUdevDevice *device)
 {
-	FuNvmeDevice *self;
-	self = g_object_new (FU_TYPE_NVME_DEVICE,
-			     "udev-device", udev_device,
-			     NULL);
+	FuNvmeDevice *self = g_object_new (FU_TYPE_NVME_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
 	return self;
 }
 

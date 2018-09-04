@@ -17,7 +17,7 @@ G_BEGIN_DECLS
 #define FU_TYPE_COLORHUG_DEVICE (fu_colorhug_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuColorhugDevice, fu_colorhug_device, FU, COLORHUG_DEVICE, FuUsbDevice)
 
-FuColorhugDevice *fu_colorhug_device_new		(GUsbDevice		*usb_device);
+FuColorhugDevice *fu_colorhug_device_new		(FuUsbDevice		*device);
 
 /* object methods */
 gboolean	 fu_colorhug_device_set_flash_success	(FuColorhugDevice	*device,

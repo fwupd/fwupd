@@ -440,11 +440,10 @@ fu_colorhug_device_class_init (FuColorhugDeviceClass *klass)
 }
 
 FuColorhugDevice *
-fu_colorhug_device_new (GUsbDevice *usb_device)
+fu_colorhug_device_new (FuUsbDevice *device)
 {
 	FuColorhugDevice *self = NULL;
-	self = g_object_new (FU_TYPE_COLORHUG_DEVICE,
-			     "usb-device", usb_device,
-			     NULL);
+	self = g_object_new (FU_TYPE_COLORHUG_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
 	return self;
 }

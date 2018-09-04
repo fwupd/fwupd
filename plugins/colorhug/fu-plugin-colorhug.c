@@ -99,19 +99,18 @@ fu_plugin_update (FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuColorhugDevice) device = NULL;
+	g_autoptr(FuColorhugDevice) dev = NULL;
 
 	/* open the device */
-	device = fu_colorhug_device_new (usb_device);
-	fu_device_set_quirks (FU_DEVICE (device), fu_plugin_get_quirks (plugin));
-	locker = fu_device_locker_new (device, error);
+	dev = fu_colorhug_device_new (device);
+	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
 
 	/* insert to hash */
-	fu_plugin_device_add (plugin, FU_DEVICE (device));
+	fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	return TRUE;
 }

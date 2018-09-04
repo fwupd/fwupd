@@ -762,7 +762,7 @@ typedef struct {
 } FuAltosDeviceVidPid;
 
 FuAltosDevice *
-fu_altos_device_new (GUsbDevice *usb_device)
+fu_altos_device_new (FuUsbDevice *device)
 {
 	const FuAltosDeviceVidPid vidpids[] = {
 		{ 0xfffe, 0x000a, FU_ALTOS_DEVICE_KIND_BOOTLOADER },
@@ -772,12 +772,10 @@ fu_altos_device_new (GUsbDevice *usb_device)
 
 	/* set kind */
 	for (guint j = 0; vidpids[j].vid != 0x0000; j++) {
-		if (g_usb_device_get_vid (usb_device) == vidpids[j].vid &&
-		    g_usb_device_get_pid (usb_device) == vidpids[j].pid) {
-			FuAltosDevice *self;
-			self = g_object_new (FU_TYPE_ALTOS_DEVICE,
-					     "usb-device", usb_device,
-					     NULL);
+		if (fu_usb_device_get_vid (device) == vidpids[j].vid &&
+		    fu_usb_device_get_pid (device) == vidpids[j].pid) {
+			FuAltosDevice *self = g_object_new (FU_TYPE_ALTOS_DEVICE, NULL);
+			fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
 			self->kind = vidpids[j].kind;
 			fu_altos_device_init_real (self);
 			return self;

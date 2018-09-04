@@ -377,12 +377,12 @@ fu_usb_device_incorporate (FuDevice *self, FuDevice *donor)
  *
  * Since: 1.0.2
  **/
-FuDevice *
+FuUsbDevice *
 fu_usb_device_new (GUsbDevice *usb_device)
 {
 	FuUsbDevice *device = g_object_new (FU_TYPE_USB_DEVICE, NULL);
 	fu_usb_device_set_dev (device, usb_device);
-	return FU_DEVICE (device);
+	return FU_USB_DEVICE (device);
 }
 
 static void

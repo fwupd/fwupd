@@ -66,10 +66,10 @@ gboolean	 fu_plugin_composite_cleanup		(FuPlugin	*plugin,
 							 GPtrArray	*devices,
 							 GError		**error);
 gboolean	 fu_plugin_usb_device_added		(FuPlugin	*plugin,
-							 GUsbDevice	*usb_device,
+							 FuUsbDevice	*device,
 							 GError		**error);
 gboolean	 fu_plugin_udev_device_added		(FuPlugin	*plugin,
-							 GUdevDevice	*udev_device,
+							 FuUdevDevice	*device,
 							 GError		**error);
 gboolean	 fu_plugin_device_removed		(FuPlugin	*plugin,
 							 FuDevice	*device,

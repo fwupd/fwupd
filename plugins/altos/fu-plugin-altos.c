@@ -18,14 +18,15 @@ fu_plugin_init (FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
 {
+	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	const gchar *platform_id = NULL;
 	g_autofree gchar *runtime_id = NULL;
 	g_autoptr(FuAltosDevice) dev = NULL;
 
 	/* get kind */
-	dev = fu_altos_device_new (usb_device);
+	dev = fu_altos_device_new (device);
 	if (dev == NULL)
 		return TRUE;
 

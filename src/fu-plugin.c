@@ -95,10 +95,10 @@ typedef gboolean	 (*FuPluginUpdateFunc)		(FuPlugin	*plugin,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 typedef gboolean	 (*FuPluginUsbDeviceAddedFunc)	(FuPlugin	*plugin,
-							 GUsbDevice	*usb_device,
+							 FuUsbDevice	*device,
 							 GError		**error);
 typedef gboolean	 (*FuPluginUdevDeviceAddedFunc)	(FuPlugin	*plugin,
-							 GUdevDevice	*udev_device,
+							 FuUdevDevice	*device,
 							 GError		**error);
 
 /**
@@ -1212,7 +1212,7 @@ fu_plugin_add_udev_subsystem (FuPlugin *plugin, const gchar *subsystem)
 }
 
 gboolean
-fu_plugin_runner_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+fu_plugin_runner_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginUsbDeviceAddedFunc func = NULL;
@@ -1229,13 +1229,13 @@ fu_plugin_runner_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GEr
 	g_module_symbol (priv->module, "fu_plugin_usb_device_added", (gpointer *) &func);
 	if (func != NULL) {
 		g_debug ("performing usb_device_added() on %s", priv->name);
-		return func (plugin, usb_device, error);
+		return func (plugin, device, error);
 	}
 	return TRUE;
 }
 
 gboolean
-fu_plugin_runner_udev_device_added (FuPlugin *plugin, GUdevDevice *udev_device, GError **error)
+fu_plugin_runner_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (plugin);
 	FuPluginUdevDeviceAddedFunc func = NULL;
@@ -1252,7 +1252,7 @@ fu_plugin_runner_udev_device_added (FuPlugin *plugin, GUdevDevice *udev_device, 
 	g_module_symbol (priv->module, "fu_plugin_udev_device_added", (gpointer *) &func);
 	if (func != NULL) {
 		g_debug ("performing udev_device_added() on %s", priv->name);
-		return func (plugin, udev_device, error);
+		return func (plugin, device, error);
 	}
 	return TRUE;
 }

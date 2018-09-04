@@ -68,50 +68,34 @@ fu_plugin_verify (FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_udev_device_added (FuPlugin *plugin, GUdevDevice *udev_device, GError **error)
+fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
 {
-	FuDevice *dev_tmp;
 	const gchar *guid = NULL;
-	const gchar *id = NULL;
 	g_autofree gchar *rom_fn = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
-	g_autoptr(FuDevice) dev = NULL;
 
 	/* interesting device? */
-	if (g_strcmp0 (g_udev_device_get_subsystem (udev_device), "pci") != 0)
+	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "pci") != 0)
 		return TRUE;
-	guid = g_udev_device_get_property (udev_device, "FWUPD_GUID");
+	guid = g_udev_device_get_property (fu_udev_device_get_dev (device), "FWUPD_GUID");
 	if (guid == NULL)
 		return TRUE;
 
 	/* get data */
 	ptask = as_profile_start (profile, "FuPluginUdev:client-add{%s}", guid);
 	g_assert (ptask != NULL);
-	g_debug ("adding udev device: %s", g_udev_device_get_sysfs_path (udev_device));
-
-	/* is already in database */
-	id = g_udev_device_get_sysfs_path (udev_device);
-	dev_tmp = fu_plugin_cache_lookup (plugin, id);
-	if (dev_tmp != NULL) {
-		g_debug ("ignoring duplicate %s", id);
-		return TRUE;
-	}
 
 	/* did we get enough data */
-	dev = fu_udev_device_new (udev_device);
-	fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_guid (dev, guid);
-	fu_device_add_icon (dev, "audio-card");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_icon (device, "audio-card");
 
 	/* get the FW version from the rom when unlocked */
-	rom_fn = g_build_filename (g_udev_device_get_sysfs_path (udev_device), "rom", NULL);
+	rom_fn = g_build_filename (fu_device_get_platform_id (FU_DEVICE (device)), "rom", NULL);
 	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS))
-		fu_device_set_metadata (dev, "RomFilename", rom_fn);
+		fu_device_set_metadata (FU_DEVICE (device), "RomFilename", rom_fn);
 
 	/* insert to hash */
-	fu_plugin_cache_add (plugin, id, dev);
-	fu_plugin_device_add_delay (plugin, dev);
+	fu_plugin_device_add_delay (plugin, FU_DEVICE (device));
 	return TRUE;
 }

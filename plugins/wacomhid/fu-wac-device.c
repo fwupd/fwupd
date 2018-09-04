@@ -890,11 +890,9 @@ fu_wac_device_class_init (FuWacDeviceClass *klass)
 }
 
 FuWacDevice *
-fu_wac_device_new (GUsbDevice *usb_device)
+fu_wac_device_new (FuUsbDevice *device)
 {
-	FuWacDevice *device = NULL;
-	device = g_object_new (FU_TYPE_WAC_DEVICE,
-			       "usb-device", usb_device,
-			       NULL);
-	return device;
+	FuWacDevice *self = g_object_new (FU_TYPE_WAC_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
+	return self;
 }
