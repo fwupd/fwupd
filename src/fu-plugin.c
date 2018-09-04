@@ -103,7 +103,7 @@ typedef gboolean	 (*FuPluginUdevDeviceAddedFunc)	(FuPlugin	*self,
 
 /**
  * fu_plugin_get_name:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  *
  * Gets the plugin name.
  *
@@ -131,7 +131,7 @@ fu_plugin_set_name (FuPlugin *self, const gchar *name)
 
 /**
  * fu_plugin_cache_lookup:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @id: the key
  *
  * Finds an object in the per-plugin cache.
@@ -151,7 +151,7 @@ fu_plugin_cache_lookup (FuPlugin *self, const gchar *id)
 
 /**
  * fu_plugin_cache_add:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @id: the key
  * @dev: a #GObject, typically a #FuDevice
  *
@@ -170,7 +170,7 @@ fu_plugin_cache_add (FuPlugin *self, const gchar *id, gpointer dev)
 
 /**
  * fu_plugin_cache_remove:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @id: the key
  *
  * Removes an object from the per-plugin cache.
@@ -188,7 +188,7 @@ fu_plugin_cache_remove (FuPlugin *self, const gchar *id)
 
 /**
  * fu_plugin_get_data:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  *
  * Gets the per-plugin allocated private data. This will return %NULL unless
  * fu_plugin_alloc_data() has been called by the plugin.
@@ -207,7 +207,7 @@ fu_plugin_get_data (FuPlugin *self)
 
 /**
  * fu_plugin_alloc_data:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @data_sz: the size to allocate
  *
  * Allocates the per-plugin allocated private data.
@@ -231,7 +231,7 @@ fu_plugin_alloc_data (FuPlugin *self, gsize data_sz)
 
 /**
  * fu_plugin_get_usb_context:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  *
  * Gets the shared USB context that all plugins can use.
  *
@@ -256,7 +256,7 @@ fu_plugin_set_usb_context (FuPlugin *self, GUsbContext *usb_ctx)
 
 /**
  * fu_plugin_get_enabled:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  *
  * Returns if the plugin is enabled. Plugins may self-disable using
  * fu_plugin_set_enabled() or can be disabled by the daemon.
@@ -275,7 +275,7 @@ fu_plugin_get_enabled (FuPlugin *self)
 
 /**
  * fu_plugin_set_enabled:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @enabled: the enabled value
  *
  * Enables or disables a plugin. Plugins can self-disable at any point.
@@ -335,7 +335,7 @@ fu_plugin_open (FuPlugin *self, const gchar *filename, GError **error)
 
 /**
  * fu_plugin_device_add:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @device: A #FuDevice
  *
  * Asks the daemon to add a device to the exported list. If this device ID
@@ -374,7 +374,7 @@ fu_plugin_device_add (FuPlugin *self, FuDevice *device)
 
 /**
  * fu_plugin_device_register:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @device: A #FuDevice
  *
  * Registers the device with other plugins so they can set metadata.
@@ -426,7 +426,7 @@ fu_plugin_device_add_delay_cb (gpointer user_data)
 
 /**
  * fu_plugin_has_device_delay:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  *
  * Returns if the device has a pending device that is waiting to be added.
  *
@@ -443,7 +443,7 @@ fu_plugin_has_device_delay (FuPlugin *self)
 
 /**
  * fu_plugin_device_add_delay:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @device: A #FuDevice
  *
  * Asks the daemon to add a device to the exported list after a small delay.
@@ -479,7 +479,7 @@ fu_plugin_device_add_delay (FuPlugin *self, FuDevice *device)
 
 /**
  * fu_plugin_device_remove:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @device: A #FuDevice
  *
  * Asks the daemon to remove a device from the exported list.
@@ -513,7 +513,7 @@ fu_plugin_device_remove (FuPlugin *self, FuDevice *device)
 
 /**
  * fu_plugin_request_recoldplug:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  *
  * Ask all the plugins to coldplug all devices, which will include the prepare()
  * and cleanup() phases. Duplicate devices added will be ignored.
@@ -529,7 +529,7 @@ fu_plugin_request_recoldplug (FuPlugin *self)
 
 /**
  * fu_plugin_check_hwid:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @hwid: A Hardware ID GUID, e.g. `6de5d951-d755-576b-bd09-c5cf66b27234`
  *
  * Checks to see if a specific GUID exists. All hardware IDs on a
@@ -550,7 +550,7 @@ fu_plugin_check_hwid (FuPlugin *self, const gchar *hwid)
 
 /**
  * fu_plugin_get_hwids:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  *
  * Returns all the HWIDs defined in the system. All hardware IDs on a
  * specific system can be shown using the `fwupdmgr hwids` command.
@@ -570,7 +570,7 @@ fu_plugin_get_hwids (FuPlugin *self)
 
 /**
  * fu_plugin_check_supported:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @guid: A Hardware ID GUID, e.g. `6de5d951-d755-576b-bd09-c5cf66b27234`
  *
  * Checks to see if a specific device GUID is supported, i.e. available in the
@@ -596,7 +596,7 @@ fu_plugin_check_supported (FuPlugin *self, const gchar *guid)
 
 /**
  * fu_plugin_get_dmi_value:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @dmi_id: A DMI ID, e.g. `BiosVersion`
  *
  * Gets a hardware DMI value.
@@ -616,7 +616,7 @@ fu_plugin_get_dmi_value (FuPlugin *self, const gchar *dmi_id)
 
 /**
  * fu_plugin_get_smbios_string:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @structure_type: A SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
  * @offset: A SMBIOS offset
  *
@@ -640,7 +640,7 @@ fu_plugin_get_smbios_string (FuPlugin *self, guint8 structure_type, guint8 offse
 
 /**
  * fu_plugin_get_smbios_data:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @structure_type: A SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
  *
  * Gets a hardware SMBIOS data.
@@ -692,7 +692,7 @@ fu_plugin_set_quirks (FuPlugin *self, FuQuirks *quirks)
 
 /**
  * fu_plugin_get_quirks:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  *
  * Returns the hardware database object. This can be used to discover device
  * quirks or other device-specific settings.
@@ -717,7 +717,7 @@ fu_plugin_set_runtime_versions (FuPlugin *self, GHashTable *runtime_versions)
 
 /**
  * fu_plugin_add_runtime_version:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @component_id: An AppStream component id, e.g. "org.gnome.Software"
  * @version: A version string, e.g. "1.2.3"
  *
@@ -747,7 +747,7 @@ fu_plugin_set_compile_versions (FuPlugin *self, GHashTable *compile_versions)
 
 /**
  * fu_plugin_add_compile_version:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @component_id: An AppStream component id, e.g. "org.gnome.Software"
  * @version: A version string, e.g. "1.2.3"
  *
@@ -770,7 +770,7 @@ fu_plugin_add_compile_version (FuPlugin *self,
 
 /**
  * fu_plugin_lookup_quirk_by_id:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @group: A string, e.g. "DfuFlags"
  * @key: An ID to match the entry, e.g. "Summary"
  *
@@ -792,7 +792,7 @@ fu_plugin_lookup_quirk_by_id (FuPlugin *self, const gchar *group, const gchar *k
 
 /**
  * fu_plugin_lookup_quirk_by_id_as_uint64:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @group: A string, e.g. "DfuFlags"
  * @key: An ID to match the entry, e.g. "Size"
  *
@@ -812,7 +812,7 @@ fu_plugin_lookup_quirk_by_id_as_uint64 (FuPlugin *self, const gchar *group, cons
 
 /**
  * fu_plugin_get_supported:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  *
  * Gets all the device GUIDs supported by the daemon.
  *
@@ -836,7 +836,7 @@ fu_plugin_set_smbios (FuPlugin *self, FuSmbios *smbios)
 
 /**
  * fu_plugin_set_coldplug_delay:
- * @plugin: A #FuPlugin
+ * @self: A #FuPlugin
  * @duration: A delay in milliseconds
  *
  * Set the minimum time that should be waited inbetween the call to
@@ -1191,7 +1191,7 @@ fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error
 
 /**
  * fu_plugin_add_udev_subsystem:
- * @plugin: a #FuPlugin
+ * @self: a #FuPlugin
  * @subsystem: a subsystem name, e.g. `pciport`
  *
  * Registers the udev subsystem to be watched by the daemon.
@@ -1573,7 +1573,7 @@ fu_plugin_runner_get_results (FuPlugin *self, FuDevice *device, GError **error)
 
 /**
  * fu_plugin_get_order:
- * @plugin: a #FuPlugin
+ * @self: a #FuPlugin
  *
  * Gets the plugin order, where higher numbers are run after lower
  * numbers.
@@ -1589,7 +1589,7 @@ fu_plugin_get_order (FuPlugin *self)
 
 /**
  * fu_plugin_set_order:
- * @plugin: a #FuPlugin
+ * @self: a #FuPlugin
  * @order: a integer value
  *
  * Sets the plugin order, where higher numbers are run after lower
@@ -1604,7 +1604,7 @@ fu_plugin_set_order (FuPlugin *self, guint order)
 
 /**
  * fu_plugin_get_priority:
- * @plugin: a #FuPlugin
+ * @self: a #FuPlugin
  *
  * Gets the plugin priority, where higher numbers are better.
  *
@@ -1619,7 +1619,7 @@ fu_plugin_get_priority (FuPlugin *self)
 
 /**
  * fu_plugin_set_priority:
- * @plugin: a #FuPlugin
+ * @self: a #FuPlugin
  * @priority: a integer value
  *
  * Sets the plugin priority, where higher numbers are better.
@@ -1633,7 +1633,7 @@ fu_plugin_set_priority (FuPlugin *self, guint priority)
 
 /**
  * fu_plugin_add_rule:
- * @plugin: a #FuPlugin
+ * @self: a #FuPlugin
  * @rule: a #FuPluginRule, e.g. %FU_PLUGIN_RULE_CONFLICTS
  * @name: a plugin name, e.g. `upower`
  *
@@ -1653,7 +1653,7 @@ fu_plugin_add_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
 
 /**
  * fu_plugin_get_rules:
- * @plugin: a #FuPlugin
+ * @self: a #FuPlugin
  * @rule: a #FuPluginRule, e.g. %FU_PLUGIN_RULE_CONFLICTS
  *
  * Gets the plugin IDs that should be run after this plugin.
@@ -1669,7 +1669,7 @@ fu_plugin_get_rules (FuPlugin *self, FuPluginRule rule)
 
 /**
  * fu_plugin_has_rule:
- * @plugin: a #FuPlugin
+ * @self: a #FuPlugin
  * @rule: a #FuPluginRule, e.g. %FU_PLUGIN_RULE_CONFLICTS
  * @name: a plugin name, e.g. `upower`
  *
@@ -1691,7 +1691,7 @@ fu_plugin_has_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
 
 /**
  * fu_plugin_add_report_metadata:
- * @plugin: a #FuPlugin
+ * @self: a #FuPlugin
  * @key: a string, e.g. `FwupdateVersion`
  * @value: a string, e.g. `10`
  *
@@ -1710,7 +1710,7 @@ fu_plugin_add_report_metadata (FuPlugin *self, const gchar *key, const gchar *va
 
 /**
  * fu_plugin_get_report_metadata:
- * @plugin: a #FuPlugin
+ * @self: a #FuPlugin
  *
  * Returns the list of additional metadata to be added when filing a report.
  *
@@ -1725,7 +1725,7 @@ fu_plugin_get_report_metadata (FuPlugin *self)
 
 /**
  * fu_plugin_get_config_value:
- * @plugin: a #FuPlugin
+ * @self: a #FuPlugin
  * @key: A settings key
  *
  * Return the value of a key if it's been configured

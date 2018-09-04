@@ -11,16 +11,16 @@
 
 G_BEGIN_DECLS
 
-GPtrArray	*fu_device_get_parent_guids		(FuDevice	*device);
-gboolean	 fu_device_has_parent_guid		(FuDevice	*device,
+GPtrArray	*fu_device_get_parent_guids		(FuDevice	*self);
+gboolean	 fu_device_has_parent_guid		(FuDevice	*self,
 							 const gchar	*guid);
-guint		 fu_device_get_order			(FuDevice	*device);
-void		 fu_device_set_order			(FuDevice	*device,
+guint		 fu_device_get_order			(FuDevice	*self);
+void		 fu_device_set_order			(FuDevice	*self,
 							 guint		 order);
-guint		 fu_device_get_priority			(FuDevice	*device);
-void		 fu_device_set_priority			(FuDevice	*device,
+guint		 fu_device_get_priority			(FuDevice	*self);
+void		 fu_device_set_priority			(FuDevice	*self,
 							 guint		 priority);
-void		 fu_device_set_alternate		(FuDevice	*device,
+void		 fu_device_set_alternate		(FuDevice	*self,
 							 FuDevice	*alternate);
 
 G_END_DECLS
