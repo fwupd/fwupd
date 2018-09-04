@@ -69,10 +69,9 @@ fu_udev_device_emit_changed (FuUdevDevice *self)
 }
 
 static guint64
-fu_udev_device_get_sysfs_attr_as_uint64 (FuUdevDevice *self, const gchar *name)
+fu_udev_device_get_sysfs_attr_as_uint64 (GUdevDevice *udev_device, const gchar *name)
 {
-	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
-	return fu_common_strtoull (g_udev_device_get_sysfs_attr (priv->udev_device, name));
+	return fu_common_strtoull (g_udev_device_get_sysfs_attr (udev_device, name));
 }
 
 static guint16
@@ -93,9 +92,17 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	g_autofree gchar *subsystem = NULL;
 
 	/* set ven:dev:rev */
-	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (self, "vendor");
-	priv->model = fu_udev_device_get_sysfs_attr_as_uint64 (self, "device");
-	priv->revision = fu_udev_device_get_sysfs_attr_as_uint64 (self, "revision");
+	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (priv->udev_device, "vendor");
+	priv->model = fu_udev_device_get_sysfs_attr_as_uint64 (priv->udev_device, "device");
+	priv->revision = fu_udev_device_get_sysfs_attr_as_uint64 (priv->udev_device, "revision");
+
+	/* fallback to the parent */
+	if (priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0) {
+		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent (priv->udev_device);
+		priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (parent, "vendor");
+		priv->model = fu_udev_device_get_sysfs_attr_as_uint64 (parent, "device");
+		priv->revision = fu_udev_device_get_sysfs_attr_as_uint64 (parent, "revision");
+	}
 
 	/* hidraw helpfully encodes the information in a different place */
 	if (priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0 &&
