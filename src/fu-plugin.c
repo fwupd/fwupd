@@ -70,34 +70,34 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuPlugin, fu_plugin, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_plugin_get_instance_private (o))
 
 typedef const gchar	*(*FuPluginGetNameFunc)		(void);
-typedef void		 (*FuPluginInitFunc)		(FuPlugin	*plugin);
-typedef gboolean	 (*FuPluginStartupFunc)		(FuPlugin	*plugin,
+typedef void		 (*FuPluginInitFunc)		(FuPlugin	*self);
+typedef gboolean	 (*FuPluginStartupFunc)		(FuPlugin	*self,
 							 GError		**error);
-typedef void		 (*FuPluginDeviceRegisterFunc)	(FuPlugin	*plugin,
+typedef void		 (*FuPluginDeviceRegisterFunc)	(FuPlugin	*self,
 							 FuDevice	*device);
-typedef gboolean	 (*FuPluginDeviceFunc)		(FuPlugin	*plugin,
+typedef gboolean	 (*FuPluginDeviceFunc)		(FuPlugin	*self,
 							 FuDevice	*device,
 							 GError		**error);
-typedef gboolean	 (*FuPluginFlaggedDeviceFunc)	(FuPlugin	*plugin,
+typedef gboolean	 (*FuPluginFlaggedDeviceFunc)	(FuPlugin	*self,
 							 FwupdInstallFlags flags,
 							 FuDevice	*device,
 							 GError		**error);
-typedef gboolean	 (*FuPluginDeviceArrayFunc)	(FuPlugin	*plugin,
+typedef gboolean	 (*FuPluginDeviceArrayFunc)	(FuPlugin	*self,
 							 GPtrArray	*devices,
 							 GError		**error);
-typedef gboolean	 (*FuPluginVerifyFunc)		(FuPlugin	*plugin,
+typedef gboolean	 (*FuPluginVerifyFunc)		(FuPlugin	*self,
 							 FuDevice	*device,
 							 FuPluginVerifyFlags flags,
 							 GError		**error);
-typedef gboolean	 (*FuPluginUpdateFunc)		(FuPlugin	*plugin,
+typedef gboolean	 (*FuPluginUpdateFunc)		(FuPlugin	*self,
 							 FuDevice	*device,
 							 GBytes		*blob_fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-typedef gboolean	 (*FuPluginUsbDeviceAddedFunc)	(FuPlugin	*plugin,
+typedef gboolean	 (*FuPluginUsbDeviceAddedFunc)	(FuPlugin	*self,
 							 FuUsbDevice	*device,
 							 GError		**error);
-typedef gboolean	 (*FuPluginUdevDeviceAddedFunc)	(FuPlugin	*plugin,
+typedef gboolean	 (*FuPluginUdevDeviceAddedFunc)	(FuPlugin	*self,
 							 FuUdevDevice	*device,
 							 GError		**error);
 
@@ -112,18 +112,18 @@ typedef gboolean	 (*FuPluginUdevDeviceAddedFunc)	(FuPlugin	*plugin,
  * Since: 0.8.0
  **/
 const gchar *
-fu_plugin_get_name (FuPlugin *plugin)
+fu_plugin_get_name (FuPlugin *self)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
 	return priv->name;
 }
 
 void
-fu_plugin_set_name (FuPlugin *plugin, const gchar *name)
+fu_plugin_set_name (FuPlugin *self, const gchar *name)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (name != NULL);
 	g_free (priv->name);
 	priv->name = g_strdup (name);
@@ -141,10 +141,10 @@ fu_plugin_set_name (FuPlugin *plugin, const gchar *name)
  * Since: 0.8.0
  **/
 gpointer
-fu_plugin_cache_lookup (FuPlugin *plugin, const gchar *id)
+fu_plugin_cache_lookup (FuPlugin *self, const gchar *id)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
 	g_return_val_if_fail (id != NULL, NULL);
 	return g_hash_table_lookup (priv->devices, id);
 }
@@ -160,10 +160,10 @@ fu_plugin_cache_lookup (FuPlugin *plugin, const gchar *id)
  * Since: 0.8.0
  **/
 void
-fu_plugin_cache_add (FuPlugin *plugin, const gchar *id, gpointer dev)
+fu_plugin_cache_add (FuPlugin *self, const gchar *id, gpointer dev)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (id != NULL);
 	g_hash_table_insert (priv->devices, g_strdup (id), g_object_ref (dev));
 }
@@ -178,10 +178,10 @@ fu_plugin_cache_add (FuPlugin *plugin, const gchar *id, gpointer dev)
  * Since: 0.8.0
  **/
 void
-fu_plugin_cache_remove (FuPlugin *plugin, const gchar *id)
+fu_plugin_cache_remove (FuPlugin *self, const gchar *id)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (id != NULL);
 	g_hash_table_remove (priv->devices, id);
 }
@@ -198,10 +198,10 @@ fu_plugin_cache_remove (FuPlugin *plugin, const gchar *id)
  * Since: 0.8.0
  **/
 FuPluginData *
-fu_plugin_get_data (FuPlugin *plugin)
+fu_plugin_get_data (FuPlugin *self)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
 	return priv->data;
 }
 
@@ -217,10 +217,10 @@ fu_plugin_get_data (FuPlugin *plugin)
  * Since: 0.8.0
  **/
 FuPluginData *
-fu_plugin_alloc_data (FuPlugin *plugin, gsize data_sz)
+fu_plugin_alloc_data (FuPlugin *self, gsize data_sz)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
 	if (priv->data != NULL) {
 		g_critical ("fu_plugin_alloc_data() already used by plugin");
 		return priv->data;
@@ -240,17 +240,17 @@ fu_plugin_alloc_data (FuPlugin *plugin, gsize data_sz)
  * Since: 0.8.0
  **/
 GUsbContext *
-fu_plugin_get_usb_context (FuPlugin *plugin)
+fu_plugin_get_usb_context (FuPlugin *self)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
 	return priv->usb_ctx;
 }
 
 void
-fu_plugin_set_usb_context (FuPlugin *plugin, GUsbContext *usb_ctx)
+fu_plugin_set_usb_context (FuPlugin *self, GUsbContext *usb_ctx)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	g_set_object (&priv->usb_ctx, usb_ctx);
 }
 
@@ -266,10 +266,10 @@ fu_plugin_set_usb_context (FuPlugin *plugin, GUsbContext *usb_ctx)
  * Since: 0.8.0
  **/
 gboolean
-fu_plugin_get_enabled (FuPlugin *plugin)
+fu_plugin_get_enabled (FuPlugin *self)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_val_if_fail (FU_IS_PLUGIN (plugin), FALSE);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
 	return priv->enabled;
 }
 
@@ -283,10 +283,10 @@ fu_plugin_get_enabled (FuPlugin *plugin)
  * Since: 0.8.0
  **/
 void
-fu_plugin_set_enabled (FuPlugin *plugin, gboolean enabled)
+fu_plugin_set_enabled (FuPlugin *self, gboolean enabled)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_PLUGIN (self));
 	priv->enabled = enabled;
 }
 
@@ -304,9 +304,9 @@ fu_plugin_guess_name_from_fn (const gchar *filename)
 }
 
 gboolean
-fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
+fu_plugin_open (FuPlugin *self, const gchar *filename, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginInitFunc func = NULL;
 
 	priv->module = g_module_open (filename, 0);
@@ -327,7 +327,7 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
 	g_module_symbol (priv->module, "fu_plugin_init", (gpointer *) &func);
 	if (func != NULL) {
 		g_debug ("performing init() on %s", filename);
-		func (plugin);
+		func (self);
 	}
 
 	return TRUE;
@@ -349,26 +349,26 @@ fu_plugin_open (FuPlugin *plugin, const gchar *filename, GError **error)
  * Since: 0.8.0
  **/
 void
-fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
+fu_plugin_device_add (FuPlugin *self, FuDevice *device)
 {
 	GPtrArray *children;
 
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
 
 	g_debug ("emit added from %s: %s",
-		 fu_plugin_get_name (plugin),
+		 fu_plugin_get_name (self),
 		 fu_device_get_id (device));
 	fu_device_set_created (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
-	fu_device_set_plugin (device, fu_plugin_get_name (plugin));
-	g_signal_emit (plugin, signals[SIGNAL_DEVICE_ADDED], 0, device);
+	fu_device_set_plugin (device, fu_plugin_get_name (self));
+	g_signal_emit (self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 
 	/* add children if they have not already been added */
 	children = fu_device_get_children (device);
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index (children, i);
 		if (fu_device_get_created (child) == 0)
-			fu_plugin_device_add (plugin, child);
+			fu_plugin_device_add (self, child);
 	}
 }
 
@@ -387,19 +387,19 @@ fu_plugin_device_add (FuPlugin *plugin, FuDevice *device)
  * Since: 0.9.7
  **/
 void
-fu_plugin_device_register (FuPlugin *plugin, FuDevice *device)
+fu_plugin_device_register (FuPlugin *self, FuDevice *device)
 {
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
 
 	g_debug ("emit device-register from %s: %s",
-		 fu_plugin_get_name (plugin),
+		 fu_plugin_get_name (self),
 		 fu_device_get_id (device));
-	g_signal_emit (plugin, signals[SIGNAL_DEVICE_REGISTER], 0, device);
+	g_signal_emit (self, signals[SIGNAL_DEVICE_REGISTER], 0, device);
 }
 
 typedef struct {
-	FuPlugin	*plugin;
+	FuPlugin	*self;
 	FuDevice	*device;
 	guint		 timeout_id;
 	GHashTable	*devices;
@@ -408,7 +408,7 @@ typedef struct {
 static void
 fu_plugin_helper_free (FuPluginHelper *helper)
 {
-	g_object_unref (helper->plugin);
+	g_object_unref (helper->self);
 	g_object_unref (helper->device);
 	g_hash_table_unref (helper->devices);
 	g_free (helper);
@@ -418,7 +418,7 @@ static gboolean
 fu_plugin_device_add_delay_cb (gpointer user_data)
 {
 	FuPluginHelper *helper = (FuPluginHelper *) user_data;
-	fu_plugin_device_add (helper->plugin, helper->device);
+	fu_plugin_device_add (helper->self, helper->device);
 	g_hash_table_remove (helper->devices, helper->device);
 	fu_plugin_helper_free (helper);
 	return FALSE;
@@ -435,9 +435,9 @@ fu_plugin_device_add_delay_cb (gpointer user_data)
  * Since: 0.8.0
  **/
 gboolean
-fu_plugin_has_device_delay (FuPlugin *plugin)
+fu_plugin_has_device_delay (FuPlugin *self)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	return g_hash_table_size (priv->devices_delay) > 0;
 }
 
@@ -451,12 +451,12 @@ fu_plugin_has_device_delay (FuPlugin *plugin)
  * Since: 0.8.0
  **/
 void
-fu_plugin_device_add_delay (FuPlugin *plugin, FuDevice *device)
+fu_plugin_device_add_delay (FuPlugin *self, FuDevice *device)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginHelper *helper;
 
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
 
 	/* already waiting for add */
@@ -470,7 +470,7 @@ fu_plugin_device_add_delay (FuPlugin *plugin, FuDevice *device)
 	/* add after a small delay */
 	g_debug ("waiting a small time for other plugins");
 	helper = g_new0 (FuPluginHelper, 1);
-	helper->plugin = g_object_ref (plugin);
+	helper->self = g_object_ref (self);
 	helper->device = g_object_ref (device);
 	helper->timeout_id = g_timeout_add (500, fu_plugin_device_add_delay_cb, helper);
 	helper->devices = g_hash_table_ref (priv->devices_delay);
@@ -487,12 +487,12 @@ fu_plugin_device_add_delay (FuPlugin *plugin, FuDevice *device)
  * Since: 0.8.0
  **/
 void
-fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
+fu_plugin_device_remove (FuPlugin *self, FuDevice *device)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginHelper *helper;
 
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
 
 	/* waiting for add */
@@ -506,9 +506,9 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
 	}
 
 	g_debug ("emit removed from %s: %s",
-		 fu_plugin_get_name (plugin),
+		 fu_plugin_get_name (self),
 		 fu_device_get_id (device));
-	g_signal_emit (plugin, signals[SIGNAL_DEVICE_REMOVED], 0, device);
+	g_signal_emit (self, signals[SIGNAL_DEVICE_REMOVED], 0, device);
 }
 
 /**
@@ -521,10 +521,10 @@ fu_plugin_device_remove (FuPlugin *plugin, FuDevice *device)
  * Since: 0.8.0
  **/
 void
-fu_plugin_request_recoldplug (FuPlugin *plugin)
+fu_plugin_request_recoldplug (FuPlugin *self)
 {
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
-	g_signal_emit (plugin, signals[SIGNAL_RECOLDPLUG], 0);
+	g_return_if_fail (FU_IS_PLUGIN (self));
+	g_signal_emit (self, signals[SIGNAL_RECOLDPLUG], 0);
 }
 
 /**
@@ -540,9 +540,9 @@ fu_plugin_request_recoldplug (FuPlugin *plugin)
  * Since: 0.9.1
  **/
 gboolean
-fu_plugin_check_hwid (FuPlugin *plugin, const gchar *hwid)
+fu_plugin_check_hwid (FuPlugin *self, const gchar *hwid)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	if (priv->hwids == NULL)
 		return FALSE;
 	return fu_hwids_has_guid (priv->hwids, hwid);
@@ -560,9 +560,9 @@ fu_plugin_check_hwid (FuPlugin *plugin, const gchar *hwid)
  * Since: 1.1.1
  **/
 GPtrArray *
-fu_plugin_get_hwids (FuPlugin *plugin)
+fu_plugin_get_hwids (FuPlugin *self)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	if (priv->hwids == NULL)
 		return NULL;
 	return fu_hwids_get_guids (priv->hwids);
@@ -581,9 +581,9 @@ fu_plugin_get_hwids (FuPlugin *plugin)
  * Since: 1.0.0
  **/
 gboolean
-fu_plugin_check_supported (FuPlugin *plugin, const gchar *guid)
+fu_plugin_check_supported (FuPlugin *self, const gchar *guid)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	if (priv->supported_guids == NULL)
 		return FALSE;
 	for (guint i = 0; i < priv->supported_guids->len; i++) {
@@ -606,9 +606,9 @@ fu_plugin_check_supported (FuPlugin *plugin, const gchar *guid)
  * Since: 0.9.7
  **/
 const gchar *
-fu_plugin_get_dmi_value (FuPlugin *plugin, const gchar *dmi_id)
+fu_plugin_get_dmi_value (FuPlugin *self, const gchar *dmi_id)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	if (priv->hwids == NULL)
 		return NULL;
 	return fu_hwids_get_value (priv->hwids, dmi_id);
@@ -630,9 +630,9 @@ fu_plugin_get_dmi_value (FuPlugin *plugin, const gchar *dmi_id)
  * Since: 0.9.8
  **/
 const gchar *
-fu_plugin_get_smbios_string (FuPlugin *plugin, guint8 structure_type, guint8 offset)
+fu_plugin_get_smbios_string (FuPlugin *self, guint8 structure_type, guint8 offset)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	if (priv->smbios == NULL)
 		return NULL;
 	return fu_smbios_get_string (priv->smbios, structure_type, offset, NULL);
@@ -650,43 +650,43 @@ fu_plugin_get_smbios_string (FuPlugin *plugin, guint8 structure_type, guint8 off
  * Since: 0.9.8
  **/
 GBytes *
-fu_plugin_get_smbios_data (FuPlugin *plugin, guint8 structure_type)
+fu_plugin_get_smbios_data (FuPlugin *self, guint8 structure_type)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	if (priv->smbios == NULL)
 		return NULL;
 	return fu_smbios_get_data (priv->smbios, structure_type, NULL);
 }
 
 void
-fu_plugin_set_hwids (FuPlugin *plugin, FuHwids *hwids)
+fu_plugin_set_hwids (FuPlugin *self, FuHwids *hwids)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	g_set_object (&priv->hwids, hwids);
 }
 
 void
-fu_plugin_set_supported (FuPlugin *plugin, GPtrArray *supported_guids)
+fu_plugin_set_supported (FuPlugin *self, GPtrArray *supported_guids)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	if (priv->supported_guids != NULL)
 		g_ptr_array_unref (priv->supported_guids);
 	priv->supported_guids = g_ptr_array_ref (supported_guids);
 }
 
 void
-fu_plugin_set_udev_subsystems (FuPlugin *plugin, GPtrArray *udev_subsystems)
+fu_plugin_set_udev_subsystems (FuPlugin *self, GPtrArray *udev_subsystems)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	if (priv->udev_subsystems != NULL)
 		g_ptr_array_unref (priv->udev_subsystems);
 	priv->udev_subsystems = g_ptr_array_ref (udev_subsystems);
 }
 
 void
-fu_plugin_set_quirks (FuPlugin *plugin, FuQuirks *quirks)
+fu_plugin_set_quirks (FuPlugin *self, FuQuirks *quirks)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	g_set_object (&priv->quirks, quirks);
 }
 
@@ -702,16 +702,16 @@ fu_plugin_set_quirks (FuPlugin *plugin, FuQuirks *quirks)
  * Since: 1.0.1
  **/
 FuQuirks *
-fu_plugin_get_quirks (FuPlugin *plugin)
+fu_plugin_get_quirks (FuPlugin *self)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	return priv->quirks;
 }
 
 void
-fu_plugin_set_runtime_versions (FuPlugin *plugin, GHashTable *runtime_versions)
+fu_plugin_set_runtime_versions (FuPlugin *self, GHashTable *runtime_versions)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	priv->runtime_versions = g_hash_table_ref (runtime_versions);
 }
 
@@ -726,11 +726,11 @@ fu_plugin_set_runtime_versions (FuPlugin *plugin, GHashTable *runtime_versions)
  * Since: 1.0.7
  **/
 void
-fu_plugin_add_runtime_version (FuPlugin *plugin,
+fu_plugin_add_runtime_version (FuPlugin *self,
 			       const gchar *component_id,
 			       const gchar *version)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	if (priv->runtime_versions == NULL)
 		return;
 	g_hash_table_insert (priv->runtime_versions,
@@ -739,9 +739,9 @@ fu_plugin_add_runtime_version (FuPlugin *plugin,
 }
 
 void
-fu_plugin_set_compile_versions (FuPlugin *plugin, GHashTable *compile_versions)
+fu_plugin_set_compile_versions (FuPlugin *self, GHashTable *compile_versions)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	priv->compile_versions = g_hash_table_ref (compile_versions);
 }
 
@@ -756,11 +756,11 @@ fu_plugin_set_compile_versions (FuPlugin *plugin, GHashTable *compile_versions)
  * Since: 1.0.7
  **/
 void
-fu_plugin_add_compile_version (FuPlugin *plugin,
+fu_plugin_add_compile_version (FuPlugin *self,
 			       const gchar *component_id,
 			       const gchar *version)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	if (priv->compile_versions == NULL)
 		return;
 	g_hash_table_insert (priv->compile_versions,
@@ -781,10 +781,10 @@ fu_plugin_add_compile_version (FuPlugin *plugin,
  * Since: 1.0.1
  **/
 const gchar *
-fu_plugin_lookup_quirk_by_id (FuPlugin *plugin, const gchar *group, const gchar *key)
+fu_plugin_lookup_quirk_by_id (FuPlugin *self, const gchar *group, const gchar *key)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_val_if_fail (FU_IS_PLUGIN (plugin), NULL);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
 
 	/* exact ID */
 	return fu_quirks_lookup_by_id (priv->quirks, group, key);
@@ -805,9 +805,9 @@ fu_plugin_lookup_quirk_by_id (FuPlugin *plugin, const gchar *group, const gchar 
  * Since: 1.1.2
  **/
 guint64
-fu_plugin_lookup_quirk_by_id_as_uint64 (FuPlugin *plugin, const gchar *group, const gchar *key)
+fu_plugin_lookup_quirk_by_id_as_uint64 (FuPlugin *self, const gchar *group, const gchar *key)
 {
-	return fu_common_strtoull (fu_plugin_lookup_quirk_by_id (plugin, group, key));
+	return fu_common_strtoull (fu_plugin_lookup_quirk_by_id (self, group, key));
 }
 
 /**
@@ -821,16 +821,16 @@ fu_plugin_lookup_quirk_by_id_as_uint64 (FuPlugin *plugin, const gchar *group, co
  * Since: 1.0.0
  **/
 GPtrArray *
-fu_plugin_get_supported (FuPlugin *plugin)
+fu_plugin_get_supported (FuPlugin *self)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	return priv->supported_guids;
 }
 
 void
-fu_plugin_set_smbios (FuPlugin *plugin, FuSmbios *smbios)
+fu_plugin_set_smbios (FuPlugin *self, FuSmbios *smbios)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	g_set_object (&priv->smbios, smbios);
 }
 
@@ -854,9 +854,9 @@ fu_plugin_set_smbios (FuPlugin *plugin, FuSmbios *smbios)
  * Since: 0.8.0
  **/
 void
-fu_plugin_set_coldplug_delay (FuPlugin *plugin, guint duration)
+fu_plugin_set_coldplug_delay (FuPlugin *self, guint duration)
 {
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
+	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (duration > 0);
 
 	/* check sanity */
@@ -868,13 +868,13 @@ fu_plugin_set_coldplug_delay (FuPlugin *plugin, guint duration)
 	}
 
 	/* emit */
-	g_signal_emit (plugin, signals[SIGNAL_SET_COLDPLUG_DELAY], 0, duration);
+	g_signal_emit (self, signals[SIGNAL_SET_COLDPLUG_DELAY], 0, duration);
 }
 
 gboolean
-fu_plugin_runner_startup (FuPlugin *plugin, GError **error)
+fu_plugin_runner_startup (FuPlugin *self, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginStartupFunc func = NULL;
 
 	/* not enabled */
@@ -890,7 +890,7 @@ fu_plugin_runner_startup (FuPlugin *plugin, GError **error)
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing startup() on %s", priv->name);
-	if (!func (plugin, error)) {
+	if (!func (self, error)) {
 		g_prefix_error (error, "failed to startup %s: ", priv->name);
 		return FALSE;
 	}
@@ -942,10 +942,10 @@ fu_plugin_runner_offline_setup (GError **error)
 }
 
 static gboolean
-fu_plugin_runner_device_generic (FuPlugin *plugin, FuDevice *device,
+fu_plugin_runner_device_generic (FuPlugin *self, FuDevice *device,
 				 const gchar *symbol_name, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceFunc func = NULL;
 
 	/* not enabled */
@@ -961,7 +961,7 @@ fu_plugin_runner_device_generic (FuPlugin *plugin, FuDevice *device,
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
-	if (!func (plugin, device, error)) {
+	if (!func (self, device, error)) {
 		g_prefix_error (error, "failed to run %s() on %s: ",
 				symbol_name + 10,
 				priv->name);
@@ -971,11 +971,11 @@ fu_plugin_runner_device_generic (FuPlugin *plugin, FuDevice *device,
 }
 
 static gboolean
-fu_plugin_runner_flagged_device_generic (FuPlugin *plugin, FwupdInstallFlags flags,
+fu_plugin_runner_flagged_device_generic (FuPlugin *self, FwupdInstallFlags flags,
 					 FuDevice *device,
 					 const gchar *symbol_name, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginFlaggedDeviceFunc func = NULL;
 
 	/* not enabled */
@@ -991,7 +991,7 @@ fu_plugin_runner_flagged_device_generic (FuPlugin *plugin, FwupdInstallFlags fla
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
-	if (!func (plugin, flags, device, error)) {
+	if (!func (self, flags, device, error)) {
 		g_prefix_error (error, "failed to run %s() on %s: ",
 				symbol_name + 10,
 				priv->name);
@@ -1002,10 +1002,10 @@ fu_plugin_runner_flagged_device_generic (FuPlugin *plugin, FwupdInstallFlags fla
 }
 
 static gboolean
-fu_plugin_runner_device_array_generic (FuPlugin *plugin, GPtrArray *devices,
+fu_plugin_runner_device_array_generic (FuPlugin *self, GPtrArray *devices,
 				       const gchar *symbol_name, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceArrayFunc func = NULL;
 
 	/* not enabled */
@@ -1021,7 +1021,7 @@ fu_plugin_runner_device_array_generic (FuPlugin *plugin, GPtrArray *devices,
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
-	if (!func (plugin, devices, error)) {
+	if (!func (self, devices, error)) {
 		g_prefix_error (error, "failed to run %s() on %s: ",
 				symbol_name + 10,
 				priv->name);
@@ -1031,9 +1031,9 @@ fu_plugin_runner_device_array_generic (FuPlugin *plugin, GPtrArray *devices,
 }
 
 gboolean
-fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
+fu_plugin_runner_coldplug (FuPlugin *self, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginStartupFunc func = NULL;
 
 	/* not enabled */
@@ -1049,7 +1049,7 @@ fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing coldplug() on %s", priv->name);
-	if (!func (plugin, error)) {
+	if (!func (self, error)) {
 		g_prefix_error (error, "failed to coldplug %s: ", priv->name);
 		return FALSE;
 	}
@@ -1057,9 +1057,9 @@ fu_plugin_runner_coldplug (FuPlugin *plugin, GError **error)
 }
 
 gboolean
-fu_plugin_runner_recoldplug (FuPlugin *plugin, GError **error)
+fu_plugin_runner_recoldplug (FuPlugin *self, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginStartupFunc func = NULL;
 
 	/* not enabled */
@@ -1075,7 +1075,7 @@ fu_plugin_runner_recoldplug (FuPlugin *plugin, GError **error)
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing recoldplug() on %s", priv->name);
-	if (!func (plugin, error)) {
+	if (!func (self, error)) {
 		g_prefix_error (error, "failed to recoldplug %s: ", priv->name);
 		return FALSE;
 	}
@@ -1083,9 +1083,9 @@ fu_plugin_runner_recoldplug (FuPlugin *plugin, GError **error)
 }
 
 gboolean
-fu_plugin_runner_coldplug_prepare (FuPlugin *plugin, GError **error)
+fu_plugin_runner_coldplug_prepare (FuPlugin *self, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginStartupFunc func = NULL;
 
 	/* not enabled */
@@ -1101,7 +1101,7 @@ fu_plugin_runner_coldplug_prepare (FuPlugin *plugin, GError **error)
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing coldplug_prepare() on %s", priv->name);
-	if (!func (plugin, error)) {
+	if (!func (self, error)) {
 		g_prefix_error (error, "failed to prepare for coldplug %s: ", priv->name);
 		return FALSE;
 	}
@@ -1109,9 +1109,9 @@ fu_plugin_runner_coldplug_prepare (FuPlugin *plugin, GError **error)
 }
 
 gboolean
-fu_plugin_runner_coldplug_cleanup (FuPlugin *plugin, GError **error)
+fu_plugin_runner_coldplug_cleanup (FuPlugin *self, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginStartupFunc func = NULL;
 
 	/* not enabled */
@@ -1127,7 +1127,7 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *plugin, GError **error)
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing coldplug_cleanup() on %s", priv->name);
-	if (!func (plugin, error)) {
+	if (!func (self, error)) {
 		g_prefix_error (error, "failed to cleanup coldplug %s: ", priv->name);
 		return FALSE;
 	}
@@ -1135,57 +1135,57 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *plugin, GError **error)
 }
 
 gboolean
-fu_plugin_runner_composite_prepare (FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_plugin_runner_composite_prepare (FuPlugin *self, GPtrArray *devices, GError **error)
 {
-	return fu_plugin_runner_device_array_generic (plugin, devices,
+	return fu_plugin_runner_device_array_generic (self, devices,
 						      "fu_plugin_composite_prepare",
 						      error);
 }
 
 gboolean
-fu_plugin_runner_composite_cleanup (FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_plugin_runner_composite_cleanup (FuPlugin *self, GPtrArray *devices, GError **error)
 {
-	return fu_plugin_runner_device_array_generic (plugin, devices,
+	return fu_plugin_runner_device_array_generic (self, devices,
 						      "fu_plugin_composite_cleanup",
 						      error);
 }
 
 gboolean
-fu_plugin_runner_update_prepare (FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *device,
+fu_plugin_runner_update_prepare (FuPlugin *self, FwupdInstallFlags flags, FuDevice *device,
 				 GError **error)
 {
-	return fu_plugin_runner_flagged_device_generic (plugin, flags, device,
+	return fu_plugin_runner_flagged_device_generic (self, flags, device,
 							"fu_plugin_update_prepare",
 							error);
 }
 
 gboolean
-fu_plugin_runner_update_cleanup (FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *device,
+fu_plugin_runner_update_cleanup (FuPlugin *self, FwupdInstallFlags flags, FuDevice *device,
 				 GError **error)
 {
-	return fu_plugin_runner_flagged_device_generic (plugin, flags, device,
+	return fu_plugin_runner_flagged_device_generic (self, flags, device,
 							"fu_plugin_update_cleanup",
 							error);
 }
 
 gboolean
-fu_plugin_runner_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_runner_update_attach (FuPlugin *self, FuDevice *device, GError **error)
 {
-	return fu_plugin_runner_device_generic (plugin, device,
+	return fu_plugin_runner_device_generic (self, device,
 						"fu_plugin_update_attach", error);
 }
 
 gboolean
-fu_plugin_runner_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error)
 {
-	return fu_plugin_runner_device_generic (plugin, device,
+	return fu_plugin_runner_device_generic (self, device,
 						"fu_plugin_update_detach", error);
 }
 
 gboolean
-fu_plugin_runner_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error)
 {
-	return fu_plugin_runner_device_generic (plugin, device,
+	return fu_plugin_runner_device_generic (self, device,
 						"fu_plugin_update_reload", error);
 }
 
@@ -1199,9 +1199,9 @@ fu_plugin_runner_update_reload (FuPlugin *plugin, FuDevice *device, GError **err
  * Plugins can use this method only in fu_plugin_init()
  **/
 void
-fu_plugin_add_udev_subsystem (FuPlugin *plugin, const gchar *subsystem)
+fu_plugin_add_udev_subsystem (FuPlugin *self, const gchar *subsystem)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	for (guint i = 0; i < priv->udev_subsystems->len; i++) {
 		const gchar *subsystem_tmp = g_ptr_array_index (priv->udev_subsystems, i);
 		if (g_strcmp0 (subsystem_tmp, subsystem) == 0)
@@ -1212,9 +1212,9 @@ fu_plugin_add_udev_subsystem (FuPlugin *plugin, const gchar *subsystem)
 }
 
 gboolean
-fu_plugin_runner_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
+fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginUsbDeviceAddedFunc func = NULL;
 
 	/* not enabled */
@@ -1229,15 +1229,15 @@ fu_plugin_runner_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError
 	g_module_symbol (priv->module, "fu_plugin_usb_device_added", (gpointer *) &func);
 	if (func != NULL) {
 		g_debug ("performing usb_device_added() on %s", priv->name);
-		return func (plugin, device, error);
+		return func (self, device, error);
 	}
 	return TRUE;
 }
 
 gboolean
-fu_plugin_runner_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
+fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginUdevDeviceAddedFunc func = NULL;
 
 	/* not enabled */
@@ -1252,26 +1252,26 @@ fu_plugin_runner_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GErr
 	g_module_symbol (priv->module, "fu_plugin_udev_device_added", (gpointer *) &func);
 	if (func != NULL) {
 		g_debug ("performing udev_device_added() on %s", priv->name);
-		return func (plugin, device, error);
+		return func (self, device, error);
 	}
 	return TRUE;
 }
 
 void
-fu_plugin_runner_device_removed (FuPlugin *plugin, FuDevice *device)
+fu_plugin_runner_device_removed (FuPlugin *self, FuDevice *device)
 {
 	g_autoptr(GError) error_local= NULL;
 
-	if (!fu_plugin_runner_device_generic (plugin, device,
+	if (!fu_plugin_runner_device_generic (self, device,
 					      "fu_plugin_device_removed",
 					      &error_local))
 		g_warning ("%s", error_local->message);
 }
 
 void
-fu_plugin_runner_device_register (FuPlugin *plugin, FuDevice *device)
+fu_plugin_runner_device_register (FuPlugin *self, FuDevice *device)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceRegisterFunc func = NULL;
 
 	/* not enabled */
@@ -1281,19 +1281,19 @@ fu_plugin_runner_device_register (FuPlugin *plugin, FuDevice *device)
 		return;
 
 	/* don't notify plugins on their own devices */
-	if (g_strcmp0 (fu_device_get_plugin (device), fu_plugin_get_name (plugin)) == 0)
+	if (g_strcmp0 (fu_device_get_plugin (device), fu_plugin_get_name (self)) == 0)
 		return;
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_device_registered", (gpointer *) &func);
 	if (func != NULL) {
 		g_debug ("performing fu_plugin_device_registered() on %s", priv->name);
-		func (plugin, device);
+		func (self, device);
 	}
 }
 
 static gboolean
-fu_plugin_runner_schedule_update (FuPlugin *plugin,
+fu_plugin_runner_schedule_update (FuPlugin *self,
 			     FuDevice *device,
 			     GBytes *blob_cab,
 			     GError **error)
@@ -1357,12 +1357,12 @@ fu_plugin_runner_schedule_update (FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_runner_verify (FuPlugin *plugin,
+fu_plugin_runner_verify (FuPlugin *self,
 			 FuDevice *device,
 			 FuPluginVerifyFlags flags,
 			 GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginVerifyFunc func = NULL;
 	GPtrArray *checksums;
 
@@ -1383,7 +1383,7 @@ fu_plugin_runner_verify (FuPlugin *plugin,
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing verify() on %s", priv->name);
-	if (!func (plugin, device, flags, error)) {
+	if (!func (self, device, flags, error)) {
 		g_prefix_error (error, "failed to verify %s: ", priv->name);
 		return FALSE;
 	}
@@ -1391,7 +1391,7 @@ fu_plugin_runner_verify (FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_runner_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
 {
 	guint64 flags;
 
@@ -1407,7 +1407,7 @@ fu_plugin_runner_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	}
 
 	/* run vfunc */
-	if (!fu_plugin_runner_device_generic (plugin, device,
+	if (!fu_plugin_runner_device_generic (self, device,
 					      "fu_plugin_unlock", error))
 		return FALSE;
 
@@ -1419,14 +1419,14 @@ fu_plugin_runner_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 }
 
 gboolean
-fu_plugin_runner_update (FuPlugin *plugin,
+fu_plugin_runner_update (FuPlugin *self,
 			 FuDevice *device,
 			 GBytes *blob_cab,
 			 GBytes *blob_fw,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginUpdateFunc update_func;
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuDevice) device_pending = NULL;
@@ -1464,7 +1464,7 @@ fu_plugin_runner_update (FuPlugin *plugin,
 					     "No cabinet archive to schedule");
 			return FALSE;
 		}
-		return fu_plugin_runner_schedule_update (plugin,
+		return fu_plugin_runner_schedule_update (self,
 							 device,
 							 blob_cab,
 							 error);
@@ -1477,7 +1477,7 @@ fu_plugin_runner_update (FuPlugin *plugin,
 	/* online */
 	history = fu_history_new ();
 	device_pending = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
-	if (!update_func (plugin, device, blob_fw, flags, &error_update)) {
+	if (!update_func (self, device, blob_fw, flags, &error_update)) {
 		fu_device_set_update_error (device, error_update->message);
 		g_propagate_error (error, error_update);
 		return FALSE;
@@ -1520,9 +1520,9 @@ fu_plugin_runner_update (FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_runner_clear_results (FuPlugin *self, FuDevice *device, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceFunc func = NULL;
 
 	/* not enabled */
@@ -1538,7 +1538,7 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing clear_result() on %s", priv->name);
-	if (!func (plugin, device, error)) {
+	if (!func (self, device, error)) {
 		g_prefix_error (error, "failed to clear_result %s: ", priv->name);
 		return FALSE;
 	}
@@ -1546,9 +1546,9 @@ fu_plugin_runner_clear_results (FuPlugin *plugin, FuDevice *device, GError **err
 }
 
 gboolean
-fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_runner_get_results (FuPlugin *self, FuDevice *device, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceFunc func = NULL;
 
 	/* not enabled */
@@ -1564,7 +1564,7 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing get_results() on %s", priv->name);
-	if (!func (plugin, device, error)) {
+	if (!func (self, device, error)) {
 		g_prefix_error (error, "failed to get_results %s: ", priv->name);
 		return FALSE;
 	}
@@ -1581,9 +1581,9 @@ fu_plugin_runner_get_results (FuPlugin *plugin, FuDevice *device, GError **error
  * Returns: the integer value
  **/
 guint
-fu_plugin_get_order (FuPlugin *plugin)
+fu_plugin_get_order (FuPlugin *self)
 {
-	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
 	return priv->order;
 }
 
@@ -1596,9 +1596,9 @@ fu_plugin_get_order (FuPlugin *plugin)
  * numbers.
  **/
 void
-fu_plugin_set_order (FuPlugin *plugin, guint order)
+fu_plugin_set_order (FuPlugin *self, guint order)
 {
-	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
 	priv->order = order;
 }
 
@@ -1611,9 +1611,9 @@ fu_plugin_set_order (FuPlugin *plugin, guint order)
  * Returns: the integer value
  **/
 guint
-fu_plugin_get_priority (FuPlugin *plugin)
+fu_plugin_get_priority (FuPlugin *self)
 {
-	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
 	return priv->priority;
 }
 
@@ -1625,9 +1625,9 @@ fu_plugin_get_priority (FuPlugin *plugin)
  * Sets the plugin priority, where higher numbers are better.
  **/
 void
-fu_plugin_set_priority (FuPlugin *plugin, guint priority)
+fu_plugin_set_priority (FuPlugin *self, guint priority)
 {
-	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
 	priv->priority = priority;
 }
 
@@ -1645,9 +1645,9 @@ fu_plugin_set_priority (FuPlugin *plugin, guint priority)
  * If depsolving fails then fwupd will not start.
  **/
 void
-fu_plugin_add_rule (FuPlugin *plugin, FuPluginRule rule, const gchar *name)
+fu_plugin_add_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
 {
-	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
 	g_ptr_array_add (priv->rules[rule], g_strdup (name));
 }
 
@@ -1661,9 +1661,9 @@ fu_plugin_add_rule (FuPlugin *plugin, FuPluginRule rule, const gchar *name)
  * Returns: (element-type utf8) (transfer none): the list of plugin names, e.g. ['appstream']
  **/
 GPtrArray *
-fu_plugin_get_rules (FuPlugin *plugin, FuPluginRule rule)
+fu_plugin_get_rules (FuPlugin *self, FuPluginRule rule)
 {
-	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
 	return priv->rules[rule];
 }
 
@@ -1678,9 +1678,9 @@ fu_plugin_get_rules (FuPlugin *plugin, FuPluginRule rule)
  * Returns: %TRUE if the name exists for the specific rule
  **/
 gboolean
-fu_plugin_has_rule (FuPlugin *plugin, FuPluginRule rule, const gchar *name)
+fu_plugin_has_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
 {
-	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
 	for (guint i = 0; i < priv->rules[rule]->len; i++) {
 		const gchar *tmp = g_ptr_array_index (priv->rules[rule], i);
 		if (g_strcmp0 (tmp, name) == 0)
@@ -1702,9 +1702,9 @@ fu_plugin_has_rule (FuPlugin *plugin, FuPluginRule rule, const gchar *name)
  * confirmation.
  **/
 void
-fu_plugin_add_report_metadata (FuPlugin *plugin, const gchar *key, const gchar *value)
+fu_plugin_add_report_metadata (FuPlugin *self, const gchar *key, const gchar *value)
 {
-	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
 	g_hash_table_insert (priv->report_metadata, g_strdup (key), g_strdup (value));
 }
 
@@ -1717,9 +1717,9 @@ fu_plugin_add_report_metadata (FuPlugin *plugin, const gchar *key, const gchar *
  * Returns: (transfer none): the map of report metadata
  **/
 GHashTable *
-fu_plugin_get_report_metadata (FuPlugin *plugin)
+fu_plugin_get_report_metadata (FuPlugin *self)
 {
-	FuPluginPrivate *priv = fu_plugin_get_instance_private (plugin);
+	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
 	return priv->report_metadata;
 }
 
@@ -1733,7 +1733,7 @@ fu_plugin_get_report_metadata (FuPlugin *plugin)
  * Since: 1.0.6
  **/
 gchar *
-fu_plugin_get_config_value (FuPlugin *plugin, const gchar *key)
+fu_plugin_get_config_value (FuPlugin *self, const gchar *key)
 {
 	g_autofree gchar *conf_dir = NULL;
 	g_autofree gchar *conf_file = NULL;
@@ -1742,7 +1742,7 @@ fu_plugin_get_config_value (FuPlugin *plugin, const gchar *key)
 	const gchar *plugin_name;
 
 	conf_dir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR_PKG);
-	plugin_name = fu_plugin_get_name (plugin);
+	plugin_name = fu_plugin_get_name (self);
 	conf_file = g_strdup_printf ("%s.conf", plugin_name);
 	conf_path = g_build_filename (conf_dir, conf_file,  NULL);
 	if (!g_file_test (conf_path, G_FILE_TEST_IS_REGULAR))
@@ -1830,9 +1830,9 @@ fu_plugin_class_init (FuPluginClass *klass)
 }
 
 static void
-fu_plugin_init (FuPlugin *plugin)
+fu_plugin_init (FuPlugin *self)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	priv->enabled = TRUE;
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
@@ -1845,8 +1845,8 @@ fu_plugin_init (FuPlugin *plugin)
 static void
 fu_plugin_finalize (GObject *object)
 {
-	FuPlugin *plugin = FU_PLUGIN (object);
-	FuPluginPrivate *priv = GET_PRIVATE (plugin);
+	FuPlugin *self = FU_PLUGIN (object);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginInitFunc func = NULL;
 
 	/* optional */
@@ -1854,7 +1854,7 @@ fu_plugin_finalize (GObject *object)
 		g_module_symbol (priv->module, "fu_plugin_destroy", (gpointer *) &func);
 		if (func != NULL) {
 			g_debug ("performing destroy() on %s", priv->name);
-			func (plugin);
+			func (self);
 		}
 	}
 
@@ -1895,7 +1895,5 @@ fu_plugin_finalize (GObject *object)
 FuPlugin *
 fu_plugin_new (void)
 {
-	FuPlugin *plugin;
-	plugin = g_object_new (FU_TYPE_PLUGIN, NULL);
-	return plugin;
+	return FU_PLUGIN (g_object_new (FU_TYPE_PLUGIN, NULL));
 }
