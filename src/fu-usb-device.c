@@ -322,6 +322,15 @@ fu_usb_device_get_dev (FuUsbDevice *device)
 	return priv->usb_device;
 }
 
+static void
+fu_usb_device_incorporate (FuDevice *self, FuDevice *donor)
+{
+	g_return_if_fail (FU_IS_USB_DEVICE (self));
+	g_return_if_fail (FU_IS_USB_DEVICE (donor));
+	fu_usb_device_set_dev (FU_USB_DEVICE (self),
+			       fu_usb_device_get_dev (FU_USB_DEVICE (donor)));
+}
+
 /**
  * fu_usb_device_new:
  * @usb_device: A #GUsbDevice
@@ -353,6 +362,7 @@ fu_usb_device_class_init (FuUsbDeviceClass *klass)
 	device_class->open = fu_usb_device_open;
 	device_class->close = fu_usb_device_close;
 	device_class->probe = fu_usb_device_probe;
+	device_class->incorporate = fu_usb_device_incorporate;
 
 	pspec = g_param_spec_object ("usb-device", NULL, NULL,
 				     G_USB_TYPE_DEVICE,

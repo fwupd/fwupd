@@ -192,6 +192,15 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 
 }
 
+static void
+fu_udev_device_incorporate (FuDevice *self, FuDevice *donor)
+{
+	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
+	g_return_if_fail (FU_IS_UDEV_DEVICE (donor));
+	fu_udev_device_set_dev (FU_UDEV_DEVICE (self),
+				fu_udev_device_get_dev (FU_UDEV_DEVICE (donor)));
+}
+
 /**
  * fu_udev_device_get_dev:
  * @self: A #FuUdevDevice
@@ -341,6 +350,7 @@ fu_udev_device_class_init (FuUdevDeviceClass *klass)
 	object_class->get_property = fu_udev_device_get_property;
 	object_class->set_property = fu_udev_device_set_property;
 	device_class->probe = fu_udev_device_probe;
+	device_class->incorporate = fu_udev_device_incorporate;
 
 	signals[SIGNAL_CHANGED] =
 		g_signal_new ("changed",

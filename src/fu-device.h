@@ -46,8 +46,10 @@ struct _FuDeviceClass
 							 GError		**error);
 	gboolean		 (*setup)		(FuDevice	*device,
 							 GError		**error);
+	void			 (*incorporate)		(FuDevice	*device,
+							 FuDevice	*donor);
 	/*< private >*/
-	gpointer	padding[22];
+	gpointer	padding[21];
 };
 
 /**
