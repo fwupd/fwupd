@@ -25,6 +25,7 @@
 
 struct _FuNvmeDevice {
 	FuUdevDevice		 parent_instance;
+	gchar			*version_format;
 	guint			 pci_depth;
 	gint			 fd;
 };
@@ -181,6 +182,41 @@ fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 }
 
 static gboolean
+fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **error)
+{
+	/* unset */
+	if (self->version_format == NULL) {
+		fu_device_set_version (FU_DEVICE (self), version);
+		return TRUE;
+	}
+
+	/* AA.BB.CC.DD */
+	if (g_strcmp0 (self->version_format, "quad") == 0) {
+		guint64 tmp = g_ascii_strtoull (version, NULL, 16);
+		g_autofree gchar *version_new = NULL;
+		if (tmp == 0 || tmp > G_MAXUINT32) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "%s is not valid 32 bit number",
+				     version);
+			return FALSE;
+		}
+		version_new = as_utils_version_from_uint32 (tmp, AS_VERSION_PARSE_FLAG_NONE);
+		fu_device_set_version (FU_DEVICE (self), version_new);
+		return TRUE;
+	}
+
+	/* invalid, or not supported */
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_INVALID_DATA,
+		     "version format %s not recognised",
+		     self->version_format);
+	return FALSE;
+}
+
+static gboolean
 fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GError **error)
 {
 	guint8 fawr;
@@ -209,8 +245,10 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 	if (mn != NULL)
 		fu_device_set_name (FU_DEVICE (self), mn);
 	sr = fu_nvme_device_get_string_safe (buf, 64, 71);
-	if (sr != NULL)
-		fu_device_set_version (FU_DEVICE (self), sr);
+	if (sr != NULL) {
+		if (!fu_nvme_device_set_version (self, sr, error))
+			return FALSE;
+	}
 
 	/* firmware slot information */
 	fawr = (buf[260] & 0x10) >> 4;
@@ -362,6 +400,24 @@ fu_nvme_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_nvme_device_set_quirk_kv (FuDevice *device,
+			     const gchar *key,
+			     const gchar *value,
+			     GError **error)
+{
+	FuNvmeDevice *self = FU_NVME_DEVICE (device);
+	if (g_strcmp0 (key, "NvmeVersionFormat") == 0) {
+		self->version_format = g_strdup (value);
+		return TRUE;
+	}
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_nvme_device_init (FuNvmeDevice *self)
 {
@@ -375,6 +431,8 @@ fu_nvme_device_init (FuNvmeDevice *self)
 static void
 fu_nvme_device_finalize (GObject *object)
 {
+	FuNvmeDevice *self = FU_NVME_DEVICE (object);
+	g_free (self->version_format);
 	G_OBJECT_CLASS (fu_nvme_device_parent_class)->finalize (object);
 }
 
@@ -385,6 +443,7 @@ fu_nvme_device_class_init (FuNvmeDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	object_class->finalize = fu_nvme_device_finalize;
 	klass_device->to_string = fu_nvme_device_to_string;
+	klass_device->set_quirk_kv = fu_nvme_device_set_quirk_kv;
 	klass_device->open = fu_nvme_device_open;
 	klass_device->setup = fu_nvme_device_setup;
 	klass_device->close = fu_nvme_device_close;
