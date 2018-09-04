@@ -136,6 +136,7 @@ fu_device_list_get_active (FuDeviceList *self)
 /**
  * fu_device_list_get_by_platform_id:
  * @self: A #FuDeviceList
+ * @platform_id: A platform ID, e.g. `/sys/devices/usb1/1-1/1-1.2`
  *
  * Returns all the active devices that have been added to the device list
  * that match a specific platform ID.
@@ -605,7 +606,7 @@ fu_device_list_replug_cb (gpointer user_data)
 /**
  * fu_device_list_wait_for_replug:
  * @self: A #FuDeviceList
- * @guid: A device GUID
+ * @device: A #FuDevice
  * @error: A #GError, or %NULL
  *
  * Waits for a specific devic to replug if %FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG

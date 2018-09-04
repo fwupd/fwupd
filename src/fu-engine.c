@@ -1230,8 +1230,7 @@ fu_engine_install_tasks (FuEngine *self,
 /**
  * fu_engine_install:
  * @self: A #FuEngine
- * @device: A #FuDevice
- * @app: The #AsApp with the firmware metadata
+ * @task: A #FuInstallTask
  * @blob_cab: The #GBytes of the .cab file
  * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
  * @error: A #GError, or %NULL

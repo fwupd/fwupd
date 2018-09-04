@@ -69,18 +69,18 @@ fu_chunk_to_string (FuChunk *item)
 
 /**
  * fu_chunk_array_to_string:
- * @segments: (element-type FuChunk): array of packets
+ * @chunks: (element-type FuChunk): array of packets
  *
  * Converts all the chunked packets in an array to a string representation.
  *
  * Return value: (transfer full): A string
  **/
 gchar *
-fu_chunk_array_to_string (GPtrArray *segments)
+fu_chunk_array_to_string (GPtrArray *chunks)
 {
 	GString *str = g_string_new (NULL);
-	for (guint i = 0; i < segments->len; i++) {
-		FuChunk *item = g_ptr_array_index (segments, i);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *item = g_ptr_array_index (chunks, i);
 		g_autofree gchar *tmp = fu_chunk_to_string (item);
 		g_string_append_printf (str, "%s\n", tmp);
 	}
