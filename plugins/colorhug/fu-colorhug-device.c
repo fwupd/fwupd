@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <string.h>
-#include <appstream-glib.h>
 
 #include "fu-chunk.h"
 #include "fu-colorhug-common.h"

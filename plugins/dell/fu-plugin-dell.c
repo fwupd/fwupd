@@ -7,7 +7,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <glib/gstdio.h>
 #include <smbios_c/system_info.h>
 #include <string.h>

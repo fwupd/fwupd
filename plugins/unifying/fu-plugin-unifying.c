@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <fwupd.h>
 
 #include "fu-plugin-vfuncs.h"
