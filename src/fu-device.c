@@ -465,9 +465,9 @@ fu_device_add_child_by_type_guid (FuDevice *self, GType type, const gchar *guid)
 	child = g_object_new (type,
 			      "quirks", priv->quirks,
 			      NULL);
+	fu_device_add_guid (child, guid);
 	if (fu_device_get_platform_id (self) != NULL)
 		fu_device_set_platform_id (child, fu_device_get_platform_id (self));
-	fu_device_add_guid (child, guid);
 	fu_device_add_child (self, child);
 }
 
