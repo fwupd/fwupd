@@ -287,7 +287,7 @@ guint16
 fu_usb_device_get_vid (FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), 0x0000);
+	g_return_val_if_fail (FU_IS_USB_DEVICE (self), 0x0000);
 	return g_usb_device_get_vid (priv->usb_device);
 }
 
@@ -305,7 +305,7 @@ guint16
 fu_usb_device_get_pid (FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), 0x0000);
+	g_return_val_if_fail (FU_IS_USB_DEVICE (self), 0x0000);
 	return g_usb_device_get_pid (priv->usb_device);
 }
 
