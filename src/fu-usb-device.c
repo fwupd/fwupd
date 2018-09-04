@@ -274,6 +274,42 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 }
 
 /**
+ * fu_usb_device_get_vid:
+ * @self: A #FuUsbDevice
+ *
+ * Gets the device vendor code.
+ *
+ * Returns: integer, or 0x0 if unset or invalid
+ *
+ * Since: 1.1.2
+ **/
+guint16
+fu_usb_device_get_vid (FuUsbDevice *self)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), 0x0000);
+	return g_usb_device_get_vid (priv->usb_device);
+}
+
+/**
+ * fu_usb_device_get_pid:
+ * @self: A #FuUsbDevice
+ *
+ * Gets the device product code.
+ *
+ * Returns: integer, or 0x0 if unset or invalid
+ *
+ * Since: 1.1.2
+ **/
+guint16
+fu_usb_device_get_pid (FuUsbDevice *self)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), 0x0000);
+	return g_usb_device_get_pid (priv->usb_device);
+}
+
+/**
  * fu_usb_device_set_dev:
  * @device: A #FuUsbDevice
  * @usb_device: A #GUsbDevice, or %NULL
