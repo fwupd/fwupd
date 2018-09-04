@@ -203,11 +203,11 @@ fu_superio_device_ec_get_str (FuSuperioDevice *self, guint8 idx, GError **error)
 {
 	GString *str = g_string_new (NULL);
 	if (!fu_superio_device_ec_cmd (self, idx, error))
-		return FALSE;
+		return NULL;
 	for (guint i = 0; i < 0xff; i++) {
 		guint8 c = 0;
 		if (!fu_superio_device_ec_read (self, &c, error))
-			return FALSE;
+			return NULL;
 		if (c == '$')
 			break;
 		g_string_append_c (str, c);

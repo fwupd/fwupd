@@ -1426,15 +1426,15 @@ fu_device_prepare_firmware (FuDevice *self, GBytes *fw, GError **error)
 	guint64 fw_sz;
 	g_autoptr(GBytes) fw_new = NULL;
 
-	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
-	g_return_val_if_fail (fw != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	g_return_val_if_fail (fw != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* optionally subclassed */
 	if (klass->prepare_firmware != NULL) {
 		fw_new = klass->prepare_firmware (self, fw, error);
 		if (fw_new == NULL)
-			return FALSE;
+			return NULL;
 	} else {
 		fw_new = g_bytes_ref (fw);
 	}
@@ -1449,7 +1449,7 @@ fu_device_prepare_firmware (FuDevice *self, GBytes *fw, GError **error)
 			     "maximum size of %04x bytes",
 			     (guint) (fw_sz - priv->size_max),
 			     (guint) priv->size_max);
-		return FALSE;
+		return NULL;
 	}
 	if (priv->size_min > 0 && fw_sz < priv->size_min) {
 		g_set_error (error,
@@ -1459,7 +1459,7 @@ fu_device_prepare_firmware (FuDevice *self, GBytes *fw, GError **error)
 			     "minimum size of %04x bytes",
 			     (guint) (priv->size_min - fw_sz),
 			     (guint) priv->size_max);
-		return FALSE;
+		return NULL;
 	}
 
 	return g_steal_pointer (&fw_new);
