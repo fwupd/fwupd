@@ -1766,10 +1766,14 @@ fu_device_probe_invalidate (FuDevice *device)
 void
 fu_device_incorporate (FuDevice *self, FuDevice *donor)
 {
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	FuDevicePrivate *priv_donor = GET_PRIVATE (donor);
 	GPtrArray *parent_guids = fu_device_get_parent_guids (donor);
 	g_autoptr(GList) metadata_keys = NULL;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (FU_IS_DEVICE (donor));
 
 	/* copy from donor FuDevice if has not already been set */
 	if (priv->alternate_id == NULL)
@@ -1791,6 +1795,10 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 
 	/* now the base class, where all the interesting bits are */
 	fwupd_device_incorporate (FWUPD_DEVICE (self), FWUPD_DEVICE (donor));
+
+	/* optional subclass */
+	if (klass->incorporate != NULL)
+		klass->incorporate (self, donor);
 }
 
 static void
