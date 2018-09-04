@@ -42,14 +42,6 @@ fu_plugin_update (FuPlugin *plugin,
 		  GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED,
-				     "writing NVMe firmware is untested, "
-				     "use --force to override");
-		return FALSE;
-	}
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
