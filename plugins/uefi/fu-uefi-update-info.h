@@ -7,8 +7,6 @@
 #ifndef __FU_UEFI_UPDATE_INFO_H
 #define __FU_UEFI_UPDATE_INFO_H
 
-#include <glib-object.h>
-
 G_BEGIN_DECLS
 
 #define FU_TYPE_UEFI_UPDATE_INFO (fu_uefi_update_info_get_type ())

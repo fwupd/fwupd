@@ -7,8 +7,6 @@
 #ifndef __FU_UEFI_BGRT_H
 #define __FU_UEFI_BGRT_H
 
-#include <glib-object.h>
-
 G_BEGIN_DECLS
 
 #define FU_TYPE_UEFI_BGRT (fu_uefi_bgrt_get_type ())

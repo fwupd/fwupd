@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 struct FuPluginData {

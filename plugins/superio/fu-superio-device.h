@@ -7,8 +7,6 @@
 #ifndef __FU_SUPERIO_DEVICE_H
 #define __FU_SUPERIO_DEVICE_H
 
-#include <glib-object.h>
-
 #include "fu-plugin.h"
 
 G_BEGIN_DECLS

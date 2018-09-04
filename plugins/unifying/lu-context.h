@@ -8,7 +8,6 @@
 #define __LU_CONTEXT_H
 
 #include <glib-object.h>
-#include <gusb.h>
 
 #include "lu-device.h"
 

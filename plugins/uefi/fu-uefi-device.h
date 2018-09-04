@@ -8,8 +8,6 @@
 #ifndef __FU_UEFI_DEVICE_H
 #define __FU_UEFI_DEVICE_H
 
-#include <glib-object.h>
-
 #include "fu-plugin.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-update-info.h"

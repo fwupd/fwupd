@@ -10,11 +10,9 @@
 #include <appstream-glib.h>
 #include <fcntl.h>
 #include <fnmatch.h>
-#include <gio/gio.h>
 #include <gio/gunixmounts.h>
 #include <glib/gi18n.h>
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-uefi-bgrt.h"

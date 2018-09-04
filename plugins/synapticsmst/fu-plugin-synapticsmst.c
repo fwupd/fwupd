@@ -9,7 +9,6 @@
 #include "config.h"
 #include "synapticsmst-device.h"
 #include "synapticsmst-common.h"
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
 

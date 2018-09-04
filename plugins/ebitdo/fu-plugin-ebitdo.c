@@ -8,7 +8,6 @@
 
 #include "fu-ebitdo-device.h"
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 void

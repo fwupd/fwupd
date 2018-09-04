@@ -7,8 +7,6 @@
 #ifndef __FU_WAC_MODULE_H
 #define __FU_WAC_MODULE_H
 
-#include <glib-object.h>
-
 #include "fu-plugin.h"
 
 G_BEGIN_DECLS

@@ -13,7 +13,6 @@
 #include <linux/fs.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <gio/gio.h>
 #include <gio/gunixinputstream.h>
 #include <gio/gunixoutputstream.h>
 
