@@ -7,8 +7,6 @@
 #ifndef __FU_ALTOS_FIRMWARE_H
 #define __FU_ALTOS_FIRMWARE_H
 
-#include <glib-object.h>
-
 G_BEGIN_DECLS
 
 #define FU_TYPE_ALTOS_FIRMWARE (fu_altos_firmware_get_type ())

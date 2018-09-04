@@ -7,7 +7,6 @@
 #ifndef __FU_PLUGIN_DELL_H
 #define __FU_PLUGIN_DELL_H
 
-#include <gusb.h>
 #include "fu-plugin.h"
 #include "fu-dell-smi.h"
 

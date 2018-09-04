@@ -7,9 +7,7 @@
 #ifndef __FU_PLUGIN_H
 #define __FU_PLUGIN_H
 
-#include <glib-object.h>
 #include <gio/gio.h>
-#include <glib-object.h>
 #include <gusb.h>
 #include <gudev/gudev.h>
 

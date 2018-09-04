@@ -15,7 +15,6 @@
 #include <sys/ioctl.h>
 #include <uuid.h>
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 typedef struct {

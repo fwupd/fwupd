@@ -8,7 +8,6 @@
 #define __FU_COLORHUG_COMMON_H
 
 #include <glib-object.h>
-#include <gusb.h>
 
 G_BEGIN_DECLS
 

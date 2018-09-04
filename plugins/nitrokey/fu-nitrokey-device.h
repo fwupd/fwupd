@@ -7,9 +7,6 @@
 #ifndef __FU_NITROKEY_DEVICE_H
 #define __FU_NITROKEY_DEVICE_H
 
-#include <glib-object.h>
-#include <gusb.h>
-
 #include "fu-plugin.h"
 
 G_BEGIN_DECLS

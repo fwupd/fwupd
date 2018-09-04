@@ -8,7 +8,6 @@
 #include "config.h"
 
 #include <efivar.h>
-#include <gio/gio.h>
 #include <gio/gunixmounts.h>
 
 #include "fu-common.h"

@@ -8,9 +8,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <gio/gio.h>
 #include <gio/gunixfdlist.h>
-#include <glib.h>
 #include <glib/gstdio.h>
 
 #include "fu-plugin-vfuncs.h"

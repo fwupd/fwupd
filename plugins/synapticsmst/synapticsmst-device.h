@@ -9,7 +9,6 @@
 #ifndef __SYNAPTICSMST_DEVICE_H
 #define __SYNAPTICSMST_DEVICE_H
 
-#include <glib-object.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS

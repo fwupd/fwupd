@@ -8,9 +8,7 @@
 
 #include <appstream-glib.h>
 #include <fwupd.h>
-#include <gusb.h>
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "lu-context.h"

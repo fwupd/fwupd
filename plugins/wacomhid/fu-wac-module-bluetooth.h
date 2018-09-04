@@ -7,9 +7,6 @@
 #ifndef __FU_WAC_MODULE_BLUETOOTH_H
 #define __FU_WAC_MODULE_BLUETOOTH_H
 
-#include <glib-object.h>
-#include <gusb.h>
-
 #include "fu-wac-module.h"
 
 G_BEGIN_DECLS

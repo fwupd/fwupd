@@ -7,9 +7,6 @@
 #ifndef __FU_WAC_MODULE_TOUCH_H
 #define __FU_WAC_MODULE_TOUCH_H
 
-#include <glib-object.h>
-#include <gusb.h>
-
 #include "fu-wac-module.h"
 
 G_BEGIN_DECLS

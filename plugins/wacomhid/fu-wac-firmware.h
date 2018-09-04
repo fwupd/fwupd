@@ -7,7 +7,6 @@
 #ifndef __FU_WAC_FIRMWARE_H
 #define __FU_WAC_FIRMWARE_H
 
-#include <glib-object.h>
 #include <gio/gio.h>
 
 #include "dfu-firmware.h"
