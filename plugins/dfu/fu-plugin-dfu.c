@@ -31,13 +31,13 @@ fu_plugin_dfu_state_changed_cb (DfuDevice *device,
 }
 
 gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *dev, GError **error)
 {
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open the device */
-	device = dfu_device_new (usb_device);
+	device = dfu_device_new (fu_usb_device_get_dev (dev));
 	fu_device_set_quirks (FU_DEVICE (device), fu_plugin_get_quirks (plugin));
 	dfu_device_set_usb_context (device, fu_plugin_get_usb_context (plugin));
 	locker = fu_device_locker_new (device, error);

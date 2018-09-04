@@ -317,7 +317,7 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 
 gboolean
 fu_plugin_usb_device_added (FuPlugin *plugin,
-			    GUsbDevice *device,
+			    FuUsbDevice *device,
 			    GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
@@ -336,9 +336,9 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 	/* don't look up immediately if a dock is connected as that would
 	   mean a SMI on every USB device that showed up on the system */
 	if (!data->smi_obj->fake_smbios) {
-		vid = g_usb_device_get_vid (device);
-		pid = g_usb_device_get_pid (device);
-		platform = g_usb_device_get_platform_id (device);
+		vid = fu_usb_device_get_vid (device);
+		pid = fu_usb_device_get_pid (device);
+		platform = fu_device_get_platform_id (FU_DEVICE (device));
 	} else {
 		vid = data->fake_vid;
 		pid = data->fake_pid;

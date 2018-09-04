@@ -12,16 +12,16 @@
 #include "fu-nvme-device.h"
 
 gboolean
-fu_plugin_udev_device_added (FuPlugin *plugin, GUdevDevice *udev_device, GError **error)
+fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
 {
 	g_autoptr(FuNvmeDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* interesting device? */
-	if (g_strcmp0 (g_udev_device_get_subsystem (udev_device), "nvme") != 0)
+	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "nvme") != 0)
 		return TRUE;
 
-	dev = fu_nvme_device_new (udev_device);
+	dev = fu_nvme_device_new (device);
 	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;

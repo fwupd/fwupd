@@ -25,7 +25,7 @@ struct _FuUdevDeviceClass
 	gpointer	__reserved[31];
 };
 
-FuDevice	*fu_udev_device_new			(GUdevDevice	*udev_device);
+FuUdevDevice	*fu_udev_device_new			(GUdevDevice	*udev_device);
 void		 fu_udev_device_emit_changed		(FuUdevDevice	*self);
 GUdevDevice	*fu_udev_device_get_dev			(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_subsystem		(FuUdevDevice	*self);

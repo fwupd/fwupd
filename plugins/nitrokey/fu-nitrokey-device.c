@@ -282,11 +282,9 @@ fu_nitrokey_device_class_init (FuNitrokeyDeviceClass *klass)
 }
 
 FuNitrokeyDevice *
-fu_nitrokey_device_new (GUsbDevice *usb_device)
+fu_nitrokey_device_new (FuUsbDevice *device)
 {
-	FuNitrokeyDevice *device;
-	device = g_object_new (FU_TYPE_NITROKEY_DEVICE,
-			       "usb-device", usb_device,
-			       NULL);
-	return FU_NITROKEY_DEVICE (device);
+	FuNitrokeyDevice *self = g_object_new (FU_TYPE_NITROKEY_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
+	return FU_NITROKEY_DEVICE (self);
 }

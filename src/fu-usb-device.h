@@ -39,7 +39,7 @@ struct _FuUsbDeviceClass
 	gpointer	__reserved[28];
 };
 
-FuDevice	*fu_usb_device_new			(GUsbDevice	*usb_device);
+FuUsbDevice	*fu_usb_device_new			(GUsbDevice	*usb_device);
 guint16		 fu_usb_device_get_vid			(FuUsbDevice	*self);
 guint16		 fu_usb_device_get_pid			(FuUsbDevice	*self);
 GUsbDevice	*fu_usb_device_get_dev			(FuUsbDevice	*device);

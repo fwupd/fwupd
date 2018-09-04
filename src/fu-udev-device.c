@@ -376,11 +376,11 @@ fu_udev_device_class_init (FuUdevDeviceClass *klass)
  *
  * Since: 1.1.2
  **/
-FuDevice *
+FuUdevDevice *
 fu_udev_device_new (GUdevDevice *udev_device)
 {
 	FuUdevDevice *self = g_object_new (FU_TYPE_UDEV_DEVICE,
 					   "udev-device", udev_device,
 					   NULL);
-	return FU_DEVICE (self);
+	return FU_UDEV_DEVICE (self);
 }

@@ -3027,12 +3027,12 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
 	const gchar *plugin_name;
-	g_autoptr(FuDevice) device = fu_udev_device_new (udev_device);
+	g_autoptr(FuUdevDevice) device = fu_udev_device_new (udev_device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* add any extra quirks */
-	fu_device_set_quirks (device, self->quirks);
-	if (!fu_device_probe (device, &error_local)) {
+	fu_device_set_quirks (FU_DEVICE (device), self->quirks);
+	if (!fu_device_probe (FU_DEVICE (device), &error_local)) {
 		g_warning ("failed to probe device %s: %s",
 			   g_udev_device_get_sysfs_path (udev_device),
 			   error_local->message);
@@ -3040,7 +3040,7 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 	}
 
 	/* can be specified using a quirk */
-	plugin_name = fu_device_get_plugin (device);
+	plugin_name = fu_device_get_plugin (FU_DEVICE (device));
 	if (plugin_name != NULL) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,
@@ -3050,7 +3050,7 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 				   plugin_name, error->message);
 			return;
 		}
-		if (!fu_plugin_runner_udev_device_added (plugin, udev_device, &error)) {
+		if (!fu_plugin_runner_udev_device_added (plugin, device, &error)) {
 			g_warning ("failed to add udev device %s: %s",
 				   g_udev_device_get_sysfs_path (udev_device),
 				   error->message);
@@ -3073,7 +3073,7 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 		}
 
 		/* run all plugins */
-		if (!fu_plugin_runner_udev_device_added (plugin_tmp, udev_device, &error)) {
+		if (!fu_plugin_runner_udev_device_added (plugin_tmp, device, &error)) {
 			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				g_debug ("%s ignoring: %s",
 					 fu_plugin_get_name (plugin_tmp),
@@ -3381,14 +3381,14 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
 	const gchar *plugin_name;
-	g_autoptr(FuDevice) device = fu_usb_device_new (usb_device);
+	g_autoptr(FuUsbDevice) device = fu_usb_device_new (usb_device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* add any extra quirks */
-	fu_device_set_quirks (device, self->quirks);
-	if (!fu_device_probe (device, &error_local)) {
+	fu_device_set_quirks (FU_DEVICE (device), self->quirks);
+	if (!fu_device_probe (FU_DEVICE (device), &error_local)) {
 		g_warning ("failed to probe device %s: %s",
-			   g_usb_device_get_platform_id (usb_device),
+			   fu_device_get_platform_id (FU_DEVICE (device)),
 			   error_local->message);
 		return;
 	}
@@ -3404,7 +3404,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 				   plugin_name, error->message);
 			return;
 		}
-		if (!fu_plugin_runner_usb_device_added (plugin, usb_device, &error)) {
+		if (!fu_plugin_runner_usb_device_added (plugin, device, &error)) {
 			g_warning ("failed to add USB device %04x:%04x: %s",
 				   g_usb_device_get_vid (usb_device),
 				   g_usb_device_get_pid (usb_device),
@@ -3429,7 +3429,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 		}
 
 		/* create a device, then probe */
-		if (!fu_plugin_runner_usb_device_added (plugin_tmp, usb_device, &error)) {
+		if (!fu_plugin_runner_usb_device_added (plugin_tmp, device, &error)) {
 			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				g_debug ("%s ignoring: %s",
 					 fu_plugin_get_name (plugin_tmp),

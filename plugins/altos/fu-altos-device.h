@@ -32,7 +32,7 @@ typedef enum {
 	FU_ALTOS_DEVICE_WRITE_FIRMWARE_FLAG_LAST
 } FuAltosDeviceWriteFirmwareFlag;
 
-FuAltosDevice	*fu_altos_device_new			(GUsbDevice *usb_device);
+FuAltosDevice	*fu_altos_device_new			(FuUsbDevice	*device);
 FuAltosDeviceKind fu_altos_device_kind_from_string	(const gchar	*kind);
 const gchar	*fu_altos_device_kind_to_string		(FuAltosDeviceKind kind);
 FuAltosDeviceKind fu_altos_device_get_kind		(FuAltosDevice	*device);

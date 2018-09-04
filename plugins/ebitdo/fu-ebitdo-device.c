@@ -223,23 +223,23 @@ fu_ebitdo_device_set_version (FuEbitdoDevice *self, guint32 version)
 static gboolean
 fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	guint8 idx;
-	g_autofree gchar *ven = NULL;
+	const gchar *ven;
 	const gchar *whitelist[] = {
 		"8Bitdo",
 		"SFC30",
 		NULL };
 
 	/* this is a new, always valid, VID */
-	if (g_usb_device_get_vid (usb_device) == 0x2dc8)
+	if (fu_usb_device_get_vid (FU_USB_DEVICE (self)) == 0x2dc8)
 		return TRUE;
 
 	/* verify the vendor prefix against a whitelist */
-	idx = g_usb_device_get_manufacturer_index (usb_device);
-	ven = g_usb_device_get_string_descriptor (usb_device, idx, error);
+	ven = fu_device_get_vendor (FU_DEVICE (self));
 	if (ven == NULL) {
-		g_prefix_error (error, "could not check vendor descriptor: ");
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "could not check vendor descriptor: ");
 		return FALSE;
 	}
 	for (guint i = 0; whitelist[i] != NULL; i++) {
@@ -605,11 +605,10 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
  * Since: 0.1.0
  **/
 FuEbitdoDevice *
-fu_ebitdo_device_new (GUsbDevice *usb_device)
+fu_ebitdo_device_new (FuUsbDevice *device)
 {
 	FuEbitdoDevice *self;
-	self = g_object_new (FU_TYPE_EBITDO_DEVICE,
-			     "usb-device", usb_device,
-			     NULL);
+	self = g_object_new (FU_TYPE_EBITDO_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
 	return FU_EBITDO_DEVICE (self);
 }
