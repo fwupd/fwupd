@@ -697,6 +697,7 @@ static gboolean
 fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
 	if (!fu_engine_load (priv->engine, error))
@@ -723,6 +724,9 @@ fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* run vfunc */
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
 	return fu_device_detach (device, error);
 }
 
@@ -730,6 +734,7 @@ static gboolean
 fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
 	if (!fu_engine_load (priv->engine, error))
@@ -756,6 +761,9 @@ fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* run vfunc */
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
 	return fu_device_attach (device, error);
 }
 
