@@ -29,18 +29,18 @@ struct _FuPluginClass
 {
 	GObjectClass	 parent_class;
 	/* signals */
-	void		 (* device_added)		(FuPlugin	*plugin,
+	void		 (* device_added)		(FuPlugin	*self,
 							 FuDevice	*device);
-	void		 (* device_removed)		(FuPlugin	*plugin,
+	void		 (* device_removed)		(FuPlugin	*self,
 							 FuDevice	*device);
-	void		 (* status_changed)		(FuPlugin	*plugin,
+	void		 (* status_changed)		(FuPlugin	*self,
 							 FwupdStatus	 status);
-	void		 (* percentage_changed)		(FuPlugin	*plugin,
+	void		 (* percentage_changed)		(FuPlugin	*self,
 							 guint		 percentage);
-	void		 (* recoldplug)			(FuPlugin	*plugin);
-	void		 (* set_coldplug_delay)		(FuPlugin	*plugin,
+	void		 (* recoldplug)			(FuPlugin	*self);
+	void		 (* set_coldplug_delay)		(FuPlugin	*self,
 							 guint		 duration);
-	void		 (* device_register)		(FuPlugin	*plugin,
+	void		 (* device_register)		(FuPlugin	*self,
 							 FuDevice	*device);
 	/*< private >*/
 	gpointer	padding[24];
@@ -82,66 +82,66 @@ typedef enum {
 typedef struct	FuPluginData	FuPluginData;
 
 /* for plugins to use */
-const gchar	*fu_plugin_get_name			(FuPlugin	*plugin);
-FuPluginData	*fu_plugin_get_data			(FuPlugin	*plugin);
-FuPluginData	*fu_plugin_alloc_data			(FuPlugin	*plugin,
+const gchar	*fu_plugin_get_name			(FuPlugin	*self);
+FuPluginData	*fu_plugin_get_data			(FuPlugin	*self);
+FuPluginData	*fu_plugin_alloc_data			(FuPlugin	*self,
 							 gsize		 data_sz);
-gboolean	 fu_plugin_get_enabled			(FuPlugin	*plugin);
-void		 fu_plugin_set_enabled			(FuPlugin	*plugin,
+gboolean	 fu_plugin_get_enabled			(FuPlugin	*self);
+void		 fu_plugin_set_enabled			(FuPlugin	*self,
 							 gboolean	 enabled);
-GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*plugin);
-GPtrArray	*fu_plugin_get_supported		(FuPlugin	*plugin);
-void		 fu_plugin_device_add			(FuPlugin	*plugin,
+GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*self);
+GPtrArray	*fu_plugin_get_supported		(FuPlugin	*self);
+void		 fu_plugin_device_add			(FuPlugin	*self,
 							 FuDevice	*device);
-void		 fu_plugin_device_add_delay		(FuPlugin	*plugin,
+void		 fu_plugin_device_add_delay		(FuPlugin	*self,
 							 FuDevice	*device);
-void		 fu_plugin_device_remove		(FuPlugin	*plugin,
+void		 fu_plugin_device_remove		(FuPlugin	*self,
 							 FuDevice	*device);
-void		 fu_plugin_device_register		(FuPlugin	*plugin,
+void		 fu_plugin_device_register		(FuPlugin	*self,
 							 FuDevice	*device);
-void		 fu_plugin_request_recoldplug		(FuPlugin	*plugin);
-void		 fu_plugin_set_coldplug_delay		(FuPlugin	*plugin,
+void		 fu_plugin_request_recoldplug		(FuPlugin	*self);
+void		 fu_plugin_set_coldplug_delay		(FuPlugin	*self,
 							 guint		 duration);
-gpointer	 fu_plugin_cache_lookup			(FuPlugin	*plugin,
+gpointer	 fu_plugin_cache_lookup			(FuPlugin	*self,
 							 const gchar	*id);
-void		 fu_plugin_cache_remove			(FuPlugin	*plugin,
+void		 fu_plugin_cache_remove			(FuPlugin	*self,
 							 const gchar	*id);
-void		 fu_plugin_cache_add			(FuPlugin	*plugin,
+void		 fu_plugin_cache_add			(FuPlugin	*self,
 							 const gchar	*id,
 							 gpointer	 dev);
-gboolean	 fu_plugin_check_hwid			(FuPlugin	*plugin,
+gboolean	 fu_plugin_check_hwid			(FuPlugin	*self,
 							 const gchar	*hwid);
-GPtrArray	*fu_plugin_get_hwids			(FuPlugin	*plugin);
-gboolean	 fu_plugin_check_supported		(FuPlugin	*plugin,
+GPtrArray	*fu_plugin_get_hwids			(FuPlugin	*self);
+gboolean	 fu_plugin_check_supported		(FuPlugin	*self,
 							 const gchar	*guid);
-const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*plugin,
+const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*self,
 							 const gchar	*dmi_id);
-const gchar	*fu_plugin_get_smbios_string		(FuPlugin	*plugin,
+const gchar	*fu_plugin_get_smbios_string		(FuPlugin	*self,
 							 guint8		 structure_type,
 							 guint8		 offset);
-GBytes		*fu_plugin_get_smbios_data		(FuPlugin	*plugin,
+GBytes		*fu_plugin_get_smbios_data		(FuPlugin	*self,
 							 guint8		 structure_type);
-void		 fu_plugin_add_rule			(FuPlugin	*plugin,
+void		 fu_plugin_add_rule			(FuPlugin	*self,
 							 FuPluginRule	 rule,
 							 const gchar	*name);
-void		 fu_plugin_add_udev_subsystem		(FuPlugin	*plugin,
+void		 fu_plugin_add_udev_subsystem		(FuPlugin	*self,
 							 const gchar	*subsystem);
-FuQuirks	*fu_plugin_get_quirks			(FuPlugin	*plugin);
-const gchar	*fu_plugin_lookup_quirk_by_id		(FuPlugin	*plugin,
+FuQuirks	*fu_plugin_get_quirks			(FuPlugin	*self);
+const gchar	*fu_plugin_lookup_quirk_by_id		(FuPlugin	*self,
 							 const gchar	*group,
 							 const gchar	*key);
-guint64		 fu_plugin_lookup_quirk_by_id_as_uint64	(FuPlugin	*plugin,
+guint64		 fu_plugin_lookup_quirk_by_id_as_uint64	(FuPlugin	*self,
 							 const gchar	*group,
 							 const gchar	*key);
-void		 fu_plugin_add_report_metadata		(FuPlugin	*plugin,
+void		 fu_plugin_add_report_metadata		(FuPlugin	*self,
 							 const gchar	*key,
 							 const gchar	*value);
-gchar		*fu_plugin_get_config_value		(FuPlugin	*plugin,
+gchar		*fu_plugin_get_config_value		(FuPlugin	*self,
 							 const gchar	*key);
-void		 fu_plugin_add_runtime_version		(FuPlugin	*plugin,
+void		 fu_plugin_add_runtime_version		(FuPlugin	*self,
 							 const gchar	*component_id,
 							 const gchar	*version);
-void		 fu_plugin_add_compile_version		(FuPlugin	*plugin,
+void		 fu_plugin_add_compile_version		(FuPlugin	*self,
 							 const gchar	*component_id,
 							 const gchar	*version);
 
