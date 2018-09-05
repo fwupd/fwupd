@@ -202,7 +202,7 @@ lu_context_add_device (LuContext *ctx, LuDevice *device)
 	g_return_if_fail (LU_IS_CONTEXT (ctx));
 	g_return_if_fail (LU_IS_DEVICE (device));
 
-	g_debug ("device %s added", fu_device_get_platform_id (FU_DEVICE (device)));
+	g_debug ("device %s added", fu_device_get_physical_id (FU_DEVICE (device)));
 
 	/* HID++1.0 devices have to sleep to allow Solaar to talk to the device
 	 * first -- we can't use the SwID as this is a HID++2.0 feature */
@@ -235,10 +235,10 @@ lu_context_add_device (LuContext *ctx, LuDevice *device)
 
 	/* if we're waiting for replug, quit the loop */
 	replug_helper = g_hash_table_lookup (ctx->hash_replug,
-					     fu_device_get_platform_id (FU_DEVICE (device)));
+					     fu_device_get_physical_id (FU_DEVICE (device)));
 	if (replug_helper != NULL) {
 		g_debug ("%s is in replug, quitting loop",
-			 fu_device_get_platform_id (FU_DEVICE (device)));
+			 fu_device_get_physical_id (FU_DEVICE (device)));
 		g_main_loop_quit (replug_helper->loop);
 	}
 
@@ -250,7 +250,7 @@ lu_context_remove_device (LuContext *ctx, LuDevice *device)
 	g_return_if_fail (LU_IS_CONTEXT (ctx));
 	g_return_if_fail (LU_IS_DEVICE (device));
 
-	g_debug ("device %s removed", fu_device_get_platform_id (FU_DEVICE (device)));
+	g_debug ("device %s removed", fu_device_get_physical_id (FU_DEVICE (device)));
 
 	/* no longer valid */
 	g_object_set (device,
@@ -326,13 +326,13 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 				       "flags", LU_DEVICE_FLAG_ACTIVE |
 						LU_DEVICE_FLAG_REQUIRES_DETACH |
 						LU_DEVICE_FLAG_DETACH_WILL_REPLUG,
-				       "platform-id", platform_id,
+				       "physical-id", platform_id,
 				       "quirks", ctx->system_quirks,
 				       "udev-device", udev_device,
 				       "hidpp-id", HIDPP_DEVICE_ID_RECEIVER,
 				       NULL);
 		g_hash_table_insert (ctx->hash_devices,
-				     g_strdup (fu_device_get_platform_id (FU_DEVICE (device))),
+				     g_strdup (fu_device_get_physical_id (FU_DEVICE (device))),
 				     g_object_ref (device));
 		lu_context_add_device (ctx, device);
 		return;
@@ -351,7 +351,7 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 	platform_id = g_udev_device_get_sysfs_path (udev_device);
 	device = g_object_new (LU_TYPE_DEVICE_PERIPHERAL,
 			       "kind", LU_DEVICE_KIND_PERIPHERAL,
-			       "platform-id", platform_id,
+			       "physical-id", platform_id,
 			       "quirks", ctx->system_quirks,
 			       "udev-device", udev_device,
 			       NULL);
@@ -370,7 +370,7 @@ lu_context_add_udev_device (LuContext *ctx, GUdevDevice *udev_device)
 		return;
 	}
 	g_hash_table_insert (ctx->hash_devices,
-			     g_strdup (fu_device_get_platform_id (FU_DEVICE (device))),
+			     g_strdup (fu_device_get_physical_id (FU_DEVICE (device))),
 			     g_object_ref (device));
 	lu_context_add_device (ctx, device);
 }
@@ -420,7 +420,7 @@ lu_context_wait_for_replug (LuContext *ctx,
 						   replug_helper);
 
 	/* register */
-	platform_id = fu_device_get_platform_id (FU_DEVICE (device));
+	platform_id = fu_device_get_physical_id (FU_DEVICE (device));
 	g_hash_table_insert (ctx->hash_replug,
 			     g_strdup (platform_id), replug_helper);
 
@@ -474,13 +474,13 @@ lu_context_poll_cb (gpointer user_data)
 		g_autoptr(GError) error = NULL;
 		if (!lu_device_open (device, &error)) {
 			g_debug ("failed to open %s: %s",
-				 fu_device_get_platform_id (FU_DEVICE (device)),
+				 fu_device_get_physical_id (FU_DEVICE (device)),
 				 error->message);
 			continue;
 		}
 		if (!lu_device_poll (device, &error)) {
 			g_debug ("failed to probe %s: %s",
-				 fu_device_get_platform_id (FU_DEVICE (device)),
+				 fu_device_get_physical_id (FU_DEVICE (device)),
 				 error->message);
 			continue;
 		}
@@ -574,7 +574,7 @@ lu_context_find_by_platform_id (LuContext *ctx, const gchar *platform_id, GError
 
 	for (guint i = 0; i < ctx->devices->len; i++) {
 		LuDevice *device = g_ptr_array_index (ctx->devices, i);
-		if (g_strcmp0 (fu_device_get_platform_id (FU_DEVICE (device)), platform_id) == 0)
+		if (g_strcmp0 (fu_device_get_physical_id (FU_DEVICE (device)), platform_id) == 0)
 			return g_object_ref (device);
 	}
 	g_set_error (error,

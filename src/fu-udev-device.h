@@ -28,10 +28,14 @@ struct _FuUdevDeviceClass
 FuUdevDevice	*fu_udev_device_new			(GUdevDevice	*udev_device);
 void		 fu_udev_device_emit_changed		(FuUdevDevice	*self);
 GUdevDevice	*fu_udev_device_get_dev			(FuUdevDevice	*self);
+const gchar	*fu_udev_device_get_sysfs_path		(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_subsystem		(FuUdevDevice	*self);
 guint16		 fu_udev_device_get_vendor		(FuUdevDevice	*self);
 guint16		 fu_udev_device_get_model		(FuUdevDevice	*self);
 guint8		 fu_udev_device_get_revision		(FuUdevDevice	*self);
+gboolean	 fu_udev_device_set_physical_id		(FuUdevDevice	*self,
+							 const gchar	*subsystem,
+							 GError		**error);
 
 G_END_DECLS
 

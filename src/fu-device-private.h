@@ -22,6 +22,8 @@ void		 fu_device_set_priority			(FuDevice	*self,
 							 guint		 priority);
 void		 fu_device_set_alternate		(FuDevice	*self,
 							 FuDevice	*alternate);
+gboolean	 fu_device_ensure_id			(FuDevice	*self,
+							 GError		**error);
 
 G_END_DECLS
 

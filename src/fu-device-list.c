@@ -133,33 +133,6 @@ fu_device_list_get_active (FuDeviceList *self)
 	return devices;
 }
 
-/**
- * fu_device_list_get_by_platform_id:
- * @self: A #FuDeviceList
- * @platform_id: A platform ID, e.g. `/sys/devices/usb1/1-1/1-1.2`
- *
- * Returns all the active devices that have been added to the device list
- * that match a specific platform ID.
- *
- * Returns: (transfer container) (element-type FuDevice): the devices
- *
- * Since: 1.1.2
- **/
-GPtrArray *
-fu_device_list_get_by_platform_id (FuDeviceList *self, const gchar *platform_id)
-{
-	GPtrArray *devices;
-	g_return_val_if_fail (FU_IS_DEVICE_LIST (self), NULL);
-	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	for (guint i = 0; i < self->devices->len; i++) {
-		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
-		if (g_strcmp0 (fu_device_get_platform_id (item->device), platform_id) != 0)
-			continue;
-		g_ptr_array_add (devices, g_object_ref (item->device));
-	}
-	return devices;
-}
-
 static FuDeviceItem *
 fu_device_list_find_by_device (FuDeviceList *self, FuDevice *device)
 {
@@ -203,14 +176,14 @@ fu_device_list_find_by_platform_id (FuDeviceList *self, const gchar *platform_id
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		FuDevice *device = item_tmp->device;
 		if (device != NULL &&
-		    g_strcmp0 (fu_device_get_platform_id (device), platform_id) == 0)
+		    g_strcmp0 (fu_device_get_physical_id (device), platform_id) == 0)
 			return item_tmp;
 	}
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		FuDevice *device = item_tmp->device_old;
 		if (device != NULL &&
-		    g_strcmp0 (fu_device_get_platform_id (device), platform_id) == 0)
+		    g_strcmp0 (fu_device_get_physical_id (device), platform_id) == 0)
 			return item_tmp;
 	}
 	return NULL;
@@ -511,7 +484,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	item = fu_device_list_get_by_guids (self, fu_device_get_guids (device));
 	if (item == NULL) {
 		item = fu_device_list_find_by_platform_id (self,
-							   fu_device_get_platform_id (device));
+							   fu_device_get_physical_id (device));
 	}
 	if (item != NULL && item->remove_id != 0) {
 		g_debug ("found compatible device %s recently removed, reusing "

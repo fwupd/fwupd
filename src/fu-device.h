@@ -151,9 +151,12 @@ void		 fu_device_set_metadata_integer		(FuDevice	*self,
 							 guint		 value);
 void		 fu_device_set_id			(FuDevice	*self,
 							 const gchar	*id);
-const gchar	*fu_device_get_platform_id		(FuDevice	*self);
-void		 fu_device_set_platform_id		(FuDevice	*self,
-							 const gchar	*platform_id);
+const gchar	*fu_device_get_physical_id		(FuDevice	*self);
+void		 fu_device_set_physical_id		(FuDevice	*self,
+							 const gchar	*physical_id);
+const gchar	*fu_device_get_logical_id		(FuDevice	*self);
+void		 fu_device_set_logical_id		(FuDevice	*self,
+							 const gchar	*logical_id);
 const gchar	*fu_device_get_serial			(FuDevice	*self);
 void		 fu_device_set_serial			(FuDevice	*self,
 							 const gchar	*serial);
