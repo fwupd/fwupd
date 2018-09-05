@@ -457,8 +457,11 @@ fu_device_add_parent_guid (FuDevice *self, const gchar *guid)
 	g_ptr_array_add (priv->parent_guids, g_strdup (guid));
 }
 
-static void
-fu_device_add_child_by_type_guid (FuDevice *self, GType type, const gchar *guid)
+static gboolean
+fu_device_add_child_by_type_guid (FuDevice *self,
+				  GType type,
+				  const gchar *guid,
+				  GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FuDevice) child = NULL;
@@ -468,7 +471,10 @@ fu_device_add_child_by_type_guid (FuDevice *self, GType type, const gchar *guid)
 	fu_device_add_guid (child, guid);
 	if (fu_device_get_platform_id (self) != NULL)
 		fu_device_set_platform_id (child, fu_device_get_platform_id (self));
+	if (!fu_device_probe (child, error))
+		return FALSE;
 	fu_device_add_child (self, child);
+	return TRUE;
 }
 
 static gboolean
@@ -478,10 +484,10 @@ fu_device_add_child_by_kv (FuDevice *self, const gchar *str, GError **error)
 
 	/* type same as parent */
 	if (g_strv_length (split) == 1) {
-		fu_device_add_child_by_type_guid (self,
-						  G_OBJECT_TYPE (self),
-						  split[1]);
-		return TRUE;
+		return fu_device_add_child_by_type_guid (self,
+							 G_OBJECT_TYPE (self),
+							 split[1],
+							 error);
 	}
 
 	/* type specified */
@@ -494,8 +500,10 @@ fu_device_add_child_by_kv (FuDevice *self, const gchar *str, GError **error)
 					     "no GType registered");
 			return FALSE;
 		}
-		fu_device_add_child_by_type_guid (self, devtype, split[1]);
-		return TRUE;
+		return fu_device_add_child_by_type_guid (self,
+							 devtype,
+							 split[1],
+							 error);
 	}
 
 	/* more than one '|' */
