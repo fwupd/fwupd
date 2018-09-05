@@ -1444,13 +1444,19 @@ fu_engine_install_blob (FuEngine *self,
 		return FALSE;
 	}
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
-	if (device == NULL)
+	if (device == NULL) {
+		g_prefix_error (error, "failed to get device ID after detach: ");
 		return FALSE;
-	if (!fu_device_list_wait_for_replug (self->device_list, device, error))
+	}
+	if (!fu_device_list_wait_for_replug (self->device_list, device, error)) {
+		g_prefix_error (error, "failed to wait for detach replug: ");
 		return FALSE;
+	}
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
-	if (device == NULL)
+	if (device == NULL) {
+		g_prefix_error (error, "failed to get device ID after detach replug: ");
 		return FALSE;
+	}
 	if (!fu_plugin_runner_update (plugin,
 				      device,
 				      blob_cab,
@@ -1492,13 +1498,19 @@ fu_engine_install_blob (FuEngine *self,
 		return FALSE;
 	}
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
-	if (device == NULL)
+	if (device == NULL) {
+		g_prefix_error (error, "failed to get device ID after update: ");
 		return FALSE;
-	if (!fu_device_list_wait_for_replug (self->device_list, device, error))
+	}
+	if (!fu_device_list_wait_for_replug (self->device_list, device, error)) {
+		g_prefix_error (error, "failed to wait for replug after update: ");
 		return FALSE;
+	}
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
-	if (device == NULL)
+	if (device == NULL) {
+		g_prefix_error (error, "failed to get device ID after post-update restart: ");
 		return FALSE;
+	}
 	if (!fu_plugin_runner_update_attach (plugin, device, &error_local)) {
 		fu_device_set_update_error (device, error_local->message);
 		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
@@ -1512,17 +1524,25 @@ fu_engine_install_blob (FuEngine *self,
 		return FALSE;
 	}
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
-	if (device == NULL)
+	if (device == NULL) {
+		g_prefix_error (error, "failed to get device ID after attach: ");
 		return FALSE;
-	if (!fu_device_list_wait_for_replug (self->device_list, device, error))
+	}
+	if (!fu_device_list_wait_for_replug (self->device_list, device, error)) {
+		g_prefix_error (error, "failed to wait for replug after attach: ");
 		return FALSE;
+	}
 
 	/* get the new version number */
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
-	if (device == NULL)
+	if (device == NULL) {
+		g_prefix_error (error, "failed to get device ID after attach replug: ");
 		return FALSE;
-	if (!fu_plugin_runner_update_reload (plugin, device, error))
+	}
+	if (!fu_plugin_runner_update_reload (plugin, device, error)) {
+		g_prefix_error (error, "failed to reload device: ");
 		return FALSE;
+	}
 
 	/* signal to all the plugins the update has happened */
 	for (guint j = 0; j < plugins->len; j++) {
