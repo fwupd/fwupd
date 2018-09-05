@@ -207,7 +207,9 @@ fu_install_task_check_requirements (FuInstallTask *self,
 
 	/* compare to the lowest supported version, if it exists */
 	version_lowest = fu_device_get_version_lowest (self->device);
-	if (version_lowest != NULL && as_utils_vercmp (version_lowest, version) > 0) {
+	if (version_lowest != NULL &&
+	    as_utils_vercmp (version_lowest, version) > 0 &&
+	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_NEWER,
