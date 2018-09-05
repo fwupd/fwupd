@@ -212,7 +212,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_NEWER,
 			     "Specified firmware is older than the minimum "
-			     "required version '%s < %s'", version_lowest, version);
+			     "required version '%s < %s'", version, version_lowest);
 		return FALSE;
 	}
 
