@@ -147,6 +147,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "is-bootloader";
 	if (device_flag == FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)
 		return "wait-for-replug";
+	if (device_flag == FWUPD_DEVICE_FLAG_IGNORE_VALIDATION)
+		return "ignore-validation";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -199,6 +201,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_IS_BOOTLOADER;
 	if (g_strcmp0 (device_flag, "wait-for-replug") == 0)
 		return FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG;
+	if (g_strcmp0 (device_flag, "ignore-validation") == 0)
+		return FWUPD_DEVICE_FLAG_IGNORE_VALIDATION;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
