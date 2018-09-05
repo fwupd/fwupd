@@ -815,7 +815,8 @@ fu_plugin_update (FuPlugin *plugin,
 	guint64 status;
 	g_autoptr(GUdevDevice) udevice = NULL;
 	g_autoptr(GError) error_local = NULL;
-	gboolean force = (flags & FWUPD_INSTALL_FLAG_FORCE) != 0;
+	gboolean install_force = (flags & FWUPD_INSTALL_FLAG_FORCE) != 0;
+	gboolean device_ignore_validation = fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_IGNORE_VALIDATION);
 	FuPluginValidation validation;
 
 	devpath = fu_device_get_metadata (dev, "sysfs-path");
@@ -847,7 +848,7 @@ fu_plugin_update (FuPlugin *plugin,
 		default:
 			break;
 		}
-		if (!force) {
+		if (!install_force && !device_ignore_validation) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
