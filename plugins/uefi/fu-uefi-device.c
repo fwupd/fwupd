@@ -386,6 +386,23 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 	klass_device->write_firmware = fu_uefi_device_write_firmware;
 }
 
+static void
+fu_uefi_device_add_win10_guid (FuUefiDevice *self)
+{
+	g_autofree gchar *guid_devid = NULL;
+	g_autofree gchar *guid_strup = NULL;
+
+	/* broken sysfs? */
+	if (self->fw_class == NULL)
+		return;
+
+	/* windows seems to be case insensitive, but for convenience we'll
+	 * match the upper case values typically specified in the .inf file */
+	guid_strup = g_ascii_strup (self->fw_class, -1);
+	guid_devid = g_strdup_printf ("UEFI\\RES_{%s}", guid_strup);
+	fu_device_add_guid (FU_DEVICE (self), guid_devid);
+}
+
 FuUefiDevice *
 fu_uefi_device_new_from_entry (const gchar *entry_path)
 {
@@ -421,6 +438,9 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 			      self->fw_class, self->fmp_hardware_instance);
 	fu_device_set_platform_id (FU_DEVICE (self), entry_path);
 
+	/* this is the DeviceID used in Windows 10 */
+	fu_uefi_device_add_win10_guid (self);
+
 	return self;
 }
 
@@ -441,6 +461,9 @@ fu_uefi_device_new_from_dev (FuDevice *dev)
 	self->capsule_flags = 0; /* FIXME? */
 	self->fw_version = 0; /* FIXME? */
 	g_assert (self->fw_class != NULL);
+
+	/* this is the DeviceID used in Windows 10 */
+	fu_uefi_device_add_win10_guid (self);
 	return self;
 }
 
