@@ -314,7 +314,7 @@ fu_nvme_device_open (FuDevice *device, GError **error)
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "failed to open %s: %s",
-			     fu_device_get_platform_id (FU_DEVICE (self)),
+			     g_udev_device_get_device_file (udev_device),
 			     strerror (errno));
 		return FALSE;
 	}
@@ -324,20 +324,32 @@ fu_nvme_device_open (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_nvme_device_setup (FuDevice *device, GError **error)
+fu_nvme_device_probe (FuUdevDevice *device, GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
-	guint8 buf[FU_NVME_ID_CTRL_SIZE];
+
+	/* set the physical ID */
+	if (!fu_udev_device_set_physical_id (device, "pci", error))
+		return FALSE;
 
 	/* look at the PCI depth to work out if in an external enclosure */
 	self->pci_depth = fu_nvme_device_pci_slot_depth (self);
 	if (self->pci_depth <= 2)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 
+	return TRUE;
+}
+
+static gboolean
+fu_nvme_device_setup (FuDevice *device, GError **error)
+{
+	FuNvmeDevice *self = FU_NVME_DEVICE (device);
+	guint8 buf[FU_NVME_ID_CTRL_SIZE];
+
 	/* get and parse CNS */
 	if (!fu_nvme_device_identify_ctrl (self, buf, error)) {
 		g_prefix_error (error, "failed to identify %s: ",
-				fu_device_get_platform_id (FU_DEVICE (self)));
+				fu_device_get_physical_id (FU_DEVICE (self)));
 		return FALSE;
 	}
 	fu_nvme_device_dump ("CNS", buf, sizeof (buf));
@@ -441,6 +453,7 @@ fu_nvme_device_class_init (FuNvmeDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_nvme_device_finalize;
 	klass_device->to_string = fu_nvme_device_to_string;
 	klass_device->set_quirk_kv = fu_nvme_device_set_quirk_kv;
@@ -448,6 +461,7 @@ fu_nvme_device_class_init (FuNvmeDeviceClass *klass)
 	klass_device->setup = fu_nvme_device_setup;
 	klass_device->close = fu_nvme_device_close;
 	klass_device->write_firmware = fu_nvme_device_write_firmware;
+	klass_udev_device->probe = fu_nvme_device_probe;
 }
 
 FuNvmeDevice *

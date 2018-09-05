@@ -51,7 +51,8 @@ enum {
 	PROP_0,
 	PROP_STATUS,
 	PROP_PROGRESS,
-	PROP_PLATFORM_ID,
+	PROP_PHYSICAL_ID,
+	PROP_LOGICAL_ID,
 	PROP_QUIRKS,
 	PROP_LAST
 };
@@ -72,8 +73,11 @@ fu_device_get_property (GObject *object, guint prop_id,
 	case PROP_PROGRESS:
 		g_value_set_uint (value, priv->progress);
 		break;
-	case PROP_PLATFORM_ID:
-		g_value_set_string (value, fu_device_get_platform_id (self));
+	case PROP_PHYSICAL_ID:
+		g_value_set_string (value, fu_device_get_physical_id (self));
+		break;
+	case PROP_LOGICAL_ID:
+		g_value_set_string (value, fu_device_get_logical_id (self));
 		break;
 	case PROP_QUIRKS:
 		g_value_set_object (value, priv->quirks);
@@ -96,8 +100,11 @@ fu_device_set_property (GObject *object, guint prop_id,
 	case PROP_PROGRESS:
 		fu_device_set_progress (self, g_value_get_uint (value));
 		break;
-	case PROP_PLATFORM_ID:
-		fu_device_set_platform_id (self, g_value_get_string (value));
+	case PROP_PHYSICAL_ID:
+		fu_device_set_physical_id (self, g_value_get_string (value));
+		break;
+	case PROP_LOGICAL_ID:
+		fu_device_set_logical_id (self, g_value_get_string (value));
 		break;
 	case PROP_QUIRKS:
 		fu_device_set_quirks (self, g_value_get_object (value));
@@ -467,10 +474,11 @@ fu_device_add_child_by_type_guid (FuDevice *self,
 	g_autoptr(FuDevice) child = NULL;
 	child = g_object_new (type,
 			      "quirks", priv->quirks,
+			      "logical-id", guid,
 			      NULL);
 	fu_device_add_guid (child, guid);
-	if (fu_device_get_platform_id (self) != NULL)
-		fu_device_set_platform_id (child, fu_device_get_platform_id (self));
+	if (fu_device_get_physical_id (self) != NULL)
+		fu_device_set_physical_id (child, fu_device_get_physical_id (self));
 	if (!fu_device_probe (child, error))
 		return FALSE;
 	fu_device_add_child (self, child);
@@ -930,6 +938,125 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 }
 
 /**
+ * fu_device_ensure_id:
+ * @self: A #FuDevice
+ * @error: A #GError
+ *
+ * If not already set, generates a device ID with the optional physical and
+ * logical IDs.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.1.2
+ **/
+gboolean
+fu_device_ensure_id (FuDevice *self, GError **error)
+{
+	g_autofree gchar *device_id = NULL;
+
+	/* already set */
+	if (fu_device_get_id (self) != NULL)
+		return TRUE;
+
+	/* nothing we can do! */
+	if (fu_device_get_physical_id (self) == NULL) {
+		g_autofree gchar *tmp = fu_device_to_string (self);
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "cannot ensure ID: %s", tmp);
+		return FALSE;
+	}
+
+	/* logical may be NULL */
+	device_id = g_strjoin (":",
+			       fu_device_get_physical_id (self),
+			       fu_device_get_logical_id (self),
+			       NULL);
+	fu_device_set_id (self, device_id);
+	return TRUE;
+}
+
+/**
+ * fu_device_get_logical_id:
+ * @self: A #FuDevice
+ *
+ * Gets the logical ID set for the device, which disambiguates devices with the
+ * same physical ID.
+ *
+ * Returns: a string value, or %NULL if never set.
+ *
+ * Since: 1.1.2
+ **/
+const gchar *
+fu_device_get_logical_id (FuDevice *self)
+{
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	return fu_device_get_metadata (self, "logical-id");
+}
+
+/**
+ * fu_device_set_logical_id:
+ * @self: A #FuDevice
+ * @logical_id: a string, e.g. `dev2`
+ *
+ * Sets the logical ID on the device. This is designed to disambiguate devices
+ * with the same physical ID.
+ *
+ * Since: 1.1.2
+ **/
+void
+fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
+{
+	g_return_if_fail (FU_IS_DEVICE (self));
+	fu_device_set_metadata (self, "logical-id", logical_id);
+}
+
+/**
+ * fu_device_set_physical_id:
+ * @self: A #FuDevice
+ * @physical_id: a string that identifies the physical device connection
+ *
+ * Sets the physical ID on the device which represents the electrical connection
+ * of the device to the system. Multiple #FuDevices can share a physical ID.
+ *
+ * The physical ID is used to remove logical devices when a physical device has
+ * been removed from the system.
+ *
+ * A sysfs or devpath is not a physical ID, but could be something like
+ * `PCI_SLOT_NAME=0000:3e:00.0`.
+ *
+ * Since: 1.1.2
+ **/
+void
+fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
+{
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (physical_id != NULL);
+	fu_device_set_metadata (self, "physical-id", physical_id);
+}
+
+/**
+ * fu_device_get_physical_id:
+ * @self: A #FuDevice
+ *
+ * Gets the physical ID set for the device, which represents the electrical
+ * connection used to compare devices.
+ *
+ * Multiple #FuDevices can share a single physical ID.
+ *
+ * Returns: a string value, or %NULL if never set.
+ *
+ * Since: 1.1.2
+ **/
+const gchar *
+fu_device_get_physical_id (FuDevice *self)
+{
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	return fu_device_get_metadata (self, "physical-id");
+}
+
+/**
  * fu_device_set_serial:
  * @self: A #FuDevice
  * @serial: a serial number string, e.g. `0000123`
@@ -1061,54 +1188,6 @@ fu_device_has_custom_flag (FuDevice *self, const gchar *hint)
 		return FALSE;
 	hints = g_strsplit (hint_str, ",", -1);
 	return g_strv_contains ((const gchar * const *) hints, hint);
-}
-
-/**
- * fu_device_set_platform_id:
- * @self: A #FuDevice
- * @platform_id: a platform string, e.g. `/sys/devices/usb1/1-1/1-1.2`
- *
- * Sets the Platform ID on the device. If unset, the ID will automatically
- * be set using a hash of the @platform_id value.
- *
- * Since: 1.0.2
- **/
-void
-fu_device_set_platform_id (FuDevice *self, const gchar *platform_id)
-{
-	g_return_if_fail (FU_IS_DEVICE (self));
-	g_return_if_fail (platform_id != NULL);
-
-	/* automatically use this */
-	if (fu_device_get_id (self) == NULL) {
-		if (fu_device_get_guid_default (self) != NULL) {
-			g_autofree gchar *id_guid = NULL;
-			id_guid = g_strdup_printf ("%s:%s", platform_id,
-						   fu_device_get_guid_default (self));
-			fu_device_set_id (self, id_guid);
-		} else {
-			fu_device_set_id (self, platform_id);
-		}
-	}
-	fu_device_set_metadata (self, "platform-id", platform_id);
-}
-
-/**
- * fu_device_get_platform_id:
- * @self: A #FuDevice
- *
- * Gets the Platform ID set for the device, which represents the connection
- * string used to compare devices.
- *
- * Returns: a string value, or %NULL if never set.
- *
- * Since: 1.0.2
- **/
-const gchar *
-fu_device_get_platform_id (FuDevice *self)
-{
-	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return fu_device_get_metadata (self, "platform-id");
 }
 
 static void
@@ -1604,6 +1683,10 @@ fu_device_open (FuDevice *self, GError **error)
 	if (!fu_device_probe (self, error))
 		return FALSE;
 
+	/* ensure the device ID is already setup */
+	if (!fu_device_ensure_id (self, error))
+		return FALSE;
+
 	/* subclassed */
 	if (klass->open != NULL) {
 		if (!klass->open (self, error))
@@ -1826,16 +1909,21 @@ fu_device_class_init (FuDeviceClass *klass)
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_STATUS, pspec);
 
+	pspec = g_param_spec_string ("physical-id", NULL, NULL, NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PHYSICAL_ID, pspec);
+
+	pspec = g_param_spec_string ("logical-id", NULL, NULL, NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_LOGICAL_ID, pspec);
+
 	pspec = g_param_spec_uint ("progress", NULL, NULL,
 				   0, 100, 0,
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PROGRESS, pspec);
-
-	pspec = g_param_spec_string ("platform-id", NULL, NULL, NULL,
-				     G_PARAM_READWRITE |
-				     G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_PLATFORM_ID, pspec);
 
 	pspec = g_param_spec_object ("quirks", NULL, NULL,
 				     FU_TYPE_QUIRKS,

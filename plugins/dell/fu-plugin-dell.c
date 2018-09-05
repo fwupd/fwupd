@@ -267,7 +267,6 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 		     const gchar *component_desc, const gchar *version)
 {
 	const gchar *dock_type;
-	g_autofree gchar *dock_id = NULL;
 	g_autofree gchar *dock_name = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
@@ -278,8 +277,8 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 	}
 
 	dev = fu_device_new ();
-	fu_device_set_platform_id (dev, platform);
-	dock_id = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, component_guid);
+	fu_device_set_physical_id (dev, platform);
+	fu_device_set_logical_id (dev, component_guid);
 	if (component_desc != NULL) {
 		dock_name = g_strdup_printf ("Dell %s %s", dock_type,
 					     component_desc);
@@ -287,7 +286,6 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 	} else {
 		dock_name = g_strdup_printf ("Dell %s", dock_type);
 	}
-	fu_device_set_id (dev, dock_id);
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, dock_name);
 	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "device-firmware");
@@ -337,7 +335,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 	if (!data->smi_obj->fake_smbios) {
 		vid = fu_usb_device_get_vid (device);
 		pid = fu_usb_device_get_pid (device);
-		platform = fu_device_get_platform_id (FU_DEVICE (device));
+		platform = fu_device_get_physical_id (FU_DEVICE (device));
 	} else {
 		vid = data->fake_vid;
 		pid = data->fake_pid;

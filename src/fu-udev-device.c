@@ -200,11 +200,6 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 	g_set_object (&priv->udev_device, udev_device);
 	if (priv->udev_device == NULL)
 		return;
-
-	/* set udev platform ID automatically */
-	fu_device_set_platform_id (FU_DEVICE (self),
-				   g_udev_device_get_sysfs_path (udev_device));
-
 }
 
 static void
@@ -250,6 +245,24 @@ fu_udev_device_get_subsystem (FuUdevDevice *self)
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
 	return g_udev_device_get_subsystem (priv->udev_device);
+}
+
+/**
+ * fu_udev_device_get_sysfs_path:
+ * @self: A #GUdevDevice
+ *
+ * Gets the device sysfs path, e.g. "/sys/devices/pci0000:00/0000:00:14.0".
+ *
+ * Returns: a local path, or NULL if unset or invalid
+ *
+ * Since: 1.1.2
+ **/
+const gchar *
+fu_udev_device_get_sysfs_path (FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
+	return g_udev_device_get_sysfs_path (priv->udev_device);
 }
 
 /**
@@ -304,6 +317,80 @@ fu_udev_device_get_revision (FuUdevDevice *self)
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), 0x00);
 	return priv->revision;
+}
+
+/**
+ * fu_udev_device_set_physical_id:
+ * @self: A #GUdevDevice
+ * @subsystem: A subsystem string, e.g. `usb`
+ * @error: A #GError, or %NULL
+ *
+ * Sets the physical ID from the device subsystem. Plugins should choose the
+ * subsystem that is "deepest" in the udev tree, for instance choosing 'usb'
+ * over 'pci' for a mouse device.
+ *
+ * Returns: %TRUE if the physical device was set.
+ *
+ * Since: 1.1.2
+ **/
+gboolean
+fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystem, GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *tmp;
+	g_autofree gchar *physical_id = NULL;
+	g_autoptr(GUdevDevice) udev_device = NULL;
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
+	g_return_val_if_fail (subsystem != NULL, FALSE);
+
+	/* get the correct device */
+	if (g_strcmp0 (g_udev_device_get_subsystem (priv->udev_device), subsystem) == 0) {
+		udev_device = g_object_ref (priv->udev_device);
+	} else {
+		udev_device = g_udev_device_get_parent_with_subsystem (priv->udev_device,
+								       subsystem, NULL);
+		if (udev_device == NULL) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_FOUND,
+				     "failed to find device with subsystem %s",
+				     subsystem);
+			return FALSE;
+		}
+	}
+	if (g_strcmp0 (subsystem, "pci") == 0) {
+		tmp = g_udev_device_get_property (udev_device, "PCI_SLOT_NAME");
+		if (tmp == NULL) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_NOT_FOUND,
+					     "failed to find PCI_SLOT_NAME");
+			return FALSE;
+		}
+		physical_id = g_strdup_printf ("PCI_SLOT_NAME=%s", tmp);
+	} else if (g_strcmp0 (subsystem, "usb") == 0) {
+		tmp = g_udev_device_get_property (udev_device, "DEVPATH");
+		if (tmp == NULL) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_NOT_FOUND,
+					     "failed to find DEVPATH");
+			return FALSE;
+		}
+		physical_id = g_strdup_printf ("DEVPATH=%s", tmp);
+	} else {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "cannot handle subsystem %s",
+			     subsystem);
+		return FALSE;
+	}
+
+	/* success */
+	fu_device_set_physical_id (FU_DEVICE (self), physical_id);
+	return TRUE;
 }
 
 static void

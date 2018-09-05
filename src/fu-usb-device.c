@@ -8,7 +8,7 @@
 
 #include <appstream-glib.h>
 
-#include "fu-usb-device.h"
+#include "fu-usb-device-private.h"
 
 /**
  * SECTION:fu-device
@@ -310,6 +310,24 @@ fu_usb_device_get_pid (FuUsbDevice *self)
 }
 
 /**
+ * fu_usb_device_get_platform_id:
+ * @self: A #FuUsbDevice
+ *
+ * Gets the device platform ID.
+ *
+ * Returns: string, or NULL if unset or invalid
+ *
+ * Since: 1.1.2
+ **/
+const gchar *
+fu_usb_device_get_platform_id (FuUsbDevice *self)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_USB_DEVICE (self), NULL);
+	return g_usb_device_get_platform_id (priv->usb_device);
+}
+
+/**
  * fu_usb_device_set_dev:
  * @device: A #FuUsbDevice
  * @usb_device: A #GUsbDevice, or %NULL
@@ -335,8 +353,8 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 		return;
 	}
 
-	/* set USB platform ID automatically */
-	fu_device_set_platform_id (FU_DEVICE (device),
+	/* set device ID automatically */
+	fu_device_set_physical_id (FU_DEVICE (device),
 				   g_usb_device_get_platform_id (usb_device));
 }
 

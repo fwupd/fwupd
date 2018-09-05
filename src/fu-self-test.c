@@ -888,11 +888,11 @@ fu_device_list_replug_auto_func (void)
 
 	/* fake devices */
 	fu_device_set_id (device1, "device1");
-	fu_device_set_platform_id (device1, "ID");
+	fu_device_set_physical_id (device1, "ID");
 	fu_device_set_plugin (device1, "self-test");
 	fu_device_set_remove_delay (device1, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_id (device2, "device2");
-	fu_device_set_platform_id (device2, "ID"); /* matches */
+	fu_device_set_physical_id (device2, "ID"); /* matches */
 	fu_device_set_plugin (device2, "self-test");
 	fu_device_set_remove_delay (device2, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 
@@ -1178,6 +1178,7 @@ fu_device_open_refcount_func (void)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(GError) error = NULL;
+	fu_device_set_id (device, "test_device");
 	ret = fu_device_open (device, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);

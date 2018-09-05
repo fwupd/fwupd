@@ -955,7 +955,7 @@ lu_device_update_platform_id (LuDevice *device)
 		udev_device = lu_device_find_udev_device (priv->usb_device);
 		if (udev_device != NULL) {
 			const gchar *tmp = g_udev_device_get_sysfs_path (udev_device);
-			fu_device_set_platform_id (FU_DEVICE (device), tmp);
+			fu_device_set_physical_id (FU_DEVICE (device), tmp);
 		}
 	}
 }

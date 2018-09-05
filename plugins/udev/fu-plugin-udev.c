@@ -45,7 +45,7 @@ fu_plugin_verify (FuPlugin *plugin,
 	if (g_strcmp0 (fu_device_get_version (device),
 		       fu_rom_get_version (rom)) != 0) {
 		g_debug ("changing version of %s from %s to %s",
-			 fu_device_get_platform_id (device),
+			 fu_device_get_id (device),
 			 fu_device_get_version (device),
 			 fu_rom_get_version (rom));
 		fu_device_set_version (device, fu_rom_get_version (rom));
@@ -68,7 +68,10 @@ fu_plugin_verify (FuPlugin *plugin,
 gboolean
 fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
 {
+	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (device));
 	const gchar *guid = NULL;
+	const gchar *pci_slot_name;
+	g_autofree gchar *physical_id = NULL;
 	g_autofree gchar *rom_fn = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
@@ -76,7 +79,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	/* interesting device? */
 	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "pci") != 0)
 		return TRUE;
-	guid = g_udev_device_get_property (fu_udev_device_get_dev (device), "FWUPD_GUID");
+	guid = g_udev_device_get_property (udev_device, "FWUPD_GUID");
 	if (guid == NULL)
 		return TRUE;
 
@@ -84,12 +87,21 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	ptask = as_profile_start (profile, "FuPluginUdev:client-add{%s}", guid);
 	g_assert (ptask != NULL);
 
+	/* get the physical ID */
+	pci_slot_name = g_udev_device_get_property (udev_device, "PCI_SLOT_NAME");
+	if (pci_slot_name == NULL) {
+		g_prefix_error (error, "failed to find PCI_SLOT_NAME: ");
+		return FALSE;
+	}
+	physical_id = g_strdup_printf ("PCI_SLOT_NAME=%s", pci_slot_name);
+	fu_device_set_physical_id (FU_DEVICE (device), physical_id);
+
 	/* did we get enough data */
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon (device, "audio-card");
 
 	/* get the FW version from the rom when unlocked */
-	rom_fn = g_build_filename (fu_device_get_platform_id (FU_DEVICE (device)), "rom", NULL);
+	rom_fn = g_build_filename (fu_udev_device_get_sysfs_path (device), "rom", NULL);
 	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS))
 		fu_device_set_metadata (FU_DEVICE (device), "RomFilename", rom_fn);
 

@@ -436,7 +436,7 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 	/* set ID */
 	id = g_strdup_printf ("UEFI-%s-dev%" G_GUINT64_FORMAT,
 			      self->fw_class, self->fmp_hardware_instance);
-	fu_device_set_platform_id (FU_DEVICE (self), entry_path);
+	fu_device_set_id (FU_DEVICE (self), id);
 
 	/* this is the DeviceID used in Windows 10 */
 	fu_uefi_device_add_win10_guid (self);

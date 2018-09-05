@@ -151,7 +151,7 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	dev_id_str = g_strdup_printf ("MST-%s-%s-%u-%u",
 				      kind_str, aux_node, layer, rad);
 	fu_device_set_id (dev, dev_id_str);
-	fu_device_set_platform_id (dev, aux_node);
+	fu_device_set_physical_id (dev, aux_node);
 	fu_device_set_metadata (dev, "SynapticsMSTKind", kind_str);
 	fu_device_set_metadata (dev, "SynapticsMSTAuxNode", aux_node);
 	layer_str = g_strdup_printf ("%u", layer);

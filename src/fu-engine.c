@@ -37,6 +37,7 @@
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
 #include "fu-smbios.h"
+#include "fu-usb-device-private.h"
 
 static void fu_engine_finalize	 (GObject *obj);
 
@@ -3113,12 +3114,16 @@ fu_engine_udev_device_remove (FuEngine *self, GUdevDevice *udev_device)
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* go through each device and remove any that match */
-	devices = fu_device_list_get_by_platform_id (self->device_list,
-						     g_udev_device_get_sysfs_path (udev_device));
+	devices = fu_device_list_get_all (self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		g_debug ("auto-removing GUdevDevice");
-		fu_device_list_remove (self->device_list, device);
+		if (!FU_IS_UDEV_DEVICE (device))
+			continue;
+		if (g_strcmp0 (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)),
+			       g_udev_device_get_sysfs_path (udev_device)) == 0) {
+			g_debug ("auto-removing GUdevDevice");
+			fu_device_list_remove (self->device_list, device);
+		}
 	}
 }
 
@@ -3128,12 +3133,15 @@ fu_engine_udev_device_changed (FuEngine *self, GUdevDevice *udev_device)
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* emit changed on any that match */
-	devices = fu_device_list_get_by_platform_id (self->device_list,
-						     g_udev_device_get_sysfs_path (udev_device));
+	devices = fu_device_list_get_all (self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		if (FU_IS_UDEV_DEVICE (device))
+		if (!FU_IS_UDEV_DEVICE (device))
+			continue;
+		if (g_strcmp0 (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)),
+			       g_udev_device_get_sysfs_path (udev_device)) == 0) {
 			fu_udev_device_emit_changed (FU_UDEV_DEVICE (device));
+		}
 	}
 }
 
@@ -3385,11 +3393,16 @@ fu_engine_usb_device_removed_cb (GUsbContext *ctx,
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* go through each device and remove any that match */
-	devices = fu_device_list_get_by_platform_id (self->device_list,
-						     g_usb_device_get_platform_id (usb_device));
+	devices = fu_device_list_get_all (self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		fu_device_list_remove (self->device_list, device);
+		if (!FU_IS_USB_DEVICE (device))
+			continue;
+		if (g_strcmp0 (fu_usb_device_get_platform_id (FU_USB_DEVICE (device)),
+			       g_usb_device_get_platform_id (usb_device)) == 0) {
+			g_debug ("auto-removing GUsbDevice");
+			fu_device_list_remove (self->device_list, device);
+		}
 	}
 }
 
@@ -3407,7 +3420,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 	fu_device_set_quirks (FU_DEVICE (device), self->quirks);
 	if (!fu_device_probe (FU_DEVICE (device), &error_local)) {
 		g_warning ("failed to probe device %s: %s",
-			   fu_device_get_platform_id (FU_DEVICE (device)),
+			   fu_device_get_physical_id (FU_DEVICE (device)),
 			   error_local->message);
 		return;
 	}

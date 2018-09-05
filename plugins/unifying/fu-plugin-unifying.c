@@ -28,7 +28,7 @@ fu_plugin_unifying_device_added (FuPlugin *plugin,
 
 	/* profile */
 	ptask = as_profile_start (profile, "FuPluginLu:added{%s}",
-				  fu_device_get_platform_id (FU_DEVICE (device)));
+				  fu_device_get_physical_id (FU_DEVICE (device)));
 	g_assert (ptask != NULL);
 
 	/* open the device */

@@ -23,8 +23,6 @@ void		 fu_device_list_remove			(FuDeviceList	*self,
 							 FuDevice	*device);
 GPtrArray	*fu_device_list_get_all			(FuDeviceList	*self);
 GPtrArray	*fu_device_list_get_active		(FuDeviceList	*self);
-GPtrArray	*fu_device_list_get_by_platform_id	(FuDeviceList	*self,
-							 const gchar	*platform_id);
 FuDevice	*fu_device_list_get_old			(FuDeviceList	*self,
 							 FuDevice	*device);
 FuDevice	*fu_device_list_get_by_id		(FuDeviceList	*self,
