@@ -74,8 +74,7 @@ BuildRequires: pango-devel
 BuildRequires: cairo-devel cairo-gobject-devel
 BuildRequires: freetype
 BuildRequires: fontconfig
-BuildRequires: dejavu-sans-fonts
-BuildRequires: adobe-source-han-sans-cn-fonts
+BuildRequires: google-noto-sans-cjk-ttc-fonts
 BuildRequires: gnu-efi-devel
 BuildRequires: pesign
 %endif

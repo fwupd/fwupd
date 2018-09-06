@@ -41,13 +41,7 @@
       <package />
     </distro>
   </dependency>
-  <dependency type="build" id="adobe-source-han-sans-cn-fonts">
-    <distro id="centos">
-      <package />
-    </distro>
-    <distro id="fedora">
-      <package />
-    </distro>
+  <dependency type="build" id="noto-fonts-cjk">
     <distro id="arch">
       <package />
     </distro>
@@ -143,15 +137,15 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="fonts-dejavu">
+  <dependency type="build" id="fonts-noto">
     <distro id="arch">
-      <package>ttf-dejavu</package>
+      <package>noto-fonts</package>
     </distro>
     <distro id="centos">
-      <package>dejavu-sans-fonts</package>
+      <package>google-noto-sans-cjk-ttc-fonts</package>
     </distro>
     <distro id="fedora">
-      <package>dejavu-sans-fonts</package>
+      <package>google-noto-sans-cjk-ttc-fonts</package>
     </distro>
     <distro id="debian">
       <control />
