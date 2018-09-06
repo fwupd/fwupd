@@ -168,22 +168,24 @@ fu_device_list_find_by_guid (FuDeviceList *self, const gchar *guid)
 }
 
 static FuDeviceItem *
-fu_device_list_find_by_platform_id (FuDeviceList *self, const gchar *platform_id)
+fu_device_list_find_by_connection (FuDeviceList *self, const gchar *physical_id, const gchar *logical_id)
 {
-	if (platform_id == NULL)
+	if (physical_id == NULL)
 		return NULL;
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		FuDevice *device = item_tmp->device;
 		if (device != NULL &&
-		    g_strcmp0 (fu_device_get_physical_id (device), platform_id) == 0)
+		    g_strcmp0 (fu_device_get_physical_id (device), physical_id) == 0 &&
+		    g_strcmp0 (fu_device_get_logical_id (device), logical_id) == 0)
 			return item_tmp;
 	}
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		FuDevice *device = item_tmp->device_old;
 		if (device != NULL &&
-		    g_strcmp0 (fu_device_get_physical_id (device), platform_id) == 0)
+		    g_strcmp0 (fu_device_get_physical_id (device), physical_id) == 0 &&
+		    g_strcmp0 (fu_device_get_logical_id (device), logical_id) == 0)
 			return item_tmp;
 	}
 	return NULL;
@@ -483,8 +485,9 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	/* verify a compatible device does not already exist */
 	item = fu_device_list_get_by_guids (self, fu_device_get_guids (device));
 	if (item == NULL) {
-		item = fu_device_list_find_by_platform_id (self,
-							   fu_device_get_physical_id (device));
+		item = fu_device_list_find_by_connection (self,
+							   fu_device_get_physical_id (device),
+							   fu_device_get_logical_id (device));
 	}
 	if (item != NULL && item->remove_id != 0) {
 		g_debug ("found compatible device %s recently removed, reusing "
