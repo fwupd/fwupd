@@ -893,15 +893,17 @@ fu_device_set_name (FuDevice *self, const gchar *value)
 
 	/* overwriting? */
 	if (g_strcmp0 (value, fu_device_get_name (self)) == 0) {
-		g_debug ("device %s overwriting same name value: %s",
-			 fu_device_get_id (self), value);
+		const gchar *id = fu_device_get_id (self);
+		g_debug ("%s device overwriting same name value: %s",
+			 id != NULL ? id : "unknown", value);
 		return;
 	}
 
 	/* changing */
 	if (fu_device_get_name (self) != NULL) {
-		g_debug ("device %s overwriting name value: %s->%s",
-			 fu_device_get_id (self),
+		const gchar *id = fu_device_get_id (self);
+		g_debug ("%s device overwriting name value: %s->%s",
+			id != NULL ? id : "unknown",
 			 fu_device_get_name (self),
 			 value);
 	}
