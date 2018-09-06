@@ -1194,6 +1194,7 @@ fu_engine_install_tasks (FuEngine *self,
 			 GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_after = NULL;
 
 	/* notify the plugins about the composite action */
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -1219,8 +1220,25 @@ fu_engine_install_tasks (FuEngine *self,
 		}
 	}
 
+	/* refresh all devices in case they replugged */
+	devices_after = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *old_device = g_ptr_array_index (devices, i);
+		FuDevice *new_device;
+		g_autoptr(GError) error_local = NULL;
+		new_device = fu_device_list_get_by_id (self->device_list,
+						       fu_device_get_id (old_device),
+						       &error_local);
+		if (new_device == NULL) {
+			g_warning ("failed to find new device: %s",
+				   error_local->message);
+			continue;
+		}
+		g_ptr_array_add (devices_after, g_object_ref (new_device));
+	}
+
 	/* notify the plugins about the composite action */
-	if (!fu_engine_composite_cleanup (self, devices, error)) {
+	if (!fu_engine_composite_cleanup (self, devices_after, error)) {
 		g_prefix_error (error, "failed to cleanup composite action: ");
 		return FALSE;
 	}
