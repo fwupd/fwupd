@@ -117,31 +117,39 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		if (tmp != NULL) {
 			g_auto(GStrv) vm = g_strsplit (tmp, " ", 2);
 			if (g_strv_length (vm) == 2) {
-				fu_device_set_vendor (device, vm[0]);
-				fu_device_set_name (device, vm[1]);
+				if (fu_device_get_vendor (device) == NULL)
+					fu_device_set_vendor (device, vm[0]);
+				if (fu_device_get_name (device) == NULL)
+					fu_device_set_name (device, vm[1]);
 			}
 		}
 	}
 
 	/* set the version if the revision has been set */
-	if (priv->revision != 0x00) {
-		g_autofree gchar *version = g_strdup_printf ("%02x", priv->revision);
-		fu_device_set_version (device, version);
+	if (fu_device_get_version (device) == NULL) {
+		if (priv->revision != 0x00) {
+			g_autofree gchar *version = g_strdup_printf ("%02x", priv->revision);
+			fu_device_set_version (device, version);
+		}
 	}
 
 	/* set model */
-	tmp = g_udev_device_get_property (priv->udev_device, "FWUPD_MODEL");
-	if (tmp == NULL)
-		tmp = g_udev_device_get_property (priv->udev_device, "ID_MODEL_FROM_DATABASE");
-	if (tmp != NULL)
-		fu_device_set_name (device, tmp);
+	if (fu_device_get_name (device) == NULL) {
+		tmp = g_udev_device_get_property (priv->udev_device, "FWUPD_MODEL");
+		if (tmp == NULL)
+			tmp = g_udev_device_get_property (priv->udev_device, "ID_MODEL_FROM_DATABASE");
+		if (tmp != NULL)
+			fu_device_set_name (device, tmp);
+	}
 
 	/* set vendor */
-	tmp = g_udev_device_get_property (priv->udev_device, "FWUPD_VENDOR");
-	if (tmp == NULL)
-		tmp = g_udev_device_get_property (priv->udev_device, "ID_VENDOR_FROM_DATABASE");
-	if (tmp != NULL)
-		fu_device_set_vendor (device, tmp);
+	if (fu_device_get_vendor (device) == NULL) {
+		tmp = g_udev_device_get_property (priv->udev_device, "FWUPD_VENDOR");
+		if (tmp == NULL)
+			tmp = g_udev_device_get_property (priv->udev_device, "ID_VENDOR_FROM_DATABASE");
+		if (tmp != NULL)
+			fu_device_set_vendor (device, tmp);
+	}
 
 	/* set vendor ID */
 	subsystem = g_ascii_strup (fu_udev_device_get_subsystem (self), -1);
