@@ -85,6 +85,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_has_guid(d,v)			fwupd_device_has_guid(FWUPD_DEVICE(d),v)
 #define fu_device_set_modified(d,v)		fwupd_device_set_modified(FWUPD_DEVICE(d),v)
 #define fu_device_set_plugin(d,v)		fwupd_device_set_plugin(FWUPD_DEVICE(d),v)
+#define fu_device_set_serial(d,v)		fwupd_device_set_serial(FWUPD_DEVICE(d),v)
 #define fu_device_set_summary(d,v)		fwupd_device_set_summary(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_error(d,v)		fwupd_device_set_update_error(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_state(d,v)		fwupd_device_set_update_state(FWUPD_DEVICE(d),v)
@@ -102,6 +103,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_guid_default(d)		fwupd_device_get_guid_default(FWUPD_DEVICE(d))
 #define fu_device_get_icons(d)			fwupd_device_get_icons(FWUPD_DEVICE(d))
 #define fu_device_get_name(d)			fwupd_device_get_name(FWUPD_DEVICE(d))
+#define fu_device_get_serial(d)			fwupd_device_get_serial(FWUPD_DEVICE(d))
 #define fu_device_get_summary(d)		fwupd_device_get_summary(FWUPD_DEVICE(d))
 #define fu_device_get_id(d)			fwupd_device_get_id(FWUPD_DEVICE(d))
 #define fu_device_get_plugin(d)			fwupd_device_get_plugin(FWUPD_DEVICE(d))
@@ -157,9 +159,6 @@ void		 fu_device_set_physical_id		(FuDevice	*self,
 const gchar	*fu_device_get_logical_id		(FuDevice	*self);
 void		 fu_device_set_logical_id		(FuDevice	*self,
 							 const gchar	*logical_id);
-const gchar	*fu_device_get_serial			(FuDevice	*self);
-void		 fu_device_set_serial			(FuDevice	*self,
-							 const gchar	*serial);
 const gchar	*fu_device_get_custom_flags		(FuDevice	*self);
 gboolean	 fu_device_has_custom_flag		(FuDevice	*self,
 							 const gchar	*hint);

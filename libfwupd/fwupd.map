@@ -264,3 +264,11 @@ LIBFWUPD_1.1.1 {
     fwupd_device_compare;
   local: *;
 } LIBFWUPD_1.1.0;
+
+LIBFWUPD_1.1.2 {
+  global:
+    fwupd_device_get_serial;
+    fwupd_device_set_serial;
+    fwupd_device_to_variant_full;
+  local: *;
+} LIBFWUPD_1.1.1;

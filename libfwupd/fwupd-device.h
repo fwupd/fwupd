@@ -45,6 +45,9 @@ void		 fwupd_device_set_parent		(FwupdDevice	*device,
 const gchar	*fwupd_device_get_name			(FwupdDevice	*device);
 void		 fwupd_device_set_name			(FwupdDevice	*device,
 							 const gchar	*name);
+const gchar	*fwupd_device_get_serial		(FwupdDevice	*device);
+void		 fwupd_device_set_serial		(FwupdDevice	*device,
+							 const gchar	*serial);
 const gchar	*fwupd_device_get_summary		(FwupdDevice	*device);
 void		 fwupd_device_set_summary		(FwupdDevice	*device,
 							 const gchar	*summary);
