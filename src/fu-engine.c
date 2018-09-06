@@ -37,6 +37,7 @@
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
 #include "fu-smbios.h"
+#include "fu-udev-device-private.h"
 #include "fu-usb-device-private.h"
 
 static void fu_engine_finalize	 (GObject *obj);
