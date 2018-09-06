@@ -1056,40 +1056,6 @@ fu_device_get_physical_id (FuDevice *self)
 	return fu_device_get_metadata (self, "physical-id");
 }
 
-/**
- * fu_device_set_serial:
- * @self: A #FuDevice
- * @serial: a serial number string, e.g. `0000123`
- *
- * Sets the serial number for the device.
- *
- * Since: 1.0.3
- **/
-void
-fu_device_set_serial (FuDevice *self, const gchar *serial)
-{
-	g_return_if_fail (FU_IS_DEVICE (self));
-	g_return_if_fail (serial != NULL);
-	fu_device_set_metadata (self, "serial", serial);
-}
-
-/**
- * fu_device_get_serial:
- * @self: A #FuDevice
- *
- * Gets the serial number for the device.
- *
- * Returns: a string value, or %NULL if never set.
- *
- * Since: 1.0.3
- **/
-const gchar *
-fu_device_get_serial (FuDevice *self)
-{
-	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return fu_device_get_metadata (self, "serial");
-}
-
 static void
 fu_device_set_custom_flag (FuDevice *self, const gchar *hint)
 {

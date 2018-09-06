@@ -36,6 +36,7 @@ typedef struct {
 	GPtrArray			*guids;
 	GPtrArray			*icons;
 	gchar				*name;
+	gchar				*serial;
 	gchar				*summary;
 	gchar				*description;
 	gchar				*vendor;
@@ -131,6 +132,42 @@ fwupd_device_set_summary (FwupdDevice *device, const gchar *summary)
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	g_free (priv->summary);
 	priv->summary = g_strdup (summary);
+}
+
+/**
+ * fwupd_device_get_serial:
+ * @device: A #FwupdDevice
+ *
+ * Gets the serial number for the device.
+ *
+ * Returns: a string value, or %NULL if never set.
+ *
+ * Since: 1.1.2
+ **/
+const gchar *
+fwupd_device_get_serial (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->serial;
+}
+
+/**
+ * fwupd_device_set_serial:
+ * @device: A #FwupdDevice
+ * @serial: the device serial number
+ *
+ * Sets the serial number for the device.
+ *
+ * Since: 1.1.2
+ **/
+void
+fwupd_device_set_serial (FwupdDevice *device, const gchar *serial)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_free (priv->serial);
+	priv->serial = g_strdup (serial);
 }
 
 /**
@@ -890,6 +927,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_parent_id (self, priv_donor->parent_id);
 	if (priv->name == NULL)
 		fwupd_device_set_name (self, priv_donor->name);
+	if (priv->serial == NULL)
+		fwupd_device_set_serial (self, priv_donor->serial);
 	if (priv->summary == NULL)
 		fwupd_device_set_summary (self, priv_donor->summary);
 	if (priv->vendor == NULL)
@@ -925,17 +964,19 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 }
 
 /**
- * fwupd_device_to_variant:
+ * fwupd_device_to_variant_full:
  * @device: A #FwupdDevice
+ * @flags: #FwupdDeviceFlags for the call
  *
  * Creates a GVariant from the device data.
+ * Optionally provides additional data based upon flags
  *
  * Returns: the GVariant, or %NULL for error
  *
- * Since: 1.0.0
+ * Since: 1.1.2
  **/
 GVariant *
-fwupd_device_to_variant (FwupdDevice *device)
+fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	GVariantBuilder builder;
@@ -1054,6 +1095,13 @@ fwupd_device_to_variant (FwupdDevice *device)
 				       FWUPD_RESULT_KEY_UPDATE_STATE,
 				       g_variant_new_uint32 (priv->update_state));
 	}
+	if (flags & FWUPD_DEVICE_FLAG_TRUSTED) {
+		if (priv->serial != NULL) {
+			g_variant_builder_add (&builder, "{sv}",
+					       FWUPD_RESULT_KEY_SERIAL,
+					       g_variant_new_string (priv->serial));
+		}
+	}
 
 	/* create an array with all the metadata in */
 	if (priv->releases->len > 0) {
@@ -1070,6 +1118,22 @@ fwupd_device_to_variant (FwupdDevice *device)
 							    priv->releases->len));
 	}
 	return g_variant_new ("a{sv}", &builder);
+}
+
+/**
+ * fwupd_device_to_variant:
+ * @device: A #FwupdDevice
+ *
+ * Creates a GVariant from the device data omitting sensitive fields
+ *
+ * Returns: the GVariant, or %NULL for error
+ *
+ * Since: 1.0.0
+ **/
+GVariant *
+fwupd_device_to_variant (FwupdDevice *device)
+{
+	return fwupd_device_to_variant_full (device, FWUPD_DEVICE_FLAG_NONE);
 }
 
 static void
@@ -1129,6 +1193,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VENDOR_ID) == 0) {
 		fwupd_device_set_vendor_id (device, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SERIAL) == 0) {
+		fwupd_device_set_serial (device, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
@@ -1398,6 +1466,7 @@ fwupd_device_to_string (FwupdDevice *device)
 		const gchar *guid = g_ptr_array_index (priv->guids, i);
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
 	}
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
@@ -1467,6 +1536,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->id);
 	g_free (priv->parent_id);
 	g_free (priv->name);
+	g_free (priv->serial);
 	g_free (priv->summary);
 	g_free (priv->vendor);
 	g_free (priv->vendor_id);
