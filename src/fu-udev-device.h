@@ -26,7 +26,6 @@ struct _FuUdevDeviceClass
 };
 
 FuUdevDevice	*fu_udev_device_new			(GUdevDevice	*udev_device);
-void		 fu_udev_device_emit_changed		(FuUdevDevice	*self);
 GUdevDevice	*fu_udev_device_get_dev			(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_sysfs_path		(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_subsystem		(FuUdevDevice	*self);

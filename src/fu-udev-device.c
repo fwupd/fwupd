@@ -9,7 +9,7 @@
 #include <appstream-glib.h>
 #include <string.h>
 
-#include "fu-udev-device.h"
+#include "fu-udev-device-private.h"
 
 /**
  * SECTION:fu-udev-device
