@@ -882,15 +882,20 @@ fu_device_list_replug_auto_func (void)
 	gboolean ret;
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) parent = fu_device_new ();
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
 	g_autoptr(GError) error = NULL;
 	FuDeviceListReplugHelper helper;
 
-	/* fake devices */
+	/* parent */
+	fu_device_set_id (parent, "parent");
+
+	/* fake child devices */
 	fu_device_set_id (device1, "device1");
 	fu_device_set_physical_id (device1, "ID");
 	fu_device_set_plugin (device1, "self-test");
 	fu_device_set_remove_delay (device1, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_add_child (parent, device1);
 	fu_device_set_id (device2, "device2");
 	fu_device_set_physical_id (device2, "ID"); /* matches */
 	fu_device_set_plugin (device2, "self-test");
@@ -919,6 +924,9 @@ fu_device_list_replug_auto_func (void)
 	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
+
+	/* check device2 now has parent too */
+	g_assert (fu_device_get_parent (device2) == parent);
 
 	/* waiting, failed */
 	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);

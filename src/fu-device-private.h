@@ -14,6 +14,8 @@ G_BEGIN_DECLS
 GPtrArray	*fu_device_get_parent_guids		(FuDevice	*self);
 gboolean	 fu_device_has_parent_guid		(FuDevice	*self,
 							 const gchar	*guid);
+void		 fu_device_set_parent			(FuDevice	*self,
+							 FuDevice	*parent);
 guint		 fu_device_get_order			(FuDevice	*self);
 void		 fu_device_set_order			(FuDevice	*self,
 							 guint		 order);

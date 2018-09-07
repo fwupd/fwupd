@@ -422,6 +422,14 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 		fu_device_set_version (device, version);
 	}
 
+	/* copy the parent if not already set */
+	if (fu_device_get_parent (item->device) != NULL &&
+	    fu_device_get_parent (device) == NULL) {
+		FuDevice *parent = fu_device_get_parent (item->device);
+		g_debug ("copying parent %s to new device", fu_device_get_id (parent));
+		fu_device_set_parent (device, parent);
+	}
+
 	/* assign the new device */
 	g_set_object (&item->device_old, item->device);
 	g_set_object (&item->device, device);

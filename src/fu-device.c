@@ -306,7 +306,7 @@ fu_device_get_parent (FuDevice *self)
 	return priv->parent;
 }
 
-static void
+void
 fu_device_set_parent (FuDevice *self, FuDevice *parent)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
