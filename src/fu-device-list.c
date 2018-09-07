@@ -168,22 +168,24 @@ fu_device_list_find_by_guid (FuDeviceList *self, const gchar *guid)
 }
 
 static FuDeviceItem *
-fu_device_list_find_by_platform_id (FuDeviceList *self, const gchar *platform_id)
+fu_device_list_find_by_connection (FuDeviceList *self, const gchar *physical_id, const gchar *logical_id)
 {
-	if (platform_id == NULL)
+	if (physical_id == NULL)
 		return NULL;
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		FuDevice *device = item_tmp->device;
 		if (device != NULL &&
-		    g_strcmp0 (fu_device_get_physical_id (device), platform_id) == 0)
+		    g_strcmp0 (fu_device_get_physical_id (device), physical_id) == 0 &&
+		    g_strcmp0 (fu_device_get_logical_id (device), logical_id) == 0)
 			return item_tmp;
 	}
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		FuDevice *device = item_tmp->device_old;
 		if (device != NULL &&
-		    g_strcmp0 (fu_device_get_physical_id (device), platform_id) == 0)
+		    g_strcmp0 (fu_device_get_physical_id (device), physical_id) == 0 &&
+		    g_strcmp0 (fu_device_get_logical_id (device), logical_id) == 0)
 			return item_tmp;
 	}
 	return NULL;
@@ -370,19 +372,6 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 }
 
 static void
-fu_device_list_add_missing_guids (FuDevice *device_new, FuDevice *device_old)
-{
-	GPtrArray *guids_old = fu_device_get_guids (device_old);
-	for (guint i = 0; i < guids_old->len; i++) {
-		const gchar *guid_tmp = g_ptr_array_index (guids_old, i);
-		if (!fu_device_has_guid (device_new, guid_tmp)) {
-			g_debug ("adding GUID %s to device", guid_tmp);
-			fu_device_add_counterpart_guid (device_new, guid_tmp);
-		}
-	}
-}
-
-static void
 fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
 	/* clear timeout if scheduled */
@@ -391,32 +380,8 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 		item->remove_id = 0;
 	}
 
-	/* copy over any GUIDs that used to exist */
-	fu_device_list_add_missing_guids (device, item->device);
-
-	/* enforce the vendor ID if specified */
-	if (fu_device_get_vendor_id (item->device) != NULL &&
-	    fu_device_get_vendor_id (device) == NULL) {
-		const gchar *vendor_id = fu_device_get_vendor_id (item->device);
-		g_debug ("copying old vendor ID %s to new device", vendor_id);
-		fu_device_set_vendor_id (device, vendor_id);
-	}
-
-	/* copy over the version strings if not set */
-	if (fu_device_get_version (item->device) != NULL &&
-	    fu_device_get_version (device) == NULL) {
-		const gchar *version = fu_device_get_version (item->device);
-		g_debug ("copying old version %s to new device", version);
-		fu_device_set_version (device, version);
-	}
-
-	/* always use the runtime version */
-	if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION) &&
-	    fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
-		const gchar *version = fu_device_get_version (item->device);
-		g_debug ("forcing runtime version %s to new device", version);
-		fu_device_set_version (device, version);
-	}
+	/* copy over everything */
+	fu_device_incorporate (device, item->device);
 
 	/* assign the new device */
 	g_set_object (&item->device_old, item->device);
@@ -483,8 +448,9 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	/* verify a compatible device does not already exist */
 	item = fu_device_list_get_by_guids (self, fu_device_get_guids (device));
 	if (item == NULL) {
-		item = fu_device_list_find_by_platform_id (self,
-							   fu_device_get_physical_id (device));
+		item = fu_device_list_find_by_connection (self,
+							   fu_device_get_physical_id (device),
+							   fu_device_get_logical_id (device));
 	}
 	if (item != NULL && item->remove_id != 0) {
 		g_debug ("found compatible device %s recently removed, reusing "
