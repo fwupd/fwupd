@@ -379,6 +379,16 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystem, GErr
 			return FALSE;
 		}
 		physical_id = g_strdup_printf ("DEVPATH=%s", tmp);
+	} else if (g_strcmp0 (subsystem, "hid") == 0) {
+		tmp = g_udev_device_get_property (udev_device, "HID_PHYS");
+		if (tmp == NULL) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_NOT_FOUND,
+					     "failed to find HID_PHYS");
+			return FALSE;
+		}
+		physical_id = g_strdup_printf ("HID_PHYS=%s", tmp);
 	} else {
 		g_set_error (error,
 			     G_IO_ERROR,
