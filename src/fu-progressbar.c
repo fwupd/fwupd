@@ -179,7 +179,7 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 	if (fu_progressbar_estimate_ready (self, percentage)) {
 		g_autofree gchar *remaining = fu_progressbar_time_remaining_str (self);
 		if (remaining != NULL)
-			g_string_append_printf (str, " %s", remaining);
+			g_string_append_printf (str, " %s…", remaining);
 	}
 
 	/* dump to screen */
