@@ -100,6 +100,7 @@ warning_flags = [
   '-Wuninitialized',
   '-Wunused-but-set-variable',
   '-Wunused-variable',
+  '-Wvla',
   '-Wwrite-strings'
 ]
 cc = meson.get_compiler('c')
