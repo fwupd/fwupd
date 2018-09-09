@@ -70,8 +70,6 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 {
 	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (device));
 	const gchar *guid = NULL;
-	const gchar *pci_slot_name;
-	g_autofree gchar *physical_id = NULL;
 	g_autofree gchar *rom_fn = NULL;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
@@ -87,14 +85,9 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	ptask = as_profile_start (profile, "FuPluginUdev:client-add{%s}", guid);
 	g_assert (ptask != NULL);
 
-	/* get the physical ID */
-	pci_slot_name = g_udev_device_get_property (udev_device, "PCI_SLOT_NAME");
-	if (pci_slot_name == NULL) {
-		g_prefix_error (error, "failed to find PCI_SLOT_NAME: ");
+	/* set the physical ID */
+	if (!fu_udev_device_set_physical_id (device, "pci", error))
 		return FALSE;
-	}
-	physical_id = g_strdup_printf ("PCI_SLOT_NAME=%s", pci_slot_name);
-	fu_device_set_physical_id (FU_DEVICE (device), physical_id);
 
 	/* did we get enough data */
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
