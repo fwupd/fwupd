@@ -20,35 +20,17 @@ apps:
   fwupd:
     command: fwupd.wrapper
     daemon: simple
-    slots: [fwupd, daemon]
+    slots: [daemon]
   fwupdmgr:
     command: fwupdmgr.wrapper
     completer:
       usr/share/bash-completion/completions/fwupdmgr
-    plugs: [network, fwupdmgr, client]
-
-plugs:
-  client:
-    interface: dbus
-    bus: system
-    name: org.freedesktop.fwupd
-  fwupdtool:
-    interface: home
-  fwupdmgr:
-    interface: home
 
 slots:
   daemon:
     interface: dbus
     bus: system
     name: org.freedesktop.fwupd
-  fwupd:
-    interface: fwupd
-  fwupd-data:
-    content: fwupd-data
-    interface: content
-    write:
-      - $SNAP_DATA
 
 parts:
   libefivar-dev:

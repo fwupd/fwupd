@@ -22,33 +22,17 @@ apps:
   fwupd:
     command: fwupd.wrapper
     daemon: simple
-    slots: [fwupd, daemon]
-    plugs: [dcdbas-control]
+    slots: [daemon]
   fwupdmgr:
     command: fwupdmgr.wrapper
     completer:
       share/bash-completion/completions/fwupdmgr
-    plugs: [network, fwupdmgr, client]
-
-plugs:
-  client:
-    interface: dbus
-    bus: system
-    name: org.freedesktop.fwupd
-  fwupdtool:
-    interface: home
-  dfu-tool:
-    interface: home
-  fwupdmgr:
-    interface: home
 
 slots:
   daemon:
     interface: dbus
     bus: system
     name: org.freedesktop.fwupd
-  fwupd:
-    interface: fwupd
 
 parts:
   libefivar-dev:
