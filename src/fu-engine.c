@@ -34,6 +34,7 @@
 #include "fu-hwids.h"
 #include "fu-keyring-utils.h"
 #include "fu-history.h"
+#include "fu-mutex.h"
 #include "fu-plugin.h"
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
@@ -2237,6 +2238,7 @@ FuDevice *
 fu_engine_get_device (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuDevice *device;
+
 	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return NULL;
