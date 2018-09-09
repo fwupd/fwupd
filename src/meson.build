@@ -31,6 +31,7 @@ libfwupdprivate = static_library(
     'fu-device-locker.c',
     'fu-hwids.c',
     'fu-history.c',
+    'fu-mutex.c',
     'fu-plugin.c',
     'fu-progressbar.c',
     'fu-quirks.c',
@@ -197,6 +198,7 @@ executable(
     'fu-keyring.c',
     'fu-keyring-utils.c',
     'fu-history.c',
+    'fu-mutex.c',
     'fu-plugin.c',
     'fu-plugin-list.c',
     'fu-quirks.c',
@@ -261,6 +263,7 @@ if get_option('tests')
       'fu-install-task.c',
       'fu-keyring.c',
       'fu-keyring-result.c',
+      'fu-mutex.c',
       'fu-plugin.c',
       'fu-plugin-list.c',
       'fu-progressbar.c',
@@ -296,6 +299,7 @@ if get_option('tests')
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
+      '-DFU_MUTEX_DEBUG',
     ],
   )
   test('fu-self-test', e, is_parallel:false)

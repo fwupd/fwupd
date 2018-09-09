@@ -22,6 +22,7 @@
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
 #include "fu-history.h"
+#include "fu-mutex.h"
 
 /**
  * SECTION:fu-plugin
@@ -52,6 +53,7 @@ typedef struct {
 	GPtrArray		*udev_subsystems;
 	FuSmbios		*smbios;
 	GHashTable		*devices;	/* platform_id:GObject */
+	FuMutex			*devices_mutex;
 	GHashTable		*report_metadata;	/* key:value */
 	FuPluginData		*data;
 } FuPluginPrivate;
@@ -145,8 +147,10 @@ gpointer
 fu_plugin_cache_lookup (FuPlugin *self, const gchar *id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->devices_mutex);
 	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
 	g_return_val_if_fail (id != NULL, NULL);
+	g_return_val_if_fail (locker != NULL, NULL);
 	return g_hash_table_lookup (priv->devices, id);
 }
 
@@ -164,8 +168,10 @@ void
 fu_plugin_cache_add (FuPlugin *self, const gchar *id, gpointer dev)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuMutexLocker) locker = fu_mutex_write_locker_new (priv->devices_mutex);
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (id != NULL);
+	g_return_if_fail (locker != NULL);
 	g_hash_table_insert (priv->devices, g_strdup (id), g_object_ref (dev));
 }
 
@@ -182,8 +188,10 @@ void
 fu_plugin_cache_remove (FuPlugin *self, const gchar *id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuMutexLocker) locker = fu_mutex_write_locker_new (priv->devices_mutex);
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (id != NULL);
+	g_return_if_fail (locker != NULL);
 	g_hash_table_remove (priv->devices, id);
 }
 
@@ -1760,6 +1768,7 @@ fu_plugin_init (FuPlugin *self)
 	priv->enabled = TRUE;
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
+	priv->devices_mutex = fu_mutex_new (G_OBJECT_TYPE_NAME(self), "devices");
 	priv->report_metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++)
 		priv->rules[i] = g_ptr_array_new_with_free_func (g_free);
@@ -1802,6 +1811,7 @@ fu_plugin_finalize (GObject *object)
 		g_hash_table_unref (priv->compile_versions);
 	g_hash_table_unref (priv->devices);
 	g_hash_table_unref (priv->report_metadata);
+	g_object_unref (priv->devices_mutex);
 	g_free (priv->name);
 	g_free (priv->data);
 	/* Must happen as the last step to avoid prematurely
