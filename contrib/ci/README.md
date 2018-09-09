@@ -26,18 +26,7 @@ Debian testing (x86_64)
 * An installed testing run with the "test" plugin and pulling from LVFS.
 * All packages are removed
 
-Debian testing (i386)
-------
-
-* A fully packaged DEB build with all plugins enabled
-* Compiled under gcc
-* Tests with -Werror enabled
-* Tests with the built in local test suite for all plugins.
-* All packages are installed
-* An installed testing run with the "test" plugin and pulling from LVFS.
-* All packages are removed
-
-Ubuntu devel release (x86_64)
+Ubuntu devel release (i386)
 ------
 
 * A fully packaged DEB build with all plugins enabled

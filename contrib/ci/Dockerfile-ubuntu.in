@@ -1,4 +1,4 @@
-FROM ubuntu:devel
+FROM %%%ARCH_PREFIX%%%ubuntu:devel
 %%%OS%%%
 ENV CC clang
 RUN echo fubar > /etc/machine-id
