@@ -23,7 +23,6 @@ struct _FuUnifyingPeripheral
 	gboolean		 is_updatable;
 	gboolean		 is_active;
 	gint			 udev_fd;
-	guint			 poll_id;
 	GPtrArray		*feature_index;	/* of FuUnifyingHidppMap */
 };
 
@@ -191,22 +190,18 @@ fu_unifying_peripheral_close (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_unifying_peripheral_poll_cb (gpointer user_data)
+fu_unifying_peripheral_poll (FuDevice *device, GError **error)
 {
-	FuUnifyingPeripheral *self = FU_UNIFYING_PERIPHERAL (user_data);
+	FuUnifyingPeripheral *self = FU_UNIFYING_PERIPHERAL (device);
 	const guint timeout = 1; /* ms */
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuUnifyingHidppMsg) msg = fu_unifying_hidpp_msg_new ();
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open */
-	locker = fu_device_locker_new (self, &error_local);
-	if (locker == NULL) {
-		g_warning ("failed to open, disabling polling: %s",
-			   error_local->message);
-		self->poll_id = 0;
-		return G_SOURCE_REMOVE;
-	}
+	locker = fu_device_locker_new (self, error);
+	if (locker == NULL)
+		return FALSE;
 
 	/* flush pending data */
 	msg->device_id = self->hidpp_id;
@@ -216,7 +211,7 @@ fu_unifying_peripheral_poll_cb (gpointer user_data)
 				      G_IO_ERROR,
 				      G_IO_ERROR_TIMED_OUT)) {
 			g_warning ("failed to get pending read: %s", error_local->message);
-			return G_SOURCE_CONTINUE;
+			return TRUE;
 		}
 		/* no data to recieve */
 		g_clear_error (&error_local);
@@ -225,22 +220,18 @@ fu_unifying_peripheral_poll_cb (gpointer user_data)
 	/* just ping */
 	if (!fu_unifying_peripheral_ping (self, &error_local)) {
 		g_warning ("failed to ping device: %s", error_local->message);
-		return G_SOURCE_CONTINUE;
+		return TRUE;
 	}
 
 	/* this is the first time the device has been active */
 	if (self->feature_index->len == 0) {
 		fu_device_probe_invalidate (FU_DEVICE (self));
-		if (!fu_device_setup (FU_DEVICE (self), &error_local)) {
-			g_warning ("failed to setup, disabling polling: %s",
-				   error_local->message);
-			self->poll_id = 0;
-			return G_SOURCE_REMOVE;
-		}
+		if (!fu_device_setup (FU_DEVICE (self), error))
+			return FALSE;
 	}
 
 	/* success */
-	return G_SOURCE_CONTINUE;
+	return TRUE;
 }
 
 static gboolean
@@ -609,11 +600,7 @@ fu_unifying_peripheral_setup (FuDevice *device, GError **error)
 	fu_unifying_peripheral_refresh_updatable (self);
 
 	/* poll for pings to track active state */
-	if (self->poll_id == 0) {
-		self->poll_id = g_timeout_add_seconds (5,
-						       fu_unifying_peripheral_poll_cb,
-						       self);
-	}
+	fu_device_set_poll_interval (device, 5000);
 	return TRUE;
 }
 
@@ -983,8 +970,6 @@ static void
 fu_unifying_peripheral_finalize (GObject *object)
 {
 	FuUnifyingPeripheral *self = FU_UNIFYING_PERIPHERAL (object);
-	if (self->poll_id != 0)
-		g_source_remove (self->poll_id);
 	g_ptr_array_unref (self->feature_index);
 	G_OBJECT_CLASS (fu_unifying_peripheral_parent_class)->finalize (object);
 }
@@ -1003,6 +988,7 @@ fu_unifying_peripheral_class_init (FuUnifyingPeripheralClass *klass)
 	klass_device->write_firmware = fu_unifying_peripheral_write_firmware;
 	klass_device->attach = fu_unifying_peripheral_attach;
 	klass_device->detach = fu_unifying_peripheral_detach;
+	klass_device->poll = fu_unifying_peripheral_poll;
 	klass_device->to_string = fu_unifying_peripheral_to_string;
 	klass_device_udev->probe = fu_unifying_peripheral_probe;
 }

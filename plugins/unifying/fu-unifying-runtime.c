@@ -19,7 +19,6 @@ struct _FuUnifyingRuntime
 	guint8			 version_bl_major;
 	gboolean		 signed_firmware;
 	gint			 udev_fd;
-	guint			 poll_id;
 };
 
 G_DEFINE_TYPE (FuUnifyingRuntime, fu_unifying_runtime, FU_TYPE_UDEV_DEVICE)
@@ -66,9 +65,9 @@ fu_unifying_runtime_close (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_unifying_runtime_poll_cb (gpointer user_data)
+fu_unifying_runtime_poll (FuDevice *device, GError **error)
 {
-	FuUnifyingRuntime *self = FU_UNIFYING_RUNTIME (user_data);
+	FuUnifyingRuntime *self = FU_UNIFYING_RUNTIME (device);
 	const guint timeout = 1; /* ms */
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuUnifyingHidppMsg) msg = fu_unifying_hidpp_msg_new ();
@@ -76,13 +75,9 @@ fu_unifying_runtime_poll_cb (gpointer user_data)
 
 	/* open */
 	g_debug ("opening for poll");
-	locker = fu_device_locker_new (self, &error_local);
-	if (locker == NULL) {
-		g_warning ("failed to open, disabling polling: %s",
-			   error_local->message);
-		self->poll_id = 0;
-		return G_SOURCE_REMOVE;
-	}
+	locker = fu_device_locker_new (self, error);
+	if (locker == NULL)
+		return FALSE;
 
 	/* is there any pending data to read */
 	msg->hidpp_version = 1;
@@ -93,13 +88,13 @@ fu_unifying_runtime_poll_cb (gpointer user_data)
 			return TRUE;
 		}
 		g_warning ("failed to get pending read: %s", error_local->message);
-		return G_SOURCE_CONTINUE;
+		return TRUE;
 	}
 
 	/* HID++1.0 error */
 	if (!fu_unifying_hidpp_msg_is_error (msg, &error_local)) {
 		g_warning ("failed to get pending read: %s", error_local->message);
-		return G_SOURCE_CONTINUE;
+		return TRUE;
 	}
 
 	/* unifying receiver notification */
@@ -121,7 +116,7 @@ fu_unifying_runtime_poll_cb (gpointer user_data)
 			break;
 		}
 	}
-	return G_SOURCE_CONTINUE;
+	return TRUE;
 }
 
 static gboolean
@@ -137,8 +132,7 @@ fu_unifying_runtime_open (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* poll for notifications */
-	if (self->poll_id == 0)
-		self->poll_id = g_timeout_add_seconds (5, fu_unifying_runtime_poll_cb, self);
+	fu_device_set_poll_interval (device, 5000);
 
 	/* success */
 	return TRUE;
@@ -304,9 +298,6 @@ fu_unifying_runtime_detach (FuDevice *device, GError **error)
 static void
 fu_unifying_runtime_finalize (GObject *object)
 {
-	FuUnifyingRuntime *self = FU_UNIFYING_RUNTIME (object);
-	if (self->poll_id != 0)
-		g_source_remove (self->poll_id);
 	G_OBJECT_CLASS (fu_unifying_runtime_parent_class)->finalize (object);
 }
 
@@ -323,6 +314,7 @@ fu_unifying_runtime_class_init (FuUnifyingRuntimeClass *klass)
 	klass_device->setup = fu_unifying_runtime_setup;
 	klass_device->close = fu_unifying_runtime_close;
 	klass_device->detach = fu_unifying_runtime_detach;
+	klass_device->poll = fu_unifying_runtime_poll;
 	klass_device->to_string = fu_unifying_runtime_to_string;
 }
 

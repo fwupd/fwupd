@@ -40,6 +40,7 @@ typedef struct {
 	guint				 progress;
 	guint				 order;
 	guint				 priority;
+	guint				 poll_id;
 	gboolean			 done_probe;
 	gboolean			 done_setup;
 	guint64				 size_min;
@@ -112,6 +113,80 @@ fu_device_set_property (GObject *object, guint prop_id,
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
+	}
+}
+
+/**
+ * fu_device_poll:
+ * @self: A #FuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Polls a device, typically querying the hardware for status.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.1.2
+ **/
+gboolean
+fu_device_poll (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* subclassed */
+	if (klass->poll != NULL) {
+		if (!klass->poll (self, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_device_poll_cb (gpointer user_data)
+{
+	FuDevice *self = FU_DEVICE (user_data);
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_device_poll (self, &error_local)) {
+		g_warning ("disabling polling: %s", error_local->message);
+		priv->poll_id = 0;
+		return G_SOURCE_REMOVE;
+	}
+	return G_SOURCE_CONTINUE;
+}
+
+/**
+ * fu_device_set_poll_interval:
+ * @self: a #FuPlugin
+ * @interval: duration in ms, or 0 to disable
+ *
+ * Polls the hardware every interval period. If the subclassed `->poll()` method
+ * returns %FALSE then a warning is printed to the console and the poll is
+ * disabled until the next call to fu_device_set_poll_interval().
+ *
+ * Since: 1.1.2
+ **/
+void
+fu_device_set_poll_interval (FuDevice *self, guint interval)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+
+	if (priv->poll_id != 0) {
+		g_source_remove (priv->poll_id);
+		priv->poll_id = 0;
+	}
+	if (interval == 0)
+		return;
+	if (interval % 1000 == 0) {
+		priv->poll_id = g_timeout_add_seconds (interval / 1000,
+						       fu_device_poll_cb,
+						       self);
+	} else {
+		priv->poll_id = g_timeout_add (interval, fu_device_poll_cb, self);
 	}
 }
 
@@ -1923,6 +1998,8 @@ fu_device_finalize (GObject *object)
 		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
 	if (priv->quirks != NULL)
 		g_object_unref (priv->quirks);
+	if (priv->poll_id != 0)
+		g_source_remove (priv->poll_id);
 	g_hash_table_unref (priv->metadata);
 	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->parent_guids);
