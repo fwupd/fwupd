@@ -99,6 +99,6 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 		fu_device_set_metadata (FU_DEVICE (device), "RomFilename", rom_fn);
 
 	/* insert to hash */
-	fu_plugin_device_add_delay (plugin, FU_DEVICE (device));
+	fu_plugin_device_add (plugin, FU_DEVICE (device));
 	return TRUE;
 }

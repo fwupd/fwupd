@@ -93,8 +93,6 @@ GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*self);
 GPtrArray	*fu_plugin_get_supported		(FuPlugin	*self);
 void		 fu_plugin_device_add			(FuPlugin	*self,
 							 FuDevice	*device);
-void		 fu_plugin_device_add_delay		(FuPlugin	*self,
-							 FuDevice	*device);
 void		 fu_plugin_device_remove		(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_device_register		(FuPlugin	*self,

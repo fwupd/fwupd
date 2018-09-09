@@ -16,7 +16,6 @@ G_BEGIN_DECLS
 #define FU_OFFLINE_TRIGGER_FILENAME	FU_OFFLINE_DESTDIR "/system-update"
 
 FuPlugin	*fu_plugin_new				(void);
-gboolean	 fu_plugin_has_device_delay		(FuPlugin	*self);
 void		 fu_plugin_set_usb_context		(FuPlugin	*self,
 							 GUsbContext	*usb_ctx);
 void		 fu_plugin_set_hwids			(FuPlugin	*self,

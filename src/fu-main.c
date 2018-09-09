@@ -1142,31 +1142,6 @@ fu_main_load_introspection (const gchar *filename, GError **error)
 	return g_dbus_node_info_new_for_xml (g_bytes_get_data (data, NULL), error);
 }
 
-static gboolean
-fu_main_perhaps_own_name (gpointer user_data)
-{
-	FuMainPrivate *priv = (FuMainPrivate *) user_data;
-	g_autoptr(GError) error = NULL;
-
-	/* are any plugins pending */
-	if (!fu_engine_check_plugins_pending (priv->engine, &error)) {
-		g_debug ("trying again: %s", error->message);
-		return G_SOURCE_CONTINUE;
-	}
-
-	/* own the object */
-	g_debug ("registering D-Bus service");
-	priv->owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
-					 FWUPD_DBUS_SERVICE,
-					 G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
-					 G_BUS_NAME_OWNER_FLAGS_REPLACE,
-					 fu_main_on_bus_acquired_cb,
-					 fu_main_on_name_acquired_cb,
-					 fu_main_on_name_lost_cb,
-					 priv, NULL);
-	return G_SOURCE_REMOVE;
-}
-
 static void
 fu_main_private_free (FuMainPrivate *priv)
 {
@@ -1257,9 +1232,6 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	/* keep polling until all the plugins are ready */
-	g_timeout_add (200, fu_main_perhaps_own_name, priv);
-
 	/* load introspection from file */
 	priv->introspection_daemon = fu_main_load_introspection (FWUPD_DBUS_INTERFACE ".xml",
 								 &error);
@@ -1274,6 +1246,16 @@ main (int argc, char *argv[])
 		g_printerr ("Failed to load authority: %s\n", error->message);
 		return EXIT_FAILURE;
 	}
+
+	/* own the object */
+	priv->owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
+					 FWUPD_DBUS_SERVICE,
+					 G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
+					 G_BUS_NAME_OWNER_FLAGS_REPLACE,
+					 fu_main_on_bus_acquired_cb,
+					 fu_main_on_name_acquired_cb,
+					 fu_main_on_name_lost_cb,
+					 priv, NULL);
 
 	/* Only timeout and close the mainloop if we have specified it
 	 * on the command line */

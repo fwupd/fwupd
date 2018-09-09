@@ -50,7 +50,6 @@ typedef struct {
 	GPtrArray		*udev_subsystems;
 	FuSmbios		*smbios;
 	GHashTable		*devices;	/* platform_id:GObject */
-	GHashTable		*devices_delay;	/* FuDevice:FuPluginHelper */
 	GHashTable		*report_metadata;	/* key:value */
 	FuPluginData		*data;
 } FuPluginPrivate;
@@ -413,85 +412,6 @@ fu_plugin_device_register (FuPlugin *self, FuDevice *device)
 	g_signal_emit (self, signals[SIGNAL_DEVICE_REGISTER], 0, device);
 }
 
-typedef struct {
-	FuPlugin	*self;
-	FuDevice	*device;
-	guint		 timeout_id;
-	GHashTable	*devices;
-} FuPluginHelper;
-
-static void
-fu_plugin_helper_free (FuPluginHelper *helper)
-{
-	g_object_unref (helper->self);
-	g_object_unref (helper->device);
-	g_hash_table_unref (helper->devices);
-	g_free (helper);
-}
-
-static gboolean
-fu_plugin_device_add_delay_cb (gpointer user_data)
-{
-	FuPluginHelper *helper = (FuPluginHelper *) user_data;
-	fu_plugin_device_add (helper->self, helper->device);
-	g_hash_table_remove (helper->devices, helper->device);
-	fu_plugin_helper_free (helper);
-	return FALSE;
-}
-
-/**
- * fu_plugin_has_device_delay:
- * @self: A #FuPlugin
- *
- * Returns if the device has a pending device that is waiting to be added.
- *
- * Returns: %TRUE if a device is waiting to be added
- *
- * Since: 0.8.0
- **/
-gboolean
-fu_plugin_has_device_delay (FuPlugin *self)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	return g_hash_table_size (priv->devices_delay) > 0;
-}
-
-/**
- * fu_plugin_device_add_delay:
- * @self: A #FuPlugin
- * @device: A #FuDevice
- *
- * Asks the daemon to add a device to the exported list after a small delay.
- *
- * Since: 0.8.0
- **/
-void
-fu_plugin_device_add_delay (FuPlugin *self, FuDevice *device)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	FuPluginHelper *helper;
-
-	g_return_if_fail (FU_IS_PLUGIN (self));
-	g_return_if_fail (FU_IS_DEVICE (device));
-
-	/* already waiting for add */
-	helper = g_hash_table_lookup (priv->devices_delay, device);
-	if (helper != NULL) {
-		g_debug ("ignoring add-delay as device %s already pending",
-			 fu_device_get_id (device));
-		return;
-	}
-
-	/* add after a small delay */
-	g_debug ("waiting a small time for other plugins");
-	helper = g_new0 (FuPluginHelper, 1);
-	helper->self = g_object_ref (self);
-	helper->device = g_object_ref (device);
-	helper->timeout_id = g_timeout_add (500, fu_plugin_device_add_delay_cb, helper);
-	helper->devices = g_hash_table_ref (priv->devices_delay);
-	g_hash_table_insert (helper->devices, device, helper);
-}
-
 /**
  * fu_plugin_device_remove:
  * @self: A #FuPlugin
@@ -504,21 +424,8 @@ fu_plugin_device_add_delay (FuPlugin *self, FuDevice *device)
 void
 fu_plugin_device_remove (FuPlugin *self, FuDevice *device)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	FuPluginHelper *helper;
-
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
-
-	/* waiting for add */
-	helper = g_hash_table_lookup (priv->devices_delay, device);
-	if (helper != NULL) {
-		g_debug ("ignoring remove from delayed addition");
-		g_source_remove (helper->timeout_id);
-		g_hash_table_remove (priv->devices_delay, helper->device);
-		fu_plugin_helper_free (helper);
-		return;
-	}
 
 	g_debug ("emit removed from %s: %s",
 		 fu_plugin_get_name (self),
@@ -1851,7 +1758,6 @@ fu_plugin_init (FuPlugin *self)
 	priv->enabled = TRUE;
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
-	priv->devices_delay = g_hash_table_new (g_direct_hash, g_direct_equal);
 	priv->report_metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++)
 		priv->rules[i] = g_ptr_array_new_with_free_func (g_free);
@@ -1893,7 +1799,6 @@ fu_plugin_finalize (GObject *object)
 	if (priv->compile_versions != NULL)
 		g_hash_table_unref (priv->compile_versions);
 	g_hash_table_unref (priv->devices);
-	g_hash_table_unref (priv->devices_delay);
 	g_hash_table_unref (priv->report_metadata);
 	g_free (priv->name);
 	g_free (priv->data);
