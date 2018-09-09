@@ -202,6 +202,8 @@ parts:
   #fetch the latest version of the signed bootloader
   #this might not match our fwupdx64.efi, but it's better than nothing
   fwup-efi-signed:
+    build-packages:
+      - python3-apt
     plugin: make
     source: contrib/snap/fwup-efi-signed
   #needed for UEFI plugin to build UX labels
