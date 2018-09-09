@@ -1410,23 +1410,6 @@ fu_plugin_delay_func (void)
 	g_assert (device_tmp != NULL);
 	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
 	g_clear_object (&device_tmp);
-
-	/* add it with a small delay */
-	fu_plugin_device_add_delay (plugin, device);
-	g_assert (device_tmp == NULL);
-	fu_test_loop_run_with_timeout (1000);
-	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
-	g_clear_object (&device_tmp);
-
-	/* add it again, twice quickly */
-	fu_plugin_device_add_delay (plugin, device);
-	fu_plugin_device_add_delay (plugin, device);
-	g_assert (device_tmp == NULL);
-	fu_test_loop_run_with_timeout (1000);
-	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
-	g_clear_object (&device_tmp);
 }
 
 static void

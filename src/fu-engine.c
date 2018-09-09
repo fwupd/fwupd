@@ -3350,38 +3350,6 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_engine_check_plugins_pending:
- * @self: A #FuEngine
- * @error: A #GError, or %NULL
- *
- * Checks if any plugins have pending devices to be added.
- *
- * Returns: %FALSE if any plugins have pending devices.
- **/
-gboolean
-fu_engine_check_plugins_pending (FuEngine *self, GError **error)
-{
-	GPtrArray *plugins;
-
-	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	plugins = fu_plugin_list_get_all (self->plugin_list);
-	for (guint i = 0; i < plugins->len; i++) {
-		FuPlugin *plugin = g_ptr_array_index (plugins, i);
-		if (fu_plugin_has_device_delay (plugin)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "%s pending",
-				     fu_plugin_get_name (plugin));
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-
 static gboolean
 fu_engine_cleanup_state (GError **error)
 {
