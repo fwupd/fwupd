@@ -2499,6 +2499,38 @@ fu_common_store_cab_error_wrong_checksum_func (void)
 	g_assert (store == NULL);
 }
 
+static gboolean
+fu_device_poll_cb (FuDevice *device, GError **error)
+{
+	guint64 cnt = fu_device_get_metadata_integer (device, "cnt");
+	g_debug ("poll cnt=%" G_GUINT64_FORMAT, cnt);
+	fu_device_set_metadata_integer (device, "cnt", cnt + 1);
+	return TRUE;
+}
+
+static void
+fu_device_poll_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+	guint cnt;
+
+	/* set up a 10ms poll */
+	klass->poll = fu_device_poll_cb;
+	fu_device_set_metadata_integer (device, "cnt", 0);
+	fu_device_set_poll_interval (device, 10);
+	fu_test_loop_run_with_timeout (100);
+	fu_test_loop_quit ();
+	cnt = fu_device_get_metadata_integer (device, "cnt");
+	g_assert_cmpint (cnt, >=, 9);
+
+	/* disable the poll */
+	fu_device_set_poll_interval (device, 0);
+	fu_test_loop_run_with_timeout (100);
+	fu_test_loop_quit ();
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "cnt"), ==, cnt);
+}
+
 static void
 fu_device_incorporate_func (void)
 {
@@ -2620,6 +2652,7 @@ main (int argc, char **argv)
 	if (g_test_slow ())
 		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
+	g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
