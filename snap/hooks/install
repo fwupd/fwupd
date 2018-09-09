@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 install_if_missing() {
-	install -C ${SNAP}/${1} /usr/${1}
+	install -m 644 -C ${SNAP}/${1} /usr/${1}
 }
 
 #install policykit rules and actions
