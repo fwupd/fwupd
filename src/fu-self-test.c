@@ -222,11 +222,13 @@ fu_engine_device_priority_func (void)
 	/* the now-removed low-prio device */
 	device = fu_engine_get_device (engine, "4e89d81a2e6fb4be2578d245fd8511c1f4ad0b58", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null (device);
 	g_clear_error (&error);
 
 	/* the never-added 2nd low-prio device */
 	device = fu_engine_get_device (engine, "c48feddbbcfee514f530ce8f7f2dccd98b6cc150", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null (device);
 }
 
 static void
@@ -987,6 +989,7 @@ fu_device_list_compatible_func (void)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device_old = NULL;
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
 	g_autoptr(GPtrArray) devices_all = NULL;
 	g_autoptr(GPtrArray) devices_active = NULL;
@@ -1053,8 +1056,8 @@ fu_device_list_compatible_func (void)
 			 "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
 
 	/* verify we can get the old device from the new device */
-	device = fu_device_list_get_old (device_list, device2);
-	g_assert (device == device1);
+	device_old = fu_device_list_get_old (device_list, device2);
+	g_assert (device_old == device1);
 }
 
 static void
@@ -1152,6 +1155,7 @@ fu_device_list_func (void)
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==,
 					   "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
+	g_clear_object (&device);
 
 	/* find by GUID */
 	device = fu_device_list_get_by_guid (device_list,
@@ -1161,6 +1165,7 @@ fu_device_list_func (void)
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==,
 			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+	g_clear_object (&device);
 
 	/* find by missing GUID */
 	device = fu_device_list_get_by_guid (device_list, "notfound", &error);
