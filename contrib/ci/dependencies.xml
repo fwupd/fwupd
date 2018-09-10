@@ -21,6 +21,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="bubblewrap">
@@ -34,6 +35,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="base-devel">
@@ -64,11 +66,13 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="clang">
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="gcc-multilib-s390x-linux-gnu">
@@ -92,6 +96,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libcairo-gobject2">
@@ -110,6 +115,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libjson-glib-dev">
@@ -135,6 +141,7 @@
         <version>(>= 1.1.1)</version>
       </control>
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="fonts-noto">
@@ -155,6 +162,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="devscripts">
@@ -164,6 +172,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="debhelper">
@@ -179,6 +188,7 @@
         <version>(>= 10.3)</version>
       </control>
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="dbus-x11">
@@ -194,6 +204,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="dconf">
@@ -213,6 +224,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="intltool">
@@ -236,6 +248,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="fakeroot">
@@ -245,6 +258,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libfreetype6-dev">
@@ -263,6 +277,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="fontconfig">
@@ -280,6 +295,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="gcab">
@@ -298,6 +314,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="gettext">
@@ -320,6 +337,7 @@
         <version>(>= 0.19.8.1)</version>
       </control>
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="gnupg2">
@@ -368,6 +386,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="git">
@@ -387,6 +406,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libglib2.0-dev">
@@ -409,6 +429,7 @@
         <version>(>= 2.45.8)</version>
       </control>
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="gobject-introspection">
@@ -429,6 +450,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libgpgme11-dev">
@@ -447,6 +469,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="gnome-desktop-testing">
@@ -459,6 +482,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="gnutls-dev">
@@ -477,6 +501,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="gnutls-bin">
@@ -495,6 +520,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="gtk-doc-tools">
@@ -515,6 +541,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="help2man">
@@ -536,6 +563,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="jq">
@@ -569,6 +597,7 @@
         <version>(>= 0.6.9)</version>
       </control>
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libarchive-dev">
@@ -587,6 +616,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libefivar-dev">
@@ -617,6 +647,7 @@
         <inclusive>i386</inclusive>
       </control>
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libefiboot-dev">
@@ -638,6 +669,7 @@
         <inclusive>i386</inclusive>
       </control>
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libgcab-dev">
@@ -653,6 +685,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libgirepository1.0-dev">
@@ -665,6 +698,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libgudev-1.0-dev">
@@ -683,6 +717,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libgusb-dev">
@@ -705,6 +740,7 @@
         <version>(>= 0.2.9)</version>
       </control>
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libicu-dev">
@@ -740,6 +776,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libsoup2.4-dev">
@@ -758,6 +795,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libtool-bin">
@@ -769,6 +807,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libstemmer-0">
@@ -783,6 +822,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libxml2-dev:s390x">
@@ -797,6 +837,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="locales">
@@ -809,6 +850,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="meson">
@@ -830,6 +872,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="gir1.2-pango-1.0">
@@ -847,6 +890,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="pkg-config">
@@ -858,6 +902,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="policykit-1">
@@ -880,6 +925,7 @@
         <version>(>> 0.105-14)</version>
       </control>
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libpolkit-gobject-1-dev">
@@ -898,6 +944,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="python34-pip">
@@ -929,6 +976,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-gobject">
@@ -955,6 +1003,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-requests">
@@ -969,6 +1018,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-requests">
@@ -1008,6 +1058,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="systemd">
@@ -1030,6 +1081,7 @@
         <version>(>= 231)</version>
       </control>
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="texlive-fonts-recommended">
@@ -1039,6 +1091,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="udev">
@@ -1051,6 +1104,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="umockdev">
@@ -1071,6 +1125,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="valac">
@@ -1092,6 +1147,7 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="valgrind">
@@ -1144,6 +1200,7 @@
         <exclusive>m68k</exclusive>
       </control>
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="wget">

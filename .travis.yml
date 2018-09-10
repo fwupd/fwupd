@@ -8,12 +8,12 @@ services:
 env:
   - OS=debian-s390x
   - OS=fedora
-  - OS=debian-x86_64
-  - OS=arch
   - OS=debian-i386
+  - OS=arch
   - OS=ubuntu-x86_64
   - OS=centos
   - OS=flatpak
+  - OS=snap
 
 install:
   - ./contrib/ci/generate_docker.py
