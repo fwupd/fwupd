@@ -1,3 +1,17 @@
+fwupd (1.1.2-1) unstable; urgency=medium
+
+  * New upstream release
+    - Fixes ESP autodetection for autofs (Closes: #906216)
+    - Adds missing signing bits (Closes: #906599)
+  * debian/rules:
+    - Pass -a into dh_missing (Closes: #906357)
+  * debian/control:
+    - Recommends for bolt for new thunderbolt power API
+    - Build depends on Noto fonts instead of Dejavu fonts
+  * Drop all patches.
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 10 Sep 2018 11:42:03 -0500
+
 fwupd (1.1.1-1) unstable; urgency=medium
 
   * New upstream release.
