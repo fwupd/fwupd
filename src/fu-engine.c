@@ -1576,7 +1576,7 @@ fu_engine_install_blob (FuEngine *self,
 	}
 
 	/* make the UI update */
-	fu_device_set_status (device, FWUPD_STATUS_IDLE);
+	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
 	fu_engine_emit_changed (self);
 	g_debug ("Updating %s took %f seconds", fu_device_get_name (device),
 		 g_timer_elapsed (timer, NULL));

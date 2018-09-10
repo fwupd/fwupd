@@ -545,7 +545,6 @@ fu_ebitdo_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	}
 
 	/* success! */
-	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 

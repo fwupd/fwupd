@@ -331,7 +331,6 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 	}
 
 	/* notify UI */
-	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	return dfu_utils_bytes_join_array (chunks);
 }
 
@@ -505,13 +504,7 @@ fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 
 	/* all done */
 	blob_empty = g_bytes_new (NULL, 0);
-	if (!fu_csr_device_download_chunk (self, idx, blob_empty, error))
-		return FALSE;
-
-	/* notify UI */
-	fu_device_set_status (device, FWUPD_STATUS_IDLE);
-
-	return TRUE;
+	return fu_csr_device_download_chunk (self, idx, blob_empty, error);
 }
 
 static gboolean

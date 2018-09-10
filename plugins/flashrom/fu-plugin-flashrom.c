@@ -154,7 +154,6 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 			g_prefix_error (error, "failed to get original firmware: ");
 			return FALSE;
 		}
-		fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	}
 
 	return TRUE;
@@ -198,6 +197,5 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* success */
-	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
