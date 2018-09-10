@@ -523,7 +523,10 @@ fu_unifying_peripheral_setup (FuDevice *device, GError **error)
 			g_debug ("%s", error_local->message);
 			if (g_error_matches (error_local,
 					     G_IO_ERROR,
-					     G_IO_ERROR_TIMED_OUT)) {
+					     G_IO_ERROR_TIMED_OUT) ||
+			    g_error_matches (error_local,
+					     G_IO_ERROR,
+					     G_IO_ERROR_HOST_UNREACHABLE)) {
 				/* timed out, so not trying any more */
 				break;
 			}
@@ -600,7 +603,7 @@ fu_unifying_peripheral_setup (FuDevice *device, GError **error)
 	fu_unifying_peripheral_refresh_updatable (self);
 
 	/* poll for pings to track active state */
-	fu_device_set_poll_interval (device, 5000);
+	fu_device_set_poll_interval (device, 30000);
 	return TRUE;
 }
 
