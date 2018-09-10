@@ -241,7 +241,7 @@ fu_unifying_peripheral_open (FuDevice *device, GError **error)
 	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (device));
 	const gchar *devpath = g_udev_device_get_device_file (udev_device);
 
-	g_debug ("opening unifying peripheral using %s", devpath);
+	/* open */
 	self->udev_fd = fu_unifying_nonblock_open (devpath, error);
 	if (self->udev_fd < 0)
 		return FALSE;

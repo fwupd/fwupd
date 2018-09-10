@@ -74,7 +74,6 @@ fu_unifying_runtime_poll (FuDevice *device, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open */
-	g_debug ("opening for poll");
 	locker = fu_device_locker_new (self, error);
 	if (locker == NULL)
 		return FALSE;
