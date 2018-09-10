@@ -107,15 +107,6 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 		}
 	}
 
-	/* not supported */
-	if (dev == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "device not supported");
-		return FALSE;
-	}
-
 	/* open to get the version */
 	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
