@@ -1,3 +1,38 @@
+Version 1.1.2
+~~~~~~~~~~~~~
+Released: 2018-09-10
+
+New Features:
+ - Add a new device flag "ignore-validation" that will override checks (Mario Limonciello)
+ - Add a new plugin to enumerate EC firmware (Richard Hughes)
+ - Add a new plugin to update NVMe hardware (Richard Hughes, Mario Limonciello)
+ - Add a plugin for updating using the flashrom command line tool (Richard Hughes)
+ - Allow the device list to take care of waiting for the device replug (Richard Hughes)
+ - Allow updating just one specific device from the command line (Richard Hughes)
+ - Allow upgrades using a self-signed fwupd.efi binary (Richard Hughes)
+ - Download firmware if the user specifies a URI (Richard Hughes)
+ - Include serial number in daemon device output when trusted (Mario Limonciello)
+ - Notify all plugins of device removals through a new vfunc (Mario Limonciello)
+ - Use boltd force power API if available (Mario Limonciello)
+
+Bugfixes:
+ - Add an install hook for classic snap (Mario Limonciello)
+ - Allow forcing installation even if no AC power is applied (Mario Limonciello)
+ - Allow using --force to ignore version_lowest (Mario Limonciello)
+ - Always use the same HardwareIDs as Windows (Richard Hughes)
+ - Check the device state before assuming a fake DFU runtime (Richard Hughes)
+ - Copy over parent GUIDs from other plugin donors (Mario Limonciello)
+ - Detect location of python3 interpreter (Mario Limonciello)
+ - Do not add udev devices after a small delay (Richard Hughes)
+ - Don't fail to run if compiled without GPG/PKCS7 (Salud Lemus, Mario Limonciello)
+ - Fix a segfault in fwupdtool caused by cleanup of USB plugins (Mario Limonciello)
+ - Implement the systemd recommendations for offline updates (Richard Hughes)
+ - Improve performance when reading keys from the quirk database (Richard Hughes)
+ - Remove children of devices when the parent is removed (Mario Limonciello)
+ - Rewrite synapticsmst to use modern error handling (Mario Limonciello)
+ - Rewrite the unifying plugin to use the new daemon-provided functionality (Richard Hughes)
+ - Show a time estimate on the progressbar after an update has started (Mario Limonciello)
+
 Version 1.1.1
 ~~~~~~~~~~~~~
 Released: 2018-08-13

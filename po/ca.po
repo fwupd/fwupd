@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-07-02 17:29+0100\n"
-"PO-Revision-Date: 2018-07-04 10:08+0000\n"
-"Last-Translator: Antoni Bella Pérez <antonibella5@yahoo.com>\n"
+"POT-Creation-Date: 2018-09-10 16:44+0100\n"
+"PO-Revision-Date: 2018-09-10 15:45+0000\n"
+"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Catalan (http://www.transifex.com/freedesktop/fwupd/language/ca/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -260,6 +260,11 @@ msgstr "Desactualitza el microprogramari en un dispositiu"
 msgid "Downgrading %s from %s to %s... "
 msgstr "S'està desactualitzant %s des de %s a %s... "
 
+#. TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers
+#, c-format
+msgid "Downgrading %s from %s to %s…"
+msgstr "S'està desactualitzant %s des de la %s a la %s…"
+
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
 msgstr "S'està descarregant..."
@@ -275,6 +280,10 @@ msgstr "Bolca els detalls sobre un fitxer de microprogramari"
 #. TRANSLATORS: command description
 msgid "Dump information about a binary patch to the screen"
 msgstr "Bolca la informació sobre un pedaç binari a la pantalla"
+
+#. TRANSLATORS: ESP is EFI System Partition
+msgid "ESP specified was not valid"
+msgstr "L'ESP especificat no era vàlid"
 
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
@@ -464,6 +473,12 @@ msgstr "Instal·la microprogramari sense signar per al dispositiu"
 
 msgid "Install unsigned system firmware"
 msgstr "Instal·la microprogramari sense signar per al sistema"
+
+#. show message in progressbar
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing %s"
+msgstr "S'està instal·lant %s"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -875,6 +890,11 @@ msgstr "Actualitza tot el microprogramari a les versions més recents"
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "S'està actualitzant %s des de %s a %s... "
+
+#. TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers
+#, c-format
+msgid "Updating %s from %s to %s…"
+msgstr "S'està actualitzant %s des de la %s a la %s…"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
