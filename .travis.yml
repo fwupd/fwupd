@@ -8,9 +8,9 @@ services:
 env:
   - OS=debian-s390x
   - OS=fedora
-  - OS=debian-x86_64
+  - OS=debian-i386
   - OS=arch
-  - OS=ubuntu-i386
+  - OS=ubuntu-x86_64
   - OS=centos
   - OS=flatpak
   - OS=snap
