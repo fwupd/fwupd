@@ -13,7 +13,6 @@
 #include <linux/fs.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <gio/gio.h>
 #include <gio/gunixinputstream.h>
 #include <gio/gunixoutputstream.h>
 
@@ -225,7 +224,7 @@ fu_uefi_vars_get_data (const gchar *guid, const gchar *name, guint8 **data,
 	if (data_sz != NULL)
 		*data_sz = data_sz_tmp;
 	if (data != NULL) {
-		g_autofree gchar *data_tmp = g_malloc0 (data_sz_tmp);
+		g_autofree guint8 *data_tmp = g_malloc0 (data_sz_tmp);
 		if (!g_input_stream_read_all (istr, data_tmp, data_sz_tmp,
 					      NULL, NULL, error)) {
 			g_prefix_error (error, "failed to read data: ");

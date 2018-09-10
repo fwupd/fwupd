@@ -9,6 +9,7 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <string.h>
+#include <appstream-glib.h>
 
 #include "fu-common.h"
 #include "fu-quirks.h"
@@ -47,7 +48,7 @@ struct _FuQuirks
 {
 	GObject			 parent_instance;
 	GPtrArray		*monitors;
-	GHashTable		*hash;	/* of group/id:string */
+	GHashTable		*hash;	/* of group:{key:value} */
 };
 
 G_DEFINE_TYPE (FuQuirks, fu_quirks, G_TYPE_OBJECT)
@@ -83,6 +84,25 @@ fu_quirks_add_inotify (FuQuirks *self, const gchar *filename, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_quirks_build_group_key (const gchar *group)
+{
+	const gchar *guid_prefixes[] = { "DeviceInstanceId=", "Guid=", "HwId=", NULL };
+
+	/* this is a GUID */
+	for (guint i = 0; guid_prefixes[i] != NULL; i++) {
+		if (g_str_has_prefix (group, guid_prefixes[i])) {
+			gsize len = strlen (guid_prefixes[i]);
+			if (as_utils_guid_is_valid (group + len))
+				return g_strdup (group + len);
+			return as_utils_guid_from_string (group + len);
+		}
+	}
+
+	/* fallback */
+	return g_strdup (group);
+}
+
 /**
  * fu_quirks_lookup_by_id:
  * @self: A #FuPlugin
@@ -98,62 +118,41 @@ fu_quirks_add_inotify (FuQuirks *self, const gchar *filename, GError **error)
 const gchar *
 fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 {
-	g_autofree gchar *prefixed_key = NULL;
+	GHashTable *kvs;
+	g_autofree gchar *group_key = NULL;
 
 	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
 	g_return_val_if_fail (group != NULL, NULL);
 	g_return_val_if_fail (key != NULL, NULL);
 
-	prefixed_key = g_strdup_printf ("%s/%s", group, key);
-	return g_hash_table_lookup (self->hash, prefixed_key);
+	group_key = fu_quirks_build_group_key (group);
+	kvs = g_hash_table_lookup (self->hash, group_key);
+	if (kvs == NULL)
+		return NULL;
+	return g_hash_table_lookup (kvs, key);
 }
 
 /**
- * fu_quirks_lookup_by_usb_device:
+ * fu_quirks_get_kvs_for_guid:
  * @self: A #FuPlugin
- * @usb_device: A #GUsbDevice
- * @key: A string group that matches the quirks file basename, e.g. "dfu-quirks"
+ * @guid: a GUID
+ * @iter: A #GHashTableIter, typically allocated on the stack by the caller
  *
- * Looks up an entry in the hardware database using various keys generated
- * from @usb_device.
+ * Looks up all entries in the hardware database using a GUID value.
  *
- * Returns: (transfer none): values from the database, or %NULL if not found
+ * Returns: %TRUE if the GUID was found, and @iter was set
  *
- * Since: 1.0.1
+ * Since: 1.1.2
  **/
-const gchar *
-fu_quirks_lookup_by_usb_device (FuQuirks *self, GUsbDevice *usb_device, const gchar *key)
+gboolean
+fu_quirks_get_kvs_for_guid (FuQuirks *self, const gchar *guid, GHashTableIter *iter)
 {
-	const gchar *tmp;
-	g_autofree gchar *group1 = NULL;
-	g_autofree gchar *group2 = NULL;
-	g_autofree gchar *group3 = NULL;
-
-	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
-	g_return_val_if_fail (key != NULL, NULL);
-	g_return_val_if_fail (G_USB_IS_DEVICE (usb_device), NULL);
-
-	/* prefer an exact match, VID:PID:REV */
-	group1 = g_strdup_printf ("DeviceInstanceId=USB\\VID_%04X&PID_%04X&REV_%04X",
-				  g_usb_device_get_vid (usb_device),
-				  g_usb_device_get_pid (usb_device),
-				  g_usb_device_get_release (usb_device));
-	tmp = fu_quirks_lookup_by_id (self, group1, key);
-	if (tmp != NULL)
-		return tmp;
-
-	/* VID:PID */
-	group2 = g_strdup_printf ("DeviceInstanceId=USB\\VID_%04X&PID_%04X",
-				  g_usb_device_get_vid (usb_device),
-				  g_usb_device_get_pid (usb_device));
-	tmp = fu_quirks_lookup_by_id (self, group2, key);
-	if (tmp != NULL)
-		return tmp;
-
-	/* VID */
-	group3 = g_strdup_printf ("DeviceInstanceId=USB\\VID_%04X",
-				  g_usb_device_get_vid (usb_device));
-	return fu_quirks_lookup_by_id (self, group3, key);
+	GHashTable *kvs;
+	kvs = g_hash_table_lookup (self->hash, guid);
+	if (kvs == NULL)
+		return FALSE;
+	g_hash_table_iter_init (iter, kvs);
+	return TRUE;
 }
 
 static gchar *
@@ -165,7 +164,7 @@ fu_quirks_merge_values (const gchar *old, const gchar *new)
 	g_auto(GStrv) oldv = g_strsplit (old, ",", -1);
 
 	/* segment flags, and append if they do not already exists */
-	resv = g_new0 (gchar *, g_strv_length (oldv) + g_strv_length (newv));
+	resv = g_new0 (gchar *, g_strv_length (oldv) + g_strv_length (newv) + 1);
 	for (guint i = 0; oldv[i] != NULL; i++) {
 		if (!g_strv_contains ((const gchar * const *) resv, oldv[i]))
 			resv[cnt++] = oldv[i];
@@ -175,6 +174,51 @@ fu_quirks_merge_values (const gchar *old, const gchar *new)
 			resv[cnt++] = newv[i];
 	}
 	return g_strjoinv (",", resv);
+}
+
+/**
+ * fu_quirks_add_value: (skip)
+ * @self: A #FuQuirks
+ * @group: group, e.g. `DeviceInstanceId=USB\VID_0BDA&PID_1100`
+ * @key: group, e.g. `Name`
+ * @value: group, e.g. `Unknown Device`
+ *
+ * Adds a value to the quirk database. Normally this is achieved by loading a
+ * quirk file using fu_quirks_load().
+ *
+ * Since: 1.1.2
+ **/
+void
+fu_quirks_add_value (FuQuirks *self, const gchar *group, const gchar *key, const gchar *value)
+{
+	GHashTable *kvs;
+	const gchar *value_old;
+	g_autofree gchar *group_key = NULL;
+	g_autofree gchar *value_new = NULL;
+
+	/* does the key already exists in our hash */
+	group_key = fu_quirks_build_group_key (group);
+	kvs = g_hash_table_lookup (self->hash, group_key);
+	if (kvs == NULL) {
+		kvs = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+		g_hash_table_insert (self->hash,
+				     g_steal_pointer (&group_key),
+				     kvs);
+		value_new = g_strdup (value);
+	} else {
+		/* look up in the 2nd level hash */
+		value_old = g_hash_table_lookup (kvs, key);
+		if (value_old != NULL) {
+			g_debug ("already found %s=%s, merging with %s",
+				 group_key, value_old, value);
+			value_new = fu_quirks_merge_values (value_old, value);
+		} else {
+			value_new = g_strdup (value);
+		}
+	}
+
+	/* insert the new value */
+	g_hash_table_insert (kvs, g_strdup (key), g_steal_pointer (&value_new));
 }
 
 static gboolean
@@ -195,31 +239,12 @@ fu_quirks_add_quirks_from_filename (FuQuirks *self, const gchar *filename, GErro
 		if (keys == NULL)
 			return FALSE;
 		for (guint j = 0; keys[j] != NULL; j++) {
-			const gchar *value_old;
-			g_autofree gchar *key = NULL;
 			g_autofree gchar *value = NULL;
-			g_autofree gchar *value_new = NULL;
-
 			/* get value from keyfile */
 			value = g_key_file_get_value (kf, groups[i], keys[j], error);
 			if (value == NULL)
 				return FALSE;
-			key = g_strdup_printf ("%s/%s", groups[i], keys[j]);
-
-			/* does the key already exists in our hash */
-			value_old = g_hash_table_lookup (self->hash, key);
-			if (value_old != NULL) {
-				g_debug ("already found %s=%s, merging with %s",
-					 key, value_old, value);
-				value_new = fu_quirks_merge_values (value_old, value);
-			} else {
-				value_new = g_steal_pointer (&value);
-			}
-
-			/* insert the new value */
-			g_hash_table_insert (self->hash,
-					     g_steal_pointer (&key),
-					     g_steal_pointer (&value_new));
+			fu_quirks_add_value (self, groups[i], keys[j], value);
 		}
 	}
 	g_debug ("now %u quirk entries", g_hash_table_size (self->hash));
@@ -329,7 +354,7 @@ static void
 fu_quirks_init (FuQuirks *self)
 {
 	self->monitors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	self->hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	self->hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_hash_table_unref);
 }
 
 static void

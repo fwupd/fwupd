@@ -8,8 +8,6 @@
 
 #include <fwupd.h>
 #include <appstream-glib.h>
-#include <glib-object.h>
-#include <gio/gio.h>
 #include <glib/gstdio.h>
 #include <string.h>
 

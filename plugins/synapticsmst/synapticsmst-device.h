@@ -9,7 +9,6 @@
 #ifndef __SYNAPTICSMST_DEVICE_H
 #define __SYNAPTICSMST_DEVICE_H
 
-#include <glib-object.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
@@ -41,17 +40,6 @@ typedef enum {
 } SynapticsMSTDeviceKind;
 
 typedef enum {
-	SYNAPTICSMST_DEVICE_BOARDID_EVB = 0x00,
-	SYNAPTICSMST_DEVICE_BOARDID_DELL_FUTURE = 0x103,
-	SYNAPTICSMST_DEVICE_BOARDID_DELL_X6 = 0x110,
-	SYNAPTICSMST_DEVICE_BOARDID_DELL_X7,
-	SYNAPTICSMST_DEVICE_BOARDID_DELL_WD15_TB16_WIRE,
-	SYNAPTICSMST_DEVICE_BOARDID_DELL_WLD15_WIRELESS,
-	SYNAPTICSMST_DEVICE_BOARDID_DELL_X7_RUGGED = 0X115,
-	SYNAPTICSMST_DEVICE_BOARDID_UNKNOWN = 0xFF,
-} SynapticsMSTDeviceBoardID;
-
-typedef enum {
 	SYNAPTICSMST_CHIP_KIND_UNKNOWN,
 	SYNAPTICSMST_CHIP_KIND_TESLA_LEAF,
 	SYNAPTICSMST_CHIP_KIND_PANAMERA,
@@ -69,7 +57,6 @@ SynapticsMSTDevice	*synapticsmst_device_new	(SynapticsMSTDeviceKind kind,
 /* helpers */
 SynapticsMSTDeviceKind synapticsmst_device_kind_from_string	(const gchar	*kind);
 const gchar	*synapticsmst_device_kind_to_string		(SynapticsMSTDeviceKind kind);
-const gchar	*synapticsmst_device_board_id_to_string		(SynapticsMSTDeviceBoardID board_id);
 GPtrArray 	*synapticsmst_device_get_guids 			(SynapticsMSTDevice *device);
 gboolean	 synapticsmst_device_scan_cascade_device 	(SynapticsMSTDevice *device,
 								 GError **error,
@@ -79,7 +66,7 @@ gboolean	 synapticsmst_device_open 			(SynapticsMSTDevice *device,
 
 /* getters */
 SynapticsMSTDeviceKind synapticsmst_device_get_kind		(SynapticsMSTDevice *device);
-SynapticsMSTDeviceBoardID synapticsmst_device_get_board_id 	(SynapticsMSTDevice *device);
+guint16		 synapticsmst_device_get_board_id	 	(SynapticsMSTDevice *device);
 const gchar	*synapticsmst_device_get_version		(SynapticsMSTDevice *device);
 const gchar 	*synapticsmst_device_get_chip_id_str 		(SynapticsMSTDevice *device);
 const gchar 	*synapticsmst_device_get_aux_node		(SynapticsMSTDevice *device);
@@ -89,12 +76,12 @@ gboolean	 synapticsmst_device_get_cascade		(SynapticsMSTDevice *device);
 
 /* object methods */
 gboolean	 synapticsmst_device_enumerate_device 		(SynapticsMSTDevice *devices,
-								const gchar *sytem_type,
 								 GError **error);
 gboolean	 synapticsmst_device_write_firmware		(SynapticsMSTDevice *device,
 								 GBytes	*fw,
 								 GFileProgressCallback	progress_cb,
 								 gpointer user_data,
+								 gboolean reboot,
 								 GError	**error);
 
 G_END_DECLS

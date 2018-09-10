@@ -17,5 +17,6 @@ gboolean	 fu_util_prompt_for_boolean	(gboolean	 def);
 
 gboolean	 fu_util_print_device_tree	(GNode *n, gpointer data);
 gboolean	 fu_util_is_interesting_device	(FwupdDevice	*dev);
+gchar		*fu_util_get_user_cache_path	(const gchar	*fn);
 
 #endif /* __FU_UTIL_COMMON_H__ */

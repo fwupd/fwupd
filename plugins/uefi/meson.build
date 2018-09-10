@@ -48,8 +48,10 @@ executable(
     include_directories('../../libfwupd'),
   ],
   dependencies : [
+    appstream_glib,
     giounix,
     gusb,
+    gudev,
     efivar,
     efiboot,
   ],

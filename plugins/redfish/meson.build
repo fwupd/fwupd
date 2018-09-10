@@ -17,7 +17,7 @@ shared_module('fu_plugin_redfish',
   dependencies : [
     plugin_deps,
     efivar,
-    json_glib,
+    libjsonglib,
   ],
 )
 
@@ -41,7 +41,7 @@ if get_option('tests')
     dependencies : [
       plugin_deps,
       efivar,
-      json_glib,
+      libjsonglib,
     ],
     link_with : [
       fwupd,

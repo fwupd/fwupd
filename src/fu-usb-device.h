@@ -39,16 +39,12 @@ struct _FuUsbDeviceClass
 	gpointer	__reserved[28];
 };
 
-FuDevice	*fu_usb_device_new			(GUsbDevice	*usb_device);
+FuUsbDevice	*fu_usb_device_new			(GUsbDevice	*usb_device);
+guint16		 fu_usb_device_get_vid			(FuUsbDevice	*self);
+guint16		 fu_usb_device_get_pid			(FuUsbDevice	*self);
 GUsbDevice	*fu_usb_device_get_dev			(FuUsbDevice	*device);
 void		 fu_usb_device_set_dev			(FuUsbDevice	*device,
 							 GUsbDevice	*usb_device);
-gboolean	 fu_usb_device_open			(FuUsbDevice	*device,
-							 GError		**error);
-gboolean	 fu_usb_device_close			(FuUsbDevice	*device,
-							 GError		**error);
-gboolean	 fu_usb_device_probe			(FuUsbDevice	*device,
-							 GError		**error);
 gboolean	 fu_usb_device_is_open			(FuUsbDevice	*device);
 
 G_END_DECLS

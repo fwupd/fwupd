@@ -7,7 +7,6 @@
 #ifndef __FU_PLUGIN_DELL_H
 #define __FU_PLUGIN_DELL_H
 
-#include <gusb.h>
 #include "fu-plugin.h"
 #include "fu-dell-smi.h"
 
@@ -26,16 +25,6 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 
 gboolean
 fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error);
-
-void
-fu_plugin_dell_device_added_cb (GUsbContext *ctx,
-				GUsbDevice *device,
-				FuPlugin *plugin);
-
-void
-fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
-				  GUsbDevice *device,
-				  FuPlugin *plugin);
 
 /* These are nodes that will indicate information about
  * the TPM status

@@ -7,9 +7,10 @@
 #
 
 LOCALEDIR=${DESTDIR}$1
+PYTHON3=$2
 
 install -m 0755 -d $LOCALEDIR
-${MESON_SOURCE_ROOT}/po/make-images "Installing firmware update…" $LOCALEDIR ${MESON_SOURCE_ROOT}/po/LINGUAS
+${PYTHON3} ${MESON_SOURCE_ROOT}/po/make-images "Installing firmware update…" $LOCALEDIR ${MESON_SOURCE_ROOT}/po/LINGUAS
 for x in ${LOCALEDIR}/*/LC_IMAGES/*.bmp ; do
     gzip -fn9 ${x}
 done

@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-altos-device.h"
@@ -18,19 +17,20 @@ fu_plugin_init (FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
 {
+	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	const gchar *platform_id = NULL;
 	g_autofree gchar *runtime_id = NULL;
 	g_autoptr(FuAltosDevice) dev = NULL;
 
 	/* get kind */
-	dev = fu_altos_device_new (usb_device);
+	dev = fu_altos_device_new (device);
 	if (dev == NULL)
 		return TRUE;
 
 	/* get device properties */
-	if (!fu_altos_device_probe (dev, error))
+	if (!fu_device_probe (FU_DEVICE (dev), error))
 		return FALSE;
 
 	/* only the bootloader can do the update */
@@ -42,7 +42,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **e
 		if (dev_runtime != NULL) {
 			const gchar *guid = fu_device_get_guid_default (dev_runtime);
 			g_debug ("adding runtime GUID of %s", guid);
-			fu_device_add_guid (FU_DEVICE (dev), guid);
+			fu_device_add_counterpart_guid (FU_DEVICE (dev), guid);
 			fu_device_set_version (FU_DEVICE (dev),
 					       fu_device_get_version (dev_runtime));
 		}

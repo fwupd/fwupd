@@ -7,7 +7,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <glib/gstdio.h>
 #include <smbios_c/system_info.h>
 #include <string.h>
@@ -254,20 +253,6 @@ fu_plugin_dell_get_version_format (FuPlugin *plugin)
 	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
 }
 
-static gchar *
-fu_plugin_get_dock_key (FuPlugin *plugin,
-			GUsbDevice *device, const gchar *guid)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar* platform_id;
-
-	if (data->smi_obj->fake_smbios)
-		platform_id = "fake";
-	else
-		platform_id = g_usb_device_get_platform_id (device);
-	return g_strdup_printf ("%s_%s", platform_id, guid);
-}
-
 static gboolean
 fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 {
@@ -277,13 +262,11 @@ fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
+fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 		     guint8 type, const gchar *component_guid,
 		     const gchar *component_desc, const gchar *version)
 {
 	const gchar *dock_type;
-	g_autofree gchar *dock_id = NULL;
-	g_autofree gchar *dock_key = NULL;
 	g_autofree gchar *dock_name = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
@@ -293,14 +276,9 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 		return FALSE;
 	}
 
-	dock_key = fu_plugin_get_dock_key (plugin, device, component_guid);
-	if (fu_plugin_cache_lookup (plugin, dock_key) != NULL) {
-		g_debug ("%s is already registered.", dock_key);
-		return FALSE;
-	}
-
 	dev = fu_device_new ();
-	dock_id = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, component_guid);
+	fu_device_set_physical_id (dev, platform);
+	fu_device_set_logical_id (dev, component_guid);
 	if (component_desc != NULL) {
 		dock_name = g_strdup_printf ("Dell %s %s", dock_type,
 					     component_desc);
@@ -308,7 +286,6 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	} else {
 		dock_name = g_strdup_printf ("Dell %s", dock_type);
 	}
-	fu_device_set_id (dev, dock_id);
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, dock_name);
 	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "device-firmware");
@@ -332,15 +309,13 @@ fu_plugin_dock_node (FuPlugin *plugin, GUsbDevice *device,
 	}
 
 	fu_plugin_device_register (plugin, dev);
-	fu_plugin_cache_add (plugin, dock_key, dev);
 	return TRUE;
 }
 
-
-void
-fu_plugin_dell_device_added_cb (GUsbContext *ctx,
-				GUsbDevice *device,
-				FuPlugin *plugin)
+gboolean
+fu_plugin_usb_device_added (FuPlugin *plugin,
+			    FuUsbDevice *device,
+			    GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	AsVersionParseFlag parse_flags;
@@ -349,6 +324,7 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	const gchar *query_str;
 	const gchar *component_guid = NULL;
 	const gchar *component_name = NULL;
+	const gchar *platform;
 	DOCK_UNION buf;
 	DOCK_INFO *dock_info;
 	gboolean old_ec = FALSE;
@@ -357,27 +333,34 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 	/* don't look up immediately if a dock is connected as that would
 	   mean a SMI on every USB device that showed up on the system */
 	if (!data->smi_obj->fake_smbios) {
-		vid = g_usb_device_get_vid (device);
-		pid = g_usb_device_get_pid (device);
+		vid = fu_usb_device_get_vid (device);
+		pid = fu_usb_device_get_pid (device);
+		platform = fu_device_get_physical_id (FU_DEVICE (device));
 	} else {
 		vid = data->fake_vid;
 		pid = data->fake_pid;
+		platform = "fake";
 	}
 
 	/* we're going to match on the Realtek NIC in the dock */
-	if (vid != DOCK_NIC_VID || pid != DOCK_NIC_PID)
-		return;
+	if (vid != DOCK_NIC_VID || pid != DOCK_NIC_PID) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+			     "wrong VID/PID %04x:%04x", vid, pid);
+		return FALSE;
+	}
 
 	buf.buf = NULL;
 	if (!fu_dell_query_dock (data->smi_obj, &buf)) {
-		g_debug ("No dock detected.");
-		return;
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+				     "no dock detected");
+		return FALSE;
 	}
 
 	if (buf.record->dock_info_header.dir_version != 1) {
-		g_debug ("Dock info header version unknown: %d",
-			 buf.record->dock_info_header.dir_version);
-		return;
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+			     "dock info header version unknown %d",
+			     buf.record->dock_info_header.dir_version);
+		return FALSE;
 	}
 
 	dock_info = &buf.record->dock_info;
@@ -403,15 +386,16 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 		query_str = g_strrstr (dock_info->components[i].description,
 				       "Query ");
 		if (query_str == NULL) {
-			g_debug ("Invalid dock component request");
-			return;
+			g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+					     "invalid dock component request");
+			return FALSE;
 		}
 		if (!fu_plugin_dell_match_dock_component (query_str + 6,
 							  &component_guid,
 							  &component_name)) {
-			g_debug ("Unable to match dock component %s",
-				query_str);
-			return;
+			g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+				     "invalid dock component request %s", query_str);
+			return FALSE;
 		}
 
 		/* dock EC hasn't been updated for first time */
@@ -430,13 +414,14 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 		fw_str = as_utils_version_from_uint32 (dock_info->components[i].fw_version,
 						       parse_flags);
 		if (!fu_plugin_dock_node (plugin,
-						 device,
-						 buf.record->dock_info_header.dock_type,
-						 component_guid,
-						 component_name,
-						 fw_str)) {
-			g_debug ("Failed to create %s", component_name);
-			return;
+					  platform,
+					  buf.record->dock_info_header.dock_type,
+					  component_guid,
+					  component_name,
+					  fw_str)) {
+			g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+				     "failed to create %s", component_name);
+			return FALSE;
 		}
 	}
 
@@ -445,61 +430,21 @@ fu_plugin_dell_device_added_cb (GUsbContext *ctx,
 		flash_ver_str = as_utils_version_from_uint32 (dock_info->flash_pkg_version,
 							      parse_flags);
 	if (!fu_plugin_dock_node (plugin,
-				  device,
+				  platform,
 				  buf.record->dock_info_header.dock_type,
 				  DOCK_FLASH_GUID,
 				  NULL,
 				  flash_ver_str)) {
-		g_debug ("Failed to create top dock node");
-		return;
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+				    "failed to create top dock node");
+
+		return FALSE;
 	}
 
 #if defined (HAVE_SYNAPTICS)
 	fu_plugin_request_recoldplug (plugin);
 #endif
-}
-
-void
-fu_plugin_dell_device_removed_cb (GUsbContext *ctx,
-				  GUsbDevice *device,
-				  FuPlugin *plugin)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *guids[] = { WD15_EC_GUID, TB16_EC_GUID, TB16_PC2_GUID,
-				 TB16_PC1_GUID, WD15_PC1_GUID,
-				 LEGACY_CBL_GUID, UNIV_CBL_GUID,
-				 TBT_CBL_GUID, DOCK_FLASH_GUID};
-	guint16 pid;
-	guint16 vid;
-	FuDevice *dev = NULL;
-
-	if (!data->smi_obj->fake_smbios) {
-		vid = g_usb_device_get_vid (device);
-		pid = g_usb_device_get_pid (device);
-	} else {
-		vid = data->fake_vid;
-		pid = data->fake_pid;
-	}
-
-	/* we're going to match on the Realtek NIC in the dock */
-	if (vid != DOCK_NIC_VID || pid != DOCK_NIC_PID)
-		return;
-
-	/* remove any components already in database? */
-	for (guint i = 0; i < G_N_ELEMENTS (guids); i++) {
-		g_autofree gchar *dock_key = NULL;
-		dock_key = fu_plugin_get_dock_key (plugin, device,
-							  guids[i]);
-		dev = fu_plugin_cache_lookup (plugin, dock_key);
-		if (dev != NULL) {
-			fu_plugin_device_remove (plugin,
-						   dev);
-			fu_plugin_cache_remove (plugin, dock_key);
-		}
-	}
-#if defined (HAVE_SYNAPTICS)
-	fu_plugin_request_recoldplug (plugin);
-#endif
+	return TRUE;
 }
 
 gboolean
@@ -865,6 +810,7 @@ fu_dell_toggle_flash (FuPlugin *plugin, FuDevice *device,
 
 gboolean
 fu_plugin_update_prepare (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
 			  FuDevice *device,
 			  GError **error)
 {
@@ -874,6 +820,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 
 gboolean
 fu_plugin_update_cleanup (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
 			  FuDevice *device,
 			  GError **error)
 {
@@ -912,6 +859,7 @@ fu_plugin_init (FuPlugin *plugin)
 	data->smi_obj->fake_smbios = FALSE;
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
 		data->smi_obj->fake_smbios = TRUE;
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_REQUIRES_QUIRK, FU_QUIRKS_PLUGIN);
 }
 
 void
@@ -927,7 +875,6 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	GUsbContext *usb_ctx = fu_plugin_get_usb_context (plugin);
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *esrtdir = NULL;
 
@@ -965,15 +912,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		data->capsule_supported = TRUE;
 	} else {
 		g_debug ("UEFI capsule firmware updating not supported");
-	}
-
-	if (usb_ctx != NULL) {
-		g_signal_connect (usb_ctx, "device-added",
-				  G_CALLBACK (fu_plugin_dell_device_added_cb),
-				  plugin);
-		g_signal_connect (usb_ctx, "device-removed",
-				  G_CALLBACK (fu_plugin_dell_device_removed_cb),
-				  plugin);
 	}
 
 	return TRUE;

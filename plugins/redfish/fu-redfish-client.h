@@ -7,7 +7,6 @@
 #ifndef __FU_REDFISH_CLIENT_H
 #define __FU_REDFISH_CLIENT_H
 
-#include <glib-object.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS

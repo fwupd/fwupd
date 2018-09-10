@@ -23,12 +23,12 @@ SIGNED := \
 all: $(SIGNED)
 
 $(SIGNED):
-	./download-fwupdate
+	./download-fwupd
 
 install: $(SIGNED)
-	install -d $(DESTDIR)/usr/lib/fwupd/efi
+	install -d $(DESTDIR)/libexec/fwupd/efi
 	install -m0644 $(SIGNED) $(SIGNED).version \
-		$(DESTDIR)/usr/lib/fwupd/efi
+		$(DESTDIR)/libexec/fwupd/efi
 
 clean:
 	rm -f $(SIGNED) $(SIGNED).version

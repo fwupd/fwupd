@@ -20,19 +20,38 @@ G_DECLARE_DERIVABLE_TYPE (FuDevice, fu_device, FU, DEVICE, FwupdDevice)
 struct _FuDeviceClass
 {
 	FwupdDeviceClass	 parent_class;
-	void			 (*to_string)		(FuDevice	*device,
+	void			 (*to_string)		(FuDevice	*self,
 							 GString	*str);
-	gboolean		 (*write_firmware)	(FuDevice	*device,
+	gboolean		 (*write_firmware)	(FuDevice	*self,
 							 GBytes		*fw,
 							 GError		**error);
-	GBytes			*(*read_firmware)	(FuDevice	*device,
+	GBytes			*(*read_firmware)	(FuDevice	*self,
 							 GError		**error);
-	gboolean		 (*detach)		(FuDevice	*device,
+	gboolean		 (*detach)		(FuDevice	*self,
 							 GError		**error);
-	gboolean		 (*attach)		(FuDevice	*device,
+	gboolean		 (*attach)		(FuDevice	*self,
+							 GError		**error);
+	gboolean		 (*open)		(FuDevice	*self,
+							 GError		**error);
+	gboolean		 (*close)		(FuDevice	*self,
+							 GError		**error);
+	gboolean		 (*probe)		(FuDevice	*self,
+							 GError		**error);
+	GBytes			*(*prepare_firmware)	(FuDevice	*self,
+							 GBytes		*fw,
+							 GError		**error);
+	gboolean		 (*set_quirk_kv)	(FuDevice	*self,
+							 const gchar	*key,
+							 const gchar	*value,
+							 GError		**error);
+	gboolean		 (*setup)		(FuDevice	*self,
+							 GError		**error);
+	void			 (*incorporate)		(FuDevice	*self,
+							 FuDevice	*donor);
+	gboolean		 (*poll)		(FuDevice	*self,
 							 GError		**error);
 	/*< private >*/
-	gpointer	padding[28];
+	gpointer	padding[20];
 };
 
 /**
@@ -68,6 +87,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_has_guid(d,v)			fwupd_device_has_guid(FWUPD_DEVICE(d),v)
 #define fu_device_set_modified(d,v)		fwupd_device_set_modified(FWUPD_DEVICE(d),v)
 #define fu_device_set_plugin(d,v)		fwupd_device_set_plugin(FWUPD_DEVICE(d),v)
+#define fu_device_set_serial(d,v)		fwupd_device_set_serial(FWUPD_DEVICE(d),v)
 #define fu_device_set_summary(d,v)		fwupd_device_set_summary(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_error(d,v)		fwupd_device_set_update_error(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_state(d,v)		fwupd_device_set_update_state(FWUPD_DEVICE(d),v)
@@ -85,6 +105,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_guid_default(d)		fwupd_device_get_guid_default(FWUPD_DEVICE(d))
 #define fu_device_get_icons(d)			fwupd_device_get_icons(FWUPD_DEVICE(d))
 #define fu_device_get_name(d)			fwupd_device_get_name(FWUPD_DEVICE(d))
+#define fu_device_get_serial(d)			fwupd_device_get_serial(FWUPD_DEVICE(d))
 #define fu_device_get_summary(d)		fwupd_device_get_summary(FWUPD_DEVICE(d))
 #define fu_device_get_id(d)			fwupd_device_get_id(FWUPD_DEVICE(d))
 #define fu_device_get_plugin(d)			fwupd_device_get_plugin(FWUPD_DEVICE(d))
@@ -98,80 +119,102 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
 
 /* accessors */
-gchar		*fu_device_to_string			(FuDevice	*device);
-const gchar	*fu_device_get_alternate_id		(FuDevice	*device);
-void		 fu_device_set_alternate_id		(FuDevice	*device,
+gchar		*fu_device_to_string			(FuDevice	*self);
+const gchar	*fu_device_get_alternate_id		(FuDevice	*self);
+void		 fu_device_set_alternate_id		(FuDevice	*self,
 							 const gchar	*alternate_id);
-const gchar	*fu_device_get_equivalent_id		(FuDevice	*device);
-void		 fu_device_set_equivalent_id		(FuDevice	*device,
+const gchar	*fu_device_get_equivalent_id		(FuDevice	*self);
+void		 fu_device_set_equivalent_id		(FuDevice	*self,
 							 const gchar	*equivalent_id);
-void		 fu_device_add_guid			(FuDevice	*device,
+void		 fu_device_add_guid			(FuDevice	*self,
 							 const gchar	*guid);
-gchar		*fu_device_get_guids_as_str		(FuDevice	*device);
-FuDevice	*fu_device_get_alternate		(FuDevice	*device);
-FuDevice	*fu_device_get_parent			(FuDevice	*device);
-GPtrArray	*fu_device_get_children			(FuDevice	*device);
-void		 fu_device_add_child			(FuDevice	*device,
+gchar		*fu_device_get_guids_as_str		(FuDevice	*self);
+FuDevice	*fu_device_get_alternate		(FuDevice	*self);
+FuDevice	*fu_device_get_parent			(FuDevice	*self);
+GPtrArray	*fu_device_get_children			(FuDevice	*self);
+void		 fu_device_add_child			(FuDevice	*self,
 							 FuDevice	*child);
-void		 fu_device_add_parent_guid		(FuDevice	*device,
+void		 fu_device_add_parent_guid		(FuDevice	*self,
 							 const gchar	*guid);
-const gchar	*fu_device_get_metadata			(FuDevice	*device,
+void		 fu_device_add_counterpart_guid		(FuDevice	*self,
+							 const gchar	*guid);
+const gchar	*fu_device_get_metadata			(FuDevice	*self,
 							 const gchar	*key);
-gboolean	 fu_device_get_metadata_boolean		(FuDevice	*device,
+gboolean	 fu_device_get_metadata_boolean		(FuDevice	*self,
 							 const gchar	*key);
-guint		 fu_device_get_metadata_integer		(FuDevice	*device,
+guint		 fu_device_get_metadata_integer		(FuDevice	*self,
 							 const gchar	*key);
-void		 fu_device_set_metadata			(FuDevice	*device,
+void		 fu_device_set_metadata			(FuDevice	*self,
 							 const gchar	*key,
 							 const gchar	*value);
-void		 fu_device_set_metadata_boolean		(FuDevice	*device,
+void		 fu_device_set_metadata_boolean		(FuDevice	*self,
 							 const gchar	*key,
 							 gboolean	 value);
-void		 fu_device_set_metadata_integer		(FuDevice	*device,
+void		 fu_device_set_metadata_integer		(FuDevice	*self,
 							 const gchar	*key,
 							 guint		 value);
-void		 fu_device_set_id			(FuDevice	*device,
+void		 fu_device_set_id			(FuDevice	*self,
 							 const gchar	*id);
-const gchar	*fu_device_get_platform_id		(FuDevice	*device);
-void		 fu_device_set_platform_id		(FuDevice	*device,
-							 const gchar	*platform_id);
-const gchar	*fu_device_get_serial			(FuDevice	*device);
-void		 fu_device_set_serial			(FuDevice	*device,
-							 const gchar	*serial);
-const gchar	*fu_device_get_custom_flags		(FuDevice	*device);
-gboolean	 fu_device_has_custom_flag		(FuDevice	*device,
+const gchar	*fu_device_get_physical_id		(FuDevice	*self);
+void		 fu_device_set_physical_id		(FuDevice	*self,
+							 const gchar	*physical_id);
+const gchar	*fu_device_get_logical_id		(FuDevice	*self);
+void		 fu_device_set_logical_id		(FuDevice	*self,
+							 const gchar	*logical_id);
+const gchar	*fu_device_get_custom_flags		(FuDevice	*self);
+gboolean	 fu_device_has_custom_flag		(FuDevice	*self,
 							 const gchar	*hint);
-void		 fu_device_set_custom_flags		(FuDevice	*device,
+void		 fu_device_set_custom_flags		(FuDevice	*self,
 							 const gchar	*custom_flags);
-void		 fu_device_set_name			(FuDevice	*device,
+void		 fu_device_set_name			(FuDevice	*self,
 							 const gchar	*value);
-guint		 fu_device_get_remove_delay		(FuDevice	*device);
-void		 fu_device_set_remove_delay		(FuDevice	*device,
+guint		 fu_device_get_remove_delay		(FuDevice	*self);
+void		 fu_device_set_remove_delay		(FuDevice	*self,
 							 guint		 remove_delay);
-FwupdStatus	 fu_device_get_status			(FuDevice	*device);
-void		 fu_device_set_status			(FuDevice	*device,
+FwupdStatus	 fu_device_get_status			(FuDevice	*self);
+void		 fu_device_set_status			(FuDevice	*self,
 							 FwupdStatus	 status);
-guint		 fu_device_get_progress			(FuDevice	*device);
-void		 fu_device_set_progress			(FuDevice	*device,
+void		 fu_device_set_firmware_size_min	(FuDevice	*self,
+							 guint64	 size_min);
+void		 fu_device_set_firmware_size_max	(FuDevice	*self,
+							 guint64	 size_max);
+guint		 fu_device_get_progress			(FuDevice	*self);
+void		 fu_device_set_progress			(FuDevice	*self,
 							 guint		 progress);
-void		 fu_device_set_progress_full		(FuDevice	*device,
+void		 fu_device_set_progress_full		(FuDevice	*self,
 							 gsize		 progress_done,
 							 gsize		 progress_total);
-void		 fu_device_set_quirks			(FuDevice	*device,
+void		 fu_device_set_quirks			(FuDevice	*self,
 							 FuQuirks	*quirks);
-FuQuirks	*fu_device_get_quirks			(FuDevice	*device);
-FwupdRelease	*fu_device_get_release_default		(FuDevice	*device);
-gboolean	 fu_device_write_firmware		(FuDevice	*device,
+FuQuirks	*fu_device_get_quirks			(FuDevice	*self);
+FwupdRelease	*fu_device_get_release_default		(FuDevice	*self);
+gboolean	 fu_device_write_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 GError		**error);
-GBytes		*fu_device_read_firmware		(FuDevice	*device,
+GBytes		*fu_device_prepare_firmware		(FuDevice	*self,
+							 GBytes		*fw,
 							 GError		**error);
-gboolean	 fu_device_attach			(FuDevice	*device,
+GBytes		*fu_device_read_firmware		(FuDevice	*self,
 							 GError		**error);
-gboolean	 fu_device_detach			(FuDevice	*device,
+gboolean	 fu_device_attach			(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_detach			(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_incorporate			(FuDevice	*self,
 							 FuDevice	*donor);
+gboolean	 fu_device_open				(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_close			(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_probe			(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_setup			(FuDevice	*self,
+							 GError		**error);
+void		 fu_device_probe_invalidate		(FuDevice	*self);
+gboolean	 fu_device_poll				(FuDevice	*self,
+							 GError		**error);
+void		 fu_device_set_poll_interval		(FuDevice	*self,
+							 guint		 interval);
 
 G_END_DECLS
 

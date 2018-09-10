@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 struct FuPluginData {
@@ -49,6 +48,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 
 gboolean
 fu_plugin_update_prepare (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
 			  FuDevice *device,
 			  GError **error)
 {
@@ -63,12 +63,12 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 		g_warning ("failed to get OnBattery value, assume on AC power");
 		return TRUE;
 	}
-	if (g_variant_get_boolean (value)) {
+	if (g_variant_get_boolean (value) && (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_AC_POWER_REQUIRED,
 				     "Cannot install update "
-				     "when not on AC power");
+				     "when not on AC power unless forced");
 		return FALSE;
 	}
 	return TRUE;

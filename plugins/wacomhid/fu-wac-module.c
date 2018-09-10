@@ -13,7 +13,6 @@
 #include "fu-wac-device.h"
 
 #include "dfu-common.h"
-#include "dfu-chunked.h"
 #include "dfu-firmware.h"
 
 #define FU_WAC_MODLE_STATUS_OK				0
@@ -295,18 +294,17 @@ fu_wac_module_constructed (GObject *object)
 	FuWacModule *self = FU_WAC_MODULE (object);
 	FuWacModulePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *devid = NULL;
-	g_autofree gchar *platform_id = NULL;
 	g_autofree gchar *vendor_id = NULL;
 
 	/* set vendor ID */
 	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
 	fu_device_set_vendor_id (FU_DEVICE (self), vendor_id);
 
-	/* set USB platform ID automatically */
-	platform_id = g_strdup_printf ("%s-%s",
-				       g_usb_device_get_platform_id (priv->usb_device),
-				       fu_wac_module_fw_type_to_string (priv->fw_type));
-	fu_device_set_platform_id (FU_DEVICE (self), platform_id);
+	/* set USB physical and logical IDs */
+	fu_device_set_physical_id (FU_DEVICE (self),
+				   g_usb_device_get_platform_id (priv->usb_device));
+	fu_device_set_logical_id (FU_DEVICE (self),
+				  fu_wac_module_fw_type_to_string (priv->fw_type));
 
 	/* append the firmware kind to the generated GUID */
 	devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X-%s",

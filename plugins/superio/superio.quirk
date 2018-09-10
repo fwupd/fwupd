@@ -1,0 +1,28 @@
+# N13xWU
+[HwId=766de8b6-ca64-53dd-a9a2-295618daffcd]
+SuperioChipsets=IT8587
+
+# W740SU
+[HwId=f00d8c4e-dce2-51c3-89d6-6cbc5fc5cdbb]
+SuperioChipsets=IT8587
+
+[SuperIO=IT8510]
+Id=0x8510
+
+[SuperIO=IT8511]
+Id=0x8511
+
+[SuperIO=IT8512]
+Id=0x8512
+
+[SuperIO=IT8513]
+Id=0x8513
+
+[SuperIO=IT8516]
+Id=0x8516
+
+[SuperIO=IT8518]
+Id=0x8518
+
+[SuperIO=IT8587]
+Id=0x8587

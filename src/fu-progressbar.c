@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include <glib.h>
 #include <glib/gi18n.h>
 
 #include "fu-progressbar.h"
@@ -24,6 +25,8 @@ struct _FuProgressbar
 	guint			 to_erase;		/* chars */
 	guint			 timer_id;
 	gint64			 last_animated;		/* monotonic */
+	GTimer			*time_elapsed;
+	gdouble			 last_estimate;
 };
 
 G_DEFINE_TYPE (FuProgressbar, fu_progressbar, G_TYPE_OBJECT)
@@ -96,6 +99,43 @@ fu_progressbar_erase_line (FuProgressbar *self)
 	self->to_erase = 0;
 }
 
+static gboolean
+fu_progressbar_estimate_ready (FuProgressbar *self, guint percentage)
+{
+	gdouble old;
+	gdouble elapsed;
+
+	if (percentage == 0 || percentage == 100)
+		return FALSE;
+
+	old = self->last_estimate;
+	elapsed = g_timer_elapsed (self->time_elapsed, NULL);
+	self->last_estimate = elapsed / percentage * (100 - percentage);
+
+	/* estimate is ready if we have decreased */
+	return old > self->last_estimate;
+}
+
+static gchar *
+fu_progressbar_time_remaining_str (FuProgressbar *self)
+{
+	/* less than 5 seconds remaining */
+	if (self->last_estimate < 5)
+		return NULL;
+
+	/* less than 60 seconds remaining */
+	if (self->last_estimate < 60) {
+		/* TRANSLATORS: time remaining for completing firmware flash */
+		return g_strdup (_("Less than one minute remaining"));
+	}
+
+	/* more than a minute */
+	return g_strdup_printf (ngettext ("%.0f minute remaining",
+					  "%.0f minutes remaining",
+					  self->last_estimate / 60),
+				self->last_estimate / 60);
+}
+
 static void
 fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentage)
 {
@@ -134,6 +174,13 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 			g_string_append_c (str, ' ');
 	}
 	g_string_append_c (str, ']');
+
+	/* once we have good data show an estimate of time remaining */
+	if (fu_progressbar_estimate_ready (self, percentage)) {
+		g_autofree gchar *remaining = fu_progressbar_time_remaining_str (self);
+		if (remaining != NULL)
+			g_string_append_printf (str, " %s…", remaining);
+	}
 
 	/* dump to screen */
 	g_print ("%s", str->str);
@@ -195,6 +242,9 @@ fu_progressbar_spin_end (FuProgressbar *self)
 	if (self->timer_id != 0) {
 		g_source_remove (self->timer_id);
 		self->timer_id = 0;
+
+		/* reset when the spinner has been stopped */
+		g_timer_start (self->time_elapsed);
 	}
 
 	/* go back to the start when we next go into unknown percentage mode */
@@ -279,6 +329,7 @@ fu_progressbar_init (FuProgressbar *self)
 	self->length_percentage = 40;
 	self->length_status = 25;
 	self->spinner_count_up = TRUE;
+	self->time_elapsed = g_timer_new ();
 }
 
 static void
@@ -288,6 +339,7 @@ fu_progressbar_finalize (GObject *obj)
 
 	if (self->timer_id != 0)
 		g_source_remove (self->timer_id);
+	g_timer_destroy (self->time_elapsed);
 
 	G_OBJECT_CLASS (fu_progressbar_parent_class)->finalize (obj);
 }

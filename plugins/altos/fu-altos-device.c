@@ -6,9 +6,7 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <fcntl.h>
-#include <gudev/gudev.h>
 #include <poll.h>
 #include <string.h>
 #include <termios.h>
@@ -662,9 +660,10 @@ fu_altos_device_probe_bootloader (FuAltosDevice *self, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_altos_device_probe (FuAltosDevice *self, GError **error)
+static gboolean
+fu_altos_device_probe (FuDevice *device, GError **error)
 {
+	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 
 	/* bootloader uses tty */
@@ -749,6 +748,7 @@ fu_altos_device_class_init (FuAltosDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	klass_device->probe = fu_altos_device_probe;
 	klass_device->write_firmware = fu_altos_device_write_firmware;
 	klass_device->read_firmware = fu_altos_device_read_firmware;
 	object_class->finalize = fu_altos_device_finalize;
@@ -761,7 +761,7 @@ typedef struct {
 } FuAltosDeviceVidPid;
 
 FuAltosDevice *
-fu_altos_device_new (GUsbDevice *usb_device)
+fu_altos_device_new (FuUsbDevice *device)
 {
 	const FuAltosDeviceVidPid vidpids[] = {
 		{ 0xfffe, 0x000a, FU_ALTOS_DEVICE_KIND_BOOTLOADER },
@@ -771,12 +771,10 @@ fu_altos_device_new (GUsbDevice *usb_device)
 
 	/* set kind */
 	for (guint j = 0; vidpids[j].vid != 0x0000; j++) {
-		if (g_usb_device_get_vid (usb_device) == vidpids[j].vid &&
-		    g_usb_device_get_pid (usb_device) == vidpids[j].pid) {
-			FuAltosDevice *self;
-			self = g_object_new (FU_TYPE_ALTOS_DEVICE,
-					     "usb-device", usb_device,
-					     NULL);
+		if (fu_usb_device_get_vid (device) == vidpids[j].vid &&
+		    fu_usb_device_get_pid (device) == vidpids[j].pid) {
+			FuAltosDevice *self = g_object_new (FU_TYPE_ALTOS_DEVICE, NULL);
+			fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
 			self->kind = vidpids[j].kind;
 			fu_altos_device_init_real (self);
 			return self;

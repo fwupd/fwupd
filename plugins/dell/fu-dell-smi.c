@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include "fu-dell-smi.h"
 
 /* These are for dock query capabilities */

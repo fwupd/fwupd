@@ -349,6 +349,47 @@ fu_common_add_argv (GPtrArray *argv, const gchar *fmt, ...)
 		g_ptr_array_add (argv, g_strdup (split[i]));
 }
 
+gchar *
+fu_common_find_program_in_path (const gchar *basename, GError **error)
+{
+	gchar *fn = g_find_program_in_path (basename);
+	if (fn == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "missing executable %s in PATH",
+			     basename);
+		return NULL;
+	}
+	return fn;
+}
+
+static gboolean
+fu_common_test_namespace_support (GError **error)
+{
+	/* test if CONFIG_USER_NS is valid */
+	if (!g_file_test ("/proc/self/ns/user", G_FILE_TEST_IS_SYMLINK)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "missing CONFIG_USER_NS in kernel");
+		return FALSE;
+	}
+	if (g_file_test ("/proc/sys/kernel/unprivileged_userns_clone", G_FILE_TEST_EXISTS)) {
+		g_autofree gchar *clone = NULL;
+		if (!g_file_get_contents ("/proc/sys/kernel/unprivileged_userns_clone", &clone, NULL, error))
+			return FALSE;
+		if (g_ascii_strtoll (clone, NULL, 10) == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "unprivileged user namespace clones disabled by distro");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 /**
  * fu_common_firmware_builder:
  * @bytes: The data to use
@@ -375,6 +416,7 @@ fu_common_firmware_builder (GBytes *bytes,
 {
 	gint rc = 0;
 	g_autofree gchar *argv_str = NULL;
+	g_autofree gchar *bwrap_fn = NULL;
 	g_autofree gchar *localstatebuilderdir = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *output2_fn = NULL;
@@ -389,6 +431,15 @@ fu_common_firmware_builder (GBytes *bytes,
 	g_return_val_if_fail (output_fn != NULL, NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
+	/* find bwrap in the path */
+	bwrap_fn = fu_common_find_program_in_path ("bwrap", error);
+	if (bwrap_fn == NULL)
+		return NULL;
+
+	/* test if CONFIG_USER_NS is valid */
+	if (!fu_common_test_namespace_support (error))
+		return NULL;
+
 	/* untar file to temp location */
 	tmpdir = g_dir_make_tmp ("fwupd-gen-XXXXXX", error);
 	if (tmpdir == NULL)
@@ -401,7 +452,7 @@ fu_common_firmware_builder (GBytes *bytes,
 	localstatebuilderdir = g_build_filename (localstatedir, "builder", NULL);
 
 	/* launch bubblewrap and generate firmware */
-	g_ptr_array_add (argv, g_strdup ("bwrap"));
+	g_ptr_array_add (argv, g_steal_pointer (&bwrap_fn));
 	fu_common_add_argv (argv, "--die-with-parent");
 	fu_common_add_argv (argv, "--ro-bind /usr /usr");
 	fu_common_add_argv (argv, "--ro-bind /lib /lib");
@@ -435,9 +486,12 @@ fu_common_firmware_builder (GBytes *bytes,
 	if (standard_output != NULL && standard_output[0] != '\0')
 		g_debug ("console output was: %s", standard_output);
 	if (rc != 0) {
+		FwupdError code = FWUPD_ERROR_INTERNAL;
+		if (errno == ENOTTY)
+			code = FWUPD_ERROR_PERMISSION_DENIED;
 		g_set_error (error,
 			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
+			     code,
 			     "failed to build firmware: %s",
 			     standard_error);
 		return NULL;
@@ -684,6 +738,62 @@ fu_common_read_uint32 (const guint8 *buf, FuEndianType endian)
 		g_assert_not_reached ();
 	}
 	return val_native;
+}
+
+/**
+ * fu_common_strtoull:
+ * @str: A string, e.g. "0x1234"
+ *
+ * Converts a string value to an integer. Values are assumed base 10, unless
+ * prefixed with "0x" where they are parsed as base 16.
+ *
+ * Returns: integer value, or 0x0 for error
+ **/
+guint64
+fu_common_strtoull (const gchar *str)
+{
+	guint base = 10;
+	if (str == NULL)
+		return 0x0;
+	if (g_str_has_prefix (str, "0x")) {
+		str += 2;
+		base = 16;
+	}
+	return g_ascii_strtoull (str, NULL, base);
+}
+
+/**
+ * fu_common_strstrip:
+ * @str: A string, e.g. " test "
+ *
+ * Removes leading and trailing whitespace from a constant string.
+ *
+ * Returns: newly allocated string
+ **/
+gchar *
+fu_common_strstrip (const gchar *str)
+{
+	guint head = G_MAXUINT;
+	guint tail = 0;
+
+	g_return_val_if_fail (str != NULL, NULL);
+
+	/* find first non-space char */
+	for (guint i = 0; str[i] != '\0'; i++) {
+		if (str[i] != ' ') {
+			head = i;
+			break;
+		}
+	}
+	if (head == G_MAXUINT)
+		return g_strdup ("");
+
+	/* find last non-space char */
+	for (guint i = head; str[i] != '\0'; i++) {
+		if (str[i] != ' ')
+			tail = i;
+	}
+	return g_strndup (str + head, tail - head + 1);
 }
 
 static const GError *

@@ -7,13 +7,13 @@
 #include "config.h"
 
 #include <fwupd.h>
-#include <glib-object.h>
 #include <glib/gstdio.h>
 #include <stdlib.h>
 
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
 #include "fu-plugin-dell.h"
+#include "fu-plugin-vfuncs.h"
 
 static FuDevice *
 _find_device_by_id (GPtrArray *devices, const gchar *device_id)
@@ -288,7 +288,9 @@ fu_plugin_dell_dock_func (void)
 	fu_plugin_dell_inject_fake_data (plugin_dell,
 					   (guint32 *) &out,
 					   0x1234, 0x4321, NULL, FALSE);
-	fu_plugin_dell_device_added_cb (NULL, NULL, plugin_dell);
+	ret = fu_plugin_usb_device_added (plugin_dell, NULL, &error);
+	g_assert_false (ret);
+	g_clear_error (&error);
 	g_assert_cmpint (devices->len, ==, 0);
 
 	/* inject a USB dongle matching correct VID/PID */
@@ -298,7 +300,9 @@ fu_plugin_dell_dock_func (void)
 					   (guint32 *) &out,
 					   DOCK_NIC_VID, DOCK_NIC_PID,
 					   NULL, FALSE);
-	fu_plugin_dell_device_added_cb (NULL, NULL, plugin_dell);
+	ret = fu_plugin_usb_device_added (plugin_dell, NULL, &error);
+	g_assert_false (ret);
+	g_clear_error (&error);
 	g_assert_cmpint (devices->len, ==, 0);
 
 	/* inject valid TB16 dock w/ invalid flash pkg version */
@@ -330,12 +334,11 @@ fu_plugin_dell_dock_func (void)
 					   (guint32 *) &out,
 					   DOCK_NIC_VID, DOCK_NIC_PID,
 					   buf.buf, FALSE);
-	fu_plugin_dell_device_added_cb (NULL, NULL, plugin_dell);
+	ret = fu_plugin_usb_device_added (plugin_dell, NULL, NULL);
+	g_assert (ret);
 	g_assert_cmpint (devices->len, ==, 4);
 	g_ptr_array_set_size (devices, 0);
 	g_free (buf.record);
-	fu_plugin_dell_device_removed_cb (NULL, NULL,
-					    plugin_dell);
 
 	/* inject valid TB16 dock w/ older system EC */
 	buf.record = g_malloc0 (sizeof(DOCK_INFO_RECORD));
@@ -366,13 +369,11 @@ fu_plugin_dell_dock_func (void)
 					   (guint32 *) &out,
 					   DOCK_NIC_VID, DOCK_NIC_PID,
 					   buf.buf, FALSE);
-	fu_plugin_dell_device_added_cb (NULL, NULL, plugin_dell);
+	ret = fu_plugin_usb_device_added (plugin_dell, NULL, NULL);
+	g_assert (ret);
 	g_assert_cmpint (devices->len, ==, 3);
 	g_ptr_array_set_size (devices, 0);
 	g_free (buf.record);
-	fu_plugin_dell_device_removed_cb (NULL, NULL,
-					    plugin_dell);
-
 
 	/* inject valid WD15 dock w/ invalid flash pkg version */
 	buf.record = g_malloc0 (sizeof(DOCK_INFO_RECORD));
@@ -400,13 +401,12 @@ fu_plugin_dell_dock_func (void)
 					   (guint32 *) &out,
 					   DOCK_NIC_VID, DOCK_NIC_PID,
 					   buf.buf, FALSE);
-	fu_plugin_dell_device_added_cb (NULL, NULL, plugin_dell);
+	ret = fu_plugin_usb_device_added (plugin_dell, NULL, &error);
+	g_assert (ret);
+	g_assert_no_error (error);
 	g_assert_cmpint (devices->len, ==, 3);
 	g_ptr_array_set_size (devices, 0);
 	g_free (buf.record);
-	fu_plugin_dell_device_removed_cb (NULL, NULL,
-					    plugin_dell);
-
 
 	/* inject valid WD15 dock w/ older system EC */
 	buf.record = g_malloc0 (sizeof(DOCK_INFO_RECORD));
@@ -434,12 +434,12 @@ fu_plugin_dell_dock_func (void)
 					 (guint32 *) &out,
 					 DOCK_NIC_VID, DOCK_NIC_PID,
 					 buf.buf, FALSE);
-	fu_plugin_dell_device_added_cb (NULL, NULL, plugin_dell);
+	ret = fu_plugin_usb_device_added (plugin_dell, NULL, &error);
+	g_assert (ret);
+	g_assert_no_error (error);
 	g_assert_cmpint (devices->len, ==, 2);
 	g_ptr_array_set_size (devices, 0);
 	g_free (buf.record);
-	fu_plugin_dell_device_removed_cb (NULL, NULL,
-					    plugin_dell);
 
 	/* inject an invalid future dock */
 	buf.record = g_malloc0 (sizeof(DOCK_INFO_RECORD));
@@ -461,7 +461,8 @@ fu_plugin_dell_dock_func (void)
 					 (guint32 *) &out,
 					 DOCK_NIC_VID, DOCK_NIC_PID,
 					 buf.buf, FALSE);
-	fu_plugin_dell_device_added_cb (NULL, NULL, plugin_dell);
+	ret = fu_plugin_usb_device_added (plugin_dell, NULL, &error);
+	g_assert_false (ret);
 	g_assert_cmpint (devices->len, ==, 0);
 	g_free (buf.record);
 }

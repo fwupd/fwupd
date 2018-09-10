@@ -113,6 +113,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	const gchar *version_lowest;
 	gboolean matches_guid = FALSE;
 	gint vercmp;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (FU_IS_INSTALL_TASK (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -206,12 +207,14 @@ fu_install_task_check_requirements (FuInstallTask *self,
 
 	/* compare to the lowest supported version, if it exists */
 	version_lowest = fu_device_get_version_lowest (self->device);
-	if (version_lowest != NULL && as_utils_vercmp (version_lowest, version) > 0) {
+	if (version_lowest != NULL &&
+	    as_utils_vercmp (version_lowest, version) > 0 &&
+	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_NEWER,
 			     "Specified firmware is older than the minimum "
-			     "required version '%s < %s'", version_lowest, version);
+			     "required version '%s < %s'", version, version_lowest);
 		return FALSE;
 	}
 
@@ -236,7 +239,17 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* verify */
-	return fu_keyring_get_release_trust_flags (release, &self->trust_flags, error);
+	if (!fu_keyring_get_release_trust_flags (release, &self->trust_flags, &error_local)) {
+		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_warning ("Ignoring verification for %s: %s",
+				   fu_device_get_name (self->device),
+				   error_local->message);
+		} else {
+			g_propagate_error (error, g_steal_pointer (&error_local));
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 /**

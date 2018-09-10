@@ -52,9 +52,11 @@ gboolean	 fu_plugin_update_reload		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
 gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
+							 FwupdInstallFlags flags,
 							 FuDevice	*dev,
 							 GError		**error);
 gboolean	 fu_plugin_update_cleanup		(FuPlugin	*plugin,
+							 FwupdInstallFlags flags,
 							 FuDevice	*dev,
 							 GError		**error);
 gboolean	 fu_plugin_composite_prepare		(FuPlugin	*plugin,
@@ -64,7 +66,13 @@ gboolean	 fu_plugin_composite_cleanup		(FuPlugin	*plugin,
 							 GPtrArray	*devices,
 							 GError		**error);
 gboolean	 fu_plugin_usb_device_added		(FuPlugin	*plugin,
-							 GUsbDevice	*usb_device,
+							 FuUsbDevice	*device,
+							 GError		**error);
+gboolean	 fu_plugin_udev_device_added		(FuPlugin	*plugin,
+							 FuUdevDevice	*device,
+							 GError		**error);
+gboolean	 fu_plugin_device_removed		(FuPlugin	*plugin,
+							 FuDevice	*device,
 							 GError		**error);
 void		 fu_plugin_device_registered		(FuPlugin	*plugin,
 							 FuDevice	*dev);

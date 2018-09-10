@@ -22,6 +22,11 @@ mv contrib/debian .
 sed s/quilt/native/ debian/source/format -i
 #generate control file
 ./contrib/ci/generate_debian.py
+
+#disable unit tests if fwupd is already installed (may cause problems)
+if [ -x /usr/lib/fwupd/fwupd ]; then
+	export DEB_BUILD_OPTIONS=nocheck
+fi
 #build the package
 EDITOR=/bin/true dch --create --package fwupd -v $VERSION "CI Build"
 debuild --no-lintian --preserve-envvar CI --preserve-envvar CC

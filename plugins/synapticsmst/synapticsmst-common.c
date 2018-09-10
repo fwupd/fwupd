@@ -8,16 +8,7 @@
 
 #include "config.h"
 
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <glib-object.h>
 #include "synapticsmst-common.h"
-#include "synapticsmst-device.h"
 
 #define UNIT_SIZE		32
 #define MAX_WAIT_TIME 		3  /* unit : second */
@@ -29,30 +20,72 @@ struct _SynapticsMSTConnection {
 	guint8		 rad;
 };
 
-guint8
+static gboolean
 synapticsmst_common_aux_node_read (SynapticsMSTConnection *connection,
-				   guint32 offset, guint8 *buf, gint length)
+				   guint32 offset, guint8 *buf,
+				   gint length, GError **error)
 {
-	if (lseek (connection->fd, offset, SEEK_SET) != offset)
-		return DPCD_SEEK_FAIL;
+	if (lseek (connection->fd, offset, SEEK_SET) != offset) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "failed to lseek");
+		return FALSE;
+	}
 
-	if (read (connection->fd, buf, length) != length)
-		return DPCD_ACCESS_FAIL;
+	if (read (connection->fd, buf, length) != length) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "failed to read");
+		return FALSE;
+	}
 
-	return DPCD_SUCCESS;
+	return TRUE;
 }
 
-static guint8
+static gboolean
 synapticsmst_common_aux_node_write (SynapticsMSTConnection *connection,
-				    guint32 offset, const guint8 *buf, gint length)
+				    guint32 offset, const guint8 *buf,
+				    gint length, GError **error)
 {
-	if (lseek (connection->fd, offset, SEEK_SET) != offset)
-		return DPCD_SEEK_FAIL;
+	if (lseek (connection->fd, offset, SEEK_SET) != offset) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "failed to lseek");
+		return FALSE;
+	}
 
-	if (write (connection->fd, buf, length) != length)
-		return DPCD_ACCESS_FAIL;
+	if (write (connection->fd, buf, length) != length) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "failed to write");
+		return FALSE;
+	}
 
-	return DPCD_SUCCESS;
+	return TRUE;
+}
+
+static gboolean
+synapticsmst_common_bus_read (SynapticsMSTConnection *connection,
+			      guint32 offset,
+			      guint8 *buf,
+			      guint32 length, GError **error)
+{
+	return synapticsmst_common_aux_node_read (connection, offset, buf,
+						  length, error);
+}
+
+static gboolean
+synapticsmst_common_bus_write (SynapticsMSTConnection *connection,
+			       guint32 offset,
+			       const guint8 *buf,
+			       guint32 length, GError **error)
+{
+	return synapticsmst_common_aux_node_write (connection, offset, buf,
+						   length, error);
 }
 
 void
@@ -72,52 +105,59 @@ synapticsmst_common_new (gint fd, guint8 layer, guint rad)
 	return connection;
 }
 
-guint8
-synapticsmst_common_read_dpcd (SynapticsMSTConnection *connection,
-			       guint32 offset, guint8 *buf, guint32 length)
+gboolean
+synapticsmst_common_read (SynapticsMSTConnection *connection,
+			  guint32 offset, guint8 *buf,
+			  guint32 length, GError **error)
 {
 	if (connection->layer && connection->remain_layer) {
-		guint8 rc, node;
+		guint8 node;
+		gboolean result;
 
 		connection->remain_layer--;
 		node = (connection->rad >> connection->remain_layer * 2) & 0x03;
-		rc =  synapticsmst_common_rc_get_command (connection,
-							  UPDC_READ_FROM_TX_DPCD + node,
-							  length, offset, (guint8 *)buf);
+		result =  synapticsmst_common_rc_get_command (connection,
+							      UPDC_READ_FROM_TX_DPCD + node,
+							      length, offset, (guint8 *)buf,
+							      error);
 		connection->remain_layer++;
-		return rc;
+		return result;
 	}
-	return synapticsmst_common_aux_node_read (connection, offset, buf, length);
+
+	return synapticsmst_common_bus_read (connection, offset, buf, length, error);
 }
 
-guint8
-synapticsmst_common_write_dpcd (SynapticsMSTConnection *connection,
-				guint32 offset,
-				const guint8 *buf,
-			 	guint32 length)
+gboolean
+synapticsmst_common_write (SynapticsMSTConnection *connection,
+			   guint32 offset,
+			   const guint8 *buf,
+			   guint32 length, GError **error)
 {
 	if (connection->layer && connection->remain_layer) {
-		guint8 rc, node;
+		guint8 node;
+		gboolean result;
 
 		connection->remain_layer--;
 		node = (connection->rad >> connection->remain_layer * 2) & 0x03;
-		rc =  synapticsmst_common_rc_set_command (connection,
-							  UPDC_WRITE_TO_TX_DPCD + node,
-							  length, offset, (guint8 *)buf);
+		result =  synapticsmst_common_rc_set_command (connection,
+							      UPDC_WRITE_TO_TX_DPCD + node,
+							      length, offset, (guint8 *)buf,
+							      error);
 		connection->remain_layer++;
-		return rc;
+		return result;
 	}
-	return synapticsmst_common_aux_node_write (connection, offset, buf, length);
+
+	return synapticsmst_common_bus_write (connection, offset, buf, length, error);
 }
 
-guint8
+gboolean
 synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 				    guint32 rc_cmd,
 				    guint32 length,
 				    guint32 offset,
-				    const guint8 *buf)
+				    const guint8 *buf,
+				    GError **error)
 {
-	guint8 rc = 0;
 	guint32 cur_offset = offset;
 	guint32 cur_length;
 	gint data_left = length;
@@ -126,7 +166,7 @@ synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 	long deadline;
 	struct timespec t_spec;
 
-	do{
+	do {
 		if (data_left > UNIT_SIZE) {
 			cur_length = UNIT_SIZE;
 		} else {
@@ -135,52 +175,73 @@ synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 
 		if (cur_length) {
 			/* write data */
-			rc = synapticsmst_common_write_dpcd (connection, REG_RC_DATA, buf, cur_length);
-			if (rc)
-				break;
+			if (!synapticsmst_common_write (connection,
+							REG_RC_DATA,
+							buf, cur_length,
+							error)) {
+				g_prefix_error (error, "failed to write data: ");
+				return FALSE;
+			}
 
 			/* write offset */
-			rc = synapticsmst_common_write_dpcd (connection,
-							     REG_RC_OFFSET,
-							     (guint8 *)&cur_offset, 4);
-			if (rc)
-				break;
+			if (!synapticsmst_common_write (connection,
+							REG_RC_OFFSET,
+							(guint8 *)&cur_offset, 4,
+							error)) {
+				g_prefix_error (error, "failed to write offset: ");
+				return FALSE;
+			}
 
 			/* write length */
-			rc = synapticsmst_common_write_dpcd (connection,
-							     REG_RC_LEN,
-							     (guint8 *)&cur_length, 4);
-			if (rc)
-				break;
+			if (!synapticsmst_common_write (connection,
+							REG_RC_LEN,
+							(guint8 *)&cur_length, 4,
+							error)) {
+				g_prefix_error (error, "failed to write length: ");
+				return FALSE;
+			}
 		}
 
 		/* send command */
 		cmd = 0x80 | rc_cmd;
-		rc = synapticsmst_common_write_dpcd (connection,
-						     REG_RC_CMD,
-						     (guint8 *)&cmd, 1);
-		if (rc)
-			break;
+		if (!synapticsmst_common_write (connection,
+						REG_RC_CMD,
+						(guint8 *)&cmd, 1,
+						error)) {
+			g_prefix_error (error, "failed to write command: ");
+			return FALSE;
+		}
 
 		/* wait command complete */
 		clock_gettime (CLOCK_REALTIME, &t_spec);
 		deadline = t_spec.tv_sec + MAX_WAIT_TIME;
 
 		do {
-			rc = synapticsmst_common_read_dpcd (connection,
-							    REG_RC_CMD,
-							    (guint8 *)&readData, 2);
+			if (!synapticsmst_common_read (connection,
+						       REG_RC_CMD,
+						       (guint8 *)&readData, 2,
+						       error)) {
+				g_prefix_error (error, "failed to read command: ");
+				return FALSE;
+			}
 			clock_gettime (CLOCK_REALTIME, &t_spec);
 			if (t_spec.tv_sec > deadline) {
-				rc = -1;
+				g_set_error_literal (error,
+						     G_IO_ERROR,
+						     G_IO_ERROR_INVALID_DATA,
+						     "timeout exceeded");
+				return FALSE;
 			}
-		} while (rc == 0 && readData & 0x80);
+		} while (readData & 0x80);
 
-		if (rc)
-			break;
-		else if (readData & 0xFF00) {
-			rc = (readData >> 8) & 0xFF;
-			break;
+		if (readData & 0xFF00) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "remote command failed: %d",
+				     (readData >> 8) & 0xFF);
+
+			return FALSE;
 		}
 
 		buf += cur_length;
@@ -188,17 +249,17 @@ synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 		data_left -= cur_length;
 	} while (data_left);
 
-	return rc;
+	return TRUE;
 }
 
-guint8
+gboolean
 synapticsmst_common_rc_get_command (SynapticsMSTConnection *connection,
 				    guint32 rc_cmd,
 				    guint32 length,
 				    guint32 offset,
-				    guint8 *buf)
+				    guint8 *buf,
+				    GError **error)
 {
-	guint8 rc = 0;
 	guint32 cur_offset = offset;
 	guint32 cur_length;
 	gint data_need = length;
@@ -216,56 +277,75 @@ synapticsmst_common_rc_get_command (SynapticsMSTConnection *connection,
 
 		if (cur_length) {
 			/* write offset */
-			rc = synapticsmst_common_write_dpcd (connection,
-							     REG_RC_OFFSET,
-							     (guint8 *)&cur_offset, 4);
-			if (rc)
-				break;
+			if (!synapticsmst_common_write (connection,
+							REG_RC_OFFSET,
+							(guint8 *)&cur_offset, 4,
+							error)) {
+				g_prefix_error (error, "failed to write offset: ");
+				return FALSE;
+			}
 
 			/* write length */
-			rc = synapticsmst_common_write_dpcd (connection,
-							     REG_RC_LEN,
-							     (guint8 *)&cur_length, 4);
-			if (rc)
-				break;
+			if (!synapticsmst_common_write (connection,
+							REG_RC_LEN,
+							(guint8 *)&cur_length, 4,
+							error)) {
+				g_prefix_error (error, "failed to write length: ");
+				return FALSE;
+			}
 		}
 
 		/* send command */
 		cmd = 0x80 | rc_cmd;
-		rc = synapticsmst_common_write_dpcd (connection,
-						     REG_RC_CMD,
-						     (guint8 *)&cmd, 1);
-		if (rc)
-			break;
+		if (!synapticsmst_common_write (connection,
+						REG_RC_CMD,
+						(guint8 *)&cmd, 1,
+						error)) {
+			g_prefix_error (error, "failed to write command: ");
+			return FALSE;
+		}
 
 		/* wait command complete */
 		clock_gettime (CLOCK_REALTIME, &t_spec);
 		deadline = t_spec.tv_sec + MAX_WAIT_TIME;
 
 		do {
-			rc = synapticsmst_common_read_dpcd (connection,
-							    REG_RC_CMD,
-							    (guint8 *)&readData, 2);
+			if (!synapticsmst_common_read (connection,
+						       REG_RC_CMD,
+						       (guint8 *)&readData, 2,
+						       error)) {
+				g_prefix_error (error, "failed to read command: ");
+				return FALSE;
+			}
 			clock_gettime (CLOCK_REALTIME, &t_spec);
 			if (t_spec.tv_sec > deadline) {
-				rc = -1;
+				g_set_error_literal (error,
+						     G_IO_ERROR,
+						     G_IO_ERROR_INVALID_DATA,
+						     "timeout exceeded");
+				return FALSE;
 			}
-		} while (rc == 0 && readData & 0x80);
+		} while (readData & 0x80);
 
-		if (rc)
-			break;
-		else if (readData & 0xFF00) {
-			rc = (readData >> 8) & 0xFF;
-			break;
+		if (readData & 0xFF00) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "remote command failed: %u",
+				     (readData >> 8) & 0xFF);
+
+			return FALSE;
 		}
 
 		if (cur_length) {
-			rc = synapticsmst_common_read_dpcd (connection,
-							    REG_RC_DATA,
-							    buf,
-							    cur_length);
-			if (rc)
-				break;
+			if (!synapticsmst_common_read (connection,
+						       REG_RC_DATA,
+						       buf,
+						       cur_length,
+						       error)) {
+				g_prefix_error (error, "failed to read data: ");
+				return FALSE;
+			}
 		}
 
 		buf += cur_length;
@@ -273,19 +353,19 @@ synapticsmst_common_rc_get_command (SynapticsMSTConnection *connection,
 		data_need -= cur_length;
 	}
 
-	return rc;
+	return TRUE;
 }
 
-guint8
+gboolean
 synapticsmst_common_rc_special_get_command (SynapticsMSTConnection *connection,
 					    guint32 rc_cmd,
 					    guint32 cmd_length,
 					    guint32 cmd_offset,
 					    guint8 *cmd_data,
 					    guint32 length,
-					    guint8 *buf)
+					    guint8 *buf,
+					    GError **error)
 {
-	guint8 rc = 0;
 	guint32 readData = 0;
 	guint32 cmd;
 	long deadline;
@@ -294,104 +374,138 @@ synapticsmst_common_rc_special_get_command (SynapticsMSTConnection *connection,
 	if (cmd_length) {
 		/* write cmd data */
 		if (cmd_data != NULL) {
-			rc = synapticsmst_common_write_dpcd (connection,
-							     REG_RC_DATA,
-							     cmd_data,
-							     cmd_length);
-			if (rc)
-				return rc;
+			if (!synapticsmst_common_write (connection,
+							REG_RC_DATA,
+							cmd_data,
+							cmd_length,
+							error)) {
+				g_prefix_error (error, "Failed to write command data: ");
+				return FALSE;
+			}
 		}
 
 		/* write offset */
-		rc = synapticsmst_common_write_dpcd (connection,
-						     REG_RC_OFFSET,
-						     (guint8 *)&cmd_offset, 4);
-		if (rc)
-			return rc;
+		if (!synapticsmst_common_write (connection,
+						REG_RC_OFFSET,
+						(guint8 *)&cmd_offset, 4,
+						error)) {
+			g_prefix_error (error, "failed to write offset: ");
+			return FALSE;
+		}
 
 		/* write length */
-		rc = synapticsmst_common_write_dpcd (connection,
-						     REG_RC_LEN,
-						     (guint8 *)&cmd_length, 4);
-		if (rc)
-			return rc;
+		if (!synapticsmst_common_write (connection,
+						REG_RC_LEN,
+						(guint8 *)&cmd_length, 4,
+						error)) {
+			g_prefix_error (error, "failed to write length: ");
+			return FALSE;
+		}
 	}
 
 	/* send command */
 	cmd = 0x80 | rc_cmd;
-	rc = synapticsmst_common_write_dpcd (connection, REG_RC_CMD, (guint8 *)&cmd, 1);
-	if (rc)
-		return rc;
+	if (!synapticsmst_common_write (connection,
+					REG_RC_CMD,
+					(guint8 *)&cmd, 1,
+					error)) {
+		g_prefix_error (error, "failed to write command: ");
+		return FALSE;
+	}
 
 	/* wait command complete */
 	clock_gettime (CLOCK_REALTIME, &t_spec);
 	deadline = t_spec.tv_sec + MAX_WAIT_TIME;
 	do {
-		rc = synapticsmst_common_read_dpcd (connection,
-						    REG_RC_CMD,
-						    (guint8 *)&readData, 2);
+		if (!synapticsmst_common_read (connection,
+						REG_RC_CMD,
+						(guint8 *)&readData, 2,
+						error)) {
+			g_prefix_error (error, "failed to read command: ");
+			return FALSE;
+		}
 		clock_gettime (CLOCK_REALTIME, &t_spec);
-		if (t_spec.tv_sec > deadline)
-			return -1;
+		if (t_spec.tv_sec > deadline) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_DATA,
+					     "timeout exceeded");
+			return FALSE;
+
+		}
 	} while (readData & 0x80);
 
-	if (rc)
-		return rc;
-	else if (readData & 0xFF00) {
-		rc = (readData >> 8) & 0xFF;
-		return rc;
+	if (readData & 0xFF00) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "remote command failed: %u",
+			     (readData >> 8) & 0xFF);
+
+		return FALSE;
 	}
 
 	if (length) {
-		rc = synapticsmst_common_read_dpcd (connection,
-						    REG_RC_DATA,
-						    buf, length);
-		if (rc)
-			return rc;
-	}
-
-	return rc;
-}
-
-guint8
-synapticsmst_common_enable_remote_control (SynapticsMSTConnection *connection)
-{
-	const gchar *sc = "PRIUS";
-	guint8 rc = 0;
-
-	for (gint i = 0; i <= connection->layer; i++) {
-		g_autoptr(SynapticsMSTConnection) connection_tmp = NULL;
-		connection_tmp = synapticsmst_common_new (connection->fd, i, connection->rad);
-		rc = synapticsmst_common_rc_set_command (connection_tmp,
-							 UPDC_ENABLE_RC,
-							 5, 0, (guint8*)sc);
-		/* if we fail, try to disable and enable one more time */
-		if (rc) {
-			g_debug ("Failed to enable remote control, retrying");
-			synapticsmst_common_disable_remote_control (connection_tmp);
-			rc = synapticsmst_common_rc_set_command (connection_tmp,
-								 UPDC_ENABLE_RC,
-								 5, 0, (guint8*)sc);
-			if (rc)
-				break;
+		if (!synapticsmst_common_read (connection,
+					       REG_RC_DATA,
+					       buf, length,
+					       error)) {
+			g_prefix_error (error, "failed to read length: ");
 		}
 	}
-	return rc;
+
+	return TRUE;
 }
 
-guint8
-synapticsmst_common_disable_remote_control (SynapticsMSTConnection *connection)
+gboolean
+synapticsmst_common_enable_remote_control (SynapticsMSTConnection *connection,
+					   GError **error)
 {
-	guint8 rc = 0;
+	const gchar *sc = "PRIUS";
 
-	for (gint i = connection->layer; i >= 0; i--) {
-		g_autoptr(SynapticsMSTConnection) connection_tmp = NULL;
-		connection_tmp = synapticsmst_common_new (connection->fd, i, connection->rad);
-		rc = synapticsmst_common_rc_set_command (connection_tmp,
-							 UPDC_DISABLE_RC,
-							 0, 0, NULL);
-		if (rc)
-			break;
+	for (gint i = 0; i <= connection->layer; i++) {
+		g_autoptr(SynapticsMSTConnection) connection_tmp = synapticsmst_common_new (connection->fd, i, connection->rad);
+		g_autoptr(GError) error_local = NULL;
+		if (!synapticsmst_common_rc_set_command (connection_tmp,
+							 UPDC_ENABLE_RC,
+							 5, 0, (guint8*)sc,
+							 &error_local)) {
+			g_warning ("Failed to enable remote control in layer %d: %s, retrying",
+				   i, error_local->message);
+
+			if (!synapticsmst_common_disable_remote_control (connection_tmp, error))
+				return FALSE;
+			if (!synapticsmst_common_rc_set_command (connection_tmp,
+								 UPDC_ENABLE_RC,
+								 5, 0, (guint8*)sc,
+								 error)) {
+				g_prefix_error (error,
+						"failed to enable remote control in layer %d: ",
+						i);
+				return FALSE;
+			}
+		}
 	}
-	return rc;
+
+	return TRUE;
+}
+
+gboolean
+synapticsmst_common_disable_remote_control (SynapticsMSTConnection *connection,
+					    GError **error)
+{
+	for (gint i = connection->layer; i >= 0; i--) {
+		g_autoptr(SynapticsMSTConnection) connection_tmp = synapticsmst_common_new (connection->fd, i, connection->rad);
+		if (!synapticsmst_common_rc_set_command (connection_tmp,
+							 UPDC_DISABLE_RC,
+							 0, 0, NULL,
+							 error)) {
+			g_prefix_error (error,
+					"failed to disable remote control in layer %d: ",
+					i);
+			return FALSE;
+		}
+	}
+
+	return TRUE;
 }

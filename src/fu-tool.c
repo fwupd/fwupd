@@ -12,6 +12,7 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <libsoup/soup.h>
 
 #include "fu-engine.h"
 #include "fu-plugin-private.h"
@@ -214,6 +215,8 @@ fu_util_private_free (FuUtilPrivate *priv)
 {
 	if (priv->cmd_array != NULL)
 		g_ptr_array_unref (priv->cmd_array);
+	if (priv->current_device != NULL)
+		g_object_unref (priv->current_device);
 	if (priv->engine != NULL)
 		g_object_unref (priv->engine);
 	if (priv->loop != NULL)
@@ -224,8 +227,6 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->progressbar);
 	if (priv->context != NULL)
 		g_option_context_free (priv->context);
-	if (priv->current_device != NULL)
-		g_object_unref (priv->current_device);
 	g_free (priv);
 }
 
@@ -549,9 +550,51 @@ fu_util_install_task_sort_cb (gconstpointer a, gconstpointer b)
 }
 
 static gboolean
+fu_util_download_out_of_process (const gchar *uri, const gchar *fn, GError **error)
+{
+	const gchar *argv[][5] = { { "wget", uri, "-o", fn, NULL },
+				   { "curl", uri, "--output", fn, NULL },
+				   { NULL } };
+	for (guint i = 0; argv[i][0] != NULL; i++) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_common_find_program_in_path (argv[i][0], &error_local)) {
+			g_debug ("%s", error_local->message);
+			continue;
+		}
+		return fu_common_spawn_sync (argv[i], NULL, NULL, NULL, error);
+	}
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "no supported out-of-process downloaders found");
+	return FALSE;
+}
+
+static gchar *
+fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GError **error)
+{
+	g_autofree gchar *filename = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+
+	/* a local file */
+	uri = soup_uri_new (perhapsfn);
+	if (uri == NULL)
+		return g_strdup (perhapsfn);
+
+	/* download the firmware to a cachedir */
+	filename = fu_util_get_user_cache_path (perhapsfn);
+	if (!fu_common_mkdir_parent (filename, error))
+		return NULL;
+	if (!fu_util_download_out_of_process (perhapsfn, filename, error))
+		return NULL;
+	return g_steal_pointer (&filename);
+}
+
+static gboolean
 fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *apps;
+	g_autofree gchar *filename = NULL;
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
@@ -583,10 +626,15 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	/* download if required */
+	filename = fu_util_download_if_required (priv, values[0], error);
+	if (filename == NULL)
+		return FALSE;
+
 	/* parse store */
-	blob_cab = fu_common_get_contents_bytes (values[0], error);
+	blob_cab = fu_common_get_contents_bytes (filename, error);
 	if (blob_cab == NULL) {
-		fu_util_maybe_prefix_sandbox_error (values[0], error);
+		fu_util_maybe_prefix_sandbox_error (filename, error);
 		return FALSE;
 	}
 	store = fu_engine_get_store_from_blob (priv->engine, blob_cab, error);
@@ -649,6 +697,7 @@ static gboolean
 fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
 	if (!fu_engine_load (priv->engine, error))
@@ -675,6 +724,9 @@ fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* run vfunc */
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
 	return fu_device_detach (device, error);
 }
 
@@ -682,6 +734,7 @@ static gboolean
 fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
 	if (!fu_engine_load (priv->engine, error))
@@ -708,7 +761,91 @@ fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* run vfunc */
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
 	return fu_device_attach (device, error);
+}
+
+static gboolean
+fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuSmbios) smbios = fu_smbios_new ();
+	g_autoptr(FuHwids) hwids = fu_hwids_new ();
+	const gchar *hwid_keys[] = {
+		FU_HWIDS_KEY_BIOS_VENDOR,
+		FU_HWIDS_KEY_BIOS_VERSION,
+		FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,
+		FU_HWIDS_KEY_BIOS_MINOR_RELEASE,
+		FU_HWIDS_KEY_MANUFACTURER,
+		FU_HWIDS_KEY_FAMILY,
+		FU_HWIDS_KEY_PRODUCT_NAME,
+		FU_HWIDS_KEY_PRODUCT_SKU,
+		FU_HWIDS_KEY_ENCLOSURE_KIND,
+		FU_HWIDS_KEY_BASEBOARD_MANUFACTURER,
+		FU_HWIDS_KEY_BASEBOARD_PRODUCT,
+		NULL };
+
+	/* read DMI data */
+	if (g_strv_length (values) == 0) {
+		if (!fu_smbios_setup (smbios, error))
+			return FALSE;
+	} else if (g_strv_length (values) == 1) {
+		if (!fu_smbios_setup_from_file (smbios, values[0], error))
+			return FALSE;
+	} else {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+	if (!fu_hwids_setup (hwids, smbios, error))
+		return FALSE;
+
+	/* show debug output */
+	g_print ("Computer Information\n");
+	g_print ("--------------------\n");
+	for (guint i = 0; hwid_keys[i] != NULL; i++) {
+		const gchar *tmp = fu_hwids_get_value (hwids, hwid_keys[i]);
+		if (tmp == NULL)
+			continue;
+		if (g_strcmp0 (hwid_keys[i], FU_HWIDS_KEY_BIOS_MAJOR_RELEASE) == 0 ||
+		    g_strcmp0 (hwid_keys[i], FU_HWIDS_KEY_BIOS_MINOR_RELEASE) == 0) {
+			guint64 val = g_ascii_strtoull (tmp, NULL, 16);
+			g_print ("%s: %" G_GUINT64_FORMAT "\n", hwid_keys[i], val);
+		} else {
+			g_print ("%s: %s\n", hwid_keys[i], tmp);
+		}
+	}
+
+	/* show GUIDs */
+	g_print ("\nHardware IDs\n");
+	g_print ("------------\n");
+	for (guint i = 0; i < 15; i++) {
+		const gchar *keys = NULL;
+		g_autofree gchar *guid = NULL;
+		g_autofree gchar *key = NULL;
+		g_autofree gchar *keys_str = NULL;
+		g_auto(GStrv) keysv = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* get the GUID */
+		key = g_strdup_printf ("HardwareID-%u", i);
+		keys = fu_hwids_get_replace_keys (hwids, key);
+		guid = fu_hwids_get_guid (hwids, key, &error_local);
+		if (guid == NULL) {
+			g_print ("%s\n", error_local->message);
+			continue;
+		}
+
+		/* show what makes up the GUID */
+		keysv = g_strsplit (keys, "&", -1);
+		keys_str = g_strjoinv (" + ", keysv);
+		g_print ("{%s}   <- %s\n", guid, keys_str);
+	}
+
+	return TRUE;
 }
 
 int
@@ -822,6 +959,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Detach to bootloader mode"),
 		     fu_util_detach);
+	fu_util_add (priv->cmd_array,
+		     "hwids",
+		     "[FILE]",
+		     /* TRANSLATORS: command description */
+		     _("Return all the hardware IDs for the machine"),
+		     fu_util_hwids);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

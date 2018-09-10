@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
     # DFU A3BU XPLAINED Mouse
     test = Test('DfuXmegaA3BU-Xplained', '80478b9a-3643-5e47-ab0f-ed28abe1019d')
-    test.add_file('90c381f1c5932a7f9505372305a615ca000e68df-a3bu-xplained123.cab', '1.23')
+    test.add_file('f5bbeaba1037dce31dd12f349e8148ae35f98b61-a3bu-xplained123.cab', '1.23')
     test.add_file('24d838541efe0340bf67e1cc5a9b95526e4d3702-a3bu-xplained124.cab', '1.24')
     tests.append(test)
 

@@ -457,7 +457,7 @@ sync_device_added (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	SyncContext *ctx = (SyncContext *) user_data;
 	MockTree *tree = ctx->tree;
-	const gchar *uuid = fu_device_get_platform_id (device);
+	const gchar *uuid = fu_device_get_physical_id (device);
 	MockTree *target;
 
 	target = (MockTree *) mock_tree_find_uuid (tree, uuid);
@@ -478,7 +478,7 @@ sync_device_removed (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	SyncContext *ctx = (SyncContext *) user_data;
 	MockTree *tree = ctx->tree;
-	const gchar *uuid = fu_device_get_platform_id (device);
+	const gchar *uuid = fu_device_get_physical_id (device);
 	MockTree *target;
 
 	target = (MockTree *) mock_tree_find_uuid (tree, uuid);
@@ -538,7 +538,7 @@ mock_tree_plugin_device_added (FuPlugin *plugin, FuDevice *device, gpointer user
 {
 	AttachContext *ctx = (AttachContext *) user_data;
 	MockTree *tree = ctx->tree;
-	const gchar *uuid = fu_device_get_platform_id (device);
+	const gchar *uuid = fu_device_get_physical_id (device);
 	MockTree *target;
 
 	target = (MockTree *) mock_tree_find_uuid (tree, uuid);

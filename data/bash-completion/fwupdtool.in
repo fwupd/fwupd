@@ -3,6 +3,7 @@ _fwupdtool_cmd_list=(
 	'get-devices'
 	'get-plugins'
 	'get-topology'
+	'hwids'
 	'install'
 	'install-blob'
 	'smbios-dump'

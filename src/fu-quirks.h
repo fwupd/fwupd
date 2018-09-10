@@ -11,7 +11,6 @@
 G_BEGIN_DECLS
 
 #include <glib-object.h>
-#include <gusb.h>
 
 #define FU_TYPE_QUIRKS (fu_quirks_get_type ())
 G_DECLARE_FINAL_TYPE (FuQuirks, fu_quirks, FU, QUIRKS, GObject)
@@ -22,13 +21,17 @@ gboolean	 fu_quirks_load				(FuQuirks	*self,
 const gchar	*fu_quirks_lookup_by_id			(FuQuirks	*self,
 							 const gchar	*group,
 							 const gchar	*key);
-const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
-							 GUsbDevice	*usb_device,
-							 const gchar	*key);
+void		 fu_quirks_add_value			(FuQuirks	*self,
+							 const gchar	*group,
+							 const gchar	*key,
+							 const gchar	*value);
+gboolean	 fu_quirks_get_kvs_for_guid		(FuQuirks	*self,
+							 const gchar	*guid,
+							 GHashTableIter *iter);
 
 /**
  * FU_QUIRKS_PLUGIN:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
  * @value: the plugin name, e.g. `csr`
  *
  * Sets the plugin to use for a specific hardware device.
@@ -69,7 +72,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 
 /**
  * FU_QUIRKS_FLAGS:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
  * @value: the quirk, e.g. `is-bootloader`
  *
  * Assigns optional quirks to use for a 8Bitdo device. The list of supported
@@ -84,7 +87,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 
 /**
  * FU_QUIRKS_SUMMARY:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
  * @value: the USB device summary, e.g. `An open source display colorimeter`
  *
  * Sets a name for a specific hardware device.
@@ -95,7 +98,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 
 /**
  * FU_QUIRKS_ICON:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
  * @value: the USB device icon name, e.g. `media-removable`
  *
  * Adds an icon name for a specific hardware device.
@@ -106,7 +109,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 
 /**
  * FU_QUIRKS_NAME:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
  * @value: the USB device name, e.g. `ColorHug`
  *
  * Sets a name for a specific hardware device.
@@ -117,7 +120,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 
 /**
  * FU_QUIRKS_GUID:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
  * @value: the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`
  *
  * Adds an extra GUID for a specific hardware device. If the value provided is
@@ -128,8 +131,54 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 #define	FU_QUIRKS_GUID				"Guid"
 
 /**
+ * FU_QUIRKS_COUNTERPART_GUID:
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
+ * @value: the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`
+ *
+ * Adds an counterpart GUID for a specific hardware device. If the value
+ * provided is not already a suitable GUID, it will be converted to one.
+ *
+ * A counterpart GUID is typically the GUID of the same device in bootloader
+ * or runtime mode, if they have a different device PCI or USB ID. Adding this
+ * type of GUID does not cause a "cascade" by matching using the quirk database.
+ *
+ * Since: 1.1.2
+ */
+#define	FU_QUIRKS_COUNTERPART_GUID		"CounterpartGuid"
+
+/**
+ * FU_QUIRKS_PARENT_GUID:
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
+ * @value: the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`
+ *
+ * Adds an extra GUID to mark as the parent device. If the value provided is
+ * not already a suitable GUID, it will be converted to one.
+ *
+ * Since: 1.1.2
+ */
+#define	FU_QUIRKS_PARENT_GUID			"ParentGuid"
+
+/**
+ * FU_QUIRKS_CHILDREN:
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
+ * @value: the GUID, e.g. `USB\VID_0763&PID_2806&I2C_01`
+ *
+ * Adds one or more virtual devices to a physical device, delimited by comma.
+ *
+ * To set the object type of the child device use a pipe before the object type,
+ * for instance: `FuRts54xxDevice|USB\VID_0763&PID_2806&I2C_01`
+ * If the type of device is not specified the parent device type is used.
+ *
+ * If the values provided are not already suitable GUIDs, they will be
+ * converted.
+ *
+ * Since: 1.1.2
+ */
+#define	FU_QUIRKS_CHILDREN			"Children"
+
+/**
  * FU_QUIRKS_VERSION:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806&REV_0001`
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806&REV_0001`
  * @value: the version number, e.g. `1.2`
  *
  * Sets a version for a specific hardware device.
@@ -140,7 +189,7 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
 
 /**
  * FU_QUIRKS_VENDOR:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
  * @value: the vendor, e.g. `Hughski Limited`
  *
  * Sets a vendor name for a specific hardware device.
@@ -148,6 +197,39 @@ const gchar	*fu_quirks_lookup_by_usb_device		(FuQuirks	*self,
  * Since: 1.0.3
  */
 #define	FU_QUIRKS_VENDOR			"Vendor"
+
+/**
+ * FU_QUIRKS_VENDOR_ID:
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
+ * @value: the vendor, e.g. `USB:0x123A`
+ *
+ * Sets a vendor ID for a specific hardware device.
+ *
+ * Since: 1.1.2
+ */
+#define	FU_QUIRKS_VENDOR_ID			"VendorId"
+
+/**
+ * FU_QUIRKS_FIRMWARE_SIZE_MIN:
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
+ * @value: the vendor, e.g. `0x10000`
+ *
+ * Sets the minimum allowed firmware size.
+ *
+ * Since: 1.1.2
+ */
+#define	FU_QUIRKS_FIRMWARE_SIZE_MIN		"FirmwareSizeMin"
+
+/**
+ * FU_QUIRKS_FIRMWARE_SIZE_MAX:
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
+ * @value: the vendor, e.g. `0x10000`
+ *
+ * Sets the maximum allowed firmware size.
+ *
+ * Since: 1.1.2
+ */
+#define	FU_QUIRKS_FIRMWARE_SIZE_MAX		"FirmwareSizeMax"
 
 G_END_DECLS
 

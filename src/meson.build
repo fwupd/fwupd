@@ -28,6 +28,7 @@ libfwupdprivate = static_library(
   'fwupdprivate',
   sources : [
     'fu-common.c',
+    'fu-chunk.c',
     'fu-device.c',
     'fu-device-locker.c',
     'fu-hwids.c',
@@ -37,6 +38,7 @@ libfwupdprivate = static_library(
     'fu-quirks.c',
     'fu-smbios.c',
     'fu-test.c',
+    'fu-udev-device.c',
     'fu-usb-device.c',
   ],
   include_directories : [
@@ -106,6 +108,7 @@ fwupdtool = executable(
   sources : [
     'fu-tool.c',
     keyring_src,
+    'fu-chunk.c',
     'fu-common.c',
     'fu-common-cab.c',
     'fu-config.c',
@@ -125,6 +128,7 @@ fwupdtool = executable(
     'fu-plugin-list.c',
     'fu-quirks.c',
     'fu-smbios.c',
+    'fu-udev-device.c',
     'fu-usb-device.c',
     'fu-util-common.c',
   ],
@@ -181,6 +185,7 @@ executable(
   resources_src,
   sources : [
     keyring_src,
+    'fu-chunk.c',
     'fu-common.c',
     'fu-common-cab.c',
     'fu-config.c',
@@ -201,6 +206,7 @@ executable(
     'fu-plugin-list.c',
     'fu-quirks.c',
     'fu-smbios.c',
+    'fu-udev-device.c',
     'fu-usb-device.c',
   ],
   include_directories : [
@@ -246,6 +252,7 @@ if get_option('tests')
     sources : [
       keyring_src,
       'fu-self-test.c',
+      'fu-chunk.c',
       'fu-common.c',
       'fu-common-cab.c',
       'fu-config.c',
@@ -266,6 +273,7 @@ if get_option('tests')
       'fu-quirks.c',
       'fu-smbios.c',
       'fu-test.c',
+      'fu-udev-device.c',
       'fu-usb-device.c',
     ],
     include_directories : [
@@ -304,6 +312,8 @@ if get_option('introspection')
   gir_dep = declare_dependency(sources: gir)
   gnome.generate_gir(fwupd,
     sources : [
+      'fu-chunk.c',
+      'fu-chunk.h',
       'fu-common.c',
       'fu-common.h',
       'fu-device.c',
@@ -314,6 +324,7 @@ if get_option('introspection')
       'fu-plugin.h',
       'fu-quirks.c',
       'fu-quirks.h',
+      'fu-udev-device.c',
       'fu-usb-device.c',
     ],
     nsversion : '1.0',

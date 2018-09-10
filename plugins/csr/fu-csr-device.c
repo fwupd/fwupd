@@ -8,10 +8,10 @@
 
 #include <string.h>
 
+#include "fu-chunk.h"
 #include "fu-csr-device.h"
 
 #include "dfu-common.h"
-#include "dfu-chunked.h"
 #include "dfu-firmware.h"
 
 /**
@@ -331,7 +331,6 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 	}
 
 	/* notify UI */
-	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	return dfu_utils_bytes_join_array (chunks);
 }
 
@@ -437,25 +436,16 @@ _dfu_firmware_get_default_element_data (DfuFirmware *firmware)
 	return dfu_element_get_contents (element);
 }
 
-static gboolean
-fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
+static GBytes *
+fu_csr_device_prepare_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
-	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	GBytes *blob_noftr;
-	const guint8 *data;
-	gsize sz = 0;
-	guint16 idx;
 	g_autoptr(DfuFirmware) dfu_firmware = dfu_firmware_new ();
-	g_autoptr(GBytes) blob_empty = NULL;
-	g_autoptr(GPtrArray) packets = NULL;
-
-	/* notify UI */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 
 	/* parse the file */
-	if (!dfu_firmware_parse_data (dfu_firmware, blob,
+	if (!dfu_firmware_parse_data (dfu_firmware, fw,
 				      DFU_FIRMWARE_PARSE_FLAG_NONE, error))
-		return FALSE;
+		return NULL;
 	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL) {
 		g_autofree gchar *fw_str = NULL;
 		fw_str = dfu_firmware_to_string (dfu_firmware);
@@ -466,7 +456,7 @@ fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "expected DFU firmware");
-		return FALSE;
+		return NULL;
 	}
 
 	/* get the blob from the firmware file */
@@ -476,18 +466,32 @@ fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "firmware contained no data");
-		return FALSE;
+		return NULL;
 	}
 
-	/* create packets */
-	data = g_bytes_get_data (blob_noftr, &sz);
-	packets = dfu_chunked_new (data, (guint32) sz, 0x0, 0x0,
-				   FU_CSR_PACKET_DATA_SIZE - FU_CSR_COMMAND_HEADER_SIZE);
+	/* success */
+	return g_bytes_ref (blob_noftr);
+}
+
+static gboolean
+fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
+{
+	FuCsrDevice *self = FU_CSR_DEVICE (device);
+	guint16 idx;
+	g_autoptr(GBytes) blob_empty = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* notify UI */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+
+	/* create chunks */
+	chunks = fu_chunk_array_new_from_bytes (blob, 0x0, 0x0,
+						FU_CSR_PACKET_DATA_SIZE - FU_CSR_COMMAND_HEADER_SIZE);
 
 	/* send to hardware */
-	for (idx = 0; idx < packets->len; idx++) {
-		DfuChunkedPacket *pkt = g_ptr_array_index (packets, idx);
-		g_autoptr(GBytes) blob_tmp = g_bytes_new_static (pkt->data, pkt->data_sz);
+	for (idx = 0; idx < chunks->len; idx++) {
+		FuChunk *chk = g_ptr_array_index (chunks, idx);
+		g_autoptr(GBytes) blob_tmp = g_bytes_new_static (chk->data, chk->data_sz);
 
 		/* send packet */
 		if (!fu_csr_device_download_chunk (self, idx, blob_tmp, error))
@@ -495,18 +499,12 @@ fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
 
 		/* update progress */
 		fu_device_set_progress_full (device,
-					     (gsize) idx, (gsize) packets->len);
+					     (gsize) idx, (gsize) chunks->len);
 	}
 
 	/* all done */
 	blob_empty = g_bytes_new (NULL, 0);
-	if (!fu_csr_device_download_chunk (self, idx, blob_empty, error))
-		return FALSE;
-
-	/* notify UI */
-	fu_device_set_status (device, FWUPD_STATUS_IDLE);
-
-	return TRUE;
+	return fu_csr_device_download_chunk (self, idx, blob_empty, error);
 }
 
 static gboolean
@@ -529,7 +527,6 @@ fu_csr_device_probe (FuUsbDevice *device, GError **error)
 static gboolean
 fu_csr_device_open (FuUsbDevice *device, GError **error)
 {
-	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 
 	/* open device and clear status */
@@ -539,6 +536,16 @@ fu_csr_device_open (FuUsbDevice *device, GError **error)
 		g_prefix_error (error, "failed to claim HID interface: ");
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_csr_device_setup (FuDevice *device, GError **error)
+{
+	FuCsrDevice *self = FU_CSR_DEVICE (device);
+
 	if (!fu_csr_device_clear_status (self, error))
 		return FALSE;
 
@@ -576,18 +583,18 @@ fu_csr_device_class_init (FuCsrDeviceClass *klass)
 	klass_device->to_string = fu_csr_device_to_string;
 	klass_device->write_firmware = fu_csr_device_download;
 	klass_device->read_firmware = fu_csr_device_upload;
+	klass_device->prepare_firmware = fu_csr_device_prepare_firmware;
 	klass_device->attach = fu_csr_device_attach;
+	klass_device->setup = fu_csr_device_setup;
 	klass_usb_device->open = fu_csr_device_open;
 	klass_usb_device->close = fu_csr_device_close;
 	klass_usb_device->probe = fu_csr_device_probe;
 }
 
 FuCsrDevice *
-fu_csr_device_new (GUsbDevice *usb_device)
+fu_csr_device_new (FuUsbDevice *device)
 {
-	FuCsrDevice *device = NULL;
-	device = g_object_new (FU_TYPE_CSR_DEVICE,
-			       "usb-device", usb_device,
-			       NULL);
-	return device;
+	FuCsrDevice *self = g_object_new (FU_TYPE_CSR_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
+	return self;
 }

@@ -15,7 +15,6 @@ fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    gudev,
   ],
 )
 
@@ -39,7 +38,6 @@ executable('tbtfwucli',
   ],
   dependencies : [
     plugin_deps,
-    gudev,
   ],
 )
 
@@ -61,7 +59,6 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
     ],
     dependencies : [
       plugin_deps,
-      gudev,
       umockdev,
     ],
     link_with : [

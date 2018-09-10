@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <string.h>
-#include <appstream-glib.h>
 
 #include "fu-nitrokey-common.h"
 #include "fu-nitrokey-device.h"
@@ -210,9 +209,6 @@ static gboolean
 fu_nitrokey_device_open (FuUsbDevice *device, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-	NitrokeyGetDeviceStatusPayload payload;
-	guint8 buf_reply[NITROKEY_REPLY_DATA_LENGTH];
-	g_autofree gchar *version = NULL;
 
 	/* claim interface */
 	if (!g_usb_device_claim_interface (usb_device, 0x02, /* idx */
@@ -221,6 +217,18 @@ fu_nitrokey_device_open (FuUsbDevice *device, GError **error)
 		g_prefix_error (error, "failed to do claim nitrokey: ");
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_nitrokey_device_setup (FuDevice *device, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	NitrokeyGetDeviceStatusPayload payload;
+	guint8 buf_reply[NITROKEY_REPLY_DATA_LENGTH];
+	g_autofree gchar *version = NULL;
 
 	/* get firmware version */
 	if (!nitrokey_execute_cmd_full (usb_device,
@@ -265,17 +273,17 @@ fu_nitrokey_device_init (FuNitrokeyDevice *device)
 static void
 fu_nitrokey_device_class_init (FuNitrokeyDeviceClass *klass)
 {
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	klass_device->setup = fu_nitrokey_device_setup;
 	klass_usb_device->open = fu_nitrokey_device_open;
 	klass_usb_device->close = fu_nitrokey_device_close;
 }
 
 FuNitrokeyDevice *
-fu_nitrokey_device_new (GUsbDevice *usb_device)
+fu_nitrokey_device_new (FuUsbDevice *device)
 {
-	FuNitrokeyDevice *device;
-	device = g_object_new (FU_TYPE_NITROKEY_DEVICE,
-			       "usb-device", usb_device,
-			       NULL);
-	return FU_NITROKEY_DEVICE (device);
+	FuNitrokeyDevice *self = g_object_new (FU_TYPE_NITROKEY_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
+	return FU_NITROKEY_DEVICE (self);
 }

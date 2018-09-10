@@ -174,15 +174,51 @@ fu_main_engine_percentage_changed_cb (FuEngine *engine,
 				       g_variant_new_uint32 (percentage));
 }
 
+static gboolean
+fu_main_get_device_flags_for_sender (FuMainPrivate *priv, const char *sender,
+				     FwupdDeviceFlags *flags, GError **error)
+{
+	uid_t calling_uid;
+	g_autoptr(GVariant) value = NULL;
+
+	g_return_val_if_fail (sender != NULL, FALSE);
+	g_return_val_if_fail (flags != NULL, FALSE);
+
+	value = g_dbus_proxy_call_sync (priv->proxy_uid,
+					"GetConnectionUnixUser",
+					g_variant_new ("(s)", sender),
+					G_DBUS_CALL_FLAGS_NONE,
+					2000,
+					NULL,
+					error);
+	if (value == NULL) {
+		g_prefix_error (error, "failed to read user id of caller: ");
+		return FALSE;
+	}
+	g_variant_get (value, "(u)", &calling_uid);
+	if (calling_uid == 0)
+		*flags |= FWUPD_DEVICE_FLAG_TRUSTED;
+
+	return TRUE;
+}
+
 static GVariant *
-fu_main_device_array_to_variant (GPtrArray *devices)
+fu_main_device_array_to_variant (FuMainPrivate *priv, const gchar *sender,
+				 GPtrArray *devices, GError **error)
 {
 	GVariantBuilder builder;
+	FwupdDeviceFlags flags = FWUPD_DEVICE_FLAG_NONE;
+
 	g_return_val_if_fail (devices->len > 0, NULL);
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+
+	if (!fu_main_get_device_flags_for_sender (priv, sender, &flags, error))
+		return NULL;
+
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		GVariant *tmp = fwupd_device_to_variant (FWUPD_DEVICE (device));
+		GVariant *tmp = fwupd_device_to_variant_full (FWUPD_DEVICE (device),
+							      flags);
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(aa{sv})", &builder);
@@ -581,7 +617,11 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		val = fu_main_device_array_to_variant (devices);
+		val = fu_main_device_array_to_variant (priv, sender, devices, &error);
+		if (val == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
@@ -659,7 +699,11 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		val = fu_main_device_array_to_variant (devices);
+		val = fu_main_device_array_to_variant (priv, sender, devices, &error);
+		if (val == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
@@ -1098,31 +1142,6 @@ fu_main_load_introspection (const gchar *filename, GError **error)
 	return g_dbus_node_info_new_for_xml (g_bytes_get_data (data, NULL), error);
 }
 
-static gboolean
-fu_main_perhaps_own_name (gpointer user_data)
-{
-	FuMainPrivate *priv = (FuMainPrivate *) user_data;
-	g_autoptr(GError) error = NULL;
-
-	/* are any plugins pending */
-	if (!fu_engine_check_plugins_pending (priv->engine, &error)) {
-		g_debug ("trying again: %s", error->message);
-		return G_SOURCE_CONTINUE;
-	}
-
-	/* own the object */
-	g_debug ("registering D-Bus service");
-	priv->owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
-					 FWUPD_DBUS_SERVICE,
-					 G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
-					 G_BUS_NAME_OWNER_FLAGS_REPLACE,
-					 fu_main_on_bus_acquired_cb,
-					 fu_main_on_name_acquired_cb,
-					 fu_main_on_name_lost_cb,
-					 priv, NULL);
-	return G_SOURCE_REMOVE;
-}
-
 static void
 fu_main_private_free (FuMainPrivate *priv)
 {
@@ -1213,9 +1232,6 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	/* keep polling until all the plugins are ready */
-	g_timeout_add (200, fu_main_perhaps_own_name, priv);
-
 	/* load introspection from file */
 	priv->introspection_daemon = fu_main_load_introspection (FWUPD_DBUS_INTERFACE ".xml",
 								 &error);
@@ -1230,6 +1246,16 @@ main (int argc, char *argv[])
 		g_printerr ("Failed to load authority: %s\n", error->message);
 		return EXIT_FAILURE;
 	}
+
+	/* own the object */
+	priv->owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
+					 FWUPD_DBUS_SERVICE,
+					 G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
+					 G_BUS_NAME_OWNER_FLAGS_REPLACE,
+					 fu_main_on_bus_acquired_cb,
+					 fu_main_on_name_acquired_cb,
+					 fu_main_on_name_lost_cb,
+					 priv, NULL);
 
 	/* Only timeout and close the mainloop if we have specified it
 	 * on the command line */

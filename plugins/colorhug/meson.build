@@ -14,7 +14,6 @@ shared_module('fu_plugin_colorhug',
   ],
   include_directories : [
     include_directories('../..'),
-    include_directories('../dfu'),
     include_directories('../../src'),
     include_directories('../../libfwupd'),
   ],
@@ -23,8 +22,5 @@ shared_module('fu_plugin_colorhug',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-  ],
-  link_with : [
-    dfu,
   ],
 )

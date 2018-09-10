@@ -7,14 +7,11 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <fcntl.h>
 #include <fnmatch.h>
-#include <gio/gio.h>
 #include <gio/gunixmounts.h>
 #include <glib/gi18n.h>
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-uefi-bgrt.h"
@@ -31,6 +28,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
 
 struct FuPluginData {
 	gchar			*esp_path;
+	gboolean		 require_shim_for_sb;
 	FuUefiBgrt		*bgrt;
 };
 
@@ -380,7 +378,7 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 
 	/* record boot information to system log for future debugging */
-	efibootmgr_path = g_find_program_in_path ("efibootmgr");
+	efibootmgr_path = fu_common_find_program_in_path ("efibootmgr", NULL);
 	if (efibootmgr_path != NULL) {
 		if (!g_spawn_command_line_sync ("efibootmgr -v",
 						&boot_variables, NULL, NULL, error))
@@ -568,6 +566,7 @@ fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *key = "OverrideESPMountPoint";
+	g_autofree gchar *require_shim_for_sb = NULL;
 
 	/* load from file */
 	data->esp_path = fu_plugin_get_config_value (plugin, key);
@@ -583,6 +582,10 @@ fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 		}
 		return TRUE;
 	}
+	require_shim_for_sb = fu_plugin_get_config_value (plugin, "RequireShimForSecureBoot");
+	if (require_shim_for_sb == NULL ||
+	    g_ascii_strcasecmp (require_shim_for_sb, "true") == 0)
+		data->require_shim_for_sb = TRUE;
 
 	/* try to guess from heuristics */
 	data->esp_path = fu_uefi_guess_esp_path ();
@@ -673,6 +676,9 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			fu_device_set_update_error (FU_DEVICE (dev), error_efivarfs->message);
 		} else {
 			fu_device_set_metadata (FU_DEVICE (dev), "EspPath", data->esp_path);
+			fu_device_set_metadata_boolean (FU_DEVICE (dev),
+							"RequireShimForSecureBoot",
+							data->require_shim_for_sb);
 			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
 		}
 		fu_plugin_device_add (plugin, FU_DEVICE (dev));

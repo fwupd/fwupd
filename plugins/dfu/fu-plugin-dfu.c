@@ -8,7 +8,6 @@
 
 #include <appstream-glib.h>
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "dfu-device.h"
@@ -31,13 +30,13 @@ fu_plugin_dfu_state_changed_cb (DfuDevice *device,
 }
 
 gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *dev, GError **error)
 {
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open the device */
-	device = dfu_device_new (usb_device);
+	device = dfu_device_new (fu_usb_device_get_dev (dev));
 	fu_device_set_quirks (FU_DEVICE (device), fu_plugin_get_quirks (plugin));
 	dfu_device_set_usb_context (device, fu_plugin_get_usb_context (plugin));
 	locker = fu_device_locker_new (device, error);
@@ -84,10 +83,9 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
 	/* detach and USB reset */
 	if (!dfu_device_detach (device, error))
 		return FALSE;
-	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
-		return FALSE;
 
-	/* success */
+	/* wait for replug */
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -112,10 +110,9 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
 	/* attach it */
 	if (!dfu_device_attach (device, error))
 		return FALSE;
-	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
-		return FALSE;
 
-	/* success */
+	/* wait for replug */
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 

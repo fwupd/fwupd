@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-wac-device.h"
@@ -18,16 +17,15 @@ fu_plugin_init (FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
 {
-	g_autoptr(FuWacDevice) device = NULL;
+	g_autoptr(FuWacDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	device = fu_wac_device_new (usb_device);
-	fu_device_set_quirks (FU_DEVICE (device), fu_plugin_get_quirks (plugin));
-	locker = fu_device_locker_new (device, error);
+	dev = fu_wac_device_new (device);
+	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
-	fu_plugin_device_add (plugin, FU_DEVICE (device));
+	fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	return TRUE;
 }
 

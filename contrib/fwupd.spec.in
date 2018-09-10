@@ -48,8 +48,10 @@ BuildRequires: systemd >= %{systemd_version}
 BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
 BuildRequires: gcab
+%ifarch %{valgrind_arches}
 BuildRequires: valgrind
 BuildRequires: valgrind-devel
+%endif
 BuildRequires: elfutils-libelf-devel
 BuildRequires: gtk-doc
 BuildRequires: libuuid-devel
@@ -72,8 +74,7 @@ BuildRequires: pango-devel
 BuildRequires: cairo-devel cairo-gobject-devel
 BuildRequires: freetype
 BuildRequires: fontconfig
-BuildRequires: dejavu-sans-fonts
-BuildRequires: adobe-source-han-sans-cn-fonts
+BuildRequires: google-noto-sans-cjk-ttc-fonts
 BuildRequires: gnu-efi-devel
 BuildRequires: pesign
 %endif
@@ -260,11 +261,14 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nitrokey.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_nvme.so
 %if 0%{?have_redfish}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_redfish.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_steelseries.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_superio.so
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synapticsmst.so
 %endif

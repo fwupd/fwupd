@@ -12,11 +12,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <appstream-glib.h>
 #include <smbios_c/token.h>
 #include <smbios_c/smi.h>
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 /* Whitelisted smbios class/select commands */

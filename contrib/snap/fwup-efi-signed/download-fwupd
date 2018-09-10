@@ -1,0 +1,36 @@
+#! /usr/bin/python3
+
+import re
+import shutil
+from urllib.parse import urlparse, urlunparse
+from urllib.request import urlopen
+
+import apt
+import apt_pkg
+
+ARCH_TO_EFI_NAME = {
+    'amd64': 'x64',
+    'i386': 'ia32',
+    'arm64': 'aa64',
+    'armhf': 'arm',
+}
+arch = apt_pkg.config['Apt::Architecture']
+efi_name = ARCH_TO_EFI_NAME[arch]
+cache = apt.Cache()
+fwupd_efi = cache["fwupd"].candidate
+pool_parsed = urlparse(fwupd_efi.uri)
+dists_dir = "/dists/devel/main/uefi/fwupd-%s/current/" % (
+    fwupd_efi.architecture)
+
+DOWNLOAD_LIST = {
+        "fwupd%s.efi.signed" %efi_name: "fwupd%s.efi.signed" % efi_name,
+        "version": "fwupd%s.efi.signed.version" % efi_name
+}
+for base in DOWNLOAD_LIST:
+    dists_parsed = list(pool_parsed)
+    dists_parsed[2] = re.sub(r"/pool/.*", dists_dir + base, dists_parsed[2])
+    dists_uri = urlunparse(dists_parsed)
+    target = DOWNLOAD_LIST[base]
+    print("Downloading %s to %s..." % (dists_uri, target))
+    with urlopen(dists_uri) as dists, open(target, "wb") as out:
+        shutil.copyfileobj(dists, out)

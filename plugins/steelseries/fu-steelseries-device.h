@@ -7,9 +7,6 @@
 #ifndef __FU_STEELSERIES_DEVICE_H
 #define __FU_STEELSERIES_DEVICE_H
 
-#include <glib-object.h>
-#include <gusb.h>
-
 #include "fu-plugin.h"
 
 G_BEGIN_DECLS
@@ -22,7 +19,7 @@ struct _FuSteelseriesDeviceClass
 	FuUsbDeviceClass	parent_class;
 };
 
-FuSteelseriesDevice	*fu_steelseries_device_new	(GUsbDevice	*usb_device);
+FuSteelseriesDevice	*fu_steelseries_device_new	(FuUsbDevice	*device);
 
 G_END_DECLS
 

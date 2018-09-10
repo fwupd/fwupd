@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2017 Richard Hughes <richard@hughsie.com> -->
+<component type="firmware">
+  <id>com.Flashrom.Laptop.firmware</id>
+  <name>Flashrom Laptop Firmware</name>
+  <summary>System firmware for a Flashrom laptop</summary>
+  <description>
+    <p>
+      The laptop can be updated using flashrom.
+    </p>
+  </description>
+  <provides>
+    <!-- this is a suitable HWID, found using `fwupdmgr hwids` -->
+    <firmware type="flashed">a0ce5085-2dea-5086-ae72-45810a186ad0</firmware>
+  </provides>
+  <url type="homepage">http://www.bbc.co.uk/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Proprietary</project_license> <!-- FIXME? -->
+  <developer_name>Flashrom</developer_name>
+  <releases>
+    <release urgency="high" version="1.2.3" date="2017-08-15">
+      <checksum filename="firmware.tar" target="content"/>
+      <description>
+        <p>
+          This release updates a frobnicator to frob faster.
+        </p>
+      </description>
+    </release>
+  </releases>
+
+  <!-- this script is run with bubblewrap -- the old firmware is in /boot -->
+  <custom>
+    <value key="fwupd::BuilderScript">startup.sh</value>
+    <value key="fwupd::BuilderOutput">firmware.bin</value>
+  </custom>
+
+  <!-- only newer versions of fwupd know how to write to this hardware -->
+  <requires>
+    <id compare="ge" version="1.0.1">org.freedesktop.fwupd</id>
+  </requires>
+
+</component>

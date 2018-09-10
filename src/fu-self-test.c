@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "fu-common-cab.h"
+#include "fu-chunk.h"
 #include "fu-config.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
@@ -216,6 +217,7 @@ fu_engine_device_priority_func (void)
 	device = fu_engine_get_device (engine, "867d5f8110f8aa79dd63d7440f21724264f10430", &error);
 	g_assert_no_error (error);
 	g_assert_cmpint (fu_device_get_priority (device), ==, 1);
+	g_clear_object (&device);
 
 	/* the now-removed low-prio device */
 	device = fu_engine_get_device (engine, "4e89d81a2e6fb4be2578d245fd8511c1f4ad0b58", &error);
@@ -852,6 +854,134 @@ fu_device_list_delay_func (void)
 	g_assert_cmpint (changed_cnt, ==, 1);
 }
 
+typedef struct {
+	FuDevice	*device_new;
+	FuDevice	*device_old;
+	FuDeviceList	*device_list;
+} FuDeviceListReplugHelper;
+
+static gboolean
+fu_device_list_remove_cb (gpointer user_data)
+{
+	FuDeviceListReplugHelper *helper = (FuDeviceListReplugHelper *) user_data;
+	fu_device_list_remove (helper->device_list, helper->device_old);
+	return FALSE;
+}
+
+static gboolean
+fu_device_list_add_cb (gpointer user_data)
+{
+	FuDeviceListReplugHelper *helper = (FuDeviceListReplugHelper *) user_data;
+	fu_device_list_add (helper->device_list, helper->device_new);
+	return FALSE;
+}
+
+static void
+fu_device_list_replug_auto_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) parent = fu_device_new ();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	g_autoptr(GError) error = NULL;
+	FuDeviceListReplugHelper helper;
+
+	/* parent */
+	fu_device_set_id (parent, "parent");
+
+	/* fake child devices */
+	fu_device_set_id (device1, "device1");
+	fu_device_set_physical_id (device1, "ID");
+	fu_device_set_plugin (device1, "self-test");
+	fu_device_set_remove_delay (device1, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_add_child (parent, device1);
+	fu_device_set_id (device2, "device2");
+	fu_device_set_physical_id (device2, "ID"); /* matches */
+	fu_device_set_plugin (device2, "self-test");
+	fu_device_set_remove_delay (device2, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+
+	/* not yet added */
+	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* add device */
+	fu_device_list_add (device_list, device1);
+
+	/* not waiting */
+	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* waiting */
+	helper.device_old = device1;
+	helper.device_new = device2;
+	helper.device_list = device_list;
+	g_timeout_add (100, fu_device_list_remove_cb, &helper);
+	g_timeout_add (200, fu_device_list_add_cb, &helper);
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* check device2 now has parent too */
+	g_assert (fu_device_get_parent (device2) == parent);
+
+	/* waiting, failed */
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	ret = fu_device_list_wait_for_replug (device_list, device2, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert (!ret);
+}
+
+static void
+fu_device_list_replug_user_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	g_autoptr(GError) error = NULL;
+	FuDeviceListReplugHelper helper;
+
+	/* fake devices */
+	fu_device_set_id (device1, "device1");
+	fu_device_add_guid (device1, "foo");
+	fu_device_add_guid (device1, "bar");
+	fu_device_set_plugin (device1, "self-test");
+	fu_device_set_remove_delay (device1, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	fu_device_set_id (device2, "device2");
+	fu_device_add_guid (device2, "baz");
+	fu_device_add_guid (device2, "bar"); /* matches */
+	fu_device_set_plugin (device2, "self-test");
+	fu_device_set_remove_delay (device2, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+
+	/* not yet added */
+	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* add device */
+	fu_device_list_add (device_list, device1);
+
+	/* not waiting */
+	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* waiting */
+	helper.device_old = device1;
+	helper.device_new = device2;
+	helper.device_list = device_list;
+	g_timeout_add (100, fu_device_list_remove_cb, &helper);
+	g_timeout_add (200, fu_device_list_add_cb, &helper);
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+}
+
 static void
 fu_device_list_compatible_func (void)
 {
@@ -925,6 +1055,51 @@ fu_device_list_compatible_func (void)
 	/* verify we can get the old device from the new device */
 	device = fu_device_list_get_old (device_list, device2);
 	g_assert (device == device1);
+}
+
+static void
+fu_device_list_remove_chain_func (void)
+{
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	g_autoptr(FuDevice) device_child = fu_device_new ();
+	g_autoptr(FuDevice) device_parent = fu_device_new ();
+
+	guint added_cnt = 0;
+	guint changed_cnt = 0;
+	guint removed_cnt = 0;
+
+	g_signal_connect (device_list, "added",
+			  G_CALLBACK (_device_list_count_cb),
+			  &added_cnt);
+	g_signal_connect (device_list, "removed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &removed_cnt);
+	g_signal_connect (device_list, "changed",
+			  G_CALLBACK (_device_list_count_cb),
+			  &changed_cnt);
+
+	/* add child */
+	fu_device_set_id (device_child, "child");
+	fu_device_add_guid (device_child, "child-GUID-1");
+	fu_device_list_add (device_list, device_child);
+	g_assert_cmpint (added_cnt, ==, 1);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
+
+	/* add parent */
+	fu_device_set_id (device_parent, "parent");
+	fu_device_add_guid (device_parent, "parent-GUID-1");
+	fu_device_add_child (device_parent, device_child);
+	fu_device_list_add (device_list, device_parent);
+	g_assert_cmpint (added_cnt, ==, 2);
+	g_assert_cmpint (removed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 0);
+
+	/* make sure that removing the parent causes both to go; but the child to go first */
+	fu_device_list_remove (device_list, device_parent);
+	g_assert_cmpint (added_cnt, ==, 2);
+	g_assert_cmpint (removed_cnt, ==, 2);
+	g_assert_cmpint (changed_cnt, ==, 0);
 }
 
 static void
@@ -1005,6 +1180,29 @@ fu_device_list_func (void)
 			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
 }
 
+static void
+fu_device_open_refcount_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(GError) error = NULL;
+	fu_device_set_id (device, "test_device");
+	ret = fu_device_open (device, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_device_open (device, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_device_close (device, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_device_close (device, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_device_close (device, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false (ret);
+}
 
 static void
 fu_device_metadata_func (void)
@@ -1212,23 +1410,6 @@ fu_plugin_delay_func (void)
 	g_assert (device_tmp != NULL);
 	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
 	g_clear_object (&device_tmp);
-
-	/* add it with a small delay */
-	fu_plugin_device_add_delay (plugin, device);
-	g_assert (device_tmp == NULL);
-	fu_test_loop_run_with_timeout (1000);
-	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
-	g_clear_object (&device_tmp);
-
-	/* add it again, twice quickly */
-	fu_plugin_device_add_delay (plugin, device);
-	fu_plugin_device_add_delay (plugin, device);
-	g_assert (device_tmp == NULL);
-	fu_test_loop_run_with_timeout (1000);
-	g_assert (device_tmp != NULL);
-	g_assert_cmpstr (fu_device_get_id (device_tmp), ==, "b7eccd0059d6d7dc2ef76c35d6de0048cc8c029d");
-	g_clear_object (&device_tmp);
 }
 
 static void
@@ -1267,6 +1448,67 @@ fu_plugin_quirks_func (void)
 	g_assert_cmpstr (tmp, ==, NULL);
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "unfound", "unfound");
 	g_assert_cmpstr (tmp, ==, NULL);
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "bb9ec3e2-77b3-53bc-a1f1-b05916715627", "Flags");
+	g_assert_cmpstr (tmp, ==, "clever");
+}
+
+static void
+fu_plugin_quirks_performance_func (void)
+{
+	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
+	g_autoptr(GTimer) timer = g_timer_new ();
+	const gchar *keys[] = {
+		"Name", "Icon", "Children", "Plugin", "Flags",
+		"FirmwareSizeMin", "FirmwareSizeMax", NULL };
+
+	/* insert */
+	for (guint j = 0; j < 1000; j++) {
+		g_autofree gchar *group = NULL;
+		group = g_strdup_printf ("DeviceInstanceId=USB\\VID_0BDA&PID_%04X", j);
+		for (guint i = 0; keys[i] != NULL; i++)
+			fu_quirks_add_value (quirks, group, keys[i], "Value");
+	}
+	g_print ("insert=%.3fms ", g_timer_elapsed (timer, NULL) * 1000.f);
+
+	/* lookup */
+	g_timer_reset (timer);
+	for (guint j = 0; j < 1000; j++) {
+		g_autofree gchar *group = NULL;
+		group = g_strdup_printf ("DeviceInstanceId=USB\\VID_0BDA&PID_%04X", j);
+		for (guint i = 0; keys[i] != NULL; i++) {
+			const gchar *tmp = fu_quirks_lookup_by_id (quirks, group, keys[i]);
+			g_assert_cmpstr (tmp, ==, "Value");
+		}
+	}
+	g_print ("lookup=%.3fms ", g_timer_elapsed (timer, NULL) * 1000.f);
+}
+
+static void
+fu_plugin_quirks_device_func (void)
+{
+	FuDevice *device_tmp;
+	GPtrArray *children;
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_quirks_load (quirks, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* use quirk file to set device attributes */
+	fu_device_set_quirks (device, quirks);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_guid (device, "USB\\VID_0BDA&PID_1100");
+	g_assert_cmpstr (fu_device_get_name (device), ==, "Hub");
+
+	/* ensure children are created */
+	children = fu_device_get_children (device);
+	g_assert_cmpint (children->len, ==, 1);
+	device_tmp = g_ptr_array_index (children, 0);
+	g_assert_cmpstr (fu_device_get_name (device_tmp), ==, "HDMI");
+	g_assert (fu_device_has_flag (device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE));
 }
 
 static void
@@ -1743,17 +1985,9 @@ fu_common_firmware_builder_func (void)
 {
 	const gchar *data;
 	g_autofree gchar *archive_fn = NULL;
-	g_autofree gchar *bwrap_fn = NULL;
 	g_autoptr(GBytes) archive_blob = NULL;
 	g_autoptr(GBytes) firmware_blob = NULL;
 	g_autoptr(GError) error = NULL;
-
-	/* we can't do this in travis: capset failed: Operation not permitted */
-	bwrap_fn = g_find_program_in_path ("bwrap");
-	if (bwrap_fn == NULL) {
-		g_test_skip ("no bwrap in path, so skipping");
-		return;
-	}
 
 	/* get test file */
 	archive_fn = fu_test_get_filename (TESTDATADIR, "builder/firmware.tar");
@@ -1767,8 +2001,17 @@ fu_common_firmware_builder_func (void)
 						    "startup.sh",
 						    "firmware.bin",
 						    &error);
-	g_assert_no_error (error);
-	g_assert (firmware_blob != NULL);
+	if (firmware_blob == NULL) {
+		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
+			g_test_skip ("Missing permissions to create namespace in container");
+			return;
+		}
+		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_test_skip ("User namespaces not supported in container");
+			return;
+		}
+		g_assert_no_error (error);
+	}
 
 	/* check it */
 	data = g_bytes_get_data (firmware_blob, NULL);
@@ -2239,6 +2482,38 @@ fu_common_store_cab_error_wrong_checksum_func (void)
 	g_assert (store == NULL);
 }
 
+static gboolean
+fu_device_poll_cb (FuDevice *device, GError **error)
+{
+	guint64 cnt = fu_device_get_metadata_integer (device, "cnt");
+	g_debug ("poll cnt=%" G_GUINT64_FORMAT, cnt);
+	fu_device_set_metadata_integer (device, "cnt", cnt + 1);
+	return TRUE;
+}
+
+static void
+fu_device_poll_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (device);
+	guint cnt;
+
+	/* set up a 10ms poll */
+	klass->poll = fu_device_poll_cb;
+	fu_device_set_metadata_integer (device, "cnt", 0);
+	fu_device_set_poll_interval (device, 10);
+	fu_test_loop_run_with_timeout (100);
+	fu_test_loop_quit ();
+	cnt = fu_device_get_metadata_integer (device, "cnt");
+	g_assert_cmpint (cnt, >=, 9);
+
+	/* disable the poll */
+	fu_device_set_poll_interval (device, 0);
+	fu_test_loop_run_with_timeout (100);
+	fu_test_loop_quit ();
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "cnt"), ==, cnt);
+}
+
 static void
 fu_device_incorporate_func (void)
 {
@@ -2274,6 +2549,71 @@ fu_device_incorporate_func (void)
 	g_assert_cmpint (fu_device_get_icons(device)->len, ==, 1);
 }
 
+static void
+fu_chunk_func (void)
+{
+	g_autofree gchar *chunked1_str = NULL;
+	g_autofree gchar *chunked2_str = NULL;
+	g_autofree gchar *chunked3_str = NULL;
+	g_autofree gchar *chunked4_str = NULL;
+	g_autoptr(GPtrArray) chunked1 = NULL;
+	g_autoptr(GPtrArray) chunked2 = NULL;
+	g_autoptr(GPtrArray) chunked3 = NULL;
+	g_autoptr(GPtrArray) chunked4 = NULL;
+
+	chunked3 = fu_chunk_array_new ((const guint8 *) "123456", 6, 0x0, 3, 3);
+	chunked3_str = fu_chunk_array_to_string (chunked3);
+	g_print ("\n%s", chunked3_str);
+	g_assert_cmpstr (chunked3_str, ==, "#00: page:00 addr:0000 len:03 123\n"
+					   "#01: page:01 addr:0000 len:03 456\n");
+
+	chunked4 = fu_chunk_array_new ((const guint8 *) "123456", 6, 0x4, 4, 4);
+	chunked4_str = fu_chunk_array_to_string (chunked4);
+	g_print ("\n%s", chunked4_str);
+	g_assert_cmpstr (chunked4_str, ==, "#00: page:01 addr:0000 len:04 1234\n"
+					   "#01: page:02 addr:0000 len:02 56\n");
+
+	chunked1 = fu_chunk_array_new ((const guint8 *) "0123456789abcdef", 16, 0x0, 10, 4);
+	chunked1_str = fu_chunk_array_to_string (chunked1);
+	g_print ("\n%s", chunked1_str);
+	g_assert_cmpstr (chunked1_str, ==, "#00: page:00 addr:0000 len:04 0123\n"
+					   "#01: page:00 addr:0004 len:04 4567\n"
+					   "#02: page:00 addr:0008 len:02 89\n"
+					   "#03: page:01 addr:0000 len:04 abcd\n"
+					   "#04: page:01 addr:0004 len:02 ef\n");
+
+	chunked2 = fu_chunk_array_new ((const guint8 *) "XXXXXXYYYYYYZZZZZZ", 18, 0x0, 6, 4);
+	chunked2_str = fu_chunk_array_to_string (chunked2);
+	g_print ("\n%s", chunked2_str);
+	g_assert_cmpstr (chunked2_str, ==, "#00: page:00 addr:0000 len:04 XXXX\n"
+					   "#01: page:00 addr:0004 len:02 XX\n"
+					   "#02: page:01 addr:0000 len:04 YYYY\n"
+					   "#03: page:01 addr:0004 len:02 YY\n"
+					   "#04: page:02 addr:0000 len:04 ZZZZ\n"
+					   "#05: page:02 addr:0004 len:02 ZZ\n");
+}
+
+static void
+fu_common_strstrip_func (void)
+{
+
+	struct {
+		const gchar *old;
+		const gchar *new;
+	} map[] = {
+		{ "same", "same" },
+		{ " leading", "leading" },
+		{ "tailing ", "tailing" },
+		{ "  b  ", "b" },
+		{ "  ", "" },
+		{ NULL, NULL }
+	};
+	for (guint i = 0; map[i].old != NULL; i++) {
+		g_autofree gchar *tmp = fu_common_strstrip (map[i].old);
+		g_assert_cmpstr (tmp, ==, map[i].new);
+	}
+}
+
 int
 main (int argc, char **argv)
 {
@@ -2295,15 +2635,20 @@ main (int argc, char **argv)
 	if (g_test_slow ())
 		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
+	g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
+	g_test_add_func ("/fwupd/device{open-refcount}", fu_device_open_refcount_func);
 	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
 	g_test_add_func ("/fwupd/device-list{delay}", fu_device_list_delay_func);
 	g_test_add_func ("/fwupd/device-list{compatible}", fu_device_list_compatible_func);
+	g_test_add_func ("/fwupd/device-list{remove-chain}", fu_device_list_remove_chain_func);
 	g_test_add_func ("/fwupd/engine{device-unlock}", fu_engine_device_unlock_func);
 	g_test_add_func ("/fwupd/engine{history-success}", fu_engine_history_func);
 	g_test_add_func ("/fwupd/engine{history-error}", fu_engine_history_error_func);
+	g_test_add_func ("/fwupd/device-list{replug-auto}", fu_device_list_replug_auto_func);
+	g_test_add_func ("/fwupd/device-list{replug-user}", fu_device_list_replug_user_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
 	g_test_add_func ("/fwupd/engine{partial-hash}", fu_engine_partial_hash_func);
 	g_test_add_func ("/fwupd/engine{downgrade}", fu_engine_downgrade_func);
@@ -2323,8 +2668,12 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
+	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
+	g_test_add_func ("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
+	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
+	g_test_add_func ("/fwupd/common{strstrip}", fu_common_strstrip_func);
 	g_test_add_func ("/fwupd/common{endian}", fu_common_endian_func);
 	g_test_add_func ("/fwupd/common{cab-success}", fu_common_store_cab_func);
 	g_test_add_func ("/fwupd/common{cab-success-unsigned}", fu_common_store_cab_unsigned_func);

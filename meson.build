@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.1.1',
+  version : '1.1.2',
   license : 'LGPL-2.1+',
   meson_version : '>=0.43.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -203,7 +203,6 @@ if valgrind.found()
 endif
 
 if get_option('plugin_redfish')
-  json_glib = dependency('json-glib-1.0')
   efivar = dependency('efivar')
 endif
 
@@ -242,7 +241,9 @@ if get_option('plugin_uefi')
           gnu_efi_arch = ''
   endif
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
-  r = run_command('po/test-deps')
+
+  python3 = find_program('python3')
+  r = run_command([python3, 'po/test-deps'])
   if r.returncode() != 0
     error(r.stdout())
   endif
@@ -254,6 +255,13 @@ if get_option('plugin_dell')
   conf.set('HAVE_DELL', '1')
   if not get_option('plugin_uefi')
     error('plugin_dell also needs plugin_uefi to work')
+  endif
+endif
+
+if get_option('plugin_nvme')
+  efivar = dependency('efivar')
+  if not cc.has_header('linux/nvme_ioctl.h')
+    error('NVMe support requires kernel >= 4.4')
   endif
 endif
 
@@ -315,6 +323,7 @@ plugin_deps += gmodule
 plugin_deps += gusb
 plugin_deps += soup
 plugin_deps += libarchive
+plugin_deps += gudev
 
 subdir('data')
 if get_option('gtkdoc')

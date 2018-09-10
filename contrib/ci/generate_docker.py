@@ -65,7 +65,7 @@ out = tempfile.NamedTemporaryFile(dir='.', delete=True)
 with open(out.name, 'w') as wfd:
     for line in lines:
         if line.startswith("FROM %%%ARCH_PREFIX%%%"):
-            if OS == "debian" and SUBOS == "i386":
+            if (OS == "debian" or OS == "ubuntu") and SUBOS == "i386":
                 replace = SUBOS + "/"
             else:
                 replace = ''

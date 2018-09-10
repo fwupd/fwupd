@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-colorhug-device.h"
@@ -20,10 +19,7 @@ fu_plugin_init (FuPlugin *plugin)
 gboolean
 fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
 	/* open device */
 	locker = fu_device_locker_new (device, error);
@@ -41,29 +37,14 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 		return FALSE;
 
 	/* wait for replug */
-	g_clear_object (&locker);
-	usb_device2 = g_usb_context_wait_for_replug (fu_plugin_get_usb_context (plugin),
-						     usb_device,
-						     10000, error);
-	if (usb_device2 == NULL) {
-		g_prefix_error (error, "device did not come back: ");
-		return FALSE;
-	}
-
-	/* set the new device until we can use a new FuDevice */
-	fu_usb_device_set_dev (FU_USB_DEVICE (self), usb_device2);
-
-	/* success */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
 gboolean
 fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
 	/* open device */
 	locker = fu_device_locker_new (device, error);
@@ -81,19 +62,7 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 		return FALSE;
 
 	/* wait for replug */
-	g_clear_object (&locker);
-	usb_device2 = g_usb_context_wait_for_replug (fu_plugin_get_usb_context (plugin),
-						     usb_device,
-						     10000, error);
-	if (usb_device2 == NULL) {
-		g_prefix_error (error, "device did not come back: ");
-		return FALSE;
-	}
-
-	/* set the new device until we can use a new FuDevice */
-	fu_usb_device_set_dev (FU_USB_DEVICE (self), usb_device2);
-
-	/* success */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -129,19 +98,18 @@ fu_plugin_update (FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuColorhugDevice) device = NULL;
+	g_autoptr(FuColorhugDevice) dev = NULL;
 
 	/* open the device */
-	device = fu_colorhug_device_new (usb_device);
-	fu_device_set_quirks (FU_DEVICE (device), fu_plugin_get_quirks (plugin));
-	locker = fu_device_locker_new (device, error);
+	dev = fu_colorhug_device_new (device);
+	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
 
 	/* insert to hash */
-	fu_plugin_device_add (plugin, FU_DEVICE (device));
+	fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	return TRUE;
 }

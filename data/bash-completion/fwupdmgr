@@ -14,7 +14,6 @@ _fwupdmgr_cmd_list=(
 	'get-results'
 	'get-topology'
 	'get-updates'
-	'hwids'
 	'install'
 	'install-prepared'
 	'modify-remote'

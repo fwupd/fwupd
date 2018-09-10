@@ -1,6 +1,7 @@
 subdir('dfu')
 subdir('colorhug')
 subdir('ebitdo')
+subdir('flashrom')
 subdir('steelseries')
 subdir('nitrokey')
 subdir('test')
@@ -8,9 +9,14 @@ subdir('udev')
 subdir('unifying')
 subdir('upower')
 subdir('wacomhid')
+subdir('superio')
 
 # depends on dfu
 subdir('csr')
+
+if get_option('plugin_nvme')
+subdir('nvme')
+endif
 
 if get_option('plugin_altos')
 subdir('altos')

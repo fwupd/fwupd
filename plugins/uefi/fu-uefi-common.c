@@ -8,7 +8,6 @@
 #include "config.h"
 
 #include <efivar.h>
-#include <gio/gio.h>
 #include <gio/gunixmounts.h>
 
 #include "fu-common.h"
@@ -266,15 +265,13 @@ fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 	g_autofree gchar *fn = g_build_filename (path, attr_name, NULL);
 	if (!g_file_get_contents (fn, &data, NULL, NULL))
 		return 0x0;
-	if (g_str_has_prefix (data, "0x"))
-		return g_ascii_strtoull (data + 2, NULL, 16);
-	return g_ascii_strtoull (data, NULL, 10);
+	return fu_common_strtoull (data);
 }
 
 gboolean
 fu_uefi_check_esp_path (const gchar *path, GError **error)
 {
-	const gchar *fs_types[] = { "vfat", "ntfs", "exfat", NULL };
+	const gchar *fs_types[] = { "vfat", "ntfs", "exfat", "autofs", NULL };
 	g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (path, NULL);
 	if (mount == NULL) {
 		g_set_error (error,
@@ -288,6 +285,17 @@ fu_uefi_check_esp_path (const gchar *path, GError **error)
 	 */
 	if (g_strcmp0 (path, "/boot") == 0) {
 		if (!g_file_test ("/boot/EFI", G_FILE_TEST_IS_DIR)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "%s/EFI does not exist", path);
+			return FALSE;
+		}
+	/* /efi is a special case because systemd sandboxing marks
+	 * it read-only, but we need to write to /efi/EFI
+	 */
+	} else if (g_strcmp0 (path, "/efi") == 0) {
+		if (!g_file_test ("/efi/EFI", G_FILE_TEST_IS_DIR)) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,

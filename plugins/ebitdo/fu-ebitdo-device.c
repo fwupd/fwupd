@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <string.h>
-#include <appstream-glib.h>
 
 #include "fu-ebitdo-common.h"
 #include "fu-ebitdo-device.h"
@@ -223,23 +222,23 @@ fu_ebitdo_device_set_version (FuEbitdoDevice *self, guint32 version)
 static gboolean
 fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	guint8 idx;
-	g_autofree gchar *ven = NULL;
+	const gchar *ven;
 	const gchar *whitelist[] = {
 		"8Bitdo",
 		"SFC30",
 		NULL };
 
 	/* this is a new, always valid, VID */
-	if (g_usb_device_get_vid (usb_device) == 0x2dc8)
+	if (fu_usb_device_get_vid (FU_USB_DEVICE (self)) == 0x2dc8)
 		return TRUE;
 
 	/* verify the vendor prefix against a whitelist */
-	idx = g_usb_device_get_manufacturer_index (usb_device);
-	ven = g_usb_device_get_string_descriptor (usb_device, idx, error);
+	ven = fu_device_get_vendor (FU_DEVICE (self));
 	if (ven == NULL) {
-		g_prefix_error (error, "could not check vendor descriptor: ");
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "could not check vendor descriptor: ");
 		return FALSE;
 	}
 	for (guint i = 0; whitelist[i] != NULL; i++) {
@@ -257,11 +256,8 @@ fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 static gboolean
 fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
 {
-	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-	gdouble tmp;
-	guint32 version_tmp = 0;
-	guint32 serial_tmp[9] = {0};
+	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
 
 	/* open, then ensure this is actually 8Bitdo hardware */
 	if (!fu_ebitdo_device_validate (self, error))
@@ -271,6 +267,18 @@ fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
 					   error)) {
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_ebitdo_device_setup (FuDevice *device, GError **error)
+{
+	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
+	gdouble tmp;
+	guint32 version_tmp = 0;
+	guint32 serial_tmp[9] = {0};
 
 	/* in firmware mode */
 	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -537,7 +545,6 @@ fu_ebitdo_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	}
 
 	/* success! */
-	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -560,8 +567,8 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 
 	/* only the bootloader can do the update */
 	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_0483&PID_5750");
-		fu_device_add_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
+		fu_device_add_counterpart_guid (FU_DEVICE (device), "USB\\VID_0483&PID_5750");
+		fu_device_add_counterpart_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
 		fu_device_add_flag (FU_DEVICE (device),
 				    FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	}
@@ -581,6 +588,7 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_ebitdo_device_write_firmware;
+	klass_device->setup = fu_ebitdo_device_setup;
 	klass_usb_device->open = fu_ebitdo_device_open;
 	klass_usb_device->probe = fu_ebitdo_device_probe;
 }
@@ -595,11 +603,10 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
  * Since: 0.1.0
  **/
 FuEbitdoDevice *
-fu_ebitdo_device_new (GUsbDevice *usb_device)
+fu_ebitdo_device_new (FuUsbDevice *device)
 {
 	FuEbitdoDevice *self;
-	self = g_object_new (FU_TYPE_EBITDO_DEVICE,
-			     "usb-device", usb_device,
-			     NULL);
+	self = g_object_new (FU_TYPE_EBITDO_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
 	return FU_EBITDO_DEVICE (self);
 }

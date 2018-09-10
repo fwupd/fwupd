@@ -8,13 +8,15 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <gio/gio.h>
-#include <glib.h>
+#include <gio/gunixfdlist.h>
 #include <glib/gstdio.h>
-#include <gudev/gudev.h>
 
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
+
+#define BOLT_DBUS_SERVICE	"org.freedesktop.bolt"
+#define BOLT_DBUS_PATH		"/org/freedesktop/bolt"
+#define BOLT_DBUS_INTERFACE	"org.freedesktop.bolt1.Power"
 
 #ifndef HAVE_GUDEV_232
 #pragma clang diagnostic push
@@ -32,10 +34,103 @@ struct FuPluginData {
 	gboolean       needs_forcepower;
 	gboolean       updating;
 	guint          timeout_id;
+	gint           bolt_fd;
 };
 
+static gboolean
+fu_plugin_thunderbolt_power_bolt_supported (FuPlugin *plugin)
+{
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GDBusProxy) proxy = NULL;
+	g_autoptr(GError) error_local = NULL;
+	gboolean supported = FALSE;
+
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error_local);
+	if (connection == NULL) {
+		g_warning ("Failed to initialize d-bus connection: %s",
+			   error_local->message);
+		return supported;
+	}
+
+	proxy = g_dbus_proxy_new_sync (connection,
+					G_DBUS_PROXY_FLAGS_NONE,
+					NULL,
+					BOLT_DBUS_SERVICE,
+					BOLT_DBUS_PATH,
+					BOLT_DBUS_INTERFACE,
+					NULL,
+					&error_local);
+	if (proxy == NULL) {
+		g_warning ("Failed to initialize d-bus proxy: %s",
+			   error_local->message);
+		return supported;
+	}
+	val = g_dbus_proxy_get_cached_property (proxy, "Supported");
+	if (val != NULL)
+		g_variant_get (val, "b", &supported);
+
+	g_debug ("Bolt force power support: %d", supported);
+
+	return supported;
+}
+
+static gboolean
+fu_plugin_thunderbolt_power_bolt_force_power (FuPlugin *plugin,
+					      GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GDBusProxy) proxy = NULL;
+	g_autoptr(GUnixFDList) fds = NULL;
+	g_autoptr(GVariant) val = NULL;
+	GVariant *input;
+
+	input = g_variant_new ("(ss)",
+				"fwupd",   /* who */
+				"");       /* flags */
+
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+	if (connection == NULL)
+		return FALSE;
+
+	proxy = g_dbus_proxy_new_sync (connection,
+					G_DBUS_PROXY_FLAGS_NONE,
+					NULL,
+					BOLT_DBUS_SERVICE,
+					BOLT_DBUS_PATH,
+					BOLT_DBUS_INTERFACE,
+					NULL,
+					error);
+	if (proxy == NULL)
+		return FALSE;
+
+	val = g_dbus_proxy_call_with_unix_fd_list_sync (proxy,
+							"ForcePower",
+							input,
+							G_DBUS_CALL_FLAGS_NONE,
+							-1,
+							NULL,
+							&fds,
+							NULL,
+							error);
+
+	if (val == NULL)
+		return FALSE;
+
+	if (g_unix_fd_list_get_length (fds) != 1) {
+		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+				"invalid number of file descriptors returned: %d",
+				g_unix_fd_list_get_length (fds));
+		return FALSE;
+	}
+	data->bolt_fd = g_unix_fd_list_get (fds, 0, NULL);
+
+	return TRUE;
+}
+
 static void
-fu_plugin_thunderbolt_power_get_path (FuPlugin *plugin)
+fu_plugin_thunderbolt_power_get_kernel_path (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(GList) devices = NULL;
@@ -66,7 +161,7 @@ fu_plugin_thunderbolt_power_get_path (FuPlugin *plugin)
 					   "force_power", NULL);
 		if (g_file_test (built_path, G_FILE_TEST_IS_REGULAR)) {
 			data->force_path = g_steal_pointer (&built_path);
-			g_debug ("Detected force power support at %s",
+			g_debug ("Direct kernel force power support at %s",
 				 data->force_path);
 			break;
 		}
@@ -75,21 +170,21 @@ fu_plugin_thunderbolt_power_get_path (FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_thunderbolt_power_supported (FuPlugin *plugin)
+fu_plugin_thunderbolt_power_kernel_supported (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	return data->force_path != NULL;
 }
 
 static gboolean
-fu_plugin_thunderbolt_power_set (FuPlugin *plugin, gboolean enable,
-				 GError **error)
+fu_plugin_thunderbolt_power_kernel_force_power (FuPlugin *plugin, gboolean enable,
+						GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	gint fd;
 	gint ret;
 
-	if (!fu_plugin_thunderbolt_power_supported (plugin)) {
+	if (!fu_plugin_thunderbolt_power_kernel_supported (plugin)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -97,7 +192,7 @@ fu_plugin_thunderbolt_power_set (FuPlugin *plugin, gboolean enable,
 			     enable);
 		return FALSE;
 	}
-	g_debug ("Setting force power to %d", enable);
+	g_debug ("Setting force power to %d using kernel", enable);
 	fd = g_open (data->force_path, O_WRONLY);
 	if (fd == -1) {
 		g_set_error (error,
@@ -115,7 +210,25 @@ fu_plugin_thunderbolt_power_set (FuPlugin *plugin, gboolean enable,
 		g_close (fd, NULL);
 		return FALSE;
 	}
+
 	return g_close (fd, error);
+}
+
+static gboolean
+fu_plugin_thunderbolt_power_set (FuPlugin *plugin, gboolean enable,
+				 GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+
+	/* prefer bolt API if available */
+	if (fu_plugin_thunderbolt_power_bolt_supported (plugin)) {
+		g_debug ("Setting force power to %d using bolt", enable);
+		if (enable)
+			return fu_plugin_thunderbolt_power_bolt_force_power (plugin, error);
+		return data->bolt_fd >= 0 ? g_close (data->bolt_fd, error) : TRUE;
+	}
+
+	return fu_plugin_thunderbolt_power_kernel_force_power (plugin, enable, error);
 }
 
 static gboolean
@@ -174,8 +287,8 @@ udev_uevent_cb (GUdevClient *udev,
 		fu_plugin_thunderbolt_reset_timeout (plugin);
 	/* intel-wmi-thunderbolt has been loaded/unloaded */
 	} else if (g_str_equal (action, "change")) {
-		fu_plugin_thunderbolt_power_get_path (plugin);
-		if (fu_plugin_thunderbolt_power_supported (plugin)) {
+		fu_plugin_thunderbolt_power_get_kernel_path (plugin);
+		if (fu_plugin_thunderbolt_power_kernel_supported (plugin)) {
 			fu_plugin_set_enabled (plugin, TRUE);
 			fu_plugin_request_recoldplug (plugin);
 		} else {
@@ -199,9 +312,11 @@ fu_plugin_init (FuPlugin *plugin)
 			  G_CALLBACK (udev_uevent_cb), plugin);
 	/* initially set to true, will wait for a device_register to reset */
 	data->needs_forcepower = TRUE;
+	/* will reset when needed */
+	data->bolt_fd = -1;
 
 	/* determines whether to run device_registered */
-	fu_plugin_thunderbolt_power_get_path (plugin);
+	fu_plugin_thunderbolt_power_get_kernel_path (plugin);
 
 	/* make sure it's tried to coldplug */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "thunderbolt");
@@ -217,6 +332,9 @@ fu_plugin_destroy (FuPlugin *plugin)
 	}
 	g_object_unref (data->udev);
 	g_free (data->force_path);
+	/* in case destroying before force power turned off */
+	if (data->bolt_fd >= 0)
+		g_close (data->bolt_fd, NULL);
 }
 
 void
@@ -226,7 +344,8 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 
 	/* thunderbolt plugin */
 	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") == 0 &&
-	    fu_plugin_thunderbolt_power_supported (plugin)) {
+	    (fu_plugin_thunderbolt_power_bolt_supported (plugin) ||
+	    fu_plugin_thunderbolt_power_kernel_supported (plugin))) {
 		data->needs_forcepower = FALSE;
 		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL)) {
 			fu_device_set_metadata_boolean (device,
@@ -238,6 +357,7 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 
 gboolean
 fu_plugin_update_prepare (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
 			  FuDevice *device,
 			  GError **error)
 {
@@ -288,6 +408,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 
 gboolean
 fu_plugin_update_cleanup (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
 			  FuDevice *device,
 			  GError **error)
 {
@@ -304,16 +425,17 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_thunderbolt_power_coldplug (FuPlugin *plugin, GError **error)
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
-	if (!fu_plugin_thunderbolt_power_supported (plugin)) {
+	if (!fu_plugin_thunderbolt_power_bolt_supported (plugin) &&
+	    !fu_plugin_thunderbolt_power_kernel_supported (plugin)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "missing kernel support for intel-wmi-thunderbolt");
+			     "No support for force power via kernel or bolt");
 		return FALSE;
 	}
 
@@ -329,7 +451,7 @@ fu_plugin_thunderbolt_power_coldplug (FuPlugin *plugin, GError **error)
 }
 
 gboolean
-fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+fu_plugin_recoldplug (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_thunderbolt_power_coldplug (plugin, error);
+	return fu_plugin_coldplug (plugin, error);
 }

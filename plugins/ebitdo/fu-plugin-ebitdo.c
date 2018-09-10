@@ -8,7 +8,6 @@
 
 #include "fu-ebitdo-device.h"
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 void
@@ -18,20 +17,19 @@ fu_plugin_init (FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuEbitdoDevice) device = NULL;
+	g_autoptr(FuEbitdoDevice) dev = NULL;
 
 	/* open the device */
-	device = fu_ebitdo_device_new (usb_device);
-	fu_device_set_quirks (FU_DEVICE (device), fu_plugin_get_quirks (plugin));
-	locker = fu_device_locker_new (device, error);
+	dev = fu_ebitdo_device_new (device);
+	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
 
 	/* success */
-	fu_plugin_device_add (plugin, FU_DEVICE (device));
+	fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	return TRUE;
 }
 
@@ -45,7 +43,6 @@ fu_plugin_update (FuPlugin *plugin,
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (dev));
 	FuEbitdoDevice *ebitdo_dev = FU_EBITDO_DEVICE (dev);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GUsbDevice) usb_device2 = NULL;
 
 	/* get version */
 	if (!fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -70,16 +67,9 @@ fu_plugin_update (FuPlugin *plugin,
 		g_prefix_error (error, "failed to force-reset device: ");
 		return FALSE;
 	}
-	g_clear_object (&locker);
-	usb_device2 = g_usb_context_wait_for_replug (fu_plugin_get_usb_context (plugin),
-						     usb_device, 10000, error);
-	if (usb_device2 == NULL) {
-		g_prefix_error (error, "device did not come back: ");
-		return FALSE;
-	}
-	fu_usb_device_set_dev (FU_USB_DEVICE (ebitdo_dev), usb_device2);
 
-	/* success */
+	/* wait for replug */
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 

@@ -8,7 +8,7 @@
 
 #include <appstream-glib.h>
 
-#include "fu-usb-device.h"
+#include "fu-usb-device-private.h"
 
 /**
  * SECTION:fu-device
@@ -23,7 +23,6 @@ typedef struct
 {
 	GUsbDevice		*usb_device;
 	FuDeviceLocker		*usb_device_locker;
-	gboolean		 done_probe;
 } FuUsbDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuUsbDevice, fu_usb_device, FU_TYPE_DEVICE)
@@ -34,59 +33,6 @@ enum {
 };
 
 #define GET_PRIVATE(o) (fu_usb_device_get_instance_private (o))
-
-static void
-fu_usb_device_apply_quirks (FuUsbDevice *device)
-{
-	FuQuirks *quirks = fu_device_get_quirks (FU_DEVICE (device));
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-	const gchar *tmp;
-
-	/* not set */
-	if (quirks == NULL)
-		return;
-
-	/* flags */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_FLAGS);
-	if (tmp != NULL)
-		fu_device_set_custom_flags (FU_DEVICE (device), tmp);
-
-	/* name */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_NAME);
-	if (tmp != NULL)
-		fu_device_set_name (FU_DEVICE (device), tmp);
-
-	/* summary */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_SUMMARY);
-	if (tmp != NULL)
-		fu_device_set_summary (FU_DEVICE (device), tmp);
-
-	/* vendor */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_VENDOR);
-	if (tmp != NULL)
-		fu_device_set_vendor (FU_DEVICE (device), tmp);
-
-	/* version */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_VERSION);
-	if (tmp != NULL)
-		fu_device_set_version (FU_DEVICE (device), tmp);
-
-	/* icon */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_ICON);
-	if (tmp != NULL)
-		fu_device_add_icon (FU_DEVICE (device), tmp);
-
-	/* GUID */
-	tmp = fu_quirks_lookup_by_usb_device (quirks, usb_device, FU_QUIRKS_GUID);
-	if (tmp != NULL)
-		fu_device_add_guid (FU_DEVICE (device), tmp);
-}
-
-static void
-fu_usb_device_notify_quirks_cb (FuUsbDevice *device, GParamSpec *pspec, gpointer user_data)
-{
-	fu_usb_device_apply_quirks (device);
-}
 
 static void
 fu_usb_device_get_property (GObject *object, guint prop_id,
@@ -136,26 +82,6 @@ fu_usb_device_finalize (GObject *object)
 static void
 fu_usb_device_init (FuUsbDevice *device)
 {
-	g_signal_connect (device, "notify::quirks",
-			  G_CALLBACK (fu_usb_device_notify_quirks_cb), NULL);
-}
-
-static void
-fu_usb_device_class_init (FuUsbDeviceClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	GParamSpec *pspec;
-
-	object_class->finalize = fu_usb_device_finalize;
-	object_class->get_property = fu_usb_device_get_property;
-	object_class->set_property = fu_usb_device_set_property;
-
-	pspec = g_param_spec_object ("usb-device", NULL, NULL,
-				     G_USB_TYPE_DEVICE,
-				     G_PARAM_READWRITE |
-				     G_PARAM_CONSTRUCT |
-				     G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_USB_DEVICE, pspec);
 }
 
 /**
@@ -176,37 +102,23 @@ fu_usb_device_is_open (FuUsbDevice *device)
 	return priv->usb_device_locker != NULL;
 }
 
-/**
- * fu_usb_device_open:
- * @device: A #FuUsbDevice
- * @error: A #GError, or %NULL
- *
- * Opens a USB device, optionally running a object-specific vfunc.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.0.2
- **/
-gboolean
-fu_usb_device_open (FuUsbDevice *device, GError **error)
+static gboolean
+fu_usb_device_open (FuDevice *device, GError **error)
 {
-	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
+	FuUsbDevice *self = FU_USB_DEVICE (device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
 	guint idx;
 	g_autoptr(AsProfile) profile = as_profile_new ();
 	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	g_return_val_if_fail (FU_IS_USB_DEVICE (device), FALSE);
+	g_return_val_if_fail (FU_IS_USB_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* already open */
 	if (priv->usb_device_locker != NULL)
 		return TRUE;
-
-	/* probe */
-	if (!fu_usb_device_probe (device, error))
-		return FALSE;
 
 	/* profile */
 	ptask = as_profile_start (profile, "added{%04x:%04x}",
@@ -220,7 +132,7 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 		return FALSE;
 
 	/* get vendor */
-	if (fu_device_get_vendor (FU_DEVICE (device)) == NULL) {
+	if (fu_device_get_vendor (device) == NULL) {
 		idx = g_usb_device_get_manufacturer_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
@@ -228,12 +140,12 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 								  idx, error);
 			if (tmp == NULL)
 				return FALSE;
-			fu_device_set_vendor (FU_DEVICE (device), tmp);
+			fu_device_set_vendor (device, tmp);
 		}
 	}
 
 	/* get product */
-	if (fu_device_get_name (FU_DEVICE (device)) == NULL) {
+	if (fu_device_get_name (device) == NULL) {
 		idx = g_usb_device_get_product_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
@@ -241,12 +153,12 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 								  idx, error);
 			if (tmp == NULL)
 				return FALSE;
-			fu_device_set_name (FU_DEVICE (device), tmp);
+			fu_device_set_name (device, tmp);
 		}
 	}
 
 	/* get serial number */
-	if (fu_device_get_serial (FU_DEVICE (device)) == NULL) {
+	if (fu_device_get_serial (device) == NULL) {
 		idx = g_usb_device_get_serial_number_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
@@ -254,7 +166,7 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 								  idx, error);
 			if (tmp == NULL)
 				return FALSE;
-			fu_device_set_serial (FU_DEVICE (device), tmp);
+			fu_device_set_serial (device, tmp);
 		}
 	}
 
@@ -265,7 +177,7 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 	if (idx != 0x00) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-		fu_device_set_version (FU_DEVICE (device), tmp);
+		fu_device_set_version (device, tmp);
 	}
 
 	/* get GUID from the descriptor if set */
@@ -275,12 +187,12 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 	if (idx != 0x00) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-		fu_device_add_guid (FU_DEVICE (device), tmp);
+		fu_device_add_guid (device, tmp);
 	}
 
 	/* subclassed */
 	if (klass->open != NULL) {
-		if (!klass->open (device, error))
+		if (!klass->open (self, error))
 			return FALSE;
 	}
 
@@ -289,24 +201,14 @@ fu_usb_device_open (FuUsbDevice *device, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_usb_device_open:
- * @device: A #FuUsbDevice
- * @error: A #GError, or %NULL
- *
- * Closes a USB device, optionally running a object-specific vfunc.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.0.2
- **/
-gboolean
-fu_usb_device_close (FuUsbDevice *device, GError **error)
+static gboolean
+fu_usb_device_close (FuDevice *device, GError **error)
 {
-	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
+	FuUsbDevice *self = FU_USB_DEVICE (device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
 
-	g_return_val_if_fail (FU_IS_USB_DEVICE (device), FALSE);
+	g_return_val_if_fail (FU_IS_USB_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* already open */
@@ -315,7 +217,7 @@ fu_usb_device_close (FuUsbDevice *device, GError **error)
 
 	/* subclassed */
 	if (klass->close != NULL) {
-		if (!klass->close (device, error))
+		if (!klass->close (self, error))
 			return FALSE;
 	}
 
@@ -323,39 +225,106 @@ fu_usb_device_close (FuUsbDevice *device, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_usb_device_probe:
- * @device: A #FuUsbDevice
- * @error: A #GError, or %NULL
- *
- * Probes a USB device, setting parameters on the object that does not need
- * the device open or the interface claimed.
- * If the device is not compatible then an error should be returned.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.0.2
- **/
-gboolean
-fu_usb_device_probe (FuUsbDevice *device, GError **error)
+static gboolean
+fu_usb_device_probe (FuDevice *device, GError **error)
 {
-	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
+	FuUsbDevice *self = FU_USB_DEVICE (device);
 	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	guint16 release;
+	g_autofree gchar *devid0 = NULL;
+	g_autofree gchar *devid1 = NULL;
+	g_autofree gchar *devid2 = NULL;
+	g_autofree gchar *vendor_id = NULL;
 
-	g_return_val_if_fail (FU_IS_USB_DEVICE (device), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	/* set vendor ID */
+	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
+	fu_device_set_vendor_id (device, vendor_id);
 
-	/* already done */
-	if (priv->done_probe)
-		return TRUE;
+	/* set the version if the release has been set */
+	release = g_usb_device_get_release (priv->usb_device);
+	if (release != 0x0) {
+		g_autofree gchar *version = as_utils_version_from_uint16 (release,
+									  AS_VERSION_PARSE_FLAG_USE_BCD);
+		fu_device_set_version (device, version);
+	}
+
+	/* add GUIDs in order of priority */
+	devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X",
+				  g_usb_device_get_vid (priv->usb_device),
+				  g_usb_device_get_pid (priv->usb_device),
+				  release);
+	fu_device_add_guid (device, devid2);
+	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+				  g_usb_device_get_vid (priv->usb_device),
+				  g_usb_device_get_pid (priv->usb_device));
+	fu_device_add_guid (device, devid1);
+	devid0 = g_strdup_printf ("USB\\VID_%04X",
+				  g_usb_device_get_vid (priv->usb_device));
+	fu_device_add_guid (device, devid0);
 
 	/* subclassed */
 	if (klass->probe != NULL) {
-		if (!klass->probe (device, error))
+		if (!klass->probe (self, error))
 			return FALSE;
 	}
-	priv->done_probe = TRUE;
+
+	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_usb_device_get_vid:
+ * @self: A #FuUsbDevice
+ *
+ * Gets the device vendor code.
+ *
+ * Returns: integer, or 0x0 if unset or invalid
+ *
+ * Since: 1.1.2
+ **/
+guint16
+fu_usb_device_get_vid (FuUsbDevice *self)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_USB_DEVICE (self), 0x0000);
+	return g_usb_device_get_vid (priv->usb_device);
+}
+
+/**
+ * fu_usb_device_get_pid:
+ * @self: A #FuUsbDevice
+ *
+ * Gets the device product code.
+ *
+ * Returns: integer, or 0x0 if unset or invalid
+ *
+ * Since: 1.1.2
+ **/
+guint16
+fu_usb_device_get_pid (FuUsbDevice *self)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_USB_DEVICE (self), 0x0000);
+	return g_usb_device_get_pid (priv->usb_device);
+}
+
+/**
+ * fu_usb_device_get_platform_id:
+ * @self: A #FuUsbDevice
+ *
+ * Gets the device platform ID.
+ *
+ * Returns: string, or NULL if unset or invalid
+ *
+ * Since: 1.1.2
+ **/
+const gchar *
+fu_usb_device_get_platform_id (FuUsbDevice *self)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_USB_DEVICE (self), NULL);
+	return g_usb_device_get_platform_id (priv->usb_device);
 }
 
 /**
@@ -371,15 +340,11 @@ void
 fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
-	guint16 release;
-	g_autofree gchar *devid1 = NULL;
-	g_autofree gchar *devid2 = NULL;
-	g_autofree gchar *vendor_id = NULL;
 
 	g_return_if_fail (FU_IS_USB_DEVICE (device));
 
 	/* need to re-probe hardware */
-	priv->done_probe = FALSE;
+	fu_device_probe_invalidate (FU_DEVICE (device));
 
 	/* allow replacement */
 	g_set_object (&priv->usb_device, usb_device);
@@ -388,35 +353,9 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 		return;
 	}
 
-	/* add both device IDs */
-	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
-				  g_usb_device_get_vid (usb_device),
-				  g_usb_device_get_pid (usb_device));
-	fu_device_add_guid (FU_DEVICE (device), devid1);
-	release = g_usb_device_get_release (usb_device);
-	devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&REV_%04X",
-				  g_usb_device_get_vid (usb_device),
-				  g_usb_device_get_pid (usb_device),
-				  release);
-	fu_device_add_guid (FU_DEVICE (device), devid2);
-
-	/* set vendor ID */
-	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (usb_device));
-	fu_device_set_vendor_id (FU_DEVICE (device), vendor_id);
-
-	/* set the version if the release has been set */
-	if (release != 0x0) {
-		g_autofree gchar *version = as_utils_version_from_uint16 (release,
-									  AS_VERSION_PARSE_FLAG_USE_BCD);
-		fu_device_set_version (FU_DEVICE (device), version);
-	}
-
-	/* set USB platform ID automatically */
-	fu_device_set_platform_id (FU_DEVICE (device),
+	/* set device ID automatically */
+	fu_device_set_physical_id (FU_DEVICE (device),
 				   g_usb_device_get_platform_id (usb_device));
-
-	/* set the quirks again */
-	fu_usb_device_apply_quirks (device);
 }
 
 /**
@@ -437,6 +376,15 @@ fu_usb_device_get_dev (FuUsbDevice *device)
 	return priv->usb_device;
 }
 
+static void
+fu_usb_device_incorporate (FuDevice *self, FuDevice *donor)
+{
+	g_return_if_fail (FU_IS_USB_DEVICE (self));
+	g_return_if_fail (FU_IS_USB_DEVICE (donor));
+	fu_usb_device_set_dev (FU_USB_DEVICE (self),
+			       fu_usb_device_get_dev (FU_USB_DEVICE (donor)));
+}
+
 /**
  * fu_usb_device_new:
  * @usb_device: A #GUsbDevice
@@ -447,10 +395,33 @@ fu_usb_device_get_dev (FuUsbDevice *device)
  *
  * Since: 1.0.2
  **/
-FuDevice *
+FuUsbDevice *
 fu_usb_device_new (GUsbDevice *usb_device)
 {
 	FuUsbDevice *device = g_object_new (FU_TYPE_USB_DEVICE, NULL);
 	fu_usb_device_set_dev (device, usb_device);
-	return FU_DEVICE (device);
+	return FU_USB_DEVICE (device);
+}
+
+static void
+fu_usb_device_class_init (FuUsbDeviceClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS (klass);
+	GParamSpec *pspec;
+
+	object_class->finalize = fu_usb_device_finalize;
+	object_class->get_property = fu_usb_device_get_property;
+	object_class->set_property = fu_usb_device_set_property;
+	device_class->open = fu_usb_device_open;
+	device_class->close = fu_usb_device_close;
+	device_class->probe = fu_usb_device_probe;
+	device_class->incorporate = fu_usb_device_incorporate;
+
+	pspec = g_param_spec_object ("usb-device", NULL, NULL,
+				     G_USB_TYPE_DEVICE,
+				     G_PARAM_READWRITE |
+				     G_PARAM_CONSTRUCT |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_USB_DEVICE, pspec);
 }

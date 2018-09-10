@@ -4,7 +4,7 @@
 #
 # Translators:
 # Boyuan Yang <073plan@gmail.com>, 2017
-# Dz Chen <wsxy162@gmail.com>, 2016-2017
+# Dz Chen <wsxy162@gmail.com>, 2016-2018
 # Mingcong Bai <jeffbai@aosc.xyz>, 2017-2018
 # Mingye Wang <arthur200126@gmail.com>, 2016
 # Mingye Wang <arthur2e5@aosc.xyz>, 2015
@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-06 14:54+0100\n"
-"PO-Revision-Date: 2018-06-06 14:00+0000\n"
+"POT-Creation-Date: 2018-09-10 16:44+0100\n"
+"PO-Revision-Date: 2018-09-10 15:45+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/freedesktop/fwupd/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
@@ -213,6 +213,10 @@ msgstr "未正确更新的设备："
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
 msgstr "禁用指定远程功能"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "显示版本"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -428,6 +432,10 @@ msgstr "Linux 供应商固件服务（测试固件）"
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
 msgstr "列出当前连接的可固件升级的设备"
+
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "列出所支持的固件更新"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"

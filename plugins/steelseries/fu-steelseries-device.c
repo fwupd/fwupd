@@ -19,10 +19,6 @@ fu_steelseries_device_open (FuUsbDevice *device, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	const guint8 iface_idx = 0x00;
-	gboolean ret;
-	gsize actual_len = 0;
-	guint8 data[32];
-	g_autofree gchar *version = NULL;
 
 	/* get firmware version on SteelSeries Rival 100 */
 	if (!g_usb_device_claim_interface (usb_device, iface_idx,
@@ -31,6 +27,20 @@ fu_steelseries_device_open (FuUsbDevice *device, GError **error)
 		g_prefix_error (error, "failed to claim interface: ");
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_steelseries_device_setup (FuDevice *device, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	gboolean ret;
+	gsize actual_len = 0;
+	guint8 data[32];
+	g_autofree gchar *version = NULL;
+
 	memset (data, 0x00, sizeof(data));
 	data[0] = 0x16;
 	ret = g_usb_device_control_transfer (usb_device,
@@ -109,17 +119,17 @@ fu_steelseries_device_init (FuSteelseriesDevice *device)
 static void
 fu_steelseries_device_class_init (FuSteelseriesDeviceClass *klass)
 {
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	klass_device->setup = fu_steelseries_device_setup;
 	klass_usb_device->open = fu_steelseries_device_open;
 	klass_usb_device->close = fu_steelseries_device_close;
 }
 
 FuSteelseriesDevice *
-fu_steelseries_device_new (GUsbDevice *usb_device)
+fu_steelseries_device_new (FuUsbDevice *device)
 {
-	FuSteelseriesDevice *device = NULL;
-	device = g_object_new (FU_TYPE_STEELSERIES_DEVICE,
-			       "usb-device", usb_device,
-			       NULL);
-	return device;
+	FuSteelseriesDevice *self = g_object_new (FU_TYPE_STEELSERIES_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
+	return self;
 }

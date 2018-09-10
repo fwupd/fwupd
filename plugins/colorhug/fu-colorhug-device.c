@@ -7,10 +7,8 @@
 #include "config.h"
 
 #include <string.h>
-#include <appstream-glib.h>
 
-#include "dfu-chunked.h"
-
+#include "fu-chunk.h"
 #include "fu-colorhug-common.h"
 #include "fu-colorhug-device.h"
 
@@ -280,7 +278,6 @@ fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
 static gboolean
 fu_colorhug_device_open (FuUsbDevice *device, GError **error)
 {
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 
 	/* got the version using the HID API */
@@ -291,6 +288,16 @@ fu_colorhug_device_open (FuUsbDevice *device, GError **error)
 					   error)) {
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_colorhug_device_setup (FuDevice *device, GError **error)
+{
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
+
 	if (fu_device_get_version (FU_DEVICE (device)) == NULL) {
 		g_autofree gchar *version = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -324,10 +331,10 @@ fu_colorhug_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* build packets */
-	chunks = dfu_chunked_new_from_bytes (fw,
-					     self->start_addr,
-					     0x00,	/* page_sz */
-					     CH_FLASH_TRANSFER_BLOCK_SIZE);
+	chunks = fu_chunk_array_new_from_bytes (fw,
+						self->start_addr,
+						0x00,	/* page_sz */
+						CH_FLASH_TRANSFER_BLOCK_SIZE);
 
 	/* don't auto-boot firmware */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
@@ -340,15 +347,15 @@ fu_colorhug_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 
 	/* write each block */
 	for (guint i = 0; i < chunks->len; i++) {
-		DfuChunkedPacket *pkt = g_ptr_array_index (chunks, i);
+		FuChunk *chk = g_ptr_array_index (chunks, i);
 		guint8 buf[CH_FLASH_TRANSFER_BLOCK_SIZE+4];
 		g_autoptr(GError) error_local = NULL;
 
 		/* set address, length, checksum, data */
-		fu_common_write_uint16 (buf + 0, pkt->address, G_LITTLE_ENDIAN);
-		buf[2] = pkt->data_sz;
-		buf[3] = ch_colorhug_device_calculate_checksum (pkt->data, pkt->data_sz);
-		memcpy (buf + 4, pkt->data, pkt->data_sz);
+		fu_common_write_uint16 (buf + 0, chk->address, G_LITTLE_ENDIAN);
+		buf[2] = chk->data_sz;
+		buf[3] = ch_colorhug_device_calculate_checksum (chk->data, chk->data_sz);
+		memcpy (buf + 4, chk->data, chk->data_sz);
 		if (!fu_colorhug_device_msg (self, CH_CMD_WRITE_FLASH,
 					     buf, sizeof(buf), /* in */
 					     NULL, 0, /* out */
@@ -368,14 +375,14 @@ fu_colorhug_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	/* verify each block */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
 	for (guint i = 0; i < chunks->len; i++) {
-		DfuChunkedPacket *pkt = g_ptr_array_index (chunks, i);
+		FuChunk *chk = g_ptr_array_index (chunks, i);
 		guint8 buf[3];
 		guint8 buf_out[CH_FLASH_TRANSFER_BLOCK_SIZE+1];
 		g_autoptr(GError) error_local = NULL;
 
 		/* set address */
-		fu_common_write_uint16 (buf + 0, pkt->address, G_LITTLE_ENDIAN);
-		buf[2] = pkt->data_sz;
+		fu_common_write_uint16 (buf + 0, chk->address, G_LITTLE_ENDIAN);
+		buf[2] = chk->data_sz;
 		if (!fu_colorhug_device_msg (self, CH_CMD_READ_FLASH,
 					     buf, sizeof(buf), /* in */
 					     buf_out, sizeof(buf_out), /* out */
@@ -389,13 +396,13 @@ fu_colorhug_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 		}
 
 		/* verify */
-		if (memcmp (buf_out + 1, pkt->data, pkt->data_sz) != 0) {
+		if (memcmp (buf_out + 1, chk->data, chk->data_sz) != 0) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_WRITE,
 				     "failed to verify firmware for chunk %u, "
 				     "address 0x%0x, length 0x%0x",
-				     i, (guint) pkt->address, pkt->data_sz);
+				     i, (guint) chk->address, chk->data_sz);
 			return FALSE;
 		}
 
@@ -414,6 +421,8 @@ fu_colorhug_device_init (FuColorhugDevice *self)
 {
 	/* this is the application code */
 	self->start_addr = CH_EEPROM_ADDR_RUNCODE;
+	fu_device_set_remove_delay (FU_DEVICE (self),
+				    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
 
 static void
@@ -424,16 +433,16 @@ fu_colorhug_device_class_init (FuColorhugDeviceClass *klass)
 	klass_device->write_firmware = fu_colorhug_device_write_firmware;
 	klass_device->attach = fu_colorhug_device_attach;
 	klass_device->detach = fu_colorhug_device_detach;
+	klass_device->setup = fu_colorhug_device_setup;
 	klass_usb_device->open = fu_colorhug_device_open;
 	klass_usb_device->probe = fu_colorhug_device_probe;
 }
 
 FuColorhugDevice *
-fu_colorhug_device_new (GUsbDevice *usb_device)
+fu_colorhug_device_new (FuUsbDevice *device)
 {
 	FuColorhugDevice *self = NULL;
-	self = g_object_new (FU_TYPE_COLORHUG_DEVICE,
-			     "usb-device", usb_device,
-			     NULL);
+	self = g_object_new (FU_TYPE_COLORHUG_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
 	return self;
 }

@@ -101,7 +101,9 @@ typedef struct {
 	gboolean		 done_upload_or_download;
 	gboolean		 claimed_interface;
 	gchar			*chip_id;
+	gchar			*jabra_detach;
 	guint16			 version;
+	guint16			 force_version;
 	guint16			 runtime_pid;
 	guint16			 runtime_vid;
 	guint16			 runtime_release;
@@ -121,65 +123,6 @@ static guint signals [SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (DfuDevice, dfu_device, FU_TYPE_USB_DEVICE)
 #define GET_PRIVATE(o) (dfu_device_get_instance_private (o))
-
-static gboolean	dfu_device_open (FuUsbDevice *device, GError **error);
-static gboolean	dfu_device_close (FuUsbDevice *device, GError **error);
-static gboolean	dfu_device_probe (FuUsbDevice *device, GError **error);
-
-static void
-dfu_device_class_init (DfuDeviceClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
-	klass_usb_device->open = dfu_device_open;
-	klass_usb_device->close = dfu_device_close;
-	klass_usb_device->probe = dfu_device_probe;
-
-	/**
-	 * DfuDevice::status-changed:
-	 * @device: the #DfuDevice instance that emitted the signal
-	 * @status: the new #DfuStatus
-	 *
-	 * The ::status-changed signal is emitted when the status changes.
-	 **/
-	signals [SIGNAL_STATUS_CHANGED] =
-		g_signal_new ("status-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (DfuDeviceClass, status_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
-
-	/**
-	 * DfuDevice::state-changed:
-	 * @device: the #DfuDevice instance that emitted the signal
-	 * @state: the new #DfuState
-	 *
-	 * The ::state-changed signal is emitted when the state changes.
-	 **/
-	signals [SIGNAL_STATE_CHANGED] =
-		g_signal_new ("state-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (DfuDeviceClass, state_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
-
-	object_class->finalize = dfu_device_finalize;
-}
-
-static void
-dfu_device_init (DfuDevice *device)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	priv->iface_number = 0xff;
-	priv->runtime_pid = 0xffff;
-	priv->runtime_vid = 0xffff;
-	priv->runtime_release = 0xffff;
-	priv->state = DFU_STATE_APP_IDLE;
-	priv->status = DFU_STATUS_OK;
-	priv->targets = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	priv->timeout_ms = 1500;
-	priv->transfer_size = 64;
-}
 
 /**
  * dfu_device_get_transfer_size:
@@ -242,20 +185,6 @@ dfu_device_set_transfer_size (DfuDevice *device, guint16 transfer_size)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (DFU_IS_DEVICE (device));
 	priv->transfer_size = transfer_size;
-}
-
-static void
-dfu_device_finalize (GObject *object)
-{
-	DfuDevice *device = DFU_DEVICE (object);
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-
-	if (priv->usb_context != NULL)
-		g_object_unref (priv->usb_context);
-	g_free (priv->chip_id);
-	g_ptr_array_unref (priv->targets);
-
-	G_OBJECT_CLASS (dfu_device_parent_class)->finalize (object);
 }
 
 typedef struct __attribute__((packed)) {
@@ -354,7 +283,6 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
 	g_autoptr(GPtrArray) ifaces = NULL;
 
 	/* add all DFU-capable targets */
@@ -365,7 +293,6 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 	for (guint i = 0; i < ifaces->len; i++) {
 		GBytes *iface_data = NULL;
 		DfuTarget *target;
-		const gchar *quirk_str;
 		g_autoptr(GError) error_local = NULL;
 
 		GUsbInterface *iface = g_ptr_array_index (ifaces, i);
@@ -393,11 +320,8 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 		}
 
 		/* fix up the version */
-		quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-							    usb_device,
-							    FU_QUIRKS_DFU_FORCE_VERSION);
-		if (quirk_str != NULL && strlen (quirk_str) == 4)
-			priv->version = dfu_utils_buffer_parse_uint16 (quirk_str);
+		if (priv->force_version > 0)
+			priv->version = priv->force_version;
 		if (priv->version == DFU_VERSION_DFU_1_0 ||
 		    priv->version == DFU_VERSION_DFU_1_1) {
 			g_debug ("DFU v1.1");
@@ -457,17 +381,16 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 	}
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
-		if (priv->targets->len == 0) {
-			g_debug ("no DFU runtime, so faking device");
-			priv->state = DFU_STATE_APP_IDLE;
-			priv->iface_number = 0xff;
-			priv->runtime_vid = g_usb_device_get_vid (usb_device);
-			priv->runtime_pid = g_usb_device_get_pid (usb_device);
-			priv->runtime_release = g_usb_device_get_release (usb_device);
-			priv->attributes = DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD |
-					   DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD;
-		}
+	if (priv->targets->len == 0 &&
+	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+		g_debug ("no DFU runtime, so faking device");
+		priv->state = DFU_STATE_APP_IDLE;
+		priv->iface_number = 0xff;
+		priv->runtime_vid = g_usb_device_get_vid (usb_device);
+		priv->runtime_pid = g_usb_device_get_pid (usb_device);
+		priv->runtime_release = g_usb_device_get_release (usb_device);
+		priv->attributes = DFU_DEVICE_ATTRIBUTE_CAN_DOWNLOAD |
+				   DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD;
 		return TRUE;
 	}
 
@@ -704,23 +627,6 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 			priv->quirks |= DFU_DEVICE_QUIRK_LEGACY_PROTOCOL;
 			continue;
 		}
-	}
-}
-
-static void
-dfu_device_apply_quirks (DfuDevice *device)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
-	if (system_quirks != NULL && usb_device != NULL) {
-		const gchar *quirk_str;
-		quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-							    usb_device,
-							    FU_QUIRKS_DFU_FLAGS);
-		if (quirk_str != NULL)
-			dfu_device_set_quirks_from_string (device, quirk_str);
-	} else {
-		g_warning ("no system quirk information");
 	}
 }
 
@@ -1093,7 +999,8 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 	}
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
+	if (priv->state == DFU_STATE_APP_IDLE &&
+	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
 		return TRUE;
 
 	/* ensure interface is claimed */
@@ -1181,10 +1088,8 @@ gboolean
 dfu_device_detach (DfuDevice *device, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	FuQuirks *system_quirks = fu_device_get_quirks (FU_DEVICE (device));
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	const guint16 timeout_reset_ms = 1000;
-	const gchar *quirk_str;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
@@ -1211,10 +1116,7 @@ dfu_device_detach (DfuDevice *device, GError **error)
 	}
 
 	/* handle Jabra devices that need a magic HID packet */
-	quirk_str = fu_quirks_lookup_by_usb_device (system_quirks,
-						    usb_device,
-						    FU_QUIRKS_DFU_JABRA_DETACH);
-	if (quirk_str != NULL) {
+	if (priv->jabra_detach != NULL) {
 		guint8 adr = 0x00;
 		guint8 rep = 0x00;
 		guint8 iface_hid;
@@ -1222,16 +1124,8 @@ dfu_device_detach (DfuDevice *device, GError **error)
 		g_autoptr(GError) error_jabra = NULL;
 
 		/* parse string and create magic packet */
-		if (strlen (quirk_str) != 4) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "unsupported jabra quirk format: '%s'",
-				     quirk_str);
-			return FALSE;
-		}
-		rep = dfu_utils_buffer_parse_uint8 (quirk_str + 0);
-		adr = dfu_utils_buffer_parse_uint8 (quirk_str + 2);
+		rep = dfu_utils_buffer_parse_uint8 (priv->jabra_detach + 0);
+		adr = dfu_utils_buffer_parse_uint8 (priv->jabra_detach + 2);
 		buf[0] = rep;
 		buf[1] = adr;
 		buf[2] = 0x00;
@@ -1294,7 +1188,8 @@ dfu_device_detach (DfuDevice *device, GError **error)
 	}
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
+	if (priv->state == DFU_STATE_APP_IDLE &&
+	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
 		return TRUE;
 
 	/* ensure interface is claimed */
@@ -1377,7 +1272,8 @@ dfu_device_abort (DfuDevice *device, GError **error)
 	}
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+	if (priv->state == DFU_STATE_APP_IDLE &&
+	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1443,7 +1339,8 @@ dfu_device_clear_status (DfuDevice *device, GError **error)
 	}
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+	if (priv->state == DFU_STATE_APP_IDLE &&
+	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1512,7 +1409,8 @@ dfu_device_open (FuUsbDevice *device, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* the device has no DFU runtime, so cheat */
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+	if (priv->state == DFU_STATE_APP_IDLE &&
+	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		priv->state = DFU_STATE_APP_IDLE;
 		priv->status = DFU_STATUS_OK;
 	}
@@ -1544,6 +1442,9 @@ dfu_device_close (FuUsbDevice *device, GError **error)
 	DfuDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 
+	/* unset the quirks */
+	priv->quirks = DFU_DEVICE_QUIRK_NONE;
+
 	/* release interface */
 	if (priv->claimed_interface) {
 		g_usb_device_release_interface (usb_device,
@@ -1559,12 +1460,7 @@ static gboolean
 dfu_device_probe (FuUsbDevice *device, GError **error)
 {
 	DfuDevice *self = DFU_DEVICE (device);
-	DfuDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-
-	/* set the quirks for this new device */
-	priv->quirks = DFU_DEVICE_QUIRK_NONE;
-	dfu_device_apply_quirks (self);
 
 	/* add all the targets */
 	if (!dfu_device_add_targets (self, error)) {
@@ -1610,7 +1506,7 @@ dfu_device_wait_for_replug (DfuDevice *device, guint timeout, GError **error)
 	g_autoptr(GUsbDevice) usb_device2  = NULL;
 
 	/* close */
-	fu_usb_device_close (FU_USB_DEVICE (device), NULL);
+	fu_device_close (FU_DEVICE (device), NULL);
 
 	/* watch the device disappear and re-appear */
 	usb_device2 = g_usb_context_wait_for_replug (priv->usb_context,
@@ -1623,7 +1519,7 @@ dfu_device_wait_for_replug (DfuDevice *device, guint timeout, GError **error)
 	/* re-open with new device set */
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
 	fu_usb_device_set_dev (FU_USB_DEVICE (device), usb_device2);
-	if (!fu_usb_device_open (FU_USB_DEVICE (device), error))
+	if (!fu_device_open (FU_DEVICE (device), error))
 		return FALSE;
 	if (!dfu_device_refresh_and_clear (device, error))
 		return FALSE;
@@ -2135,6 +2031,50 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 	return g_string_free (str, FALSE);
 }
 
+static gboolean
+dfu_device_set_quirk_kv (FuDevice *device,
+			 const gchar *key,
+			 const gchar *value,
+			 GError **error)
+{
+	DfuDevice *self = DFU_DEVICE (device);
+	DfuDevicePrivate *priv = GET_PRIVATE (self);
+
+	if (g_strcmp0 (key, FU_QUIRKS_DFU_FLAGS) == 0) {
+		dfu_device_set_quirks_from_string (self, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_DFU_JABRA_DETACH) == 0) {
+		if (value != NULL && strlen (value) == 4) {
+			priv->jabra_detach = g_strdup (value);
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "unsupported jabra quirk format");
+		return FALSE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_DFU_FORCE_VERSION) == 0) {
+		if (value != NULL && strlen (value) == 4) {
+			priv->force_version = dfu_utils_buffer_parse_uint16 (value);
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid DFU version");
+		return FALSE;
+	}
+
+	/* failed */
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "quirk key not supported");
+	return FALSE;
+}
+
 /**
  * dfu_device_get_attributes_as_string: (skip)
  * @device: a #DfuDevice
@@ -2165,4 +2105,76 @@ dfu_device_get_attributes_as_string (DfuDevice *device)
 	/* remove trailing pipe */
 	g_string_truncate (str, str->len - 1);
 	return g_string_free (str, FALSE);
+}
+
+static void
+dfu_device_finalize (GObject *object)
+{
+	DfuDevice *device = DFU_DEVICE (object);
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+
+	if (priv->usb_context != NULL)
+		g_object_unref (priv->usb_context);
+	g_free (priv->chip_id);
+	g_free (priv->jabra_detach);
+	g_ptr_array_unref (priv->targets);
+
+	G_OBJECT_CLASS (dfu_device_parent_class)->finalize (object);
+}
+
+static void
+dfu_device_class_init (DfuDeviceClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	klass_device->set_quirk_kv = dfu_device_set_quirk_kv;
+	klass_usb_device->open = dfu_device_open;
+	klass_usb_device->close = dfu_device_close;
+	klass_usb_device->probe = dfu_device_probe;
+
+	/**
+	 * DfuDevice::status-changed:
+	 * @device: the #DfuDevice instance that emitted the signal
+	 * @status: the new #DfuStatus
+	 *
+	 * The ::status-changed signal is emitted when the status changes.
+	 **/
+	signals [SIGNAL_STATUS_CHANGED] =
+		g_signal_new ("status-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (DfuDeviceClass, status_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
+	/**
+	 * DfuDevice::state-changed:
+	 * @device: the #DfuDevice instance that emitted the signal
+	 * @state: the new #DfuState
+	 *
+	 * The ::state-changed signal is emitted when the state changes.
+	 **/
+	signals [SIGNAL_STATE_CHANGED] =
+		g_signal_new ("state-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (DfuDeviceClass, state_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
+	object_class->finalize = dfu_device_finalize;
+}
+
+static void
+dfu_device_init (DfuDevice *device)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	priv->iface_number = 0xff;
+	priv->runtime_pid = 0xffff;
+	priv->runtime_vid = 0xffff;
+	priv->runtime_release = 0xffff;
+	priv->state = DFU_STATE_APP_IDLE;
+	priv->status = DFU_STATUS_OK;
+	priv->targets = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	priv->timeout_ms = 1500;
+	priv->transfer_size = 64;
 }

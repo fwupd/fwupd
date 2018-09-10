@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-plugin.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-nitrokey-device.h"
@@ -19,18 +18,18 @@ fu_plugin_init (FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin, GUsbDevice *usb_device, GError **error)
+fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuNitrokeyDevice) device = NULL;
+	g_autoptr(FuNitrokeyDevice) dev = NULL;
 
 	/* open the device */
-	device = fu_nitrokey_device_new (usb_device);
-	locker = fu_device_locker_new (device, error);
+	dev = fu_nitrokey_device_new (device);
+	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
 
 	/* success */
-	fu_plugin_device_add (plugin, FU_DEVICE (device));
+	fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	return TRUE;
 }

@@ -8,13 +8,13 @@
 
 #include <string.h>
 
+#include "fu-chunk.h"
 #include "fu-wac-device.h"
 #include "fu-wac-common.h"
 #include "fu-wac-firmware.h"
 #include "fu-wac-module-bluetooth.h"
 #include "fu-wac-module-touch.h"
 
-#include "dfu-chunked.h"
 #include "dfu-common.h"
 #include "dfu-firmware.h"
 
@@ -170,7 +170,7 @@ fu_wac_device_get_feature_report (FuWacDevice *self,
 	fu_wac_buffer_dump ("GE2", cmd, buf, sz);
 
 	/* check packet */
-	if (flags && FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC == 0 && sz != bufsz) {
+	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC) == 0 && sz != bufsz) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -219,7 +219,7 @@ fu_wac_device_set_feature_report (FuWacDevice *self,
 	}
 
 	/* check packet */
-	if (flags && FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC == 0 && sz != bufsz) {
+	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC) == 0 && sz != bufsz) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -600,14 +600,14 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 			return FALSE;
 
 		/* write block in chunks */
-		chunks = dfu_chunked_new_from_bytes (blob_block,
-						     fd->start_addr,
-						     0, /* page_sz */
-						     self->write_block_sz);
+		chunks = fu_chunk_array_new_from_bytes (blob_block,
+							fd->start_addr,
+							0, /* page_sz */
+							self->write_block_sz);
 		for (guint j = 0; j < chunks->len; j++) {
-			DfuChunkedPacket *pkt = g_ptr_array_index (chunks, j);
-			g_autoptr(GBytes) blob_chunk = g_bytes_new (pkt->data, pkt->data_sz);
-			if (!fu_wac_device_write_block (self, pkt->address, blob_chunk, error))
+			FuChunk *chk = g_ptr_array_index (chunks, j);
+			g_autoptr(GBytes) blob_chunk = g_bytes_new (chk->data, chk->data_sz);
+			if (!fu_wac_device_write_block (self, chk->address, blob_chunk, error))
 				return FALSE;
 		}
 
@@ -793,9 +793,7 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 static gboolean
 fu_wac_device_open (FuUsbDevice *device, GError **error)
 {
-	FuWacDevice *self = FU_WAC_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* open device */
 	if (!g_usb_device_claim_interface (usb_device, 0x00, /* HID */
@@ -804,6 +802,15 @@ fu_wac_device_open (FuUsbDevice *device, GError **error)
 		g_prefix_error (error, "failed to claim HID interface: ");
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_wac_device_setup (FuDevice *device, GError **error)
+{
+	FuWacDevice *self = FU_WAC_DEVICE (device);
 
 	/* get current status */
 	if (!fu_wac_device_ensure_status (self, error))
@@ -819,8 +826,6 @@ fu_wac_device_open (FuUsbDevice *device, GError **error)
 	}
 
 	/* success */
-	fu_wac_device_to_string (FU_DEVICE (self), str);
-	g_debug ("opened: %s", str->str);
 	return TRUE;
 }
 
@@ -879,16 +884,15 @@ fu_wac_device_class_init (FuWacDeviceClass *klass)
 	object_class->finalize = fu_wac_device_finalize;
 	klass_device->write_firmware = fu_wac_device_write_firmware;
 	klass_device->to_string = fu_wac_device_to_string;
+	klass_device->setup = fu_wac_device_setup;
 	klass_usb_device->open = fu_wac_device_open;
 	klass_usb_device->close = fu_wac_device_close;
 }
 
 FuWacDevice *
-fu_wac_device_new (GUsbDevice *usb_device)
+fu_wac_device_new (FuUsbDevice *device)
 {
-	FuWacDevice *device = NULL;
-	device = g_object_new (FU_TYPE_WAC_DEVICE,
-			       "usb-device", usb_device,
-			       NULL);
-	return device;
+	FuWacDevice *self = g_object_new (FU_TYPE_WAC_DEVICE, NULL);
+	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
+	return self;
 }

@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <fwupd.h>
-#include <glib-object.h>
 #include <glib/gstdio.h>
 #include <gio/gfiledescriptorbased.h>
 #include <stdlib.h>
