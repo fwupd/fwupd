@@ -37,17 +37,17 @@ slots:
 parts:
   libefivar-dev:
     plugin: make
+    make-parameters:
+    - prefix=/
+    - libdir=/lib
     source: https://github.com/rhboot/efivar/releases/download/35/efivar-35.tar.bz2
     build-packages:
       - libpopt-dev
-    organize:
-      usr/lib64: usr/lib/x86_64-linux-gnu
-      usr/lib: usr/lib/i386-linux-gnu
     prime:
-     - -usr/include
-     - -usr/bin
-     - -usr/share/man
-     - -usr/lib/*/pkgconfig
+     - -include
+     - -bin
+     - -share/man
+     - -lib/pkgconfig
   #adjust the paths from libefivar
   libefivar-fixpkgconfig:
     plugin: make
