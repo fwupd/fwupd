@@ -213,7 +213,7 @@ fu_main_device_array_to_variant (FuMainPrivate *priv, const gchar *sender,
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 
 	if (!fu_main_get_device_flags_for_sender (priv, sender, &flags, error))
-		return FALSE;
+		return NULL;
 
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
