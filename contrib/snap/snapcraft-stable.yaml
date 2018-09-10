@@ -22,17 +22,10 @@ apps:
   fwupd:
     command: fwupd.wrapper
     daemon: simple
-    slots: [daemon]
   fwupdmgr:
     command: fwupdmgr.wrapper
     completer:
       share/bash-completion/completions/fwupdmgr
-
-slots:
-  daemon:
-    interface: dbus
-    bus: system
-    name: org.freedesktop.fwupd
 
 parts:
   libefivar-dev:
